@@ -107,8 +107,6 @@ impl MainThreadWasmContext {
 
     let target_element_dataset = target_element_data.dataset.clone();
 
-    let target_element = target_element_data.dom_ref.clone();
-
     let iter: Box<dyn Iterator<Item = &usize> + '_> = if is_capture {
       Box::new(bubble_unique_id_path.iter().rev())
     } else {
@@ -153,9 +151,9 @@ impl MainThreadWasmContext {
               handler,
               current_target_parent_component_id.as_deref(),
               serialized_event,
-              &target_element,
+              target_unique_id,
               &target_element_dataset.clone().into(),
-              &current_target_element_data.dom_ref,
+              *unique_id,
               &current_target_element_data.dataset.clone().into(),
             );
           }
@@ -173,9 +171,9 @@ impl MainThreadWasmContext {
             self.mts_binding.publish_mts_event(
               &handler,
               serialized_event,
-              &target_element,
+              target_unique_id,
               &target_element_dataset.clone().into(),
-              &current_target_element_data.dom_ref,
+              *unique_id,
               &current_target_element_data.dataset.clone().into(),
             );
           }
@@ -183,9 +181,9 @@ impl MainThreadWasmContext {
             self.mts_binding.publish_mts_event(
               &handler,
               serialized_event,
-              &target_element,
+              target_unique_id,
               &target_element_dataset.clone().into(),
-              &current_target_element_data.dom_ref,
+              *unique_id,
               &current_target_element_data.dataset.clone().into(),
             );
           }

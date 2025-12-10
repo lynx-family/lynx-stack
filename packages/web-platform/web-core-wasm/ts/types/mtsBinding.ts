@@ -14,9 +14,9 @@ export interface RustMainthreadContextBinding {
   runWorklet(
     handler: unknown,
     eventObject: LynxCrossThreadEvent,
-    target: HTMLElement,
+    targetUniqueId: number,
     targetDataset: CloneableObject,
-    currentTarget: HTMLElement,
+    currentTargetUniqueId: number,
     currentTargetDataset: CloneableObject,
   ): void;
 
@@ -24,11 +24,13 @@ export interface RustMainthreadContextBinding {
     handlerName: string,
     parentComponentId: string | undefined,
     eventObject: LynxCrossThreadEvent,
-    target: HTMLElement,
+    targetUniqueId: number,
     targetDataset: CloneableObject,
-    currentTarget: HTMLElement,
+    currentTargetUniqueId: number,
     currentTargetDataset: CloneableObject,
   ): void;
 
   addEventListener(event_name: string): void;
+
+  markExposureRelatedElementByUniqueId(uniqueId: number): void;
 }

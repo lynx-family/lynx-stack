@@ -4,10 +4,14 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 impl MainThreadWasmContext {
   #[wasm_bindgen(js_name = "__SetDataset")]
-  pub fn set_dataset(&mut self, unique_id: usize, new_dataset: &js_sys::Object) {
+  pub fn set_dataset(
+    &mut self,
+    unique_id: usize,
+    dom: &web_sys::HtmlElement,
+    new_dataset: &js_sys::Object,
+  ) {
     let element_rc = self.get_element_data_by_unique_id(unique_id).unwrap();
     let mut element_data = element_rc.borrow_mut();
-    let dom = element_data.dom_ref.clone();
     let dataset = element_data.dataset.get_or_insert_with(js_sys::Object::new);
     // compare old dataset and new dataset and update dom attributes
     let old_keys = js_sys::Object::keys(dataset);

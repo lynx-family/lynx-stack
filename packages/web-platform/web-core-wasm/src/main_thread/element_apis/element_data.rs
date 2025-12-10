@@ -17,7 +17,6 @@ pub(crate) struct LynxElementData {
   pub(crate) dataset: Option<js_sys::Object>,
   pub(crate) component_config: Option<js_sys::Object>,
   pub(crate) event_handlers_map: Option<FnvHashMap<String, EventHandler>>,
-  pub(crate) dom_ref: web_sys::HtmlElement,
   /**
    * Whether the exposure-id attribute has been assigned
    */
@@ -29,7 +28,6 @@ impl LynxElementData {
     parent_component_unique_id: usize,
     css_id: i32,
     component_id: Option<String>,
-    dom_ref: web_sys::HtmlElement,
   ) -> Self {
     LynxElementData {
       parent_component_unique_id,
@@ -38,21 +36,14 @@ impl LynxElementData {
       dataset: None,
       component_config: None,
       event_handlers_map: None,
-      dom_ref,
       exposure_id_assigned: false,
     }
   }
 
-  pub(crate) fn clone_node(
-    &self,
-    parent_component_unique_id: usize,
-    css_id: i32,
-    dom_ref: web_sys::HtmlElement,
-  ) -> Self {
+  pub(crate) fn clone_node(&self, parent_component_unique_id: usize, css_id: i32) -> Self {
     LynxElementData {
       parent_component_unique_id,
       css_id,
-      dom_ref,
       dataset: self
         .dataset
         .as_ref()

@@ -16,32 +16,16 @@ impl MainThreadWasmContext {
       {
         let element_data_cell = self.get_element_data_by_unique_id(*unique_id).unwrap();
         let mut element_data = element_data_cell.borrow_mut();
-        if css_id != element_data.css_id {
-          if css_id == 0 {
-            element_data
-              .dom_ref
-              .remove_attribute(constants::CSS_ID_ATTRIBUTE)
-              .unwrap();
-          } else {
-            let _ = element_data
-              .dom_ref
-              .set_attribute(constants::CSS_ID_ATTRIBUTE, &css_id.to_string());
-          }
-        }
         element_data.css_id = css_id;
-      }
-      if !self.config_enable_css_selector {
-        self.update_css_og_style(*unique_id);
       }
     }
   }
 
   #[wasm_bindgen(js_name = "__wasm_update_css_og_style")]
-  pub fn update_css_og_style(&mut self, unique_id: usize) {
+  pub fn update_css_og_style(&mut self, unique_id: usize, dom: &web_sys::HtmlElement) {
     if let Some(element_data_cell) = self.unique_id_to_element_map.get(unique_id) {
       if let Some(element_data_cell) = element_data_cell.as_ref() {
         let element_data = element_data_cell.borrow();
-        let dom = &element_data.dom_ref;
         let class_list: Vec<String> = dom
           .class_list()
           .values()
@@ -69,12 +53,10 @@ impl MainThreadWasmContext {
    */
   pub fn add_inline_style_raw_string_key(
     &self,
-    unique_id: usize,
+    dom: &web_sys::HtmlElement,
     key: String,
     value: Option<String>,
   ) {
-    let binding = self.get_element_data_by_unique_id(unique_id).unwrap();
-    let dom = &binding.borrow().dom_ref;
     if let Some(value) = value {
       let (transformed, _) = query_transform_rules(&key, &value);
       let style = dom.style();
@@ -91,16 +73,19 @@ impl MainThreadWasmContext {
   }
 
   #[wasm_bindgen(js_name = "__wasm_AddInlineStyle_number_key")]
-  pub fn set_inline_styles_number_key(&self, unique_id: usize, key: i32, value: Option<String>) {
+  pub fn set_inline_styles_number_key(
+    &self,
+    dom: &web_sys::HtmlElement,
+    key: i32,
+    value: Option<String>,
+  ) {
     if let Some(style_property) = constants::STYLE_PROPERTY_MAP.get(key as usize) {
-      self.add_inline_style_raw_string_key(unique_id, style_property.to_string(), value.clone());
+      self.add_inline_style_raw_string_key(dom, style_property.to_string(), value.clone());
     }
   }
 
   #[wasm_bindgen(js_name = "__wasm_SetInlineStyles")]
-  pub fn set_inline_styles_in_str(&self, unique_id: usize, styles: String) {
-    let binding = self.get_element_data_by_unique_id(unique_id).unwrap();
-    let dom = &binding.borrow().dom_ref;
+  pub fn set_inline_styles_in_str(&self, dom: &web_sys::HtmlElement, styles: String) {
     let transformed_style_str = transform_inline_style_string(&styles);
     let _ = dom.set_attribute("style", &transformed_style_str);
   }

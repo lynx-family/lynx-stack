@@ -20,7 +20,6 @@ pub struct MainThreadWasmContext {
   pub(super) unique_id_to_element_map: Vec<Option<Rc<RefCell<Box<LynxElementData>>>>>,
   pub(super) unique_id_symbol: wasm_bindgen::JsValue,
   pub(super) timing_flags: Vec<String>,
-  pub(super) exposure_changed_elements: Vec<usize>,
   /**
    * key: template_url
    * value: key: element_template_name, value: DecodedElementTemplate
@@ -67,7 +66,6 @@ impl MainThreadWasmContext {
       unique_id_symbol,
       enabled_events: FnvHashSet::default(),
       timing_flags: vec![],
-      exposure_changed_elements: vec![],
       // document,
       style_manager,
       // root_node,
@@ -113,7 +111,7 @@ impl MainThreadWasmContext {
     if css_id != 0 {
       let _ = dom.set_attribute(constants::CSS_ID_ATTRIBUTE, &css_id.to_string());
     }
-    let element_data = LynxElementData::new(parent_component_unique_id, css_id, component_id, dom);
+    let element_data = LynxElementData::new(parent_component_unique_id, css_id, component_id);
 
     let element_data = Box::new(element_data);
     self
@@ -122,47 +120,9 @@ impl MainThreadWasmContext {
     unique_id
   }
 
-  #[wasm_bindgen(js_name = "__wasm_mark_exposure_id_assigned")]
-  pub fn mark_exposure_id_assigned(&mut self, unique_id: usize) {
-    if let Some(element_data_cell) = self.unique_id_to_element_map.get(unique_id) {
-      if let Some(element_data_cell) = element_data_cell.as_ref() {
-        let mut element_data = element_data_cell.borrow_mut();
-        element_data.exposure_id_assigned = true;
-        self.exposure_changed_elements.push(unique_id);
-      }
-    }
-  }
-
-  #[wasm_bindgen(js_name = "__wasm_mark_exposure_id_removed")]
-  pub fn mark_exposure_id_removed(&mut self, unique_id: usize) {
-    if let Some(element_data_cell) = self.unique_id_to_element_map.get(unique_id) {
-      if let Some(element_data_cell) = element_data_cell.as_ref() {
-        let mut element_data = element_data_cell.borrow_mut();
-        element_data.exposure_id_assigned = false;
-        self.exposure_changed_elements.push(unique_id);
-      }
-    }
-  }
-
   #[wasm_bindgen(js_name = "__wasm_take_timing_flags")]
   pub fn take_timing_flags(&mut self) -> Vec<String> {
     std::mem::take(&mut self.timing_flags)
-  }
-
-  #[wasm_bindgen(js_name = "__wasm_take_exposure_enabled_elements")]
-  pub fn take_exposure_enabled_elements(&mut self) -> Vec<web_sys::HtmlElement> {
-    let mut elements = vec![];
-    for unique_id in self.exposure_changed_elements.drain(..) {
-      if let Some(element_data_cell) = self.unique_id_to_element_map.get(unique_id) {
-        if let Some(element_data_cell) = element_data_cell.as_ref() {
-          let element_data = element_data_cell.borrow();
-          if element_data.should_enable_exposure_event() {
-            elements.push(element_data.dom_ref.clone());
-          }
-        }
-      }
-    }
-    elements
   }
 
   #[wasm_bindgen(js_name = "__wasm_load_style")]

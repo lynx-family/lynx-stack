@@ -9,6 +9,7 @@ import {
   lynxEntryNameAttribute,
   uniqueIdSymbol,
   LYNX_TAG_TO_HTML_TAG_MAP,
+  cssIdAttribute,
 } from '../../../constants.js';
 import {
   __SwapElement,
@@ -40,6 +41,7 @@ import {
 import type {
   DecoratedHTMLElement,
   ElementPAPIs,
+  SetCSSIdPAPI,
   UpdateListInfoAttributeValue,
 } from '../../../types/index.js';
 import type { WASMJSBinding } from './WASMJSBinding.js';
@@ -61,6 +63,35 @@ export function createElementAPI(
   mtsBinding.wasmContext = wasmContext;
   let page: DecoratedHTMLElement | undefined = undefined;
   const timingFlags: string[] = [];
+  const uniqueIdToElement = mtsBinding.uniqueIdToElement;
+
+  const __SetCSSId: SetCSSIdPAPI = (elements, cssId, entryName) => {
+    const uniqueIds = elements.map(
+      (element) => {
+        if (entryName) {
+          element.setAttribute(lynxEntryNameAttribute, entryName);
+        } else {
+          element.removeAttribute(lynxEntryNameAttribute);
+        }
+        if (cssId) {
+          element.setAttribute(cssIdAttribute, cssId.toString());
+        } else {
+          element.removeAttribute(cssIdAttribute);
+        }
+        return (element as DecoratedHTMLElement)[uniqueIdSymbol];
+      },
+    );
+    if (cssId !== null) {
+      wasmContext.__wasm_set_css_id(
+        new Uint32Array(uniqueIds),
+        cssId,
+      );
+      for (const element of elements) {
+        const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+        wasmContext.__wasm_update_css_og_style(uniqueId, element);
+      }
+    }
+  };
   return {
     __CreateView(parentComponentUniqueId: number) {
       const dom = document.createElement('x-view') as DecoratedHTMLElement;
@@ -68,6 +99,7 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
+      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
       return dom;
     },
     __CreateText(parentComponentUniqueId) {
@@ -76,6 +108,7 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
+      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
       return dom;
     },
     __CreateImage(parentComponentUniqueId) {
@@ -84,12 +117,14 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
+      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
       return dom;
     },
     __CreateRawText(text) {
       const dom = document.createElement('raw-text') as DecoratedHTMLElement;
       dom.setAttribute('text', text);
       dom[uniqueIdSymbol] = wasmContext.__CreateElementCommon(-1, dom);
+      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
       return dom;
     },
     __CreateScrollView(parentComponentUniqueId) {
@@ -99,6 +134,7 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
+      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
       return dom;
     },
     __CreateElement(tagName, parentComponentUniqueId) {
@@ -109,6 +145,7 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
+      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
       return dom;
     },
     __CreateComponent(
@@ -131,7 +168,7 @@ export function createElementAPI(
       if (name) {
         dom.setAttribute('name', name);
       }
-
+      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
       return dom;
     },
     __CreateWrapperElement(parentComponentUniqueId) {
@@ -142,6 +179,7 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
+      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
       return dom;
     },
     __CreateList(parentComponentUniqueId, componentAtIndex, enqueueComponent) {
@@ -152,6 +190,7 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
+      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
       return dom;
     },
     __CreatePage(componentID, cssID) {
@@ -173,6 +212,7 @@ export function createElementAPI(
       }
       dom.setAttribute('part', 'page');
       page = dom;
+      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
       return dom;
     },
     __ElementFromBinary(templateId, parentComponentUniqueId) {
@@ -191,26 +231,9 @@ export function createElementAPI(
         __SetClasses(element, classname);
         // Also sync to wasm side
         const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
-        wasmContext.__wasm_update_css_og_style(uniqueId);
+        wasmContext.__wasm_update_css_og_style(uniqueId, element);
       }),
-    __SetCSSId(elements, cssId, entryName) {
-      const uniqueIds = elements.map(
-        (element) => {
-          if (entryName) {
-            element.setAttribute(lynxEntryNameAttribute, entryName);
-          } else {
-            element.removeAttribute(lynxEntryNameAttribute);
-          }
-          return (element as DecoratedHTMLElement)[uniqueIdSymbol];
-        },
-      );
-      if (cssId !== null) {
-        wasmContext.__wasm_set_css_id(
-          new Uint32Array(uniqueIds),
-          cssId,
-        );
-      }
-    },
+    __SetCSSId,
     __AddInlineStyle: (
       element,
       key,
@@ -219,16 +242,15 @@ export function createElementAPI(
       if (typeof value != 'string') {
         value = (value as number).toString();
       }
-      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
       if (typeof key === 'number') {
         return wasmContext.__wasm_AddInlineStyle_number_key(
-          uniqueId,
+          element,
           key,
           value as string | null,
         );
       } else {
         return wasmContext.__wasm_AddInlineStyle_str_key(
-          uniqueId,
+          element,
           key.toString(),
           value as string | null,
         );
@@ -238,17 +260,16 @@ export function createElementAPI(
       element,
       value,
     ) => {
-      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
       if (!value) {
         element.removeAttribute('style');
       } else if (typeof value === 'string') {
         return wasmContext.__wasm_SetInlineStyles(
-          uniqueId,
+          element,
           value,
         );
       } else {
         wasmContext.__wasm_SetInlineStyles(
-          uniqueId,
+          element,
           Object.entries(value).map(([k, v]) => `${k}: ${v};`).join(),
         );
       }
@@ -262,13 +283,22 @@ export function createElementAPI(
     __UpdateComponentInfo: (element, componentInfo) => {
       const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
       const { componentID, cssID, entry, name } = componentInfo;
-      wasmContext.__UpdateComponentInfo(
+      if (name) {
+        element.setAttribute('name', name);
+      } else {
+        element.removeAttribute('name');
+      }
+      wasmContext.__UpdateComponentID(
         uniqueId,
         componentID,
-        name,
-        entry,
-        cssID,
       );
+      if (cssID !== undefined) {
+        __SetCSSId(
+          [element],
+          cssID,
+          entry,
+        );
+      }
     },
     __UpdateComponentID: (element, componentID) => {
       const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
@@ -292,7 +322,7 @@ export function createElementAPI(
     },
     __SetDataset: (element, dataset) => {
       const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
-      wasmContext.__SetDataset(uniqueId, dataset);
+      wasmContext.__SetDataset(uniqueId, element, dataset);
     },
     __AddDataset: (element, key, value) => {
       const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
@@ -349,10 +379,10 @@ export function createElementAPI(
         if (name === 'exposure-id') {
           if (value != null) {
             const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
-            wasmContext.__wasm_mark_exposure_id_assigned(uniqueId);
+            mtsBinding.markExposureRelatedElementByUniqueId(uniqueId);
           } else {
             const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
-            wasmContext.__wasm_mark_exposure_id_removed(uniqueId);
+            mtsBinding.markExposureRelatedElementByUniqueId(uniqueId);
           }
         }
       }
@@ -431,8 +461,10 @@ export function createElementAPI(
         options?.pipelineOptions?.pipelineID,
       );
       timingFlags.length = 0;
-      const enabledExposureElements = wasmContext
-        .__wasm_take_exposure_enabled_elements();
+      const enabledExposureElements = [
+        ...mtsBinding.exposureSettingsChangedElements,
+      ];
+      mtsBinding.exposureSettingsChangedElements.clear();
       mtsBinding?.updateExposureStatus(
         enabledExposureElements,
       );

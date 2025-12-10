@@ -25,6 +25,8 @@ export type WASMJSBindingInjectedHandler = {
 
 export class WASMJSBinding implements RustMainthreadContextBinding {
   wasmContext: InstanceType<typeof MainThreadWasmContext> | undefined;
+  uniqueIdToElement: (WeakRef<HTMLElement> | null)[] = [null];
+  exposureSettingsChangedElements: Set<HTMLElement> = new Set();
 
   constructor(
     private readonly lynxViewInstance: WASMJSBindingInjectedHandler,
@@ -35,6 +37,12 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     this.loadUnknownElement = this.lynxViewInstance.loadUnknownElement.bind(
       this.lynxViewInstance,
     );
+  }
+  markExposureRelatedElementByUniqueId(uniqueId: number): void {
+    const dom = this.uniqueIdToElement[uniqueId]?.deref();
+    if (dom) {
+      this.exposureSettingsChangedElements.add(dom);
+    }
   }
 
   loadInternalWebElement: (elementId: number) => void;
@@ -53,14 +61,29 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     };
   }
 
+  getElementByUniqueId(uniqueId: number): HTMLElement | undefined {
+    const ref = this.uniqueIdToElement[uniqueId];
+    if (ref) {
+      const element = ref.deref();
+      if (element) {
+        return element;
+      }
+    }
+    return undefined;
+  }
+
   runWorklet(
     handler: unknown,
     eventObject: LynxCrossThreadEvent,
-    target: HTMLElement,
+    targetUniqueId: number,
     targetDataset: Record<string, string>,
-    currentTarget: HTMLElement,
+    currentTargetUniqueId: number,
     currentTargetDataset: Record<string, string>,
   ) {
+    const target = this.getElementByUniqueId(targetUniqueId);
+    const currentTarget = this.getElementByUniqueId(
+      currentTargetUniqueId,
+    );
     eventObject.target = this.generateTargetObject(
       target as DecoratedHTMLElement,
       targetDataset,
@@ -81,11 +104,15 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     handlerName: string,
     parentComponentId: string | undefined,
     eventObject: LynxCrossThreadEvent,
-    target: HTMLElement,
+    targetUniqueId: number,
     targetDataset: CloneableObject,
-    currentTarget: HTMLElement,
+    currentTargetUniqueId: number,
     currentTargetDataset: CloneableObject,
   ) {
+    const target = this.getElementByUniqueId(targetUniqueId);
+    const currentTarget = this.getElementByUniqueId(
+      currentTargetUniqueId,
+    );
     eventObject.target = this.generateTargetObject(
       target as DecoratedHTMLElement,
       targetDataset,
