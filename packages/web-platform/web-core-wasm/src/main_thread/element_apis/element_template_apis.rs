@@ -79,23 +79,24 @@ impl MainThreadWasmContext {
           .unwrap();
           let lynx_element_data =
             prepared_element_data.clone_node(parent_component_unique_id, css_id);
-          self
-            .unique_id_to_element_map
-            .push(Some(Rc::new(RefCell::new(Box::new(lynx_element_data)))));
 
           if decoded_element_template
             .exposure_changed_elements
             .contains(&element_id)
           {
-            self
-              .mts_binding
-              .mark_exposure_related_element_by_unique_id(unique_id);
+            self.mts_binding.mark_exposure_related_element_by_unique_id(
+              unique_id,
+              lynx_element_data.should_enable_exposure_event(),
+            );
           }
           if !decoded_element_template.timing_flags.is_empty() {
             self
               .timing_flags
               .extend(decoded_element_template.timing_flags.iter().cloned());
           }
+          self
+            .unique_id_to_element_map
+            .push(Some(Rc::new(RefCell::new(Box::new(lynx_element_data)))));
         }
       }
       Ok(

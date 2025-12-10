@@ -40,5 +40,6 @@ extern "C" {
   pub fn mark_exposure_related_element_by_unique_id(
     this: &RustMainthreadContextBinding,
     unique_id: usize,
+    to_enable: bool,
   );
 }

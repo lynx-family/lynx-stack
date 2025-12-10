@@ -379,10 +379,10 @@ export function createElementAPI(
         if (name === 'exposure-id') {
           if (value != null) {
             const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
-            mtsBinding.markExposureRelatedElementByUniqueId(uniqueId);
+            mtsBinding.markExposureRelatedElementByUniqueId(uniqueId, true);
           } else {
             const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
-            mtsBinding.markExposureRelatedElementByUniqueId(uniqueId);
+            mtsBinding.markExposureRelatedElementByUniqueId(uniqueId, false);
           }
         }
       }
@@ -462,9 +462,9 @@ export function createElementAPI(
       );
       timingFlags.length = 0;
       const enabledExposureElements = [
-        ...mtsBinding.exposureSettingsChangedElements,
+        ...mtsBinding.toBeEnabledElement,
       ];
-      mtsBinding.exposureSettingsChangedElements.clear();
+      mtsBinding.toBeEnabledElement.clear();
       mtsBinding?.updateExposureStatus(
         enabledExposureElements,
       );

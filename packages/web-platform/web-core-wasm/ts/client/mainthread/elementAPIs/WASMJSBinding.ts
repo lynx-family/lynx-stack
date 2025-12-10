@@ -26,7 +26,7 @@ export type WASMJSBindingInjectedHandler = {
 export class WASMJSBinding implements RustMainthreadContextBinding {
   wasmContext: InstanceType<typeof MainThreadWasmContext> | undefined;
   uniqueIdToElement: (WeakRef<HTMLElement> | null)[] = [null];
-  exposureSettingsChangedElements: Set<HTMLElement> = new Set();
+  toBeEnabledElement: Set<HTMLElement> = new Set();
 
   constructor(
     private readonly lynxViewInstance: WASMJSBindingInjectedHandler,
@@ -38,10 +38,17 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
       this.lynxViewInstance,
     );
   }
-  markExposureRelatedElementByUniqueId(uniqueId: number): void {
+  markExposureRelatedElementByUniqueId(
+    uniqueId: number,
+    toEnable: boolean,
+  ): void {
     const dom = this.uniqueIdToElement[uniqueId]?.deref();
     if (dom) {
-      this.exposureSettingsChangedElements.add(dom);
+      if (toEnable) {
+        this.toBeEnabledElement.add(dom);
+      } else {
+        this.toBeEnabledElement.delete(dom);
+      }
     }
   }
 

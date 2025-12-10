@@ -32,5 +32,8 @@ export interface RustMainthreadContextBinding {
 
   addEventListener(event_name: string): void;
 
-  markExposureRelatedElementByUniqueId(uniqueId: number): void;
+  markExposureRelatedElementByUniqueId(
+    uniqueId: number,
+    toEnable: boolean,
+  ): void;
 }
