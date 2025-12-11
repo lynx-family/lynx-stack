@@ -325,7 +325,7 @@ importers:
         version: 6.9.1
       rsbuild-plugin-publint:
         specifier: 0.3.3
-        version: 0.3.3(@rsbuild/core@1.6.9)
+        version: 0.3.3(@rsbuild/core@1.6.13)
 
   packages/mcp-servers/devtool-mcp-server:
     dependencies:
