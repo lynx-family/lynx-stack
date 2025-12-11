@@ -153,6 +153,7 @@ jobs:
         pnpm run build
         pnpm run build --mode development
         pnpm run lint
+        cd `mktemp -d`
         npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react-vitest-rltl --dir create-rspeedy-regression-vitest-rltl --tools eslint
         cd create-rspeedy-regression-vitest-rltl
         pnpm install --registry=http://localhost:4873
@@ -212,7 +213,7 @@ jobs:
           - name: Ubuntu
             label: lynx-ubuntu-24.04-medium
           - name: Windows
-            label: lynx-windows-2022-large
+            label: lynx-windows-2022-large-verify
     name: Vitest (${{ matrix.runs-on.name }})
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

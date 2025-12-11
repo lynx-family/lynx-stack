@@ -26,6 +26,8 @@ pub struct DynamicImportVisitorConfig {
   pub runtime_pkg: String,
   /// @internal
   pub layer: String,
+  /// @internal
+  pub inject_lazy_bundle: Option<bool>,
 }
 
 impl Default for DynamicImportVisitorConfig {
@@ -33,6 +35,7 @@ impl Default for DynamicImportVisitorConfig {
     DynamicImportVisitorConfig {
       layer: "".into(),
       runtime_pkg: "@lynx-js/react/internal".into(),
+      inject_lazy_bundle: Some(true),
     }
   }
 }
@@ -42,6 +45,7 @@ where
   C: Comments,
 {
   opts: DynamicImportVisitorConfig,
+  has_inner_lazy_bundle: bool,
   named_imports: HashSet<Ident>,
   comments: Option<C>,
 }
@@ -63,6 +67,7 @@ where
     DynamicImportVisitor {
       opts,
       comments,
+      has_inner_lazy_bundle: false,
       named_imports: HashSet::new(),
     }
   }
@@ -107,6 +112,21 @@ fn is_import_call_with_type(call_expr: &CallExpr) -> (bool, bool, Value) {
     },
     _ => (false, false, Value::Null),
   }
+}
+
+fn create_import_decl(name: &str) -> ModuleItem {
+  ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+    span: DUMMY_SP,
+    phase: ImportPhase::Evaluation,
+    specifiers: vec![],
+    src: Box::new(Str {
+      span: DUMMY_SP,
+      raw: None,
+      value: name.into(),
+    }),
+    type_only: Default::default(),
+    with: Default::default(),
+  }))
 }
 
 impl<C> VisitMut for DynamicImportVisitor<C>
@@ -196,6 +216,7 @@ where
           text: format!("webpackChunkName: \"{}-{}\"", str_lit, self.opts.layer).into(),
         },
       );
+      self.has_inner_lazy_bundle = true;
     } else {
       let ident: Ident = "__dynamicImport".into();
       *call_expr = CallExpr {
@@ -244,20 +265,20 @@ where
 
       prepend_stmt(
         &mut n.body,
-        ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
-          span: DUMMY_SP,
-          phase: ImportPhase::Evaluation,
-          specifiers: vec![],
-          src: Box::new(Str {
-            span: DUMMY_SP,
-            raw: None,
-            value: format!("{}/experimental/lazy/import", self.opts.runtime_pkg)
-              .replace("/internal", "")
-              .into(),
-          }),
-          type_only: Default::default(),
-          with: Default::default(),
-        })),
+        create_import_decl(
+          &format!("{}/experimental/lazy/import", self.opts.runtime_pkg).replace("/internal", ""),
+        ),
+      );
+    }
+    if match self.opts.inject_lazy_bundle {
+      Some(true) => true,
+      Some(false) => false,
+      None => true,
+    } && self.has_inner_lazy_bundle
+    {
+      prepend_stmt(
+        &mut n.body,
+        create_import_decl("data:text/javascript;charset=utf-8,import { loadLazyBundle } from \"@lynx-js/react/internal\";lynx.loadLazyBundle = loadLazyBundle;"),
       );
     }
   }
@@ -282,6 +303,7 @@ mod tests {
     |t| visit_mut_pass(DynamicImportVisitor::new(
       DynamicImportVisitorConfig {
         layer: "test".into(),
+        inject_lazy_bundle: Some(false),
         ..Default::default()
       },
       Some(t.comments.clone())
@@ -318,15 +340,52 @@ mod tests {
       },
       Some(t.comments.clone())
     )),
-    should_not_import_lazy,
+    should_import_lazy_import,
+    r#"
+    (async function () {
+      await import("https://www/a.js", { with: { type: "component" } });
+    })();
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(DynamicImportVisitor::new(
+      DynamicImportVisitorConfig {
+        layer: "test".into(),
+        ..Default::default()
+      },
+      Some(t.comments.clone())
+    )),
+    should_import_lazy_bundle,
     r#"
     (async function () {
       await import("./index.js");
-      await import(`./locales/${name}`);
-      await import("ftp://www/a.js");
+    })();
+    "#
+  );
 
-      await import("./index.js", { with: { type: "component" } });
-      await import("ftp://www/a.js", { with: { type: "component" } });
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(DynamicImportVisitor::new(
+      DynamicImportVisitorConfig {
+        layer: "test".into(),
+        ..Default::default()
+      },
+      Some(t.comments.clone())
+    )),
+    should_not_import_lazy,
+    r#"
+    (async function () {
+      await import(`./locales/${name}`);
     })();
     "#
   );

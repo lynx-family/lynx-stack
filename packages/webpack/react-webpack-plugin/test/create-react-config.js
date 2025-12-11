@@ -82,9 +82,6 @@ export function createConfig(loaderOptions, pluginOptions, swcLoaderOptions) {
     module: {
       rules: createReactRules(loaderOptions, swcLoaderOptions),
     },
-    experiments: {
-      layers: true,
-    },
     resolve: {
       extensionAlias: {
         '.js': ['.js', '.ts', '.jsx'],

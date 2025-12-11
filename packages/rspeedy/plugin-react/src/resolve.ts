@@ -9,13 +9,36 @@ import { createLazyResolver } from '@lynx-js/react-alias-rsbuild-plugin'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-export const resolve: (request: string) => Promise<string> = createLazyResolver(
-  __dirname,
-  ['import'],
-)
+export const getImportResolver: (
+  rspack: typeof import('@rspack/core').rspack,
+) => (
+  request: string,
+) => Promise<string> = (() => {
+  let resolver: ((request: string) => Promise<string>) | null = null
 
-export const resolveMainThread: (request: string) => Promise<string> =
-  createLazyResolver(
-    __dirname,
-    ['lepus'],
-  )
+  return rspack => {
+    resolver ??= createLazyResolver(
+      rspack,
+      __dirname,
+      ['import'],
+    )
+    return resolver
+  }
+})()
+
+export const getMainThreadResolver: (
+  rspack: typeof import('@rspack/core').rspack,
+) => (
+  request: string,
+) => Promise<string> = (() => {
+  let resolver: ((request: string) => Promise<string>) | null = null
+
+  return rspack => {
+    resolver ??= createLazyResolver(
+      rspack,
+      __dirname,
+      ['lepus'],
+    )
+    return resolver
+  }
+})()

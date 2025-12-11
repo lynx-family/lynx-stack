@@ -6,7 +6,7 @@
 ## Asset Files
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 4458
+- Update: main.LAST_HASH.hot-update.js, size: 4749
 
 ## Manifest
 
@@ -34,11 +34,11 @@ var globDynamicComponentEntry;
 "use strict";
 exports.ids = ["main"];
 exports.modules = {
-"./app.jsx": 
+"./app.jsx"
 /*!*****************!*\
   !*** ./app.jsx ***!
   \*****************/
-(function (module, __webpack_exports__, __webpack_require__) {
+(module, __webpack_exports__, __webpack_require__) {
 __webpack_require__.r(__webpack_exports__);
 __webpack_require__.d(__webpack_exports__, {
   App: () => (App)
@@ -50,24 +50,25 @@ __webpack_require__.d(__webpack_exports__, {
 
 
 const Theme = (0,_lynx_js_react__rspack_import_1.createContext)('light');
-const __snapshot_4953c_6688c_1 = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .createSnapshot */.createSnapshot)("__snapshot_4953c_6688c_1", function() {
-    const pageId = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__pageId */.__pageId);
-    const el = __CreateText(pageId);
-    const el1 = __CreateRawText("after: ");
-    __AppendElement(el, el1);
-    const el2 = __CreateWrapperElement(pageId);
-    __AppendElement(el, el2);
-    return [
-        el,
-        el1,
-        el2
-    ];
-}, null, [
-    [
-        (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__DynamicPartChildren */.__DynamicPartChildren),
-        2
-    ]
-], undefined, globDynamicComponentEntry, null);
+const __snapshot_4953c_6688c_1 = "__snapshot_4953c_6688c_1";
+(__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .snapshotCreatorMap */.snapshotCreatorMap)[__snapshot_4953c_6688c_1] = (__snapshot_4953c_6688c_1)=>(__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .createSnapshot */.createSnapshot)(__snapshot_4953c_6688c_1, function() {
+        const pageId = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__pageId */.__pageId);
+        const el = __CreateText(pageId);
+        const el1 = __CreateRawText("after: ");
+        __AppendElement(el, el1);
+        const el2 = __CreateWrapperElement(pageId);
+        __AppendElement(el, el2);
+        return [
+            el,
+            el1,
+            el2
+        ];
+    }, null, [
+        [
+            (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__DynamicPartChildren */.__DynamicPartChildren),
+            2
+        ]
+    ], undefined, globDynamicComponentEntry, null, true);
 function Inner() {
     const theme = (0,_lynx_js_react__rspack_import_1.useContext)(Theme);
     __RenderContent(`after: ${theme}`);
@@ -147,7 +148,7 @@ if (moduleHot) {
 }
 
 
-}),
+},
 
 };
 exports.runtime = function(__webpack_require__) {

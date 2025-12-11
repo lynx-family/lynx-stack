@@ -5,7 +5,7 @@ import { TypiaRspackPlugin } from 'typia-rspack-plugin'
 
 export default defineConfig({
   lib: [
-    { format: 'esm', syntax: 'es2022', dts: { bundle: true, tsgo: true } },
+    { format: 'esm', syntax: 'es2022', dts: { bundle: true, tsgo: false } },
   ],
   source: {
     entry: {

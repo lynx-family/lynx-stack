@@ -52,7 +52,7 @@ describe('ssr', () => {
         "__opcodes": [
           0,
           [
-            "__Card__:__snapshot_a94a8_test_1",
+            "__snapshot_a94a8_test_1",
             -2,
             [
               {
@@ -104,7 +104,7 @@ describe('ssr', () => {
         "__opcodes": [
           0,
           [
-            "__Card__:__snapshot_a94a8_test_2",
+            "__snapshot_a94a8_test_2",
             -2,
             [
               {
@@ -114,7 +114,7 @@ describe('ssr', () => {
           ],
           0,
           [
-            "__Card__:__snapshot_a94a8_test_3",
+            "__snapshot_a94a8_test_3",
             -3,
             [
               {
@@ -133,7 +133,7 @@ describe('ssr', () => {
           ],
           0,
           [
-            "__Card__:__snapshot_a94a8_test_4",
+            "__snapshot_a94a8_test_4",
             -4,
             [
               {
@@ -143,7 +143,7 @@ describe('ssr', () => {
           ],
           0,
           [
-            "__Card__:__snapshot_a94a8_test_5",
+            "__snapshot_a94a8_test_5",
             -5,
             [
               {
@@ -195,7 +195,7 @@ describe('ssr', () => {
         "__opcodes": [
           0,
           [
-            "__Card__:__snapshot_a94a8_test_6",
+            "__snapshot_a94a8_test_6",
             -2,
             [
               {
@@ -251,7 +251,7 @@ describe('ssr', () => {
         "__opcodes": [
           0,
           [
-            "__Card__:__snapshot_a94a8_test_7",
+            "__snapshot_a94a8_test_7",
             -2,
             [
               {
@@ -315,7 +315,7 @@ describe('ssr', () => {
         "__opcodes": [
           0,
           [
-            "__Card__:__snapshot_a94a8_test_8",
+            "__snapshot_a94a8_test_8",
             -2,
             [
               {
@@ -325,7 +325,7 @@ describe('ssr', () => {
           ],
           0,
           [
-            "__Card__:__snapshot_a94a8_test_9",
+            "__snapshot_a94a8_test_9",
             -3,
             [
               {
@@ -344,7 +344,7 @@ describe('ssr', () => {
           ],
           0,
           [
-            "__Card__:__snapshot_a94a8_test_10",
+            "__snapshot_a94a8_test_10",
             -4,
             [
               {

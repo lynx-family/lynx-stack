@@ -7,7 +7,7 @@
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
 - Manifest: main/main.LAST_HASH.css.hot-update.json, size: 1682
-- Update: main.LAST_HASH.hot-update.js, size: 1244
+- Update: main.LAST_HASH.hot-update.js, size: 1231
 
 ## Manifest
 
@@ -42,7 +42,7 @@
 "use strict";
 exports.ids = ["main"];
 exports.modules = {
-"./hot-update-json/filename/file.module.css": (function (module, __webpack_exports__, __webpack_require__) {
+"./hot-update-json/filename/file.module.css"(module, __webpack_exports__, __webpack_require__) {
 __webpack_require__.r(__webpack_exports__);
 __webpack_require__.d(__webpack_exports__, {
   foo: () => (_1)
@@ -72,7 +72,7 @@ var _1 = "M_Iy_Ry8Zw0AyEYX";
     })();
   }
 
-}),
+},
 
 };
 exports.runtime = function(__webpack_require__) {
