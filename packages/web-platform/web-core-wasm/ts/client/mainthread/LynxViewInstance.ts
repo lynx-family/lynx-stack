@@ -59,8 +59,11 @@ export class LynxViewInstance implements AsyncDisposable {
 
   private renderPageFunction: ((data: Cloneable) => void) | null = null;
   private abortIOController: AbortController = new AbortController();
+  private fetchBundleCache: Map<string, Promise<void>> = new Map();
+  private queryComponentCache: Map<string, Promise<unknown>> = new Map();
+  private pageConfigLoaded: boolean = false;
 
-  lepusCodeUrls?: Record<string, string>;
+  lepusCodeUrls = new Map<string, Record<string, string>>();
 
   constructor(
     public readonly parentDom: LynxViewElement,
@@ -74,7 +77,7 @@ export class LynxViewInstance implements AsyncDisposable {
     private readonly napiModulesMap: NapiModulesMap = {},
     initI18nResources?: InitI18nResources,
   ) {
-    fetchTemplate(this.templateUrl, this.abortIOController.signal, this);
+    this.fetchBundle(templateUrl, true);
     this.mainThreadGlobalThis = mtsRealm.globalWindow as
       & typeof globalThis
       & MainThreadGlobalThis;
@@ -94,6 +97,10 @@ export class LynxViewInstance implements AsyncDisposable {
   }
 
   onPageConfigReady() {
+    if (this.pageConfigLoaded) {
+      return;
+    }
+    this.pageConfigLoaded = true;
     // create element APIs
     const enableCSSSelector = templateManager.getConfig(
       this.templateUrl,
@@ -134,18 +141,26 @@ export class LynxViewInstance implements AsyncDisposable {
     });
   }
 
-  onStyleInfoReady() {
+  onStyleInfoReady(currentUrl: string) {
     this.mtsWasmBinding.wasmContext?.__wasm_load_style(
       templateManager,
-      this.templateUrl,
+      currentUrl,
     );
   }
 
-  onMTSScriptsLoaded() {
-    this.lepusCodeUrls = templateManager.getMainThreadCodeUrls(
-      this.templateUrl,
+  onMTSScriptsLoaded(currentUrl: string, executeRoot: boolean) {
+    const urlMap = templateManager.getMainThreadCodeUrls(
+      currentUrl,
     ) as Record<string, string>;
-    this.mtsRealm.loadScript(this.lepusCodeUrls['root']!);
+    this.lepusCodeUrls.set(
+      currentUrl,
+      urlMap,
+    );
+    if (executeRoot) {
+      this.mtsRealm.loadScript(
+        urlMap['root']!,
+      );
+    }
   }
 
   async onMTSScriptsExecuted() {
@@ -169,13 +184,16 @@ export class LynxViewInstance implements AsyncDisposable {
     this.mainThreadGlobalThis.__FlushElementTree();
   }
 
-  onBTSScriptsLoaded() {
-    this.backgroundThread.startBTS(
-      templateManager.getBackgroundCodeUrls(this.templateUrl) as Record<
-        string,
-        string
-      >,
+  async onBTSScriptsLoaded(url: string) {
+    const btsUrls = templateManager.getBackgroundCodeUrls(url) as Record<
+      string,
+      string
+    >;
+    await this.backgroundThread.updateBTSChunk(
+      url,
+      btsUrls,
     );
+    this.backgroundThread.startBTS();
   }
 
   loadWebElement(id: number) {
@@ -196,6 +214,38 @@ export class LynxViewInstance implements AsyncDisposable {
     this.webElementsLoadingPromises.push(
       customElements.whenDefined(tagName).then(() => {}),
     );
+  }
+
+  queryComponent(url: string): Promise<unknown> {
+    if (this.queryComponentCache.has(url)) {
+      return this.queryComponentCache.get(url)!;
+    }
+    const promise = this.fetchBundle(url, true).then(async () => {
+      let lepusRootChunkExport = await this.mtsRealm.loadScript(
+        this.lepusCodeUrls.get(url)!['root']!,
+      );
+      lepusRootChunkExport = this.mainThreadGlobalThis.processEvalResult?.(
+        lepusRootChunkExport,
+        url,
+      );
+      return lepusRootChunkExport;
+    });
+    this.queryComponentCache.set(url, promise);
+    return promise;
+  }
+
+  fetchBundle(url: string, executeRoot: boolean = false): Promise<void> {
+    if (this.fetchBundleCache.has(url)) {
+      return this.fetchBundleCache.get(url)!;
+    }
+    const promise = fetchTemplate(
+      url,
+      this.abortIOController.signal,
+      this,
+      executeRoot,
+    );
+    this.fetchBundleCache.set(url, promise);
+    return promise;
   }
 
   async updateData(

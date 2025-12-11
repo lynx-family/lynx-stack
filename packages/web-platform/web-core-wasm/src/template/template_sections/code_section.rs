@@ -94,6 +94,11 @@ pub(crate) fn decode_lepus_code(
 }
 
 #[cfg(feature = "client")]
-pub fn decode_code_section_for_background(code_section: CodeSection) -> js_sys::Object {
-  create_blob_url_map(code_section, |_, code| code.into_bytes())
+pub fn decode_code_section_for_background(
+  code_section: CodeSection,
+  template_url: &str,
+) -> js_sys::Object {
+  create_blob_url_map(code_section, |key, code| {
+    format!("{code}//# sourceURL={template_url}/{key}").into_bytes()
+  })
 }

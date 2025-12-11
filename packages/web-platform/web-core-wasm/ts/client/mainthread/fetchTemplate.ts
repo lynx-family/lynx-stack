@@ -96,6 +96,7 @@ async function handleStream(
   stream: ReadableStreamBYOBReader | ReadableStreamDefaultReader,
   isBYOB: boolean,
   lynxViewInstance: LynxViewInstance,
+  executeRoot: boolean,
 ) {
   templateManager.createTemplate(url);
   const reader = new StreamReader(stream, isBYOB);
@@ -170,7 +171,7 @@ async function handleStream(
           break;
         case TemplateSectionLabel.StyleInfo:
           templateManager.setStyleInfo(url, content);
-          lynxViewInstance.onStyleInfoReady();
+          lynxViewInstance.onStyleInfoReady(url);
           break;
         case TemplateSectionLabel.LepusCode:
           templateManager.setLepusCode(url, content);
@@ -183,12 +184,12 @@ async function handleStream(
           const jsonStr = textDecoder.decode(content);
           const customSections = JSON.parse(jsonStr);
           templateManager.setCustomSection(url, customSections);
-          lynxViewInstance.onMTSScriptsLoaded();
+          lynxViewInstance.onMTSScriptsLoaded(url, executeRoot);
           break;
         }
         case TemplateSectionLabel.Manifest:
           templateManager.setBackgroundCode(url, content);
-          lynxViewInstance.onBTSScriptsLoaded();
+          await lynxViewInstance.onBTSScriptsLoaded(url);
           break;
         default:
           throw new Error(`Unknown section label: ${label}`);
@@ -205,6 +206,7 @@ export function fetchTemplate(
   url: string,
   signal: AbortSignal,
   lynxViewInstance: LynxViewInstance,
+  executeRoot: boolean,
 ): Promise<void> {
   return fetch(url, { signal }).then(async (response) => {
     if (!response.body) {
@@ -220,6 +222,6 @@ export function fetchTemplate(
     } catch {
       reader = response.body.getReader();
     }
-    await handleStream(url, reader, isBYOB, lynxViewInstance);
+    await handleStream(url, reader, isBYOB, lynxViewInstance, executeRoot);
   });
 }

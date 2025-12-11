@@ -15,4 +15,5 @@ export interface WorkerStartMessage {
   customSections: Record<string, Cloneable>;
   nativeModulesMap: NativeModulesMap;
   napiModulesMap: NapiModulesMap;
+  entryTemplateUrl: string;
 }

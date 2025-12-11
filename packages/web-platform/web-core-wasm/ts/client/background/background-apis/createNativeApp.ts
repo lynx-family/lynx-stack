@@ -47,7 +47,7 @@ export async function createNativeApp(
   mainThreadRpc: Rpc,
   timingSystem: TimingSystem,
   nativeModulesMap: NativeModulesMap,
-  initialBTSChunkUrls: Record<string, string>,
+  entryTemplateUrl: string,
 ): Promise<NativeApp> {
   const performanceApis = createPerformanceApis(
     timingSystem,
@@ -69,7 +69,7 @@ export async function createNativeApp(
   );
   const reportError = mainThreadRpc.createCall(reportErrorEndpoint);
   const { templateCache, loadScript, loadScriptAsync, readScript } =
-    createChunkLoading(initialBTSChunkUrls);
+    createChunkLoading(entryTemplateUrl);
 
   mainThreadRpc.registerHandler(
     updateBTSChunkEndpoint,

@@ -15,9 +15,17 @@ import { lynxDisposedAttribute } from '../../constants.js';
 import { LynxViewInstance } from './LynxViewInstance.js';
 import { createIFrameRealm } from './createIFrameRealm.js';
 // @ts-expect-error
-import CSS from '../../../css/in_shadow.css?inline';
+import INSHARDOWCSS from '../../../css/in_shadow.css?inline';
+
+let CompatCSS: string | undefined;
+try {
+  // @ts-expect-error
+  CompatCSS = (await import(
+    '@lynx-js/web-elements-compat/LinearContainer/linear-compat.css?inline'
+  )).default;
+} catch {}
 const IN_SHADOW_CSS = URL.createObjectURL(
-  new Blob([CSS], { type: 'text/css' }),
+  new Blob([INSHARDOWCSS, CompatCSS], { type: 'text/css' }),
 );
 
 export type INapiModulesCall = (
@@ -88,70 +96,70 @@ export class LynxViewElement extends HTMLElement {
   static observedAttributes = LynxViewElement.observedAttributeAsProperties.map(
     nm => nm.toLowerCase(),
   );
-  #instance?: LynxViewInstance;
+  private _instance?: LynxViewInstance;
 
-  #connected = false;
-  #url?: string;
+  private _connected = false;
+  private _url?: string;
   /**
    * @public
    * @property the url of lynx view output entry file
    */
   get url(): string | undefined {
-    return this.#url;
+    return this._url;
   }
   set url(val: string) {
-    this.#url = val;
-    this.#render();
+    this._url = val;
+    this._render();
   }
 
-  #globalProps: Cloneable = {};
+  private _globalProps: Cloneable = {};
   /**
    * @public
    * @property globalProps
    * @default {}
    */
   get globalProps(): Cloneable {
-    return this.#globalProps;
+    return this._globalProps;
   }
   set globalProps(val: string | Cloneable) {
     if (typeof val === 'string') {
-      this.#globalProps = JSON.parse(val);
+      this._globalProps = JSON.parse(val);
     } else {
-      this.#globalProps = val;
+      this._globalProps = val;
     }
   }
 
-  #initData: Cloneable = {};
+  private _initData: Cloneable = {};
   /**
    * @public
    * @property initData
    * @default {}
    */
   get initData(): Cloneable {
-    return this.#initData;
+    return this._initData;
   }
   set initData(val: string | Cloneable) {
     if (typeof val === 'string') {
-      this.#initData = JSON.parse(val);
+      this._initData = JSON.parse(val);
     } else {
-      this.#initData = val;
+      this._initData = val;
     }
   }
 
-  #initI18nResources: InitI18nResources = [];
+  private _initI18nResources: InitI18nResources = [];
   /**
    * @public
    * @property initI18nResources
    * @default {}
    */
   get initI18nResources(): InitI18nResources {
-    return this.#initI18nResources;
+    return this._initI18nResources;
   }
   set initI18nResources(val: string | InitI18nResources) {
     if (typeof val === 'string') {
-      this.#initI18nResources = JSON.parse(val);
+      this._initI18nResources = JSON.parse(val);
     } else {
-      this.#initI18nResources = val;
+      this._initI18nResources = val;
     }
   }
 
@@ -164,84 +172,86 @@ export class LynxViewElement extends HTMLElement {
     data: InitI18nResources,
     options: I18nResourceTranslationOptions,
   ) {
-    this.#instance?.i18nManager.updateData(data, options);
+    this._instance?.i18nManager.updateData(data, options);
   }
 
-  #overrideLynxTagToHTMLTagMap: Record<string, string> = { 'page': 'div' };
+  private _overrideLynxTagToHTMLTagMap: Record<string, string> = {
+    'page': 'div',
+  };
   /**
    * @public
    * @property
    * @default {page: 'div'}
    */
   get overrideLynxTagToHTMLTagMap(): Record<string, string> {
-    return this.#overrideLynxTagToHTMLTagMap;
+    return this._overrideLynxTagToHTMLTagMap;
   }
   set overrideLynxTagToHTMLTagMap(val: string | Record<string, string>) {
     if (typeof val === 'string') {
-      this.#overrideLynxTagToHTMLTagMap = JSON.parse(val);
+      this._overrideLynxTagToHTMLTagMap = JSON.parse(val);
     } else {
-      this.#overrideLynxTagToHTMLTagMap = val;
+      this._overrideLynxTagToHTMLTagMap = val;
     }
   }
 
-  #cachedNativeModulesCall: Array<
+  private _cachedNativeModulesCall: Array<
     {
       args: [name: string, data: any, moduleName: string];
       resolve: (ret: unknown) => void;
     }
   > = [];
-  #onNativeModulesCall?: NativeModulesCall;
+  private _onNativeModulesCall?: NativeModulesCall;
   /**
    * @param
    * @property
    */
   get onNativeModulesCall(): NativeModulesCall | undefined {
-    return this.#onNativeModulesCall;
+    return this._onNativeModulesCall;
   }
   set onNativeModulesCall(handler: NativeModulesCall) {
-    this.#onNativeModulesCall = handler;
-    for (const callInfo of this.#cachedNativeModulesCall) {
+    this._onNativeModulesCall = handler;
+    for (const callInfo of this._cachedNativeModulesCall) {
       callInfo.resolve(handler.apply(undefined, callInfo.args));
     }
-    this.#cachedNativeModulesCall = [];
+    this._cachedNativeModulesCall = [];
   }
 
-  #nativeModulesMap: NativeModulesMap = {};
+  private _nativeModulesMap: NativeModulesMap = {};
   /**
    * @public
    * @property nativeModulesMap
    * @default {}
    */
   get nativeModulesMap(): NativeModulesMap | undefined {
-    return this.#nativeModulesMap;
+    return this._nativeModulesMap;
   }
   set nativeModulesMap(map: NativeModulesMap) {
-    this.#nativeModulesMap = map;
+    this._nativeModulesMap = map;
   }
 
-  #napiModulesMap: NapiModulesMap = {};
+  private _napiModulesMap: NapiModulesMap = {};
   /**
    * @param
    * @property napiModulesMap
    * @default {}
    */
   get napiModulesMap(): NapiModulesMap | undefined {
-    return this.#napiModulesMap;
+    return this._napiModulesMap;
   }
   set napiModulesMap(map: NapiModulesMap) {
-    this.#napiModulesMap = map;
+    this._napiModulesMap = map;
   }
 
-  #onNapiModulesCall?: NapiModulesCall;
+  private _onNapiModulesCall?: NapiModulesCall;
   /**
    * @param
    * @property
    */
   get onNapiModulesCall(): NapiModulesCall | undefined {
-    return this.#onNapiModulesCall;
+    return this._onNapiModulesCall;
   }
   set onNapiModulesCall(handler: INapiModulesCall) {
-    this.#onNapiModulesCall = (name, data, moduleName, dispatchNapiModules) => {
+    this._onNapiModulesCall = (name, data, moduleName, dispatchNapiModules) => {
       return handler(name, data, moduleName, this, dispatchNapiModules);
     };
   }
@@ -273,7 +283,7 @@ export class LynxViewElement extends HTMLElement {
     processorName?: string,
     callback?: () => void,
   ) {
-    this.#instance?.updateData(data, processorName).then(() => {
+    this._instance?.updateData(data, processorName).then(() => {
       callback?.();
     });
   }
@@ -284,7 +294,7 @@ export class LynxViewElement extends HTMLElement {
    * update the `__globalProps`
    */
   updateGlobalProps(data: Cloneable) {
-    this.#instance?.updateGlobalProps(data);
+    this._instance?.updateGlobalProps(data);
     this.globalProps = data;
   }
 
@@ -294,7 +304,7 @@ export class LynxViewElement extends HTMLElement {
    * send global events, which can be listened to using the GlobalEventEmitter
    */
   sendGlobalEvent(eventName: string, params: Cloneable[]) {
-    this.#instance?.backgroundThread.sendGlobalEvent(eventName, params);
+    this._instance?.backgroundThread.sendGlobalEvent(eventName, params);
   }
 
   /**
@@ -304,7 +314,7 @@ export class LynxViewElement extends HTMLElement {
    */
   reload() {
     this.removeAttribute('ssr');
-    this.#render();
+    this._render();
   }
 
   /**
@@ -328,13 +338,13 @@ export class LynxViewElement extends HTMLElement {
     if (oldValue !== newValue) {
       switch (name) {
         case 'url':
-          this.#url = newValue;
+          this._url = newValue;
           break;
         case 'global-props':
-          this.#globalProps = JSON.parse(newValue);
+          this._globalProps = JSON.parse(newValue);
           break;
         case 'init-data':
-          this.#initData = JSON.parse(newValue);
+          this._initData = JSON.parse(newValue);
           break;
       }
     }
@@ -346,8 +356,8 @@ export class LynxViewElement extends HTMLElement {
    * @private
    */
   disconnectedCallback() {
-    this.#instance?.[Symbol.asyncDispose]();
-    this.#instance = undefined;
+    this._instance?.[Symbol.asyncDispose]();
+    this._instance = undefined;
     // under the all-on-ui strategy, when reload() triggers dsl flush, the previously removed pageElement will be used in __FlushElementTree.
     // This attribute is added to filter this issue.
     this.shadowRoot?.querySelector('[part="page"]')
@@ -363,39 +373,39 @@ export class LynxViewElement extends HTMLElement {
   /**
    * @private the flag to group all changes into one render operation
    */
-  #rendering = false;
+  private _rendering = false;
 
   /**
    * @private
    */
-  #render() {
-    if (!this.#rendering && this.#connected) {
-      this.#rendering = true;
+  private _render() {
+    if (!this._rendering && this._connected) {
+      this._rendering = true;
       this.attachShadow({ mode: 'open' });
       const mtsRealmPromise = createIFrameRealm(this.shadowRoot!);
       queueMicrotask(async () => {
-        this.#rendering = false;
+        this._rendering = false;
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = IN_SHADOW_CSS;
         this.shadowRoot!.appendChild(link);
         const mtsRealm = await mtsRealmPromise;
-        if (this.#instance) {
+        if (this._instance) {
           this.disconnectedCallback();
         }
-        if (this.#url) {
+        if (this._url) {
           const lynxGroupId = this.lynxGroupId;
-          this.#instance = new LynxViewInstance(
+          this._instance = new LynxViewInstance(
             this,
-            this.#initData,
-            this.#globalProps,
-            this.#url,
+            this.initData,
+            this.globalProps,
+            this._url,
             this.shadowRoot!,
             mtsRealm,
             lynxGroupId,
-            this.#nativeModulesMap,
-            this.#napiModulesMap,
-            this.#initI18nResources,
+            this._nativeModulesMap,
+            this._napiModulesMap,
+            this._initI18nResources,
           );
         }
       });
@@ -405,8 +415,13 @@ export class LynxViewElement extends HTMLElement {
    * @private
    */
   connectedCallback() {
-    this.#connected = true;
-    this.#render();
+    // @ts-expect-error
+    if (super.url) {
+      // @ts-expect-error
+      this._url = super.url;
+    }
+    this._connected = true;
+    this._render();
   }
 }
 

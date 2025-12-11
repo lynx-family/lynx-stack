@@ -66,7 +66,8 @@ export function createMainThreadGlobalAPIs(
     },
     __LoadLepusChunk: (path) => {
       try {
-        path = lynxViewInstance.lepusCodeUrls?.[path] ?? path;
+        path = lynxViewInstance.lepusCodeUrls.get(lynxViewInstance.templateUrl)
+          ?.[path] ?? path;
         lynxViewInstance.mtsRealm!.loadScriptSync(path);
         return true;
       } catch (e) {
@@ -83,8 +84,17 @@ export function createMainThreadGlobalAPIs(
       ._I18nResourceTranslation.bind(
         lynxViewInstance.i18nManager,
       ),
-    __QueryComponent: () => {
-      throw `NYI`;
+    __QueryComponent: (url: string, callback) => {
+      lynxViewInstance.queryComponent(url).then((lepusRootChunkExport) => {
+        callback?.({
+          code: 0,
+          data: {
+            url,
+            evalResult: lepusRootChunkExport,
+          },
+        });
+      });
+      return null;
     },
   };
 }

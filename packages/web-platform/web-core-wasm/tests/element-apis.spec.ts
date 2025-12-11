@@ -1064,6 +1064,36 @@ describe('Element APIs', () => {
     expect(inlineStyle).toContain('flex-shrink');
   });
 
+  test('event upper case `Tap` works', () => {
+    vi.spyOn(mtsBinding, 'addEventListener');
+    vi.spyOn(mtsBinding, 'publishEvent');
+    let page = mtsGlobalThis.__CreatePage('0', 0);
+    let parent = mtsGlobalThis.__CreateComponent(
+      0,
+      'id1',
+      0,
+      'test_entry',
+      'name',
+      'path',
+      {},
+      {},
+    );
+    let parentUid = mtsGlobalThis.__GetElementUniqueID(parent);
+    let child = mtsGlobalThis.__CreateView(parentUid);
+    mtsGlobalThis.__AppendElement(page, parent);
+    mtsGlobalThis.__AppendElement(parent, child);
+    mtsGlobalThis.__SetID(parent, 'parent_id');
+    mtsGlobalThis.__SetID(child, 'child_id');
+    mtsGlobalThis.__AddEvent(child, 'bindEvent', 'Tap', 'hname');
+    mtsGlobalThis.__FlushElementTree();
+    rootDom.querySelector('#child_id')?.dispatchEvent(
+      new window.Event('click'),
+    );
+    expect(mtsBinding.addEventListener).toBeCalledTimes(1);
+    expect(mtsBinding.addEventListener).toBeCalledWith('tap');
+    expect(mtsBinding.publishEvent).toBeCalledTimes(1);
+  });
+
   test('publicComponentEvent', () => {
     vi.spyOn(mtsBinding, 'addEventListener');
     vi.spyOn(mtsBinding, 'publishEvent');

@@ -8,21 +8,21 @@ import type {
   BundleInitReturnObj,
 } from '../../../types/index.js';
 
-export function createChunkLoading(initialTemplate: Record<string, string>): {
+export function createChunkLoading(entryTemplateUrl: string): {
   readScript: NativeApp['readScript'];
   loadScript: NativeApp['loadScript'];
   loadScriptAsync: NativeApp['loadScriptAsync'];
   templateCache: Map<string, Record<string, string>>;
 } {
-  const templateCache = new Map<string, Record<string, string>>([[
-    '__Card__',
-    initialTemplate,
-  ]]);
+  const templateCache = new Map<string, Record<string, string>>();
   const readScript: NativeApp['readScript'] = (
     sourceURL,
-    entryName = '__Card__',
+    templateUrl,
   ) => {
-    const finalSourceURL = templateCache.get(entryName!)
+    if (!templateUrl || templateUrl === '__Card__') {
+      templateUrl = entryTemplateUrl;
+    }
+    const finalSourceURL = templateCache.get(templateUrl!)
       ?.[`/${sourceURL}`] ?? sourceURL;
     const xhr = new XMLHttpRequest();
     xhr.open('GET', finalSourceURL, false);
@@ -35,9 +35,12 @@ export function createChunkLoading(initialTemplate: Record<string, string>): {
 
   const readScriptAsync: (
     sourceURL: string,
-    entryName: string | undefined,
-  ) => Promise<string> = async (sourceURL, entryName = '__Card__') => {
-    const finalSourceURL = templateCache.get(entryName!)
+    templateUrl: string,
+  ) => Promise<string> = async (sourceURL, templateUrl) => {
+    if (!templateUrl || templateUrl === '__Card__') {
+      templateUrl = entryTemplateUrl;
+    }
+    const finalSourceURL = templateCache.get(templateUrl!)
       ?.[`/${sourceURL}`] ?? sourceURL;
     return new Promise((resolve, reject) => {
       fetch(finalSourceURL).then((response) => {
@@ -146,14 +149,14 @@ export function createChunkLoading(initialTemplate: Record<string, string>): {
   };
   return {
     readScript,
-    loadScript: (sourceURL, entryName = '__Card__') => {
-      const jsContent = readScript(sourceURL, entryName);
+    loadScript: (sourceURL, templateUrl) => {
+      const jsContent = readScript(sourceURL, templateUrl);
       return createBundleInitReturnObj(
         jsContent,
       );
     },
-    loadScriptAsync: async (sourceURL, callback, entryName = '__Card__') => {
-      readScriptAsync(sourceURL, entryName).then((jsContent) => {
+    loadScriptAsync: async (sourceURL, callback, templateUrl: string) => {
+      readScriptAsync(sourceURL, templateUrl).then((jsContent) => {
         callback(
           null,
           createBundleInitReturnObj(

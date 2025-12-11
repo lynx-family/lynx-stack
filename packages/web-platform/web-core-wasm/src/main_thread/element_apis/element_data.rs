@@ -78,10 +78,10 @@ impl LynxElementData {
     event_type: &str,
   ) -> Option<String> {
     let event_handlers_map = self.event_handlers_map.as_ref()?;
-    let event_handler_store = event_handlers_map.get(&event_name.to_ascii_lowercase())?;
+    let event_handler_store = event_handlers_map.get(event_name)?;
     event_handler_store
       .framework_cross_thread_identifier
-      .get(&event_type.to_ascii_lowercase())
+      .get(event_type)
       .cloned()
   }
 
@@ -92,15 +92,13 @@ impl LynxElementData {
    */
   pub(crate) fn replace_framework_cross_thread_event_handler(
     &mut self,
-    event_name: &str,
-    event_type: &str,
+    event_name: String,
+    event_type: String,
     identifier: Option<String>,
   ) {
     let event_handlers_map = self.event_handlers_map.get_or_insert_default();
-    let event_handler_store = event_handlers_map
-      .entry(event_name.to_ascii_lowercase())
-      .or_default();
-    let event_type = event_type.to_ascii_lowercase();
+    let event_handler_store = event_handlers_map.entry(event_name).or_default();
+    let event_type = event_type;
     if let Some(identifier) = identifier {
       event_handler_store
         .framework_cross_thread_identifier
@@ -127,19 +125,17 @@ impl LynxElementData {
 
   pub(crate) fn replace_framework_run_worklet_event_handler(
     &mut self,
-    event_name: &str,
-    event_type: &str,
+    event_name: String,
+    event_type: String,
     mts_event_identifier: Option<wasm_bindgen::JsValue>,
   ) {
     let event_handlers_map = self.event_handlers_map.get_or_insert_default();
-    let event_handler_store = event_handlers_map
-      .entry(event_name.to_ascii_lowercase())
-      .or_default();
-    let event_type = event_type.to_ascii_lowercase();
+    let event_handler_store = event_handlers_map.entry(event_name.to_owned()).or_default();
+    let event_type = event_type;
     if let Some(identifier) = mts_event_identifier {
       event_handler_store
         .framework_run_worklet_identifier
-        .insert(event_type, identifier);
+        .insert(event_type.to_owned(), identifier);
     } else {
       event_handler_store
         .framework_run_worklet_identifier
@@ -165,7 +161,7 @@ impl LynxElementData {
   // pub(crate) fn remove_js_function_event_listener(
   //   &self,
   //   event_name: String,
-  //   event_type: &str,
+  //   event_type: String,
   //   js_function: js_sys::Function,
   // ) {
   //   let mut element_data = self.data.borrow_mut();

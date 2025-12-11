@@ -9,7 +9,6 @@ import type {
   LynxCrossThreadEvent,
   InvokeCallbackRes,
   ElementAnimationOptions,
-  BackMainThreadContextConfig,
   UpdateDataOptions,
   TimingEntry,
 } from '../types/index.js';
@@ -49,9 +48,11 @@ export const disposeEndpoint = createRpcEndpoint<
   void
 >('dispose', false, true);
 
-export const BackgroundThreadStartEndpoint = createRpcEndpoint<[
-  BackMainThreadContextConfig,
-], void>('start', false, true);
+export const BackgroundThreadStartEndpoint = createRpcEndpoint<[], void>(
+  'start',
+  false,
+  true,
+);
 
 /**
  * Error message, info

@@ -321,4 +321,19 @@ describe('encodeCSS', () => {
       `.class145[[data-status="complete"]]:not([l-e-name]):before {content:"✓ ";}`,
     );
   });
+
+  test('complex combinator selector', () => {
+    const cssMap = {
+      '0': CSS.parse(`
+        .parent > :not([hidden]) ~ :not([hidden]) {
+          background-color: green;
+        }
+      `).root,
+    };
+    const buffer = encodeCSS(cssMap);
+    const decodedString = get_decoded_style_string(buffer, null, true);
+    expect(decodedString.trim()).toBe(
+      `.parent > :not([hidden]) ~ :not([hidden]):not([l-e-name]) {background-color:green;}`,
+    );
+  });
 });

@@ -20,15 +20,21 @@ impl MainThreadWasmContext {
   pub fn add_event(
     &mut self,
     unique_id: usize,
-    event_type: &str,
-    event_name: &str,
+    event_type: String,
+    event_name: String,
     event_handler: wasm_bindgen::JsValue,
   ) {
-    self.enable_event(event_name);
+    let event_name = event_name.to_ascii_lowercase();
+    let event_type = event_type.to_ascii_lowercase();
+    self.enable_event(&event_name);
     let binding = self.get_element_data_by_unique_id(unique_id).unwrap();
     let mut element_data = binding.borrow_mut();
     if event_handler.is_null_or_undefined() {
-      element_data.replace_framework_cross_thread_event_handler(event_name, event_type, None);
+      element_data.replace_framework_cross_thread_event_handler(
+        event_name.clone(),
+        event_type.clone(),
+        None,
+      );
       element_data.replace_framework_run_worklet_event_handler(event_name, event_type, None);
     } else if event_handler.is_object() {
       element_data.replace_framework_run_worklet_event_handler(
@@ -49,13 +55,15 @@ impl MainThreadWasmContext {
   pub fn get_event(
     &self,
     unique_id: usize,
-    event_name: &str,
-    event_type: &str,
+    event_name: String,
+    event_type: String,
   ) -> wasm_bindgen::JsValue {
     let binding = self.get_element_data_by_unique_id(unique_id).unwrap();
     let element_data = binding.borrow();
+    let event_name = event_name.to_ascii_lowercase();
+    let event_type = event_type.to_ascii_lowercase();
     wasm_bindgen::JsValue::from(
-      element_data.get_framework_cross_thread_event_handler(event_name, event_type),
+      element_data.get_framework_cross_thread_event_handler(&event_name, &event_type),
     )
   }
 
@@ -227,9 +235,9 @@ impl MainThreadWasmContext {
  *
  */
 impl MainThreadWasmContext {
-  pub(super) fn enable_event(&mut self, event_name: &str) {
+  pub(super) fn enable_event(&mut self, event_name: &String) {
     if !self.enabled_events.contains(event_name) {
-      self.enabled_events.insert(event_name.to_string());
+      self.enabled_events.insert(event_name.clone());
       self.mts_binding.add_event_listener(event_name);
     }
   }

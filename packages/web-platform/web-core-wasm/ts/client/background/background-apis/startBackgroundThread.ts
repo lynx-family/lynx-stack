@@ -11,10 +11,6 @@ import { createNapiLoader } from './createNapiLoader.js';
 import { createTimingSystem } from './createTimingSystem.js';
 import type { WorkerStartMessage } from '../../../types/WorkerStartMessage.js';
 
-const lynxCore = import(
-  /* webpackMode: "eager" */ '@lynx-js/lynx-core/web'
-);
-
 export function startBackgroundThread(
   startMessage: WorkerStartMessage,
 ): void {
@@ -25,59 +21,64 @@ export function startBackgroundThread(
     initData,
     globalProps,
     customSections,
+    cardType,
+    entryTemplateUrl,
   } = startMessage;
   const mainThreadPort = mainThreadMessagePort;
   const mainThreadRpc = new Rpc(mainThreadPort, 'bg-to-main');
   const timingSystem = createTimingSystem(mainThreadRpc, mainThreadRpc);
   timingSystem.markTimingInternal('load_core_start');
-  mainThreadRpc.registerHandler(
-    BackgroundThreadStartEndpoint,
-    async (config) => {
+  const nativeApp = createNativeApp(
+    mainThreadRpc,
+    timingSystem,
+    nativeModulesMap,
+    entryTemplateUrl,
+  );
+  const lynxCore = import(
+    /* webpackChunkName: "lynx-core-chunk" */
+    '@lynx-js/lynx-core/web'
+  );
+  const napiLoader = createNapiLoader(
+    mainThreadRpc,
+    napiModulesMap,
+  );
+  Promise.all([lynxCore, nativeApp, napiLoader]).then(
+    ([lynxCore, nativeApp, napiLoader]) => {
       timingSystem.markTimingInternal('load_core_end');
-      const nativeApp = await createNativeApp(
-        mainThreadRpc,
-        timingSystem,
-        nativeModulesMap,
-        config.initialBTSChunkUrls,
-      );
-      (globalThis as any)['napiLoaderOnRT' + nativeApp.id] =
-        await createNapiLoader(
-          mainThreadRpc,
-          napiModulesMap,
-        );
-
+      (globalThis as any)['napiLoaderOnRT' + nativeApp.id] = napiLoader;
       const nativeLynx = createBackgroundLynx(
         globalProps,
         customSections,
         nativeApp,
         mainThreadRpc,
       );
-      lynxCore.then(
-        (
-          {
-            loadCard,
-            destroyCard,
-            callDestroyLifetimeFun,
-            nativeGlobal,
-            loadDynamicComponent,
-          },
-        ) => {
-          // @lynx-js/lynx-core >= 0.1.3 will export nativeGlobal and loadDynamicComponent
-          if (nativeGlobal && loadDynamicComponent) {
-            nativeGlobal.loadDynamicComponent = loadDynamicComponent;
-          }
+      const {
+        loadCard,
+        destroyCard,
+        callDestroyLifetimeFun,
+        nativeGlobal,
+        loadDynamicComponent,
+      } = lynxCore;
+      // @lynx-js/lynx-core >= 0.1.3 will export nativeGlobal and loadDynamicComponent
+      if (nativeGlobal && loadDynamicComponent) {
+        nativeGlobal.loadDynamicComponent = loadDynamicComponent;
+      }
+      mainThreadRpc.registerHandler(
+        BackgroundThreadStartEndpoint,
+        () => {
           loadCard(nativeApp, {
-            ...config,
+            initData,
+            cardType,
             // @ts-ignore
             updateData: initData,
           }, nativeLynx);
-          registerDisposeHandler(
-            mainThreadRpc,
-            nativeApp,
-            destroyCard,
-            callDestroyLifetimeFun,
-          );
         },
+      );
+      registerDisposeHandler(
+        mainThreadRpc,
+        nativeApp,
+        destroyCard,
+        callDestroyLifetimeFun,
       );
     },
   );

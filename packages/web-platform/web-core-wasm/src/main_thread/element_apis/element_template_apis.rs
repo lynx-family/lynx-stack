@@ -188,18 +188,20 @@ impl MainThreadWasmContext {
               return Err(JsError::new("Invalid operands for AddEvent opcode"));
             };
             let identifier = &operation.operands_str.get(2);
-            element_data.replace_framework_cross_thread_event_handler(
-              event_name,
-              event_type,
-              identifier.cloned(),
-            );
+            let event_name = event_name.to_ascii_lowercase();
+            let event_type = event_type.to_ascii_lowercase();
+            self.enable_event(&event_name);
             match event_name.as_str() {
               constants::APPEAR_EVENT_NAME | constants::DISAPPEAR_EVENT_NAME => {
                 exposure_changed_elements.insert(element_id);
               }
               _ => {}
             }
-            self.enable_event(event_name);
+            element_data.replace_framework_cross_thread_event_handler(
+              event_name,
+              event_type,
+              identifier.cloned(),
+            );
           }
           LEOAsmOpcode::AppendChild => {
             let parent_element_id = operation.operands_num[0];

@@ -2,10 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { LynxTemplate } from '@lynx-js/web-core';
 import { lynxViewTests } from './lynx-view.ts';
-
-const ENABLE_MULTI_THREAD = !!process.env.ENABLE_MULTI_THREAD;
 
 const searchParams = new URLSearchParams(document.location.search);
 const casename = searchParams.get('casename');
@@ -25,9 +22,6 @@ if (casename) {
     : undefined;
   lynxViewTests(lynxView => {
     lynxView.setAttribute('url', `${dir}/index.web.json`);
-    ENABLE_MULTI_THREAD
-      ? lynxView.setAttribute('thread-strategy', 'multi-thread')
-      : lynxView.setAttribute('thread-strategy', 'all-on-ui');
     lynxView.id = 'lynxview1';
     if (casename2) {
       lynxView.setAttribute('lynx-group-id', '2');

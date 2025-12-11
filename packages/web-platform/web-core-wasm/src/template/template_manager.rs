@@ -193,7 +193,10 @@ impl TemplateManager {
       template_url,
       code_section_buf,
       |template, code_section: CodeSection| {
-        template.background_code_urls = Some(decode_code_section_for_background(code_section));
+        template.background_code_urls = Some(decode_code_section_for_background(
+          code_section,
+          &template.template_url.clone(),
+        ));
         Ok(())
       },
     )

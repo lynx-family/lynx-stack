@@ -5,6 +5,7 @@ import type {
   DecoratedHTMLElement,
   RustMainthreadContextBinding,
   CloneableObject,
+  MainThreadGlobalThis,
 } from '../../../types/index.js';
 import {
   LynxEventNameToW3cCommon,
@@ -21,6 +22,7 @@ export type WASMJSBindingInjectedHandler = {
   exposureServices: ExposureServices;
   loadWebElement: (elementId: number) => void;
   loadUnknownElement: (tagName: string) => void;
+  mainThreadGlobalThis: MainThreadGlobalThis;
 };
 
 export class WASMJSBinding implements RustMainthreadContextBinding {
@@ -29,7 +31,7 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   toBeEnabledElement: Set<HTMLElement> = new Set();
 
   constructor(
-    private readonly lynxViewInstance: WASMJSBindingInjectedHandler,
+    public readonly lynxViewInstance: WASMJSBindingInjectedHandler,
   ) {
     this.loadInternalWebElement = this.lynxViewInstance.loadWebElement.bind(
       this.lynxViewInstance,
@@ -92,7 +94,7 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   }
 
   runWorklet(
-    handler: unknown,
+    handler: { value: unknown },
     eventObject: LynxCrossThreadEvent,
     targetUniqueId: number,
     targetDataset: Record<string, string>,
@@ -115,8 +117,9 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     eventObject.target.elementRefptr = target;
     // @ts-expect-error
     eventObject.currentTarget.elementRefptr = currentTarget;
-    // @ts-expect-error
-    this.mtsRealm.globalWindow.runWorklet?.(handler, [eventObject]);
+    this.lynxViewInstance.mainThreadGlobalThis.runWorklet?.(handler.value, [
+      eventObject,
+    ]);
   }
 
   publishEvent(

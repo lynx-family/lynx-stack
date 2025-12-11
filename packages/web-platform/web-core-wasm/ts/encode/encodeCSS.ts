@@ -100,6 +100,13 @@ export function encodeCSS(
               );
               continue;
             }
+            if (child.type === 'PseudoClassSelector') {
+              selector.push_one_selector_section(
+                child.type,
+                CSS.csstree.generate(child).slice(1),
+              );
+              continue;
+            }
             // @ts-expect-error
             if (!child.name) {
               throw new Error(

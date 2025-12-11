@@ -22,6 +22,8 @@ import {
   switchExposureServiceEndpoint,
   reportErrorEndpoint,
   dispatchLynxViewEventEndpoint,
+  updateBTSChunkEndpoint,
+  queryComponentEndpoint,
 } from '../endpoints.js';
 import type {
   Cloneable,
@@ -79,18 +81,22 @@ export class BackgroundThread implements AsyncDisposable {
   >;
   readonly updateData: RpcCallType<typeof updateDataEndpoint>;
   readonly updateGlobalProps: RpcCallType<typeof updateGlobalPropsEndpoint>;
+  readonly updateBTSChunk: RpcCallType<typeof updateBTSChunkEndpoint>;
+
+  private btsStarted = false;
 
   constructor(
     private readonly lynxGroupId: number | undefined,
     private readonly lynxViewInstance: LynxViewInstance,
   ) {
-    const btsRpc = new Rpc(undefined, 'ui-to-bg');
+    const btsRpc = new Rpc(undefined, 'main-to-bg');
     this.rpc = btsRpc;
     this.jsContext = new LynxCrossThreadContext({
       rpc: this.rpc,
       receiveEventEndpoint: dispatchJSContextOnMainThreadEndpoint,
       sendEventEndpoint: dispatchCoreContextOnBackgroundEndpoint,
     });
+    this.jsContext.__start();
     this.batchSendTimingInfo = this.rpc.createCall(markTimingEndpoint);
     this.postTimingFlags = this.rpc.createCall(postTimingFlagsEndpoint);
     this.sendGlobalEvent = this.rpc.createCall(sendGlobalEventEndpoint);
@@ -103,6 +109,7 @@ export class BackgroundThread implements AsyncDisposable {
     );
     this.updateData = this.rpc.createCall(updateDataEndpoint);
     this.updateGlobalProps = this.rpc.createCall(updateGlobalPropsEndpoint);
+    this.updateBTSChunk = this.rpc.createCall(updateBTSChunkEndpoint);
   }
 
   startWebWorker(
@@ -113,6 +120,7 @@ export class BackgroundThread implements AsyncDisposable {
     nativeModulesMap: NativeModulesMap,
     napiModulesMap: NapiModulesMap,
   ) {
+    if (this.webWorker) return;
     // now start the background worker
     if (this.lynxGroupId !== undefined) {
       const group =
@@ -142,15 +150,16 @@ export class BackgroundThread implements AsyncDisposable {
         customSections,
         nativeModulesMap,
         napiModulesMap,
+        entryTemplateUrl: this.lynxViewInstance.templateUrl,
       } as WorkerStartMessage,
       [messageChannel.port2],
     );
     this.rpc.setMessagePort(messageChannel.port1);
   }
 
-  startBTS(
-    initialBTSChunkUrls: Record<string, string>,
-  ) {
+  startBTS() {
+    if (this.btsStarted) return;
+    this.btsStarted = true;
     // prepare bts rpc handlers
     this.rpc.registerHandler(
       callLepusMethodEndpoint,
@@ -190,6 +199,23 @@ export class BackgroundThread implements AsyncDisposable {
         );
       },
     );
+    this.rpc.registerHandler(
+      queryComponentEndpoint,
+      (url: string) => {
+        return this.lynxViewInstance.queryComponent(url).then(() => {
+          this.jsContext.dispatchEvent({
+            type: '__OnDynamicJSSourcePrepared',
+            data: url,
+          });
+          return {
+            code: 0,
+            detail: {
+              schema: url,
+            },
+          };
+        });
+      },
+    );
     registerGetPathInfoHandler(this.rpc, this.lynxViewInstance);
     registerInvokeUIMethodHandler(this.rpc, this.lynxViewInstance);
     registerNapiModulesCallHandler(this.rpc, this.lynxViewInstance);
@@ -202,11 +228,7 @@ export class BackgroundThread implements AsyncDisposable {
       this.lynxViewInstance,
     );
 
-    this.rpc.invoke(BackgroundThreadStartEndpoint, [
-      {
-        initialBTSChunkUrls,
-      },
-    ]);
+    this.rpc.invoke(BackgroundThreadStartEndpoint, []);
   }
 
   markTiming(

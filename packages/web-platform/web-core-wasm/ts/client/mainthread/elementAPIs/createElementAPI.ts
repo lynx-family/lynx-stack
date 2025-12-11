@@ -45,6 +45,7 @@ import type {
   UpdateListInfoAttributeValue,
 } from '../../../types/index.js';
 import type { WASMJSBinding } from './WASMJSBinding.js';
+import hyphenateStyleName from 'hyphenate-style-name';
 
 export function createElementAPI(
   entry_template_url: string,
@@ -88,7 +89,9 @@ export function createElementAPI(
       );
       for (const element of elements) {
         const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
-        wasmContext.__wasm_update_css_og_style(uniqueId, element);
+        if (!config_enable_css_selector) {
+          wasmContext.__wasm_update_css_og_style(uniqueId, element);
+        }
       }
     }
   };
@@ -270,7 +273,9 @@ export function createElementAPI(
       } else {
         wasmContext.__wasm_SetInlineStyles(
           element,
-          Object.entries(value).map(([k, v]) => `${k}: ${v};`).join(),
+          Object.entries(value).map(([k, v]) =>
+            `${hyphenateStyleName(k)}: ${v};`
+          ).join(),
         );
       }
     },
@@ -446,20 +451,35 @@ export function createElementAPI(
     __UpdateListCallbacks,
     __SwapElement,
     __FlushElementTree: (_, options) => {
+      const pipelineId = options?.pipelineOptions?.pipelineID;
+      const backgroundThread = mtsBinding.lynxViewInstance.backgroundThread;
       if (
         page && !page.parentNode
         && page.getAttribute(lynxDisposedAttribute) !== ''
       ) {
+        backgroundThread.markTiming('dispatch_start', pipelineId);
+        backgroundThread.jsContext.dispatchEvent({
+          type: '__OnNativeAppReady',
+          data: undefined,
+        });
+        backgroundThread.markTiming('layout_start', pipelineId);
+        backgroundThread.markTiming('ui_operation_flush_start', pipelineId);
         // @ts-expect-error
         rootDom.append(page);
+        backgroundThread.markTiming('ui_operation_flush_end', pipelineId);
+        backgroundThread.markTiming('layout_end', pipelineId);
+        backgroundThread.markTiming('dispatch_end', pipelineId);
+        backgroundThread.flushTimingInfo();
       }
       let timingFlagsAll = timingFlags.concat(
         wasmContext.__wasm_take_timing_flags(),
       );
-      mtsBinding.postTimingFlags(
-        timingFlagsAll,
-        options?.pipelineOptions?.pipelineID,
-      );
+      requestAnimationFrame(() => {
+        mtsBinding.postTimingFlags(
+          timingFlagsAll,
+          pipelineId,
+        );
+      });
       timingFlags.length = 0;
       const enabledExposureElements = [
         ...mtsBinding.toBeEnabledElement,
