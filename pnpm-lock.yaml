@@ -1265,8 +1265,8 @@ importers:
         specifier: workspace:*
         version: link:../test-tools
       '@rspack/core':
-        specifier: 1.6.5
-        version: 1.6.5(@swc/helpers@0.5.17)
+        specifier: 1.6.6
+        version: 1.6.6(@swc/helpers@0.5.17)
       foo:
         specifier: ./test/foo
         version: link:test/foo
