@@ -1,5 +1,11 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.10.0
+
+### Minor Changes
+
+- Merge all css chunk and generate a `.css.hot-update.json` file for each bundle. ([#1965](https://github.com/lynx-family/lynx-stack/pull/1965))
+
 ## 0.9.2
 
 ### Patch Changes
