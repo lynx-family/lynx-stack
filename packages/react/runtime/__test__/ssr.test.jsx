@@ -182,9 +182,9 @@ describe('ssr', () => {
           style={s}
           bindtap={() => {}}
           ref={() => {}}
-          main-thread:bindtap={{ _wkltId: '1' }}
-          main-thread:ref={{ _wkltId: '2' }}
           data-xxx={c}
+          main-thread:bindtap={{ _lepusWorkletHash: '1' }}
+          main-thread:ref={{ _lepusWorkletHash: '2' }}
         />
       );
     }
@@ -212,14 +212,9 @@ describe('ssr', () => {
             },
             "-2:2:",
             "react-ref--2-3",
-            {
-              "_wkltId": "1",
-              "_workletType": "main-thread",
-            },
-            {
-              "_wkltId": "2",
-            },
             "red",
+            null,
+            null,
           ],
           1,
         ],
@@ -237,8 +232,8 @@ describe('ssr', () => {
         style: s,
         bindtap: () => {},
         ref: () => {},
-        'main-thread:bindtap': { _wkltId: '1' },
-        'main-thread:ref': { _wkltId: '2' },
+        'main-thread:bindtap': { '_lepusWorkletHash': '1' },
+        'main-thread:ref': { '_lepusWorkletHash': '2' },
         'data-xxx': c,
       };
       return <view {...props} />;
@@ -266,13 +261,6 @@ describe('ssr', () => {
               "bindtap": "-2:0:bindtap",
               "className": "red",
               "data-xxx": "red",
-              "main-thread:bindtap": {
-                "_wkltId": "1",
-                "_workletType": "main-thread",
-              },
-              "main-thread:ref": {
-                "_wkltId": "2",
-              },
               "ref": "react-ref--2-0",
               "style": {
                 "color": "red",
@@ -476,5 +464,47 @@ describe('ssr', () => {
     }
 
     vi.unstubAllGlobals();
+  });
+  it('ssrEncode - filter _lepusWorkletHash', () => {
+    const props = {
+      worklet: { _lepusWorkletHash: 'hash' },
+      normal: { key: 'value' },
+      nested: {
+        innerWorklet: { _lepusWorkletHash: 'inner' },
+        innerNormal: 'ok',
+      },
+    };
+
+    function Comp() {
+      return <view {...props} />;
+    }
+
+    __root.__jsx = <Comp />;
+    renderPage();
+    const encoded = JSON.parse(ssrEncode());
+
+    // Find the values array in the encoded output
+    // The structure is { __opcodes: [ ..., "values", [ ...values... ], ... ] }
+    const opcodes = encoded.__opcodes;
+    const valuesIndex = opcodes.indexOf('values');
+    const values = opcodes[valuesIndex + 1];
+
+    // Check that worklet objects are removed/replaced
+    expect(values).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          normal: { key: 'value' },
+          nested: {
+            innerNormal: 'ok',
+          },
+        }),
+      ]),
+    );
+
+    // Explicitly check keys are missing
+    const propValue = values.find(v => v.normal && v.normal.key === 'value');
+    expect(propValue).toBeDefined();
+    expect(propValue.worklet).toBeUndefined();
+    expect(propValue.nested.innerWorklet).toBeUndefined();
   });
 });

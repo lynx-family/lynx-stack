@@ -9,10 +9,10 @@ import { LifecycleConstant } from '../lifecycleConstant.js';
 import { ssrHydrateByOpcodes } from '../opcodes.js';
 import { __pendingListUpdates } from '../pendingListUpdates.js';
 import { __root, setRoot } from '../root.js';
+import { markTiming, setPipeline } from './performance.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
 import { SnapshotInstance, __page, setupPage } from '../snapshot.js';
 import { isEmptyObject } from '../utils.js';
-import { markTiming, setPipeline } from './performance.js';
 
 function ssrEncode() {
   const { __opcodes } = __root;
@@ -29,7 +29,13 @@ function ssrEncode() {
   };
 
   try {
-    return JSON.stringify({ __opcodes, __root_values: __root.__values });
+    return JSON.stringify({ __opcodes, __root_values: __root.__values }, (_key, value) => {
+      // hack: exclude worklet ctx from serialization to reduce payload size
+      if (value && typeof value === 'object' && '_lepusWorkletHash' in value) {
+        return undefined;
+      }
+      return value as unknown;
+    });
   } finally {
     SnapshotInstance.prototype.toJSON = oldToJSON;
   }
