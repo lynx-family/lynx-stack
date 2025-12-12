@@ -75,6 +75,45 @@ export const defaultExternalBundleLibConfig: LibConfig = {
   },
 }
 
+type Externals = Record<string, string | string[]>
+
+type LibOutputConfig = Required<LibConfig>['output']
+
+interface OutputConfig extends LibOutputConfig {
+  externals?: Externals
+}
+
+interface ExternalBundleLibConfig extends LibConfig {
+  output?: OutputConfig
+}
+
+function transformExternals(
+  externals?: Externals,
+): Required<LibOutputConfig>['externals'] {
+  if (!externals) return {}
+
+  return function({ request, contextInfo }, callback) {
+    if (!request) return callback()
+    const libraryName = externals[request]
+    if (!libraryName) return callback()
+
+    if (contextInfo?.issuerLayer === LAYERS.MAIN_THREAD) {
+      callback(undefined, [
+        'globalThis',
+        'lynx_ex',
+        ...(Array.isArray(libraryName) ? libraryName : [libraryName]),
+      ], 'var')
+    } else {
+      callback(undefined, [
+        'lynxCoreInject',
+        'tt',
+        'lynx_ex',
+        ...(Array.isArray(libraryName) ? libraryName : [libraryName]),
+      ], 'var')
+    }
+  }
+}
+
 /**
  * Get the rslib config for building Lynx external bundles.
  *
@@ -146,7 +185,7 @@ export const defaultExternalBundleLibConfig: LibConfig = {
  * Then you can use `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })` in background thread and `lynx.loadScript('utils__main-thread', { bundleName: 'utils-lib-bundle-url' })` in main-thread.
  */
 export function defineExternalBundleRslibConfig(
-  userLibConfig: LibConfig,
+  userLibConfig: ExternalBundleLibConfig,
   encodeOptions: EncodeOptions = {},
 ): RslibConfig {
   return {
@@ -154,7 +193,13 @@ export function defineExternalBundleRslibConfig(
       // eslint-disable-next-line import/namespace
       rsbuild.mergeRsbuildConfig<LibConfig>(
         defaultExternalBundleLibConfig,
-        userLibConfig,
+        {
+          ...userLibConfig,
+          output: {
+            ...userLibConfig.output,
+            externals: transformExternals(userLibConfig.output?.externals),
+          },
+        },
       ),
     ],
     plugins: [
