@@ -78,6 +78,7 @@ export default defineConfig({
       'packages/use-sync-external-store/vitest.config.ts',
       'packages/web-platform/*/vitest.config.ts',
       'packages/webpack/*/vitest.config.ts',
+      'packages/lynx/gesture-runtime/vitest.config.ts',
     ],
   },
 });
