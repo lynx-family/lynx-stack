@@ -242,6 +242,40 @@ importers:
         specifier: 0.0.0-experimental-0566679-20250709
         version: 0.0.0-experimental-0566679-20250709
 
+  examples/react-externals:
+    dependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+    devDependencies:
+      '@lynx-js/externals-loading-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../packages/webpack/externals-loading-webpack-plugin
+      '@lynx-js/lynx-bundle-rslib-config':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/lynx-bundle-rslib-config
+      '@lynx-js/preact-devtools':
+        specifier: ^5.0.1-cf9aef5
+        version: 5.0.1
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-qrcode
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-react
+      '@lynx-js/react-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../packages/webpack/react-webpack-plugin
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+      '@lynx-js/types':
+        specifier: 3.4.11
+        version: 3.4.11
+      '@types/react':
+        specifier: ^18.3.25
+        version: 18.3.25
+
   examples/react-lazy-bundle:
     dependencies:
       '@lynx-js/react':

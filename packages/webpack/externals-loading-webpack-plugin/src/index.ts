@@ -144,11 +144,32 @@ export interface ExternalsLoadingPluginOptions {
        * }
        * ```
        *
+       * You can pass an array to specify subpath of the external. Same as https://webpack.js.org/configuration/externals/#string-1. For example:
+       *
+       * ```js
+       * ExternalsLoadingPlugin({
+       *   externals: {
+       *     preact: {
+       *       libraryName: ['ReactLynx', 'Preact'],
+       *       url: '……',
+       *     },
+       *   }
+       * })
+       * ```
+       *
+       * Will generate the following webpack externals config:
+       *
+       * ```js
+       * externals: {
+       *   preact: '__webpack_require__.lynx_ex.ReactLynx.Preact',
+       * }
+       * ```
+       *
        * @defaultValue `undefined`
        *
        * @example `Lodash`
        */
-      libraryName?: string;
+      libraryName?: string | string[];
 
       /**
        * Whether the source should be loaded asynchronously or not.
@@ -193,6 +214,13 @@ export interface LayerOptions {
   sectionPath: string;
 }
 
+function getLynxExternalGlobal(layer: 'background' | 'mainThread') {
+  // We do not use `globalThis` in BTS to avoid issues when sharing js context is enabled
+  return `${
+    layer === 'background' ? 'lynxCoreInject.tt.lynx_ex' : 'globalThis.lynx_ex'
+  }`;
+}
+
 /**
  * The webpack plugin to load lynx external bundles.
  *
@@ -228,10 +256,6 @@ export interface LayerOptions {
  * @public
  */
 export class ExternalsLoadingPlugin {
-  static RuntimeGlobals = {
-    lynxExternals: '__webpack_require__.lynx_ex',
-  };
-
   constructor(private options: ExternalsLoadingPluginOptions) {}
 
   apply(compiler: Compiler): void {
@@ -279,7 +303,7 @@ export class ExternalsLoadingPlugin {
         const syncLoadCode: string[] = [];
         // filter duplicate externals by libraryName or package name to avoid loading the same external multiple times. We keep the last one.
         const externalsMap = new Map<
-          string,
+          string | string[],
           ExternalsLoadingPluginOptions['externals'][string]
         >();
         for (
@@ -294,8 +318,7 @@ export class ExternalsLoadingPlugin {
         if (externals.length === 0) {
           return '';
         }
-        const runtimeGlobalsInit =
-          `${ExternalsLoadingPlugin.RuntimeGlobals.lynxExternals} = {};`;
+        const runtimeGlobalsInit = `${getLynxExternalGlobal(layer)} = {};`;
         const loadExternalFunc = `
 function createLoadExternalAsync(handler, sectionPath) {
   return new Promise((resolve, reject) => {
@@ -328,6 +351,8 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
 }
 `;
 
+        const hasUrlLibraryNamePairInjected = new Set();
+
         for (let i = 0; i < externals.length; i++) {
           const [pkgName, external] = externals[i]!;
           const {
@@ -343,13 +368,26 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           if (!layerOptions?.sectionPath) {
             continue;
           }
+
+          const libraryNameWithDefault = libraryName ?? pkgName;
+          const libraryNameStr = Array.isArray(libraryNameWithDefault)
+            ? libraryNameWithDefault[0]
+            : libraryNameWithDefault;
+
+          const hash = `${url}-${libraryNameStr}`;
+          if (hasUrlLibraryNamePairInjected.has(hash)) {
+            continue;
+          }
+          hasUrlLibraryNamePairInjected.add(hash);
+
           fetchCode.push(
             `const handler${i} = lynx.fetchBundle(${JSON.stringify(url)}, {});`,
           );
+
           if (async) {
             asyncLoadCode.push(
-              `${ExternalsLoadingPlugin.RuntimeGlobals.lynxExternals}[${
-                JSON.stringify(libraryName ?? pkgName)
+              `${getLynxExternalGlobal(layer)}[${
+                JSON.stringify(libraryNameStr)
               }] = createLoadExternalAsync(handler${i}, ${
                 JSON.stringify(layerOptions.sectionPath)
               });`,
@@ -358,8 +396,8 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           }
 
           syncLoadCode.push(
-            `${ExternalsLoadingPlugin.RuntimeGlobals.lynxExternals}[${
-              JSON.stringify(libraryName ?? pkgName)
+            `${getLynxExternalGlobal(layer)}[${
+              JSON.stringify(libraryNameStr)
             }] = createLoadExternalSync(handler${i}, ${
               JSON.stringify(layerOptions.sectionPath)
             }, ${timeout});`,
@@ -428,13 +466,14 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
         && externals[request]?.[currentLayer]
       ) {
         const isAsync = externals[request]?.async ?? true;
+        const libraryName = externals[request]?.libraryName ?? request;
         return callback(
           undefined,
-          `${
-            isAsync ? 'promise ' : ''
-          }${ExternalsLoadingPlugin.RuntimeGlobals.lynxExternals}[${
-            JSON.stringify(externals[request]?.libraryName ?? request)
-          }]`,
+          [
+            getLynxExternalGlobal(currentLayer),
+            ...(Array.isArray(libraryName) ? libraryName : [libraryName]),
+          ],
+          isAsync ? 'promise' : undefined,
         );
       }
       // Continue without externalizing the import
