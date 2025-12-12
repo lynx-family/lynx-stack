@@ -1437,6 +1437,123 @@ class X extends Component {
 });
 
 describe('worklet', () => {
+  it('should error on unsupported runtime import attribute', async () => {
+    const result = await transformReactLynx(
+      `\
+import { foo } from "./shared.js" with { runtime: "invalid" };
+export function bar() {
+  "main thread";
+  foo();
+}
+`,
+      {
+        pluginName: '',
+        filename: '',
+        sourcemap: false,
+        cssScope: false,
+        jsx: false,
+        directiveDCE: true,
+        defineDCE: {
+          define: {
+            __LEPUS__: 'true',
+            __JS__: 'false',
+          },
+        },
+        shake: false,
+        compat: true,
+        refresh: false,
+        worklet: {
+          target: 'LEPUS',
+          filename: '',
+          runtimePkg: '@lynx-js/react',
+        },
+      },
+    );
+
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].text).toBe(
+      'Invalid runtime value. Only \'shared\' is supported.',
+    );
+  });
+
+  it('should error on non-string runtime import attribute', async () => {
+    const result = await transformReactLynx(
+      `\
+import { foo } from "./shared.js" with { runtime: 123 };
+export function bar() {
+  "main thread";
+  foo();
+}
+`,
+      {
+        pluginName: '',
+        filename: '',
+        sourcemap: false,
+        cssScope: false,
+        jsx: false,
+        directiveDCE: true,
+        defineDCE: {
+          define: {
+            __LEPUS__: 'true',
+            __JS__: 'false',
+          },
+        },
+        shake: false,
+        compat: true,
+        refresh: false,
+        worklet: {
+          target: 'LEPUS',
+          filename: '',
+          runtimePkg: '@lynx-js/react',
+        },
+      },
+    );
+
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].text).toBe(
+      'Invalid runtime value. Only \'shared\' is supported.',
+    );
+  });
+
+  it('should error on non-string \'runtime\' key runtime import attribute', async () => {
+    const result = await transformReactLynx(
+      `\
+import { foo } from "./shared.js" with { 'runtime': 123 };
+export function bar() {
+  "main thread";
+  foo();
+}
+`,
+      {
+        pluginName: '',
+        filename: '',
+        sourcemap: false,
+        cssScope: false,
+        jsx: false,
+        directiveDCE: true,
+        defineDCE: {
+          define: {
+            __LEPUS__: 'true',
+            __JS__: 'false',
+          },
+        },
+        shake: false,
+        compat: true,
+        refresh: false,
+        worklet: {
+          target: 'LEPUS',
+          filename: '',
+          runtimePkg: '@lynx-js/react',
+        },
+      },
+    );
+
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].text).toBe(
+      'Invalid runtime value. Only \'shared\' is supported.',
+    );
+  });
+
   for (const target of ['LEPUS', 'JS', 'MIXED']) {
     it('member expression', async () => {
       const { code } = await transformReactLynx(
