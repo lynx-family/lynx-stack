@@ -1,5 +1,13 @@
 # @lynx-js/css-extract-webpack-plugin
 
+## 0.7.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Require `@lynx-js/template-webpack-plugin` 0.10.0. ([#1965](https://github.com/lynx-family/lynx-stack/pull/1965))
+
+- Merge all css chunk and generate a `.css.hot-update.json` file for each bundle. ([#1965](https://github.com/lynx-family/lynx-stack/pull/1965))
+
 ## 0.6.5
 
 ### Patch Changes
