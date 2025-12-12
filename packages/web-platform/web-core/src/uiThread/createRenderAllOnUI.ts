@@ -22,6 +22,11 @@ import { dispatchLynxViewEvent } from '../utils/dispatchLynxViewEvent.js';
 import { createExposureMonitor } from './crossThreadHandlers/createExposureMonitor.js';
 import type { StartUIThreadCallbacks } from './startUIThread.js';
 
+const existingScript = document.querySelector('script[nonce]') as
+  | HTMLScriptElement
+  | null;
+const nonce = existingScript?.nonce || existingScript?.getAttribute('nonce');
+
 const {
   prepareMainThreadAPIs,
 } = await import(
@@ -63,6 +68,7 @@ async function createIFrameRealm(parent: Node): Promise<JSRealm> {
     script.fetchPriority = 'high';
     script.defer = true;
     script.async = false;
+    script.nonce = nonce || '';
     iframe.contentDocument!.head.appendChild(script);
     return new Promise(async (resolve, reject) => {
       script.onload = () => {
