@@ -16,37 +16,44 @@ pub struct EventInfo {
 
 #[wasm_bindgen]
 impl MainThreadWasmContext {
-  #[wasm_bindgen(js_name = "__AddEvent")]
-  pub fn add_event(
+  #[wasm_bindgen(js_name = "__wasm_add_event_bts")]
+  pub fn add_cross_thread_event(
     &mut self,
     unique_id: usize,
     event_type: String,
     event_name: String,
-    event_handler: wasm_bindgen::JsValue,
+    event_handler_identifier: Option<String>,
   ) {
     let event_name = event_name.to_ascii_lowercase();
     let event_type = event_type.to_ascii_lowercase();
     self.enable_event(&event_name);
-    let binding = self.get_element_data_by_unique_id(unique_id).unwrap();
-    let mut element_data = binding.borrow_mut();
-    if event_handler.is_null_or_undefined() {
+    if let Some(binding) = self.get_element_data_by_unique_id(unique_id) {
+      let mut element_data = binding.borrow_mut();
       element_data.replace_framework_cross_thread_event_handler(
-        event_name.clone(),
-        event_type.clone(),
-        None,
+        event_name,
+        event_type,
+        event_handler_identifier,
       );
-      element_data.replace_framework_run_worklet_event_handler(event_name, event_type, None);
-    } else if event_handler.is_object() {
+    }
+  }
+
+  #[wasm_bindgen(js_name = "__wasm_add_event_run_worklet")]
+  pub fn add_run_worklet_event(
+    &mut self,
+    unique_id: usize,
+    event_type: String,
+    event_name: String,
+    event_handler_identifier: Option<JsValue>,
+  ) {
+    let event_name = event_name.to_ascii_lowercase();
+    let event_type = event_type.to_ascii_lowercase();
+    self.enable_event(&event_name);
+    if let Some(binding) = self.get_element_data_by_unique_id(unique_id) {
+      let mut element_data = binding.borrow_mut();
       element_data.replace_framework_run_worklet_event_handler(
         event_name,
         event_type,
-        Some(event_handler),
-      );
-    } else if let Some(identifier) = event_handler.as_string() {
-      element_data.replace_framework_cross_thread_event_handler(
-        event_name,
-        event_type,
-        Some(identifier),
+        event_handler_identifier,
       );
     }
   }

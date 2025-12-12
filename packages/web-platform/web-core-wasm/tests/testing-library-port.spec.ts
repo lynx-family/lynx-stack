@@ -5,7 +5,12 @@ import { JSDOM } from 'jsdom';
 
 const { window } = new JSDOM(undefined, { url: 'http://localhost/' });
 const document = window.document;
-Object.assign(globalThis, { document, window, Window: window.Window });
+Object.assign(globalThis, {
+  document,
+  window,
+  Window: window.Window,
+  requestAnimationFrame: (cb: any) => setTimeout(cb, 0),
+});
 
 describe('Testing Library Port', () => {
   let lynxViewDom: HTMLElement;
@@ -28,12 +33,18 @@ describe('Testing Library Port', () => {
           publicComponentEvent: vi.fn(),
           publishEvent: vi.fn(),
           postTimingFlags: vi.fn(),
+          markTiming: vi.fn(),
+          flushTimingInfo: vi.fn(),
+          jsContext: vi.mockObject({
+            dispatchEvent: vi.fn(),
+          }),
         } as any),
         exposureServices: vi.mockObject({
           updateExposureStatus: vi.fn(),
         } as any),
         loadWebElement: vi.fn(),
         loadUnknownElement: vi.fn(),
+        mainThreadGlobalThis: globalThis as any,
       }),
     );
     mtsGlobalThis = createElementAPI(

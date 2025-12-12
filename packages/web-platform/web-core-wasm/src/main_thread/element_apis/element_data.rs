@@ -98,7 +98,6 @@ impl LynxElementData {
   ) {
     let event_handlers_map = self.event_handlers_map.get_or_insert_default();
     let event_handler_store = event_handlers_map.entry(event_name).or_default();
-    let event_type = event_type;
     if let Some(identifier) = identifier {
       event_handler_store
         .framework_cross_thread_identifier
@@ -131,7 +130,6 @@ impl LynxElementData {
   ) {
     let event_handlers_map = self.event_handlers_map.get_or_insert_default();
     let event_handler_store = event_handlers_map.entry(event_name.to_owned()).or_default();
-    let event_type = event_type;
     if let Some(identifier) = mts_event_identifier {
       event_handler_store
         .framework_run_worklet_identifier

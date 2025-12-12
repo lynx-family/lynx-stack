@@ -8,4 +8,6 @@ Object.assign(globalThis, {
   CustomEvent: window.CustomEvent,
   HTMLElement: window.HTMLElement,
   customElements: window.customElements,
+  requestAnimationFrame: (cb: any) => setTimeout(cb, 0),
+  Worker: window.Worker,
 });

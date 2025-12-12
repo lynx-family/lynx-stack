@@ -86,20 +86,18 @@ impl TemplateManager {
   pub fn set_config(
     &mut self,
     template_url: String,
-    config_buf: js_sys::Uint8Array,
+    config: wasm_bindgen::JsValue,
   ) -> Result<(), JsError> {
-    self.decode_and_set(
-      template_url,
-      config_buf,
-      |template, config: Configurations| {
-        template.configuration = Some(config);
-        Ok(())
-      },
-    )
+    let template = self
+      .cache
+      .get_mut(&template_url)
+      .ok_or_else(|| JsError::new("Template not found"))?;
+    template.configuration = Some(config);
+    Ok(())
   }
 
   #[wasm_bindgen(js_name = getConfig)]
-  pub fn get_config(&self, template_url: String, key: String) -> Result<Option<String>, JsError> {
+  pub fn get_config(&self, template_url: String) -> Result<wasm_bindgen::JsValue, JsError> {
     let template = self
       .cache
       .get(&template_url)
@@ -108,29 +106,21 @@ impl TemplateManager {
       .configuration
       .as_ref()
       .ok_or_else(|| JsError::new("Configuration not loaded"))?;
-    Ok(config.config_data.get(&key).cloned())
+    Ok(config.clone())
   }
 
-  #[wasm_bindgen(js_name = setStyleInfo)]
+  #[wasm_bindgen(js_name = "setStyleInfo")]
   pub fn set_style_info(
     &mut self,
     template_url: String,
     style_info_buf: js_sys::Uint8Array,
+    config_enable_css_selector: bool,
+    is_lazy_component_template: bool,
   ) -> Result<(), JsError> {
     self.decode_and_set(
       template_url,
       style_info_buf,
       |template, raw_style_info: RawStyleInfo| {
-        let config = template
-          .configuration
-          .as_ref()
-          .ok_or_else(|| JsError::new("Configuration not loaded"))?;
-        let config_enable_css_selector = config
-          .get_config_value_bool("enableCSSSelector")
-          .map_err(|e| JsError::new(&e))?;
-        let is_lazy_component_template = config
-          .get_config_value_bool("isLazy")
-          .map_err(|e| JsError::new(&e))?;
         let entry_name = match is_lazy_component_template {
           true => Some(template.entry_name.clone()),
           false => None,
@@ -147,29 +137,18 @@ impl TemplateManager {
   pub fn set_lepus_code(
     &mut self,
     template_url: String,
-    code_section_buf: js_sys::Uint8Array,
+    lepus_code: JsValue,
   ) -> Result<(), JsError> {
-    self.decode_and_set(
-      template_url,
-      code_section_buf,
-      |template, code_section: CodeSection| {
-        let config = template
-          .configuration
-          .as_ref()
-          .ok_or_else(|| JsError::new("Configuration not loaded"))?;
-        let is_lazy_component_template = config
-          .get_config_value_bool("isLazy")
-          .map_err(|e| JsError::new(&e))?;
-        let template_url = template.template_url.clone();
-        let lepus_code = decode_lepus_code(code_section, is_lazy_component_template, &template_url);
-        template.lepus_code = Some(lepus_code);
-        Ok(())
-      },
-    )
+    let template = self
+      .cache
+      .get_mut(&template_url)
+      .ok_or_else(|| JsError::new("Template not found"))?;
+    template.lepus_code = Some(lepus_code);
+    Ok(())
   }
 
   #[wasm_bindgen(js_name = getMainThreadCodeUrls)]
-  pub fn get_main_thread_code_urls(&self, template_url: String) -> Result<js_sys::Object, JsError> {
+  pub fn get_main_thread_code_urls(&self, template_url: String) -> Result<JsValue, JsError> {
     let template = self
       .cache
       .get(&template_url)
@@ -187,23 +166,18 @@ impl TemplateManager {
   pub fn set_background_code(
     &mut self,
     template_url: String,
-    code_section_buf: js_sys::Uint8Array,
+    background_code: JsValue,
   ) -> Result<(), JsError> {
-    self.decode_and_set(
-      template_url,
-      code_section_buf,
-      |template, code_section: CodeSection| {
-        template.background_code_urls = Some(decode_code_section_for_background(
-          code_section,
-          &template.template_url.clone(),
-        ));
-        Ok(())
-      },
-    )
+    let template = self
+      .cache
+      .get_mut(&template_url)
+      .ok_or_else(|| JsError::new("Template not found"))?;
+    template.background_code_urls = Some(background_code);
+    Ok(())
   }
 
   #[wasm_bindgen(js_name = getBackgroundCodeUrls)]
-  pub fn get_background_code_urls(&self, template_url: String) -> Result<js_sys::Object, JsError> {
+  pub fn get_background_code_urls(&self, template_url: String) -> Result<JsValue, JsError> {
     let template = self
       .cache
       .get(&template_url)

@@ -14,15 +14,15 @@ pub(crate) struct DecodedTemplate {
 
   pub(crate) style_info: Option<DecodedStyleInfo>,
 
-  pub(crate) lepus_code: Option<js_sys::Object>,
+  pub(crate) lepus_code: Option<wasm_bindgen::JsValue>,
 
-  pub(crate) background_code_urls: Option<js_sys::Object>,
+  pub(crate) background_code_urls: Option<wasm_bindgen::JsValue>,
 
-  pub(crate) configuration: Option<Configurations>,
-
-  pub(crate) element_templates: Option<ElementTemplateSection>,
+  pub(crate) configuration: Option<wasm_bindgen::JsValue>,
 
   pub(crate) custom_sections: Option<js_sys::Object>,
+
+  pub(crate) element_templates: Option<ElementTemplateSection>,
 }
 
 impl DecodedTemplate {

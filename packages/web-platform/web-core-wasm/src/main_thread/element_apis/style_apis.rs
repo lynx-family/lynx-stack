@@ -85,8 +85,14 @@ impl MainThreadWasmContext {
   }
 
   #[wasm_bindgen(js_name = "__wasm_SetInlineStyles")]
-  pub fn set_inline_styles_in_str(&self, dom: &web_sys::HtmlElement, styles: String) {
+  pub fn set_inline_styles_in_str(&self, dom: &web_sys::HtmlElement, styles: String) -> bool {
     let transformed_style_str = transform_inline_style_string(&styles);
+    // we compare the transformed style string with the original one
+    // The reason is copy utf-8 string from wasm to js is expensive
+    if transformed_style_str == styles {
+      return false;
+    }
     let _ = dom.set_attribute("style", &transformed_style_str);
+    true
   }
 }

@@ -39,6 +39,7 @@ import {
   __UpdateListCallbacks,
 } from './pureElementPAPIs.js';
 import type {
+  AddEventPAPI,
   DecoratedHTMLElement,
   ElementPAPIs,
   SetCSSIdPAPI,
@@ -46,7 +47,6 @@ import type {
 } from '../../../types/index.js';
 import type { WASMJSBinding } from './WASMJSBinding.js';
 import hyphenateStyleName from 'hyphenate-style-name';
-
 export function createElementAPI(
   entry_template_url: string,
   rootDom: Node,
@@ -95,6 +95,42 @@ export function createElementAPI(
       }
     }
   };
+  const __AddEvent: AddEventPAPI = (
+    element,
+    eventType,
+    eventName,
+    frameworkCrossThreadIdentifier,
+  ) => {
+    const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+    if (typeof frameworkCrossThreadIdentifier === 'string') {
+      wasmContext.__wasm_add_event_bts(
+        uniqueId,
+        eventType,
+        eventName,
+        frameworkCrossThreadIdentifier,
+      );
+    } else if (frameworkCrossThreadIdentifier == null) {
+      wasmContext.__wasm_add_event_bts(
+        uniqueId,
+        eventType,
+        eventName,
+        undefined,
+      );
+      wasmContext.__wasm_add_event_run_worklet(
+        uniqueId,
+        eventType,
+        eventName,
+        undefined,
+      );
+    } else if (typeof frameworkCrossThreadIdentifier === 'object') {
+      wasmContext.__wasm_add_event_run_worklet(
+        uniqueId,
+        eventType,
+        eventName,
+        frameworkCrossThreadIdentifier,
+      );
+    }
+  };
   return {
     __CreateView(parentComponentUniqueId: number) {
       const dom = document.createElement('x-view') as DecoratedHTMLElement;
@@ -102,7 +138,7 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
-      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
+      uniqueIdToElement[dom[uniqueIdSymbol]] = dom;
       return dom;
     },
     __CreateText(parentComponentUniqueId) {
@@ -111,7 +147,7 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
-      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
+      uniqueIdToElement[dom[uniqueIdSymbol]] = dom;
       return dom;
     },
     __CreateImage(parentComponentUniqueId) {
@@ -120,14 +156,14 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
-      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
+      uniqueIdToElement[dom[uniqueIdSymbol]] = dom;
       return dom;
     },
     __CreateRawText(text) {
       const dom = document.createElement('raw-text') as DecoratedHTMLElement;
       dom.setAttribute('text', text);
       dom[uniqueIdSymbol] = wasmContext.__CreateElementCommon(-1, dom);
-      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
+      uniqueIdToElement[dom[uniqueIdSymbol]] = dom;
       return dom;
     },
     __CreateScrollView(parentComponentUniqueId) {
@@ -137,7 +173,7 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
-      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
+      uniqueIdToElement[dom[uniqueIdSymbol]] = dom;
       return dom;
     },
     __CreateElement(tagName, parentComponentUniqueId) {
@@ -148,7 +184,7 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
-      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
+      uniqueIdToElement[dom[uniqueIdSymbol]] = dom;
       return dom;
     },
     __CreateComponent(
@@ -171,7 +207,7 @@ export function createElementAPI(
       if (name) {
         dom.setAttribute('name', name);
       }
-      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
+      uniqueIdToElement[dom[uniqueIdSymbol]] = dom;
       return dom;
     },
     __CreateWrapperElement(parentComponentUniqueId) {
@@ -182,7 +218,7 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
-      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
+      uniqueIdToElement[dom[uniqueIdSymbol]] = dom;
       return dom;
     },
     __CreateList(parentComponentUniqueId, componentAtIndex, enqueueComponent) {
@@ -193,7 +229,7 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
       );
-      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
+      uniqueIdToElement[dom[uniqueIdSymbol]] = dom;
       return dom;
     },
     __CreatePage(componentID, cssID) {
@@ -215,7 +251,7 @@ export function createElementAPI(
       }
       dom.setAttribute('part', 'page');
       page = dom;
-      uniqueIdToElement[dom[uniqueIdSymbol]] = new WeakRef(dom);
+      uniqueIdToElement[dom[uniqueIdSymbol]] = dom;
       return dom;
     },
     __ElementFromBinary(templateId, parentComponentUniqueId) {
@@ -265,18 +301,20 @@ export function createElementAPI(
     ) => {
       if (!value) {
         element.removeAttribute('style');
-      } else if (typeof value === 'string') {
-        return wasmContext.__wasm_SetInlineStyles(
-          element,
-          value,
-        );
       } else {
-        wasmContext.__wasm_SetInlineStyles(
-          element,
-          Object.entries(value).map(([k, v]) =>
+        const styleString = typeof value === 'string'
+          ? value
+          : Object.entries(value).map(([k, v]) =>
             `${hyphenateStyleName(k)}: ${v};`
-          ).join(),
-        );
+          ).join();
+        if (
+          !wasmContext.__wasm_SetInlineStyles(
+            element,
+            styleString,
+          )
+        ) {
+          element.setAttribute('style', styleString);
+        }
       }
     },
     __AddConfig: (element, type, value) => {
@@ -392,20 +430,7 @@ export function createElementAPI(
         }
       }
     },
-    __AddEvent: (
-      element,
-      eventType,
-      eventName,
-      frameworkCrossThreadIdentifier,
-    ) => {
-      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
-      wasmContext.__AddEvent(
-        uniqueId,
-        eventType,
-        eventName,
-        frameworkCrossThreadIdentifier,
-      );
-    },
+    __AddEvent,
     __GetEvent: (element, eventType, eventName) => {
       const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
       return wasmContext.__GetEvent(uniqueId, eventType, eventName);
@@ -415,10 +440,9 @@ export function createElementAPI(
       return wasmContext.__GetEvents(uniqueId) as any;
     },
     __SetEvents: (element, events) => {
-      const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
       for (const event of events) {
-        wasmContext.__AddEvent(
-          uniqueId,
+        __AddEvent(
+          element,
           event.type,
           event.name,
           event.function,

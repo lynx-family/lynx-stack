@@ -318,7 +318,7 @@ describe('encodeCSS', () => {
     const buffer = encodeCSS(cssMap);
     const decodedString = get_decoded_style_string(buffer, null, true);
     expect(decodedString.trim()).toBe(
-      `.class145[[data-status="complete"]]:not([l-e-name]):before {content:"✓ ";}`,
+      `.class145[[data-status="complete"]]:before:not([l-e-name]) {content:"✓ ";}`,
     );
   });
 
@@ -336,4 +336,16 @@ describe('encodeCSS', () => {
       `.parent > :not([hidden]) ~ :not([hidden]):not([l-e-name]) {background-color:green;}`,
     );
   });
+
+  // test('cssog basic', () => {    const cssMap = {
+  //   '0': CSS.parse(`
+  //       .parent{
+  //         background-color: green;
+  //       }
+  //     `).root,
+  //   };
+  //   const buffer = encodeCSS(cssMap);
+  //   const decodedString = get_decoded_style_string(buffer, null, true);
+  //   expect(decodedString.trim()).toBe('');
+  // })
 });

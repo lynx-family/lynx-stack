@@ -1143,12 +1143,9 @@ importers:
 
   packages/web-platform/web-rsbuild-server-middleware:
     devDependencies:
-      '@lynx-js/web-core':
+      '@lynx-js/web-core-wasm':
         specifier: workspace:*
-        version: link:../web-core
-      '@lynx-js/web-elements':
-        specifier: workspace:*
-        version: link:../web-elements
+        version: link:../web-core-wasm
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 1.6.9

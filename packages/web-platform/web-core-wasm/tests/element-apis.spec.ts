@@ -23,12 +23,18 @@ describe('Element APIs', () => {
           publicComponentEvent: vi.fn(),
           publishEvent: vi.fn(),
           postTimingFlags: vi.fn(),
+          markTiming: vi.fn(),
+          flushTimingInfo: vi.fn(),
+          jsContext: vi.mockObject({
+            dispatchEvent: vi.fn(),
+          }),
         } as any),
         exposureServices: vi.mockObject({
           updateExposureStatus: vi.fn(),
         }) as any,
         loadWebElement: vi.fn(),
         loadUnknownElement: vi.fn(),
+        mainThreadGlobalThis: vi.mockObject({}) as any,
       }),
     );
     mtsGlobalThis = createElementAPI(

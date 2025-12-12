@@ -169,6 +169,7 @@ impl DecodedStyleInfo {
                     | OneSimpleSelectorType::AttributeSelector
                     | OneSimpleSelectorType::TypeSelector
                     | OneSimpleSelectorType::UniversalSelector
+                    | OneSimpleSelectorType::PseudoClassSelector
                 ) {
                   the_index_of_last_compound_selector = simple_selector_index + 1;
                 }
@@ -674,7 +675,7 @@ mod test {
       style_content_str_size_hint: 0,
     };
     let result = generate_string_buf(raw_style_info);
-    let expected = ":not([l-e-name]):not([hidden]) {width:100px;}";
+    let expected = ":not([hidden]):not([l-e-name]) {width:100px;}";
     assert_eq!(result.style_content, expected);
   }
 }

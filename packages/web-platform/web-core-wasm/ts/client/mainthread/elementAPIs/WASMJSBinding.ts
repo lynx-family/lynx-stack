@@ -27,7 +27,7 @@ export type WASMJSBindingInjectedHandler = {
 
 export class WASMJSBinding implements RustMainthreadContextBinding {
   wasmContext: InstanceType<typeof MainThreadWasmContext> | undefined;
-  uniqueIdToElement: (WeakRef<HTMLElement> | null)[] = [null];
+  uniqueIdToElement: (HTMLElement | undefined)[] = [undefined];
   toBeEnabledElement: Set<HTMLElement> = new Set();
 
   constructor(
@@ -44,7 +44,7 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     uniqueId: number,
     toEnable: boolean,
   ): void {
-    const dom = this.uniqueIdToElement[uniqueId]?.deref();
+    const dom = this.uniqueIdToElement[uniqueId];
     if (dom) {
       if (toEnable) {
         this.toBeEnabledElement.add(dom);
@@ -71,14 +71,7 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   }
 
   getElementByUniqueId(uniqueId: number): HTMLElement | undefined {
-    const ref = this.uniqueIdToElement[uniqueId];
-    if (ref) {
-      const element = ref.deref();
-      if (element) {
-        return element;
-      }
-    }
-    return undefined;
+    return this.uniqueIdToElement[uniqueId];
   }
 
   getElementByComponentId(

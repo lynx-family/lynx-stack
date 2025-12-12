@@ -2,42 +2,44 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-export const cssIdAttribute = 'l-css-id' as const;
+export const cssIdAttribute = /*#__PURE__*/ 'l-css-id' as const;
 
-export const componentIdAttribute = 'l-comp-id' as const;
+export const componentIdAttribute = /*#__PURE__*/ 'l-comp-id' as const;
 
-export const parentComponentUniqueIdAttribute = 'l-p-comp-uid' as const;
+export const parentComponentUniqueIdAttribute =
+  /*#__PURE__*/ 'l-p-comp-uid' as const;
 
-export const lynxEntryNameAttribute = 'l-e-name' as const;
+export const lynxEntryNameAttribute = /*#__PURE__*/ 'l-e-name' as const;
 
-export const lynxDatasetAttribute = 'l-dset' as const;
+export const lynxDatasetAttribute = /*#__PURE__*/ 'l-dset' as const;
 
-export const lynxComponentConfigAttribute = 'l-comp-cfg' as const;
+export const lynxComponentConfigAttribute = /*#__PURE__*/ 'l-comp-cfg' as const;
 
-export const lynxDisposedAttribute = 'l-disposed' as const;
+export const lynxDisposedAttribute = /*#__PURE__*/ 'l-disposed' as const;
 
-export const lynxElementTemplateMarkerAttribute = 'l-template' as const;
+export const lynxElementTemplateMarkerAttribute =
+  /*#__PURE__*/ 'l-template' as const;
 
-export const lynxPartIdAttribute = 'dirtyID' as const;
+export const lynxPartIdAttribute = /*#__PURE__*/ 'dirtyID' as const;
 
-export const lynxDefaultDisplayLinearAttribute =
+export const lynxDefaultDisplayLinearAttribute = /*#__PURE__*/
   'lynx-default-display-linear' as const;
 
-export const lynxDefaultOverflowVisibleAttribute =
+export const lynxDefaultOverflowVisibleAttribute /*#__PURE__*/ =
   'lynx-default-overflow-visible' as const;
 
-export const __lynx_timing_flag = '__lynx_timing_flag' as const;
+export const __lynx_timing_flag = /*#__PURE__*/ '__lynx_timing_flag' as const;
 
 export const i18nResourceMissedEventName = 'i18nResourceMissed' as const;
 
-export const uniqueIdSymbol = Symbol('uniqueId');
+export const uniqueIdSymbol = /*#__PURE__*/ Symbol('uniqueId');
 
-export const systemInfoBase = {
+export const systemInfoBase = /*#__PURE__*/ {
   platform: 'web',
   lynxSdkVersion: '3.0',
 } as Record<string, string | number>;
 
-export const W3cEventNameToLynx: Record<string, string> = {
+export const W3cEventNameToLynx: Record<string, string> = /*#__PURE__*/ {
   click: 'tap',
   lynxscroll: 'scroll',
   lynxscrollend: 'scrollend',
@@ -47,7 +49,7 @@ export const W3cEventNameToLynx: Record<string, string> = {
   lynxinput: 'input',
 };
 
-export const LynxEventNameToW3cCommon: Record<string, string> = {
+export const LynxEventNameToW3cCommon: Record<string, string> = /*#__PURE__*/ {
   tap: 'click',
   scroll: 'lynxscroll',
   scrollend: 'lynxscrollend',
@@ -58,9 +60,9 @@ export const LynxEventNameToW3cCommon: Record<string, string> = {
 };
 
 // YnYRNREG
-export const MagicHeader = 0x596E59524E526567; // random magic number for verififying the stream is a Lynx encoded template
+export const MagicHeader = /*#__PURE__*/ 0x596E59524E526567; // random magic number for verififying the stream is a Lynx encoded template
 
-export const TemplateSectionLabel = {
+export const TemplateSectionLabel = /*#__PURE__*/ {
   Manifest: 1,
   StyleInfo: 2,
   LepusCode: 3,
@@ -82,56 +84,59 @@ export const enum ErrorCode {
   NO_UI_FOR_NODE = 6,
 }
 
-export const LYNX_TAG_TO_HTML_TAG_MAP: Record<string, string> = Object.freeze(
-  Object.assign(Object.create(null), {
-    'view': 'x-view',
-    'text': 'x-text',
-    'image': 'x-image',
-    'raw-text': 'raw-text',
-    'scroll-view': 'x-scroll-view',
-    'wrapper': 'lynx-wrapper',
-    'list': 'x-list',
-    'page': 'div',
-    'input': 'x-input',
-    'x-input-ng': 'x-input',
-  }),
-);
+export const LYNX_TAG_TO_HTML_TAG_MAP: Record<string, string> =
+  /*#__PURE__*/ Object.freeze(
+    Object.assign(Object.create(null), {
+      'view': 'x-view',
+      'text': 'x-text',
+      'image': 'x-image',
+      'raw-text': 'raw-text',
+      'scroll-view': 'x-scroll-view',
+      'wrapper': 'lynx-wrapper',
+      'list': 'x-list',
+      'page': 'div',
+      'input': 'x-input',
+      'x-input-ng': 'x-input',
+    }),
+  );
 
-export const HTML_TAG_TO_LYNX_TAG_MAP: Record<string, string> = Object.freeze(
-  Object.assign(
-    Object.create(null),
-    Object.fromEntries(
-      Object.entries(LYNX_TAG_TO_HTML_TAG_MAP).map(([k, v]) => [v, k]),
+export const HTML_TAG_TO_LYNX_TAG_MAP: Record<string, string> =
+  /*#__PURE__*/ Object.freeze(
+    Object.assign(
+      Object.create(null),
+      Object.fromEntries(
+        Object.entries(LYNX_TAG_TO_HTML_TAG_MAP).map(([k, v]) => [v, k]),
+      ),
     ),
-  ),
-);
+  );
 
 /**
  * also see packages/web-platform/web-core-wasm/src/constants.rs
  */
-export const LYNX_TAG_TO_DYNAMIC_LOAD_TAG_ID: Record<string, number> = Object
-  .freeze(
-    Object.assign(Object.create(null), {
-      'list': 0,
-      'x-swiper': 1,
-      'x-input': 2,
-      'x-input-ng': 2,
-      'input': 2,
-      'x-textarea': 3,
-      'x-audio-tt': 4,
-      'x-foldview-ng': 5,
-      'x-foldview-header-ng': 5,
-      'x-foldview-slot-drag-ng': 5,
-      'x-foldview-slot-ng': 5,
-      'x-foldview-toolbar-ng': 5,
-      'x-refresh-view': 6,
-      'x-refresh-header': 6,
-      'x-refresh-footer': 6,
-      'x-overlay-ng': 7,
-      'x-viewpager-ng': 8,
-      'x-viewpager-item-ng': 8,
-    }),
-  );
+export const LYNX_TAG_TO_DYNAMIC_LOAD_TAG_ID: Record<string, number> =
+  /*#__PURE__*/ Object
+    .freeze(
+      Object.assign(Object.create(null), {
+        'list': 0,
+        'x-swiper': 1,
+        'x-input': 2,
+        'x-input-ng': 2,
+        'input': 2,
+        'x-textarea': 3,
+        'x-audio-tt': 4,
+        'x-foldview-ng': 5,
+        'x-foldview-header-ng': 5,
+        'x-foldview-slot-drag-ng': 5,
+        'x-foldview-slot-ng': 5,
+        'x-foldview-toolbar-ng': 5,
+        'x-refresh-view': 6,
+        'x-refresh-header': 6,
+        'x-refresh-footer': 6,
+        'x-overlay-ng': 7,
+        'x-viewpager-ng': 8,
+        'x-viewpager-item-ng': 8,
+      }),
+    );
 
 export const scrollContainerDom = Symbol.for('lynx-scroll-container-dom');
 

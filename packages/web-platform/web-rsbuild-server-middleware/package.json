@@ -26,8 +26,7 @@
     "build": "rsbuild build"
   },
   "devDependencies": {
-    "@lynx-js/web-core": "workspace:*",
-    "@lynx-js/web-elements": "workspace:*",
+    "@lynx-js/web-core-wasm": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
     "rsbuild-plugin-arethetypeswrong": "0.1.1",
     "rsbuild-plugin-publint": "0.3.3"

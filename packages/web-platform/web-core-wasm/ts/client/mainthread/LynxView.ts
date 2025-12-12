@@ -19,8 +19,8 @@ import INSHARDOWCSS from '../../../css/in_shadow.css?inline';
 
 let CompatCSS: string | undefined;
 try {
-  // @ts-expect-error
   CompatCSS = (await import(
+    // @ts-expect-error
     '@lynx-js/web-elements-compat/LinearContainer/linear-compat.css?inline'
   )).default;
 } catch {}
@@ -415,10 +415,8 @@ export class LynxViewElement extends HTMLElement {
    * @private
    */
   connectedCallback() {
-    // @ts-expect-error
-    if (super.url) {
-      // @ts-expect-error
-      this._url = super.url;
+    if (this.url) {
+      this._url = this.url;
     }
     this._connected = true;
     this._render();

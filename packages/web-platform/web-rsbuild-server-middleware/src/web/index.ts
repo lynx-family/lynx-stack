@@ -1,14 +1,12 @@
-import '@lynx-js/web-core';
-import '@lynx-js/web-elements/all';
-import '@lynx-js/web-core/index.css';
-import '@lynx-js/web-elements/index.css';
+import '@lynx-js/web-core-wasm/client';
+import '@lynx-js/web-core-wasm/index.css';
 import './index.css';
-import type { LynxView } from '@lynx-js/web-core';
+import type { LynxViewElement } from '@lynx-js/web-core-wasm/client';
 
 const INIT_DATA_KEY = 'lynx-web-core-init-data';
 const GLOBAL_PROPS_KEY = 'lynx-web-core-global-props';
 
-const lynxView = document.createElement('lynx-view') as LynxView;
+const lynxView = document.createElement('lynx-view') as LynxViewElement;
 document.body.appendChild(lynxView);
 const searchParams = new URLSearchParams(document.location.search);
 const casename = searchParams.get('casename');

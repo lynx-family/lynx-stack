@@ -10,5 +10,6 @@ export default defineConfig({
   },
   output: {
     polyfill: 'off',
+    module: true,
   },
 });

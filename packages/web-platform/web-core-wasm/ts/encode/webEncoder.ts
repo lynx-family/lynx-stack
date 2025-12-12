@@ -8,8 +8,53 @@ import type { ElementTemplateData } from '../types/index.js';
 import { encodeCSS } from './encodeCSS.js';
 import { encodeElementTemplates } from './encodeElementTemplate.js';
 import { MagicHeader, TemplateSectionLabel } from '../constants.js';
-// @ts-ignore
-import { CodeSection, Configurations } from '../../binary/encode/encode.js';
+
+function encodeAsJSON(map: Record<string, unknown>): Uint8Array {
+  const jsonString = JSON.stringify(map);
+  const utf16Array = new Uint16Array(jsonString.length);
+  for (let i = 0; i < jsonString.length; i++) {
+    utf16Array[i] = jsonString.charCodeAt(i);
+  }
+  return new Uint8Array(utf16Array.buffer);
+}
+
+function encodeStringMap(map: Record<string, string>): Uint8Array {
+  const entries = Object.entries(map);
+  const count = entries.length;
+
+  // Calculate size
+  let size = 4; // count
+  const encoder = new TextEncoder();
+  const encodedEntries: { keyBytes: Uint8Array; valBytes: Uint8Array }[] = [];
+
+  for (const [key, val] of entries) {
+    const keyBytes = encoder.encode(key);
+    const valBytes = encoder.encode(val);
+    encodedEntries.push({ keyBytes, valBytes });
+    size += 4 + keyBytes.length + 4 + valBytes.length;
+  }
+
+  const buffer = new Uint8Array(size);
+  const view = new DataView(buffer.buffer);
+  let offset = 0;
+
+  view.setUint32(offset, count, true);
+  offset += 4;
+
+  for (const { keyBytes, valBytes } of encodedEntries) {
+    view.setUint32(offset, keyBytes.length, true);
+    offset += 4;
+    buffer.set(keyBytes, offset);
+    offset += keyBytes.length;
+
+    view.setUint32(offset, valBytes.length, true);
+    offset += 4;
+    buffer.set(valBytes, offset);
+    offset += valBytes.length;
+  }
+
+  return buffer;
+}
 
 export type TasmJSONInfo = {
   styleInfo: Record<string, CSS.LynxStyleNode[]>;
@@ -38,28 +83,20 @@ export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
   } = tasmJSON;
   const encodedStyleInfo = encodeCSS(styleInfo);
   const encodedElementTemplates = encodeElementTemplates(elementTemplates);
-  const manifestCodeSection = new CodeSection();
-  for (const [key, value] of Object.entries(manifest)) {
-    manifestCodeSection.add_code(key, value);
-  }
-  const encodedManifest = manifestCodeSection.encode();
-  const lepusCodeSection = new CodeSection();
-  for (const [key, value] of Object.entries(lepusCode)) {
-    lepusCodeSection.add_code(key, value);
-  }
-  const encodedLepusCode = lepusCodeSection.encode();
-  // encode custom sections to Uint8Array
-  const textEncoder = new TextEncoder();
-  const encodedCustomSections = textEncoder.encode(
-    JSON.stringify(customSections),
-  );
-  const configurations = new Configurations();
-  configurations.add_config('cardType', cardType);
-  configurations.add_config('isLazy', appType !== 'card' ? 'true' : 'false');
+
+  const encodedManifest = encodeStringMap(manifest);
+  const encodedLepusCode = encodeStringMap(lepusCode);
+
+  const encodedCustomSections = encodeAsJSON(customSections);
+
+  const configMap: Record<string, string> = {};
+  configMap['cardType'] = cardType;
+  configMap['isLazy'] = appType !== 'card' ? 'true' : 'false';
   for (const [key, value] of Object.entries(pageConfig)) {
-    configurations.add_config(key, String(value));
+    configMap[key] = String(value);
   }
-  const encodedConfigurations = configurations.encode();
+  const encodedConfigurations = encodeAsJSON(configMap);
+
   const bufferLength = 8 // Magic Header
     + 4 // Version
     /*section label*/

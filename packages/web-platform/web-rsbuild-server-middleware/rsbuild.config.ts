@@ -19,11 +19,7 @@ export default defineConfig({
     polyfill: 'off',
     overrideBrowserslist: ['last 2 Chrome versions'],
     assetPrefix: 'http://lynx-web-core-mocked.localhost/',
-  },
-  performance: {
-    chunkSplit: {
-      strategy: 'all-in-one',
-    },
+    module: true,
   },
   tools: {
     rspack: {

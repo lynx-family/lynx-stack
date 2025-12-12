@@ -58,7 +58,6 @@ export class LynxViewInstance implements AsyncDisposable {
   readonly webElementsLoadingPromises: Promise<void>[] = [];
 
   private renderPageFunction: ((data: Cloneable) => void) | null = null;
-  private abortIOController: AbortController = new AbortController();
   private fetchBundleCache: Map<string, Promise<void>> = new Map();
   private queryComponentCache: Map<string, Promise<unknown>> = new Map();
   private pageConfigLoaded: boolean = false;
@@ -96,24 +95,15 @@ export class LynxViewInstance implements AsyncDisposable {
     );
   }
 
-  onPageConfigReady() {
+  onPageConfigReady(config: Record<string, string>) {
     if (this.pageConfigLoaded) {
       return;
     }
     this.pageConfigLoaded = true;
     // create element APIs
-    const enableCSSSelector = templateManager.getConfig(
-      this.templateUrl,
-      'enableCSSSelector',
-    ) == 'true';
-    const defaultDisplayLinear = templateManager.getConfig(
-      this.templateUrl,
-      'defaultDisplayLinear',
-    ) == 'true';
-    const defaultOverflowVisible = templateManager.getConfig(
-      this.templateUrl,
-      'defaultOverflowVisible',
-    ) == 'true';
+    const enableCSSSelector = config['enableCSSSelector'] == 'true';
+    const defaultDisplayLinear = config['defaultDisplayLinear'] == 'true';
+    const defaultOverflowVisible = config['defaultOverflowVisible'] == 'true';
     Object.assign(
       this.mtsRealm.globalWindow,
       createElementAPI(
@@ -172,7 +162,7 @@ export class LynxViewInstance implements AsyncDisposable {
     this.backgroundThread.startWebWorker(
       processedData,
       this.globalprops,
-      templateManager.getConfig(this.templateUrl, 'cardType') || 'react',
+      templateManager.getConfig(this.templateUrl)['cardType'] || 'react',
       templateManager.getCustomSection(this.templateUrl) as Record<
         string,
         Cloneable
@@ -240,7 +230,6 @@ export class LynxViewInstance implements AsyncDisposable {
     }
     const promise = fetchTemplate(
       url,
-      this.abortIOController.signal,
       this,
       executeRoot,
     );
@@ -282,7 +271,6 @@ export class LynxViewInstance implements AsyncDisposable {
   }
 
   async [Symbol.asyncDispose]() {
-    this.abortIOController.abort();
     await this.backgroundThread[Symbol.asyncDispose]();
   }
 }

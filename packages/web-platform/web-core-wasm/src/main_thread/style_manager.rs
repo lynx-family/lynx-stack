@@ -1,4 +1,4 @@
-use crate::template::template_sections::style_info::DecodedStyleInfo;
+use crate::{constants, template::template_sections::style_info::DecodedStyleInfo};
 use fnv::FnvHashMap;
 use wasm_bindgen::JsCast;
 
@@ -67,7 +67,8 @@ impl StyleManager {
       } else {
         let rule_index = style_sheet
           .insert_rule(&format!(
-            "[unique-id=\"{unique_id}\"] {{{new_declarations}}}"
+            "[{}=\"{unique_id}\"] {{{new_declarations}}}",
+            constants::LYNX_UNIQUE_ID_ATTRIBUTE
           ))
           .unwrap();
         let style_declaration = style_sheet
@@ -81,7 +82,7 @@ impl StyleManager {
     }
   }
 
-  pub(crate) fn push_style_sheet(&mut self, flattened_style_info: &DecodedStyleInfo) {
+  pub(crate) fn push_style_sheet(&mut self, decoded_style_info: &DecodedStyleInfo) {
     let new_style_element = web_sys::window()
       .unwrap()
       .document()
@@ -89,16 +90,7 @@ impl StyleManager {
       .create_element("style")
       .unwrap()
       .unchecked_into::<web_sys::HtmlStyleElement>();
-    let array_buffer =
-      js_sys::Uint8Array::new_from_slice(flattened_style_info.style_content.as_bytes());
-    let parts = js_sys::Array::of1(&array_buffer);
-    let blob_config = web_sys::BlobPropertyBag::new();
-    blob_config.set_type("text/css;charset=utf-8");
-    let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(&parts, &blob_config)
-      .expect("Failed to create CSS Blob");
-    let blob_url = web_sys::Url::create_object_url_with_blob(&blob)
-      .expect("Failed to create object URL for CSS Blob");
-    new_style_element.set_inner_text(&format!("@import url(\"{blob_url}\");"));
+    new_style_element.set_text_content(Some(&decoded_style_info.style_content));
     self.root_node.append_child(&new_style_element).unwrap();
   }
 }
