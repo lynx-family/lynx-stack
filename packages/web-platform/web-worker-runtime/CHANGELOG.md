@@ -1,5 +1,14 @@
 # @lynx-js/web-worker-runtime
 
+## 0.19.1
+
+### Patch Changes
+
+- Updated dependencies [[`f7256d5`](https://github.com/lynx-family/lynx-stack/commit/f7256d5bd920b2f6c0cadab44455585c35621b35)]:
+  - @lynx-js/web-mainthread-apis@0.19.1
+  - @lynx-js/web-constants@0.19.1
+  - @lynx-js/web-worker-rpc@0.19.1
+
 ## 0.19.0
 
 ### Patch Changes
