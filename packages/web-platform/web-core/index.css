@@ -6,7 +6,7 @@
 
 lynx-view {
   contain: strict;
-  display: flex;
+  display: flex !important;
 }
 
 lynx-view[width="auto"] {
