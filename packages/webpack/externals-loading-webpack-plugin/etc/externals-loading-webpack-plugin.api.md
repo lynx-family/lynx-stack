@@ -11,10 +11,6 @@ export class ExternalsLoadingPlugin {
     constructor(options: ExternalsLoadingPluginOptions);
     // (undocumented)
     apply(compiler: Compiler): void;
-    // (undocumented)
-    static RuntimeGlobals: {
-        lynxExternals: string;
-    };
 }
 
 // @public
@@ -23,7 +19,7 @@ export interface ExternalsLoadingPluginOptions {
     backgroundLayer: string;
     externals: Record<string, {
         url: string;
-        libraryName?: string;
+        libraryName?: string | string[];
         async?: boolean;
         background?: LayerOptions;
         mainThread?: LayerOptions;

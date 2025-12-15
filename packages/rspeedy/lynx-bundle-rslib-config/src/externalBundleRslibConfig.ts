@@ -75,15 +75,15 @@ export const defaultExternalBundleLibConfig: LibConfig = {
   },
 }
 
-type Externals = Record<string, string | string[]>
+export type Externals = Record<string, string | string[]>
 
-type LibOutputConfig = Required<LibConfig>['output']
+export type LibOutputConfig = Required<LibConfig>['output']
 
-interface OutputConfig extends LibOutputConfig {
+export interface OutputConfig extends LibOutputConfig {
   externals?: Externals
 }
 
-interface ExternalBundleLibConfig extends LibConfig {
+export interface ExternalBundleLibConfig extends LibConfig {
   output?: OutputConfig
 }
 

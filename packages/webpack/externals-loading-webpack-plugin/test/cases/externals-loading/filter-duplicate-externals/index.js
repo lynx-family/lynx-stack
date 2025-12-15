@@ -18,13 +18,13 @@ it('should filter duplicate externals', async () => {
   );
   expect(
     background.split(
-      '__webpack_require__.lynx_ex["Foo"] '
+      'lynxCoreInject.tt.lynx_ex["Foo"] '
         + '= createLoadExternalSync(',
     ).length - 1,
   ).toBe(1);
   expect(
     mainThread.split(
-      '__webpack_require__.lynx_ex["Foo"] '
+      'globalThis.lynx_ex["Foo"] '
         + '= createLoadExternalSync(',
     ).length - 1,
   ).toBe(1);

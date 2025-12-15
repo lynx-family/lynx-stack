@@ -12,5 +12,5 @@ In this example, we show:
 pnpm build:reactlynx
 pnpm build:comp-lib
 pnpx http-server -p 8080 dist
-EXTERNAL_BUNDLE_PREFIX=http://${YOUR_IP_HERE}$:8080 pnpm dev
+EXTERNAL_BUNDLE_PREFIX=http://${YOUR_IP_HERE}:8080 pnpm dev
 ```

@@ -32,4 +32,7 @@ function __injectGlobals(target) {
   };
 
   target.Lodash = {};
+
+  target.lynxCoreInject = {};
+  target.lynxCoreInject.tt = {};
 }

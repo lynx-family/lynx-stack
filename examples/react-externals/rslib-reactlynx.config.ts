@@ -22,11 +22,13 @@ export default defineExternalBundleRslibConfig({
       module: {
         rules: [
           {
+            test: /\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)$/,
             issuerLayer: LAYERS.BACKGROUND,
             loader: ReactWebpackPlugin.loaders.BACKGROUND,
           },
           {
             issuerLayer: LAYERS.MAIN_THREAD,
+            test: /\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)$/,
             loader: ReactWebpackPlugin.loaders.MAIN_THREAD,
           },
         ],

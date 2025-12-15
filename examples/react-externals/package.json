@@ -7,8 +7,7 @@
     "build": "rspeedy build",
     "build:comp-lib": "rslib build --config rslib-comp-lib.config.ts",
     "build:reactlynx": "rslib build --config rslib-reactlynx.config.ts",
-    "dev": "rspeedy dev",
-    "test:type": "vitest --typecheck.only"
+    "dev": "rspeedy dev"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*"
