@@ -2,7 +2,7 @@
 "@lynx-js/externals-loading-webpack-plugin": patch
 ---
 
-Introduce `ExternalsLoadingWebpackPlugin`.
+Introduce `@lynx-js/externals-loading-webpack-plugin`.
 
 ```js
 // webpack.config.js
