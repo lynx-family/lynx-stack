@@ -5,16 +5,13 @@ import {
   LAYERS,
   defineExternalBundleRslibConfig,
 } from '@lynx-js/lynx-bundle-rslib-config';
+import { pluginReactAlias } from '@lynx-js/react-alias-rsbuild-plugin';
 import { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin';
 
 const require = createRequire(import.meta.url);
 const reactLynxDir = path.dirname(
   require.resolve('@lynx-js/react/package.json'),
 );
-const preactDir = path.dirname(
-  require.resolve('preact/package.json', { paths: [reactLynxDir] }),
-);
-
 export default defineExternalBundleRslibConfig({
   id: 'react',
   tools: {
@@ -48,12 +45,12 @@ export default defineExternalBundleRslibConfig({
       '__EXTRACT_STR__': 'false',
     },
   },
-  resolve: {
-    alias: {
-      'react': preactDir,
-      'preact': preactDir,
-    },
-  },
+  plugins: [
+    pluginReactAlias({
+      LAYERS,
+      rootPath: reactLynxDir,
+    }),
+  ],
   output: {
     cleanDistPath: false,
     minify: false,
