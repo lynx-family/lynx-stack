@@ -327,7 +327,7 @@ importers:
         version: link:../../packages/rspeedy/core
       '@lynx-js/tailwind-preset':
         specifier: workspace:*
-        version: link:../../packages/third-party/tailwind-preset
+        version: link:../../packages/tailwind-preset
       '@lynx-js/types':
         specifier: 3.4.11
         version: 3.4.11
@@ -832,6 +832,12 @@ importers:
         specifier: ^8.18.3
         version: 8.18.3
 
+  packages/tailwind-preset:
+    devDependencies:
+      tailwindcss:
+        specifier: ^3.4.17
+        version: 3.4.17
+
   packages/testing-library/examples/basic:
     dependencies:
       '@lynx-js/react':
@@ -905,12 +911,6 @@ importers:
       rsbuild-plugin-publint:
         specifier: 0.3.3
         version: 0.3.3(@rsbuild/core@1.6.13)
-
-  packages/third-party/tailwind-preset:
-    devDependencies:
-      tailwindcss:
-        specifier: ^3.4.17
-        version: 3.4.17
 
   packages/tools/canary-release:
     dependencies:
