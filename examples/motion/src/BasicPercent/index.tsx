@@ -16,7 +16,7 @@ export default function BasicPercent() {
     if (boxMTRef.current) {
       animateMTRef.current = animate(
         boxMTRef.current,
-        { width: ['10px', '50%'] },
+        { width: ['10px', '50px'] },
         {
           ease: 'circInOut',
           duration: 1,

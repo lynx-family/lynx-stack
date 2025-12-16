@@ -58,7 +58,8 @@ import type {
 } from 'motion-dom';
 
 import { useMotionValueRefEvent } from '../hooks/useMotionEvent.js';
-import { motionValue as motionValueOrig } from '../polyfill/MotionValue.js';
+import { ElementCompt } from '../polyfill/element.js' with { runtime: 'shared' };
+import { motionValue as motionValueOrig } from '../polyfill/MotionValue.js' with { runtime: 'shared' };
 import type { ElementOrElements } from '../types/index.js';
 import { elementOrSelector2Dom } from '../utils/elementHelper.js';
 import {
@@ -172,9 +173,10 @@ function animate<O extends {}>(
     } else {
       elementNodes = subjectOrSequence;
     }
+    console.log('elementNodes', elementNodes);
     realSubjectOrSequence = (Array.isArray(elementNodes)
-      ? elementNodes.map(el => new globalThis.ElementCompt(el))
-      : new globalThis.ElementCompt(
+      ? elementNodes.map(el => new ElementCompt(el))
+      : new ElementCompt(
         elementNodes,
       )) as unknown as ElementOrSelector;
   } else {

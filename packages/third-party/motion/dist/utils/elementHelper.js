@@ -1,4 +1,5 @@
 import { isMainThreadElement, isMainThreadElementArray, } from './isMainThreadElement.js';
+import { ElementCompt } from '../polyfill/element.js' with { runtime: 'shared' };
 export function elementOrSelector2Dom(nodesOrSelector) {
     'main thread';
     let domElements = undefined;
@@ -13,8 +14,8 @@ export function elementOrSelector2Dom(nodesOrSelector) {
             elementNodes = nodesOrSelector;
         }
         domElements = (Array.isArray(elementNodes)
-            ? elementNodes.map(el => new globalThis.ElementCompt(el))
-            : new globalThis.ElementCompt(elementNodes));
+            ? elementNodes.map(el => new ElementCompt(el))
+            : new ElementCompt(elementNodes));
     }
     return domElements;
 }

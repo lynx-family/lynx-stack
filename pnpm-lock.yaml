@@ -862,6 +862,9 @@ importers:
       motion-dom:
         specifier: 12.23.12
         version: 12.23.12
+      motion-utils:
+        specifier: 12.23.6
+        version: 12.23.6
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*

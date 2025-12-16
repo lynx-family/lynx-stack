@@ -43,6 +43,7 @@ export class ElementCompt {
             this.element.setStyleProperty('transform', 'scale(1, 1)');
             return true;
           }
+          console.log('setStyle', prop, value);
           this.element.setStyleProperty(prop, String(value));
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           target[prop] = value;
@@ -159,5 +160,41 @@ export class ElementCompt {
   }
   set bottom(value: string) {
     this.element.setStyleProperty('bottom', value);
+  }
+
+  public getBoundingClientRect() {
+    // Parse dimensions from computed style
+    const width = parseFloat(this.getStyleProperty('width')) || 0;
+    const height = parseFloat(this.getStyleProperty('height')) || 0;
+
+    // Parse position - these may be 'auto' or pixel values
+    const left = parseFloat(this.getStyleProperty('left')) || 0;
+    const top = parseFloat(this.getStyleProperty('top')) || 0;
+
+    // Calculate bounds
+    const right = left + width;
+    const bottom = top + height;
+
+    console.log('getBoundingClient', {
+      left,
+      top,
+      right,
+      bottom,
+      width,
+      height,
+      x: left,
+      y: top,
+    });
+
+    return {
+      left,
+      top,
+      right,
+      bottom,
+      width,
+      height,
+      x: left,
+      y: top,
+    };
   }
 }
