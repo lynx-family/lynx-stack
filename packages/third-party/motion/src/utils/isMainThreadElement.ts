@@ -6,9 +6,7 @@ import type { MainThread } from '@lynx-js/types';
 export function isMainThreadElement(ele: unknown): ele is MainThread.Element {
   'main thread';
   // @ts-expect-error error
-  // biome-ignore lint/complexity/useOptionalChain: <explanation>
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  if (ele && ele.element && ele.element.elementRefptr) {
+  if (ele && 'element' in ele) {
     return true;
   } else {
     return false;

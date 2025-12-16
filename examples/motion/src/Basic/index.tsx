@@ -36,7 +36,7 @@ export default function Basic() {
   useEffect(() => {
     setTimeout(() => {
       void runOnMainThread(startAnimation)();
-    }, 1000);
+    }, 1500);
     return () => {
       void runOnMainThread(endAnimation)();
     };

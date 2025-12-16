@@ -9,6 +9,7 @@ import {
   isMainThreadElement,
   isMainThreadElementArray,
 } from './isMainThreadElement.js';
+import { ElementCompt } from '../polyfill/element.js' with { runtime: 'shared' };
 import type { ElementOrElements } from '../types/index.js';
 
 export function elementOrSelector2Dom(
@@ -29,8 +30,8 @@ export function elementOrSelector2Dom(
       elementNodes = nodesOrSelector;
     }
     domElements = (Array.isArray(elementNodes)
-      ? elementNodes.map(el => new globalThis.ElementCompt(el))
-      : new globalThis.ElementCompt(
+      ? elementNodes.map(el => new ElementCompt(el))
+      : new ElementCompt(
         elementNodes,
       )) as unknown as ElementOrSelector;
   }

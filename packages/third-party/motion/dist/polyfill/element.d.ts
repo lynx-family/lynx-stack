@@ -36,5 +36,15 @@ export declare class ElementCompt {
     set right(value: string);
     get bottom(): string;
     set bottom(value: string);
+    getBoundingClientRect(): {
+        left: number;
+        top: number;
+        right: number;
+        bottom: number;
+        width: number;
+        height: number;
+        x: number;
+        y: number;
+    };
 }
 export {};

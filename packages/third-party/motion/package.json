@@ -15,7 +15,24 @@
     "directory": "packages/third-party/motion"
   },
   "license": "MIT",
+  "sideEffects": [
+    "./src/polyfill/shim.ts"
+  ],
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    },
+    "./mini": {
+      "types": "./dist/mini/index.d.ts",
+      "import": "./dist/mini/index.js",
+      "require": "./dist/mini/index.cjs",
+      "default": "./dist/mini/index.js"
+    }
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -29,7 +46,8 @@
   },
   "dependencies": {
     "framer-motion": "12.23.12",
-    "motion-dom": "12.23.12"
+    "motion-dom": "12.23.12",
+    "motion-utils": "12.23.6"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",

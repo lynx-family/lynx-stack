@@ -24,7 +24,8 @@ import '../polyfill/shim.js';
 import { animate as animateOrig, clamp as clampOrig, progress as progressOrig, stagger as staggerOrig, } from 'framer-motion/dom' with { runtime: 'shared' };
 import { mapValue as mapValueOrig, mix as mixOrig, spring as springOrig, springValue as springValueOrig, styleEffect as styleEffectOrig, transformValue as transformValueOrig, } from 'motion-dom' with { runtime: 'shared' };
 import { useMotionValueRefEvent } from '../hooks/useMotionEvent.js';
-import { motionValue as motionValueOrig } from '../polyfill/MotionValue.js';
+import { ElementCompt } from '../polyfill/element.js' with { runtime: 'shared' };
+import { motionValue as motionValueOrig } from '../polyfill/MotionValue.js' with { runtime: 'shared' };
 import { elementOrSelector2Dom } from '../utils/elementHelper.js';
 import { isMainThreadElement, isMainThreadElementArray, } from '../utils/isMainThreadElement.js';
 function animate(subjectOrSequence, optionsOrKeyframes, options) {
@@ -41,8 +42,8 @@ function animate(subjectOrSequence, optionsOrKeyframes, options) {
             elementNodes = subjectOrSequence;
         }
         realSubjectOrSequence = (Array.isArray(elementNodes)
-            ? elementNodes.map(el => new globalThis.ElementCompt(el))
-            : new globalThis.ElementCompt(elementNodes));
+            ? elementNodes.map(el => new ElementCompt(el))
+            : new ElementCompt(elementNodes));
     }
     else {
         realSubjectOrSequence = subjectOrSequence;
