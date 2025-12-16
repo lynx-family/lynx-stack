@@ -61,7 +61,9 @@ export function applyEntry(
   api.modifyBundlerChain(async (chain, { environment, isDev, isProd }) => {
     const entries = chain.entryPoints.entries() ?? {}
     const isLynx = environment.name === 'lynx'
+      || environment.name.startsWith('lynx-')
     const isWeb = environment.name === 'web'
+      || environment.name.startsWith('web-')
     const { hmr, liveReload } = environment.config.dev ?? {}
     const enabledHMR = isDev && !isWeb && hmr !== false
     const enabledLiveReload = isDev && !isWeb && liveReload !== false
