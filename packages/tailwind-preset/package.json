@@ -10,7 +10,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
-    "directory": "packages/third-party/tailwind-preset"
+    "directory": "packages/tailwind-preset"
   },
   "type": "module",
   "exports": {
