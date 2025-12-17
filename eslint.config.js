@@ -97,6 +97,10 @@ export default tseslint.config(
       // testing-library
       'packages/testing-library/**',
       'packages/react/testing-library/**',
+
+      // TODO: enable eslint for tailwind-preset
+      // tailwind-preset
+      'packages/tailwind-preset/**',
     ],
   },
   js.configs.recommended,
