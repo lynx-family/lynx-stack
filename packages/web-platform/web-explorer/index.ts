@@ -41,6 +41,11 @@ window.addEventListener('message', (ev) => {
     setLynxViewUrl(ev.data.url);
   }
 });
+const iframeId = new URLSearchParams(window.location.search).get('iframeId');
+window.parent.postMessage({
+  method: 'iframeReady',
+  iframeId,
+}, '*');
 
 function setLynxViewUrl(url: string) {
   const theme = window.matchMedia('(prefers-color-scheme: dark)').matches
