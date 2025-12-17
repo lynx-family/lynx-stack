@@ -1,0 +1,20 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": [
+        "@lynx-js/react#build",
+      ],
+      "inputs": [
+        "$TURBO_ROOT$/tsconfig.json",
+        "package.json",
+        "src/**",
+        "rslib.config.ts",
+      ],
+      "outputs": [
+        "dist",
+      ],
+    },
+  },
+}

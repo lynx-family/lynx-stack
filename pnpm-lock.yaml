@@ -349,6 +349,21 @@ importers:
         specifier: ^8.8.4
         version: 8.8.5
 
+  packages/lynx/gesture-runtime:
+    devDependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../react
+      '@lynx-js/types':
+        specifier: 3.4.11
+        version: 3.4.11
+      '@testing-library/jest-dom':
+        specifier: ^6.9.0
+        version: 6.9.1
+      rsbuild-plugin-publint:
+        specifier: 0.3.3
+        version: 0.3.3(@rsbuild/core@1.6.13)
+
   packages/mcp-servers/devtool-mcp-server:
     dependencies:
       '@lynx-js/debug-router-connector':
@@ -470,7 +485,7 @@ importers:
         version: 10.4.1
       '@testing-library/jest-dom':
         specifier: ^6.9.0
-        version: 6.9.0
+        version: 6.9.1
 
   packages/react/transform:
     devDependencies:
@@ -852,7 +867,7 @@ importers:
         version: link:../../../rspeedy/core
       '@testing-library/jest-dom':
         specifier: ^6.9.0
-        version: 6.9.0
+        version: 6.9.1
 
   packages/testing-library/examples/react-compiler:
     dependencies:
@@ -889,7 +904,7 @@ importers:
         version: 3.4.11
       '@testing-library/jest-dom':
         specifier: ^6.9.0
-        version: 6.9.0
+        version: 6.9.1
       '@types/react':
         specifier: ^18.3.25
         version: 18.3.25
@@ -904,7 +919,7 @@ importers:
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.9.0
-        version: 6.9.0
+        version: 6.9.1
       '@types/jsdom':
         specifier: ^21.1.7
         version: 21.1.7
@@ -3845,8 +3860,8 @@ packages:
     resolution: {integrity: sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg==}
     engines: {node: '>=18'}
 
-  '@testing-library/jest-dom@6.9.0':
-    resolution: {integrity: sha512-QHdxYMJ0YPGKYofMc6zYvo7LOViVhdc6nPg/OtM2cf9MQrwEcTxFCs7d/GJ5eSyPkHzOiBkc/KfLdFJBHzldtQ==}
+  '@testing-library/jest-dom@6.9.1':
+    resolution: {integrity: sha512-zIcONa+hVtVSSep9UT3jZ5rizo2BsxgyDYU7WFD5eICBE7no3881HGeb/QkGfsJs6JTkY1aQhT7rIPC7e+0nnA==}
     engines: {node: '>=14', npm: '>=6', yarn: '>=1'}
 
   '@trysound/sax@0.2.0':
@@ -12550,7 +12565,7 @@ snapshots:
       picocolors: 1.1.1
       pretty-format: 27.5.1
 
-  '@testing-library/jest-dom@6.9.0':
+  '@testing-library/jest-dom@6.9.1':
     dependencies:
       '@adobe/css-tools': 4.4.2
       aria-query: 5.3.0
