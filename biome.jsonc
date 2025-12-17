@@ -49,7 +49,7 @@
 
       "packages/web-platform/**",
 
-      "packages/third-party/**",
+      "packages/tailwind-preset/**",
 
       "packages/testing-library/**",
       "packages/react/testing-library/**",

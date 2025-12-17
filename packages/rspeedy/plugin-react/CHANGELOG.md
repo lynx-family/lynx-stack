@@ -1,5 +1,19 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.12.1
+
+### Patch Changes
+
+- Avoid injecting hot update runtime when dev.hmr or dev.liveReload is set to false. ([#1980](https://github.com/lynx-family/lynx-stack/pull/1980))
+
+- Updated dependencies [[`553ece1`](https://github.com/lynx-family/lynx-stack/commit/553ece1e025b1f4feae353310c21b2e159f1f03a), [`8cdb69d`](https://github.com/lynx-family/lynx-stack/commit/8cdb69d4b2cc3e9925a2494ee8a889d7af17e2e9), [`8cdb69d`](https://github.com/lynx-family/lynx-stack/commit/8cdb69d4b2cc3e9925a2494ee8a889d7af17e2e9)]:
+  - @lynx-js/react-webpack-plugin@0.7.3
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+  - @lynx-js/template-webpack-plugin@0.10.0
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.1
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+
 ## 0.12.0
 
 ### Minor Changes

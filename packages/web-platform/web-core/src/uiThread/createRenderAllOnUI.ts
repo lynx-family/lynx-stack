@@ -22,6 +22,12 @@ import { dispatchLynxViewEvent } from '../utils/dispatchLynxViewEvent.js';
 import { createExposureMonitor } from './crossThreadHandlers/createExposureMonitor.js';
 import type { StartUIThreadCallbacks } from './startUIThread.js';
 
+const existingScript = document.querySelector('script[nonce]') as
+  | HTMLScriptElement
+  | null;
+const nonce = existingScript?.nonce || existingScript?.getAttribute('nonce')
+  || '';
+
 const {
   prepareMainThreadAPIs,
 } = await import(
@@ -52,7 +58,7 @@ async function createIFrameRealm(parent: Node): Promise<JSRealm> {
   });
   iframe.style.display = 'none';
   iframe.srcdoc =
-    '<!DOCTYPE html><html><head><script>parent.postMessage("lynx:mtsready","*")</script></head><body style="display:none"></body></html>';
+    `<!DOCTYPE html><html><head><script nonce="${nonce}">parent.postMessage("lynx:mtsready","*")</script></head><body style="display:none"></body></html>`;
   iframe.sandbox = 'allow-same-origin allow-scripts'; // Restrict capabilities for security
   iframe.loading = 'eager';
   parent.appendChild(iframe);
@@ -63,6 +69,7 @@ async function createIFrameRealm(parent: Node): Promise<JSRealm> {
     script.fetchPriority = 'high';
     script.defer = true;
     script.async = false;
+    script.nonce = nonce;
     iframe.contentDocument!.head.appendChild(script);
     return new Promise(async (resolve, reject) => {
       script.onload = () => {
@@ -84,6 +91,7 @@ async function createIFrameRealm(parent: Node): Promise<JSRealm> {
     xhr.send(null);
     if (xhr.status === 200) {
       const script = iframe.contentDocument!.createElement('script');
+      script.nonce = nonce;
       script.textContent = xhr.responseText;
       // @ts-expect-error
       iframeWindow.module = { exports: undefined };

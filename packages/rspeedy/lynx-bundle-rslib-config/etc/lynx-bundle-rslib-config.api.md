@@ -14,8 +14,10 @@ import type { RslibConfig } from '@rslib/core';
 // @public
 export const defaultExternalBundleLibConfig: LibConfig;
 
+// Warning: (ae-forgotten-export) The symbol "ExternalBundleLibConfig" needs to be exported by the entry point index.d.ts
+//
 // @public
-export function defineExternalBundleRslibConfig(userLibConfig: LibConfig, encodeOptions?: EncodeOptions): RslibConfig;
+export function defineExternalBundleRslibConfig(userLibConfig: ExternalBundleLibConfig, encodeOptions?: EncodeOptions): RslibConfig;
 
 // @public
 export interface EncodeOptions {

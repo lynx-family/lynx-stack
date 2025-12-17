@@ -100,6 +100,9 @@ export default tseslint.config(
 
       // gesture-runtime-testing
       'packages/lynx/gesture-runtime/__test__/**',
+      // TODO: enable eslint for tailwind-preset
+      // tailwind-preset
+      'packages/tailwind-preset/**',
     ],
   },
   js.configs.recommended,

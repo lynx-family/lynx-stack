@@ -1,5 +1,11 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.7.3
+
+### Patch Changes
+
+- Support `@lynx-js/template-webpack-plugin` v0.10.0. ([#1992](https://github.com/lynx-family/lynx-stack/pull/1992))
+
 ## 0.7.2
 
 ### Patch Changes

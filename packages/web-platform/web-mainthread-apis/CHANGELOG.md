@@ -1,5 +1,14 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.19.1
+
+### Patch Changes
+
+- fix: fix reload lynx-view when `enableCSSSelector` false may cause css style lost ([#1982](https://github.com/lynx-family/lynx-stack/pull/1982))
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.1
+
 ## 0.19.0
 
 ### Patch Changes
