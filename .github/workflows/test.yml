@@ -87,12 +87,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        thread: [MULTI_THREAD, ALL_ON_UI]
+        thread: [ALL_ON_UI]
         render: [SSR, CSR]
         shard: [1, 2, 3, 4]
-        exclude:
-          - thread: MULTI_THREAD
-            render: SSR
+        # exclude:
+        #   - thread: MULTI_THREAD
+        #     render: SSR
     with:
       runs-on: lynx-custom-container
       is-web: true

@@ -54,7 +54,6 @@ export type INapiModulesCall = (
  * @property {"false" | "true" | null} injectHeadLinks [optional] (attribute: "inject-head-links") @default true set it to "false" to disable injecting the <link href="" ref="stylesheet"> styles into shadowroot
  * @property {string[]} injectStyleRules [optional] the css rules which will be injected into shadowroot. Each items will be inserted by `insertRule` method. @see https://developer.mozilla.org/docs/Web/API/CSSStyleSheet/insertRule
  * @property {number} lynxGroupId [optional] (attribute: "lynx-group-id") the background shared context id, which is used to share webworker between different lynx cards
- * @property {"all-on-ui" | "multi-thread"} threadStrategy [optional] @default "multi-thread" (attribute: "thread-strategy") controls the thread strategy for current lynx view
  * @property {(string)=>Promise<LynxTemplate>} customTemplateLoader [optional] the custom template loader, which is used to load the template
  * @property {InitI18nResources} initI18nResources [optional] (attribute: "init-i18n-resources") the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation
  *
@@ -344,6 +343,7 @@ export class LynxView extends HTMLElement {
   /**
    * @param
    * @property
+   * @deprecated multi-thread is deprecated, please use "all-on-ui" instead. If you still want to use multi-thread mode, please try to use a cross-origin isolated iframe.
    */
   get threadStrategy(): 'all-on-ui' | 'multi-thread' {
     // @ts-expect-error
@@ -431,6 +431,11 @@ export class LynxView extends HTMLElement {
           const threadStrategy = (this.threadStrategy ?? 'all-on-ui') as
             | 'all-on-ui'
             | 'multi-thread';
+          if (threadStrategy === 'multi-thread') {
+            console.warn(
+              `[LynxView] multi-thread strategy is deprecated, please use "all-on-ui" instead. If you still want to use multi-thread mode, please try to use a cross-origin isolated iframe.`,
+            );
+          }
           const lynxView = createLynxView({
             threadStrategy,
             tagMap,
