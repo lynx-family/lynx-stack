@@ -30,7 +30,7 @@ export class XListWaterfall
   #childrenObserver: MutationObserver | undefined;
 
   @registerEventEnableStatusChangeHandler('scrolltolower')
-  #handleXEnableHeaderOffsetEvent(enableScrollToLower: boolean) {
+  _handleXEnableHeaderOffsetEvent(enableScrollToLower: boolean) {
     enableScrollToLower
       ? this.#dom.setAttribute('x-enable-scrolltolower-event', '')
       : this.#dom.removeAttribute('x-enable-scrolltolower-event'); // css needs this;
@@ -207,7 +207,7 @@ export class XListWaterfall
   };
 
   @registerAttributeHandler('list-type', true)
-  #handlerListType(newVal: string | null) {
+  _handlerListType(newVal: string | null) {
     if (newVal === 'waterfall') {
       this.#createWaterfallContainer();
 

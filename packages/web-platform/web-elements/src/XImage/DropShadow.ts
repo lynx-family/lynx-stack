@@ -19,7 +19,7 @@ export class DropShadow
   #getImg = genDomGetter<HTMLImageElement>(() => this.#dom.shadowRoot!, '#img');
 
   @registerAttributeHandler('drop-shadow', true)
-  #handleBlurRadius = bindToStyle(
+  _handleBlurRadius = bindToStyle(
     this.#getImg,
     '--drop-shadow',
     undefined,

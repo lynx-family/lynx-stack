@@ -56,7 +56,7 @@ export class CommonEventsAndMethods {
     }
   };
 
-  #disableExposure() {
+  dispose() {
     this.#resizeObserver?.disconnect();
   }
 }

@@ -29,7 +29,7 @@ export class XOverlayAttributes
   );
 
   @registerAttributeHandler('events-pass-through', true)
-  #handleEventsPassThrough(newVal: string | null) {
+  _handleEventsPassThrough(newVal: string | null) {
     if (newVal !== null) {
       this.#getDialogDom().addEventListener(
         'click',
@@ -49,7 +49,7 @@ export class XOverlayAttributes
   }
 
   @registerAttributeHandler('visible', false)
-  #handleVisible(newVal: string | null) {
+  _handleVisible(newVal: string | null) {
     this.#visible = newVal !== null;
     if (this.#useModernDialog) {
       if (this.#visible) {

@@ -32,7 +32,7 @@ export class XSwipeEvents
   ).bind(this);
 
   @registerEventEnableStatusChangeHandler('transition')
-  #handleEnableTransitionEvent = bindSwitchToEventListener(
+  _handleEnableTransitionEvent = bindSwitchToEventListener(
     this.#getContentContainer,
     'scroll',
     this.#scrollEventListenerForTransition,
@@ -170,7 +170,7 @@ export class XSwipeEvents
   @registerEventEnableStatusChangeHandler('lynxscrollend')
   @registerEventEnableStatusChangeHandler('change')
   @registerEventEnableStatusChangeHandler('change-event-for-indicator')
-  #enableScrollEventProcessor(value: boolean, eventName: string) {
+  _enableScrollEventProcessor(value: boolean, eventName: string) {
     this
       .#eventSwitches[
         eventName as

@@ -31,7 +31,7 @@ export class XTextareaEvents
 
   @registerAttributeHandler('input-filter', true)
   @registerEventEnableStatusChangeHandler('lynxinput')
-  #handleEnableConfirmEvent(status: string | boolean | null) {
+  _handleEnableConfirmEvent(status: string | boolean | null) {
     const textareaElement = this.#getTextareaElement();
     if (status) {
       textareaElement.addEventListener(
@@ -57,7 +57,7 @@ export class XTextareaEvents
   }
 
   @registerAttributeHandler('send-composing-input', true)
-  #handleSendComposingInput(newVal: string | null) {
+  _handleSendComposingInput(newVal: string | null) {
     this.#sendComposingInput = newVal !== null;
   }
 
@@ -127,7 +127,7 @@ export class XTextareaEvents
   };
 
   @registerEventEnableStatusChangeHandler('selection')
-  #handleEnableSelectionEvent(status: boolean) {
+  _handleEnableSelectionEvent(status: boolean) {
     if (status) {
       this.#getTextareaElement().addEventListener(
         'select',

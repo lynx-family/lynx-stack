@@ -87,7 +87,7 @@ export class XListEvents
   };
 
   @registerEventEnableStatusChangeHandler('scrolltoupper')
-  #updateEventSwitches = (enableScrollToUpper: boolean) => {
+  _updateEventSwitches = (enableScrollToUpper: boolean) => {
     enableScrollToUpper
       ? this.#dom.setAttribute('x-enable-scrolltoupper-event', '')
       : this.#dom.removeAttribute('x-enable-scrolltoupper-event'); // css needs this;
@@ -137,7 +137,7 @@ export class XListEvents
   };
 
   @registerAttributeHandler('upper-threshold-item-count', true)
-  #handleUpperThresholdItemCountChange(
+  _handleUpperThresholdItemCountChange(
     newValue: string | null,
     oldValue: string | null,
   ) {
@@ -183,7 +183,7 @@ export class XListEvents
   };
 
   @registerEventEnableStatusChangeHandler('scrolltolower')
-  #updateScrollToLowerEventSwitches = (enableScrollToLower: boolean) => {
+  _updateScrollToLowerEventSwitches = (enableScrollToLower: boolean) => {
     this.#eventSwitches.scrolltolower = enableScrollToLower;
     enableScrollToLower
       ? this.#dom.setAttribute('x-enable-scrolltolower-event', '')
@@ -233,7 +233,7 @@ export class XListEvents
   };
 
   @registerAttributeHandler('lower-threshold-item-count', true)
-  #handleLowerThresholdItemCountChange(
+  _handleLowerThresholdItemCountChange(
     newValue: string | null,
     oldValue: string | null,
   ) {
@@ -352,10 +352,10 @@ export class XListEvents
   @registerEventEnableStatusChangeHandler('lynxscroll')
   @registerEventEnableStatusChangeHandler('lynxscrollend')
   @registerEventEnableStatusChangeHandler('snap')
-  #handleScrollEventsSwitches = (enabled: boolean, name: string) => {
+  _handleScrollEventsSwitches = (enabled: boolean, name: string) => {
     this.#eventSwitches[name as 'lynxscroll' | 'lynxscrollend' | 'snap'] =
       enabled;
-    const { lynxscroll, lynxscrollend, snap } = this.#eventSwitches;
+    const { lynxscrollend, snap } = this.#eventSwitches;
     const scrollEventThrottle = this.#dom.getAttribute('scroll-event-throttle');
     this.#enableScrollEnd = lynxscrollend !== null || snap !== null;
     const listContainer = this.#getListContainer();
@@ -411,7 +411,7 @@ export class XListEvents
   };
 
   @registerEventEnableStatusChangeHandler('scrolltoupperedge')
-  #handleScrollToUpperEdgeEventEnable = (enabled: boolean) => {
+  _handleScrollToUpperEdgeEventEnable = (enabled: boolean) => {
     enabled
       ? this.#dom.setAttribute('x-enable-scrolltoupperedge-event', '')
       : this.#dom.removeAttribute('x-enable-scrolltoupperedge-event'); // css needs this;
@@ -425,7 +425,7 @@ export class XListEvents
   );
 
   @registerEventEnableStatusChangeHandler('scrolltoloweredge')
-  #handleScrollToLowerEdgeEventEnable = (enabled: boolean) => {
+  _handleScrollToLowerEdgeEventEnable = (enabled: boolean) => {
     enabled
       ? this.#dom.setAttribute('x-enable-scrolltoloweredge-event', '')
       : this.#dom.removeAttribute('x-enable-scrolltoloweredge-event'); // css needs this;

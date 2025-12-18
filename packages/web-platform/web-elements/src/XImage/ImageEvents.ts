@@ -19,7 +19,7 @@ export class ImageEvents
   #getImg = genDomGetter<HTMLImageElement>(() => this.#dom.shadowRoot!, '#img');
 
   @registerEventEnableStatusChangeHandler('load')
-  #enableLoadEvent(status: boolean) {
+  _enableLoadEvent(status: boolean) {
     if (status) {
       this.#getImg().addEventListener('load', this.#teleportLoadEvent, {
         passive: true,
@@ -30,7 +30,7 @@ export class ImageEvents
   }
 
   @registerEventEnableStatusChangeHandler('error')
-  #enableErrorEvent(status: boolean) {
+  _enableErrorEvent(status: boolean) {
     if (status) {
       this.#getImg().addEventListener('error', this.#teleportErrorEvent, {
         passive: true,

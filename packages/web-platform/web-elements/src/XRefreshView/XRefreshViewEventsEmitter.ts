@@ -48,7 +48,7 @@ export class XRefreshViewEventsEmitter
   @registerEventEnableStatusChangeHandler('headeroffset')
   @registerEventEnableStatusChangeHandler('headershow')
   @registerEventEnableStatusChangeHandler('footeroffset')
-  #handleComplexEventEnableAttributes(status: boolean, eventName: string) {
+  _handleComplexEventEnableAttributes(status: boolean, eventName: string) {
     this
       .#eventSwitches[
         eventName as 'headeroffset' | 'headershow' | 'footeroffset'
@@ -69,7 +69,7 @@ export class XRefreshViewEventsEmitter
   @registerEventEnableStatusChangeHandler('headerreleased')
   @registerEventEnableStatusChangeHandler('startloadmore')
   @registerEventEnableStatusChangeHandler('footerreleased')
-  #handleXEnableHeaderOffsetEvent(status: boolean, eventName: string) {
+  _handleXEnableHeaderOffsetEvent(status: boolean, eventName: string) {
     this
       .#eventSwitches[
         eventName as
@@ -213,7 +213,6 @@ export class XRefreshViewEventsEmitter
       if (footer) {
         const contentDom = this.#dom.shadowRoot!.querySelector('#container')!;
         const scrollTop = contentDom.scrollTop;
-        const scrollHeight = contentDom.scrollHeight;
         const height = parseFloat(getComputedStyle(footer).height);
         this.#dom.dispatchEvent(
           new CustomEvent('footeroffset', {

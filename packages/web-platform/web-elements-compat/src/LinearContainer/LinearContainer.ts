@@ -5,7 +5,7 @@ import './linear-compat.css';
 import {
   type AttributeReactiveClass,
   bindToAttribute,
-  WebComponentClass,
+  type WebComponentClass,
 } from '@lynx-js/web-elements';
 
 /** For @container

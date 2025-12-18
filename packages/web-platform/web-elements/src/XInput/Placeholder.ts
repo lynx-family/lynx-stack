@@ -26,10 +26,10 @@ export class Placeholder
   #getInputElement = genDomGetter(() => this.#dom.shadowRoot!, '#input');
 
   @registerAttributeHandler('placeholder', true)
-  #handlerPlaceholder = bindToAttribute(this.#getInputElement, 'placeholder');
+  _handlerPlaceholder = bindToAttribute(this.#getInputElement, 'placeholder');
 
   @registerAttributeHandler('placeholder-color', true)
-  #handlerPlaceholderColor = bindToStyle(
+  _handlerPlaceholderColor = bindToStyle(
     this.#getInputElement,
     '--placeholder-color',
     undefined,
@@ -37,7 +37,7 @@ export class Placeholder
   );
 
   @registerAttributeHandler('placeholder-font-family', true)
-  #handlerPlaceholderFontFamily = bindToStyle(
+  _handlerPlaceholderFontFamily = bindToStyle(
     this.#getInputElement,
     '--placeholder-font-family',
     undefined,
@@ -45,7 +45,7 @@ export class Placeholder
   );
 
   @registerAttributeHandler('placeholder-font-size', true)
-  #handlerPlaceholderFontSize = bindToStyle(
+  _handlerPlaceholderFontSize = bindToStyle(
     this.#getInputElement,
     '--placeholder-font-size',
     undefined,
@@ -53,7 +53,7 @@ export class Placeholder
   );
 
   @registerAttributeHandler('placeholder-font-weight', true)
-  #handlerPlaceholderFontWeight = bindToStyle(
+  _handlerPlaceholderFontWeight = bindToStyle(
     this.#getInputElement,
     '--placeholder-font-weight',
     undefined,

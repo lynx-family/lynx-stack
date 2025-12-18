@@ -26,19 +26,19 @@ export class ImageSrc
   #getImg = genDomGetter<HTMLImageElement>(() => this.#dom.shadowRoot!, '#img');
 
   @registerAttributeHandler('src', true)
-  #handleSrc = bindToAttribute(this.#getImg, 'src', (newval) => {
+  _handleSrc = bindToAttribute(this.#getImg, 'src', (newval) => {
     return newval || this.#dom.getAttribute('placeholder');
   });
 
   @registerAttributeHandler('placeholder', true)
-  #preloadPlaceholder(newVal: string | null) {
+  _preloadPlaceholder(newVal: string | null) {
     if (newVal) {
       new Image().src = newVal;
     }
   }
 
   @registerAttributeHandler('blur-radius', true)
-  #handleBlurRadius = bindToStyle(
+  _handleBlurRadius = bindToStyle(
     this.#getImg,
     '--blur-radius',
     undefined,
@@ -46,10 +46,10 @@ export class ImageSrc
   );
 
   @registerAttributeHandler('crossorigin', true)
-  #handleCrossorigin = bindToAttribute(this.#getImg, 'crossorigin');
+  _handleCrossorigin = bindToAttribute(this.#getImg, 'crossorigin');
 
   @registerAttributeHandler('referrerpolicy', true)
-  #handleReferrerpolicy = bindToAttribute(this.#getImg, 'referrerpolicy');
+  _handleReferrerpolicy = bindToAttribute(this.#getImg, 'referrerpolicy');
 
   #onImageError = () => {
     const currentSrc = this.#getImg().src;
@@ -69,7 +69,7 @@ export class ImageSrc
       this.#dom.getAttribute('src') === null
       || this.#dom.getAttribute('src') === ''
     ) {
-      this.#handleSrc(null);
+      this._handleSrc(null);
     }
   }
 }

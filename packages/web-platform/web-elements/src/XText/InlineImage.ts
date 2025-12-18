@@ -22,7 +22,7 @@ export class InlineImageAttributes
   #getImage = genDomGetter(() => this.#dom.shadowRoot!, '#img');
 
   @registerAttributeHandler('src', true)
-  #handleSrc(newVal: string | null) {
+  _handleSrc(newVal: string | null) {
     if (newVal) this.#getImage().setAttribute('src', newVal);
     else this.#getImage().removeAttribute('src');
   }

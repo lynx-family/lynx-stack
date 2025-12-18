@@ -33,7 +33,7 @@ export class XSwiperAutoScroll
   }
 
   @registerAttributeHandler('current', false)
-  #handleCurrentChange(newVal: string | null) {
+  _handleCurrentChange(newVal: string | null) {
     const newval = Number(newVal);
     if (!Number.isNaN(newval)) {
       this.#dom.currentIndex = newval;
@@ -59,7 +59,7 @@ export class XSwiperAutoScroll
 
   @registerAttributeHandler('interval', false)
   @registerAttributeHandler('autoplay', false)
-  #handleAutoplay() {
+  _handleAutoplay() {
     const enableAutoPlay = this.#dom.getAttribute('autoplay') !== null;
     if (enableAutoPlay) {
       const interval = this.#dom.getAttribute('interval');

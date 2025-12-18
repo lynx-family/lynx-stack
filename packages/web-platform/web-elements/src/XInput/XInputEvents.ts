@@ -31,7 +31,7 @@ export class XInputEvents
 
   @registerAttributeHandler('input-filter', true)
   @registerEventEnableStatusChangeHandler('lynxinput')
-  #handleEnableInputEvent(status: boolean | string | null) {
+  _handleEnableInputEvent(status: boolean | string | null) {
     const input = this.#getInputElement();
     if (status) {
       input.addEventListener(
@@ -57,7 +57,7 @@ export class XInputEvents
   }
 
   @registerAttributeHandler('send-composing-input', true)
-  #handleSendComposingInput(newVal: string | null) {
+  _handleSendComposingInput(newVal: string | null) {
     this.#sendComposingInput = newVal !== null;
   }
 
@@ -127,7 +127,7 @@ export class XInputEvents
   };
 
   @registerEventEnableStatusChangeHandler('selection')
-  #handleEnableSelectionEvent(status: boolean) {
+  _handleEnableSelectionEvent(status: boolean) {
     if (status) {
       this.#getInputElement().addEventListener(
         'select',

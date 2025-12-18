@@ -4,12 +4,10 @@
 // LICENSE file in the root directory of this source tree.
 */
 import {
-  Component,
   registerAttributeHandler,
   bindToStyle,
   type AttributeReactiveClass,
 } from '@lynx-js/web-elements-reactive';
-import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import type { ListItem } from './ListItem.js';
 
 export class ListItemAttributes
@@ -22,7 +20,7 @@ export class ListItemAttributes
   #dom: ListItem;
 
   @registerAttributeHandler('estimated-main-axis-size-px', true)
-  #handlerEstimatedMainAxisSizePx = bindToStyle(
+  _handlerEstimatedMainAxisSizePx = bindToStyle(
     () => this.#dom,
     '--estimated-main-axis-size-px',
     (v) => `${parseFloat(v)}px`,
