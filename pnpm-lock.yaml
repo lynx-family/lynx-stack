@@ -164,8 +164,8 @@ importers:
         specifier: ^0.30.19
         version: 0.30.19
       tinybench:
-        specifier: ^5.0.1
-        version: 5.0.1
+        specifier: ^5.1.0
+        version: 5.1.0
     devDependencies:
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
@@ -8792,8 +8792,8 @@ packages:
   tinybench@2.9.0:
     resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
 
-  tinybench@5.0.1:
-    resolution: {integrity: sha512-aNVgWQZY4veCZLQJRftDA1X9OoLUIjDWNfC90nledkX7Lx205IpSEFYnsu4slyofoPGpJ+NIQj+BNSt4U5edMg==}
+  tinybench@5.1.0:
+    resolution: {integrity: sha512-LXKNtFualiKOm6gADe1UXPtf8+Nfn1CtPMEHAT33Fd2YjQatrujkDcK0+4wRC1X6t7fxUDXUs6BsvuIgfkDgDg==}
     engines: {node: '>=20.0.0'}
 
   tinyexec@0.3.2:
@@ -18412,7 +18412,7 @@ snapshots:
 
   tinybench@2.9.0: {}
 
-  tinybench@5.0.1: {}
+  tinybench@5.1.0: {}
 
   tinyexec@0.3.2: {}
 
