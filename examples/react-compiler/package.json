@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*",
-    "react-compiler-runtime": "0.0.0-experimental-0566679-20250709"
+    "react-compiler-runtime": "0.0.0-experimental-fe727a3-20250909"
   },
   "devDependencies": {
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
@@ -18,6 +18,6 @@
     "@lynx-js/types": "3.4.11",
     "@rsbuild/plugin-babel": "^1.0.6",
     "@types/react": "^18.3.25",
-    "babel-plugin-react-compiler": "0.0.0-experimental-0566679-20250709"
+    "babel-plugin-react-compiler": "0.0.0-experimental-fe727a3-20250909"
   }
 }

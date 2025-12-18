@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*",
-    "react-compiler-runtime": "0.0.0-experimental-0566679-20250709"
+    "react-compiler-runtime": "0.0.0-experimental-fe727a3-20250909"
   },
   "devDependencies": {
     "@babel/core": "^7.28.5",
@@ -23,7 +23,7 @@
     "@lynx-js/types": "3.4.11",
     "@testing-library/jest-dom": "^6.9.0",
     "@types/react": "^18.3.25",
-    "babel-plugin-react-compiler": "0.0.0-experimental-0566679-20250709",
+    "babel-plugin-react-compiler": "0.0.0-experimental-fe727a3-20250909",
     "vite-plugin-babel": "^1.3.2"
   }
 }
