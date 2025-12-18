@@ -36,7 +36,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.19"
   },
   "peerDependencies": {
     "tailwindcss": "^3.4.0"
