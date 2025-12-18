@@ -5,8 +5,6 @@ export default {
   context: __dirname,
   ...createConfig(
     {
-      backgroundChunks: ['main:background'],
-      mainThreadChunks: ['main:main-thread'],
       backgroundLayer: 'background',
       mainThreadLayer: 'main-thread',
       externals: {
