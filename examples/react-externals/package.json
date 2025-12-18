@@ -13,7 +13,7 @@
     "@lynx-js/react": "workspace:*"
   },
   "devDependencies": {
-    "@lynx-js/externals-loading-webpack-plugin": "workspace:*",
+    "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
     "@lynx-js/preact-devtools": "^5.0.1-cf9aef5",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",

@@ -368,6 +368,8 @@ export function pluginReactLynx(
           applyLazy(api)
         }
 
+        api.expose(Symbol.for('LAYERS'), LAYERS)
+
         const rspeedyAPIs = api.useExposed<ExposedAPI>(
           Symbol.for('rspeedy.api'),
         )!
