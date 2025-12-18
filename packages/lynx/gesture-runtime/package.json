@@ -28,7 +28,7 @@
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "3.4.11",
-    "@testing-library/jest-dom": "^6.9.0",
+    "@testing-library/jest-dom": "^6.9.1",
     "rsbuild-plugin-publint": "0.3.3"
   },
   "peerDependencies": {
