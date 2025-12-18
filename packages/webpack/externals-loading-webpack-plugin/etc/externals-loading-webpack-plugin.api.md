@@ -15,7 +15,6 @@ export class ExternalsLoadingPlugin {
 
 // @public
 export interface ExternalsLoadingPluginOptions {
-    backgroundChunks: string[];
     backgroundLayer: string;
     externals: Record<string, {
         url: string;
@@ -25,7 +24,6 @@ export interface ExternalsLoadingPluginOptions {
         mainThread?: LayerOptions;
         timeout?: number;
     }>;
-    mainThreadChunks: string[];
     mainThreadLayer: string;
 }
 

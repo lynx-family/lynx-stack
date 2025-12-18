@@ -11,8 +11,6 @@ export default defineConfig({
     rspack: {
       plugins: [
         new ExternalsLoadingPlugin({
-          mainThreadChunks: ['main__main-thread'],
-          backgroundChunks: ['main'],
           mainThreadLayer: LAYERS.MAIN_THREAD,
           backgroundLayer: LAYERS.BACKGROUND,
           externals: {
