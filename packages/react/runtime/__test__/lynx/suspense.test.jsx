@@ -1503,7 +1503,7 @@ describe('suspense', () => {
     }
   });
 
-  it('repro: resolves after unmount may insertBefore on a torn-down parent', async () => {
+  it('should not update torn-down parent when lazy resolves after unmount', async () => {
     // Repro steps:
     // 1) Mount a Suspense boundary with a lazy child so it suspends and shows fallback.
     // 2) Unmount the entire subtree and apply the unmount patch on the main thread.
@@ -1614,32 +1614,7 @@ describe('suspense', () => {
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
 
       expect(prettyFormatSnapshotPatch(JSON.parse(rLynxChange[1].data).patchList[0].snapshotPatch))
-        .toMatchInlineSnapshot(`
-          [
-            {
-              "id": 3,
-              "op": "CreateElement",
-              "type": "wrapper",
-            },
-            {
-              "id": 4,
-              "op": "CreateElement",
-              "type": "__snapshot_a94a8_test_34",
-            },
-            {
-              "beforeId": null,
-              "childId": 4,
-              "op": "InsertBefore",
-              "parentId": 3,
-            },
-            {
-              "beforeId": null,
-              "childId": 3,
-              "op": "InsertBefore",
-              "parentId": -4,
-            },
-          ]
-        `);
+        .toMatchInlineSnapshot(`[]`);
 
       globalEnvManager.switchToMainThread();
 
@@ -1653,18 +1628,7 @@ describe('suspense', () => {
 
       // snapshotPatchApply should emit a ctx-not-found event back to BG,
       // which is converted into a lynx.reportError in error.ts.
-      expect(lynx.getJSContext().dispatchEvent.mock.calls).toMatchInlineSnapshot(`
-        [
-          [
-            {
-              "data": {
-                "id": -4,
-              },
-              "type": "Lynx.Error.CtxNotFound",
-            },
-          ],
-        ]
-      `);
+      expect(lynx.getJSContext().dispatchEvent.mock.calls).toMatchInlineSnapshot(`[]`);
     }
   });
 });
