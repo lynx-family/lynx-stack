@@ -98,7 +98,7 @@ impl<T: Transformer> Parser for ParserState<'_, '_, T> {
       && self.prev_token_type == DELIM_TOKEN
       && cmp_str(self.source, start, end, IMPORTANT_STR)
     {
-      // here we will have some bad caes: like
+      // here we will have some bad cases: like
       // height: 1px !important 2px;
       // height: 1px /important;
       // we accept such limited cases for performance consideration
