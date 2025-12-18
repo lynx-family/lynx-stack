@@ -25,16 +25,6 @@ import type {
  */
 export interface ExternalsLoadingPluginOptions {
   /**
-   * The chunk names to be considered as main thread chunks.
-   */
-  mainThreadChunks: string[];
-
-  /**
-   * The chunk names to be considered as background chunks.
-   */
-  backgroundChunks: string[];
-
-  /**
    * The name of the main thread layer.
    */
   mainThreadLayer: string;
@@ -264,39 +254,19 @@ export class ExternalsLoadingPlugin {
     const externalsLoadingPluginOptions = this.options;
 
     class ExternalsLoadingRuntimeModule extends RuntimeModule {
-      constructor() {
+      constructor(private options: { layer: string }) {
         super('externals-loading-runtime');
       }
 
       override generate() {
-        if (!this.chunk?.name) {
+        if (!this.chunk?.name || !externalsLoadingPluginOptions.externals) {
           return '';
         }
-        if (!externalsLoadingPluginOptions.externals) {
-          return '';
-        }
-
-        if (
-          externalsLoadingPluginOptions.backgroundChunks.some(name =>
-            name === this.chunk!.name
-          )
-        ) {
-          return this.#genFetchAndLoadCode('background');
-        }
-
-        if (
-          externalsLoadingPluginOptions.mainThreadChunks.some(name =>
-            name === this.chunk!.name
-          )
-        ) {
-          return this.#genFetchAndLoadCode('mainThread');
-        }
-
-        return '';
+        return this.#genExternalsLoadingCode(this.options.layer);
       }
 
-      #genFetchAndLoadCode(
-        layer: 'background' | 'mainThread',
+      #genExternalsLoadingCode(
+        chunkLayer: string,
       ): string {
         const fetchCode: string[] = [];
         const asyncLoadCode: string[] = [];
@@ -306,6 +276,16 @@ export class ExternalsLoadingPlugin {
           string | string[],
           ExternalsLoadingPluginOptions['externals'][string]
         >();
+        let layer: 'background' | 'mainThread';
+        if (chunkLayer === externalsLoadingPluginOptions.backgroundLayer) {
+          layer = 'background';
+        } else if (
+          chunkLayer === externalsLoadingPluginOptions.mainThreadLayer
+        ) {
+          layer = 'mainThread';
+        } else {
+          return '';
+        }
         for (
           const [pkgName, external] of Object.entries(
             externalsLoadingPluginOptions.externals,
@@ -430,9 +410,23 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
       compilation => {
         compilation.hooks.additionalTreeRuntimeRequirements
           .tap(ExternalsLoadingRuntimeModule.name, (chunk) => {
+            const modules = compilation.chunkGraph.getChunkModulesIterable(
+              chunk,
+            );
+            let layer: string | undefined;
+            for (const module of modules) {
+              if (module.layer) {
+                layer = module.layer;
+                break;
+              }
+            }
+            if (!layer) {
+              // Skip chunks without a layer
+              return;
+            }
             compilation.addRuntimeModule(
               chunk,
-              new ExternalsLoadingRuntimeModule(),
+              new ExternalsLoadingRuntimeModule({ layer }),
             );
           });
       },

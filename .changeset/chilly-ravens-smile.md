@@ -11,8 +11,6 @@ import { ExternalsLoadingPlugin } from '@lynx-js/externals-loading-webpack-plugi
 export default {
   plugins: [
     new ExternalsLoadingPlugin({
-      mainThreadChunks: ['index__main-thread'],
-      backgroundChunks: ['index'],
       mainThreadLayer: 'main-thread',
       backgroundLayer: 'background',
       externals: {
