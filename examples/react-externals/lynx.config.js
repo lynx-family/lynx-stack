@@ -77,7 +77,7 @@ export default defineConfig({
               url: `${EXTERNAL_BUNDLE_PREFIX}/comp-lib.lynx.bundle`,
               background: { sectionPath: 'CompLib' },
               mainThread: { sectionPath: 'CompLib__main-thread' },
-              async: false,
+              async: true,
             },
           },
         }),

@@ -92,25 +92,15 @@ function transformExternals(
 ): Required<LibOutputConfig>['externals'] {
   if (!externals) return {}
 
-  return function({ request, contextInfo }, callback) {
+  return function({ request }, callback) {
     if (!request) return callback()
     const libraryName = externals[request]
     if (!libraryName) return callback()
 
-    if (contextInfo?.issuerLayer === LAYERS.MAIN_THREAD) {
-      callback(undefined, [
-        'globalThis',
-        'lynx_ex',
-        ...(Array.isArray(libraryName) ? libraryName : [libraryName]),
-      ], 'var')
-    } else {
-      callback(undefined, [
-        'lynxCoreInject',
-        'tt',
-        'lynx_ex',
-        ...(Array.isArray(libraryName) ? libraryName : [libraryName]),
-      ], 'var')
-    }
+    callback(undefined, [
+      'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
+      ...(Array.isArray(libraryName) ? libraryName : [libraryName]),
+    ], 'var')
   }
 }
 
