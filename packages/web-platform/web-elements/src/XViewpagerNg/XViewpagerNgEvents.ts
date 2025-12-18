@@ -87,7 +87,7 @@ export class XViewpagerNgEvents
   #enableOffsetChange: boolean = false;
   @registerEventEnableStatusChangeHandler('offsetchange')
   _enableOffsetChangeEvent(status: boolean) {
-    this.#enableChange = status;
+    this.#enableOffsetChange = status;
     this.#enableScrollEventListener();
   }
   #enableScrollEventListener() {

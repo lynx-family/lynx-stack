@@ -58,5 +58,7 @@ export class CommonEventsAndMethods {
 
   dispose() {
     this.#resizeObserver?.disconnect();
+    this.#resizeObserver = undefined;
+    this.#resizeObserving = false;
   }
 }
