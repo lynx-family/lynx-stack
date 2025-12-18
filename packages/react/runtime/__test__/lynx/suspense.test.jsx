@@ -3,7 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 
 import { render, Component } from 'preact';
-import { Suspense } from '../../src/index';
+import { createElement } from 'preact/compat';
+import { Suspense, lazy, useState } from '../../src/index';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
@@ -16,6 +17,7 @@ import { elementTree } from '../utils/nativeMethod';
 import { backgroundSnapshotInstanceManager } from '../../src/snapshot';
 import { prettyFormatSnapshotPatch } from '../../src/debug/formatPatch';
 import { createSuspender } from '../createSuspender';
+import { BackgroundSnapshotInstance } from '../../src/backgroundSnapshot';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));
@@ -1498,6 +1500,171 @@ describe('suspense', () => {
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
       vi.runAllTimers();
+    }
+  });
+
+  it('repro: resolves after unmount may insertBefore on a torn-down parent', async () => {
+    // Repro steps:
+    // 1) Mount a Suspense boundary with a lazy child so it suspends and shows fallback.
+    // 2) Unmount the entire subtree and apply the unmount patch on the main thread.
+    // 3) Resolve the lazy child after unmount and trigger a state update so background produces a patch.
+    // 4) Apply that late patch on the main thread and assert ctx-not-found is reported.
+    const deferred = Promise.withResolvers();
+    const LazyChild = lazy(() => deferred.promise);
+
+    let setShow;
+    let setColor;
+
+    function App() {
+      const [show, _setShow] = useState(true);
+      const [color, _setColor] = useState('red');
+      setShow = _setShow;
+      setColor = _setColor;
+
+      return show
+        ? (
+          <view color={color}>
+            <Suspense fallback='loading'>
+              <view id='suspense-child'>
+                <LazyChild />
+              </view>
+            </Suspense>
+          </view>
+        )
+        : null;
+    }
+
+    {
+      globalEnvManager.switchToMainThread();
+      __root.__jsx = createElement(App, null);
+      renderPage();
+    }
+
+    {
+      globalEnvManager.switchToBackground();
+      render(createElement(App, null), __root);
+    }
+
+    {
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(1);
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+
+      globalEnvManager.switchToMainThread();
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <view
+            color="red"
+          >
+            <wrapper>
+              <raw-text
+                text="loading"
+              />
+            </wrapper>
+          </view>
+        </page>
+      `);
+
+      globalEnvManager.switchToBackground();
+      rLynxChange[2]();
+    }
+
+    lynx.getNativeApp().callLepusMethod.mockClear();
+
+    {
+      globalEnvManager.switchToBackground();
+      setShow(false);
+      await Promise.resolve().then(() => {});
+
+      expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+
+      expect(prettyFormatSnapshotPatch(JSON.parse(rLynxChange[1].data).patchList[0].snapshotPatch))
+        .toMatchInlineSnapshot(`
+          [
+            {
+              "childId": -4,
+              "op": "RemoveChild",
+              "parentId": -1,
+            },
+          ]
+        `);
+
+      globalEnvManager.switchToMainThread();
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        />
+      `);
+    }
+
+    lynx.getNativeApp().callLepusMethod.mockClear();
+
+    {
+      globalEnvManager.switchToBackground();
+      deferred.resolve({ default: () => <view id='lazy' /> });
+      setColor('green');
+      await Promise.resolve().then(() => {});
+
+      expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+
+      expect(prettyFormatSnapshotPatch(JSON.parse(rLynxChange[1].data).patchList[0].snapshotPatch))
+        .toMatchInlineSnapshot(`
+          [
+            {
+              "id": 3,
+              "op": "CreateElement",
+              "type": "wrapper",
+            },
+            {
+              "id": 4,
+              "op": "CreateElement",
+              "type": "__snapshot_a94a8_test_34",
+            },
+            {
+              "beforeId": null,
+              "childId": 4,
+              "op": "InsertBefore",
+              "parentId": 3,
+            },
+            {
+              "beforeId": null,
+              "childId": 3,
+              "op": "InsertBefore",
+              "parentId": -4,
+            },
+          ]
+        `);
+
+      globalEnvManager.switchToMainThread();
+
+      // Apply the late patch on the main thread.
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        />
+      `);
+
+      // snapshotPatchApply should emit a ctx-not-found event back to BG,
+      // which is converted into a lynx.reportError in error.ts.
+      expect(lynx.getJSContext().dispatchEvent.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            {
+              "data": {
+                "id": -4,
+              },
+              "type": "Lynx.Error.CtxNotFound",
+            },
+          ],
+        ]
+      `);
     }
   });
 });
