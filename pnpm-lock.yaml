@@ -380,8 +380,8 @@ importers:
         specifier: ^4.1.12
         version: 4.1.12
       core-js:
-        specifier: ^3.46.0
-        version: 3.46.0
+        specifier: ^3.47.0
+        version: 3.47.0
       debug:
         specifier: ^4.4.3
         version: 4.4.3
