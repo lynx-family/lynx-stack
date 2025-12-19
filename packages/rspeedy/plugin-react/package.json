@@ -52,7 +52,7 @@
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "@rollup/plugin-typescript": "^12.1.4",
+    "@rollup/plugin-typescript": "^12.3.0",
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-sass": "1.4.0",
     "@rsbuild/plugin-typed-css-modules": "1.1.1",

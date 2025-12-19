@@ -66,7 +66,7 @@
   "devDependencies": {
     "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "@rollup/plugin-typescript": "^12.1.4",
+    "@rollup/plugin-typescript": "^12.3.0",
     "chokidar": "^4.0.3",
     "commander": "^13.1.0",
     "eventemitter3": "^5.0.1",
