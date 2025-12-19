@@ -105,7 +105,7 @@ export interface ExternalsLoadingPluginOptions {
        *
        * ```js
        * externals: {
-       *   lodash: '__webpack_require__.lynx_ex.lodash',
+       *   lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].lodash',
        * }
        * ```
        *
@@ -129,8 +129,8 @@ export interface ExternalsLoadingPluginOptions {
        *
        * ```js
        * externals: {
-       *   lodash: '__webpack_require__.lynx_ex.Lodash',
-       *   'lodash-es': '__webpack_require__.lynx_ex.Lodash',
+       *   lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash',
+       *   'lodash-es': 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash',
        * }
        * ```
        *
@@ -151,7 +151,7 @@ export interface ExternalsLoadingPluginOptions {
        *
        * ```js
        * externals: {
-       *   preact: '__webpack_require__.lynx_ex.ReactLynx.Preact',
+       *   preact: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.Preact',
        * }
        * ```
        *
@@ -204,11 +204,8 @@ export interface LayerOptions {
   sectionPath: string;
 }
 
-function getLynxExternalGlobal(layer: 'background' | 'mainThread') {
-  // We do not use `globalThis` in BTS to avoid issues when sharing js context is enabled
-  return `${
-    layer === 'background' ? 'lynxCoreInject.tt.lynx_ex' : 'globalThis.lynx_ex'
-  }`;
+function getLynxExternalGlobal() {
+  return `lynx[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]`;
 }
 
 /**
@@ -269,8 +266,7 @@ export class ExternalsLoadingPlugin {
         chunkLayer: string,
       ): string {
         const fetchCode: string[] = [];
-        const asyncLoadCode: string[] = [];
-        const syncLoadCode: string[] = [];
+        const loadCode: string[] = [];
         // filter duplicate externals by libraryName or package name to avoid loading the same external multiple times. We keep the last one.
         const externalsMap = new Map<
           string | string[],
@@ -298,7 +294,7 @@ export class ExternalsLoadingPlugin {
         if (externals.length === 0) {
           return '';
         }
-        const runtimeGlobalsInit = `${getLynxExternalGlobal(layer)} = {};`;
+        const runtimeGlobalsInit = `${getLynxExternalGlobal()} = {};`;
         const loadExternalFunc = `
 function createLoadExternalAsync(handler, sectionPath) {
   return new Promise((resolve, reject) => {
@@ -365,8 +361,8 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           );
 
           if (async) {
-            asyncLoadCode.push(
-              `${getLynxExternalGlobal(layer)}[${
+            loadCode.push(
+              `${getLynxExternalGlobal()}[${
                 JSON.stringify(libraryNameStr)
               }] = createLoadExternalAsync(handler${i}, ${
                 JSON.stringify(layerOptions.sectionPath)
@@ -375,8 +371,8 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             continue;
           }
 
-          syncLoadCode.push(
-            `${getLynxExternalGlobal(layer)}[${
+          loadCode.push(
+            `${getLynxExternalGlobal()}[${
               JSON.stringify(libraryNameStr)
             }] = createLoadExternalSync(handler${i}, ${
               JSON.stringify(layerOptions.sectionPath)
@@ -388,8 +384,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           runtimeGlobalsInit,
           loadExternalFunc,
           fetchCode,
-          asyncLoadCode,
-          syncLoadCode,
+          loadCode,
         ].flat().join('\n');
       }
     }
@@ -464,7 +459,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
         return callback(
           undefined,
           [
-            getLynxExternalGlobal(currentLayer),
+            getLynxExternalGlobal(),
             ...(Array.isArray(libraryName) ? libraryName : [libraryName]),
           ],
           isAsync ? 'promise' : undefined,

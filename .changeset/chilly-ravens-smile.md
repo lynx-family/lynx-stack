@@ -1,8 +1,9 @@
 ---
 "@lynx-js/externals-loading-webpack-plugin": patch
+"@lynx-js/lynx-bundle-rslib-config": patch
 ---
 
-Introduce `@lynx-js/externals-loading-webpack-plugin`.
+Introduce `@lynx-js/externals-loading-webpack-plugin`. It will help you to load externals built by `@lynx-js/lynx-bundle-rslib-config`.
 
 ```js
 // webpack.config.js
