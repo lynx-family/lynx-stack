@@ -61,7 +61,7 @@
     "source-map": "^0.7.6",
     "tailwindcss": "^3.4.19",
     "type-fest": "^5.0.1",
-    "typia": "9.7.2",
+    "typia": "10.1.0",
     "typia-rspack-plugin": "2.2.2"
   },
   "peerDependencies": {
