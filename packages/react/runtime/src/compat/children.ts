@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { ComponentChild } from 'preact';
 import { Children as PreactChildren } from 'preact/compat';
 
 /**
@@ -27,7 +28,13 @@ function freezeDev<T extends object>(obj: T): T {
  *   accidental mutations that can break compile-time snapshot optimizations
  * - In production builds, no freeze overhead is applied
  */
-export const Children = {
+export const Children: {
+  forEach: typeof PreactChildren.forEach;
+  map: typeof PreactChildren.map;
+  count: typeof PreactChildren.count;
+  only: typeof PreactChildren.only;
+  toArray: (children: ComponentChild | ComponentChild[]) => readonly any[];
+} = {
   /**
    * Iterate over children and call a function for each child.
    *
@@ -83,4 +90,4 @@ export const Children = {
     // Freeze to catch accidental mutation like push/splice/sort in dev
     return freezeDev(arr);
   },
-} as const;
+};
