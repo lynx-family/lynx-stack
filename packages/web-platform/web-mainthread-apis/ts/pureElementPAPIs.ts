@@ -24,6 +24,7 @@ import {
   type GetChildrenPAPI,
   type GetClassesPAPI,
   type GetComponentIdPAPI,
+  type GetComputedStyleByKeyPAPI,
   type GetDataByKeyPAPI,
   type GetDatasetPAPI,
   type GetElementConfigPAPI,
@@ -384,3 +385,15 @@ export const __MarkPartElement: MarkPartElementPAPI = (
 ) => {
   element.setAttribute(lynxPartIdAttribute, partId);
 };
+
+export const __GetComputedStyleByKey: GetComputedStyleByKeyPAPI =
+  /*#__PURE__*/ (
+    element,
+    key,
+  ) => {
+    if (typeof window !== 'undefined' && window.getComputedStyle) {
+      const computedStyle = window.getComputedStyle(element);
+      return computedStyle.getPropertyValue(key);
+    }
+    return '';
+  };

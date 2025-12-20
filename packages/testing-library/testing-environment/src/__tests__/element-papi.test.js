@@ -58,4 +58,22 @@ describe('element PAPI', () => {
       </view>
     `);
   });
+
+  it('__GetComputedStyleByKey should work', () => {
+    const view = __CreateView(0);
+    __SetInlineStyles(view, 'color: red; font-size: 16px;');
+
+    // Get computed style for a specific property
+    const color = __GetComputedStyleByKey(view, 'color');
+    const fontSize = __GetComputedStyleByKey(view, 'font-size');
+
+    // The exact color format may vary by browser (rgb vs color name)
+    // but it should return a non-empty string
+    expect(color).toBeTruthy();
+    expect(fontSize).toBeTruthy();
+
+    // Test with a property that doesn't exist
+    const nonExistent = __GetComputedStyleByKey(view, 'non-existent-property');
+    expect(nonExistent).toBe('');
+  });
 });

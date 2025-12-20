@@ -72,9 +72,11 @@ import {
   __ElementIsEqual,
   __FirstElement,
   __GetAttributes,
+  __GetAttributeByName,
   __GetChildren,
   __GetClasses,
   __GetComponentID,
+  __GetComputedStyleByKey,
   __GetDataByKey,
   __GetDataset,
   __GetElementConfig,
@@ -99,7 +101,6 @@ import {
   __SetInlineStyles,
   __UpdateComponentID,
   __UpdateComponentInfo,
-  __GetAttributeByName,
 } from './pureElementPAPIs.js';
 import { createCrossThreadEvent } from './utils/createCrossThreadEvent.js';
 
@@ -797,6 +798,7 @@ export function createMainThreadGlobalThis(
     __UpdateListCallbacks,
     __GetConfig: __GetElementConfig,
     __GetAttributeByName,
+    __GetComputedStyleByKey,
     __GetClasses,
     __AddClass: isCSSOG ? __AddClassForCSSOG : __AddClass,
     __SetClasses: isCSSOG ? __SetClassesForCSSOG : __SetClasses,

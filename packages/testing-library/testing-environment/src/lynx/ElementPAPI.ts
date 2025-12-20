@@ -417,6 +417,14 @@ export const initElementTree = () => {
       return ele.getAttribute(name);
     }
 
+    __GetComputedStyleByKey(element: LynxElement, key: string): string {
+      if (typeof window !== 'undefined' && window.getComputedStyle) {
+        const computedStyle = window.getComputedStyle(element);
+        return computedStyle.getPropertyValue(key);
+      }
+      return '';
+    }
+
     clear() {
       this.root = undefined;
     }
