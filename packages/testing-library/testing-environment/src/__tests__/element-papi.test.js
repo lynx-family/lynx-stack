@@ -76,4 +76,16 @@ describe('element PAPI', () => {
     const nonExistent = __GetComputedStyleByKey(view, 'non-existent-property');
     expect(nonExistent).toBe('');
   });
+
+  it('__GetComputedStyleByKey should work with CSS properties using dash notation', () => {
+    const view = __CreateView(0);
+    __SetInlineStyles(view, 'background-color: blue; margin-top: 10px;');
+
+    // Get computed style using dash notation
+    const backgroundColor = __GetComputedStyleByKey(view, 'background-color');
+    const marginTop = __GetComputedStyleByKey(view, 'margin-top');
+
+    expect(backgroundColor).toBeTruthy();
+    expect(marginTop).toBeTruthy();
+  });
 });
