@@ -58,6 +58,7 @@ export const initElementTree: () => {
     __CreateList(parentComponentUniqueId: number, componentAtIndex: any, enqueueComponent: any): LynxElement;
     __GetTag(ele: LynxElement): string;
     __GetAttributeByName(ele: LynxElement, name: string): string | null;
+    __GetComputedStyleByKey(element: LynxElement, key: string): string;
     clear(): void;
     toTree(): LynxElement | undefined;
     enterListItemAtIndex(e: LynxElement, index: number, ...args: any[]): number;
