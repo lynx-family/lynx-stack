@@ -27,7 +27,7 @@ export class TextareaBaseAttributes
   #getTextareaElement = genDomGetter(() => this.#dom.shadowRoot!, '#textarea');
 
   @registerAttributeHandler('confirm-type', true)
-  #handlerConfirmType = bindToAttribute(
+  _handlerConfirmType = bindToAttribute(
     this.#getTextareaElement,
     'enterkeyhint',
     (val) => {
@@ -37,7 +37,7 @@ export class TextareaBaseAttributes
   );
 
   @registerAttributeHandler('maxlength', true)
-  #handlerMaxlength = bindToAttribute(
+  _handlerMaxlength = bindToAttribute(
     this.#getTextareaElement,
     'maxlength',
     (val) => {
@@ -47,21 +47,21 @@ export class TextareaBaseAttributes
   );
 
   @registerAttributeHandler('readonly', true)
-  #handleReadonly = bindToAttribute(
+  _handleReadonly = bindToAttribute(
     this.#getTextareaElement,
     'readonly',
     (value) => (value !== null ? '' : null),
   );
 
   @registerAttributeHandler('ios-spell-check', true)
-  #handleSpellCheck = bindToAttribute(
+  _handleSpellCheck = bindToAttribute(
     this.#getTextareaElement,
     'spellcheck',
     (value) => (value === null ? 'false' : 'true'),
   );
 
   @registerAttributeHandler('show-soft-input-onfocus', true)
-  #handleShowSoftInputOnfocus = bindToAttribute(
+  _handleShowSoftInputOnfocus = bindToAttribute(
     this.#getTextareaElement,
     'virtualkeyboardpolicy',
     (value) => (value === null ? 'manual' : 'auto'),

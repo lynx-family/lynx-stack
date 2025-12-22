@@ -26,7 +26,7 @@ export class XInputAttribute
 
   @registerAttributeHandler('value', false)
   // delay value to connectedCallback to wait the maxlength value.
-  #handleValue(newValue: string | null) {
+  _handleValue(newValue: string | null) {
     if (newValue) {
       const maxlength = parseFloat(this.#dom.getAttribute('maxlength') ?? '');
       if (!isNaN(maxlength)) newValue = newValue.substring(0, maxlength);
@@ -40,14 +40,14 @@ export class XInputAttribute
   }
 
   @registerAttributeHandler('disabled', true)
-  #handleDisabled = bindToAttribute(
+  _handleDisabled = bindToAttribute(
     this.#getInputElement,
     'disabled',
     (value) => (value !== null ? '' : null),
   );
 
   @registerAttributeHandler('autocomplete', true)
-  #handleAutocomplete = bindToAttribute(
+  _handleAutocomplete = bindToAttribute(
     this.#getInputElement,
     'autocomplete',
   );

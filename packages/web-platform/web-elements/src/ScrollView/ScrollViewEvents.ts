@@ -66,7 +66,7 @@ export class ScrollViewEvents
   ];
 
   @registerEventEnableStatusChangeHandler('scrolltoupper')
-  #handleScrollUpperThresholdEventEnabled = (enabled: boolean) => {
+  _handleScrollUpperThresholdEventEnabled = (enabled: boolean) => {
     enabled
       ? this.#dom.setAttribute('x-enable-scrolltoupper-event', '')
       : this.#dom.removeAttribute('x-enable-scrolltoupper-event'); // css needs this;
@@ -80,7 +80,7 @@ export class ScrollViewEvents
   );
 
   @registerEventEnableStatusChangeHandler('scrolltolower')
-  #handleScrollLowerThresholdEventEnabled = (enabled: boolean) => {
+  _handleScrollLowerThresholdEventEnabled = (enabled: boolean) => {
     enabled
       ? this.#dom.setAttribute('x-enable-scrolltolower-event', '')
       : this.#dom.removeAttribute('x-enable-scrolltolower-event'); // css needs this;
@@ -94,14 +94,14 @@ export class ScrollViewEvents
   );
 
   @registerAttributeHandler('upper-threshold', true)
-  #updateUpperThreshold = bindToStyle(
+  _updateUpperThreshold = bindToStyle(
     this.#getUpperThresholdObserverDom,
     'flex-basis',
     (v) => `${parseInt(v)}px`,
   );
 
   @registerAttributeHandler('lower-threshold', true)
-  #updateLowerThreshold = bindToStyle(
+  _updateLowerThreshold = bindToStyle(
     this.#getLowerThresholdObserverDom,
     'flex-basis',
     (v) => `${parseInt(v)}px`,
@@ -157,14 +157,14 @@ export class ScrollViewEvents
 
   #scrollEventEnabled = false;
   @registerEventEnableStatusChangeHandler('lynxscroll')
-  #handleScrollEventEnabled = (enabled: boolean) => {
+  _handleScrollEventEnabled = (enabled: boolean) => {
     this.#scrollEventEnabled = enabled;
     this.#handleScrollEventsSwitches();
   };
 
   #scrollEndEventEnabled = false;
   @registerEventEnableStatusChangeHandler('lynxscrollend')
-  #handleScrollEndEventEnabled = (enabled: boolean) => {
+  _handleScrollEndEventEnabled = (enabled: boolean) => {
     this.#scrollEndEventEnabled = enabled;
     this.#handleScrollEventsSwitches();
   };

@@ -53,10 +53,14 @@ export class CommonEventsAndMethods {
       }
     } else {
       this.#resizeObserver?.disconnect();
+      this.#resizeObserver = undefined;
+      this.#resizeObserving = false;
     }
   };
 
-  #disableExposure() {
+  dispose() {
     this.#resizeObserver?.disconnect();
+    this.#resizeObserver = undefined;
+    this.#resizeObserving = false;
   }
 }

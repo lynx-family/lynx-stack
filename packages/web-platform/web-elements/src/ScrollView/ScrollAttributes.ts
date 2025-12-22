@@ -28,7 +28,7 @@ export class ScrollAttributes
   @registerAttributeHandler('scroll-top', false)
   @registerAttributeHandler('scroll-left', false)
   @registerAttributeHandler('initial-scroll-offset', false)
-  #handleInitialScrollOffset(
+  _handleInitialScrollOffset(
     newVal: string | null,
     _: string | null,
     attributeName: string,
@@ -63,7 +63,7 @@ export class ScrollAttributes
 
   @registerAttributeHandler('scroll-to-index', false)
   @registerAttributeHandler('initial-scroll-to-index', false)
-  #handleInitialScrollIndex(newVal: string | null) {
+  _handleInitialScrollIndex(newVal: string | null) {
     if (newVal) {
       const scrollValue = parseFloat(newVal);
       const childrenElement = this.#dom.children.item(scrollValue);

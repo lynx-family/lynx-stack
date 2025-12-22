@@ -299,7 +299,7 @@ export class XTextTruncation
   @registerAttributeHandler('text-maxlength', true)
   @registerAttributeHandler('text-maxline', true)
   @registerAttributeHandler('tail-color-convert', true)
-  #handleAttributeChange() {
+  _handleAttributeChange() {
     this.#maxLength = parseFloat(
       this.#dom.getAttribute('text-maxlength') ?? '',
     );
@@ -317,7 +317,7 @@ export class XTextTruncation
   }
 
   @registerEventEnableStatusChangeHandler('layout')
-  #handleEnableLayoutEvent(status: boolean) {
+  _handleEnableLayoutEvent(status: boolean) {
     this.#enableLayoutEvent = status;
   }
 
@@ -385,10 +385,10 @@ export class XTextTruncation
 
   connectedCallback(): void {
     this.#componentConnected = true;
-    this.#handleEnableLayoutEvent(
+    this._handleEnableLayoutEvent(
       this.#enableLayoutEvent,
     );
-    this.#handleAttributeChange();
+    this._handleAttributeChange();
     boostedQueueMicrotask(() => {
       this.#sendLayoutEvent();
     });

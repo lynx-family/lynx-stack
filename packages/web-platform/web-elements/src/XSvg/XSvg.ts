@@ -6,7 +6,6 @@
 import {
   type AttributeReactiveClass,
   Component,
-  bindToStyle,
   genDomGetter,
   registerAttributeHandler,
   registerEventEnableStatusChangeHandler,
@@ -25,7 +24,7 @@ export class XSvgFeatures
   #getImg = genDomGetter<HTMLImageElement>(() => this.#dom.shadowRoot!, '#img');
 
   @registerAttributeHandler('src', true)
-  #handleSrc(newVal: string | null) {
+  _handleSrc(newVal: string | null) {
     if (!newVal) {
       this.#getImg().src = '';
     } else {
@@ -34,7 +33,7 @@ export class XSvgFeatures
   }
 
   @registerAttributeHandler('content', true)
-  #handleContent(content: string | null) {
+  _handleContent(content: string | null) {
     this.#url && URL.revokeObjectURL(this.#url);
     if (!content) {
       this.#url = '';
@@ -49,7 +48,7 @@ export class XSvgFeatures
   }
 
   @registerEventEnableStatusChangeHandler('load')
-  #enableLoadEvent(status: boolean) {
+  _enableLoadEvent(status: boolean) {
     if (status) {
       this.#getImg().addEventListener('load', this.#teleportLoadEvent, {
         passive: true,

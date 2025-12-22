@@ -17,7 +17,7 @@ export class RawTextAttributes {
     this.#dom = currentElement;
   }
   @registerAttributeHandler('text', true)
-  #handleText(newVal: string | null) {
+  _handleText(newVal: string | null) {
     this.#text?.remove();
     if (newVal) {
       this.#text = new Text(newVal);

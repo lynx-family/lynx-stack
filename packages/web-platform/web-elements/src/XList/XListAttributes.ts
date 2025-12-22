@@ -24,7 +24,7 @@ export class XListAttributes
   #dom: XList;
 
   @registerAttributeHandler('sticky-offset', true)
-  #handlerStickyOffset = bindToStyle(
+  _handlerStickyOffset = bindToStyle(
     () => this.#dom,
     '--list-item-sticky-offset',
     (v) => `${parseFloat(v)}px`,
@@ -32,7 +32,7 @@ export class XListAttributes
 
   @registerAttributeHandler('span-count', true)
   @registerAttributeHandler('column-count', true)
-  #handlerCount = bindToStyle(
+  _handlerCount = bindToStyle(
     () => this.#dom,
     '--list-item-span-count',
     (v) => `${parseFloat(v)}`,

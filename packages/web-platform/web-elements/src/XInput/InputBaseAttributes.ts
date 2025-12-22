@@ -26,12 +26,11 @@ export class InputBaseAttributes
     'spell-check',
   ];
   #dom: HTMLElement;
-  #inputType: InputType = 'text';
 
   #getInputElement = genDomGetter(() => this.#dom.shadowRoot!, '#input');
 
   @registerAttributeHandler('confirm-type', true)
-  #handlerConfirmType = bindToAttribute(
+  _handlerConfirmType = bindToAttribute(
     this.#getInputElement,
     'enterkeyhint',
     (val) => {
@@ -41,7 +40,7 @@ export class InputBaseAttributes
   );
 
   @registerAttributeHandler('maxlength', true)
-  #handlerMaxlength = bindToAttribute(
+  _handlerMaxlength = bindToAttribute(
     this.#getInputElement,
     'maxlength',
     (val) => {
@@ -51,7 +50,7 @@ export class InputBaseAttributes
   );
 
   @registerAttributeHandler('readonly', true)
-  #handleReadonly = bindToAttribute(
+  _handleReadonly = bindToAttribute(
     this.#getInputElement,
     'readonly',
     (value) => (value !== null ? '' : null),
@@ -61,7 +60,7 @@ export class InputBaseAttributes
   #setInputmode = bindToAttribute(this.#getInputElement, 'inputmode');
 
   @registerAttributeHandler('type', true)
-  #handleType(value: string | null) {
+  _handleType(value: string | null) {
     const attributeValue = value as InputType;
     // @see https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/inputmode
     let inputMode:
@@ -93,7 +92,7 @@ export class InputBaseAttributes
 
   @registerAttributeHandler('ios-spell-check', true)
   @registerAttributeHandler('spell-check', true)
-  #handleSpellCheck = bindToAttribute(
+  _handleSpellCheck = bindToAttribute(
     this.#getInputElement,
     'spellcheck',
     (value) => (value === null ? 'false' : 'true'),

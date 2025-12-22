@@ -23,13 +23,13 @@ export class XFoldviewNgEvents
   static observedAttributes = ['granularity'];
 
   @registerAttributeHandler('granularity', true)
-  #handleGranularity(newVal: string | null) {
+  _handleGranularity(newVal: string | null) {
     if (newVal && newVal !== '') this.#granularity = parseFloat(newVal);
     else this.#granularity = 0.01;
   }
 
   @registerEventEnableStatusChangeHandler('offset')
-  #enableOffsetEvent(enable: boolean) {
+  _enableOffsetEvent(enable: boolean) {
     if (enable) {
       this.#dom.addEventListener('scroll', this.#handleScroll, {
         passive: true,

@@ -6,7 +6,6 @@
     "target": "ES2024",
     "rootDir": "./src",
     "importHelpers": true,
-    "noUnusedLocals": false,
   },
   "include": ["src"],
   "references": [

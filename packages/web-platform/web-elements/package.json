@@ -18,71 +18,90 @@
     "./index.css": {
       "default": "./index.css"
     },
+    "./elements.css": {
+      "default": "./elements.css"
+    },
     "./all": {
       "types": "./dist/all.d.ts",
       "default": "./dist/all.js"
     },
     "./LynxWrapper": {
+      "source": "./src/LynxWrapper/index.ts",
       "types": "./dist/LynxWrapper/index.d.ts",
       "default": "./dist/LynxWrapper/index.js"
     },
     "./ScrollView": {
+      "source": "./src/ScrollView/index.ts",
       "types": "./dist/ScrollView/index.d.ts",
       "default": "./dist/ScrollView/index.js"
     },
     "./XAudioTT": {
+      "source": "./src/XAudioTT/index.ts",
       "types": "./dist/XAudioTT/index.d.ts",
       "default": "./dist/XAudioTT/index.js"
     },
     "./XCanvas": {
+      "source": "./src/XCanvas/index.ts",
       "types": "./dist/XCanvas/index.d.ts",
       "default": "./dist/XCanvas/index.js"
     },
     "./XFoldViewNg": {
+      "source": "./src/XFoldViewNg/index.ts",
       "types": "./dist/XFoldViewNg/index.d.ts",
       "default": "./dist/XFoldViewNg/index.js"
     },
     "./XImage": {
+      "source": "./src/XImage/index.ts",
       "types": "./dist/XImage/index.d.ts",
       "default": "./dist/XImage/index.js"
     },
     "./XInput": {
+      "source": "./src/XInput/index.ts",
       "types": "./dist/XInput/index.d.ts",
       "default": "./dist/XInput/index.js"
     },
     "./XOverlayNg": {
+      "source": "./src/XOverlayNg/index.ts",
       "types": "./dist/XOverlayNg/index.d.ts",
       "default": "./dist/XOverlayNg/index.js"
     },
     "./XRefreshView": {
+      "source": "./src/XRefreshView/index.ts",
       "types": "./dist/XRefreshView/index.d.ts",
       "default": "./dist/XRefreshView/index.js"
     },
     "./XSvg": {
+      "source": "./src/XSvg/index.ts",
       "types": "./dist/XSvg/index.d.ts",
       "default": "./dist/XSvg/index.js"
     },
     "./XSwiper": {
+      "source": "./src/XSwiper/index.ts",
       "types": "./dist/XSwiper/index.d.ts",
       "default": "./dist/XSwiper/index.js"
     },
     "./XText": {
+      "source": "./src/XText/index.ts",
       "types": "./dist/XText/index.d.ts",
       "default": "./dist/XText/index.js"
     },
     "./XTextarea": {
+      "source": "./src/XTextarea/index.ts",
       "types": "./dist/XTextarea/index.d.ts",
       "default": "./dist/XTextarea/index.js"
     },
     "./XView": {
+      "source": "./src/XView/index.ts",
       "types": "./dist/XView/index.d.ts",
       "default": "./dist/XView/index.js"
     },
     "./XViewpagerNg": {
+      "source": "./src/XViewpagerNg/index.ts",
       "types": "./dist/XViewpagerNg/index.d.ts",
       "default": "./dist/XViewpagerNg/index.js"
     },
     "./XList": {
+      "source": "./src/XList/index.ts",
       "types": "./dist/XList/index.d.ts",
       "default": "./dist/XList/index.js"
     }

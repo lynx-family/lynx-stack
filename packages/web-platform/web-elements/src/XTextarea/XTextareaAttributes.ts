@@ -31,26 +31,26 @@ export class XTextareaAttributes
 
   #confirmEnter = false;
   @registerAttributeHandler('confirm-enter', true)
-  #handleConfirmEnter(newVal: string | null) {
+  _handleConfirmEnter(newVal: string | null) {
     this.#confirmEnter = newVal !== null;
   }
 
   @registerAttributeHandler('disabled', true)
-  #handleDisabled = bindToAttribute(
+  _handleDisabled = bindToAttribute(
     this.#getTextareaElement,
     'disabled',
     (value) => (value !== null ? '' : null),
   );
 
   @registerAttributeHandler('max-height', true)
-  #handleMaxHeight = bindToStyle(this.#getTextareaElement, 'max-height');
+  _handleMaxHeight = bindToStyle(this.#getTextareaElement, 'max-height');
 
   @registerAttributeHandler('min-height', true)
-  #handleMinHeight = bindToStyle(this.#getTextareaElement, 'min-height');
+  _handleMinHeight = bindToStyle(this.#getTextareaElement, 'min-height');
 
   @registerAttributeHandler('value', false)
   // delay value to connectedCallback to wait the maxlength value.
-  #handleValue(newValue: string | null) {
+  _handleValue(newValue: string | null) {
     if (newValue) {
       const maxlength = parseFloat(this.#dom.getAttribute('maxlength') ?? '');
       if (!isNaN(maxlength)) newValue = newValue.substring(0, maxlength);

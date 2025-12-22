@@ -29,7 +29,7 @@ export class Placeholder
   );
 
   @registerAttributeHandler('placeholder-color', true)
-  #updatePlaceholderColor = bindToStyle(
+  _updatePlaceholderColor = bindToStyle(
     this.#getTextarea,
     '--placeholder-color',
     undefined,
@@ -37,7 +37,7 @@ export class Placeholder
   );
 
   @registerAttributeHandler('placeholder-font-size', true)
-  #updatePlaceholderFontSize = bindToStyle(
+  _updatePlaceholderFontSize = bindToStyle(
     this.#getTextarea,
     '--placeholder-font-size',
     undefined,
@@ -45,7 +45,7 @@ export class Placeholder
   );
 
   @registerAttributeHandler('placeholder-font-weight', true)
-  #updatePlaceholderFontWeight = bindToStyle(
+  _updatePlaceholderFontWeight = bindToStyle(
     this.#getTextarea,
     '--placeholder-font-weight',
     undefined,
@@ -53,7 +53,7 @@ export class Placeholder
   );
 
   @registerAttributeHandler('placeholder-font-family', true)
-  #updatePlaceholderFontFamily = bindToStyle(
+  _updatePlaceholderFontFamily = bindToStyle(
     this.#getTextarea,
     '--placeholder-font-family',
     undefined,
@@ -61,7 +61,7 @@ export class Placeholder
   );
 
   @registerAttributeHandler('placeholder', true)
-  #handlePlaceholder = bindToAttribute(this.#getTextarea, 'placeholder');
+  _handlePlaceholder = bindToAttribute(this.#getTextarea, 'placeholder');
 
   #dom: HTMLElement;
   constructor(dom: HTMLElement) {

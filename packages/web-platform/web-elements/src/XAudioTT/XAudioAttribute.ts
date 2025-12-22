@@ -27,10 +27,8 @@ export class XAudioAttribute
 
   #getAudioElement = genDomGetter(() => this.#dom.shadowRoot!, '#audio');
 
-  #setAudioSrc = bindToAttribute(this.#getAudioElement, 'src');
-
   @registerAttributeHandler('src', true)
-  #handleSrc(newValue: string | null) {
+  _handleSrc(newValue: string | null) {
     let parsedSrc;
     try {
       parsedSrc = JSON.parse(newValue || '') || {};
@@ -73,7 +71,7 @@ export class XAudioAttribute
   }
 
   @registerAttributeHandler('loop', true)
-  #handleLoop = bindToAttribute(this.#getAudioElement, 'loop');
+  _handleLoop = bindToAttribute(this.#getAudioElement, 'loop');
 
   #documentVisibilitychange = () => {
     if (document.visibilityState === 'hidden') {
@@ -82,7 +80,7 @@ export class XAudioAttribute
   };
 
   @registerAttributeHandler('pause-on-hide', true)
-  #handlePauseOnHide(newValue: string | null) {
+  _handlePauseOnHide(newValue: string | null) {
     if (newValue !== null) {
       document.addEventListener(
         'visibilitychange',

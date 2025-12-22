@@ -3,6 +3,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
+
 import {
   type AttributeReactiveClass,
   bindToStyle,
@@ -10,6 +11,7 @@ import {
   registerAttributeHandler,
   registerStyleChangeHandler,
 } from '@lynx-js/web-elements-reactive';
+
 import type { ScrollView } from './ScrollView.js';
 
 export class FadeEdgeLengthAttribute
@@ -26,7 +28,7 @@ export class FadeEdgeLengthAttribute
   }
 
   @registerAttributeHandler('fading-edge-length', true)
-  #handleFadingEdgeLength = bindToStyle(
+  _handleFadingEdgeLength = bindToStyle(
     () => this.#dom,
     '--scroll-view-fading-edge-length',
     (v) => `${parseFloat(v)}px`,
@@ -34,7 +36,7 @@ export class FadeEdgeLengthAttribute
 
   @registerStyleChangeHandler('background')
   @registerStyleChangeHandler('background-color')
-  #backgroundColorToVariable(backGroundColor: string | null) {
+  _backgroundColorToVariable(backGroundColor: string | null) {
     this.#getTopFadeMask().style.setProperty(
       '--scroll-view-bg-color',
       backGroundColor,

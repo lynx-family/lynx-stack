@@ -158,7 +158,7 @@ export class XSwiperCircular
   ];
 
   @registerAttributeHandler('circular', false)
-  #handleCircular(newVal: string | null) {
+  _handleCircular(newVal: string | null) {
     this.#listeners.forEach((l) => l(newVal != null));
     if (newVal !== null) {
       this.#changeEventHandler({
@@ -192,7 +192,7 @@ export class XSwiperCircular
   }
 
   @registerAttributeHandler('vertical', true)
-  #handleVerticalChange(newVal: string | null) {
+  _handleVerticalChange(newVal: string | null) {
     const enable = newVal !== null;
     this.#isVertical = enable;
   }

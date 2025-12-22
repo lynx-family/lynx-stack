@@ -6,7 +6,6 @@
 import type { AttributeReactiveClass } from '@lynx-js/web-elements-reactive';
 import { isHeaderShowing, type XFoldviewNg } from './XFoldviewNg.js';
 import type { XFoldviewSlotNg } from './XFoldviewSlotNg.js';
-import { isChromium } from '../common/constants.js';
 export class XFoldviewSlotNgTouchEventsHandler
   implements InstanceType<AttributeReactiveClass<typeof XFoldviewSlotNg>>
 {

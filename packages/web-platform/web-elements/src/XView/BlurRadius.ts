@@ -21,7 +21,7 @@ export class BlurRadius
   );
 
   @registerAttributeHandler('blur-radius', true)
-  #handleBlurRadius(newVal: string | null) {
+  _handleBlurRadius(newVal: string | null) {
     if (newVal) {
       newVal = `blur(${parseFloat(newVal)}px)`;
       this.#getDynamicStyle().innerHTML =

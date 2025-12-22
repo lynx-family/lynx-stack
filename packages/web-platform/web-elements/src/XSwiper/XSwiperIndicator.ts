@@ -39,35 +39,35 @@ export class XSwiperIndicator
   }
 
   @registerAttributeHandler('indicator-color', true)
-  #handleIndicatorColor = bindToStyle(
+  _handleIndicatorColor = bindToStyle(
     this.#getIndicatorContainer,
     '--indicator-color',
     undefined,
     true,
   );
   @registerAttributeHandler('indicator-active-color', true)
-  #handleIndicatorActiveColor = bindToStyle(
+  _handleIndicatorActiveColor = bindToStyle(
     this.#getIndicatorContainer,
     '--indicator-active-color',
     undefined,
     true,
   );
   @registerAttributeHandler('page-margin', true)
-  #handlePageMargin = bindToStyle(
+  _handlePageMargin = bindToStyle(
     this.#getIndicatorContainer,
     '--page-margin',
     undefined,
     true,
   );
   @registerAttributeHandler('previous-margin', true)
-  #handlePreviousMargin = bindToStyle(
+  _handlePreviousMargin = bindToStyle(
     this.#getIndicatorContainer,
     '--previous-margin',
     undefined,
     true,
   );
   @registerAttributeHandler('next-margin', true)
-  #handleNextMargin = bindToStyle(
+  _handleNextMargin = bindToStyle(
     this.#getIndicatorContainer,
     '--next-margin',
     undefined,
