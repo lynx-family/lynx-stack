@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/lynx-bundle-rslib-config",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "The rsbuild config for building Lynx bundle",
   "keywords": [
     "Rsbuild",

@@ -1,6 +1,6 @@
 {
   "name": "upgrade-rspeedy",
-  "version": "0.12.2",
+  "version": "0.12.3",
   "description": "Upgrade Rspeedy-related packages",
   "keywords": [
     "webpack",
