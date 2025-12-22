@@ -65,6 +65,9 @@ const SIDEBARS = {
       ],
     }),
     createAPI({
+      name: 'external-bundle-rsbuild-plugin',
+    }),
+    createAPI({
       name: 'lynx-bundle-rslib-config',
     }),
   ],
@@ -203,6 +206,10 @@ const SIDEBARS_ZH = {
       skips: [
         'PluginQRCodeOptions',
       ],
+    }),
+    createAPI({
+      base: 'zh/api',
+      name: 'external-bundle-rsbuild-plugin',
     }),
     createAPI({
       base: 'zh/api',

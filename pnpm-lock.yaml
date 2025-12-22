@@ -248,9 +248,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react
     devDependencies:
-      '@lynx-js/externals-loading-webpack-plugin':
+      '@lynx-js/external-bundle-rsbuild-plugin':
         specifier: workspace:*
-        version: link:../../packages/webpack/externals-loading-webpack-plugin
+        version: link:../../packages/rspeedy/plugin-external-bundle
       '@lynx-js/lynx-bundle-rslib-config':
         specifier: workspace:*
         version: link:../../packages/rspeedy/lynx-bundle-rslib-config
@@ -655,6 +655,19 @@ importers:
       webpack:
         specifier: ^5.102.0
         version: 5.102.0
+
+  packages/rspeedy/plugin-external-bundle:
+    dependencies:
+      '@lynx-js/externals-loading-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/externals-loading-webpack-plugin
+    devDependencies:
+      '@microsoft/api-extractor':
+        specifier: 'catalog:'
+        version: 7.55.2(@types/node@24.6.1)
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 1.6.13
 
   packages/rspeedy/plugin-qrcode:
     devDependencies:
@@ -1518,6 +1531,9 @@ importers:
       '@lynx-js/css-extract-webpack-plugin':
         specifier: workspace:*
         version: link:../packages/webpack/css-extract-webpack-plugin
+      '@lynx-js/external-bundle-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../packages/rspeedy/plugin-external-bundle
       '@lynx-js/lynx-bundle-rslib-config':
         specifier: workspace:*
         version: link:../packages/rspeedy/lynx-bundle-rslib-config
