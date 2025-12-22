@@ -1,5 +1,14 @@
 # @lynx-js/rspeedy
 
+## 0.12.3
+
+### Patch Changes
+
+- Support environment variants to enable multiple configurations for the same targets. ([#1969](https://github.com/lynx-family/lynx-stack/pull/1969))
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.2
+
 ## 0.12.2
 
 ### Patch Changes
