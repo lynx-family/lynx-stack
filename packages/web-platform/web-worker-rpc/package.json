@@ -27,5 +27,8 @@
     "Notice.txt",
     "CHANGELOG.md",
     "README.md"
-  ]
+  ],
+  "scripts": {
+    "test": "vitest"
+  }
 }

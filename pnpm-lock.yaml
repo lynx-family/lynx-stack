@@ -1194,9 +1194,6 @@ importers:
       '@lynx-js/web-rsbuild-server-middleware':
         specifier: workspace:*
         version: link:../web-rsbuild-server-middleware
-      '@lynx-js/web-worker-rpc':
-        specifier: workspace:*
-        version: link:../web-worker-rpc
       '@lynx-js/webpack-dev-transport':
         specifier: workspace:*
         version: link:../../webpack/webpack-dev-transport
