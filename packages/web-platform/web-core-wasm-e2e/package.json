@@ -1,0 +1,32 @@
+{
+  "name": "@lynx-js/web-core-wasm-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "bench": "vitest bench",
+    "build": "pnpm dlx premove dist && EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE=true pnpm run --stream \"/^build:.*/\"",
+    "build:csr": "node ./scripts/generate-build-command.js",
+    "coverage": "nyc report --cwd=$(realpath ../)",
+    "coverage:ci": "nyc report --cwd=$(realpath ../) --reporter=lcov",
+    "serve": "rsbuild dev",
+    "test": "playwright test",
+    "test:debug": "playwright test --ui",
+    "test:install": "playwright install --with-deps chromium firefox webkit",
+    "test:update": "playwright test --ui --update-snapshots"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/web-core-wasm": "workspace:*",
+    "@lynx-js/web-elements-compat": "workspace:*",
+    "@playwright/test": "^1.56.0",
+    "@rsbuild/core": "catalog:rsbuild",
+    "nyc": "^17.1.0",
+    "source-map-loader": "^5.0.0",
+    "tslib": "^2.8.1",
+    "v8-to-istanbul": "^9.3.0"
+  }
+}

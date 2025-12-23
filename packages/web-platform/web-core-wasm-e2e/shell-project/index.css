@@ -1,0 +1,16 @@
+/* Copyright 2024 The Lynx Authors. All rights reserved.
+ Licensed under the Apache License Version 2.0 that can be found in the
+ LICENSE file in the root directory of this source tree. */
+@import url("../resources/font.css");
+body {
+  margin: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  font-family: "Noto Sans SC";
+}
+
+lynx-view {
+  width: 100vw;
+  max-width: 500px;
+}
