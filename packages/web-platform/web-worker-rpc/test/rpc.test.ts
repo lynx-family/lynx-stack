@@ -10,6 +10,7 @@ import {
   testLazy,
   addAsyncWithTransfer,
   changeLazyHandler,
+  callbackifyEndpoint,
 } from './endpoints';
 import { Worker } from 'node:worker_threads';
 
@@ -107,5 +108,39 @@ describe('rpc tests', () => {
     // The RPC implementation unwraps it and returns the data.
     expect(ret).toBeInstanceOf(ArrayBuffer);
     expect(ret.byteLength).toBe(100);
+  });
+
+  test('callbackify', async () => {
+    const fn = rpc.createCallbackify(callbackifyEndpoint, 2);
+    // (a, b, callback)
+    const promise = new Promise<number>((resolve) => {
+      fn(2, 3, (ret: number) => {
+        resolve(ret);
+      });
+    });
+    const ret = await promise;
+    expect(ret).toBe(5);
+  });
+
+  test('set message port', async () => {
+    const channel = new MessageChannel();
+    // buffer flush
+    const rpc = new Rpc(undefined, 'test');
+    rpc.postMessage({
+      type: 'test',
+    });
+    // flush
+    rpc.setMessagePort(channel.port1);
+    expect(() => {
+      rpc.setMessagePort(channel.port1);
+    }).toThrow('Rpc port already set');
+    channel.port1.close();
+    channel.port2.close();
+  });
+
+  test('remove handler', () => {
+    const rpc = new Rpc(undefined, 'test');
+    rpc.registerHandler(addAsync, async (a, b) => a + b);
+    rpc.removeHandler(addAsync);
   });
 });

@@ -53,3 +53,10 @@ export const changeLazyHandler = createRpcEndpoint(
   true,
   false,
 );
+
+export const callbackifyEndpoint = createRpcEndpoint(
+  'callbackify',
+  false,
+  true,
+  false,
+);
