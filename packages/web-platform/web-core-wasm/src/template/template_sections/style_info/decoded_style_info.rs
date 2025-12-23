@@ -78,7 +78,7 @@ impl StyleInfoDecoder {
                3. for type selector section, we should transform it to [lynx-tag="type"]
                4 if enableCSSSelector is false:
                  4.1 if the current selector has only one class selector, we extract the class selector name and use it to map to the declarations in css_og_css_id_to_class_selector_name_to_declarations_map
-                     the declarations should be tranformed by calling transform_one_declaration function.
+                     the declarations should be transformed by calling transform_one_declaration function.
                      the current selector should be skipped in following phases.
                5 if the self.entryName is Some, we should add a [{constants::LYNX_CSS_ENTRY_NAME_ATTRIBUTE}="{entry_name}"] to the last compound selector just before the first pseudo class or pseudo element
                    otherwise, we should add a :not({constants::LYNX_CSS_ENTRY_NAME_ATTRIBUTE}) just before the first pseudo class or pseudo element in the current compound selector
@@ -108,21 +108,21 @@ impl StyleInfoDecoder {
                   simple_selector.selector_type = OneSimpleSelectorType::AttributeSelector;
                   simple_selector.value = "part=\"page\"".to_string();
                   // find the position to insert
-                  let mut compond_selector_start_index = simple_selector_index;
-                  while compond_selector_start_index > 0 {
+                  let mut compound_selector_start_index = simple_selector_index;
+                  while compound_selector_start_index > 0 {
                     let prev_simple_selector =
-                      &selector.simple_selectors[compond_selector_start_index - 1];
+                      &selector.simple_selectors[compound_selector_start_index - 1];
                     if prev_simple_selector.selector_type == OneSimpleSelectorType::Combinator {
                       break;
                     }
-                    compond_selector_start_index -= 1;
+                    compound_selector_start_index -= 1;
                   }
-                  // move the current simple selector to the compond selector start index
+                  // move the current simple selector to the compound selector start index
                   let root_simple_selector =
                     selector.simple_selectors.remove(simple_selector_index);
                   selector
                     .simple_selectors
-                    .insert(compond_selector_start_index, root_simple_selector);
+                    .insert(compound_selector_start_index, root_simple_selector);
                 } else if simple_selector.selector_type
                   == OneSimpleSelectorType::PseudoElementSelector
                   && simple_selector.value == "placeholder"

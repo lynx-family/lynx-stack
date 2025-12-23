@@ -128,7 +128,7 @@ impl MainThreadWasmContext {
       Box::new(bubble_unique_id_path.iter())
     };
     for unique_id in iter {
-      let mut is_catched = false;
+      let mut is_caught = false;
       // now dispatch event
       // if has cross thread handler, we should get the parent component id
       let bind_handler_name = if is_capture {
@@ -160,7 +160,7 @@ impl MainThreadWasmContext {
                 .and_then(|binding| binding.borrow().component_id.clone())
             }
           };
-          is_catched = catch_handler.is_some();
+          is_caught = catch_handler.is_some();
           for handler in [bind_handler, catch_handler].iter().flatten() {
             self.mts_binding.publish_event(
               handler,
@@ -181,7 +181,7 @@ impl MainThreadWasmContext {
         let catch_handler = current_target_element_data
           .get_framework_run_worklet_event_handler(&event_name, catch_handler_name);
         if bind_handler.is_some() || catch_handler.is_some() {
-          is_catched = catch_handler.is_some();
+          is_caught = catch_handler.is_some();
           if let Some(handler) = bind_handler {
             self.mts_binding.publish_mts_event(
               &handler,
@@ -206,7 +206,7 @@ impl MainThreadWasmContext {
       }
       // assign elementRefptr to target and current_target
 
-      if is_catched {
+      if is_caught {
         return true;
       }
     }
@@ -220,8 +220,8 @@ impl MainThreadWasmContext {
     bubble_unique_id_path: Vec<usize>,
     event_name: &str,
   ) {
-    let catched = self.dispatch_event_by_path(&bubble_unique_id_path, event_name, true, &event);
-    if !catched {
+    let caught = self.dispatch_event_by_path(&bubble_unique_id_path, event_name, true, &event);
+    if !caught {
       self.dispatch_event_by_path(&bubble_unique_id_path, event_name, false, &event);
     }
   }
