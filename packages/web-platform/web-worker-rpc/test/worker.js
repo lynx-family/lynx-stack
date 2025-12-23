@@ -10,6 +10,7 @@ import {
   testLazy,
   addAsyncWithTransfer,
   changeLazyHandler,
+  callbackifyEndpoint,
 } from './endpoints.js';
 
 console.log('worker started');
@@ -49,6 +50,9 @@ parentPort.on('message', async (ev) => {
     });
     rpc.registerHandler(changeLazyHandler, () => {
       emptyObj.testLazy = () => 100;
+    });
+    rpc.registerHandler(callbackifyEndpoint, async (a, b) => {
+      return a + b;
     });
     privatePort.postMessage({ type: 'ready' });
   }
