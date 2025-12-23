@@ -37,7 +37,7 @@ impl StyleInfoDecoder {
     raw_style_info: RawStyleInfo,
     entry_name: Option<String>,
     config_enable_css_selector: bool,
-  ) -> Self {
+  ) -> Result<Self, JsError> {
     let flattened_style_info: FlattenedStyleInfo = raw_style_info.into();
     let mut decoded_style_info = StyleInfoDecoder {
       style_content: String::with_capacity(flattened_style_info.style_content_str_size_hint + 64),
@@ -54,11 +54,11 @@ impl StyleInfoDecoder {
       css_og_current_processing_css_id: None,
       css_og_current_processing_class_selector_names: None,
     };
-    decoded_style_info.decode(flattened_style_info);
-    decoded_style_info
+    decoded_style_info.decode(flattened_style_info)?;
+    Ok(decoded_style_info)
   }
 
-  fn decode(&mut self, flattened_style_info: FlattenedStyleInfo) {
+  fn decode(&mut self, flattened_style_info: FlattenedStyleInfo) -> Result<(), JsError> {
     for (css_id, style_sheet) in flattened_style_info.css_id_to_style_sheet.into_iter() {
       for mut style_rule in style_sheet.rules.into_iter() {
         match style_rule.rule_type {
@@ -259,8 +259,6 @@ impl StyleInfoDecoder {
               }
               if nested_rule.rule_type == RuleType::Declaration {
                 self.generate_one_declaration_block(nested_rule.declaration_block);
-              } else {
-                panic!("Unsupported nested rule type in KeyFrames");
               }
             }
 
@@ -269,6 +267,7 @@ impl StyleInfoDecoder {
         }
       }
     }
+    Ok(())
   }
   fn generate_one_declaration_block(&mut self, declaration_block: DeclarationBlock) {
     (if self.is_processing_font_face {
@@ -360,7 +359,7 @@ mod test {
     config_enable_css_selector: bool,
     entry_name: Option<String>,
   ) -> StyleInfoDecoder {
-    StyleInfoDecoder::new(raw_style_info, entry_name, config_enable_css_selector)
+    StyleInfoDecoder::new(raw_style_info, entry_name, config_enable_css_selector).unwrap()
   }
 
   #[test]

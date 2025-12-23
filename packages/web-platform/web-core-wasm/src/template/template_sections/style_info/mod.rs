@@ -89,7 +89,7 @@ impl DecodedStyleData {
           wasm_bindgen::JsError::new(&format!("Failed to decode from Uint8Array: {e}",))
         })?;
     let decode_data: DecodedStyleData =
-      StyleInfoDecoder::new(data, entry_name, config_enable_css_selector).into();
+      StyleInfoDecoder::new(data, entry_name, config_enable_css_selector)?.into();
     let data = &bincode::encode_to_vec(&decode_data, bincode::config::standard())
       .map_err(|e| wasm_bindgen::JsError::new(&format!("Failed to encode to Uint8Array: {e}",)))?;
     Ok(js_sys::Uint8Array::from(data.as_slice()))

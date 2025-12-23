@@ -148,7 +148,7 @@ impl RawStyleInfo {
   #[wasm_bindgen]
   pub fn encode(&mut self) -> Result<js_sys::Uint8Array, JsError> {
     use crate::template::template_sections::style_info::decoded_style_info::StyleInfoDecoder;
-    let decoded_style_info = StyleInfoDecoder::new(self.clone(), None, true);
+    let decoded_style_info = StyleInfoDecoder::new(self.clone(), None, true)?;
     self.style_content_str_size_hint = decoded_style_info.style_content.len();
     let serialized = bincode::encode_to_vec(&*self, bincode::config::standard())
       .map_err(|e| JsError::new(&format!("Failed to encode RawStyleInfo: {e:?}")))?;
@@ -275,7 +275,11 @@ impl Selector {
    */
   #[cfg(feature = "encode")]
   #[wasm_bindgen]
-  pub fn push_one_selector_section(&mut self, selector_type: String, value: String) {
+  pub fn push_one_selector_section(
+    &mut self,
+    selector_type: String,
+    value: String,
+  ) -> Result<(), JsError> {
     let selector_selector_type = match selector_type.as_str() {
       "ClassSelector" => OneSimpleSelectorType::ClassSelector,
       "IdSelector" => OneSimpleSelectorType::IdSelector,
@@ -286,13 +290,18 @@ impl Selector {
       "PseudoElementSelector" => OneSimpleSelectorType::PseudoElementSelector,
       "UniversalSelector" => OneSimpleSelectorType::UniversalSelector,
       "UnknownText" => OneSimpleSelectorType::UnknownText,
-      _ => panic!("Unknown selector section type: {selector_type}"),
+      _ => {
+        return Err(JsError::new(&format!(
+          "Unknown selector section type: {selector_type}"
+        )))
+      }
     };
     let selector_section = OneSimpleSelector {
       selector_type: selector_selector_type,
       value,
     };
     self.simple_selectors.push(selector_section);
+    Ok(())
   }
 }
 
