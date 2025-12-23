@@ -34,11 +34,11 @@ export interface ExternalBundleWebpackPluginOptions {
    */
   encode: (opts: unknown) => Promise<{ buffer: Buffer }>
   /**
-   * The target SDK version of the external bundle.
+   * The engine version of the external bundle.
    *
-   * @defaultValue '3.4'
+   * @defaultValue '3.5'
    */
-  targetSdkVersion?: string | undefined
+  engineVersion?: string | undefined
 }
 
 const isDebug = (): boolean => {
@@ -122,8 +122,8 @@ export class ExternalBundleWebpackPlugin {
 
     const compilerOptions: Record<string, unknown> = {
       enableFiberArch: true,
-      // lynx.fetchBundle requires targetSdkVersion >= 3.4
-      targetSdkVersion: this.options.targetSdkVersion ?? '3.4',
+      // `lynx.fetchBundle` and `lynx.loadScript` require engineVersion >= 3.5
+      targetSdkVersion: this.options.engineVersion ?? '3.5',
     }
 
     const encodeOptions = {
