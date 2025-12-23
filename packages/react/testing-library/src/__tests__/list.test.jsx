@@ -9,6 +9,7 @@ import { Component, useState } from '@lynx-js/react';
 
 import { render } from '..';
 import { __pendingListUpdates } from '../../../runtime/lib/pendingListUpdates.js';
+import { prettyFormatSnapshotPatch } from '../../../runtime/lib/debug/formatPatch';
 
 describe('list', () => {
   it('basic', async () => {
@@ -509,6 +510,693 @@ describe('list', () => {
       </list>
     `);
   });
+  it.only('should reuse removed list', async () => {
+    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
+
+    let setHide;
+    const Comp = () => {
+      const [hide, _setHide] = useState(false);
+      setHide = _setHide;
+
+      if (hide) return null;
+
+      return (
+        <view
+          style={{
+            width: '100vw',
+            height: '100vh',
+          }}
+        >
+          {
+            <list
+              style={{
+                width: '100%',
+                height: '100%',
+              }}
+            >
+              {Array(6)
+                .fill(0)
+                .map((v, i) => i).map((v) => {
+                  return (
+                    <list-item item-key={`${v}`} key={v} full-span>
+                      {
+                        /*
+                      Add a static view here to ensure `__DynamicPartSlot` is generated
+
+                      Since https://github.com/lynx-family/lynx-stack/pull/1541 will add a wrapper
+                      for <list-item/> with dynamic key={v}, it will use __DynamicPartChildren
+                      for all its children
+                     */
+                      }
+                      <view>
+                        {'Hello'}
+                        ---
+                        {'ReactLynx!'}
+                      </view>
+                    </list-item>
+                  );
+                })}
+            </list>
+          }
+        </view>
+      );
+    };
+
+    const { container } = render(<Comp />);
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <view
+          style="width:100vw;height:100vh"
+        >
+          <list
+            style="width:100%;height:100%"
+            update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_15","item-key":"0","full-span":true},{"position":1,"type":"__snapshot_a9e46_test_15","item-key":"1","full-span":true},{"position":2,"type":"__snapshot_a9e46_test_15","item-key":"2","full-span":true},{"position":3,"type":"__snapshot_a9e46_test_15","item-key":"3","full-span":true},{"position":4,"type":"__snapshot_a9e46_test_15","item-key":"4","full-span":true},{"position":5,"type":"__snapshot_a9e46_test_15","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]}]"
+          />
+        </view>
+      </page>
+    `);
+
+    const list = container.firstChild.firstChild;
+
+    const uid0 = elementTree.enterListItemAtIndex(list, 0);
+    const uid1 = elementTree.enterListItemAtIndex(list, 1);
+    const uid2 = elementTree.enterListItemAtIndex(list, 2);
+    const uid3 = elementTree.enterListItemAtIndex(list, 3);
+
+    const listItem3 = list.children[3];
+    expect(listItem3).toMatchInlineSnapshot(`
+      <list-item
+        full-span="true"
+        item-key="3"
+      >
+        <wrapper>
+          <view>
+            <wrapper>
+              Hello
+            </wrapper>
+            ---
+            <wrapper>
+              ReactLynx!
+            </wrapper>
+          </view>
+        </wrapper>
+      </list-item>
+    `);
+
+    // Move the element 3 to the recycler pool
+    elementTree.leaveListItem(list, uid3);
+
+    callLepusMethodCalls.length = 0;
+
+    // Hide all
+    act(() => {
+      setHide(true);
+    });
+
+    {
+      const snapshotPatch = JSON.parse(callLepusMethodCalls[0][1]['data']).patchList[0].snapshotPatch;
+      const formattedSnapshotPatch = prettyFormatSnapshotPatch(snapshotPatch);
+      expect(formattedSnapshotPatch).toMatchInlineSnapshot(`
+        [
+          {
+            "childId": 2,
+            "op": "RemoveChild",
+            "parentId": -1,
+          },
+        ]
+      `);
+    }
+
+    callLepusMethodCalls.length = 0;
+
+    // Show all
+    act(() => {
+      setHide(false);
+    });
+
+    {
+      const snapshotPatch = JSON.parse(callLepusMethodCalls[0][1]['data']).patchList[0].snapshotPatch;
+      const formattedSnapshotPatch = prettyFormatSnapshotPatch(snapshotPatch);
+      expect(formattedSnapshotPatch).toMatchInlineSnapshot(`
+        [
+          {
+            "id": 40,
+            "op": "CreateElement",
+            "type": "__snapshot_a9e46_test_13",
+          },
+          {
+            "id": 41,
+            "op": "CreateElement",
+            "type": "__snapshot_a9e46_test_14",
+          },
+          {
+            "id": 42,
+            "op": "CreateElement",
+            "type": "__snapshot_a9e46_test_15",
+          },
+          {
+            "id": 42,
+            "op": "SetAttributes",
+            "values": [
+              {
+                "full-span": true,
+                "item-key": "0",
+              },
+            ],
+          },
+          {
+            "id": 43,
+            "op": "CreateElement",
+            "type": "__snapshot_a9e46_test_16",
+          },
+          {
+            "id": 44,
+            "op": "CreateElement",
+            "type": "wrapper",
+          },
+          {
+            "id": 45,
+            "op": "CreateElement",
+            "type": null,
+          },
+          {
+            "dynamicPartIndex": 0,
+            "id": 45,
+            "op": "SetAttribute",
+            "value": "Hello",
+          },
+          {
+            "beforeId": null,
+            "childId": 45,
+            "op": "InsertBefore",
+            "parentId": 44,
+          },
+          {
+            "beforeId": null,
+            "childId": 44,
+            "op": "InsertBefore",
+            "parentId": 43,
+          },
+          {
+            "id": 46,
+            "op": "CreateElement",
+            "type": "wrapper",
+          },
+          {
+            "id": 47,
+            "op": "CreateElement",
+            "type": null,
+          },
+          {
+            "dynamicPartIndex": 0,
+            "id": 47,
+            "op": "SetAttribute",
+            "value": "ReactLynx!",
+          },
+          {
+            "beforeId": null,
+            "childId": 47,
+            "op": "InsertBefore",
+            "parentId": 46,
+          },
+          {
+            "beforeId": null,
+            "childId": 46,
+            "op": "InsertBefore",
+            "parentId": 43,
+          },
+          {
+            "beforeId": null,
+            "childId": 43,
+            "op": "InsertBefore",
+            "parentId": 42,
+          },
+          {
+            "beforeId": null,
+            "childId": 42,
+            "op": "InsertBefore",
+            "parentId": 41,
+          },
+          {
+            "id": 48,
+            "op": "CreateElement",
+            "type": "__snapshot_a9e46_test_15",
+          },
+          {
+            "id": 48,
+            "op": "SetAttributes",
+            "values": [
+              {
+                "full-span": true,
+                "item-key": "1",
+              },
+            ],
+          },
+          {
+            "id": 49,
+            "op": "CreateElement",
+            "type": "__snapshot_a9e46_test_16",
+          },
+          {
+            "id": 50,
+            "op": "CreateElement",
+            "type": "wrapper",
+          },
+          {
+            "id": 51,
+            "op": "CreateElement",
+            "type": null,
+          },
+          {
+            "dynamicPartIndex": 0,
+            "id": 51,
+            "op": "SetAttribute",
+            "value": "Hello",
+          },
+          {
+            "beforeId": null,
+            "childId": 51,
+            "op": "InsertBefore",
+            "parentId": 50,
+          },
+          {
+            "beforeId": null,
+            "childId": 50,
+            "op": "InsertBefore",
+            "parentId": 49,
+          },
+          {
+            "id": 52,
+            "op": "CreateElement",
+            "type": "wrapper",
+          },
+          {
+            "id": 53,
+            "op": "CreateElement",
+            "type": null,
+          },
+          {
+            "dynamicPartIndex": 0,
+            "id": 53,
+            "op": "SetAttribute",
+            "value": "ReactLynx!",
+          },
+          {
+            "beforeId": null,
+            "childId": 53,
+            "op": "InsertBefore",
+            "parentId": 52,
+          },
+          {
+            "beforeId": null,
+            "childId": 52,
+            "op": "InsertBefore",
+            "parentId": 49,
+          },
+          {
+            "beforeId": null,
+            "childId": 49,
+            "op": "InsertBefore",
+            "parentId": 48,
+          },
+          {
+            "beforeId": null,
+            "childId": 48,
+            "op": "InsertBefore",
+            "parentId": 41,
+          },
+          {
+            "id": 54,
+            "op": "CreateElement",
+            "type": "__snapshot_a9e46_test_15",
+          },
+          {
+            "id": 54,
+            "op": "SetAttributes",
+            "values": [
+              {
+                "full-span": true,
+                "item-key": "2",
+              },
+            ],
+          },
+          {
+            "id": 55,
+            "op": "CreateElement",
+            "type": "__snapshot_a9e46_test_16",
+          },
+          {
+            "id": 56,
+            "op": "CreateElement",
+            "type": "wrapper",
+          },
+          {
+            "id": 57,
+            "op": "CreateElement",
+            "type": null,
+          },
+          {
+            "dynamicPartIndex": 0,
+            "id": 57,
+            "op": "SetAttribute",
+            "value": "Hello",
+          },
+          {
+            "beforeId": null,
+            "childId": 57,
+            "op": "InsertBefore",
+            "parentId": 56,
+          },
+          {
+            "beforeId": null,
+            "childId": 56,
+            "op": "InsertBefore",
+            "parentId": 55,
+          },
+          {
+            "id": 58,
+            "op": "CreateElement",
+            "type": "wrapper",
+          },
+          {
+            "id": 59,
+            "op": "CreateElement",
+            "type": null,
+          },
+          {
+            "dynamicPartIndex": 0,
+            "id": 59,
+            "op": "SetAttribute",
+            "value": "ReactLynx!",
+          },
+          {
+            "beforeId": null,
+            "childId": 59,
+            "op": "InsertBefore",
+            "parentId": 58,
+          },
+          {
+            "beforeId": null,
+            "childId": 58,
+            "op": "InsertBefore",
+            "parentId": 55,
+          },
+          {
+            "beforeId": null,
+            "childId": 55,
+            "op": "InsertBefore",
+            "parentId": 54,
+          },
+          {
+            "beforeId": null,
+            "childId": 54,
+            "op": "InsertBefore",
+            "parentId": 41,
+          },
+          {
+            "id": 60,
+            "op": "CreateElement",
+            "type": "__snapshot_a9e46_test_15",
+          },
+          {
+            "id": 60,
+            "op": "SetAttributes",
+            "values": [
+              {
+                "full-span": true,
+                "item-key": "3",
+              },
+            ],
+          },
+          {
+            "id": 61,
+            "op": "CreateElement",
+            "type": "__snapshot_a9e46_test_16",
+          },
+          {
+            "id": 62,
+            "op": "CreateElement",
+            "type": "wrapper",
+          },
+          {
+            "id": 63,
+            "op": "CreateElement",
+            "type": null,
+          },
+          {
+            "dynamicPartIndex": 0,
+            "id": 63,
+            "op": "SetAttribute",
+            "value": "Hello",
+          },
+          {
+            "beforeId": null,
+            "childId": 63,
+            "op": "InsertBefore",
+            "parentId": 62,
+          },
+          {
+            "beforeId": null,
+            "childId": 62,
+            "op": "InsertBefore",
+            "parentId": 61,
+          },
+          {
+            "id": 64,
+            "op": "CreateElement",
+            "type": "wrapper",
+          },
+          {
+            "id": 65,
+            "op": "CreateElement",
+            "type": null,
+          },
+          {
+            "dynamicPartIndex": 0,
+            "id": 65,
+            "op": "SetAttribute",
+            "value": "ReactLynx!",
+          },
+          {
+            "beforeId": null,
+            "childId": 65,
+            "op": "InsertBefore",
+            "parentId": 64,
+          },
+          {
+            "beforeId": null,
+            "childId": 64,
+            "op": "InsertBefore",
+            "parentId": 61,
+          },
+          {
+            "beforeId": null,
+            "childId": 61,
+            "op": "InsertBefore",
+            "parentId": 60,
+          },
+          {
+            "beforeId": null,
+            "childId": 60,
+            "op": "InsertBefore",
+            "parentId": 41,
+          },
+          {
+            "id": 66,
+            "op": "CreateElement",
+            "type": "__snapshot_a9e46_test_15",
+          },
+          {
+            "id": 66,
+            "op": "SetAttributes",
+            "values": [
+              {
+                "full-span": true,
+                "item-key": "4",
+              },
+            ],
+          },
+          {
+            "id": 67,
+            "op": "CreateElement",
+            "type": "__snapshot_a9e46_test_16",
+          },
+          {
+            "id": 68,
+            "op": "CreateElement",
+            "type": "wrapper",
+          },
+          {
+            "id": 69,
+            "op": "CreateElement",
+            "type": null,
+          },
+          {
+            "dynamicPartIndex": 0,
+            "id": 69,
+            "op": "SetAttribute",
+            "value": "Hello",
+          },
+          {
+            "beforeId": null,
+            "childId": 69,
+            "op": "InsertBefore",
+            "parentId": 68,
+          },
+          {
+            "beforeId": null,
+            "childId": 68,
+            "op": "InsertBefore",
+            "parentId": 67,
+          },
+          {
+            "id": 70,
+            "op": "CreateElement",
+            "type": "wrapper",
+          },
+          {
+            "id": 71,
+            "op": "CreateElement",
+            "type": null,
+          },
+          {
+            "dynamicPartIndex": 0,
+            "id": 71,
+            "op": "SetAttribute",
+            "value": "ReactLynx!",
+          },
+          {
+            "beforeId": null,
+            "childId": 71,
+            "op": "InsertBefore",
+            "parentId": 70,
+          },
+          {
+            "beforeId": null,
+            "childId": 70,
+            "op": "InsertBefore",
+            "parentId": 67,
+          },
+          {
+            "beforeId": null,
+            "childId": 67,
+            "op": "InsertBefore",
+            "parentId": 66,
+          },
+          {
+            "beforeId": null,
+            "childId": 66,
+            "op": "InsertBefore",
+            "parentId": 41,
+          },
+          {
+            "id": 72,
+            "op": "CreateElement",
+            "type": "__snapshot_a9e46_test_15",
+          },
+          {
+            "id": 72,
+            "op": "SetAttributes",
+            "values": [
+              {
+                "full-span": true,
+                "item-key": "5",
+              },
+            ],
+          },
+          {
+            "id": 73,
+            "op": "CreateElement",
+            "type": "__snapshot_a9e46_test_16",
+          },
+          {
+            "id": 74,
+            "op": "CreateElement",
+            "type": "wrapper",
+          },
+          {
+            "id": 75,
+            "op": "CreateElement",
+            "type": null,
+          },
+          {
+            "dynamicPartIndex": 0,
+            "id": 75,
+            "op": "SetAttribute",
+            "value": "Hello",
+          },
+          {
+            "beforeId": null,
+            "childId": 75,
+            "op": "InsertBefore",
+            "parentId": 74,
+          },
+          {
+            "beforeId": null,
+            "childId": 74,
+            "op": "InsertBefore",
+            "parentId": 73,
+          },
+          {
+            "id": 76,
+            "op": "CreateElement",
+            "type": "wrapper",
+          },
+          {
+            "id": 77,
+            "op": "CreateElement",
+            "type": null,
+          },
+          {
+            "dynamicPartIndex": 0,
+            "id": 77,
+            "op": "SetAttribute",
+            "value": "ReactLynx!",
+          },
+          {
+            "beforeId": null,
+            "childId": 77,
+            "op": "InsertBefore",
+            "parentId": 76,
+          },
+          {
+            "beforeId": null,
+            "childId": 76,
+            "op": "InsertBefore",
+            "parentId": 73,
+          },
+          {
+            "beforeId": null,
+            "childId": 73,
+            "op": "InsertBefore",
+            "parentId": 72,
+          },
+          {
+            "beforeId": null,
+            "childId": 72,
+            "op": "InsertBefore",
+            "parentId": 41,
+          },
+          {
+            "beforeId": null,
+            "childId": 41,
+            "op": "InsertBefore",
+            "parentId": 40,
+          },
+          {
+            "beforeId": null,
+            "childId": 40,
+            "op": "InsertBefore",
+            "parentId": -1,
+          },
+        ]
+      `);
+    }
+
+    // Reuse the element 3
+    elementTree.enterListItemAtIndex(list, 1);
+  });
 });
 
 describe('list - deferred <list-item/> should render as normal', () => {
@@ -594,7 +1282,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
               <text
                 style="padding: 10rpx;"
               >
-                Item 
+                Item
                 <wrapper>
                   1
                 </wrapper>
@@ -610,7 +1298,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
               <text
                 style="padding: 10rpx;"
               >
-                Item 
+                Item
                 <wrapper>
                   2
                 </wrapper>
@@ -626,7 +1314,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
               <text
                 style="padding: 10rpx;"
               >
-                Item 
+                Item
                 <wrapper>
                   3
                 </wrapper>
@@ -795,7 +1483,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
               <text
                 style="padding: 10rpx;"
               >
-                Item 
+                Item
                 <wrapper>
                   3
                 </wrapper>
@@ -811,7 +1499,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
               <text
                 style="padding: 10rpx;"
               >
-                Item 
+                Item
                 <wrapper>
                   2
                 </wrapper>
