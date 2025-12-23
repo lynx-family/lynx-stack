@@ -607,12 +607,12 @@ export class SnapshotInstance {
       __RemoveElement(this.__elements[elementIndex]!, child.__element_root!);
     }
 
-    if (child.__snapshot_def.isListHolder) {
-      snapshotDestroyList(child);
-    }
-
     this.__removeChild(child);
     traverseSnapshotInstance(child, v => {
+      if (v.__snapshot_def.isListHolder) {
+        snapshotDestroyList(v);
+      }
+
       v.__parent = null;
       v.__previousSibling = null;
       v.__nextSibling = null;
