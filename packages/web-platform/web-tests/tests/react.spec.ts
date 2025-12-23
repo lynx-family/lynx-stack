@@ -1065,6 +1065,41 @@ test.describe('reactlynx3 tests', () => {
         'rgb(0, 128, 0)',
       ); // green;
     });
+    test('api-initdata-immutable', async ({ page }, { title }) => {
+      await goto(page, 'api-initdata');
+      await wait(100);
+      await expect(page.locator('#target')).toHaveCSS(
+        'background-color',
+        'rgb(0, 128, 0)',
+      ); // green;
+      const [first, second] = await page.evaluate(async () => {
+        const wait = async (ms: number) => {
+          await new Promise((resolve) => {
+            setTimeout(resolve, ms);
+          });
+        };
+        const initData = { mockData: 'mockData' };
+        const lynxViewDOM = document.querySelector('lynx-view');
+        lynxViewDOM.initData = initData;
+        lynxViewDOM.reload();
+        await wait(500);
+        const first = getComputedStyle(
+          document.querySelector('lynx-view').shadowRoot
+            .querySelector('x-view'),
+        )['background-color'] === 'rgb(0, 128, 0)';
+        initData.mockData = 'newData';
+        lynxViewDOM.reload();
+        await wait(500);
+        const second = getComputedStyle(
+          document.querySelector('lynx-view').shadowRoot
+            .querySelector('x-view'),
+        )['background-color'] === 'rgb(0, 128, 0)';
+        return [first, second];
+      });
+      await wait(100);
+      expect(first).toBe(true);
+      expect(second).toBe(true);
+    });
 
     test('api-lynx-performance', async ({ page }, { title }) => {
       test.fixme(isSSR, 'implement performance API for SSR');
