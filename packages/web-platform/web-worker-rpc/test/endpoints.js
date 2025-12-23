@@ -53,10 +53,3 @@ export const changeLazyHandler = createRpcEndpoint(
   true,
   false,
 );
-
-export const removeLazyHandler = createRpcEndpoint(
-  'remove_lazy_handler',
-  false,
-  true,
-  false,
-);
