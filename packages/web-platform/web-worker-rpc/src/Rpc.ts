@@ -117,6 +117,7 @@ export class Rpc {
         }
 
         if (message.sync) {
+          console.log('[rpc] send sync reply', retData);
           if (message.buf) {
             const retStr = JSON.stringify(retData);
             const lengthViewer = new Uint32Array(message.buf, 0, 1);
