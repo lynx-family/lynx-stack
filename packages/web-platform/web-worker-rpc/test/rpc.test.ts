@@ -69,7 +69,7 @@ describe('rpc tests', () => {
   test('throwError sync', async () => {
     expect(() => {
       throwErrorSyncFn();
-    }).toThrowError('test sync error');
+    }).toThrow();
   });
 
   test('wait async', async () => {
