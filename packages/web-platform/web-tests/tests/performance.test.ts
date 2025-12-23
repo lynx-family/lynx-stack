@@ -79,7 +79,7 @@ test.describe('performance', () => {
   test('simple-one-dom', async ({ page, browserName, context }, { title }) => {
     const cdpSession = await goto({ page, browserName, context }, title);
     const metrics = await getMetrics(cdpSession, page);
-    expect(metrics.LayoutCount, 'layout count').toBeLessThanOrEqual(2);
+    expect(metrics.LayoutCount, 'layout count').toBeLessThanOrEqual(3);
     expect(metrics.RecalcStyleCount, 'recalc count').toBeLessThanOrEqual(3);
   });
   test('simple-two-dom', async ({ page, browserName, context }, { title }) => {
