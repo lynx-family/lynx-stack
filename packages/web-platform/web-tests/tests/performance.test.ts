@@ -120,7 +120,7 @@ test.describe('performance', () => {
 
   isCI ?? test.describe.configure({ retries: 8 });
   test(
-    'x-list-waterfall-1000',
+    'x-list-waterfall-100',
     async ({ page, browserName, context }, { title }) => {
       const cdpSession = await goto({ page, browserName, context }, title);
       const metrics = await getMetrics(cdpSession, page);
