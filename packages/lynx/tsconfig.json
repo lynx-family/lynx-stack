@@ -5,6 +5,7 @@
   "references": [
     /** packages-start */
     { "path": "./gesture-runtime/tsconfig.build.json" },
+    { "path": "./stylelint-plugin/tsconfig.build.json" },
     /** packages-end */
   ],
   "include": [],
