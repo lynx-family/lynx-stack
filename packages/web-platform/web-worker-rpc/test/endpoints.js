@@ -31,7 +31,7 @@ export const wait = createRpcEndpoint(
   false,
 );
 
-export const waitSync = createRpcEndpoint('wait_async', true, false);
+export const waitSync = createRpcEndpoint('wait_sync', true, false);
 
 export const testLazy = createRpcEndpoint(
   'add_lazy',
