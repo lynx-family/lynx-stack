@@ -239,10 +239,11 @@ impl StyleInfoDecoder {
           }
           RuleType::KeyFrames => {
             self.style_content.push_str("@keyframes ");
-            assert!(
-              style_rule.prelude.selector_list.len() == 1,
-              "KeyFrames rule should have only one selector"
-            );
+            if style_rule.prelude.selector_list.len() != 1 {
+              return Err(JsError::new(
+                "KeyFrames rule must have exactly one selector",
+              ));
+            }
             let keyframes_name = &style_rule.prelude.selector_list[0];
             keyframes_name.generate_to_string_buf(&mut self.style_content);
             self.style_content.push('{');
