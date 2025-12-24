@@ -39,13 +39,15 @@ impl MainThreadWasmContext {
         .template_root_dom
         .content()
         .clone_node_with_deep(true)
-        .unwrap()
+        .map_err(|e| JsError::new(&format!("Failed to clone template: {e:?}")))?
         .unchecked_into::<web_sys::DocumentFragment>();
       let elements = cloned_root
         .query_selector_all(format!("[{}]", constants::LYNX_TEMPLATE_MEMBER_ID_ATTRIBUTE).as_str())
-        .unwrap();
+        .map_err(|e| JsError::new(&format!("Failed to query selector all: {e:?}")))?;
       for element in elements.values() {
-        let dom = element.unwrap().unchecked_into::<web_sys::HtmlElement>();
+        let dom = element
+          .map_err(|e| JsError::new(&format!("Failed to get element: {e:?}")))?
+          .unchecked_into::<web_sys::HtmlElement>();
         let unique_id_attr = dom
           .get_attribute(constants::LYNX_TEMPLATE_MEMBER_ID_ATTRIBUTE)
           .ok_or_else(|| JsError::new("Missing LYNX_TEMPLATE_MEMBER_ID_ATTRIBUTE"))?;
@@ -76,7 +78,7 @@ impl MainThreadWasmContext {
             &self.unique_id_symbol,
             &JsValue::from_f64(unique_id as f64),
           )
-          .unwrap();
+          .map_err(|e| JsError::new(&format!("Failed to set unique_id symbol: {e:?}")))?;
           let lynx_element_data =
             prepared_element_data.clone_node(parent_component_unique_id, css_id);
 
@@ -126,7 +128,7 @@ impl MainThreadWasmContext {
       let template_root_dom = self
         .document
         .create_element("template")
-        .unwrap()
+        .map_err(|e| JsError::new(&format!("Failed to create template element: {e:?}")))?
         .unchecked_into::<web_sys::HtmlTemplateElement>();
       let template_root_content = template_root_dom.content();
       let mut id_to_prepared_element_data: FnvHashMap<i32, LynxElementData> = FnvHashMap::default();
