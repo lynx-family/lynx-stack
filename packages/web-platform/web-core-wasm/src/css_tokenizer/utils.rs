@@ -7,7 +7,7 @@
 use super::char_code_definitions::*;
 
 pub fn cmp_str(test_str: &str, start: usize, end: usize, reference_str: &str) -> bool {
-  if end > test_str.len() {
+  if start > end || end > test_str.len() {
     return false;
   }
   test_str[start..end].eq_ignore_ascii_case(reference_str)

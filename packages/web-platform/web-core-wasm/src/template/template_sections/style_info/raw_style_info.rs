@@ -170,21 +170,23 @@ impl Rule {
    */
   #[cfg(feature = "encode")]
   #[wasm_bindgen(constructor)]
-  pub fn new(rule_type: String) -> Rule {
+  pub fn new(rule_type: String) -> Result<Rule, JsError> {
     let rule_type_enum = match rule_type.as_str() {
       "StyleRule" => RuleType::Declaration,
       "FontFaceRule" => RuleType::FontFace,
       "KeyframesRule" => RuleType::KeyFrames,
-      _ => panic!("Unknown rule type: {rule_type}"),
+      _ => {
+        return Err(JsError::new(&format!("Unknown rule type: {rule_type}")));
+      }
     };
-    Rule {
+    Ok(Rule {
       rule_type: rule_type_enum,
       prelude: RulePrelude {
         selector_list: vec![],
       },
       declaration_block: DeclarationBlock { tokens: vec![] },
       nested_rules: vec![],
-    }
+    })
   }
 
   /**
