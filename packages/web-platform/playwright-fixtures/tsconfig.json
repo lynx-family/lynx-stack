@@ -5,7 +5,7 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "lib": ["ESNext", "DOM"],
-    "noEmit": true,
+    "emitDeclarationOnly": true,
   },
   "include": ["src"],
 }
