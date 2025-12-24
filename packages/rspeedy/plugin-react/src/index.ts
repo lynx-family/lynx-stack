@@ -19,4 +19,14 @@ export type {
   ShakeVisitorConfig,
 } from '@lynx-js/react-transform'
 
+// We only export types here
+// It is encouraged to use `api.useExposed(Symbol.for('LynxTemplatePlugin'))`
+// to access the actual API
+export type {
+  LynxTemplatePlugin,
+  LynxTemplatePluginOptions,
+  TemplateHooks,
+  EncodeOptions,
+} from '@lynx-js/template-webpack-plugin'
+
 export { LAYERS } from '@lynx-js/react-webpack-plugin'

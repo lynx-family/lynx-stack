@@ -21,6 +21,7 @@ import type {
 } from '@lynx-js/react-transform'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 import type { ExposedAPI } from '@lynx-js/rspeedy'
+import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
 import { applyBackgroundOnly } from './backgroundOnly.js'
 import { applyCSS } from './css.js'
@@ -369,6 +370,7 @@ export function pluginReactLynx(
         }
 
         api.expose(Symbol.for('LAYERS'), LAYERS)
+        api.expose(Symbol.for('LynxTemplatePlugin'), { LynxTemplatePlugin })
 
         const rspeedyAPIs = api.useExposed<ExposedAPI>(
           Symbol.for('rspeedy.api'),
