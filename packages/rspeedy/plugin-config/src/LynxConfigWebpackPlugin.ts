@@ -12,8 +12,8 @@ export class LynxConfigWebpackPlugin<Config extends object> {
     private options: {
       LynxTemplatePlugin: typeof LynxTemplatePlugin
       config: Config
-      compilerOptionsKeys: (keyof Config)[]
-      configKeys: (keyof Config)[]
+      compilerOptionsKeys: string[]
+      configKeys: string[]
     },
   ) {}
 
@@ -30,12 +30,12 @@ export class LynxConfigWebpackPlugin<Config extends object> {
 
         args.encodeData.compilerOptions = {
           ...args.encodeData.compilerOptions,
-          ...pick(config, this.options.compilerOptionsKeys),
+          ...pick(config, this.options.compilerOptionsKeys as (keyof Config)[]),
         }
 
         args.encodeData.sourceContent.config = {
           ...args.encodeData.sourceContent.config,
-          ...pick(config, this.options.configKeys),
+          ...pick(config, this.options.configKeys as (keyof Config)[]),
         }
 
         return args

@@ -10,7 +10,10 @@ import type {
   CompilerOptions as LynxCompilerOptions,
   Config as LynxConfig,
 } from '@lynx-js/type-config'
-import { compilerOptionsKeys, configKeys } from '@lynx-js/type-config'
+import {
+  compilerOptionsKeys as defaultCompilerOptionsKeys,
+  configKeys as defaultConfigKeys,
+} from '@lynx-js/type-config'
 
 import { LynxConfigWebpackPlugin } from './LynxConfigWebpackPlugin.js'
 import { validate as defaultValidate } from './validate.js'
@@ -49,7 +52,9 @@ export interface Config extends LynxConfig, LynxCompilerOptions {}
  */
 export function pluginLynxConfig(
   config: Config,
-  validate: (config: Config) => void = defaultValidate,
+  compilerOptionsKeys: string[] = defaultCompilerOptionsKeys,
+  configKeys: string[] = defaultConfigKeys,
+  validate: (input: unknown) => Config = defaultValidate,
   dslPluginName2PkgName: Record<string, string> = defaultDslPluginName2PkgName,
   upgradeRspeedyLink = 'https://www.npmjs.com/package/upgrade-rspeedy',
 ): RsbuildPlugin {
