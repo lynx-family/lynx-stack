@@ -90,11 +90,9 @@ impl StyleInfoDecoder {
                 && selector.simple_selectors[0].selector_type
                   == OneSimpleSelectorType::ClassSelector
               {
-                self
-                  .css_og_current_processing_class_selector_names
-                  .as_mut()
-                  .unwrap()
-                  .push(selector.simple_selectors[0].value.clone());
+                if let Some(names) = self.css_og_current_processing_class_selector_names.as_mut() {
+                  names.push(selector.simple_selectors[0].value.clone());
+                }
                 continue;
               }
               let mut the_index_of_last_compound_selector = 0;
@@ -294,43 +292,39 @@ impl Generator for StyleInfoDecoder {
   fn push_transform_kids_style(&mut self, declaration: ParsedDeclaration) {
     declaration.generate_to_string_buf(&mut self.temp_child_rules_buffer);
     if !self.config_enable_css_selector {
-      let class_selector_map = self
-        .css_og_css_id_to_class_selector_name_to_declarations_map
-        .as_mut()
-        .unwrap()
-        .entry(self.css_og_current_processing_css_id.unwrap())
-        .or_default();
-      for class_selector_name in self
-        .css_og_current_processing_class_selector_names
-        .as_ref()
-        .unwrap()
-        .iter()
-      {
-        let string_buf = class_selector_map
-          .entry(class_selector_name.clone())
-          .or_default();
-        declaration.generate_to_string_buf(string_buf);
+      if let (Some(map), Some(css_id), Some(names)) = (
+        self
+          .css_og_css_id_to_class_selector_name_to_declarations_map
+          .as_mut(),
+        self.css_og_current_processing_css_id,
+        self.css_og_current_processing_class_selector_names.as_ref(),
+      ) {
+        let class_selector_map = map.entry(css_id).or_default();
+        for class_selector_name in names.iter() {
+          let string_buf = class_selector_map
+            .entry(class_selector_name.clone())
+            .or_default();
+          declaration.generate_to_string_buf(string_buf);
+        }
       }
     }
   }
   fn push_transformed_style(&mut self, declaration: ParsedDeclaration) {
     if !self.config_enable_css_selector && !self.is_processing_font_face {
-      let class_selector_map = self
-        .css_og_css_id_to_class_selector_name_to_declarations_map
-        .as_mut()
-        .unwrap()
-        .entry(self.css_og_current_processing_css_id.unwrap())
-        .or_default();
-      for class_selector_name in self
-        .css_og_current_processing_class_selector_names
-        .as_ref()
-        .unwrap()
-        .iter()
-      {
-        let strint_buf = class_selector_map
-          .entry(class_selector_name.clone())
-          .or_default();
-        declaration.generate_to_string_buf(strint_buf);
+      if let (Some(map), Some(css_id), Some(names)) = (
+        self
+          .css_og_css_id_to_class_selector_name_to_declarations_map
+          .as_mut(),
+        self.css_og_current_processing_css_id,
+        self.css_og_current_processing_class_selector_names.as_ref(),
+      ) {
+        let class_selector_map = map.entry(css_id).or_default();
+        for class_selector_name in names.iter() {
+          let strint_buf = class_selector_map
+            .entry(class_selector_name.clone())
+            .or_default();
+          declaration.generate_to_string_buf(strint_buf);
+        }
       }
     }
     declaration.generate_to_string_buf(if self.is_processing_font_face {

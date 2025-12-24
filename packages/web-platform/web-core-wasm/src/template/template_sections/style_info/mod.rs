@@ -50,12 +50,12 @@ impl DecodedStyleData {
 
   #[wasm_bindgen(getter)]
   pub fn style_content(&mut self) -> String {
-    self.style_content.take().unwrap()
+    self.style_content.take().unwrap_or_default()
   }
 
   #[wasm_bindgen(getter)]
   pub fn font_face_content(&mut self) -> String {
-    self.font_face_content.take().unwrap()
+    self.font_face_content.take().unwrap_or_default()
   }
 
   #[wasm_bindgen]
