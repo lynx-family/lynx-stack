@@ -79,9 +79,9 @@ export class BackgroundSnapshotInstance {
   //   return !!this.__parent;
   // }
 
-  contains(child: BackgroundSnapshotInstance): boolean {
-    return child.parentNode === this;
-  }
+  // contains(child: BackgroundSnapshotInstance): boolean {
+  //   return child.parentNode === this;
+  // }
 
   // This will be called in `lazy`/`Suspense`.
   appendChild(child: BackgroundSnapshotInstance): void {
