@@ -89,7 +89,7 @@ export interface ExternalsLoadingPluginOptions {
  */
 export interface ExternalValue {
   /**
-   * The bundle(lynx.bundle) url of the library. The library source should be placed in `customSections`.
+   * The bundle url of the library. The library source should be placed in `customSections`.
    */
   url: string;
 
