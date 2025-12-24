@@ -1,3 +1,9 @@
+/*
+ * Copyright 2025 The Lynx Authors. All rights reserved.
+ * Licensed under the Apache License Version 2.0 that can be found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 mod decoded_style_info;
 mod flattened_style_info;
 mod raw_style_info;

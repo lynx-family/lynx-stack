@@ -1,3 +1,9 @@
+/*
+ * Copyright 2025 The Lynx Authors. All rights reserved.
+ * Licensed under the Apache License Version 2.0 that can be found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 /// CSS Tokenizer module.
 ///
 /// This module implements a CSS tokenizer based on the CSS Syntax Level 3 specification.

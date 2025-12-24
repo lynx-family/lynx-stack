@@ -1,3 +1,9 @@
+/*
+ * Copyright 2025 The Lynx Authors. All rights reserved.
+ * Licensed under the Apache License Version 2.0 that can be found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 use super::char_code_definitions::*;
 
 pub fn cmp_str(test_str: &str, start: usize, end: usize, reference_str: &str) -> bool {

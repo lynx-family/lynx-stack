@@ -1,3 +1,9 @@
+/*
+ * Copyright 2025 The Lynx Authors. All rights reserved.
+ * Licensed under the Apache License Version 2.0 that can be found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 pub const EOF_CATEGORY: u8 = 0x80;
 pub const WHITE_SPACE_CATEGORY: u8 = 0x82;
 pub const DIGIT_CATEGORY: u8 = 0x83;
