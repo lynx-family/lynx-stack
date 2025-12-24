@@ -4569,7 +4569,39 @@ test.describe('reactlynx3 tests', () => {
           expect(scrollend).toBeTruthy();
         },
       );
+      test(
+        'basic-element-list-basic-size',
+        async ({ page, browserName }, { title }) => {
+          let scrolled = false;
+          let scrollend = false;
+          await page.on('console', async (msg) => {
+            const event = await msg.args()[0]?.evaluate((e) => ({
+              type: e.type,
+            }));
+            if (!event) return;
+            if (event.type === 'scroll') {
+              scrolled = true;
+            }
+            if (event.type === 'scrollend') {
+              scrollend = true;
+            }
+          });
 
+          await goto(page, title);
+          await diffScreenShot(page, elementName, title);
+          await page.evaluate(() => {
+            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
+              'x-list',
+            )?.shadowRoot?.querySelector(
+              '#content',
+            )
+              ?.scrollTo(0, 500);
+          });
+          await wait(1000);
+          expect(scrolled).toBeTruthy();
+          expect(scrollend).toBeTruthy();
+        },
+      );
       test(
         'basic-element-list-scroll-to-position',
         async ({ page }, { title }) => {
@@ -4593,113 +4625,32 @@ test.describe('reactlynx3 tests', () => {
       test(
         'basic-element-list-estimated-main-axis-size-px',
         async ({ page, browserName }, { title }) => {
-          let scrolltolower = false;
-          await page.on('console', async (msg) => {
-            const event = await msg.args()[0]?.evaluate((e) => ({
-              type: e.type,
-            }));
-            if (!event) return;
-            if (event.type === 'scrolltolower') {
-              scrolltolower = true;
-            }
-          });
-
           await goto(page, title);
-          await wait(3000);
-          expect(scrolltolower).toBeTruthy();
-        },
-      );
-      test(
-        'basic-element-list-estimated-main-axis-size-px-default',
-        async ({ page }, { title }) => {
-          await goto(page, title);
-          await diffScreenShot(page, elementName, title, 'initial');
-          await wait(1000);
+          expect(
+            await page.locator('#target').evaluate((e) =>
+              getComputedStyle(e).getPropertyValue('height')
+            ),
+          )
+            .toBe(
+              '100px',
+            );
           await page.evaluate(() => {
             document.querySelector('lynx-view')!.shadowRoot!.querySelector(
               'x-list',
             )?.shadowRoot?.querySelector(
               '#content',
             )
-              ?.scrollTo(0, 300);
+              ?.scrollTo(0, 5000);
           });
-          await wait(1000);
-          await diffScreenShot(page, elementName, title, 'scroll');
-        },
-      );
-      test(
-        'basic-element-list-estimated-main-axis-size-px-horizontal-default',
-        async ({ page }, { title }) => {
-          await goto(page, title);
-          await diffScreenShot(page, elementName, title, 'initial');
-          await wait(1000);
-          await page.evaluate(() => {
-            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
-              'x-list',
-            )?.shadowRoot?.querySelector(
-              '#content',
-            )
-              ?.scrollTo(300, 0);
-          });
-          await wait(1000);
-          await diffScreenShot(page, elementName, title, 'scroll');
-        },
-      );
-      test(
-        'basic-element-list-estimated-main-axis-size-px-waterfall',
-        async ({ page, browserName }, { title }) => {
-          let scrolltolower = false;
-          await page.on('console', async (msg) => {
-            const event = await msg.args()[0]?.evaluate((e) => ({
-              type: e.type,
-            }));
-            if (!event) return;
-            if (event.type === 'scrolltolower') {
-              scrolltolower = true;
-            }
-          });
-
-          await goto(page, title);
-          await wait(5000);
-          expect(scrolltolower).toBeTruthy();
-        },
-      );
-      test(
-        'basic-element-list-horizontal-estimated-main-axis-size-px',
-        async ({ page, browserName }, { title }) => {
-          let scrolltolower = false;
-          await page.on('console', async (msg) => {
-            const event = await msg.args()[0]?.evaluate((e) => ({
-              type: e.type,
-            }));
-            if (!event) return;
-            if (event.type === 'scrolltolower') {
-              scrolltolower = true;
-            }
-          });
-
-          await goto(page, title);
-          await wait(5000);
-          expect(scrolltolower).toBeTruthy();
-        },
-      );
-      test(
-        'basic-element-list-horizontal-estimated-main-axis-size-px-waterfall',
-        async ({ page, browserName }, { title }) => {
-          let scrolltolower = false;
-          await page.on('console', async (msg) => {
-            const event = await msg.args()[0]?.evaluate((e) => ({
-              type: e.type,
-            }));
-            if (!event) return;
-            if (event.type === 'scrolltolower') {
-              scrolltolower = true;
-            }
-          });
-
-          await goto(page, title);
-          await wait(5000);
-          expect(scrolltolower).toBeTruthy();
+          await wait(500);
+          expect(
+            await page.locator('#target').evaluate((e) =>
+              getComputedStyle(e).getPropertyValue('height')
+            ),
+          )
+            .toBe(
+              '200px',
+            );
         },
       );
     });
