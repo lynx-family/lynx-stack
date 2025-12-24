@@ -1727,6 +1727,16 @@ test.describe('web-elements test suite', () => {
       await diffScreenShot(page, title, 'wheel-y-wheelable');
     });
 
+    test('list-item-fit-content', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      const listItems = page.locator('list-item');
+      const firstItemBox = await listItems.nth(0).boundingBox();
+      const secondItemBox = await listItems.nth(1).boundingBox();
+      expect(firstItemBox?.height).toBe(110);
+      expect(secondItemBox?.height).toBe(210);
+    });
+
     test('enable-scroll', async ({ page, browserName }, { titlePath }) => {
       const title = getTitle(titlePath);
       await gotoWebComponentPage(page, title);
