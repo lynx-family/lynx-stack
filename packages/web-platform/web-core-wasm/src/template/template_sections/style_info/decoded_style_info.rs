@@ -320,10 +320,10 @@ impl Generator for StyleInfoDecoder {
       ) {
         let class_selector_map = map.entry(css_id).or_default();
         for class_selector_name in names.iter() {
-          let strint_buf = class_selector_map
+          let string_buf = class_selector_map
             .entry(class_selector_name.clone())
             .or_default();
-          declaration.generate_to_string_buf(strint_buf);
+          declaration.generate_to_string_buf(string_buf);
         }
       }
     }
