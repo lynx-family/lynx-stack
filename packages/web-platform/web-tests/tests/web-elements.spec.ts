@@ -1,8 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { swipe, dragAndHold } from './utils.js';
-import { test, expect } from './coverage-fixture.js';
+import { test, expect, swipe, dragAndHold } from '@lynx-js/playwright-fixtures';
 import type { Page } from '@playwright/test';
 import path from 'node:path';
 const ENABLE_MULTI_THREAD = !!process.env['ENABLE_MULTI_THREAD'];

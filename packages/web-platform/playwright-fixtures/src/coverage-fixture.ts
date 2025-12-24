@@ -1,3 +1,7 @@
+// Copyright 2024 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -32,9 +36,8 @@ export const test: typeof base = base.extend({
     await Promise.all(
       Array.from(pages.values()).flatMap(async (page, index) => {
         const coverage = await page.coverage.stopJSCoverage();
-
         const converter = v8ToIstanbul(
-          path.join(__dirname, '..', '..', 'www', 'main.js'),
+          path.join(path.dirname(testInfo.file), '..', 'www', 'main.js'),
         );
         await converter.load();
 

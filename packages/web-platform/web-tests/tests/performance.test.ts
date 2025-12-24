@@ -4,7 +4,7 @@
 
 import type { Page, BrowserContext, CDPSession } from '@playwright/test';
 
-import { test, expect } from './coverage-fixture.js';
+import { test, expect } from '@lynx-js/playwright-fixtures';
 
 const ENABLE_MULTI_THREAD = !!process.env['ENABLE_MULTI_THREAD'];
 const isSSR = !!process.env['ENABLE_SSR'];
