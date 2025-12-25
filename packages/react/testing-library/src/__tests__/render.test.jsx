@@ -2,6 +2,7 @@ import '@testing-library/jest-dom';
 import { test, expect } from 'vitest';
 import { render } from '..';
 import { createRef } from '@lynx-js/react';
+import { Component } from 'preact';
 
 test('renders view into page', async () => {
   const ref = createRef();
@@ -258,4 +259,38 @@ describe('dynamic key in snapshot', () => {
       </page>
     `);
   });
+});
+
+it('should handle keyed replacements', () => {
+  const actions = [];
+  class Comp extends Component {
+    componentDidMount() {
+      actions.push('mounted ' + this.props.i);
+    }
+    render() {
+      return <text>Hello</text>;
+    }
+  }
+
+  const App = props => {
+    return (
+      <view>
+        <Comp key={props.y} i={1} />
+        {false}
+        <Comp i={2} />
+        <Comp i={3} />
+      </view>
+    );
+  };
+
+  render(<App y='1' />);
+  expect(actions).to.deep.equal(['mounted 1', 'mounted 2', 'mounted 3']);
+
+  render(<App y='2' />);
+  expect(actions).to.deep.equal([
+    'mounted 1',
+    'mounted 2',
+    'mounted 3',
+    'mounted 1',
+  ]);
 });

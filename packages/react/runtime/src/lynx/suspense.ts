@@ -18,7 +18,6 @@ export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: 
     (__MAIN_THREAD__ ? createElementMainThread : createElementBackground) as typeof createElementBackground;
   const childrenRef = useRef<BackgroundSnapshotInstance>();
 
-  // @ts-expect-error wrapper is a valid element type
   const newChildren = __createElement('wrapper', {
     ref: (bsi: BackgroundSnapshotInstance) => {
       if (bsi) {
@@ -27,7 +26,6 @@ export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: 
     },
   }, children);
 
-  // @ts-expect-error wrapper is a valid element type
   const newFallback = __createElement('wrapper', {
     ref: (bsi: BackgroundSnapshotInstance) => {
       if (bsi && childrenRef.current) {
