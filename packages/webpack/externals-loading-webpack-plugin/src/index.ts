@@ -78,118 +78,125 @@ export interface ExternalsLoadingPluginOptions {
    */
   externals: Record<
     string,
-    {
-      /**
-       * The bundle(lynx.bundle) url of the library. The library source should be placed in `customSections`.
-       */
-      url: string;
-
-      /**
-       * The name of the library. Same as https://webpack.js.org/configuration/externals/#string.
-       *
-       * By default, the library name is the same as the externals key. For example:
-       *
-       * The config
-       *
-       * ```js
-       * ExternalsLoadingPlugin({
-       *   externals: {
-       *     lodash: {
-       *       url: '……',
-       *     }
-       *   }
-       * })
-       * ```
-       *
-       * Will generate the following webpack externals config:
-       *
-       * ```js
-       * externals: {
-       *   lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].lodash',
-       * }
-       * ```
-       *
-       * If one external bundle contains multiple modules, should set the same library name to ensure it's loaded only once. For example:
-       *
-       * ```js
-       * ExternalsLoadingPlugin({
-       *   externals: {
-       *     lodash: {
-       *       libraryName: 'Lodash',
-       *       url: '……',
-       *     },
-       *     'lodash-es': {
-       *       libraryName: 'Lodash',
-       *       url: '……',
-       *     }
-       *   }
-       * })
-       * ```
-       * Will generate the following webpack externals config:
-       *
-       * ```js
-       * externals: {
-       *   lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash',
-       *   'lodash-es': 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash',
-       * }
-       * ```
-       *
-       * You can pass an array to specify subpath of the external. Same as https://webpack.js.org/configuration/externals/#string-1. For example:
-       *
-       * ```js
-       * ExternalsLoadingPlugin({
-       *   externals: {
-       *     preact: {
-       *       libraryName: ['ReactLynx', 'Preact'],
-       *       url: '……',
-       *     },
-       *   }
-       * })
-       * ```
-       *
-       * Will generate the following webpack externals config:
-       *
-       * ```js
-       * externals: {
-       *   preact: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.Preact',
-       * }
-       * ```
-       *
-       * @defaultValue `undefined`
-       *
-       * @example `Lodash`
-       */
-      libraryName?: string | string[];
-
-      /**
-       * Whether the source should be loaded asynchronously or not.
-       *
-       * @defaultValue `true`
-       */
-      async?: boolean;
-
-      /**
-       * The options of the background layer.
-       *
-       * @defaultValue `undefined`
-       */
-      background?: LayerOptions;
-
-      /**
-       * The options of the main-thread layer.
-       *
-       * @defaultValue `undefined`
-       */
-      mainThread?: LayerOptions;
-
-      /**
-       * The wait time in milliseconds.
-       *
-       * @defaultValue `2000`
-       */
-      timeout?: number;
-    }
+    ExternalValue
   >;
+}
+
+/**
+ * The value item of the externals.
+ *
+ * @public
+ */
+export interface ExternalValue {
+  /**
+   * The bundle url of the library. The library source should be placed in `customSections`.
+   */
+  url: string;
+
+  /**
+   * The name of the library. Same as https://webpack.js.org/configuration/externals/#string.
+   *
+   * By default, the library name is the same as the externals key. For example:
+   *
+   * The config
+   *
+   * ```js
+   * ExternalsLoadingPlugin({
+   *   externals: {
+   *     lodash: {
+   *       url: '……',
+   *     }
+   *   }
+   * })
+   * ```
+   *
+   * Will generate the following webpack externals config:
+   *
+   * ```js
+   * externals: {
+   *   lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].lodash',
+   * }
+   * ```
+   *
+   * If one external bundle contains multiple modules, should set the same library name to ensure it's loaded only once. For example:
+   *
+   * ```js
+   * ExternalsLoadingPlugin({
+   *   externals: {
+   *     lodash: {
+   *       libraryName: 'Lodash',
+   *       url: '……',
+   *     },
+   *     'lodash-es': {
+   *       libraryName: 'Lodash',
+   *       url: '……',
+   *     }
+   *   }
+   * })
+   * ```
+   * Will generate the following webpack externals config:
+   *
+   * ```js
+   * externals: {
+   *   lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash',
+   *   'lodash-es': 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash',
+   * }
+   * ```
+   *
+   * You can pass an array to specify subpath of the external. Same as https://webpack.js.org/configuration/externals/#string-1. For example:
+   *
+   * ```js
+   * ExternalsLoadingPlugin({
+   *   externals: {
+   *     preact: {
+   *       libraryName: ['ReactLynx', 'Preact'],
+   *       url: '……',
+   *     },
+   *   }
+   * })
+   * ```
+   *
+   * Will generate the following webpack externals config:
+   *
+   * ```js
+   * externals: {
+   *   preact: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.Preact',
+   * }
+   * ```
+   *
+   * @defaultValue `undefined`
+   *
+   * @example `Lodash`
+   */
+  libraryName?: string | string[];
+
+  /**
+   * Whether the source should be loaded asynchronously or not.
+   *
+   * @defaultValue `true`
+   */
+  async?: boolean;
+
+  /**
+   * The options of the background layer.
+   *
+   * @defaultValue `undefined`
+   */
+  background?: LayerOptions;
+
+  /**
+   * The options of the main-thread layer.
+   *
+   * @defaultValue `undefined`
+   */
+  mainThread?: LayerOptions;
+
+  /**
+   * The wait time in milliseconds.
+   *
+   * @defaultValue `2000`
+   */
+  timeout?: number;
 }
 
 /**
