@@ -29,13 +29,13 @@ function ssrEncode() {
   };
 
   try {
-    return JSON.stringify({ __opcodes, __root_values: __root.__values }, (_key, value) => {
-      // hack: exclude worklet ctx from serialization to reduce payload size
-      if (value && typeof value === 'object' && '_lepusWorkletHash' in value) {
-        return undefined;
+    const replacer = (_key: string, value: unknown): unknown => {
+      if (value && typeof value === 'object' && '_lepusWorkletHash' in (value as Record<string, unknown>)) {
+        return null;
       }
-      return value as unknown;
-    });
+      return value;
+    };
+    return JSON.stringify({ __opcodes, __root_values: __root.__values }, replacer);
   } finally {
     SnapshotInstance.prototype.toJSON = oldToJSON;
   }
