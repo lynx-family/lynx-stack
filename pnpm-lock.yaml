@@ -1531,6 +1531,9 @@ importers:
       '@lynx-js/external-bundle-rsbuild-plugin':
         specifier: workspace:*
         version: link:../packages/rspeedy/plugin-external-bundle
+      '@lynx-js/externals-loading-webpack-plugin':
+        specifier: workspace:*
+        version: link:../packages/webpack/externals-loading-webpack-plugin
       '@lynx-js/lynx-bundle-rslib-config':
         specifier: workspace:*
         version: link:../packages/rspeedy/lynx-bundle-rslib-config
