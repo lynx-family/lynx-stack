@@ -3356,7 +3356,7 @@ test.describe('web-elements test suite', () => {
     );
 
     test(
-      'x-swiper/x-swiper-set-curren-smooth-scroll',
+      'x-swiper/x-swiper-set-current-smooth-scroll',
       async ({ page, browserName, context }, {
         title,
       }) => {
