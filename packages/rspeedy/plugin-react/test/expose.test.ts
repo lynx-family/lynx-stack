@@ -4,14 +4,13 @@
 import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
 import { describe, expect, test } from 'vitest'
 
-import { createRspeedy } from '@lynx-js/rspeedy'
-
+import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 import type { LynxTemplatePlugin, TemplateHooks } from '../src/index.js'
 
 describe('Expose', () => {
   test('LynxTemplatePlugin', async () => {
-    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const { pluginReactLynx } = await import('../src/index.js')
 
     let expose: { LynxTemplatePlugin: typeof LynxTemplatePlugin } | undefined
     let beforeEncodeArgs:
