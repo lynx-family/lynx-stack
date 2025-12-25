@@ -835,7 +835,7 @@ test.describe('web-elements test suite', () => {
       });
       await diffScreenShot(page, title, 'fling-works');
     });
-    test('x-foldview-ng/size-controled-by-parent-flex-cross-axis', async ({
+    test('x-foldview-ng/size-controlled-by-parent-flex-cross-axis', async ({
       page,
       browserName,
     }, { title }) => {
