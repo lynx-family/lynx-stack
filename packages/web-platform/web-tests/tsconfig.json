@@ -10,7 +10,6 @@
   "references": [
     /** packages-start */
     { "path": "../offscreen-document/tsconfig.json" },
-    { "path": "../web-elements-reactive/tsconfig.json" },
     { "path": "../web-elements/tsconfig.json" },
     { "path": "../web-constants/tsconfig.json" },
     { "path": "../web-mainthread-apis/tsconfig.json" },
