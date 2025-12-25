@@ -12,6 +12,7 @@ import { createRequire } from 'node:module'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 
+import type { Config } from '@lynx-js/config-rsbuild-plugin'
 import { pluginReactAlias } from '@lynx-js/react-alias-rsbuild-plugin'
 import type {
   CompatVisitorConfig,
@@ -325,8 +326,21 @@ export function pluginReactLynx(
     }),
     {
       name: 'lynx:react',
-      pre: ['lynx:rsbuild:plugin-api'],
+      pre: ['lynx:rsbuild:plugin-api', 'lynx:config'],
       setup(api) {
+        const exposedConfig = api.useExposed<{ config: Config }>(
+          Symbol.for('lynx.config'),
+        )
+        if (exposedConfig) {
+          Object.keys(defaultOptions).forEach((key) => {
+            if (Object.hasOwn(exposedConfig.config, key)) {
+              Object.assign(resolvedOptions, {
+                [key]: exposedConfig.config[key as keyof Config],
+              })
+            }
+          })
+        }
+
         applyCSS(api, resolvedOptions)
         applyEntry(api, resolvedOptions)
         applyBackgroundOnly(api)

@@ -47,6 +47,7 @@
     "background-only": "workspace:^"
   },
   "devDependencies": {
+    "@lynx-js/config-rsbuild-plugin": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-transform": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
