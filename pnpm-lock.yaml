@@ -1571,6 +1571,9 @@ importers:
       '@lynx-js/chunk-loading-webpack-plugin':
         specifier: workspace:*
         version: link:../packages/webpack/chunk-loading-webpack-plugin
+      '@lynx-js/config-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../packages/rspeedy/plugin-config
       '@lynx-js/css-extract-webpack-plugin':
         specifier: workspace:*
         version: link:../packages/webpack/css-extract-webpack-plugin
