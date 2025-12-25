@@ -763,6 +763,9 @@ importers:
         specifier: workspace:^
         version: link:../../background-only
     devDependencies:
+      '@lynx-js/config-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-config
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react
