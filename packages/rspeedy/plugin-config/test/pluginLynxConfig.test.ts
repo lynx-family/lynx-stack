@@ -1,9 +1,6 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-// Copyright 2025 The Lynx Authors. All rights reserved.
-// Licensed under the Apache License Version 2.0 that can be found in the
-// LICENSE file in the root directory of this source tree.
 
 /* eslint-disable no-irregular-whitespace */
 import { describe, expect, test, vi } from 'vitest'
@@ -69,7 +66,9 @@ describe('pluginLynxConfig', () => {
       rspeedyConfig: {
         plugins: [
           pluginLynxConfig({}, {
-            'lynx:vue': '@lynx-js/vue-rsbuild-plugin',
+            dslPluginName2PkgName: {
+              'lynx:vue': '@lynx-js/vue-rsbuild-plugin',
+            },
           }),
           {
             name: 'lynx:vue',
