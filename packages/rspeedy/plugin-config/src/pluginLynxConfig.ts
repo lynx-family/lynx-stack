@@ -30,6 +30,19 @@ const defaultDslPluginName2PkgName = {
 export interface Config extends LynxConfig, LynxCompilerOptions {}
 
 /**
+ * Options for the Lynx Config rsbuild plugin.
+ *
+ * @public
+ */
+export interface Options {
+  compilerOptionsKeys?: string[]
+  configKeys?: string[]
+  validate?: (input: unknown) => Config
+  dslPluginName2PkgName?: Record<string, string>
+  upgradeRspeedyLink?: string
+}
+
+/**
  * A rsbuild plugin for config Lynx Config defined by `@lynx-js/type-config`.
  *
  * @param config - The Lynx config to set.
@@ -52,12 +65,16 @@ export interface Config extends LynxConfig, LynxCompilerOptions {}
  */
 export function pluginLynxConfig(
   config: Config,
-  compilerOptionsKeys: string[] = defaultCompilerOptionsKeys,
-  configKeys: string[] = defaultConfigKeys,
-  validate: (input: unknown) => Config = defaultValidate,
-  dslPluginName2PkgName: Record<string, string> = defaultDslPluginName2PkgName,
-  upgradeRspeedyLink = 'https://www.npmjs.com/package/upgrade-rspeedy',
+  options?: Options,
 ): RsbuildPlugin {
+  const {
+    compilerOptionsKeys = defaultCompilerOptionsKeys,
+    configKeys = defaultConfigKeys,
+    validate = defaultValidate,
+    dslPluginName2PkgName = defaultDslPluginName2PkgName,
+    upgradeRspeedyLink = 'https://www.npmjs.com/package/upgrade-rspeedy',
+  } = options ?? {}
+
   validate(config)
 
   return {

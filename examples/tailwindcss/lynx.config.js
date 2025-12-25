@@ -19,7 +19,7 @@ export default defineConfig({
       exclude: [/[\\/]node_modules[\\/]/],
     }),
     pluginLynxConfig({
-      enableICU: false,
+      enableCSSInlineVariables: true,
     }),
   ],
 });

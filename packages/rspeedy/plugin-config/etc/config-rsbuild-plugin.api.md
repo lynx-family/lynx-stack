@@ -13,6 +13,20 @@ export interface Config extends Config_2, CompilerOptions {
 }
 
 // @public
-export function pluginLynxConfig(config: Config, compilerOptionsKeys?: string[], configKeys?: string[], validate?: (input: unknown) => Config, dslPluginName2PkgName?: Record<string, string>, upgradeRspeedyLink?: string): RsbuildPlugin;
+export interface Options {
+    // (undocumented)
+    compilerOptionsKeys?: string[];
+    // (undocumented)
+    configKeys?: string[];
+    // (undocumented)
+    dslPluginName2PkgName?: Record<string, string>;
+    // (undocumented)
+    upgradeRspeedyLink?: string;
+    // (undocumented)
+    validate?: (input: unknown) => Config;
+}
+
+// @public
+export function pluginLynxConfig(config: Config, options?: Options): RsbuildPlugin;
 
 ```

@@ -24,4 +24,4 @@
 
 export { pluginLynxConfig } from './pluginLynxConfig.js'
 
-export type { Config } from './pluginLynxConfig.js'
+export type { Config, Options } from './pluginLynxConfig.js'
