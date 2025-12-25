@@ -347,7 +347,7 @@ importers:
     dependencies:
       zx:
         specifier: ^8.8.4
-        version: 8.8.5
+        version: 8.8.4
 
   packages/lynx/gesture-runtime:
     devDependencies:
@@ -375,7 +375,7 @@ importers:
         version: 7.55.2(@types/node@24.6.1)
       '@modelcontextprotocol/sdk':
         specifier: ^1.20.0
-        version: 1.24.0(zod@3.25.76)
+        version: 1.20.0
       '@types/debug':
         specifier: ^4.1.12
         version: 4.1.12
@@ -396,7 +396,7 @@ importers:
     dependencies:
       '@modelcontextprotocol/sdk':
         specifier: ^1.20.0
-        version: 1.24.0(zod@3.25.76)
+        version: 1.20.0
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -1063,27 +1063,21 @@ importers:
       '@lynx-js/playwright-fixtures':
         specifier: workspace:*
         version: link:../playwright-fixtures
-      '@lynx-js/web-elements-compat':
-        specifier: workspace:*
-        version: link:../web-elements-compat
       '@playwright/test':
         specifier: ^1.57.0
         version: 1.57.0
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 1.6.13
+      '@rsbuild/plugin-source-build':
+        specifier: ^1.0.3
+        version: 1.0.3(@rsbuild/core@1.6.13)
       nyc:
         specifier: ^17.1.0
         version: 17.1.0
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
-
-  packages/web-platform/web-elements-compat:
-    devDependencies:
-      '@lynx-js/web-elements':
-        specifier: workspace:*
-        version: link:../web-elements
 
   packages/web-platform/web-elements-reactive: {}
 
@@ -1207,15 +1201,6 @@ importers:
       '@lynx-js/web-core-server':
         specifier: workspace:*
         version: link:../web-core-server
-      '@lynx-js/web-elements':
-        specifier: workspace:*
-        version: link:../web-elements
-      '@lynx-js/web-elements-compat':
-        specifier: workspace:*
-        version: link:../web-elements-compat
-      '@lynx-js/web-elements-reactive':
-        specifier: workspace:*
-        version: link:../web-elements-reactive
       '@lynx-js/web-mainthread-apis':
         specifier: workspace:*
         version: link:../web-mainthread-apis
@@ -2931,15 +2916,9 @@ packages:
   '@microsoft/tsdoc@0.16.0':
     resolution: {integrity: sha512-xgAyonlVVS+q7Vc7qLW0UrJU7rSFcETRWsqdXZtjzRU8dF+6CkozTK4V4y1LwOX7j8r/vHphjDeMeGI4tNGeGA==}
 
-  '@modelcontextprotocol/sdk@1.24.0':
-    resolution: {integrity: sha512-D8h5KXY2vHFW8zTuxn2vuZGN0HGrQ5No6LkHwlEA9trVgNdPL3TF1dSqKA7Dny6BbBYKSW/rOBDXdC8KJAjUCg==}
+  '@modelcontextprotocol/sdk@1.20.0':
+    resolution: {integrity: sha512-kOQ4+fHuT4KbR2iq2IjeV32HiihueuOf1vJkq18z08CLZ1UQrTc8BXJpVfxZkq45+inLLD+D4xx4nBjUelJa4Q==}
     engines: {node: '>=18'}
-    peerDependencies:
-      '@cfworker/json-schema': ^4.1.1
-      zod: ^3.25 || ^4.0
-    peerDependenciesMeta:
-      '@cfworker/json-schema':
-        optional: true
 
   '@module-federation/error-codes@0.21.6':
     resolution: {integrity: sha512-MLJUCQ05KnoVl8xd6xs9a5g2/8U+eWmVxg7xiBMeR0+7OjdWUbHwcwgVFatRIwSZvFgKHfWEiI7wsU1q1XbTRQ==}
@@ -3254,6 +3233,14 @@ packages:
     resolution: {integrity: sha512-2XcrXUwJftWsWURsvGKKXc7A4yEAUdVkw+K95Qrfmy5E5IfARik0Ko3TFB1828wdvhZ1OFLvDQEzONCIyQV1yg==}
     peerDependencies:
       '@rsbuild/core': 1.x
+
+  '@rsbuild/plugin-source-build@1.0.3':
+    resolution: {integrity: sha512-b+BWbx5eqSV3Ydq0gH265ov0LsVfV7ho0q4FT5zgxt+ZIPU5W5TB14tAt3enHXGOATMFBrjTL85XNpqQS6aExA==}
+    peerDependencies:
+      '@rsbuild/core': 1.x
+    peerDependenciesMeta:
+      '@rsbuild/core':
+        optional: true
 
   '@rsbuild/plugin-type-check@1.3.1':
     resolution: {integrity: sha512-T+HrTGL1N2m8fusNmJuIXpmWk8OhyOYqhpGQ4uC+qs+6X6+/gNbh9M7a0AvD4lqXJqgBjPo9CltqU06uJJloAw==}
@@ -5779,6 +5766,10 @@ packages:
     resolution: {integrity: sha512-oX2ruAFQwf/Orj8m737Y5adxDQO0LAB7/S5MnxCdTNDd4p6BsyIVsv9JQsATbTSq8KHRpLwIHbVlUNatxd+1Ow==}
     engines: {node: '>=8.6.0'}
 
+  fast-glob@3.3.3:
+    resolution: {integrity: sha512-7MptL8U0cqcFdzIzwOTHoilX9x5BrNqye7Z/LuC7kCMRio1EMSyqRK3BEAUD7sXRq4iT4AzTVuZdhgQ2TCvYLg==}
+    engines: {node: '>=8.6.0'}
+
   fast-json-stable-stringify@2.1.0:
     resolution: {integrity: sha512-lhd/wF+Lk98HZoTCtlVraHtfh5XYijIjalXck7saUtuanSDyLMxnHhSXEDJqHxD7msR8D0uCmqlkwjCV8xvwHw==}
 
@@ -6676,9 +6667,6 @@ packages:
 
   jju@1.4.0:
     resolution: {integrity: sha512-8wb9Yw966OSxApiCt0K3yNJL8pnNeIv+OEq2YMidz4FKP6nonSRoOXc80iXY4JaN2FC11B9qsNmDsm+ZOfMROA==}
-
-  jose@6.1.3:
-    resolution: {integrity: sha512-0TpaTfihd4QMNwrz/ob2Bp7X04yuxJkjRGi4aKmOqwhov54i6u79oCv7T+C7lo70MKH6BesI3vscD1yb/yzKXQ==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -9505,8 +9493,8 @@ packages:
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
-  zx@8.8.5:
-    resolution: {integrity: sha512-SNgDF5L0gfN7FwVOdEFguY3orU5AkfFZm9B5YSHog/UDHv+lvmd82ZAsOenOkQixigwH2+yyH198AwNdKhj+RA==}
+  zx@8.8.4:
+    resolution: {integrity: sha512-44GcD+ZlM/v1OQtbwnSxLPcoE1ZEUICmR+RSbJZLAqfIixNLuMjLyh0DcS75OyfJ/sWYAwCWDmDvJ4hdnANAPQ==}
     engines: {node: '>= 12.17.0'}
     hasBin: true
 
@@ -11277,10 +11265,9 @@ snapshots:
 
   '@microsoft/tsdoc@0.16.0': {}
 
-  '@modelcontextprotocol/sdk@1.24.0(zod@3.25.76)':
+  '@modelcontextprotocol/sdk@1.20.0':
     dependencies:
-      ajv: 8.17.1
-      ajv-formats: 3.0.1(ajv@8.17.1)
+      ajv: 6.12.6
       content-type: 1.0.5
       cors: 2.8.5
       cross-spawn: 7.0.6
@@ -11288,7 +11275,6 @@ snapshots:
       eventsource-parser: 3.0.6
       express: 5.2.1
       express-rate-limit: 7.5.1(express@5.2.1)
-      jose: 6.1.3
       pkce-challenge: 5.0.1
       raw-body: 3.0.2
       zod: 3.25.76
@@ -11580,6 +11566,14 @@ snapshots:
       postcss: 8.5.6
       reduce-configs: 1.1.1
       sass-embedded: 1.90.0
+
+  '@rsbuild/plugin-source-build@1.0.3(@rsbuild/core@1.6.13)':
+    dependencies:
+      fast-glob: 3.3.3
+      json5: 2.2.3
+      yaml: 2.8.1
+    optionalDependencies:
+      '@rsbuild/core': 1.6.13
 
   '@rsbuild/plugin-type-check@1.3.1(@rsbuild/core@1.6.13)(@rspack/core@1.6.6(@swc/helpers@0.5.17))(typescript@5.9.3)':
     dependencies:
@@ -13209,10 +13203,6 @@ snapshots:
     optionalDependencies:
       ajv: 8.13.0
 
-  ajv-formats@3.0.1(ajv@8.17.1):
-    optionalDependencies:
-      ajv: 8.17.1
-
   ajv-keywords@5.1.0(ajv@8.17.1):
     dependencies:
       ajv: 8.17.1
@@ -14749,6 +14739,14 @@ snapshots:
       merge2: 1.4.1
       micromatch: 4.0.8
 
+  fast-glob@3.3.3:
+    dependencies:
+      '@nodelib/fs.stat': 2.0.5
+      '@nodelib/fs.walk': 1.2.8
+      glob-parent: 5.1.2
+      merge2: 1.4.1
+      micromatch: 4.0.8
+
   fast-json-stable-stringify@2.1.0: {}
 
   fast-levenshtein@2.0.6: {}
@@ -15803,8 +15801,6 @@ snapshots:
   jiti@2.6.1: {}
 
   jju@1.4.0: {}
-
-  jose@6.1.3: {}
 
   js-tokens@4.0.0: {}
 
@@ -19199,4 +19195,4 @@ snapshots:
 
   zwitch@2.0.4: {}
 
-  zx@8.8.5: {}
+  zx@8.8.4: {}

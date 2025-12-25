@@ -1,4 +1,5 @@
 import { defineConfig } from '@rsbuild/core';
+import { pluginSourceBuild } from '@rsbuild/plugin-source-build';
 
 const port = process.env.PORT ?? 3080;
 export default defineConfig({
@@ -22,6 +23,9 @@ export default defineConfig({
     cleanDistPath: true,
     sourceMap: true,
   },
+  plugins: [
+    pluginSourceBuild(),
+  ],
   dev: {
     hmr: false,
     liveReload: false,

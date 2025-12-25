@@ -2,5 +2,5 @@
  Licensed under the Apache License Version 2.0 that can be found in the
  LICENSE file in the root directory of this source tree. 
  */
-@import url("./src/common-css/linear.css");
+@import url("./src/elements/common-css/linear.css");
 @import url("./elements.css");
