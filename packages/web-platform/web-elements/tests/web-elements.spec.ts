@@ -51,11 +51,11 @@ test.describe('web-elements test suite', () => {
       await diffScreenShot(page, title, 'index');
     });
 
-    test('layout/percentage-cyclic-sibiling', async ({ page }, { title }) => {
+    test('layout/percentage-cyclic-sibling', async ({ page }, { title }) => {
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, 'index');
     });
-    test('layout/percentage-cyclic-sibiling-linear', async ({ page }, {
+    test('layout/percentage-cyclic-sibling-linear', async ({ page }, {
       title,
     }) => {
       test.skip(
