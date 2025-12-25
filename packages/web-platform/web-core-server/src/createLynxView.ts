@@ -30,7 +30,7 @@ import {
   templateInlineImage,
   templateXTextarea,
   templateXViewpageNg,
-} from '@lynx-js/web-elements-template';
+} from '@lynx-js/web-elements/html-templates';
 import { dumpHTMLString } from './dumpHTMLString.js';
 import vm from 'node:vm';
 import fs from 'node:fs';

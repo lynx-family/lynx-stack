@@ -3,7 +3,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { type AttributeReactiveClass } from '@lynx-js/web-elements-reactive';
+import { type AttributeReactiveClass } from '../../element-reactive/index.js';
 import type { ScrollView } from './ScrollView.js';
 
 export class ScrollIntoView

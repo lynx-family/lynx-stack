@@ -3,11 +3,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { Component, genDomGetter } from '@lynx-js/web-elements-reactive';
+import { Component, genDomGetter } from '../../element-reactive/index.js';
 import { XRefreshViewEventsEmitter } from './XRefreshViewEventsEmitter.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { scrollContainerDom } from '../common/constants.js';
-import { templateXRefreshView } from '@lynx-js/web-elements-template';
+import { templateXRefreshView } from '../htmlTemplates.js';
 
 @Component(
   'x-refresh-view',

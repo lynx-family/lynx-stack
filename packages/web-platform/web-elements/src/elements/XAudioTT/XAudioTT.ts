@@ -7,7 +7,7 @@ import {
   Component,
   genDomGetter,
   bindToAttribute,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 import { XAudioAttribute } from './XAudioAttribute.js';
 import { XAudioEvents } from './XAudioEvents.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
@@ -19,7 +19,7 @@ import {
   xAudioBlob,
   xAudioSrc,
 } from './utils.js';
-import { templateXAudioTT } from '@lynx-js/web-elements-template';
+import { templateXAudioTT } from '../htmlTemplates.js';
 
 @Component<typeof XAudioTT>(
   'x-audio-tt',

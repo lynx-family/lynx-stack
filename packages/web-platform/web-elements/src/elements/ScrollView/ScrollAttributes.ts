@@ -6,7 +6,7 @@
 import {
   type AttributeReactiveClass,
   registerAttributeHandler,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 import type { ScrollView } from './ScrollView.js';
 
 export class ScrollAttributes

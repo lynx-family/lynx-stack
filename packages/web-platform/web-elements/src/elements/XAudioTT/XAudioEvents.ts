@@ -6,7 +6,7 @@
 import {
   type AttributeReactiveClass,
   genDomGetter,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 import {
   audioLoadingStateMap,
   audioPlaybackStateMap,

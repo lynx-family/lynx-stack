@@ -7,7 +7,7 @@ import {
   type AttributeReactiveClass,
   genDomGetter,
   registerAttributeHandler,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 import type { XBlurView } from './XBlurView.js';
 
 export class BlurRadius

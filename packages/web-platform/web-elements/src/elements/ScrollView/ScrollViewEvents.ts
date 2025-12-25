@@ -8,12 +8,12 @@ import {
   bindToStyle,
   genDomGetter,
   registerAttributeHandler,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
 import type { ScrollView } from './ScrollView.js';
 import { bindToIntersectionObserver } from '../common/bindToIntersectionObserver.js';
 import { useScrollEnd } from '../common/constants.js';
-import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-reactive';
+import { registerEventEnableStatusChangeHandler } from '../../element-reactive/index.js';
 
 export class ScrollViewEvents
   implements InstanceType<AttributeReactiveClass<typeof ScrollView>>

@@ -6,11 +6,11 @@
 import {
   boostedQueueMicrotask,
   Component,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { XViewpagerNgEvents } from './XViewpagerNgEvents.js';
 import { scrollContainerDom } from '../common/constants.js';
-import { templateXViewpageNg } from '@lynx-js/web-elements-template';
+import { templateXViewpageNg } from '../htmlTemplates.js';
 
 @Component<typeof XViewpagerNg>(
   'x-viewpager-ng',

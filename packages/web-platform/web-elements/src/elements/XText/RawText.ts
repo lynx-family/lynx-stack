@@ -6,7 +6,7 @@
 import {
   Component,
   registerAttributeHandler,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 
 export class RawTextAttributes {
   static observedAttributes = ['text'];

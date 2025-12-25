@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { commonComponentEventSetting } from './commonEventInitConfiguration.js';
-import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-reactive';
+import { registerEventEnableStatusChangeHandler } from '../../element-reactive/index.js';
 
 export const layoutChangeTarget = Symbol('layoutChangeTarget');
 

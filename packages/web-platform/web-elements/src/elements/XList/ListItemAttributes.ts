@@ -7,7 +7,7 @@ import {
   registerAttributeHandler,
   bindToStyle,
   type AttributeReactiveClass,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 import type { ListItem } from './ListItem.js';
 
 export class ListItemAttributes

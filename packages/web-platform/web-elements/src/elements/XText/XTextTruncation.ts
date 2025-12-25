@@ -8,10 +8,10 @@ import {
   boostedQueueMicrotask,
   genDomGetter,
   registerAttributeHandler,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
 import type { XText } from './XText.js';
-import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-reactive';
+import { registerEventEnableStatusChangeHandler } from '../../element-reactive/index.js';
 type NodeInfo = {
   node: Text | Element;
   start: number;

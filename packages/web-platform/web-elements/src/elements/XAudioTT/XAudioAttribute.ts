@@ -9,7 +9,7 @@ import {
   bindToAttribute,
   genDomGetter,
   registerAttributeHandler,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 import type { XAudioTT } from './XAudioTT.js';
 import { XAudioErrorCode, xAudioBlob, xAudioSrc } from './utils.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';

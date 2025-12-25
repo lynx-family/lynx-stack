@@ -9,7 +9,7 @@ import {
   bindToStyle,
   genDomGetter,
   registerAttributeHandler,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 import { XTextarea } from './XTextarea.js';
 
 export class Placeholder

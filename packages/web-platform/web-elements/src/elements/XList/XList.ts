@@ -3,13 +3,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { Component, genDomGetter } from '@lynx-js/web-elements-reactive';
+import { Component, genDomGetter } from '../../element-reactive/index.js';
 import { XListAttributes } from './XListAttributes.js';
 import { XListEvents } from './XListEvents.js';
 import { XListWaterfall } from './XListWaterfall.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
-import { templateXList } from '@lynx-js/web-elements-template';
+import { templateXList } from '../htmlTemplates.js';
 
 @Component<typeof XList>(
   'x-list',

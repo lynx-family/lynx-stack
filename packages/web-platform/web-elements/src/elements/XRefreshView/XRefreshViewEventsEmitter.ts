@@ -6,12 +6,12 @@
 import {
   type AttributeReactiveClass,
   genDomGetter,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 import type { XRefreshHeader } from './XRefreshHeader.js';
 import { XRefreshIntersectionObserverEvent } from './XRefreshSubElementIntersectionObserver.js';
 import type { XRefreshView } from './XRefreshView.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
-import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-reactive';
+import { registerEventEnableStatusChangeHandler } from '../../element-reactive/index.js';
 
 export class XRefreshViewEventsEmitter
   implements InstanceType<AttributeReactiveClass<typeof XRefreshView>>

@@ -8,7 +8,7 @@ import {
   registerAttributeHandler,
   type AttributeReactiveClass,
   registerEventEnableStatusChangeHandler,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 import type { XList } from './XList.js';
 
 const WATERFALL_SLOT = 'waterfall-slot';

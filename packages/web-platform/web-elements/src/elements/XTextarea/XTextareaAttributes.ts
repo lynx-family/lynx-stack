@@ -9,7 +9,7 @@ import {
   genDomGetter,
   registerAttributeHandler,
   bindToStyle,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 
 export class XTextareaAttributes
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>

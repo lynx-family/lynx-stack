@@ -8,7 +8,7 @@ import {
   bindToStyle,
   genDomGetter,
   registerAttributeHandler,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 
 export class DropShadow
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>

@@ -9,10 +9,10 @@ import {
   genDomGetter,
   registerAttributeHandler,
   registerEventEnableStatusChangeHandler,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
-import { templateXSvg } from '@lynx-js/web-elements-template';
+import { templateXSvg } from '../htmlTemplates.js';
 
 export class XSvgFeatures
   implements InstanceType<AttributeReactiveClass<typeof XSvg>>

@@ -7,7 +7,7 @@ import {
   type AttributeReactiveClass,
   registerAttributeHandler,
   registerEventEnableStatusChangeHandler,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
 import { scrollableLength, type XFoldviewNg } from './XFoldviewNg.js';
 

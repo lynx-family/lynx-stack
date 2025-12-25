@@ -8,7 +8,7 @@ import {
   bindToAttribute,
   genDomGetter,
   registerAttributeHandler,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 
 /**
  * shared by x-input and x-input-ng

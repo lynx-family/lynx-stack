@@ -6,9 +6,9 @@
 import {
   type AttributeReactiveClass,
   genDomGetter,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
-import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-reactive';
+import { registerEventEnableStatusChangeHandler } from '../../element-reactive/index.js';
 
 export class ImageEvents
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>

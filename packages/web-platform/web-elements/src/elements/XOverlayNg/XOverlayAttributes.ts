@@ -9,7 +9,7 @@ import {
   type AttributeReactiveClass,
   registerAttributeHandler,
   genDomGetter,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 
 export class XOverlayAttributes
   implements InstanceType<AttributeReactiveClass<typeof XOverlayNg>>

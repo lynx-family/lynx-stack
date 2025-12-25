@@ -3,7 +3,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { Component, genDomGetter } from '@lynx-js/web-elements-reactive';
+import { Component, genDomGetter } from '../../element-reactive/index.js';
 
 import { XSwipeEvents } from './XSwiperEvents.js';
 import { XSwiperAutoScroll } from './XSwiperAutoScroll.js';
@@ -11,7 +11,7 @@ import { XSwiperCircular } from './XSwiperCircular.js';
 import { XSwiperIndicator } from './XSwiperIndicator.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { scrollContainerDom } from '../common/constants.js';
-import { templateXSwiper } from '@lynx-js/web-elements-template';
+import { templateXSwiper } from '../htmlTemplates.js';
 
 @Component<typeof XSwiper>(
   'x-swiper',

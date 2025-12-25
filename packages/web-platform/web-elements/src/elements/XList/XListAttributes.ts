@@ -8,7 +8,7 @@ import {
   bindToStyle,
   boostedQueueMicrotask,
   registerAttributeHandler,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 import type { XList } from './XList.js';
 
 export class XListAttributes

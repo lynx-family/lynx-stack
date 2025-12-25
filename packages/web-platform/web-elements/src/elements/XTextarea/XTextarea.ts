@@ -3,13 +3,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { Component, genDomGetter } from '@lynx-js/web-elements-reactive';
+import { Component, genDomGetter } from '../../element-reactive/index.js';
 import { Placeholder } from './Placeholder.js';
 import { TextareaBaseAttributes } from './TextareaBaseAttributes.js';
 import { XTextareaAttributes } from './XTextareaAttributes.js';
 import { XTextareaEvents } from './XTextareaEvents.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
-import { templateXTextarea } from '@lynx-js/web-elements-template';
+import { templateXTextarea } from '../htmlTemplates.js';
 
 // x-textarea
 @Component(

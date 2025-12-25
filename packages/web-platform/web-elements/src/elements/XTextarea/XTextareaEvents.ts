@@ -7,10 +7,10 @@ import {
   type AttributeReactiveClass,
   genDomGetter,
   registerAttributeHandler,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
 import { renameEvent } from '../common/renameEvent.js';
-import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-reactive';
+import { registerEventEnableStatusChangeHandler } from '../../element-reactive/index.js';
 
 export class XTextareaEvents
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>

@@ -8,7 +8,7 @@ import {
   bindSwitchToEventListener,
   genDomGetter,
   registerAttributeHandler,
-} from '@lynx-js/web-elements-reactive';
+} from '../../element-reactive/index.js';
 import type { XSwiper } from './XSwiper.js';
 
 export class XSwiperCircular

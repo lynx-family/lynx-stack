@@ -1035,9 +1035,9 @@ importers:
       '@lynx-js/web-constants':
         specifier: workspace:*
         version: link:../web-constants
-      '@lynx-js/web-elements-template':
+      '@lynx-js/web-elements':
         specifier: workspace:*
-        version: link:../web-elements-template
+        version: link:../web-elements
       '@lynx-js/web-mainthread-apis':
         specifier: workspace:*
         version: link:../web-mainthread-apis
@@ -1052,13 +1052,6 @@ importers:
         version: 0.3.3(@rsbuild/core@1.6.13)
 
   packages/web-platform/web-elements:
-    dependencies:
-      '@lynx-js/web-elements-reactive':
-        specifier: workspace:*
-        version: link:../web-elements-reactive
-      '@lynx-js/web-elements-template':
-        specifier: workspace:*
-        version: link:../web-elements-template
     devDependencies:
       '@lynx-js/playwright-fixtures':
         specifier: workspace:*
@@ -1078,10 +1071,6 @@ importers:
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
-
-  packages/web-platform/web-elements-reactive: {}
-
-  packages/web-platform/web-elements-template: {}
 
   packages/web-platform/web-explorer:
     devDependencies:

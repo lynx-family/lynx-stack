@@ -3,7 +3,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { Component } from '@lynx-js/web-elements-reactive';
+import { Component } from '../../element-reactive/index.js';
 import { ScrollIntoView } from '../ScrollView/ScrollIntoView.js';
 import {
   CommonEventsAndMethods,
