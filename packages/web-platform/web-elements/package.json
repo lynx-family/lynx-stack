@@ -106,6 +106,11 @@
       "types": "./dist/elements/XList/index.d.ts",
       "default": "./dist/elements/XList/index.js"
     },
+    "./XWebView": {
+      "source": "./src/elements/XWebView/index.ts",
+      "types": "./dist/elements/XWebView/index.d.ts",
+      "default": "./dist/elements/XWebView/index.js"
+    },
     "./html-templates": {
       "source": "./src/elements/htmlTemplates.ts",
       "types": "./dist/elements/htmlTemplates.d.ts",
