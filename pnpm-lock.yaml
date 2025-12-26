@@ -1190,6 +1190,9 @@ importers:
       '@lynx-js/web-core-server':
         specifier: workspace:*
         version: link:../web-core-server
+      '@lynx-js/web-elements':
+        specifier: workspace:*
+        version: link:../web-elements
       '@lynx-js/web-mainthread-apis':
         specifier: workspace:*
         version: link:../web-mainthread-apis

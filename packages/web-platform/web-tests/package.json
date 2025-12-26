@@ -33,6 +33,7 @@
     "@lynx-js/web-constants": "workspace:*",
     "@lynx-js/web-core": "workspace:*",
     "@lynx-js/web-core-server": "workspace:*",
+    "@lynx-js/web-elements": "workspace:*",
     "@lynx-js/web-mainthread-apis": "workspace:*",
     "@lynx-js/web-platform-rsbuild-plugin": "workspace:*",
     "@lynx-js/web-rsbuild-server-middleware": "workspace:*",
