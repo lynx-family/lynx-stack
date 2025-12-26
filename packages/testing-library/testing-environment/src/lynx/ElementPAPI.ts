@@ -79,6 +79,7 @@ export const initElementTree = () => {
     __CreatePage(_tag: string, parentComponentUniqueId: number) {
       const page = this.__CreateElement('page', parentComponentUniqueId);
       this.root = page;
+      document.body.innerHTML = '';
       lynxTestingEnv.jsdom.window.document.body.appendChild(page);
       return page;
     }
