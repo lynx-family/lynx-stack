@@ -33,14 +33,13 @@ function build(
   isNode = false,
 ) {
   const outDir = path.join(packageRoot, 'binary', featureName);
-  ``;
   const outputWasmName = `${featureName}`;
   const outputWasmDebugName = `${featureName}_debug`;
   const outputWasm = path.join(outDir, outputWasmName);
   const outputWasmDebug = path.join(outDir, outputWasmDebugName);
   // build release
   execSync(
-    `cargo build '--release' --target wasm32-unknown-unknown  --features ${featureName}`,
+    `cargo build --release --target wasm32-unknown-unknown  --features ${featureName}`,
     {
       cwd: packageRoot,
       stdio: 'inherit',
@@ -83,7 +82,7 @@ function build(
  * bulk-memory|   75     |  79     |   15
  * sign-ext   |   74     |  62     |   14.1
  * simd       |   91     |  89     |   16.4
- * ref-typs   |   96     |  79     |   15
+ * ref-types  |   96     |  79     |   15
  * multivalue |   85     |  78     |   13.1
  * nontrapping-float-to-int | 75 | 64 | 15
  * mutable-globals | 74 | 61 | 13.1
