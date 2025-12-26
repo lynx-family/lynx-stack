@@ -1,5 +1,4 @@
 ---
-"@lynx-js/web-elements-compat": patch
 "@lynx-js/web-elements": patch
 ---
 
