@@ -14,8 +14,6 @@ import { XWebViewAttribute } from './XWebViewAttribute.js';
   templateXWebView,
 )
 export class XWebView extends HTMLElement {
-  static readonly observedAttributes = ['webview-type'];
-
   #getWebView = genDomGetter<HTMLIFrameElement>(
     () => this.shadowRoot!,
     '#webview',
