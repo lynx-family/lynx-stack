@@ -7,6 +7,7 @@ describe('.toHaveTextContent', () => {
     lynxTestingEnv.switchToMainThread();
 
     const page = __CreatePage('0', 0);
+    expect(page.parentNode.children.length).toBe(1);
     const text0 = __CreateText(0);
     const rawText0 = __CreateRawText('2', text0.$$uiSign);
     __AppendElement(text0, rawText0);
@@ -35,6 +36,7 @@ describe('.toHaveTextContent', () => {
     lynxTestingEnv.reset();
     lynxTestingEnv.switchToMainThread();
     const page = __CreatePage('0', 0);
+    expect(page.parentNode.children.length).toBe(1);
     const text0 = __CreateText(0);
     const rawText0 = __CreateRawText('example', text0.$$uiSign);
     __AppendElement(text0, rawText0);
@@ -60,6 +62,7 @@ describe('.toHaveTextContent', () => {
     lynxTestingEnv.reset();
     lynxTestingEnv.switchToMainThread();
     const page = __CreatePage('0', 0);
+    expect(page.parentNode.children.length).toBe(1);
     const text0 = __CreateText(0);
     const rawText0 = __CreateRawText('2', text0.$$uiSign);
     __AppendElement(text0, rawText0);
@@ -89,6 +92,7 @@ describe('.toHaveTextContent', () => {
     lynxTestingEnv.reset();
     lynxTestingEnv.switchToMainThread();
     const page = __CreatePage('0', 0);
+    expect(page.parentNode.children.length).toBe(1);
     const text0 = __CreateText(0);
     const rawText0 = __CreateRawText('Step 1 of 4', text0.$$uiSign);
     __AppendElement(text0, rawText0);
@@ -107,6 +111,7 @@ describe('.toHaveTextContent', () => {
     lynxTestingEnv.reset();
     lynxTestingEnv.switchToMainThread();
     const page = __CreatePage('0', 0);
+    expect(page.parentNode.children.length).toBe(1);
     const text0 = __CreateText(0);
     const rawText0 = __CreateRawText('  Step 1 of 4', text0.$$uiSign);
     __AppendElement(text0, rawText0);
@@ -127,6 +132,7 @@ describe('.toHaveTextContent', () => {
     lynxTestingEnv.reset();
     lynxTestingEnv.switchToMainThread();
     const page = __CreatePage('0', 0);
+    expect(page.parentNode.children.length).toBe(1);
     const text0 = __CreateText(0);
     const rawText0 = __CreateRawText('Step 1 of 4', text0.$$uiSign);
     __AppendElement(text0, rawText0);
@@ -150,6 +156,7 @@ describe('.toHaveTextContent', () => {
     lynxTestingEnv.reset();
     lynxTestingEnv.switchToMainThread();
     const page = __CreatePage('0', 0);
+    expect(page.parentNode.children.length).toBe(1);
     const view = __CreateView(0);
     const text0 = __CreateText(view.$$uiSign);
     const rawText0 = __CreateRawText('Step', text0.$$uiSign);
@@ -198,6 +205,7 @@ describe('.toHaveTextContent', () => {
     lynxTestingEnv.reset();
     lynxTestingEnv.switchToMainThread();
     const page = __CreatePage('0', 0);
+    expect(page.parentNode.children.length).toBe(1);
     const text0 = __CreateText(0);
     __AppendElement(page, text0);
     expect(elementTree).toMatchInlineSnapshot(`
@@ -212,6 +220,7 @@ describe('.toHaveTextContent', () => {
     lynxTestingEnv.reset();
     lynxTestingEnv.switchToMainThread();
     const page = __CreatePage('0', 0);
+    expect(page.parentNode.children.length).toBe(1);
     const text0 = __CreateText(0);
     const rawText0 = __CreateRawText('Sensitive text', text0.$$uiSign);
     __AppendElement(text0, rawText0);
@@ -231,6 +240,7 @@ describe('.toHaveTextContent', () => {
 
   test('when matching with empty string and element with content, suggest using toBeEmptyDOMElement instead', () => {
     const page = __CreatePage('0', 0);
+    expect(page.parentNode.children.length).toBe(1);
     const text0 = __CreateText(0);
     const rawText0 = __CreateRawText('not empty', text0.$$uiSign);
     __AppendElement(text0, rawText0);
