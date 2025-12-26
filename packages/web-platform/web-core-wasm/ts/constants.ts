@@ -52,7 +52,7 @@ export const LynxEventNameToW3cCommon: Record<string, string> = /*#__PURE__*/ {
   'lynxinput': 'lynxinput',
 };
 
-export const MagicHeader = /*#__PURE__*/ 0x464F525741524453; // random magic number for verififying the stream is a Lynx encoded template
+export const MagicHeader = /*#__PURE__*/ 0x464F525741524453; // random magic number for verifying the stream is a Lynx encoded template
 
 export const TemplateSectionLabel = /*#__PURE__*/ {
   Manifest: 1,

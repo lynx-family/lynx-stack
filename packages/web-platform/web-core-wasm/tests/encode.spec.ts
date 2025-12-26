@@ -251,7 +251,7 @@ describe('encodeCSS', () => {
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
-  test('scoped css', () => {
+  test('scoped css, 2 css id', () => {
     const cssMap = {
       '1': CSS.parse(`
         @import "2";
