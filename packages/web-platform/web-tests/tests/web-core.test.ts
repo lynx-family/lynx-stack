@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 // @ts-nocheck
-import { test, expect } from './coverage-fixture.js';
+import { test, expect } from '@lynx-js/playwright-fixtures';
 import type { Page, Worker } from '@playwright/test';
 
 const ENABLE_MULTI_THREAD = !!process.env.ENABLE_MULTI_THREAD;

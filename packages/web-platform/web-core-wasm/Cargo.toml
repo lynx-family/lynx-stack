@@ -1,0 +1,20 @@
+[package]
+name = "web-core-wasm"
+version = "0.0.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+bincode = { version = "2.0.1" }
+fnv = "1.0.7"
+js-sys = { workspace = true }
+lazy_static = { workspace = true }
+wasm-bindgen = { workspace = true }
+web-sys = { workspace = true, optional = true, features = ["HtmlCollection", "CssStyleDeclaration", "CssRule", "CssRuleList", "HtmlElement", "Blob", "BlobPropertyBag", "Url", "HtmlTemplateElement", "HtmlStyleElement", "DocumentFragment", "Document", "NodeList", "DomTokenList", "CssStyleSheet"] }
+[features]
+default = []
+encode = []
+client = ["web-sys"]
+server = []

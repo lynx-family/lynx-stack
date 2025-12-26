@@ -480,6 +480,60 @@ describe('list', () => {
       </list>
     `);
   });
+
+  it('should recursively destroy list', async () => {
+    let setHide;
+    const Comp = () => {
+      const [hide, _setHide] = useState(false);
+      setHide = _setHide;
+
+      if (hide) return null;
+
+      return (
+        <view
+          style={{
+            width: '100vw',
+            height: '100vh',
+          }}
+        >
+          {
+            <list
+              style={{
+                width: '100%',
+                height: '100%',
+              }}
+            >
+              {Array(6)
+                .fill(0)
+                .map((v, i) => i).map((v) => {
+                  return (
+                    <list-item item-key={`${v}`} key={v} full-span>
+                      <view>
+                        {'Hello'}
+                      </view>
+                    </list-item>
+                  );
+                })}
+            </list>
+          }
+        </view>
+      );
+    };
+
+    const { container } = render(<Comp />);
+
+    const list = container.firstChild.firstChild;
+    const uid0 = elementTree.enterListItemAtIndex(list, 0);
+
+    // Hide all
+    act(() => {
+      setHide(true);
+    });
+
+    expect(() => {
+      elementTree.leaveListItem(list, uid0);
+    }).toThrowErrorMatchingInlineSnapshot(`[Error: enqueueComponent called on removed list]`);
+  });
 });
 
 describe('list - deferred <list-item/> should render as normal', () => {
@@ -511,7 +565,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_13","item-key":"x"},{"position":1,"type":"__snapshot_a9e46_test_15","item-key":"0"},{"position":2,"type":"__snapshot_a9e46_test_15","item-key":"1"},{"position":3,"type":"__snapshot_a9e46_test_15","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_17","item-key":"x"},{"position":1,"type":"__snapshot_a9e46_test_19","item-key":"0"},{"position":2,"type":"__snapshot_a9e46_test_19","item-key":"1"},{"position":3,"type":"__snapshot_a9e46_test_19","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -535,7 +589,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_13","item-key":"x"},{"position":1,"type":"__snapshot_a9e46_test_15","item-key":"0"},{"position":2,"type":"__snapshot_a9e46_test_15","item-key":"1"},{"position":3,"type":"__snapshot_a9e46_test_15","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_17","item-key":"x"},{"position":1,"type":"__snapshot_a9e46_test_19","item-key":"0"},{"position":2,"type":"__snapshot_a9e46_test_19","item-key":"1"},{"position":3,"type":"__snapshot_a9e46_test_19","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -547,7 +601,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_13","item-key":"x"},{"position":1,"type":"__snapshot_a9e46_test_15","item-key":"0"},{"position":2,"type":"__snapshot_a9e46_test_15","item-key":"1"},{"position":3,"type":"__snapshot_a9e46_test_15","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_17","item-key":"x"},{"position":1,"type":"__snapshot_a9e46_test_19","item-key":"0"},{"position":2,"type":"__snapshot_a9e46_test_19","item-key":"1"},{"position":3,"type":"__snapshot_a9e46_test_19","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="x"
@@ -658,7 +712,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_18","item-key":"x"},{"position":1,"type":"__snapshot_a9e46_test_20","item-key":"0"},{"position":2,"type":"__snapshot_a9e46_test_20","item-key":"1"},{"position":3,"type":"__snapshot_a9e46_test_20","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_22","item-key":"x"},{"position":1,"type":"__snapshot_a9e46_test_24","item-key":"0"},{"position":2,"type":"__snapshot_a9e46_test_24","item-key":"1"},{"position":3,"type":"__snapshot_a9e46_test_24","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -716,7 +770,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_23","item-key":"0"},{"position":1,"type":"__snapshot_a9e46_test_23","item-key":"1"},{"position":2,"type":"__snapshot_a9e46_test_23","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_27","item-key":"0"},{"position":1,"type":"__snapshot_a9e46_test_27","item-key":"1"},{"position":2,"type":"__snapshot_a9e46_test_27","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -736,7 +790,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_23","item-key":"0"},{"position":1,"type":"__snapshot_a9e46_test_23","item-key":"1"},{"position":2,"type":"__snapshot_a9e46_test_23","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_27","item-key":"0"},{"position":1,"type":"__snapshot_a9e46_test_27","item-key":"1"},{"position":2,"type":"__snapshot_a9e46_test_27","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -755,7 +809,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_23","item-key":"0"},{"position":1,"type":"__snapshot_a9e46_test_23","item-key":"1"},{"position":2,"type":"__snapshot_a9e46_test_23","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_a9e46_test_27","item-key":"0"},{"position":1,"type":"__snapshot_a9e46_test_27","item-key":"1"},{"position":2,"type":"__snapshot_a9e46_test_27","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="2"
@@ -840,7 +894,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
             "rLynxFirstScreen",
             {
               "jsReadyEventIdSwap": {},
-              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a9e46_test_26","children":[{"id":-3,"type":"__snapshot_a9e46_test_27","values":[{"item-key":0}],"children":[{"id":-4,"type":"__snapshot_a9e46_test_25","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-5,"type":"__snapshot_a9e46_test_28","children":[{"id":-12,"type":null,"values":[0]}]}]}]},{"id":-6,"type":"__snapshot_a9e46_test_27","values":[{"item-key":1}],"children":[{"id":-7,"type":"__snapshot_a9e46_test_25","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-8,"type":"__snapshot_a9e46_test_28","children":[{"id":-13,"type":null,"values":[1]}]}]}]},{"id":-9,"type":"__snapshot_a9e46_test_27","values":[{"item-key":2}],"children":[{"id":-10,"type":"__snapshot_a9e46_test_25","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-11,"type":"__snapshot_a9e46_test_28","children":[{"id":-14,"type":null,"values":[2]}]}]}]}]}]}",
+              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a9e46_test_30","children":[{"id":-3,"type":"__snapshot_a9e46_test_31","values":[{"item-key":0}],"children":[{"id":-4,"type":"__snapshot_a9e46_test_29","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-5,"type":"__snapshot_a9e46_test_32","children":[{"id":-12,"type":null,"values":[0]}]}]}]},{"id":-6,"type":"__snapshot_a9e46_test_31","values":[{"item-key":1}],"children":[{"id":-7,"type":"__snapshot_a9e46_test_29","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-8,"type":"__snapshot_a9e46_test_32","children":[{"id":-13,"type":null,"values":[1]}]}]}]},{"id":-9,"type":"__snapshot_a9e46_test_31","values":[{"item-key":2}],"children":[{"id":-10,"type":"__snapshot_a9e46_test_29","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-11,"type":"__snapshot_a9e46_test_32","children":[{"id":-14,"type":null,"values":[2]}]}]}]}]}]}",
             },
           ],
         ],

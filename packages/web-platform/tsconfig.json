@@ -12,6 +12,7 @@
   },
   "references": [
     /** packages-start */
+    { "path": "./playwright-fixtures/tsconfig.json" },
     { "path": "./offscreen-document/tsconfig.json" },
     { "path": "./web-elements-template/tsconfig.json" },
     { "path": "./web-elements-reactive/tsconfig.json" },

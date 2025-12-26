@@ -140,9 +140,13 @@ export let snapshotCreatorMap: Record<string, (uniqId: string) => string> = {};
 if (__DEV__ && __JS__) {
   snapshotCreatorMap = new Proxy(snapshotCreatorMap, {
     set(target, prop: string, value: (uniqId: string) => string) {
-      // `__globalSnapshotPatch` does not exist before hydration,
-      // so the snapshot of the first screen will not be sent to the main thread.
-      if (__globalSnapshotPatch) {
+      if (
+        // `__globalSnapshotPatch` does not exist before hydration,
+        // so the snapshot of the first screen will not be sent to the main thread.
+        __globalSnapshotPatch
+        // `prop` will be `https://example.com/main.lynx.bundle:__snapshot_835da_eff1e_1` when loading a standalone lazy bundle after hydration.
+        && !prop.includes(':')
+      ) {
         __globalSnapshotPatch.push(
           SnapshotOperation.DEV_ONLY_AddSnapshot,
           prop,
@@ -607,12 +611,12 @@ export class SnapshotInstance {
       __RemoveElement(this.__elements[elementIndex]!, child.__element_root!);
     }
 
-    if (child.__snapshot_def.isListHolder) {
-      snapshotDestroyList(child);
-    }
-
     this.__removeChild(child);
     traverseSnapshotInstance(child, v => {
+      if (v.__snapshot_def.isListHolder) {
+        snapshotDestroyList(v);
+      }
+
       v.__parent = null;
       v.__previousSibling = null;
       v.__nextSibling = null;

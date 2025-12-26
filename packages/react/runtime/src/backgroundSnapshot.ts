@@ -67,6 +67,17 @@ export class BackgroundSnapshotInstance {
   private __nextSibling: BackgroundSnapshotInstance | null = null;
   private __removed_from_tree?: boolean;
 
+  private get isDetached(): boolean {
+    let node: BackgroundSnapshotInstance | null = this;
+    while (node) {
+      if (node.__removed_from_tree) {
+        return true;
+      }
+      node = node.__parent;
+    }
+    return false;
+  }
+
   get parentNode(): BackgroundSnapshotInstance | null {
     return this.__parent;
   }
@@ -85,7 +96,9 @@ export class BackgroundSnapshotInstance {
 
   // This will be called in `lazy`/`Suspense`.
   appendChild(child: BackgroundSnapshotInstance): void {
-    return this.insertBefore(child);
+    if (!this.isDetached) {
+      return this.insertBefore(child);
+    }
   }
 
   insertBefore(

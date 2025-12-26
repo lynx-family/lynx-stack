@@ -16,15 +16,18 @@ export class ExternalsLoadingPlugin {
 // @public
 export interface ExternalsLoadingPluginOptions {
     backgroundLayer: string;
-    externals: Record<string, {
-        url: string;
-        libraryName?: string | string[];
-        async?: boolean;
-        background?: LayerOptions;
-        mainThread?: LayerOptions;
-        timeout?: number;
-    }>;
+    externals: Record<string, ExternalValue>;
     mainThreadLayer: string;
+}
+
+// @public
+export interface ExternalValue {
+    async?: boolean;
+    background?: LayerOptions;
+    libraryName?: string | string[];
+    mainThread?: LayerOptions;
+    timeout?: number;
+    url: string;
 }
 
 // @public

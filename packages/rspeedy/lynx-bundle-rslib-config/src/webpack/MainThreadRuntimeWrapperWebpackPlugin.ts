@@ -33,7 +33,9 @@ export class MainThreadRuntimeWrapperWebpackPlugin {
     new BannerPlugin({
       test: this.options.test ?? /\.js$/,
       raw: true,
-      banner: `(function () {   
+      banner: `(function () {
+  // TODO: remove this after \`useModuleWrapper\` supports MTS
+  var globDynamicComponentEntry = '__Card__';
   const module = { exports: {} }
   const exports = module.exports`,
     }).apply(compiler)

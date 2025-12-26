@@ -1,10 +1,6 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-
-// Copyright 2024 The Lynx Authors. All rights reserved.
-// Licensed under the Apache License Version 2.0 that can be found in the
-// LICENSE file in the root directory of this source tree.
 import type { CDPSession } from '@playwright/test';
 
 export const swipe = async (
@@ -18,7 +14,7 @@ export const swipe = async (
     steps?: number;
   },
 ): Promise<void> => {
-  const { x, y, yDistance, xDistance, speed = 300, steps = 10 } = options;
+  const { x, y, yDistance, xDistance, steps = 10 } = options;
   const xStepDistance = xDistance / steps;
   const yStepDistance = yDistance / steps;
   await cdpSession.send('Input.dispatchTouchEvent', {

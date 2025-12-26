@@ -128,27 +128,27 @@ describe('should build external bundle', () => {
       .toBeTruthy()
   })
 
-  it('set targetSdkVersion to 3.5', async () => {
+  it('set engineVersion to 3.5', async () => {
     const rslibConfig = defineExternalBundleRslibConfig({
       source: {
         entry: {
           utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
         },
       },
-      id: 'utils-targetSdkVersion-35',
+      id: 'utils-engineVersion-35',
       output: {
         distPath: {
           root: path.join(fixtureDir, 'dist'),
         },
       },
     }, {
-      targetSdkVersion: '3.5',
+      engineVersion: '3.5',
     })
 
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-targetSdkVersion-35.lynx.bundle'),
+      path.join(fixtureDir, 'dist/utils-engineVersion-35.lynx.bundle'),
     )
     expect(decodedResult['engine-version']).toBe('3.5')
   })

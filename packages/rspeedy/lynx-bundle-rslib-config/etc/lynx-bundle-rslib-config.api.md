@@ -21,7 +21,7 @@ export function defineExternalBundleRslibConfig(userLibConfig: ExternalBundleLib
 
 // @public
 export interface EncodeOptions {
-    targetSdkVersion?: string;
+    engineVersion?: string;
 }
 
 // @public
@@ -37,7 +37,7 @@ export interface ExternalBundleWebpackPluginOptions {
     encode: (opts: unknown) => Promise<{
         buffer: Buffer;
     }>;
-    targetSdkVersion?: string | undefined;
+    engineVersion?: string | undefined;
 }
 
 // @public

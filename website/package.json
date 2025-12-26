@@ -15,13 +15,14 @@
   },
   "dependencies": {
     "@rstack-dev/doc-ui": "1.11.0",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
   },
   "devDependencies": {
     "@lynx-js/chunk-loading-webpack-plugin": "workspace:*",
     "@lynx-js/css-extract-webpack-plugin": "workspace:*",
     "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",
+    "@lynx-js/externals-loading-webpack-plugin": "workspace:*",
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react": "workspace:*",

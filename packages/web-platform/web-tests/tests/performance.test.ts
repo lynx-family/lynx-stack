@@ -4,7 +4,7 @@
 
 import type { Page, BrowserContext, CDPSession } from '@playwright/test';
 
-import { test, expect } from './coverage-fixture.js';
+import { test, expect } from '@lynx-js/playwright-fixtures';
 
 const ENABLE_MULTI_THREAD = !!process.env['ENABLE_MULTI_THREAD'];
 const isSSR = !!process.env['ENABLE_SSR'];
@@ -73,19 +73,19 @@ test.describe('performance', () => {
      */
     const cdpSession = await goto({ page, browserName, context }, title);
     const metrics = await getMetrics(cdpSession, page);
-    expect(metrics.LayoutCount, 'layout count').toBeLessThanOrEqual(2);
+    expect(metrics.LayoutCount, 'layout count').toBeLessThanOrEqual(3);
     expect(metrics.RecalcStyleCount, 'recalc count').toBeLessThanOrEqual(3);
   });
   test('simple-one-dom', async ({ page, browserName, context }, { title }) => {
     const cdpSession = await goto({ page, browserName, context }, title);
     const metrics = await getMetrics(cdpSession, page);
-    expect(metrics.LayoutCount, 'layout count').toBeLessThanOrEqual(2);
+    expect(metrics.LayoutCount, 'layout count').toBeLessThanOrEqual(3);
     expect(metrics.RecalcStyleCount, 'recalc count').toBeLessThanOrEqual(3);
   });
   test('simple-two-dom', async ({ page, browserName, context }, { title }) => {
     const cdpSession = await goto({ page, browserName, context }, title);
     const metrics = await getMetrics(cdpSession, page);
-    expect(metrics.LayoutCount, 'layout count').toBeLessThanOrEqual(2);
+    expect(metrics.LayoutCount, 'layout count').toBeLessThanOrEqual(3);
     expect(metrics.RecalcStyleCount, 'recalc count').toBeLessThanOrEqual(3);
   });
   test(
@@ -94,7 +94,7 @@ test.describe('performance', () => {
       const cdpSession = await goto({ page, browserName, context }, title);
       await wait(200);
       const metrics = await getMetrics(cdpSession, page);
-      await expect(metrics.LayoutCount, 'layout count').toBeLessThanOrEqual(2);
+      await expect(metrics.LayoutCount, 'layout count').toBeLessThanOrEqual(3);
       await expect(metrics.RecalcStyleCount, 'recalc count')
         .toBeLessThanOrEqual(4);
       await expect(

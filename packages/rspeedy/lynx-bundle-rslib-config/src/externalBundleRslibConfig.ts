@@ -17,11 +17,11 @@ import { MainThreadRuntimeWrapperWebpackPlugin } from './webpack/MainThreadRunti
  */
 export interface EncodeOptions {
   /**
-   * The target SDK version of the external bundle.
+   * The engine version of the external bundle.
    *
-   * @defaultValue '3.4'
+   * @defaultValue '3.5'
    */
-  targetSdkVersion?: string
+  engineVersion?: string
 }
 
 /**
@@ -194,7 +194,7 @@ export function defineExternalBundleRslibConfig(
     ],
     plugins: [
       externalBundleEntryRsbuildPlugin(),
-      externalBundleRsbuildPlugin(encodeOptions.targetSdkVersion),
+      externalBundleRsbuildPlugin(encodeOptions.engineVersion),
     ],
   }
 }
@@ -286,7 +286,7 @@ const externalBundleEntryRsbuildPlugin = (): rsbuild.RsbuildPlugin => ({
 })
 
 const externalBundleRsbuildPlugin = (
-  targetSdkVersion: string | undefined,
+  engineVersion: string | undefined,
 ): rsbuild.RsbuildPlugin => ({
   name: 'lynx:gen-external-bundle',
   async setup(api) {
@@ -302,7 +302,7 @@ const externalBundleRsbuildPlugin = (
             { 
               bundleFileName: `${libName}.lynx.bundle`,
               encode: getEncodeMode(),
-              targetSdkVersion,
+              engineVersion,
             },
           ],
         )

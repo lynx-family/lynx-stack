@@ -10,6 +10,8 @@ import { registerWorkletOnBackground } from '../src/internal';
 import { addCtxNotFoundEventListener } from '../src/lifecycle/patch/error';
 import {
   SnapshotOperation,
+  __globalSnapshotPatch,
+  deinitGlobalSnapshotPatch,
   initGlobalSnapshotPatch,
   takeGlobalSnapshotPatch,
 } from '../src/lifecycle/patch/snapshotPatch';
@@ -1207,54 +1209,17 @@ describe('DEV_ONLY_addSnapshot', () => {
 
     const patch = takeGlobalSnapshotPatch();
 
-    expect(patch).toMatchInlineSnapshot(`
-      [
-        100,
-        "FOO:with-cssId-entryName-0",
-        "(uniqID12) => {
-            globalThis.createSnapshot(
-              uniqID12,
-              // The \`create\` function is stringified and called by \`new Function()\`
-              /* v8 ignore start */
-              () => {
-                const pageId = 0;
-                const el = __CreateView(pageId);
-                const el1 = __CreateText(pageId);
-                __AppendElement(el, el1);
-                const el2 = __CreateRawText("Hello, ReactLynx x Fast Refresh");
-                __AppendElement(el1, el2);
-                return [
-                  el,
-                  el1,
-                  el2
-                ];
-              },
-              /* v8 ignore stop */
-              null,
-              null,
-              1e3,
-              entryName,
-              null,
-              true
-            );
-          }",
-      ]
-    `);
+    // it is expected that the patch is empty
+    // since only standalone lazy bundle will has entryName
+    // we should not generate `DEV_ONLY_AddSnapshot`
+    // when loading a lazy bundle after hydration
+    expect(patch).toMatchInlineSnapshot(`[]`);
 
-    new SnapshotInstance(uniqID1);
     const originalSize = snapshotManager.values.size;
-
-    // Remove the old definition
-    snapshotManager.values.delete(uniqID1);
-    delete snapshotCreatorMap[uniqID1];
-
     const fn = vi.fn();
     vi.stubGlobal('__SetCSSId', fn);
-    // Apply patches in main thread
-    snapshotPatchApply(patch);
     new SnapshotInstance(uniqID1);
-
-    expect(snapshotManager.values.size).toBe(originalSize);
+    expect(snapshotManager.values.size).toBe(originalSize + 1);
     expect(snapshotManager.values.has(uniqID1)).toBeTruthy();
     const snapshot = snapshotManager.values.get(uniqID1);
     expect(snapshot).toHaveProperty('create', expect.any(Function));
@@ -1303,54 +1268,17 @@ describe('DEV_ONLY_addSnapshot', () => {
 
     const patch = takeGlobalSnapshotPatch();
 
-    expect(patch).toMatchInlineSnapshot(`
-      [
-        100,
-        "BAR:with-entryName-only-0",
-        "(uniqID12) => {
-            globalThis.createSnapshot(
-              uniqID12,
-              // The \`create\` function is stringified and called by \`new Function()\`
-              /* v8 ignore start */
-              () => {
-                const pageId = 0;
-                const el = __CreateView(pageId);
-                const el1 = __CreateText(pageId);
-                __AppendElement(el, el1);
-                const el2 = __CreateRawText("Hello, ReactLynx x Fast Refresh");
-                __AppendElement(el1, el2);
-                return [
-                  el,
-                  el1,
-                  el2
-                ];
-              },
-              /* v8 ignore stop */
-              null,
-              null,
-              void 0,
-              entryName,
-              null,
-              true
-            );
-          }",
-      ]
-    `);
+    // it is expected that the patch is empty
+    // since only standalone lazy bundle will has entryName
+    // we should not generate `DEV_ONLY_AddSnapshot`
+    // when loading a lazy bundle after hydration
+    expect(patch).toMatchInlineSnapshot(`[]`);
 
-    new SnapshotInstance(uniqID1);
     const originalSize = snapshotManager.values.size;
-
-    // Remove the old definition
-    snapshotManager.values.delete(uniqID1);
-    delete snapshotCreatorMap[uniqID1];
-
     const fn = vi.fn();
     vi.stubGlobal('__SetCSSId', fn);
-    // Apply patches in main thread
-    snapshotPatchApply(patch);
     new SnapshotInstance(uniqID1);
-
-    expect(snapshotManager.values.size).toBe(originalSize);
+    expect(snapshotManager.values.size).toBe(originalSize + 1);
     expect(snapshotManager.values.has(uniqID1)).toBeTruthy();
     const snapshot = snapshotManager.values.get(uniqID1);
     expect(snapshot).toHaveProperty('create', expect.any(Function));
@@ -1568,5 +1496,35 @@ describe('lazy snapshot', () => {
     expect(snapshotManager.values.size).toBe(oriSize + 1);
     const si = new SnapshotInstance(uniqueId);
     expect(si.type).toBe('https://example.com/main.lynx.bundle:snapshot-1');
+  });
+  it('standalone lazy bundle snapshotCreatorMap set should not generate DEV_ONLY_AddSnapshot', () => {
+    initGlobalSnapshotPatch();
+    expect(__globalSnapshotPatch).toMatchInlineSnapshot(`[]`);
+
+    const globDynamicComponentEntry = 'https://example.com/main.lynx.bundle';
+
+    snapshotCreatorMap[`${globDynamicComponentEntry}:${'__snapshot_835da_eff1e_1'}`] = (uniqID) => {
+      globalThis.createSnapshot(
+        uniqID,
+        /* v8 ignore start */
+        () => {
+          return [__CreateView(0)];
+        },
+        /* v8 ignore stop */
+        null,
+        null,
+        undefined,
+        /** entryName */
+        globDynamicComponentEntry,
+        null,
+        /** isLazySnapshotSupported */
+        true,
+      );
+    };
+
+    expect(__globalSnapshotPatch.length).toBe(0);
+
+    deinitGlobalSnapshotPatch();
+    expect(__globalSnapshotPatch).toMatchInlineSnapshot(`undefined`);
   });
 });
