@@ -27,9 +27,12 @@ export function createLynxAsyncChunksRuntimeModule(
       return `// lynx async chunks ids
 ${RuntimeGlobals.lynxAsyncChunkIds} = {${
         Array.from(chunk.getAllAsyncChunks())
-          .filter(c => c.name !== null && c.name !== undefined)
+          // .filter(c => c.name !== null && c.name !== undefined)
           .map(c => {
-            const filename = this.getChunkName(c.name!);
+            const filename = this.getChunkName(c.id!.toString()).replaceAll(
+              '_react_background_',
+              '',
+            ).replaceAll('_react_main-thread_', '');
 
             // Modified from https://github.com/webpack/webpack/blob/11449f02175f055a4540d76aa4478958c4cb297e/lib/runtime/GetChunkFilenameRuntimeModule.js#L154-L157
             const chunkPath = compilation.getPath(filename, {

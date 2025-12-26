@@ -208,14 +208,14 @@ where
         return;
       }
 
-      self.comments.add_leading(
-        call_expr.args[0].span_lo(),
-        Comment {
-          span: DUMMY_SP,
-          kind: CommentKind::Block,
-          text: format!("webpackChunkName: \"{}-{}\"", str_lit, self.opts.layer).into(),
-        },
-      );
+      // self.comments.add_leading(
+      //   call_expr.args[0].span_lo(),
+      //   Comment {
+      //     span: DUMMY_SP,
+      //     kind: CommentKind::Block,
+      //     text: format!("webpackChunkName: \"{}-{}\"", str_lit, self.opts.layer).into(),
+      //   },
+      // );
       self.has_inner_lazy_bundle = true;
     } else {
       let ident: Ident = "__dynamicImport".into();

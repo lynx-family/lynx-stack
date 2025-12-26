@@ -14,6 +14,12 @@ export function App() {
         console.info('dynamic add', res);
       });
     });
+    void import('@/utils/dynamic.js').then((res) => {
+      console.info('dynamic import dynamic');
+      void res.dynamicAdd(1, 2).then(res => {
+        console.info('alias dynamic add', res);
+      });
+    });
   }, []);
 
   return (

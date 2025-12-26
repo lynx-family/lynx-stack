@@ -4,20 +4,23 @@
 
 import path from 'node:path';
 
+import type { RuntimeModule } from '@rspack/core';
+import type {
+  Asset,
+  AsyncDependenciesBlock,
+  Chunk,
+  ChunkGroup,
+  Compilation,
+  Compiler,
+  RspackError,
+} from '@rspack/core';
 import {
   AsyncSeriesBailHook,
   AsyncSeriesWaterfallHook,
   SyncWaterfallHook,
 } from '@rspack/lite-tapable';
-import groupBy from 'object.groupby';
-import type {
-  Asset,
-  Chunk,
-  ChunkGroup,
-  Compilation,
-  Compiler,
-  WebpackError,
-} from 'webpack';
+// import groupBy from 'object.groupby';
+import type { NormalModule } from 'webpack';
 
 import type * as CSS from '@lynx-js/css-serializer';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
@@ -527,7 +530,7 @@ class LynxTemplatePluginImpl {
     compiler.hooks.thisCompilation.tap(this.name, compilation => {
       const onceForChunkSet = new WeakSet<Chunk>();
       const LynxAsyncChunksRuntimeModule = createLynxAsyncChunksRuntimeModule(
-        compiler.webpack,
+        compiler.webpack as unknown as typeof import('webpack'),
       );
 
       const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
@@ -547,9 +550,8 @@ class LynxTemplatePluginImpl {
           chunk,
           new LynxAsyncChunksRuntimeModule((chunkName) => {
             const filename = hooks.asyncChunkName.call(chunkName);
-
             return this.#getAsyncFilenameTemplate(filename);
-          }),
+          }) as unknown as RuntimeModule,
         );
       });
 
@@ -630,13 +632,9 @@ class LynxTemplatePluginImpl {
       return asyncChunkGroups;
     }
 
-    const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
-
-    asyncChunkGroups = groupBy(
-      compilation.chunkGroups
-        .filter(cg => !cg.isInitial())
-        .filter(cg => cg.name !== null && cg.name !== undefined),
-      cg => hooks.asyncChunkName.call(cg.name!),
+    asyncChunkGroups = groupChunkGroupsByDependencies(
+      compilation,
+      compilation.chunkGroups.filter(cg => !cg.isInitial()),
     );
 
     LynxTemplatePluginImpl.#asyncChunkGroups.set(compilation, asyncChunkGroups);
@@ -658,7 +656,7 @@ class LynxTemplatePluginImpl {
 
     const intermediateRoot = path.dirname(this.#options.intermediate);
 
-    const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
+    // const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
 
     // We cache the encoded template so that it will not be encoded twice
     if (!LynxTemplatePluginImpl.#encodedTemplate.has(compilation)) {
@@ -672,13 +670,19 @@ class LynxTemplatePluginImpl {
     await Promise.all(
       Object.entries(asyncChunkGroups).map(
         ([entryName, chunkGroups]): Promise<void> => {
-          const chunkNames =
-            // We use the chunk name(provided by `webpackChunkName`) as filename
-            chunkGroups
-              .filter(cg => cg.name !== null && cg.name !== undefined)
-              .map(cg => hooks.asyncChunkName.call(cg.name!));
+          // const chunkNames =
+          //   // We use the chunk name(provided by `webpackChunkName`) as filename
+          //   chunkGroups
+          //     .filter(cg => cg.name !== null && cg.name !== undefined)
+          //     .map(cg => hooks.asyncChunkName.call(cg.name!));
 
-          const filename = Array.from(new Set(chunkNames)).join('_');
+          const chunkNames = chunkGroups.flatMap((cg) => {
+            const chunks = cg.chunks;
+            return chunks.map(chunk => chunk.id);
+          });
+
+          const filename = chunkNames[0]?.replaceAll('_react_background_', '')
+            .replaceAll('_react_main-thread_', '');
 
           // If no filename is found, avoid generating async template
           if (!filename) {
@@ -696,7 +700,7 @@ class LynxTemplatePluginImpl {
 
           const asyncAssetsInfoByGroups = this.#getAssetsInformationByFilenames(
             compilation,
-            chunkGroups.flatMap(cg => cg.getFiles()),
+            Array.from(new Set(chunkGroups.flatMap(cg => cg.getFiles()))),
           );
 
           return this.#encodeByAssetsInformation(
@@ -888,7 +892,6 @@ class LynxTemplatePluginImpl {
       });
 
       const filename = compilation.getPath(filenameTemplate, {
-        // @ts-expect-error we have a mock chunk here to make contenthash works in webpack
         chunk: {},
         contentHash: this.hash.update(buffer).digest('hex').toString(),
       });
@@ -919,7 +922,7 @@ class LynxTemplatePluginImpl {
           new compiler.webpack.WebpackError(error.error_msg as string),
         );
       } else {
-        compilation.errors.push(error as WebpackError);
+        compilation.errors.push(error as RspackError);
       }
     }
   }
@@ -1051,4 +1054,35 @@ export function isDebug(): boolean {
 
 export function isRsdoctor(): boolean {
   return process.env['RSDOCTOR'] === 'true';
+}
+
+function getDependencies(compilation: Compilation, cg: ChunkGroup): string[] {
+  const blocks = compilation.chunkGraph.getChunkGroupBlocks(cg);
+  return blocks.flatMap((block: AsyncDependenciesBlock) => {
+    const { dependencies } = block;
+    const deps = dependencies.map((dep) => {
+      const module = compilation.moduleGraph.getModule(
+        dep,
+      ) as unknown as NormalModule;
+      const { resource } = module ?? {};
+      return resource ?? '';
+    });
+    return deps;
+  }).sort();
+}
+
+function groupChunkGroupsByDependencies(
+  compilation: Compilation,
+  chunkGroups: ChunkGroup[],
+): Record<string, ChunkGroup[]> {
+  const chunkMap = new Map<string, ChunkGroup[]>();
+  chunkGroups.forEach((cg) => {
+    const deps = getDependencies(compilation, cg);
+    const key = deps.join('_');
+    if (!chunkMap.has(key)) {
+      chunkMap.set(key, []);
+    }
+    chunkMap.get(key)!.push(cg);
+  });
+  return Object.fromEntries(chunkMap.entries());
 }

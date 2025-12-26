@@ -15,7 +15,7 @@ export default defineConfig({
     }),
   ],
   environments: {
-    web: {},
+    // web: {},
     lynx: {
       performance: {
         profile: enableBundleAnalysis,

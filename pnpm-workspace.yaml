@@ -40,8 +40,8 @@ catalogs:
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "1.6.6"
-    "@rspack/core": "1.6.6"
+    "@rspack/cli": "npm:@rspack-canary/cli@1.6.8-canary-ea281acb-20251211080551"
+    "@rspack/core": "npm:@rspack-canary/core@1.6.8-canary-ea281acb-20251211080551"
     # TODO: Upgrade `@rspack/test-tools` to latest
     "@rspack/test-tools": "1.5.6"
 

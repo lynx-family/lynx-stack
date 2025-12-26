@@ -8,6 +8,9 @@
     "allowJs": true,
     "checkJs": true,
     "isolatedDeclarations": false,
+    "paths": {
+      "@/*": ["./src/*"],
+    },
   },
   "include": ["src", "lynx.config.js", "test", "vitest.config.ts"],
   "references": [

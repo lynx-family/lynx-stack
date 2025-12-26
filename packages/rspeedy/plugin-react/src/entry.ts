@@ -232,7 +232,7 @@ export function applyEntry(
           },
           targetSdkVersion,
           // Inject runtime wrapper for all `.js` but not `main-thread.js` and `main-thread.[hash].js`.
-          test: /^(?!.*main-thread(?:\.[A-Fa-f0-9]*)?\.js$).*\.js$/,
+          test: /^(?!.*main-thread.*\.js$).*\.js$/,
           experimental_isLazyBundle,
         }])
         .end()
