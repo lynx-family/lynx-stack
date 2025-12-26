@@ -4,8 +4,12 @@
 
 ```ts
 
+import { EncodeOptions } from '@lynx-js/template-webpack-plugin';
 import { LAYERS } from '@lynx-js/react-webpack-plugin';
+import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+import { LynxTemplatePluginOptions } from '@lynx-js/template-webpack-plugin';
 import type { RsbuildPlugin } from '@rsbuild/core';
+import { TemplateHooks } from '@lynx-js/template-webpack-plugin';
 
 // @public
 export interface AddComponentElementConfig {
@@ -37,6 +41,8 @@ export interface DefineDceVisitorConfig {
     define: Record<string, string>
 }
 
+export { EncodeOptions }
+
 // @public
 export interface ExtractStrConfig {
     // @internal (undocumented)
@@ -45,6 +51,10 @@ export interface ExtractStrConfig {
 }
 
 export { LAYERS }
+
+export { LynxTemplatePlugin }
+
+export { LynxTemplatePluginOptions }
 
 // @public
 export function pluginReactLynx(userOptions?: PluginReactLynxOptions): RsbuildPlugin[];
@@ -82,5 +92,7 @@ export interface ShakeVisitorConfig {
     removeCallParams: Array<string>
     retainProp: Array<string>
 }
+
+export { TemplateHooks }
 
 ```

@@ -70,6 +70,9 @@ const SIDEBARS = {
     createAPI({
       name: 'lynx-bundle-rslib-config',
     }),
+    createAPI({
+      name: 'config-rsbuild-plugin',
+    }),
   ],
   Webpack: [
     {
@@ -215,6 +218,10 @@ const SIDEBARS_ZH = {
     createAPI({
       base: 'zh/api',
       name: 'lynx-bundle-rslib-config',
+    }),
+    createAPI({
+      base: 'zh/api',
+      name: 'config-rsbuild-plugin',
     }),
   ],
   Webpack: [
