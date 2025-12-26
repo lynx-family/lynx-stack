@@ -1,5 +1,11 @@
 # @lynx-js/externals-loading-webpack-plugin
 
+## 0.0.2
+
+### Patch Changes
+
+- Export `ExternalValue` ts type. ([#2037](https://github.com/lynx-family/lynx-stack/pull/2037))
+
 ## 0.0.1
 
 ### Patch Changes
