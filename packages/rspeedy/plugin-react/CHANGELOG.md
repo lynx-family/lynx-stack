@@ -1,5 +1,19 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.12.3
+
+### Patch Changes
+
+- expose LAYERS via `api.expose` for other rsbuild plugins. ([#2006](https://github.com/lynx-family/lynx-stack/pull/2006))
+
+- Updated dependencies [[`cd89bf9`](https://github.com/lynx-family/lynx-stack/commit/cd89bf9e3fc8ed4658dfb6c983584376416d620f)]:
+  - @lynx-js/template-webpack-plugin@0.10.1
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.3
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/react-webpack-plugin@0.7.3
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+
 ## 0.12.2
 
 ### Patch Changes

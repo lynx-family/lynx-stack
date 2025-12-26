@@ -1,5 +1,13 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.10.1
+
+### Patch Changes
+
+- fix: pass updated css from encodeData to resolvedEncodeOptions ([#2053](https://github.com/lynx-family/lynx-stack/pull/2053))
+
+  Previously, the initial CSS was used in resolvedEncodeOptions instead of the potentially updated CSS from encodeData after the beforeEncode hook. This fix ensures resolvedEncodeOptions receives the latest CSS data.
+
 ## 0.10.0
 
 ### Minor Changes
