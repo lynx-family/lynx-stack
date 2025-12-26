@@ -126,8 +126,33 @@ When generating or modifying code in this package, please adhere to the followin
 
 ## Development & Build
 
-- **Build WASM**: `cargo build --target wasm32-unknown-unknown`
-- **Test**: `cargo test --all-features`
+This package uses `pnpm` for dependency management and scripts.
+
+- **Install Dependencies**: `pnpm install`
+- **Build WASM**: `pnpm build` (This runs the `scripts/build.js` script, which builds both `client` and `encode` features)
+- **Test**: `pnpm test` (Uses `vitest` to run tests in `tests/`)
+
+### Build Script (`scripts/build.js`)
+
+The `scripts/build.js` script handles the complex build process:
+
+1. Builds the Rust crate with `cargo build --target wasm32-unknown-unknown`.
+2. Runs `wasm-bindgen` to generate the JS glue code.
+3. Runs `wasm-opt` to optimize the WASM binary.
+4. It builds two variants:
+   - `client`: For the runtime (browser/webview).
+   - `encode`: For build-time tools (CSS encoding).
+
+## TypeScript Integration
+
+### Client (`ts/client`)
+
+- **`wasm.ts`**: Handles the loading of the WASM module. It supports `WebAssembly.compileStreaming` in browsers and falls back for other environments. It exports `wasmInstance` and `wasmModule`.
+- **`DecodedStyle`**: A wrapper class around the WASM `DecodedStyleData` struct. It provides a convenient API for accessing decoded style information in TypeScript, handling `Uint8Array` decoding and string caching.
+
+### Encode (`ts/encode`)
+
+- **`encodeCSS.ts`**: Provides the `encodeCSS` function, which takes a map of CSS ASTs (from `@lynx-js/css-serializer`) and encodes them into a `Uint8Array` using the `encode` feature of the WASM module. This is used by build tools to serialize CSS.
 
 ## Module Details
 
