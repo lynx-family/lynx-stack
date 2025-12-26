@@ -240,7 +240,7 @@ describe('loadLazyBundle', () => {
 
     test('blocking QueryComponent with error', async () => {
       QueryComponent.mockImplementation((source, callback) => {
-        callback({ code: 1, detail: { errMsg: 'error', source } });
+        callback({ code: 1, detail: { errMsg: 'error', schema: source } });
       });
 
       const { loadLazyBundle } = await import('../../src/lynx/lazy-bundle');
@@ -257,14 +257,14 @@ describe('loadLazyBundle', () => {
       let catchCalled = false;
       const promise3 = promise.catch((err) => {
         expect(err).toMatchInlineSnapshot(
-          `[Error: Lazy bundle load failed: {"code":1,"detail":{"errMsg":"error","source":"foo"}}]`,
+          `[Error: Lazy bundle load failed, schema: foo]`,
         );
         catchCalled = true;
       });
       expect(catchCalled).toBe(false); // Should be non-blocking
 
       await expect(promise2).rejects.toThrowErrorMatchingInlineSnapshot(
-        `[Error: Lazy bundle load failed: {"code":1,"detail":{"errMsg":"error","source":"foo"}}]`,
+        `[Error: Lazy bundle load failed, schema: foo]`,
       );
 
       await promise3;
@@ -447,7 +447,7 @@ describe('loadLazyBundle', () => {
     test('non-blocking QueryComponent with rejections', async () => {
       QueryComponent.mockImplementation((source, callback) => {
         Promise.resolve().then(() => {
-          callback({ code: 1, detail: { errMsg: 'error', source } });
+          callback({ code: 1, detail: { errMsg: 'error', schema: source } });
         });
       });
 
@@ -462,7 +462,7 @@ describe('loadLazyBundle', () => {
         expect.fail('promise should not resolve');
       }, (err) => {
         expect(err).toMatchInlineSnapshot(
-          `[Error: Lazy bundle load failed: {"code":1,"detail":{"errMsg":"error","source":"foo"}}]`,
+          `[Error: Lazy bundle load failed, schema: foo]`,
         );
         thenCalled = true;
         return 'bar';
@@ -470,7 +470,7 @@ describe('loadLazyBundle', () => {
       expect(thenCalled).toBe(false);
 
       await expect(promise).rejects.toMatchInlineSnapshot(
-        `[Error: Lazy bundle load failed: {"code":1,"detail":{"errMsg":"error","source":"foo"}}]`,
+        `[Error: Lazy bundle load failed, schema: foo]`,
       );
       expect(thenCalled).toBe(true);
 
@@ -482,6 +482,52 @@ describe('loadLazyBundle', () => {
       expect(thenCalled).toBe(false);
 
       await expect(promise2).resolves.toBe('bar');
+      expect(thenCalled).toBe(true);
+    });
+
+    test('catch and process error of loadLazyBundle', async () => {
+      QueryComponent.mockImplementation((source, callback) => {
+        Promise.resolve().then(() => {
+          callback({ code: 1, detail: { errMsg: 'error', schema: source } });
+        });
+      });
+
+      const { loadLazyBundle } = await import('../../src/lynx/lazy-bundle');
+
+      const promise = loadLazyBundle('foo');
+
+      expect(QueryComponent).toBeCalledWith('foo', expect.any(Function));
+
+      let thenCalled = false;
+      const promise2 = promise.then(() => {
+        expect.fail('promise should not resolve');
+      }, (err) => {
+        const cause = err.cause;
+        expect(cause).toMatchInlineSnapshot(
+          `"{"code":1,"detail":{"errMsg":"error","schema":"foo"}}"`,
+        );
+        thenCalled = true;
+        return `Lazy Bundle load failed result: ${cause}`;
+      });
+      expect(thenCalled).toBe(false);
+
+      await expect(promise).rejects.toMatchInlineSnapshot(
+        `[Error: Lazy bundle load failed, schema: foo]`,
+      );
+      expect(thenCalled).toBe(true);
+
+      thenCalled = false;
+      promise2.then((data) => {
+        expect(data).toMatchInlineSnapshot(
+          `"Lazy Bundle load failed result: {"code":1,"detail":{"errMsg":"error","schema":"foo"}}"`,
+        );
+        thenCalled = true;
+      });
+      expect(thenCalled).toBe(false);
+
+      await expect(promise2).resolves.toMatchInlineSnapshot(
+        `"Lazy Bundle load failed result: {"code":1,"detail":{"errMsg":"error","schema":"foo"}}"`,
+      );
       expect(thenCalled).toBe(true);
     });
 
