@@ -64,7 +64,7 @@ const LynxTemplatePluginHooksMap = new WeakMap<Compilation, TemplateHooks>();
  *     compiler.hooks.compilation.tap("MyPlugin", (compilation) => {
  *       console.log("The compiler is starting a new compilation...");
  *
- *       LynxTemplatePlugin.getCompilationHooks(compilation).beforeEmit.tapAsync(
+ *       LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(
  *         "MyPlugin", // <-- Set a meaningful name here for stacktraces
  *         (data, cb) => {
  *           // Manipulate the content

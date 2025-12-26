@@ -370,7 +370,15 @@ export function pluginReactLynx(
         }
 
         api.expose(Symbol.for('LAYERS'), LAYERS)
-        api.expose(Symbol.for('LynxTemplatePlugin'), { LynxTemplatePlugin })
+        // Only expose `LynxTemplatePlugin.getLynxTemplatePluginHooks` to avoid
+        // other breaking changes in `LynxTemplatePlugin`
+        // breaks `pluginReactLynx`
+        api.expose(Symbol.for('LynxTemplatePlugin'), {
+          LynxTemplatePlugin: {
+            getLynxTemplatePluginHooks: LynxTemplatePlugin
+              .getLynxTemplatePluginHooks.bind(LynxTemplatePlugin),
+          },
+        })
 
         const rspeedyAPIs = api.useExposed<ExposedAPI>(
           Symbol.for('rspeedy.api'),
