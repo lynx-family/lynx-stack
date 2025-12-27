@@ -108,10 +108,18 @@ When implementing a new web element, follow these strict guidelines:
 5. **Exports**:
    - Export the component in `src/elements/all.ts`.
    - Add export config to `package.json` under `"exports"` (types and default).
-6. **Testing**:
-   - Create a directory in `tests/fixtures/` matching the tag name (e.g., `tests/fixtures/x-my-element/`).
-   - Create one HTML file per test case/feature (Atomic Testing).
-   - Add E2E tests in `tests/web-elements.spec.ts`.
+6. **Attribute Handling (Critical)**:
+   - **Do NOT** implement attribute logic (handlers decorated with `@registerAttributeHandler`) directly on the main Element class (the one decorated with `@Component`). They will **NOT** be registered.
+   - **Pattern**: Create a separate "Attribute Class" (e.g., `XWebViewAttribute.ts`) that implements `AttributeReactiveClass` logic.
+   - **Register**: Pass this Attribute Class as the second argument to the `@Component` decorator.
+   - **Lazy Access**: Use `genDomGetter` to safely access internal elements within the Shadow DOM.
+
+7. **Testing**:
+   - **Structure**: Create a separate spec file for new components (e.g., `tests/x-webview.spec.ts`) instead of adding to the monolithic `web-elements.spec.ts`.
+   - **Network Mocking**: If the component makes external requests (e.g., via `iframe` or `fetch`), you **MUST** mock them using `page.route` to ensure tests are hermetic and fast.
+   - **Shadow DOM**: Playwright relies on specific strategies to access Shadow DOM.
+     - **Locators**: `page.locator('x-elem').locator('inner-elem')` works automatically if the shadow root is open.
+     - **evaluate/waitForFunction**: You must explicit traverse `.shadowRoot`. Example: `el.shadowRoot.querySelector('iframe')`.
 
 ### 4. Example Test (Playwright)
 
@@ -121,16 +129,40 @@ import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 const goto = async (page: Page, fixtureName: string) => {
+  // Use relative path for fixtures
   await page.goto(`tests/fixtures/${fixtureName}.html`, { waitUntil: 'load' });
   await page.evaluate(() => document.fonts.ready);
 };
 
-test('my-element should update style on attribute change', async ({ page }) => {
-  await goto(page, 'my-element');
-  const element = page.locator('my-element');
+test.describe('my-element', () => {
+  // NETWORK MOCKING EXAMPLE
+  test.beforeEach(async ({ page }) => {
+    await page.route('https://example.com/*', async route => {
+      await route.fulfill({ status: 200, body: 'Mocked Content' });
+    });
+  });
 
-  await element.evaluate(el => el.setAttribute('custom-color', 'red'));
-  await expect(element).toHaveCSS('background-color', 'rgb(255, 0, 0)');
+  test('should update style on attribute change', async ({ page }) => {
+    await goto(page, 'my-element/basic'); // Subdirectory in fixtures
+    const element = page.locator('my-element');
+
+    await element.evaluate(el => el.setAttribute('custom-color', 'red'));
+    await expect(element).toHaveCSS('background-color', 'rgb(255, 0, 0)');
+  });
+
+  test('should access internal shadow dom element', async ({ page }) => {
+    await goto(page, 'my-element/basic');
+    // 1. Using Locators (Preferred)
+    const inner = page.locator('my-element').locator('#inner-id');
+    await expect(inner).toBeVisible();
+
+    // 2. Using evaluate/waitForFunction (If necessary)
+    // NOTE: document.querySelector('x-element #inner') fails. Access shadowRoot explicitly.
+    await page.waitForFunction(() => {
+      const el = document.querySelector('my-element');
+      return el?.shadowRoot?.querySelector('#inner-id') !== null;
+    });
+  });
 });
 ```
 
