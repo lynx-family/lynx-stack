@@ -62,6 +62,10 @@ export class Element {
     });
   }
 
+  public getComputedStyleByKey(key: string): string {
+    return __GetComputedStyleByKey(this.element, key);
+  }
+
   public animate(
     keyframes: Record<string, number | string>[],
     options?: number | Record<string, number | string>,
