@@ -429,8 +429,8 @@ importers:
   packages/react:
     dependencies:
       preact:
-        specifier: npm:@hongzhiyuan/preact@10.24.0-00213bad
-        version: '@hongzhiyuan/preact@10.24.0-00213bad'
+        specifier: npm:@upupming/preact@10.24.0-c76271e
+        version: '@upupming/preact@10.24.0-c76271e'
     devDependencies:
       '@lynx-js/types':
         specifier: 3.4.11
@@ -2707,9 +2707,6 @@ packages:
     resolution: {integrity: sha512-Z5kJ+wU3oA7MMIqVR9tyZRtjYPr4OC004Q4Rw7pgOKUOKkJfZ3O24nz3WYfGRpMDNmcOi3TwQOmgm7B7Tpii0w==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@hongzhiyuan/preact@10.24.0-00213bad':
-    resolution: {integrity: sha512-bHWp4ZDK5ZimcY+bTWw3S3xGiB8eROpZj0RK3FClNIaTOajb0b11CsT3K+pdeakgPgq1jWN3T2e2rfrPm40JsQ==}
-
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
     engines: {node: '>=18.18.0'}
@@ -4298,6 +4295,9 @@ packages:
     resolution: {integrity: sha512-lrW200hZdbfRtztbygyaq/6jP6AKE8qQN2KvPcJ+x7wiD038YtnYtZ82IMNJ69GJibV7bwL3y9FgK+5w/pYt6g==}
     cpu: [x64]
     os: [win32]
+
+  '@upupming/preact@10.24.0-c76271e':
+    resolution: {integrity: sha512-qM5XGO6VvfZn4zFPQhpfBAss/Bgt/HYp/HCrd+t8q88DgUuGAjH//KJIDz8yzM6O/64qI/PVXk0RRwmgWso/6Q==}
 
   '@vitest/coverage-v8@3.2.4':
     resolution: {integrity: sha512-EyF9SXU6kS5Ku/U82E259WSnvg6c8KTjppUncuNdm5QHpe17mwREHnjDzozC8x9MZ0xfBUFSaLkRv4TMA75ALQ==}
@@ -10940,8 +10940,6 @@ snapshots:
       '@eslint/core': 0.15.2
       levn: 0.4.1
 
-  '@hongzhiyuan/preact@10.24.0-00213bad': {}
-
   '@humanfs/core@0.19.1': {}
 
   '@humanfs/node@0.16.6':
@@ -12989,6 +12987,8 @@ snapshots:
 
   '@unrs/resolver-binding-win32-x64-msvc@1.11.1':
     optional: true
+
+  '@upupming/preact@10.24.0-c76271e': {}
 
   '@vitest/coverage-v8@3.2.4(vitest@3.2.4)':
     dependencies:

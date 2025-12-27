@@ -6,6 +6,10 @@ function RecursiveText(props: { text: string }) {
   const { text } = props;
   const sliced = [...text];
   const [first, ...rest] = sliced;
+  
+  for (let i = 0; i < 1e5; i++) {
+    console.log('test')
+  }
 
   return (
     sliced.length > 0 && (
