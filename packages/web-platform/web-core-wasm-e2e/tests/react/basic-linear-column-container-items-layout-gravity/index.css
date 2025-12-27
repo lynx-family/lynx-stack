@@ -1,0 +1,84 @@
+/*
+// Copyright 2024 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+*/
+.container {
+  display: linear;
+  linear-gravity: none;
+  linear-weight-sum: 0;
+}
+.items-center {
+  linear-cross-gravity: center;
+}
+.pink {
+  background-color: pink;
+}
+.aqua {
+  background-color: aqua;
+}
+.vertical {
+  linear-direction: column;
+  width: 100px;
+  height: 300px;
+  background-color: pink;
+}
+.vertical-reverse {
+  linear-direction: column-reverse;
+  width: 300px;
+  height: 150px;
+  background-color: #99ddaa;
+}
+.horizontal {
+  linear-direction: row;
+  width: 300px;
+  height: 100px;
+  background-color: pink;
+}
+.horizontal-reverse {
+  linear-direction: row-reverse;
+  width: 200px;
+  height: 100px;
+  background-color: #99ddaa;
+}
+.container-item {
+  linear-weight: 0;
+  width: 40px;
+  height: 40px;
+}
+.self-left {
+  linear-layout-gravity: left;
+}
+.self-right {
+  linear-layout-gravity: right;
+}
+.self-top {
+  linear-layout-gravity: top;
+}
+.self-bottom {
+  linear-layout-gravity: bottom;
+}
+.self-start {
+  linear-layout-gravity: start;
+}
+.self-end {
+  linear-layout-gravity: end;
+}
+.self-center {
+  linear-layout-gravity: center;
+}
+.self-center-vertical {
+  linear-layout-gravity: center-vertical;
+}
+.self-center-horizontal {
+  linear-layout-gravity: center-horizontal;
+}
+.self-stretch {
+  linear-layout-gravity: stretch;
+}
+.self-fill-vertical {
+  linear-layout-gravity: fill-vertical;
+}
+.self-fill-horizontal {
+  linear-layout-gravity: fill-horizontal;
+}
