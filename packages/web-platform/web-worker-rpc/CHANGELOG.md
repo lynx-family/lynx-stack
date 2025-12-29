@@ -1,5 +1,11 @@
 # @lynx-js/web-worker-rpc
 
+## 0.19.3
+
+### Patch Changes
+
+- feat: support lazy message port assigning in web-worker-rpc ([#2040](https://github.com/lynx-family/lynx-stack/pull/2040))
+
 ## 0.19.2
 
 ## 0.19.1
