@@ -1,6 +1,6 @@
+import '../polyfill/shim.js';
 import { spring as spring_ } from 'motion-dom';
 import type { MainThreadRef } from '@lynx-js/react';
-import '../polyfill/shim.js';
 export declare function spring(...args: Parameters<typeof spring_>): ReturnType<typeof spring_>;
 export interface MotionValue<T> {
     get(): T;
@@ -13,6 +13,7 @@ export interface MotionValue<T> {
      * Internal method to update velocity, usually called by the animation loop.
      */
     updateVelocity(v: number): void;
+    stop(): void;
 }
 export declare function createMotionValue<T>(initial: T): MotionValue<T>;
 export interface MotionValueEventCallbacks<V> {

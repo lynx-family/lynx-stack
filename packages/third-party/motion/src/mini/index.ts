@@ -1,7 +1,9 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { spring as spring_ } from 'motion-dom' with { runtime: 'shared' };
+import '../polyfill/shim.js';
+
+import { spring as spring_ } from 'motion-dom';
 
 import {
   runOnMainThread,
@@ -17,7 +19,6 @@ import type {
 import { runWorkletCtx } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { registerCallable } from '../utils/registeredFunction.js';
-import '../polyfill/shim.js';
 
 function noopMT() {
   'main thread';
@@ -27,6 +28,8 @@ let springHandle = 'springHandle';
 
 if (__MAIN_THREAD__) {
   springHandle = registerCallable(spring_, 'springHandle');
+} else {
+  console.log('ohmyoh bts');
 }
 
 export function spring(
@@ -50,6 +53,11 @@ export interface MotionValue<T> {
    * Internal method to update velocity, usually called by the animation loop.
    */
   updateVelocity(v: number): void;
+  stop(): void;
+  /**
+   * @internal
+   */
+  attach(cancel: () => void): () => void;
 }
 
 export function createMotionValue<T>(initial: T): MotionValue<T> {
@@ -58,6 +66,7 @@ export function createMotionValue<T>(initial: T): MotionValue<T> {
     v: T;
     velocity = 0;
     listeners = new Set<(v: T) => void>();
+    activeAnimations = new Set<() => void>();
     lastUpdated = 0;
 
     constructor(initial: T) {
@@ -114,6 +123,22 @@ export function createMotionValue<T>(initial: T): MotionValue<T> {
       for (const cb of this.listeners) {
         cb(this.v);
       }
+    }
+
+    attach(cancel: () => void) {
+      this.activeAnimations.add(cancel);
+      return () => this.activeAnimations.delete(cancel);
+    }
+
+    stop() {
+      for (const cancel of this.activeAnimations) {
+        cancel();
+      }
+      this.activeAnimations.clear();
+    }
+
+    toJSON() {
+      return String(this.v);
     }
   }
 
@@ -192,6 +217,9 @@ export function animate(
   } else {
     currentV = value.get();
     startVelocity = startVelocity || value.getVelocity();
+    if (value.stop) {
+      value.stop();
+    }
   }
 
   // If type is spring or no duration provided, default to spring.
@@ -226,6 +254,14 @@ export function animate(
 
   const duration = options.duration ?? 0.3;
   const ease = options.ease ?? easeOut;
+
+  let detach: (() => void) | undefined;
+  if (
+    typeof value === 'object' && value && 'attach' in value
+    && typeof value.attach === 'function'
+  ) {
+    detach = value.attach(controls.stop);
+  }
 
   const tick = () => {
     if (canceled) return;
@@ -280,6 +316,7 @@ export function animate(
         options.onComplete();
       }
       controls.onFinish();
+      detach?.();
     } else {
       requestAnimationFrame(tick);
     }

@@ -69,16 +69,17 @@ function shimGlobals() {
 if (__MAIN_THREAD__) {
     setupDocument();
     shimGlobals();
-} else if (__DEV__) {
-  // Only shim queueMicrotask if it doesn't exist
-  // eslint-disable-next-line unicorn/no-lonely-if
-  if (!globalThis.queueMicrotask) {
+}
+else if (__DEV__) {
+    // Only shim queueMicrotask if it doesn't exist
+    // eslint-disable-next-line unicorn/no-lonely-if
+    if (!globalThis.queueMicrotask) {
         globalThis.queueMicrotask = (fn) => {
             void Promise.resolve().then(() => {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                 fn();
             });
         };
-  }
+    }
 }
 //# sourceMappingURL=shim.js.map

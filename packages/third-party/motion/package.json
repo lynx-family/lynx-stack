@@ -1,7 +1,7 @@
 {
   "name": "@lynx-js/motion-lynx",
   "version": "0.0.1",
-  "private": true,
+  "private": false,
   "description": "This is a motion adapter for Lynx.js",
   "keywords": [
     "react",
@@ -16,20 +16,21 @@
   },
   "license": "MIT",
   "sideEffects": [
-    "./src/polyfill/shim.ts"
+    "./src/polyfill/shim.ts",
+    "./dist/polyfill/shim.js"
   ],
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
+      "require": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./mini": {
       "types": "./dist/mini/index.d.ts",
       "import": "./dist/mini/index.js",
-      "require": "./dist/mini/index.cjs",
+      "require": "./dist/mini/index.js",
       "default": "./dist/mini/index.js"
     }
   },

@@ -1,17 +1,20 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { spring as spring_ } from 'motion-dom' with { runtime: 'shared' };
+import '../polyfill/shim.js';
+import { spring as spring_ } from 'motion-dom';
 import { runOnMainThread, useEffect, useMainThreadRef, useMemo, } from '@lynx-js/react';
 import { runWorkletCtx } from '@lynx-js/react/worklet-runtime/bindings';
 import { registerCallable } from '../utils/registeredFunction.js';
-import '../polyfill/shim.js';
 function noopMT() {
     'main thread';
 }
 let springHandle = 'springHandle';
 if (__MAIN_THREAD__) {
     springHandle = registerCallable(spring_, 'springHandle');
+}
+else {
+    console.log('ohmyoh bts');
 }
 export function spring(...args) {
     'main thread';
@@ -24,6 +27,7 @@ export function createMotionValue(initial) {
         v;
         velocity = 0;
         listeners = new Set();
+        activeAnimations = new Set();
         lastUpdated = 0;
         constructor(initial) {
             this.v = initial;
@@ -72,6 +76,19 @@ export function createMotionValue(initial) {
                 cb(this.v);
             }
         }
+        attach(cancel) {
+            this.activeAnimations.add(cancel);
+            return () => this.activeAnimations.delete(cancel);
+        }
+        stop() {
+            for (const cancel of this.activeAnimations) {
+                cancel();
+            }
+            this.activeAnimations.clear();
+        }
+        toJSON() {
+            return String(this.v);
+        }
     }
     return new MotionValueImpl(initial);
 }
@@ -116,6 +133,9 @@ export function animate(value, target, options = {}) {
     else {
         currentV = value.get();
         startVelocity = startVelocity || value.getVelocity();
+        if (value.stop) {
+            value.stop();
+        }
     }
     // If type is spring or no duration provided, default to spring.
     // Unless ease is provided, then tween.
@@ -144,6 +164,11 @@ export function animate(value, target, options = {}) {
     };
     const duration = options.duration ?? 0.3;
     const ease = options.ease ?? easeOut;
+    let detach;
+    if (typeof value === 'object' && value && 'attach' in value
+        && typeof value.attach === 'function') {
+        detach = value.attach(controls.stop);
+    }
     const tick = () => {
         if (canceled)
             return;
@@ -195,6 +220,7 @@ export function animate(value, target, options = {}) {
                 options.onComplete();
             }
             controls.onFinish();
+            detach?.();
         }
         else {
             requestAnimationFrame(tick);
