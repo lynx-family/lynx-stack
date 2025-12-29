@@ -23,9 +23,7 @@ const config = {
   cache: false,
   entry: {
     main: './shell-project/index.ts',
-    'web-elements': './shell-project/web-elements.ts',
     'main-thread-test': './shell-project/mainthread-test.ts',
-    'rpc-test': './shell-project/rpc-test/index.ts',
     'web-core': './shell-project/web-core.ts',
     'fp-only': './shell-project/fp-only.ts',
   },
@@ -91,22 +89,6 @@ const config = {
       chunks: ['main-thread-test'],
       scriptLoading: 'module',
       filename: 'main-thread-test.html',
-    }),
-
-    new rspack.HtmlRspackPlugin({
-      title: 'rpc-test',
-      meta: {
-        viewport:
-          'width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no',
-        'apple-mobile-web-app-capable': 'yes',
-        'apple-mobile-web-app-status-bar-style': 'default',
-        'screen-orientation': 'portrait',
-        'format-detection': 'telephone=no',
-        'x5-orientation': 'portrait',
-      },
-      chunks: ['rpc-test'],
-      scriptLoading: 'module',
-      filename: 'rpc-test.html',
     }),
     new rspack.HtmlRspackPlugin({
       title: 'lynx-for-web-core-test',

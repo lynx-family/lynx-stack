@@ -18,10 +18,6 @@
       "@lynx-js/web-rsbuild-server-middleware"
     ],
     [
-      "@lynx-js/web-elements",
-      "@lynx-js/web-elements-template"
-    ],
-    [
       "@lynx-js/react-rsbuild-plugin",
       "@lynx-js/react-alias-rsbuild-plugin"
     ],

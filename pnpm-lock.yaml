@@ -358,7 +358,7 @@ importers:
         specifier: 3.4.11
         version: 3.4.11
       '@testing-library/jest-dom':
-        specifier: ^6.9.0
+        specifier: ^6.9.1
         version: 6.9.1
       rsbuild-plugin-publint:
         specifier: 0.3.3
@@ -484,7 +484,7 @@ importers:
         specifier: ^10.4.1
         version: 10.4.1
       '@testing-library/jest-dom':
-        specifier: ^6.9.0
+        specifier: ^6.9.1
         version: 6.9.1
 
   packages/react/transform:
@@ -879,7 +879,7 @@ importers:
         specifier: workspace:*
         version: link:../../../rspeedy/core
       '@testing-library/jest-dom':
-        specifier: ^6.9.0
+        specifier: ^6.9.1
         version: 6.9.1
 
   packages/testing-library/examples/react-compiler:
@@ -916,7 +916,7 @@ importers:
         specifier: 3.4.11
         version: 3.4.11
       '@testing-library/jest-dom':
-        specifier: ^6.9.0
+        specifier: ^6.9.1
         version: 6.9.1
       '@types/react':
         specifier: ^18.3.25
@@ -931,7 +931,7 @@ importers:
   packages/testing-library/testing-environment:
     devDependencies:
       '@testing-library/jest-dom':
-        specifier: ^6.9.0
+        specifier: ^6.9.1
         version: 6.9.1
       '@types/jsdom':
         specifier: ^21.1.7
@@ -979,6 +979,19 @@ importers:
 
   packages/web-platform/offscreen-document: {}
 
+  packages/web-platform/playwright-fixtures:
+    dependencies:
+      nyc:
+        specifier: ^17.1.0
+        version: 17.1.0
+      v8-to-istanbul:
+        specifier: ^9.3.0
+        version: 9.3.0
+    devDependencies:
+      '@playwright/test':
+        specifier: ^1.57.0
+        version: 1.57.0
+
   packages/web-platform/web-constants:
     dependencies:
       '@lynx-js/web-worker-rpc':
@@ -1022,9 +1035,9 @@ importers:
       '@lynx-js/web-constants':
         specifier: workspace:*
         version: link:../web-constants
-      '@lynx-js/web-elements-template':
+      '@lynx-js/web-elements':
         specifier: workspace:*
-        version: link:../web-elements-template
+        version: link:../web-elements
       '@lynx-js/web-mainthread-apis':
         specifier: workspace:*
         version: link:../web-mainthread-apis
@@ -1039,27 +1052,25 @@ importers:
         version: 0.3.3(@rsbuild/core@1.6.13)
 
   packages/web-platform/web-elements:
-    dependencies:
-      '@lynx-js/web-elements-reactive':
-        specifier: workspace:*
-        version: link:../web-elements-reactive
-      '@lynx-js/web-elements-template':
-        specifier: workspace:*
-        version: link:../web-elements-template
     devDependencies:
+      '@lynx-js/playwright-fixtures':
+        specifier: workspace:*
+        version: link:../playwright-fixtures
+      '@playwright/test':
+        specifier: ^1.57.0
+        version: 1.57.0
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 1.6.13
+      '@rsbuild/plugin-source-build':
+        specifier: ^1.0.3
+        version: 1.0.3(@rsbuild/core@1.6.13)
+      nyc:
+        specifier: ^17.1.0
+        version: 17.1.0
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
-
-  packages/web-platform/web-elements-compat:
-    devDependencies:
-      '@lynx-js/web-elements':
-        specifier: workspace:*
-        version: link:../web-elements
-
-  packages/web-platform/web-elements-reactive: {}
-
-  packages/web-platform/web-elements-template: {}
 
   packages/web-platform/web-explorer:
     devDependencies:
@@ -1158,6 +1169,9 @@ importers:
       '@lynx-js/offscreen-document':
         specifier: workspace:*
         version: link:../offscreen-document
+      '@lynx-js/playwright-fixtures':
+        specifier: workspace:*
+        version: link:../playwright-fixtures
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react
@@ -1179,12 +1193,6 @@ importers:
       '@lynx-js/web-elements':
         specifier: workspace:*
         version: link:../web-elements
-      '@lynx-js/web-elements-compat':
-        specifier: workspace:*
-        version: link:../web-elements-compat
-      '@lynx-js/web-elements-reactive':
-        specifier: workspace:*
-        version: link:../web-elements-reactive
       '@lynx-js/web-mainthread-apis':
         specifier: workspace:*
         version: link:../web-mainthread-apis
@@ -1194,15 +1202,12 @@ importers:
       '@lynx-js/web-rsbuild-server-middleware':
         specifier: workspace:*
         version: link:../web-rsbuild-server-middleware
-      '@lynx-js/web-worker-rpc':
-        specifier: workspace:*
-        version: link:../web-worker-rpc
       '@lynx-js/webpack-dev-transport':
         specifier: workspace:*
         version: link:../../webpack/webpack-dev-transport
       '@playwright/test':
-        specifier: ^1.56.0
-        version: 1.56.0
+        specifier: ^1.57.0
+        version: 1.57.0
       '@rspack/cli':
         specifier: catalog:rspack
         version: 1.6.6(@rspack/core@1.6.6(@swc/helpers@0.5.17))(@types/express@4.17.21)(webpack@5.102.0)
@@ -1534,6 +1539,9 @@ importers:
       '@lynx-js/external-bundle-rsbuild-plugin':
         specifier: workspace:*
         version: link:../packages/rspeedy/plugin-external-bundle
+      '@lynx-js/externals-loading-webpack-plugin':
+        specifier: workspace:*
+        version: link:../packages/webpack/externals-loading-webpack-plugin
       '@lynx-js/lynx-bundle-rslib-config':
         specifier: workspace:*
         version: link:../packages/rspeedy/lynx-bundle-rslib-config
@@ -3034,8 +3042,8 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@playwright/test@1.56.0':
-    resolution: {integrity: sha512-Tzh95Twig7hUwwNe381/K3PggZBZblKUe2wv25oIpzWLr6Z0m4KgV1ZVIjnR6GM9ANEqjZD7XsZEa6JL/7YEgg==}
+  '@playwright/test@1.57.0':
+    resolution: {integrity: sha512-6TyEnHgd6SArQO8UO2OMTxshln3QMWBtPGrOCgs3wVEmQmwyuNtB10IZMfmYDE0riwNR1cu4q+pPcxMVtaG3TA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -3220,6 +3228,14 @@ packages:
     resolution: {integrity: sha512-2XcrXUwJftWsWURsvGKKXc7A4yEAUdVkw+K95Qrfmy5E5IfARik0Ko3TFB1828wdvhZ1OFLvDQEzONCIyQV1yg==}
     peerDependencies:
       '@rsbuild/core': 1.x
+
+  '@rsbuild/plugin-source-build@1.0.3':
+    resolution: {integrity: sha512-b+BWbx5eqSV3Ydq0gH265ov0LsVfV7ho0q4FT5zgxt+ZIPU5W5TB14tAt3enHXGOATMFBrjTL85XNpqQS6aExA==}
+    peerDependencies:
+      '@rsbuild/core': 1.x
+    peerDependenciesMeta:
+      '@rsbuild/core':
+        optional: true
 
   '@rsbuild/plugin-type-check@1.3.1':
     resolution: {integrity: sha512-T+HrTGL1N2m8fusNmJuIXpmWk8OhyOYqhpGQ4uC+qs+6X6+/gNbh9M7a0AvD4lqXJqgBjPo9CltqU06uJJloAw==}
@@ -5744,8 +5760,8 @@ packages:
   fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
 
-  fast-glob@3.3.2:
-    resolution: {integrity: sha512-oX2ruAFQwf/Orj8m737Y5adxDQO0LAB7/S5MnxCdTNDd4p6BsyIVsv9JQsATbTSq8KHRpLwIHbVlUNatxd+1Ow==}
+  fast-glob@3.3.3:
+    resolution: {integrity: sha512-7MptL8U0cqcFdzIzwOTHoilX9x5BrNqye7Z/LuC7kCMRio1EMSyqRK3BEAUD7sXRq4iT4AzTVuZdhgQ2TCvYLg==}
     engines: {node: '>=8.6.0'}
 
   fast-json-stable-stringify@2.1.0:
@@ -6245,8 +6261,8 @@ packages:
     resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
     engines: {node: '>=0.10.0'}
 
-  iconv-lite@0.7.0:
-    resolution: {integrity: sha512-cf6L2Ds3h57VVmkZe+Pn+5APsT7FpqJtEhhieDCvrE2MK5Qk9MyffgQyuxQTm6BChfeZNtcOLHp9IcWRVcIcBQ==}
+  iconv-lite@0.7.1:
+    resolution: {integrity: sha512-2Tth85cXwGFHfvRgZWszZSvdo+0Xsqmw8k8ZwxScfcBneNUraK+dxRxRm24nszx80Y0TVio8kKLt5sLE7ZCLlw==}
     engines: {node: '>=0.10.0'}
 
   icss-utils@5.1.0:
@@ -7519,13 +7535,13 @@ packages:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
     engines: {node: '>=8'}
 
-  playwright-core@1.56.0:
-    resolution: {integrity: sha512-1SXl7pMfemAMSDn5rkPeZljxOCYAmQnYLBTExuh6E8USHXGSX3dx6lYZN/xPpTz1vimXmPA9CDnILvmJaB8aSQ==}
+  playwright-core@1.57.0:
+    resolution: {integrity: sha512-agTcKlMw/mjBWOnD6kFZttAAGHgi/Nw0CZ2o6JqWSbMlI219lAFLZZCyqByTsvVAJq5XA5H8cA6PrvBRpBWEuQ==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.56.0:
-    resolution: {integrity: sha512-X5Q1b8lOdWIE4KAoHpW3SE8HvUB+ZZsUoN64ZhjnN8dOb1UpujxBtENGiZFE+9F/yhzJwYa+ca3u43FeLbboHA==}
+  playwright@1.57.0:
+    resolution: {integrity: sha512-ilYQj1s8sr2ppEJ2YVadYBN0Mb3mdo9J0wQ+UuDhzYqURwSoW4n1Xs5vs7ORwgDGmyEh33tRMeS8KhdkMoLXQw==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -10940,7 +10956,7 @@ snapshots:
   '@inquirer/external-editor@1.0.3(@types/node@24.6.1)':
     dependencies:
       chardet: 2.1.1
-      iconv-lite: 0.7.0
+      iconv-lite: 0.7.1
     optionalDependencies:
       '@types/node': 24.6.1
 
@@ -11380,9 +11396,9 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@playwright/test@1.56.0':
+  '@playwright/test@1.57.0':
     dependencies:
-      playwright: 1.56.0
+      playwright: 1.57.0
 
   '@polka/url@1.0.0-next.25': {}
 
@@ -11547,6 +11563,14 @@ snapshots:
       postcss: 8.5.6
       reduce-configs: 1.1.1
       sass-embedded: 1.90.0
+
+  '@rsbuild/plugin-source-build@1.0.3(@rsbuild/core@1.6.13)':
+    dependencies:
+      fast-glob: 3.3.3
+      json5: 2.2.3
+      yaml: 2.8.1
+    optionalDependencies:
+      '@rsbuild/core': 1.6.13
 
   '@rsbuild/plugin-type-check@1.3.1(@rsbuild/core@1.6.13)(@rspack/core@1.6.6(@swc/helpers@0.5.17))(typescript@5.9.3)':
     dependencies:
@@ -12842,7 +12866,7 @@ snapshots:
       '@typescript-eslint/types': 8.45.0
       '@typescript-eslint/visitor-keys': 8.45.0
       debug: 4.4.3
-      fast-glob: 3.3.2
+      fast-glob: 3.3.3
       is-glob: 4.0.3
       minimatch: 9.0.5
       semver: 7.7.3
@@ -13447,7 +13471,7 @@ snapshots:
       content-type: 1.0.5
       debug: 4.4.3
       http-errors: 2.0.1
-      iconv-lite: 0.7.0
+      iconv-lite: 0.7.1
       on-finished: 2.4.1
       qs: 6.14.0
       raw-body: 3.0.2
@@ -14710,7 +14734,7 @@ snapshots:
 
   fast-deep-equal@3.1.3: {}
 
-  fast-glob@3.3.2:
+  fast-glob@3.3.3:
     dependencies:
       '@nodelib/fs.stat': 2.0.5
       '@nodelib/fs.walk': 1.2.8
@@ -15039,7 +15063,7 @@ snapshots:
     dependencies:
       array-union: 2.1.0
       dir-glob: 3.0.1
-      fast-glob: 3.3.2
+      fast-glob: 3.3.3
       ignore: 5.3.2
       merge2: 1.4.1
       slash: 3.0.0
@@ -15334,7 +15358,7 @@ snapshots:
     dependencies:
       safer-buffer: 2.1.2
 
-  iconv-lite@0.7.0:
+  iconv-lite@0.7.1:
     dependencies:
       safer-buffer: 2.1.2
 
@@ -16895,11 +16919,11 @@ snapshots:
     dependencies:
       find-up: 4.1.0
 
-  playwright-core@1.56.0: {}
+  playwright-core@1.57.0: {}
 
-  playwright@1.56.0:
+  playwright@1.57.0:
     dependencies:
-      playwright-core: 1.56.0
+      playwright-core: 1.57.0
     optionalDependencies:
       fsevents: 2.3.2
 
@@ -17210,7 +17234,7 @@ snapshots:
     dependencies:
       bytes: 3.1.2
       http-errors: 2.0.1
-      iconv-lite: 0.7.0
+      iconv-lite: 0.7.1
       unpipe: 1.0.0
 
   react-compiler-runtime@0.0.0-experimental-fe727a3-20250909(react@19.2.3):
@@ -18233,7 +18257,7 @@ snapshots:
       chokidar: 3.6.0
       didyoumean: 1.2.2
       dlv: 1.1.3
-      fast-glob: 3.3.2
+      fast-glob: 3.3.3
       glob-parent: 6.0.2
       is-glob: 4.0.3
       jiti: 1.21.7

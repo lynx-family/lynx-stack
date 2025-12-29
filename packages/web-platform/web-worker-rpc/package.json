@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-worker-rpc",
-  "version": "0.19.2",
+  "version": "0.19.3",
   "private": false,
   "description": "",
   "keywords": [],
@@ -27,5 +27,8 @@
     "Notice.txt",
     "CHANGELOG.md",
     "README.md"
-  ]
+  ],
+  "scripts": {
+    "test": "vitest"
+  }
 }

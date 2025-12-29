@@ -38,6 +38,11 @@ type RetEndpoint<Return> = RpcEndpointBase<
 export class Rpc {
   private incId = 0;
 
+  #messageQueue: {
+    message: RpcMessageData | RpcMessageDataSync;
+    detail?: { transfer: Transferable[] };
+  }[] = [];
+
   #messageCache: Record<
     string,
     (RpcMessageData | RpcMessageDataSync)[] | undefined
@@ -68,9 +73,36 @@ export class Rpc {
    * @param port one size of a message channel
    * @param name instance name
    */
-  constructor(private port: MessagePort, private name: string) {
-    port.onmessage = (ev) => this.#onMessage(ev.data);
+  constructor(private port: MessagePort | undefined, private name: string) {
+    if (port) {
+      port.onmessage = (ev) => this.#onMessage(ev.data);
+    }
   }
+
+  setMessagePort(port: MessagePort): void {
+    if (this.port) {
+      throw new Error('Rpc port already set');
+    } else {
+      this.port = port;
+      for (const item of this.#messageQueue) {
+        this.postMessage(item.message, item.detail);
+      }
+      this.#messageQueue = [];
+      port.onmessage = (ev) => this.#onMessage(ev.data);
+    }
+  }
+
+  postMessage(message: unknown, detail?: { transfer: Transferable[] }): void {
+    if (this.port) {
+      this.port.postMessage(message, detail);
+    } else {
+      this.#messageQueue.push({
+        message: message as (RpcMessageData | RpcMessageDataSync),
+        detail,
+      });
+    }
+  }
+
   get nextRetId() {
     return `ret_${this.name}_${this.incId++}`;
   }
@@ -403,7 +435,7 @@ export class Rpc {
         lock: lock,
         buf: sharedBuffer,
       };
-      this.port.postMessage(message, { transfer });
+      this.postMessage(message, { transfer });
       Atomics.wait(lockViewer, 0, 0);
       if (lockViewer[0] === 2) {
         // error
@@ -425,9 +457,13 @@ export class Rpc {
       }
     } else {
       if (endpoint.hasReturn) {
-        const { promise, resolve, reject } = Promise.withResolvers<
-          E['_TypeReturn']
-        >();
+        let promise: Promise<E['_TypeReturn']>,
+          resolve: (value: E['_TypeReturn']) => void,
+          reject: () => void;
+        promise = new Promise<E['_TypeReturn']>((res, rej) => {
+          resolve = res;
+          reject = rej;
+        });
         const retHandler = Rpc.createRetEndpoint(this.nextRetId);
         this.registerHandler(retHandler!, (returnValue, error) => {
           if (error) reject();
@@ -440,7 +476,7 @@ export class Rpc {
           retId: retHandler?.name,
           hasTransfer: endpoint.hasReturnTransfer,
         };
-        this.port.postMessage(message, { transfer });
+        this.postMessage(message, { transfer });
         return promise;
       } else {
         const message: RpcMessageData = {
@@ -448,7 +484,7 @@ export class Rpc {
           data: parameters,
           sync: false,
         };
-        this.port.postMessage(message, { transfer });
+        this.postMessage(message, { transfer });
       }
     }
   }

@@ -22,6 +22,7 @@
     "@lynx-js/chunk-loading-webpack-plugin": "workspace:*",
     "@lynx-js/css-extract-webpack-plugin": "workspace:*",
     "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",
+    "@lynx-js/externals-loading-webpack-plugin": "workspace:*",
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react": "workspace:*",
