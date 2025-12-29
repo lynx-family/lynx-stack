@@ -8,6 +8,7 @@ import type { TracingComplete } from '../../connector.ts';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
+import { Writable } from 'node:stream';
 
 type IOReadResponse = {
   data: string;
@@ -33,48 +34,32 @@ export const EndTracing = /*#__PURE__*/ defineTool({
         { handle: stream, size: 1024 * 1024 },
       );
     };
-    const readStreamData = async (stream: number): Promise<Buffer[]> => {
-      const dataChunks: Buffer[] = [];
-      let hasEnd = false;
-
-      while (!hasEnd) {
-        const message = await sendIOReadMessage(stream);
-
-        if (!message.data) {
-          throw new Error('Failed to read trace data: no data available');
-        }
-
-        const chunk = Buffer.from(message.data, 'base64');
-        dataChunks.push(chunk);
-        hasEnd = message.eof;
-      }
-
-      return dataChunks;
-    };
-
-    const writeDataToFile = async (
-      dataChunks: Buffer[],
+    const readStreamDataToFile = async (
+      stream: number,
       filePath: string,
     ): Promise<void> => {
-      return new Promise((resolve, reject) => {
-        const writeStream = fs.createWriteStream(filePath);
+      const sourceStream = new ReadableStream<Uint8Array>({
+        async pull(controller) {
+          try {
+            const message = await sendIOReadMessage(stream);
 
-        writeStream.on('error', (error) => {
-          reject(
-            new Error(`Failed to write trace data to file: ${error.message}`),
-          );
-        });
+            if (message.data) {
+              controller.enqueue(Buffer.from(message.data, 'base64'));
+            }
 
-        writeStream.on('finish', () => {
-          resolve();
-        });
-
-        for (const chunk of dataChunks) {
-          writeStream.write(chunk);
-        }
-
-        writeStream.end();
+            if (message.eof) {
+              controller.close();
+            }
+          } catch (err) {
+            controller.error(err);
+          }
+        },
       });
+
+      const writeStream = fs.createWriteStream(filePath);
+      const fileWritable = Writable.toWeb(writeStream);
+
+      await sourceStream.pipeTo(fileWritable);
     };
     const { promise, resolve } = Promise.withResolvers<void>();
 
@@ -101,13 +86,12 @@ export const EndTracing = /*#__PURE__*/ defineTool({
 
       try {
         const stream = data.stream;
-        const dataChunks = await readStreamData(stream);
 
         const tempDir = os.tmpdir();
         const timestamp = Date.now();
         const tempFileName = `trace-${timestamp}.pftrace`;
         const tempFilePath = path.join(tempDir, tempFileName);
-        await writeDataToFile(dataChunks, tempFilePath);
+        await readStreamDataToFile(stream, tempFilePath);
 
         response.appendLines(
           `Trace completed successfully, trace file path: ${tempFilePath}`,

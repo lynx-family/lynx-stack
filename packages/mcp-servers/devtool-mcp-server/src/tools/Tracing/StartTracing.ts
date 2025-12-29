@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { clientId } from '../../schema/index.ts';
 import { defineTool } from '../defineTool.ts';
+import * as z from 'zod';
 
 type TracingStartResponse = {
   error?: {
@@ -15,6 +16,15 @@ export const StartTracing = /*#__PURE__*/ defineTool({
   description: 'Start trace events collection',
   schema: {
     clientId,
+    JSProfileType: z.enum(['quickjs', 'v8']).default('quickjs').describe(
+      'JavaScript profile type: quickjs or v8. Use quickjs in most cases, unless you explicitly need v8.',
+    ),
+    enableSystrace: z.boolean().default(true).describe(
+      'Whether to enable systrace. Defaults to true, unless explicitly set to false.',
+    ),
+    JSProfileInterval: z.number().default(100).describe(
+      'JavaScript profile interval in milliseconds. Set to -1 to disable JavaScript profiling.',
+    ),
   },
   annotations: {
     readOnlyHint: false,
@@ -33,18 +43,18 @@ export const StartTracing = /*#__PURE__*/ defineTool({
           'enable_debug_mode',
           true,
         );
-        response.appendLines(
-          'Start Trace failed: Please restart the app to enable tracing functionality.',
+        throw new Error(
+          'Please restart the app to enable tracing functionality.',
         );
-        return;
       }
     }
     const config = {
       recordMode: 'recordContinuously',
       includedCategories: ['*'],
-      enableSystrace: true,
+      enableSystrace: params.enableSystrace,
       bufferSize: 200 * 1024,
-      JSProfileInterval: 1,
+      JSProfileInterval: params.JSProfileInterval,
+      JSProfileType: params.JSProfileType,
       enableCompress: true,
     };
     const result = await connector.sendCDPMessage<TracingStartResponse>(
@@ -60,21 +70,18 @@ export const StartTracing = /*#__PURE__*/ defineTool({
       const msg = result.error.message;
 
       if (
-        msg.indexOf('Failed to get trace controller') >= 0
-        || msg.indexOf('Not implemented:') >= 0
-        || msg.indexOf('Tracing not enabled') >= 0
-        || msg.indexOf('Failed to start tracing') >= 0
+        msg.includes('Failed to get trace controller')
+        || msg.includes('Not implemented:')
+        || msg.includes('Tracing not enabled')
+        || msg.includes('Failed to start tracing')
       ) {
-        response.appendLines(
-          'Start Trace failed: Tracing functionality is not supported in the current version. Please integrate the Lynx development version (with -dev suffix) to enable tracing. For more information, visit: https://lynxjs.org/en/guide/start/integrate-lynx-dev-version.html',
+        throw new Error(
+          'Tracing functionality is not supported in the current version. Please integrate the Lynx development version (with -dev suffix) to enable tracing. For more information, visit: https://lynxjs.org/en/guide/start/integrate-lynx-dev-version.html',
         );
-      } else if (msg.indexOf('Tracing already started') >= 0) {
-        response.appendLines('Start Trace success');
       } else {
-        response.appendLines('Start Trace failed: Trace command error');
+        throw new Error('Trace command error');
       }
-    } else {
-      response.appendLines('Start Trace success');
     }
+    response.appendLines('Start Trace success');
   },
 });
