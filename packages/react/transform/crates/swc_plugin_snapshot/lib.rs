@@ -6,7 +6,6 @@ use std::{
 
 use once_cell::sync::Lazy;
 use swc_core::{
-  atoms as swc_atoms,
   common::{
     comments::{CommentKind, Comments},
     errors::HANDLER,
