@@ -1,0 +1,32 @@
+{
+  "name": "@lynx-js/stylelint-plugin",
+  "version": "0.0.0",
+  "description": "Stylelint plugin for Lynx CSS.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.js"
+    }
+  },
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "files": [
+    "lib",
+    "!lib/**/*.map"
+  ],
+  "scripts": {
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@lynx-js/css-defines": "0.0.7"
+  },
+  "devDependencies": {
+    "postcss": "^8.5.6",
+    "stylelint": "^16.24.0",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "stylelint": "^16.0.0"
+  }
+}
