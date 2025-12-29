@@ -1,5 +1,34 @@
 # @lynx-js/web-elements
 
+## 0.10.0
+
+### Minor Changes
+
+- chore: migrate all @lynx-js/web-elements-\* packages into one ([#2057](https://github.com/lynx-family/lynx-stack/pull/2057))
+
+  ### Before
+
+  ```js
+  import '@lynx-js/web-elements-template';
+  import '@lynx-js/web-elements-compat/LinearContainer';
+  ```
+
+  ### After
+
+  ```js
+  import '@lynx-js/web-elements/html-templates';
+  import '@lynx-js/web-elements/compat/LinearContainer';
+  ```
+
+### Patch Changes
+
+- refactor: change code structure for improved readability and maintainability ([#2004](https://github.com/lynx-family/lynx-stack/pull/2004))
+
+  - enable noUnusedLocals for web-elements
+  - add source field for supporting @rsbuild/plugin-source-build
+
+  This is a part of #1937
+
 ## 0.9.0
 
 ### Minor Changes
