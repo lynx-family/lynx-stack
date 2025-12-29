@@ -8,11 +8,9 @@
   If you want to learn more about contributing to this project, please visit: https://github.com/lynx-family/lynx-stack/blob/main/CONTRIBUTING.md.
 -->
 
-## Summary
+<!-- The AI summary below will be auto-generated - feel free to replace it with your own. -->
 
-<!-- Can you explain the reasoning behind implementing this change? What problem or issue does this pull request resolve? -->
-
-<!-- It would be helpful if you could provide any relevant context, such as GitHub issues or related discussions. -->
+@coderabbitai summary
 
 ## Checklist
 
@@ -20,3 +18,4 @@
 
 - [ ] Tests updated (or not required).
 - [ ] Documentation updated (or not required).
+- [ ] Changeset added, and when a BREAKING CHANGE occurs, it needs to be clearly marked (or not required).

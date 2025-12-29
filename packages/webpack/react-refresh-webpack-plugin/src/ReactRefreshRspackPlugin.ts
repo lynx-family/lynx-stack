@@ -117,10 +117,10 @@ export class ReactRefreshRspackPlugin {
    * @param compiler - the rspack compiler
    */
   apply(compiler: Compiler): void {
-    if (
-      process.env['NODE_ENV'] === 'production'
-      || compiler.options.mode === 'production'
-    ) {
+    const isDev = process.env['NODE_ENV'] === 'development'
+      || compiler.options.mode === 'development';
+
+    if (!isDev) {
       return;
     }
 

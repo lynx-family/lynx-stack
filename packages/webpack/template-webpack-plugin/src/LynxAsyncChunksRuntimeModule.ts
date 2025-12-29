@@ -7,7 +7,7 @@ import type { RuntimeModule } from 'webpack';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 type LynxAsyncChunksRuntimeModule = new(
-  getChunkName: (chunkName: string | null | undefined) => string,
+  getChunkName: (chunkName: string) => string,
 ) => RuntimeModule;
 
 export function createLynxAsyncChunksRuntimeModule(
@@ -15,7 +15,7 @@ export function createLynxAsyncChunksRuntimeModule(
 ): LynxAsyncChunksRuntimeModule {
   return class LynxAsyncChunksRuntimeModule extends webpack.RuntimeModule {
     constructor(
-      public getChunkName: (chunkName: string | null | undefined) => string,
+      public getChunkName: (chunkName: string) => string,
     ) {
       super('Lynx async chunks', webpack.RuntimeModule.STAGE_ATTACH);
     }
@@ -26,9 +26,10 @@ export function createLynxAsyncChunksRuntimeModule(
 
       return `// lynx async chunks ids
 ${RuntimeGlobals.lynxAsyncChunkIds} = {${
-        Array.from(chunk.getAllAsyncChunks()).map(
-          c => {
-            const filename = this.getChunkName(c.name);
+        Array.from(chunk.getAllAsyncChunks())
+          .filter(c => c.name !== null && c.name !== undefined)
+          .map(c => {
+            const filename = this.getChunkName(c.name!);
 
             // Modified from https://github.com/webpack/webpack/blob/11449f02175f055a4540d76aa4478958c4cb297e/lib/runtime/GetChunkFilenameRuntimeModule.js#L154-L157
             const chunkPath = compilation.getPath(filename, {
@@ -40,9 +41,9 @@ ${RuntimeGlobals.lynxAsyncChunkIds} = {${
             });
 
             return [c.id, chunkPath];
-          },
+          })
           // Do not use `JSON.stringify` on `chunkPath`, it may contains `+` which will be treated as string concatenation.
-        ).map(([id, path]) => `${JSON.stringify(id)}: "${path}"`).join(',\n')
+          .map(([id, path]) => `${JSON.stringify(id)}: "${path}"`).join(',\n')
       }}`;
     }
   };

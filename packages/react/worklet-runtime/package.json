@@ -31,11 +31,10 @@
     "src"
   ],
   "scripts": {
-    "build": "node scripts/build.js",
+    "build": "rslib build",
     "test": "vitest run --coverage"
   },
   "devDependencies": {
-    "@lynx-js/types": "3.3.0",
-    "esbuild": "^0.25.4"
+    "@lynx-js/types": "3.4.11"
   }
 }

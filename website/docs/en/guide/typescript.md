@@ -22,7 +22,7 @@ The [`paths`](https://www.typescriptlang.org/tsconfig/#paths) option of TypeScri
 
 After configuring, if you reference `@common/request.ts` in your code, it will be mapped to the `<project>/src/common/request.ts` path.
 
-<!-- eslint-disable-next-line import/no-unresolved -->
+<!-- eslint-disable-next-line import/no-unresolved, no-unused-vars -->
 
 ```js
 import { get } from '@common/request.js'; // The same as './common/request.js'
@@ -93,7 +93,7 @@ export { type SomeType } from './types.js';
 
 Type checking is not performed.
 
-Rsbuild provides the [Type Check plugin](https://rsbuild.dev/plugins/list/plugin-type-check), which runs TypeScript type checking in a separate process. The plugin internally integrates [fork-ts-checker-webpack-plugin](https://github.com/TypeStrong/fork-ts-checker-webpack-plugin).
+Rsbuild provides the [Type Check plugin](https://rsbuild.rs/guide/basic/typescript#type-checking), which runs TypeScript type checking in a separate process. The plugin internally integrates [fork-ts-checker-webpack-plugin](https://github.com/TypeStrong/fork-ts-checker-webpack-plugin).
 
 1. Install the `@rsbuild/plugin-type-check` package
 
@@ -117,4 +117,4 @@ export default defineConfig({
 });
 ```
 
-Please refer to the [Type Check plugin](https://rsbuild.dev/plugins/list/plugin-type-check) for more available options.
+Please refer to the [Type Check plugin](https://rsbuild.rs/guide/basic/typescript#type-checking) for more available options.

@@ -14,7 +14,8 @@ export function createStubLynx(vi, require, replaceStyleSheetByIdWithBase64) {
         callback,
       ) => {
         try {
-          callback(null, require(path));
+          // 'http://localhost:3000/' -> './'
+          callback(null, require(path.replace(/^http:\/\/.*:\d+\//, './')));
         } catch (err) {
           callback(err);
         }

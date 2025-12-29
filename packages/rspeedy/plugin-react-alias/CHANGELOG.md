@@ -1,5 +1,75 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.11.0
+
+## 0.10.14
+
+### Patch Changes
+
+- Allow customization of the react$ alias. ([#1653](https://github.com/lynx-family/lynx-stack/pull/1653))
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    resolve: {
+      alias: {
+        react$: '@lynx-js/react/compat',
+      },
+    },
+  })
+  ```
+
+## 0.10.13
+
+### Patch Changes
+
+- Support using multiple times in different environments. ([#1498](https://github.com/lynx-family/lynx-stack/pull/1498))
+
+- Alias `@lynx-js/preact-devtools` to `false` to reduce an import of empty webpack module. ([#1593](https://github.com/lynx-family/lynx-stack/pull/1593))
+
+## 0.10.12
+
+## 0.10.11
+
+### Patch Changes
+
+- Fix the `Package subpath './compat' is not defined by "exports"` error. ([#1460](https://github.com/lynx-family/lynx-stack/pull/1460))
+
+## 0.10.10
+
+## 0.10.9
+
+### Patch Changes
+
+- Add alias for `@lynx-js/react/compat`. ([#1316](https://github.com/lynx-family/lynx-stack/pull/1316))
+
+## 0.10.8
+
+### Patch Changes
+
+- Support `@lynx-js/react/debug`. ([#1250](https://github.com/lynx-family/lynx-stack/pull/1250))
+
+## 0.10.7
+
+## 0.10.6
+
+## 0.10.5
+
+## 0.10.4
+
+### Patch Changes
+
+- Replace `enhanced-resolve` with `unrs-resolver` ([#936](https://github.com/lynx-family/lynx-stack/pull/936))
+
+## 0.10.3
+
+## 0.10.2
+
+### Patch Changes
+
+- Resolve runtime packages in parallel using `Promise.all`. ([#955](https://github.com/lynx-family/lynx-stack/pull/955))
+
 ## 0.10.1
 
 ## 0.10.0

@@ -1,9 +1,9 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createRsbuild } from '@rsbuild/core'
 import { describe, expect, test, vi } from 'vitest'
 
+import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 
 vi
@@ -16,8 +16,8 @@ describe('pluginReactLynx with react-refresh', () => {
       '@lynx-js/react-refresh-webpack-plugin'
     )
 
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
         tools: {
           rspack: {
             output: {
@@ -39,43 +39,12 @@ describe('pluginReactLynx with react-refresh', () => {
 
     const [rspackConfig] = await rsbuild.initConfigs()
 
-    expect(rspackConfig.mode).toBe('development')
+    expect(rspackConfig?.mode).toBe('development')
     expect(
-      rspackConfig.plugins.some(plugin =>
+      rspackConfig?.plugins?.some(plugin =>
         plugin instanceof ReactRefreshRspackPlugin
       ),
     ).toBe(true)
-    expect(
-      rspackConfig
-        .module
-        .rules
-        .some(rule => {
-          if (typeof rule !== 'object') {
-            return false
-          }
-
-          if (rule.loader === ReactRefreshRspackPlugin.loader) {
-            return true
-          }
-
-          if (
-            typeof rule.use === 'string'
-            && rule.use === ReactRefreshRspackPlugin.loader
-          ) {
-            return true
-          }
-
-          return (
-            Array.isArray(rule.use)
-            && rule.use.some(u => {
-              if (typeof u === 'string') {
-                return u === ReactRefreshRspackPlugin.loader
-              }
-              return u.loader === ReactRefreshRspackPlugin.loader
-            })
-          )
-        }),
-    )
-      .toBe(true)
+    expect(rspackConfig).toHaveLoader(ReactRefreshRspackPlugin.loader)
   })
 })

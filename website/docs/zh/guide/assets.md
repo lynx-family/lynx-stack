@@ -16,7 +16,7 @@ Rspeedy 支持使用包括图片、字体、音频和视频等多种静态资源
 // Import the logo.png image in the static directory
 import logo from './static/logo.png';
 
-function App() {
+export function App() {
   return <image src={logo} />; // Can be directly used in ReactLynx
 }
 ```
@@ -58,7 +58,7 @@ console.log(logo); // "https://example.com/assets/logo.6c12aba3.png"
 在 JavaScript 代码中，你可以通过 `process.env.ASSET_PREFIX` 拼接这些资源的 URL：
 
 ```js
-const logoURL = `${process.env.ASSET_PREFIX}/logo.png`;
+export const logoURL = `${process.env.ASSET_PREFIX}/logo.png`;
 ```
 
 :::warning

@@ -2,11 +2,34 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RsbuildPlugin } from '@rsbuild/core';
-import path from 'path';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const __filename = new URL('', import.meta.url).pathname;
-const __dirname = path.dirname(__filename);
+import type { RsbuildPlugin } from '@rsbuild/core';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+export const getNativeModulesPathRule = (nativeModulesPath: string) => ({
+  test: /backgroundThread[\\/]background-apis[\\/]createNativeModules\.js$/,
+  loader: path.resolve(
+    __dirname,
+    './loaders/native-modules.js',
+  ),
+  options: {
+    nativeModulesPath,
+  },
+});
+
+export const getNapiModulesPathRule = (napiModulesPath: string) => ({
+  test: /backgroundThread[\\/]background-apis[\\/]createNapiLoader\.js$/,
+  loader: path.resolve(
+    __dirname,
+    './loaders/napi-modules.js',
+  ),
+  options: {
+    napiModulesPath,
+  },
+});
 
 /**
  * The options for {@link pluginWebPlatform}.
@@ -25,11 +48,19 @@ export interface PluginWebPlatformOptions {
   /**
    * The absolute path of the native-modules file.
    *
-   * If you use it, you don't need to pass nativeModulesMap in the lynx-view tag, otherwise it will cause duplicate packaging.
-   *
    * When enabled, nativeModules will be packaged directly into the worker chunk instead of being transferred through Blob.
+   *
+   * Warning: If you use this, you don't need to pass nativeModulesMap in the lynx-view tag, otherwise it will cause duplicate packaging.
    */
   nativeModulesPath?: string;
+  /**
+   * The absolute path of the napi-modules file, it is similar to nativeModulesPath.
+   *
+   * When enabled, napiModules will be packaged directly into the worker chunk instead of being transferred through Blob.
+   *
+   * Warning: If you use this, you don't need to pass napiModulesMap in the lynx-view tag, otherwise it will cause duplicate packaging.
+   */
+  napiModulesPath?: string;
 }
 
 /**
@@ -71,6 +102,15 @@ export function pluginWebPlatform(
         );
       }
 
+      if (
+        options.napiModulesPath !== undefined
+        && !path.isAbsolute(options.napiModulesPath)
+      ) {
+        throw new Error(
+          'options.napiModulesPath must be an absolute path.',
+        );
+      }
+
       api.modifyRsbuildConfig(config => {
         if (options.polyfill === true) {
           config.source = {
@@ -88,25 +128,14 @@ export function pluginWebPlatform(
       });
 
       api.modifyRspackConfig(rspackConfig => {
-        console.log(path.resolve(
-          __dirname,
-          './loaders/native-modules.js',
-        ));
         rspackConfig.module = {
           ...rspackConfig.module,
           rules: [
             ...(rspackConfig.module?.rules ?? []),
-            {
-              test:
-                /backgroundThread\/background-apis\/createNativeModules\.js$/,
-              loader: path.resolve(
-                __dirname,
-                './loaders/native-modules.js',
-              ),
-              options: {
-                nativeModulesPath: options.nativeModulesPath,
-              },
-            },
+            options.nativeModulesPath
+            && getNativeModulesPathRule(options.nativeModulesPath),
+            options.napiModulesPath
+            && getNapiModulesPathRule(options.napiModulesPath),
           ],
         };
       });

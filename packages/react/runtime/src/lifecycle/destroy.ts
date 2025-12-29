@@ -7,12 +7,14 @@ import { __root } from '../root.js';
 import { delayedEvents } from './event/delayEvents.js';
 import { delayedLifecycleEvents } from './event/delayLifecycleEvents.js';
 import { globalCommitTaskMap } from './patch/commit.js';
+import { profileEnd, profileStart } from '../debug/utils.js';
 
 function destroyBackground(): void {
   if (__PROFILE__) {
-    console.profile('destroyBackground');
+    profileStart('ReactLynx::destroyBackground');
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   render(null, __root as any);
 
   globalCommitTaskMap.forEach(task => {
@@ -26,7 +28,7 @@ function destroyBackground(): void {
     delayedEvents.length = 0;
   }
   if (__PROFILE__) {
-    console.profileEnd();
+    profileEnd();
   }
 }
 

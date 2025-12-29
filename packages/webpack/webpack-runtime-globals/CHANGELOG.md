@@ -1,5 +1,11 @@
 # @lynx-js/webpack-runtime-globals
 
+## 0.0.6
+
+### Patch Changes
+
+- Add `lynxCacheEventsSetupList` and `lynxCacheEvents` to RuntimeGlobals. It will be used to cache Lynx native events until the BTS chunk is fully loaded, and replay them when the BTS chunk is ready. ([#1370](https://github.com/lynx-family/lynx-stack/pull/1370))
+
 ## 0.0.5
 
 ### Patch Changes

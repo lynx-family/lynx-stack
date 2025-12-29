@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 
 import type { CloneableObject } from './Cloneable.js';
+import type { I18nResource } from './I18n.js';
 import type { LynxContextEventTarget } from './LynxContextEventTarget.js';
 import type { PerformancePipelineOptions } from './Performance.js';
 
@@ -98,7 +99,7 @@ export const enum ErrorCode {
 
 export interface InvokeCallbackRes {
   code: ErrorCode;
-  data?: string;
+  data?: unknown;
 }
 
 export interface NativeApp {
@@ -122,7 +123,7 @@ export interface NativeApp {
 
   cancelAnimationFrame: (id: number) => void;
 
-  loadScript: (sourceURL: string) => BundleInitReturnObj;
+  loadScript: (sourceURL: string, entryName?: string) => BundleInitReturnObj;
 
   loadScriptAsync(
     sourceURL: string,
@@ -149,6 +150,15 @@ export interface NativeApp {
     root_unique_id: number,
   ) => void;
 
+  getPathInfo: (
+    type: IdentifierType,
+    identifier: string,
+    component_id: string,
+    first_only: boolean,
+    callback: (ret: InvokeCallbackRes) => void,
+    root_unique_id?: number,
+  ) => void;
+
   setCard(tt: NativeTTObject): void;
 
   // Timing related
@@ -170,6 +180,21 @@ export interface NativeApp {
    */
   profileEnd: () => void;
 
+  /***
+   * Support from Lynx 3.0
+   */
+  profileMark: () => void;
+
+  /**
+   * Support from Lynx 3.0
+   */
+  profileFlowId: () => number;
+
+  /**
+   * Support from Lynx 2.18
+   */
+  isProfileRecording: () => boolean;
+
   triggerComponentEvent(id: string, params: {
     eventDetail: CloneableObject;
     eventOption: CloneableObject;
@@ -189,4 +214,20 @@ export interface NativeApp {
 
   setSharedData<T>(dataKey: string, dataVal: T): void;
   getSharedData<T = unknown>(dataKey: string): T | undefined;
+
+  i18nResource: I18nResource;
+
+  reportException: (error: Error, _: unknown) => void;
+  __SetSourceMapRelease: (err: Error) => void;
+
+  queryComponent: (
+    source: string,
+    callback: (
+      ret: { __hasReady: boolean } | {
+        code: number;
+        detail?: { schema: string };
+      },
+    ) => void,
+  ) => void;
+  tt: NativeTTObject | null;
 }

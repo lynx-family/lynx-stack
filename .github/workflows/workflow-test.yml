@@ -17,6 +17,10 @@ on:
         required: false
         type: boolean
         default: false
+      web-report-name:
+        required: false
+        type: string
+        default: "playwright-report"
       codecov-flags:
         required: false
         type: string
@@ -30,23 +34,30 @@ env:
   TURBO_TELEMETRY_DISABLED: 1
 jobs:
   check:
+    timeout-minutes: 30
     runs-on: ${{ inputs.runs-on }}
     permissions: {}
+    container:
+      image: ${{ inputs.is-web && 'mcr.microsoft.com/playwright:v1.55.0-noble' || null }}
+      env:
+        CI: 1
+        TURBO_TELEMETRY_DISABLED: 1
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           # Codecov requires fetch-depth: 0
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "22"
+          package-manager-cache: false
       - name: TurboCache
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
           path: .turbo
           # We have to be strict here to make sure getting the cache of build-all
-          key: turbo-v3-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
+          key: turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
           fail-on-cache-miss: true
       - name: Install
         run: |
@@ -56,26 +67,23 @@ jobs:
       - name: Build
         run: |
           pnpm turbo build --summarize
-      - uses: ./.github/actions/setup-playwright
-        if: ${{ inputs.is-web }}
-        with:
-          working-directory: packages/web-platform/web-tests
       - name: Test # zizmor: ignore[template-injection] The inputs.run is provided by us.
         id: test
         env:
-          NODE_OPTIONS: --max-old-space-size=8192
+          NODE_OPTIONS: --max-old-space-size=16384
           GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
         run: ${{ inputs.run }}
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5
+        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: ${{ inputs.codecov-flags }}
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
+        continue-on-error: true
         uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -85,7 +93,7 @@ jobs:
         if: ${{ inputs.is-web && failure() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: playwright-report
+          name: ${{ inputs.web-report-name }}
           path: packages/web-platform/web-tests/playwright-report
           if-no-files-found: error
           retention-days: 1

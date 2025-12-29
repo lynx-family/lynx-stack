@@ -4,13 +4,14 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { DefinePlugin } from 'webpack'
+import { plugins } from '../../../../test/plugins.js'
 import { CssExtractWebpackPlugin } from '../../../../src/index.js'
 import path from 'node:path'
 
 /** @type {import('webpack').Configuration} */
 export default {
   output: {
-    publicPath: './',
+    publicPath: 'http://localhost:3000/',
     pathinfo: false,
   },
   module: {
@@ -37,6 +38,7 @@ export default {
     ],
   },
   plugins: [
+    ...plugins,
     new DefinePlugin({
       HMR_RUNTIME_LEPUS: JSON.stringify(
         path.resolve(

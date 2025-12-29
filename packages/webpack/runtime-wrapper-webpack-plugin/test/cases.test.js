@@ -74,7 +74,6 @@ describeCases({
             undefined, // webkit
             undefined, // Reporter
             undefined, // print
-            undefined, // Function
             undefined, // global
             // Lynx API
             vi.fn(), // requestAnimationFrame

@@ -1,16 +1,17 @@
-/*
-// Copyright 2024 The Lynx Authors. All rights reserved.
+// Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-*/
-import { setupBackgroundDocument, setupDocument } from '../../src/document.js';
-import { __root, setRoot } from '../../src/root.js';
+import { getJSModule } from './jsModule.js';
 import { BackgroundSnapshotInstance } from '../../src/backgroundSnapshot.js';
-import { backgroundSnapshotInstanceManager, SnapshotInstance, snapshotInstanceManager } from '../../src/snapshot.js';
+import { setupBackgroundDocument, setupDocument } from '../../src/document.js';
 import { deinitGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch.js';
-import { globalPipelineOptions, setPipeline } from '../../src/lynx/performance.js';
+import { shouldDelayUiOps } from '../../src/lifecycle/ref/delay.js';
 import { clearListGlobal } from '../../src/list.js';
-import { clearWorkletRefLastIdForTesting } from '../../src/worklet/workletRef.js';
+import { globalPipelineOptions, setPipeline } from '../../src/lynx/performance.js';
+import { __root, setRoot } from '../../src/root.js';
+import { SnapshotInstance, backgroundSnapshotInstanceManager, snapshotInstanceManager } from '../../src/snapshot.js';
+import { hydrationMap } from '../../src/snapshotInstanceHydrationMap.js';
+import { clearWorkletRefLastIdForTesting } from '../../src/worklet/ref/workletRef.js';
 
 export class EnvManager {
   root: typeof __root | undefined;
@@ -71,9 +72,12 @@ export class EnvManager {
     backgroundSnapshotInstanceManager.nextId = 0;
     snapshotInstanceManager.clear();
     snapshotInstanceManager.nextId = 0;
+    hydrationMap.clear();
+    shouldDelayUiOps.value = true;
     clearListGlobal();
     deinitGlobalSnapshotPatch();
     clearWorkletRefLastIdForTesting();
+    getJSModule('GlobalEventEmitter')?.clear();
     this.switchToBackground();
     this.switchToMainThread();
   }

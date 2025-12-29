@@ -1,5 +1,90 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.7.1
+
+### Patch Changes
+
+- Supports `@lynx-js/template-webpack-plugin` 0.9.0. ([#1705](https://github.com/lynx-family/lynx-stack/pull/1705))
+
+## 0.7.0
+
+### Minor Changes
+
+- Remove `@lynx-js/react` from peerDependencies. ([#1711](https://github.com/lynx-family/lynx-stack/pull/1711))
+
+- Add a new required option `workletRuntimePath`. ([#1711](https://github.com/lynx-family/lynx-stack/pull/1711))
+
+## 0.6.20
+
+### Patch Changes
+
+- Updated dependencies [[`aaca8f9`](https://github.com/lynx-family/lynx-stack/commit/aaca8f91d177061c7b0430cc5cb21a3602897534)]:
+  - @lynx-js/webpack-runtime-globals@0.0.6
+
+## 0.6.19
+
+### Patch Changes
+
+- Be compat with `@lynx-js/react` v0.112.0 ([#1323](https://github.com/lynx-family/lynx-stack/pull/1323))
+
+- Fix `REACT_PROFILE` not taking effect. ([#1306](https://github.com/lynx-family/lynx-stack/pull/1306))
+
+## 0.6.18
+
+### Patch Changes
+
+- Be compat with `@lynx-js/react` v0.111.0 ([#204](https://github.com/lynx-family/lynx-stack/pull/204))
+
+## 0.6.17
+
+### Patch Changes
+
+- Enable fine-grained control for `output.inlineScripts` ([#883](https://github.com/lynx-family/lynx-stack/pull/883))
+
+  ```ts
+  type InlineChunkTestFunction = (params: {
+    size: number;
+    name: string;
+  }) => boolean;
+
+  type InlineChunkTest = RegExp | InlineChunkTestFunction;
+
+  type InlineChunkConfig =
+    | boolean
+    | InlineChunkTest
+    | { enable?: boolean | 'auto'; test: InlineChunkTest };
+  ```
+
+  ```ts
+  import { defineConfig } from '@lynx-js/rspeedy';
+
+  export default defineConfig({
+    output: {
+      inlineScripts: ({ name, size }) => {
+        return name.includes('foo') && size < 1000;
+      },
+    },
+  });
+  ```
+
+## 0.6.16
+
+### Patch Changes
+
+- Supports `@lynx-js/template-webpack-plugin` 0.8.0. ([#1033](https://github.com/lynx-family/lynx-stack/pull/1033))
+
+- Support `@lynx-js/react` v0.110.0. ([#770](https://github.com/lynx-family/lynx-stack/pull/770))
+
+- Keep snapshot id unchanged on Windows. ([#1050](https://github.com/lynx-family/lynx-stack/pull/1050))
+
+- Fix lazy bundle name on Windows. ([#1060](https://github.com/lynx-family/lynx-stack/pull/1060))
+
+## 0.6.15
+
+### Patch Changes
+
+- Fix lazy bundle build failed on Rspeedy v0.9.8 (with `output.iife: true`). ([#972](https://github.com/lynx-family/lynx-stack/pull/972))
+
 ## 0.6.14
 
 ### Patch Changes

@@ -1,0 +1,14 @@
+[package]
+name = "swc_plugin_directive_dce"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+napi = { workspace = true }
+napi-derive = { workspace = true }
+swc_core = { workspace = true, features = ["base", "ecma_codegen", "ecma_parser", "ecma_minifier", "ecma_transforms_typescript", "ecma_utils", "ecma_quote", "ecma_transforms_react", "ecma_transforms_optimization", "css_parser", "css_ast", "css_visit", "css_codegen", "__visit", "__testing_transform"] }
+swc_plugin_define_dce = { path = "../swc_plugin_define_dce" }
+swc_plugins_shared = { path = "../swc_plugins_shared" }

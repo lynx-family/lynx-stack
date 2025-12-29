@@ -17,6 +17,7 @@
   "linter": {
     "enabled": true,
     "ignore": [
+      "benchmark/react/**",
       "coverage/**",
       "dist/**",
       "lib/**",
@@ -40,6 +41,8 @@
       "packages/react/runtime/**",
 
       "packages/tools/**",
+
+      "packages/use-sync-external-store/test/**",
 
       "packages/webpack/*/runtime/**",
 
@@ -127,7 +130,7 @@
         "noExplicitAny": "error",
         "noExtraNonNullAssertion": "error",
         "noConfusingVoidType": "error",
-        "noMisleadingInstantiator": "error", // cSpell:disable-line
+        "noMisleadingInstantiator": "error",
         "noRedeclare": "error",
         "noUnsafeDeclarationMerging": "error",
         "useAwait": "error",

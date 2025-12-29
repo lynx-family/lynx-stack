@@ -1,5 +1,11 @@
 # @lynx-js/css-serializer
 
+## 0.1.3
+
+### Patch Changes
+
+- Support Windows. ([#1007](https://github.com/lynx-family/lynx-stack/pull/1007))
+
 ## 0.1.2
 
 ### Patch Changes

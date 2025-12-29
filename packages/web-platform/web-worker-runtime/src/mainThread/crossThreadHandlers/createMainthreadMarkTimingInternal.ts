@@ -2,17 +2,37 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { markTimingEndpoint } from '@lynx-js/web-constants';
+import {
+  dispatchMarkTiming,
+  flushMarkTiming,
+  markTimingEndpoint,
+} from '@lynx-js/web-constants';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 
 export function createMarkTimingInternal(
-  uiThreadRpc: Rpc,
-): (timingKey: string, pipelineId?: string) => void {
-  return (timingKey, pipelineId) => {
-    uiThreadRpc.invoke(markTimingEndpoint, [
-      timingKey,
-      pipelineId,
-      performance.now() + performance.timeOrigin,
-    ]);
+  backgroundThreadRpc: Rpc,
+) {
+  const markTiming = backgroundThreadRpc.createCall(markTimingEndpoint);
+  const cacheMarkTimings = {
+    records: [],
+    timeout: null,
+  };
+
+  return {
+    markTimingInternal: (
+      timingKey: string,
+      pipelineId?: string,
+      timeStamp?: number,
+    ) => {
+      dispatchMarkTiming({
+        timingKey,
+        pipelineId,
+        timeStamp,
+        markTiming,
+        cacheMarkTimings,
+      });
+    },
+    flushMarkTimingInternal: () =>
+      flushMarkTiming(markTiming, cacheMarkTimings),
   };
 }

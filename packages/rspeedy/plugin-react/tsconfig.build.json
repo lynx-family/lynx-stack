@@ -11,7 +11,6 @@
     "composite": true,
     "outDir": "./lib",
     "rootDir": "./src",
-    "baseUrl": "./",
     "resolveJsonModule": true,
   },
   "include": [

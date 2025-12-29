@@ -86,7 +86,6 @@
   }
 
   // npm
-  // cspell:disable-next-line
   a[target="_blank"][href*="npmjs.com"] {
     @include link-prefix("📦");
     &::after {

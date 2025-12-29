@@ -84,7 +84,6 @@ export interface ChunkSplit {
    *           react: {
    *             test: /node_modules[\\/](@lynx-js[\\/]react|react-router)[\\/]/,
    *             name: 'lib-react',
-   *             chunks: 'all',
    *           },
    *         },
    *       },
@@ -193,7 +192,6 @@ export interface ChunkSplitCustom {
    *           react: {
    *             test: /node_modules[\\/](@lynx-js[\\/]react|react-router)[\\/]/,
    *             name: 'lib-react',
-   *             chunks: 'all',
    *           },
    *         },
    *       },

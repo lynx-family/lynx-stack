@@ -4,7 +4,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { destroyWorklet } from '../../src/worklet/destroy';
-import { transformToWorklet } from '../../src/worklet/transformToWorklet';
+import { transformToWorklet } from '../../src/worklet/call/transformToWorklet';
 
 afterEach(() => {
   destroyWorklet();
@@ -20,6 +20,7 @@ describe('WorkletJsFnTransform', () => {
     result = transformToWorklet(fn);
     expect(result._fn).toBe(fn);
     expect(result._jsFnId).toEqual(2);
+    expect(JSON.stringify(result)).toBe('{"_jsFnId":2,"_fn":"[BackgroundFunction]"}');
   });
 
   it('should raise error when argument is not a function', () => {

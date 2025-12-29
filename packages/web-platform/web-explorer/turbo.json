@@ -5,7 +5,7 @@
     "build": {
       "inputs": ["*.{json, ts, html}", "icons/**", "preinstalled/**"],
       "outputs": ["dist"],
-      "env": ["CI", "CODECOV_TOKEN", "GITHUB_SHA"]
+      "env": ["CI", "CODECOV_TOKEN"]
     }
   }
 }

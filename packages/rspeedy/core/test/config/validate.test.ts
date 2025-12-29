@@ -12,6 +12,7 @@ import type {
   Minify,
   Output,
   Performance,
+  Resolve,
   Server,
   Source,
   Tools,
@@ -41,6 +42,18 @@ describe('Config Validation', () => {
       Unknown property: \`$input["long-unknown-function"]\` in configuration
       ]
     `)
+  })
+
+  describe('Config', () => {
+    test('valid type', () => {
+      const cases = [
+        {},
+        new Promise(p => p({})),
+      ]
+      cases.forEach(config => {
+        expect(validate(config)).toStrictEqual(config)
+      })
+    })
   })
 
   describe('Dev', () => {
@@ -788,6 +801,18 @@ describe('Config Validation', () => {
         { dataUriLimit: Number.NaN },
         { dataUriLimit: Number.POSITIVE_INFINITY },
         { dataUriLimit: Number.MAX_SAFE_INTEGER },
+        {
+          dataUriLimit: {},
+        },
+        {
+          dataUriLimit: {
+            assets: 0,
+            image: 10,
+            svg: 100,
+            font: 1000,
+            media: 10000,
+          },
+        },
         { cssModules: { auto: true } },
         { cssModules: { auto: false } },
         { cssModules: { auto: /module/ } },
@@ -835,6 +860,24 @@ describe('Config Validation', () => {
         { distPath: { svg: 'svg' } },
         { inlineScripts: true },
         { inlineScripts: false },
+        { inlineScripts: /[\\/]background\.\w+\.js$/ },
+        {
+          inlineScripts: ({ size }) => {
+            return size < 10 * 1000
+          },
+        },
+        {
+          inlineScripts: {
+            enable: 'auto',
+            test: /[\\/]background\.\w+\.js$/,
+          },
+        },
+        {
+          inlineScripts: {
+            enable: true,
+            test: /[\\/]background\.\w+\.js$/,
+          },
+        },
         { legalComments: 'inline' },
         { legalComments: 'none' },
         { legalComments: 'linked' },
@@ -943,7 +986,7 @@ describe('Config Validation', () => {
             - Got: undefined
 
           Invalid config on \`$input.output.copy.patterns\`.
-            - Expect to be Array<string | ({ from: string; } & Partial<RawCopyPattern>)>
+            - Expect to be Array<string | (Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)>
             - Got: undefined
           ]
         `)
@@ -957,7 +1000,7 @@ describe('Config Validation', () => {
             - Got: null
 
           Invalid config on \`$input.output.copy.patterns\`.
-            - Expect to be Array<string | ({ from: string; } & Partial<RawCopyPattern>)>
+            - Expect to be Array<string | (Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)>
             - Got: undefined
           ]
         `)
@@ -971,7 +1014,7 @@ describe('Config Validation', () => {
             - Got: undefined
 
           Invalid config on \`$input.output.copy.patterns\`.
-            - Expect to be Array<string | ({ from: string; } & Partial<RawCopyPattern>)>
+            - Expect to be Array<string | (Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)>
             - Got: undefined
           ]
         `)
@@ -985,7 +1028,7 @@ describe('Config Validation', () => {
             - Got: undefined
 
           Invalid config on \`$input.output.copy.patterns\`.
-            - Expect to be Array<string | ({ from: string; } & Partial<RawCopyPattern>)>
+            - Expect to be Array<string | (Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)>
             - Got: undefined
           ]
         `)
@@ -999,7 +1042,7 @@ describe('Config Validation', () => {
           Unknown property: \`$input.output.copy[0].dist\` in configuration
 
           Invalid config on \`$input.output.copy.patterns\`.
-            - Expect to be Array<string | ({ from: string; } & Partial<RawCopyPattern>)>
+            - Expect to be Array<string | (Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)>
             - Got: undefined
           ]
         `)
@@ -1013,7 +1056,7 @@ describe('Config Validation', () => {
             - Got: null
 
           Invalid config on \`$input.output.copy.patterns\`.
-            - Expect to be Array<string | ({ from: string; } & Partial<RawCopyPattern>)>
+            - Expect to be Array<string | (Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)>
             - Got: undefined
           ]
         `)
@@ -1023,7 +1066,7 @@ describe('Config Validation', () => {
           [Error: Invalid configuration.
 
           Invalid config on \`$input.output.dataUriLimit\`.
-            - Expect to be (number | undefined)
+            - Expect to be (DataUriLimit | number | undefined)
             - Got: string
           ]
         `)
@@ -1099,15 +1142,67 @@ describe('Config Validation', () => {
           ]
         `)
 
-      expect(() => validate({ output: { inlineScripts: null } }))
-        .toThrowErrorMatchingInlineSnapshot(`
-          [Error: Invalid configuration.
+      expect(() =>
+        validate({
+          output: {
+            inlineScripts: {
+              enable: 123,
+            },
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
 
-          Invalid config on \`$input.output.inlineScripts\`.
-            - Expect to be (boolean | undefined)
-            - Got: null
-          ]
-        `)
+        Invalid config on \`$input.output.inlineScripts.enable\`.
+          - Expect to be ("auto" | boolean | undefined)
+          - Got: number
+
+        Invalid config on \`$input.output.inlineScripts.test\`.
+          - Expect to be RegExp
+          - Got: undefined
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          output: {
+            inlineScripts: {
+              enable: true,
+            },
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.output.inlineScripts.test\`.
+          - Expect to be RegExp
+          - Got: undefined
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          output: {
+            inlineScripts: {
+              enable: true,
+              test: 123,
+            },
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.output.inlineScripts.test\`.
+          - Expect to be RegExp
+          - Got: number
+        ]
+      `)
+
+      //  FIXME:
+      //  ubuntu will matchingInlineSnapshot _type.o111
+      //  macos will matchingInlineSnapshot _type.o110
+      expect(() => validate({ output: { inlineScripts: null } }))
+        .toThrowError()
 
       expect(() => validate({ output: { legalComments: [null] } }))
         .toThrowErrorMatchingInlineSnapshot(`
@@ -1687,6 +1782,23 @@ describe('Config Validation', () => {
       cases.forEach(source => {
         expect(validate({ source })).toStrictEqual({ source })
       })
+
+      const resolveCases: Resolve[] = [
+        {},
+        { alias: {} },
+        { alias: { foo: 'bar', bar$: 'baz', baz: false } },
+        { alias: { foo: 'bar', bar$: ['baz'] } },
+        { dedupe: [] },
+        { dedupe: ['foo'] },
+        { dedupe: ['foo', 'bar', 'baz'] },
+        { aliasStrategy: undefined },
+        { aliasStrategy: 'prefer-tsconfig' },
+        { aliasStrategy: 'prefer-alias' },
+      ]
+
+      resolveCases.forEach(resolve => {
+        expect(validate({ resolve })).toStrictEqual({ resolve })
+      })
     })
 
     test('invalid type', () => {
@@ -1731,7 +1843,15 @@ describe('Config Validation', () => {
       ).toThrowErrorMatchingInlineSnapshot(`
         [Error: Invalid configuration.
 
-        Unknown property: \`$input.resolve\` in configuration
+        Invalid config on \`$input.resolve.extensions\`.
+          - Expect to be (Array<string> | undefined)
+          - Got: string
+
+        Unknown property: \`$input.resolve.aliasFields\` in configuration
+
+        Unknown property: \`$input.resolve.conditionNames\` in configuration
+
+        Unknown property: \`$input.resolve.extensionAlias\` in configuration
         ]
       `)
 
@@ -1796,6 +1916,74 @@ describe('Config Validation', () => {
           - Got: array
         ]
       `)
+
+      expect(() =>
+        validate({
+          resolve: {
+            dedupe: {},
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.resolve.dedupe\`.
+          - Expect to be (Array<string> | undefined)
+          - Got: object
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          resolve: {
+            dedupe: [Symbol.for('foo'), 0, null],
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.resolve.dedupe[0]\`.
+          - Expect to be string
+          - Got: symbol
+
+        Invalid config on \`$input.resolve.dedupe[1]\`.
+          - Expect to be string
+          - Got: number
+
+        Invalid config on \`$input.resolve.dedupe[2]\`.
+          - Expect to be string
+          - Got: null
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          resolve: {
+            aliasStrategy: 'invalid-strategy',
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.resolve.aliasStrategy\`.
+          - Expect to be ("prefer-alias" | "prefer-tsconfig" | undefined)
+          - Got: string
+        ]
+      `)
+
+      expect(() =>
+        validate({
+          resolve: {
+            aliasStrategy: 123,
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.resolve.aliasStrategy\`.
+          - Expect to be ("prefer-alias" | "prefer-tsconfig" | undefined)
+          - Got: number
+        ]
+      `)
     })
   })
 
@@ -1812,6 +2000,17 @@ describe('Config Validation', () => {
         { host: '0.0.0.0' },
         { port: 8000 },
         { host: 'example.com', port: 3000 },
+        { cors: true },
+        { cors: false },
+        { cors: { origin: 'https://example.com' } },
+        { cors: { origin: /example/ } },
+        {
+          cors: {
+            origin: (origin, callback) => {
+              callback(null, origin ?? '*')
+            },
+          },
+        },
       ]
 
       cases.forEach(server => {
@@ -1850,12 +2049,42 @@ describe('Config Validation', () => {
           ]
         `)
 
+      expect(() => validate({ server: { cors: null } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Invalid config on \`$input.server.cors\`.
+            - Expect to be (boolean | e.CorsOptions | undefined)
+            - Got: null
+          ]
+        `)
+
       expect(() => validate({ server: { headers: 123 } }))
         .toThrowErrorMatchingInlineSnapshot(`
           [Error: Invalid configuration.
 
           Invalid config on \`$input.server.headers\`.
             - Expect to be (Record<string, string | string[]> | undefined)
+            - Got: number
+          ]
+        `)
+
+      expect(() => validate({ server: { cors: 123 } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Invalid config on \`$input.server.cors\`.
+            - Expect to be (boolean | e.CorsOptions | undefined)
+            - Got: number
+          ]
+        `)
+
+      expect(() => validate({ server: { cors: { origin: 123 } } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Invalid config on \`$input.server.cors.origin\`.
+            - Expect to be (Array<string | boolean | RegExp> | RegExp | boolean | string | undefined)
             - Got: number
           ]
         `)
@@ -2739,16 +2968,14 @@ describe('Config Validation', () => {
             },
           },
         })
-        // cSpell:disable
       ).toThrowErrorMatchingInlineSnapshot(`
         [Error: Invalid configuration.
 
         Invalid config on \`$input.tools.rspack.devtool\`.
-          - Expect to be ("cheap-module-source-map" | "cheap-source-map" | "eval" | "eval-cheap-module-source-map" | "eval-cheap-source-map" | "eval-nosources-cheap-module-source-map" | "eval-nosources-cheap-source-map" | "eval-nosources-source-map" | "eval-source-map" | "hidden-cheap-module-source-map" | "hidden-cheap-source-map" | "hidden-nosources-cheap-module-source-map" | "hidden-nosources-cheap-source-map" | "hidden-nosources-source-map" | "hidden-source-map" | "inline-cheap-module-source-map" | "inline-cheap-source-map" | "inline-nosources-cheap-module-source-map" | "inline-nosources-cheap-source-map" | "inline-nosources-source-map" | "inline-source-map" | "nosources-cheap-module-source-map" | "nosources-cheap-source-map" | "nosources-source-map" | "source-map" | false | undefined)
+          - Expect to be ("cheap-module-source-map" | "cheap-module-source-map-debugids" | "cheap-source-map" | "cheap-source-map-debugids" | "eval" | "eval-cheap-module-source-map" | "eval-cheap-module-source-map-debugids" | "eval-cheap-source-map" | "eval-cheap-source-map-debugids" | "eval-nosources-cheap-module-source-map" | "eval-nosources-cheap-module-source-map-debugids" | "eval-nosources-cheap-source-map" | "eval-nosources-cheap-source-map-debugids" | "eval-nosources-source-map" | "eval-nosources-source-map-debugids" | "eval-source-map" | "eval-source-map-debugids" | "hidden-cheap-module-source-map" | "hidden-cheap-module-source-map-debugids" | "hidden-cheap-source-map" | "hidden-cheap-source-map-debugids" | "hidden-nosources-cheap-module-source-map" | "hidden-nosources-cheap-module-source-map-debugids" | "hidden-nosources-cheap-source-map" | "hidden-nosources-cheap-source-map-debugids" | "hidden-nosources-source-map" | "hidden-nosources-source-map-debugids" | "hidden-source-map" | "hidden-source-map-debugids" | "inline-cheap-module-source-map" | "inline-cheap-module-source-map-debugids" | "inline-cheap-source-map" | "inline-cheap-source-map-debugids" | "inline-nosources-cheap-module-source-map" | "inline-nosources-cheap-module-source-map-debugids" | "inline-nosources-cheap-source-map" | "inline-nosources-cheap-source-map-debugids" | "inline-nosources-source-map" | "inline-nosources-source-map-debugids" | "inline-source-map" | "inline-source-map-debugids" | "nosources-cheap-module-source-map" | "nosources-cheap-module-source-map-debugids" | "nosources-cheap-source-map" | "nosources-cheap-source-map-debugids" | "nosources-source-map" | "nosources-source-map-debugids" | "source-map" | "source-map-debugids" | false | undefined)
           - Got: string
         ]
       `)
-      // cSpell:enable
     })
   })
 })

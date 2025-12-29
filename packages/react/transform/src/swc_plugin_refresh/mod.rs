@@ -17,15 +17,9 @@ use swc_core::{
 use crate::calc_hash;
 
 #[napi(object)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct RefreshVisitorConfig {
   pub library: Option<Vec<String>>,
-}
-
-impl Default for RefreshVisitorConfig {
-  fn default() -> Self {
-    Self { library: None }
-  }
 }
 
 #[derive(Debug)]

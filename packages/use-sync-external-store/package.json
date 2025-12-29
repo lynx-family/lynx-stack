@@ -1,0 +1,53 @@
+{
+  "name": "@lynx-js/use-sync-external-store",
+  "version": "1.5.0",
+  "description": "A pure ESM fork of use-sync-external-store. Works with @lynx-js/react.",
+  "keywords": [
+    "react",
+    "lynx"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/use-sync-external-store"
+  },
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./with-selector": {
+      "types": "./with-selector.d.ts",
+      "default": "./with-selector.js"
+    },
+    "./shim": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./shim/with-selector": {
+      "types": "./with-selector.d.ts",
+      "default": "./with-selector.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "index.d.ts",
+  "files": [
+    "index.d.ts",
+    "index.js",
+    "with-selector.d.ts",
+    "with-selector.js",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "vitest",
+    "test:type": "vitest --typecheck.only"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*"
+  },
+  "peerDependencies": {
+    "@lynx-js/react": "*"
+  }
+}

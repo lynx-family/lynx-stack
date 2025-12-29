@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import os from 'node:os';
+
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -24,7 +26,6 @@ export default defineConfig({
         'packages/react/transform/tests/__swc_snapshots__/**',
         'packages/rspeedy/create-rspeedy/template-*/**',
 
-        // cSpell:disable-next-line
         '.lintstagedrc.mjs',
         'eslint.config.js',
 
@@ -33,6 +34,8 @@ export default defineConfig({
         'packages/webpack/test-tools/**',
         'packages/testing-library/test-environment/**',
         'packages/react/testing-library/**',
+        'packages/lynx/benchx_cli/**',
+        'benchmark/react/**',
       ],
     },
 
@@ -47,5 +50,31 @@ export default defineConfig({
       FORCE_COLOR: '0',
       NODE_ENV: 'test',
     },
+
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        minForks: 1,
+        maxForks: ((cpuCount) =>
+          Math.floor(
+            cpuCount <= 32
+              ? cpuCount / 2
+              : 16 + (cpuCount - 32) / 6,
+          ))(os.availableParallelism()),
+      },
+    },
+
+    projects: [
+      'examples/*/vitest.config.ts',
+      'packages/react/*/vitest.config.ts',
+      'packages/rspeedy/*/vitest.config.ts',
+      'packages/testing-library/*/vitest.config.mts',
+      'packages/testing-library/examples/*/vitest.config.ts',
+      'packages/third-party/*/vitest.config.ts',
+      'packages/tools/*/vitest.config.ts',
+      'packages/use-sync-external-store/vitest.config.ts',
+      'packages/web-platform/*/vitest.config.ts',
+      'packages/webpack/*/vitest.config.ts',
+    ],
   },
 });

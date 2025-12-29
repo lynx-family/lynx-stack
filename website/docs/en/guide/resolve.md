@@ -36,15 +36,15 @@ After configuring, if you reference `@common/Foo.tsx` in your code, it will be m
 You can refer to the [TypeScript - paths](https://typescriptlang.org/tsconfig#paths) documentation for more details.
 :::
 
-### Use `source.alias` Configuration
+### Use `resolve.alias` Configuration
 
-Rsbuild provides the [source.alias](/api/rspeedy.source.alias) configuration option, which corresponds to the webpack/Rspack native [resolve.alias](https://rspack.dev/config/resolve#resolvealias) configuration. You can configure this option using an object or a function.
+Rsbuild provides the [resolve.alias](/api/rspeedy.resolve.alias) configuration option, which corresponds to the webpack/Rspack native [resolve.alias](https://rspack.dev/config/resolve#resolvealias) configuration. You can configure this option using an object or a function.
 
 #### Use Cases
 
 The `paths` configuration in `tsconfig.json` is static and lacks dynamism. Furthermore, `paths` only takes effect when the module is included in [`source.include`](/api/rspeedy.source.include).
 
-The `source.alias` configuration can overcome this limitation by enabling you to dynamically set `source.alias` using JavaScript code.
+The `resolve.alias` configuration can overcome this limitation by enabling you to dynamically set `resolve.alias` using JavaScript code.
 
 For example, use the workspace version of `lodash-es` for all dependencies:
 
@@ -56,7 +56,7 @@ import { defineConfig } from '@lynx-js/rspeedy';
 const require = createRequire(import.meta.url);
 
 export default defineConfig({
-  source: {
+  resolve: {
     alias: {
       'lodash-es': require.resolve('lodash-es'),
     },

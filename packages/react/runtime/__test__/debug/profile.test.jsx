@@ -26,14 +26,12 @@ describe('profile', () => {
   });
 
   test('original options hooks should be called', async () => {
-    vi.stubGlobal('__JS__', true);
-
     render(
       null,
       scratch,
     );
 
-    expect(noop).toBeCalledTimes(3);
+    expect(noop).toBeCalledTimes(4);
   });
 
   test('diff and render should be profiled', async () => {
@@ -59,18 +57,18 @@ describe('profile', () => {
       scratch,
     );
 
-    // render::
-    expect(console.profile).toBeCalledWith(`render::Foo`);
-    expect(console.profile).not.toBeCalledWith(`render::Bar`);
-    expect(console.profile).toBeCalledWith(`render::Baz`);
-    expect(console.profile).not.toBeCalledWith(`render::ClassComponent`);
-    expect(console.profile).toBeCalledWith(`render::Clazz`);
+    // // ReactLynx::render::
+    expect(lynx.performance.profileStart).toBeCalledWith(`ReactLynx::render::Foo`);
+    expect(lynx.performance.profileStart).not.toBeCalledWith(`ReactLynx::render::Bar`);
+    expect(lynx.performance.profileStart).toBeCalledWith(`ReactLynx::render::Baz`);
+    expect(lynx.performance.profileStart).not.toBeCalledWith(`ReactLynx::render::ClassComponent`);
+    expect(lynx.performance.profileStart).toBeCalledWith(`ReactLynx::render::Clazz`);
 
-    // diff::
-    expect(console.profile).toBeCalledWith(`diff::Foo`);
-    expect(console.profile).not.toBeCalledWith(`diff::Bar`);
-    expect(console.profile).toBeCalledWith(`diff::Baz`);
-    expect(console.profile).not.toBeCalledWith(`diff::ClassComponent`);
-    expect(console.profile).toBeCalledWith(`diff::Clazz`);
+    // // ReactLynx::diff::
+    expect(lynx.performance.profileStart).toBeCalledWith(`ReactLynx::diff::Foo`, {});
+    expect(lynx.performance.profileStart).not.toBeCalledWith(`ReactLynx::diff::Bar`);
+    expect(lynx.performance.profileStart).toBeCalledWith(`ReactLynx::diff::Baz`, {});
+    expect(lynx.performance.profileStart).not.toBeCalledWith(`ReactLynx::diff::ClassComponent`);
+    expect(lynx.performance.profileStart).toBeCalledWith(`ReactLynx::diff::Clazz`, {});
   });
 });

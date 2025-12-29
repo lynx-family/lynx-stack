@@ -600,4 +600,83 @@ describe('spreadUpdate', () => {
       </page>
     `);
   });
+
+  it('circular reference', async () => {
+    await import('../../src/lynx');
+    let patch;
+    let setSpread_;
+
+    const a = {};
+    a.a = a;
+
+    function Foo(props) {
+      return props.children;
+    }
+
+    function Bar() {
+      const [spread, setSpread] = useState({});
+      setSpread_ = setSpread;
+      return <text {...spread}>1</text>;
+    }
+
+    function Comp() {
+      return (
+        <Foo>
+          <Bar />
+        </Foo>
+      );
+    }
+
+    globalEnvManager.switchToMainThread();
+    render(<Comp />, scratch);
+
+    globalEnvManager.switchToBackground();
+    render(<Comp />, scratchBackground);
+
+    initGlobalSnapshotPatch();
+    setSpread_(a);
+
+    expect(() => render(<Comp />, scratchBackground)).toThrowErrorMatchingInlineSnapshot(`
+      [TypeError: Converting circular structure to JSON
+          --> starting at object with constructor 'Object'
+          --- property 'a' closes the circle
+
+        in Bar
+        in Comp
+      ]
+    `);
+    patch = takeGlobalSnapshotPatch();
+    expect(patch).toMatchInlineSnapshot(`[]`);
+  });
+
+  it('should remove __self and __source when spreading props onto element', async function() {
+    let componentProps;
+    function Child(props) {
+      componentProps = JSON.stringify(props);
+      return <text {...props}>1</text>;
+    }
+
+    function Comp() {
+      const [spread, setSpread] = useState({
+        id: 'id_str',
+      });
+      return (
+        <view>
+          <Child {...spread} key='key' data-outside={'outside'} __self={'self'} __source={'source'} />
+        </view>
+      );
+    }
+
+    globalEnvManager.switchToBackground();
+    initGlobalSnapshotPatch();
+    render(<Comp />, scratchBackground);
+
+    const patchStr = JSON.stringify(takeGlobalSnapshotPatch());
+    expect(patchStr).not.toContain('source');
+    expect(patchStr).not.toContain('self');
+    expect(patchStr).toContain('outside');
+    expect(componentProps).toContain('source');
+    expect(componentProps).toContain('self');
+    expect(componentProps).toContain('outside');
+  });
 });

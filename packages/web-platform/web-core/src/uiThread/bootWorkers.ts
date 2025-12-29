@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { systemInfo, type BrowserConfig } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import type { WorkerStartMessage } from '@lynx-js/web-worker-runtime';
 
@@ -14,10 +15,10 @@ interface LynxViewRpc {
 const backgroundWorkerContextCount: number[] = [];
 const contextIdToBackgroundWorker: (Worker | undefined)[] = [];
 
-let preHeatedMainWorker = createMainWorker();
 export function bootWorkers(
   lynxGroupId: number | undefined,
-  allOnUI?: boolean,
+  allOnUI: boolean,
+  browserConfig: BrowserConfig,
 ): LynxViewRpc {
   let curMainWorker: {
     mainThreadRpc: Rpc;
@@ -27,12 +28,12 @@ export function bootWorkers(
   if (allOnUI) {
     curMainWorker = createUIChannel();
   } else {
-    curMainWorker = preHeatedMainWorker;
-    preHeatedMainWorker = createMainWorker();
+    curMainWorker = createMainWorker();
   }
   const curBackgroundWorker = createBackgroundWorker(
     lynxGroupId,
     curMainWorker.channelMainThreadWithBackground,
+    browserConfig,
   );
   if (lynxGroupId !== undefined) {
     if (backgroundWorkerContextCount[lynxGroupId]) {
@@ -99,6 +100,7 @@ function createMainWorker() {
 function createBackgroundWorker(
   lynxGroupId: number | undefined,
   channelMainThreadWithBackground: MessageChannel,
+  browserConfig: BrowserConfig,
 ) {
   const channelToBackground = new MessageChannel();
   let backgroundThreadWorker: Worker;
@@ -113,6 +115,7 @@ function createBackgroundWorker(
     mode: 'background',
     toUIThread: channelToBackground.port2,
     toPeerThread: channelMainThreadWithBackground.port2,
+    systemInfo: { ...systemInfo, ...browserConfig },
   };
   backgroundThreadWorker.postMessage(backgroundThreadMessage, [
     channelToBackground.port2,
@@ -124,6 +127,10 @@ function createBackgroundWorker(
 
 function createWebWorker(name: string): Worker {
   return new Worker(
+    /* webpackFetchPriority: "high" */
+    /* webpackChunkName: "web-core-worker-runtime" */
+    /* webpackPrefetch: true */
+    /* webpackPreload: true */
     new URL('@lynx-js/web-worker-runtime', import.meta.url),
     {
       type: 'module',

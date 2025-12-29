@@ -4,8 +4,9 @@
 export { OffscreenDocument, _onEvent } from './OffscreenDocument.js';
 export {
   _attributes,
-  innerHTML,
+  textContent,
   _children,
+  _cssRuleContents,
   OffscreenElement,
 } from './OffscreenElement.js';
 export type * from './OffscreenEvent.js';

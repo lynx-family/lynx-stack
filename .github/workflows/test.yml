@@ -31,15 +31,17 @@ jobs:
     uses: ./.github/workflows/workflow-bundle-analysis.yml
   code-style-check:
     runs-on: lynx-ubuntu-24.04-medium
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           # We need full history for changeset status check
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
-          node-version: "22"
+          node-version: "24"
+          package-manager-cache: false
       - name: Install
         run: |
           npm install -g corepack@latest
@@ -49,12 +51,18 @@ jobs:
         run: |
           pnpm dprint check
           pnpm biome check
-      - name: Spell Check
-        run: pnpm run spell
       - name: API Check
         run: pnpm turbo api-extractor
       - name: Changeset Check
         run: pnpm changeset status --since=origin/main
+
+  eslint:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    permissions: {}
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: pnpm eslint .
 
   lighthouse:
     needs: build
@@ -65,7 +73,7 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-xlarge
+      runs-on: lynx-custom-container
       is-web: true
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
@@ -73,50 +81,33 @@ jobs:
   playwright-linux:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
-
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    name: Playwright ${{ matrix.thread }}-${{ matrix.render }} (${{ matrix.shard }}/4)
+    strategy:
+      fail-fast: false
+      matrix:
+        thread: [MULTI_THREAD, ALL_ON_UI]
+        render: [SSR, CSR]
+        shard: [1, 2, 3, 4]
+        exclude:
+          - thread: MULTI_THREAD
+            render: SSR
     with:
-      runs-on: lynx-ubuntu-24.04-xlarge
+      runs-on: lynx-custom-container
       is-web: true
+      web-report-name: "playwright-${{ matrix.thread }}-${{ matrix.render }}-shard${{ matrix.shard }}"
       codecov-flags: "e2e"
       run: |
+        if [ "${{ matrix.thread }}" = "MULTI_THREAD" ]; then
+          export ENABLE_MULTI_THREAD=true
+        fi
+        if [ "${{ matrix.render }}" = "SSR" ]; then
+          export ENABLE_SSR=true
+        fi
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
-        pnpm --filter @lynx-js/web-tests run coverage:ci
-  playwright-linux-all-on-ui:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-ubuntu-24.04-xlarge
-      is-web: true
-      codecov-flags: "e2e,all-on-ui"
-      run: |
-        export NODE_OPTIONS="--max-old-space-size=32768"
-        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-        export ALL_ON_UI=true
-        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
-        pnpm --filter @lynx-js/web-tests run coverage:ci
-  playwright-linux-fp-only:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-ubuntu-24.04-xlarge
-      is-web: true
-      codecov-flags: "e2e,fp-only"
-      run: |
-        export NODE_OPTIONS="--max-old-space-size=32768"
-        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-        export ENABLE_SSR=true
-        export TEST_FP_ONLY=true
-        pnpm --filter @lynx-js/web-tests run build:cases:ssr
-        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
+        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/4
         pnpm --filter @lynx-js/web-tests run coverage:ci
   test-api:
     needs: build
@@ -149,25 +140,25 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: |
-        pnpm dlx @pnpm/registry-mock prepare
-        pnpm dlx @pnpm/registry-mock &
+        pnpm dlx @pnpm/registry-mock@4 prepare
+        pnpm dlx @pnpm/registry-mock@4 &
         printf '\n//localhost:4873/:_authToken="this-is-a-fake-token"\n' >> ~/.npmrc
         pnpm changeset version --snapshot regression
         node packages/tools/canary-release/snapshot.js
         pnpm --recursive publish --no-git-checks --access public --registry=http://localhost:4873
         cd `mktemp -d`
-        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir create-rspeedy-regression
+        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir create-rspeedy-regression --tools eslint
         cd create-rspeedy-regression
         pnpm install --registry=http://localhost:4873
-        pnpm tsc --noEmit
         pnpm run build
-        pnpm tsc --noEmit
-        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react-vitest-rltl --dir create-rspeedy-regression-vitest-rltl
+        pnpm run build --mode development
+        pnpm run lint
+        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react-vitest-rltl --dir create-rspeedy-regression-vitest-rltl --tools eslint
         cd create-rspeedy-regression-vitest-rltl
         pnpm install --registry=http://localhost:4873
-        pnpm tsc --noEmit
         pnpm run build
-        pnpm tsc --noEmit
+        pnpm run build --mode development
+        pnpm run lint
         pnpm run test
   test-react:
     needs: build
@@ -188,12 +179,11 @@ jobs:
         --outputFile=test-report.junit.xml
         --coverage.reporter='json'
         --coverage.reporter='text'
-        --test-timeout=50000
+        --testTimeout=50000
         --no-cache
         --logHeapUsage
         --silent
   test-rust:
-    needs: build
     uses: ./.github/workflows/rust.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -209,23 +199,34 @@ jobs:
     runs-on: lynx-ubuntu-24.04-medium
     steps:
       - uses: taiki-e/checkout-action@b13d20b7cda4e2f325ef19895128f7ff735c0b3d # v1.3.1
-      - uses: crate-ci/typos@0f0ccba9ed1df83948f0c15026e4f5ccfce46109 # v1.32.0
+      - uses: crate-ci/typos@85f62a8a84f939ae994ab3763f01a0296d61a7ee # v1.36.2
         with:
           files: .
   test-vitest:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on:
+          - name: Ubuntu
+            label: lynx-ubuntu-24.04-medium
+          - name: Windows
+            label: lynx-windows-2022-large
+    name: Vitest (${{ matrix.runs-on.name }})
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: ${{ matrix.runs-on.label }}
       run: >
         pnpm run test
         --reporter=github-actions
         --reporter=dot
         --reporter=junit
         --outputFile=test-report.junit.xml
-        --test-timeout=50000
+        --expect.poll.timeout=5000
+        --testTimeout=50000
+        --hookTimeout=50000
         --coverage
         --coverage.reporter='json'
         --coverage.reporter='text'
@@ -237,10 +238,10 @@ jobs:
     uses: ./.github/workflows/workflow-website.yml
   done:
     needs:
+      - benchmark
       - code-style-check
+      - eslint
       - playwright-linux
-      - playwright-linux-all-on-ui
-      - playwright-linux-fp-only
       - test-api
       - test-publish
       - test-react
@@ -250,7 +251,7 @@ jobs:
       - test-vitest
       - website
     if: always()
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: ubuntu-latest
     name: Done
     steps:
       - run: exit 1

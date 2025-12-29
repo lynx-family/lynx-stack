@@ -1,151 +1,55 @@
-import { globalMuteableVars, type LynxTemplate } from '@lynx-js/web-constants';
+import {
+  generateTemplate,
+  type LynxTemplate,
+  type MarkTimingInternal,
+  type TemplateLoader,
+} from '@lynx-js/web-constants';
 
-const TemplateCache: Record<string, LynxTemplate> = {};
+const templateCache: Map<string, Promise<LynxTemplate> | LynxTemplate> =
+  new Map();
 
 function createJsModuleUrl(content: string): string {
   return URL.createObjectURL(new Blob([content], { type: 'text/javascript' }));
 }
 
-function generateJavascriptUrl<T extends Record<string, string>>(
-  obj: T,
-  injectVars: string[],
-  injectWithBind: string[],
-  muteableVars: readonly string[],
+export function createTemplateLoader(
+  customTemplateLoader: TemplateLoader | undefined,
+  markTimingInternal: MarkTimingInternal,
 ) {
-  injectVars = injectVars.concat(muteableVars);
-  return Object.fromEntries(
-    Object.entries(obj).map(([name, content]) => {
-      return [
-        name,
-        createJsModuleUrl(
-          [
-            '//# allFunctionsCalledOnLoad\n',
-            'globalThis.module.exports = function(lynx_runtime) {',
-            'const module= {exports:{}};let exports = module.exports;',
-            'var {',
-            injectVars.join(','),
-            '} = lynx_runtime;',
-            ...injectWithBind.map((nm) =>
-              `const ${nm} = lynx_runtime.${nm}?.bind(lynx_runtime);`
-            ),
-            ';var globDynamicComponentEntry = \'__Card__\';',
-            'var {__globalProps} = lynx;',
-            'lynx_runtime._updateVars=()=>{',
-            ...muteableVars.map((nm) =>
-              `${nm} = lynx_runtime.__lynxGlobalBindingValues.${nm};`
-            ),
-            '};\n',
-            content,
-            '\n return module.exports;}',
-          ].join(''),
-        ),
-      ];
-    }),
-  ) as T;
-}
-
-const mainThreadInjectVars = [
-  'lynx',
-  'globalThis',
-  '_ReportError',
-  '__AddConfig',
-  '__AddDataset',
-  '__GetAttributes',
-  '__GetComponentID',
-  '__GetDataByKey',
-  '__GetDataset',
-  '__GetElementConfig',
-  '__GetElementUniqueID',
-  '__GetID',
-  '__GetTag',
-  '__SetAttribute',
-  '__SetConfig',
-  '__SetDataset',
-  '__SetID',
-  '__UpdateComponentID',
-  '__GetConfig',
-  '__UpdateListCallbacks',
-  '__AppendElement',
-  '__ElementIsEqual',
-  '__FirstElement',
-  '__GetChildren',
-  '__GetParent',
-  '__InsertElementBefore',
-  '__LastElement',
-  '__NextElement',
-  '__RemoveElement',
-  '__ReplaceElement',
-  '__ReplaceElements',
-  '__SwapElement',
-  '__CreateComponent',
-  '__CreateElement',
-  '__CreatePage',
-  '__CreateView',
-  '__CreateText',
-  '__CreateRawText',
-  '__CreateImage',
-  '__CreateScrollView',
-  '__CreateWrapperElement',
-  '__CreateList',
-  '__AddEvent',
-  '__GetEvent',
-  '__GetEvents',
-  '__SetEvents',
-  '__AddClass',
-  '__SetClasses',
-  '__GetClasses',
-  '__AddInlineStyle',
-  '__SetInlineStyles',
-  '__SetCSSId',
-  '__OnLifecycleEvent',
-  '__FlushElementTree',
-  '__LoadLepusChunk',
-  'SystemInfo',
-];
-
-const backgroundInjectVars = [
-  'NativeModules',
-  'globalThis',
-  'lynx',
-  'lynxCoreInject',
-  'SystemInfo',
-];
-
-const backgroundInjectWithBind = [
-  'Card',
-  'Component',
-];
-
-export async function loadTemplate(
-  url: string,
-  customTemplateLoader?: (url: string) => Promise<LynxTemplate>,
-): Promise<LynxTemplate> {
-  const cachedTemplate = TemplateCache[url];
-  if (cachedTemplate) return cachedTemplate;
-  const template = customTemplateLoader
-    ? await customTemplateLoader(url)
-    : (await (await fetch(url, {
-      method: 'GET',
-    })).json()) as LynxTemplate;
-  const decodedTemplate: LynxTemplate = {
-    ...template,
-    lepusCode: generateJavascriptUrl(
-      template.lepusCode,
-      mainThreadInjectVars,
-      [],
-      globalMuteableVars,
-    ),
-    manifest: generateJavascriptUrl(
-      template.manifest,
-      backgroundInjectVars,
-      backgroundInjectWithBind,
-      [],
-    ),
+  const loadTemplate: TemplateLoader = async (
+    url: string,
+  ) => {
+    markTimingInternal('load_template_start');
+    const cachedTemplate = templateCache.get(url);
+    if (cachedTemplate) {
+      markTimingInternal('load_template_end');
+      return cachedTemplate;
+    } else {
+      const promise = new Promise<LynxTemplate>(async (resolve, reject) => {
+        try {
+          const template = customTemplateLoader
+            ? await customTemplateLoader(url)
+            : (await (await fetch(url, {
+              method: 'GET',
+            })).json()) as LynxTemplate;
+          const decodedTemplate = await generateTemplate(
+            template,
+            createJsModuleUrl,
+          );
+          resolve(decodedTemplate);
+        } catch (e) {
+          templateCache.delete(url);
+          reject(e);
+        }
+      });
+      templateCache.set(url, promise);
+      /**
+       * This will cause a memory leak, which is expected.
+       * We cannot ensure that the `URL.createObjectURL` created url will never be used, therefore here we keep it for the entire lifetime of this page.
+       */
+      markTimingInternal('load_template_end');
+      return promise;
+    }
   };
-  TemplateCache[url] = decodedTemplate;
-  /**
-   * This will cause a memory leak, which is expected.
-   * We cannot ensure that the `URL.createObjectURL` created url will never be used, therefore here we keep it for the entire lifetime of this page.
-   */
-  return decodedTemplate;
+  return loadTemplate;
 }

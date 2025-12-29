@@ -139,6 +139,10 @@ export const elementTree = new (class {
     e.props[key] = value;
   }
 
+  __GetAttributes(e: Element): Record<string, any> {
+    return e.props;
+  }
+
   __AddEvent(e: Element, eventType: string, eventName: string, event: string | Record<string, any>) {
     if (typeof event === 'undefined') {
       if (e.props.event) {
@@ -312,6 +316,7 @@ export const elementTree = new (class {
 
   clear() {
     this.root = undefined;
+    uiSignNext = 0;
   }
 
   toTree() {

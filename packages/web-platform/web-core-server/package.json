@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-core-server",
-  "version": "0.13.3",
+  "version": "0.17.0",
   "private": false,
   "description": "",
   "keywords": [],
@@ -12,6 +12,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "main": "dist/index.js",
+  "module": "dist/index.js",
   "typings": "dist/index.d.ts",
   "files": [
     "dist",
@@ -21,11 +22,17 @@
     "CHANGELOG.md",
     "README.md"
   ],
+  "scripts": {
+    "build": "rslib build",
+    "watch": "rslib build --watch"
+  },
   "devDependencies": {
     "@lynx-js/offscreen-document": "workspace:*",
     "@lynx-js/web-constants": "workspace:*",
     "@lynx-js/web-elements-template": "workspace:*",
     "@lynx-js/web-mainthread-apis": "workspace:*",
-    "@lynx-js/web-worker-rpc": "workspace:*"
+    "@lynx-js/web-worker-rpc": "workspace:*",
+    "rsbuild-plugin-arethetypeswrong": "0.1.1",
+    "rsbuild-plugin-publint": "0.3.3"
   }
 }

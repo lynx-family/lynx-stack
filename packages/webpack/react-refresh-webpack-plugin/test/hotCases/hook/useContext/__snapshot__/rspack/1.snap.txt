@@ -6,7 +6,7 @@
 ## Asset Files
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 4556
+- Update: main.LAST_HASH.hot-update.js, size: 4548
 
 ## Manifest
 
@@ -50,7 +50,7 @@ __webpack_require__.d(__webpack_exports__, {
 
 
 const Theme = (0,_lynx_js_react__WEBPACK_IMPORTED_MODULE_1__.createContext)('light');
-const __snapshot_4953c_6688c_1 = /*#__PURE__*/ (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .createSnapshot */.createSnapshot)("__snapshot_4953c_6688c_1", function() {
+const __snapshot_4953c_6688c_1 = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .createSnapshot */.createSnapshot)("__snapshot_4953c_6688c_1", function() {
     const pageId = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__pageId */.__pageId);
     const el = __CreateText(pageId);
     const el1 = __CreateRawText("after: ");
@@ -67,7 +67,7 @@ const __snapshot_4953c_6688c_1 = /*#__PURE__*/ (__webpack_require__(/*! @lynx-js
         (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__DynamicPartChildren */.__DynamicPartChildren),
         2
     ]
-], undefined, globDynamicComponentEntry);
+], undefined, globDynamicComponentEntry, null);
 function Inner() {
     const theme = (0,_lynx_js_react__WEBPACK_IMPORTED_MODULE_1__.useContext)(Theme);
     __RenderContent(`after: ${theme}`);

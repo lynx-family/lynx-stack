@@ -1,12 +1,14 @@
 // @ts-nocheck
-import { fireEvent as domFireEvent, createEvent } from '@testing-library/dom';
+import { createEvent, fireEvent as domFireEvent } from '@testing-library/dom';
 
-let NodesRef = lynx.createSelectorQuery().selectUniqueID(-1).constructor;
+const NodesRef = lynx.createSelectorQuery().selectUniqueID(-1).constructor;
 function getElement(elemOrNodesRef) {
   if (elemOrNodesRef instanceof NodesRef) {
     return __GetElementByUniqueId(
       Number(elemOrNodesRef._nodeSelectToken.identifier),
     );
+  } else if ('refAttr' in elemOrNodesRef) {
+    return document.querySelector(`[react-ref-${elemOrNodesRef.refAttr[0]}-${elemOrNodesRef.refAttr[1]}]`);
   } else if (elemOrNodesRef?.constructor?.name === 'HTMLUnknownElement') {
     return elemOrNodesRef;
   } else {
@@ -25,7 +27,7 @@ export const fireEvent: any = (elemOrNodesRef, ...args) => {
 
   const elem = getElement(elemOrNodesRef);
 
-  let ans = domFireEvent(elem, ...args);
+  const ans = domFireEvent(elem, ...args);
 
   if (isMainThread) {
     // switch back to main thread
@@ -156,7 +158,7 @@ Object.keys(eventMap).forEach((key) => {
     lynxTestingEnv.switchToBackgroundThread();
 
     const elem = getElement(elemOrNodesRef);
-    const eventType = init?.['eventType'] || 'bindEvent';
+    const eventType = init?.eventType || 'bindEvent';
     init = {
       eventType,
       eventName: key,

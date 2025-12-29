@@ -7,6 +7,7 @@ import type { RsbuildConfig, RsbuildPlugins } from '@rsbuild/core'
 import type { Dev } from './dev/index.js'
 import type { Output } from './output/index.js'
 import type { Performance } from './performance/index.js'
+import type { Resolve } from './resolve/index.js'
 import type { Server } from './server/index.js'
 import type { Source } from './source/index.js'
 import type { Tools } from './tools/index.js'
@@ -17,32 +18,6 @@ import type { Tools } from './tools/index.js'
  * @public
  */
 export interface Config {
-  /**
-   * The Rsbuild provider.
-   *
-   * @example
-   * You can switch from Rspack to Webpack by:
-   *
-   * - Use `webpackProvider` from `@rsbuild/webpack`
-   * - Add `pluginSwc` from `@rsbuild/plugin-webpack-swc` for TypeScript transpilation
-   *
-   * ```ts
-   * import { defineConfig } from '@lynx-js/rspeedy'
-   * import { webpackProvider } from '@rsbuild/webpack'
-   * import { pluginSwc } from '@rsbuild/plugin-webpack-swc'
-   *
-   * export default defineConfig({
-   *   provider: webpackProvider,
-   *   plugins: [
-   *     pluginSwc(),
-   *   ],
-   * })
-   * ```
-   *
-   * @alpha
-   */
-  provider?: RsbuildConfig['provider']
-
   /**
    * The {@link Dev} option is used to control the behavior related with development. Including: HMR, DevServer, etc.
    */
@@ -158,9 +133,14 @@ export interface Config {
   output?: Output | undefined
 
   /**
-   * The {@link Performance} option is used to
+   * The {@link Performance} option is used to optimize the build-time and runtime performance.
    */
   performance?: Performance | undefined
+
+  /**
+   * The {@link Resolve} option is used to control the resolution behavior of Rspack.
+   */
+  resolve?: Resolve | undefined
 
   /**
    * The {@link Server} option changes the behavior of dev-server.

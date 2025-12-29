@@ -1,15 +1,14 @@
 // Copyright 2023 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type {
-  Cloneable,
-  CloneableObject,
-  LynxCrossThreadEvent,
-} from '@lynx-js/web-constants';
 import {
-  elementToRuntimeInfoMap,
-  type MainThreadRuntime,
-} from '../MainThreadRuntime.js';
+  lynxDatasetAttribute,
+  lynxUniqueIdAttribute,
+  type Cloneable,
+  type CloneableObject,
+  type LynxCrossThreadEvent,
+  type MinimalRawEventObject,
+} from '@lynx-js/web-constants';
 
 function toCloneableObject(obj: any): CloneableObject {
   const cloneableObj: CloneableObject = {};
@@ -26,13 +25,14 @@ function toCloneableObject(obj: any): CloneableObject {
 }
 
 export function createCrossThreadEvent(
-  runtime: MainThreadRuntime,
-  domEvent: Event,
+  domEvent: MinimalRawEventObject,
   eventName: string,
 ): LynxCrossThreadEvent {
   const targetElement = domEvent.target as HTMLElement;
-  const currentTargetElement = domEvent
-    .currentTarget! as HTMLElement;
+  const currentTargetElement = (domEvent
+      .currentTarget as HTMLElement).getAttribute
+    ? (domEvent.currentTarget as HTMLElement)
+    : undefined;
   const type = domEvent.type;
   const params: Cloneable = {};
   const isTrusted = domEvent.isTrusted;
@@ -40,17 +40,17 @@ export function createCrossThreadEvent(
   if (type.match(/^transition/)) {
     Object.assign(params, {
       'animation_type': 'keyframe-animation',
-      'animation_name': (domEvent as TransitionEvent).propertyName,
+      'animation_name': domEvent.propertyName,
       new_animator: true, // we support the new_animator only
     });
   } else if (type.match(/animation/)) {
     Object.assign(params, {
       'animation_type': 'keyframe-animation',
-      'animation_name': (domEvent as AnimationEvent).animationName,
+      'animation_name': domEvent.animationName,
       new_animator: true, // we support the new_animator only
     });
   } else if (type.startsWith('touch')) {
-    const touchEvent = domEvent as TouchEvent;
+    const touchEvent = domEvent;
     const touch = [...touchEvent.touches as unknown as Touch[]];
     const targetTouches = [...touchEvent.targetTouches as unknown as Touch[]];
     const changedTouches = [...touchEvent.changedTouches as unknown as Touch[]];
@@ -68,25 +68,32 @@ export function createCrossThreadEvent(
         : changedTouches,
     });
   }
-  const targetElementRuntimeInfo = runtime[elementToRuntimeInfoMap].get(
-    targetElement,
-  )!;
-  const currentTargetElementRuntimeInfo = runtime[elementToRuntimeInfoMap].get(
-    currentTargetElement,
+  const currentTargetDatasetString = currentTargetElement?.getAttribute(
+    lynxDatasetAttribute,
   );
+  const currentTargetDataset = currentTargetDatasetString
+    ? JSON.parse(decodeURIComponent(currentTargetDatasetString))
+    : {};
+  const targetDatasetString = targetElement.getAttribute(lynxDatasetAttribute);
+  const targetDataset = targetDatasetString
+    ? JSON.parse(decodeURIComponent(targetDatasetString))
+    : {};
+
   return {
     type: eventName,
     timestamp: domEvent.timeStamp,
     target: {
-      id: targetElement.id,
-      dataset: targetElementRuntimeInfo.lynxDataset,
-      uniqueId: targetElementRuntimeInfo.uniqueId,
+      id: targetElement.getAttribute('id'),
+      dataset: targetDataset,
+      uniqueId: Number(targetElement.getAttribute(lynxUniqueIdAttribute)),
     },
-    currentTarget: currentTargetElementRuntimeInfo
+    currentTarget: currentTargetElement
       ? {
-        id: currentTargetElement.id,
-        dataset: currentTargetElementRuntimeInfo.lynxDataset,
-        uniqueId: currentTargetElementRuntimeInfo.uniqueId,
+        id: currentTargetElement.getAttribute('id'),
+        dataset: currentTargetDataset,
+        uniqueId: Number(
+          currentTargetElement.getAttribute(lynxUniqueIdAttribute),
+        ),
       }
       : null,
     // @ts-expect-error

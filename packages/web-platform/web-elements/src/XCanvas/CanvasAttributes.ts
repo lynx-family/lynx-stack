@@ -34,7 +34,7 @@ export class CanvasAttributes
   @registerAttributeHandler('height', true)
   handleHeight = bindToAttribute(this.#getCanvas, 'height');
 
-  @registerAttributeHandler('height', true)
+  @registerAttributeHandler('width', true)
   handleWidth = bindToAttribute(this.#getCanvas, 'width');
 
   #resizeHandler: ResizeObserverCallback = (entries: ResizeObserverEntry[]) => {

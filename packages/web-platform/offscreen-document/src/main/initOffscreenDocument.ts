@@ -2,10 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import {
-  OperationType,
-  type ElementOperation,
-} from '../types/ElementOperation.js';
+import { OperationType } from '../types/ElementOperation.js';
 
 function emptyHandler() {
   // no-op
@@ -105,74 +102,137 @@ export function initOffscreenDocument(options: {
     }
   }
 
-  function decodeOperation(operations: ElementOperation[]) {
-    for (const op of operations) {
-      if (op.type === OperationType.CreateElement) {
-        const element = document.createElement(op.tag);
-        uniqueIdToElement[op.uid] = new WeakRef(element);
-        elementToUniqueId.set(element, op.uid);
+  function decodeOperation(operations: (string | number)[]) {
+    if (operations.length === 0) {
+      return;
+    }
+    let offset: number = 0;
+    const {
+      CreateElement,
+      SetAttribute,
+      RemoveAttribute,
+      Append,
+      Remove,
+      ReplaceWith,
+      InsertBefore,
+      EnableEvent,
+      RemoveChild,
+      StyleDeclarationSetProperty,
+      StyleDeclarationRemoveProperty,
+      SetTextContent,
+      sheetInsertRule,
+      sheetRuleUpdateCssText,
+    } = OperationType;
+    let op: number | string | undefined;
+    while ((op = operations[offset++])) {
+      const uid = operations[offset++] as number;
+      if (op === CreateElement) {
+        const element = document.createElement(operations[offset++] as string);
+        uniqueIdToElement[uid] = new WeakRef(element);
+        elementToUniqueId.set(element, uid);
       } else {
-        const target = _getElement(op.uid);
-        switch (op.type) {
-          case OperationType.SetAttribute:
-            target.setAttribute(op.key, op.value);
-            break;
-          case OperationType.RemoveAttribute:
-            target.removeAttribute(op.key);
-            break;
-          case OperationType.Append:
+        const target = _getElement(uid);
+        switch (op) {
+          case SetAttribute:
             {
-              const children = op.cid.map(id => _getElement(id));
-              target.append(...children);
+              const key = operations[offset++] as string;
+              const value = operations[offset++] as string;
+              target.setAttribute(key, value);
             }
             break;
-          case OperationType.Remove:
+          case RemoveAttribute:
+            {
+              target.removeAttribute(operations[offset++] as string);
+            }
+            break;
+          case Append:
+            {
+              const childrenLength = operations[offset++] as number;
+              for (let i = 0; i < childrenLength; i++) {
+                const id = operations[offset++] as number;
+                const child = _getElement(id);
+                target.appendChild(child);
+              }
+            }
+            break;
+          case Remove:
             target.remove();
             break;
-          case OperationType.ReplaceWith:
-            const newChildren = op.nid.map(id => _getElement(id));
-            target.replaceWith(...newChildren);
-            break;
-          case OperationType.InsertBefore:
+          case ReplaceWith:
             {
-              const kid = _getElement(op.cid);
-              const ref = op.ref ? _getElement(op.ref) : null;
+              const childrenLength = operations[offset++] as number;
+              const newChildren: HTMLElement[] = operations.slice(
+                offset,
+                offset + childrenLength,
+              ).map((id) => _getElement(id as number));
+              offset += childrenLength;
+              target.replaceWith(...newChildren);
+            }
+            break;
+          case InsertBefore:
+            {
+              const kid = _getElement(operations[offset++] as number);
+              const refUid = operations[offset++] as number;
+              const ref = refUid ? _getElement(refUid) : null;
               target.insertBefore(kid, ref);
             }
             break;
-          case OperationType.EnableEvent:
+          case EnableEvent:
+            const eventType = operations[offset++] as string;
             target.addEventListener(
-              op.eventType,
+              eventType,
               emptyHandler,
               { passive: true },
             );
-            if (!enabledEvents.has(op.eventType)) {
+            if (!enabledEvents.has(eventType)) {
               shadowRoot.addEventListener(
-                op.eventType,
+                eventType,
                 _eventHandler,
                 { passive: true, capture: true },
               );
-              enabledEvents.add(op.eventType);
+              enabledEvents.add(eventType);
             }
             break;
-          case OperationType.RemoveChild:
+          case RemoveChild:
             {
-              const kid = _getElement(op.cid);
+              const kid = _getElement(operations[offset++] as number);
               target.removeChild(kid);
             }
             break;
-          case OperationType.StyleDeclarationSetProperty:
+          case StyleDeclarationSetProperty:
             {
-              target.style.setProperty(op.property, op.value, op.priority);
+              target.style.setProperty(
+                operations[offset++] as string,
+                operations[offset++] as string,
+                operations[offset++] as string,
+              );
             }
             break;
-          case OperationType.StyleDeclarationRemoveProperty:
+          case StyleDeclarationRemoveProperty:
             {
-              target.style.removeProperty(op.property);
+              target.style.removeProperty(operations[offset++] as string);
             }
             break;
-          case OperationType.SetInnerHTML:
-            target.innerHTML = op.text;
+          case SetTextContent:
+            target.textContent = operations[offset++] as string;
+            break;
+          case sheetInsertRule:
+            {
+              const index = operations[offset++] as number;
+              const rule = operations[offset++] as string;
+              (target as HTMLStyleElement).sheet!.insertRule(
+                rule,
+                index,
+              );
+            }
+            break;
+          case sheetRuleUpdateCssText:
+            {
+              const index = operations[offset++] as number;
+              ((target as HTMLStyleElement).sheet!
+                .cssRules[index]! as CSSStyleRule).style.cssText =
+                  operations[offset++] as string;
+            }
             break;
         }
       }

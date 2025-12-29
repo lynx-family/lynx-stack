@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { createRequire } from 'node:module';
+
 import { rspack } from '@rspack/core';
 
 import { LAYERS, ReactWebpackPlugin } from '../src';
@@ -13,11 +15,11 @@ import { LAYERS, ReactWebpackPlugin } from '../src';
  */
 export function createEntries(name = 'main', source = './index.js') {
   return {
-    [`${name}:main-thread`]: {
+    [`${name}__main-thread`]: {
       layer: LAYERS.MAIN_THREAD,
       import: source,
     },
-    [`${name}:background`]: {
+    [`${name}__background`]: {
       layer: LAYERS.BACKGROUND,
       import: source,
     },
@@ -66,6 +68,8 @@ function createReactRules(options, swcLoaderOptions = {
   ];
 }
 
+const require = createRequire(import.meta.url);
+
 /**
  * @param {import('../src').ReactLoaderOptions=} loaderOptions - The options for loader
  * @param {import('../src').ReactWebpackPluginOptions=} pluginOptions - The options for plugin
@@ -91,7 +95,10 @@ export function createConfig(loaderOptions, pluginOptions, swcLoaderOptions) {
     },
     plugins: [
       new ReactWebpackPlugin({
-        mainThreadChunks: ['main:main-thread.js'],
+        mainThreadChunks: ['main__main-thread.js'],
+        workletRuntimePath: require.resolve(
+          '@lynx-js/react/worklet-dev-runtime',
+        ),
         ...pluginOptions,
       }),
       /**

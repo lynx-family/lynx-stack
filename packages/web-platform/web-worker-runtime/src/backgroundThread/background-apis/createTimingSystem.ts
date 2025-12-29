@@ -7,6 +7,7 @@ import {
   markTimingEndpoint,
   postTimingFlagsEndpoint,
   type EventEmitter,
+  type MarkTiming,
   type TimingInfo,
 } from '@lynx-js/web-constants';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
@@ -24,31 +25,33 @@ const ListenerKeys = {
 
 export function createTimingSystem(
   mainThreadRpc: Rpc,
-  backgroundThreadRpc: Rpc,
+  uiThreadRpc: Rpc,
 ): TimingSystem {
   let isFp = true;
   const setupTiming: Record<string, number> = {};
   const pipelineIdToTiming: Map<string, Record<string, number>> = new Map();
   const pipelineIdToTimingFlags: Map<string, string[]> = new Map();
-  const dispatchLynxViewEvent = backgroundThreadRpc.createCall(
+  const dispatchLynxViewEvent = uiThreadRpc.createCall(
     dispatchLynxViewEventEndpoint,
   );
   let commonTimingFlags: string[] = [];
   function markTimingInternal(
-    timingKey: string,
-    pipelineId?: string,
-    timeStamp?: number,
+    markTimingRecords: Array<
+      Omit<MarkTiming, 'timeStamp'> & { timeStamp?: number }
+    >,
   ) {
-    if (!timeStamp) timeStamp = performance.now() + performance.timeOrigin;
-    if (!pipelineId) {
-      setupTiming[timingKey] = timeStamp;
-      return;
+    for (let { timingKey, pipelineId, timeStamp } of markTimingRecords) {
+      if (!timeStamp) timeStamp = performance.now() + performance.timeOrigin;
+      if (!pipelineId) {
+        setupTiming[timingKey] = timeStamp;
+        continue;
+      }
+      if (!pipelineIdToTiming.has(pipelineId)) {
+        pipelineIdToTiming.set(pipelineId, {});
+      }
+      const timingInfo = pipelineIdToTiming.get(pipelineId)!;
+      timingInfo[timingKey] = timeStamp;
     }
-    if (!pipelineIdToTiming.has(pipelineId)) {
-      pipelineIdToTiming.set(pipelineId, {});
-    }
-    const timingInfo = pipelineIdToTiming.get(pipelineId)!;
-    timingInfo[timingKey] = timeStamp;
   }
   const registerGlobalEmitter = (globalEventEmitter: EventEmitter) => {
     mainThreadRpc.registerHandler(
@@ -107,12 +110,16 @@ export function createTimingSystem(
     markTimingEndpoint,
     markTimingInternal,
   );
-  backgroundThreadRpc.registerHandler(
+  uiThreadRpc.registerHandler(
     markTimingEndpoint,
     markTimingInternal,
   );
   return {
-    markTimingInternal,
+    markTimingInternal: (
+      timingKey: string,
+      pipelineId?: string,
+      timeStamp?: number,
+    ) => markTimingInternal([{ timingKey, pipelineId, timeStamp }]),
     registerGlobalEmitter,
     pipelineIdToTimingFlags,
   };

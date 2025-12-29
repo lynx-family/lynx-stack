@@ -8,11 +8,11 @@ import path from 'node:path';
 import {
   BasicRunnerFactory,
   ECompilerType,
-  NormalRunner,
+  NodeRunner,
   TestContext,
 } from '@rspack/test-tools';
 import type {
-  IBasicGlobalContext,
+  IGlobalContext,
   ITestContext,
   ITestEnv,
   ITestProcessor,
@@ -75,7 +75,7 @@ export function createVitestEnv(): ITestEnv {
 
 interface TRunnerOutput {
   exports: unknown;
-  context: IBasicGlobalContext;
+  context: IGlobalContext;
 }
 
 export function createRunner(
@@ -92,6 +92,19 @@ export function createRunner(
 ): (name: string, processor: ITestProcessor) => void {
   const require = createRequire(import.meta.url);
   const testConfigFile = path.join(src, 'test.config.cjs');
+  const testConfig = existsSync(testConfigFile)
+    ? require(testConfigFile) as TTestConfig<ECompilerType>
+    : {};
+  const oldModuleScope = testConfig.moduleScope;
+  testConfig.moduleScope = (ms, stats) => {
+    if (typeof oldModuleScope === 'function') {
+      ms = oldModuleScope(ms, stats);
+    }
+    // @ts-expect-error Mock the console.alog method
+    ms.console.alog = () => void 0;
+    return ms;
+  };
+
   const context = new TestContext({
     src,
     dist,
@@ -106,9 +119,7 @@ export function createRunner(
         ) as TCompiler<ECompilerType>,
     },
     runnerFactory,
-    testConfig: existsSync(testConfigFile)
-      ? require(testConfigFile) as TTestConfig<ECompilerType>
-      : {},
+    testConfig,
   });
   const runner = function run(name: string, processor: ITestProcessor) {
     it(`should run before`, async () => {
@@ -181,7 +192,7 @@ export function createRunner(
 
 export class RspeedyNormalRunner<
   T extends ECompilerType = ECompilerType.Rspack,
-> extends NormalRunner<T> {
+> extends NodeRunner<T> {
   override async run<T>(
     file: string,
   ): Promise<{ exports: T; context: typeof globalThis }> {

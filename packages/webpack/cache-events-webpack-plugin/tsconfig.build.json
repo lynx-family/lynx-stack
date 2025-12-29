@@ -1,0 +1,13 @@
+{
+  "extends": ["../../../tsconfig.json"],
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./lib",
+    "baseUrl": "./",
+    "rootDir": "./src",
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../webpack-runtime-globals/tsconfig.build.json" },
+  ],
+}

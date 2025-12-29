@@ -1,6 +1,7 @@
 import { test, expect } from './coverage-fixture.js';
 import type { Page } from '@playwright/test';
-
+const ENABLE_MULTI_THREAD = !!process.env['ENABLE_MULTI_THREAD'];
+const isSSR = !!process.env['ENABLE_SSR'];
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -44,6 +45,7 @@ const goto = async (
 };
 
 test.describe('SSR no Javascript tests', () => {
+  test.skip(isSSR || ENABLE_MULTI_THREAD, 'no difference for different mode');
   test.beforeEach(({ browserName }) => {
     test.skip(browserName === 'firefox', 'firefox does not support @container');
   });

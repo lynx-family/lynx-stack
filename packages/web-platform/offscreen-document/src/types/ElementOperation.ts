@@ -14,106 +14,124 @@ export const OperationType = {
   RemoveChild: 9,
   StyleDeclarationSetProperty: 10,
   StyleDeclarationRemoveProperty: 11,
-  SetInnerHTML: 12,
+  SetTextContent: 12,
+  sheetInsertRule: 13,
+  sheetRuleUpdateCssText: 14,
 } as const;
 
-type IOperationType = typeof OperationType;
-interface ElementOperationBase {
-  type: IOperationType[keyof IOperationType];
-  /**
-   * uniqueId
-   */
-  uid: number;
-}
+// keep these types for opcode hint
 
-export interface CreateOperation extends ElementOperationBase {
-  type: IOperationType['CreateElement'];
-  tag: string;
-}
+// type IOperationType = typeof OperationType;
+// interface ElementOperationBase {
+//   type: IOperationType[keyof IOperationType];
+//   /**
+//    * uniqueId
+//    */
+//   uid: number;
+// }
 
-export interface SetAttributeOperation extends ElementOperationBase {
-  type: IOperationType['SetAttribute'];
-  key: string;
-  value: string;
-}
-export interface RemoveAttributeOperation extends ElementOperationBase {
-  type: IOperationType['RemoveAttribute'];
-  key: string;
-}
+// export interface CreateOperation extends ElementOperationBase {
+//   type: IOperationType['CreateElement'];
+//   tag: string;
+// }
 
-export interface AppendOperation extends ElementOperationBase {
-  type: IOperationType['Append'];
-  /**
-   * child uniqueId
-   */
-  cid: number[];
-}
+// export interface SetAttributeOperation extends ElementOperationBase {
+//   type: IOperationType['SetAttribute'];
+//   key: string;
+//   value: string;
+// }
+// export interface RemoveAttributeOperation extends ElementOperationBase {
+//   type: IOperationType['RemoveAttribute'];
+//   key: string;
+// }
 
-export interface RemoveOperation extends ElementOperationBase {
-  type: IOperationType['Remove'];
-}
+// export interface AppendOperation extends ElementOperationBase {
+//   type: IOperationType['Append'];
+//   /**
+//    * child uniqueId
+//    */
+//   cid: number[];
+// }
 
-export interface InsertBeforeOperation extends ElementOperationBase {
-  type: IOperationType['InsertBefore'];
-  /**
-   * child uniqueId
-   */
-  cid: number;
-  ref?: number | undefined;
-}
+// export interface RemoveOperation extends ElementOperationBase {
+//   type: IOperationType['Remove'];
+// }
 
-export interface ReplaceOperation extends ElementOperationBase {
-  type: IOperationType['ReplaceWith'];
-  /**
-   * the new element's unique id.
-   */
-  nid: number[];
-}
+// export interface InsertBeforeOperation extends ElementOperationBase {
+//   type: IOperationType['InsertBefore'];
+//   /**
+//    * child uniqueId
+//    */
+//   cid: number;
+//   ref?: number | undefined;
+// }
 
-export interface EnableEventOperation extends ElementOperationBase {
-  type: IOperationType['EnableEvent'];
-  eventType: string;
-}
+// export interface ReplaceOperation extends ElementOperationBase {
+//   type: IOperationType['ReplaceWith'];
+//   /**
+//    * the new element's unique id.
+//    */
+//   nid: number[];
+// }
 
-export interface RemoveChildOperation extends ElementOperationBase {
-  type: IOperationType['RemoveChild'];
-  /**
-   * the child element's unique id to be removed.
-   */
-  cid: number;
-}
+// export interface EnableEventOperation extends ElementOperationBase {
+//   type: IOperationType['EnableEvent'];
+//   eventType: string;
+// }
 
-export interface StyleDeclarationSetPropertyOperation
-  extends ElementOperationBase
-{
-  type: IOperationType['StyleDeclarationSetProperty'];
-  property: string;
-  value: string;
-  priority: string | undefined | '';
-}
+// export interface RemoveChildOperation extends ElementOperationBase {
+//   type: IOperationType['RemoveChild'];
+//   /**
+//    * the child element's unique id to be removed.
+//    */
+//   cid: number;
+// }
 
-export interface StyleDeclarationRemovePropertyOperation
-  extends ElementOperationBase
-{
-  type: IOperationType['StyleDeclarationRemoveProperty'];
-  property: string;
-}
+// export interface StyleDeclarationSetPropertyOperation
+//   extends ElementOperationBase
+// {
+//   type: IOperationType['StyleDeclarationSetProperty'];
+//   property: string;
+//   value: string;
+//   priority: string | undefined | '';
+// }
 
-export interface SetInnerHTMLOperation extends ElementOperationBase {
-  type: IOperationType['SetInnerHTML'];
-  text: string;
-}
+// export interface StyleDeclarationRemovePropertyOperation
+//   extends ElementOperationBase
+// {
+//   type: IOperationType['StyleDeclarationRemoveProperty'];
+//   property: string;
+// }
 
-export type ElementOperation =
-  | EnableEventOperation
-  | ReplaceOperation
-  | InsertBeforeOperation
-  | CreateOperation
-  | SetAttributeOperation
-  | RemoveAttributeOperation
-  | AppendOperation
-  | RemoveOperation
-  | RemoveChildOperation
-  | StyleDeclarationSetPropertyOperation
-  | StyleDeclarationRemovePropertyOperation
-  | SetInnerHTMLOperation;
+// export interface SetTextContentOperation extends ElementOperationBase {
+//   type: IOperationType['SetTextContent'];
+//   text: string;
+// }
+
+// export interface SheetInsertRuleOperation extends ElementOperationBase {
+//   type: IOperationType['sheetInsertRule'];
+//   rule: string;
+//   index: number;
+// }
+
+// export interface SheetRuleUpdateCssTextOperation extends ElementOperationBase {
+//   type: IOperationType['sheetRuleUpdateCssText'];
+//   index: number;
+//   cssText: string;
+// }
+
+// export type ElementOperation =
+//   | EnableEventOperation
+//   | ReplaceOperation
+//   | InsertBeforeOperation
+//   | CreateOperation
+//   | SetAttributeOperation
+//   | RemoveAttributeOperation
+//   | AppendOperation
+//   | RemoveOperation
+//   | RemoveChildOperation
+//   | StyleDeclarationSetPropertyOperation
+//   | StyleDeclarationRemovePropertyOperation
+//   | SetTextContentOperation
+//   | SheetInsertRuleOperation
+//   | SheetRuleUpdateCssTextOperation;

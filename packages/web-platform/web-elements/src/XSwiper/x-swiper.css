@@ -171,8 +171,6 @@ x-swiper::part(indicator-item) {
   flex: 0 0 var(--indicator-size);
   margin: 0 calc(var(--indicator-size) / 5) 0 calc(var(--indicator-size) / 5);
   border-radius: 100%;
-  animation-name: indicator-dot;
-  animation-duration: 100ms;
 }
 
 x-swiper[vertical]::part(indicator-item) {

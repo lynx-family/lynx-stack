@@ -3,33 +3,35 @@
 // LICENSE file in the root directory of this source tree.
 
 import { defineConfig, devices } from '@playwright/test';
+import os from 'node:os';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+const __dirname = fileURLToPath(import.meta.url);
+const dir = path.join(__dirname, '..', '.nyc_output');
+fs.mkdir(dir, { recursive: true }).catch(() => {/* */});
 process.env['LIBGL_ALWAYS_SOFTWARE'] = 'true'; // https://github.com/microsoft/playwright/issues/32151
 process.env['GALLIUM_HUD_SCALE'] = '1';
 const isCI = !!process.env.CI;
-const ALL_ON_UI = !!process.env.ALL_ON_UI;
-const enableSSR = !!process.env.ENABLE_SSR;
-const testFPOnly = !!process.env.TEST_FP_ONLY;
 const port = process.env.PORT ?? 3080;
-const workerLimit = process.env['cpu_limit']
-  ? Math.floor(parseFloat(process.env['cpu_limit']) / 2)
-  : undefined;
-
-const testMatch: string | undefined = (() => {
-  if (testFPOnly) {
-    return '**/fp-only.spec.ts';
+const workerLimit = Math.floor(((cpuCount, envCPULimit) => {
+  if (isCI) {
+    if (envCPULimit) {
+      return envCPULimit / 2;
+    } else {
+      if (cpuCount <= 32) {
+        return 8;
+      } else {
+        return 8 + (cpuCount - 32) / 6;
+      }
+    }
   }
-  if (ALL_ON_UI || enableSSR) {
-    return '**/{react,web-core}.{test,spec}.ts';
-  }
-  return undefined;
-})();
+  return cpuCount / 2;
+})(os.cpus().length, parseFloat(process.env['cpu_limit'] ?? '0')));
 
 const testIgnore: string[] = (() => {
   const ignore = ['**vitest**'];
-  if (isCI && !testFPOnly) {
-    ignore.push('**/fp-only.spec.ts'); // fp-only tests has its own test steps
-  }
   return ignore;
 })();
 
@@ -46,7 +48,7 @@ export default defineConfig({
   /** global timeout https://playwright.dev/docs/test-timeouts#global-timeout */
   globalTimeout: 20 * 60 * 1000,
   testDir: './tests',
-  testMatch,
+  // testMatch,
   testIgnore,
   /* Run tests in files in parallel */
   fullyParallel: true,

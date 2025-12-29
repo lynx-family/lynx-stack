@@ -139,30 +139,34 @@ export class XSwiper extends HTMLElement {
     return this.getAttribute('circular') !== null;
   }
 
-  scrollToNext() {
-    const current = this.currentIndex;
-    const count = this.childElementCount;
-    if (current === count - 1) {
-      const circularPlay = this.circularPlay;
-      if (circularPlay) {
-        this.currentIndex = 0;
+  override scrollTo(options: {
+    /**
+     * @description target index
+     */
+    index: number;
+    /**
+     * @description Whether there is switching animation
+     * @defaultValue true
+     */
+    smooth?: boolean;
+  }): void;
+  override scrollTo(options?: ScrollToOptions | undefined): void;
+  override scrollTo(x: number, y: number): void;
+  override scrollTo(...args: any[]): void {
+    // Check if the first argument has an index property (custom usage)
+    if (
+      args.length > 0 && typeof args[0] === 'object' && args[0] !== null
+      && 'index' in args[0]
+    ) {
+      const { index, smooth = true } = args[0];
+      if (typeof index === 'number') {
+        this.#scrollToIndex(index, smooth ? 'smooth' : 'instant');
+        return;
       }
-    } else {
-      this.currentIndex += 1;
     }
-  }
 
-  scrollToPrevious() {
-    const current = this.currentIndex;
-    const count = this.childElementCount;
-    if (current === 0) {
-      const circularPlay = this.circularPlay;
-      if (circularPlay) {
-        this.currentIndex = count - 1;
-      }
-    } else {
-      this.currentIndex = count - 1;
-    }
+    // Fall back to standard HTML scrollTo behavior
+    super.scrollTo(...args);
   }
 
   connectedCallback() {

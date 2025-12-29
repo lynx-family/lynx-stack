@@ -8,7 +8,9 @@
 import EventEmitter from 'events';
 import { JSDOM } from 'jsdom';
 import { createGlobalThis, LynxGlobalThis } from './lynx/GlobalThis.js';
-import { initElementTree } from './lynx/ElementPAPI.js';
+import { initElementTree, type LynxElement } from './lynx/ElementPAPI.js';
+import { Console } from 'console';
+import { GlobalEventEmitter } from './lynx/GlobalEventEmitter.js';
 export { initElementTree } from './lynx/ElementPAPI.js';
 export type { LynxElement } from './lynx/ElementPAPI.js';
 export type { LynxGlobalThis } from './lynx/GlobalThis.js';
@@ -98,7 +100,7 @@ function createPolyfills() {
       globalThis[rLynxChange[0]](rLynxChange[1]);
 
       globalThis.lynxTestingEnv.switchToBackgroundThread();
-      rLynxChange[2]();
+      rLynxChange[2]?.();
       globalThis.lynxTestingEnv.switchToMainThread();
 
       // restore the original thread state
@@ -142,16 +144,25 @@ function createPolyfills() {
     type,
     data,
   }) => {
-    const isMainThread = __MAIN_THREAD__;
-    lynxTestingEnv.switchToBackgroundThread();
+    const origin = __MAIN_THREAD__ ? 'CoreContext' : 'JSContext';
+    // Switch to another thread
+    if (origin === 'CoreContext') {
+      lynxTestingEnv.switchToBackgroundThread();
+    } else {
+      lynxTestingEnv.switchToMainThread();
+    }
 
     // Ensure the code is running on the background thread
     ee.emit(type, {
       data: data,
+      origin,
     });
 
-    if (isMainThread) {
+    // Finish executing, restore the original thread state
+    if (origin === 'CoreContext') {
       lynxTestingEnv.switchToMainThread();
+    } else {
+      lynxTestingEnv.switchToBackgroundThread();
     }
   };
   // @ts-ignore
@@ -165,14 +176,11 @@ function createPolyfills() {
 
   function __LoadLepusChunk(
     chunkName: string,
-    options,
+    _options,
   ) {
     const isBackground = !__MAIN_THREAD__;
     globalThis.lynxTestingEnv.switchToMainThread();
 
-    if (process.env['DEBUG']) {
-      console.log('__LoadLepusChunk', chunkName, options);
-    }
     let ans;
     if (chunkName === 'worklet-runtime') {
       ans = globalThis.onInitWorkletRuntime?.();
@@ -197,11 +205,24 @@ function createPolyfills() {
   };
 }
 
+function createPreconfiguredConsole() {
+  const console = new Console(
+    process.stdout,
+    process.stderr,
+  );
+  console.profile = () => {};
+  console.profileEnd = () => {};
+  // @ts-expect-error Lynx has console.alog
+  console.alog = () => {};
+  return console;
+}
+
 function injectMainThreadGlobals(target?: any, polyfills?: any) {
   __injectElementApi(target);
 
   const {
     performance,
+    CoreContext,
     JsContext,
     __LoadLepusChunk,
   } = polyfills || {};
@@ -211,6 +232,7 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
 
   target.__DEV__ = true;
   target.__PROFILE__ = true;
+  target.__ALOG__ = true;
   target.__JS__ = false;
   target.__LEPUS__ = true;
   target.__BACKGROUND__ = false;
@@ -222,6 +244,19 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   target.globDynamicComponentEntry = '__Card__';
   target.lynx = {
     performance,
+    getCoreContext: (() => CoreContext),
+    /*
+
+    background thread -> main thread:
+    lynx.getJSContext().addEventListener("message", (e: Event) => {
+      console.log('message', e)
+      });
+    main thread -> background thread:
+    lynx.getJSContext().postMessage({
+      type: 'message',
+      data: [3, 4, 5]
+    });
+    */
     getJSContext: (() => JsContext),
     reportError: (e: Error) => {
       throw e;
@@ -230,8 +265,7 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   target.requestAnimationFrame = setTimeout;
   target.cancelAnimationFrame = clearTimeout;
 
-  target.console.profile = () => {};
-  target.console.profileEnd = () => {};
+  target.console = createPreconfiguredConsole();
 
   target.__LoadLepusChunk = __LoadLepusChunk;
 
@@ -243,13 +277,18 @@ const IGNORE_LIST_GLOBALS = [
   'global',
 ];
 
+interface NodeSelectToken {
+  type: IdentifierType;
+  identifier: string;
+}
+
 class NodesRef {
   // @ts-ignore
-  private readonly _nodeSelectToken: any;
+  private readonly _nodeSelectToken: NodeSelectToken;
   // @ts-ignore
   private readonly _selectorQuery: any;
 
-  constructor(selectorQuery: any, nodeSelectToken: any) {
+  constructor(selectorQuery: any, nodeSelectToken: NodeSelectToken) {
     this._nodeSelectToken = nodeSelectToken;
     this._selectorQuery = selectorQuery;
   }
@@ -262,9 +301,31 @@ class NodesRef {
   fields() {
     throw new Error('not implemented');
   }
-  setNativeProps() {
-    throw new Error('not implemented');
+  setNativeProps(props: Record<string, any>) {
+    return {
+      exec: () => {
+        const element = elementTree.uniqueId2Element.get(
+          Number(this._nodeSelectToken.identifier),
+        );
+        if (!element) {
+          throw new Error(
+            `[NodesRef.setNativeProps] Element not found for identifier=${this._nodeSelectToken.identifier}`,
+          );
+        }
+        if (element) {
+          for (const key in props) {
+            element.setAttributeNS(null, key, props[key]);
+          }
+        }
+      },
+    };
   }
+}
+
+const enum IdentifierType {
+  ID_SELECTOR, // css selector
+  REF_ID, // for react ref
+  UNIQUE_ID, // element_id
 }
 
 function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
@@ -272,6 +333,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
     app,
     performance,
     CoreContext,
+    JsContext,
     __LoadLepusChunk,
   } = polyfills || {};
   if (typeof target === 'undefined') {
@@ -280,6 +342,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
 
   target.__DEV__ = true;
   target.__PROFILE__ = true;
+  target.__ALOG__ = true;
   target.__JS__ = true;
   target.__LEPUS__ = false;
   target.__BACKGROUND__ = true;
@@ -294,17 +357,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
     },
   };
 
-  const enum IdentifierType {
-    ID_SELECTOR, // css selector
-    REF_ID, // for react ref
-    UNIQUE_ID, // element_id
-  }
-
-  const globalEventEmitter = new EventEmitter();
-  // @ts-ignore
-  globalEventEmitter.trigger = globalEventEmitter.emit;
-  // @ts-ignore
-  globalEventEmitter.toggle = globalEventEmitter.emit;
+  const globalEventEmitter = new GlobalEventEmitter();
   target.lynx = {
     getNativeApp: () => app,
     performance,
@@ -316,9 +369,35 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
             identifier: uniqueId.toString(),
           });
         },
+        select: function(selector: string) {
+          const el = lynxTestingEnv.jsdom.window.document.querySelector(
+            selector,
+          ) as LynxElement;
+          if (!el) {
+            throw new Error(
+              `[createSelectorQuery.select] No element matches selector: ${selector}`,
+            );
+          }
+          return new NodesRef({}, {
+            type: IdentifierType.ID_SELECTOR,
+            identifier: el.$$uiSign.toString(),
+          });
+        },
       };
     }),
+    /*
+    main thread -> background thread:
+    lynx.getCoreContext().addEventListener("message", (e: Event) => {
+      console.log('message', e)
+    });
+    background thread -> main thread:
+    lynx.getCoreContext().postMessage({
+      type: 'message',
+      data: [1, 2, 3]
+    });
+    */
     getCoreContext: (() => CoreContext),
+    getJSContext: (() => JsContext),
     getJSModule: (moduleName) => {
       if (moduleName === 'GlobalEventEmitter') {
         return globalEventEmitter;
@@ -333,8 +412,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
   target.requestAnimationFrame = setTimeout;
   target.cancelAnimationFrame = clearTimeout;
 
-  target.console.profile = () => {};
-  target.console.profileEnd = () => {};
+  target.console = createPreconfiguredConsole();
 
   // TODO: user-configurable
   target.SystemInfo = {
@@ -362,7 +440,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
  * ```ts
  * import { LynxTestingEnv } from '@lynx-js/testing-environment';
  *
- * const lynxTestingEnv = new LynxTestingEnv();
+ * const lynxTestingEnv = new LynxTestingEnv(new JSDOM());
  *
  * lynxTestingEnv.switchToMainThread();
  * // use the main thread Element PAPI
@@ -384,7 +462,7 @@ export class LynxTestingEnv {
    * ```ts
    * import { LynxTestingEnv } from '@lynx-js/testing-environment';
    *
-   * const lynxTestingEnv = new LynxTestingEnv();
+   * const lynxTestingEnv = new LynxTestingEnv(new JSDOM());
    *
    * lynxTestingEnv.switchToBackgroundThread();
    * // use the background thread global object
@@ -400,7 +478,7 @@ export class LynxTestingEnv {
    * ```ts
    * import { LynxTestingEnv } from '@lynx-js/testing-environment';
    *
-   * const lynxTestingEnv = new LynxTestingEnv();
+   * const lynxTestingEnv = new LynxTestingEnv(new JSDOM());
    *
    * lynxTestingEnv.switchToMainThread();
    * // use the main thread global object
@@ -410,8 +488,17 @@ export class LynxTestingEnv {
    * ```
    */
   mainThread: LynxGlobalThis & ElementTreeGlobals;
-  jsdom: JSDOM = global.jsdom;
-  constructor() {
+  jsdom: JSDOM;
+  constructor(jsdom?: JSDOM) {
+    // Prefer explicit instance; fall back to test runner-provided global.
+    this.jsdom = jsdom ?? global.jsdom;
+    if (!this.jsdom) {
+      throw new Error(
+        'LynxTestingEnv requires a JSDOM instance. Pass one to the constructor, '
+          + 'or ensure your test runner sets global.jsdom (e.g., via a setup file).',
+      );
+    }
+
     this.backgroundThread = createGlobalThis() as any;
     this.mainThread = createGlobalThis() as any;
 

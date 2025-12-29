@@ -15,7 +15,7 @@ import { registerEventEnableStatusChangeHandler } from '@lynx-js/web-elements-re
 export class XTextareaEvents
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
-  static observedAttributes = ['send-composing-input'];
+  static observedAttributes = ['send-composing-input', 'input-filter'];
   #dom: HTMLElement;
 
   #sendComposingInput = false;
@@ -29,8 +29,9 @@ export class XTextareaEvents
     '#form',
   );
 
-  @registerEventEnableStatusChangeHandler('input')
-  #handleEnableConfirmEvent(status: boolean) {
+  @registerAttributeHandler('input-filter', true)
+  @registerEventEnableStatusChangeHandler('lynxinput')
+  #handleEnableConfirmEvent(status: string | boolean | null) {
     const textareaElement = this.#getTextareaElement();
     if (status) {
       textareaElement.addEventListener(
@@ -74,17 +75,25 @@ export class XTextareaEvents
 
   #teleportInput = (event: InputEvent) => {
     const input = this.#getTextareaElement();
-    const value = input.value;
+    const inputFilter = this.#dom.getAttribute('input-filter');
+    const filterValue = inputFilter
+      ? input.value.replace(new RegExp(inputFilter, 'g'), '')
+      : input.value;
     const isComposing = event.isComposing;
+    input.value = filterValue;
     if (isComposing && !this.#sendComposingInput) return;
     this.#dom.dispatchEvent(
-      new CustomEvent('input', {
+      new CustomEvent('lynxinput', {
         ...commonComponentEventSetting,
         detail: {
-          value,
-          textLength: value.length,
+          value: filterValue,
+          /** @deprecated */
+          textLength: filterValue.length,
+          /** @deprecated */
           cursor: input.selectionStart,
           isComposing,
+          selectionStart: input.selectionStart,
+          selectionEnd: input.selectionEnd,
         },
       }),
     );
@@ -92,20 +101,60 @@ export class XTextareaEvents
 
   #teleportCompositionendInput = () => {
     const input = this.#getTextareaElement();
-    const value = input.value;
+    const inputFilter = this.#dom.getAttribute('input-filter');
+    const filterValue = inputFilter
+      ? input.value.replace(new RegExp(inputFilter, 'g'), '')
+      : input.value;
+    input.value = filterValue;
     // if #sendComposingInput set true, #teleportInput will send detail
     if (!this.#sendComposingInput) {
       this.#dom.dispatchEvent(
-        new CustomEvent('input', {
+        new CustomEvent('lynxinput', {
           ...commonComponentEventSetting,
           detail: {
-            value,
-            textLength: value.length,
+            value: filterValue,
+            /** @deprecated */
+            textLength: filterValue.length,
+            /** @deprecated */
             cursor: input.selectionStart,
+            isComposing: false,
+            selectionStart: input.selectionStart,
+            selectionEnd: input.selectionEnd,
           },
         }),
       );
     }
+  };
+
+  @registerEventEnableStatusChangeHandler('selection')
+  #handleEnableSelectionEvent(status: boolean) {
+    if (status) {
+      this.#getTextareaElement().addEventListener(
+        'select',
+        this.#selectEvent,
+        {
+          passive: true,
+        },
+      );
+    } else {
+      this.#getTextareaElement().removeEventListener(
+        'select',
+        this.#selectEvent,
+      );
+    }
+  }
+
+  #selectEvent = () => {
+    const input = this.#getTextareaElement();
+    this.#dom.dispatchEvent(
+      new CustomEvent('selection', {
+        ...commonComponentEventSetting,
+        detail: {
+          selectionStart: input.selectionStart,
+          selectionEnd: input.selectionEnd,
+        },
+      }),
+    );
   };
 
   #blockHtmlEvent = (event: FocusEvent | InputEvent) => {

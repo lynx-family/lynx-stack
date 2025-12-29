@@ -1,6 +1,6 @@
 ERROR in ./main-thread/error/index.jsx
-× Module not found: Can't resolve './non-exist-file.js' in '<PROJECT_ROOT>/packages/webpack/react-webpack-plugin/test/diagnostic/main-thread/error'
+× Module not found: Can't resolve './non-exist-file.js' in '<ROOT>/packages/webpack/react-webpack-plugin/test/diagnostic/main-thread/error'
 ╭────
-1  import(/*webpackChunkName: "./non-exist-file.js-react:main-thread"*/ './non-exist-file.js');
-· ───────────────────────────────────────────────────────────────────────────────────────────
+1  import(/*webpackChunkName: "./non-exist-file.js-react__main-thread"*/ './non-exist-file.js');
+· ────────────────────────────────────────────────────────────────────────────────────────────
 ╰────

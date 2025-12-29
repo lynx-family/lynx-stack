@@ -64,16 +64,16 @@ export interface LynxElement extends HTMLElement {
  */
 export const initElementTree = () => {
   let uiSignNext = 0;
-  const uniqueId2Element = new Map<number, LynxElement>();
 
   return new (class ElementTree {
+    uniqueId2Element = new Map<number, LynxElement>();
     root: LynxElement | undefined;
     countElement(
       element: LynxElement,
       parentComponentUniqueId: number,
     ) {
       element.$$uiSign = uiSignNext++;
-      uniqueId2Element.set(element.$$uiSign, element);
+      this.uniqueId2Element.set(element.$$uiSign, element);
       element.parentComponentUniqueId = parentComponentUniqueId;
     }
     __CreatePage(_tag: string, parentComponentUniqueId: number) {
@@ -284,7 +284,8 @@ export const initElementTree = () => {
       styles: string | Record<string, string>,
     ) {
       if (typeof styles === 'string') {
-        e.style.cssText = styles;
+        // Same as from https://github.com/jsdom/jsdom/blob/6197af431c46b95622eb4ce9d3e4df3010c66984/lib/jsdom/living/nodes/ElementCSSInlineStyle-impl.js#L8
+        e.setAttributeNS(null, 'style', styles);
       } else {
         Object.assign(e.style, styles);
       }
@@ -324,6 +325,7 @@ export const initElementTree = () => {
           parent.removeChild(ch);
           break;
         }
+        ch = ch.nextSibling;
       }
     }
 
@@ -461,7 +463,7 @@ export const initElementTree = () => {
       return this.toTree();
     }
     __GetElementByUniqueId(uniqueId: number) {
-      return uniqueId2Element.get(uniqueId);
+      return this.uniqueId2Element.get(uniqueId);
     }
   })();
 };

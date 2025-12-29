@@ -3,19 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 import { dispatchLynxViewEventEndpoint } from '@lynx-js/web-constants';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
+import { dispatchLynxViewEvent } from '../../utils/dispatchLynxViewEvent.js';
 
 export function registerDispatchLynxViewEventHandler(
   rpc: Rpc,
   shadowRoot: ShadowRoot,
 ) {
   rpc.registerHandler(dispatchLynxViewEventEndpoint, (eventType, detail) => {
-    shadowRoot.dispatchEvent(
-      new CustomEvent(eventType, {
-        detail,
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-      }),
-    );
+    dispatchLynxViewEvent(shadowRoot, eventType, detail);
   });
 }

@@ -283,13 +283,28 @@ list-item {
     x-textarea,
     x-list,
     list-item {
+      /* 
+       `--lynx-linear-weight-sum`
+       0 -> 1
+       <value> -> <value>
+       */
       flex-shrink: 0;
+      /* The following `calc` and `clamp` logic ensures that if 
+         `--lynx-linear-weight-sum` is zero, it defaults to 1. This prevents
+         division by zero and ensures consistent behavior. */
       flex-grow: calc(
-        var(--lynx-linear-weight) / var(--lynx-linear-weight-sum)
+        var(--lynx-linear-weight) /
+          calc(
+          var(--lynx-linear-weight-sum) +
+            (
+            1 - clamp(0, var(--lynx-linear-weight-sum) * 999999, 1)
+          )
+        )
       );
       flex-basis: var(--lynx-linear-weight-basis);
     }
   }
+
   @container not style(--lynx-display: linear) {
     x-view,
     x-blur-view,

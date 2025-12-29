@@ -1,6 +1,7 @@
-import { defineConfig, type UserConfig } from 'vitest/config';
+import { defineConfig } from 'vitest/config';
+import type { ViteUserConfig } from 'vitest/config';
 
-const config: UserConfig = defineConfig({
+const config: ViteUserConfig = defineConfig({
   define: {
     __DEV__: false,
   },
@@ -10,8 +11,9 @@ const config: UserConfig = defineConfig({
       exclude: [
         'dist/**',
         'lib/**',
-        'scripts',
-        'src/api/**',
+        'rslib.config.ts',
+        'src/api/lepusQuerySelector.ts',
+        'src/api/lynxApi.ts',
         'src/bindings/**',
         'src/index.ts',
         'src/listeners.ts',

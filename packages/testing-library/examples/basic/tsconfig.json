@@ -1,8 +1,8 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    /* Specify what JSX code is generated. */
-    "jsx": "preserve",
+    "jsx": "react-jsx",
+    "jsxImportSource": "@lynx-js/react",
 
     /* Disable emitting files from a compilation. */
     "noEmit": true,

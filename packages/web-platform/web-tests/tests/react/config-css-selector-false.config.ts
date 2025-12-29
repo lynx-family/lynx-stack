@@ -3,23 +3,28 @@
 // LICENSE file in the root directory of this source tree.
 import { glob } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { defineConfig } from '@lynx-js/rspeedy';
+
+import { mergeRspeedyConfig, type Config } from '@lynx-js/rspeedy';
+
 import { commonConfig } from './commonConfig.js';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const reactBasicCases = await Array.fromAsync(glob(
-  path.join(__dirname, 'config-css-selector-false-*', '*.jsx'),
+  [
+    path.join(import.meta.dirname, 'config-css-selector-false-*', '*.jsx'),
+  ],
 ));
 
-export default defineConfig({
-  ...commonConfig({
+const config: Config = mergeRspeedyConfig(
+  commonConfig({
     enableCSSSelector: false,
   }),
-  source: {
-    entry: Object.fromEntries(reactBasicCases.map((reactBasicEntry) => {
-      return [path.basename(path.dirname(reactBasicEntry)), reactBasicEntry];
-    })),
+  {
+    source: {
+      entry: Object.fromEntries(reactBasicCases.map((reactBasicEntry) => {
+        return [path.basename(path.dirname(reactBasicEntry)), reactBasicEntry];
+      })),
+    },
   },
-});
+);
+
+export default config;

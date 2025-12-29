@@ -34,6 +34,6 @@ it('should have correct tasm.json', async () => {
   expect(lepusCode).toHaveProperty('root', manifest['/e/e.js']);
   expect(manifest['/e/e.js']).toContain(['**', 'eee', '**'].join(''));
   expect(manifest['/app-service.js']).toContain(
-    `lynx.requireModule('/e/e.js',globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`,
+    `lynx.requireModule(\"/e/e.js\",globDynamicComponentEntry?globDynamicComponentEntry:'__Card__')`,
   );
 });

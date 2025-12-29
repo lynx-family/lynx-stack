@@ -2,17 +2,21 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 export const DIFF = '__b';
+export const DIFF2 = '_diff2';
 export const RENDER = '__r';
 export const DIFFED = 'diffed';
 export const COMMIT = '__c';
 export const SKIP_EFFECTS = '__s';
 export const CATCH_ERROR = '__e';
+export const ROOT = '__';
+export const RENDER_COMPONENT = 'renderComponent';
 
 // VNode properties
 export const COMPONENT = '__c';
 export const CHILDREN = '__k';
 export const PARENT = '__';
 export const MASK = '__m';
+export const DOM = '__e';
 
 // Component properties
 export const VNODE = '__v';

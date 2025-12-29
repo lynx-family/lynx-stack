@@ -2,16 +2,28 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended",
-    ":automergeStableNonMajor",
-    ":automergeTypes",
     ":maintainLockFilesWeekly",
     "helpers:pinGitHubActionDigests",
   ],
 
+  // Exclude `examples` from "config:recommended"
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "**/vendor/**",
+    // "**/examples/**",
+    "**/__tests__/**",
+    "**/test/**",
+    "**/tests/**",
+    "**/__fixtures__/**",
+  ],
+
   "enabledManagers": [
+    "cargo",
+    "custom.regex",
+    "github-actions",
     "npm",
     "nvm",
-    "github-actions",
   ],
 
   "labels": ["bot:renovate"],
@@ -35,7 +47,6 @@
         "/@rspack/*/",
       ],
       "rangeStrategy": "pin",
-      "automerge": false,
     },
     {
       "groupName": "Rsbuild",
@@ -50,7 +61,6 @@
         "/rsbuild-plugin-*/",
       ],
       "rangeStrategy": "pin",
-      "automerge": false,
     },
     {
       "groupName": "Rspress",
@@ -63,6 +73,7 @@
         "rspress",
         "/@rspress/*/",
         "@rstack-dev/doc-ui",
+        "/@shikijs/*/",
       ],
       "rangeStrategy": "pin",
     },
@@ -74,6 +85,13 @@
       ],
     },
     {
+      "groupName": "Prefresh",
+      "groupSlug": "prefresh",
+      "matchPackageNames": [
+        "/@prefresh/*/"
+      ]
+    },
+    {
       "groupName": "API Extractor",
       "groupSlug": "api-extractor",
       "matchPackageNames": [
@@ -82,12 +100,17 @@
         "@microsoft/api-extractor-model",
         "@microsoft/tsdoc",
       ],
-      "automerge": true,
     },
     {
       "groupName": "linting",
       "groupSlug": "linting",
-      "matchPackageNames": ["/eslint/", "/^@cspell/*/", "cspell"],
+      "matchPackageNames": [
+        "/eslint/",
+        "globals",
+        "husky",
+        "lint-staged",
+        "sort-package-json",
+      ],
     },
     {
       "groupName": "Typia",
@@ -97,7 +120,6 @@
         "typia-rspack-plugin",
         "@samchon/openapi",
       ],
-      "automerge": false,
       "rangeStrategy": "pin",
     },
     {
@@ -111,7 +133,62 @@
       "groupSlug": "github-actions",
       "matchManagers": ["github-actions"],
     },
+    {
+      "groupName": "types",
+      "groupSlug": "types",
+      "matchPackageNames": [
+        "/^@tsconfig/*/",
+        "/^@types/*/",
+      ],
+    },
+    {
+      "groupName": "Lynx Engine",
+      "groupSlug": "lynx-engine",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": [
+        "https://github.com/lynx-family/lynx",
+      ],
+      // Schedule once a month on the first day of the month before 4 AM.
+      "schedule": [
+        "* 0-3 1 * *",
+      ],
+    },
+        {
+      "groupName": "Rust Crates",
+      "groupSlug": "rust-crates",
+      "matchManagers": ["cargo"],
+      "matchPackageNames": [
+        "!swc",
+        "!swc_*",
+      ],
+    },
+    {
+      "groupName": "SWC",
+      "groupSlug": "swc",
+      "matchManagers": ["cargo"],
+      "matchPackageNames": [
+        "swc",
+        "swc_*",
+      ],
+      "matchUpdateTypes": [
+        "major",
+      ],
+    },
   ],
+
+  "customManagers": [
+    {
+      // See: https://docs.renovatebot.com/modules/datasource/git-refs/
+      "customType": "regex",
+      "managerFilePatterns": ["packages/lynx/benchx_cli/scripts/build.mjs"],
+      "matchStrings": ["const COMMIT = '(?<currentDigest>.*?)';"],
+      "currentValueTemplate": "develop",
+      "depNameTemplate": "lynx",
+      "packageNameTemplate": "https://github.com/lynx-family/lynx",
+      "datasourceTemplate": "git-refs",
+    },
+  ],
+
   "postUpdateOptions": [
     "pnpmDedupe",
   ],
@@ -121,5 +198,15 @@
 
     // Rspress not compatible
     "@microsoft/api-documenter",
+
+    // Not following SemVer
+    "stormslowly/rust-cache",
+
+    // TODO: remove this after drop napi-rs
+    "@emnapi/core",
+    "@emnapi/runtime",
+    "@napi-rs/cli",
+    "napi",
+    "napi-derive",
   ],
 }

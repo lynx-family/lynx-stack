@@ -4,6 +4,9 @@
 import '@testing-library/jest-dom';
 import { expect, test, vi } from 'vitest';
 import { render, getQueriesForElement } from '@lynx-js/react/testing-library';
+// @ts-expect-error preact is aliased to the dep of @lynx-js/react
+import { Component as PreacComponent } from 'preact';
+import { Component } from '@lynx-js/react';
 
 import { App } from '../App.jsx';
 
@@ -48,4 +51,8 @@ test('App', async () => {
       Hello World!
     </text>
   `);
+});
+
+test('preact is aliased correctly', () => {
+  expect(PreacComponent).toBe(Component);
 });

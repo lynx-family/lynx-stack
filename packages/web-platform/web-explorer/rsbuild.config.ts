@@ -27,6 +27,11 @@ export default defineConfig({
   tools: {
     htmlPlugin: false,
     rspack: {
+      resolve: {
+        fallback: {
+          'module': false,
+        },
+      },
       output: {
         publicPath: 'auto',
       },

@@ -142,7 +142,39 @@ declare module '@lynx-js/types' {
      * we can use typeof item as the reuse-identifier.
      * By default, the developer does not provide a reuse-identifier, which is determined by the framework at the compile stage.
      */
-    'reuse-identifier'?: Key;
+    'reuse-identifier'?: Key | null | undefined;
+
+    /**
+     * Makes the `<list-item />` deferred, meaning it will not be eagerly rendered
+     * on the main thread like a non-deferred `<list-item />`.
+     * Instead, it will be rendered on the background thread when necessary.
+     *
+     * As a result, rendering becomes asynchronous,
+     * which means that during extremely fast scrolling, some `<list-item />`s may not have been rendered yet—these will usually appear blank.
+     *
+     * @example
+     *
+     * Render a `<list-item />` containing a heavyweight component on the background thread.
+     *
+     * ```tsx
+     * <list-item defer item-key="heavy-item">
+     *   <HeavyComponent />
+     * </list-item>
+     * ```
+     *
+     * @example
+     *
+     * Turn on the `unmountRecycled` switch to uninstall invisible JSX nodes.
+     * If they are components, related lifecycle (e.g. `componentWillUnmount` and cleanup of `useEffect`) will be executed accordingly.
+     * If they are intrinsic element, they will be `unref`-ed (`ref` will be set to `null` or cleanup of `ref` will be executed).
+     *
+     * ```tsx
+     * <list-item defer={{ unmountRecycled: true }} item-key="some-item">
+     *   <WillBeUnmountIfRecycled />
+     * </list-item>
+     * ```
+     */
+    'defer'?: boolean | { unmountRecycled?: boolean } | undefined;
   }
 
   export interface FrameworkRenderingTimings {

@@ -6,6 +6,11 @@ import './index.css';
 
 function App() {
   const onInput = (e) => {
+    if (typeof e.detail !== 'object') {
+      throw new Error(
+        `detail type not match. expect object, got ${typeof detail}`,
+      );
+    }
     console.log(e);
   };
 

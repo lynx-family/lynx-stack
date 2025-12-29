@@ -3,9 +3,15 @@
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path';
 
+import { describe } from 'vitest';
+
 import { diagnosticCases } from '@lynx-js/test-tools';
 
-diagnosticCases({
-  name: 'css-extract',
-  casePath: path.join(__dirname, 'diagnostic'),
-});
+if (process.platform === 'win32') {
+  describe.todo('diagnostic test is not supported on Windows');
+} else {
+  diagnosticCases({
+    name: 'css-extract',
+    casePath: path.join(__dirname, 'diagnostic'),
+  });
+}

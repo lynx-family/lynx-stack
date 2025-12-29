@@ -1,5 +1,6 @@
 import { builtinEnvironments } from 'vitest/environments';
 import { LynxTestingEnv } from '@lynx-js/testing-environment';
+import { JSDOM } from 'jsdom';
 
 const env = {
   name: 'lynxTestingEnv',
@@ -9,9 +10,8 @@ const env = {
       jsdom?: any;
     } = {};
     await builtinEnvironments.jsdom.setup(fakeGlobal, {});
-    global.jsdom = fakeGlobal.jsdom;
 
-    const lynxTestingEnv = new LynxTestingEnv();
+    const lynxTestingEnv = new LynxTestingEnv(fakeGlobal.jsdom as JSDOM);
     global.lynxTestingEnv = lynxTestingEnv;
 
     return {

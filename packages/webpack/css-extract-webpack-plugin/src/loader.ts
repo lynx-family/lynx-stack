@@ -134,9 +134,7 @@ export async function load(
   if (isNamedExports(moduleExports)) {
     Object.keys(moduleExports).forEach((key) => {
       if (key !== 'default') {
-        if (!locals) {
-          locals = {};
-        }
+        locals ??= {};
         locals[key] = moduleExports[key]!;
       }
     });

@@ -4,10 +4,14 @@
 
 ```ts
 
+import type { CompressOptions } from '@rsbuild/core';
 import type { CreateRsbuildOptions } from '@rsbuild/core';
+import type { DataUriLimit } from '@rsbuild/core';
 import type { DistPathConfig } from '@rsbuild/core';
+import type { InlineChunkConfig } from '@rsbuild/core';
 import { logger } from '@rsbuild/core';
 import type { PerformanceConfig } from '@rsbuild/core';
+import type { ProxyConfig } from '@rsbuild/core';
 import type { RsbuildConfig } from '@rsbuild/core';
 import type { RsbuildInstance } from '@rsbuild/core';
 import { RsbuildPlugin } from '@rsbuild/core';
@@ -17,6 +21,7 @@ import { version as rsbuildVersion } from '@rsbuild/core';
 import type { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin';
 import { Rspack } from '@rsbuild/core';
 import { rspack } from '@rsbuild/core';
+import type { ServerConfig } from '@rsbuild/core';
 import type { ToolsConfig } from '@rsbuild/core';
 import type { WatchFiles } from '@rsbuild/core';
 
@@ -67,11 +72,16 @@ export interface Config {
     output?: Output | undefined;
     performance?: Performance | undefined;
     plugins?: RsbuildPlugins | undefined;
-    // @alpha
-    provider?: RsbuildConfig['provider'];
+    resolve?: Resolve | undefined;
     server?: Server | undefined;
     source?: Source | undefined;
     tools?: Tools | undefined;
+}
+
+// @public
+export interface ConfigParams {
+    command: 'build' | 'dev' | 'inspect' | 'preview' | (string & Record<never, never>);
+    env: 'production' | 'development' | 'test' | (string & Record<never, never>);
 }
 
 // @public
@@ -140,6 +150,15 @@ export interface Decorators {
 export function defineConfig(config: Config): Config;
 
 // @public
+export function defineConfig(config: (params: ConfigParams) => Config): (params: ConfigParams) => Config;
+
+// @public
+export function defineConfig(config: Promise<Config>): Promise<Config>;
+
+// @public
+export function defineConfig(config: (params: ConfigParams) => Promise<Config>): (params: ConfigParams) => Promise<Config>;
+
+// @public
 export interface Dev {
     assetPrefix?: string | boolean | undefined;
     client?: DevClient | undefined;
@@ -159,6 +178,7 @@ export interface DevClient {
 
 // @public
 export interface DistPath extends DistPathConfig {
+    // @deprecated
     intermediate?: string | undefined;
 }
 
@@ -182,15 +202,17 @@ export interface ExposedAPI {
 
 // @public
 export interface Filename {
+    assets?: Rspack.AssetModuleFilename;
     bundle?: string | undefined;
-    css?: string | undefined;
-    font?: string | undefined;
-    image?: string | undefined;
-    js?: string | undefined;
-    media?: string | undefined;
-    svg?: string | undefined;
+    css?: Rspack.CssFilename | undefined;
+    font?: Rspack.AssetModuleFilename | undefined;
+    image?: Rspack.AssetModuleFilename | undefined;
+    js?: Rspack.Filename | undefined;
+    media?: Rspack.AssetModuleFilename | undefined;
+    svg?: Rspack.AssetModuleFilename | undefined;
     // @deprecated
     template?: string | undefined;
+    wasm?: Rspack.WebassemblyModuleFilename;
 }
 
 // @public
@@ -228,11 +250,11 @@ export interface Output {
     cleanDistPath?: boolean | undefined;
     copy?: Rspack.CopyRspackPluginOptions | Rspack.CopyRspackPluginOptions['patterns'] | undefined;
     cssModules?: CssModules | undefined;
-    dataUriLimit?: number | undefined;
+    dataUriLimit?: number | DataUriLimit | undefined;
     distPath?: DistPath | undefined;
     filename?: string | Filename | undefined;
     filenameHash?: boolean | string | undefined;
-    inlineScripts?: boolean | undefined;
+    inlineScripts?: InlineChunkConfig | undefined;
     legalComments?: 'none' | 'inline' | 'linked' | undefined;
     minify?: Minify | boolean | undefined;
     sourceMap?: boolean | SourceMap | undefined;
@@ -246,6 +268,14 @@ export interface Performance {
     printFileSize?: PerformanceConfig['printFileSize'] | undefined;
     profile?: boolean | undefined;
     removeConsole?: boolean | ConsoleType[] | undefined;
+}
+
+// @public
+export interface Resolve {
+    alias?: Record<string, string | false | string[]> | undefined;
+    aliasStrategy?: 'prefer-tsconfig' | 'prefer-alias' | undefined;
+    dedupe?: string[] | undefined;
+    extensions?: string[] | undefined;
 }
 
 export { RsbuildPlugin }
@@ -276,14 +306,18 @@ export type RspeedyInstance = RsbuildInstance & {
 // @public
 export interface Server {
     base?: string | undefined;
+    compress?: boolean | CompressOptions | undefined;
+    cors?: ServerConfig['cors'] | undefined;
     headers?: Record<string, string | string[]> | undefined;
     host?: string | undefined;
     port?: number | undefined;
+    proxy?: ProxyConfig | undefined;
     strictPort?: boolean | undefined;
 }
 
 // @public
 export interface Source {
+    // @deprecated
     alias?: Record<string, string | false | string[]> | undefined;
     assetsInclude?: Rspack.RuleSetCondition | undefined;
     decorators?: Decorators | undefined;

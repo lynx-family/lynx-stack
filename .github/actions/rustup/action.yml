@@ -1,0 +1,84 @@
+# This action installs the minimal Rust profile and configures Swatinem/rust-cache.
+#
+# It is needed to install as few Rust components as possbile because
+# it takes a few minutes to install some of components on Windows and Mac, especially rust-doc.
+
+name: Rustup
+
+description: Install Rust with cache
+
+inputs:
+  key:
+    description: The cache key for cargo
+    required: true
+  save-if:
+    description: Should save toolchain cache or not
+    default: "false"
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Install rustup, if needed
+      shell: bash
+      run: | # zizmor: ignore[github-env] This action would only run on pull_request
+        if ! command -v rustup &> /dev/null ; then
+          curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --default-toolchain none -y
+
+          # Resolve the correct CARGO_HOME path depending on OS
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            echo "${CARGO_HOME:-$USERPROFILE/.cargo}/bin" | sed 's|/|\\|g' >> $GITHUB_PATH
+          else
+            printf '%s\n' "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
+          fi
+        fi
+      env:
+        RUNNER_OS: "${{ runner.os }}"
+
+    - name: Get toolchain
+      id: get-toolchain
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [[ -f rust-toolchain.toml ]]; then
+          toolchain="$(grep -E '^\s*channel\s*=' rust-toolchain.toml | head -n1 | sed -E 's/.*=\s*"([^"]+)".*/\1/')"
+        elif [[ -f rust-toolchain ]]; then
+          toolchain="$(cat rust-toolchain)"
+        else
+          toolchain="stable"
+        fi
+        printf 'toolchain=%s\n' "${toolchain}" >> "$GITHUB_OUTPUT"
+    - name: Restore rustup cache
+      id: restore
+      if: ${{ inputs.save-if == 'true' }}
+      uses: lynx-infra/cache/restore@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+      with:
+        path: ~/.rustup/toolchains
+        key: rustup-cache-v3-${{ runner.os }}-${{ steps.get-toolchain.outputs.toolchain }}
+
+    # install components for nightly toolchain
+    - name: Install
+      shell: bash
+      env:
+        toolchain: ${{ steps.get-toolchain.outputs.toolchain }}
+      run: |
+        rustup toolchain install "$toolchain" \
+          -c rustc \
+          -c cargo \
+          -c rust-std \
+          -c clippy \
+          -c rustfmt
+    - name: Save rustup cache
+      uses: lynx-infra/cache/save@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+      if: ${{ inputs.save-if == 'true' && steps.restore.outputs.cache-hit != 'true' }}
+      with:
+        path: ~/.rustup/toolchains
+        key: rustup-cache-v3-${{ runner.os }}-${{ steps.get-toolchain.outputs.toolchain }}
+
+    - name: Cargo cache
+      uses: stormslowly/rust-cache@8269079380bc35105b3ed8b0f1f7c9557c6dec93 # v0.0.2
+      with:
+        prefix-key: "RCache-L-5"
+        shared-key: ${{ inputs.key }}
+        save-if: ${{ inputs.save-if }}
+        fullmatch-only: "true"

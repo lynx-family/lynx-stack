@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { Rspack } from '@rsbuild/core'
+import type { DataUriLimit, InlineChunkConfig, Rspack } from '@rsbuild/core'
 
 import type { CssModules } from './css-modules.js'
 import type { DistPath } from './dist-path.js'
@@ -207,8 +207,25 @@ export interface Output {
    *   },
    * })
    * ```
+   *
+   * @example
+   *
+   * Disable inlining of all media but not images.
+   *
+   * ```ts title="lynx.config.ts"
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * export default defineConfig({
+   *   output: {
+   *     dataUriLimit: {
+   *       image: 5000,
+   *       media: 0,
+   *     },
+   *   },
+   * })
+   * ```
    */
-  dataUriLimit?: number | undefined
+  dataUriLimit?: number | DataUriLimit | undefined
 
   /**
    * Set the directory of the dist files.
@@ -304,11 +321,15 @@ export interface Output {
    *
    * @remarks
    *
-   * If no value is provided, the default value would be `true`.
+   * If no value is provided, the default value would be `true`, which means all background thread scripts will be inlined.
    *
    * This is different with {@link https://rsbuild.dev/config/output/inline-scripts | output.inlineScripts } since we normally want to inline scripts in Lynx bundle (`.lynx.bundle`).
    *
-   * Only background thread scripts can remain non-inlined, whereas the main thread script is always inlined.
+   * There are two points that need to be especially noted:
+   *
+   * 1. Only background thread scripts can remain non-inlined, whereas the main thread script is always inlined.
+   *
+   * 2. Currently, when `experimental_isLazyBundle` is enabled, `inlineScripts` will always be `true`.
    *
    * @example
    *
@@ -323,7 +344,7 @@ export interface Output {
    * })
    * ```
    */
-  inlineScripts?: boolean | undefined
+  inlineScripts?: InlineChunkConfig | undefined
 
   /**
    * The {@link Output.legalComments} controls how to handle the legal comment.

@@ -1,10 +1,7 @@
 // Copyright 2023 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import {
-  OperationType,
-  type ElementOperation,
-} from '../types/ElementOperation.js';
+import { OperationType } from '../types/ElementOperation.js';
 import {
   _attributes,
   _children,
@@ -37,7 +34,7 @@ export class OffscreenDocument extends OffscreenElement {
   /**
    * @private
    */
-  [operations]: ElementOperation[] = [];
+  [operations]: (string | number)[] = [];
 
   /**
    * @private
@@ -51,18 +48,18 @@ export class OffscreenDocument extends OffscreenElement {
   [enableEvent]: (eventType: string, uid: number) => void;
   constructor(
     private _callbacks: {
-      onCommit: (operations: ElementOperation[]) => void;
+      onCommit: (operations: (string | number)[]) => void;
     },
   ) {
     const enableEventImpl: (nm: string, uid: number) => void = (
       eventType,
       uid,
     ) => {
-      this[operations].push({
-        type: OperationType.EnableEvent,
-        eventType,
+      this[operations].push(
+        OperationType.EnableEvent,
         uid,
-      });
+        eventType,
+      );
     };
     super('', 0);
     this[ancestorDocument] = this;
@@ -80,11 +77,11 @@ export class OffscreenDocument extends OffscreenElement {
     const element = new OffscreenElement(tagName, uniqueId);
     element[ancestorDocument] = this;
     this[_uniqueIdToElement][uniqueId] = new WeakRef(element);
-    this[operations].push({
-      type: OperationType.CreateElement,
-      uid: uniqueId,
-      tag: tagName,
-    });
+    this[operations].push(
+      OperationType.CreateElement,
+      uniqueId,
+      tagName,
+    );
     return element;
   }
 

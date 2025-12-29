@@ -107,11 +107,7 @@ async function loop(
             options.port,
           )[currentSchema]!,
         })),
-        // autoComplete requires `maxItems`, otherwise it will render all items
-        maxItems: 8,
-        // autoComplete will not work if `initialValue` is set
-        // See: https://github.com/bombshell-dev/clack/issues/326
-        // initialValue: currentEntry,
+        initialValue: currentEntry,
       })
       if (isCancel(selection)) {
         break
@@ -132,11 +128,7 @@ async function loop(
           label: name,
           hint: url,
         })),
-        // autoComplete requires `maxItems`, otherwise it will render all items
-        maxItems: 8,
-        // autoComplete will not work if `initialValue` is set
-        // See: https://github.com/bombshell-dev/clack/issues/326
-        // initialValue: currentSchema,
+        initialValue: currentSchema,
       })
       if (isCancel(selection)) {
         break

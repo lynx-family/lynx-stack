@@ -66,7 +66,7 @@ export { Fragment, Suspense } from 'react';
  * Legacy React APIs
  * @see https://react.dev/reference/react/legacy
  */
-export { Component, PureComponent, createElement, createRef, isValidElement } from 'react';
+export { Component, PureComponent, cloneElement, createElement, createRef, isValidElement } from 'react';
 
 /**
  * RL-defined Lynx APIs

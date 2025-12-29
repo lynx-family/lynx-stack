@@ -1,5 +1,24 @@
 # @lynx-js/runtime-wrapper-webpack-plugin
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [[`aaca8f9`](https://github.com/lynx-family/lynx-stack/commit/aaca8f91d177061c7b0430cc5cb21a3602897534)]:
+  - @lynx-js/webpack-runtime-globals@0.0.6
+
+## 0.1.2
+
+### Patch Changes
+
+- Wrap with IIFE when `output.iife: false` to avoid naming conflict. ([#1176](https://github.com/lynx-family/lynx-stack/pull/1176))
+
+## 0.1.1
+
+### Patch Changes
+
+- Fix `requestAnimationFrame` is not working. ([#1021](https://github.com/lynx-family/lynx-stack/pull/1021))
+
 ## 0.1.0
 
 ### Minor Changes

@@ -3,21 +3,19 @@
 // LICENSE file in the root directory of this source tree.
 import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { nextCommitTaskId } from '../lifecycle/patch/commit.js';
-import { SnapshotInstance, backgroundSnapshotInstanceManager } from '../snapshot.js';
+import type { SnapshotInstance } from '../snapshot.js';
 import { workletUnRef } from './workletRef.js';
+import { RefProxy } from '../lifecycle/ref/delay.js';
 
-let globalRefPatch: Record<string, number | null> = {};
-const globalRefsToRemove: Map</* commitId */ number, Map</* sign */ string, /* ref */ any>> = /* @__PURE__ */ new Map();
-const globalRefsToSet: Map</* commitId */ number, Record<string, number>> = /* @__PURE__ */ new Map();
-let nextRefId = 1;
+const refsToClear: Ref[] = [];
+const refsToApply: (Ref | [snapshotInstanceId: number, expIndex: number])[] = [];
+
+type Ref = (((ref: RefProxy) => (() => void) | void) | { current: RefProxy | null }) & {
+  _unmount?: (() => void) | void;
+  __ref?: { value: number };
+};
 
 function unref(snapshot: SnapshotInstance, recursive: boolean): void {
-  snapshot.__ref_set?.forEach(v => {
-    globalRefPatch[v] = null;
-  });
-  snapshot.__ref_set?.clear();
-
   snapshot.__worklet_ref_set?.forEach(v => {
     if (v) {
       workletUnRef(v as Worklet | WorkletRefImpl<Element>);
@@ -32,91 +30,65 @@ function unref(snapshot: SnapshotInstance, recursive: boolean): void {
   }
 }
 
-function applyRef(ref: any, value: any) {
-  // TODO: ref: exceptions thrown in user functions should be able to be caught by an Error Boundary
-  if (typeof ref == 'function') {
-    const hasRefUnmount = typeof ref._unmount == 'function';
-    if (hasRefUnmount) {
-      // @ts-ignore TS doesn't like moving narrowing checks into variables
-      ref._unmount();
-    }
+// This function is modified from preact source code.
+function applyRef(ref: Ref, value: null | [snapshotInstanceId: number, expIndex: number]): void {
+  const newRef = value && new RefProxy(value);
 
-    if (!hasRefUnmount || value != null) {
-      // Store the cleanup function on the function
-      // instance object itself to avoid shape
-      // transitioning vnode
-      ref._unmount = ref(value);
-    }
-  } else ref.current = value;
-}
-
-function updateBackgroundRefs(commitId: number): void {
-  const oldRefMap = globalRefsToRemove.get(commitId);
-  if (oldRefMap) {
-    globalRefsToRemove.delete(commitId);
-    for (const ref of oldRefMap.values()) {
-      applyRef(ref, null);
-    }
-  }
-  const newRefMap = globalRefsToSet.get(commitId);
-  if (newRefMap) {
-    globalRefsToSet.delete(commitId);
-    for (const sign in newRefMap) {
-      const ref = backgroundSnapshotInstanceManager.getValueBySign(sign);
-      if (ref) {
-        // TODO: ref: support __REF_FIRE_IMMEDIATELY__
-        const v = newRefMap[sign] && lynx.createSelectorQuery().selectUniqueID(newRefMap[sign]);
-        applyRef(ref, v);
+  try {
+    if (typeof ref == 'function') {
+      const hasRefUnmount = typeof ref._unmount == 'function';
+      if (hasRefUnmount) {
+        ref._unmount!();
       }
-    }
+
+      if (!hasRefUnmount || newRef != null) {
+        // Store the cleanup function on the function
+        // instance object itself to avoid shape
+        // transitioning vnode
+        ref._unmount = ref(newRef!);
+      }
+    } else ref.current = newRef;
+    /* v8 ignore start */
+  } catch (e) {
+    lynx.reportError(e as Error);
   }
+  /* v8 ignore stop */
 }
 
 function updateRef(
   snapshot: SnapshotInstance,
   expIndex: number,
-  oldValue: any,
+  oldValue: string | null,
   elementIndex: number,
-  spreadKey: string,
 ): void {
-  const value = snapshot.__values![expIndex];
+  const value: unknown = snapshot.__values![expIndex];
   let ref;
-  if (!value) {
-    ref = undefined;
-  } else if (typeof value === 'string') {
+  if (typeof value === 'string') {
     ref = value;
   } else {
-    ref = `${snapshot.__id}:${expIndex}:${spreadKey}`;
+    ref = `react-ref-${snapshot.__id}-${expIndex}`;
   }
 
   snapshot.__values![expIndex] = ref;
-  if (snapshot.__elements && ref) {
-    __SetAttribute(snapshot.__elements[elementIndex]!, 'has-react-ref', true);
-    const uid = __GetElementUniqueID(snapshot.__elements[elementIndex]!);
-    globalRefPatch[ref] = uid;
-    snapshot.__ref_set ??= new Set();
-    snapshot.__ref_set.add(ref);
-  }
-  if (oldValue !== ref) {
-    snapshot.__ref_set?.delete(oldValue);
+  if (snapshot.__elements && oldValue !== ref) {
+    if (oldValue) {
+      __SetAttribute(snapshot.__elements[elementIndex]!, oldValue, undefined);
+    }
+    if (ref) {
+      __SetAttribute(snapshot.__elements[elementIndex]!, ref, 1);
+    }
   }
 }
 
-function takeGlobalRefPatchMap(): Record<string, number | null> {
-  const patch = globalRefPatch;
-  globalRefPatch = {};
-  return patch;
-}
-
-function transformRef(ref: unknown): Function | (object & Record<'current', unknown>) | null | undefined {
+function transformRef(ref: unknown): Ref | null | undefined {
   if (ref === undefined || ref === null) {
     return ref;
   }
   if (typeof ref === 'function' || (typeof ref === 'object' && 'current' in ref)) {
     if ('__ref' in ref) {
-      return ref;
+      return ref as Ref;
     }
-    return Object.defineProperty(ref, '__ref', { value: nextRefId++ });
+    return Object.defineProperty(ref, '__ref', { value: 1 }) as Ref;
   }
   throw new Error(
     `Elements' "ref" property should be a function, or an object created `
@@ -124,25 +96,44 @@ function transformRef(ref: unknown): Function | (object & Record<'current', unkn
   );
 }
 
-function markRefToRemove(sign: string, ref: unknown): void {
-  if (!ref) {
-    return;
+function applyQueuedRefs(): void {
+  try {
+    for (const ref of refsToClear) {
+      applyRef(ref, null);
+    }
+    for (let i = 0; i < refsToApply.length; i += 2) {
+      const ref = refsToApply[i] as Ref;
+      const value = refsToApply[i + 1] as [snapshotInstanceId: number, expIndex: number] | null;
+      applyRef(ref, value);
+    }
+  } finally {
+    clearQueuedRefs();
   }
-  let oldRefs = globalRefsToRemove.get(nextCommitTaskId);
-  if (!oldRefs) {
-    oldRefs = new Map();
-    globalRefsToRemove.set(nextCommitTaskId, oldRefs);
-  }
-  oldRefs.set(sign, ref);
 }
 
-export {
-  globalRefsToRemove,
-  globalRefsToSet,
-  markRefToRemove,
-  takeGlobalRefPatchMap,
-  transformRef,
-  unref,
-  updateBackgroundRefs,
-  updateRef,
-};
+function queueRefAttrUpdate(
+  oldRef: Ref | null | undefined,
+  newRef: Ref | null | undefined,
+  snapshotInstanceId: number,
+  expIndex: number,
+): void {
+  if (oldRef === newRef) {
+    return;
+  }
+  if (oldRef) {
+    refsToClear.push(oldRef);
+  }
+  if (newRef) {
+    refsToApply.push(newRef, [snapshotInstanceId, expIndex]);
+  }
+}
+
+function clearQueuedRefs(): void {
+  refsToClear.length = 0;
+  refsToApply.length = 0;
+}
+
+/**
+ * @internal
+ */
+export { queueRefAttrUpdate, updateRef, unref, transformRef, applyRef, applyQueuedRefs, clearQueuedRefs, type Ref };

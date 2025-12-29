@@ -1,10 +1,16 @@
 import {
   _attributes,
   _children,
-  innerHTML,
+  textContent,
+  _cssRuleContents,
   type OffscreenDocument,
   type OffscreenElement,
 } from '@lynx-js/offscreen-document/webworker';
+import { escapeHtml } from './utils/escapeHtml.js';
+import {
+  lynxPartIdAttribute,
+  lynxUniqueIdAttribute,
+} from '@lynx-js/web-constants';
 
 type ShadowrootTemplates =
   | ((
@@ -12,7 +18,7 @@ type ShadowrootTemplates =
   ) => string)
   | string;
 
-function getInnerHTMLImpl(
+function getTextContentImpl(
   buffer: string[],
   element: OffscreenElement,
   shadowrootTemplates: Record<string, ShadowrootTemplates>,
@@ -23,10 +29,16 @@ function getInnerHTMLImpl(
   for (const [key, value] of element[_attributes]) {
     buffer.push(' ');
     buffer.push(key);
-    buffer.push('="');
-    buffer.push(value);
-    buffer.push('"');
+    if (value.length > 0) {
+      buffer.push('="');
+      buffer.push(escapeHtml(value));
+      buffer.push('"');
+    }
   }
+
+  const partId = element[_attributes].get(lynxPartIdAttribute)
+    ?? element[_attributes].get(lynxUniqueIdAttribute)!;
+  buffer.push(' ', lynxPartIdAttribute, '="', partId, '"');
 
   buffer.push('>');
   const templateImpl = shadowrootTemplates[localName];
@@ -36,11 +48,14 @@ function getInnerHTMLImpl(
       : templateImpl;
     buffer.push('<template shadowrootmode="open">', template, '</template>');
   }
-  if (element[innerHTML]) {
-    buffer.push(element[innerHTML]);
+  if (element[_cssRuleContents]?.length) {
+    buffer.push(...element[_cssRuleContents]);
+  }
+  if (element[textContent]) {
+    buffer.push(element[textContent]);
   } else {
     for (const child of element[_children]) {
-      getInnerHTMLImpl(
+      getTextContentImpl(
         buffer,
         child as OffscreenElement,
         shadowrootTemplates,
@@ -58,7 +73,7 @@ export function dumpHTMLString(
   shadowrootTemplates: Record<string, ShadowrootTemplates>,
 ): void {
   for (const child of element[_children]) {
-    getInnerHTMLImpl(
+    getTextContentImpl(
       buffer,
       child as OffscreenElement,
       shadowrootTemplates,

@@ -1,5 +1,17 @@
 # @lynx-js/qrcode-rsbuild-plugin
 
+## 0.4.1
+
+### Patch Changes
+
+- Bump @clack/prompts to v1.0.0-alpha.4 ([#1559](https://github.com/lynx-family/lynx-stack/pull/1559))
+
+## 0.4.0
+
+### Minor Changes
+
+- Support "Type to search" when switching entries and schema. ([#1115](https://github.com/lynx-family/lynx-stack/pull/1115))
+
 ## 0.3.6
 
 ### Patch Changes

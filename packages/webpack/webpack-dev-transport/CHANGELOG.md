@@ -1,5 +1,11 @@
 # @lynx-js/webpack-dev-transport
 
+## 0.2.0
+
+### Minor Changes
+
+- Use token-based WebSocket authentication ([#1239](https://github.com/lynx-family/lynx-stack/pull/1239))
+
 ## 0.1.3
 
 ### Patch Changes

@@ -8,7 +8,7 @@ import {
   ComponentFromReactRuntime as Component,
   ComponentFromReactRuntime as PureComponent,
 } from '../compat/lynxComponent.js';
-import { useCallback, useEffect, useMemo, useReducer, useState, useRef } from '../hooks/react.js';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from '../hooks/react.js';
 
 /* v8 ignore next 3 */
 function __runInJS<T>(value: T): T | undefined | null {

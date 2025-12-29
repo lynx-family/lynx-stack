@@ -6,12 +6,13 @@ import type { Rpc } from '@lynx-js/web-worker-rpc';
 
 export function registerReportErrorHandler(
   rpc: Rpc,
-  onError?: (e: string) => void,
+  fileName: string,
+  onError?: (e: Error, release: string, fileName: string) => void,
 ) {
   rpc.registerHandler(
     reportErrorEndpoint,
-    (e) => {
-      onError?.(e);
+    (e, _, release) => {
+      onError?.(e, release, fileName);
     },
   );
 }

@@ -1,43 +1,47 @@
 packages:
+  - benchmark/react
   - examples/*
   - packages/vue
   - packages/vue/runtime
   - packages/vue/runtime-lynx
+  - packages/background-only
+  - packages/lynx/*
   - packages/react
   - packages/react/refresh
   - packages/react/runtime
+  - packages/react/testing-library
   - packages/react/transform
   - packages/react/worklet-runtime
-  - packages/react/testing-library
   - packages/rspeedy/*
-  - packages/tools/*
-  - packages/web-platform/*
-  - packages/webpack/*
-  - packages/third-party/*
   - packages/testing-library/*
   - packages/testing-library/examples/*
-  - packages/background-only
-  - "!packages/testing-library/examples"
+  - packages/third-party/*
+  - packages/tools/*
+  - packages/use-sync-external-store
+  - packages/web-platform/*
+  - packages/webpack/*
   - website
+
+# From `@pnpm/plugin-better-defaults`
+enablePrePostScripts: false
+ignorePatchFailures: false
+optimisticRepeatInstall: true
+resolutionMode: "lowest-direct"
 
 # Default catalogs
 catalog:
-  "@microsoft/api-extractor": "7.52.8"
+  "@microsoft/api-extractor": "7.52.13"
 
 catalogs:
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "1.3.21"
-    "@rsbuild/webpack": "1.3.2"
-    "@rsbuild/plugin-less": "1.2.4"
-    "@rsbuild/plugin-sass": "1.3.1"
-    "@rsbuild/plugin-webpack-swc": "1.1.1"
+    "@rsbuild/core": "1.5.12"
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "1.3.11"
-    "@rspack/core": "1.3.11"
-    "@rspack/test-tools": "1.3.11"
+    "@rspack/cli": "1.5.6"
+    "@rspack/core": "1.5.6"
+    "@rspack/test-tools": "1.5.6"
 
 overrides:
   "@rspack/core": "$@rspack/core"
@@ -47,9 +51,15 @@ patchedDependencies:
   "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
   "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch"
 
+strictDepBuilds: true
+
 onlyBuiltDependencies:
   - dprint
   - esbuild
 
 ignoredBuiltDependencies:
+  - "@biomejs/biome"
+  - "@parcel/watcher"
+  - "@swc/core"
   - core-js
+  - unrs-resolver

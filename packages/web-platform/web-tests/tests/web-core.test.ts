@@ -5,15 +5,22 @@
 import { test, expect } from './coverage-fixture.js';
 import type { Page, Worker } from '@playwright/test';
 
-const ALL_ON_UI = !!process.env.ALL_ON_UI;
+const ENABLE_MULTI_THREAD = !!process.env.ENABLE_MULTI_THREAD;
+const isSSR = !!process.env['ENABLE_SSR'];
+
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
 };
 
-const goto = async (page: Page) => {
-  await page.goto('/web-core.html', {
+const goto = async (page: Page, title?: string) => {
+  let url = '/web-core.html';
+  if (title) {
+    url += `?casename=${title}`;
+  }
+
+  await page.goto(url, {
     waitUntil: 'load',
   });
   await wait(500);
@@ -23,7 +30,7 @@ async function getMainThreadWorker(
   page: Page,
 ): Promise<Worker | Page | undefined> {
   await wait(100);
-  if (ALL_ON_UI) {
+  if (!ENABLE_MULTI_THREAD) {
     return page;
   } else {
     for (const i of page.workers()) {
@@ -56,6 +63,7 @@ async function getBackgroundThreadWorker(
 }
 
 test.describe('web core tests', () => {
+  test.skip(isSSR, 'not support ssr');
   test('selectComponent', async ({ page, browserName }) => {
     // firefox not support
     test.skip(browserName === 'firefox');
@@ -99,8 +107,10 @@ test.describe('web core tests', () => {
     expect(isSuccess).toBeTruthy();
   });
   test('lynx.requireModuleAsync', async ({ page, browserName }) => {
-    // firefox dose not support this.
-    test.skip(browserName === 'firefox');
+    test.skip(
+      browserName === 'firefox' && ENABLE_MULTI_THREAD,
+      'firefox flaky',
+    );
     await goto(page);
     const mainWorker = await getMainThreadWorker(page);
     await mainWorker.evaluate(() => {
@@ -120,8 +130,10 @@ test.describe('web core tests', () => {
     expect(importedValue).toBe('hello');
   });
   test('lynx.requireModuleAsync-2', async ({ page, browserName }) => {
-    // firefox dose not support this.
-    test.skip(browserName === 'firefox');
+    test.skip(
+      browserName === 'firefox' && ENABLE_MULTI_THREAD,
+      'firefox flaky',
+    );
     await goto(page);
     const mainWorker = await getMainThreadWorker(page);
     await mainWorker.evaluate(() => {
@@ -149,8 +161,10 @@ test.describe('web core tests', () => {
     expect(world).toBe('world');
   });
   test('lynx.requireModule+sync', async ({ page, browserName }) => {
-    // firefox dose not support this.
-    test.skip(browserName === 'firefox');
+    test.skip(
+      browserName === 'firefox' && ENABLE_MULTI_THREAD,
+      'firefox flaky',
+    );
     await goto(page);
     const mainWorker = await getMainThreadWorker(page);
     await mainWorker.evaluate(() => {
@@ -176,8 +190,6 @@ test.describe('web core tests', () => {
   });
 
   test('loadLepusChunk', async ({ page, browserName }) => {
-    // firefox dose not support this.
-    test.skip(browserName === 'firefox');
     await goto(page);
     const mainWorker = await getMainThreadWorker(page);
     await mainWorker.evaluate(() => {
@@ -196,7 +208,7 @@ test.describe('web core tests', () => {
     await goto(page);
     const mainWorker = await getMainThreadWorker(page);
     const registerDataProcessor = await mainWorker.evaluate(() => {
-      return globalThis.registerDataProcessor;
+      return globalThis.runtime.registerDataProcessor;
     });
     expect(registerDataProcessor).toBe('pass');
   });
@@ -342,5 +354,322 @@ test.describe('web core tests', () => {
     });
     await wait(1000);
     expect(successDispatchNapiModule).toBeTruthy();
+  });
+  test('api-i18n-resources-translation', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    const mainWorker = await getMainThreadWorker(page);
+    const success = await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+      if (
+        JSON.stringify(globalThis.runtime._I18nResourceTranslation({
+          locale: 'en',
+          channel: '1',
+          fallback_url: '',
+        })) === '{"hello":"hello","lynx":"lynx web platform1"}'
+      ) {
+        return true;
+      }
+    });
+    await wait(2000);
+    expect(success).toBeTruthy();
+  });
+  test('event-i18n-resources-missed', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    let success = false;
+    await page.on('console', async (msg) => {
+      const event = await msg.args()[0]?.evaluate((e) => {
+        return {
+          type: e.type,
+          channel: e.detail?.channel,
+        };
+      });
+      if (!event || event.type !== 'i18nResourceMissed') {
+        return;
+      }
+      if (event.channel === '2') {
+        success = true;
+      }
+    });
+    const mainWorker = await getMainThreadWorker(page);
+    await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+      globalThis.runtime._I18nResourceTranslation({
+        locale: 'en',
+        channel: '2',
+        fallback_url: '',
+      });
+    });
+    await wait(2000);
+    expect(success).toBeTruthy();
+  });
+  test('api-update-i18n-resources', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    const mainWorker = await getMainThreadWorker(page);
+    const first = await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+      if (
+        globalThis.runtime._I18nResourceTranslation({
+          locale: 'en',
+          channel: '2',
+          fallback_url: '',
+        }) === undefined
+      ) {
+        return true;
+      }
+    });
+    await wait(500);
+    await page.evaluate(() => {
+      document.querySelector('lynx-view').updateI18nResources([
+        {
+          options: {
+            locale: 'en',
+            channel: '1',
+            fallback_url: '',
+          },
+          resource: {
+            hello: 'hello',
+            lynx: 'lynx web platform1',
+          },
+        },
+        {
+          options: {
+            locale: 'en',
+            channel: '2',
+            fallback_url: '',
+          },
+          resource: {
+            hello: 'hello',
+            lynx: 'lynx web platform2',
+          },
+        },
+      ], {
+        locale: 'en',
+        channel: '2',
+        fallback_url: '',
+      });
+    });
+    await wait(500);
+    const second = await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+      if (
+        JSON.stringify(globalThis.runtime._I18nResourceTranslation({
+          locale: 'en',
+          channel: '2',
+          fallback_url: '',
+        })) === '{"hello":"hello","lynx":"lynx web platform2"}'
+      ) {
+        return true;
+      }
+    });
+    await wait(500);
+    expect(first).toBeTruthy();
+    expect(second).toBeTruthy();
+  });
+  test('api-get-i18n-resource-by-mts', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    const mainWorker = await getMainThreadWorker(page);
+    await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+    });
+    await wait(500);
+    const backWorker = await getBackgroundThreadWorker(page);
+    const first = await backWorker?.evaluate(() =>
+      globalThis.runtime.lynx.getNativeLynx().getI18nResource() === undefined
+    );
+    await wait(500);
+    await mainWorker?.evaluate(() => {
+      globalThis.runtime._I18nResourceTranslation({
+        locale: 'en',
+        channel: '1',
+        fallback_url: '',
+      });
+    });
+    const second = await backWorker?.evaluate(() =>
+      JSON.stringify(globalThis.runtime.lynx.getNativeLynx().getI18nResource())
+        === '{"hello":"hello","lynx":"lynx web platform1"}'
+    );
+    expect(first).toBeTruthy();
+    expect(second).toBeTruthy();
+  });
+  test('api-get-i18n-resource-by-lynx-update', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    const mainWorker = await getMainThreadWorker(page);
+    await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+    });
+    await wait(500);
+    const backWorker = await getBackgroundThreadWorker(page);
+    const first = await backWorker?.evaluate(() =>
+      globalThis.runtime.lynx.getNativeLynx().getI18nResource() === undefined
+    );
+    await wait(500);
+    await page.evaluate(() => {
+      document.querySelector('lynx-view').updateI18nResources([
+        {
+          options: {
+            locale: 'en',
+            channel: '1',
+            fallback_url: '',
+          },
+          resource: {
+            hello: 'hello',
+            lynx: 'lynx web platform1',
+          },
+        },
+        {
+          options: {
+            locale: 'en',
+            channel: '2',
+            fallback_url: '',
+          },
+          resource: {
+            hello: 'hello',
+            lynx: 'lynx web platform2',
+          },
+        },
+      ], {
+        locale: 'en',
+        channel: '2',
+        fallback_url: '',
+      });
+    });
+    await wait(500);
+    const second = await backWorker?.evaluate(() =>
+      JSON.stringify(globalThis.runtime.lynx.getNativeLynx().getI18nResource())
+        === '{"hello":"hello","lynx":"lynx web platform2"}'
+    );
+    expect(first).toBeTruthy();
+    expect(second).toBeTruthy();
+  });
+  test('api-onI18nResourceReady-by-mts', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    const mainWorker = await getMainThreadWorker(page);
+    await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+    });
+    await wait(500);
+    let success = false;
+    await page.on('console', async (message) => {
+      if (message.text() === 'onI18nResourceReady') {
+        success = true;
+      }
+    });
+    const backWorker = await getBackgroundThreadWorker(page);
+    await backWorker?.evaluate(() => {
+      globalThis.runtime.GlobalEventEmitter.addListener(
+        'onI18nResourceReady',
+        () => {
+          console.log('onI18nResourceReady');
+        },
+      );
+    });
+    await wait(500);
+    await mainWorker?.evaluate(() => {
+      globalThis.runtime._I18nResourceTranslation({
+        locale: 'en',
+        channel: '1',
+        fallback_url: '',
+      });
+    });
+    await wait(500);
+    expect(success).toBeTruthy();
+  });
+  test('api-onI18nResourceReady-by-lynx-update', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    const mainWorker = await getMainThreadWorker(page);
+    await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+    });
+    await wait(500);
+    let success = false;
+    await page.on('console', async (message) => {
+      if (message.text() === 'onI18nResourceReady') {
+        success = true;
+      }
+    });
+    const backWorker = await getBackgroundThreadWorker(page);
+    await backWorker?.evaluate(() => {
+      globalThis.runtime.GlobalEventEmitter.addListener(
+        'onI18nResourceReady',
+        () => {
+          console.log('onI18nResourceReady');
+        },
+      );
+    });
+    await wait(500);
+    await page.evaluate(() => {
+      document.querySelector('lynx-view').updateI18nResources([
+        {
+          options: {
+            locale: 'en',
+            channel: '1',
+            fallback_url: '',
+          },
+          resource: {
+            hello: 'hello',
+            lynx: 'lynx web platform1',
+          },
+        },
+        {
+          options: {
+            locale: 'en',
+            channel: '2',
+            fallback_url: '',
+          },
+          resource: {
+            hello: 'hello',
+            lynx: 'lynx web platform2',
+          },
+        },
+      ], {
+        locale: 'en',
+        channel: '2',
+        fallback_url: '',
+      });
+    });
+    await wait(500);
+    expect(success).toBeTruthy();
+  });
+  test('decode-css-in-js-warn', async ({ page, browserName }) => {
+    // firefox not support
+    test.skip(browserName === 'firefox');
+    await goto(page, 'enable-css-selector-false');
+    const mainWorker = await getMainThreadWorker(page);
+    await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {
+        const root = globalThis.runtime.__CreatePage('0', '0', {});
+        const container = globalThis.runtime.__CreateElement('view', '0', {});
+        globalThis.runtime.__SetAttribute(container, 'l-css-id', '-1');
+        globalThis.runtime.__SetAttribute(
+          container,
+          'style',
+          'width: 100px;height: 100px; background-color: red',
+        );
+        globalThis.runtime.__AppendElement(root, container);
+        globalThis.runtime.__AddClass(container, 'target');
+      };
+    });
+    await wait(1000);
+    const height = await page.evaluate(() =>
+      getComputedStyle(document.querySelector('lynx-view')).getPropertyValue(
+        'height',
+      )
+    );
+    await wait(500);
+    expect(height).toBe('100px');
   });
 });

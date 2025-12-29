@@ -126,12 +126,10 @@ describe('Validation', () => {
       )
     })
 
-    // cSpell:disable
     expect(() => validateConfig({ jsxes: 1 }))
       .toThrowErrorMatchingInlineSnapshot(
         `[Error: Unknown property: \`$input.jsxes\` in the configuration of pluginReactLynx]`,
       )
-    // cSpell:enable
   })
 
   test('targetSdkVersion', () => {

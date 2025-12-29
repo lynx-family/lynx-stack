@@ -45,8 +45,24 @@ export function startBackgroundThread(
         uiThreadRpc,
       );
       lynxCore.then(
-        ({ loadCard, destroyCard, callDestroyLifetimeFun }) => {
-          loadCard(nativeApp, config, nativeLynx);
+        (
+          {
+            loadCard,
+            destroyCard,
+            callDestroyLifetimeFun,
+            nativeGlobal,
+            loadDynamicComponent,
+          },
+        ) => {
+          // @lynx-js/lynx-core >= 0.1.3 will export nativeGlobal and loadDynamicComponent
+          if (nativeGlobal && loadDynamicComponent) {
+            nativeGlobal.loadDynamicComponent = loadDynamicComponent;
+          }
+          loadCard(nativeApp, {
+            ...config,
+            // @ts-ignore
+            updateData: config.initData,
+          }, nativeLynx);
           registerDisposeHandler(
             uiThreadRpc,
             nativeApp,

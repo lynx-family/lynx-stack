@@ -1,5 +1,314 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.17.0
+
+### Patch Changes
+
+- fix: \_\_QueryComponentImpl in mts should execute only once for same url ([#1763](https://github.com/lynx-family/lynx-stack/pull/1763))
+
+- fix: avoid duplicate style transformation ([#1748](https://github.com/lynx-family/lynx-stack/pull/1748))
+
+  After this commit, we use DAG methods to handle the styleInfos
+
+- feat: support lazy bundle with CSSOG(`enableCSSSelector: false`). ([#1770](https://github.com/lynx-family/lynx-stack/pull/1770))
+
+- Updated dependencies [[`93d707b`](https://github.com/lynx-family/lynx-stack/commit/93d707b82a59f7256952e21da6dcad2999f8233d)]:
+  - @lynx-js/web-constants@0.17.0
+  - @lynx-js/web-style-transformer@0.17.0
+
+## 0.16.1
+
+### Patch Changes
+
+- feat: supports lazy bundle. (This feature requires `@lynx-js/lynx-core >= 0.1.3`) ([#1235](https://github.com/lynx-family/lynx-stack/pull/1235))
+
+- Updated dependencies [[`608f375`](https://github.com/lynx-family/lynx-stack/commit/608f375e20732cc4c9f141bfbf9800ba6896100b)]:
+  - @lynx-js/web-constants@0.16.1
+  - @lynx-js/web-style-transformer@0.16.1
+
+## 0.16.0
+
+### Minor Changes
+
+- refactor: provide the mts a real globalThis ([#1589](https://github.com/lynx-family/lynx-stack/pull/1589))
+
+  Before this change, We create a function wrapper and a fake globalThis for Javascript code.
+
+  This caused some issues.
+
+  After this change, we will create an iframe for createing an isolated Javascript context.
+
+  This means the globalThis will be the real one.
+
+### Patch Changes
+
+- refactor: add `:not([l-e-name])` at the end of selector for lazy component ([#1622](https://github.com/lynx-family/lynx-stack/pull/1622))
+
+- fix: the SystemInfo in bts should be assigned to the globalThis ([#1599](https://github.com/lynx-family/lynx-stack/pull/1599))
+
+- Updated dependencies [[`1a32dd8`](https://github.com/lynx-family/lynx-stack/commit/1a32dd886fe736c95639f67028cf7685377d9769), [`bb53d9a`](https://github.com/lynx-family/lynx-stack/commit/bb53d9a035f607e7c89952098d4ed77877a2e3c1), [`c1f8715`](https://github.com/lynx-family/lynx-stack/commit/c1f8715a81b2e69ff46fc363013626db4468c209)]:
+  - @lynx-js/web-constants@0.16.0
+  - @lynx-js/web-style-transformer@0.16.0
+
+## 0.15.7
+
+### Patch Changes
+
+- fix: globalThis is never accessible in MTS ([#1531](https://github.com/lynx-family/lynx-stack/pull/1531))
+
+- Updated dependencies [[`70863fb`](https://github.com/lynx-family/lynx-stack/commit/70863fbc311d8885ebda40855668097b0631f521)]:
+  - @lynx-js/web-constants@0.15.7
+  - @lynx-js/web-style-transformer@0.15.7
+
+## 0.15.6
+
+### Patch Changes
+
+- fix: systeminfo in mts function ([#1537](https://github.com/lynx-family/lynx-stack/pull/1537))
+
+- refactor: use utf-8 string ([#1473](https://github.com/lynx-family/lynx-stack/pull/1473))
+
+- feat: add MTS API: \_\_UpdateComponentInfo ([#1485](https://github.com/lynx-family/lynx-stack/pull/1485))
+
+- fix: \_\_ElementFromBinary should mark all elements actively ([#1484](https://github.com/lynx-family/lynx-stack/pull/1484))
+
+- fix: `__ElementFromBinary` needs to correctly apply the dataset in elementTemplate to the Element ([#1487](https://github.com/lynx-family/lynx-stack/pull/1487))
+
+- fix: all attributes except `id` and `type` under ElementTemplateData are optional. ([#1483](https://github.com/lynx-family/lynx-stack/pull/1483))
+
+- feat: add MTS API \_\_GetAttributeByName ([#1486](https://github.com/lynx-family/lynx-stack/pull/1486))
+
+- Updated dependencies [[`405a917`](https://github.com/lynx-family/lynx-stack/commit/405a9170442ae32603b7687549b49ab4b34aff92), [`b8f89e2`](https://github.com/lynx-family/lynx-stack/commit/b8f89e25f106a15ba9d70f2df06dfb684cbb6633), [`f76aae9`](https://github.com/lynx-family/lynx-stack/commit/f76aae9ea06abdc7022ba508d22f9f4eb00864e8), [`d8381a5`](https://github.com/lynx-family/lynx-stack/commit/d8381a58d12af6424cab4955617251e798bdc9f1), [`214898b`](https://github.com/lynx-family/lynx-stack/commit/214898bb9c74fc9b44e68cb220a4c02485102ce2), [`ab8cee4`](https://github.com/lynx-family/lynx-stack/commit/ab8cee4bab384fa905c045c4b4b93e5d4a95d57f)]:
+  - @lynx-js/web-constants@0.15.6
+  - @lynx-js/web-style-transformer@0.15.6
+
+## 0.15.5
+
+### Patch Changes
+
+- fix: load main-thread chunk in ESM format ([#1437](https://github.com/lynx-family/lynx-stack/pull/1437))
+
+  See [nodejs/node#59362](https://github.com/nodejs/node/issues/59362) for more details.
+
+- Updated dependencies [[`29434ae`](https://github.com/lynx-family/lynx-stack/commit/29434aec853f14242f521316429cf07a93b8c371), [`fb7096b`](https://github.com/lynx-family/lynx-stack/commit/fb7096bb3c79166cd619a407095b8206eccb7918)]:
+  - @lynx-js/web-constants@0.15.5
+  - @lynx-js/web-style-transformer@0.15.5
+
+## 0.15.4
+
+### Patch Changes
+
+- feat: support `__ElementFromBinary` ([#1391](https://github.com/lynx-family/lynx-stack/pull/1391))
+
+- fix: crash on chrome<96 ([#1361](https://github.com/lynx-family/lynx-stack/pull/1361))
+
+  https://github.com/wasm-bindgen/wasm-bindgen/issues/4211#issuecomment-2505965903
+
+  https://github.com/WebAssembly/binaryen/issues/7358
+
+  The rust toolchain enables WASM feature `reference types` by default.
+
+  However this feature is not supported by chromium lower than version 96
+
+  Therefore we found a workaround for it.
+
+  In this implementation we detect if browser supports `reference types` first.
+
+  If user's browser supported it, we load the wasm file with `reference types` on, otherwise we load the wasm file with `reference types` off.
+
+- Updated dependencies [[`22ca433`](https://github.com/lynx-family/lynx-stack/commit/22ca433eb96b39724c6eb47ce0a938d291bbdef2)]:
+  - @lynx-js/web-constants@0.15.4
+  - @lynx-js/web-style-transformer@0.15.4
+
+## 0.15.3
+
+### Patch Changes
+
+- Updated dependencies [[`0da5ef0`](https://github.com/lynx-family/lynx-stack/commit/0da5ef03e41f20e9f8019c6dc03cb4a38ab18854)]:
+  - @lynx-js/web-constants@0.15.3
+
+## 0.15.2
+
+### Patch Changes
+
+- feat: support SSR for all-on-ui ([#1029](https://github.com/lynx-family/lynx-stack/pull/1029))
+
+- feat: move SSR hydrate essential info to the ssr attribute ([#1292](https://github.com/lynx-family/lynx-stack/pull/1292))
+
+  We found that in browser there is no simple tool to decode a base64 string
+
+  Therefore we move the data to `ssr` attribute
+
+  Also fix some ssr issues
+
+- feat: support \_\_MarkTemplateElement, \_\_MarkPartElement and \_\_GetTemplateParts for all-on-ui ([#1275](https://github.com/lynx-family/lynx-stack/pull/1275))
+
+- feat: mark template elements for SSR and update part ID handling ([#1286](https://github.com/lynx-family/lynx-stack/pull/1286))
+
+- Updated dependencies [[`1443e46`](https://github.com/lynx-family/lynx-stack/commit/1443e468a353363e29aab0d90cd8b91c232a5525), [`5062128`](https://github.com/lynx-family/lynx-stack/commit/5062128c68e21abcf276ebcb40d7cc8f6e54244b)]:
+  - @lynx-js/web-constants@0.15.2
+
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [[`e59138b`](https://github.com/lynx-family/lynx-stack/commit/e59138b3c2285ce83a2927ee046671b9015acdfd)]:
+  - @lynx-js/web-style-transformer@0.3.3
+  - @lynx-js/web-constants@0.15.1
+
+## 0.15.0
+
+### Minor Changes
+
+- refactor: move exposure system to web-core ([#1254](https://github.com/lynx-family/lynx-stack/pull/1254))
+
+  **THIS IS A BREAKING CHANGE**
+
+  **You'll need to upgrade your @lynx-js/web-elements to >= 0.8.0**
+
+  For SSR and better performance, we moved the lynx's exposure system from web-element to web-core.
+
+  Before this commit, we create Intersection observers by creating HTMLElements.
+
+  After this commit, we will create such Intersection observers after dom stabled.
+
+  Also, the setInterval for exposure has been removed, now we use an on time lazy timer for such features.
+
+### Patch Changes
+
+- Updated dependencies [[`16f402f`](https://github.com/lynx-family/lynx-stack/commit/16f402f557ba12ec34a35a1b9b00115bf576c20f), [`60095d7`](https://github.com/lynx-family/lynx-stack/commit/60095d741ae969e76a8faeb669a0fbe7e6e81f7c), [`224c653`](https://github.com/lynx-family/lynx-stack/commit/224c653f370d807281fa0a9ffbb4f4dd5c9d308e)]:
+  - @lynx-js/web-style-transformer@0.3.2
+  - @lynx-js/web-constants@0.15.0
+
+## 0.14.2
+
+### Patch Changes
+
+- feat: merge multiple markTiming RPC communication events together and send them together, which can effectively reduce the number of RPC communications. ([#1178](https://github.com/lynx-family/lynx-stack/pull/1178))
+
+- fix: correctly handle with CSS compound-selector, such as `.a.b`, which will be processed as `.a .b` incorrectly. ([#1187](https://github.com/lynx-family/lynx-stack/pull/1187))
+
+  This problem also occurs when used in combination with other selectors, here are some ways to write styles that worked incorrectly before this commit:
+
+  - `.a.b { }`
+  - `.a.b view { }`
+  - `.a.b:not(.c) { }`
+  - `.a.b::placeholder { }`
+
+- Updated dependencies [[`e44b146`](https://github.com/lynx-family/lynx-stack/commit/e44b146b1bc2b58c0347af7fb4e4157688e07e36), [`6ca5b91`](https://github.com/lynx-family/lynx-stack/commit/6ca5b9106aade393dfac88914b160960a61a82f2)]:
+  - @lynx-js/web-constants@0.14.2
+
+## 0.14.1
+
+### Patch Changes
+
+- fix: under the all-on-ui strategy, reload() will add two page elements. ([#1147](https://github.com/lynx-family/lynx-stack/pull/1147))
+
+- Updated dependencies [[`a64333e`](https://github.com/lynx-family/lynx-stack/commit/a64333ef28228d6b90c32e027f67bef8acbd8432), [`7751375`](https://github.com/lynx-family/lynx-stack/commit/775137521782ca5445f22029c39163c0a63bbfa5), [`b52a924`](https://github.com/lynx-family/lynx-stack/commit/b52a924a2375cb6f7ebafdd8abfbab0254eb2330)]:
+  - @lynx-js/web-constants@0.14.1
+
+## 0.14.0
+
+### Patch Changes
+
+- feat: add `_SetSourceMapRelease(errInfo)` MTS API. ([#1118](https://github.com/lynx-family/lynx-stack/pull/1118))
+
+  You can get `errInfo.release` through `e.detail.release` in the error event callback of lynx-view.
+
+  The `_SetSourceMapRelease` function is not complete yet, because it is currently limited by the Web platform and some functions and some props such as `err.stack` do not need to be supported for the time being.
+
+- feat: add `_I18nResourceTranslation` api in mts && `init-i18n-resources` attr, `i18nResourceMissed` event of lynx-view. ([#1065](https://github.com/lynx-family/lynx-stack/pull/1065))
+
+  `init-i18n-resource` is the complete set of i18nResources that need to be maintained on the container side. Note: You need to pass this value when lynx-view is initialized.
+
+  You can use `_I18nResourceTranslation` in MTS to get the corresponding i18nResource from `init-i18n-resources`. If it is undefined, the `i18nResourceMissed` event will be dispatched.
+
+  ```js
+  // ui thread
+  lynxView.initI18nResources = [
+    {
+      options: {
+        locale: 'en',
+        channel: '1',
+        fallback_url: '',
+      },
+      resource: {
+        hello: 'hello',
+        lynx: 'lynx web platform1',
+      },
+    },
+  ];
+  lynxView.addEventListener('i18nResourceMissed', (e) => {
+    console.log(e);
+  });
+
+  // mts
+  _I18nResourceTranslation({
+    locale: 'en',
+    channel: '1',
+    fallback_url: '',
+  });
+  ```
+
+- feat: supports `lynx.getI18nResource()` and `onI18nResourceReady` event in bts. ([#1088](https://github.com/lynx-family/lynx-stack/pull/1088))
+
+  - `lynx.getI18nResource()` can be used to get i18nResource in bts, it has two data sources:
+    - the result of `_I18nResourceTranslation()`
+    - lynx-view `updateI18nResources(data: InitI18nResources, options: I18nResourceTranslationOptions)`, it will be matched to the correct i8nResource as a result of `lynx.getI18nResource()`
+  - `onI18nResourceReady` event can be used to listen `_I18nResourceTranslation` and lynx-view `updateI18nResources` execution.
+
+- feat: add `updateI18nResources` method of lynx-view. ([#1085](https://github.com/lynx-family/lynx-stack/pull/1085))
+
+  Now you can use `updateI18nResources` to update i18nResources, and then use \_I18nResourceTranslation() to get the updated result.
+
+- fix: `decodeCssInJs` will not throw error. ([#1120](https://github.com/lynx-family/lynx-stack/pull/1120))
+
+  Before this pr, decoding css will be strictly executed according to cssInfo, and an error will be thrown if data that does not meet the requirements is encountered. Now it is changed to console.warn, which will not block rendering.
+
+- Updated dependencies [[`25a04c9`](https://github.com/lynx-family/lynx-stack/commit/25a04c9e59f4b893227bdead74f2de69f6615cdb), [`0dbb8b1`](https://github.com/lynx-family/lynx-stack/commit/0dbb8b1f580d0700e2b67b92018a7a00d1494837), [`f99de1e`](https://github.com/lynx-family/lynx-stack/commit/f99de1ef60cc5a11eae4fd0acc70a490787d36c9), [`873a285`](https://github.com/lynx-family/lynx-stack/commit/873a2852fa3df9e32c48a6504160bb243540c7b9), [`afacb2c`](https://github.com/lynx-family/lynx-stack/commit/afacb2cbea7feca46c553651000625d0845b2b00), [`7e73450`](https://github.com/lynx-family/lynx-stack/commit/7e73450f8f5f1153f8a064036f5552c1335c23d7)]:
+  - @lynx-js/web-constants@0.14.0
+  - @lynx-js/web-style-transformer@0.3.1
+
+## 0.13.5
+
+### Patch Changes
+
+- refactor: move some internal status to dom's attribute ([#945](https://github.com/lynx-family/lynx-stack/pull/945))
+
+  It's essential for SSR
+
+- refactor: avoid to create many style element for cssog ([#1026](https://github.com/lynx-family/lynx-stack/pull/1026))
+
+- fix: target.id is undefined ([#1016](https://github.com/lynx-family/lynx-stack/pull/1016))
+
+- feat: add new pageConfig configuration: enableJSDataProcessor ([#886](https://github.com/lynx-family/lynx-stack/pull/886))
+
+- refactor: move component config info to attribute ([#984](https://github.com/lynx-family/lynx-stack/pull/984))
+
+- refactor: save dataset on an attribute ([#981](https://github.com/lynx-family/lynx-stack/pull/981))
+
+  On lynx, the `data-*` attributes have different behaviors than the HTMLElement has.
+
+  The dataset will be treated as properties, the key will not be applied the camel-case <-> hyphenate name transformation.
+
+  Before this commit we use it as a runtime data, but after this commit we will use encodeURI(JSON.stringify(dataset)) to encode it as a string.
+
+- refactor: create elements of `elementToRuntimeInfoMap` on demand ([#986](https://github.com/lynx-family/lynx-stack/pull/986))
+
+- refactor: implement mts apis in closure pattern ([#1004](https://github.com/lynx-family/lynx-stack/pull/1004))
+
+- Updated dependencies [[`70b82d2`](https://github.com/lynx-family/lynx-stack/commit/70b82d23744d6b6ec945dff9f8895ab3488ba4c8), [`9499ea9`](https://github.com/lynx-family/lynx-stack/commit/9499ea91debdf73b2d31af0b31bcbc216135543b), [`50f0193`](https://github.com/lynx-family/lynx-stack/commit/50f01933942268b697bf5abe790da86c932f1dfc), [`57bf0ef`](https://github.com/lynx-family/lynx-stack/commit/57bf0ef19f1d79bc52ab6a4f0cd2939e7901d98b), [`0525fbf`](https://github.com/lynx-family/lynx-stack/commit/0525fbf38baa7a977a7a8c66e8a4d8bf34cc3b68), [`b6b87fd`](https://github.com/lynx-family/lynx-stack/commit/b6b87fd11dbc76c28f3b5022aa8c6afeb773d90f), [`c014327`](https://github.com/lynx-family/lynx-stack/commit/c014327ad0cf599b32d4182d95116b46c35f5fa5)]:
+  - @lynx-js/web-constants@0.13.5
+
+## 0.13.4
+
+### Patch Changes
+
+- fix: style loss issue caused by incorrect handling of styleInfo-imports when enableCSSSelector and enableRemoveCSSScope are turned off. ([#931](https://github.com/lynx-family/lynx-stack/pull/931))
+
+- Updated dependencies [[`569618d`](https://github.com/lynx-family/lynx-stack/commit/569618d8e2665f5c9e1672f7ee5900ec2a5179a2), [`f9f88d6`](https://github.com/lynx-family/lynx-stack/commit/f9f88d6fb9c42d3370a6622d9d799d671ffcf1a7)]:
+  - @lynx-js/web-constants@0.13.4
+
 ## 0.13.3
 
 ### Patch Changes

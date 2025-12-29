@@ -8,4 +8,8 @@
  * A rsbuild plugin that integrates with Web Platform.
  */
 
-export { pluginWebPlatform } from './pluginWebPlatform.js';
+export {
+  pluginWebPlatform,
+  getNativeModulesPathRule,
+  getNapiModulesPathRule,
+} from './pluginWebPlatform.js';

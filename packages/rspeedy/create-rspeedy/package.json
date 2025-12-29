@@ -1,6 +1,6 @@
 {
   "name": "create-rspeedy",
-  "version": "0.9.7",
+  "version": "0.11.3",
   "description": "Create Rspeedy-powered ReactLynx apps with one command",
   "keywords": [
     "webpack",
@@ -35,7 +35,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "create-rstack": "1.4.5"
+    "create-rstack": "1.6.1"
   },
   "devDependencies": {
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:^",
@@ -43,7 +43,8 @@
     "@lynx-js/react-rsbuild-plugin": "workspace:^",
     "@lynx-js/rspeedy": "workspace:^",
     "@lynx-js/rspeedy-plugin-vue": "workspace:^",
-    "@lynx-js/vue": "workspace:^"
+    "@lynx-js/vue": "workspace:^",
+    "@rsbuild/plugin-type-check": "1.2.4"
   },
   "engines": {
     "node": ">=18"

@@ -4,6 +4,7 @@
 export const target = __LEPUS__ ? globalThis : lynx;
 
 export const sExportsReact = Symbol.for('__REACT_LYNX_EXPORTS__(@lynx-js/react)');
+export const sExportsReactCompat = Symbol.for('__REACT_LYNX_EXPORTS__(@lynx-js/react/compat)');
 export const sExportsReactLepus = Symbol.for('__REACT_LYNX_EXPORTS__(@lynx-js/react/lepus)');
 export const sExportsReactInternal = Symbol.for('__REACT_LYNX_EXPORTS__(@lynx-js/react/internal)');
 export const sExportsJSXRuntime = Symbol.for('__REACT_LYNX_EXPORTS__(@lynx-js/react/jsx-runtime)');

@@ -1,14 +1,14 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { Rspack } from '@rsbuild/core'
+import type { InitConfigsOptions, Rspack } from '@rsbuild/core'
 import { vi } from 'vitest'
 
 import { createRspeedy } from '../src/index.js'
 import type { Config, RspeedyInstance } from '../src/index.js'
 
 interface RsbuildHelper {
-  unwrapConfig(): Promise<Rspack.Configuration>
+  unwrapConfig(options?: InitConfigsOptions): Promise<Rspack.Configuration>
   usingDevServer(): Promise<{
     port: number
     urls: string[]
@@ -27,8 +27,8 @@ export async function createStubRspeedy(
   })
 
   const helper: RsbuildHelper = {
-    async unwrapConfig() {
-      const [config] = await rsbuild.initConfigs()
+    async unwrapConfig(options?: InitConfigsOptions) {
+      const [config] = await rsbuild.initConfigs(options)
       return config!
     },
 

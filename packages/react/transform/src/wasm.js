@@ -19,7 +19,7 @@ const { instance, napiModule } = instantiateNapiModuleSync(mod, {
       ...importObject.emnapi,
     };
 
-    importObject.getrandom = { // cSpell:disable-line
+    importObject.getrandom = {
       random_fill_sync: function(offset, size) {
         const view = new Uint8Array(
           instance.exports.memory.buffer,

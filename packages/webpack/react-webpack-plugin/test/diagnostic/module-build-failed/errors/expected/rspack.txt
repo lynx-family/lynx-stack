@@ -1,13 +1,13 @@
 ERROR in ./module-build-failed/errors/invalid.js
 × Module build failed:
 ╰─▶   × Error: react-transform failed
-at Object.backgroundLoader (file://<PROJECT_ROOT>/packages/webpack/react-webpack-plugin/src/loaders/background.ts:<LINE:COLUMN>)
-at <PROJECT_ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>
+at Object.backgroundLoader (<ROOT>/packages/webpack/react-webpack-plugin/src/loaders/background.ts:<LINE:COLUMN>)
+at <ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>
 at node:internal/util:<LINE:COLUMN>
 at new Promise (<anonymous>)
 at node:internal/util:<LINE:COLUMN>
-at isomorphoicRun (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
-at runLoaders (<PROJECT_ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
+at isomorphoicRun (<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
+at runLoaders (<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
 
 ERROR in ./module-build-failed/errors/invalid.js <LINE:COLUMN>-7
 × ModuleError: Expected ';', '}' or <eof>

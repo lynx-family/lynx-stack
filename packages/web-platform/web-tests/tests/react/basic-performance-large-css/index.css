@@ -1,0 +1,593 @@
+.class1 {
+  color: #333;
+  background-color: #f0f0f0;
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+.class2 {
+  font-size: 16px;
+  line-height: 1.5;
+  margin-bottom: 5px;
+}
+
+.class3 {
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.class4 {
+  text-align: center;
+}
+
+.class5 {
+  margin-top: 20px;
+}
+
+.class6 {
+  border-radius: 5px;
+}
+
+.class7 {
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.class8 {
+  width: 80%;
+  margin: 0 auto;
+}
+
+.class9 {
+  font-style: italic;
+}
+
+.class10 {
+  opacity: 0.8;
+}
+.class11 {
+  color: #111;
+}
+.class12 {
+  font-size: 14px;
+}
+.class13 {
+  text-decoration: underline;
+}
+.class14 {
+  letter-spacing: 1px;
+}
+.class15 {
+  word-spacing: 2px;
+}
+.class16 {
+  line-height: 1.6;
+}
+.class17 {
+  text-shadow: 1px 1px 2px #ccc;
+}
+.class18 {
+  vertical-align: middle;
+}
+.class19 {
+  white-space: nowrap;
+}
+.class20 {
+  overflow: hidden;
+}
+.class21 {
+  text-overflow: ellipsis;
+}
+.class22 {
+  direction: rtl;
+}
+.class23 {
+  unicode-bidi: bidi-override;
+}
+.class24 {
+  box-sizing: border-box;
+}
+.class25 {
+  cursor: pointer;
+}
+.class26 {
+  visibility: hidden;
+}
+.class27 {
+  z-index: 10;
+}
+.class28 {
+  position: relative;
+}
+.class29 {
+  top: 0;
+}
+.class30 {
+  right: 0;
+}
+.class31 {
+  bottom: 0;
+}
+.class32 {
+  left: 0;
+}
+.class33 {
+  float: left;
+}
+.class34 {
+  clear: both;
+}
+.class35 {
+  display: inline-block;
+}
+.class36 {
+  border-collapse: collapse;
+}
+.class37 {
+  border-spacing: 0;
+}
+.class38 {
+  empty-cells: hide;
+}
+.class39 {
+  caption-side: bottom;
+}
+.class40 {
+  quotes: "\"" "\"";
+}
+.class41 {
+  counter-reset: section;
+}
+.class42 {
+  counter-increment: section;
+}
+.class43 {
+  content: counter(section);
+}
+.class44 {
+  page-break-before: always;
+}
+.class45 {
+  page-break-inside: avoid;
+}
+.class46 {
+  page-break-after: always;
+}
+.class47 {
+  orphans: 3;
+}
+.class48 {
+  widows: 3;
+}
+.class49 {
+  background-repeat: no-repeat;
+}
+.class50 {
+  background-attachment: fixed;
+}
+.class51 {
+  background-clip: border-box;
+}
+.class52 {
+  background-origin: padding-box;
+}
+.class53 {
+  background-size: cover;
+}
+.class54 {
+  border-width: 2px;
+}
+.class55 {
+  border-style: dashed;
+}
+.class56 {
+  border-color: #555;
+}
+.class57 {
+  border-top: 1px solid black;
+}
+.class58 {
+  border-right: 1px solid black;
+}
+.class59 {
+  border-bottom: 1px solid black;
+}
+.class60 {
+  border-left: 1px solid black;
+}
+.class61 {
+  border-radius: 10px;
+}
+.class62 {
+  outline: 1px dotted gray;
+}
+.class63 {
+  outline-offset: 2px;
+}
+.class64 {
+  box-shadow: 3px 3px 5px #888;
+}
+.class65 {
+  opacity: 0.5;
+}
+.class66 {
+  overflow-x: auto;
+}
+.class67 {
+  overflow-y: scroll;
+}
+.class68 {
+  clip: rect(0, 60px, 200px, 0);
+}
+.class70 {
+  filter: blur(5px);
+}
+.class71 {
+  transform: rotate(45deg);
+}
+.class72 {
+  transform-origin: top left;
+}
+.class73 {
+  transition: all 0.3s ease;
+}
+.class74 {
+  animation-name: fadeIn;
+}
+.class75 {
+  animation-duration: 5s;
+}
+.class76 {
+  animation-iteration-count: infinite;
+}
+.class77 {
+  column-count: 3;
+}
+.class78 {
+  column-gap: 40px;
+}
+.class79 {
+  column-rule: 1px solid black;
+}
+.class80 {
+  resize: both;
+}
+.class81 {
+  appearance: none;
+}
+.class82 {
+  content: "";
+}
+.class84 {
+  font-family: Arial, sans-serif;
+}
+.class85 {
+  font-size: 1.1em;
+}
+.class86 {
+  font-weight: normal;
+}
+.class87 {
+  font-style: normal;
+}
+.class88 {
+  font-variant: small-caps;
+}
+.class89 {
+  text-indent: 50px;
+}
+.class90 {
+  letter-spacing: 0.1em;
+}
+.class91 {
+  word-spacing: 0.2em;
+}
+.class92 {
+  text-transform: none;
+}
+.class93 {
+  text-decoration: none;
+}
+.class94 {
+  text-align: justify;
+}
+.class95 {
+  vertical-align: baseline;
+}
+.class96 {
+  white-space: normal;
+}
+.class97 {
+  color: #444;
+}
+.class98 {
+  background-color: #ddd;
+}
+.class99 {
+  padding: 5px;
+}
+.class100 {
+  margin: 5px;
+}
+.class101 {
+  border: 1px solid #bbb;
+}
+.class102 .class103 {
+  color: blue;
+}
+.class104 > .class105 {
+  color: green;
+}
+.class106 + .class107 {
+  margin-top: 10px;
+}
+.class108 ~ .class109 {
+  border-bottom: 1px solid red;
+}
+.class110.class111 {
+  font-weight: bold;
+}
+.class112:hover {
+  background-color: lightblue;
+}
+.class113:active {
+  color: purple;
+}
+.class114:focus {
+  outline: none;
+}
+.class115 {
+  content: ">> ";
+}
+.class116 {
+  content: " <<";
+}
+.class117[data-value="test"] {
+  font-style: italic;
+}
+.class118:nth-child(odd) {
+  background-color: #eee;
+}
+.class119:nth-child(even) {
+  background-color: #fff;
+}
+.class120:first-child {
+  border-top: none;
+}
+.class121:last-child {
+  border-bottom: none;
+}
+.class122:empty {
+  display: none;
+}
+.class123:disabled {
+  opacity: 0.5;
+}
+.class124:checked + label {
+  font-weight: bold;
+}
+.class125:not(.active) {
+  color: gray;
+}
+.class126 input:required {
+  border-color: orange;
+}
+.class127 input:valid {
+  border-color: green;
+}
+.class128 input:invalid {
+  border-color: red;
+}
+.class129 p:lang(fr) {
+  font-style: italic;
+}
+.class130:root {
+  font-size: 16px;
+}
+.class131:only-child {
+  margin: 0 auto;
+}
+.class132:only-of-type {
+  color: maroon;
+}
+.class133:target {
+  border: 2px solid teal;
+}
+.class134:enabled {
+  cursor: pointer;
+}
+.class135 {
+  background: yellow;
+}
+.class136 {
+  background: yellow;
+}
+.class137 .class138 > .class139 {
+  text-align: center;
+}
+.class140 + .class141 ~ .class142 {
+  padding: 5px;
+}
+.class143.class144:hover {
+  text-decoration: underline;
+}
+.class145[data-status="complete"]:before {
+  content: "✓ ";
+}
+.class146:nth-of-type(3n) {
+  color: navy;
+}
+.class147:first-of-type {
+  font-size: 1.2em;
+}
+.class148:last-of-type {
+  margin-bottom: 0;
+}
+.class149:default {
+  border: 1px dashed silver;
+}
+.class150:optional {
+  font-style: oblique;
+}
+.class151:in-range {
+  background-color: lightgreen;
+}
+.class152:out-of-range {
+  background-color: pink;
+}
+.class153 input:read-only {
+  background-color: #f9f9f9;
+}
+.class154 div:scope {
+  border: 1px dotted black;
+}
+.class155 li:nth-last-child(2) {
+  font-weight: bolder;
+}
+.class156 span:nth-last-of-type(1) {
+  color: brown;
+}
+.class157 article:has(img) {
+  border: 1px solid purple;
+}
+.class158 figure:not(:has(figcaption)) {
+  opacity: 0.7;
+}
+.class159 section:dir(rtl) {
+  text-align: right;
+}
+.class160 details:open {
+  border: 2px groove gray;
+}
+.class161 summary {
+  color: rebeccapurple;
+}
+.class162 meter {
+  background-color: orange;
+}
+.class163 progress {
+  background-color: limegreen;
+}
+.class164 time {
+  font-weight: bold;
+}
+.class165 .class166.class167 {
+  letter-spacing: 0.5px;
+}
+.class168 > .class169 + .class170 {
+  text-shadow: none;
+}
+.class171 ~ .class172:focus {
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+}
+.class173[aria-checked="true"] {
+  outline: 2px solid gold;
+}
+.class174:nth-child(4n+1) {
+  border-left: 3px solid hotpink;
+}
+.class175:nth-of-type(5n-2) {
+  transform: scale(0.9);
+}
+.class176:only-child:hover {
+  cursor: crosshair;
+}
+.class177:only-of-type:active {
+  filter: grayscale(100%);
+}
+.class178:target {
+  content: "#";
+}
+.class179:enabled:focus {
+  background-color: rgba(0, 255, 0, 0.1);
+}
+.class180 {
+  color: black;
+  background: palegoldenrod;
+}
+.class181 {
+  color: black;
+  background: palegoldenrod;
+}
+.class182 input {
+  color: silver;
+}
+.class183 textarea {
+  color: silver;
+}
+.class184 details > summary:first-of-type {
+  font-size: larger;
+}
+.class185 figure:has(> figcaption) {
+  margin: 1em;
+}
+.class186 section:not(:empty) {
+  padding: 10px;
+}
+.class187 article:nth-child(odd):hover {
+  transform: rotate(-2deg);
+}
+.class188 aside:nth-of-type(even):active {
+  transform: rotate(2deg);
+}
+.class189 nav:first-child {
+  content: " - Navigation";
+}
+.class190 main:last-child {
+  content: "End of Main Content - ";
+}
+.class191 header:only-of-type {
+  background-color: rgba(255, 0, 0, 0.1);
+}
+.class192 footer:only-child {
+  font-size: smaller;
+}
+.class193 div:lang(es) {
+  font-family: "Times New Roman", serif;
+}
+.class194 span:dir(ltr) {
+  unicode-bidi: normal;
+  direction: ltr;
+}
+.class195 a:any-link {
+  text-decoration: underline dotted;
+}
+.class196 button:default:hover {
+  background-color: lightgray;
+}
+.class197 fieldset:disabled legend {
+  color: gray;
+}
+.class198 form:valid button[type="submit"] {
+  border: 2px solid darkgreen;
+}
+.class199 input:invalid + span {
+  color: red;
+  font-weight: bold;
+}
+.class200 select:required:focus {
+  box-shadow: 0 0 5px rgba(0, 0, 255, 0.5);
+}
+.class201 textarea:optional:active {
+  outline: 1px dashed blue;
+}
+.class202, .class203, .class204 {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.class205:hover, .class206:focus, .class207:active {
+  opacity: 0.9;
+}
+
+.class208.class209, .class210.class211, .class212.class213 {
+  display: block;
+}
+
+.class214 > .class215, .class216 > .class217, .class218 > .class219 {
+  position: absolute;
+}
+
+.class220 + .class221, .class222 + .class223, .class224 + .class225 {
+  clear: left;
+}

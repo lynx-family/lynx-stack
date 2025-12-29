@@ -12,15 +12,16 @@ import { createRequire } from 'node:module'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 
+import { pluginReactAlias } from '@lynx-js/react-alias-rsbuild-plugin'
 import type {
   CompatVisitorConfig,
   DefineDceVisitorConfig,
   ExtractStrConfig,
   ShakeVisitorConfig,
 } from '@lynx-js/react-transform'
+import { LAYERS } from '@lynx-js/react-webpack-plugin'
 import type { ExposedAPI } from '@lynx-js/rspeedy'
 
-import { applyAlias } from './alias.js'
 import { applyBackgroundOnly } from './backgroundOnly.js'
 import { applyCSS } from './css.js'
 import { applyEntry } from './entry.js'
@@ -30,6 +31,7 @@ import { applyLoaders } from './loaders.js'
 import { applyRefresh } from './refresh.js'
 import { applySplitChunksRule } from './splitChunks.js'
 import { applySWC } from './swc.js'
+import { applyUseSyncExternalStore } from './useSyncExternalStore.js'
 import { validateConfig } from './validate.js'
 
 /**
@@ -113,15 +115,6 @@ export interface PluginReactLynxOptions {
   enableAccessibilityElement?: boolean
 
   /**
-   * enableICU enables the Intl API to be enabled globally.
-   *
-   * If enabled, please double check the compatibility with Lynx Share Context feature to avoid using shared Intl API from other destroyed card.
-   *
-   * @defaultValue `false`
-   */
-  enableICU?: boolean
-
-  /**
    * enableCSSInheritance enables the default inheritance properties.
    *
    * @remarks
@@ -187,15 +180,6 @@ export interface PluginReactLynxOptions {
   enableNewGesture?: boolean
 
   /**
-   * enableParallelElement enables Threaded Element Resolution.
-   *
-   * @defaultValue `true`
-   *
-   * @public
-   */
-  enableParallelElement?: boolean
-
-  /**
    * enableRemoveCSSScope controls whether CSS is restrict to use in the component scope.
    *
    * `true`: All CSS files are treated as global CSS.
@@ -234,31 +218,6 @@ export interface PluginReactLynxOptions {
    * @public
    */
   enableSSR?: boolean
-
-  /**
-   * Composite configuration representing pipeline scheduling strategies, including {@link PluginReactLynxOptions.enableParallelElement} and list batch-rendering. All newly introduced scheduling strategies will be managed by this uint64 configuration.
-   *
-   * @remarks
-   *
-   * Preallocate 64 bit unsigned integer for pipeline scheduler config.
-   *
-   * -  0 ~ 7 bit: Reserved for parsing binary bundle into C++ bundle.
-   *
-   * -  8 ~ 15 bit: Reserved for MTS Render.
-   *
-   * -  16 ~ 23 bit: Reserved for resolve stage in Pixel Pipeline.
-   *
-   * -  24 ~ 31 bit: Reserved for layout stage in Pixel Pipeline.
-   *
-   * -  32 ~ 39 bit: Reserved for execute UI OP stage in Pixel Pipeline.
-   *
-   * -  40 ~ 47 bit: Reserved for paint stage in Pixel Pipeline.
-   *
-   * -  48 ~ 63 bit: Flexible bits for extensibility.
-   *
-   * @defaultValue `0x00010000`
-   */
-  pipelineSchedulerConfig?: number
 
   /**
    * removeDescendantSelectorScope is used to remove the scope of descendant selectors.
@@ -322,7 +281,7 @@ export interface PluginReactLynxOptions {
  */
 export function pluginReactLynx(
   userOptions?: PluginReactLynxOptions,
-): RsbuildPlugin {
+): RsbuildPlugin[] {
   validateConfig(userOptions)
 
   const engineVersion = userOptions?.engineVersion
@@ -334,16 +293,13 @@ export function pluginReactLynx(
     debugInfoOutside: true,
     defaultDisplayLinear: true,
     enableAccessibilityElement: false,
-    enableICU: false,
     enableCSSInheritance: false,
     enableCSSInvalidation: true,
     enableCSSSelector: true,
     enableNewGesture: false,
-    enableParallelElement: true,
     enableRemoveCSSScope: true,
     firstScreenSyncTiming: 'immediately',
     enableSSR: false,
-    pipelineSchedulerConfig: 0x00010000,
     removeDescendantSelectorScope: true,
     shake: undefined,
     defineDCE: undefined,
@@ -361,64 +317,78 @@ export function pluginReactLynx(
     engineVersion,
   })
 
-  return {
-    name: 'lynx:react',
-    pre: ['lynx:rsbuild:plugin-api'],
-    async setup(api) {
-      await applyAlias(api, resolvedOptions.experimental_isLazyBundle)
-      applyCSS(api, resolvedOptions)
-      applyEntry(api, resolvedOptions)
-      applyBackgroundOnly(api)
-      applyGenerator(api)
-      applyLoaders(api, resolvedOptions)
-      applyRefresh(api)
-      applySplitChunksRule(api)
-      applySWC(api)
+  return [
+    pluginReactAlias({
+      lazy: resolvedOptions.experimental_isLazyBundle,
+      LAYERS,
+    }),
+    {
+      name: 'lynx:react',
+      pre: ['lynx:rsbuild:plugin-api'],
+      setup(api) {
+        applyCSS(api, resolvedOptions)
+        applyEntry(api, resolvedOptions)
+        applyBackgroundOnly(api)
+        applyGenerator(api, resolvedOptions)
+        applyLoaders(api, resolvedOptions)
+        applyRefresh(api)
+        applySplitChunksRule(api)
+        applySWC(api)
+        applyUseSyncExternalStore(api)
 
-      api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-        const userConfig = api.getRsbuildConfig('original')
-        if (typeof userConfig.source?.include === 'undefined') {
-          config = mergeRsbuildConfig(config, {
-            source: {
-              include: [
-                /\.(?:js|mjs|cjs)$/,
-              ],
+        api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+          const userConfig = api.getRsbuildConfig('original')
+          if (typeof userConfig.source?.include === 'undefined') {
+            config = mergeRsbuildConfig(config, {
+              source: {
+                include: [
+                  /\.(?:js|mjs|cjs)$/,
+                ],
+              },
+            })
+          }
+
+          // This is used for compat with `@lynx-js/rspeedy` <= 0.9.6
+          // where the default value of `output.inlineScripts` is `false`.
+          // TODO: remove this when required Rspeedy version bumped to ^0.9.7
+          if (typeof userConfig.output?.inlineScripts === 'undefined') {
+            config = mergeRsbuildConfig(config, {
+              output: {
+                inlineScripts: true,
+              },
+            })
+          }
+
+          // This is used to avoid the IIFE in main-thread.js, which would cause memory leak.
+          // TODO: remove this when required Rspeedy version bumped to ^0.10.0
+          config = mergeRsbuildConfig({
+            tools: {
+              rspack: { output: { iife: false } },
             },
-          })
+          }, config)
+
+          return config
+        })
+
+        if (resolvedOptions.experimental_isLazyBundle) {
+          applyLazy(api)
         }
 
-        // This is used for compat with `@lynx-js/rspeedy` <= 0.9.6
-        // where the default value of `output.inlineScripts` is `false`.
-        // TODO: remove this when required Rspeedy version bumped to ^0.9.7
-        if (typeof userConfig.output?.inlineScripts === 'undefined') {
-          config = mergeRsbuildConfig(config, {
-            output: {
-              inlineScripts: true,
-            },
-          })
-        }
+        const rspeedyAPIs = api.useExposed<ExposedAPI>(
+          Symbol.for('rspeedy.api'),
+        )!
 
-        return config
-      })
+        const require = createRequire(import.meta.url)
 
-      if (resolvedOptions.experimental_isLazyBundle) {
-        applyLazy(api)
-      }
+        const { version } = require('../package.json') as { version: string }
 
-      const rspeedyAPIs = api.useExposed<ExposedAPI>(
-        Symbol.for('rspeedy.api'),
-      )!
-
-      const require = createRequire(import.meta.url)
-
-      const { version } = require('../package.json') as { version: string }
-
-      rspeedyAPIs.debug(() => {
-        const webpackPluginPath = require.resolve(
-          '@lynx-js/react-webpack-plugin',
-        )
-        return `Using @lynx-js/react-webpack-plugin v${version} at ${webpackPluginPath}`
-      })
+        rspeedyAPIs.debug(() => {
+          const webpackPluginPath = require.resolve(
+            '@lynx-js/react-webpack-plugin',
+          )
+          return `Using @lynx-js/react-webpack-plugin v${version} at ${webpackPluginPath}`
+        })
+      },
     },
-  }
+  ]
 }

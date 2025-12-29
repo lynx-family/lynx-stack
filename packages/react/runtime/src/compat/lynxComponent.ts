@@ -9,15 +9,15 @@ export function wrapWithLynxComponent(
   jsxComponent: any,
 ): ReactNode {
   const C = jsxComponent.type;
-  if (typeof C === 'function') {
-    if (C === ComponentFromReactRuntime || C.prototype instanceof ComponentFromReactRuntime) {
-      if (jsxSnapshot.length === 1) {
-        return jsxSnapshot(jsxComponent);
-      } else {
-        // spread
-        if (!jsxComponent.props.removeComponentElement) {
-          return jsxSnapshot(jsxComponent, takeComponentAttributes(jsxComponent));
-        }
+  if (
+    typeof C === 'function' && (C === ComponentFromReactRuntime || C.prototype instanceof ComponentFromReactRuntime)
+  ) {
+    if (jsxSnapshot.length === 1) {
+      return jsxSnapshot(jsxComponent);
+    } else {
+      // spread
+      if (!jsxComponent.props.removeComponentElement) {
+        return jsxSnapshot(jsxComponent, takeComponentAttributes(jsxComponent));
       }
     }
   }
@@ -25,8 +25,7 @@ export function wrapWithLynxComponent(
 }
 
 // @ts-expect-error
-export class ComponentFromReactRuntime extends Component {
-}
+export class ComponentFromReactRuntime extends Component {}
 
 const __COMPONENT_ATTRIBUTES__ = /* @__PURE__ */ new Set([
   'name',
@@ -68,8 +67,8 @@ function takeComponentAttributes(jsxComponent: any): Record<string, any> {
       || k === 'dataSet'
       || k === 'data-set'
       || k === 'removeComponentElement'
-      || k.match(/^(global-bind|bind|catch|capture-bind|capture-catch)([A-Za-z]+)$/)
-      || k.match(/^data-([A-Za-z]+)$/)
+      || (/^(global-bind|bind|catch|capture-bind|capture-catch)([A-Za-z]+)$/.exec(k))
+      || (/^data-([A-Za-z]+)$/.exec(k))
     ) {
       attributes[k] = jsxComponent.props[k];
       delete jsxComponent.props[k];

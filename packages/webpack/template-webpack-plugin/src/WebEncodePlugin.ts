@@ -73,7 +73,11 @@ export class WebEncodePlugin {
             },
             customSections: encodeData.customSections,
             cardType: encodeData.sourceContent.dsl.substring(0, 5),
-            pageConfig: encodeData.compilerOptions,
+            appType: encodeData.sourceContent.appType,
+            pageConfig: {
+              ...encodeData.compilerOptions,
+              ...encodeData.sourceContent.config,
+            },
           });
           return encodeOptions;
         });
@@ -87,13 +91,15 @@ export class WebEncodePlugin {
               styleInfo: encodeOptions['styleInfo'],
               manifest: encodeOptions.manifest,
               cardType: encodeOptions['cardType'],
-              pageConfig: encodeOptions.compilerOptions,
+              appType: encodeOptions['appType'],
+              pageConfig: encodeOptions['pageConfig'],
               lepusCode: {
                 // flatten the lepusCode to a single object
                 ...encodeOptions.lepusCode.lepusChunk,
                 root: encodeOptions.lepusCode.root,
               },
               customSections: encodeOptions.customSections,
+              elementTemplate: encodeOptions['elementTemplate'],
             })),
             debugInfo: '',
           };

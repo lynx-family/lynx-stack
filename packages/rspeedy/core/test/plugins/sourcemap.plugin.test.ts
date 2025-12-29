@@ -63,7 +63,9 @@ describe('sourcemap.plugin', () => {
         },
       })
 
-      const config = await rspeedy.unwrapConfig()
+      const config = await rspeedy.unwrapConfig({
+        action: 'build',
+      })
       expect(config.devtool).toBe(false)
       // source-map with publicPath applied
       expect(SourceMapDevToolPlugin).toBeCalledWith(
@@ -93,7 +95,9 @@ describe('sourcemap.plugin', () => {
         },
       })
 
-      const config = await rspeedy.unwrapConfig()
+      const config = await rspeedy.unwrapConfig({
+        action: 'build',
+      })
       expect(config.devtool).toBe(false)
       // source-map with publicPath applied
       expect(SourceMapDevToolPlugin).toBeCalledWith(
@@ -122,7 +126,9 @@ describe('sourcemap.plugin', () => {
         },
       })
 
-      const config = await rspeedy.unwrapConfig()
+      const config = await rspeedy.unwrapConfig({
+        action: 'build',
+      })
       expect(config.devtool).toBe(false)
 
       // cheap-module-source-map with publicPath applied
@@ -152,7 +158,9 @@ describe('sourcemap.plugin', () => {
         },
       })
 
-      const config = await rspeedy.unwrapConfig()
+      const config = await rspeedy.unwrapConfig({
+        action: 'build',
+      })
       expect(config.devtool).toBe(false)
 
       // hidden-source-map with publicPath applied
@@ -198,7 +206,9 @@ describe('sourcemap.plugin', () => {
         },
       })
 
-      const config = await rspeedy.unwrapConfig()
+      const config = await rspeedy.unwrapConfig({
+        action: 'build',
+      })
       expect(config.devtool).toBe(false)
 
       // source-map with publicPath applied
@@ -248,7 +258,7 @@ describe('sourcemap.plugin', () => {
                 return mergeRsbuildConfig(config, {
                   output: {
                     sourceMap: {
-                      js: 'hidden-nosources-source-map', // cSpell:disable-line
+                      js: 'hidden-nosources-source-map',
                     },
                   },
                 })
@@ -258,10 +268,12 @@ describe('sourcemap.plugin', () => {
         ],
       })
 
-      const config = await rspeedy.unwrapConfig()
+      const config = await rspeedy.unwrapConfig({
+        action: 'build',
+      })
       expect(config.devtool).toBe(false)
       expect(SourceMapDevToolPlugin).toBeCalled()
-      // 'hidden-nosources-source-map' with publicPath applied // cSpell:disable-line
+      // 'hidden-nosources-source-map' with publicPath applied
       expect(SourceMapDevToolPlugin).toBeCalledWith(
         expect.objectContaining({
           publicPath: '/',

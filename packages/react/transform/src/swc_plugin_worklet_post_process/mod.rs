@@ -1,14 +1,9 @@
 use swc_core::ecma::ast::*;
 use swc_core::ecma::visit::{noop_visit_mut_type, VisitMut, VisitMutWith};
 
+#[derive(Default)]
 pub struct WorkletPostProcessorVisitorResult {
   pub has_worklet: bool,
-}
-
-impl Default for WorkletPostProcessorVisitorResult {
-  fn default() -> Self {
-    WorkletPostProcessorVisitorResult { has_worklet: false }
-  }
 }
 
 pub struct WorkletPostProcessorVisitor {
@@ -23,7 +18,7 @@ impl Default for WorkletPostProcessorVisitor {
 
 impl WorkletPostProcessorVisitor {
   pub fn new(result: WorkletPostProcessorVisitorResult) -> Self {
-    return WorkletPostProcessorVisitor { result };
+    WorkletPostProcessorVisitor { result }
   }
 }
 

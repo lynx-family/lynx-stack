@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/qrcode-rsbuild-plugin",
-  "version": "0.3.6",
+  "version": "0.4.1",
   "description": "A rsbuild plugin for printing QRCode in terminal",
   "keywords": [
     "rsbuild",
@@ -48,7 +48,7 @@
     "test": "pnpm -w run test --project rspeedy/qrcode"
   },
   "devDependencies": {
-    "@clack/prompts": "1.0.0-alpha.0",
+    "@clack/prompts": "1.0.0-alpha.5",
     "@lynx-js/rspeedy": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@rsbuild/core": "catalog:rsbuild",

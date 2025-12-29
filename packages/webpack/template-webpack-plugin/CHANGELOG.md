@@ -1,5 +1,123 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.9.0
+
+### Minor Changes
+
+- **BREAKING CHANGE:** Remove the `enableParallelElement` and `pipelineSchedulerConfig` options. ([#1705](https://github.com/lynx-family/lynx-stack/pull/1705))
+
+  Since the thread element resolution is still in experimental stage and may have stability risks, it will be disabled by default after this change.
+
+- **BREAKING CHANGE**: Remove the `enableICU` option. ([#1800](https://github.com/lynx-family/lynx-stack/pull/1800))
+
+## 0.8.6
+
+### Patch Changes
+
+- fix: add appType field for lazy bundle for web ([#1738](https://github.com/lynx-family/lynx-stack/pull/1738))
+
+## 0.8.5
+
+### Patch Changes
+
+- Always inline the background script that contains rspack runtime module. ([#1582](https://github.com/lynx-family/lynx-stack/pull/1582))
+
+- Updated dependencies [[`aaca8f9`](https://github.com/lynx-family/lynx-stack/commit/aaca8f91d177061c7b0430cc5cb21a3602897534)]:
+  - @lynx-js/webpack-runtime-globals@0.0.6
+
+## 0.8.4
+
+### Patch Changes
+
+- Fix invalid `module.exports=;` syntax in app-service.js. ([#1501](https://github.com/lynx-family/lynx-stack/pull/1501))
+
+## 0.8.3
+
+### Patch Changes
+
+- feat: support elementTemplate for web ([#1374](https://github.com/lynx-family/lynx-stack/pull/1374))
+
+## 0.8.2
+
+### Patch Changes
+
+- Fix the `Syntax Error: expecting ';'` error of chunk splitting ([#1279](https://github.com/lynx-family/lynx-stack/pull/1279))
+
+## 0.8.1
+
+### Patch Changes
+
+- feat: `::placeholder` will be compiled to `part(input)::placeholder`, which means you can use pseudo-element CSS to add placeholder styles to input and textarea. ([#1158](https://github.com/lynx-family/lynx-stack/pull/1158))
+
+  ```
+  // before
+  <input placeholder-color='red' placeholder-font-weight='bold' placeholder-font-size='20px'>
+
+  // after
+  <input>
+
+  input::placeholder {
+    color: red;
+    font-weight: bold;
+    font-size: 20px;
+  }
+  ```
+
+- Enable fine-grained control for `output.inlineScripts` ([#883](https://github.com/lynx-family/lynx-stack/pull/883))
+
+  ```ts
+  type InlineChunkTestFunction = (params: {
+    size: number;
+    name: string;
+  }) => boolean;
+
+  type InlineChunkTest = RegExp | InlineChunkTestFunction;
+
+  type InlineChunkConfig =
+    | boolean
+    | InlineChunkTest
+    | { enable?: boolean | 'auto'; test: InlineChunkTest };
+  ```
+
+  ```ts
+  import { defineConfig } from '@lynx-js/rspeedy';
+
+  export default defineConfig({
+    output: {
+      inlineScripts: ({ name, size }) => {
+        return name.includes('foo') && size < 1000;
+      },
+    },
+  });
+  ```
+
+## 0.8.0
+
+### Minor Changes
+
+- Remove `EncodeCSSOptions` and `encodeCSS` to ensure consistent encoding options are used across CSS HMR updates and the main template. ([#1033](https://github.com/lynx-family/lynx-stack/pull/1033))
+
+### Patch Changes
+
+- Avoid generating lazy bundles when there are no chunk name. ([#1090](https://github.com/lynx-family/lynx-stack/pull/1090))
+
+  E.g.: using `import.meta.webpackContext`.
+
+## 0.7.2
+
+### Patch Changes
+
+- Updated dependencies [[`ccb4254`](https://github.com/lynx-family/lynx-stack/commit/ccb4254cf4008362e2536a473660c4e3453e5a64)]:
+  - @lynx-js/css-serializer@0.1.3
+
+## 0.7.1
+
+### Patch Changes
+
+- feat: Merge the absent configurations for `.web.bundle`. ([#884](https://github.com/lynx-family/lynx-stack/pull/884))
+
+  Before this change, the configuration of pageConfig in `.web.bundle` was `compilerOptions`. After this commit, pageConfig will be a combination of `compilerOptions` and `sourceContent.config`.
+
 ## 0.7.0
 
 ### Minor Changes

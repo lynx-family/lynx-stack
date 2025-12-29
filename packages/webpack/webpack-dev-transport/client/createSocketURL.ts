@@ -79,7 +79,7 @@ function format(
 
 export function createSocketURL(
   parsedURL: URL,
-  compilationId?: string,
+  token?: string,
 ): string {
   const { hostname } = parsedURL;
 
@@ -133,6 +133,6 @@ export function createSocketURL(
     port: socketURLPort,
     pathname: socketURLPathname,
     slashes: true,
-    search: compilationId ? `?compilationId=${compilationId}` : '',
+    search: token ? `?token=${token}` : '',
   });
 }

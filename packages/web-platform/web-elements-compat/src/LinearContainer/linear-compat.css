@@ -70,8 +70,15 @@
 [lynx-computed-display="linear"] > *,
 [lynx-computed-display="linear"] > lynx-wrapper > * {
   flex-shrink: 0 !important;
-  flex-grow: calc(var(--lynx-linear-weight) / var(--lynx-linear-weight-sum))
-    !important;
+  flex-grow: calc(
+    var(--lynx-linear-weight) /
+      calc(
+      var(--lynx-linear-weight-sum) +
+        (
+        1 - clamp(0, var(--lynx-linear-weight-sum) * 999999, 1)
+      )
+    )
+  ) !important;
   flex-basis: var(--lynx-linear-weight-basis) !important;
 }
 

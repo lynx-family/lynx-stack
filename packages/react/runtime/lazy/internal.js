@@ -5,6 +5,7 @@
 import { sExportsReactInternal, target } from './target.js';
 
 export const {
+  BackgroundSnapshotInstance,
   Component,
   __ComponentIsPolyfill,
   __DynamicPartChildren,
@@ -21,6 +22,7 @@ export const {
   loadLazyBundle,
   loadWorkletRuntime,
   options,
+  process,
   registerWorkletOnBackground,
   snapshotCreateList,
   snapshotManager,

@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/tailwind-preset",
-  "version": "0.0.3",
+  "version": "0.4.0",
   "description": "A tailwindcss preset for ReactLynx",
   "keywords": [
     "Lynx",
@@ -13,21 +13,32 @@
     "directory": "packages/third-party/tailwind-preset"
   },
   "type": "module",
-  "exports": null,
-  "main": "./lib/lynx.js",
-  "types": "./lib/lynx.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/lynx.d.ts",
+      "import": "./dist/lynx.js",
+      "require": "./dist/lynx.cjs",
+      "default": "./dist/lynx.js"
+    }
+  },
+  "main": "./dist/lynx.js",
+  "types": "./dist/lynx.d.ts",
   "files": [
-    "lib",
+    "dist",
+    "!dist/__tests__",
+    "!dist/**/*.js.map",
     "CHANGELOG.md",
     "README.md"
   ],
   "scripts": {
+    "build": "rslib build",
     "test": "vitest",
     "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "@lynx-js/types": "3.3.0",
-    "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17"
+  },
+  "peerDependencies": {
+    "tailwindcss": "^3.4.0"
   }
 }

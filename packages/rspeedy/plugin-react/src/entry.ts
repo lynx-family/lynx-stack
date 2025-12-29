@@ -15,7 +15,6 @@ import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 import type { ExposedAPI } from '@lynx-js/rspeedy'
 import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 import {
-  CSSPlugins,
   LynxEncodePlugin,
   LynxTemplatePlugin,
   WebEncodePlugin,
@@ -42,27 +41,24 @@ export function applyEntry(
     debugInfoOutside,
     defaultDisplayLinear,
     enableAccessibilityElement,
-    enableICU,
     enableCSSInheritance,
     enableCSSInvalidation,
     enableCSSSelector,
     enableNewGesture,
-    enableParallelElement,
     enableRemoveCSSScope,
     firstScreenSyncTiming,
     enableSSR,
-    pipelineSchedulerConfig,
     removeDescendantSelectorScope,
     targetSdkVersion,
-    extractStr,
+    extractStr: originalExtractStr,
 
     experimental_isLazyBundle,
   } = options
 
-  const { config } = api.useExposed<ExposedAPI>(
+  const { config, logger } = api.useExposed<ExposedAPI>(
     Symbol.for('rspeedy.api'),
   )!
-  api.modifyBundlerChain((chain, { environment, isDev, isProd }) => {
+  api.modifyBundlerChain(async (chain, { environment, isDev, isProd }) => {
     const entries = chain.entryPoints.entries() ?? {}
     const isLynx = environment.name === 'lynx'
     const isWeb = environment.name === 'web'
@@ -108,6 +104,7 @@ export function applyEntry(
           experimental_isLazyBundle,
         ),
       )
+
       const backgroundEntry = entryName
 
       mainThreadChunks.push(mainThreadName)
@@ -169,7 +166,6 @@ export function applyEntry(
             environment.name,
           ),
           intermediate: path.posix.join(
-            // TODO: config intermediate
             DEFAULT_DIST_PATH_INTERMEDIATE,
             entryName,
           ),
@@ -178,30 +174,35 @@ export function applyEntry(
           defaultDisplayLinear,
           enableA11y: true,
           enableAccessibilityElement,
-          enableICU,
           enableCSSInheritance,
           enableCSSInvalidation,
           enableCSSSelector,
           enableNewGesture,
-          enableParallelElement,
           enableRemoveCSSScope: enableRemoveCSSScope ?? true,
-          pipelineSchedulerConfig,
           removeDescendantSelectorScope,
           targetSdkVersion,
 
           experimental_isLazyBundle,
-          cssPlugins: [
-            CSSPlugins.parserPlugins.removeFunctionWhiteSpace(),
-          ],
+          cssPlugins: [],
         }])
         .end()
     })
 
+    const rsbuildConfig = api.getRsbuildConfig()
+    const userConfig = api.getRsbuildConfig('original')
+
+    const enableChunkSplitting =
+      rsbuildConfig.performance?.chunkSplit?.strategy !== 'all-in-one'
+
     if (isLynx) {
-      const inlineScripts =
-        typeof environment.config.output?.inlineScripts === 'boolean'
-          ? environment.config.output.inlineScripts
-          : true
+      let inlineScripts
+      if (experimental_isLazyBundle) {
+        // TODO: support inlineScripts in lazyBundle
+        inlineScripts = true
+      } else {
+        inlineScripts = environment.config.output?.inlineScripts
+          ?? !enableChunkSplitting
+      }
 
       chain
         .plugin(PLUGIN_NAME_RUNTIME_WRAPPER)
@@ -238,7 +239,17 @@ export function applyEntry(
         .end()
     }
 
-    const rsbuildConfig = api.getRsbuildConfig()
+    let extractStr = originalExtractStr
+    if (enableChunkSplitting && originalExtractStr) {
+      logger.warn(
+        '`extractStr` is changed to `false` because it is only supported in `all-in-one` chunkSplit strategy, please set `performance.chunkSplit.strategy` to `all-in-one` to use `extractStr.`',
+      )
+      extractStr = false
+    }
+
+    const { resolve } = api.useExposed<
+      { resolve: (request: string) => Promise<string> }
+    >(Symbol.for('@lynx-js/react/internal:resolve'))!
 
     chain
       .plugin(PLUGIN_NAME_REACT)
@@ -251,9 +262,33 @@ export function applyEntry(
         mainThreadChunks,
         extractStr,
         experimental_isLazyBundle,
-        profile: rsbuildConfig.performance?.profile,
+        profile: getDefaultProfile(),
+        workletRuntimePath: await resolve(
+          `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,
+        ),
       }])
+
+    function getDefaultProfile(): boolean | undefined {
+      if (userConfig.performance?.profile !== undefined) {
+        return userConfig.performance.profile
+      }
+
+      if (isDebug()) {
+        return true
+      }
+
+      return undefined
+    }
   })
+}
+
+export const isDebug = (): boolean => {
+  if (!process.env['DEBUG']) {
+    return false
+  }
+
+  const values = process.env['DEBUG'].toLocaleLowerCase().split(',')
+  return ['rspeedy', '*'].some((key) => values.includes(key))
 }
 
 // This is copied from https://github.com/web-infra-dev/rsbuild/blob/037da7b9d92e20c7136c8b2efa21eef539fa2f88/packages/core/src/plugins/html.ts#L168

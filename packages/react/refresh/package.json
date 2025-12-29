@@ -10,12 +10,11 @@
     "src"
   ],
   "scripts": {
-    "build": "esbuild --bundle src/index.ts --outfile=dist/index.js --external:@lynx-js/react --define:self=globalThis --format=esm --alias:preact=@lynx-js/react/internal --alias:preact/hooks=@lynx-js/react"
+    "build": "rslib build"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
-    "@prefresh/core": "^1.5.3",
-    "@prefresh/utils": "^1.2.0",
-    "esbuild": "^0.25.4"
+    "@prefresh/core": "^1.5.7",
+    "@prefresh/utils": "^1.2.1"
   }
 }

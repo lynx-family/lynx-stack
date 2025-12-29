@@ -20,7 +20,7 @@ You can directly import static assets in JavaScript:
 // Import the logo.png image in the static directory
 import logo from './static/logo.png';
 
-function App() {
+export function App() {
   return <image src={logo} />; // Can be directly used in ReactLynx
 }
 ```
@@ -62,7 +62,7 @@ The `public` folder at the project root can be used to place some static assets.
 In JavaScript code, you can splice the URL via `process.env.ASSET_PREFIX`:
 
 ```js
-const logoURL = `${process.env.ASSET_PREFIX}/logo.png`;
+export const logoURL = `${process.env.ASSET_PREFIX}/logo.png`;
 ```
 
 :::warning

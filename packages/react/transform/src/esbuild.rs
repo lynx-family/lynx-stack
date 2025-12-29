@@ -41,6 +41,95 @@ pub struct PartialLocation {
   pub suggestion: Option<String>,
 }
 
+type LRVPartialMessage = Lrc<RwLock<Vec<PartialMessage>>>;
+
+pub struct EsbuildEmitter {
+  pub errors: LRVPartialMessage,
+  pub warnings: LRVPartialMessage,
+
+  plugin_name: String,
+  source_map: Option<Lrc<SourceMapperDyn>>,
+}
+
+impl EsbuildEmitter {
+  pub fn new(
+    plugin_name: String,
+    source_map: Option<Lrc<SourceMapperDyn>>,
+  ) -> (Self, LRVPartialMessage, LRVPartialMessage) {
+    let errors = Lrc::new(RwLock::new(vec![]));
+    let warnings = Lrc::new(RwLock::new(vec![]));
+
+    (
+      Self {
+        errors: errors.clone(),
+        warnings: warnings.clone(),
+
+        plugin_name,
+        source_map,
+      },
+      errors,
+      warnings,
+    )
+  }
+}
+
+impl Emitter for EsbuildEmitter {
+  fn emit(&mut self, msg: &mut DiagnosticBuilder<'_>) {
+    let partial_message = PartialMessage {
+      id: msg.code.as_ref().map(|code| match code {
+        DiagnosticId::Error(id) => id.to_string(),
+        DiagnosticId::Lint(id) => id.to_string(),
+      }),
+      plugin_name: Some(self.plugin_name.clone()),
+      text: Some(msg.message().to_string()),
+      location: if let (Some(sm), Some(primary_span)) =
+        (self.source_map.as_ref(), msg.span.primary_span().as_ref())
+      {
+        let loc = sm.lookup_char_pos(primary_span.lo());
+        let filename = sm.span_to_filename(*primary_span);
+
+        let mut location = PartialLocation {
+          file: Some(filename.to_string()),
+          namespace: None,
+          line: Some(loc.line as u32),
+          column: Some(loc.col.0 as u32),
+          length: Some(primary_span.hi().0 - primary_span.lo().0),
+          line_text: None,
+          suggestion: None,
+        };
+
+        if let Ok(FileLines { lines, file }) = sm.span_to_lines(*primary_span) {
+          lines.iter().for_each(|line| {
+            if line.line_index + 1 == loc.line {
+              if let Some(line_text) = file.get_line(line.line_index) {
+                location.line_text = Some(line_text.to_string());
+              }
+            }
+          });
+        }
+
+        Some(location)
+      } else {
+        None
+      },
+      notes: None,
+      detail: None,
+    };
+
+    match msg.level {
+      Level::Bug | Level::Fatal | Level::PhaseFatal | Level::Error => {
+        self.errors.write().unwrap().push(partial_message);
+      }
+      Level::Warning => {
+        self.warnings.write().unwrap().push(partial_message);
+      }
+      _ => {
+        todo!()
+      }
+    }
+  }
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -108,99 +197,5 @@ mod tests {
     });
 
     assert_eq!(s, serde_json::from_value(json).unwrap());
-  }
-}
-
-pub struct EsbuildEmitter {
-  pub errors: Lrc<RwLock<Vec<PartialMessage>>>,
-  pub warnings: Lrc<RwLock<Vec<PartialMessage>>>,
-
-  plugin_name: String,
-  source_map: Option<Lrc<SourceMapperDyn>>,
-}
-
-impl EsbuildEmitter {
-  pub fn new(
-    plugin_name: String,
-    source_map: Option<Lrc<SourceMapperDyn>>,
-  ) -> (
-    Self,
-    Lrc<RwLock<Vec<PartialMessage>>>,
-    Lrc<RwLock<Vec<PartialMessage>>>,
-  ) {
-    let errors = Lrc::new(RwLock::new(vec![]));
-    let warnings = Lrc::new(RwLock::new(vec![]));
-
-    (
-      Self {
-        errors: errors.clone(),
-        warnings: warnings.clone(),
-
-        plugin_name,
-        source_map,
-      },
-      errors,
-      warnings,
-    )
-  }
-}
-
-impl Emitter for EsbuildEmitter {
-  fn emit(&mut self, msg: &mut DiagnosticBuilder<'_>) {
-    let partial_message = PartialMessage {
-      id: msg.code.as_ref().map(|code| match code {
-        DiagnosticId::Error(id) => id.to_string(),
-        DiagnosticId::Lint(id) => id.to_string(),
-      }),
-      plugin_name: Some(self.plugin_name.clone()),
-      text: Some(msg.message().to_string()),
-      location: if let (Some(sm), Some(primary_span)) =
-        (self.source_map.as_ref(), msg.span.primary_span().as_ref())
-      {
-        let loc = sm.lookup_char_pos(primary_span.lo());
-        let filename = sm.span_to_filename(*primary_span);
-
-        let mut location = PartialLocation {
-          file: Some(filename.to_string()),
-          namespace: None,
-          line: Some(loc.line as u32),
-          column: Some(loc.col.0 as u32),
-          length: Some(primary_span.hi().0 - primary_span.lo().0),
-          line_text: None,
-          suggestion: None,
-        };
-
-        match sm.span_to_lines(*primary_span) {
-          Ok(FileLines { lines, file }) => {
-            lines.iter().for_each(|line| {
-              if line.line_index + 1 == loc.line {
-                if let Some(line_text) = file.get_line(line.line_index) {
-                  location.line_text = Some(line_text.to_string());
-                }
-              }
-            });
-          }
-          Err(_) => {}
-        }
-
-        Some(location)
-      } else {
-        None
-      },
-      notes: None,
-      detail: None,
-    };
-
-    match msg.level {
-      Level::Bug | Level::Fatal | Level::PhaseFatal | Level::Error => {
-        self.errors.write().unwrap().push(partial_message);
-      }
-      Level::Warning => {
-        self.warnings.write().unwrap().push(partial_message);
-      }
-      _ => {
-        todo!()
-      }
-    }
   }
 }

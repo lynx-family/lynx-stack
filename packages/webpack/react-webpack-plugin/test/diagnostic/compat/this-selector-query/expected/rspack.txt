@@ -1,4 +1,4 @@
-WARNING in ./compat/this-selector-query/index.jsx
+WARNING in ./compat/this-selector-query/index.jsx <LINE:COLUMN>-30
 ⚠ ModuleWarning: BROKEN: createSelectorQuery on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.
 ╭─[<LINE:COLUMN>]
 3  class App extends Component {
@@ -10,7 +10,7 @@ WARNING in ./compat/this-selector-query/index.jsx
 7    }
 ╰────
 
-WARNING in ./compat/this-selector-query/index.jsx
+WARNING in ./compat/this-selector-query/index.jsx <LINE:COLUMN>-25
 ⚠ ModuleWarning: BROKEN: getElementById on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.getElementById instead.
 ╭─[<LINE:COLUMN>]
 4    componentDidMount() {

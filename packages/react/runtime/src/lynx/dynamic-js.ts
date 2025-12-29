@@ -9,6 +9,7 @@ export function loadDynamicJS<T>(url: string): Promise<T> {
       new Error(`A dynamic import (to "${url}") is leaked to Lepus bundle.`),
       { errorCode: 202 },
     );
+    // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
     return Promise.reject();
   }
   return new Promise((resolve, reject) => {
@@ -22,7 +23,10 @@ export function loadDynamicJS<T>(url: string): Promise<T> {
   });
 }
 
-export function __dynamicImport<T>(url: string, options?: any): Promise<T> {
+export function __dynamicImport<T>(
+  url: string,
+  options?: { with?: { type?: 'component' | 'tsx' | 'jsx' } },
+): Promise<T> {
   const t = options?.with?.type;
   if (t === 'component' || t === 'tsx' || t === 'jsx') {
     return loadLazyBundle<any>(url);

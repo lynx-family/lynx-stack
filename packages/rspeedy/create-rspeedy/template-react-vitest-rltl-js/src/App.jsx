@@ -10,13 +10,13 @@ export function App(props) {
 
   useEffect(() => {
     console.info('Hello, ReactLynx')
-    props.onMounted?.()
   }, [])
+  props.onRender?.()
 
   const onTap = useCallback(() => {
     'background only'
-    setAlterLogo(!alterLogo)
-  }, [alterLogo])
+    setAlterLogo(prevAlterLogo => !prevAlterLogo)
+  }, [])
 
   return (
     <view>
@@ -35,11 +35,18 @@ export function App(props) {
           <image src={arrow} className='Arrow' />
           <text className='Description'>Tap the logo and have fun!</text>
           <text className='Hint'>
-            Edit<text style={{ fontStyle: 'italic' }}>{' src/App.tsx '}</text>
+            Edit<text
+              style={{
+                fontStyle: 'italic',
+                color: 'rgba(255, 255, 255, 0.85)',
+              }}
+            >
+              {' src/App.tsx '}
+            </text>
             to see updates!
           </text>
         </view>
-        <view style={{ flex: 1 }}></view>
+        <view style={{ flex: 1 }} />
       </view>
     </view>
   )

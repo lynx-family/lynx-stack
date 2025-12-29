@@ -6,28 +6,6 @@ import type { ClosureValueType, JsFnHandle, Worklet, WorkletRefImpl } from './ty
 import type { Element } from '../api/element.js';
 
 /**
- * This function must be called when a worklet context is updated.
- *
- * @param worklet - The worklet to be updated
- * @param oldWorklet - The old worklet context
- * @param isFirstScreen - Whether it is before the hydration is finished
- * @param element - The element
- * @internal
- */
-function onWorkletCtxUpdate(
-  worklet: Worklet,
-  oldWorklet: Worklet | null | undefined,
-  isFirstScreen: boolean,
-  element: ElementNode,
-): void {
-  globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager?.addRef(worklet._execId!, worklet);
-  if (isFirstScreen && oldWorklet) {
-    globalThis.lynxWorkletImpl?._hydrateCtx(worklet, oldWorklet);
-  }
-  globalThis.lynxWorkletImpl?._eventDelayImpl.runDelayedWorklet(worklet, element);
-}
-
-/**
  * Executes the worklet ctx.
  * @param worklet - The Worklet ctx to run.
  * @param params - An array as parameters of the worklet run.
@@ -59,16 +37,6 @@ function updateWorkletRefInitValueChanges(patch?: [number, unknown][]): void {
 }
 
 /**
- * This must be called when the hydration is finished.
- *
- * @internal
- */
-function onHydrationFinished(): void {
-  globalThis.lynxWorkletImpl?._runOnBackgroundDelayImpl.runDelayedBackgroundFunctions();
-  globalThis.lynxWorkletImpl?._refImpl.clearFirstScreenWorkletRefMap();
-}
-
-/**
  * Register a worklet.
  *
  * @internal
@@ -86,12 +54,30 @@ function delayRunOnBackground(fnObj: JsFnHandle, fn: (fnId: number, execId: numb
   globalThis.lynxWorkletImpl?._runOnBackgroundDelayImpl.delayRunOnBackground(fnObj, fn);
 }
 
+/**
+ * Set whether EOM operations should flush the element tree.
+ *
+ * @internal
+ */
+function setEomShouldFlushElementTree(value: boolean) {
+  globalThis.lynxWorkletImpl?._eomImpl.setShouldFlush(value);
+}
+
+/**
+ * Runs a task on the main thread.
+ *
+ * @internal
+ */
+function runRunOnMainThreadTask(task: Worklet, params: ClosureValueType[], resolveId: number): void {
+  globalThis.lynxWorkletImpl?._runRunOnMainThreadTask(task, params, resolveId);
+}
+
 export {
-  onWorkletCtxUpdate,
   runWorkletCtx,
   updateWorkletRef,
   updateWorkletRefInitValueChanges,
-  onHydrationFinished,
   registerWorklet,
   delayRunOnBackground,
+  setEomShouldFlushElementTree,
+  runRunOnMainThreadTask,
 };

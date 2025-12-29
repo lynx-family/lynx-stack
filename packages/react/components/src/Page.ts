@@ -15,7 +15,7 @@ let pageMounted = false;
 const Page: ForwardRefExoticComponent<Omit<PropsWithChildren, 'ref'> & RefAttributes<unknown>> =
   /* @__PURE__ */ (function() {
     if (__LEPUS__) {
-      snapshotManager.values.get('root')!.update![0] = (snapshot, index, oldValue) => {
+      snapshotManager.values.get('root')!.update![0] = (snapshot, index, oldValue: Record<string, unknown>) => {
         /* v8 ignore start */
         if (__JS__ && !__DEV__) {
           return;
@@ -33,7 +33,7 @@ const Page: ForwardRefExoticComponent<Omit<PropsWithChildren, 'ref'> & RefAttrib
         } = props;
 
         __root.setAttribute('values', [{
-          ref,
+          ...ref ? { ref } : undefined,
           ...restProps,
           __spread: true,
         }]);

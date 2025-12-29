@@ -7,5 +7,6 @@ import { describeCases } from '@lynx-js/test-tools';
 
 describeCases({
   name: 'css-extract',
+  // eslint-disable-next-line n/no-unsupported-features/node-builtins
   casePath: path.join(import.meta.dirname, 'fixtures'),
 });

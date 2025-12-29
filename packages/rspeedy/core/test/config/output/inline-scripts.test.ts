@@ -29,6 +29,34 @@ describe('output.inlineScripts', () => {
     expect.assertions(2)
   })
 
+  test('defaults with enableChunkSplitting', async () => {
+    const rspeedy = await createStubRspeedy({
+      performance: {
+        chunkSplit: {
+          strategy: 'split-by-size',
+        },
+      },
+
+      plugins: [
+        {
+          name: 'test',
+          setup(api: RsbuildPluginAPI) {
+            api.modifyRsbuildConfig((config) => {
+              expect(config.output?.inlineScripts).toBe(false)
+            })
+            api.modifyBundlerChain((_, { environment }) => {
+              expect(environment.config.output.inlineScripts).toBe(false)
+            })
+          },
+        },
+      ],
+    })
+
+    await rspeedy.initConfigs()
+
+    expect.assertions(2)
+  })
+
   test('output.inlineScripts: false', async () => {
     const rspeedy = await createStubRspeedy({
       output: {
@@ -44,6 +72,38 @@ describe('output.inlineScripts', () => {
             })
             api.modifyBundlerChain((_, { environment }) => {
               expect(environment.config.output.inlineScripts).toBe(false)
+            })
+          },
+        },
+      ],
+    })
+
+    await rspeedy.initConfigs()
+
+    expect.assertions(2)
+  })
+
+  test('output.inlineScripts: true, with enableChunkSplitting', async () => {
+    const rspeedy = await createStubRspeedy({
+      performance: {
+        chunkSplit: {
+          strategy: 'split-by-size',
+        },
+      },
+
+      output: {
+        inlineScripts: true,
+      },
+
+      plugins: [
+        {
+          name: 'test',
+          setup(api: RsbuildPluginAPI) {
+            api.modifyRsbuildConfig((config) => {
+              expect(config.output?.inlineScripts).toBe(true)
+            })
+            api.modifyBundlerChain((_, { environment }) => {
+              expect(environment.config.output.inlineScripts).toBe(true)
             })
           },
         },

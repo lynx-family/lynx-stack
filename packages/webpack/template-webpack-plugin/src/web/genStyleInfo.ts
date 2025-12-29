@@ -72,7 +72,18 @@ export function genStyleInfo(
               } else if (selector.type === 'PseudoClassSelector') {
                 pseudoClassSelectors.push(CSS.csstree.generate(selector));
               } else if (selector.type === 'PseudoElementSelector') {
-                pseudoElementSelectors.push(CSS.csstree.generate(selector));
+                /**
+                 * [aa]::placeholder {
+                 * }
+                 * ===>
+                 * [aa]::part(input)::placeholder {
+                 * }
+                 */
+                if (selector.name === 'placeholder') {
+                  pseudoClassSelectors.push('::part(input)::placeholder');
+                } else {
+                  pseudoElementSelectors.push(CSS.csstree.generate(selector));
+                }
               } else if (selector.type === 'TypeSelector') {
                 plainSelectors.push(`[lynx-tag="${selector.name}"]`);
               } else if (selector.type === 'Combinator') {

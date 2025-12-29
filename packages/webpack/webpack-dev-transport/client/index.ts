@@ -42,8 +42,7 @@ const options: Options = {
 
 const parsedResourceQuery = parseURL(__resourceQuery);
 
-declare const RSPEEDY_COMPILATION_ID: string;
-const compilationId = RSPEEDY_COMPILATION_ID;
+const token = parsedResourceQuery['token'];
 
 if (parsedResourceQuery['hot'] === 'true') {
   options.hot = true;
@@ -150,7 +149,7 @@ const onSocketMessage = {
 
 const socketURL = createSocketURL(
   parsedResourceQuery as unknown as URL,
-  compilationId,
+  token as string,
 );
 
 // @ts-expect-error I don't know TypeScript. I can't make it work :(

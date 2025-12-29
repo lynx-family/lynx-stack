@@ -9,7 +9,7 @@ function App() {
   const handleScrollToPosition = () => {
     ref.current?.invoke({
       method: 'scrollToPosition',
-      params: { index: 10 },
+      params: { position: 10 },
     }).exec();
   };
 

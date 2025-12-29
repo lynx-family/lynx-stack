@@ -432,10 +432,11 @@ describe('CLI - Inspect', () => {
             .map(i => i.value as Promise<InspectConfigResult>),
         )
 
-        expect(inspectResult!.origin.rsbuildConfig.source.alias).toHaveProperty(
-          'foo',
-          'bar',
-        )
+        expect(inspectResult!.origin.rsbuildConfig.source.alias)
+          .toHaveProperty(
+            'foo',
+            'bar',
+          )
       },
     )
   })

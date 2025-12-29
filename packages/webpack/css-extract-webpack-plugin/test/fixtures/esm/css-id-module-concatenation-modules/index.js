@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { a } from './a.css?cssId=42';
 import * as b from './b.css?cssId=42';
 
@@ -27,7 +28,7 @@ it('should extract correct CSS', async () => {
 }
 
 }
-`);
+`.replaceAll('/', path.sep));
   expect(content).toContain(`\
 @cssId "42" "esm/css-id-module-concatenation-modules/b.css" {
 .foo__b {
@@ -35,7 +36,7 @@ it('should extract correct CSS', async () => {
 }
 
 }
-`);
+`.replaceAll('/', path.sep));
   expect(content).toContain(`\
 @cssId "52" "esm/css-id-module-concatenation-modules/c.css" {
 .foo__c {
@@ -43,7 +44,7 @@ it('should extract correct CSS', async () => {
 }
 
 }
-`);
+`.replaceAll('/', path.sep));
 
   // All modules should be concatenated into the root module
   expect(

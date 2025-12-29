@@ -1,4 +1,4 @@
-WARNING in ./compat/react-runtime/index.jsx
+WARNING in ./compat/react-runtime/index.jsx <LINE:COLUMN>-25
 ⚠ ModuleWarning: DEPRECATED: lynx-key is changed to key
 ╭─[<LINE:COLUMN>]
 3  class App extends Component {

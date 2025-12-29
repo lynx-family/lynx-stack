@@ -14,13 +14,14 @@ import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree } from '../utils/nativeMethod';
+import { injectUpdateMTRefInitValue } from '../../src/worklet/ref/updateInitValue';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));
   injectUpdateMainThread();
+  injectUpdateMTRefInitValue();
   replaceCommitHook();
 
-  globalThis.__TESTING_FORCE_RENDER_TO_OPCODE__ = true;
   globalThis.lynxWorkletImpl = {
     _refImpl: {
       updateWorkletRef: vi.fn(),
@@ -30,6 +31,11 @@ beforeAll(() => {
     _runOnBackgroundDelayImpl: {
       runDelayedBackgroundFunctions: vi.fn(),
     },
+    _eventDelayImpl: {
+      runDelayedWorklet: vi.fn(),
+      clearDelayedWorklets: vi.fn(),
+    },
+    _hydrateCtx: vi.fn(),
   };
   globalThis.runWorklet = vi.fn();
 });
@@ -264,14 +270,10 @@ describe('WorkletRef', () => {
       expect(lynx.getNativeApp().callLepusMethod.mock.calls).toMatchInlineSnapshot(`
         [
           [
-            "rLynxChange",
+            "rLynxChangeRefInitValue",
             {
-              "data": "{"patchList":[{"id":5,"workletRefInitValuePatch":[[1,null],[2,null],[3,null],[4,null],[5,null],[6,null]]}]}",
-              "patchOptions": {
-                "reloadVersion": 0,
-              },
+              "data": "[[1,null],[2,null],[3,null],[4,null],[5,null],[6,null]]",
             },
-            [Function],
           ],
           [
             "rLynxChange",
@@ -334,6 +336,15 @@ describe('WorkletRef', () => {
           ],
           [
             {
+              "_unmount": undefined,
+              "_wkltId": 233,
+            },
+            [
+              null,
+            ],
+          ],
+          [
+            {
               "_execId": 2,
               "_unmount": undefined,
               "_wkltId": 233,
@@ -344,15 +355,6 @@ describe('WorkletRef', () => {
                   has-react-ref={true}
                 />,
               },
-            ],
-          ],
-          [
-            {
-              "_unmount": undefined,
-              "_wkltId": 233,
-            },
-            [
-              null,
             ],
           ],
           [
@@ -371,7 +373,7 @@ describe('WorkletRef', () => {
           ],
         ]
       `);
-      globalThis.runWorklet.mock.calls[1][0]._unmount = cleanup;
+      globalThis.runWorklet.mock.calls[2][0]._unmount = cleanup;
     }
 
     // update
@@ -493,7 +495,9 @@ describe('WorkletRef', () => {
       render([createCompBG1('ref1'), createCompBG1('mts')], __root);
 
       globalEnvManager.switchToMainThread();
-      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      let rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+      rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[1];
       globalThis[rLynxChange[0]](rLynxChange[1]);
       expect(__root.__element_root).toMatchInlineSnapshot(`
         <page

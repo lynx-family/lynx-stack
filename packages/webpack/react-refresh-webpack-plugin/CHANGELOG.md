@@ -1,5 +1,11 @@
 # @lynx-js/react-refresh-webpack-plugin
 
+## 0.3.4
+
+### Patch Changes
+
+- Should apply the plugin when using `mode: 'development'` with `NODE_ENV=production`. ([#1253](https://github.com/lynx-family/lynx-stack/pull/1253))
+
 ## 0.3.3
 
 ### Patch Changes

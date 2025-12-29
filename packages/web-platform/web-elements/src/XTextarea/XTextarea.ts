@@ -57,6 +57,15 @@ export class XTextarea extends HTMLElement {
     }
   }
 
+  getValue() {
+    const input = this.#getTextarea();
+    return {
+      value: input.value,
+      selectionBegin: input.selectionStart,
+      selectionEnd: input.selectionEnd,
+    };
+  }
+
   sendDelEvent(params: { action: number; length: number }) {
     let { action, length } = params;
     const input = this.#getTextarea();

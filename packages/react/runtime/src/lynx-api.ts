@@ -7,6 +7,7 @@ import { useState } from 'preact/hooks';
 import type { Consumer, FC, ReactNode } from 'react';
 
 import { factory, withInitDataInState } from './compat/initData.js';
+import { profileEnd, profileStart } from './debug/utils.js';
 import { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';
 import { LifecycleConstant } from './lifecycleConstant.js';
 import { flushDelayedLifecycleEvents } from './lynx/tt.js';
@@ -82,11 +83,19 @@ export interface Root {
  */
 export const root: Root = {
   render: (jsx: ReactNode): void => {
+    /* v8 ignore next 2 */
     if (__MAIN_THREAD__) {
       __root.__jsx = jsx;
     } else {
       __root.__jsx = jsx;
+      if (__PROFILE__) {
+        profileStart('ReactLynx::renderBackground');
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       render(jsx, __root as any);
+      if (__PROFILE__) {
+        profileEnd();
+      }
       if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {
         // This is for cases where `root.render()` is called asynchronously,
         // `firstScreen` message might have been reached.
@@ -96,6 +105,7 @@ export const root: Root = {
       }
     }
   },
+  /* v8 ignore next 3 */
   registerDataProcessors: (dataProcessorDefinition: DataProcessorDefinition): void => {
     lynx.registerDataProcessors(dataProcessorDefinition);
   },
@@ -107,7 +117,7 @@ const _InitData = /* @__PURE__ */ factory<InitData>(
     useState,
     createElement,
     useLynxGlobalEventListener,
-  } as any,
+  },
   '__initData',
   'onDataChanged',
 );
@@ -137,6 +147,7 @@ const _InitData = /* @__PURE__ */ factory<InitData>(
  *
  * @public
  */
+// @ts-expect-error make preact and react types work
 export const InitDataProvider: FC<{ children?: ReactNode | undefined }> = /* @__PURE__ */ _InitData.Provider();
 /**
  * The {@link https://react.dev/reference/react/createContext#consumer | Consumer} Component that provide `initData`.
@@ -144,6 +155,7 @@ export const InitDataProvider: FC<{ children?: ReactNode | undefined }> = /* @__
  * @group Components
  * @public
  */
+// @ts-expect-error make preact and react types work
 export const InitDataConsumer: Consumer<InitData> = /* @__PURE__ */ _InitData.Consumer();
 /**
  * A React Hooks for you to get `initData`.
@@ -216,6 +228,82 @@ export interface InitData {}
 export { withInitDataInState };
 
 /**
+ * The data processors that registered with {@link Lynx.registerDataProcessors}.
+ *
+ * @example
+ *
+ * Extending `dataProcessors` interface
+ *
+ * ```ts
+ * import type { DataProcessors as WellKnownDataProcessors } from '@lynx-js/react';
+ *
+ * declare module '@lynx-js/react' {
+ *   interface DataProcessors extends WellKnownDataProcessors {
+ *     foo(bar: string): number;
+ *   }
+ * }
+ * ```
+ *
+ * Then you can use `lynx.registerDataProcessors` with types.
+ *
+ * ```js
+ * lynx.registerDataProcessors({
+ *   dataProcessors: {
+ *     foo(bar) {
+ *       return 1;
+ *     }
+ *   }
+ * })
+ * ```
+ *
+ * @public
+ */
+export interface DataProcessors {
+  /**
+   * Optional processor to override screen metrics used by the app
+   *
+   * @param metrics - The physical screen dimensions in pixels
+   *
+   * @returns New screen dimensions to be used by the app
+   *
+   * @example
+   *
+   * ```ts
+   * lynx.registerDataProcessors({
+   *   dataProcessors: {
+   *     getScreenMetricsOverride: (metrics) => {
+   *       // Force a specific aspect ratio
+   *       return {
+   *         width: metrics.width,
+   *         height: metrics.width * (16/9)
+   *       };
+   *     }
+   *   }
+   * });
+   * ```
+   */
+  getScreenMetricsOverride?(metrics: {
+    /**
+     * The physical pixel width of the screen
+     */
+    width: number;
+    /**
+     * The physical pixel height of the screen
+     */
+    height: number;
+  }): { width: number; height: number };
+
+  /**
+   * Custom unknown data processors.
+   *
+   * @remarks
+   *
+   * You may extends the `DataProcessors` interface for better TypeScript types. See {@link DataProcessors}.
+   */
+  [processorName: string]: (...args: any[]) => any;
+}
+
+/**
  * Definition of DataProcessor(s)
  * @public
  */
@@ -235,7 +323,7 @@ export interface DataProcessorDefinition {
    *
    * @public
    */
-  dataProcessors?: Record<string, Function>;
+  dataProcessors?: DataProcessors;
 }
 
 /**
@@ -371,6 +459,6 @@ export interface Lynx {
 }
 
 export { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';
-export { runOnBackground } from './worklet/runOnBackground.js';
-export { runOnMainThread } from './worklet/runOnMainThread.js';
-export { MainThreadRef, useMainThreadRef } from './worklet/workletRef.js';
+export { runOnBackground } from './worklet/call/runOnBackground.js';
+export { runOnMainThread } from './worklet/call/runOnMainThread.js';
+export { MainThreadRef, useMainThreadRef } from './worklet/ref/workletRef.js';

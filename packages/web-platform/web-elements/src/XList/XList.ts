@@ -56,7 +56,7 @@ export class XList extends HTMLElement {
 
   scrollToPosition(
     params: {
-      index: number;
+      position: number;
       smooth?: boolean;
       /**
        * @description The offset of the content
@@ -73,12 +73,14 @@ export class XList extends HTMLElement {
       offset = { left: params.offset, top: params.offset };
     }
 
-    if (typeof params.index === 'number') {
-      if (params.index === 0) {
+    if (typeof params.position === 'number') {
+      if (params.position === 0) {
         this.#getListContainer().scrollTop = 0;
         this.#getListContainer().scrollLeft = 0;
-      } else if (params.index > 0 && params.index < this.childElementCount) {
-        const targetKid = this.children.item(params.index);
+      } else if (
+        params.position > 0 && params.position < this.childElementCount
+      ) {
+        const targetKid = this.children.item(params.position);
         if (targetKid instanceof HTMLElement) {
           if (offset) {
             offset = {

@@ -8,10 +8,25 @@ import { SnapshotInstance } from './snapshot.js';
  * The internal ReactLynx's root.
  * {@link @lynx-js/react!Root | root}.
  */
-let __root: (SnapshotInstance | BackgroundSnapshotInstance) & { __jsx?: React.ReactNode; __opcodes?: any[] };
+let __root: (SnapshotInstance | BackgroundSnapshotInstance) & {
+  __jsx?: React.ReactNode;
+  __opcodes?: any[];
+
+  /**
+   * Returns the type of node.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/nodeType)
+   */
+  nodeType?: Element['nodeType'];
+};
 
 function setRoot(root: typeof __root): void {
   __root = root;
+
+  // A fake ELEMENT_NODE to make preact/debug happy.
+  if (__DEV__ && __root) {
+    __root.nodeType = 1;
+  }
 }
 
 if (__MAIN_THREAD__) {

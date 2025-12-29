@@ -1,4 +1,5 @@
 import { defineConfig, type rsbuild } from '@rslib/core'
+import { pluginAreTheTypesWrong } from 'rsbuild-plugin-arethetypeswrong'
 import { pluginPublint } from 'rsbuild-plugin-publint'
 import { TypiaRspackPlugin } from 'typia-rspack-plugin'
 
@@ -7,7 +8,13 @@ export default defineConfig({
     {
       format: 'esm',
       syntax: 'es2022',
-      dts: { bundle: true },
+      dts: {
+        bundle: true,
+        // There are type-check issues when using tsgo.
+        // Excessive stack depth comparing types 'UnionToTuple<ArrayToUnion<[...?]>, LastOf<ArrayToUnion<[...?]>>, [ArrayToUnion<[...?]>] extends [never] ? true : false>' and 'ExtendRuleData<any, string>[]'.ts(2321)
+        // See: rsdoctor.plugin.ts
+        tsgo: false,
+      },
       plugins: [pluginTypia()],
       performance: {
         profile: !!process.env.RSPEEDY_BUNDLE_ANALYSIS,
@@ -52,10 +59,19 @@ export default defineConfig({
   ],
   output: {
     externals: [
-      '@lynx-js/rspeedy/register',
+      '#register',
     ],
   },
-  plugins: [pluginPublint()],
+  plugins: [
+    pluginAreTheTypesWrong({
+      areTheTypesWrongOptions: {
+        ignoreRules: [
+          'cjs-resolves-to-esm',
+        ],
+      },
+    }),
+    pluginPublint(),
+  ],
   source: {
     tsconfigPath: './tsconfig.build.json',
   },

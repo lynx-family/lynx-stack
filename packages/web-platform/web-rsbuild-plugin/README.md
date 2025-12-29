@@ -12,6 +12,8 @@ export default defineConfig({
   plugins: [pluginWebPlatform({
     // replace with your actual native-modules file path
     nativeModulesPath: path.resolve(__dirname, './index.native-modules.ts'),
+    // replace with your actual napi-modules file path
+    napiModulesPath: path.resolve(__dirname, './index.napi-modules.ts'),
   })],
 });
 ```
@@ -36,6 +38,14 @@ export default defineConfig({
    * When enabled, nativeModules will be packaged directly into the worker chunk instead of being transferred through Blob.
    */
   nativeModulesPath?: string;
+  /**
+   * The absolute path of the native-modules file.
+   *
+   * If you use it, you don't need to pass napiModulesMap in the lynx-view tag, otherwise it will cause duplicate packaging.
+   *
+   * When enabled, napiModulesMap will be packaged directly into the worker chunk instead of being transferred through Blob.
+   */
+  napiModulesPath?: string;
 }
 ```
 
@@ -51,6 +61,23 @@ export default {
       async getColor(data, callback) {
         const color = await NativeModulesCall('getColor', data);
         callback(color);
+      },
+    };
+  },
+};
+```
+
+### napiModulesPath
+
+`napi-modules.ts` example:
+
+```ts
+// index.napi-modules.ts
+export default {
+  custom_module: function(NapiModules, NapiModulesCall) {
+    return {
+      async test(name) {
+        console.log('CustomModule', NapiModules, NapiModulesCall);
       },
     };
   },

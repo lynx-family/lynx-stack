@@ -64,6 +64,11 @@ interface ReactWebpackPluginOptions {
    * @defaultValue `false` when production, `true` when development
    */
   profile?: boolean | undefined;
+
+  /**
+   * The file path of `@lynx-js/react/worklet-runtime`.
+   */
+  workletRuntimePath: string;
 }
 
 /**
@@ -137,6 +142,7 @@ class ReactWebpackPlugin {
       extractStr: false,
       experimental_isLazyBundle: false,
       profile: undefined,
+      workletRuntimePath: '',
     });
 
   /**
@@ -172,10 +178,12 @@ class ReactWebpackPlugin {
       // We enable profile by default in development.
       // It can also be disabled by environment variable `REACT_PROFILE=false`
       __PROFILE__: JSON.stringify(
-        options.profile
-          ?? process.env['REACT_PROFILE']
+        process.env['REACT_PROFILE']
+          ?? options.profile
           ?? compiler.options.mode === 'development',
       ),
+      // User can enable ALog by environment variable `REACT_ALOG=true`
+      __ALOG__: JSON.stringify(Boolean(process.env['REACT_ALOG'])),
       __EXTRACT_STR__: JSON.stringify(Boolean(options.extractStr)),
       __FIRST_SCREEN_SYNC_TIMING__: JSON.stringify(
         options.firstScreenSyncTiming,
@@ -257,14 +265,10 @@ class ReactWebpackPlugin {
               'registerWorkletInternal',
             )
           ) {
-            const path = compiler.options.mode === 'development'
-              ? '@lynx-js/react/worklet-dev-runtime'
-              : '@lynx-js/react/worklet-runtime';
-            const runtimeFile = require.resolve(path);
             lepusCode.chunks.push({
               name: 'worklet-runtime',
               source: new RawSource(fs.readFileSync(
-                runtimeFile,
+                options.workletRuntimePath,
                 'utf8',
               )),
               info: {
@@ -297,7 +301,7 @@ class ReactWebpackPlugin {
               `\
 (function (globDynamicComponentEntry) {
   const module = { exports: {} }
-  const exports = module.exports
+  const exports = module.exports;
 `,
               old,
               `
@@ -308,14 +312,14 @@ class ReactWebpackPlugin {
         return args;
       });
 
-      // The react-transform will add `-${LAYER}` to the webpackChunkName.
+      // The react-transform will add `-react__${LAYER}` to the webpackChunkName.
       // We replace it with an empty string here to make sure main-thread & background chunk match.
       hooks.asyncChunkName.tap(
         this.constructor.name,
         (chunkName) =>
           chunkName
-            ?.replaceAll(`-${LAYERS.BACKGROUND}`, '')
-            ?.replaceAll(`-${LAYERS.MAIN_THREAD}`, ''),
+            ?.replaceAll(`-react__background`, '')
+            ?.replaceAll(`-react__main-thread`, ''),
       );
     });
   }

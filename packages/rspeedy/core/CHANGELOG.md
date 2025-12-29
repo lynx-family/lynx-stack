@@ -1,5 +1,262 @@
 # @lynx-js/rspeedy
 
+## 0.11.3
+
+### Patch Changes
+
+- Use `output.chunkLoading: 'lynx'` for `environments.web`. ([#1737](https://github.com/lynx-family/lynx-stack/pull/1737))
+
+- Support `resolve.extensions` ([#1759](https://github.com/lynx-family/lynx-stack/pull/1759))
+
+- Set the default value of `output.cssModules.localIdentName` to `[local]-[hash:base64:6]`. ([#1783](https://github.com/lynx-family/lynx-stack/pull/1783))
+
+## 0.11.2
+
+### Patch Changes
+
+- Support `server.proxy`. ([#1745](https://github.com/lynx-family/lynx-stack/pull/1745))
+
+- Support `command` and `env` parameters in the function exported by `lynx.config.js`. ([#1669](https://github.com/lynx-family/lynx-stack/pull/1669))
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig(({ command, env }) => {
+    const isBuild = command === 'build'
+    const isTest = env === 'test'
+
+    return {
+      output: {
+        minify: !isTest,
+      },
+      performance: {
+        buildCache: isBuild,
+      },
+    }
+  })
+  ```
+
+- Support `resolve.dedupe`. ([#1671](https://github.com/lynx-family/lynx-stack/pull/1671))
+
+  This is useful when having multiple duplicated packages in the bundle:
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    resolve: {
+      dedupe: ['tslib'],
+    },
+  })
+  ```
+
+- Support `resolve.aliasStrategy` for controlling priority between `tsconfig.json` paths and `resolve.alias` ([#1722](https://github.com/lynx-family/lynx-stack/pull/1722))
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    resolve: {
+      alias: {
+        '@': './src',
+      },
+      // 'prefer-tsconfig' (default): tsconfig.json paths take priority
+      // 'prefer-alias': resolve.alias takes priority
+      aliasStrategy: 'prefer-alias',
+    },
+  })
+  ```
+
+- Bump Rsbuild v1.5.4 with Rspack v1.5.2. ([#1644](https://github.com/lynx-family/lynx-stack/pull/1644))
+
+- Updated dependencies [[`d7c5da3`](https://github.com/lynx-family/lynx-stack/commit/d7c5da329caddfb12ed77159fb8b1b8f38717cff)]:
+  - @lynx-js/chunk-loading-webpack-plugin@0.3.3
+  - @lynx-js/cache-events-webpack-plugin@0.0.2
+
+## 0.11.1
+
+### Patch Changes
+
+- Disable lazyCompilation by default. ([#1647](https://github.com/lynx-family/lynx-stack/pull/1647))
+
+- Bump Rsbuild v1.5.2 with Rspack v1.5.1. ([#1624](https://github.com/lynx-family/lynx-stack/pull/1624))
+
+- Add `output.dataUriLimit.*` for fine-grained control of asset inlining. ([#1648](https://github.com/lynx-family/lynx-stack/pull/1648))
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    output: {
+      dataUriLimit: {
+        image: 5000,
+        media: 0,
+      },
+    },
+  })
+  ```
+
+## 0.11.0
+
+### Minor Changes
+
+- Deprecate `source.alias`, use `resolve.alias` instead. ([#1610](https://github.com/lynx-family/lynx-stack/pull/1610))
+
+  Note that `resolve.alias` has **lower** priority than the deprecated `source.alias`.
+
+- Bump Rsbuild v1.5.0 with Rspack v1.5.0. ([#1591](https://github.com/lynx-family/lynx-stack/pull/1591))
+
+- **BREAKING CHANGE**: Remove the `./register` exports from `@lynx-js/rspeedy`. ([#1547](https://github.com/lynx-family/lynx-stack/pull/1547))
+
+  This should not affect most users.
+
+### Patch Changes
+
+- Support `resolve.alias`. ([#1610](https://github.com/lynx-family/lynx-stack/pull/1610))
+
+- Support `rspeedy build --watch` ([#1579](https://github.com/lynx-family/lynx-stack/pull/1579))
+
+- Updated dependencies [[`d7d0b9b`](https://github.com/lynx-family/lynx-stack/commit/d7d0b9b94e219cd057c935d723775c82b10559a6), [`1952fc1`](https://github.com/lynx-family/lynx-stack/commit/1952fc1557e5abbdbdf4a2073fd3b6f64dd32c3c)]:
+  - @lynx-js/cache-events-webpack-plugin@0.0.2
+  - @lynx-js/chunk-loading-webpack-plugin@0.3.2
+
+## 0.10.8
+
+### Patch Changes
+
+- Support caching Lynx native events when chunk splitting is enabled. ([#1370](https://github.com/lynx-family/lynx-stack/pull/1370))
+
+  When `performance.chunkSplit.strategy` is not `all-in-one`, Lynx native events are cached until the BTS chunk is fully loaded and are replayed when that chunk is ready. The `firstScreenSyncTiming` flag will no longer change to `jsReady` anymore.
+
+- Support exporting `Promise` and function in `lynx.config.ts`. ([#1590](https://github.com/lynx-family/lynx-stack/pull/1590))
+
+- Fix missing `publicPath` using when `rspeedy dev --mode production`. ([#1310](https://github.com/lynx-family/lynx-stack/pull/1310))
+
+- Updated dependencies [[`aaca8f9`](https://github.com/lynx-family/lynx-stack/commit/aaca8f91d177061c7b0430cc5cb21a3602897534)]:
+  - @lynx-js/cache-events-webpack-plugin@0.0.1
+  - @lynx-js/chunk-loading-webpack-plugin@0.3.1
+
+## 0.10.7
+
+### Patch Changes
+
+- `output.inlineScripts` defaults to `false` when chunkSplit strategy is not `'all-in-one'` ([#1504](https://github.com/lynx-family/lynx-stack/pull/1504))
+
+## 0.10.6
+
+### Patch Changes
+
+- Remove the experimental `provider` option. ([#1432](https://github.com/lynx-family/lynx-stack/pull/1432))
+
+- Add `output.filename.wasm` and `output.filename.assets` options. ([#1449](https://github.com/lynx-family/lynx-stack/pull/1449))
+
+- fix deno compatibility ([#1412](https://github.com/lynx-family/lynx-stack/pull/1412))
+
+- Should call the `api.onCloseBuild` hook after the build finished. ([#1446](https://github.com/lynx-family/lynx-stack/pull/1446))
+
+- Bump Rsbuild v1.4.15. ([#1423](https://github.com/lynx-family/lynx-stack/pull/1423))
+
+- Support using function in `output.filename.*`. ([#1449](https://github.com/lynx-family/lynx-stack/pull/1449))
+
+## 0.10.5
+
+### Patch Changes
+
+- Should support using `.js` extensions when loading configuration with Node.js [builtin type stripping](https://nodejs.org/api/typescript.html#type-stripping). ([#1407](https://github.com/lynx-family/lynx-stack/pull/1407))
+
+## 0.10.4
+
+### Patch Changes
+
+- Bump Rsbuild v1.4.12 with Rspack v1.4.11. ([#1326](https://github.com/lynx-family/lynx-stack/pull/1326))
+
+## 0.10.3
+
+### Patch Changes
+
+- Should be able to override `performance.profile` when `DEBUG=rspeedy`. ([#1307](https://github.com/lynx-family/lynx-stack/pull/1307))
+
+## 0.10.2
+
+### Patch Changes
+
+- Bump Rsbuild v1.4.6 with Rspack v1.4.8. ([#1282](https://github.com/lynx-family/lynx-stack/pull/1282))
+
+## 0.10.1
+
+### Patch Changes
+
+- Fix `rspeedy build --mode development` failed. ([#1252](https://github.com/lynx-family/lynx-stack/pull/1252))
+
+- Bump Rsbuild v1.4.5 with Rspack v1.4.5 ([#1239](https://github.com/lynx-family/lynx-stack/pull/1239))
+
+- Updated dependencies [[`0a3c89d`](https://github.com/lynx-family/lynx-stack/commit/0a3c89d5776009d1f32d444e77be834fa2b79645)]:
+  - @lynx-js/webpack-dev-transport@0.2.0
+
+## 0.10.0
+
+### Minor Changes
+
+- Bump Rsbuild v1.4.3 with Rspack v1.4.2. ([#1204](https://github.com/lynx-family/lynx-stack/pull/1204))
+
+  See [Announcing Rspack 1.4](https://rspack.rs/blog/announcing-1-4) for more details.
+
+- Deprecated `output.distPath.intermediate` ([#1154](https://github.com/lynx-family/lynx-stack/pull/1154))
+
+  This option is never read and will be removed in the future version.
+
+## 0.9.11
+
+### Patch Changes
+
+- Enable fine-grained control for `output.inlineScripts` ([#883](https://github.com/lynx-family/lynx-stack/pull/883))
+
+  ```ts
+  type InlineChunkTestFunction = (params: {
+    size: number
+    name: string
+  }) => boolean
+
+  type InlineChunkTest = RegExp | InlineChunkTestFunction
+
+  type InlineChunkConfig =
+    | boolean
+    | InlineChunkTest
+    | { enable?: boolean | 'auto', test: InlineChunkTest }
+  ```
+
+  ```ts
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    output: {
+      inlineScripts: ({ name, size }) => {
+        return name.includes('foo') && size < 1000
+      },
+    },
+  })
+  ```
+
+- docs: remove chunks: 'all' in comments ([#1168](https://github.com/lynx-family/lynx-stack/pull/1168))
+
+## 0.9.10
+
+## 0.9.9
+
+### Patch Changes
+
+- Set `optimization.emitOnErrors` when `DEBUG` is enabled. ([#1000](https://github.com/lynx-family/lynx-stack/pull/1000))
+
+  This is useful for debugging PrimJS Syntax error.
+
+## 0.9.8
+
+### Patch Changes
+
+- Fix the "SyntaxError: invalid redefinition of parameter name" error. ([#949](https://github.com/lynx-family/lynx-stack/pull/949))
+
+  Remove the default `output.iife: false` from Rspack.
+
 ## 0.9.7
 
 ### Patch Changes

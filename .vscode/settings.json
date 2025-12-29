@@ -32,8 +32,10 @@
   "[rust]": {
     "editor.defaultFormatter": "rust-lang.rust-analyzer",
   },
+  "typescript.experimental.useTsgo": true,
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.preferences.importModuleSpecifier": "relative",
   "typescript.preferences.preferTypeOnlyAutoImports": true,
   "typescript.preferences.importModuleSpecifierEnding": "js",
+  "rust-analyzer.check.command": "clippy",
 }

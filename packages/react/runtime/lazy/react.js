@@ -13,6 +13,7 @@ export const {
   MainThreadRef,
   PureComponent,
   Suspense,
+  cloneElement,
   createContext,
   createElement,
   createRef,

@@ -1,9 +1,11 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { ComponentClass, Consumer, Context, FC, PropsWithChildren, ReactNode } from 'react';
+import type { ComponentChildren, Consumer, Context, Provider } from 'preact';
+import type { ComponentClass } from 'react';
 
 import { useLynxGlobalEventListener } from '../hooks/useLynxGlobalEventListener.js';
+import { globalFlushOptions } from '../lifecycle/patch/commit.js';
 
 type Getter<T> = {
   [key in keyof T]: () => T[key];
@@ -11,26 +13,30 @@ type Getter<T> = {
 
 // for better reuse if runtime is changed
 export function factory<Data>(
-  { createContext, useState, createElement, useLynxGlobalEventListener: useListener }: typeof import('react') & {
+  { createContext, useState, createElement, useLynxGlobalEventListener: useListener }: {
+    createContext: typeof import('preact').createContext;
+    useState: typeof import('preact/hooks').useState;
+    createElement: typeof import('preact').createElement;
     useLynxGlobalEventListener: typeof useLynxGlobalEventListener;
   },
   prop: '__globalProps' | '__initData',
   eventName: string,
 ): Getter<{
   Context: Context<Data>;
-  Provider: FC<{
-    children?: ReactNode | undefined;
-  }>;
+  Provider: Provider<Data>;
   Consumer: Consumer<Data>;
   use: () => Data;
   useChanged: (callback: (data: Data) => void) => void;
 }> {
   const Context = createContext({} as Data);
 
-  const Provider: FC<PropsWithChildren> = ({ children }) => {
+  const Provider = ({ children }: { children?: ComponentChildren }) => {
     const [__, set] = useState<Data>(lynx[prop] as Data);
 
     const handleChange = () => {
+      if (prop === '__initData') {
+        globalFlushOptions.triggerDataUpdated = true;
+      }
       set(lynx[prop] as Data);
     };
 
@@ -50,6 +56,9 @@ export function factory<Data>(
   const use = (): Data => {
     const [__, set] = useState(lynx[prop]);
     useChanged(() => {
+      if (prop === '__initData') {
+        globalFlushOptions.triggerDataUpdated = true;
+      }
       set(lynx[prop]);
     });
 
@@ -58,12 +67,12 @@ export function factory<Data>(
 
   const useChanged = (callback: (__: Data) => void) => {
     if (!__LEPUS__) {
-      // @ts-ignore
-      useListener<(__: unknown) => void>(eventName, callback);
+      useListener(eventName, callback);
     }
   };
 
   return {
+    /* v8 ignore next */
     Context: () => Context,
     Provider: () => Provider,
     Consumer: () => Consumer,
@@ -98,7 +107,8 @@ export function factory<Data>(
  * @public
  */
 export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentClass<P, S> {
-  const isClassComponent = 'prototype' in App && App.prototype.render;
+  const isClassComponent = 'prototype' in App && 'render' in App.prototype;
+  /* v8 ignore next 4 */
   if (!isClassComponent) {
     // return as-is when not class component
     return App;
@@ -117,8 +127,10 @@ export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentC
       if (!__LEPUS__) {
         lynx.getJSModule('GlobalEventEmitter').addListener(
           'onDataChanged',
-          this.h = () => {
-            this.setState(lynx.__initData as S);
+          this.h = (...args: unknown[]) => {
+            const [newData] = args as [S];
+            globalFlushOptions.triggerDataUpdated = true;
+            this.setState(newData);
           },
         );
       }

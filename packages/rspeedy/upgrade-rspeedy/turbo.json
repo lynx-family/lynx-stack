@@ -7,7 +7,7 @@
     "build": {
       "dependsOn": [],
       "inputs": [
-        "src"
+        "src/**"
       ],
       "outputs": [
         "dist"

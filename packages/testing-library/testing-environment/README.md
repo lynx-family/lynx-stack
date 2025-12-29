@@ -8,8 +8,9 @@ The Element PAPI implementation is based on jsdom, for example `__CreateElement`
 
 ```js
 import { LynxTestingEnv } from '@lynx-js/testing-environment';
+import { JSDOM } from 'jsdom';
 
-const lynxTestingEnv = new LynxTestingEnv();
+const lynxTestingEnv = new LynxTestingEnv(new JSDOM());
 ```
 
 To use `@lynx-js/testing-environment`, you will primarily use the `LynxTestingEnv` constructor, which is a named export of the package. You will get back a `LynxTestingEnv` instance, which has a number of methods of useful properties, notably `switchToMainThread` and `switchToBackgroundThread`, which allow you to switch between the main thread and background thread.

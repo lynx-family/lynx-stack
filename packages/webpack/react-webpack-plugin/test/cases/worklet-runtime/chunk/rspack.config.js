@@ -10,7 +10,7 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const defaultConfig = createConfig({}, {
-  mainThreadChunks: ['main:main-thread.js'],
+  mainThreadChunks: ['main__main-thread.js'],
 }, {});
 
 /** @type {import('@rspack/core').Configuration} */
@@ -21,7 +21,7 @@ export default {
     ...defaultConfig.plugins,
     new LynxEncodePlugin(),
     new LynxTemplatePlugin({
-      chunks: ['main:main-thread', 'main:background'],
+      chunks: ['main__main-thread', 'main__background'],
       filename: 'main/template.json',
       intermediate: '.rspeedy',
     }),

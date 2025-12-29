@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import * as ReactAPIs from '@lynx-js/react';
+import * as ReactCompatAPIS from '@lynx-js/react/compat';
 import * as ReactInternal from '@lynx-js/react/internal';
 import * as ReactJSXDevRuntime from '@lynx-js/react/jsx-dev-runtime';
 import * as ReactJSXRuntime from '@lynx-js/react/jsx-runtime';
@@ -13,6 +14,7 @@ import {
   sExportsJSXRuntime,
   sExportsLegacyReactRuntime,
   sExportsReact,
+  sExportsReactCompat,
   sExportsReactInternal,
   sExportsReactLepus,
   target,
@@ -20,6 +22,13 @@ import {
 
 Object.defineProperty(target, sExportsReact, {
   value: ReactAPIs,
+  enumerable: false,
+  writable: false,
+  configurable: true,
+});
+
+Object.defineProperty(target, sExportsReactCompat, {
+  value: ReactCompatAPIS,
   enumerable: false,
   writable: false,
   configurable: true,

@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "lib": ["ESNext"],
+    "noEmit": true,
+  },
+  "include": ["src"],
+  "exclude": ["src/web"],
+  "references": [
+    { "path": "../web-core/tsconfig.json" },
+    { "path": "../web-elements/tsconfig.json" },
+  ],
+}

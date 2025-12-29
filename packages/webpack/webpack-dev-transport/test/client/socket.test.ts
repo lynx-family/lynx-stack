@@ -57,6 +57,7 @@ describe('socket', () => {
 
     // this simulates receiving a message from the server and passing it
     // along to the callback of onMessage
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     mockClientInstance.onMessage.mock.calls[0][0](
       JSON.stringify({
         type: 'example',
@@ -92,6 +93,7 @@ describe('socket', () => {
 
     // this simulates receiving a message from the server and passing it
     // along to the callback of onMessage
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     mockClientInstance.onMessage.mock.calls[0][0](
       JSON.stringify({
         type: 'example',

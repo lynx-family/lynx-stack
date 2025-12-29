@@ -6,9 +6,11 @@
     "composite": true,
     "outDir": "./lib",
     "rootDir": "./src",
-    "baseUrl": "./",
     "resolveJsonModule": true,
-    "isolatedDeclarations": false,
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "isolatedDeclarations": true,
+    "moduleResolution": "nodenext",
   },
   "include": [
     "src",
