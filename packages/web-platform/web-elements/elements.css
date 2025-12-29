@@ -2,17 +2,18 @@
  Licensed under the Apache License Version 2.0 that can be found in the
  LICENSE file in the root directory of this source tree. 
  */
-@import url("./src/LynxWrapper/lynx-wrapper.css");
-@import url("./src/XText/x-text.css");
-@import url("./src/ScrollView/scroll-view.css");
-@import url("./src/XFoldViewNg/x-foldview-ng.css");
-@import url("./src/XViewpagerNg/x-viewpager-ng.css");
-@import url("./src/XCanvas/x-canvas.css");
-@import url("./src/XSvg/x-svg.css");
-@import url("./src/XImage/x-image.css");
-@import url("./src/XInput/x-input.css");
-@import url("./src/XOverlayNg/x-overlay-ng.css");
-@import url("./src/XRefreshView/x-refresh-view.css");
-@import url("./src/XSwiper/x-swiper.css");
-@import url("./src/XTextarea/x-textarea.css");
-@import url("./src/XList/x-list.css");
+@import url("./src/elements/LynxWrapper/lynx-wrapper.css");
+@import url("./src/elements/XText/x-text.css");
+@import url("./src/elements/ScrollView/scroll-view.css");
+@import url("./src/elements/XFoldViewNg/x-foldview-ng.css");
+@import url("./src/elements/XViewpagerNg/x-viewpager-ng.css");
+@import url("./src/elements/XCanvas/x-canvas.css");
+@import url("./src/elements/XSvg/x-svg.css");
+@import url("./src/elements/XImage/x-image.css");
+@import url("./src/elements/XInput/x-input.css");
+@import url("./src/elements/XOverlayNg/x-overlay-ng.css");
+@import url("./src/elements/XRefreshView/x-refresh-view.css");
+@import url("./src/elements/XSwiper/x-swiper.css");
+@import url("./src/elements/XTextarea/x-textarea.css");
+@import url("./src/elements/XList/x-list.css");
+@import url("./src/elements/XWebView/x-webview.css");

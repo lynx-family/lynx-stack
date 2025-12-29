@@ -23,7 +23,6 @@ const config = {
   cache: false,
   entry: {
     main: './shell-project/index.ts',
-    'web-elements': './shell-project/web-elements.ts',
     'main-thread-test': './shell-project/mainthread-test.ts',
     'web-core': './shell-project/web-core.ts',
     'fp-only': './shell-project/fp-only.ts',
@@ -267,6 +266,8 @@ const config = {
   experiments: {
     futureDefaults: true,
   },
+  // TODO: enable lazy compilation
+  lazyCompilation: false,
 };
 
 export default config;

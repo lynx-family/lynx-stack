@@ -1,5 +1,15 @@
 # @lynx-js/lynx-bundle-rslib-config
 
+## 0.1.0
+
+### Minor Changes
+
+- Update external bundle minimum SDK version to 3.5. ([#2037](https://github.com/lynx-family/lynx-stack/pull/2037))
+
+### Patch Changes
+
+- Fix `globDynamicComponentEntry is not defined` error when minify is enabled in external bundle consumer. ([#2058](https://github.com/lynx-family/lynx-stack/pull/2058))
+
 ## 0.0.2
 
 ### Patch Changes

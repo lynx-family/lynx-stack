@@ -1,5 +1,12 @@
 # @lynx-js/rspeedy
 
+## 0.12.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.3
+
 ## 0.12.3
 
 ### Patch Changes
