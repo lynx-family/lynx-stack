@@ -103,7 +103,11 @@ export const loadLazyBundle: <
             return;
           }
         }
-        resolver.reject(new Error('Lazy bundle load failed: ' + JSON.stringify(result)));
+        const e = new Error('Lazy bundle load failed, schema: ' + result.detail.schema);
+        // ES5 does not support new Error('message', { cause: 'detail' })
+        // So we set cause using `.cause` assignment
+        e.cause = JSON.stringify(result);
+        resolver.reject(e);
       };
       if (typeof lynx.QueryComponent === 'function') {
         lynx.QueryComponent(source, callback);
