@@ -123,7 +123,7 @@ impl<'a, T: Generator> Parser for StyleTransformer<'a, T> {
       && self.prev_token_type == DELIM_TOKEN
       && token_value.eq_ignore_ascii_case(IMPORTANT_STR)
     {
-      // here we will have some bad caes: like
+      // here we will have some bad cases: like
       // height: 1px !important 2px;
       // height: 1px /important;
       // we accept such limited cases for performance consideration
