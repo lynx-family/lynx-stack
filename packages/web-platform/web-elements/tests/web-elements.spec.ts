@@ -2165,6 +2165,16 @@ test.describe('web-elements test suite', () => {
       },
     );
 
+    test('recyclable-false', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await wait(1000);
+
+      const listItem = page.locator('list-item').first();
+      await expect(listItem).toHaveCSS('content-visibility', 'visible');
+      await diffScreenShot(page, title, 'index');
+    });
+
     test('basic-flow', async ({ page, browserName }, { titlePath }) => {
       const title = getTitle(titlePath);
       await gotoWebComponentPage(page, title);
