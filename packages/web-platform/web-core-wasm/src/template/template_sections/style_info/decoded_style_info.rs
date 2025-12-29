@@ -37,7 +37,7 @@ impl StyleInfoDecoder {
     raw_style_info: RawStyleInfo,
     entry_name: Option<String>,
     config_enable_css_selector: bool,
-  ) -> Result<Self, JsError> {
+  ) -> Result<Self, wasm_bindgen::JsError> {
     let flattened_style_info: FlattenedStyleInfo = raw_style_info.into();
     let mut decoded_style_info = StyleInfoDecoder {
       style_content: String::with_capacity(flattened_style_info.style_content_str_size_hint + 64),
@@ -58,7 +58,10 @@ impl StyleInfoDecoder {
     Ok(decoded_style_info)
   }
 
-  fn decode(&mut self, flattened_style_info: FlattenedStyleInfo) -> Result<(), JsError> {
+  fn decode(
+    &mut self,
+    flattened_style_info: FlattenedStyleInfo,
+  ) -> Result<(), wasm_bindgen::JsError> {
     for (css_id, style_sheet) in flattened_style_info.css_id_to_style_sheet.into_iter() {
       for mut style_rule in style_sheet.rules.into_iter() {
         match style_rule.rule_type {
@@ -240,7 +243,7 @@ impl StyleInfoDecoder {
           RuleType::KeyFrames => {
             self.style_content.push_str("@keyframes ");
             if style_rule.prelude.selector_list.len() != 1 {
-              return Err(JsError::new(
+              return Err(wasm_bindgen::JsError::new(
                 "KeyFrames rule must have exactly one selector",
               ));
             }
