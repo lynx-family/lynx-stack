@@ -43,6 +43,11 @@
       "last 1 chrome version"
     ]
   },
+  "dependencies": {
+    "@lynx-js/web-elements": "workspace:*",
+    "@lynx-js/web-worker-rpc": "workspace:*",
+    "hyphenate-style-name": "^1.1.0"
+  },
   "devDependencies": {
     "@lynx-js/css-serializer": "workspace:*",
     "@lynx-js/lynx-core": "0.1.3",

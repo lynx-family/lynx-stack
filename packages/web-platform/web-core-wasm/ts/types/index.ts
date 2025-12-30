@@ -7,7 +7,7 @@
 export type * from './Element.js';
 export type * from './EventType.js';
 export type * from './Cloneable.js';
-export type * from './IElementPAPI.js';
+export type * from './IElementPAPI.ts';
 export type * from './ElementTemplateData.js';
 export type * from './NativeModules.js';
 export type * from './NapiModules.js';
@@ -23,3 +23,4 @@ export type * from './ProcessDataCallback.js';
 export type * from './UpdateDataOptions.js';
 export type * from './BTSChunk.js';
 export type * from './PageConfig.js';
+export type * from './DecodedTemplate.js';

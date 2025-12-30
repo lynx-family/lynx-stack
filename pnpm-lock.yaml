@@ -1052,6 +1052,16 @@ importers:
         version: 0.3.3(@rsbuild/core@1.6.13)
 
   packages/web-platform/web-core-wasm:
+    dependencies:
+      '@lynx-js/web-elements':
+        specifier: workspace:*
+        version: link:../web-elements
+      '@lynx-js/web-worker-rpc':
+        specifier: workspace:*
+        version: link:../web-worker-rpc
+      hyphenate-style-name:
+        specifier: ^1.1.0
+        version: 1.1.0
     devDependencies:
       '@lynx-js/css-serializer':
         specifier: workspace:*
