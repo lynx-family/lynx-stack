@@ -7,6 +7,7 @@ import {
   DefaultScrollGesture,
   FlingGesture,
   LongPressGesture,
+  NativeGesture,
   PanGesture,
   TapGesture,
 } from '../src/index.js';
@@ -193,6 +194,7 @@ describe('Gesture Cloning', () => {
         new LongPressGesture(),
         new FlingGesture(),
         new DefaultScrollGesture(),
+        new NativeGesture(),
       ];
 
       gestures.forEach((original) => {

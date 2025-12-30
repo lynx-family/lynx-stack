@@ -7,6 +7,7 @@ import {
   DefaultScrollGesture,
   FlingGesture,
   LongPressGesture,
+  NativeGesture,
   PanGesture,
   TapGesture,
 } from '../src/index.js';
@@ -171,6 +172,7 @@ describe('Gesture Configuration', () => {
         new LongPressGesture(),
         new FlingGesture(),
         new DefaultScrollGesture(),
+        new NativeGesture(),
       ];
 
       gestures.forEach((gesture) => {
@@ -186,6 +188,7 @@ describe('Gesture Configuration', () => {
         new LongPressGesture(),
         new FlingGesture(),
         new DefaultScrollGesture(),
+        new NativeGesture(),
       ];
 
       const ids = gestures.map((g) => g.id);
@@ -200,6 +203,7 @@ describe('Gesture Configuration', () => {
         new LongPressGesture(),
         new FlingGesture(),
         new DefaultScrollGesture(),
+        new NativeGesture(),
       ];
 
       gestures.forEach((gesture) => {
