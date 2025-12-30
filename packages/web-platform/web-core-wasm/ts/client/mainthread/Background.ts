@@ -65,7 +65,7 @@ export class BackgroundThread implements AsyncDisposable {
   #rpc: Rpc;
   #webWorker?: Worker;
   #nextMacroTask: ReturnType<typeof setTimeout> | null = null;
-  #catchedTimingInfo: TimingEntry[] = [];
+  #caughtTimingInfo: TimingEntry[] = [];
   #batchSendTimingInfo: RpcCallType<typeof markTimingEndpoint>;
 
   readonly jsContext: LynxCrossThreadContext;
@@ -241,7 +241,7 @@ export class BackgroundThread implements AsyncDisposable {
     pipelineId?: string,
     timeStamp?: number,
   ): void {
-    this.#catchedTimingInfo.push({
+    this.#caughtTimingInfo.push({
       timingKey,
       pipelineId,
       timeStamp: timeStamp ?? performance.now(),
@@ -257,8 +257,8 @@ export class BackgroundThread implements AsyncDisposable {
    * Flush the timing info immediately.
    */
   flushTimingInfo(): void {
-    this.#batchSendTimingInfo(this.#catchedTimingInfo);
-    this.#catchedTimingInfo = [];
+    this.#batchSendTimingInfo(this.#caughtTimingInfo);
+    this.#caughtTimingInfo = [];
     this.#nextMacroTask = null;
     this.#nextMacroTask && clearTimeout(this.#nextMacroTask);
   }
