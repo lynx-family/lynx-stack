@@ -1,0 +1,73 @@
+{
+  "name": "@lynx-js/web-core-wasm",
+  "version": "0.0.0",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/web-platform/web-core-wasm"
+  },
+  "license": "Apache-2.0",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    "./encode": {
+      "types": "./dist/encode/index.d.ts",
+      "import": "./dist/encode/index.js",
+      "default": "./dist/encode/index.js"
+    }
+  },
+  "main": "./dist/client/index.js",
+  "files": [
+    "dist",
+    "binary",
+    "css",
+    "!dist/**/*.js.map",
+    "*.d.ts",
+    "*.js",
+    "LICENSE.txt",
+    "Notice.txt",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node scripts/build.js",
+    "test": "vitest run"
+  },
+  "browserslist": {
+    "production": [
+      "Chrome >= 92",
+      "Safari >= 16.4"
+    ],
+    "development": [
+      "last 1 chrome version"
+    ]
+  },
+  "devDependencies": {
+    "@lynx-js/css-serializer": "workspace:*",
+    "@lynx-js/lynx-core": "0.1.3",
+    "binaryen": "^125.0.0",
+    "eslint-plugin-compat": "^6.0.2",
+    "fb-dotslash": "^0.5.8",
+    "jsdom": "^27.4.0",
+    "tslib": "^2.8.1",
+    "vite-plugin-wasm": "^3.5.0",
+    "wasm-feature-detect": "^1.8.0"
+  },
+  "peerDependencies": {
+    "@lynx-js/css-serializer": "workspace:*",
+    "@lynx-js/lynx-core": "0.1.3",
+    "tslib": "^2.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@lynx-js/css-serializer": {
+      "optional": true
+    },
+    "@lynx-js/lynx-core": {
+      "optional": true
+    },
+    "tslib": {
+      "optional": true
+    }
+  }
+}
