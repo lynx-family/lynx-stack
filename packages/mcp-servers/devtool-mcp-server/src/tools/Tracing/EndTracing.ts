@@ -35,8 +35,8 @@ export const EndTracing = /*#__PURE__*/ defineTool({
       );
     };
 
-    const sendIOCloseMessage = (stream: number): Promise<IOReadResponse> => {
-      return connector.sendCDPMessage<IOReadResponse>(
+    const sendIOCloseMessage = (stream: number): Promise<void> => {
+      return connector.sendCDPMessage<void>(
         params.clientId,
         -1,
         'IO.close',
@@ -79,25 +79,10 @@ export const EndTracing = /*#__PURE__*/ defineTool({
       }
     };
     const { promise, resolve, reject } = Promise.withResolvers<void>();
-    promise.catch(() => {
-      void 0;
-    });
-    let isSettled = false;
-
-    const settle = (errorText?: string) => {
-      if (isSettled) return;
-      isSettled = true;
-
-      if (errorText) {
-        reject(new Error(errorText));
-      } else {
-        resolve();
-      }
-    };
 
     const timer = setTimeout(() => {
       connector.offCDPEvent('Tracing.tracingComplete', handleTraceComplete);
-      settle('Loading trace data timeout, please try again later!');
+      reject(new Error('Loading trace data timeout, please try again later!'));
     }, 8000);
 
     const cleanup = () => {
@@ -125,24 +110,42 @@ export const EndTracing = /*#__PURE__*/ defineTool({
         response.appendLines(
           `Trace completed successfully, trace file path: ${tempFilePath}`,
         );
-        settle();
+        resolve();
       } catch (error) {
-        settle(
-          `Trace completed failed, ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-        );
+        reject(error);
       } finally {
         cleanup();
       }
     };
 
     connector.onCDPEvent('Tracing.tracingComplete', handleTraceComplete);
-    await connector.sendCDPMessage(
+    connector.sendCDPMessage(
       params.clientId,
       -1,
       'Tracing.end',
-    );
+    ).catch((error: Error) => {
+      cleanup();
+      const msg = error.message;
+      if (
+        msg.includes('Failed to get trace controller')
+      ) {
+        reject(
+          new Error(
+            'Tracing functionality is not supported in the current version. Please integrate the Lynx development version (with -dev suffix) to enable tracing. For more information, visit: https://lynxjs.org/en/guide/start/integrate-lynx-dev-version.html',
+          ),
+        );
+      } else if (
+        msg.includes('Tracing is not started')
+      ) {
+        reject(
+          new Error(
+            'Tracing is not started, please start tracing first.',
+          ),
+        );
+      } else {
+        reject(error);
+      }
+    });
 
     return promise;
   },
