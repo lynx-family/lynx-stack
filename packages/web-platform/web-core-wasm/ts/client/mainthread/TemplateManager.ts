@@ -226,7 +226,6 @@ export class TemplateManager {
         const blobMap = data as Record<string, string>;
         this.#setBackgroundCode(url, blobMap);
         instance.onBTSScriptsLoaded(url);
-        this.#resolvePromise(url);
         break;
       }
       default:
