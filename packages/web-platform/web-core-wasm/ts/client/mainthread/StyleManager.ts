@@ -7,25 +7,8 @@ import type { DecodedStyle } from '../wasm.js';
 // @ts-expect-error
 import IN_SHADOW_CSS_MODERN from '../../../css/in_shadow.css?inline';
 
-let compatCSS: string | undefined;
-try {
-  compatCSS = (await Promise.all([
-    import(
-      /* webpackMode: "eager" */
-      // @ts-expect-error
-      '@lynx-js/web-elements-compat/LinearContainer/linear-compat.css?inline'
-    ),
-    import(
-      /* webpackMode: "eager" */
-      // @ts-expect-error
-      '@lynx-js/web-elements-compat/LinearContainer/LinearContainer.ts'
-    ),
-  ]))[0].default;
-} catch {
-  console.error('style err');
-}
 const IN_SHADOW_CSS = URL.createObjectURL(
-  new Blob([IN_SHADOW_CSS_MODERN, compatCSS], { type: 'text/css' }),
+  new Blob([IN_SHADOW_CSS_MODERN], { type: 'text/css' }),
 );
 
 const IMPORT_CSS_STMT = `@import url("${IN_SHADOW_CSS}");\n`;
