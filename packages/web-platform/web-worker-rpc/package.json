@@ -14,8 +14,8 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.js",
-      "source": "./src/index.ts"
+      "source": "./src/index.ts",
+      "default": "./dist/index.js"
     }
   },
   "main": "dist/index.js",
