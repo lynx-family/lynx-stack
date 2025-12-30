@@ -699,7 +699,7 @@ importers:
         specifier: 2.2.2
         version: 2.2.2(typescript@5.9.3)(typia@10.1.0(typescript@5.9.3))
       webpack:
-        specifier: ^5.102.0
+        specifier: ^5.104.1
         version: 5.104.1
 
   packages/rspeedy/plugin-external-bundle:
