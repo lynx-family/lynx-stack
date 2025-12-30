@@ -14577,8 +14577,8 @@ snapshots:
     dependencies:
       '@mdn/browser-compat-data': 5.7.6
       ast-metadata-inferer: 0.8.1
-      browserslist: 4.25.2
-      caniuse-lite: 1.0.30001734
+      browserslist: 4.28.1
+      caniuse-lite: 1.0.30001761
       eslint: 9.36.0(jiti@2.6.1)
       find-up: 5.0.0
       globals: 15.15.0
