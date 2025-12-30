@@ -10,6 +10,7 @@ import type {
   ExposureEventDetail,
   GlobalExposureEvent,
 } from '../../types/index.js';
+import { scrollContainerDom } from '../../constants.js';
 import { convertLengthToPx } from './utils/convertLengthToPx.js';
 import type { LynxViewInstance } from './LynxViewInstance.js';
 

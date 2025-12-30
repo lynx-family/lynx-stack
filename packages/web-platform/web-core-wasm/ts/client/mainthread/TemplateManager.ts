@@ -51,7 +51,7 @@ export class TemplateManager {
     overrideConfig?: Record<string, string>,
   ): Promise<void> {
     if (this.#templates.has(url) && !overrideConfig) {
-      return new Promise(async (resolve) => {
+      return (async () => {
         const template = this.#templates.get(url);
         const config = (template?.config || {}) as PageConfig;
         const lynxViewInstance = await lynxViewInstancePromise;
@@ -62,8 +62,7 @@ export class TemplateManager {
         }
         lynxViewInstance.onMTSScriptsLoaded(url, config.isLazy === 'true');
         lynxViewInstance.onBTSScriptsLoaded(url);
-        resolve();
-      });
+      })();
     } else {
       this.createTemplate(url);
       return this.#load(url, lynxViewInstancePromise, overrideConfig);

@@ -238,8 +238,13 @@ export class LynxViewInstance implements AsyncDisposable {
       enableCSSSelector: this.#pageConfig!['enableCSSSelector'],
     })
       .then(async () => {
+        const urlMap = this.lepusCodeUrls.get(url);
+        const rootUrl = urlMap?.['root'];
+        if (!rootUrl) {
+          throw new Error(`[lynx-web] Missing root URL for component: ${url}`);
+        }
         let lepusRootChunkExport = await this.mtsRealm.loadScript(
-          this.lepusCodeUrls.get(url)!['root']!,
+          rootUrl,
         );
         lepusRootChunkExport = this.mainThreadGlobalThis.processEvalResult?.(
           lepusRootChunkExport,

@@ -10,7 +10,7 @@ export default defineConfig({
   test: {
     name: 'web-platform/web-core-tests',
     include: ['./tests/*.spec.ts'],
-    exclude: ['/tests/*.bench.spec.ts'],
+    exclude: ['./tests/*.bench.spec.ts'],
     benchmark: {
       include: ['./tests/*.bench.spec.ts'],
     },

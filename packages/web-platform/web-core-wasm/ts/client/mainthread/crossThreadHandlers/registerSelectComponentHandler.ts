@@ -12,7 +12,6 @@ export function registerSelectComponentHandler(
   rpc: Rpc,
   lynxViewInstance: LynxViewInstance,
 ) {
-  let element: Element | null;
   rpc.registerHandler(
     selectComponentEndpoint,
     (
@@ -20,6 +19,7 @@ export function registerSelectComponentHandler(
       idSelector,
       single,
     ) => {
+      let element: Element | null = null;
       queryNodes(
         lynxViewInstance,
         IdentifierType.ID_SELECTOR,
@@ -31,6 +31,8 @@ export function registerSelectComponentHandler(
           element = ele;
         },
       );
+
+      if (!element) return [];
 
       return [
         lynxViewInstance.mainThreadGlobalThis.__GetComponentID(

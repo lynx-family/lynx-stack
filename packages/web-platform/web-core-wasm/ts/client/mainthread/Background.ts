@@ -169,8 +169,16 @@ export class BackgroundThread implements AsyncDisposable {
     this.#rpc.registerHandler(
       callLepusMethodEndpoint,
       (methodName: string, data: unknown) => {
-        // @ts-expect-error
-        this.#lynxViewInstance.mainThreadGlobalThis[methodName](data);
+        const method = (
+          this.#lynxViewInstance.mainThreadGlobalThis as any
+        )[methodName];
+        if (typeof method === 'function') {
+          method.call(this.#lynxViewInstance.mainThreadGlobalThis, data);
+        } else {
+          console.error(
+            `Method ${methodName} not found on mainThreadGlobalThis`,
+          );
+        }
       },
     );
 
@@ -259,8 +267,10 @@ export class BackgroundThread implements AsyncDisposable {
   flushTimingInfo(): void {
     this.#batchSendTimingInfo(this.#caughtTimingInfo);
     this.#caughtTimingInfo = [];
-    this.#nextMacroTask = null;
-    this.#nextMacroTask && clearTimeout(this.#nextMacroTask);
+    if (this.#nextMacroTask !== null) {
+      clearTimeout(this.#nextMacroTask);
+      this.#nextMacroTask = null;
+    }
   }
 
   [Symbol.asyncDispose](): Promise<void> {

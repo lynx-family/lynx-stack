@@ -39,9 +39,11 @@ export function registerTriggerElementMethodEndpointHandler(
             break;
           case AnimationOperation.CANCEL:
             animationMap.get(options.id)?.cancel();
+            animationMap.delete(options.id);
             break;
           case AnimationOperation.FINISH:
             animationMap.get(options.id)?.finish();
+            animationMap.delete(options.id);
             break;
         }
       }

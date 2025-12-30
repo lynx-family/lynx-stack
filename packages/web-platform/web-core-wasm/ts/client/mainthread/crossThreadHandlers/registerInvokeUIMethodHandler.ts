@@ -29,8 +29,6 @@ export function registerInvokeUIMethodHandler(
   rpc: Rpc,
   lynxViewInstance: LynxViewInstance,
 ) {
-  let code = ErrorCode.UNKNOWN;
-  let data: any = undefined;
   rpc.registerHandler(
     invokeUIMethodEndpoint,
     (
@@ -41,6 +39,8 @@ export function registerInvokeUIMethodHandler(
       params,
       root_unique_id,
     ) => {
+      let code = ErrorCode.UNKNOWN;
+      let data: any = undefined;
       queryNodes(
         lynxViewInstance,
         type,
