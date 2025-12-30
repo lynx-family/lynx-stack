@@ -88,6 +88,19 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
       markTiming('hydrateParseSnapshotStart');
       const before = JSON.parse(lepusSide) as SerializedSnapshotInstance;
+      if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+        console.alog?.(
+          '[ReactLynxDebug] MTS -> BTS OnLifecycleEvent:\n' + JSON.stringify(
+            {
+              ...data as object,
+              // use parsed lepusSide to avoid extra escape characters ('\\')
+              root: before,
+            },
+            null,
+            2,
+          ),
+        );
+      }
       markTiming('hydrateParseSnapshotEnd');
       markTiming('diffVdomStart');
       const snapshotPatch = hydrate(
