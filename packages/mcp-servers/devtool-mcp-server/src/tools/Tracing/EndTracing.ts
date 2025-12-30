@@ -34,6 +34,15 @@ export const EndTracing = /*#__PURE__*/ defineTool({
         { handle: stream, size: 1024 * 1024 },
       );
     };
+
+    const sendIOCloseMessage = (stream: number): Promise<IOReadResponse> => {
+      return connector.sendCDPMessage<IOReadResponse>(
+        params.clientId,
+        -1,
+        'IO.close',
+        { handle: stream },
+      );
+    };
     const readStreamDataToFile = async (
       stream: number,
       filePath: string,
@@ -59,16 +68,36 @@ export const EndTracing = /*#__PURE__*/ defineTool({
       const writeStream = fs.createWriteStream(filePath);
       const fileWritable = Writable.toWeb(writeStream);
 
-      await sourceStream.pipeTo(fileWritable);
+      try {
+        await sourceStream.pipeTo(fileWritable);
+      } finally {
+        try {
+          await sendIOCloseMessage(stream);
+        } catch {
+          void 0;
+        }
+      }
     };
-    const { promise, resolve } = Promise.withResolvers<void>();
+    const { promise, resolve, reject } = Promise.withResolvers<void>();
+    promise.catch(() => {
+      void 0;
+    });
+    let isSettled = false;
+
+    const settle = (errorText?: string) => {
+      if (isSettled) return;
+      isSettled = true;
+
+      if (errorText) {
+        reject(new Error(errorText));
+      } else {
+        resolve();
+      }
+    };
 
     const timer = setTimeout(() => {
-      response.appendLines(
-        'Loading trace data timeout, please try again later!',
-      );
       connector.offCDPEvent('Tracing.tracingComplete', handleTraceComplete);
-      resolve();
+      settle('Loading trace data timeout, please try again later!');
     }, 8000);
 
     const cleanup = () => {
@@ -96,15 +125,15 @@ export const EndTracing = /*#__PURE__*/ defineTool({
         response.appendLines(
           `Trace completed successfully, trace file path: ${tempFilePath}`,
         );
+        settle();
       } catch (error) {
-        response.appendLines(
+        settle(
           `Trace completed failed, ${
             error instanceof Error ? error.message : String(error)
           }`,
         );
       } finally {
         cleanup();
-        resolve();
       }
     };
 

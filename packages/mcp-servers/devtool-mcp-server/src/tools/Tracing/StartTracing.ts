@@ -32,7 +32,7 @@ export const StartTracing = /*#__PURE__*/ defineTool({
   async handler({ params }, response, context) {
     const connector = context.connector();
     const client = connector.usbClients.get(params.clientId);
-    if (client && client.info.query.os === 'Android') {
+    if (client?.info.query.os === 'Android') {
       const value = await connector.getGlobalSwitch(
         params.clientId,
         'enable_debug_mode',
@@ -51,6 +51,7 @@ export const StartTracing = /*#__PURE__*/ defineTool({
     const config = {
       recordMode: 'recordContinuously',
       includedCategories: ['*'],
+      excludedCategories: ['*'],
       enableSystrace: params.enableSystrace,
       bufferSize: 200 * 1024,
       JSProfileInterval: params.JSProfileInterval,
@@ -79,7 +80,9 @@ export const StartTracing = /*#__PURE__*/ defineTool({
           'Tracing functionality is not supported in the current version. Please integrate the Lynx development version (with -dev suffix) to enable tracing. For more information, visit: https://lynxjs.org/en/guide/start/integrate-lynx-dev-version.html',
         );
       } else {
-        throw new Error('Trace command error');
+        throw new Error(
+          `Trace command error: ${msg}`,
+        );
       }
     }
     response.appendLines('Start Trace success');
