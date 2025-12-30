@@ -35,7 +35,7 @@
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/type-element-api": "0.0.2",
-    "@lynx-js/types": "3.4.11",
+    "@lynx-js/types": "3.6.0",
     "@types/react": "^18.3.25"
   }
 }
