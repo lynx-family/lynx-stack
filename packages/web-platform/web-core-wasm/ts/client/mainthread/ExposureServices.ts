@@ -70,8 +70,6 @@ export class ExposureServices {
     elementsToBeEnabledSet.forEach((element) => {
       const currentExposureId = element.getAttribute('exposure-id') || '';
       if (!this.#exposureEnabledElementsToIntersectionObserver.has(element)) {
-        this.#exposureEnabledElementsToIntersectionObserver.get(element)
-          ?.disconnect();
         this.#exposureEnabledElementsToOldExposureIdAttributeValue.set(
           element,
           currentExposureId,
