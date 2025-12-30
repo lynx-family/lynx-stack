@@ -180,8 +180,8 @@ importers:
         specifier: 0.0.2
         version: 0.0.2
       '@lynx-js/types':
-        specifier: 3.4.11
-        version: 3.4.11
+        specifier: 3.6.0
+        version: 3.6.0
       '@types/react':
         specifier: ^18.3.25
         version: 18.3.25
@@ -205,8 +205,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.4.11
-        version: 3.4.11
+        specifier: 3.6.0
+        version: 3.6.0
       '@types/react':
         specifier: ^18.3.25
         version: 18.3.25
@@ -230,8 +230,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.4.11
-        version: 3.4.11
+        specifier: 3.6.0
+        version: 3.6.0
       '@rsbuild/plugin-babel':
         specifier: ^1.0.6
         version: 1.0.6(@rsbuild/core@1.6.13)
@@ -273,8 +273,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.4.11
-        version: 3.4.11
+        specifier: 3.6.0
+        version: 3.6.0
       '@types/react':
         specifier: ^18.3.25
         version: 18.3.25
@@ -298,8 +298,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.4.11
-        version: 3.4.11
+        specifier: 3.6.0
+        version: 3.6.0
       '@types/react':
         specifier: ^18.3.25
         version: 18.3.25
@@ -329,8 +329,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tailwind-preset
       '@lynx-js/types':
-        specifier: 3.4.11
-        version: 3.4.11
+        specifier: 3.6.0
+        version: 3.6.0
       '@types/react':
         specifier: ^18.3.25
         version: 18.3.25
@@ -355,8 +355,8 @@ importers:
         specifier: workspace:*
         version: link:../../react
       '@lynx-js/types':
-        specifier: 3.4.11
-        version: 3.4.11
+        specifier: 3.6.0
+        version: 3.6.0
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -433,8 +433,8 @@ importers:
         version: '@hongzhiyuan/preact@10.24.0-00213bad'
     devDependencies:
       '@lynx-js/types':
-        specifier: 3.4.11
-        version: 3.4.11
+        specifier: 3.6.0
+        version: 3.6.0
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.55.2(@types/node@24.6.1)
@@ -463,8 +463,8 @@ importers:
         specifier: workspace:*
         version: link:../transform
       '@lynx-js/types':
-        specifier: 3.4.11
-        version: 3.4.11
+        specifier: 3.6.0
+        version: 3.6.0
       '@types/react':
         specifier: ^18.3.25
         version: 18.3.25
@@ -524,8 +524,8 @@ importers:
   packages/react/worklet-runtime:
     devDependencies:
       '@lynx-js/types':
-        specifier: 3.4.11
-        version: 3.4.11
+        specifier: 3.6.0
+        version: 3.6.0
 
   packages/rspeedy/core:
     dependencies:
@@ -808,8 +808,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@lynx-js/types':
-        specifier: 3.4.11
-        version: 3.4.11
+        specifier: 3.6.0
+        version: 3.6.0
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../../web-platform/web-core
@@ -913,8 +913,8 @@ importers:
         specifier: workspace:*
         version: link:../../../rspeedy/core
       '@lynx-js/types':
-        specifier: 3.4.11
-        version: 3.4.11
+        specifier: 3.6.0
+        version: 3.6.0
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -2877,8 +2877,8 @@ packages:
   '@lynx-js/type-element-api@0.0.2':
     resolution: {integrity: sha512-Unz3RHf2RM2vOWForwubjLYw9xbBP02ReuOL4KVLc3+0Vzryo8KbgqbhMUZCsJXHVmcaE2zXiE1AV/nqrBAoPA==}
 
-  '@lynx-js/types@3.4.11':
-    resolution: {integrity: sha512-k4mu4d2xmMqMIP1e7WGPdzO/k9x9W35b/OE/awalQUbcLlruFatagEOEM6TANK/VuRvEl0eLXQjhBnSwGkgt5w==}
+  '@lynx-js/types@3.6.0':
+    resolution: {integrity: sha512-nNCuFP5Cpd7X/D3X7JsQLYkiIUsr6iTsRpqSz4swUdlNpK64Xt9epdjkqxbruuUqplFFmkhjThjWN4Bc8uZNWQ==}
 
   '@manypkg/find-root@1.1.0':
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
@@ -11239,7 +11239,7 @@ snapshots:
 
   '@lynx-js/type-element-api@0.0.2': {}
 
-  '@lynx-js/types@3.4.11':
+  '@lynx-js/types@3.6.0':
     dependencies:
       csstype: 3.1.3
 
