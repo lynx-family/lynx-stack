@@ -16,21 +16,22 @@ export const createNapiLoader = async (
 ) => {
   const napiModulesCall = rpc.createCall(napiModulesCallEndpoint);
   const napiModules: Record<string, Record<string, any>> = {};
+  const listeners = new Set<(data: unknown) => void>();
+  rpc.registerHandler(dispatchNapiModuleEndpoint, (data) => {
+    listeners.forEach((listener) => listener(data));
+  });
+
   await Promise.all(
-    Object.entries(napiModulesMap).map((
-      [moduleName, moduleStr],
-    ) =>
+    Object.entries(napiModulesMap).map(([moduleName, moduleStr]) =>
       import(/* webpackIgnore: true */ moduleStr).then(
-        module =>
-          napiModules[moduleName] = module?.default?.(
-            napiModules,
-            (name: string, data: Cloneable) =>
-              napiModulesCall(name, data, moduleName),
-            (func: (data: unknown) => void) => {
-              rpc.registerHandler(dispatchNapiModuleEndpoint, (data) =>
-                func(data));
-            },
-          ),
+        (module) => (napiModules[moduleName] = module?.default?.(
+          napiModules,
+          (name: string, data: Cloneable) =>
+            napiModulesCall(name, data, moduleName),
+          (func: (data: unknown) => void) => {
+            listeners.add(func);
+          },
+        )),
       )
     ),
   );
