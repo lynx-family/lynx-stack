@@ -227,6 +227,36 @@ describe('alog', () => {
         "jsReadyEventIdSwap": {}
       }",
         ],
+        [
+          "[ReactLynxDebug] SnapshotInstance tree for first screen hydration:
+      | -1(root): undefined
+        | -2(__snapshot_426db_test_1): ["-2:0:"]
+          | -3(wrapper): undefined
+            | -7(null): [0]
+          | -4(wrapper): undefined
+            | -5(__snapshot_426db_test_2): undefined
+            | -6(__snapshot_426db_test_3): undefined",
+        ],
+        [
+          "[ReactLynxDebug] BackgroundSnapshotInstance tree before hydration:
+      | 1(root): undefined
+        | 2(__snapshot_426db_test_1): [null]
+          | 3(wrapper): undefined
+            | 4(null): [0]
+          | 5(wrapper): undefined
+            | 6(__snapshot_426db_test_2): undefined
+            | 7(__snapshot_426db_test_3): undefined",
+        ],
+        [
+          "[ReactLynxDebug] BackgroundSnapshotInstance after hydration:
+      | -1(root): undefined
+        | -2(__snapshot_426db_test_1): [null]
+          | -3(wrapper): undefined
+            | -7(null): [0]
+          | -4(wrapper): undefined
+            | -5(__snapshot_426db_test_2): undefined
+            | -6(__snapshot_426db_test_3): undefined",
+        ],
       ]
     `);
 
