@@ -16,7 +16,7 @@ export function createGetCustomSection(
     callback: (object: Cloneable) => void,
   ) => {
     if (customSections[key]) {
-      callback(customSections[key]);
+      return callback(customSections[key]);
     }
     getCustomSections(key).then(callback);
   };
