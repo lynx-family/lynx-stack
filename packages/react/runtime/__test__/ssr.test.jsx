@@ -183,8 +183,8 @@ describe('ssr', () => {
           bindtap={() => {}}
           ref={() => {}}
           data-xxx={c}
-          main-thread:bindtap={{ _lepusWorkletHash: '1' }}
-          main-thread:ref={{ _lepusWorkletHash: '2' }}
+          main-thread:bindtap={{ _wkltId: '1' }}
+          main-thread:ref={{ _wkltId: '2' }}
         />
       );
     }
@@ -232,8 +232,8 @@ describe('ssr', () => {
         style: s,
         bindtap: () => {},
         ref: () => {},
-        'main-thread:bindtap': { '_lepusWorkletHash': '1' },
-        'main-thread:ref': { '_lepusWorkletHash': '2' },
+        'main-thread:bindtap': { '_wkltId': '1' },
+        'main-thread:ref': { '_wkltId': '2' },
         'data-xxx': c,
       };
       return <view {...props} />;
@@ -468,12 +468,12 @@ describe('ssr', () => {
     vi.unstubAllGlobals();
   });
 
-  it('ssrEncode - filter _lepusWorkletHash', () => {
+  it('ssrEncode - filter _wkltId', () => {
     const props = {
-      worklet: { _lepusWorkletHash: 'hash' },
+      worklet: { _wkltId: 'hash' },
       normal: { key: 'value' },
       nested: {
-        innerWorklet: { _lepusWorkletHash: 'inner' },
+        innerWorklet: { _wkltId: 'inner' },
         innerNormal: 'ok',
       },
     };
@@ -508,7 +508,7 @@ describe('ssr', () => {
         return false;
       }
       if (typeof node === 'object') {
-        if ('_lepusWorkletHash' in node) return true;
+        if ('_wkltId' in node) return true;
         for (const key of Object.keys(node)) if (containsWorkletHash(node[key])) return true;
       }
       return false;
@@ -527,8 +527,8 @@ describe('ssr', () => {
   it('ssrEncode - array worklet objects', () => {
     function Comp() {
       const props = {
-        arr: [{ '_lepusWorkletHash': 'h1' }, 123, { x: 1 }],
-        'main-thread:bindtap': { '_lepusWorkletHash': 'h2' },
+        arr: [{ '_wkltId': 'h1' }, 123, { x: 1 }],
+        'main-thread:bindtap': { '_wkltId': 'h2' },
       };
       return <view {...props} />;
     }

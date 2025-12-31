@@ -30,7 +30,7 @@ function ssrEncode() {
 
   try {
     const replacer = (_key: string, value: unknown): unknown => {
-      if (value && typeof value === 'object' && '_lepusWorkletHash' in (value as Record<string, unknown>)) {
+      if (value && typeof value === 'object' && '_wkltId' in (value as Record<string, unknown>)) {
         return null;
       }
       return value;
