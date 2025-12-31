@@ -2,9 +2,15 @@
   "$schema": "https://turbo.build/schema.json",
   "extends": ["//"],
   "tasks": {
+    "build:wasm": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "scripts/**", "Cargo.toml", "packages.json"],
+      "outputs": ["binary/**"]
+    },
     "build": {
+      "dependsOn": ["build:wasm", "^build"],
       "inputs": ["src/**", "ts/**", "index.css", "*.ts"],
-      "outputs": ["dist/**", "binary/**"]
+      "outputs": ["dist/**"]
     }
   }
 }
