@@ -30,7 +30,7 @@ export default defineConfig({
         'eslint.config.js',
 
         'packages/tools/canary-release/**',
-        'packages/web-platform/**',
+        'packages/web-platform/web-tests/**',
         'packages/webpack/test-tools/**',
         'packages/testing-library/test-environment/**',
         'packages/react/testing-library/**',
