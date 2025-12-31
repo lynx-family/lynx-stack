@@ -92,6 +92,16 @@ export const LYNX_TAG_TO_HTML_TAG_MAP: Record<string, string> =
     }),
   );
 
+export const HTML_TAG_TO_LYNX_TAG_MAP: Record<string, string> =
+  /*#__PURE__*/ Object.freeze(
+    Object.assign(
+      Object.create(null),
+      Object.fromEntries(
+        Object.entries(LYNX_TAG_TO_HTML_TAG_MAP).map(([k, v]) => [v, k]),
+      ),
+    ),
+  );
+
 /**
  * also see packages/web-platform/web-core-wasm/src/constants.rs
  */

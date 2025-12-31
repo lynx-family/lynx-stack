@@ -131,6 +131,9 @@ This package uses `pnpm` for dependency management and scripts.
 - **Install Dependencies**: `pnpm install`
 - **Build WASM**: `pnpm build` (This runs the `scripts/build.js` script, which builds both `client` and `encode` features)
 - **Test**: `pnpm test` (Uses `vitest` to run tests in `tests/`)
+  - `tests/encode.spec.ts`: Verifies CSS encoding (build-time).
+  - `tests/element-apis.spec.ts`: comprehensive tests for `createElementAPI` and DOM interactions.
+  - `tests/lazy-load.spec.ts`: Verifies the lazy loading mechanism for elements.
 
 ### Build Script (`scripts/build.js`)
 
@@ -149,6 +152,15 @@ The `scripts/build.js` script handles the complex build process:
 
 - **`wasm.ts`**: Handles the loading of the WASM module. It supports `WebAssembly.compileStreaming` in browsers and falls back for other environments. It exports `wasmInstance` and `wasmModule`.
 - **`DecodedStyle`**: A wrapper class around the WASM `DecodedStyleData` struct. It provides a convenient API for accessing decoded style information in TypeScript, handling `Uint8Array` decoding and string caching.
+
+### Main Thread Runtime (`ts/client/mainthread`)
+
+The main thread runtime creates the environment for Lynx views to run in the browser.
+
+- **`TemplateManager.ts`**: Manages the loading, decoding, and caching of templates. It offloads CPU-intensive decoding tasks to a Web Worker (`decode.worker.js`) to keep the main thread responsive. It handles various template sections (configurations, style info, custom sections) and orchestrates the worker lifecycle.
+- **`LynxView.ts`**: Defines the `<lynx-view>` custom element. It serves as the entry point for embedding Lynx cards, managing properties like `url`, `initData`, and `globalProps`. It uses `TemplateManager` to fetch bundles and creates `LynxViewInstance` to render content.
+- **`LynxViewInstance.ts`**: Represents a single instance of a Lynx view. It manages the lifecycle of the view, handles data updates, and interacts with the Wasm core to render the component tree.
+- **`elementAPIs/createElementAPI.ts`**: Bridges the JavaScript runtime with the Wasm `MainThreadWasmContext`. It provides a comprehensive set of APIs (`__CreateView`, `__SetAttribute`, `__AppendElement`, etc.) for direct DOM manipulation and interaction with the Wasm core. It also handles the integration with the lazy loading mechanism ensuring elements are loaded on demand.
 
 ### Encode (`ts/encode`)
 

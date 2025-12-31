@@ -8,8 +8,7 @@ import {
   RulePrelude,
 } from '../ts/encode/encodeCSS.js';
 import * as CSS from '@lynx-js/css-serializer';
-import { DecodedStyle, wasmReadyPromise } from '../ts/client/wasm.js';
-await wasmReadyPromise;
+import { DecodedStyle } from '../ts/client/wasm.js';
 
 describe('RawStyleInfo', () => {
   test('should encode StyleRule correctly', () => {
