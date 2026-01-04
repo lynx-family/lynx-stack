@@ -1542,7 +1542,7 @@ where
         prepend_stmt(
           &mut n.body,
           ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
-            span: n.span.shrink_to_lo(),
+            span: DUMMY_SP,
             specifiers: vec![ImportSpecifier::Namespace(ImportStarAsSpecifier {
               span: DUMMY_SP,
               local: runtime_id.clone(),

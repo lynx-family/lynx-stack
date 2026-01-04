@@ -379,8 +379,8 @@ Component, View
         ]
       `);
       expect(result.code).toMatchInlineSnapshot(`
-        "/*#__PURE__*/ import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
-        _jsx(Comp, {
+        "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+        /*#__PURE__*/ _jsx(Comp, {
             ...s
         });
         "
@@ -397,7 +397,7 @@ Component, View
         }),
       ).toMatchInlineSnapshot(`[]`);
       expect(result.code).toMatchInlineSnapshot(`
-        "/*#__PURE__*/ import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+        "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
         import * as ReactLynx from "@lynx-js/react";
         import * as ReactLynx1 from "@lynx-js/react/internal";
         const __snapshot_da39a_89b7f_1 = "__snapshot_da39a_89b7f_1";
@@ -412,7 +412,7 @@ Component, View
             ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, [
                 0
             ], true);
-        /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>/*#__PURE__*/ _jsx(__snapshot_da39a_89b7f_1, {
+        /*#__PURE__*/ /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>/*#__PURE__*/ _jsx(__snapshot_da39a_89b7f_1, {
                 values: [
                     {
                         ...__spread,
