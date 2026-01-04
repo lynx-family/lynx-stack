@@ -6,6 +6,7 @@ import { useRef } from '@lynx-js/react';
 import type { DefaultScrollGesture } from './defaultScrollGesture.js';
 import type { FlingGesture } from './flingGesture.js';
 import type { LongPressGesture } from './longPressGesture.js';
+import type { NativeGesture } from './nativeGesture.js';
 import type { PanGesture } from './panGesture.js';
 import type { TapGesture } from './tapGesture.js';
 
@@ -14,7 +15,8 @@ type IBasicGestures =
   | FlingGesture
   | DefaultScrollGesture
   | TapGesture
-  | LongPressGesture;
+  | LongPressGesture
+  | NativeGesture;
 
 function useGesture<T extends IBasicGestures>(
   GestureConstructor: new() => T,

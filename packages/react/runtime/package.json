@@ -20,7 +20,7 @@
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-transform": "workspace:*",
-    "@lynx-js/types": "3.4.11",
+    "@lynx-js/types": "3.6.0",
     "@types/react": "^18.3.25",
     "pretty-format": "^30.2.0"
   },

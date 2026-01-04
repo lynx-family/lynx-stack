@@ -1,5 +1,11 @@
 # @lynx-js/web-worker-rpc
 
+## 0.19.4
+
+### Patch Changes
+
+- Ensure the `default` export entry is last in the package exports map. ([#2075](https://github.com/lynx-family/lynx-stack/pull/2075))
+
 ## 0.19.3
 
 ### Patch Changes

@@ -113,6 +113,8 @@ When implementing a new web element, follow these strict guidelines:
    - **Pattern**: Create a separate "Attribute Class" (e.g., `XWebViewAttribute.ts`) that implements `AttributeReactiveClass` logic.
    - **Register**: Pass this Attribute Class as the second argument to the `@Component` decorator.
    - **Lazy Access**: Use `genDomGetter` to safely access internal elements within the Shadow DOM.
+   - **Boolean-like Attributes**: The framework automatically removes attributes with value `"false"` (string) unless whitelisted.
+     - **Fix**: Add the attribute name to `static readonly notToFilterFalseAttributes` Set in the component class (e.g., `ListItem.ts`).
 
 7. **Testing**:
    - **Structure**: Create a separate spec file for new components (e.g., `tests/x-webview.spec.ts`) instead of adding to the monolithic `web-elements.spec.ts`.

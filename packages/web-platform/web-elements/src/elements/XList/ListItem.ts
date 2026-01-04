@@ -11,4 +11,6 @@ import { ListItemAttributes } from './ListItemAttributes.js';
   CommonEventsAndMethods,
   ListItemAttributes,
 ])
-export class ListItem extends HTMLElement {}
+export class ListItem extends HTMLElement {
+  static readonly notToFilterFalseAttributes = new Set(['recyclable']);
+}

@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-worker-rpc",
-  "version": "0.19.3",
+  "version": "0.19.4",
   "private": false,
   "description": "",
   "keywords": [],
@@ -14,8 +14,8 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.js",
-      "source": "./src/index.ts"
+      "source": "./src/index.ts",
+      "default": "./dist/index.js"
     }
   },
   "main": "dist/index.js",

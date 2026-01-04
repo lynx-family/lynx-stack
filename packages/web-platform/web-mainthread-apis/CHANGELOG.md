@@ -1,5 +1,12 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.19.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.4
+
 ## 0.19.3
 
 ### Patch Changes
