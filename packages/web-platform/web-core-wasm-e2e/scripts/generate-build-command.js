@@ -25,7 +25,10 @@ if (command.length) {
           stdio: 'inherit',
           cwd: path.join(import.meta.dirname, '..'),
           shell: true,
-          env: process.env,
+          env: {
+            ...process.env,
+            'EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE': 'true',
+          },
         });
 
         child.on('exit', (code) => {

@@ -2452,7 +2452,7 @@ test.describe('reactlynx3 tests', () => {
         async ({ page, browserName }, { title }) => {
           test.skip(
             browserName !== 'chromium',
-            'only chrome can show the blured image in screenshot',
+            'only chrome can show the blurred image in screenshot',
           );
           await goto(page, title);
           await diffScreenShot(page, elementName, title);
@@ -2463,7 +2463,7 @@ test.describe('reactlynx3 tests', () => {
         async ({ page, browserName }, { title }) => {
           test.skip(
             browserName !== 'chromium',
-            'only chrome can show the blured image in screenshot',
+            'only chrome can show the blurred image in screenshot',
           );
           await goto(page, title);
           await diffScreenShot(page, elementName, title);
@@ -2595,7 +2595,7 @@ test.describe('reactlynx3 tests', () => {
         async ({ page, browserName, context }, {
           title,
         }) => {
-          test.skip(browserName !== 'chromium', 'not supoort CDPsession');
+          test.skip(browserName !== 'chromium', 'not support CDPsession');
           await goto(page, title);
           await wait(300);
           const cdpSession = await context.newCDPSession(page);
@@ -2676,7 +2676,7 @@ test.describe('reactlynx3 tests', () => {
         browserName,
         context,
       }, { title }) => {
-        test.skip(browserName !== 'chromium', 'not supoort CDPsession');
+        test.skip(browserName !== 'chromium', 'not support CDPsession');
         await goto(page, title);
         const cdpSession = await context.newCDPSession(page);
         await swipe(cdpSession, {
@@ -2723,7 +2723,7 @@ test.describe('reactlynx3 tests', () => {
         browserName,
         context,
       }, { title }) => {
-        test.skip(browserName !== 'chromium', 'not supoort CDPsession');
+        test.skip(browserName !== 'chromium', 'not support CDPsession');
         await goto(page, title);
         const cdpSession = await context.newCDPSession(page);
         await swipe(cdpSession, {
@@ -3156,7 +3156,7 @@ test.describe('reactlynx3 tests', () => {
         test.fixme(isSSR, 'flaky');
         await goto(page, title);
         await wait(200);
-        await diffScreenShot(page, 'x-overlay-ng/demo', '', 'inital');
+        await diffScreenShot(page, 'x-overlay-ng/demo', '', 'initial');
         await wait(100);
         await page.mouse.click(10, 10);
         await wait(100);
@@ -4772,7 +4772,7 @@ test.describe('reactlynx3 tests', () => {
         expect(boundingRact2!.width).toEqual(40);
       },
     );
-    test('basic-linear-weight-sum-equal-to-item-weigth', async ({ page }, {
+    test('basic-linear-weight-sum-equal-to-item-weight', async ({ page }, {
       title,
     }) => {
       await goto(page, title);

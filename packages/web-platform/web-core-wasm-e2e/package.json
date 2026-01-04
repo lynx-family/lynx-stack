@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "build": "pnpm dlx premove dist && EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE=true pnpm run --stream \"/^build:.*/\"",
+    "build": "pnpm dlx premove dist && pnpm run --stream \"/^build:.*/\"",
     "build:csr": "node ./scripts/generate-build-command.js",
     "coverage": "nyc report --cwd=$(realpath ../)",
     "coverage:ci": "nyc report --cwd=$(realpath ../) --reporter=lcov",
