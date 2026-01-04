@@ -1,0 +1,8 @@
+.wrapper view {
+  border: 2px solid blue;
+}
+
+.a.b {
+  background-color: red;
+  border: 1px solid blue;
+}

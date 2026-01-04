@@ -1,0 +1,71 @@
+/*
+// Copyright 2024 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+*/
+.container {
+  display: linear;
+  linear-weight-sum: 0;
+}
+.items-center {
+  align-items: center;
+}
+.pink {
+  background-color: pink;
+}
+.aqua {
+  background-color: aqua;
+}
+.vertical {
+  linear-direction: column;
+  width: 100px;
+  height: 300px;
+  background-color: pink;
+}
+.vertical-reverse {
+  linear-direction: column-reverse;
+  width: 300px;
+  height: 150px;
+  background-color: #99ddaa;
+}
+.horizontal {
+  linear-direction: row;
+  width: 300px;
+  height: 100px;
+  background-color: pink;
+}
+.horizontal-reverse {
+  linear-direction: row-reverse;
+  width: 200px;
+  height: 100px;
+  background-color: #99ddaa;
+}
+.container-item {
+  linear-weight: 0;
+  width: 40px;
+  height: 40px;
+}
+.self-auto {
+  align-self: auto;
+}
+.self-center {
+  align-self: center;
+}
+.self-start {
+  align-self: start;
+}
+.self-end {
+  align-self: end;
+}
+.self-flex-start {
+  align-self: flex-start;
+}
+.self-flex-end {
+  align-self: flex-end;
+}
+.self-baseline {
+  align-self: baseline;
+}
+.self-stretch {
+  align-self: stretch;
+}
