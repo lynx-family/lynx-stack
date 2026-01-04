@@ -8,6 +8,7 @@ import { runRunOnMainThreadTask, setEomShouldFlushElementTree } from '@lynx-js/r
 import type { PatchList, PatchOptions } from './commit.js';
 import { setMainThreadHydrating } from './isMainThreadHydrating.js';
 import { snapshotPatchApply } from './snapshotPatchApply.js';
+import { prettyFormatSnapshotPatch } from '../../debug/formatPatch.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { markTiming, setPipeline } from '../../lynx/performance.js';
 import { __pendingListUpdates } from '../../pendingListUpdates.js';
@@ -37,7 +38,27 @@ function updateMainThread(
   setPipeline(patchOptions.pipelineOptions);
   markTiming('mtsRenderStart');
   markTiming('parseChangesStart');
-  const { patchList, flushOptions = {}, delayedRunOnMainThreadData } = JSON.parse(data) as PatchList;
+  const parsedData = JSON.parse(data) as PatchList;
+  const { patchList, flushOptions = {}, delayedRunOnMainThreadData } = parsedData;
+
+  if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+    console.alog?.(
+      '[ReactLynxDebug] BTS -> MTS updateMainThread:\n' + JSON.stringify(
+        {
+          data: {
+            ...parsedData,
+            patchList: parsedData.patchList.map(patch => ({
+              ...patch,
+              snapshotPatch: prettyFormatSnapshotPatch(patch.snapshotPatch),
+            })),
+          },
+          patchOptions,
+        },
+        null,
+        2,
+      ),
+    );
+  }
 
   markTiming('parseChangesEnd');
   markTiming('patchChangesStart');
