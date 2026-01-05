@@ -57,10 +57,6 @@ export function apply(program: Command): Command {
     .name('rspeedy')
     .usage('<command> [options]')
     .version(version)
-    .option(
-      '--unmanaged',
-      'Force to use the unmanaged version of Rspeedy, instead of the locally installed.',
-    )
     .showHelpAfterError(true)
     .showSuggestionAfterError(true)
     .exitOverride() // Avoid calling `process.exit` by commander

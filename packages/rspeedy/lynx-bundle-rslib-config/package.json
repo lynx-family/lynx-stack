@@ -40,7 +40,7 @@
     "@lynx-js/tasm": "0.0.20"
   },
   "devDependencies": {
-    "@rslib/core": "^0.15.0",
+    "@rslib/core": "^0.19.1",
     "vitest": "^3.2.4",
     "webpack": "^5.104.1"
   },

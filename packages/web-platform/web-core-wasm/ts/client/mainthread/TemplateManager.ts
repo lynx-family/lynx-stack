@@ -1,0 +1,326 @@
+/*
+ * Copyright 2025 The Lynx Authors. All rights reserved.
+ * Licensed under the Apache License Version 2.0 that can be found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+import { TemplateSectionLabel } from '../../constants.js';
+import type { LynxViewInstance } from './LynxViewInstance.js';
+import type {
+  MainMessage,
+  LoadTemplateMessage,
+  SectionMessage,
+  InitMessage,
+} from '../decodeWorker/types.js';
+import type { PageConfig, DecodedTemplate } from '../../types/index.js';
+import type { DecodedStyle } from '../wasm.js';
+
+const wasm = import(
+  /* webpackMode: "eager" */
+  /* webpackChunkName: "wasm-initializer" */
+  /* webpackFetchPriority: "high" */
+  /* webpackPrefetch: true */
+  /* webpackPreload: true */
+  '../wasm.js'
+);
+
+export class TemplateManager {
+  readonly #templates: Map<string, DecodedTemplate> = new Map();
+  readonly #lynxViewInstancesMap: Map<
+    string,
+    Promise<LynxViewInstance>
+  > = new Map();
+  readonly #pendingResolves: Map<
+    string,
+    { resolve: () => void; reject: (reason?: any) => void }
+  > = new Map();
+
+  #worker: Worker | null = null;
+  #workerReadyPromise: Promise<void> | null = null;
+  #resolveWorkerReady: (() => void) | null = null;
+  #activeUrls: Set<string> = new Set();
+  #terminateTimer: ReturnType<typeof setTimeout> | null = null;
+
+  constructor() {
+    this.#ensureWorker();
+  }
+
+  public fetchBundle(
+    url: string,
+    lynxViewInstancePromise: Promise<LynxViewInstance>,
+    overrideConfig?: Record<string, string>,
+  ): Promise<void> {
+    if (this.#templates.has(url) && !overrideConfig) {
+      return (async () => {
+        const template = this.#templates.get(url);
+        const config = (template?.config || {}) as PageConfig;
+        const lynxViewInstance = await lynxViewInstancePromise;
+        lynxViewInstance.onPageConfigReady(config);
+        const styleInfo = template?.styleInfo;
+        if (styleInfo) {
+          lynxViewInstance.onStyleInfoReady(styleInfo, url);
+        }
+        lynxViewInstance.onMTSScriptsLoaded(url, config.isLazy === 'true');
+        lynxViewInstance.onBTSScriptsLoaded(url);
+      })();
+    } else {
+      this.createTemplate(url);
+      return this.#load(url, lynxViewInstancePromise, overrideConfig);
+    }
+  }
+
+  async #load(
+    url: string,
+    lynxViewInstancePromise: Promise<LynxViewInstance>,
+    overrideConfig?: Partial<PageConfig>,
+  ): Promise<void> {
+    this.#activeUrls.add(url);
+    this.#lynxViewInstancesMap.set(url, lynxViewInstancePromise);
+    if (this.#terminateTimer) {
+      clearTimeout(this.#terminateTimer);
+      this.#terminateTimer = null;
+    }
+
+    await this.#ensureWorker();
+
+    const msg: LoadTemplateMessage = {
+      type: 'load',
+      url,
+      fetchUrl: (new URL(url, location.href)).toString(),
+      overrideConfig,
+    };
+    this.#worker!.postMessage(msg);
+    return new Promise((resolve, reject) => {
+      this.#pendingResolves.set(url, { resolve, reject });
+    });
+  }
+
+  #resolvePromise(url: string) {
+    const promise = this.#pendingResolves.get(url);
+    if (promise) {
+      promise.resolve();
+      this.#pendingResolves.delete(url);
+    }
+  }
+
+  #rejectPromise(url: string, reason?: any) {
+    const promise = this.#pendingResolves.get(url);
+    if (promise) {
+      promise.reject(reason);
+      this.#pendingResolves.delete(url);
+    }
+  }
+
+  #ensureWorker(): Promise<void> | void {
+    if (!this.#worker) {
+      this.#workerReadyPromise = new Promise((resolve) => {
+        this.#resolveWorkerReady = resolve;
+      });
+      this.#worker = new Worker(
+        new URL(
+          /* webpackFetchPriority: "high" */
+          /* webpackChunkName: "web-core-template-loader-thread" */
+          /* webpackPrefetch: true */
+          /* webpackPreload: true */
+          '../decodeWorker/decode.worker.js',
+          import.meta.url,
+        ),
+        { type: 'module' },
+      );
+      this.#worker.onmessage = this.#handleMessage.bind(this);
+      this.#workerReadyPromise.then(() => {
+        wasm.then(({ wasmModule }) => {
+          this.#worker!.postMessage({
+            type: 'init',
+            wasmModule,
+          } as InitMessage);
+        });
+      });
+      return this.#workerReadyPromise;
+    } else if (this.#workerReadyPromise) {
+      return this.#workerReadyPromise;
+    }
+  }
+
+  #handleMessage(event: MessageEvent<MainMessage>) {
+    const msg = event.data;
+    if (msg.type === 'ready') {
+      if (this.#resolveWorkerReady) {
+        this.#resolveWorkerReady();
+        this.#resolveWorkerReady = null;
+        this.#workerReadyPromise = null;
+      }
+      return;
+    }
+    const { url } = msg;
+    const lynxViewInstancePromise = this.#lynxViewInstancesMap.get(url);
+    if (!lynxViewInstancePromise) return;
+
+    switch (msg.type) {
+      case 'section':
+        /**
+         * The lynxViewInstance is already awaited the wasm is ready
+         */
+        this.#handleSection(msg, lynxViewInstancePromise);
+        break;
+      case 'error':
+        console.error(`Error decoding template ${url}:`, msg.error);
+        this.#cleanup(url);
+        this.#removeTemplate(url);
+        this.#rejectPromise(url, new Error(msg.error));
+        break;
+      case 'done':
+        this.#cleanup(url);
+        this.#resolvePromise(url);
+        break;
+    }
+  }
+
+  async #handleSection(
+    msg: SectionMessage,
+    instancePromise: Promise<LynxViewInstance>,
+  ) {
+    const [
+      instance,
+      { DecodedStyle, ElementTemplateSection },
+    ] = await Promise.all([
+      instancePromise,
+      wasm.then(({ DecodedStyle, wasmInstance }) => ({
+        DecodedStyle,
+        ElementTemplateSection: wasmInstance.ElementTemplateSection,
+      })),
+    ]);
+    const { label, data, url, config } = msg;
+    switch (label) {
+      case TemplateSectionLabel.Configurations: {
+        this.#setConfig(url, data);
+        instance.onPageConfigReady(data);
+        break;
+      }
+      case TemplateSectionLabel.StyleInfo: {
+        const decodedStyle = new DecodedStyle(
+          new Uint8Array(data as ArrayBuffer),
+        );
+        this.#setStyleInfo(url, decodedStyle);
+        instance.onStyleInfoReady(decodedStyle, url);
+        break;
+      }
+      case TemplateSectionLabel.LepusCode: {
+        const blobMap = data as Record<string, string>;
+        this.#setLepusCode(url, blobMap);
+        instance.onMTSScriptsLoaded(url, config!['isLazy'] === 'true');
+        break;
+      }
+      case TemplateSectionLabel.ElementTemplates:
+        // data is Uint8Array
+        const section = ElementTemplateSection.from_encoded(
+          new Uint8Array(data as ArrayBuffer),
+        );
+        this.setElementTemplateSection(url, section);
+        break;
+      case TemplateSectionLabel.CustomSections: {
+        this.#setCustomSection(url, data);
+        break;
+      }
+      case TemplateSectionLabel.Manifest: {
+        const blobMap = data as Record<string, string>;
+        this.#setBackgroundCode(url, blobMap);
+        instance.onBTSScriptsLoaded(url);
+        break;
+      }
+      default:
+        throw new Error(`Unknown section label: ${label}`);
+    }
+  }
+
+  #cleanup(url: string) {
+    this.#activeUrls.delete(url);
+    this.#lynxViewInstancesMap.delete(url);
+    if (this.#activeUrls.size === 0) {
+      this.#terminateTimer = setTimeout(() => {
+        if (this.#activeUrls.size === 0 && this.#worker) {
+          this.#worker.terminate();
+          this.#worker = null;
+          this.#workerReadyPromise = null;
+          this.#resolveWorkerReady = null;
+        }
+      }, 10000);
+    }
+  }
+
+  createTemplate(url: string) {
+    if (this.#templates.has(url)) {
+      // remove the template and revoke URLs
+      const template = this.#templates.get(url);
+      if (template) {
+        if (template.lepusCode) {
+          for (const blobUrl of Object.values(template.lepusCode)) {
+            URL.revokeObjectURL(blobUrl);
+          }
+        }
+        if (template.backgroundCode) {
+          for (const blobUrl of Object.values(template.backgroundCode)) {
+            URL.revokeObjectURL(blobUrl);
+          }
+        }
+      }
+      this.#templates.delete(url);
+    }
+    this.#templates.set(url, {});
+  }
+
+  #removeTemplate(url: string) {
+    this.#templates.delete(url);
+  }
+
+  #setConfig(url: string, config: PageConfig) {
+    const template = this.#templates.get(url);
+    if (template) {
+      template.config = config;
+    }
+  }
+
+  #setStyleInfo(url: string, styleInfo: DecodedStyle) {
+    const template = this.#templates.get(url);
+    if (template) {
+      template.styleInfo = styleInfo;
+    }
+  }
+
+  #setLepusCode(url: string, lepusCode: Record<string, string>) {
+    const template = this.#templates.get(url);
+    if (template) {
+      template.lepusCode = lepusCode;
+    }
+  }
+
+  setElementTemplateSection(url: string, section: any) {
+    const template = this.#templates.get(url);
+    if (template) {
+      template.elementTemplates = section;
+    }
+  }
+
+  #setCustomSection(url: string, customSections: Record<string, any>) {
+    const template = this.#templates.get(url);
+    if (template) {
+      template.customSections = customSections;
+    }
+  }
+
+  #setBackgroundCode(
+    url: string,
+    backgroundCode: Record<string, string>,
+  ) {
+    const template = this.#templates.get(url);
+    if (template) {
+      template.backgroundCode = backgroundCode;
+    }
+  }
+
+  public getTemplate(url: string): DecodedTemplate | undefined {
+    return this.#templates.get(url);
+  }
+}
+
+export const templateManager = new TemplateManager();

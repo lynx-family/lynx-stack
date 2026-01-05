@@ -26,7 +26,6 @@ export default defineConfig({
       source: {
         entry: {
           'cli/main': './src/cli/main.ts',
-          'cli/start': './src/cli/start.ts',
         },
       },
       dts: false,

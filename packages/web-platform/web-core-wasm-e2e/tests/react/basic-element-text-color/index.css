@@ -1,0 +1,9 @@
+.a {
+  font-size: 16px;
+  color: red;
+}
+
+.b {
+  font-size: 80px;
+  color: linear-gradient(green, yellow);
+}

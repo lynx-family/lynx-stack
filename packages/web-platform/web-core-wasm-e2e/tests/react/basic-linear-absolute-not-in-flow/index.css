@@ -1,0 +1,28 @@
+/*
+// Copyright 2024 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+*/
+#container {
+  display: linear;
+  linear-direction: column;
+  linear-cross-gravity: none;
+  linear-weight-sum: 0;
+}
+.container-item {
+  linear-layout-gravity: none;
+  height: 100px;
+  width: 100px;
+  linear-weight: 0;
+}
+.absolute {
+  position: absolute;
+  left: 50px;
+  top: 50px;
+}
+
+.fixed {
+  position: absolute;
+  left: 50px;
+  top: 150px;
+}

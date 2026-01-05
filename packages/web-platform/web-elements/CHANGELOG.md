@@ -1,5 +1,13 @@
 # @lynx-js/web-elements
 
+## 0.10.1
+
+### Patch Changes
+
+- feat: implement x-webview component ([#2061](https://github.com/lynx-family/lynx-stack/pull/2061))
+
+- feat: support `recyclable="false"` on `list-item` and enable overflow visibility ([#2069](https://github.com/lynx-family/lynx-stack/pull/2069))
+
 ## 0.10.0
 
 ### Minor Changes

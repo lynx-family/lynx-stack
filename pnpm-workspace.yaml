@@ -36,12 +36,12 @@ catalog:
 catalogs:
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "1.6.13"
+    "@rsbuild/core": "1.7.1"
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "1.7.0-beta.1"
-    "@rspack/core": "1.7.0-beta.1"
+    "@rspack/cli": "1.7.0"
+    "@rspack/core": "1.7.0"
     # TODO: Upgrade `@rspack/test-tools` to latest
     "@rspack/test-tools": "1.5.6"
 
