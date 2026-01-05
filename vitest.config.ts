@@ -27,7 +27,7 @@ export default defineConfig({
         '**/tests/__swc_snapshots__/**',
 
         '.lintstagedrc.mjs',
-        'eslint.config.js',
+        '**/eslint.config.js',
 
         'packages/tools/canary-release/**',
         'packages/web-platform/web-tests/**',
