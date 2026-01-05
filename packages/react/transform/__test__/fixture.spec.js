@@ -412,7 +412,7 @@ Component, View
             ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, [
                 0
             ], true);
-        /*#__PURE__*/ /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>/*#__PURE__*/ _jsx(__snapshot_da39a_89b7f_1, {
+        /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>/*#__PURE__*/ _jsx(__snapshot_da39a_89b7f_1, {
                 values: [
                     {
                         ...__spread,
