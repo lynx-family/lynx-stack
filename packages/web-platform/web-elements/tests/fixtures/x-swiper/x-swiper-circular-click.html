@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<!-- Copyright 2024 The Lynx Authors. All rights reserved.
+ Licensed under the Apache License Version 2.0 that can be found in the
+ LICENSE file in the root directory of this source tree. -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>web playground</title>
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta content="default" name="apple-mobile-web-app-status-bar-style">
+    <meta content="telephone=no" name="format-detection">
+    <meta content="portrait" name="screen-orientation">
+    <meta
+      content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+      name="viewport"
+    >
+    <meta content="portrait" name="x5-orientation" />
+    <link
+      href="/main.css"
+      rel="stylesheet"
+    />
+
+    <style>
+    x-swiper {
+      height: 200px;
+      width: 400px;
+      background-color: orange;
+    }
+
+    x-swiper-item {
+      width: 100%;
+      height: 100%;
+    }
+
+    .btn {
+      width: 10px;
+      height: 10px;
+      background-color: transparent;
+    }
+    </style>
+    <script type="module">
+    let counter = 0;
+      let current = 0;
+
+      const text = document.querySelector('x-text');
+      text.innerHTML = `${counter}`;
+
+      const swiper = document.querySelector('x-swiper');
+      swiper.setAttribute('current', current);
+
+      const swiperItems = document.getElementsByTagName('x-swiper-item');
+      for (const item of swiperItems) {
+        const currentIndex = ++counter;
+        item.addEventListener('click', function() {
+          text.innerHTML = `${currentIndex}`;
+        });
+      }
+
+      const btn = document.querySelector('.btn');
+      btn.addEventListener('click', function() {
+        swiper.setAttribute('current', (++current) % 3);
+      });
+    </script>
+  </head>
+
+  <body>
+    <script src="/main.js" defer></script>
+    <x-view class="page column">
+      <x-swiper style="display: flex; --lynx-display: linear" circular>
+        <x-swiper-item style="background-color: red"> </x-swiper-item>
+        <x-swiper-item style="background-color: green"> </x-swiper-item>
+        <x-swiper-item style="background-color: blue"> </x-swiper-item>
+      </x-swiper>
+
+      <x-text></x-text>
+
+      <view class="btn" data-testid="next" bindtap="next" />
+    </x-view>
+    <div class="container">
+      <div class="rectangle"></div>
+    </div>
+  </body>
+</html>

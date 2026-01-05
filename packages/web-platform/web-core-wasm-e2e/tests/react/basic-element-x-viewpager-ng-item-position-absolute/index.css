@@ -1,0 +1,23 @@
+/*
+// Copyright 2024 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+*/
+.page {
+  width: 100%;
+  height: 100%;
+}
+
+.viewpager-content {
+  height: 150px;
+  width: 100%;
+  background-color: #ff9800;
+  display: linear;
+}
+
+.viewpager-item {
+  width: 100%;
+  height: 100%;
+  border: 5px solid black;
+  background-color: #1890ff;
+}

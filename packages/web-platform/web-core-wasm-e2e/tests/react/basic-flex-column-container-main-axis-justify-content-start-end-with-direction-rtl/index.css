@@ -1,0 +1,33 @@
+/*
+// Copyright 2024 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+*/
+.container {
+  display: flex;
+}
+.vertical {
+  flex-direction: column;
+}
+.vertical-reverse {
+  flex-direction: column-reverse;
+}
+.start {
+  justify-content: start;
+}
+.end {
+  justify-content: end;
+}
+.flex-start {
+  justify-content: flex-start;
+}
+.flex-end {
+  justify-content: flex-end;
+}
+.container-item {
+  width: 40px;
+  height: 40px;
+}
+.rtl {
+  direction: lynx-rtl;
+}

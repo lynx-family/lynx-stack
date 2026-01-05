@@ -1,5 +1,47 @@
 # @lynx-js/web-core
 
+## 0.19.4
+
+### Patch Changes
+
+- Updated dependencies [[`bba05e2`](https://github.com/lynx-family/lynx-stack/commit/bba05e2ed06cca8009ad415fd9777e8334a0887a)]:
+  - @lynx-js/web-worker-rpc@0.19.4
+  - @lynx-js/web-constants@0.19.4
+  - @lynx-js/web-worker-runtime@0.19.4
+  - @lynx-js/web-mainthread-apis@0.19.4
+
+## 0.19.3
+
+### Patch Changes
+
+- Updated dependencies [[`986761d`](https://github.com/lynx-family/lynx-stack/commit/986761dd1e9e631f8118faec68188f29f78e9236)]:
+  - @lynx-js/web-worker-rpc@0.19.3
+  - @lynx-js/web-constants@0.19.3
+  - @lynx-js/web-worker-runtime@0.19.3
+  - @lynx-js/web-mainthread-apis@0.19.3
+
+## 0.19.2
+
+### Patch Changes
+
+- chore: mark the "multi-thread" deprecated ([#2030](https://github.com/lynx-family/lynx-stack/pull/2030))
+
+  **NOTICE This will be a breaking change in the future**
+
+  mark the thread strategy "multi-thread" as deprecated.
+
+  Please use "all-on-ui" instead. If you still want to use multi-thread mode, please try to use a cross-origin isolated iframe.
+
+  A console warning will be printed if `thread-strategy` is set to `multi-thread`.
+
+- fix csp issue for mts realm ([#1998](https://github.com/lynx-family/lynx-stack/pull/1998))
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.2
+  - @lynx-js/web-mainthread-apis@0.19.2
+  - @lynx-js/web-worker-rpc@0.19.2
+  - @lynx-js/web-worker-runtime@0.19.2
+
 ## 0.19.1
 
 ### Patch Changes

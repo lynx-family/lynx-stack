@@ -78,118 +78,125 @@ export interface ExternalsLoadingPluginOptions {
    */
   externals: Record<
     string,
-    {
-      /**
-       * The bundle(lynx.bundle) url of the library. The library source should be placed in `customSections`.
-       */
-      url: string;
-
-      /**
-       * The name of the library. Same as https://webpack.js.org/configuration/externals/#string.
-       *
-       * By default, the library name is the same as the externals key. For example:
-       *
-       * The config
-       *
-       * ```js
-       * ExternalsLoadingPlugin({
-       *   externals: {
-       *     lodash: {
-       *       url: '……',
-       *     }
-       *   }
-       * })
-       * ```
-       *
-       * Will generate the following webpack externals config:
-       *
-       * ```js
-       * externals: {
-       *   lodash: '__webpack_require__.lynx_ex.lodash',
-       * }
-       * ```
-       *
-       * If one external bundle contains multiple modules, should set the same library name to ensure it's loaded only once. For example:
-       *
-       * ```js
-       * ExternalsLoadingPlugin({
-       *   externals: {
-       *     lodash: {
-       *       libraryName: 'Lodash',
-       *       url: '……',
-       *     },
-       *     'lodash-es': {
-       *       libraryName: 'Lodash',
-       *       url: '……',
-       *     }
-       *   }
-       * })
-       * ```
-       * Will generate the following webpack externals config:
-       *
-       * ```js
-       * externals: {
-       *   lodash: '__webpack_require__.lynx_ex.Lodash',
-       *   'lodash-es': '__webpack_require__.lynx_ex.Lodash',
-       * }
-       * ```
-       *
-       * You can pass an array to specify subpath of the external. Same as https://webpack.js.org/configuration/externals/#string-1. For example:
-       *
-       * ```js
-       * ExternalsLoadingPlugin({
-       *   externals: {
-       *     preact: {
-       *       libraryName: ['ReactLynx', 'Preact'],
-       *       url: '……',
-       *     },
-       *   }
-       * })
-       * ```
-       *
-       * Will generate the following webpack externals config:
-       *
-       * ```js
-       * externals: {
-       *   preact: '__webpack_require__.lynx_ex.ReactLynx.Preact',
-       * }
-       * ```
-       *
-       * @defaultValue `undefined`
-       *
-       * @example `Lodash`
-       */
-      libraryName?: string | string[];
-
-      /**
-       * Whether the source should be loaded asynchronously or not.
-       *
-       * @defaultValue `true`
-       */
-      async?: boolean;
-
-      /**
-       * The options of the background layer.
-       *
-       * @defaultValue `undefined`
-       */
-      background?: LayerOptions;
-
-      /**
-       * The options of the main-thread layer.
-       *
-       * @defaultValue `undefined`
-       */
-      mainThread?: LayerOptions;
-
-      /**
-       * The wait time in milliseconds.
-       *
-       * @defaultValue `2000`
-       */
-      timeout?: number;
-    }
+    ExternalValue
   >;
+}
+
+/**
+ * The value item of the externals.
+ *
+ * @public
+ */
+export interface ExternalValue {
+  /**
+   * The bundle url of the library. The library source should be placed in `customSections`.
+   */
+  url: string;
+
+  /**
+   * The name of the library. Same as https://webpack.js.org/configuration/externals/#string.
+   *
+   * By default, the library name is the same as the externals key. For example:
+   *
+   * The config
+   *
+   * ```js
+   * ExternalsLoadingPlugin({
+   *   externals: {
+   *     lodash: {
+   *       url: '……',
+   *     }
+   *   }
+   * })
+   * ```
+   *
+   * Will generate the following webpack externals config:
+   *
+   * ```js
+   * externals: {
+   *   lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].lodash',
+   * }
+   * ```
+   *
+   * If one external bundle contains multiple modules, should set the same library name to ensure it's loaded only once. For example:
+   *
+   * ```js
+   * ExternalsLoadingPlugin({
+   *   externals: {
+   *     lodash: {
+   *       libraryName: 'Lodash',
+   *       url: '……',
+   *     },
+   *     'lodash-es': {
+   *       libraryName: 'Lodash',
+   *       url: '……',
+   *     }
+   *   }
+   * })
+   * ```
+   * Will generate the following webpack externals config:
+   *
+   * ```js
+   * externals: {
+   *   lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash',
+   *   'lodash-es': 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash',
+   * }
+   * ```
+   *
+   * You can pass an array to specify subpath of the external. Same as https://webpack.js.org/configuration/externals/#string-1. For example:
+   *
+   * ```js
+   * ExternalsLoadingPlugin({
+   *   externals: {
+   *     preact: {
+   *       libraryName: ['ReactLynx', 'Preact'],
+   *       url: '……',
+   *     },
+   *   }
+   * })
+   * ```
+   *
+   * Will generate the following webpack externals config:
+   *
+   * ```js
+   * externals: {
+   *   preact: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.Preact',
+   * }
+   * ```
+   *
+   * @defaultValue `undefined`
+   *
+   * @example `Lodash`
+   */
+  libraryName?: string | string[];
+
+  /**
+   * Whether the source should be loaded asynchronously or not.
+   *
+   * @defaultValue `true`
+   */
+  async?: boolean;
+
+  /**
+   * The options of the background layer.
+   *
+   * @defaultValue `undefined`
+   */
+  background?: LayerOptions;
+
+  /**
+   * The options of the main-thread layer.
+   *
+   * @defaultValue `undefined`
+   */
+  mainThread?: LayerOptions;
+
+  /**
+   * The wait time in milliseconds.
+   *
+   * @defaultValue `2000`
+   */
+  timeout?: number;
 }
 
 /**
@@ -204,11 +211,8 @@ export interface LayerOptions {
   sectionPath: string;
 }
 
-function getLynxExternalGlobal(layer: 'background' | 'mainThread') {
-  // We do not use `globalThis` in BTS to avoid issues when sharing js context is enabled
-  return `${
-    layer === 'background' ? 'lynxCoreInject.tt.lynx_ex' : 'globalThis.lynx_ex'
-  }`;
+function getLynxExternalGlobal() {
+  return `lynx[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]`;
 }
 
 /**
@@ -269,8 +273,7 @@ export class ExternalsLoadingPlugin {
         chunkLayer: string,
       ): string {
         const fetchCode: string[] = [];
-        const asyncLoadCode: string[] = [];
-        const syncLoadCode: string[] = [];
+        const loadCode: string[] = [];
         // filter duplicate externals by libraryName or package name to avoid loading the same external multiple times. We keep the last one.
         const externalsMap = new Map<
           string | string[],
@@ -298,7 +301,7 @@ export class ExternalsLoadingPlugin {
         if (externals.length === 0) {
           return '';
         }
-        const runtimeGlobalsInit = `${getLynxExternalGlobal(layer)} = {};`;
+        const runtimeGlobalsInit = `${getLynxExternalGlobal()} = {};`;
         const loadExternalFunc = `
 function createLoadExternalAsync(handler, sectionPath) {
   return new Promise((resolve, reject) => {
@@ -365,8 +368,8 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           );
 
           if (async) {
-            asyncLoadCode.push(
-              `${getLynxExternalGlobal(layer)}[${
+            loadCode.push(
+              `${getLynxExternalGlobal()}[${
                 JSON.stringify(libraryNameStr)
               }] = createLoadExternalAsync(handler${i}, ${
                 JSON.stringify(layerOptions.sectionPath)
@@ -375,8 +378,8 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             continue;
           }
 
-          syncLoadCode.push(
-            `${getLynxExternalGlobal(layer)}[${
+          loadCode.push(
+            `${getLynxExternalGlobal()}[${
               JSON.stringify(libraryNameStr)
             }] = createLoadExternalSync(handler${i}, ${
               JSON.stringify(layerOptions.sectionPath)
@@ -388,8 +391,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           runtimeGlobalsInit,
           loadExternalFunc,
           fetchCode,
-          asyncLoadCode,
-          syncLoadCode,
+          loadCode,
         ].flat().join('\n');
       }
     }
@@ -464,7 +466,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
         return callback(
           undefined,
           [
-            getLynxExternalGlobal(currentLayer),
+            getLynxExternalGlobal(),
             ...(Array.isArray(libraryName) ? libraryName : [libraryName]),
           ],
           isAsync ? 'promise' : undefined,

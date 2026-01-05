@@ -11,7 +11,7 @@
 - Manifest: async/lazy.LAST_HASH.css.hot-update.json, size: 1374
 - Manifest: entry.LAST_HASH.css.hot-update.json, size: 1362
 - Manifest: entry.LAST_HASH.hot-update.json, size: 29
-- Update: entry.LAST_HASH.hot-update.js, size: 1219
+- Update: entry.LAST_HASH.hot-update.js, size: 1203
 
 ## Manifest
 
@@ -91,15 +91,15 @@ __webpack_require__.r(__webpack_exports__);
 
 };
 exports.runtime = function(__webpack_require__) {
-// webpack/runtime/get_full_hash
-(() => {
-__webpack_require__.h = () => ("CURRENT_HASH")
-})();
-// webpack/runtime/lynx css hot update
+// lynx css hot update
 (() => {
 
 __webpack_require__.cssHotUpdateList = [["lazy","async/lazy.LAST_HASH.css.hot-update.json"],["common","async/common.LAST_HASH.css.hot-update.json"],["entry","entry.LAST_HASH.css.hot-update.json"]];
 
+})();
+// webpack/runtime/get_full_hash
+(() => {
+__webpack_require__.h = () => ("CURRENT_HASH")
 })();
 
 }

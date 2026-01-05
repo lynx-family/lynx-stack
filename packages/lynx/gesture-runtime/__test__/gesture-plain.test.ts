@@ -9,6 +9,7 @@ import {
   Gesture,
   GestureTypeInner,
   LongPressGesture,
+  NativeGesture,
   PanGesture,
   TapGesture,
 } from '../src/index.js';
@@ -26,10 +27,12 @@ describe('create gesture', () => {
     const tapGesture = new TapGesture();
     const longPressGesture = new LongPressGesture();
 
+    const nativeGesture = new NativeGesture();
     expect(panGesture.type).toBe(GestureTypeInner.PAN);
     expect(flingGesture.type).toBe(GestureTypeInner.FLING);
     expect(tapGesture.type).toBe(GestureTypeInner.TAP);
     expect(longPressGesture.type).toBe(GestureTypeInner.LONGPRESS);
+    expect(nativeGesture.type).toBe(GestureTypeInner.NATIVE);
   });
 
   test('gesture config', () => {

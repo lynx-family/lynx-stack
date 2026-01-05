@@ -1,0 +1,290 @@
+/*
+// Copyright 2024 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+*/
+x-list {
+  contain: layout;
+  scrollbar-width: none;
+  container-type: size;
+  --list-item-sticky-offset: 0;
+  --list-item-span-count: 0;
+  --list-main-axis-gap: 0px;
+  --list-cross-axis-gap: 0px;
+}
+
+x-list > *:not(list-item) {
+  display: none;
+}
+
+x-list::part(content),
+x-list[list-type="waterfall"]::part(waterfall-content) {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  width: 100%;
+  height: 100%;
+  justify-content: inherit;
+  background-color: inherit;
+  flex-direction: inherit;
+  scrollbar-width: inherit;
+  scroll-snap-type: inherit;
+  scroll-snap-align: start;
+  overflow: inherit;
+  position: relative;
+  content-visibility: auto;
+  row-gap: inherit;
+  column-gap: inherit;
+}
+
+x-list::part(content),
+x-list::part(slot) {
+  --lynx-display: inherit;
+}
+
+x-list,
+x-list::part(content) {
+  scrollbar-width: none;
+}
+
+x-list::-webkit-scrollbar,
+x-list::part(content)::-webkit-scrollbar {
+  display: none;
+}
+
+x-list[scrollbar-enable]::part(content) {
+  scrollbar-width: initial;
+}
+
+x-list[scrollbar-enable]::part(content)::-webkit-scrollbar {
+  display: initial;
+}
+
+list-item {
+  display: none;
+  content-visibility: auto;
+  flex: 0 0 auto !important;
+  position: static;
+  contain: size;
+  contain-intrinsic-size: none auto var(--estimated-main-axis-size-px, 100cqh);
+}
+
+list-item[recyclable="false"] {
+  content-visibility: visible;
+  contain: initial;
+}
+
+x-list[scroll-orientation="horizontal"] list-item {
+  contain-intrinsic-size: auto var(--estimated-main-axis-size-px, 100cqw) none;
+}
+
+x-list > list-item,
+x-list > lynx-wrapper > list-item {
+  display: flex;
+}
+
+x-list {
+  overflow-y: scroll !important;
+  overflow-x: clip !important;
+}
+
+x-list[scroll-orientation="horizontal"] {
+  overflow-x: scroll !important;
+  overflow-y: clip !important;
+}
+
+x-list[enable-scroll="false"] {
+  overflow-y: hidden !important;
+}
+
+x-list[scroll-orientation="horizontal"][enable-scroll="false"] {
+  overflow-x: hidden !important;
+}
+
+x-list[sticky="true"] list-item[sticky-top],
+x-list[sticky="true"] list-item[sticky-bottom] {
+  position: sticky;
+  z-index: 1;
+}
+
+x-list[sticky="true"] > list-item[sticky-top],
+x-list[sticky="true"] > lynx-wrapper > list-item[sticky-top] {
+  top: var(--list-item-sticky-offset);
+}
+
+x-list[sticky="true"] > list-item[sticky-bottom],
+x-list[sticky="true"] > lynx-wrapper > list-item[sticky-bottom] {
+  bottom: var(--list-item-sticky-offset);
+}
+
+x-list[sticky="true"][scroll-orientation="horizontal"] > list-item[sticky-top],
+x-list[sticky="true"][scroll-orientation="horizontal"]
+  > lynx-wrapper
+  > list-item[sticky-top] {
+  top: unset;
+  left: var(--list-item-sticky-offset);
+}
+
+x-list[sticky="true"][scroll-orientation="horizontal"]
+  > list-item[sticky-bottom],
+x-list[sticky="true"][scroll-orientation="horizontal"]
+  > lynx-wrapper
+  > list-item[sticky-bottom] {
+  bottom: unset;
+  right: var(--list-item-sticky-offset);
+}
+
+x-list[item-snap],
+x-list[paging-enabled] {
+  scroll-snap-type: y mandatory;
+  scroll-snap-stop: always;
+}
+
+x-list[item-snap][scroll-orientation="horizontal"],
+x-list[paging-enabled][scroll-orientation="horizontal"] {
+  scroll-snap-type: x mandatory;
+}
+
+x-list[item-snap] > list-item,
+x-list[item-snap] > lynx-wrapper > list-item {
+  scroll-snap-align: start;
+}
+
+x-list[x-enable-scrolltoupper-event]::part(upper-threshold-observer),
+x-list[x-enable-scrolltoupperedge-event]::part(upper-threshold-observer),
+x-list[x-enable-scrolltolower-event]::part(lower-threshold-observer),
+x-list[x-enable-scrolltoloweredge-event]::part(lower-threshold-observer) {
+  display: flex;
+}
+
+x-list::part(lower-threshold-observer) {
+  flex-direction: column-reverse;
+}
+
+x-list[vertical-orientation="false"]::part(lower-threshold-observer) {
+  flex-direction: row-reverse;
+}
+
+/* list-type single */
+x-list {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  row-gap: var(--list-main-axis-gap);
+  column-gap: var(--list-cross-axis-gap);
+}
+
+x-list[scroll-orientation="horizontal"] {
+  flex-direction: row;
+  row-gap: var(--list-cross-axis-gap);
+  column-gap: var(--list-main-axis-gap);
+}
+
+/* list-type flow */
+x-list[list-type="flow"]::part(content) {
+  display: grid;
+  grid-template-columns: repeat(var(--list-item-span-count), 1fr);
+  grid-auto-rows: min-content;
+  justify-items: stretch;
+  align-items: start;
+  grid-row-gap: var(--list-main-axis-gap);
+  grid-column-gap: var(--list-cross-axis-gap);
+}
+
+x-list[list-type="flow"][scroll-orientation="horizontal"]::part(content) {
+  grid-template-rows: repeat(var(--list-item-span-count), 1fr);
+  grid-auto-flow: column;
+  grid-auto-columns: min-content;
+  justify-items: start;
+  align-items: stretch;
+  grid-row-gap: var(--list-cross-axis-gap);
+  grid-column-gap: var(--list-main-axis-gap);
+}
+
+x-list[list-type="flow"] list-item[full-span]:not([full-span="false"]) {
+  grid-column-start: 1;
+  grid-column-end: calc(var(--list-item-span-count) + 1);
+}
+
+x-list[list-type="flow"][scroll-orientation="horizontal"]
+  list-item[full-span]:not([full-span="false"]) {
+  grid-row-start: 1;
+  grid-row-end: calc(var(--list-item-span-count) + 1);
+}
+
+x-list[list-type="flow"][x-enable-scrolltoupper-event]::part(upper-threshold-observer),
+x-list[list-type="flow"][x-enable-scrolltoupperedge-event]::part(upper-threshold-observer),
+x-list[list-type="flow"][x-enable-scrolltolower-event]::part(lower-threshold-observer),
+x-list[list-type="flow"][x-enable-scrolltoloweredge-event]::part(lower-threshold-observer) {
+  grid-column: 1 / calc(var(--list-item-span-count) + 1);
+}
+
+x-list[list-type="flow"][scroll-orientation="horizontal"][x-enable-scrolltoupper-event]::part(upper-threshold-observer),
+x-list[list-type="flow"][scroll-orientation="horizontal"][x-enable-scrolltoupperedge-event]::part(upper-threshold-observer),
+x-list[list-type="flow"][scroll-orientation="horizontal"][x-enable-scrolltolower-event]::part(lower-threshold-observer),
+x-list[list-type="flow"][scroll-orientation="horizontal"][x-enable-scrolltoloweredge-event]::part(lower-threshold-observer) {
+  grid-row: 1 / calc(var(--list-item-span-count) + 1);
+}
+
+/* list-type waterfall */
+x-list[list-type="waterfall"] {
+  display: flex;
+  flex-direction: column;
+}
+
+x-list[list-type="waterfall"][scroll-orientation="horizontal"] {
+  flex-direction: row;
+}
+
+x-list[list-type="waterfall"]::part(slot) {
+  visibility: hidden;
+}
+
+x-list[list-type="waterfall"] list-item {
+  position: absolute;
+}
+
+x-list[list-type="waterfall"] list-item {
+  width: calc(
+    (
+      100% - var(--list-cross-axis-gap) * (var(--list-item-span-count) - 1)
+    ) /
+      var(--list-item-span-count)
+  );
+  height: fit-content;
+}
+
+x-list[list-type="waterfall"][scroll-orientation="horizontal"] list-item {
+  width: fit-content;
+  height: calc(
+    (
+      100% - var(--list-cross-axis-gap) * (var(--list-item-span-count) - 1)
+    ) /
+      var(--list-item-span-count)
+  );
+}
+
+x-list[list-type="waterfall"] list-item[full-span]:not([full-span="false"]) {
+  width: 100%;
+  height: fit-content;
+}
+
+x-list[list-type="waterfall"][scroll-orientation="horizontal"]
+  list-item[full-span]:not([full-span="false"]) {
+  width: fit-content;
+  height: 100%;
+}
+
+x-list[list-type="waterfall"]::part(upper-threshold-observer),
+x-list[list-type="waterfall"]::part(lower-threshold-observer) {
+  position: absolute;
+}
+
+x-list[list-type="waterfall"]::part(lower-threshold-observer) {
+  bottom: -999px;
+}
+
+x-list[list-type="waterfall"][scroll-orientation="horizontal"]::part(lower-threshold-observer) {
+  bottom: unset;
+  right: -999px;
+}

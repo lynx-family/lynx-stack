@@ -1,5 +1,11 @@
 # @lynx-js/web-explorer
 
+## 0.0.15
+
+### Patch Changes
+
+- fix: web-explorer needs to actively send an iframeReady message to the parent, the parent uses `iframe load` listener cannot guarantee that the `message-listener` will complete execution. ([#2001](https://github.com/lynx-family/lynx-stack/pull/2001))
+
 ## 0.0.14
 
 ### Patch Changes

@@ -6,15 +6,7 @@
     "target": "ES2024",
     "rootDir": "./src",
     "importHelpers": true,
-    "noUnusedLocals": false,
   },
   "include": ["src"],
-  "references": [
-    {
-      "path": "../web-elements-reactive",
-    },
-    {
-      "path": "../web-elements-template",
-    },
-  ],
+  "references": [],
 }

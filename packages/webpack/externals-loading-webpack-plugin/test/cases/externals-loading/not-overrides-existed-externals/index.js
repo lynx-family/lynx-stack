@@ -20,9 +20,9 @@ it('should external lodash and foo', async () => {
   expect(background).toContain('module.exports ' + '= Lodash;');
   expect(mainThread).toContain('module.exports ' + '= Lodash;');
   expect(background).toContain(
-    'module.exports ' + '= lynxCoreInject.tt.lynx_ex.Foo;',
+    'module.exports ' + `= lynx[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')].Foo;`,
   );
   expect(mainThread).toContain(
-    'module.exports ' + '= globalThis.lynx_ex.Foo;',
+    'module.exports ' + `= lynx[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')].Foo;`,
   );
 });

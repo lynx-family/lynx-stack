@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-core-server",
-  "version": "0.19.1",
+  "version": "0.19.4",
   "private": false,
   "description": "",
   "keywords": [],
@@ -29,7 +29,7 @@
   "devDependencies": {
     "@lynx-js/offscreen-document": "workspace:*",
     "@lynx-js/web-constants": "workspace:*",
-    "@lynx-js/web-elements-template": "workspace:*",
+    "@lynx-js/web-elements": "workspace:*",
     "@lynx-js/web-mainthread-apis": "workspace:*",
     "@lynx-js/web-worker-rpc": "workspace:*",
     "rsbuild-plugin-arethetypeswrong": "0.1.1",

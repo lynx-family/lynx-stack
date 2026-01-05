@@ -1,0 +1,150 @@
+/* tslint:disable */
+/* eslint-disable */
+export class DecodedStyleData {
+  free(): void;
+  [Symbol.dispose](): void;
+  constructor(buffer: Uint8Array);
+  query_css_og_declarations_by_css_id(css_id: number, class_name: string[]): string;
+  static decode_into(buffer: Uint8Array, entry_name: string | null | undefined, config_enable_css_selector: boolean): Uint8Array;
+  readonly style_content: string;
+  readonly font_face_content: string;
+}
+export class ElementTemplateSection {
+  private constructor();
+  free(): void;
+  [Symbol.dispose](): void;
+  static from_encoded(buffer: Uint8Array): ElementTemplateSection;
+}
+/**
+ *
+ * * for return of __GetEvents
+ * 
+ */
+export class EventInfo {
+  private constructor();
+  free(): void;
+  [Symbol.dispose](): void;
+  name: string;
+  type: string;
+  function: any;
+}
+export class MainThreadWasmContext {
+  free(): void;
+  [Symbol.dispose](): void;
+  __wasm_set_css_id(elements_unique_id: Uint32Array, css_id: number): void;
+  /**
+   *
+   *   * The key could be string or number
+   *   * The value could be string or number or null or undefined
+   *   
+   */
+  __wasm_AddInlineStyle_str_key(dom: HTMLElement, key: string, value?: string | null): void;
+  __wasm_AddInlineStyle_number_key(dom: HTMLElement, key: number, value?: string | null): void;
+  __wasm_SetInlineStyles(dom: HTMLElement, styles: string): boolean;
+  __wasm_add_event_bts(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: string | null): void;
+  __wasm_add_event_run_worklet(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: any | null): void;
+  __GetEvent(unique_id: number, event_name: string, event_type: string): any;
+  __GetEvents(unique_id: number): EventInfo[];
+  dispatch_event_by_path(bubble_unique_id_path: Uint32Array, event_name: string, is_capture: boolean, serialized_event: any): boolean;
+  __wasm_commonEventHandler(event: any, bubble_unique_id_path: Uint32Array, event_name: string): void;
+  constructor(document: Document, root_node: Node, mts_binding: any, unique_id_symbol: any, config_enable_css_selector: boolean);
+  __wasm_set_page_element_unique_id(unique_id: number): void;
+  __CreateElementCommon(parent_component_unique_id: number, dom: HTMLElement, css_id?: number | null, component_id?: string | null): number;
+  __wasm_take_timing_flags(): string[];
+  __wasm_get_unique_id_by_component_id(component_id: string): number | undefined;
+  __wasm_get_css_id_by_unique_id(unique_id: number): number | undefined;
+  _wasm_elementFromBinary(parent_component_unique_id: number, template_url: string, element_template_name: string, element_template_section: ElementTemplateSection): Element;
+  __GetComponentID(unique_id: number): string | undefined;
+  __GetElementConfig(unique_id: number): object | undefined;
+  /**
+   *
+   *   * key: String
+   *   * value: stringifyed js value
+   *   
+   */
+  __SetConfig(unique_id: number, config: object): void;
+  __GetConfig(unique_id: number): object;
+  __UpdateComponentID(unique_id: number, component_id?: string | null): void;
+  __SetDataset(unique_id: number, dom: HTMLElement, new_dataset: object): void;
+  __AddDataset(unique_id: number, key: any, value: any): void;
+  __GetDataset(unique_id: number): object;
+  __GetDataByKey(unique_id: number, key: string): any;
+}
+
+export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
+
+export interface InitOutput {
+  readonly memory: WebAssembly.Memory;
+  readonly mainthreadwasmcontext___wasm_set_css_id: (a: number, b: number, c: number, d: number) => void;
+  readonly mainthreadwasmcontext___wasm_AddInlineStyle_str_key: (a: number, b: any, c: number, d: number, e: number, f: number) => void;
+  readonly mainthreadwasmcontext___wasm_AddInlineStyle_number_key: (a: number, b: any, c: number, d: number, e: number) => void;
+  readonly mainthreadwasmcontext___wasm_SetInlineStyles: (a: number, b: any, c: number, d: number) => number;
+  readonly __wbg_decodedstyledata_free: (a: number, b: number) => void;
+  readonly decodedstyledata_new: (a: any) => [number, number, number];
+  readonly decodedstyledata_style_content: (a: number) => [number, number];
+  readonly decodedstyledata_font_face_content: (a: number) => [number, number];
+  readonly decodedstyledata_query_css_og_declarations_by_css_id: (a: number, b: number, c: number, d: number) => [number, number];
+  readonly decodedstyledata_decode_into: (a: any, b: number, c: number, d: number) => [number, number, number];
+  readonly __wbg_elementtemplatesection_free: (a: number, b: number) => void;
+  readonly elementtemplatesection_from_encoded: (a: any) => [number, number, number];
+  readonly __wbg_eventinfo_free: (a: number, b: number) => void;
+  readonly __wbg_get_eventinfo_name: (a: number) => [number, number];
+  readonly __wbg_set_eventinfo_name: (a: number, b: number, c: number) => void;
+  readonly __wbg_get_eventinfo_type: (a: number) => [number, number];
+  readonly __wbg_set_eventinfo_type: (a: number, b: number, c: number) => void;
+  readonly __wbg_get_eventinfo_function: (a: number) => any;
+  readonly __wbg_set_eventinfo_function: (a: number, b: any) => void;
+  readonly mainthreadwasmcontext___wasm_add_event_bts: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+  readonly mainthreadwasmcontext___wasm_add_event_run_worklet: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+  readonly mainthreadwasmcontext___GetEvent: (a: number, b: number, c: number, d: number, e: number, f: number) => any;
+  readonly mainthreadwasmcontext___GetEvents: (a: number, b: number) => [number, number];
+  readonly mainthreadwasmcontext_dispatch_event_by_path: (a: number, b: number, c: number, d: number, e: number, f: number, g: any) => number;
+  readonly mainthreadwasmcontext___wasm_commonEventHandler: (a: number, b: any, c: number, d: number, e: number, f: number) => void;
+  readonly __wbg_mainthreadwasmcontext_free: (a: number, b: number) => void;
+  readonly mainthreadwasmcontext_new: (a: any, b: any, c: any, d: any, e: number) => number;
+  readonly mainthreadwasmcontext___wasm_set_page_element_unique_id: (a: number, b: number) => void;
+  readonly mainthreadwasmcontext___CreateElementCommon: (a: number, b: number, c: any, d: number, e: number, f: number) => number;
+  readonly mainthreadwasmcontext___wasm_take_timing_flags: (a: number) => [number, number];
+  readonly mainthreadwasmcontext___wasm_get_unique_id_by_component_id: (a: number, b: number, c: number) => number;
+  readonly mainthreadwasmcontext___wasm_get_css_id_by_unique_id: (a: number, b: number) => number;
+  readonly mainthreadwasmcontext__wasm_elementFromBinary: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number, number];
+  readonly mainthreadwasmcontext___GetComponentID: (a: number, b: number) => [number, number, number, number];
+  readonly mainthreadwasmcontext___GetElementConfig: (a: number, b: number) => [number, number, number];
+  readonly mainthreadwasmcontext___SetConfig: (a: number, b: number, c: any) => [number, number];
+  readonly mainthreadwasmcontext___GetConfig: (a: number, b: number) => [number, number, number];
+  readonly mainthreadwasmcontext___UpdateComponentID: (a: number, b: number, c: number, d: number) => [number, number];
+  readonly mainthreadwasmcontext___SetDataset: (a: number, b: number, c: any, d: any) => [number, number];
+  readonly mainthreadwasmcontext___AddDataset: (a: number, b: number, c: any, d: any) => [number, number];
+  readonly mainthreadwasmcontext___GetDataset: (a: number, b: number) => [number, number, number];
+  readonly mainthreadwasmcontext___GetDataByKey: (a: number, b: number, c: number, d: number) => [number, number, number];
+  readonly __wbindgen_malloc: (a: number, b: number) => number;
+  readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
+  readonly __wbindgen_exn_store: (a: number) => void;
+  readonly __externref_table_alloc: () => number;
+  readonly __wbindgen_externrefs: WebAssembly.Table;
+  readonly __externref_table_dealloc: (a: number) => void;
+  readonly __wbindgen_free: (a: number, b: number, c: number) => void;
+  readonly __externref_drop_slice: (a: number, b: number) => void;
+  readonly __wbindgen_start: () => void;
+}
+
+export type SyncInitInput = BufferSource | WebAssembly.Module;
+/**
+* Instantiates the given `module`, which can either be bytes or
+* a precompiled `WebAssembly.Module`.
+*
+* @param {{ module: SyncInitInput }} module - Passing `SyncInitInput` directly is deprecated.
+*
+* @returns {InitOutput}
+*/
+export function initSync(module: { module: SyncInitInput } | SyncInitInput): InitOutput;
+
+/**
+* If `module_or_path` is {RequestInfo} or {URL}, makes a request and
+* for everything else, calls `WebAssembly.instantiate` directly.
+*
+* @param {{ module_or_path: InitInput | Promise<InitInput> }} module_or_path - Passing `InitInput` directly is deprecated.
+*
+* @returns {Promise<InitOutput>}
+*/
+export default function __wbg_init (module_or_path?: { module_or_path: InitInput | Promise<InitInput> } | InitInput | Promise<InitInput>): Promise<InitOutput>;

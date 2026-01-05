@@ -64,7 +64,7 @@ const LynxTemplatePluginHooksMap = new WeakMap<Compilation, TemplateHooks>();
  *     compiler.hooks.compilation.tap("MyPlugin", (compilation) => {
  *       console.log("The compiler is starting a new compilation...");
  *
- *       LynxTemplatePlugin.getCompilationHooks(compilation).beforeEmit.tapAsync(
+ *       LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(
  *         "MyPlugin", // <-- Set a meaningful name here for stacktraces
  *         (data, cb) => {
  *           // Manipulate the content
@@ -743,7 +743,7 @@ class LynxTemplatePluginImpl {
     const isDev = process.env['NODE_ENV'] === 'development'
       || compiler.options.mode === 'development';
 
-    const css = cssChunksToMap(
+    const initialCSS = cssChunksToMap(
       assetsInfoByGroups.css
         .map(chunk => compilation.getAsset(chunk.name))
         .filter((v): v is Asset => !!v)
@@ -785,7 +785,7 @@ class LynxTemplatePluginImpl {
         },
       },
       css: {
-        ...css,
+        ...initialCSS,
         chunks: assetsInfoByGroups.css,
       },
       lepusCode: {
@@ -817,7 +817,7 @@ class LynxTemplatePluginImpl {
       entryNames,
     });
 
-    const { lepusCode } = encodeData;
+    const { lepusCode, css } = encodeData;
 
     const resolvedEncodeOptions: EncodeOptions = {
       ...encodeData,

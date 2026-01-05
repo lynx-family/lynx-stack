@@ -7,6 +7,6 @@ edition = "2021"
 path = "lib.rs"
 
 [dependencies]
-swc_core = { workspace = true, features = ["base", "ecma_codegen", "ecma_parser", "ecma_minifier", "ecma_transforms_typescript", "ecma_utils", "ecma_quote", "ecma_transforms_react", "ecma_transforms_optimization", "css_parser", "css_ast", "css_visit", "css_codegen", "__visit", "__testing_transform"] }
+swc_core = { workspace = true, features = ["ecma_parser", "ecma_utils", "ecma_quote", "ecma_visit", "testing_transform"] }
 swc_plugin_snapshot = { path = "../swc_plugin_snapshot" }
 swc_plugins_shared = { path = "../swc_plugins_shared" }

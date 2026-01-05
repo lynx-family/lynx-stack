@@ -18,4 +18,4 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["preserve_order"] }
 sha-1 = { workspace = true }
 sugar_path = { workspace = true }
-swc_core = { workspace = true, features = ["base", "ecma_codegen", "ecma_parser", "ecma_minifier", "ecma_transforms_typescript", "ecma_utils", "ecma_quote", "ecma_transforms_react", "ecma_transforms_optimization"] }
+swc_core = { workspace = true, features = ["ecma_ast", "ecma_utils", "swc_atoms"] }

@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-worker-rpc",
-  "version": "0.19.1",
+  "version": "0.19.4",
   "private": false,
   "description": "",
   "keywords": [],
@@ -11,6 +11,13 @@
   },
   "license": "Apache-2.0",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "source": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "files": [
@@ -20,5 +27,8 @@
     "Notice.txt",
     "CHANGELOG.md",
     "README.md"
-  ]
+  ],
+  "scripts": {
+    "test": "vitest"
+  }
 }
