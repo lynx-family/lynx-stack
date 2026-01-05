@@ -1,0 +1,29 @@
+.intro {
+  margin: 30px;
+  flex-direction: column;
+}
+
+.test-box {
+  border: 2px solid #0e0;
+  padding: 10px;
+  transition: all linear 0.5s;
+  display: flex;
+}
+.haha {
+  background-color: #00e;
+}
+
+.showDescAnimation {
+  animation: fadeInAnimation 0.5s 2;
+  animation-timing-function: linear;
+}
+
+@keyframes fadeInAnimation {
+  0% {
+    background-color: #00e;
+  }
+
+  100% {
+    background-color: #e00;
+  }
+}

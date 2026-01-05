@@ -1097,6 +1097,33 @@ importers:
         specifier: ^1.8.0
         version: 1.8.0
 
+  packages/web-platform/web-core-wasm-e2e:
+    devDependencies:
+      '@lynx-js/playwright-fixtures':
+        specifier: workspace:*
+        version: link:../playwright-fixtures
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../react
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../rspeedy/plugin-react
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../rspeedy/core
+      '@lynx-js/web-core-wasm':
+        specifier: workspace:*
+        version: link:../web-core-wasm
+      '@playwright/test':
+        specifier: ^1.57.0
+        version: 1.57.0
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 1.7.1
+      nyc:
+        specifier: ^17.1.0
+        version: 17.1.0
+
   packages/web-platform/web-elements:
     devDependencies:
       '@lynx-js/playwright-fixtures':

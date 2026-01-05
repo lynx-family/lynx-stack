@@ -1,0 +1,22 @@
+/*
+// Copyright 2023 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+*/
+.basic {
+  height: 100px;
+  width: 100px;
+  background-color: pink;
+}
+.animate {
+  animation: 0.1s animate linear;
+  animation-fill-mode: forwards;
+}
+@keyframes animate {
+  from {
+    background-color: pink;
+  }
+  to {
+    background-color: green;
+  }
+}

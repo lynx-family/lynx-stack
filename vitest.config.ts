@@ -31,6 +31,7 @@ export default defineConfig({
 
         'packages/tools/canary-release/**',
         'packages/web-platform/web-tests/**',
+        'packages/web-platform/web-core-wasm-e2e/**',
         'packages/webpack/test-tools/**',
         'packages/testing-library/test-environment/**',
         'packages/react/testing-library/**',
