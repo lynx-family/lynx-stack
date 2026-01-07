@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { Animation } from './animation/animation.js';
 import { KeyframeEffect } from './animation/effect.js';
+import { isSdkVersionGt } from '../utils/version.js';
 
 let willFlush = false;
 let shouldFlush = true;
@@ -62,7 +63,16 @@ export class Element {
     });
   }
 
-  public getComputedStyleByKey(key: string): string {
+  public getComputedStyleProperty(key: string): string {
+    if (!isSdkVersionGt(3, 4)) {
+      throw new Error(
+        'getComputedStyleProperty requires Lynx sdk version 3.5',
+      );
+    }
+
+    if (!key) {
+      throw new Error('getComputedStyleProperty: key is required');
+    }
     return __GetComputedStyleByKey(this.element, key);
   }
 

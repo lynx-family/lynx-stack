@@ -109,27 +109,46 @@ describe('Element', () => {
   });
 
   it('should get computed style by key', () => {
+    globalThis.SystemInfo.lynxSdkVersion = '3.5';
     globalThis.__GetComputedStyleByKey.mockReturnValue('16px');
     const element = new Element('element-instance');
-    const value = element.getComputedStyleByKey('fontSize');
+    const value = element.getComputedStyleProperty('fontSize');
     expect(globalThis.__GetComputedStyleByKey).toHaveBeenCalledWith('element-instance', 'fontSize');
     expect(value).toBe('16px');
   });
 
   it('should get computed style for color property', () => {
+    globalThis.SystemInfo.lynxSdkVersion = '3.5';
     globalThis.__GetComputedStyleByKey.mockReturnValue('rgb(255, 0, 0)');
     const element = new Element('element-instance');
-    const value = element.getComputedStyleByKey('color');
+    const value = element.getComputedStyleProperty('color');
     expect(globalThis.__GetComputedStyleByKey).toHaveBeenCalledWith('element-instance', 'color');
     expect(value).toBe('rgb(255, 0, 0)');
   });
 
   it('should get computed style for display property', () => {
+    globalThis.SystemInfo.lynxSdkVersion = '3.5';
     globalThis.__GetComputedStyleByKey.mockReturnValue('flex');
     const element = new Element('element-instance');
-    const value = element.getComputedStyleByKey('display');
+    const value = element.getComputedStyleProperty('display');
     expect(globalThis.__GetComputedStyleByKey).toHaveBeenCalledWith('element-instance', 'display');
     expect(value).toBe('flex');
+  });
+
+  it('should throw when get computed style value with low sdk version', () => {
+    globalThis.SystemInfo.lynxSdkVersion = '3.4';
+    const element = new Element('element-instance');
+    expect(() => element.getComputedStyleProperty('width')).toThrow(
+      'getComputedStyleProperty requires Lynx sdk version 3.5',
+    );
+  });
+
+  it('should throw when get computed style value with empty key', () => {
+    globalThis.SystemInfo.lynxSdkVersion = '3.5';
+    const element = new Element('element-instance');
+    expect(() => element.getComputedStyleProperty('')).toThrow(
+      'getComputedStyleProperty: key is required',
+    );
   });
 
   it('should invoke method and resolve', async () => {
