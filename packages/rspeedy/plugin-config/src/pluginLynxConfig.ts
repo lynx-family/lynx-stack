@@ -21,9 +21,13 @@ import { validate as defaultValidate } from './validate.js'
 const defaultDslPluginName2PkgName = {
   'lynx:react': '@lynx-js/react-rsbuild-plugin',
 }
+const defaultUpgradeRspeedyLink =
+  'https://www.npmjs.com/package/upgrade-rspeedy'
 
 /**
  * A configuration interface for Lynx Config defined by `@lynx-js/type-config`.
+ *
+ * See all available options in {@link https://lynxjs.org/next/api/lynx-config/config-reference.html}.
  *
  * @public
  */
@@ -35,15 +39,40 @@ export interface Config extends LynxConfig, LynxCompilerOptions {}
  * @public
  */
 export interface Options {
+  /**
+   * The keys of compiler options to set.
+   */
   compilerOptionsKeys?: string[]
+  /**
+   * The keys of config options to set.
+   */
   configKeys?: string[]
+  /**
+   * Custom validation function for the Lynx config.
+   *
+   * @param input - The input to validate.
+   * @returns The validated Lynx config.
+   */
   validate?: (input: unknown) => Config
+  /**
+   * A map from DSL plugin name to its package name.
+   *
+   * @example
+   * ```ts
+   * {
+   *   'lynx:react': '@lynx-js/react-rsbuild-plugin',
+   * }
+   * ```
+   */
   dslPluginName2PkgName?: Record<string, string>
+  /**
+   * The link to upgrade Rspeedy.
+   */
   upgradeRspeedyLink?: string
 }
 
 /**
- * A rsbuild plugin for config Lynx Config defined by `@lynx-js/type-config`.
+ * An rsbuild plugin for config Lynx Config defined by `@lynx-js/type-config`.
  *
  * @param config - The Lynx config to set.
  *
@@ -72,7 +101,7 @@ export function pluginLynxConfig(
     configKeys = defaultConfigKeys,
     validate = defaultValidate,
     dslPluginName2PkgName = defaultDslPluginName2PkgName,
-    upgradeRspeedyLink = 'https://www.npmjs.com/package/upgrade-rspeedy',
+    upgradeRspeedyLink = defaultUpgradeRspeedyLink,
   } = options ?? {}
 
   validate(config)

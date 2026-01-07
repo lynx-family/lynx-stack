@@ -14,15 +14,10 @@ export interface Config extends Config_2, CompilerOptions {
 
 // @public
 export interface Options {
-    // (undocumented)
     compilerOptionsKeys?: string[];
-    // (undocumented)
     configKeys?: string[];
-    // (undocumented)
     dslPluginName2PkgName?: Record<string, string>;
-    // (undocumented)
     upgradeRspeedyLink?: string;
-    // (undocumented)
     validate?: (input: unknown) => Config;
 }
 

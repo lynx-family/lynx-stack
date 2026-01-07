@@ -5,7 +5,7 @@
 /**
  * @packageDocumentation
  *
- * A rsbuild plugin for config Lynx Config defined by `@lynx-js/type-config`.
+ * An rsbuild plugin for config Lynx Config defined by `@lynx-js/type-config`.
  *
  * @example
  * ```ts
