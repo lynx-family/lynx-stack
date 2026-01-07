@@ -27,7 +27,9 @@ export default defineConfig({
     htmlPlugin: false,
   },
   plugins: [
-    pluginSourceBuild(),
+    pluginSourceBuild({
+      sourceField: '@lynx-js/source-field',
+    }),
     pluginEslint({
       eslintPluginOptions: {
         configType: 'flat',

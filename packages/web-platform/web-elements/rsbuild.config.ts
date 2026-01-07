@@ -24,7 +24,9 @@ export default defineConfig({
     sourceMap: true,
   },
   plugins: [
-    pluginSourceBuild(),
+    pluginSourceBuild({
+      sourceField: '@lynx-js/source-field',
+    }),
   ],
   dev: {
     hmr: false,
