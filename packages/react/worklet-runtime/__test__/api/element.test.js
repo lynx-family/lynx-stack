@@ -20,6 +20,7 @@ beforeEach(() => {
   globalThis.__GetAttributeNames = vi.fn();
   globalThis.__QuerySelector = vi.fn();
   globalThis.__QuerySelectorAll = vi.fn();
+  globalThis.__GetComputedStyleByKey = vi.fn();
   globalThis.__InvokeUIMethod = vi.fn();
   globalThis.__FlushElementTree = vi.fn();
   globalThis.__ElementAnimate = vi.fn();
@@ -105,6 +106,30 @@ describe('Element', () => {
     expect(children[1]).toBeInstanceOf(Element);
     expect(children[0].element).toBe('child1');
     expect(children[1].element).toBe('child2');
+  });
+
+  it('should get computed style by key', () => {
+    globalThis.__GetComputedStyleByKey.mockReturnValue('16px');
+    const element = new Element('element-instance');
+    const value = element.getComputedStyleByKey('fontSize');
+    expect(globalThis.__GetComputedStyleByKey).toHaveBeenCalledWith('element-instance', 'fontSize');
+    expect(value).toBe('16px');
+  });
+
+  it('should get computed style for color property', () => {
+    globalThis.__GetComputedStyleByKey.mockReturnValue('rgb(255, 0, 0)');
+    const element = new Element('element-instance');
+    const value = element.getComputedStyleByKey('color');
+    expect(globalThis.__GetComputedStyleByKey).toHaveBeenCalledWith('element-instance', 'color');
+    expect(value).toBe('rgb(255, 0, 0)');
+  });
+
+  it('should get computed style for display property', () => {
+    globalThis.__GetComputedStyleByKey.mockReturnValue('flex');
+    const element = new Element('element-instance');
+    const value = element.getComputedStyleByKey('display');
+    expect(globalThis.__GetComputedStyleByKey).toHaveBeenCalledWith('element-instance', 'display');
+    expect(value).toBe('flex');
   });
 
   it('should invoke method and resolve', async () => {
