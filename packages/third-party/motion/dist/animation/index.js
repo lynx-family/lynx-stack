@@ -41,6 +41,7 @@ function animate(subjectOrSequence, optionsOrKeyframes, options) {
         else {
             elementNodes = subjectOrSequence;
         }
+        console.log('elementNodes', elementNodes);
         realSubjectOrSequence = (Array.isArray(elementNodes)
             ? elementNodes.map(el => new ElementCompt(el))
             : new ElementCompt(elementNodes));
