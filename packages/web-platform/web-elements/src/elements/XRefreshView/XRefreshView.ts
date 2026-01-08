@@ -8,10 +8,11 @@ import { XRefreshViewEventsEmitter } from './XRefreshViewEventsEmitter.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { scrollContainerDom } from '../common/constants.js';
 import { templateXRefreshView } from '../htmlTemplates.js';
+import { LinearContainer } from '../../compat/index.js';
 
 @Component(
   'x-refresh-view',
-  [CommonEventsAndMethods, XRefreshViewEventsEmitter],
+  [LinearContainer, CommonEventsAndMethods, XRefreshViewEventsEmitter],
   templateXRefreshView,
 )
 export class XRefreshView extends HTMLElement {

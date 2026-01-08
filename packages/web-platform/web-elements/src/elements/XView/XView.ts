@@ -9,8 +9,10 @@ import {
   CommonEventsAndMethods,
   layoutChangeTarget,
 } from '../common/CommonEventsAndMethods.js';
+import { LinearContainer } from '../../compat/index.js';
 
 @Component<typeof XView>('x-view', [
+  LinearContainer,
   CommonEventsAndMethods,
 ])
 export class XView extends HTMLElement {
