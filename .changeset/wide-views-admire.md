@@ -2,11 +2,11 @@
 "@lynx-js/web-elements": minor
 ---
 
-feat: intergrate the LinearContainer Compat plugin
+feat: integrate the LinearContainer Compat plugin
 
 **This is a BREAKING CHANGE**
 
-Not we intergrated the `LinearCompat` in the @lynx-js/web-elements. Developers could safely remove the following imports:
+Now we integrated the `LinearCompat` into @lynx-js/web-elements. Developers can safely remove the following imports:
 
 ```js
 import '@lynx-js/web-elements/compat/LinearContainer';
