@@ -1,0 +1,33 @@
+/*
+// Copyright 2024 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+*/
+.countdown {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.countdown__block {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  background-color: #ff3b52;
+  min-width: 15px;
+  border-radius: 3px;
+}
+
+.countdown___num {
+  color: #fff;
+  font-weight: 600;
+}
+
+.countdown__split {
+  color: #ff3b52;
+  margin-left: 2px;
+  margin-right: 2px;
+  font-weight: 600;
+}

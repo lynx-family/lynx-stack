@@ -1,0 +1,21 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`encodeCSS > :root 1`] = `"[part="page"]:not([l-e-name]){background:red;}"`;
+
+exports[`encodeCSS > complex combinator selector 1`] = `".parent > :not([hidden]) ~ :not([hidden]):not([l-e-name]){background-color:green;}"`;
+
+exports[`encodeCSS > complex-root 1`] = `"[part="page"].dark:not([l-e-name]){background:red;}"`;
+
+exports[`encodeCSS > css cascading order 1`] = `".foo:not([l-e-name]){background:red;}.foo:not([l-e-name]),.bar:not([l-e-name]){height:100px;}"`;
+
+exports[`encodeCSS > font-family-at-rule 1`] = `"@font-face{font-family:"MyFont";src:url('myfont.woff');}"`;
+
+exports[`encodeCSS > non ascii characters 1`] = `".class145[[data-status="complete"]]:before:not([l-e-name]){content:"✓ ";}"`;
+
+exports[`encodeCSS > normal css 1`] = `".foo:not([l-e-name]){background:red;}"`;
+
+exports[`encodeCSS > scoped css 1`] = `".foo:where([l-css-id="1"]):not([l-e-name]){background:red;}"`;
+
+exports[`encodeCSS > scoped css, 2 css id 1`] = `".foo:where([l-css-id="1"]):not([l-e-name]),.foo:where([l-css-id="2"]):not([l-e-name]){background:red;}"`;
+
+exports[`encodeCSS > scoped css, import non existing 1`] = `".foo:where([l-css-id="1"]):not([l-e-name]),.foo:where([l-css-id="20"]):not([l-e-name]),.foo:where([l-css-id="2"]):not([l-e-name]){background:red;}"`;

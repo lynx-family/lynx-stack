@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-elements",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "private": false,
   "repository": {
     "type": "git",
@@ -105,6 +105,11 @@
       "source": "./src/elements/XList/index.ts",
       "types": "./dist/elements/XList/index.d.ts",
       "default": "./dist/elements/XList/index.js"
+    },
+    "./XWebView": {
+      "source": "./src/elements/XWebView/index.ts",
+      "types": "./dist/elements/XWebView/index.d.ts",
+      "default": "./dist/elements/XWebView/index.js"
     },
     "./html-templates": {
       "source": "./src/elements/htmlTemplates.ts",

@@ -15,3 +15,4 @@ import './XView/index.js';
 import './XViewpagerNg/index.js';
 import './XList/index.js';
 import './XList/ListItem.js';
+import './XWebView/index.js';

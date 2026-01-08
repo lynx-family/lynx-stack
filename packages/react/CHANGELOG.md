@@ -1,5 +1,27 @@
 # @lynx-js/react
 
+## 0.115.3
+
+### Patch Changes
+
+- Add dual-thread commutation logs for troubleshooting when `REACT_ALOG=true` or global define `__ALOG__` is set. ([#2081](https://github.com/lynx-family/lynx-stack/pull/2081))
+
+- Use error cause to simplify the error msg of lazy bundle loading. User can catch the error cause to get the original result: ([#2056](https://github.com/lynx-family/lynx-stack/pull/2056))
+
+  ```ts
+  const LazyComponent = lazy(async () => {
+    try {
+      const mod = await import('./lazy-bundle');
+      return mod.default;
+    } catch (error) {
+      console.error(`Lazy Bundle load failed message: ${error.message}`);
+      // User can catch the error cause to get the original result
+      console.error(`Lazy Bundle load failed result: ${error.cause}`);
+      throw error;
+    }
+  });
+  ```
+
 ## 0.115.2
 
 ### Patch Changes

@@ -6,7 +6,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { build } from '@rslib/core'
+import { createRslib } from '@rslib/core'
+import type { RslibConfig } from '@rslib/core'
 import { describe, expect, it, vi } from 'vitest'
 
 import { decodeTemplate } from './utils.js'
@@ -14,6 +15,13 @@ import { LAYERS, defineExternalBundleRslibConfig } from '../src/index.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+async function build(rslibConfig: RslibConfig) {
+  const rslib = await createRslib({
+    config: rslibConfig,
+  })
+  return await rslib.build()
+}
 
 describe('define config', () => {
   it('should return entry config', () => {

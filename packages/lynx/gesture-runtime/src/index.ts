@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { BaseGesture } from './baseGesture.js';
+import { BaseGesture, ContinuousGesture } from './baseGesture.js';
 import {
   ComposedGesture,
   ExclusiveGesture,
@@ -13,6 +13,7 @@ import { DefaultScrollGesture } from './defaultScrollGesture.js';
 import { FlingGesture } from './flingGesture.js';
 import type { GestureKind } from './gestureInterface.js';
 import { LongPressGesture } from './longPressGesture.js';
+import { NativeGesture } from './nativeGesture.js';
 import { PanGesture } from './panGesture.js';
 import { TapGesture } from './tapGesture.js';
 import { useGesture } from './useGesture.js';
@@ -35,6 +36,7 @@ export { GestureEntry as Gesture };
 export * from './gestureInterface.js';
 export {
   BaseGesture,
+  ContinuousGesture,
   SimultaneousGesture,
   ComposedGesture,
   ExclusiveGesture,
@@ -43,6 +45,7 @@ export {
   PanGesture,
   TapGesture,
   LongPressGesture,
+  NativeGesture,
 };
 
 export { useGesture };

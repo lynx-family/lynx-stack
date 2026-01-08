@@ -47,6 +47,10 @@ describe('SWC configuration', () => {
     expect(getLoaderOptions(config, 'builtin:swc-loader'))
       .toMatchInlineSnapshot(`
         {
+          "collectTypeScriptInfo": {
+            "exportedEnum": false,
+            "typeExports": true,
+          },
           "isModule": "unknown",
           "jsc": {
             "experimental": {
@@ -70,12 +74,6 @@ describe('SWC configuration', () => {
                 "simplify": true,
               },
               "useDefineForClassFields": false,
-            },
-          },
-          "rspackExperiments": {
-            "collectTypeScriptInfo": {
-              "exportedEnum": false,
-              "typeExports": true,
             },
           },
         }

@@ -342,6 +342,15 @@ export const templateXViewpageNg = `<style>
   <slot></slot>
 </div>`;
 
+export const templateXWebView = `<style>
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+</style>
+<iframe id="webview" part="webview"></iframe>`;
+
 export const templateXSvg = () => {
   return `<img part="img" alt="" loading="lazy" id="img" /> `;
 };
