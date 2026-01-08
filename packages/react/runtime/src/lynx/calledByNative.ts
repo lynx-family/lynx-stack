@@ -9,10 +9,10 @@ import { LifecycleConstant } from '../lifecycleConstant.js';
 import { ssrHydrateByOpcodes } from '../opcodes.js';
 import { __pendingListUpdates } from '../pendingListUpdates.js';
 import { __root, setRoot } from '../root.js';
+import { markTiming, setPipeline } from './performance.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
 import { SnapshotInstance, __page, setupPage } from '../snapshot.js';
 import { isEmptyObject } from '../utils.js';
-import { markTiming, setPipeline } from './performance.js';
 
 function ssrEncode() {
   const { __opcodes } = __root;
@@ -29,7 +29,13 @@ function ssrEncode() {
   };
 
   try {
-    return JSON.stringify({ __opcodes, __root_values: __root.__values });
+    const replacer = (_key: string, value: unknown): unknown => {
+      if (value && typeof value === 'object' && '_wkltId' in (value as Record<string, unknown>)) {
+        return null;
+      }
+      return value;
+    };
+    return JSON.stringify({ __opcodes, __root_values: __root.__values }, replacer);
   } finally {
     SnapshotInstance.prototype.toJSON = oldToJSON;
   }

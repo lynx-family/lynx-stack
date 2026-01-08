@@ -19,6 +19,7 @@ import {
   Gesture,
   GestureTypeInner,
   LongPressGesture,
+  NativeGesture,
   PanGesture,
   TapGesture,
 } from '../src/index.js';
@@ -37,10 +38,12 @@ describe('create gesture', () => {
     const tapGesture = new TapGesture();
     const longPressGesture = new LongPressGesture();
 
+    const nativeGesture = new NativeGesture();
     expect(panGesture.type).toBe(GestureTypeInner.PAN);
     expect(flingGesture.type).toBe(GestureTypeInner.FLING);
     expect(tapGesture.type).toBe(GestureTypeInner.TAP);
     expect(longPressGesture.type).toBe(GestureTypeInner.LONGPRESS);
+    expect(nativeGesture.type).toBe(GestureTypeInner.NATIVE);
   });
 
   test('gesture config', () => {
@@ -99,17 +102,20 @@ describe('useGesture', () => {
     let _tapGesture;
     let _flingGesture;
     let _longPressGesture;
+    let _nativeGesture;
 
     const App = () => {
       const panGesture = useGesture(PanGesture);
       const tapGesture = useGesture(TapGesture);
       const flingGesture = useGesture(FlingGesture);
       const longPressGesture = useGesture(LongPressGesture);
+      const nativeGesture = useGesture(NativeGesture);
 
       _panGesture = panGesture;
       _tapGesture = tapGesture;
       _flingGesture = flingGesture;
       _longPressGesture = longPressGesture;
+      _nativeGesture = nativeGesture;
       return <view main-thread:gesture={panGesture}></view>;
     };
 
@@ -119,6 +125,7 @@ describe('useGesture', () => {
     expect(_tapGesture).toBeInstanceOf(TapGesture);
     expect(_flingGesture).toBeInstanceOf(FlingGesture);
     expect(_longPressGesture).toBeInstanceOf(LongPressGesture);
+    expect(_nativeGesture).toBeInstanceOf(NativeGesture);
   });
 
   test('useGesture should create different instance when updated', async () => {

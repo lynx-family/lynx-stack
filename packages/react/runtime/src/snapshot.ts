@@ -295,7 +295,12 @@ export class SnapshotInstance {
       if (snapshotCreatorMap[type]) {
         snapshotCreatorMap[type](type);
       } else {
-        throw new Error('Snapshot not found: ' + type);
+        let message = 'Snapshot not found: ' + type;
+        if (__DEV__) {
+          message +=
+            '. You can set environment variable `REACT_ALOG=true` and restart your dev server for troubleshooting.';
+        }
+        throw new Error(message);
       }
     }
     this.__snapshot_def = snapshotManager.values.get(type)!;

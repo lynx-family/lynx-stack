@@ -182,9 +182,9 @@ describe('ssr', () => {
           style={s}
           bindtap={() => {}}
           ref={() => {}}
+          data-xxx={c}
           main-thread:bindtap={{ _wkltId: '1' }}
           main-thread:ref={{ _wkltId: '2' }}
-          data-xxx={c}
         />
       );
     }
@@ -212,14 +212,9 @@ describe('ssr', () => {
             },
             "-2:2:",
             "react-ref--2-3",
-            {
-              "_wkltId": "1",
-              "_workletType": "main-thread",
-            },
-            {
-              "_wkltId": "2",
-            },
             "red",
+            null,
+            null,
           ],
           1,
         ],
@@ -237,8 +232,8 @@ describe('ssr', () => {
         style: s,
         bindtap: () => {},
         ref: () => {},
-        'main-thread:bindtap': { _wkltId: '1' },
-        'main-thread:ref': { _wkltId: '2' },
+        'main-thread:bindtap': { '_wkltId': '1' },
+        'main-thread:ref': { '_wkltId': '2' },
         'data-xxx': c,
       };
       return <view {...props} />;
@@ -266,13 +261,8 @@ describe('ssr', () => {
               "bindtap": "-2:0:bindtap",
               "className": "red",
               "data-xxx": "red",
-              "main-thread:bindtap": {
-                "_wkltId": "1",
-                "_workletType": "main-thread",
-              },
-              "main-thread:ref": {
-                "_wkltId": "2",
-              },
+              "main-thread:bindtap": null,
+              "main-thread:ref": null,
               "ref": "react-ref--2-0",
               "style": {
                 "color": "red",
@@ -476,5 +466,99 @@ describe('ssr', () => {
     }
 
     vi.unstubAllGlobals();
+  });
+
+  it('ssrEncode - filter _wkltId', () => {
+    const props = {
+      worklet: { _wkltId: 'hash' },
+      normal: { key: 'value' },
+      nested: {
+        innerWorklet: { _wkltId: 'inner' },
+        innerNormal: 'ok',
+      },
+    };
+
+    function Comp() {
+      return <view {...props} />;
+    }
+
+    __root.__jsx = <Comp />;
+    renderPage();
+    const encoded = JSON.parse(ssrEncode());
+
+    function findMatches(node, results = []) {
+      if (node == null) return results;
+      if (Array.isArray(node)) {
+        for (const item of node) findMatches(item, results);
+        return results;
+      }
+      if (typeof node === 'object') {
+        const obj = node;
+        const hasShape = obj.normal && obj.normal.key === 'value' && obj.nested && obj.nested.innerNormal === 'ok';
+        if (hasShape) results.push(obj);
+        for (const key of Object.keys(obj)) findMatches(obj[key], results);
+      }
+      return results;
+    }
+
+    function containsWorkletHash(node) {
+      if (node == null) return false;
+      if (Array.isArray(node)) {
+        for (const item of node) if (containsWorkletHash(item)) return true;
+        return false;
+      }
+      if (typeof node === 'object') {
+        if ('_wkltId' in node) return true;
+        for (const key of Object.keys(node)) if (containsWorkletHash(node[key])) return true;
+      }
+      return false;
+    }
+
+    const matches = findMatches(encoded);
+    expect(matches.length).toBeGreaterThan(0);
+    for (const m of matches) {
+      expect(m.worklet).toBeNull();
+      expect(m.nested.innerWorklet).toBeNull();
+      expect(containsWorkletHash(m)).toBe(false);
+    }
+    expect(containsWorkletHash(encoded)).toBe(false);
+  });
+
+  it('ssrEncode - array worklet objects', () => {
+    function Comp() {
+      const props = {
+        arr: [{ '_wkltId': 'h1' }, 123, { x: 1 }],
+        'main-thread:bindtap': { '_wkltId': 'h2' },
+      };
+      return <view {...props} />;
+    }
+
+    __root.__jsx = <Comp />;
+    renderPage();
+    const encoded = JSON.parse(ssrEncode());
+
+    function findArrays(node, results = []) {
+      if (node == null) return results;
+      if (Array.isArray(node)) {
+        for (const item of node) findArrays(item, results);
+        return results;
+      }
+      if (typeof node === 'object') {
+        if (Array.isArray(node.arr)) results.push(node.arr);
+        for (const key of Object.keys(node)) findArrays(node[key], results);
+      }
+      return results;
+    }
+
+    const arrays = findArrays(encoded);
+    expect(arrays.length).toBeGreaterThan(0);
+    const target = arrays[0];
+    expect(target[0]).toBeNull();
+    expect(target[1]).toBe(123);
+    expect(target[2]).toEqual({ x: 1 });
+
+    globalThis.__GetPageElement = () => ({});
+    globalThis.__GetTemplateParts = () => new Map();
+    expect(() => ssrHydrate(JSON.stringify(encoded))).not.toThrow();
   });
 });

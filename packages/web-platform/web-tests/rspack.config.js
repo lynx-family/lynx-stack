@@ -266,6 +266,8 @@ const config = {
   experiments: {
     futureDefaults: true,
   },
+  // TODO: enable lazy compilation
+  lazyCompilation: false,
 };
 
 export default config;

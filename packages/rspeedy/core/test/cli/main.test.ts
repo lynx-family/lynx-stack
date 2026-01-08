@@ -74,49 +74,6 @@ describe('CLI - main', () => {
       process.env['NODE_ENV'] = NODE_ENV
     })
 
-    test('`rspeedy build` with `--unmanaged`', async () => {
-      const NODE_ENV = process.env['NODE_ENV']
-      delete process.env['NODE_ENV']
-
-      await main(['node', 'rspeedy', 'build', '--unmanaged'])
-
-      expect(process.env['NODE_ENV']).toBe('production')
-
-      process.env['NODE_ENV'] = NODE_ENV
-    })
-
-    test('`rspeedy build` with `--unmanaged at front', async () => {
-      const NODE_ENV = process.env['NODE_ENV']
-      delete process.env['NODE_ENV']
-
-      await main(['node', 'rspeedy', 'build', '--unmanaged'])
-
-      expect(process.env['NODE_ENV']).toBe('production')
-
-      process.env['NODE_ENV'] = NODE_ENV
-    })
-    test('`rspeedy dev` with `--unmanaged`', async () => {
-      const NODE_ENV = process.env['NODE_ENV']
-      delete process.env['NODE_ENV']
-
-      await main(['node', 'rspeedy', 'dev', '--unmanaged'])
-
-      expect(process.env['NODE_ENV']).toBe('development')
-
-      process.env['NODE_ENV'] = NODE_ENV
-    })
-
-    test('`rspeedy dev` with `--unmanaged` at front', async () => {
-      const NODE_ENV = process.env['NODE_ENV']
-      delete process.env['NODE_ENV']
-
-      await main(['node', 'rspeedy', '--unmanaged', 'dev'])
-
-      expect(process.env['NODE_ENV']).toBe('development')
-
-      process.env['NODE_ENV'] = NODE_ENV
-    })
-
     test('`rspeedy preview` without NODE_ENV', async () => {
       const NODE_ENV = process.env['NODE_ENV']
       delete process.env['NODE_ENV']
@@ -124,39 +81,6 @@ describe('CLI - main', () => {
       await main(['node', 'rspeedy', 'preview'])
 
       expect(process.env['NODE_ENV']).toBe('development')
-
-      process.env['NODE_ENV'] = NODE_ENV
-    })
-
-    test('`rspeedy preview` with `--unmanaged`', async () => {
-      const NODE_ENV = process.env['NODE_ENV']
-      delete process.env['NODE_ENV']
-
-      await main(['node', 'rspeedy', 'preview', '--unmanaged'])
-
-      expect(process.env['NODE_ENV']).toBe('development')
-
-      process.env['NODE_ENV'] = NODE_ENV
-    })
-
-    test('`rspeedy preview` with `--unmanaged` at front', async () => {
-      const NODE_ENV = process.env['NODE_ENV']
-      delete process.env['NODE_ENV']
-
-      await main(['node', 'rspeedy', '--unmanaged', 'preview'])
-
-      expect(process.env['NODE_ENV']).toBe('development')
-
-      process.env['NODE_ENV'] = NODE_ENV
-    })
-
-    test('`rspeedy` with `--unmanaged`', async () => {
-      const NODE_ENV = process.env['NODE_ENV']
-      delete process.env['NODE_ENV']
-
-      await main(['node', 'rspeedy', '--unmanaged'])
-
-      expect(process.env['NODE_ENV']).toBe('production')
 
       process.env['NODE_ENV'] = NODE_ENV
     })

@@ -42,7 +42,11 @@ export function reportCtxNotFound(data: CtxNotFoundData): void {
     }
   }
 
-  lynx.reportError(new Error(`${errorMsg}, snapshot type: '${snapshotType}'`));
+  let message = `${errorMsg}, snapshot type: '${snapshotType}'`;
+  if (__DEV__) {
+    message += '. You can set environment variable `REACT_ALOG=true` and restart your dev server for troubleshooting.';
+  }
+  lynx.reportError(new Error(message));
 }
 
 export function addCtxNotFoundEventListener(): void {

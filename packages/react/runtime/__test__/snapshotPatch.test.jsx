@@ -289,19 +289,19 @@ describe('insertBefore', () => {
     expect(_ReportError.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
           {
             "errorCode": 1101,
           },
         ],
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
           {
             "errorCode": 1101,
           },
         ],
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: '__snapshot_a94a8_test_3'],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: '__snapshot_a94a8_test_3'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
           {
             "errorCode": 1101,
           },
@@ -464,13 +464,13 @@ describe('removeChild', () => {
     expect(_ReportError.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'root'],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'root'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
           {
             "errorCode": 1101,
           },
         ],
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'root'],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'root'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
           {
             "errorCode": 1101,
           },
@@ -656,7 +656,7 @@ describe('setAttribute', () => {
     expect(_ReportError.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
           {
             "errorCode": 1101,
           },
@@ -700,7 +700,7 @@ describe('setAttribute', () => {
 
     expect(_ReportError.mock.calls[0]).toMatchInlineSnapshot(`
       [
-        [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'],
+        [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
         {
           "errorCode": 1101,
         },

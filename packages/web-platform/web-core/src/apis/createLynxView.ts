@@ -17,8 +17,8 @@ import {
 } from '../uiThread/startUIThread.js';
 import type { RpcCallType } from '@lynx-js/web-worker-rpc';
 const pixelRatio = window.devicePixelRatio;
-const screenWidth = window.screen.availWidth * pixelRatio;
-const screenHeight = window.screen.availHeight * pixelRatio;
+const screenWidth = document.documentElement.clientWidth * pixelRatio;
+const screenHeight = document.documentElement.clientHeight * pixelRatio;
 
 export interface LynxViewConfigs {
   templateUrl: string;
