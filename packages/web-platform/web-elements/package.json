@@ -18,9 +18,6 @@
     "./index.css": {
       "default": "./index.css"
     },
-    "./elements.css": {
-      "default": "./elements.css"
-    },
     "./all": {
       "@lynx-js/source-field": "./src/elements/all.ts",
       "types": "./dist/elements/all.d.ts",
@@ -115,14 +112,6 @@
       "@lynx-js/source-field": "./src/elements/htmlTemplates.ts",
       "types": "./dist/elements/htmlTemplates.d.ts",
       "default": "./dist/elements/htmlTemplates.js"
-    },
-    "./compat/LinearContainer": {
-      "@lynx-js/source-field": "./src/compat/LinearContainer/LinearContainer.ts",
-      "types": "./dist/compat/LinearContainer/LinearContainer.d.ts",
-      "default": "./dist/compat/LinearContainer/LinearContainer.js"
-    },
-    "./compat/LinearContainer/linear-compat.css": {
-      "default": "./src/compat/LinearContainer/linear-compat.css"
     }
   },
   "main": "dist/index.js",
