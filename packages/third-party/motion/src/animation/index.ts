@@ -3,30 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 import '../polyfill/shim.js';
 
-// import {
-//   animate as animateOrig,
-//   clamp as clampOrig,
-//   progress as progressOrig,
-//   stagger as staggerOrig,
-// } from 'framer-motion/dom';
-// import type {
-//   AnimationSequence,
-//   ObjectTarget,
-//   SequenceOptions,
-// } from 'framer-motion/dom';
-// import {
-//   mapValue as mapValueOrig,
-//   mix as mixOrig,
-//   spring as springOrig,
-//   springValue as springValueOrig,
-//   styleEffect as styleEffectOrig,
-//   transformValue as transformValueOrig,
-// } from 'motion-dom';
 import {
-  animate as animateOrig,
-  clamp as clampOrig,
-  progress as progressOrig,
-  stagger as staggerOrig,
+  animate as animate_,
+  clamp as clamp_,
+  progress as progress_,
+  stagger as stagger_,
 } from 'framer-motion/dom' with { runtime: 'shared' };
 import type {
   AnimationSequence,
@@ -34,12 +15,12 @@ import type {
   SequenceOptions,
 } from 'framer-motion/dom';
 import {
-  mapValue as mapValueOrig,
-  mix as mixOrig,
-  spring as springOrig,
-  springValue as springValueOrig,
-  styleEffect as styleEffectOrig,
-  transformValue as transformValueOrig,
+  mapValue as mapValue_,
+  mix as mix_,
+  springValue as springValue_,
+  spring as spring_,
+  styleEffect as styleEffect_,
+  transformValue as transformValue_,
 } from 'motion-dom' with { runtime: 'shared' };
 import type {
   AnimationOptions,
@@ -59,7 +40,7 @@ import type {
 
 import { useMotionValueRefEvent } from '../hooks/useMotionEvent.js';
 import { ElementCompt } from '../polyfill/element.js' with { runtime: 'shared' };
-import { motionValue as motionValueOrig } from '../polyfill/MotionValue.js' with { runtime: 'shared' };
+import { motionValue as motionValue_ } from '../polyfill/MotionValue.js' with { runtime: 'shared' };
 import type { ElementOrElements } from '../types/index.js';
 import { elementOrSelector2Dom } from '../utils/elementHelper.js';
 import {
@@ -184,7 +165,7 @@ function animate<O extends {}>(
   }
 
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
-  return animateOrig(
+  return animate_(
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     realSubjectOrSequence as any,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -195,11 +176,11 @@ function animate<O extends {}>(
 }
 
 function stagger(
-  ...args: Parameters<typeof staggerOrig>
-): ReturnType<typeof staggerOrig> {
+  ...args: Parameters<typeof stagger_>
+): ReturnType<typeof stagger_> {
   'main thread';
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
-  return staggerOrig(
+  return stagger_(
     ...args,
   );
 }
@@ -210,18 +191,18 @@ function motionValue<V>(
 ): MotionValue<V> {
   'main thread';
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
-  return motionValueOrig(
+  return motionValue_(
     init,
     options,
   );
 }
 
 function spring(
-  ...args: Parameters<typeof springOrig>
-): ReturnType<typeof springOrig> {
+  ...args: Parameters<typeof spring_>
+): ReturnType<typeof spring_> {
   'main thread';
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
-  return springOrig(...args);
+  return spring_(...args);
 }
 
 function springValue<T extends AnyResolvedKeyframe>(
@@ -230,7 +211,7 @@ function springValue<T extends AnyResolvedKeyframe>(
 ): MotionValue<T> {
   'main thread';
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
-  return springValueOrig(
+  return springValue_(
     source,
     options,
   );
@@ -242,7 +223,7 @@ function mix<T>(from: T, to: T, p?: T): Mixer<T> | number {
   'main thread';
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
 
-  return mixOrig(
+  return mix_(
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     from as any,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -254,7 +235,7 @@ function mix<T>(from: T, to: T, p?: T): Mixer<T> | number {
 
 function progress(from: number, to: number, value: number): number {
   'main thread';
-  return progressOrig(
+  return progress_(
     from,
     to,
     value,
@@ -263,7 +244,7 @@ function progress(from: number, to: number, value: number): number {
 
 function clamp(min: number, max: number, v: number): number {
   'main thread';
-  return clampOrig(min, max, v);
+  return clamp_(min, max, v);
 }
 
 function mapValue<O>(
@@ -273,7 +254,7 @@ function mapValue<O>(
   options?: TransformOptions<O>,
 ): MotionValue<O> {
   'main thread';
-  return mapValueOrig(
+  return mapValue_(
     inputValue,
     inputRange,
     outputRange,
@@ -283,7 +264,7 @@ function mapValue<O>(
 
 function transformValue<O>(transform: () => O): MotionValue<O> {
   'main thread';
-  return transformValueOrig(transform);
+  return transformValue_(transform);
 }
 
 function styleEffect(
@@ -295,7 +276,7 @@ function styleEffect(
   if (!elements) {
     return () => {};
   }
-  return styleEffectOrig(
+  return styleEffect_(
     elements,
     values,
   );
