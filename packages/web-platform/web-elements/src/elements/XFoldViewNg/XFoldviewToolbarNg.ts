@@ -7,8 +7,10 @@ import { Component } from '../../element-reactive/index.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { resizeObserver, type XFoldviewNg } from './XFoldviewNg.js';
 import { getCombinedDirectParentElement } from '../common/getCombinedParentElement.js';
+import { LinearContainer } from '../../compat/index.js';
 
 @Component<typeof XFoldviewToolbarNg>('x-foldview-toolbar-ng', [
+  LinearContainer,
   CommonEventsAndMethods,
 ])
 export class XFoldviewToolbarNg extends HTMLElement {

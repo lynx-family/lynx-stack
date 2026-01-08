@@ -316,6 +316,9 @@ importers:
         specifier: ^3.4.0
         version: 3.4.0
     devDependencies:
+      '@lynx-js/config-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-config
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -652,6 +655,49 @@ importers:
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(jsdom@27.4.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
+      webpack:
+        specifier: ^5.104.1
+        version: 5.104.1
+
+  packages/rspeedy/plugin-config:
+    dependencies:
+      '@lynx-js/type-config':
+        specifier: 3.6.0
+        version: 3.6.0
+    devDependencies:
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../core
+      '@lynx-js/template-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/template-webpack-plugin
+      '@lynx-js/test-tools':
+        specifier: workspace:*
+        version: link:../../webpack/test-tools
+      '@rollup/plugin-typescript':
+        specifier: ^12.3.0
+        version: 12.3.0(patch_hash=926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d)(rollup@4.34.9)(tslib@2.8.1)(typescript@5.9.3)
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 1.7.1
+      '@types/object.pick':
+        specifier: ^1.3.4
+        version: 1.3.4
+      object.pick:
+        specifier: ^1.3.0
+        version: 1.3.0
+      picocolors:
+        specifier: ^1.1.1
+        version: 1.1.1
+      terminal-link:
+        specifier: ^4.0.0
+        version: 4.0.0
+      typia:
+        specifier: 10.1.0
+        version: 10.1.0(typescript@5.9.3)
+      typia-rspack-plugin:
+        specifier: 2.2.2
+        version: 2.2.2(typescript@5.9.3)(typia@10.1.0(typescript@5.9.3))
       webpack:
         specifier: ^5.104.1
         version: 5.104.1
@@ -1606,6 +1652,9 @@ importers:
       '@lynx-js/chunk-loading-webpack-plugin':
         specifier: workspace:*
         version: link:../packages/webpack/chunk-loading-webpack-plugin
+      '@lynx-js/config-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../packages/rspeedy/plugin-config
       '@lynx-js/css-extract-webpack-plugin':
         specifier: workspace:*
         version: link:../packages/webpack/css-extract-webpack-plugin
@@ -2959,6 +3008,9 @@ packages:
   '@lynx-js/tasm@0.0.20':
     resolution: {integrity: sha512-ezMq43s59jqFuQ1YygpsUuZmGXw4XH+00RsB5RVmkYZuHQxEaLt/ECTOixF+9RixvAyhmxzF2eSURvmNckO9xg==}
 
+  '@lynx-js/type-config@3.6.0':
+    resolution: {integrity: sha512-XS+Wdbs77iWaVqrs1HKp3LyTLLHbu/AwLwy837BinmyNO28YunkgnOz0dmuzjnGGsbKJB3Alm7RoYrH/PAsVuQ==}
+
   '@lynx-js/type-element-api@0.0.2':
     resolution: {integrity: sha512-Unz3RHf2RM2vOWForwubjLYw9xbBP02ReuOL4KVLc3+0Vzryo8KbgqbhMUZCsJXHVmcaE2zXiE1AV/nqrBAoPA==}
 
@@ -4139,6 +4191,9 @@ packages:
 
   '@types/object.groupby@1.0.4':
     resolution: {integrity: sha512-n5gXvoz1nuDLLLMgTl82b5VCkSlqt2zfBkSWxoCmMS/j+hN6W7BuPlpOm68B/RRluy2bYo67KOtMQ28cySqeYw==}
+
+  '@types/object.pick@1.3.4':
+    resolution: {integrity: sha512-5PjwB0uP2XDp3nt5u5NJAG2DORHIRClPzWT/TTZhJ2Ekwe8M5bA9tvPdi9NO/n2uvu2/ictat8kgqvLfcIE1SA==}
 
   '@types/prop-types@15.7.13':
     resolution: {integrity: sha512-hCZTSvwbzWGvhqxp/RqVqwU999pBf2vp7hzIjiYOsl8wqOmUxkQ6ddw1cV3l8811+kdUFus/q4d1Y3E3SyEifA==}
@@ -7486,6 +7541,10 @@ packages:
     resolution: {integrity: sha512-+Lhy3TQTuzXI5hevh8sBGqbmurHbbIjAi0Z4S63nthVLmLxfbj4T54a4CfZrXIrt9iP4mVAPYMo/v99taj3wjQ==}
     engines: {node: '>= 0.4'}
 
+  object.pick@1.3.0:
+    resolution: {integrity: sha512-tqa/UMy/CCoYmj+H5qc07qvSL9dqcs/WZENZ1JbtWBlATP+iVOe778gE6MSijnyCnORzDuX6hU+LA4SZ09YjFQ==}
+    engines: {node: '>=0.10.0'}
+
   object.values@1.2.1:
     resolution: {integrity: sha512-gXah6aZrcUxjWg2zR2MwouP2eHlCBzdV4pygudehaKXSGW4v2AsRQUK+lwwXhii6KFZcunEnmSUoYp5CXibxtA==}
     engines: {node: '>= 0.4'}
@@ -8881,6 +8940,10 @@ packages:
     resolution: {integrity: sha512-MpUEN2OodtUzxvKQl72cUF7RQ5EiHsGvSsVG0ia9c5RbWGL2CI4C7EpPS8UTBIplnlzZiNuV56w+FuNxy3ty2Q==}
     engines: {node: '>=10'}
 
+  supports-hyperlinks@3.2.0:
+    resolution: {integrity: sha512-zFObLMyZeEwzAoKCyu1B91U79K2t7ApXuQfo8OuxwXLDgcKxuwM+YvcbIhm6QWqz7mHUH1TVytR1PwVVjEuMig==}
+    engines: {node: '>=14.18'}
+
   supports-preserve-symlinks-flag@1.0.0:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
@@ -8930,6 +8993,10 @@ packages:
   term-size@2.2.1:
     resolution: {integrity: sha512-wK0Ri4fOGjv/XPy8SBHZChl8CM7uMc5VML7SqiQ0zG7+J5Vr+RMQDoHa2CNT6KHUnTGIXH34UDMkPzAUyapBZg==}
     engines: {node: '>=8'}
+
+  terminal-link@4.0.0:
+    resolution: {integrity: sha512-lk+vH+MccxNqgVqSnkMVKx4VLJfnLjDBGzH16JVZjKE2DoxP57s6/vt6JmXV5I3jBcfGrxNrYtC+mPtU7WJztA==}
+    engines: {node: '>=18'}
 
   terser-webpack-plugin@5.3.16:
     resolution: {integrity: sha512-h9oBFCWrq78NyWWVcSwZarJkZ01c2AyGrzs1crmHZO3QUg9D61Wu4NPjBy69n7JqylFF5y+CsUZYmYEIZ3mR+Q==}
@@ -11374,6 +11441,8 @@ snapshots:
 
   '@lynx-js/tasm@0.0.20': {}
 
+  '@lynx-js/type-config@3.6.0': {}
+
   '@lynx-js/type-element-api@0.0.2': {}
 
   '@lynx-js/types@3.6.0':
@@ -12963,6 +13032,8 @@ snapshots:
       undici-types: 7.13.0
 
   '@types/object.groupby@1.0.4': {}
+
+  '@types/object.pick@1.3.4': {}
 
   '@types/prop-types@15.7.13': {}
 
@@ -17081,6 +17152,10 @@ snapshots:
       define-properties: 1.2.1
       es-abstract: 1.24.0
 
+  object.pick@1.3.0:
+    dependencies:
+      isobject: 3.0.1
+
   object.values@1.2.1:
     dependencies:
       call-bind: 1.0.8
@@ -18609,6 +18684,11 @@ snapshots:
     dependencies:
       has-flag: 4.0.0
 
+  supports-hyperlinks@3.2.0:
+    dependencies:
+      has-flag: 4.0.0
+      supports-color: 7.2.0
+
   supports-preserve-symlinks-flag@1.0.0: {}
 
   svgo@3.3.2:
@@ -18671,6 +18751,11 @@ snapshots:
   tapable@2.3.0: {}
 
   term-size@2.2.1: {}
+
+  terminal-link@4.0.0:
+    dependencies:
+      ansi-escapes: 7.0.0
+      supports-hyperlinks: 3.2.0
 
   terser-webpack-plugin@5.3.16(@swc/core@1.13.1(@swc/helpers@0.5.18))(webpack@5.104.1(@swc/core@1.13.1(@swc/helpers@0.5.18))):
     dependencies:

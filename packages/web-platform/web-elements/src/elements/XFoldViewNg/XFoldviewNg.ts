@@ -8,6 +8,7 @@ import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { XFoldviewNgEvents } from './XFoldviewNgEvents.js';
 import { scrollContainerDom } from '../common/constants.js';
 import type { XFoldviewSlotNg } from './XFoldviewSlotNg.js';
+import { LinearContainer } from '../../compat/index.js';
 
 export const scrollableLength = Symbol('scrollableLength');
 export const isHeaderShowing = Symbol('isHeaderShowing');
@@ -15,6 +16,7 @@ export const resizeObserver = Symbol('resizeObserver');
 export const slotKid = Symbol('slotKid');
 
 @Component<typeof XFoldviewNg>('x-foldview-ng', [
+  LinearContainer,
   CommonEventsAndMethods,
   XFoldviewNgEvents,
 ])

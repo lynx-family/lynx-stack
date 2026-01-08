@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@lynx-js/chunk-loading-webpack-plugin": "workspace:*",
+    "@lynx-js/config-rsbuild-plugin": "workspace:*",
     "@lynx-js/css-extract-webpack-plugin": "workspace:*",
     "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",
     "@lynx-js/externals-loading-webpack-plugin": "workspace:*",

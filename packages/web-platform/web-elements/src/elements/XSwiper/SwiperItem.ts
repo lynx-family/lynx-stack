@@ -5,6 +5,10 @@
 */
 import { Component } from '../../element-reactive/index.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
+import { LinearContainer } from '../../compat/index.js';
 
-@Component<typeof SwiperItem>('x-swiper-item', [CommonEventsAndMethods])
+@Component<typeof SwiperItem>('x-swiper-item', [
+  LinearContainer,
+  CommonEventsAndMethods,
+])
 export class SwiperItem extends HTMLElement {}
