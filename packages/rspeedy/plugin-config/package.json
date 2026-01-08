@@ -37,7 +37,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@lynx-js/type-config": "3.6.1-alpha.0"
+    "@lynx-js/type-config": "3.6.0"
   },
   "devDependencies": {
     "@lynx-js/rspeedy": "workspace:*",
