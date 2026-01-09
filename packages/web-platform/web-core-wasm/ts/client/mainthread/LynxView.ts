@@ -92,6 +92,41 @@ export class LynxViewElement extends HTMLElement {
 
   #connected = false;
   #url?: string;
+
+  /**
+   * @public
+   * @property nativeModulesMap
+   * @default {}
+   */
+  nativeModulesMap: NativeModulesMap | undefined;
+
+  /**
+   * @param
+   * @property napiModulesMap
+   * @default {}
+   */
+  napiModulesMap: NapiModulesMap | undefined;
+
+  /**
+   * @param
+   * @property
+   */
+  onNapiModulesCall: NapiModulesCall | undefined;
+
+  constructor() {
+    super();
+    if (!this.onNativeModulesCall) {
+      this.onNativeModulesCall = (name, data, moduleName) => {
+        return new Promise((resolve) => {
+          this.#cachedNativeModulesCall.push({
+            args: [name, data, moduleName],
+            resolve,
+          });
+        });
+      };
+    }
+  }
+
   /**
    * @public
    * @property the url of lynx view output entry file
@@ -208,46 +243,6 @@ export class LynxViewElement extends HTMLElement {
     this.#cachedNativeModulesCall = [];
   }
 
-  #nativeModulesMap: NativeModulesMap = {};
-  /**
-   * @public
-   * @property nativeModulesMap
-   * @default {}
-   */
-  get nativeModulesMap(): NativeModulesMap | undefined {
-    return this.#nativeModulesMap;
-  }
-  set nativeModulesMap(map: NativeModulesMap) {
-    this.#nativeModulesMap = map;
-  }
-
-  #napiModulesMap: NapiModulesMap = {};
-  /**
-   * @param
-   * @property napiModulesMap
-   * @default {}
-   */
-  get napiModulesMap(): NapiModulesMap | undefined {
-    return this.#napiModulesMap;
-  }
-  set napiModulesMap(map: NapiModulesMap) {
-    this.#napiModulesMap = map;
-  }
-
-  #onNapiModulesCall?: NapiModulesCall;
-  /**
-   * @param
-   * @property
-   */
-  get onNapiModulesCall(): NapiModulesCall | undefined {
-    return this.#onNapiModulesCall;
-  }
-  set onNapiModulesCall(handler: INapiModulesCall) {
-    this.#onNapiModulesCall = (name, data, moduleName, dispatchNapiModules) => {
-      return handler(name, data, moduleName, this, dispatchNapiModules);
-    };
-  }
-
   /**
    * @param
    * @property
@@ -342,14 +337,12 @@ export class LynxViewElement extends HTMLElement {
     }
   }
 
-  public injectStyleRules: string[] = [];
+  public injectStyleRules?: string[];
 
   /**
    * @private
    */
   disconnectedCallback() {
-    this.#instance?.[Symbol.asyncDispose]();
-    this.#instance = undefined;
     // under the all-on-ui strategy, when reload() triggers dsl flush, the previously removed pageElement will be used in __FlushElementTree.
     // This attribute is added to filter this issue.
     this.shadowRoot?.querySelector('[part="page"]')
@@ -357,9 +350,11 @@ export class LynxViewElement extends HTMLElement {
         lynxDisposedAttribute,
         '',
       );
+    this.#instance?.[Symbol.asyncDispose]();
     if (this.shadowRoot) {
       this.shadowRoot.innerHTML = '';
     }
+    this.#instance = undefined;
   }
 
   /**
@@ -381,6 +376,14 @@ export class LynxViewElement extends HTMLElement {
       }
       const mtsRealmPromise = createIFrameRealm(this.shadowRoot!);
       queueMicrotask(async () => {
+        if (this.injectStyleRules && this.injectStyleRules.length > 0) {
+          const styleSheet = new CSSStyleSheet();
+          for (const rule of this.injectStyleRules) {
+            styleSheet.insertRule(rule);
+          }
+          this.shadowRoot!.adoptedStyleSheets = this.shadowRoot!
+            .adoptedStyleSheets.concat(styleSheet);
+        }
         const mtsRealm = await mtsRealmPromise;
         if (this.#url) {
           const lynxViewInstance = import(
@@ -396,8 +399,8 @@ export class LynxViewElement extends HTMLElement {
               this.shadowRoot!,
               mtsRealm,
               lynxGroupId,
-              this.#nativeModulesMap,
-              this.#napiModulesMap,
+              this.nativeModulesMap,
+              this.napiModulesMap,
               this.#initI18nResources,
             );
           });

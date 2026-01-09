@@ -28,7 +28,7 @@ pub(crate) struct StyleInfoDecoder {
   temp_child_rules_buffer: String,
   config_enable_css_selector: bool,
   entry_name: Option<String>,
-  css_og_current_processing_css_id: Option<i32>,
+  css_og_current_processing_css_ids: Option<Vec<i32>>,
   css_og_current_processing_class_selector_names: Option<Vec<String>>,
 }
 
@@ -51,7 +51,7 @@ impl StyleInfoDecoder {
       entry_name,
       config_enable_css_selector,
       is_processing_font_face: false,
-      css_og_current_processing_css_id: None,
+      css_og_current_processing_css_ids: None,
       css_og_current_processing_class_selector_names: None,
     };
     decoded_style_info.decode(flattened_style_info)?;
@@ -62,12 +62,12 @@ impl StyleInfoDecoder {
     &mut self,
     flattened_style_info: FlattenedStyleInfo,
   ) -> Result<(), wasm_bindgen::JsError> {
-    for (css_id, style_sheet) in flattened_style_info.css_id_to_style_sheet.into_iter() {
+    for (_, style_sheet) in flattened_style_info.css_id_to_style_sheet.into_iter() {
       for mut style_rule in style_sheet.rules.into_iter() {
         match style_rule.rule_type {
           RuleType::Declaration => {
             if !self.config_enable_css_selector {
-              self.css_og_current_processing_css_id = Some(css_id);
+              self.css_og_current_processing_css_ids = Some(style_sheet.imported_by.clone());
               self.css_og_current_processing_class_selector_names = Some(Vec::new());
             }
             let mut new_selectors_to_add = Vec::new(); // selectors will be added for removeCSSScope false
@@ -128,12 +128,12 @@ impl StyleInfoDecoder {
                   == OneSimpleSelectorType::PseudoElementSelector
                   && simple_selector.value == "placeholder"
                 {
-                  // transform ::placeholder to ::part(placeholder)::placeholder
+                  // transform ::placeholder to ::part(input)::placeholder
                   selector.simple_selectors.insert(
                     simple_selector_index,
                     OneSimpleSelector {
                       selector_type: OneSimpleSelectorType::PseudoElementSelector,
-                      value: "part(placeholder)".to_string(),
+                      value: "part(input)".to_string(),
                     },
                   );
                   simple_selector_index += 1; // skip the newly inserted simple selector
@@ -296,38 +296,42 @@ impl Generator for StyleInfoDecoder {
   fn push_transform_kids_style(&mut self, declaration: ParsedDeclaration) {
     declaration.generate_to_string_buf(&mut self.temp_child_rules_buffer);
     if !self.config_enable_css_selector {
-      if let (Some(map), Some(css_id), Some(names)) = (
+      if let (Some(map), Some(css_ids), Some(names)) = (
         self
           .css_og_css_id_to_class_selector_name_to_declarations_map
           .as_mut(),
-        self.css_og_current_processing_css_id,
+        self.css_og_current_processing_css_ids.as_ref(),
         self.css_og_current_processing_class_selector_names.as_ref(),
       ) {
-        let class_selector_map = map.entry(css_id).or_default();
-        for class_selector_name in names.iter() {
-          let string_buf = class_selector_map
-            .entry(class_selector_name.clone())
-            .or_default();
-          declaration.generate_to_string_buf(string_buf);
+        for css_id in css_ids.iter() {
+          let class_selector_map = map.entry(*css_id).or_default();
+          for class_selector_name in names.iter() {
+            let string_buf = class_selector_map
+              .entry(class_selector_name.clone())
+              .or_default();
+            declaration.generate_to_string_buf(string_buf);
+          }
         }
       }
     }
   }
   fn push_transformed_style(&mut self, declaration: ParsedDeclaration) {
     if !self.config_enable_css_selector && !self.is_processing_font_face {
-      if let (Some(map), Some(css_id), Some(names)) = (
+      if let (Some(map), Some(css_ids), Some(names)) = (
         self
           .css_og_css_id_to_class_selector_name_to_declarations_map
           .as_mut(),
-        self.css_og_current_processing_css_id,
+        self.css_og_current_processing_css_ids.as_ref(),
         self.css_og_current_processing_class_selector_names.as_ref(),
       ) {
-        let class_selector_map = map.entry(css_id).or_default();
-        for class_selector_name in names.iter() {
-          let string_buf = class_selector_map
-            .entry(class_selector_name.clone())
-            .or_default();
-          declaration.generate_to_string_buf(string_buf);
+        for css_id in css_ids.iter() {
+          let class_selector_map = map.entry(*css_id).or_default();
+          for class_selector_name in names.iter() {
+            let string_buf = class_selector_map
+              .entry(class_selector_name.clone())
+              .or_default();
+            declaration.generate_to_string_buf(string_buf);
+          }
         }
       }
     }
@@ -841,6 +845,53 @@ mod test {
     };
     let result = generate_string_buf(raw_style_info, true, None);
     let expected = ":not([hidden]):not([l-e-name]){width:100px;}";
+    assert_eq!(result.style_content, expected);
+  }
+  #[test]
+  fn test_placeholder_selector() {
+    let raw_style_info = RawStyleInfo {
+      css_id_to_style_sheet: FnvHashMap::from_iter(vec![(
+        0,
+        StyleSheet {
+          imports: vec![],
+          rules: vec![Rule {
+            nested_rules: vec![],
+            rule_type: RuleType::Declaration,
+            prelude: RulePrelude {
+              selector_list: vec![Selector {
+                simple_selectors: vec![OneSimpleSelector {
+                  selector_type: OneSimpleSelectorType::PseudoElementSelector,
+                  value: "placeholder".to_string(),
+                }],
+              }],
+            },
+            declaration_block: DeclarationBlock {
+              tokens: vec![
+                ValueToken {
+                  token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
+                  value: "color".to_string(),
+                },
+                ValueToken {
+                  token_type: crate::css_tokenizer::token_types::COLON_TOKEN,
+                  value: ":".to_string(),
+                },
+                ValueToken {
+                  token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
+                  value: "red".to_string(),
+                },
+                ValueToken {
+                  token_type: crate::css_tokenizer::token_types::SEMICOLON_TOKEN,
+                  value: ";".to_string(),
+                },
+              ],
+            },
+          }],
+        },
+      )]),
+      style_content_str_size_hint: 0,
+    };
+    let result = generate_string_buf(raw_style_info, true, None);
+    let expected = ":not([l-e-name])::part(input)::placeholder{--lynx-text-bg-color:initial;-webkit-background-clip:initial;background-clip:initial;color:red;}";
     assert_eq!(result.style_content, expected);
   }
 }

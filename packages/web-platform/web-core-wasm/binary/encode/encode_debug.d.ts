@@ -17,6 +17,7 @@ export class DecodedStyleData {
   constructor(buffer: Uint8Array);
   query_css_og_declarations_by_css_id(css_id: number, class_name: string[]): string;
   static decode_into(buffer: Uint8Array, entry_name: string | null | undefined, config_enable_css_selector: boolean): Uint8Array;
+  static encode_from_raw_style_info(raw_style_info: RawStyleInfo, config_enable_css_selector: boolean, entry_name?: string | null): Uint8Array;
   readonly style_content: string;
   readonly font_face_content: string;
 }

@@ -5,7 +5,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-
+import { existsSync } from 'node:fs';
 import { test as base } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import v8ToIstanbul from 'v8-to-istanbul';
@@ -36,8 +36,19 @@ export const test: typeof base = base.extend({
     await Promise.all(
       Array.from(pages.values()).flatMap(async (page, index) => {
         const coverage = await page.coverage.stopJSCoverage();
-        const converter = v8ToIstanbul(
+        const sourceFilePath = [
           path.join(path.dirname(testInfo.file), '..', 'www', 'main.js'),
+          path.join(
+            path.dirname(testInfo.file),
+            '..',
+            'www',
+            'static',
+            'js',
+            'index.js',
+          ),
+        ].find((p) => existsSync(p))!;
+        const converter = v8ToIstanbul(
+          sourceFilePath,
         );
         await converter.load();
 

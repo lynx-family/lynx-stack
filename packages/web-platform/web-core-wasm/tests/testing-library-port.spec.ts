@@ -91,7 +91,7 @@ describe('Testing Library Port', () => {
 
       const el = rootDom.querySelector('[data-testid="svg-element"]');
       expect(el).not.toBeNull();
-      expect(el?.tagName.toLowerCase()).toBe('svg');
+      expect(el?.tagName.toLowerCase()).toBe('x-svg');
       expect(mtsGlobalThis.__GetTag(view1)).toBe('svg');
     });
 

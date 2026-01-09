@@ -1,5 +1,6 @@
 import { TemplateSectionLabel, MagicHeader } from '../../constants.js';
 import type { InitMessage, LoadTemplateMessage, MainMessage } from './types.js';
+
 import { DecodedStyle, wasmInstance } from '../wasm.js';
 import type { PageConfig } from '../../types/PageConfig.js';
 
@@ -7,6 +8,8 @@ let wasmModuleLoadedResolve: () => void;
 const wasmModuleLoadedPromise: Promise<void> = new Promise((resolve) => {
   wasmModuleLoadedResolve = resolve;
 });
+
+import { loadStyleFromJSON } from './cssLoader.js';
 
 class StreamReader {
   #reader: ReadableStreamDefaultReader<Uint8Array>;
@@ -49,6 +52,24 @@ class StreamReader {
 
     const result = this.#buffer.slice(0, size);
     this.#buffer = this.#buffer.slice(size);
+    return result;
+  }
+
+  async readRest(): Promise<Uint8Array> {
+    while (true) {
+      const { done, value } = await this.#reader.read();
+      if (value) {
+        const newBuffer = new Uint8Array(this.#buffer.length + value.length);
+        newBuffer.set(this.#buffer);
+        newBuffer.set(value, this.#buffer.length);
+        this.#buffer = newBuffer;
+      }
+      if (done) {
+        break;
+      }
+    }
+    const result = this.#buffer;
+    this.#buffer = new Uint8Array(0);
     return result;
   }
 }
@@ -159,6 +180,17 @@ async function handleStream(
   if (!headerBytes) {
     throw new Error('Empty stream');
   }
+
+  // Check if JSON (starts with {)
+  if (headerBytes[0] === 123) {
+    const rest = await streamReader.readRest();
+    const decoder = new TextDecoder();
+    const jsonStr = decoder.decode(headerBytes) + decoder.decode(rest);
+    const json = JSON.parse(jsonStr);
+    await handleJSON(json, url, overrideConfig);
+    return;
+  }
+
   const view = new DataView(
     headerBytes.buffer,
     headerBytes.byteOffset,
@@ -300,6 +332,117 @@ async function handleStream(
       default:
         throw new Error(`Unknown section label: ${label}`);
     }
+  }
+}
+
+async function handleJSON(
+  json: any,
+  url: string,
+  overrideConfig?: Partial<PageConfig>,
+) {
+  // Configurations
+  let config: Partial<PageConfig> = {};
+  if (json.pageConfig) {
+    config = { ...json.pageConfig };
+  }
+  if (overrideConfig) {
+    config = { ...config, ...overrideConfig };
+  }
+  postMessage({
+    type: 'section',
+    label: TemplateSectionLabel.Configurations,
+    url,
+    data: config,
+  } as MainMessage);
+
+  // StyleInfo
+  if (json.styleInfo) {
+    await wasmModuleLoadedPromise;
+    const buffer = loadStyleFromJSON(
+      json.styleInfo,
+      config['enableCSSSelector'] === 'true',
+      config['isLazy'] === 'true' ? url : undefined,
+    );
+    postMessage(
+      {
+        type: 'section',
+        label: TemplateSectionLabel.StyleInfo,
+        url,
+        data: buffer.buffer,
+        config,
+      } as MainMessage,
+      {
+        transfer: [buffer.buffer],
+      },
+    );
+  }
+
+  // LepusCode
+  if (json.lepusCode) {
+    // Flattened structure in json: { root: "...", chunk1: "..." }
+    const isLazy = config['isLazy'] === 'true';
+    const blobMap: Record<string, string> = {};
+    for (const [key, code] of Object.entries(json.lepusCode)) {
+      if (typeof code !== 'string') continue;
+      const prefix =
+        `(function(){ "use strict"; const navigator=void 0,postMessage=void 0,window=void 0; ${
+          isLazy ? 'module.exports=' : ''
+        } `;
+      const suffix = ` \n })()\n//# sourceURL=${url}/${key}\n`;
+      const blob = new Blob([prefix, code, suffix], {
+        type: 'text/javascript;',
+      });
+      blobMap[key] = URL.createObjectURL(blob);
+    }
+    postMessage({
+      type: 'section',
+      label: TemplateSectionLabel.LepusCode,
+      url,
+      data: blobMap,
+      config,
+    } as MainMessage);
+  }
+
+  // Manifest
+  if (json.manifest) {
+    const blobMap: Record<string, string> = {};
+    for (const [key, code] of Object.entries(json.manifest)) {
+      if (typeof code !== 'string') continue;
+      const blob = new Blob([code], {
+        type: 'text/javascript;',
+      });
+      blobMap[key] = URL.createObjectURL(blob);
+    }
+    postMessage({
+      type: 'section',
+      label: TemplateSectionLabel.Manifest,
+      url,
+      data: blobMap,
+    } as MainMessage);
+  }
+
+  // CustomSections
+  if (json.customSections) {
+    // Currently we don't have a way to encode custom sections here.
+    // If main thread accepts generic object, we send it.
+    // But TemplateManager expects buffer?
+    // TemplateManager: case CustomSections: #setCustomSection(url, data). data: any.
+    // So passing object is fine!
+    postMessage({
+      type: 'section',
+      label: TemplateSectionLabel.CustomSections,
+      url,
+      data: json.customSections,
+    } as MainMessage);
+  }
+
+  // ElementTemplates
+  if (json.elementTemplates) {
+    // TemplateManager expects Uint8Array for ElementTemplates.
+    // We can't support this easily for JSON.
+    throw new Error(
+      'ElementTemplates in JSON artifacts are not supported yet.',
+    );
   }
 }
 

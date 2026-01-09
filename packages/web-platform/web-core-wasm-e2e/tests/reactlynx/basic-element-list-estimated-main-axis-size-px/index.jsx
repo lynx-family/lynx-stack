@@ -7,46 +7,32 @@ import './index.css';
 function App() {
   const ref = useRef(null);
 
-  const handleScrollToLower = (e) => {
-    console.log(e);
-  };
-
-  useEffect(() => {
-    ref.current
-      ?.invoke({
-        method: 'autoScroll',
-        params: {
-          rate: '100',
-          start: true,
-        },
-      })
-      .exec();
-  }, []);
-
   return (
     <view class='page'>
       <list
         list-type='single'
-        bindscrolltolower={handleScrollToLower}
         ref={ref}
       >
-        <list-item item-key='1' id='1' estimated-main-axis-size-px={100}>
-          <text>1</text>
-        </list-item>
-        <list-item item-key='2' id='2' estimated-main-axis-size-px={100}>
-          <text>2</text>
-        </list-item>
-        <list-item item-key='3' id='3' estimated-main-axis-size-px={100}>
-          <text>3</text>
-        </list-item>
-        <list-item item-key='4' id='4' estimated-main-axis-size-px={100}>
-          <text>4</text>
-        </list-item>
-        <list-item item-key='5' id='5' estimated-main-axis-size-px={100}>
-          <text>5</text>
-        </list-item>
-        <list-item item-key='6' id='6' estimated-main-axis-size-px={100}>
-          <text>6</text>
+        <list-item style={{ '--item-index': 1, height: '300px' }}></list-item>
+        <list-item style={{ '--item-index': 2, height: '300px' }}></list-item>
+        <list-item style={{ '--item-index': 3, height: '300px' }}></list-item>
+        <list-item style={{ '--item-index': 4, height: '300px' }}></list-item>
+        <list-item style={{ '--item-index': 5, height: '300px' }}></list-item>
+        <list-item style={{ '--item-index': 6, height: '300px' }}></list-item>
+        <list-item style={{ '--item-index': 7, height: '300px' }}></list-item>
+        <list-item style={{ '--item-index': 8, height: '300px' }}></list-item>
+        <list-item style={{ '--item-index': 9, height: '300px' }}></list-item>
+        <list-item style={{ '--item-index': 10, height: '300px' }}></list-item>
+        <list-item style={{ '--item-index': 11, height: '300px' }}></list-item>
+        <list-item style={{ '--item-index': 12, height: '300px' }}></list-item>
+        <list-item style={{ '--item-index': 13, height: '300px' }}></list-item>
+        <list-item style={{ '--item-index': 14, height: '300px' }}></list-item>
+        <list-item
+          style={{ '--item-index': 15 }}
+          estimated-main-axis-size-px={100}
+          id='target'
+        >
+          <view style={{ height: '200px' }}></view>
         </list-item>
       </list>
     </view>

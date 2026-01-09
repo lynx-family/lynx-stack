@@ -38,6 +38,7 @@
   "dependencies": {
     "@lynx-js/css-serializer": "workspace:*",
     "@lynx-js/tasm": "0.0.20",
+    "@lynx-js/web-core-wasm": "workspace:*",
     "@lynx-js/webpack-runtime-globals": "workspace:^",
     "@rspack/lite-tapable": "1.0.1",
     "css-tree": "^3.1.0",

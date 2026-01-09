@@ -38,8 +38,6 @@ export class TemplateManager {
   #worker: Worker | null = null;
   #workerReadyPromise: Promise<void> | null = null;
   #resolveWorkerReady: (() => void) | null = null;
-  #activeUrls: Set<string> = new Set();
-  #terminateTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     this.#ensureWorker();
@@ -55,6 +53,7 @@ export class TemplateManager {
         const template = this.#templates.get(url);
         const config = (template?.config || {}) as PageConfig;
         const lynxViewInstance = await lynxViewInstancePromise;
+        lynxViewInstance.backgroundThread.markTiming('decode_start');
         lynxViewInstance.onPageConfigReady(config);
         const styleInfo = template?.styleInfo;
         if (styleInfo) {
@@ -74,12 +73,15 @@ export class TemplateManager {
     lynxViewInstancePromise: Promise<LynxViewInstance>,
     overrideConfig?: Partial<PageConfig>,
   ): Promise<void> {
-    this.#activeUrls.add(url);
+    const currentTime = performance.now() + performance.timeOrigin;
+    lynxViewInstancePromise.then((instance) => {
+      instance.backgroundThread.markTiming(
+        'fetch_start',
+        undefined,
+        currentTime,
+      );
+    });
     this.#lynxViewInstancesMap.set(url, lynxViewInstancePromise);
-    if (this.#terminateTimer) {
-      clearTimeout(this.#terminateTimer);
-      this.#terminateTimer = null;
-    }
 
     await this.#ensureWorker();
 
@@ -171,7 +173,11 @@ export class TemplateManager {
         break;
       case 'done':
         this.#cleanup(url);
-        this.#resolvePromise(url);
+        lynxViewInstancePromise.then((instance) => {
+          instance.backgroundThread.markTiming('decode_end');
+          instance.backgroundThread.markTiming('load_template_start');
+          this.#resolvePromise(url);
+        });
         break;
     }
   }
@@ -193,6 +199,7 @@ export class TemplateManager {
     const { label, data, url, config } = msg;
     switch (label) {
       case TemplateSectionLabel.Configurations: {
+        instance.backgroundThread.markTiming('decode_start');
         this.#setConfig(url, data);
         instance.onPageConfigReady(data);
         break;
@@ -234,18 +241,7 @@ export class TemplateManager {
   }
 
   #cleanup(url: string) {
-    this.#activeUrls.delete(url);
     this.#lynxViewInstancesMap.delete(url);
-    if (this.#activeUrls.size === 0) {
-      this.#terminateTimer = setTimeout(() => {
-        if (this.#activeUrls.size === 0 && this.#worker) {
-          this.#worker.terminate();
-          this.#worker = null;
-          this.#workerReadyPromise = null;
-          this.#resolveWorkerReady = null;
-        }
-      }, 10000);
-    }
   }
 
   createTemplate(url: string) {

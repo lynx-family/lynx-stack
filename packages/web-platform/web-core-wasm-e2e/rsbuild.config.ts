@@ -1,5 +1,4 @@
 import { defineConfig } from '@rsbuild/core';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -31,6 +30,7 @@ export default defineConfig({
         watch: false,
       },
     ],
+    htmlFallback: false,
   },
   html: {
     tags: [

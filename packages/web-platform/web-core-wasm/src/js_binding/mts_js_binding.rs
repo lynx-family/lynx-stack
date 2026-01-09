@@ -48,4 +48,18 @@ extern "C" {
     unique_id: usize,
     to_enable: bool,
   );
+
+  #[wasm_bindgen(method, js_name = "enableElementEvent")]
+  pub fn enable_element_event(
+    this: &RustMainthreadContextBinding,
+    unique_id: usize,
+    event_name: &str,
+  );
+
+  #[wasm_bindgen(method, js_name = "disableElementEvent")]
+  pub fn disable_element_event(
+    this: &RustMainthreadContextBinding,
+    unique_id: usize,
+    event_name: &str,
+  );
 }
