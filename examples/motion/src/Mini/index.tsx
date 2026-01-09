@@ -2,7 +2,7 @@ import {
   animate,
   useMotionValueRef,
   useMotionValueRefEvent,
-} from '@lynx-js/motion-lynx/mini';
+} from '@lynx-js/motion/mini';
 import { root, runOnMainThread, useMainThreadRef } from '@lynx-js/react';
 import type { MainThread } from '@lynx-js/types';
 

@@ -1,4 +1,4 @@
-import { animate } from '@lynx-js/motion-lynx';
+import { animate } from '@lynx-js/motion';
 import { runOnMainThread, useEffect, useMainThreadRef } from '@lynx-js/react';
 
 import './styles.css';

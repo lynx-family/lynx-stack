@@ -13,17 +13,18 @@ import type {
 
 import { motionValue } from '../animation/index.js';
 
-export function useMotionValueRef<T>(value: T): MainThreadRef<MotionValue<T>> {
+export function useMotionValueRefCore<T, MV>(
+  value: T,
+  make: (v: T) => MV,
+): MainThreadRef<MV> {
   // @ts-expect-error expected
-  const motionValueRef: MainThreadRef<MotionValue<T>> = useMainThreadRef<
-    MotionValue<T>
-  >();
+  const motionValueRef: MainThreadRef<MV> = useMainThreadRef<MV>();
 
   useMemo(() => {
     function setMotionValue(value: T) {
       'main thread';
       if (!motionValueRef.current) {
-        motionValueRef.current = motionValue<T>(value);
+        motionValueRef.current = make(value);
       }
     }
     if (__BACKGROUND__) {
@@ -36,4 +37,8 @@ export function useMotionValueRef<T>(value: T): MainThreadRef<MotionValue<T>> {
   }, []);
 
   return motionValueRef;
+}
+
+export function useMotionValueRef<T>(value: T): MainThreadRef<MotionValue<T>> {
+  return useMotionValueRefCore(value, motionValue);
 }

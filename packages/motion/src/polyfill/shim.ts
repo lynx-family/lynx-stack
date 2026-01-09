@@ -24,7 +24,7 @@ function shimGlobals() {
 
   // Only shim queueMicrotask if it doesn't exist
   if (!globalThis.queueMicrotask) {
-    globalThis.queueMicrotask = (fn: any) => {
+    globalThis.queueMicrotask = (fn: CallableFunction) => {
       void Promise.resolve().then(() => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         fn();
@@ -60,6 +60,7 @@ function shimGlobals() {
   if (!globalThis.window) {
     // @ts-expect-error error
     globalThis.window = {
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
       getComputedStyle: (ele: any) => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         return ele.getComputedStyle();
@@ -83,7 +84,7 @@ if (__MAIN_THREAD__) {
   // Only shim queueMicrotask if it doesn't exist
   // eslint-disable-next-line unicorn/no-lonely-if
   if (!globalThis.queueMicrotask) {
-    globalThis.queueMicrotask = (fn: any) => {
+    globalThis.queueMicrotask = (fn: CallableFunction) => {
       void Promise.resolve().then(() => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         fn();

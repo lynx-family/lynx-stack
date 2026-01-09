@@ -7,7 +7,7 @@ import {
   styleEffect,
   transformValue,
   useMotionValueRef,
-} from '@lynx-js/motion-lynx';
+} from '@lynx-js/motion';
 import { runOnMainThread, useEffect, useMainThreadRef } from '@lynx-js/react';
 import type { MainThread } from '@lynx-js/types';
 

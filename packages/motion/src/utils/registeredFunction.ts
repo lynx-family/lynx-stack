@@ -19,6 +19,7 @@ export function runOnRegistered<T extends CallableFunction = CallableFunction>(
 }
 
 declare global {
+  // biome-ignore lint/suspicious/noRedeclare: <explanation>
   var runOnRegistered: <T extends CallableFunction = CallableFunction>(
     id: string,
   ) => T;

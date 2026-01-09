@@ -4,10 +4,10 @@
 import { MotionValue } from 'motion-dom';
 
 /**
- * This hack is needed to prevent large bulk of cross thread communication happened.
- * This is because what MainThreadScript working for syncing MainThread and Background Thread
- * But actually this is not needed, because we have single source of truth in MainThread
- * So we can just ignore the cross thread communication
+ * Prevents excessive cross-thread communication.
+ *
+ * This override avoids unnecessary synchronization between the Main and Background
+ * threads, as the Main Thread serves as the single source of truth.
  */
 
 // @ts-expect-error expected

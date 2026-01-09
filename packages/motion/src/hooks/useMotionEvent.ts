@@ -1,20 +1,27 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { MotionValue, MotionValueEventCallbacks } from 'motion-dom';
+import type { MotionValueEventCallbacks } from 'motion-dom';
 
 import { runOnMainThread, useEffect, useMainThreadRef } from '@lynx-js/react';
 import type { MainThreadRef } from '@lynx-js/react';
+
+interface Listenable<V> {
+  on(
+    event: 'change',
+    callback: (v: V) => void,
+  ): () => void;
+}
 
 export function useMotionValueRefEvent<
   V,
   EventName extends keyof MotionValueEventCallbacks<V>,
 >(
-  valueRef: MainThreadRef<MotionValue<V>>,
+  valueRef: MainThreadRef<Listenable<V>>,
   event: 'change',
   callback: MotionValueEventCallbacks<V>[EventName],
 ): void {
-  const unListenRef = useMainThreadRef<VoidFunction>();
+  const unListenRef = useMainThreadRef<() => void>();
 
   useEffect(() => {
     void runOnMainThread(() => {

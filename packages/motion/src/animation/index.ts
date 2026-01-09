@@ -47,6 +47,7 @@ import {
   isMainThreadElement,
   isMainThreadElementArray,
 } from '../utils/isMainThreadElement.js';
+import { noopMT } from '../utils/noop.js';
 
 /**
  * Animate a sequence
@@ -154,7 +155,6 @@ function animate<O extends {}>(
     } else {
       elementNodes = subjectOrSequence;
     }
-    console.log('elementNodes', elementNodes);
     realSubjectOrSequence = (Array.isArray(elementNodes)
       ? elementNodes.map(el => new ElementCompt(el))
       : new ElementCompt(
@@ -166,12 +166,10 @@ function animate<O extends {}>(
 
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
   return animate_(
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    realSubjectOrSequence as any,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    optionsOrKeyframes as any,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    options as any,
+    // @ts-expect-error expected
+    realSubjectOrSequence,
+    optionsOrKeyframes,
+    options,
   );
 }
 
@@ -224,12 +222,10 @@ function mix<T>(from: T, to: T, p?: T): Mixer<T> | number {
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
 
   return mix_(
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    from as any,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    to as any,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    p as any,
+    // @ts-expect-error expected
+    from,
+    to,
+    p,
   );
 }
 
@@ -274,15 +270,13 @@ function styleEffect(
   'main thread';
   const elements = elementOrSelector2Dom(subject);
   if (!elements) {
-    return () => {};
+    return noopMT;
   }
   return styleEffect_(
     elements,
     values,
   );
 }
-
-export const noop = (): void => {};
 
 export {
   animate,

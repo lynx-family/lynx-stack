@@ -188,9 +188,9 @@ importers:
 
   examples/motion:
     dependencies:
-      '@lynx-js/motion-lynx':
+      '@lynx-js/motion':
         specifier: workspace:*
-        version: link:../../packages/third-party/motion
+        version: link:../../packages/motion
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../packages/react
@@ -208,8 +208,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.4.11
-        version: 3.4.11
+        specifier: 3.6.0
+        version: 3.6.0
       '@types/react':
         specifier: ^18.3.25
         version: 18.3.25
@@ -456,6 +456,28 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+
+  packages/motion:
+    dependencies:
+      framer-motion:
+        specifier: 12.23.12
+        version: 12.23.12(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      motion-dom:
+        specifier: 12.23.12
+        version: 12.23.12
+      motion-utils:
+        specifier: 12.23.6
+        version: 12.23.6
+    devDependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../react
+      '@lynx-js/types':
+        specifier: 3.6.0
+        version: 3.6.0
+      rsbuild-plugin-publint:
+        specifier: 0.3.3
+        version: 0.3.3(@rsbuild/core@1.7.1)
 
   packages/react:
     dependencies:
@@ -1013,25 +1035,6 @@ importers:
       rsbuild-plugin-publint:
         specifier: 0.3.3
         version: 0.3.3(@rsbuild/core@1.7.1)
-
-  packages/third-party/motion:
-    dependencies:
-      framer-motion:
-        specifier: 12.23.12
-        version: 12.23.12(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      motion-dom:
-        specifier: 12.23.12
-        version: 12.23.12
-      motion-utils:
-        specifier: 12.23.6
-        version: 12.23.6
-    devDependencies:
-      '@lynx-js/react':
-        specifier: workspace:*
-        version: link:../../react
-      '@lynx-js/types':
-        specifier: 3.4.11
-        version: 3.4.11
 
   packages/tools/canary-release:
     dependencies:
@@ -3060,9 +3063,6 @@ packages:
 
   '@lynx-js/type-element-api@0.0.2':
     resolution: {integrity: sha512-Unz3RHf2RM2vOWForwubjLYw9xbBP02ReuOL4KVLc3+0Vzryo8KbgqbhMUZCsJXHVmcaE2zXiE1AV/nqrBAoPA==}
-
-  '@lynx-js/types@3.4.11':
-    resolution: {integrity: sha512-k4mu4d2xmMqMIP1e7WGPdzO/k9x9W35b/OE/awalQUbcLlruFatagEOEM6TANK/VuRvEl0eLXQjhBnSwGkgt5w==}
 
   '@lynx-js/types@3.6.0':
     resolution: {integrity: sha512-nNCuFP5Cpd7X/D3X7JsQLYkiIUsr6iTsRpqSz4swUdlNpK64Xt9epdjkqxbruuUqplFFmkhjThjWN4Bc8uZNWQ==}
@@ -11493,10 +11493,6 @@ snapshots:
   '@lynx-js/type-config@3.6.0': {}
 
   '@lynx-js/type-element-api@0.0.2': {}
-
-  '@lynx-js/types@3.4.11':
-    dependencies:
-      csstype: 3.1.3
 
   '@lynx-js/types@3.6.0':
     dependencies:

@@ -5,7 +5,7 @@
 import { MotionValue } from 'motion-dom' with { runtime: 'shared' };
 import type { MotionValueOptions } from 'motion-dom';
 
-class CustomMotionValue<V = any> extends MotionValue<V> {
+class CustomMotionValue<V = unknown> extends MotionValue<V> {
   toJSON() {
     return {};
   }

@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "stripInternal": true,
+    "target": "ESNext",
+    "lib": ["es2021"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "resolveJsonModule": true,
+    "composite": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "@lynx-js/react",
+    "rootDir": "src",
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+}

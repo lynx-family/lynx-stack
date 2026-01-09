@@ -9,7 +9,7 @@
     "test:type": "vitest --typecheck.only"
   },
   "dependencies": {
-    "@lynx-js/motion-lynx": "workspace:*",
+    "@lynx-js/motion": "workspace:*",
     "@lynx-js/react": "workspace:*"
   },
   "devDependencies": {
@@ -17,7 +17,7 @@
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
-    "@lynx-js/types": "3.4.11",
+    "@lynx-js/types": "3.6.0",
     "@types/react": "^18.3.25"
   }
 }

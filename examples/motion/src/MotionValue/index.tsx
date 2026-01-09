@@ -1,5 +1,5 @@
-import { motionValue } from '@lynx-js/motion-lynx';
-import type { MotionValue, animate } from '@lynx-js/motion-lynx';
+import { motionValue } from '@lynx-js/motion';
+import type { MotionValue, animate } from '@lynx-js/motion';
 import { runOnMainThread, useEffect, useMainThreadRef } from '@lynx-js/react';
 import type { MainThread } from '@lynx-js/types';
 
