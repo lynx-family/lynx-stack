@@ -1554,9 +1554,6 @@ importers:
       '@lynx-js/tasm':
         specifier: 0.0.20
         version: 0.0.20
-      '@lynx-js/web-core-wasm':
-        specifier: workspace:*
-        version: link:../../web-platform/web-core-wasm
       '@lynx-js/webpack-runtime-globals':
         specifier: workspace:^
         version: link:../webpack-runtime-globals
@@ -1591,6 +1588,10 @@ importers:
       webpack:
         specifier: ^5.104.1
         version: 5.104.1
+    optionalDependencies:
+      '@lynx-js/web-core-wasm':
+        specifier: workspace:*
+        version: link:../../web-platform/web-core-wasm
 
   packages/webpack/test-tools:
     devDependencies:
