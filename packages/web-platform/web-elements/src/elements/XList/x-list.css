@@ -65,7 +65,7 @@ list-item {
   content-visibility: auto;
   flex: 0 0 auto !important;
   position: static;
-  contain: size;
+  contain: layout paint;
   contain-intrinsic-size: none auto var(--estimated-main-axis-size-px, 100cqh);
 }
 
