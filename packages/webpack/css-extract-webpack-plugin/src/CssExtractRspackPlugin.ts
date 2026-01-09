@@ -125,6 +125,7 @@ export type { CssExtractRspackPluginOptions };
 class CssExtractRspackPluginImpl {
   name = 'CssExtractRspackPlugin';
   private hash: string | null = null;
+  private hotUpdateFiles = new Map<string, string>();
 
   /**
    * Check if Hot Module Replacement (HMR) is enabled
@@ -167,15 +168,18 @@ class CssExtractRspackPluginImpl {
         );
 
         hooks.beforeEmit.tapPromise(this.name, async (args) => {
-          for (
-            const {
-              name: filename,
-              source,
-            } of args.cssChunks
-          ) {
-            const content: string = source.source().toString('utf-8');
+          const cssChunks = args.cssChunks;
+          const content: string[] = cssChunks.map((chunk) =>
+            chunk.source.source().toString('utf-8')
+          );
+          for (const entryName of args.entryNames) {
+            // generate hot update file which is required by cssHotUpdateList
+            const hotUpdateFilePath = this.hotUpdateFiles.get(entryName);
+            if (!hotUpdateFilePath) {
+              continue;
+            }
             const css = LynxTemplatePlugin.convertCSSChunksToMap(
-              [content],
+              content,
               options.cssPlugins,
               Boolean(
                 args.finalEncodeOptions.compilerOptions['enableCSSSelector'],
@@ -208,6 +212,7 @@ class CssExtractRspackPluginImpl {
                   lepusCode: {
                     root: undefined,
                     lepusChunk: {},
+                    filename: undefined,
                   },
                   manifest: {},
                   customSections: {},
@@ -218,10 +223,7 @@ class CssExtractRspackPluginImpl {
                 deps: cssDeps,
               };
               compilation.emitAsset(
-                filename.replace(
-                  '.css',
-                  `${this.hash ? `.${this.hash}` : ''}.css.hot-update.json`,
-                ),
+                hotUpdateFilePath,
                 new compiler.webpack.sources.RawSource(
                   JSON.stringify(result),
                   true,
@@ -240,7 +242,6 @@ class CssExtractRspackPluginImpl {
             }
           }
           this.hash = compilation.hash;
-
           return args;
         });
 
@@ -248,10 +249,15 @@ class CssExtractRspackPluginImpl {
 
         class CSSHotUpdateRuntimeModule extends RuntimeModule {
           hash: string | null;
+          hotUpdateFiles: Map<string, string>;
 
-          constructor(hash: string | null) {
+          constructor(
+            hash: string | null,
+            hotUpdateFiles: Map<string, string>,
+          ) {
             super('lynx css hot update');
             this.hash = hash;
+            this.hotUpdateFiles = hotUpdateFiles;
           }
 
           override generate(): string {
@@ -275,13 +281,19 @@ class CssExtractRspackPluginImpl {
 
             const cssHotUpdateList = [...asyncChunks, initialChunk].map((
               [chunkName, cssHotUpdatePath],
-            ) => [
-              chunkName!,
-              cssHotUpdatePath!.replace(
+            ) => {
+              // use hash of previous compilation cause CSSHotUpdateRuntimeModule can not get hash immediately
+              const hotUpdatePath = cssHotUpdatePath!.replace(
                 '.css',
                 `${this.hash ? `.${this.hash}` : ''}.css.hot-update.json`,
-              ),
-            ]);
+              );
+              // save all hot update file info
+              this.hotUpdateFiles.set(chunkName!, hotUpdatePath);
+              return [
+                chunkName!,
+                hotUpdatePath,
+              ];
+            });
 
             return `
 ${RuntimeGlobals.require}.cssHotUpdateList = ${
@@ -298,7 +310,7 @@ ${RuntimeGlobals.require}.cssHotUpdateList = ${
           runtimeRequirements.add(RuntimeGlobals.publicPath);
           compilation.addRuntimeModule(
             chunk,
-            new CSSHotUpdateRuntimeModule(this.hash),
+            new CSSHotUpdateRuntimeModule(this.hash, this.hotUpdateFiles),
           );
         };
 

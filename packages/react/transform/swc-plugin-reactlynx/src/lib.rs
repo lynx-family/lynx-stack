@@ -31,7 +31,9 @@ use swc_plugin_snapshot::{JSXTransformer, JSXTransformerConfig};
 use swc_plugin_text::TextVisitor;
 use swc_plugin_worklet::{WorkletVisitor, WorkletVisitorConfig};
 use swc_plugins_shared::{
-  engine_version::is_engine_version_ge, transform_mode::TransformMode, utils::get_relative_path,
+  engine_version::is_engine_version_ge,
+  transform_mode::TransformMode,
+  utils::{get_relative_path, WEBPACK_VARS},
 };
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
@@ -116,6 +118,7 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
 
   let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
   let top_level_mark = Mark::new();
+  let top_retain = WEBPACK_VARS.iter().map(|&s| s.into()).collect::<Vec<_>>();
 
   let simplify_pass_1 = Optional::new(
     simplifier(
@@ -123,6 +126,7 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
       simplify::Config {
         dce: simplify::dce::Config {
           preserve_imports_with_side_effects: false,
+          top_retain: top_retain.clone(),
           ..Default::default()
         },
         ..Default::default()
@@ -228,6 +232,7 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
     simplify::Config {
       dce: simplify::dce::Config {
         preserve_imports_with_side_effects: false,
+        top_retain: top_retain.clone(),
         ..Default::default()
       },
       ..Default::default()

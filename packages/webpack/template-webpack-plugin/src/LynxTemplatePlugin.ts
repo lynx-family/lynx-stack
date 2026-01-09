@@ -41,6 +41,7 @@ export interface EncodeOptions {
   lepusCode: {
     root: string | undefined;
     lepusChunk: Record<string, string>;
+    filename: string | undefined;
   };
   // `customSections` option only takes effect on Lynx >= 2.16.
   customSections: Record<string, {
@@ -63,7 +64,7 @@ const LynxTemplatePluginHooksMap = new WeakMap<Compilation, TemplateHooks>();
  *     compiler.hooks.compilation.tap("MyPlugin", (compilation) => {
  *       console.log("The compiler is starting a new compilation...");
  *
- *       LynxTemplatePlugin.getCompilationHooks(compilation).beforeEmit.tapAsync(
+ *       LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(
  *         "MyPlugin", // <-- Set a meaningful name here for stacktraces
  *         (data, cb) => {
  *           // Manipulate the content
@@ -123,6 +124,7 @@ export interface TemplateHooks {
     outputName: string;
     mainThreadAssets: Asset[];
     cssChunks: Asset[];
+    entryNames: string[];
   }>;
 
   /**
@@ -307,6 +309,7 @@ interface EncodeRawData {
   lepusCode: {
     root: Asset | undefined;
     chunks: Asset[];
+    filename: string | undefined;
   };
   /**
    * background thread
@@ -740,7 +743,7 @@ class LynxTemplatePluginImpl {
     const isDev = process.env['NODE_ENV'] === 'development'
       || compiler.options.mode === 'development';
 
-    const css = cssChunksToMap(
+    const initialCSS = cssChunksToMap(
       assetsInfoByGroups.css
         .map(chunk => compilation.getAsset(chunk.name))
         .filter((v): v is Asset => !!v)
@@ -782,13 +785,20 @@ class LynxTemplatePluginImpl {
         },
       },
       css: {
-        ...css,
+        ...initialCSS,
         chunks: assetsInfoByGroups.css,
       },
       lepusCode: {
         // TODO: support multiple lepus chunks
         root: assetsInfoByGroups.mainThread[0],
         chunks: [],
+        filename: (() => {
+          const name = assetsInfoByGroups.mainThread[0]?.name;
+          if (name) {
+            return path.basename(name);
+          }
+          return undefined;
+        })(),
       },
       manifest: Object.fromEntries(
         assetsInfoByGroups.backgroundThread.map(asset => {
@@ -807,7 +817,7 @@ class LynxTemplatePluginImpl {
       entryNames,
     });
 
-    const { lepusCode } = encodeData;
+    const { lepusCode, css } = encodeData;
 
     const resolvedEncodeOptions: EncodeOptions = {
       ...encodeData,
@@ -824,6 +834,7 @@ class LynxTemplatePluginImpl {
             return [asset.name, asset.source.source().toString()];
           }),
         ),
+        filename: lepusCode.filename,
       },
     };
 
@@ -890,6 +901,7 @@ class LynxTemplatePluginImpl {
         mainThreadAssets: [lepusCode.root, ...encodeData.lepusCode.chunks]
           .filter(i => i !== undefined),
         cssChunks: assetsInfoByGroups.css,
+        entryNames,
       });
 
       compilation.emitAsset(filename, new RawSource(template, false));

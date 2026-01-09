@@ -1,5 +1,53 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.19.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.4
+
+## 0.19.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.3
+
+## 0.19.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.2
+
+## 0.19.1
+
+### Patch Changes
+
+- fix: fix reload lynx-view when `enableCSSSelector` false may cause css style lost ([#1982](https://github.com/lynx-family/lynx-stack/pull/1982))
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.1
+
+## 0.19.0
+
+### Patch Changes
+
+- fix: capture and bind event listener should be trigger correctly ([#1972](https://github.com/lynx-family/lynx-stack/pull/1972))
+
+- fix: the l-p-comp-uid of page should be '1' ([#1970](https://github.com/lynx-family/lynx-stack/pull/1970))
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.0
+
+## 0.18.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.18.4
+
 ## 0.18.3
 
 ### Patch Changes

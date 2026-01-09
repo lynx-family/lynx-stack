@@ -3,7 +3,6 @@ import type { Cloneable } from './Cloneable.js';
 import type {
   ComponentAtIndexCallback,
   EnqueueComponentCallback,
-  WebFiberElementImpl,
 } from './Element.js';
 import type { LynxEventType } from './EventType.js';
 import type { FlushElementTreeOptions } from './FlushElementTreeOptions.js';
@@ -18,20 +17,20 @@ type ElementPAPIEventHandler =
   | undefined;
 
 export type AddEventPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
   eventType: LynxEventType,
   eventName: string,
   newEventHandler: ElementPAPIEventHandler,
 ) => void;
 
 export type GetEventPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
   eventName: string,
   eventType: LynxEventType,
 ) => ElementPAPIEventHandler;
 
 export type GetEventsPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
 ) => {
   type: LynxEventType;
   name: string;
@@ -39,7 +38,7 @@ export type GetEventsPAPI = (
 }[];
 
 export type SetEventsPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
   listeners: {
     type: LynxEventType;
     name: string;
@@ -48,124 +47,124 @@ export type SetEventsPAPI = (
 ) => void;
 
 export type AppendElementPAPI = (
-  parent: WebFiberElementImpl,
-  child: WebFiberElementImpl,
+  parent: HTMLElement,
+  child: HTMLElement,
 ) => void;
 
 export type ElementIsEqualPAPI = (
-  left: WebFiberElementImpl,
-  right: WebFiberElementImpl,
+  left: HTMLElement | null,
+  right: HTMLElement | null,
 ) => boolean;
 
 export type FirstElementPAPI = (
-  element: WebFiberElementImpl,
-) => WebFiberElementImpl | null;
+  element: HTMLElement,
+) => HTMLElement | null;
 
 export type GetChildrenPAPI = (
-  element: WebFiberElementImpl,
-) => WebFiberElementImpl[] | null;
+  element: HTMLElement,
+) => HTMLElement[] | null;
 
 export type GetParentPAPI = (
-  element: WebFiberElementImpl,
-) => WebFiberElementImpl | null;
+  element: HTMLElement,
+) => HTMLElement | null;
 
 export type InsertElementBeforePAPI = (
-  parent: WebFiberElementImpl,
-  child: WebFiberElementImpl,
-  ref?: WebFiberElementImpl | null,
-) => WebFiberElementImpl;
+  parent: HTMLElement,
+  child: HTMLElement,
+  ref?: HTMLElement | null,
+) => HTMLElement;
 
 export type LastElementPAPI = (
-  element: WebFiberElementImpl,
-) => WebFiberElementImpl | null;
+  element: HTMLElement,
+) => HTMLElement | null;
 
 export type NextElementPAPI = (
-  element: WebFiberElementImpl,
-) => WebFiberElementImpl | null;
+  element: HTMLElement,
+) => HTMLElement | null;
 
 export type RemoveElementPAPI = (
-  parent: WebFiberElementImpl,
-  child: WebFiberElementImpl,
-) => WebFiberElementImpl;
+  parent: HTMLElement,
+  child: HTMLElement,
+) => HTMLElement;
 
 export type ReplaceElementPAPI = (
-  newElement: WebFiberElementImpl,
-  oldElement: WebFiberElementImpl,
+  newElement: HTMLElement,
+  oldElement: HTMLElement,
 ) => void;
 
 export type ReplaceElementsPAPI = (
-  parent: WebFiberElementImpl,
-  newChildren: WebFiberElementImpl[] | WebFiberElementImpl,
-  oldChildren?: WebFiberElementImpl[] | WebFiberElementImpl | null | undefined,
+  parent: HTMLElement,
+  newChildren: HTMLElement[] | HTMLElement,
+  oldChildren?: HTMLElement[] | HTMLElement | null | undefined,
 ) => void;
 
 export type AddConfigPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
   type: string,
   value: Cloneable,
 ) => void;
 
 export type AddDatasetPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
   key: string,
   value: Cloneable,
 ) => void;
 
 export type GetDatasetPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
 ) => Record<string, Cloneable>;
 
 export type GetDataByKeyPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
   key: string,
 ) => Cloneable | undefined;
 
 export type GetAttributesPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
 ) => Record<string, string>;
 
 export type GetComponentIdPAPI = (
-  element: WebFiberElementImpl,
-) => string | null;
+  element: HTMLElement,
+) => string | null | undefined;
 
 export type GetElementConfigPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
 ) => Record<string, Cloneable>;
 
 export type GetElementUniqueIDPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
 ) => number;
 
 export type GetIDPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
 ) => string | null;
 
 export type GetTagPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
 ) => string;
 
 export type SetConfigPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
   config: Record<string, Cloneable>,
 ) => void;
 
 export type SetDatasetPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
   dataset: Record<string, Cloneable>,
 ) => void;
 
 export type SetIDPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
   id: string | null,
 ) => void;
 
 export type UpdateComponentIDPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
   componentID: string,
 ) => void;
 
 export type UpdateComponentInfoPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
   params: {
     componentID?: string;
     name?: string;
@@ -176,16 +175,16 @@ export type UpdateComponentInfoPAPI = (
 ) => void;
 
 export type GetClassesPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
 ) => string[];
 
 export type CreateViewPAPI = (
   parentComponentUniqueID: number,
-) => WebFiberElementImpl;
+) => HTMLElement;
 
 export type SwapElementPAPI = (
-  childA: WebFiberElementImpl,
-  childB: WebFiberElementImpl,
+  childA: HTMLElement,
+  childB: HTMLElement,
 ) => void;
 
 export type UpdateListInfoAttributeValue = {
@@ -197,20 +196,25 @@ export type UpdateListInfoAttributeValue = {
   }[];
 };
 export type SetAttributePAPI = (
-  element: WebFiberElementImpl,
-  key: string,
-  value: string | null | undefined | UpdateListInfoAttributeValue,
+  element: HTMLElement,
+  key: Exclude<string, 'update-list-info'>,
+  value: string | null | undefined | boolean,
+) => void;
+export type SetAttributePAPIUpdateListInfo = (
+  element: HTMLElement,
+  key: 'update-list-info',
+  value: UpdateListInfoAttributeValue | null,
 ) => void;
 
 export type UpdateListCallbacksPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
   componentAtIndex: ComponentAtIndexCallback,
   enqueueComponent: EnqueueComponentCallback,
 ) => void;
 
 export type CreateTextPAPI = CreateViewPAPI;
 
-export type CreateRawTextPAPI = (text: string) => WebFiberElementImpl;
+export type CreateRawTextPAPI = (text: string) => HTMLElement;
 
 export type CreateImagePAPI = CreateViewPAPI;
 
@@ -227,67 +231,67 @@ export type CreateComponentPAPI = (
   path: string,
   config: Record<string, Cloneable> | null | undefined,
   info: Record<string, Cloneable> | null | undefined,
-) => WebFiberElementImpl;
+) => HTMLElement;
 
 export type CreateElementPAPI = (
   tagName: string,
   parentComponentUniqueId: number,
   info?: Record<string, Cloneable> | null | undefined,
-) => WebFiberElementImpl;
+) => HTMLElement;
 
 export type CreatePagePAPI = (
   componentID: string,
   cssID: number,
-  info: Record<string, Cloneable> | null | undefined,
-) => WebFiberElementImpl;
+  info?: Record<string, Cloneable> | null | undefined,
+) => HTMLElement;
 
 export type CreateListPAPI = (
   parentComponentUniqueId: number,
   componentAtIndex: ComponentAtIndexCallback,
   enqueueComponent: EnqueueComponentCallback,
-) => WebFiberElementImpl;
+) => HTMLElement;
 
 export type AddClassPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
   className: string,
 ) => void;
 
 export type SetClassesPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
   classNames: string | null,
 ) => void;
 
 export type AddInlineStylePAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
   key: number | string,
   value: string | number | null | undefined,
 ) => void;
 
 export type SetInlineStylesPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
   value: string | Record<string, string> | undefined,
 ) => void;
 
 export type SetCSSIdPAPI = (
-  elements: WebFiberElementImpl[],
+  elements: HTMLElement[],
   cssId: number | null,
   entryName: string | undefined,
 ) => void;
 
-export type GetPageElementPAPI = () => WebFiberElementImpl | undefined;
+export type GetPageElementPAPI = () => HTMLElement | undefined;
 
 export type MarkTemplateElementPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
 ) => void;
 
 export type MarkPartElementPAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
   partId: string,
 ) => void;
 
 export type GetTemplatePartsPAPI = (
-  templateElement: WebFiberElementImpl,
-) => Record<string, WebFiberElementImpl>;
+  templateElement: HTMLElement,
+) => Record<string, HTMLElement>;
 
 interface JSErrorInfo {
   release: string;
@@ -296,10 +300,10 @@ interface JSErrorInfo {
 export type ElementFromBinaryPAPI = (
   templateId: string,
   parentComponentUniId: number,
-) => WebFiberElementImpl[];
+) => HTMLElement[];
 
 export type GetAttributeByNamePAPI = (
-  element: WebFiberElementImpl,
+  element: HTMLElement,
   name: string,
 ) => string | null;
 
@@ -313,8 +317,7 @@ export type QueryComponentPAPI = (
     };
   }) => void,
 ) => null;
-
-export interface MainThreadGlobalThis {
+export interface ElementPAPIs {
   __ElementFromBinary: ElementFromBinaryPAPI;
 
   // __GetTemplateParts currently only provided by the thread-strategy = "all-on-ui" (default)
@@ -365,7 +368,7 @@ export interface MainThreadGlobalThis {
   __CreateElement: CreateElementPAPI;
   __CreatePage: CreatePagePAPI;
   __CreateList: CreateListPAPI;
-  __SetAttribute: SetAttributePAPI;
+  __SetAttribute: SetAttributePAPI & SetAttributePAPIUpdateListInfo;
   __UpdateListCallbacks: UpdateListCallbacksPAPI;
   __AddClass: AddClassPAPI;
   __SetClasses: SetClassesPAPI;
@@ -374,6 +377,13 @@ export interface MainThreadGlobalThis {
   __SetCSSId: SetCSSIdPAPI;
   __GetPageElement: GetPageElementPAPI;
   __GetAttributeByName: GetAttributeByNamePAPI;
+  __FlushElementTree: (
+    _subTree?: unknown,
+    options?: FlushElementTreeOptions,
+  ) => void;
+}
+
+export interface MainThreadGlobalThis extends ElementPAPIs {
   __globalProps: unknown;
   SystemInfo: typeof systemInfo;
   globalThis?: MainThreadGlobalThis;
@@ -385,10 +395,6 @@ export interface MainThreadGlobalThis {
   _SetSourceMapRelease: (errInfo: JSErrorInfo) => void;
   __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
   __LoadLepusChunk: (path: string) => boolean;
-  __FlushElementTree: (
-    _subTree: unknown,
-    options: FlushElementTreeOptions,
-  ) => void;
   _I18nResourceTranslation: (
     options: I18nResourceTranslationOptions,
   ) => unknown | undefined;

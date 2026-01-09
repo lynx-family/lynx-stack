@@ -68,19 +68,19 @@ export const createVitestConfig = async (options) => {
     {
       find: /^react$/,
       replacement: require.resolve(runtimeOSSPkgName, {
-        paths: [runtimeDir],
+        paths: [runtimeDir, __dirname],
       }),
     },
     {
       find: /^react\/jsx-runtime$/,
       replacement: require.resolve(path.posix.join(runtimeOSSPkgName, 'jsx-runtime'), {
-        paths: [runtimeDir],
+        paths: [runtimeDir, __dirname],
       }),
     },
     {
       find: /^react\/jsx-dev-runtime$/,
       replacement: require.resolve(path.posix.join(runtimeOSSPkgName, 'jsx-dev-runtime'), {
-        paths: [runtimeDir],
+        paths: [runtimeDir, __dirname],
       }),
     },
   ];
@@ -234,6 +234,11 @@ export const createVitestConfig = async (options) => {
             target: 'MIXED',
           },
           engineVersion: options?.engineVersion ?? '',
+          dynamicImport: {
+            injectLazyBundle: false,
+            layer: 'test',
+            runtimePkg: `${runtimePkgName}/internal`,
+          },
           // snapshot: true,
           directiveDCE: false,
           defineDCE: false,

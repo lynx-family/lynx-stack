@@ -8,6 +8,7 @@ import type { FirstScreenData } from '../lifecycleConstant.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from './performance.js';
 import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import { runWithForce } from './runWithForce.js';
+import { printSnapshotInstanceToString } from '../debug/printSnapshot.js';
 import { profileEnd, profileStart } from '../debug/utils.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEvents.js';
@@ -88,12 +89,39 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
       markTiming('hydrateParseSnapshotStart');
       const before = JSON.parse(lepusSide) as SerializedSnapshotInstance;
+      if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+        console.alog?.(
+          '[ReactLynxDebug] MTS -> BTS OnLifecycleEvent:\n' + JSON.stringify(
+            {
+              ...data as object,
+              // use parsed lepusSide to avoid extra escape characters ('\\')
+              root: before,
+            },
+            null,
+            2,
+          ),
+        );
+        console.alog?.(
+          '[ReactLynxDebug] SnapshotInstance tree for first screen hydration:\n'
+            + printSnapshotInstanceToString(before),
+        );
+        console.alog?.(
+          '[ReactLynxDebug] BackgroundSnapshotInstance tree before hydration:\n'
+            + printSnapshotInstanceToString(__root as BackgroundSnapshotInstance),
+        );
+      }
       markTiming('hydrateParseSnapshotEnd');
       markTiming('diffVdomStart');
       const snapshotPatch = hydrate(
         before,
         __root as BackgroundSnapshotInstance,
       );
+      if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+        console.alog?.(
+          '[ReactLynxDebug] BackgroundSnapshotInstance after hydration:\n'
+            + printSnapshotInstanceToString(__root as BackgroundSnapshotInstance),
+        );
+      }
       if (__PROFILE__) {
         profileEnd();
       }

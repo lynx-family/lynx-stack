@@ -1,5 +1,59 @@
 # @lynx-js/web-worker-runtime
 
+## 0.19.4
+
+### Patch Changes
+
+- Updated dependencies [[`bba05e2`](https://github.com/lynx-family/lynx-stack/commit/bba05e2ed06cca8009ad415fd9777e8334a0887a)]:
+  - @lynx-js/web-worker-rpc@0.19.4
+  - @lynx-js/web-constants@0.19.4
+  - @lynx-js/web-mainthread-apis@0.19.4
+
+## 0.19.3
+
+### Patch Changes
+
+- Updated dependencies [[`986761d`](https://github.com/lynx-family/lynx-stack/commit/986761dd1e9e631f8118faec68188f29f78e9236)]:
+  - @lynx-js/web-worker-rpc@0.19.3
+  - @lynx-js/web-constants@0.19.3
+  - @lynx-js/web-mainthread-apis@0.19.3
+
+## 0.19.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.2
+  - @lynx-js/web-mainthread-apis@0.19.2
+  - @lynx-js/web-worker-rpc@0.19.2
+
+## 0.19.1
+
+### Patch Changes
+
+- Updated dependencies [[`f7256d5`](https://github.com/lynx-family/lynx-stack/commit/f7256d5bd920b2f6c0cadab44455585c35621b35)]:
+  - @lynx-js/web-mainthread-apis@0.19.1
+  - @lynx-js/web-constants@0.19.1
+  - @lynx-js/web-worker-rpc@0.19.1
+
+## 0.19.0
+
+### Patch Changes
+
+- Updated dependencies [[`40c3a1a`](https://github.com/lynx-family/lynx-stack/commit/40c3a1a0436701e46b505301c4ba66a8f68de7c0), [`46bd5ee`](https://github.com/lynx-family/lynx-stack/commit/46bd5eea324d0c8348f44b3d0b437e745411ab5c)]:
+  - @lynx-js/web-mainthread-apis@0.19.0
+  - @lynx-js/web-constants@0.19.0
+  - @lynx-js/web-worker-rpc@0.19.0
+
+## 0.18.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.18.4
+  - @lynx-js/web-mainthread-apis@0.18.4
+  - @lynx-js/web-worker-rpc@0.18.4
+
 ## 0.18.3
 
 ### Patch Changes

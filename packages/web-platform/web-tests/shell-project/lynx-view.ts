@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { LynxView } from '@lynx-js/web-core';
-import '@lynx-js/web-elements-compat/LinearContainer';
 import '@lynx-js/web-core';
 import '@lynx-js/web-elements/all';
 import '@lynx-js/web-elements/index.css';

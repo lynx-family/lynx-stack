@@ -10,7 +10,6 @@ import {
   type MainThreadGlobalThis,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
-import { prepareMainThreadAPIs } from '@lynx-js/web-mainthread-apis';
 import { loadTemplate } from './utils/loadTemplate.js';
 import {
   _attributes,
@@ -31,7 +30,7 @@ import {
   templateInlineImage,
   templateXTextarea,
   templateXViewpageNg,
-} from '@lynx-js/web-elements-template';
+} from '@lynx-js/web-elements/html-templates';
 import { dumpHTMLString } from './dumpHTMLString.js';
 import vm from 'node:vm';
 import fs from 'node:fs';
@@ -164,6 +163,9 @@ export async function createLynxView(
       });
     });
   };
+  const { prepareMainThreadAPIs } = await import(
+    '@lynx-js/web-mainthread-apis'
+  );
   const { startMainThread } = prepareMainThreadAPIs(
     backgroundThreadRpc,
     offscreenDocument,
@@ -203,6 +205,7 @@ export async function createLynxView(
         ]);
       },
     },
+    threadStrategy === 'all-on-ui',
   );
   await startMainThread({
     template,

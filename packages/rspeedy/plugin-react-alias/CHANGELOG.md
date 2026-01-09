@@ -1,5 +1,30 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.12.4
+
+## 0.12.3
+
+## 0.12.2
+
+## 0.12.1
+
+## 0.12.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Use resolver from Rspack. ([#1964](https://github.com/lynx-family/lynx-stack/pull/1964))
+
+  The `createLazyResolver` now requires an `rspack` parameter:
+
+  ```diff
+  - function createLazyResolver(directory: string, conditionNames: string[]): (request: string) => Promise<string>;
+  + function createLazyResolver(rspack: rspack, directory: string, conditionNames: string[]): (request: string) => Promise<string>;
+  ```
+
+### Patch Changes
+
+- Support Yarn Plug'n'Play. ([#1964](https://github.com/lynx-family/lynx-stack/pull/1964))
+
 ## 0.11.4
 
 ## 0.11.3

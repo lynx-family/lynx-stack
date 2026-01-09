@@ -135,6 +135,32 @@ export const snapshotInstanceManager: {
   },
 };
 
+export let snapshotCreatorMap: Record<string, (uniqId: string) => string> = {};
+
+if (__DEV__ && __JS__) {
+  snapshotCreatorMap = new Proxy(snapshotCreatorMap, {
+    set(target, prop: string, value: (uniqId: string) => string) {
+      if (
+        // `__globalSnapshotPatch` does not exist before hydration,
+        // so the snapshot of the first screen will not be sent to the main thread.
+        __globalSnapshotPatch
+        // `prop` will be `https://example.com/main.lynx.bundle:__snapshot_835da_eff1e_1` when loading a standalone lazy bundle after hydration.
+        && !prop.includes(':')
+      ) {
+        __globalSnapshotPatch.push(
+          SnapshotOperation.DEV_ONLY_AddSnapshot,
+          prop,
+          // We use `Function.prototype.toString` to serialize the `() => createSnapshot()` function for main thread.
+          // This allows the updates to be applied to main thread.
+          value.toString(),
+        );
+      }
+      target[prop] = value;
+      return true;
+    },
+  });
+}
+
 export const backgroundSnapshotInstanceManager: {
   nextId: number;
   values: Map<number, BackgroundSnapshotInstance>;
@@ -205,34 +231,11 @@ export function createSnapshot(
   cssId: number | undefined,
   entryName: string | undefined,
   refAndSpreadIndexes: number[] | null,
+  isLazySnapshotSupported: boolean = false,
 ): string {
-  if (
-    __DEV__ && __JS__
-    // `__globalSnapshotPatch` does not exist before hydration,
-    // so the snapshot of the first screen will not be sent to the main thread.
-    && __globalSnapshotPatch
-    && !snapshotManager.values.has(entryUniqID(uniqID, entryName))
-    // `create` may be `null` when loading a lazy bundle after hydration.
-    && create !== null
-  ) {
-    // We only update the lepus snapshot if the `uniqID` is different.
-    // This means that `uniqID` is considered the "hash" of the snapshot.
-    // When HMR (Hot Module Replacement) or fast refresh updates occur, `createSnapshot` will be re-executed with the new snapshot definition.
-    __globalSnapshotPatch.push(
-      SnapshotOperation.DEV_ONLY_AddSnapshot,
-      uniqID,
-      // We use `Function.prototype.toString` to serialize the `create` and `update` functions for Lepus.
-      // This allows the updates to be applied to Lepus.
-      // As a result, both the static part (`create`) and the dynamic parts (`update` and `slot`) can be updated.
-      create.toString(),
-      update?.map(f => f.toString()) ?? [],
-      slot,
-      cssId,
-      entryName,
-    );
+  if (!isLazySnapshotSupported) {
+    uniqID = entryUniqID(uniqID, entryName);
   }
-
-  uniqID = entryUniqID(uniqID, entryName);
 
   const s: Snapshot = { create, update, slot, cssId, entryName, refAndSpreadIndexes };
   snapshotManager.values.set(uniqID, s);
@@ -287,11 +290,20 @@ export class SnapshotInstance {
   __extraProps?: Record<string, unknown> | undefined;
 
   constructor(public type: string, id?: number) {
-    this.__snapshot_def = snapshotManager.values.get(type)!;
     // Suspense uses 'div'
-    if (!this.__snapshot_def && type !== 'div') {
-      throw new Error('Snapshot not found: ' + type);
+    if (!snapshotManager.values.has(type) && type !== 'div') {
+      if (snapshotCreatorMap[type]) {
+        snapshotCreatorMap[type](type);
+      } else {
+        let message = 'Snapshot not found: ' + type;
+        if (__DEV__) {
+          message +=
+            '. You can set environment variable `REACT_ALOG=true` and restart your dev server for troubleshooting.';
+        }
+        throw new Error(message);
+      }
     }
+    this.__snapshot_def = snapshotManager.values.get(type)!;
 
     id ??= snapshotInstanceManager.nextId -= 1;
     this.__id = id;
@@ -335,6 +347,13 @@ export class SnapshotInstance {
       // In nested list scenarios, there are some `list` that are lazily created.
       // We need to `flush` them during `ensureElements`.
       // Also, `flush` is a safe operation since it checks if the `list` is in `__pendingListUpdates`.
+      if (__pendingListUpdates.values && !__pendingListUpdates.values[this.__id] && this.__firstChild !== null) {
+        let child: SnapshotInstance | null = this.__firstChild;
+        while (child) {
+          (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(this)).onInsertBefore(child);
+          child = child.__nextSibling;
+        }
+      }
       __pendingListUpdates.flushWithId(this.__id);
     } else {
       let index = 0;
@@ -597,12 +616,12 @@ export class SnapshotInstance {
       __RemoveElement(this.__elements[elementIndex]!, child.__element_root!);
     }
 
-    if (child.__snapshot_def.isListHolder) {
-      snapshotDestroyList(child);
-    }
-
     this.__removeChild(child);
     traverseSnapshotInstance(child, v => {
+      if (v.__snapshot_def.isListHolder) {
+        snapshotDestroyList(v);
+      }
+
       v.__parent = null;
       v.__previousSibling = null;
       v.__nextSibling = null;

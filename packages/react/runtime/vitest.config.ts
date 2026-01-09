@@ -36,6 +36,7 @@ function transformReactLynxPlugin(): Plugin {
           filename: 'test',
           target: 'MIXED',
         },
+        dynamicImport: false,
         // snapshot: true,
         directiveDCE: false,
         defineDCE: false,

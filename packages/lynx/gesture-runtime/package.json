@@ -1,0 +1,43 @@
+{
+  "name": "@lynx-js/gesture-runtime",
+  "version": "2.1.1",
+  "description": "Lynx Gesture",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/lynx/gesture-runtime"
+  },
+  "license": "Apache-2.0",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "CHANGELOG.md",
+    "README.md",
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/types": "3.6.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "rsbuild-plugin-publint": "0.3.3"
+  },
+  "peerDependencies": {
+    "@lynx-js/react": "*",
+    "@lynx-js/types": "*"
+  }
+}

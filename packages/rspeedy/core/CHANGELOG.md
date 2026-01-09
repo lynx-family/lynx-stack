@@ -1,5 +1,57 @@
 # @lynx-js/rspeedy
 
+## 0.12.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.4
+
+## 0.12.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.3
+
+## 0.12.3
+
+### Patch Changes
+
+- Support environment variants to enable multiple configurations for the same targets. ([#1969](https://github.com/lynx-family/lynx-stack/pull/1969))
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.2
+
+## 0.12.2
+
+### Patch Changes
+
+- Bump Rsbuild v1.6.13 with Rspack v1.6.6. ([#1995](https://github.com/lynx-family/lynx-stack/pull/1995))
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.1
+
+## 0.12.1
+
+### Patch Changes
+
+- Bump Rsbuild v1.6.9 with Rspack v1.6.5. ([#1967](https://github.com/lynx-family/lynx-stack/pull/1967))
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.0
+
+## 0.12.0
+
+### Minor Changes
+
+- Bump Rsbuild v1.6.7 with Rspack v1.6.4. ([#1905](https://github.com/lynx-family/lynx-stack/pull/1905))
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.18.4
+
 ## 0.11.9
 
 ### Patch Changes

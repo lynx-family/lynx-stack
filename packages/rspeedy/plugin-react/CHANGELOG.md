@@ -1,5 +1,72 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.12.4
+
+### Patch Changes
+
+- ([#2051](https://github.com/lynx-family/lynx-stack/pull/2051))
+
+- Updated dependencies []:
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.4
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/react-webpack-plugin@0.7.3
+
+## 0.12.3
+
+### Patch Changes
+
+- expose LAYERS via `api.expose` for other rsbuild plugins. ([#2006](https://github.com/lynx-family/lynx-stack/pull/2006))
+
+- Updated dependencies [[`cd89bf9`](https://github.com/lynx-family/lynx-stack/commit/cd89bf9e3fc8ed4658dfb6c983584376416d620f)]:
+  - @lynx-js/template-webpack-plugin@0.10.1
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.3
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/react-webpack-plugin@0.7.3
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+
+## 0.12.2
+
+### Patch Changes
+
+- Support environment variants to enable multiple configurations for the same targets. ([#1969](https://github.com/lynx-family/lynx-stack/pull/1969))
+
+- Updated dependencies []:
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.2
+
+## 0.12.1
+
+### Patch Changes
+
+- Avoid injecting hot update runtime when dev.hmr or dev.liveReload is set to false. ([#1980](https://github.com/lynx-family/lynx-stack/pull/1980))
+
+- Updated dependencies [[`553ece1`](https://github.com/lynx-family/lynx-stack/commit/553ece1e025b1f4feae353310c21b2e159f1f03a), [`8cdb69d`](https://github.com/lynx-family/lynx-stack/commit/8cdb69d4b2cc3e9925a2494ee8a889d7af17e2e9), [`8cdb69d`](https://github.com/lynx-family/lynx-stack/commit/8cdb69d4b2cc3e9925a2494ee8a889d7af17e2e9)]:
+  - @lynx-js/react-webpack-plugin@0.7.3
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+  - @lynx-js/template-webpack-plugin@0.10.0
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.1
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+
+## 0.12.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Require `@lynx-js/rspeedy` 0.12.0. ([#1951](https://github.com/lynx-family/lynx-stack/pull/1951))
+
+### Patch Changes
+
+- Support Yarn Plug'n'Play. ([#1964](https://github.com/lynx-family/lynx-stack/pull/1964))
+
+- Updated dependencies [[`738d44d`](https://github.com/lynx-family/lynx-stack/commit/738d44d685870d7c3f64a1be7139e8d7af498feb), [`5bbb439`](https://github.com/lynx-family/lynx-stack/commit/5bbb43981580f917f59819cd4ff7972b9737a341), [`3692a16`](https://github.com/lynx-family/lynx-stack/commit/3692a169ae443124de0e9f7a288318f5dfba13b0), [`d2e290b`](https://github.com/lynx-family/lynx-stack/commit/d2e290b67971ead5bedbcc1e34dd7f3bf4a6f5f3), [`738d44d`](https://github.com/lynx-family/lynx-stack/commit/738d44d685870d7c3f64a1be7139e8d7af498feb)]:
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.0
+  - @lynx-js/css-extract-webpack-plugin@0.6.5
+  - @lynx-js/template-webpack-plugin@0.9.2
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/react-webpack-plugin@0.7.2
+
 ## 0.11.4
 
 ### Patch Changes

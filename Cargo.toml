@@ -6,8 +6,8 @@ members = [
   "packages/react/transform/crates/*",
   "packages/react/transform/swc-plugin-reactlynx",
   "packages/react/transform/swc-plugin-reactlynx-compat",
-  "packages/web-platform/inline-style-parser",
-  "packages/web-platform/web-style-transformer",
+  "packages/web-platform/web-core-wasm",
+  "packages/web-platform/web-mainthread-apis",
 ]
 
 [workspace.dependencies]
@@ -30,7 +30,8 @@ sugar_path = "1.2.0"
 swc_core = "47.0.3"
 swc_sourcemap = "9.3.0"
 version-compare = "0.2.0"
-wasm-bindgen = "0.2.104"
+wasm-bindgen = "0.2.105"
+web-sys = "0.3.81"
 
 [profile.release]
 codegen-units = 1

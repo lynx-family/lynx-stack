@@ -64,6 +64,15 @@ const SIDEBARS = {
         'PluginQRCodeOptions',
       ],
     }),
+    createAPI({
+      name: 'external-bundle-rsbuild-plugin',
+    }),
+    createAPI({
+      name: 'lynx-bundle-rslib-config',
+    }),
+    createAPI({
+      name: 'config-rsbuild-plugin',
+    }),
   ],
   Webpack: [
     {
@@ -77,6 +86,7 @@ const SIDEBARS = {
     createAPI({ name: 'react-webpack-plugin' }),
     createAPI({ name: 'runtime-wrapper-webpack-plugin' }),
     createAPI({ name: 'template-webpack-plugin' }),
+    createAPI({ name: 'externals-loading-webpack-plugin' }),
     createAPI({ name: 'webpack-runtime-globals' }),
   ],
   Config: [
@@ -201,6 +211,18 @@ const SIDEBARS_ZH = {
         'PluginQRCodeOptions',
       ],
     }),
+    createAPI({
+      base: 'zh/api',
+      name: 'external-bundle-rsbuild-plugin',
+    }),
+    createAPI({
+      base: 'zh/api',
+      name: 'lynx-bundle-rslib-config',
+    }),
+    createAPI({
+      base: 'zh/api',
+      name: 'config-rsbuild-plugin',
+    }),
   ],
   Webpack: [
     {
@@ -214,6 +236,7 @@ const SIDEBARS_ZH = {
     createAPI({ base: 'zh/api', name: 'react-webpack-plugin' }),
     createAPI({ base: 'zh/api', name: 'runtime-wrapper-webpack-plugin' }),
     createAPI({ base: 'zh/api', name: 'template-webpack-plugin' }),
+    createAPI({ base: 'zh/api', name: 'externals-loading-webpack-plugin' }),
     createAPI({ base: 'zh/api', name: 'webpack-runtime-globals' }),
   ],
   Config: [

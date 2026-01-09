@@ -1,5 +1,23 @@
 # @lynx-js/web-explorer
 
+## 0.0.15
+
+### Patch Changes
+
+- fix: web-explorer needs to actively send an iframeReady message to the parent, the parent uses `iframe load` listener cannot guarantee that the `message-listener` will complete execution. ([#2001](https://github.com/lynx-family/lynx-stack/pull/2001))
+
+## 0.0.14
+
+### Patch Changes
+
+- chore: update web-elements version of web-explorer ([#1962](https://github.com/lynx-family/lynx-stack/pull/1962))
+
+## 0.0.13
+
+### Patch Changes
+
+- feat: builtinTagTransformMap add `'x-input-ng': 'x-input'` ([#1932](https://github.com/lynx-family/lynx-stack/pull/1932))
+
 ## 0.0.12
 
 ### Patch Changes

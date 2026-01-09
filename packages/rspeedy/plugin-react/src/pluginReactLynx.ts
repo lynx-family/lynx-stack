@@ -21,6 +21,7 @@ import type {
 } from '@lynx-js/react-transform'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 import type { ExposedAPI } from '@lynx-js/rspeedy'
+import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
 import { applyBackgroundOnly } from './backgroundOnly.js'
 import { applyCSS } from './css.js'
@@ -348,19 +349,7 @@ export function pluginReactLynx(
             })
           }
 
-          // This is used for compat with `@lynx-js/rspeedy` <= 0.9.6
-          // where the default value of `output.inlineScripts` is `false`.
-          // TODO: remove this when required Rspeedy version bumped to ^0.9.7
-          if (typeof userConfig.output?.inlineScripts === 'undefined') {
-            config = mergeRsbuildConfig(config, {
-              output: {
-                inlineScripts: true,
-              },
-            })
-          }
-
           // This is used to avoid the IIFE in main-thread.js, which would cause memory leak.
-          // TODO: remove this when required Rspeedy version bumped to ^0.10.0
           config = mergeRsbuildConfig({
             tools: {
               rspack: { output: { iife: false } },
@@ -379,6 +368,17 @@ export function pluginReactLynx(
         if (resolvedOptions.experimental_isLazyBundle) {
           applyLazy(api)
         }
+
+        api.expose(Symbol.for('LAYERS'), LAYERS)
+        // Only expose `LynxTemplatePlugin.getLynxTemplatePluginHooks` to avoid
+        // other breaking changes in `LynxTemplatePlugin`
+        // breaks `pluginReactLynx`
+        api.expose(Symbol.for('LynxTemplatePlugin'), {
+          LynxTemplatePlugin: {
+            getLynxTemplatePluginHooks: LynxTemplatePlugin
+              .getLynxTemplatePluginHooks.bind(LynxTemplatePlugin),
+          },
+        })
 
         const rspeedyAPIs = api.useExposed<ExposedAPI>(
           Symbol.for('rspeedy.api'),

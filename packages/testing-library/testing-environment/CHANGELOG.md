@@ -1,5 +1,11 @@
 # @lynx-js/testing-environment
 
+## 0.1.9
+
+### Patch Changes
+
+- Fix duplicated `<page />` elements on body when multiple `__CreatePage` called. ([#2065](https://github.com/lynx-family/lynx-stack/pull/2065))
+
 ## 0.1.8
 
 ### Patch Changes

@@ -52,7 +52,7 @@ describe('lynx global API', () => {
     const reportErrorCalls = lynxTestingEnv.backgroundThread.lynx.reportError.mock.calls;
 
     expect(() => render(<view />)).toThrowErrorMatchingInlineSnapshot(
-      `[Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null']`,
+      `[Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.]`,
     );
 
     const snapshotPatch = JSON.parse(callLepusMethodCalls[0][1]['data']).patchList[0].snapshotPatch;
@@ -62,7 +62,7 @@ describe('lynx global API', () => {
         {
           "id": 2,
           "op": "CreateElement",
-          "type": "__Card__:__snapshot_d4b6f_test_1",
+          "type": "__snapshot_d4b6f_test_1",
         },
         {
           "beforeId": null,

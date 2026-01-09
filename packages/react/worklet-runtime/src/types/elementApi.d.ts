@@ -17,6 +17,8 @@ declare function __GetAttributeNames(e: ElementNode): string[];
 
 declare function __GetPageElement(): ElementNode;
 
+declare function __GetComputedStyleByKey(e: ElementNode, key: string): string;
+
 declare function __InvokeUIMethod(
   e: ElementNode,
   method: string,

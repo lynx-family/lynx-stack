@@ -10,11 +10,19 @@ import { registerWorkletOnBackground } from '../src/internal';
 import { addCtxNotFoundEventListener } from '../src/lifecycle/patch/error';
 import {
   SnapshotOperation,
+  __globalSnapshotPatch,
+  deinitGlobalSnapshotPatch,
   initGlobalSnapshotPatch,
   takeGlobalSnapshotPatch,
 } from '../src/lifecycle/patch/snapshotPatch';
 import { snapshotPatchApply } from '../src/lifecycle/patch/snapshotPatchApply';
-import { SnapshotInstance, createSnapshot, snapshotInstanceManager, snapshotManager } from '../src/snapshot';
+import {
+  SnapshotInstance,
+  createSnapshot,
+  snapshotCreatorMap,
+  snapshotInstanceManager,
+  snapshotManager,
+} from '../src/snapshot';
 import { DynamicPartType } from '../src/snapshot/dynamicPartType';
 
 const HOLE = null;
@@ -24,6 +32,8 @@ beforeAll(() => {
   globalEnvManager.switchToBackground();
   addCtxNotFoundEventListener();
   globalEnvManager.switchToMainThread();
+  globalThis.createSnapshot = createSnapshot;
+  globalThis.DynamicPartType = DynamicPartType;
 });
 
 beforeEach(() => {
@@ -84,10 +94,10 @@ describe('createElement', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_1",
+        "__snapshot_a94a8_test_1",
         2,
         0,
-        "__Card__:__snapshot_a94a8_test_2",
+        "__snapshot_a94a8_test_2",
         3,
       ]
     `);
@@ -134,10 +144,10 @@ describe('insertBefore', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_1",
+        "__snapshot_a94a8_test_1",
         2,
         0,
-        "__Card__:__snapshot_a94a8_test_2",
+        "__snapshot_a94a8_test_2",
         3,
         1,
         2,
@@ -181,13 +191,13 @@ describe('insertBefore', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_1",
+        "__snapshot_a94a8_test_1",
         2,
         0,
-        "__Card__:__snapshot_a94a8_test_2",
+        "__snapshot_a94a8_test_2",
         3,
         0,
-        "__Card__:__snapshot_a94a8_test_3",
+        "__snapshot_a94a8_test_3",
         4,
         1,
         2,
@@ -254,10 +264,10 @@ describe('insertBefore', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_1",
+        "__snapshot_a94a8_test_1",
         2,
         0,
-        "__Card__:__snapshot_a94a8_test_2",
+        "__snapshot_a94a8_test_2",
         3,
         1,
         2,
@@ -279,19 +289,19 @@ describe('insertBefore', () => {
     expect(_ReportError.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
           {
             "errorCode": 1101,
           },
         ],
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
           {
             "errorCode": 1101,
           },
         ],
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: '__Card__:__snapshot_a94a8_test_3'],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: '__snapshot_a94a8_test_3'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
           {
             "errorCode": 1101,
           },
@@ -454,13 +464,13 @@ describe('removeChild', () => {
     expect(_ReportError.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'root'],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'root'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
           {
             "errorCode": 1101,
           },
         ],
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'root'],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'root'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
           {
             "errorCode": 1101,
           },
@@ -522,7 +532,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_4",
+        "__snapshot_a94a8_test_4",
         2,
         3,
         2,
@@ -558,7 +568,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_4",
+        "__snapshot_a94a8_test_4",
         2,
         4,
         2,
@@ -592,7 +602,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_4",
+        "__snapshot_a94a8_test_4",
         2,
         4,
         2,
@@ -628,7 +638,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_4",
+        "__snapshot_a94a8_test_4",
         2,
         4,
         100,
@@ -646,7 +656,7 @@ describe('setAttribute', () => {
     expect(_ReportError.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
           {
             "errorCode": 1101,
           },
@@ -674,7 +684,7 @@ describe('setAttribute', () => {
     expect(patch).toMatchInlineSnapshot(`
       [
         0,
-        "__Card__:__snapshot_a94a8_test_4",
+        "__snapshot_a94a8_test_4",
         2,
         3,
         3,
@@ -690,7 +700,7 @@ describe('setAttribute', () => {
 
     expect(_ReportError.mock.calls[0]).toMatchInlineSnapshot(`
       [
-        [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'],
+        [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
         {
           "errorCode": 1101,
         },
@@ -714,62 +724,81 @@ describe('DEV_ONLY_addSnapshot', () => {
   });
 
   it('basic', () => {
-    // We have to use `createSnapshot` so that is can be created after `initGlobalSnapshotPatch`
-    const uniqID1 = createSnapshot(
-      'basic-0',
-      // The `create` function is stringified and called by `new Function()`
-      /* v8 ignore start */
-      () => {
-        const pageId = 0;
-        const el = __CreateView(pageId);
-        const el1 = __CreateText(pageId);
-        __AppendElement(el, el1);
-        const el2 = __CreateRawText('Hello, ReactLynx x Fast Refresh');
-        __AppendElement(el1, el2);
-        return [
-          el,
-          el1,
-          el2,
-        ];
-      },
-      /* v8 ignore stop */
-      null,
-      null,
-    );
-
+    const uniqID1 = 'basic-0';
+    // We have to use `snapshotCreatorMap[uniqID1] =` so that it can be created after `initGlobalSnapshotPatch`
+    snapshotCreatorMap[uniqID1] = (uniqID1) => {
+      globalThis.createSnapshot(
+        uniqID1,
+        // The `create` function is stringified and called by `new Function()`
+        /* v8 ignore start */
+        () => {
+          const pageId = 0;
+          const el = __CreateView(pageId);
+          const el1 = __CreateText(pageId);
+          __AppendElement(el, el1);
+          const el2 = __CreateRawText('Hello, ReactLynx x Fast Refresh');
+          __AppendElement(el1, el2);
+          return [
+            el,
+            el1,
+            el2,
+          ];
+        },
+        /* v8 ignore stop */
+        null,
+        null,
+        undefined,
+        undefined,
+        null,
+        true,
+      );
+    };
     const patch = takeGlobalSnapshotPatch();
 
     expect(patch).toMatchInlineSnapshot(`
       [
         100,
         "basic-0",
-        "() => {
-              const pageId = 0;
-              const el = __CreateView(pageId);
-              const el1 = __CreateText(pageId);
-              __AppendElement(el, el1);
-              const el2 = __CreateRawText("Hello, ReactLynx x Fast Refresh");
-              __AppendElement(el1, el2);
-              return [
-                el,
-                el1,
-                el2
-              ];
-            }",
-        [],
-        null,
-        undefined,
-        undefined,
+        "(uniqID12) => {
+            globalThis.createSnapshot(
+              uniqID12,
+              // The \`create\` function is stringified and called by \`new Function()\`
+              /* v8 ignore start */
+              () => {
+                const pageId = 0;
+                const el = __CreateView(pageId);
+                const el1 = __CreateText(pageId);
+                __AppendElement(el, el1);
+                const el2 = __CreateRawText("Hello, ReactLynx x Fast Refresh");
+                __AppendElement(el1, el2);
+                return [
+                  el,
+                  el1,
+                  el2
+                ];
+              },
+              /* v8 ignore stop */
+              null,
+              null,
+              void 0,
+              void 0,
+              null,
+              true
+            );
+          }",
       ]
     `);
 
+    new SnapshotInstance(uniqID1);
     const originalSize = snapshotManager.values.size;
 
     // Remove the old definition
     snapshotManager.values.delete(uniqID1);
+    delete snapshotCreatorMap[uniqID1];
 
     // Apply patches in main thread
     snapshotPatchApply(patch);
+    new SnapshotInstance(uniqID1);
 
     expect(snapshotManager.values.size).toBe(originalSize);
     expect(snapshotManager.values.has(uniqID1)).toBeTruthy();
@@ -778,33 +807,40 @@ describe('DEV_ONLY_addSnapshot', () => {
     const si = new SnapshotInstance(uniqID1);
     expect(si.ensureElements());
     expect(si.__element_root).not.toBeUndefined();
-    expect(snapshot).toHaveProperty('update', expect.any(Array));
+    expect(snapshot).toHaveProperty('update', null);
     expect(snapshot).toHaveProperty('slot', null);
   });
 
   it('with update', () => {
-    // We have to use `createSnapshot` so that is can be created after `initGlobalSnapshotPatch`
-    const uniqID1 = createSnapshot(
-      'with-update-0',
-      // The `create` and `update` functions are stringified and called by `new Function()`
-      /* v8 ignore start */
-      function() {
-        const pageId = 0;
-        const el = __CreateImage(pageId);
-        return [
-          el,
-        ];
-      },
-      [
-        function(ctx) {
-          if (ctx.__elements) {
-            __SetAttribute(ctx.__elements[0], 'src', ctx.__values[0]);
-          }
+    const uniqID1 = 'with-update-0';
+    // We have to use `snapshotCreatorMap[uniqID1] =` so that it can be created after `initGlobalSnapshotPatch`
+    snapshotCreatorMap[uniqID1] = (uniqID1) => {
+      globalThis.createSnapshot(
+        uniqID1,
+        // The `create` and `update` functions are stringified and called by `new Function()`
+        /* v8 ignore start */
+        function() {
+          const pageId = 0;
+          const el = __CreateImage(pageId);
+          return [
+            el,
+          ];
         },
-      ],
-      /* v8 ignore stop */
-      null,
-    );
+        [
+          function(ctx) {
+            if (ctx.__elements) {
+              __SetAttribute(ctx.__elements[0], 'src', ctx.__values[0]);
+            }
+          },
+        ],
+        /* v8 ignore stop */
+        null,
+        undefined,
+        undefined,
+        null,
+        true,
+      );
+    };
 
     const patch = takeGlobalSnapshotPatch();
 
@@ -812,31 +848,44 @@ describe('DEV_ONLY_addSnapshot', () => {
       [
         100,
         "with-update-0",
-        "function() {
-              const pageId = 0;
-              const el = __CreateImage(pageId);
-              return [
-                el
-              ];
-            }",
-        [
-          "function(ctx) {
-                if (ctx.__elements) __SetAttribute(ctx.__elements[0], "src", ctx.__values[0]);
-              }",
-        ],
-        null,
-        undefined,
-        undefined,
+        "(uniqID12) => {
+            globalThis.createSnapshot(
+              uniqID12,
+              // The \`create\` and \`update\` functions are stringified and called by \`new Function()\`
+              /* v8 ignore start */
+              function() {
+                const pageId = 0;
+                const el = __CreateImage(pageId);
+                return [
+                  el
+                ];
+              },
+              [
+                function(ctx) {
+                  if (ctx.__elements) __SetAttribute(ctx.__elements[0], "src", ctx.__values[0]);
+                }
+              ],
+              /* v8 ignore stop */
+              null,
+              void 0,
+              void 0,
+              null,
+              true
+            );
+          }",
       ]
     `);
 
+    new SnapshotInstance(uniqID1);
     const originalSize = snapshotManager.values.size;
 
     // Remove the old definition
     snapshotManager.values.delete(uniqID1);
+    delete snapshotCreatorMap[uniqID1];
 
     // Apply patches in main thread
     snapshotPatchApply(patch);
+    new SnapshotInstance(uniqID1);
 
     expect(snapshotManager.values.size).toBe(originalSize);
     expect(snapshotManager.values.has(uniqID1)).toBeTruthy();
@@ -852,28 +901,35 @@ describe('DEV_ONLY_addSnapshot', () => {
   });
 
   it('with slot', () => {
-    const uniqID1 = createSnapshot(
-      'with-slot-0',
-      // The `create` and `update` functions are stringified and called by `new Function()`
-      /* v8 ignore start */
-      function() {
-        const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId);
-        __SetClasses(el, 'Logo');
-        return [
-          el,
-        ];
-      },
-      [
-        function(ctx) {
-          if (ctx.__elements) {
-            __AddEvent(ctx.__elements[0], 'bindEvent', 'tap', `${ctx.__id}:${0}:`);
-          }
+    const uniqID1 = 'with-slot-0';
+    snapshotCreatorMap[uniqID1] = (uniqID1) => {
+      globalThis.createSnapshot(
+        uniqID1,
+        // The `create` and `update` functions are stringified and called by `new Function()`
+        /* v8 ignore start */
+        function() {
+          const pageId = ReactLynx.__pageId;
+          const el = __CreateView(pageId);
+          __SetClasses(el, 'Logo');
+          return [
+            el,
+          ];
         },
-      ],
-      /* v8 ignore stop */
-      [DynamicPartType.Children, 0],
-    );
+        [
+          function(ctx) {
+            if (ctx.__elements) {
+              __AddEvent(ctx.__elements[0], 'bindEvent', 'tap', `${ctx.__id}:${0}:`);
+            }
+          },
+        ],
+        /* v8 ignore stop */
+        [globalThis.DynamicPartType.Children, 0],
+        undefined,
+        undefined,
+        null,
+        true,
+      );
+    };
 
     const patch = takeGlobalSnapshotPatch();
 
@@ -881,35 +937,48 @@ describe('DEV_ONLY_addSnapshot', () => {
       [
         100,
         "with-slot-0",
-        "function() {
-              const pageId = ReactLynx.__pageId;
-              const el = __CreateView(pageId);
-              __SetClasses(el, "Logo");
-              return [
-                el
-              ];
-            }",
-        [
-          "function(ctx) {
-                if (ctx.__elements) __AddEvent(ctx.__elements[0], "bindEvent", "tap", \`\${ctx.__id}:\${0}:\`);
-              }",
-        ],
-        [
-          3,
-          0,
-        ],
-        undefined,
-        undefined,
+        "(uniqID12) => {
+            globalThis.createSnapshot(
+              uniqID12,
+              // The \`create\` and \`update\` functions are stringified and called by \`new Function()\`
+              /* v8 ignore start */
+              function() {
+                const pageId = ReactLynx.__pageId;
+                const el = __CreateView(pageId);
+                __SetClasses(el, "Logo");
+                return [
+                  el
+                ];
+              },
+              [
+                function(ctx) {
+                  if (ctx.__elements) __AddEvent(ctx.__elements[0], "bindEvent", "tap", \`\${ctx.__id}:\${0}:\`);
+                }
+              ],
+              /* v8 ignore stop */
+              [
+                globalThis.DynamicPartType.Children,
+                0
+              ],
+              void 0,
+              void 0,
+              null,
+              true
+            );
+          }",
       ]
     `);
 
+    new SnapshotInstance(uniqID1);
     const originalSize = snapshotManager.values.size;
 
     // Remove the old definition
     snapshotManager.values.delete(uniqID1);
+    delete snapshotCreatorMap[uniqID1];
 
     // Apply patches in main thread
     snapshotPatchApply(patch);
+    new SnapshotInstance(uniqID1);
 
     expect(snapshotManager.values.size).toBe(originalSize);
     expect(snapshotManager.values.has(uniqID1)).toBeTruthy();
@@ -921,28 +990,35 @@ describe('DEV_ONLY_addSnapshot', () => {
   });
 
   it('with list', () => {
-    const uniqID1 = createSnapshot(
-      'with-list-0',
-      // The `create` and `update` functions are stringified and called by `new Function()`
-      /* v8 ignore start */
-      function() {
-        const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId);
-        __SetClasses(el, 'Logo');
-        return [
-          el,
-        ];
-      },
-      [
-        function(ctx) {
-          if (ctx.__elements) {
-            __AddEvent(ctx.__elements[0], 'bindEvent', 'tap', `${ctx.__id}:${0}:`);
-          }
+    const uniqID1 = 'with-list-0';
+    snapshotCreatorMap[uniqID1] = (uniqID1) => {
+      globalThis.createSnapshot(
+        uniqID1,
+        // The `create` and `update` functions are stringified and called by `new Function()`
+        /* v8 ignore start */
+        function() {
+          const pageId = ReactLynx.__pageId;
+          const el = __CreateView(pageId);
+          __SetClasses(el, 'Logo');
+          return [
+            el,
+          ];
         },
-      ],
-      /* v8 ignore stop */
-      [[DynamicPartType.ListChildren]],
-    );
+        [
+          function(ctx) {
+            if (ctx.__elements) {
+              __AddEvent(ctx.__elements[0], 'bindEvent', 'tap', `${ctx.__id}:${0}:`);
+            }
+          },
+        ],
+        /* v8 ignore stop */
+        [[globalThis.DynamicPartType.ListChildren]],
+        undefined,
+        undefined,
+        null,
+        true,
+      );
+    };
 
     const patch = takeGlobalSnapshotPatch();
 
@@ -950,36 +1026,49 @@ describe('DEV_ONLY_addSnapshot', () => {
       [
         100,
         "with-list-0",
-        "function() {
-              const pageId = ReactLynx.__pageId;
-              const el = __CreateView(pageId);
-              __SetClasses(el, "Logo");
-              return [
-                el
-              ];
-            }",
-        [
-          "function(ctx) {
-                if (ctx.__elements) __AddEvent(ctx.__elements[0], "bindEvent", "tap", \`\${ctx.__id}:\${0}:\`);
-              }",
-        ],
-        [
-          [
-            4,
-          ],
-        ],
-        undefined,
-        undefined,
+        "(uniqID12) => {
+            globalThis.createSnapshot(
+              uniqID12,
+              // The \`create\` and \`update\` functions are stringified and called by \`new Function()\`
+              /* v8 ignore start */
+              function() {
+                const pageId = ReactLynx.__pageId;
+                const el = __CreateView(pageId);
+                __SetClasses(el, "Logo");
+                return [
+                  el
+                ];
+              },
+              [
+                function(ctx) {
+                  if (ctx.__elements) __AddEvent(ctx.__elements[0], "bindEvent", "tap", \`\${ctx.__id}:\${0}:\`);
+                }
+              ],
+              /* v8 ignore stop */
+              [
+                [
+                  globalThis.DynamicPartType.ListChildren
+                ]
+              ],
+              void 0,
+              void 0,
+              null,
+              true
+            );
+          }",
       ]
     `);
 
+    new SnapshotInstance(uniqID1);
     const originalSize = snapshotManager.values.size;
 
     // Remove the old definition
     snapshotManager.values.delete(uniqID1);
+    delete snapshotCreatorMap[uniqID1];
 
     // Apply patches in main thread
     snapshotPatchApply(patch);
+    new SnapshotInstance(uniqID1);
 
     expect(snapshotManager.values.size).toBe(originalSize);
     expect(snapshotManager.values.has(uniqID1)).toBeTruthy();
@@ -992,29 +1081,35 @@ describe('DEV_ONLY_addSnapshot', () => {
   });
 
   it('with cssId', () => {
-    // We have to use `createSnapshot` so that is can be created after `initGlobalSnapshotPatch`
-    const uniqID1 = createSnapshot(
-      'with-cssId-0',
-      // The `create` function is stringified and called by `new Function()`
-      /* v8 ignore start */
-      () => {
-        const pageId = 0;
-        const el = __CreateView(pageId);
-        const el1 = __CreateText(pageId);
-        __AppendElement(el, el1);
-        const el2 = __CreateRawText('Hello, ReactLynx x Fast Refresh');
-        __AppendElement(el1, el2);
-        return [
-          el,
-          el1,
-          el2,
-        ];
-      },
-      /* v8 ignore stop */
-      null,
-      null,
-      1000,
-    );
+    const uniqID1 = 'with-cssId-0';
+    // We have to use `snapshotCreatorMap[uniqID1] =` so that it can be created after `initGlobalSnapshotPatch`
+    snapshotCreatorMap[uniqID1] = (uniqID1) => {
+      globalThis.createSnapshot(
+        uniqID1,
+        // The `create` function is stringified and called by `new Function()`
+        /* v8 ignore start */
+        () => {
+          const pageId = 0;
+          const el = __CreateView(pageId);
+          const el1 = __CreateText(pageId);
+          __AppendElement(el, el1);
+          const el2 = __CreateRawText('Hello, ReactLynx x Fast Refresh');
+          __AppendElement(el1, el2);
+          return [
+            el,
+            el1,
+            el2,
+          ];
+        },
+        /* v8 ignore stop */
+        null,
+        null,
+        1000,
+        undefined,
+        null,
+        true,
+      );
+    };
 
     const patch = takeGlobalSnapshotPatch();
 
@@ -1022,35 +1117,48 @@ describe('DEV_ONLY_addSnapshot', () => {
       [
         100,
         "with-cssId-0",
-        "() => {
-              const pageId = 0;
-              const el = __CreateView(pageId);
-              const el1 = __CreateText(pageId);
-              __AppendElement(el, el1);
-              const el2 = __CreateRawText("Hello, ReactLynx x Fast Refresh");
-              __AppendElement(el1, el2);
-              return [
-                el,
-                el1,
-                el2
-              ];
-            }",
-        [],
-        null,
-        1000,
-        undefined,
+        "(uniqID12) => {
+            globalThis.createSnapshot(
+              uniqID12,
+              // The \`create\` function is stringified and called by \`new Function()\`
+              /* v8 ignore start */
+              () => {
+                const pageId = 0;
+                const el = __CreateView(pageId);
+                const el1 = __CreateText(pageId);
+                __AppendElement(el, el1);
+                const el2 = __CreateRawText("Hello, ReactLynx x Fast Refresh");
+                __AppendElement(el1, el2);
+                return [
+                  el,
+                  el1,
+                  el2
+                ];
+              },
+              /* v8 ignore stop */
+              null,
+              null,
+              1e3,
+              void 0,
+              null,
+              true
+            );
+          }",
       ]
     `);
 
+    new SnapshotInstance(uniqID1);
     const originalSize = snapshotManager.values.size;
 
     // Remove the old definition
     snapshotManager.values.delete(uniqID1);
+    delete snapshotCreatorMap[uniqID1];
 
     const fn = vi.fn();
     vi.stubGlobal('__SetCSSId', fn);
     // Apply patches in main thread
     snapshotPatchApply(patch);
+    new SnapshotInstance(uniqID1);
 
     expect(snapshotManager.values.size).toBe(originalSize);
     expect(snapshotManager.values.has(uniqID1)).toBeTruthy();
@@ -1066,71 +1174,52 @@ describe('DEV_ONLY_addSnapshot', () => {
   });
 
   it('with cssId and entryName', () => {
-    const entryName = 'FOO';
-    // We have to use `createSnapshot` so that is can be created after `initGlobalSnapshotPatch`
-    const uniqID1 = createSnapshot(
-      'with-cssId-entryName-0',
-      // The `create` function is stringified and called by `new Function()`
-      /* v8 ignore start */
-      () => {
-        const pageId = 0;
-        const el = __CreateView(pageId);
-        const el1 = __CreateText(pageId);
-        __AppendElement(el, el1);
-        const el2 = __CreateRawText('Hello, ReactLynx x Fast Refresh');
-        __AppendElement(el1, el2);
-        return [
-          el,
-          el1,
-          el2,
-        ];
-      },
-      /* v8 ignore stop */
-      null,
-      null,
-      1000,
-      entryName,
-    );
+    globalThis.entryName = 'FOO';
+    const uniqID1 = `${entryName}:with-cssId-entryName-0`;
+    // We have to use `snapshotCreatorMap[uniqID1] =` so that it can be created after `initGlobalSnapshotPatch`
+    snapshotCreatorMap[uniqID1] = (uniqID1) => {
+      globalThis.createSnapshot(
+        uniqID1,
+        // The `create` function is stringified and called by `new Function()`
+        /* v8 ignore start */
+        () => {
+          const pageId = 0;
+          const el = __CreateView(pageId);
+          const el1 = __CreateText(pageId);
+          __AppendElement(el, el1);
+          const el2 = __CreateRawText('Hello, ReactLynx x Fast Refresh');
+          __AppendElement(el1, el2);
+          return [
+            el,
+            el1,
+            el2,
+          ];
+        },
+        /* v8 ignore stop */
+        null,
+        null,
+        1000,
+        entryName,
+        null,
+        true,
+      );
+    };
 
     expect(uniqID1.startsWith(entryName)).toBeTruthy();
 
     const patch = takeGlobalSnapshotPatch();
 
-    expect(patch).toMatchInlineSnapshot(`
-      [
-        100,
-        "with-cssId-entryName-0",
-        "() => {
-              const pageId = 0;
-              const el = __CreateView(pageId);
-              const el1 = __CreateText(pageId);
-              __AppendElement(el, el1);
-              const el2 = __CreateRawText("Hello, ReactLynx x Fast Refresh");
-              __AppendElement(el1, el2);
-              return [
-                el,
-                el1,
-                el2
-              ];
-            }",
-        [],
-        null,
-        1000,
-        "FOO",
-      ]
-    `);
+    // it is expected that the patch is empty
+    // since only standalone lazy bundle will has entryName
+    // we should not generate `DEV_ONLY_AddSnapshot`
+    // when loading a lazy bundle after hydration
+    expect(patch).toMatchInlineSnapshot(`[]`);
 
     const originalSize = snapshotManager.values.size;
-
-    // Remove the old definition
-    snapshotManager.values.delete(uniqID1);
-
     const fn = vi.fn();
     vi.stubGlobal('__SetCSSId', fn);
-    // Apply patches in main thread
-    snapshotPatchApply(patch);
-
-    expect(snapshotManager.values.size).toBe(originalSize);
+    new SnapshotInstance(uniqID1);
+    expect(snapshotManager.values.size).toBe(originalSize + 1);
     expect(snapshotManager.values.has(uniqID1)).toBeTruthy();
     const snapshot = snapshotManager.values.get(uniqID1);
     expect(snapshot).toHaveProperty('create', expect.any(Function));
@@ -1145,77 +1234,58 @@ describe('DEV_ONLY_addSnapshot', () => {
   });
 
   it('with entryName only', () => {
-    const entryName = 'BAR';
-    // We have to use `createSnapshot` so that is can be created after `initGlobalSnapshotPatch`
-    const uniqID1 = createSnapshot(
-      'with-entryName-only-0',
-      // The `create` function is stringified and called by `new Function()`
-      /* v8 ignore start */
-      () => {
-        const pageId = 0;
-        const el = __CreateView(pageId);
-        const el1 = __CreateText(pageId);
-        __AppendElement(el, el1);
-        const el2 = __CreateRawText('Hello, ReactLynx x Fast Refresh');
-        __AppendElement(el1, el2);
-        return [
-          el,
-          el1,
-          el2,
-        ];
-      },
-      /* v8 ignore stop */
-      null,
-      null,
-      undefined,
-      entryName,
-    );
+    globalThis.entryName = 'BAR';
+    const uniqID1 = `${entryName}:with-entryName-only-0`;
+    // We have to use `snapshotCreatorMap[uniqID1] =` so that it can be created after `initGlobalSnapshotPatch`
+    snapshotCreatorMap[uniqID1] = (uniqID1) => {
+      globalThis.createSnapshot(
+        uniqID1,
+        // The `create` function is stringified and called by `new Function()`
+        /* v8 ignore start */
+        () => {
+          const pageId = 0;
+          const el = __CreateView(pageId);
+          const el1 = __CreateText(pageId);
+          __AppendElement(el, el1);
+          const el2 = __CreateRawText('Hello, ReactLynx x Fast Refresh');
+          __AppendElement(el1, el2);
+          return [
+            el,
+            el1,
+            el2,
+          ];
+        },
+        /* v8 ignore stop */
+        null,
+        null,
+        undefined,
+        entryName,
+        null,
+        true,
+      );
+    };
     expect(uniqID1.startsWith(entryName)).toBeTruthy();
 
     const patch = takeGlobalSnapshotPatch();
 
-    expect(patch).toMatchInlineSnapshot(`
-      [
-        100,
-        "with-entryName-only-0",
-        "() => {
-              const pageId = 0;
-              const el = __CreateView(pageId);
-              const el1 = __CreateText(pageId);
-              __AppendElement(el, el1);
-              const el2 = __CreateRawText("Hello, ReactLynx x Fast Refresh");
-              __AppendElement(el1, el2);
-              return [
-                el,
-                el1,
-                el2
-              ];
-            }",
-        [],
-        null,
-        undefined,
-        "BAR",
-      ]
-    `);
+    // it is expected that the patch is empty
+    // since only standalone lazy bundle will has entryName
+    // we should not generate `DEV_ONLY_AddSnapshot`
+    // when loading a lazy bundle after hydration
+    expect(patch).toMatchInlineSnapshot(`[]`);
 
     const originalSize = snapshotManager.values.size;
-
-    // Remove the old definition
-    snapshotManager.values.delete(uniqID1);
-
     const fn = vi.fn();
     vi.stubGlobal('__SetCSSId', fn);
-    // Apply patches in main thread
-    snapshotPatchApply(patch);
-
-    expect(snapshotManager.values.size).toBe(originalSize);
+    new SnapshotInstance(uniqID1);
+    expect(snapshotManager.values.size).toBe(originalSize + 1);
     expect(snapshotManager.values.has(uniqID1)).toBeTruthy();
     const snapshot = snapshotManager.values.get(uniqID1);
     expect(snapshot).toHaveProperty('create', expect.any(Function));
     const si = new SnapshotInstance(uniqID1);
     si.ensureElements();
     expect(si.__element_root).not.toBeUndefined();
-    expect(snapshot).toHaveProperty('cssId', 0);
+    expect(snapshot).toHaveProperty('cssId', undefined);
     expect(snapshot).toHaveProperty('entryName', 'BAR');
     expect(fn).toBeCalledTimes(1);
     expect(fn).toBeCalledWith(si.__elements, 0, 'BAR');
@@ -1225,17 +1295,24 @@ describe('DEV_ONLY_addSnapshot', () => {
     const __webpack_require__ = vi.fn();
     vi.stubGlobal('__webpack_require__', __webpack_require__);
 
-    const uniqID1 = createSnapshot(
-      'with-__webpack_require__-0',
-      /* v8 ignore start */
-      () => {
-        __webpack_require__('foo');
-        return [__CreateView(0)];
-      },
-      /* v8 ignore stop */
-      null,
-      null,
-    );
+    const uniqID1 = 'with-__webpack_require__-0';
+    snapshotCreatorMap[uniqID1] = (uniqID1) => {
+      globalThis.createSnapshot(
+        uniqID1,
+        /* v8 ignore start */
+        () => {
+          __webpack_require__('foo');
+          return [__CreateView(0)];
+        },
+        /* v8 ignore stop */
+        null,
+        null,
+        undefined,
+        undefined,
+        null,
+        true,
+      );
+    };
 
     const patch = takeGlobalSnapshotPatch();
 
@@ -1243,24 +1320,37 @@ describe('DEV_ONLY_addSnapshot', () => {
       [
         100,
         "with-__webpack_require__-0",
-        "() => {
-              __webpack_require__("foo");
-              return [
-                __CreateView(0)
-              ];
-            }",
-        [],
-        null,
-        undefined,
-        undefined,
+        "(uniqID12) => {
+            globalThis.createSnapshot(
+              uniqID12,
+              /* v8 ignore start */
+              () => {
+                __webpack_require__("foo");
+                return [
+                  __CreateView(0)
+                ];
+              },
+              /* v8 ignore stop */
+              null,
+              null,
+              void 0,
+              void 0,
+              null,
+              true
+            );
+          }",
       ]
     `);
 
+    new SnapshotInstance(uniqID1);
     const originalSize = snapshotManager.values.size;
 
     // Remove the old definition
     snapshotManager.values.delete(uniqID1);
+    delete snapshotCreatorMap[uniqID1];
+
     snapshotPatchApply(patch);
+    new SnapshotInstance(uniqID1);
 
     expect(snapshotManager.values.size).toBe(originalSize);
     expect(snapshotManager.values.has(uniqID1)).toBeTruthy();
@@ -1352,10 +1442,89 @@ describe('missing snapshot', () => {
   });
 
   it('should throw error when missing snapshot', () => {
-    const bsi1 = new BackgroundSnapshotInstance('missing-snapshot');
-    let patch;
-    patch = takeGlobalSnapshotPatch();
-    expect(patch.length).toMatchInlineSnapshot(`3`);
-    expect(() => snapshotPatchApply(patch)).toThrowError('Snapshot not found: missing-snapshot');
+    expect(() => new BackgroundSnapshotInstance('missing-snapshot')).toThrowError(
+      'BackgroundSnapshot not found: missing-snapshot',
+    );
+    expect(() => new SnapshotInstance('missing-snapshot')).toThrowError('Snapshot not found: missing-snapshot');
+  });
+});
+
+describe('lazy snapshot', () => {
+  it('lazy snapshot should work', () => {
+    let oriSize = snapshotManager.values.size;
+    expect(snapshotManager.values.size).toBe(oriSize);
+    snapshotCreatorMap['snapshot-0'] = (uniqID) => {
+      globalThis.createSnapshot(
+        uniqID,
+        /* v8 ignore start */
+        () => {
+          return [__CreateView(0)];
+        },
+        /* v8 ignore stop */
+        null,
+        null,
+        undefined,
+        undefined,
+        null,
+        true,
+      );
+    };
+    expect(snapshotManager.values.size).toBe(oriSize);
+    const si = new SnapshotInstance('snapshot-0');
+    expect(snapshotManager.values.size).toBe(oriSize + 1);
+    expect(si.type).toBe('snapshot-0');
+  });
+  it('legacy sync createSnapshot should work', () => {
+    let oriSize = snapshotManager.values.size;
+    expect(snapshotManager.values.size).toBe(oriSize);
+    const uniqueId = globalThis.createSnapshot(
+      'snapshot-1',
+      /* v8 ignore start */
+      () => {
+        return [__CreateView(0)];
+      },
+      /* v8 ignore stop */
+      null,
+      null,
+      undefined,
+      /** entryName */
+      'https://example.com/main.lynx.bundle',
+      null,
+      /** isLazySnapshotSupported */
+      false,
+    );
+    expect(snapshotManager.values.size).toBe(oriSize + 1);
+    const si = new SnapshotInstance(uniqueId);
+    expect(si.type).toBe('https://example.com/main.lynx.bundle:snapshot-1');
+  });
+  it('standalone lazy bundle snapshotCreatorMap set should not generate DEV_ONLY_AddSnapshot', () => {
+    initGlobalSnapshotPatch();
+    expect(__globalSnapshotPatch).toMatchInlineSnapshot(`[]`);
+
+    const globDynamicComponentEntry = 'https://example.com/main.lynx.bundle';
+
+    snapshotCreatorMap[`${globDynamicComponentEntry}:${'__snapshot_835da_eff1e_1'}`] = (uniqID) => {
+      globalThis.createSnapshot(
+        uniqID,
+        /* v8 ignore start */
+        () => {
+          return [__CreateView(0)];
+        },
+        /* v8 ignore stop */
+        null,
+        null,
+        undefined,
+        /** entryName */
+        globDynamicComponentEntry,
+        null,
+        /** isLazySnapshotSupported */
+        true,
+      );
+    };
+
+    expect(__globalSnapshotPatch.length).toBe(0);
+
+    deinitGlobalSnapshotPatch();
+    expect(__globalSnapshotPatch).toMatchInlineSnapshot(`undefined`);
   });
 });

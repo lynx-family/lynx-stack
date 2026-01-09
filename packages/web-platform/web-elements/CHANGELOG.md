@@ -1,5 +1,64 @@
 # @lynx-js/web-elements
 
+## 0.10.1
+
+### Patch Changes
+
+- feat: implement x-webview component ([#2061](https://github.com/lynx-family/lynx-stack/pull/2061))
+
+- feat: support `recyclable="false"` on `list-item` and enable overflow visibility ([#2069](https://github.com/lynx-family/lynx-stack/pull/2069))
+
+## 0.10.0
+
+### Minor Changes
+
+- chore: migrate all @lynx-js/web-elements-\* packages into one ([#2057](https://github.com/lynx-family/lynx-stack/pull/2057))
+
+  ### Before
+
+  ```js
+  import '@lynx-js/web-elements-template';
+  import '@lynx-js/web-elements-compat/LinearContainer';
+  ```
+
+  ### After
+
+  ```js
+  import '@lynx-js/web-elements/html-templates';
+  import '@lynx-js/web-elements/compat/LinearContainer';
+  ```
+
+### Patch Changes
+
+- refactor: change code structure for improved readability and maintainability ([#2004](https://github.com/lynx-family/lynx-stack/pull/2004))
+
+  - enable noUnusedLocals for web-elements
+  - add source field for supporting @rsbuild/plugin-source-build
+
+  This is a part of #1937
+
+## 0.9.0
+
+### Minor Changes
+
+- feat: new flex:val impl ([#1979](https://github.com/lynx-family/lynx-stack/pull/1979))
+
+### Patch Changes
+
+- fix: x-input display should add !important to avoid override ([#1960](https://github.com/lynx-family/lynx-stack/pull/1960))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.9.0
+
+## 0.8.11
+
+### Patch Changes
+
+- fix: when estimated-main-axis-size-px is not set, should use the height of list ([#1930](https://github.com/lynx-family/lynx-stack/pull/1930))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.11
+
 ## 0.8.10
 
 ### Patch Changes

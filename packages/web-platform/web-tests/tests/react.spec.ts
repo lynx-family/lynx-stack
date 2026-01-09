@@ -1,11 +1,9 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { swipe, dragAndHold } from './utils.js';
-import { test, expect } from './coverage-fixture.js';
+import { test, expect, swipe, dragAndHold } from '@lynx-js/playwright-fixtures';
 import type { Page } from '@playwright/test';
 import type { LynxView } from '../../web-core/src/index.js';
-const ENABLE_MULTI_THREAD = !!process.env['ENABLE_MULTI_THREAD'];
 const isSSR = !!process.env['ENABLE_SSR'];
 
 const wait = async (ms: number) => {
@@ -862,6 +860,35 @@ test.describe('reactlynx3 tests', () => {
         ); // green
       },
     );
+
+    test('basic-page-event', async ({ page }, { title }) => {
+      await goto(page, title);
+      const target = page.locator('#target');
+      await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)'); // pink
+      await target.click();
+      await wait(100);
+      await expect(target).toHaveCSS(
+        'background-color',
+        'rgb(0, 128, 0)',
+      ); // green;
+    });
+
+    test('basic-event-target-trigger', async ({ page }, { title }) => {
+      await goto(page, 'basic-event-trigger');
+      await page.locator('#target1').click();
+      await wait(100);
+      await expect(page.locator('#target')).toHaveText(
+        '[capture tap][bind tap]',
+      );
+    });
+    test('basic-event-child-trigger', async ({ page }, { title }) => {
+      await goto(page, 'basic-event-trigger');
+      await page.locator('#target2').click();
+      await wait(100);
+      await expect(page.locator('#target')).toHaveText(
+        '[capture tap][bind tap]',
+      );
+    });
   });
   test.describe('basic-css', () => {
     test('basic-css-asset-in-css', async ({ page }, { title }) => {
@@ -1808,6 +1835,23 @@ test.describe('reactlynx3 tests', () => {
         await expect(
           page.locator('#sub'),
         ).toHaveCSS('background-color', 'rgb(0, 128, 0)');
+      },
+    );
+    test(
+      'config-css-selector-false-reload',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        await expect(
+          page.locator('#target'),
+        ).toHaveCSS('background-color', 'rgb(255, 0, 0)');
+        await page.evaluate(() => {
+          document.querySelector('lynx-view')?.reload();
+        });
+        await wait(1000);
+        await expect(
+          page.locator('#target'),
+        ).toHaveCSS('background-color', 'rgb(255, 0, 0)');
       },
     );
     test(

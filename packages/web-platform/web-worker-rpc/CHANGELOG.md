@@ -1,5 +1,25 @@
 # @lynx-js/web-worker-rpc
 
+## 0.19.4
+
+### Patch Changes
+
+- Ensure the `default` export entry is last in the package exports map. ([#2075](https://github.com/lynx-family/lynx-stack/pull/2075))
+
+## 0.19.3
+
+### Patch Changes
+
+- feat: support lazy message port assigning in web-worker-rpc ([#2040](https://github.com/lynx-family/lynx-stack/pull/2040))
+
+## 0.19.2
+
+## 0.19.1
+
+## 0.19.0
+
+## 0.18.4
+
 ## 0.18.3
 
 ## 0.18.2

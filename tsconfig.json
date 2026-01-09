@@ -123,7 +123,10 @@
       "path": "./packages/react"
     },
     {
-      "path": "./packages/third-party"
+      "path": "./packages/lynx"
+    },
+    {
+      "path": "./packages/tailwind-preset/tsconfig.build.json"
     }
   ],
   "include": []

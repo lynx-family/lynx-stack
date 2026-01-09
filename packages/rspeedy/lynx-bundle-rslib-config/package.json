@@ -1,0 +1,50 @@
+{
+  "name": "@lynx-js/lynx-bundle-rslib-config",
+  "version": "0.1.0",
+  "description": "The rsbuild config for building Lynx bundle",
+  "keywords": [
+    "Rsbuild",
+    "Rspeedy",
+    "Lynx",
+    "Rslib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/rspeedy/lynx-bundle-rslib-config"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Hengchang Lu",
+    "email": "luhengchang228@gmail.com"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    }
+  },
+  "files": [
+    "lib",
+    "!lib/**/*.js.map",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "api-extractor": "api-extractor run --verbose",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
+    "@lynx-js/tasm": "0.0.20"
+  },
+  "devDependencies": {
+    "@rslib/core": "^0.19.1",
+    "vitest": "^3.2.4",
+    "webpack": "^5.104.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

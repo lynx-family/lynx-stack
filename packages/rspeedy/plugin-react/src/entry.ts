@@ -61,7 +61,12 @@ export function applyEntry(
   api.modifyBundlerChain(async (chain, { environment, isDev, isProd }) => {
     const entries = chain.entryPoints.entries() ?? {}
     const isLynx = environment.name === 'lynx'
+      || environment.name.startsWith('lynx-')
     const isWeb = environment.name === 'web'
+      || environment.name.startsWith('web-')
+    const { hmr, liveReload } = environment.config.dev ?? {}
+    const enabledHMR = isDev && !isWeb && hmr !== false
+    const enabledLiveReload = isDev && !isWeb && liveReload !== false
 
     chain.entryPoints.clear()
 
@@ -116,7 +121,7 @@ export function applyEntry(
           import: imports,
           filename: mainThreadName,
         })
-        .when(isDev && !isWeb, entry => {
+        .when(enabledHMR, entry => {
           const require = createRequire(import.meta.url)
           // use prepend to make sure it does not affect the exports
           // from the entry
@@ -137,7 +142,7 @@ export function applyEntry(
         })
         // in standalone lazy bundle mode, we do not add
         // other entries to avoid wrongly exporting from other entries
-        .when(isDev && !isWeb, entry => {
+        .when(enabledHMR, entry => {
           // use prepend to make sure it does not affect the exports
           // from the entry
           entry
@@ -146,14 +151,18 @@ export function applyEntry(
               layer: LAYERS.BACKGROUND,
               import: '@rspack/core/hot/dev-server',
             })
-            .prepend({
-              layer: LAYERS.BACKGROUND,
-              import: '@lynx-js/webpack-dev-transport/client',
-            })
             // This is aliased in `./refresh.ts`
             .prepend({
               layer: LAYERS.BACKGROUND,
               import: '@lynx-js/react/refresh',
+            })
+        })
+        .when(enabledHMR || enabledLiveReload, entry => {
+          // This is aliased in `@lynx-js/rspeedy`
+          entry
+            .prepend({
+              layer: LAYERS.BACKGROUND,
+              import: '@lynx-js/webpack-dev-transport/client',
             })
         })
         .end()

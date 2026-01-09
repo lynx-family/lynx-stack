@@ -4,7 +4,7 @@
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
-import type { RsbuildInstance } from '@rsbuild/core'
+import type { RsbuildInstance, Rspack } from '@rsbuild/core'
 import { describe, expect, test, vi } from 'vitest'
 
 import type { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
@@ -1356,8 +1356,8 @@ describe('Config', () => {
           "main": {
             "filename": ".rspeedy/main/background.js",
             "import": [
-              "@lynx-js/react/refresh",
               "@lynx-js/webpack-dev-transport/client",
+              "@lynx-js/react/refresh",
               "@rspack/core/hot/dev-server",
               "./fixtures/basic.tsx",
             ],
@@ -1406,8 +1406,8 @@ describe('Config', () => {
           "main": {
             "filename": ".rspeedy/main/background.[contenthash].js",
             "import": [
-              "@lynx-js/react/refresh",
               "@lynx-js/webpack-dev-transport/client",
+              "@lynx-js/react/refresh",
               "@rspack/core/hot/dev-server",
               "./fixtures/basic.tsx",
             ],
@@ -2076,8 +2076,8 @@ describe('Config', () => {
             "main": {
               "filename": ".rspeedy/main/background.[contenthash:8].js",
               "import": [
-                "@lynx-js/react/refresh",
                 "@lynx-js/webpack-dev-transport/client",
+                "@lynx-js/react/refresh",
                 "@rspack/core/hot/dev-server",
                 "./src/index.js",
               ],
@@ -2352,6 +2352,106 @@ describe('Config', () => {
       'workletRuntimePath',
       require.resolve('@lynx-js/react/worklet-runtime'),
     )
+  })
+
+  describe('environment', () => {
+    test('lynx environment', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          environments: { lynx: {} },
+          plugins: [
+            pluginReactLynx(),
+          ],
+        },
+      })
+
+      const configs = await rspeedy.initConfigs()
+
+      expect(configs.length).toBe(1)
+
+      expect(configs[0]!.name).toBe('lynx')
+    })
+
+    test('lynx variant environment', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          environments: {
+            lynx: {},
+            'lynx-foo': { output: { distPath: 'dist/foo' } },
+          },
+          plugins: [
+            pluginReactLynx(),
+          ],
+        },
+      })
+
+      const configs = await rspeedy.initConfigs()
+
+      expect(configs.length).toBe(2)
+
+      expect(configs[0]!.name).toBe('lynx')
+      expect(configs[1]!.name).toBe('lynx-foo')
+      // only lynx output will be emitted to `.rspeedy`
+      expect(
+        (configs[1]?.entry as Record<string, Rspack.EntryDescription>)?.['main']
+          ?.filename,
+      ).toBe('.rspeedy/main/background.js')
+    })
+
+    test('web environment', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          environments: { web: {} },
+          plugins: [
+            pluginReactLynx(),
+          ],
+        },
+      })
+
+      const configs = await rspeedy.initConfigs()
+
+      expect(configs.length).toBe(1)
+
+      expect(configs[0]!.name).toBe('web')
+    })
+
+    test('web variant environment', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          environments: {
+            web: {},
+            'web-foo': { output: { distPath: 'dist/foo' } },
+          },
+          plugins: [
+            pluginReactLynx(),
+          ],
+        },
+      })
+
+      const configs = await rspeedy.initConfigs()
+
+      expect(configs.length).toBe(2)
+
+      expect(configs[0]!.name).toBe('web')
+      expect(configs[1]!.name).toBe('web-foo')
+
+      expect(
+        (configs[0]?.entry as Record<string, Rspack.EntryDescription>)?.['main']
+          ?.filename,
+      ).toBe('main/background.js')
+      expect(
+        (configs[1]?.entry as Record<string, Rspack.EntryDescription>)?.['main']
+          ?.filename,
+      ).toBe('main/background.js')
+    })
   })
 })
 

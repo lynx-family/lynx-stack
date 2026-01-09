@@ -1,5 +1,29 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.10.1
+
+### Patch Changes
+
+- fix: pass updated css from encodeData to resolvedEncodeOptions ([#2053](https://github.com/lynx-family/lynx-stack/pull/2053))
+
+  Previously, the initial CSS was used in resolvedEncodeOptions instead of the potentially updated CSS from encodeData after the beforeEncode hook. This fix ensures resolvedEncodeOptions receives the latest CSS data.
+
+## 0.10.0
+
+### Minor Changes
+
+- Merge all css chunk and generate a `.css.hot-update.json` file for each bundle. ([#1965](https://github.com/lynx-family/lynx-stack/pull/1965))
+
+## 0.9.2
+
+### Patch Changes
+
+- Set main thread JS basename to `lepusCode.filename` in tasm encode data. It will ensure a filename is reported on MTS error without devtools enabled. ([#1949](https://github.com/lynx-family/lynx-stack/pull/1949))
+
+- Upgrade `@lynx-js/tasm` to `0.0.20`. ([#1943](https://github.com/lynx-family/lynx-stack/pull/1943))
+
+- refactor: move web style info generation to the encode phase ([#1975](https://github.com/lynx-family/lynx-stack/pull/1975))
+
 ## 0.9.1
 
 ### Patch Changes

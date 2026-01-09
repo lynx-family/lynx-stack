@@ -9,6 +9,9 @@
     { "path": "./plugin-qrcode/tsconfig.build.json" },
     { "path": "./plugin-react/tsconfig.build.json" },
     { "path": "./plugin-react-alias/tsconfig.build.json" },
+    { "path": "./lynx-bundle-rslib-config/tsconfig.build.json" },
+    { "path": "./plugin-external-bundle/tsconfig.build.json" },
+    { "path": "./plugin-config/tsconfig.build.json" },
     /** packages-end */
   ],
   "include": [],

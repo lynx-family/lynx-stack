@@ -79,13 +79,14 @@ export class A extends Component {
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       import { Component } from "@lynx-js/react/legacy-react-runtime";
-      const __snapshot_da39a_test_1 = ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
-          const pageId = ReactLynx.__pageId;
-          const el = __CreateView(pageId);
-          return [
-              el
-          ];
-      }, null, null, undefined, globDynamicComponentEntry, null);
+      const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
+              const pageId = ReactLynx.__pageId;
+              const el = __CreateView(pageId);
+              return [
+                  el
+              ];
+          }, null, null, undefined, globDynamicComponentEntry, null, true);
       export class A extends Component {
           render() {
               return /*#__PURE__*/ _jsx(__snapshot_da39a_test_1, {});
@@ -99,13 +100,14 @@ export class A extends Component {
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       import { Component } from "@lynx-js/react/legacy-react-runtime";
-      const __snapshot_da39a_test_1 = ReactLynx.createSnapshot("__snapshot_da39a_test_1", function() {
-          const pageId = ReactLynx.__pageId;
-          const el = __CreateView(pageId);
-          return [
-              el
-          ];
-      }, null, null, undefined, globDynamicComponentEntry, null);
+      const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
+              const pageId = ReactLynx.__pageId;
+              const el = __CreateView(pageId);
+              return [
+                  el
+              ];
+          }, null, null, undefined, globDynamicComponentEntry, null, true);
       export class A extends Component {
           render() {
               return /*#__PURE__*/ _jsx(__snapshot_da39a_test_1, {});
@@ -173,27 +175,29 @@ describe('jsx', () => {
         "code": "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       import * as ReactLynxRuntimeComponents from '@lynx-js/react/runtime-components';
-      const __snapshot_da39a_04d8c_2 = ReactLynx.createSnapshot("__snapshot_da39a_04d8c_2", function() {
-          const pageId = ReactLynx.__pageId;
-          const el = __CreateElement("list-item", pageId);
-          return [
-              el
-          ];
-      }, [
-          (snapshot, index, oldValue)=>ReactLynx.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
-      ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null);
-      const __snapshot_da39a_04d8c_1 = ReactLynx.createSnapshot("__snapshot_da39a_04d8c_1", function(snapshotInstance) {
-          const pageId = ReactLynx.__pageId;
-          const el = ReactLynx.snapshotCreateList(pageId, snapshotInstance, 0);
-          return [
-              el
-          ];
-      }, null, [
-          [
-              ReactLynx.__DynamicPartListChildren,
-              0
-          ]
-      ], undefined, globDynamicComponentEntry, null);
+      const __snapshot_da39a_04d8c_2 = "__snapshot_da39a_04d8c_2";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_04d8c_2] = (__snapshot_da39a_04d8c_2)=>ReactLynx.createSnapshot(__snapshot_da39a_04d8c_2, function() {
+              const pageId = ReactLynx.__pageId;
+              const el = __CreateElement("list-item", pageId);
+              return [
+                  el
+              ];
+          }, [
+              (snapshot, index, oldValue)=>ReactLynx.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
+          ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null, true);
+      const __snapshot_da39a_04d8c_1 = "__snapshot_da39a_04d8c_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_04d8c_1] = (__snapshot_da39a_04d8c_1)=>ReactLynx.createSnapshot(__snapshot_da39a_04d8c_1, function(snapshotInstance) {
+              const pageId = ReactLynx.__pageId;
+              const el = ReactLynx.snapshotCreateList(pageId, snapshotInstance, 0);
+              return [
+                  el
+              ];
+          }, null, [
+              [
+                  ReactLynx.__DynamicPartListChildren,
+                  0
+              ]
+          ], undefined, globDynamicComponentEntry, null, true);
       /*#__PURE__*/ _jsx(__snapshot_da39a_04d8c_1, {
           children: /*#__PURE__*/ _jsx(ReactLynxRuntimeComponents.DeferredListItem, {
               renderListItem: (__c)=>_jsx(__snapshot_da39a_04d8c_2, {
@@ -396,17 +400,18 @@ Component, View
         "/*#__PURE__*/ import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
         import * as ReactLynx from "@lynx-js/react";
         import * as ReactLynx1 from "@lynx-js/react/internal";
-        const __snapshot_da39a_89b7f_1 = ReactLynx.createSnapshot("__snapshot_da39a_89b7f_1", function() {
-            const pageId = ReactLynx.__pageId;
-            const el = __CreateView(pageId);
-            return [
-                el
-            ];
-        }, [
-            (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 0)
-        ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, [
-            0
-        ]);
+        const __snapshot_da39a_89b7f_1 = "__snapshot_da39a_89b7f_1";
+        ReactLynx.snapshotCreatorMap[__snapshot_da39a_89b7f_1] = (__snapshot_da39a_89b7f_1)=>ReactLynx.createSnapshot(__snapshot_da39a_89b7f_1, function() {
+                const pageId = ReactLynx.__pageId;
+                const el = __CreateView(pageId);
+                return [
+                    el
+                ];
+            }, [
+                (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 0)
+            ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, [
+                0
+            ], true);
         /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>/*#__PURE__*/ _jsx(__snapshot_da39a_89b7f_1, {
                 values: [
                     {
@@ -883,13 +888,14 @@ export default class App extends Component {
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       let c = 1;
-      const __snapshot_da39a_b7447_1 = ReactLynx.createSnapshot("__snapshot_da39a_b7447_1", function() {
-          const pageId = ReactLynx.__pageId;
-          const el = __CreateView(pageId);
-          return [
-              el
-          ];
-      }, null, null, undefined, globDynamicComponentEntry, null);
+      const __snapshot_da39a_b7447_1 = "__snapshot_da39a_b7447_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_b7447_1] = (__snapshot_da39a_b7447_1)=>ReactLynx.createSnapshot(__snapshot_da39a_b7447_1, function() {
+              const pageId = ReactLynx.__pageId;
+              const el = __CreateView(pageId);
+              return [
+                  el
+              ];
+          }, null, null, undefined, globDynamicComponentEntry, null, true);
       export default class App extends Component {
           a() {}
           render() {
@@ -907,6 +913,57 @@ export default class App extends Component {
 });
 
 describe('dynamic import', () => {
+  it('lazy import', async () => {
+    const result = await transformReactLynx(`await import("https://www/a.js", { with: { type: "component" } });`, {
+      pluginName: '',
+      filename: '',
+      sourcemap: false,
+      parserConfig: {
+        tsx: true,
+      },
+      cssScope: false,
+      jsx: false,
+      directiveDCE: false,
+      defineDCE: false,
+      shake: false,
+      compat: false,
+      worklet: false,
+      refresh: false,
+    });
+    expect(result.code).toMatchInlineSnapshot(`
+      "import "@lynx-js/react/experimental/lazy/import";
+      import { __dynamicImport } from "@lynx-js/react/internal";
+      await __dynamicImport("https://www/a.js", {
+          with: {
+              type: "component"
+          }
+      });
+      "
+    `);
+  });
+  it('inline import', async () => {
+    const result = await transformReactLynx(`await import(/*webpackChunkName: "./index.js-test"*/"./index.js");`, {
+      pluginName: '',
+      filename: '',
+      sourcemap: false,
+      parserConfig: {
+        tsx: true,
+      },
+      cssScope: false,
+      jsx: false,
+      directiveDCE: false,
+      defineDCE: false,
+      shake: false,
+      compat: false,
+      worklet: false,
+      refresh: false,
+    });
+    expect(result.code).toMatchInlineSnapshot(`
+      "import 'data:text/javascript;charset=utf-8,import { loadLazyBundle } from "@lynx-js/react/internal";lynx.loadLazyBundle = loadLazyBundle;';
+      await import(/*webpackChunkName: "./index.js-test"*/ /*webpackChunkName: "./index.js-"*/ "./index.js");
+      "
+    `);
+  });
   it('badcase', async () => {
     const result = await transformReactLynx(
       `\
@@ -1359,13 +1416,14 @@ class X extends Component {
     ).toMatchInlineSnapshot(`
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
-      const __snapshot_da39a_e2935_1 = ReactLynx.createSnapshot("__snapshot_da39a_e2935_1", function() {
-          const pageId = ReactLynx.__pageId;
-          const el = __CreateView(pageId);
-          return [
-              el
-          ];
-      }, null, null, undefined, globDynamicComponentEntry, null);
+      const __snapshot_da39a_e2935_1 = "__snapshot_da39a_e2935_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_e2935_1] = (__snapshot_da39a_e2935_1)=>ReactLynx.createSnapshot(__snapshot_da39a_e2935_1, function() {
+              const pageId = ReactLynx.__pageId;
+              const el = __CreateView(pageId);
+              return [
+                  el
+              ];
+          }, null, null, undefined, globDynamicComponentEntry, null, true);
       class X extends Component {
           constructor(){}
           render() {
@@ -1379,6 +1437,123 @@ class X extends Component {
 });
 
 describe('worklet', () => {
+  it('should error on unsupported runtime import attribute', async () => {
+    const result = await transformReactLynx(
+      `\
+import { foo } from "./shared.js" with { runtime: "invalid" };
+export function bar() {
+  "main thread";
+  foo();
+}
+`,
+      {
+        pluginName: '',
+        filename: '',
+        sourcemap: false,
+        cssScope: false,
+        jsx: false,
+        directiveDCE: true,
+        defineDCE: {
+          define: {
+            __LEPUS__: 'true',
+            __JS__: 'false',
+          },
+        },
+        shake: false,
+        compat: true,
+        refresh: false,
+        worklet: {
+          target: 'LEPUS',
+          filename: '',
+          runtimePkg: '@lynx-js/react',
+        },
+      },
+    );
+
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].text).toBe(
+      'Invalid runtime value. Only \'shared\' is supported.',
+    );
+  });
+
+  it('should error on non-string runtime import attribute', async () => {
+    const result = await transformReactLynx(
+      `\
+import { foo } from "./shared.js" with { runtime: 123 };
+export function bar() {
+  "main thread";
+  foo();
+}
+`,
+      {
+        pluginName: '',
+        filename: '',
+        sourcemap: false,
+        cssScope: false,
+        jsx: false,
+        directiveDCE: true,
+        defineDCE: {
+          define: {
+            __LEPUS__: 'true',
+            __JS__: 'false',
+          },
+        },
+        shake: false,
+        compat: true,
+        refresh: false,
+        worklet: {
+          target: 'LEPUS',
+          filename: '',
+          runtimePkg: '@lynx-js/react',
+        },
+      },
+    );
+
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].text).toBe(
+      'Invalid runtime value. Only \'shared\' is supported.',
+    );
+  });
+
+  it('should error on non-string \'runtime\' key runtime import attribute', async () => {
+    const result = await transformReactLynx(
+      `\
+import { foo } from "./shared.js" with { 'runtime': 123 };
+export function bar() {
+  "main thread";
+  foo();
+}
+`,
+      {
+        pluginName: '',
+        filename: '',
+        sourcemap: false,
+        cssScope: false,
+        jsx: false,
+        directiveDCE: true,
+        defineDCE: {
+          define: {
+            __LEPUS__: 'true',
+            __JS__: 'false',
+          },
+        },
+        shake: false,
+        compat: true,
+        refresh: false,
+        worklet: {
+          target: 'LEPUS',
+          filename: '',
+          runtimePkg: '@lynx-js/react',
+        },
+      },
+    );
+
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].text).toBe(
+      'Invalid runtime value. Only \'shared\' is supported.',
+    );
+  });
+
   for (const target of ['LEPUS', 'JS', 'MIXED']) {
     it('member expression', async () => {
       const { code } = await transformReactLynx(
@@ -1647,6 +1822,26 @@ function getCurrentDelta(event) {
           if (foo(a)) foo(b);
           return null;
       });
+      "
+    `);
+  });
+
+  it('should keep webpack runtime variables', async () => {
+    const inputContent = `
+__webpack_public_path__="a";
+__webpack_require__.p="b";
+__webpack_test__="a";
+import { Component } from "@lynx-js/react-runtime";
+export class A extends Component {}
+`;
+    const { code } = await transformReactLynx(inputContent);
+    expect(code).toMatchInlineSnapshot(`
+      "__webpack_public_path__ = "a";
+      __webpack_require__.p = "b";
+      "a";
+      import { Component } from "@lynx-js/react-runtime";
+      export class A extends Component {
+      }
       "
     `);
   });

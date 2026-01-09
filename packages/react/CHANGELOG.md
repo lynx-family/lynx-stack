@@ -1,5 +1,95 @@
 # @lynx-js/react
 
+## 0.115.3
+
+### Patch Changes
+
+- Add dual-thread commutation logs for troubleshooting when `REACT_ALOG=true` or global define `__ALOG__` is set. ([#2081](https://github.com/lynx-family/lynx-stack/pull/2081))
+
+- Use error cause to simplify the error msg of lazy bundle loading. User can catch the error cause to get the original result: ([#2056](https://github.com/lynx-family/lynx-stack/pull/2056))
+
+  ```ts
+  const LazyComponent = lazy(async () => {
+    try {
+      const mod = await import('./lazy-bundle');
+      return mod.default;
+    } catch (error) {
+      console.error(`Lazy Bundle load failed message: ${error.message}`);
+      // User can catch the error cause to get the original result
+      console.error(`Lazy Bundle load failed result: ${error.cause}`);
+      throw error;
+    }
+  });
+  ```
+
+## 0.115.2
+
+### Patch Changes
+
+- Fix `undefined factory (react:background)/./node_modules/.pnpm/@lynx-js+react...` error when loading a standalone lazy bundle after hydration. ([#2048](https://github.com/lynx-family/lynx-stack/pull/2048))
+
+- Partially fix "main-thread.js exception: TypeError: cannot read property '\_\_elements' of undefined" by recursively calling `snapshotDestroyList`. ([#2041](https://github.com/lynx-family/lynx-stack/pull/2041))
+
+- Fix a bug where React throws `CtxNotFound` error when lazy bundle resolves after unmount. ([#2003](https://github.com/lynx-family/lynx-stack/pull/2003))
+
+## 0.115.1
+
+### Patch Changes
+
+- Auto define lynx.loadLazyBundle when using `import(/* relative path */)`. ([#1956](https://github.com/lynx-family/lynx-stack/pull/1956))
+
+- feat: support declaring cross-thread shared modules via Import Attributes, enabling Main Thread Functions to call standard JS functions directly. ([#1968](https://github.com/lynx-family/lynx-stack/pull/1968))
+
+  - Usage: Add `with { runtime: "shared" }` to the `import` statement. For example:
+
+    ```ts
+    import { func } from './utils.js' with { runtime: 'shared' };
+
+    function worklet() {
+      'main thread';
+      func(); // callable inside a main thread function
+    }
+    ```
+
+  - Limitations:
+    - Only directly imported identifiers are treated as shared; assigning the import to a new variable will result in the loss of this shared capability.
+    - Functions defined within shared modules do not automatically become Main Thread Functions. Accessing main-thread-only APIs (e.g., `MainThreadRef`) will cause errors.
+
+## 0.115.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Delay the `createSnapshot` operation to `Snapshot` constructor to speed up IFR. ([#1899](https://github.com/lynx-family/lynx-stack/pull/1899))
+
+  This change refactors how snapshots are created and registered:
+
+  - Removed the `entryUniqID` function
+  - Snapshots are now lazily created via `snapshotCreatorMap` instead of eagerly at bundle load time
+  - Snapshot IDs are generated at compile time and only prefixed with `${globDynamicComponentEntry}:` for standalone lazy bundles
+
+  **⚠️ Lazy Bundle Compatibility:**
+
+  - **Backward compatibility (new runtime → old lazy bundles)**: ✅ **Supported**. Old lazy bundles will work with the new runtime.
+
+  - **Forward compatibility (old runtime → new lazy bundles)**: ❌ **NOT Supported**. Lower version consumers **will not be able to load lazy bundles produced by this version** due to the changed snapshot creation mechanism.
+
+  **Migration guidance**:
+  If you are using lazy bundles, ensure all consumers are upgraded to this version or later **before** deploying lazy bundles built with this version. For monorepo setups, coordinate the upgrade across all consuming applications.
+
+### Patch Changes
+
+- Preserve assignments to webpack runtime variables like `__webpack_public_path__`, `__webpack_require__.p`, etc. ([#1958](https://github.com/lynx-family/lynx-stack/pull/1958))
+
+- Fixed blank screen issues with nested lists. Lazily created nested lists were being flushed but not properly recorded, causing rendering failures. ([#1963](https://github.com/lynx-family/lynx-stack/pull/1963))
+
+- fix: export `createRef` and `useRef` from `@lynx-js/react/legacy-react-runtime` ([#1953](https://github.com/lynx-family/lynx-stack/pull/1953))
+
+## 0.114.5
+
+### Patch Changes
+
+- Reduce `__SetInlineStyles` element API call when attrs in spread not changed ([#1919](https://github.com/lynx-family/lynx-stack/pull/1919))
+
 ## 0.114.4
 
 ### Patch Changes

@@ -28,13 +28,26 @@ import { applyRef, clearQueuedRefs, queueRefAttrUpdate } from './snapshot/ref.js
 import type { Ref } from './snapshot/ref.js';
 import { transformSpread } from './snapshot/spread.js';
 import type { SerializedSnapshotInstance, Snapshot } from './snapshot.js';
-import { backgroundSnapshotInstanceManager, snapshotManager, traverseSnapshotInstance } from './snapshot.js';
+import {
+  backgroundSnapshotInstanceManager,
+  snapshotCreatorMap,
+  snapshotManager,
+  traverseSnapshotInstance,
+} from './snapshot.js';
 import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { isDirectOrDeepEqual } from './utils.js';
 import { onPostWorkletCtx } from './worklet/ctx.js';
 
 export class BackgroundSnapshotInstance {
   constructor(public type: string) {
+    // Suspense uses 'div'
+    if (!snapshotManager.values.has(type) && type !== 'div') {
+      if (snapshotCreatorMap[type]) {
+        snapshotCreatorMap[type](type);
+      } else {
+        throw new Error('BackgroundSnapshot not found: ' + type);
+      }
+    }
     this.__snapshot_def = snapshotManager.values.get(type)!;
     const id = this.__id = backgroundSnapshotInstanceManager.nextId += 1;
     backgroundSnapshotInstanceManager.values.set(id, this);
@@ -54,6 +67,17 @@ export class BackgroundSnapshotInstance {
   private __nextSibling: BackgroundSnapshotInstance | null = null;
   private __removed_from_tree?: boolean;
 
+  private get isDetached(): boolean {
+    let node: BackgroundSnapshotInstance | null = this;
+    while (node) {
+      if (node.__removed_from_tree) {
+        return true;
+      }
+      node = node.__parent;
+    }
+    return false;
+  }
+
   get parentNode(): BackgroundSnapshotInstance | null {
     return this.__parent;
   }
@@ -72,7 +96,9 @@ export class BackgroundSnapshotInstance {
 
   // This will be called in `lazy`/`Suspense`.
   appendChild(child: BackgroundSnapshotInstance): void {
-    return this.insertBefore(child);
+    if (!this.isDetached) {
+      return this.insertBefore(child);
+    }
   }
 
   insertBefore(

@@ -1,0 +1,15 @@
+/*
+// Copyright 2024 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+*/
+.text {
+  color: red;
+}
+.outer-view {
+  overflow: hidden;
+  width: 100%;
+  height: 450px;
+  background-size: contain;
+  background-repeat: no-repeat;
+}

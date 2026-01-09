@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/template-webpack-plugin",
-  "version": "0.9.1",
+  "version": "0.10.1",
   "description": "Simplifies creation of Lynx template files to serve your webpack bundles",
   "keywords": [
     "webpack",
@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@lynx-js/css-serializer": "workspace:*",
-    "@lynx-js/tasm": "0.0.18",
+    "@lynx-js/tasm": "0.0.20",
     "@lynx-js/webpack-runtime-globals": "workspace:^",
     "@rspack/lite-tapable": "1.0.1",
     "css-tree": "^3.1.0",
@@ -49,7 +49,8 @@
     "@microsoft/api-extractor": "catalog:",
     "@types/css-tree": "^2.3.11",
     "@types/object.groupby": "^1.0.4",
-    "webpack": "^5.102.0"
+    "css-loader": "^7.1.2",
+    "webpack": "^5.104.1"
   },
   "engines": {
     "node": ">=18"

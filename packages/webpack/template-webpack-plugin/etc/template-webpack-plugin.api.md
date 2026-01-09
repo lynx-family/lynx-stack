@@ -68,6 +68,7 @@ export interface EncodeOptions {
     lepusCode: {
         root: string | undefined;
         lepusChunk: Record<string, string>;
+        filename: string | undefined;
     };
     // (undocumented)
     manifest: Record<string, string | undefined>;
@@ -147,6 +148,7 @@ export interface TemplateHooks {
         outputName: string;
         mainThreadAssets: Asset[];
         cssChunks: Asset[];
+        entryNames: string[];
     }>;
     // @alpha
     beforeEncode: AsyncSeriesWaterfallHook<{
@@ -183,6 +185,6 @@ export class WebEncodePlugin {
 
 // Warnings were encountered during analysis:
 //
-// lib/LynxTemplatePlugin.d.ts:67:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
+// lib/LynxTemplatePlugin.d.ts:68:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
 
 ```
