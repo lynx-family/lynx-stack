@@ -5,8 +5,10 @@
 */
 import { Component } from '../../element-reactive/index.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
+import { LinearContainer } from '../../compat/index.js';
 
 @Component<typeof XFoldviewSlotDragNg>('x-foldview-slot-drag-ng', [
+  LinearContainer,
   CommonEventsAndMethods,
 ])
 export class XFoldviewSlotDragNg extends HTMLElement {}
