@@ -85,7 +85,6 @@ describe('updateGlobalProps', () => {
       lynx.getNativeApp().callLepusMethod.mockClear();
       lynxCoreInject.tt.updateGlobalProps({ theme: 'light' });
       await waitSchedule();
-      console.log('rLynxChange', lynx.getNativeApp().callLepusMethod.mock.calls[0]);
 
       globalEnvManager.switchToMainThread();
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
