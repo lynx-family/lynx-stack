@@ -317,6 +317,12 @@ export type QueryComponentPAPI = (
     };
   }) => void,
 ) => null;
+
+export type GetComputedStyleByKeyPAPI = (
+  element: HTMLElement,
+  key: string,
+) => string;
+
 export interface ElementPAPIs {
   __ElementFromBinary: ElementFromBinaryPAPI;
 
@@ -377,6 +383,7 @@ export interface ElementPAPIs {
   __SetCSSId: SetCSSIdPAPI;
   __GetPageElement: GetPageElementPAPI;
   __GetAttributeByName: GetAttributeByNamePAPI;
+  __GetComputedStyleByKey: GetComputedStyleByKeyPAPI;
   __FlushElementTree: (
     _subTree?: unknown,
     options?: FlushElementTreeOptions,
