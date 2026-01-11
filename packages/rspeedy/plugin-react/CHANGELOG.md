@@ -1,5 +1,17 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.12.5
+
+### Patch Changes
+
+- Support reading config from `pluginLynxConfig`. ([#2054](https://github.com/lynx-family/lynx-stack/pull/2054))
+
+- Updated dependencies []:
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.5
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/react-webpack-plugin@0.7.3
+
 ## 0.12.4
 
 ### Patch Changes

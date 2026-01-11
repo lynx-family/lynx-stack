@@ -1,5 +1,23 @@
 # @lynx-js/react
 
+## 0.115.4
+
+### Patch Changes
+
+- fix: unable to access `MainThreadRef` in some scenarios ([#1996](https://github.com/lynx-family/lynx-stack/pull/1996))
+
+- Add `getComputedStyleProperty` for `MainThread.Element` to retrieve computed style values synchronously. ([#2005](https://github.com/lynx-family/lynx-stack/pull/2005))
+
+  **Requires Lynx SDK >= 3.5**
+
+  ```typescript
+  function getStyle(ele: MainThread.Element) {
+    'main thread';
+    const width = ele.getComputedStyleProperty('width'); // Returns 300px
+    const transformMatrix = ele.getComputedStyleProperty('transform'); // Returns matrix(2, 0, 0, 2, 200, 400)
+  }
+  ```
+
 ## 0.115.3
 
 ### Patch Changes

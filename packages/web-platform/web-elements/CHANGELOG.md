@@ -1,5 +1,29 @@
 # @lynx-js/web-elements
 
+## 0.11.0
+
+### Minor Changes
+
+- feat: integrate the LinearContainer Compat plugin ([#2100](https://github.com/lynx-family/lynx-stack/pull/2100))
+
+  **This is a BREAKING CHANGE**
+
+  Now we integrated the `LinearCompat` into @lynx-js/web-elements. Developers can safely remove the following imports:
+
+  ```js
+  import '@lynx-js/web-elements/compat/LinearContainer';
+  ```
+
+  ```js
+  import '@lynx-js/web-elements-compat/LinearContainer';
+  ```
+
+### Patch Changes
+
+- fix: list-item `contain` property changes from `size` to `layout paint`, because the size of the `list-item` can be expanded by its children. ([#2043](https://github.com/lynx-family/lynx-stack/pull/2043))
+
+- Use the scoped `@lynx-js/source-field` for source build resolution. ([#2096](https://github.com/lynx-family/lynx-stack/pull/2096))
+
 ## 0.10.1
 
 ### Patch Changes
