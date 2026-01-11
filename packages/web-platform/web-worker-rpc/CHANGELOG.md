@@ -1,5 +1,11 @@
 # @lynx-js/web-worker-rpc
 
+## 0.19.5
+
+### Patch Changes
+
+- Use the scoped `@lynx-js/source-field` for source build resolution. ([#2096](https://github.com/lynx-family/lynx-stack/pull/2096))
+
 ## 0.19.4
 
 ### Patch Changes

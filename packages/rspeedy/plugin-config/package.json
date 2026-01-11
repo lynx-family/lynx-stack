@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/config-rsbuild-plugin",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "An rsbuild plugin for config Lynx Config defined by @lynx-js/type-config.",
   "keywords": [
     "rsbuild",
