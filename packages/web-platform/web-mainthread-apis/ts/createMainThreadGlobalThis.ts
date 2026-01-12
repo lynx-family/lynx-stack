@@ -61,6 +61,7 @@ import {
   type JSRealm,
   type QueryComponentPAPI,
   lynxEntryNameAttribute,
+  ErrorCode,
 } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
 import {
@@ -816,6 +817,46 @@ export function createMainThreadGlobalThis(
     _I18nResourceTranslation: callbacks._I18nResourceTranslation,
     _AddEventListener: () => {},
     renderPage: undefined,
+    __InvokeUIMethod: (element, method, params, callback) => {
+      try {
+        if (method === 'boundingClientRect') {
+          const rect = (element as HTMLElement).getBoundingClientRect();
+          callback({
+            code: ErrorCode.SUCCESS,
+            data: {
+              id: (element as HTMLElement).id,
+              width: rect.width,
+              height: rect.height,
+              left: rect.left,
+              right: rect.right,
+              top: rect.top,
+              bottom: rect.bottom,
+            },
+          });
+          return;
+        }
+        if (typeof (element as any)[method] === 'function') {
+          const data = (element as any)[method](params);
+          callback({
+            code: ErrorCode.SUCCESS,
+            data,
+          });
+          return;
+        }
+        callback({
+          code: ErrorCode.METHOD_NOT_FOUND,
+        });
+      } catch (e) {
+        console.error(
+          `[lynx-web] invokeUIMethod: apply method failed with`,
+          e,
+          element,
+        );
+        callback({
+          code: ErrorCode.PARAM_INVALID,
+        });
+      }
+    },
   };
   Object.assign(mtsRealm.globalWindow, mtsGlobalThis);
   Object.defineProperty(mtsRealm.globalWindow, 'renderPage', {
