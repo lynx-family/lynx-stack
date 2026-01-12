@@ -102,6 +102,7 @@ export class WebEncodePlugin {
               },
               customSections: encodeOptions.customSections,
               elementTemplate: encodeOptions['elementTemplate'],
+              version: 2,
             })),
             debugInfo: '',
           };

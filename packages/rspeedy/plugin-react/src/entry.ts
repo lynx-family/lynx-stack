@@ -203,6 +203,29 @@ export function applyEntry(
     const enableChunkSplitting =
       rsbuildConfig.performance?.chunkSplit?.strategy !== 'all-in-one'
 
+    chain
+      .plugin(PLUGIN_NAME_RUNTIME_WRAPPER)
+      .use(RuntimeWrapperWebpackPlugin, [{
+        injectVars(vars) {
+          const UNUSED_VARS = new Set([
+            'Card',
+            'Component',
+            'ReactLynx',
+            'Behavior',
+          ])
+          return vars.map(name => {
+            if (UNUSED_VARS.has(name)) {
+              return `__${name}`
+            }
+            return name
+          })
+        },
+        targetSdkVersion,
+        // Inject runtime wrapper for all `.js` but not `main-thread.js` and `main-thread.[hash].js`.
+        test: /^(?!.*main-thread(?:\.[A-Fa-f0-9]*)?\.js$).*\.js$/,
+        experimental_isLazyBundle,
+      }])
+      .end()
     if (isLynx) {
       let inlineScripts
       if (experimental_isLazyBundle) {
@@ -214,28 +237,6 @@ export function applyEntry(
       }
 
       chain
-        .plugin(PLUGIN_NAME_RUNTIME_WRAPPER)
-        .use(RuntimeWrapperWebpackPlugin, [{
-          injectVars(vars) {
-            const UNUSED_VARS = new Set([
-              'Card',
-              'Component',
-              'ReactLynx',
-              'Behavior',
-            ])
-            return vars.map(name => {
-              if (UNUSED_VARS.has(name)) {
-                return `__${name}`
-              }
-              return name
-            })
-          },
-          targetSdkVersion,
-          // Inject runtime wrapper for all `.js` but not `main-thread.js` and `main-thread.[hash].js`.
-          test: /^(?!.*main-thread(?:\.[A-Fa-f0-9]*)?\.js$).*\.js$/,
-          experimental_isLazyBundle,
-        }])
-        .end()
         .plugin(`${LynxEncodePlugin.name}`)
         .use(LynxEncodePlugin, [{ inlineScripts }])
         .end()
