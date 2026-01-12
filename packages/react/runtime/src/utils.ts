@@ -39,8 +39,17 @@ export function isEmptyObject(obj?: object): obj is Record<string, never> {
   return true;
 }
 
+export function safeMtsSystemInfo(): typeof SystemInfo {
+  if (typeof SystemInfo !== 'undefined') {
+    return SystemInfo;
+  }
+
+  const { SystemInfo: lynxSystemInfo } = lynx as unknown as { SystemInfo?: typeof SystemInfo };
+  return lynxSystemInfo ?? {/* empty obj for unit tests */} as typeof SystemInfo;
+}
+
 export function isSdkVersionGt(major: number, minor: number): boolean {
-  const lynxSdkVersion: string = SystemInfo.lynxSdkVersion || '1.0';
+  const lynxSdkVersion: string = safeMtsSystemInfo().lynxSdkVersion ?? '1.0';
   const version = lynxSdkVersion.split('.');
   return Number(version[0]) > major || (Number(version[0]) == major && Number(version[1]) > minor);
 }
