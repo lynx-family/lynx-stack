@@ -1,4 +1,3 @@
-use swc_core::atoms as swc_atoms;
 use swc_core::{
   common::{comments::Comments, util::take::Take, DUMMY_SP},
   ecma::{

@@ -1,6 +1,4 @@
-/**
- * @jsxCSSId 100
- */ import * as ReactLynx from "@lynx-js/react";
+import * as ReactLynx from "@lynx-js/react";
 const __snapshot_da39a_test_1 = `${globDynamicComponentEntry}:${"__snapshot_da39a_test_1"}`;
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
         const pageId = ReactLynx.__pageId;
@@ -10,7 +8,9 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1
             el
         ];
     }, null, null, 100, globDynamicComponentEntry, null, true);
-<__snapshot_da39a_test_1/>;
+/**
+ * @jsxCSSId 100
+ */ <__snapshot_da39a_test_1/>;
 const __snapshot_da39a_test_2 = `${globDynamicComponentEntry}:${"__snapshot_da39a_test_2"}`;
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2)=>ReactLynx.createSnapshot(__snapshot_da39a_test_2, function() {
         const pageId = ReactLynx.__pageId;

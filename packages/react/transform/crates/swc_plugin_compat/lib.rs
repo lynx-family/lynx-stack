@@ -6,7 +6,6 @@ use regex::Regex;
 use serde::Deserialize;
 use swc_core::common::comments::Comments;
 use swc_core::common::util::take::Take;
-use swc_core::common::Span;
 use swc_core::{
   common::{errors::HANDLER, DUMMY_SP},
   ecma::{
@@ -459,6 +458,9 @@ where
 
     snapshot_jsx.visit_mut_with(self);
 
+    let component_jsx_span = component_jsx.span;
+    self.comments.add_pure_comment(component_jsx_span.lo);
+
     let mut wrap_call = if has_spread {
       quote!(
         "$runtime_id.wrapWithLynxComponent(($children, $spread) => $snapshot_jsx, $component_jsx)" as Expr,
@@ -480,9 +482,7 @@ where
 
     wrap_call = match wrap_call {
       Expr::Call(mut call) => {
-        let pure_span = Span::dummy_with_cmt();
-        self.comments.add_pure_comment(pure_span.lo);
-        call.span = pure_span;
+        call.span = component_jsx_span;
         Expr::Call(call)
       }
       _ => unreachable!(
@@ -1253,7 +1253,7 @@ mod tests {
     ecma::{
       parser::{EsSyntax, Syntax},
       transforms::{
-        base::{hygiene::hygiene_with_config, resolver},
+        base::{fixer::fixer, hygiene::hygiene_with_config, resolver},
         testing::test,
       },
       visit::visit_mut_pass,
@@ -1269,6 +1269,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig::default(),
@@ -1290,6 +1291,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig::default(),
@@ -1318,6 +1320,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig::default(),
@@ -1342,6 +1345,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig::default(),
@@ -1363,6 +1367,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig::default(),
@@ -1384,6 +1389,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig::default(),
@@ -1404,6 +1410,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig::default(),
@@ -1430,6 +1437,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig::default(),
@@ -1450,6 +1458,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
@@ -1487,6 +1496,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
@@ -1526,6 +1536,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
@@ -1549,6 +1560,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
@@ -1574,6 +1586,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
@@ -1597,6 +1610,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
@@ -1635,6 +1649,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
@@ -1675,6 +1690,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
@@ -1713,6 +1729,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
@@ -1753,6 +1770,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
@@ -1805,6 +1823,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
@@ -1835,6 +1854,7 @@ mod tests {
       ..Default::default()
     }),
     |t| (
+      fixer(None),
       resolver(Mark::new(), Mark::new(), true),
       visit_mut_pass(CompatVisitor::new(
         CompatVisitorConfig {
