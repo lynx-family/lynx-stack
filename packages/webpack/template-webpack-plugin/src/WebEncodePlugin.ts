@@ -102,10 +102,17 @@ export class WebEncodePlugin {
             customSections: encodeOptions.customSections ?? {},
             elementTemplates: encodeOptions['elementTemplates'] ?? {},
           };
-          const isExperimentalWebBinary =
-            process.env['EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE'];
+          const isExperimentalWebBinary = !!process
+            .env['EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE'];
           if (isExperimentalWebBinary) {
-            const { encode } = await import('@lynx-js/web-core-wasm/encode');
+            const { encode } = await import('@lynx-js/web-core-wasm/encode')
+              .catch(
+                () => {
+                  throw new Error(
+                    `FLAG EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE IS INTERNAL USED ONLY`,
+                  );
+                },
+              );
             return {
               buffer: Buffer.from(encode(tasmJSONInfo as TasmJSONInfo)),
               debugInfo: '',
