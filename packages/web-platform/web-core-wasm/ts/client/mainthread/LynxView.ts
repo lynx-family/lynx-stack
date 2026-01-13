@@ -343,8 +343,17 @@ export class LynxViewElement extends HTMLElement {
    * @private
    */
   disconnectedCallback() {
-    // under the all-on-ui strategy, when reload() triggers dsl flush, the previously removed pageElement will be used in __FlushElementTree.
-    // This attribute is added to filter this issue.
+    /* TODO:
+     * Await async disposal before re-rendering to prevent concurrent instance mutations.
+
+        Currently disconnectedCallback() triggers asyncDispose() without awaiting, allowing #render() to immediately create a new instance while the old one is still cleaning up on the background thread. This causes both instances to render into the shadowRoot concurrently, producing multiple page elements.
+
+        The basic-reload-page-only-one test confirms this issue by checking that exactly one page element exists after reload. The disposal must complete before the new instance begins rendering.
+
+        Extract an async #disposeInstance() method that marks the old page as disposed, awaits the instance cleanup, clears the shadowRoot, and resets adoptedStyleSheets to prevent stylesheet accumulation. Then await this in the microtask before instantiating the new LynxViewInstance.
+
+        This also fixes a secondary bug where lynxGroupId is referenced before declaration.
+     */
     this.shadowRoot?.querySelector('[part="page"]')
       ?.setAttribute(
         lynxDisposedAttribute,

@@ -1348,13 +1348,11 @@ describe('Element APIs', () => {
     const enableSpy = vi.spyOn(mtsBinding, 'enableElementEvent');
     const disableSpy = vi.spyOn(mtsBinding, 'disableElementEvent');
 
-    // 1. Add first scroll listener -> should enable
     mtsGlobalThis.__AddEvent(element, 'bindEvent', 'input', 'handler1');
     expect(enableSpy).toHaveBeenCalledTimes(1);
     expect(enableSpy).toHaveBeenCalledWith(expect.anything(), 'input');
     enableSpy.mockClear();
 
-    // 2. Add second scroll listener -> should NOT enable again
     mtsGlobalThis.__AddEvent(element, 'bindEvent', 'input', 'handler2');
     expect(enableSpy).not.toHaveBeenCalled();
 

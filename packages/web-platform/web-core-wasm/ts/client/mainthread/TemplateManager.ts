@@ -173,6 +173,9 @@ export class TemplateManager {
         break;
       case 'done':
         this.#cleanup(url);
+        /* TODO: The promise resolution is deferred inside .then() without error handling.
+         *
+         */
         lynxViewInstancePromise.then((instance) => {
           instance.backgroundThread.markTiming('decode_end');
           instance.backgroundThread.markTiming('load_template_start');
