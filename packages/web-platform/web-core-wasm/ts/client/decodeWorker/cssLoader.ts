@@ -90,8 +90,7 @@ export function loadStyleFromJSON(
     }
   }
 
-  // Use the new Rust method
-  return wasmInstance.DecodedStyleData.encode_from_raw_style_info(
+  return wasmInstance.encode_legacy_json_generated_raw_style_info(
     rawStyleInfo,
     configEnableCssSelector,
     entryName,

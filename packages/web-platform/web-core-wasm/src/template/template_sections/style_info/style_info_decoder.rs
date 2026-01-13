@@ -351,9 +351,10 @@ mod test {
     raw_style_info::StyleSheet, Rule, RulePrelude, Selector, ValueToken,
   };
 
+  use super::StyleInfoDecoder;
+
   use super::super::{
     DeclarationBlock, OneSimpleSelector, OneSimpleSelectorType, RawStyleInfo, RuleType,
-    StyleInfoDecoder,
   };
 
   fn generate_string_buf(

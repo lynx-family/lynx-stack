@@ -3,7 +3,7 @@ import { describe, test, expect, beforeEach, beforeAll, vi } from 'vitest';
 import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElementAPI.js';
 import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
 import { templateManager } from '../ts/client/mainthread/TemplateManager.js';
-import { ElementTemplateSection, wasmInstance } from '../ts/client/wasm.js';
+import { wasmInstance, templateManagerWasm } from '../ts/client/wasm.js';
 import { encodeElementTemplates } from '../ts/encode/encodeElementTemplate.js';
 
 describe('Lazy Load Web Elements', () => {
@@ -39,10 +39,9 @@ describe('Lazy Load Web Elements', () => {
         'events': [],
       },
     });
-    const section = wasmInstance.ElementTemplateSection.from_encoded(encoded);
-    templateManager.setElementTemplateSection(
+    templateManagerWasm?.add_element_template(
       'test-lazy-load',
-      section,
+      encoded,
     );
   });
 

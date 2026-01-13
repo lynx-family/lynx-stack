@@ -14,3 +14,4 @@
 /// - `element_apis`: Contains APIs for manipulating elements, handling events, and managing styles.
 mod element_apis;
 mod main_thread_context;
+pub mod style_manager;

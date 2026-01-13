@@ -4,7 +4,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 use super::{transformer::StyleTransformer, ParsedDeclaration};
-use crate::style_transformer::transformer::Generator;
+use crate::{
+  style_transformer::transformer::Generator, utils::hyphenate_style_name::hyphenate_style_name,
+};
 struct InlineStyleGenerator {
   string_buffer: String,
 }
@@ -22,6 +24,30 @@ pub(crate) fn transform_inline_style_string(source: &str) -> String {
   };
   let transformer = &mut StyleTransformer::new(&mut generator);
   transformer.parse(source);
+  generator.string_buffer
+}
+
+pub(crate) fn transform_inline_style_key_value_vec(source: Vec<String>) -> String {
+  let mut generator = InlineStyleGenerator {
+    string_buffer: String::new(),
+  };
+  let transformer = &mut StyleTransformer::new(&mut generator);
+
+  // the even valule of source should be processed by hyphenate_style_name
+  // iterate 2 values at a time
+  let mut key: String = String::new();
+  for (idx, value) in source.into_iter().enumerate() {
+    if idx % 2 == 0 {
+      key = value;
+    } else {
+      transformer.on_declaration_parsed(ParsedDeclaration {
+        property_name: hyphenate_style_name(&key),
+        property_value: value,
+        is_important: false,
+      });
+    }
+  }
+
   generator.string_buffer
 }
 

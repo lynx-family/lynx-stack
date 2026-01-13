@@ -6,6 +6,9 @@
 
 use crate::css_tokenizer::token_types::{COLON_TOKEN, IDENT_TOKEN, SEMICOLON_TOKEN};
 use crate::css_tokenizer::tokenize;
+
+#[cfg(feature = "encode")]
+use super::style_info_decoder::StyleInfoDecoder;
 use bincode::Decode;
 #[cfg(feature = "encode")]
 use bincode::Encode;
@@ -146,7 +149,6 @@ impl RawStyleInfo {
   #[cfg(feature = "encode")]
   #[wasm_bindgen]
   pub fn encode(&mut self) -> Result<js_sys::Uint8Array, JsError> {
-    use crate::template::template_sections::style_info::decoded_style_info::StyleInfoDecoder;
     let decoded_style_info = StyleInfoDecoder::new(self.clone(), None, true)?;
     self.style_content_str_size_hint = decoded_style_info.style_content.len();
     let serialized = bincode::encode_to_vec(&*self, bincode::config::standard())

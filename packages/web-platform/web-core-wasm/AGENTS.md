@@ -31,6 +31,8 @@ The Rust code forms the logic backbone, compiled into WASM.
 - **`style_transformer`**: Transforms Lynx CSS into Web CSS. It handles complex rules like converting `display: linear` to Flexbox equivalents and resolving `rpx` units to `calc()`.
 - **`template`**: Defines the schema for binary templates (`RawElementTemplate`, `RawStyleInfo`) and handles their `bincode` serialization.
 - **`leo_asm`**: Defines "Leo Assembly" opcodes (e.g., `CreateElement`, `SetAttribute`) used to efficiently reconstruct DOM trees from templates.
+- **`utils`**: General purpose utilities.
+  - **`hyphenate_style_name.rs`**: Converts camelCase style names to kebab-case (e.g., `backgroundColor` -> `background-color`). **Note**: Assumes no `ms` vendor prefix.
 
 ### 2. Client Runtime (`ts/client`)
 
@@ -41,7 +43,8 @@ TypeScript bindings that load the WASM module and build the browser environment.
 Handles DOM rendering and user interaction.
 
 - **`LynxView.ts`**: The `<lynx-view>` custom element. It initializes the `LynxViewInstance` and acts as the entry point.
-- **`TemplateManager.ts`**: Orchestrates template loading. It uses a dedicated `decode.worker.js` to parse binary templates off-main-thread.
+- `ts/client/mainthread/TemplateManager.ts`: Manages template loading and processing. a dedicated `decode.worker.js` to parse binary templates off-main-thread.
+- `src/main_thread/style_manager.rs`: Manages styles, handles CSS selector logic and CSS OG style updates.
 - **`elementAPIs/createElementAPI.ts`**: A JavaScript facade over the Wasm `MainThreadWasmContext`. It provides methods like `__CreateElement` and `__SetAttribute` that bridge JS calls to the underlying Rust logic.
 - **`elementAPIs/WASMJSBinding.ts`**: Mocks or proxies the Wasm binding for testing or non-Wasm environments.
 
@@ -106,3 +109,10 @@ This package uses a hybrid build system involving `pnpm`, `rsbuild`, and `cargo`
 2. **Performance is Key**: This package is the engine. Avoid main-thread blocking concepts. Prefer Wasm for heavy compute.
 3. **Testing**: When modifying `src/main_thread`, ALWAYS add corresponding tests in `tests/element-apis.spec.ts` to verify the JS-side behavior.
 4. **Documentation**: Keep this file updated if you add new modules or change the architecture.
+
+## Technical Learnings
+
+### WASM <-> JS Interop
+
+- **Recursive Borrowing**: Avoid patterns where Rust calls JS, and JS immediately calls back into Rust to retrieve data that Rust already possesses. This will cause `RefCell` borrowing panics ("recursive use of an object").
+- **Object Passing**: Instead of passing IDs (like `uniqueId`) from Rust to JS and having JS callback to retrieve the object, pass the object reference (e.g., `&web_sys::HtmlElement`) directly from Rust to JS. `wasm-bindgen` handles this seamlessly and key for avoiding re-entrant calls.

@@ -45,21 +45,28 @@ extern "C" {
   #[wasm_bindgen(method, js_name = "markExposureRelatedElementByUniqueId")]
   pub fn mark_exposure_related_element_by_unique_id(
     this: &RustMainthreadContextBinding,
-    unique_id: usize,
+    element: &web_sys::HtmlElement,
     to_enable: bool,
   );
 
   #[wasm_bindgen(method, js_name = "enableElementEvent")]
   pub fn enable_element_event(
     this: &RustMainthreadContextBinding,
-    unique_id: usize,
+    element: &web_sys::HtmlElement,
     event_name: &str,
   );
 
   #[wasm_bindgen(method, js_name = "disableElementEvent")]
   pub fn disable_element_event(
     this: &RustMainthreadContextBinding,
-    unique_id: usize,
+    element: &web_sys::HtmlElement,
     event_name: &str,
   );
+
+  #[wasm_bindgen(method, js_name = "getClassList")]
+  pub fn get_class_name_list(
+    this: &RustMainthreadContextBinding,
+    element: &web_sys::HtmlElement,
+  ) -> Vec<String>;
+
 }

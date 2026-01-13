@@ -3,7 +3,7 @@
  * Licensed under the Apache License Version 2.0 that can be found in the
  * LICENSE file in the root directory of this source tree.
  */
-#[cfg(feature = "client")]
+#[cfg(any(feature = "client", test))]
 use crate::css_tokenizer::tokenize;
 use crate::css_tokenizer::{
   char_code_definitions::is_white_space, token_types::*, tokenize::Parser,
@@ -166,7 +166,7 @@ impl<'a, T: Generator> StyleTransformer<'a, T> {
     }
   }
 
-  fn on_declaration_parsed(&mut self, declaration: ParsedDeclaration) {
+  pub(crate) fn on_declaration_parsed(&mut self, declaration: ParsedDeclaration) {
     let empty: bool = {
       let (current_declarations, kids_declarations) =
         query_transform_rules(&declaration.property_name, &declaration.property_value);

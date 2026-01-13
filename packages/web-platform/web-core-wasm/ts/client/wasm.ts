@@ -40,42 +40,9 @@ export const [wasmInstance, wasmModule] = await wasmLoaded;
 if (!isWorker) {
   wasmInstance.initSync({ module: wasmModule! });
 }
-
-export class DecodedStyle {
-  static webWorkerDecode(
-    data: Uint8Array,
-    configEnableCssSelector: boolean,
-    entryName?: string,
-  ) {
-    return wasmInstance.DecodedStyleData.decode_into(
-      data,
-      entryName,
-      configEnableCssSelector,
-    );
-  }
-  readonly #styleData: InstanceType<
-    typeof wasmInstance.DecodedStyleData
-  >;
-  readonly style_content: string;
-  readonly font_face_content: string;
-  constructor(
-    data: Uint8Array,
-  ) {
-    this.#styleData = new wasmInstance.DecodedStyleData(
-      data,
-    );
-    // cache the string result to avoid multiple utf8 -> utf16 string transformation
-    this.style_content = this.#styleData.style_content;
-    this.font_face_content = this.#styleData.font_face_content;
-    this.query_css_og_declarations_by_css_id = this.#styleData
-      .query_css_og_declarations_by_css_id.bind(this.#styleData);
-  }
-  query_css_og_declarations_by_css_id: InstanceType<
-    typeof wasmInstance.DecodedStyleData
-  >['query_css_og_declarations_by_css_id'];
-}
+export const templateManagerWasm = isWorker
+  ? undefined
+  : new wasmInstance.TemplateManager();
 
 export type MainThreadWasmContext =
   typeof import('../../binary/client/client.js').MainThreadWasmContext;
-export type ElementTemplateSection =
-  typeof import('../../binary/client/client.js').ElementTemplateSection;

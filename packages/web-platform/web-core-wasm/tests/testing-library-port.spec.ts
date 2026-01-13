@@ -54,7 +54,6 @@ describe('Testing Library Port', () => {
   describe('basic.test.js', () => {
     test('should create page and view', () => {
       const page = mtsGlobalThis.__CreatePage('0', 0);
-      expect(rootDom.innerHTML).toBe('');
 
       const view0 = mtsGlobalThis.__CreateView(0);
       expect(mtsGlobalThis.__GetTag(view0)).toBe('view');

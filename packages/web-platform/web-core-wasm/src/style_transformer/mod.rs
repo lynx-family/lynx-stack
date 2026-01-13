@@ -18,7 +18,9 @@ mod rules;
 mod token_transformer;
 mod transformer;
 #[cfg(feature = "client")]
-pub(crate) use inline_style::transform_inline_style_string;
+pub(crate) use inline_style::{
+  transform_inline_style_key_value_vec, transform_inline_style_string,
+};
 #[cfg(feature = "client")]
 pub(crate) use rules::query_transform_rules;
 pub(crate) use transformer::Generator;

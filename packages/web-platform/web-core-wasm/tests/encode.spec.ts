@@ -8,7 +8,11 @@ import {
   RulePrelude,
 } from '../ts/encode/encodeCSS.js';
 import * as CSS from '@lynx-js/css-serializer';
-import { DecodedStyle } from '../ts/client/wasm.js';
+import {
+  get_style_content,
+  get_font_face_content,
+  decode_style_info,
+} from '../binary/encode/encode.js';
 import { encode, TasmJSONInfo } from '../ts/encode/webEncoder.js';
 import { TemplateSectionLabel } from '../ts/constants.js';
 
@@ -187,9 +191,9 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
   test(':root', () => {
@@ -201,9 +205,9 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
   test('complex-root', () => {
@@ -215,9 +219,9 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
@@ -231,9 +235,9 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .font_face_content;
+    const decodedString = get_font_face_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
@@ -246,9 +250,9 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
@@ -264,9 +268,9 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
@@ -286,9 +290,9 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
@@ -304,18 +308,18 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
   test('no css', () => {
     const cssMap = {};
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toBe('');
   });
 
@@ -328,9 +332,9 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
@@ -343,9 +347,9 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
@@ -357,7 +361,9 @@ describe('encodeCSS', () => {
   //     `).root,
   //   };
   //   const buffer = encodeCSS(cssMap);
-  //   const decodedString = new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined)).style_content;
+  //    const decodedString = get_style_content(
+  //     DecodedStyle.webWorkerDecode(buffer, true, undefined),
+  //   );
   //   expect(decodedString.trim()).toBe('');
   // })
 });
