@@ -5,6 +5,7 @@
  */
 
 use super::MainThreadWasmContext;
+use crate::constants;
 use wasm_bindgen::prelude::*;
 
 /**
@@ -31,15 +32,40 @@ impl MainThreadWasmContext {
     event_handler_identifier: Option<String>,
   ) {
     let event_name = event_name.to_ascii_lowercase();
+    let event_name_str = event_name.as_str();
     let event_type = event_type.to_ascii_lowercase();
     self.enable_event(&event_name);
+
+    let is_allowlisted = constants::ELEMENT_REACTIVE_EVENTS.contains(event_name_str);
+    let mut should_enable = false;
+    let mut should_disable = false;
+
     if let Some(binding) = self.get_element_data_by_unique_id(unique_id) {
       let mut element_data = binding.borrow_mut();
+      if is_allowlisted {
+        let old_handler =
+          element_data.get_framework_cross_thread_event_handler(&event_name, &event_type);
+        match (&old_handler, &event_handler_identifier) {
+          (None, Some(_)) => should_enable = true,
+          (Some(_), None) => should_disable = true,
+          _ => {}
+        }
+      }
+
       element_data.replace_framework_cross_thread_event_handler(
-        event_name,
+        event_name.clone(),
         event_type,
         event_handler_identifier,
       );
+    }
+    if should_enable {
+      self
+        .mts_binding
+        .enable_element_event(unique_id, event_name_str);
+    } else if should_disable {
+      self
+        .mts_binding
+        .disable_element_event(unique_id, event_name_str);
     }
   }
 
@@ -52,15 +78,40 @@ impl MainThreadWasmContext {
     event_handler_identifier: Option<JsValue>,
   ) {
     let event_name = event_name.to_ascii_lowercase();
+    let event_name_str = event_name.as_str();
     let event_type = event_type.to_ascii_lowercase();
     self.enable_event(&event_name);
+
+    let is_allowlisted = constants::ELEMENT_REACTIVE_EVENTS.contains(event_name_str);
+    let mut should_enable = false;
+    let mut should_disable = false;
+
     if let Some(binding) = self.get_element_data_by_unique_id(unique_id) {
       let mut element_data = binding.borrow_mut();
+      if is_allowlisted {
+        let old_handler =
+          element_data.get_framework_run_worklet_event_handler(&event_name, &event_type);
+        match (&old_handler, &event_handler_identifier) {
+          (None, Some(_)) => should_enable = true,
+          (Some(_), None) => should_disable = true,
+          _ => {}
+        }
+      }
+
       element_data.replace_framework_run_worklet_event_handler(
-        event_name,
+        event_name.clone(),
         event_type,
         event_handler_identifier,
       );
+    }
+    if should_enable {
+      self
+        .mts_binding
+        .enable_element_event(unique_id, event_name_str);
+    } else if should_disable {
+      self
+        .mts_binding
+        .disable_element_event(unique_id, event_name_str);
     }
   }
 

@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest';
 import { encodeCSS } from '../ts/encode/encodeCSS.js';
 import { DecodedStyle } from '../ts/client/wasm.js';
 import * as CSS from '@lynx-js/css-serializer';
+import { StyleManager } from '../ts/client/mainthread/StyleManager.js';
 
 vi.mock('wasm-feature-detect', () => ({
   referenceTypes: async () => true,
@@ -13,13 +14,7 @@ vi.mock('wasm-feature-detect', () => ({
 
 describe('StyleManager', () => {
   let rootNode: HTMLElement;
-  let styleManager: any;
-  let StyleManager: any;
-
-  beforeAll(async () => {
-    const module = await import('../ts/client/mainthread/StyleManager.js');
-    StyleManager = module.StyleManager;
-  });
+  let styleManager: StyleManager;
 
   beforeEach(() => {
     rootNode = document.createElement('div');
@@ -113,6 +108,53 @@ describe('StyleManager', () => {
     // Should update existing rule
     if (sheet) {
       expect(sheet.cssRules.length).toBe(1);
+    }
+  });
+  it('should not include styles from other css-ids if not imported in Non-CSS Selector mode', () => {
+    styleManager = new StyleManager(rootNode);
+
+    const encoded = encodeCSS({
+      '1': CSS.parse(`
+        .background-green {
+          background-color: green;
+        }
+    `).root,
+      '2': CSS.parse(`
+        .background-yellow {
+          background-color: yellow;
+        }
+    `).root,
+      '123': CSS.parse(`
+        @import "1";
+    `).root,
+    });
+
+    const decodedStyle = new DecodedStyle(
+      DecodedStyle.webWorkerDecode(encoded, false),
+    );
+
+    styleManager.pushStyleSheet(decodedStyle);
+
+    // Node has cssId = 1
+    styleManager.updateCssOgStyle(
+      1,
+      123,
+      ['background-yellow', 'background-green'] as any,
+    );
+
+    const styleElement = rootNode.querySelector(
+      'style:last-of-type',
+    ) as HTMLStyleElement;
+    const sheet = styleElement?.sheet;
+    expect(sheet).toBeDefined();
+    if (sheet) {
+      expect(sheet.cssRules.length).toBe(1);
+      const rule = sheet.cssRules[0] as CSSStyleRule;
+      // Should contain green
+      expect(rule.style.backgroundColor).toBe('green');
+      // Should NOT contain yellow
+      expect(rule.style.backgroundColor).not.toBe('yellow');
+      expect(rule.cssText).not.toContain('yellow');
     }
   });
 });

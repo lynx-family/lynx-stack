@@ -21,7 +21,8 @@ export const lynxDefaultDisplayLinearAttribute = /*#__PURE__*/
 export const lynxDefaultOverflowVisibleAttribute /*#__PURE__*/ =
   'lynx-default-overflow-visible' as const;
 
-export const __lynx_timing_flag = /*#__PURE__*/ '__lynx_timing_flag' as const;
+export const LYNX_TIMING_FLAG_ATTRIBUTE =
+  /*#__PURE__*/ '__lynx_timing_flag' as const;
 
 export const i18nResourceMissedEventName = 'i18nResourceMissed' as const;
 
@@ -42,15 +43,10 @@ export const W3cEventNameToLynx: Record<string, string> = /*#__PURE__*/ {
   lynxinput: 'input',
 };
 
-export const LynxEventNameToW3cCommon: Record<string, string> = /*#__PURE__*/ {
-  tap: 'click',
-  scroll: 'lynxscroll',
-  scrollend: 'lynxscrollend',
-  touch: 'overlaytouch',
-  'lynxblur': 'lynxblur',
-  'lynxfocus': 'lynxfocus',
-  'lynxinput': 'lynxinput',
-};
+export const LynxEventNameToW3cCommon: Record<string, string> =
+  /*#__PURE__*/ Object.fromEntries(
+    Object.entries(W3cEventNameToLynx).map(([k, v]) => [v, k]),
+  );
 
 export const MagicHeader = /*#__PURE__*/ 0x464F525741524453; // random magic number for verifying the stream is a Lynx encoded template
 
@@ -89,6 +85,7 @@ export const LYNX_TAG_TO_HTML_TAG_MAP: Record<string, string> =
       'page': 'div',
       'input': 'x-input',
       'x-input-ng': 'x-input',
+      'svg': 'x-svg',
     }),
   );
 

@@ -245,6 +245,7 @@ These instructions were generated through comprehensive analysis and testing of 
 - Includes E2E test suite requiring Playwright
 - Many packages have complex interdependencies
 - Contains performance-critical rendering code
+- See `packages/web-platform/web-core-wasm/AGENTS.md` for specific instructions on `web-core-wasm`.
 
 Remember: This is a complex, multi-language monorepo. Always allow extra time for builds and tests, and follow the exact command sequences provided.
 

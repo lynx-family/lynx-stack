@@ -7,6 +7,7 @@ export const decodedstyledata_style_content: (a: number) => [number, number];
 export const decodedstyledata_font_face_content: (a: number) => [number, number];
 export const decodedstyledata_query_css_og_declarations_by_css_id: (a: number, b: number, c: number, d: number) => [number, number];
 export const decodedstyledata_decode_into: (a: any, b: number, c: number, d: number) => [number, number, number];
+export const decodedstyledata_encode_from_raw_style_info: (a: number, b: number, c: number, d: number) => [number, number, number];
 export const __wbg_rawelementtemplate_free: (a: number, b: number) => void;
 export const rawelementtemplate_new: () => number;
 export const rawelementtemplate_append_to_root: (a: number, b: number) => void;

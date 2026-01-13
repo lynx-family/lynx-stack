@@ -37,7 +37,8 @@
   },
   "ignore": [
     "@lynx-js/web-tests",
-    "@lynx-js/example-react"
+    "@lynx-js/example-react",
+    "@lynx-js/web-core-wasm-e2e"
   ],
   "changedFilePatterns": [
     "src/**"

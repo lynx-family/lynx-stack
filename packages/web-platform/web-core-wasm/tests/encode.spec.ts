@@ -9,6 +9,8 @@ import {
 } from '../ts/encode/encodeCSS.js';
 import * as CSS from '@lynx-js/css-serializer';
 import { DecodedStyle } from '../ts/client/wasm.js';
+import { encode, TasmJSONInfo } from '../ts/encode/webEncoder.js';
+import { TemplateSectionLabel } from '../ts/constants.js';
 
 describe('RawStyleInfo', () => {
   test('should encode StyleRule correctly', () => {
@@ -358,4 +360,66 @@ describe('encodeCSS', () => {
   //   const decodedString = new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined)).style_content;
   //   expect(decodedString.trim()).toBe('');
   // })
+});
+
+describe('webEncoder', () => {
+  test('should skip elementTemplates section if empty', () => {
+    const tasmJSON: TasmJSONInfo = {
+      styleInfo: {},
+      manifest: {},
+      cardType: 'card',
+      appType: 'card',
+      pageConfig: {},
+      lepusCode: {},
+      customSections: {},
+      elementTemplates: {},
+    };
+    const buffer = encode(tasmJSON);
+    const view = new DataView(buffer.buffer);
+    let offset = 8 + 4; // Magic + Version
+
+    while (offset < buffer.byteLength) {
+      const label = view.getUint32(offset, true);
+      offset += 4;
+      const length = view.getUint32(offset, true);
+      offset += 4;
+      if (label === TemplateSectionLabel.ElementTemplates) {
+        throw new Error('ElementTemplates section should not be present');
+      }
+      offset += length;
+    }
+  });
+
+  test('should include elementTemplates section if not empty', () => {
+    const tasmJSON: TasmJSONInfo = {
+      styleInfo: {},
+      manifest: {},
+      cardType: 'card',
+      appType: 'card',
+      pageConfig: {},
+      lepusCode: {},
+      customSections: {},
+      elementTemplates: {
+        '0': {
+          type: 'view',
+        },
+      },
+    };
+    const buffer = encode(tasmJSON);
+    const view = new DataView(buffer.buffer);
+    let offset = 8 + 4; // Magic + Version
+    let found = false;
+
+    while (offset < buffer.byteLength) {
+      const label = view.getUint32(offset, true);
+      offset += 4;
+      const length = view.getUint32(offset, true);
+      offset += 4;
+      if (label === TemplateSectionLabel.ElementTemplates) {
+        found = true;
+      }
+      offset += length;
+    }
+    expect(found).toBe(true);
+  });
 });

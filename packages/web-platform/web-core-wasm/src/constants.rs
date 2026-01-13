@@ -251,6 +251,7 @@ lazy_static::lazy_static! {
     ("wrapper", "lynx-wrapper"),
     ("list", "x-list"),
     ("page", "div"),
+    ("svg", "x-svg"),
   ]);
 
   pub static ref HTML_TAG_TO_LYNX_TAG_MAP: FnvHashMap<&'static str, &'static str> = FnvHashMap::from_iter(LYNX_TAG_TO_HTML_TAG_MAP
@@ -292,5 +293,34 @@ lazy_static::lazy_static! {
     "wrapper",
     "div",
     "svg"
+  ]);
+
+  pub static ref ELEMENT_REACTIVE_EVENTS: FnvHashSet<&'static str> = FnvHashSet::from_iter(vec![
+    "headeroffset",
+    "headershow",
+    "footeroffset",
+    "startrefresh",
+    "headerreleased",
+    "startloadmore",
+    "footerreleased",
+    "scrolltoupper",
+    "scrolltolower",
+    "scroll",
+    "scrollend",
+    "load",
+    "change",
+    "offsetchange",
+    "transition",
+    "scrollstart",
+    "change-event-for-indicator",
+    "layoutchange",
+    "input",
+    "selection",
+    "error",
+    "layout",
+    "offset",
+    "snap",
+    "scrolltoupperedge",
+    "scrolltoloweredge"
   ]);
 }

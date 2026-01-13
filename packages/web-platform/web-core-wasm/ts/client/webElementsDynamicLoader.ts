@@ -80,3 +80,14 @@ export function loadWebElement(id: number): Promise<void> | undefined {
     loadedWebElementsCSSIds.add(id);
   });
 }
+
+export function loadAllWebElements(): Promise<void> {
+  const promises: Promise<unknown>[] = [];
+  for (let i = 0; i <= 8; i++) {
+    const p = loadWebElement(i);
+    if (p) {
+      promises.push(p);
+    }
+  }
+  return Promise.all(promises) as Promise<unknown> as Promise<void>;
+}
