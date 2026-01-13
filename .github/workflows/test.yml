@@ -134,7 +134,7 @@ jobs:
     uses: ./.github/workflows/workflow-test.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    name: Playwright ${{ matrix.render }} (${{ matrix.shard }}/3)
+    name: Playwright ${{ matrix.render }} (${{ matrix.shard }}/2)
     strategy:
       fail-fast: false
       matrix:
