@@ -280,8 +280,16 @@ impl StyleInfoDecoder {
     .push('{');
     let mut transformer = StyleTransformer::new(self);
 
-    for token in declaration_block.tokens.into_iter() {
-      transformer.on_token(token.token_type, token.value.as_str());
+    for decl in declaration_block.declarations.into_iter() {
+      transformer.on_token(
+        crate::css_tokenizer::token_types::IDENT_TOKEN,
+        &decl.property_name,
+      );
+      transformer.on_token(crate::css_tokenizer::token_types::COLON_TOKEN, ":");
+      for token in decl.value_token_list.iter() {
+        transformer.on_token(token.token_type, &token.value);
+      }
+      transformer.on_token(crate::css_tokenizer::token_types::SEMICOLON_TOKEN, ";");
     }
     (if self.is_processing_font_face {
       &mut self.font_face_content
@@ -348,7 +356,8 @@ mod test {
   use fnv::FnvHashMap;
 
   use crate::template::template_sections::style_info::{
-    raw_style_info::StyleSheet, Rule, RulePrelude, Selector, ValueToken,
+    raw_style_info::{DeclarationParser, StyleSheet},
+    Rule, RulePrelude, Selector, ValueToken,
   };
 
   use super::StyleInfoDecoder;
@@ -386,42 +395,26 @@ mod test {
               selector_list: vec![],
             },
             declaration_block: DeclarationBlock {
-              tokens: vec![
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
-                  value: "font-family".to_string(),
+              declarations: vec![
+                DeclarationParser {
+                  property_name: "font-family".to_string(),
+                  value_token_list: vec![ValueToken {
+                    token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
+                    value: "MyFont".to_string(),
+                  }],
                 },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::COLON_TOKEN,
-                  value: ":".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
-                  value: "MyFont".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::SEMICOLON_TOKEN,
-                  value: ";".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
-                  value: "src".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::COLON_TOKEN,
-                  value: ":".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
-                  value: "url('myfont.woff2')".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
-                  value: "format('woff2')".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::SEMICOLON_TOKEN,
-                  value: ";".to_string(),
+                DeclarationParser {
+                  property_name: "src".to_string(),
+                  value_token_list: vec![
+                    ValueToken {
+                      token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
+                      value: "url('myfont.woff2')".to_string(),
+                    },
+                    ValueToken {
+                      token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
+                      value: "format('woff2')".to_string(),
+                    },
+                  ],
                 },
               ],
             },
@@ -454,24 +447,13 @@ mod test {
               }],
             },
             declaration_block: DeclarationBlock {
-              tokens: vec![
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
-                  value: "width".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::COLON_TOKEN,
-                  value: ":".to_string(),
-                },
-                ValueToken {
+              declarations: vec![DeclarationParser {
+                property_name: "width".to_string(),
+                value_token_list: vec![ValueToken {
                   token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
                   value: "100rpx".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::SEMICOLON_TOKEN,
-                  value: ";".to_string(),
-                },
-              ],
+                }],
+              }],
             },
           }],
         },
@@ -502,24 +484,13 @@ mod test {
               }],
             },
             declaration_block: DeclarationBlock {
-              tokens: vec![
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
-                  value: "width".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::COLON_TOKEN,
-                  value: ":".to_string(),
-                },
-                ValueToken {
+              declarations: vec![DeclarationParser {
+                property_name: "width".to_string(),
+                value_token_list: vec![ValueToken {
                   token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
                   value: "100px".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::SEMICOLON_TOKEN,
-                  value: ";".to_string(),
-                },
-              ],
+                }],
+              }],
             },
           }],
         },
@@ -550,24 +521,13 @@ mod test {
               }],
             },
             declaration_block: DeclarationBlock {
-              tokens: vec![
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
-                  value: "width".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::COLON_TOKEN,
-                  value: ":".to_string(),
-                },
-                ValueToken {
+              declarations: vec![DeclarationParser {
+                property_name: "width".to_string(),
+                value_token_list: vec![ValueToken {
                   token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
                   value: "100px".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::SEMICOLON_TOKEN,
-                  value: ";".to_string(),
-                },
-              ],
+                }],
+              }],
             },
           }],
         },
@@ -632,27 +592,18 @@ mod test {
               },
               nested_rules: vec![],
               declaration_block: DeclarationBlock {
-                tokens: vec![
-                  ValueToken {
-                    token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
-                    value: "width".to_string(),
-                  },
-                  ValueToken {
-                    token_type: crate::css_tokenizer::token_types::COLON_TOKEN,
-                    value: ":".to_string(),
-                  },
-                  ValueToken {
+                declarations: vec![DeclarationParser {
+                  property_name: "width".to_string(),
+                  value_token_list: vec![ValueToken {
                     token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
                     value: "100rpx".to_string(),
-                  },
-                  ValueToken {
-                    token_type: crate::css_tokenizer::token_types::SEMICOLON_TOKEN,
-                    value: ";".to_string(),
-                  },
-                ],
+                  }],
+                }],
               },
             }],
-            declaration_block: DeclarationBlock { tokens: vec![] },
+            declaration_block: DeclarationBlock {
+              declarations: vec![],
+            },
           }],
         },
       )]),
@@ -683,24 +634,13 @@ mod test {
                 }],
               },
               declaration_block: DeclarationBlock {
-                tokens: vec![
-                  ValueToken {
-                    token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
-                    value: "width".to_string(),
-                  },
-                  ValueToken {
-                    token_type: crate::css_tokenizer::token_types::COLON_TOKEN,
-                    value: ":".to_string(),
-                  },
-                  ValueToken {
+                declarations: vec![DeclarationParser {
+                  property_name: "width".to_string(),
+                  value_token_list: vec![ValueToken {
                     token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
                     value: "100px".to_string(),
-                  },
-                  ValueToken {
-                    token_type: crate::css_tokenizer::token_types::SEMICOLON_TOKEN,
-                    value: ";".to_string(),
-                  },
-                ],
+                  }],
+                }],
               },
             },
             Rule {
@@ -715,24 +655,13 @@ mod test {
                 }],
               },
               declaration_block: DeclarationBlock {
-                tokens: vec![
-                  ValueToken {
-                    token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
-                    value: "height".to_string(),
-                  },
-                  ValueToken {
-                    token_type: crate::css_tokenizer::token_types::COLON_TOKEN,
-                    value: ":".to_string(),
-                  },
-                  ValueToken {
+                declarations: vec![DeclarationParser {
+                  property_name: "height".to_string(),
+                  value_token_list: vec![ValueToken {
                     token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
                     value: "100px".to_string(),
-                  },
-                  ValueToken {
-                    token_type: crate::css_tokenizer::token_types::SEMICOLON_TOKEN,
-                    value: ";".to_string(),
-                  },
-                ],
+                  }],
+                }],
               },
             },
           ],
@@ -772,24 +701,13 @@ mod test {
               ],
             },
             declaration_block: DeclarationBlock {
-              tokens: vec![
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
-                  value: "height".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::COLON_TOKEN,
-                  value: ":".to_string(),
-                },
-                ValueToken {
+              declarations: vec![DeclarationParser {
+                property_name: "height".to_string(),
+                value_token_list: vec![ValueToken {
                   token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
                   value: "100px".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::SEMICOLON_TOKEN,
-                  value: ";".to_string(),
-                },
-              ],
+                }],
+              }],
             },
           }],
         },
@@ -820,24 +738,13 @@ mod test {
               }],
             },
             declaration_block: DeclarationBlock {
-              tokens: vec![
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
-                  value: "width".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::COLON_TOKEN,
-                  value: ":".to_string(),
-                },
-                ValueToken {
+              declarations: vec![DeclarationParser {
+                property_name: "width".to_string(),
+                value_token_list: vec![ValueToken {
                   token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
                   value: "100px".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::SEMICOLON_TOKEN,
-                  value: ";".to_string(),
-                },
-              ],
+                }],
+              }],
             },
           }],
         },
@@ -867,24 +774,13 @@ mod test {
               }],
             },
             declaration_block: DeclarationBlock {
-              tokens: vec![
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
-                  value: "color".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::COLON_TOKEN,
-                  value: ":".to_string(),
-                },
-                ValueToken {
+              declarations: vec![DeclarationParser {
+                property_name: "color".to_string(),
+                value_token_list: vec![ValueToken {
                   token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
                   value: "red".to_string(),
-                },
-                ValueToken {
-                  token_type: crate::css_tokenizer::token_types::SEMICOLON_TOKEN,
-                  value: ";".to_string(),
-                },
-              ],
+                }],
+              }],
             },
           }],
         },

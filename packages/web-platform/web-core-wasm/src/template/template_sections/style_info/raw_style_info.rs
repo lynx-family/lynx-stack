@@ -100,11 +100,11 @@ pub(super) enum OneSimpleSelectorType {
 #[derive(Decode)]
 #[cfg_attr(feature = "encode", derive(Encode, Clone))]
 pub(super) struct DeclarationBlock {
-  pub(super) tokens: Vec<ValueToken>,
+  pub(crate) declarations: Vec<DeclarationParser>,
 }
 
-#[derive(Decode)]
-#[cfg_attr(feature = "encode", derive(Encode, Clone))]
+#[derive(Decode, Clone)]
+#[cfg_attr(feature = "encode", derive(Encode))]
 pub(super) struct ValueToken {
   pub(super) token_type: u8,
   pub(super) value: String,
@@ -178,7 +178,9 @@ impl Rule {
       prelude: RulePrelude {
         selector_list: vec![],
       },
-      declaration_block: DeclarationBlock { tokens: vec![] },
+      declaration_block: DeclarationBlock {
+        declarations: vec![],
+      },
       nested_rules: vec![],
     })
   }
@@ -199,31 +201,12 @@ impl Rule {
    */
   #[wasm_bindgen]
   pub fn push_declaration(&mut self, property_name: String, value: String) {
-    // 1. property name
-    self.declaration_block.tokens.push(ValueToken {
-      token_type: IDENT_TOKEN,
-      value: property_name,
-    });
-    // 2. colon
-    self.declaration_block.tokens.push(ValueToken {
-      token_type: COLON_TOKEN,
-      value: ":".to_string(),
-    });
-    // 3. value tokens
     let mut parser = DeclarationParser {
+      property_name,
       value_token_list: vec![],
     };
     tokenize::tokenize(&value, &mut parser);
-    self
-      .declaration_block
-      .tokens
-      .append(&mut parser.value_token_list);
-
-    // 4. semicolon
-    self.declaration_block.tokens.push(ValueToken {
-      token_type: SEMICOLON_TOKEN,
-      value: ";".to_string(),
-    });
+    self.declaration_block.declarations.push(parser);
   }
 
   /**
@@ -343,8 +326,12 @@ impl Selector {
     }
   }
 }
-struct DeclarationParser {
-  value_token_list: Vec<ValueToken>,
+
+#[derive(Decode, Clone, Default)]
+#[cfg_attr(feature = "encode", derive(Encode))]
+pub(crate) struct DeclarationParser {
+  pub(crate) property_name: String,
+  pub(crate) value_token_list: Vec<ValueToken>,
 }
 
 impl tokenize::Parser for DeclarationParser {
