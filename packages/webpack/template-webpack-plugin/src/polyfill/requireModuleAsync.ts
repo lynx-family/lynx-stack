@@ -47,5 +47,5 @@ export function getRequireModuleAsyncCachePolyfill() {
   };
   Object.assign(lynx.requireModuleAsync, oldRequireModuleAsync);
 }
-`;
+;`;
 }
