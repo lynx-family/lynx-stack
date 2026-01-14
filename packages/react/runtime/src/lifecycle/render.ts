@@ -17,7 +17,7 @@ import { SnapshotInstance } from '../snapshot.js';
 function renderMainThread(): void {
   let opcodes;
   try {
-    if (__PROFILE__) {
+    if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileStart('ReactLynx::renderMainThread');
     }
     opcodes = renderToString(__root.__jsx, undefined);
@@ -25,7 +25,7 @@ function renderMainThread(): void {
     lynx.reportError(e as Error);
     opcodes = [];
   } finally {
-    if (__PROFILE__) {
+    if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileEnd();
     }
   }
@@ -40,7 +40,7 @@ function renderMainThread(): void {
     });
   }
 
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::renderOpcodes');
   }
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -48,7 +48,7 @@ function renderMainThread(): void {
   if (__ENABLE_SSR__) {
     __root.__opcodes = opcodes;
   }
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
 }

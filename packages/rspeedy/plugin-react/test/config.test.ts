@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
@@ -1924,6 +1925,56 @@ describe('Config', () => {
       } catch (_error) {
         expect.fail('build should succeed')
       }
+    })
+
+    test('defineDCE should correctly eliminate dead code for compilation macros', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      // Production build with typical macro definitions
+      vi.stubEnv('NODE_ENV', 'production')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          source: {
+            entry: {
+              main: new URL('./fixtures/defineDCE/macros.js', import.meta.url)
+                .pathname,
+            },
+          },
+          environments: {
+            lynx: {},
+          },
+          plugins: [
+            pluginReactLynx({
+              defineDCE: {
+                define: {
+                  __PROFILE__: 'false',
+                },
+              },
+            }),
+          ],
+        },
+      })
+
+      try {
+        await rsbuild.build()
+      } catch (_error) {
+        expect.fail('build should succeed')
+      }
+
+      const distPath = path.join(
+        rsbuild.context.distPath,
+        '.rspeedy/main',
+        'main-thread.js',
+      )
+
+      if (!existsSync(distPath)) {
+        expect.fail(`Build output should exist at ${distPath}`)
+      }
+
+      const builtCode = readFileSync(distPath, 'utf8')
+      expect(builtCode).not.toContain('profileStart(\'test\')')
+      expect(builtCode).toContain('Config is: profile-off-mode')
     })
   })
 

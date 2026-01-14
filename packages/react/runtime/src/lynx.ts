@@ -23,14 +23,14 @@ import { injectUpdateMTRefInitValue } from './worklet/ref/updateInitValue.js';
 export { runWithForce } from './lynx/runWithForce.js';
 
 // @ts-expect-error Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature
-if (__MAIN_THREAD__ && typeof globalThis.processEvalResult === 'undefined') {
+if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__ && typeof globalThis.processEvalResult === 'undefined') {
   // @ts-expect-error Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature
   globalThis.processEvalResult = <T>(result: ((schema: string) => T) | undefined, schema: string) => {
     return result?.(schema);
   };
 }
 
-if (__MAIN_THREAD__) {
+if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
   injectCalledByNative();
   injectUpdateMainThread();
   injectUpdateMTRefInitValue();
@@ -44,7 +44,7 @@ if (__DEV__) {
 }
 
 // We are profiling both main-thread and background.
-if (__MAIN_THREAD__ && __PROFILE__) {
+if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__ && typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
   initProfileHook();
 }
 
@@ -53,7 +53,7 @@ if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
   initAlog();
 }
 
-if (__BACKGROUND__) {
+if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
   // Trick Preact and TypeScript to accept our custom document adapter.
   options.document = document as unknown as Document;
   options.requestAnimationFrame = lynxQueueMicrotask;
