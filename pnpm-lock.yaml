@@ -432,8 +432,8 @@ importers:
   packages/react:
     dependencies:
       preact:
-        specifier: npm:@hongzhiyuan/preact@10.24.0-00213bad
-        version: '@hongzhiyuan/preact@10.24.0-00213bad'
+        specifier: npm:@hongzhiyuan/preact@10.28.0-fc4af453
+        version: '@hongzhiyuan/preact@10.28.0-fc4af453'
     devDependencies:
       '@lynx-js/types':
         specifier: 3.6.0
@@ -452,7 +452,7 @@ importers:
         version: link:..
       '@prefresh/core':
         specifier: ^1.5.9
-        version: 1.5.9(preact@10.23.2)
+        version: 1.5.9(preact@10.28.0)
       '@prefresh/utils':
         specifier: ^1.2.1
         version: 1.2.1
@@ -2876,8 +2876,8 @@ packages:
       '@exodus/crypto':
         optional: true
 
-  '@hongzhiyuan/preact@10.24.0-00213bad':
-    resolution: {integrity: sha512-bHWp4ZDK5ZimcY+bTWw3S3xGiB8eROpZj0RK3FClNIaTOajb0b11CsT3K+pdeakgPgq1jWN3T2e2rfrPm40JsQ==}
+  '@hongzhiyuan/preact@10.28.0-fc4af453':
+    resolution: {integrity: sha512-TrM2g079OZN1poroDnU2kQd1gNUB1DMfVoKyz23AE3hZvl9ypRgG2MdgxAJtwT5u3BmYvI4Z0EbdpJTdf428IQ==}
 
   '@hono/node-server@1.19.7':
     resolution: {integrity: sha512-vUcD0uauS7EU2caukW8z5lJKtoGMokxNbJtBiwHgpqxEXokaHCBkQUmCHhjFB1VUTWdqj25QoMkMKzgjq+uhrw==}
@@ -8046,8 +8046,8 @@ packages:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
 
-  preact@10.23.2:
-    resolution: {integrity: sha512-kKYfePf9rzKnxOAKDpsWhg/ysrHPqT+yQ7UW4JjdnqjFIeNUnNcEJvhuA8fDenxAGWzUqtd51DfVg7xp/8T9NA==}
+  preact@10.28.0:
+    resolution: {integrity: sha512-rytDAoiXr3+t6OIP3WGlDd0ouCUG1iCWzkcY3++Nreuoi17y6T5i/zRhe6uYfoVcxq6YU+sBtJouuRDsq8vvqA==}
 
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -11274,7 +11274,7 @@ snapshots:
 
   '@exodus/bytes@1.6.0': {}
 
-  '@hongzhiyuan/preact@10.24.0-00213bad': {}
+  '@hongzhiyuan/preact@10.28.0-fc4af453': {}
 
   '@hono/node-server@1.19.7(hono@4.11.3)':
     dependencies:
@@ -11747,9 +11747,9 @@ snapshots:
 
   '@polka/url@1.0.0-next.25': {}
 
-  '@prefresh/core@1.5.9(preact@10.23.2)':
+  '@prefresh/core@1.5.9(preact@10.28.0)':
     dependencies:
-      preact: 10.23.2
+      preact: 10.28.0
 
   '@prefresh/utils@1.2.1': {}
 
@@ -17631,7 +17631,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  preact@10.23.2: {}
+  preact@10.28.0: {}
 
   prelude-ls@1.2.1: {}
 
