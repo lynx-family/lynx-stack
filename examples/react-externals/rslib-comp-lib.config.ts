@@ -1,56 +1,15 @@
-import { createRequire } from 'node:module';
-import path from 'node:path';
-
-import {
-  LAYERS,
-  defineExternalBundleRslibConfig,
-} from '@lynx-js/lynx-bundle-rslib-config';
-import { pluginReactAlias } from '@lynx-js/react-alias-rsbuild-plugin';
-import { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin';
-
-const require = createRequire(import.meta.url);
-const reactLynxDir = path.dirname(
-  require.resolve('@lynx-js/react/package.json'),
-);
+import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config';
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 
 export default defineExternalBundleRslibConfig({
   id: 'comp-lib',
-  tools: {
-    rspack: {
-      module: {
-        rules: [
-          {
-            test: /\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)$/,
-            issuerLayer: LAYERS.BACKGROUND,
-            loader: ReactWebpackPlugin.loaders.BACKGROUND,
-          },
-          {
-            test: /\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)$/,
-            issuerLayer: LAYERS.MAIN_THREAD,
-            loader: ReactWebpackPlugin.loaders.MAIN_THREAD,
-          },
-        ],
-      },
-    },
-  },
   source: {
     entry: {
       'CompLib': './external-bundle/CompLib.tsx',
     },
-    define: {
-      '__DEV__': 'false',
-      'process.env.NODE_ENV': '"production"',
-      '__FIRST_SCREEN_SYNC_TIMING__': '"immediately"',
-      '__ENABLE_SSR__': 'false',
-      '__PROFILE__': 'false',
-      '__EXTRACT_STR__': 'false',
-    },
   },
   plugins: [
-    pluginReactAlias({
-      LAYERS,
-      rootPath: reactLynxDir,
-    }),
+    pluginReactLynx(),
   ],
   output: {
     cleanDistPath: false,

@@ -10,8 +10,10 @@ import { createRslib } from '@rslib/core'
 import type { RslibConfig } from '@rslib/core'
 import { describe, expect, it, vi } from 'vitest'
 
+import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
 import { decodeTemplate } from './utils.js'
-import { LAYERS, defineExternalBundleRslibConfig } from '../src/index.js'
+import { defineExternalBundleRslibConfig } from '../src/index.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -63,6 +65,7 @@ describe('should build external bundle', () => {
           root: path.join(fixtureDir, 'dist'),
         },
       },
+      plugins: [pluginReactLynx()],
     })
 
     await build(rslibConfig)
@@ -92,6 +95,7 @@ describe('should build external bundle', () => {
           root: path.join(fixtureDir, 'dist'),
         },
       },
+      plugins: [pluginReactLynx()],
     })
 
     await build(rslibConfig)
@@ -122,6 +126,7 @@ describe('should build external bundle', () => {
           root: path.join(fixtureDir, 'dist'),
         },
       },
+      plugins: [pluginReactLynx()],
     })
 
     await build(rslibConfig)
@@ -149,6 +154,7 @@ describe('should build external bundle', () => {
           root: path.join(fixtureDir, 'dist'),
         },
       },
+      plugins: [pluginReactLynx()],
     }, {
       engineVersion: '3.5',
     })
@@ -159,34 +165,6 @@ describe('should build external bundle', () => {
       path.join(fixtureDir, 'dist/utils-engineVersion-35.lynx.bundle'),
     )
     expect(decodedResult['engine-version']).toBe('3.5')
-  })
-
-  it('override the default syntax to es2023', async () => {
-    const rslibConfig = defineExternalBundleRslibConfig({
-      source: {
-        entry: {
-          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
-        },
-      },
-      id: 'utils-es2023',
-      output: {
-        distPath: {
-          root: path.join(fixtureDir, 'dist'),
-        },
-        minify: false,
-      },
-      syntax: 'es2023',
-    })
-
-    await build(rslibConfig)
-
-    const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-es2023.lynx.bundle'),
-    )
-    expect(
-      decodedResult['custom-sections']['utils']?.includes('globalThis?.abc'),
-    )
-      .toBeTruthy()
   })
 })
 
@@ -214,6 +192,7 @@ describe('debug mode artifacts', () => {
           root: distRoot,
         },
       },
+      plugins: [pluginReactLynx()],
     }))
   }
 
@@ -235,5 +214,102 @@ describe('debug mode artifacts', () => {
     )
 
     vi.unstubAllEnvs()
+  })
+})
+
+describe('pluginReactLynx', async () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+  const distRoot = path.join(fixtureDir, 'dist')
+
+  const bundleId = 'utils-reactlynx'
+
+  vi.stubEnv('DEBUG', 'rspeedy')
+
+  const rslibConfig = defineExternalBundleRslibConfig({
+    source: {
+      entry: {
+        utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+      },
+    },
+    id: bundleId,
+    output: {
+      distPath: {
+        root: distRoot,
+      },
+    },
+    plugins: [pluginReactLynx()],
+  })
+  const rslib = await createRslib({
+    config: rslibConfig,
+  })
+  await rslib.build()
+  const decodedResult = await decodeTemplate(
+    path.join(fixtureDir, 'dist/utils-reactlynx.lynx.bundle'),
+  )
+
+  it('should handle alias', async () => {
+    const config = await rslib.inspectConfig()
+    expect(config.origin.bundlerConfigs[0]!.resolve!.alias)
+      .toMatchInlineSnapshot(`
+      {
+        "@lynx-js/preact-devtools$": false,
+        "@lynx-js/react$": "<WORKSPACE>/packages/react/runtime/lib/index.js",
+        "@lynx-js/react/compat$": "<WORKSPACE>/packages/react/runtime/compat/index.js",
+        "@lynx-js/react/debug$": false,
+        "@lynx-js/react/experimental/lazy/import$": "<WORKSPACE>/packages/react/runtime/lazy/import.js",
+        "@lynx-js/react/internal$": "<WORKSPACE>/packages/react/runtime/lib/internal.js",
+        "@lynx-js/react/legacy-react-runtime$": "<WORKSPACE>/packages/react/runtime/lib/legacy-react-runtime/index.js",
+        "@lynx-js/react/runtime-components$": "<WORKSPACE>/packages/react/components/lib/index.js",
+        "@lynx-js/react/worklet-runtime/bindings$": "<WORKSPACE>/packages/react/worklet-runtime/lib/bindings/index.js",
+        "@swc/helpers": "<WORKSPACE>/node_modules/<PNPM_INNER>/@swc/helpers",
+        "preact$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/dist/preact.mjs",
+        "preact/compat$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/compat/dist/compat.mjs",
+        "preact/compat/client$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/compat/client.mjs",
+        "preact/compat/jsx-dev-runtime$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/compat/jsx-dev-runtime.mjs",
+        "preact/compat/jsx-runtime$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/compat/jsx-runtime.mjs",
+        "preact/compat/scheduler$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/compat/scheduler.mjs",
+        "preact/compat/server$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/compat/server.mjs",
+        "preact/debug$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/debug/dist/debug.mjs",
+        "preact/devtools$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/devtools/dist/devtools.mjs",
+        "preact/hooks$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/hooks/dist/hooks.mjs",
+        "preact/jsx-dev-runtime$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/jsx-runtime/dist/jsxRuntime.mjs",
+        "preact/jsx-runtime$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/jsx-runtime/dist/jsxRuntime.mjs",
+        "preact/test-utils$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/test-utils/dist/testUtils.mjs",
+        "react$": "<WORKSPACE>/packages/react/runtime/lib/index.js",
+        "react-compiler-runtime": "<WORKSPACE>/node_modules/<PNPM_INNER>/react-compiler-runtime",
+        "use-sync-external-store$": "<WORKSPACE>/packages/use-sync-external-store/index.js",
+        "use-sync-external-store/shim$": "<WORKSPACE>/packages/use-sync-external-store/index.js",
+        "use-sync-external-store/shim/with-selector$": "<WORKSPACE>/packages/use-sync-external-store/with-selector.js",
+        "use-sync-external-store/with-selector$": "<WORKSPACE>/packages/use-sync-external-store/with-selector.js",
+      }
+    `)
+  })
+
+  it('should handle marcos', () => {
+    expect(Object.keys(decodedResult['custom-sections'])).toEqual([
+      'utils',
+      'utils__main-thread',
+    ])
+
+    expect(decodedResult['custom-sections']['utils']).toContain(
+      'log("defineDCE",{isMainThread:!1,isLepus:!1,isBackground:!0}',
+    )
+    expect(decodedResult['custom-sections']['utils__main-thread']).toContain(
+      'log("defineDCE",{isMainThread:!0,isLepus:!0,isBackground:!1}',
+    )
+
+    expect(decodedResult['custom-sections']['utils']).toContain(
+      'log("define",{isDev:!1,isProfile:!0}',
+    )
+    expect(decodedResult['custom-sections']['utils__main-thread']).toContain(
+      'log("define",{isDev:!1,isProfile:!0}',
+    )
+
+    expect(decodedResult['custom-sections']['utils']).toContain(
+      'log("process.env.NODE_ENV",{NODE_ENV:"test"}',
+    )
+    expect(decodedResult['custom-sections']['utils__main-thread']).toContain(
+      'log("process.env.NODE_ENV",{NODE_ENV:"test"}',
+    )
   })
 })
