@@ -144,6 +144,13 @@ function createPolyfills() {
     type,
     data,
   }) => {
+    // Avoid ReferenceError: lynxTestingEnv is not defined
+    // This error happens because worklet runtime may dispatch event
+    // after the vitest environment is torn down
+    if (!globalThis.lynxTestingEnv) {
+      return;
+    }
+
     const origin = __MAIN_THREAD__ ? 'CoreContext' : 'JSContext';
     // Switch to another thread
     if (origin === 'CoreContext') {
