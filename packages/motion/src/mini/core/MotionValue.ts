@@ -9,8 +9,6 @@ export interface MotionValue<T> {
   set(v: T): void;
   getVelocity(): number;
   jump(v: T): void;
-  // Standard Framer Motion API usually has `stop`, `isAnimating` etc.
-  // For mini version, keeping it simple but compatible with what was requested.
   onChange(callback: (v: T) => void): () => void;
   on(event: 'change', callback: (v: T) => void): () => void;
   /**
@@ -18,6 +16,18 @@ export interface MotionValue<T> {
    */
   updateVelocity(v: number): void;
   stop(): void;
+  /**
+   * Check if this MotionValue is currently animating.
+   */
+  isAnimating(): boolean;
+  /**
+   * Clear all change listeners.
+   */
+  clearListeners(): void;
+  /**
+   * Destroy this MotionValue, stopping all animations and clearing all listeners.
+   */
+  destroy(): void;
   /**
    * @internal
    */
@@ -99,6 +109,19 @@ export function createMotionValue<T>(initial: T): MotionValue<T> {
         cancel();
       }
       this.activeAnimations.clear();
+    }
+
+    isAnimating() {
+      return this.activeAnimations.size > 0;
+    }
+
+    clearListeners() {
+      this.listeners.clear();
+    }
+
+    destroy() {
+      this.stop();
+      this.clearListeners();
     }
 
     toJSON() {

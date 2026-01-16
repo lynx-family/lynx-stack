@@ -13,7 +13,6 @@ export {
   clamp,
   transformValue,
   styleEffect,
-  noop,
   useMotionValueRefEvent,
 } from './animation/index.js';
 
