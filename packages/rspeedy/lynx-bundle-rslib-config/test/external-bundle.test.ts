@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url'
 
 import { createRslib } from '@rslib/core'
 import type { RslibConfig } from '@rslib/core'
-import { describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
 
@@ -74,7 +74,7 @@ describe('should build external bundle', () => {
     const decodedResult = await decodeTemplate(
       path.join(fixtureDir, 'dist/utils-dual.lynx.bundle'),
     )
-    expect(Object.keys(decodedResult['custom-sections'])).toEqual([
+    expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
       'utils',
       'utils__main-thread',
     ])
@@ -218,36 +218,45 @@ describe('debug mode artifacts', () => {
   })
 })
 
-describe('pluginReactLynx', async () => {
+describe('pluginReactLynx', () => {
   const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
   const distRoot = path.join(fixtureDir, 'dist')
 
   const bundleId = 'utils-reactlynx'
 
-  vi.stubEnv('DEBUG', 'rspeedy')
+  let rslib!: Awaited<ReturnType<typeof createRslib>>
+  let decodedResult!: Awaited<ReturnType<typeof decodeTemplate>>
 
-  const rslibConfig = defineExternalBundleRslibConfig({
-    source: {
-      entry: {
-        utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+  beforeAll(async () => {
+    vi.stubEnv('DEBUG', 'rspeedy')
+
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
       },
-    },
-    id: bundleId,
-    output: {
-      distPath: {
-        root: distRoot,
+      id: bundleId,
+      output: {
+        distPath: {
+          root: distRoot,
+        },
       },
-    },
-    plugins: [pluginReactLynx()],
+      plugins: [pluginReactLynx()],
+    })
+    rslib = await createRslib({
+      config: rslibConfig,
+      cwd: __dirname,
+    })
+    await rslib.build()
+    decodedResult = await decodeTemplate(
+      path.join(fixtureDir, 'dist/utils-reactlynx.lynx.bundle'),
+    )
   })
-  const rslib = await createRslib({
-    config: rslibConfig,
-    cwd: __dirname,
+
+  afterAll(() => {
+    vi.unstubAllEnvs()
   })
-  await rslib.build()
-  const decodedResult = await decodeTemplate(
-    path.join(fixtureDir, 'dist/utils-reactlynx.lynx.bundle'),
-  )
 
   it('should handle alias', async () => {
     const config = await rslib.inspectConfig()
@@ -288,7 +297,7 @@ describe('pluginReactLynx', async () => {
   })
 
   it('should handle marcos', () => {
-    expect(Object.keys(decodedResult['custom-sections'])).toEqual([
+    expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
       'utils',
       'utils__main-thread',
     ])
