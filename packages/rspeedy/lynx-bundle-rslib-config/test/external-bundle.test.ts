@@ -296,7 +296,7 @@ describe('pluginReactLynx', () => {
     `)
   })
 
-  it('should handle marcos', () => {
+  it('should handle macros', () => {
     expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
       'utils',
       'utils__main-thread',
