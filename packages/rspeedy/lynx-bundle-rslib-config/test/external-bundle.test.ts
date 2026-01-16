@@ -21,6 +21,7 @@ const __dirname = path.dirname(__filename)
 async function build(rslibConfig: RslibConfig) {
   const rslib = await createRslib({
     config: rslibConfig,
+    cwd: __dirname,
   })
   return await rslib.build()
 }
@@ -241,6 +242,7 @@ describe('pluginReactLynx', async () => {
   })
   const rslib = await createRslib({
     config: rslibConfig,
+    cwd: __dirname,
   })
   await rslib.build()
   const decodedResult = await decodeTemplate(
