@@ -24,7 +24,10 @@ import { ExposureServices } from './ExposureServices.js';
 import { createElementAPI } from './elementAPIs/createElementAPI.js';
 import { createMainThreadGlobalAPIs } from './createMainThreadGlobalAPIs.js';
 import { templateManager } from './TemplateManager.js';
-import { loadWebElement } from '../webElementsDynamicLoader.js';
+import {
+  loadAllWebElements,
+  loadWebElement,
+} from '../webElementsDynamicLoader.js';
 import type { LynxViewElement } from './LynxView.js';
 import { StyleManager } from './StyleManager.js';
 
@@ -35,8 +38,8 @@ export const systemInfo = Object.freeze({
   ...systemInfoBase,
   // some information only available on main thread, we should read and pass to worker
   pixelRatio,
-  screenWidth,
-  screenHeight,
+  pixelWidth: screenWidth,
+  pixelHeight: screenHeight,
 });
 
 export interface LynxViewConfigs {
@@ -107,6 +110,7 @@ export class LynxViewInstance implements AsyncDisposable {
     this.exposureServices = new ExposureServices(
       this,
     );
+    this.backgroundThread.markTiming('create_lynx_start');
   }
 
   onPageConfigReady(config: PageConfig) {
@@ -158,6 +162,7 @@ export class LynxViewInstance implements AsyncDisposable {
   }
 
   onMTSScriptsLoaded(currentUrl: string, isLazy: boolean) {
+    this.backgroundThread.markTiming('lepus_execute_start');
     const urlMap = templateManager.getTemplate(currentUrl)
       ?.lepusCode as Record<string, string>;
     this.lepusCodeUrls.set(
@@ -172,14 +177,24 @@ export class LynxViewInstance implements AsyncDisposable {
   }
 
   async onMTSScriptsExecuted() {
+    this.backgroundThread.markTiming('lepus_execute_end');
+
+    if (
+      !templateManager.getTemplate(this.templateUrl)?.elementTemplates
+    ) {
+      this.webElementsLoadingPromises.push(loadAllWebElements());
+    }
+
     await Promise.all([
       ...this.webElementsLoadingPromises,
       this.styleReadyPromise,
     ]);
     this.webElementsLoadingPromises.length = 0;
+    this.backgroundThread.markTiming('data_processor_start');
     const processedData = this.mainThreadGlobalThis.processData
-      ? this.mainThreadGlobalThis.processData(this.initData)
+      ? this.mainThreadGlobalThis.processData?.(this.initData)
       : this.initData;
+    this.backgroundThread.markTiming('data_processor_end');
     this.backgroundThread.startWebWorker(
       processedData,
       this.globalprops,
@@ -285,6 +300,9 @@ export class LynxViewInstance implements AsyncDisposable {
           release,
           fileName,
         },
+        bubbles: true,
+        cancelable: true,
+        composed: true,
       }),
     );
   }

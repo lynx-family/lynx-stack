@@ -6,6 +6,9 @@ const config = defineConfig({
   test: {
     include: ['__tests__/**/*.test.{js,ts,jsx,tsx}'],
     exclude: ['__tests__/utils/**'],
+    coverage: {
+      include: ['src/**'],
+    },
   },
 });
 

@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react-rsbuild-plugin",
-  "version": "0.12.4",
+  "version": "0.12.5",
   "description": "A rsbuild plugin for ReactLynx",
   "keywords": [
     "rsbuild",
@@ -47,6 +47,7 @@
     "background-only": "workspace:^"
   },
   "devDependencies": {
+    "@lynx-js/config-rsbuild-plugin": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-transform": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",

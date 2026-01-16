@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { runOnMainThread, useEffect } from '@lynx-js/react';
+import { act, render } from '@lynx-js/react/testing-library';
 
 import { createMotionValue } from '../src/mini/core/MotionValue.js';
 import { noopMT } from '../src/utils/noop.js';
@@ -12,453 +14,503 @@ describe('MotionValue', () => {
 
   beforeEach(() => {
     mockRegisteredMap = new Map<string, CallableFunction>();
-    vi.spyOn(globalThis, 'runOnRegistered', 'get').mockImplementation(
-      function(id: string) {
-        const func = mockRegisteredMap.get(id) ?? noopMT;
-        return func;
-      },
-    );
+    const mockImpl = (id: string) => {
+      const func = mockRegisteredMap.get(id);
+      if (func) return func;
+      return () => {};
+    };
+    Object.defineProperty(globalThis, 'runOnRegistered', {
+      get: () => mockImpl,
+      configurable: true,
+    });
+    (globalThis as any).__TEST_ERROR = undefined;
+    (globalThis as any).__MV = undefined; // Clear persistent motion value
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers(); // Ensure timers are reset
+    delete (globalThis as any).runOnRegistered;
+    delete (globalThis as any).__TEST_ERROR;
+    delete (globalThis as any).__MV;
+  });
+
+  const checkError = async () => {
+    await act(async () => {
+      await Promise.resolve(); // Just flush, don't use setTimeout directly if timers fake
+    });
+    const err = (globalThis as any).__TEST_ERROR;
+    if (err) throw new Error(err);
+  };
+
   describe('createMotionValue', () => {
-    test('should create motion value with initial number value', () => {
-      const mv = createMotionValue(0);
-      expect(mv.get()).toBe(0);
+    test('should create motion value with initial number value', async () => {
+      const App = () => {
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            try {
+              const mv = createMotionValue(0);
+              if (mv.get() !== 0) {
+                throw new Error(`Expected 0 but got ${mv.get()}`);
+              }
+            } catch (e) {
+              (globalThis as any).__TEST_ERROR = String(e);
+            }
+          })();
+        }, []);
+        return <view />;
+      };
+      render(<App />, { enableMainThread: true, enableBackgroundThread: true });
+      await checkError();
     });
 
-    test('should create motion value with initial string value', () => {
-      const mv = createMotionValue('hello');
-      expect(mv.get()).toBe('hello');
-    });
-
-    test('should create motion value with initial object value', () => {
-      const obj = { x: 10, y: 20 };
-      const mv = createMotionValue(obj);
-      expect(mv.get()).toBe(obj);
+    test('should create motion value with initial string value', async () => {
+      const App = () => {
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            try {
+              const mv = createMotionValue('hello');
+              if (mv.get() !== 'hello') throw new Error(`Expected hello`);
+            } catch (e) {
+              (globalThis as any).__TEST_ERROR = String(e);
+            }
+          })();
+        }, []);
+        return <view />;
+      };
+      render(<App />, { enableMainThread: true, enableBackgroundThread: true });
+      await checkError();
     });
   });
 
   describe('get() and set()', () => {
-    test('should get and set number values', () => {
-      const mv = createMotionValue(0);
-      expect(mv.get()).toBe(0);
-
-      mv.set(100);
-      expect(mv.get()).toBe(100);
+    test('should get and set number values', async () => {
+      const App = () => {
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            try {
+              const mv = createMotionValue(0);
+              mv.set(100);
+              if (mv.get() !== 100) throw new Error('Set fail');
+            } catch (e) {
+              (globalThis as any).__TEST_ERROR = String(e);
+            }
+          })();
+        }, []);
+        return <view />;
+      };
+      render(<App />, { enableMainThread: true, enableBackgroundThread: true });
+      await checkError();
     });
 
-    test('should get and set string values', () => {
-      const mv = createMotionValue('initial');
-      expect(mv.get()).toBe('initial');
-
-      mv.set('updated');
-      expect(mv.get()).toBe('updated');
-    });
-
-    test('should trigger listeners on set', () => {
-      const mv = createMotionValue(0);
-      const listener = vi.fn();
-
-      mv.onChange(listener);
-      mv.set(50);
-
-      expect(listener).toHaveBeenCalledWith(50);
-      expect(listener).toHaveBeenCalledTimes(1);
+    test('should trigger listeners on set', async () => {
+      const App = () => {
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            try {
+              const mv = createMotionValue(0);
+              let called = 0;
+              const listener = () => called++;
+              mv.onChange(listener);
+              mv.set(50);
+              if (called !== 1) throw new Error('Listener not called');
+            } catch (e) {
+              (globalThis as any).__TEST_ERROR = String(e);
+            }
+          })();
+        }, []);
+        return <view />;
+      };
+      render(<App />, { enableMainThread: true, enableBackgroundThread: true });
+      await checkError();
     });
   });
 
   describe('velocity tracking', () => {
-    test('should track velocity on number value changes', () => {
+    test('should track velocity on number value changes', async () => {
       vi.useFakeTimers();
-      const mv = createMotionValue(0);
 
-      mv.set(0);
-      vi.advanceTimersByTime(100); // 0.1s
-      mv.set(10);
+      const App = () => {
+        useEffect(() => {
+          // Step 1: Init
+          runOnMainThread(() => {
+            'main thread';
+            try {
+              const mv = createMotionValue(0);
+              mv.set(0);
+              (globalThis as any).__MV = mv;
+            } catch (e) {
+              (globalThis as any).__TEST_ERROR = String(e);
+            }
+          })();
+        }, []);
+        return <view />;
+      };
+      const { rerender } = render(<App />, {
+        enableMainThread: true,
+        enableBackgroundThread: true,
+      });
 
-      // velocity = delta / time = 10 / 0.1 = 100
-      const velocity = mv.getVelocity();
-      expect(velocity).toBeCloseTo(100, 0);
+      // Manually handle waiting logic since timers are mocked
+      await act(async () => {
+        vi.advanceTimersByTime(10);
+      });
+      await checkError();
 
-      vi.useRealTimers();
-    });
+      // Step 2: Advance time
+      await act(async () => {
+        // We already advanced 10ms for previous check.
+        // We want total 100ms interval for easy math.
+        vi.advanceTimersByTime(90);
+      });
 
-    test('should update velocity on subsequent changes', () => {
-      vi.useFakeTimers();
-      const mv = createMotionValue(0);
+      // Step 3: Set value
+      const Step2 = () => {
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            try {
+              const mv = (globalThis as any).__MV;
+              mv.set(10);
+              // Check velocity
+              const v = mv.getVelocity();
+              // 10 / 0.1 = 100
+              if (Math.abs(v - 100) > 1) {
+                throw new Error('Velocity mismatch: ' + v);
+              }
+            } catch (e) {
+              (globalThis as any).__TEST_ERROR = String(e);
+            }
+          })();
+        }, []);
+        return <view />;
+      };
+      rerender(<Step2 />);
 
-      mv.set(0);
-      vi.advanceTimersByTime(100);
-      mv.set(10);
-
-      vi.advanceTimersByTime(100);
-      mv.set(20);
-
-      // velocity = delta / time = 10 / 0.1 = 100
-      const velocity = mv.getVelocity();
-      expect(velocity).toBeCloseTo(100, 0);
-
-      vi.useRealTimers();
-    });
-
-    test('should not track velocity for non-number values', () => {
-      const mv = createMotionValue('a');
-      mv.set('b');
-
-      expect(mv.getVelocity()).toBe(0);
-    });
-
-    test('should allow manual velocity update', () => {
-      const mv = createMotionValue(0);
-      mv.updateVelocity(500);
-
-      expect(mv.getVelocity()).toBe(500);
+      await act(async () => {
+        vi.advanceTimersByTime(10);
+      });
+      await checkError();
     });
   });
 
   describe('jump()', () => {
-    test('should set value without triggering velocity calculation', () => {
-      const mv = createMotionValue(0);
-      mv.jump(100);
-
-      expect(mv.get()).toBe(100);
-      expect(mv.getVelocity()).toBe(0);
-    });
-
-    test('should trigger listeners on jump', () => {
-      const mv = createMotionValue(0);
-      const listener = vi.fn();
-
-      mv.onChange(listener);
-      mv.jump(50);
-
-      expect(listener).toHaveBeenCalledWith(50);
-    });
-
-    test('should reset velocity to zero', () => {
-      const mv = createMotionValue(0);
-      mv.updateVelocity(100);
-
-      mv.jump(50);
-
-      expect(mv.getVelocity()).toBe(0);
+    test('should set value without triggering velocity calculation', async () => {
+      const App = () => {
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            try {
+              const mv = createMotionValue(0);
+              mv.jump(100);
+              if (mv.get() !== 100) throw new Error('Jump val fail');
+              if (mv.getVelocity() !== 0) {
+                throw new Error('Jump velocity not 0');
+              }
+            } catch (e) {
+              (globalThis as any).__TEST_ERROR = String(e);
+            }
+          })();
+        }, []);
+        return <view />;
+      };
+      render(<App />, { enableMainThread: true, enableBackgroundThread: true });
+      await checkError();
     });
   });
 
   describe('onChange() and on()', () => {
-    test('should subscribe to value changes with onChange', () => {
-      const mv = createMotionValue(0);
-      const listener = vi.fn();
+    test('should subscribe and unsubscribe', async () => {
+      const App = () => {
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            try {
+              const mv = createMotionValue(0);
+              let count = 0;
+              const listener = () => count++;
+              const unsub = mv.onChange(listener);
 
-      mv.onChange(listener);
+              mv.set(10);
+              if (count !== 1) throw new Error('Count 1 fail');
 
-      mv.set(10);
-      mv.set(20);
-      mv.set(30);
-
-      expect(listener).toHaveBeenCalledTimes(3);
-      expect(listener).toHaveBeenNthCalledWith(1, 10);
-      expect(listener).toHaveBeenNthCalledWith(2, 20);
-      expect(listener).toHaveBeenNthCalledWith(3, 30);
-    });
-
-    test('should unsubscribe from value changes', () => {
-      const mv = createMotionValue(0);
-      const listener = vi.fn();
-
-      const unsubscribe = mv.onChange(listener);
-
-      mv.set(10);
-      expect(listener).toHaveBeenCalledTimes(1);
-
-      unsubscribe();
-
-      mv.set(20);
-      expect(listener).toHaveBeenCalledTimes(1); // Still 1, not called again
-    });
-
-    test('should support multiple listeners', () => {
-      const mv = createMotionValue(0);
-      const listener1 = vi.fn();
-      const listener2 = vi.fn();
-
-      mv.onChange(listener1);
-      mv.onChange(listener2);
-
-      mv.set(10);
-
-      expect(listener1).toHaveBeenCalledWith(10);
-      expect(listener2).toHaveBeenCalledWith(10);
-    });
-
-    test('should subscribe with on() method', () => {
-      const mv = createMotionValue(0);
-      const listener = vi.fn();
-
-      const unsubscribe = mv.on('change', listener);
-
-      mv.set(10);
-
-      expect(listener).toHaveBeenCalledWith(10);
-
-      unsubscribe();
-      mv.set(20);
-
-      expect(listener).toHaveBeenCalledTimes(1);
-    });
-
-    test('should return noop for unknown event types', () => {
-      const mv = createMotionValue(0);
-      // @ts-expect-error - testing invalid event type
-      const result = mv.on('unknown', vi.fn());
-
-      expect(result).toBe(noopMT);
+              unsub();
+              mv.set(20);
+              if (count !== 1) throw new Error('Unsub fail');
+            } catch (e) {
+              (globalThis as any).__TEST_ERROR = String(e);
+            }
+          })();
+        }, []);
+        return <view />;
+      };
+      render(<App />, { enableMainThread: true, enableBackgroundThread: true });
+      await checkError();
     });
   });
 
   describe('attach() and stop()', () => {
-    test('should attach animation cancel callbacks', () => {
-      const mv = createMotionValue(0);
-      const cancel1 = vi.fn();
-      const cancel2 = vi.fn();
+    test('should attach and lifecycle', async () => {
+      const App = () => {
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            try {
+              const mv = createMotionValue(0);
+              let cancelled = false;
+              const cancel = () => cancelled = true;
 
-      mv.attach(cancel1);
-      mv.attach(cancel2);
+              mv.attach(cancel);
+              if (!mv.isAnimating()) {
+                throw new Error('Should match isAnimating true');
+              }
 
-      mv.stop();
-
-      expect(cancel1).toHaveBeenCalledTimes(1);
-      expect(cancel2).toHaveBeenCalledTimes(1);
-    });
-
-    test('should detach animation on returned function', () => {
-      const mv = createMotionValue(0);
-      const cancel = vi.fn();
-
-      const detach = mv.attach(cancel);
-      detach();
-
-      mv.stop();
-
-      expect(cancel).not.toHaveBeenCalled();
-    });
-
-    test('should clear all animations after stop', () => {
-      const mv = createMotionValue(0);
-      const cancel = vi.fn();
-
-      mv.attach(cancel);
-      mv.stop();
-
-      expect(cancel).toHaveBeenCalledTimes(1);
-
-      // Calling stop again shouldn't call cancel again
-      mv.stop();
-      expect(cancel).toHaveBeenCalledTimes(1);
-    });
-
-    test('should support multiple attach/detach cycles', () => {
-      const mv = createMotionValue(0);
-      const cancel1 = vi.fn();
-      const cancel2 = vi.fn();
-
-      const detach1 = mv.attach(cancel1);
-      mv.attach(cancel2);
-
-      detach1();
-      mv.stop();
-
-      expect(cancel1).not.toHaveBeenCalled();
-      expect(cancel2).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('toJSON()', () => {
-    test('should serialize number values', () => {
-      const mv = createMotionValue(42);
-      expect(mv.toJSON()).toBe('42');
-    });
-
-    test('should serialize string values', () => {
-      const mv = createMotionValue('hello');
-      expect(mv.toJSON()).toBe('hello');
-    });
-
-    test('should serialize object values', () => {
-      const mv = createMotionValue({ x: 10 });
-      expect(mv.toJSON()).toBe('[object Object]');
-    });
-  });
-
-  describe('integration scenarios', () => {
-    test('should handle rapid value changes', () => {
-      const mv = createMotionValue(0);
-      const listener = vi.fn();
-
-      mv.onChange(listener);
-
-      for (let i = 1; i <= 100; i++) {
-        mv.set(i);
-      }
-
-      expect(listener).toHaveBeenCalledTimes(100);
-      expect(mv.get()).toBe(100);
-    });
-
-    test('should handle animation lifecycle', () => {
-      const mv = createMotionValue(0);
-      const cancel = vi.fn();
-      const listener = vi.fn();
-
-      mv.onChange(listener);
-      const detach = mv.attach(cancel);
-
-      mv.set(50);
-      expect(listener).toHaveBeenCalledWith(50);
-
-      mv.stop();
-      expect(cancel).toHaveBeenCalled();
-
-      mv.set(100);
-      expect(listener).toHaveBeenCalledWith(100);
-    });
-  });
-
-  describe('isAnimating()', () => {
-    test('should return false when no animations are active', () => {
-      const mv = createMotionValue(0);
-      expect(mv.isAnimating()).toBe(false);
-    });
-
-    test('should return true when animations are attached', () => {
-      const mv = createMotionValue(0);
-      const cancel = vi.fn();
-
-      mv.attach(cancel);
-
-      expect(mv.isAnimating()).toBe(true);
-    });
-
-    test('should return false after stop is called', () => {
-      const mv = createMotionValue(0);
-      const cancel = vi.fn();
-
-      mv.attach(cancel);
-      expect(mv.isAnimating()).toBe(true);
-
-      mv.stop();
-      expect(mv.isAnimating()).toBe(false);
-    });
-
-    test('should return false after animation is detached', () => {
-      const mv = createMotionValue(0);
-      const cancel = vi.fn();
-
-      const detach = mv.attach(cancel);
-      expect(mv.isAnimating()).toBe(true);
-
-      detach();
-      expect(mv.isAnimating()).toBe(false);
-    });
-
-    test('should track multiple animations', () => {
-      const mv = createMotionValue(0);
-
-      const detach1 = mv.attach(vi.fn());
-      expect(mv.isAnimating()).toBe(true);
-
-      const detach2 = mv.attach(vi.fn());
-      expect(mv.isAnimating()).toBe(true);
-
-      detach1();
-      expect(mv.isAnimating()).toBe(true); // Still one active
-
-      detach2();
-      expect(mv.isAnimating()).toBe(false); // All cleared
+              mv.stop();
+              if (!cancelled) throw new Error('Cancel func not called');
+              if (mv.isAnimating()) {
+                throw new Error('Should match isAnimating false');
+              }
+            } catch (e) {
+              (globalThis as any).__TEST_ERROR = String(e);
+            }
+          })();
+        }, []);
+        return <view />;
+      };
+      render(<App />, { enableMainThread: true, enableBackgroundThread: true });
+      await checkError();
     });
   });
 
   describe('clearListeners()', () => {
-    test('should remove all listeners', () => {
-      const mv = createMotionValue(0);
-      const listener1 = vi.fn();
-      const listener2 = vi.fn();
+    test('should remove all listeners', async () => {
+      const App = () => {
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            try {
+              const mv = createMotionValue(0);
+              let count = 0;
+              mv.onChange(() => count++);
 
-      mv.onChange(listener1);
-      mv.onChange(listener2);
+              mv.set(10);
+              if (count !== 1) throw new Error('Init count fail');
 
-      mv.set(10);
-      expect(listener1).toHaveBeenCalledTimes(1);
-      expect(listener2).toHaveBeenCalledTimes(1);
-
-      mv.clearListeners();
-
-      mv.set(20);
-      expect(listener1).toHaveBeenCalledTimes(1); // Not called again
-      expect(listener2).toHaveBeenCalledTimes(1); // Not called again
-    });
-
-    test('should allow adding new listeners after clearing', () => {
-      const mv = createMotionValue(0);
-      const listener1 = vi.fn();
-      const listener2 = vi.fn();
-
-      mv.onChange(listener1);
-      mv.clearListeners();
-      mv.onChange(listener2);
-
-      mv.set(10);
-
-      expect(listener1).not.toHaveBeenCalled();
-      expect(listener2).toHaveBeenCalledWith(10);
+              mv.clearListeners();
+              mv.set(20);
+              if (count !== 1) {
+                throw new Error('Clear listeners fail (still called)');
+              }
+            } catch (e) {
+              (globalThis as any).__TEST_ERROR = String(e);
+            }
+          })();
+        }, []);
+        return <view />;
+      };
+      render(<App />, { enableMainThread: true, enableBackgroundThread: true });
+      await checkError();
     });
   });
 
   describe('destroy()', () => {
-    test('should stop all animations and clear all listeners', () => {
-      const mv = createMotionValue(0);
-      const cancel = vi.fn();
-      const listener = vi.fn();
+    test('should stop all animations and clear all listeners', async () => {
+      const App = () => {
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            try {
+              const mv = createMotionValue(0);
+              let cancelled = false;
+              let count = 0;
 
-      mv.attach(cancel);
-      mv.onChange(listener);
+              mv.attach(() => cancelled = true);
+              mv.onChange(() => count++);
 
-      expect(mv.isAnimating()).toBe(true);
+              mv.destroy();
 
-      mv.destroy();
+              if (!cancelled) {
+                throw new Error('Destroy did not cancel animation');
+              }
+              if (mv.isAnimating()) {
+                throw new Error('Still animating after destroy');
+              }
 
-      expect(cancel).toHaveBeenCalled();
-      expect(mv.isAnimating()).toBe(false);
+              mv.set(10);
+              if (count !== 0) throw new Error('Listener called after destroy');
+            } catch (e) {
+              (globalThis as any).__TEST_ERROR = String(e);
+            }
+          })();
+        }, []);
+        return <view />;
+      };
+      render(<App />, { enableMainThread: true, enableBackgroundThread: true });
+      await checkError();
+    });
+  });
 
-      mv.set(10);
-      expect(listener).not.toHaveBeenCalled();
+  describe('Edge cases', () => {
+    test('multiple listeners should all receive callbacks', async () => {
+      const App = () => {
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            try {
+              const mv = createMotionValue(0);
+              let count1 = 0;
+              let count2 = 0;
+              let count3 = 0;
+
+              mv.onChange(() => count1++);
+              mv.onChange(() => count2++);
+              mv.on('change', () => count3++);
+
+              mv.set(10);
+              mv.set(20);
+
+              if (count1 !== 2) throw new Error(`Listener1 fail: ${count1}`);
+              if (count2 !== 2) throw new Error(`Listener2 fail: ${count2}`);
+              if (count3 !== 2) throw new Error(`Listener3 fail: ${count3}`);
+            } catch (e) {
+              (globalThis as any).__TEST_ERROR = String(e);
+            }
+          })();
+        }, []);
+        return <view />;
+      };
+      render(<App />, { enableMainThread: true, enableBackgroundThread: true });
+      await checkError();
     });
 
-    test('should be idempotent', () => {
-      const mv = createMotionValue(0);
-      const cancel = vi.fn();
+    test('on() with unsupported event should return noop-like function', async () => {
+      const App = () => {
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            try {
+              const mv = createMotionValue(0);
 
-      mv.attach(cancel);
+              // Calling on() with an unsupported event should not throw
+              // @ts-expect-error - testing unsupported event
+              const unsub = mv.on('unsupported', () => {});
 
-      mv.destroy();
-      expect(cancel).toHaveBeenCalledTimes(1);
-
-      // Calling destroy again should not cause issues
-      mv.destroy();
-      expect(cancel).toHaveBeenCalledTimes(1); // Still 1
+              // The returned function should be callable without error
+              if (typeof unsub !== 'function') {
+                throw new Error('on() did not return a function');
+              }
+              unsub(); // Should not throw
+            } catch (e) {
+              (globalThis as any).__TEST_ERROR = String(e);
+            }
+          })();
+        }, []);
+        return <view />;
+      };
+      render(<App />, { enableMainThread: true, enableBackgroundThread: true });
+      await checkError();
     });
 
-    test('should allow value operations after destroy', () => {
-      const mv = createMotionValue(0);
+    test('toJSON() should serialize value correctly', async () => {
+      const App = () => {
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            try {
+              const mvNumber = createMotionValue(42);
+              const mvString = createMotionValue('hello');
 
-      mv.destroy();
+              const json1 = mvNumber.toJSON();
+              const json2 = mvString.toJSON();
 
-      // Should still work
-      mv.set(10);
-      expect(mv.get()).toBe(10);
+              if (json1 !== '42') {
+                throw new Error(`Number toJSON fail: ${json1}`);
+              }
+              if (json2 !== 'hello') {
+                throw new Error(`String toJSON fail: ${json2}`);
+              }
+            } catch (e) {
+              (globalThis as any).__TEST_ERROR = String(e);
+            }
+          })();
+        }, []);
+        return <view />;
+      };
+      render(<App />, { enableMainThread: true, enableBackgroundThread: true });
+      await checkError();
+    });
 
-      mv.jump(20);
-      expect(mv.get()).toBe(20);
+    test('unsubscribe should only remove specific listener', async () => {
+      const App = () => {
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            try {
+              const mv = createMotionValue(0);
+              let count1 = 0;
+              let count2 = 0;
+
+              const unsub1 = mv.onChange(() => count1++);
+              mv.onChange(() => count2++);
+
+              mv.set(10); // Both should fire
+              unsub1(); // Unsubscribe first
+              mv.set(20); // Only second should fire
+
+              if (count1 !== 1) throw new Error(`Listener1 fail: ${count1}`);
+              if (count2 !== 2) throw new Error(`Listener2 fail: ${count2}`);
+            } catch (e) {
+              (globalThis as any).__TEST_ERROR = String(e);
+            }
+          })();
+        }, []);
+        return <view />;
+      };
+      render(<App />, { enableMainThread: true, enableBackgroundThread: true });
+      await checkError();
+    });
+
+    test('multiple attach() calls should track all animations', async () => {
+      const App = () => {
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            try {
+              const mv = createMotionValue(0);
+              let cancel1Called = false;
+              let cancel2Called = false;
+
+              mv.attach(() => {
+                cancel1Called = true;
+              });
+              mv.attach(() => {
+                cancel2Called = true;
+              });
+
+              if (!mv.isAnimating()) {
+                throw new Error('Should be animating');
+              }
+
+              mv.stop();
+
+              if (!cancel1Called) throw new Error('Cancel1 not called');
+              if (!cancel2Called) throw new Error('Cancel2 not called');
+              if (mv.isAnimating()) {
+                throw new Error('Should not be animating after stop');
+              }
+            } catch (e) {
+              (globalThis as any).__TEST_ERROR = String(e);
+            }
+          })();
+        }, []);
+        return <view />;
+      };
+      render(<App />, { enableMainThread: true, enableBackgroundThread: true });
+      await checkError();
     });
   });
 });

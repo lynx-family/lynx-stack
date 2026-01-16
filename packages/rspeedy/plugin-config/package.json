@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/config-rsbuild-plugin",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "An rsbuild plugin for config Lynx Config defined by @lynx-js/type-config.",
   "keywords": [
     "rsbuild",
@@ -54,7 +54,7 @@
     "webpack": "^5.104.1"
   },
   "peerDependencies": {
-    "@lynx-js/rspeedy": "^0.7.0 || ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0"
+    "@lynx-js/rspeedy": "^0.7.0 || ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0"
   },
   "engines": {
     "node": ">=18"

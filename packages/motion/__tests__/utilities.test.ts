@@ -24,8 +24,8 @@ describe('Utilities', () => {
     test('noopMT should be exported and not throw', async () => {
       // Dynamic import to avoid execution context issues
       const { noopMT } = await import('../src/utils/noop.js');
-      expect(typeof noopMT).toBe('function');
-      expect(() => noopMT()).not.toThrow();
+      expect(typeof noopMT).toBe('object');
+      expect(noopMT).toHaveProperty('_wkltId');
     });
   });
 

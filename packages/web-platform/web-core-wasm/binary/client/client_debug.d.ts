@@ -6,6 +6,7 @@ export class DecodedStyleData {
   constructor(buffer: Uint8Array);
   query_css_og_declarations_by_css_id(css_id: number, class_name: string[]): string;
   static decode_into(buffer: Uint8Array, entry_name: string | null | undefined, config_enable_css_selector: boolean): Uint8Array;
+  static encode_from_raw_style_info(raw_style_info: RawStyleInfo, config_enable_css_selector: boolean, entry_name?: string | null): Uint8Array;
   readonly style_content: string;
   readonly font_face_content: string;
 }
@@ -70,6 +71,102 @@ export class MainThreadWasmContext {
   __GetDataset(unique_id: number): object;
   __GetDataByKey(unique_id: number, key: string): any;
 }
+/**
+ *
+ * * key: cssId
+ * * value: StyleSheet
+ * 
+ */
+export class RawStyleInfo {
+  free(): void;
+  [Symbol.dispose](): void;
+  constructor();
+  /**
+   *
+   *   * Appends an import to the stylesheet identified by `css_id`.
+   *   * If the stylesheet does not exist, it is created.
+   *   * @param css_id - The ID of the CSS file.
+   *   * @param import_css_id - The ID of the imported CSS file.
+   *   
+   */
+  append_import(css_id: number, import_css_id: number): void;
+  /**
+   *
+   *   * Pushes a rule to the stylesheet identified by `css_id`.
+   *   * If the stylesheet does not exist, it is created.
+   *   * @param css_id - The ID of the CSS file.
+   *   * @param rule - The rule to append.
+   *   
+   */
+  push_rule(css_id: number, rule: Rule): void;
+}
+export class Rule {
+  free(): void;
+  [Symbol.dispose](): void;
+  /**
+   *
+   *   * Creates a new Rule with the specified type.
+   *   * @param rule_type - The type of the rule (e.g., "StyleRule", "FontFaceRule", "KeyframesRule").
+   *   
+   */
+  constructor(rule_type: string);
+  /**
+   *
+   *   * Sets the prelude for the rule.
+   *   * @param prelude - The prelude to set (SelectorList or KeyFramesPrelude).
+   *   
+   */
+  set_prelude(prelude: RulePrelude): void;
+  /**
+   *
+   *   * Pushes a declaration to the rule's declaration block.
+   *   * @param property_name - The property name.
+   *   * @param value - The property value.
+   *   
+   */
+  push_declaration(property_name: string, value: string): void;
+  /**
+   *
+   *   * Pushes a nested rule to the rule.
+   *   * @param rule - The nested rule to add.
+   *   
+   */
+  push_rule_children(rule: Rule): void;
+}
+/**
+ *
+ * * Either SelectorList or KeyFramesPrelude
+ * * Depending on the RuleType
+ * * If it is SelectorList, then selectors is a list of Selector
+ * * If it is KeyFramesPrelude, then selectors has only one selector which is Prelude text, its simple_selectors is empty
+ * * If the parent is FontFace, then selectors is empty
+ * 
+ */
+export class RulePrelude {
+  free(): void;
+  [Symbol.dispose](): void;
+  constructor();
+  /**
+   *
+   *   * Pushes a selector to the list.
+   *   * @param selector - The selector to add.
+   *   
+   */
+  push_selector(selector: Selector): void;
+}
+export class Selector {
+  free(): void;
+  [Symbol.dispose](): void;
+  constructor();
+  /**
+   *
+   *   * Pushes a selector section to the selector.
+   *   * @param selector_type - The type of the selector section (e.g., "ClassSelector", "IdSelector").
+   *   * @param value - The value of the selector section.
+   *   
+   */
+  push_one_selector_section(selector_type: string, value: string): void;
+}
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
@@ -85,6 +182,22 @@ export interface InitOutput {
   readonly decodedstyledata_font_face_content: (a: number) => [number, number];
   readonly decodedstyledata_query_css_og_declarations_by_css_id: (a: number, b: number, c: number, d: number) => [number, number];
   readonly decodedstyledata_decode_into: (a: any, b: number, c: number, d: number) => [number, number, number];
+  readonly decodedstyledata_encode_from_raw_style_info: (a: number, b: number, c: number, d: number) => [number, number, number];
+  readonly __wbg_rawstyleinfo_free: (a: number, b: number) => void;
+  readonly __wbg_rule_free: (a: number, b: number) => void;
+  readonly __wbg_ruleprelude_free: (a: number, b: number) => void;
+  readonly __wbg_selector_free: (a: number, b: number) => void;
+  readonly rawstyleinfo_new: () => number;
+  readonly rawstyleinfo_append_import: (a: number, b: number, c: number) => void;
+  readonly rawstyleinfo_push_rule: (a: number, b: number, c: number) => void;
+  readonly rule_new: (a: number, b: number) => [number, number, number];
+  readonly rule_set_prelude: (a: number, b: number) => void;
+  readonly rule_push_declaration: (a: number, b: number, c: number, d: number, e: number) => void;
+  readonly rule_push_rule_children: (a: number, b: number) => void;
+  readonly ruleprelude_new: () => number;
+  readonly ruleprelude_push_selector: (a: number, b: number) => void;
+  readonly selector_new: () => number;
+  readonly selector_push_one_selector_section: (a: number, b: number, c: number, d: number, e: number) => [number, number];
   readonly __wbg_elementtemplatesection_free: (a: number, b: number) => void;
   readonly elementtemplatesection_from_encoded: (a: any) => [number, number, number];
   readonly __wbg_eventinfo_free: (a: number, b: number) => void;

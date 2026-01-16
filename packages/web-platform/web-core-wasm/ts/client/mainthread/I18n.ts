@@ -69,6 +69,8 @@ export class I18nManager {
   ) {
     const event = new CustomEvent(i18nResourceMissedEventName, {
       detail: options as CloneableObject,
+      bubbles: true,
+      composed: true,
     });
     this.#rootDom.dispatchEvent(event);
   }

@@ -3,6 +3,10 @@ import { expect, test, vi } from 'vitest';
 test('preact/debug - Invalid argument passed to hook', async () => {
   vi.stubGlobal('__MAIN_THREAD__', false)
     .stubGlobal('__LEPUS__', false);
+  let warnLog = [];
+  vi.spyOn(console, 'warn').mockImplementation((...args) => {
+    warnLog.push(args);
+  });
 
   await import('preact/debug');
   const { root, useEffect, useState } = await import('../../src/index');
@@ -27,7 +31,12 @@ test('preact/debug - Invalid argument passed to hook', async () => {
     );
   }
 
-  expect(() => root.render(<App />)).toThrowErrorMatchingInlineSnapshot(
-    `[Error: Invalid argument passed to hook. Hooks should not be called with NaN in the dependency array. Hook index 1 in component Bar was called with NaN.]`,
-  );
+  root.render(<App />);
+  expect(warnLog).toMatchInlineSnapshot(`
+    [
+      [
+        "Invalid argument passed to hook. Hooks should not be called with NaN in the dependency array. Hook index 1 in component Bar was called with NaN.",
+      ],
+    ]
+  `);
 });

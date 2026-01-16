@@ -1,5 +1,15 @@
 # @lynx-js/web-explorer
 
+## 0.0.16
+
+### Patch Changes
+
+- fix: add web bundle check && toast error ([#2101](https://github.com/lynx-family/lynx-stack/pull/2101))
+
+- fix: list-item `contain` property changes from `size` to `layout paint`, because the size of the `list-item` can be expanded by its children. ([#2043](https://github.com/lynx-family/lynx-stack/pull/2043))
+
+- fix: pixelWidth and pixelHeight use client instead of screen ([#2055](https://github.com/lynx-family/lynx-stack/pull/2055))
+
 ## 0.0.15
 
 ### Patch Changes

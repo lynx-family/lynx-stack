@@ -4,31 +4,28 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#[cfg(feature = "encode")]
 use crate::css_tokenizer::token_types::{COLON_TOKEN, IDENT_TOKEN, SEMICOLON_TOKEN};
-#[cfg(feature = "encode")]
 use crate::css_tokenizer::tokenize;
 use bincode::Decode;
 #[cfg(feature = "encode")]
 use bincode::Encode;
 use fnv::FnvHashMap;
-#[cfg(feature = "encode")]
 use wasm_bindgen::prelude::*;
 
 /**
  * key: cssId
  * value: StyleSheet
  */
-#[derive(Decode)]
-#[cfg_attr(feature = "encode", derive(Encode, Clone, Default))]
-#[cfg_attr(feature = "encode", wasm_bindgen)]
+#[derive(Decode, Default)]
+#[cfg_attr(feature = "encode", derive(Encode, Clone))]
+#[wasm_bindgen]
 pub struct RawStyleInfo {
   pub(super) css_id_to_style_sheet: FnvHashMap<i32, StyleSheet>,
   pub(super) style_content_str_size_hint: usize,
 }
 
-#[derive(Decode)]
-#[cfg_attr(feature = "encode", derive(Encode, Default, Clone))]
+#[derive(Decode, Default)]
+#[cfg_attr(feature = "encode", derive(Encode, Clone))]
 pub(crate) struct StyleSheet {
   pub(super) imports: Vec<i32>,
   pub(super) rules: Vec<Rule>,
@@ -36,7 +33,7 @@ pub(crate) struct StyleSheet {
 
 #[derive(Decode)]
 #[cfg_attr(feature = "encode", derive(Encode, Clone))]
-#[cfg_attr(feature = "encode", wasm_bindgen)]
+#[wasm_bindgen]
 pub struct Rule {
   pub(super) rule_type: RuleType,
   pub(super) prelude: RulePrelude,
@@ -54,7 +51,7 @@ pub(super) enum RuleType {
 
 #[derive(Decode, Default)]
 #[cfg_attr(feature = "encode", derive(Encode, Clone))]
-#[cfg_attr(feature = "encode", wasm_bindgen)]
+#[wasm_bindgen]
 /**
  * Either SelectorList or KeyFramesPrelude
  * Depending on the RuleType
@@ -68,7 +65,7 @@ pub struct RulePrelude {
 
 #[derive(Decode, Clone, Default)]
 #[cfg_attr(feature = "encode", derive(Encode))]
-#[cfg_attr(feature = "encode", wasm_bindgen)]
+#[wasm_bindgen]
 pub struct Selector {
   pub(super) simple_selectors: Vec<OneSimpleSelector>,
 }
@@ -110,10 +107,8 @@ pub(super) struct ValueToken {
   pub(super) value: String,
 }
 
-#[cfg(feature = "encode")]
 #[wasm_bindgen]
 impl RawStyleInfo {
-  #[cfg(feature = "encode")]
   #[wasm_bindgen(constructor)]
   pub fn new() -> Self {
     Self::default()
@@ -125,7 +120,6 @@ impl RawStyleInfo {
    * @param css_id - The ID of the CSS file.
    * @param import_css_id - The ID of the imported CSS file.
    */
-  #[cfg(feature = "encode")]
   #[wasm_bindgen]
   pub fn append_import(&mut self, css_id: i32, import_css_id: i32) {
     // if css_id not exist, create a new StyleSheet
@@ -139,7 +133,6 @@ impl RawStyleInfo {
    * @param css_id - The ID of the CSS file.
    * @param rule - The rule to append.
    */
-  #[cfg(feature = "encode")]
   #[wasm_bindgen]
   pub fn push_rule(&mut self, css_id: i32, rule: Rule) {
     let style_sheet = self.css_id_to_style_sheet.entry(css_id).or_default();
@@ -162,13 +155,12 @@ impl RawStyleInfo {
   }
 }
 
-#[cfg_attr(feature = "encode", wasm_bindgen)]
+#[wasm_bindgen]
 impl Rule {
   /**
    * Creates a new Rule with the specified type.
    * @param rule_type - The type of the rule (e.g., "StyleRule", "FontFaceRule", "KeyframesRule").
    */
-  #[cfg(feature = "encode")]
   #[wasm_bindgen(constructor)]
   pub fn new(rule_type: String) -> Result<Rule, JsError> {
     let rule_type_enum = match rule_type.as_str() {
@@ -193,7 +185,6 @@ impl Rule {
    * Sets the prelude for the rule.
    * @param prelude - The prelude to set (SelectorList or KeyFramesPrelude).
    */
-  #[cfg(feature = "encode")]
   #[wasm_bindgen]
   pub fn set_prelude(&mut self, prelude: RulePrelude) {
     self.prelude = prelude;
@@ -204,7 +195,6 @@ impl Rule {
    * @param property_name - The property name.
    * @param value - The property value.
    */
-  #[cfg(feature = "encode")]
   #[wasm_bindgen]
   pub fn push_declaration(&mut self, property_name: String, value: String) {
     // 1. property name
@@ -238,16 +228,14 @@ impl Rule {
    * Pushes a nested rule to the rule.
    * @param rule - The nested rule to add.
    */
-  #[cfg(feature = "encode")]
   #[wasm_bindgen]
   pub fn push_rule_children(&mut self, rule: Rule) {
     self.nested_rules.push(rule);
   }
 }
 
-#[cfg_attr(feature = "encode", wasm_bindgen)]
+#[wasm_bindgen]
 impl RulePrelude {
-  #[cfg(feature = "encode")]
   #[wasm_bindgen(constructor)]
   pub fn new() -> Self {
     Self {
@@ -259,16 +247,14 @@ impl RulePrelude {
    * Pushes a selector to the list.
    * @param selector - The selector to add.
    */
-  #[cfg(feature = "encode")]
   #[wasm_bindgen]
   pub fn push_selector(&mut self, selector: Selector) {
     self.selector_list.push(selector);
   }
 }
 
-#[cfg_attr(feature = "encode", wasm_bindgen)]
+#[wasm_bindgen]
 impl Selector {
-  #[cfg(feature = "encode")]
   #[wasm_bindgen(constructor)]
   pub fn new() -> Self {
     Self {
@@ -281,7 +267,6 @@ impl Selector {
    * @param selector_type - The type of the selector section (e.g., "ClassSelector", "IdSelector").
    * @param value - The value of the selector section.
    */
-  #[cfg(feature = "encode")]
   #[wasm_bindgen]
   pub fn push_one_selector_section(
     &mut self,
@@ -356,12 +341,10 @@ impl Selector {
     }
   }
 }
-#[cfg(feature = "encode")]
 struct DeclarationParser {
   value_token_list: Vec<ValueToken>,
 }
 
-#[cfg(feature = "encode")]
 impl tokenize::Parser for DeclarationParser {
   fn on_token(&mut self, token_type: u8, token_value: &str) {
     let value_token = ValueToken {

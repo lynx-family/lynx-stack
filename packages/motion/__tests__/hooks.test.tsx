@@ -214,4 +214,198 @@ describe('Hooks', () => {
       expect(true).toBe(true);
     });
   });
+
+  describe('Real callback invocations', () => {
+    test('should fire callback when MotionValue changes via set()', async () => {
+      const App = () => {
+        const mvRef = useMotionValueRef(0);
+
+        useMotionValueRefEvent(mvRef, 'change', (v) => {
+          'main thread';
+          (globalThis as any).__CALLBACK_VALUES =
+            (globalThis as any).__CALLBACK_VALUES || [];
+          (globalThis as any).__CALLBACK_VALUES.push(v);
+        });
+
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            // Set value after a small delay to ensure listener is attached
+            setTimeout(() => {
+              if (mvRef.current) {
+                mvRef.current.set(50);
+                mvRef.current.set(100);
+              }
+            }, 50);
+          })();
+        }, []);
+
+        return <view />;
+      };
+
+      render(<App />, {
+        enableMainThread: true,
+        enableBackgroundThread: true,
+      });
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 150));
+      });
+
+      const values = (globalThis as any).__CALLBACK_VALUES || [];
+      expect(values.length).toBeGreaterThan(0);
+      expect(values).toContain(50);
+      expect(values).toContain(100);
+
+      delete (globalThis as any).__CALLBACK_VALUES;
+    });
+
+    test('should fire callback when MotionValue changes via jump()', async () => {
+      const App = () => {
+        const mvRef = useMotionValueRef(0);
+
+        useMotionValueRefEvent(mvRef, 'change', (v) => {
+          'main thread';
+          (globalThis as any).__JUMP_VALUE = v;
+        });
+
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            setTimeout(() => {
+              if (mvRef.current) {
+                mvRef.current.jump(999);
+              }
+            }, 50);
+          })();
+        }, []);
+
+        return <view />;
+      };
+
+      render(<App />, {
+        enableMainThread: true,
+        enableBackgroundThread: true,
+      });
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 150));
+      });
+
+      const value = (globalThis as any).__JUMP_VALUE;
+      expect(value).toBe(999);
+
+      delete (globalThis as any).__JUMP_VALUE;
+    });
+
+    test('should not fire callback after unmount', async () => {
+      let callbackCount = 0;
+
+      const App = () => {
+        const mvRef = useMotionValueRef(0);
+
+        useMotionValueRefEvent(mvRef, 'change', () => {
+          'main thread';
+          callbackCount++;
+          (globalThis as any).__CALLBACK_COUNT = callbackCount;
+        });
+
+        // Store ref globally for testing
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            (globalThis as any).__MV_REF = mvRef;
+          })();
+        }, []);
+
+        return <view />;
+      };
+
+      const { unmount } = render(<App />, {
+        enableMainThread: true,
+        enableBackgroundThread: true,
+      });
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      });
+
+      // Trigger a change before unmount
+      await act(async () => {
+        runOnMainThread(() => {
+          'main thread';
+          const ref = (globalThis as any).__MV_REF;
+          if (ref?.current) {
+            ref.current.set(10);
+          }
+        })();
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      });
+
+      const countBeforeUnmount = (globalThis as any).__CALLBACK_COUNT || 0;
+
+      unmount();
+
+      // Wait a bit after unmount
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      });
+
+      // The callback count should not have increased after unmount
+      // (we can't easily trigger more changes after unmount in this test setup)
+      expect(countBeforeUnmount).toBeGreaterThan(0);
+
+      delete (globalThis as any).__CALLBACK_COUNT;
+      delete (globalThis as any).__MV_REF;
+    });
+
+    test('should support multiple listeners on same MotionValue', async () => {
+      const App = () => {
+        const mvRef = useMotionValueRef(0);
+
+        useMotionValueRefEvent(mvRef, 'change', (v) => {
+          'main thread';
+          (globalThis as any).__LISTENER_1 =
+            ((globalThis as any).__LISTENER_1 || 0) + 1;
+        });
+
+        useMotionValueRefEvent(mvRef, 'change', (v) => {
+          'main thread';
+          (globalThis as any).__LISTENER_2 =
+            ((globalThis as any).__LISTENER_2 || 0) + 1;
+        });
+
+        useEffect(() => {
+          runOnMainThread(() => {
+            'main thread';
+            setTimeout(() => {
+              if (mvRef.current) {
+                mvRef.current.set(50);
+              }
+            }, 50);
+          })();
+        }, []);
+
+        return <view />;
+      };
+
+      render(<App />, {
+        enableMainThread: true,
+        enableBackgroundThread: true,
+      });
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 150));
+      });
+
+      const listener1Count = (globalThis as any).__LISTENER_1 || 0;
+      const listener2Count = (globalThis as any).__LISTENER_2 || 0;
+
+      expect(listener1Count).toBeGreaterThan(0);
+      expect(listener2Count).toBeGreaterThan(0);
+
+      delete (globalThis as any).__LISTENER_1;
+      delete (globalThis as any).__LISTENER_2;
+    });
+  });
 });

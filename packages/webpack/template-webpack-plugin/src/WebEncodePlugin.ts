@@ -4,6 +4,8 @@
 
 import type { Compilation, Compiler } from 'webpack';
 
+import type { TasmJSONInfo } from '@lynx-js/web-core-wasm/encode';
+
 import type { LynxStyleNode } from './css/index.js';
 import {
   LynxTemplatePlugin,
@@ -80,31 +82,58 @@ export class WebEncodePlugin {
           return encodeOptions;
         });
 
-        hooks.encode.tap({
+        hooks.encode.tapPromise({
           name: WebEncodePlugin.name,
           stage: WebEncodePlugin.ENCODE_HOOK_STAGE,
-        }, ({ encodeOptions }) => {
-          return {
-            buffer: Buffer.from(JSON.stringify({
-              styleInfo: genStyleInfo(
-                (encodeOptions['css'] as {
-                  cssMap: Record<string, LynxStyleNode[]>;
-                }).cssMap,
-              ),
-              manifest: encodeOptions.manifest,
-              cardType: encodeOptions['cardType'],
-              appType: encodeOptions['appType'],
-              pageConfig: encodeOptions['pageConfig'],
-              lepusCode: {
-                // flatten the lepusCode to a single object
-                ...encodeOptions.lepusCode.lepusChunk,
-                root: encodeOptions.lepusCode.root,
-              },
-              customSections: encodeOptions.customSections,
-              elementTemplate: encodeOptions['elementTemplate'],
-            })),
-            debugInfo: '',
+        }, async ({ encodeOptions }) => {
+          const tasmJSONInfo: Record<string, unknown> = {
+            styleInfo: (encodeOptions['css'] as {
+              cssMap: Record<string, LynxStyleNode[]>;
+            }).cssMap,
+            manifest: encodeOptions.manifest as Record<string, string>,
+            cardType: encodeOptions['cardType'] as string,
+            appType: encodeOptions['appType'] as string,
+            pageConfig: encodeOptions['pageConfig'] as Record<string, unknown>,
+            lepusCode: {
+              // flatten the lepusCode to a single object
+              ...encodeOptions.lepusCode.lepusChunk,
+              root: encodeOptions.lepusCode.root!,
+            },
+            customSections: encodeOptions.customSections ?? {},
+            elementTemplates: encodeOptions['elementTemplates'] ?? {},
           };
+          const isExperimentalWebBinary = !!process
+            .env['EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE'];
+          if (isExperimentalWebBinary) {
+            const { encode } = await import('@lynx-js/web-core-wasm/encode')
+              .catch(
+                () => {
+                  throw new Error(
+                    `FLAG EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE IS INTERNAL USED ONLY`,
+                  );
+                },
+              );
+            return {
+              buffer: Buffer.from(encode(tasmJSONInfo as TasmJSONInfo)),
+              debugInfo: '',
+            };
+          } else {
+            return {
+              buffer: Buffer.from(
+                JSON.stringify({
+                  ...tasmJSONInfo,
+                  styleInfo: genStyleInfo(
+                    tasmJSONInfo['styleInfo'] as Record<
+                      string,
+                      LynxStyleNode[]
+                    >,
+                  ),
+                }),
+                'utf-8',
+              ),
+              debugInfo: '',
+            };
+          }
         });
       },
     );

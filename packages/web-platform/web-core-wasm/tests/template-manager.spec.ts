@@ -43,6 +43,9 @@ const mockLynxViewInstance = {
   onStyleInfoReady: vi.fn(),
   onMTSScriptsLoaded: vi.fn(),
   onBTSScriptsLoaded: vi.fn(),
+  backgroundThread: vi.mockObject({
+    markTiming: vi.fn(),
+  }),
 } as unknown as LynxViewInstance;
 
 describe('Template Manager', () => {
@@ -252,5 +255,83 @@ describe('Template Manager', () => {
         foo: 'bar',
       }),
     );
+  });
+
+  test('should load web-core.main-thread.json correctly', async () => {
+    const jsonContent = {
+      'styleInfo': {
+        '0': {
+          'rules': [],
+          'content': [],
+        },
+      },
+      'lepusCode': {
+        'app-service.js':
+          'globalThis.runtime = lynxCoreInject.tt; globalThis.__lynx_worker_type = \'background\'',
+        'manifest-chunk.js': 'module.exports = \'hello\';',
+        'manifest-chunk2.js': 'module.exports = \'world\';',
+      },
+      'manifest': {
+        '/app-service.js':
+          'globalThis.runtime = lynxCoreInject.tt; globalThis.__lynx_worker_type = \'background\'',
+        '/manifest-chunk.js': 'module.exports = \'hello\';',
+        '/manifest-chunk2.js': 'module.exports = \'world\';',
+        '/json': '{}',
+      },
+      'customSections': {},
+      'cardType': 'react',
+      'appType': 'card',
+      'pageConfig': {
+        'enableFiberArch': true,
+        'useLepusNG': true,
+        'enableReuseContext': true,
+        'bundleModuleMode': 'ReturnByFunction',
+        'templateDebugUrl': '',
+        'debugInfoOutside': true,
+        'defaultDisplayLinear': true,
+        'enableCSSInvalidation': true,
+        'enableCSSSelector': true,
+        'enableLepusDebug': false,
+        'enableRemoveCSSScope': true,
+        'targetSdkVersion': '2.10',
+      },
+    };
+
+    const jsonString = JSON.stringify(jsonContent);
+    const encoded = new TextEncoder().encode(jsonString);
+
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoded);
+        controller.close();
+      },
+    });
+
+    (globalThis.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      body: stream,
+    });
+
+    const templateUrl = 'http://example.com/web-core.main-thread.json';
+    await templateManager.fetchBundle(
+      templateUrl,
+      Promise.resolve(mockLynxViewInstance),
+    );
+
+    // Verify config
+    expect(mockLynxViewInstance.onPageConfigReady).toHaveBeenCalledWith(
+      expect.objectContaining(jsonContent.pageConfig),
+    );
+
+    // Verify style info
+    expect(mockLynxViewInstance.onStyleInfoReady).toHaveBeenCalled();
+
+    // Verify script decoding (LepusCode)
+    // The worker sends section: LepusCode with a blob URL map.
+    // TemplateManager handles this but doesn't expose the blob map directly easily in tests unless we mock the handler side effect or inspect mockLynxViewInstance.
+    // TemplateManager calls lynxViewInstance.onMTSScriptsLoaded(url, data).
+    expect(mockLynxViewInstance.onMTSScriptsLoaded).toHaveBeenCalled();
   });
 });
