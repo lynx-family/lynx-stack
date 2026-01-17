@@ -4,6 +4,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+pub(crate) mod css_property;
 mod decoded_style_data;
 mod flattened_style_info;
 mod raw_style_info;

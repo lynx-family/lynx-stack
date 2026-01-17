@@ -24,5 +24,4 @@ pub(crate) use inline_style::{
 #[cfg(feature = "client")]
 pub(crate) use rules::query_transform_rules;
 pub(crate) use transformer::Generator;
-pub(crate) use transformer::ParsedDeclaration;
 pub(crate) use transformer::StyleTransformer;

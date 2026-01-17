@@ -6,8 +6,7 @@
 
 use super::flattened_style_info::FlattenedStyleInfo;
 use super::raw_style_info::RuleType;
-use crate::css_tokenizer::tokenize::Parser;
-use crate::style_transformer::{Generator, ParsedDeclaration, StyleTransformer};
+use crate::style_transformer::{Generator, StyleTransformer};
 use crate::template::template_sections::style_info::raw_style_info::{
   DeclarationBlock, OneSimpleSelector, OneSimpleSelectorType,
 };
@@ -281,15 +280,7 @@ impl StyleInfoDecoder {
     let mut transformer = StyleTransformer::new(self);
 
     for decl in declaration_block.declarations.into_iter() {
-      transformer.on_token(
-        crate::css_tokenizer::token_types::IDENT_TOKEN,
-        &decl.property_name,
-      );
-      transformer.on_token(crate::css_tokenizer::token_types::COLON_TOKEN, ":");
-      for token in decl.value_token_list.iter() {
-        transformer.on_token(token.token_type, &token.value);
-      }
-      transformer.on_token(crate::css_tokenizer::token_types::SEMICOLON_TOKEN, ";");
+      transformer.on_half_parsed_declaration(decl);
     }
     (if self.is_processing_font_face {
       &mut self.font_face_content
@@ -301,8 +292,8 @@ impl StyleInfoDecoder {
 }
 
 impl Generator for StyleInfoDecoder {
-  fn push_transform_kids_style(&mut self, declaration: ParsedDeclaration) {
-    declaration.generate_to_string_buf(&mut self.temp_child_rules_buffer);
+  fn push_transform_kids_style(&mut self, declaration_str: String) {
+    self.temp_child_rules_buffer.push_str(&declaration_str);
     if !self.config_enable_css_selector {
       if let (Some(map), Some(css_ids), Some(names)) = (
         self
@@ -317,13 +308,13 @@ impl Generator for StyleInfoDecoder {
             let string_buf = class_selector_map
               .entry(class_selector_name.clone())
               .or_default();
-            declaration.generate_to_string_buf(string_buf);
+            string_buf.push_str(&declaration_str);
           }
         }
       }
     }
   }
-  fn push_transformed_style(&mut self, declaration: ParsedDeclaration) {
+  fn push_transformed_style(&mut self, declaration_str: String) {
     if !self.config_enable_css_selector && !self.is_processing_font_face {
       if let (Some(map), Some(css_ids), Some(names)) = (
         self
@@ -338,16 +329,17 @@ impl Generator for StyleInfoDecoder {
             let string_buf = class_selector_map
               .entry(class_selector_name.clone())
               .or_default();
-            declaration.generate_to_string_buf(string_buf);
+            string_buf.push_str(&declaration_str);
           }
         }
       }
     }
-    declaration.generate_to_string_buf(if self.is_processing_font_face {
+    (if self.is_processing_font_face {
       &mut self.font_face_content
     } else {
       &mut self.style_content
-    });
+    })
+    .push_str(&declaration_str);
   }
 }
 
@@ -355,9 +347,11 @@ impl Generator for StyleInfoDecoder {
 mod test {
   use fnv::FnvHashMap;
 
+  use crate::template::template_sections::style_info::css_property::{
+    CSSProperty, ParsedDeclaration, ValueToken,
+  };
   use crate::template::template_sections::style_info::{
-    raw_style_info::{DeclarationParser, StyleSheet},
-    Rule, RulePrelude, Selector, ValueToken,
+    raw_style_info::StyleSheet, Rule, RulePrelude, Selector,
   };
 
   use super::StyleInfoDecoder;
@@ -396,15 +390,17 @@ mod test {
             },
             declaration_block: DeclarationBlock {
               declarations: vec![
-                DeclarationParser {
-                  property_name: "font-family".to_string(),
+                ParsedDeclaration {
+                  property_id: CSSProperty::FontFamily,
+                  is_important: false,
                   value_token_list: vec![ValueToken {
                     token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
                     value: "MyFont".to_string(),
                   }],
                 },
-                DeclarationParser {
-                  property_name: "src".to_string(),
+                ParsedDeclaration {
+                  property_id: CSSProperty::Src,
+                  is_important: false,
                   value_token_list: vec![
                     ValueToken {
                       token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
@@ -447,8 +443,9 @@ mod test {
               }],
             },
             declaration_block: DeclarationBlock {
-              declarations: vec![DeclarationParser {
-                property_name: "width".to_string(),
+              declarations: vec![ParsedDeclaration {
+                property_id: CSSProperty::Width,
+                is_important: false,
                 value_token_list: vec![ValueToken {
                   token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
                   value: "100rpx".to_string(),
@@ -484,8 +481,9 @@ mod test {
               }],
             },
             declaration_block: DeclarationBlock {
-              declarations: vec![DeclarationParser {
-                property_name: "width".to_string(),
+              declarations: vec![ParsedDeclaration {
+                property_id: CSSProperty::Width,
+                is_important: false,
                 value_token_list: vec![ValueToken {
                   token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
                   value: "100px".to_string(),
@@ -521,8 +519,9 @@ mod test {
               }],
             },
             declaration_block: DeclarationBlock {
-              declarations: vec![DeclarationParser {
-                property_name: "width".to_string(),
+              declarations: vec![ParsedDeclaration {
+                property_id: CSSProperty::Width,
+                is_important: false,
                 value_token_list: vec![ValueToken {
                   token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
                   value: "100px".to_string(),
@@ -592,8 +591,9 @@ mod test {
               },
               nested_rules: vec![],
               declaration_block: DeclarationBlock {
-                declarations: vec![DeclarationParser {
-                  property_name: "width".to_string(),
+                declarations: vec![ParsedDeclaration {
+                  property_id: CSSProperty::Width,
+                  is_important: false,
                   value_token_list: vec![ValueToken {
                     token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
                     value: "100rpx".to_string(),
@@ -634,8 +634,9 @@ mod test {
                 }],
               },
               declaration_block: DeclarationBlock {
-                declarations: vec![DeclarationParser {
-                  property_name: "width".to_string(),
+                declarations: vec![ParsedDeclaration {
+                  property_id: CSSProperty::Width,
+                  is_important: false,
                   value_token_list: vec![ValueToken {
                     token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
                     value: "100px".to_string(),
@@ -655,8 +656,9 @@ mod test {
                 }],
               },
               declaration_block: DeclarationBlock {
-                declarations: vec![DeclarationParser {
-                  property_name: "height".to_string(),
+                declarations: vec![ParsedDeclaration {
+                  property_id: CSSProperty::Height,
+                  is_important: false,
                   value_token_list: vec![ValueToken {
                     token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
                     value: "100px".to_string(),
@@ -701,8 +703,9 @@ mod test {
               ],
             },
             declaration_block: DeclarationBlock {
-              declarations: vec![DeclarationParser {
-                property_name: "height".to_string(),
+              declarations: vec![ParsedDeclaration {
+                property_id: CSSProperty::Height,
+                is_important: false,
                 value_token_list: vec![ValueToken {
                   token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
                   value: "100px".to_string(),
@@ -738,8 +741,9 @@ mod test {
               }],
             },
             declaration_block: DeclarationBlock {
-              declarations: vec![DeclarationParser {
-                property_name: "width".to_string(),
+              declarations: vec![ParsedDeclaration {
+                property_id: CSSProperty::Width,
+                is_important: false,
                 value_token_list: vec![ValueToken {
                   token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
                   value: "100px".to_string(),
@@ -774,8 +778,9 @@ mod test {
               }],
             },
             declaration_block: DeclarationBlock {
-              declarations: vec![DeclarationParser {
-                property_name: "color".to_string(),
+              declarations: vec![ParsedDeclaration {
+                property_id: CSSProperty::Color,
+                is_important: false,
                 value_token_list: vec![ValueToken {
                   token_type: crate::css_tokenizer::token_types::IDENT_TOKEN,
                   value: "red".to_string(),

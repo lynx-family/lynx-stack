@@ -4,8 +4,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use crate::css_tokenizer::token_types::{COLON_TOKEN, IDENT_TOKEN, SEMICOLON_TOKEN};
-use crate::css_tokenizer::tokenize;
+use super::css_property::ParsedDeclaration;
 
 #[cfg(feature = "encode")]
 use super::style_info_decoder::StyleInfoDecoder;
@@ -100,14 +99,7 @@ pub(super) enum OneSimpleSelectorType {
 #[derive(Decode)]
 #[cfg_attr(feature = "encode", derive(Encode, Clone))]
 pub(super) struct DeclarationBlock {
-  pub(crate) declarations: Vec<DeclarationParser>,
-}
-
-#[derive(Decode, Clone)]
-#[cfg_attr(feature = "encode", derive(Encode))]
-pub(super) struct ValueToken {
-  pub(super) token_type: u8,
-  pub(super) value: String,
+  pub(crate) declarations: Vec<ParsedDeclaration>,
 }
 
 #[wasm_bindgen]
@@ -201,12 +193,10 @@ impl Rule {
    */
   #[wasm_bindgen]
   pub fn push_declaration(&mut self, property_name: String, value: String) {
-    let mut parser = DeclarationParser {
-      property_name,
-      value_token_list: vec![],
-    };
-    tokenize::tokenize(&value, &mut parser);
-    self.declaration_block.declarations.push(parser);
+    self
+      .declaration_block
+      .declarations
+      .push(ParsedDeclaration::new(property_name, value));
   }
 
   /**
@@ -324,22 +314,5 @@ impl Selector {
         }
       }
     }
-  }
-}
-
-#[derive(Decode, Clone, Default)]
-#[cfg_attr(feature = "encode", derive(Encode))]
-pub(crate) struct DeclarationParser {
-  pub(crate) property_name: String,
-  pub(crate) value_token_list: Vec<ValueToken>,
-}
-
-impl tokenize::Parser for DeclarationParser {
-  fn on_token(&mut self, token_type: u8, token_value: &str) {
-    let value_token = ValueToken {
-      token_type,
-      value: token_value.to_string(),
-    };
-    self.value_token_list.push(value_token);
   }
 }

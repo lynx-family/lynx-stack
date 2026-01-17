@@ -8,6 +8,7 @@ use crate::constants;
 use crate::style_transformer::{
   query_transform_rules, transform_inline_style_key_value_vec, transform_inline_style_string,
 };
+use crate::template::template_sections::style_info::css_property::CSSProperty;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -79,7 +80,8 @@ pub fn add_inline_style_raw_string_key(
   value: Option<String>,
 ) {
   if let Some(value) = value {
-    let (transformed, _) = query_transform_rules(&key, &value);
+    let property_id = CSSProperty::parse(&key);
+    let (transformed, _) = query_transform_rules(property_id, &value);
     let style = dom.style();
     if transformed.is_empty() {
       style.set_property(&key, &value).unwrap();
@@ -95,8 +97,22 @@ pub fn add_inline_style_raw_string_key(
 
 #[wasm_bindgen]
 pub fn set_inline_styles_number_key(dom: &web_sys::HtmlElement, key: i32, value: Option<String>) {
-  if let Some(style_property) = constants::STYLE_PROPERTY_MAP.get(key as usize) {
-    add_inline_style_raw_string_key(dom, style_property.to_string(), value);
+  let property_id = CSSProperty::from_id(key as u16);
+  if let Some(value) = value {
+    let (transformed, _) = query_transform_rules(property_id, &value);
+    let style = dom.style();
+    if transformed.is_empty() {
+      style.set_property(property_id.to_string(), &value).unwrap();
+    } else {
+      for (k, v) in transformed.iter() {
+        style.set_property(k, v).unwrap();
+      }
+    }
+  } else {
+    dom
+      .style()
+      .remove_property(property_id.to_string())
+      .unwrap();
   }
 }
 #[wasm_bindgen]

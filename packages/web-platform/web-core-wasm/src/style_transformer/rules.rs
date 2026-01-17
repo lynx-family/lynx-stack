@@ -5,27 +5,28 @@
  */
 
 #![allow(clippy::type_complexity)]
+use crate::template::template_sections::style_info::css_property::CSSProperty;
 use fnv::FnvHashMap;
 
 lazy_static::lazy_static! {
-  pub static ref RENAME_RULE: FnvHashMap<&'static str, &'static str> = {
+  pub static ref RENAME_RULE: FnvHashMap<CSSProperty, &'static str> = {
     FnvHashMap::from_iter([
-      ("linear-weight", "--lynx-linear-weight"),
-      ("flex-direction", "--flex-direction"),
-      ("flex-wrap", "--flex-wrap"),
-      ("flex-grow", "--flex-grow"),
-      ("flex-shrink", "--flex-shrink"),
-      ("flex-basis", "--flex-basis"),
-      ("list-main-axis-gap", "--list-main-axis-gap"),
-      ("list-cross-axis-gap", "--list-cross-axis-gap"),
-      ("flex", "--flex"),
+      (CSSProperty::LinearWeight, "--lynx-linear-weight"),
+      (CSSProperty::FlexDirection, "--flex-direction"),
+      (CSSProperty::FlexWrap, "--flex-wrap"),
+      (CSSProperty::FlexGrow, "--flex-grow"),
+      (CSSProperty::FlexShrink, "--flex-shrink"),
+      (CSSProperty::FlexBasis, "--flex-basis"),
+      (CSSProperty::ListMainAxisGap, "--list-main-axis-gap"),
+      (CSSProperty::ListCrossAxisGap, "--list-cross-axis-gap"),
+      (CSSProperty::Flex, "--flex"),
     ])
   };
 
-  pub static ref REPLACE_RULE: FnvHashMap<&'static str, FnvHashMap<&'static str, &'static [(&'static str, &'static str)]>> = {
+  pub static ref REPLACE_RULE: FnvHashMap<CSSProperty, FnvHashMap<&'static str, &'static [(&'static str, &'static str)]>> = {
     FnvHashMap::from_iter([
       (
-        "display",
+        CSSProperty::Display,
           FnvHashMap::from_iter([
             ("linear", &[
               ("--lynx-display-toggle", "var(--lynx-display-linear)"),
@@ -40,13 +41,13 @@ lazy_static::lazy_static! {
           ]),
       ),
       (
-        "direction",
+        CSSProperty::Direction,
           FnvHashMap::from_iter([
             ("lynx-rtl", &[("direction", "rtl")] as &'static [(&'static str, &'static str)]),
           ]),
       ),
       (
-        "linear-orientation",
+        CSSProperty::LinearOrientation,
           FnvHashMap::from_iter([
             ("horizontal", &[("--lynx-linear-orientation", "horizontal"),("--lynx-linear-orientation-toggle", "var(--lynx-linear-orientation-horizontal)")] as &'static [(&'static str, &'static str)]),
             ("horizontal-reverse", &[("--lynx-linear-orientation", "horizontal-reverse"), ("--lynx-linear-orientation-toggle", "var(--lynx-linear-orientation-horizontal-reverse)")]),
@@ -55,7 +56,7 @@ lazy_static::lazy_static! {
           ]),
       ),
       (
-        "linear-direction",
+        CSSProperty::LinearDirection,
           FnvHashMap::from_iter([
             ("row", &[("--lynx-linear-orientation", "horizontal"), ("--lynx-linear-orientation-toggle", "var(--lynx-linear-orientation-horizontal)")] as &'static [(&'static str, &'static str)]),
             ("row-reverse", &[("--lynx-linear-orientation", "horizontal-reverse"), ("--lynx-linear-orientation-toggle", "var(--lynx-linear-orientation-horizontal-reverse)")]),
@@ -64,7 +65,7 @@ lazy_static::lazy_static! {
           ]),
       ),
       (
-        "linear-gravity",
+        CSSProperty::LinearGravity,
           FnvHashMap::from_iter([
             ("top", &[
               ("--justify-content-column", "flex-start"),
@@ -129,7 +130,7 @@ lazy_static::lazy_static! {
           ]),
       ),
       (
-        "linear-cross-gravity",
+        CSSProperty::LinearCrossGravity,
           FnvHashMap::from_iter([
             ("start", &[
               ("align-items", "start"),
@@ -146,7 +147,7 @@ lazy_static::lazy_static! {
           ]),
       ),
       (
-        "linear-layout-gravity",
+        CSSProperty::LinearLayoutGravity,
           FnvHashMap::from_iter([
             ("none", &[
               ("--align-self-row", "auto"),
@@ -203,7 +204,7 @@ lazy_static::lazy_static! {
           ])
         ),
         (
-          "justify-content",
+          CSSProperty::JustifyContent,
             FnvHashMap::from_iter([
             ("start", &[
               ("justify-content", "flex-start"),
@@ -225,16 +226,16 @@ lazy_static::lazy_static! {
 }
 
 #[inline(always)]
-pub fn get_rename_rule_value(name: &str) -> Option<&'static str> {
-  RENAME_RULE.get(name).copied()
+pub fn get_rename_rule_value(id: CSSProperty) -> Option<&'static str> {
+  RENAME_RULE.get(&id).copied()
 }
 
 #[inline(always)]
 pub fn get_replace_rule_value(
-  name: &str,
+  id: CSSProperty,
   value: &str,
 ) -> Option<&'static [(&'static str, &'static str)]> {
-  if let Some(sub_rule) = REPLACE_RULE.get(name) {
+  if let Some(sub_rule) = REPLACE_RULE.get(&id) {
     sub_rule.get(value).copied()
   } else {
     None
@@ -244,14 +245,14 @@ pub fn get_replace_rule_value(
 type CSSPair<'a> = (&'a str, &'a str);
 
 pub(crate) fn query_transform_rules<'a>(
-  name: &'a str,
+  property_id: CSSProperty,
   value: &'a str,
 ) -> (Vec<CSSPair<'a>>, Vec<CSSPair<'a>>) {
   let mut result: Vec<CSSPair<'a>> = Vec::new();
   let mut result_children: Vec<CSSPair<'a>> = Vec::new();
-  if let Some(renamed_value) = get_rename_rule_value(name) {
+  if let Some(renamed_value) = get_rename_rule_value(property_id) {
     result.push((renamed_value, value));
-  } else if let Some(replaced) = get_replace_rule_value(name, value) {
+  } else if let Some(replaced) = get_replace_rule_value(property_id, value) {
     result.extend(replaced);
   }
   // now transform color
@@ -269,7 +270,7 @@ pub(crate) fn query_transform_rules<'a>(
       color: xx;
   */
   // compare the name is "color"
-  else if name == "color" {
+  else if property_id == CSSProperty::Color {
     // check if the value is starting with "linear-gradient"
     let is_linear_gradient = value.starts_with("linear-gradient");
     if is_linear_gradient {
@@ -292,7 +293,7 @@ pub(crate) fn query_transform_rules<'a>(
    now we're going to generate children style for linear-weight-sum
    linear-weight-sum: <value> --> --lynx-linear-weight-sum: <value>;
   */
-  if name == "linear-weight-sum" {
+  if property_id == CSSProperty::LinearWeightSum {
     result_children.push(("--lynx-linear-weight-sum", value));
   }
   /*
@@ -300,7 +301,7 @@ pub(crate) fn query_transform_rules<'a>(
    * linear-weight: 0; -->  do nothing
    * linear-weight: <value> --> --lynx-linear-weight: 0;
    */
-  if name == "linear-weight" && value != "0" {
+  if property_id == CSSProperty::LinearWeight && value != "0" {
     result.push(("--lynx-linear-weight-basis", "0"));
   }
   (result, result_children)
@@ -308,45 +309,17 @@ pub(crate) fn query_transform_rules<'a>(
 #[cfg(test)]
 mod tests {
   use super::{get_rename_rule_value, get_replace_rule_value, query_transform_rules};
+  use crate::template::template_sections::style_info::css_property::CSSProperty;
 
   #[test]
   fn test_rename_rule_flex_direction() {
-    let source = "flex-direction:row";
-    let name = &source[0..source.len() - 4];
-    let result = get_rename_rule_value(name).unwrap();
+    let result = get_rename_rule_value(CSSProperty::FlexDirection).unwrap();
     assert_eq!(result, "--flex-direction");
   }
-  #[test]
-  fn test_rename_rule_flex_direction_at_mid() {
-    let source = "height:1px;flex-direction:row";
-    let offset = "height:1px;".len();
-    let name = &source[offset..source.len() - 4];
-    let result = get_rename_rule_value(name).unwrap();
-    assert_eq!(result, "--flex-direction");
-  }
+
   #[test]
   fn test_replace_rule_display_linear() {
-    let source = "display:linear";
-    let name = &source[0..7];
-    let value = &source[8..];
-    let result = get_replace_rule_value(name, value)
-      .unwrap()
-      .iter()
-      .map(|pair| format!("{}:{}", pair.0, pair.1))
-      .collect::<Vec<_>>()
-      .join(";");
-    assert_eq!(
-      result,
-      "--lynx-display-toggle:var(--lynx-display-linear);--lynx-display:linear;display:flex"
-    );
-  }
-  #[test]
-  fn test_replace_rule_display_linear_at_mid() {
-    let source = "height:1px;display:linear";
-    let offset = "height:1px;".len();
-    let name = &source[offset..offset + 7];
-    let value = &source[offset + 8..];
-    let result = get_replace_rule_value(name, value)
+    let result = get_replace_rule_value(CSSProperty::Display, "linear")
       .unwrap()
       .iter()
       .map(|pair| format!("{}:{}", pair.0, pair.1))
@@ -360,40 +333,32 @@ mod tests {
 
   #[test]
   fn test_rename_rule_not_exist() {
-    let source = "background-image:url(\"https://example.com\")";
-    let name = &source[0.."background-image".len()];
-    let result = get_rename_rule_value(name);
+    let result = get_rename_rule_value(CSSProperty::BackgroundImage);
     assert_eq!(result, None);
   }
 
   #[test]
   fn test_replace_rule_value_not_match() {
-    let source = "display:grid";
-    let name = &source[0..7];
-    let value = &source[8..];
-    let result = get_replace_rule_value(name, value);
+    let result = get_replace_rule_value(CSSProperty::Display, "grid");
     assert_eq!(result, None);
   }
 
   #[test]
   fn test_replace_rule_name_not_match() {
-    let source = "height:1px";
-    let name = &source[0..6];
-    let value = &source[7..];
-    let result = get_replace_rule_value(name, value);
+    let result = get_replace_rule_value(CSSProperty::Height, "linear");
     assert_eq!(result, None);
   }
 
   #[test]
   fn test_query_transform_rules_rename() {
-    let (res, children) = query_transform_rules("flex-direction", "row");
+    let (res, children) = query_transform_rules(CSSProperty::FlexDirection, "row");
     assert_eq!(res, vec![("--flex-direction", "row")]);
     assert!(children.is_empty());
   }
 
   #[test]
   fn test_query_transform_rules_replace() {
-    let (res, children) = query_transform_rules("display", "linear");
+    let (res, children) = query_transform_rules(CSSProperty::Display, "linear");
     assert_eq!(
       res,
       vec![
@@ -407,7 +372,7 @@ mod tests {
 
   #[test]
   fn test_query_transform_rules_color_linear_gradient() {
-    let (res, children) = query_transform_rules("color", "linear-gradient(red, blue)");
+    let (res, children) = query_transform_rules(CSSProperty::Color, "linear-gradient(red, blue)");
     assert_eq!(
       res,
       vec![
@@ -422,7 +387,7 @@ mod tests {
 
   #[test]
   fn test_query_transform_rules_color_normal() {
-    let (res, children) = query_transform_rules("color", "red");
+    let (res, children) = query_transform_rules(CSSProperty::Color, "red");
     assert_eq!(
       res,
       vec![
@@ -437,14 +402,14 @@ mod tests {
 
   #[test]
   fn test_query_transform_rules_linear_weight_sum() {
-    let (res, children) = query_transform_rules("linear-weight-sum", "1");
+    let (res, children) = query_transform_rules(CSSProperty::LinearWeightSum, "1");
     assert!(res.is_empty());
     assert_eq!(children, vec![("--lynx-linear-weight-sum", "1")]);
   }
 
   #[test]
   fn test_query_transform_rules_linear_weight() {
-    let (res, children) = query_transform_rules("linear-weight", "1");
+    let (res, children) = query_transform_rules(CSSProperty::LinearWeight, "1");
     assert_eq!(
       res,
       vec![
@@ -457,15 +422,13 @@ mod tests {
 
   #[test]
   fn test_query_transform_rules_linear_weight_zero() {
-    let (res, children) = query_transform_rules("linear-weight", "0");
+    let (res, children) = query_transform_rules(CSSProperty::LinearWeight, "0");
     assert_eq!(res, vec![("--lynx-linear-weight", "0")]);
     assert!(children.is_empty());
   }
   #[test]
   fn test_query_transform_rules_linear_direction() {
-    let name = "linear-direction";
-    let value = "row";
-    let (result, _) = query_transform_rules(name, value);
+    let (result, _) = query_transform_rules(CSSProperty::LinearDirection, "row");
     assert_eq!(result[0].0, "--lynx-linear-orientation");
     assert_eq!(result[0].1, "horizontal");
   }

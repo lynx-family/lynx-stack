@@ -3,7 +3,8 @@
  * Licensed under the Apache License Version 2.0 that can be found in the
  * LICENSE file in the root directory of this source tree.
  */
-use super::{transformer::StyleTransformer, ParsedDeclaration};
+use super::transformer::StyleTransformer;
+use crate::template::template_sections::style_info::css_property::CSSProperty;
 use crate::{
   style_transformer::transformer::Generator, utils::hyphenate_style_name::hyphenate_style_name,
 };
@@ -11,11 +12,11 @@ struct InlineStyleGenerator {
   string_buffer: String,
 }
 impl Generator for InlineStyleGenerator {
-  fn push_transform_kids_style(&mut self, _: ParsedDeclaration) {
+  fn push_transform_kids_style(&mut self, _: String) {
     // do nothing
   }
-  fn push_transformed_style(&mut self, declaration: ParsedDeclaration) {
-    declaration.generate_to_string_buf(&mut self.string_buffer);
+  fn push_transformed_style(&mut self, value: String) {
+    self.string_buffer.push_str(&value);
   }
 }
 pub(crate) fn transform_inline_style_string(source: &str) -> String {
@@ -40,11 +41,8 @@ pub(crate) fn transform_inline_style_key_value_vec(source: Vec<String>) -> Strin
     if idx % 2 == 0 {
       key = value;
     } else {
-      transformer.on_declaration_parsed(ParsedDeclaration {
-        property_name: hyphenate_style_name(&key),
-        property_value: value,
-        is_important: false,
-      });
+      let name = hyphenate_style_name(&key);
+      transformer.on_declaration_parsed(CSSProperty::parse(&name), value, false);
     }
   }
 

@@ -24,12 +24,13 @@ The Rust code forms the logic backbone, compiled into WASM.
   - **`element_apis`**: Implements the logic for manipulating elements.
     - **`element_data.rs`**: Stores per-element metadata (`LynxElementData`), including CSS IDs, component IDs, and datasets.
     - **`event_apis.rs`**: Handles event registration and dispatching (both standard events and "worklet" events).
-    - **`style_apis.rs`**: Provides style manipulation APIs.
+    - **`style_apis.rs`**: Provides style manipulation APIs, utilizing `CSSProperty::from_id`.
   - **`js_binding`**: Defines the `RustMainthreadContextBinding` to expose these Rust methods to JavaScript.
 
 - **`css_tokenizer`**: A CSS tokenizer ported from `css-tree`, fully compliant with CSS Syntax Level 3.
-- **`style_transformer`**: Transforms Lynx CSS into Web CSS. It handles complex rules like converting `display: linear` to Flexbox equivalents and resolving `rpx` units to `calc()`.
+- **`style_transformer`**: Transforms Lynx CSS into Web CSS using the strongly-typed `CSSProperty` enum for efficiency. Handles `rpx` unit resolution (via `token_transformer`) and complex property rules.
 - **`template`**: Defines the schema for binary templates (`RawElementTemplate`, `RawStyleInfo`) and handles their `bincode` serialization.
+  - **`css_property.rs`**: Defines the `CSSProperty` enum (u16 IDs) and shared `ParsedDeclaration` struct. Uses `bincode` instead of `serde`. Unknown properties are treated homogenously.
 - **`leo_asm`**: Defines "Leo Assembly" opcodes (e.g., `CreateElement`, `SetAttribute`) used to efficiently reconstruct DOM trees from templates.
 - **`utils`**: General purpose utilities.
   - **`hyphenate_style_name.rs`**: Converts camelCase style names to kebab-case (e.g., `backgroundColor` -> `background-color`). **Note**: Assumes no `ms` vendor prefix.
