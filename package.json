@@ -8,6 +8,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc --build",
+    "prepare": "husky && ts-patch install",
     "test": "vitest"
   },
   "lint-staged": {
