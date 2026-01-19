@@ -17,6 +17,13 @@ export default defineExternalBundleRslibConfig({
     externals: {
       '@lynx-js/react': ['ReactLynx', 'React'],
       '@lynx-js/react/internal': ['ReactLynx', 'ReactInternal'],
+      '@lynx-js/react/jsx-dev-runtime': ['ReactLynx', 'ReactJSXDevRuntime'],
+      '@lynx-js/react/jsx-runtime': ['ReactLynx', 'ReactJSXRuntime'],
+      '@lynx-js/react/lepus/jsx-dev-runtime': [
+        'ReactLynx',
+        'ReactJSXLepusDevRuntime',
+      ],
+      '@lynx-js/react/lepus/jsx-runtime': ['ReactLynx', 'ReactJSXLepusRuntime'],
       '@lynx-js/react/experimental/lazy/import': [
         'ReactLynx',
         'ReactLazyImport',
