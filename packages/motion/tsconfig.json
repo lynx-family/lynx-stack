@@ -1,5 +1,8 @@
 {
   "files": [],
+  "compilerOptions": {
+    "composite": true,
+  },
   "references": [
     { "path": "./tsconfig.build.json" },
   ],
