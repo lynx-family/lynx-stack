@@ -13,6 +13,9 @@ interface Listenable<V> {
   ): () => void;
 }
 
+/**
+ * @experimental useMotionValueEvent, but only accepts motionValueRef format, highly experimental, subject to change
+ */
 export function useMotionValueRefEvent<
   V,
   EventName extends keyof MotionValueEventCallbacks<V>,

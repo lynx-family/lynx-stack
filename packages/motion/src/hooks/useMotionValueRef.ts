@@ -39,6 +39,9 @@ export function useMotionValueRefCore<T, MV>(
   return motionValueRef;
 }
 
+/**
+ * @experimental useMotionValue, but in MainThreadRef format, highly experimental, subject to change
+ */
 export function useMotionValueRef<T>(value: T): MainThreadRef<MotionValue<T>> {
   return useMotionValueRefCore(value, motionValue);
 }
