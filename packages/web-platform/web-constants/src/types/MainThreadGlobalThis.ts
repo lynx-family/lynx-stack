@@ -319,11 +319,16 @@ export type QueryComponentPAPI = (
   }) => void,
 ) => null;
 export type InvokeUIMethodPAPI = (
-  element: unknown,
+  element: HTMLElement,
   method: string,
   params: object,
   callback: (result: InvokeCallbackRes) => void,
 ) => void;
+
+export type QuerySelectorPAPI = (
+  element: HTMLElement,
+  selector: string,
+) => unknown;
 
 export interface ElementPAPIs {
   __ElementFromBinary: ElementFromBinaryPAPI;
@@ -390,6 +395,7 @@ export interface ElementPAPIs {
     options?: FlushElementTreeOptions,
   ) => void;
   __InvokeUIMethod: InvokeUIMethodPAPI;
+  __QuerySelector: QuerySelectorPAPI;
 }
 
 export interface MainThreadGlobalThis extends ElementPAPIs {

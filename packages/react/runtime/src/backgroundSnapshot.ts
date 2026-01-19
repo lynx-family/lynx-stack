@@ -238,7 +238,7 @@ export class BackgroundSnapshotInstance {
   }
 
   setAttribute(key: string | number, value: unknown): void {
-    if (__PROFILE__) {
+    if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileStart('ReactLynx::BSI::setAttribute');
     }
     if (key === 'values') {
@@ -286,7 +286,7 @@ export class BackgroundSnapshotInstance {
         });
       }
       this.__values = value as unknown[];
-      if (__PROFILE__) {
+      if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileEnd();
       }
       return;
@@ -305,7 +305,7 @@ export class BackgroundSnapshotInstance {
       key,
       value,
     );
-    if (__PROFILE__) {
+    if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileEnd();
     }
   }

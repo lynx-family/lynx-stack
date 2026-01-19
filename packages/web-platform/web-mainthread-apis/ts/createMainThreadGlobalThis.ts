@@ -62,6 +62,8 @@ import {
   type QueryComponentPAPI,
   lynxEntryNameAttribute,
   ErrorCode,
+  type QuerySelectorPAPI,
+  type InvokeUIMethodPAPI,
 } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
 import {
@@ -649,6 +651,76 @@ export function createMainThreadGlobalThis(
     );
   };
 
+  const __InvokeUIMethod: InvokeUIMethodPAPI = (
+    element,
+    method,
+    params,
+    callback,
+  ) => {
+    try {
+      if (method === 'boundingClientRect') {
+        const rect = (element as HTMLElement).getBoundingClientRect();
+        callback({
+          code: ErrorCode.SUCCESS,
+          data: {
+            id: (element as HTMLElement).id,
+            width: rect.width,
+            height: rect.height,
+            left: rect.left,
+            right: rect.right,
+            top: rect.top,
+            bottom: rect.bottom,
+          },
+        });
+        return;
+      }
+      if (typeof (element as any)[method] === 'function') {
+        const data = (element as any)[method](params);
+        callback({
+          code: ErrorCode.SUCCESS,
+          data,
+        });
+        return;
+      }
+      callback({
+        code: ErrorCode.METHOD_NOT_FOUND,
+      });
+    } catch (e) {
+      console.error(
+        `[lynx-web] invokeUIMethod: apply method failed with`,
+        e,
+        element,
+      );
+      callback({
+        code: ErrorCode.PARAM_INVALID,
+      });
+    }
+  };
+
+  const __QuerySelector: QuerySelectorPAPI = (
+    element,
+    selector,
+  ) => {
+    if (!element) return null;
+    const el = (element as HTMLElement).querySelector(selector);
+    if (el) {
+      if (!(el as any).invoke) {
+        (el as any).invoke = (method: string, params: object) => {
+          return new Promise((resolve, reject) => {
+            __InvokeUIMethod(el as HTMLElement, method, params, (res) => {
+              if (res.code === ErrorCode.SUCCESS) {
+                resolve(res.data);
+              } else {
+                reject(res);
+              }
+            });
+          });
+        };
+      }
+    }
+    return el;
+  };
+
   const __GetPageElement: GetPageElementPAPI = () => {
     return pageElement;
   };
@@ -817,46 +889,8 @@ export function createMainThreadGlobalThis(
     _I18nResourceTranslation: callbacks._I18nResourceTranslation,
     _AddEventListener: () => {},
     renderPage: undefined,
-    __InvokeUIMethod: (element, method, params, callback) => {
-      try {
-        if (method === 'boundingClientRect') {
-          const rect = (element as HTMLElement).getBoundingClientRect();
-          callback({
-            code: ErrorCode.SUCCESS,
-            data: {
-              id: (element as HTMLElement).id,
-              width: rect.width,
-              height: rect.height,
-              left: rect.left,
-              right: rect.right,
-              top: rect.top,
-              bottom: rect.bottom,
-            },
-          });
-          return;
-        }
-        if (typeof (element as any)[method] === 'function') {
-          const data = (element as any)[method](params);
-          callback({
-            code: ErrorCode.SUCCESS,
-            data,
-          });
-          return;
-        }
-        callback({
-          code: ErrorCode.METHOD_NOT_FOUND,
-        });
-      } catch (e) {
-        console.error(
-          `[lynx-web] invokeUIMethod: apply method failed with`,
-          e,
-          element,
-        );
-        callback({
-          code: ErrorCode.PARAM_INVALID,
-        });
-      }
-    },
+    __InvokeUIMethod,
+    __QuerySelector,
   };
   Object.assign(mtsRealm.globalWindow, mtsGlobalThis);
   Object.defineProperty(mtsRealm.globalWindow, 'renderPage', {

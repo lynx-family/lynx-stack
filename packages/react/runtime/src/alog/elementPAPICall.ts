@@ -66,7 +66,7 @@ export function initElementPAPICallAlog(globalWithIndex: Record<string, unknown>
     const oldFiberElementPAPI = globalWithIndex[fiberElementPAPIName];
     if (typeof oldFiberElementPAPI === 'function') {
       globalWithIndex[fiberElementPAPIName] = (...args: unknown[]): unknown => {
-        if (__PROFILE__) {
+        if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
           profileStart(`FiberElementPAPI: ${fiberElementPAPIName}`, {
             args: {
               args: JSON.stringify(args),
@@ -74,7 +74,7 @@ export function initElementPAPICallAlog(globalWithIndex: Record<string, unknown>
           });
         }
         const result = (oldFiberElementPAPI as (...args: unknown[]) => unknown)(...args);
-        if (__PROFILE__) {
+        if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
           profileEnd();
         }
 
