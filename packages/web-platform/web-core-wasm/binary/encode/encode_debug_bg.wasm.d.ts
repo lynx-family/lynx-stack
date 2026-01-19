@@ -1,6 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
+export const __wbg_styleinfodecoder_free: (a: number, b: number) => void;
+export const __wbg_operation_free: (a: number, b: number) => void;
 export const __wbg_decodedstyledata_free: (a: number, b: number) => void;
 export const decodedstyledata_new: (a: any) => [number, number, number];
 export const decodedstyledata_style_content: (a: number) => [number, number];
@@ -8,17 +10,6 @@ export const decodedstyledata_font_face_content: (a: number) => [number, number]
 export const decodedstyledata_query_css_og_declarations_by_css_id: (a: number, b: number, c: number, d: number) => [number, number];
 export const decodedstyledata_decode_into: (a: any, b: number, c: number, d: number) => [number, number, number];
 export const decodedstyledata_encode_from_raw_style_info: (a: number, b: number, c: number, d: number) => [number, number, number];
-export const __wbg_rawelementtemplate_free: (a: number, b: number) => void;
-export const rawelementtemplate_new: () => number;
-export const rawelementtemplate_append_to_root: (a: number, b: number) => void;
-export const rawelementtemplate_create_element: (a: number, b: number, c: number, d: number) => void;
-export const rawelementtemplate_set_attribute: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
-export const rawelementtemplate_set_dataset: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
-export const rawelementtemplate_append_child: (a: number, b: number, c: number) => void;
-export const rawelementtemplate_set_cross_thread_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
-export const rawelementtemplate_set_attribute_slot: (a: number, b: number, c: number, d: number, e: number) => void;
-export const rawelementtemplate_append_element_slot: (a: number, b: number, c: number) => void;
-export const __wbg_operation_free: (a: number, b: number) => void;
 export const __wbg_elementtemplatesection_free: (a: number, b: number) => void;
 export const elementtemplatesection_new: () => number;
 export const elementtemplatesection_from_encoded: (a: any) => [number, number, number];
@@ -40,7 +31,16 @@ export const ruleprelude_new: () => number;
 export const ruleprelude_push_selector: (a: number, b: number) => void;
 export const selector_new: () => number;
 export const selector_push_one_selector_section: (a: number, b: number, c: number, d: number, e: number) => [number, number];
-export const __wbg_styleinfodecoder_free: (a: number, b: number) => void;
+export const __wbg_rawelementtemplate_free: (a: number, b: number) => void;
+export const rawelementtemplate_new: () => number;
+export const rawelementtemplate_append_to_root: (a: number, b: number) => void;
+export const rawelementtemplate_create_element: (a: number, b: number, c: number, d: number) => void;
+export const rawelementtemplate_set_attribute: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+export const rawelementtemplate_set_dataset: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+export const rawelementtemplate_append_child: (a: number, b: number, c: number) => void;
+export const rawelementtemplate_set_cross_thread_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+export const rawelementtemplate_set_attribute_slot: (a: number, b: number, c: number, d: number, e: number) => void;
+export const rawelementtemplate_append_element_slot: (a: number, b: number, c: number) => void;
 export const __wbindgen_malloc: (a: number, b: number) => number;
 export const __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
 export const __wbindgen_externrefs: WebAssembly.Table;
