@@ -1,5 +1,16 @@
 # @lynx-js/web-constants
 
+## 0.19.6
+
+### Patch Changes
+
+- feat: add main-thread API: \_\_QuerySelector ([#2115](https://github.com/lynx-family/lynx-stack/pull/2115))
+
+- feat: support main thread invoke ui method ([#2104](https://github.com/lynx-family/lynx-stack/pull/2104))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.19.6
+
 ## 0.19.5
 
 ### Patch Changes
