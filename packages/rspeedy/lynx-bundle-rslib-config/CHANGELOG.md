@@ -1,5 +1,11 @@
 # @lynx-js/lynx-bundle-rslib-config
 
+## 0.2.0
+
+### Minor Changes
+
+- Use `LAYERS` exposed by DSL plugins ([#2114](https://github.com/lynx-family/lynx-stack/pull/2114))
+
 ## 0.1.0
 
 ### Minor Changes

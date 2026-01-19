@@ -1,5 +1,11 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.10.2
+
+### Patch Changes
+
+- Polyfill `lynx.requireModuleAsync` to allow cache same parallel requests. ([#2108](https://github.com/lynx-family/lynx-stack/pull/2108))
+
 ## 0.10.1
 
 ### Patch Changes
