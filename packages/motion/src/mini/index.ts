@@ -35,10 +35,16 @@ export type {
 } from './core/MotionValue.js';
 export { spring } from './core/spring.js';
 
+/**
+ * @experimental useMotionValue, but in MainThreadRef format, highly experimental, subject to change
+ */
 export function useMotionValueRef<T>(value: T): MainThreadRef<MotionValue<T>> {
   return useMotionValueRefCore(value, createMotionValue);
 }
 
+/**
+ * @experimental useMotionValueEvent, but only accepts motionValueRef format, highly experimental, subject to change
+ */
 export function useMotionValueRefEvent<
   V,
   EventName extends keyof MotionValueEventCallbacks<V>,
