@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "rspeedy build",
-    "dev": "rspeedy dev",
-    "test:type": "vitest --typecheck.only"
+    "dev": "rspeedy dev"
   },
   "dependencies": {
     "@lynx-js/motion": "workspace:*",
