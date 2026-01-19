@@ -14,7 +14,7 @@
     "url": "git+https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/motion"
   },
-  "license": "MIT",
+  "license": "Apache-2.0",
   "sideEffects": [
     "./src/polyfill/shim.ts",
     "./dist/polyfill/shim.js"

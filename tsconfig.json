@@ -123,9 +123,6 @@
       "path": "./packages/react"
     },
     {
-      "path": "./packages/motion"
-    },
-    {
       "path": "./packages/tailwind-preset/tsconfig.build.json"
     }
   ],
