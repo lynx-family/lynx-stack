@@ -183,8 +183,8 @@ importers:
         specifier: 3.6.0
         version: 3.6.0
       '@types/react':
-        specifier: ^18.3.25
-        version: 18.3.25
+        specifier: ^19.2.8
+        version: 19.2.8
 
   examples/react:
     dependencies:
@@ -208,8 +208,8 @@ importers:
         specifier: 3.6.0
         version: 3.6.0
       '@types/react':
-        specifier: ^18.3.25
-        version: 18.3.25
+        specifier: ^19.2.8
+        version: 19.2.8
 
   examples/react-compiler:
     dependencies:
@@ -236,8 +236,8 @@ importers:
         specifier: ^1.0.6
         version: 1.0.6(@rsbuild/core@1.7.1)
       '@types/react':
-        specifier: ^18.3.25
-        version: 18.3.25
+        specifier: ^19.2.8
+        version: 19.2.8
       babel-plugin-react-compiler:
         specifier: 0.0.0-experimental-fe727a3-20250909
         version: 0.0.0-experimental-fe727a3-20250909
@@ -276,8 +276,8 @@ importers:
         specifier: 3.6.0
         version: 3.6.0
       '@types/react':
-        specifier: ^18.3.25
-        version: 18.3.25
+        specifier: ^19.2.8
+        version: 19.2.8
 
   examples/react-lazy-bundle:
     dependencies:
@@ -301,8 +301,8 @@ importers:
         specifier: 3.6.0
         version: 3.6.0
       '@types/react':
-        specifier: ^18.3.25
-        version: 18.3.25
+        specifier: ^19.2.8
+        version: 19.2.8
 
   examples/tailwindcss:
     dependencies:
@@ -335,8 +335,8 @@ importers:
         specifier: 3.6.0
         version: 3.6.0
       '@types/react':
-        specifier: ^18.3.25
-        version: 18.3.25
+        specifier: ^19.2.8
+        version: 19.2.8
       rsbuild-plugin-tailwindcss:
         specifier: 0.2.3
         version: 0.2.3(@rsbuild/core@1.7.1)(tailwindcss@3.4.19)
@@ -442,8 +442,8 @@ importers:
         specifier: 'catalog:'
         version: 7.55.2(@types/node@24.6.1)
       '@types/react':
-        specifier: ^18.3.25
-        version: 18.3.25
+        specifier: ^19.2.8
+        version: 19.2.8
 
   packages/react/refresh:
     devDependencies:
@@ -469,8 +469,8 @@ importers:
         specifier: 3.6.0
         version: 3.6.0
       '@types/react':
-        specifier: ^18.3.25
-        version: 18.3.25
+        specifier: ^19.2.8
+        version: 19.2.8
       pretty-format:
         specifier: ^30.2.0
         version: 30.2.0
@@ -968,8 +968,8 @@ importers:
         specifier: ^6.9.1
         version: 6.9.1
       '@types/react':
-        specifier: ^18.3.25
-        version: 18.3.25
+        specifier: ^19.2.8
+        version: 19.2.8
       babel-plugin-react-compiler:
         specifier: 0.0.0-experimental-fe727a3-20250909
         version: 0.0.0-experimental-fe727a3-20250909
@@ -983,8 +983,8 @@ importers:
         specifier: ^6.9.1
         version: 6.9.1
       '@types/jsdom':
-        specifier: ^21.1.7
-        version: 21.1.7
+        specifier: ^27.0.0
+        version: 27.0.0
       rsbuild-plugin-publint:
         specifier: 0.3.3
         version: 0.3.3(@rsbuild/core@1.7.1)
@@ -1253,8 +1253,8 @@ importers:
         specifier: catalog:rsbuild
         version: 1.7.1
       '@types/loader-utils':
-        specifier: ^2.0.6
-        version: 2.0.6
+        specifier: ^3.0.0
+        version: 3.0.0
       '@types/webpack':
         specifier: ^5.28.5
         version: 5.28.5
@@ -1717,19 +1717,19 @@ importers:
         version: 1.1.1(@rsbuild/core@1.7.1)
       '@rspress/core':
         specifier: 2.0.0-beta.34
-        version: 2.0.0-beta.34(@types/react@19.1.16)
+        version: 2.0.0-beta.34(@types/react@19.2.8)
       '@rspress/plugin-client-redirects':
         specifier: 2.0.0-beta.34
-        version: 2.0.0-beta.34(@rspress/core@2.0.0-beta.34(@types/react@19.1.16))
+        version: 2.0.0-beta.34(@rspress/core@2.0.0-beta.34(@types/react@19.2.8))
       '@shikijs/transformers':
         specifier: 3.13.0
         version: 3.13.0
       '@types/react':
         specifier: npm:@types/react@^19.1.16
-        version: 19.1.16
+        version: 19.2.8
       '@types/react-dom':
         specifier: ^19.1.9
-        version: 19.1.9(@types/react@19.1.16)
+        version: 19.1.9(@types/react@19.2.8)
       change-case:
         specifier: ^5.4.4
         version: 5.4.4
@@ -4165,8 +4165,8 @@ packages:
   '@types/istanbul-reports@3.0.4':
     resolution: {integrity: sha512-pk2B1NWalF9toCRu6gjBzR69syFjP4Od8WRAX+0mmf9lAjCRicLOWc+ZrxZHx/0XRjotgkF9t6iaMJ+aXcOdZQ==}
 
-  '@types/jsdom@21.1.7':
-    resolution: {integrity: sha512-yOriVnggzrnQ3a9OKOCxaVuSug3w3/SbOj5i7VwXWZEyUNl3bLF9V3MfxGbZKuwqJOQyRfqXyROBB1CoZLFWzA==}
+  '@types/jsdom@27.0.0':
+    resolution: {integrity: sha512-NZyFl/PViwKzdEkQg96gtnB8wm+1ljhdDay9ahn4hgb+SfVtPCbm3TlmDUFXTA+MGN3CijicnMhG18SI5H3rFw==}
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
@@ -4177,8 +4177,8 @@ packages:
   '@types/jsonfile@6.1.4':
     resolution: {integrity: sha512-D5qGUYwjvnNNextdU59/+fI+spnwtTFmyQP0h+PfIOSkNfpU6AOICUOkm4i0OnSk+NyjdPJrxCDro0sJsWlRpQ==}
 
-  '@types/loader-utils@2.0.6':
-    resolution: {integrity: sha512-cgu0Xefgq9O5FjFR78jgI6X31aPjDWCaJ6LCfRtlj6BtyVVWiXagysSYlPACwGKAzRwsFLjKXcj4iGfcVt6cLw==}
+  '@types/loader-utils@3.0.0':
+    resolution: {integrity: sha512-oOi4OGpiLUbb+Q/cN9FIkkDFgOpOGZ2cUAzb5i03wrGstnG6Syx1WDMhSiB5rcP10XX7cw7Uev8mv++/aplnNg==}
 
   '@types/mdast@4.0.4':
     resolution: {integrity: sha512-kGaNbPh1k7AFzgpud/gMdvIm5xuECykRR+JnWKQno9TAXVa6WIVCGTPvYGekIDL4uwCZQSYbUxNBSb1aUo79oA==}
@@ -4207,9 +4207,6 @@ packages:
   '@types/object.pick@1.3.4':
     resolution: {integrity: sha512-5PjwB0uP2XDp3nt5u5NJAG2DORHIRClPzWT/TTZhJ2Ekwe8M5bA9tvPdi9NO/n2uvu2/ictat8kgqvLfcIE1SA==}
 
-  '@types/prop-types@15.7.13':
-    resolution: {integrity: sha512-hCZTSvwbzWGvhqxp/RqVqwU999pBf2vp7hzIjiYOsl8wqOmUxkQ6ddw1cV3l8811+kdUFus/q4d1Y3E3SyEifA==}
-
   '@types/qs@6.9.15':
     resolution: {integrity: sha512-uXHQKES6DQKKCLh441Xv/dwxOq1TVS3JPUMlEqoEglvlhR6Mxnlew/Xq/LRVHpLyk7iK3zODe1qYHIMltO7XGg==}
 
@@ -4221,11 +4218,8 @@ packages:
     peerDependencies:
       '@types/react': ^19.0.0
 
-  '@types/react@18.3.25':
-    resolution: {integrity: sha512-oSVZmGtDPmRZtVDqvdKUi/qgCsWp5IDY29wp8na8Bj4B3cc99hfNzvNhlMkVVxctkAOGUA3Km7MMpBHAnWfcIA==}
-
-  '@types/react@19.1.16':
-    resolution: {integrity: sha512-WBM/nDbEZmDUORKnh5i1bTnAz6vTohUf9b8esSMu+b24+srbaxa04UbJgWx78CVfNXA20sNu0odEIluZDFdCog==}
+  '@types/react@19.2.8':
+    resolution: {integrity: sha512-3MbSL37jEchWZz2p2mjntRZtPt837ij10ApxKfgmXCTuHWagYg7iA5bqPw6C8BMPfwidlvfPI/fxOc42HLhcyg==}
 
   '@types/retry@0.12.2':
     resolution: {integrity: sha512-XISRgDJ2Tc5q4TRqvgJtzsRkFYNJzZrhTdtMoGVBttwzzQJkPnS3WWTFc7kuDRoPtPakl+T+OfdEUjYJj7Jbow==}
@@ -4245,23 +4239,14 @@ packages:
   '@types/sockjs@0.3.36':
     resolution: {integrity: sha512-MK9V6NzAS1+Ud7JV9lJLFqW85VbC9dq3LmwZCuBe4wBDgKC0Kj/jd8Xl+nSviU+Qc3+m7umHHyHg//2KSa0a0Q==}
 
-  '@types/source-list-map@0.1.6':
-    resolution: {integrity: sha512-5JcVt1u5HDmlXkwOD2nslZVllBBc7HDuOICfiZah2Z0is8M8g+ddAEawbmd3VjedfDHBzxCaXLs07QEmb7y54g==}
-
   '@types/stack-utils@2.0.3':
     resolution: {integrity: sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw==}
-
-  '@types/tapable@1.0.12':
-    resolution: {integrity: sha512-bTHG8fcxEqv1M9+TD14P8ok8hjxoOCkfKc8XXLaaD05kI7ohpeI956jtDOD3XHKBQrlyPughUtzm1jtVhHpA5Q==}
 
   '@types/tapable@2.2.7':
     resolution: {integrity: sha512-D6QzACV9vNX3r8HQQNTOnpG+Bv1rko+yEA82wKs3O9CQ5+XW7HI7TED17/UE7+5dIxyxZIWTxKbsBeF6uKFCwA==}
 
   '@types/tough-cookie@4.0.5':
     resolution: {integrity: sha512-/Ad8+nIOV7Rl++6f1BdKxFSMgmoqEoYbHRpPcx3JEfv8VRsQe9Z4mCXeJBzxs7mbHY/XOZZuXlRNfhpVPbs6ZA==}
-
-  '@types/uglify-js@3.17.5':
-    resolution: {integrity: sha512-TU+fZFBTBcXj/GpDpDaBmgWk/gn96kMZ+uocaFUlV2f8a6WdMzzI44QBCmGcCiYR0Y6ZlNRiyUyKKt5nl/lbzQ==}
 
   '@types/unist@2.0.11':
     resolution: {integrity: sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA==}
@@ -4271,12 +4256,6 @@ packages:
 
   '@types/uuid@9.0.8':
     resolution: {integrity: sha512-jg+97EGIcY9AGHJJRaaPVgetKDsrTgbRjQ5Msgjh/DQKEFl0DtyRr/VCOyD1T2R1MNeWPK/u7JoGhlDZnKBAfA==}
-
-  '@types/webpack-sources@3.2.3':
-    resolution: {integrity: sha512-4nZOdMwSPHZ4pTEZzSp0AsTM4K7Qmu40UKW4tJDiOVs20UzYF9l+qUe4s0ftfN0pin06n+5cWWDJXH+sbhAiDw==}
-
-  '@types/webpack@4.41.40':
-    resolution: {integrity: sha512-u6kMFSBM9HcoTpUXnL6mt2HSzftqb3JgYV6oxIgL2dl6sX6aCa5k6SOkzv5DuZjBTPUE/dJltKtwwuqrkZHpfw==}
 
   '@types/webpack@5.28.5':
     resolution: {integrity: sha512-wR87cgvxj3p6D0Crt1r5avwqffqPXUkNlnQ1mjU93G7gCuFjufZR4I6j8cz5g1F1tTYpfOOFvly+cmIQwL9wvw==}
@@ -5322,6 +5301,9 @@ packages:
 
   csstype@3.1.3:
     resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
+
+  csstype@3.2.3:
+    resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
 
   csv-to-markdown-table@1.5.0:
     resolution: {integrity: sha512-E8vOzE+eNEClCn/M9X7xBrsP3NaU4Dmr9U2EYpSSmwAiYPFAh5Qp0NJCNC6IzgJ/02nxv9olXmbLeaUAdpI9cw==}
@@ -11531,10 +11513,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@mdx-js/react@3.1.1(@types/react@19.1.16)(react@19.2.3)':
+  '@mdx-js/react@3.1.1(@types/react@19.2.8)(react@19.2.3)':
     dependencies:
       '@types/mdx': 2.0.13
-      '@types/react': 19.1.16
+      '@types/react': 19.2.8
       react: 19.2.3
 
   '@microsoft/api-documenter@7.23.38(@types/node@24.6.1)':
@@ -12198,16 +12180,16 @@ snapshots:
       - utf-8-validate
       - webpack-cli
 
-  '@rspress/core@2.0.0-beta.34(@types/react@19.1.16)':
+  '@rspress/core@2.0.0-beta.34(@types/react@19.2.8)':
     dependencies:
       '@mdx-js/mdx': 3.1.1
-      '@mdx-js/react': 3.1.1(@types/react@19.1.16)(react@19.2.3)
+      '@mdx-js/react': 3.1.1(@types/react@19.2.8)(react@19.2.3)
       '@rsbuild/core': 1.5.17
       '@rsbuild/plugin-react': 1.4.1(@rsbuild/core@1.5.17)
       '@rspress/mdx-rs': 0.6.6
       '@rspress/runtime': 2.0.0-beta.34
       '@rspress/shared': 2.0.0-beta.34
-      '@rspress/theme-default': 2.0.0-beta.34(@types/react@19.1.16)
+      '@rspress/theme-default': 2.0.0-beta.34(@types/react@19.2.8)
       '@shikijs/rehype': 3.13.0
       '@types/unist': 3.0.3
       '@unhead/react': 2.0.17(react@19.2.3)
@@ -12273,9 +12255,9 @@ snapshots:
       '@rspress/mdx-rs-win32-arm64-msvc': 0.6.6
       '@rspress/mdx-rs-win32-x64-msvc': 0.6.6
 
-  '@rspress/plugin-client-redirects@2.0.0-beta.34(@rspress/core@2.0.0-beta.34(@types/react@19.1.16))':
+  '@rspress/plugin-client-redirects@2.0.0-beta.34(@rspress/core@2.0.0-beta.34(@types/react@19.2.8))':
     dependencies:
-      '@rspress/core': 2.0.0-beta.34(@types/react@19.1.16)
+      '@rspress/core': 2.0.0-beta.34(@types/react@19.2.8)
 
   '@rspress/runtime@2.0.0-beta.34':
     dependencies:
@@ -12293,9 +12275,9 @@ snapshots:
       lodash-es: 4.17.21
       unified: 11.0.5
 
-  '@rspress/theme-default@2.0.0-beta.34(@types/react@19.1.16)':
+  '@rspress/theme-default@2.0.0-beta.34(@types/react@19.2.8)':
     dependencies:
-      '@mdx-js/react': 3.1.1(@types/react@19.1.16)(react@19.2.3)
+      '@mdx-js/react': 3.1.1(@types/react@19.2.8)(react@19.2.3)
       '@rspress/runtime': 2.0.0-beta.34
       '@rspress/shared': 2.0.0-beta.34
       '@unhead/react': 2.0.17(react@19.2.3)
@@ -13014,7 +12996,7 @@ snapshots:
     dependencies:
       '@types/istanbul-lib-report': 3.0.3
 
-  '@types/jsdom@21.1.7':
+  '@types/jsdom@27.0.0':
     dependencies:
       '@types/node': 24.6.1
       '@types/tough-cookie': 4.0.5
@@ -13028,10 +13010,15 @@ snapshots:
     dependencies:
       '@types/node': 24.6.1
 
-  '@types/loader-utils@2.0.6':
+  '@types/loader-utils@3.0.0':
     dependencies:
       '@types/node': 24.6.1
-      '@types/webpack': 4.41.40
+      webpack: 5.104.1
+    transitivePeerDependencies:
+      - '@swc/core'
+      - esbuild
+      - uglify-js
+      - webpack-cli
 
   '@types/mdast@4.0.4':
     dependencies:
@@ -13057,24 +13044,17 @@ snapshots:
 
   '@types/object.pick@1.3.4': {}
 
-  '@types/prop-types@15.7.13': {}
-
   '@types/qs@6.9.15': {}
 
   '@types/range-parser@1.2.7': {}
 
-  '@types/react-dom@19.1.9(@types/react@19.1.16)':
+  '@types/react-dom@19.1.9(@types/react@19.2.8)':
     dependencies:
-      '@types/react': 19.1.16
+      '@types/react': 19.2.8
 
-  '@types/react@18.3.25':
+  '@types/react@19.2.8':
     dependencies:
-      '@types/prop-types': 15.7.13
-      csstype: 3.1.3
-
-  '@types/react@19.1.16':
-    dependencies:
-      csstype: 3.1.3
+      csstype: 3.2.3
 
   '@types/retry@0.12.2': {}
 
@@ -13099,11 +13079,7 @@ snapshots:
     dependencies:
       '@types/node': 24.6.1
 
-  '@types/source-list-map@0.1.6': {}
-
   '@types/stack-utils@2.0.3': {}
-
-  '@types/tapable@1.0.12': {}
 
   '@types/tapable@2.2.7':
     dependencies:
@@ -13111,30 +13087,11 @@ snapshots:
 
   '@types/tough-cookie@4.0.5': {}
 
-  '@types/uglify-js@3.17.5':
-    dependencies:
-      source-map: 0.6.1
-
   '@types/unist@2.0.11': {}
 
   '@types/unist@3.0.3': {}
 
   '@types/uuid@9.0.8': {}
-
-  '@types/webpack-sources@3.2.3':
-    dependencies:
-      '@types/node': 24.6.1
-      '@types/source-list-map': 0.1.6
-      source-map: 0.7.6
-
-  '@types/webpack@4.41.40':
-    dependencies:
-      '@types/node': 24.6.1
-      '@types/tapable': 1.0.12
-      '@types/uglify-js': 3.17.5
-      '@types/webpack-sources': 3.2.3
-      anymatch: 3.1.3
-      source-map: 0.6.1
 
   '@types/webpack@5.28.5':
     dependencies:
@@ -14298,6 +14255,8 @@ snapshots:
       css-tree: 3.1.0
 
   csstype@3.1.3: {}
+
+  csstype@3.2.3: {}
 
   csv-to-markdown-table@1.5.0: {}
 
