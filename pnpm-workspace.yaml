@@ -17,6 +17,7 @@ packages:
   - packages/tailwind-preset
   - packages/testing-library/*
   - packages/testing-library/examples/*
+  - packages/motion
   - packages/tools/*
   - packages/use-sync-external-store
   - packages/web-platform/*
