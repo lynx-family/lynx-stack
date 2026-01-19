@@ -45,29 +45,4 @@ mod tests {
     assert_eq!(hyphenate_style_name("-"), "-");
     assert_eq!(hyphenate_style_name("--custom-prop"), "--custom-prop");
   }
-
-  #[test]
-  fn test_performance() {
-    use std::time::Instant;
-
-    let iterations = 100_000;
-    let start = Instant::now();
-    for _ in 0..iterations {
-      let _ = hyphenate_style_name("backgroundColor");
-      let _ = hyphenate_style_name("borderTopLeftRadius");
-      let _ = hyphenate_style_name("WebkitTransform");
-    }
-    let duration = start.elapsed();
-
-    println!(
-      "Performance: {} iterations took {:?}. Avg per call: {:?}",
-      iterations * 3,
-      duration,
-      duration / (iterations * 3)
-    );
-
-    // Basic sanity check to ensure it's not excessively slow (e.g. > 100ms for 300k ops)
-    // This is a loose bound, mostly to ensure no catastrophic regression/loop.
-    assert!(duration.as_millis() < 500);
-  }
 }

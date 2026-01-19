@@ -25,7 +25,7 @@ pub struct StyleTransformer<'a, T: Generator> {
   prev_token_type: u8,
 }
 
-pub(crate) trait Generator {
+pub trait Generator {
   fn push_transformed_style(&mut self, value: String);
   fn push_transform_kids_style(&mut self, value: String);
 }
@@ -127,7 +127,7 @@ impl<'a, T: Generator> Parser for StyleTransformer<'a, T> {
   }
 }
 impl<'a, T: Generator> StyleTransformer<'a, T> {
-  pub(crate) fn new(generator: &'a mut T) -> Self {
+  pub fn new(generator: &'a mut T) -> Self {
     StyleTransformer {
       generator,
       status: 0,
@@ -139,7 +139,7 @@ impl<'a, T: Generator> StyleTransformer<'a, T> {
   }
 
   #[cfg(any(feature = "client", test))]
-  pub(crate) fn parse(&mut self, source: &str) {
+  pub fn parse(&mut self, source: &str) {
     tokenize::tokenize(source, self);
     if self.prev_token_type != SEMICOLON_TOKEN {
       self.on_token(SEMICOLON_TOKEN, ";");

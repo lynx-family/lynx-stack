@@ -17,4 +17,4 @@ mod template_manager;
 ///   - `style_info`: Defines `RawStyleInfo` which contains style sheets and rules.
 pub(crate) mod template_sections;
 #[cfg(feature = "client")]
-pub(crate) use template_manager::TemplateManager;
+pub use template_manager::TemplateManager;

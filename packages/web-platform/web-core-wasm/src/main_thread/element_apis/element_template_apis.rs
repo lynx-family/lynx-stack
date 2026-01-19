@@ -13,7 +13,7 @@ use fnv::{FnvHashMap, FnvHashSet};
 use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
-pub(crate) struct DecodedElementTemplate {
+pub struct DecodedElementTemplate {
   id_to_prepared_element_data: FnvHashMap<i32, LynxElementData>,
   template_root_dom: web_sys::HtmlTemplateElement,
   timing_flags: Vec<String>,

@@ -6,7 +6,7 @@
 
 use super::decoded_style_data::DecodedStyleData;
 
-pub(crate) struct StyleSheetResource {
+pub struct StyleSheetResource {
   pub(crate) style_content_element: Option<web_sys::Element>,
   pub(crate) font_face_element: Option<web_sys::Element>,
   pub(crate) css_og_css_id_to_class_selector_name_to_declarations_map:

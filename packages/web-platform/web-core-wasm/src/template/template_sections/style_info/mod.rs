@@ -5,10 +5,10 @@
  */
 
 pub(crate) mod css_property;
-mod decoded_style_data;
-mod flattened_style_info;
-mod raw_style_info;
-mod style_info_decoder;
+pub(crate) mod decoded_style_data;
+pub(crate) mod flattened_style_info;
+pub(crate) mod raw_style_info;
+pub(crate) mod style_info_decoder;
 use fnv::FnvHashMap;
 use raw_style_info::RawStyleInfo;
 type CssOgClassSelectorNameToDeclarationsMap = FnvHashMap<String, String>;
@@ -16,9 +16,9 @@ type CssOgCssIdToClassSelectorNameToDeclarationsMap =
   FnvHashMap<i32, CssOgClassSelectorNameToDeclarationsMap>;
 
 #[cfg(feature = "client")]
-mod style_sheet_resource;
+pub(crate) mod style_sheet_resource;
 #[cfg(feature = "client")]
-pub(crate) use style_sheet_resource::StyleSheetResource;
+pub use style_sheet_resource::StyleSheetResource;
 
 #[cfg(test)]
 use raw_style_info::*;

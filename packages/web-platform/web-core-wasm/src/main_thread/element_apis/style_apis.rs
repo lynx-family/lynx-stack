@@ -22,10 +22,7 @@ impl MainThreadWasmContext {
   ) -> Result<(), JsError> {
     for unique_id in elements_unique_id.into_iter() {
       {
-        let element = self
-          .unique_id_to_dom_map
-          .get(&unique_id)
-          .expect_throw("Element not found for given unique_id");
+        let element = self.unique_id_to_dom_map.get(&unique_id).expect_throw("El");
         if let Some(entry_name) = &entry_name {
           let _ = element.set_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE, entry_name);
         }
@@ -35,7 +32,7 @@ impl MainThreadWasmContext {
           let _ = element.remove_attribute(constants::CSS_ID_ATTRIBUTE);
         }
         {
-          let element_data_cell = self.get_element_data_by_unique_id(unique_id).unwrap();
+          let element_data_cell = self.get_element_data_by_unique_id(unique_id).unwrap_throw();
           let mut element_data = element_data_cell.borrow_mut();
           element_data.css_id = css_id;
         }
@@ -53,11 +50,8 @@ impl MainThreadWasmContext {
     unique_id: usize,
     entry_name: Option<String>,
   ) -> Result<(), JsError> {
-    let element = self
-      .unique_id_to_dom_map
-      .get(&unique_id)
-      .expect_throw("Element not found for given unique_id");
-    let element_data_cell = self.get_element_data_by_unique_id(unique_id).unwrap();
+    let element = self.unique_id_to_dom_map.get(&unique_id).expect_throw("El");
+    let element_data_cell = self.get_element_data_by_unique_id(unique_id).unwrap_throw();
     let element_data = element_data_cell.borrow_mut();
     self.style_manager.update_css_og_style(
       unique_id,
@@ -76,22 +70,22 @@ impl MainThreadWasmContext {
  */
 pub fn add_inline_style_raw_string_key(
   dom: &web_sys::HtmlElement,
-  key: String,
+  key: &str,
   value: Option<String>,
 ) {
   if let Some(value) = value {
-    let property_id = CSSProperty::parse(&key);
+    let property_id = CSSProperty::parse(key);
     let (transformed, _) = query_transform_rules(property_id, &value);
     let style = dom.style();
     if transformed.is_empty() {
-      style.set_property(&key, &value).unwrap();
+      let _ = style.set_property(key, &value);
     } else {
       for (k, v) in transformed.iter() {
-        style.set_property(k, v).unwrap();
+        let _ = style.set_property(k, v);
       }
     }
   } else {
-    dom.style().remove_property(&key).unwrap();
+    let _ = dom.style().remove_property(key);
   }
 }
 
@@ -102,17 +96,14 @@ pub fn set_inline_styles_number_key(dom: &web_sys::HtmlElement, key: i32, value:
     let (transformed, _) = query_transform_rules(property_id, &value);
     let style = dom.style();
     if transformed.is_empty() {
-      style.set_property(property_id.to_string(), &value).unwrap();
+      let _ = style.set_property(property_id.to_string(), &value);
     } else {
       for (k, v) in transformed.iter() {
-        style.set_property(k, v).unwrap();
+        let _ = style.set_property(k, v);
       }
     }
   } else {
-    dom
-      .style()
-      .remove_property(property_id.to_string())
-      .unwrap();
+    let _ = dom.style().remove_property(property_id.to_string());
   }
 }
 #[wasm_bindgen]

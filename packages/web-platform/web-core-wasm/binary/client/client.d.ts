@@ -1,68 +1,55 @@
 /* tslint:disable */
 /* eslint-disable */
-/**
- *
- * * The key could be string or number
- * * The value could be string or number or null or undefined
- * 
- */
-export function add_inline_style_raw_string_key(dom: HTMLElement, key: string, value?: string | null): void;
-export function set_inline_styles_number_key(dom: HTMLElement, key: number, value?: string | null): void;
-export function set_inline_styles_in_str(dom: HTMLElement, styles: string): boolean;
-export function get_inline_styles_in_key_value_vec(dom: HTMLElement, k_v_vec: string[]): void;
-export function decode_style_info(buffer: Uint8Array, entry_name: string | null | undefined, config_enable_css_selector: boolean): Uint8Array;
-export function encode_legacy_json_generated_raw_style_info(raw_style_info: RawStyleInfo, config_enable_css_selector: boolean, entry_name?: string | null): Uint8Array;
-export function get_style_content(buffer: Uint8Array): string;
-export function get_font_face_content(buffer: Uint8Array): string;
+
 /**
  *
  * * for return of __GetEvents
  *
  */
 export class EventInfo {
-  private constructor();
-  free(): void;
-  [Symbol.dispose](): void;
-  event_name: string;
-  event_type: string;
-  event_handler: any;
+    private constructor();
+    free(): void;
+    [Symbol.dispose](): void;
+    event_handler: any;
+    event_name: string;
+    event_type: string;
 }
 
 export class MainThreadWasmContext {
-  free(): void;
-  [Symbol.dispose](): void;
-  get_component_id(unique_id: number): string | undefined;
-  get_element_config(unique_id: number): object | undefined;
-  /**
-   *
-   *   * key: String
-   *   * value: stringifyed js value
-   *   
-   */
-  set_config(unique_id: number, config: object): void;
-  get_config(unique_id: number): object;
-  update_component_id(unique_id: number, component_id?: string | null): void;
-  set_dataset(unique_id: number, dom: HTMLElement, new_dataset: object): void;
-  add_dataset(unique_id: number, key: any, value: any): void;
-  get_dataset(unique_id: number): object;
-  get_data_by_key(unique_id: number, key: string): any;
-  _wasm_elementFromBinary(parent_component_unique_id: number, template_url: string, element_template_name: string, template_manager: TemplateManager): Element;
-  add_cross_thread_event(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: string | null): void;
-  add_run_worklet_event(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: any | null): void;
-  get_event(unique_id: number, event_name: string, event_type: string): any;
-  get_events(unique_id: number): EventInfo[];
-  dispatch_event_by_path(bubble_unique_id_path: Uint32Array, event_name: string, is_capture: boolean, serialized_event: any): boolean;
-  common_event_handler(event: any, bubble_unique_id_path: Uint32Array, event_name: string): void;
-  set_css_id(elements_unique_id: Uint32Array, css_id: number, entry_name?: string | null): void;
-  update_css_og_style(unique_id: number, entry_name?: string | null): void;
-  constructor(document: Document, root_node: Node, mts_binding: any, unique_id_symbol: any, config_enable_css_selector: boolean);
-  push_style_sheet(template_manager: TemplateManager, entry_name: string, is_entry_template: boolean): void;
-  set_page_element_unique_id(unique_id: number): void;
-  create_element_common(parent_component_unique_id: number, dom: HTMLElement, css_id?: number | null, component_id?: string | null): number;
-  get_dom_by_unique_id(unique_id: number): HTMLElement | undefined;
-  take_timing_flags(): string[];
-  get_unique_id_by_component_id(component_id: string): number | undefined;
-  get_css_id_by_unique_id(unique_id: number): number | undefined;
+    free(): void;
+    [Symbol.dispose](): void;
+    _wasm_elementFromBinary(parent_component_unique_id: number, template_url: string, element_template_name: string, template_manager: TemplateManager): Element;
+    add_cross_thread_event(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: string | null): void;
+    add_dataset(unique_id: number, key: any, value: any): void;
+    add_run_worklet_event(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: any | null): void;
+    common_event_handler(event: any, bubble_unique_id_path: Uint32Array, event_name: string): void;
+    create_element_common(parent_component_unique_id: number, dom: HTMLElement, css_id?: number | null, component_id?: string | null): number;
+    dispatch_event_by_path(bubble_unique_id_path: Uint32Array, event_name: string, is_capture: boolean, serialized_event: any): boolean;
+    get_component_id(unique_id: number): string | undefined;
+    get_config(unique_id: number): object;
+    get_css_id_by_unique_id(unique_id: number): number | undefined;
+    get_data_by_key(unique_id: number, key: string): any;
+    get_dataset(unique_id: number): object;
+    get_dom_by_unique_id(unique_id: number): HTMLElement | undefined;
+    get_element_config(unique_id: number): object | undefined;
+    get_event(unique_id: number, event_name: string, event_type: string): any;
+    get_events(unique_id: number): EventInfo[];
+    get_unique_id_by_component_id(component_id: string): number | undefined;
+    constructor(document: Document, root_node: Node, mts_binding: any, unique_id_symbol: any, config_enable_css_selector: boolean);
+    push_style_sheet(template_manager: TemplateManager, entry_name: string, is_entry_template: boolean): void;
+    /**
+     *
+     *   * key: String
+     *   * value: stringifyed js value
+     *
+     */
+    set_config(unique_id: number, config: object): void;
+    set_css_id(elements_unique_id: Uint32Array, css_id: number, entry_name?: string | null): void;
+    set_dataset(unique_id: number, dom: HTMLElement, new_dataset: object): void;
+    set_page_element_unique_id(unique_id: number): void;
+    take_timing_flags(): string[];
+    update_component_id(unique_id: number, component_id?: string | null): void;
+    update_css_og_style(unique_id: number, entry_name?: string | null): void;
 }
 
 /**
@@ -164,14 +151,37 @@ export class Selector {
      */
     push_one_selector_section(selector_type: string, value: string): void;
 }
+
 export class TemplateManager {
-  free(): void;
-  [Symbol.dispose](): void;
-  constructor();
-  add_element_template(template_name: string, buf: Uint8Array): void;
-  add_style_info(template_name: string, buf: Uint8Array, document: Document): void;
-  has_element_template(template_name: string): boolean;
+    free(): void;
+    [Symbol.dispose](): void;
+    add_element_template(template_name: string, buf: Uint8Array): void;
+    add_style_info(template_name: string, buf: Uint8Array, document: Document): void;
+    has_element_template(template_name: string): boolean;
+    constructor();
 }
+
+/**
+ *
+ * * The key could be string or number
+ * * The value could be string or number or null or undefined
+ *
+ */
+export function add_inline_style_raw_string_key(dom: HTMLElement, key: string, value?: string | null): void;
+
+export function decode_style_info(buffer: Uint8Array, entry_name: string | null | undefined, config_enable_css_selector: boolean): Uint8Array;
+
+export function encode_legacy_json_generated_raw_style_info(raw_style_info: RawStyleInfo, config_enable_css_selector: boolean, entry_name?: string | null): Uint8Array;
+
+export function get_font_face_content(buffer: Uint8Array): string;
+
+export function get_inline_styles_in_key_value_vec(dom: HTMLElement, k_v_vec: string[]): void;
+
+export function get_style_content(buffer: Uint8Array): string;
+
+export function set_inline_styles_in_str(dom: HTMLElement, styles: string): boolean;
+
+export function set_inline_styles_number_key(dom: HTMLElement, key: number, value?: string | null): void;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 

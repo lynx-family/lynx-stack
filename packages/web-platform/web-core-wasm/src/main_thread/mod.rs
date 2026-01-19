@@ -12,6 +12,6 @@
 /// Key components:
 /// - `main_thread_context`: Defines `MainThreadWasmContext`, the central struct holding the application state.
 /// - `element_apis`: Contains APIs for manipulating elements, handling events, and managing styles.
-mod element_apis;
-mod main_thread_context;
+pub(crate) mod element_apis;
+pub(crate) mod main_thread_context;
 pub mod style_manager;

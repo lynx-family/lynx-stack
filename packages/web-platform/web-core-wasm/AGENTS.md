@@ -117,3 +117,16 @@ This package uses a hybrid build system involving `pnpm`, `rsbuild`, and `cargo`
 
 - **Recursive Borrowing**: Avoid patterns where Rust calls JS, and JS immediately calls back into Rust to retrieve data that Rust already possesses. This will cause `RefCell` borrowing panics ("recursive use of an object").
 - **Object Passing**: Instead of passing IDs (like `uniqueId`) from Rust to JS and having JS callback to retrieve the object, pass the object reference (e.g., `&web_sys::HtmlElement`) directly from Rust to JS. `wasm-bindgen` handles this seamlessly and key for avoiding re-entrant calls.
+
+## Benchmarking
+
+### Rust (wasm32)
+
+- Run: cargo bench --target wasm32-unknown-unknown --all-features
+- Bench entry: packages/web-platform/web-core-wasm/benches/wasm_bench.rs
+- Bench helper module: packages/web-platform/web-core-wasm/benches/support/bench_support.rs
+
+Notes:
+
+- Keep helper modules under benches/support/ so Cargo does not treat them as standalone benchmark targets.
+- The helper is included into the crate via a #[path = "../benches/support/bench_support.rs"] module in src/lib.rs, gated behind cfg(all(feature = "client", feature = "encode", target_arch = "wasm32")).

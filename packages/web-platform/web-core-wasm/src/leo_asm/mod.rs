@@ -14,5 +14,5 @@
 /// - `LEOAsmOpcode`: Enumerates the supported operations (e.g., `SetAttribute`, `AppendChild`).
 mod operation;
 #[cfg(any(feature = "encode", feature = "client"))]
-pub(crate) use operation::LEOAsmOpcode;
-pub(crate) use operation::Operation;
+pub use operation::LEOAsmOpcode;
+pub use operation::Operation;

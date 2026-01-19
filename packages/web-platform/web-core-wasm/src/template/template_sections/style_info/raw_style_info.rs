@@ -28,7 +28,7 @@ pub struct RawStyleInfo {
 
 #[derive(Decode, Default)]
 #[cfg_attr(feature = "encode", derive(Encode, Clone))]
-pub(crate) struct StyleSheet {
+pub struct StyleSheet {
   pub(super) imports: Vec<i32>,
   pub(super) rules: Vec<Rule>,
 }
@@ -74,9 +74,9 @@ pub struct Selector {
 
 #[derive(Decode, PartialEq, Clone)]
 #[cfg_attr(feature = "encode", derive(Encode))]
-pub(super) struct OneSimpleSelector {
-  pub(super) selector_type: OneSimpleSelectorType,
-  pub(super) value: String,
+pub(crate) struct OneSimpleSelector {
+  pub(crate) selector_type: OneSimpleSelectorType,
+  pub(crate) value: String,
 }
 
 #[derive(Decode, PartialEq, Clone)]
@@ -84,7 +84,7 @@ pub(super) struct OneSimpleSelector {
 /**
  * All possible OneSimpleSelector types
  */
-pub(super) enum OneSimpleSelectorType {
+pub(crate) enum OneSimpleSelectorType {
   ClassSelector = 1_isize,
   IdSelector = 2_isize,
   AttributeSelector = 3_isize,
@@ -98,7 +98,7 @@ pub(super) enum OneSimpleSelectorType {
 
 #[derive(Decode)]
 #[cfg_attr(feature = "encode", derive(Encode, Clone))]
-pub(super) struct DeclarationBlock {
+pub(crate) struct DeclarationBlock {
   pub(crate) declarations: Vec<ParsedDeclaration>,
 }
 

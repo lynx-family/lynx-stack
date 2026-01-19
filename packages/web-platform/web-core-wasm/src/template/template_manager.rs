@@ -70,3 +70,29 @@ impl TemplateManager {
     self.style_info_map.get(template_name).cloned()
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use crate::template::TemplateManager;
+  use wasm_bindgen_test::*;
+
+  wasm_bindgen_test_configure!(run_in_node_experimental);
+
+  #[wasm_bindgen_test]
+  fn test_template_manager_add_and_check() {
+    let mut manager = TemplateManager::new();
+    assert!(!manager.has_element_template("test_tpl"));
+
+    // bincode 2.0 standard: empty map = length 0 (varint).
+    // 0 in varint is byte 0.
+    let bytes: [u8; 1] = [0];
+    let array = js_sys::Uint8Array::new_with_length(1);
+    array.copy_from(&bytes);
+
+    // We use string key "test_tpl"
+    let res = manager.add_element_template("test_tpl".to_string(), array);
+
+    assert!(res.is_ok(), "add_element_template failed: {:?}", res.err());
+    assert!(manager.has_element_template("test_tpl"));
+  }
+}

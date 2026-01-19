@@ -7,7 +7,7 @@
 use fnv::FnvHashMap;
 
 #[derive(Default, Clone)]
-pub(crate) struct EventHandler {
+pub struct EventHandler {
   /* bind capture-bind catch capture-catch */
   framework_cross_thread_identifier: FnvHashMap<String, String>,
   /* bind capture-bind catch capture-catch */
@@ -16,7 +16,7 @@ pub(crate) struct EventHandler {
   // event_type_to_handlers: FnvHashMap<String, Vec<js_sys::Function>>,
 }
 
-pub(crate) struct LynxElementData {
+pub struct LynxElementData {
   pub(crate) parent_component_unique_id: usize,
   pub(crate) css_id: i32,
   pub(crate) component_id: Option<String>,

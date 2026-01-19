@@ -16,7 +16,7 @@ use fnv::FnvHashMap;
 use wasm_bindgen::prelude::*;
 
 #[cfg_attr(feature = "encode", wasm_bindgen)] // for testing purpose
-pub(crate) struct StyleInfoDecoder {
+pub struct StyleInfoDecoder {
   pub(super) style_content: String,
   // the font face should be placed at the head of the css content, therefore we use a separate buffer
   pub(super) font_face_content: String,
@@ -32,7 +32,7 @@ pub(crate) struct StyleInfoDecoder {
 }
 
 impl StyleInfoDecoder {
-  pub(crate) fn new(
+  pub fn new(
     raw_style_info: RawStyleInfo,
     entry_name: Option<String>,
     config_enable_css_selector: bool,
@@ -795,5 +795,113 @@ mod test {
     let result = generate_string_buf(raw_style_info, true, None);
     let expected = ":not([l-e-name])::part(input)::placeholder{--lynx-text-bg-color:initial;-webkit-background-clip:initial;background-clip:initial;color:red;}";
     assert_eq!(result.style_content, expected);
+  }
+}
+
+#[cfg(test)]
+mod tests_roundtrip {
+  use super::*;
+  use crate::template::template_sections::style_info::raw_style_info::{
+    RawStyleInfo, Rule, RulePrelude, Selector,
+  };
+  use wasm_bindgen_test::*;
+
+  wasm_bindgen_test_configure!(run_in_node_experimental);
+
+  fn build_sample_style_info() -> RawStyleInfo {
+    let mut raw = RawStyleInfo::new();
+    raw.append_import(1, 2);
+
+    let mut rule = Rule::new("StyleRule".to_string()).expect("rule should build");
+    let mut selector = Selector::new();
+    selector
+      .push_one_selector_section("ClassSelector".to_string(), "card".to_string())
+      .expect("selector section should build");
+    selector
+      .push_one_selector_section("Combinator".to_string(), ">".to_string())
+      .expect("selector section should build");
+    selector
+      .push_one_selector_section("TypeSelector".to_string(), "view".to_string())
+      .expect("selector section should build");
+    let mut prelude = RulePrelude::new();
+    prelude.push_selector(selector);
+    rule.set_prelude(prelude);
+    rule.push_declaration("width".to_string(), "100rpx".to_string());
+    rule.push_declaration("height".to_string(), "200rpx".to_string());
+    rule.push_declaration("display".to_string(), "flex".to_string());
+    raw.push_rule(1, rule);
+
+    let mut font_face = Rule::new("FontFaceRule".to_string()).expect("rule should build");
+    font_face.push_declaration("font-family".to_string(), "BenchFont".to_string());
+    font_face.push_declaration("src".to_string(), "url(bench.woff)".to_string());
+    raw.push_rule(1, font_face);
+
+    let mut keyframes = Rule::new("KeyframesRule".to_string()).expect("rule should build");
+    let mut keyframes_prelude = RulePrelude::new();
+    let mut keyframes_selector = Selector::new();
+    keyframes_selector
+      .push_one_selector_section("UnknownText".to_string(), "fade".to_string())
+      .expect("selector section should build");
+    keyframes_prelude.push_selector(keyframes_selector);
+    keyframes.set_prelude(keyframes_prelude);
+
+    let mut from_rule = Rule::new("StyleRule".to_string()).expect("rule should build");
+    let mut from_prelude = RulePrelude::new();
+    let mut from_selector = Selector::new();
+    from_selector
+      .push_one_selector_section("UnknownText".to_string(), "from".to_string())
+      .expect("selector section should build");
+    from_prelude.push_selector(from_selector);
+    from_rule.set_prelude(from_prelude);
+    from_rule.push_declaration("opacity".to_string(), "0".to_string());
+    keyframes.push_rule_children(from_rule);
+
+    let mut to_rule = Rule::new("StyleRule".to_string()).expect("rule should build");
+    let mut to_prelude = RulePrelude::new();
+    let mut to_selector = Selector::new();
+    to_selector
+      .push_one_selector_section("UnknownText".to_string(), "to".to_string())
+      .expect("selector section should build");
+    to_prelude.push_selector(to_selector);
+    to_rule.set_prelude(to_prelude);
+    to_rule.push_declaration("opacity".to_string(), "1".to_string());
+    keyframes.push_rule_children(to_rule);
+    raw.push_rule(1, keyframes);
+
+    raw
+  }
+
+  #[wasm_bindgen_test]
+  fn test_style_info_roundtrip() {
+    let mut raw = build_sample_style_info();
+
+    // Enable encode feature usage manually or assume it's available since tests run with it
+    #[cfg(feature = "encode")]
+    {
+      let bytes = raw.encode().expect("Should encode");
+
+      // decode manually using accessing internal logic via new
+      // We can use StyleInfoDecoder::new directly as we are in the same module
+
+      // Need to decode bytes back to RawStyleInfo first
+      let mut buf = vec![0u8; bytes.length() as usize];
+      bytes.copy_to(&mut buf);
+      let (decoded_raw, _): (RawStyleInfo, usize) =
+        bincode::decode_from_slice(&buf, bincode::config::standard())
+          .expect("RawStyleInfo decode should succeed");
+
+      let decoder =
+        StyleInfoDecoder::new(decoded_raw, None, true).expect("StyleInfoDecoder should succeed");
+      let decoded_string = decoder.style_content;
+
+      assert!(decoded_string.contains(".card > x-view:where([l-css-id=\"1\"]):not([l-e-name])"));
+      assert!(decoded_string.contains("width:calc(100 * var(--rpx-unit));"));
+      assert!(decoded_string.contains("display:flex;"));
+
+      // Keyframes
+      assert!(decoded_string.contains("@keyframes fade"));
+      assert!(decoded_string.contains("from{opacity:0;}"));
+      assert!(decoded_string.contains("to{opacity:1;}"));
+    }
   }
 }
