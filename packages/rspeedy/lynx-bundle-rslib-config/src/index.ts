@@ -10,7 +10,6 @@
 export {
   defineExternalBundleRslibConfig,
   defaultExternalBundleLibConfig,
-  LAYERS,
 } from './externalBundleRslibConfig.js'
 export type { EncodeOptions } from './externalBundleRslibConfig.js'
 export { ExternalBundleWebpackPlugin } from './webpack/ExternalBundleWebpackPlugin.js'

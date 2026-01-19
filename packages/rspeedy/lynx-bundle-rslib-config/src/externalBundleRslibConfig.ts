@@ -25,16 +25,6 @@ export interface EncodeOptions {
 }
 
 /**
- * The Layer name of background and main-thread.
- *
- * @public
- */
-export const LAYERS = {
-  BACKGROUND: 'background',
-  MAIN_THREAD: 'main-thread',
-} as const
-
-/**
  * The default lib config{@link LibConfig} for external bundle.
  *
  * @public
@@ -199,9 +189,27 @@ export function defineExternalBundleRslibConfig(
   }
 }
 
+interface ExposedLayers {
+  readonly BACKGROUND: string
+  readonly MAIN_THREAD: string
+}
+
 const externalBundleEntryRsbuildPlugin = (): rsbuild.RsbuildPlugin => ({
   name: 'lynx:external-bundle-entry',
+  // ensure dsl plugin has exposed LAYERS
+  enforce: 'post',
   setup(api) {
+    // Get layer names from react-rsbuild-plugin
+    const LAYERS = api.useExposed<ExposedLayers>(
+      Symbol.for('LAYERS'),
+    )
+
+    if (!LAYERS) {
+      throw new Error(
+        'external-bundle-rsbuild-plugin requires exposed `LAYERS`.',
+      )
+    }
+
     api.modifyBundlerChain((chain) => {
       // copy entries
       const entries = chain.entryPoints.entries() ?? {}
@@ -299,7 +307,7 @@ const externalBundleRsbuildPlugin = (
         .use(
           ExternalBundleWebpackPlugin,
           [
-            { 
+            {
               bundleFileName: `${libName}.lynx.bundle`,
               encode: getEncodeMode(),
               engineVersion,
