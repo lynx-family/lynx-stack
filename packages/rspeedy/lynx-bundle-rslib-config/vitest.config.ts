@@ -4,6 +4,7 @@ import type { UserWorkspaceConfig } from 'vitest/config'
 const config: UserWorkspaceConfig = defineProject({
   test: {
     name: 'rspeedy/lynx-bundle-rslib-config',
+    setupFiles: ['@lynx-js/vitest-setup/setup.ts'],
   },
 })
 

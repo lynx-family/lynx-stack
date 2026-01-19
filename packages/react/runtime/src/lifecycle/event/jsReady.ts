@@ -11,12 +11,12 @@ let jsReadyEventIdSwap: Record<string | number, number>;
 function jsReady(): void {
   isJSReady = true;
 
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::transferRoot');
     profileStart('ReactLynx::serializeRoot');
   }
   const root = JSON.stringify(__root);
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
   __OnLifecycleEvent([
@@ -26,7 +26,7 @@ function jsReady(): void {
       jsReadyEventIdSwap,
     },
   ]);
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
   jsReadyEventIdSwap = {};

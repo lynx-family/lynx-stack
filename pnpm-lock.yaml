@@ -288,15 +288,9 @@ importers:
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
-      '@lynx-js/react-alias-rsbuild-plugin':
-        specifier: workspace:*
-        version: link:../../packages/rspeedy/plugin-react-alias
       '@lynx-js/react-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-react
-      '@lynx-js/react-webpack-plugin':
-        specifier: workspace:*
-        version: link:../../packages/webpack/react-webpack-plugin
       '@lynx-js/rspeedy':
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
@@ -699,6 +693,15 @@ importers:
         specifier: 0.0.20
         version: 0.0.20
     devDependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../react
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-react
+      '@lynx-js/vitest-setup':
+        specifier: workspace:*
+        version: link:../../tools/vitest-setup
       '@rslib/core':
         specifier: ^0.19.1
         version: 0.19.1(@microsoft/api-extractor@7.55.2(@types/node@24.6.1))(@typescript/native-preview@7.0.0-dev.20251106.1)(typescript@5.9.3)

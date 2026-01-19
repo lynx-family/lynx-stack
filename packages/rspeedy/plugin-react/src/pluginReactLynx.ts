@@ -21,7 +21,6 @@ import type {
   ShakeVisitorConfig,
 } from '@lynx-js/react-transform'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
-import type { ExposedAPI } from '@lynx-js/rspeedy'
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
 import { applyBackgroundOnly } from './backgroundOnly.js'
@@ -30,6 +29,7 @@ import { applyEntry } from './entry.js'
 import { applyGenerator } from './generator.js'
 import { applyLazy } from './lazy.js'
 import { applyLoaders } from './loaders.js'
+import { applyNodeEnv } from './nodeEnv.js'
 import { applyRefresh } from './refresh.js'
 import { applySplitChunksRule } from './splitChunks.js'
 import { applySWC } from './swc.js'
@@ -328,6 +328,8 @@ export function pluginReactLynx(
       name: 'lynx:react',
       pre: ['lynx:rsbuild:plugin-api', 'lynx:config'],
       setup(api) {
+        const isRslib = api.context.callerName === 'rslib'
+
         const exposedConfig = api.useExposed<{ config: Config }>(
           Symbol.for('lynx.config'),
         )
@@ -341,7 +343,9 @@ export function pluginReactLynx(
           })
         }
 
-        applyCSS(api, resolvedOptions)
+        if (!isRslib) {
+          applyCSS(api, resolvedOptions)
+        }
         applyEntry(api, resolvedOptions)
         applyBackgroundOnly(api)
         applyGenerator(api, resolvedOptions)
@@ -350,6 +354,9 @@ export function pluginReactLynx(
         applySplitChunksRule(api)
         applySWC(api)
         applyUseSyncExternalStore(api)
+        if (isRslib) {
+          applyNodeEnv(api)
+        }
 
         api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
           const userConfig = api.getRsbuildConfig('original')
@@ -393,21 +400,16 @@ export function pluginReactLynx(
               .getLynxTemplatePluginHooks.bind(LynxTemplatePlugin),
           },
         })
-
-        const rspeedyAPIs = api.useExposed<ExposedAPI>(
-          Symbol.for('rspeedy.api'),
-        )!
-
         const require = createRequire(import.meta.url)
 
         const { version } = require('../package.json') as { version: string }
 
-        rspeedyAPIs.debug(() => {
-          const webpackPluginPath = require.resolve(
-            '@lynx-js/react-webpack-plugin',
-          )
-          return `Using @lynx-js/react-webpack-plugin v${version} at ${webpackPluginPath}`
-        })
+        const webpackPluginPath = require.resolve(
+          '@lynx-js/react-webpack-plugin',
+        )
+        api.logger?.debug(
+          `Using @lynx-js/react-webpack-plugin v${version} at ${webpackPluginPath}`,
+        )
       },
     },
   ]
