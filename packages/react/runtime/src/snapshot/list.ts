@@ -23,7 +23,7 @@ export function snapshotCreateList(
   );
   const listID = __GetElementUniqueID(list);
 
-  lynx.getNative().addEventListener('__DestroyLifetime', () => {
+  lynx.getNative()?.addEventListener('__DestroyLifetime', () => {
     // Clear the list callbacks to avoid memory leak
     __UpdateListCallbacks(list, null, null, null);
   });
