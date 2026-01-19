@@ -23,10 +23,11 @@ export function snapshotCreateList(
   );
   const listID = __GetElementUniqueID(list);
 
-  lynx.getNative()?.addEventListener('__DestroyLifetime', () => {
-    // Clear the list callbacks to avoid memory leak
-    __UpdateListCallbacks(list, null, null, null);
-  });
+  if (typeof lynx !== 'undefined' && typeof lynx.getNative === 'function') {
+    lynx.getNative()?.addEventListener('__DestroyLifetime', () => {
+      __UpdateListCallbacks(list, null, null, null);
+    });
+  }
 
   gSignMap[listID] = signMap;
   gRecycleMap[listID] = recycleMap;
