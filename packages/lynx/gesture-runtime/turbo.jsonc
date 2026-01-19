@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": [
-        "@lynx-js/react#build",
+        "^build",
       ],
       "inputs": [
         "$TURBO_ROOT$/tsconfig.json",
