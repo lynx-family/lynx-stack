@@ -4,9 +4,6 @@ import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElem
 import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
 import { vi } from 'vitest';
 import { cssIdAttribute } from '../ts/constants.js';
-import { templateManager } from '../ts/client/mainthread/TemplateManager.js';
-import { wasmInstance } from '../ts/client/wasm.js';
-import { encodeElementTemplates } from '../ts/encode/encodeElementTemplate.js';
 describe('Element APIs', () => {
   let lynxViewDom: HTMLElement;
   let rootDom: ShadowRoot;
@@ -1224,117 +1221,6 @@ describe('Element APIs', () => {
         === targetPart;
     expect(targetPartLength).toBe(1);
     expect(targetPartExist).toBe(true);
-  });
-
-  describe.skip('__ElementFromBinary', () => {
-    beforeAll(() => {
-      templateManager.createTemplate('test');
-      const encoded = encodeElementTemplates({
-        'test-template': {
-          'type': 'view',
-          'class': [
-            'class1',
-            'class2',
-          ],
-          'idSelector': 'template-view',
-          'attributes': {
-            'attr1': 'value1',
-          },
-          'builtinAttributes': {},
-          'children': [
-            {
-              'type': 'text',
-              'class': [],
-              'idSelector': 'id-2',
-              'attributes': {
-                'value': 'Hello from template',
-              },
-              'builtinAttributes': {
-                'dirtyID': 'id-2',
-              },
-              'children': [],
-              'events': [],
-            },
-          ],
-          'events': [
-            {
-              'type': 'bindEvent',
-              'name': 'tap',
-              'value': 'templateTap',
-            },
-          ],
-          'dataset': {
-            'customdata': 'customdata',
-          },
-        },
-      });
-      const section = wasmInstance.ElementTemplateSection.from_encoded(encoded);
-      templateManager.setElementTemplateSection(
-        'test',
-        section,
-      );
-    });
-
-    test('should create a basic element from template', () => {
-      const element = mtsGlobalThis.__ElementFromBinary('test-template', 0);
-      expect(mtsGlobalThis.__GetTag(element)).toBe('view');
-    });
-
-    test('should apply attributes from template', () => {
-      const element = mtsGlobalThis.__ElementFromBinary('test-template', 0);
-      const attrs = Object.entries(mtsGlobalThis.__GetAttributes(element));
-      expect(attrs).toContainEqual(['attr1', 'value1']);
-    });
-
-    test('should apply classes from template', () => {
-      const element = mtsGlobalThis.__ElementFromBinary('test-template', 0);
-      const classes = mtsGlobalThis.__GetClasses(element);
-      expect(classes).toEqual(['class1', 'class2']);
-    });
-
-    test('should apply id from template', () => {
-      const element = mtsGlobalThis.__ElementFromBinary('test-template', 0);
-      const id = mtsGlobalThis.__GetID(element);
-      expect(id).toBe('template-view');
-    });
-
-    test('should create child elements from template', () => {
-      const element = mtsGlobalThis.__ElementFromBinary('test-template', 0);
-      const child = mtsGlobalThis.__FirstElement(element);
-      expect(mtsGlobalThis.__GetTag(child!)).toBe('text');
-      expect(mtsGlobalThis.__GetAttributeByName(child!, 'value')).toBe(
-        'Hello from template',
-      );
-    });
-
-    test('should apply events from template', () => {
-      const element = mtsGlobalThis.__ElementFromBinary('test-template', 0);
-      const events = mtsGlobalThis.__GetEvents(element);
-      expect(events!.length).toBe(1);
-      expect(events![0]!.name).toBe('tap');
-      expect(events![0]!.type.toLowerCase()).toBe('bindevent');
-    });
-
-    test('should mark part element', () => {
-      const element = mtsGlobalThis.__ElementFromBinary('test-template', 0);
-      const child = mtsGlobalThis.__FirstElement(element);
-      const parts = mtsGlobalThis.__GetTemplateParts(element);
-      expect(Object.keys(parts!).length).toBe(1);
-      expect(parts!['id-2']).toBe(child);
-    });
-
-    test('should apply dataset from template', () => {
-      const element = mtsGlobalThis.__ElementFromBinary('test-template', 0);
-      expect(mtsGlobalThis.__GetDataByKey(element, 'customdata')).toBe(
-        'customdata',
-      );
-    });
-
-    test('should throw error if template not found', () => {
-      expect(() => {
-        mtsGlobalThis.__ElementFromBinary('non-existent-template', 0);
-      }).toThrow();
-    });
   });
 
   test('should optimize event enable/disable for whitelisted events', () => {

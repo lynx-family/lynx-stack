@@ -179,11 +179,7 @@ export class LynxViewInstance implements AsyncDisposable {
   async onMTSScriptsExecuted() {
     this.backgroundThread.markTiming('lepus_execute_end');
 
-    if (
-      !templateManagerWasm?.has_element_template(this.templateUrl)
-    ) {
-      this.webElementsLoadingPromises.push(loadAllWebElements());
-    }
+    this.webElementsLoadingPromises.push(loadAllWebElements());
 
     await Promise.all([
       ...this.webElementsLoadingPromises,

@@ -4,7 +4,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use super::element_apis::{DecodedElementTemplate, LynxElementData};
+use super::element_apis::LynxElementData;
 use crate::constants;
 use crate::js_binding::RustMainthreadContextBinding;
 use crate::main_thread::style_manager::StyleManager;
@@ -22,12 +22,7 @@ pub struct MainThreadWasmContext {
   pub(super) unique_id_to_dom_map: FnvHashMap<usize, web_sys::HtmlElement>,
   pub(super) unique_id_symbol: wasm_bindgen::JsValue,
   pub(super) timing_flags: Vec<String>,
-  /**
-   * key: template_url
-   * value: key: element_template_name, value: DecodedElementTemplate
-   */
-  pub(super) element_templates_instances:
-    FnvHashMap<String, FnvHashMap<String, Box<DecodedElementTemplate>>>,
+
   pub(super) enabled_events: FnvHashSet<String>,
   pub(super) page_element_unique_id: Option<usize>,
   pub(super) mts_binding: RustMainthreadContextBinding,
@@ -62,7 +57,7 @@ impl MainThreadWasmContext {
       root_node,
       document,
       mts_binding,
-      element_templates_instances: FnvHashMap::default(),
+
       unique_id_to_element_map: vec![None],
       unique_id_to_dom_map: FnvHashMap::default(),
       unique_id_symbol,

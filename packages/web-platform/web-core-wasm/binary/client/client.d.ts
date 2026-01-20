@@ -18,7 +18,6 @@ export class EventInfo {
 export class MainThreadWasmContext {
     free(): void;
     [Symbol.dispose](): void;
-    _wasm_elementFromBinary(parent_component_unique_id: number, template_url: string, element_template_name: string, template_manager: TemplateManager): Element;
     add_cross_thread_event(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: string | null): void;
     add_dataset(unique_id: number, key: any, value: any): void;
     add_run_worklet_event(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: any | null): void;
@@ -155,9 +154,7 @@ export class Selector {
 export class TemplateManager {
     free(): void;
     [Symbol.dispose](): void;
-    add_element_template(template_name: string, buf: Uint8Array): void;
     add_style_info(template_name: string, buf: Uint8Array, document: Document): void;
-    has_element_template(template_name: string): boolean;
     constructor();
 }
 

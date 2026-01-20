@@ -1,14 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export class ElementTemplateSection {
-    free(): void;
-    [Symbol.dispose](): void;
-    add_element_template(id: string, raw_element_template: RawElementTemplate): void;
-    encode(): Uint8Array;
-    constructor();
-}
-
 export enum LEOAsmOpcode {
     SetAttribute = 1,
     RemoveChild = 3,
@@ -25,20 +17,6 @@ export class Operation {
     private constructor();
     free(): void;
     [Symbol.dispose](): void;
-}
-
-export class RawElementTemplate {
-    free(): void;
-    [Symbol.dispose](): void;
-    append_child(parent_element_id: number, child_element_id: number): void;
-    append_element_slot(parent_element_id: number, child_element_slot_id: number): void;
-    append_to_root(element_id: number): void;
-    create_element(tag_names: string, element_id: number): void;
-    constructor();
-    set_attribute(element_id: number, attr_name: string, attr_value: string): void;
-    set_attribute_slot(element_id: number, attribute_slot_id: number, attr_name: string): void;
-    set_cross_thread_event(element_id: number, event_type: string, event_name: string, event_value: string): void;
-    set_dataset(element_id: number, data_name: string, data_value: string): void;
 }
 
 /**

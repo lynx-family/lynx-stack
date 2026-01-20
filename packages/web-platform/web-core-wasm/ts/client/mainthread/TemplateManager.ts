@@ -215,12 +215,7 @@ export class TemplateManager {
         instance.onMTSScriptsLoaded(url, config!['isLazy'] === 'true');
         break;
       }
-      case TemplateSectionLabel.ElementTemplates:
-        templateManagerWasm!.add_element_template(
-          url,
-          new Uint8Array(data as ArrayBuffer),
-        );
-        break;
+
       case TemplateSectionLabel.CustomSections: {
         this.#setCustomSection(url, data);
         break;

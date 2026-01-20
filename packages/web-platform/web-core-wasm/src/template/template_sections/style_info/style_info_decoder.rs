@@ -904,4 +904,51 @@ mod tests_roundtrip {
       assert!(decoded_string.contains("to{opacity:1;}"));
     }
   }
+
+  #[wasm_bindgen_test]
+  fn test_css_var_in_property() {
+    let mut raw = RawStyleInfo::new();
+    let mut rule = Rule::new("StyleRule".to_string()).expect("rule should build");
+    let mut selector = Selector::new();
+    selector
+      .push_one_selector_section("ClassSelector".to_string(), "card".to_string())
+      .expect("selector section should build");
+    let mut prelude = RulePrelude::new();
+    prelude.push_selector(selector);
+    rule.set_prelude(prelude);
+
+    // Add a property with CSS variable
+    rule.push_declaration("--color".to_string(), "var(--main-bg-color)".to_string());
+    // Add another property with CSS variable and fallback
+    rule.push_declaration(
+      "background-color".to_string(),
+      "var(--main-bg-color, red)".to_string(),
+    );
+    // Add a property with mixed usage
+    rule.push_declaration(
+      "border".to_string(),
+      "1px solid var(--border-color)".to_string(),
+    );
+
+    raw.push_rule(1, rule);
+
+    #[cfg(feature = "encode")]
+    {
+      let bytes = raw.encode().expect("Should encode");
+
+      let mut buf = vec![0u8; bytes.length() as usize];
+      bytes.copy_to(&mut buf);
+      let (decoded_raw, _): (RawStyleInfo, usize) =
+        bincode::decode_from_slice(&buf, bincode::config::standard())
+          .expect("RawStyleInfo decode should succeed");
+
+      let decoder =
+        StyleInfoDecoder::new(decoded_raw, None, true).expect("StyleInfoDecoder should succeed");
+      let decoded_string = decoder.style_content;
+
+      assert!(decoded_string.contains("--color:var(--main-bg-color);"));
+      assert!(decoded_string.contains("background-color:var(--main-bg-color, red);"));
+      assert!(decoded_string.contains("border:1px solid var(--border-color);"));
+    }
+  }
 }
