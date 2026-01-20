@@ -154,7 +154,7 @@ impl<'a, T: Generator> StyleTransformer<'a, T> {
   ) {
     let empty: bool = {
       let (current_declarations, kids_declarations) =
-        query_transform_rules(property_id, &property_value);
+        query_transform_rules(&property_id, &property_value);
       for (property_str, property_value) in kids_declarations.into_iter() {
         self
           .generator
@@ -183,7 +183,7 @@ impl<'a, T: Generator> StyleTransformer<'a, T> {
       self
         .generator
         .push_transformed_style(generate_one_declaration(
-          property_id.to_string(),
+          &property_id.to_string(),
           &property_value,
           is_important,
         ));

@@ -13,11 +13,10 @@ use crate::css_tokenizer::tokenize;
 macro_rules! define_css_properties {
     ($($variant:ident = $name:expr),* $(,)?) => {
         #[cfg_attr(any(feature = "encode", test), derive(Encode, Debug))]
-        #[derive(Clone, Copy, PartialEq, Eq, Hash, Decode)]
-        #[repr(u16)]
+        #[derive(Clone, PartialEq, Eq, Decode)]
         pub enum CSSProperty {
             $($variant),*,
-            Unknown,
+            Unknown(String),
         }
 
         #[cfg(any(feature = "client", test))]
@@ -25,33 +24,55 @@ macro_rules! define_css_properties {
             $($name),*
         ];
 
+        #[repr(u16)]
+        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        enum CSSPropertyId {
+            $($variant),*,
+            Unknown,
+        }
+
         impl CSSProperty {
-            #[cfg(any(feature = "client", test))]
             pub fn from_id(id: u16) -> Self {
-                // We rely on the order being exactly the same as the enum variants.
-                // Enum variants are assigned 0, 1, 2... by default.
-                // We check if id is within bounds.
-                // STYLE_PROPERTY_MAP.len() should match the number of variants (excluding Unknown).
-                if (id as usize) < STYLE_PROPERTY_MAP.len() {
-                    // Safety: The variants are strictly 0..N-1 matching the map indices.
-                    unsafe { std::mem::transmute(id) }
-                } else {
-                    Self::Unknown
+                if id >= CSSPropertyId::Unknown as u16 {
+                    return Self::Unknown(String::new());
+                }
+                // SAFETY: We checked bounds. CSSPropertyId is repr(u16).
+                // The variants 0..Unknown are valid.
+                let id_enum: CSSPropertyId = unsafe { std::mem::transmute(id) };
+                match id_enum {
+                    $(CSSPropertyId::$variant => Self::$variant),*,
+                    CSSPropertyId::Unknown => Self::Unknown(String::new()),
                 }
             }
 
-            pub fn to_string(&self) -> &'static str {
+            pub fn to_id(&self) -> u16 {
+                let id_enum = match self {
+                    $(Self::$variant => CSSPropertyId::$variant),*,
+                    Self::Unknown(_) => CSSPropertyId::Unknown,
+                };
+                id_enum as u16
+            }
+
+            pub fn to_string(&self) -> String {
                 match self {
-                    $(Self::$variant => $name),*,
-                    Self::Unknown => "",
+                    $(Self::$variant => $name.to_string()),*,
+                    Self::Unknown(s) => s.clone(),
                 }
             }
 
             pub fn parse(s: &str) -> Self {
                 match s {
                     $($name => Self::$variant),*,
-                    _ => Self::Unknown,
+                    _ => Self::Unknown(s.to_string()),
                 }
+            }
+        }
+
+        impl std::hash::Hash for CSSProperty {
+            fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+                // User requested: "during hash calculation... only take its numeric id"
+                // So we hash the ID.
+                self.to_id().hash(state);
             }
         }
     };
@@ -72,7 +93,7 @@ define_css_properties! {
     BackgroundColor = "background-color",
     BorderLeftColor = "border-left-color",
     BorderRightColor = "border-right-color",
-    BorderTopColor = "border-top-color",
+    BorderTopColor = "border-top-color", // 139
     BorderBottomColor = "border-bottom-color",
     BorderRadius = "border-radius",
     BorderTopLeftRadius = "border-top-left-radius",
@@ -321,24 +342,32 @@ impl tokenize::Parser for ParsedDeclaration {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use wasm_bindgen_test::*;
 
-  #[test]
+  #[wasm_bindgen_test]
   fn test_css_property_parse() {
     assert_eq!(CSSProperty::parse("display"), CSSProperty::Display);
     assert_eq!(
       CSSProperty::parse("background-color"),
       CSSProperty::BackgroundColor
     );
-    assert_eq!(CSSProperty::parse("invalid-prop"), CSSProperty::Unknown);
+    assert_eq!(
+      CSSProperty::parse("invalid-prop"),
+      CSSProperty::Unknown("invalid-prop".to_string())
+    );
   }
 
-  #[test]
+  #[wasm_bindgen_test]
   fn test_css_property_to_string() {
     assert_eq!(CSSProperty::Display.to_string(), "display");
-    assert_eq!(CSSProperty::Unknown.to_string(), "");
+    assert_eq!(CSSProperty::Unknown("".to_string()).to_string(), "");
+    assert_eq!(
+      CSSProperty::Unknown("custom".to_string()).to_string(),
+      "custom"
+    );
   }
 
-  #[test]
+  #[wasm_bindgen_test]
   fn test_css_property_from_id() {
     let display_idx = STYLE_PROPERTY_MAP
       .iter()
@@ -351,7 +380,32 @@ mod tests {
 
     assert_eq!(
       CSSProperty::from_id(STYLE_PROPERTY_MAP.len() as u16),
-      CSSProperty::Unknown
+      CSSProperty::Unknown("".to_string())
     );
+  }
+
+  #[wasm_bindgen_test]
+  fn test_css_property_hash() {
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+
+    fn calculate_hash<T: Hash>(t: &T) -> u64 {
+      let mut s = DefaultHasher::new();
+      t.hash(&mut s);
+      s.finish()
+    }
+
+    let p1 = CSSProperty::Unknown("a".to_string());
+    let p2 = CSSProperty::Unknown("b".to_string());
+    let p3 = CSSProperty::Display;
+
+    // User requirement: hash based on numeric id only.
+    // For Unknown, the ID is uniform (unknown property ID).
+    assert_eq!(calculate_hash(&p1), calculate_hash(&p2));
+    assert_ne!(calculate_hash(&p1), calculate_hash(&p3));
+
+    // Also verify IDs matches
+    assert_eq!(p1.to_id(), p2.to_id());
+    assert_ne!(p1.to_id(), p3.to_id());
   }
 }

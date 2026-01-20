@@ -75,7 +75,7 @@ pub fn add_inline_style_raw_string_key(
 ) {
   if let Some(value) = value {
     let property_id = CSSProperty::parse(key);
-    let (transformed, _) = query_transform_rules(property_id, &value);
+    let (transformed, _) = query_transform_rules(&property_id, &value);
     let style = dom.style();
     if transformed.is_empty() {
       let _ = style.set_property(key, &value);
@@ -93,17 +93,17 @@ pub fn add_inline_style_raw_string_key(
 pub fn set_inline_styles_number_key(dom: &web_sys::HtmlElement, key: i32, value: Option<String>) {
   let property_id = CSSProperty::from_id(key as u16);
   if let Some(value) = value {
-    let (transformed, _) = query_transform_rules(property_id, &value);
+    let (transformed, _) = query_transform_rules(&property_id, &value);
     let style = dom.style();
     if transformed.is_empty() {
-      let _ = style.set_property(property_id.to_string(), &value);
+      let _ = style.set_property(&property_id.to_string(), &value);
     } else {
       for (k, v) in transformed.iter() {
         let _ = style.set_property(k, v);
       }
     }
   } else {
-    let _ = dom.style().remove_property(property_id.to_string());
+    let _ = dom.style().remove_property(&property_id.to_string());
   }
 }
 #[wasm_bindgen]
