@@ -9,7 +9,7 @@
       ],
       "inputs": [
         "$TURBO_ROOT$/tsconfig.json",
-        "$TURBO_ROOT$/tsconfig.build.json",
+        "./tsconfig.build.json",
         "package.json",
         "src/**",
         "rslib.config.ts",

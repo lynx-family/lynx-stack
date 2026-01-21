@@ -1,17 +1,35 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { document, setupDocument } from '@lynx-js/react/internal/document';
 
 import { ElementCompt } from './element.js';
 
 const timeOrigin = Date.now();
 
+function shimQueueMicroTask() {
+  if (!globalThis.queueMicrotask) {
+    if (lynx.queueMicrotask) {
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      globalThis.queueMicrotask = lynx.queueMicrotask;
+    } else {
+      const resolved = globalThis.Promise.resolve();
+      globalThis.queueMicrotask = (fn) => {
+        // Schedule as a microtask, and surface exceptions like queueMicrotask would.
+        resolved.then(fn).catch((err) => {
+          setTimeout(() => {
+            throw err;
+          }, 0);
+        });
+      };
+    }
+  }
+}
+
 function shimGlobals() {
   // Only shim document if it doesn't exist
   if (!globalThis.document) {
     // @ts-expect-error error
-    globalThis.document = document;
+    globalThis.document = {};
   }
 
   // Only shim performance if it doesn't exist
@@ -22,20 +40,11 @@ function shimGlobals() {
     };
   }
 
-  // Only shim queueMicrotask if it doesn't exist
-  if (!globalThis.queueMicrotask) {
-    globalThis.queueMicrotask = (fn: CallableFunction) => {
-      void Promise.resolve().then(() => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        fn();
-      });
-    };
-  }
-
   // Only shim document query methods if they don't exist
-  // @ts-expect-error error
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   document.querySelector ??= lynx.querySelector;
   // @ts-expect-error error
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   document.querySelectorAll ??= lynx.querySelectorAll;
 
   // Only shim NodeList if it doesn't exist
@@ -74,21 +83,12 @@ function shimGlobals() {
 
   // Only shim getComputedStyle if it doesn't exist
   globalThis.getComputedStyle ??= globalThis.window?.getComputedStyle;
+
+  shimQueueMicroTask();
 }
 
 if (__MAIN_THREAD__) {
-  setupDocument();
-
   shimGlobals();
 } else if (__DEV__) {
-  // Only shim queueMicrotask if it doesn't exist
-  // eslint-disable-next-line unicorn/no-lonely-if
-  if (!globalThis.queueMicrotask) {
-    globalThis.queueMicrotask = (fn: CallableFunction) => {
-      void Promise.resolve().then(() => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        fn();
-      });
-    };
-  }
+  shimQueueMicroTask();
 }
