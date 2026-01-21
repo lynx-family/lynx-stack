@@ -25,7 +25,7 @@ interface ExposedLayers {
  */
 export type PluginExternalBundleOptions = Pick<
   ExternalsLoadingPluginOptions,
-  'externals'
+  'externals' | 'globalObject'
 >
 
 /**
@@ -81,6 +81,7 @@ export function pluginExternalBundle(
             backgroundLayer: LAYERS.BACKGROUND,
             mainThreadLayer: LAYERS.MAIN_THREAD,
             externals: options.externals,
+            globalObject: options.globalObject,
           }),
         )
         return config

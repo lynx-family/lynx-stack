@@ -218,6 +218,84 @@ describe('debug mode artifacts', () => {
   })
 })
 
+describe('mount externals library', () => {
+  it('should mount externals library to lynx by default', async () => {
+    const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      id: 'utils-reactlynx',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist'),
+        },
+        externals: {
+          '@lynx-js/react': ['ReactLynx', 'React'],
+        },
+        minify: false,
+      },
+      plugins: [pluginReactLynx()],
+    })
+
+    await build(rslibConfig)
+
+    const decodedResult = await decodeTemplate(
+      path.join(fixtureDir, 'dist/utils-reactlynx.lynx.bundle'),
+    )
+    expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
+      'utils',
+      'utils__main-thread',
+    ])
+    expect(decodedResult['custom-sections']['utils']).toContain(
+      'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
+    )
+    expect(decodedResult['custom-sections']['utils__main-thread']).toContain(
+      'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
+    )
+  })
+  it('should mount externals library to globalThis', async () => {
+    const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      id: 'utils-reactlynx',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist'),
+        },
+        externals: {
+          '@lynx-js/react': ['ReactLynx', 'React'],
+        },
+        minify: false,
+        globalObject: 'globalThis',
+      },
+      plugins: [pluginReactLynx()],
+    })
+
+    await build(rslibConfig)
+
+    const decodedResult = await decodeTemplate(
+      path.join(fixtureDir, 'dist/utils-reactlynx.lynx.bundle'),
+    )
+    expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
+      'utils',
+      'utils__main-thread',
+    ])
+    expect(decodedResult['custom-sections']['utils']).toContain(
+      'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
+    )
+    expect(decodedResult['custom-sections']['utils__main-thread']).toContain(
+      'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
+    )
+  })
+})
+
 describe('pluginReactLynx', () => {
   const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
   const distRoot = path.join(fixtureDir, 'dist')

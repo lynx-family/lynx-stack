@@ -17,6 +17,8 @@ export class ExternalsLoadingPlugin {
 export interface ExternalsLoadingPluginOptions {
     backgroundLayer: string;
     externals: Record<string, ExternalValue>;
+    // Warning: (tsdoc-undefined-tag) The TSDoc tag "@default" is not defined in this configuration
+    globalObject?: 'lynx' | 'globalThis' | undefined;
     mainThreadLayer: string;
 }
 

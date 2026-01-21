@@ -14,5 +14,6 @@ export default defineExternalBundleRslibConfig({
   output: {
     cleanDistPath: false,
     minify: false,
+    globalObject: 'globalThis',
   },
 });

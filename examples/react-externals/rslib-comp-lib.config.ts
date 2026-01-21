@@ -41,5 +41,6 @@ export default defineExternalBundleRslibConfig({
       'preact': ['ReactLynx', 'Preact'],
     },
     minify: false,
+    globalObject: 'globalThis',
   },
 });

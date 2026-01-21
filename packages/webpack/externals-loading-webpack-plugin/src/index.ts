@@ -80,6 +80,16 @@ export interface ExternalsLoadingPluginOptions {
     string,
     ExternalValue
   >;
+  /**
+   * This option indicates what global object will be used to mount the library.
+   *
+   * In Lynx, the library will be mounted to `lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]` by default.
+   *
+   * If you have enabled share js context and want to reuse the library by mounting to the global object, you can set this option to `'globalThis'`.
+   *
+   * @default 'lynx'
+   */
+  globalObject?: 'lynx' | 'globalThis' | undefined;
 }
 
 /**
@@ -211,8 +221,8 @@ export interface LayerOptions {
   sectionPath: string;
 }
 
-function getLynxExternalGlobal() {
-  return `lynx[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]`;
+function getLynxExternalGlobal(globalObject?: string) {
+  return `${globalObject ?? 'lynx'}[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]`;
 }
 
 /**
@@ -301,7 +311,9 @@ export class ExternalsLoadingPlugin {
         if (externals.length === 0) {
           return '';
         }
-        const runtimeGlobalsInit = `${getLynxExternalGlobal()} = {};`;
+        const runtimeGlobalsInit = `${
+          getLynxExternalGlobal(externalsLoadingPluginOptions.globalObject)
+        } = {};`;
         const loadExternalFunc = `
 function createLoadExternalAsync(handler, sectionPath) {
   return new Promise((resolve, reject) => {
@@ -367,23 +379,24 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             `const handler${i} = lynx.fetchBundle(${JSON.stringify(url)}, {});`,
           );
 
+          const mountVar = `${
+            getLynxExternalGlobal(
+              externalsLoadingPluginOptions.globalObject,
+            )
+          }[${JSON.stringify(libraryNameStr)}]`;
           if (async) {
             loadCode.push(
-              `${getLynxExternalGlobal()}[${
-                JSON.stringify(libraryNameStr)
-              }] = createLoadExternalAsync(handler${i}, ${
+              `${mountVar} = ${mountVar} === undefined ? createLoadExternalAsync(handler${i}, ${
                 JSON.stringify(layerOptions.sectionPath)
-              });`,
+              }) : ${mountVar};`,
             );
             continue;
           }
 
           loadCode.push(
-            `${getLynxExternalGlobal()}[${
-              JSON.stringify(libraryNameStr)
-            }] = createLoadExternalSync(handler${i}, ${
+            `${mountVar} = ${mountVar} === undefined ? createLoadExternalSync(handler${i}, ${
               JSON.stringify(layerOptions.sectionPath)
-            }, ${timeout});`,
+            }, ${timeout}) : ${mountVar};`,
           );
         }
 
@@ -403,7 +416,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           : (typeof compiler.options.externals === 'undefined'
             ? []
             : [compiler.options.externals])),
-        this.#genExternalsConfig(),
+        this.#genExternalsConfig(externalsLoadingPluginOptions.globalObject),
       ];
     });
 
@@ -438,7 +451,9 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
   /**
    * If the external is async, use `promise` external type; otherwise, use `var` external type.
    */
-  #genExternalsConfig(): (
+  #genExternalsConfig(
+    globalObject: ExternalsLoadingPluginOptions['globalObject'],
+  ): (
     data: ExternalItemFunctionData,
     callback: (
       err?: Error,
@@ -466,7 +481,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
         return callback(
           undefined,
           [
-            getLynxExternalGlobal(),
+            getLynxExternalGlobal(globalObject),
             ...(Array.isArray(libraryName) ? libraryName : [libraryName]),
           ],
           isAsync ? 'promise' : undefined,
