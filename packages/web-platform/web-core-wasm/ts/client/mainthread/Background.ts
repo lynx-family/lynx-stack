@@ -86,6 +86,10 @@ export class BackgroundThread implements AsyncDisposable {
   readonly #lynxGroupId: number | undefined;
   readonly #lynxViewInstance: LynxViewInstance;
 
+  readonly #btsReady: Promise<void>;
+
+  #btsReadyResolver!: () => void;
+
   #btsStarted = false;
 
   constructor(
@@ -100,6 +104,9 @@ export class BackgroundThread implements AsyncDisposable {
       rpc: this.#rpc,
       receiveEventEndpoint: dispatchJSContextOnMainThreadEndpoint,
       sendEventEndpoint: dispatchCoreContextOnBackgroundEndpoint,
+    });
+    this.#btsReady = new Promise((resolve) => {
+      this.#btsReadyResolver = resolve;
     });
     this.jsContext.__start();
     this.#batchSendTimingInfo = this.#rpc.createCall(markTimingEndpoint);
@@ -195,7 +202,7 @@ export class BackgroundThread implements AsyncDisposable {
         this.#lynxViewInstance.reportError(
           e,
           release,
-          this.#lynxViewInstance.templateUrl,
+          'app-service.js',
         );
       },
     );
@@ -241,7 +248,9 @@ export class BackgroundThread implements AsyncDisposable {
       this.#lynxViewInstance,
     );
 
-    this.#rpc.invoke(BackgroundThreadStartEndpoint, []);
+    this.#rpc.invoke(BackgroundThreadStartEndpoint, []).then(
+      this.#btsReadyResolver,
+    );
   }
 
   markTiming(
@@ -252,7 +261,7 @@ export class BackgroundThread implements AsyncDisposable {
     this.#caughtTimingInfo.push({
       timingKey,
       pipelineId,
-      timeStamp: timeStamp ?? performance.now(),
+      timeStamp: timeStamp ?? (performance.now() + performance.timeOrigin),
     });
     if (this.#nextMacroTask === null) {
       this.#nextMacroTask = setTimeout(() => {
@@ -273,7 +282,16 @@ export class BackgroundThread implements AsyncDisposable {
     }
   }
 
-  [Symbol.asyncDispose](): Promise<void> {
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.#btsReady;
+    /*
+     * TODO:
+     * Potential deadlock if startBTS() was never called.
+     * If [Symbol.asyncDispose]() is invoked on a BackgroundThread instance where startBTS() was never called,
+     * #btsReady will never resolve, causing the disposal to hang indefinitely.
+     * Consider guarding with the existing #btsStarted flag.
+     */
+    await this.#rpc.invoke(disposeEndpoint, []);
     if (this.#lynxGroupId !== undefined) {
       const group =
         BackgroundThread.contextIdToBackgroundWorker[this.#lynxGroupId];
@@ -290,6 +308,5 @@ export class BackgroundThread implements AsyncDisposable {
       this.#webWorker?.terminate();
     }
     this.#nextMacroTask && clearTimeout(this.#nextMacroTask);
-    return this.#rpc.invoke(disposeEndpoint, []);
   }
 }

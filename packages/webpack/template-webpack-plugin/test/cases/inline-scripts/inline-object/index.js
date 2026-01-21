@@ -60,9 +60,15 @@ it('should generate correct bar template', async () => {
   const { sourceContent, manifest } = JSON.parse(content);
   expect(sourceContent).toHaveProperty('appType', 'DynamicComponent');
   expect(manifest).toHaveProperty('/app-service.js');
+  // should have requireModuleAsyncCache polyfill
+  expect(manifest['/app-service.js']).toContain('var moduleCache = {}');
 
   expect(manifest).not.toHaveProperty('/bar:background.rspack.bundle.js');
   expect(manifest['/app-service.js']).toContain(
     `lynx.requireModuleAsync(\"/bar:background.rspack.bundle.js\")`,
   );
+
+  it('inlined scripts should not have syntax error', () => {
+    eval(manifest['/app-service.js']);
+  });
 });

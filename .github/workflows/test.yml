@@ -73,7 +73,7 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
     with:
-      runs-on: lynx-custom-container
+      runs-on: lynx-custom-container-tmp
       is-web: true
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
@@ -89,9 +89,10 @@ jobs:
         shard: [1, 2]
     name: Playwright Web Elements Test (${{ matrix.shard }}/2)
     with:
-      runs-on: lynx-custom-container
+      runs-on: lynx-custom-container-tmp
       is-web: true
       codecov-flags: "e2e"
+      web-report-path: "packages/web-platform/web-elements/playwright-report"
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
@@ -113,7 +114,7 @@ jobs:
         #   - thread: MULTI_THREAD
         #     render: SSR
     with:
-      runs-on: lynx-custom-container
+      runs-on: lynx-custom-container-tmp
       is-web: true
       web-report-name: "playwright-${{ matrix.thread }}-${{ matrix.render }}-shard${{ matrix.shard }}"
       codecov-flags: "e2e"
@@ -128,6 +129,30 @@ jobs:
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
         pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/4
         pnpm --filter @lynx-js/web-tests run coverage:ci
+  web-core-wasm-e2e:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    name: Playwright ${{ matrix.render }} (${{ matrix.shard }}/2)
+    strategy:
+      fail-fast: false
+      matrix:
+        render: [CSR]
+        shard: [1, 2]
+    with:
+      runs-on: lynx-custom-container-tmp
+      is-web: true
+      web-report-name: "playwright-${{ matrix.render }}-shard${{ matrix.shard }}"
+      web-report-path: "packages/web-platform/web-core-wasm-e2e/playwright-report"
+      codecov-flags: "e2e"
+      run: |
+        if [ "${{ matrix.render }}" = "SSR" ]; then
+          export ENABLE_SSR=true
+        fi
+        export NODE_OPTIONS="--max-old-space-size=32768"
+        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+        pnpm --filter @lynx-js/web-core-wasm-e2e run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/4
   test-api:
     needs: build
     uses: ./.github/workflows/workflow-test.yml

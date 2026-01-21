@@ -21,13 +21,125 @@ export const lynxViewTests = (
   });
   if (!lynxView.parentElement) document.body.append(lynxView);
 
-  Object.assign(globalThis, { lynxView });
+  const nativeModulesMap = {
+    CustomModule: URL.createObjectURL(
+      new Blob(
+        [
+          `export default function(NativeModules, NativeModulesCall) {
+      return {
+        async getColor(data, callback) {
+          const color = await NativeModulesCall('getColor', data);
+          callback(color);
+        },
+      }
+    };`,
+        ],
+        { type: 'text/javascript' },
+      ),
+    ),
+  };
+  lynxView.nativeModulesMap = nativeModulesMap;
+  const color_environment = URL.createObjectURL(
+    new Blob(
+      [
+        `export default function(NapiModules, NapiModulesCall) {
+    return {
+      getColor() {
+        NapiModules.color_methods.getColor({ color: 'green' }, color => {
+          console.log(color);
+        });
+      },
+      ColorEngine: class ColorEngine {
+        getColor(name) {
+          NapiModules.color_methods.getColor({ color: 'green' }, color => {
+            console.log(color);
+          });
+        }
+      },
+    };
+  };`,
+      ],
+      { type: 'text/javascript' },
+    ),
+  );
+
+  const color_methods = URL.createObjectURL(
+    new Blob(
+      [
+        `export default function(NapiModules, NapiModulesCall) {
+    return {
+      async getColor(data, callback) {
+        const color = await NapiModulesCall('getColor', data);
+        callback(color);
+      },
+    };
+  };`,
+      ],
+      { type: 'text/javascript' },
+    ),
+  );
+  const event_method = URL.createObjectURL(
+    new Blob(
+      [
+        `export default function(NapiModules, NapiModulesCall, handleDispatch) {
+    return {
+      async bindEvent() {
+        await NapiModulesCall('bindEvent');
+        handleDispatch((data) => console.log(\`bts:\${data}\`));
+      },
+    };
+  };`,
+      ],
+      { type: 'text/javascript' },
+    ),
+  );
+
+  lynxView.napiModulesMap = {
+    color_environment,
+    color_methods,
+    event_method,
+  };
+  lynxView.onNapiModulesCall = async (
+    name,
+    data,
+    moduleName,
+    dispatchNapiModules,
+  ) => {
+    if (name === 'getColor' && moduleName === 'color_methods') {
+      return {
+        data: { color: data.color, tagName: lynxView.tagName },
+      };
+    }
+    if (name === 'bindEvent' && moduleName === 'event_method') {
+      document.querySelector('lynx-view')?.addEventListener('click', () => {
+        dispatchNapiModules('lynx-view');
+      });
+      return;
+    }
+    return undefined;
+  };
+
+  lynxView.initI18nResources = [
+    {
+      options: {
+        locale: 'en',
+        channel: '1',
+        fallback_url: '',
+      },
+      resource: {
+        hello: 'hello',
+        lynx: 'lynx web platform1',
+      },
+    },
+  ];
+
   return lynxView;
 };
 
 const searchParams = new URLSearchParams(document.location.search);
 const casename = searchParams.get('casename');
 const casename2 = searchParams.get('casename2');
+const resourceName = searchParams.get('resourceName');
 const hasdir = searchParams.get('hasdir') === 'true';
 const isSSR = document.location.pathname.includes('ssr');
 
@@ -42,12 +154,15 @@ if (casename) {
   const lynxView = lynxViewTests(
     document.querySelector('lynx-view') as LynxViewElement | undefined,
   );
+
+  if (casename === 'api-inject-style-rules') {
+    lynxView.injectStyleRules = [`.injected-style-rules{background:green}`];
+  }
   lynxView.setAttribute('url', lynxTemplateUrl);
   lynxView.id = 'lynxview1';
   if (casename2) {
     lynxView.setAttribute('lynx-group-id', '2');
   }
-  lynxView.injectStyleRules = [`.injected-style-rules{background:green}`];
   if (casename === 'api-nativemodules-call-delay') {
     setTimeout(() => {
       lynxView.onNativeModulesCall = (name, data, moduleName) => {
@@ -77,4 +192,10 @@ if (casename) {
   }
 } else {
   console.error('cannot find casename');
+}
+if (resourceName) {
+  const lynxView = lynxViewTests(
+    document.querySelector('lynx-view') as LynxViewElement | undefined,
+  );
+  lynxView.setAttribute('url', `/resources/${resourceName}`);
 }

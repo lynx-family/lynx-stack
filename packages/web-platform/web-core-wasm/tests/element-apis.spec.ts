@@ -1339,4 +1339,59 @@ describe('Element APIs', () => {
       }).toThrow();
     });
   });
+
+  test('should optimize event enable/disable for whitelisted events', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const element = mtsGlobalThis.__CreateScrollView(0);
+    mtsGlobalThis.__AppendElement(root, element);
+
+    const enableSpy = vi.spyOn(mtsBinding, 'enableElementEvent');
+    const disableSpy = vi.spyOn(mtsBinding, 'disableElementEvent');
+
+    mtsGlobalThis.__AddEvent(element, 'bindEvent', 'input', 'handler1');
+    expect(enableSpy).toHaveBeenCalledTimes(1);
+    expect(enableSpy).toHaveBeenCalledWith(expect.anything(), 'input');
+    enableSpy.mockClear();
+
+    mtsGlobalThis.__AddEvent(element, 'bindEvent', 'input', 'handler2');
+    expect(enableSpy).not.toHaveBeenCalled();
+
+    // 3. Remove first scroll listener (by setting null/undefined or however removal works)
+    // __AddEvent doesn't explicitly support removal in the type signature shown in createElementAPI ??
+    // Actually createElementAPI.__AddEvent just calls __wasm_add_event_bts.
+    // To remove, we usually pass null/undefined as identifier?
+    // Looking at createElementAPI.ts: if frameworkCrossThreadIdentifier == null, it calls with undefined.
+    // But how to remove?
+    // In Rust: replace_framework_cross_thread_event_handler takes Option<String>.
+    // If we call __AddEvent with null identifier?
+
+    // Let's check createElementAPI.ts again.
+    // if (frameworkCrossThreadIdentifier == null) { wasmContext.__wasm_add_event_bts(..., undefined); ... }
+    // So passing null/undefined removes it?
+    // Wait, the Rust side: `replace_framework_cross_thread_event_handler` puts the new identifier.
+    // If new identifier is None (from undefined), it removes.
+    // But we need to target the *specific* event name.
+
+    // Warning: `AddEventPAPI` signature usually implies adding.
+    // "replace_framework_cross_thread_event_handler" suggests we REPLACE the handler for (event_name, event_type).
+    // So there is only ONE "bindEvent" handler for "lynxscroll" at a time?
+    // Use `event_apis.rs`: `framework_cross_thread_identifier: FnvHashMap<String, String>` where key is like "bind", "capture-bind".
+    // So YES, for a given (event_name, type="bindEvent"), there is only ONE handler identifier.
+
+    // So my test step 2 "Add second scroll listener" actually REPLACES the first one.
+    // Rust logic:
+    // Old: Some("handler1"), New: Some("handler2").
+    // match (Some, Some) => nothing.
+    // Correct.
+
+    // 4. Remove listener.
+    // Call __AddEvent with null identifier.
+    mtsGlobalThis.__AddEvent(element, 'bindEvent', 'input', null as any);
+
+    // Rust logic:
+    // Old: Some("handler2"), New: None.
+    // match (Some, None) => should_disable = true.
+    expect(disableSpy).toHaveBeenCalledTimes(1);
+    expect(disableSpy).toHaveBeenCalledWith(expect.anything(), 'input');
+  });
 });

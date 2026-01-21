@@ -471,7 +471,8 @@ describe('triggerDataUpdated', () => {
       lynxCoreInject.tt.updateCardData({ msg: 'update' });
       await waitSchedule();
 
-      expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(3);
+      // duplicated because of https://github.com/preactjs/preact/pull/4724
+      expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(3 * 2);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls).toMatchInlineSnapshot(
         `
         [
@@ -491,7 +492,7 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":12,"snapshotPatch":[3,-6,0,"update"]}]}",
+              "data": "{"patchList":[{"id":12}]}",
               "patchOptions": {
                 "flowIds": [
                   666,
@@ -504,11 +505,41 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":13,"snapshotPatch":[3,-7,0,"update"]}]}",
+              "data": "{"patchList":[{"id":13}]}",
               "patchOptions": {
                 "flowIds": [
                   666,
                 ],
+                "reloadVersion": 0,
+              },
+            },
+            [Function],
+          ],
+          [
+            "rLynxChange",
+            {
+              "data": "{"patchList":[{"id":14}]}",
+              "patchOptions": {
+                "reloadVersion": 0,
+              },
+            },
+            [Function],
+          ],
+          [
+            "rLynxChange",
+            {
+              "data": "{"patchList":[{"id":15,"snapshotPatch":[3,-6,0,"update"]}]}",
+              "patchOptions": {
+                "reloadVersion": 0,
+              },
+            },
+            [Function],
+          ],
+          [
+            "rLynxChange",
+            {
+              "data": "{"patchList":[{"id":16,"snapshotPatch":[3,-7,0,"update"]}]}",
+              "patchOptions": {
                 "reloadVersion": 0,
               },
             },
@@ -648,7 +679,7 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":16,"snapshotPatch":[3,-3,0,"update"]}],"flushOptions":{"triggerDataUpdated":true}}",
+              "data": "{"patchList":[{"id":19,"snapshotPatch":[3,-3,0,"update"]}],"flushOptions":{"triggerDataUpdated":true}}",
               "patchOptions": {
                 "flowIds": [
                   666,
@@ -958,7 +989,7 @@ describe('flush pending `renderComponent` before hydrate', () => {
       globalThis[rLynxChange[0]](rLynxChange[1]);
       expect(rLynxChange[1]).toMatchInlineSnapshot(`
         {
-          "data": "{"patchList":[{"snapshotPatch":[],"id":24}]}",
+          "data": "{"patchList":[{"snapshotPatch":[],"id":27}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
@@ -1059,7 +1090,7 @@ describe('flush pending `renderComponent` before hydrate', () => {
       globalThis[rLynxChange[0]](rLynxChange[1]);
       expect(rLynxChange[1]).toMatchInlineSnapshot(`
         {
-          "data": "{"patchList":[{"snapshotPatch":[3,-3,0,"true"],"id":26}]}",
+          "data": "{"patchList":[{"snapshotPatch":[3,-3,0,"true"],"id":29}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {

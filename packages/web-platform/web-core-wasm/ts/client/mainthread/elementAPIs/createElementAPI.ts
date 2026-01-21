@@ -2,12 +2,14 @@ import { wasmInstance } from '../../wasm.js';
 import { templateManager } from '../TemplateManager.js';
 
 import {
+  LYNX_TIMING_FLAG_ATTRIBUTE,
   lynxDisposedAttribute,
   lynxDefaultDisplayLinearAttribute,
   lynxEntryNameAttribute,
   uniqueIdSymbol,
   LYNX_TAG_TO_HTML_TAG_MAP,
   cssIdAttribute,
+  lynxDefaultOverflowVisibleAttribute,
 } from '../../../constants.js';
 import {
   __SwapElement,
@@ -134,6 +136,12 @@ export function createElementAPI(
         frameworkCrossThreadIdentifier,
       );
     }
+    if (eventName === 'uiappear' || eventName === 'uidisappear') {
+      mtsBinding.markExposureRelatedElementByUniqueId(
+        uniqueId,
+        frameworkCrossThreadIdentifier != null,
+      );
+    }
   };
   return {
     __CreateView(parentComponentUniqueId: number) {
@@ -248,7 +256,7 @@ export function createElementAPI(
         componentID,
       );
       if (config_default_overflow_visible) {
-        dom.setAttribute(lynxDefaultDisplayLinearAttribute, 'true');
+        dom.setAttribute(lynxDefaultOverflowVisibleAttribute, 'true');
       }
       if (!config_default_display_linear) {
         dom.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
@@ -436,6 +444,8 @@ export function createElementAPI(
             const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
             mtsBinding.markExposureRelatedElementByUniqueId(uniqueId, false);
           }
+        } else if (name === LYNX_TIMING_FLAG_ATTRIBUTE) {
+          timingFlags.push(String(value));
         }
       }
     },
@@ -518,8 +528,13 @@ export function createElementAPI(
         ...mtsBinding.toBeEnabledElement,
       ];
       mtsBinding.toBeEnabledElement.clear();
+      const disabledExposureElements = [
+        ...mtsBinding.toBeDisabledElement,
+      ];
+      mtsBinding.toBeDisabledElement.clear();
       mtsBinding?.updateExposureStatus(
         enabledExposureElements,
+        disabledExposureElements,
       );
     },
   };

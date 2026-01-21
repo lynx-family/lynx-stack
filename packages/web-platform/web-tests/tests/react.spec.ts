@@ -116,6 +116,16 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       await expect(await target.getAttribute('style')).toContain('pink');
     });
+    test('basic-bindtap-simultaneous', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await target.click();
+      await wait(100);
+      await expect(await target.getAttribute('style')).toContain('green'); // BTS check
+      await expect(await target.getAttribute('data-mts-clicked')).toBe('true'); // MTS check
+      await expect(page.locator('#bts-status')).toHaveText('BTS Clicked');
+    });
     test('basic-bindtap-detail', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
@@ -457,6 +467,22 @@ test.describe('reactlynx3 tests', () => {
       );
       expect(scrollTopBefore).toBe(0);
       await page.locator('#target').click();
+      await wait(3000);
+      const scrollTopAfter = await scrollView.evaluate((node) =>
+        node.scrollTop
+      );
+      expect(scrollTopAfter).toBeGreaterThan(100);
+    });
+
+    test('basic-main-query-selector', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const scrollView = page.locator('scroll-view');
+      const scrollTopBefore = await scrollView.evaluate((node) =>
+        node.scrollTop
+      );
+      expect(scrollTopBefore).toBe(0);
+      await page.locator('#tap-me').click();
       await wait(3000);
       const scrollTopAfter = await scrollView.evaluate((node) =>
         node.scrollTop

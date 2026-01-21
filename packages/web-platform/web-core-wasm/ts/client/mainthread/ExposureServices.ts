@@ -50,47 +50,21 @@ export class ExposureServices {
    */
   updateExposureStatus(
     elementsToBeEnabled: HTMLElement[],
+    elementsToBeDisabled: HTMLElement[],
   ) {
     const elementsToBeEnabledSet = new Set(elementsToBeEnabled);
-    for (
-      const element of this.#exposureEnabledElementsToIntersectionObserver
-        .keys()
-    ) {
-      if (!elementsToBeEnabledSet.has(element)) {
-        // stop observing elements that are no longer enabled
-        this.#exposureEnabledElementsToIntersectionObserver.get(element)
-          ?.disconnect();
-        this.#exposureEnabledElementsToIntersectionObserver.delete(element);
-        this.#exposureEnabledElementsToOldExposureIdAttributeValue.delete(
-          element,
-        );
-      }
-    }
     // start observing newly enabled elements
-    elementsToBeEnabledSet.forEach((element) => {
-      const currentExposureId = element.getAttribute('exposure-id') || '';
-      if (!this.#exposureEnabledElementsToIntersectionObserver.has(element)) {
-        this.#exposureEnabledElementsToOldExposureIdAttributeValue.set(
-          element,
-          currentExposureId,
-        );
-        this.#startIntersectionObserver(element);
-      } else {
-        // check if exposure-id attribute has changed
-        const oldExposureId = this
-          .#exposureEnabledElementsToOldExposureIdAttributeValue.get(element);
-        if (oldExposureId !== currentExposureId) {
-          this.#exposureEnabledElementsToOldExposureIdAttributeValue.set(
-            element,
-            currentExposureId,
-          );
-          if (oldExposureId != null) {
-            // send disexposure event with old exposure id
-            this.#sendExposureEvent(element, false, oldExposureId, false);
-          }
-        }
+    for (const element of elementsToBeEnabledSet.values()) {
+      if (this.#exposureEnabledElementsToIntersectionObserver.has(element)) {
+        this.#stopIntersectionObserver(element);
       }
-    });
+      this.#startIntersectionObserver(element);
+    }
+    const elementsToBeDisabledSet = new Set(elementsToBeDisabled);
+    // stop observing newly disabled elements
+    for (const element of elementsToBeDisabledSet.values()) {
+      this.#stopIntersectionObserver(element);
+    }
   }
 
   #IntersectionObserverEventHandler = (
@@ -108,6 +82,26 @@ export class ExposureServices {
       }
     });
   };
+
+  #stopIntersectionObserver(element: HTMLElement) {
+    const intersectionObserver = this
+      .#exposureEnabledElementsToIntersectionObserver.get(element);
+    if (intersectionObserver) {
+      const oldExposureId = this
+        .#exposureEnabledElementsToOldExposureIdAttributeValue.get(element);
+      intersectionObserver.unobserve(element);
+      intersectionObserver.disconnect();
+      this.#exposureEnabledElementsToIntersectionObserver.delete(element);
+      this.#exposureEnabledElementsToOldExposureIdAttributeValue.delete(
+        element,
+      );
+      const currentExposureId = element.getAttribute('exposure-id');
+      if (oldExposureId != null && currentExposureId !== oldExposureId) {
+        this.#sendExposureEvent(element, false, oldExposureId, false);
+      }
+    }
+    this.#exposedElements.delete(element);
+  }
 
   #startIntersectionObserver(target: HTMLElement) {
     const threshold = parseFloat(target.getAttribute('exposure-area') ?? '0')
@@ -182,6 +176,13 @@ export class ExposureServices {
       target,
       intersectionObserver,
     );
+    const currentExposureId = target.getAttribute('exposure-id');
+    if (currentExposureId != null) {
+      this.#exposureEnabledElementsToOldExposureIdAttributeValue.set(
+        target,
+        currentExposureId,
+      );
+    }
   }
 
   #sendExposureEvent(
@@ -226,7 +227,7 @@ export class ExposureServices {
           ?? ({} as CloneableObject),
       );
     const globalEvent: GlobalExposureEvent = {
-      ...serializedTargetInfo.dataset,
+      dataset: serializedTargetInfo.dataset,
       ...detail,
       type: isIntersecting ? 'exposure' : 'disexposure',
       target: serializedTargetInfo,
@@ -252,15 +253,22 @@ export class ExposureServices {
           const currentDisexposureEvents = this.#globalDisexposureEventCache;
           this.#globalExposureEventCache = [];
           this.#globalDisexposureEventCache = [];
-          this.#lynxViewInstance.backgroundThread?.sendGlobalEvent('exposure', [
-            currentExposureEvents,
-          ]);
-          this.#lynxViewInstance.backgroundThread?.sendGlobalEvent(
-            'disexposure',
-            [
-              currentDisexposureEvents,
-            ],
-          );
+          if (currentExposureEvents.length > 0) {
+            this.#lynxViewInstance.backgroundThread?.sendGlobalEvent(
+              'exposure',
+              [
+                currentExposureEvents,
+              ],
+            );
+          }
+          if (currentDisexposureEvents.length > 0) {
+            this.#lynxViewInstance.backgroundThread?.sendGlobalEvent(
+              'disexposure',
+              [
+                currentDisexposureEvents,
+              ],
+            );
+          }
         }
         this.#globalExposureEventBatchTimer = null;
       }, 1000 / 20);

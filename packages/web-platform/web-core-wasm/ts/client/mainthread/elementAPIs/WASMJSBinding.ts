@@ -31,6 +31,7 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   wasmContext: InstanceType<MainThreadWasmContext> | undefined;
   uniqueIdToElement: (HTMLElement | undefined)[] = [undefined];
   toBeEnabledElement: Set<HTMLElement> = new Set();
+  toBeDisabledElement: Set<HTMLElement> = new Set();
 
   constructor(
     public readonly lynxViewInstance: WASMJSBindingInjectedHandler,
@@ -49,9 +50,11 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     const dom = this.uniqueIdToElement[uniqueId];
     if (dom) {
       if (toEnable) {
+        this.toBeDisabledElement.delete(dom);
         this.toBeEnabledElement.add(dom);
       } else {
         this.toBeEnabledElement.delete(dom);
+        this.toBeDisabledElement.add(dom);
       }
     }
   }
@@ -201,9 +204,27 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
 
   updateExposureStatus(
     enabledExposureElements: HTMLElement[],
+    disabledExposureElements: HTMLElement[],
   ) {
     this.lynxViewInstance.exposureServices.updateExposureStatus(
       enabledExposureElements,
+      disabledExposureElements,
     );
+  }
+
+  enableElementEvent(uniqueId: number, eventName: string) {
+    const element = this.getElementByUniqueId(uniqueId);
+    if (element) {
+      // @ts-expect-error
+      element.enableEvent?.(LynxEventNameToW3cCommon[eventName] ?? eventName);
+    }
+  }
+
+  disableElementEvent(uniqueId: number, eventName: string) {
+    const element = this.getElementByUniqueId(uniqueId);
+    if (element) {
+      // @ts-expect-error
+      element.disableEvent?.(LynxEventNameToW3cCommon[eventName] ?? eventName);
+    }
   }
 }

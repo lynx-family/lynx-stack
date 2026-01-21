@@ -39,6 +39,7 @@ export const decodedstyledata_style_content: (a: number) => [number, number];
 export const decodedstyledata_font_face_content: (a: number) => [number, number];
 export const decodedstyledata_query_css_og_declarations_by_css_id: (a: number, b: number, c: number, d: number) => [number, number];
 export const decodedstyledata_decode_into: (a: any, b: number, c: number, d: number) => [number, number, number];
+export const decodedstyledata_encode_from_raw_style_info: (a: number, b: number, c: number, d: number) => [number, number, number];
 export const selector_new: () => number;
 export const __wbindgen_malloc: (a: number, b: number) => number;
 export const __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

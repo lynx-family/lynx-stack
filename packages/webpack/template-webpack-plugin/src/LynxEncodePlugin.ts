@@ -5,6 +5,7 @@
 import type { Chunk, Compiler } from 'webpack';
 
 import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
+import { getRequireModuleAsyncCachePolyfill } from './polyfill/requireModuleAsync.js';
 
 // https://github.com/web-infra-dev/rsbuild/blob/main/packages/core/src/types/config.ts#L1029
 type InlineChunkTestFunction = (params: {
@@ -252,6 +253,9 @@ export class LynxEncodePluginImpl {
 
     const externalKeys = Object.keys(externalManifest);
     if (externalKeys.length > 0) {
+      parts.push(
+        getRequireModuleAsyncCachePolyfill(),
+      );
       const externalRequires = externalKeys
         .map(name =>
           `lynx.requireModuleAsync(${

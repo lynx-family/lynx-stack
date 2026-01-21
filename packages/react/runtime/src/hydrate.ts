@@ -380,7 +380,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           updateAction,
         };
 
-        if (__PROFILE__) {
+        if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
           profileStart('ReactLynx::listHydrate::updateListInfo', {
             args: {
               'list id': String(listID),
@@ -403,7 +403,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         // avoid the newly created list's (behind snapshot instance `after`) "update-list-info" being recorded.
         __pendingListUpdates.clear(after.__id);
 
-        if (__PROFILE__) {
+        if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
           profileEnd();
         }
       }

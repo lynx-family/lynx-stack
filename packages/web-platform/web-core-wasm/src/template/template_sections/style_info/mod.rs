@@ -100,4 +100,17 @@ impl DecodedStyleData {
       .map_err(|e| wasm_bindgen::JsError::new(&format!("Failed to encode to Uint8Array: {e}",)))?;
     Ok(js_sys::Uint8Array::from(data.as_slice()))
   }
+
+  #[wasm_bindgen]
+  pub fn encode_from_raw_style_info(
+    raw_style_info: RawStyleInfo,
+    config_enable_css_selector: bool,
+    entry_name: Option<String>,
+  ) -> Result<js_sys::Uint8Array, wasm_bindgen::JsError> {
+    let decode_data: DecodedStyleData =
+      StyleInfoDecoder::new(raw_style_info, entry_name, config_enable_css_selector)?.into();
+    let data = &bincode::encode_to_vec(&decode_data, bincode::config::standard())
+      .map_err(|e| wasm_bindgen::JsError::new(&format!("Failed to encode to Uint8Array: {e}",)))?;
+    Ok(js_sys::Uint8Array::from(data.as_slice()))
+  }
 }

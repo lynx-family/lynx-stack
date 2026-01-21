@@ -1,7 +1,7 @@
 {
   "name": "@lynx-js/web-core-wasm",
   "version": "0.0.0",
-  "private": true,
+  "description": "This is an internal experimental package, do not use",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
