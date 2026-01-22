@@ -93,6 +93,32 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
+  coverage-web-elements:
+    needs: build-all
+    uses: ./.github/workflows/workflow-test.yml
+    if: github.repository == 'lynx-family/lynx-stack'
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: |
+        export NODE_OPTIONS="--max-old-space-size=32768"
+        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+        pnpm --filter @lynx-js/web-elements run test --reporter='github,dot,junit,html'
+        pnpm --filter @lynx-js/web-elements run coverage:ci
+  coverage-web-core:
+    needs: build-all
+    uses: ./.github/workflows/workflow-test.yml
+    if: github.repository == 'lynx-family/lynx-stack'
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: |
+        export NODE_OPTIONS="--max-old-space-size=32768"
+        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
+        pnpm --filter @lynx-js/web-tests run coverage:ci
   publish:
     timeout-minutes: 30
     needs: build
