@@ -25,7 +25,7 @@
     "upgrade-rspeedy": "./dist/upgrade-rspeedy.js"
   },
   "files": [
-    "dist/upgrade-rspeedy.js",
+    "dist/*.js",
     "CHANGELOG.md",
     "README.md"
   ],

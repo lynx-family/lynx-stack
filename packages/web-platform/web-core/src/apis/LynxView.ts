@@ -480,6 +480,9 @@ export class LynxView extends HTMLElement {
                 );
               },
               customTemplateLoader: this.customTemplateLoader,
+              reload: () => {
+                this.reload();
+              },
             },
             ssr: ssrData
               ? JSON.parse(decodeURI(ssrData)) as SSRDumpInfo

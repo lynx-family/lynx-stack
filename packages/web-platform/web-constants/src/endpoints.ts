@@ -260,3 +260,8 @@ export const loadTemplateMultiThread = createRpcEndpoint<
   [string],
   LynxTemplate
 >('loadTemplateMultiThread', false, true);
+
+export const reloadEndpoint = createRpcEndpoint<
+  [],
+  void
+>('reload', false, false);

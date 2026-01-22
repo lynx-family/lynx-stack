@@ -5,6 +5,7 @@
 import {
   dispatchCoreContextOnBackgroundEndpoint,
   dispatchJSContextOnMainThreadEndpoint,
+  reloadEndpoint,
 } from '../../endpoints.js';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import { createGetCustomSection } from './crossThreadHandlers/createGetCustomSection.js';
@@ -56,5 +57,8 @@ export function createBackgroundLynx(
         },
       ) => void,
     ) => nativeApp.queryComponent(source, callback),
+    reload: () => {
+      mainThreadRpc.invoke(reloadEndpoint, []);
+    },
   };
 }

@@ -212,3 +212,8 @@ export const updateBTSChunkEndpoint = createRpcEndpoint<
   [/** url */ string, Record<string, string>],
   void
 >('updateBTSChunkEndpoint', false, true);
+
+export const reloadEndpoint = createRpcEndpoint<
+  [],
+  void
+>('reload', false, false);
