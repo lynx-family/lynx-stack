@@ -31,6 +31,9 @@ export function runWithForce(cb: () => void): void {
 
     const c = oldVNode[COMPONENT];
     if (c) {
+      if (vnode[ORIGINAL] != null && oldVNode[ORIGINAL] === vnode[ORIGINAL]) {
+        vnode[ORIGINAL] += 1;
+      }
       c[FORCE] = true;
     } else {
       // mount phase of a new Component
