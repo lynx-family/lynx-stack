@@ -250,6 +250,18 @@ test.describe('reactlynx3 tests', () => {
         page.locator('#wheat'),
       ).toHaveAttribute('style', /wheat/g);
     });
+
+    test('basic-lynx-reload', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await target.click();
+      await wait(100);
+      await expect(await target.getAttribute('style')).toContain('green');
+      await page.locator('#reload').click();
+      await wait(100);
+      await expect(await target.getAttribute('style')).toContain('pink');
+    });
     test(
       'basic-wrapper-element-do-not-impact-layout',
       async ({ page }, { title }) => {
