@@ -100,7 +100,8 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: lynx-custom-container
+      is-web: true
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
@@ -113,7 +114,8 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: lynx-custom-container
+      is-web: true
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
