@@ -264,7 +264,7 @@ describe('mount externals library', () => {
           utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
         },
       },
-      id: 'utils-reactlynx',
+      id: 'utils-reactlynx-globalThis',
       output: {
         distPath: {
           root: path.join(fixtureDir, 'dist'),
@@ -281,17 +281,20 @@ describe('mount externals library', () => {
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-reactlynx.lynx.bundle'),
+      path.join(
+        fixtureDir,
+        'dist/utils-reactlynx-globalThis.lynx.bundle',
+      ),
     )
     expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
       'utils',
       'utils__main-thread',
     ])
     expect(decodedResult['custom-sections']['utils']).toContain(
-      'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
+      'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
     )
     expect(decodedResult['custom-sections']['utils__main-thread']).toContain(
-      'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
+      'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
     )
   })
 })

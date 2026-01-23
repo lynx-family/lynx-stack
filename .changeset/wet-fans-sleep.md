@@ -4,4 +4,4 @@
 "@lynx-js/external-bundle-rsbuild-plugin": patch
 ---
 
-Add [`globalObject`](https://webpack.js.org/configuration/output/#outputglobalobject) config for external bundle loading, user can config it to `globalThis` for BTS external bundle sharing.
+Add [`globalObject`](https://webpack.js.org/configuration/output/#outputglobalobject) config for external bundle loading, user can configure it to `globalThis` for BTS external bundle sharing.

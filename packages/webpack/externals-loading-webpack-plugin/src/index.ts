@@ -311,9 +311,11 @@ export class ExternalsLoadingPlugin {
         if (externals.length === 0) {
           return '';
         }
-        const runtimeGlobalsInit = `${
-          getLynxExternalGlobal(externalsLoadingPluginOptions.globalObject)
-        } = {};`;
+        const lynxExternalGlobal = getLynxExternalGlobal(
+          externalsLoadingPluginOptions.globalObject,
+        );
+        const runtimeGlobalsInit =
+          `${lynxExternalGlobal} = ${lynxExternalGlobal} === undefined ? {} : ${lynxExternalGlobal};`;
         const loadExternalFunc = `
 function createLoadExternalAsync(handler, sectionPath) {
   return new Promise((resolve, reject) => {
