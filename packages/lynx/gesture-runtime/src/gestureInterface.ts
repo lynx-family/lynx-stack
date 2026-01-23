@@ -98,7 +98,14 @@ export interface DefaultGestureChangeEvent extends GestureChangeEvent {
  * Uses the base GestureChangeEvent without additional properties.
  */
 export interface NativeGestureChangeEvent extends GestureChangeEvent {
-  // Uses base event properties
+  params: GestureChangeEvent['params'] & {
+    scrollX: number;
+    scrollY: number;
+    deltaX: number;
+    deltaY: number;
+    isAtStart: boolean;
+    isAtEnd: boolean;
+  };
 }
 
 export enum SetGestureStateType {

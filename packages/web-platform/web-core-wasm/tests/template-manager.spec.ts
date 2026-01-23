@@ -11,6 +11,7 @@ await import('../ts/client/decodeWorker/decode.worker.js');
 // Mock wasm-feature-detect to ensure we load the standard WASM
 vi.mock('wasm-feature-detect', () => ({
   referenceTypes: async () => true,
+  simd: async () => true,
 }));
 
 // Import TemplateManager after mocks are set up

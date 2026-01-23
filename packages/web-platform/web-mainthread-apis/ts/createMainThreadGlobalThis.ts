@@ -560,17 +560,32 @@ export function createMainThreadGlobalThis(
           const componentAtIndex = runtimeInfo.componentAtIndex;
           const enqueueComponent = runtimeInfo.enqueueComponent;
           const uniqueId = __GetElementUniqueID(element);
+          removeAction.forEach((position, i) => {
+            // remove list-item
+            const removedEle = element.children[position - i] as HTMLElement;
+            if (removedEle) {
+              const sign = __GetElementUniqueID(removedEle);
+              enqueueComponent?.(element, uniqueId, sign);
+              element.removeChild(removedEle);
+            }
+          });
           for (const action of insertAction) {
-            componentAtIndex?.(
+            const childSign = componentAtIndex?.(
               element,
               uniqueId,
               action.position,
               0,
               false,
-            );
-          }
-          for (const action of removeAction) {
-            enqueueComponent?.(element, uniqueId, action.position);
+            ) as number | undefined;
+            if (typeof childSign === 'number') {
+              const childElement = lynxUniqueIdToElement[childSign]?.deref();
+              if (childElement) {
+                const referenceNode = element.children[action.position];
+                if (referenceNode !== childElement) {
+                  element.insertBefore(childElement, referenceNode || null);
+                }
+              }
+            }
           }
         }
       });
