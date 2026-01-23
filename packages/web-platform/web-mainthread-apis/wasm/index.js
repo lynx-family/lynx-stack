@@ -1,8 +1,11 @@
-import { referenceTypes } from 'wasm-feature-detect';
+import { referenceTypes, simd } from 'wasm-feature-detect';
 export let wasm;
 export async function initWasm() {
-  const supportsReferenceTypes = await referenceTypes();
-  if (supportsReferenceTypes) {
+  const [supportsSimd, supportsReferenceTypes] = await Promise.all([
+    simd(),
+    referenceTypes(),
+  ]);
+  if (supportsSimd && supportsReferenceTypes) {
     wasm = await import(
       /* webpackMode: "eager" */
       /* webpackFetchPriority: "high" */
