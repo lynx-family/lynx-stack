@@ -8,11 +8,13 @@ const isWorker = typeof WorkerGlobalScope !== 'undefined'
   && self instanceof WorkerGlobalScope;
 const wasmLoaded = simd().then((supportsSimd) => {
   if (!supportsSimd) {
-    throw new Error('WASM not supported');
+    throw new Error('WASM SIMD support required but not available');
   }
   return referenceTypes().then((supportsReferenceTypes) => {
     if (!supportsReferenceTypes) {
-      throw new Error('WASM not supported');
+      throw new Error(
+        'WASM reference types support required but not available',
+      );
     }
     return Promise.all([
       import(
