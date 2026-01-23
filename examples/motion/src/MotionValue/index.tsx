@@ -1,23 +1,24 @@
 import { motionValue } from '@lynx-js/motion';
-import type { MotionValue, animate } from '@lynx-js/motion';
+import type { MotionValue } from '@lynx-js/motion';
 import { runOnMainThread, useEffect, useMainThreadRef } from '@lynx-js/react';
 import type { MainThread } from '@lynx-js/types';
 
 import './styles.css';
 
 export default function Basic() {
-  const animateMTRef = useMainThreadRef<ReturnType<typeof animate> | null>(
-    null,
-  );
   const boxMTRef = useMainThreadRef<MainThread.Element>(null);
   const valueMTRef = useMainThreadRef<MotionValue<number>>();
+  const intervalMTRef = useMainThreadRef<ReturnType<typeof setInterval> | null>(
+    null,
+  );
+  const unsubscribeMTRef = useMainThreadRef<(() => void) | null>(null);
 
   function bindMotionValueCallback() {
     'main thread';
 
     valueMTRef.current ??= motionValue(0.5);
 
-    valueMTRef.current.on('change', (value) => {
+    unsubscribeMTRef.current = valueMTRef.current.on('change', (value) => {
       boxMTRef.current?.setStyleProperties({
         transform: `scale(${value})`,
       });
@@ -29,7 +30,7 @@ export default function Basic() {
 
     bindMotionValueCallback();
 
-    setInterval(() => {
+    intervalMTRef.current = setInterval(() => {
       valueMTRef.current?.set(valueMTRef.current.get() + 0.5);
     }, 1000);
   }
@@ -37,14 +38,23 @@ export default function Basic() {
   function endAnimation() {
     'main thread';
 
-    animateMTRef.current?.stop();
+    if (intervalMTRef.current) {
+      clearInterval(intervalMTRef.current);
+      intervalMTRef.current = null;
+    }
+
+    if (unsubscribeMTRef.current) {
+      unsubscribeMTRef.current();
+      unsubscribeMTRef.current = null;
+    }
   }
 
   useEffect(() => {
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       void runOnMainThread(startAnimation)();
     }, 1000);
     return () => {
+      clearTimeout(timeoutId);
       void runOnMainThread(endAnimation)();
     };
   }, []);

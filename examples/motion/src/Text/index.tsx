@@ -18,7 +18,7 @@ export default function Text() {
         ease: 'circInOut',
         duration: 2,
         onUpdate: (latest) => {
-          textMTRef.current?.setAttribute('text', latest);
+          textMTRef.current?.setAttribute('text', String(latest));
         },
       });
     }

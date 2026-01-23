@@ -16,18 +16,24 @@ export default function MiniExample() {
   const x = useMotionValueRef(0);
   const scale = useMotionValueRef(1);
 
+  // Consolidate transform updates to avoid redundant DOM operations
+  const updateTransform = (xVal?: number, scaleVal?: number) => {
+    'main thread';
+    const xValue = xVal ?? x.current.get();
+    const scaleValue = scaleVal ?? scale.current.get();
+    boxRef.current?.setStyleProperties({
+      transform: `translateX(${xValue}px) scale(${scaleValue})`,
+    });
+  };
+
   useMotionValueRefEvent(x, 'change', (v) => {
     'main thread';
-    boxRef.current?.setStyleProperties({
-      transform: `translateX(${v}px) scale(${scale.current.get()})`,
-    });
+    updateTransform(v, undefined);
   });
 
   useMotionValueRefEvent(scale, 'change', (v) => {
     'main thread';
-    boxRef.current?.setStyleProperties({
-      transform: `translateX(${x.current.get()}px) scale(${v})`,
-    });
+    updateTransform(undefined, v);
   });
 
   const handleTapSpring = () => {

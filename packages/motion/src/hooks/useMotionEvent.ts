@@ -37,5 +37,5 @@ export function useMotionValueRefEvent<
         unListenRef.current?.();
       })();
     };
-  }, [callback]);
+  }, [valueRef, event, callback]);
 }

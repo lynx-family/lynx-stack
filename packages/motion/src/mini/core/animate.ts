@@ -100,13 +100,18 @@ export function animate(
   const startTime = Date.now();
   let canceled = false;
 
+  let resolvePromise: (() => void) | undefined;
+  const completionPromise = new Promise<void>((resolve) => {
+    resolvePromise = resolve;
+  });
+
   const controls = {
     stop: () => {
       canceled = true;
     },
     then: (cb: () => void) => {
       controls.onFinish = cb;
-      return Promise.resolve(); // Mock promise return async/await usage
+      return completionPromise; // Return actual promise that resolves on completion
     },
     // biome-ignore lint/suspicious/noEmptyBlockStatements: <explanation>
     onFinish: () => {},
@@ -176,6 +181,7 @@ export function animate(
         options.onComplete();
       }
       controls.onFinish();
+      resolvePromise?.(); // Resolve the promise when animation completes
       detach?.();
     } else {
       requestAnimationFrame(tick);

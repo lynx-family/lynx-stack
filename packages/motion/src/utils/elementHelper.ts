@@ -26,6 +26,13 @@ export function elementOrSelector2Dom(
     let elementNodes: ElementOrElements;
     if (typeof nodesOrSelector === 'string') {
       elementNodes = lynx.querySelectorAll(nodesOrSelector);
+      // Validate that query returned results
+      if (
+        !elementNodes
+        || (Array.isArray(elementNodes) && elementNodes.length === 0)
+      ) {
+        return undefined;
+      }
     } else {
       elementNodes = nodesOrSelector;
     }

@@ -34,10 +34,11 @@ export default function Basic() {
   }
 
   useEffect(() => {
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       void runOnMainThread(startAnimation)();
     }, 1500);
     return () => {
+      clearTimeout(timeoutId);
       void runOnMainThread(endAnimation)();
     };
   }, []);

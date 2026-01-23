@@ -4,11 +4,16 @@
 
 import { ElementCompt } from './element.js';
 
-const timeOrigin = Date.now();
+// Capture timeOrigin correctly - use performance.timeOrigin if available, otherwise current timestamp
+const timeOrigin =
+  (typeof performance !== 'undefined' && performance.timeOrigin)
+    ? performance.timeOrigin
+    : Date.now();
 
 function shimQueueMicroTask() {
   if (!globalThis.queueMicrotask) {
-    if (lynx.queueMicrotask) {
+    // Guard against undefined lynx global before accessing lynx.queueMicrotask
+    if (typeof lynx !== 'undefined' && lynx.queueMicrotask) {
       // eslint-disable-next-line @typescript-eslint/unbound-method
       globalThis.queueMicrotask = lynx.queueMicrotask;
     } else {
@@ -81,8 +86,10 @@ function shimGlobals() {
   // @ts-expect-error error
   globalThis.EventTarget ??= ElementCompt;
 
-  // Only shim getComputedStyle if it doesn't exist
-  globalThis.getComputedStyle ??= globalThis.window?.getComputedStyle;
+  // Only shim getComputedStyle if it doesn't exist and window.getComputedStyle is available
+  if (!globalThis.getComputedStyle && globalThis.window?.getComputedStyle) {
+    globalThis.getComputedStyle = globalThis.window.getComputedStyle;
+  }
 
   shimQueueMicroTask();
 }

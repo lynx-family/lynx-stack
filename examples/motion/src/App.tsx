@@ -13,7 +13,12 @@ import Text from './Text/index.js';
 
 import './App.css';
 
-const CASES = [
+interface CaseItem {
+  name: string;
+  comp: () => JSX.Element;
+}
+
+const CASES: CaseItem[] = [
   {
     name: 'Basic',
     comp: Basic,
@@ -59,8 +64,7 @@ const CASES = [
 export function App() {
   const [current, setCurrent] = useState(0);
 
-  // @ts-expect-error error
-  const CurrentComp = CASES[current].comp;
+  const CurrentComp = CASES[current]?.comp;
 
   return (
     <view className='container'>
@@ -79,7 +83,7 @@ export function App() {
       </view>
       <text className='text-area'>Current case is: {CASES[current]?.name}</text>
       <view className='case-area'>
-        {<CurrentComp />}
+        {CurrentComp && <CurrentComp />}
       </view>
     </view>
   );

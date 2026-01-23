@@ -27,7 +27,6 @@ import type {
   AnimationPlaybackControlsWithThen,
   AnyResolvedKeyframe,
   DOMKeyframesDefinition,
-  ElementOrSelector,
   MapInputRange,
   Mixer,
   MotionValue,
@@ -39,14 +38,9 @@ import type {
 } from 'motion-dom';
 
 import { useMotionValueRefEvent } from '../hooks/useMotionEvent.js';
-import { ElementCompt } from '../polyfill/element.js' with { runtime: 'shared' };
 import { motionValue as motionValue_ } from '../polyfill/MotionValue.js' with { runtime: 'shared' };
 import type { ElementOrElements } from '../types/index.js';
 import { elementOrSelector2Dom } from '../utils/elementHelper.js';
-import {
-  isMainThreadElement,
-  isMainThreadElementArray,
-} from '../utils/isMainThreadElement.js';
 import { noopMT } from '../utils/noop.js';
 
 /**
@@ -134,35 +128,9 @@ function animate<O extends {}>(
 ): AnimationPlaybackControlsWithThen {
   'main thread';
 
-  let realSubjectOrSequence:
-    | AnimationSequence
-    | MotionValue<number>
-    | MotionValue<string>
-    | number
-    | string
-    | ElementOrSelector
-    | O
-    | O[];
-
-  if (
-    typeof subjectOrSequence === 'string'
-    || isMainThreadElement(subjectOrSequence)
-    || isMainThreadElementArray(subjectOrSequence)
-  ) {
-    let elementNodes: ElementOrElements;
-    if (typeof subjectOrSequence === 'string') {
-      elementNodes = lynx.querySelectorAll(subjectOrSequence);
-    } else {
-      elementNodes = subjectOrSequence;
-    }
-    realSubjectOrSequence = (Array.isArray(elementNodes)
-      ? elementNodes.map(el => new ElementCompt(el))
-      : new ElementCompt(
-        elementNodes,
-      )) as unknown as ElementOrSelector;
-  } else {
-    realSubjectOrSequence = subjectOrSequence;
-  }
+  const realSubjectOrSequence =
+    elementOrSelector2Dom(subjectOrSequence as ElementOrElements)
+      ?? (subjectOrSequence as unknown);
 
   // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
   return animate_(
