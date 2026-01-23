@@ -10,6 +10,7 @@ import { StyleManager } from '../ts/client/mainthread/StyleManager.js';
 
 vi.mock('wasm-feature-detect', () => ({
   referenceTypes: async () => true,
+  simd: async () => true,
 }));
 
 describe('StyleManager', () => {
