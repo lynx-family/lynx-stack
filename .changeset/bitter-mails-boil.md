@@ -2,4 +2,4 @@
 "@lynx-js/web-core": patch
 ---
 
-fix: avoid crash on user's CPU does not support simd
+fix: avoid crash on CPUs that do not support SIMD
