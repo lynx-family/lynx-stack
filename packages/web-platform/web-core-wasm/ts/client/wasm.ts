@@ -6,11 +6,11 @@
 import { referenceTypes, simd } from 'wasm-feature-detect';
 const isWorker = typeof WorkerGlobalScope !== 'undefined'
   && self instanceof WorkerGlobalScope;
-const wasmLoaded = simd().then((supportsSimd) => {
-  if (!supportsSimd) {
-    throw new Error('WASM SIMD support required but not available');
-  }
-  return referenceTypes().then((supportsReferenceTypes) => {
+const wasmLoaded = Promise.all([simd(), referenceTypes()]).then(
+  ([supportsSimd, supportsReferenceTypes]) => {
+    if (!supportsSimd) {
+      throw new Error('WASM SIMD support required but not available');
+    }
     if (!supportsReferenceTypes) {
       throw new Error(
         'WASM reference types support required but not available',
@@ -38,8 +38,8 @@ const wasmLoaded = simd().then((supportsSimd) => {
         ),
       ),
     ]);
-  });
-});
+  },
+);
 export const [wasmInstance, wasmModule] = await wasmLoaded;
 if (!isWorker) {
   wasmInstance.initSync({ module: wasmModule! });

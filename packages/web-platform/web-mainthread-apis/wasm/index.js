@@ -8,11 +8,15 @@ const loadLegacy = () =>
     './legacy.js'
   );
 export async function initWasm() {
-  if (!(await simd())) {
+  const [supportsSimd, supportsReferenceTypes] = await Promise.all([
+    simd(),
+    referenceTypes(),
+  ]);
+  if (!supportsSimd) {
     wasm = await loadLegacy();
     return;
   }
-  if (!(await referenceTypes())) {
+  if (!supportsReferenceTypes) {
     wasm = await loadLegacy();
     return;
   }
