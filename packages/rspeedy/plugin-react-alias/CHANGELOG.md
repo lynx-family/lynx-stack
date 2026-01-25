@@ -1,5 +1,7 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.12.6
+
 ## 0.12.5
 
 ## 0.12.4
