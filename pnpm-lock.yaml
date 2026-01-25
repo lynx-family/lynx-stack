@@ -3371,11 +3371,6 @@ packages:
     engines: {node: '>=18.12.0'}
     hasBin: true
 
-  '@rsbuild/core@1.7.1':
-    resolution: {integrity: sha512-ULIE/Qh+Ne80Pm/aUPbRHUvwvIzpap07jYNFB47azI8w5Q3sDEC4Gn574jsluT/42iNDsZTFADRBog9FEvtN9Q==}
-    engines: {node: '>=18.12.0'}
-    hasBin: true
-
   '@rsbuild/core@1.7.2':
     resolution: {integrity: sha512-VAFO6cM+cyg2ntxNW6g3tB2Jc5J5mpLjLluvm7VtW2uceNzyUlVv41o66Yp1t1ikxd3ljtqegViXem62JqzveA==}
     engines: {node: '>=18.12.0'}
@@ -11851,14 +11846,6 @@ snapshots:
       core-js: 3.46.0
       jiti: 2.6.1
 
-  '@rsbuild/core@1.7.1':
-    dependencies:
-      '@rspack/core': 1.7.3(@swc/helpers@0.5.18)
-      '@rspack/lite-tapable': 1.1.0
-      '@swc/helpers': 0.5.18
-      core-js: 3.47.0
-      jiti: 2.6.1
-
   '@rsbuild/core@1.7.2':
     dependencies:
       '@rspack/core': 1.7.3(@swc/helpers@0.5.18)
@@ -12076,8 +12063,8 @@ snapshots:
 
   '@rslib/core@0.19.1(@microsoft/api-extractor@7.55.2(@types/node@24.6.1))(@typescript/native-preview@7.0.0-dev.20251106.1)(typescript@5.9.3)':
     dependencies:
-      '@rsbuild/core': 1.7.1
-      rsbuild-plugin-dts: 0.19.1(@microsoft/api-extractor@7.55.2(@types/node@24.6.1))(@rsbuild/core@1.7.1)(@typescript/native-preview@7.0.0-dev.20251106.1)(typescript@5.9.3)
+      '@rsbuild/core': 1.7.2
+      rsbuild-plugin-dts: 0.19.1(@microsoft/api-extractor@7.55.2(@types/node@24.6.1))(@rsbuild/core@1.7.2)(@typescript/native-preview@7.0.0-dev.20251106.1)(typescript@5.9.3)
     optionalDependencies:
       '@microsoft/api-extractor': 7.55.2(@types/node@24.6.1)
       typescript: 5.9.3
@@ -18070,10 +18057,10 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 1.7.2
 
-  rsbuild-plugin-dts@0.19.1(@microsoft/api-extractor@7.55.2(@types/node@24.6.1))(@rsbuild/core@1.7.1)(@typescript/native-preview@7.0.0-dev.20251106.1)(typescript@5.9.3):
+  rsbuild-plugin-dts@0.19.1(@microsoft/api-extractor@7.55.2(@types/node@24.6.1))(@rsbuild/core@1.7.2)(@typescript/native-preview@7.0.0-dev.20251106.1)(typescript@5.9.3):
     dependencies:
       '@ast-grep/napi': 0.37.0
-      '@rsbuild/core': 1.7.1
+      '@rsbuild/core': 1.7.2
     optionalDependencies:
       '@microsoft/api-extractor': 7.55.2(@types/node@24.6.1)
       '@typescript/native-preview': 7.0.0-dev.20251106.1
