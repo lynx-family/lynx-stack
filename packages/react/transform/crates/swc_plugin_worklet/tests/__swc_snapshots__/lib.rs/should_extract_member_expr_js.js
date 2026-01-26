@@ -1,23 +1,14 @@
+import { workletCapture as __workletCapture } from "@lynx-js/react";
+var workletCapture = __workletCapture;
 let onTapLepus = {
     _c: {
-        aaaa: {
-            bbbb: aaaa.bbbb
-        },
-        cccc: {
-            dddd: cccc.dddd
-        },
-        hhhh: {
-            iiii: hhhh.iiii
-        },
+        aaaa: workletCapture(aaaa, "bbbb", aaaa.bbbb),
+        cccc: workletCapture(cccc, "dddd", cccc.dddd),
+        hhhh: workletCapture(hhhh, "iiii", hhhh.iiii),
         llll,
-        oooo: {
-            pppp: oooo.pppp,
-            qqqq: oooo.qqqq
-        },
+        oooo: workletCapture(oooo, "pppp", oooo.pppp, "qqqq", oooo.qqqq),
         rrrr,
-        uuuu: {
-            "__??__": uuuu["__??__"]
-        }
+        uuuu: workletCapture(uuuu, "__??__", uuuu["__??__"])
     },
     _wkltId: "a123:test:1"
 };

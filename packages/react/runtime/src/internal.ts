@@ -70,3 +70,4 @@ export { transformToWorklet } from './worklet/call/transformToWorklet.js';
 export { registerWorkletOnBackground } from './worklet/hmr.js';
 
 export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';
+export { workletCapture } from './worklet/capture.js';

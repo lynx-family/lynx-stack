@@ -28,9 +28,9 @@ function updateWorkletRef(workletRef: WorkletRefImpl<Element>, element: ElementN
 /**
  * Update the initial value of the `WorkletRef`.
  *
- * @param patch - An array containing the index and new value of the worklet value.
+ * @param patch - An array containing the index, new value, and optional type of the worklet value.
  */
-function updateWorkletRefInitValueChanges(patch?: [number, unknown][]): void {
+function updateWorkletRefInitValueChanges(patch?: [number, unknown, string?][]): void {
   if (patch) {
     globalThis.lynxWorkletImpl?._refImpl.updateWorkletRefInitValueChanges(patch);
   }

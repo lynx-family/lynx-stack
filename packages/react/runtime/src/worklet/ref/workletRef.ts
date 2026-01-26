@@ -1,82 +1,13 @@
-// Copyright 2024 The Lynx Authors. All rights reserved.
+// Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { RefObject } from 'react';
 
-import type { WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
-import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
-
-import { addWorkletRefInitValue } from './workletRefPool.js';
+import { MainThreadValue, clearMainThreadValueIdForTesting } from './mainThreadValue.js';
 import { useMemo } from '../../hooks/react.js';
 
-// Split into two variables for testing purposes
-let lastIdBG = 0;
-let lastIdMT = 0;
-
 export function clearWorkletRefLastIdForTesting(): void {
-  lastIdBG = lastIdMT = 0;
-}
-
-abstract class WorkletRef<T> {
-  /**
-   * @internal
-   */
-  protected _wvid: number;
-  /**
-   * @internal
-   */
-  protected _initValue: T | undefined;
-  /**
-   * @internal
-   */
-  protected _type: string;
-  /**
-   * @internal
-   */
-  protected _lifecycleObserver: unknown;
-
-  /**
-   * @internal
-   */
-  protected constructor(initValue: T, type: string) {
-    this._initValue = initValue;
-    this._type = type;
-    if (__JS__) {
-      this._wvid = ++lastIdBG;
-      addWorkletRefInitValue(this._wvid, initValue);
-    } else {
-      this._wvid = --lastIdMT;
-    }
-  }
-
-  get current(): T {
-    if (__JS__ && __DEV__) {
-      throw new Error('MainThreadRef: value of a MainThreadRef cannot be accessed in the background thread.');
-    }
-    if (__LEPUS__ && __DEV__) {
-      /* v8 ignore next 3 */
-      throw new Error('MainThreadRef: value of a MainThreadRef cannot be accessed outside of main thread script.');
-    }
-    return undefined as T;
-  }
-
-  set current(_: T) {
-    if (__JS__ && __DEV__) {
-      throw new Error('MainThreadRef: value of a MainThreadRef cannot be accessed in the background thread.');
-    }
-    if (__LEPUS__ && __DEV__) {
-      throw new Error('MainThreadRef: value of a MainThreadRef cannot be accessed outside of main thread script.');
-    }
-  }
-
-  /**
-   * @internal
-   */
-  toJSON(): { _wvid: WorkletRefImpl<T>['_wvid'] } {
-    return {
-      _wvid: this._wvid,
-    };
-  }
+  clearMainThreadValueIdForTesting();
 }
 
 /**
@@ -86,20 +17,25 @@ abstract class WorkletRef<T> {
  * multiple main thread functions.
  * @public
  */
-export class MainThreadRef<T> extends WorkletRef<T> {
+export class MainThreadRef<T> extends MainThreadValue<T> {
   constructor(initValue: T) {
     super(initValue, 'main-thread');
-    if (__JS__) {
-      const id = this._wvid;
-      this._lifecycleObserver = lynx.getNativeApp().createJSObjectDestructionObserver?.(() => {
-        lynx.getCoreContext?.().dispatchEvent({
-          type: WorkletEvents.releaseWorkletRef,
-          data: {
-            id,
-          },
-        });
-      });
+  }
+
+  get current(): T {
+    try {
+      return this.getValueOnMainThread();
+    } catch {
+      // For backward compatibility / safety in background thread (though it throws in base)
+      // The base class throws if on BG.
+      // The original MainThreadRef threw on BG in DEV.
+      // Base class throws Error.
+      return super.getValueOnMainThread();
     }
+  }
+
+  set current(val: T) {
+    this.setValueOnMainThread(val);
   }
 }
 

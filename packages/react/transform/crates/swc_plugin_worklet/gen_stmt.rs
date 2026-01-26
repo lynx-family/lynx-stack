@@ -24,7 +24,15 @@ impl StmtGen {
     is_class_member: bool,
     named_imports: &mut HashSet<String>,
   ) -> (Box<Expr>, Stmt) {
+    if target == TransformTarget::JS
+      || target == TransformTarget::MIXED
+      || target == TransformTarget::LEPUS
+    {
+      named_imports.insert("workletCapture".into());
+    }
+
     let hash = Expr::Lit(hash.into());
+
     let extracted_value = ident_collector.take_values();
     let extracted_idents = ident_collector.take_idents();
     let extracted_js_fns = ident_collector.take_js_fns();
@@ -72,8 +80,79 @@ impl StmtGen {
     hash: Expr,
     named_imports: &mut HashSet<String>,
   ) -> Box<Expr> {
+    let mut extracted_value = extracted_value;
     if target == TransformTarget::JS && !extracted_js_fns.is_empty() {
       named_imports.insert("transformToWorklet".into());
+    }
+
+    if let Some(obj) = extracted_value.as_mut_object() {
+      for prop in &mut obj.props {
+        if let PropOrSpread::Prop(p) = prop {
+          if let Prop::KeyValue(kv) = &mut **p {
+            if let Expr::Object(val_obj) = &*kv.value {
+              if let PropName::Ident(key_ident) = &kv.key {
+                let context_ident = StmtGen::find_root_ident(&Expr::Object(val_obj.clone()))
+                  .unwrap_or_else(|| {
+                    Ident::new(key_ident.sym.clone(), key_ident.span, Default::default())
+                  });
+
+                let mut args = vec![Expr::Ident(context_ident).into()];
+                for p in &val_obj.props {
+                  if let PropOrSpread::Prop(p) = p {
+                    match &**p {
+                      Prop::Shorthand(id) => {
+                        args.push(
+                          Expr::Lit(Lit::Str(Str {
+                            span: DUMMY_SP,
+                            value: id.sym.as_str().into(),
+                            raw: None,
+                          }))
+                          .into(),
+                        );
+                        args.push(Expr::Ident(id.clone()).into());
+                      }
+                      Prop::KeyValue(kv) => {
+                        let key_str = match &kv.key {
+                          PropName::Ident(id) => id.sym.as_str().to_string(),
+                          PropName::Str(s) => s.value.to_string_lossy().to_string(),
+                          _ => continue,
+                        };
+                        args.push(
+                          Expr::Lit(Lit::Str(Str {
+                            span: DUMMY_SP,
+                            value: key_str.into(),
+                            raw: None,
+                          }))
+                          .into(),
+                        );
+                        args.push(*kv.value.clone());
+                      }
+                      _ => {}
+                    }
+                  }
+                }
+                kv.value = Box::new(Expr::Call(CallExpr {
+                  span: DUMMY_SP,
+                  callee: Callee::Expr(Box::new(Expr::Ident(Ident::new(
+                    "workletCapture".into(),
+                    DUMMY_SP,
+                    Default::default(),
+                  )))),
+                  args: args
+                    .into_iter()
+                    .map(|e| ExprOrSpread {
+                      spread: None,
+                      expr: Box::new(e),
+                    })
+                    .collect(),
+                  type_args: None,
+                  ctxt: Default::default(),
+                }));
+              }
+            }
+          }
+        }
+      }
     }
 
     let mut props: Vec<PropOrSpread> = vec![];
@@ -157,6 +236,30 @@ impl StmtGen {
     }
     .into()
   }
+
+  fn find_root_ident(expr: &Expr) -> Option<Ident> {
+    match expr {
+      Expr::Ident(id) => Some(id.clone()),
+      Expr::Member(member) => StmtGen::find_root_ident(&member.obj),
+      Expr::Object(obj) => {
+        for prop in &obj.props {
+          if let PropOrSpread::Prop(p) = prop {
+            match &**p {
+              Prop::KeyValue(kv) => return StmtGen::find_root_ident(&kv.value),
+              Prop::Shorthand(id) => return Some(id.clone()),
+              _ => {}
+            }
+          }
+        }
+        None
+      }
+      _ => None,
+    }
+  }
+
+  /*
+   * registerWorklet($type, $hash, $function);
+   */
 
   /*
    * registerWorklet($type, $hash, $function);

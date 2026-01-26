@@ -12,11 +12,45 @@ interface RefImpl {
     refImpl: WorkletRefImpl<Element | null>,
     element: ElementNode | null,
   ): void;
-  updateWorkletRefInitValueChanges(patch: [number, unknown][]): void;
+  updateWorkletRefInitValueChanges(patch: [number, unknown, string?][]): void;
   clearFirstScreenWorkletRefMap(): void;
 }
 
 let impl: RefImpl | undefined;
+
+/**
+ * Registry for custom MainThreadValue types.
+ * Maps type string (e.g., 'main-thread', 'motion-value') to constructor.
+ */
+/**
+ * Registry for custom MainThreadValue types.
+ * Maps type string (e.g., 'main-thread', 'motion-value') to constructor.
+ */
+const typeRegistry: Record<string, new(initValue: unknown, type: string) => unknown> = {};
+
+/**
+ * Register a custom MainThreadValue class for hydration on the main thread.
+ * @param type - Unique type identifier (e.g., '@my-lib/MotionValue')
+ * @param Ctor - The class constructor
+ */
+export function registerMainThreadValueClass(
+  Ctor: new(initValue: unknown, type: string) => unknown,
+  type: string,
+): void {
+  typeRegistry[type] = Ctor;
+
+  // Also add to lynxWorkletImpl if already initialized
+  if (globalThis.lynxWorkletImpl?._mainThreadValueClassMap) {
+    globalThis.lynxWorkletImpl._mainThreadValueClassMap[type] = Ctor;
+  }
+}
+
+/**
+ * Get the type registry for use during worklet initialization.
+ */
+export function getMainThreadValueClassMap(): Record<string, new(initValue: unknown, type: string) => unknown> {
+  return typeRegistry;
+}
 
 function initWorkletRef(): RefImpl {
   return (impl = {
@@ -44,6 +78,27 @@ const createWorkletRef = <T>(
   };
 };
 
+/**
+ * Hydrate a WorkletRef from its serialized form.
+ * Uses the type registry to instantiate the correct class.
+ */
+function hydrateWorkletRef<T>(refImpl: WorkletRefImpl<T>): WorkletRef<T> {
+  const type = refImpl._type ?? 'main-thread';
+  // Check local typeRegistry and global lynxWorkletImpl registry
+  const Ctor = typeRegistry[type]
+    ?? globalThis.lynxWorkletImpl?._mainThreadValueClassMap?.[type];
+
+  if (Ctor) {
+    // Instantiate the registered class
+    const instance = new Ctor(refImpl._initValue, type) as WorkletRef<T>;
+    // Assign the ID
+    (instance as { _wvid: WorkletRefId })._wvid = refImpl._wvid;
+    return instance;
+  }
+  // Fallback: plain object with .current
+  return createWorkletRef(refImpl._wvid, refImpl._initValue);
+}
+
 const getFromWorkletRefMap = <T>(
   refImpl: WorkletRefImpl<T>,
 ): WorkletRef<T> => {
@@ -56,10 +111,13 @@ const getFromWorkletRefMap = <T>(
     // 2. In `main-thread:ref`
     value = impl!._firstScreenWorkletRefMap[id] as WorkletRef<T>;
     if (!value) {
-      value = impl!._firstScreenWorkletRefMap[id] = createWorkletRef(id, refImpl._initValue);
+      value = impl!._firstScreenWorkletRefMap[id] = hydrateWorkletRef(refImpl);
     }
   } else {
     value = impl!._workletRefMap[id] as WorkletRef<T>;
+    if (!value) {
+      value = impl!._workletRefMap[id] = hydrateWorkletRef(refImpl);
+    }
   }
 
   /* v8 ignore next 3 */
@@ -71,6 +129,7 @@ const getFromWorkletRefMap = <T>(
 
 function removeValueFromWorkletRefMap(id: WorkletRefId): void {
   delete impl!._workletRefMap[id];
+  delete impl!._firstScreenWorkletRefMap[id];
 }
 
 /**
@@ -89,12 +148,21 @@ function updateWorkletRef(
 }
 
 function updateWorkletRefInitValueChanges(
-  patch: [WorkletRefId, unknown][],
+  patch: [WorkletRefId, unknown, string?][],
 ): void {
   profile('updateWorkletRefInitValueChanges', () => {
-    patch.forEach(([id, value]) => {
-      if (!impl!._workletRefMap[id]) {
-        impl!._workletRefMap[id] = createWorkletRef(id, value);
+    patch.forEach(([id, value, type]) => {
+      const existing = impl!._workletRefMap[id];
+      if (existing) {
+        // Update the existing ref's value
+        existing.current = value;
+      } else {
+        // Create a new ref with type-aware hydration
+        impl!._workletRefMap[id] = hydrateWorkletRef({
+          _wvid: id,
+          _initValue: value,
+          _type: type,
+        } as WorkletRefImpl<unknown>);
       }
     });
   });

@@ -1,5 +1,5 @@
-import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-var loadWorkletRuntime = __loadWorkletRuntime;
+import { loadWorkletRuntime as __loadWorkletRuntime, workletCapture as __workletCapture } from "@lynx-js/react";
+var loadWorkletRuntime = __loadWorkletRuntime, workletCapture = __workletCapture;
 let onTapLepus = {
     _wkltId: "a123:test:1"
 };

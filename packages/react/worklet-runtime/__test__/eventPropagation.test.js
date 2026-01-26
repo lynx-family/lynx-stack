@@ -17,6 +17,10 @@ describe('EventPropagation', () => {
     delete globalThis.lynxWorkletImpl;
     globalThis.lynx = {
       requestAnimationFrame: vi.fn(),
+      getCoreContext: () => ({
+        addEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }),
     };
     initApiEnv();
   });
