@@ -1,5 +1,11 @@
 # @lynx-js/rspeedy
 
+## 0.13.2
+
+### Patch Changes
+
+- Bump Rsbuild 1.7.2 with Rspack 1.7.1. ([#2136](https://github.com/lynx-family/lynx-stack/pull/2136))
+
 ## 0.13.1
 
 ### Patch Changes
