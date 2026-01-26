@@ -396,6 +396,16 @@ export class LynxView extends HTMLElement {
   customTemplateLoader?: (url: string) => Promise<LynxTemplate>;
 
   /**
+   * @public
+   * allow user to customize the browser config
+   */
+  browserConfig?: {
+    pixelRatio?: number;
+    pixelWidth?: number;
+    pixelHeight?: number;
+  };
+
+  /**
    * @private the flag to group all changes into one render operation
    */
   #rendering = false;
@@ -447,6 +457,7 @@ export class LynxView extends HTMLElement {
             napiModulesMap: this.#napiModulesMap,
             lynxGroupId,
             initI18nResources: this.#initI18nResources,
+            browserConfig: this.browserConfig,
             callbacks: {
               nativeModulesCall: (
                 ...args: [name: string, data: any, moduleName: string]
