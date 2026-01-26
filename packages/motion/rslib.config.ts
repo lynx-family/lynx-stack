@@ -14,4 +14,7 @@ export default defineConfig({
     tsconfigPath: './tsconfig.build.json',
   },
   plugins: [pluginPublint()],
+  performance: {
+    buildCache: false,
+  },
 });

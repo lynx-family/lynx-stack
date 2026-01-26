@@ -44,7 +44,7 @@ export function MyComponent() {
 }
 ```
 
-For more comprehensive examples, please refer to the [examples/motion](../../examples/motion) directory in this repository.
+For more comprehensive examples, please refer to the [examples/motion](https://github.com/lynx-family/lynx-stack/tree/main/examples/motion) directory in this repository.
 
 ## Motion Mini (`@lynx-js/motion/mini`)
 
