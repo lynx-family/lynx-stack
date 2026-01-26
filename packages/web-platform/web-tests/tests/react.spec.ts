@@ -212,6 +212,16 @@ test.describe('reactlynx3 tests', () => {
         'green',
       );
     });
+
+    test('api-createLynxView-browserConfig', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const width = page.locator('#width');
+      const height = page.locator('#height');
+      await expect(width).toHaveText('1234');
+      await expect(height).toHaveText('5678');
+    });
+
     test('basic-event-dataset', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);

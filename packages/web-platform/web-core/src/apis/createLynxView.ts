@@ -33,6 +33,11 @@ export interface LynxViewConfigs {
   threadStrategy: 'all-on-ui' | 'multi-thread';
   initI18nResources: InitI18nResources;
   ssr?: SSRDumpInfo;
+  browserConfig?: {
+    pixelRatio?: number;
+    pixelWidth?: number;
+    pixelHeight?: number;
+  };
 }
 
 export interface LynxView {
@@ -64,6 +69,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
     threadStrategy = 'multi-thread',
     initI18nResources,
     ssr,
+    browserConfig,
   } = configs;
   return startUIThread(
     templateUrl,
@@ -74,9 +80,9 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
       nativeModulesMap,
       napiModulesMap,
       browserConfig: {
-        pixelRatio: window.devicePixelRatio,
-        pixelWidth: screenWidth,
-        pixelHeight: screenHeight,
+        pixelRatio: browserConfig?.pixelRatio ?? window.devicePixelRatio,
+        pixelWidth: browserConfig?.pixelWidth ?? screenWidth,
+        pixelHeight: browserConfig?.pixelHeight ?? screenHeight,
       },
       initI18nResources,
     },
