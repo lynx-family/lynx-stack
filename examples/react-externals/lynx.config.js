@@ -109,6 +109,7 @@ export default defineConfig({
           async: true,
         },
       },
+      globalObject: 'globalThis',
     }),
   ],
   environments: {

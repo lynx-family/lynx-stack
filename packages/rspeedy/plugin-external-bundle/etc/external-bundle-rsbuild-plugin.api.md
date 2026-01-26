@@ -11,6 +11,6 @@ import type { RsbuildPlugin } from '@rsbuild/core';
 export function pluginExternalBundle(options: PluginExternalBundleOptions): RsbuildPlugin;
 
 // @public
-export type PluginExternalBundleOptions = Pick<ExternalsLoadingPluginOptions, 'externals'>;
+export type PluginExternalBundleOptions = Pick<ExternalsLoadingPluginOptions, 'externals' | 'globalObject'>;
 
 ```

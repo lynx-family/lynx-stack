@@ -811,6 +811,118 @@ describe('DEV_ONLY_addSnapshot', () => {
     expect(snapshot).toHaveProperty('slot', null);
   });
 
+  it('with non-standalone lazy bundle', () => {
+    const uniqID1 = 'basic-1';
+    // We have to use `snapshotCreatorMap[uniqID1] =` so that it can be created after `initGlobalSnapshotPatch`
+    snapshotCreatorMap[uniqID1] = (uniqID1) => {
+      globalThis.createSnapshot(
+        uniqID1,
+        // The `create` function is stringified and called by `new Function()`
+        /* v8 ignore start */
+        () => {
+          const pageId = 0;
+          const el = __CreateView(pageId);
+          const el1 = __CreateText(pageId);
+          __AppendElement(el, el1);
+          const el2 = __CreateRawText('Hello, ReactLynx x Fast Refresh');
+          __AppendElement(el1, el2);
+          return [
+            el,
+            el1,
+            el2,
+          ];
+        },
+        /* v8 ignore stop */
+        null,
+        null,
+        undefined,
+        globDynamicComponentEntry,
+        null,
+        true,
+      );
+    };
+    const patch = takeGlobalSnapshotPatch();
+
+    expect(patch).toMatchInlineSnapshot(`
+      [
+        100,
+        "basic-1",
+        "(uniqID12) => {
+            globalThis.createSnapshot(
+              uniqID12,
+              // The \`create\` function is stringified and called by \`new Function()\`
+              /* v8 ignore start */
+              () => {
+                const pageId = 0;
+                const el = __CreateView(pageId);
+                const el1 = __CreateText(pageId);
+                __AppendElement(el, el1);
+                const el2 = __CreateRawText("Hello, ReactLynx x Fast Refresh");
+                __AppendElement(el1, el2);
+                return [
+                  el,
+                  el1,
+                  el2
+                ];
+              },
+              /* v8 ignore stop */
+              null,
+              null,
+              void 0,
+              globDynamicComponentEntry,
+              null,
+              true
+            );
+          }",
+      ]
+    `);
+
+    const oldDynamicComponentEntry = global.globDynamicComponentEntry;
+    global.globDynamicComponentEntry = 'https://example.com/lazy-bundle.js';
+    new SnapshotInstance(uniqID1);
+    const originalSize = snapshotManager.values.size;
+
+    {
+      const patch1 = takeGlobalSnapshotPatch();
+      expect(patch1).toMatchInlineSnapshot(`
+        [
+          102,
+          "basic-1",
+          "https://example.com/lazy-bundle.js",
+        ]
+      `);
+      global.globDynamicComponentEntry = oldDynamicComponentEntry;
+      patch.push(...patch1);
+    }
+
+    // Remove the old definition
+    snapshotManager.values.delete(uniqID1);
+    delete snapshotCreatorMap[uniqID1];
+
+    const fn = vi.fn();
+    vi.stubGlobal('__SetCSSId', fn);
+    // Apply patches in main thread
+    snapshotPatchApply(patch);
+    new SnapshotInstance(uniqID1);
+
+    expect(snapshotManager.values.size).toBe(originalSize);
+    expect(snapshotManager.values.has(uniqID1)).toBeTruthy();
+    const snapshot = snapshotManager.values.get(uniqID1);
+    expect(snapshot).toHaveProperty('create', expect.any(Function));
+    const si = new SnapshotInstance(uniqID1);
+    expect(si.ensureElements());
+    expect(si.__element_root).not.toBeUndefined();
+    expect(snapshot).toHaveProperty('update', null);
+    expect(snapshot).toHaveProperty('slot', null);
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(fn.mock.calls[0].slice(1)).toMatchInlineSnapshot(`
+      [
+        0,
+        "https://example.com/lazy-bundle.js",
+      ]
+    `);
+  });
+
   it('with update', () => {
     const uniqID1 = 'with-update-0';
     // We have to use `snapshotCreatorMap[uniqID1] =` so that it can be created after `initGlobalSnapshotPatch`

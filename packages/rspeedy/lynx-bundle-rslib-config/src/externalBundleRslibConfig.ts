@@ -71,6 +71,16 @@ export type LibOutputConfig = Required<LibConfig>['output']
 
 export interface OutputConfig extends LibOutputConfig {
   externals?: Externals
+  /**
+   * This option indicates what global object will be used to mount the library.
+   *
+   * In Lynx, the library will be mounted to `lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]` by default.
+   *
+   * If you have enabled share js context and want to reuse the library by mounting to the global object, you can set this option to `'globalThis'`.
+   *
+   * @default 'lynx'
+   */
+  globalObject?: 'lynx' | 'globalThis'
 }
 
 export interface ExternalBundleLibConfig extends LibConfig {
@@ -79,6 +89,7 @@ export interface ExternalBundleLibConfig extends LibConfig {
 
 function transformExternals(
   externals?: Externals,
+  globalObject?: string,
 ): Required<LibOutputConfig>['externals'] {
   if (!externals) return {}
 
@@ -88,7 +99,7 @@ function transformExternals(
     if (!libraryName) return callback()
 
     callback(undefined, [
-      'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
+      `${globalObject ?? 'lynx'}[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]`,
       ...(Array.isArray(libraryName) ? libraryName : [libraryName]),
     ], 'var')
   }
@@ -177,7 +188,10 @@ export function defineExternalBundleRslibConfig(
           ...userLibConfig,
           output: {
             ...userLibConfig.output,
-            externals: transformExternals(userLibConfig.output?.externals),
+            externals: transformExternals(
+              userLibConfig.output?.externals,
+              userLibConfig.output?.globalObject,
+            ),
           },
         },
       ),
