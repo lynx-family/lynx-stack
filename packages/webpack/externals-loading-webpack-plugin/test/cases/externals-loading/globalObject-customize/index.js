@@ -1,10 +1,8 @@
 import x from 'foo';
-import x2 from 'foo2';
 
 console.info(x);
-console.info(x2);
 
-it('should filter duplicate externals', async () => {
+it('should mount to externals library to globalThis', async () => {
   const fs = await import('node:fs');
   const path = await import('node:path');
 
@@ -18,13 +16,13 @@ it('should filter duplicate externals', async () => {
   );
   expect(
     background.split(
-      `lynx[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]["Foo"]`
+      `globalThis[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]["Foo"]`
         + ' = ',
     ).length - 1,
   ).toBe(1);
   expect(
     mainThread.split(
-      `lynx[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]["Foo"] `
+      `globalThis[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]["Foo"] `
         + '= ',
     ).length - 1,
   ).toBe(1);
