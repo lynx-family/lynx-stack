@@ -636,12 +636,18 @@ importers:
 
   packages/rspeedy/lynx-bundle-rslib-config:
     dependencies:
+      '@lynx-js/css-serializer':
+        specifier: workspace:*
+        version: link:../../tools/css-serializer
       '@lynx-js/runtime-wrapper-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/runtime-wrapper-webpack-plugin
       '@lynx-js/tasm':
         specifier: 0.0.20
         version: 0.0.20
+      css-tree:
+        specifier: ^3.1.0
+        version: 3.1.0
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*
@@ -655,6 +661,9 @@ importers:
       '@rslib/core':
         specifier: ^0.19.1
         version: 0.19.1(@microsoft/api-extractor@7.55.2(@types/node@24.6.1))(@typescript/native-preview@7.0.0-dev.20251106.1)(typescript@5.9.3)
+      '@types/css-tree':
+        specifier: ^2.3.11
+        version: 2.3.11
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(@vitest/ui@3.2.4)(jsdom@27.4.0)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)
