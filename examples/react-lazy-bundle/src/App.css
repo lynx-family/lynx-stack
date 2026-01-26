@@ -32,3 +32,7 @@
 text {
   color: var(--color-text);
 }
+
+.Suspense {
+  margin-top: 21px;
+}
