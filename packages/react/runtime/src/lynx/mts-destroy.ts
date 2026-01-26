@@ -15,8 +15,11 @@ export function registerDestroyMts(): void {
 
 function destroyMts(): void {
   lynx.performance.profileStart('ReactLynx::destroyMts');
-  const root = __root as SnapshotInstance;
-  root.childNodes.forEach(child => root.removeChild(child));
-  lynx.performance.profileEnd();
-  lynx.getNative().removeEventListener('__DestroyLifetime', destroyMts);
+  try {
+    const root = __root as SnapshotInstance;
+    root.childNodes.forEach(child => root.removeChild(child));
+  } finally {
+    lynx.performance.profileEnd();
+    lynx.getNative().removeEventListener('__DestroyLifetime', destroyMts);
+  }
 }

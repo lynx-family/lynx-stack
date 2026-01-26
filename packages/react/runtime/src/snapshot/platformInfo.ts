@@ -40,7 +40,10 @@ function updateListItemPlatformInfo(
   oldValue: any,
   elementIndex: number,
 ): void {
-  const newValue = ctx.__listItemPlatformInfo = ctx.__values![index] as PlatformInfo;
+  const rawValue = ctx.__values?.[index];
+  const newValue = ctx.__listItemPlatformInfo = rawValue && typeof rawValue === 'object'
+    ? (rawValue as PlatformInfo)
+    : ({} as PlatformInfo);
 
   if (__pendingListUpdates.values) {
     const list = ctx.parentNode;
@@ -57,7 +60,7 @@ function updateListItemPlatformInfo(
   // No adding / removing keys.
   if (ctx.__elements) {
     const e = ctx.__elements[elementIndex]!;
-    const value = ctx.__values![index] as Record<string, unknown>;
+    const value = newValue as unknown as Record<string, unknown>;
     for (const k in value) {
       if (platformInfoVirtualAttributes.has(k)) {
         continue;
