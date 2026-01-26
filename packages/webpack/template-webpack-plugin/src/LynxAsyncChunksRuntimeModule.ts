@@ -2,12 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RuntimeModule } from 'webpack';
+import type { Chunk, RuntimeModule } from 'webpack';
 
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 type LynxAsyncChunksRuntimeModule = new(
-  getChunkName: (chunkName: string) => string,
+  getChunkName: (chunkName: string, chunk: Chunk) => string,
 ) => RuntimeModule;
 
 export function createLynxAsyncChunksRuntimeModule(
@@ -15,7 +15,7 @@ export function createLynxAsyncChunksRuntimeModule(
 ): LynxAsyncChunksRuntimeModule {
   return class LynxAsyncChunksRuntimeModule extends webpack.RuntimeModule {
     constructor(
-      public getChunkName: (chunkName: string) => string,
+      public getChunkName: (chunkName: string, chunk: Chunk) => string,
     ) {
       super('Lynx async chunks', webpack.RuntimeModule.STAGE_ATTACH);
     }
@@ -29,7 +29,7 @@ ${RuntimeGlobals.lynxAsyncChunkIds} = {${
         Array.from(chunk.getAllAsyncChunks())
           .filter(c => c.name !== null && c.name !== undefined)
           .map(c => {
-            const filename = this.getChunkName(c.name!);
+            const filename = this.getChunkName(c.name!, c);
 
             // Modified from https://github.com/webpack/webpack/blob/11449f02175f055a4540d76aa4478958c4cb297e/lib/runtime/GetChunkFilenameRuntimeModule.js#L154-L157
             const chunkPath = compilation.getPath(filename, {
