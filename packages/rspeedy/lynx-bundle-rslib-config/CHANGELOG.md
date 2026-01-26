@@ -1,5 +1,11 @@
 # @lynx-js/lynx-bundle-rslib-config
 
+## 0.2.1
+
+### Patch Changes
+
+- Add [`globalObject`](https://webpack.js.org/configuration/output/#outputglobalobject) config for external bundle loading, user can configure it to `globalThis` for BTS external bundle sharing. ([#2123](https://github.com/lynx-family/lynx-stack/pull/2123))
+
 ## 0.2.0
 
 ### Minor Changes
