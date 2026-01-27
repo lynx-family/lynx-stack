@@ -23,10 +23,7 @@ import { ExposureServices } from './ExposureServices.js';
 import { createElementAPI } from './elementAPIs/createElementAPI.js';
 import { createMainThreadGlobalAPIs } from './createMainThreadGlobalAPIs.js';
 import { templateManager } from './TemplateManager.js';
-import {
-  loadAllWebElements,
-  loadWebElement,
-} from '../webElementsDynamicLoader.js';
+import { loadAllWebElements } from '../webElementsDynamicLoader.js';
 import type { LynxViewElement } from './LynxView.js';
 import { templateManagerWasm } from '../wasm.js';
 
@@ -216,13 +213,6 @@ export class LynxViewInstance implements AsyncDisposable {
       btsUrls,
     );
     this.backgroundThread.startBTS();
-  }
-
-  loadWebElement(id: number) {
-    const loadPromise = loadWebElement(id);
-    if (loadPromise) {
-      this.webElementsLoadingPromises.push(loadPromise);
-    }
   }
 
   loadUnknownElement(tagName: string) {

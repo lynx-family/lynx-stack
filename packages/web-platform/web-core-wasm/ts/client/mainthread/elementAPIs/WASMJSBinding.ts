@@ -20,8 +20,6 @@ export type WASMJSBindingInjectedHandler = {
   rootDom: ShadowRoot;
   backgroundThread: BackgroundThread;
   exposureServices: ExposureServices;
-  loadWebElement: (elementId: number) => void;
-  loadUnknownElement: (tagName: string) => void;
   mainThreadGlobalThis: MainThreadGlobalThis;
 };
 
@@ -33,12 +31,6 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   constructor(
     public readonly lynxViewInstance: WASMJSBindingInjectedHandler,
   ) {
-    this.loadInternalWebElement = this.lynxViewInstance.loadWebElement.bind(
-      this.lynxViewInstance,
-    );
-    this.loadUnknownElement = this.lynxViewInstance.loadUnknownElement.bind(
-      this.lynxViewInstance,
-    );
   }
   markExposureRelatedElementByUniqueId(
     element: HTMLElement,
@@ -54,10 +46,6 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
       }
     }
   }
-
-  loadInternalWebElement: (elementId: number) => void;
-
-  loadUnknownElement: (tagName: string) => void;
 
   generateTargetObject(
     element: DecoratedHTMLElement,

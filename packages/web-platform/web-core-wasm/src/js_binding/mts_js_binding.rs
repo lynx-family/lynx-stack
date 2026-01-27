@@ -36,19 +36,6 @@ extern "C" {
   #[wasm_bindgen(method, js_name = "addEventListener")]
   pub fn add_event_listener(this: &RustMainthreadContextBinding, event_name: &str);
 
-  #[wasm_bindgen(method, js_name = "loadInternalWebElement")]
-  pub fn load_internal_web_element(this: &RustMainthreadContextBinding, element_id: usize);
-
-  #[wasm_bindgen(method, js_name = "loadUnknownElement")]
-  pub fn load_unknown_element(this: &RustMainthreadContextBinding, element_tag: &str);
-
-  #[wasm_bindgen(method, js_name = "markExposureRelatedElementByUniqueId")]
-  pub fn mark_exposure_related_element_by_unique_id(
-    this: &RustMainthreadContextBinding,
-    element: &web_sys::HtmlElement,
-    to_enable: bool,
-  );
-
   #[wasm_bindgen(method, js_name = "enableElementEvent")]
   pub fn enable_element_event(
     this: &RustMainthreadContextBinding,
