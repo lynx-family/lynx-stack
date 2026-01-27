@@ -696,7 +696,9 @@ class LynxTemplatePluginImpl {
 
           const asyncAssetsInfoByGroups = this.#getAssetsInformationByFilenames(
             compilation,
-            chunkGroups.flatMap(cg => cg.getFiles()),
+            chunkGroups.flatMap(cg => cg.getFiles()).filter(chunkFile =>
+              predicateNonHotModuleReplacementAsset(chunkFile, compilation)
+            ),
           );
 
           return this.#encodeByAssetsInformation(
@@ -961,17 +963,9 @@ class LynxTemplatePluginImpl {
       /** entryPointUnfilteredFiles - also includes hot module update files */
       const entryPointUnfilteredFiles = compilation.entrypoints.get(entryName)!
         .getFiles();
-      return entryPointUnfilteredFiles.filter((chunkFile) => {
-        const asset = compilation.getAsset(chunkFile);
-
-        // Prevent hot-module files from being included:
-        const assetMetaInformation = asset?.info ?? {};
-
-        return !(
-          assetMetaInformation.hotModuleReplacement
-            ?? assetMetaInformation.development
-        );
-      });
+      return entryPointUnfilteredFiles.filter((chunkFile) =>
+        predicateNonHotModuleReplacementAsset(chunkFile, compilation)
+      );
     });
 
     return this.#getAssetsInformationByFilenames(compilation, filenames);
@@ -1051,4 +1045,19 @@ export function isDebug(): boolean {
 
 export function isRsdoctor(): boolean {
   return process.env['RSDOCTOR'] === 'true';
+}
+
+export function predicateNonHotModuleReplacementAsset(
+  chunkFile: string,
+  compilation: Compilation,
+): boolean {
+  const asset = compilation.getAsset(chunkFile);
+
+  // Prevent hot-module files from being included:
+  const assetMetaInformation = asset?.info ?? {};
+
+  return !(
+    assetMetaInformation.hotModuleReplacement
+      ?? assetMetaInformation.development
+  );
 }
