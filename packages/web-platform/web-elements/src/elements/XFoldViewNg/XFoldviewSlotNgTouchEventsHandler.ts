@@ -22,7 +22,7 @@ export class XFoldviewSlotNgTouchEventsHandler
   constructor(dom: XFoldviewSlotNg) {
     this.#dom = dom;
 
-    this.#dom.addEventListener('touchmove', this.#scroller, {
+    this.#dom.addEventListener('touchmove', this.#handleTouch, {
       passive: false,
     });
 
@@ -64,7 +64,7 @@ export class XFoldviewSlotNgTouchEventsHandler
     scrollableKid.scrollTop = targetKidScrollDistance;
   }
 
-  #scroller = (event: TouchEvent) => {
+  #handleTouch = (event: TouchEvent) => {
     const parentElement = this.#getParentElement();
     if (!parentElement) {
       return;
@@ -82,9 +82,8 @@ export class XFoldviewSlotNgTouchEventsHandler
     if (event.cancelable) {
       event.preventDefault();
     }
-    this.#handleScrollDelta(deltaY, parentElement, true, false);
+    this.#handleScrollDelta(deltaY, parentElement);
     this.#previousPageY = pageY;
-    this.#deltaY = deltaY;
   };
 
   #handleWheel = (event: WheelEvent) => {
@@ -114,8 +113,7 @@ export class XFoldviewSlotNgTouchEventsHandler
     if (event.cancelable) {
       event.preventDefault();
     }
-    this.#handleScrollDelta(event.deltaY, parentElement, true, true);
-    this.#deltaY = event.deltaY;
+    this.#handleScrollDelta(event.deltaY, parentElement);
   };
 
   #getParentElement(): XFoldviewNg | void {
@@ -160,12 +158,7 @@ export class XFoldviewSlotNgTouchEventsHandler
   #handleScrollDelta(
     deltaY: number,
     parentElement: XFoldviewNg,
-    smoothParent: boolean,
-    allowRemainderToChild: boolean,
   ) {
-    if (deltaY === 0) {
-      return;
-    }
     const scrollableKidY = this.#getTheMostScrollableKid(deltaY);
     if (
       (parentElement[isHeaderShowing] && deltaY > 0
@@ -175,36 +168,17 @@ export class XFoldviewSlotNgTouchEventsHandler
       || (!parentElement[isHeaderShowing] && !scrollableKidY)
       // all sub doms are scrolled
     ) {
-      if (!allowRemainderToChild) {
-        parentElement.scrollBy({
-          top: deltaY,
-          behavior: smoothParent ? 'smooth' : 'auto',
-        });
-        this.#parentScrollTop += deltaY;
-        parentElement.scrollTop = this.#parentScrollTop;
-        this.#currentScrollingElement = parentElement;
-        return;
-      }
-      const previousScrollTop = this.#parentScrollTop;
+      parentElement.scrollBy({
+        top: deltaY,
+        behavior: 'smooth',
+      });
       this.#parentScrollTop += deltaY;
       parentElement.scrollTop = this.#parentScrollTop;
-      const flingDelta = parentElement.scrollTop - previousScrollTop;
-      this.#parentScrollTop = parentElement.scrollTop;
-      if (smoothParent && flingDelta !== 0) {
-        parentElement.scrollBy({
-          top: flingDelta,
-          behavior: 'smooth',
-        });
-      }
       this.#currentScrollingElement = parentElement;
-      const remainingDelta = deltaY - flingDelta;
-      if (remainingDelta !== 0 && scrollableKidY) {
-        this.#currentScrollingElement = scrollableKidY;
-        this.#scrollKid(scrollableKidY, remainingDelta);
-      }
     } else if (scrollableKidY) {
       this.#currentScrollingElement = scrollableKidY;
       this.#scrollKid(scrollableKidY, deltaY);
     }
+    this.#deltaY = deltaY;
   }
 }
