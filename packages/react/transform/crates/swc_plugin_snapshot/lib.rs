@@ -664,14 +664,12 @@ where
                         })) => {
                           let expr = &**expr;
                           if is_literal(expr) {
-                            let s = get_string_inline_style_from_literal(expr, span);
-
-                            if s.is_some() {
+                            if let Some(s) = get_string_inline_style_from_literal(expr, span) {
                               // <view style={{backgroundColor: "red"}} />;
                               // <view style={`background-color: red;`} />;
                               let s = Lit::Str(Str {
                                 span: *span,
-                                value: s.unwrap().into(),
+                                value: s.into(),
                                 raw: None,
                               });
                               let stmt = quote!(

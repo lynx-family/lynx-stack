@@ -557,11 +557,11 @@ where
         });
       }
 
-      n.src = Box::new(Str {
+      *n.src = Str {
         span: DUMMY_SP,
         raw: None,
         value: format!("{}/legacy-react-runtime", self.opts.new_runtime_pkg.clone()).into(),
-      });
+      };
 
       self.is_old_runtime_pkg = true;
     }
