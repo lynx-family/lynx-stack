@@ -4,6 +4,7 @@
 
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
+import * as path from 'node:path';
 
 import type { Chunk, Compilation, Compiler } from '@rspack/core';
 import invariant from 'tiny-invariant';
@@ -313,13 +314,56 @@ class ReactWebpackPlugin {
       });
 
       // The react-transform will add `-react__${LAYER}` to the webpackChunkName.
-      // We replace it with an empty string here to make sure main-thread & background chunk match.
+      // We normalize the chunk name using the resolved module path to ensure
+      // that the same file imported via different paths produces a single bundle.
+      // See: https://github.com/lynx-family/lynx-stack/issues/455
       hooks.asyncChunkName.tap(
         this.constructor.name,
-        (chunkName) =>
-          chunkName
+        (chunkName, chunkGroup) => {
+          // First strip the layer suffix from the chunk name
+          const nameWithoutLayer = chunkName
             ?.replaceAll(`-react__background`, '')
-            ?.replaceAll(`-react__main-thread`, ''),
+            ?.replaceAll(`-react__main-thread`, '');
+
+          // Try to normalize using ChunkGroup origin information
+          // The origin contains the import request and the module that made the import
+          if (chunkGroup && chunkGroup.origins.length > 0) {
+            const origin = chunkGroup.origins[0];
+            // origin.module is the module that contains the import() statement
+            // origin.request is the original import string (e.g., './Foo.jsx')
+            if (origin?.module && origin.request) {
+              // Get the absolute path of the importing module directly from webpack
+              // The 'resource' property contains the resolved absolute path
+              const mod = origin.module as { resource?: string };
+              const importerPath = mod.resource;
+
+              if (!importerPath) {
+                return nameWithoutLayer;
+              }
+
+              // Only normalize relative imports (starting with . or ..)
+              if (
+                !origin.request.startsWith('./')
+                && !origin.request.startsWith('../')
+              ) {
+                return nameWithoutLayer;
+              }
+
+              // Resolve the import request relative to the importer's directory
+              const importerDir = path.dirname(importerPath);
+              const resolvedPath = path.resolve(importerDir, origin.request);
+
+              // Calculate relative path from project root (keep extension)
+              const rootContext = compilation.compiler.context;
+              const relativePath = path.relative(rootContext, resolvedPath);
+
+              return './' + relativePath;
+            }
+          }
+
+          // Fallback to the original behavior if no origin info available
+          return nameWithoutLayer;
+        },
       );
     });
   }

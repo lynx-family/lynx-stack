@@ -84,9 +84,12 @@ export interface TemplateHooks {
   /**
    * Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template.
    *
+   * @param chunkName - The original chunk name from webpackChunkName comment
+   * @param chunkGroup - The ChunkGroup containing module information for path normalization
+   *
    * @alpha
    */
-  asyncChunkName: SyncWaterfallHook<string>;
+  asyncChunkName: SyncWaterfallHook<[string, ChunkGroup | undefined]>;
 
   /**
    * Called before the encode process. Can be used to modify the encode options.
@@ -143,7 +146,7 @@ export interface TemplateHooks {
  */
 function createLynxTemplatePluginHooks(): TemplateHooks {
   return {
-    asyncChunkName: new SyncWaterfallHook(['pluginArgs']),
+    asyncChunkName: new SyncWaterfallHook(['chunkName', 'chunkGroup']),
     beforeEncode: new AsyncSeriesWaterfallHook(['pluginArgs']),
     encode: new AsyncSeriesBailHook(['pluginArgs']),
     beforeEmit: new AsyncSeriesWaterfallHook(['pluginArgs']),
@@ -545,8 +548,12 @@ class LynxTemplatePluginImpl {
 
         compilation.addRuntimeModule(
           chunk,
-          new LynxAsyncChunksRuntimeModule((chunkName) => {
-            const filename = hooks.asyncChunkName.call(chunkName);
+          new LynxAsyncChunksRuntimeModule((chunkName, asyncChunk) => {
+            // Find the ChunkGroup for this chunk to pass to the hook
+            const chunkGroup = compilation.chunkGroups.find(
+              cg => cg.chunks.includes(asyncChunk) && cg.name === chunkName,
+            );
+            const filename = hooks.asyncChunkName.call(chunkName, chunkGroup);
 
             return this.#getAsyncFilenameTemplate(filename);
           }),
@@ -636,7 +643,7 @@ class LynxTemplatePluginImpl {
       compilation.chunkGroups
         .filter(cg => !cg.isInitial())
         .filter(cg => cg.name !== null && cg.name !== undefined),
-      cg => hooks.asyncChunkName.call(cg.name!),
+      cg => hooks.asyncChunkName.call(cg.name!, cg),
     );
 
     LynxTemplatePluginImpl.#asyncChunkGroups.set(compilation, asyncChunkGroups);
@@ -676,7 +683,7 @@ class LynxTemplatePluginImpl {
             // We use the chunk name(provided by `webpackChunkName`) as filename
             chunkGroups
               .filter(cg => cg.name !== null && cg.name !== undefined)
-              .map(cg => hooks.asyncChunkName.call(cg.name!));
+              .map(cg => hooks.asyncChunkName.call(cg.name!, cg));
 
           const filename = Array.from(new Set(chunkNames)).join('_');
 
