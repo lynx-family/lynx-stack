@@ -75,9 +75,9 @@ impl StyleInfoDecoder {
               style_rule.prelude.selector_list.iter_mut().enumerate()
             {
               /*
-               1. for :root selector section, we should transform it to [lynx-tag="page"] and move it to the start of the current compound selector
+               1. for :root selector section, we should transform it to [part="page"] and move it to the start of the current compound selector
                2. for ::placeholder selector section, we should transform it to ::part(placeholder)::placeholder
-               3. for type selector section, we should transform it to [lynx-tag="type"]
+               3. for type selector section, we should transform it to [part="type"]
                4 if enableCSSSelector is false:
                  4.1 if the current selector has only one class selector, we extract the class selector name and use it to map to the declarations in css_og_css_id_to_class_selector_name_to_declarations_map
                      the declarations should be transformed by calling transform_one_declaration function.

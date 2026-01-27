@@ -15,7 +15,7 @@ type StyleInfo = Record<string, OneInfo>;
 
 export function loadStyleFromJSON(
   styleInfo: StyleInfo,
-  configEnableCssSelector: boolean,
+  configEnableCSSSelector: boolean,
   entryName?: string,
 ): Uint8Array {
   const rawStyleInfo = new wasmInstance.RawStyleInfo();
@@ -92,7 +92,7 @@ export function loadStyleFromJSON(
 
   return wasmInstance.encode_legacy_json_generated_raw_style_info(
     rawStyleInfo,
-    configEnableCssSelector,
+    configEnableCSSSelector,
     entryName,
   );
 }

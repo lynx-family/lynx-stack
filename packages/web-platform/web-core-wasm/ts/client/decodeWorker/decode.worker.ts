@@ -348,6 +348,9 @@ async function handleJSON(
   if (overrideConfig) {
     config = { ...config, ...overrideConfig };
   }
+  config = Object.fromEntries(
+    Object.entries(config).map(([key, value]) => [key, value.toString()]),
+  );
   postMessage({
     type: 'section',
     label: TemplateSectionLabel.Configurations,
@@ -437,7 +440,7 @@ async function handleJSON(
   }
 
   // ElementTemplates
-  if (json.elementTemplates) {
+  if (json.elementTemplates && Object.keys(json.elementTemplates).length > 0) {
     // TemplateManager expects Uint8Array for ElementTemplates.
     // We can't support this easily for JSON.
     throw new Error(
