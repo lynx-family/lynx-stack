@@ -175,6 +175,16 @@ export class XFoldviewSlotNgTouchEventsHandler
       || (!parentElement[isHeaderShowing] && !scrollableKidY)
       // all sub doms are scrolled
     ) {
+      if (!allowRemainderToChild) {
+        parentElement.scrollBy({
+          top: deltaY,
+          behavior: smoothParent ? 'smooth' : 'auto',
+        });
+        this.#parentScrollTop += deltaY;
+        parentElement.scrollTop = this.#parentScrollTop;
+        this.#currentScrollingElement = parentElement;
+        return;
+      }
       const previousScrollTop = this.#parentScrollTop;
       this.#parentScrollTop += deltaY;
       parentElement.scrollTop = this.#parentScrollTop;
@@ -187,12 +197,10 @@ export class XFoldviewSlotNgTouchEventsHandler
         });
       }
       this.#currentScrollingElement = parentElement;
-      if (allowRemainderToChild) {
-        const remainingDelta = deltaY - flingDelta;
-        if (remainingDelta !== 0 && scrollableKidY) {
-          this.#currentScrollingElement = scrollableKidY;
-          this.#scrollKid(scrollableKidY, remainingDelta);
-        }
+      const remainingDelta = deltaY - flingDelta;
+      if (remainingDelta !== 0 && scrollableKidY) {
+        this.#currentScrollingElement = scrollableKidY;
+        this.#scrollKid(scrollableKidY, remainingDelta);
       }
     } else if (scrollableKidY) {
       this.#currentScrollingElement = scrollableKidY;
