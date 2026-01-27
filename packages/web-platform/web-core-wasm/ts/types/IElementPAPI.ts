@@ -323,7 +323,7 @@ export type QueryComponentPAPI = (
   }) => void,
 ) => null;
 export interface ElementPAPIs {
-  __ElementFromBinary: ElementFromBinaryPAPI;
+  // __ElementFromBinary: ElementFromBinaryPAPI;
 
   // __GetTemplateParts currently only provided by the thread-strategy = "all-on-ui" (default)
   __GetTemplateParts: GetTemplatePartsPAPI;

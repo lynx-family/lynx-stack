@@ -123,7 +123,6 @@ export class LynxViewInstance implements AsyncDisposable {
     Object.assign(
       this.mtsRealm.globalWindow,
       createElementAPI(
-        this.templateUrl,
         this.rootDom,
         this.mtsWasmBinding,
         enableCSSSelector,

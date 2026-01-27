@@ -1,4 +1,4 @@
-import { wasmInstance, templateManagerWasm } from '../../wasm.js';
+import { wasmInstance } from '../../wasm.js';
 
 import {
   LYNX_TAG_TO_HTML_TAG_MAP,
@@ -64,7 +64,6 @@ const {
 } = wasmInstance;
 
 export function createElementAPI(
-  entryTemplateUrl: string,
   rootDom: ShadowRoot,
   mtsBinding: WASMJSBinding,
   config_enable_css_selector: boolean,
@@ -73,10 +72,8 @@ export function createElementAPI(
 ): ElementPAPIs {
   rootDom.append(linkElement.cloneNode(false));
   const wasmContext = new MainThreadWasmContext(
-    document,
     rootDom,
     mtsBinding,
-    uniqueIdSymbol,
     config_enable_css_selector,
   );
   mtsBinding.wasmContext = wasmContext;
@@ -253,16 +250,6 @@ export function createElementAPI(
       page = dom;
       return dom;
     },
-    __ElementFromBinary(templateId, parentComponentUniqueId) {
-      let template_root = wasmContext._wasm_elementFromBinary(
-        parentComponentUniqueId,
-        entryTemplateUrl,
-        templateId,
-        templateManagerWasm!,
-      ) as HTMLElement;
-      __MarkTemplateElement(template_root);
-      return template_root;
-    },
     __SetClasses: config_enable_css_selector
       ? __SetClasses
       : ((element, classname) => {
@@ -317,7 +304,7 @@ export function createElementAPI(
         } else {
           get_inline_styles_in_key_value_vec(
             element,
-            Object.entries(value).flat(),
+            Object.entries(value).flat().map((item) => item.toString()),
           );
         }
       }
