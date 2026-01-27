@@ -105,9 +105,12 @@ export function animate(
     resolvePromise = resolve;
   });
 
+  let detach: (() => void) | undefined;
+
   const controls = {
     stop: () => {
       canceled = true;
+      detach?.();
     },
     then: (cb: () => void) => {
       controls.onFinish = cb;
@@ -120,7 +123,6 @@ export function animate(
   const duration = options.duration ?? 0.3;
   const ease = options.ease ?? easeOut;
 
-  let detach: (() => void) | undefined;
   if (
     typeof value === 'object' && value && 'attach' in value
     && typeof value.attach === 'function'

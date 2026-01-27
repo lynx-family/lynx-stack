@@ -26,5 +26,4 @@ declare global {
 }
 
 // We use globalThis trick to get over with closure capture
-// @TODO: Remove this when ReactLynx supports importing MTS for module
 globalThis.runOnRegistered = runOnRegistered;

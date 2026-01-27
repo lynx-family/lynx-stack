@@ -16,6 +16,5 @@ export function spring(
   ...args: Parameters<typeof spring_>
 ): ReturnType<typeof spring_> {
   'main thread';
-  // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
   return globalThis.runOnRegistered<typeof spring_>(springHandle)(...args);
 }

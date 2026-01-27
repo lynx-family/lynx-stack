@@ -27,6 +27,7 @@ import type {
   AnimationPlaybackControlsWithThen,
   AnyResolvedKeyframe,
   DOMKeyframesDefinition,
+  ElementOrSelector,
   MapInputRange,
   Mixer,
   MotionValue,
@@ -128,13 +129,25 @@ function animate<O extends {}>(
 ): AnimationPlaybackControlsWithThen {
   'main thread';
 
-  const realSubjectOrSequence =
-    elementOrSelector2Dom(subjectOrSequence as ElementOrElements)
-      ?? (subjectOrSequence as unknown);
+  // When animating a value (string/number), we shouldn't attempt to resolve it as a selector.
+  // Value animations use an array or primitive as the second argument (optionsOrKeyframes).
+  // Element animations use an object as the second argument (styles/keyframes).
+  const isStringSubject = typeof subjectOrSequence === 'string';
+  const isKeyframesObject = typeof optionsOrKeyframes === 'object'
+    && optionsOrKeyframes !== null
+    && !Array.isArray(optionsOrKeyframes);
 
-  // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
+  let realSubjectOrSequence: typeof subjectOrSequence | ElementOrSelector =
+    subjectOrSequence;
+
+  if (!isStringSubject || isKeyframesObject) {
+    realSubjectOrSequence =
+      elementOrSelector2Dom(subjectOrSequence as ElementOrElements)
+        ?? subjectOrSequence;
+  }
+
   return animate_(
-    // @ts-expect-error expected
+    // @ts-expect-error match overload
     realSubjectOrSequence,
     optionsOrKeyframes,
     options,
@@ -145,7 +158,6 @@ function stagger(
   ...args: Parameters<typeof stagger_>
 ): ReturnType<typeof stagger_> {
   'main thread';
-  // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
   return stagger_(
     ...args,
   );
@@ -156,7 +168,6 @@ function motionValue<V>(
   options?: MotionValueOptions,
 ): MotionValue<V> {
   'main thread';
-  // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
   return motionValue_(
     init,
     options,
@@ -167,7 +178,6 @@ function spring(
   ...args: Parameters<typeof spring_>
 ): ReturnType<typeof spring_> {
   'main thread';
-  // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
   return spring_(...args);
 }
 
@@ -176,7 +186,6 @@ function springValue<T extends AnyResolvedKeyframe>(
   options?: SpringOptions,
 ): MotionValue<T> {
   'main thread';
-  // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
   return springValue_(
     source,
     options,
@@ -187,8 +196,6 @@ function mix<T>(from: T, to: T): Mixer<T>;
 function mix(from: number, to: number, p: number): number;
 function mix<T>(from: T, to: T, p?: T): Mixer<T> | number {
   'main thread';
-  // @TODO: Remove the globalThis trick when MTS can treat a module as MTS module
-
   return mix_(
     // @ts-expect-error expected
     from,
