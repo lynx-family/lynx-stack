@@ -165,12 +165,15 @@ impl ExtractingIdentsCollector {
       .into()
     };
 
-    if prop.is_some() {
-      if path.len() == 1 {
-        *prop.unwrap() = new_prop;
+    match prop {
+      Some(prop) => {
+        if path.len() == 1 {
+          *prop = new_prop;
+        }
       }
-    } else {
-      props.push(new_prop);
+      None => {
+        props.push(new_prop);
+      }
     }
 
     if path.len() > 1 {
