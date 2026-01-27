@@ -103,6 +103,7 @@ This package uses a hybrid build system involving `pnpm`, `rsbuild`, and `cargo`
 - **`tests/element-apis.spec.ts`**: A key test file. It validates the `MainThreadWasmContext` logic by mocking the Wasm binding entirely in JavaScript (`WASMJSBinding.ts`). This allows testing DOM manipulation logic without loading the actual Wasm binary in every test.
 - **`tests/encode.spec.ts`**: Verifies that the CSS encoder correctly serializes various CSS rules.
 - **`tests/lazy-load.spec.ts`**: Ensures that custom elements are loaded dynamically only when needed.
+- **Rust Tests**: run `cargo test --all-features` and `cargo test --target wasm32-unknown-unknown --all-features` separately.
 
 ## Guidelines for LLMs
 

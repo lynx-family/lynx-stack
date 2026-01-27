@@ -23,10 +23,10 @@ pub struct LynxElementData {
   pub(crate) dataset: Option<js_sys::Object>,
   pub(crate) component_config: Option<js_sys::Object>,
   pub(crate) event_handlers_map: Option<FnvHashMap<String, EventHandler>>,
-  /**
-   * Whether the exposure-id attribute has been assigned
-   */
-  pub(crate) exposure_id_assigned: bool,
+  // /**
+  //  * Whether the exposure-id attribute has been assigned
+  //  */
+  // pub(crate) exposure_id_assigned: bool,
 }
 
 impl LynxElementData {
@@ -42,41 +42,41 @@ impl LynxElementData {
       dataset: None,
       component_config: None,
       event_handlers_map: None,
-      exposure_id_assigned: false,
+      // exposure_id_assigned: false,
     }
   }
 
-  pub(crate) fn clone_node(&self, parent_component_unique_id: usize, css_id: i32) -> Self {
-    LynxElementData {
-      parent_component_unique_id,
-      css_id,
-      dataset: self
-        .dataset
-        .as_ref()
-        .map(|dataset| js_sys::Object::assign(&js_sys::Object::default(), dataset)),
-      component_config: self.component_config.as_ref().map(|component_config| {
-        js_sys::Object::assign(&js_sys::Object::default(), component_config)
-      }),
-      component_id: self.component_id.clone(),
-      event_handlers_map: self.event_handlers_map.clone(),
-      exposure_id_assigned: self.exposure_id_assigned,
-    }
-  }
+  // pub(crate) fn clone_node(&self, parent_component_unique_id: usize, css_id: i32) -> Self {
+  //   LynxElementData {
+  //     parent_component_unique_id,
+  //     css_id,
+  //     dataset: self
+  //       .dataset
+  //       .as_ref()
+  //       .map(|dataset| js_sys::Object::assign(&js_sys::Object::default(), dataset)),
+  //     component_config: self.component_config.as_ref().map(|component_config| {
+  //       js_sys::Object::assign(&js_sys::Object::default(), component_config)
+  //     }),
+  //     component_id: self.component_id.clone(),
+  //     event_handlers_map: self.event_handlers_map.clone(),
+  //     exposure_id_assigned: self.exposure_id_assigned,
+  //   }
+  // }
 
-  /**
-   * There are two conditions to enable exposure/disexposure(InsectionObserver) detection:
-   * 1. an element has exposure-id attribute
-   * 2. an element has 'appear'/'disappear' event listener added
-   */
-  pub(crate) fn should_enable_exposure_event(&self) -> bool {
-    self.exposure_id_assigned || {
-      if let Some(event_handlers_map) = &self.event_handlers_map {
-        event_handlers_map.contains_key("appear") || event_handlers_map.contains_key("disappear")
-      } else {
-        false
-      }
-    }
-  }
+  // /**
+  //  * There are two conditions to enable exposure/disexposure(InsectionObserver) detection:
+  //  * 1. an element has exposure-id attribute
+  //  * 2. an element has 'appear'/'disappear' event listener added
+  //  */
+  // pub(crate) fn should_enable_exposure_event(&self) -> bool {
+  //   self.exposure_id_assigned || {
+  //     if let Some(event_handlers_map) = &self.event_handlers_map {
+  //       event_handlers_map.contains_key("appear") || event_handlers_map.contains_key("disappear")
+  //     } else {
+  //       false
+  //     }
+  //   }
+  // }
 
   pub(crate) fn get_framework_cross_thread_event_handler(
     &self,

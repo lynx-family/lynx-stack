@@ -34,7 +34,7 @@ export class MainThreadWasmContext {
     get_event(unique_id: number, event_name: string, event_type: string): any;
     get_events(unique_id: number): EventInfo[];
     get_unique_id_by_component_id(component_id: string): number | undefined;
-    constructor(document: Document, root_node: Node, mts_binding: any, unique_id_symbol: any, config_enable_css_selector: boolean);
+    constructor(root_node: Node, mts_binding: any, config_enable_css_selector: boolean);
     push_style_sheet(template_manager: TemplateManager, entry_name: string, is_entry_template: boolean): void;
     /**
      *
@@ -191,6 +191,21 @@ export interface InitOutput {
     readonly __wbg_get_eventinfo_name: (a: number) => [number, number];
     readonly __wbg_get_eventinfo_type: (a: number) => [number, number];
     readonly __wbg_mainthreadwasmcontext_free: (a: number, b: number) => void;
+    readonly mainthreadwasmcontext_new: (a: any, b: any, c: number) => number;
+    readonly mainthreadwasmcontext_push_style_sheet: (a: number, b: number, c: number, d: number, e: number) => void;
+    readonly mainthreadwasmcontext_set_page_element_unique_id: (a: number, b: number) => void;
+    readonly mainthreadwasmcontext_create_element_common: (a: number, b: number, c: any, d: number, e: number, f: number) => number;
+    readonly mainthreadwasmcontext_get_dom_by_unique_id: (a: number, b: number) => any;
+    readonly mainthreadwasmcontext_take_timing_flags: (a: number) => [number, number];
+    readonly mainthreadwasmcontext_get_unique_id_by_component_id: (a: number, b: number, c: number) => number;
+    readonly mainthreadwasmcontext_get_css_id_by_unique_id: (a: number, b: number) => number;
+    readonly __wbg_templatemanager_free: (a: number, b: number) => void;
+    readonly templatemanager_new: () => number;
+    readonly templatemanager_add_style_info: (a: number, b: number, c: number, d: any, e: any) => [number, number];
+    readonly decode_style_info: (a: any, b: number, c: number, d: number) => [number, number, number];
+    readonly encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number) => [number, number, number];
+    readonly get_style_content: (a: any) => [number, number, number, number];
+    readonly get_font_face_content: (a: any) => [number, number, number, number];
     readonly __wbg_rawstyleinfo_free: (a: number, b: number) => void;
     readonly __wbg_rule_free: (a: number, b: number) => void;
     readonly __wbg_ruleprelude_free: (a: number, b: number) => void;

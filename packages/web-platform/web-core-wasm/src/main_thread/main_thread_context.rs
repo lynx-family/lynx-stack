@@ -16,11 +16,8 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct MainThreadWasmContext {
-  pub(super) root_node: web_sys::Node,
-  pub(super) document: web_sys::Document,
   pub(super) unique_id_to_element_map: Vec<Option<Rc<RefCell<Box<LynxElementData>>>>>,
   pub(super) unique_id_to_dom_map: FnvHashMap<usize, web_sys::HtmlElement>,
-  pub(super) unique_id_symbol: wasm_bindgen::JsValue,
   pub(super) timing_flags: Vec<String>,
 
   pub(super) enabled_events: FnvHashSet<String>,
@@ -46,21 +43,15 @@ impl MainThreadWasmContext {
 impl MainThreadWasmContext {
   #[wasm_bindgen(constructor)]
   pub fn new(
-    document: web_sys::Document,
     root_node: web_sys::Node,
     mts_binding: RustMainthreadContextBinding,
-    unique_id_symbol: wasm_bindgen::JsValue,
     config_enable_css_selector: bool,
   ) -> MainThreadWasmContext {
     let style_manager = StyleManager::new(root_node.clone());
     MainThreadWasmContext {
-      root_node,
-      document,
       mts_binding,
-
       unique_id_to_element_map: vec![None],
       unique_id_to_dom_map: FnvHashMap::default(),
-      unique_id_symbol,
       enabled_events: FnvHashSet::default(),
       timing_flags: vec![],
       page_element_unique_id: None,

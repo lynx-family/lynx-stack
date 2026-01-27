@@ -8,14 +8,12 @@ mod constants;
 pub mod css_tokenizer;
 #[cfg(feature = "client")]
 mod js_binding;
-mod leo_asm;
 #[cfg(feature = "client")]
 mod main_thread;
 mod style_transformer;
 mod template;
 pub mod utils;
 
-pub use leo_asm::Operation;
 #[cfg(feature = "client")]
 pub use main_thread::{
   element_apis::{

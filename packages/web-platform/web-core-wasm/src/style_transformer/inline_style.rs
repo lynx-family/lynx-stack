@@ -4,7 +4,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 use super::transformer::StyleTransformer;
-use crate::template::template_sections::style_info::css_property::CSSProperty;
 use crate::{
   style_transformer::transformer::Generator, utils::hyphenate_style_name::hyphenate_style_name,
 };
@@ -42,7 +41,7 @@ pub(crate) fn transform_inline_style_key_value_vec(source: Vec<String>) -> Strin
       key = value;
     } else {
       let name = hyphenate_style_name(&key);
-      transformer.on_declaration_parsed(CSSProperty::parse(&name), value, false);
+      transformer.on_declaration_parsed(name.into(), value, false);
     }
   }
 

@@ -74,7 +74,7 @@ pub fn add_inline_style_raw_string_key(
   value: Option<String>,
 ) {
   if let Some(value) = value {
-    let property_id = CSSProperty::parse(key);
+    let property_id: CSSProperty = key.into();
     let (transformed, _) = query_transform_rules(&property_id, &value);
     let style = dom.style();
     if transformed.is_empty() {
@@ -90,8 +90,8 @@ pub fn add_inline_style_raw_string_key(
 }
 
 #[wasm_bindgen]
-pub fn set_inline_styles_number_key(dom: &web_sys::HtmlElement, key: i32, value: Option<String>) {
-  let property_id = CSSProperty::from_id(key as u16);
+pub fn set_inline_styles_number_key(dom: &web_sys::HtmlElement, key: usize, value: Option<String>) {
+  let property_id: CSSProperty = key.into();
   if let Some(value) = value {
     let (transformed, _) = query_transform_rules(&property_id, &value);
     let style = dom.style();

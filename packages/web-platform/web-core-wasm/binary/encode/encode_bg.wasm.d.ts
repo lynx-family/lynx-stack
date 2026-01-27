@@ -1,10 +1,10 @@
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
-export const __wbg_decodedstyledata_free: (a: number, b: number) => void;
-export const __wbg_elementtemplatesection_free: (a: number, b: number) => void;
-export const __wbg_operation_free: (a: number, b: number) => void;
-export const __wbg_rawelementtemplate_free: (a: number, b: number) => void;
+export const decode_style_info: (a: any, b: number, c: number, d: number) => [number, number, number];
+export const encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number) => [number, number, number];
+export const get_style_content: (a: any) => [number, number, number, number];
+export const get_font_face_content: (a: any) => [number, number, number, number];
 export const __wbg_rawstyleinfo_free: (a: number, b: number) => void;
 export const __wbg_rule_free: (a: number, b: number) => void;
 export const __wbg_ruleprelude_free: (a: number, b: number) => void;

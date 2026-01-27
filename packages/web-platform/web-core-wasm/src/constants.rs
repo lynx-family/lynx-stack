@@ -11,16 +11,16 @@ pub const LYNX_ENTRY_NAME_ATTRIBUTE: &str = "l-e-name";
 
 #[cfg(feature = "client")]
 pub const LYNX_UNIQUE_ID_ATTRIBUTE: &str = "l-uid";
-#[cfg(feature = "client")]
-pub const LYNX_TEMPLATE_MEMBER_ID_ATTRIBUTE: &str = "l-t-e-id";
-#[cfg(feature = "client")]
-pub const APPEAR_EVENT_NAME: &str = "appear";
-#[cfg(feature = "client")]
-pub const DISAPPEAR_EVENT_NAME: &str = "disappear";
-#[cfg(feature = "client")]
-pub const LYNX_EXPOSURE_ID_ATTRIBUTE: &str = "exposure-id"; // if this attribute is present, the exposure event is enabled
-#[cfg(feature = "client")]
-pub const LYNX_TIMING_FLAG_ATTRIBUTE: &str = "__lynx_timing_flag"; // if this attribute is present, we should collect timing flags on creating and send it on calling __flushElementTree
+// #[cfg(feature = "client")]
+// pub const LYNX_TEMPLATE_MEMBER_ID_ATTRIBUTE: &str = "l-t-e-id";
+// #[cfg(feature = "client")]
+// pub const APPEAR_EVENT_NAME: &str = "appear";
+// #[cfg(feature = "client")]
+// pub const DISAPPEAR_EVENT_NAME: &str = "disappear";
+// #[cfg(feature = "client")]
+// pub const LYNX_EXPOSURE_ID_ATTRIBUTE: &str = "exposure-id"; // if this attribute is present, the exposure event is enabled
+// #[cfg(feature = "client")]
+// pub const LYNX_TIMING_FLAG_ATTRIBUTE: &str = "__lynx_timing_flag"; // if this attribute is present, we should collect timing flags on creating and send it on calling __flushElementTree
 lazy_static::lazy_static! {
   pub static ref LYNX_TAG_TO_HTML_TAG_MAP: FnvHashMap<&'static str, &'static str> = FnvHashMap::from_iter(vec![
     ("view", "x-view"),

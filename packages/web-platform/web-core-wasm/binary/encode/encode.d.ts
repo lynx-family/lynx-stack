@@ -1,24 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export enum LEOAsmOpcode {
-    SetAttribute = 1,
-    RemoveChild = 3,
-    AppendChild = 5,
-    CreateElement = 6,
-    SetAttributeSlot = 7,
-    AppendElementSlot = 8,
-    SetDataset = 10,
-    AddEvent = 11,
-    AppendToRoot = 12,
-}
-
-export class Operation {
-    private constructor();
-    free(): void;
-    [Symbol.dispose](): void;
-}
-
 /**
  *
  * * key: cssId

@@ -48,7 +48,7 @@ impl<'a, T: Generator> Parser for StyleTransformer<'a, T> {
       1. If the next token is an <ident-token>, consume a token from input and set decl's name to the token’s value.
         Otherwise, consume the remnants of a bad declaration from input, with nested, and return nothing.
       */
-      self.current_property_id = Some(CSSProperty::parse(&token_value));
+      self.current_property_id = Some(token_value.into());
       self.prev_token_type = token_type;
       self.status = 1;
     }
