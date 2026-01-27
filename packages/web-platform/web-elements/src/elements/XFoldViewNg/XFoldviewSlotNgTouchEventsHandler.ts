@@ -178,17 +178,17 @@ export class XFoldviewSlotNgTouchEventsHandler
       const previousScrollTop = this.#parentScrollTop;
       this.#parentScrollTop += deltaY;
       parentElement.scrollTop = this.#parentScrollTop;
-      const appliedDelta = parentElement.scrollTop - previousScrollTop;
+      const flingDelta = parentElement.scrollTop - previousScrollTop;
       this.#parentScrollTop = parentElement.scrollTop;
-      if (smoothParent && appliedDelta !== 0) {
+      if (smoothParent && flingDelta !== 0) {
         parentElement.scrollBy({
-          top: appliedDelta,
+          top: flingDelta,
           behavior: 'smooth',
         });
       }
       this.#currentScrollingElement = parentElement;
       if (allowRemainderToChild) {
-        const remainingDelta = deltaY - appliedDelta;
+        const remainingDelta = deltaY - flingDelta;
         if (remainingDelta !== 0 && scrollableKidY) {
           this.#currentScrollingElement = scrollableKidY;
           this.#scrollKid(scrollableKidY, remainingDelta);
