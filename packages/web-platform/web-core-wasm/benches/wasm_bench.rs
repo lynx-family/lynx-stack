@@ -4,8 +4,7 @@ use wasm_bindgen_test::{wasm_bindgen_bench, wasm_bindgen_test_configure, Criteri
 
 use web_core_wasm::css_tokenizer::tokenize::{self, Parser};
 use web_core_wasm::{
-  ElementTemplateSection, Generator, RawElementTemplate, RawStyleInfo, Rule, RulePrelude, Selector,
-  StyleInfoDecoder, StyleTransformer,
+  Generator, RawStyleInfo, Rule, RulePrelude, Selector, StyleInfoDecoder, StyleTransformer,
 };
 
 wasm_bindgen_test_configure!(run_in_node_experimental);
@@ -68,43 +67,12 @@ fn build_style_info_bytes() -> js_sys::Uint8Array {
 }
 
 #[cfg(feature = "encode")]
-fn build_element_template_bytes() -> js_sys::Uint8Array {
-  let mut section = ElementTemplateSection::new();
-  for index in 0..6 {
-    let mut template = RawElementTemplate::new();
-    let root_id = 1;
-    template.create_element("view".to_string(), root_id);
-    template.set_attribute(root_id, "class".to_string(), format!("root-{index}"));
-    template.set_dataset(root_id, "idx".to_string(), index.to_string());
-    template.set_cross_thread_event(
-      root_id,
-      "tap".to_string(),
-      format!("rootTap{index}"),
-      "true".to_string(),
-    );
-
-    let mut child_id = 2;
-    for child_index in 0..8 {
-      template.create_element("text".to_string(), child_id);
-      template.set_attribute(
-        child_id,
-        "data-child".to_string(),
-        format!("{index}-{child_index}"),
-      );
-      template.append_child(root_id, child_id);
-      child_id += 1;
-    }
-    template.append_to_root(root_id);
-    section.add_element_template(format!("template-{index}"), template);
-  }
-  section.encode()
-}
-
-#[cfg(feature = "encode")]
-fn decode_element_template_bytes(bytes: &js_sys::Uint8Array) -> usize {
-  let section = ElementTemplateSection::try_from(bytes.clone())
-    .expect("ElementTemplateSection decode should succeed in benchmarks");
-  section.element_templates_map.len()
+fn decode_style_info_bytes(bytes: &js_sys::Uint8Array) {
+  let mut buf = vec![0u8; bytes.length() as usize];
+  bytes.copy_to(&mut buf);
+  let raw = unsafe { rkyv::from_bytes_unchecked::<RawStyleInfo>(&buf) }
+    .expect("RawStyleInfo decode should succeed");
+  let _ = StyleInfoDecoder::new(raw, None, true).expect("StyleInfoDecoder should succeed");
 }
 
 #[cfg(feature = "encode")]
@@ -169,15 +137,6 @@ fn build_sample_style_info() -> RawStyleInfo {
   raw.push_rule(1, keyframes);
 
   raw
-}
-#[cfg(feature = "encode")]
-fn decode_style_info_bytes(bytes: &js_sys::Uint8Array) {
-  let mut buf = vec![0u8; bytes.length() as usize];
-  bytes.copy_to(&mut buf);
-  let (raw, _): (RawStyleInfo, usize) =
-    bincode::decode_from_slice(&buf, bincode::config::standard())
-      .expect("RawStyleInfo decode should succeed");
-  let _ = StyleInfoDecoder::new(raw, None, true).expect("StyleInfoDecoder should succeed");
 }
 
 const CSS_SMALL: &str = r#"
@@ -263,23 +222,6 @@ fn bench_transform_large(c: &mut Criterion) {
 fn bench_style_info_encode(c: &mut Criterion) {
   c.bench_function("style_info_encode", |b| {
     b.iter(|| build_style_info_bytes());
-  });
-}
-
-#[cfg(feature = "encode")]
-#[wasm_bindgen_bench]
-fn bench_element_template_encode(c: &mut Criterion) {
-  c.bench_function("element_template_encode", |b| {
-    b.iter(|| build_element_template_bytes());
-  });
-}
-
-#[cfg(feature = "encode")]
-#[wasm_bindgen_bench]
-fn bench_element_template_decode(c: &mut Criterion) {
-  let bytes = build_element_template_bytes();
-  c.bench_function("element_template_decode", |b| {
-    b.iter(|| decode_element_template_bytes(&bytes));
   });
 }
 

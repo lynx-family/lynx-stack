@@ -8,51 +8,47 @@ use super::css_property::ParsedDeclaration;
 
 #[cfg(feature = "encode")]
 use super::style_info_decoder::StyleInfoDecoder;
-use bincode::Decode;
-#[cfg(feature = "encode")]
-use bincode::Encode;
 use fnv::FnvHashMap;
+use rkyv::{Archive, Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
-/**
- * key: cssId
- * value: StyleSheet
- */
-#[derive(Decode, Default)]
-#[cfg_attr(feature = "encode", derive(Encode, Clone))]
+#[derive(Clone, Default, Archive, Serialize, Deserialize)]
 #[wasm_bindgen]
 pub struct RawStyleInfo {
   pub(super) css_id_to_style_sheet: FnvHashMap<i32, StyleSheet>,
   pub(super) style_content_str_size_hint: usize,
 }
 
-#[derive(Decode, Default)]
-#[cfg_attr(feature = "encode", derive(Encode, Clone))]
+#[derive(Clone, Default, Archive, Serialize, Deserialize)]
 pub struct StyleSheet {
   pub(super) imports: Vec<i32>,
   pub(super) rules: Vec<Rule>,
 }
 
-#[derive(Decode)]
-#[cfg_attr(feature = "encode", derive(Encode, Clone))]
+#[derive(Clone, Archive, Serialize, Deserialize)]
+#[archive(bound(
+  serialize = "__S: rkyv::ser::Serializer + rkyv::ser::ScratchSpace",
+  deserialize = "__D: rkyv::de::SharedDeserializeRegistry"
+))]
 #[wasm_bindgen]
 pub struct Rule {
   pub(super) rule_type: RuleType,
   pub(super) prelude: RulePrelude,
   pub(super) declaration_block: DeclarationBlock,
+  #[omit_bounds]
+  #[archive(boxed)]
   pub(super) nested_rules: Vec<Rule>,
 }
 
-#[derive(Decode, PartialEq)]
-#[cfg_attr(feature = "encode", derive(Encode, Clone))]
+#[derive(Clone, PartialEq, Archive, Serialize, Deserialize)]
+#[repr(i32)]
 pub(super) enum RuleType {
-  Declaration = 1_isize,
-  FontFace = 2_isize,
-  KeyFrames = 3_isize,
+  Declaration = 1,
+  FontFace = 2,
+  KeyFrames = 3,
 }
 
-#[derive(Decode, Default)]
-#[cfg_attr(feature = "encode", derive(Encode, Clone))]
+#[derive(Clone, Default, Archive, Serialize, Deserialize)]
 #[wasm_bindgen]
 /**
  * Either SelectorList or KeyFramesPrelude
@@ -65,39 +61,36 @@ pub struct RulePrelude {
   pub(super) selector_list: Vec<Selector>,
 }
 
-#[derive(Decode, Clone, Default)]
-#[cfg_attr(feature = "encode", derive(Encode))]
+#[derive(Clone, Default, Archive, Serialize, Deserialize)]
 #[wasm_bindgen]
 pub struct Selector {
   pub(super) simple_selectors: Vec<OneSimpleSelector>,
 }
 
-#[derive(Decode, PartialEq, Clone)]
-#[cfg_attr(feature = "encode", derive(Encode))]
+#[derive(Clone, PartialEq, Archive, Serialize, Deserialize)]
 pub(crate) struct OneSimpleSelector {
   pub(crate) selector_type: OneSimpleSelectorType,
   pub(crate) value: String,
 }
 
-#[derive(Decode, PartialEq, Clone)]
-#[cfg_attr(feature = "encode", derive(Encode))]
+#[derive(Clone, PartialEq, Archive, Serialize, Deserialize)]
+#[repr(i32)]
 /**
  * All possible OneSimpleSelector types
  */
 pub(crate) enum OneSimpleSelectorType {
-  ClassSelector = 1_isize,
-  IdSelector = 2_isize,
-  AttributeSelector = 3_isize,
-  TypeSelector = 4_isize,
-  Combinator = 5_isize,
-  PseudoClassSelector = 6_isize,
-  PseudoElementSelector = 7_isize,
-  UniversalSelector = 8_isize,
-  UnknownText = 9_isize,
+  ClassSelector = 1,
+  IdSelector = 2,
+  AttributeSelector = 3,
+  TypeSelector = 4,
+  Combinator = 5,
+  PseudoClassSelector = 6,
+  PseudoElementSelector = 7,
+  UniversalSelector = 8,
+  UnknownText = 9,
 }
 
-#[derive(Decode)]
-#[cfg_attr(feature = "encode", derive(Encode, Clone))]
+#[derive(Clone, Archive, Serialize, Deserialize)]
 pub(crate) struct DeclarationBlock {
   pub(crate) declarations: Vec<ParsedDeclaration>,
 }
@@ -135,7 +128,7 @@ impl RawStyleInfo {
   }
 
   /**
-   * Encodes the RawStyleInfo into a Uint8Array using bincode serialization.
+   * Encodes the RawStyleInfo into a Uint8Array using rkyv serialization.
    * @returns A Uint8Array containing the serialized RawStyleInfo.
    */
   #[cfg(feature = "encode")]
@@ -143,7 +136,7 @@ impl RawStyleInfo {
   pub fn encode(&mut self) -> Result<js_sys::Uint8Array, JsError> {
     let decoded_style_info = StyleInfoDecoder::new(self.clone(), None, true)?;
     self.style_content_str_size_hint = decoded_style_info.style_content.len();
-    let serialized = bincode::encode_to_vec(&*self, bincode::config::standard())
+    let serialized = rkyv::to_bytes::<_, 1024>(self)
       .map_err(|e| JsError::new(&format!("Failed to encode RawStyleInfo: {e:?}")))?;
     Ok(js_sys::Uint8Array::from(serialized.as_slice()))
   }

@@ -51,12 +51,6 @@ export class MainThreadWasmContext {
     update_css_og_style(unique_id: number, entry_name?: string | null): void;
 }
 
-/**
- *
- * * key: cssId
- * * value: StyleSheet
- *
- */
 export class RawStyleInfo {
     free(): void;
     [Symbol.dispose](): void;

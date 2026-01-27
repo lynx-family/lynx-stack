@@ -4,11 +4,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use bincode::Decode;
-#[cfg(any(feature = "encode", test))]
-use bincode::Encode;
 use fnv::FnvHashMap;
 use lazy_static::lazy_static;
+use rkyv::{Archive, Deserialize, Serialize};
 
 use crate::css_tokenizer::tokenize;
 
@@ -241,9 +239,8 @@ lazy_static! {
   };
 }
 
-#[cfg_attr(any(feature = "encode", test), derive(Encode))]
-#[derive(Clone, Copy, PartialEq, Eq, Decode, Debug, Hash)]
-#[repr(usize)]
+#[repr(u32)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Archive, Serialize, Deserialize)]
 pub enum CSSPropertyEnum {
   Unknown = 0,
   Top = 1,
@@ -466,15 +463,14 @@ pub enum CSSPropertyEnum {
 impl CSSPropertyEnum {
   pub fn from_id(id: usize) -> Self {
     if id <= CSSPropertyEnum::OffsetDistance as usize {
-      unsafe { std::mem::transmute(id) }
+      unsafe { std::mem::transmute(id as u32) }
     } else {
       CSSPropertyEnum::Unknown
     }
   }
 }
 
-#[cfg_attr(any(feature = "encode", test), derive(Encode))]
-#[derive(Debug, Clone, PartialEq, Eq, Decode)]
+#[derive(Debug, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub struct CSSProperty {
   pub id: CSSPropertyEnum,
   pub unknown_name: Option<String>,
@@ -569,15 +565,13 @@ impl std::fmt::Display for CSSProperty {
   }
 }
 
-#[cfg_attr(feature = "encode", derive(Encode))]
-#[derive(Clone, Decode, PartialEq)]
+#[derive(Clone, PartialEq, Archive, Serialize, Deserialize)]
 pub struct ValueToken {
   pub token_type: u8,
   pub value: String,
 }
 
-#[cfg_attr(feature = "encode", derive(Encode))]
-#[derive(Clone, Decode)]
+#[derive(Clone, Archive, Serialize, Deserialize)]
 pub struct ParsedDeclaration {
   pub property_id: CSSProperty,
   pub value_token_list: Vec<ValueToken>,

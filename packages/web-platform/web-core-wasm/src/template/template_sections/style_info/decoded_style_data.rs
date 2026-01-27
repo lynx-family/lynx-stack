@@ -6,10 +6,10 @@
 
 use super::raw_style_info::RawStyleInfo;
 use super::style_info_decoder::StyleInfoDecoder;
-use bincode::{Decode, Encode};
+use rkyv::{Archive, Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
-#[derive(Encode, Decode)]
+#[derive(Archive, Deserialize, Serialize)]
 pub struct DecodedStyleData {
   pub(super) style_content: Option<String>,
   // the font face should be placed at the head of the css content, therefore we use a separate buffer
@@ -31,12 +31,12 @@ impl From<StyleInfoDecoder> for DecodedStyleData {
 }
 
 impl TryFrom<js_sys::Uint8Array> for DecodedStyleData {
-  type Error = bincode::error::DecodeError;
+  type Error = wasm_bindgen::JsError;
   fn try_from(buffer: js_sys::Uint8Array) -> Result<DecodedStyleData, Self::Error> {
-    let (data, _) = bincode::decode_from_slice::<DecodedStyleData, _>(
-      &buffer.to_vec(),
-      bincode::config::standard(),
-    )?;
+    let buf = buffer.to_vec();
+    let data = unsafe { rkyv::from_bytes_unchecked::<DecodedStyleData>(&buf) }.map_err(|e| {
+      wasm_bindgen::JsError::new(&format!("Failed to decode DecodedStyleData: {e:?}"))
+    })?;
     Ok(data)
   }
 }
@@ -47,18 +47,18 @@ pub fn decode_style_info(
   entry_name: Option<String>,
   config_enable_css_selector: bool,
 ) -> Result<js_sys::Uint8Array, wasm_bindgen::JsError> {
-  let (data, _) =
-    bincode::decode_from_slice::<RawStyleInfo, _>(&buffer.to_vec(), bincode::config::standard())
-      .map_err(|e| {
-        wasm_bindgen::JsError::new(&format!("Failed to decode from Uint8Array: {e}",))
-      })?;
+  let buf = buffer.to_vec();
+  let data = unsafe { rkyv::from_bytes_unchecked::<RawStyleInfo>(&buf) }
+    .map_err(|e| wasm_bindgen::JsError::new(&format!("Failed to decode RawStyleInfo: {e:?}")))?;
+
   let decode_data: DecodedStyleData =
     StyleInfoDecoder::new(data, entry_name, config_enable_css_selector)?.into();
-  Ok(js_sys::Uint8Array::from(
-    bincode::encode_to_vec(&decode_data, bincode::config::standard())
-      .map_err(|e| wasm_bindgen::JsError::new(&format!("Failed to encode to Uint8Array: {e}",)))?
-      .as_slice(),
-  ))
+
+  let serialized = rkyv::to_bytes::<_, 1024>(&decode_data).map_err(|e| {
+    wasm_bindgen::JsError::new(&format!("Failed to encode DecodedStyleData: {e:?}"))
+  })?;
+
+  Ok(js_sys::Uint8Array::from(serialized.as_slice()))
 }
 
 #[wasm_bindgen]
@@ -69,21 +69,24 @@ pub fn encode_legacy_json_generated_raw_style_info(
 ) -> Result<js_sys::Uint8Array, wasm_bindgen::JsError> {
   let decode_data: DecodedStyleData =
     StyleInfoDecoder::new(raw_style_info, entry_name, config_enable_css_selector)?.into();
-  let data = &bincode::encode_to_vec(&decode_data, bincode::config::standard())
-    .map_err(|e| wasm_bindgen::JsError::new(&format!("Failed to encode to Uint8Array: {e}",)))?;
-  Ok(js_sys::Uint8Array::from(data.as_slice()))
+  let serialized = rkyv::to_bytes::<_, 1024>(&decode_data).map_err(|e| {
+    wasm_bindgen::JsError::new(&format!("Failed to encode DecodedStyleData: {e:?}"))
+  })?;
+  Ok(js_sys::Uint8Array::from(serialized.as_slice()))
 }
 
 #[wasm_bindgen]
 pub fn get_style_content(buffer: js_sys::Uint8Array) -> Result<String, wasm_bindgen::JsError> {
-  let decode_data = DecodedStyleData::try_from(buffer)
-    .map_err(|e| wasm_bindgen::JsError::new(&format!("Failed to decode from Uint8Array: {e}",)))?;
+  let decode_data = DecodedStyleData::try_from(buffer).map_err(|e| {
+    wasm_bindgen::JsError::new(&format!("Failed to decode from Uint8Array: {e:?}",))
+  })?;
   Ok(decode_data.style_content.unwrap_or_default())
 }
 
 #[wasm_bindgen]
 pub fn get_font_face_content(buffer: js_sys::Uint8Array) -> Result<String, wasm_bindgen::JsError> {
-  let decode_data = DecodedStyleData::try_from(buffer)
-    .map_err(|e| wasm_bindgen::JsError::new(&format!("Failed to decode from Uint8Array: {e}",)))?;
+  let decode_data = DecodedStyleData::try_from(buffer).map_err(|e| {
+    wasm_bindgen::JsError::new(&format!("Failed to decode from Uint8Array: {e:?}",))
+  })?;
   Ok(decode_data.font_face_content.unwrap_or_default())
 }

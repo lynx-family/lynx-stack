@@ -7,7 +7,7 @@ This package (`packages/web-platform/web-core-wasm`) is the high-performance cor
 The `web-core-wasm` package bridges the gap between Lynx's native-like architecture and the web platform. Its primary responsibilities include:
 
 1. **CSS Processing**: High-performance tokenization and transformation of Lynx-specific CSS (e.g., `rpx` units, `linear` layout) into standard Web CSS.
-2. **Template Management**: efficient binary serialization (`encode`) and deserialization (`decode`) of element templates using `bincode`.
+2. **Template Management**: efficient binary serialization (`encode`) and deserialization (`decode`) of style templates using `rkyv`.
 3. **Main Thread Runtime**: Managing the state of Lynx elements, DOM manipulation, and event handling on the main thread.
 4. **Background Thread Service (BTS)**: Hosting the Lynx logic (React/JavaScript) in a Web Worker to ensure UI responsiveness.
 
@@ -29,8 +29,8 @@ The Rust code forms the logic backbone, compiled into WASM.
 
 - **`css_tokenizer`**: A CSS tokenizer ported from `css-tree`, fully compliant with CSS Syntax Level 3.
 - **`style_transformer`**: Transforms Lynx CSS into Web CSS using the strongly-typed `CSSProperty` enum for efficiency. Handles `rpx` unit resolution (via `token_transformer`) and complex property rules.
-- **`template`**: Defines the schema for binary templates (`RawElementTemplate`, `RawStyleInfo`) and handles their `bincode` serialization.
-  - **`css_property.rs`**: Defines the `CSSProperty` enum (u16 IDs) and shared `ParsedDeclaration` struct. Uses `bincode` instead of `serde`. Unknown properties are treated homogenously.
+- **`template`**: Defines the schema for binary templates (`RawStyleInfo`) and handles their `rkyv` serialization.
+  - **`css_property.rs`**: Defines the `CSSProperty` enum (u16 IDs) and shared `ParsedDeclaration` struct. Uses `rkyv` instead of `serde`. Unknown properties are treated homogenously.
 - **`leo_asm`**: Defines "Leo Assembly" opcodes (e.g., `CreateElement`, `SetAttribute`) used to efficiently reconstruct DOM trees from templates.
 - **`utils`**: General purpose utilities.
   - **`hyphenate_style_name.rs`**: Converts camelCase style names to kebab-case (e.g., `backgroundColor` -> `background-color`). **Note**: Assumes no `ms` vendor prefix.

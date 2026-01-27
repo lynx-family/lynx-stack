@@ -9,7 +9,7 @@ mod template_manager;
 /// Template module.
 ///
 /// This module defines the structure of Lynx templates, including element templates and style information.
-/// It handles the serialization and deserialization of templates using `bincode`.
+/// It handles the serialization and deserialization of templates using `rkyv`.
 ///
 /// Key components:
 /// - `template_sections`: Contains submodules for different sections of a template.

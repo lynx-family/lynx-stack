@@ -1,12 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
 
-/**
- *
- * * key: cssId
- * * value: StyleSheet
- *
- */
 export class RawStyleInfo {
     free(): void;
     [Symbol.dispose](): void;
@@ -21,7 +15,7 @@ export class RawStyleInfo {
     append_import(css_id: number, import_css_id: number): void;
     /**
      *
-     *   * Encodes the RawStyleInfo into a Uint8Array using bincode serialization.
+     *   * Encodes the RawStyleInfo into a Uint8Array using rkyv serialization.
      *   * @returns A Uint8Array containing the serialized RawStyleInfo.
      *
      */

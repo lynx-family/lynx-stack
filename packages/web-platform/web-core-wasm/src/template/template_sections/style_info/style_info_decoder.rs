@@ -889,9 +889,8 @@ mod tests_roundtrip {
       // Need to decode bytes back to RawStyleInfo first
       let mut buf = vec![0u8; bytes.length() as usize];
       bytes.copy_to(&mut buf);
-      let (decoded_raw, _): (RawStyleInfo, usize) =
-        bincode::decode_from_slice(&buf, bincode::config::standard())
-          .expect("RawStyleInfo decode should succeed");
+      let decoded_raw = unsafe { rkyv::from_bytes_unchecked::<RawStyleInfo>(&buf) }
+        .expect("RawStyleInfo decode should succeed");
 
       let decoder =
         StyleInfoDecoder::new(decoded_raw, None, true).expect("StyleInfoDecoder should succeed");
@@ -941,9 +940,8 @@ mod tests_roundtrip {
 
       let mut buf = vec![0u8; bytes.length() as usize];
       bytes.copy_to(&mut buf);
-      let (decoded_raw, _): (RawStyleInfo, usize) =
-        bincode::decode_from_slice(&buf, bincode::config::standard())
-          .expect("RawStyleInfo decode should succeed");
+      let decoded_raw = unsafe { rkyv::from_bytes_unchecked::<RawStyleInfo>(&buf) }
+        .expect("RawStyleInfo decode should succeed");
 
       let decoder =
         StyleInfoDecoder::new(decoded_raw, None, true).expect("StyleInfoDecoder should succeed");
