@@ -49,6 +49,7 @@ jobs:
           CARGO_LLVM_COV_FLAGS_NO_RUNNER: --no-sparse
         run: |
           cargo llvm-cov nextest --all-features --profile ci --config-file .cargo/nextest.toml --lcov --output-path lcov.info  --release
+          cargo llvm-cov nextest --all-features --profile ci --config-file .cargo/nextest.toml --lcov --output-path lcov.info  --release --target wasm32-unknown-unknown
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
         with:
