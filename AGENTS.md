@@ -101,7 +101,7 @@ pnpm changeset status --since=origin/main
 ```bash
 # Install Rust with wasm target
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-rustup target add wasm32-unknown-unknown
+rustup toolchain install
 ```
 
 **Issue**: "API Report Changes Detected" error
