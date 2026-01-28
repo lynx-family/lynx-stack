@@ -75,7 +75,9 @@ export function animate(
     currentV = options.from ?? 0;
   } else {
     currentV = value.get();
-    startVelocity = startVelocity || value.getVelocity();
+    if (options.velocity == null) {
+      startVelocity = value.getVelocity();
+    }
     if (value.stop) {
       value.stop();
     }
@@ -111,6 +113,8 @@ export function animate(
     stop: () => {
       canceled = true;
       detach?.();
+      controls.onFinish();
+      resolvePromise?.();
     },
     then: (cb: () => void) => {
       controls.onFinish = cb;

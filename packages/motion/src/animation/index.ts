@@ -137,10 +137,15 @@ function animate<O extends {}>(
     && optionsOrKeyframes !== null
     && !Array.isArray(optionsOrKeyframes);
 
+  const isKeyframesArray = Array.isArray(optionsOrKeyframes)
+    && optionsOrKeyframes.every(
+      k => typeof k === 'object' && k !== null && !Array.isArray(k),
+    );
+
   let realSubjectOrSequence: typeof subjectOrSequence | ElementOrSelector =
     subjectOrSequence;
 
-  if (!isStringSubject || isKeyframesObject) {
+  if (!isStringSubject || isKeyframesObject || isKeyframesArray) {
     realSubjectOrSequence =
       elementOrSelector2Dom(subjectOrSequence as ElementOrElements)
         ?? subjectOrSequence;
