@@ -33,7 +33,7 @@ pub(crate) fn transform_inline_style_key_value_vec(source: Vec<String>) -> Strin
   };
   let transformer = &mut StyleTransformer::new(&mut generator);
 
-  // the even valule of source should be processed by hyphenate_style_name
+  // the even value of source should be processed by hyphenate_style_name
   // iterate 2 values at a time
   let mut key: String = String::new();
   for (idx, value) in source.into_iter().enumerate() {

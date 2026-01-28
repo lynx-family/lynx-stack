@@ -30,7 +30,7 @@ The Rust code forms the logic backbone, compiled into WASM.
 - **`css_tokenizer`**: A CSS tokenizer ported from `css-tree`, fully compliant with CSS Syntax Level 3.
 - **`style_transformer`**: Transforms Lynx CSS into Web CSS using the strongly-typed `CSSProperty` enum for efficiency. Handles `rpx` unit resolution (via `token_transformer`) and complex property rules.
 - **`template`**: Defines the schema for binary templates (`RawStyleInfo`) and handles their `rkyv` serialization.
-  - **`css_property.rs`**: Defines the `CSSProperty` enum (u16 IDs) and shared `ParsedDeclaration` struct. Uses `rkyv` instead of `serde`. Unknown properties are treated homogenously.
+  - **`css_property.rs`**: Defines the `CSSProperty` enum (u16 IDs) and shared `ParsedDeclaration` struct. Uses `rkyv` instead of `serde`. Unknown properties are treated homogeneously.
 - **`leo_asm`**: Defines "Leo Assembly" opcodes (e.g., `CreateElement`, `SetAttribute`) used to efficiently reconstruct DOM trees from templates.
 - **`utils`**: General purpose utilities.
   - **`hyphenate_style_name.rs`**: Converts camelCase style names to kebab-case (e.g., `backgroundColor` -> `background-color`). **Note**: Assumes no `ms` vendor prefix.
