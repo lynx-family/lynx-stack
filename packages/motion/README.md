@@ -95,3 +95,11 @@ animate(mv, 100, {
   damping: 30,
 });
 ```
+
+## License & Attribution
+
+This package is licensed under the Apache-2.0 License.
+
+It adapts code from [Motion for React (framer-motion)](https://motion.dev/), [motion-dom](https://github.com/motiondivision/motion/tree/main/packages/motion-dom), and [motion-utils](https://github.com/motiondivision/motion/tree/main/packages/motion-utils) which are licensed under the MIT License.
+
+See [LICENSE](./LICENSE), [NOTICE](./NOTICE) for details.

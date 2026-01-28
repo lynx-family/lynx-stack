@@ -57,11 +57,11 @@ describe('Shim', () => {
     globalThis.document = origDocument;
     globalThis.performance = origPerformance;
     globalThis.queueMicrotask = origQueueMicrotask;
-    // @ts-expect-error
+
     globalThis.NodeList = origNodeList;
-    // @ts-expect-error
+
     globalThis.SVGElement = origSVGElement;
-    // @ts-expect-error
+
     globalThis.HTMLElement = origHTMLElement;
     globalThis.window = origWindow;
     (globalThis as any).Element = origElement;
@@ -96,22 +96,5 @@ describe('Shim queueMicrotask', () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     expect(called).toBe(true);
-  });
-});
-
-describe('Modified MotionValue', () => {
-  test('should export CustomMotionValue factory', async () => {
-    const module = await import('../src/modified/motionValue.js');
-    expect(module.motionValue).toBeDefined();
-  });
-
-  test('CustomMotionValue should have toJSON that returns empty object', async () => {
-    const { motionValue } = await import('../src/modified/motionValue.js');
-    const mv = motionValue(42);
-
-    expect(mv).toBeDefined();
-    // The custom toJSON should return empty object
-    const json = (mv as any).toJSON();
-    expect(json).toEqual({});
   });
 });

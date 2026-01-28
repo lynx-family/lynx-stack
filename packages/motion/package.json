@@ -16,7 +16,6 @@
   },
   "license": "Apache-2.0",
   "sideEffects": [
-    "./src/polyfill/shim.ts",
     "./dist/polyfill/shim.js"
   ],
   "type": "module",
@@ -37,6 +36,8 @@
   "files": [
     "dist",
     "README.md",
+    "NOTICE",
+    "LICENSE",
     "CHANGELOG.md"
   ],
   "scripts": {

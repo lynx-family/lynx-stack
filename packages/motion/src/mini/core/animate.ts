@@ -36,8 +36,6 @@ export interface AnimationOptions {
 
 // --- Easings ---
 
-// --- Easings ---
-
 export {
   anticipate,
   backIn,
@@ -83,10 +81,11 @@ export function animate(
     }
   }
 
-  // If type is spring or no duration provided, default to spring.
-  // Unless ease is provided, then tween.
+  if (options.type === 'decay' || options.type === 'keyframes') {
+    throw new Error('mini animate() does not support type=decay/keyframes yet');
+  }
   const isSpring = options.type === 'spring'
-    || (!options.ease && !options.duration && options.type !== 'keyframes');
+    || (!options.ease && !options.duration && options.type == null);
 
   const { from: _from, to: _to, ...springOptions } = options;
 
@@ -103,9 +102,17 @@ export function animate(
   let canceled = false;
 
   let resolvePromise: (() => void) | undefined;
+  let settled = false;
   const completionPromise = new Promise<void>((resolve) => {
     resolvePromise = resolve;
   });
+
+  const settle = () => {
+    if (settled) return;
+    settled = true;
+    controls.onFinish();
+    resolvePromise?.();
+  };
 
   let detach: (() => void) | undefined;
 
@@ -113,11 +120,11 @@ export function animate(
     stop: () => {
       canceled = true;
       detach?.();
-      controls.onFinish();
-      resolvePromise?.();
+      settle();
     },
     then: (cb: () => void) => {
       controls.onFinish = cb;
+      if (settled) cb();
       return completionPromise; // Return actual promise that resolves on completion
     },
     // biome-ignore lint/suspicious/noEmptyBlockStatements: <explanation>
@@ -186,8 +193,8 @@ export function animate(
       if (options.onComplete) {
         options.onComplete();
       }
-      controls.onFinish();
-      resolvePromise?.(); // Resolve the promise when animation completes
+
+      settle();
       detach?.();
     } else {
       requestAnimationFrame(tick);

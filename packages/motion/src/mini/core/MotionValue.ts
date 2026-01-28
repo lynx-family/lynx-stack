@@ -2,8 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { noopMT } from '../../utils/noop.js';
-
 export interface MotionValue<T> {
   get(): T;
   set(v: T): void;
@@ -89,8 +87,11 @@ export function createMotionValue<T>(initial: T): MotionValue<T> {
     on(event: 'change', callback: (v: T) => void) {
       if (event === 'change') {
         return this.onChange(callback);
+      } else {
+        throw new Error(
+          `mini animate() does not support event type other than 'change'`,
+        );
       }
-      return noopMT;
     }
 
     notify() {

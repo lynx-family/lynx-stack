@@ -2,12 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { runOnMainThread, useEffect } from '@lynx-js/react';
 import { act, render } from '@lynx-js/react/testing-library';
 
 import { createMotionValue } from '../src/mini/core/MotionValue.js';
-import { noopMT } from '../src/utils/noop.js';
 
 describe('MotionValue', () => {
   let mockRegisteredMap: Map<string, CallableFunction>;
@@ -395,16 +394,17 @@ describe('MotionValue', () => {
             try {
               const mv = createMotionValue(0);
 
-              // Calling on() with an unsupported event should not throw
+              // Calling on() with an unsupported event should throw
               // @ts-expect-error - testing unsupported event
-              const unsub = mv.on('unsupported', () => {});
-
-              // The returned function should be callable without error
-              if (typeof unsub !== 'function') {
-                throw new Error('on() did not return a function');
+              mv.on('unsupported', () => {});
+            } catch (e: any) {
+              if (
+                e.message
+                  === 'mini animate() does not support event type other than \'change\''
+              ) {
+                // Expected error
+                return;
               }
-              unsub(); // Should not throw
-            } catch (e) {
               (globalThis as any).__TEST_ERROR = String(e);
             }
           })();
