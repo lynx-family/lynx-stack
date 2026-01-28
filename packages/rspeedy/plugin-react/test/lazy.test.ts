@@ -270,26 +270,31 @@ describe('Lazy', () => {
       },
     })
 
-    await rsbuild.build()
+    try {
+      await rsbuild.build()
 
-    expect(entryNamesOfBeforeEncode).toMatchInlineSnapshot(`
-      [
+      expect(entryNamesOfBeforeEncode).toMatchInlineSnapshot(`
         [
-          "main__main-thread",
-          "main",
-        ],
-        [
-          "./LazyComponent.js-react__main-thread",
-          "./LazyComponent.js-react__background",
-        ],
-      ]
-    `)
-    const cssHotUpdateList = /\.cssHotUpdateList\s*=\s*(\[\[[\s\S]*?\]\])/.exec(
-      backgroundJSContent,
-    )![1]
-    expect(cssHotUpdateList).toMatchInlineSnapshot(
-      `"[["./LazyComponent.js-react__background",".rspeedy/async/./LazyComponent.js-react__background/./LazyComponent.js-react__background.css.hot-update.json"],["main",".rspeedy/main/main.css.hot-update.json"]]"`,
-    )
+          [
+            "main__main-thread",
+            "main",
+          ],
+          [
+            "./LazyComponent.js-react__main-thread",
+            "./LazyComponent.js-react__background",
+          ],
+        ]
+      `)
+      const cssHotUpdateList =
+        /\.cssHotUpdateList\s*=\s*(\[\[[\s\S]*?\]\])/.exec(
+          backgroundJSContent,
+        )![1]
+      expect(cssHotUpdateList).toMatchInlineSnapshot(
+        `"[["./LazyComponent.js-react__background",".rspeedy/async/./LazyComponent.js-react__background/./LazyComponent.js-react__background.css.hot-update.json"],["main",".rspeedy/main/main.css.hot-update.json"]]"`,
+      )
+    } finally {
+      vi.unstubAllEnvs()
+    }
   })
 
   test('lazy bundle app-service.js should not load hot-update.js', async () => {
