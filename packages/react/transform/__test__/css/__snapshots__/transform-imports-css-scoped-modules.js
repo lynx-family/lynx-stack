@@ -1,6 +1,6 @@
-/*@jsxCSSId 1185352*/ import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
 import * as ReactLynx from "@lynx-js/react";
-import './foo.css';
+/*@jsxCSSId 1185352*/ import './foo.css';
 import bar from "./bar.css?cssId=1185352";
 import * as styles from "./baz.scss?cssId=1185352";
 import { styles0, styles1 } from "./foo.modules.css?cssId=1185352";
