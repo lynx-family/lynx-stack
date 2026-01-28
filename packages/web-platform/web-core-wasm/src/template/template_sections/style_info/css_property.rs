@@ -463,7 +463,7 @@ pub enum CSSPropertyEnum {
 impl CSSPropertyEnum {
   pub fn from_id(id: usize) -> Self {
     if id <= CSSPropertyEnum::OffsetDistance as usize {
-      unsafe { std::mem::transmute(id as u32) }
+      unsafe { std::mem::transmute::<u32, CSSPropertyEnum>(id as u32) }
     } else {
       CSSPropertyEnum::Unknown
     }

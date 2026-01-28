@@ -33,13 +33,10 @@ describe('Testing Library Port', () => {
         exposureServices: vi.mockObject({
           updateExposureStatus: vi.fn(),
         } as any),
-        loadWebElement: vi.fn(),
-        loadUnknownElement: vi.fn(),
         mainThreadGlobalThis: globalThis as any,
       }),
     );
     mtsGlobalThis = createElementAPI(
-      'test',
       rootDom,
       mtsBinding as any,
       true,

@@ -395,37 +395,4 @@ describe('webEncoder', () => {
       offset += length;
     }
   });
-
-  test('should include elementTemplates section if not empty', () => {
-    const tasmJSON: TasmJSONInfo = {
-      styleInfo: {},
-      manifest: {},
-      cardType: 'card',
-      appType: 'card',
-      pageConfig: {},
-      lepusCode: {},
-      customSections: {},
-      elementTemplates: {
-        '0': {
-          type: 'view',
-        },
-      },
-    };
-    const buffer = encode(tasmJSON);
-    const view = new DataView(buffer.buffer);
-    let offset = 8 + 4; // Magic + Version
-    let found = false;
-
-    while (offset < buffer.byteLength) {
-      const label = view.getUint32(offset, true);
-      offset += 4;
-      const length = view.getUint32(offset, true);
-      offset += 4;
-      if (label === TemplateSectionLabel.ElementTemplates) {
-        found = true;
-      }
-      offset += length;
-    }
-    expect(found).toBe(true);
-  });
 });

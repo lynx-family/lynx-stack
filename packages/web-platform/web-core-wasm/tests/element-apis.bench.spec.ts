@@ -30,13 +30,10 @@ describe('Element APIs Benchmarks', () => {
         exposureServices: vi.mockObject({
           updateExposureStatus: vi.fn(),
         }) as any,
-        loadWebElement: vi.fn(),
-        loadUnknownElement: vi.fn(),
         mainThreadGlobalThis: vi.mockObject({}) as any,
       }),
     );
     mtsGlobalThis = createElementAPI(
-      'test',
       rootDom,
       mtsBinding,
       true,
