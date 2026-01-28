@@ -2,4 +2,4 @@
 "@lynx-js/react": patch
 ---
 
-Use replace instead of replaceAll for DEV_ONLY_SetSnapshotEntryName
+Fix "TypeError: not a function" error caused by `replaceAll` not supported in ES5.
