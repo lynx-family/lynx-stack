@@ -22,7 +22,7 @@ export class XFoldviewSlotNgTouchEventsHandler
   constructor(dom: XFoldviewSlotNg) {
     this.#dom = dom;
 
-    this.#dom.addEventListener('touchmove', this.#scroller, {
+    this.#dom.addEventListener('touchmove', this.#handleTouch, {
       passive: false,
     });
 
@@ -31,6 +31,9 @@ export class XFoldviewSlotNgTouchEventsHandler
     });
     this.#dom.addEventListener('touchend', this.#touchEnd, {
       passive: true,
+    });
+    this.#dom.addEventListener('wheel', this.#handleWheel, {
+      passive: false,
     });
   }
 
@@ -61,8 +64,11 @@ export class XFoldviewSlotNgTouchEventsHandler
     scrollableKid.scrollTop = targetKidScrollDistance;
   }
 
-  #scroller = (event: TouchEvent) => {
+  #handleTouch = (event: TouchEvent) => {
     const parentElement = this.#getParentElement();
+    if (!parentElement) {
+      return;
+    }
     const touch = event.touches.item(0)!;
     const { pageY, pageX } = touch;
     const deltaY = this.#previousPageY! - pageY;
@@ -73,35 +79,41 @@ export class XFoldviewSlotNgTouchEventsHandler
     if (this.#scrollingVertically === false) {
       return;
     }
-    const scrollableKidY = this.#getTheMostScrollableKid(deltaY);
-    if (
-      parentElement
-    ) {
-      if (event.cancelable) {
-        event.preventDefault();
-      }
-      if (
-        (parentElement[isHeaderShowing] && deltaY > 0
-          || (deltaY < 0 && !scrollableKidY))
-        // deltaY > 0: swipe up (folding header)
-        // scroll the foldview if its scrollable
-        || (!parentElement[isHeaderShowing] && !scrollableKidY)
-        // all sub doms are scrolled
-      ) {
-        parentElement.scrollBy({
-          top: deltaY,
-          behavior: 'smooth',
-        });
-        this.#parentScrollTop += deltaY;
-        parentElement.scrollTop = this.#parentScrollTop;
-        this.#currentScrollingElement = parentElement;
-      } else if (scrollableKidY) {
-        this.#currentScrollingElement = scrollableKidY;
-        this.#scrollKid(scrollableKidY, deltaY);
+    if (event.cancelable) {
+      event.preventDefault();
+    }
+    this.#handleScrollDelta(deltaY, parentElement);
+    this.#previousPageY = pageY;
+  };
+
+  #handleWheel = (event: WheelEvent) => {
+    const parentElement = this.#getParentElement();
+    if (!parentElement) {
+      return;
+    }
+    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
+      return;
+    }
+    const pathElements = event.composedPath().filter((
+      element,
+    ): element is Element =>
+      element instanceof Element && this.#dom.contains(element)
+    );
+    const { clientX, clientY } = event;
+    const pointElements = document.elementsFromPoint(clientX, clientY).filter(
+      e => this.#dom.contains(e),
+    );
+    this.#elements = [...new Set([...pathElements, ...pointElements])];
+    this.#parentScrollTop = parentElement.scrollTop;
+    if (this.#elements) {
+      for (const element of this.#elements) {
+        this.#childrenElemsntsScrollTop.set(element, element.scrollTop);
       }
     }
-    this.#previousPageY = pageY;
-    this.#deltaY = deltaY;
+    if (event.cancelable) {
+      event.preventDefault();
+    }
+    this.#handleScrollDelta(event.deltaY, parentElement);
   };
 
   #getParentElement(): XFoldviewNg | void {
@@ -142,4 +154,31 @@ export class XFoldviewSlotNgTouchEventsHandler
       });
     }
   };
+
+  #handleScrollDelta(
+    deltaY: number,
+    parentElement: XFoldviewNg,
+  ) {
+    const scrollableKidY = this.#getTheMostScrollableKid(deltaY);
+    if (
+      (parentElement[isHeaderShowing] && deltaY > 0
+        || (deltaY < 0 && !scrollableKidY))
+      // deltaY > 0: swipe up (folding header)
+      // scroll the foldview if its scrollable
+      || (!parentElement[isHeaderShowing] && !scrollableKidY)
+      // all sub doms are scrolled
+    ) {
+      parentElement.scrollBy({
+        top: deltaY,
+        behavior: 'smooth',
+      });
+      this.#parentScrollTop += deltaY;
+      parentElement.scrollTop = this.#parentScrollTop;
+      this.#currentScrollingElement = parentElement;
+    } else if (scrollableKidY) {
+      this.#currentScrollingElement = scrollableKidY;
+      this.#scrollKid(scrollableKidY, deltaY);
+    }
+    this.#deltaY = deltaY;
+  }
 }
