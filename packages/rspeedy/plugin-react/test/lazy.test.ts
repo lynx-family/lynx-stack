@@ -391,32 +391,36 @@ describe('Lazy', () => {
       },
     })
 
-    await rsbuild.createDevServer()
-    await waitCompilationDone()
-    expect(appServiceJSContent).toMatchInlineSnapshot(
-      `"(function(){'use strict';function n({tt}){tt.define('/app-service.js',function(e,module,_,i,l,u,a,c,s,f,p,d,h,v,g,y,lynx){module.exports=lynx.requireModule("/static/js/async/./LazyComponent.js-react__background.js",globDynamicComponentEntry?globDynamicComponentEntry:'__Card__');});return tt.require('/app-service.js');}return{init:n}})()"`,
+    const lazyComponentUrl = new URL(
+      './fixtures/lazy-bundle/LazyComponent.tsx',
+      import.meta.url,
     )
+    let tmpContent: string | undefined
 
-    // Modify the fixtures/lazy-bundle/LazyComponent.tsx file
-    // to trigger HMR
-    const tmpContent = await fs.readFile(
-      new URL('./fixtures/lazy-bundle/LazyComponent.tsx', import.meta.url),
-      'utf-8',
-    )
-    await fs.writeFile(
-      new URL('./fixtures/lazy-bundle/LazyComponent.tsx', import.meta.url),
-      'export default function LazyComponent() { return null }',
-    )
-    await waitCompilationDone()
+    try {
+      await rsbuild.createDevServer()
+      await waitCompilationDone()
+      expect(appServiceJSContent).toMatchInlineSnapshot(
+        `"(function(){'use strict';function n({tt}){tt.define('/app-service.js',function(e,module,_,i,l,u,a,c,s,f,p,d,h,v,g,y,lynx){module.exports=lynx.requireModule("/static/js/async/./LazyComponent.js-react__background.js",globDynamicComponentEntry?globDynamicComponentEntry:'__Card__');});return tt.require('/app-service.js');}return{init:n}})()"`,
+      )
 
-    expect(appServiceJSContent).toMatchInlineSnapshot(
-      `"(function(){'use strict';function n({tt}){tt.define('/app-service.js',function(e,module,_,i,l,u,a,c,s,f,p,d,h,v,g,y,lynx){module.exports=lynx.requireModule("/static/js/async/./LazyComponent.js-react__background.js",globDynamicComponentEntry?globDynamicComponentEntry:'__Card__');});return tt.require('/app-service.js');}return{init:n}})()"`,
-    )
+      // Modify the fixtures/lazy-bundle/LazyComponent.tsx file
+      // to trigger HMR
+      tmpContent = await fs.readFile(lazyComponentUrl, 'utf-8')
+      await fs.writeFile(
+        lazyComponentUrl,
+        'export default function LazyComponent() { return null }',
+      )
+      await waitCompilationDone()
 
-    // Restore the original content
-    await fs.writeFile(
-      new URL('./fixtures/lazy-bundle/LazyComponent.tsx', import.meta.url),
-      tmpContent,
-    )
+      expect(appServiceJSContent).toMatchInlineSnapshot(
+        `"(function(){'use strict';function n({tt}){tt.define('/app-service.js',function(e,module,_,i,l,u,a,c,s,f,p,d,h,v,g,y,lynx){module.exports=lynx.requireModule("/static/js/async/./LazyComponent.js-react__background.js",globDynamicComponentEntry?globDynamicComponentEntry:'__Card__');});return tt.require('/app-service.js');}return{init:n}})()"`,
+      )
+    } finally {
+      if (tmpContent !== undefined) {
+        await fs.writeFile(lazyComponentUrl, tmpContent)
+      }
+      vi.unstubAllEnvs()
+    }
   })
 })
