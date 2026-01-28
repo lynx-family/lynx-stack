@@ -101,7 +101,7 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
           // HMR-related
           // Update the evaluated snapshot entryName from JS.
           snapshotCreatorMap[uniqID] = evaluate<(uniqId: string) => string>(
-            snapshotCreatorMap[uniqID]!.toString().replaceAll('globDynamicComponentEntry', JSON.stringify(entryName)),
+            snapshotCreatorMap[uniqID]!.toString().replace(/globDynamicComponentEntry/g, JSON.stringify(entryName)),
           );
         }
         break;
