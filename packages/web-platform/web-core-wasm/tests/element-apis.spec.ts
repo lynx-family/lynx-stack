@@ -1271,7 +1271,55 @@ describe('Element APIs', () => {
     // Rust logic:
     // Old: Some("handler2"), New: None.
     // match (Some, None) => should_disable = true.
+    expect(disableSpy).toHaveBeenCalledWith(expect.anything(), 'input');
+  });
+
+  test('should handle worklet events enable/disable', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const element = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AppendElement(root, element);
+
+    const enableSpy = vi.spyOn(mtsBinding, 'enableElementEvent');
+    const disableSpy = vi.spyOn(mtsBinding, 'disableElementEvent');
+
+    // Test add_run_worklet_event
+    mtsGlobalThis.__AddEvent(
+      element,
+      'bindevent',
+      'input',
+      { name: 'worklet-handler' } as any,
+    );
+    expect(enableSpy).toHaveBeenCalledTimes(1);
+    expect(enableSpy).toHaveBeenCalledWith(expect.anything(), 'input');
+    enableSpy.mockClear();
+
+    // Test get_events including worklet events
+    const events = mtsGlobalThis.__GetEvents(element);
+    // Assuming EventInfo struct matches JS object: { event_name, event_type, event_handler }
+    // We check if we can find the added event
+    const found = events.some((e: any) =>
+      e.event_name === 'input' && e.event_type === 'bindevent'
+    );
+    expect(found).toBe(true);
+
+    // Test removal (disable)
+    mtsGlobalThis.__AddEvent(element, 'bindevent', 'input', null as any);
     expect(disableSpy).toHaveBeenCalledTimes(1);
     expect(disableSpy).toHaveBeenCalledWith(expect.anything(), 'input');
+  });
+
+  test('getClassList', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const element = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AddClass(element, 'foo');
+    mtsGlobalThis.__AddClass(element, 'bar');
+    mtsGlobalThis.__AppendElement(root, element);
+
+    const spy = vi.spyOn(mtsBinding, 'getClassList');
+    const classes = mtsBinding.getClassList(element);
+
+    expect(spy).toHaveBeenCalledWith(element);
+    expect(classes).toEqual(expect.arrayContaining(['foo', 'bar']));
+    expect(classes.length).toBe(2);
   });
 });

@@ -45,6 +45,7 @@ export class Rule {
     /**
      *
      *   * Pushes a declaration to the rule's declaration block.
+     *   * LynxJS doesn't support !important
      *   * @param property_name - The property name.
      *   * @param value - The property value.
      *

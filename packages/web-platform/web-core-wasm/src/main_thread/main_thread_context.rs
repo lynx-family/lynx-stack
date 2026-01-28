@@ -66,17 +66,19 @@ impl MainThreadWasmContext {
     template_manager: &TemplateManager,
     entry_name: String,
     is_entry_template: bool,
-  ) {
+  ) -> Result<(), JsError> {
     let style_info = template_manager.get_style_info_by_name(&entry_name);
     if let Some(style_info) = style_info {
-      let _ = self.style_manager.push_style_sheet(
+      self.style_manager.push_style_sheet(
         style_info,
         if is_entry_template {
           None
         } else {
           Some(entry_name)
         },
-      );
+      )
+    } else {
+      Ok(())
     }
   }
 

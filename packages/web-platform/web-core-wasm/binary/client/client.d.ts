@@ -88,6 +88,7 @@ export class Rule {
     /**
      *
      *   * Pushes a declaration to the rule's declaration block.
+     *   * LynxJS doesn't support !important
      *   * @param property_name - The property name.
      *   * @param value - The property value.
      *
@@ -214,7 +215,7 @@ export interface InitOutput {
     readonly mainthreadwasmcontext_get_events: (a: number, b: number) => [number, number];
     readonly mainthreadwasmcontext_get_unique_id_by_component_id: (a: number, b: number, c: number) => number;
     readonly mainthreadwasmcontext_new: (a: any, b: any, c: number) => number;
-    readonly mainthreadwasmcontext_push_style_sheet: (a: number, b: number, c: number, d: number, e: number) => void;
+    readonly mainthreadwasmcontext_push_style_sheet: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly mainthreadwasmcontext_set_config: (a: number, b: number, c: any) => [number, number];
     readonly mainthreadwasmcontext_set_css_id: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly mainthreadwasmcontext_set_dataset: (a: number, b: number, c: any, d: any) => [number, number];

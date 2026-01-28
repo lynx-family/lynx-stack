@@ -37,7 +37,7 @@ export const mainthreadwasmcontext_get_event: (a: number, b: number, c: number, 
 export const mainthreadwasmcontext_get_events: (a: number, b: number) => [number, number];
 export const mainthreadwasmcontext_get_unique_id_by_component_id: (a: number, b: number, c: number) => number;
 export const mainthreadwasmcontext_new: (a: any, b: any, c: number) => number;
-export const mainthreadwasmcontext_push_style_sheet: (a: number, b: number, c: number, d: number, e: number) => void;
+export const mainthreadwasmcontext_push_style_sheet: (a: number, b: number, c: number, d: number, e: number) => [number, number];
 export const mainthreadwasmcontext_set_config: (a: number, b: number, c: any) => [number, number];
 export const mainthreadwasmcontext_set_css_id: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
 export const mainthreadwasmcontext_set_dataset: (a: number, b: number, c: any, d: any) => [number, number];

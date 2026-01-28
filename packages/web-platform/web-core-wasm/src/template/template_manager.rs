@@ -23,7 +23,6 @@ impl TemplateManager {
   }
 
   #[wasm_bindgen]
-  #[wasm_bindgen]
   pub fn add_style_info(
     &mut self,
     template_name: String,

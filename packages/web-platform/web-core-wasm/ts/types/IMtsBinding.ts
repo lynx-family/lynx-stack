@@ -40,4 +40,6 @@ export interface RustMainthreadContextBinding {
   enableElementEvent(element: HTMLElement, eventName: string): void;
 
   disableElementEvent(element: HTMLElement, eventName: string): void;
+
+  getClassList(element: HTMLElement): string[];
 }

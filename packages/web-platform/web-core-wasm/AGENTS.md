@@ -45,6 +45,7 @@ Handles DOM rendering and user interaction.
 
 - **`LynxView.ts`**: The `<lynx-view>` custom element. It initializes the `LynxViewInstance` and acts as the entry point.
 - `ts/client/mainthread/TemplateManager.ts`: Manages template loading and processing. a dedicated `decode.worker.js` to parse binary templates off-main-thread.
+- `src/template/template_sections/style_info`: Contains style information modules (`raw_style_info.rs`, `css_property.rs`, `style_info_decoder.rs`) which define the schema and decoding logic for styles.
 - `src/main_thread/style_manager.rs`: Manages styles, handles CSS selector logic and CSS OG style updates.
 - **`elementAPIs/createElementAPI.ts`**: A JavaScript facade over the Wasm `MainThreadWasmContext`. It provides methods like `__CreateElement` and `__SetAttribute` that bridge JS calls to the underlying Rust logic.
 - **`elementAPIs/WASMJSBinding.ts`**: Mocks or proxies the Wasm binding for testing or non-Wasm environments.
