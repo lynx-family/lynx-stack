@@ -3,8 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path'
 
-import type { Rspack } from '@rsbuild/core'
+import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
 import { describe, expect, test, vi } from 'vitest'
+
+import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
@@ -169,5 +171,125 @@ describe('Lazy', () => {
 
       vi.unstubAllEnvs()
     })
+  })
+
+  test('lazy bundle beforeEncode entryNames', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const entryNamesOfBeforeEncode: string[][] = []
+    let backgroundJSContent = ''
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        source: {
+          entry: {
+            main: new URL(
+              './fixtures/lazy-bundle/index.tsx',
+              import.meta.url,
+            ).pathname,
+          },
+        },
+        output: {
+          distPath: {
+            root: './dist/lazy-bundle',
+          },
+        },
+        plugins: [
+          pluginReactLynx(),
+          {
+            name: 'test',
+            pre: ['lynx:react'],
+            setup(api) {
+              api.modifyBundlerChain((chain, { CHAIN_ID }) => {
+                const rule = chain.module
+                  .rules.get('css:react:main-thread')
+                  .uses.get(CHAIN_ID.USE.IGNORE_CSS)
+                rule.loader(
+                  // add .ts suffix to ignore-css-loader
+                  // this workaround is needed because vitest
+                  // runs on our ts files.
+                  rule.get('loader') as string + '.ts',
+                )
+              })
+            },
+          } as RsbuildPlugin,
+        ],
+        tools: {
+          rspack: {
+            plugins: [
+              {
+                name: 'extractBackgroundJSContent',
+                apply(compiler) {
+                  compiler.hooks.compilation.tap(
+                    'extractBackgroundJSContent',
+                    (compilation) => {
+                      compilation.hooks.processAssets.tap(
+                        'extractBackgroundJSContent',
+                        (assets) => {
+                          for (const key in assets) {
+                            if (/[\\/]background.js$/.test(key)) {
+                              backgroundJSContent = assets[key]!.source()
+                                .toString()!
+                            }
+                          }
+                        },
+                      )
+                    },
+                  )
+                },
+              } as Rspack.RspackPluginInstance,
+              {
+                name: 'beforeEncode-test',
+                apply(compiler) {
+                  compiler.hooks.compilation.tap(
+                    'beforeEncode-test',
+                    (compilation) => {
+                      const hooks = LynxTemplatePlugin
+                        .getLynxTemplatePluginHooks(
+                          compilation as unknown as Parameters<
+                            typeof LynxTemplatePlugin.getLynxTemplatePluginHooks
+                          >[0],
+                        )
+                      hooks.beforeEncode.tap(
+                        'beforeEncode-test',
+                        (args) => {
+                          entryNamesOfBeforeEncode.push(args.entryNames)
+
+                          return args
+                        },
+                      )
+                    },
+                  )
+                },
+              } as Rspack.RspackPluginInstance,
+            ],
+          },
+        },
+      },
+    })
+
+    await rsbuild.build()
+
+    expect(entryNamesOfBeforeEncode).toMatchInlineSnapshot(`
+      [
+        [
+          "main__main-thread",
+          "main",
+        ],
+        [
+          "./LazyComponent.js-react__main-thread",
+          "./LazyComponent.js-react__background",
+        ],
+      ]
+    `)
+    expect(backgroundJSContent.length).toMatchInlineSnapshot(`572304`)
+    // /__webpack_require__\.cssHotUpdateList\s*=\s*(\[[\s\S]*?\]);/
+    const cssHotUpdateList = /\.cssHotUpdateList\s*=\s*(\[\[[\s\S]*?\]\])/.exec(
+      backgroundJSContent,
+    )![1]
+    expect(cssHotUpdateList).toMatchInlineSnapshot(
+      `"[["./LazyComponent.js-react__background",".rspeedy/async/./LazyComponent.js-react__background/./LazyComponent.js-react__background.css.hot-update.json"],["main",".rspeedy/main/main.css.hot-update.json"]]"`,
+    )
   })
 })
