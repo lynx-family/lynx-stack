@@ -41,7 +41,6 @@ pub struct Rule {
   pub(super) prelude: RulePrelude,
   pub(super) declaration_block: DeclarationBlock,
   #[omit_bounds]
-  #[archive(boxed)]
   pub(super) nested_rules: Vec<Rule>,
 }
 
