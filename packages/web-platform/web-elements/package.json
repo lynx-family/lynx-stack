@@ -138,7 +138,7 @@
     "@lynx-js/playwright-fixtures": "workspace:*",
     "@playwright/test": "^1.57.0",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rsbuild/plugin-source-build": "^1.0.3",
+    "@rsbuild/plugin-source-build": "1.0.3",
     "nyc": "^17.1.0",
     "tslib": "^2.8.1"
   },
