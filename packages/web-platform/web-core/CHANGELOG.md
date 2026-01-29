@@ -1,5 +1,25 @@
 # @lynx-js/web-core
 
+## 0.19.7
+
+### Patch Changes
+
+- feat: add browser config of lynx-view, now you can customize the browser config of lynx-view: ([#2140](https://github.com/lynx-family/lynx-stack/pull/2140))
+
+  ```
+  lynxView.browserConfig = {
+    pixelRatio: 1,
+    pixelWidth: 1234,
+    pixelHeight: 5678,
+  }
+  ```
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.7
+  - @lynx-js/web-mainthread-apis@0.19.7
+  - @lynx-js/web-worker-rpc@0.19.7
+  - @lynx-js/web-worker-runtime@0.19.7
+
 ## 0.19.6
 
 ### Patch Changes
