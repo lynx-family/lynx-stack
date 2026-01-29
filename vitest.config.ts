@@ -80,6 +80,7 @@ export default defineConfig({
       'packages/web-platform/*/vitest.config.ts',
       'packages/webpack/*/vitest.config.ts',
       'packages/lynx/gesture-runtime/vitest.config.ts',
+      'packages/motion/vitest.config.ts',
     ],
   },
 });

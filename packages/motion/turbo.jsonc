@@ -4,10 +4,12 @@
   "tasks": {
     "build": {
       "dependsOn": [
+        "//#build",
         "^build",
       ],
       "inputs": [
         "$TURBO_ROOT$/tsconfig.json",
+        "tsconfig.build.json",
         "package.json",
         "src/**",
         "rslib.config.ts",

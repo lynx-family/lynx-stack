@@ -1,0 +1,67 @@
+{
+  "name": "@lynx-js/motion",
+  "version": "0.0.1",
+  "private": false,
+  "description": "This is a motion adapter for Lynx.js",
+  "keywords": [
+    "react",
+    "lynx",
+    "motion",
+    "framer-motion"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/motion"
+  },
+  "license": "Apache-2.0",
+  "sideEffects": [
+    "./dist/polyfill/shim.js"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./mini": {
+      "types": "./dist/mini/index.d.ts",
+      "import": "./dist/mini/index.js",
+      "default": "./dist/mini/index.js"
+    }
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "NOTICE",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "framer-motion": "12.23.12",
+    "motion-dom": "12.23.12",
+    "motion-utils": "12.23.6"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/types": "3.6.0",
+    "rsbuild-plugin-publint": "0.3.3"
+  },
+  "peerDependencies": {
+    "@lynx-js/react": "*",
+    "@lynx-js/types": "*"
+  },
+  "peerDependenciesMeta": {
+    "@lynx-js/types": {
+      "optional": true
+    }
+  }
+}
