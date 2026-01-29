@@ -534,6 +534,21 @@ Component, View
         ]
       `);
     }
+
+    {
+      cfg.compat.disableDeprecatedWarning = true;
+      const result = await transformReactLynx(
+        `this.createSelectorQuery();
+         this.getElementById();`,
+        cfg,
+      );
+      expect(
+        await formatMessages(result.warnings, {
+          kind: 'warning',
+          color: false,
+        }),
+      ).toMatchInlineSnapshot(`[]`);
+    }
   });
 });
 
