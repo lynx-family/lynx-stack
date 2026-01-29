@@ -22,6 +22,13 @@ export function snapshotCreateList(
     componentAtIndexes,
   );
   const listID = __GetElementUniqueID(list);
+
+  if (typeof lynx !== 'undefined' && typeof lynx.getNative === 'function') {
+    lynx.getNative()?.addEventListener('__DestroyLifetime', () => {
+      __UpdateListCallbacks(list, null, null, null);
+    });
+  }
+
   gSignMap[listID] = signMap;
   gRecycleMap[listID] = recycleMap;
   return list;
