@@ -50,6 +50,10 @@ export class XList extends HTMLElement {
     return this.#getListContainer().scrollHeight;
   }
 
+  override get scrollWidth() {
+    return this.#getListContainer().scrollWidth;
+  }
+
   get __scrollTop() {
     return super.scrollTop;
   }
