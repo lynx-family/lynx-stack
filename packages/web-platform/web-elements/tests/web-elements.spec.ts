@@ -2141,11 +2141,15 @@ test.describe('web-elements test suite', () => {
             return (document.querySelector('x-list') as any)
               ?.getScrollContainerInfo();
           })).jsonValue();
+        const scrollHeight1 = await page.evaluate(() => {
+          return (document.querySelector('x-list') as any)?.scrollHeight;
+        });
         expect(
           typeof info1 === 'object' && info1.scrollLeft === 0
             && info1.scrollTop === 0 && info1.scrollHeight !== 0
             && info1.scrollWidth !== 0,
         ).toBeTruthy();
+        expect(scrollHeight1).toBe(info1.scrollHeight);
         await page.evaluate(() =>
           document.querySelector('x-list')?.shadowRoot?.querySelector(
             '#content',
@@ -2157,11 +2161,15 @@ test.describe('web-elements test suite', () => {
             return (document.querySelector('x-list') as any)
               ?.getScrollContainerInfo();
           })).jsonValue();
+        const scrollHeight2 = await page.evaluate(() => {
+          return (document.querySelector('x-list') as any)?.scrollHeight;
+        });
         expect(
           typeof info2 === 'object' && info2.scrollLeft === 200
             && info2.scrollTop === 200 && info2.scrollHeight !== 0
             && info2.scrollWidth !== 0,
         ).toBeTruthy();
+        expect(scrollHeight2).toBe(info2.scrollHeight);
       },
     );
 
