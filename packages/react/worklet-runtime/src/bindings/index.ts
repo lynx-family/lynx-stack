@@ -10,3 +10,5 @@ export * from './observers.js';
 export type * from './types.js';
 
 export { WorkletEvents, type RunWorkletCtxData, type RunWorkletCtxRetData } from './events.js';
+
+export { registerMainThreadValueClass } from '../workletRef.js';
