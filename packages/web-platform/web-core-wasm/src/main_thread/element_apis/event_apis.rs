@@ -13,17 +13,17 @@ use wasm_bindgen::prelude::*;
  */
 #[wasm_bindgen]
 pub struct EventInfo {
-  #[wasm_bindgen(getter_with_clone, js_name = "name")]
+  #[wasm_bindgen(getter_with_clone)]
   pub event_name: String,
-  #[wasm_bindgen(getter_with_clone, js_name = "type")]
+  #[wasm_bindgen(getter_with_clone)]
   pub event_type: String,
-  #[wasm_bindgen(getter_with_clone, js_name = "function")]
+  #[wasm_bindgen(getter_with_clone)]
   pub event_handler: wasm_bindgen::JsValue,
 }
 
 #[wasm_bindgen]
 impl MainThreadWasmContext {
-  #[wasm_bindgen(js_name = "__wasm_add_event_bts")]
+  #[wasm_bindgen]
   pub fn add_cross_thread_event(
     &mut self,
     unique_id: usize,
@@ -59,17 +59,21 @@ impl MainThreadWasmContext {
       );
     }
     if should_enable {
-      self
-        .mts_binding
-        .enable_element_event(unique_id, event_name_str);
+      if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
+        self
+          .mts_binding
+          .enable_element_event(element, event_name_str);
+      }
     } else if should_disable {
-      self
-        .mts_binding
-        .disable_element_event(unique_id, event_name_str);
+      if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
+        self
+          .mts_binding
+          .disable_element_event(element, event_name_str);
+      }
     }
   }
 
-  #[wasm_bindgen(js_name = "__wasm_add_event_run_worklet")]
+  #[wasm_bindgen]
   pub fn add_run_worklet_event(
     &mut self,
     unique_id: usize,
@@ -105,17 +109,21 @@ impl MainThreadWasmContext {
       );
     }
     if should_enable {
-      self
-        .mts_binding
-        .enable_element_event(unique_id, event_name_str);
+      if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
+        self
+          .mts_binding
+          .enable_element_event(element, event_name_str);
+      }
     } else if should_disable {
-      self
-        .mts_binding
-        .disable_element_event(unique_id, event_name_str);
+      if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
+        self
+          .mts_binding
+          .disable_element_event(element, event_name_str);
+      }
     }
   }
 
-  #[wasm_bindgen(js_name = "__GetEvent")]
+  #[wasm_bindgen]
   pub fn get_event(
     &self,
     unique_id: usize,
@@ -131,7 +139,7 @@ impl MainThreadWasmContext {
     )
   }
 
-  #[wasm_bindgen(js_name = "__GetEvents")]
+  #[wasm_bindgen]
   pub fn get_events(&self, unique_id: usize) -> Vec<EventInfo> {
     let mut event_infos: Vec<EventInfo> = vec![];
     let event_types = vec!["bindevent", "capture-bind", "catchevent", "capture-catch"];
@@ -270,7 +278,7 @@ impl MainThreadWasmContext {
     false
   }
 
-  #[wasm_bindgen(js_name = "__wasm_commonEventHandler")]
+  #[wasm_bindgen]
   pub fn common_event_handler(
     &self,
     event: JsValue,

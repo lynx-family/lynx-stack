@@ -1,34 +1,15 @@
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
-export const __wbg_decodedstyledata_free: (a: number, b: number) => void;
-export const __wbg_elementtemplatesection_free: (a: number, b: number) => void;
-export const __wbg_operation_free: (a: number, b: number) => void;
-export const __wbg_rawelementtemplate_free: (a: number, b: number) => void;
 export const __wbg_rawstyleinfo_free: (a: number, b: number) => void;
 export const __wbg_rule_free: (a: number, b: number) => void;
 export const __wbg_ruleprelude_free: (a: number, b: number) => void;
 export const __wbg_selector_free: (a: number, b: number) => void;
 export const __wbg_styleinfodecoder_free: (a: number, b: number) => void;
-export const decodedstyledata_decode_into: (a: any, b: number, c: number, d: number) => [number, number, number];
-export const decodedstyledata_encode_from_raw_style_info: (a: number, b: number, c: number, d: number) => [number, number, number];
-export const decodedstyledata_font_face_content: (a: number) => [number, number];
-export const decodedstyledata_new: (a: any) => [number, number, number];
-export const decodedstyledata_query_css_og_declarations_by_css_id: (a: number, b: number, c: number, d: number) => [number, number];
-export const decodedstyledata_style_content: (a: number) => [number, number];
-export const elementtemplatesection_add_element_template: (a: number, b: number, c: number, d: number) => void;
-export const elementtemplatesection_encode: (a: number) => any;
-export const elementtemplatesection_from_encoded: (a: any) => [number, number, number];
-export const elementtemplatesection_new: () => number;
-export const rawelementtemplate_append_child: (a: number, b: number, c: number) => void;
-export const rawelementtemplate_append_element_slot: (a: number, b: number, c: number) => void;
-export const rawelementtemplate_append_to_root: (a: number, b: number) => void;
-export const rawelementtemplate_create_element: (a: number, b: number, c: number, d: number) => void;
-export const rawelementtemplate_new: () => number;
-export const rawelementtemplate_set_attribute: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
-export const rawelementtemplate_set_attribute_slot: (a: number, b: number, c: number, d: number, e: number) => void;
-export const rawelementtemplate_set_cross_thread_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
-export const rawelementtemplate_set_dataset: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+export const decode_style_info: (a: any, b: number, c: number, d: number) => [number, number, number];
+export const encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number) => [number, number, number];
+export const get_font_face_content: (a: any) => [number, number, number, number];
+export const get_style_content: (a: any) => [number, number, number, number];
 export const rawstyleinfo_append_import: (a: number, b: number, c: number) => void;
 export const rawstyleinfo_encode: (a: number) => [number, number, number];
 export const rawstyleinfo_new: () => number;
@@ -46,5 +27,4 @@ export const __wbindgen_realloc: (a: number, b: number, c: number, d: number) =>
 export const __wbindgen_externrefs: WebAssembly.Table;
 export const __externref_table_dealloc: (a: number) => void;
 export const __wbindgen_free: (a: number, b: number, c: number) => void;
-export const __externref_table_alloc: () => number;
 export const __wbindgen_start: () => void;

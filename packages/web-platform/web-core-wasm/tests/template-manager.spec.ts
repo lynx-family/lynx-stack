@@ -323,7 +323,13 @@ describe('Template Manager', () => {
 
     // Verify config
     expect(mockLynxViewInstance.onPageConfigReady).toHaveBeenCalledWith(
-      expect.objectContaining(jsonContent.pageConfig),
+      expect.objectContaining(
+        Object.fromEntries(
+          Object.entries(jsonContent.pageConfig).map((
+            [k, v],
+          ) => [k, String(v)]),
+        ),
+      ),
     );
 
     // Verify style info

@@ -16,7 +16,6 @@ import {
   loadUnknownElementEventName,
   systemInfoBase,
 } from '../../constants.js';
-import type { DecodedStyle } from '../wasm.js';
 import { BackgroundThread } from './Background.js';
 import { I18nManager } from './I18n.js';
 import { WASMJSBinding } from './elementAPIs/WASMJSBinding.js';
@@ -24,12 +23,9 @@ import { ExposureServices } from './ExposureServices.js';
 import { createElementAPI } from './elementAPIs/createElementAPI.js';
 import { createMainThreadGlobalAPIs } from './createMainThreadGlobalAPIs.js';
 import { templateManager } from './TemplateManager.js';
-import {
-  loadAllWebElements,
-  loadWebElement,
-} from '../webElementsDynamicLoader.js';
+import { loadAllWebElements } from '../webElementsDynamicLoader.js';
 import type { LynxViewElement } from './LynxView.js';
-import { StyleManager } from './StyleManager.js';
+import { templateManagerWasm } from '../wasm.js';
 
 const pixelRatio = window.devicePixelRatio;
 const screenWidth = window.screen.availWidth * pixelRatio;
@@ -63,7 +59,6 @@ export class LynxViewInstance implements AsyncDisposable {
   readonly webElementsLoadingPromises: Promise<void>[] = [];
   readonly styleReadyPromise: Promise<void>;
   readonly styleReadyResolve: () => void;
-  styleManager?: StyleManager;
 
   #renderPageFunction: ((data: Cloneable) => void) | null = null;
   #queryComponentCache: Map<string, Promise<unknown>> = new Map();
@@ -122,13 +117,9 @@ export class LynxViewInstance implements AsyncDisposable {
     const enableCSSSelector = config['enableCSSSelector'] == 'true';
     const defaultDisplayLinear = config['defaultDisplayLinear'] == 'true';
     const defaultOverflowVisible = config['defaultOverflowVisible'] == 'true';
-    this.styleManager = new StyleManager(
-      this.rootDom,
-    );
     Object.assign(
       this.mtsRealm.globalWindow,
       createElementAPI(
-        this.templateUrl,
         this.rootDom,
         this.mtsWasmBinding,
         enableCSSSelector,
@@ -152,11 +143,16 @@ export class LynxViewInstance implements AsyncDisposable {
     });
   }
 
-  onStyleInfoReady(styleInfo: DecodedStyle, currentUrl: string) {
-    this.styleManager?.pushStyleSheet(
-      styleInfo,
-      currentUrl === this.templateUrl ? undefined : currentUrl,
-    );
+  onStyleInfoReady(
+    currentUrl: string,
+  ) {
+    if (this.mtsWasmBinding.wasmContext) {
+      this.mtsWasmBinding.wasmContext.push_style_sheet(
+        templateManagerWasm!,
+        currentUrl,
+        this.templateUrl === currentUrl,
+      );
+    }
     this.parentDom.style.display = 'flex';
     this.styleReadyResolve();
   }
@@ -179,11 +175,7 @@ export class LynxViewInstance implements AsyncDisposable {
   async onMTSScriptsExecuted() {
     this.backgroundThread.markTiming('lepus_execute_end');
 
-    if (
-      !templateManager.getTemplate(this.templateUrl)?.elementTemplates
-    ) {
-      this.webElementsLoadingPromises.push(loadAllWebElements());
-    }
+    this.webElementsLoadingPromises.push(loadAllWebElements());
 
     await Promise.all([
       ...this.webElementsLoadingPromises,
@@ -221,13 +213,6 @@ export class LynxViewInstance implements AsyncDisposable {
       btsUrls,
     );
     this.backgroundThread.startBTS();
-  }
-
-  loadWebElement(id: number) {
-    const loadPromise = loadWebElement(id);
-    if (loadPromise) {
-      this.webElementsLoadingPromises.push(loadPromise);
-    }
   }
 
   loadUnknownElement(tagName: string) {

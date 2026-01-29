@@ -4,53 +4,57 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use crate::css_tokenizer::token_types::{COLON_TOKEN, IDENT_TOKEN, SEMICOLON_TOKEN};
-use crate::css_tokenizer::tokenize;
-use bincode::Decode;
+use super::css_property::ParsedDeclaration;
+
 #[cfg(feature = "encode")]
-use bincode::Encode;
+use super::style_info_decoder::StyleInfoDecoder;
 use fnv::FnvHashMap;
+#[cfg(feature = "encode")]
+use rkyv::Serialize;
+use rkyv::{Archive, Deserialize};
 use wasm_bindgen::prelude::*;
 
-/**
- * key: cssId
- * value: StyleSheet
- */
-#[derive(Decode, Default)]
-#[cfg_attr(feature = "encode", derive(Encode, Clone))]
+#[derive(Clone, Default, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 #[wasm_bindgen]
 pub struct RawStyleInfo {
   pub(super) css_id_to_style_sheet: FnvHashMap<i32, StyleSheet>,
   pub(super) style_content_str_size_hint: usize,
 }
 
-#[derive(Decode, Default)]
-#[cfg_attr(feature = "encode", derive(Encode, Clone))]
-pub(crate) struct StyleSheet {
+#[derive(Clone, Default, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
+pub struct StyleSheet {
   pub(super) imports: Vec<i32>,
   pub(super) rules: Vec<Rule>,
 }
 
-#[derive(Decode)]
-#[cfg_attr(feature = "encode", derive(Encode, Clone))]
+#[derive(Clone, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
+#[archive(bound(
+  serialize = "__S: rkyv::ser::Serializer + rkyv::ser::ScratchSpace",
+  deserialize = "__D: rkyv::de::SharedDeserializeRegistry"
+))]
 #[wasm_bindgen]
 pub struct Rule {
   pub(super) rule_type: RuleType,
   pub(super) prelude: RulePrelude,
   pub(super) declaration_block: DeclarationBlock,
+  #[omit_bounds]
   pub(super) nested_rules: Vec<Rule>,
 }
 
-#[derive(Decode, PartialEq)]
-#[cfg_attr(feature = "encode", derive(Encode, Clone))]
+#[derive(Clone, PartialEq, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
+#[repr(i32)]
 pub(super) enum RuleType {
-  Declaration = 1_isize,
-  FontFace = 2_isize,
-  KeyFrames = 3_isize,
+  Declaration = 1,
+  FontFace = 2,
+  KeyFrames = 3,
 }
 
-#[derive(Decode, Default)]
-#[cfg_attr(feature = "encode", derive(Encode, Clone))]
+#[derive(Clone, Default, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 #[wasm_bindgen]
 /**
  * Either SelectorList or KeyFramesPrelude
@@ -63,48 +67,42 @@ pub struct RulePrelude {
   pub(super) selector_list: Vec<Selector>,
 }
 
-#[derive(Decode, Clone, Default)]
-#[cfg_attr(feature = "encode", derive(Encode))]
+#[derive(Clone, Default, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 #[wasm_bindgen]
 pub struct Selector {
   pub(super) simple_selectors: Vec<OneSimpleSelector>,
 }
 
-#[derive(Decode, PartialEq, Clone)]
-#[cfg_attr(feature = "encode", derive(Encode))]
-pub(super) struct OneSimpleSelector {
-  pub(super) selector_type: OneSimpleSelectorType,
-  pub(super) value: String,
+#[derive(Clone, PartialEq, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
+pub(crate) struct OneSimpleSelector {
+  pub(crate) selector_type: OneSimpleSelectorType,
+  pub(crate) value: String,
 }
 
-#[derive(Decode, PartialEq, Clone)]
-#[cfg_attr(feature = "encode", derive(Encode))]
+#[derive(Clone, PartialEq, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
+#[repr(i32)]
 /**
  * All possible OneSimpleSelector types
  */
-pub(super) enum OneSimpleSelectorType {
-  ClassSelector = 1_isize,
-  IdSelector = 2_isize,
-  AttributeSelector = 3_isize,
-  TypeSelector = 4_isize,
-  Combinator = 5_isize,
-  PseudoClassSelector = 6_isize,
-  PseudoElementSelector = 7_isize,
-  UniversalSelector = 8_isize,
-  UnknownText = 9_isize,
+pub(crate) enum OneSimpleSelectorType {
+  ClassSelector = 1,
+  IdSelector = 2,
+  AttributeSelector = 3,
+  TypeSelector = 4,
+  Combinator = 5,
+  PseudoClassSelector = 6,
+  PseudoElementSelector = 7,
+  UniversalSelector = 8,
+  UnknownText = 9,
 }
 
-#[derive(Decode)]
-#[cfg_attr(feature = "encode", derive(Encode, Clone))]
-pub(super) struct DeclarationBlock {
-  pub(super) tokens: Vec<ValueToken>,
-}
-
-#[derive(Decode)]
-#[cfg_attr(feature = "encode", derive(Encode, Clone))]
-pub(super) struct ValueToken {
-  pub(super) token_type: u8,
-  pub(super) value: String,
+#[derive(Clone, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
+pub(crate) struct DeclarationBlock {
+  pub(crate) declarations: Vec<ParsedDeclaration>,
 }
 
 #[wasm_bindgen]
@@ -140,16 +138,15 @@ impl RawStyleInfo {
   }
 
   /**
-   * Encodes the RawStyleInfo into a Uint8Array using bincode serialization.
+   * Encodes the RawStyleInfo into a Uint8Array using rkyv serialization.
    * @returns A Uint8Array containing the serialized RawStyleInfo.
    */
   #[cfg(feature = "encode")]
   #[wasm_bindgen]
   pub fn encode(&mut self) -> Result<js_sys::Uint8Array, JsError> {
-    use crate::template::template_sections::style_info::decoded_style_info::StyleInfoDecoder;
     let decoded_style_info = StyleInfoDecoder::new(self.clone(), None, true)?;
     self.style_content_str_size_hint = decoded_style_info.style_content.len();
-    let serialized = bincode::encode_to_vec(&*self, bincode::config::standard())
+    let serialized = rkyv::to_bytes::<_, 1024>(self)
       .map_err(|e| JsError::new(&format!("Failed to encode RawStyleInfo: {e:?}")))?;
     Ok(js_sys::Uint8Array::from(serialized.as_slice()))
   }
@@ -176,7 +173,9 @@ impl Rule {
       prelude: RulePrelude {
         selector_list: vec![],
       },
-      declaration_block: DeclarationBlock { tokens: vec![] },
+      declaration_block: DeclarationBlock {
+        declarations: vec![],
+      },
       nested_rules: vec![],
     })
   }
@@ -192,36 +191,16 @@ impl Rule {
 
   /**
    * Pushes a declaration to the rule's declaration block.
+   * LynxJS doesn't support !important
    * @param property_name - The property name.
    * @param value - The property value.
    */
   #[wasm_bindgen]
   pub fn push_declaration(&mut self, property_name: String, value: String) {
-    // 1. property name
-    self.declaration_block.tokens.push(ValueToken {
-      token_type: IDENT_TOKEN,
-      value: property_name,
-    });
-    // 2. colon
-    self.declaration_block.tokens.push(ValueToken {
-      token_type: COLON_TOKEN,
-      value: ":".to_string(),
-    });
-    // 3. value tokens
-    let mut parser = DeclarationParser {
-      value_token_list: vec![],
-    };
-    tokenize::tokenize(&value, &mut parser);
     self
       .declaration_block
-      .tokens
-      .append(&mut parser.value_token_list);
-
-    // 4. semicolon
-    self.declaration_block.tokens.push(ValueToken {
-      token_type: SEMICOLON_TOKEN,
-      value: ";".to_string(),
-    });
+      .declarations
+      .push(ParsedDeclaration::new(property_name, value));
   }
 
   /**
@@ -339,18 +318,5 @@ impl Selector {
         }
       }
     }
-  }
-}
-struct DeclarationParser {
-  value_token_list: Vec<ValueToken>,
-}
-
-impl tokenize::Parser for DeclarationParser {
-  fn on_token(&mut self, token_type: u8, token_value: &str) {
-    let value_token = ValueToken {
-      token_type,
-      value: token_value.to_string(),
-    };
-    self.value_token_list.push(value_token);
   }
 }

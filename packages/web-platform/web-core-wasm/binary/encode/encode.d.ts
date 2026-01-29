@@ -1,64 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export class DecodedStyleData {
-    free(): void;
-    [Symbol.dispose](): void;
-    static decode_into(buffer: Uint8Array, entry_name: string | null | undefined, config_enable_css_selector: boolean): Uint8Array;
-    static encode_from_raw_style_info(raw_style_info: RawStyleInfo, config_enable_css_selector: boolean, entry_name?: string | null): Uint8Array;
-    constructor(buffer: Uint8Array);
-    query_css_og_declarations_by_css_id(css_id: number, class_name: string[]): string;
-    readonly font_face_content: string;
-    readonly style_content: string;
-}
-
-export class ElementTemplateSection {
-    free(): void;
-    [Symbol.dispose](): void;
-    add_element_template(id: string, raw_element_template: RawElementTemplate): void;
-    encode(): Uint8Array;
-    static from_encoded(buffer: Uint8Array): ElementTemplateSection;
-    constructor();
-}
-
-export enum LEOAsmOpcode {
-    SetAttribute = 1,
-    RemoveChild = 3,
-    AppendChild = 5,
-    CreateElement = 6,
-    SetAttributeSlot = 7,
-    AppendElementSlot = 8,
-    SetDataset = 10,
-    AddEvent = 11,
-    AppendToRoot = 12,
-}
-
-export class Operation {
-    private constructor();
-    free(): void;
-    [Symbol.dispose](): void;
-}
-
-export class RawElementTemplate {
-    free(): void;
-    [Symbol.dispose](): void;
-    append_child(parent_element_id: number, child_element_id: number): void;
-    append_element_slot(parent_element_id: number, child_element_slot_id: number): void;
-    append_to_root(element_id: number): void;
-    create_element(tag_names: string, element_id: number): void;
-    constructor();
-    set_attribute(element_id: number, attr_name: string, attr_value: string): void;
-    set_attribute_slot(element_id: number, attribute_slot_id: number, attr_name: string): void;
-    set_cross_thread_event(element_id: number, event_type: string, event_name: string, event_value: string): void;
-    set_dataset(element_id: number, data_name: string, data_value: string): void;
-}
-
-/**
- *
- * * key: cssId
- * * value: StyleSheet
- *
- */
 export class RawStyleInfo {
     free(): void;
     [Symbol.dispose](): void;
@@ -73,7 +15,7 @@ export class RawStyleInfo {
     append_import(css_id: number, import_css_id: number): void;
     /**
      *
-     *   * Encodes the RawStyleInfo into a Uint8Array using bincode serialization.
+     *   * Encodes the RawStyleInfo into a Uint8Array using rkyv serialization.
      *   * @returns A Uint8Array containing the serialized RawStyleInfo.
      *
      */
@@ -103,6 +45,7 @@ export class Rule {
     /**
      *
      *   * Pushes a declaration to the rule's declaration block.
+     *   * LynxJS doesn't support !important
      *   * @param property_name - The property name.
      *   * @param value - The property value.
      *
@@ -165,3 +108,11 @@ export class StyleInfoDecoder {
     free(): void;
     [Symbol.dispose](): void;
 }
+
+export function decode_style_info(buffer: Uint8Array, entry_name: string | null | undefined, config_enable_css_selector: boolean): Uint8Array;
+
+export function encode_legacy_json_generated_raw_style_info(raw_style_info: RawStyleInfo, config_enable_css_selector: boolean, entry_name?: string | null): Uint8Array;
+
+export function get_font_face_content(buffer: Uint8Array): string;
+
+export function get_style_content(buffer: Uint8Array): string;

@@ -4,9 +4,4 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export function loadAllWebElements(): Promise<void> {
-  return import(
-    /* webpackChunkName: "web-elements" */
-    '@lynx-js/web-elements/all'
-  ).then(() => {});
-}
+pub mod hyphenate_style_name;

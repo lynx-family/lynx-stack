@@ -57,8 +57,7 @@
   },
   "dependencies": {
     "@lynx-js/web-elements": "workspace:*",
-    "@lynx-js/web-worker-rpc": "workspace:*",
-    "hyphenate-style-name": "^1.1.0"
+    "@lynx-js/web-worker-rpc": "workspace:*"
   },
   "devDependencies": {
     "@lynx-js/css-serializer": "workspace:*",

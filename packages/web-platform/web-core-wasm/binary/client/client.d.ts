@@ -1,24 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export class DecodedStyleData {
-    free(): void;
-    [Symbol.dispose](): void;
-    static decode_into(buffer: Uint8Array, entry_name: string | null | undefined, config_enable_css_selector: boolean): Uint8Array;
-    static encode_from_raw_style_info(raw_style_info: RawStyleInfo, config_enable_css_selector: boolean, entry_name?: string | null): Uint8Array;
-    constructor(buffer: Uint8Array);
-    query_css_og_declarations_by_css_id(css_id: number, class_name: string[]): string;
-    readonly font_face_content: string;
-    readonly style_content: string;
-}
-
-export class ElementTemplateSection {
-    private constructor();
-    free(): void;
-    [Symbol.dispose](): void;
-    static from_encoded(buffer: Uint8Array): ElementTemplateSection;
-}
-
 /**
  *
  * * for return of __GetEvents
@@ -28,60 +10,47 @@ export class EventInfo {
     private constructor();
     free(): void;
     [Symbol.dispose](): void;
-    function: any;
-    name: string;
-    type: string;
+    event_handler: any;
+    event_name: string;
+    event_type: string;
 }
 
 export class MainThreadWasmContext {
     free(): void;
     [Symbol.dispose](): void;
-    __AddDataset(unique_id: number, key: any, value: any): void;
-    __CreateElementCommon(parent_component_unique_id: number, dom: HTMLElement, css_id?: number | null, component_id?: string | null): number;
-    __GetComponentID(unique_id: number): string | undefined;
-    __GetConfig(unique_id: number): object;
-    __GetDataByKey(unique_id: number, key: string): any;
-    __GetDataset(unique_id: number): object;
-    __GetElementConfig(unique_id: number): object | undefined;
-    __GetEvent(unique_id: number, event_name: string, event_type: string): any;
-    __GetEvents(unique_id: number): EventInfo[];
+    add_cross_thread_event(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: string | null): void;
+    add_dataset(unique_id: number, key: any, value: any): void;
+    add_run_worklet_event(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: any | null): void;
+    common_event_handler(event: any, bubble_unique_id_path: Uint32Array, event_name: string): void;
+    create_element_common(parent_component_unique_id: number, dom: HTMLElement, css_id?: number | null, component_id?: string | null): number;
+    dispatch_event_by_path(bubble_unique_id_path: Uint32Array, event_name: string, is_capture: boolean, serialized_event: any): boolean;
+    get_component_id(unique_id: number): string | undefined;
+    get_config(unique_id: number): object;
+    get_css_id_by_unique_id(unique_id: number): number | undefined;
+    get_data_by_key(unique_id: number, key: string): any;
+    get_dataset(unique_id: number): object;
+    get_dom_by_unique_id(unique_id: number): HTMLElement | undefined;
+    get_element_config(unique_id: number): object | undefined;
+    get_event(unique_id: number, event_name: string, event_type: string): any;
+    get_events(unique_id: number): EventInfo[];
+    get_unique_id_by_component_id(component_id: string): number | undefined;
+    constructor(root_node: Node, mts_binding: any, config_enable_css_selector: boolean);
+    push_style_sheet(template_manager: TemplateManager, entry_name: string, is_entry_template: boolean): void;
     /**
      *
      *   * key: String
      *   * value: stringifyed js value
      *
      */
-    __SetConfig(unique_id: number, config: object): void;
-    __SetDataset(unique_id: number, dom: HTMLElement, new_dataset: object): void;
-    __UpdateComponentID(unique_id: number, component_id?: string | null): void;
-    __wasm_AddInlineStyle_number_key(dom: HTMLElement, key: number, value?: string | null): void;
-    /**
-     *
-     *   * The key could be string or number
-     *   * The value could be string or number or null or undefined
-     *
-     */
-    __wasm_AddInlineStyle_str_key(dom: HTMLElement, key: string, value?: string | null): void;
-    __wasm_SetInlineStyles(dom: HTMLElement, styles: string): boolean;
-    __wasm_add_event_bts(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: string | null): void;
-    __wasm_add_event_run_worklet(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: any | null): void;
-    __wasm_commonEventHandler(event: any, bubble_unique_id_path: Uint32Array, event_name: string): void;
-    __wasm_get_css_id_by_unique_id(unique_id: number): number | undefined;
-    __wasm_get_unique_id_by_component_id(component_id: string): number | undefined;
-    __wasm_set_css_id(elements_unique_id: Uint32Array, css_id: number): void;
-    __wasm_set_page_element_unique_id(unique_id: number): void;
-    __wasm_take_timing_flags(): string[];
-    _wasm_elementFromBinary(parent_component_unique_id: number, template_url: string, element_template_name: string, element_template_section: ElementTemplateSection): Element;
-    dispatch_event_by_path(bubble_unique_id_path: Uint32Array, event_name: string, is_capture: boolean, serialized_event: any): boolean;
-    constructor(document: Document, root_node: Node, mts_binding: any, unique_id_symbol: any, config_enable_css_selector: boolean);
+    set_config(unique_id: number, config: object): void;
+    set_css_id(elements_unique_id: Uint32Array, css_id: number, entry_name?: string | null): void;
+    set_dataset(unique_id: number, dom: HTMLElement, new_dataset: object): void;
+    set_page_element_unique_id(unique_id: number): void;
+    take_timing_flags(): string[];
+    update_component_id(unique_id: number, component_id?: string | null): void;
+    update_css_og_style(unique_id: number, entry_name?: string | null): void;
 }
 
-/**
- *
- * * key: cssId
- * * value: StyleSheet
- *
- */
 export class RawStyleInfo {
     free(): void;
     [Symbol.dispose](): void;
@@ -119,6 +88,7 @@ export class Rule {
     /**
      *
      *   * Pushes a declaration to the rule's declaration block.
+     *   * LynxJS doesn't support !important
      *   * @param property_name - The property name.
      *   * @param value - The property value.
      *
@@ -176,57 +146,83 @@ export class Selector {
     push_one_selector_section(selector_type: string, value: string): void;
 }
 
+export class TemplateManager {
+    free(): void;
+    [Symbol.dispose](): void;
+    add_style_info(template_name: string, buf: Uint8Array, document: Document): void;
+    constructor();
+}
+
+/**
+ *
+ * * The key could be string or number
+ * * The value could be string or number or null or undefined
+ *
+ */
+export function add_inline_style_raw_string_key(dom: HTMLElement, key: string, value?: string | null): void;
+
+export function decode_style_info(buffer: Uint8Array, entry_name: string | null | undefined, config_enable_css_selector: boolean): Uint8Array;
+
+export function encode_legacy_json_generated_raw_style_info(raw_style_info: RawStyleInfo, config_enable_css_selector: boolean, entry_name?: string | null): Uint8Array;
+
+export function get_font_face_content(buffer: Uint8Array): string;
+
+export function get_inline_styles_in_key_value_vec(dom: HTMLElement, k_v_vec: string[]): void;
+
+export function get_style_content(buffer: Uint8Array): string;
+
+export function set_inline_styles_in_str(dom: HTMLElement, styles: string): boolean;
+
+export function set_inline_styles_number_key(dom: HTMLElement, key: number, value?: string | null): void;
+
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
-    readonly __wbg_decodedstyledata_free: (a: number, b: number) => void;
-    readonly __wbg_elementtemplatesection_free: (a: number, b: number) => void;
     readonly __wbg_eventinfo_free: (a: number, b: number) => void;
-    readonly __wbg_get_eventinfo_function: (a: number) => any;
-    readonly __wbg_get_eventinfo_name: (a: number) => [number, number];
-    readonly __wbg_get_eventinfo_type: (a: number) => [number, number];
+    readonly __wbg_get_eventinfo_event_handler: (a: number) => any;
+    readonly __wbg_get_eventinfo_event_name: (a: number) => [number, number];
+    readonly __wbg_get_eventinfo_event_type: (a: number) => [number, number];
     readonly __wbg_mainthreadwasmcontext_free: (a: number, b: number) => void;
     readonly __wbg_rawstyleinfo_free: (a: number, b: number) => void;
     readonly __wbg_rule_free: (a: number, b: number) => void;
     readonly __wbg_ruleprelude_free: (a: number, b: number) => void;
     readonly __wbg_selector_free: (a: number, b: number) => void;
-    readonly __wbg_set_eventinfo_function: (a: number, b: any) => void;
-    readonly __wbg_set_eventinfo_name: (a: number, b: number, c: number) => void;
-    readonly __wbg_set_eventinfo_type: (a: number, b: number, c: number) => void;
-    readonly decodedstyledata_decode_into: (a: any, b: number, c: number, d: number) => [number, number, number];
-    readonly decodedstyledata_encode_from_raw_style_info: (a: number, b: number, c: number, d: number) => [number, number, number];
-    readonly decodedstyledata_font_face_content: (a: number) => [number, number];
-    readonly decodedstyledata_new: (a: any) => [number, number, number];
-    readonly decodedstyledata_query_css_og_declarations_by_css_id: (a: number, b: number, c: number, d: number) => [number, number];
-    readonly decodedstyledata_style_content: (a: number) => [number, number];
-    readonly elementtemplatesection_from_encoded: (a: any) => [number, number, number];
-    readonly mainthreadwasmcontext___AddDataset: (a: number, b: number, c: any, d: any) => [number, number];
-    readonly mainthreadwasmcontext___CreateElementCommon: (a: number, b: number, c: any, d: number, e: number, f: number) => number;
-    readonly mainthreadwasmcontext___GetComponentID: (a: number, b: number) => [number, number, number, number];
-    readonly mainthreadwasmcontext___GetConfig: (a: number, b: number) => [number, number, number];
-    readonly mainthreadwasmcontext___GetDataByKey: (a: number, b: number, c: number, d: number) => [number, number, number];
-    readonly mainthreadwasmcontext___GetDataset: (a: number, b: number) => [number, number, number];
-    readonly mainthreadwasmcontext___GetElementConfig: (a: number, b: number) => [number, number, number];
-    readonly mainthreadwasmcontext___GetEvent: (a: number, b: number, c: number, d: number, e: number, f: number) => any;
-    readonly mainthreadwasmcontext___GetEvents: (a: number, b: number) => [number, number];
-    readonly mainthreadwasmcontext___SetConfig: (a: number, b: number, c: any) => [number, number];
-    readonly mainthreadwasmcontext___SetDataset: (a: number, b: number, c: any, d: any) => [number, number];
-    readonly mainthreadwasmcontext___UpdateComponentID: (a: number, b: number, c: number, d: number) => [number, number];
-    readonly mainthreadwasmcontext___wasm_AddInlineStyle_number_key: (a: number, b: any, c: number, d: number, e: number) => void;
-    readonly mainthreadwasmcontext___wasm_AddInlineStyle_str_key: (a: number, b: any, c: number, d: number, e: number, f: number) => void;
-    readonly mainthreadwasmcontext___wasm_SetInlineStyles: (a: number, b: any, c: number, d: number) => number;
-    readonly mainthreadwasmcontext___wasm_add_event_bts: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
-    readonly mainthreadwasmcontext___wasm_add_event_run_worklet: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
-    readonly mainthreadwasmcontext___wasm_commonEventHandler: (a: number, b: any, c: number, d: number, e: number, f: number) => void;
-    readonly mainthreadwasmcontext___wasm_get_css_id_by_unique_id: (a: number, b: number) => number;
-    readonly mainthreadwasmcontext___wasm_get_unique_id_by_component_id: (a: number, b: number, c: number) => number;
-    readonly mainthreadwasmcontext___wasm_set_css_id: (a: number, b: number, c: number, d: number) => void;
-    readonly mainthreadwasmcontext___wasm_set_page_element_unique_id: (a: number, b: number) => void;
-    readonly mainthreadwasmcontext___wasm_take_timing_flags: (a: number) => [number, number];
-    readonly mainthreadwasmcontext__wasm_elementFromBinary: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number, number];
+    readonly __wbg_set_eventinfo_event_handler: (a: number, b: any) => void;
+    readonly __wbg_set_eventinfo_event_name: (a: number, b: number, c: number) => void;
+    readonly __wbg_set_eventinfo_event_type: (a: number, b: number, c: number) => void;
+    readonly __wbg_templatemanager_free: (a: number, b: number) => void;
+    readonly add_inline_style_raw_string_key: (a: any, b: number, c: number, d: number, e: number) => void;
+    readonly decode_style_info: (a: any, b: number, c: number, d: number) => [number, number, number];
+    readonly encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number) => [number, number, number];
+    readonly get_font_face_content: (a: any) => [number, number, number, number];
+    readonly get_inline_styles_in_key_value_vec: (a: any, b: number, c: number) => void;
+    readonly get_style_content: (a: any) => [number, number, number, number];
+    readonly mainthreadwasmcontext_add_cross_thread_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+    readonly mainthreadwasmcontext_add_dataset: (a: number, b: number, c: any, d: any) => [number, number];
+    readonly mainthreadwasmcontext_add_run_worklet_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+    readonly mainthreadwasmcontext_common_event_handler: (a: number, b: any, c: number, d: number, e: number, f: number) => void;
+    readonly mainthreadwasmcontext_create_element_common: (a: number, b: number, c: any, d: number, e: number, f: number) => number;
     readonly mainthreadwasmcontext_dispatch_event_by_path: (a: number, b: number, c: number, d: number, e: number, f: number, g: any) => number;
-    readonly mainthreadwasmcontext_new: (a: any, b: any, c: any, d: any, e: number) => number;
+    readonly mainthreadwasmcontext_get_component_id: (a: number, b: number) => [number, number, number, number];
+    readonly mainthreadwasmcontext_get_config: (a: number, b: number) => [number, number, number];
+    readonly mainthreadwasmcontext_get_css_id_by_unique_id: (a: number, b: number) => number;
+    readonly mainthreadwasmcontext_get_data_by_key: (a: number, b: number, c: number, d: number) => [number, number, number];
+    readonly mainthreadwasmcontext_get_dataset: (a: number, b: number) => [number, number, number];
+    readonly mainthreadwasmcontext_get_dom_by_unique_id: (a: number, b: number) => any;
+    readonly mainthreadwasmcontext_get_element_config: (a: number, b: number) => [number, number, number];
+    readonly mainthreadwasmcontext_get_event: (a: number, b: number, c: number, d: number, e: number, f: number) => any;
+    readonly mainthreadwasmcontext_get_events: (a: number, b: number) => [number, number];
+    readonly mainthreadwasmcontext_get_unique_id_by_component_id: (a: number, b: number, c: number) => number;
+    readonly mainthreadwasmcontext_new: (a: any, b: any, c: number) => number;
+    readonly mainthreadwasmcontext_push_style_sheet: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly mainthreadwasmcontext_set_config: (a: number, b: number, c: any) => [number, number];
+    readonly mainthreadwasmcontext_set_css_id: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
+    readonly mainthreadwasmcontext_set_dataset: (a: number, b: number, c: any, d: any) => [number, number];
+    readonly mainthreadwasmcontext_set_page_element_unique_id: (a: number, b: number) => void;
+    readonly mainthreadwasmcontext_take_timing_flags: (a: number) => [number, number];
+    readonly mainthreadwasmcontext_update_component_id: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly mainthreadwasmcontext_update_css_og_style: (a: number, b: number, c: number, d: number) => [number, number];
     readonly rawstyleinfo_append_import: (a: number, b: number, c: number) => void;
     readonly rawstyleinfo_new: () => number;
     readonly rawstyleinfo_push_rule: (a: number, b: number, c: number) => void;
@@ -237,6 +233,10 @@ export interface InitOutput {
     readonly ruleprelude_new: () => number;
     readonly ruleprelude_push_selector: (a: number, b: number) => void;
     readonly selector_push_one_selector_section: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly set_inline_styles_in_str: (a: any, b: number, c: number) => number;
+    readonly set_inline_styles_number_key: (a: any, b: number, c: number, d: number) => void;
+    readonly templatemanager_add_style_info: (a: number, b: number, c: number, d: any, e: any) => [number, number];
+    readonly templatemanager_new: () => number;
     readonly selector_new: () => number;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

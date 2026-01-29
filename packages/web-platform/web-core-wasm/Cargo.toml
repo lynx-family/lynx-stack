@@ -4,17 +4,20 @@ version = "0.0.0"
 edition = "2021"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-bincode = { version = "2.0.1" }
 fnv = "1.0.7"
 js-sys = { workspace = true }
 lazy_static = { workspace = true }
+rkyv = { version = "0.7" }
 wasm-bindgen = { workspace = true }
-web-sys = { workspace = true, optional = true, features = ["HtmlCollection", "CssStyleDeclaration", "CssRule", "CssRuleList", "HtmlElement", "Blob", "BlobPropertyBag", "Url", "HtmlTemplateElement", "HtmlStyleElement", "DocumentFragment", "Document", "NodeList", "DomTokenList", "CssStyleSheet"] }
+web-sys = { workspace = true, optional = true, features = ["CssStyleRule", "HtmlCollection", "CssStyleDeclaration", "CssRule", "CssRuleList", "HtmlElement", "HtmlTemplateElement", "HtmlStyleElement", "DocumentFragment", "Document", "NodeList", "DomTokenList", "CssStyleSheet"] }
 [features]
 default = []
 encode = []
 client = ["web-sys"]
 server = []
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.58"

@@ -4,14 +4,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { DecodedStyle } from '../client/wasm.js';
 import type { PageConfig } from './PageConfig.js';
 
 export interface DecodedTemplate {
   config?: PageConfig;
-  styleInfo?: DecodedStyle;
   lepusCode?: Record<string, string>;
-  elementTemplates?: any;
   customSections?: Record<string, any>;
   backgroundCode?: Record<string, string>;
 }
