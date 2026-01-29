@@ -6,7 +6,9 @@
 
 use fnv::FnvHashMap;
 use lazy_static::lazy_static;
-use rkyv::{Archive, Deserialize, Serialize};
+#[cfg(feature = "encode")]
+use rkyv::Serialize;
+use rkyv::{Archive, Deserialize};
 
 use crate::css_tokenizer::tokenize;
 
@@ -240,7 +242,8 @@ lazy_static! {
 }
 
 #[repr(u32)]
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Archive, Serialize, Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 pub enum CSSPropertyEnum {
   Unknown = 0,
   Top = 1,
@@ -470,7 +473,8 @@ impl CSSPropertyEnum {
   }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 pub struct CSSProperty {
   pub id: CSSPropertyEnum,
   pub unknown_name: Option<String>,
@@ -565,13 +569,15 @@ impl std::fmt::Display for CSSProperty {
   }
 }
 
-#[derive(Clone, PartialEq, Archive, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 pub struct ValueToken {
   pub token_type: u8,
   pub value: String,
 }
 
-#[derive(Clone, Archive, Serialize, Deserialize)]
+#[derive(Clone, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 pub struct ParsedDeclaration {
   pub property_id: CSSProperty,
   pub value_token_list: Vec<ValueToken>,

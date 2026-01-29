@@ -9,23 +9,28 @@ use super::css_property::ParsedDeclaration;
 #[cfg(feature = "encode")]
 use super::style_info_decoder::StyleInfoDecoder;
 use fnv::FnvHashMap;
-use rkyv::{Archive, Deserialize, Serialize};
+#[cfg(feature = "encode")]
+use rkyv::Serialize;
+use rkyv::{Archive, Deserialize};
 use wasm_bindgen::prelude::*;
 
-#[derive(Clone, Default, Archive, Serialize, Deserialize)]
+#[derive(Clone, Default, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 #[wasm_bindgen]
 pub struct RawStyleInfo {
   pub(super) css_id_to_style_sheet: FnvHashMap<i32, StyleSheet>,
   pub(super) style_content_str_size_hint: usize,
 }
 
-#[derive(Clone, Default, Archive, Serialize, Deserialize)]
+#[derive(Clone, Default, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 pub struct StyleSheet {
   pub(super) imports: Vec<i32>,
   pub(super) rules: Vec<Rule>,
 }
 
-#[derive(Clone, Archive, Serialize, Deserialize)]
+#[derive(Clone, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 #[archive(bound(
   serialize = "__S: rkyv::ser::Serializer + rkyv::ser::ScratchSpace",
   deserialize = "__D: rkyv::de::SharedDeserializeRegistry"
@@ -40,7 +45,8 @@ pub struct Rule {
   pub(super) nested_rules: Vec<Rule>,
 }
 
-#[derive(Clone, PartialEq, Archive, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 #[repr(i32)]
 pub(super) enum RuleType {
   Declaration = 1,
@@ -48,7 +54,8 @@ pub(super) enum RuleType {
   KeyFrames = 3,
 }
 
-#[derive(Clone, Default, Archive, Serialize, Deserialize)]
+#[derive(Clone, Default, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 #[wasm_bindgen]
 /**
  * Either SelectorList or KeyFramesPrelude
@@ -61,19 +68,22 @@ pub struct RulePrelude {
   pub(super) selector_list: Vec<Selector>,
 }
 
-#[derive(Clone, Default, Archive, Serialize, Deserialize)]
+#[derive(Clone, Default, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 #[wasm_bindgen]
 pub struct Selector {
   pub(super) simple_selectors: Vec<OneSimpleSelector>,
 }
 
-#[derive(Clone, PartialEq, Archive, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 pub(crate) struct OneSimpleSelector {
   pub(crate) selector_type: OneSimpleSelectorType,
   pub(crate) value: String,
 }
 
-#[derive(Clone, PartialEq, Archive, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 #[repr(i32)]
 /**
  * All possible OneSimpleSelector types
@@ -90,7 +100,8 @@ pub(crate) enum OneSimpleSelectorType {
   UnknownText = 9,
 }
 
-#[derive(Clone, Archive, Serialize, Deserialize)]
+#[derive(Clone, Archive, Deserialize)]
+#[cfg_attr(feature = "encode", derive(Serialize))]
 pub(crate) struct DeclarationBlock {
   pub(crate) declarations: Vec<ParsedDeclaration>,
 }
