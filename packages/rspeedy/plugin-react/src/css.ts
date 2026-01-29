@@ -61,12 +61,14 @@ export function applyCSS(
           const rule = chain.module.rule(ruleName)
 
           removeLightningCSS(rule)
+          removeIgnoreCSS(rule)
 
           // Replace the CssExtractRspackPlugin.loader with ours.
           // This is for scoped CSS.
           rule
             .issuerLayer(LAYERS.BACKGROUND)
             .use(CHAIN_ID.USE.MINI_CSS_EXTRACT)
+            .before(CHAIN_ID.USE.CSS)
             .loader(CssExtractPlugin.loader)
             .end()
 
@@ -139,6 +141,21 @@ export function applyCSS(
         ) {
           rule.uses.delete(CHAIN_ID.USE.LIGHTNINGCSS)
         }
+      }
+      function removeIgnoreCSS(rule: ReturnType<typeof chain.module.rule>) {
+        if (
+          // Rslib has a builtin ignore-css-loader
+          // We need to remove it and use our own ignore-css-loader
+          rule.uses.has(CHAIN_ID.USE.IGNORE_CSS)
+        ) {
+          rule.uses.delete(CHAIN_ID.USE.IGNORE_CSS)
+        }
+      }
+
+      if (!chain.plugins.has(CHAIN_ID.PLUGIN.MINI_CSS_EXTRACT)) {
+        chain
+          .plugin(CHAIN_ID.PLUGIN.MINI_CSS_EXTRACT)
+          .use(CssExtractPlugin)
       }
 
       chain
