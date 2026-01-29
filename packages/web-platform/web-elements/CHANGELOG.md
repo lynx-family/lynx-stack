@@ -1,5 +1,11 @@
 # @lynx-js/web-elements
 
+## 0.11.1
+
+### Patch Changes
+
+- feat: add wheel event handling and corresponding tests for x-foldview-ng ([#2145](https://github.com/lynx-family/lynx-stack/pull/2145))
+
 ## 0.11.0
 
 ### Minor Changes

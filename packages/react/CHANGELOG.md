@@ -1,5 +1,15 @@
 # @lynx-js/react
 
+## 0.116.2
+
+### Patch Changes
+
+- Fix "TypeError: not a function" error caused by `replaceAll` not supported in ES5. ([#2142](https://github.com/lynx-family/lynx-stack/pull/2142))
+
+- Fix memory leak by clearing list callbacks when \_\_DestroyLifetime event is triggered. ([#2112](https://github.com/lynx-family/lynx-stack/pull/2112))
+
+- Bump `swc_core` v53. ([#2071](https://github.com/lynx-family/lynx-stack/pull/2071))
+
 ## 0.116.1
 
 ### Patch Changes
