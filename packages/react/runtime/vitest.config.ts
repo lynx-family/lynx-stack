@@ -1,10 +1,12 @@
 import { createRequire } from 'node:module';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import type { Plugin } from 'vitest/config';
 import { defineConfig } from 'vitest/config';
 
 const require = createRequire(import.meta.url);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const runtimePkg = require.resolve('./src/internal.ts');
 
 function transformReactLynxPlugin(): Plugin {
