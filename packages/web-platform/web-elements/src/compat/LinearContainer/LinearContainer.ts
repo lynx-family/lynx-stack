@@ -4,7 +4,6 @@
 import {
   type AttributeReactiveClass,
   bindToAttribute,
-  type WebComponentClass,
 } from '../../element-reactive/index.js';
 import '../../../src/compat/LinearContainer/linear-compat.css';
 
@@ -56,7 +55,7 @@ const supportContainerStyleQuery = CSS.supports('width:1rex')
   && CSS.supports('transition-behavior:allow-discrete')
   && CSS.supports('content-visibility: auto');
 
-export class LinearContainer
+class LinearContainerImpl
   implements InstanceType<AttributeReactiveClass<typeof HTMLElement>>
 {
   static readonly observedAttributes = [];
@@ -87,49 +86,6 @@ export class LinearContainer
   );
 }
 
-/**
- * remove this once firefox supports @container style()
- * @see https://developer.mozilla.org/en-US/docs/Web/CSS/@container
- * @see https://bugzilla.mozilla.org/show_bug.cgi?id=1795622
- */
-if (!supportContainerStyleQuery) {
-  const targetElements = new Set([
-    'x-view',
-    'scroll-view',
-    'x-foldview-header-ng',
-    'x-foldview-ng',
-    'x-foldview-slot-drag-ng',
-    'x-foldview-slot-ng',
-    'x-foldview-toolbar-ng',
-    'x-refresh-footer',
-    'x-refresh-header',
-    'x-refresh-view',
-    'x-swiper-item',
-    'x-viewpager-item-ng',
-    'x-viewpager-ng',
-  ]);
-  const realDefine = customElements.define.bind(customElements);
-  const fakeDefine = (
-    name: string,
-    cls: CustomElementConstructor,
-    options: any,
-  ) => {
-    if (targetElements.has(name)) {
-      (cls as WebComponentClass).registerPlugin?.(
-        LinearContainer,
-      );
-      targetElements.delete(name);
-    }
-    realDefine(name, cls, options);
-  };
-  customElements.define = fakeDefine;
-  for (const tag of targetElements) {
-    (customElements.whenDefined(tag)).then((cls: WebComponentClass) => {
-      if (targetElements.has(tag)) {
-        cls.registerPlugin?.(
-          LinearContainer,
-        );
-      }
-    });
-  }
-}
+export const LinearContainer = supportContainerStyleQuery
+  ? undefined
+  : LinearContainerImpl;

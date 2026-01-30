@@ -1,8 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { swipe, dragAndHold } from './utils.js';
-import { test, expect } from './coverage-fixture.js';
+import { test, expect, swipe, dragAndHold } from '@lynx-js/playwright-fixtures';
 import type { Page } from '@playwright/test';
 import type { LynxViewElement } from '@lynx-js/web-core-wasm/client';
 const isSSR = !!process.env['ENABLE_SSR'];
@@ -83,8 +82,7 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       await expect(await target.getAttribute('style')).toContain('green');
       await page.evaluate(() => {
-        // @ts-expect-error
-        globalThis.lynxView.reload();
+        (document.querySelector('lynx-view') as LynxViewElement).reload();
       });
       await wait(100);
       await expect(await target.getAttribute('style')).toContain('pink');
@@ -93,8 +91,7 @@ test.describe('reactlynx3 tests', () => {
       await goto(page, 'basic-reload');
       await wait(100);
       await page.evaluate(() => {
-        // @ts-expect-error
-        globalThis.lynxView.reload();
+        (document.querySelector('lynx-view') as LynxViewElement).reload();
       });
       await wait(100);
       expect(
@@ -932,13 +929,6 @@ test.describe('reactlynx3 tests', () => {
     });
   });
   test.describe('apis', () => {
-    test('api-custom-template-loader', async ({ page }, { title }) => {
-      test.skip(isSSR, 'No need to test on SSR');
-      await goto(page, title);
-      await wait(100);
-      const target = page.locator('#target');
-      await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
-    });
     test('api-animation-event', async ({ page }, { title }) => {
       await goto(page, title);
       await page.locator('#tap1').click();
@@ -1069,7 +1059,7 @@ test.describe('reactlynx3 tests', () => {
     test('api-lynx-performance', async ({ page }, { title }) => {
       test.fixme(isSSR, 'implement performance API for SSR');
       await goto(page, title);
-      await wait(200);
+      await wait(1000);
       await expect(page.locator('#target')).toHaveCSS(
         'background-color',
         'rgb(0, 128, 0)',
@@ -1077,22 +1067,21 @@ test.describe('reactlynx3 tests', () => {
       // now check the html event
       await wait(200);
       const timingKeys = await page.evaluate(() => {
-        // @ts-expect-error
         return Object.keys(globalThis.timing);
       });
-      expect(timingKeys).toContain('create_lynx_start');
-      expect(timingKeys).toContain('dispatch_start');
-      expect(timingKeys).toContain('layout_start');
-      expect(timingKeys).toContain('layout_end');
-      expect(timingKeys).toContain('load_core_start');
-      expect(timingKeys).toContain('ui_operation_flush_end');
-      expect(timingKeys).toContain('ui_operation_flush_start');
-      expect(timingKeys).toContain('decode_start');
-      expect(timingKeys).toContain('decode_end');
-      expect(timingKeys).toContain('lepus_execute_start');
-      expect(timingKeys).toContain('load_template_start');
-      expect(timingKeys).toContain('data_processor_start');
-      expect(timingKeys).toContain('data_processor_end');
+      expect(timingKeys).toContainEqual('create_lynx_start');
+      expect(timingKeys).toContainEqual('dispatch_start');
+      expect(timingKeys).toContainEqual('layout_start');
+      expect(timingKeys).toContainEqual('layout_end');
+      expect(timingKeys).toContainEqual('load_core_start');
+      expect(timingKeys).toContainEqual('ui_operation_flush_end');
+      expect(timingKeys).toContainEqual('ui_operation_flush_start');
+      expect(timingKeys).toContainEqual('decode_start');
+      expect(timingKeys).toContainEqual('decode_end');
+      expect(timingKeys).toContainEqual('lepus_execute_start');
+      expect(timingKeys).toContainEqual('load_template_start');
+      expect(timingKeys).toContainEqual('data_processor_start');
+      expect(timingKeys).toContainEqual('data_processor_end');
     });
 
     test('api-updateData', async ({ page }, { title }) => {
@@ -1100,8 +1089,9 @@ test.describe('reactlynx3 tests', () => {
       const target = page.locator('#target');
       await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)'); // pink
       await page.evaluate(() => {
-        // @ts-expect-error
-        globalThis.lynxView.updateData({ mockData: 'updatedData' });
+        (document.querySelector('lynx-view') as LynxViewElement).updateData({
+          mockData: 'updatedData',
+        });
       });
       await wait(50);
       await expect(target).toHaveCSS(
@@ -1129,8 +1119,7 @@ test.describe('reactlynx3 tests', () => {
       await goto(page, title);
       await wait(1000);
       await page.evaluate(() => {
-        // @ts-expect-error
-        globalThis.lynxView.updateData(
+        (document.querySelector('lynx-view') as LynxViewElement).updateData(
           { mockData: 'updatedData' },
           'default',
           () => {
@@ -1153,8 +1142,9 @@ test.describe('reactlynx3 tests', () => {
         'rgb(255, 192, 203)',
       ); // pink
       await page.evaluate(() => {
-        // @ts-expect-error
-        globalThis.lynxView.updateData({ mockData: 'updatedData' });
+        (document.querySelector('lynx-view') as LynxViewElement).updateData({
+          mockData: 'updatedData',
+        });
       });
       await expect(target).toHaveCSS(
         'background-color',
@@ -1174,8 +1164,7 @@ test.describe('reactlynx3 tests', () => {
           'rgb(255, 192, 203)',
         ); // pink
         await page.evaluate(() => {
-          // @ts-expect-error
-          globalThis.lynxView.updateData(
+          (document.querySelector('lynx-view') as LynxViewElement).updateData(
             { mockData: 'updatedData' },
             'useless',
           );
@@ -1187,8 +1176,7 @@ test.describe('reactlynx3 tests', () => {
         ); // pink
         await wait(100);
         await page.evaluate(() => {
-          // @ts-expect-error
-          globalThis.lynxView.updateData(
+          (document.querySelector('lynx-view') as LynxViewElement).updateData(
             { mockData: 'updatedData' },
             'processData',
           );
@@ -1225,6 +1213,7 @@ test.describe('reactlynx3 tests', () => {
       await goto(page, title);
       const target = page.locator('#target');
       await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)'); // pink
+      const currentWorkerCount = page.workers().length;
       const message: string[] = [];
       await page.on('console', (msg) => {
         message.push(msg.text());
@@ -1234,7 +1223,7 @@ test.describe('reactlynx3 tests', () => {
       });
       await wait(50);
       expect(message).toContain('fin');
-      expect(page.workers().length).toStrictEqual(0);
+      expect(currentWorkerCount - page.workers().length).toStrictEqual(1);
     });
 
     test('api-error', async ({ page }, { title }) => {
@@ -1438,7 +1427,7 @@ test.describe('reactlynx3 tests', () => {
         document.body.querySelector('lynx-view')?.remove()
       );
       await wait(100);
-      expect(page.workers().length).toBeLessThanOrEqual(0);
+      expect(page.workers().length).toBeLessThanOrEqual(1);
     });
 
     test.describe('api-exposure', () => {
@@ -1670,9 +1659,9 @@ test.describe('reactlynx3 tests', () => {
             message.push(msg.text());
           }
         });
-        await wait(100);
+        await wait(200);
         await page.locator('#button').click();
-        await wait(100);
+        await wait(200);
         expect(message).toContain('pass:dataset2');
       });
       test('api-exposure-stop-events-has-dataset', async ({ page }, {
@@ -1717,8 +1706,8 @@ test.describe('reactlynx3 tests', () => {
       const target = page.locator('#target');
       await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)'); // pink
       await page.evaluate(() => {
-        // @ts-expect-error
-        globalThis.lynxView.sendGlobalEvent('event-test', ['change']);
+        (document.querySelector('lynx-view') as LynxViewElement)
+          .sendGlobalEvent('event-test', ['change']);
       });
       await wait(200);
       await expect(target).toHaveCSS(

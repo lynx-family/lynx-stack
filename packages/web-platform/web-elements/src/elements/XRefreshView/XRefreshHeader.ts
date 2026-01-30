@@ -6,10 +6,12 @@
 import { Component } from '../../element-reactive/index.js';
 import { XRefreshSubElementIntersectionObserver } from './XRefreshSubElementIntersectionObserver.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
+import { LinearContainer } from '../../compat/index.js';
 
 @Component(
   'x-refresh-header',
   [
+    LinearContainer,
     CommonEventsAndMethods,
     XRefreshSubElementIntersectionObserver,
   ],

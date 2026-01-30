@@ -18,111 +18,100 @@
     "./index.css": {
       "default": "./index.css"
     },
-    "./elements.css": {
-      "default": "./elements.css"
-    },
     "./all": {
-      "source": "./src/elements/all.ts",
+      "@lynx-js/source-field": "./src/elements/all.ts",
       "types": "./dist/elements/all.d.ts",
       "default": "./dist/elements/all.js"
     },
     "./LynxWrapper": {
-      "source": "./src/elements/LynxWrapper/index.ts",
+      "@lynx-js/source-field": "./src/elements/LynxWrapper/index.ts",
       "types": "./dist/elements/LynxWrapper/index.d.ts",
       "default": "./dist/elements/LynxWrapper/index.js"
     },
     "./ScrollView": {
-      "source": "./src/elements/ScrollView/index.ts",
+      "@lynx-js/source-field": "./src/elements/ScrollView/index.ts",
       "types": "./dist/elements/ScrollView/index.d.ts",
       "default": "./dist/elements/ScrollView/index.js"
     },
     "./XAudioTT": {
-      "source": "./src/elements/XAudioTT/index.ts",
+      "@lynx-js/source-field": "./src/elements/XAudioTT/index.ts",
       "types": "./dist/elements/XAudioTT/index.d.ts",
       "default": "./dist/elements/XAudioTT/index.js"
     },
     "./XCanvas": {
-      "source": "./src/elements/XCanvas/index.ts",
+      "@lynx-js/source-field": "./src/elements/XCanvas/index.ts",
       "types": "./dist/elements/XCanvas/index.d.ts",
       "default": "./dist/elements/XCanvas/index.js"
     },
     "./XFoldViewNg": {
-      "source": "./src/elements/XFoldViewNg/index.ts",
+      "@lynx-js/source-field": "./src/elements/XFoldViewNg/index.ts",
       "types": "./dist/elements/XFoldViewNg/index.d.ts",
       "default": "./dist/elements/XFoldViewNg/index.js"
     },
     "./XImage": {
-      "source": "./src/elements/XImage/index.ts",
+      "@lynx-js/source-field": "./src/elements/XImage/index.ts",
       "types": "./dist/elements/XImage/index.d.ts",
       "default": "./dist/elements/XImage/index.js"
     },
     "./XInput": {
-      "source": "./src/elements/XInput/index.ts",
+      "@lynx-js/source-field": "./src/elements/XInput/index.ts",
       "types": "./dist/elements/XInput/index.d.ts",
       "default": "./dist/elements/XInput/index.js"
     },
     "./XOverlayNg": {
-      "source": "./src/elements/XOverlayNg/index.ts",
+      "@lynx-js/source-field": "./src/elements/XOverlayNg/index.ts",
       "types": "./dist/elements/XOverlayNg/index.d.ts",
       "default": "./dist/elements/XOverlayNg/index.js"
     },
     "./XRefreshView": {
-      "source": "./src/elements/XRefreshView/index.ts",
+      "@lynx-js/source-field": "./src/elements/XRefreshView/index.ts",
       "types": "./dist/elements/XRefreshView/index.d.ts",
       "default": "./dist/elements/XRefreshView/index.js"
     },
     "./XSvg": {
-      "source": "./src/elements/XSvg/index.ts",
+      "@lynx-js/source-field": "./src/elements/XSvg/index.ts",
       "types": "./dist/elements/XSvg/index.d.ts",
       "default": "./dist/elements/XSvg/index.js"
     },
     "./XSwiper": {
-      "source": "./src/elements/XSwiper/index.ts",
+      "@lynx-js/source-field": "./src/elements/XSwiper/index.ts",
       "types": "./dist/elements/XSwiper/index.d.ts",
       "default": "./dist/elements/XSwiper/index.js"
     },
     "./XText": {
-      "source": "./src/elements/XText/index.ts",
+      "@lynx-js/source-field": "./src/elements/XText/index.ts",
       "types": "./dist/elements/XText/index.d.ts",
       "default": "./dist/elements/XText/index.js"
     },
     "./XTextarea": {
-      "source": "./src/elements/XTextarea/index.ts",
+      "@lynx-js/source-field": "./src/elements/XTextarea/index.ts",
       "types": "./dist/elements/XTextarea/index.d.ts",
       "default": "./dist/elements/XTextarea/index.js"
     },
     "./XView": {
-      "source": "./src/elements/XView/index.ts",
+      "@lynx-js/source-field": "./src/elements/XView/index.ts",
       "types": "./dist/elements/XView/index.d.ts",
       "default": "./dist/elements/XView/index.js"
     },
     "./XViewpagerNg": {
-      "source": "./src/elements/XViewpagerNg/index.ts",
+      "@lynx-js/source-field": "./src/elements/XViewpagerNg/index.ts",
       "types": "./dist/elements/XViewpagerNg/index.d.ts",
       "default": "./dist/elements/XViewpagerNg/index.js"
     },
     "./XList": {
-      "source": "./src/elements/XList/index.ts",
+      "@lynx-js/source-field": "./src/elements/XList/index.ts",
       "types": "./dist/elements/XList/index.d.ts",
       "default": "./dist/elements/XList/index.js"
     },
     "./XWebView": {
-      "source": "./src/elements/XWebView/index.ts",
+      "@lynx-js/source-field": "./src/elements/XWebView/index.ts",
       "types": "./dist/elements/XWebView/index.d.ts",
       "default": "./dist/elements/XWebView/index.js"
     },
     "./html-templates": {
-      "source": "./src/elements/htmlTemplates.ts",
+      "@lynx-js/source-field": "./src/elements/htmlTemplates.ts",
       "types": "./dist/elements/htmlTemplates.d.ts",
       "default": "./dist/elements/htmlTemplates.js"
-    },
-    "./compat/LinearContainer": {
-      "source": "./src/compat/LinearContainer/LinearContainer.ts",
-      "types": "./dist/compat/LinearContainer/LinearContainer.d.ts",
-      "default": "./dist/compat/LinearContainer/LinearContainer.js"
-    },
-    "./compat/LinearContainer/linear-compat.css": {
-      "default": "./src/compat/LinearContainer/linear-compat.css"
     }
   },
   "main": "dist/index.js",
