@@ -4,10 +4,18 @@
 
 import os from 'node:os';
 
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
+    exclude: [
+      ...configDefaults.exclude,
+      '**/dist/**',
+      '**/cypress/**',
+      '**/lib/**',
+      '**/.{idea,git,cache,output,temp}/**',
+      '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
+    ],
     coverage: {
       exclude: [
         '**/*.d.ts',
