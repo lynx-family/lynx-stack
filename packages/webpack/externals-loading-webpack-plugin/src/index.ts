@@ -299,6 +299,7 @@ export class ExternalsLoadingPlugin {
         } else {
           return '';
         }
+        const isMainThreadLayer = layer === 'mainThread';
         for (
           const [pkgName, external] of Object.entries(
             externalsLoadingPluginOptions.externals,
@@ -323,9 +324,20 @@ function createLoadExternalAsync(handler, sectionPath) {
       if (response.code === 0) {
         try {
           const result = lynx.loadScript(sectionPath, { bundleName: response.url });
+          ${
+          isMainThreadLayer
+            ? `
+          const styleSheet = __LoadStyleSheet(sectionPath.replace('__main-thread', '') + ':CSS', response.url);
+          if (styleSheet !== null) {
+            __AdoptStyleSheet(styleSheet);
+            __FlushElementTree();
+          }
+            `
+            : ''
+        }
           resolve(result)
         } catch (error) {
-          reject(new Error('Failed to load script ' + sectionPath + ' in ' + response.url, { cause: error }))
+          reject(new Error('Failed to load script ' + sectionPath + ' in ' + response.url + ': ' + error.message, { cause: error }))
         }
       } else {
         reject(new Error('Failed to fetch external source ' + response.url + ' . The response is ' + JSON.stringify(response), { cause: response }));
@@ -338,9 +350,20 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
   if (response.code === 0) {
     try  {
       const result = lynx.loadScript(sectionPath, { bundleName: response.url });
+      ${
+          isMainThreadLayer
+            ? `
+      const styleSheet = __LoadStyleSheet(sectionPath.replace('__main-thread', '') + ':CSS', response.url);
+      if (styleSheet !== null) {
+        __AdoptStyleSheet(styleSheet);
+        __FlushElementTree();
+      }
+          `
+            : ''
+        }
       return result
     } catch (error) {
-      throw new Error('Failed to load script ' + sectionPath + ' in ' + response.url, { cause: error })
+      reject(new Error('Failed to load script ' + sectionPath + ' in ' + response.url + ': ' + error.message, { cause: error }))
     }
   } else {
     throw new Error('Failed to fetch external source ' + response.url + ' . The response is ' + JSON.stringify(response), { cause: response })
