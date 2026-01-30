@@ -4,7 +4,14 @@
   "tasks": {
     "build": {
       "dependsOn": [],
-      "inputs": [".cargo/**", "src/**/*.rs", "Cargo.toml", "build.js"],
+      "inputs": [
+        "$TURBO_ROOT$/Cargo.toml",
+        "$TURBO_ROOT$/Cargo.lock",
+        ".cargo/**",
+        "src/**/*.rs",
+        "Cargo.toml",
+        "build.js"
+      ],
       "outputs": ["swc_plugin_reactlynx_compat.wasm"]
     }
   }
