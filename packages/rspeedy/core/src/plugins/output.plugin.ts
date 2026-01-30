@@ -33,7 +33,7 @@ export function pluginOutput(options?: Output): RsbuildPlugin {
             {
               output: {
                 filename: {
-                  css: defaultFilenameOptions.css!,
+                  css: defaultFilenameOptions.css,
                 },
               },
             },
