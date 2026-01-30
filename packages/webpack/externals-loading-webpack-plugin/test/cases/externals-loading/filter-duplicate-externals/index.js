@@ -19,13 +19,13 @@ it('should filter duplicate externals', async () => {
   expect(
     background.split(
       `lynx[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]["Foo"]`
-        + ' = createLoadExternalSync(',
+        + ' = ',
     ).length - 1,
   ).toBe(1);
   expect(
     mainThread.split(
       `lynx[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]["Foo"] `
-        + '= createLoadExternalSync(',
+        + '= ',
     ).length - 1,
   ).toBe(1);
 });

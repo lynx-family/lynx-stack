@@ -5,8 +5,10 @@
 */
 import { Component } from '../../element-reactive/index.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
+import { LinearContainer } from '../../compat/index.js';
 
 @Component<typeof XViewpagerItemNg>('x-viewpager-item-ng', [
+  LinearContainer,
   CommonEventsAndMethods,
 ])
 export class XViewpagerItemNg extends HTMLElement {}

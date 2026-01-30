@@ -9,7 +9,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 impl MainThreadWasmContext {
-  #[wasm_bindgen(js_name = "__GetComponentID")]
+  #[wasm_bindgen]
   pub fn get_component_id(&self, unique_id: usize) -> Result<Option<String>, JsError> {
     Ok(
       self
@@ -21,7 +21,7 @@ impl MainThreadWasmContext {
     )
   }
 
-  #[wasm_bindgen(js_name = "__GetElementConfig")]
+  #[wasm_bindgen]
   pub fn get_element_config(&self, unique_id: usize) -> Result<Option<js_sys::Object>, JsError> {
     Ok(
       self
@@ -33,7 +33,7 @@ impl MainThreadWasmContext {
     )
   }
 
-  #[wasm_bindgen(js_name = "__SetConfig")]
+  #[wasm_bindgen]
   /**
    * key: String
    * value: stringifyed js value
@@ -47,7 +47,7 @@ impl MainThreadWasmContext {
     Ok(())
   }
 
-  #[wasm_bindgen(js_name = "__GetConfig")]
+  #[wasm_bindgen]
   pub fn get_config(&self, unique_id: usize) -> Result<js_sys::Object, JsError> {
     let binding = self
       .get_element_data_by_unique_id(unique_id)
@@ -62,7 +62,7 @@ impl MainThreadWasmContext {
     }
   }
 
-  #[wasm_bindgen(js_name = "__UpdateComponentID")]
+  #[wasm_bindgen]
   pub fn update_component_id(
     &self,
     unique_id: usize,

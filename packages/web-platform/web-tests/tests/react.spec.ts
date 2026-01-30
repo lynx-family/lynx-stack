@@ -116,6 +116,16 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       await expect(await target.getAttribute('style')).toContain('pink');
     });
+    test('basic-bindtap-simultaneous', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await target.click();
+      await wait(100);
+      await expect(await target.getAttribute('style')).toContain('green'); // BTS check
+      await expect(await target.getAttribute('data-mts-clicked')).toBe('true'); // MTS check
+      await expect(page.locator('#bts-status')).toHaveText('BTS Clicked');
+    });
     test('basic-bindtap-detail', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
@@ -202,6 +212,16 @@ test.describe('reactlynx3 tests', () => {
         'green',
       );
     });
+
+    test('api-createLynxView-browserConfig', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const width = page.locator('#width');
+      const height = page.locator('#height');
+      await expect(width).toHaveText('1234');
+      await expect(height).toHaveText('5678');
+    });
+
     test('basic-event-dataset', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
@@ -239,6 +259,18 @@ test.describe('reactlynx3 tests', () => {
       await expect(
         page.locator('#wheat'),
       ).toHaveAttribute('style', /wheat/g);
+    });
+
+    test('basic-lynx-reload', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await target.click();
+      await wait(100);
+      await expect(await target.getAttribute('style')).toContain('green');
+      await page.locator('#reload').click();
+      await wait(100);
+      await expect(await target.getAttribute('style')).toContain('pink');
     });
     test(
       'basic-wrapper-element-do-not-impact-layout',
@@ -447,6 +479,38 @@ test.describe('reactlynx3 tests', () => {
         await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },
     );
+
+    test('basic-ref-main-invoke-ui-method', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const scrollView = page.locator('#scroll-view');
+      const scrollTopBefore = await scrollView.evaluate((node) =>
+        node.scrollTop
+      );
+      expect(scrollTopBefore).toBe(0);
+      await page.locator('#target').click();
+      await wait(3000);
+      const scrollTopAfter = await scrollView.evaluate((node) =>
+        node.scrollTop
+      );
+      expect(scrollTopAfter).toBeGreaterThan(100);
+    });
+
+    test('basic-main-query-selector', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const scrollView = page.locator('scroll-view');
+      const scrollTopBefore = await scrollView.evaluate((node) =>
+        node.scrollTop
+      );
+      expect(scrollTopBefore).toBe(0);
+      await page.locator('#tap-me').click();
+      await wait(3000);
+      const scrollTopAfter = await scrollView.evaluate((node) =>
+        node.scrollTop
+      );
+      expect(scrollTopAfter).toBeGreaterThan(100);
+    });
 
     // lazy component
     test(
@@ -4569,7 +4633,39 @@ test.describe('reactlynx3 tests', () => {
           expect(scrollend).toBeTruthy();
         },
       );
+      test(
+        'basic-element-list-basic-size',
+        async ({ page, browserName }, { title }) => {
+          let scrolled = false;
+          let scrollend = false;
+          await page.on('console', async (msg) => {
+            const event = await msg.args()[0]?.evaluate((e) => ({
+              type: e.type,
+            }));
+            if (!event) return;
+            if (event.type === 'scroll') {
+              scrolled = true;
+            }
+            if (event.type === 'scrollend') {
+              scrollend = true;
+            }
+          });
 
+          await goto(page, title);
+          await diffScreenShot(page, elementName, title);
+          await page.evaluate(() => {
+            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
+              'x-list',
+            )?.shadowRoot?.querySelector(
+              '#content',
+            )
+              ?.scrollTo(0, 500);
+          });
+          await wait(1000);
+          expect(scrolled).toBeTruthy();
+          expect(scrollend).toBeTruthy();
+        },
+      );
       test(
         'basic-element-list-scroll-to-position',
         async ({ page }, { title }) => {
@@ -4578,6 +4674,41 @@ test.describe('reactlynx3 tests', () => {
           await wait(1000);
           await page.locator('#scrollToPosition').click();
           await diffScreenShot(page, elementName, title, 'scroll-to-position');
+        },
+      );
+      test(
+        'basic-element-list-remove-action',
+        async ({ page }, { title }) => {
+          test.skip(isSSR, 'not support on SSR');
+          await goto(page, title);
+
+          // Initial state: loading = true
+          // Expected: 1, 2, 3, 5
+          await expect(page.locator('list-item').count()).resolves.toBe(4);
+          let ids = await page.locator('list-item').evaluateAll((items) =>
+            items.map((i) => i.id)
+          );
+          expect(ids).toEqual(['1', '2', '3', '5']);
+
+          // First click: loading = false
+          // Expected: 1, 4, 5
+          await page.locator('#target').click();
+          await wait(1000);
+          await expect(page.locator('list-item').count()).resolves.toBe(3);
+          ids = await page.locator('list-item').evaluateAll((items) =>
+            items.map((i) => i.id)
+          );
+          expect(ids).toEqual(['1', '4', '5']);
+
+          // Second click: loading = true
+          // Expected: 1, 2, 3, 5
+          await page.locator('#target').click();
+          await wait(1000);
+          await expect(page.locator('list-item').count()).resolves.toBe(4);
+          ids = await page.locator('list-item').evaluateAll((items) =>
+            items.map((i) => i.id)
+          );
+          expect(ids).toEqual(['1', '2', '3', '5']);
         },
       );
 
@@ -4593,113 +4724,32 @@ test.describe('reactlynx3 tests', () => {
       test(
         'basic-element-list-estimated-main-axis-size-px',
         async ({ page, browserName }, { title }) => {
-          let scrolltolower = false;
-          await page.on('console', async (msg) => {
-            const event = await msg.args()[0]?.evaluate((e) => ({
-              type: e.type,
-            }));
-            if (!event) return;
-            if (event.type === 'scrolltolower') {
-              scrolltolower = true;
-            }
-          });
-
           await goto(page, title);
-          await wait(3000);
-          expect(scrolltolower).toBeTruthy();
-        },
-      );
-      test(
-        'basic-element-list-estimated-main-axis-size-px-default',
-        async ({ page }, { title }) => {
-          await goto(page, title);
-          await diffScreenShot(page, elementName, title, 'initial');
-          await wait(1000);
+          expect(
+            await page.locator('#target').evaluate((e) =>
+              getComputedStyle(e).getPropertyValue('height')
+            ),
+          )
+            .toBe(
+              '100px',
+            );
           await page.evaluate(() => {
             document.querySelector('lynx-view')!.shadowRoot!.querySelector(
               'x-list',
             )?.shadowRoot?.querySelector(
               '#content',
             )
-              ?.scrollTo(0, 300);
+              ?.scrollTo(0, 5000);
           });
-          await wait(1000);
-          await diffScreenShot(page, elementName, title, 'scroll');
-        },
-      );
-      test(
-        'basic-element-list-estimated-main-axis-size-px-horizontal-default',
-        async ({ page }, { title }) => {
-          await goto(page, title);
-          await diffScreenShot(page, elementName, title, 'initial');
-          await wait(1000);
-          await page.evaluate(() => {
-            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
-              'x-list',
-            )?.shadowRoot?.querySelector(
-              '#content',
-            )
-              ?.scrollTo(300, 0);
-          });
-          await wait(1000);
-          await diffScreenShot(page, elementName, title, 'scroll');
-        },
-      );
-      test(
-        'basic-element-list-estimated-main-axis-size-px-waterfall',
-        async ({ page, browserName }, { title }) => {
-          let scrolltolower = false;
-          await page.on('console', async (msg) => {
-            const event = await msg.args()[0]?.evaluate((e) => ({
-              type: e.type,
-            }));
-            if (!event) return;
-            if (event.type === 'scrolltolower') {
-              scrolltolower = true;
-            }
-          });
-
-          await goto(page, title);
-          await wait(5000);
-          expect(scrolltolower).toBeTruthy();
-        },
-      );
-      test(
-        'basic-element-list-horizontal-estimated-main-axis-size-px',
-        async ({ page, browserName }, { title }) => {
-          let scrolltolower = false;
-          await page.on('console', async (msg) => {
-            const event = await msg.args()[0]?.evaluate((e) => ({
-              type: e.type,
-            }));
-            if (!event) return;
-            if (event.type === 'scrolltolower') {
-              scrolltolower = true;
-            }
-          });
-
-          await goto(page, title);
-          await wait(5000);
-          expect(scrolltolower).toBeTruthy();
-        },
-      );
-      test(
-        'basic-element-list-horizontal-estimated-main-axis-size-px-waterfall',
-        async ({ page, browserName }, { title }) => {
-          let scrolltolower = false;
-          await page.on('console', async (msg) => {
-            const event = await msg.args()[0]?.evaluate((e) => ({
-              type: e.type,
-            }));
-            if (!event) return;
-            if (event.type === 'scrolltolower') {
-              scrolltolower = true;
-            }
-          });
-
-          await goto(page, title);
-          await wait(5000);
-          expect(scrolltolower).toBeTruthy();
+          await wait(500);
+          expect(
+            await page.locator('#target').evaluate((e) =>
+              getComputedStyle(e).getPropertyValue('height')
+            ),
+          )
+            .toBe(
+              '200px',
+            );
         },
       );
     });

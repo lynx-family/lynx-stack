@@ -5,24 +5,37 @@ import type { RsbuildPluginAPI } from '@rsbuild/core'
 
 export function applySWC(api: RsbuildPluginAPI): void {
   api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-    return mergeRsbuildConfig({
-      tools: {
-        swc: {
-          jsc: {
-            transform: {
-              useDefineForClassFields: false,
-              optimizer: {
-                simplify: true,
+    return mergeRsbuildConfig(
+      {
+        tools: {
+          swc: {
+            jsc: {
+              transform: {
+                useDefineForClassFields: false,
+                optimizer: {
+                  simplify: true,
+                },
               },
-            },
-            parser: {
-              syntax: 'typescript',
-              tsx: false,
-              decorators: true,
+              parser: {
+                syntax: 'typescript',
+                tsx: false,
+                decorators: true,
+              },
             },
           },
         },
       },
-    }, config)
+      config,
+      {
+        tools: {
+          swc(config) {
+            // Avoid error: "`env` and `jsc.target` cannot be used together"
+            // since rslib will set env by default, we need to clear it
+            delete config.env
+            return config
+          },
+        },
+      },
+    )
   })
 }

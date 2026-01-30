@@ -4,5 +4,4 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-pub(crate) mod element_template;
 pub(crate) mod style_info;

@@ -11,10 +11,11 @@ import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { XViewpagerNgEvents } from './XViewpagerNgEvents.js';
 import { scrollContainerDom } from '../common/constants.js';
 import { templateXViewpageNg } from '../htmlTemplates.js';
+import { LinearContainer } from '../../compat/index.js';
 
 @Component<typeof XViewpagerNg>(
   'x-viewpager-ng',
-  [CommonEventsAndMethods, XViewpagerNgEvents],
+  [LinearContainer, CommonEventsAndMethods, XViewpagerNgEvents],
   templateXViewpageNg,
 )
 export class XViewpagerNg extends HTMLElement {

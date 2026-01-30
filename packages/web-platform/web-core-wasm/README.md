@@ -1,3 +1,1 @@
-# @lynx-js/web-mainthread-apis
-
-main-thread apis
+# This is an internal experimental package, do not use

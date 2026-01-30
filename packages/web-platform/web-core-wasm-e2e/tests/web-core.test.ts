@@ -1,12 +1,16 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-// @ts-nocheck
-import { test, expect } from './coverage-fixture.js';
+import { test, expect } from '@lynx-js/playwright-fixtures';
+import type { LynxViewElement } from '@lynx-js/web-core-wasm/client';
 import type { Page, Worker } from '@playwright/test';
 
-const ENABLE_MULTI_THREAD = !!process.env.ENABLE_MULTI_THREAD;
-const isSSR = !!process.env['ENABLE_SSR'];
+declare global {
+  // eslint-disable-next-line no-var
+  var runtime: any;
+  // eslint-disable-next-line no-var
+  var __lynx_worker_type: string;
+}
 
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
@@ -15,40 +19,15 @@ const wait = async (ms: number) => {
 };
 
 const goto = async (page: Page, title?: string) => {
-  let url = '/web-core.html';
-  if (title) {
-    url += `?casename=${title}`;
-  }
-
-  await page.goto(url, {
+  await page.goto('/?resourceName=web-core.main-thread.json', {
     waitUntil: 'load',
   });
   await wait(500);
 };
 
-async function getMainThreadWorker(
-  page: Page,
-): Promise<Worker | Page | undefined> {
-  await wait(100);
-  if (!ENABLE_MULTI_THREAD) {
-    return page;
-  } else {
-    for (const i of page.workers()) {
-      const isActive = await i.evaluate(() => {
-        return globalThis.runtime !== undefined
-          && globalThis.__lynx_worker_type === 'main';
-      });
-
-      if (isActive) {
-        return i;
-      }
-    }
-  }
-}
-
 async function getBackgroundThreadWorker(
   page: Page,
-): Promise<Worker | undefined> {
+): Promise<Worker> {
   await wait(100);
   for (const i of page.workers()) {
     const isActive = await i.evaluate(() => {
@@ -60,16 +39,15 @@ async function getBackgroundThreadWorker(
       return i;
     }
   }
+  throw new Error('background thread worker not found');
 }
 
 test.describe('web core tests', () => {
-  test.skip(isSSR, 'not support ssr');
   test('selectComponent', async ({ page, browserName }) => {
     // firefox not support
     test.skip(browserName === 'firefox');
     await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
+    await page.evaluate(() => {
       globalThis.runtime.renderPage = () => {
         const root = globalThis.runtime.__CreatePage('0', '0', {});
         const element = globalThis.runtime.__CreateElement('view', '0', {});
@@ -88,6 +66,7 @@ test.describe('web core tests', () => {
         globalThis.runtime.__AppendElement(element, component);
       };
     });
+    await wait(200);
     const backWorker = await getBackgroundThreadWorker(page);
     const isSuccess = await backWorker.evaluate(() => {
       return new Promise(resolve => {
@@ -95,7 +74,7 @@ test.describe('web core tests', () => {
           'card',
           '.wrapper',
           true,
-          (ids) => {
+          (ids: unknown) => {
             if (Array.isArray(ids) && ids[0] === '0-13826000') {
               resolve(true);
             }
@@ -108,12 +87,11 @@ test.describe('web core tests', () => {
   });
   test('lynx.requireModuleAsync', async ({ page, browserName }) => {
     test.skip(
-      browserName === 'firefox' && ENABLE_MULTI_THREAD,
+      browserName === 'firefox',
       'firefox flaky',
     );
     await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
+    await page.evaluate(() => {
       globalThis.runtime.renderPage = () => {};
     });
     const worker = await getBackgroundThreadWorker(page);
@@ -121,7 +99,7 @@ test.describe('web core tests', () => {
       const { promise, resolve } = Promise.withResolvers<string>();
       globalThis.runtime.lynx.requireModuleAsync(
         'manifest-chunk.js',
-        (_, exports) => {
+        (_: unknown, exports: string) => {
           resolve(exports);
         },
       );
@@ -131,12 +109,11 @@ test.describe('web core tests', () => {
   });
   test('lynx.requireModuleAsync-2', async ({ page, browserName }) => {
     test.skip(
-      browserName === 'firefox' && ENABLE_MULTI_THREAD,
+      browserName === 'firefox',
       'firefox flaky',
     );
     await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
+    await page.evaluate(() => {
       globalThis.runtime.renderPage = () => {};
     });
     const worker = await getBackgroundThreadWorker(page);
@@ -145,13 +122,13 @@ test.describe('web core tests', () => {
       const chunk2 = Promise.withResolvers<string>();
       globalThis.runtime.lynx.requireModuleAsync(
         'manifest-chunk.js',
-        (_, exports) => {
+        (_: unknown, exports: string) => {
           chunk1.resolve(exports);
         },
       );
       globalThis.runtime.lynx.requireModuleAsync(
         'manifest-chunk2.js',
-        (_, exports) => {
+        (_: unknown, exports: string) => {
           chunk2.resolve(exports);
         },
       );
@@ -162,12 +139,11 @@ test.describe('web core tests', () => {
   });
   test('lynx.requireModule+sync', async ({ page, browserName }) => {
     test.skip(
-      browserName === 'firefox' && ENABLE_MULTI_THREAD,
+      browserName === 'firefox',
       'firefox flaky',
     );
     await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
+    await page.evaluate(() => {
       globalThis.runtime.renderPage = () => {};
     });
     const worker = await getBackgroundThreadWorker(page);
@@ -176,7 +152,7 @@ test.describe('web core tests', () => {
       const chunk2 = Promise.withResolvers<string>();
       globalThis.runtime.lynx.requireModuleAsync(
         'manifest-chunk.js',
-        (_, exports) => {
+        (_: unknown, exports: string) => {
           chunk1.resolve(exports);
         },
       );
@@ -191,11 +167,10 @@ test.describe('web core tests', () => {
 
   test('loadLepusChunk', async ({ page, browserName }) => {
     await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
+    await page.evaluate(() => {
       globalThis.runtime.renderPage = () => {};
     });
-    const [success, fail] = await mainWorker!.evaluate(async () => {
+    const [success, fail] = await page.evaluate(async () => {
       return [
         globalThis.runtime.__LoadLepusChunk('manifest-chunk2.js'),
         globalThis.runtime.__LoadLepusChunk('manifest-chunk8.js'),
@@ -209,8 +184,7 @@ test.describe('web core tests', () => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
+    await page.evaluate(() => {
       globalThis.runtime.renderPage = () => {};
     });
     await wait(3000);
@@ -224,8 +198,7 @@ test.describe('web core tests', () => {
   });
   test('registerDataProcessor-as-global-var-update', async ({ page, browserName }) => {
     await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    const registerDataProcessor = await mainWorker.evaluate(() => {
+    const registerDataProcessor = await page.evaluate(() => {
       return globalThis.runtime.registerDataProcessor;
     });
     expect(registerDataProcessor).toBe('pass');
@@ -236,8 +209,7 @@ test.describe('web core tests', () => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
+    await page.evaluate(() => {
       globalThis.runtime.renderPage = () => {};
     });
     const backgroundWorker = await getBackgroundThreadWorker(page);
@@ -284,8 +256,7 @@ test.describe('web core tests', () => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
+    await page.evaluate(() => {
       globalThis.runtime.renderPage = () => {};
     });
     await wait(3000);
@@ -293,15 +264,16 @@ test.describe('web core tests', () => {
     let successCallback = false;
     let successCallback2 = false;
     await page.on('console', async (message) => {
-      if (message.text() === 'green') {
+      if (message.text().includes('green')) {
         successCallback = true;
       }
-      if (message.text() === 'LYNX-VIEW') {
+      if (message.text().includes('LYNX-VIEW')) {
         successCallback2 = true;
       }
     });
     await backWorker.evaluate(() => {
       const nativeApp = globalThis.runtime.lynx.getNativeApp();
+      // @ts-expect-error
       const colorStarter = globalThis[`napiLoaderOnRT${nativeApp.id}`].load(
         'color_environment',
       );
@@ -315,8 +287,7 @@ test.describe('web core tests', () => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
+    await page.evaluate(() => {
       globalThis.runtime.renderPage = () => {};
     });
     await wait(3000);
@@ -324,22 +295,23 @@ test.describe('web core tests', () => {
     let successCallback = false;
     let successCallback2 = false;
     await page.on('console', async (message) => {
-      if (message.text() === 'green') {
+      if (message.text().includes('green')) {
         successCallback = true;
       }
-      if (message.text() === 'LYNX-VIEW') {
+      if (message.text().includes('LYNX-VIEW')) {
         successCallback2 = true;
       }
     });
     await backWorker.evaluate(() => {
       const nativeApp = globalThis.runtime.lynx.getNativeApp();
+      // @ts-expect-error
       const colorStarter = globalThis[`napiLoaderOnRT${nativeApp.id}`].load(
         'color_environment',
       );
       const engine = new colorStarter.ColorEngine();
       engine.getColor();
     });
-    await wait(100);
+    await wait(500);
     expect(successCallback).toBeTruthy();
     expect(successCallback2).toBeTruthy();
   });
@@ -347,8 +319,8 @@ test.describe('web core tests', () => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
+    await wait(200);
+    await page.evaluate(() => {
       globalThis.runtime.renderPage = () => {};
     });
     await wait(3000);
@@ -361,14 +333,15 @@ test.describe('web core tests', () => {
     });
     await backWorker.evaluate(() => {
       const nativeApp = globalThis.runtime.lynx.getNativeApp();
-      const eventMethod = globalThis[`napiLoaderOnRT${nativeApp.id}`].load(
-        'event_method',
-      );
+      const eventMethod = (globalThis as any)[`napiLoaderOnRT${nativeApp.id}`]
+        .load(
+          'event_method',
+        );
       eventMethod.bindEvent();
     });
     await wait(1000);
     await page.evaluate(() => {
-      document.querySelector('lynx-view')?.click();
+      (document.querySelector('lynx-view') as HTMLElement)?.click();
     });
     await wait(1000);
     expect(successDispatchNapiModule).toBeTruthy();
@@ -377,8 +350,7 @@ test.describe('web core tests', () => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    const success = await mainWorker.evaluate(() => {
+    const success = await page.evaluate(() => {
       globalThis.runtime.renderPage = () => {};
       if (
         JSON.stringify(globalThis.runtime._I18nResourceTranslation({
@@ -398,22 +370,18 @@ test.describe('web core tests', () => {
     test.skip(browserName === 'firefox');
     await goto(page);
     let success = false;
-    await page.on('console', async (msg) => {
-      const event = await msg.args()[0]?.evaluate((e) => {
-        return {
-          type: e.type,
-          channel: e.detail?.channel,
-        };
-      });
-      if (!event || event.type !== 'i18nResourceMissed') {
-        return;
-      }
-      if (event.channel === '2') {
-        success = true;
-      }
+    await page.evaluate(() => {
+      (document.querySelector('lynx-view') as LynxViewElement).addEventListener(
+        'i18nResourceMissed',
+        (event) => {
+          // @ts-expect-error
+          if (event.detail.channel === '2') {
+            success = true;
+          }
+        },
+      );
     });
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
+    await page.evaluate(() => {
       globalThis.runtime.renderPage = () => {};
       globalThis.runtime._I18nResourceTranslation({
         locale: 'en',
@@ -421,15 +389,17 @@ test.describe('web core tests', () => {
         fallback_url: '',
       });
     });
-    await wait(2000);
+    await wait(500);
+    success = await page.evaluate<boolean>(() => {
+      return success;
+    });
     expect(success).toBeTruthy();
   });
   test('api-update-i18n-resources', async ({ page, browserName }) => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    const first = await mainWorker.evaluate(() => {
+    const first = await page.evaluate(() => {
       globalThis.runtime.renderPage = () => {};
       if (
         globalThis.runtime._I18nResourceTranslation({
@@ -443,7 +413,7 @@ test.describe('web core tests', () => {
     });
     await wait(500);
     await page.evaluate(() => {
-      document.querySelector('lynx-view').updateI18nResources([
+      (document.querySelector('lynx-view') as any)?.updateI18nResources([
         {
           options: {
             locale: 'en',
@@ -473,7 +443,7 @@ test.describe('web core tests', () => {
       });
     });
     await wait(500);
-    const second = await mainWorker.evaluate(() => {
+    const second = await page.evaluate(() => {
       globalThis.runtime.renderPage = () => {};
       if (
         JSON.stringify(globalThis.runtime._I18nResourceTranslation({
@@ -493,8 +463,7 @@ test.describe('web core tests', () => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
+    await page.evaluate(() => {
       globalThis.runtime.renderPage = () => {};
     });
     await wait(500);
@@ -503,7 +472,7 @@ test.describe('web core tests', () => {
       globalThis.runtime.lynx.getNativeLynx().getI18nResource() === undefined
     );
     await wait(500);
-    await mainWorker?.evaluate(() => {
+    await page.evaluate(() => {
       globalThis.runtime._I18nResourceTranslation({
         locale: 'en',
         channel: '1',
@@ -521,8 +490,7 @@ test.describe('web core tests', () => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
+    await page.evaluate(() => {
       globalThis.runtime.renderPage = () => {};
     });
     await wait(500);
@@ -532,7 +500,7 @@ test.describe('web core tests', () => {
     );
     await wait(500);
     await page.evaluate(() => {
-      document.querySelector('lynx-view').updateI18nResources([
+      (document.querySelector('lynx-view') as any)?.updateI18nResources([
         {
           options: {
             locale: 'en',
@@ -573,43 +541,7 @@ test.describe('web core tests', () => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-    });
-    await wait(500);
-    let success = false;
-    await page.on('console', async (message) => {
-      if (message.text() === 'onI18nResourceReady') {
-        success = true;
-      }
-    });
-    const backWorker = await getBackgroundThreadWorker(page);
-    await backWorker?.evaluate(() => {
-      globalThis.runtime.GlobalEventEmitter.addListener(
-        'onI18nResourceReady',
-        () => {
-          console.log('onI18nResourceReady');
-        },
-      );
-    });
-    await wait(500);
-    await mainWorker?.evaluate(() => {
-      globalThis.runtime._I18nResourceTranslation({
-        locale: 'en',
-        channel: '1',
-        fallback_url: '',
-      });
-    });
-    await wait(500);
-    expect(success).toBeTruthy();
-  });
-  test('api-onI18nResourceReady-by-lynx-update', async ({ page, browserName }) => {
-    // firefox dose not support this.
-    test.skip(browserName === 'firefox');
-    await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
+    await page.evaluate(() => {
       globalThis.runtime.renderPage = () => {};
     });
     await wait(500);
@@ -630,7 +562,41 @@ test.describe('web core tests', () => {
     });
     await wait(500);
     await page.evaluate(() => {
-      document.querySelector('lynx-view').updateI18nResources([
+      globalThis.runtime._I18nResourceTranslation({
+        locale: 'en',
+        channel: '1',
+        fallback_url: '',
+      });
+    });
+    await wait(500);
+    expect(success).toBeTruthy();
+  });
+  test('api-onI18nResourceReady-by-lynx-update', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    await page.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+    });
+    await wait(500);
+    let success = false;
+    await page.on('console', async (message) => {
+      if (message.text() === 'onI18nResourceReady') {
+        success = true;
+      }
+    });
+    const backWorker = await getBackgroundThreadWorker(page);
+    await backWorker?.evaluate(() => {
+      globalThis.runtime.GlobalEventEmitter.addListener(
+        'onI18nResourceReady',
+        () => {
+          console.log('onI18nResourceReady');
+        },
+      );
+    });
+    await wait(500);
+    await page.evaluate(() => {
+      (document.querySelector('lynx-view') as any)?.updateI18nResources([
         {
           options: {
             locale: 'en',
@@ -662,40 +628,11 @@ test.describe('web core tests', () => {
     await wait(500);
     expect(success).toBeTruthy();
   });
-  test('decode-css-in-js-warn', async ({ page, browserName }) => {
-    // firefox not support
-    test.skip(browserName === 'firefox');
-    await goto(page, 'enable-css-selector-false');
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
-      globalThis.runtime.renderPage = () => {
-        const root = globalThis.runtime.__CreatePage('0', '0', {});
-        const container = globalThis.runtime.__CreateElement('view', '0', {});
-        globalThis.runtime.__SetAttribute(container, 'l-css-id', '-1');
-        globalThis.runtime.__SetAttribute(
-          container,
-          'style',
-          'width: 100px;height: 100px; background-color: red',
-        );
-        globalThis.runtime.__AppendElement(root, container);
-        globalThis.runtime.__AddClass(container, 'target');
-      };
-    });
-    await wait(1000);
-    const height = await page.evaluate(() =>
-      getComputedStyle(document.querySelector('lynx-view')).getPropertyValue(
-        'height',
-      )
-    );
-    await wait(500);
-    expect(height).toBe('100px');
-  });
   test('source-map-release', async ({ page, browserName }) => {
     // firefox not support
     test.skip(browserName === 'firefox');
     await goto(page);
-    const mainWorker = await getMainThreadWorker(page);
-    await mainWorker.evaluate(() => {
+    await page.evaluate(() => {
       globalThis.runtime.renderPage = () => {};
     });
     const backWorker = await getBackgroundThreadWorker(page);

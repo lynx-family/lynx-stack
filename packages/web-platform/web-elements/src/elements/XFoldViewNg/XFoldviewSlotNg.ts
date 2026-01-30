@@ -7,10 +7,12 @@ import { Component } from '../../element-reactive/index.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { XFoldviewSlotNgTouchEventsHandler } from './XFoldviewSlotNgTouchEventsHandler.js';
 import { slotKid, type XFoldviewNg } from './XFoldviewNg.js';
+import { LinearContainer } from '../../compat/index.js';
 
 @Component<typeof XFoldviewSlotNg>(
   'x-foldview-slot-ng',
   [
+    LinearContainer,
     CommonEventsAndMethods,
     XFoldviewSlotNgTouchEventsHandler,
   ],

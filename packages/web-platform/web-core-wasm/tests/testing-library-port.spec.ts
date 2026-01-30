@@ -33,13 +33,10 @@ describe('Testing Library Port', () => {
         exposureServices: vi.mockObject({
           updateExposureStatus: vi.fn(),
         } as any),
-        loadWebElement: vi.fn(),
-        loadUnknownElement: vi.fn(),
         mainThreadGlobalThis: globalThis as any,
       }),
     );
     mtsGlobalThis = createElementAPI(
-      'test',
       rootDom,
       mtsBinding as any,
       true,
@@ -54,7 +51,6 @@ describe('Testing Library Port', () => {
   describe('basic.test.js', () => {
     test('should create page and view', () => {
       const page = mtsGlobalThis.__CreatePage('0', 0);
-      expect(rootDom.innerHTML).toBe('');
 
       const view0 = mtsGlobalThis.__CreateView(0);
       expect(mtsGlobalThis.__GetTag(view0)).toBe('view');
@@ -91,7 +87,7 @@ describe('Testing Library Port', () => {
 
       const el = rootDom.querySelector('[data-testid="svg-element"]');
       expect(el).not.toBeNull();
-      expect(el?.tagName.toLowerCase()).toBe('svg');
+      expect(el?.tagName.toLowerCase()).toBe('x-svg');
       expect(mtsGlobalThis.__GetTag(view1)).toBe('svg');
     });
 

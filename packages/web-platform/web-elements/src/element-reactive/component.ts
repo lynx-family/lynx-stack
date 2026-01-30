@@ -64,10 +64,13 @@ export type AttributeReactiveObject = {
 
 export function Component<T extends WebComponentClass>(
   tag: string,
-  attributeReactiveClasses: AttributeReactiveClass<T>[],
+  attributeReactiveClassesOptional: (AttributeReactiveClass<T> | undefined)[],
   template?: string,
 ): (target: T, context: ClassDecoratorContext<T>) => T {
   let templateElement: HTMLTemplateElement | undefined;
+  const attributeReactiveClasses = attributeReactiveClassesOptional.filter(
+    (e): e is AttributeReactiveClass<T> => Boolean(e),
+  );
   return (target: T, { addInitializer }): T => {
     const observedStyleProperties = new Set([
       ...attributeReactiveClasses
@@ -269,34 +272,56 @@ export function Component<T extends WebComponentClass>(
         }
       > = {};
 
+      public enableEvent(eventName: string): void {
+        this.#eventListenerMap[eventName] ??= {
+          count: 0,
+          listenerCount: new WeakMap(),
+          captureListenerCount: new WeakMap(),
+        };
+        const targetEventInfo = this.#eventListenerMap[eventName];
+        if (targetEventInfo.count === 0) {
+          // trigger eventStatusChangeHandler
+          for (const oneReactive of this.#attributeReactives) {
+            const handler = oneReactive.eventStatusChangedHandler?.[eventName];
+            if (handler) {
+              handler.call(oneReactive, true, eventName);
+            }
+          }
+        }
+        targetEventInfo.count++;
+      }
+
+      public disableEvent(eventName: string): void {
+        const targetEventInfo = this.#eventListenerMap[eventName];
+        if (targetEventInfo && targetEventInfo.count > 0) {
+          targetEventInfo.count--;
+          if (targetEventInfo.count === 0) {
+            // trigger eventStatusChangeHandler
+            for (const oneReactive of this.#attributeReactives) {
+              const handler = oneReactive.eventStatusChangedHandler
+                ?.[eventName];
+              if (handler) {
+                handler.call(oneReactive, false, eventName);
+              }
+            }
+          }
+        }
+      }
+
       override addEventListener(
         type: string,
         listener: EventListener,
         options?: AddEventListenerOptions | boolean,
       ): void {
         super.addEventListener(type, listener, options);
-        this.#eventListenerMap[type] ??= {
-          count: 0,
-          listenerCount: new WeakMap(),
-          captureListenerCount: new WeakMap(),
-        };
-        const targetEventInfo = this.#eventListenerMap[type];
+        this.enableEvent(type);
+        const targetEventInfo = this.#eventListenerMap[type]!;
         const capture = typeof options === 'object' ? options.capture : options;
         const targetMap = capture
           ? targetEventInfo.captureListenerCount
           : targetEventInfo.listenerCount;
         const currentListenerCount = targetMap.get(listener) ?? 0;
         targetMap.set(listener, currentListenerCount + 1);
-        if (targetEventInfo.count === 0) {
-          // trigger eventStatusChangeHandler
-          for (const oneReactive of this.#attributeReactives) {
-            const handler = oneReactive.eventStatusChangedHandler?.[type];
-            if (handler) {
-              handler.call(oneReactive, true, type);
-            }
-          }
-        }
-        targetEventInfo.count++;
       }
 
       override removeEventListener(
@@ -309,21 +334,12 @@ export function Component<T extends WebComponentClass>(
         const targetEventInfo = this.#eventListenerMap[type];
         if (targetEventInfo && targetEventInfo.count > 0) {
           const targetMap = capture
-            ? targetEventInfo?.captureListenerCount
-            : targetEventInfo?.listenerCount;
+            ? targetEventInfo.captureListenerCount
+            : targetEventInfo.listenerCount;
           const currentListenerCount = targetMap.get(listener);
           if (currentListenerCount === 1) {
-            targetEventInfo.listenerCount.delete(listener);
-            targetEventInfo.count--;
-            if (targetEventInfo.count === 0) {
-              // trigger eventStatusChangeHandler
-              for (const oneReactive of this.#attributeReactives) {
-                const handler = oneReactive.eventStatusChangedHandler?.[type];
-                if (handler) {
-                  handler.call(oneReactive, false, type);
-                }
-              }
-            }
+            targetMap.delete(listener);
+            this.disableEvent(type);
           }
         }
       }

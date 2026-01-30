@@ -1,7 +1,7 @@
 {
   "name": "@lynx-js/external-bundle-rsbuild-plugin",
-  "version": "0.0.1",
-  "description": "A rsbuild plugin for loading lynx external bundles.",
+  "version": "0.0.2",
+  "description": "An rsbuild plugin for loading lynx external bundles.",
   "keywords": [
     "rsbuild",
     "Lynx",

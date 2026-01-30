@@ -8,7 +8,13 @@ import {
   RulePrelude,
 } from '../ts/encode/encodeCSS.js';
 import * as CSS from '@lynx-js/css-serializer';
-import { DecodedStyle } from '../ts/client/wasm.js';
+import {
+  get_style_content,
+  get_font_face_content,
+  decode_style_info,
+} from '../binary/encode/encode.js';
+import { encode, TasmJSONInfo } from '../ts/encode/webEncoder.js';
+import { TemplateSectionLabel } from '../ts/constants.js';
 
 describe('RawStyleInfo', () => {
   test('should encode StyleRule correctly', () => {
@@ -185,9 +191,9 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
   test(':root', () => {
@@ -199,9 +205,9 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
   test('complex-root', () => {
@@ -213,9 +219,9 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
@@ -229,9 +235,9 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .font_face_content;
+    const decodedString = get_font_face_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
@@ -244,9 +250,9 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
@@ -262,9 +268,9 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
@@ -284,9 +290,9 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
@@ -302,18 +308,18 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
   test('no css', () => {
     const cssMap = {};
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toBe('');
   });
 
@@ -326,9 +332,9 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
@@ -341,9 +347,9 @@ describe('encodeCSS', () => {
       `).root,
     };
     const buffer = encodeCSS(cssMap);
-    const decodedString =
-      new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined))
-        .style_content;
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
@@ -355,7 +361,38 @@ describe('encodeCSS', () => {
   //     `).root,
   //   };
   //   const buffer = encodeCSS(cssMap);
-  //   const decodedString = new DecodedStyle(DecodedStyle.webWorkerDecode(buffer, true, undefined)).style_content;
+  //    const decodedString = get_style_content(
+  //     DecodedStyle.webWorkerDecode(buffer, true, undefined),
+  //   );
   //   expect(decodedString.trim()).toBe('');
   // })
+});
+
+describe('webEncoder', () => {
+  test('should skip elementTemplates section if empty', () => {
+    const tasmJSON: TasmJSONInfo = {
+      styleInfo: {},
+      manifest: {},
+      cardType: 'card',
+      appType: 'card',
+      pageConfig: {},
+      lepusCode: {},
+      customSections: {},
+      elementTemplates: {},
+    };
+    const buffer = encode(tasmJSON);
+    const view = new DataView(buffer.buffer);
+    let offset = 8 + 4; // Magic + Version
+
+    while (offset < buffer.byteLength) {
+      const label = view.getUint32(offset, true);
+      offset += 4;
+      const length = view.getUint32(offset, true);
+      offset += 4;
+      if (label === TemplateSectionLabel.ElementTemplates) {
+        throw new Error('ElementTemplates section should not be present');
+      }
+      offset += length;
+    }
+  });
 });

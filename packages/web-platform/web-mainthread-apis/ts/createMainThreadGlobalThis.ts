@@ -61,6 +61,9 @@ import {
   type JSRealm,
   type QueryComponentPAPI,
   lynxEntryNameAttribute,
+  ErrorCode,
+  type QuerySelectorPAPI,
+  type InvokeUIMethodPAPI,
 } from '@lynx-js/web-constants';
 import { createMainThreadLynx } from './createMainThreadLynx.js';
 import {
@@ -207,48 +210,59 @@ export function createMainThreadGlobalThis(
       currentTarget as any as HTMLElement,
     );
     if (runtimeInfo) {
-      const hname = isCapture
+      const handlerInfos = (isCapture
         ? runtimeInfo.eventHandlerMap[lynxEventName]?.capture
-          ?.handler
-        : runtimeInfo.eventHandlerMap[lynxEventName]?.bind
-          ?.handler;
-      const crossThreadEvent = createCrossThreadEvent(
-        event as MinimalRawEventObject,
-        lynxEventName,
-      );
-      if (typeof hname === 'string') {
-        const parentComponentUniqueId = Number(
-          currentTarget.getAttribute(parentComponentUniqueIdAttribute)!,
-        );
-        const parentComponent = lynxUniqueIdToElement[parentComponentUniqueId]!
-          .deref()!;
-        const componentId =
-          parentComponent?.getAttribute(lynxTagAttribute) !== 'page'
-            ? parentComponent?.getAttribute(componentIdAttribute) ?? undefined
-            : undefined;
-        if (componentId) {
-          callbacks.publicComponentEvent(
-            componentId,
-            hname,
-            crossThreadEvent,
+        : runtimeInfo.eventHandlerMap[lynxEventName]?.bind) as unknown as {
+          handler: string | { type: 'worklet'; value: unknown };
+        }[];
+      let stopPropagation = false;
+      if (handlerInfos) {
+        for (const handlerInfo of handlerInfos) {
+          const hname = handlerInfo.handler;
+          const crossThreadEvent = createCrossThreadEvent(
+            event as MinimalRawEventObject,
+            lynxEventName,
           );
-        } else {
-          callbacks.publishEvent(
-            hname,
-            crossThreadEvent,
-          );
+          if (typeof hname === 'string') {
+            const parentComponentUniqueId = Number(
+              currentTarget.getAttribute(parentComponentUniqueIdAttribute)!,
+            );
+            const parentComponent =
+              lynxUniqueIdToElement[parentComponentUniqueId]!
+                .deref()!;
+            const componentId =
+              parentComponent?.getAttribute(lynxTagAttribute) !== 'page'
+                ? parentComponent?.getAttribute(componentIdAttribute)
+                  ?? undefined
+                : undefined;
+            if (componentId) {
+              callbacks.publicComponentEvent(
+                componentId,
+                hname,
+                crossThreadEvent,
+              );
+            } else {
+              callbacks.publishEvent(
+                hname,
+                crossThreadEvent,
+              );
+            }
+            if (handlerInfos.length === 1) {
+              stopPropagation = true;
+            }
+          } else if (hname) {
+            (crossThreadEvent as MainThreadScriptEvent).target.elementRefptr =
+              event.target;
+            if (crossThreadEvent.currentTarget) {
+              (crossThreadEvent as MainThreadScriptEvent).currentTarget!
+                .elementRefptr = event.currentTarget;
+            }
+            (mtsRealm.globalWindow as typeof globalThis & MainThreadGlobalThis)
+              .runWorklet?.(hname.value, [crossThreadEvent]);
+          }
         }
-        return true;
-      } else if (hname) {
-        (crossThreadEvent as MainThreadScriptEvent).target.elementRefptr =
-          event.target;
-        if (crossThreadEvent.currentTarget) {
-          (crossThreadEvent as MainThreadScriptEvent).currentTarget!
-            .elementRefptr = event.currentTarget;
-        }
-        (mtsRealm.globalWindow as typeof globalThis & MainThreadGlobalThis)
-          .runWorklet?.(hname.value, [crossThreadEvent]);
       }
+      return stopPropagation;
     }
     return false;
   };
@@ -282,9 +296,10 @@ export function createMainThreadGlobalThis(
       componentAtIndex: undefined,
       enqueueComponent: undefined,
     };
-    const currentHandler = isCapture
+    const handlerList = (isCapture
       ? runtimeInfo.eventHandlerMap[eventName]?.capture
-      : runtimeInfo.eventHandlerMap[eventName]?.bind;
+      : runtimeInfo.eventHandlerMap[eventName]?.bind) as unknown as any[];
+    const currentHandler = handlerList && handlerList.length > 0;
     const currentRegisteredHandler = isCatch
       ? (isCapture ? catchCaptureHandler : defaultCatchHandler)
       : (isCapture ? captureHandler : defaultHandler);
@@ -301,6 +316,13 @@ export function createMainThreadGlobalThis(
           || eventName === 'uidisappear';
         if (isExposure && element.getAttribute('exposure-id') === '-1') {
           mtsGlobalThis.__SetAttribute(element, 'exposure-id', null);
+        }
+        if (runtimeInfo.eventHandlerMap[eventName]) {
+          if (isCapture) {
+            runtimeInfo.eventHandlerMap[eventName]!.capture = undefined;
+          } else {
+            runtimeInfo.eventHandlerMap[eventName]!.bind = undefined;
+          }
         }
       }
     } else {
@@ -333,10 +355,28 @@ export function createMainThreadGlobalThis(
           bind: undefined,
         };
       }
-      if (isCapture) {
-        runtimeInfo.eventHandlerMap[eventName]!.capture = info;
+      let targetList = (isCapture
+        ? runtimeInfo.eventHandlerMap[eventName]!.capture
+        : runtimeInfo.eventHandlerMap[eventName]!.bind) as unknown as any[];
+
+      if (!Array.isArray(targetList)) {
+        targetList = targetList ? [targetList] : [];
+      }
+
+      const typeOfNew = typeof newEventHandler;
+      const index = targetList.findIndex((h: any) =>
+        typeof h.handler === typeOfNew
+      );
+      if (index !== -1) {
+        targetList[index] = info;
       } else {
-        runtimeInfo.eventHandlerMap[eventName]!.bind = info;
+        targetList.push(info);
+      }
+
+      if (isCapture) {
+        runtimeInfo.eventHandlerMap[eventName]!.capture = targetList as any;
+      } else {
+        runtimeInfo.eventHandlerMap[eventName]!.bind = targetList as any;
       }
     }
     elementToRuntimeInfoMap.set(element, runtimeInfo);
@@ -351,10 +391,13 @@ export function createMainThreadGlobalThis(
     if (runtimeInfo) {
       eventName = eventName.toLowerCase();
       const isCapture = eventType.startsWith('capture');
-      const handler = isCapture
+      const handler = (isCapture
         ? runtimeInfo.eventHandlerMap[eventName]?.capture
-        : runtimeInfo.eventHandlerMap[eventName]?.bind;
-      return handler?.handler;
+        : runtimeInfo.eventHandlerMap[eventName]?.bind) as unknown as any[];
+      if (Array.isArray(handler)) {
+        return handler[0]?.handler;
+      }
+      return (handler as any)?.handler;
     } else {
       return undefined;
     }
@@ -371,13 +414,18 @@ export function createMainThreadGlobalThis(
     for (const [lynxEventName, info] of Object.entries(eventHandlerMap)) {
       for (const atomInfo of [info.bind, info.capture]) {
         if (atomInfo) {
-          const { type, handler } = atomInfo;
-          if (handler) {
-            eventInfos.push({
-              type: type as LynxEventType,
-              name: lynxEventName,
-              function: handler,
-            });
+          const handlerList = (Array.isArray(atomInfo)
+            ? atomInfo
+            : [atomInfo]) as any[];
+          for (const item of handlerList) {
+            const { type, handler } = item;
+            if (handler) {
+              eventInfos.push({
+                type: type as LynxEventType,
+                name: lynxEventName,
+                function: handler,
+              });
+            }
           }
         }
       }
@@ -512,17 +560,32 @@ export function createMainThreadGlobalThis(
           const componentAtIndex = runtimeInfo.componentAtIndex;
           const enqueueComponent = runtimeInfo.enqueueComponent;
           const uniqueId = __GetElementUniqueID(element);
+          removeAction.forEach((position, i) => {
+            // remove list-item
+            const removedEle = element.children[position - i] as HTMLElement;
+            if (removedEle) {
+              const sign = __GetElementUniqueID(removedEle);
+              enqueueComponent?.(element, uniqueId, sign);
+              element.removeChild(removedEle);
+            }
+          });
           for (const action of insertAction) {
-            componentAtIndex?.(
+            const childSign = componentAtIndex?.(
               element,
               uniqueId,
               action.position,
               0,
               false,
-            );
-          }
-          for (const action of removeAction) {
-            enqueueComponent?.(element, uniqueId, action.position);
+            ) as number | undefined;
+            if (typeof childSign === 'number') {
+              const childElement = lynxUniqueIdToElement[childSign]?.deref();
+              if (childElement) {
+                const referenceNode = element.children[action.position];
+                if (referenceNode !== childElement) {
+                  element.insertBefore(childElement, referenceNode || null);
+                }
+              }
+            }
           }
         }
       });
@@ -646,6 +709,76 @@ export function createMainThreadGlobalThis(
       timingFlagsCopied,
       exposureChangedElementsArray,
     );
+  };
+
+  const __InvokeUIMethod: InvokeUIMethodPAPI = (
+    element,
+    method,
+    params,
+    callback,
+  ) => {
+    try {
+      if (method === 'boundingClientRect') {
+        const rect = (element as HTMLElement).getBoundingClientRect();
+        callback({
+          code: ErrorCode.SUCCESS,
+          data: {
+            id: (element as HTMLElement).id,
+            width: rect.width,
+            height: rect.height,
+            left: rect.left,
+            right: rect.right,
+            top: rect.top,
+            bottom: rect.bottom,
+          },
+        });
+        return;
+      }
+      if (typeof (element as any)[method] === 'function') {
+        const data = (element as any)[method](params);
+        callback({
+          code: ErrorCode.SUCCESS,
+          data,
+        });
+        return;
+      }
+      callback({
+        code: ErrorCode.METHOD_NOT_FOUND,
+      });
+    } catch (e) {
+      console.error(
+        `[lynx-web] invokeUIMethod: apply method failed with`,
+        e,
+        element,
+      );
+      callback({
+        code: ErrorCode.PARAM_INVALID,
+      });
+    }
+  };
+
+  const __QuerySelector: QuerySelectorPAPI = (
+    element,
+    selector,
+  ) => {
+    if (!element) return null;
+    const el = (element as HTMLElement).querySelector(selector);
+    if (el) {
+      if (!(el as any).invoke) {
+        (el as any).invoke = (method: string, params: object) => {
+          return new Promise((resolve, reject) => {
+            __InvokeUIMethod(el as HTMLElement, method, params, (res) => {
+              if (res.code === ErrorCode.SUCCESS) {
+                resolve(res.data);
+              } else {
+                reject(res);
+              }
+            });
+          });
+        };
+      }
+    }
+    return el;
   };
 
   const __GetPageElement: GetPageElementPAPI = () => {
@@ -816,6 +949,8 @@ export function createMainThreadGlobalThis(
     _I18nResourceTranslation: callbacks._I18nResourceTranslation,
     _AddEventListener: () => {},
     renderPage: undefined,
+    __InvokeUIMethod,
+    __QuerySelector,
   };
   Object.assign(mtsRealm.globalWindow, mtsGlobalThis);
   Object.defineProperty(mtsRealm.globalWindow, 'renderPage', {

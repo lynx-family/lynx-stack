@@ -25,16 +25,6 @@ export interface EncodeOptions {
 }
 
 /**
- * The Layer name of background and main-thread.
- *
- * @public
- */
-export const LAYERS = {
-  BACKGROUND: 'background',
-  MAIN_THREAD: 'main-thread',
-} as const
-
-/**
  * The default lib config{@link LibConfig} for external bundle.
  *
  * @public
@@ -81,6 +71,16 @@ export type LibOutputConfig = Required<LibConfig>['output']
 
 export interface OutputConfig extends LibOutputConfig {
   externals?: Externals
+  /**
+   * This option indicates what global object will be used to mount the library.
+   *
+   * In Lynx, the library will be mounted to `lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]` by default.
+   *
+   * If you have enabled share js context and want to reuse the library by mounting to the global object, you can set this option to `'globalThis'`.
+   *
+   * @default 'lynx'
+   */
+  globalObject?: 'lynx' | 'globalThis'
 }
 
 export interface ExternalBundleLibConfig extends LibConfig {
@@ -89,6 +89,7 @@ export interface ExternalBundleLibConfig extends LibConfig {
 
 function transformExternals(
   externals?: Externals,
+  globalObject?: string,
 ): Required<LibOutputConfig>['externals'] {
   if (!externals) return {}
 
@@ -98,7 +99,7 @@ function transformExternals(
     if (!libraryName) return callback()
 
     callback(undefined, [
-      'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
+      `${globalObject ?? 'lynx'}[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]`,
       ...(Array.isArray(libraryName) ? libraryName : [libraryName]),
     ], 'var')
   }
@@ -115,7 +116,7 @@ function transformExternals(
  *
  * ```js
  * // rslib.config.js
- * import { defineExternalBundleRslibConfig, LAYERS } from '@lynx-js/lynx-bundle-rslib-config'
+ * import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'
  *
  * export default defineExternalBundleRslibConfig({
  *   id: 'utils-lib',
@@ -123,7 +124,7 @@ function transformExternals(
  *     entry: {
  *       utils: {
  *         import: './src/utils.ts',
- *         layer: LAYERS.BACKGROUND,
+ *         layer: 'background',
  *       }
  *     }
  *   }
@@ -138,7 +139,7 @@ function transformExternals(
  *
  * ```js
  * // rslib.config.js
- * import { defineExternalBundleRslibConfig, LAYERS } from '@lynx-js/lynx-bundle-rslib-config'
+ * import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'
  *
  * export default defineExternalBundleRslibConfig({
  *   id: 'utils-lib',
@@ -146,7 +147,7 @@ function transformExternals(
  *     entry: {
  *       utils: {
  *         import: './src/utils.ts',
- *         layer: LAYERS.MAIN_THREAD,
+ *         layer: 'main-thread',
  *       }
  *     }
  *   }
@@ -187,7 +188,10 @@ export function defineExternalBundleRslibConfig(
           ...userLibConfig,
           output: {
             ...userLibConfig.output,
-            externals: transformExternals(userLibConfig.output?.externals),
+            externals: transformExternals(
+              userLibConfig.output?.externals,
+              userLibConfig.output?.globalObject,
+            ),
           },
         },
       ),
@@ -199,9 +203,27 @@ export function defineExternalBundleRslibConfig(
   }
 }
 
+interface ExposedLayers {
+  readonly BACKGROUND: string
+  readonly MAIN_THREAD: string
+}
+
 const externalBundleEntryRsbuildPlugin = (): rsbuild.RsbuildPlugin => ({
   name: 'lynx:external-bundle-entry',
+  // ensure dsl plugin has exposed LAYERS
+  enforce: 'post',
   setup(api) {
+    // Get layer names from react-rsbuild-plugin
+    const LAYERS = api.useExposed<ExposedLayers>(
+      Symbol.for('LAYERS'),
+    )
+
+    if (!LAYERS) {
+      throw new Error(
+        'external-bundle-rsbuild-plugin requires exposed `LAYERS`.',
+      )
+    }
+
     api.modifyBundlerChain((chain) => {
       // copy entries
       const entries = chain.entryPoints.entries() ?? {}
@@ -299,7 +321,7 @@ const externalBundleRsbuildPlugin = (
         .use(
           ExternalBundleWebpackPlugin,
           [
-            { 
+            {
               bundleFileName: `${libName}.lynx.bundle`,
               encode: getEncodeMode(),
               engineVersion,

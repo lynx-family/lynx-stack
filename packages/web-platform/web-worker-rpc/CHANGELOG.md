@@ -1,5 +1,19 @@
 # @lynx-js/web-worker-rpc
 
+## 0.19.6
+
+### Patch Changes
+
+- fix: when a list-item is deleted from list, the deleted list-item is still showed incorrectly. ([#1092](https://github.com/lynx-family/lynx-stack/pull/1092))
+
+  This is because the `enqueueComponent` method does not delete the node from the Element Tree. It is only to maintain the display node on RL, and lynx web needs to delete the dom additionally.
+
+## 0.19.5
+
+### Patch Changes
+
+- Use the scoped `@lynx-js/source-field` for source build resolution. ([#2096](https://github.com/lynx-family/lynx-stack/pull/2096))
+
 ## 0.19.4
 
 ### Patch Changes

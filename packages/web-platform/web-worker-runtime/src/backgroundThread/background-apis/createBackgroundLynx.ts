@@ -6,6 +6,7 @@ import {
   dispatchCoreContextOnBackgroundEndpoint,
   dispatchJSContextOnMainThreadEndpoint,
   LynxCrossThreadContext,
+  reloadEndpoint,
   type BackMainThreadContextConfig,
   type NativeApp,
 } from '@lynx-js/web-constants';
@@ -57,5 +58,8 @@ export function createBackgroundLynx(
         },
       ) => void,
     ) => nativeApp.queryComponent(source, callback),
+    reload: () => {
+      uiThreadRpc.invoke(reloadEndpoint, []);
+    },
   };
 }

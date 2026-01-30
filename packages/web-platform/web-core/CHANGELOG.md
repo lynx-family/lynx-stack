@@ -1,5 +1,31 @@
 # @lynx-js/web-core
 
+## 0.19.6
+
+### Patch Changes
+
+- fix: avoid crash on CPUs that do not support SIMD ([#2133](https://github.com/lynx-family/lynx-stack/pull/2133))
+
+- feat: support lynx.reload() ([#2127](https://github.com/lynx-family/lynx-stack/pull/2127))
+
+- Updated dependencies [[`179f984`](https://github.com/lynx-family/lynx-stack/commit/179f9844adf00ff4b2cd450ffb943649441c87d3), [`f7133c1`](https://github.com/lynx-family/lynx-stack/commit/f7133c137f094063e991dfa0e993ea92177aa173), [`6c2b51a`](https://github.com/lynx-family/lynx-stack/commit/6c2b51a661ae244eb40671f63f29ee971e084ed4), [`556fe9f`](https://github.com/lynx-family/lynx-stack/commit/556fe9fded90945a7926093897288d5302c314d3), [`5b589ab`](https://github.com/lynx-family/lynx-stack/commit/5b589ab53b01a8e2357d3ccbb159edab004086d3)]:
+  - @lynx-js/web-constants@0.19.6
+  - @lynx-js/web-mainthread-apis@0.19.6
+  - @lynx-js/web-worker-rpc@0.19.6
+  - @lynx-js/web-worker-runtime@0.19.6
+
+## 0.19.5
+
+### Patch Changes
+
+- fix: pixelWidth and pixelHeight use client instead of screen ([#2055](https://github.com/lynx-family/lynx-stack/pull/2055))
+
+- Updated dependencies [[`a91173c`](https://github.com/lynx-family/lynx-stack/commit/a91173c986ce3f358f1c11c788ca46a0529c701d)]:
+  - @lynx-js/web-worker-rpc@0.19.5
+  - @lynx-js/web-constants@0.19.5
+  - @lynx-js/web-worker-runtime@0.19.5
+  - @lynx-js/web-mainthread-apis@0.19.5
+
 ## 0.19.4
 
 ### Patch Changes

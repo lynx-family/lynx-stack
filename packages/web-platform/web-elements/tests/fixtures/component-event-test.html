@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>component-event-test</title>
+  </head>
+  <body>
+    <!-- The script will register x-event-test via shell-project.ts bundle -->
+    <script src="/main.js"></script>
+    <script>
+    const { Component, registerEventEnableStatusChangeHandler } =
+        globalThis;
+
+      class EventTracker {
+        static observedAttributes = [];
+      }
+      // Apply decorator manually since we are in potentially non-transpiled JS or simpler env
+      // But decorators usually need transpilation.
+      // Actually, since this is running in browser via simple script tag, we can't use TS decorators directly unless we use the return value of registerEventEnableStatusChangeHandler as a function wrapper if it supports it, OR we just use the prototype manipulation if the decorator helper is available.
+      // Wait, the previous code used TS decorators.
+      // `registerEventEnableStatusChangeHandler` is a function that returns a decorator.
+
+      // Let's check how registerEventEnableStatusChangeHandler is implemented.
+      // distinct from the TS decorator, we might need to apply it manually.
+
+      // Let's implement it in a way that works in browser JS (if the build supports it).
+      // Since main.js is built from shell-project.ts which includes the libs.
+
+      // The decorator implementation:
+      // export const registerEventEnableStatusChangeHandler = generateRegister<...>(...);
+      // generateRegister returns a decorator function (target, context) => ...
+
+      // In TS 5.0 decorators are functions. In legacy experiment decorators they are also functions.
+
+      // However, writing raw ES classes in HTML script tag means no TS compilation.
+      // We can simulate what the decorator does or just define the reactive class structure manually if we know it.
+
+      // Looking at `component.ts`:
+      // `Component` takes (tag, attributeReactiveClassesOptional, template).
+      // `AttributeReactiveClass` expects `observedAttributes`, `eventStatusChangedHandler` etc.
+
+      // So we can define the class directly without decorators if we construct the metadata manually.
+
+      class EventTrackerImpl {
+        static observedAttributes = [];
+        static eventStatusChangedHandler = {
+          'custom-event': function(status, type) {
+            if (!window.eventEvents) {
+              window.eventEvents = [];
+            }
+            window.eventEvents.push({ type, status });
+          },
+        };
+      }
+
+      // Logic from `registerEventStatusChangedHandler.ts` -> `generateRegister`
+      // It basically registers the handler to a static `eventStatusChangedHandler` map or similar?
+      // Actually `generateRegister` creates a method decorator.
+
+      // If we look at `component.ts`:
+      // export type AttributeReactiveObject = {
+      //   eventStatusChangedHandler?: Record<string, EventStatusChangeHandler>;
+      // ...
+      // }
+
+      // And `Component` uses `new oneClass(this)`.
+
+      // So the instances of `EventTracker` need to have `eventStatusChangedHandler`.
+      // Or the class `EventTracker` needs to have the static metadata if `Component` reads it from static?
+
+      // `component.ts`:
+      // 296: const handler = oneReactive.eventStatusChangedHandler?.[type];
+
+      // So `oneReactive` (instance of AttributeReactiveClass) must have `eventStatusChangedHandler` property.
+
+      class EventTrackerManual {
+        constructor(dom) {
+          this.dom = dom;
+        }
+
+        eventStatusChangedHandler = {
+          'custom-event': (enable, eventName) => {
+            if (!window.eventEvents) {
+              window.eventEvents = [];
+            }
+            window.eventEvents.push({ type: eventName, status: enable });
+          },
+        };
+      }
+      EventTrackerManual.observedAttributes = [];
+
+      Component('x-event-test', [EventTrackerManual], '')(HTMLElement, {
+        addInitializer: (cb) => cb(),
+      });
+    </script>
+    <x-event-test id="target"></x-event-test>
+  </body>
+</html>

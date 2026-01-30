@@ -4,7 +4,6 @@
 import type { LynxView } from '@lynx-js/web-core';
 import '@lynx-js/web-core';
 import '@lynx-js/web-elements/index.css';
-import '@lynx-js/web-elements/compat/LinearContainer';
 import '@lynx-js/web-core/index.css';
 import './index.css';
 

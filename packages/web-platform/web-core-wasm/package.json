@@ -1,7 +1,7 @@
 {
   "name": "@lynx-js/web-core-wasm",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.0.1",
+  "description": "This is an internal experimental package, do not use",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
@@ -57,8 +57,7 @@
   },
   "dependencies": {
     "@lynx-js/web-elements": "workspace:*",
-    "@lynx-js/web-worker-rpc": "workspace:*",
-    "hyphenate-style-name": "^1.1.0"
+    "@lynx-js/web-worker-rpc": "workspace:*"
   },
   "devDependencies": {
     "@lynx-js/css-serializer": "workspace:*",

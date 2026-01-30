@@ -7,15 +7,15 @@ use super::raw_style_info::{RawStyleInfo, Rule};
 use fnv::{FnvHashMap, FnvHashSet};
 
 #[derive(Default)]
-pub(super) struct FlattenedStyleSheet {
-  pub(super) imported_by: Vec<i32>,
-  pub(super) rules: Vec<Rule>,
+pub struct FlattenedStyleSheet {
+  pub(crate) imported_by: Vec<i32>,
+  pub(crate) rules: Vec<Rule>,
 }
 
 #[derive(Default)]
-pub(super) struct FlattenedStyleInfo {
-  pub(super) css_id_to_style_sheet: FnvHashMap<i32, FlattenedStyleSheet>,
-  pub(super) style_content_str_size_hint: usize,
+pub struct FlattenedStyleInfo {
+  pub(crate) css_id_to_style_sheet: FnvHashMap<i32, FlattenedStyleSheet>,
+  pub(crate) style_content_str_size_hint: usize,
 }
 
 impl From<RawStyleInfo> for FlattenedStyleInfo {

@@ -1,5 +1,29 @@
 # @lynx-js/web-constants
 
+## 0.19.6
+
+### Patch Changes
+
+- feat: add main-thread API: \_\_QuerySelector ([#2115](https://github.com/lynx-family/lynx-stack/pull/2115))
+
+- fix: when a list-item is deleted from list, the deleted list-item is still showed incorrectly. ([#1092](https://github.com/lynx-family/lynx-stack/pull/1092))
+
+  This is because the `enqueueComponent` method does not delete the node from the Element Tree. It is only to maintain the display node on RL, and lynx web needs to delete the dom additionally.
+
+- feat: support main thread invoke ui method ([#2104](https://github.com/lynx-family/lynx-stack/pull/2104))
+
+- feat: support lynx.reload() ([#2127](https://github.com/lynx-family/lynx-stack/pull/2127))
+
+- Updated dependencies [[`f7133c1`](https://github.com/lynx-family/lynx-stack/commit/f7133c137f094063e991dfa0e993ea92177aa173)]:
+  - @lynx-js/web-worker-rpc@0.19.6
+
+## 0.19.5
+
+### Patch Changes
+
+- Updated dependencies [[`a91173c`](https://github.com/lynx-family/lynx-stack/commit/a91173c986ce3f358f1c11c788ca46a0529c701d)]:
+  - @lynx-js/web-worker-rpc@0.19.5
+
 ## 0.19.4
 
 ### Patch Changes

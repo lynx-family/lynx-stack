@@ -190,4 +190,51 @@ describe('pluginExternalBundle', () => {
       },
     })
   })
+
+  test('should allow config globalObject', async () => {
+    const { pluginExternalBundle } = await import('../src/index.js')
+
+    let capturedPlugins: unknown[] = []
+
+    const rsbuild = await createRsbuild({
+      rsbuildConfig: {
+        source: {
+          entry: {
+            main: './fixtures/basic.tsx',
+          },
+        },
+        tools: {
+          rspack(config) {
+            capturedPlugins = config.plugins || []
+            return config
+          },
+        },
+        plugins: [
+          pluginStubLayers(),
+          pluginExternalBundle({
+            externals: {
+              lodash: {
+                url: 'http://lodash.lynx.bundle',
+                background: { sectionPath: 'background' },
+                mainThread: { sectionPath: 'mainThread' },
+              },
+            },
+            globalObject: 'globalThis',
+          }),
+        ],
+      },
+    })
+
+    await rsbuild.inspectConfig()
+
+    const externalBundlePlugin = capturedPlugins.find(
+      (plugin) => plugin instanceof ExternalsLoadingPlugin,
+    )
+    expect(externalBundlePlugin).toBeDefined()
+    expect(externalBundlePlugin).toMatchObject({
+      options: {
+        globalObject: 'globalThis',
+      },
+    })
+  })
 })

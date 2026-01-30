@@ -258,7 +258,6 @@ list-item {
  *
  * update this once firefox supports this.
  * 
- * If you want to be fully compatible with chrome below 117, you need to use @lynx-js/web-elements/compat/LinearContainer.
  */
 @supports (content-visibility: auto) and
   (transition-behavior: allow-discrete) and (width: 1rex) {

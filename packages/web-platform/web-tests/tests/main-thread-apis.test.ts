@@ -1395,4 +1395,261 @@ test.describe('main thread api tests', () => {
     expect(ret.cssID).toBe('8');
     expect(ret.name).toBe('name2');
   });
+
+  test(
+    'list update-list-info should insert at correct position',
+    async ({ page }, { title }) => {
+      const result = await page.evaluate(async () => {
+        const list = globalThis.__CreateList(
+          0,
+          (list, listID, cellIndex, operationID, enableReuseNotification) => {
+            const item = globalThis.__CreateView(0);
+            item.setAttribute('data-content', 'B');
+            globalThis.__AppendElement(list, item);
+            return globalThis.__GetElementUniqueID(item);
+          },
+          (list, listID, sign) => {},
+        );
+
+        const itemA = globalThis.__CreateView(0);
+        itemA.setAttribute('data-content', 'A');
+        globalThis.__AppendElement(list, itemA);
+
+        const updateInfo = {
+          insertAction: [
+            { position: 0, type: 'type' },
+          ],
+          removeAction: [],
+        };
+
+        globalThis.__SetAttribute(list, 'update-list-info', updateInfo);
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const children = list.children;
+        return {
+          count: children.length,
+          firstContent: children[0].getAttribute('data-content'),
+          secondContent: children[1].getAttribute('data-content'),
+        };
+      });
+
+      expect(result.count).toBe(2);
+      expect(result.firstContent).toBe('B');
+      expect(result.secondContent).toBe('A');
+    },
+  );
+
+  test(
+    'list update-list-info should remove at correct position',
+    async ({ page }, { title }) => {
+      const result = await page.evaluate(async () => {
+        let recycledSign = -1;
+        const list = globalThis.__CreateList(
+          0,
+          (list, listID, cellIndex, operationID, enableReuseNotification) => {
+            return 0;
+          },
+          (list, listID, sign) => {
+            recycledSign = sign;
+          },
+        );
+
+        const itemA = globalThis.__CreateView(0);
+        itemA.setAttribute('data-content', 'A');
+        const itemB = globalThis.__CreateView(0);
+        itemB.setAttribute('data-content', 'B');
+        const itemC = globalThis.__CreateView(0);
+        itemC.setAttribute('data-content', 'C');
+
+        globalThis.__AppendElement(list, itemA);
+        globalThis.__AppendElement(list, itemB);
+        globalThis.__AppendElement(list, itemC);
+
+        const bUniqueId = globalThis.__GetElementUniqueID(itemB);
+
+        const updateInfo = {
+          insertAction: [],
+          removeAction: [1], // Remove B
+        };
+
+        globalThis.__SetAttribute(list, 'update-list-info', updateInfo);
+
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        const children = list.children;
+        return {
+          count: children.length,
+          firstContent: children[0].getAttribute('data-content'),
+          secondContent: children[1].getAttribute('data-content'),
+          recycledSign: recycledSign,
+          expectedRecycledSign: bUniqueId,
+        };
+      });
+
+      expect(result.count).toBe(2);
+      expect(result.firstContent).toBe('A');
+      expect(result.secondContent).toBe('C');
+      expect(result.recycledSign).toBe(result.expectedRecycledSign);
+    },
+  );
+
+  test(
+    'list update-list-info should handle mixed insert and remove',
+    async ({ page }, { title }) => {
+      const result = await page.evaluate(async () => {
+        const list = globalThis.__CreateList(
+          0,
+          (list, listID, cellIndex, operationID, enableReuseNotification) => {
+            const item = globalThis.__CreateView(0);
+            item.setAttribute('data-content', 'D');
+            globalThis.__AppendElement(list, item);
+            return globalThis.__GetElementUniqueID(item);
+          },
+          (list, listID, sign) => {},
+        );
+
+        const itemA = globalThis.__CreateView(0);
+        itemA.setAttribute('data-content', 'A');
+        const itemB = globalThis.__CreateView(0);
+        itemB.setAttribute('data-content', 'B');
+        const itemC = globalThis.__CreateView(0);
+        itemC.setAttribute('data-content', 'C');
+
+        globalThis.__AppendElement(list, itemA);
+        globalThis.__AppendElement(list, itemB);
+        globalThis.__AppendElement(list, itemC);
+
+        // Initial: [A, B, C]
+        // Remove 1 (B) -> [A, C]
+        // Insert at 0 (D) -> [D, A, C]
+
+        const updateInfo = {
+          insertAction: [{ position: 0, type: 'type' }],
+          removeAction: [1],
+        };
+
+        globalThis.__SetAttribute(list, 'update-list-info', updateInfo);
+
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        const children = list.children;
+        return {
+          count: children.length,
+          c0: children[0].getAttribute('data-content'),
+          c1: children[1].getAttribute('data-content'),
+          c2: children[2].getAttribute('data-content'),
+        };
+      });
+
+      expect(result.count).toBe(3);
+      expect(result.c0).toBe('D');
+      expect(result.c1).toBe('A');
+      expect(result.c2).toBe('C');
+    },
+  );
+
+  test(
+    'list update-list-info stress test with random operations',
+    async ({ page }, { title }) => {
+      const result = await page.evaluate(async () => {
+        // 1. Setup Initial State
+        const INITIAL_COUNT = 20;
+        const INSERT_COUNT = 10;
+        let uniqueCounter = INITIAL_COUNT;
+        const pendingInsertions: string[] = [];
+
+        const list = globalThis.__CreateList(
+          0,
+          (list, listID, cellIndex, operationID, enableReuseNotification) => {
+            const content = pendingInsertions.shift();
+            const item = globalThis.__CreateView(0);
+            item.setAttribute('data-content', content || 'ERROR');
+            globalThis.__AppendElement(list, item);
+            return globalThis.__GetElementUniqueID(item);
+          },
+          (list, listID, sign) => {},
+        );
+
+        // Populate initial list
+        const currentModel: string[] = [];
+        for (let i = 0; i < INITIAL_COUNT; i++) {
+          const content = i.toString();
+          const item = globalThis.__CreateView(0);
+          item.setAttribute('data-content', content);
+          globalThis.__AppendElement(list, item);
+          currentModel.push(content);
+        }
+
+        // 2. Generate Random Actions
+        // Phase A: Removals
+        // Randomly remove ~30% of items
+        const originalIndicesToRemove: number[] = [];
+        for (let i = 0; i < INITIAL_COUNT; i++) {
+          if (Math.random() < 0.3) {
+            originalIndicesToRemove.push(i);
+          }
+        }
+        // Remove from model (simulating the logic: removeAction indices are from original list)
+        // We need to remove them from currentModel.
+        // Since originalIndicesToRemove is sorted ascending, we can iterate from back to front to avoid index shifting issues when splicing?
+        // No, removeAction indices are "original indices".
+        // currentModel is [0, 1, 2, ...].
+        // If we remove 1 and 3.
+        // Value '1' is at index 1. Value '3' is at index 3.
+        // So we just filter out values where parseInt(val) is in originalIndicesToRemove.
+        const modelAfterRemovals = currentModel.filter((val) =>
+          !originalIndicesToRemove.includes(Number(val))
+        );
+
+        // Phase B: Insertions
+        const insertAction: { position: number; type: string }[] = [];
+        const finalModel = [...modelAfterRemovals];
+
+        for (let i = 0; i < INSERT_COUNT; i++) {
+          // Random position in the CURRENT list (accumulated state)
+          const pos = Math.floor(Math.random() * (finalModel.length + 1));
+          const content = (uniqueCounter++).toString();
+
+          finalModel.splice(pos, 0, content);
+          insertAction.push({ position: pos, type: 'stress' });
+          pendingInsertions.push(content);
+        }
+
+        // 3. Apply Update
+        const updateInfo = {
+          insertAction,
+          removeAction: originalIndicesToRemove,
+        };
+
+        globalThis.__SetAttribute(list, 'update-list-info', updateInfo);
+
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        // 4. Verification
+        const children = list.children;
+        const actualContent = Array.from(children).map((child) =>
+          child.getAttribute('data-content')
+        );
+
+        return {
+          match: JSON.stringify(actualContent) === JSON.stringify(finalModel),
+          actual: actualContent,
+          expected: finalModel,
+          actions: {
+            remove: originalIndicesToRemove,
+            insert: insertAction,
+          },
+        };
+      });
+
+      expect(result.match).toBe(true);
+      if (!result.match) {
+        console.log(
+          'Stress Test Failed Details:',
+          JSON.stringify(result, null, 2),
+        );
+      }
+    },
+  );
 });

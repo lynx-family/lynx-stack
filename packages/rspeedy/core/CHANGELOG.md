@@ -1,5 +1,39 @@
 # @lynx-js/rspeedy
 
+## 0.13.2
+
+### Patch Changes
+
+- Bump Rsbuild 1.7.2 with Rspack 1.7.1. ([#2136](https://github.com/lynx-family/lynx-stack/pull/2136))
+
+## 0.13.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.6
+
+## 0.13.0
+
+### Minor Changes
+
+- Bump Rsbuild v1.7.1 with Rspack v1.7.0. ([#2088](https://github.com/lynx-family/lynx-stack/pull/2088))
+
+- **BREAKING CHANGE**: Remove the CLI version selector and the `--unmanaged` flag. ([#2093](https://github.com/lynx-family/lynx-stack/pull/2093))
+
+  Rspeedy will no longer automatically attempt to use the locally installed version when the CLI is invoked.
+
+  Please uninstall your globally installed version of Rspeedy:
+
+  ```bash
+  npm uninstall -g @lynx-js/rspeedy
+  ```
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.5
+
 ## 0.12.5
 
 ### Patch Changes
