@@ -6,6 +6,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Element } from '../src/api/element';
 import { initApiEnv } from '../src/api/lynxApi';
 import { RunWorkletSource } from '../src/bindings/types';
+import { MainThreadRef } from '../src/Ref';
 import { updateWorkletRefInitValueChanges } from '../src/workletRef';
 import { initWorklet } from '../src/workletRuntime';
 
@@ -18,7 +19,12 @@ describe('Worklet', () => {
     };
     delete globalThis.lynxWorkletImpl;
     globalThis.lynx = {
+      ...globalThis.lynx,
       requestAnimationFrame: vi.fn(),
+    };
+    // Re-register MainThreadRef for each test since initWorklet consumes the registry
+    globalThis.__LYNX_MTV_REGISTRY__ = {
+      'main-thread': MainThreadRef,
     };
     initApiEnv();
   });
@@ -61,6 +67,7 @@ describe('Worklet', () => {
 
     let wv = {
       _wvid: 178,
+      _type: 'main-thread',
     };
 
     let worklet = {
@@ -105,6 +112,7 @@ describe('Worklet', () => {
 
     let wv = {
       _wvid: 1,
+      _type: 'main-thread',
     };
 
     let worklet2 = {
@@ -144,6 +152,7 @@ describe('Worklet', () => {
 
     let wv1 = {
       _wvid: 1,
+      _type: 'main-thread',
     };
 
     let worklet = {
@@ -172,6 +181,7 @@ describe('Worklet', () => {
       _c: {
         wv1: {
           _wvid: 1,
+          _type: 'main-thread',
         },
       },
       _wkltId: '1',
@@ -251,10 +261,12 @@ describe('Worklet', () => {
 
     let argWorkletRef = {
       _wvid: 1,
+      _type: 'main-thread',
     };
 
     let wv5 = {
       _wvid: 2,
+      _type: 'main-thread',
     };
 
     let worklet = {
@@ -389,68 +401,119 @@ describe('Worklet', () => {
 
     expect(ret).toBe(1);
   });
-});
 
-it('requestAnimationFrame should throw error before 2.16', async () => {
-  globalThis.SystemInfo = {
-    lynxSdkVersion: '2.15',
-  };
-  initWorklet();
+  it('should support __MT_PERSIST__ marked objects as main thread values', async () => {
+    initWorklet();
+    updateWorkletRefInitValueChanges([[99, { initialized: true }]]);
 
-  const fn = vi.fn(function() {
-    globalThis.lynxWorkletImpl._workletMap['1'].bind(this);
-    expect(() => {
-      globalThis.requestAnimationFrame(vi.fn());
-    }).toThrow(
-      new Error(
-        'requestAnimationFrame in main thread script requires Lynx sdk version 2.16',
-      ),
-    );
-    expect(() => {
-      globalThis.lynx.requestAnimationFrame(vi.fn());
-    }).toThrow(
-      new Error(
-        'requestAnimationFrame in main thread script requires Lynx sdk version 2.16',
-      ),
-    );
+    const fn = vi.fn(function() {
+      const { mtValue } = this._c;
+      globalThis.lynxWorkletImpl._workletMap['1'].bind(this);
+      // The mtValue should be hydrated from the worklet ref map
+      expect(mtValue.current).toEqual({ initialized: true });
+      // Modify it to verify it's a real main thread value
+      mtValue.current = { modified: true };
+    });
+    globalThis.registerWorklet('main-thread', '1', fn);
+
+    // Object with __MT_PERSIST__ marker and _wvid
+    const mtValue = {
+      __MT_PERSIST__: true,
+      _wvid: 99,
+      _initValue: { initialized: true },
+      _type: 'main-thread',
+    };
+
+    const worklet = {
+      _c: {
+        mtValue: mtValue,
+      },
+      _wkltId: '1',
+    };
+
+    globalThis.runWorklet(worklet, []);
+    expect(fn).toBeCalled();
+
+    // Run again to verify state is preserved
+    const fn2 = vi.fn(function() {
+      const { mtValue } = this._c;
+      globalThis.lynxWorkletImpl._workletMap['2'].bind(this);
+      expect(mtValue.current).toEqual({ modified: true });
+    });
+    globalThis.registerWorklet('main-thread', '2', fn2);
+
+    const worklet2 = {
+      _c: {
+        mtValue: mtValue,
+      },
+      _wkltId: '2',
+    };
+
+    globalThis.runWorklet(worklet2, []);
+    expect(fn2).toBeCalled();
   });
-  globalThis.registerWorklet('main-thread', '1', fn);
-  updateWorkletRefInitValueChanges([[178, 333]]);
 
-  let worklet = {
-    _wkltId: '1',
-  };
-  globalThis.runWorklet(worklet, [1]);
-  expect(fn).toBeCalled();
-});
+  it('requestAnimationFrame should throw error before 2.16', async () => {
+    globalThis.SystemInfo = {
+      lynxSdkVersion: '2.15',
+    };
+    initWorklet();
 
-it('requestAnimationFrame should throw error before 2.16 2', async () => {
-  globalThis.SystemInfo = {};
-  initWorklet();
+    const fn = vi.fn(function() {
+      globalThis.lynxWorkletImpl._workletMap['1'].bind(this);
+      expect(() => {
+        globalThis.requestAnimationFrame(vi.fn());
+      }).toThrow(
+        new Error(
+          'requestAnimationFrame in main thread script requires Lynx sdk version 2.16',
+        ),
+      );
+      expect(() => {
+        globalThis.lynx.requestAnimationFrame(vi.fn());
+      }).toThrow(
+        new Error(
+          'requestAnimationFrame in main thread script requires Lynx sdk version 2.16',
+        ),
+      );
+    });
+    globalThis.registerWorklet('main-thread', '1', fn);
+    updateWorkletRefInitValueChanges([[178, 333]]);
 
-  const fn = vi.fn(function() {
-    globalThis.lynxWorkletImpl._workletMap['1'].bind(this);
-    expect(() => {
-      globalThis.requestAnimationFrame(vi.fn());
-    }).toThrow(
-      new Error(
-        'requestAnimationFrame in main thread script requires Lynx sdk version 2.16',
-      ),
-    );
-    expect(() => {
-      globalThis.lynx.requestAnimationFrame(vi.fn());
-    }).toThrow(
-      new Error(
-        'requestAnimationFrame in main thread script requires Lynx sdk version 2.16',
-      ),
-    );
+    let worklet = {
+      _wkltId: '1',
+    };
+    globalThis.runWorklet(worklet, [1]);
+    expect(fn).toBeCalled();
   });
-  globalThis.registerWorklet('main-thread', '1', fn);
-  updateWorkletRefInitValueChanges([[178, 333]]);
 
-  let worklet = {
-    _wkltId: '1',
-  };
-  globalThis.runWorklet(worklet, [1]);
-  expect(fn).toBeCalled();
+  it('requestAnimationFrame should throw error before 2.16 2', async () => {
+    globalThis.SystemInfo = {};
+    initWorklet();
+
+    const fn = vi.fn(function() {
+      globalThis.lynxWorkletImpl._workletMap['1'].bind(this);
+      expect(() => {
+        globalThis.requestAnimationFrame(vi.fn());
+      }).toThrow(
+        new Error(
+          'requestAnimationFrame in main thread script requires Lynx sdk version 2.16',
+        ),
+      );
+      expect(() => {
+        globalThis.lynx.requestAnimationFrame(vi.fn());
+      }).toThrow(
+        new Error(
+          'requestAnimationFrame in main thread script requires Lynx sdk version 2.16',
+        ),
+      );
+    });
+    globalThis.registerWorklet('main-thread', '1', fn);
+    updateWorkletRefInitValueChanges([[178, 333]]);
+
+    let worklet = {
+      _wkltId: '1',
+    };
+    globalThis.runWorklet(worklet, [1]);
+    expect(fn).toBeCalled();
+  });
 });
