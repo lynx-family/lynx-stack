@@ -236,6 +236,15 @@ export function createSnapshot(
   if (!isLazySnapshotSupported) {
     uniqID = entryUniqID(uniqID, entryName);
   }
+  // For Lazy Bundle, their entryName is not DEFAULT_ENTRY_NAME.
+  // We need to set the entryName correctly for HMR
+  if (__DEV__ && __JS__ && __globalSnapshotPatch && entryName && entryName !== DEFAULT_ENTRY_NAME) {
+    __globalSnapshotPatch.push(
+      SnapshotOperation.DEV_ONLY_SetSnapshotEntryName,
+      uniqID,
+      entryName,
+    );
+  }
 
   const s: Snapshot = { create, update, slot, cssId, entryName, refAndSpreadIndexes };
   snapshotManager.values.set(uniqID, s);

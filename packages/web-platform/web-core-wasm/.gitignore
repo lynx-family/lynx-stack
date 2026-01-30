@@ -1,3 +1,4 @@
 **/binary/**
 !**/binary/**/
 !**/binary/**/*.d.ts
+binary/**/*_debug*

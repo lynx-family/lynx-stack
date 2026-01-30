@@ -379,8 +379,8 @@ Component, View
         ]
       `);
       expect(result.code).toMatchInlineSnapshot(`
-        "/*#__PURE__*/ import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
-        _jsx(Comp, {
+        "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+        /*#__PURE__*/ _jsx(Comp, {
             ...s
         });
         "
@@ -397,7 +397,7 @@ Component, View
         }),
       ).toMatchInlineSnapshot(`[]`);
       expect(result.code).toMatchInlineSnapshot(`
-        "/*#__PURE__*/ import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+        "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
         import * as ReactLynx from "@lynx-js/react";
         import * as ReactLynx1 from "@lynx-js/react/internal";
         const __snapshot_da39a_89b7f_1 = "__snapshot_da39a_89b7f_1";
@@ -533,6 +533,21 @@ Component, View
         ",
         ]
       `);
+    }
+
+    {
+      cfg.compat.disableDeprecatedWarning = true;
+      const result = await transformReactLynx(
+        `this.createSelectorQuery();
+         this.getElementById();`,
+        cfg,
+      );
+      expect(
+        await formatMessages(result.warnings, {
+          kind: 'warning',
+          color: false,
+        }),
+      ).toMatchInlineSnapshot(`[]`);
     }
   });
 });

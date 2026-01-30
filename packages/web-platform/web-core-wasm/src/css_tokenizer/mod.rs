@@ -14,8 +14,8 @@
 /// - `token_types`: Defines constants for different token types.
 /// - `char_code_definitions`: Utility macros and functions for character classification.
 pub(crate) mod char_code_definitions;
-pub(crate) mod token_types;
-pub(crate) mod tokenize;
+pub mod token_types;
+pub mod tokenize;
 mod utils;
 
 #[cfg(test)]

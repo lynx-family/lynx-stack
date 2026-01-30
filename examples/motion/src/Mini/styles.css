@@ -1,0 +1,26 @@
+.mini-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+.mini-box {
+  width: 100px;
+  height: 100px;
+  background-color: #ff0080;
+  border-radius: 20px;
+}
+.mini-controls {
+  margin-top: 30px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.mini-btn {
+  padding: 10px 15px;
+  background-color: #eee;
+  border-radius: 8px;
+}

@@ -1,0 +1,5 @@
+[build]
+rustflags = ["--cfg", "wasm_js"]
+
+[target.wasm32-unknown-unknown]
+runner = "wasm-bindgen-test-runner"

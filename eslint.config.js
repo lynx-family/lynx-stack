@@ -100,6 +100,8 @@ export default tseslint.config(
 
       // gesture-runtime-testing
       'packages/lynx/gesture-runtime/__test__/**',
+      // motion tests
+      'packages/motion/__tests__/**',
       // TODO: enable eslint for tailwind-preset
       // tailwind-preset
       'packages/tailwind-preset/**',

@@ -1,7 +1,7 @@
 import { TemplateSectionLabel, MagicHeader } from '../../constants.js';
 import type { InitMessage, LoadTemplateMessage, MainMessage } from './types.js';
 
-import { DecodedStyle, wasmInstance } from '../wasm.js';
+import { wasmInstance } from '../wasm.js';
 import type { PageConfig } from '../../types/PageConfig.js';
 
 let wasmModuleLoadedResolve: () => void;
@@ -259,10 +259,10 @@ async function handleStream(
       }
       case TemplateSectionLabel.StyleInfo: {
         await wasmModuleLoadedPromise;
-        const buffer = DecodedStyle.webWorkerDecode(
+        const buffer = wasmInstance.decode_style_info(
           content,
-          config['enableCSSSelector'] === 'true',
           config['isLazy'] === 'true' ? url : undefined,
+          config['enableCSSSelector'] === 'true',
         );
         postMessage(
           {
@@ -348,6 +348,9 @@ async function handleJSON(
   if (overrideConfig) {
     config = { ...config, ...overrideConfig };
   }
+  config = Object.fromEntries(
+    Object.entries(config).map(([key, value]) => [key, value.toString()]),
+  );
   postMessage({
     type: 'section',
     label: TemplateSectionLabel.Configurations,
@@ -437,7 +440,7 @@ async function handleJSON(
   }
 
   // ElementTemplates
-  if (json.elementTemplates) {
+  if (json.elementTemplates && Object.keys(json.elementTemplates).length > 0) {
     // TemplateManager expects Uint8Array for ElementTemplates.
     // We can't support this easily for JSON.
     throw new Error(

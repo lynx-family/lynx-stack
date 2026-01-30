@@ -6,7 +6,6 @@
 import type * as CSS from '@lynx-js/css-serializer';
 import type { ElementTemplateData } from '../types/index.js';
 import { encodeCSS } from './encodeCSS.js';
-import { encodeElementTemplates } from './encodeElementTemplate.js';
 import { MagicHeader, TemplateSectionLabel } from '../constants.js';
 
 function encodeAsJSON(map: Record<string, unknown>): Uint8Array {
@@ -79,14 +78,8 @@ export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
     pageConfig,
     lepusCode,
     customSections,
-    elementTemplates,
   } = tasmJSON;
   const encodedStyleInfo = encodeCSS(styleInfo);
-  const hasElementTemplates = Object.keys(elementTemplates).length > 0;
-  const encodedElementTemplates = hasElementTemplates
-    ? encodeElementTemplates(elementTemplates)
-    : new Uint8Array(0);
-
   const encodedManifest = encodeStringMap(manifest);
   const encodedLepusCode = encodeStringMap(lepusCode);
 
@@ -106,7 +99,6 @@ export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
     /*section length*/
     + 4 + 4 + encodedConfigurations.length // Configurations
     + 4 + 4 + encodedStyleInfo.length // Style Info
-    + (hasElementTemplates ? 4 + 4 + encodedElementTemplates.length : 0) // Element Templates
     + 4 + 4 + encodedLepusCode.length // Lepus Code
     + 4 + 4 + encodedCustomSections.length // Custom Sections
     + 4 + 4 + encodedManifest.length // Manifest
@@ -130,15 +122,7 @@ export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
   offset += 4;
   buffer.set(encodedConfigurations, offset);
   offset += encodedConfigurations.length;
-  // Element Templates
-  if (hasElementTemplates) {
-    dataView.setUint32(offset, TemplateSectionLabel.ElementTemplates, true); // section label
-    offset += 4;
-    dataView.setUint32(offset, encodedElementTemplates.length, true); // section length
-    offset += 4;
-    buffer.set(encodedElementTemplates, offset);
-    offset += encodedElementTemplates.length;
-  }
+
   // Lepus Code
   dataView.setUint32(offset, TemplateSectionLabel.LepusCode, true); // section label
   offset += 4;

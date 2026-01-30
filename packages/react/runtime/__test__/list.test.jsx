@@ -4380,3 +4380,33 @@ describe('update-list-info profile', () => {
     `);
   });
 });
+
+describe('clear __UpdateListCallbacks', () => {
+  it('should register __DestroyLifetime listener and clear callbacks when triggered', () => {
+    const s1 = __SNAPSHOT__(
+      <view>
+        <text>test</text>
+        <list>{HOLE}</list>
+      </view>,
+    );
+
+    const a = new SnapshotInstance(s1);
+    a.ensureElements();
+
+    expect(lynx.getNative().addEventListener).toHaveBeenCalledWith(
+      '__DestroyLifetime',
+      expect.any(Function),
+    );
+
+    const listElement = a.__elements[3];
+    expect(listElement.componentAtIndex).not.toBeNull();
+    expect(listElement.enqueueComponent).not.toBeNull();
+    expect(listElement.componentAtIndexes).not.toBeNull();
+
+    lynx.getNative().dispatchEvent({ type: '__DestroyLifetime', data: {} });
+
+    expect(listElement.componentAtIndex).toBeNull();
+    expect(listElement.enqueueComponent).toBeNull();
+    expect(listElement.componentAtIndexes).toBeNull();
+  });
+});

@@ -1,6 +1,8 @@
-import { useEffect } from '@lynx-js/react';
+import { Suspense, lazy, useEffect } from '@lynx-js/react';
 
 import './App.css';
+
+const LazyComponent = lazy(() => import('./LazyComponent.js'));
 
 export function App() {
   useEffect(() => {
@@ -23,6 +25,11 @@ export function App() {
         <view className='Banner'>
           <text className='Title'>React</text>
           <text className='Subtitle'>on Lynx</text>
+        </view>
+        <view className='Suspense'>
+          <Suspense fallback={<text>Loading...</text>}>
+            <LazyComponent />
+          </Suspense>
         </view>
       </view>
     </view>

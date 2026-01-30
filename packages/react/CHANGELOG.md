@@ -1,5 +1,11 @@
 # @lynx-js/react
 
+## 0.116.1
+
+### Patch Changes
+
+- Fix the issue that lazy bundle HMR will lost CSS. ([#2134](https://github.com/lynx-family/lynx-stack/pull/2134))
+
 ## 0.116.0
 
 ### Minor Changes

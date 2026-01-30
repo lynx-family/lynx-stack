@@ -249,8 +249,36 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   target.__TESTING_FORCE_RENDER_TO_OPCODE__ = false;
   target.__ENABLE_SSR__ = false;
   target.globDynamicComponentEntry = '__Card__';
+
+  const native = {
+    _listeners: {} as Record<string, ((event: any) => void)[]>,
+    onTriggerEvent: undefined as ((event: any) => void) | undefined,
+    postMessage: ((_message: any) => {}),
+    addEventListener: ((type: string, listener: (event: any) => void) => {
+      if (!native._listeners[type]) {
+        native._listeners[type] = [];
+      }
+      native._listeners[type].push(listener);
+    }),
+    removeEventListener: ((type: string, listener: (event: any) => void) => {
+      if (native._listeners[type]) {
+        native._listeners[type] = native._listeners[type].filter(l =>
+          l !== listener
+        );
+      }
+    }),
+    dispatchEvent: ((event: { type: string; data?: any }) => {
+      const listeners = native._listeners[event.type];
+      if (listeners) {
+        listeners.forEach(listener => listener(event));
+      }
+      return { canceled: false };
+    }),
+  };
+
   target.lynx = {
     performance,
+    getNative: () => native,
     getCoreContext: (() => CoreContext),
     /*
 

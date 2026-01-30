@@ -54,6 +54,7 @@
       "packages/testing-library/**",
       "packages/react/testing-library/**",
       "packages/lynx/gesture-runtime/__test__/**",
+      "packages/motion/__tests__/**",
 
       "packages/rspeedy/lynx-bundle-rslib-config/test/fixtures/**",
     ],

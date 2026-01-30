@@ -4,9 +4,6 @@ import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElem
 import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
 import { vi } from 'vitest';
 import { cssIdAttribute } from '../ts/constants.js';
-import { templateManager } from '../ts/client/mainthread/TemplateManager.js';
-import { wasmInstance } from '../ts/client/wasm.js';
-import { encodeElementTemplates } from '../ts/encode/encodeElementTemplate.js';
 describe('Element APIs', () => {
   let lynxViewDom: HTMLElement;
   let rootDom: ShadowRoot;
@@ -33,13 +30,10 @@ describe('Element APIs', () => {
         exposureServices: vi.mockObject({
           updateExposureStatus: vi.fn(),
         }) as any,
-        loadWebElement: vi.fn(),
-        loadUnknownElement: vi.fn(),
         mainThreadGlobalThis: vi.mockObject({}) as any,
       }),
     );
     mtsGlobalThis = createElementAPI(
-      'test',
       rootDom,
       mtsBinding,
       true,
@@ -409,24 +403,21 @@ describe('Element APIs', () => {
     let root = mtsGlobalThis.__CreatePage('page', 0);
     mtsGlobalThis.__AddInlineStyle(root, 26, '80px');
     mtsGlobalThis.__FlushElementTree();
-    const rootDomElement = rootDom.firstElementChild as HTMLElement;
-    expect(rootDomElement.style.height).toBe('80px');
+    expect(root.style.height).toBe('80px');
   });
 
   test('__AddInlineStyle_key_is_name', () => {
     let root = mtsGlobalThis.__CreatePage('page', 0);
     mtsGlobalThis.__AddInlineStyle(root, 'height', '80px');
     mtsGlobalThis.__FlushElementTree();
-    const rootDomElement = rootDom.firstElementChild as HTMLElement;
-    expect(rootDomElement.style.height).toBe('80px');
+    expect(root.style.height).toBe('80px');
   });
 
   test('__AddInlineStyle_raw_string', () => {
     let root = mtsGlobalThis.__CreatePage('page', 0);
     mtsGlobalThis.__SetInlineStyles(root, 'height:80px');
     mtsGlobalThis.__FlushElementTree();
-    const rootDomElement = rootDom.firstElementChild as HTMLElement;
-    expect(rootDomElement.style.height).toBe('80px');
+    expect(root.style.height).toBe('80px');
   });
 
   test('complicated_dom_tree_opt', () => {
@@ -1229,117 +1220,6 @@ describe('Element APIs', () => {
     expect(targetPartExist).toBe(true);
   });
 
-  describe('__ElementFromBinary', () => {
-    beforeAll(() => {
-      templateManager.createTemplate('test');
-      const encoded = encodeElementTemplates({
-        'test-template': {
-          'type': 'view',
-          'class': [
-            'class1',
-            'class2',
-          ],
-          'idSelector': 'template-view',
-          'attributes': {
-            'attr1': 'value1',
-          },
-          'builtinAttributes': {},
-          'children': [
-            {
-              'type': 'text',
-              'class': [],
-              'idSelector': 'id-2',
-              'attributes': {
-                'value': 'Hello from template',
-              },
-              'builtinAttributes': {
-                'dirtyID': 'id-2',
-              },
-              'children': [],
-              'events': [],
-            },
-          ],
-          'events': [
-            {
-              'type': 'bindEvent',
-              'name': 'tap',
-              'value': 'templateTap',
-            },
-          ],
-          'dataset': {
-            'customdata': 'customdata',
-          },
-        },
-      });
-      const section = wasmInstance.ElementTemplateSection.from_encoded(encoded);
-      templateManager.setElementTemplateSection(
-        'test',
-        section,
-      );
-    });
-
-    test('should create a basic element from template', () => {
-      const element = mtsGlobalThis.__ElementFromBinary('test-template', 0);
-      expect(mtsGlobalThis.__GetTag(element)).toBe('view');
-    });
-
-    test('should apply attributes from template', () => {
-      const element = mtsGlobalThis.__ElementFromBinary('test-template', 0);
-      const attrs = Object.entries(mtsGlobalThis.__GetAttributes(element));
-      expect(attrs).toContainEqual(['attr1', 'value1']);
-    });
-
-    test('should apply classes from template', () => {
-      const element = mtsGlobalThis.__ElementFromBinary('test-template', 0);
-      const classes = mtsGlobalThis.__GetClasses(element);
-      expect(classes).toEqual(['class1', 'class2']);
-    });
-
-    test('should apply id from template', () => {
-      const element = mtsGlobalThis.__ElementFromBinary('test-template', 0);
-      const id = mtsGlobalThis.__GetID(element);
-      expect(id).toBe('template-view');
-    });
-
-    test('should create child elements from template', () => {
-      const element = mtsGlobalThis.__ElementFromBinary('test-template', 0);
-      const child = mtsGlobalThis.__FirstElement(element);
-      expect(mtsGlobalThis.__GetTag(child!)).toBe('text');
-      expect(mtsGlobalThis.__GetAttributeByName(child!, 'value')).toBe(
-        'Hello from template',
-      );
-    });
-
-    test('should apply events from template', () => {
-      const element = mtsGlobalThis.__ElementFromBinary('test-template', 0);
-      const events = mtsGlobalThis.__GetEvents(element);
-      expect(events!.length).toBe(1);
-      expect(events![0]!.name).toBe('tap');
-      expect(events![0]!.type.toLowerCase()).toBe('bindevent');
-    });
-
-    test('should mark part element', () => {
-      const element = mtsGlobalThis.__ElementFromBinary('test-template', 0);
-      const child = mtsGlobalThis.__FirstElement(element);
-      const parts = mtsGlobalThis.__GetTemplateParts(element);
-      expect(Object.keys(parts!).length).toBe(1);
-      expect(parts!['id-2']).toBe(child);
-    });
-
-    test('should apply dataset from template', () => {
-      const element = mtsGlobalThis.__ElementFromBinary('test-template', 0);
-      expect(mtsGlobalThis.__GetDataByKey(element, 'customdata')).toBe(
-        'customdata',
-      );
-    });
-
-    test('should throw error if template not found', () => {
-      expect(() => {
-        mtsGlobalThis.__ElementFromBinary('non-existent-template', 0);
-      }).toThrow();
-    });
-  });
-
   test('should optimize event enable/disable for whitelisted events', () => {
     const root = mtsGlobalThis.__CreatePage('page', 0);
     const element = mtsGlobalThis.__CreateScrollView(0);
@@ -1391,7 +1271,55 @@ describe('Element APIs', () => {
     // Rust logic:
     // Old: Some("handler2"), New: None.
     // match (Some, None) => should_disable = true.
+    expect(disableSpy).toHaveBeenCalledWith(expect.anything(), 'input');
+  });
+
+  test('should handle worklet events enable/disable', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const element = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AppendElement(root, element);
+
+    const enableSpy = vi.spyOn(mtsBinding, 'enableElementEvent');
+    const disableSpy = vi.spyOn(mtsBinding, 'disableElementEvent');
+
+    // Test add_run_worklet_event
+    mtsGlobalThis.__AddEvent(
+      element,
+      'bindevent',
+      'input',
+      { name: 'worklet-handler' } as any,
+    );
+    expect(enableSpy).toHaveBeenCalledTimes(1);
+    expect(enableSpy).toHaveBeenCalledWith(expect.anything(), 'input');
+    enableSpy.mockClear();
+
+    // Test get_events including worklet events
+    const events = mtsGlobalThis.__GetEvents(element);
+    // Assuming EventInfo struct matches JS object: { event_name, event_type, event_handler }
+    // We check if we can find the added event
+    const found = events.some((e: any) =>
+      e.event_name === 'input' && e.event_type === 'bindevent'
+    );
+    expect(found).toBe(true);
+
+    // Test removal (disable)
+    mtsGlobalThis.__AddEvent(element, 'bindevent', 'input', null as any);
     expect(disableSpy).toHaveBeenCalledTimes(1);
     expect(disableSpy).toHaveBeenCalledWith(expect.anything(), 'input');
+  });
+
+  test('getClassList', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const element = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AddClass(element, 'foo');
+    mtsGlobalThis.__AddClass(element, 'bar');
+    mtsGlobalThis.__AppendElement(root, element);
+
+    const spy = vi.spyOn(mtsBinding, 'getClassList');
+    const classes = mtsBinding.getClassList(element);
+
+    expect(spy).toHaveBeenCalledWith(element);
+    expect(classes).toEqual(expect.arrayContaining(['foo', 'bar']));
+    expect(classes.length).toBe(2);
   });
 });

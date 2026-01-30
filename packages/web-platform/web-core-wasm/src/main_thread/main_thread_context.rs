@@ -4,9 +4,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use super::element_apis::{DecodedElementTemplate, LynxElementData};
+use super::element_apis::LynxElementData;
 use crate::constants;
 use crate::js_binding::RustMainthreadContextBinding;
+use crate::main_thread::style_manager::StyleManager;
+use crate::template::TemplateManager;
 use fnv::{FnvHashMap, FnvHashSet};
 use std::cell::RefCell;
 use std::{rc::Rc, vec};
@@ -14,21 +16,15 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct MainThreadWasmContext {
-  pub(super) root_node: web_sys::Node,
-  pub(super) document: web_sys::Document,
   pub(super) unique_id_to_element_map: Vec<Option<Rc<RefCell<Box<LynxElementData>>>>>,
-  pub(super) unique_id_symbol: wasm_bindgen::JsValue,
+  pub(super) unique_id_to_dom_map: FnvHashMap<usize, web_sys::HtmlElement>,
   pub(super) timing_flags: Vec<String>,
-  /**
-   * key: template_url
-   * value: key: element_template_name, value: DecodedElementTemplate
-   */
-  pub(super) element_templates_instances:
-    FnvHashMap<String, FnvHashMap<String, Box<DecodedElementTemplate>>>,
+
   pub(super) enabled_events: FnvHashSet<String>,
   pub(super) page_element_unique_id: Option<usize>,
   pub(super) mts_binding: RustMainthreadContextBinding,
   pub(super) config_enable_css_selector: bool,
+  pub(super) style_manager: StyleManager,
 }
 
 impl MainThreadWasmContext {
@@ -47,32 +43,51 @@ impl MainThreadWasmContext {
 impl MainThreadWasmContext {
   #[wasm_bindgen(constructor)]
   pub fn new(
-    document: web_sys::Document,
     root_node: web_sys::Node,
     mts_binding: RustMainthreadContextBinding,
-    unique_id_symbol: wasm_bindgen::JsValue,
     config_enable_css_selector: bool,
   ) -> MainThreadWasmContext {
+    let style_manager = StyleManager::new(root_node.clone());
     MainThreadWasmContext {
-      root_node,
-      document,
       mts_binding,
-      element_templates_instances: FnvHashMap::default(),
       unique_id_to_element_map: vec![None],
-      unique_id_symbol,
+      unique_id_to_dom_map: FnvHashMap::default(),
       enabled_events: FnvHashSet::default(),
       timing_flags: vec![],
       page_element_unique_id: None,
       config_enable_css_selector,
+      style_manager,
     }
   }
 
-  #[wasm_bindgen(js_name = "__wasm_set_page_element_unique_id")]
+  #[wasm_bindgen]
+  pub fn push_style_sheet(
+    &mut self,
+    template_manager: &TemplateManager,
+    entry_name: String,
+    is_entry_template: bool,
+  ) -> Result<(), JsError> {
+    let style_info = template_manager.get_style_info_by_name(&entry_name);
+    if let Some(style_info) = style_info {
+      self.style_manager.push_style_sheet(
+        style_info,
+        if is_entry_template {
+          None
+        } else {
+          Some(entry_name)
+        },
+      )
+    } else {
+      Ok(())
+    }
+  }
+
+  #[wasm_bindgen]
   pub fn set_page_element_unique_id(&mut self, unique_id: usize) {
     self.page_element_unique_id = Some(unique_id);
   }
 
-  #[wasm_bindgen(js_name = "__CreateElementCommon")]
+  #[wasm_bindgen]
   pub fn create_element_common(
     self: &mut MainThreadWasmContext,
     parent_component_unique_id: usize,
@@ -110,15 +125,21 @@ impl MainThreadWasmContext {
     self
       .unique_id_to_element_map
       .push(Some(Rc::new(RefCell::new(element_data))));
+    self.unique_id_to_dom_map.insert(unique_id, dom.clone());
     unique_id
   }
 
-  #[wasm_bindgen(js_name = "__wasm_take_timing_flags")]
+  #[wasm_bindgen]
+  pub fn get_dom_by_unique_id(&self, unique_id: usize) -> Option<web_sys::HtmlElement> {
+    self.unique_id_to_dom_map.get(&unique_id).cloned()
+  }
+
+  #[wasm_bindgen]
   pub fn take_timing_flags(&mut self) -> Vec<String> {
     std::mem::take(&mut self.timing_flags)
   }
 
-  #[wasm_bindgen(js_name = "__wasm_get_unique_id_by_component_id")]
+  #[wasm_bindgen]
   pub fn get_unique_id_by_component_id(&self, component_id: &str) -> Option<usize> {
     for (unique_id, element_data_option) in self.unique_id_to_element_map.iter().enumerate() {
       if let Some(element_data_cell) = element_data_option {
@@ -133,7 +154,7 @@ impl MainThreadWasmContext {
     None
   }
 
-  #[wasm_bindgen(js_name = "__wasm_get_css_id_by_unique_id")]
+  #[wasm_bindgen]
   pub fn get_css_id_by_unique_id(&self, unique_id: usize) -> Option<i32> {
     self
       .unique_id_to_element_map
@@ -142,7 +163,7 @@ impl MainThreadWasmContext {
       .map(|element_data_cell| element_data_cell.borrow().css_id)
   }
 
-  // #[wasm_bindgen(js_name = "__wasm_GC")]
+  // #[wasm_bindgen]
   // pub fn gc(&mut self) {
   //   self.unique_id_to_element_map.retain(|_, value| {
   //     let dom = value.get_dom();
