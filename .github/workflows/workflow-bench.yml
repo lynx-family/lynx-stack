@@ -38,17 +38,16 @@ jobs:
       - name: Build
         run: |
           pnpm turbo build
+      - name: Prepare CodSpeed
+        run: |
+          curl -fsSL https://github.com/CodSpeedHQ/runner/releases/download/v4.10.2/codspeed-runner-installer.sh | bash -s -- --quiet
       - name: Run the benchmarks
-        uses: CodSpeedHQ/action@v4
-        with:
-          mode: instrumentation
-          run: pnpm -r run --workspace-concurrency=1 bench
+        run: |
+          . "$HOME/.cargo/env"
+          codspeed run --mode instrumentation -- pnpm -r run --workspace-concurrency=1 bench
       - name: React benchmark - Run perfetto
-        uses: CodSpeedHQ/action@v4
-        with:
-          mode: instrumentation
-          run: |
-            pnpm -r run --workspace-concurrency=1 perfetto
+        run: |
+          pnpm -r run --workspace-concurrency=1 perfetto
       - name: React benchmark - Upload perfetto output
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
