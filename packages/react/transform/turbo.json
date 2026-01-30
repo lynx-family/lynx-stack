@@ -9,7 +9,6 @@
     "build:wasm": {
       "dependsOn": [],
       "inputs": [
-        "$TURBO_ROOT$/Cargo.lock",
         "crates/**/*.rs",
         "crates/**/Cargo.toml",
         "src/**/*.rs",
