@@ -5,4 +5,4 @@ Expected ';', '}' or <eof>
 ERROR in ./module-build-failed/errors/invalid.js
 Module build failed (from ../../lib/loaders/background.js):
 Error: react-transform failed
-    at Object.backgroundLoader (<ROOT>/packages/webpack/react-webpack-plugin/src/loaders/background.ts:<LINE:COLUMN>)
+    at Object.backgroundLoader (<ROOT>/packages/webpack/react-webpack-plugin/lib/loaders/background.js:<LINE:COLUMN>)

@@ -52,18 +52,15 @@ export default defineConfig({
       NODE_ENV: 'test',
     },
 
-    pool: 'forks',
-    poolOptions: {
-      forks: {
-        minForks: 1,
-        maxForks: ((cpuCount) =>
-          Math.floor(
-            cpuCount <= 32
-              ? cpuCount / 2
-              : 16 + (cpuCount - 32) / 6,
-          ))(os.availableParallelism()),
-      },
-    },
+    maxWorkers: Math.max(
+      1,
+      ((cpuCount) =>
+        Math.floor(
+          cpuCount <= 32
+            ? cpuCount / 2
+            : 16 + (cpuCount - 32) / 6,
+        ))(os.availableParallelism()),
+    ),
 
     projects: [
       'examples/*/vitest.config.ts',

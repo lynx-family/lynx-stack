@@ -4,7 +4,7 @@ import { JSDOM } from 'jsdom';
 
 const env = {
   name: 'lynxTestingEnv',
-  transformMode: 'web',
+  viteEnvironment: 'client',
   async setup(global) {
     const fakeGlobal: {
       jsdom?: any;
