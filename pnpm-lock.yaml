@@ -26,6 +26,9 @@ overrides:
   '@rsbuild/core>@rspack/core': 1.7.3
 
 patchedDependencies:
+  '@codspeed/vitest-plugin':
+    hash: 83c2998d34ec8b432e8fad4ceb97558297b11c29b0d3eb56060786877df6fa3d
+    path: patches/@codspeed__vitest-plugin.patch
   '@napi-rs/cli@2.18.4':
     hash: ba947eb1c48b2a85834e99f92cbbae896722ce61fd5ae67507a3be9041959ebd
     path: patches/@napi-rs__cli@2.18.4.patch
@@ -45,7 +48,7 @@ importers:
         version: 2.29.8(@types/node@24.6.1)
       '@codspeed/vitest-plugin':
         specifier: ^5.0.1
-        version: 5.0.1(tinybench@5.1.0)(vite@7.3.1(@types/node@24.6.1)(jiti@2.6.1)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)(yaml@2.8.1))(vitest@4.0.18)
+        version: 5.0.1(patch_hash=83c2998d34ec8b432e8fad4ceb97558297b11c29b0d3eb56060786877df6fa3d)(tinybench@5.1.0)(vite@7.3.1(@types/node@24.6.1)(jiti@2.6.1)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)(yaml@2.8.1))(vitest@4.0.18)
       '@eslint/js':
         specifier: ^9.36.0
         version: 9.36.0
@@ -10981,7 +10984,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@codspeed/vitest-plugin@5.0.1(tinybench@5.1.0)(vite@7.3.1(@types/node@24.6.1)(jiti@2.6.1)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)(yaml@2.8.1))(vitest@4.0.18)':
+  '@codspeed/vitest-plugin@5.0.1(patch_hash=83c2998d34ec8b432e8fad4ceb97558297b11c29b0d3eb56060786877df6fa3d)(tinybench@5.1.0)(vite@7.3.1(@types/node@24.6.1)(jiti@2.6.1)(sass-embedded@1.90.0)(sass@1.90.0)(terser@5.31.6)(yaml@2.8.1))(vitest@4.0.18)':
     dependencies:
       '@codspeed/core': 5.0.1
       tinybench: 5.1.0

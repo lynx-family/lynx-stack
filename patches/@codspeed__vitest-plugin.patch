@@ -1,0 +1,14 @@
+diff --git a/dist/index.mjs b/dist/index.mjs
+index 7ccc91c566dfd0c9f9b26217cda8e0342b19ad86..442bb0fa9a420d73ff0c350db8a9ea5dac14b79d 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -32,7 +32,9 @@ function codspeedPlugin() {
+       const runnerMode = getCodspeedRunnerMode();
+       const config = {
+         test: {
++          execArgv: getV8Flags(), // For Vitest v4
+           pool: "forks",
++          // For Vitest v3 compatibility
+           poolOptions: {
+             forks: {
+               execArgv: getV8Flags()
