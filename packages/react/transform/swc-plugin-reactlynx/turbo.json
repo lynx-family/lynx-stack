@@ -5,7 +5,6 @@
     "build": {
       "dependsOn": [],
       "inputs": [
-        "$TURBO_ROOT$/Cargo.toml",
         "$TURBO_ROOT$/Cargo.lock",
         ".cargo/**",
         "src/**/*.rs",
