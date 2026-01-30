@@ -1,5 +1,11 @@
 # @lynx-js/testing-environment
 
+## 0.1.10
+
+### Patch Changes
+
+- Fix the error "lynxTestingEnv is not defined" ([#2118](https://github.com/lynx-family/lynx-stack/pull/2118))
+
 ## 0.1.9
 
 ### Patch Changes

@@ -38,7 +38,7 @@ export function initProfileHook(): void {
     const sFlowID = Symbol('FLOW_ID');
     type PatchedComponent = Component & { [sFlowID]?: number };
 
-    if (__BACKGROUND__) {
+    if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
       function buildSetStateProfileMarkArgs(
         currentState: Record<string, unknown>,
         nextState: Record<string, unknown>,
@@ -84,7 +84,7 @@ export function initProfileHook(): void {
       if (typeof vnode.type === 'function') {
         const profileOptions: TraceOption = {};
 
-        if (__BACKGROUND__) {
+        if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
           const c: PatchedComponent = oldVNode[COMPONENT]!;
           if (c) {
             const flowId = c[sFlowID];
@@ -112,7 +112,7 @@ export function initProfileHook(): void {
       old?.(vnode);
     });
 
-    if (__BACKGROUND__) {
+    if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
       hook(options, COMMIT, (old, vnode, commitQueue) => {
         profileStart('ReactLynx::commit', {
           ...globalPatchOptions.flowIds
@@ -144,7 +144,7 @@ export function initProfileHook(): void {
     old?.(vnode);
   });
 
-  if (__BACKGROUND__) {
+  if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
     const sPatchLength = Symbol('PATCH_LENGTH');
 
     type PatchedVNode = VNode & { [sPatchLength]?: number };

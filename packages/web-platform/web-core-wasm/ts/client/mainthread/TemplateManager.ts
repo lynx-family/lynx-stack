@@ -13,7 +13,6 @@ import type {
   InitMessage,
 } from '../decodeWorker/types.js';
 import type { PageConfig, DecodedTemplate } from '../../types/index.js';
-import type { DecodedStyle } from '../wasm.js';
 
 const wasm = import(
   /* webpackMode: "eager" */
@@ -38,8 +37,6 @@ export class TemplateManager {
   #worker: Worker | null = null;
   #workerReadyPromise: Promise<void> | null = null;
   #resolveWorkerReady: (() => void) | null = null;
-  #activeUrls: Set<string> = new Set();
-  #terminateTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     this.#ensureWorker();
@@ -55,11 +52,9 @@ export class TemplateManager {
         const template = this.#templates.get(url);
         const config = (template?.config || {}) as PageConfig;
         const lynxViewInstance = await lynxViewInstancePromise;
+        lynxViewInstance.backgroundThread.markTiming('decode_start');
         lynxViewInstance.onPageConfigReady(config);
-        const styleInfo = template?.styleInfo;
-        if (styleInfo) {
-          lynxViewInstance.onStyleInfoReady(styleInfo, url);
-        }
+        lynxViewInstance.onStyleInfoReady(url);
         lynxViewInstance.onMTSScriptsLoaded(url, config.isLazy === 'true');
         lynxViewInstance.onBTSScriptsLoaded(url);
       })();
@@ -74,12 +69,15 @@ export class TemplateManager {
     lynxViewInstancePromise: Promise<LynxViewInstance>,
     overrideConfig?: Partial<PageConfig>,
   ): Promise<void> {
-    this.#activeUrls.add(url);
+    const currentTime = performance.now() + performance.timeOrigin;
+    lynxViewInstancePromise.then((instance) => {
+      instance.backgroundThread.markTiming(
+        'fetch_start',
+        undefined,
+        currentTime,
+      );
+    });
     this.#lynxViewInstancesMap.set(url, lynxViewInstancePromise);
-    if (this.#terminateTimer) {
-      clearTimeout(this.#terminateTimer);
-      this.#terminateTimer = null;
-    }
 
     await this.#ensureWorker();
 
@@ -171,7 +169,14 @@ export class TemplateManager {
         break;
       case 'done':
         this.#cleanup(url);
-        this.#resolvePromise(url);
+        /* TODO: The promise resolution is deferred inside .then() without error handling.
+         *
+         */
+        lynxViewInstancePromise.then((instance) => {
+          instance.backgroundThread.markTiming('decode_end');
+          instance.backgroundThread.markTiming('load_template_start');
+          this.#resolvePromise(url);
+        });
         break;
     }
   }
@@ -182,27 +187,26 @@ export class TemplateManager {
   ) {
     const [
       instance,
-      { DecodedStyle, ElementTemplateSection },
+      templateManagerWasm,
     ] = await Promise.all([
       instancePromise,
-      wasm.then(({ DecodedStyle, wasmInstance }) => ({
-        DecodedStyle,
-        ElementTemplateSection: wasmInstance.ElementTemplateSection,
-      })),
+      wasm.then((wasm) => (wasm.templateManagerWasm)),
     ]);
     const { label, data, url, config } = msg;
     switch (label) {
       case TemplateSectionLabel.Configurations: {
+        instance.backgroundThread.markTiming('decode_start');
         this.#setConfig(url, data);
         instance.onPageConfigReady(data);
         break;
       }
       case TemplateSectionLabel.StyleInfo: {
-        const decodedStyle = new DecodedStyle(
+        templateManagerWasm!.add_style_info(
+          url,
           new Uint8Array(data as ArrayBuffer),
+          document,
         );
-        this.#setStyleInfo(url, decodedStyle);
-        instance.onStyleInfoReady(decodedStyle, url);
+        instance.onStyleInfoReady(url);
         break;
       }
       case TemplateSectionLabel.LepusCode: {
@@ -211,13 +215,7 @@ export class TemplateManager {
         instance.onMTSScriptsLoaded(url, config!['isLazy'] === 'true');
         break;
       }
-      case TemplateSectionLabel.ElementTemplates:
-        // data is Uint8Array
-        const section = ElementTemplateSection.from_encoded(
-          new Uint8Array(data as ArrayBuffer),
-        );
-        this.setElementTemplateSection(url, section);
-        break;
+
       case TemplateSectionLabel.CustomSections: {
         this.#setCustomSection(url, data);
         break;
@@ -234,18 +232,7 @@ export class TemplateManager {
   }
 
   #cleanup(url: string) {
-    this.#activeUrls.delete(url);
     this.#lynxViewInstancesMap.delete(url);
-    if (this.#activeUrls.size === 0) {
-      this.#terminateTimer = setTimeout(() => {
-        if (this.#activeUrls.size === 0 && this.#worker) {
-          this.#worker.terminate();
-          this.#worker = null;
-          this.#workerReadyPromise = null;
-          this.#resolveWorkerReady = null;
-        }
-      }, 10000);
-    }
   }
 
   createTemplate(url: string) {
@@ -280,24 +267,10 @@ export class TemplateManager {
     }
   }
 
-  #setStyleInfo(url: string, styleInfo: DecodedStyle) {
-    const template = this.#templates.get(url);
-    if (template) {
-      template.styleInfo = styleInfo;
-    }
-  }
-
   #setLepusCode(url: string, lepusCode: Record<string, string>) {
     const template = this.#templates.get(url);
     if (template) {
       template.lepusCode = lepusCode;
-    }
-  }
-
-  setElementTemplateSection(url: string, section: any) {
-    const template = this.#templates.get(url);
-    if (template) {
-      template.elementTemplates = section;
     }
   }
 

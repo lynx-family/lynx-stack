@@ -25,7 +25,7 @@ test('preact/debug - Objects are not valid as a child', async () => {
 
   expect(() => root.render(<App />)).toThrowErrorMatchingInlineSnapshot(
     `
-    [Error: Objects are not valid as a child. Encountered an object with the keys {foo,bar,baz,__,__b,__i,__u,__d}.
+    [Error: Objects are not valid as a child. Encountered an object with the keys {foo,bar,baz,__,__b,__i,__u}.
 
       in Bar
       in App

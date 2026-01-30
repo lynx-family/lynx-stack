@@ -12,5 +12,6 @@
     { "path": "../../webpack/react-refresh-webpack-plugin/tsconfig.build.json" },
     { "path": "../core/tsconfig.build.json" },
     { "path": "../plugin-react-alias/tsconfig.build.json" },
+    { "path": "../plugin-config/tsconfig.build.json" },
   ],
 }

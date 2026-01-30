@@ -1,5 +1,31 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.12.6
+
+### Patch Changes
+
+- Support using `pluginReactLynx` in Rslib. ([#2114](https://github.com/lynx-family/lynx-stack/pull/2114))
+
+- Updated dependencies [[`4cd7182`](https://github.com/lynx-family/lynx-stack/commit/4cd71828a073e27ac3a2f5accded53e42e663215)]:
+  - @lynx-js/template-webpack-plugin@0.10.2
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.6
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/react-webpack-plugin@0.7.3
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+
+## 0.12.5
+
+### Patch Changes
+
+- Support reading config from `pluginLynxConfig`. ([#2054](https://github.com/lynx-family/lynx-stack/pull/2054))
+
+- Updated dependencies []:
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.5
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/react-webpack-plugin@0.7.3
+
 ## 0.12.4
 
 ### Patch Changes

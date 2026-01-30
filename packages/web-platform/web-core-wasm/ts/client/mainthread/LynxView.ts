@@ -92,6 +92,41 @@ export class LynxViewElement extends HTMLElement {
 
   #connected = false;
   #url?: string;
+
+  /**
+   * @public
+   * @property nativeModulesMap
+   * @default {}
+   */
+  nativeModulesMap: NativeModulesMap | undefined;
+
+  /**
+   * @param
+   * @property napiModulesMap
+   * @default {}
+   */
+  napiModulesMap: NapiModulesMap | undefined;
+
+  /**
+   * @param
+   * @property
+   */
+  onNapiModulesCall: NapiModulesCall | undefined;
+
+  constructor() {
+    super();
+    if (!this.onNativeModulesCall) {
+      this.onNativeModulesCall = (name, data, moduleName) => {
+        return new Promise((resolve) => {
+          this.#cachedNativeModulesCall.push({
+            args: [name, data, moduleName],
+            resolve,
+          });
+        });
+      };
+    }
+  }
+
   /**
    * @public
    * @property the url of lynx view output entry file
@@ -208,46 +243,6 @@ export class LynxViewElement extends HTMLElement {
     this.#cachedNativeModulesCall = [];
   }
 
-  #nativeModulesMap: NativeModulesMap = {};
-  /**
-   * @public
-   * @property nativeModulesMap
-   * @default {}
-   */
-  get nativeModulesMap(): NativeModulesMap | undefined {
-    return this.#nativeModulesMap;
-  }
-  set nativeModulesMap(map: NativeModulesMap) {
-    this.#nativeModulesMap = map;
-  }
-
-  #napiModulesMap: NapiModulesMap = {};
-  /**
-   * @param
-   * @property napiModulesMap
-   * @default {}
-   */
-  get napiModulesMap(): NapiModulesMap | undefined {
-    return this.#napiModulesMap;
-  }
-  set napiModulesMap(map: NapiModulesMap) {
-    this.#napiModulesMap = map;
-  }
-
-  #onNapiModulesCall?: NapiModulesCall;
-  /**
-   * @param
-   * @property
-   */
-  get onNapiModulesCall(): NapiModulesCall | undefined {
-    return this.#onNapiModulesCall;
-  }
-  set onNapiModulesCall(handler: INapiModulesCall) {
-    this.#onNapiModulesCall = (name, data, moduleName, dispatchNapiModules) => {
-      return handler(name, data, moduleName, this, dispatchNapiModules);
-    };
-  }
-
   /**
    * @param
    * @property
@@ -342,24 +337,33 @@ export class LynxViewElement extends HTMLElement {
     }
   }
 
-  public injectStyleRules: string[] = [];
+  public injectStyleRules?: string[];
 
   /**
    * @private
    */
   disconnectedCallback() {
-    this.#instance?.[Symbol.asyncDispose]();
-    this.#instance = undefined;
-    // under the all-on-ui strategy, when reload() triggers dsl flush, the previously removed pageElement will be used in __FlushElementTree.
-    // This attribute is added to filter this issue.
+    /* TODO:
+     * Await async disposal before re-rendering to prevent concurrent instance mutations.
+
+        Currently disconnectedCallback() triggers asyncDispose() without awaiting, allowing #render() to immediately create a new instance while the old one is still cleaning up on the background thread. This causes both instances to render into the shadowRoot concurrently, producing multiple page elements.
+
+        The basic-reload-page-only-one test confirms this issue by checking that exactly one page element exists after reload. The disposal must complete before the new instance begins rendering.
+
+        Extract an async #disposeInstance() method that marks the old page as disposed, awaits the instance cleanup, clears the shadowRoot, and resets adoptedStyleSheets to prevent stylesheet accumulation. Then await this in the microtask before instantiating the new LynxViewInstance.
+
+        This also fixes a secondary bug where lynxGroupId is referenced before declaration.
+     */
     this.shadowRoot?.querySelector('[part="page"]')
       ?.setAttribute(
         lynxDisposedAttribute,
         '',
       );
+    this.#instance?.[Symbol.asyncDispose]();
     if (this.shadowRoot) {
       this.shadowRoot.innerHTML = '';
     }
+    this.#instance = undefined;
   }
 
   /**
@@ -381,6 +385,14 @@ export class LynxViewElement extends HTMLElement {
       }
       const mtsRealmPromise = createIFrameRealm(this.shadowRoot!);
       queueMicrotask(async () => {
+        if (this.injectStyleRules && this.injectStyleRules.length > 0) {
+          const styleSheet = new CSSStyleSheet();
+          for (const rule of this.injectStyleRules) {
+            styleSheet.insertRule(rule);
+          }
+          this.shadowRoot!.adoptedStyleSheets = this.shadowRoot!
+            .adoptedStyleSheets.concat(styleSheet);
+        }
         const mtsRealm = await mtsRealmPromise;
         if (this.#url) {
           const lynxViewInstance = import(
@@ -396,8 +408,8 @@ export class LynxViewElement extends HTMLElement {
               this.shadowRoot!,
               mtsRealm,
               lynxGroupId,
-              this.#nativeModulesMap,
-              this.#napiModulesMap,
+              this.nativeModulesMap,
+              this.napiModulesMap,
               this.#initI18nResources,
             );
           });

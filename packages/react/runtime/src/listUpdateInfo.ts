@@ -85,7 +85,7 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
     // });
     const updateListInfo = this.__toAttribute();
 
-    if (__PROFILE__) {
+    if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       const listID = __GetElementUniqueID(listElement);
       profileStart(`ReactLynx::listFlush::updateListInfo`, {
         args: {
@@ -104,7 +104,7 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
       componentAtIndexes,
     );
 
-    if (__PROFILE__) {
+    if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileEnd();
     }
     return this.list.__id;

@@ -7,7 +7,7 @@ This package (`packages/web-platform/web-core-wasm`) is the high-performance cor
 The `web-core-wasm` package bridges the gap between Lynx's native-like architecture and the web platform. Its primary responsibilities include:
 
 1. **CSS Processing**: High-performance tokenization and transformation of Lynx-specific CSS (e.g., `rpx` units, `linear` layout) into standard Web CSS.
-2. **Template Management**: efficient binary serialization (`encode`) and deserialization (`decode`) of element templates using `bincode`.
+2. **Template Management**: efficient binary serialization (`encode`) and deserialization (`decode`) of style templates using `rkyv`.
 3. **Main Thread Runtime**: Managing the state of Lynx elements, DOM manipulation, and event handling on the main thread.
 4. **Background Thread Service (BTS)**: Hosting the Lynx logic (React/JavaScript) in a Web Worker to ensure UI responsiveness.
 
@@ -24,13 +24,16 @@ The Rust code forms the logic backbone, compiled into WASM.
   - **`element_apis`**: Implements the logic for manipulating elements.
     - **`element_data.rs`**: Stores per-element metadata (`LynxElementData`), including CSS IDs, component IDs, and datasets.
     - **`event_apis.rs`**: Handles event registration and dispatching (both standard events and "worklet" events).
-    - **`style_apis.rs`**: Provides style manipulation APIs.
+    - **`style_apis.rs`**: Provides style manipulation APIs, utilizing `CSSProperty::from_id`.
   - **`js_binding`**: Defines the `RustMainthreadContextBinding` to expose these Rust methods to JavaScript.
 
 - **`css_tokenizer`**: A CSS tokenizer ported from `css-tree`, fully compliant with CSS Syntax Level 3.
-- **`style_transformer`**: Transforms Lynx CSS into Web CSS. It handles complex rules like converting `display: linear` to Flexbox equivalents and resolving `rpx` units to `calc()`.
-- **`template`**: Defines the schema for binary templates (`RawElementTemplate`, `RawStyleInfo`) and handles their `bincode` serialization.
+- **`style_transformer`**: Transforms Lynx CSS into Web CSS using the strongly-typed `CSSProperty` enum for efficiency. Handles `rpx` unit resolution (via `token_transformer`) and complex property rules.
+- **`template`**: Defines the schema for binary templates (`RawStyleInfo`) and handles their `rkyv` serialization.
+  - **`css_property.rs`**: Defines the `CSSProperty` enum (u16 IDs) and shared `ParsedDeclaration` struct. Uses `rkyv` instead of `serde`. Unknown properties are treated homogeneously.
 - **`leo_asm`**: Defines "Leo Assembly" opcodes (e.g., `CreateElement`, `SetAttribute`) used to efficiently reconstruct DOM trees from templates.
+- **`utils`**: General purpose utilities.
+  - **`hyphenate_style_name.rs`**: Converts camelCase style names to kebab-case (e.g., `backgroundColor` -> `background-color`). **Note**: Assumes no `ms` vendor prefix.
 
 ### 2. Client Runtime (`ts/client`)
 
@@ -41,7 +44,9 @@ TypeScript bindings that load the WASM module and build the browser environment.
 Handles DOM rendering and user interaction.
 
 - **`LynxView.ts`**: The `<lynx-view>` custom element. It initializes the `LynxViewInstance` and acts as the entry point.
-- **`TemplateManager.ts`**: Orchestrates template loading. It uses a dedicated `decode.worker.js` to parse binary templates off-main-thread.
+- `ts/client/mainthread/TemplateManager.ts`: Manages template loading and processing. a dedicated `decode.worker.js` to parse binary templates off-main-thread.
+- `src/template/template_sections/style_info`: Contains style information modules (`raw_style_info.rs`, `css_property.rs`, `style_info_decoder.rs`) which define the schema and decoding logic for styles.
+- `src/main_thread/style_manager.rs`: Manages styles, handles CSS selector logic and CSS OG style updates.
 - **`elementAPIs/createElementAPI.ts`**: A JavaScript facade over the Wasm `MainThreadWasmContext`. It provides methods like `__CreateElement` and `__SetAttribute` that bridge JS calls to the underlying Rust logic.
 - **`elementAPIs/WASMJSBinding.ts`**: Mocks or proxies the Wasm binding for testing or non-Wasm environments.
 
@@ -99,6 +104,7 @@ This package uses a hybrid build system involving `pnpm`, `rsbuild`, and `cargo`
 - **`tests/element-apis.spec.ts`**: A key test file. It validates the `MainThreadWasmContext` logic by mocking the Wasm binding entirely in JavaScript (`WASMJSBinding.ts`). This allows testing DOM manipulation logic without loading the actual Wasm binary in every test.
 - **`tests/encode.spec.ts`**: Verifies that the CSS encoder correctly serializes various CSS rules.
 - **`tests/lazy-load.spec.ts`**: Ensures that custom elements are loaded dynamically only when needed.
+- **Rust Tests**: run `cargo test --all-features` and `cargo test --target wasm32-unknown-unknown --all-features` separately.
 
 ## Guidelines for LLMs
 
@@ -106,3 +112,23 @@ This package uses a hybrid build system involving `pnpm`, `rsbuild`, and `cargo`
 2. **Performance is Key**: This package is the engine. Avoid main-thread blocking concepts. Prefer Wasm for heavy compute.
 3. **Testing**: When modifying `src/main_thread`, ALWAYS add corresponding tests in `tests/element-apis.spec.ts` to verify the JS-side behavior.
 4. **Documentation**: Keep this file updated if you add new modules or change the architecture.
+
+## Technical Learnings
+
+### WASM <-> JS Interop
+
+- **Recursive Borrowing**: Avoid patterns where Rust calls JS, and JS immediately calls back into Rust to retrieve data that Rust already possesses. This will cause `RefCell` borrowing panics ("recursive use of an object").
+- **Object Passing**: Instead of passing IDs (like `uniqueId`) from Rust to JS and having JS callback to retrieve the object, pass the object reference (e.g., `&web_sys::HtmlElement`) directly from Rust to JS. `wasm-bindgen` handles this seamlessly and key for avoiding re-entrant calls.
+
+## Benchmarking
+
+### Rust (wasm32)
+
+- Run: cargo bench --target wasm32-unknown-unknown --all-features
+- Bench entry: packages/web-platform/web-core-wasm/benches/wasm_bench.rs
+- Bench helper module: packages/web-platform/web-core-wasm/benches/support/bench_support.rs
+
+Notes:
+
+- Keep helper modules under benches/support/ so Cargo does not treat them as standalone benchmark targets.
+- The helper is included into the crate via a #[path = "../benches/support/bench_support.rs"] module in src/lib.rs, gated behind cfg(all(feature = "client", feature = "encode", target_arch = "wasm32")).

@@ -93,6 +93,19 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         }
         break;
       }
+      case SnapshotOperation.DEV_ONLY_SetSnapshotEntryName: {
+        if (__DEV__) {
+          const uniqID = snapshotPatch[++i] as string;
+          const entryName = snapshotPatch[++i] as string;
+
+          // HMR-related
+          // Update the evaluated snapshot entryName from JS.
+          snapshotCreatorMap[uniqID] = evaluate<(uniqId: string) => string>(
+            snapshotCreatorMap[uniqID]!.toString().replace(/globDynamicComponentEntry/g, JSON.stringify(entryName)),
+          );
+        }
+        break;
+      }
         // case SnapshotOperation.DEV_ONLY_RegisterWorklet: {
         //   // HMR-related
         //   if (__DEV__) {

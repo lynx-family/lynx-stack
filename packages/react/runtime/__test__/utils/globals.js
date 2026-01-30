@@ -13,6 +13,37 @@ const app = {
   }),
 };
 
+const native = {
+  _listeners: {},
+  onTriggerEvent: undefined,
+  postMessage: vi.fn((_message) => {}),
+  addEventListener: vi.fn((type, listener) => {
+    if (!native._listeners[type]) {
+      native._listeners[type] = [];
+    }
+    native._listeners[type].push(listener);
+  }),
+  removeEventListener: vi.fn((type, listener) => {
+    if (native._listeners[type]) {
+      native._listeners[type] = native._listeners[type].filter(l => l !== listener);
+    }
+  }),
+  dispatchEvent: vi.fn((event) => {
+    if (native._listeners[event.type]) {
+      native._listeners[event.type].forEach(listener => listener(event));
+    }
+    return { canceled: false };
+  }),
+  _clear: () => {
+    native._listeners = {};
+    native.onTriggerEvent = undefined;
+    native.postMessage.mockClear();
+    native.addEventListener.mockClear();
+    native.removeEventListener.mockClear();
+    native.dispatchEvent.mockClear();
+  },
+};
+
 const performance = {
   __functionCallHistory: [],
   _generatePipelineOptions: vi.fn(() => {
@@ -126,6 +157,7 @@ function injectGlobals() {
   globalThis.lynx = {
     queueMicrotask: Promise.prototype.then.bind(Promise.resolve()),
     getNativeApp: () => app,
+    getNative: () => native,
     performance,
     createSelectorQuery: () => {
       return new SelectorQuery();
@@ -169,6 +201,7 @@ function injectGlobals() {
 beforeEach(() => {
   performance.profileStart.mockClear();
   performance.profileEnd.mockClear();
+  native._clear();
 });
 
 afterEach((context) => {

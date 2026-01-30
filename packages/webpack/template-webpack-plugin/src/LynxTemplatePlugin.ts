@@ -671,12 +671,16 @@ class LynxTemplatePluginImpl {
 
     await Promise.all(
       Object.entries(asyncChunkGroups).map(
-        ([entryName, chunkGroups]): Promise<void> => {
-          const chunkNames =
-            // We use the chunk name(provided by `webpackChunkName`) as filename
+        ([_entryName, chunkGroups]): Promise<void> => {
+          const entryNames = // We use the chunk name(provided by `webpackChunkName`) as filename
             chunkGroups
-              .filter(cg => cg.name !== null && cg.name !== undefined)
-              .map(cg => hooks.asyncChunkName.call(cg.name!));
+              .filter(cg => cg.name !== null && cg.name !== undefined).map(cg =>
+                cg.name!
+              );
+
+          const chunkNames = entryNames.map(name =>
+            hooks.asyncChunkName.call(name)
+          );
 
           const filename = Array.from(new Set(chunkNames)).join('_');
 
@@ -696,13 +700,15 @@ class LynxTemplatePluginImpl {
 
           const asyncAssetsInfoByGroups = this.#getAssetsInformationByFilenames(
             compilation,
-            chunkGroups.flatMap(cg => cg.getFiles()),
+            chunkGroups.flatMap(cg => cg.getFiles()).filter(chunkFile =>
+              predicateNonHotModuleReplacementAsset(chunkFile, compilation)
+            ),
           );
 
           return this.#encodeByAssetsInformation(
             compilation,
             asyncAssetsInfoByGroups,
-            [entryName],
+            entryNames,
             filenameTemplate,
             path.join(intermediateRoot, 'async', filename),
             /** isAsync */ true,
@@ -961,17 +967,9 @@ class LynxTemplatePluginImpl {
       /** entryPointUnfilteredFiles - also includes hot module update files */
       const entryPointUnfilteredFiles = compilation.entrypoints.get(entryName)!
         .getFiles();
-      return entryPointUnfilteredFiles.filter((chunkFile) => {
-        const asset = compilation.getAsset(chunkFile);
-
-        // Prevent hot-module files from being included:
-        const assetMetaInformation = asset?.info ?? {};
-
-        return !(
-          assetMetaInformation.hotModuleReplacement
-            ?? assetMetaInformation.development
-        );
-      });
+      return entryPointUnfilteredFiles.filter((chunkFile) =>
+        predicateNonHotModuleReplacementAsset(chunkFile, compilation)
+      );
     });
 
     return this.#getAssetsInformationByFilenames(compilation, filenames);
@@ -1051,4 +1049,19 @@ export function isDebug(): boolean {
 
 export function isRsdoctor(): boolean {
   return process.env['RSDOCTOR'] === 'true';
+}
+
+export function predicateNonHotModuleReplacementAsset(
+  chunkFile: string,
+  compilation: Compilation,
+): boolean {
+  const asset = compilation.getAsset(chunkFile);
+
+  // Prevent hot-module files from being included:
+  const assetMetaInformation = asset?.info ?? {};
+
+  return !(
+    assetMetaInformation.hotModuleReplacement
+      ?? assetMetaInformation.development
+  );
 }

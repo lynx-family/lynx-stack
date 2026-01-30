@@ -98,9 +98,9 @@ declare global {
   ): void;
   declare function __UpdateListCallbacks(
     list: FiberElement,
-    componentAtIndex: ComponentAtIndexCallback,
-    enqueueComponent: EnqueueComponentCallback,
-    componentAtIndexes: ComponentAtIndexesCallback,
+    componentAtIndex: ComponentAtIndexCallback | null,
+    enqueueComponent: EnqueueComponentCallback | null,
+    componentAtIndexes: ComponentAtIndexesCallback | null,
   ): void;
   declare function __OnLifecycleEvent(...args: any[]): void;
   declare function _ReportError(

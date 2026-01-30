@@ -41,12 +41,6 @@ export interface ExternalBundleWebpackPluginOptions {
 }
 
 // @public
-export const LAYERS: {
-    readonly BACKGROUND: "background";
-    readonly MAIN_THREAD: "main-thread";
-};
-
-// @public
 export class MainThreadRuntimeWrapperWebpackPlugin {
     constructor(options?: Partial<MainThreadRuntimeWrapperWebpackPluginOptions>);
     // (undocumented)

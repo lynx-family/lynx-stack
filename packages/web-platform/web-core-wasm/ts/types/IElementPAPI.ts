@@ -302,11 +302,6 @@ interface JSErrorInfo {
   release: string;
 }
 
-export type ElementFromBinaryPAPI = (
-  templateId: string,
-  parentComponentUniId: number,
-) => HTMLElement;
-
 export type GetAttributeByNamePAPI = (
   element: HTMLElement,
   name: string,
@@ -323,8 +318,6 @@ export type QueryComponentPAPI = (
   }) => void,
 ) => null;
 export interface ElementPAPIs {
-  __ElementFromBinary: ElementFromBinaryPAPI;
-
   // __GetTemplateParts currently only provided by the thread-strategy = "all-on-ui" (default)
   __GetTemplateParts: GetTemplatePartsPAPI;
 

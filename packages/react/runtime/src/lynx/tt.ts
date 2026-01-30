@@ -58,7 +58,7 @@ function onLifecycleEvent([type, data]: [LifecycleConstant, unknown]) {
     return;
   }
 
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart(`OnLifecycleEvent::${type}`);
   }
 
@@ -68,7 +68,7 @@ function onLifecycleEvent([type, data]: [LifecycleConstant, unknown]) {
     lynx.reportError(e as Error);
   }
 
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
 }
@@ -83,7 +83,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         processErr = e;
       }
       const { root: lepusSide, jsReadyEventIdSwap } = data as FirstScreenData;
-      if (__PROFILE__) {
+      if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileStart('ReactLynx::hydrate');
       }
       beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
@@ -122,7 +122,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
             + printSnapshotInstanceToString(__root as BackgroundSnapshotInstance),
         );
       }
-      if (__PROFILE__) {
+      if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileEnd();
       }
       markTiming('diffVdomEnd');

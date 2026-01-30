@@ -25,6 +25,8 @@ it('should inline foo, but not inline bar', async () => {
   expect(manifest).toHaveProperty('/app-service.js');
   expect(Object.keys(manifest).length).toBe(3);
   expect(manifest['/app-service.js']).toBeTruthy();
+  // should have requireModuleAsyncCache polyfill
+  expect(manifest['/app-service.js']).toContain('var moduleCache = {}');
   expect(manifest['/foo.js']).toBeTruthy();
   // it is inlined because rspack.bundle.js has rspack runtime module which needs to be loaded synchronously
   expect(manifest['/rspack.bundle.js']).toBeTruthy();

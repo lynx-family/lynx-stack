@@ -33,7 +33,13 @@ export interface RustMainthreadContextBinding {
   addEventListener(event_name: string): void;
 
   markExposureRelatedElementByUniqueId(
-    uniqueId: number,
+    element: HTMLElement,
     toEnable: boolean,
   ): void;
+
+  enableElementEvent(element: HTMLElement, eventName: string): void;
+
+  disableElementEvent(element: HTMLElement, eventName: string): void;
+
+  getClassList(element: HTMLElement): string[];
 }

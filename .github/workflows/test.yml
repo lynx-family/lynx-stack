@@ -92,6 +92,7 @@ jobs:
       runs-on: lynx-custom-container
       is-web: true
       codecov-flags: "e2e"
+      web-report-path: "packages/web-platform/web-elements/playwright-report"
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
@@ -128,6 +129,30 @@ jobs:
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
         pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/4
         pnpm --filter @lynx-js/web-tests run coverage:ci
+  web-core-wasm-e2e:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    name: Playwright ${{ matrix.render }} (${{ matrix.shard }}/2)
+    strategy:
+      fail-fast: false
+      matrix:
+        render: [CSR]
+        shard: [1, 2]
+    with:
+      runs-on: lynx-custom-container
+      is-web: true
+      web-report-name: "playwright-${{ matrix.render }}-shard${{ matrix.shard }}"
+      web-report-path: "packages/web-platform/web-core-wasm-e2e/playwright-report"
+      codecov-flags: "e2e"
+      run: |
+        if [ "${{ matrix.render }}" = "SSR" ]; then
+          export ENABLE_SSR=true
+        fi
+        export NODE_OPTIONS="--max-old-space-size=32768"
+        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+        pnpm --filter @lynx-js/web-core-wasm-e2e run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/4
   test-api:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -168,6 +193,7 @@ jobs:
         cd `mktemp -d`
         npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir create-rspeedy-regression --tools eslint
         cd create-rspeedy-regression
+        npx --registry http://localhost:4873 upgrade-rspeedy-canary@latest
         pnpm install --registry=http://localhost:4873
         pnpm run build
         pnpm run build --mode development
@@ -175,6 +201,7 @@ jobs:
         cd `mktemp -d`
         npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react-vitest-rltl --dir create-rspeedy-regression-vitest-rltl --tools eslint
         cd create-rspeedy-regression-vitest-rltl
+        npx --registry http://localhost:4873 upgrade-rspeedy-canary@latest
         pnpm install --registry=http://localhost:4873
         pnpm run build
         pnpm run build --mode development

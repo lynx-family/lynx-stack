@@ -10,6 +10,7 @@ import type { I18nResourceTranslationOptions } from './index.js';
 import type { MainThreadLynx } from './MainThreadLynx.js';
 import type { ProcessDataCallback } from './ProcessDataCallback.js';
 import type { UpdateDataOptions } from './UpdateDataOptions.js';
+import type { InvokeCallbackRes } from './NativeApp.js';
 
 type ElementPAPIEventHandler =
   | string
@@ -191,9 +192,7 @@ export type UpdateListInfoAttributeValue = {
   insertAction: {
     position: number;
   }[];
-  removeAction: {
-    position: number;
-  }[];
+  removeAction: number[];
 };
 export type SetAttributePAPI = (
   element: HTMLElement,
@@ -317,6 +316,18 @@ export type QueryComponentPAPI = (
     };
   }) => void,
 ) => null;
+export type InvokeUIMethodPAPI = (
+  element: HTMLElement,
+  method: string,
+  params: object,
+  callback: (result: InvokeCallbackRes) => void,
+) => void;
+
+export type QuerySelectorPAPI = (
+  element: HTMLElement,
+  selector: string,
+) => unknown;
+
 export interface ElementPAPIs {
   __ElementFromBinary: ElementFromBinaryPAPI;
 
@@ -381,6 +392,8 @@ export interface ElementPAPIs {
     _subTree?: unknown,
     options?: FlushElementTreeOptions,
   ) => void;
+  __InvokeUIMethod: InvokeUIMethodPAPI;
+  __QuerySelector: QuerySelectorPAPI;
 }
 
 export interface MainThreadGlobalThis extends ElementPAPIs {

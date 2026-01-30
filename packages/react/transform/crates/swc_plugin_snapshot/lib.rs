@@ -6,7 +6,6 @@ use std::{
 
 use once_cell::sync::Lazy;
 use swc_core::{
-  atoms as swc_atoms,
   common::{
     comments::{CommentKind, Comments},
     errors::HANDLER,
@@ -665,14 +664,12 @@ where
                         })) => {
                           let expr = &**expr;
                           if is_literal(expr) {
-                            let s = get_string_inline_style_from_literal(expr, span);
-
-                            if s.is_some() {
+                            if let Some(s) = get_string_inline_style_from_literal(expr, span) {
                               // <view style={{backgroundColor: "red"}} />;
                               // <view style={`background-color: red;`} />;
                               let s = Lit::Str(Str {
                                 span: *span,
-                                value: s.unwrap().into(),
+                                value: s.into(),
                                 raw: None,
                               });
                               let stmt = quote!(
@@ -1511,11 +1508,11 @@ where
   }
 
   fn visit_mut_module_items(&mut self, n: &mut Vec<ModuleItem>) {
-    let mut new_items: Vec<ModuleItem> = vec![];
-    for item in n.iter_mut() {
+    let mut new_items: Vec<ModuleItem> = Vec::with_capacity(n.len());
+    for mut item in n.take() {
       item.visit_mut_with(self);
       new_items.extend(self.current_snapshot_defs.take());
-      new_items.push(item.take());
+      new_items.push(item);
     }
 
     if let Some(module_item) = &self.runtime_components_module_item {
@@ -1532,31 +1529,34 @@ where
       self.parse_directives(span);
     }
 
-    if matches!(self.cfg.is_dynamic_component, Some(true)) && self.css_id_value.is_none() {
+    if self.css_id_value.is_none() && matches!(self.cfg.is_dynamic_component, Some(true)) {
       self.css_id_value = Some(Expr::Lit(Lit::Num(0.into())));
     }
 
     n.visit_mut_children_with(self);
-    if let Some(Expr::Ident(runtime_id)) = Lazy::<Expr>::get(&self.runtime_id) {
-      prepend_stmt(
-        &mut n.body,
-        ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
-          span: DUMMY_SP,
-          specifiers: vec![ImportSpecifier::Namespace(ImportStarAsSpecifier {
+
+    if let Expr::Ident(runtime_id) = &*self.runtime_id {
+      if self.snapshot_counter > 0 {
+        prepend_stmt(
+          &mut n.body,
+          ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
             span: DUMMY_SP,
-            local: runtime_id.clone(),
-          })],
-          src: Box::new(Str {
-            span: DUMMY_SP,
-            raw: None,
-            value: self.cfg.runtime_pkg.clone().into(),
-          }),
-          type_only: Default::default(),
-          // asserts: Default::default(),
-          with: Default::default(),
-          phase: ImportPhase::Evaluation,
-        })),
-      );
+            specifiers: vec![ImportSpecifier::Namespace(ImportStarAsSpecifier {
+              span: DUMMY_SP,
+              local: runtime_id.clone(),
+            })],
+            src: Box::new(Str {
+              span: DUMMY_SP,
+              raw: None,
+              value: self.cfg.runtime_pkg.clone().into(),
+            }),
+            type_only: Default::default(),
+            // asserts: Default::default(),
+            with: Default::default(),
+            phase: ImportPhase::Evaluation,
+          })),
+        );
+      }
     }
   }
 }

@@ -5,11 +5,34 @@
  */
 
 mod constants;
-mod css_tokenizer;
+pub mod css_tokenizer;
 #[cfg(feature = "client")]
 mod js_binding;
-mod leo_asm;
 #[cfg(feature = "client")]
 mod main_thread;
 mod style_transformer;
 mod template;
+pub mod utils;
+
+#[cfg(feature = "client")]
+pub use main_thread::{
+  element_apis::{
+    element_data::{EventHandler, LynxElementData},
+    event_apis::EventInfo,
+  },
+  main_thread_context::MainThreadWasmContext,
+  style_manager::StyleManager,
+};
+pub use style_transformer::{Generator, StyleTransformer};
+pub use template::template_sections::style_info::{
+  css_property::{ParsedDeclaration, ValueToken},
+  decoded_style_data::DecodedStyleData,
+  flattened_style_info::{FlattenedStyleInfo, FlattenedStyleSheet},
+  raw_style_info::{RawStyleInfo, Rule, RulePrelude, Selector, StyleSheet},
+  style_info_decoder::StyleInfoDecoder,
+};
+
+#[cfg(feature = "client")]
+pub use template::{
+  template_sections::style_info::style_sheet_resource::StyleSheetResource, TemplateManager,
+};
