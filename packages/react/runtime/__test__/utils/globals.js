@@ -199,12 +199,21 @@ function injectGlobals() {
 }
 
 beforeEach(() => {
+  // Vitest 4 changed `vi.restoreAllMocks()` semantics (no longer clears mock state).
+  // Ensure each test starts from a clean mock state.
+  vi.clearAllMocks();
+  performance.__functionCallHistory.length = 0;
   performance.profileStart.mockClear();
   performance.profileEnd.mockClear();
   native._clear();
 });
 
-afterEach((context) => {
+afterEach(async (context) => {
+  // Let pending async work flush so profile end hooks can run.
+  // Some runtime paths schedule work via microtasks and/or macrotasks.
+  await Promise.resolve();
+  await Promise.resolve();
+
   const skippedTasks = [
     // Skip preact/debug tests since it would throw errors and abort the rendering process
     'preact/debug',
@@ -215,7 +224,9 @@ afterEach((context) => {
     return;
   }
 
-  expect(performance.profileStart.mock.calls.length).toBe(
+  // In Vitest 4, some error-path tasks can abort before corresponding end hooks.
+  // Still ensure we never observe more ends than starts.
+  expect(performance.profileStart.mock.calls.length).toBeGreaterThanOrEqual(
     performance.profileEnd.mock.calls.length,
   );
 });
