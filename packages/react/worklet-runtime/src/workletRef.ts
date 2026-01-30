@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
 import type { WorkletRef, WorkletRefId, WorkletRefImpl } from './bindings/types.js';
+import { mainThreadFlushLoopMark } from './utils/mainThreadFlushLoopGuard.js';
 import { profile } from './utils/profile.js';
 
 interface RefImpl {
@@ -48,6 +49,7 @@ const getFromWorkletRefMap = <T>(
   refImpl: WorkletRefImpl<T>,
 ): WorkletRef<T> => {
   const id = refImpl._wvid;
+  mainThreadFlushLoopMark(`MainThreadRef:get id=${id}`);
   let value;
   if (id < 0) {
     // At the first screen rendering, the worklet ref is created with a negative ID.
@@ -64,7 +66,7 @@ const getFromWorkletRefMap = <T>(
 
   /* v8 ignore next 3 */
   if (__DEV__ && value === undefined) {
-    throw new Error('Worklet: ref is not initialized: ' + id);
+    throw new Error('MainThreadRef is not initialized: ' + id);
   }
   return value;
 };
