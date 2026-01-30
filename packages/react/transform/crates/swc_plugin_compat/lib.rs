@@ -7,7 +7,7 @@ use serde::Deserialize;
 use swc_core::common::comments::Comments;
 use swc_core::common::util::take::Take;
 use swc_core::{
-  common::{errors::HANDLER, DUMMY_SP},
+  common::{errors::HANDLER, Span, DUMMY_SP},
   ecma::{
     ast::*,
     utils::{prepend_stmt, private_ident},
@@ -410,6 +410,12 @@ impl<C> CompatVisitor<C>
 where
   C: Comments + Clone,
 {
+  fn emit_deprecation_warning(&self, span: Span, message: &str) {
+    if !self.opts.disable_deprecated_warning {
+      HANDLER.with(|handler| handler.struct_span_warn(span, message).emit());
+    }
+  }
+
   pub fn new(opts: CompatVisitorConfig, comments: Option<C>) -> Self {
     CompatVisitor {
       opts,
@@ -522,16 +528,10 @@ where
       .iter()
       .any(|pkg| pkg == import_src_str)
     {
-      if !self.opts.disable_deprecated_warning {
-        HANDLER.with(|handler| {
-          handler
-            .struct_span_warn(
-              n.span,
-              format!("DEPRECATED: old package \"{import_src_str}\" is removed").as_str(),
-            )
-            .emit()
-        });
-      }
+      self.emit_deprecation_warning(
+        n.span,
+        &format!("DEPRECATED: old package \"{import_src_str}\" is removed"),
+      );
 
       self.is_components_pkg = true;
     }
@@ -543,19 +543,12 @@ where
       .any(|pkg| pkg == import_src_str)
     {
       let new_runtime_pkg = &self.opts.new_runtime_pkg;
-      if !self.opts.disable_deprecated_warning {
-        HANDLER.with(|handler| {
-          handler
-            .struct_span_warn(
-              n.span,
-              format!(
-                "DEPRECATED: old runtime package \"{import_src_str}\" is changed to \"{new_runtime_pkg}\""
-              )
-              .as_str(),
-            )
-            .emit()
-        });
-      }
+      self.emit_deprecation_warning(
+        n.span,
+        &format!(
+          "DEPRECATED: old runtime package \"{import_src_str}\" is changed to \"{new_runtime_pkg}\""
+        ),
+      );
 
       *n.src = Str {
         span: DUMMY_SP,
@@ -680,13 +673,10 @@ where
           unreachable!("Unexpected JSXNamespacedName in component is polyfill - expected Ident")
         }
       }
-      if !self.opts.disable_deprecated_warning {
-        HANDLER.with(|handler| {
-                    handler
-                        .struct_span_warn(n.span, format!("DEPRECATED: syntax `<component is=? />` is deprecated, use `lazy` and `loadLazyBundle` exported from \"{}\" instead.", self.opts.new_runtime_pkg).as_str())
-                        .emit()
-                });
-      }
+      self.emit_deprecation_warning(
+        n.span,
+        &format!("DEPRECATED: syntax `<component is=? />` is deprecated, use `lazy` and `loadLazyBundle` exported from \"{}\" instead.", self.opts.new_runtime_pkg),
+      );
     }
 
     // this test if the jsx element is lynx instrict element, like <view/>
@@ -965,18 +955,11 @@ where
       None
     }
 
-    let warning_transform_event_name = |old_name, new_name| {
-      if !self.opts.disable_deprecated_warning {
-        HANDLER.with(|handler| {
-          handler
-            .struct_span_warn(
-              n.span,
-              format!("DEPRECATED: old event props \"{old_name}\" is changed to \"{new_name}\"",)
-                .as_str(),
-            )
-            .emit()
-        });
-      }
+    let warning_transform_event_name = |old_name: &str, new_name: &str| {
+      self.emit_deprecation_warning(
+        n.span,
+        &format!("DEPRECATED: old event props \"{old_name}\" is changed to \"{new_name}\""),
+      );
     };
 
     if *self.is_target_jsx_element.last().unwrap_or(&false) {
@@ -1003,13 +986,7 @@ where
     match &n.name {
       JSXAttrName::Ident(id) => {
         if id.sym == "lynx-key" {
-          if !self.opts.disable_deprecated_warning {
-            HANDLER.with(|handler| {
-              handler
-                .struct_span_warn(id.span, "DEPRECATED: lynx-key is changed to key")
-                .emit()
-            });
-          }
+          self.emit_deprecation_warning(id.span, "DEPRECATED: lynx-key is changed to key");
 
           n.name = JSXAttrName::Ident(IdentName::new("key".into(), id.span));
         }
@@ -1031,20 +1008,13 @@ where
             .to_case(Case::Kebab);
 
           if id.sym != new_id_str {
-            if !self.opts.disable_deprecated_warning {
-              HANDLER.with(|handler| {
-                handler
-                  .struct_span_warn(
-                    id.span,
-                    format!(
-                      "DEPRECATED: old JSXElementName \"{}\" is changed to \"{}\"",
-                      id.sym, new_id_str
-                    )
-                    .as_str(),
-                  )
-                  .emit()
-              });
-            }
+            self.emit_deprecation_warning(
+              id.span,
+              &format!(
+                "DEPRECATED: old JSXElementName \"{}\" is changed to \"{}\"",
+                id.sym, new_id_str
+              ),
+            );
 
             *name = JSXElementName::Ident(IdentName::new(new_id_str.into(), id.span).into());
           }
@@ -1062,24 +1032,16 @@ where
           if let MemberProp::Ident(id) = &m.prop {
             match id.sym.to_string().as_str() {
               "getNodeRef" | "getNodeRefFromRoot" | "createSelectorQuery" => {
-                HANDLER.with(|handler| {
-                                    handler
-                                        .struct_span_warn(
-                                            n.span,
-                                            format!("BROKEN: {} on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.", id.sym).as_str(),
-                                        )
-                                        .emit()
-                                });
+                self.emit_deprecation_warning(
+                  n.span,
+                  &format!("BROKEN: {} on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.", id.sym),
+                );
               }
               "getElementById" => {
-                HANDLER.with(|handler| {
-                                handler
-                                    .struct_span_warn(
-                                        n.span,
-                                        format!("BROKEN: {} on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.getElementById instead.", id.sym).as_str(),
-                                    )
-                                    .emit()
-                            });
+                self.emit_deprecation_warning(
+                  n.span,
+                  &format!("BROKEN: {} on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.getElementById instead.", id.sym),
+                );
               }
               &_ => {}
             }
