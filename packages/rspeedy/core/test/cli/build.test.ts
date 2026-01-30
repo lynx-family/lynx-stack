@@ -28,7 +28,12 @@ describe('CLI - build', () => {
   )
 
   beforeEach(() => {
+    // Vitest v4: vi.restoreAllMocks() no longer clears mock state for automocks.
+    // Clear mock call history between tests to avoid cross-test pollution.
+    vi.useRealTimers()
+    vi.unstubAllEnvs()
     vi.restoreAllMocks()
+    vi.clearAllMocks()
   })
 
   test('config not found', async () => {
