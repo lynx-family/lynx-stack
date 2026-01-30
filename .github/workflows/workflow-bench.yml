@@ -40,11 +40,11 @@ jobs:
           pnpm turbo build
       - name: Prepare CodSpeed
         run: |
-          curl -fsSL https://github.com/CodSpeedHQ/runner/releases/download/v3.8.0/codspeed-runner-installer.sh | bash -s -- --quiet
-      - name: Run benchmark
+          curl -fsSL https://github.com/CodSpeedHQ/runner/releases/download/v4.10.2/codspeed-runner-installer.sh | bash -s -- --quiet
+      - name: Run the benchmarks
         run: |
           . "$HOME/.cargo/env"
-          codspeed run -- pnpm -r run --workspace-concurrency=1 bench
+          codspeed run --mode instrumentation -- pnpm -r run --workspace-concurrency=1 bench
       - name: React benchmark - Run perfetto
         run: |
           pnpm -r run --workspace-concurrency=1 perfetto

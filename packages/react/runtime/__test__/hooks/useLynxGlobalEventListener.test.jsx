@@ -141,7 +141,7 @@ describe('useLynxGlobalEventListener', () => {
       [
         [
           "eventName",
-          [MockFunction spy],
+          [MockFunction],
         ],
       ]
     `);

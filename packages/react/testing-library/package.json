@@ -7,7 +7,7 @@
     "build": "rslib build",
     "dev": "rslib build --watch",
     "test": "npm run test:base && npm run test:3.1",
-    "test:3.1": "vitest --config vitest.3.1.config.ts",
+    "test:3.1": "vitest --config vitest.3_1.config.ts",
     "test:base": "vitest",
     "test:ui": "vitest --ui"
   },

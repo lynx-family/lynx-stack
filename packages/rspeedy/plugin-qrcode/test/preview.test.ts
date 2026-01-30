@@ -29,7 +29,12 @@ const pluginStubRspeedyAPI = (config: Config = {}): RsbuildPlugin => ({
 
 describe('Preview', () => {
   beforeEach(() => {
-    vi.restoreAllMocks()
+    // Vitest v4: `vi.restoreAllMocks()` no longer resets the state of automocks.
+    // Reset mocks explicitly to avoid cross-test pollution.
+    vi.resetAllMocks()
+    vi.unstubAllEnvs()
+
+    return () => vi.unstubAllEnvs()
   })
 
   test('preview with NODE_ENV=development', async () => {

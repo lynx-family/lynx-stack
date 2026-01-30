@@ -30,9 +30,6 @@ export function createEntries(name = 'main', source = './index.js') {
 export function createConfig(externalsLoadingPluginOptions, externals = {}) {
   return {
     entry: createEntries(),
-    experiments: {
-      layers: true,
-    },
     externals,
     plugins: [
       new ExternalsLoadingPlugin(

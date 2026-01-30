@@ -1,7 +1,7 @@
 ERROR in ./jsx/namespace-name/index.jsx
 × Module build failed (from ../../lib/loaders/background.js):
 ╰─▶   × Error: react-transform failed
-at Object.backgroundLoader (<ROOT>/packages/webpack/react-webpack-plugin/src/loaders/background.ts:<LINE:COLUMN>)
+at Object.backgroundLoader (<ROOT>/packages/webpack/react-webpack-plugin/lib/loaders/background.js:<LINE:COLUMN>)
 at <ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>
 at node:internal/util:<LINE:COLUMN>
 at new Promise (<anonymous>)

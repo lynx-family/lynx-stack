@@ -1,11 +1,10 @@
 import '@testing-library/jest-dom';
-import { expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitForElementToBeRemoved, act } from '@lynx-js/react/testing-library';
 import { Suspense, lazy, useState } from '@lynx-js/react';
 import { BackgroundSnapshotInstance } from '@lynx-js/react/internal';
 import { Suspense as PreactSuspense } from 'preact/compat';
 import { createRequire } from 'node:module';
-import { describe } from 'node:test';
 import { prettyFormatSnapshotPatch } from '../../../../runtime/lib/debug/formatPatch';
 
 const SuspenseMap = {
@@ -74,6 +73,11 @@ describe('Suspense', () => {
   beforeEach(() => {
     vi.clearAllTimers();
     vi.useFakeTimers({ toFake: ['setTimeout'] });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   Object.entries(SuspenseMap).forEach(([name, Suspense]) => {

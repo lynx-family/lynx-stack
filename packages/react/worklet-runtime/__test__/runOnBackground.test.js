@@ -64,7 +64,7 @@ describe('runOnBackground', () => {
     ).toMatchInlineSnapshot(`
       [
         {
-          "task": [MockFunction spy],
+          "task": [MockFunction],
         },
       ]
     `);
@@ -79,7 +79,7 @@ describe('runOnBackground', () => {
             "_execId": 8,
             "_jsFnId": 1,
           },
-          "task": [MockFunction spy],
+          "task": [MockFunction],
         },
       ]
     `);

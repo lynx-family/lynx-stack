@@ -34,8 +34,11 @@ vi.mock('@clack/prompts')
 
 describe('Plugins - Terminal', () => {
   beforeEach(() => {
+    // Vitest v4: `vi.restoreAllMocks()` no longer resets the state of automocks.
+    // Reset mocks explicitly to avoid cross-test pollution.
+    vi.resetAllMocks()
+    vi.unstubAllEnvs()
     vi.stubEnv('NODE_ENV', 'production')
-    vi.restoreAllMocks()
     vi.mocked(isCancel).mockReturnValue(true)
 
     return () => vi.unstubAllEnvs()

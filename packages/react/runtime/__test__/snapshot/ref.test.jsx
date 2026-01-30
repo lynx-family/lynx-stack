@@ -1720,7 +1720,7 @@ describe('ui operations', () => {
             "[react-ref--2-0]",
             "path",
             [
-              [MockFunction spy],
+              [MockFunction],
             ],
           ],
         ]

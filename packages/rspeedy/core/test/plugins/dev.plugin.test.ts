@@ -13,6 +13,13 @@ vi.mock('node:os')
 
 describe('Plugins - Dev', () => {
   beforeEach(async () => {
+    // Vitest v4: vi.restoreAllMocks() no longer clears mock state for automocks.
+    // Ensure env/timers/mocks are reset between tests to avoid call-count leakage.
+    vi.useRealTimers()
+    vi.unstubAllEnvs()
+    vi.restoreAllMocks()
+    vi.clearAllMocks()
+
     vi.stubEnv('NODE_ENV', 'development')
     vi.mock('../../src/webpack/ProvidePlugin.js')
 
@@ -32,8 +39,10 @@ describe('Plugins - Dev', () => {
     })
 
     return () => {
+      vi.useRealTimers()
       vi.unstubAllEnvs()
-        .restoreAllMocks()
+      vi.restoreAllMocks()
+      vi.clearAllMocks()
     }
   })
 
