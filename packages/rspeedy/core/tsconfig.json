@@ -3,7 +3,6 @@
   "compilerOptions": {
     "rootDir": ".",
     "noEmit": true,
-    "exactOptionalPropertyTypes": false,
   },
   "include": [
     "bin",
