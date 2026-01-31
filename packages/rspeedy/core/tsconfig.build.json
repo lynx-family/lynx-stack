@@ -11,7 +11,7 @@
     "composite": true,
     "outDir": "./lib",
     "rootDir": "./src",
-    "module": "node20",
+    "module": "nodenext",
 
     "resolveJsonModule": true,
   },
