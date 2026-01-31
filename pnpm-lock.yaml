@@ -647,8 +647,8 @@ importers:
         specifier: ^0.6.2
         version: 0.6.2
       type-fest:
-        specifier: ^5.0.1
-        version: 5.0.1
+        specifier: ^5.4.3
+        version: 5.4.3
       typia:
         specifier: 10.1.0
         version: 10.1.0(typescript@5.9.3)
@@ -859,8 +859,8 @@ importers:
         specifier: ^3.4.19
         version: 3.4.19
       type-fest:
-        specifier: ^5.0.1
-        version: 5.0.1
+        specifier: ^5.4.3
+        version: 5.4.3
       typia:
         specifier: 10.1.0
         version: 10.1.0(typescript@5.9.3)
@@ -943,8 +943,8 @@ importers:
         specifier: ^1.2.11
         version: 1.2.11
       type-fest:
-        specifier: ^5.0.1
-        version: 5.0.1
+        specifier: ^5.4.3
+        version: 5.4.3
 
   packages/rspeedy/websocket:
     dependencies:
@@ -9283,8 +9283,8 @@ packages:
     resolution: {integrity: sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==}
     engines: {node: '>=8'}
 
-  type-fest@5.0.1:
-    resolution: {integrity: sha512-9MpwAI52m8H6ssA542UxSLnSiSD2dsC3/L85g6hVubLSXd82wdI80eZwTWhdOfN67NlA+D+oipAs1MlcTcu3KA==}
+  type-fest@5.4.3:
+    resolution: {integrity: sha512-AXSAQJu79WGc79/3e9/CR77I/KQgeY1AhNvcShIH4PTcGYyC4xv6H4R4AUOwkPS5799KlVDAu8zExeCrkGquiA==}
     engines: {node: '>=20'}
 
   type-is@1.6.18:
@@ -19013,7 +19013,7 @@ snapshots:
 
   type-fest@0.8.1: {}
 
-  type-fest@5.0.1:
+  type-fest@5.4.3:
     dependencies:
       tagged-tag: 1.0.0
 
