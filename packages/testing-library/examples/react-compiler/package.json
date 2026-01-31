@@ -13,9 +13,9 @@
     "react-compiler-runtime": "0.0.0-experimental-fe727a3-20250909"
   },
   "devDependencies": {
-    "@babel/core": "^7.28.5",
-    "@babel/plugin-syntax-jsx": "^7.27.1",
-    "@babel/plugin-syntax-typescript": "^7.27.1",
+    "@babel/core": "^7.28.6",
+    "@babel/plugin-syntax-jsx": "^7.28.6",
+    "@babel/plugin-syntax-typescript": "^7.28.6",
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
