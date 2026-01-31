@@ -196,7 +196,7 @@ importers:
         version: link:../../packages/react
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: ^5.0.1-cf9aef5
+        specifier: ^5.0.1
         version: 5.0.1
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
@@ -221,7 +221,7 @@ importers:
         version: link:../../packages/react
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: ^5.0.1-cf9aef5
+        specifier: ^5.0.1
         version: 5.0.1
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
@@ -283,7 +283,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/lynx-bundle-rslib-config
       '@lynx-js/preact-devtools':
-        specifier: ^5.0.1-cf9aef5
+        specifier: ^5.0.1
         version: 5.0.1
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
@@ -308,7 +308,7 @@ importers:
         version: link:../../packages/react
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: ^5.0.1-cf9aef5
+        specifier: ^5.0.1
         version: 5.0.1
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*

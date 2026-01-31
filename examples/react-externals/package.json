@@ -15,7 +15,7 @@
   "devDependencies": {
     "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
-    "@lynx-js/preact-devtools": "^5.0.1-cf9aef5",
+    "@lynx-js/preact-devtools": "^5.0.1",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
