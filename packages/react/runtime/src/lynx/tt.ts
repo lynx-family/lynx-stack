@@ -180,7 +180,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       break;
     }
     case LifecycleConstant.publishEvent: {
-      const { handlerName, data: d } = data as { handlerName: string; data: unknown };
+      const { handlerName, data: d } = data as { handlerName: string; data: EventDataType };
       lynxCoreInject.tt.publishEvent(handlerName, d);
       break;
     }
@@ -201,25 +201,58 @@ function flushDelayedLifecycleEvents(): void {
   flushingDelayedLifecycleEvents = false;
 }
 
-function publishEvent(handlerName: string, data: unknown) {
+function publishEvent(handlerName: string, data: EventDataType) {
   lynxCoreInject.tt.callBeforePublishEvent?.(data);
   const eventHandler = backgroundSnapshotInstanceManager.getValueBySign(
     handlerName,
-  );
+  ) as ((data: unknown) => void) | undefined;
+
+  if (__PROFILE__) {
+    profileStart(`ReactLynx::publishEvent`, {
+      args: {
+        handlerName,
+        type: data.type,
+        snapshotInstanceType: backgroundSnapshotInstanceManager.values.get(
+          Number(handlerName.split(':')[0]),
+        )?.type ?? '',
+        jsFunctionName: eventHandler?.name ?? '',
+      },
+    });
+  }
+  if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+    console.alog?.(
+      `[ReactLynxDebug] BTS received event:\n` + JSON.stringify(
+        {
+          handlerName,
+          type: data.type,
+          snapshotInstanceType: backgroundSnapshotInstanceManager.values.get(
+            Number(handlerName.split(':')[0]),
+          )?.type ?? '',
+          jsFunctionName: eventHandler?.name ?? '',
+        },
+        null,
+        2,
+      ),
+    );
+  }
+
   if (eventHandler) {
     try {
-      (eventHandler as (...args: unknown[]) => void)(data);
+      eventHandler(data);
     } catch (e) {
       lynx.reportError(e as Error);
     }
   }
+  if (__PROFILE__) {
+    profileEnd();
+  }
 }
 
-function publicComponentEvent(_componentId: string, handlerName: string, data: unknown) {
+function publicComponentEvent(_componentId: string, handlerName: string, data: EventDataType) {
   publishEvent(handlerName, data);
 }
 
-function delayedPublicComponentEvent(_componentId: string, handlerName: string, data: unknown) {
+function delayedPublicComponentEvent(_componentId: string, handlerName: string, data: EventDataType) {
   delayedPublishEvent(handlerName, data);
 }
 

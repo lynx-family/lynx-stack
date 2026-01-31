@@ -177,6 +177,11 @@ declare global {
     removeComponents: () => void;
   }
 
+  declare interface EventDataType {
+    type: string;
+    [prop: string]: unknown;
+  }
+
   namespace lynxCoreInject {
     const tt: {
       _params: {
@@ -185,8 +190,8 @@ declare global {
       };
 
       OnLifecycleEvent: ([type, data]: [LifecycleConstant, unknown]) => void;
-      publishEvent: (handlerName: string, data: unknown) => void;
-      publicComponentEvent: (componentId: string, handlerName: string, data: unknown) => void;
+      publishEvent: (handlerName: string, data: EventDataType) => void;
+      publicComponentEvent: (componentId: string, handlerName: string, data: EventDataType) => void;
       callDestroyLifetimeFun: () => void;
       updateGlobalProps: (newData: Record<string, unknown>) => void;
       updateCardData: (newData: Record<string, any>, options?: Record<string, unknown>) => void;
