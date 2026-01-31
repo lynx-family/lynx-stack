@@ -14,7 +14,7 @@
     "preview": "rspress preview"
   },
   "dependencies": {
-    "@rstack-dev/doc-ui": "1.11.0",
+    "@rstack-dev/doc-ui": "1.12.3",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },
@@ -39,9 +39,9 @@
     "@rsbuild/plugin-sass": "1.5.0",
     "@rsbuild/plugin-type-check": "1.3.3",
     "@rsbuild/plugin-typed-css-modules": "1.2.1",
-    "@rspress/core": "2.0.0-beta.34",
-    "@rspress/plugin-client-redirects": "2.0.0-beta.34",
-    "@shikijs/transformers": "3.13.0",
+    "@rspress/core": "2.0.1",
+    "@rspress/plugin-client-redirects": "2.0.1",
+    "@shikijs/transformers": "3.22.0",
     "@types/react": "npm:@types/react@^19.2.10",
     "@types/react-dom": "^19.2.3",
     "change-case": "^5.4.4",
