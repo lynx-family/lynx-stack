@@ -20,7 +20,7 @@
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/tailwind-preset": "workspace:*",
     "@lynx-js/types": "3.6.0",
-    "@types/react": "^18.3.27",
+    "@types/react": "^19.2.10",
     "rsbuild-plugin-tailwindcss": "0.2.3",
     "tailwindcss": "^3.4.19"
   }
