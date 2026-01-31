@@ -68,8 +68,6 @@ export const initElementTree: () => {
 
 // @public
 export interface LynxElement extends HTMLElement {
-    // @internal
-    $$uiSign: number;
     cssId?: string;
     eventMap?: {
         [key: string]: any;
@@ -79,8 +77,6 @@ export interface LynxElement extends HTMLElement {
         [key: string]: any;
     };
     nextSibling: LynxElement;
-    // @internal
-    parentComponentUniqueId: number;
     parentNode: LynxElement;
 }
 
@@ -88,10 +84,6 @@ export interface LynxElement extends HTMLElement {
 export interface LynxGlobalThis {
     // (undocumented)
     [key: string]: any;
-    // @internal (undocumented)
-    _globalObject: any;
-    // @internal (undocumented)
-    _globalProxy: any;
     globalThis: LynxGlobalThis;
 }
 
