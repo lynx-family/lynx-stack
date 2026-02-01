@@ -33,7 +33,7 @@
     "@rslib/core": "^0.19.4",
     "@rspack/core": "catalog:rspack",
     "@svitejs/changesets-changelog-github-compact": "^1.2.0",
-    "@tsconfig/node22": "^22.0.0",
+    "@tsconfig/node22": "^22.0.5",
     "@tsconfig/strictest": "^2.0.8",
     "@types/node": "^24.10.9",
     "@typescript/native-preview": "7.0.0-dev.20260131.1",
