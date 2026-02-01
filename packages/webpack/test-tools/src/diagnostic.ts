@@ -94,40 +94,44 @@ function createCase(name: string, src: string, dist: string, cwd: string) {
       const caseName = `${name} - ${compilerType}`;
       const caseConfigFile = path.join(src, `${compilerType}.config.js`);
 
-      describe.runIf(fs.existsSync(caseConfigFile))(caseName, async () => {
-        const caseOptions = await createOptions<ECompilerType>(caseConfigFile);
-        it('should have error or warning', { timeout: 30000 }, async () => {
-          await runner(
-            caseName,
-            new RspeedyDiagnosticProcessor<ECompilerType>({
-              snapshotErrors: './raw-error.err',
-              snapshotWarning: './raw-warning.err',
-              defaultOptions: () => caseOptions,
-              overrideOptions: (_, options) => {
-                options.output ??= {};
-                options.output.filename = `${compilerType}.bundle.js`;
-                if (compilerType === ECompilerType.Webpack) {
-                  options.output.pathinfo = 'verbose';
-                  options.target = 'node';
-                }
-              },
-              name: caseName,
-              snapshot: `./expected/${compilerType}.txt`,
-              compilerType,
-              format: (output: string) => {
-                if (compilerType === ECompilerType.Rspack) {
-                  output = output
-                    .replaceAll('│', '')
-                    .split(/\r?\n/)
-                    .map((s: string) => s.trim())
-                    .join('\n');
-                }
-                return serializer.serialize(output);
-              },
-            }),
+      if (fs.existsSync(caseConfigFile)) {
+        describe(caseName, async () => {
+          const caseOptions = await createOptions<ECompilerType>(
+            caseConfigFile,
           );
+          it('should have error or warning', { timeout: 30000 }, async () => {
+            await runner(
+              caseName,
+              new RspeedyDiagnosticProcessor<ECompilerType>({
+                snapshotErrors: './raw-error.err',
+                snapshotWarning: './raw-warning.err',
+                defaultOptions: () => caseOptions,
+                overrideOptions: (_, options) => {
+                  options.output ??= {};
+                  options.output.filename = `${compilerType}.bundle.js`;
+                  if (compilerType === ECompilerType.Webpack) {
+                    options.output.pathinfo = 'verbose';
+                    options.target = 'node';
+                  }
+                },
+                name: caseName,
+                snapshot: `./expected/${compilerType}.txt`,
+                compilerType,
+                format: (output: string) => {
+                  if (compilerType === ECompilerType.Rspack) {
+                    output = output
+                      .replaceAll('│', '')
+                      .split(/\r?\n/)
+                      .map((s: string) => s.trim())
+                      .join('\n');
+                  }
+                  return serializer.serialize(output);
+                },
+              }),
+            );
+          });
         });
-      });
+      }
     }
   });
 }

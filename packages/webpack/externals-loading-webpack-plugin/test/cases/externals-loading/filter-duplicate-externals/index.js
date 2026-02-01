@@ -18,14 +18,14 @@ it('should filter duplicate externals', async () => {
   );
   expect(
     background.split(
-      `lynx[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]["Foo"]`
-        + ' = ',
+      `Object.defineProperty(lynx[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')],`
+        + ' "Foo",',
     ).length - 1,
   ).toBe(1);
   expect(
     mainThread.split(
-      `lynx[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]["Foo"] `
-        + '= ',
+      `Object.defineProperty(lynx[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')],`
+        + ' "Foo",',
     ).length - 1,
   ).toBe(1);
 });

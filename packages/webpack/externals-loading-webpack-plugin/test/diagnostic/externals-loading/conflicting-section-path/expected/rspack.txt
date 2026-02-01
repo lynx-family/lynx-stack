@@ -1,0 +1,6 @@
+ERROR in × ExternalsLoadingPlugin Error: Conflicting 'sectionPath' configurations found for library "MyLib" (from URL "http://example.com/lib.bundle") in the "mainThread" layer.
+- Defined in "lib-a": "path/to/a"
+- Defined in "lib-b": "path/to/b"
+Please ensure all externals pointing to the same library bundle have a consistent 'sectionPath' for each layer.
+
+ERROR in × Conflict: Multiple assets emit different content to the same filename rspack.bundle.js

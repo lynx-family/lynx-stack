@@ -123,5 +123,6 @@ export default defineConfig({
   output: {
     filenameHash: 'contenthash:8',
     cleanDistPath: false,
+    minify: false,
   },
 });
