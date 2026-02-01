@@ -2,11 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { HomeLayout } from './HomeLayout/index.jsx';
-
 // eslint-disable-next-line import/export
-export { HomeLayout };
+export { HomeLayout } from './HomeLayout/index.jsx';
 
 // The eslint-plugin-import cannot resolve `@rspress/core`
 // eslint-disable-next-line import/export
-export * from '@rspress/core/theme';
+export * from '@rspress/core/theme-original';
