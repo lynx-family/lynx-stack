@@ -68,8 +68,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@tsconfig/node24':
-        specifier: ^24.0.0
-        version: 24.0.0
+        specifier: ^24.0.4
+        version: 24.0.4
       '@tsconfig/strictest':
         specifier: ^2.0.8
         version: 2.0.8
@@ -4025,8 +4025,8 @@ packages:
     resolution: {integrity: sha512-zIcONa+hVtVSSep9UT3jZ5rizo2BsxgyDYU7WFD5eICBE7no3881HGeb/QkGfsJs6JTkY1aQhT7rIPC7e+0nnA==}
     engines: {node: '>=14', npm: '>=6', yarn: '>=1'}
 
-  '@tsconfig/node24@24.0.0':
-    resolution: {integrity: sha512-3/6Cr4dELEAucgPIr6ufY7yBYMi4ttZFOewABADNZ+bm4DUZl4dup2VBcBeP1ejj3QblrWVWux/1XcRv/ZVikA==}
+  '@tsconfig/node24@24.0.4':
+    resolution: {integrity: sha512-2A933l5P5oCbv6qSxHs7ckKwobs8BDAe9SJ/Xr2Hy+nDlwmLE1GhFh/g/vXGRZWgxBg9nX/5piDtHR9Dkw/XuA==}
 
   '@tsconfig/strictest@2.0.8':
     resolution: {integrity: sha512-XnQ7vNz5HRN0r88GYf1J9JJjqtZPiHt2woGJOo2dYqyHGGcd6OLGqSlBB6p1j9mpzja6Oe5BoPqWmeDx6X9rLw==}
@@ -12814,7 +12814,7 @@ snapshots:
       picocolors: 1.1.1
       redent: 3.0.0
 
-  '@tsconfig/node24@24.0.0': {}
+  '@tsconfig/node24@24.0.4': {}
 
   '@tsconfig/strictest@2.0.8': {}
 
