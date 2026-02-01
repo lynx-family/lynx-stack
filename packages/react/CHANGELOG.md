@@ -1,5 +1,20 @@
 # @lynx-js/react
 
+## 0.116.2
+
+### Patch Changes
+
+- Fix "TypeError: not a function" error caused by `replaceAll` not supported in ES5. ([#2142](https://github.com/lynx-family/lynx-stack/pull/2142))
+
+- Bump `swc_core` v56. ([#2154](https://github.com/lynx-family/lynx-stack/pull/2154))
+
+- Use `disableDeprecatedWarning` option to suppress BROKEN warnings during compilation. ([#2157](https://github.com/lynx-family/lynx-stack/pull/2157))
+
+  1. BROKEN: `getNodeRef`/`getNodeRefFromRoot`/`createSelectorQuery` on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.
+  2. BROKEN: `getElementById` on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.getElementById instead.
+
+- Fix memory leak by clearing list callbacks when \_\_DestroyLifetime event is triggered. ([#2112](https://github.com/lynx-family/lynx-stack/pull/2112))
+
 ## 0.116.1
 
 ### Patch Changes

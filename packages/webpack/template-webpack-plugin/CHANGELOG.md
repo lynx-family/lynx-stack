@@ -1,5 +1,13 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.10.3
+
+### Patch Changes
+
+- Fix "Failed to load CSS update file" for lazy bundle ([#2150](https://github.com/lynx-family/lynx-stack/pull/2150))
+
+- Fix "TypeError: cannot read property 'call' of undefined" error of lazy bundle HMR. ([#2146](https://github.com/lynx-family/lynx-stack/pull/2146))
+
 ## 0.10.2
 
 ### Patch Changes
