@@ -59,8 +59,8 @@ importers:
         specifier: catalog:rsbuild
         version: 1.7.2
       '@rslib/core':
-        specifier: ^0.19.1
-        version: 0.19.1(@microsoft/api-extractor@7.55.2(@types/node@24.10.9))(@typescript/native-preview@7.0.0-dev.20260131.1)(typescript@5.9.3)
+        specifier: ^0.19.4
+        version: 0.19.4(@microsoft/api-extractor@7.55.2(@types/node@24.10.9))(@typescript/native-preview@7.0.0-dev.20260131.1)(typescript@5.9.3)
       '@rspack/core':
         specifier: 1.7.3
         version: 1.7.3(@swc/helpers@0.5.18)
@@ -703,8 +703,8 @@ importers:
         specifier: workspace:*
         version: link:../../tools/vitest-setup
       '@rslib/core':
-        specifier: ^0.19.1
-        version: 0.19.1(@microsoft/api-extractor@7.55.2(@types/node@24.10.9))(@typescript/native-preview@7.0.0-dev.20260131.1)(typescript@5.9.3)
+        specifier: ^0.19.4
+        version: 0.19.4(@microsoft/api-extractor@7.55.2(@types/node@24.10.9))(@typescript/native-preview@7.0.0-dev.20260131.1)(typescript@5.9.3)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.9)(@vitest/ui@3.2.4)(jsdom@27.4.0)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)
@@ -3514,8 +3514,8 @@ packages:
   '@rsdoctor/utils@1.2.3':
     resolution: {integrity: sha512-HawWrcqXeqdhj4dKhdjJg4BXvstcQauYSRx0cnYH78f7z9PW60Smr6vYpByXC87rK3JKpa6CNiZi+qhI5yTAog==}
 
-  '@rslib/core@0.19.1':
-    resolution: {integrity: sha512-Fz+uknjf9BRE6tNax7zcZOZ8FX3FLT5kKcR10vHdo6IgCaMZpJxQmM62NNfv21kdy5u1PdIRgKFVpqP2QTarfg==}
+  '@rslib/core@0.19.4':
+    resolution: {integrity: sha512-qFJKXxFGf582uNWyD+2cxKVoorsDepWn7M0VXZX8BLzaEXVBzQmQ0i9UojWicmJr3ui9nkI7WRh66FQzoyWREg==}
     engines: {node: '>=18.12.0'}
     hasBin: true
     peerDependencies:
@@ -8413,8 +8413,8 @@ packages:
       '@rsbuild/core':
         optional: true
 
-  rsbuild-plugin-dts@0.19.1:
-    resolution: {integrity: sha512-LaK1RAvHPrb/ulfwvZckeui5qkQSKxf1RD7rzBTgK2UY8fMTQgsxsvun/XzfzAOKqdagzIohhnmNd5+j2Niqww==}
+  rsbuild-plugin-dts@0.19.4:
+    resolution: {integrity: sha512-IDJsg3m9ZT/Jm5RU2e8Hits8b3vI2OWdCKxkly5uDB2owXGWAaswEy3H6uTR9GhnJlQGzvfOTxwy3JQeltiLqQ==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@microsoft/api-extractor': ^7
@@ -12078,10 +12078,10 @@ snapshots:
       - supports-color
       - webpack
 
-  '@rslib/core@0.19.1(@microsoft/api-extractor@7.55.2(@types/node@24.10.9))(@typescript/native-preview@7.0.0-dev.20260131.1)(typescript@5.9.3)':
+  '@rslib/core@0.19.4(@microsoft/api-extractor@7.55.2(@types/node@24.10.9))(@typescript/native-preview@7.0.0-dev.20260131.1)(typescript@5.9.3)':
     dependencies:
       '@rsbuild/core': 1.7.2
-      rsbuild-plugin-dts: 0.19.1(@microsoft/api-extractor@7.55.2(@types/node@24.10.9))(@rsbuild/core@1.7.2)(@typescript/native-preview@7.0.0-dev.20260131.1)(typescript@5.9.3)
+      rsbuild-plugin-dts: 0.19.4(@microsoft/api-extractor@7.55.2(@types/node@24.10.9))(@rsbuild/core@1.7.2)(@typescript/native-preview@7.0.0-dev.20260131.1)(typescript@5.9.3)
     optionalDependencies:
       '@microsoft/api-extractor': 7.55.2(@types/node@24.10.9)
       typescript: 5.9.3
@@ -18064,7 +18064,7 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 1.7.2
 
-  rsbuild-plugin-dts@0.19.1(@microsoft/api-extractor@7.55.2(@types/node@24.10.9))(@rsbuild/core@1.7.2)(@typescript/native-preview@7.0.0-dev.20260131.1)(typescript@5.9.3):
+  rsbuild-plugin-dts@0.19.4(@microsoft/api-extractor@7.55.2(@types/node@24.10.9))(@rsbuild/core@1.7.2)(@typescript/native-preview@7.0.0-dev.20260131.1)(typescript@5.9.3):
     dependencies:
       '@ast-grep/napi': 0.37.0
       '@rsbuild/core': 1.7.2
