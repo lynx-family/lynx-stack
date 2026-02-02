@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@microsoft/api-extractor": "^7.55.2",
-    "@modelcontextprotocol/sdk": "^1.25.2",
+    "@modelcontextprotocol/sdk": "^1.25.3",
     "@types/debug": "^4.1.12",
     "core-js": "^3.47.0",
     "debug": "^4.4.3",
