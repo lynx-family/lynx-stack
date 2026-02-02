@@ -51,7 +51,7 @@ export class Element {
   }
 
   public setStyleProperties(styles: Record<string, string>): void {
-    /* v8 ignore next 6 */
+    /* v8 ignore next 5 */
     if (__DEV__) {
       mainThreadFlushLoopMark(
         `element:setStyleProperties keys=${Object.keys(styles).length}`,

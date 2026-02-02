@@ -49,7 +49,10 @@ const getFromWorkletRefMap = <T>(
   refImpl: WorkletRefImpl<T>,
 ): WorkletRef<T> => {
   const id = refImpl._wvid;
-  mainThreadFlushLoopMark(`MainThreadRef:get id=${id}`);
+  /* v8 ignore next 3 */
+  if (__DEV__) {
+    mainThreadFlushLoopMark(`MainThreadRef:get id=${id}`);
+  }
   let value;
   if (id < 0) {
     // At the first screen rendering, the worklet ref is created with a negative ID.
