@@ -1711,6 +1711,18 @@ test.describe('web-elements test suite', () => {
       // Verify that the referrerpolicy attribute is set to 'no-referrer' on the internal img element
       expect(referrerpolicyValue).toBe('no-referrer');
     });
+    test('should not have loading attribute by default', async ({ page }) => {
+      const title = 'x-image/basic';
+      await gotoWebComponentPage(page, title);
+
+      const loadingValue = await page.evaluate(() => {
+        const xImage = document.querySelector('x-image');
+        const img = xImage?.shadowRoot?.querySelector('#img');
+        return img?.getAttribute('loading');
+      });
+
+      expect(loadingValue).toBeNull();
+    });
   });
 
   test.describe('x-list', () => {
