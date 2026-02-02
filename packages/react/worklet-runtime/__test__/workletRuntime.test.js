@@ -288,13 +288,13 @@ describe('Worklet', () => {
   it('should not throw when invalid worklet ctx', () => {
     initWorklet();
     globalThis.runWorklet({});
-    expect(consoleMock).lastCalledWith('Worklet: Invalid worklet object: {}');
+    expect(consoleMock).lastCalledWith('MainThreadFunction: Invalid function object: {}');
     globalThis.runWorklet(undefined);
-    expect(consoleMock).lastCalledWith('Worklet: Invalid worklet object: undefined');
+    expect(consoleMock).lastCalledWith('MainThreadFunction: Invalid function object: undefined');
     globalThis.runWorklet(null);
-    expect(consoleMock).lastCalledWith('Worklet: Invalid worklet object: null');
+    expect(consoleMock).lastCalledWith('MainThreadFunction: Invalid function object: null');
     globalThis.runWorklet(1);
-    expect(consoleMock).lastCalledWith('Worklet: Invalid worklet object: 1');
+    expect(consoleMock).lastCalledWith('MainThreadFunction: Invalid function object: 1');
   });
 
   it('should not throw when depth of argument exceeds limit', () => {

@@ -8,11 +8,11 @@ export function profile<Ret, Fn extends (...args: unknown[]) => Ret>(
   /* v8 ignore next 9 */
   // TODO: change it to __PROFILE__
   if (__DEV__) {
-    console.profile(sliceName);
+    console.profile?.(sliceName);
     try {
       return f();
     } finally {
-      console.profileEnd();
+      console.profileEnd?.();
     }
   } else {
     return f();
