@@ -399,7 +399,7 @@ importers:
         specifier: ^7.55.2
         version: 7.55.2(@types/node@24.10.9)
       '@modelcontextprotocol/sdk':
-        specifier: ^1.20.0
+        specifier: ^1.25.2
         version: 1.25.2(hono@4.11.7)(zod@3.25.76)
       '@types/debug':
         specifier: ^4.1.12
@@ -420,7 +420,7 @@ importers:
   packages/mcp-servers/docs-mcp-server:
     dependencies:
       '@modelcontextprotocol/sdk':
-        specifier: ^1.20.0
+        specifier: ^1.25.2
         version: 1.25.2(hono@4.11.7)(zod@3.25.76)
       commander:
         specifier: ^13.1.0
@@ -438,7 +438,7 @@ importers:
         specifier: ^2.1.2
         version: 2.1.2
       undici:
-        specifier: ^6.22.0
+        specifier: ^6.23.0
         version: 6.23.0
     devDependencies:
       '@types/debug':
@@ -1091,8 +1091,8 @@ importers:
         version: 9.3.0
     devDependencies:
       '@playwright/test':
-        specifier: ^1.57.0
-        version: 1.57.0
+        specifier: ^1.58.1
+        version: 1.58.1
 
   packages/web-platform/web-constants:
     dependencies:
@@ -1214,8 +1214,8 @@ importers:
         specifier: workspace:*
         version: link:../web-core-wasm
       '@playwright/test':
-        specifier: ^1.57.0
-        version: 1.57.0
+        specifier: ^1.58.1
+        version: 1.58.1
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 1.7.2
@@ -1229,8 +1229,8 @@ importers:
         specifier: workspace:*
         version: link:../playwright-fixtures
       '@playwright/test':
-        specifier: ^1.57.0
-        version: 1.57.0
+        specifier: ^1.58.1
+        version: 1.58.1
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 1.7.2
@@ -1378,8 +1378,8 @@ importers:
         specifier: workspace:*
         version: link:../../webpack/webpack-dev-transport
       '@playwright/test':
-        specifier: ^1.57.0
-        version: 1.57.0
+        specifier: ^1.58.1
+        version: 1.58.1
       '@rspack/cli':
         specifier: catalog:rspack
         version: 1.7.4(@rspack/core@1.7.4(@swc/helpers@0.5.18))(@types/express@4.17.21)(webpack@5.104.1)
@@ -3272,8 +3272,8 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@playwright/test@1.57.0':
-    resolution: {integrity: sha512-6TyEnHgd6SArQO8UO2OMTxshln3QMWBtPGrOCgs3wVEmQmwyuNtB10IZMfmYDE0riwNR1cu4q+pPcxMVtaG3TA==}
+  '@playwright/test@1.58.1':
+    resolution: {integrity: sha512-6LdVIUERWxQMmUSSQi0I53GgCBYgM2RpGngCPY7hSeju+VrKjq3lvs7HpJoPbDiY5QM5EYRtRX5fvrinnMAz3w==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -7786,13 +7786,13 @@ packages:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
     engines: {node: '>=8'}
 
-  playwright-core@1.57.0:
-    resolution: {integrity: sha512-agTcKlMw/mjBWOnD6kFZttAAGHgi/Nw0CZ2o6JqWSbMlI219lAFLZZCyqByTsvVAJq5XA5H8cA6PrvBRpBWEuQ==}
+  playwright-core@1.58.1:
+    resolution: {integrity: sha512-bcWzOaTxcW+VOOGBCQgnaKToLJ65d6AqfLVKEWvexyS3AS6rbXl+xdpYRMGSRBClPvyj44njOWoxjNdL/H9UNg==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.57.0:
-    resolution: {integrity: sha512-ilYQj1s8sr2ppEJ2YVadYBN0Mb3mdo9J0wQ+UuDhzYqURwSoW4n1Xs5vs7ORwgDGmyEh33tRMeS8KhdkMoLXQw==}
+  playwright@1.58.1:
+    resolution: {integrity: sha512-+2uTZHxSCcxjvGc5C891LrS1/NlxglGxzrC4seZiVjcYVQfUa87wBL6rTDqzGjuoWNjnBzRqKmF6zRYGMvQUaQ==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -11763,9 +11763,9 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@playwright/test@1.57.0':
+  '@playwright/test@1.58.1':
     dependencies:
-      playwright: 1.57.0
+      playwright: 1.58.1
 
   '@polka/url@1.0.0-next.25': {}
 
@@ -17375,11 +17375,11 @@ snapshots:
     dependencies:
       find-up: 4.1.0
 
-  playwright-core@1.57.0: {}
+  playwright-core@1.58.1: {}
 
-  playwright@1.57.0:
+  playwright@1.58.1:
     dependencies:
-      playwright-core: 1.57.0
+      playwright-core: 1.58.1
     optionalDependencies:
       fsevents: 2.3.2
 

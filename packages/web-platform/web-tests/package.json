@@ -38,7 +38,7 @@
     "@lynx-js/web-platform-rsbuild-plugin": "workspace:*",
     "@lynx-js/web-rsbuild-server-middleware": "workspace:*",
     "@lynx-js/webpack-dev-transport": "workspace:*",
-    "@playwright/test": "^1.57.0",
+    "@playwright/test": "^1.58.1",
     "@rspack/cli": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
     "nyc": "^17.1.0",
