@@ -33,19 +33,30 @@ export class Element {
   }
 
   public setAttribute(name: string, value: unknown): void {
-    mainThreadFlushLoopMark(`element:setAttribute ${name}`);
+    /* v8 ignore next 3 */
+    if (__DEV__) {
+      mainThreadFlushLoopMark(`element:setAttribute ${name}`);
+    }
     __SetAttribute(this.element, name, value);
     this.flushElementTree();
   }
 
   public setStyleProperty(name: string, value: string): void {
-    mainThreadFlushLoopMark(`element:setStyleProperty ${name}`);
+    /* v8 ignore next 3 */
+    if (__DEV__) {
+      mainThreadFlushLoopMark(`element:setStyleProperty ${name}`);
+    }
     __AddInlineStyle(this.element, name, value);
     this.flushElementTree();
   }
 
   public setStyleProperties(styles: Record<string, string>): void {
-    mainThreadFlushLoopMark(`element:setStyleProperties keys=${Object.keys(styles).length}`);
+    /* v8 ignore next 6 */
+    if (__DEV__) {
+      mainThreadFlushLoopMark(
+        `element:setStyleProperties keys=${Object.keys(styles).length}`,
+      );
+    }
     for (const key in styles) {
       __AddInlineStyle(this.element, key, styles[key]!);
     }
@@ -96,7 +107,10 @@ export class Element {
     methodName: string,
     params?: Record<string, unknown>,
   ): Promise<unknown> {
-    mainThreadFlushLoopMark(`element:invoke ${methodName}`);
+    /* v8 ignore next 3 */
+    if (__DEV__) {
+      mainThreadFlushLoopMark(`element:invoke ${methodName}`);
+    }
     return new Promise((resolve, reject) => {
       __InvokeUIMethod(
         this.element,
