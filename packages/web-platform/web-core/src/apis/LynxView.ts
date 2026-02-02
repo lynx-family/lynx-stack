@@ -92,7 +92,6 @@ export class LynxView extends HTMLElement {
   );
   #instance?: LynxViewInstance;
 
-  #connected = false;
   #url?: string;
   /**
    * @public
@@ -414,10 +413,13 @@ export class LynxView extends HTMLElement {
    * @private
    */
   #render() {
-    if (!this.#rendering && this.#connected) {
+    if (!this.#rendering && this.isConnected) {
       this.#rendering = true;
       queueMicrotask(() => {
         this.#rendering = false;
+        if (!this.isConnected) {
+          return;
+        }
         const ssrData = this.getAttribute('ssr');
         if (this.#instance) {
           this.disconnectedCallback();
@@ -529,7 +531,6 @@ export class LynxView extends HTMLElement {
    * @private
    */
   connectedCallback() {
-    this.#connected = true;
     this.#render();
   }
 }
