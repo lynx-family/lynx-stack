@@ -6,6 +6,41 @@ const goto = async (page: Page, fixtureName: string) => {
   await page.evaluate(() => document.fonts.ready);
 };
 
+const getShadowText = async (page: Page, selector: string) =>
+  page.evaluate((value) => {
+    const element = document.querySelector('x-markdown');
+    return element?.shadowRoot?.querySelector(value)?.textContent ?? '';
+  }, selector);
+
+const getShadowCount = async (page: Page, selector: string) =>
+  page.evaluate((value) => {
+    const element = document.querySelector('x-markdown');
+    return element?.shadowRoot?.querySelectorAll(value).length ?? 0;
+  }, selector);
+
+const appendContent = async (page: Page, suffix: string) => {
+  await page.evaluate((value) => {
+    const element = document.querySelector('x-markdown');
+    const content = element?.getAttribute('content') ?? '';
+    element?.setAttribute('content', `${content}${value}`);
+  }, suffix);
+};
+
+const captureFirstChild = async (page: Page) => {
+  await page.evaluate(() => {
+    const element = document.querySelector('x-markdown');
+    const root = element?.shadowRoot?.querySelector('#markdown-root');
+    (window as any).__markdown_first_child = root?.firstElementChild ?? null;
+  });
+};
+
+const isFirstChildSame = async (page: Page) =>
+  page.evaluate(() => {
+    const element = document.querySelector('x-markdown');
+    const root = element?.shadowRoot?.querySelector('#markdown-root');
+    return root?.firstElementChild === (window as any).__markdown_first_child;
+  });
+
 test.describe('x-markdown', () => {
   test('should render basic markdown', async ({ page }) => {
     await goto(page, 'x-markdown/basic');
@@ -86,5 +121,43 @@ test.describe('x-markdown', () => {
       '/tests/fixtures/resources/firefox-logo.png',
     );
     expect(imageDetail.contentId).toBe('case-1');
+  });
+
+  test('should append content incrementally', async ({ page }) => {
+    await goto(page, 'x-markdown/basic');
+    expect(await getShadowText(page, 'h1')).toBe('Title');
+    await captureFirstChild(page);
+    await appendContent(page, '\n\n## More');
+    await page.waitForFunction(() => {
+      const element = document.querySelector('x-markdown');
+      const root = element?.shadowRoot;
+      return root?.querySelector('h2')?.textContent === 'More';
+    });
+    expect(await isFirstChildSame(page)).toBe(true);
+  });
+
+  test('should re-render when content diverges', async ({ page }) => {
+    await goto(page, 'x-markdown/basic');
+    await captureFirstChild(page);
+    await page.evaluate(() => {
+      const element = document.querySelector('x-markdown');
+      element?.setAttribute('content', '# Title\n\nReplaced');
+    });
+    await page.waitForFunction(() => {
+      const element = document.querySelector('x-markdown');
+      return element?.shadowRoot?.querySelector('p')?.textContent
+        === 'Replaced';
+    });
+    expect(await isFirstChildSame(page)).toBe(false);
+  });
+
+  test('should batch append by newline boundary', async ({ page }) => {
+    await goto(page, 'x-markdown/incremental');
+    expect(await getShadowCount(page, 'p')).toBe(1);
+    await appendContent(page, 'Line 2');
+    await page.waitForTimeout(20);
+    expect(await getShadowCount(page, 'p')).toBe(1);
+    await page.waitForTimeout(80);
+    expect(await getShadowCount(page, 'p')).toBe(2);
   });
 });

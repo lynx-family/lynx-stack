@@ -11,10 +11,23 @@ import {
 } from '../../element-reactive/index.js';
 import type { XMarkdown } from './XMarkdown.js';
 
-const markdownParser = new MarkdownIt({
-  html: false,
-  linkify: true,
-});
+const MarkdownItCtor =
+  (MarkdownIt as unknown as { default?: typeof MarkdownIt }).default
+    ?? MarkdownIt;
+let markdownParser: MarkdownIt | null = null;
+let markdownParserError: unknown;
+const getMarkdownParser = () => {
+  if (markdownParser || markdownParserError) return markdownParser;
+  try {
+    markdownParser = new MarkdownItCtor({
+      html: false,
+      linkify: true,
+    });
+  } catch (error) {
+    markdownParserError = error;
+  }
+  return markdownParser;
+};
 
 const unitlessCssProperties = new Set([
   'font-weight',
@@ -129,8 +142,12 @@ export class XMarkdownAttributes {
 
   #pendingRender = false;
   #content = '';
+  #renderedContent = '';
   #contentId?: string;
   #eventsAttached = false;
+  #appendRemainder = '';
+  #appendFlushTimer?: ReturnType<typeof setTimeout>;
+  #appendFlushDelay = 60;
 
   constructor(dom: XMarkdown) {
     this.#dom = dom;
@@ -202,9 +219,95 @@ export class XMarkdownAttributes {
     const root = this.#root();
     if (!this.#content) {
       root.innerHTML = '';
+      this.#renderedContent = '';
+      this.#appendRemainder = '';
+      this.#clearAppendFlushTimer();
       return;
     }
-    root.innerHTML = markdownParser.render(this.#content);
+    const parser = getMarkdownParser();
+    if (!parser) {
+      root.textContent = this.#content;
+      this.#renderedContent = this.#content;
+      this.#appendRemainder = '';
+      this.#clearAppendFlushTimer();
+      return;
+    }
+    if (this.#canAppendIncrementally()) {
+      this.#appendIncrementally(root);
+      return;
+    }
+    root.innerHTML = parser.render(this.#content);
+    this.#renderedContent = this.#content;
+    this.#appendRemainder = '';
+    this.#clearAppendFlushTimer();
+  }
+
+  #canAppendIncrementally() {
+    if (!this.#renderedContent) return false;
+    if (!this.#content.startsWith(this.#renderedContent)) return false;
+    if (this.#content.length === this.#renderedContent.length) return false;
+    return true;
+  }
+
+  #appendIncrementally(root: HTMLElement) {
+    const delta = this.#content.slice(this.#renderedContent.length);
+    if (!delta) return;
+    const lastNewlineIndex = delta.lastIndexOf('\n');
+    if (lastNewlineIndex === -1) {
+      this.#appendRemainder = delta;
+      this.#scheduleAppendFlush();
+      return;
+    }
+    const chunk = delta.slice(0, lastNewlineIndex + 1);
+    if (chunk) {
+      const parser = getMarkdownParser();
+      if (!parser) return;
+      const html = parser.render(chunk);
+      this.#appendHtml(root, html);
+      this.#renderedContent += chunk;
+    }
+    this.#appendRemainder = delta.slice(lastNewlineIndex + 1);
+    if (this.#appendRemainder) {
+      this.#scheduleAppendFlush();
+    } else {
+      this.#clearAppendFlushTimer();
+    }
+  }
+
+  #scheduleAppendFlush() {
+    this.#clearAppendFlushTimer();
+    this.#appendFlushTimer = setTimeout(() => {
+      this.#appendFlushTimer = undefined;
+      this.#flushAppendRemainder();
+    }, this.#appendFlushDelay);
+  }
+
+  #clearAppendFlushTimer() {
+    if (this.#appendFlushTimer) {
+      clearTimeout(this.#appendFlushTimer);
+      this.#appendFlushTimer = undefined;
+    }
+  }
+
+  #flushAppendRemainder() {
+    if (!this.#appendRemainder) return;
+    if (!this.#content.startsWith(this.#renderedContent)) return;
+    const expectedLength = this.#renderedContent.length
+      + this.#appendRemainder.length;
+    if (this.#content.length !== expectedLength) return;
+    const root = this.#root();
+    const parser = getMarkdownParser();
+    if (!parser) return;
+    const html = parser.render(this.#appendRemainder);
+    this.#appendHtml(root, html);
+    this.#renderedContent += this.#appendRemainder;
+    this.#appendRemainder = '';
+  }
+
+  #appendHtml(root: HTMLElement, html: string) {
+    const template = document.createElement('template');
+    template.innerHTML = html;
+    root.append(template.content);
   }
 
   #applyMarkdownStyle(value: string | null) {
