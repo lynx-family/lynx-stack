@@ -140,6 +140,7 @@
     "test:update": "playwright test --ui --update-snapshots"
   },
   "dependencies": {
+    "dompurify": "^3.0.8",
     "markdown-it": "^14.1.0"
   },
   "devDependencies": {
