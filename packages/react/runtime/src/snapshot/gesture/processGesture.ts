@@ -161,6 +161,22 @@ export function processGesture(
   },
 ): void {
   const domSet = gestureOptions?.domSet === true;
+  if (!gesture || !isSerializedGesture(gesture)) {
+    const { oldBaseGesturesById } = collectOldGestureInfo(oldGesture);
+    for (const oldBaseGesture of oldBaseGesturesById.values()) {
+      removeGestureDetector(dom, oldBaseGesture.id);
+    }
+
+    // Clearing the attrs keeps the legacy main-thread state in sync when
+    // gesture props disappear during spread/key-removal updates.
+    if (!domSet && oldBaseGesturesById.size > 0) {
+      __SetAttribute(dom, 'has-react-gesture', null);
+      __SetAttribute(dom, 'flatten', null);
+      __SetAttribute(dom, 'gesture', null);
+    }
+    return;
+  }
+
   const { uniqOldBaseGestures, oldBaseGesturesById } = collectOldGestureInfo(oldGesture);
 
   // Fast path for the most common case: single base gesture update.
