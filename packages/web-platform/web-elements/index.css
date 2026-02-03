@@ -13,6 +13,7 @@
 @import url("./src/elements/XSvg/x-svg.css");
 @import url("./src/elements/XImage/x-image.css");
 @import url("./src/elements/XInput/x-input.css");
+@import url("./src/elements/XMarkdown/x-markdown.css");
 @import url("./src/elements/XOverlayNg/x-overlay-ng.css");
 @import url("./src/elements/XRefreshView/x-refresh-view.css");
 @import url("./src/elements/XSwiper/x-swiper.css");
