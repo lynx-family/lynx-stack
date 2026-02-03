@@ -34,7 +34,7 @@
     "build": "rslib build"
   },
   "dependencies": {
-    "@lynx-js/debug-router-connector": "0.0.6"
+    "@lynx-js/debug-router-connector": "0.0.10"
   },
   "devDependencies": {
     "@microsoft/api-extractor": "^7.55.2",
