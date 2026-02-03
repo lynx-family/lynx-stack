@@ -3,6 +3,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
+import createDOMPurify from 'dompurify';
 import MarkdownIt from 'markdown-it';
 import {
   boostedQueueMicrotask,
@@ -14,8 +15,13 @@ import type { XMarkdown } from './XMarkdown.js';
 const MarkdownItCtor =
   (MarkdownIt as unknown as { default?: typeof MarkdownIt }).default
     ?? MarkdownIt;
+const DOMPurifyCtor =
+  (createDOMPurify as unknown as { default?: typeof createDOMPurify }).default
+    ?? createDOMPurify;
 let markdownParser: MarkdownIt | null = null;
 let markdownParserError: unknown;
+let htmlSanitizer: ReturnType<typeof DOMPurifyCtor> | null = null;
+let htmlSanitizerError: unknown;
 const getMarkdownParser = () => {
   if (markdownParser || markdownParserError) return markdownParser;
   try {
@@ -27,6 +33,22 @@ const getMarkdownParser = () => {
     markdownParserError = error;
   }
   return markdownParser;
+};
+
+const getHtmlSanitizer = () => {
+  if (htmlSanitizer || htmlSanitizerError) return htmlSanitizer;
+  try {
+    htmlSanitizer = DOMPurifyCtor(window);
+  } catch (error) {
+    htmlSanitizerError = error;
+  }
+  return htmlSanitizer;
+};
+
+const sanitizeHtml = (value: string) => {
+  const sanitizer = getHtmlSanitizer();
+  if (!sanitizer) return value;
+  return sanitizer.sanitize(value, { USE_PROFILES: { html: true } }) as string;
 };
 
 const unitlessCssProperties = new Set([
@@ -236,7 +258,8 @@ export class XMarkdownAttributes {
       this.#appendIncrementally(root);
       return;
     }
-    root.innerHTML = parser.render(this.#content);
+    const rendered = parser.render(this.#content);
+    root.innerHTML = sanitizeHtml(rendered);
     this.#renderedContent = this.#content;
     this.#appendRemainder = '';
     this.#clearAppendFlushTimer();
@@ -306,7 +329,7 @@ export class XMarkdownAttributes {
 
   #appendHtml(root: HTMLElement, html: string) {
     const template = document.createElement('template');
-    template.innerHTML = html;
+    template.innerHTML = sanitizeHtml(html);
     root.append(template.content);
   }
 
