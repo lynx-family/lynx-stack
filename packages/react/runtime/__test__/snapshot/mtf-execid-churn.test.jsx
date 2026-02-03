@@ -10,7 +10,9 @@ import { globalEnvManager } from '../utils/envManager';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
 
 function getSnapshotPatchFromPatchUpdateCall(call) {
+  expect(call, 'expected a patch update call').toBeTruthy();
   const obj = call[1];
+  expect(obj?.data, 'expected patch payload').toBeTypeOf('string');
   const parsed = JSON.parse(obj.data);
   return parsed.patchList?.[0]?.snapshotPatch;
 }
@@ -192,6 +194,7 @@ describe('Patch size / execId churn', () => {
       globalEnvManager.switchToBackground();
       lynx.getNativeApp().callLepusMethod.mockClear();
       render(<Comp tick={1} />, __root);
+      await waitSchedule();
 
       globalEnvManager.switchToMainThread();
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
