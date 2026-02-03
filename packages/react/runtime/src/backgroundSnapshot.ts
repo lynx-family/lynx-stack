@@ -11,7 +11,7 @@
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { profileEnd, profileStart } from './debug/utils.js';
-import { processGestureBackground } from './gesture/processGestureBagkround.js';
+import { prepareGestureForCommit } from './gesture/processGestureBagkround.js';
 import type { GestureKind } from './gesture/types.js';
 import { diffArrayAction, diffArrayLepus } from './hydrate.js';
 import { globalBackgroundSnapshotInstancesToRemove } from './lifecycle/patch/commit.js';
@@ -37,6 +37,34 @@ import {
 import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { isDirectOrDeepEqual } from './utils.js';
 import { onPostWorkletCtx } from './worklet/ctx.js';
+
+function prepareWorkletForCommit(worklet: Worklet): Worklet | null {
+  // Copy-on-commit: do not mutate the background-side worklet ctx.
+  // `_execId` is injected into the payload object that will be sent to the main thread.
+  return onPostWorkletCtx({ ...(worklet as unknown as Record<string, unknown>) } as Worklet);
+}
+
+function prepareSpreadForCommit(
+  spread: Record<string, unknown>,
+  oldSpread: Record<string, unknown> | undefined,
+): Record<string, unknown> {
+  const committed: Record<string, unknown> = { ...spread };
+  for (const key in committed) {
+    const v = committed[key];
+    if (key === '__lynx_timing_flag' && oldSpread?.[key] != v && globalPipelineOptions) {
+      globalPipelineOptions.needTimestamps = true;
+    }
+    if (!v || typeof v !== 'object') {
+      continue;
+    }
+    if ('_wkltId' in (v as Record<string, unknown>)) {
+      committed[key] = prepareWorkletForCommit(v as Worklet);
+    } else if ('__isGesture' in (v as Record<string, unknown>)) {
+      committed[key] = prepareGestureForCommit(v as GestureKind);
+    }
+  }
+  return committed;
+}
 
 export class BackgroundSnapshotInstance {
   constructor(public type: string) {
@@ -337,33 +365,34 @@ export class BackgroundSnapshotInstance {
           this.__id,
           index,
         );
-        if (needUpdate) {
-          for (const key in newSpread) {
-            const newSpreadValue = newSpread[key];
-            if (!newSpreadValue) {
-              continue;
-            }
-            if ((newSpreadValue as { _wkltId?: string })._wkltId) {
-              newSpread[key] = onPostWorkletCtx(newSpreadValue as Worklet);
-            } else if ((newSpreadValue as { __isGesture?: boolean }).__isGesture) {
-              processGestureBackground(newSpreadValue as GestureKind);
-            } else if (key == '__lynx_timing_flag' && oldSpread?.[key] != newSpreadValue && globalPipelineOptions) {
-              globalPipelineOptions.needTimestamps = true;
-            }
-          }
-        }
-        return { needUpdate, valueToCommit: newSpread };
+        return {
+          needUpdate,
+          valueToCommit: needUpdate ? prepareSpreadForCommit(newSpread, oldSpread) : newSpread,
+        };
       }
       if ('__ref' in newValueObj) {
         queueRefAttrUpdate(oldValue as Ref, newValueObj as Ref, this.__id, index);
         return { needUpdate: false, valueToCommit: 1 };
       }
       if ('_wkltId' in newValueObj) {
-        return { needUpdate: true, valueToCommit: onPostWorkletCtx(newValueObj as Worklet) };
+        // Worklet ctx can be stable across rerenders (e.g. memoized by the user).
+        // In that case we should NOT re-register / re-send it, otherwise `_execId` churn
+        // will cause unnecessary patches.
+        const needUpdate = oldValue !== newValue;
+        return {
+          needUpdate,
+          valueToCommit: needUpdate ? prepareWorkletForCommit(newValueObj as Worklet) : newValue,
+        };
       }
       if ('__isGesture' in newValueObj) {
-        processGestureBackground(newValueObj as unknown as GestureKind);
-        return { needUpdate: true, valueToCommit: newValue };
+        // Gestures are large objects; if the reference is stable, avoid reprocessing and patching.
+        const needUpdate = oldValue !== newValue;
+        return {
+          needUpdate,
+          valueToCommit: needUpdate
+            ? prepareGestureForCommit(newValueObj as unknown as GestureKind)
+            : newValue,
+        };
       }
       if ('__ltf' in newValueObj) {
         // __lynx_timing_flag
@@ -408,25 +437,17 @@ export function hydrate(
             // `value.__spread` my contain event ids using snapshot ids before hydration. Remove it.
             delete value.__spread;
             const __spread = transformSpread(after, index, value);
-            for (const key in __spread) {
-              const v = __spread[key];
-              if (v && typeof v === 'object') {
-                if ('_wkltId' in v) {
-                  onPostWorkletCtx(v as Worklet);
-                } else if ('__isGesture' in v) {
-                  processGestureBackground(v as GestureKind);
-                }
-              }
-            }
+            // Cache a clean spread for future diffs. For the patch payload, create a committed copy
+            // with runtime fields (e.g. `_execId`) injected.
             (after.__values![index]! as Record<string, unknown>)['__spread'] = __spread;
-            value = __spread;
+            value = prepareSpreadForCommit(__spread, old as Record<string, unknown> | undefined);
           } else if ('__ref' in value) {
             // skip patch
             value = old;
           } else if ('_wkltId' in value) {
-            onPostWorkletCtx(value as Worklet);
+            value = prepareWorkletForCommit(value as Worklet);
           } else if ('__isGesture' in value) {
-            processGestureBackground(value as GestureKind);
+            value = prepareGestureForCommit(value as GestureKind);
           }
         } else if (typeof value === 'function') {
           if ('__ref' in value) {
