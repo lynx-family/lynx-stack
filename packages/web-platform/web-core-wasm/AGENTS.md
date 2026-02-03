@@ -58,7 +58,14 @@ Runs the application logic (BTS).
 - **`createNativeApp.ts`**: Creates the `NativeApp` interface, which mimics the native Lynx environment for the application code. It proxies commands (like `createElement`) to the main thread via RPC.
 - **`createBackgroundLynx.ts`**: Sets up the global `lynx` object in the worker.
 
-### 3. Encoder (`ts/encode`)
+### 3. Server Runtime (`ts/server`)
+
+TypeScript bindings for Server-Side Rendering (SSR).
+
+- **`wasm.ts`**: Loads the server-specific Wasm binary.
+- **`elementAPIs/createElementAPI.ts`**: Implements `ElementPAPIs` for the server, using `MainThreadServerContext` to generate HTML strings instead of manipulating DOM.
+
+### 4. Encoder (`ts/encode`)
 
 Build-time utilities.
 
@@ -91,7 +98,7 @@ This package uses a hybrid build system involving `pnpm`, `rsbuild`, and `cargo`
   1. Compiles Rust to Wasm (`wasm32-unknown-unknown`) using `cargo`.
   2. Generates high-performance JS bindings with `wasm-bindgen`.
   3. Optimizes the binary size with `wasm-opt`.
-  4. Builds two variants: `client` (browser runtime) and `encode` (build tool).
+  4. Builds three variants: `client` (browser runtime), `server` (SSR), and `encode` (build tool).
 - **`pnpm test`**: Runs `vitest`.
 
 ### Configuration

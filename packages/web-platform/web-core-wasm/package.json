@@ -23,9 +23,6 @@
     },
     "./client.prod.js": {
       "default": "./dist/client_prod/client.js"
-    },
-    "./index.css": {
-      "default": "./css/index.css"
     }
   },
   "main": "./dist/client/index.js",

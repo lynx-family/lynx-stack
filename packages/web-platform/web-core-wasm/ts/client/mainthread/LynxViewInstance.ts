@@ -25,7 +25,7 @@ import { createMainThreadGlobalAPIs } from './createMainThreadGlobalAPIs.js';
 import { templateManager } from './TemplateManager.js';
 import { loadAllWebElements } from '../webElementsDynamicLoader.js';
 import type { LynxViewElement } from './LynxView.js';
-import { templateManagerWasm } from '../wasm.js';
+const loadAllWebElementsPromise = loadAllWebElements();
 
 const pixelRatio = window.devicePixelRatio;
 const screenWidth = window.screen.availWidth * pixelRatio;
@@ -57,8 +57,6 @@ export class LynxViewInstance implements AsyncDisposable {
   readonly i18nManager: I18nManager;
   readonly exposureServices: ExposureServices;
   readonly webElementsLoadingPromises: Promise<void>[] = [];
-  readonly styleReadyPromise: Promise<void>;
-  readonly styleReadyResolve: () => void;
 
   #renderPageFunction: ((data: Cloneable) => void) | null = null;
   #queryComponentCache: Map<string, Promise<unknown>> = new Map();
@@ -82,12 +80,6 @@ export class LynxViewInstance implements AsyncDisposable {
   ) {
     this.#nativeModulesMap = nativeModulesMap;
     this.#napiModulesMap = napiModulesMap;
-    let resolve!: () => void;
-    const promise = new Promise<void>((res) => {
-      resolve = res;
-    });
-    this.styleReadyPromise = promise;
-    this.styleReadyResolve = resolve;
     this.parentDom.style.display = 'none';
     this.mainThreadGlobalThis = mtsRealm.globalWindow as
       & typeof globalThis
@@ -147,14 +139,17 @@ export class LynxViewInstance implements AsyncDisposable {
     currentUrl: string,
   ) {
     if (this.mtsWasmBinding.wasmContext) {
-      this.mtsWasmBinding.wasmContext.push_style_sheet(
-        templateManagerWasm!,
-        currentUrl,
-        this.templateUrl === currentUrl,
-      );
+      const resource = templateManager.getStyleSheet(currentUrl);
+      if (resource) {
+        this.mtsWasmBinding.wasmContext.push_style_sheet(
+          resource,
+          this.templateUrl === currentUrl ? undefined : currentUrl,
+        );
+      }
     }
-    this.parentDom.style.display = 'flex';
-    this.styleReadyResolve();
+    loadAllWebElementsPromise.then(() => {
+      this.parentDom.style.display = 'flex';
+    });
   }
 
   onMTSScriptsLoaded(currentUrl: string, isLazy: boolean) {
@@ -174,13 +169,6 @@ export class LynxViewInstance implements AsyncDisposable {
 
   async onMTSScriptsExecuted() {
     this.backgroundThread.markTiming('lepus_execute_end');
-
-    this.webElementsLoadingPromises.push(loadAllWebElements());
-
-    await Promise.all([
-      ...this.webElementsLoadingPromises,
-      this.styleReadyPromise,
-    ]);
     this.webElementsLoadingPromises.length = 0;
     this.backgroundThread.markTiming('data_processor_start');
     const processedData = this.mainThreadGlobalThis.processData

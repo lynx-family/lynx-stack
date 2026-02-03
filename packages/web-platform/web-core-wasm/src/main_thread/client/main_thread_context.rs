@@ -4,11 +4,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use super::element_apis::LynxElementData;
+use super::style_manager::StyleManager;
 use crate::constants;
 use crate::js_binding::RustMainthreadContextBinding;
-use crate::main_thread::style_manager::StyleManager;
-use crate::template::TemplateManager;
+use crate::main_thread::element_data::LynxElementData;
+use crate::template::template_sections::style_info::StyleSheetResource;
 use fnv::{FnvHashMap, FnvHashSet};
 use std::cell::RefCell;
 use std::{rc::Rc, vec};
@@ -63,23 +63,10 @@ impl MainThreadWasmContext {
   #[wasm_bindgen]
   pub fn push_style_sheet(
     &mut self,
-    template_manager: &TemplateManager,
-    entry_name: String,
-    is_entry_template: bool,
+    style_info: &StyleSheetResource,
+    entry_name: Option<String>,
   ) -> Result<(), JsError> {
-    let style_info = template_manager.get_style_info_by_name(&entry_name);
-    if let Some(style_info) = style_info {
-      self.style_manager.push_style_sheet(
-        style_info,
-        if is_entry_template {
-          None
-        } else {
-          Some(entry_name)
-        },
-      )
-    } else {
-      Ok(())
-    }
+    self.style_manager.push_style_sheet(style_info, entry_name)
   }
 
   #[wasm_bindgen]

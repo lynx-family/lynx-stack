@@ -4,7 +4,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 use super::token_transformer::transform_one_token;
-#[cfg(any(feature = "client", test))]
+#[cfg(any(feature = "client", feature = "server", test))]
 use crate::css_tokenizer::tokenize;
 use crate::css_tokenizer::{
   char_code_definitions::is_white_space, token_types::*, tokenize::Parser,
@@ -138,7 +138,7 @@ impl<'a, T: Generator> StyleTransformer<'a, T> {
     }
   }
 
-  #[cfg(any(feature = "client", test))]
+  #[cfg(any(feature = "client", feature = "server", test))]
   pub fn parse(&mut self, source: &str) {
     tokenize::tokenize(source, self);
     if self.prev_token_type != SEMICOLON_TOKEN {

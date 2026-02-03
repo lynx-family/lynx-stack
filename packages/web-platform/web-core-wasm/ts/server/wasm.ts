@@ -2,11 +2,8 @@
  * Copyright 2025 The Lynx Authors. All rights reserved.
  * Licensed under the Apache License Version 2.0 that can be found in the
  * LICENSE file in the root directory of this source tree.
-*/
+ */
 
-#[cfg(feature = "client")]
-pub(crate) mod client;
-#[cfg(any(feature = "client", feature = "server"))]
-pub mod element_data;
-#[cfg(feature = "server")]
-pub(crate) mod server;
+// @ts-ignore
+import { MainThreadServerContext } from '../../binary/server/server.js';
+export { MainThreadServerContext };

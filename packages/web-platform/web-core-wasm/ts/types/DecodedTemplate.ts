@@ -5,10 +5,12 @@
  */
 
 import type { PageConfig } from './PageConfig.js';
+import type { StyleSheetResource } from '../../binary/client/client.js';
 
 export interface DecodedTemplate {
   config?: PageConfig;
   lepusCode?: Record<string, string>;
   customSections?: Record<string, any>;
   backgroundCode?: Record<string, string>;
+  styleSheet?: StyleSheetResource;
 }

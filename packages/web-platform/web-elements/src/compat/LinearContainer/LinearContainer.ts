@@ -5,7 +5,6 @@ import {
   type AttributeReactiveClass,
   bindToAttribute,
 } from '../../element-reactive/index.js';
-import '../../../src/compat/LinearContainer/linear-compat.css';
 
 /** For @container
  * chrome 111, safari 18, firefox no

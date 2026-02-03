@@ -283,12 +283,16 @@ async function handleStream(
         const isLazy = config['isLazy'] === 'true';
         const blobMap: Record<string, string> = {};
         for (const [key, code] of Object.entries(codeMap)) {
-          const prefix =
-            `(function(){ "use strict"; const navigator=void 0,postMessage=void 0,window=void 0; ${
-              isLazy ? 'module.exports=' : ''
-            } `;
-          const suffix = ` \n })()\n//# sourceURL=${url}\n`;
-          const blob = new Blob([prefix, code as unknown as BlobPart, suffix], {
+          const blob = new Blob([
+            '//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0,window=void 0; ',
+            isLazy ? 'module.exports=' : '',
+            code as unknown as BlobPart,
+            ' \n })()\n//# sourceURL=',
+            url,
+            '/',
+            key,
+            '\n',
+          ], {
             type: 'text/javascript; charset=utf-8',
           });
           blobMap[key] = URL.createObjectURL(blob);
@@ -318,8 +322,13 @@ async function handleStream(
         const codeMap = decodeBinaryMap(content);
         const blobMap: Record<string, string> = {};
         for (const [key, code] of Object.entries(codeMap)) {
-          const suffix = `//# sourceURL=${url}/${key}`;
-          const blob = new Blob([code as unknown as BlobPart, suffix], {
+          const blob = new Blob([
+            code as unknown as BlobPart,
+            '//# sourceURL=',
+            url,
+            '/',
+            key,
+          ], {
             type: 'text/javascript; charset=utf-8',
           });
           blobMap[key] = URL.createObjectURL(blob);
