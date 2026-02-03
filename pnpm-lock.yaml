@@ -620,8 +620,8 @@ importers:
         specifier: ^13.1.0
         version: 13.1.0
       eventemitter3:
-        specifier: ^5.0.1
-        version: 5.0.1
+        specifier: ^5.0.4
+        version: 5.0.4
       exit-hook:
         specifier: ^4.0.0
         version: 4.0.0
@@ -949,8 +949,8 @@ importers:
   packages/rspeedy/websocket:
     dependencies:
       eventemitter3:
-        specifier: ^5.0.1
-        version: 5.0.1
+        specifier: ^5.0.4
+        version: 5.0.4
     devDependencies:
       '@microsoft/api-extractor':
         specifier: 'catalog:'
@@ -5925,8 +5925,8 @@ packages:
   eventemitter3@4.0.7:
     resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
 
-  eventemitter3@5.0.1:
-    resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
+  eventemitter3@5.0.4:
+    resolution: {integrity: sha512-mlsTRyGaPBjPedk6Bvw+aqbsXDtoAyAzm5MO7JgU+yVRyMQ5O8bD4Kcci7BS85f93veegeCPkL8R4GLClnjLFw==}
 
   events@3.3.0:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
@@ -15044,7 +15044,7 @@ snapshots:
 
   eventemitter3@4.0.7: {}
 
-  eventemitter3@5.0.1: {}
+  eventemitter3@5.0.4: {}
 
   events@3.3.0: {}
 
@@ -16369,7 +16369,7 @@ snapshots:
     dependencies:
       cli-truncate: 5.1.0
       colorette: 2.0.20
-      eventemitter3: 5.0.1
+      eventemitter3: 5.0.4
       log-update: 6.1.0
       rfdc: 1.4.1
       wrap-ansi: 9.0.0

@@ -69,7 +69,7 @@
     "@rollup/plugin-typescript": "^12.3.0",
     "chokidar": "^4.0.3",
     "commander": "^13.1.0",
-    "eventemitter3": "^5.0.1",
+    "eventemitter3": "^5.0.4",
     "exit-hook": "^4.0.0",
     "ipaddr.js": "^2.3.0",
     "javascript-stringify": "^2.1.0",
