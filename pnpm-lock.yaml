@@ -392,8 +392,8 @@ importers:
   packages/mcp-servers/devtool-mcp-server:
     dependencies:
       '@lynx-js/debug-router-connector':
-        specifier: 0.0.6
-        version: 0.0.6
+        specifier: 0.0.10
+        version: 0.0.10
     devDependencies:
       '@microsoft/api-extractor':
         specifier: ^7.55.2
@@ -3058,8 +3058,8 @@ packages:
   '@leichtgewicht/ip-codec@2.0.5':
     resolution: {integrity: sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw==}
 
-  '@lynx-js/debug-router-connector@0.0.6':
-    resolution: {integrity: sha512-ZJAFRfG/zzfAF7+GxtWuT/VTRNaTt0FDvlDiJJdHhHY44YenCvuPSuDnKnqO3U8TREtLrJVDBKgrAvTik6NgRA==}
+  '@lynx-js/debug-router-connector@0.0.10':
+    resolution: {integrity: sha512-ewthmoY90gX4CNDmx1g6Yd4u7+7lfvXePZSLEHQPsiKP7sWUKGi4H7ILBq8GGK/I8Zt34dtdjkngEP6A33B7OQ==}
 
   '@lynx-js/lynx-core@0.1.3':
     resolution: {integrity: sha512-uWzKKYJUK4Q09ZRZxWSAFINnmZb9piWPbvWF9SkLn+3snBl9u/BJa4ekPRcKWAhBmpbtxWH1x27fxe3Q3p5l3Q==}
@@ -11446,7 +11446,7 @@ snapshots:
 
   '@leichtgewicht/ip-codec@2.0.5': {}
 
-  '@lynx-js/debug-router-connector@0.0.6':
+  '@lynx-js/debug-router-connector@0.0.10':
     dependencies:
       '@aws-sdk/client-s3': 3.669.0
       '@devicefarmer/adbkit': 3.2.4
@@ -11456,7 +11456,6 @@ snapshots:
       chalk: 4.1.2
       debug: 4.3.4
       detect-port: 1.6.1
-      express: 5.2.1
       fs-extra: 11.3.3
       ip: 2.0.1
       plist: 3.0.6
