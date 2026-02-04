@@ -2629,7 +2629,11 @@ test.describe('web-elements test suite', () => {
         const title = getTitle(titlePath);
         await gotoWebComponentPage(page, title);
         const inputType = await page.locator('input').getAttribute('type');
-        expect(inputType).toBe('number');
+        expect(inputType).toBe('text');
+        const inputFilter = await page
+          .locator('x-input')
+          .getAttribute('input-filter');
+        expect(inputFilter).toBe('[^0-9.]|\\.(?=.*\\.)');
       },
     );
 
