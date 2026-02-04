@@ -2630,10 +2630,6 @@ test.describe('web-elements test suite', () => {
         await gotoWebComponentPage(page, title);
         const inputType = await page.locator('input').getAttribute('type');
         expect(inputType).toBe('text');
-        const inputFilter = await page
-          .locator('x-input')
-          .getAttribute('input-filter');
-        expect(inputFilter).toBe('[^0-9.]|\\.(?=.*\\.)');
       },
     );
 
@@ -2825,9 +2821,9 @@ test.describe('web-elements test suite', () => {
             return detail;
           });
         await page.mouse.click(100, 25);
-        await page.keyboard.type('2.');
+        await page.keyboard.type('1.2a');
         await wait(200);
-        expect((await confirmValue.jsonValue()).value).toBe('2.');
+        expect((await confirmValue.jsonValue()).value).toBe('1.2');
       },
     );
 

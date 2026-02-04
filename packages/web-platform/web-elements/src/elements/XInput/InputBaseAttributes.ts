@@ -11,7 +11,6 @@ import {
 } from '../../element-reactive/index.js';
 
 type InputType = 'text' | 'number' | 'digit' | 'password' | 'tel' | 'email';
-const numberInputFilter = '[^0-9.]|\\.(?=.*\\.)';
 /**
  * shared by x-input and x-input-ng
  */
@@ -27,7 +26,6 @@ export class InputBaseAttributes
     'spell-check',
   ];
   #dom: HTMLElement;
-  #numberInputFilterOverride: string | null | undefined;
 
   #getInputElement = genDomGetter(() => this.#dom.shadowRoot!, '#input');
 
@@ -64,7 +62,6 @@ export class InputBaseAttributes
   @registerAttributeHandler('type', true)
   _handleType(value: string | null) {
     const attributeValue = value as InputType;
-    const existingInputFilter = this.#dom.getAttribute('input-filter');
     // @see https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/inputmode
     let inputMode:
       | 'text'
@@ -82,32 +79,12 @@ export class InputBaseAttributes
       inputMode = 'numeric';
     } else if (attributeValue === 'number') {
       inputMode = 'decimal';
-      if (existingInputFilter !== numberInputFilter) {
-        if (this.#numberInputFilterOverride === undefined) {
-          this.#numberInputFilterOverride = existingInputFilter;
-        }
-        this.#dom.setAttribute('input-filter', numberInputFilter);
-      }
     } else if (attributeValue === 'email') {
       inputMode = 'email';
     } else if (attributeValue === 'tel') {
       inputMode = 'tel';
     } else {
       inputType = attributeValue;
-    }
-    if (
-      attributeValue !== 'number'
-      && this.#numberInputFilterOverride !== undefined
-    ) {
-      if (this.#numberInputFilterOverride === null) {
-        this.#dom.removeAttribute('input-filter');
-      } else {
-        this.#dom.setAttribute(
-          'input-filter',
-          this.#numberInputFilterOverride,
-        );
-      }
-      this.#numberInputFilterOverride = undefined;
     }
     this.#setInputmode(inputMode);
     this.#setType(inputType);
