@@ -371,7 +371,7 @@ importers:
   packages/lynx/benchx_cli:
     dependencies:
       zx:
-        specifier: ^8.8.4
+        specifier: ^8.8.5
         version: 8.8.5
 
   packages/lynx/gesture-runtime:
