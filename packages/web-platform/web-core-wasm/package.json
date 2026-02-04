@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-core-wasm",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "This is an internal experimental package, do not use",
   "repository": {
     "type": "git",
@@ -64,7 +64,7 @@
     "@lynx-js/lynx-core": "0.1.3",
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-eslint": "^1.2.0",
-    "@rsbuild/plugin-source-build": "^1.0.3",
+    "@rsbuild/plugin-source-build": "1.0.3",
     "binaryen": "^125.0.0",
     "eslint-plugin-compat": "^6.0.2",
     "fb-dotslash": "^0.5.8",

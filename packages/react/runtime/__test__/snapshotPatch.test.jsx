@@ -1609,13 +1609,14 @@ describe('lazy snapshot', () => {
     const si = new SnapshotInstance(uniqueId);
     expect(si.type).toBe('https://example.com/main.lynx.bundle:snapshot-1');
   });
-  it('standalone lazy bundle snapshotCreatorMap set should not generate DEV_ONLY_AddSnapshot', () => {
+  it('standalone lazy bundle snapshotCreatorMap set should not generate DEV_ONLY_AddSnapshot and DEV_ONLY_SetSnapshotEntryName', () => {
     initGlobalSnapshotPatch();
     expect(__globalSnapshotPatch).toMatchInlineSnapshot(`[]`);
 
     const globDynamicComponentEntry = 'https://example.com/main.lynx.bundle';
+    const uniqID = `${globDynamicComponentEntry}:${'__snapshot_835da_eff1e_1'}`;
 
-    snapshotCreatorMap[`${globDynamicComponentEntry}:${'__snapshot_835da_eff1e_1'}`] = (uniqID) => {
+    snapshotCreatorMap[uniqID] = (uniqID) => {
       globalThis.createSnapshot(
         uniqID,
         /* v8 ignore start */
@@ -1634,6 +1635,10 @@ describe('lazy snapshot', () => {
       );
     };
 
+    expect(__globalSnapshotPatch.length).toBe(0);
+
+    vi.stubGlobal('__JS__', true);
+    snapshotCreatorMap[uniqID](uniqID);
     expect(__globalSnapshotPatch.length).toBe(0);
 
     deinitGlobalSnapshotPatch();

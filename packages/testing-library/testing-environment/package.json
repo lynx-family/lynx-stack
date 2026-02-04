@@ -55,6 +55,6 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
     "@types/jsdom": "^21.1.7",
-    "rsbuild-plugin-publint": "0.3.3"
+    "rsbuild-plugin-publint": "0.3.4"
   }
 }

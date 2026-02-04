@@ -1,6 +1,6 @@
 {
   "name": "upgrade-rspeedy",
-  "version": "0.13.2",
+  "version": "0.13.3",
   "description": "Upgrade Rspeedy-related packages",
   "keywords": [
     "webpack",
@@ -41,15 +41,15 @@
     "@lynx-js/types": "3.6.0",
     "@lynx-js/web-core": "workspace:*",
     "@lynx-js/web-elements": "workspace:*",
-    "@rsbuild/plugin-less": "1.5.0",
-    "@rsbuild/plugin-sass": "1.4.0",
+    "@rsbuild/plugin-less": "1.6.0",
+    "@rsbuild/plugin-sass": "1.5.0",
     "commander": "^13.1.0",
     "detect-indent": "^7.0.2",
     "memfs": "^4.51.1",
     "picocolors": "^1.1.1",
     "rsbuild-plugin-tailwindcss": "0.2.3",
     "rslog": "^1.2.11",
-    "type-fest": "^5.0.1"
+    "type-fest": "^5.4.3"
   },
   "engines": {
     "node": ">=18"

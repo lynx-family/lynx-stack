@@ -238,7 +238,11 @@ export function createSnapshot(
   }
   // For Lazy Bundle, their entryName is not DEFAULT_ENTRY_NAME.
   // We need to set the entryName correctly for HMR
-  if (__DEV__ && __JS__ && __globalSnapshotPatch && entryName && entryName !== DEFAULT_ENTRY_NAME) {
+  if (
+    __DEV__ && __JS__ && __globalSnapshotPatch && entryName && entryName !== DEFAULT_ENTRY_NAME
+    // `uniqID` will be `https://example.com/main.lynx.bundle:__snapshot_835da_eff1e_1` when loading a standalone lazy bundle after hydration.
+    && !uniqID.includes(':')
+  ) {
     __globalSnapshotPatch.push(
       SnapshotOperation.DEV_ONLY_SetSnapshotEntryName,
       uniqID,

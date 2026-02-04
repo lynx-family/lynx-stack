@@ -5,6 +5,7 @@ import { options } from 'preact';
 // to make sure preact's hooks to register earlier than ours
 import './hooks/react.js';
 
+import { initElementPAPICallAlog } from './alog/elementPAPICall.js';
 import { initAlog } from './alog/index.js';
 import { setupComponentStack } from './debug/component-stack.js';
 import { initProfileHook } from './debug/profile.js';
@@ -51,6 +52,9 @@ if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__ && typeof __PROFIL
 if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
   // We are logging both main-thread and background.
   initAlog();
+}
+if (typeof __ALOG_ELEMENT_API__ !== 'undefined' && __ALOG_ELEMENT_API__) {
+  initElementPAPICallAlog();
 }
 
 if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {

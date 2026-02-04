@@ -94,9 +94,7 @@ export const templateXImage = (attributes: { src?: string }) => {
       'detected <script, this is a potential XSS attack, please check your src',
     );
   }
-  return `<img part="img" alt="" loading="lazy" id="img" ${
-    src ? `src="${src}"` : ''
-  }/> `;
+  return `<img part="img" alt="" id="img" ${src ? `src="${src}"` : ''}/> `;
 };
 
 export const templateFilterImage = templateXImage;

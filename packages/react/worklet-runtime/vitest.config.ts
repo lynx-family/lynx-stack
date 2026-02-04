@@ -15,6 +15,7 @@ const config: ViteUserConfig = defineConfig({
         'src/api/lepusQuerySelector.ts',
         'src/api/lynxApi.ts',
         'src/bindings/**',
+        'src/global.ts',
         'src/index.ts',
         'src/listeners.ts',
         'src/types/**',

@@ -3,6 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 import { Animation } from './animation/animation.js';
 import { KeyframeEffect } from './animation/effect.js';
+import {
+  mainThreadFlushLoopMark,
+  mainThreadFlushLoopOnFlushMicrotask,
+  mainThreadFlushLoopReport,
+} from '../utils/mainThreadFlushLoopGuard.js';
 import { isSdkVersionGt } from '../utils/version.js';
 
 let willFlush = false;
@@ -28,16 +33,30 @@ export class Element {
   }
 
   public setAttribute(name: string, value: unknown): void {
+    /* v8 ignore next 3 */
+    if (__DEV__) {
+      mainThreadFlushLoopMark(`element:setAttribute ${name}`);
+    }
     __SetAttribute(this.element, name, value);
     this.flushElementTree();
   }
 
   public setStyleProperty(name: string, value: string): void {
+    /* v8 ignore next 3 */
+    if (__DEV__) {
+      mainThreadFlushLoopMark(`element:setStyleProperty ${name}`);
+    }
     __AddInlineStyle(this.element, name, value);
     this.flushElementTree();
   }
 
   public setStyleProperties(styles: Record<string, string>): void {
+    /* v8 ignore next 5 */
+    if (__DEV__) {
+      mainThreadFlushLoopMark(
+        `element:setStyleProperties keys=${Object.keys(styles).length}`,
+      );
+    }
     for (const key in styles) {
       __AddInlineStyle(this.element, key, styles[key]!);
     }
@@ -88,6 +107,10 @@ export class Element {
     methodName: string,
     params?: Record<string, unknown>,
   ): Promise<unknown> {
+    /* v8 ignore next 3 */
+    if (__DEV__) {
+      mainThreadFlushLoopMark(`element:invoke ${methodName}`);
+    }
     return new Promise((resolve, reject) => {
       __InvokeUIMethod(
         this.element,
@@ -112,6 +135,17 @@ export class Element {
     willFlush = true;
     void Promise.resolve().then(() => {
       willFlush = false;
+      if (__DEV__) {
+        mainThreadFlushLoopMark('render');
+        const error = mainThreadFlushLoopOnFlushMicrotask();
+        if (error) {
+          // Stop scheduling further flushes so we can surface the error.
+          // This is DEV-only behavior guarded internally by the dev guard.
+          shouldFlush = false;
+          mainThreadFlushLoopReport(error);
+          return;
+        }
+      }
       __FlushElementTree();
     });
   }

@@ -983,7 +983,6 @@ describe('dynamic import', () => {
     const result = await transformReactLynx(
       `\
 (async function () {
-  await import();
   await import(0);
   await import(0, 0);
   await import("./index.js", { with: { typo: "component" } });
@@ -1013,7 +1012,6 @@ describe('dynamic import', () => {
       "import "@lynx-js/react/experimental/lazy/import";
       import { __dynamicImport } from "@lynx-js/react/internal";
       (async function() {
-          await import();
           await import(0);
           await import(0, 0);
           await import("./index.js", {
@@ -1040,31 +1038,24 @@ describe('dynamic import', () => {
     expect(await formatMessages(result.errors, { kind: 'error', color: false }))
       .toMatchInlineSnapshot(`
         [
-          "${errorIcon} [ERROR] \`import()\` with no argument is not allowed
-
-            :2:8:
-              2 │   await import();
-                ╵         ~~~~~~~~
-
-        ",
           "${errorIcon} [ERROR] \`import(...)\` call with non-string literal module id is not allowed
 
-            :3:8:
-              3 │   await import(0);
+            :2:8:
+              2 │   await import(0);
                 ╵         ~~~~~~~~~
 
         ",
           "${errorIcon} [ERROR] \`import(...)\` call with non-string literal module id is not allowed
 
-            :4:8:
-              4 │   await import(0, 0);
+            :3:8:
+              3 │   await import(0, 0);
                 ╵         ~~~~~~~~~~~~
 
         ",
           "${errorIcon} [ERROR] \`import("...", ...)\` with invalid options is not allowed
 
-            :5:8:
-              5 │   await import("./index.js", { with: { typo: "component" } });
+            :4:8:
+              4 │   await import("./index.js", { with: { typo: "component" } });
                 ╵         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         ",

@@ -1711,6 +1711,18 @@ test.describe('web-elements test suite', () => {
       // Verify that the referrerpolicy attribute is set to 'no-referrer' on the internal img element
       expect(referrerpolicyValue).toBe('no-referrer');
     });
+    test('should not have loading attribute by default', async ({ page }) => {
+      const title = 'x-image/basic';
+      await gotoWebComponentPage(page, title);
+
+      const loadingValue = await page.evaluate(() => {
+        const xImage = document.querySelector('x-image');
+        const img = xImage?.shadowRoot?.querySelector('#img');
+        return img?.getAttribute('loading');
+      });
+
+      expect(loadingValue).toBeNull();
+    });
   });
 
   test.describe('x-list', () => {
@@ -2141,11 +2153,19 @@ test.describe('web-elements test suite', () => {
             return (document.querySelector('x-list') as any)
               ?.getScrollContainerInfo();
           })).jsonValue();
+        const scrollHeight1 = await page.evaluate(() => {
+          return (document.querySelector('x-list') as any)?.scrollHeight;
+        });
+        const scrollWidth1 = await page.evaluate(() => {
+          return (document.querySelector('x-list') as any)?.scrollWidth;
+        });
         expect(
           typeof info1 === 'object' && info1.scrollLeft === 0
             && info1.scrollTop === 0 && info1.scrollHeight !== 0
             && info1.scrollWidth !== 0,
         ).toBeTruthy();
+        expect(scrollHeight1).toBe(info1.scrollHeight);
+        expect(scrollWidth1).toBe(info1.scrollWidth);
         await page.evaluate(() =>
           document.querySelector('x-list')?.shadowRoot?.querySelector(
             '#content',
@@ -2157,11 +2177,19 @@ test.describe('web-elements test suite', () => {
             return (document.querySelector('x-list') as any)
               ?.getScrollContainerInfo();
           })).jsonValue();
+        const scrollHeight2 = await page.evaluate(() => {
+          return (document.querySelector('x-list') as any)?.scrollHeight;
+        });
+        const scrollWidth2 = await page.evaluate(() => {
+          return (document.querySelector('x-list') as any)?.scrollWidth;
+        });
         expect(
           typeof info2 === 'object' && info2.scrollLeft === 200
             && info2.scrollTop === 200 && info2.scrollHeight !== 0
             && info2.scrollWidth !== 0,
         ).toBeTruthy();
+        expect(scrollHeight2).toBe(info2.scrollHeight);
+        expect(scrollWidth2).toBe(info2.scrollWidth);
       },
     );
 
