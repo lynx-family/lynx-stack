@@ -79,6 +79,7 @@ export class InputBaseAttributes
       inputMode = 'numeric';
     } else if (attributeValue === 'number') {
       inputMode = 'decimal';
+      inputType = 'number';
     } else if (attributeValue === 'email') {
       inputMode = 'email';
     } else if (attributeValue === 'tel') {

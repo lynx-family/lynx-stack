@@ -2624,6 +2624,16 @@ test.describe('web-elements test suite', () => {
     );
 
     test(
+      'attribute-type-number-inner-input-type',
+      async ({ page }, { titlePath }) => {
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        const inputType = await page.locator('input').getAttribute('type');
+        expect(inputType).toBe('number');
+      },
+    );
+
+    test(
       'attribute-type-tel',
       async ({ page }, { titlePath, title: simpleTitle }) => {
         const title = getTitle(titlePath);
