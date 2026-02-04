@@ -363,7 +363,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
         }
       return result
     } catch (error) {
-      reject(new Error('Failed to load script ' + sectionPath + ' in ' + response.url + ': ' + error.message, { cause: error }))
+      throw new Error('Failed to load script ' + sectionPath + ' in ' + response.url + ': ' + error.message, { cause: error })
     }
   } else {
     throw new Error('Failed to fetch external source ' + response.url + ' . The response is ' + JSON.stringify(response), { cause: response })
