@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-export const templateScrollView = `<style>
+export const templateScrollView = /*#__PURE__*/ `<style>
   .placeholder-dom {
     display: none;
     flex: 0 0 0;
@@ -85,8 +85,8 @@ export const templateScrollView = `<style>
     id="bot-fade-mask"
     part="bot-fade-mask"
   ></div>`;
-export const templateXAudioTT = `<audio id="audio"></audio>`;
-const XSSDetector = /<\s*script/g;
+export const templateXAudioTT = /*#__PURE__*/ `<audio id="audio"></audio>`;
+const XSSDetector = /*#__PURE__*/ /<\s*script/g;
 export const templateXImage = (attributes: { src?: string }) => {
   const { src } = attributes;
   if (src && XSSDetector.test(src)) {
@@ -97,9 +97,9 @@ export const templateXImage = (attributes: { src?: string }) => {
   return `<img part="img" alt="" id="img" ${src ? `src="${src}"` : ''}/> `;
 };
 
-export const templateFilterImage = templateXImage;
+export const templateFilterImage = /*#__PURE__*/ templateXImage;
 
-export const templateXInput = `<style>
+export const templateXInput = /*#__PURE__*/ `<style>
   #input:focus {
     outline: none;
   }
@@ -117,7 +117,7 @@ export const templateXInput = `<style>
     spell-check="true"
   />
 </form>`;
-export const templateXList = `<style>
+export const templateXList = /*#__PURE__*/ `<style>
   .placeholder-dom {
     display: none;
     flex: 0 0 0;
@@ -155,7 +155,7 @@ export const templateXList = `<style>
   </div>
 </div>`;
 
-export const templateXOverlayNg = `<style>
+export const templateXOverlayNg = /*#__PURE__*/ `<style>
   #dialog[open] {
     top: 0;
     left: 0;
@@ -193,7 +193,7 @@ export const templateXOverlayNg = `<style>
   <div class="overlay-placeholder"></div>
 </dialog>`;
 
-export const templateXRefreshView = `<style>
+export const templateXRefreshView = /*#__PURE__*/ `<style>
   .bounce-container {
     overflow: scroll;
     overscroll-behavior: contain;
@@ -244,7 +244,7 @@ export const templateXRefreshView = `<style>
   The animation name should be defined in the template
   This is a workaround for safari
 */
-export const templateXSwiper = `<style>
+export const templateXSwiper = /*#__PURE__*/ `<style>
   #bounce-padding {
     display: none;
     flex: 0 0 0;
@@ -296,12 +296,69 @@ export const templateXSwiper = `<style>
   <slot part="slot-end" name="circular-end" id="circular-end"></slot>
 </div>`;
 
-export const templateXText =
+export const templateXText = /*#__PURE__*/
   `<div id="inner-box" part="inner-box"><slot part="slot"></slot><slot name="inline-truncation"></slot></div>`;
 
-export const templateInlineImage = templateXImage;
+export const templateXMarkdown = /*#__PURE__*/ `<style>
+  :host {
+    display: block;
+  }
+  .markdown-body {
+    display: block;
+    line-height: 1.4;
+    color: inherit;
+    word-break: break-word;
+  }
+  .markdown-body p {
+    margin: 0 0 0.75em 0;
+  }
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3,
+  .markdown-body h4,
+  .markdown-body h5,
+  .markdown-body h6 {
+    margin: 0.8em 0 0.4em 0;
+  }
+  .markdown-body ul,
+  .markdown-body ol {
+    margin: 0 0 0.75em 1.5em;
+  }
+  .markdown-body pre {
+    margin: 0 0 0.75em 0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: #f6f8fa;
+    overflow: auto;
+  }
+  .markdown-body code {
+    font-family: ui-monospace, SFMono-Regular, SFMono, Menlo, Consolas,
+      "Liberation Mono", monospace;
+  }
+  .markdown-body img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+  .markdown-body .md-image-figure {
+    margin: 0 0 0.75em 0;
+  }
+  .markdown-body .md-image-caption {
+    margin-top: 4px;
+    color: #666;
+    font-size: 0.875em;
+  }
+  .markdown-body a {
+    color: #0366d6;
+    text-decoration: underline;
+  }
+</style>
+<style id="markdown-style"></style>
+<div id="markdown-root" part="root" class="markdown-body"></div>`;
 
-export const templateXTextarea = `<style>
+export const templateInlineImage = /*#__PURE__*/ templateXImage;
+
+export const templateXTextarea = /*#__PURE__*/ `<style>
   #textarea:focus,
   #textarea:focus-visible {
     border: inherit;
@@ -312,7 +369,7 @@ export const templateXTextarea = `<style>
   <textarea id="textarea" part="textarea"></textarea>
 </form>`;
 
-export const templateXViewpageNg = `<style>
+export const templateXViewpageNg = /*#__PURE__*/ `<style>
   #bounce-padding {
     display: none;
     flex: 0 0 0;
@@ -340,7 +397,7 @@ export const templateXViewpageNg = `<style>
   <slot></slot>
 </div>`;
 
-export const templateXWebView = `<style>
+export const templateXWebView = /*#__PURE__*/ `<style>
   iframe {
     width: 100%;
     height: 100%;
@@ -349,6 +406,6 @@ export const templateXWebView = `<style>
 </style>
 <iframe id="webview" part="webview"></iframe>`;
 
-export const templateXSvg = () => {
+export const templateXSvg = /*#__PURE__*/ () => {
   return `<img part="img" alt="" loading="lazy" id="img" /> `;
 };
