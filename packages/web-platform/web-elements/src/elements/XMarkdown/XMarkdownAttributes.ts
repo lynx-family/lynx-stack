@@ -21,7 +21,6 @@ const DOMPurifyCtor =
 let markdownParser: MarkdownIt | null = null;
 let markdownParserError: unknown;
 let htmlSanitizer: ReturnType<typeof DOMPurifyCtor> | null = null;
-let htmlSanitizerError: unknown;
 const getMarkdownParser = () => {
   if (markdownParser || markdownParserError) return markdownParser;
   try {
@@ -36,12 +35,8 @@ const getMarkdownParser = () => {
 };
 
 const getHtmlSanitizer = () => {
-  if (htmlSanitizer || htmlSanitizerError) return htmlSanitizer;
-  try {
-    htmlSanitizer = DOMPurifyCtor(window);
-  } catch (error) {
-    htmlSanitizerError = error;
-  }
+  if (htmlSanitizer) return htmlSanitizer;
+  htmlSanitizer = DOMPurifyCtor(window)!;
   return htmlSanitizer;
 };
 
