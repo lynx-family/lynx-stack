@@ -136,7 +136,7 @@ impl StmtGen {
     }
 
     let worklet_props = extracted_this_expr.expect_object().props;
-    if target == TransformTarget::JS && !worklet_props.is_empty() {
+    if !worklet_props.is_empty() {
       props.push(
         SpreadElement {
           dot3_token: DUMMY_SP,
