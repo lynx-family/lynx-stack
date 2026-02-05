@@ -6,9 +6,6 @@ test('executeTemplate should run lepusCode.root from dist artifact', async () =>
   const distDir = path.join(__dirname, '../dist');
   // Using api-globalThis.web.bundle as example
   const bundlePath = path.join(distDir, 'api-globalThis.web.bundle');
-
-  console.log(`Executing template: ${bundlePath}`);
-
   const context = await executeTemplate(bundlePath);
 
   expect(context).toBeDefined();

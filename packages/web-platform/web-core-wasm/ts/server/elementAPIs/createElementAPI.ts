@@ -35,31 +35,31 @@ const __GetElementUniqueID = (element: unknown) => {
 };
 
 // Throwing/Stub Implementations
-const __GetID = (element: unknown) => {
+const __GetID = (_element: unknown) => {
   throw new Error('__GetID is not implemented in SSR');
 };
 
-const __GetTag = (element: unknown) => {
+const __GetTag = (_element: unknown) => {
   throw new Error('__GetTag is not implemented in SSR');
 };
 
-const __GetAttributes = (element: unknown) => {
+const __GetAttributes = (_element: unknown) => {
   throw new Error('__GetAttributes is not implemented in SSR');
 };
 
-const __GetAttributeByName = (element: unknown, name: string) => {
+const __GetAttributeByName = (_element: unknown, _name: string) => {
   throw new Error('__GetAttributeByName is not implemented in SSR');
 };
 
-const __GetClasses = (element: unknown) => {
+const __GetClasses = (_element: unknown) => {
   throw new Error('__GetClasses is not implemented in SSR');
 };
 
-const __GetParent = (element: unknown) => {
+const __GetParent = (_element: unknown) => {
   throw new Error('__GetParent is not implemented in SSR');
 };
 
-const __GetChildren = (element: unknown) => {
+const __GetChildren = (_element: unknown) => {
   throw new Error('__GetChildren is not implemented in SSR');
 };
 
@@ -99,7 +99,7 @@ const __GetComponentID = () => {
   throw new Error('__GetComponentID is not implemented in SSR');
 };
 
-const __GetDataset = (element: unknown) => {
+const __GetDataset = (_element: unknown) => {
   throw new Error('__GetDataset is not implemented in SSR');
 };
 
@@ -114,19 +114,19 @@ const __AddDataset = (_element: unknown, _key: string, _value: Cloneable) => {
   throw new Error('__AddDataset is not implemented in SSR');
 };
 
-const __GetDataByKey = (element: unknown, key: string) => {
+const __GetDataByKey = (_element: unknown, _key: string) => {
   throw new Error('__GetDataByKey is not implemented in SSR');
 };
 
-const __FirstElement = (element: unknown) => {
+const __FirstElement = (_element: unknown) => {
   throw new Error('__FirstElement is not implemented in SSR');
 };
 
-const __LastElement = (element: unknown) => {
+const __LastElement = (_element: unknown) => {
   throw new Error('__LastElement is not implemented in SSR');
 };
 
-const __NextElement = (element: unknown) => {
+const __NextElement = (_element: unknown) => {
   throw new Error('__NextElement is not implemented in SSR');
 };
 

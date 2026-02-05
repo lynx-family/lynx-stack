@@ -90,6 +90,11 @@ export function decodeTemplate(buffer: Uint8Array): DecodedTemplate {
         customSections = content;
         break;
       }
+      case TemplateSectionLabel.Manifest:
+      case TemplateSectionLabel.ElementTemplates: {
+        // Ignore these sections for now
+        break;
+      }
       default:
         // Ignore unknown sections or throw? Worker throws.
         throw new Error(`Unknown section label: ${label}`);
