@@ -12,7 +12,7 @@ import { NEXT_STATE } from '../renderToOpcodes/constants.js';
 
 if (__JS__) {
   function reportRefDeprecationError(fnName: string, newFnName: string) {
-    if (!__DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__) {
+    if (__DEV__ && !__DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__) {
       lynx.reportError(
         new Error(
           `${fnName} is deprecated and has different behavior in ReactLynx 3.0, please use ref or ${newFnName} instead.`,
