@@ -6,3 +6,5 @@
 
 export * from './wasm.js';
 export * from './elementAPIs/createElementAPI.js';
+export * from './deploy.js';
+export * from './decode.js';

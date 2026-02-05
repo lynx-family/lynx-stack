@@ -11,6 +11,7 @@ export const decode_style_info: (a: any, b: number, c: number, d: number) => [nu
 export const encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number) => [number, number, number];
 export const get_font_face_content: (a: any) => [number, number, number, number];
 export const get_style_content: (a: any) => [number, number, number, number];
+export const mainthreadservercontext_add_class: (a: number, b: number, c: number, d: number) => void;
 export const mainthreadservercontext_append_child: (a: number, b: number, c: number) => void;
 export const mainthreadservercontext_create_element: (a: number, b: number, c: number) => number;
 export const mainthreadservercontext_generate_html_segment: (a: number, b: number) => [number, number];

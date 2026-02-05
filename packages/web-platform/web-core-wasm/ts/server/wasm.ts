@@ -4,6 +4,4 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// @ts-ignore
-import { MainThreadServerContext } from '../../binary/server/server.js';
-export { MainThreadServerContext };
+export * from '../../binary/server/server.js';

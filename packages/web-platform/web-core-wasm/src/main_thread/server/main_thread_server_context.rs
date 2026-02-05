@@ -101,6 +101,19 @@ impl MainThreadServerContext {
     self.render_element(element_id, &mut buffer);
     buffer
   }
+
+  pub fn add_class(&mut self, element_id: usize, class_name: String) {
+    if let Some(Some(element)) = self.elements.get_mut(element_id) {
+      let classes_attr = element.attributes.entry("class".to_string()).or_default();
+      let exists = classes_attr.split_whitespace().any(|c| c == class_name);
+      if !exists {
+        if !classes_attr.is_empty() {
+          classes_attr.push(' ');
+        }
+        classes_attr.push_str(&class_name);
+      }
+    }
+  }
 }
 
 impl MainThreadServerContext {

@@ -112,6 +112,11 @@ This package uses a hybrid build system involving `pnpm`, `rsbuild`, and `cargo`
 - **`tests/encode.spec.ts`**: Verifies that the CSS encoder correctly serializes various CSS rules.
 - **`tests/lazy-load.spec.ts`**: Ensures that custom elements are loaded dynamically only when needed.
 - **Rust Tests**: run `cargo test --all-features` and `cargo test --target wasm32-unknown-unknown --all-features` separately.
+- **Server E2E Tests (`packages/web-platform/web-core-wasm-e2e`)**:
+  - Located in `packages/web-platform/web-core-wasm-e2e`.
+  - Uses `vitest` to run tests against the **built artifacts** (e.g., `dist/api-globalThis.web.bundle`).
+  - Verifies server-side execution of templates using `executeTemplate` and isolated VM contexts.
+  - Run with `pnpm test` inside the `web-core-wasm-e2e` directory.
 
 ## Guidelines for LLMs
 

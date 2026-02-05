@@ -4,6 +4,7 @@
 export class MainThreadServerContext {
     free(): void;
     [Symbol.dispose](): void;
+    add_class(element_id: number, class_name: string): void;
     append_child(parent_id: number, child_id: number): void;
     create_element(tag_name: string): number;
     generate_html_segment(element_id: number): string;

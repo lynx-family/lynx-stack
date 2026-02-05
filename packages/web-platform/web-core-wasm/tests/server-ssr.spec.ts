@@ -6,11 +6,11 @@
 
 import { describe, it, expect } from 'vitest';
 import { createElementAPI } from '../ts/server/index.js';
-import { MainThreadServerContext } from '../ts/server/wasm.js';
+import { MainThreadServerContext, SSRBinding } from '../ts/server/wasm.js';
 
 describe('Server SSR', () => {
   it('should generate html correctly', () => {
-    const binding: any = {};
+    const binding: SSRBinding = {};
     const api = createElementAPI(binding);
     const wasmCtx = binding.wasmContext as MainThreadServerContext;
 

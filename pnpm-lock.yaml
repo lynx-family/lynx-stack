@@ -1222,6 +1222,9 @@ importers:
       nyc:
         specifier: ^17.1.0
         version: 17.1.0
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.9)(@vitest/ui@3.2.4)(jsdom@27.4.0)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)
 
   packages/web-platform/web-elements:
     devDependencies:

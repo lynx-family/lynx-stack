@@ -60,7 +60,6 @@ impl MainThreadWasmContext {
     }
   }
 
-  #[wasm_bindgen]
   pub fn push_style_sheet(
     &mut self,
     style_info: &StyleSheetResource,
@@ -69,12 +68,10 @@ impl MainThreadWasmContext {
     self.style_manager.push_style_sheet(style_info, entry_name)
   }
 
-  #[wasm_bindgen]
   pub fn set_page_element_unique_id(&mut self, unique_id: usize) {
     self.page_element_unique_id = Some(unique_id);
   }
 
-  #[wasm_bindgen]
   pub fn create_element_common(
     self: &mut MainThreadWasmContext,
     parent_component_unique_id: usize,
@@ -116,17 +113,14 @@ impl MainThreadWasmContext {
     unique_id
   }
 
-  #[wasm_bindgen]
   pub fn get_dom_by_unique_id(&self, unique_id: usize) -> Option<web_sys::HtmlElement> {
     self.unique_id_to_dom_map.get(&unique_id).cloned()
   }
 
-  #[wasm_bindgen]
   pub fn take_timing_flags(&mut self) -> Vec<String> {
     std::mem::take(&mut self.timing_flags)
   }
 
-  #[wasm_bindgen]
   pub fn get_unique_id_by_component_id(&self, component_id: &str) -> Option<usize> {
     for (unique_id, element_data_option) in self.unique_id_to_element_map.iter().enumerate() {
       if let Some(element_data_cell) = element_data_option {
@@ -141,7 +135,6 @@ impl MainThreadWasmContext {
     None
   }
 
-  #[wasm_bindgen]
   pub fn get_css_id_by_unique_id(&self, unique_id: usize) -> Option<i32> {
     self
       .unique_id_to_element_map
@@ -150,7 +143,6 @@ impl MainThreadWasmContext {
       .map(|element_data_cell| element_data_cell.borrow().css_id)
   }
 
-  // #[wasm_bindgen]
   // pub fn gc(&mut self) {
   //   self.unique_id_to_element_map.retain(|_, value| {
   //     let dom = value.get_dom();
