@@ -135,18 +135,15 @@ impl VisitMut for WorkletVisitor {
           getter_fn.is_generator = false;
           getter_fn.type_params = None;
           getter_fn.return_type = None;
-          getter_fn.body = Some(
-            BlockStmt {
-              ctxt: Default::default(),
+          getter_fn.body = Some(BlockStmt {
+            ctxt: Default::default(),
+            span: DUMMY_SP,
+            stmts: vec![ReturnStmt {
               span: DUMMY_SP,
-              stmts: vec![ReturnStmt {
-                span: DUMMY_SP,
-                arg: Some(worklet_object_expr),
-              }
-              .into()],
+              arg: Some(worklet_object_expr),
             }
-            .into(),
-          );
+            .into()],
+          });
 
           *n = ClassMethod {
             span: m.span,
@@ -253,18 +250,15 @@ impl VisitMut for WorkletVisitor {
             span: DUMMY_SP,
             params: vec![],
             decorators: vec![],
-            body: Some(
-              BlockStmt {
-                ctxt: Default::default(),
+            body: Some(BlockStmt {
+              ctxt: Default::default(),
+              span: DUMMY_SP,
+              stmts: vec![ReturnStmt {
                 span: DUMMY_SP,
-                stmts: vec![ReturnStmt {
-                  span: DUMMY_SP,
-                  arg: Some(worklet_object_expr),
-                }
-                .into()],
+                arg: Some(worklet_object_expr),
               }
-              .into(),
-            ),
+              .into()],
+            }),
             is_generator: false,
             is_async: false,
             type_params: None,
