@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
-    "@lynx-js/tasm": "0.0.20"
+    "@lynx-js/tasm": "0.0.23"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
