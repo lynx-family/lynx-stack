@@ -1,6 +1,6 @@
 {
   "name": "create-rspeedy",
-  "version": "0.13.3",
+  "version": "0.13.4",
   "description": "Create Rspeedy-powered ReactLynx apps with one command",
   "keywords": [
     "webpack",
