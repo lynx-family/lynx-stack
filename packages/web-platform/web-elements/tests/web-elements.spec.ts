@@ -2954,6 +2954,14 @@ test.describe('web-elements test suite', () => {
       },
     );
     test(
+      'style-inherit-padding',
+      async ({ page }, { titlePath }) => {
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'initial');
+      },
+    );
+    test(
       'style-inherit-color',
       async ({ page }, { titlePath }) => {
         const title = getTitle(titlePath);
