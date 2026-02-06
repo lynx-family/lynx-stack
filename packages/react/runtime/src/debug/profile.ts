@@ -22,24 +22,41 @@ import {
 } from '../renderToOpcodes/constants.js';
 import { getDisplayName, hook } from '../utils.js';
 
+const format = (val: unknown) => {
+  if (typeof val === 'function') {
+    return val.toString();
+  }
+  return val;
+};
+
+const safeJsonStringify = (val: unknown) => {
+  try {
+    return JSON.stringify(val);
+  } catch {
+    return '"Unserializable"';
+  }
+};
+
 function buildSetStateProfileMarkArgs(
-  currentState: Record<string, unknown>,
-  nextState: Record<string, unknown>,
+  currentState: unknown,
+  nextState: unknown,
 ): Record<string, string> {
   const EMPTY_OBJ = {};
 
-  currentState ??= EMPTY_OBJ;
-  nextState ??= EMPTY_OBJ;
+  const currentStateObj = (currentState ?? EMPTY_OBJ) as Record<string, unknown>;
+  const nextStateObj = (nextState ?? EMPTY_OBJ) as Record<string, unknown>;
 
   return {
-    'current state keys': JSON.stringify(Object.keys(currentState)),
-    'next state keys': JSON.stringify(Object.keys(nextState)),
+    'current state keys': JSON.stringify(Object.keys(currentStateObj)),
+    'next state keys': JSON.stringify(Object.keys(nextStateObj)),
     'changed (shallow diff) state keys': JSON.stringify(
       // the setState is in assign manner, we assume nextState is a superset of currentState
-      Object.keys(nextState).filter(
-        key => currentState[key] !== nextState[key],
+      Object.keys(nextStateObj).filter(
+        key => currentStateObj[key] !== nextStateObj[key],
       ),
     ),
+    currentValue: safeJsonStringify(format(currentState)),
+    nextValue: safeJsonStringify(format(nextState)),
   };
 }
 
@@ -87,8 +104,8 @@ export function initProfileHook(): void {
               profileMark('ReactLynx::setState', {
                 flowId: this[sFlowID] ??= profileFlowId(),
                 args: buildSetStateProfileMarkArgs(
-                  this.state as Record<string, unknown>,
-                  this[NEXT_STATE] as Record<string, unknown>,
+                  this.state,
+                  this[NEXT_STATE],
                 ),
               });
             } else {}
@@ -148,21 +165,6 @@ export function initProfileHook(): void {
                       return;
                     }
 
-                    const format = (val: unknown) => {
-                      if (typeof val === 'function') {
-                        return val.toString();
-                      }
-                      return val;
-                    };
-
-                    const safeJsonStringify = (val: unknown) => {
-                      try {
-                        return JSON.stringify(val);
-                      } catch {
-                        return '"Unserializable"';
-                      }
-                    };
-
                     const type = component.__v?.type;
                     const flowId = component[sFlowID] ??= profileFlowId();
 
@@ -173,11 +175,9 @@ export function initProfileHook(): void {
                           ? getDisplayName(type as ComponentClass)
                           : 'Unknown',
                         hookIdx: String(hookIdx),
-                        currentValue: safeJsonStringify(format(currentValue)),
-                        nextValue: safeJsonStringify(format(nextValue)),
                         ...buildSetStateProfileMarkArgs(
-                          currentValue as Record<string, unknown>,
-                          nextValue as Record<string, unknown>,
+                          currentValue,
+                          nextValue,
                         ),
                       },
                     });
