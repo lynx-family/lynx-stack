@@ -1,0 +1,16 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./lib",
+    "declaration": true,
+    "sourceMap": true,
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "target": "ES2022",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [],
+}
