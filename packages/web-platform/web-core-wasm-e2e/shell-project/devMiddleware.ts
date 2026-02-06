@@ -13,54 +13,78 @@ import type { IncomingMessage, ServerResponse } from 'http';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export function setupSSRMiddleware(api: any) {
-  api.use(
-    async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
-      const url = new URL(req.url ?? '', `http://${req.headers.host}`);
-      if (url.pathname === '/ssr') {
-        const bundlePathQuery = url.searchParams.get('bundle');
-        if (!bundlePathQuery) {
-          res.end('Missing bundle query param');
-          return;
+export async function ssrMiddleware(
+  req: IncomingMessage,
+  res: ServerResponse,
+  next: () => void,
+) {
+  const url = new URL(req.url ?? '', `http://${req.headers.host}`);
+  if (url.pathname === '/ssr') {
+    const caseName = url.searchParams.get('casename');
+    const hasdir = url.searchParams.get('hasdir') === 'true';
+    const bundlePath = path.join(
+      __dirname,
+      '../dist',
+      hasdir ? caseName : '',
+      `${caseName}.web.bundle`,
+    );
+
+    try {
+      const buffer = fs.readFileSync(bundlePath);
+
+      // Construct view attributes from other query params and defaults
+      const attributes = new Map<string, string>();
+      attributes.set('height', 'auto');
+      attributes.set('id', 'lynxview1');
+      attributes.set(
+        'url',
+        `/dist/ssr/${
+          hasdir
+            ? `${caseName}/${caseName}.web.bundle`
+            : `${caseName}.web.bundle`
+        }`,
+      );
+
+      url.searchParams.forEach((value, key) => {
+        if (key !== 'casename' && key !== 'hasdir') {
+          attributes.set(key, value);
         }
+      });
 
-        const bundlePath = path.resolve(process.cwd(), bundlePathQuery);
-
-        try {
-          console.log(`SSR Rendering: ${bundlePath}`);
-
-          const buffer = fs.readFileSync(bundlePath);
-
-          // Execute Template
-          const ssrResult = await executeTemplate(
-            buffer,
-            {}, // initData
-            {}, // globalProps
-            {}, // initI18nResources
-          );
-
-          // Read template
-          const template = fs.readFileSync(
-            path.join(__dirname, 'ssr.html'),
-            'utf-8',
-          );
-
-          // Inject result
-          const html = template.replace(
-            '<!--INJECT_SSR_CONTENT-->',
-            ssrResult,
-          );
-
-          res.setHeader('Content-Type', 'text/html');
-          res.end(html);
-        } catch (err: any) {
-          console.error('SSR Error:', err);
-          res.statusCode = 500;
-          res.end(`SSR Error: ${err.message}`);
-        }
-      } else {
-        next();
+      let viewAttributes = '';
+      for (const [key, value] of attributes) {
+        viewAttributes += `${key}="${value}" `;
       }
-    },
-  );
+      viewAttributes = viewAttributes.trim();
+
+      // Execute Template
+      const ssrResult = await executeTemplate(
+        buffer,
+        {}, // initData
+        {}, // globalProps
+        {}, // initI18nResources
+        viewAttributes,
+      );
+
+      // Read template
+      const template = fs.readFileSync(
+        path.join(__dirname, 'ssr.html'),
+        'utf-8',
+      );
+
+      // Inject result
+      const html = template.replace(
+        '<!--INJECT_SSR_CONTENT-->',
+        ssrResult,
+      );
+
+      res.setHeader('Content-Type', 'text/html');
+      res.end(html);
+    } catch (err: any) {
+      console.error('SSR Error:', err);
+      res.statusCode = 500;
+    }
+  } else {
+    next();
+  }
 }

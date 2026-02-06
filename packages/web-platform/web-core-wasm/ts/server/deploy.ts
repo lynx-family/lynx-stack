@@ -12,6 +12,7 @@ export function executeTemplate(
   initData: Cloneable,
   globalProps: Cloneable,
   _initI18nResources: InitI18nResources,
+  viewAttributes?: string,
 ): Promise<string> {
   const result = decodeTemplate(templateBuffer);
   const config = result.config;
@@ -23,6 +24,7 @@ export function executeTemplate(
       enableCSSSelector: config['enableCSSSelector'] === 'true',
       defaultOverflowVisible: config['defaultOverflowVisible'] === 'true',
       defaultDisplayLinear: config['defaultDisplayLinear'] !== 'false', // Default to true if not present or 'true'
+      viewAttributes,
     },
     result.styleInfo,
   );

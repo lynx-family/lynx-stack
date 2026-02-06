@@ -1,22 +1,10 @@
 import { defineConfig } from '@rsbuild/core';
 import { fileURLToPath } from 'node:url';
-import { setupSSRMiddleware } from './shell-project/devMiddleware.js';
+import { ssrMiddleware } from './shell-project/devMiddleware.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const port = process.env.PORT ?? 3080;
 export default defineConfig({
-  tools: {
-    devServer: {
-      result: {
-        setupMiddlewares: [
-          (middlewares, server) => {
-            setupSSRMiddleware(server.middlewares);
-            return middlewares;
-          },
-        ],
-      },
-    },
-  },
   source: {
     entry: {
       index: './shell-project/index.ts',
@@ -33,6 +21,12 @@ export default defineConfig({
     hmr: false,
     liveReload: false,
     writeToDisk: true,
+    setupMiddlewares: [
+      (middlewares: any) => {
+        middlewares.unshift(ssrMiddleware);
+        return middlewares;
+      },
+    ],
   },
   server: {
     port: Number(port),

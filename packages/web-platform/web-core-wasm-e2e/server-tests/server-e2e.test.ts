@@ -41,3 +41,55 @@ test('executeTemplate should run lepusCode.root from config-css-selector-false-r
     'config-css-selector-false-remove-css-and-style-collapsed.web.bundle',
   );
 });
+
+test('executeTemplate should run lepusCode.root from basic-element-text-baseline.web.bundle', async () => {
+  await runSnapshotTest('basic-element-text-baseline.web.bundle');
+});
+
+test('executeTemplate should run lepusCode.root from basic-scroll-view.web.bundle', async () => {
+  await runSnapshotTest('basic-scroll-view.web.bundle');
+});
+
+test('executeTemplate should run lepusCode.root from basic-element-x-audio-tt-play.web.bundle', async () => {
+  await runSnapshotTest('basic-element-x-audio-tt-play.web.bundle');
+});
+
+test('executeTemplate should run lepusCode.root from basic-element-image-src.web.bundle', async () => {
+  await runSnapshotTest('basic-element-image-src.web.bundle');
+});
+
+test('executeTemplate should run lepusCode.root from basic-element-x-input-value.web.bundle', async () => {
+  await runSnapshotTest('basic-element-x-input-value.web.bundle');
+});
+
+test('executeTemplate should run lepusCode.root from basic-element-list-basic.web.bundle', async () => {
+  await runSnapshotTest('basic-element-list-basic.web.bundle');
+});
+
+test('executeTemplate should run lepusCode.root from basic-element-x-overlay-ng-demo.web.bundle', async () => {
+  await runSnapshotTest('basic-element-x-overlay-ng-demo.web.bundle');
+});
+
+test('executeTemplate should run lepusCode.root from basic-element-x-refresh-view-demo.web.bundle', async () => {
+  await runSnapshotTest('basic-element-x-refresh-view-demo.web.bundle');
+});
+
+test('executeTemplate should run lepusCode.root from basic-element-svg-with-css.web.bundle', async () => {
+  await runSnapshotTest('basic-element-svg-with-css.web.bundle');
+});
+
+test('executeTemplate should run lepusCode.root from basic-element-x-swiper-autoplay.web.bundle', async () => {
+  await runSnapshotTest('basic-element-x-swiper-autoplay.web.bundle');
+});
+
+test('executeTemplate should run lepusCode.root from basic-element-text-color.web.bundle', async () => {
+  await runSnapshotTest('basic-element-text-color.web.bundle');
+});
+
+test('executeTemplate should run lepusCode.root from basic-element-x-textarea-placeholder.web.bundle', async () => {
+  await runSnapshotTest('basic-element-x-textarea-placeholder.web.bundle');
+});
+
+test('executeTemplate should run lepusCode.root from basic-element-x-viewpager-ng-bindchange.web.bundle', async () => {
+  await runSnapshotTest('basic-element-x-viewpager-ng-bindchange.web.bundle');
+});

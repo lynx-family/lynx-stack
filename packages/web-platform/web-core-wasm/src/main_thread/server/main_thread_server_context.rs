@@ -16,15 +16,29 @@ use wasm_bindgen::prelude::*;
 pub struct MainThreadServerContext {
   elements: Vec<Option<LynxElementData>>,
   style_manager: StyleManagerServer,
+  element_templates: fnv::FnvHashMap<String, JsValue>,
+  view_attributes: String,
 }
 
 #[wasm_bindgen]
 impl MainThreadServerContext {
   #[wasm_bindgen(constructor)]
-  pub fn new() -> Self {
+  pub fn new(templates: js_sys::Object, view_attributes: String) -> Self {
+    let mut element_templates = fnv::FnvHashMap::default();
+    let entries = js_sys::Object::entries(&templates);
+    for i in 0..entries.length() {
+      if let Ok(entry) = entries.get(i).dyn_into::<js_sys::Array>() {
+        if let (Some(key), value) = (entry.get(0).as_string(), entry.get(1)) {
+          element_templates.insert(key, value);
+        }
+      }
+    }
+
     Self {
       elements: Vec::new(),
       style_manager: StyleManagerServer::new(),
+      element_templates,
+      view_attributes,
     }
   }
 
@@ -66,8 +80,6 @@ impl MainThreadServerContext {
   pub fn append_child(&mut self, parent_id: usize, child_id: usize) {
     if let Some(Some(parent)) = self.elements.get_mut(parent_id) {
       parent.append_child(child_id);
-      // If parent is not set yet (implicit root?) - we might need to handle root logic,
-      // but usually the caller manages the structure.
     }
   }
 
@@ -96,9 +108,18 @@ impl MainThreadServerContext {
     }
   }
 
-  pub fn generate_html_segment(&self, element_id: usize) -> String {
-    let mut buffer = String::with_capacity(1024);
+  pub fn generate_html(&self, element_id: usize) -> String {
+    let mut buffer = String::with_capacity(4096);
+    buffer.push_str("<lynx-view");
+    if !self.view_attributes.is_empty() {
+      buffer.push(' ');
+      buffer.push_str(&self.view_attributes);
+    }
+    buffer.push_str(r#"><template shadowrootmode="open"><style>"#);
+    buffer.push_str(&self.style_manager.get_css_string());
+    buffer.push_str("</style>");
     self.render_element(element_id, &mut buffer);
+    buffer.push_str("</template></lynx-view>");
     buffer
   }
 
@@ -143,6 +164,29 @@ impl MainThreadServerContext {
 
             buffer.push('>');
 
+            if let Some(template_val) = self.element_templates.get(&element.tag_name) {
+              let content_str_opt = if template_val.is_function() {
+                let func = template_val.unchecked_ref::<js_sys::Function>();
+                let attrs_obj = js_sys::Object::new();
+                for (k, v) in &element.attributes {
+                  let _ =
+                    js_sys::Reflect::set(&attrs_obj, &JsValue::from_str(k), &JsValue::from_str(v));
+                }
+                func
+                  .call1(&JsValue::NULL, &attrs_obj)
+                  .ok()
+                  .and_then(|v| v.as_string())
+              } else {
+                template_val.as_string()
+              };
+
+              if let Some(content_str) = content_str_opt {
+                buffer.push_str(r#"<template shadowrootmode="open">"#);
+                buffer.push_str(&content_str);
+                buffer.push_str("</template>");
+              }
+            }
+
             stack.push(Action::Close(element_id));
 
             for child_id in element.children.iter().rev() {
@@ -168,7 +212,8 @@ mod tests {
 
   #[test]
   fn test_html_generation() {
-    let mut ctx = MainThreadServerContext::new();
+    let templates = js_sys::Object::new();
+    let mut ctx = MainThreadServerContext::new(templates);
 
     // Create <div>
     let div_id = ctx.create_element("div".to_string());
@@ -180,16 +225,16 @@ mod tests {
     ctx.set_attribute(span_id, "class".to_string(), "text".to_string());
     ctx.append_child(div_id, span_id);
 
-    let html = ctx.generate_html_segment(div_id);
+    let html = ctx.generate_html(div_id);
 
     // Check structural correctness (attributes/style order might vary in HashMaps)
-    assert!(html.starts_with("<div"));
+    assert!(html.starts_with("<lynx-view><template shadowrootmode=\"open\"><style></style><div"));
     assert!(html.contains("id=\"container\""));
     assert!(html.contains("style=\"")); // checks for style attribute presence
     assert!(html.contains("color:red;"));
     assert!(html.contains("<span"));
     assert!(html.contains("class=\"text\""));
-    assert!(html.ends_with("</span></div>"));
+    assert!(html.ends_with("</span></div></template></lynx-view>"));
 
     // Verify initial CSS is empty
     assert_eq!(ctx.get_page_css(), "");

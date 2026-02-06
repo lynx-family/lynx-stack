@@ -1,83 +1,1160 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`executeTemplate should run lepusCode.root from basic-element-image-src.web.bundle 1`] = `
+"<lynx-view
+  ><template shadowrootmode="open"
+    ><style></style>
+    <div part="page" lynx-default-overflow-visible="true">
+      <x-image
+        id="target"
+        src="../../../resources/lynx-logo.jpeg"
+        style="height: 100px; width: 100px"
+        ><template shadowrootmode="open"
+          ><img
+            part="img"
+            alt=""
+            loading="lazy"
+            id="img"
+            src="../../../resources/lynx-logo.jpeg"
+          /> </template
+      ></x-image></div></template
+></lynx-view>
+"
+`;
+
+exports[`executeTemplate should run lepusCode.root from basic-element-text-baseline.web.bundle 1`] = `
+"<lynx-view
+  ><template shadowrootmode="open"
+    ><style></style>
+    <div part="page" lynx-default-overflow-visible="true">
+      <x-view
+        style="
+          --lynx-display-toggle: var(--lynx-display-flex);
+          --lynx-display: flex;
+          display: flex;
+        "
+        ><x-view
+          style="
+            --lynx-display-toggle: var(--lynx-display-flex);
+            --lynx-display: flex;
+            display: flex;
+          "
+          ><x-text text="hello world" style="font-size: 20px"
+            ><template shadowrootmode="open"
+              ><div id="inner-box" part="inner-box">
+                <slot part="slot"></slot
+                ><slot name="inline-truncation"></slot></div></template></x-text
+          ><x-text text="111" style="font-size: 30px"
+            ><template shadowrootmode="open"
+              ><div id="inner-box" part="inner-box">
+                <slot part="slot"></slot
+                ><slot
+                  name="inline-truncation"
+                ></slot></div></template></x-text></x-view
+        ><x-view
+          style="
+            --lynx-display-toggle: var(--lynx-display-flex);
+            --lynx-display: flex;
+            display: flex;
+          "
+          ><x-text
+            ><template shadowrootmode="open"
+              ><div id="inner-box" part="inner-box">
+                <slot part="slot"></slot
+                ><slot name="inline-truncation"></slot></div></template
+            ><x-text style="font-size: 20px"
+              ><template shadowrootmode="open"
+                ><div id="inner-box" part="inner-box">
+                  <slot part="slot"></slot
+                  ><slot name="inline-truncation"></slot></div></template
+              ><raw-text text="hello world"></raw-text></x-text
+            ><x-text style="font-size: 30px"
+              ><template shadowrootmode="open"
+                ><div id="inner-box" part="inner-box">
+                  <slot part="slot"></slot
+                  ><slot name="inline-truncation"></slot></div></template
+              ><raw-text text="111"></raw-text></x-text></x-text></x-view
+      ></x-view></div></template
+></lynx-view>
+"
+`;
+
+exports[`executeTemplate should run lepusCode.root from basic-element-text-color.web.bundle 1`] = `
+"<lynx-view
+  ><template shadowrootmode="open"
+    ><style>
+      .a:not([l-e-name]) {
+        --lynx-text-bg-color: initial;
+        -webkit-background-clip: initial;
+        background-clip: initial;
+        color: red;
+        font-size: 16px;
+      }
+      .b:not([l-e-name]) {
+        color: transparent;
+        -webkit-background-clip: text;
+        background-clip: text;
+        --lynx-text-bg-color: linear-gradient(green, #ff0);
+        font-size: 80px;
+      }
+    </style>
+    <div part="page" lynx-default-overflow-visible="true">
+      <x-view
+        ><x-text class="a b" text="hello lynx"
+          ><template shadowrootmode="open"
+            ><div id="inner-box" part="inner-box">
+              <slot part="slot"></slot
+              ><slot name="inline-truncation"></slot></div></template></x-text
+      ></x-view></div></template
+></lynx-view>
+"
+`;
+
+exports[`executeTemplate should run lepusCode.root from basic-element-x-input-value.web.bundle 1`] = `
+"<lynx-view
+  ><template shadowrootmode="open"
+    ><style></style>
+    <div part="page" lynx-default-overflow-visible="true">
+      <x-view
+        ><x-view
+          class="click"
+          style="width: 100px; height: 100px; background-color: red"
+        ></x-view
+        ><x-input
+          class="input"
+          value=""
+          style="border: 1px solid; width: 300px; height: 40px"
+          ><template shadowrootmode="open"
+            ><style>
+              #input:focus {
+                outline: none;
+              }
+              #form {
+                display: none;
+              }
+            </style>
+            <form id="form" part="form" method="dialog">
+              <input
+                id="input"
+                part="input"
+                step="any"
+                type="text"
+                inputmode="text"
+                spell-check="true"
+              /></form></template></x-input
+        ><x-view class="result"
+          ><x-text
+            ><template shadowrootmode="open"
+              ><div id="inner-box" part="inner-box">
+                <slot part="slot"></slot
+                ><slot name="inline-truncation"></slot></div></template
+            ><raw-text text=""></raw-text></x-text></x-view
+      ></x-view></div></template
+></lynx-view>
+"
+`;
+
+exports[`executeTemplate should run lepusCode.root from basic-element-x-overlay-ng-demo.web.bundle 1`] = `
+"<lynx-view
+  ><template shadowrootmode="open"
+    ><style>
+      .container:not([l-e-name]) {
+        border: 1px solid red;
+      }
+      .ani:not([l-e-name]) {
+        transition: all 0.25s ease-out;
+      }
+      .ani:not([l-e-name]),
+      .noani:not([l-e-name]) {
+        --lynx-display-toggle: var(--lynx-display-flex);
+        --lynx-display: flex;
+        display: flex;
+        --flex-direction: column;
+        height: calc(100% - 150px);
+      }
+      .noani:not([l-e-name]) {
+        transition: none;
+      }
+    </style>
+    <div part="page" lynx-default-overflow-visible="true">
+      <x-view
+        style="
+          width: 100%;
+          height: 100%;
+          --lynx-display-toggle: var(--lynx-display-linear);
+          --lynx-display: linear;
+          display: flex;
+        "
+        ><x-view style="width: 50px; height: 50px; background: blue"></x-view
+        ><x-overlay-ng
+          style="overflow: visible"
+          custom-layout="true"
+          id="overlay-ng"
+          mode="page"
+          ><template shadowrootmode="open"
+            ><style>
+              #dialog[open] {
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                position: fixed;
+                overscroll-behavior: contain;
+                scrollbar-width: none;
+              }
+              #dialog[open]::-webkit-scrollbar {
+                display: none;
+              }
+              #dialog::backdrop {
+                background-color: transparent;
+              }
+              .overlay-inner {
+                position: sticky;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+              }
+              .overlay-inner > * {
+                pointer-events: auto;
+              }
+              .overlay-placeholder {
+                width: 100%;
+                height: 1px;
+              }
+            </style>
+            <dialog id="dialog" part="dialog">
+              <div class="overlay-inner">
+                <slot></slot>
+              </div>
+              <div class="overlay-placeholder"></div></dialog></template
+          ><x-view
+            block-native-event="true"
+            class="ani"
+            style="overflow: visible; background: #33333333"
+            ><x-view
+              class="noani"
+              id="dragcontainer"
+              style="background: red; top: 1000px; width: 100%"
+              ><x-view style="width: 100%; height: 50px; background: gray"
+                ><scroll-view scroll-x="true" style="width: 100%; height: 100%"
+                  ><template shadowrootmode="open"
+                    ><style>
+                      .placeholder-dom {
+                        display: none;
+                        flex: 0 0 0;
+                        align-self: stretch;
+                        min-height: 0;
+                        min-width: 0;
+                      }
+                      .mask {
+                        z-index: 1;
+                        position: sticky;
+                      }
+                      .observer-container {
+                        flex-direction: inherit;
+                        overflow: visible;
+                      }
+                      .observer {
+                        display: flex;
+                      }
+                      ::-webkit-scrollbar {
+                        display: none;
+                      }
+
+                      @keyframes topFading {
+                        0% {
+                          box-shadow: transparent 0px 0px 0px 0px;
+                        }
+                        5% {
+                          box-shadow: var(--scroll-view-bg-color) 0px 0px
+                            var(--scroll-view-fading-edge-length)
+                            var(--scroll-view-fading-edge-length);
+                        }
+                        100% {
+                          box-shadow: var(--scroll-view-bg-color) 0px 0px
+                            var(--scroll-view-fading-edge-length)
+                            var(--scroll-view-fading-edge-length);
+                        }
+                      }
+                      @keyframes botFading {
+                        0% {
+                          box-shadow: var(--scroll-view-bg-color) 0px 0px
+                            var(--scroll-view-fading-edge-length)
+                            var(--scroll-view-fading-edge-length);
+                        }
+                        95% {
+                          box-shadow: var(--scroll-view-bg-color) 0px 0px
+                            var(--scroll-view-fading-edge-length)
+                            var(--scroll-view-fading-edge-length);
+                        }
+                        100% {
+                          box-shadow: transparent 0px 0px 0px 0px;
+                        }
+                      }
+                    </style>
+                    <div
+                      class="mask placeholder-dom"
+                      id="top-fade-mask"
+                      part="top-fade-mask"
+                    ></div>
+                    <div
+                      class="observer-container placeholder-dom"
+                      part="upper-threshold-observer"
+                    >
+                      <div
+                        class="observer placeholder-dom"
+                        id="upper-threshold-observer"
+                      ></div>
+                    </div>
+                    <slot></slot>
+                    <div
+                      class="observer-container placeholder-dom"
+                      part="lower-threshold-observer"
+                    >
+                      <div
+                        class="observer placeholder-dom"
+                        id="lower-threshold-observer"
+                      ></div>
+                    </div>
+                    <div
+                      class="mask placeholder-dom"
+                      id="bot-fade-mask"
+                      part="bot-fade-mask"
+                    ></div></template
+                  ><x-text
+                    text="Hello Mfs"
+                    style="margin-left: 50px; background: blue"
+                    ><template shadowrootmode="open"
+                      ><div id="inner-box" part="inner-box">
+                        <slot part="slot"></slot
+                        ><slot
+                          name="inline-truncation"
+                        ></slot></div></template></x-text
+                  ><x-text
+                    text="Hello Mfs"
+                    style="margin-left: 50px; background: yellow"
+                    ><template shadowrootmode="open"
+                      ><div id="inner-box" part="inner-box">
+                        <slot part="slot"></slot
+                        ><slot
+                          name="inline-truncation"
+                        ></slot></div></template></x-text
+                  ><x-text
+                    text="Hello Mfs"
+                    style="margin-left: 50px; background: gray"
+                    ><template shadowrootmode="open"
+                      ><div id="inner-box" part="inner-box">
+                        <slot part="slot"></slot
+                        ><slot
+                          name="inline-truncation"
+                        ></slot></div></template></x-text
+                  ><x-text
+                    text="Hello Mfs"
+                    style="margin-left: 50px; background: green"
+                    ><template shadowrootmode="open"
+                      ><div id="inner-box" part="inner-box">
+                        <slot part="slot"></slot
+                        ><slot
+                          name="inline-truncation"
+                        ></slot></div></template></x-text
+                  ><x-text
+                    text="Hello Mfs"
+                    style="margin-left: 50px; background: blue"
+                    ><template shadowrootmode="open"
+                      ><div id="inner-box" part="inner-box">
+                        <slot part="slot"></slot
+                        ><slot
+                          name="inline-truncation"
+                        ></slot></div></template></x-text
+                  ><x-text
+                    text="Hello Mfs"
+                    style="margin-left: 50px; background: yellow"
+                    ><template shadowrootmode="open"
+                      ><div id="inner-box" part="inner-box">
+                        <slot part="slot"></slot
+                        ><slot
+                          name="inline-truncation"
+                        ></slot></div></template></x-text
+                  ><x-text
+                    text="Hello Mfs"
+                    style="margin-left: 50px; background: green"
+                    ><template shadowrootmode="open"
+                      ><div id="inner-box" part="inner-box">
+                        <slot part="slot"></slot
+                        ><slot
+                          name="inline-truncation"
+                        ></slot></div></template></x-text></scroll-view></x-view
+              ><scroll-view
+                style="width: 100%; height: 100%; --flex: 1"
+                scroll-y="true"
+                id="aa"
+                bounces="false"
+                ><template shadowrootmode="open"
+                  ><style>
+                    .placeholder-dom {
+                      display: none;
+                      flex: 0 0 0;
+                      align-self: stretch;
+                      min-height: 0;
+                      min-width: 0;
+                    }
+                    .mask {
+                      z-index: 1;
+                      position: sticky;
+                    }
+                    .observer-container {
+                      flex-direction: inherit;
+                      overflow: visible;
+                    }
+                    .observer {
+                      display: flex;
+                    }
+                    ::-webkit-scrollbar {
+                      display: none;
+                    }
+
+                    @keyframes topFading {
+                      0% {
+                        box-shadow: transparent 0px 0px 0px 0px;
+                      }
+                      5% {
+                        box-shadow: var(--scroll-view-bg-color) 0px 0px
+                          var(--scroll-view-fading-edge-length)
+                          var(--scroll-view-fading-edge-length);
+                      }
+                      100% {
+                        box-shadow: var(--scroll-view-bg-color) 0px 0px
+                          var(--scroll-view-fading-edge-length)
+                          var(--scroll-view-fading-edge-length);
+                      }
+                    }
+                    @keyframes botFading {
+                      0% {
+                        box-shadow: var(--scroll-view-bg-color) 0px 0px
+                          var(--scroll-view-fading-edge-length)
+                          var(--scroll-view-fading-edge-length);
+                      }
+                      95% {
+                        box-shadow: var(--scroll-view-bg-color) 0px 0px
+                          var(--scroll-view-fading-edge-length)
+                          var(--scroll-view-fading-edge-length);
+                      }
+                      100% {
+                        box-shadow: transparent 0px 0px 0px 0px;
+                      }
+                    }
+                  </style>
+                  <div
+                    class="mask placeholder-dom"
+                    id="top-fade-mask"
+                    part="top-fade-mask"
+                  ></div>
+                  <div
+                    class="observer-container placeholder-dom"
+                    part="upper-threshold-observer"
+                  >
+                    <div
+                      class="observer placeholder-dom"
+                      id="upper-threshold-observer"
+                    ></div>
+                  </div>
+                  <slot></slot>
+                  <div
+                    class="observer-container placeholder-dom"
+                    part="lower-threshold-observer"
+                  >
+                    <div
+                      class="observer placeholder-dom"
+                      id="lower-threshold-observer"
+                    ></div>
+                  </div>
+                  <div
+                    class="mask placeholder-dom"
+                    id="bot-fade-mask"
+                    part="bot-fade-mask"
+                  ></div></template
+                ><x-text
+                  text="Hello Mfs"
+                  style="margin-top: 50px; background: blue"
+                  ><template shadowrootmode="open"
+                    ><div id="inner-box" part="inner-box">
+                      <slot part="slot"></slot
+                      ><slot
+                        name="inline-truncation"
+                      ></slot></div></template></x-text
+                ><x-text
+                  text="Hello Mfs"
+                  style="margin-top: 150px; background: yellow"
+                  ><template shadowrootmode="open"
+                    ><div id="inner-box" part="inner-box">
+                      <slot part="slot"></slot
+                      ><slot
+                        name="inline-truncation"
+                      ></slot></div></template></x-text
+                ><scroll-view scroll-x="true" style="width: 100%; height: 60px"
+                  ><template shadowrootmode="open"
+                    ><style>
+                      .placeholder-dom {
+                        display: none;
+                        flex: 0 0 0;
+                        align-self: stretch;
+                        min-height: 0;
+                        min-width: 0;
+                      }
+                      .mask {
+                        z-index: 1;
+                        position: sticky;
+                      }
+                      .observer-container {
+                        flex-direction: inherit;
+                        overflow: visible;
+                      }
+                      .observer {
+                        display: flex;
+                      }
+                      ::-webkit-scrollbar {
+                        display: none;
+                      }
+
+                      @keyframes topFading {
+                        0% {
+                          box-shadow: transparent 0px 0px 0px 0px;
+                        }
+                        5% {
+                          box-shadow: var(--scroll-view-bg-color) 0px 0px
+                            var(--scroll-view-fading-edge-length)
+                            var(--scroll-view-fading-edge-length);
+                        }
+                        100% {
+                          box-shadow: var(--scroll-view-bg-color) 0px 0px
+                            var(--scroll-view-fading-edge-length)
+                            var(--scroll-view-fading-edge-length);
+                        }
+                      }
+                      @keyframes botFading {
+                        0% {
+                          box-shadow: var(--scroll-view-bg-color) 0px 0px
+                            var(--scroll-view-fading-edge-length)
+                            var(--scroll-view-fading-edge-length);
+                        }
+                        95% {
+                          box-shadow: var(--scroll-view-bg-color) 0px 0px
+                            var(--scroll-view-fading-edge-length)
+                            var(--scroll-view-fading-edge-length);
+                        }
+                        100% {
+                          box-shadow: transparent 0px 0px 0px 0px;
+                        }
+                      }
+                    </style>
+                    <div
+                      class="mask placeholder-dom"
+                      id="top-fade-mask"
+                      part="top-fade-mask"
+                    ></div>
+                    <div
+                      class="observer-container placeholder-dom"
+                      part="upper-threshold-observer"
+                    >
+                      <div
+                        class="observer placeholder-dom"
+                        id="upper-threshold-observer"
+                      ></div>
+                    </div>
+                    <slot></slot>
+                    <div
+                      class="observer-container placeholder-dom"
+                      part="lower-threshold-observer"
+                    >
+                      <div
+                        class="observer placeholder-dom"
+                        id="lower-threshold-observer"
+                      ></div>
+                    </div>
+                    <div
+                      class="mask placeholder-dom"
+                      id="bot-fade-mask"
+                      part="bot-fade-mask"
+                    ></div></template
+                  ><x-text
+                    text="Hello Mfs"
+                    style="margin-left: 50px; background: blue"
+                    ><template shadowrootmode="open"
+                      ><div id="inner-box" part="inner-box">
+                        <slot part="slot"></slot
+                        ><slot
+                          name="inline-truncation"
+                        ></slot></div></template></x-text
+                  ><x-text
+                    text="Hello Mfs"
+                    style="margin-left: 50px; background: yellow"
+                    ><template shadowrootmode="open"
+                      ><div id="inner-box" part="inner-box">
+                        <slot part="slot"></slot
+                        ><slot
+                          name="inline-truncation"
+                        ></slot></div></template></x-text
+                  ><x-text
+                    text="Hello Mfs"
+                    style="margin-left: 50px; background: gray"
+                    ><template shadowrootmode="open"
+                      ><div id="inner-box" part="inner-box">
+                        <slot part="slot"></slot
+                        ><slot
+                          name="inline-truncation"
+                        ></slot></div></template></x-text
+                  ><x-text
+                    text="Hello Mfs"
+                    style="margin-left: 50px; background: green"
+                    ><template shadowrootmode="open"
+                      ><div id="inner-box" part="inner-box">
+                        <slot part="slot"></slot
+                        ><slot
+                          name="inline-truncation"
+                        ></slot></div></template></x-text
+                  ><x-text
+                    text="Hello Mfs"
+                    style="margin-left: 50px; background: blue"
+                    ><template shadowrootmode="open"
+                      ><div id="inner-box" part="inner-box">
+                        <slot part="slot"></slot
+                        ><slot
+                          name="inline-truncation"
+                        ></slot></div></template></x-text
+                  ><x-text
+                    text="Hello Mfs"
+                    style="margin-left: 50px; background: yellow"
+                    ><template shadowrootmode="open"
+                      ><div id="inner-box" part="inner-box">
+                        <slot part="slot"></slot
+                        ><slot
+                          name="inline-truncation"
+                        ></slot></div></template></x-text
+                  ><x-text
+                    text="Hello Mfs"
+                    style="margin-left: 50px; background: green"
+                    ><template shadowrootmode="open"
+                      ><div id="inner-box" part="inner-box">
+                        <slot part="slot"></slot
+                        ><slot
+                          name="inline-truncation"
+                        ></slot></div></template></x-text></scroll-view
+                ><x-text style="margin-top: 250px; background: gray"
+                  ><template shadowrootmode="open"
+                    ><div id="inner-box" part="inner-box">
+                      <slot part="slot"></slot
+                      ><slot name="inline-truncation"></slot></div></template
+                  ><raw-text text="1"></raw-text></x-text
+                ><x-text
+                  text="Hello Mfs"
+                  style="margin-top: 350px; background: green"
+                  ><template shadowrootmode="open"
+                    ><div id="inner-box" part="inner-box">
+                      <slot part="slot"></slot
+                      ><slot
+                        name="inline-truncation"
+                      ></slot></div></template></x-text
+                ><x-text
+                  text="Hello Mfs"
+                  style="margin-top: 450px; background: blue"
+                  ><template shadowrootmode="open"
+                    ><div id="inner-box" part="inner-box">
+                      <slot part="slot"></slot
+                      ><slot
+                        name="inline-truncation"
+                      ></slot></div></template></x-text
+                ><x-text
+                  text="Hello Mfs"
+                  style="margin-top: 550px; background: yellow"
+                  ><template shadowrootmode="open"
+                    ><div id="inner-box" part="inner-box">
+                      <slot part="slot"></slot
+                      ><slot
+                        name="inline-truncation"
+                      ></slot></div></template></x-text
+                ><x-text
+                  text="Hello Mfs"
+                  style="margin-top: 650px; background: green"
+                  ><template shadowrootmode="open"
+                    ><div id="inner-box" part="inner-box">
+                      <slot part="slot"></slot
+                      ><slot
+                        name="inline-truncation"
+                      ></slot></div></template></x-text></scroll-view></x-view
+            ><x-view></x-view><x-view></x-view></x-view></x-overlay-ng
+      ></x-view></div></template
+></lynx-view>
+"
+`;
+
+exports[`executeTemplate should run lepusCode.root from basic-element-x-refresh-view-demo.web.bundle 1`] = `
+"<lynx-view
+  ><template shadowrootmode="open"
+    ><style>
+      .refresh-view:not([l-e-name]) {
+        --lynx-display-toggle: var(--lynx-display-linear);
+        --lynx-display: linear;
+        display: flex;
+        height: 800px;
+        width: 100%;
+        --lynx-linear-orientation: vertical;
+        --lynx-linear-orientation-toggle: var(
+          --lynx-linear-orientation-vertical
+        );
+      }
+      .refresh-header:not([l-e-name]) {
+        align-items: center;
+        background-color: red;
+        height: 50px;
+        justify-content: center;
+        position: absolute;
+        width: 100%;
+      }
+      .scroll-view:not([l-e-name]) {
+        --lynx-display-toggle: var(--lynx-display-linear);
+        --lynx-display: linear;
+        display: flex;
+        height: 100%;
+        width: 100%;
+        --lynx-linear-orientation: vertical;
+        --lynx-linear-orientation-toggle: var(
+          --lynx-linear-orientation-vertical
+        );
+        background-color: #ff0;
+      }
+      .refresh-footer:not([l-e-name]) {
+        align-items: center;
+        background-color: red;
+        height: 50px;
+        justify-content: center;
+        width: 100%;
+      }
+      .item:not([l-e-name]) {
+        background-color: #adff2f;
+        height: 100px;
+        margin-top: 5px;
+        width: 100%;
+      }
+    </style>
+    <div part="page" lynx-default-overflow-visible="true">
+      <x-refresh-view
+        class="refresh-view"
+        enable-footer-rebound="true"
+        enable-auto-loadmore="false"
+        id="refresh-view"
+        ><template shadowrootmode="open"
+          ><style>
+            .bounce-container {
+              overflow: scroll;
+              overscroll-behavior: contain;
+              scroll-snap-type: y mandatory;
+              scroll-behavior: smooth;
+              scrollbar-width: none;
+            }
+            .overflow-placeholder {
+              min-height: 30%;
+              min-width: 100%;
+              flex-shrink: 0;
+              scroll-snap-align: none;
+            }
+            .not-shrink {
+              height: 100%;
+              width: 100%;
+              min-height: 100%;
+              min-width: 100%;
+              flex-shrink: 0;
+            }
+            .vertical {
+              display: flex;
+              flex-direction: column;
+            }
+            #content {
+              scroll-snap-align: center;
+            }
+          </style>
+          <div
+            id="container"
+            part="container"
+            class="bounce-container not-shrink vertical"
+          >
+            <div
+              id="placeholder-top"
+              class="overflow-placeholder bounce-item"
+              part="placeholder-top"
+            ></div>
+            <slot name="header"></slot>
+            <div id="content" part="content" class="not-shrink vertical">
+              <slot part="slot"></slot>
+            </div>
+            <slot name="footer"></slot>
+            <div
+              id="placeholder-bot"
+              class="overflow-placeholder bounce-item"
+              part="placeholder-bot"
+            ></div></div></template
+        ><x-refresh-header class="refresh-header"
+          ><x-image
+            src="http://localhost:3080/dist/static/image/img.c330e8ee.png"
+            style="width: 30px; height: 30px"
+            ><template shadowrootmode="open"
+              ><img
+                part="img"
+                alt=""
+                loading="lazy"
+                id="img"
+                src="http://localhost:3080/dist/static/image/img.c330e8ee.png"
+              /> </template></x-image></x-refresh-header
+        ><scroll-view class="scroll-view" bounces="true" scroll-y="true"
+          ><template shadowrootmode="open"
+            ><style>
+              .placeholder-dom {
+                display: none;
+                flex: 0 0 0;
+                align-self: stretch;
+                min-height: 0;
+                min-width: 0;
+              }
+              .mask {
+                z-index: 1;
+                position: sticky;
+              }
+              .observer-container {
+                flex-direction: inherit;
+                overflow: visible;
+              }
+              .observer {
+                display: flex;
+              }
+              ::-webkit-scrollbar {
+                display: none;
+              }
+
+              @keyframes topFading {
+                0% {
+                  box-shadow: transparent 0px 0px 0px 0px;
+                }
+                5% {
+                  box-shadow: var(--scroll-view-bg-color) 0px 0px
+                    var(--scroll-view-fading-edge-length)
+                    var(--scroll-view-fading-edge-length);
+                }
+                100% {
+                  box-shadow: var(--scroll-view-bg-color) 0px 0px
+                    var(--scroll-view-fading-edge-length)
+                    var(--scroll-view-fading-edge-length);
+                }
+              }
+              @keyframes botFading {
+                0% {
+                  box-shadow: var(--scroll-view-bg-color) 0px 0px
+                    var(--scroll-view-fading-edge-length)
+                    var(--scroll-view-fading-edge-length);
+                }
+                95% {
+                  box-shadow: var(--scroll-view-bg-color) 0px 0px
+                    var(--scroll-view-fading-edge-length)
+                    var(--scroll-view-fading-edge-length);
+                }
+                100% {
+                  box-shadow: transparent 0px 0px 0px 0px;
+                }
+              }
+            </style>
+            <div
+              class="mask placeholder-dom"
+              id="top-fade-mask"
+              part="top-fade-mask"
+            ></div>
+            <div
+              class="observer-container placeholder-dom"
+              part="upper-threshold-observer"
+            >
+              <div
+                class="observer placeholder-dom"
+                id="upper-threshold-observer"
+              ></div>
+            </div>
+            <slot></slot>
+            <div
+              class="observer-container placeholder-dom"
+              part="lower-threshold-observer"
+            >
+              <div
+                class="observer placeholder-dom"
+                id="lower-threshold-observer"
+              ></div>
+            </div>
+            <div
+              class="mask placeholder-dom"
+              id="bot-fade-mask"
+              part="bot-fade-mask"
+            ></div></template
+          ><x-image
+            src="http://localhost:3080/dist/static/image/img.c330e8ee.png"
+            style="width: 100%; height: 50%; background-color: #0ff"
+            ><template shadowrootmode="open"
+              ><img
+                part="img"
+                alt=""
+                loading="lazy"
+                id="img"
+                src="http://localhost:3080/dist/static/image/img.c330e8ee.png"
+              /> </template></x-image
+          ><lynx-wrapper></lynx-wrapper></scroll-view
+        ><x-refresh-footer class="refresh-footer"
+          ><x-image
+            src="http://localhost:3080/dist/static/image/img.c330e8ee.png"
+            style="width: 30px; height: 30px"
+            ><template shadowrootmode="open"
+              ><img
+                part="img"
+                alt=""
+                loading="lazy"
+                id="img"
+                src="http://localhost:3080/dist/static/image/img.c330e8ee.png"
+              /> </template></x-image></x-refresh-footer
+      ></x-refresh-view></div></template
+></lynx-view>
+"
+`;
+
+exports[`executeTemplate should run lepusCode.root from basic-element-x-textarea-placeholder.web.bundle 1`] = `
+"<lynx-view
+  ><template shadowrootmode="open"
+    ><style>
+      .page:not([l-e-name]) {
+        --flex-direction: column;
+        width: 100%;
+      }
+      .block:not([l-e-name]) {
+        background-color: skyblue;
+        height: 200px;
+      }
+      .textarea:not([l-e-name]) {
+        border: 1px solid #000;
+        height: 30px;
+      }
+    </style>
+    <div part="page" lynx-default-overflow-visible="true">
+      <x-view class="page"
+        ><x-view class="block"></x-view
+        ><x-textarea class="textarea" placeholder="placeholder"
+          ><template shadowrootmode="open"
+            ><style>
+              #textarea:focus,
+              #textarea:focus-visible {
+                border: inherit;
+                outline: inherit;
+              }
+            </style>
+            <form id="form" part="form" method="dialog">
+              <textarea
+                id="textarea"
+                part="textarea"
+              ></textarea></form></template></x-textarea
+        ><x-textarea class="textarea" placeholder=""
+          ><template shadowrootmode="open"
+            ><style>
+              #textarea:focus,
+              #textarea:focus-visible {
+                border: inherit;
+                outline: inherit;
+              }
+            </style>
+            <form id="form" part="form" method="dialog">
+              <textarea
+                id="textarea"
+                part="textarea"
+              ></textarea></form></template></x-textarea
+      ></x-view></div></template
+></lynx-view>
+"
+`;
+
 exports[`executeTemplate should run lepusCode.root from basic-pink-rect.web.bundle 1`] = `
-"<style></style>
-<div part="page" lynx-default-overflow-visible="true">
-  <x-view
-    id="target"
-    style="height: 100px; width: 100px; background: pink"
-  ></x-view>
-</div>
+"<lynx-view
+  ><template shadowrootmode="open"
+    ><style></style>
+    <div part="page" lynx-default-overflow-visible="true">
+      <x-view
+        id="target"
+        style="height: 100px; width: 100px; background: pink"
+      ></x-view></div></template
+></lynx-view>
+"
+`;
+
+exports[`executeTemplate should run lepusCode.root from basic-scroll-view.web.bundle 1`] = `
+"<lynx-view
+  ><template shadowrootmode="open"
+    ><style></style>
+    <div part="page" lynx-default-overflow-visible="true">
+      <scroll-view
+        id="target"
+        style="height: 100px; width: 100px; background: pink"
+        ><template shadowrootmode="open"
+          ><style>
+            .placeholder-dom {
+              display: none;
+              flex: 0 0 0;
+              align-self: stretch;
+              min-height: 0;
+              min-width: 0;
+            }
+            .mask {
+              z-index: 1;
+              position: sticky;
+            }
+            .observer-container {
+              flex-direction: inherit;
+              overflow: visible;
+            }
+            .observer {
+              display: flex;
+            }
+            ::-webkit-scrollbar {
+              display: none;
+            }
+
+            @keyframes topFading {
+              0% {
+                box-shadow: transparent 0px 0px 0px 0px;
+              }
+              5% {
+                box-shadow: var(--scroll-view-bg-color) 0px 0px
+                  var(--scroll-view-fading-edge-length)
+                  var(--scroll-view-fading-edge-length);
+              }
+              100% {
+                box-shadow: var(--scroll-view-bg-color) 0px 0px
+                  var(--scroll-view-fading-edge-length)
+                  var(--scroll-view-fading-edge-length);
+              }
+            }
+            @keyframes botFading {
+              0% {
+                box-shadow: var(--scroll-view-bg-color) 0px 0px
+                  var(--scroll-view-fading-edge-length)
+                  var(--scroll-view-fading-edge-length);
+              }
+              95% {
+                box-shadow: var(--scroll-view-bg-color) 0px 0px
+                  var(--scroll-view-fading-edge-length)
+                  var(--scroll-view-fading-edge-length);
+              }
+              100% {
+                box-shadow: transparent 0px 0px 0px 0px;
+              }
+            }
+          </style>
+          <div
+            class="mask placeholder-dom"
+            id="top-fade-mask"
+            part="top-fade-mask"
+          ></div>
+          <div
+            class="observer-container placeholder-dom"
+            part="upper-threshold-observer"
+          >
+            <div
+              class="observer placeholder-dom"
+              id="upper-threshold-observer"
+            ></div>
+          </div>
+          <slot></slot>
+          <div
+            class="observer-container placeholder-dom"
+            part="lower-threshold-observer"
+          >
+            <div
+              class="observer placeholder-dom"
+              id="lower-threshold-observer"
+            ></div>
+          </div>
+          <div
+            class="mask placeholder-dom"
+            id="bot-fade-mask"
+            part="bot-fade-mask"
+          ></div></template
+      ></scroll-view></div></template
+></lynx-view>
 "
 `;
 
 exports[`executeTemplate should run lepusCode.root from config-css-default-display-linear-false.web.bundle 1`] = `
-"<style>
-  .background-green:not([l-e-name]) {
-    background-color: green;
-  }
-  .background-yellow:not([l-e-name]) {
-    background-color: #ff0;
-  }
-  x-view:not([l-e-name]) {
-    height: 200px;
-    width: 200px;
-  }
-</style>
-<div
-  lynx-default-display-linear="false"
-  part="page"
-  lynx-default-overflow-visible="true"
->
-  <x-view style="width: auto; height: auto"
-    ><x-view class="background-green"></x-view
-    ><x-view class="background-yellow"></x-view
-  ></x-view>
-</div>
+"<lynx-view
+  ><template shadowrootmode="open"
+    ><style>
+      .background-green:not([l-e-name]) {
+        background-color: green;
+      }
+      .background-yellow:not([l-e-name]) {
+        background-color: #ff0;
+      }
+      x-view:not([l-e-name]) {
+        height: 200px;
+        width: 200px;
+      }
+    </style>
+    <div
+      lynx-default-display-linear="false"
+      part="page"
+      lynx-default-overflow-visible="true"
+    >
+      <x-view style="width: auto; height: auto"
+        ><x-view class="background-green"></x-view
+        ><x-view class="background-yellow"></x-view
+      ></x-view></div></template
+></lynx-view>
 "
 `;
 
 exports[`executeTemplate should run lepusCode.root from config-css-remove-scope-false-display-linear.web.bundle 1`] = `
-"<style>
-  .linear:where([l-css-id="1"]):not([l-e-name]),
-  .linear:where([l-css-id="1865610"]):not([l-e-name]),
-  .linear:where([l-css-id="1853379"]):not([l-e-name]) {
-    --lynx-display-toggle: var(--lynx-display-linear);
-    --lynx-display: linear;
-    display: flex;
-  }
-  .basic:where([l-css-id="1865610"]):not([l-e-name]),
-  .basic:where([l-css-id="3"]):not([l-e-name]) {
-    background-color: green;
-    height: 100px;
-    width: 100px;
-  }
-  .basic:where([l-css-id="2"]):not([l-e-name]),
-  .basic:where([l-css-id="1853379"]):not([l-e-name]) {
-    background-color: red;
-    height: 100px;
-    width: 100px;
-  }
-</style>
-<div part="page" lynx-default-overflow-visible="true">
-  <x-view class="basic" id="index" l-css-id="1853379"
-    ><x-view class="basic linear" id="sub" l-css-id="1865610"></x-view
-  ></x-view>
-</div>
+"<lynx-view
+  ><template shadowrootmode="open"
+    ><style>
+      .linear:where([l-css-id="1"]):not([l-e-name]),
+      .linear:where([l-css-id="1865610"]):not([l-e-name]),
+      .linear:where([l-css-id="1853379"]):not([l-e-name]) {
+        --lynx-display-toggle: var(--lynx-display-linear);
+        --lynx-display: linear;
+        display: flex;
+      }
+      .basic:where([l-css-id="1865610"]):not([l-e-name]),
+      .basic:where([l-css-id="3"]):not([l-e-name]) {
+        background-color: green;
+        height: 100px;
+        width: 100px;
+      }
+      .basic:where([l-css-id="2"]):not([l-e-name]),
+      .basic:where([l-css-id="1853379"]):not([l-e-name]) {
+        background-color: red;
+        height: 100px;
+        width: 100px;
+      }
+    </style>
+    <div part="page" lynx-default-overflow-visible="true">
+      <x-view class="basic" id="index" l-css-id="1853379"
+        ><x-view class="basic linear" id="sub" l-css-id="1865610"></x-view
+      ></x-view></div></template
+></lynx-view>
 "
 `;
 
 exports[`executeTemplate should run lepusCode.root from config-css-selector-false-remove-css-and-style-collapsed.web.bundle 1`] = `
-"<style>
-  {background-color:green;}{background-color:#ff0;}[l-uid="1"] {background-color:#ff0;}
-</style>
-<div l-uid="0" part="page" lynx-default-overflow-visible="true">
-  <x-view
-    class="background-yellow"
-    style="height: 100px; width: 100px; backgroundcolor: green"
-    l-uid="1"
-    id="target"
-  ></x-view>
-</div>
+"<lynx-view
+  ><template shadowrootmode="open"
+    ><style>
+      {background-color:green;}{background-color:#ff0;}[l-uid="1"] {background-color:#ff0;}
+    </style>
+    <div l-uid="0" part="page" lynx-default-overflow-visible="true">
+      <x-view
+        class="background-yellow"
+        style="height: 100px; width: 100px; backgroundcolor: green"
+        l-uid="1"
+        id="target"
+      ></x-view></div></template
+></lynx-view>
 "
 `;

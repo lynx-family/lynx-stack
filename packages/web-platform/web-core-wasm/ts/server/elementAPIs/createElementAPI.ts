@@ -6,6 +6,23 @@
 
 import { MainThreadServerContext, StyleSheetResource } from '../wasm.js';
 import {
+  templateFilterImage,
+  templateInlineImage,
+  templateScrollView,
+  templateXAudioTT,
+  templateXImage,
+  templateXInput,
+  templateXList,
+  templateXOverlayNg,
+  templateXRefreshView,
+  templateXSvg,
+  templateXSwiper,
+  templateXText,
+  templateXTextarea,
+  templateXViewpageNg,
+  templateXWebView,
+} from '@lynx-js/web-elements/html-templates';
+import {
   LYNX_TAG_TO_HTML_TAG_MAP,
   uniqueIdSymbol,
   cssIdAttribute,
@@ -92,14 +109,33 @@ export function createElementAPI(
     enableCSSSelector: boolean;
     defaultOverflowVisible: boolean;
     defaultDisplayLinear: boolean;
+    viewAttributes?: string;
   },
   styleInfo?: Uint8Array,
 ): ElementPAPIs {
-  const wasmContext = new MainThreadServerContext();
+  const wasmContext = new MainThreadServerContext({
+    'scroll-view': templateScrollView,
+    'x-audio-tt': templateXAudioTT,
+    'x-image': templateXImage,
+    'filter-image': templateFilterImage,
+    'inline-image': templateInlineImage,
+    'x-input': templateXInput,
+    'x-list': templateXList,
+    'x-overlay-ng': templateXOverlayNg,
+    'x-refresh-view': templateXRefreshView,
+    'x-svg': templateXSvg,
+    'x-swiper': templateXSwiper,
+    'x-text': templateXText,
+    'x-textarea': templateXTextarea,
+    'x-viewpager-ng': templateXViewpageNg,
+    'x-web-view': templateXWebView,
+  }, config.viewAttributes ?? '');
   if (styleInfo) {
     const resource = new StyleSheetResource(styleInfo, undefined);
     wasmContext.push_style_sheet(resource);
   }
+  (mtsBinding as any).wasmContext = wasmContext;
+
   let pageElementId: number | undefined;
 
   // Helper to create element
@@ -421,9 +457,7 @@ export function createElementAPI(
 
     __FlushElementTree: (() => {
       if (pageElementId !== undefined) {
-        const html = wasmContext.generate_html_segment(pageElementId);
-        const css = wasmContext.get_page_css();
-        mtsBinding.ssrResult = `<style>${css}</style>${html}`;
+        mtsBinding.ssrResult = wasmContext.generate_html(pageElementId);
       }
     }),
 

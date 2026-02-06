@@ -7,9 +7,9 @@ export class MainThreadServerContext {
     add_class(element_id: number, class_name: string): void;
     append_child(parent_id: number, child_id: number): void;
     create_element(tag_name: string): number;
-    generate_html_segment(element_id: number): string;
+    generate_html(element_id: number): string;
     get_page_css(): string;
-    constructor();
+    constructor(templates: object, view_attributes: string);
     push_style_sheet(resource: StyleSheetResource, entry_name?: string | null): void;
     set_attribute(element_id: number, key: string, value: string): void;
     set_style(element_id: number, key: string, value: string): void;

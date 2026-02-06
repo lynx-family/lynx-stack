@@ -11,8 +11,8 @@ import { MainThreadServerContext, SSRBinding } from '../ts/server/wasm.js';
 describe('Server SSR', () => {
   it('should generate html correctly', () => {
     const binding: SSRBinding = {};
-    const api = createElementAPI(binding);
-    const wasmCtx = binding.wasmContext as MainThreadServerContext;
+    const config = { enableCSSSelector: true };
+    const api = createElementAPI(binding, config);
 
     // Create Page
     const page = api.__CreatePage(0, 0);
@@ -47,8 +47,8 @@ describe('Server SSR', () => {
 
   it('should handle attributes and styles', () => {
     const binding: any = {};
-    const api = createElementAPI(binding);
-    const wasmCtx = binding.wasmContext as MainThreadServerContext;
+    const config = { enableCSSSelector: true };
+    const api = createElementAPI(binding, config);
 
     const el = api.__CreateElement('image', 0);
     api.__SetAttribute(el, 'src', 'http://example.com/img.png');
@@ -56,7 +56,8 @@ describe('Server SSR', () => {
     api.__AddInlineStyle(el, 'height', '100px');
 
     const uid = api.__GetElementUniqueID(el);
-    const html = wasmCtx.generate_html_segment(uid);
+    const wasmCtx = binding.wasmContext as MainThreadServerContext;
+    const html = wasmCtx.generate_html(uid);
 
     console.log('Image HTML:', html);
 
@@ -68,15 +69,16 @@ describe('Server SSR', () => {
 
   it('should transform styles', () => {
     const binding: any = {};
-    const api = createElementAPI(binding);
-    const wasmCtx = binding.wasmContext as MainThreadServerContext;
+    const config = { enableCSSSelector: true };
+    const api = createElementAPI(binding, config);
 
     const el = api.__CreateElement('view', 0);
     // Test key-value transformation
     api.__AddInlineStyle(el, 'flex', '1');
 
     const uid = api.__GetElementUniqueID(el);
-    let html = wasmCtx.generate_html_segment(uid);
+    const wasmCtx = binding.wasmContext as MainThreadServerContext;
+    let html = wasmCtx.generate_html(uid);
     // Check key-value transform (flex -> --flex)
     expect(html).toContain('--flex:1');
 
@@ -85,7 +87,7 @@ describe('Server SSR', () => {
     api.__SetAttribute(el2, 'style', 'linear-layout-gravity: right;');
 
     const uid2 = api.__GetElementUniqueID(el2);
-    html = wasmCtx.generate_html_segment(uid2);
+    html = wasmCtx.generate_html(uid2);
 
     // Check string transform (linear-layout-gravity -> --align-self-column:end)
     expect(html).toContain('--align-self-column:end');
