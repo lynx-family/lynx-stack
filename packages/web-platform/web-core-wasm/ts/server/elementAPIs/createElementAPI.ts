@@ -4,212 +4,270 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { MainThreadServerContext } from '../wasm.js';
-import { LYNX_TAG_TO_HTML_TAG_MAP, uniqueIdSymbol } from '../../constants.js';
+import { MainThreadServerContext, StyleSheetResource } from '../wasm.js';
+import {
+  LYNX_TAG_TO_HTML_TAG_MAP,
+  uniqueIdSymbol,
+  cssIdAttribute,
+  lynxEntryNameAttribute,
+  lynxDefaultDisplayLinearAttribute,
+} from '../../constants.js';
 import type {
-  ElementPAPIs,
+  AddClassPAPI,
+  AddInlineStylePAPI,
+  AppendElementPAPI,
+  CreateComponentPAPI,
+  CreateElementPAPI,
+  CreateImagePAPI,
+  CreateListPAPI,
+  CreatePagePAPI,
+  CreateRawTextPAPI,
+  CreateScrollViewPAPI,
+  CreateTextPAPI,
+  CreateViewPAPI,
+  CreateWrapperElementPAPI,
   DecoratedHTMLElement,
-  Cloneable,
+  ElementPAPIs,
+  GetAttributesPAPI,
+  GetClassesPAPI,
+  GetIDPAPI,
+  GetTagPAPI,
+  SetAttributePAPI,
+  SetAttributePAPIUpdateListInfo,
+  SetCSSIdPAPI,
+  SetClassesPAPI,
+  SetIDPAPI,
+  SetInlineStylesPAPI,
   UpdateListInfoAttributeValue,
 } from '../../types/index.js';
+import {
+  __AddConfig,
+  __AddDataset,
+  __AddEvent,
+  __ElementIsEqual,
+  __FirstElement,
+  __GetChildren,
+  __GetComponentID,
+  __GetConfig,
+  __GetDataByKey,
+  __GetDataset,
+  __GetElementConfig,
+  __GetElementUniqueID,
+  __GetEvent,
+  __GetEvents,
+  __GetPageElement,
+  __GetParent,
+  __GetTemplateParts,
+  __InsertElementBefore,
+  __LastElement,
+  __MarkPartElement,
+  __MarkTemplateElement,
+  __NextElement,
+  __RemoveElement,
+  __ReplaceElement,
+  __ReplaceElements,
+  __SetConfig,
+  __SetDataset,
+  __SetEvents,
+  __SwapElement,
+  __UpdateComponentID,
+  __UpdateComponentInfo,
+  __UpdateListCallbacks,
+  getUniqueId,
+  type ServerElement,
+} from './pureElementAPIs.js';
 
 export type SSRBinding = {
-  wasmContext?: MainThreadServerContext;
-  ssrResult?: string;
+  ssrResult: string;
 };
 
-interface ElementHandle {
-  [uniqueIdSymbol]: number;
+// Internal strict cast
+function getServerElement(element: unknown): ServerElement {
+  return element as ServerElement;
 }
 
-function getUniqueId(element: unknown): number {
-  return (element as ElementHandle)[uniqueIdSymbol];
-}
-
-const __ElementIsEqual = (left: unknown, right: unknown) => {
-  return getUniqueId(left) === getUniqueId(right);
-};
-
-const __GetElementUniqueID = (element: unknown) => {
-  return getUniqueId(element);
-};
-
-// Throwing/Stub Implementations
-const __GetID = (_element: unknown) => {
-  throw new Error('__GetID is not implemented in SSR');
-};
-
-const __GetTag = (_element: unknown) => {
-  throw new Error('__GetTag is not implemented in SSR');
-};
-
-const __GetAttributes = (_element: unknown) => {
-  throw new Error('__GetAttributes is not implemented in SSR');
-};
-
-const __GetAttributeByName = (_element: unknown, _name: string) => {
-  throw new Error('__GetAttributeByName is not implemented in SSR');
-};
-
-const __GetClasses = (_element: unknown) => {
-  throw new Error('__GetClasses is not implemented in SSR');
-};
-
-const __GetParent = (_element: unknown) => {
-  throw new Error('__GetParent is not implemented in SSR');
-};
-
-const __GetChildren = (_element: unknown) => {
-  throw new Error('__GetChildren is not implemented in SSR');
-};
-
-const __AddEvent = () => {
-  // skip
-};
-
-const __GetEvent = () => {
-  throw new Error('__GetEvent is not implemented in SSR');
-};
-
-const __GetEvents = () => {
-  throw new Error('__GetEvents is not implemented in SSR');
-};
-
-const __SetEvents = () => {
-  throw new Error('__SetEvents is not implemented in SSR');
-};
-
-const __UpdateListCallbacks = () => {
-  throw new Error('__UpdateListCallbacks is not implemented in SSR');
-};
-
-const __GetConfig = () => {
-  throw new Error('__GetConfig is not implemented in SSR');
-};
-
-const __SetConfig = () => {
-  throw new Error('__SetConfig is not implemented in SSR');
-};
-
-const __GetElementConfig = () => {
-  throw new Error('__GetElementConfig is not implemented in SSR');
-};
-
-const __GetComponentID = () => {
-  throw new Error('__GetComponentID is not implemented in SSR');
-};
-
-const __GetDataset = (_element: unknown) => {
-  throw new Error('__GetDataset is not implemented in SSR');
-};
-
-const __SetDataset = (
-  _element: unknown,
-  _dataset: Record<string, Cloneable>,
-) => {
-  throw new Error('__SetDataset is not implemented in SSR');
-};
-
-const __AddDataset = (_element: unknown, _key: string, _value: Cloneable) => {
-  throw new Error('__AddDataset is not implemented in SSR');
-};
-
-const __GetDataByKey = (_element: unknown, _key: string) => {
-  throw new Error('__GetDataByKey is not implemented in SSR');
-};
-
-const __FirstElement = (_element: unknown) => {
-  throw new Error('__FirstElement is not implemented in SSR');
-};
-
-const __LastElement = (_element: unknown) => {
-  throw new Error('__LastElement is not implemented in SSR');
-};
-
-const __NextElement = (_element: unknown) => {
-  throw new Error('__NextElement is not implemented in SSR');
-};
-
-const __RemoveElement = (_parent: unknown, _child: unknown) => {
-  throw new Error('__RemoveElement is not implemented in SSR');
-};
-
-const __ReplaceElement = (_newEl: unknown, _oldEl: unknown) => {
-  throw new Error('__ReplaceElement is not implemented in SSR');
-};
-
-const __SwapElement = (_a: unknown, _b: unknown) => {
-  throw new Error('__SwapElement is not implemented in SSR');
-};
-
-const __SetCSSId = () => {
-  throw new Error('__SetCSSId is not implemented in SSR');
-};
-
-const __AddConfig = () => {
-  throw new Error('__AddConfig is not implemented in SSR');
-};
-
-const __UpdateComponentInfo = () => {
-  throw new Error('__UpdateComponentInfo is not implemented in SSR');
-};
-
-const __UpdateComponentID = () => {
-  throw new Error('__UpdateComponentID is not implemented in SSR');
-};
-
-const __MarkTemplateElement = () => {
-  throw new Error('__MarkTemplateElement is not implemented in SSR');
-};
-
-const __MarkPartElement = () => {
-  throw new Error('__MarkPartElement is not implemented in SSR');
-};
-
-const __GetTemplateParts = () => {
-  throw new Error('__GetTemplateParts is not implemented in SSR');
-};
-
-const __GetPageElement = () => {
-  throw new Error('__GetPageElement is not implemented in SSR');
-};
-
-const __InsertElementBefore = (
-  _parent: unknown,
-  _child: unknown,
-  _ref: unknown,
-) => {
-  throw new Error('__InsertElementBefore is not implemented in SSR');
-};
-
-const __ReplaceElements = (
-  _parent: unknown,
-  _newChildren: unknown,
-  _oldChildren: unknown,
-) => {
-  throw new Error('__ReplaceElements is not implemented in SSR');
-};
-
-export function createElementAPI(mtsBinding: SSRBinding): ElementPAPIs {
+export function createElementAPI(
+  mtsBinding: SSRBinding,
+  config: {
+    enableCSSSelector: boolean;
+    defaultOverflowVisible: boolean;
+    defaultDisplayLinear: boolean;
+  },
+  styleInfo?: Uint8Array,
+): ElementPAPIs {
   const wasmContext = new MainThreadServerContext();
+  if (styleInfo) {
+    const resource = new StyleSheetResource(styleInfo, undefined);
+    wasmContext.push_style_sheet(resource);
+  }
   let pageElementId: number | undefined;
 
-  // Attach context
-  mtsBinding.wasmContext = wasmContext;
-
   // Helper to create element
-  function createServerElement(tagName: string): ElementHandle {
+  function createServerElement(tagName: string): ServerElement {
     const uniqueId = wasmContext.create_element(tagName);
-    return { [uniqueIdSymbol]: uniqueId };
+    const element: ServerElement = {
+      [uniqueIdSymbol]: uniqueId,
+      attributes: {},
+      tagName,
+    };
+    if (!config.enableCSSSelector) {
+      setAttributeInternal(element, 'l-uid', uniqueId.toString());
+    }
+    return element;
   }
+
+  // Optimized: Direct access without redundant getUniqueId call if we already have the element
+  function setAttributeInternal(el: ServerElement, key: string, value: string) {
+    el.attributes[key] = value;
+    wasmContext.set_attribute(el[uniqueIdSymbol], key, value);
+  }
+
+  function getAttributeInternal(
+    el: ServerElement,
+    key: string,
+  ): string | undefined {
+    return el.attributes[key];
+  }
+
+  // Wrapper for external calls where we only have unknown/HTMLElement
+  function setAttribute(element: unknown, key: string, value: string) {
+    setAttributeInternal(getServerElement(element), key, value);
+  }
+
+  function getAttribute(element: unknown, key: string): string | undefined {
+    return getAttributeInternal(getServerElement(element), key);
+  }
+
+  // --- CSSOG Implementations ---
+  const __SetCSSIdForCSSOG: SetCSSIdPAPI = (
+    elements: HTMLElement[],
+    cssId: number | null,
+    entryName?: string,
+  ) => {
+    for (const element of elements) {
+      const el = getServerElement(element);
+      if (cssId !== 0) {
+        setAttributeInternal(
+          el,
+          cssIdAttribute,
+          cssId === null ? '' : String(cssId),
+        );
+      }
+      if (entryName) {
+        setAttributeInternal(el, lynxEntryNameAttribute, entryName);
+      }
+      const cls = getAttributeInternal(el, 'class');
+      if (cls) {
+        __SetClassesForCSSOG(element, cls);
+      }
+    }
+  };
+
+  const __SetClassesForCSSOG: SetClassesPAPI = (
+    element: HTMLElement,
+    classNames: string | null,
+  ) => {
+    const el = getServerElement(element);
+
+    // Inline __SetClasses logic to avoid redundant lookups
+    const clsVal = classNames || '';
+    setAttributeInternal(el, 'class', clsVal);
+
+    const cssId = getAttributeInternal(el, cssIdAttribute);
+    const entryName = getAttributeInternal(el, lynxEntryNameAttribute);
+
+    // Direct WASM call with cached values
+    wasmContext.update_css_og_style(
+      el[uniqueIdSymbol],
+      Number(cssId) || 0,
+      clsVal.split(/\s+/),
+      entryName,
+    );
+  };
+
+  const __AddClassForCSSOG: AddClassPAPI = (
+    element: HTMLElement,
+    className: string,
+  ) => {
+    const el = getServerElement(element);
+    const oldClass = getAttributeInternal(el, 'class') ?? '';
+    const newClassName = (oldClass + ' ' + className).trim();
+    setAttributeInternal(el, 'class', newClassName);
+
+    const cssId = getAttributeInternal(el, cssIdAttribute);
+    const entryName = getAttributeInternal(el, lynxEntryNameAttribute);
+
+    wasmContext.update_css_og_style(
+      el[uniqueIdSymbol],
+      Number(cssId) || 0,
+      newClassName.split(/\s+/),
+      entryName,
+    );
+  };
+
+  const __SetCSSId: SetCSSIdPAPI = (
+    elements: HTMLElement[],
+    cssId: number | null,
+    entryName?: string,
+  ) => {
+    for (const element of elements) {
+      if (cssId === 0) {
+        // Skip setting cssIdAttribute for 0 to match CSR behavior
+        continue;
+      }
+      const el = getServerElement(element);
+      setAttributeInternal(
+        el,
+        cssIdAttribute,
+        cssId === null ? '' : String(cssId),
+      );
+      if (entryName) {
+        setAttributeInternal(el, lynxEntryNameAttribute, entryName);
+      }
+    }
+  };
+
+  const __SetClasses: SetClassesPAPI = (
+    element: HTMLElement,
+    classname: string | null,
+  ) => {
+    setAttribute(element, 'class', classname || '');
+  };
+
+  const __AddClass: AddClassPAPI = (
+    element: HTMLElement,
+    className: string,
+  ) => {
+    const el = getServerElement(element);
+    wasmContext.add_class(el[uniqueIdSymbol], className);
+    // Update local attribute state
+    const oldClass = getAttributeInternal(el, 'class') ?? '';
+    const newClassName = (oldClass + ' ' + className).trim();
+    el.attributes['class'] = newClassName;
+  };
+
+  const isCSSOG = !config.enableCSSSelector;
 
   return {
     // Pure/Throwing Methods
-    __GetID,
-    __GetTag,
-    __GetAttributes,
-    __GetAttributeByName,
-    __GetClasses,
+    __GetID: ((element: HTMLElement) => {
+      return getAttribute(element, 'id') ?? null;
+    }) as GetIDPAPI,
+    __GetTag: ((element: HTMLElement) => {
+      // Direct access via getServerElement optimized path
+      return getServerElement(element).tagName;
+    }) as GetTagPAPI,
+    __GetAttributes: ((element: HTMLElement) => {
+      return { ...getServerElement(element).attributes };
+    }) as GetAttributesPAPI,
+    __GetAttributeByName: (element: unknown, name: string) => {
+      return getAttribute(element, name) ?? null;
+    },
+    __GetClasses: ((element: HTMLElement) => {
+      const cls = getAttribute(element, 'class');
+      if (!cls) return [];
+      return cls.split(/\s+/).filter((c) => c.length > 0);
+    }) as GetClassesPAPI,
     __GetParent,
     __GetChildren,
     __AddEvent,
@@ -233,7 +291,11 @@ export function createElementAPI(mtsBinding: SSRBinding): ElementPAPIs {
     __RemoveElement,
     __ReplaceElement,
     __SwapElement,
-    __SetCSSId,
+
+    __SetCSSId: isCSSOG ? __SetCSSIdForCSSOG : __SetCSSId,
+    __SetClasses: isCSSOG ? __SetClassesForCSSOG : __SetClasses,
+    __AddClass: isCSSOG ? __AddClassForCSSOG : __AddClass,
+
     __AddConfig,
     __UpdateComponentInfo,
     __UpdateComponentID,
@@ -245,142 +307,128 @@ export function createElementAPI(mtsBinding: SSRBinding): ElementPAPIs {
     __ReplaceElements,
 
     // Context-Dependent Methods
-    __CreateView(_parentComponentUniqueId: number) {
+    // Note: We cast to DecoratedHTMLElement to satisfy the PAPI interface,
+    // even though our runtime object is ServerElement.
+    __CreateView: ((_parentComponentUniqueId: number) => {
       return createServerElement('x-view') as unknown as DecoratedHTMLElement;
-    },
-    __CreateText(_parentComponentUniqueId: number) {
+    }) as CreateViewPAPI,
+    __CreateText: ((_parentComponentUniqueId: number) => {
       return createServerElement('x-text') as unknown as DecoratedHTMLElement;
-    },
-    __CreateImage(_parentComponentUniqueId: number) {
+    }) as CreateTextPAPI,
+    __CreateImage: ((_parentComponentUniqueId: number) => {
       return createServerElement('x-image') as unknown as DecoratedHTMLElement;
-    },
-    __CreateRawText(text: string) {
+    }) as CreateImagePAPI,
+    __CreateRawText: ((text: string) => {
       const el = createServerElement('raw-text');
-      wasmContext.set_attribute(getUniqueId(el), 'text', text);
+      setAttributeInternal(el, 'text', text);
       return el as unknown as DecoratedHTMLElement;
-    },
-    __CreateScrollView(_parentComponentUniqueId: number) {
+    }) as CreateRawTextPAPI,
+    __CreateScrollView: ((_parentComponentUniqueId: number) => {
       return createServerElement(
         'scroll-view',
       ) as unknown as DecoratedHTMLElement;
-    },
-    __CreateElement(tagName: string, _parentComponentUniqueId: number) {
+    }) as CreateScrollViewPAPI,
+    __CreateElement: ((tagName: string, _parentComponentUniqueId: number) => {
       const htmlTag = LYNX_TAG_TO_HTML_TAG_MAP[tagName] ?? tagName;
       return createServerElement(htmlTag) as unknown as DecoratedHTMLElement;
-    },
-    __CreateComponent(
+    }) as CreateElementPAPI,
+    __CreateComponent: ((
       _parentComponentUniqueId: number,
       _componentID: string,
       _cssID: number,
       entryName: string,
       name: string,
-    ) {
+    ) => {
       const el = createServerElement('x-view'); // Component host
-      const id = getUniqueId(el);
-      // TODO: Handle componentID/cssID if needed by server context
       if (entryName) {
-        wasmContext.set_attribute(
-          id,
-          'lynx-entry-name',
-          entryName,
-        );
+        setAttributeInternal(el, 'lynx-entry-name', entryName);
       }
       if (name) {
-        wasmContext.set_attribute(id, 'name', name);
+        setAttributeInternal(el, 'name', name);
       }
       return el as unknown as DecoratedHTMLElement;
-    },
-    __CreateWrapperElement(_parentComponentUniqueId: number) {
+    }) as CreateComponentPAPI,
+    __CreateWrapperElement: ((_parentComponentUniqueId: number) => {
       return createServerElement(
         'lynx-wrapper',
       ) as unknown as DecoratedHTMLElement;
-    },
-    __CreateList(_parentComponentUniqueId: number) {
-      const el = createServerElement('x-list');
-      return el as unknown as DecoratedHTMLElement;
-    },
-    __CreatePage(_componentID: string, _cssID: number) {
+    }) as CreateWrapperElementPAPI,
+    __CreateList: ((_parentComponentUniqueId: number) => {
+      return createServerElement('x-list') as unknown as DecoratedHTMLElement;
+    }) as CreateListPAPI,
+    __CreatePage: ((_componentID: string, _cssID: number) => {
       const el = createServerElement('div');
-      const id = getUniqueId(el);
-      pageElementId = id;
-      wasmContext.set_attribute(id, 'part', 'page');
-      return el as unknown as DecoratedHTMLElement;
-    },
+      pageElementId = el[uniqueIdSymbol];
+      setAttributeInternal(el, 'part', 'page');
 
-    __AppendElement(parent: unknown, child: unknown) {
+      if (config.defaultDisplayLinear === false) {
+        setAttributeInternal(el, lynxDefaultDisplayLinearAttribute, 'false');
+      }
+      if (config.defaultOverflowVisible === true) {
+        setAttributeInternal(el, 'lynx-default-overflow-visible', 'true');
+      }
+
+      return el as unknown as DecoratedHTMLElement;
+    }) as CreatePagePAPI,
+
+    __AppendElement: ((parent: HTMLElement, child: HTMLElement) => {
       const parentId = getUniqueId(parent);
       const childId = getUniqueId(child);
       wasmContext.append_child(parentId, childId);
-    },
+    }) as AppendElementPAPI,
 
-    __SetAttribute(
-      element: unknown,
+    __SetAttribute: ((
+      element: HTMLElement,
       name: string,
       value: string | boolean | null | undefined | UpdateListInfoAttributeValue,
-    ) {
-      const id = getUniqueId(element);
+    ) => {
+      const el = getServerElement(element);
+      let valStr = '';
       if (value == null) {
-        wasmContext.set_attribute(id, name, '');
+        valStr = '';
       } else {
-        const valStr = value.toString();
-        wasmContext.set_attribute(id, name, valStr);
+        valStr = value.toString();
       }
-    },
+      setAttributeInternal(el, name, valStr);
+    }) as SetAttributePAPI & SetAttributePAPIUpdateListInfo,
 
-    __SetClasses(element: unknown, classname: string | null) {
-      const id = getUniqueId(element);
-      if (classname) {
-        wasmContext.set_attribute(id, 'class', classname);
-      } else {
-        wasmContext.set_attribute(id, 'class', '');
-      }
-    },
-
-    __AddClass(element: unknown, className: string) {
-      const id = getUniqueId(element);
-      wasmContext.add_class(id, className);
-    },
-
-    __SetInlineStyles(
-      element: unknown,
+    __SetInlineStyles: ((
+      element: HTMLElement,
       value: string | Record<string, string> | undefined,
-    ) {
-      const id = getUniqueId(element);
+    ) => {
+      const el = getServerElement(element);
+      const id = el[uniqueIdSymbol];
       if (typeof value === 'string') {
         wasmContext.set_attribute(id, 'style', value);
       } else if (value && typeof value === 'object') {
         Object.entries(value).forEach(([k, v]) => {
-          const val = v as string;
-          wasmContext.set_style(id, k, val);
+          // TODO: This loop can be optimized in WASM side if we had bulk update
+          wasmContext.set_style(id, k, v as string);
         });
       }
-    },
+    }) as SetInlineStylesPAPI,
 
-    __AddInlineStyle(
-      element: unknown,
+    __AddInlineStyle: ((
+      element: HTMLElement,
       key: string | number,
       value: string | number | null | undefined,
-    ) {
-      const id = getUniqueId(element);
+    ) => {
+      const el = getServerElement(element);
       const keyStr = key.toString();
       const valStr = value?.toString() ?? '';
-      wasmContext.set_style(id, keyStr, valStr);
-    },
+      wasmContext.set_style(el[uniqueIdSymbol], keyStr, valStr);
+    }) as AddInlineStylePAPI,
 
-    __FlushElementTree() {
+    __FlushElementTree: (() => {
       if (pageElementId !== undefined) {
         const html = wasmContext.generate_html_segment(pageElementId);
-        mtsBinding.ssrResult = html;
+        const css = wasmContext.get_page_css();
+        mtsBinding.ssrResult = `<style>${css}</style>${html}`;
       }
-    },
+    }),
 
-    __SetID(element: unknown, id: string | null) {
-      const elemId = getUniqueId(element);
-      if (id) {
-        wasmContext.set_attribute(elemId, 'id', id);
-      } else {
-        wasmContext.set_attribute(elemId, 'id', '');
-      }
-    },
+    __SetID: ((element: HTMLElement, id: string | null) => {
+      setAttribute(element, 'id', id ?? '');
+    }) as SetIDPAPI,
   };
 }

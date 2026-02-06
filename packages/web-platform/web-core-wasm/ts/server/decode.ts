@@ -7,7 +7,7 @@ export interface DecodedTemplate {
   config: Record<string, any>;
   styleInfo?: Uint8Array;
   lepusCode: Record<string, Uint8Array>;
-  customSections?: Uint8Array;
+  customSections?: Record<string, any>;
 }
 
 export function decodeTemplate(buffer: Uint8Array): DecodedTemplate {
@@ -42,7 +42,7 @@ export function decodeTemplate(buffer: Uint8Array): DecodedTemplate {
   let config: Record<string, any> = {};
   let styleInfo: Uint8Array | undefined;
   let lepusCode: Record<string, Uint8Array> = {};
-  let customSections: Uint8Array | undefined;
+  let customSections: Record<string, any> | undefined;
 
   while (offset < buffer.length) {
     if (buffer.length < offset + 4) {
@@ -87,7 +87,8 @@ export function decodeTemplate(buffer: Uint8Array): DecodedTemplate {
         break;
       }
       case TemplateSectionLabel.CustomSections: {
-        customSections = content;
+        const decoder = new TextDecoder('utf-16le');
+        customSections = JSON.parse(decoder.decode(content));
         break;
       }
       case TemplateSectionLabel.Manifest:

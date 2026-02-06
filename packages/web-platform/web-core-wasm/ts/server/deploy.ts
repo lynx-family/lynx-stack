@@ -1,44 +1,86 @@
 import * as vm from 'vm';
-import * as fs from 'fs';
 import { decodeTemplate } from './decode.js';
-import { decode_style_info } from './wasm.js';
+import {
+  createElementAPI,
+  type SSRBinding,
+} from './elementAPIs/createElementAPI.js';
+import type { Cloneable, InitI18nResources } from '../types/index.js';
+import { createServerLynx } from './createServerLynx.js';
 
-export async function executeTemplate(filePath: string) {
-  const context = vm.createContext({
+export function executeTemplate(
+  templateBuffer: Buffer,
+  initData: Cloneable,
+  globalProps: Cloneable,
+  _initI18nResources: InitI18nResources,
+): Promise<string> {
+  const result = decodeTemplate(templateBuffer);
+  const config = result.config;
+
+  const binding: SSRBinding = { ssrResult: '' };
+  const elementAPIs = createElementAPI(
+    binding,
+    {
+      enableCSSSelector: config['enableCSSSelector'] === 'true',
+      defaultOverflowVisible: config['defaultOverflowVisible'] === 'true',
+      defaultDisplayLinear: config['defaultDisplayLinear'] !== 'false', // Default to true if not present or 'true'
+    },
+    result.styleInfo,
+  );
+
+  let resolveRender: (val: string) => void;
+  const renderPromise = new Promise<string>((resolve) => {
+    resolveRender = resolve;
+  });
+
+  const sandbox: Record<string, any> = {
     module: { exports: {} },
     exports: {},
     console: console,
-    // Mock globals to match client environment if needed, though usage should be guarded
+    // Mock globals to match client environment if needed
     setTimeout: setTimeout,
     clearTimeout: clearTimeout,
-    lynx: {
-      // Mock basic lynx objects
-      getCoreContext: () => ({}),
-      __globalProps: {},
+    lynx: createServerLynx(
+      globalProps,
+      result.customSections as unknown as Record<string, Cloneable>,
+    ),
+    __OnLifecycleEvent: () => {},
+    ...elementAPIs,
+  };
+
+  // Intercept renderPage assignment
+  // When assigned, schedule a microtask to execute it.
+  let renderPageFunction: ((data: Cloneable) => void) | null = null;
+  Object.defineProperty(sandbox, 'renderPage', {
+    get: () => {
+      return renderPageFunction;
     },
+    set: (v) => {
+      renderPageFunction = v;
+      if (typeof v === 'function') {
+        // Removed: capturedRenderPage = true;
+        queueMicrotask(() => {
+          const processData = sandbox['processData'];
+          const processedData = processData
+            ? processData(initData)
+            : initData;
+          v(processedData);
+          elementAPIs.__FlushElementTree();
+          resolveRender(binding.ssrResult);
+        });
+      }
+    },
+    configurable: true,
+    enumerable: true,
   });
 
-  const buffer = fs.readFileSync(filePath);
-  const result = decodeTemplate(buffer);
+  const context = vm.createContext(sandbox);
 
-  const config = result.config;
-
-  // Style Info
-  if (result.styleInfo) {
-    try {
-      decode_style_info(
-        result.styleInfo,
-        config['isLazy'] === 'true' ? filePath : undefined,
-        config['enableCSSSelector'] === 'true',
-      );
-    } catch (e) {
-      console.warn('Failed to decode style info:', e);
-    }
-  }
+  // Style Info block removed as it is passed to createElementAPI
 
   // Lepus Code
-  const rootCode = result.lepusCode['root'];
-  if (rootCode) {
+  const rootCodeBuf = result.lepusCode['root'];
+  if (rootCodeBuf) {
+    const rootCode = new TextDecoder('utf-8').decode(rootCodeBuf);
     const isLazy = config['isLazy'] === 'true';
 
     const wrappedCode = `
@@ -52,10 +94,13 @@ export async function executeTemplate(filePath: string) {
         })()
       `;
 
+    // Execute root code
+    // This execution should trigger the assignment of globalThis.renderPage,
+    // which in turn triggers our setter, queues the microtask.
     vm.runInContext(wrappedCode, context, {
-      filename: `${filePath}/root`,
+      filename: `root`,
     });
   }
 
-  return context;
+  return renderPromise;
 }

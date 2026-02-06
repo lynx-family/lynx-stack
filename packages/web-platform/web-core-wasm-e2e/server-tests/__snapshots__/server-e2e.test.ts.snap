@@ -1,0 +1,83 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`executeTemplate should run lepusCode.root from basic-pink-rect.web.bundle 1`] = `
+"<style></style>
+<div part="page" lynx-default-overflow-visible="true">
+  <x-view
+    id="target"
+    style="height: 100px; width: 100px; background: pink"
+  ></x-view>
+</div>
+"
+`;
+
+exports[`executeTemplate should run lepusCode.root from config-css-default-display-linear-false.web.bundle 1`] = `
+"<style>
+  .background-green:not([l-e-name]) {
+    background-color: green;
+  }
+  .background-yellow:not([l-e-name]) {
+    background-color: #ff0;
+  }
+  x-view:not([l-e-name]) {
+    height: 200px;
+    width: 200px;
+  }
+</style>
+<div
+  lynx-default-display-linear="false"
+  part="page"
+  lynx-default-overflow-visible="true"
+>
+  <x-view style="width: auto; height: auto"
+    ><x-view class="background-green"></x-view
+    ><x-view class="background-yellow"></x-view
+  ></x-view>
+</div>
+"
+`;
+
+exports[`executeTemplate should run lepusCode.root from config-css-remove-scope-false-display-linear.web.bundle 1`] = `
+"<style>
+  .linear:where([l-css-id="1"]):not([l-e-name]),
+  .linear:where([l-css-id="1865610"]):not([l-e-name]),
+  .linear:where([l-css-id="1853379"]):not([l-e-name]) {
+    --lynx-display-toggle: var(--lynx-display-linear);
+    --lynx-display: linear;
+    display: flex;
+  }
+  .basic:where([l-css-id="1865610"]):not([l-e-name]),
+  .basic:where([l-css-id="3"]):not([l-e-name]) {
+    background-color: green;
+    height: 100px;
+    width: 100px;
+  }
+  .basic:where([l-css-id="2"]):not([l-e-name]),
+  .basic:where([l-css-id="1853379"]):not([l-e-name]) {
+    background-color: red;
+    height: 100px;
+    width: 100px;
+  }
+</style>
+<div part="page" lynx-default-overflow-visible="true">
+  <x-view class="basic" id="index" l-css-id="1853379"
+    ><x-view class="basic linear" id="sub" l-css-id="1865610"></x-view
+  ></x-view>
+</div>
+"
+`;
+
+exports[`executeTemplate should run lepusCode.root from config-css-selector-false-remove-css-and-style-collapsed.web.bundle 1`] = `
+"<style>
+  {background-color:green;}{background-color:#ff0;}[l-uid="1"] {background-color:#ff0;}
+</style>
+<div l-uid="0" part="page" lynx-default-overflow-visible="true">
+  <x-view
+    class="background-yellow"
+    style="height: 100px; width: 100px; backgroundcolor: green"
+    l-uid="1"
+    id="target"
+  ></x-view>
+</div>
+"
+`;
