@@ -343,9 +343,7 @@ export function pluginReactLynx(
           })
         }
 
-        if (!isRslib) {
-          applyCSS(api, resolvedOptions)
-        }
+        applyCSS(api, resolvedOptions)
         applyEntry(api, resolvedOptions)
         applyBackgroundOnly(api)
         applyGenerator(api, resolvedOptions)

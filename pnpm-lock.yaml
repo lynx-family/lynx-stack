@@ -686,12 +686,18 @@ importers:
 
   packages/rspeedy/lynx-bundle-rslib-config:
     dependencies:
+      '@lynx-js/css-serializer':
+        specifier: workspace:*
+        version: link:../../tools/css-serializer
       '@lynx-js/runtime-wrapper-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/runtime-wrapper-webpack-plugin
       '@lynx-js/tasm':
         specifier: 0.0.20
         version: 0.0.20
+      css-tree:
+        specifier: ^3.1.0
+        version: 3.1.0
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*
@@ -705,6 +711,9 @@ importers:
       '@rslib/core':
         specifier: ^0.19.4
         version: 0.19.4(@microsoft/api-extractor@7.55.2(@types/node@24.10.9))(@typescript/native-preview@7.0.0-dev.20260131.1)(typescript@5.9.3)
+      '@types/css-tree':
+        specifier: ^2.3.11
+        version: 2.3.11
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.9)(@vitest/ui@3.2.4)(jsdom@27.4.0)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)
@@ -6272,6 +6281,7 @@ packages:
   glob@11.1.0:
     resolution: {integrity: sha512-vuNwKSaKiqm7g0THUBu2x7ckSs3XJLXE+2ssL7/MfTGPLLcrJQ/4Uq1CjPTtO5cCIiRxqvN6Twy1qOwhL0Xjcw==}
     engines: {node: 20 || >=22}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
     hasBin: true
 
   glob@13.0.0:
@@ -8097,7 +8107,6 @@ packages:
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
     deprecated: |-
       You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
-
       (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
 
   qs@6.13.0:
