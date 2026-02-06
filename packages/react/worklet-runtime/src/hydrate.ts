@@ -71,11 +71,23 @@ function hydrateMainThreadRef(
   refId: WorkletRefId,
   value: WorkletRefImpl<unknown>,
 ) {
-  if ('_initValue' in value) {
-    // The ref has not been accessed yet.
+  // After runWorklet, value is the hydrated MainThreadRef instance (or similar).
+  // If it's still the raw serialized object (with just _wvid, _initValue, _type),
+  // it means the ref was never accessed during first screen, so no need to hydrate.
+  // A hydrated instance will have 'current' as an own property or accessor.
+  const hasCurrentAccessor = 'current' in value && (
+    typeof Object.getOwnPropertyDescriptor(Object.getPrototypeOf(value) ?? {}, 'current')?.get === 'function'
+    || Object.prototype.hasOwnProperty.call(value, 'current')
+  );
+
+  if (!hasCurrentAccessor) {
+    // Still the raw serialized form, not accessed during first screen
     return;
   }
-  lynxWorkletImpl!._refImpl._workletRefMap[refId] = value;
+
+  lynxWorkletImpl!._refImpl._workletRefMap[refId] = value as unknown as import('./bindings/types.js').WorkletRef<
+    unknown
+  >;
 }
 
 /**

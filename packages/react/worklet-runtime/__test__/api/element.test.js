@@ -14,6 +14,13 @@ beforeEach(() => {
   initWorklet();
   vi.useFakeTimers();
 
+  globalThis.lynx = {
+    getCoreContext: () => ({
+      addEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }),
+  };
+
   globalThis.__SetAttribute = vi.fn();
   globalThis.__AddInlineStyle = vi.fn();
   globalThis.__GetAttributeByName = vi.fn();

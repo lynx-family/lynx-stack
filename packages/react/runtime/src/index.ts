@@ -84,3 +84,4 @@ export {
 };
 
 export * from './lynx-api.js';
+export { workletCapture } from './worklet/capture.js';

@@ -1,3 +1,5 @@
+import { workletCapture as __workletCapture } from "@lynx-js/react";
+var workletCapture = __workletCapture;
 let worklet = {
     _c: {
         y1
