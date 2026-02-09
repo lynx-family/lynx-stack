@@ -3,10 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 import type { MainThreadRef } from '@lynx-js/react';
 
-import '../polyfill/shim.js';
+import './polyfill.js';
 
 import { useMotionValueRefEvent as useMotionValueRefEvent_ } from '../hooks/useMotionEvent.js';
-import { useMotionValueRefCore } from '../hooks/useMotionValueRef.js';
+import { useMotionValueRefCore } from '../hooks/useMotionValueRefCore.js';
 import { createMotionValue } from './core/MotionValue.js';
 import type {
   MotionValue,
