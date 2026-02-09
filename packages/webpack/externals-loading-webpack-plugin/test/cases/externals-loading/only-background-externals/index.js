@@ -4,6 +4,8 @@ const consoleInfoMock = vi.spyOn(console, 'info').mockImplementation(() =>
   undefined
 );
 
+consoleInfoMock.mockClear();
+
 console.info(add(1, 2));
 
 it('should log 3', async () => {

@@ -505,7 +505,7 @@ describe('document - background', () => {
     expect(scratch).toMatchInlineSnapshot(`
       <root>
         <__snapshot_a94a8_test_25
-          0={[MockFunction spy]}
+          0={[MockFunction]}
         />
       </root>
     `);
@@ -515,7 +515,7 @@ describe('document - background', () => {
     expect(scratch).toMatchInlineSnapshot(`
       <root>
         <__snapshot_a94a8_test_25
-          0={[MockFunction spy]}
+          0={[MockFunction]}
         />
       </root>
     `);

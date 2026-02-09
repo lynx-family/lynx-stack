@@ -4,10 +4,18 @@
 
 import os from 'node:os';
 
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
+    exclude: [
+      ...configDefaults.exclude,
+      '**/dist/**',
+      '**/cypress/**',
+      '**/lib/**',
+      '**/.{idea,git,cache,output,temp}/**',
+      '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
+    ],
     coverage: {
       exclude: [
         '**/*.d.ts',
@@ -52,18 +60,15 @@ export default defineConfig({
       NODE_ENV: 'test',
     },
 
-    pool: 'forks',
-    poolOptions: {
-      forks: {
-        minForks: 1,
-        maxForks: ((cpuCount) =>
-          Math.floor(
-            cpuCount <= 32
-              ? cpuCount / 2
-              : 16 + (cpuCount - 32) / 6,
-          ))(os.availableParallelism()),
-      },
-    },
+    maxWorkers: Math.max(
+      1,
+      ((cpuCount) =>
+        Math.floor(
+          cpuCount <= 32
+            ? cpuCount / 2
+            : 16 + (cpuCount - 32) / 6,
+        ))(os.availableParallelism()),
+    ),
 
     projects: [
       'examples/*/vitest.config.ts',

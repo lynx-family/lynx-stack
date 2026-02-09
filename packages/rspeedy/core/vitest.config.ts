@@ -21,6 +21,10 @@ const config: UserWorkspaceConfig = defineProject({
     }),
   ],
   test: {
+    typecheck: {
+      ignoreSourceErrors: true,
+      include: ['test/**/*.test-d.ts'],
+    },
     name: 'rspeedy',
     setupFiles: ['@lynx-js/vitest-setup/setup.ts'],
     env: {

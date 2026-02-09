@@ -81,7 +81,6 @@
     "type-fest": "^5.4.3",
     "typia": "10.1.0",
     "typia-rspack-plugin": "2.2.2",
-    "vitest": "^3.2.4",
     "webpack": "^5.104.1"
   },
   "peerDependencies": {

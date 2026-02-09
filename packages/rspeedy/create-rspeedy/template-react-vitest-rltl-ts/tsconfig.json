@@ -4,6 +4,8 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
 
+    "lib": ["ES2015"],
+
     "esModuleInterop": true,
     "skipLibCheck": true,
 

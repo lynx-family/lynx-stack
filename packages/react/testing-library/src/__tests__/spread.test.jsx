@@ -118,6 +118,15 @@ test('re-render with same style should not generate patch with spread', () => {
         "values",
         [
           {
+            "backgroundColor": "red",
+          },
+          1,
+        ],
+      ],
+      [
+        "values",
+        [
+          {
             "__spread": {
               "data-count": 0,
               "style": {
