@@ -21,7 +21,7 @@
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/web-core-wasm": "workspace:*",
-    "@playwright/test": "^1.58.1",
+    "@playwright/test": "^1.58.2",
     "@rsbuild/core": "catalog:rsbuild",
     "nyc": "^17.1.0"
   }
