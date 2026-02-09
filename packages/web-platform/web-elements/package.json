@@ -136,7 +136,7 @@
   },
   "devDependencies": {
     "@lynx-js/playwright-fixtures": "workspace:*",
-    "@playwright/test": "^1.58.1",
+    "@playwright/test": "^1.58.2",
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-source-build": "1.0.3",
     "nyc": "^17.1.0",
