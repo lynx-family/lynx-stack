@@ -38,11 +38,11 @@
   },
   "devDependencies": {
     "@microsoft/api-extractor": "^7.55.2",
-    "@modelcontextprotocol/sdk": "^1.20.0",
+    "@modelcontextprotocol/sdk": "^1.25.2",
     "@types/debug": "^4.1.12",
     "core-js": "^3.47.0",
     "debug": "^4.4.3",
-    "rsbuild-plugin-publint": "0.3.3",
+    "rsbuild-plugin-publint": "0.3.4",
     "zod": "^3.25.76"
   },
   "peerDependencies": {

@@ -20,6 +20,7 @@ declare global {
   declare const __MAIN_THREAD__: boolean;
   declare const __PROFILE__: boolean;
   declare const __ALOG__: boolean | undefined;
+  declare const __ALOG_ELEMENT_API__: boolean | undefined;
   declare const __ENABLE_SSR__: boolean;
 
   declare function __CreatePage(componentId: string, cssId: number): FiberElement;
@@ -177,6 +178,11 @@ declare global {
     removeComponents: () => void;
   }
 
+  declare interface EventDataType {
+    type: string;
+    [prop: string]: unknown;
+  }
+
   namespace lynxCoreInject {
     const tt: {
       _params: {
@@ -185,8 +191,8 @@ declare global {
       };
 
       OnLifecycleEvent: ([type, data]: [LifecycleConstant, unknown]) => void;
-      publishEvent: (handlerName: string, data: unknown) => void;
-      publicComponentEvent: (componentId: string, handlerName: string, data: unknown) => void;
+      publishEvent: (handlerName: string, data: EventDataType) => void;
+      publicComponentEvent: (componentId: string, handlerName: string, data: EventDataType) => void;
       callDestroyLifetimeFun: () => void;
       updateGlobalProps: (newData: Record<string, unknown>) => void;
       updateCardData: (newData: Record<string, any>, options?: Record<string, unknown>) => void;

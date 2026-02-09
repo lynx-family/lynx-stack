@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react-rsbuild-plugin",
-  "version": "0.12.6",
+  "version": "0.12.7",
   "description": "A rsbuild plugin for ReactLynx",
   "keywords": [
     "rsbuild",
@@ -55,13 +55,13 @@
     "@microsoft/api-extractor": "catalog:",
     "@rollup/plugin-typescript": "^12.3.0",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rsbuild/plugin-sass": "1.4.0",
-    "@rsbuild/plugin-typed-css-modules": "1.1.1",
+    "@rsbuild/plugin-sass": "1.5.0",
+    "@rsbuild/plugin-typed-css-modules": "1.2.1",
     "rsbuild-plugin-arethetypeswrong": "0.1.1",
-    "rsbuild-plugin-publint": "0.3.3",
+    "rsbuild-plugin-publint": "0.3.4",
     "source-map": "^0.7.6",
     "tailwindcss": "^3.4.19",
-    "type-fest": "^5.0.1",
+    "type-fest": "^5.4.3",
     "typia": "10.1.0",
     "typia-rspack-plugin": "2.2.2"
   },

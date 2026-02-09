@@ -5,6 +5,7 @@
     "allowImportingTsExtensions": true,
 
     "lib": ["ES2024.Promise"],
+    "module": "nodenext",
 
     "isolatedDeclarations": false,
     "noEmit": true,

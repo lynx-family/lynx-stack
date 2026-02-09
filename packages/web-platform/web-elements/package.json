@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-elements",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "private": false,
   "repository": {
     "type": "git",
@@ -136,9 +136,9 @@
   },
   "devDependencies": {
     "@lynx-js/playwright-fixtures": "workspace:*",
-    "@playwright/test": "^1.57.0",
+    "@playwright/test": "^1.58.1",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rsbuild/plugin-source-build": "^1.0.3",
+    "@rsbuild/plugin-source-build": "1.0.3",
     "nyc": "^17.1.0",
     "tslib": "^2.8.1"
   },

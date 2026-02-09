@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-core-server",
-  "version": "0.19.6",
+  "version": "0.19.7",
   "private": false,
   "description": "",
   "keywords": [],
@@ -33,6 +33,6 @@
     "@lynx-js/web-mainthread-apis": "workspace:*",
     "@lynx-js/web-worker-rpc": "workspace:*",
     "rsbuild-plugin-arethetypeswrong": "0.1.1",
-    "rsbuild-plugin-publint": "0.3.3"
+    "rsbuild-plugin-publint": "0.3.4"
   }
 }

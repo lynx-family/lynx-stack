@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
 import type { ClosureValueType, RunWorkletOptions, Worklet, WorkletRefImpl } from './bindings/types.js';
+import { RunWorkletSource } from './bindings/types.js';
 import { initRunOnBackgroundDelay } from './delayRunOnBackground.js';
 import { delayExecUntilJsReady, initEventDelay } from './delayWorkletEvent.js';
 import { initEomImpl } from './eomImpl.js';
@@ -10,6 +11,7 @@ import { addEventMethodsIfNeeded } from './eventPropagation.js';
 import { hydrateCtx } from './hydrate.js';
 import { JsFunctionLifecycleManager, isRunOnBackgroundEnabled } from './jsFunctionLifecycle.js';
 import { runRunOnMainThreadTask } from './runOnMainThread.js';
+import { mainThreadFlushLoopMark } from './utils/mainThreadFlushLoopGuard.js';
 import { profile } from './utils/profile.js';
 import { getFromWorkletRefMap, initWorkletRef } from './workletRef.js';
 
@@ -53,9 +55,22 @@ function registerWorklet(_type: string, id: string, worklet: (...args: unknown[]
  */
 function runWorklet(ctx: Worklet, params: ClosureValueType[], options?: RunWorkletOptions): unknown {
   if (!validateWorklet(ctx)) {
-    console.warn('Worklet: Invalid worklet object: ' + JSON.stringify(ctx));
+    console.warn('MainThreadFunction: Invalid function object: ' + JSON.stringify(ctx));
     return;
   }
+
+  if (__DEV__) {
+    if (options?.source === RunWorkletSource.EVENT && Array.isArray(params)) {
+      const first = params[0];
+      const t = (first as { type?: unknown }).type;
+      if (typeof t === 'string') {
+        mainThreadFlushLoopMark(`event:${t}`);
+      }
+    }
+
+    mainThreadFlushLoopMark(`MainThreadFunction id=${String(ctx._wkltId)}`);
+  }
+
   if ('_lepusWorkletHash' in ctx) {
     delayExecUntilJsReady(ctx._lepusWorkletHash, params);
     return;

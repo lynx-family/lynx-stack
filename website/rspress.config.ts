@@ -396,6 +396,41 @@ const config: UserConfig = defineConfig({
       : `https://${CDN_HOST}/rspeedy-navbar-logo-dark.png`,
   },
   icon: '/rspeedy.png',
+  locales: [
+    {
+      lang: 'zh',
+      label: '简体中文',
+    },
+    {
+      lang: 'en',
+      label: 'English',
+    },
+  ],
+  i18nSource: {
+    // Replace removed `themeConfig.locales.*Text` configs in Rspress v2.
+    editLinkText: {
+      zh: '在 GitHub 上编辑此页',
+      en: 'Edit this page on GitHub',
+    },
+    searchNoResultsText: {
+      zh: '未搜索到相关结果',
+    },
+    searchPlaceholderText: {
+      zh: '搜索文档',
+    },
+    searchSuggestedQueryText: {
+      zh: '可更换不同的关键字后重试',
+    },
+    'overview.filterNameText': {
+      zh: '过滤',
+    },
+    'overview.filterPlaceholderText': {
+      zh: '输入关键词',
+    },
+    'overview.filterNoResultText': {
+      zh: '未找到匹配的 API',
+    },
+  },
   markdown: {
     shiki: {
       transformers: [
@@ -409,38 +444,10 @@ const config: UserConfig = defineConfig({
     cleanUrls: true,
   },
   themeConfig: {
-    locales: [
-      {
-        lang: 'zh',
-        label: '简体中文',
-        title: 'Rspeedy',
-        description: '由 Rspack 驱动的 Lynx 构建工具',
-        editLink: {
-          docRepoBaseUrl:
-            'https://github.com/lynx-family/lynx-stack/tree/main/website/docs',
-          text: '在 GitHub 上编辑此页',
-        },
-        searchNoResultsText: '未搜索到相关结果',
-        searchPlaceholderText: '搜索文档',
-        searchSuggestedQueryText: '可更换不同的关键字后重试',
-        overview: {
-          filterNameText: '过滤',
-          filterPlaceholderText: '输入关键词',
-          filterNoResultText: '未找到匹配的 API',
-        },
-      },
-      {
-        lang: 'en',
-        label: 'English',
-        title: 'Rspeedy',
-        description: 'Fast Rspack-based Lynx build tools',
-        editLink: {
-          docRepoBaseUrl:
-            'https://github.com/lynx-family/lynx-stack/tree/main/website/docs',
-          text: 'Edit this page on GitHub',
-        },
-      },
-    ],
+    editLink: {
+      docRepoBaseUrl:
+        'https://github.com/lynx-family/lynx-stack/tree/main/website/docs',
+    },
     lastUpdated: true,
     socialLinks: [
       {
@@ -763,7 +770,9 @@ const config: UserConfig = defineConfig({
     ],
     enableScrollToTop: true,
   },
-  ssg: true,
+  ssg: {
+    experimentalWorker: true,
+  },
   globalStyles: join(__dirname, 'src', 'styles', 'global.scss'),
   builderConfig: {
     output: {

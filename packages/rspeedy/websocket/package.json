@@ -44,7 +44,7 @@
     "api-extractor": "api-extractor run --verbose"
   },
   "dependencies": {
-    "eventemitter3": "^5.0.1"
+    "eventemitter3": "^5.0.4"
   },
   "devDependencies": {
     "@microsoft/api-extractor": "catalog:",

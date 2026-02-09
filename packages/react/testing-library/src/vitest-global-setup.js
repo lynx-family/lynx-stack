@@ -110,7 +110,9 @@ globalThis.onInjectMainThreadGlobals = (target) => {
 
   target.globalPipelineOptions = undefined;
 
-  initElementPAPICallAlog(target);
+  if (typeof __ALOG_ELEMENT_API__ !== 'undefined' && __ALOG_ELEMENT_API__) {
+    initElementPAPICallAlog(target);
+  }
 };
 globalThis.onInjectBackgroundThreadGlobals = (target) => {
   if (onInjectBackgroundThreadGlobals) {
