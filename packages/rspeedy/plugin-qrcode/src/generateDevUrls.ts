@@ -7,12 +7,10 @@ import type { ExposedAPI } from '@lynx-js/rspeedy'
 
 import type { CustomizedSchemaFn } from './index.js'
 
-export default function generateDevUrls(
+function generateFileNameBase(
   api: RsbuildPluginAPI,
-  entry: string,
-  schemaFn: CustomizedSchemaFn,
   port: number,
-): Record<string, string> {
+): { name: string, assetPublicPath: string } {
   const { dev: { assetPrefix } } = api.getNormalizedConfig()
   const { config } = api.useExposed<ExposedAPI>(
     Symbol.for('rspeedy.api'),
@@ -34,16 +32,51 @@ export default function generateDevUrls(
   } else {
     name = filename
   }
+  // <port> is supported in `dev.assetPrefix`, we should replace it with the real port
+  const assetPublicPath = assetPrefix.replaceAll('<port>', String(port))
+  return { name, assetPublicPath }
+}
+
+export function generateExplorerDevUrls(
+  api: RsbuildPluginAPI,
+  entry: string,
+  schemaFn: CustomizedSchemaFn,
+  port: number,
+): Record<string, string> {
+  const { name, assetPublicPath } = generateFileNameBase(api, port)
 
   const customSchema = schemaFn(
     new URL(
       name.replace('[name]', entry).replace('[platform]', 'lynx'),
-      // <port> is supported in `dev.assetPrefix`, we should replace it with the real port
-      assetPrefix.replaceAll('<port>', String(port)),
+      assetPublicPath,
     ).toString(),
   )
 
   return typeof customSchema === 'string'
     ? { default: customSchema }
     : customSchema
+}
+
+export function generateWebDevUrls(
+  api: RsbuildPluginAPI,
+  webEntries: string[],
+  port: number,
+): Record<string, string> {
+  const { name, assetPublicPath } = generateFileNameBase(api, port)
+  return Object.fromEntries(
+    webEntries.map(entry => {
+      const base = URL.parse(assetPublicPath)
+        ? assetPublicPath
+        : `http://localhost:${port}/`
+      const pathname = new URL(
+        name.replace('[name]', entry).replace('[platform]', 'web'),
+        base,
+      ).pathname
+      const url = new URL(`/web?casename=${pathname}`, base).toString()
+      return [
+        entry,
+        url,
+      ]
+    }),
+  )
 }
