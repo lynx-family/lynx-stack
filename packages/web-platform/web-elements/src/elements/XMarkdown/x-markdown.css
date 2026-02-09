@@ -1,0 +1,15 @@
+/*
+// Copyright 2024 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+*/
+x-markdown {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  color: inherit;
+}
+
+x-markdown::part(root) {
+  width: 100%;
+}

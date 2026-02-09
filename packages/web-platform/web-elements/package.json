@@ -58,6 +58,11 @@
       "types": "./dist/elements/XInput/index.d.ts",
       "default": "./dist/elements/XInput/index.js"
     },
+    "./XMarkdown": {
+      "@lynx-js/source-field": "./src/elements/XMarkdown/index.ts",
+      "types": "./dist/elements/XMarkdown/index.d.ts",
+      "default": "./dist/elements/XMarkdown/index.js"
+    },
     "./XOverlayNg": {
       "@lynx-js/source-field": "./src/elements/XOverlayNg/index.ts",
       "types": "./dist/elements/XOverlayNg/index.d.ts",
@@ -134,11 +139,16 @@
     "test:install": "playwright install --with-deps chromium firefox webkit",
     "test:update": "playwright test --ui --update-snapshots"
   },
+  "dependencies": {
+    "dompurify": "^3.3.1",
+    "markdown-it": "^14.1.0"
+  },
   "devDependencies": {
     "@lynx-js/playwright-fixtures": "workspace:*",
     "@playwright/test": "^1.58.2",
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-source-build": "1.0.3",
+    "@types/markdown-it": "^14.1.1",
     "nyc": "^17.1.0",
     "tslib": "^2.8.1"
   },
