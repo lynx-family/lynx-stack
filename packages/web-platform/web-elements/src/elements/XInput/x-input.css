@@ -28,6 +28,7 @@ x-input::part(input), x-input::part(form) {
   background-color: inherit;
   z-index: inherit;
   margin: inherit;
+  padding: inherit;
   color: inherit;
 }
 

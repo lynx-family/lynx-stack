@@ -72,63 +72,223 @@ impl VisitMut for WorkletVisitor {
   noop_visit_mut_type!();
 
   fn visit_mut_class_member(&mut self, n: &mut ClassMember) {
-    if !n.is_method() || n.as_method().unwrap().kind != MethodKind::Method {
-      n.visit_mut_children_with(self);
-      return;
-    }
-    let worklet_type = match n.as_mut_method().unwrap().function.body {
-      None => None,
-      Some(ref mut body) => self.check_is_worklet_block(body),
-    };
-    if worklet_type.is_none() {
-      n.visit_mut_children_with(self);
-      return;
-    }
+    match n {
+      ClassMember::Method(_) => {
+        if n.as_method().unwrap().kind != MethodKind::Method {
+          n.visit_mut_children_with(self);
+          return;
+        }
 
-    let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
-      custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
-      shared_identifiers: Some(self.shared_identifiers.clone()),
-    });
-    n.visit_mut_with(&mut collector);
+        let worklet_type = match n.as_mut_method().unwrap().function.body {
+          None => None,
+          Some(ref mut body) => self.check_is_worklet_block(body),
+        };
+        if worklet_type.is_none() {
+          n.visit_mut_children_with(self);
+          return;
+        }
 
-    let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-    let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
-      self.mode,
-      worklet_type.unwrap(),
-      hash,
-      self.cfg.target,
-      n.as_method()
-        .unwrap()
-        .key
-        .clone()
-        .ident()
-        .unwrap_or(Ident::dummy().into())
-        .into(),
-      n.as_method().unwrap().function.clone(),
-      &mut collector,
-      true,
-      &mut self.named_imports,
-    );
+        let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
+          custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
+          shared_identifiers: Some(self.shared_identifiers.clone()),
+        });
+        n.visit_mut_with(&mut collector);
 
-    *n = ClassProp {
-      span: n.as_method().unwrap().span,
-      key: n.as_method().unwrap().key.clone(),
-      value: worklet_object_expr.into(),
-      declare: false,
-      is_abstract: n.as_method().unwrap().is_abstract,
-      decorators: vec![],
-      definite: false,
-      type_ann: None,
-      is_static: n.as_method().unwrap().is_static,
-      accessibility: n.as_method().unwrap().accessibility,
-      is_optional: n.as_method().unwrap().is_optional,
-      is_override: n.as_method().unwrap().is_override,
-      readonly: false,
+        let should_use_getter = self.cfg.target == TransformTarget::JS
+          && !n.as_method().unwrap().is_static
+          && (collector.has_extracted_this_props()
+            || collector.has_extracted_values_props()
+            || collector.has_extracted_js_fns());
+
+        let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
+        let m = n.as_method().unwrap().clone();
+        let original_function = m.function.clone();
+        let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
+          self.mode,
+          worklet_type.unwrap(),
+          hash,
+          self.cfg.target,
+          m.key
+            .clone()
+            .ident()
+            .unwrap_or(Ident::dummy().into())
+            .into(),
+          m.function,
+          &mut collector,
+          true,
+          &mut self.named_imports,
+        );
+
+        // For JS worklets, the ctx object is later converted to a function by `transformWorklet(..)`
+        // and invoked with `this` bound to the ctx object (not the component instance). Therefore,
+        // extracted `this.xxx` values become snapshot-like values on the ctx.
+        //
+        // If we emit a class field initializer (`onTapLepus = { ... a: this.a }`), that snapshot is
+        // computed once during construction, and `this.a` inside the worklet will keep reading the
+        // old value from the ctx. To keep `this.xxx` in sync for class components, generate a
+        // getter so the ctx object is re-created whenever `this.onTapLepus` is read (e.g. each
+        // render).
+        if should_use_getter {
+          let mut getter_fn = (*original_function).clone();
+          getter_fn.params = vec![];
+          getter_fn.is_async = false;
+          getter_fn.is_generator = false;
+          getter_fn.type_params = None;
+          getter_fn.return_type = None;
+          getter_fn.body = Some(BlockStmt {
+            ctxt: Default::default(),
+            span: DUMMY_SP,
+            stmts: vec![ReturnStmt {
+              span: DUMMY_SP,
+              arg: Some(worklet_object_expr),
+            }
+            .into()],
+          });
+
+          *n = ClassMethod {
+            span: m.span,
+            key: m.key,
+            function: getter_fn.into(),
+            kind: MethodKind::Getter,
+            is_static: false,
+            accessibility: m.accessibility,
+            is_abstract: m.is_abstract,
+            is_optional: m.is_optional,
+            is_override: m.is_override,
+          }
+          .into();
+        } else {
+          *n = ClassProp {
+            span: m.span,
+            key: m.key,
+            value: worklet_object_expr.into(),
+            declare: false,
+            is_abstract: m.is_abstract,
+            decorators: vec![],
+            definite: false,
+            type_ann: None,
+            is_static: m.is_static,
+            accessibility: m.accessibility,
+            is_optional: m.is_optional,
+            is_override: m.is_override,
+            readonly: false,
+          }
+          .into();
+        }
+        self
+          .stmts_to_insert_at_top_level
+          .push(register_worklet_stmt);
+      }
+      ClassMember::ClassProp(p) => {
+        if self.cfg.target != TransformTarget::JS || p.is_static || p.value.is_none() {
+          n.visit_mut_children_with(self);
+          return;
+        }
+
+        let value = p.value.as_mut().unwrap();
+        let worklet_type: Option<WorkletType> = match value.as_mut() {
+          Expr::Arrow(arrow) if arrow.body.is_block_stmt() => {
+            self.check_is_worklet_block(arrow.body.as_mut_block_stmt().unwrap())
+          }
+          Expr::Fn(FnExpr { function, .. }) if function.body.is_some() => {
+            self.check_is_worklet_block(function.body.as_mut().unwrap())
+          }
+          _ => None,
+        };
+
+        if worklet_type.is_none() {
+          n.visit_mut_children_with(self);
+          return;
+        }
+
+        let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
+          custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
+          shared_identifiers: Some(self.shared_identifiers.clone()),
+        });
+        value.visit_mut_with(&mut collector);
+
+        let function: Box<Function> = match value.as_ref() {
+          Expr::Arrow(arrow) if arrow.body.is_block_stmt() => Box::new(Function {
+            ctxt: arrow.ctxt,
+            body: arrow.body.as_block_stmt().unwrap().clone().into(),
+            span: arrow.span,
+            return_type: arrow.return_type.clone(),
+            is_async: arrow.is_async,
+            is_generator: arrow.is_generator,
+            type_params: arrow.type_params.clone(),
+            decorators: vec![],
+            params: arrow.params.iter().cloned().map(|p| p.into()).collect(),
+          }),
+          Expr::Fn(FnExpr { function, .. }) => function.clone(),
+          _ => unreachable!("worklet_type was checked to be a class property function"),
+        };
+
+        let should_use_getter = collector.has_extracted_this_props()
+          || collector.has_extracted_values_props()
+          || collector.has_extracted_js_fns();
+
+        let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
+        let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
+          self.mode,
+          worklet_type.unwrap(),
+          hash,
+          self.cfg.target,
+          p.key
+            .clone()
+            .ident()
+            .unwrap_or(Ident::dummy().into())
+            .into(),
+          function,
+          &mut collector,
+          true,
+          &mut self.named_imports,
+        );
+
+        if should_use_getter {
+          let getter_fn: Function = Function {
+            ctxt: Default::default(),
+            span: DUMMY_SP,
+            params: vec![],
+            decorators: vec![],
+            body: Some(BlockStmt {
+              ctxt: Default::default(),
+              span: DUMMY_SP,
+              stmts: vec![ReturnStmt {
+                span: DUMMY_SP,
+                arg: Some(worklet_object_expr),
+              }
+              .into()],
+            }),
+            is_generator: false,
+            is_async: false,
+            type_params: None,
+            return_type: None,
+          };
+
+          *n = ClassMethod {
+            span: p.span,
+            key: p.key.clone(),
+            function: getter_fn.into(),
+            kind: MethodKind::Getter,
+            is_static: false,
+            accessibility: p.accessibility,
+            is_abstract: p.is_abstract,
+            is_optional: p.is_optional,
+            is_override: p.is_override,
+          }
+          .into();
+        } else {
+          p.value = Some(worklet_object_expr);
+        }
+
+        self
+          .stmts_to_insert_at_top_level
+          .push(register_worklet_stmt);
+      }
+      _ => {
+        n.visit_mut_children_with(self);
+      }
     }
-    .into();
-    self
-      .stmts_to_insert_at_top_level
-      .push(register_worklet_stmt);
   }
 
   fn visit_mut_decl(&mut self, n: &mut Decl) {
@@ -1149,6 +1309,36 @@ class App extends Component {
         TransformMode::Test,
         WorkletVisitorConfig {
           filename: "index.js".into(),
+          target: TransformTarget::JS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_transform_in_class_js_capture_values,
+    r#"
+let a = 1;
+class App extends Component {
+  onTapLepus(event) {
+    "main thread";
+    console.log(a);
+  }
+}
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
@@ -1255,6 +1445,36 @@ class App extends Component {
     "main thread";
     console.log(a);
     console.log(this.a);
+  }
+}
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::JS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_transform_in_class_property_js_capture_values,
+    r#"
+let a = 1;
+class App extends Component {
+  onTapLepus = (event) => {
+    "main thread";
+    console.log(a);
   }
 }
     "#

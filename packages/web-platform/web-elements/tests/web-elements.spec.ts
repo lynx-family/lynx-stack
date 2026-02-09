@@ -2624,6 +2624,16 @@ test.describe('web-elements test suite', () => {
     );
 
     test(
+      'attribute-type-number-inner-input-type',
+      async ({ page }, { titlePath }) => {
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        const inputType = await page.locator('input').getAttribute('type');
+        expect(inputType).toBe('text');
+      },
+    );
+
+    test(
       'attribute-type-tel',
       async ({ page }, { titlePath, title: simpleTitle }) => {
         const title = getTitle(titlePath);
@@ -2811,9 +2821,9 @@ test.describe('web-elements test suite', () => {
             return detail;
           });
         await page.mouse.click(100, 25);
-        await page.keyboard.type('2.');
+        await page.keyboard.type('1.2a');
         await wait(200);
-        expect((await confirmValue.jsonValue()).value).toBe('2.');
+        expect((await confirmValue.jsonValue()).value).toBe('1.2');
       },
     );
 
@@ -2937,6 +2947,14 @@ test.describe('web-elements test suite', () => {
     );
     test(
       'style-inherit-margin',
+      async ({ page }, { titlePath }) => {
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'initial');
+      },
+    );
+    test(
+      'style-inherit-padding',
       async ({ page }, { titlePath }) => {
         const title = getTitle(titlePath);
         await gotoWebComponentPage(page, title);
