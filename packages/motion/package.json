@@ -16,7 +16,8 @@
   },
   "license": "Apache-2.0",
   "sideEffects": [
-    "./dist/polyfill/shim.js"
+    "./dist/polyfill/shim.js",
+    "./dist/mini/polyfill.js"
   ],
   "type": "module",
   "exports": {
