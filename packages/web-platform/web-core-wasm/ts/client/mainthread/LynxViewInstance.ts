@@ -25,7 +25,7 @@ import { createMainThreadGlobalAPIs } from './createMainThreadGlobalAPIs.js';
 import { templateManager } from './TemplateManager.js';
 import { loadAllWebElements } from '../webElementsDynamicLoader.js';
 import type { LynxViewElement } from './LynxView.js';
-const loadAllWebElementsPromise = loadAllWebElements();
+loadAllWebElements();
 
 const pixelRatio = window.devicePixelRatio;
 const screenWidth = window.screen.availWidth * pixelRatio;
@@ -80,7 +80,6 @@ export class LynxViewInstance implements AsyncDisposable {
   ) {
     this.#nativeModulesMap = nativeModulesMap;
     this.#napiModulesMap = napiModulesMap;
-    this.parentDom.style.display = 'none';
     this.mainThreadGlobalThis = mtsRealm.globalWindow as
       & typeof globalThis
       & MainThreadGlobalThis;
@@ -149,9 +148,6 @@ export class LynxViewInstance implements AsyncDisposable {
         );
       }
     }
-    loadAllWebElementsPromise.then(() => {
-      this.parentDom.style.display = 'flex';
-    });
   }
 
   onMTSScriptsLoaded(currentUrl: string, isLazy: boolean) {
