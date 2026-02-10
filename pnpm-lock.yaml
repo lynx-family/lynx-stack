@@ -387,7 +387,7 @@ importers:
         version: 6.9.1
       rsbuild-plugin-publint:
         specifier: 0.3.4
-        version: 0.3.4(@rsbuild/core@2.0.0-beta.1(core-js@3.47.0))
+        version: 0.3.4(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0))
 
   packages/mcp-servers/devtool-mcp-server:
     dependencies:
@@ -405,14 +405,14 @@ importers:
         specifier: ^4.1.12
         version: 4.1.12
       core-js:
-        specifier: ^3.47.0
-        version: 3.47.0
+        specifier: ^3.48.0
+        version: 3.48.0
       debug:
         specifier: ^4.4.3
         version: 4.4.3
       rsbuild-plugin-publint:
         specifier: 0.3.4
-        version: 0.3.4(@rsbuild/core@2.0.0-beta.1(core-js@3.47.0))
+        version: 0.3.4(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0))
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -471,7 +471,7 @@ importers:
         version: 3.6.0
       rsbuild-plugin-publint:
         specifier: 0.3.4
-        version: 0.3.4(@rsbuild/core@2.0.0-beta.1(core-js@3.47.0))
+        version: 0.3.4(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0))
 
   packages/react:
     dependencies:
@@ -682,7 +682,7 @@ importers:
         version: link:../core
       '@rsbuild/plugin-type-check':
         specifier: 1.3.3
-        version: 1.3.3(@rsbuild/core@2.0.0-beta.1(core-js@3.47.0))(@rspack/core@1.7.6(@swc/helpers@0.5.18))(typescript@5.9.3)
+        version: 1.3.3(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0))(@rspack/core@1.7.6(@swc/helpers@0.5.18))(typescript@5.9.3)
 
   packages/rspeedy/lynx-bundle-rslib-config:
     dependencies:
@@ -1040,7 +1040,7 @@ importers:
         version: 21.1.7
       rsbuild-plugin-publint:
         specifier: 0.3.4
-        version: 0.3.4(@rsbuild/core@2.0.0-beta.1(core-js@3.47.0))
+        version: 0.3.4(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0))
 
   packages/tools/canary-release:
     dependencies:
@@ -1767,10 +1767,10 @@ importers:
         version: 1.2.1(@rsbuild/core@1.7.3)
       '@rspress/core':
         specifier: 2.0.2
-        version: 2.0.2(@types/react@19.2.10)(core-js@3.47.0)
+        version: 2.0.2(@types/react@19.2.10)(core-js@3.48.0)
       '@rspress/plugin-client-redirects':
         specifier: 2.0.2
-        version: 2.0.2(@rspress/core@2.0.2(@types/react@19.2.10)(core-js@3.47.0))
+        version: 2.0.2(@rspress/core@2.0.2(@types/react@19.2.10)(core-js@3.48.0))
       '@shikijs/transformers':
         specifier: 3.22.0
         version: 3.22.0
@@ -5186,6 +5186,9 @@ packages:
 
   core-js@3.47.0:
     resolution: {integrity: sha512-c3Q2VVkGAUyupsjRnaNX6u8Dq2vAdzm9iuPj5FW0fRxzlxgq9Q39MDq10IvmQSpLgHQNyQzQmOo6bgGHmH3NNg==}
+
+  core-js@3.48.0:
+    resolution: {integrity: sha512-zpEHTy1fjTMZCKLHUZoVeylt9XrzaIN2rbPXEt0k+q7JE5CkCZdo6bNq55bn24a69CH7ErAVLKijxJja4fw+UQ==}
 
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
@@ -11850,13 +11853,13 @@ snapshots:
       core-js: 3.47.0
       jiti: 2.6.1
 
-  '@rsbuild/core@2.0.0-beta.1(core-js@3.47.0)':
+  '@rsbuild/core@2.0.0-beta.1(core-js@3.48.0)':
     dependencies:
       '@rspack/core': 1.7.6(@swc/helpers@0.5.18)
       '@swc/helpers': 0.5.18
       jiti: 2.6.1
     optionalDependencies:
-      core-js: 3.47.0
+      core-js: 3.48.0
 
   '@rsbuild/plugin-babel@1.0.6(@rsbuild/core@1.7.3)':
     dependencies:
@@ -11910,9 +11913,9 @@ snapshots:
       deepmerge: 4.3.1
       reduce-configs: 1.1.1
 
-  '@rsbuild/plugin-react@1.4.5(@rsbuild/core@2.0.0-beta.1(core-js@3.47.0))':
+  '@rsbuild/plugin-react@1.4.5(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0))':
     dependencies:
-      '@rsbuild/core': 2.0.0-beta.1(core-js@3.47.0)
+      '@rsbuild/core': 2.0.0-beta.1(core-js@3.48.0)
       '@rspack/plugin-react-refresh': 1.6.0(react-refresh@0.18.0)
       react-refresh: 0.18.0
     transitivePeerDependencies:
@@ -11947,14 +11950,14 @@ snapshots:
       - '@rspack/core'
       - typescript
 
-  '@rsbuild/plugin-type-check@1.3.3(@rsbuild/core@2.0.0-beta.1(core-js@3.47.0))(@rspack/core@1.7.6(@swc/helpers@0.5.18))(typescript@5.9.3)':
+  '@rsbuild/plugin-type-check@1.3.3(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0))(@rspack/core@1.7.6(@swc/helpers@0.5.18))(typescript@5.9.3)':
     dependencies:
       deepmerge: 4.3.1
       json5: 2.2.3
       reduce-configs: 1.1.1
       ts-checker-rspack-plugin: 1.2.6(@rspack/core@1.7.6(@swc/helpers@0.5.18))(typescript@5.9.3)
     optionalDependencies:
-      '@rsbuild/core': 2.0.0-beta.1(core-js@3.47.0)
+      '@rsbuild/core': 2.0.0-beta.1(core-js@3.48.0)
     transitivePeerDependencies:
       - '@rspack/core'
       - typescript
@@ -12219,13 +12222,13 @@ snapshots:
       - utf-8-validate
       - webpack-cli
 
-  '@rspress/core@2.0.2(@types/react@19.2.10)(core-js@3.47.0)':
+  '@rspress/core@2.0.2(@types/react@19.2.10)(core-js@3.48.0)':
     dependencies:
       '@mdx-js/mdx': 3.1.1
       '@mdx-js/react': 3.1.1(@types/react@19.2.10)(react@19.2.4)
-      '@rsbuild/core': 2.0.0-beta.1(core-js@3.47.0)
-      '@rsbuild/plugin-react': 1.4.5(@rsbuild/core@2.0.0-beta.1(core-js@3.47.0))
-      '@rspress/shared': 2.0.2(core-js@3.47.0)
+      '@rsbuild/core': 2.0.0-beta.1(core-js@3.48.0)
+      '@rsbuild/plugin-react': 1.4.5(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0))
+      '@rspress/shared': 2.0.2(core-js@3.48.0)
       '@shikijs/rehype': 3.22.0
       '@types/unist': 3.0.3
       '@unhead/react': 2.1.2(react@19.2.4)
@@ -12269,13 +12272,13 @@ snapshots:
       - supports-color
       - webpack-hot-middleware
 
-  '@rspress/plugin-client-redirects@2.0.2(@rspress/core@2.0.2(@types/react@19.2.10)(core-js@3.47.0))':
+  '@rspress/plugin-client-redirects@2.0.2(@rspress/core@2.0.2(@types/react@19.2.10)(core-js@3.48.0))':
     dependencies:
-      '@rspress/core': 2.0.2(@types/react@19.2.10)(core-js@3.47.0)
+      '@rspress/core': 2.0.2(@types/react@19.2.10)(core-js@3.48.0)
 
-  '@rspress/shared@2.0.2(core-js@3.47.0)':
+  '@rspress/shared@2.0.2(core-js@3.48.0)':
     dependencies:
-      '@rsbuild/core': 2.0.0-beta.1(core-js@3.47.0)
+      '@rsbuild/core': 2.0.0-beta.1(core-js@3.48.0)
       '@shikijs/rehype': 3.22.0
       gray-matter: 4.0.3
       lodash-es: 4.17.23
@@ -14111,6 +14114,8 @@ snapshots:
       browserslist: 4.28.1
 
   core-js@3.47.0: {}
+
+  core-js@3.48.0: {}
 
   core-util-is@1.0.3: {}
 
@@ -18026,12 +18031,12 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 1.7.3
 
-  rsbuild-plugin-publint@0.3.4(@rsbuild/core@2.0.0-beta.1(core-js@3.47.0)):
+  rsbuild-plugin-publint@0.3.4(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0)):
     dependencies:
       picocolors: 1.1.1
       publint: 0.3.17
     optionalDependencies:
-      '@rsbuild/core': 2.0.0-beta.1(core-js@3.47.0)
+      '@rsbuild/core': 2.0.0-beta.1(core-js@3.48.0)
 
   rsbuild-plugin-tailwindcss@0.2.3(@rsbuild/core@1.7.3)(tailwindcss@3.4.19):
     dependencies:
