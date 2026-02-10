@@ -128,7 +128,9 @@ export class LynxViewInstance implements AsyncDisposable {
       },
       set: (v) => {
         this.#renderPageFunction = v;
-        this.onMTSScriptsExecuted();
+        queueMicrotask(() => {
+          this.onMTSScriptsExecuted();
+        });
       },
       configurable: true,
       enumerable: true,
@@ -167,7 +169,7 @@ export class LynxViewInstance implements AsyncDisposable {
     }
   }
 
-  async onMTSScriptsExecuted() {
+  onMTSScriptsExecuted() {
     this.backgroundThread.markTiming('lepus_execute_end');
     this.webElementsLoadingPromises.length = 0;
     this.backgroundThread.markTiming('data_processor_start');
