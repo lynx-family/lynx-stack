@@ -44,7 +44,7 @@ jobs:
       - name: Run benchmark
         run: |
           . "$HOME/.cargo/env"
-          codspeed run -- pnpm -r run --workspace-concurrency=1 bench
+          codspeed run --mode simulation -- pnpm -r run --workspace-concurrency=1 bench
       - name: React benchmark - Run perfetto
         run: |
           pnpm -r run --workspace-concurrency=1 perfetto
