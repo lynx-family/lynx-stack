@@ -40,7 +40,7 @@ jobs:
           pnpm turbo build
       - name: Prepare CodSpeed
         run: |
-          curl -fsSL https://github.com/CodSpeedHQ/runner/releases/download/v3.8.0/codspeed-runner-installer.sh | bash -s -- --quiet
+          curl -fsSL https://github.com/CodSpeedHQ/codspeed/releases/download/v4.10.6/codspeed-runner-installer.sh | bash -s -- --quiet
       - name: Run benchmark
         run: |
           . "$HOME/.cargo/env"
