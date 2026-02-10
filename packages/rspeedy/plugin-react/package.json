@@ -61,7 +61,7 @@
     "rsbuild-plugin-publint": "0.3.4",
     "source-map": "^0.7.6",
     "tailwindcss": "^3.4.19",
-    "type-fest": "^5.4.3",
+    "type-fest": "^5.4.4",
     "typia": "10.1.0",
     "typia-rspack-plugin": "2.2.2"
   },
