@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { RsbuildPluginAPI } from '@rsbuild/core'
-import { describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { registerConsoleShortcuts } from '../src/shortcuts.js'
 
@@ -17,6 +17,28 @@ describe('PluginQRCode - CLI Shortcuts', () => {
       config: { filename: '[name].[platform].bundle' },
     }),
   } as unknown as RsbuildPluginAPI
+
+  beforeEach(() => {
+    Object.defineProperty(process.stdin, 'isTTY', {
+      value: true,
+      configurable: true,
+    })
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: true,
+      configurable: true,
+    })
+
+    return () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: undefined,
+        configurable: true,
+      })
+      Object.defineProperty(process.stdout, 'isTTY', {
+        value: undefined,
+        configurable: true,
+      })
+    }
+  })
 
   test('open page', async () => {
     vi.stubEnv('NODE_ENV', 'development')
