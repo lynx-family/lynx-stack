@@ -42,7 +42,7 @@ jobs:
     runs-on: ${{ inputs.runs-on }}
     permissions: {}
     container:
-      image: ${{ inputs.is-web && 'mcr.microsoft.com/playwright:v1.58.1-noble' || null }}
+      image: ${{ inputs.is-web && 'mcr.microsoft.com/playwright:v1.58.2-noble' || null }}
       env:
         CI: 1
         TURBO_TELEMETRY_DISABLED: 1
