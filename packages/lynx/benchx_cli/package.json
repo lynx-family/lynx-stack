@@ -3,11 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "bin": {
-    "benchx_cli": "./dist/bin/benchx_cli"
+    "benchx_cli": "./bin/benchx_cli"
   },
   "scripts": {
-    "build": "node scripts/build.mjs",
-    "prepare": "node scripts/prepare.mjs"
+    "build": "node scripts/build.mjs"
   },
   "dependencies": {
     "zx": "^8.8.5"

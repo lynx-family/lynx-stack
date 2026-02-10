@@ -34,8 +34,8 @@ console.log('noop')
   process.exit(0);
 }
 
-const COMMIT = 'd6dd806293012c62e5104ad7ed2bed5c66f4f833';
-const PICK_COMMIT = 'ce49dc44c73bb26bb6c1cc56d0ae86fa45cc254c';
+const COMMIT = '25af017a126ed087ba1bf276639f4a0b60b348fc';
+const PICK_COMMIT = '26f5fa8f92c517bce0550c34ff7a43f06c2df705';
 
 function checkCwd() {
   try {
@@ -88,18 +88,20 @@ rm -rf lynx
 
 // prepare the lynx repo
 await $`
-git clone https://github.com/lynx-family/lynx
+mkdir -p lynx
 cd lynx
+git init -b main
+git remote add origin https://github.com/lynx-family/lynx
 git fetch origin ${COMMIT}
 git checkout ${COMMIT}
-git remote add hzy https://github.com/hzy/lynx
-git fetch hzy ${PICK_COMMIT}
+git remote add lynx-community https://github.com/lynx-community/benchx_cli
+git fetch lynx-community ${PICK_COMMIT}
 git cherry-pick -n ${PICK_COMMIT}
-git apply ../patches/android_sdk_manager.diff
 `.pipe(process.stdout);
 
 // hab sync .
 await $`
+set +u
 cd lynx
 uv venv .venv
 source .venv/bin/activate
@@ -110,16 +112,17 @@ tools/hab sync .
 
 // build from source
 await $`
+set +u
 cd lynx
 source tools/envsetup.sh
-gn gen --args='enable_unittests=true enable_trace="perfetto" jsengine_type="quickjs" enable_frozen_mode=true' out/Default
+gn gen --args=${
+  process.platform === 'darwin'
+    ? `enable_unittests=true enable_trace="perfetto" jsengine_type="quickjs" enable_frozen_mode=true use_flutter_cxx=false`
+    : `enable_unittests=true enable_trace="perfetto" jsengine_type="quickjs" enable_frozen_mode=true`
+} out/Default
 ninja -C out/Default benchx_cli
 mkdir -p ../dist/bin
-cp ${
-  process.platform === 'darwin'
-    ? 'out/Default/benchx_cli'
-    : 'out/Default/exe.unstripped/benchx_cli' // linux
-} ../dist/bin/benchx_cli
+cp out/Default/benchx_cli ../dist/bin/benchx_cli
 git rev-parse HEAD > ../dist/bin/benchx_cli.commit
 rm -rf out
 `.pipe(process.stdout);
