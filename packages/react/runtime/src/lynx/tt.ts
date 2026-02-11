@@ -9,7 +9,7 @@ import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } fr
 import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import { runWithForce } from './runWithForce.js';
 import { printSnapshotInstanceToString } from '../debug/printSnapshot.js';
-import { profileEnd, profileStart } from '../debug/utils.js';
+import { profileEnd, profileStart } from '../debug/profile.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEvents.js';
 import { delayLifecycleEvent, delayedLifecycleEvents } from '../lifecycle/event/delayLifecycleEvents.js';
