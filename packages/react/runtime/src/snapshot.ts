@@ -273,6 +273,32 @@ export function traverseSnapshotInstance<I extends WithChildren>(
   }
 }
 
+function clearSnapshotInstanceValuesWithUpdater(v: SnapshotInstance): void {
+  const values = v.__values;
+  const update = v.__snapshot_def.update;
+  if (!values || !update) {
+    return;
+  }
+
+  __pendingListUpdates.runWithoutUpdates(() => {
+    const len = values.length;
+    for (let i = 0; i < len; i++) {
+      const updater = update[i]!;
+
+      const oldValue = values[i];
+      const newValue: unknown = undefined;
+
+      if (oldValue === undefined || oldValue === null) {
+        values[i] = undefined;
+        continue;
+      }
+
+      values[i] = newValue;
+      updater(v, i, oldValue);
+    }
+  });
+}
+
 export interface SerializedSnapshotInstance {
   id: number;
   type: string;
@@ -616,6 +642,7 @@ export class SnapshotInstance {
 
       this.__removeChild(child);
       traverseSnapshotInstance(child, v => {
+        clearSnapshotInstanceValuesWithUpdater(v);
         snapshotInstanceManager.values.delete(v.__id);
       });
       // mark this child as deleted
@@ -635,6 +662,7 @@ export class SnapshotInstance {
         snapshotDestroyList(v);
       }
 
+      clearSnapshotInstanceValuesWithUpdater(v);
       v.__parent = null;
       v.__previousSibling = null;
       v.__nextSibling = null;
