@@ -8,6 +8,7 @@ import './hooks/react.js';
 import { initElementPAPICallAlog } from './alog/elementPAPICall.js';
 import { initAlog } from './alog/index.js';
 import { setupComponentStack } from './debug/component-stack.js';
+import { isProfiling } from './debug/profile.js';
 import { initProfileHook } from './debug/profileHooks.js';
 import { document, setupBackgroundDocument } from './document.js';
 import { replaceCommitHook } from './lifecycle/patch/commit.js';
@@ -69,7 +70,7 @@ if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
   else {
     replaceCommitHook();
     initTimingAPI();
-    if (lynx.performance?.isProfileRecording?.()) {
+    if (isProfiling) {
       initProfileHook();
     }
   }

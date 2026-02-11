@@ -4,7 +4,10 @@
 
 /* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 
+export const isProfiling: boolean = Boolean(lynx.performance?.isProfileRecording?.());
+
 const noop = () => {};
+const noopFlowId = () => 0;
 
 export const profileStart = /* @__PURE__ */ ((() => {
   let p;
@@ -21,3 +24,11 @@ export const profileEnd = /* @__PURE__ */ ((() => {
   }
   return p.profileEnd.bind(p);
 })()) as typeof lynx.performance.profileEnd;
+
+export const profileFlowId = /* @__PURE__ */ ((() => {
+  let p;
+  if (!(p = lynx.performance) || typeof p.profileFlowId !== 'function') {
+    return noopFlowId;
+  }
+  return p.profileFlowId.bind(p);
+})()) as typeof lynx.performance.profileFlowId;
