@@ -207,7 +207,7 @@ function publishEvent(handlerName: string, data: EventDataType) {
     handlerName,
   ) as ((data: unknown) => void) | undefined;
 
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart(`ReactLynx::publishEvent`, {
       args: {
         handlerName,
@@ -243,7 +243,7 @@ function publishEvent(handlerName: string, data: EventDataType) {
       lynx.reportError(e as Error);
     }
   }
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
 }
