@@ -11,6 +11,7 @@
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { profileEnd, profileStart } from './debug/profile.js';
+import { getSnapshotVNodeSource } from './debug/vnodeSource.js';
 import { processGestureBackground } from './gesture/processGestureBagkround.js';
 import type { GestureKind } from './gesture/types.js';
 import { diffArrayAction, diffArrayLepus } from './hydrate.js';
@@ -454,6 +455,7 @@ export function hydrate(
                 args: {
                   id: String(after.__id),
                   snapshotType: String(after.type),
+                  source: getSnapshotVNodeSource(after.__id) ?? '',
                   dynamicPartIndex: String(index),
                   valueType: value === null ? 'null' : typeof value,
                 },
@@ -490,6 +492,7 @@ export function hydrate(
                 args: {
                   id: String(after.__id),
                   snapshotType: String(after.type),
+                  source: getSnapshotVNodeSource(after.__id) ?? '',
                   dynamicPartIndex: key,
                   valueType: value === null ? 'null' : typeof value,
                 },
@@ -556,6 +559,7 @@ export function hydrate(
                     args: {
                       id: String(node.__id),
                       snapshotType: String(node.type),
+                      source: getSnapshotVNodeSource(node.__id) ?? '',
                     },
                   });
                 }
@@ -574,6 +578,7 @@ export function hydrate(
                     args: {
                       id: String(node.id),
                       snapshotType: String(node.type),
+                      source: getSnapshotVNodeSource(node.id) ?? '',
                       parentId: String(before.id),
                     },
                   });
@@ -601,6 +606,7 @@ export function hydrate(
                     args: {
                       id: String(node.id),
                       snapshotType: String(node.type),
+                      source: getSnapshotVNodeSource(node.id) ?? '',
                       parentId: String(before.id),
                       targetId: String(target?.id ?? ''),
                     },
