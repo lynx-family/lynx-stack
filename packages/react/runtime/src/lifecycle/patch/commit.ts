@@ -33,7 +33,7 @@ import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValu
 import { getReloadVersion } from '../pass.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
-import { profileEnd, profileStart } from '../../debug/utils.js';
+import { profileEnd, profileStart } from '../../debug/profile.js';
 import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,

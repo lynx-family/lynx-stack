@@ -8,7 +8,7 @@
 
 import { isValidElement } from 'preact';
 
-import { profileEnd, profileStart } from '../debug/utils.js';
+import { profileEnd, profileStart } from '../debug/profile.js';
 import { renderOpcodesInto } from '../opcodes.js';
 import { render as renderToString } from '../renderToOpcodes/index.js';
 import { __root } from '../root.js';
