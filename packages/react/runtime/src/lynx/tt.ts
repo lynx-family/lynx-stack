@@ -10,6 +10,7 @@ import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import { runWithForce } from './runWithForce.js';
 import { printSnapshotInstanceToString } from '../debug/printSnapshot.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
+import { getSnapshotVNodeSource } from '../debug/vnodeSource.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEvents.js';
 import { delayLifecycleEvent, delayedLifecycleEvents } from '../lifecycle/event/delayLifecycleEvents.js';
@@ -203,6 +204,7 @@ function flushDelayedLifecycleEvents(): void {
 
 function publishEvent(handlerName: string, data: EventDataType) {
   lynxCoreInject.tt.callBeforePublishEvent?.(data);
+  const snapshotId = Number(handlerName.split(':')[0]);
   const eventHandler = backgroundSnapshotInstanceManager.getValueBySign(
     handlerName,
   ) as ((data: unknown) => void) | undefined;
@@ -213,8 +215,9 @@ function publishEvent(handlerName: string, data: EventDataType) {
         handlerName,
         type: data.type,
         snapshotInstanceType: backgroundSnapshotInstanceManager.values.get(
-          Number(handlerName.split(':')[0]),
+          snapshotId,
         )?.type ?? '',
+        source: getSnapshotVNodeSource(snapshotId) ?? '',
         jsFunctionName: eventHandler?.name ?? '',
       },
     });
