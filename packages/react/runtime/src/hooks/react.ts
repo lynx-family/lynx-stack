@@ -10,10 +10,11 @@ import {
   useImperativeHandle,
   useMemo,
   useEffect as usePreactEffect,
+  useState as usePreactState,
   useReducer,
   useRef,
-  useState,
 } from 'preact/hooks';
+import type { Dispatch, StateUpdater } from 'preact/hooks';
 import type { DependencyList, EffectCallback } from 'react';
 
 import type { TraceOption } from '@lynx-js/types';
@@ -61,10 +62,6 @@ function withEffectProfile(
 }
 
 function useEffectWithProfile(effect: EffectCallback, deps: DependencyList | undefined, traceName: string): void {
-  if (!isProfiling) {
-    return usePreactEffect(effect, deps);
-  }
-
   const flowId = profileFlowId();
   const stack = new Error().stack;
   const traceOption = buildTraceOption(flowId, stack);
@@ -75,6 +72,56 @@ function useEffectWithProfile(effect: EffectCallback, deps: DependencyList | und
     profileEnd();
   }
 }
+
+function useLayoutEffectProfiled(effect: EffectCallback, deps?: DependencyList): void {
+  return useEffectWithProfile(effect, deps, 'ReactLynx::hooks::useLayoutEffect');
+}
+
+function useEffectProfiled(effect: EffectCallback, deps?: DependencyList): void {
+  return useEffectWithProfile(effect, deps, 'ReactLynx::hooks::useEffect');
+}
+
+function useStateWithProfile<S>(initialState: S | (() => S)): [S, Dispatch<StateUpdater<S>>];
+function useStateWithProfile<S = undefined>(): [S | undefined, Dispatch<StateUpdater<S | undefined>>];
+function useStateWithProfile<S>(
+  initialState?: S | (() => S),
+): [S | undefined, Dispatch<StateUpdater<S | undefined>>] {
+  const [state, setState] = (
+    arguments.length === 0
+      ? usePreactState<S | undefined>()
+      : usePreactState(initialState as S | (() => S))
+  ) as [S | undefined, Dispatch<StateUpdater<S | undefined>>];
+  const tracedSetState = useCallback<Dispatch<StateUpdater<S | undefined>>>((nextState) => {
+    const stack = new Error().stack;
+    const traceOption = stack
+      ? ({ args: { stack } } as TraceOption)
+      : undefined;
+    profileStart('ReactLynx::hooks::useState::setter', traceOption);
+    try {
+      return setState(nextState);
+    } finally {
+      profileEnd();
+    }
+  }, [setState]);
+  return [state, tracedSetState];
+}
+
+const useState: typeof usePreactState = isProfiling
+  ? useStateWithProfile as typeof usePreactState
+  : usePreactState;
+
+/**
+ * Accepts a function that contains imperative, possibly effectful code.
+ * The effects run after main thread dom update without blocking it.
+ *
+ * @param effect - Imperative function that can return a cleanup function
+ * @param deps - If present, effect will only activate if the values in the list change (using ===).
+ *
+ * @public
+ */
+const useEffect: typeof usePreactEffect = isProfiling
+  ? useEffectProfiled
+  : usePreactEffect;
 
 /**
  * `useLayoutEffect` is now an alias of `useEffect`. Use `useEffect` instead.
@@ -88,22 +135,9 @@ function useEffectWithProfile(effect: EffectCallback, deps: DependencyList | und
  *
  * @deprecated `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React.
  */
-function useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void {
-  return useEffectWithProfile(effect, deps, 'ReactLynx::hooks::useLayoutEffect');
-}
-
-/**
- * Accepts a function that contains imperative, possibly effectful code.
- * The effects run after main thread dom update without blocking it.
- *
- * @param effect - Imperative function that can return a cleanup function
- * @param deps - If present, effect will only activate if the values in the list change (using ===).
- *
- * @public
- */
-function useEffect(effect: EffectCallback, deps?: DependencyList): void {
-  return useEffectWithProfile(effect, deps, 'ReactLynx::hooks::useEffect');
-}
+const useLayoutEffect: typeof usePreactEffect = isProfiling
+  ? useLayoutEffectProfiled
+  : usePreactEffect;
 
 export {
   // preact
