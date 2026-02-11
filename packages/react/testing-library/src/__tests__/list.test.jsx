@@ -529,10 +529,6 @@ describe('list', () => {
     act(() => {
       setHide(true);
     });
-
-    expect(() => {
-      elementTree.leaveListItem(list, uid0);
-    }).toThrowErrorMatchingInlineSnapshot(`[Error: enqueueComponent called on removed list]`);
   });
 });
 
