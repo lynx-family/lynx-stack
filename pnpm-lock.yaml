@@ -361,7 +361,7 @@ importers:
         version: 18.3.27
       rsbuild-plugin-tailwindcss:
         specifier: 0.2.4
-        version: 0.2.4(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0))(tailwindcss@3.4.19)
+        version: 0.2.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(tailwindcss@3.4.19)
       tailwindcss:
         specifier: ^3.4.19
         version: 3.4.19
@@ -387,7 +387,7 @@ importers:
         version: 6.9.1
       rsbuild-plugin-publint:
         specifier: 0.3.4
-        version: 0.3.4(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0))
+        version: 0.3.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
 
   packages/mcp-servers/devtool-mcp-server:
     dependencies:
@@ -412,7 +412,7 @@ importers:
         version: 4.4.3
       rsbuild-plugin-publint:
         specifier: 0.3.4
-        version: 0.3.4(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0))
+        version: 0.3.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -471,7 +471,7 @@ importers:
         version: 3.6.0
       rsbuild-plugin-publint:
         specifier: 0.3.4
-        version: 0.3.4(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0))
+        version: 0.3.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
 
   packages/react:
     dependencies:
@@ -682,7 +682,7 @@ importers:
         version: link:../core
       '@rsbuild/plugin-type-check':
         specifier: 1.3.3
-        version: 1.3.3(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0))(@rspack/core@1.7.6(@swc/helpers@0.5.18))(tslib@2.8.1)(typescript@5.9.3)
+        version: 1.3.3(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(@rspack/core@1.7.6(@swc/helpers@0.5.18))(tslib@2.8.1)(typescript@5.9.3)
 
   packages/rspeedy/lynx-bundle-rslib-config:
     dependencies:
@@ -1040,7 +1040,7 @@ importers:
         version: 21.1.7
       rsbuild-plugin-publint:
         specifier: 0.3.4
-        version: 0.3.4(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0))
+        version: 0.3.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
 
   packages/tools/canary-release:
     dependencies:
@@ -1766,11 +1766,11 @@ importers:
         specifier: 1.2.1
         version: 1.2.1(@rsbuild/core@1.7.3)
       '@rspress/core':
-        specifier: 2.0.2
-        version: 2.0.2(@types/react@19.2.10)(core-js@3.48.0)
+        specifier: 2.0.3
+        version: 2.0.3(@types/react@19.2.10)(core-js@3.48.0)
       '@rspress/plugin-client-redirects':
-        specifier: 2.0.2
-        version: 2.0.2(@rspress/core@2.0.2(@types/react@19.2.10)(core-js@3.48.0))
+        specifier: 2.0.3
+        version: 2.0.3(@rspress/core@2.0.3(@types/react@19.2.10)(core-js@3.48.0))
       '@shikijs/transformers':
         specifier: 3.22.0
         version: 3.22.0
@@ -3509,8 +3509,8 @@ packages:
     engines: {node: '>=18.12.0'}
     hasBin: true
 
-  '@rsbuild/core@2.0.0-beta.1':
-    resolution: {integrity: sha512-m7L3oi4evTDODcY+Qk3cmY/p7GCaauSRe00D0AkXVohNvxFBt7F49uPwBSThS24I9d31zFuAED2jFqBeBlDqWw==}
+  '@rsbuild/core@2.0.0-beta.3':
+    resolution: {integrity: sha512-dfH+Pt2GuF3rWOWGsf5XOhn3Zarvr4DoHwoI1arAsCGvpzoeud3DNGmWPy13tngj0r/YvQRcPTRBCRV4RP5CMw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -3725,19 +3725,19 @@ packages:
     peerDependencies:
       '@rspack/core': 1.7.6
 
-  '@rspress/core@2.0.2':
-    resolution: {integrity: sha512-tU8rUVaPyC8o8k4ezgigRVQuZhBAC41KWdwZZ0BldN6o+QXSEIb722RnxCTpa9FGK2riqcwJgM+OqqcqXsFpmw==}
+  '@rspress/core@2.0.3':
+    resolution: {integrity: sha512-a+JJFiALqMxGJBqR38/lkN6tas42UF4jRIhu6RilC/3DdqpfqR8j6jjQFOmqoNKo6ZGXW2W+i1Pscn6drvoG3w==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
-  '@rspress/plugin-client-redirects@2.0.2':
-    resolution: {integrity: sha512-FOxUBDOGP06+1hL4jgbIxUe0XoEduXIQ0rSjWjzpo2mC+qTdhZUGJ0xYE2laQIfJXYv/up5zk25zjxUBnxsejw==}
+  '@rspress/plugin-client-redirects@2.0.3':
+    resolution: {integrity: sha512-9+SoAbfoxM6OCRWx8jWHHi2zwJDcNaej/URx0CWZk8tvQ618yJW5mXJydknlac62399eYh/F7C3w8TZM3ORGVA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     peerDependencies:
-      '@rspress/core': ^2.0.2
+      '@rspress/core': ^2.0.3
 
-  '@rspress/shared@2.0.2':
-    resolution: {integrity: sha512-9+QC8UL1gV2KpRZx4n55vAl6bE38y7eDnGJhdFSHdJkpFbUCiJDk9ZcR6jD/Rrtq7vlT0gfumUk640pxpi3IDQ==}
+  '@rspress/shared@2.0.3':
+    resolution: {integrity: sha512-yI9G4P165fSsmm6QoYTUrdgUis1aFnDh04GcM4SQIpL3itvEZhGtItgoeGkX9EWbnEjhriwI8mTqDDJIp+vrGA==}
 
   '@rstack-dev/doc-ui@1.12.3':
     resolution: {integrity: sha512-5W70pjRxxwyNT3R4kTYDE8cPaMjsJKXMeZQn7+Q54+RCJ1ahN4pADnpaY7WvSEBWkjXdI4IR4GGvBs7nSU/8MA==}
@@ -4466,8 +4466,8 @@ packages:
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
 
-  '@unhead/react@2.1.2':
-    resolution: {integrity: sha512-VNKa0JJZq5Jp28VuiOMfjAA7CTLHI0SdW/Hs1ZPq2PsNV/cgxGv8quFBGXWx4gfoHB52pejO929RKjIpYX5+iQ==}
+  '@unhead/react@2.1.4':
+    resolution: {integrity: sha512-3DzMi5nJkUyLVfQF/q78smCvcSy84TTYgTwXVz5s3AjUcLyHro5Z7bLWriwk1dn5+YRfEsec8aPkLCMi5VjMZg==}
     peerDependencies:
       react: '>=18.3.1'
 
@@ -9431,8 +9431,8 @@ packages:
     resolution: {integrity: sha512-VfQPToRA5FZs/qJxLIinmU59u0r7LXqoJkCzinq3ckNJp3vKEh7jTWN589YQ5+aoAC/TGRLyJLCPKcLQbM8r9g==}
     engines: {node: '>=18.17'}
 
-  unhead@2.1.2:
-    resolution: {integrity: sha512-vSihrxyb+zsEUfEbraZBCjdE0p/WSoc2NGDrpwwSNAwuPxhYK1nH3eegf02IENLpn1sUhL8IoO84JWmRQ6tILA==}
+  unhead@2.1.4:
+    resolution: {integrity: sha512-+5091sJqtNNmgfQ07zJOgUnMIMKzVKAWjeMlSrTdSGPB6JSozhpjUKuMfWEoLxlMAfhIvgOU8Me0XJvmMA/0fA==}
 
   unified@11.0.5:
     resolution: {integrity: sha512-xKvGhPWw3k84Qjh8bI3ZeJjqnyadK+GEFtazSfZv/rKeTkTjOJho6mFqh2SM96iIcZokxiOpg78GazTSg8+KHA==}
@@ -12046,7 +12046,7 @@ snapshots:
       core-js: 3.47.0
       jiti: 2.6.1
 
-  '@rsbuild/core@2.0.0-beta.1(core-js@3.48.0)':
+  '@rsbuild/core@2.0.0-beta.3(core-js@3.48.0)':
     dependencies:
       '@rspack/core': 1.7.6(@swc/helpers@0.5.18)
       '@swc/helpers': 0.5.18
@@ -12106,9 +12106,9 @@ snapshots:
       deepmerge: 4.3.1
       reduce-configs: 1.1.1
 
-  '@rsbuild/plugin-react@1.4.5(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0))':
+  '@rsbuild/plugin-react@1.4.5(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))':
     dependencies:
-      '@rsbuild/core': 2.0.0-beta.1(core-js@3.48.0)
+      '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
       '@rspack/plugin-react-refresh': 1.6.0(react-refresh@0.18.0)
       react-refresh: 0.18.0
     transitivePeerDependencies:
@@ -12144,14 +12144,14 @@ snapshots:
       - tslib
       - typescript
 
-  '@rsbuild/plugin-type-check@1.3.3(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0))(@rspack/core@1.7.6(@swc/helpers@0.5.18))(tslib@2.8.1)(typescript@5.9.3)':
+  '@rsbuild/plugin-type-check@1.3.3(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(@rspack/core@1.7.6(@swc/helpers@0.5.18))(tslib@2.8.1)(typescript@5.9.3)':
     dependencies:
       deepmerge: 4.3.1
       json5: 2.2.3
       reduce-configs: 1.1.1
       ts-checker-rspack-plugin: 1.2.6(@rspack/core@1.7.6(@swc/helpers@0.5.18))(tslib@2.8.1)(typescript@5.9.3)
     optionalDependencies:
-      '@rsbuild/core': 2.0.0-beta.1(core-js@3.48.0)
+      '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
     transitivePeerDependencies:
       - '@rspack/core'
       - tslib
@@ -12419,16 +12419,16 @@ snapshots:
       - utf-8-validate
       - webpack-cli
 
-  '@rspress/core@2.0.2(@types/react@19.2.10)(core-js@3.48.0)':
+  '@rspress/core@2.0.3(@types/react@19.2.10)(core-js@3.48.0)':
     dependencies:
       '@mdx-js/mdx': 3.1.1
       '@mdx-js/react': 3.1.1(@types/react@19.2.10)(react@19.2.4)
-      '@rsbuild/core': 2.0.0-beta.1(core-js@3.48.0)
-      '@rsbuild/plugin-react': 1.4.5(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0))
-      '@rspress/shared': 2.0.2(core-js@3.48.0)
+      '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
+      '@rsbuild/plugin-react': 1.4.5(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
+      '@rspress/shared': 2.0.3(core-js@3.48.0)
       '@shikijs/rehype': 3.22.0
       '@types/unist': 3.0.3
-      '@unhead/react': 2.1.2(react@19.2.4)
+      '@unhead/react': 2.1.4(react@19.2.4)
       body-scroll-lock: 4.0.0-beta.0
       cac: 6.7.14
       chokidar: 3.6.0
@@ -12469,13 +12469,13 @@ snapshots:
       - supports-color
       - webpack-hot-middleware
 
-  '@rspress/plugin-client-redirects@2.0.2(@rspress/core@2.0.2(@types/react@19.2.10)(core-js@3.48.0))':
+  '@rspress/plugin-client-redirects@2.0.3(@rspress/core@2.0.3(@types/react@19.2.10)(core-js@3.48.0))':
     dependencies:
-      '@rspress/core': 2.0.2(@types/react@19.2.10)(core-js@3.48.0)
+      '@rspress/core': 2.0.3(@types/react@19.2.10)(core-js@3.48.0)
 
-  '@rspress/shared@2.0.2(core-js@3.48.0)':
+  '@rspress/shared@2.0.3(core-js@3.48.0)':
     dependencies:
-      '@rsbuild/core': 2.0.0-beta.1(core-js@3.48.0)
+      '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
       '@shikijs/rehype': 3.22.0
       gray-matter: 4.0.3
       lodash-es: 4.17.23
@@ -13446,10 +13446,10 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@unhead/react@2.1.2(react@19.2.4)':
+  '@unhead/react@2.1.4(react@19.2.4)':
     dependencies:
       react: 19.2.4
-      unhead: 2.1.2
+      unhead: 2.1.4
 
   '@unrs/resolver-binding-android-arm-eabi@1.11.1':
     optional: true
@@ -18238,12 +18238,12 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 1.7.3
 
-  rsbuild-plugin-publint@0.3.4(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0)):
+  rsbuild-plugin-publint@0.3.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0)):
     dependencies:
       picocolors: 1.1.1
       publint: 0.3.17
     optionalDependencies:
-      '@rsbuild/core': 2.0.0-beta.1(core-js@3.48.0)
+      '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
 
   rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@1.7.3)(tailwindcss@3.4.19):
     dependencies:
@@ -18251,11 +18251,11 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 1.7.3
 
-  rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@2.0.0-beta.1(core-js@3.48.0))(tailwindcss@3.4.19):
+  rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(tailwindcss@3.4.19):
     dependencies:
       tailwindcss: 3.4.19
     optionalDependencies:
-      '@rsbuild/core': 2.0.0-beta.1(core-js@3.48.0)
+      '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
 
   rslog@1.2.11: {}
 
@@ -19285,7 +19285,7 @@ snapshots:
 
   undici@6.23.0: {}
 
-  unhead@2.1.2:
+  unhead@2.1.4:
     dependencies:
       hookable: 6.0.1
 
