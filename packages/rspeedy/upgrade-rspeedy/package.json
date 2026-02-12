@@ -47,7 +47,7 @@
     "detect-indent": "^7.0.2",
     "memfs": "^4.56.10",
     "picocolors": "^1.1.1",
-    "rsbuild-plugin-tailwindcss": "0.2.3",
+    "rsbuild-plugin-tailwindcss": "0.2.4",
     "rslog": "^1.2.11",
     "type-fest": "^5.4.4"
   },
