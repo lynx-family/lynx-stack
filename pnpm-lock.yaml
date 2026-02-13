@@ -1027,8 +1027,8 @@ importers:
         specifier: 0.0.0-experimental-fe727a3-20250909
         version: 0.0.0-experimental-fe727a3-20250909
       vite-plugin-babel:
-        specifier: ^1.3.2
-        version: 1.3.2(@babel/core@7.29.0)(vite@5.4.2(@types/node@24.10.13)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6))
+        specifier: ^1.5.1
+        version: 1.5.1(@babel/core@7.29.0)(vite@5.4.2(@types/node@24.10.13)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6))
 
   packages/testing-library/testing-environment:
     devDependencies:
@@ -9546,8 +9546,8 @@ packages:
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
 
-  vite-plugin-babel@1.3.2:
-    resolution: {integrity: sha512-mEld4OVyuNs5+ISN+U5XyTnNcDwln/s2oER2m0PQ32YYPqPR25E3mfnhAA/RkZJxPuwFkprKWV405aZArE6kzA==}
+  vite-plugin-babel@1.5.1:
+    resolution: {integrity: sha512-TBBBsAYYg7V5yR+xPeZYHwritMmc2QvZrZKFSS26it7ZQ0Y8ESKwJJm2KUUcmHQZU/owvA4yKk4ibPVrfhlwJw==}
     peerDependencies:
       '@babel/core': ^7.0.0
       vite: ^2.7.0 || ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0
@@ -19450,7 +19450,7 @@ snapshots:
       - supports-color
       - terser
 
-  vite-plugin-babel@1.3.2(@babel/core@7.29.0)(vite@5.4.2(@types/node@24.10.13)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)):
+  vite-plugin-babel@1.5.1(@babel/core@7.29.0)(vite@5.4.2(@types/node@24.10.13)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)):
     dependencies:
       '@babel/core': 7.29.0
       vite: 5.4.2(@types/node@24.10.13)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)
