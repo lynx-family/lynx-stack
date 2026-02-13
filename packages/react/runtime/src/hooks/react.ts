@@ -119,7 +119,7 @@ const useState: typeof usePreactState = isProfiling
  *
  * @public
  */
-const useEffect: typeof usePreactEffect = isProfiling
+const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = isProfiling
   ? useEffectProfiled
   : usePreactEffect;
 
@@ -135,7 +135,7 @@ const useEffect: typeof usePreactEffect = isProfiling
  *
  * @deprecated `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React.
  */
-const useLayoutEffect: typeof usePreactEffect = isProfiling
+const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) => void = isProfiling
   ? useLayoutEffectProfiled
   : usePreactEffect;
 
