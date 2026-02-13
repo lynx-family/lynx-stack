@@ -360,7 +360,7 @@ Component, View
             column: w.location.column,
             length: w.location.length,
             lineText: w.location.lineText,
-          }
+          },
         })),
       ).toMatchInlineSnapshot(`
         [
@@ -475,7 +475,7 @@ Component, View
             column: w.location.column,
             length: w.location.length,
             lineText: w.location.lineText,
-          }
+          },
         })),
       ).toMatchInlineSnapshot(`
         [
@@ -509,7 +509,7 @@ Component, View
             column: w.location.column,
             length: w.location.length,
             lineText: w.location.lineText,
-          }
+          },
         })),
       ).toMatchInlineSnapshot(`
         [
@@ -826,8 +826,8 @@ class X {
           column: w.location.column,
           length: w.location.length,
           lineText: w.location.lineText,
-        }
-      }))
+        },
+      })),
     ).toMatchInlineSnapshot(`
       [
         {
@@ -860,7 +860,6 @@ class X {
       ]
     `);
   });
-
 });
 
 describe('simplifyCtorLikeReactLynx2', () => {
@@ -1050,8 +1049,8 @@ describe('dynamic import', () => {
           column: w.location.column,
           length: w.location.length,
           lineText: w.location.lineText,
-        }
-      }))
+        },
+      })),
     ).toMatchInlineSnapshot(`
       [
         {
