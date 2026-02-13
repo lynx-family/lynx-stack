@@ -15,7 +15,8 @@
         "src/wasm.js",
         "build.rs",
         "Cargo.toml",
-        "scripts/build_wasm.sh"
+        "rslib.config.ts",
+        "scripts/buffer-loader.cjs"
       ],
       "outputs": ["dist/wasm.cjs"]
     },
