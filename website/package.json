@@ -42,7 +42,7 @@
     "@rspress/core": "2.0.3",
     "@rspress/plugin-client-redirects": "2.0.3",
     "@shikijs/transformers": "3.22.0",
-    "@types/react": "npm:@types/react@^19.2.10",
+    "@types/react": "npm:@types/react@^19.2.14",
     "@types/react-dom": "^19.2.3",
     "change-case": "^5.4.4",
     "tailwindcss": "^3.4.19"
