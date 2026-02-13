@@ -4,7 +4,7 @@
 import { instantiateNapiModuleSync } from '@emnapi/core';
 import { getDefaultContext } from '@emnapi/runtime';
 
-// build with `./node_modules/.bin/esbuild src/wasm.js --bundle --loader:.wasm=binary --format=cjs --platform=neutral --outfile=dist/wasm.js`
+// alias in `rslib.config.mts`
 // eslint-disable-next-line import/no-unresolved
 import bytes from '#react_transform.wasm';
 
