@@ -40,6 +40,7 @@ const commonOptions = {
     '.wasm': 'binary',
   },
   platform: 'neutral',
+  target: 'es2022',
 };
 
 await Promise.all([
