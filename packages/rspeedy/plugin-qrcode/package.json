@@ -48,7 +48,7 @@
     "test": "pnpm -w run test --project rspeedy/qrcode"
   },
   "devDependencies": {
-    "@clack/prompts": "1.0.0",
+    "@clack/prompts": "1.0.1",
     "@lynx-js/rspeedy": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@rsbuild/core": "catalog:rsbuild",
