@@ -41,7 +41,7 @@ jobs:
           key: test
           save-if: ${{ github.ref_name == 'main' }}
       - name: Install llvm-cov and nextest
-        uses: taiki-e/install-action@de7896b7cd1c7d181266425abbe571b5a8c757bc # v2
+        uses: taiki-e/install-action@288875dd3d64326724fa6d9593062d9f8ba0b131 # v2
         with:
           tool: cargo-llvm-cov,cargo-nextest
       - name: Test
