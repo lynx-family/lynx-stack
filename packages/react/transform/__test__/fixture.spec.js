@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { formatMessages } from 'esbuild';
 import { describe, expect, it } from 'vitest';
 
 import { transformBundleResult, transformReactLynx } from '../main.js';
@@ -311,14 +310,10 @@ Component, View
     expect(result.code).not.toContain(`__AddInlineStyle`);
     // Should have __SetInlineStyles(element, "invalid: true")
     expect(result.code).toContain('invalid: true');
-    expect(
-      await formatMessages(result.warnings, { kind: 'warning', color: false }),
-    ).toMatchInlineSnapshot(`[]`);
+    expect(result.warnings).toEqual([]);
   });
 
   it('should not warn JSXSpread when not enable addComponentElement', async () => {
-    const { formatMessages } = await import('esbuild');
-
     const cfg = {
       pluginName: '',
       filename: '',
@@ -349,12 +344,7 @@ Component, View
     {
       cfg.compat.addComponentElement = false;
       const result = await transformReactLynx(`<Comp {...s}/>;`, cfg);
-      expect(
-        await formatMessages(result.warnings, {
-          kind: 'warning',
-          color: false,
-        }),
-      ).toMatchInlineSnapshot(`[]`);
+      expect(result.warnings).toEqual([]);
     }
 
     {
@@ -363,19 +353,26 @@ Component, View
       };
       const result = await transformReactLynx(`<Comp {...s}/>;`, cfg);
       expect(
-        await formatMessages(result.warnings, {
-          kind: 'warning',
-          color: false,
-        }),
+        result.warnings.map(w => ({
+          text: w.text,
+          location: {
+            line: w.location.line,
+            column: w.location.column,
+            length: w.location.length,
+            lineText: w.location.lineText,
+          }
+        })),
       ).toMatchInlineSnapshot(`
         [
-          "▲ [WARNING] addComponentElement: component with JSXSpread is ignored to avoid badcase, you can switch addComponentElement.compilerOnly to false to enable JSXSpread support
-
-            :1:7:
-              1 │ <Comp {...s}/>;
-                ╵        ~~~
-
-        ",
+          {
+            "location": {
+              "column": 7,
+              "length": 3,
+              "line": 1,
+              "lineText": "<Comp {...s}/>;",
+            },
+            "text": "addComponentElement: component with JSXSpread is ignored to avoid badcase, you can switch addComponentElement.compilerOnly to false to enable JSXSpread support",
+          },
         ]
       `);
       expect(result.code).toMatchInlineSnapshot(`
@@ -390,12 +387,7 @@ Component, View
     {
       cfg.compat.addComponentElement = true;
       const result = await transformReactLynx(`<Comp {...s}/>;`, cfg);
-      expect(
-        await formatMessages(result.warnings, {
-          kind: 'warning',
-          color: false,
-        }),
-      ).toMatchInlineSnapshot(`[]`);
+      expect(result.warnings).toEqual([]);
       expect(result.code).toMatchInlineSnapshot(`
         "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
         import * as ReactLynx from "@lynx-js/react";
@@ -457,8 +449,6 @@ Component, View
   });
 
   it('should error when encounter <component/>', async () => {
-    const { formatMessages } = await import('esbuild');
-
     const cfg = __cfg();
     {
       cfg.compat.addComponentElement = true;
@@ -466,15 +456,11 @@ Component, View
         `function A() { return <view><component/></view>; }`,
         cfg,
       );
-      expect(
-        await formatMessages(result.errors, { kind: 'error', color: false }),
-      ).toMatchInlineSnapshot(`[]`);
+      expect(result.errors).toEqual([]);
     }
   });
 
   it('should error when encounter class property config', async () => {
-    const { formatMessages } = await import('esbuild');
-
     const cfg = __cfg();
     {
       const result = await transformReactLynx(
@@ -482,27 +468,32 @@ Component, View
         cfg,
       );
       expect(
-        await formatMessages(result.warnings, {
-          kind: 'warning',
-          color: false,
-        }),
+        result.warnings.map(w => ({
+          text: w.text,
+          location: {
+            line: w.location.line,
+            column: w.location.column,
+            length: w.location.length,
+            lineText: w.location.lineText,
+          }
+        })),
       ).toMatchInlineSnapshot(`
         [
-          "▲ [WARNING] BROKEN: supporting for class property \`config\` is removed and MUST be migrated in ReactLynx 3.0, you should put your configs inside \`pageConfig\` in lynx.config.js [plugin transform]
-
-            :1:28:
-              1 │ class A extends Component { config = {}; render() {return <view/>;} }
-                ╵                             ~~~~~~~~~~~~
-
-        ",
+          {
+            "location": {
+              "column": 28,
+              "length": 12,
+              "line": 1,
+              "lineText": "class A extends Component { config = {}; render() {return <view/>;} }",
+            },
+            "text": "BROKEN: supporting for class property \`config\` is removed and MUST be migrated in ReactLynx 3.0, you should put your configs inside \`pageConfig\` in lynx.config.js",
+          },
         ]
       `);
     }
   });
 
   it('should warning when encounter this.createSelectorQuery', async () => {
-    const { formatMessages } = await import('esbuild');
-
     const cfg = __cfg();
     {
       const result = await transformReactLynx(
@@ -511,26 +502,35 @@ Component, View
         cfg,
       );
       expect(
-        await formatMessages(result.warnings, {
-          kind: 'warning',
-          color: false,
-        }),
+        result.warnings.map(w => ({
+          text: w.text,
+          location: {
+            line: w.location.line,
+            column: w.location.column,
+            length: w.location.length,
+            lineText: w.location.lineText,
+          }
+        })),
       ).toMatchInlineSnapshot(`
         [
-          "▲ [WARNING] BROKEN: createSelectorQuery on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead. [plugin transform]
-
-            :1:0:
-              1 │ this.createSelectorQuery();
-                ╵ ~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-        ",
-          "▲ [WARNING] BROKEN: getElementById on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.getElementById instead. [plugin transform]
-
-            :2:9:
-              2 │          this.getElementById();
-                ╵          ~~~~~~~~~~~~~~~~~~~~~
-
-        ",
+          {
+            "location": {
+              "column": 0,
+              "length": 26,
+              "line": 1,
+              "lineText": "this.createSelectorQuery();",
+            },
+            "text": "BROKEN: createSelectorQuery on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.",
+          },
+          {
+            "location": {
+              "column": 9,
+              "length": 21,
+              "line": 2,
+              "lineText": "         this.getElementById();",
+            },
+            "text": "BROKEN: getElementById on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.getElementById instead.",
+          },
         ]
       `);
     }
@@ -542,12 +542,7 @@ Component, View
          this.getElementById();`,
         cfg,
       );
-      expect(
-        await formatMessages(result.warnings, {
-          kind: 'warning',
-          color: false,
-        }),
-      ).toMatchInlineSnapshot(`[]`);
+      expect(result.warnings).toEqual([]);
     }
   });
 });
@@ -824,33 +819,48 @@ class X {
     );
 
     expect(
-      await formatMessages(result.warnings, { kind: 'warning', color: false }),
+      result.warnings.map(w => ({
+        text: w.text,
+        location: {
+          line: w.location.line,
+          column: w.location.column,
+          length: w.location.length,
+          lineText: w.location.lineText,
+        }
+      }))
     ).toMatchInlineSnapshot(`
       [
-        "▲ [WARNING] directive inside constructor is not allowed
-
-          :4:4:
-            4 │     'use js only';
-              ╵     ~~~~~~~~~~~~~~
-
-      ",
-        "▲ [WARNING] directive inside getter/setter is ignored
-
-          :8:4:
-            8 │     'use js only';
-              ╵     ~~~~~~~~~~~~~~
-
-      ",
-        "▲ [WARNING] directive inside getter/setter is ignored
-
-          :12:4:
-            12 │     'use js only';
-               ╵     ~~~~~~~~~~~~~~
-
-      ",
+        {
+          "location": {
+            "column": 4,
+            "length": 14,
+            "line": 4,
+            "lineText": "    'use js only';",
+          },
+          "text": "directive inside constructor is not allowed",
+        },
+        {
+          "location": {
+            "column": 4,
+            "length": 14,
+            "line": 8,
+            "lineText": "    'use js only';",
+          },
+          "text": "directive inside getter/setter is ignored",
+        },
+        {
+          "location": {
+            "column": 4,
+            "length": 14,
+            "line": 12,
+            "lineText": "    'use js only';",
+          },
+          "text": "directive inside getter/setter is ignored",
+        },
       ]
     `);
   });
+
 });
 
 describe('simplifyCtorLikeReactLynx2', () => {
@@ -1032,35 +1042,47 @@ describe('dynamic import', () => {
       })();
       "
     `);
-    // esbuild uses different icon on Windows
-    // See https://github.com/evanw/esbuild/blob/f4159a7b823cd5fe2217da2c30e8873d2f319667/internal/logger/logger.go#L82
-    const errorIcon = process.platform === 'win32' ? 'X' : '✘';
-    expect(await formatMessages(result.errors, { kind: 'error', color: false }))
-      .toMatchInlineSnapshot(`
-        [
-          "${errorIcon} [ERROR] \`import(...)\` call with non-string literal module id is not allowed
-
-            :2:8:
-              2 │   await import(0);
-                ╵         ~~~~~~~~~
-
-        ",
-          "${errorIcon} [ERROR] \`import(...)\` call with non-string literal module id is not allowed
-
-            :3:8:
-              3 │   await import(0, 0);
-                ╵         ~~~~~~~~~~~~
-
-        ",
-          "${errorIcon} [ERROR] \`import("...", ...)\` with invalid options is not allowed
-
-            :4:8:
-              4 │   await import("./index.js", { with: { typo: "component" } });
-                ╵         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-        ",
-        ]
-      `);
+    expect(
+      result.errors.map(w => ({
+        text: w.text,
+        location: {
+          line: w.location.line,
+          column: w.location.column,
+          length: w.location.length,
+          lineText: w.location.lineText,
+        }
+      }))
+    ).toMatchInlineSnapshot(`
+      [
+        {
+          "location": {
+            "column": 8,
+            "length": 9,
+            "line": 2,
+            "lineText": "  await import(0);",
+          },
+          "text": "\`import(...)\` call with non-string literal module id is not allowed",
+        },
+        {
+          "location": {
+            "column": 8,
+            "length": 12,
+            "line": 3,
+            "lineText": "  await import(0, 0);",
+          },
+          "text": "\`import(...)\` call with non-string literal module id is not allowed",
+        },
+        {
+          "location": {
+            "column": 8,
+            "length": 53,
+            "line": 4,
+            "lineText": "  await import("./index.js", { with: { typo: "component" } });",
+          },
+          "text": "\`import("...", ...)\` with invalid options is not allowed",
+        },
+      ]
+    `);
   });
 });
 
