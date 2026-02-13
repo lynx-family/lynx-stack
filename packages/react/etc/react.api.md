@@ -11,8 +11,6 @@ import type { Consumer } from 'react';
 import { createContext } from 'react';
 import { createElement } from 'react';
 import { createRef } from 'react';
-import type { DependencyList } from 'react';
-import type { EffectCallback } from 'react';
 import type { FC } from 'react';
 import { forwardRef } from 'react';
 import { Fragment } from 'react';
@@ -26,6 +24,7 @@ import { Suspense } from 'react';
 import { useCallback } from 'react';
 import { useContext } from 'react';
 import { useDebugValue } from 'react';
+import { useEffect as useEffect_2 } from 'preact/hooks';
 import { useErrorBoundary } from 'preact/hooks';
 import { useImperativeHandle } from 'react';
 import { useMemo } from 'react';
@@ -132,7 +131,7 @@ export { useContext }
 export { useDebugValue }
 
 // @public
-export function useEffect(effect: EffectCallback, deps?: DependencyList): void;
+export const useEffect: typeof useEffect_2;
 
 export { useErrorBoundary }
 
@@ -145,7 +144,7 @@ export const useInitData: () => InitData;
 export const useInitDataChanged: (callback: (data: InitData) => void) => void;
 
 // @public @deprecated
-export function useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void;
+export const useLayoutEffect: typeof useEffect_2;
 
 // @public
 export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(eventName: string, listener: T): void;
