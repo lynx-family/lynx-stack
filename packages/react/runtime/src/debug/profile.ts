@@ -4,9 +4,7 @@
 
 /* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 
-export const isProfiling: boolean = Boolean(
-  (typeof __PROFILE__ !== 'undefined' && __PROFILE__) || lynx.performance?.isProfileRecording?.(),
-);
+export const isProfiling: boolean = Boolean(lynx.performance?.isProfileRecording?.());
 if (isProfiling && typeof __PROFILE__ === 'undefined') {
   // @ts-expect-error mock profile
   globalThis.__PROFILE__ = true;
