@@ -20,7 +20,7 @@
     "@babel/preset-typescript": "^7.28.5",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
-    "@lynx-js/types": "3.6.0",
+    "@lynx-js/types": "3.7.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@types/react": "^18.3.27",
     "babel-plugin-react-compiler": "0.0.0-experimental-fe727a3-20250909",

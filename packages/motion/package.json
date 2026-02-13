@@ -53,7 +53,7 @@
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
-    "@lynx-js/types": "3.6.0",
+    "@lynx-js/types": "3.7.0",
     "rsbuild-plugin-publint": "0.3.4"
   },
   "peerDependencies": {

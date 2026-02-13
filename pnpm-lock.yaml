@@ -180,8 +180,8 @@ importers:
         specifier: 0.0.3
         version: 0.0.3
       '@lynx-js/types':
-        specifier: 3.6.0
-        version: 3.6.0
+        specifier: 3.7.0
+        version: 3.7.0
       '@types/react':
         specifier: ^18.3.27
         version: 18.3.27
@@ -208,8 +208,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.6.0
-        version: 3.6.0
+        specifier: 3.7.0
+        version: 3.7.0
       '@types/react':
         specifier: ^18.3.27
         version: 18.3.27
@@ -233,8 +233,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.6.0
-        version: 3.6.0
+        specifier: 3.7.0
+        version: 3.7.0
       '@types/react':
         specifier: ^18.3.27
         version: 18.3.27
@@ -258,8 +258,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.6.0
-        version: 3.6.0
+        specifier: 3.7.0
+        version: 3.7.0
       '@rsbuild/plugin-babel':
         specifier: 1.0.6
         version: 1.0.6(@rsbuild/core@1.7.3)
@@ -295,8 +295,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.6.0
-        version: 3.6.0
+        specifier: 3.7.0
+        version: 3.7.0
       '@types/react':
         specifier: ^18.3.27
         version: 18.3.27
@@ -320,8 +320,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.6.0
-        version: 3.6.0
+        specifier: 3.7.0
+        version: 3.7.0
       '@types/react':
         specifier: ^18.3.27
         version: 18.3.27
@@ -354,8 +354,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tailwind-preset
       '@lynx-js/types':
-        specifier: 3.6.0
-        version: 3.6.0
+        specifier: 3.7.0
+        version: 3.7.0
       '@types/react':
         specifier: ^18.3.27
         version: 18.3.27
@@ -380,8 +380,8 @@ importers:
         specifier: workspace:*
         version: link:../../react
       '@lynx-js/types':
-        specifier: 3.6.0
-        version: 3.6.0
+        specifier: 3.7.0
+        version: 3.7.0
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -467,8 +467,8 @@ importers:
         specifier: workspace:*
         version: link:../react
       '@lynx-js/types':
-        specifier: 3.6.0
-        version: 3.6.0
+        specifier: 3.7.0
+        version: 3.7.0
       rsbuild-plugin-publint:
         specifier: 0.3.4
         version: 0.3.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
@@ -480,8 +480,8 @@ importers:
         version: '@hongzhiyuan/preact@10.28.0-fc4af453'
     devDependencies:
       '@lynx-js/types':
-        specifier: 3.6.0
-        version: 3.6.0
+        specifier: 3.7.0
+        version: 3.7.0
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.56.3(@types/node@24.10.9)
@@ -510,8 +510,8 @@ importers:
         specifier: workspace:*
         version: link:../transform
       '@lynx-js/types':
-        specifier: 3.6.0
-        version: 3.6.0
+        specifier: 3.7.0
+        version: 3.7.0
       '@types/react':
         specifier: ^18.3.27
         version: 18.3.27
@@ -571,8 +571,8 @@ importers:
   packages/react/worklet-runtime:
     devDependencies:
       '@lynx-js/types':
-        specifier: 3.6.0
-        version: 3.6.0
+        specifier: 3.7.0
+        version: 3.7.0
 
   packages/rspeedy/core:
     dependencies:
@@ -910,8 +910,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@lynx-js/types':
-        specifier: 3.6.0
-        version: 3.6.0
+        specifier: 3.7.0
+        version: 3.7.0
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../../web-platform/web-core
@@ -1015,8 +1015,8 @@ importers:
         specifier: workspace:*
         version: link:../../../rspeedy/core
       '@lynx-js/types':
-        specifier: 3.6.0
-        version: 3.6.0
+        specifier: 3.7.0
+        version: 3.7.0
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -3171,8 +3171,8 @@ packages:
   '@lynx-js/type-element-api@0.0.3':
     resolution: {integrity: sha512-e8+V1aU9VD6fmVJhS1VoE5ZxUD2udhEtTTsGBj2jlxYNscND2V6fyYFGF/dUPN+s9EwRiB80vUY/Im8tYSsMWA==}
 
-  '@lynx-js/types@3.6.0':
-    resolution: {integrity: sha512-nNCuFP5Cpd7X/D3X7JsQLYkiIUsr6iTsRpqSz4swUdlNpK64Xt9epdjkqxbruuUqplFFmkhjThjWN4Bc8uZNWQ==}
+  '@lynx-js/types@3.7.0':
+    resolution: {integrity: sha512-VEcz5HBJ8m938In1VJj2phR06cWyT0Tx+HnwBJrPINiuWPjN9YfrPl1lX87XWr3eMDhKZY+6F+5eFpJ7JFgjXw==}
 
   '@manypkg/find-root@1.1.0':
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
@@ -11673,7 +11673,7 @@ snapshots:
 
   '@lynx-js/type-element-api@0.0.3': {}
 
-  '@lynx-js/types@3.6.0':
+  '@lynx-js/types@3.7.0':
     dependencies:
       csstype: 3.1.3
 
