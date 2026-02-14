@@ -195,14 +195,14 @@
 
   "customManagers": [
     {
-      // See: https://docs.renovatebot.com/modules/datasource/git-refs/
+      // Update benchx_cli version from GitHub releases
+      // See: https://docs.renovatebot.com/modules/datasource/github-releases/
       "customType": "regex",
-      "managerFilePatterns": ["packages/lynx/benchx_cli/scripts/build.mjs"],
-      "matchStrings": ["const COMMIT = '(?<currentDigest>.*?)';"],
-      "currentValueTemplate": "develop",
-      "depNameTemplate": "lynx",
-      "packageNameTemplate": "https://github.com/lynx-family/lynx",
-      "datasourceTemplate": "git-refs",
+      "managerFilePatterns": ["packages/lynx/benchx_cli/scripts/build.sh"],
+      "matchStrings": ["LOCKED_VERSION=\"(?<currentValue>benchx_cli-.*?)\""],
+      "depNameTemplate": "lynx-community/benchx_cli",
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "regex:^benchx_cli-(?<major>\\d{4})(?<minor>\\d{2})(?<patch>\\d{2})(?<build>\\d{4})$",
     },
     {
       "customType": "regex",
