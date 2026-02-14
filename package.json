@@ -30,7 +30,7 @@
     "@eslint/markdown": "^7.3.0",
     "@microsoft/api-extractor": "catalog:",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rslib/core": "^0.19.5",
+    "@rslib/core": "^0.19.6",
     "@rspack/core": "catalog:rspack",
     "@svitejs/changesets-changelog-github-compact": "^1.2.0",
     "@tsconfig/node22": "^22.0.5",
