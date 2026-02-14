@@ -74,7 +74,7 @@
     "ipaddr.js": "^2.3.0",
     "javascript-stringify": "^2.1.0",
     "picocolors": "^1.1.1",
-    "rsbuild-plugin-arethetypeswrong": "0.1.1",
+    "rsbuild-plugin-arethetypeswrong": "0.2.0",
     "rsbuild-plugin-publint": "0.3.4",
     "tiny-invariant": "^1.3.3",
     "ts-blank-space": "^0.7.0",
