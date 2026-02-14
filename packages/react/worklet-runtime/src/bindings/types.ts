@@ -16,6 +16,13 @@ export interface WorkletRefImpl<T> {
   current?: T;
 }
 
+export interface MainThreadValueImpl<T> {
+  __MT_PERSIST__: true;
+  _wvid: number;
+  _initValue: T;
+  _type: string;
+}
+
 export interface WorkletRef<T> {
   _wvid: WorkletRefId;
   current: T;
@@ -33,6 +40,7 @@ export type ClosureValueType =
   | number
   | Worklet
   | WorkletRef<unknown>
+  | MainThreadValueImpl<unknown>
   | Element
   | (((...args: unknown[]) => unknown) & { ctx?: ClosureValueType })
   | ClosureValueType_

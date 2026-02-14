@@ -1,3 +1,5 @@
+import { workletCapture as __workletCapture } from "@lynx-js/react";
+var workletCapture = __workletCapture;
 import * as SR from './utils.js' with {
     runtime: "shared"
 };

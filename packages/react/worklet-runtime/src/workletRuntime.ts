@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
+import { WorkletEvents } from './bindings/events.js';
 import type { ClosureValueType, RunWorkletOptions, Worklet, WorkletRefImpl } from './bindings/types.js';
 import { RunWorkletSource } from './bindings/types.js';
 import { initRunOnBackgroundDelay } from './delayRunOnBackground.js';
@@ -13,11 +14,21 @@ import { JsFunctionLifecycleManager, isRunOnBackgroundEnabled } from './jsFuncti
 import { runRunOnMainThreadTask } from './runOnMainThread.js';
 import { mainThreadFlushLoopMark } from './utils/mainThreadFlushLoopGuard.js';
 import { profile } from './utils/profile.js';
-import { getFromWorkletRefMap, initWorkletRef } from './workletRef.js';
+import './Ref.js';
+import {
+  getFromWorkletRefMap,
+  getMainThreadValueClassMap,
+  initWorkletRef,
+  removeValueFromWorkletRefMap,
+} from './workletRef.js';
 
 function initWorklet(): void {
+  // Capture existing type registry (may contain types registered before init)
+  const stagingMap = getMainThreadValueClassMap();
+
   globalThis.lynxWorkletImpl = {
     _workletMap: {},
+    _mainThreadValueClassMap: stagingMap,
     _refImpl: initWorkletRef(),
     _runOnBackgroundDelayImpl: initRunOnBackgroundDelay(),
     _hydrateCtx: hydrateCtx,
@@ -25,6 +36,14 @@ function initWorklet(): void {
     _eomImpl: initEomImpl(),
     _runRunOnMainThreadTask: runRunOnMainThreadTask,
   };
+
+  // Listen for release events to clean up refs
+  lynx.getCoreContext().addEventListener(
+    WorkletEvents.releaseWorkletRef,
+    (evt: { data: { id: number } }) => {
+      removeValueFromWorkletRefMap(evt.data.id);
+    },
+  );
 
   if (isRunOnBackgroundEnabled()) {
     globalThis.lynxWorkletImpl._jsFunctionLifecycleManager = new JsFunctionLifecycleManager();
@@ -143,7 +162,7 @@ function transformWorklet(
 const transformWorkletInner = (
   value: ClosureValueType,
   depth: number,
-  ctx: unknown,
+  ctx?: unknown,
 ) => {
   const limit = 1000;
   if (++depth >= limit) {
@@ -170,6 +189,8 @@ const transformWorkletInner = (
 
     transformWorkletInner(subObj, depth, ctx);
 
+    // Detect WorkletRef and MainThreadValue objects (both have _wvid)
+    // The hydration in getFromWorkletRefMap handles type-aware instantiation
     const isWorkletRef = '_wvid' in (subObj as object);
     if (isWorkletRef) {
       obj[key] = getFromWorkletRefMap(
@@ -187,7 +208,7 @@ const transformWorkletInner = (
       continue;
     }
     const isJsFn = '_jsFnId' in subObj;
-    if (isJsFn) {
+    if (isJsFn && ctx) {
       subObj['_execId'] = (ctx as Worklet)._execId;
       lynxWorkletImpl._jsFunctionLifecycleManager?.addRef(
         (ctx as Worklet)._execId!,
