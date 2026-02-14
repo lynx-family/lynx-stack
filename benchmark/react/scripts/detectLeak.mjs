@@ -11,6 +11,21 @@ import { WasmEngine } from '@lynx-js/trace-processor';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distDir = path.resolve(__dirname, '../dist');
 
+async function disposeEngine(engine) {
+  // Node 22 doesn't support `using`; manually dispose resources if supported.
+  if (typeof engine.dispose === 'function') {
+    await engine.dispose();
+  } else if (typeof engine.close === 'function') {
+    await engine.close();
+  } else if (typeof engine.free === 'function') {
+    await engine.free();
+  } else if (typeof engine[Symbol.asyncDispose] === 'function') {
+    await engine[Symbol.asyncDispose]();
+  } else if (typeof engine[Symbol.dispose] === 'function') {
+    engine[Symbol.dispose]();
+  }
+}
+
 async function main() {
   if (
     !(await fs
@@ -37,30 +52,32 @@ async function main() {
     const filePath = path.join(distDir, file);
     const fileContent = await fs.readFile(filePath);
 
-    using engine = new WasmEngine('detectLeak');
-    await engine.parse(fileContent);
-    await engine.notifyEof();
+    const engine = new WasmEngine('detectLeak');
+    try {
+      await engine.parse(fileContent);
+      await engine.notifyEof();
 
-    const countQuery = `
-      SELECT count(*) as count
-      FROM slice s
-      JOIN args a1 ON s.arg_set_id = a1.arg_set_id
-      JOIN args a2 ON s.arg_set_id = a2.arg_set_id
-      WHERE s.name = 'FiberElement::Constructor' AND a1.key = 'debug.id' AND a2.key = 'debug.tag'
-    `;
-    const countResult = await engine.query(countQuery);
-    const countIt = countResult.iter({ count: 0 });
-    if (countIt.valid()) {
-      const count = countIt.get('count');
-      if (count === 0) {
-        console.error(
-          `Error: No FiberElement::Constructor events found in ${file}.`,
-        );
-        process.exit(1); // eslint-disable-line n/no-process-exit
+      const countQuery = `
+        SELECT count(*) as count
+        FROM slice s
+        JOIN args a1 ON s.arg_set_id = a1.arg_set_id
+        JOIN args a2 ON s.arg_set_id = a2.arg_set_id
+        WHERE s.name = 'FiberElement::Constructor' AND a1.key = 'debug.id' AND a2.key = 'debug.tag'
+      `;
+      const countResult = await engine.query(countQuery);
+      const countIt = countResult.iter({ count: 0 });
+      if (countIt.valid()) {
+        const count = countIt.get('count');
+        if (count === 0) {
+          console.error(
+            `Error: No FiberElement::Constructor events found in ${file}.`,
+          );
+          hasLeak = true;
+          continue;
+        }
       }
-    }
 
-    const query = `\
+      const query = `\
 WITH
 CtorIds AS (
   SELECT
@@ -95,22 +112,25 @@ WHERE
   dtor.id IS NULL;
 `;
 
-    const result = await engine.query(query);
+      const result = await engine.query(query);
 
-    if (result.numRows() > 0) {
-      console.error(`Memory leak detected in ${file}!`);
-      const columns = result.columns();
+      if (result.numRows() > 0) {
+        console.error(`Memory leak detected in ${file}!`);
+        const columns = result.columns();
 
-      for (const it = result.iter({}); it.valid(); it.next()) {
-        const row = {};
-        for (const name of columns) {
-          row[name] = it.get(name);
+        for (const it = result.iter({}); it.valid(); it.next()) {
+          const row = {};
+          for (const name of columns) {
+            row[name] = it.get(name);
+          }
+          console.error(`Leaked Element:`, row);
         }
-        console.error(`Leaked Element:`, row);
+        hasLeak = true;
+      } else {
+        console.info(`No leaks detected in ${file}.`);
       }
-      hasLeak = true;
-    } else {
-      console.info(`No leaks detected in ${file}.`);
+    } finally {
+      await disposeEngine(engine);
     }
   }
 
@@ -119,4 +139,7 @@ WHERE
   }
 }
 
-await main();
+await main().catch((err) => {
+  console.error(err);
+  process.exit(1); // eslint-disable-line n/no-process-exit
+});
