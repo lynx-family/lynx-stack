@@ -35,7 +35,7 @@ test('preact/debug - Invalid argument passed to hook', async () => {
   expect(warnLog).toMatchInlineSnapshot(`
     [
       [
-        "Invalid argument passed to hook. Hooks should not be called with NaN in the dependency array. Hook index 1 in component Bar was called with NaN.",
+        "Invalid argument passed to hook. Hooks should not be called with NaN in the dependency array. Hook index 2 in component Bar was called with NaN.",
       ],
     ]
   `);

@@ -132,7 +132,7 @@ export { useContext }
 export { useDebugValue }
 
 // @public
-export function useEffect(effect: EffectCallback, deps?: DependencyList): void;
+export const useEffect: (effect: EffectCallback, deps?: DependencyList) => void;
 
 export { useErrorBoundary }
 
@@ -145,7 +145,7 @@ export const useInitData: () => InitData;
 export const useInitDataChanged: (callback: (data: InitData) => void) => void;
 
 // @public @deprecated
-export function useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void;
+export const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) => void;
 
 // @public
 export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(eventName: string, listener: T): void;
