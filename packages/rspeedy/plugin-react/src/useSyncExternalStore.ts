@@ -11,19 +11,22 @@ export function applyUseSyncExternalStore(api: RsbuildPluginAPI): void {
     const useSyncExternalStoreEntries = [
       'use-sync-external-store',
       'use-sync-external-store/with-selector',
+      'use-sync-external-store/with-selector.js',
       'use-sync-external-store/shim',
       'use-sync-external-store/shim/with-selector',
+      'use-sync-external-store/shim/with-selector.js',
     ]
 
     await Promise.all(
-      useSyncExternalStoreEntries.map(entry =>
-        resolve(`@lynx-js/${entry}`).then(value => {
+      useSyncExternalStoreEntries.map(key => {
+        const entry = key.endsWith('.js') ? key.replace('.js', '') : key
+        return resolve(`@lynx-js/${entry}`).then(value => {
           chain
             .resolve
             .alias
-            .set(`${entry}$`, value)
+            .set(`${key}$`, value)
         })
-      ),
+      }),
     )
   })
 }
