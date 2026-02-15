@@ -15,9 +15,9 @@ type CssOgClassSelectorNameToDeclarationsMap = FnvHashMap<String, String>;
 type CssOgCssIdToClassSelectorNameToDeclarationsMap =
   FnvHashMap<i32, CssOgClassSelectorNameToDeclarationsMap>;
 
-#[cfg(feature = "client")]
+#[cfg(any(feature = "client", feature = "server"))]
 pub(crate) mod style_sheet_resource;
-#[cfg(feature = "client")]
+#[cfg(any(feature = "client", feature = "server"))]
 pub use style_sheet_resource::StyleSheetResource;
 
 #[cfg(test)]

@@ -40,9 +40,6 @@ export const [wasmInstance, wasmModule] = await wasmLoaded;
 if (!isWorker) {
   wasmInstance.initSync({ module: wasmModule! });
 }
-export const templateManagerWasm = isWorker
-  ? undefined
-  : new wasmInstance.TemplateManager();
 
 export type MainThreadWasmContext =
   typeof import('../../binary/client/client.js').MainThreadWasmContext;

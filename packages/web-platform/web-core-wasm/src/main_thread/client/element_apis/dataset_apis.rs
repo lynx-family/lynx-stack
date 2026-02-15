@@ -9,7 +9,6 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 impl MainThreadWasmContext {
-  #[wasm_bindgen]
   pub fn set_dataset(
     &mut self,
     unique_id: usize,
@@ -55,7 +54,6 @@ impl MainThreadWasmContext {
     Ok(())
   }
 
-  #[wasm_bindgen]
   pub fn add_dataset(
     &mut self,
     unique_id: usize,
@@ -77,7 +75,6 @@ impl MainThreadWasmContext {
     Ok(())
   }
 
-  #[wasm_bindgen]
   pub fn get_dataset(&self, unique_id: usize) -> Result<js_sys::Object, JsError> {
     let element_rc = self
       .get_element_data_by_unique_id(unique_id)
@@ -90,7 +87,6 @@ impl MainThreadWasmContext {
     }
   }
 
-  #[wasm_bindgen]
   pub fn get_data_by_key(
     &self,
     unique_id: usize,

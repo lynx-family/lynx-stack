@@ -24,6 +24,9 @@ export const test: typeof base = base.extend({
     const pages = new Set<Page>();
 
     context.on('page', async (page) => {
+      if (testInfo.titlePath.join(' ').includes('SSR No JS')) {
+        return;
+      }
       await page.coverage.startJSCoverage({
         reportAnonymousScripts: true,
         resetOnNavigation: true,

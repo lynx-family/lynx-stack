@@ -23,7 +23,6 @@ pub struct EventInfo {
 
 #[wasm_bindgen]
 impl MainThreadWasmContext {
-  #[wasm_bindgen]
   pub fn add_cross_thread_event(
     &mut self,
     unique_id: usize,
@@ -73,7 +72,6 @@ impl MainThreadWasmContext {
     }
   }
 
-  #[wasm_bindgen]
   pub fn add_run_worklet_event(
     &mut self,
     unique_id: usize,
@@ -123,7 +121,6 @@ impl MainThreadWasmContext {
     }
   }
 
-  #[wasm_bindgen]
   pub fn get_event(
     &self,
     unique_id: usize,
@@ -139,7 +136,6 @@ impl MainThreadWasmContext {
     )
   }
 
-  #[wasm_bindgen]
   pub fn get_events(&self, unique_id: usize) -> Vec<EventInfo> {
     let mut event_infos: Vec<EventInfo> = vec![];
     let event_types = vec!["bindevent", "capture-bind", "catchevent", "capture-catch"];
@@ -278,7 +274,6 @@ impl MainThreadWasmContext {
     false
   }
 
-  #[wasm_bindgen]
   pub fn common_event_handler(
     &self,
     event: JsValue,

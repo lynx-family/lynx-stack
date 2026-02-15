@@ -6,9 +6,6 @@
 
 pub(crate) mod component_apis;
 pub(crate) mod dataset_apis;
-pub(crate) mod element_data;
-
 pub(crate) mod event_apis;
 pub(crate) mod style_apis;
 use super::main_thread_context::MainThreadWasmContext;
-pub(super) use element_data::LynxElementData;

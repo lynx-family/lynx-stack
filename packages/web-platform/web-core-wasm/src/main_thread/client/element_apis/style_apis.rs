@@ -13,7 +13,6 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 impl MainThreadWasmContext {
-  #[wasm_bindgen]
   pub fn set_css_id(
     &mut self,
     elements_unique_id: Vec<usize>,
@@ -44,7 +43,6 @@ impl MainThreadWasmContext {
     Ok(())
   }
 
-  #[wasm_bindgen]
   pub fn update_css_og_style(
     &mut self,
     unique_id: usize,

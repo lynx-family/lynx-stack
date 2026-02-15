@@ -4,8 +4,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#[cfg(feature = "client")]
-mod template_manager;
 /// Template module.
 ///
 /// This module defines the structure of Lynx templates, including element templates and style information.
@@ -16,5 +14,3 @@ mod template_manager;
 ///   - `element_template`: Defines `RawElementTemplate` which contains operations to build the element tree.
 ///   - `style_info`: Defines `RawStyleInfo` which contains style sheets and rules.
 pub(crate) mod template_sections;
-#[cfg(feature = "client")]
-pub use template_manager::TemplateManager;
