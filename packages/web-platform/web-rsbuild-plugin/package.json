@@ -32,7 +32,7 @@
     "@lynx-js/web-core": "workspace:*",
     "@lynx-js/web-elements": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
-    "@types/loader-utils": "^2.0.6",
+    "@types/loader-utils": "^3.0.0",
     "@types/webpack": "^5.28.5",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
