@@ -61,7 +61,7 @@
     "@lynx-js/websocket": "workspace:^",
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-css-minimizer": "1.1.1",
-    "@rsdoctor/rspack-plugin": "1.2.3"
+    "@rsdoctor/rspack-plugin": "1.5.2"
   },
   "devDependencies": {
     "@lynx-js/vitest-setup": "workspace:*",
