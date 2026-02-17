@@ -45,7 +45,7 @@
     "test": "pnpm -w run test --project webpack/css-extract"
   },
   "dependencies": {
-    "mini-css-extract-plugin": "^2.9.4"
+    "mini-css-extract-plugin": "^2.10.0"
   },
   "devDependencies": {
     "@lynx-js/css-serializer": "workspace:*",
