@@ -258,8 +258,6 @@ let jsx = <view style={{ height, width }}/>`,
   });
 
   it('should fallback to SetInlineStyles when have unknown CSS property', async () => {
-    const { formatMessages } = await import('esbuild');
-
     const result = await transformReactLynx(
       `<view style={{ width: '100px', invalid: false, height: '200rpx', invalidProperty: 'auto' }}/>`,
     );
@@ -269,14 +267,10 @@ let jsx = <view style={{ height, width }}/>`,
     expect(result.code).toContain(`width: '100px'`);
     expect(result.code).toContain(`invalid: false`);
     expect(result.code).toContain(`height: '200rpx'`);
-    expect(
-      await formatMessages(result.warnings, { kind: 'warning', color: false }),
-    ).toMatchInlineSnapshot(`[]`);
+    expect(result.warnings).toEqual([]);
   });
 
   it('should fallback to SetInlineStyles when have computed CSS property', async () => {
-    const { formatMessages } = await import('esbuild');
-
     const result = await transformReactLynx(
       `<view style={{ width: value, [key]: false, height: '200rpx' }}/>`,
     );
@@ -286,8 +280,6 @@ let jsx = <view style={{ height, width }}/>`,
     expect(result.code).toContain(`width: value`);
     expect(result.code).toContain(`[key]: false`);
     expect(result.code).toContain(`height: '200rpx'`);
-    expect(
-      await formatMessages(result.warnings, { kind: 'warning', color: false }),
-    ).toMatchInlineSnapshot(`[]`);
+    expect(result.warnings).toEqual([]);
   });
 });
