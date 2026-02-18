@@ -6,7 +6,7 @@ import { createRequire } from 'node:module';
 
 import { rspack } from '@rspack/core';
 
-import { LAYERS, ReactWebpackPlugin } from '../src';
+import { LAYERS, ReactWebpackPlugin } from '../src/index.ts';
 
 /**
  * @param {string=} name - The name
