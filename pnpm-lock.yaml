@@ -1461,8 +1461,8 @@ importers:
         specifier: ^7.1.3
         version: 7.1.3(@rspack/core@1.7.6(@swc/helpers@0.5.18))(webpack@5.105.2)
       mini-css-extract-plugin:
-        specifier: ^2.9.4
-        version: 2.9.4(webpack@5.105.2)
+        specifier: ^2.10.0
+        version: 2.10.0(webpack@5.105.2)
       webpack:
         specifier: ^5.105.2
         version: 5.105.2
@@ -1470,8 +1470,8 @@ importers:
   packages/webpack/css-extract-webpack-plugin:
     dependencies:
       mini-css-extract-plugin:
-        specifier: ^2.9.4
-        version: 2.9.4(webpack@5.105.2)
+        specifier: ^2.10.0
+        version: 2.10.0(webpack@5.105.2)
     devDependencies:
       '@lynx-js/css-serializer':
         specifier: workspace:*
@@ -7530,8 +7530,8 @@ packages:
     resolution: {integrity: sha512-I9jwMn07Sy/IwOj3zVkVik2JTvgpaykDZEigL6Rx6N9LbMywwUSMtxET+7lVoDLLd3O3IXwJwvuuns8UB/HeAg==}
     engines: {node: '>=4'}
 
-  mini-css-extract-plugin@2.9.4:
-    resolution: {integrity: sha512-ZWYT7ln73Hptxqxk2DxPU9MmapXRhxkJD6tkSR04dnQxm8BGu2hzgKLugK5yySD97u/8yy7Ma7E76k9ZdvtjkQ==}
+  mini-css-extract-plugin@2.10.0:
+    resolution: {integrity: sha512-540P2c5dYnJlyJxTaSloliZexv8rji6rY8FhQN+WF/82iHQfA23j/xtJx97L+mXOML27EqksSek/g4eK7jaL3g==}
     engines: {node: '>= 12.13.0'}
     peerDependencies:
       webpack: ^5.0.0
@@ -17240,7 +17240,7 @@ snapshots:
 
   min-indent@1.0.1: {}
 
-  mini-css-extract-plugin@2.9.4(webpack@5.105.2):
+  mini-css-extract-plugin@2.10.0(webpack@5.105.2):
     dependencies:
       schema-utils: 4.3.3
       tapable: 2.3.0
