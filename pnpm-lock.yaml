@@ -1458,8 +1458,8 @@ importers:
         specifier: 1.7.6
         version: 1.7.6(@swc/helpers@0.5.18)
       css-loader:
-        specifier: ^7.1.3
-        version: 7.1.3(@rspack/core@1.7.6(@swc/helpers@0.5.18))(webpack@5.105.2)
+        specifier: ^7.1.4
+        version: 7.1.4(@rspack/core@1.7.6(@swc/helpers@0.5.18))(webpack@5.105.2)
       mini-css-extract-plugin:
         specifier: ^2.10.0
         version: 2.10.0(webpack@5.105.2)
@@ -1492,8 +1492,8 @@ importers:
         specifier: 1.7.6
         version: 1.7.6(@swc/helpers@0.5.18)
       css-loader:
-        specifier: ^7.1.3
-        version: 7.1.3(@rspack/core@1.7.6(@swc/helpers@0.5.18))(webpack@5.105.2)
+        specifier: ^7.1.4
+        version: 7.1.4(@rspack/core@1.7.6(@swc/helpers@0.5.18))(webpack@5.105.2)
       sass-loader:
         specifier: ^16.0.7
         version: 16.0.7(@rspack/core@1.7.6(@swc/helpers@0.5.18))(sass-embedded@1.97.3)(sass@1.97.3)(webpack@5.105.2)
@@ -1571,8 +1571,8 @@ importers:
         specifier: 1.7.6
         version: 1.7.6(@swc/helpers@0.5.18)
       css-loader:
-        specifier: ^7.1.3
-        version: 7.1.3(@rspack/core@1.7.6(@swc/helpers@0.5.18))(webpack@5.105.2(@swc/core@1.13.1(@swc/helpers@0.5.18)))
+        specifier: ^7.1.4
+        version: 7.1.4(@rspack/core@1.7.6(@swc/helpers@0.5.18))(webpack@5.105.2(@swc/core@1.13.1(@swc/helpers@0.5.18)))
       swc-loader:
         specifier: ^0.2.7
         version: 0.2.7(@swc/core@1.13.1(@swc/helpers@0.5.18))(webpack@5.105.2(@swc/core@1.13.1(@swc/helpers@0.5.18)))
@@ -1636,8 +1636,8 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4
       css-loader:
-        specifier: ^7.1.3
-        version: 7.1.3(@rspack/core@1.7.6(@swc/helpers@0.5.18))(webpack@5.105.2)
+        specifier: ^7.1.4
+        version: 7.1.4(@rspack/core@1.7.6(@swc/helpers@0.5.18))(webpack@5.105.2)
       webpack:
         specifier: ^5.105.2
         version: 5.105.2
@@ -5360,8 +5360,8 @@ packages:
     peerDependencies:
       postcss: ^8.0.9
 
-  css-loader@7.1.3:
-    resolution: {integrity: sha512-frbERmjT0UC5lMheWpJmMilnt9GEhbZJN/heUb7/zaJYeIzj5St9HvDcfshzzOqbsS+rYpMk++2SD3vGETDSyA==}
+  css-loader@7.1.4:
+    resolution: {integrity: sha512-vv3J9tlOl04WjiMvHQI/9tmIrCxVrj6PFbHemBB1iihpeRbi/I4h033eoFIhwxBBqLhI0KYFS7yvynBFhIZfTw==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@rspack/core': 1.7.6
@@ -14384,7 +14384,7 @@ snapshots:
     dependencies:
       postcss: 8.5.6
 
-  css-loader@7.1.3(@rspack/core@1.7.6(@swc/helpers@0.5.18))(webpack@5.105.2(@swc/core@1.13.1(@swc/helpers@0.5.18))):
+  css-loader@7.1.4(@rspack/core@1.7.6(@swc/helpers@0.5.18))(webpack@5.105.2(@swc/core@1.13.1(@swc/helpers@0.5.18))):
     dependencies:
       icss-utils: 5.1.0(postcss@8.5.6)
       postcss: 8.5.6
@@ -14398,7 +14398,7 @@ snapshots:
       '@rspack/core': 1.7.6(@swc/helpers@0.5.18)
       webpack: 5.105.2(@swc/core@1.13.1(@swc/helpers@0.5.18))
 
-  css-loader@7.1.3(@rspack/core@1.7.6(@swc/helpers@0.5.18))(webpack@5.105.2):
+  css-loader@7.1.4(@rspack/core@1.7.6(@swc/helpers@0.5.18))(webpack@5.105.2):
     dependencies:
       icss-utils: 5.1.0(postcss@8.5.6)
       postcss: 8.5.6
