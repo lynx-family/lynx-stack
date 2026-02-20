@@ -47,7 +47,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "framer-motion": "12.34.1",
+    "framer-motion": "12.34.3",
     "motion-dom": "12.23.12",
     "motion-utils": "12.23.6"
   },
