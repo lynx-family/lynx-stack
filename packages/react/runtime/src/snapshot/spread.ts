@@ -47,7 +47,7 @@ function updateSpread(
   elementIndex: number,
 ): void {
   oldValue ??= {};
-  let newValue: Record<string, unknown> = snapshot.__values![index] as Record<string, unknown>; // compiler guarantee this must be an object;
+  let newValue: Record<string, unknown> = (snapshot.__values![index] ?? {}) as Record<string, unknown>; // compiler guarantee this must be an object;
 
   const list = snapshot.parentNode;
   if (list?.__snapshot_def.isListHolder) {

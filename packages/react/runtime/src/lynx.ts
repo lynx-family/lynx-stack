@@ -16,6 +16,7 @@ import { injectUpdateMainThread } from './lifecycle/patch/updateMainThread.js';
 import { injectCalledByNative } from './lynx/calledByNative.js';
 import { setupLynxEnv } from './lynx/env.js';
 import { injectLepusMethods } from './lynx/injectLepusMethods.js';
+import { registerDestroyMts } from './lynx/mts-destroy.js';
 import { initTimingAPI } from './lynx/performance.js';
 import { injectTt } from './lynx/tt.js';
 import { lynxQueueMicrotask } from './utils.js';
@@ -38,6 +39,7 @@ if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
   if (__DEV__) {
     injectLepusMethods();
   }
+  registerDestroyMts();
 }
 
 if (__DEV__) {
