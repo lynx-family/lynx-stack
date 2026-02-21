@@ -169,6 +169,12 @@ describe('Config', () => {
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store/with-selector.js$',
+      expect.stringContaining(
+        '/use-sync-external-store/with-selector.js'.replaceAll('/', path.sep),
+      ),
+    )
+    expect(config.resolve.alias).toHaveProperty(
       'use-sync-external-store/shim$',
       expect.stringContaining(
         '/use-sync-external-store/index.js'.replaceAll('/', path.sep),
@@ -176,6 +182,12 @@ describe('Config', () => {
     )
     expect(config.resolve.alias).toHaveProperty(
       'use-sync-external-store/shim/with-selector$',
+      expect.stringContaining(
+        '/use-sync-external-store/with-selector.js'.replaceAll('/', path.sep),
+      ),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store/shim/with-selector.js$',
       expect.stringContaining(
         '/use-sync-external-store/with-selector.js'.replaceAll('/', path.sep),
       ),
