@@ -176,6 +176,9 @@ importers:
       '@lynx-js/rspeedy':
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
+      '@lynx-js/trace-processor':
+        specifier: ^0.0.1
+        version: 0.0.1
       '@lynx-js/type-element-api':
         specifier: 0.0.3
         version: 0.0.3
@@ -3175,6 +3178,10 @@ packages:
 
   '@lynx-js/tasm@0.0.20':
     resolution: {integrity: sha512-ezMq43s59jqFuQ1YygpsUuZmGXw4XH+00RsB5RVmkYZuHQxEaLt/ECTOixF+9RixvAyhmxzF2eSURvmNckO9xg==}
+
+  '@lynx-js/trace-processor@0.0.1':
+    resolution: {integrity: sha512-Zyl74cKi+BDggeXroLQG4frbBuiQ0DB0yH0C3pMkUHWv17abWTdJ2mw/H9Cd1QiIr+aQHn1U2SRtsrbkmWMtJw==}
+    engines: {node: '>=18'}
 
   '@lynx-js/type-config@3.6.0':
     resolution: {integrity: sha512-XS+Wdbs77iWaVqrs1HKp3LyTLLHbu/AwLwy837BinmyNO28YunkgnOz0dmuzjnGGsbKJB3Alm7RoYrH/PAsVuQ==}
@@ -6651,6 +6658,9 @@ packages:
   ignore@7.0.5:
     resolution: {integrity: sha512-Hs59xBNfUIunMFgWAbGX5cq6893IbWg4KnrjbYwX3tx0ztorVgTDA6B2sxf8ejHJ4wz8BqGUMYlnzNBer5NvGg==}
     engines: {node: '>= 4'}
+
+  immer@10.2.0:
+    resolution: {integrity: sha512-d/+XTN3zfODyjr89gM3mPq1WNX2B8pYsu7eORitdwyA2sBubnTl3laYlBk4sXY5FUa5qTZGBDPJICVbvqzjlbw==}
 
   immutable@5.0.2:
     resolution: {integrity: sha512-1NU7hWZDkV7hJ4PJ9dur9gTNQ4ePNPN4k9/0YhwjzykTi/+3Q5pF93YU5QoVj8BuOnhLgaY8gs0U2pj4kSYVcw==}
@@ -11706,6 +11716,10 @@ snapshots:
 
   '@lynx-js/tasm@0.0.20': {}
 
+  '@lynx-js/trace-processor@0.0.1':
+    dependencies:
+      immer: 10.2.0
+
   '@lynx-js/type-config@3.6.0': {}
 
   '@lynx-js/type-element-api@0.0.3': {}
@@ -15982,6 +15996,8 @@ snapshots:
   ignore@5.3.2: {}
 
   ignore@7.0.5: {}
+
+  immer@10.2.0: {}
 
   immutable@5.0.2: {}
 
