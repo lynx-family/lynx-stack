@@ -17,6 +17,7 @@
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
+import { clearSnapshotVNodeSource, moveSnapshotVNodeSource } from './debug/vnodeSource.js';
 import { SnapshotOperation, __globalSnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
 import { ListUpdateInfoRecording } from './listUpdateInfo.js';
 import { __pendingListUpdates } from './pendingListUpdates.js';
@@ -132,6 +133,9 @@ export const snapshotInstanceManager: {
   clear() {
     // not resetting `nextId` to prevent id collision
     this.values.clear();
+    if (__DEV__) {
+      clearSnapshotVNodeSource();
+    }
   },
 };
 
@@ -173,6 +177,9 @@ export const backgroundSnapshotInstanceManager: {
   clear() {
     // not resetting `nextId` to prevent id collision
     this.values.clear();
+    if (__DEV__) {
+      clearSnapshotVNodeSource();
+    }
   },
   updateId(id: number, newId: number) {
     const values = this.values;
@@ -191,6 +198,9 @@ export const backgroundSnapshotInstanceManager: {
     values.delete(id);
     values.set(newId, si);
     si.__id = newId;
+    if (__DEV__) {
+      moveSnapshotVNodeSource(id, newId);
+    }
   },
   getValueBySign(str: string): unknown {
     const res = str?.split(':');

@@ -10,7 +10,7 @@ import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { setupDocument } from '../../src/document';
 import { setupPage, snapshotInstanceManager } from '../../src/snapshot';
-import { initProfileHook } from '../../src/debug/profile';
+import { initProfileHook } from '../../src/debug/profileHooks';
 
 describe('profile', () => {
   let scratch;
