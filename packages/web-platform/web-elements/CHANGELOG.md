@@ -1,5 +1,17 @@
 # @lynx-js/web-elements
 
+## 0.11.2
+
+### Patch Changes
+
+- Add scrollHeight/scrollWidth getters to XList. ([#2156](https://github.com/lynx-family/lynx-stack/pull/2156))
+
+- Inherit padding styles for x-input elements. ([#2199](https://github.com/lynx-family/lynx-stack/pull/2199))
+
+- Remove the default lazy-loading attribute from x-image elements. ([#2186](https://github.com/lynx-family/lynx-stack/pull/2186))
+
+- Fix x-input number type forwarding to the inner input element. ([#2193](https://github.com/lynx-family/lynx-stack/pull/2193))
+
 ## 0.11.1
 
 ### Patch Changes

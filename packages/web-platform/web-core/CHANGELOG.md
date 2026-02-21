@@ -1,5 +1,17 @@
 # @lynx-js/web-core
 
+## 0.19.8
+
+### Patch Changes
+
+- fix: avoid error when LynxView is removed immediately after connected ([#2182](https://github.com/lynx-family/lynx-stack/pull/2182))
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.8
+  - @lynx-js/web-mainthread-apis@0.19.8
+  - @lynx-js/web-worker-rpc@0.19.8
+  - @lynx-js/web-worker-runtime@0.19.8
+
 ## 0.19.7
 
 ### Patch Changes

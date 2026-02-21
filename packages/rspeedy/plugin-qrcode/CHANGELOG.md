@@ -1,5 +1,11 @@
 # @lynx-js/qrcode-rsbuild-plugin
 
+## 0.4.5
+
+### Patch Changes
+
+- Only register console shortcuts when running in TTY environments ([#2202](https://github.com/lynx-family/lynx-stack/pull/2202))
+
 ## 0.4.4
 
 ### Patch Changes
