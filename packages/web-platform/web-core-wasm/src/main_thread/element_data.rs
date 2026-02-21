@@ -6,27 +6,44 @@
 
 use fnv::FnvHashMap;
 
-#[derive(Default, Clone)]
+#[cfg(feature = "server")]
+use rkyv::Serialize;
+use rkyv::{Archive, Deserialize};
+#[derive(Default, Clone, Archive, Deserialize)]
+#[cfg_attr(feature = "server", derive(Serialize))]
 pub struct EventHandler {
   /* bind capture-bind catch capture-catch */
-  framework_cross_thread_identifier: FnvHashMap<String, String>,
+  pub(crate) framework_cross_thread_identifier: FnvHashMap<String, String>,
   /* bind capture-bind catch capture-catch */
-  framework_run_worklet_identifier: FnvHashMap<String, wasm_bindgen::JsValue>,
-  /* bind capture-bind catch capture-catch */
-  // event_type_to_handlers: FnvHashMap<String, Vec<js_sys::Function>>,
+  #[with(rkyv::with::Skip)]
+  pub(crate) framework_run_worklet_identifier: FnvHashMap<String, wasm_bindgen::JsValue>,
 }
 
+#[derive(Archive, Deserialize, Clone)]
+#[cfg_attr(feature = "server", derive(Serialize))]
 pub struct LynxElementData {
   pub(crate) parent_component_unique_id: usize,
   pub(crate) css_id: i32,
+  #[with(rkyv::with::Skip)]
   pub(crate) component_id: Option<String>,
+  #[with(rkyv::with::Skip)]
   pub(crate) dataset: Option<js_sys::Object>,
+  #[with(rkyv::with::Skip)]
   pub(crate) component_config: Option<js_sys::Object>,
+  #[with(rkyv::with::Skip)]
   pub(crate) event_handlers_map: Option<FnvHashMap<String, EventHandler>>,
-  // /**
-  //  * Whether the exposure-id attribute has been assigned
-  //  */
-  // pub(crate) exposure_id_assigned: bool,
+
+  #[cfg(feature = "server")]
+  #[with(rkyv::with::Skip)]
+  pub(crate) tag_name: String,
+
+  #[cfg(feature = "server")]
+  #[with(rkyv::with::Skip)]
+  pub(crate) attributes: FnvHashMap<String, String>,
+
+  #[cfg(feature = "server")]
+  #[with(rkyv::with::Skip)]
+  pub(crate) children: Vec<usize>,
 }
 
 impl LynxElementData {
@@ -42,42 +59,18 @@ impl LynxElementData {
       dataset: None,
       component_config: None,
       event_handlers_map: None,
-      // exposure_id_assigned: false,
+      #[cfg(feature = "server")]
+      tag_name: String::new(),
+      #[cfg(feature = "server")]
+      attributes: FnvHashMap::default(),
+      #[cfg(feature = "server")]
+      children: Vec::new(),
     }
   }
+}
 
-  // pub(crate) fn clone_node(&self, parent_component_unique_id: usize, css_id: i32) -> Self {
-  //   LynxElementData {
-  //     parent_component_unique_id,
-  //     css_id,
-  //     dataset: self
-  //       .dataset
-  //       .as_ref()
-  //       .map(|dataset| js_sys::Object::assign(&js_sys::Object::default(), dataset)),
-  //     component_config: self.component_config.as_ref().map(|component_config| {
-  //       js_sys::Object::assign(&js_sys::Object::default(), component_config)
-  //     }),
-  //     component_id: self.component_id.clone(),
-  //     event_handlers_map: self.event_handlers_map.clone(),
-  //     exposure_id_assigned: self.exposure_id_assigned,
-  //   }
-  // }
-
-  // /**
-  //  * There are two conditions to enable exposure/disexposure(InsectionObserver) detection:
-  //  * 1. an element has exposure-id attribute
-  //  * 2. an element has 'appear'/'disappear' event listener added
-  //  */
-  // pub(crate) fn should_enable_exposure_event(&self) -> bool {
-  //   self.exposure_id_assigned || {
-  //     if let Some(event_handlers_map) = &self.event_handlers_map {
-  //       event_handlers_map.contains_key("appear") || event_handlers_map.contains_key("disappear")
-  //     } else {
-  //       false
-  //     }
-  //   }
-  // }
-
+#[cfg(feature = "client")]
+impl LynxElementData {
   pub(crate) fn get_framework_cross_thread_event_handler(
     &self,
     event_name: &str,
@@ -146,6 +139,72 @@ impl LynxElementData {
         .remove(&event_type);
     }
   }
+}
+
+#[cfg(feature = "server")]
+impl LynxElementData {
+  pub(crate) fn new_with_tag_name(
+    parent_component_unique_id: usize,
+    css_id: i32,
+    component_id: Option<String>,
+    tag_name: String,
+  ) -> Self {
+    let mut data = Self::new(parent_component_unique_id, css_id, component_id);
+    data.tag_name = tag_name;
+    data
+  }
+
+  pub(crate) fn set_attribute(&mut self, key: String, value: String) {
+    self.attributes.insert(key, value);
+  }
+
+  pub(crate) fn set_style(&mut self, key: String, value: String) {
+    if value.is_empty() {
+      // In SSR we do not support remove style
+      panic!("Remove style is not supported in SSR");
+    }
+    let style = self.attributes.entry("style".to_string()).or_default();
+    style.push_str(&key);
+    style.push(':');
+    style.push_str(&value);
+    style.push(';');
+  }
+
+  pub(crate) fn append_child(&mut self, child_id: usize) {
+    self.children.push(child_id);
+  }
+
+  // pub(crate) fn clone_node(&self, parent_component_unique_id: usize, css_id: i32) -> Self {
+  //   LynxElementData {
+  //     parent_component_unique_id,
+  //     css_id,
+  //     dataset: self
+  //       .dataset
+  //       .as_ref()
+  //       .map(|dataset| js_sys::Object::assign(&js_sys::Object::default(), dataset)),
+  //     component_config: self.component_config.as_ref().map(|component_config| {
+  //       js_sys::Object::assign(&js_sys::Object::default(), component_config)
+  //     }),
+  //     component_id: self.component_id.clone(),
+  //     event_handlers_map: self.event_handlers_map.clone(),
+  //     exposure_id_assigned: self.exposure_id_assigned,
+  //   }
+  // }
+
+  // /**
+  //  * There are two conditions to enable exposure/disexposure(InsectionObserver) detection:
+  //  * 1. an element has exposure-id attribute
+  //  * 2. an element has 'appear'/'disappear' event listener added
+  //  */
+  // pub(crate) fn should_enable_exposure_event(&self) -> bool {
+  //   self.exposure_id_assigned || {
+  //     if let Some(event_handlers_map) = &self.event_handlers_map {
+  //       event_handlers_map.contains_key("appear") || event_handlers_map.contains_key("disappear")
+  //     } else {
+  //       false
+  //     }
+  //   }
+  // }
 
   // pub(crate) fn add_event_listener_with_js_function(
   //   &self,

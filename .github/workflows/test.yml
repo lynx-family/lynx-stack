@@ -96,7 +96,7 @@ jobs:
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-        pnpm --filter @lynx-js/web-elements run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/4
+        pnpm --filter @lynx-js/web-elements run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/2
         pnpm --filter @lynx-js/web-elements run coverage:ci
   playwright-linux:
     needs: build
@@ -127,7 +127,7 @@ jobs:
         fi
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/4
+        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/3
         pnpm --filter @lynx-js/web-tests run coverage:ci
   web-core-wasm-e2e:
     needs: build
@@ -152,7 +152,7 @@ jobs:
         fi
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-        pnpm --filter @lynx-js/web-core-wasm-e2e run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/4
+        pnpm --filter @lynx-js/web-core-wasm-e2e run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/2
   test-api:
     needs: build
     uses: ./.github/workflows/workflow-test.yml

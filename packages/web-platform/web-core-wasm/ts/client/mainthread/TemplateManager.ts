@@ -187,10 +187,10 @@ export class TemplateManager {
   ) {
     const [
       instance,
-      templateManagerWasm,
+      StyleSheetResource,
     ] = await Promise.all([
       instancePromise,
-      wasm.then((wasm) => (wasm.templateManagerWasm)),
+      wasm.then((wasm) => (wasm.wasmInstance.StyleSheetResource)),
     ]);
     const { label, data, url, config } = msg;
     switch (label) {
@@ -201,11 +201,14 @@ export class TemplateManager {
         break;
       }
       case TemplateSectionLabel.StyleInfo: {
-        templateManagerWasm!.add_style_info(
-          url,
+        const resource = new StyleSheetResource(
           new Uint8Array(data as ArrayBuffer),
           document,
         );
+        const template = this.#templates.get(url);
+        if (template) {
+          template.styleSheet = resource;
+        }
         instance.onStyleInfoReady(url);
         break;
       }
@@ -250,6 +253,9 @@ export class TemplateManager {
             URL.revokeObjectURL(blobUrl);
           }
         }
+        if (template.styleSheet) {
+          template.styleSheet.free();
+        }
       }
       this.#templates.delete(url);
     }
@@ -257,6 +263,7 @@ export class TemplateManager {
   }
 
   #removeTemplate(url: string) {
+    this.createTemplate(url); // This actually clears it in current logic
     this.#templates.delete(url);
   }
 
@@ -293,6 +300,10 @@ export class TemplateManager {
 
   public getTemplate(url: string): DecodedTemplate | undefined {
     return this.#templates.get(url);
+  }
+
+  public getStyleSheet(url: string): any {
+    return this.#templates.get(url)?.styleSheet;
   }
 }
 

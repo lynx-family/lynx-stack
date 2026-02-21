@@ -118,7 +118,6 @@ impl RawStyleInfo {
    * @param css_id - The ID of the CSS file.
    * @param import_css_id - The ID of the imported CSS file.
    */
-  #[wasm_bindgen]
   pub fn append_import(&mut self, css_id: i32, import_css_id: i32) {
     // if css_id not exist, create a new StyleSheet
     let style_sheet = self.css_id_to_style_sheet.entry(css_id).or_default();
@@ -131,7 +130,6 @@ impl RawStyleInfo {
    * @param css_id - The ID of the CSS file.
    * @param rule - The rule to append.
    */
-  #[wasm_bindgen]
   pub fn push_rule(&mut self, css_id: i32, rule: Rule) {
     let style_sheet = self.css_id_to_style_sheet.entry(css_id).or_default();
     style_sheet.rules.push(rule);
@@ -142,7 +140,6 @@ impl RawStyleInfo {
    * @returns A Uint8Array containing the serialized RawStyleInfo.
    */
   #[cfg(feature = "encode")]
-  #[wasm_bindgen]
   pub fn encode(&mut self) -> Result<js_sys::Uint8Array, JsError> {
     let decoded_style_info = StyleInfoDecoder::new(self.clone(), None, true)?;
     self.style_content_str_size_hint = decoded_style_info.style_content.len();
@@ -184,7 +181,6 @@ impl Rule {
    * Sets the prelude for the rule.
    * @param prelude - The prelude to set (SelectorList or KeyFramesPrelude).
    */
-  #[wasm_bindgen]
   pub fn set_prelude(&mut self, prelude: RulePrelude) {
     self.prelude = prelude;
   }
@@ -195,7 +191,6 @@ impl Rule {
    * @param property_name - The property name.
    * @param value - The property value.
    */
-  #[wasm_bindgen]
   pub fn push_declaration(&mut self, property_name: String, value: String) {
     self
       .declaration_block
@@ -207,7 +202,6 @@ impl Rule {
    * Pushes a nested rule to the rule.
    * @param rule - The nested rule to add.
    */
-  #[wasm_bindgen]
   pub fn push_rule_children(&mut self, rule: Rule) {
     self.nested_rules.push(rule);
   }
@@ -226,7 +220,6 @@ impl RulePrelude {
    * Pushes a selector to the list.
    * @param selector - The selector to add.
    */
-  #[wasm_bindgen]
   pub fn push_selector(&mut self, selector: Selector) {
     self.selector_list.push(selector);
   }
@@ -246,7 +239,6 @@ impl Selector {
    * @param selector_type - The type of the selector section (e.g., "ClassSelector", "IdSelector").
    * @param value - The value of the selector section.
    */
-  #[wasm_bindgen]
   pub fn push_one_selector_section(
     &mut self,
     selector_type: String,

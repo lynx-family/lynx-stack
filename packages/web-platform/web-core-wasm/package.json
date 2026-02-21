@@ -21,11 +21,16 @@
       "import": "./dist/client/index.js",
       "default": "./dist/client/index.js"
     },
-    "./client.prod.js": {
-      "default": "./dist/client_prod/client.js"
+    "./server": {
+      "types": "./dist/server/index.d.ts",
+      "import": "./dist/server/index.js",
+      "default": "./dist/server/index.js"
     },
-    "./index.css": {
-      "default": "./css/index.css"
+    "./client.prod.js": {
+      "default": "./dist/client_prod/static/js/client.js"
+    },
+    "./client.prod.css": {
+      "default": "./dist/client_prod/static/css/client.css"
     }
   },
   "main": "./dist/client/index.js",

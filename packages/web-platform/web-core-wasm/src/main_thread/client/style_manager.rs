@@ -7,14 +7,13 @@
 use crate::constants;
 use crate::template::template_sections::style_info::StyleSheetResource;
 use fnv::FnvHashMap;
-use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{CssStyleSheet, HtmlStyleElement, Node};
 
 pub struct StyleManager {
   root_node: Node,
-  css_query_map_by_entry_name: FnvHashMap<String, Rc<StyleSheetResource>>,
+  css_query_map_by_entry_name: FnvHashMap<String, StyleSheetResource>,
   css_og_style_sheet: Option<CssStyleSheet>,
   unique_id_to_style_declarations_map: Option<FnvHashMap<usize, web_sys::CssStyleDeclaration>>,
 }
@@ -103,7 +102,7 @@ impl StyleManager {
 
   pub fn push_style_sheet(
     &mut self,
-    resource: Rc<StyleSheetResource>,
+    resource: &StyleSheetResource,
     entry_name: Option<String>,
   ) -> Result<(), JsError> {
     let entry_key = entry_name.clone().unwrap_or_else(|| "__Card__".to_string());
@@ -143,7 +142,9 @@ impl StyleManager {
       }
     }
 
-    self.css_query_map_by_entry_name.insert(entry_key, resource);
+    self
+      .css_query_map_by_entry_name
+      .insert(entry_key, resource.clone());
     Ok(())
   }
 }

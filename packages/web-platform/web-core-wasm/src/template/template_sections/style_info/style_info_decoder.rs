@@ -876,12 +876,12 @@ mod tests_roundtrip {
 
   #[wasm_bindgen_test]
   fn test_style_info_roundtrip() {
-    let mut raw = build_sample_style_info();
+    let mut _raw = build_sample_style_info();
 
     // Enable encode feature usage manually or assume it's available since tests run with it
     #[cfg(feature = "encode")]
     {
-      let bytes = raw.encode().expect("Should encode");
+      let bytes = _raw.encode().expect("Should encode");
 
       // decode manually using accessing internal logic via new
       // We can use StyleInfoDecoder::new directly as we are in the same module

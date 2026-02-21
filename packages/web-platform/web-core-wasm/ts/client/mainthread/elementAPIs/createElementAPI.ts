@@ -46,6 +46,7 @@ import type {
 import type { WASMJSBinding } from './WASMJSBinding.js';
 // @ts-expect-error
 import IN_SHADOW_CSS_MODERN from '../../../../css/in_shadow.css?inline';
+import { requestIdleCallbackImpl } from '../utils/requestIdleCallback.js';
 
 const IN_SHADOW_CSS = URL.createObjectURL(
   new Blob([IN_SHADOW_CSS_MODERN], { type: 'text/css' }),
@@ -496,7 +497,7 @@ export function createElementAPI(
       let timingFlagsAll = timingFlags.concat(
         wasmContext.take_timing_flags(),
       );
-      requestAnimationFrame(() => {
+      requestIdleCallbackImpl(() => {
         mtsBinding.postTimingFlags(
           timingFlagsAll,
           pipelineId,

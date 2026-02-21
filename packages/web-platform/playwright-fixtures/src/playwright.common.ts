@@ -42,7 +42,7 @@ const workerLimit = Math.floor(((cpuCount, envCPULimit) => {
 export const playwrightConfigCommon: Parameters<typeof defineConfig>[0] = {
   /** global timeout https://playwright.dev/docs/test-timeouts#global-timeout */
   globalTimeout: 20 * 60 * 1000,
-  // testMatch,
+  testMatch: '**/tests/*',
   /* Run tests in files in parallel */
   fullyParallel: true,
   workers: isCI ? workerLimit : undefined,

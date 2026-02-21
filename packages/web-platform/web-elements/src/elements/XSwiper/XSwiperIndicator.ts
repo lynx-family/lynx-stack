@@ -8,7 +8,6 @@ import {
   genDomGetter,
   registerAttributeHandler,
   bindToStyle,
-  boostedQueueMicrotask,
 } from '../../element-reactive/index.js';
 import type { XSwiper } from './XSwiper.js';
 
@@ -136,17 +135,18 @@ export class XSwiperIndicator
           }
         }).bind(this) as EventListener,
       );
-      boostedQueueMicrotask(() => {
-        (
-          this.#getIndicatorContainer().children[
-            this.#dom.currentIndex
-          ] as HTMLElement
-        )?.style.setProperty(
-          'background-color',
-          'var(--indicator-active-color)',
-          'important',
-        );
-      });
+      const firstPaintIndex = parseFloat(
+        this.#dom.getAttribute('current') ?? '0',
+      );
+      (
+        this.#getIndicatorContainer().children[
+          firstPaintIndex
+        ] as HTMLElement
+      )?.style.setProperty(
+        'background-color',
+        'var(--indicator-active-color)',
+        'important',
+      );
     }
   }
   dispose(): void {

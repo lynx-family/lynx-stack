@@ -10,6 +10,7 @@ const wasmModuleLoadedPromise: Promise<void> = new Promise((resolve) => {
 });
 
 import { loadStyleFromJSON } from './cssLoader.js';
+import { decodeBinaryMap } from '../../common/decodeUtils.js';
 
 class StreamReader {
   #reader: ReadableStreamDefaultReader<Uint8Array>;
@@ -90,52 +91,6 @@ function decodeJSONMap<T>(buffer: Uint8Array): Record<string, T> {
   }
 
   return JSON.parse(jsonString);
-}
-
-function decodeBinaryMap(buffer: Uint8Array): Record<string, Uint8Array> {
-  const view = new DataView(
-    buffer.buffer,
-    buffer.byteOffset,
-    buffer.byteLength,
-  );
-  let offset = 0;
-  if (buffer.byteLength < 4) {
-    throw new Error('Buffer too short for count');
-  }
-  const count = view.getUint32(offset, true);
-  offset += 4;
-
-  const result: Record<string, Uint8Array> = {};
-  const decoder = new TextDecoder();
-
-  for (let i = 0; i < count; i++) {
-    if (buffer.byteLength < offset + 4) {
-      throw new Error('Buffer too short for key length');
-    }
-    const keyLen = view.getUint32(offset, true);
-    offset += 4;
-
-    if (buffer.byteLength < offset + keyLen) {
-      throw new Error('Buffer too short for key');
-    }
-    const key = decoder.decode(buffer.subarray(offset, offset + keyLen));
-    offset += keyLen;
-
-    if (buffer.byteLength < offset + 4) {
-      throw new Error('Buffer too short for value length');
-    }
-    const valLen = view.getUint32(offset, true);
-    offset += 4;
-
-    if (buffer.byteLength < offset + valLen) {
-      throw new Error('Buffer too short for value');
-    }
-    const val = buffer.subarray(offset, offset + valLen);
-    offset += valLen;
-
-    result[key] = val;
-  }
-  return result;
 }
 
 self.onmessage = async (
@@ -283,12 +238,16 @@ async function handleStream(
         const isLazy = config['isLazy'] === 'true';
         const blobMap: Record<string, string> = {};
         for (const [key, code] of Object.entries(codeMap)) {
-          const prefix =
-            `(function(){ "use strict"; const navigator=void 0,postMessage=void 0,window=void 0; ${
-              isLazy ? 'module.exports=' : ''
-            } `;
-          const suffix = ` \n })()\n//# sourceURL=${url}\n`;
-          const blob = new Blob([prefix, code as unknown as BlobPart, suffix], {
+          const blob = new Blob([
+            '//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0,window=void 0; ',
+            isLazy ? 'module.exports=' : '',
+            code as unknown as BlobPart,
+            ' \n })()\n//# sourceURL=',
+            url,
+            '/',
+            key,
+            '\n',
+          ], {
             type: 'text/javascript; charset=utf-8',
           });
           blobMap[key] = URL.createObjectURL(blob);
@@ -318,8 +277,13 @@ async function handleStream(
         const codeMap = decodeBinaryMap(content);
         const blobMap: Record<string, string> = {};
         for (const [key, code] of Object.entries(codeMap)) {
-          const suffix = `//# sourceURL=${url}/${key}`;
-          const blob = new Blob([code as unknown as BlobPart, suffix], {
+          const blob = new Blob([
+            code as unknown as BlobPart,
+            '//# sourceURL=',
+            url,
+            '/',
+            key,
+          ], {
             type: 'text/javascript; charset=utf-8',
           });
           blobMap[key] = URL.createObjectURL(blob);
