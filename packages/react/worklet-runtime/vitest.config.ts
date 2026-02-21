@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import type { ViteUserConfig } from 'vitest/config';
+import * as path from 'node:path';
 
 const config: ViteUserConfig = defineConfig({
   define: {
@@ -7,6 +8,7 @@ const config: ViteUserConfig = defineConfig({
   },
   test: {
     name: 'react/worklet-runtime',
+    setupFiles: [path.join(__dirname, '__test__/setup.js')],
     coverage: {
       exclude: [
         'dist/**',

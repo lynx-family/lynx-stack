@@ -1,5 +1,5 @@
-import { transformToWorklet as __transformToWorklet } from "@lynx-js/react";
-var transformToWorklet = __transformToWorklet;
+import { transformToWorklet as __transformToWorklet, workletCapture as __workletCapture } from "@lynx-js/react";
+var transformToWorklet = __transformToWorklet, workletCapture = __workletCapture;
 let onTapLepus = {
     _wkltId: "a123:test:1",
     _jsFn: {
