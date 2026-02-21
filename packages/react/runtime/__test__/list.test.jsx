@@ -443,12 +443,10 @@ describe(`list componentAtIndex`, () => {
     __pendingListUpdates.flush();
 
     a.removeChild(b);
-    expect(() => {
-      elementTree.triggerComponentAtIndex(listRef, 0);
-    }).toThrowErrorMatchingInlineSnapshot(`[Error: componentAtIndex called on removed list]`);
-    expect(() => {
-      elementTree.triggerEnqueueComponent(listRef, 0);
-    }).toThrowErrorMatchingInlineSnapshot(`[Error: enqueueComponent called on removed list]`);
+
+    expect(listRef.componentAtIndex()).toBe(-1);
+    expect(listRef.enqueueComponent()).toBeUndefined();
+    expect(listRef.componentAtIndexes()).toBeUndefined();
   });
 
   it('should reuse and hydrate', () => {
@@ -4408,5 +4406,46 @@ describe('clear __UpdateListCallbacks', () => {
     expect(listElement.componentAtIndex).toBeNull();
     expect(listElement.enqueueComponent).toBeNull();
     expect(listElement.componentAtIndexes).toBeNull();
+  });
+
+  it('should remove __DestroyLifetime listener when list is destroyed via removeChild', () => {
+    const s0 = __SNAPSHOT__(
+      <view>
+        {HOLE}
+      </view>,
+    );
+    const s1 = __SNAPSHOT__(
+      <view>
+        <text>test</text>
+        <list>{HOLE}</list>
+      </view>,
+    );
+
+    const root = new SnapshotInstance(s0);
+    root.ensureElements();
+
+    const a = new SnapshotInstance(s1);
+    root.insertBefore(a);
+
+    expect(lynx.getNative().addEventListener).toHaveBeenCalledWith(
+      '__DestroyLifetime',
+      expect.any(Function),
+    );
+
+    const listElement = a.__elements[3];
+    expect(listElement.componentAtIndex).not.toBeNull();
+    expect(listElement.enqueueComponent).not.toBeNull();
+    expect(listElement.componentAtIndexes).not.toBeNull();
+
+    root.removeChild(a);
+
+    expect(lynx.getNative().removeEventListener).toHaveBeenCalledWith(
+      '__DestroyLifetime',
+      expect.any(Function),
+    );
+
+    expect(listElement.componentAtIndex()).toBe(-1);
+    expect(listElement.enqueueComponent()).toBeUndefined();
+    expect(listElement.componentAtIndexes()).toBeUndefined();
   });
 });
