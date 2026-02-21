@@ -1,5 +1,16 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.12.8
+
+### Patch Changes
+
+- Updated dependencies [[`4240138`](https://github.com/lynx-family/lynx-stack/commit/424013867a33c44bf1c95f6b0a80a07646ebce2b)]:
+  - @lynx-js/react-webpack-plugin@0.7.4
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.8
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/template-webpack-plugin@0.10.3
+
 ## 0.12.7
 
 ### Patch Changes

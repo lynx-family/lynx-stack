@@ -1,5 +1,11 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.7.4
+
+### Patch Changes
+
+- Remove element api calls alog by default, and only enable it when `__ALOG_ELEMENT_API__` is defined to `true` or environment variable `REACT_ALOG_ELEMENT_API` is set to `true`. ([#2192](https://github.com/lynx-family/lynx-stack/pull/2192))
+
 ## 0.7.3
 
 ### Patch Changes

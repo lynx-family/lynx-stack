@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-core-wasm",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "This is an internal experimental package, do not use",
   "repository": {
     "type": "git",

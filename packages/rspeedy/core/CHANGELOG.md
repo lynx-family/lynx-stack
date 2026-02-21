@@ -1,5 +1,16 @@
 # @lynx-js/rspeedy
 
+## 0.13.4
+
+### Patch Changes
+
+- Bump ts-blank-space v0.7.0 ([#2238](https://github.com/lynx-family/lynx-stack/pull/2238))
+
+- Bump Rsbuild v1.7.3 with Rspack v1.7.5. ([#2189](https://github.com/lynx-family/lynx-stack/pull/2189))
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.8
+
 ## 0.13.3
 
 ### Patch Changes

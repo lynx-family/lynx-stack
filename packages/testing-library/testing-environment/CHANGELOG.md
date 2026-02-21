@@ -1,5 +1,11 @@
 # @lynx-js/testing-environment
 
+## 0.1.11
+
+### Patch Changes
+
+- Remove element api calls alog by default, and only enable it when `__ALOG_ELEMENT_API__` is defined to `true` or environment variable `REACT_ALOG_ELEMENT_API` is set to `true`. ([#2192](https://github.com/lynx-family/lynx-stack/pull/2192))
+
 ## 0.1.10
 
 ### Patch Changes
