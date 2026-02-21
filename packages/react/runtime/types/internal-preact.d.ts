@@ -22,6 +22,16 @@ declare module 'preact' {
     __?(vnode: VNode, parentDom: any): void;
   }
 
+  export type HookState = Record<string, unknown>;
+
+  // Hook tracking
+  interface ComponentHooks {
+    /** The list of hooks a component uses */
+    __?: HookState[];
+    /** List of Effects to be invoked after the next frame is rendered */
+    _pendingEffects: EffectHookState[];
+  }
+
   interface VNode {
     /** _component */
     __c?: Component | null;
@@ -38,5 +48,7 @@ declare module 'preact' {
     __e?: boolean;
     /** dirty */
     __d?: boolean;
+    /** __hooks */
+    __H?: ComponentHooks;
   }
 }
