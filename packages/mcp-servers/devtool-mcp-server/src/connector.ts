@@ -51,7 +51,7 @@ type CDPResponse = {
 };
 type GetGlobalSwitchResponse = {
   type: 'GetGlobalSwitch';
-  data: string | boolean | { global_value: string | boolean };
+  data: string | boolean | { message: string | boolean };
   sender: number;
 };
 type SetGlobalSwitchResponse = {
@@ -84,9 +84,13 @@ type ParsedSource = {
   viewId: number;
 };
 
+export type TracingComplete = {
+  stream: number;
+};
+
 type EventMap = {
   SessionList: [Session[]];
-  GetGlobalSwitch: [string | boolean | { global_value: string | boolean }];
+  GetGlobalSwitch: [string | boolean | { message: string | boolean }];
   SetGlobalSwitch: [{ global_value: boolean; global_key: GlobalKey }];
   'CDP-event-Runtime.consoleAPICalled': [
     error: string | undefined,
@@ -106,9 +110,15 @@ type EventMap = {
     clientId: number,
     sessionId: number,
   ];
+  'CDP-event-Tracing.tracingComplete': [
+    error: string | undefined,
+    TracingComplete,
+    clientId: number,
+    sessionId: number,
+  ];
 };
 
-type GlobalKey = 'enable_devtool';
+type GlobalKey = 'enable_devtool' | 'enable_debug_mode';
 
 export class DebugRouterConnector extends BaseDebugRouterConnector {
   #messageEmitter: EventEmitter<EventMap> = new EventEmitter();
@@ -139,7 +149,7 @@ export class DebugRouterConnector extends BaseDebugRouterConnector {
     this.#messageEmitter.once('GetGlobalSwitch', (result) => {
       if (typeof result === 'object') {
         resolve(
-          result?.global_value === 'true' || result?.global_value === true,
+          result?.message === 'true' || result?.message === true,
         );
       } else {
         resolve(result === 'true' || result === true);
@@ -453,6 +463,17 @@ export class DebugRouterConnector extends BaseDebugRouterConnector {
     ) => void,
   ) {
     this.#messageEmitter.on(`CDP-event-${event}`, listener as never);
+  }
+
+  offCDPEvent<EventName extends string>(
+    event: EventName,
+    listener: (
+      ...args: `CDP-event-${EventName}` extends `CDP-event-${infer E}`
+        ? EventMap[`CDP-event-${E}`]
+        : unknown[]
+    ) => void,
+  ) {
+    this.#messageEmitter.off(`CDP-event-${event}`, listener as never);
   }
 }
 
