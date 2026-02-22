@@ -59,6 +59,16 @@ export function processGesture(
   },
 ): void {
   if (!gesture || !isSerializedGesture(gesture)) {
+    // When a gesture is removed (or becomes non-serialized), we need to clear the native state
+    // that was previously set by `processGesture` / `__SetGestureDetector`.
+    //
+    // Without this, spread updates such as `{ 'main-thread:gesture': undefined }` (which becomes
+    // key-removal after JSON serialization) would leave stale gesture detectors on the element.
+    if (!gestureOptions?.domSet && oldGesture && isSerializedGesture(oldGesture)) {
+      __SetAttribute(dom, 'has-react-gesture', null);
+      __SetAttribute(dom, 'flatten', null);
+      __SetAttribute(dom, 'gesture', null);
+    }
     return;
   }
 
