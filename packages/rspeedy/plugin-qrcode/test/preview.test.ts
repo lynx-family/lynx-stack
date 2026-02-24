@@ -30,6 +30,25 @@ const pluginStubRspeedyAPI = (config: Config = {}): RsbuildPlugin => ({
 describe('Preview', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    Object.defineProperty(process.stdin, 'isTTY', {
+      value: true,
+      configurable: true,
+    })
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: true,
+      configurable: true,
+    })
+
+    return () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: undefined,
+        configurable: true,
+      })
+      Object.defineProperty(process.stdout, 'isTTY', {
+        value: undefined,
+        configurable: true,
+      })
+    }
   })
 
   test('preview with NODE_ENV=development', async () => {
@@ -228,9 +247,6 @@ describe('Preview', () => {
           pluginStubRspeedyAPI(),
           pluginQRCode(),
         ],
-        environments: {
-          lynx: {},
-        },
         source: {
           entry: {},
         },

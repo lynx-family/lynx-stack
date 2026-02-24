@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/motion",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": false,
   "description": "This is a motion adapter for Lynx.js",
   "keywords": [
@@ -16,7 +16,8 @@
   },
   "license": "Apache-2.0",
   "sideEffects": [
-    "./dist/polyfill/shim.js"
+    "./dist/polyfill/shim.js",
+    "./dist/mini/polyfill.js"
   ],
   "type": "module",
   "exports": {
@@ -46,13 +47,13 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "framer-motion": "12.23.12",
+    "framer-motion": "12.34.1",
     "motion-dom": "12.23.12",
     "motion-utils": "12.23.6"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
-    "@lynx-js/types": "3.6.0",
+    "@lynx-js/types": "3.7.0",
     "rsbuild-plugin-publint": "0.3.4"
   },
   "peerDependencies": {

@@ -68,12 +68,30 @@ impl ExtractingIdentsCollector {
     self.values_extracted.take()
   }
 
+  pub fn has_extracted_values_props(&self) -> bool {
+    self
+      .values_extracted
+      .as_object()
+      .is_some_and(|obj| !obj.props.is_empty())
+  }
+
   pub fn take_idents(&mut self) -> Vec<Ident> {
     self.idents_to_extract.take()
   }
 
   pub fn take_this_expr(&mut self) -> Box<Expr> {
     self.this_expr_to_extract.take()
+  }
+
+  pub fn has_extracted_this_props(&self) -> bool {
+    self
+      .this_expr_to_extract
+      .as_object()
+      .is_some_and(|obj| !obj.props.is_empty())
+  }
+
+  pub fn has_extracted_js_fns(&self) -> bool {
+    !self.js_fns_to_extract.is_empty()
   }
 
   pub fn take_js_fns(&mut self) -> Vec<(IdentName, Box<Expr>)> {

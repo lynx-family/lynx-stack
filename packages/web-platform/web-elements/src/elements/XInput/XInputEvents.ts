@@ -19,6 +19,7 @@ export class XInputEvents
   #dom: HTMLElement;
 
   #sendComposingInput = false;
+  #numberInputFilter = /[^0-9.]|\.(?=.*\.)/g;
 
   #getInputElement = genDomGetter<HTMLInputElement>(
     () => this.#dom.shadowRoot!,
@@ -75,10 +76,7 @@ export class XInputEvents
 
   #teleportInput = (event: InputEvent) => {
     const input = this.#getInputElement();
-    const inputFilter = this.#dom.getAttribute('input-filter');
-    const filterValue = inputFilter
-      ? input.value.replace(new RegExp(inputFilter, 'g'), '')
-      : input.value;
+    const filterValue = this.#filterInputValue(input.value);
     const isComposing = event.isComposing;
     input.value = filterValue;
     if (isComposing && !this.#sendComposingInput) return;
@@ -101,10 +99,7 @@ export class XInputEvents
 
   #teleportCompositionendInput = () => {
     const input = this.#getInputElement();
-    const inputFilter = this.#dom.getAttribute('input-filter');
-    const filterValue = inputFilter
-      ? input.value.replace(new RegExp(inputFilter, 'g'), '')
-      : input.value;
+    const filterValue = this.#filterInputValue(input.value);
     input.value = filterValue;
     // if #sendComposingInput set true, #teleportInput will send detail
     if (!this.#sendComposingInput) {
@@ -125,6 +120,18 @@ export class XInputEvents
       );
     }
   };
+
+  #filterInputValue(value: string) {
+    let filterValue = value;
+    if (this.#dom.getAttribute('type') === 'number') {
+      filterValue = filterValue.replace(this.#numberInputFilter, '');
+    }
+    const inputFilter = this.#dom.getAttribute('input-filter');
+    if (inputFilter) {
+      filterValue = filterValue.replace(new RegExp(inputFilter, 'g'), '');
+    }
+    return filterValue;
+  }
 
   @registerEventEnableStatusChangeHandler('selection')
   _handleEnableSelectionEvent(status: boolean) {
