@@ -15,6 +15,8 @@ import {
   DIFF2,
   DIFFED,
   DIRTY,
+  HOOKS,
+  LIST,
   NEXT_STATE,
   NEXT_VALUE,
   RENDER,
@@ -29,13 +31,20 @@ const format = (val: unknown) => {
   return val;
 };
 
-const safeJsonStringify = (val: unknown) => {
-  try {
-    return JSON.stringify(val);
-  } catch {
-    return '"Unserializable"';
-  }
-};
+function safeJsonStringify(val: unknown) {
+  const seen = new WeakSet<object>();
+
+  return JSON.stringify(val, function(_key, value: unknown) {
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) {
+        return '[Unserializable: Circular]';
+      }
+      seen.add(value);
+    }
+
+    return value;
+  });
+}
 
 function buildSetStateProfileMarkArgs(
   currentState: unknown,
@@ -98,7 +107,6 @@ export function initProfileHook(): void {
             const type = this.__v!.type;
             const isClassComponent = typeof type === 'function' && ('prototype' in type)
               && ('render' in type.prototype);
-            console.log('isClassComponent', isClassComponent, type);
 
             if (isClassComponent) {
               profileMark('ReactLynx::setState', {
@@ -142,51 +150,49 @@ export function initProfileHook(): void {
 
     hook(options, DIFFED, (old, vnode) => {
       if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
-        const hooks = vnode.__c?.__H;
-        const hookList = hooks?.__;
+        const hooks = vnode[COMPONENT]?.[HOOKS];
+        const hookList = hooks?.[LIST];
 
         if (Array.isArray(hookList)) {
           hookList.forEach((hookState, hookIdx: number) => {
-            try {
-              hookState['internalNextValue'] = hookState[NEXT_VALUE];
-              // define a setter for __N to track the next value of the hook
-              Object.defineProperty(hookState, NEXT_VALUE, {
-                get: () => hookState['internalNextValue'],
-                set: (value) => {
-                  if (Array.isArray(value)) {
-                    // hookState[VALUE] is [state, dispatch]
-                    const currentValueTuple = hookState[VALUE] as unknown[];
-                    const currentValue = Array.isArray(currentValueTuple) ? currentValueTuple[0] : currentValueTuple;
-                    const [nextValue] = value as unknown[];
+            hookState['internalNextValue'] = hookState[NEXT_VALUE];
+            // define a setter for __N to track the next value of the hook
+            Object.defineProperty(hookState, NEXT_VALUE, {
+              get: () => hookState['internalNextValue'],
+              set: (value) => {
+                if (Array.isArray(value)) {
+                  // hookState[VALUE] is [state, dispatch]
+                  const currentValueTuple = hookState[VALUE] as unknown[];
+                  const currentValue = currentValueTuple[0];
+                  const [nextValue] = value as unknown[];
 
-                    const component = hookState[COMPONENT] as PatchedComponent | undefined;
-                    if (!component) {
-                      hookState['internalNextValue'] = value;
-                      return;
-                    }
-
-                    const type = component.__v?.type;
-                    const flowId = component[sFlowID] ??= profileFlowId();
-
-                    profileMark('ReactLynx::hooks::setState', {
-                      flowId,
-                      args: {
-                        componentName: (type && typeof type === 'function')
-                          ? getDisplayName(type as ComponentClass)
-                          : 'Unknown',
-                        hookIdx: String(hookIdx),
-                        ...buildSetStateProfileMarkArgs(
-                          currentValue,
-                          nextValue,
-                        ),
-                      },
-                    });
+                  const component = hookState[COMPONENT] as PatchedComponent | undefined;
+                  if (!component) {
+                    hookState['internalNextValue'] = value;
+                    return;
                   }
-                  hookState['internalNextValue'] = value;
-                },
-                configurable: true,
-              });
-            } catch (e) {}
+
+                  const type = component.__v?.type;
+                  const flowId = component[sFlowID] ??= profileFlowId();
+
+                  profileMark('ReactLynx::hooks::setState', {
+                    flowId,
+                    args: {
+                      componentName: (type && typeof type === 'function')
+                        ? getDisplayName(type as ComponentClass)
+                        : 'Unknown',
+                      hookIdx: String(hookIdx),
+                      ...buildSetStateProfileMarkArgs(
+                        currentValue,
+                        nextValue,
+                      ),
+                    },
+                  });
+                }
+                hookState['internalNextValue'] = value;
+              },
+              configurable: true,
+            });
           });
         }
       }

@@ -2,4 +2,4 @@
 "@lynx-js/react": patch
 ---
 
-fix(react): improve profile hook coverage and robustness
+Support `ReactLynx::hooks::setState` trace for function components.

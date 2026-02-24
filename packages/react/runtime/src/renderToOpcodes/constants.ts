@@ -29,5 +29,7 @@ export const RENDER_CALLBACKS = '__h';
 export const HOOK = '__h';
 
 // Hooks properties
+export const HOOKS = '__H';
+export const LIST = '__';
 export const VALUE = '__';
 export const NEXT_VALUE = '__N';
