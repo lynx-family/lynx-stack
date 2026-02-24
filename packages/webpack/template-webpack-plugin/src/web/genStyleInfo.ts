@@ -2,8 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import * as CSS from '@lynx-js/css-serializer';
+
 import type { CSSRule, OneInfo, StyleInfo } from './StyleInfo.js';
-import * as CSS from '../css/index.js';
 
 export function genStyleInfo(
   cssMap: Record<string, CSS.LynxStyleNode[]>,

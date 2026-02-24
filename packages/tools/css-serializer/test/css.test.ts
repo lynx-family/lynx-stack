@@ -3,11 +3,14 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, test } from 'vitest';
 
-import type { LynxStyleNode } from '@lynx-js/css-serializer';
+import type { LynxStyleNode } from '../src';
 
-import { cssChunksToMap } from '../src/css/cssChunksToMap.js';
+import { cssChunksToMap, Plugins as parserPlugins } from '../src';
 import { debundleCSS } from '../src/css/debundle.js';
-import { CSSPlugins } from '../src/index.js';
+
+const CSSPlugins = {
+  parserPlugins,
+};
 
 describe('CSS', () => {
   describe('cssChunksToMap', () => {

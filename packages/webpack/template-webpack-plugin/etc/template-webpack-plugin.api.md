@@ -9,49 +9,19 @@ import { AsyncSeriesBailHook } from '@rspack/lite-tapable';
 import { AsyncSeriesWaterfallHook } from '@rspack/lite-tapable';
 import type { Compilation } from 'webpack';
 import type { Compiler } from 'webpack';
-import type * as CSS_2 from '@lynx-js/css-serializer';
-import { csstree } from '@lynx-js/css-serializer';
-import { Declaration } from '@lynx-js/css-serializer';
-import { FontFaceRule } from '@lynx-js/css-serializer';
-import { ImportRule } from '@lynx-js/css-serializer';
-import { KeyframesRule } from '@lynx-js/css-serializer';
-import { LynxStyleNode } from '@lynx-js/css-serializer';
-import { parse } from '@lynx-js/css-serializer';
-import { Plugin } from '@lynx-js/css-serializer';
+import * as CSS from '@lynx-js/css-serializer';
+import { cssChunksToMap } from '@lynx-js/css-serializer';
 import { Plugins } from '@lynx-js/css-serializer';
-import { StyleRule } from '@lynx-js/css-serializer';
 import { SyncWaterfallHook } from '@rspack/lite-tapable';
 
-declare namespace CSS {
-    export {
-        csstree,
-        Plugins,
-        parse,
-        Plugin,
-        Declaration,
-        LynxStyleNode,
-        StyleRule,
-        FontFaceRule,
-        ImportRule,
-        KeyframesRule,
-        cssChunksToMap
-    }
-}
+export { CSS }
 
-// Warning: (ae-missing-release-tag) "cssChunksToMap" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+// Warning: (ae-missing-release-tag) "CSSPlugins" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-function cssChunksToMap(cssChunks: string[], plugins: CSS_2.Plugin[], enableCSSSelector: boolean): {
-    cssMap: Record<string, CSS_2.LynxStyleNode[]>;
-    cssSource: Record<string, string>;
-    contentMap: Map<number, string[]>;
+export const CSSPlugins: {
+    parserPlugins: typeof Plugins;
 };
-
-declare namespace CSSPlugins {
-    export {
-        Plugins as parserPlugins
-    }
-}
 
 // @public
 export interface EncodeOptions {
@@ -98,8 +68,8 @@ export interface LynxEncodePluginOptions {
 export class LynxTemplatePlugin {
     constructor(options?: LynxTemplatePluginOptions | undefined);
     apply(compiler: Compiler): void;
-    static convertCSSChunksToMap(cssChunks: string[], plugins: CSS_2.Plugin[], enableCSSSelector: boolean): {
-        cssMap: Record<string, CSS_2.LynxStyleNode[]>;
+    static convertCSSChunksToMap(cssChunks: string[], plugins: CSS.Plugin[], enableCSSSelector: boolean): {
+        cssMap: Record<string, CSS.LynxStyleNode[]>;
         cssSource: Record<string, string>;
     };
     static defaultOptions: Readonly<Required<LynxTemplatePluginOptions>>;
@@ -109,7 +79,7 @@ export class LynxTemplatePlugin {
 // @public
 export interface LynxTemplatePluginOptions {
     chunks?: 'all' | string[];
-    cssPlugins: CSS_2.Plugin[];
+    cssPlugins: CSS.Plugin[];
     customCSSInheritanceList: string[] | undefined;
     debugInfoOutside: boolean;
     defaultDisplayLinear: boolean;

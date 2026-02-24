@@ -4,9 +4,9 @@
 
 import type { Compilation, Compiler } from 'webpack';
 
+import type { LynxStyleNode } from '@lynx-js/css-serializer';
 import type { TasmJSONInfo } from '@lynx-js/web-core-wasm/encode';
 
-import type { LynxStyleNode } from './css/index.js';
 import {
   LynxTemplatePlugin,
   isDebug,

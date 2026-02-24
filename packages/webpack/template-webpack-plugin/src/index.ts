@@ -8,6 +8,9 @@
  * A webpack plugin that simplifies creation of `template.js` files to serve your bundles.
  */
 
+import { Plugins } from '@lynx-js/css-serializer';
+import * as CSS from '@lynx-js/css-serializer';
+
 export { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
 export type {
   LynxTemplatePluginOptions,
@@ -17,5 +20,9 @@ export type {
 export { LynxEncodePlugin } from './LynxEncodePlugin.js';
 export type { LynxEncodePluginOptions } from './LynxEncodePlugin.js';
 export { WebEncodePlugin } from './WebEncodePlugin.js';
-export * as CSSPlugins from './css/plugins/index.js';
-export * as CSS from './css/index.js';
+export const CSSPlugins: {
+  parserPlugins: typeof Plugins;
+} = {
+  parserPlugins: Plugins,
+};
+export { CSS };
