@@ -275,8 +275,8 @@ describe('profile', () => {
 
     const profileWrapper = options.diffed;
     options.diffed = (vnode) => {
-      if (vnode.__c && typeof vnode.type === 'function' && vnode.type.name === 'App') {
-        capturedComponent = vnode.__c;
+      if (vnode[COMPONENT] && typeof vnode.type === 'function' && vnode.type.name === 'App') {
+        capturedComponent = vnode[COMPONENT];
       }
       profileWrapper?.(vnode);
     };
