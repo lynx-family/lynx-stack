@@ -53,8 +53,8 @@ export function componentAtIndexFactory(
     const signMap = gSignMap[listID];
     const recycleMap = gRecycleMap[listID];
 
+    /* v8 ignore start */
     if (!signMap || !recycleMap) {
-      /* v8 ignore start */
       // Theoretically unreachable since snapshotDestroyList clears componentAtIndex with a noop function.
       // Kept as a safeguard in case the callback is somehow invoked after list removal.
       throw new Error('componentAtIndex called on removed list');
