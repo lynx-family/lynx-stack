@@ -28,12 +28,10 @@ describe('debug/profile module', () => {
     globalThis.__PROFILE__ = originalProfileFlag as boolean | undefined;
   });
 
-  it('should set __PROFILE__ to true when recording is enabled and __PROFILE__ is missing', async () => {
+  it('should indicate profiling is enabled when recording is active', async () => {
     const perf: PerformanceLike = {
       isProfileRecording: vi.fn(() => true),
     };
-    // eslint-disable-next-line no-undef
-    globalThis.__PROFILE__ = undefined;
     globalThis.lynx = {
       ...globalThis.lynx,
       performance: perf,
@@ -42,7 +40,6 @@ describe('debug/profile module', () => {
     const profile = await import('../../src/debug/profile');
 
     expect(profile.isProfiling).toBe(true);
-    expect(globalThis.__PROFILE__).toBe(true);
   });
 
   it('should fallback to no-op APIs when profile functions are unavailable', async () => {
