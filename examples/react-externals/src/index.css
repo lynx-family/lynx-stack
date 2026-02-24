@@ -1,0 +1,8 @@
+/* At least a css rule is needed in consumer
+ * to make sure the css engine is loaded
+ * so that the css in external bundles can be applied
+ *
+ * This is a limitation of Lynx engine
+ * we can remove this limitation in the future
+ */
+.dummy {}
