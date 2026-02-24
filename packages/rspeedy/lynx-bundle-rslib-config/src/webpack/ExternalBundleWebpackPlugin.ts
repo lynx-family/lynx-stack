@@ -3,8 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import type { Asset, Compilation, Compiler } from 'webpack'
 
-import { cssChunksToMap } from './css/index.js'
-import type { LynxStyleNode } from './css/index.js'
+import { cssChunksToMap } from '@lynx-js/css-serializer'
+import type { LynxStyleNode } from '@lynx-js/css-serializer'
 
 /**
  * The options for {@link ExternalBundleWebpackPlugin}.
