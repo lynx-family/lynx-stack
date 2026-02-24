@@ -179,7 +179,10 @@ describe('backgroundSnapshot profile', () => {
   });
 
   describe('hydrate branches', () => {
+    let originalProfileFlag;
+
     beforeEach(() => {
+      originalProfileFlag = globalThis.__PROFILE__;
       snapshotInstanceManager.clear();
       snapshotInstanceManager.nextId = 0;
       backgroundSnapshotInstanceManager.clear();
@@ -187,103 +190,88 @@ describe('backgroundSnapshot profile', () => {
     });
 
     afterEach(() => {
-      globalThis.__PROFILE__ = true;
+      globalThis.__PROFILE__ = originalProfileFlag;
     });
 
     it('should apply non-profile hydrate branches for setAttribute/remove/move', () => {
-      const originalProfileFlag = globalThis.__PROFILE__;
       globalThis.__PROFILE__ = false;
 
-      try {
-        const before = createBeforeTree();
-        const after = createAfterTree('meta-new');
+      const before = createBeforeTree();
+      const after = createAfterTree('meta-new');
 
-        lynx.performance.profileStart.mockClear();
-        lynx.performance.profileEnd.mockClear();
+      lynx.performance.profileStart.mockClear();
+      lynx.performance.profileEnd.mockClear();
 
-        const patch = hydrate(before, after);
-        const operations = decodePatch(patch);
+      const patch = hydrate(before, after);
+      const operations = decodePatch(patch);
 
-        expect(lynx.performance.profileStart).not.toBeCalled();
-        expect(lynx.performance.profileEnd).not.toBeCalled();
-        expect(operations).toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({
-              op: SnapshotOperation.SetAttribute,
-              args: expect.arrayContaining([before.children[0].id, 0, 'a-new']),
-            }),
-            expect.objectContaining({
-              op: SnapshotOperation.SetAttribute,
-              args: expect.arrayContaining([before.children[0].id, 'meta', 'meta-new']),
-            }),
-            expect.objectContaining({
-              op: SnapshotOperation.RemoveChild,
-              args: [before.id, before.children[2].id],
-            }),
-            expect.objectContaining({
-              op: SnapshotOperation.InsertBefore,
-              args: [before.id, before.children[0].id, undefined],
-            }),
-          ]),
-        );
-      } finally {
-        globalThis.__PROFILE__ = originalProfileFlag;
-      }
+      expect(lynx.performance.profileStart).not.toBeCalled();
+      expect(lynx.performance.profileEnd).not.toBeCalled();
+      expect(operations).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            op: SnapshotOperation.SetAttribute,
+            args: expect.arrayContaining([before.children[0].id, 0, 'a-new']),
+          }),
+          expect.objectContaining({
+            op: SnapshotOperation.SetAttribute,
+            args: expect.arrayContaining([before.children[0].id, 'meta', 'meta-new']),
+          }),
+          expect.objectContaining({
+            op: SnapshotOperation.RemoveChild,
+            args: [before.id, before.children[2].id],
+          }),
+          expect.objectContaining({
+            op: SnapshotOperation.InsertBefore,
+            args: [before.id, before.children[0].id, undefined],
+          }),
+        ]),
+      );
     });
 
     it('should profile hydrate extraProps null valueType and empty move targetId', () => {
-      const originalProfileFlag = globalThis.__PROFILE__;
       globalThis.__PROFILE__ = true;
 
-      try {
-        const before = createBeforeTree();
-        const after = createAfterTree(null);
+      const before = createBeforeTree();
+      const after = createAfterTree(null);
 
-        lynx.performance.profileStart.mockClear();
-        lynx.performance.profileEnd.mockClear();
+      lynx.performance.profileStart.mockClear();
+      lynx.performance.profileEnd.mockClear();
 
-        hydrate(before, after);
+      hydrate(before, after);
 
-        const setAttributeCalls = lynx.performance.profileStart.mock.calls.filter(
-          ([traceName]) => traceName === 'ReactLynx::hydrate::setAttribute',
-        );
-        const insertBeforeCalls = lynx.performance.profileStart.mock.calls.filter(
-          ([traceName]) => traceName === 'ReactLynx::hydrate::insertBefore',
-        );
+      const setAttributeCalls = lynx.performance.profileStart.mock.calls.filter(
+        ([traceName]) => traceName === 'ReactLynx::hydrate::setAttribute',
+      );
+      const insertBeforeCalls = lynx.performance.profileStart.mock.calls.filter(
+        ([traceName]) => traceName === 'ReactLynx::hydrate::insertBefore',
+      );
 
-        expect(
-          setAttributeCalls.some(([, option]) => (
-            option?.args?.dynamicPartIndex === 'meta' && option?.args?.valueType === 'null'
-          )),
-        ).toBe(true);
-        expect(
-          insertBeforeCalls.some(([, option]) => option?.args?.targetId === ''),
-        ).toBe(true);
-      } finally {
-        globalThis.__PROFILE__ = originalProfileFlag;
-      }
+      expect(
+        setAttributeCalls.some(([, option]) => (
+          option?.args?.dynamicPartIndex === 'meta' && option?.args?.valueType === 'null'
+        )),
+      ).toBe(true);
+      expect(
+        insertBeforeCalls.some(([, option]) => option?.args?.targetId === ''),
+      ).toBe(true);
     });
 
     it('should apply non-profile move branch with defined target id', () => {
-      const originalProfileFlag = globalThis.__PROFILE__;
       globalThis.__PROFILE__ = false;
 
-      try {
-        const before = createBeforeTreeWithDefinedTargetMove();
-        const after = createAfterTreeWithDefinedTargetMove();
+      const before = createBeforeTreeWithDefinedTargetMove();
+      const after = createAfterTreeWithDefinedTargetMove();
 
-        const patch = hydrate(before, after);
-        const operations = decodePatch(patch);
-        const moveWithDefinedTarget = operations.find(({ op, args }) => (
-          op === SnapshotOperation.InsertBefore
-          && args[0] === before.id
-          && args[2] !== undefined
-        ));
+      const patch = hydrate(before, after);
+      const operations = decodePatch(patch);
+      const moveWithDefinedTarget = operations.find(({ op, args }) => (
+        op === SnapshotOperation.InsertBefore
+        && args[0] === before.id
+        && args[2] !== undefined
+      ));
 
-        expect(moveWithDefinedTarget).toBeDefined();
-      } finally {
-        globalThis.__PROFILE__ = originalProfileFlag;
-      }
+      expect(moveWithDefinedTarget).toBeDefined();
     });
   });
 });

@@ -399,23 +399,6 @@ export function hydrate(
   try {
     initGlobalSnapshotPatch();
 
-    const tracedPush = (
-      traceName: string,
-      traceOption: { args: Record<string, string> },
-      ...patchArgs: unknown[]
-    ): void => {
-      if (shouldProfile) {
-        profileStart(traceName, traceOption);
-        try {
-          __globalSnapshotPatch!.push(...patchArgs);
-        } finally {
-          profileEnd();
-        }
-      } else {
-        __globalSnapshotPatch!.push(...patchArgs);
-      }
-    };
-
     const helper = (
       before: SerializedSnapshotInstance,
       after: BackgroundSnapshotInstance,
@@ -467,9 +450,8 @@ export function hydrate(
             // but the old value becomes `null` during JSON serialization.
             // In this case, we should not patch the value.
           } else {
-            tracedPush(
-              'ReactLynx::hydrate::setAttribute',
-              {
+            if (shouldProfile) {
+              profileStart('ReactLynx::hydrate::setAttribute', {
                 args: {
                   id: String(after.__id),
                   snapshotType: String(after.type),
@@ -477,12 +459,25 @@ export function hydrate(
                   dynamicPartIndex: String(index),
                   valueType: value === null ? 'null' : typeof value,
                 },
-              },
-              SnapshotOperation.SetAttribute,
-              after.__id,
-              index,
-              value,
-            );
+              });
+              try {
+                __globalSnapshotPatch!.push(
+                  SnapshotOperation.SetAttribute,
+                  after.__id,
+                  index,
+                  value,
+                );
+              } finally {
+                profileEnd();
+              }
+            } else {
+              __globalSnapshotPatch!.push(
+                SnapshotOperation.SetAttribute,
+                after.__id,
+                index,
+                value,
+              );
+            }
           }
         }
       });
@@ -492,9 +487,8 @@ export function hydrate(
           const value = after.__extraProps[key];
           const old = before.extraProps?.[key];
           if (!isDirectOrDeepEqual(value, old)) {
-            tracedPush(
-              'ReactLynx::hydrate::setAttribute',
-              {
+            if (shouldProfile) {
+              profileStart('ReactLynx::hydrate::setAttribute', {
                 args: {
                   id: String(after.__id),
                   snapshotType: String(after.type),
@@ -502,12 +496,25 @@ export function hydrate(
                   dynamicPartIndex: key,
                   valueType: value === null ? 'null' : typeof value,
                 },
-              },
-              SnapshotOperation.SetAttribute,
-              after.__id,
-              key,
-              value,
-            );
+              });
+              try {
+                __globalSnapshotPatch!.push(
+                  SnapshotOperation.SetAttribute,
+                  after.__id,
+                  key,
+                  value,
+                );
+              } finally {
+                profileEnd();
+              }
+            } else {
+              __globalSnapshotPatch!.push(
+                SnapshotOperation.SetAttribute,
+                after.__id,
+                key,
+                value,
+              );
+            }
           }
         }
       }
@@ -566,26 +573,36 @@ export function hydrate(
                 return undefined as unknown as SerializedSnapshotInstance;
               },
               node => {
-                tracedPush(
-                  'ReactLynx::hydrate::removeChild',
-                  {
+                if (shouldProfile) {
+                  profileStart('ReactLynx::hydrate::removeChild', {
                     args: {
                       id: String(node.id),
                       snapshotType: String(node.type),
                       source: getSnapshotVNodeSource(node.id) ?? '',
                       parentId: String(before.id),
                     },
-                  },
-                  SnapshotOperation.RemoveChild,
-                  before.id,
-                  node.id,
-                );
+                  });
+                  try {
+                    __globalSnapshotPatch!.push(
+                      SnapshotOperation.RemoveChild,
+                      before.id,
+                      node.id,
+                    );
+                  } finally {
+                    profileEnd();
+                  }
+                } else {
+                  __globalSnapshotPatch!.push(
+                    SnapshotOperation.RemoveChild,
+                    before.id,
+                    node.id,
+                  );
+                }
               },
               (node, target) => {
                 // changedList.push([SnapshotOperation.RemoveChild, before.id, node.id]);
-                tracedPush(
-                  'ReactLynx::hydrate::insertBefore',
-                  {
+                if (shouldProfile) {
+                  profileStart('ReactLynx::hydrate::insertBefore', {
                     args: {
                       id: String(node.id),
                       snapshotType: String(node.type),
@@ -593,12 +610,25 @@ export function hydrate(
                       parentId: String(before.id),
                       targetId: String(target?.id ?? ''),
                     },
-                  },
-                  SnapshotOperation.InsertBefore,
-                  before.id,
-                  node.id,
-                  target?.id,
-                );
+                  });
+                  try {
+                    __globalSnapshotPatch!.push(
+                      SnapshotOperation.InsertBefore,
+                      before.id,
+                      node.id,
+                      target?.id,
+                    );
+                  } finally {
+                    profileEnd();
+                  }
+                } else {
+                  __globalSnapshotPatch!.push(
+                    SnapshotOperation.InsertBefore,
+                    before.id,
+                    node.id,
+                    target?.id,
+                  );
+                }
               },
             );
             break;
