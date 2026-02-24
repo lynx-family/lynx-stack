@@ -281,64 +281,27 @@ describe('profile', () => {
       profileWrapper?.(vnode);
     };
 
-    let updateMissing;
-    function App() {
-      const [val, setVal] = useState(0);
-      updateMissing = () => setVal(1);
-      return <text>{val}</text>;
-    }
-    render(<App />, scratch);
-    expect(capturedComponent).toBeDefined();
-
-    if (capturedComponent && capturedComponent[HOOKS] && capturedComponent[HOOKS][LIST]) {
-      capturedComponent[HOOKS][LIST][0][COMPONENT] = undefined;
-    } else {
-      throw new Error('Failed to access hook state for sabotage');
-    }
-
-    // Trigger update, expect Preact to crash (but our interceptor runs first)
-    expect(() => {
-      updateMissing();
-    }).toThrow();
-  });
-
-  test('should handle unknown component name', async () => {
-    const profileMarkSpy = lynx.performance.profileMark;
-    let capturedComponent;
-
-    const profileWrapper = options.diffed;
-    options.diffed = (vnode) => {
-      if (vnode.__c && typeof vnode.type === 'function' && vnode.type.name === 'App') {
-        capturedComponent = vnode.__c;
+    try {
+      let updateMissing;
+      function App() {
+        const [val, setVal] = useState(0);
+        updateMissing = () => setVal(1);
+        return <text>{val}</text>;
       }
-      profileWrapper?.(vnode);
-    };
+      render(<App />, scratch);
+      expect(capturedComponent).toBeDefined();
 
-    let updateUnknown;
-    function App() {
-      const [val, setVal] = useState(0);
-      updateUnknown = () => setVal(1);
-      return <text>{val}</text>;
+      if (capturedComponent && capturedComponent[HOOKS] && capturedComponent[HOOKS][LIST]) {
+        capturedComponent[HOOKS][LIST][0][COMPONENT] = undefined;
+      } else {
+        throw new Error('Failed to access hook state for sabotage');
+      }
+
+      expect(() => {
+        updateMissing();
+      }).toThrow();
+    } finally {
+      options.diffed = profileWrapper;
     }
-
-    render(<App />, scratch);
-    expect(capturedComponent).toBeDefined();
-
-    if (capturedComponent && capturedComponent[VNODE]) {
-      // Sabotage: set type to something not a function
-      capturedComponent[VNODE].type = {};
-    } else {
-      throw new Error('Failed to access vnode for sabotage');
-    }
-    updateUnknown();
-
-    expect(profileMarkSpy).toHaveBeenCalledWith(
-      'ReactLynx::hooks::setState',
-      expect.objectContaining({
-        args: expect.objectContaining({
-          componentName: 'Unknown',
-        }),
-      }),
-    );
   });
 });

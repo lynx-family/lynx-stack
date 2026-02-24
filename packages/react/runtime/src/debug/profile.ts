@@ -21,6 +21,7 @@ import {
   NEXT_VALUE,
   RENDER,
   VALUE,
+  VNODE,
 } from '../renderToOpcodes/constants.js';
 import { getDisplayName, hook } from '../utils.js';
 
@@ -104,7 +105,7 @@ export function initProfileHook(): void {
           old?.call(this, state, callback);
 
           if (this[DIRTY]) {
-            const type = this.__v!.type;
+            const type = this[VNODE]!.type;
             const isClassComponent = typeof type === 'function' && ('prototype' in type)
               && ('render' in type.prototype);
 
@@ -116,7 +117,7 @@ export function initProfileHook(): void {
                   this[NEXT_STATE],
                 ),
               });
-            } else {}
+            }
           }
         },
       );
@@ -172,7 +173,7 @@ export function initProfileHook(): void {
                     return;
                   }
 
-                  const type = component.__v?.type;
+                  const type = component[VNODE]!.type;
                   const flowId = component[sFlowID] ??= profileFlowId();
 
                   profileMark('ReactLynx::hooks::setState', {
