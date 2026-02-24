@@ -39,7 +39,7 @@ function decodePatch(patch) {
     const op = patch[index];
     const params = SnapshotOperationParams[op]?.params;
     if (!params) {
-      break;
+      throw new Error(`Invalid patch operation at index ${index}, op: ${String(op)}`);
     }
     const paramCount = params.length;
     const args = patch.slice(index + 1, index + 1 + paramCount);

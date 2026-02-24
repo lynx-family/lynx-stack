@@ -204,32 +204,35 @@ function flushDelayedLifecycleEvents(): void {
 
 function publishEvent(handlerName: string, data: EventDataType) {
   lynxCoreInject.tt.callBeforePublishEvent?.(data);
-  const snapshotId = Number(handlerName.split(':')[0]);
+  let snapshotId: number | undefined;
+  const getSnapshotId = () => snapshotId ??= Number(handlerName.split(':')[0]);
   const eventHandler = backgroundSnapshotInstanceManager.getValueBySign(
     handlerName,
   ) as ((data: unknown) => void) | undefined;
 
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+    const currentSnapshotId = getSnapshotId();
     profileStart(`ReactLynx::publishEvent`, {
       args: {
         handlerName,
         type: data.type,
         snapshotInstanceType: backgroundSnapshotInstanceManager.values.get(
-          snapshotId,
+          currentSnapshotId,
         )?.type ?? '',
-        source: getSnapshotVNodeSource(snapshotId) ?? '',
+        source: getSnapshotVNodeSource(currentSnapshotId) ?? '',
         jsFunctionName: eventHandler?.name ?? '',
       },
     });
   }
   if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+    const currentSnapshotId = getSnapshotId();
     console.alog?.(
       `[ReactLynxDebug] BTS received event:\n` + JSON.stringify(
         {
           handlerName,
           type: data.type,
           snapshotInstanceType: backgroundSnapshotInstanceManager.values.get(
-            Number(handlerName.split(':')[0]),
+            currentSnapshotId,
           )?.type ?? '',
           jsFunctionName: eventHandler?.name ?? '',
         },

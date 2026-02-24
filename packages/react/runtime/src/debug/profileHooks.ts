@@ -202,7 +202,7 @@ export function initProfileHook(): void {
       }
 
       if (typeof vnode.type === 'function') {
-        profileEnd(); // for options[DIFF]
+        profileEnd(); // for options[DIFF2]
       }
       old?.(vnode);
     });
@@ -252,8 +252,8 @@ export function initProfileHook(): void {
     });
 
     hook(options, DIFFED, (old, vnode: PatchedVNode) => {
-      if (typeof vnode.type === 'function' && __globalSnapshotPatch) {
-        if (vnode[sPatchLength] === __globalSnapshotPatch.length) {
+      if (typeof vnode.type === 'function') {
+        if (__globalSnapshotPatch && vnode[sPatchLength] === __globalSnapshotPatch.length) {
           // "NoPatch" is a conventional name in Lynx
           profileMark('ReactLynx::diffFinishNoPatch', {
             args: {
