@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Component, options } from 'preact';
-import type { ComponentClass, VNode } from 'preact';
+import type { ComponentClass, ComponentType, VNode } from 'preact';
 
 import type { TraceOption } from '@lynx-js/types';
 
@@ -48,6 +48,7 @@ function safeJsonStringify(val: unknown) {
 }
 
 function buildSetStateProfileMarkArgs(
+  type: string | ComponentType | undefined,
   currentState: unknown,
   nextState: unknown,
 ): Record<string, string> {
@@ -57,6 +58,9 @@ function buildSetStateProfileMarkArgs(
   const nextStateObj = (nextState ?? EMPTY_OBJ) as Record<string, unknown>;
 
   return {
+    componentName: (type && typeof type === 'function')
+      ? getDisplayName(type as ComponentClass)
+      : 'Unknown',
     'current state keys': JSON.stringify(Object.keys(currentStateObj)),
     'next state keys': JSON.stringify(Object.keys(nextStateObj)),
     'changed (shallow diff) state keys': JSON.stringify(
@@ -113,6 +117,7 @@ export function initProfileHook(): void {
               profileMark('ReactLynx::setState', {
                 flowId: this[sFlowID] ??= profileFlowId(),
                 args: buildSetStateProfileMarkArgs(
+                  type,
                   this.state,
                   this[NEXT_STATE],
                 ),
@@ -179,11 +184,9 @@ export function initProfileHook(): void {
                   profileMark('ReactLynx::hooks::setState', {
                     flowId,
                     args: {
-                      componentName: (type && typeof type === 'function')
-                        ? getDisplayName(type as ComponentClass)
-                        : 'Unknown',
                       hookIdx: String(hookIdx),
                       ...buildSetStateProfileMarkArgs(
+                        type,
                         currentValue,
                         nextValue,
                       ),

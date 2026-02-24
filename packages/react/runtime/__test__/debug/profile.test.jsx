@@ -124,6 +124,7 @@ describe('profile', () => {
           {
             "args": {
               "changed (shallow diff) state keys": "["count"]",
+              "componentName": "ClassComponent",
               "current state keys": "["count"]",
               "currentValue": "{"count":0}",
               "next state keys": "["count"]",
