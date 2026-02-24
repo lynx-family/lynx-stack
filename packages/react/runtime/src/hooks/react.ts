@@ -91,7 +91,7 @@ function useStateWithProfile<S>(
       ? usePreactState<S | undefined>()
       : usePreactState(initialState as S | (() => S))
   ) as [S | undefined, Dispatch<StateUpdater<S | undefined>>];
-  const tracedSetState = useCallback<Dispatch<StateUpdater<S | undefined>>>((nextState) => {
+  const tracedSetState = (nextState: StateUpdater<S | undefined>) => {
     const stack = new Error().stack;
     const traceOption = stack
       ? ({ args: { stack } } as TraceOption)
@@ -102,7 +102,7 @@ function useStateWithProfile<S>(
     } finally {
       profileEnd();
     }
-  }, [setState]);
+  };
   return [state, tracedSetState];
 }
 
