@@ -20,9 +20,9 @@ import type {
 } from 'webpack';
 
 import type * as CSS from '@lynx-js/css-serializer';
+import { cssChunksToMap } from '@lynx-js/css-serializer';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
-import { cssChunksToMap } from './css/cssChunksToMap.js';
 import { createLynxAsyncChunksRuntimeModule } from './LynxAsyncChunksRuntimeModule.js';
 
 export type OriginManifest = Record<string, {
