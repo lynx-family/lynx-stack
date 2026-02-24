@@ -7,10 +7,6 @@
 export const isProfiling: boolean = /* @__PURE__ */ Boolean(
   lynx.performance?.isProfileRecording?.(),
 );
-if (isProfiling && typeof __PROFILE__ === 'undefined') {
-  // @ts-expect-error mock profile
-  globalThis.__PROFILE__ = true;
-}
 
 const noop = () => {};
 const noopFlowId = () => 0;
