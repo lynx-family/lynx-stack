@@ -240,6 +240,7 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   target.__DEV__ = true;
   target.__PROFILE__ = true;
   target.__ALOG__ = true;
+  target.__ALOG_ELEMENT_API__ = true;
   target.__JS__ = false;
   target.__LEPUS__ = true;
   target.__BACKGROUND__ = false;
@@ -378,6 +379,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
   target.__DEV__ = true;
   target.__PROFILE__ = true;
   target.__ALOG__ = true;
+  target.__ALOG_ELEMENT_API__ = true;
   target.__JS__ = true;
   target.__LEPUS__ = false;
   target.__BACKGROUND__ = true;

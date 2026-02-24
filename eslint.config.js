@@ -33,6 +33,7 @@ export default tseslint.config(
       '**/test/js',
       '**/dist/**',
       '**/lib/**',
+      'website/doc_build/**',
       '.changeset/*',
       '**/CHANGELOG.md',
       '**/etc/*.md',
@@ -327,6 +328,11 @@ export default tseslint.config(
     },
     rules: {
       ...vitest.configs.recommended.rules,
+      // These rules are newly introduced in vitest's recommended set and have
+      // significant existing violations across the repo. Keep them disabled for
+      // now to avoid churn when updating linting deps.
+      'vitest/no-conditional-expect': 'off',
+      'vitest/no-interpolation-in-snapshots': 'off',
     },
     settings: {
       vitest: {

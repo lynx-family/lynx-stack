@@ -47,7 +47,9 @@ export async function registerConsoleShortcuts(
   gExistingShortcuts.add(options)
 
   // We should not `await` on this since it would block the NodeJS main thread.
-  void loop(options, value, devUrls)
+  if (process.stdin.isTTY && process.stdout.isTTY) {
+    void loop(options, value, devUrls)
+  }
 
   function off() {
     gExistingShortcuts.delete(options)

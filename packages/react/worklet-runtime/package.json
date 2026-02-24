@@ -35,6 +35,6 @@
     "test": "vitest run --coverage"
   },
   "devDependencies": {
-    "@lynx-js/types": "3.6.0"
+    "@lynx-js/types": "3.7.0"
   }
 }
