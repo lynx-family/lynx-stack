@@ -6,6 +6,8 @@ import { hydrate } from '../hydrate.js';
 import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from '../list.js';
 import type { SnapshotInstance } from '../snapshot.js';
 
+const destroyLifetimeHandlerMap = new Map<number, () => void>();
+
 export function snapshotCreateList(
   pageId: number,
   _ctx: SnapshotInstance,
@@ -24,9 +26,12 @@ export function snapshotCreateList(
   const listID = __GetElementUniqueID(list);
 
   if (typeof lynx !== 'undefined' && typeof lynx.getNative === 'function') {
-    lynx.getNative()?.addEventListener('__DestroyLifetime', () => {
+    const cb = () => {
       __UpdateListCallbacks(list, null, null, null);
-    });
+      destroyLifetimeHandlerMap.delete(listID);
+    };
+    lynx.getNative()?.addEventListener('__DestroyLifetime', cb);
+    destroyLifetimeHandlerMap.set(listID, cb);
   }
 
   gSignMap[listID] = signMap;
@@ -38,6 +43,17 @@ export function snapshotDestroyList(si: SnapshotInstance): void {
   const [, elementIndex] = si.__snapshot_def.slot[0]!;
   const list = si.__elements![elementIndex]!;
   const listID = __GetElementUniqueID(list);
+
+  __UpdateListCallbacks(list, () => -1, () => {}, () => {});
+
+  if (typeof lynx !== 'undefined' && typeof lynx.getNative === 'function') {
+    const cb = destroyLifetimeHandlerMap.get(listID);
+    if (cb) {
+      lynx.getNative()?.removeEventListener('__DestroyLifetime', cb);
+      destroyLifetimeHandlerMap.delete(listID);
+    }
+  }
+
   delete gSignMap[listID];
   delete gRecycleMap[listID];
 }

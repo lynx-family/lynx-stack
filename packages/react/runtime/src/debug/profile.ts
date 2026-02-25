@@ -2,14 +2,77 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Component, options } from 'preact';
-import type { ComponentClass, VNode } from 'preact';
+import type { ComponentClass, ComponentType, VNode } from 'preact';
 
 import type { TraceOption } from '@lynx-js/types';
 
 import { globalPatchOptions } from '../lifecycle/patch/commit.js';
 import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
-import { COMMIT, COMPONENT, DIFF, DIFF2, DIFFED, DIRTY, NEXT_STATE, RENDER } from '../renderToOpcodes/constants.js';
+import {
+  COMMIT,
+  COMPONENT,
+  DIFF,
+  DIFF2,
+  DIFFED,
+  DIRTY,
+  HOOKS,
+  LIST,
+  NEXT_STATE,
+  NEXT_VALUE,
+  RENDER,
+  VALUE,
+  VNODE,
+} from '../renderToOpcodes/constants.js';
 import { getDisplayName, hook } from '../utils.js';
+
+const format = (val: unknown) => {
+  if (typeof val === 'function') {
+    return val.toString();
+  }
+  return val;
+};
+
+function safeJsonStringify(val: unknown) {
+  const seen = new WeakSet<object>();
+
+  return JSON.stringify(val, function(_key, value: unknown) {
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) {
+        return '[Unserializable: Circular]';
+      }
+      seen.add(value);
+    }
+
+    return value;
+  });
+}
+
+function buildSetStateProfileMarkArgs(
+  type: string | ComponentType | undefined,
+  currentState: unknown,
+  nextState: unknown,
+): Record<string, string> {
+  const EMPTY_OBJ = {};
+
+  const currentStateObj = (currentState ?? EMPTY_OBJ) as Record<string, unknown>;
+  const nextStateObj = (nextState ?? EMPTY_OBJ) as Record<string, unknown>;
+
+  return {
+    componentName: (type && typeof type === 'function')
+      ? getDisplayName(type as ComponentClass)
+      : 'Unknown',
+    'current state keys': JSON.stringify(Object.keys(currentStateObj)),
+    'next state keys': JSON.stringify(Object.keys(nextStateObj)),
+    'changed (shallow diff) state keys': JSON.stringify(
+      // the setState is in assign manner, we assume nextState is a superset of currentState
+      Object.keys(nextStateObj).filter(
+        key => currentStateObj[key] !== nextStateObj[key],
+      ),
+    ),
+    currentValue: safeJsonStringify(format(currentState)),
+    nextValue: safeJsonStringify(format(nextState)),
+  };
+}
 
 export function initProfileHook(): void {
   // early-exit if required profiling APIs are unavailable
@@ -39,27 +102,6 @@ export function initProfileHook(): void {
     type PatchedComponent = Component & { [sFlowID]?: number };
 
     if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
-      function buildSetStateProfileMarkArgs(
-        currentState: Record<string, unknown>,
-        nextState: Record<string, unknown>,
-      ): Record<string, string> {
-        const EMPTY_OBJ = {};
-
-        currentState ??= EMPTY_OBJ;
-        nextState ??= EMPTY_OBJ;
-
-        return {
-          'current state keys': JSON.stringify(Object.keys(currentState)),
-          'next state keys': JSON.stringify(Object.keys(nextState)),
-          'changed (shallow diff) state keys': JSON.stringify(
-            // the setState is in assign manner, we assume nextState is a superset of currentState
-            Object.keys(nextState).filter(
-              key => currentState[key] !== nextState[key],
-            ),
-          ),
-        };
-      }
-
       hook(
         Component.prototype,
         'setState',
@@ -67,13 +109,20 @@ export function initProfileHook(): void {
           old?.call(this, state, callback);
 
           if (this[DIRTY]) {
-            profileMark('ReactLynx::setState', {
-              flowId: this[sFlowID] ??= profileFlowId(),
-              args: buildSetStateProfileMarkArgs(
-                this.state as Record<string, unknown>,
-                this[NEXT_STATE] as Record<string, unknown>,
-              ),
-            });
+            const type = this[VNODE]!.type;
+            const isClassComponent = typeof type === 'function' && ('prototype' in type)
+              && ('render' in type.prototype);
+
+            if (isClassComponent) {
+              profileMark('ReactLynx::setState', {
+                flowId: this[sFlowID] ??= profileFlowId(),
+                args: buildSetStateProfileMarkArgs(
+                  type,
+                  this.state,
+                  this[NEXT_STATE],
+                ),
+              });
+            }
           }
         },
       );
@@ -106,6 +155,52 @@ export function initProfileHook(): void {
     });
 
     hook(options, DIFFED, (old, vnode) => {
+      if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
+        const hooks = vnode[COMPONENT]?.[HOOKS];
+        const hookList = hooks?.[LIST];
+
+        if (Array.isArray(hookList)) {
+          hookList.forEach((hookState, hookIdx: number) => {
+            hookState['internalNextValue'] = hookState[NEXT_VALUE];
+            // define a setter for __N to track the next value of the hook
+            Object.defineProperty(hookState, NEXT_VALUE, {
+              get: () => hookState['internalNextValue'],
+              set: (value) => {
+                if (Array.isArray(value)) {
+                  // hookState[VALUE] is [state, dispatch]
+                  const currentValueTuple = hookState[VALUE] as unknown[];
+                  const currentValue = currentValueTuple[0];
+                  const [nextValue] = value as unknown[];
+
+                  const component = hookState[COMPONENT] as PatchedComponent | undefined;
+                  if (!component) {
+                    hookState['internalNextValue'] = value;
+                    return;
+                  }
+
+                  const type = component[VNODE]!.type;
+                  const flowId = component[sFlowID] ??= profileFlowId();
+
+                  profileMark('ReactLynx::hooks::setState', {
+                    flowId,
+                    args: {
+                      hookIdx: String(hookIdx),
+                      ...buildSetStateProfileMarkArgs(
+                        type,
+                        currentValue,
+                        nextValue,
+                      ),
+                    },
+                  });
+                }
+                hookState['internalNextValue'] = value;
+              },
+              configurable: true,
+            });
+          });
+        }
+      }
+
       if (typeof vnode.type === 'function') {
         profileEnd(); // for options[DIFF]
       }
