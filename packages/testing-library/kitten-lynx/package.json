@@ -1,0 +1,39 @@
+{
+  "name": "@lynx-test/kitten-lynx",
+  "version": "0.1.0",
+  "description": "A testing framework executing the Lynx explorer Android application",
+  "keywords": [
+    "Lynx",
+    "testing",
+    "android",
+    "emulator"
+  ],
+  "author": {
+    "name": "lynx-stack"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@lynx-js/debug-router-connector": "0.0.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.0.0"
+  }
+}
