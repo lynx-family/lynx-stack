@@ -193,10 +193,9 @@ describe('should build external bundle', () => {
     )
 
     // Check custom-sections for CSS keys
-    // Note: Sections with 'encoding: CSS' might not appear in custom-sections of the decoded result
-    // TODO: wait for @lynx-js/tasm to support CSS encoding
     expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
       'index',
+      'index:CSS',
       'index__main-thread',
     ])
   })
