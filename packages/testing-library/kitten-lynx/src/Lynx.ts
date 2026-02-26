@@ -4,12 +4,50 @@ import {
 } from '@lynx-js/debug-router-connector';
 import { LynxView } from './LynxView.js';
 
+import { execSync } from 'child_process';
+
 export class Lynx {
   private _connector: DebugRouterConnector | null = null;
   private _currentClient: any | null = null;
   private _currentClientId: number = -1;
 
   static async connect(): Promise<Lynx> {
+    try {
+      const output = execSync('adb devices').toString();
+      const lines = output.split('\n');
+      const adbDevices = [];
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i]?.trim();
+        if (line && line.endsWith('device')) {
+          const parts = line.split('\t');
+          if (parts.length >= 1 && parts[0]) {
+            adbDevices.push(parts[0]);
+          }
+        }
+      }
+
+      for (const deviceId of adbDevices) {
+        try {
+          console.log(
+            `[Lynx] Restarting com.lynx.explorer on device ${deviceId}...`,
+          );
+          execSync(`adb -s ${deviceId} shell am force-stop com.lynx.explorer`);
+          execSync(
+            `adb -s ${deviceId} shell monkey -p com.lynx.explorer -c android.intent.category.LAUNCHER 1`,
+          );
+        } catch (e) {
+          console.error(
+            `[Lynx] Failed to restart app on device ${deviceId}:`,
+            e,
+          );
+        }
+      }
+    } catch (e) {
+      console.warn(
+        '[Lynx] Failed to list ADB devices or adb is not available.',
+      );
+    }
+
     const lynx = new Lynx();
 
     lynx._connector = new DebugRouterConnector({
