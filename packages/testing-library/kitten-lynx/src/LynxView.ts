@@ -18,73 +18,116 @@ export class LynxView {
   constructor(
     private _connector: DebugRouterConnector,
     private _clientId: number,
+    private _client?: any,
   ) {
     this.id = LynxView.incId++;
     idToLynxView[this.id.toString()] = new WeakRef(this);
   }
 
   async goto(url: string, _options?: unknown): Promise<void> {
-    const { exec } = await import('node:child_process');
-    const { promisify } = await import('node:util');
-    const execAsync = promisify(exec);
-
-    // Launch the URL through adb using the custom launcher intent
-    await execAsync(
-      `adb shell am start -n com.lynx.explorer/.LynxViewShellActivity -d "${url}"`,
-    );
-
-    // Wait for the page to attach to CDP
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const { promise, resolve, reject } = Promise.withResolvers<number>();
-    let isSettled = false;
-    const listener = ({ message, id }: { message: string; id: number }) => {
-      if (id !== this._clientId) return;
-      const parsed = JSON.parse(message);
+    if (!this._channel) {
       if (
-        parsed.event === 'Customized' && parsed.data?.type === 'SessionList'
+        this._client && typeof this._client.sendClientMessage === 'function'
       ) {
-        const sessions = parsed.data.data;
-        if (sessions.length > 0) {
-          isSettled = true;
-          this._connector.off('usb-client-message', listener);
-          resolve(sessions[sessions.length - 1].session_id);
+        const { promise: newClientPromise, resolve: newClientResolve } = Promise
+          .withResolvers<any>();
+        const clientListener = (client: any) => newClientResolve(client);
+        this._connector.on('client-connected', clientListener);
+
+        this._client.sendClientMessage('App.openPage', { url });
+
+        const newClientTimeout = setTimeout(() => {
+          this._connector.off('client-connected', clientListener);
+          newClientResolve(null);
+        }, 10000);
+
+        const newClient = await newClientPromise;
+        clearTimeout(newClientTimeout);
+        this._connector.off('client-connected', clientListener);
+
+        if (newClient) {
+          this._client = newClient;
+          this._clientId = newClient.clientId();
         }
       }
-    };
-    this._connector.on('usb-client-message', listener);
 
-    // Periodically ask for SessionList until settled or timeout
-    const pollInterval = setInterval(() => {
-      if (isSettled) {
-        clearInterval(pollInterval);
-        return;
-      }
-      this._connector.sendMessageToApp(
-        this._clientId,
-        JSON.stringify({
-          event: 'Customized',
-          data: {
-            type: 'ListSession',
-            data: [],
-            sender: this._clientId,
-          },
-          from: this._clientId,
-        }),
-      );
-    }, 500);
+      // Fetch initial session
+      const { promise, resolve, reject } = Promise.withResolvers<number>();
+      let isSettled = false;
+      const listener = ({ message, id }: { message: string; id: number }) => {
+        const parsed = JSON.parse(message);
+        // Log all messages locally to find the session
+        if (
+          parsed.event === 'Customized' && parsed.data?.type === 'SessionList'
+        ) {
+          const sessions = parsed.data.data;
+          if (sessions.length > 0) {
+            isSettled = true;
+            this._connector.off('usb-client-message', listener);
+            resolve(sessions[sessions.length - 1].session_id);
+          }
+        }
+      };
+      this._connector.on('usb-client-message', listener);
 
-    setTimeout(() => {
-      if (!isSettled) {
-        isSettled = true;
-        clearInterval(pollInterval);
-        this._connector.off('usb-client-message', listener);
-        reject(new Error('Timeout waiting for session'));
-      }
+      // Periodically ask for SessionList until settled or timeout
+      const pollInterval = setInterval(() => {
+        if (isSettled) {
+          clearInterval(pollInterval);
+          return;
+        }
+        this._connector.sendMessageToApp(
+          this._clientId,
+          JSON.stringify({
+            event: 'Customized',
+            data: {
+              type: 'ListSession',
+              data: [],
+              sender: this._clientId,
+            },
+            from: this._clientId,
+          }),
+        );
+      }, 500);
+
+      setTimeout(() => {
+        if (!isSettled) {
+          isSettled = true;
+          clearInterval(pollInterval);
+          this._connector.off('usb-client-message', listener);
+          reject(new Error('Timeout waiting for session'));
+        }
+      }, 15000);
+
+      const sessionId = await promise;
+      await this.onAttachedToTarget(sessionId);
+    }
+
+    const { promise: execPromise, resolve: execResolve } = Promise
+      .withResolvers<void>();
+    const off = this._channel.onEvent('DOM.childNodeInserted', () => {
+      off();
+      execResolve();
+    });
+
+    const fallbackTimeout = setTimeout(() => {
+      off();
+      execResolve();
     }, 5000);
 
-    const sessionId = await promise;
-    await this.onAttachedToTarget(sessionId);
+    // Launch the URL via CDP Page.navigate message
+    await this._channel.send('Page.navigate', { url });
+
+    // Wait for the new page to establish its execution context instead of fixed timers
+    await execPromise;
+    clearTimeout(fallbackTimeout);
+
+    // Refresh the DOM because navigation happened
+    const response = await this._channel.send('DOM.getDocument', {
+      depth: -1,
+    });
+    const root = response.root.children[0]!;
+    this._root = ElementNode.fromId(root.nodeId, this);
   }
 
   async locator(selector: string): Promise<ElementNode | undefined> {
@@ -108,8 +151,12 @@ export class LynxView {
         this._clientId,
         this._connector,
       );
-      // Enable DOM agent
-      await this._channel.send('Runtime.enable' as any, {}); // Enable Runtime to get events
+      // Enable DOM and Page agents
+      await Promise.all([
+        this._channel.send('Runtime.enable' as any, {}),
+        this._channel.send('Page.enable' as any, {}).catch(() => {}),
+        this._channel.send('DOM.enable' as any, {}).catch(() => {}),
+      ]);
       const response = await this._channel.send('DOM.getDocument', {
         depth: -1,
       });

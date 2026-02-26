@@ -9,15 +9,18 @@ describe('kitten-lynx testing framework', () => {
   });
 
   afterAll(async () => {
-    // Assuming disconnect exists or processes will naturally end
+    await lynx?.close();
   });
 
   it('can navigate to a page and read the DOM', async () => {
     const page = await lynx.newPage();
-    await page.goto('https://lynxjs.org/api/react/index.bundle');
+
+    await page.goto(
+      'https://lynxjs.org/next/lynx-examples/hello-world/dist/main.lynx.bundle',
+    );
 
     const content = await page.content();
-    expect(content).toContain('<view');
+    expect(content).toContain('have fun');
 
     const rootElement = await page.locator('view');
     expect(rootElement).toBeDefined();

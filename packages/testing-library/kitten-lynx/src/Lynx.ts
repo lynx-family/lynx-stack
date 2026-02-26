@@ -6,6 +6,7 @@ import { LynxView } from './LynxView.js';
 
 export class Lynx {
   private _connector: DebugRouterConnector | null = null;
+  private _currentClient: any | null = null;
   private _currentClientId: number = -1;
 
   static async connect(): Promise<Lynx> {
@@ -48,10 +49,30 @@ export class Lynx {
       if (devices.length === 0) {
         throw new Error('Failed to connect to Lynx: no device found.');
       }
+      for (const device of devices) {
+        device.startWatchClient();
+      }
     }
 
-    // Wait until a client is attached
-    lynx._currentClientId = await clientPromise;
+    const usbClients = lynx._connector.getAllUsbClients();
+    if (usbClients.length > 0) {
+      lynx._currentClient = usbClients[0];
+      lynx._currentClientId = usbClients[0]!.clientId();
+    } else {
+      const existingClients = lynx._connector.getAllAppClients();
+      if (existingClients.length > 0) {
+        lynx._currentClient = existingClients[0];
+        lynx._currentClientId = existingClients[0]!.clientId;
+      } else {
+        // Wait until a client is attached
+        const clientId = await clientPromise;
+        const allUsbs = lynx._connector.getAllUsbClients();
+        lynx._currentClient = allUsbs.find((c: any) =>
+          c.clientId() === clientId
+        ) || null;
+        lynx._currentClientId = clientId;
+      }
+    }
 
     // Force enable devtools toggle if required
     lynx._connector.sendMessageToApp(
@@ -82,11 +103,19 @@ export class Lynx {
     if (!this._connector || this._currentClientId === -1) {
       throw new Error('Not connected. Call Lynx.connect() first.');
     }
-    return new LynxView(this._connector, this._currentClientId);
+    return new LynxView(
+      this._connector,
+      this._currentClientId,
+      this._currentClient,
+    );
   }
 
   async close(): Promise<void> {
-    // Optional: terminate the connector properly
-    // Note: API bindings for `close` on `DebugRouterConnector` depend on upstream
+    if (this._connector) {
+      if (this._connector.wss) {
+        this._connector.wss.close();
+      }
+      this._connector = null;
+    }
   }
 }
