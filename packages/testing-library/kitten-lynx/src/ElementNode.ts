@@ -52,9 +52,6 @@ export class ElementNode {
       timestamp,
     });
 
-    // Wait briefly to simulate actual human tap duration
-    await new Promise(resolve => setTimeout(resolve, 50));
-
     await this._lynxView._channel.send('Input.emulateTouchFromMouseEvent', {
       type: 'mouseReleased',
       x,

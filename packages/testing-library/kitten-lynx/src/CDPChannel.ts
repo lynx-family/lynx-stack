@@ -58,6 +58,12 @@ interface Protocol {
       computedStyle: { name: string; value: string }[];
     };
   };
+  'Page.navigate': {
+    params: {
+      url: string;
+    };
+    return: unknown;
+  };
   'Input.emulateTouchFromMouseEvent': {
     params: {
       type: 'mousePressed' | 'mouseReleased' | 'mouseMoved';
@@ -159,5 +165,30 @@ export class CDPChannel {
     }, 5000);
 
     return promise;
+  }
+
+  onEvent(method: string, listener: (params: any) => void): () => void {
+    const handler = (
+      { message, id: sourceId }: { message: string; id: number },
+    ) => {
+      const parsed = JSON.parse(message);
+      if (parsed.event !== 'Customized' || parsed.data?.type !== 'CDP') {
+        return;
+      }
+
+      const cdpData = parsed.data.data;
+      if (cdpData.session_id !== this._sessionId) return;
+
+      const cdpMessage = typeof cdpData.message === 'string'
+        ? JSON.parse(cdpData.message)
+        : cdpData.message;
+
+      if (cdpMessage.method === method) {
+        listener(cdpMessage.params);
+      }
+    };
+
+    this._connector.on('usb-client-message', handler);
+    return () => this._connector.off('usb-client-message', handler);
   }
 }
