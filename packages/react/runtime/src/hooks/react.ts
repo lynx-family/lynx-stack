@@ -21,6 +21,14 @@ import type { TraceOption } from '@lynx-js/types';
 
 import { isProfiling, profileEnd, profileFlowId, profileStart } from '../debug/profile.js';
 
+type GenericSetState = Dispatch<StateUpdater<unknown>>;
+
+// Cache profiled wrappers by the original preact setter to preserve stable
+// identity without introducing extra hooks in component render flow.
+const stateSetterTraceCache: WeakMap<GenericSetState, GenericSetState> | undefined = /* @__PURE__ */ isProfiling
+  ? new WeakMap<GenericSetState, GenericSetState>()
+  : undefined;
+
 function buildTraceOption(flowId: number, stack: string | undefined): TraceOption {
   if (!stack) {
     return { flowId };
@@ -91,7 +99,13 @@ function useStateWithProfile<S>(
       ? usePreactState<S | undefined>()
       : usePreactState(initialState as S | (() => S))
   ) as [S | undefined, Dispatch<StateUpdater<S | undefined>>];
-  const tracedSetState = (nextState: StateUpdater<S | undefined>) => {
+  const genericSetState = setState as unknown as GenericSetState;
+  const cachedTracedSetState = stateSetterTraceCache?.get(genericSetState);
+  if (cachedTracedSetState) {
+    return [state, cachedTracedSetState as Dispatch<StateUpdater<S | undefined>>];
+  }
+
+  const tracedSetState = ((nextState: StateUpdater<S | undefined>) => {
     const stack = new Error().stack;
     const traceOption = stack
       ? ({ args: { stack } } as TraceOption)
@@ -102,7 +116,9 @@ function useStateWithProfile<S>(
     } finally {
       profileEnd();
     }
-  };
+  }) as Dispatch<StateUpdater<S | undefined>>;
+  stateSetterTraceCache?.set(genericSetState, tracedSetState as unknown as GenericSetState);
+
   return [state, tracedSetState];
 }
 
