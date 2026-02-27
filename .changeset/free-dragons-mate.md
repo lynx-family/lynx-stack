@@ -2,7 +2,7 @@
 "@lynx-js/react": patch
 ---
 
-Improve profiling support in React runtime with lower overhead when profiling is disabled.
+Improve React runtime hook profiling.
 Enable Profiling recording first, then enter the target page so the trace includes full render/hydrate phases.
 
 - Record trace events for `useEffect` / `useLayoutEffect` hook entry, callback, and cleanup phases.

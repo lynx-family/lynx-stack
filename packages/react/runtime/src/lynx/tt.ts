@@ -216,7 +216,7 @@ function publishEvent(handlerName: string, data: EventDataType) {
       args: {
         handlerName,
         type: data.type,
-        snapshotInstanceType: backgroundSnapshotInstanceManager.values.get(
+        snapshotType: backgroundSnapshotInstanceManager.values.get(
           currentSnapshotId,
         )?.type ?? '',
         source: getSnapshotVNodeSource(currentSnapshotId) ?? '',
@@ -231,7 +231,7 @@ function publishEvent(handlerName: string, data: EventDataType) {
         {
           handlerName,
           type: data.type,
-          snapshotInstanceType: backgroundSnapshotInstanceManager.values.get(
+          snapshotType: backgroundSnapshotInstanceManager.values.get(
             currentSnapshotId,
           )?.type ?? '',
           jsFunctionName: eventHandler?.name ?? '',
