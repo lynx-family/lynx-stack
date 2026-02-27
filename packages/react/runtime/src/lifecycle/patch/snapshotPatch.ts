@@ -17,6 +17,7 @@ export const SnapshotOperation = {
 
   DEV_ONLY_AddSnapshot: 100,
   DEV_ONLY_RegisterWorklet: 101,
+  DEV_ONLY_SetSnapshotEntryName: 102,
 } as const;
 
 export const SnapshotOperationParams: Record<number, { name: string; params: string[] }> = /* @__PURE__ */ {
@@ -35,16 +36,16 @@ export const SnapshotOperationParams: Record<number, { name: string; params: str
     name: 'DEV_ONLY_AddSnapshot',
     params: [
       'uniqID', /* string */
-      'create', /* string */
-      'update', /* string[] */
-      'slot', /* [DynamicPartType, number][] */
-      'cssId', /* number | undefined */
-      'entryName', /* string | undefined */
+      'snapshotCreator', /* string */
     ],
   },
   [SnapshotOperation.DEV_ONLY_RegisterWorklet]: {
     name: 'DEV_ONLY_RegisterWorklet',
     params: ['hash', /* string */ 'fnStr' /* string */],
+  },
+  [SnapshotOperation.DEV_ONLY_SetSnapshotEntryName]: {
+    name: 'DEV_ONLY_SetSnapshotEntryName',
+    params: ['uniqID', /* string */ 'entryName' /* string */],
   },
 } as const;
 

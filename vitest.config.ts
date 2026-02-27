@@ -24,13 +24,14 @@ export default defineConfig({
         'website/**',
 
         'packages/react/transform/tests/__swc_snapshots__/**',
-        'packages/rspeedy/create-rspeedy/template-*/**',
+        '**/tests/__swc_snapshots__/**',
 
         '.lintstagedrc.mjs',
-        'eslint.config.js',
+        '**/eslint.config.js',
 
         'packages/tools/canary-release/**',
-        'packages/web-platform/**',
+        'packages/web-platform/web-tests/**',
+        'packages/web-platform/web-core-wasm-e2e/**',
         'packages/webpack/test-tools/**',
         'packages/testing-library/test-environment/**',
         'packages/react/testing-library/**',
@@ -67,14 +68,19 @@ export default defineConfig({
     projects: [
       'examples/*/vitest.config.ts',
       'packages/react/*/vitest.config.ts',
+      'packages/react/*/vitest.**.config.ts',
       'packages/rspeedy/*/vitest.config.ts',
       'packages/testing-library/*/vitest.config.mts',
       'packages/testing-library/examples/*/vitest.config.ts',
-      'packages/third-party/*/vitest.config.ts',
+      '!packages/testing-library/examples/react-compiler/vitest.config.ts',
+      'packages/testing-library/examples/react-compiler/vitest.config.*.ts',
+      'packages/tailwind-preset/vitest.config.ts',
       'packages/tools/*/vitest.config.ts',
       'packages/use-sync-external-store/vitest.config.ts',
       'packages/web-platform/*/vitest.config.ts',
       'packages/webpack/*/vitest.config.ts',
+      'packages/lynx/gesture-runtime/vitest.config.ts',
+      'packages/motion/vitest.config.ts',
     ],
   },
 });

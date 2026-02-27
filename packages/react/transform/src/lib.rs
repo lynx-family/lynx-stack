@@ -4,22 +4,11 @@
 #[macro_use]
 extern crate napi_derive;
 mod bundle;
-mod css;
 mod esbuild;
-mod swc_plugin_compat;
 mod swc_plugin_compat_post;
-mod swc_plugin_define_dce;
-mod swc_plugin_directive_dce;
-mod swc_plugin_dynamic_import;
 mod swc_plugin_extract_str;
-mod swc_plugin_inject;
-mod swc_plugin_list;
 mod swc_plugin_refresh;
-mod swc_plugin_shake;
-mod swc_plugin_snapshot;
-mod swc_plugin_worklet;
 mod swc_plugin_worklet_post_process;
-mod target;
 
 use std::vec;
 
@@ -60,69 +49,22 @@ use swc_core::{
 
 // currently `use xxx as yyy` is not supported by napi-rs
 // So we have to use different name
-use swc_plugin_compat::{CompatVisitor, CompatVisitorConfig};
+use swc_plugin_compat::napi::{CompatVisitor, CompatVisitorConfig};
 use swc_plugin_compat_post::CompatPostVisitor;
 use swc_plugin_css_scope::napi::{CSSScopeVisitor, CSSScopeVisitorConfig};
-use swc_plugin_define_dce::DefineDCEVisitorConfig;
-use swc_plugin_directive_dce::{DirectiveDCEVisitor, DirectiveDCEVisitorConfig};
-use swc_plugin_dynamic_import::{DynamicImportVisitor, DynamicImportVisitorConfig};
-use swc_plugin_inject::{InjectVisitor, InjectVisitorConfig};
+use swc_plugin_define_dce::napi::DefineDCEVisitorConfig;
+use swc_plugin_directive_dce::napi::{DirectiveDCEVisitor, DirectiveDCEVisitorConfig};
+use swc_plugin_dynamic_import::napi::{DynamicImportVisitor, DynamicImportVisitorConfig};
+use swc_plugin_inject::napi::{InjectVisitor, InjectVisitorConfig};
 use swc_plugin_refresh::{RefreshVisitor, RefreshVisitorConfig};
-use swc_plugin_shake::{ShakeVisitor, ShakeVisitorConfig};
-use swc_plugin_snapshot::{JSXTransformer, JSXTransformerConfig};
-use swc_plugin_worklet::{WorkletVisitor, WorkletVisitorConfig};
-use swc_plugins_shared::utils::calc_hash;
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum TransformMode {
-  /// Transform for production.
-  Production,
-  /// Transform for development.
-  Development,
-  /// Transform for testing.
-  Test,
-}
-
-impl napi::bindgen_prelude::FromNapiValue for TransformMode {
-  unsafe fn from_napi_value(
-    env: napi::bindgen_prelude::sys::napi_env,
-    napi_val: napi::bindgen_prelude::sys::napi_value,
-  ) -> napi::bindgen_prelude::Result<Self> {
-    let val = <&str>::from_napi_value(env, napi_val).map_err(|e| {
-      napi::bindgen_prelude::error!(
-        e.status,
-        "Failed to convert napi value into enum `{}`. {}",
-        "TransformMode",
-        e,
-      )
-    })?;
-    match val {
-      "production" => Ok(TransformMode::Production),
-      "development" => Ok(TransformMode::Development),
-      "test" => Ok(TransformMode::Test),
-      _ => Err(napi::bindgen_prelude::error!(
-        napi::bindgen_prelude::Status::InvalidArg,
-        "value `{}` does not match any variant of enum `{}`",
-        val,
-        "TransformMode"
-      )),
-    }
-  }
-}
-
-impl napi::bindgen_prelude::ToNapiValue for TransformMode {
-  unsafe fn to_napi_value(
-    env: napi::bindgen_prelude::sys::napi_env,
-    val: Self,
-  ) -> napi::bindgen_prelude::Result<napi::bindgen_prelude::sys::napi_value> {
-    let val = match val {
-      TransformMode::Production => "production",
-      TransformMode::Development => "development",
-      TransformMode::Test => "test",
-    };
-    <&str>::to_napi_value(env, val)
-  }
-}
+use swc_plugin_shake::napi::{ShakeVisitor, ShakeVisitorConfig};
+use swc_plugin_snapshot::napi::{JSXTransformer, JSXTransformerConfig};
+use swc_plugin_worklet::napi::{WorkletVisitor, WorkletVisitorConfig};
+use swc_plugins_shared::{
+  engine_version::is_engine_version_ge,
+  transform_mode_napi::TransformMode,
+  utils::{calc_hash, WEBPACK_VARS},
+};
 
 #[derive(Debug, Clone, Copy)]
 pub struct SyntaxConfig(Syntax);
@@ -256,6 +198,7 @@ pub struct TransformNodiffOptions {
   pub is_module: Option<IsModuleConfig>,
   pub css_scope: Either<bool, CSSScopeVisitorConfig>,
   pub snapshot: Option<Either<bool, JSXTransformerConfig>>,
+  pub engine_version: Option<String>,
   pub shake: Either<bool, ShakeVisitorConfig>,
   pub compat: Either<bool, CompatVisitorConfig>,
   pub refresh: Either<bool, RefreshVisitorConfig>,
@@ -269,6 +212,7 @@ pub struct TransformNodiffOptions {
   pub inject: Option<Either<bool, InjectVisitorConfig>>,
   /// @internal
   pub verbatim_module_syntax: Option<bool>,
+  pub input_source_map: Option<String>,
 }
 
 impl Default for TransformNodiffOptions {
@@ -285,6 +229,7 @@ impl Default for TransformNodiffOptions {
       is_module: Default::default(),
       css_scope: Either::B(Default::default()),
       snapshot: Default::default(),
+      engine_version: None,
       shake: Either::A(false),
       compat: Either::A(false),
       refresh: Either::A(false),
@@ -294,6 +239,7 @@ impl Default for TransformNodiffOptions {
       dynamic_import: Some(Either::B(Default::default())),
       inject: Some(Either::A(false)),
       verbatim_module_syntax: Some(false),
+      input_source_map: None,
     }
   }
 }
@@ -376,6 +322,7 @@ fn transform_react_lynx_inner(
 
     let unresolved_mark = Mark::new();
     let top_level_mark = Mark::new();
+    let top_retain = WEBPACK_VARS.iter().map(|&s| s.into()).collect::<Vec<_>>();
 
     let simplify_pass_1 = Optional::new(
       simplifier(
@@ -383,6 +330,7 @@ fn transform_react_lynx_inner(
         simplify::Config {
           dce: simplify::dce::Config {
             preserve_imports_with_side_effects: false,
+            top_retain: top_retain.clone(),
             ..Default::default()
           },
           ..Default::default()
@@ -494,6 +442,12 @@ fn transform_react_lynx_inner(
       enabled,
     );
 
+    let is_ge_3_1: bool = is_engine_version_ge(&options.engine_version, "3.1");
+    let text_plugin = Optional::new(
+      visit_mut_pass(swc_plugin_text::TextVisitor {}),
+      enabled && is_ge_3_1,
+    );
+
     let shake_plugin = match options.shake.clone() {
       Either::A(config) => Optional::new(visit_mut_pass(ShakeVisitor::default()), config),
       Either::B(config) => Optional::new(visit_mut_pass(ShakeVisitor::new(config)), true),
@@ -504,6 +458,7 @@ fn transform_react_lynx_inner(
       simplify::Config {
         dce: simplify::dce::Config {
           preserve_imports_with_side_effects: false,
+          top_retain: top_retain.clone(),
           ..Default::default()
         },
         ..Default::default()
@@ -617,7 +572,7 @@ fn transform_react_lynx_inner(
       compat_plugin,
       worklet_plugin,
       css_scope_plugin,
-      (list_plugin, snapshot_plugin),
+      (text_plugin, list_plugin, snapshot_plugin),
       directive_dce_plugin,
       define_dce_plugin,
       simplify_pass_1, // do simplify after DCE above to make shake below works better
@@ -656,7 +611,13 @@ fn transform_react_lynx_inner(
           Either::B(s) => SourceMapsConfig::Str(s),
         },
         source_map_names: &Default::default(),
-        orig: None,
+        orig: match &options.input_source_map {
+          Some(s) => {
+            let bytes = s.as_bytes();
+            swc_sourcemap::SourceMap::from_reader(bytes).ok()
+          }
+          None => None,
+        },
         comments: Some(&comments),
         emit_source_map_columns: options.source_map_columns.unwrap_or(true),
         preamble: "",

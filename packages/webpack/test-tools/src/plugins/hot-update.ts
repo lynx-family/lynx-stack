@@ -23,7 +23,9 @@ export class TestHotUpdatePlugin {
       compilation.hooks.runtimeModule.tap(
         'HMR_TEST_PLUGIN',
         (module) => {
-          if (module.constructorName === 'DefinePropertyGettersRuntimeModule') {
+          if (
+            module.constructor.name === 'DefinePropertyGettersRuntimeModule'
+          ) {
             module.source!.source = Buffer.from(
               `__webpack_require__.d = function (exports, definition) {
 												for (var key in definition) {

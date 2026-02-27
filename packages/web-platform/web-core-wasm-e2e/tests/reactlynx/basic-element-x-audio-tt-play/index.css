@@ -1,0 +1,26 @@
+.page {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 48px 0 0;
+}
+
+.title {
+  text-align: center;
+  width: 100%;
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  width: 200px;
+}
+
+text {
+  width: 500px;
+  height: 60px;
+  background-color: red;
+  color: #fff;
+  margin-top: 30px;
+}

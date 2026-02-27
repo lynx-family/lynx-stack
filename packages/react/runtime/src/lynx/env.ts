@@ -51,7 +51,7 @@ export function setupLynxEnv(): void {
     ) {
       let hasDefaultDataProcessorExecuted = false;
       globalThis.processData = (data, processorName) => {
-        if (__PROFILE__) {
+        if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
           profileStart('processData');
         }
 
@@ -70,7 +70,7 @@ export function setupLynxEnv(): void {
           r = {};
         }
 
-        if (__PROFILE__) {
+        if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
           profileEnd();
         }
 

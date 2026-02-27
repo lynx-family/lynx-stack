@@ -1,5 +1,59 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.10.3
+
+### Patch Changes
+
+- Fix "Failed to load CSS update file" for lazy bundle ([#2150](https://github.com/lynx-family/lynx-stack/pull/2150))
+
+- Fix "TypeError: cannot read property 'call' of undefined" error of lazy bundle HMR. ([#2146](https://github.com/lynx-family/lynx-stack/pull/2146))
+
+## 0.10.2
+
+### Patch Changes
+
+- Polyfill `lynx.requireModuleAsync` to allow cache same parallel requests. ([#2108](https://github.com/lynx-family/lynx-stack/pull/2108))
+
+## 0.10.1
+
+### Patch Changes
+
+- fix: pass updated css from encodeData to resolvedEncodeOptions ([#2053](https://github.com/lynx-family/lynx-stack/pull/2053))
+
+  Previously, the initial CSS was used in resolvedEncodeOptions instead of the potentially updated CSS from encodeData after the beforeEncode hook. This fix ensures resolvedEncodeOptions receives the latest CSS data.
+
+## 0.10.0
+
+### Minor Changes
+
+- Merge all css chunk and generate a `.css.hot-update.json` file for each bundle. ([#1965](https://github.com/lynx-family/lynx-stack/pull/1965))
+
+## 0.9.2
+
+### Patch Changes
+
+- Set main thread JS basename to `lepusCode.filename` in tasm encode data. It will ensure a filename is reported on MTS error without devtools enabled. ([#1949](https://github.com/lynx-family/lynx-stack/pull/1949))
+
+- Upgrade `@lynx-js/tasm` to `0.0.20`. ([#1943](https://github.com/lynx-family/lynx-stack/pull/1943))
+
+- refactor: move web style info generation to the encode phase ([#1975](https://github.com/lynx-family/lynx-stack/pull/1975))
+
+## 0.9.1
+
+### Patch Changes
+
+- Remove `compiler.hooks.initialize` as [it's not called in child compilers](https://github.com/web-infra-dev/rspack/blob/aa4ad886b900770787ecddd625d3e24a51b6b99c/packages/rspack/src/rspack.ts#L78). ([#1898](https://github.com/lynx-family/lynx-stack/pull/1898))
+
+## 0.9.0
+
+### Minor Changes
+
+- **BREAKING CHANGE:** Remove the `enableParallelElement` and `pipelineSchedulerConfig` options. ([#1705](https://github.com/lynx-family/lynx-stack/pull/1705))
+
+  Since the thread element resolution is still in experimental stage and may have stability risks, it will be disabled by default after this change.
+
+- **BREAKING CHANGE**: Remove the `enableICU` option. ([#1800](https://github.com/lynx-family/lynx-stack/pull/1800))
+
 ## 0.8.6
 
 ### Patch Changes

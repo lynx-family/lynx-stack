@@ -17,7 +17,9 @@ export function toRsbuildConfig(
 ): UndefinedOnPartialDeep<RsbuildConfig> {
   return {
     dev: {
+      hmr: config.dev?.hmr ?? true,
       lazyCompilation: false,
+      liveReload: config.dev?.liveReload ?? true,
       watchFiles: config.dev?.watchFiles,
       // We expect to use different default writeToDisk with Rsbuild
       writeToDisk: config.dev?.writeToDisk ?? true,
@@ -87,6 +89,10 @@ export function toRsbuildConfig(
     },
     server: {
       base: config.server?.base,
+
+      compress: config.server?.compress,
+
+      cors: config.server?.cors,
 
       headers: config.server?.headers,
 

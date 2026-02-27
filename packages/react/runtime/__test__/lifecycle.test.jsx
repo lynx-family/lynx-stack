@@ -120,7 +120,7 @@ describe('componentDidMount', () => {
     expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
     expect(mtCallback[1]).toMatchInlineSnapshot(`
       {
-        "data": "{"patchList":[{"id":6,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_3",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}]}",
+        "data": "{"patchList":[{"id":6,"snapshotPatch":[0,"__snapshot_a94a8_test_3",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}]}",
         "patchOptions": {
           "reloadVersion": 0,
         },
@@ -167,7 +167,7 @@ describe('componentDidMount', () => {
     expect(mtCallback[0]).toEqual(LifecycleConstant.patchUpdate);
     expect(mtCallback[1]).toMatchInlineSnapshot(`
       {
-        "data": "{"patchList":[{"id":9,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_4",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}]}",
+        "data": "{"patchList":[{"id":9,"snapshotPatch":[0,"__snapshot_a94a8_test_4",2,0,null,3,3,3,0,1,1,2,3,null,1,1,2,null]}]}",
         "patchOptions": {
           "reloadVersion": 0,
         },
@@ -559,7 +559,7 @@ describe('useState', () => {
       await waitSchedule();
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"id":27,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_15",2,4,2,[false,{"str":"str"}],1,-1,2,null]}]}"`,
+        `"{"patchList":[{"id":27,"snapshotPatch":[0,"__snapshot_a94a8_test_15",2,4,2,[false,{"str":"str"}],1,-1,2,null]}]}"`,
       );
     }
   });

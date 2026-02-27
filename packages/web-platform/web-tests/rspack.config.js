@@ -10,19 +10,20 @@ import {
   getNativeModulesPathRule,
   getNapiModulesPathRule,
 } from '@lynx-js/web-platform-rsbuild-plugin';
+import { createWebVirtualFilesMiddleware } from '@lynx-js/web-rsbuild-server-middleware';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const isCI = !!process.env.CI;
 const port = process.env.PORT ?? 3080;
+
+const main = createWebVirtualFilesMiddleware('/middleware');
 /** @type {import('@rspack/cli').Configuration} */
 const config = {
   cache: false,
   entry: {
     main: './shell-project/index.ts',
-    'web-elements': './shell-project/web-elements.ts',
     'main-thread-test': './shell-project/mainthread-test.ts',
-    'rpc-test': './shell-project/rpc-test/index.ts',
     'web-core': './shell-project/web-core.ts',
     'fp-only': './shell-project/fp-only.ts',
   },
@@ -88,22 +89,6 @@ const config = {
       chunks: ['main-thread-test'],
       scriptLoading: 'module',
       filename: 'main-thread-test.html',
-    }),
-
-    new rspack.HtmlRspackPlugin({
-      title: 'rpc-test',
-      meta: {
-        viewport:
-          'width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no',
-        'apple-mobile-web-app-capable': 'yes',
-        'apple-mobile-web-app-status-bar-style': 'default',
-        'screen-orientation': 'portrait',
-        'format-detection': 'telephone=no',
-        'x5-orientation': 'portrait',
-      },
-      chunks: ['rpc-test'],
-      scriptLoading: 'module',
-      filename: 'rpc-test.html',
     }),
     new rspack.HtmlRspackPlugin({
       title: 'lynx-for-web-core-test',
@@ -202,6 +187,7 @@ const config = {
           }
         },
       });
+      middlewares.push(main);
       return middlewares;
     },
     watchFiles: isCI
@@ -221,7 +207,7 @@ const config = {
       {
         directory: path.join(__dirname, 'node_modules'),
         publicPath: '/node_modules',
-        watch: !isCI,
+        watch: false,
       },
       {
         directory: path.join(__dirname, 'dist'),
@@ -280,6 +266,8 @@ const config = {
   experiments: {
     futureDefaults: true,
   },
+  // TODO: enable lazy compilation
+  lazyCompilation: false,
 };
 
 export default config;

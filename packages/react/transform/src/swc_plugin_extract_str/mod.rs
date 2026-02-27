@@ -147,13 +147,15 @@ impl VisitMut for ExtractStrVisitor {
     } else {
       match expr {
         Expr::Lit(Lit::Str(str)) => {
-          if str.value.to_string().len() < self.opts.str_length as usize {
+          let str_value = str.value.to_string_lossy();
+          if str_value.len() < self.opts.str_length as usize {
             return;
           }
+          let str_value_ref = str_value.as_ref();
           let index: f64 = match &self.extracted_str_arr {
             Some(arr) => {
               // js
-              let position = arr.iter().position(|x| x == str.value.as_ref());
+              let position = arr.iter().position(|x| x == str_value_ref);
               match position {
                 Some(i) => i as f64,
                 None => {
@@ -164,15 +166,12 @@ impl VisitMut for ExtractStrVisitor {
             }
             None => {
               // lepus
-              let position = self
-                .select_str_vec
-                .iter()
-                .position(|x| x == str.value.as_ref());
+              let position = self.select_str_vec.iter().position(|x| x == str_value_ref);
               match position {
                 Some(i) => i as f64,
                 None => {
                   let i = self.select_str_vec.len();
-                  self.select_str_vec.push(str.value.to_string());
+                  self.select_str_vec.push(str_value_ref.to_string());
                   i as f64
                 }
               }

@@ -1,5 +1,51 @@
 # @lynx-js/web-explorer
 
+## 0.0.16
+
+### Patch Changes
+
+- fix: add web bundle check && toast error ([#2101](https://github.com/lynx-family/lynx-stack/pull/2101))
+
+- fix: list-item `contain` property changes from `size` to `layout paint`, because the size of the `list-item` can be expanded by its children. ([#2043](https://github.com/lynx-family/lynx-stack/pull/2043))
+
+- fix: pixelWidth and pixelHeight use client instead of screen ([#2055](https://github.com/lynx-family/lynx-stack/pull/2055))
+
+## 0.0.15
+
+### Patch Changes
+
+- fix: web-explorer needs to actively send an iframeReady message to the parent, the parent uses `iframe load` listener cannot guarantee that the `message-listener` will complete execution. ([#2001](https://github.com/lynx-family/lynx-stack/pull/2001))
+
+## 0.0.14
+
+### Patch Changes
+
+- chore: update web-elements version of web-explorer ([#1962](https://github.com/lynx-family/lynx-stack/pull/1962))
+
+## 0.0.13
+
+### Patch Changes
+
+- feat: builtinTagTransformMap add `'x-input-ng': 'x-input'` ([#1932](https://github.com/lynx-family/lynx-stack/pull/1932))
+
+## 0.0.12
+
+### Patch Changes
+
+- feat: update @lynx-js/web-elements to 0.8.10 ([#1914](https://github.com/lynx-family/lynx-stack/pull/1914))
+
+## 0.0.11
+
+### Patch Changes
+
+- feat: builtinTagTransformMap add `'input': 'x-input'` ([#1907](https://github.com/lynx-family/lynx-stack/pull/1907))
+
+## 0.0.10
+
+### Patch Changes
+
+- chore: update `@lynx-js/lynx-core` to `0.1.3`, `@lynx-js/web-core` to `0.17.1`. ([#1839](https://github.com/lynx-family/lynx-stack/pull/1839))
+
 ## 0.0.9
 
 ### Patch Changes

@@ -2,7 +2,7 @@
   "name": "@lynx-js/swc-plugin-reactlynx-compat",
   "version": "0.1.0",
   "private": true,
-  "description": "",
+  "description": "A swc wasm plugin for ReactLynx compatibility transformations",
   "keywords": [
     "lynx",
     "react",

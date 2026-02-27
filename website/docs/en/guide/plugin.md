@@ -34,6 +34,7 @@ The following Rsbuild plugins can be used in Rspeedy.
 - [Type Check Plugin](https://github.com/rspack-contrib/rsbuild-plugin-type-check): Run TypeScript type checker on a separate process.
 - [Image Compress Plugin](https://github.com/rspack-contrib/rsbuild-plugin-image-compress): Compress the image assets.
 - [Typed CSS Modules Plugin](https://github.com/rspack-contrib/rsbuild-plugin-typed-css-modules): Generate TypeScript declaration file for CSS Modules.
+- [Tailwind CSS Plugin](https://github.com/rstackjs/rsbuild-plugin-tailwindcss): Integration with Tailwind CSS V3.
 
 ### Rspack/Webpack Plugins
 

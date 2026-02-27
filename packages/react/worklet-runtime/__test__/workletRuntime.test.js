@@ -5,6 +5,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Element } from '../src/api/element';
 import { initApiEnv } from '../src/api/lynxApi';
+import { RunWorkletSource } from '../src/bindings/types';
 import { updateWorkletRefInitValueChanges } from '../src/workletRef';
 import { initWorklet } from '../src/workletRuntime';
 
@@ -287,13 +288,13 @@ describe('Worklet', () => {
   it('should not throw when invalid worklet ctx', () => {
     initWorklet();
     globalThis.runWorklet({});
-    expect(consoleMock).lastCalledWith('Worklet: Invalid worklet object: {}');
+    expect(consoleMock).lastCalledWith('MainThreadFunction: Invalid function object: {}');
     globalThis.runWorklet(undefined);
-    expect(consoleMock).lastCalledWith('Worklet: Invalid worklet object: undefined');
+    expect(consoleMock).lastCalledWith('MainThreadFunction: Invalid function object: undefined');
     globalThis.runWorklet(null);
-    expect(consoleMock).lastCalledWith('Worklet: Invalid worklet object: null');
+    expect(consoleMock).lastCalledWith('MainThreadFunction: Invalid function object: null');
     globalThis.runWorklet(1);
-    expect(consoleMock).lastCalledWith('Worklet: Invalid worklet object: 1');
+    expect(consoleMock).lastCalledWith('MainThreadFunction: Invalid function object: 1');
   });
 
   it('should not throw when depth of argument exceeds limit', () => {
@@ -335,6 +336,58 @@ describe('Worklet', () => {
 
     globalThis.runWorklet(worklet2Ctx, [2]);
     expect(worklet2).toBeCalledWith(2);
+  });
+
+  it('event object should have stopPropagation and stopImmediatePropagation', async () => {
+    initWorklet();
+    const fn = vi.fn(function(event) {
+      globalThis.lynxWorkletImpl._workletMap['1'].bind(this);
+      expect(event.stopPropagation).toBeDefined();
+      expect(event.stopImmediatePropagation).toBeDefined();
+    });
+    globalThis.registerWorklet('main-thread', '1', fn);
+    globalThis.runWorklet({ _wkltId: '1' }, [{
+      target: {},
+      currentTarget: {},
+    }], {
+      source: RunWorkletSource.EVENT,
+    });
+  });
+
+  it('event object should have returnValue wrapped', async () => {
+    initWorklet();
+    const fn = vi.fn(function() {
+      globalThis.lynxWorkletImpl._workletMap['1'].bind(this);
+
+      return 1;
+    });
+
+    globalThis.registerWorklet('main-thread', '1', fn);
+    const ret = globalThis.runWorklet({ _wkltId: '1' }, [{
+      target: {},
+      currentTarget: {},
+    }], {
+      source: RunWorkletSource.EVENT,
+    });
+
+    expect(ret).toMatchObject({
+      returnValue: 1,
+      eventReturnResult: undefined,
+    });
+  });
+
+  it('non event object should not have returnValue wrapped', async () => {
+    initWorklet();
+    const fn = vi.fn(function() {
+      globalThis.lynxWorkletImpl._workletMap['1'].bind(this);
+
+      return 1;
+    });
+
+    globalThis.registerWorklet('main-thread', '1', fn);
+    const ret = globalThis.runWorklet({ _wkltId: '1' }, [1, 2]);
+
+    expect(ret).toBe(1);
   });
 });
 

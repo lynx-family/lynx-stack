@@ -33,6 +33,7 @@ export default tseslint.config(
       '**/test/js',
       '**/dist/**',
       '**/lib/**',
+      'website/doc_build/**',
       '.changeset/*',
       '**/CHANGELOG.md',
       '**/etc/*.md',
@@ -68,6 +69,7 @@ export default tseslint.config(
       // Generated
       'packages/react/transform/index.d.ts',
       'packages/react/transform/index.cjs',
+      'packages/react/transform/**/index.d.ts',
 
       // TODO: enable eslint for react
       // react
@@ -96,6 +98,14 @@ export default tseslint.config(
       // testing-library
       'packages/testing-library/**',
       'packages/react/testing-library/**',
+
+      // gesture-runtime-testing
+      'packages/lynx/gesture-runtime/__test__/**',
+      // motion tests
+      'packages/motion/__tests__/**',
+      // TODO: enable eslint for tailwind-preset
+      // tailwind-preset
+      'packages/tailwind-preset/**',
     ],
   },
   js.configs.recommended,
@@ -257,7 +267,7 @@ export default tseslint.config(
         ecmaVersion: 'latest',
         sourceType: 'module',
         projectService: {
-          allowDefaultProject: ['./*.js'],
+          allowDefaultProject: ['*.js', 'rslib.config.ts', 'vitest.config.ts'],
           defaultProject: './tsconfig.json',
         },
         tsconfigRootDir: import.meta.dirname,
@@ -288,6 +298,7 @@ export default tseslint.config(
           jsx: true,
         },
         jsxPragma: null,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
   },
@@ -305,6 +316,7 @@ export default tseslint.config(
           jsx: true,
         },
         jsxPragma: null,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
   },
@@ -316,6 +328,11 @@ export default tseslint.config(
     },
     rules: {
       ...vitest.configs.recommended.rules,
+      // These rules are newly introduced in vitest's recommended set and have
+      // significant existing violations across the repo. Keep them disabled for
+      // now to avoid churn when updating linting deps.
+      'vitest/no-conditional-expect': 'off',
+      'vitest/no-interpolation-in-snapshots': 'off',
     },
     settings: {
       vitest: {

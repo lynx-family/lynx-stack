@@ -28,8 +28,6 @@ describe('CLI - help', () => {
 
       Options:
         -V, --version      output the version number
-        --unmanaged        Force to use the unmanaged version of Rspeedy, instead of
-                           the locally installed.
         -h, --help         display help for command
 
       Commands:

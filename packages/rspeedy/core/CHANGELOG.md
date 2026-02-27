@@ -1,5 +1,176 @@
 # @lynx-js/rspeedy
 
+## 0.13.4
+
+### Patch Changes
+
+- Bump ts-blank-space v0.7.0 ([#2238](https://github.com/lynx-family/lynx-stack/pull/2238))
+
+- Bump Rsbuild v1.7.3 with Rspack v1.7.5. ([#2189](https://github.com/lynx-family/lynx-stack/pull/2189))
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.8
+
+## 0.13.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.7
+
+## 0.13.2
+
+### Patch Changes
+
+- Bump Rsbuild 1.7.2 with Rspack 1.7.1. ([#2136](https://github.com/lynx-family/lynx-stack/pull/2136))
+
+## 0.13.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.6
+
+## 0.13.0
+
+### Minor Changes
+
+- Bump Rsbuild v1.7.1 with Rspack v1.7.0. ([#2088](https://github.com/lynx-family/lynx-stack/pull/2088))
+
+- **BREAKING CHANGE**: Remove the CLI version selector and the `--unmanaged` flag. ([#2093](https://github.com/lynx-family/lynx-stack/pull/2093))
+
+  Rspeedy will no longer automatically attempt to use the locally installed version when the CLI is invoked.
+
+  Please uninstall your globally installed version of Rspeedy:
+
+  ```bash
+  npm uninstall -g @lynx-js/rspeedy
+  ```
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.5
+
+## 0.12.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.4
+
+## 0.12.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.3
+
+## 0.12.3
+
+### Patch Changes
+
+- Support environment variants to enable multiple configurations for the same targets. ([#1969](https://github.com/lynx-family/lynx-stack/pull/1969))
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.2
+
+## 0.12.2
+
+### Patch Changes
+
+- Bump Rsbuild v1.6.13 with Rspack v1.6.6. ([#1995](https://github.com/lynx-family/lynx-stack/pull/1995))
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.1
+
+## 0.12.1
+
+### Patch Changes
+
+- Bump Rsbuild v1.6.9 with Rspack v1.6.5. ([#1967](https://github.com/lynx-family/lynx-stack/pull/1967))
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.19.0
+
+## 0.12.0
+
+### Minor Changes
+
+- Bump Rsbuild v1.6.7 with Rspack v1.6.4. ([#1905](https://github.com/lynx-family/lynx-stack/pull/1905))
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.18.4
+
+## 0.11.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.18.3
+
+## 0.11.8
+
+### Patch Changes
+
+- feat: support web preview in rspeedy dev ([#1891](https://github.com/lynx-family/lynx-stack/pull/1891))
+
+  - print URLs with labels
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.18.2
+
+## 0.11.7
+
+### Patch Changes
+
+- Bump Rsbuild v1.5.17. ([#1889](https://github.com/lynx-family/lynx-stack/pull/1889))
+
+- feat: support web preview in rspeedy dev ([#1893](https://github.com/lynx-family/lynx-stack/pull/1893))
+
+  - support web preview in rspeedy dev (experimental)
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.18.1
+
+## 0.11.6
+
+### Patch Changes
+
+- Should apply `dev.hmr` and `dev.liveReload` to Rsbuild config. ([#1882](https://github.com/lynx-family/lynx-stack/pull/1882))
+
+- Support CLI flag `--root` to specify the root of the project. ([#1836](https://github.com/lynx-family/lynx-stack/pull/1836))
+
+## 0.11.5
+
+### Patch Changes
+
+- Bump Rsbuild v1.5.13 with Rspack v1.5.8. ([#1849](https://github.com/lynx-family/lynx-stack/pull/1849))
+
+## 0.11.4
+
+### Patch Changes
+
+- Bump Rsbuild v1.5.12 with Rspack v1.5.7. ([#1708](https://github.com/lynx-family/lynx-stack/pull/1708))
+
+- Fix the "lynx.getJSModule is not a function" error on Web platform ([#1830](https://github.com/lynx-family/lynx-stack/pull/1830))
+
+- Support `server.compress` ([#1799](https://github.com/lynx-family/lynx-stack/pull/1799))
+
+- Support `server.cors` ([#1808](https://github.com/lynx-family/lynx-stack/pull/1808))
+
+## 0.11.3
+
+### Patch Changes
+
+- Use `output.chunkLoading: 'lynx'` for `environments.web`. ([#1737](https://github.com/lynx-family/lynx-stack/pull/1737))
+
+- Support `resolve.extensions` ([#1759](https://github.com/lynx-family/lynx-stack/pull/1759))
+
+- Set the default value of `output.cssModules.localIdentName` to `[local]-[hash:base64:6]`. ([#1783](https://github.com/lynx-family/lynx-stack/pull/1783))
+
 ## 0.11.2
 
 ### Patch Changes

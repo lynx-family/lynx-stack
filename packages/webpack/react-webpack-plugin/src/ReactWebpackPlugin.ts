@@ -184,6 +184,10 @@ class ReactWebpackPlugin {
       ),
       // User can enable ALog by environment variable `REACT_ALOG=true`
       __ALOG__: JSON.stringify(Boolean(process.env['REACT_ALOG'])),
+      // User can enable ALog of element API calls by environment variable `REACT_ALOG_ELEMENT_API=true`
+      __ALOG_ELEMENT_API__: JSON.stringify(
+        Boolean(process.env['REACT_ALOG_ELEMENT_API']),
+      ),
       __EXTRACT_STR__: JSON.stringify(Boolean(options.extractStr)),
       __FIRST_SCREEN_SYNC_TIMING__: JSON.stringify(
         options.firstScreenSyncTiming,

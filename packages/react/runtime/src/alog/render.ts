@@ -16,11 +16,11 @@ export function initRenderAlog(): void {
       const threadName = __MAIN_THREAD__ ? 'MainThread' : 'BackgroundThread';
       const displayName = getDisplayName(vnode.type as ComponentClass);
       // log the component render into Alog
-      if (__MAIN_THREAD__) {
+      if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
         console.alog?.(
           `[${threadName} Component Render] name: ${displayName}`,
         );
-      } else if (__BACKGROUND__) {
+      } else if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
         const dom = vnode[DOM];
         console.alog?.(
           `[${threadName} Component Render] name: ${displayName}, uniqID: ${dom?.type}, __id: ${dom?.__id}`,

@@ -14,6 +14,40 @@ describe('Config - Server', () => {
     assertType<Server>({ base: '/foo' })
   })
 
+  test('server.compress', () => {
+    assertType<Server>({})
+    assertType<Server>({ compress: undefined })
+    assertType<Server>({ compress: false })
+    assertType<Server>({ compress: true })
+    assertType<Server>({ compress: { level: 1 } })
+    assertType<Server>({
+      compress: {
+        filter: (req, res) => {
+          assertType<IncomingMessage>(req)
+          assertType<ServerResponse>(res)
+          return true
+        },
+      },
+    })
+  })
+
+  test('server.cors', () => {
+    assertType<Server>({})
+    assertType<Server>({ cors: undefined })
+    assertType<Server>({ cors: false })
+    assertType<Server>({ cors: true })
+    assertType<Server>({ cors: { origin: 'https://example.com' } })
+    assertType<Server>({
+      cors: {
+        origin: (origin, callback) => {
+          assertType<string | undefined>(origin)
+          callback(null, '*')
+        },
+        credentials: true,
+      },
+    })
+  })
+
   test('server.headers', () => {
     assertType<Server>({})
     assertType<Server>({

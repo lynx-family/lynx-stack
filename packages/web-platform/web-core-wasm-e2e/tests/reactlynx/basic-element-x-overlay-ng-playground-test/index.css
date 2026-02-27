@@ -1,0 +1,120 @@
+/*
+// Copyright 2024 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+*/
+.title {
+  text-align: center;
+  font-size: 26px;
+  margin-bottom: 10px;
+}
+
+.input {
+  margin-top: 300px;
+  width: 100%;
+  height: 30px;
+  border: 1px solid red;
+}
+.block {
+  width: 400px;
+  height: 150px;
+  background: #fff;
+}
+
+.test-card {
+  display: linear;
+  linear-direction: column;
+  padding-left: 10px;
+  padding-right: 10px;
+  background-color: #fff;
+  padding-bottom: 20px;
+  padding-top: 20px;
+  height: 700px;
+}
+
+.box {
+  display: linear;
+  linear-direction: column;
+  border-width: 1px;
+  border-color: #000;
+  margin-top: 5px;
+  padding: 10px;
+  overflow: visible;
+}
+
+.h1 {
+  font-size: 18px;
+  margin-top: 10px;
+}
+
+.word {
+  color: black;
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+
+.text-inner {
+  background-color: black;
+  height: 16px;
+  width: 50px;
+}
+
+.text-inner-text {
+  color: #fff;
+}
+
+.button {
+  padding: 16px;
+  width: 100%;
+  background-color: #119988;
+}
+
+.button-text {
+  color: #fff;
+}
+
+.dialog-overlay {
+  overflow: visible;
+}
+
+.dialog-container {
+  width: 100px;
+  height: 100px;
+  background-color: grey;
+  /* justify-content: center; */
+  align-items: center;
+  overflow: visible;
+  linear-gravity: center;
+  /* linear-cross-gravity: center; */
+}
+
+.dialog {
+  background-color: red;
+  width: 200px;
+  height: 400px;
+  /* align-items: center; */
+  /* justify-content: center; */
+  linear-gravity: center;
+  linear-cross-gravity: center;
+}
+
+.dialog-text {
+  color: #000;
+}
+
+.desc {
+  margin-bottom: 20px;
+}
+
+.close-view {
+  width: 150px;
+  height: 150px;
+  background-color: blue;
+  overflow: visible;
+}
+
+.close-view3 {
+  width: 75px;
+  height: 75px;
+  background-color: green;
+}

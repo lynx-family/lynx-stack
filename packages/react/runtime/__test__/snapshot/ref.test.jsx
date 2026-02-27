@@ -6,6 +6,8 @@
 import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { RefProxy, runDelayedUiOps, shouldDelayUiOps } from '../../src/lifecycle/ref/delay';
+
 import { Component, createRef, useState } from '../../src/index';
 import { clearCommitTaskId, replaceCommitHook } from '../../src/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
@@ -115,7 +117,7 @@ describe('element ref', () => {
             "rLynxFirstScreen",
             {
               "jsReadyEventIdSwap": {},
-              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_3","values":["react-ref--2-0","react-ref--2-1"]}]}",
+              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_3","values":["react-ref--2-0","react-ref--2-1"]}]}",
             },
           ],
         ]
@@ -200,7 +202,7 @@ describe('element ref', () => {
       render(<Comp show={true} />, __root);
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"id":3,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_4",2,4,2,[1,1],1,-1,2,null]}]}"`,
+        `"{"patchList":[{"id":3,"snapshotPatch":[0,"__snapshot_a94a8_test_4",2,4,2,[1,1],1,-1,2,null]}]}"`,
       );
     }
 
@@ -494,7 +496,7 @@ describe('element ref', () => {
             "rLynxFirstScreen",
             {
               "jsReadyEventIdSwap": {},
-              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_9","values":["react-ref--2-0","react-ref--2-1","react-ref--2-2"]}]}",
+              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_9","values":["react-ref--2-0","react-ref--2-1","react-ref--2-2"]}]}",
             },
           ],
         ]
@@ -901,7 +903,7 @@ describe('element ref', () => {
             "rLynxFirstScreen",
             {
               "jsReadyEventIdSwap": {},
-              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_17"}]}",
+              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_17"}]}",
             },
           ],
         ]
@@ -936,7 +938,7 @@ describe('element ref', () => {
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_18",3,4,3,[1],1,-2,3,null],"id":2}]}"`,
+        `"{"patchList":[{"snapshotPatch":[0,"__snapshot_a94a8_test_18",3,4,3,[1],1,-2,3,null],"id":2}]}"`,
       );
 
       // rLynxChange
@@ -1013,7 +1015,7 @@ describe('element ref in spread', () => {
               "rLynxFirstScreen",
               {
                 "jsReadyEventIdSwap": {},
-                "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a94a8_test_19","values":[{},{"ref":"react-ref--2-1"},{}]}]}",
+                "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_19","values":[{},{"ref":"react-ref--2-1"},{}]}]}",
               },
             ],
           ],
@@ -1438,17 +1440,17 @@ describe('element ref in list', () => {
                     {
                       "item-key": 0,
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_25",
+                      "type": "__snapshot_a94a8_test_25",
                     },
                     {
                       "item-key": 1,
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_25",
+                      "type": "__snapshot_a94a8_test_25",
                     },
                     {
                       "item-key": 2,
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_25",
+                      "type": "__snapshot_a94a8_test_25",
                     },
                   ],
                   "removeAction": [],
@@ -1520,17 +1522,17 @@ describe('element ref in list', () => {
                     {
                       "item-key": 0,
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_25",
+                      "type": "__snapshot_a94a8_test_25",
                     },
                     {
                       "item-key": 1,
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_25",
+                      "type": "__snapshot_a94a8_test_25",
                     },
                     {
                       "item-key": 2,
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_25",
+                      "type": "__snapshot_a94a8_test_25",
                     },
                   ],
                   "removeAction": [],
@@ -1575,17 +1577,17 @@ describe('element ref in list', () => {
                     {
                       "item-key": 0,
                       "position": 0,
-                      "type": "__Card__:__snapshot_a94a8_test_25",
+                      "type": "__snapshot_a94a8_test_25",
                     },
                     {
                       "item-key": 1,
                       "position": 1,
-                      "type": "__Card__:__snapshot_a94a8_test_25",
+                      "type": "__snapshot_a94a8_test_25",
                     },
                     {
                       "item-key": 2,
                       "position": 2,
-                      "type": "__Card__:__snapshot_a94a8_test_25",
+                      "type": "__snapshot_a94a8_test_25",
                     },
                   ],
                   "removeAction": [],
@@ -1789,6 +1791,73 @@ describe('ui operations', () => {
     }
   });
 
+  it('should forward animation operations via ref proxy', () => {
+    const selectorQueryConstructor = lynx.createSelectorQuery().constructor;
+    selectorQueryConstructor.execLog.mockClear();
+    shouldDelayUiOps.value = true;
+
+    const animations = [{ duration: 350, name: 'fade' }];
+    const animationIds = ['anim-1', 'anim-2'];
+
+    const ref = new RefProxy([-2, 0]);
+
+    ref.animate(animations).exec();
+    ref.playAnimation(animationIds).exec();
+    ref.pauseAnimation('anim-2').exec();
+    ref.cancelAnimation(animationIds).exec();
+
+    expect(selectorQueryConstructor.execLog.mock.calls).toMatchInlineSnapshot(`[]`);
+
+    runDelayedUiOps();
+
+    expect(selectorQueryConstructor.execLog.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          "[react-ref--2-0]",
+          "animate",
+          [
+            [
+              {
+                "duration": 350,
+                "name": "fade",
+              },
+            ],
+          ],
+        ],
+        [
+          "[react-ref--2-0]",
+          "playAnimation",
+          [
+            [
+              "anim-1",
+              "anim-2",
+            ],
+          ],
+        ],
+        [
+          "[react-ref--2-0]",
+          "pauseAnimation",
+          [
+            "anim-2",
+          ],
+        ],
+        [
+          "[react-ref--2-0]",
+          "cancelAnimation",
+          [
+            [
+              "anim-1",
+              "anim-2",
+            ],
+          ],
+        ],
+      ]
+    `);
+
+    selectorQueryConstructor.execLog.mockClear();
+    shouldDelayUiOps.value = true;
+  });
+
   it('should not delay after hydration', async function() {
     const ref1 = createRef();
 
@@ -1891,7 +1960,7 @@ describe('ui operations', () => {
       render(<Comp />, __root);
 
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"id":3,"snapshotPatch":[0,"__Card__:__snapshot_a94a8_test_30",3,4,3,[1],1,-2,3,null]}]}"`,
+        `"{"patchList":[{"id":3,"snapshotPatch":[0,"__snapshot_a94a8_test_30",3,4,3,[1],1,-2,3,null]}]}"`,
       );
       expect(lynx.createSelectorQuery().constructor.execLog.mock.calls).toMatchInlineSnapshot(`
         [
@@ -1907,5 +1976,17 @@ describe('ui operations', () => {
         ]
       `);
     }
+  });
+});
+
+describe('runDelayedUiOps helper', () => {
+  it('should reset shouldDelayUiOps when no tasks queued', () => {
+    // flush any queued tasks from previous tests
+    shouldDelayUiOps.value = false;
+    runDelayedUiOps();
+
+    shouldDelayUiOps.value = true;
+    runDelayedUiOps();
+    expect(shouldDelayUiOps.value).toBe(false);
   });
 });

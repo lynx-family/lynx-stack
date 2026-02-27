@@ -1,0 +1,12 @@
+[package]
+name = "web-mainthread-apis"
+version = "0.0.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+js-sys = { workspace = true }
+lazy_static = { workspace = true }
+wasm-bindgen = { workspace = true }

@@ -65,9 +65,9 @@ it('should generate css.hot-update.json', () =>
         expect(styles).toHaveProperty('foo')
         expect(styles.foo).toStrictEqual(expect.any(String))
 
-        const jsonPath = path.join(__dirname, `lib-common.${prevHash}.css.hot-update.json`)
+        const jsonPath = path.join(__dirname, `index.${prevHash}.css.hot-update.json`)
         expect(fs.existsSync(jsonPath)).toBeTruthy()
-        const { content } = __non_webpack_require__(`./lib-common.${prevHash}.css.hot-update.json`)
+        const { content } = __non_webpack_require__(`./index.${prevHash}.css.hot-update.json`)
 
         expect(content).toBeBase64EncodedMatching(styles.foo)
         expect(content).toBeBase64EncodedMatching(
@@ -83,9 +83,9 @@ it('should generate css.hot-update.json', () =>
             expect(styles).toHaveProperty('bar')
             expect(styles['bar']).toStrictEqual(expect.any(String))
 
-            const jsonPath = path.join(__dirname, `lib-common.${prevHash}.css.hot-update.json`)
+            const jsonPath = path.join(__dirname, `index.${prevHash}.css.hot-update.json`)
             expect(fs.existsSync(jsonPath)).toBeTruthy()
-            const { content } = __non_webpack_require__(`./lib-common.${prevHash}.css.hot-update.json`)
+            const { content } = __non_webpack_require__(`./index.${prevHash}.css.hot-update.json`)
 
             console.log(content)
 

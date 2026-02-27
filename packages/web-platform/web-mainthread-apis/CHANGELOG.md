@@ -1,5 +1,175 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.19.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.8
+
+## 0.19.7
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.7
+
+## 0.19.6
+
+### Patch Changes
+
+- feat: add main-thread API: \_\_QuerySelector ([#2115](https://github.com/lynx-family/lynx-stack/pull/2115))
+
+- fix: when a list-item is deleted from list, the deleted list-item is still showed incorrectly. ([#1092](https://github.com/lynx-family/lynx-stack/pull/1092))
+
+  This is because the `enqueueComponent` method does not delete the node from the Element Tree. It is only to maintain the display node on RL, and lynx web needs to delete the dom additionally.
+
+- feat: support main thread invoke ui method ([#2104](https://github.com/lynx-family/lynx-stack/pull/2104))
+
+- fix: mts && bts events can be binded both ([#2121](https://github.com/lynx-family/lynx-stack/pull/2121))
+
+- Updated dependencies [[`179f984`](https://github.com/lynx-family/lynx-stack/commit/179f9844adf00ff4b2cd450ffb943649441c87d3), [`f7133c1`](https://github.com/lynx-family/lynx-stack/commit/f7133c137f094063e991dfa0e993ea92177aa173), [`6c2b51a`](https://github.com/lynx-family/lynx-stack/commit/6c2b51a661ae244eb40671f63f29ee971e084ed4), [`5b589ab`](https://github.com/lynx-family/lynx-stack/commit/5b589ab53b01a8e2357d3ccbb159edab004086d3)]:
+  - @lynx-js/web-constants@0.19.6
+
+## 0.19.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.5
+
+## 0.19.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.4
+
+## 0.19.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.3
+
+## 0.19.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.2
+
+## 0.19.1
+
+### Patch Changes
+
+- fix: fix reload lynx-view when `enableCSSSelector` false may cause css style lost ([#1982](https://github.com/lynx-family/lynx-stack/pull/1982))
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.1
+
+## 0.19.0
+
+### Patch Changes
+
+- fix: capture and bind event listener should be trigger correctly ([#1972](https://github.com/lynx-family/lynx-stack/pull/1972))
+
+- fix: the l-p-comp-uid of page should be '1' ([#1970](https://github.com/lynx-family/lynx-stack/pull/1970))
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.0
+
+## 0.18.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.18.4
+
+## 0.18.3
+
+### Patch Changes
+
+- fix: The `e.detail` in the `bindtap` callback needs to correctly include `x` and `y`. ([#1913](https://github.com/lynx-family/lynx-stack/pull/1913))
+
+- Updated dependencies [[`ebc1a60`](https://github.com/lynx-family/lynx-stack/commit/ebc1a606318e9809e8a07457e18536b59be12a18)]:
+  - @lynx-js/web-constants@0.18.3
+  - @lynx-js/web-style-transformer@0.18.3
+
+## 0.18.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.18.2
+  - @lynx-js/web-style-transformer@0.18.2
+
+## 0.18.1
+
+### Patch Changes
+
+- fix: mts freeze after reload() ([#1892](https://github.com/lynx-family/lynx-stack/pull/1892))
+
+  The mts may be freezed after reload() called.
+
+  We fixed it by waiting until the all-on-ui Javascript realm implementation, an iframe, to be fully loaded.
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.18.1
+  - @lynx-js/web-style-transformer@0.18.1
+
+## 0.18.0
+
+### Patch Changes
+
+- fix: ([#1837](https://github.com/lynx-family/lynx-stack/pull/1837))
+
+  1. `LynxView.updateData()` cannot trigger `dataProcessor`.
+
+  2. **This is a break change:** The second parameter of `LynxView.updateData()` has been changed from `UpdateDataType` to `string`, which is the `processorName` (default is `default` which will use `defaultDataProcessor`). This change is to better align with Native. The current complete type is as follows:
+
+  ```ts
+  LynxView.updateData(data: Cloneable, processorName?: string | undefined, callback?: (() => void) | undefined): void
+  ```
+
+- feat: mouse event output structures remain aligned ([#1820](https://github.com/lynx-family/lynx-stack/pull/1820))
+
+- Updated dependencies [[`77397fd`](https://github.com/lynx-family/lynx-stack/commit/77397fd535cf60556f8f82f7ef8dae8a623d1625)]:
+  - @lynx-js/web-constants@0.18.0
+  - @lynx-js/web-style-transformer@0.18.0
+
+## 0.17.2
+
+### Patch Changes
+
+- Updated dependencies [[`a35a245`](https://github.com/lynx-family/lynx-stack/commit/a35a2452e5355bda3c475f9a750a86085e0cf56a)]:
+  - @lynx-js/web-constants@0.17.2
+  - @lynx-js/web-style-transformer@0.17.2
+
+## 0.17.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.17.1
+  - @lynx-js/web-style-transformer@0.17.1
+
+## 0.17.0
+
+### Patch Changes
+
+- fix: \_\_QueryComponentImpl in mts should execute only once for same url ([#1763](https://github.com/lynx-family/lynx-stack/pull/1763))
+
+- fix: avoid duplicate style transformation ([#1748](https://github.com/lynx-family/lynx-stack/pull/1748))
+
+  After this commit, we use DAG methods to handle the styleInfos
+
+- feat: support lazy bundle with CSSOG(`enableCSSSelector: false`). ([#1770](https://github.com/lynx-family/lynx-stack/pull/1770))
+
+- Updated dependencies [[`93d707b`](https://github.com/lynx-family/lynx-stack/commit/93d707b82a59f7256952e21da6dcad2999f8233d)]:
+  - @lynx-js/web-constants@0.17.0
+  - @lynx-js/web-style-transformer@0.17.0
+
 ## 0.16.1
 
 ### Patch Changes

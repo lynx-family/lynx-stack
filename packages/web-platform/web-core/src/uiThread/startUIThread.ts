@@ -28,6 +28,7 @@ export type StartUIThreadCallbacks = {
   napiModulesCall: NapiModulesCall;
   onError?: (err: Error, release: string, fileName: string) => void;
   customTemplateLoader?: TemplateLoader;
+  reload: () => void;
 };
 
 export function startUIThread(
@@ -49,7 +50,6 @@ export function startUIThread(
   const {
     markTiming,
     sendGlobalEvent,
-    updateDataBackground,
     updateI18nResourceBackground,
   } = startBackground(
     backgroundRpc,
@@ -104,7 +104,7 @@ export function startUIThread(
     });
   });
   return {
-    updateData: createUpdateData(updateDataMainThread, updateDataBackground),
+    updateData: createUpdateData(updateDataMainThread),
     dispose: createDispose(
       backgroundRpc,
       terminateWorkers,

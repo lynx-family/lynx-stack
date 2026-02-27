@@ -28,13 +28,26 @@ import { applyRef, clearQueuedRefs, queueRefAttrUpdate } from './snapshot/ref.js
 import type { Ref } from './snapshot/ref.js';
 import { transformSpread } from './snapshot/spread.js';
 import type { SerializedSnapshotInstance, Snapshot } from './snapshot.js';
-import { backgroundSnapshotInstanceManager, snapshotManager, traverseSnapshotInstance } from './snapshot.js';
+import {
+  backgroundSnapshotInstanceManager,
+  snapshotCreatorMap,
+  snapshotManager,
+  traverseSnapshotInstance,
+} from './snapshot.js';
 import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { isDirectOrDeepEqual } from './utils.js';
 import { onPostWorkletCtx } from './worklet/ctx.js';
 
 export class BackgroundSnapshotInstance {
   constructor(public type: string) {
+    // Suspense uses 'div'
+    if (!snapshotManager.values.has(type) && type !== 'div') {
+      if (snapshotCreatorMap[type]) {
+        snapshotCreatorMap[type](type);
+      } else {
+        throw new Error('BackgroundSnapshot not found: ' + type);
+      }
+    }
     this.__snapshot_def = snapshotManager.values.get(type)!;
     const id = this.__id = backgroundSnapshotInstanceManager.nextId += 1;
     backgroundSnapshotInstanceManager.values.set(id, this);
@@ -54,6 +67,17 @@ export class BackgroundSnapshotInstance {
   private __nextSibling: BackgroundSnapshotInstance | null = null;
   private __removed_from_tree?: boolean;
 
+  private get isDetached(): boolean {
+    let node: BackgroundSnapshotInstance | null = this;
+    while (node) {
+      if (node.__removed_from_tree) {
+        return true;
+      }
+      node = node.__parent;
+    }
+    return false;
+  }
+
   get parentNode(): BackgroundSnapshotInstance | null {
     return this.__parent;
   }
@@ -66,13 +90,15 @@ export class BackgroundSnapshotInstance {
   //   return !!this.__parent;
   // }
 
-  contains(child: BackgroundSnapshotInstance): boolean {
-    return child.parentNode === this;
-  }
+  // contains(child: BackgroundSnapshotInstance): boolean {
+  //   return child.parentNode === this;
+  // }
 
   // This will be called in `lazy`/`Suspense`.
   appendChild(child: BackgroundSnapshotInstance): void {
-    return this.insertBefore(child);
+    if (!this.isDetached) {
+      return this.insertBefore(child);
+    }
   }
 
   insertBefore(
@@ -212,7 +238,7 @@ export class BackgroundSnapshotInstance {
   }
 
   setAttribute(key: string | number, value: unknown): void {
-    if (__PROFILE__) {
+    if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileStart('ReactLynx::BSI::setAttribute');
     }
     if (key === 'values') {
@@ -260,7 +286,7 @@ export class BackgroundSnapshotInstance {
         });
       }
       this.__values = value as unknown[];
-      if (__PROFILE__) {
+      if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileEnd();
       }
       return;
@@ -279,7 +305,7 @@ export class BackgroundSnapshotInstance {
       key,
       value,
     );
-    if (__PROFILE__) {
+    if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileEnd();
     }
   }
@@ -471,6 +497,8 @@ export function hydrate(
             (a, b) => {
               helper(a, b);
             },
+            // Should be `false` in hydrate as SerializedSnapshotInstance has no item-key
+            false,
           );
           diffArrayAction(
             beforeChildNodes,

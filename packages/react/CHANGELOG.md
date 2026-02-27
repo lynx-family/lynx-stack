@@ -1,5 +1,282 @@
 # @lynx-js/react
 
+## 0.116.3
+
+### Patch Changes
+
+- fix: remove `lynx.createSelectorQuery` deprecated warning in production ([#2195](https://github.com/lynx-family/lynx-stack/pull/2195))
+
+- Add a DEV-only guard that detects MainThread flush loops caused by re-entrant MTS handlers. ([#2159](https://github.com/lynx-family/lynx-stack/pull/2159))
+
+  This typically happens when a MainThread handler (e.g. event callback or `MainThreadRef`) performs UI mutations (like `Element.setStyleProperty`, `setStyleProperties`, `setAttribute`, or `invoke`) that synchronously trigger a flush which re-enters the handler again.
+
+- Avoid DEV_ONLY_SetSnapshotEntryName on standalone lazy bundle. ([#2184](https://github.com/lynx-family/lynx-stack/pull/2184))
+
+- Add alog and trace for BTS event handlers. ([#2102](https://github.com/lynx-family/lynx-stack/pull/2102))
+
+- fix: Main thread functions cannot access properties on `this` before hydration completes. ([#2194](https://github.com/lynx-family/lynx-stack/pull/2194))
+
+  This fixes the `cannot convert to object` error.
+
+- Remove element api calls alog by default, and only enable it when `__ALOG_ELEMENT_API__` is defined to `true` or environment variable `REACT_ALOG_ELEMENT_API` is set to `true`. ([#2192](https://github.com/lynx-family/lynx-stack/pull/2192))
+
+- fix: captured variables in main thread functions within class components do not update correctly ([#2197](https://github.com/lynx-family/lynx-stack/pull/2197))
+
+## 0.116.2
+
+### Patch Changes
+
+- Fix "TypeError: not a function" error caused by `replaceAll` not supported in ES5. ([#2142](https://github.com/lynx-family/lynx-stack/pull/2142))
+
+- Bump `swc_core` v56. ([#2154](https://github.com/lynx-family/lynx-stack/pull/2154))
+
+- Use `disableDeprecatedWarning` option to suppress BROKEN warnings during compilation. ([#2157](https://github.com/lynx-family/lynx-stack/pull/2157))
+
+  1. BROKEN: `getNodeRef`/`getNodeRefFromRoot`/`createSelectorQuery` on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.
+  2. BROKEN: `getElementById` on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.getElementById instead.
+
+- Fix memory leak by clearing list callbacks when \_\_DestroyLifetime event is triggered. ([#2112](https://github.com/lynx-family/lynx-stack/pull/2112))
+
+## 0.116.1
+
+### Patch Changes
+
+- Fix the issue that lazy bundle HMR will lost CSS. ([#2134](https://github.com/lynx-family/lynx-stack/pull/2134))
+
+## 0.116.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Bump Preact from [10.24.0](https://github.com/preactjs/preact/commit/1807173df5e18b6b1a3cd667ee2a31af37f4282b) to [10.28.0](https://github.com/preactjs/preact/commit/f7693b72ecb4a40c66e6e47f54e2d4edc374c9f0), see diffs at [hzy/preact#6](https://github.com/hzy/preact/pull/6). ([#2042](https://github.com/lynx-family/lynx-stack/pull/2042))
+
+### Patch Changes
+
+- Add safety checks for compilation macros to prevent runtime errors when they are undefined. ([#2110](https://github.com/lynx-family/lynx-stack/pull/2110))
+
+  Replaces direct usage of `__PROFILE__`, `__MAIN_THREAD__`, `__BACKGROUND__` with `typeof` checks.
+
+  This improves robustness by checking variable existence before access, preventing runtime errors in environments where compilation macros are not defined.
+
+## 0.115.4
+
+### Patch Changes
+
+- fix: unable to access `MainThreadRef` in some scenarios ([#1996](https://github.com/lynx-family/lynx-stack/pull/1996))
+
+- Add `getComputedStyleProperty` for `MainThread.Element` to retrieve computed style values synchronously. ([#2005](https://github.com/lynx-family/lynx-stack/pull/2005))
+
+  **Requires Lynx SDK >= 3.5**
+
+  ```typescript
+  function getStyle(ele: MainThread.Element) {
+    'main thread';
+    const width = ele.getComputedStyleProperty('width'); // Returns 300px
+    const transformMatrix = ele.getComputedStyleProperty('transform'); // Returns matrix(2, 0, 0, 2, 200, 400)
+  }
+  ```
+
+## 0.115.3
+
+### Patch Changes
+
+- Add dual-thread commutation logs for troubleshooting when `REACT_ALOG=true` or global define `__ALOG__` is set. ([#2081](https://github.com/lynx-family/lynx-stack/pull/2081))
+
+- Use error cause to simplify the error msg of lazy bundle loading. User can catch the error cause to get the original result: ([#2056](https://github.com/lynx-family/lynx-stack/pull/2056))
+
+  ```ts
+  const LazyComponent = lazy(async () => {
+    try {
+      const mod = await import('./lazy-bundle');
+      return mod.default;
+    } catch (error) {
+      console.error(`Lazy Bundle load failed message: ${error.message}`);
+      // User can catch the error cause to get the original result
+      console.error(`Lazy Bundle load failed result: ${error.cause}`);
+      throw error;
+    }
+  });
+  ```
+
+## 0.115.2
+
+### Patch Changes
+
+- Fix `undefined factory (react:background)/./node_modules/.pnpm/@lynx-js+react...` error when loading a standalone lazy bundle after hydration. ([#2048](https://github.com/lynx-family/lynx-stack/pull/2048))
+
+- Partially fix "main-thread.js exception: TypeError: cannot read property '\_\_elements' of undefined" by recursively calling `snapshotDestroyList`. ([#2041](https://github.com/lynx-family/lynx-stack/pull/2041))
+
+- Fix a bug where React throws `CtxNotFound` error when lazy bundle resolves after unmount. ([#2003](https://github.com/lynx-family/lynx-stack/pull/2003))
+
+## 0.115.1
+
+### Patch Changes
+
+- Auto define lynx.loadLazyBundle when using `import(/* relative path */)`. ([#1956](https://github.com/lynx-family/lynx-stack/pull/1956))
+
+- feat: support declaring cross-thread shared modules via Import Attributes, enabling Main Thread Functions to call standard JS functions directly. ([#1968](https://github.com/lynx-family/lynx-stack/pull/1968))
+
+  - Usage: Add `with { runtime: "shared" }` to the `import` statement. For example:
+
+    ```ts
+    import { func } from './utils.js' with { runtime: 'shared' };
+
+    function worklet() {
+      'main thread';
+      func(); // callable inside a main thread function
+    }
+    ```
+
+  - Limitations:
+    - Only directly imported identifiers are treated as shared; assigning the import to a new variable will result in the loss of this shared capability.
+    - Functions defined within shared modules do not automatically become Main Thread Functions. Accessing main-thread-only APIs (e.g., `MainThreadRef`) will cause errors.
+
+## 0.115.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Delay the `createSnapshot` operation to `Snapshot` constructor to speed up IFR. ([#1899](https://github.com/lynx-family/lynx-stack/pull/1899))
+
+  This change refactors how snapshots are created and registered:
+
+  - Removed the `entryUniqID` function
+  - Snapshots are now lazily created via `snapshotCreatorMap` instead of eagerly at bundle load time
+  - Snapshot IDs are generated at compile time and only prefixed with `${globDynamicComponentEntry}:` for standalone lazy bundles
+
+  **⚠️ Lazy Bundle Compatibility:**
+
+  - **Backward compatibility (new runtime → old lazy bundles)**: ✅ **Supported**. Old lazy bundles will work with the new runtime.
+
+  - **Forward compatibility (old runtime → new lazy bundles)**: ❌ **NOT Supported**. Lower version consumers **will not be able to load lazy bundles produced by this version** due to the changed snapshot creation mechanism.
+
+  **Migration guidance**:
+  If you are using lazy bundles, ensure all consumers are upgraded to this version or later **before** deploying lazy bundles built with this version. For monorepo setups, coordinate the upgrade across all consuming applications.
+
+### Patch Changes
+
+- Preserve assignments to webpack runtime variables like `__webpack_public_path__`, `__webpack_require__.p`, etc. ([#1958](https://github.com/lynx-family/lynx-stack/pull/1958))
+
+- Fixed blank screen issues with nested lists. Lazily created nested lists were being flushed but not properly recorded, causing rendering failures. ([#1963](https://github.com/lynx-family/lynx-stack/pull/1963))
+
+- fix: export `createRef` and `useRef` from `@lynx-js/react/legacy-react-runtime` ([#1953](https://github.com/lynx-family/lynx-stack/pull/1953))
+
+## 0.114.5
+
+### Patch Changes
+
+- Reduce `__SetInlineStyles` element API call when attrs in spread not changed ([#1919](https://github.com/lynx-family/lynx-stack/pull/1919))
+
+## 0.114.4
+
+### Patch Changes
+
+- During hydration, replace update with insert + remove for same-type `<list-item />` with different `item-key` so the Lynx Engine detects changes. ([#1598](https://github.com/lynx-family/lynx-stack/pull/1598))
+
+  ```html
+  Hydrate List B into List A: List A:
+  <list>
+    <list-item item-key="a">hello</list-item>
+    <list-item item-key="a">world</list-item>
+  </list>
+
+  List B:
+  <list>
+    <list-item item-key="a1">hello</list-item>
+    <list-item item-key="a2">world</list-item>
+  </list>
+  ```
+
+  Previously this case was hydrated as an update; it is now emitted as insert + remove to ensure SDK detection.
+
+- Bump `swc_core` v47. ([#1916](https://github.com/lynx-family/lynx-stack/pull/1916))
+
+- Pass sourcemap generated by rspack to swc transformer. ([#1910](https://github.com/lynx-family/lynx-stack/pull/1910))
+
+- When engineVersion is greater than or equal to 3.1, use `__SetAttribute` to set text attribute for text node instead of creating a raw text node. ([#1880](https://github.com/lynx-family/lynx-stack/pull/1880))
+
+- Add profile for list `update-list-info`. ([#1480](https://github.com/lynx-family/lynx-stack/pull/1480))
+
+- Support testing React Compiler in testing library. Enable React Compiler by setting the `experimental_enableReactCompiler` option of `createVitestConfig` to `true`. ([#1269](https://github.com/lynx-family/lynx-stack/pull/1269))
+
+  ```js
+  import { defineConfig, mergeConfig } from 'vitest/config';
+  import { createVitestConfig } from '@lynx-js/react/testing-library/vitest-config';
+
+  const defaultConfig = await createVitestConfig({
+    runtimePkgName: '@lynx-js/react',
+    experimental_enableReactCompiler: true,
+  });
+
+  export default mergeConfig(defaultConfig, config);
+  ```
+
+## 0.114.3
+
+### Patch Changes
+
+- Initialize `ctxNotFoundEventListener` before each test in testing library ([#1888](https://github.com/lynx-family/lynx-stack/pull/1888))
+
+- fix: main thread functions created during the initial render cannot correctly modify `MainThreadRef`s after hydration ([#1884](https://github.com/lynx-family/lynx-stack/pull/1884))
+
+## 0.114.2
+
+### Patch Changes
+
+- fix: main thread functions created during the initial render cannot correctly call `runOnBackground()` after hydration ([#1878](https://github.com/lynx-family/lynx-stack/pull/1878))
+
+## 0.114.1
+
+### Patch Changes
+
+- Add `event.stopPropagation` and `event.stopImmediatePropagation` in MTS, to help with event propagation control ([#1835](https://github.com/lynx-family/lynx-stack/pull/1835))
+
+  ```tsx
+  function App() {
+    function handleInnerTap(event: MainThread.TouchEvent) {
+      'main thread';
+      event.stopPropagation();
+      // Or stop immediate propagation with
+      // event.stopImmediatePropagation();
+    }
+
+    // OuterTap will not be triggered
+    return (
+      <view main-thread:bindtap={handleOuterTap}>
+        <view main-thread:bindtap={handleInnerTap}>
+          <text>Hello, world</text>
+        </view>
+      </view>
+    );
+  }
+  ```
+
+  Note, if this feature is used in [Lazy Loading Standalone Project](https://lynxjs.org/react/code-splitting.html#lazy-loading-standalone-project), both the Producer and the Consumer should update to latest version of `@lynx-js/react` to make sure the feature is available.
+
+- Fix the "ReferenceError: Node is not defined" error. ([#1850](https://github.com/lynx-family/lynx-stack/pull/1850))
+
+  This error would happen when upgrading to `@testing-library/jest-dom` [v6.9.0](https://github.com/testing-library/jest-dom/releases/tag/v6.9.0).
+
+- fix: optimize main thread event error message ([#1838](https://github.com/lynx-family/lynx-stack/pull/1838))
+
+## 0.114.0
+
+### Minor Changes
+
+- Partially fix the "cannot read property 'update' of undefined" error. ([#1771](https://github.com/lynx-family/lynx-stack/pull/1771))
+
+  This error happens when rendering a JSX expression in a [background-only](https://lynxjs.org/react/thinking-in-reactlynx.html) context.
+
+  See [lynx-family/lynx-stack#894](https://github.com/lynx-family/lynx-stack/issues/894) for more details.
+
+### Patch Changes
+
+- Reduce extra snapshot when children are pure text ([#1562](https://github.com/lynx-family/lynx-stack/pull/1562))
+
+- feat: Support `SelectorQuery` `animation` APIs ([#1768](https://github.com/lynx-family/lynx-stack/pull/1768))
+
+- Fix spread props inside list-item caused redundant snapshot patch ([#1760](https://github.com/lynx-family/lynx-stack/pull/1760))
+
+- fix: `ref is not initialized` error on template reload ([#1757](https://github.com/lynx-family/lynx-stack/pull/1757))
+
 ## 0.113.0
 
 ### Minor Changes

@@ -15,7 +15,9 @@ export interface DeferredListItemProps {
 }
 
 export const DeferredListItem: FC<DeferredListItemProps> = ({ defer, renderListItem, renderChildren }) => {
-  const __cloneElement = __MAIN_THREAD__ ? _cloneElementMainThread : _cloneElement;
+  const __cloneElement = typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__
+    ? _cloneElementMainThread
+    : _cloneElement;
 
   const initialDeferRef = useRef(defer);
   const prevDeferRef = useRef(defer);
@@ -42,7 +44,7 @@ export const DeferredListItem: FC<DeferredListItemProps> = ({ defer, renderListI
     };
   }, []);
 
-  if (__BACKGROUND__) {
+  if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
     if (prevDeferRef.current && !defer) {
       setIsReady(true);
     }

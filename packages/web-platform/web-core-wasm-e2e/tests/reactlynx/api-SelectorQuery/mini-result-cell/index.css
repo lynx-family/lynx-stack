@@ -1,0 +1,53 @@
+.result-root {
+  width: 100%;
+  flex-direction: column;
+  display: flex;
+}
+
+.result-cell {
+  width: 100%;
+  display: flex;
+}
+
+.desc {
+  font-size: 8px;
+  line-height: 10px;
+  padding-right: 2px;
+  padding-left: 2px;
+  width: 100%;
+  margin-left: 5px;
+  margin-right: 5px;
+  margin-bottom: 5px;
+}
+
+.succ {
+  color: #fff;
+  background-color: #009688;
+  font-size: 8px;
+  line-height: 10px;
+  padding-top: 2px;
+  padding-right: 2px;
+  padding-bottom: 2px;
+  padding-left: 2px;
+  width: 100%;
+  margin-left: 5px;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  display: flex;
+}
+
+.err {
+  color: #fff;
+  background-color: #e91e63;
+  font-size: 8px;
+  line-height: 10px;
+  padding-top: 2px;
+  padding-right: 2px;
+  padding-bottom: 2px;
+  padding-left: 2px;
+  width: 100%;
+  margin-left: 5px;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  display: flex;
+}

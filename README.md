@@ -6,7 +6,7 @@
 [![X (formerly Twitter) URL](https://img.shields.io/twitter/url?url=https%3A%2F%2Fx.com%2Flynxjs_org&style=social&label=Lynx)](https://x.com/lynxjs_org)
 [![Discord](https://img.shields.io/discord/1345754526174543964?logo=discord&style=social&label=Lynx)](https://discord.gg/mXk7jqdDXk)
 
-This repository contains the **core JavaScript stack** of Lynx, including [ReactLynx][1], [Rspeedy][2], [Lynx for Web][3], and more. For other repositories in the Lynx family, visit our [org homepage](https://github.com/lynx-family).
+This repository contains the **core Frontend stack** of Lynx, including [ReactLynx][1], [Rspeedy][2], [Lynx for Web][3], and more. For other repositories in the Lynx family, visit our [org homepage](https://github.com/lynx-family).
 
 ## Content
 

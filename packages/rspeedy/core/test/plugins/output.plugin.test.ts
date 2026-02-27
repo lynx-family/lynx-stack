@@ -211,7 +211,7 @@ describe('Plugins - Output', () => {
             "auto": true,
             "exportGlobals": false,
             "exportLocalsConvention": "camelCase",
-            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
+            "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": false,
@@ -239,7 +239,7 @@ describe('Plugins - Output', () => {
             "auto": true,
             "exportGlobals": false,
             "exportLocalsConvention": "camelCase",
-            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
+            "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": false,
@@ -267,7 +267,7 @@ describe('Plugins - Output', () => {
             "auto": false,
             "exportGlobals": false,
             "exportLocalsConvention": "camelCase",
-            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
+            "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": false,
@@ -295,7 +295,7 @@ describe('Plugins - Output', () => {
             "auto": /module/,
             "exportGlobals": false,
             "exportLocalsConvention": "camelCase",
-            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
+            "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": false,
@@ -325,7 +325,7 @@ describe('Plugins - Output', () => {
             "auto": [Function],
             "exportGlobals": false,
             "exportLocalsConvention": "camelCase",
-            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
+            "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": false,
@@ -352,7 +352,7 @@ describe('Plugins - Output', () => {
             "auto": true,
             "exportGlobals": true,
             "exportLocalsConvention": "camelCase",
-            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
+            "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": false,
@@ -380,7 +380,7 @@ describe('Plugins - Output', () => {
             "auto": true,
             "exportGlobals": false,
             "exportLocalsConvention": "asIs",
-            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
+            "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": false,
@@ -408,7 +408,7 @@ describe('Plugins - Output', () => {
             "auto": true,
             "exportGlobals": false,
             "exportLocalsConvention": "dashesOnly",
-            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
+            "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": false,
@@ -461,7 +461,7 @@ describe('Plugins - Output', () => {
             "auto": true,
             "exportGlobals": false,
             "exportLocalsConvention": "camelCase",
-            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
+            "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": false,
@@ -487,6 +487,58 @@ describe('Plugins - Output', () => {
             "exportGlobals": false,
             "exportLocalsConvention": "camelCase",
             "localIdentName": "[local]-[hash:base64:6]",
+            "namedExport": false,
+          },
+          "sourceMap": false,
+        }
+      `)
+    })
+
+    test('output.cssModules.localIdentName default value', async () => {
+      const rsbuild = await createStubRspeedy({
+        output: {},
+      })
+
+      const config = await rsbuild.unwrapConfig()
+
+      const options = getLoaderOptions(config, /css-loader/)
+
+      expect(options).toMatchInlineSnapshot(`
+        {
+          "importLoaders": 1,
+          "modules": {
+            "auto": true,
+            "exportGlobals": false,
+            "exportLocalsConvention": "camelCase",
+            "localIdentName": "[local]-[hash:base64:6]",
+            "namedExport": false,
+          },
+          "sourceMap": false,
+        }
+      `)
+    })
+
+    test('output.cssModules.localIdentName manual override', async () => {
+      const rsbuild = await createStubRspeedy({
+        output: {
+          cssModules: {
+            localIdentName: '[path][name]__[local]-[hash:base64:8]',
+          },
+        },
+      })
+
+      const config = await rsbuild.unwrapConfig()
+
+      const options = getLoaderOptions(config, /css-loader/)
+
+      expect(options).toMatchInlineSnapshot(`
+        {
+          "importLoaders": 1,
+          "modules": {
+            "auto": true,
+            "exportGlobals": false,
+            "exportLocalsConvention": "camelCase",
+            "localIdentName": "[path][name]__[local]-[hash:base64:8]",
             "namedExport": false,
           },
           "sourceMap": false,

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<!-- Copyright 2024 The Lynx Authors. All rights reserved.
+ Licensed under the Apache License Version 2.0 that can be found in the
+ LICENSE file in the root directory of this source tree. -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>web playground</title>
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta content="default" name="apple-mobile-web-app-status-bar-style">
+    <meta content="telephone=no" name="format-detection">
+    <meta content="portrait" name="screen-orientation">
+    <meta
+      content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+      name="viewport"
+    >
+    <meta content="portrait" name="x5-orientation" />
+    <link
+      href="/main.css"
+      rel="stylesheet"
+    />
+
+    <style>
+    .atom {
+      width: 50px;
+      height: 20px;
+      border: 1px solid red;
+      margin: 2px;
+      background-color: yellow;
+    }
+    </style>
+  </head>
+
+  <body>
+    <script src="/main.js" defer></script>
+    <x-text style="width: 100px" text-maxline="2">
+      this is text I know you your past your future<x-view
+        style="display: flex; --lynx-display: flex; --lynx-display-toggle: var(--lynx-display-flex); flex-direction: row"
+      >
+        <x-view class="atom"></x-view>
+        <x-view class="atom"></x-view>
+        <x-view class="atom"></x-view>
+      </x-view>
+      <inline-truncation>
+        truncation
+      </inline-truncation>
+    </x-text>
+  </body>
+</html>

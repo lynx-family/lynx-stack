@@ -12,6 +12,7 @@ import { createRequire } from 'node:module'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 
+import type { Config } from '@lynx-js/config-rsbuild-plugin'
 import { pluginReactAlias } from '@lynx-js/react-alias-rsbuild-plugin'
 import type {
   CompatVisitorConfig,
@@ -20,7 +21,7 @@ import type {
   ShakeVisitorConfig,
 } from '@lynx-js/react-transform'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
-import type { ExposedAPI } from '@lynx-js/rspeedy'
+import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
 import { applyBackgroundOnly } from './backgroundOnly.js'
 import { applyCSS } from './css.js'
@@ -28,6 +29,7 @@ import { applyEntry } from './entry.js'
 import { applyGenerator } from './generator.js'
 import { applyLazy } from './lazy.js'
 import { applyLoaders } from './loaders.js'
+import { applyNodeEnv } from './nodeEnv.js'
 import { applyRefresh } from './refresh.js'
 import { applySplitChunksRule } from './splitChunks.js'
 import { applySWC } from './swc.js'
@@ -113,15 +115,6 @@ export interface PluginReactLynxOptions {
    * enableAccessibilityElement set the default value of `accessibility-element` for all `<view />` elements.
    */
   enableAccessibilityElement?: boolean
-
-  /**
-   * enableICU enables the Intl API to be enabled globally.
-   *
-   * If enabled, please double check the compatibility with Lynx Share Context feature to avoid using shared Intl API from other destroyed card.
-   *
-   * @defaultValue `false`
-   */
-  enableICU?: boolean
 
   /**
    * enableCSSInheritance enables the default inheritance properties.
@@ -302,7 +295,6 @@ export function pluginReactLynx(
     debugInfoOutside: true,
     defaultDisplayLinear: true,
     enableAccessibilityElement: false,
-    enableICU: false,
     enableCSSInheritance: false,
     enableCSSInvalidation: true,
     enableCSSSelector: true,
@@ -334,9 +326,26 @@ export function pluginReactLynx(
     }),
     {
       name: 'lynx:react',
-      pre: ['lynx:rsbuild:plugin-api'],
+      pre: ['lynx:rsbuild:plugin-api', 'lynx:config'],
       setup(api) {
-        applyCSS(api, resolvedOptions)
+        const isRslib = api.context.callerName === 'rslib'
+
+        const exposedConfig = api.useExposed<{ config: Config }>(
+          Symbol.for('lynx.config'),
+        )
+        if (exposedConfig) {
+          Object.keys(defaultOptions).forEach((key) => {
+            if (Object.hasOwn(exposedConfig.config, key)) {
+              Object.assign(resolvedOptions, {
+                [key]: exposedConfig.config[key as keyof Config],
+              })
+            }
+          })
+        }
+
+        if (!isRslib) {
+          applyCSS(api, resolvedOptions)
+        }
         applyEntry(api, resolvedOptions)
         applyBackgroundOnly(api)
         applyGenerator(api, resolvedOptions)
@@ -345,6 +354,9 @@ export function pluginReactLynx(
         applySplitChunksRule(api)
         applySWC(api)
         applyUseSyncExternalStore(api)
+        if (isRslib) {
+          applyNodeEnv(api)
+        }
 
         api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
           const userConfig = api.getRsbuildConfig('original')
@@ -358,22 +370,16 @@ export function pluginReactLynx(
             })
           }
 
-          // This is used for compat with `@lynx-js/rspeedy` <= 0.9.6
-          // where the default value of `output.inlineScripts` is `false`.
-          // TODO: remove this when required Rspeedy version bumped to ^0.9.7
-          if (typeof userConfig.output?.inlineScripts === 'undefined') {
-            config = mergeRsbuildConfig(config, {
-              output: {
-                inlineScripts: true,
-              },
-            })
-          }
-
           // This is used to avoid the IIFE in main-thread.js, which would cause memory leak.
-          // TODO: remove this when required Rspeedy version bumped to ^0.10.0
           config = mergeRsbuildConfig({
             tools: {
               rspack: { output: { iife: false } },
+            },
+          }, config)
+
+          config = mergeRsbuildConfig({
+            resolve: {
+              dedupe: ['react-compiler-runtime'],
             },
           }, config)
 
@@ -384,20 +390,26 @@ export function pluginReactLynx(
           applyLazy(api)
         }
 
-        const rspeedyAPIs = api.useExposed<ExposedAPI>(
-          Symbol.for('rspeedy.api'),
-        )!
-
+        api.expose(Symbol.for('LAYERS'), LAYERS)
+        // Only expose `LynxTemplatePlugin.getLynxTemplatePluginHooks` to avoid
+        // other breaking changes in `LynxTemplatePlugin`
+        // breaks `pluginReactLynx`
+        api.expose(Symbol.for('LynxTemplatePlugin'), {
+          LynxTemplatePlugin: {
+            getLynxTemplatePluginHooks: LynxTemplatePlugin
+              .getLynxTemplatePluginHooks.bind(LynxTemplatePlugin),
+          },
+        })
         const require = createRequire(import.meta.url)
 
         const { version } = require('../package.json') as { version: string }
 
-        rspeedyAPIs.debug(() => {
-          const webpackPluginPath = require.resolve(
-            '@lynx-js/react-webpack-plugin',
-          )
-          return `Using @lynx-js/react-webpack-plugin v${version} at ${webpackPluginPath}`
-        })
+        const webpackPluginPath = require.resolve(
+          '@lynx-js/react-webpack-plugin',
+        )
+        api.logger?.debug(
+          `Using @lynx-js/react-webpack-plugin v${version} at ${webpackPluginPath}`,
+        )
       },
     },
   ]
