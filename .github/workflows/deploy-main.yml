@@ -102,6 +102,7 @@ jobs:
     with:
       runs-on: lynx-custom-container
       is-web: true
+      container-image: mcr.microsoft.com/playwright:v1.58.2-noble
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
@@ -116,6 +117,7 @@ jobs:
     with:
       runs-on: lynx-custom-container
       is-web: true
+      container-image: mcr.microsoft.com/playwright:v1.58.2-noble
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
