@@ -100,7 +100,7 @@ export class Lynx {
       const existingClients = lynx._connector.getAllAppClients();
       if (existingClients.length > 0) {
         lynx._currentClient = existingClients[0];
-        lynx._currentClientId = existingClients[0]!.clientId;
+        lynx._currentClientId = existingClients[0]!.clientId();
       } else {
         // Wait until a client is attached
         const clientId = await clientPromise;
