@@ -11,10 +11,12 @@
 import { Plugins } from '@lynx-js/css-serializer';
 import * as CSS from '@lynx-js/css-serializer';
 
-export { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
+export { LynxTemplatePlugin, LynxBundlePlugin } from './LynxTemplatePlugin.js';
 export type {
   LynxTemplatePluginOptions,
+  LynxBundlePluginOptions,
   TemplateHooks,
+  BundleHooks,
   EncodeOptions,
 } from './LynxTemplatePlugin.js';
 export { LynxEncodePlugin } from './LynxEncodePlugin.js';

@@ -61,10 +61,18 @@ function encodeStringMap(map: Record<string, string>): Uint8Array {
 
 export type TasmJSONInfo = {
   styleInfo: Record<string, CSS.LynxStyleNode[]>;
+  /**
+   * Background Thread Script (BTS) chunks.
+   * @remarks The field name `manifest` is a legacy artifact.
+   */
   manifest: Record<string, string>;
   cardType: string;
   appType: string;
   pageConfig: Record<string, unknown>;
+  /**
+   * Main Thread Script (MTS) chunks.
+   * @remarks The field name `lepusCode` is a legacy artifact.
+   */
   lepusCode: Record<string, string>;
   customSections: Record<string, {
     type?: 'lazy';

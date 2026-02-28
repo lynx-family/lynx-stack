@@ -7,6 +7,12 @@ import {
   type Rpc,
 } from '@lynx-js/web-constants';
 
+/**
+ * Registers a handler for calling Main Thread Script (MTS) methods.
+ *
+ * @remarks
+ * "Lepus" in the function name is a legacy term for Main Thread Script (MTS).
+ */
 export function registerCallLepusMethodHandler(
   rpc: Rpc,
   runtime: MainThreadGlobalThis,

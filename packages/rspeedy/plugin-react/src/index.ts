@@ -32,6 +32,11 @@ interface LynxTemplatePlugin {
 // We only export types here
 // It is encouraged to use `api.useExposed(Symbol.for('LynxTemplatePlugin'))`
 // to access the actual API
-export type { LynxTemplatePlugin, TemplateHooks }
+/** @deprecated Use {@link LynxBundlePlugin} instead. `LynxTemplatePlugin` is a legacy name. */
+export type { LynxTemplatePlugin }
+/** @deprecated Use {@link BundleHooks} instead. `TemplateHooks` is a legacy name. */
+export type { TemplateHooks }
+export type { LynxTemplatePlugin as LynxBundlePlugin }
+export type { TemplateHooks as BundleHooks }
 
 export { LAYERS } from '@lynx-js/react-webpack-plugin'

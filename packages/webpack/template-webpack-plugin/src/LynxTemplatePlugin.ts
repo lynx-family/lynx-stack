@@ -25,6 +25,11 @@ import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { createLynxAsyncChunksRuntimeModule } from './LynxAsyncChunksRuntimeModule.js';
 
+/**
+ * @deprecated The name `OriginManifest` is a legacy artifact. "Manifest" here
+ * refers to Background Thread Script (BTS) chunks in the official Lynx
+ * specification.
+ */
 export type OriginManifest = Record<string, {
   content: string;
   size: number;
@@ -36,8 +41,23 @@ export type OriginManifest = Record<string, {
  * @public
  */
 export interface EncodeOptions {
+  /**
+   * Background Thread Script (BTS) chunks.
+   *
+   * @remarks
+   * In the official Lynx specification this is called "Background Thread
+   * Script" (BTS). The field name `manifest` is a legacy artifact.
+   */
   manifest: Record<string, string | undefined>;
   compilerOptions: Record<string, string | boolean>;
+  /**
+   * Main Thread Script (MTS) and its associated chunks.
+   *
+   * @remarks
+   * In the official Lynx specification this is called "Main Thread Script"
+   * (MTS). The field name `lepusCode` is a legacy artifact. The inner
+   * `lepusChunk` field holds additional MTS chunks.
+   */
   lepusCode: {
     root: string | undefined;
     lepusChunk: Record<string, string>;
@@ -77,6 +97,9 @@ const LynxTemplatePluginHooksMap = new WeakMap<Compilation, TemplateHooks>();
  *   }
  * }
  * ```
+ *
+ * @deprecated Use {@link BundleHooks} instead. This alias is retained for
+ * backward compatibility.
  *
  * @public
  */
@@ -152,7 +175,10 @@ function createLynxTemplatePluginHooks(): TemplateHooks {
 }
 
 /**
- * The options for LynxTemplatePlugin
+ * The options for {@link LynxTemplatePlugin}.
+ *
+ * @deprecated Use {@link LynxBundlePluginOptions} instead. This alias is
+ * retained for backward compatibility.
  *
  * @public
  */
@@ -304,7 +330,11 @@ interface EncodeRawData {
     [k: string]: string | boolean;
   };
   /**
-   * main-thread
+   * Main Thread Script (MTS) assets.
+   *
+   * @remarks
+   * The field name `lepusCode` is a legacy artifact. In the official Lynx
+   * specification this is called "Main Thread Script" (MTS).
    */
   lepusCode: {
     root: Asset | undefined;
@@ -312,7 +342,11 @@ interface EncodeRawData {
     filename: string | undefined;
   };
   /**
-   * background thread
+   * Background Thread Script (BTS) assets.
+   *
+   * @remarks
+   * The field name `manifest` is a legacy artifact. In the official Lynx
+   * specification this is called "Background Thread Script" (BTS).
    */
   manifest: Record<string, string>;
   css: {
@@ -332,7 +366,15 @@ interface EncodeRawData {
 }
 
 /**
- * LynxTemplatePlugin
+ * The core webpack / rspack plugin that orchestrates Lynx Bundle assembly and
+ * encoding.
+ *
+ * @remarks
+ * In the official Lynx specification the output artifact is called a "Bundle".
+ * The class name `LynxTemplatePlugin` is a legacy artifact.
+ *
+ * @deprecated Use {@link LynxBundlePlugin} instead. This alias is retained for
+ * backward compatibility.
  *
  * @public
  */
@@ -1066,3 +1108,23 @@ export function predicateNonHotModuleReplacementAsset(
       ?? assetMetaInformation.development
   );
 }
+
+// ---------------------------------------------------------------------------
+// Preferred aliases — the names above are legacy artifacts kept for backward
+// compatibility.  New code should use these instead.
+// ---------------------------------------------------------------------------
+
+/**
+ * @see {@link LynxTemplatePlugin}
+ */
+export const LynxBundlePlugin = LynxTemplatePlugin;
+
+/**
+ * @see {@link TemplateHooks}
+ */
+export type BundleHooks = TemplateHooks;
+
+/**
+ * @see {@link LynxTemplatePluginOptions}
+ */
+export type LynxBundlePluginOptions = LynxTemplatePluginOptions;

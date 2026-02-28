@@ -179,7 +179,8 @@ export class LynxEncodePluginImpl {
         }
 
         encodeData.manifest = {
-          // `app-service.js` is the entry point of a template.
+          // `/app-service.js` is the conventional entry point name for
+          // Background Thread Script (BTS) in a Lynx Bundle.
           // All the initial chunks will be loaded **synchronously**.
           //
           // ```
@@ -235,6 +236,7 @@ export class LynxEncodePluginImpl {
     });
   }
 
+  /** Conventional BTS entry point name in a Lynx Bundle. */
   #APP_SERVICE_NAME = '/app-service.js';
   #appServiceBanner(): string {
     const loadScriptBanner = `(function(){'use strict';function n({tt}){`;
