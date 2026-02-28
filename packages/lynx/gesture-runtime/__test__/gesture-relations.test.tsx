@@ -188,4 +188,61 @@ describe('Gesture Relations and Edge Cases', () => {
     expect(composed.gestures[0]).toBe(pan);
     expect(composed.gestures[1]).toBe(tap);
   });
+  test('should deduplicate gestures in externalWaitFor when using ComposedGesture', () => {
+    const pan = new PanGesture();
+    const tap = new TapGesture();
+
+    pan.externalWaitFor(tap);
+    const initialExecId = pan.execId;
+
+    // Passing a composed gesture that contains the current gesture `pan`,
+    // an already existing gesture `tap`, and a duplicate gesture `tap` again.
+    // Also include a new gesture `longPress`.
+    const longPress = new LongPressGesture();
+    const composed = Gesture.Simultaneous(pan, tap, tap, longPress);
+
+    pan.externalWaitFor(composed);
+
+    // Only `longPress` should be added. `pan` is self, `tap` is existing, the second `tap` is duplicate.
+    expect(pan.waitFor).toHaveLength(2);
+    expect(pan.waitFor).toContain(tap);
+    expect(pan.waitFor).toContain(longPress);
+    expect(pan.execId).toBe(initialExecId + 1);
+  });
+
+  test('should deduplicate gestures in externalSimultaneous when using ComposedGesture', () => {
+    const pan = new PanGesture();
+    const tap = new TapGesture();
+
+    pan.externalSimultaneous(tap);
+    const initialExecId = pan.execId;
+
+    const longPress = new LongPressGesture();
+    const composed = Gesture.Race(pan, tap, tap, longPress);
+
+    pan.externalSimultaneous(composed);
+
+    expect(pan.simultaneousWith).toHaveLength(2);
+    expect(pan.simultaneousWith).toContain(tap);
+    expect(pan.simultaneousWith).toContain(longPress);
+    expect(pan.execId).toBe(initialExecId + 1);
+  });
+
+  test('should deduplicate gestures in externalContinueWith when using ComposedGesture', () => {
+    const pan = new PanGesture();
+    const tap = new TapGesture();
+
+    pan.externalContinueWith(tap);
+    const initialExecId = pan.execId;
+
+    const longPress = new LongPressGesture();
+    const composed = Gesture.Exclusive(pan, tap, tap, longPress);
+
+    pan.externalContinueWith(composed);
+
+    expect(pan.continueWith).toHaveLength(2);
+    expect(pan.continueWith).toContain(tap);
+    expect(pan.continueWith).toContain(longPress);
+    expect(pan.execId).toBe(initialExecId + 1);
+  });
 });
