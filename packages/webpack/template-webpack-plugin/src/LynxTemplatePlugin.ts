@@ -1111,7 +1111,7 @@ export function predicateNonHotModuleReplacementAsset(
  * @deprecated Use {@link LynxTemplatePlugin} (class) directly, or the
  * preferred alias {@link LynxBundlePlugin} for new code.
  */
-export const LynxBundlePlugin = LynxTemplatePlugin;
+export const LynxBundlePlugin: typeof LynxTemplatePlugin = LynxTemplatePlugin;
 
 /**
  * @deprecated Use {@link BundleHooks} instead.

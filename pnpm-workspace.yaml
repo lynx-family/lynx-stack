@@ -4,7 +4,6 @@ packages:
   - packages/background-only
   - packages/lynx/*
   - packages/mcp-servers/*
-  - packages/repl
   - packages/react
   - packages/react/refresh
   - packages/react/runtime
