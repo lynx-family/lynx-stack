@@ -9,8 +9,8 @@
  */
 
 import type {
-  LynxTemplatePlugin as InnerLynxTemplatePlugin,
   BundleHooks,
+  LynxTemplatePlugin as InnerLynxTemplatePlugin,
 } from '@lynx-js/template-webpack-plugin'
 
 export { pluginReactLynx } from './pluginReactLynx.js'

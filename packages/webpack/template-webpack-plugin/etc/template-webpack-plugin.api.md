@@ -14,96 +14,8 @@ import { cssChunksToMap } from '@lynx-js/css-serializer';
 import { Plugins } from '@lynx-js/css-serializer';
 import { SyncWaterfallHook } from '@rspack/lite-tapable';
 
-export { CSS }
-
-// Warning: (ae-missing-release-tag) "CSSPlugins" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export const CSSPlugins: {
-    parserPlugins: typeof Plugins;
-};
-
 // @public
-export interface EncodeOptions {
-    // (undocumented)
-    [k: string]: unknown;
-    // (undocumented)
-    compilerOptions: Record<string, string | boolean>;
-    // (undocumented)
-    customSections: Record<string, {
-        type?: 'lazy';
-        content: string | Record<string, unknown>;
-    }>;
-    // (undocumented)
-    lepusCode: {
-        root: string | undefined;
-        lepusChunk: Record<string, string>;
-        filename: string | undefined;
-    };
-    // (undocumented)
-    manifest: Record<string, string | undefined>;
-}
-
-// @public
-export class LynxEncodePlugin {
-    constructor(options?: LynxEncodePluginOptions | undefined);
-    apply(compiler: Compiler): void;
-    static BEFORE_EMIT_STAGE: number;
-    static BEFORE_ENCODE_STAGE: number;
-    static defaultOptions: Readonly<Required<LynxEncodePluginOptions>>;
-    static ENCODE_STAGE: number;
-    // (undocumented)
-    protected options?: LynxEncodePluginOptions | undefined;
-}
-
-// @public
-export interface LynxEncodePluginOptions {
-    // Warning: (ae-forgotten-export) The symbol "InlineChunkConfig" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    inlineScripts?: InlineChunkConfig | undefined;
-}
-
-// @public
-export class LynxTemplatePlugin {
-    constructor(options?: LynxTemplatePluginOptions | undefined);
-    apply(compiler: Compiler): void;
-    static convertCSSChunksToMap(cssChunks: string[], plugins: CSS.Plugin[], enableCSSSelector: boolean): {
-        cssMap: Record<string, CSS.LynxStyleNode[]>;
-        cssSource: Record<string, string>;
-    };
-    static defaultOptions: Readonly<Required<LynxTemplatePluginOptions>>;
-    static getLynxTemplatePluginHooks(compilation: Compilation): TemplateHooks;
-}
-
-// @public
-export interface LynxTemplatePluginOptions {
-    chunks?: 'all' | string[];
-    cssPlugins: CSS.Plugin[];
-    customCSSInheritanceList: string[] | undefined;
-    debugInfoOutside: boolean;
-    defaultDisplayLinear: boolean;
-    defaultOverflowVisible?: boolean;
-    dsl?: 'tt' | 'react' | 'react_nodiff';
-    enableA11y: boolean;
-    enableAccessibilityElement: boolean;
-    enableCSSInheritance: boolean;
-    enableCSSInvalidation: boolean;
-    enableCSSSelector: boolean;
-    enableNewGesture: boolean;
-    enableRemoveCSSScope: boolean;
-    excludeChunks?: string[];
-    // @alpha
-    experimental_isLazyBundle?: boolean;
-    filename?: string | ((entryName: string) => string);
-    intermediate?: string;
-    lazyBundleFilename?: string;
-    removeDescendantSelectorScope: boolean;
-    targetSdkVersion: string;
-}
-
-// @public
-export interface TemplateHooks {
+export interface BundleHooks {
     // @alpha
     afterEmit: AsyncSeriesWaterfallHook<{
         outputName: string;
@@ -136,6 +48,107 @@ export interface TemplateHooks {
     }>;
 }
 
+export { CSS }
+
+// Warning: (ae-missing-release-tag) "CSSPlugins" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export const CSSPlugins: {
+    parserPlugins: typeof Plugins;
+};
+
+// @public
+export interface EncodeOptions {
+    // (undocumented)
+    [k: string]: unknown;
+    // (undocumented)
+    compilerOptions: Record<string, string | boolean>;
+    // (undocumented)
+    customSections: Record<string, {
+        type?: 'lazy';
+        content: string | Record<string, unknown>;
+    }>;
+    lepusCode: {
+        root: string | undefined;
+        lepusChunk: Record<string, string>;
+        filename: string | undefined;
+    };
+    manifest: Record<string, string | undefined>;
+}
+
+// Warning: (ae-missing-release-tag) "LynxBundlePlugin" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public @deprecated (undocumented)
+export const LynxBundlePlugin: typeof LynxTemplatePlugin;
+
+// @public
+export interface LynxBundlePluginOptions {
+    chunks?: 'all' | string[];
+    cssPlugins: CSS.Plugin[];
+    customCSSInheritanceList: string[] | undefined;
+    debugInfoOutside: boolean;
+    defaultDisplayLinear: boolean;
+    defaultOverflowVisible?: boolean;
+    dsl?: 'tt' | 'react' | 'react_nodiff';
+    enableA11y: boolean;
+    enableAccessibilityElement: boolean;
+    enableCSSInheritance: boolean;
+    enableCSSInvalidation: boolean;
+    enableCSSSelector: boolean;
+    enableNewGesture: boolean;
+    enableRemoveCSSScope: boolean;
+    excludeChunks?: string[];
+    // @alpha
+    experimental_isLazyBundle?: boolean;
+    filename?: string | ((entryName: string) => string);
+    intermediate?: string;
+    lazyBundleFilename?: string;
+    removeDescendantSelectorScope: boolean;
+    targetSdkVersion: string;
+}
+
+// @public
+export class LynxEncodePlugin {
+    constructor(options?: LynxEncodePluginOptions | undefined);
+    apply(compiler: Compiler): void;
+    static BEFORE_EMIT_STAGE: number;
+    static BEFORE_ENCODE_STAGE: number;
+    static defaultOptions: Readonly<Required<LynxEncodePluginOptions>>;
+    static ENCODE_STAGE: number;
+    // (undocumented)
+    protected options?: LynxEncodePluginOptions | undefined;
+}
+
+// @public
+export interface LynxEncodePluginOptions {
+    // Warning: (ae-forgotten-export) The symbol "InlineChunkConfig" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    inlineScripts?: InlineChunkConfig | undefined;
+}
+
+// @public @deprecated
+export class LynxTemplatePlugin {
+    constructor(options?: LynxBundlePluginOptions | undefined);
+    apply(compiler: Compiler): void;
+    static convertCSSChunksToMap(cssChunks: string[], plugins: CSS.Plugin[], enableCSSSelector: boolean): {
+        cssMap: Record<string, CSS.LynxStyleNode[]>;
+        cssSource: Record<string, string>;
+    };
+    static defaultOptions: Readonly<Required<LynxBundlePluginOptions>>;
+    static getLynxTemplatePluginHooks(compilation: Compilation): BundleHooks;
+}
+
+// Warning: (ae-missing-release-tag) "LynxTemplatePluginOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public @deprecated (undocumented)
+export type LynxTemplatePluginOptions = LynxBundlePluginOptions;
+
+// Warning: (ae-missing-release-tag) "TemplateHooks" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public @deprecated (undocumented)
+export type TemplateHooks = BundleHooks;
+
 // Warning: (ae-missing-release-tag) "WebEncodePlugin" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -155,6 +168,6 @@ export class WebEncodePlugin {
 
 // Warnings were encountered during analysis:
 //
-// lib/LynxTemplatePlugin.d.ts:68:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
+// lib/LynxTemplatePlugin.d.ts:88:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
 
 ```
