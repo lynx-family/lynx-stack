@@ -1,0 +1,4 @@
+[submodule "packages/react/preact-upstream-tests/preact"]
+	path = packages/react/preact-upstream-tests/preact
+	url = https://github.com/hzy/preact.git
+	branch = lynx/v10.24.x
