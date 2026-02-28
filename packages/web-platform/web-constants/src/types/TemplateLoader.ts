@@ -1,15 +1,11 @@
-import type { LynxTemplate } from './LynxModule.js';
-
-/**
- * @deprecated Use {@link BundleLoader} instead. This alias is retained for
- * backward compatibility.
- */
-export type TemplateLoader = (url: string) => Promise<LynxTemplate>;
+import type { LynxBundle } from './LynxModule.js';
 
 /**
  * Loads a Lynx Bundle from the given URL.
- *
- * This is the preferred name for the type previously known as
- * {@link TemplateLoader}.
  */
-export type BundleLoader = TemplateLoader;
+export type BundleLoader = (url: string) => Promise<LynxBundle>;
+
+/**
+ * @deprecated Use {@link BundleLoader} instead.
+ */
+export type TemplateLoader = BundleLoader;

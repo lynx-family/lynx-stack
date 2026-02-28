@@ -25,12 +25,9 @@ export type ElementTemplateData = {
  *
  * @remarks
  * This interface corresponds to the "Bundle" concept in the official Lynx
- * specification. The name `LynxTemplate` is a legacy artifact.
- *
- * @deprecated Use {@link LynxBundle} instead. This alias is retained for
- * backward compatibility.
+ * specification.
  */
-export interface LynxTemplate {
+export interface LynxBundle {
   styleInfo: StyleInfo;
   pageConfig: PageConfig;
   customSections: {
@@ -71,14 +68,9 @@ export interface LynxTemplate {
 }
 
 /**
- * Represents a Lynx Bundle — the compiled artifact containing all necessary
- * resources (stylesheet, scripts, serialized element tree) for a Lynx
- * application to run.
- *
- * This is the preferred name for the type previously known as
- * {@link LynxTemplate}.
+ * @deprecated Use {@link LynxBundle} instead.
  */
-export type LynxBundle = LynxTemplate;
+export type LynxTemplate = LynxBundle;
 
 export type BTSChunkEntry = (
   postMessage: undefined,

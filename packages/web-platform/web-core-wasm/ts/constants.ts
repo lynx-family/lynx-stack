@@ -55,36 +55,30 @@ export const MagicHeader1 = /*#__PURE__*/ 0x464F5257; // 'WROF'
  * Section labels used in the binary Lynx Bundle encoding format.
  *
  * @remarks
- * `LepusCode` and `Manifest` are legacy names. In the official Lynx
- * specification they correspond to "Main Thread Script" (MTS) and
- * "Background Thread Script" (BTS) respectively. Prefer using the
- * `MainThreadScript` / `BackgroundThreadScript` aliases in new code.
+ * `BackgroundThreadScript` corresponds to "Manifest" in legacy code.
+ * `MainThreadScript` corresponds to "LepusCode" in legacy code.
+ * Wire values are unchanged.
  */
-export const TemplateSectionLabel = /*#__PURE__*/ {
-  /** @deprecated Use {@link BundleSectionLabel.BackgroundThreadScript} instead. "Manifest" is a legacy name for Background Thread Script (BTS). */
-  Manifest: 1,
+export const BundleSectionLabel = /*#__PURE__*/ {
+  /** Background Thread Script (BTS). Legacy name: "Manifest". */
+  BackgroundThreadScript: 1,
   StyleInfo: 2,
-  /** @deprecated Use {@link BundleSectionLabel.MainThreadScript} instead. "LepusCode" is a legacy name for Main Thread Script (MTS). */
-  LepusCode: 3,
+  /** Main Thread Script (MTS). Legacy name: "LepusCode". */
+  MainThreadScript: 3,
   CustomSections: 4,
   ElementTemplates: 5,
   Configurations: 6,
 } as const;
 
 /**
- * Section labels using official Lynx specification terminology.
- * Preferred over {@link TemplateSectionLabel} in new code.
- *
- * @remarks
- * Values are identical to the corresponding legacy labels in
- * {@link TemplateSectionLabel} and are wire-compatible.
+ * @deprecated Use {@link BundleSectionLabel} instead.
  */
-export const BundleSectionLabel = /*#__PURE__*/ {
-  /** Background Thread Script (BTS). Same wire value as `TemplateSectionLabel.Manifest`. */
-  BackgroundThreadScript: 1,
+export const TemplateSectionLabel = /*#__PURE__*/ {
+  /** @deprecated Use {@link BundleSectionLabel.BackgroundThreadScript} instead. */
+  Manifest: 1,
   StyleInfo: 2,
-  /** Main Thread Script (MTS). Same wire value as `TemplateSectionLabel.LepusCode`. */
-  MainThreadScript: 3,
+  /** @deprecated Use {@link BundleSectionLabel.MainThreadScript} instead. */
+  LepusCode: 3,
   CustomSections: 4,
   ElementTemplates: 5,
   Configurations: 6,

@@ -71,10 +71,10 @@ export interface EncodeOptions {
   [k: string]: unknown;
 }
 
-const LynxTemplatePluginHooksMap = new WeakMap<Compilation, TemplateHooks>();
+const LynxTemplatePluginHooksMap = new WeakMap<Compilation, BundleHooks>();
 
 /**
- * To allow other plugins to alter the Template, this plugin executes
+ * To allow other plugins to alter the Bundle, this plugin executes
  * {@link https://github.com/webpack/tapable | tapable} hooks.
  *
  * @example
@@ -98,12 +98,9 @@ const LynxTemplatePluginHooksMap = new WeakMap<Compilation, TemplateHooks>();
  * }
  * ```
  *
- * @deprecated Use {@link BundleHooks} instead. This alias is retained for
- * backward compatibility.
- *
  * @public
  */
-export interface TemplateHooks {
+export interface BundleHooks {
   /**
    * Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template.
    *
@@ -164,7 +161,7 @@ export interface TemplateHooks {
  * Add hooks to the webpack compilation object to allow foreign plugins to
  * extend the LynxTemplatePlugin
  */
-function createLynxTemplatePluginHooks(): TemplateHooks {
+function createLynxTemplatePluginHooks(): BundleHooks {
   return {
     asyncChunkName: new SyncWaterfallHook(['pluginArgs']),
     beforeEncode: new AsyncSeriesWaterfallHook(['pluginArgs']),
@@ -177,12 +174,9 @@ function createLynxTemplatePluginHooks(): TemplateHooks {
 /**
  * The options for {@link LynxTemplatePlugin}.
  *
- * @deprecated Use {@link LynxBundlePluginOptions} instead. This alias is
- * retained for backward compatibility.
- *
  * @public
  */
-export interface LynxTemplatePluginOptions {
+export interface LynxBundlePluginOptions {
   /**
    * The file to write the template to.
    * Supports subdirectories eg: `assets/template.js`.
@@ -379,12 +373,12 @@ interface EncodeRawData {
  * @public
  */
 export class LynxTemplatePlugin {
-  constructor(private options?: LynxTemplatePluginOptions | undefined) {}
+  constructor(private options?: LynxBundlePluginOptions | undefined) {}
 
   /**
    * Returns all public hooks of the Lynx template webpack plugin for the given compilation
    */
-  static getLynxTemplatePluginHooks(compilation: Compilation): TemplateHooks {
+  static getLynxTemplatePluginHooks(compilation: Compilation): BundleHooks {
     let hooks = LynxTemplatePluginHooksMap.get(compilation);
     // Setup the hooks only once
     if (hooks === undefined) {
@@ -417,8 +411,8 @@ export class LynxTemplatePlugin {
    *
    * @public
    */
-  static defaultOptions: Readonly<Required<LynxTemplatePluginOptions>> = Object
-    .freeze<Required<LynxTemplatePluginOptions>>({
+  static defaultOptions: Readonly<Required<LynxBundlePluginOptions>> = Object
+    .freeze<Required<LynxBundlePluginOptions>>({
       filename: '[name].bundle',
       lazyBundleFilename: 'async/[name].[fullhash].bundle',
       intermediate: '.rspeedy',
@@ -506,7 +500,7 @@ class LynxTemplatePluginImpl {
 
   constructor(
     compiler: Compiler,
-    options: Required<LynxTemplatePluginOptions>,
+    options: Required<LynxBundlePluginOptions>,
   ) {
     this.#options = options;
 
@@ -1067,7 +1061,7 @@ class LynxTemplatePluginImpl {
     return assets;
   }
 
-  #options: Required<LynxTemplatePluginOptions>;
+  #options: Required<LynxBundlePluginOptions>;
 }
 
 interface AssetsInformationByGroups {
@@ -1110,21 +1104,21 @@ export function predicateNonHotModuleReplacementAsset(
 }
 
 // ---------------------------------------------------------------------------
-// Preferred aliases — the names above are legacy artifacts kept for backward
-// compatibility.  New code should use these instead.
+// Deprecated aliases — retained for backward compatibility.
 // ---------------------------------------------------------------------------
 
 /**
- * @see {@link LynxTemplatePlugin}
+ * @deprecated Use {@link LynxTemplatePlugin} (class) directly, or the
+ * preferred alias {@link LynxBundlePlugin} for new code.
  */
 export const LynxBundlePlugin = LynxTemplatePlugin;
 
 /**
- * @see {@link TemplateHooks}
+ * @deprecated Use {@link BundleHooks} instead.
  */
-export type BundleHooks = TemplateHooks;
+export type TemplateHooks = BundleHooks;
 
 /**
- * @see {@link LynxTemplatePluginOptions}
+ * @deprecated Use {@link LynxBundlePluginOptions} instead.
  */
-export type LynxBundlePluginOptions = LynxTemplatePluginOptions;
+export type LynxTemplatePluginOptions = LynxBundlePluginOptions;

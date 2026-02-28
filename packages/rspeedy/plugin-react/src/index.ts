@@ -10,7 +10,7 @@
 
 import type {
   LynxTemplatePlugin as InnerLynxTemplatePlugin,
-  TemplateHooks,
+  BundleHooks,
 } from '@lynx-js/template-webpack-plugin'
 
 export { pluginReactLynx } from './pluginReactLynx.js'
@@ -24,7 +24,7 @@ export type {
   ShakeVisitorConfig,
 } from '@lynx-js/react-transform'
 
-interface LynxTemplatePlugin {
+interface LynxBundlePlugin {
   getLynxTemplatePluginHooks:
     typeof InnerLynxTemplatePlugin.getLynxTemplatePluginHooks
 }
@@ -32,11 +32,11 @@ interface LynxTemplatePlugin {
 // We only export types here
 // It is encouraged to use `api.useExposed(Symbol.for('LynxTemplatePlugin'))`
 // to access the actual API
-/** @deprecated Use {@link LynxBundlePlugin} instead. `LynxTemplatePlugin` is a legacy name. */
-export type { LynxTemplatePlugin }
-/** @deprecated Use {@link BundleHooks} instead. `TemplateHooks` is a legacy name. */
-export type { TemplateHooks }
-export type { LynxTemplatePlugin as LynxBundlePlugin }
-export type { TemplateHooks as BundleHooks }
+export type { LynxBundlePlugin }
+export type { BundleHooks }
+/** @deprecated Use {@link LynxBundlePlugin} instead. */
+export type { LynxBundlePlugin as LynxTemplatePlugin }
+/** @deprecated Use {@link BundleHooks} instead. */
+export type { BundleHooks as TemplateHooks }
 
 export { LAYERS } from '@lynx-js/react-webpack-plugin'

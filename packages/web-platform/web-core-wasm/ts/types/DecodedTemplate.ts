@@ -12,12 +12,9 @@ import type { StyleSheetResource } from '../../binary/client/client.js';
  *
  * @remarks
  * This interface corresponds to the "Bundle" concept in the official Lynx
- * specification. The name `DecodedTemplate` is a legacy artifact.
- *
- * @deprecated Use {@link DecodedBundle} instead. This alias is retained for
- * backward compatibility.
+ * specification.
  */
-export interface DecodedTemplate {
+export interface DecodedBundle {
   config?: PageConfig;
   /**
    * Main Thread Script (MTS) — code that runs on the main thread (UI thread).
@@ -33,9 +30,6 @@ export interface DecodedTemplate {
 }
 
 /**
- * A decoded Lynx Bundle with its sections parsed into JS objects / blob URLs.
- *
- * This is the preferred name for the type previously known as
- * {@link DecodedTemplate}.
+ * @deprecated Use {@link DecodedBundle} instead.
  */
-export type DecodedBundle = DecodedTemplate;
+export type DecodedTemplate = DecodedBundle;
