@@ -10,6 +10,8 @@ import {
 
 export interface EditorPaneHandle {
   editor: EditorInstance | null;
+  /** Collapse panels whose corresponding code is empty, expand those with content. */
+  collapseByContent(code: { mainThread: string; background: string; css: string }): void;
 }
 
 interface EditorPaneProps {
@@ -40,6 +42,18 @@ export const EditorPane = forwardRef<EditorPaneHandle, EditorPaneProps>(
     useImperativeHandle(ref, () => ({
       get editor() {
         return editorRef.current;
+      },
+      collapseByContent(code: { mainThread: string; background: string; css: string }) {
+        const values = [code.mainThread, code.background, code.css];
+        panelRefs.forEach((pRef, i) => {
+          const panel = pRef.current;
+          if (!panel) return;
+          if (values[i]?.trim()) {
+            if (panel.isCollapsed()) panel.expand();
+          } else {
+            if (!panel.isCollapsed()) panel.collapse();
+          }
+        });
       },
     }));
 

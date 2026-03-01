@@ -12,8 +12,10 @@ import { buildLynxTemplate } from './bundler/template-builder.js';
 import { samples } from './samples.js';
 import { getInitialState, saveToUrl, saveSampleToUrl } from './url-state.js';
 import { saveToLocalStorage, loadFromLocalStorage, clearLocalStorage } from './local-storage.js';
+import { useConsole } from './console/useConsole.js';
 
 const MOBILE_BREAKPOINT = 768;
+const SESSION_ID = Math.random().toString(36).slice(2);
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(
@@ -66,6 +68,7 @@ export function App() {
   const [template, setTemplate] = useState<LynxTemplate | null>(null);
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const isMobile = useIsMobile();
+  const { entries: consoleEntries, clear: clearConsole } = useConsole(SESSION_ID);
 
   const editorPaneRef = useRef<EditorPaneHandle>(null);
 
@@ -78,10 +81,12 @@ export function App() {
     const editor = editorPaneRef.current?.editor;
     if (!editor) return;
 
+    clearConsole();
+
     const t0 = performance.now();
     const { background, mainThread, css } = editor.getCode();
 
-    const { template: newTemplate, timing } = buildLynxTemplate(mainThread, background, css);
+    const { template: newTemplate, timing } = buildLynxTemplate(mainThread, background, css, SESSION_ID);
     const t2 = performance.now();
 
     setTemplate(newTemplate);
@@ -96,7 +101,7 @@ export function App() {
         `total: ${ms(t3 - t0)}`,
       ].join('  \u00b7  '),
     );
-  }, []);
+  }, [clearConsole]);
 
   // Debounced rebuild + persist
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -116,9 +121,12 @@ export function App() {
     }, 500);
   }, [rebuild]);
 
-  // Initial render after mount
+  // Initial render + collapse empty panels after mount
   useEffect(() => {
-    const timer = setTimeout(rebuild, 100);
+    const timer = setTimeout(() => {
+      rebuild();
+      editorPaneRef.current?.collapseByContent(initial.code);
+    }, 100);
     return () => clearTimeout(timer);
   }, [rebuild]);
 
@@ -139,11 +147,13 @@ export function App() {
     (index: number) => {
       setSampleIndex(index);
       const sample = samples[index]!;
-      editorPaneRef.current?.editor?.setCode({
+      const code = {
         background: sample.background,
         mainThread: sample.mainThread,
         css: sample.css,
-      });
+      };
+      editorPaneRef.current?.editor?.setCode(code);
+      editorPaneRef.current?.collapseByContent(code);
       clearLocalStorage();
       saveSampleToUrl(index);
       rebuild();
@@ -152,12 +162,15 @@ export function App() {
   );
 
   const handleShare = useCallback(() => {
-    const editor = editorPaneRef.current?.editor;
-    if (!editor) return;
-    const code = editor.getCode();
-    saveToUrl(code);
+    if (sampleIndex !== null) {
+      saveSampleToUrl(sampleIndex);
+    } else {
+      const editor = editorPaneRef.current?.editor;
+      if (!editor) return;
+      saveToUrl(editor.getCode());
+    }
     navigator.clipboard.writeText(window.location.href);
-  }, []);
+  }, [sampleIndex]);
 
   return (
     <div className="flex flex-col h-screen">
@@ -191,11 +204,11 @@ export function App() {
             className="h-full"
             style={{ display: mobileTab === 'preview' ? 'block' : 'none' }}
           >
-            <PreviewPane template={template} timingText={timingText} />
+            <PreviewPane template={template} timingText={timingText} consoleEntries={consoleEntries} onConsoleClear={clearConsole} />
           </div>
         </div>
       ) : (
-        <ResizablePanelGroup orientation="horizontal" className="flex-1 min-h-0">
+        <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
           <ResizablePanel defaultSize={60} minSize={20}>
             <EditorPane
               ref={editorPaneRef}
@@ -206,7 +219,7 @@ export function App() {
           </ResizablePanel>
           <ResizableHandle />
           <ResizablePanel defaultSize={40} minSize={20}>
-            <PreviewPane template={template} timingText={timingText} />
+            <PreviewPane template={template} timingText={timingText} consoleEntries={consoleEntries} onConsoleClear={clearConsole} />
           </ResizablePanel>
         </ResizablePanelGroup>
       )}
