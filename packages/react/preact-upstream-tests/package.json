@@ -1,0 +1,20 @@
+{
+  "name": "@lynx-js/preact-upstream-tests",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "preact:init": "cd ../../.. && git submodule update --init packages/react/preact-upstream-tests/preact",
+    "preact:status": "cd ../../.. && git submodule status packages/react/preact-upstream-tests/preact",
+    "preact:update": "cd ../../.. && git submodule update --remote packages/react/preact-upstream-tests/preact",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/testing-environment": "workspace:*",
+    "chai": "^5.2.0",
+    "jsdom": "^26.1.0",
+    "sinon": "^19.0.2",
+    "sinon-chai": "^4.0.0",
+    "vitest": "^3.2.4"
+  }
+}
