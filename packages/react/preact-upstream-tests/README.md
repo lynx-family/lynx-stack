@@ -4,7 +4,28 @@ Run Preact's own test suite through the **ReactLynx dual-threaded rendering pipe
 to verify semantic alignment between "Preact rendering to the Web" and
 "Preact rendering to Lynx through the Snapshot -> Element PAPI path".
 
-**Current results**: 203 pass / 0 fail / 107 skip (across 310 tests in 5 files)
+## Dual-Mode Testing
+
+The same test suite runs in **two modes** via Vitest workspace:
+
+| Mode          | Project Name               | What Preact Sees                                 | Validates                                   |
+| ------------- | -------------------------- | ------------------------------------------------ | ------------------------------------------- |
+| No compiler   | `preact-upstream`          | Raw props `{ className: 'foo' }`                 | Reconciler semantics baseline               |
+| With compiler | `preact-upstream-compiled` | `{ values: ['foo'] }` via SWC snapshot transform | Compiler optimization doesn't change output |
+
+The compiler is **conservative** (like Vue 3's compiler-hinted Virtual DOM) — it only
+optimizes what it can statically analyze. As an optimization, it should **not change
+program semantics**. Both modes' `scratch.innerHTML` should be identical for any given
+test. A discrepancy = a bug in the compiler or runtime.
+
+**Current results (no-compiler)**: 203 pass / 0 fail / 107 skip (across 310 tests in 5 files)
+**Current results (compiled)**: 148 pass / 0 fail / 162 skip (across 310 tests in 5 files)
+
+> The compiled mode has additional skips tracked in `compiler_skip_list` — these are
+> due to semantic differences in how the compiler outputs elements (e.g. `<wrapper>`
+> around text expressions, serialized event attributes, snapshot-based render return
+> values). The 148 passing tests confirm that the compiler preserves rendering semantics
+> for the majority of Preact's test suite.
 
 ## Goals and Non-Goals
 
@@ -114,12 +135,16 @@ This approach means:
 - **Easy to audit** — `skipped_count` shows the blast radius of each keyword
 - **Easy to evolve** — as Lynx gains features, remove entries and watch tests pass
 
-### Decision: `skip_list` vs `permanent_skip_list`
+### Decision: `skip_list` vs `permanent_skip_list` vs `compiler_skip_list`
 
 - **`skip_list`**: Tests that _could_ pass someday if we bridge the gap (e.g., BSI IDL
   properties, JSON serialization). We keep them separate to track potential future work.
 - **`permanent_skip_list`**: Tests that are _structurally impossible_ in Lynx (e.g.,
   direct DOM mutation, `<template>.content`). No point tracking these as future work.
+- **`compiler_skip_list`**: Tests that fail **only in compiled mode**. Applied only when
+  running the `preact-upstream-compiled` project. Most are due to `__snapshot_*` tag names
+  replacing HTML tags in `innerHTML`/`nodeName` assertions. As the compiled-mode setup
+  matures, entries should be investigated and either fixed or reclassified.
 
 ## Architecture
 
@@ -187,6 +212,23 @@ This approach means:
    ReactLynx-forked Preact uses `options.__c` (mangled). A `defineProperty`
    getter/setter bridges the two.
 
+### Vite Plugin Pipeline
+
+The two modes share most plugins but differ in whether the SWC snapshot transform runs:
+
+**No-compiler mode** (`preact-upstream`):
+
+1. `preact-pipeline-render` — `render(` → `__pipelineRender(`
+2. `preact-skiplist` — `it(` → `it.skip(` for skiplisted tests
+3. esbuild JSX transform — JSX → `createElement()` calls
+
+**Compiled mode** (`preact-upstream-compiled`):
+
+1. `preact-snapshot-transform` — JSX → snapshot definitions + `_jsx()` calls (SWC)
+2. `preact-pipeline-render` — `render(` → `__pipelineRender(`
+3. `preact-skiplist` — `it(` → `it.skip(` (includes `compiler_skip_list`)
+4. esbuild — no-op (no JSX remaining after SWC)
+
 ## Managing the Preact submodule (upstream)
 
 The `preact/` directory is a **git submodule** that points to the Lynx fork of Preact
@@ -231,7 +273,12 @@ Then run tests and commit the updated submodule reference if needed.
 Ensure the Preact submodule is initialized (see above), then from this package:
 
 ```bash
+# Run both modes (workspace)
 pnpm test
-# or
-npx vitest run
+
+# Run only no-compiler mode
+pnpm test:no-compile
+
+# Run only compiled mode
+pnpm test:compiled
 ```

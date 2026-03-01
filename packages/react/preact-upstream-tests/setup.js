@@ -48,6 +48,7 @@ const { addCtxNotFoundEventListener } = await import('../runtime/lib/lifecycle/p
 const {
   SnapshotInstance,
   snapshotManager,
+  snapshotCreatorMap,
   snapshotInstanceManager,
   setupPage,
 } = await import('../runtime/lib/snapshot.js');
@@ -89,8 +90,15 @@ const _origGet = snapshotManager.values.get.bind(snapshotManager.values);
 
 snapshotManager.values.has = function(type) {
   if (_origHas(type)) return true;
-  // Auto-register for any string type (HTML elements, custom elements, etc.)
   if (typeof type === 'string' || type === null) {
+    // If the compiler registered a creator for this type, let it register
+    // the real snapshot definition (with correct element tags) instead of
+    // falling back to a generic snapshot that uses the snapshot type name.
+    if (snapshotCreatorMap[type]) {
+      snapshotCreatorMap[type](type);
+      return _origHas(type);
+    }
+    // No compiler definition — auto-register a generic snapshot
     snapshotManager.values.set(type, createGenericSnapshot(type));
     return true;
   }
@@ -101,6 +109,13 @@ snapshotManager.values.get = function(type) {
   const existing = _origGet(type);
   if (existing) return existing;
   if (typeof type === 'string' || type === null) {
+    // Try compiler-registered creator first
+    if (snapshotCreatorMap[type]) {
+      snapshotCreatorMap[type](type);
+      const compiled = _origGet(type);
+      if (compiled) return compiled;
+    }
+    // Fallback to generic snapshot
     const snapshot = createGenericSnapshot(type);
     snapshotManager.values.set(type, snapshot);
     return snapshot;

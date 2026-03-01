@@ -6,7 +6,9 @@
     "preact:init": "cd ../../.. && git submodule update --init packages/react/preact-upstream-tests/preact",
     "preact:status": "cd ../../.. && git submodule status packages/react/preact-upstream-tests/preact",
     "preact:update": "cd ../../.. && git submodule update --remote packages/react/preact-upstream-tests/preact",
-    "test": "vitest run"
+    "test": "vitest run --workspace vitest.workspace.ts",
+    "test:compiled": "vitest run --workspace vitest.workspace.ts --project preact-upstream-compiled",
+    "test:no-compile": "vitest run --workspace vitest.workspace.ts --project preact-upstream"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
