@@ -1,0 +1,108 @@
+{
+  "unsupported_features": [
+    {
+      "keywords": ["getLog", "clearLog"],
+      "comment": "DOM mutation order — pipeline routes through <page> root, producing different mutation sequences"
+    },
+    {
+      "keywords": ["MutationObserver"],
+      "comment": "Lynx environment does not provide MutationObserver"
+    },
+    {
+      "keywords": ["dangerouslySetInnerHTML"],
+      "comment": "Lynx does not support dangerouslySetInnerHTML"
+    }
+  ],
+
+  "skip_list": [
+    {
+      "tests": [
+        "should not render falsy values",
+        "should render NaN as text content",
+        "should clear falsy attributes",
+        "should not render falsy attributes on hydrate"
+      ],
+      "comment": "JSON.stringify(NaN) → null — NaN is lost in BSI→patch IPC serialization"
+    },
+    {
+      "tests": ["should render bigint as text content"],
+      "comment": "JSON.stringify(BigInt) throws — BigInt cannot cross BSI→patch IPC boundary"
+    },
+    {
+      "tests": ["should serialize object props as attributes"],
+      "comment": "JSON.stringify strips custom toString() — object identity lost in IPC serialization"
+    },
+    {
+      "tests": [
+        "should keep c.base up to date if a nested child component changes DOM nodes",
+        "should not update sibling c.base if child component changes DOM nodes",
+        "should not update parent c.base if child component changes DOM nodes and it is not first child component",
+        "should update parent c.base if child component changes DOM nodes and it is first non-null child component",
+        "should not update parent c.base if child component changes DOM nodes and a parent is not first child component",
+        "should update parent c.base if first child becomes null",
+        "should update parent c.base if first child becomes non-null",
+        "should update parent c.base if first non-null child becomes null with multiple null siblings",
+        "should update parent c.base if a null child returns DOM with multiple null siblings",
+        "should update parent c.base to null if last child becomes null",
+        "should update parent c.base if last child returns dom",
+        "should not update parent if it is a DOM node"
+      ],
+      "comment": "component.base returns BSI (background thread), not a DOM node"
+    },
+    {
+      "tests": [
+        "should clear falsy input values",
+        "should set enumerable boolean attribute",
+        "should allow setting contentEditable to false",
+        "should not clear falsy DOM properties",
+        "should mask value on password input elements",
+        "should allow <input list /> to pass through as an attribute",
+        "should not throw when changing contentEditable to undefined or null",
+        "should support subsequent renders w/ defaultValue",
+        "should support subsequent renders w/ defaultChecked"
+      ],
+      "comment": "Web DOM IDL properties (value, checked, contentEditable, spellcheck, …) — Preact does dom[prop]=val but BSI has no IDL property, causing a different code path in setProperty()"
+    },
+    {
+      "tests": [
+        "should set checked attribute on custom elements without checked property",
+        "should support false aria-* attributes",
+        "should re-render nested components"
+      ],
+      "comment": "Boolean-to-attribute serialization convention (true→'' vs 'true', false→remove vs 'false') — web-specific behavior not relevant to Lynx Element PAPI"
+    },
+    {
+      "tests": [
+        "should not execute append operation when child is at last",
+        "should always diff `checked` and `value` properties against the DOM"
+      ],
+      "comment": "Refs return BSI, not DOM node — tests call ref.focus(), ref.value, etc."
+    },
+    {
+      "tests": ["should accurately call nested setState callbacks"],
+      "comment": "Pipeline timing — componentDidMount reads scratch before pipeline syncs output to container"
+    }
+  ],
+
+  "permanent_skip_list": [
+    {
+      "tests": [
+        "should reconcile mutated DOM attributes",
+        "should remove attributes on pre-existing DOM"
+      ],
+      "comment": "Test mutates or pre-populates jsdom directly — BSI has no access to main-thread DOM state"
+    },
+    {
+      "tests": ["should support the <template> tag"],
+      "comment": "BSI has no .content DocumentFragment — web-specific <template> API"
+    },
+    {
+      "tests": ["should reorder Fragment children"],
+      "comment": "BSI .type field collision — type set as JS property instead of setAttribute, breaking diff"
+    },
+    {
+      "tests": ["handle shuffled (stress test)"],
+      "comment": "Exceeds 5s timeout due to pipeline overhead per commit"
+    }
+  ]
+}
