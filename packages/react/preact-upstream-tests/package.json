@@ -8,7 +8,9 @@
     "preact:update": "cd ../../.. && git submodule update --remote packages/react/preact-upstream-tests/preact",
     "test": "vitest run --workspace vitest.workspace.ts",
     "test:compiled": "vitest run --workspace vitest.workspace.ts --project preact-upstream-compiled",
-    "test:no-compile": "vitest run --workspace vitest.workspace.ts --project preact-upstream"
+    "test:no-compile": "vitest run --workspace vitest.workspace.ts --project preact-upstream",
+    "test:skipped": "SKIPLIST_ONLY=skip_list,nocompile_skip_list vitest run --workspace vitest.workspace.ts --project preact-upstream",
+    "test:skipped:compiled": "SKIPLIST_ONLY=skip_list,compiler_skip_list vitest run --workspace vitest.workspace.ts --project preact-upstream-compiled"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
