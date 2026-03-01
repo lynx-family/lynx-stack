@@ -1,7 +1,6 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-/* global __SetClasses, __SetInlineStyles, __SetID, __SetAttribute, __AddDataset */
 /**
  * Preact Upstream Tests — Non-Compiled Mode Setup
  *
@@ -11,8 +10,10 @@
  * (style, addEventListener, removeAttribute), which must be shimmed.
  *
  * The string-keyed attributes from BSI are dispatched to Element PAPI via
- * applyViaElementPAPI(), mirroring the updateSpread() logic in the runtime.
+ * applyProp(), mirroring the updateSpread() logic in the runtime.
  */
+
+import { applyProp } from '@lynx-js/testing-environment';
 
 import { SnapshotInstance, lynxTestingEnv } from './setup-shared.js';
 
@@ -93,7 +94,7 @@ SnapshotInstance.prototype.setAttribute = function(key, value) {
     && this.__snapshot_def?.__isGeneric
     && this.__elements?.[0]
   ) {
-    applyViaElementPAPI(this.__elements[0], key, value);
+    applyProp(this.__elements[0], key, value);
   }
 };
 
@@ -105,61 +106,10 @@ SnapshotInstance.prototype.ensureElements = function() {
   if (this.__snapshot_def?.__isGeneric && this.__extraProps && this.__elements?.[0]) {
     const el = this.__elements[0];
     for (const [key, value] of Object.entries(this.__extraProps)) {
-      applyViaElementPAPI(el, key, value);
+      applyProp(el, key, value);
     }
   }
 };
-
-// Dispatch string-keyed attributes to Element PAPI methods (mirrors updateSpread logic).
-// This ensures the test exercises the real SI → Element PAPI → jsdom path.
-function applyViaElementPAPI(el, key, value) {
-  // Style: shimBSI generates 'style:cssText' and 'style:<prop>' keys
-  if (key === 'style:cssText' || key === 'style') {
-    __SetInlineStyles(el, value ?? '');
-    return;
-  }
-  if (key.startsWith('style:')) {
-    const prop = key.slice(6);
-    __SetInlineStyles(el, { [prop]: value ?? '' });
-    return;
-  }
-  if (key === 'className' || key === 'class') {
-    __SetClasses(el, value ?? '');
-    return;
-  }
-  if (key === 'id') {
-    __SetID(el, value ?? '');
-    return;
-  }
-  if (key === 'htmlFor') {
-    __SetAttribute(el, 'for', value);
-    return;
-  }
-  if (key.startsWith('data-')) {
-    __AddDataset(el, key.slice(5), value ?? '');
-    return;
-  }
-  // Skip event/internal/ref keys — events are handled by BSI shim,
-  // and these are forbidden by __SetAttribute.
-  if (key.startsWith('on') || key.startsWith('__') || key === '_listeners') return;
-  if (key === 'ref' || key === 'key') return;
-  // Boolean → string conversion before __SetAttribute
-  // (Preact sets translate={false}; DOM expects "yes"/"no")
-  if (key === 'translate') {
-    __SetAttribute(el, key, value ? 'yes' : 'no');
-    return;
-  }
-  if (value === true) {
-    __SetAttribute(el, key, '');
-    return;
-  }
-  if (value == null || value === false) {
-    __SetAttribute(el, key, null);
-    return;
-  }
-  // __SetAttribute handles string values directly; non-strings get JSON.stringify'd
-  __SetAttribute(el, key, typeof value === 'string' ? value : String(value));
-}
 
 // --- 3. Wrap background thread hooks to inject BSI shims ---
 // vitest-global-setup.js creates _document.createElement that returns plain BSI;
