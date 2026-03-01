@@ -63,7 +63,7 @@ export function LynxPreview({ template }: LynxPreviewProps) {
 
   return (
     <div
-      className="preview-content-area flex-1 flex flex-col overflow-hidden min-h-0 relative"
+      className="preview-content-area h-full flex flex-col overflow-hidden min-h-0 relative"
       style={{ background: 'var(--repl-preview-bg)' }}
       ref={containerRef}
     >

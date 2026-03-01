@@ -1,11 +1,13 @@
 import type { LynxTemplate, StyleInfo } from '@lynx-js/web-constants';
 
 import { processCSS } from './css-processor.js';
+import { getConsoleWrapperCode } from '../console/console-wrapper.js';
 
 export function buildLynxTemplate(
   mainThread: string,
   background: string,
   css: string,
+  sessionId: string,
 ): { template: LynxTemplate; timing: { 'css-serializer': number; assemble: number } } {
   const mainThreadWithFallback = `${mainThread}
 
@@ -13,6 +15,9 @@ if (typeof globalThis.renderPage !== 'function') {
   globalThis.renderPage = () => {};
 }
 `;
+
+  const mainThreadCode = getConsoleWrapperCode('main-thread', sessionId) + mainThreadWithFallback;
+  const backgroundCode = getConsoleWrapperCode('background', sessionId) + background;
 
   let styleInfo: StyleInfo = {};
   let cssSerializerTime = 0;
@@ -24,8 +29,8 @@ if (typeof globalThis.renderPage !== 'function') {
 
   const assembleStart = performance.now();
   const template: LynxTemplate = {
-    lepusCode: { root: mainThreadWithFallback },
-    manifest: { '/app-service.js': background },
+    lepusCode: { root: mainThreadCode },
+    manifest: { '/app-service.js': backgroundCode },
     styleInfo,
     pageConfig: {
       enableCSSSelector: true,

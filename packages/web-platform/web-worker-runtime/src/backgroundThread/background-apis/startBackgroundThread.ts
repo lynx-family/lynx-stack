@@ -68,6 +68,7 @@ export function startBackgroundThread(
             nativeApp,
             destroyCard,
             callDestroyLifetimeFun,
+            nativeGlobal,
           );
         },
       );

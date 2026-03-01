@@ -1,5 +1,6 @@
 // UI Tree
 import uiTreeCreatingElements from './examples/ui-tree-creating-elements/main-thread.js?raw';
+import uiTreeElementTypes from './examples/ui-tree-element-types/main-thread.js?raw';
 import uiTreeTreeMutations from './examples/ui-tree-tree-mutations/main-thread.js?raw';
 import uiTreeTreeTraversal from './examples/ui-tree-tree-traversal/main-thread.js?raw';
 
@@ -12,6 +13,7 @@ import stylingCssClassesCss from './examples/styling-css-classes-and-scoping/ind
 import interactivityEventMain from './examples/interactivity-event-handling/main-thread.js?raw';
 import interactivityEventBg from './examples/interactivity-event-handling/background.js?raw';
 import interactivitySelectorQuery from './examples/interactivity-selector-query/main-thread.js?raw';
+import interactivityGetById from './examples/interactivity-get-element-by-id/main-thread.js?raw';
 
 // Attributes & Data
 import attributesSetAndGet from './examples/attributes-set-and-get/main-thread.js?raw';
@@ -29,6 +31,14 @@ import lifecycleEvents from './examples/lifecycle-events/main-thread.js?raw';
 
 // List Virtualization
 import listVirtualization from './examples/list-virtualization/main-thread.js?raw';
+
+// Global APIs
+import globalSystemInfo from './examples/global-system-info/main-thread.js?raw';
+import globalFetchMain from './examples/global-fetch/main-thread.js?raw';
+import globalFetchBg from './examples/global-fetch/background.js?raw';
+import globalProps from './examples/global-props/main-thread.js?raw';
+import globalConsoleMain from './examples/global-console/main-thread.js?raw';
+import globalConsoleBg from './examples/global-console/background.js?raw';
 
 // Demos
 import demoCounterMain from './examples/demo-background-counter/main-thread.js?raw';
@@ -80,6 +90,13 @@ export const samples: Sample[] = [
     css: '',
   },
   {
+    name: 'Element Types & Props',
+    category: 'UI Tree',
+    mainThread: uiTreeElementTypes,
+    background: '',
+    css: '',
+  },
+  {
     name: 'Tree Mutations',
     category: 'UI Tree',
     mainThread: uiTreeTreeMutations,
@@ -122,6 +139,13 @@ export const samples: Sample[] = [
     name: 'SelectorQuery & Measurement',
     category: 'Interactivity',
     mainThread: interactivitySelectorQuery,
+    background: '',
+    css: '',
+  },
+  {
+    name: 'getElementById',
+    category: 'Interactivity',
+    mainThread: interactivityGetById,
     background: '',
     css: '',
   },
@@ -171,6 +195,36 @@ export const samples: Sample[] = [
     category: 'Lifecycle',
     mainThread: lifecycleEvents,
     background: '',
+    css: '',
+  },
+
+  // ── Global APIs ───────────────────────────────────────────────────────
+  {
+    name: 'SystemInfo',
+    category: 'Global APIs',
+    mainThread: globalSystemInfo,
+    background: '',
+    css: '',
+  },
+  {
+    name: 'Fetch API',
+    category: 'Global APIs',
+    mainThread: globalFetchMain,
+    background: globalFetchBg,
+    css: '',
+  },
+  {
+    name: '__globalProps',
+    category: 'Global APIs',
+    mainThread: globalProps,
+    background: '',
+    css: '',
+  },
+  {
+    name: 'Console API',
+    category: 'Global APIs',
+    mainThread: globalConsoleMain,
+    background: globalConsoleBg,
     css: '',
   },
 

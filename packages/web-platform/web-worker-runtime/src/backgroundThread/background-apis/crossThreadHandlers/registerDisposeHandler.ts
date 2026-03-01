@@ -10,10 +10,14 @@ export function registerDisposeHandler(
   destroyCard: typeof import('@lynx-js/lynx-core/web')['destroyCard'],
   callDestroyLifetimeFun:
     typeof import('@lynx-js/lynx-core/web')['callDestroyLifetimeFun'],
+  nativeGlobal?: typeof import('@lynx-js/lynx-core/web')['nativeGlobal'],
 ): void {
   rpc.registerHandler(disposeEndpoint, () => {
     const id = nativeApp.id;
-    callDestroyLifetimeFun(id);
+    const appInstance = nativeGlobal?.multiApps?.[id];
+    if (typeof appInstance?.callDestroyLifetimeFun === 'function') {
+      callDestroyLifetimeFun(id);
+    }
     destroyCard(id);
   });
 }
