@@ -1,0 +1,4 @@
+// main-thread.js — runs on the main thread (Lepus context)
+// This file can manipulate the element tree and handle rendering.
+// For a basic example, it can be left empty — the background thread
+// drives the initial element creation.
