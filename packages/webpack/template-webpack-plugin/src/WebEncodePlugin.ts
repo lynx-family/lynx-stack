@@ -109,7 +109,7 @@ export class WebEncodePlugin {
               .catch(
                 () => {
                   throw new Error(
-                    `cannot enable the flat EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE, please contact developers`,
+                    `cannot enable the flag EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE, please contact developers`,
                   );
                 },
               );
