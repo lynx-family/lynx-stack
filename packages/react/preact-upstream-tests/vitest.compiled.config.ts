@@ -26,7 +26,9 @@ function stripJsxPragmaPlugin(): Plugin {
   };
 }
 
-const baseConfig = createBaseConfig('preact-upstream-compiled');
+const baseConfig = createBaseConfig('preact-upstream-compiled', {
+  setupFile: 'setup-compiled.js',
+});
 
 // Compiled mode: SWC transforms JSX into snapshot elements with values arrays.
 // Preact sees { values: ['foo'] } instead of raw props.

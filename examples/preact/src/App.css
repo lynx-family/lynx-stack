@@ -1,0 +1,72 @@
+:root {
+  background-color: #1a1a2e;
+  --color-text: #fff;
+}
+
+.App {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+text {
+  color: var(--color-text);
+}
+
+.Banner {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.Title {
+  font-size: 36px;
+  font-weight: 700;
+}
+
+.Subtitle {
+  font-style: italic;
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.Content {
+  flex: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.Description {
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 15rpx;
+}
+
+.Button {
+  margin-top: 16px;
+  padding: 12px 32px;
+  background-color: #673ab7;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.ButtonText {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.Hint {
+  font-size: 12px;
+  margin-top: 16px;
+  color: rgba(255, 255, 255, 0.65);
+}

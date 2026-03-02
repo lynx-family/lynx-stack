@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { existsSync } from 'node:fs';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,7 +11,19 @@ import type { Plugin, UserConfig } from 'vitest/config';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const preactDir = path.resolve(__dirname, 'preact');
+// The preact fork submodule lives in the react package.
+// We reference it by relative path to avoid maintaining a second submodule.
+const preactDir = path.resolve(
+  __dirname,
+  '../../react/preact-upstream-tests/preact',
+);
+
+if (!existsSync(path.join(preactDir, 'src/index.js'))) {
+  throw new Error(
+    'Preact submodule not initialized.\n'
+      + 'Run: pnpm --filter @lynx-js/preact-upstream-tests run preact:init',
+  );
+}
 
 // --- Skiplist parsing ---
 
@@ -37,32 +50,22 @@ const skiplist: Skiplist = JSON.parse(
   readFileSync(path.resolve(__dirname, 'skiplist.json'), 'utf-8'),
 );
 
-const unsupportedFeatures = skiplist.unsupported_features
-  .flatMap(({ keywords }) =>
+const unsupportedFeatures = skiplist.unsupported_features.flatMap(
+  ({ keywords }) =>
     keywords.map((kw) => ({
       keyword: kw,
       pattern: new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`),
-    }))
-  );
+    })),
+);
 
 const commonSkips = new Set<string>(
-  [...skiplist.skip_list, ...skiplist.permanent_skip_list]
-    .flatMap((entry) => entry.tests),
+  [...skiplist.skip_list, ...skiplist.permanent_skip_list].flatMap(
+    (entry) => entry.tests,
+  ),
 );
 
-const noCompileSkips = new Set<string>(
-  skiplist.nocompile_skip_list
-    .flatMap((entry) => entry.tests),
-);
+// --- Utility ---
 
-const compilerSkips = new Set<string>(
-  skiplist.compiler_skip_list
-    .flatMap((entry) => entry.tests),
-);
-
-// --- Utility functions ---
-
-// Find the closing ')' that matches the opening '(' at position 0 of string s.
 function findMatchingParen(s: string): number {
   let depth = 0;
   for (let i = 0; i < s.length; i++) {
@@ -75,66 +78,16 @@ function findMatchingParen(s: string): number {
   return -1;
 }
 
-// Extract the source text of an it() block starting from the '(' after 'it'.
-// Returns the full source from '(' to the matching ')'.
 function extractItBody(code: string, openParenOffset: number): string | null {
   const closeIdx = findMatchingParen(code.slice(openParenOffset));
   if (closeIdx === -1) return null;
   return code.slice(openParenOffset, openParenOffset + closeIdx + 1);
 }
 
-// --- Shared plugins ---
-
-export function pipelineRenderPlugin(): Plugin {
-  return {
-    name: 'preact-pipeline-render',
-    enforce: 'pre',
-    transform(code, id) {
-      if (!id.includes('/test/') || id.includes('_util/')) return null;
-      if (!id.endsWith('.js') && !id.endsWith('.jsx')) return null;
-
-      if (code.includes('render') && (code.includes('from \'preact\'') || code.includes('from "preact"'))) {
-        const transformed = code.replace(
-          /\brender\s*\(/g,
-          (match, offset) => {
-            // Skip if part of another word (rerender, prerender, etc.)
-            if (offset > 0 && /\w/.test(code[offset - 1])) return match;
-            // Skip property access: .render(
-            if (offset > 0 && code[offset - 1] === '.') return match;
-            // Skip method definitions: render() { or render(props) {
-            const afterRender = code.slice(offset + match.length - 1);
-            const closeIdx = findMatchingParen(afterRender);
-            if (closeIdx !== -1) {
-              const afterClose = afterRender.slice(closeIdx + 1).trimStart();
-              if (afterClose.startsWith('{')) return match;
-            }
-            return '__pipelineRender(';
-          },
-        );
-        if (transformed !== code) {
-          return { code: transformed, map: null };
-        }
-      }
-      return null;
-    },
-  };
-}
-
-// --- SKIPLIST_ONLY mode ---
-// Parse SKIPLIST_ONLY env var to determine which skipped tests to run exclusively.
-// Format: "category" or "category:groupIndex" (comma-separated for multiple).
-// Examples:
-//   SKIPLIST_ONLY=skip_list                    — run all tests from skip_list
-//   SKIPLIST_ONLY=nocompile_skip_list          — run all tests from nocompile_skip_list
-//   SKIPLIST_ONLY=skip_list:0                  — run only the first group in skip_list
-//   SKIPLIST_ONLY=skip_list:0,skip_list:1      — run first two groups
-//   SKIPLIST_ONLY=unsupported_features:2       — run tests matching dangerouslySetInnerHTML keywords
-//   SKIPLIST_ONLY=permanent_skip_list           — run all permanently skipped tests
+// --- SKIPLIST_ONLY mode (same interface as react package for consistency) ---
 
 interface SkiplistOnlySpec {
-  /** Set of test names to run (from name-based categories) */
   names: Set<string>;
-  /** Keyword patterns to match in test bodies (from unsupported_features) */
   keywords: Array<{ keyword: string; pattern: RegExp }>;
 }
 
@@ -151,30 +104,39 @@ function parseSkiplistOnly(): SkiplistOnlySpec | null {
 
     const colonIdx = trimmed.indexOf(':');
     const category = colonIdx === -1 ? trimmed : trimmed.slice(0, colonIdx);
-    const groupIdx = colonIdx === -1 ? undefined : Number.parseInt(trimmed.slice(colonIdx + 1), 10);
+    const groupIdx = colonIdx === -1
+      ? undefined
+      : parseInt(trimmed.slice(colonIdx + 1), 10);
 
     if (category === 'unsupported_features') {
-      const entries = groupIdx === undefined
-        ? skiplist.unsupported_features
-        : [skiplist.unsupported_features[groupIdx]!];
+      const entries = groupIdx !== undefined
+        ? [skiplist.unsupported_features[groupIdx]!]
+        : skiplist.unsupported_features;
       for (const entry of entries) {
         for (const kw of entry.keywords) {
           keywords.push({
             keyword: kw,
-            pattern: new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`),
+            pattern: new RegExp(
+              `\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`,
+            ),
           });
         }
       }
     } else {
-      const list =
-        skiplist[category as 'skip_list' | 'nocompile_skip_list' | 'permanent_skip_list' | 'compiler_skip_list'];
+      const list = skiplist[
+        category as
+          | 'skip_list'
+          | 'nocompile_skip_list'
+          | 'permanent_skip_list'
+          | 'compiler_skip_list'
+      ];
       if (!list) {
         throw new Error(
           `SKIPLIST_ONLY: unknown category "${category}". `
-            + `Valid: unsupported_features, skip_list, nocompile_skip_list, permanent_skip_list, compiler_skip_list`,
+            + `Valid: unsupported_features, skip_list, permanent_skip_list`,
         );
       }
-      const entries = groupIdx === undefined ? list : [list[groupIdx]!];
+      const entries = groupIdx !== undefined ? [list[groupIdx]!] : list;
       for (const entry of entries) {
         for (const t of entry.tests) {
           names.add(t);
@@ -188,8 +150,55 @@ function parseSkiplistOnly(): SkiplistOnlySpec | null {
 
 const skiplistOnlySpec = parseSkiplistOnly();
 
-export function skiplistPlugin(projectName?: string): Plugin {
-  const isCompiled = projectName === 'preact-upstream-compiled';
+// --- Lynx render plugin ---
+// Rewrites render( → __lynxRender( in test files so that Preact renders
+// through our LynxDocument/LynxElement PAPI adapter (defined in setup.js)
+// instead of the browser DOM.
+//
+// This is analogous to pipelineRenderPlugin in packages/react/preact-upstream-tests,
+// but targets the main-thread direct renderer instead of the dual-thread pipeline.
+
+export function lynxRenderPlugin(): Plugin {
+  return {
+    name: 'preact-lynx-render',
+    enforce: 'pre',
+    transform(code, id) {
+      if (!id.includes('/test/') || id.includes('_util/')) return null;
+      if (!id.endsWith('.js') && !id.endsWith('.jsx')) return null;
+
+      if (
+        code.includes('render')
+        && (code.includes('from \'preact\'') || code.includes('from "preact"'))
+      ) {
+        const transformed = code.replace(
+          /\brender\s*\(/g,
+          (match, offset) => {
+            // Skip if part of another word (rerender, prerender, etc.)
+            if (offset > 0 && /\w/.test(code[offset - 1])) return match;
+            // Skip property access: .render(
+            if (offset > 0 && code[offset - 1] === '.') return match;
+            // Skip method definitions: render() { or render(props) {
+            const afterRender = code.slice(offset + match.length - 1);
+            const closeIdx = findMatchingParen(afterRender);
+            if (closeIdx !== -1) {
+              const afterClose = afterRender.slice(closeIdx + 1).trimStart();
+              if (afterClose.startsWith('{')) return match;
+            }
+            return '__lynxRender(';
+          },
+        );
+        if (transformed !== code) {
+          return { code: transformed, map: null };
+        }
+      }
+      return null;
+    },
+  };
+}
+
+// --- Skiplist plugin ---
+
+export function skiplistPlugin(): Plugin {
   return {
     name: 'preact-skiplist',
     enforce: 'pre',
@@ -200,30 +209,27 @@ export function skiplistPlugin(projectName?: string): Plugin {
       let transformed = code;
       let changed = false;
 
-      // Process it( and it.only( calls — rewrite to it.skip( when matched.
-      // Regex matches: it('name' or it("name" or it.only('name' etc.
       const itPattern = /\b(it(?:\.only)?)\s*\(\s*(['"`])((?:(?!\2).)*)\2/g;
       let match;
-      const replacements: Array<{ start: number; end: number; replacement: string }> = [];
+      const replacements: Array<{
+        start: number;
+        end: number;
+        replacement: string;
+      }> = [];
 
       if (skiplistOnlySpec) {
-        // --- SKIPLIST_ONLY mode: only run specified skipped tests ---
         while ((match = itPattern.exec(code)) !== null) {
-          const itKeyword = match[1]; // 'it' or 'it.only'
-          const testName = match[3];
+          const itKeyword = match[1]!;
+          const testName = match[3]!;
           const fullMatchStart = match.index;
 
-          // Check if this test is in the "only" set
-          let shouldRun = false;
+          let shouldRun = skiplistOnlySpec.names.has(testName);
 
-          // Check name-based match
-          if (skiplistOnlySpec.names.has(testName)) {
-            shouldRun = true;
-          }
-
-          // Check keyword-based match (unsupported_features)
           if (!shouldRun && skiplistOnlySpec.keywords.length > 0) {
-            const openParen = code.indexOf('(', fullMatchStart + itKeyword.length);
+            const openParen = code.indexOf(
+              '(',
+              fullMatchStart + itKeyword.length,
+            );
             if (openParen !== -1) {
               const body = extractItBody(code, openParen);
               if (body) {
@@ -237,7 +243,6 @@ export function skiplistPlugin(projectName?: string): Plugin {
             }
           }
 
-          // Skip tests that are NOT in the "only" set
           if (!shouldRun) {
             replacements.push({
               start: fullMatchStart,
@@ -247,13 +252,11 @@ export function skiplistPlugin(projectName?: string): Plugin {
           }
         }
       } else {
-        // --- Normal mode: skip tests that are in skip lists ---
         while ((match = itPattern.exec(code)) !== null) {
-          const itKeyword = match[1]; // 'it' or 'it.only'
-          const testName = match[3];
+          const itKeyword = match[1]!;
+          const testName = match[3]!;
           const fullMatchStart = match.index;
 
-          // Check manual skip lists first
           if (commonSkips.has(testName)) {
             replacements.push({
               start: fullMatchStart,
@@ -263,28 +266,10 @@ export function skiplistPlugin(projectName?: string): Plugin {
             continue;
           }
 
-          // Check no-compile-specific skip list
-          if (!isCompiled && noCompileSkips.has(testName)) {
-            replacements.push({
-              start: fullMatchStart,
-              end: fullMatchStart + itKeyword.length,
-              replacement: 'it.skip',
-            });
-            continue;
-          }
-
-          // Check compiler-specific skip list (only in compiled mode)
-          if (isCompiled && compilerSkips.has(testName)) {
-            replacements.push({
-              start: fullMatchStart,
-              end: fullMatchStart + itKeyword.length,
-              replacement: 'it.skip',
-            });
-            continue;
-          }
-
-          // Check keyword-based unsupported features by scanning the it() body
-          const openParen = code.indexOf('(', fullMatchStart + itKeyword.length);
+          const openParen = code.indexOf(
+            '(',
+            fullMatchStart + itKeyword.length,
+          );
           if (openParen === -1) continue;
           const body = extractItBody(code, openParen);
           if (!body) continue;
@@ -302,9 +287,10 @@ export function skiplistPlugin(projectName?: string): Plugin {
         }
       }
 
-      // Apply replacements in reverse order to preserve offsets
       for (const r of replacements.reverse()) {
-        transformed = transformed.slice(0, r.start) + r.replacement + transformed.slice(r.end);
+        transformed = transformed.slice(0, r.start)
+          + r.replacement
+          + transformed.slice(r.end);
         changed = true;
       }
 
@@ -318,11 +304,10 @@ export function skiplistPlugin(projectName?: string): Plugin {
 
 // --- Shared config factory ---
 
-export function createBaseConfig(name: string, options?: { setupFile?: string }): UserConfig {
-  const setupFile = options?.setupFile ?? 'setup-nocompile.js';
+export function createBaseConfig(): UserConfig {
   return {
     esbuild: {
-      // Treat .js files as JSX (upstream tests use /** @jsx createElement */ pragma)
+      // Upstream tests use /** @jsx createElement */ pragma
       loader: 'jsx',
       include: /.*\.js$/,
       exclude: ['node_modules'],
@@ -332,8 +317,8 @@ export function createBaseConfig(name: string, options?: { setupFile?: string })
     },
     resolve: {
       alias: [
-        // Map preact bare specifiers to fork source (from submodule)
-        // Order matters: more specific paths must come before less specific ones.
+        // Map preact bare specifiers to the forked source in the react submodule.
+        // More specific paths must come before less specific ones.
         {
           find: /^preact\/hooks$/,
           replacement: path.join(preactDir, 'hooks/src/index.js'),
@@ -364,25 +349,45 @@ export function createBaseConfig(name: string, options?: { setupFile?: string })
         },
       ],
     },
-    plugins: [
-      pipelineRenderPlugin(),
-      skiplistPlugin(name),
-    ],
+    plugins: [lynxRenderPlugin(), skiplistPlugin()],
     test: {
-      name,
+      name: 'preact-main-thread',
       globals: true,
       environment: 'jsdom',
-      setupFiles: [path.resolve(__dirname, setupFile)],
+      setupFiles: [path.resolve(__dirname, 'setup.js')],
 
       include: [
-        // Core rendering tests — the most valuable for alignment verification
+        // --- Core rendering ---
         'preact/test/browser/render.test.js',
         'preact/test/browser/components.test.js',
         'preact/test/browser/fragments.test.js',
         'preact/test/browser/keys.test.js',
         'preact/test/browser/createContext.test.js',
 
-        // Lifecycle methods
+        // --- Refs: now fully enabled ---
+        // In the react package, refs.test.js was excluded because ref.current
+        // returns a BSI (BackgroundSnapshotInstance), not a DOM node. Here,
+        // Preact renders directly in jsdom, so refs return real DOM nodes.
+        'preact/test/browser/refs.test.js',
+
+        // --- Events ---
+        // In the react package these were excluded due to Lynx's distinct event model.
+        // In direct jsdom rendering, addEventListener/removeEventListener work natively.
+        'preact/test/browser/events.test.js',
+
+        // --- Focus ---
+        // jsdom has basic focus support (activeElement, focus(), blur()).
+        // Not all tests may pass (layout-dependent ones won't), but many will.
+        'preact/test/browser/focus.test.js',
+
+        // --- Other browser utilities ---
+        'preact/test/browser/spec.test.js',
+        'preact/test/browser/cloneElement.test.js',
+        'preact/test/browser/isValidElement.test.js',
+        'preact/test/browser/toChildArray.test.js',
+        'preact/test/browser/placeholders.test.js',
+
+        // --- All lifecycle methods ---
         'preact/test/browser/lifecycles/lifecycle.test.js',
         'preact/test/browser/lifecycles/componentDidCatch.test.js',
         'preact/test/browser/lifecycles/getDerivedStateFromError.test.js',
@@ -396,16 +401,7 @@ export function createBaseConfig(name: string, options?: { setupFile?: string })
         'preact/test/browser/lifecycles/componentWillUpdate.test.js',
         'preact/test/browser/lifecycles/componentWillReceiveProps.test.js',
 
-        // Utilities and additional browser tests
-        'preact/test/browser/spec.test.js',
-        'preact/test/browser/cloneElement.test.js',
-        'preact/test/browser/isValidElement.test.js',
-        'preact/test/browser/toChildArray.test.js',
-        'preact/test/browser/placeholders.test.js',
-        'preact/test/browser/events.test.js',
-        'preact/test/browser/focus.test.js',
-
-        // Hooks
+        // --- All hooks ---
         'preact/hooks/test/browser/useState.test.js',
         'preact/hooks/test/browser/useEffect.test.js',
         'preact/hooks/test/browser/useContext.test.js',
@@ -421,25 +417,37 @@ export function createBaseConfig(name: string, options?: { setupFile?: string })
       ],
 
       exclude: [
-        // PAPI: no createElementNS — SVG/MathML namespace tests fail
+        // JSDOM: CSSStyleDeclaration.setProperty behavior differs from browsers
+        'preact/test/browser/style.test.js',
+
+        // Namespace elements (SVG/MathML/custom): deferred
         'preact/test/browser/svg.test.js',
         'preact/test/browser/mathml.test.js',
         'preact/test/browser/customBuiltInElements.test.js',
-        // Missing dep: preact-render-to-string (deferred to v2)
+
+        // Missing dep: preact-render-to-string
         'preact/hooks/test/browser/useId.test.js',
-        // JSDOM: CSSStyleDeclaration.setProperty behavior differs from browsers
-        'preact/test/browser/style.test.js',
-        // Preact internals: accesses _children VNode attachment on DOM nodes, not pipeline-compatible
+
+        // Deferred: SSR hydration
+        'preact/test/browser/hydrate.test.js',
+
+        // Deferred: select element specifics
+        'preact/test/browser/select.test.js',
+
+        // Deferred: debug value display
+        'preact/hooks/test/browser/useDebugValue.test.js',
+
+        // Deferred: options hook internals
+        'preact/hooks/test/browser/hooks.options.test.js',
+
+        // PAPI incompatibility: getDomSibling.test.js compares vnode._dom
+        // (which is a LynxElement) against raw jsdom elements — they won't match.
         'preact/test/browser/getDomSibling.test.js',
-        // replaceNode (3rd render() param): pre-populated DOM + internal _children state, web-specific
+
+        // PAPI incompatibility: replaceNode passes a raw jsdom element as the
+        // 3rd render() arg but Preact now tracks LynxElement nodes internally.
         'preact/test/browser/replaceNode.test.js',
-        // refs: ~17/26 fail in both modes — BSI refs vs DOM nodes (tracked in skip_list)
-        // Deferred until BSI ref bridging is implemented
-        'preact/test/browser/refs.test.js',
       ],
-      // Exclude compat tests (fork deleted handleDomVNode — className→class, onChange→onInput etc.)
-      // Exclude debug tests (deferred to v2)
-      // Exclude devtools tests (deferred to v2)
     },
   };
 }

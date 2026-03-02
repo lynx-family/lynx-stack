@@ -51,6 +51,9 @@
 
       "packages/tailwind-preset/**",
 
+      // Out-of-tree experimental packages (not part of main trunk)
+      "packages/preact/**",
+
       "packages/testing-library/**",
       "packages/react/testing-library/**",
       "packages/lynx/gesture-runtime/__test__/**",

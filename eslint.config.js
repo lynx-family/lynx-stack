@@ -106,6 +106,12 @@ export default tseslint.config(
       // TODO: enable eslint for tailwind-preset
       // tailwind-preset
       'packages/tailwind-preset/**',
+
+      // Out-of-tree experimental packages (not part of main trunk)
+      'packages/preact/**',
+
+      // Internal agent/workspace notes (not source code)
+      '.context/**',
     ],
   },
   js.configs.recommended,

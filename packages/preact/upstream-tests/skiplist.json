@@ -1,0 +1,96 @@
+{
+  "_comment": "Skiplist for packages/preact/upstream-tests (main-thread direct rendering).",
+  "_comment2": "This skiplist is intentionally minimal: most tests pass when Preact renders",
+  "_comment2b": "directly in jsdom without the dual-thread pipeline.",
+  "_comment3": "Categories that vanish vs packages/react/preact-upstream-tests:",
+  "_comment3b": "  - Dual-thread: refs return DOM nodes, useLayoutEffect is synchronous",
+  "_comment3c": "  - Test methodology: getLog/clearLog spy on synchronous DOM, __pipelineRender gone",
+  "_comment3d": "  - BSI/snapshot machinery: none of it is needed here",
+
+  "unsupported_features": [],
+
+  "skip_list": [
+    {
+      "tests": [
+        "handle shuffled (stress test)"
+      ],
+      "comment": "Exceeds default test timeout."
+    },
+    {
+      "tests": [
+        "should effectively iterate on large lists",
+        "should effectively iterate on large component lists"
+      ],
+      "comment": "Stress tests: exceed default test timeout under PAPI rendering overhead."
+    },
+    {
+      "tests": [
+        "should set enumerable boolean attribute",
+        "should not throw when changing contentEditable to undefined or null",
+        "should allow setting contentEditable to false"
+      ],
+      "comment": "Web DOM IDL property: jsdom does not fully implement contentEditable as an IDL attribute (returns undefined instead of 'inherit'/'true'). The Lynx fork uses setAttribute/removeAttribute which sets the content attribute, but the IDL getter is not reflected by jsdom."
+    },
+    {
+      "tests": [
+        "should support (got|lost)PointerCapture events"
+      ],
+      "comment": "Event name case normalization: the Lynx fork normalizes onGotPointerCapture to 'GotPointerCapture' (uppercase), while the test expects 'gotpointercapture' (lowercase). This is a difference in the forked Preact's event name handling vs upstream."
+    },
+    {
+      "tests": [
+        "should invoke refs in __lynxRender()",
+        "should not call stale refs",
+        "should invoke refs in Component.render()",
+        "should only null refs after unmount",
+        "should null and re-invoke refs when swapping component root element type",
+        "should add refs to components representing DOM nodes with no attributes if they have been pre-rendered",
+        "should not remove refs for memoized components keyed",
+        "should not remove refs for memoized components unkeyed",
+        "should properly call null for memoized components keyed",
+        "should properly call null for memoized components unkeyed",
+        "should bind refs before componentDidMount",
+        "should call refs after element is added to document on initial mount",
+        "should call refs after element is added to document on update",
+        "is invoked after refs are set",
+        "parent and child refs should be set before all effects"
+      ],
+      "comment": "PAPI ref mismatch: ref.current is a LynxElement Proxy wrapping the jsdom element, not the jsdom HTMLElement itself. Tests that compare ref.current with scratch.firstChild (a raw jsdom element) will fail because they are different objects. In production Lynx, ref.current would be a native element handle."
+    },
+    {
+      "tests": [
+        "should correctly display DOM",
+        "should invoke layout effects after subtree is fully connected",
+        "should run layout affects after all refs are invoked"
+      ],
+      "comment": "document.body.contains(ref.current) fails: ref.current is a LynxElement Proxy, not a jsdom Node, so jsdom's Node.contains() rejects it with 'parameter 1 is not of type Node'."
+    },
+    {
+      "tests": [
+        "should support subsequent renders w/ defaultValue",
+        "should support subsequent renders w/ defaultChecked",
+        "should not hydrate with dangerouslySetInnerHTML",
+        "should remove attributes on pre-existing DOM"
+      ],
+      "comment": "Pre-existing DOM incompatibility: these tests set scratch.innerHTML before rendering to simulate DOM reuse (hydration). Our __kids array only tracks elements appended via PAPI; it does not see pre-existing jsdom children. So Preact's excessDomChildren list is empty and it creates new elements rather than reusing the existing ones."
+    },
+    {
+      "tests": [
+        "should support the <template> tag"
+      ],
+      "comment": "template element: Preact renders children into template.content (a DocumentFragment), but our LynxElement does not expose a .content property. This is a niche HTML feature not relevant to Lynx apps."
+    },
+    {
+      "tests": [
+        "should not clear falsy DOM properties"
+      ],
+      "comment": "DOM property path: test expects border={false} on <table> to produce border=\"false\" attribute. In browsers, 'border' in table is true so Preact uses the DOM property path (table.border = false → 'false' string). For our LynxElement, 'border' is not a declared property so Preact uses setAttribute('border', false) which our applyViaElementPAPI converts to removeAttribute."
+    }
+  ],
+
+  "permanent_skip_list": [],
+
+  "nocompile_skip_list": [],
+
+  "compiler_skip_list": []
+}

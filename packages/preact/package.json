@@ -1,0 +1,29 @@
+{
+  "name": "@lynx-js/preact",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Preact running directly on the Lynx main thread (single-thread renderer, no dual-thread pipeline)",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "default": "./src/index.js"
+    },
+    "./jsx-runtime": {
+      "import": "./src/jsx-runtime.js",
+      "default": "./src/jsx-runtime.js"
+    },
+    "./jsx-dev-runtime": {
+      "import": "./src/jsx-runtime.js",
+      "default": "./src/jsx-runtime.js"
+    }
+  },
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "scripts": {
+    "test": "pnpm --filter @lynx-js/preact-upstream-tests run test"
+  },
+  "dependencies": {
+    "preact": "^10.28.0"
+  }
+}
