@@ -11,79 +11,79 @@
  * Regular elements start from id=2.
  */
 export class ShadowElement {
-  static nextId = 2 // 1 is reserved for the page root
+  static nextId = 2; // 1 is reserved for the page root
 
-  id: number
-  type: string
-  parent: ShadowElement | null = null
-  firstChild: ShadowElement | null = null
-  lastChild: ShadowElement | null = null
-  prev: ShadowElement | null = null
-  next: ShadowElement | null = null
+  id: number;
+  type: string;
+  parent: ShadowElement | null = null;
+  firstChild: ShadowElement | null = null;
+  lastChild: ShadowElement | null = null;
+  prev: ShadowElement | null = null;
+  next: ShadowElement | null = null;
 
   constructor(type: string, forceId?: number) {
-    if (forceId !== undefined) {
-      this.id = forceId
+    if (forceId === undefined) {
+      this.id = ShadowElement.nextId++;
     } else {
-      this.id = ShadowElement.nextId++
+      this.id = forceId;
     }
-    this.type = type
+    this.type = type;
   }
 
   insertBefore(child: ShadowElement, anchor: ShadowElement | null): void {
     // Detach from current parent first
     if (child.parent) {
-      child.parent.removeChild(child)
+      child.parent.removeChild(child);
     }
-    child.parent = this
+    child.parent = this;
 
-    if (!anchor) {
+    if (anchor) {
+      // Insert before anchor
+      const prev = anchor.prev;
+      child.next = anchor;
+      child.prev = prev;
+      anchor.prev = child;
+      if (prev) {
+        prev.next = child;
+      } else {
+        this.firstChild = child;
+      }
+    } else {
       // Append at end
       if (this.lastChild) {
-        this.lastChild.next = child
-        child.prev = this.lastChild
+        this.lastChild.next = child;
+        child.prev = this.lastChild;
       } else {
-        this.firstChild = child
-        child.prev = null
+        this.firstChild = child;
+        child.prev = null;
       }
-      this.lastChild = child
-      child.next = null
-    } else {
-      // Insert before anchor
-      const prev = anchor.prev
-      child.next = anchor
-      child.prev = prev
-      anchor.prev = child
-      if (prev) {
-        prev.next = child
-      } else {
-        this.firstChild = child
-      }
+      this.lastChild = child;
+      child.next = null;
     }
   }
 
   removeChild(child: ShadowElement): void {
-    const prev = child.prev
-    const next = child.next
+    const prev = child.prev;
+    const next = child.next;
     if (prev) {
-      prev.next = next
+      prev.next = next;
     } else {
-      this.firstChild = next
+      this.firstChild = next;
     }
     if (next) {
-      next.prev = prev
+      next.prev = prev;
     } else {
-      this.lastChild = prev
+      this.lastChild = prev;
     }
-    child.parent = null
-    child.prev = null
-    child.next = null
+    child.parent = null;
+    child.prev = null;
+    child.next = null;
   }
 }
 
-export const PAGE_ROOT_ID = 1
+export const PAGE_ROOT_ID = 1;
 
 /** Create the page root shadow element with the reserved id=1. */
 export function createPageRoot(): ShadowElement {
-  return new ShadowElement('page', PAGE_ROOT_ID)
+  return new ShadowElement('page', PAGE_ROOT_ID);
 }

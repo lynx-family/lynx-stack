@@ -31,13 +31,32 @@ declare var lynxCoreInject:
 
 const g = globalThis as Record<string, unknown>;
 
+console.info(
+  '[vue-bg] entry-background init, lynxCoreInject type:',
+  typeof lynxCoreInject,
+);
+
 // Primary path: lynxCoreInject.tt.publishEvent (used by modern Lynx)
 if (typeof lynxCoreInject !== 'undefined' && lynxCoreInject?.tt) {
+  console.info('[vue-bg] setting lynxCoreInject.tt.publishEvent');
   lynxCoreInject.tt.publishEvent = publishEvent;
+  lynxCoreInject.tt['publicComponentEvent'] = (
+    _cid: string,
+    sign: string,
+    data: unknown,
+  ) => {
+    console.info('[vue-bg] publicComponentEvent sign:', sign);
+    publishEvent(sign, data);
+  };
+} else {
+  console.info(
+    '[vue-bg] lynxCoreInject.tt NOT available, falling back to globalThis only',
+  );
 }
 
 // Fallback: some older Lynx SDKs call globalThis.publishEvent directly
 g['publishEvent'] = publishEvent;
+console.info('[vue-bg] globalThis.publishEvent set');
 
 // updatePage – Vue's reactivity handles all updates automatically.
 g['updatePage'] = function(_data: unknown): void {

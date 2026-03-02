@@ -21,19 +21,19 @@ import {
   h,
   onMounted,
   ref,
-} from '@lynx-js/vue-runtime'
+} from '@lynx-js/vue-runtime';
 
 const Counter = defineComponent({
   name: 'Counter',
   setup() {
-    const count = ref(0)
+    const count = ref(0);
 
     onMounted(() => {
       // Auto-increment every 2 s to verify reactive updates work without user input
       setInterval(() => {
-        count.value++
-      }, 2000)
-    })
+        count.value++;
+      }, 2000);
+    });
 
     return () =>
       h(
@@ -52,16 +52,23 @@ const Counter = defineComponent({
                 backgroundColor: '#0077ff',
                 borderRadius: 8,
               },
-              bindtap: () => {
-                count.value++
+              bindtap: (e: unknown) => {
+                console.info(
+                  '[vue-app] bindtap fired! event=',
+                  e,
+                  'count before=',
+                  count.value,
+                );
+                count.value++;
+                console.info('[vue-app] count after=', count.value);
               },
             },
             [h('text', { style: { color: '#fff' } }, ['Tap to increment'])],
           ),
         ],
-      )
+      );
   },
-})
+});
 
 const App = defineComponent({
   name: 'App',
@@ -72,9 +79,9 @@ const App = defineComponent({
           'Vue 3 × Lynx – Dual-Thread MVP',
         ]),
         h(Counter),
-      ])
+      ]);
   },
-})
+});
 
-const app = createApp(App)
-app.mount()
+const app = createApp(App);
+app.mount();

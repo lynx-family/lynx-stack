@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 
@@ -42,7 +43,10 @@ interface WebpackCompilation {
 
 /** Minimal typing for the webpack Compiler object (avoids importing @rspack/core). */
 interface WebpackCompiler {
-  webpack: { Compilation: { PROCESS_ASSETS_STAGE_ADDITIONAL: number } };
+  webpack: {
+    Compilation: { PROCESS_ASSETS_STAGE_ADDITIONAL: number };
+    sources: { RawSource: new(source: string) => unknown };
+  };
   hooks: {
     thisCompilation: {
       tap(
@@ -54,12 +58,29 @@ interface WebpackCompiler {
 }
 
 /**
- * VueMainThreadPlugin marks the main-thread.js chunk with `lynx:main-thread: true`
- * so that LynxTemplatePlugin routes it to `lepusCode.root` (compiled to Lepus bytecode)
- * rather than the background-thread manifest.
+ * VueMainThreadPlugin replaces the webpack-generated main-thread.js bundle with
+ * a pre-built flat ESM script and marks it with `lynx:main-thread: true`.
+ *
+ * WHY: rspeedy sets `chunkLoading: 'lynx'` globally.  With this setting webpack's
+ * StartupChunkDependenciesPlugin only generates a startup call
+ * (`__webpack_require__(entryId)`) when `hasChunkEntryDependentChunks(chunk)` is
+ * true.  For the simple main-thread entry (no async imports) that condition is
+ * false, so the module factories inside `__webpack_modules__` never execute.
+ * This means `globalThis.renderPage`, `globalThis.vuePatchUpdate`, etc. are never
+ * assigned and Lepus throws "renderPage is not a function".
+ *
+ * The background bundle is fine because RuntimeWrapperWebpackPlugin wraps it in an
+ * AMD `tt.define(...)` factory which acts as the startup mechanism.
+ *
+ * Fix: rslib builds entry-main.ts as a flat bundled ESM (no module wrapping).
+ * We replace the webpack asset content with that flat script so every assignment
+ * runs at the top level when Lepus evaluates the script.
  */
 class VueMainThreadPlugin {
-  constructor(private readonly mainThreadFilenames: string[]) {}
+  constructor(
+    private readonly mainThreadFilenames: string[],
+    private readonly flatBundlePath: string,
+  ) {}
 
   apply(compiler: WebpackCompiler): void {
     compiler.hooks.thisCompilation.tap(
@@ -71,13 +92,19 @@ class VueMainThreadPlugin {
             stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
           },
           () => {
+            const flatCode = fs.readFileSync(this.flatBundlePath, 'utf8');
+            const RawSource = compiler.webpack.sources.RawSource;
             for (const filename of this.mainThreadFilenames) {
               const asset = compilation.getAsset(filename);
               if (asset) {
-                compilation.updateAsset(filename, asset.source, {
-                  ...asset.info,
-                  'lynx:main-thread': true,
-                });
+                compilation.updateAsset(
+                  filename,
+                  new RawSource(flatCode),
+                  {
+                    ...asset.info,
+                    'lynx:main-thread': true,
+                  },
+                );
               }
             }
           },
@@ -200,14 +227,24 @@ export function applyEntry(api: RsbuildPluginAPI): void {
     }
 
     // ------------------------------------------------------------------
-    // VueMainThreadPlugin – mark main-thread.js with lynx:main-thread: true
-    // so LynxTemplatePlugin routes it to lepusCode.root (Lepus bytecode)
-    // instead of the background-thread manifest.
+    // VueMainThreadPlugin – replace webpack-generated main-thread.js with
+    // a pre-built flat bundle and mark with lynx:main-thread: true so that
+    // LynxTemplatePlugin routes it to lepusCode.root (Lepus bytecode).
     // ------------------------------------------------------------------
     if (isLynx && mainThreadFilenames.length > 0) {
+      // Resolve the pre-built flat bundle next to the package.json so that
+      // it works even before the package exposes an explicit export path.
+      const pkgRoot = path.dirname(
+        require.resolve('@lynx-js/vue-main-thread/package.json'),
+      );
+      const flatBundlePath = path.join(
+        pkgRoot,
+        'dist',
+        'main-thread-bundled.js',
+      );
       chain
         .plugin(PLUGIN_MARK_MAIN_THREAD)
-        .use(VueMainThreadPlugin, [mainThreadFilenames])
+        .use(VueMainThreadPlugin, [mainThreadFilenames, flatBundlePath])
         .end();
     }
 

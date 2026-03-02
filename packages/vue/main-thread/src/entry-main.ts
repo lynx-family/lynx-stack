@@ -31,9 +31,11 @@ g['processData'] = function(data: unknown, _processorName?: string): unknown {
 // We create the root page element and store it as id=1 so Background ops that
 // target the root can resolve it correctly.
 g['renderPage'] = function(_data: unknown): void {
+  console.info('[vue-mt] renderPage called');
   const page = __CreatePage('0', 0);
   elements.set(PAGE_ROOT_ID, page);
   __FlushElementTree(page);
+  console.info('[vue-mt] renderPage done, page root id=1 stored');
 };
 
 // Lynx may call updatePage / updateGlobalProps after data changes.
@@ -49,5 +51,11 @@ g['updateGlobalProps'] = function(_data: unknown): void {
 // Called by the BG Thread via callLepusMethod('vuePatchUpdate', { data }).
 g['vuePatchUpdate'] = function({ data }: { data: string }): void {
   const ops = JSON.parse(data) as unknown[];
+  console.info(
+    '[vue-mt] vuePatchUpdate: ops.length=',
+    ops.length,
+    'raw:',
+    data.slice(0, 200),
+  );
   applyOps(ops);
 };
