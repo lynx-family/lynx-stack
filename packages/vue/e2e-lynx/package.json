@@ -1,0 +1,23 @@
+{
+  "name": "@lynx-js/vue-e2e-lynx",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vue-Lynx dual-thread MVP demo app",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "rspeedy build",
+    "dev": "rspeedy dev"
+  },
+  "dependencies": {
+    "@lynx-js/vue-runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/vue-rsbuild-plugin": "workspace:*",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

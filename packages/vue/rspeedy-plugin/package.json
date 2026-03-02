@@ -1,0 +1,49 @@
+{
+  "name": "@lynx-js/vue-rsbuild-plugin",
+  "version": "0.1.0",
+  "private": false,
+  "description": "A rsbuild / rspeedy plugin for Vue-Lynx",
+  "keywords": ["rsbuild", "vue", "lynx", "vue-lynx"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/vue/rspeedy-plugin"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "CHANGELOG.md", "README.md"],
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch"
+  },
+  "dependencies": {
+    "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
+    "@lynx-js/template-webpack-plugin": "workspace:*",
+    "@lynx-js/vue-main-thread": "workspace:*",
+    "@lynx-js/vue-runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@rslib/core": "^0.7.0",
+    "rsbuild-plugin-publint": "0.3.4",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "@rsbuild/core": "catalog:rsbuild"
+  },
+  "peerDependenciesMeta": {
+    "@rsbuild/core": {
+      "optional": false
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

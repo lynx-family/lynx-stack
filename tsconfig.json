@@ -129,6 +129,15 @@
       "path": "./packages/motion"
     },
     {
+      "path": "./packages/vue/runtime/tsconfig.build.json"
+    },
+    {
+      "path": "./packages/vue/main-thread/tsconfig.build.json"
+    },
+    {
+      "path": "./packages/vue/rspeedy-plugin/tsconfig.build.json"
+    },
+    {
       "path": "./packages/tailwind-preset/tsconfig.build.json"
     }
   ],

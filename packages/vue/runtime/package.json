@@ -1,0 +1,42 @@
+{
+  "name": "@lynx-js/vue-runtime",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Vue 3 custom renderer for Lynx Background Thread",
+  "keywords": ["vue", "lynx", "vue-lynx", "renderer"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/vue/runtime"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./entry-background": {
+      "types": "./dist/entry-background.d.ts",
+      "import": "./dist/entry-background.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "CHANGELOG.md", "README.md"],
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch"
+  },
+  "dependencies": {
+    "@vue/runtime-core": "^3.5.0"
+  },
+  "devDependencies": {
+    "@rslib/core": "^0.7.0",
+    "rsbuild-plugin-publint": "0.3.4",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
