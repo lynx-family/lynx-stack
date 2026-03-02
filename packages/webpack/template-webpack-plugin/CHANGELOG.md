@@ -1,5 +1,14 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.10.4
+
+### Patch Changes
+
+- Move `cssChunksToMap` implementation from `@lynx-js/template-webpack-plugin` to `@lynx-js/css-serializer` for future reuse. ([#2269](https://github.com/lynx-family/lynx-stack/pull/2269))
+
+- Updated dependencies [[`9033e2d`](https://github.com/lynx-family/lynx-stack/commit/9033e2d6c7c0c2405ecbbf73446239dd65b4a177)]:
+  - @lynx-js/css-serializer@0.1.4
+
 ## 0.10.3
 
 ### Patch Changes

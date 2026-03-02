@@ -1,5 +1,11 @@
 # @lynx-js/web-elements
 
+## 0.11.3
+
+### Patch Changes
+
+- fix: firefox 147+ layout issue ([#2205](https://github.com/lynx-family/lynx-stack/pull/2205))
+
 ## 0.11.2
 
 ### Patch Changes

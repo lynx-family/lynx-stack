@@ -1,5 +1,15 @@
 # @lynx-js/web-core-wasm
 
+## 0.0.4
+
+### Patch Changes
+
+- Refactor web element templates and server-side rendering logic ([#2205](https://github.com/lynx-family/lynx-stack/pull/2205))
+
+- Updated dependencies [[`94e5779`](https://github.com/lynx-family/lynx-stack/commit/94e57796c39e9cab1f3790a1986aeacea6a7484e), [`9033e2d`](https://github.com/lynx-family/lynx-stack/commit/9033e2d6c7c0c2405ecbbf73446239dd65b4a177)]:
+  - @lynx-js/web-elements@0.11.3
+  - @lynx-js/css-serializer@0.1.4
+
 ## 0.0.3
 
 ### Patch Changes

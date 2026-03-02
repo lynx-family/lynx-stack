@@ -1,5 +1,13 @@
 # @lynx-js/react
 
+## 0.116.4
+
+### Patch Changes
+
+- Support `ReactLynx::hooks::setState` trace for function components. ([#2198](https://github.com/lynx-family/lynx-stack/pull/2198))
+
+- fix: properly cleanup `__DestroyLifetime` listeners and listCallbacks in `snapshotDestroyList`. ([#2224](https://github.com/lynx-family/lynx-stack/pull/2224))
+
 ## 0.116.3
 
 ### Patch Changes
