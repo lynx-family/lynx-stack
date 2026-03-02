@@ -37,6 +37,26 @@ interface EditorPaneProps {
 /** Height/width of a collapsed panel in px (main-axis size). */
 const COLLAPSED_SIZE_PX = 30;
 
+/** Monaco editor line height: Math.round(1.5 × fontSize=13) */
+const LINE_HEIGHT_PX = 20;
+/** From EDITOR_OPTIONS padding.top */
+const MONACO_TOP_PADDING_PX = 4;
+/** EditorWindowHeader min-h-[26px] */
+const HEADER_HEIGHT_PX = 26;
+/** Bottom buffer for scrollbar / focus ring */
+const MONACO_BOTTOM_BUFFER_PX = 8;
+
+/** Estimate the pixel height a panel needs to display `code` without scrolling. */
+function naturalHeightPx(code: string): number {
+  const lines = (code.match(/\n/g)?.length ?? 0) + 1;
+  return (
+    HEADER_HEIGHT_PX
+    + MONACO_TOP_PADDING_PX
+    + lines * LINE_HEIGHT_PX
+    + MONACO_BOTTOM_BUFFER_PX
+  );
+}
+
 const WINDOWS = [
   {
     id: 'window-main-thread',
@@ -73,6 +93,73 @@ export const EditorPane = forwardRef<EditorPaneHandle, EditorPaneProps>(
       false,
       false,
     ]);
+
+    /**
+     * Distribute space among expanded panels, shrinking panels whose natural
+     * content height is less than their equal share and giving surplus to others.
+     * Falls back to equal distribution for panels that want more space.
+     */
+    const distributeByContent = useCallback(
+      (
+        collapsed: boolean[],
+        code: { mainThread: string; background: string; css: string },
+      ) => {
+        const expandedIndices: number[] = [];
+        collapsed.forEach((c, i) => {
+          if (!c) expandedIndices.push(i);
+        });
+        if (expandedIndices.length === 0) return;
+
+        const el = groupElementRef.current;
+        if (!el) return;
+        const totalPx = layout === 'rows' ? el.offsetHeight : el.offsetWidth;
+        if (!totalPx) return;
+
+        const collapsedCount = collapsed.filter(Boolean).length;
+        const remainingPx = totalPx - collapsedCount * COLLAPSED_SIZE_PX;
+
+        const codeValues = [code.mainThread, code.background, code.css];
+        const naturalHeights = WINDOWS.map((_, i) =>
+          naturalHeightPx(codeValues[i] ?? '')
+        );
+
+        // Iteratively cap panels whose natural height < their equal share,
+        // redistributing the surplus to uncapped panels.
+        const sizes: number[] = [0, 0, 0];
+        let uncapped = [...expandedIndices];
+        let available = remainingPx;
+
+        while (uncapped.length > 0) {
+          const share = available / uncapped.length;
+          const nowCapped: number[] = [];
+
+          for (const i of uncapped) {
+            if (naturalHeights[i] < share) {
+              sizes[i] = naturalHeights[i];
+              nowCapped.push(i);
+            }
+          }
+
+          if (nowCapped.length === 0) {
+            // All remaining panels want at least their share — split equally
+            for (const i of uncapped) {
+              sizes[i] = share;
+            }
+            break;
+          }
+
+          available -= nowCapped.reduce((sum, i) => sum + sizes[i], 0);
+          uncapped = uncapped.filter(i => !nowCapped.includes(i));
+        }
+
+        for (const i of expandedIndices) {
+          panelRefs.current[i]?.current?.resize(
+            Math.max(sizes[i], COLLAPSED_SIZE_PX + 1),
+          );
+        }
+      },
+      [layout],
+    );
 
     /**
      * Resize all currently-expanded panels to equal shares of the remaining space.
@@ -118,22 +205,31 @@ export const EditorPane = forwardRef<EditorPaneHandle, EditorPaneProps>(
     }, []);
 
     /**
-     * Apply a target collapsed state to all panels, then redistribute space equally.
+     * Apply a target collapsed state to all panels, then redistribute space.
+     * Pass a custom `distributeFn` for content-aware sizing; omit for equal split.
      * This is the single shared path used by both toggle and collapseByContent.
      */
-    const applyCollapsedState = useCallback((newCollapsed: boolean[]) => {
-      panelRefs.current.forEach((pRef, i) => {
-        const panel = pRef.current;
-        if (!panel) return;
-        if (newCollapsed[i]) {
-          if (!panel.isCollapsed()) panel.collapse();
-        } else {
-          if (panel.isCollapsed()) panel.expand();
-        }
-      });
-      setCollapsedStates(newCollapsed);
-      requestAnimationFrame(() => distributeEqual(newCollapsed));
-    }, [distributeEqual]);
+    const applyCollapsedState = useCallback(
+      (
+        newCollapsed: boolean[],
+        distributeFn?: (collapsed: boolean[]) => void,
+      ) => {
+        panelRefs.current.forEach((pRef, i) => {
+          const panel = pRef.current;
+          if (!panel) return;
+          if (newCollapsed[i]) {
+            if (!panel.isCollapsed()) panel.collapse();
+          } else {
+            if (panel.isCollapsed()) panel.expand();
+          }
+        });
+        setCollapsedStates(newCollapsed);
+        requestAnimationFrame(() =>
+          (distributeFn ?? distributeEqual)(newCollapsed)
+        );
+      },
+      [distributeEqual],
+    );
 
     const handleToggle = useCallback((index: number) => {
       const panel = panelRefs.current[index]?.current;
@@ -153,9 +249,13 @@ export const EditorPane = forwardRef<EditorPaneHandle, EditorPaneProps>(
         code: { mainThread: string; background: string; css: string },
       ) {
         const values = [code.mainThread, code.background, code.css] as const;
-        applyCollapsedState(values.map(v => !v?.trim()));
+        const newCollapsed = values.map(v => !v?.trim());
+        applyCollapsedState(
+          newCollapsed,
+          collapsed => distributeByContent(collapsed, code),
+        );
       },
-    }), [applyCollapsedState]);
+    }), [applyCollapsedState, distributeByContent]);
 
     // When the layout orientation changes, reset all panels to equal expanded state.
     const prevLayoutRef = useRef(layout);

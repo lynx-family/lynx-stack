@@ -84,6 +84,7 @@ const initial = resolveInitial();
 export function App() {
   const [layout, setLayout] = useState<'rows' | 'cols'>('rows');
   const [isDark, setIsDark] = useState(true);
+  const [layoutReady, setLayoutReady] = useState(false);
   const [sampleIndex, setSampleIndex] = useState<number | null>(
     initial.sampleIndex,
   );
@@ -96,11 +97,6 @@ export function App() {
   );
 
   const editorPaneRef = useRef<EditorPaneHandle>(null);
-
-  // Set initial theme
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', 'dark');
-  }, []);
 
   const rebuild = useCallback(() => {
     const editor = editorPaneRef.current?.editor;
@@ -151,13 +147,19 @@ export function App() {
     }, 500);
   }, [rebuild]);
 
-  // Initial render + collapse empty panels after mount
+  // Initial render + collapse empty panels after mount.
+  // React runs child effects before parent effects, so by the time this runs
+  // the Monaco editor in EditorPane is already initialized — no timeout needed.
+  // We keep the content invisible (opacity-0) until the collapse+resize settles
+  // to avoid the flash of an un-collapsed layout.
   useEffect(() => {
-    const timer = setTimeout(() => {
-      rebuild();
-      editorPaneRef.current?.collapseByContent(initial.code);
-    }, 100);
-    return () => clearTimeout(timer);
+    rebuild();
+    editorPaneRef.current?.collapseByContent(initial.code);
+    // applyCollapsedState schedules a rAF for distributeEqual; wait for it,
+    // then wait one more frame for React to commit the resize, then reveal.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setLayoutReady(true));
+    });
   }, [rebuild]);
 
   const handleToggleLayout = useCallback(() => {
@@ -224,57 +226,65 @@ export function App() {
         onMobileTabChange={setMobileTab}
       />
 
-      {isMobile
-        ? (
-          <div className='flex-1 min-h-0'>
-            <div
-              className='h-full'
-              style={{ display: mobileTab === 'editor' ? 'block' : 'none' }}
-            >
-              <EditorPane
-                ref={editorPaneRef}
-                layout='rows'
-                defaultCode={initial.code}
-                onChange={debouncedRebuild}
-              />
+      {/* Fade in once the initial collapse+resize has settled to avoid layout shift */}
+      <div
+        className='flex-1 min-h-0 transition-opacity duration-150'
+        style={{ opacity: layoutReady ? 1 : 0 }}
+      >
+        {isMobile
+          ? (
+            <div className='h-full'>
+              <div
+                className='h-full'
+                style={{ display: mobileTab === 'editor' ? 'block' : 'none' }}
+              >
+                <EditorPane
+                  ref={editorPaneRef}
+                  layout='rows'
+                  defaultCode={initial.code}
+                  onChange={debouncedRebuild}
+                />
+              </div>
+              <div
+                className='h-full'
+                style={{ display: mobileTab === 'preview' ? 'block' : 'none' }}
+              >
+                <PreviewPane
+                  template={template}
+                  timingText={timingText}
+                  consoleEntries={consoleEntries}
+                  onConsoleClear={clearConsole}
+                  isDark={isDark}
+                />
+              </div>
             </div>
-            <div
+          )
+          : (
+            <ResizablePanelGroup
+              orientation='horizontal'
               className='h-full'
-              style={{ display: mobileTab === 'preview' ? 'block' : 'none' }}
             >
-              <PreviewPane
-                template={template}
-                timingText={timingText}
-                consoleEntries={consoleEntries}
-                onConsoleClear={clearConsole}
-              />
-            </div>
-          </div>
-        )
-        : (
-          <ResizablePanelGroup
-            orientation='horizontal'
-            className='flex-1 min-h-0'
-          >
-            <ResizablePanel defaultSize={60} minSize={20}>
-              <EditorPane
-                ref={editorPaneRef}
-                layout={layout}
-                defaultCode={initial.code}
-                onChange={debouncedRebuild}
-              />
-            </ResizablePanel>
-            <ResizableHandle />
-            <ResizablePanel defaultSize={40} minSize={20}>
-              <PreviewPane
-                template={template}
-                timingText={timingText}
-                consoleEntries={consoleEntries}
-                onConsoleClear={clearConsole}
-              />
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        )}
+              <ResizablePanel defaultSize={60} minSize={20}>
+                <EditorPane
+                  ref={editorPaneRef}
+                  layout={layout}
+                  defaultCode={initial.code}
+                  onChange={debouncedRebuild}
+                />
+              </ResizablePanel>
+              <ResizableHandle />
+              <ResizablePanel defaultSize={40} minSize={20}>
+                <PreviewPane
+                  template={template}
+                  timingText={timingText}
+                  consoleEntries={consoleEntries}
+                  onConsoleClear={clearConsole}
+                  isDark={isDark}
+                />
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          )}
+      </div>
     </div>
   );
 }
