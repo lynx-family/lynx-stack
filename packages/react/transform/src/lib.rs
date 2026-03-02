@@ -329,7 +329,6 @@ fn transform_react_lynx_inner(
         top_level_mark,
         simplify::Config {
           dce: simplify::dce::Config {
-            preserve_imports_with_side_effects: false,
             top_retain: top_retain.clone(),
             ..Default::default()
           },
@@ -457,7 +456,6 @@ fn transform_react_lynx_inner(
       top_level_mark,
       simplify::Config {
         dce: simplify::dce::Config {
-          preserve_imports_with_side_effects: false,
           top_retain: top_retain.clone(),
           ..Default::default()
         },
@@ -561,7 +559,6 @@ fn transform_react_lynx_inner(
       typescript::typescript(
         typescript::Config {
           verbatim_module_syntax: options.verbatim_module_syntax.unwrap_or(false),
-          import_not_used_as_values: typescript::ImportsNotUsedAsValues::Remove,
           ..Default::default()
         },
         unresolved_mark,

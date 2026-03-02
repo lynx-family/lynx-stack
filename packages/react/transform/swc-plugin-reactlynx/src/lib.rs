@@ -125,7 +125,6 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
       metadata.unresolved_mark,
       simplify::Config {
         dce: simplify::dce::Config {
-          preserve_imports_with_side_effects: false,
           top_retain: top_retain.clone(),
           ..Default::default()
         },
@@ -231,7 +230,6 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
     metadata.unresolved_mark,
     simplify::Config {
       dce: simplify::dce::Config {
-        preserve_imports_with_side_effects: false,
         top_retain: top_retain.clone(),
         ..Default::default()
       },
@@ -413,7 +411,7 @@ mod tests {
   fn test_dce_directive() {
     let json_data = r#"
     {
-      "directiveDCE":{      
+      "directiveDCE":{
         "target": "JS"
       }
     }"#;
