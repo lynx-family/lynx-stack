@@ -173,6 +173,13 @@ test.describe('web-elements test suite', () => {
       await diffScreenShot(page, title, 'index');
     });
     test(
+      'x-text/text-maxline-truncation-in-view',
+      async ({ page }, { title }) => {
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'index');
+      },
+    );
+    test(
       'x-text/inline-image-with-lynx-wrapper',
       async ({ page }, { title }) => {
         await gotoWebComponentPage(page, title);
