@@ -66,10 +66,18 @@ export async function applyDefaultPlugins(
   ])
 
   const promises: Promise<void>[] = [
-    Promise.all(defaultPlugins).then(plugins => {
+    Promise.all(defaultPlugins).then((plugins) => {
       rsbuildInstance.addPlugins(plugins)
     }),
   ]
+
+  if (config.performance?.profile) {
+    promises.push(
+      import('./stats.plugin.js').then(({ pluginStats }) =>
+        rsbuildInstance.addPlugins([pluginStats()])
+      ),
+    )
+  }
 
   if (isDebug()) {
     debug('apply Rspeedy default debug plugins')

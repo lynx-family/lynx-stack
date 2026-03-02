@@ -110,8 +110,6 @@ export function toRsbuildConfig(
 
       chunkSplit: config.performance?.chunkSplit,
 
-      profile: config.performance?.profile,
-
       removeConsole: toRsbuildRemoveConsole(config) as
         | ConsoleType[]
         | false

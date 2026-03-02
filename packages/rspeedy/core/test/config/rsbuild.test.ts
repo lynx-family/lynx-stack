@@ -441,7 +441,7 @@ describe('Config - toRsBuildConfig', () => {
       const rsbuildConfig = toRsbuildConfig({
         performance: { profile: true },
       })
-      expect(rsbuildConfig.performance?.profile).toBe(true)
+      expect(rsbuildConfig.performance?.profile).toBeUndefined()
     })
 
     test('transform performance.removeConsole true', () => {

@@ -11,9 +11,7 @@ describe('stats plugin', () => {
     const rspeedy = await createStubRspeedy({})
     await rspeedy.unwrapConfig()
 
-    const config = rspeedy.getRsbuildConfig()
-
-    expect(config.performance?.profile).toBe(false)
+    expect(rspeedy.isPluginExists('lynx:rsbuild:stats')).toBeFalsy()
   })
 
   test('DEBUG', async () => {
@@ -21,9 +19,7 @@ describe('stats plugin', () => {
     const rspeedy = await createStubRspeedy({})
     await rspeedy.unwrapConfig()
 
-    const config = rspeedy.getRsbuildConfig()
-
-    expect(config.performance?.profile).toBe(true)
+    expect(rspeedy.isPluginExists('lynx:rsbuild:stats')).toBeTruthy()
   })
 
   test('override performance.profile', async () => {
@@ -33,8 +29,6 @@ describe('stats plugin', () => {
     })
     await rspeedy.unwrapConfig()
 
-    const config = rspeedy.getRsbuildConfig()
-
-    expect(config.performance?.profile).toBe(false)
+    expect(rspeedy.isPluginExists('lynx:rsbuild:stats')).toBeFalsy()
   })
 })
