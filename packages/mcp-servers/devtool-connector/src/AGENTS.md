@@ -33,7 +33,7 @@ The Connector adopts a layered architecture to separate concerns:
 ### Connector layer (core)
 
 - **Responsibility**: Expose a unified interface and coordinate the Transport and Protocol layers.
-- **Implementation**: `Connector` class in `src/connector/index.ts`.
+- **Implementation**: `Connector` class in `src/index.ts`.
 - **Mechanics**:
   - **Short-lived requests**: Each call to `sendMessageWithTransport` establishes a new connection, transfers data, and then closes the connection immediately.
   - **Device/client discovery**:
@@ -52,12 +52,12 @@ In the stateless model, the lifecycle of core objects changes:
 
 ## 4. Code Structure
 
-- `src/connector/index.ts`: Connector layer. Main entry, manages all transports.
-- `src/connector/transport.ts`: Transport interface definition.
-- `src/connector/android.ts`: `AndroidTransport` implementation.
-- `src/connector/ios.ts`: `iOSTransport` implementation.
-- `src/connector/peertalk.ts` / `cdp.ts`: Protocol layer stream transformers.
-- `src/connector/types.ts`: Core type definitions.
+- `src/index.ts`: Connector layer. Main entry, manages all transports.
+- `src/transport/transport.ts`: Transport interface definition.
+- `src/transport/android.ts`: `AndroidTransport` implementation.
+- `src/transport/ios.ts`: `iOSTransport` implementation.
+- `src/streams/peertalk.ts` / `src/streams/cdp.ts`: Protocol layer stream transformers.
+- `src/types.ts`: Core type definitions.
 
 ## 5. Development Guide
 
@@ -72,9 +72,9 @@ The Connector is the single entry point for upper-layer tools to communicate wit
 ### 6.1 Initialization
 
 ```typescript
-import { AndroidTransport } from './connector/android.js';
-import { Connector } from './connector/index.js';
-import { iOSTransport } from './connector/ios.js';
+import { AndroidTransport } from './transport/android.js';
+import { Connector } from './index.js';
+import { iOSTransport } from './transport/ios.js';
 
 // Initialize the Connector with support for both Android and iOS
 const connector = new Connector([
