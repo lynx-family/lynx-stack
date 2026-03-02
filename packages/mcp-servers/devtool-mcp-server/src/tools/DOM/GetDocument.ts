@@ -6,7 +6,7 @@ import { defineTool } from '../defineTool.ts';
 
 export const GetDocument = /*#__PURE__*/ defineTool({
   name: 'DOM_getDocument',
-  description: 'Get the document tree of the Lynx page.',
+  description: 'Get the document tree of the page.',
   schema: {
     clientId,
     sessionId,
