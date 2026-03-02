@@ -302,3 +302,203 @@ triggerEvent(el, evt)   →  需要自定义实现
 3. **runtime-core 测试是最佳切入点** — 约 12 个文件完全不依赖 DOM，另外 20+ 个文件只需 mock renderer
 4. **preact-upstream-tests 的 skiplist + vitest 基础设施可以直接复用**
 5. **最大的新增工作是 patchProp 的 Lynx 实现和 scheduler 桥接**，而非底层 DOM 操作
+
+---
+
+## 附录: 双线程架构拆分方案
+
+### 核心问题
+
+Vue 3 是单线程设计。Lynx 是双线程:
+- **Background Thread**: JS 执行、VDOM diffing、组件生命周期
+- **Main Thread**: Native 元素创建、布局、绘制
+- **通信**: IPC（JSON 序列化的 patch 操作码）
+
+### Lynx 的双线程切分机制（Preact 现状）
+
+```
+Background Thread                    IPC                    Main Thread
+─────────────────                 ─────────                ─────────────
+Preact VDOM diff
+  ↓
+BSI.insertBefore()
+  → 记录 patch: [1, parentId, childId, beforeId]
+BSI.removeChild()
+  → 记录 patch: [2, parentId, childId]
+BSI.setAttribute()
+  → 记录 patch: [3, id, key, value]
+  ↓
+options.__c (commit hook)
+  → takeGlobalSnapshotPatch()
+  → JSON.stringify(patchList)        ──→   updateMainThread()
+                                              ↓
+                                           snapshotPatchApply(patch)
+                                              ↓
+                                           SI.insertBefore()
+                                              → __InsertElementBefore()
+                                           SI.removeChild()
+                                              → __RemoveElement()
+                                           SI.setAttribute()
+                                              → update functions → Element PAPI
+                                              ↓
+                                           __FlushElementTree()
+                                              → Native 渲染
+```
+
+**关键切面**:
+- **BSI** 是纯内存树，**从不**直接调用 Element PAPI
+- BSI 的每次 mutation 都 push 一条操作码到全局 `__globalSnapshotPatch` 数组
+- **Commit hook 是 IPC 触发点** — 收集所有 patch → 序列化 → 发送到主线程
+- **SI** 收到 patch 后，执行实际的 Element PAPI 调用（`__CreateElement`, `__InsertElementBefore` 等）
+- 最后 `__FlushElementTree()` 通知 native 层渲染
+
+### Vue 3 的映射方案
+
+```
+Background Thread                    IPC                    Main Thread
+─────────────────                 ─────────                ─────────────
+Vue createRenderer({nodeOps, patchProp})
+  ↓
+lynxNodeOps.createElement(tag)
+  → new BSI(tag)  // 记录 patch
+lynxNodeOps.insert(child, parent, anchor)
+  → bsi.insertBefore(child, anchor)  // 记录 patch
+lynxNodeOps.remove(child)
+  → parent.removeChild(child)  // 记录 patch
+lynxPatchProp(el, key, prev, next)
+  → bsi.setAttribute(...)  // 记录 patch
+  ↓
+Vue scheduler flush 完成
+  → 收集 patch
+  → JSON.stringify              ──→   updateMainThread()
+                                              ↓
+                                        snapshotPatchApply(patch)
+                                              ↓
+                                        SI → Element PAPI
+                                              ↓
+                                        __FlushElementTree()
+```
+
+### 具体实现: 三层架构
+
+#### Layer 1: Lynx nodeOps（Background Thread）
+
+```typescript
+// 运行在 background thread，操作 BSI
+const lynxNodeOps = {
+  createElement(tag) {
+    return new BackgroundSnapshotInstance(tag);
+    // BSI 构造函数自动记录 patch: [CreateElement, tag, id]
+  },
+  createText(text) {
+    const bsi = new BackgroundSnapshotInstance(null);
+    // 设置文本值
+    return bsi;
+  },
+  insert(child, parent, anchor) {
+    parent.insertBefore(child, anchor || undefined);
+    // BSI.insertBefore 自动记录 patch: [InsertBefore, parentId, childId, anchorId]
+  },
+  remove(child) {
+    child.parentNode?.removeChild(child);
+    // BSI.removeChild 自动记录 patch: [RemoveChild, parentId, childId]
+  },
+  parentNode(node) { return node.parentNode; },     // O(1) getter
+  nextSibling(node) { return node.nextSibling; },   // O(1) getter
+  setText(node, text) { node.setAttribute('text', text); },
+  setElementText(el, text) { el.setAttribute('textContent', text); },
+};
+```
+
+**关键洞察**: BSI 已经内建了 patch 录制机制。Vue 的 nodeOps 只需要薄薄地包一层 BSI 操作，patch 生成是自动的。
+
+#### Layer 2: Lynx patchProp（Background Thread）
+
+```typescript
+const lynxPatchProp = (el, key, prevValue, nextValue) => {
+  if (key === 'class') {
+    el.setAttribute('className', nextValue);
+    // → BSI 记录 patch: [SetAttribute, id, 'className', value]
+  } else if (key === 'style') {
+    el.setAttribute('style', nextValue);
+  } else if (isOn(key)) {
+    // 事件处理：需要 invoker pattern 或直接映射
+    const eventName = key.slice(2).toLowerCase(); // onClick → click
+    const lynxEvent = eventNameMap[eventName];     // click → tap
+    el.setAttribute(`bindEvent:${lynxEvent}`, nextValue);
+  } else {
+    el.setAttribute(key, nextValue);
+  }
+};
+```
+
+#### Layer 3: Scheduler Bridge（IPC 触发点）
+
+Vue 没有 Preact 的 `options.__c` 全局 commit hook，但可以通过以下方式桥接:
+
+**方案 A: 注入 `flushPostFlushCbs` 后置钩子**（推荐）
+
+```typescript
+// scheduler.ts 中 flushPostFlushCbs 结束后:
+//   activePostFlushCbs = null
+//   postFlushIndex = 0
+//   >>> IPC 桥接点 <<<
+
+// 实现方式: monkey-patch flushPostFlushCbs
+const originalFlush = flushPostFlushCbs;
+flushPostFlushCbs = (seen) => {
+  originalFlush(seen);
+  // 所有 DOM mutation 已完成，发送 patch 到主线程
+  const patches = takeGlobalSnapshotPatch();
+  if (patches?.length) {
+    const patchList = { patchList: [{ snapshotPatch: patches }] };
+    lynx.getNativeApp().callLepusMethod(
+      'rLynxChange',
+      { data: JSON.stringify(patchList) },
+      () => { /* cleanup callback */ }
+    );
+  }
+};
+```
+
+**方案 B: 包装 `createApp().mount()`**
+
+```typescript
+const { createApp } = createRenderer({ ...lynxNodeOps, patchProp: lynxPatchProp });
+
+// 包装 mount 以在每次 flush 后触发 IPC
+const originalMount = createApp;
+function createLynxApp(rootComponent) {
+  const app = originalMount(rootComponent);
+  // 注入 post-flush IPC hook
+  return app;
+}
+```
+
+### Vue vs Preact 的架构差异总结
+
+| 维度 | Preact on Lynx | Vue on Lynx |
+|------|---------------|-------------|
+| **VDOM 线程** | Background | Background |
+| **nodeOps 目标** | BSI（通过 shim 让 Preact 以为在操作 DOM） | BSI（通过 `createRenderer` 显式注入） |
+| **Hack 程度** | 高 — 需要 regex 替换 render、style proxy、event stubs | 低 — `createRenderer` 是 first-class API |
+| **Patch 录制** | BSI 自动录制 | BSI 自动录制（复用同一套） |
+| **IPC 触发** | `options.__c` commit hook | `flushPostFlushCbs` 后置钩子 |
+| **主线程应用** | `snapshotPatchApply` → SI → Element PAPI | **完全复用**（patch 格式相同） |
+| **Snapshot 概念** | 需要 — Preact 不知道 snapshot | 不需要 — Vue 的 nodeOps 直接操作 BSI |
+
+### 不需要改动的部分（直接复用）
+
+1. **BSI 类及其 patch 录制机制** — Vue nodeOps 调 BSI 方法，patch 自动生成
+2. **`snapshotPatchApply()`** — 主线程 patch 应用逻辑完全复用
+3. **SI → Element PAPI 调用链** — 不需要改动
+4. **`__FlushElementTree()`** — 不需要改动
+5. **`LynxTestingEnv`** — 双线程模拟可复用
+6. **IPC 传输层** (`callLepusMethod`) — 不需要改动
+
+### 需要新增的部分
+
+1. **`lynxNodeOps`** — BSI 的薄包装层（~50 行）
+2. **`lynxPatchProp`** — class/style/event/attr 分发（~100 行）
+3. **Scheduler bridge** — `flushPostFlushCbs` 后置钩子（~30 行）
+4. **Generic snapshot 注册** — 让 `snapshotManager` 认识 Vue 创建的 BSI 类型（可复用 preact-upstream-tests 的 `createGenericSnapshot` 模式）
