@@ -1,3 +1,4 @@
+name: Benchmark
 on:
   workflow_call:
 
