@@ -64,18 +64,18 @@ export class AndroidTransport implements Transport {
       throw err;
     }
 
-    if (signal?.aborted) {
-      await socket.close();
-      await adb.close();
-      signal.throwIfAborted();
-    }
-
     const abortHandler = () => {
       void Promise.resolve(socket.close()).catch((err: unknown) => {
         debug(`connect: socket ${service} close on abort err: %o`, err);
       });
     };
     signal?.addEventListener('abort', abortHandler, { once: true });
+
+    if (signal?.aborted) {
+      await socket.close();
+      await adb.close();
+      signal.throwIfAborted();
+    }
 
     void Promise.resolve(socket.closed).catch((err: unknown) => {
       debug(`connect: socket ${service} closed with err: %o`, err);

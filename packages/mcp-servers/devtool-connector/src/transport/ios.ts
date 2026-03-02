@@ -38,15 +38,16 @@ export class iOSTransport implements Transport {
     signal?.throwIfAborted();
 
     const conn = await this.#client.createDeviceTunnel(deviceId, port);
-    if (signal?.aborted) {
-      conn.destroy();
-    }
-    signal?.throwIfAborted();
 
     const abortHandler = () => {
       conn.destroy();
     };
     signal?.addEventListener('abort', abortHandler, { once: true });
+
+    if (signal?.aborted) {
+      conn.destroy();
+      signal.throwIfAborted();
+    }
 
     const { readable, writable } = Duplex.toWeb(conn);
     return {
