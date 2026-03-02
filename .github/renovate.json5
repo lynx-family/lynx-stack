@@ -198,11 +198,14 @@
       // Update benchx_cli version from GitHub releases
       // See: https://docs.renovatebot.com/modules/datasource/github-releases/
       "customType": "regex",
-      "managerFilePatterns": ["packages/lynx/benchx_cli/scripts/build.sh"],
+      "managerFilePatterns": ["packages/lynx/benchx_cli/scripts/build_*.sh"],
       "matchStrings": ["LOCKED_VERSION=\"(?<currentValue>benchx_cli-.*?)\""],
       "depNameTemplate": "lynx-community/benchx_cli",
       "datasourceTemplate": "github-releases",
-      "versioningTemplate": "regex:^benchx_cli-(?<major>\\d{4})(?<minor>\\d{2})(?<patch>\\d{2})(?<build>\\d{4})$",
+      // Support both formats:
+      // - benchx_cli-YYYYMMDDHHmm (e.g. benchx_cli-202602132156)
+      // - benchx_cli-YYYYMMDD     (e.g. benchx_cli-20260212)
+      "versioningTemplate": "regex:^benchx_cli-(?<major>\\d{4})(?<minor>\\d{2})(?<patch>\\d{2})(?:(?<build>\\d{4}))?$",
     },
     {
       "customType": "regex",
