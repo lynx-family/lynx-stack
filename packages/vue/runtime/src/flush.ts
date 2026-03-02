@@ -2,9 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { queuePostFlushCb } from '@vue/runtime-core'
+import { queuePostFlushCb } from '@vue/runtime-core';
 
-import { takeOps } from './ops.js'
+import { takeOps } from './ops.js';
 
 /**
  * Schedule a flush of the ops buffer via Vue's post-flush hook.
@@ -15,24 +15,44 @@ import { takeOps } from './ops.js'
  * traffic.
  */
 
-let scheduled = false
+// `lynx` is injected by RuntimeWrapperWebpackPlugin as a parameter to the
+// tt.define() AMD callback – it is NOT on globalThis.  Declare it as an
+// ambient variable so TypeScript accepts the bare identifier reference.
+// eslint-disable-next-line no-var
+declare var lynx:
+  | {
+    getNativeApp():
+      | {
+        callLepusMethod(
+          method: string,
+          params: unknown,
+          callback: () => void,
+        ): void;
+      }
+      | null
+      | undefined;
+  }
+  | null
+  | undefined;
+
+let scheduled = false;
 
 export function scheduleFlush(): void {
-  if (scheduled) return
-  scheduled = true
-  queuePostFlushCb(doFlush)
+  if (scheduled) return;
+  scheduled = true;
+  queuePostFlushCb(doFlush);
 }
 
 function doFlush(): void {
-  scheduled = false
-  const ops = takeOps()
-  if (!ops.length) return
-  // lynx is a global injected by the Lynx BG runtime.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const g = globalThis as any
-  g.lynx?.getNativeApp?.()?.callLepusMethod?.(
+  scheduled = false;
+  const ops = takeOps();
+  if (ops.length === 0) return;
+  // `lynx` is the Lynx BG runtime object injected by RuntimeWrapperWebpackPlugin
+  // as a closure parameter – access it as a bare identifier, NOT via globalThis.
+
+  lynx?.getNativeApp?.()?.callLepusMethod?.(
     'vuePatchUpdate',
     { data: JSON.stringify(ops) },
-    () => { /* ack callback – no-op for MVP */ },
-  )
+    () => {/* ack callback – no-op for MVP */},
+  );
 }

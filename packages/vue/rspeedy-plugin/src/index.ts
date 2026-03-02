@@ -20,12 +20,12 @@
  * ```
  */
 
-import type { RsbuildPlugin } from '@rsbuild/core'
+import type { RsbuildPlugin } from '@rsbuild/core';
 
-import { applyEntry } from './entry.js'
-import { LAYERS } from './layers.js'
+import { applyEntry } from './entry.js';
+import { LAYERS } from './layers.js';
 
-export { LAYERS }
+export { LAYERS };
 
 /**
  * Options for {@link pluginVueLynx}.
@@ -37,13 +37,13 @@ export interface PluginVueLynxOptions {
    * Disabling it reduces bundle size.
    * @defaultValue true
    */
-  optionsApi?: boolean
+  optionsApi?: boolean;
 
   /**
    * Whether to enable Vue devtools in production builds.
    * @defaultValue false
    */
-  prodDevtools?: boolean
+  prodDevtools?: boolean;
 }
 
 /**
@@ -53,7 +53,7 @@ export interface PluginVueLynxOptions {
 export function pluginVueLynx(
   options: PluginVueLynxOptions = {},
 ): RsbuildPlugin {
-  const { optionsApi = true, prodDevtools = false } = options
+  const { optionsApi = true, prodDevtools = false } = options;
 
   return {
     name: 'lynx:vue',
@@ -61,11 +61,13 @@ export function pluginVueLynx(
 
     setup(api) {
       // Inject Vue build-time macros via DefinePlugin
-      api.modifyRsbuildConfig((config, { mergeRsbuildConfig, isDev }) => {
+      api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
         return mergeRsbuildConfig(config, {
           source: {
             define: {
-              __DEV__: isDev ? 'true' : 'false',
+              // Use standard Vue approach: process.env.NODE_ENV check
+              // rspack replaces process.env.NODE_ENV with 'production'/'development'
+              __DEV__: 'process.env.NODE_ENV !== \'production\'',
               __VUE_OPTIONS_API__: optionsApi ? 'true' : 'false',
               __VUE_PROD_DEVTOOLS__: prodDevtools ? 'true' : 'false',
               __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false',
@@ -79,11 +81,11 @@ export function pluginVueLynx(
               },
             },
           },
-        })
-      })
+        });
+      });
 
       // Set up dual-bundle entry splitting and Lynx plugins
-      applyEntry(api)
+      applyEntry(api);
     },
-  }
+  };
 }

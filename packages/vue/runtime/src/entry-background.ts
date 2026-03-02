@@ -6,28 +6,40 @@
  * Background Thread bootstrap entry.
  *
  * Injected by @lynx-js/vue-rsbuild-plugin as the first import of every
- * background bundle.  Sets up:
- *   - globalThis.publishEvent  – routes native events to Vue handlers
- *   - globalThis.renderPage    – triggers deferred Vue app mount
- *   - globalThis.updatePage    – placeholder (Vue reactivity handles updates)
+ * background bundle.  Sets up event routing so that native-dispatched events
+ * reach our Vue handlers.
+ *
+ * Lynx routes native events via lynxCoreInject.tt.publishEvent (not
+ * globalThis.publishEvent), so we must assign to both to cover all versions.
  */
 
-import { triggerRenderPage } from './app-registry.js'
-import { publishEvent } from './event-registry.js'
+import { publishEvent } from './event-registry.js';
 
-const g = globalThis as Record<string, unknown>
+// `lynxCoreInject` is injected by RuntimeWrapperWebpackPlugin as a parameter
+// of the outer __init_card_bundle__ function – it is available as a bare
+// identifier inside every module that runs in the AMD callback.
+// eslint-disable-next-line no-var
+declare var lynxCoreInject:
+  | {
+    tt?: {
+      publishEvent?: (handlerName: string, data: unknown) => void;
+      [key: string]: unknown;
+    };
+  }
+  | null
+  | undefined;
 
-// Make event dispatch available to the Lynx native layer.
-g['publishEvent'] = publishEvent
+const g = globalThis as Record<string, unknown>;
 
-// Lynx calls renderPage when it's ready to display the first frame.
-g['renderPage'] = function (_data: unknown): void {
-  triggerRenderPage()
+// Primary path: lynxCoreInject.tt.publishEvent (used by modern Lynx)
+if (typeof lynxCoreInject !== 'undefined' && lynxCoreInject?.tt) {
+  lynxCoreInject.tt.publishEvent = publishEvent;
 }
 
-// Lynx calls updatePage when page-level data changes from the host.
-// Vue's reactivity system handles component-level updates automatically;
-// user code can subscribe to this if needed via a custom global store.
-g['updatePage'] = function (_data: unknown): void {
+// Fallback: some older Lynx SDKs call globalThis.publishEvent directly
+g['publishEvent'] = publishEvent;
+
+// updatePage – Vue's reactivity handles all updates automatically.
+g['updatePage'] = function(_data: unknown): void {
   // no-op for MVP
-}
+};

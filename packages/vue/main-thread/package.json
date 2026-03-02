@@ -3,7 +3,12 @@
   "version": "0.1.0",
   "private": false,
   "description": "Vue-Lynx Main Thread PAPI executor",
-  "keywords": ["vue", "lynx", "vue-lynx", "main-thread"],
+  "keywords": [
+    "vue",
+    "lynx",
+    "vue-lynx",
+    "main-thread"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
@@ -14,12 +19,18 @@
   "exports": {
     ".": {
       "types": "./dist/entry-main.d.ts",
-      "import": "./dist/entry-main.js"
+      "import": "./dist/entry-main.js",
+      "default": "./dist/entry-main.js"
     },
     "./package.json": "./package.json"
   },
+  "main": "./dist/entry-main.js",
   "types": "./dist/entry-main.d.ts",
-  "files": ["dist", "CHANGELOG.md", "README.md"],
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "README.md"
+  ],
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch"

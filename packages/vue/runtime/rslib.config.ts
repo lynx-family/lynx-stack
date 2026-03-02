@@ -1,4 +1,4 @@
-import { defineConfig } from '@rslib/core'
+import { defineConfig } from '@rslib/core';
 
 export default defineConfig({
   lib: [
@@ -18,5 +18,10 @@ export default defineConfig({
   },
   output: {
     distPath: { root: 'dist' },
+    // Overwrite files in place rather than delete-then-write.
+    // Without this, rslib's watch mode cleans dist/ on each rebuild,
+    // causing rspeedy's webpack watcher to see transient "module not found"
+    // errors while the files are briefly absent.
+    cleanDistPath: false,
   },
-})
+});

@@ -265,7 +265,7 @@ importers:
         version: 3.7.0
       '@rsbuild/plugin-babel':
         specifier: 1.1.0
-        version: 1.1.0(@rsbuild/core@1.7.3)
+        version: 1.1.0(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -923,10 +923,10 @@ importers:
         version: link:../../web-platform/web-elements
       '@rsbuild/plugin-less':
         specifier: 1.6.0
-        version: 1.6.0(@rsbuild/core@1.7.3)
+        version: 1.6.0(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
       '@rsbuild/plugin-sass':
         specifier: 1.5.0
-        version: 1.5.0(@rsbuild/core@1.7.3)
+        version: 1.5.0(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -941,7 +941,7 @@ importers:
         version: 1.1.1
       rsbuild-plugin-tailwindcss:
         specifier: 0.2.4
-        version: 0.2.4(@rsbuild/core@1.7.3)(tailwindcss@3.4.19)
+        version: 0.2.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(tailwindcss@3.4.19)
       rslog:
         specifier: ^1.3.2
         version: 1.3.2
@@ -1081,6 +1081,75 @@ importers:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../react
+
+  packages/vue/e2e-lynx:
+    dependencies:
+      '@lynx-js/vue-runtime':
+        specifier: workspace:*
+        version: link:../runtime
+    devDependencies:
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../rspeedy/core
+      '@lynx-js/vue-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../rspeedy-plugin
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+
+  packages/vue/main-thread:
+    devDependencies:
+      '@rslib/core':
+        specifier: ^0.7.0
+        version: 0.7.0(@microsoft/api-extractor@7.56.3(@types/node@24.10.13))(typescript@5.9.3)
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+
+  packages/vue/rspeedy-plugin:
+    dependencies:
+      '@lynx-js/runtime-wrapper-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/runtime-wrapper-webpack-plugin
+      '@lynx-js/template-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/template-webpack-plugin
+      '@lynx-js/vue-main-thread':
+        specifier: workspace:*
+        version: link:../main-thread
+      '@lynx-js/vue-runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 1.7.3
+    devDependencies:
+      '@rslib/core':
+        specifier: ^0.7.0
+        version: 0.7.0(@microsoft/api-extractor@7.56.3(@types/node@24.10.13))(typescript@5.9.3)
+      rsbuild-plugin-publint:
+        specifier: 0.3.4
+        version: 0.3.4(@rsbuild/core@1.7.3)
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+
+  packages/vue/runtime:
+    dependencies:
+      '@vue/runtime-core':
+        specifier: ^3.5.0
+        version: 3.5.0
+    devDependencies:
+      '@rslib/core':
+        specifier: ^0.7.0
+        version: 0.7.0(@microsoft/api-extractor@7.56.3(@types/node@24.10.13))(typescript@5.9.3)
+      rsbuild-plugin-publint:
+        specifier: 0.3.4
+        version: 0.3.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
 
   packages/web-platform/offscreen-document: {}
 
@@ -1761,13 +1830,13 @@ importers:
         version: 7.32.2(@types/node@24.10.13)
       '@rsbuild/plugin-sass':
         specifier: 1.5.0
-        version: 1.5.0(@rsbuild/core@1.7.3)
+        version: 1.5.0(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
       '@rsbuild/plugin-type-check':
         specifier: 1.3.3
-        version: 1.3.3(@rsbuild/core@1.7.3)(@rspack/core@1.7.6(@swc/helpers@0.5.18))(tslib@2.8.1)(typescript@5.9.3)
+        version: 1.3.3(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(@rspack/core@1.7.6(@swc/helpers@0.5.18))(tslib@2.8.1)(typescript@5.9.3)
       '@rsbuild/plugin-typed-css-modules':
         specifier: 1.2.1
-        version: 1.2.1(@rsbuild/core@1.7.3)
+        version: 1.2.1(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
       '@rspress/core':
         specifier: 2.0.3
         version: 2.0.3(@types/react@19.2.14)(core-js@3.48.0)
@@ -1824,14 +1893,33 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
+  '@ast-grep/napi-darwin-arm64@0.38.7':
+    resolution: {integrity: sha512-sOq8FDfiSjBuE7ho99TNI/YR9XdtlxrGSV1wYDL55Lkd283tSymW8jYUbxvNrhBj/Gzg+ZQys4pPnqPXb0yoEA==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
   '@ast-grep/napi-darwin-x64@0.37.0':
     resolution: {integrity: sha512-zvcvdgekd4ySV3zUbUp8HF5nk5zqwiMXTuVzTUdl/w08O7JjM6XPOIVT+d2o/MqwM9rsXdzdergY5oY2RdhSPA==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
 
+  '@ast-grep/napi-darwin-x64@0.38.7':
+    resolution: {integrity: sha512-56BN0l8tuLAngnkqv1Gq1W2hIbN7A2PRKIM66AOjNpWzJ9U1gbrup1LsAlQMThzL/5ia6+q6z47F8fF0Amwo4A==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+
   '@ast-grep/napi-linux-arm64-gnu@0.37.0':
     resolution: {integrity: sha512-L7Sj0lXy8X+BqSMgr1LB8cCoWk0rericdeu+dC8/c8zpsav5Oo2IQKY1PmiZ7H8IHoFBbURLf8iklY9wsD+cyA==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@ast-grep/napi-linux-arm64-gnu@0.38.7':
+    resolution: {integrity: sha512-rr4fe2C3OYNQq5xN2VCvQBY4C4OeG16SZtMPbUnSitYS7k8BqD+ERt5Ambo10DKGUERdKsp8BUF7/pgKRawD3w==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
@@ -1844,8 +1932,22 @@ packages:
     os: [linux]
     libc: [musl]
 
+  '@ast-grep/napi-linux-arm64-musl@0.38.7':
+    resolution: {integrity: sha512-vXtLRt/ZaYhd6X+jvjZTdhqBsbjHbfelgyir/h4B3ZYi/4RkzBtoC8PWBeejcoHSenn9YsfUdldhM+j/Akdekg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [musl]
+
   '@ast-grep/napi-linux-x64-gnu@0.37.0':
     resolution: {integrity: sha512-TViz5/klqre6aSmJzswEIjApnGjJzstG/SE8VDWsrftMBMYt2PTu3MeluZVwzSqDao8doT/P+6U11dU05UOgxw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@ast-grep/napi-linux-x64-gnu@0.38.7':
+    resolution: {integrity: sha512-zCkTOYAKkBrh/8Gh0oBgeOZTM7v3pOw/QyMQsWjnDqBJPxyJGnGy/MhTVL5DNVkJAJcejQ3sXcFiITdDr4YueQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
@@ -1858,8 +1960,21 @@ packages:
     os: [linux]
     libc: [musl]
 
+  '@ast-grep/napi-linux-x64-musl@0.38.7':
+    resolution: {integrity: sha512-xethNRmEqkIsqHCC8B/OFX4MhDK4UI1q+Fw1EV8xx5MvgycSneR0p1ITwJhZkJThhXWzhqa9Fl8lgj7WiOG6fg==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
   '@ast-grep/napi-win32-arm64-msvc@0.37.0':
     resolution: {integrity: sha512-TjQA4cFoIEW2bgjLkaL9yqT4XWuuLa5MCNd0VCDhGRDMNQ9+rhwi9eLOWRaap3xzT7g+nlbcEHL3AkVCD2+b3A==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@ast-grep/napi-win32-arm64-msvc@0.38.7':
+    resolution: {integrity: sha512-REabttG3AtLUxTbxNNu5wEd0mG402qbOHEK3nQfm2F4BPp7D8gl5TBtz9uv/K8xepGSRCfZYCWh4uBV2I2MsIw==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [win32]
@@ -1870,14 +1985,30 @@ packages:
     cpu: [ia32]
     os: [win32]
 
+  '@ast-grep/napi-win32-ia32-msvc@0.38.7':
+    resolution: {integrity: sha512-LcoqmXsuPrEWtA2PPKIRJ7j9ClYXKprRHDxJHSaBPXqWKdfK6yAdhEYPIIkenbw+VKif4wbm9nYfwAonqozEPA==}
+    engines: {node: '>= 10'}
+    cpu: [ia32]
+    os: [win32]
+
   '@ast-grep/napi-win32-x64-msvc@0.37.0':
     resolution: {integrity: sha512-vCiFOT3hSCQuHHfZ933GAwnPzmL0G04JxQEsBRfqONywyT8bSdDc/ECpAfr3S9VcS4JZ9/F6tkePKW/Om2Dq2g==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
 
+  '@ast-grep/napi-win32-x64-msvc@0.38.7':
+    resolution: {integrity: sha512-+2lAElwprdDemx2s/bY0RWwwltu17IhoRaXbwqP18NMC0NwqWuWiLDe/d/ywp9XqrSbkU1BwkZqM5dZ1AlErKw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+
   '@ast-grep/napi@0.37.0':
     resolution: {integrity: sha512-Hb4o6h1Pf6yRUAX07DR4JVY7dmQw+RVQMW5/m55GoiAT/VRoKCWBtIUPPOnqDVhbx1Cjfil9b6EDrgJsUAujEQ==}
+    engines: {node: '>= 10'}
+
+  '@ast-grep/napi@0.38.7':
+    resolution: {integrity: sha512-4jrp4OZc7yxDdKcZkVLVlJXLjxy26WuMtcaxUpP7475nh85k2jeBWTwt8RmeEBXhr9PvJBbdN8sKHmcsKeXd3A==}
     engines: {node: '>= 10'}
 
   '@aws-crypto/crc32@5.2.0':
@@ -3541,6 +3672,11 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@rsbuild/core@1.3.19':
+    resolution: {integrity: sha512-qN8PwbahiPv8e4bp0Wvbqrysz8fB6OxslsXPPKszS9IBYFqUhRC5ve2pCUnc9CFRYJ2hkHY2wtg4ooHYdZRHDQ==}
+    engines: {node: '>=16.10.0'}
+    hasBin: true
+
   '@rsbuild/core@1.7.3':
     resolution: {integrity: sha512-kI1oQvCXbQYxUvQPnDLdjSX4gFsbrFNpuUj6jXEJ7IcJ74Q+n4oeFj74/8tKerhxhe0L90m/ZQfzLeN5ORGA9w==}
     engines: {node: '>=18.12.0'}
@@ -3672,6 +3808,19 @@ packages:
       typescript:
         optional: true
 
+  '@rslib/core@0.7.0':
+    resolution: {integrity: sha512-FWP2OkpQ30MWcxYd6L9RhAUl9fxW0MpYbEPZRQ1Cop/9awldM+ZrJsnhnz4ySTsqpTxCTBcsYGReGKY19TwR6w==}
+    engines: {node: '>=16.7.0'}
+    hasBin: true
+    peerDependencies:
+      '@microsoft/api-extractor': ^7
+      typescript: ^5
+    peerDependenciesMeta:
+      '@microsoft/api-extractor':
+        optional: true
+      typescript:
+        optional: true
+
   '@rspack/binding-darwin-arm64@1.7.6':
     resolution: {integrity: sha512-NZ9AWtB1COLUX1tA9HQQvWpTy07NSFfKBU8A6ylWd5KH8AePZztpNgLLAVPTuNO4CZXYpwcoclf8jG/luJcQdQ==}
     cpu: [arm64]
@@ -3748,6 +3897,10 @@ packages:
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@rspack/core': 1.7.6
+
+  '@rspack/lite-tapable@1.0.1':
+    resolution: {integrity: sha512-VynGOEsVw2s8TAlLf/uESfrgfrq2+rcXB1muPJYBWbsm1Oa6r5qVQhjA5ggM6z/coYPrsVMgovl3Ff7Q7OCp1w==}
+    engines: {node: '>=16.0.0'}
 
   '@rspack/lite-tapable@1.1.0':
     resolution: {integrity: sha512-E2B0JhYFmVAwdDiG14+DW0Di4Ze4Jg10Pc4/lILUrd5DRCaklduz2OvJ5HYQ6G+hd+WTzqQb3QnDNfK4yvAFYw==}
@@ -4675,6 +4828,15 @@ packages:
   '@vitest/utils@3.2.4':
     resolution: {integrity: sha512-fB2V0JFrQSMsCo9HiSq3Ezpdv4iYaXRG1Sx8edX3MwxfyNn83mKiGzOcH+Fkxt4MHxr3y42fQi1oeAInqgX2QA==}
 
+  '@vue/reactivity@3.5.0':
+    resolution: {integrity: sha512-Ew3F5riP3B3ZDGjD3ZKb9uZylTTPSqt8hAf4sGbvbjrjDjrFb3Jm15Tk1/w7WwTE5GbQ2Qhwxx1moc9hr8A/OQ==}
+
+  '@vue/runtime-core@3.5.0':
+    resolution: {integrity: sha512-mQyW0F9FaNRdt8ghkAs+BMG3iQ7LGgWKOpkzUzR5AI5swPNydHGL5hvVTqFaeMzwecF1g0c86H4yFQsSxJhH1w==}
+
+  '@vue/shared@3.5.0':
+    resolution: {integrity: sha512-m9IgiteBpCkFaMNwCOBkFksA7z8QiKc30ooRuoXWUFRDu0mGyNPlFHmbncF0/Kra1RlX8QrmBbRaIxVvikaR0Q==}
+
   '@webassemblyjs/ast@1.14.1':
     resolution: {integrity: sha512-nuBEDgQfm1ccRp/8bCQrx1frohyufl4JlbMMZ4P1wpeOfDhF6FQkxZJ1b/e+PLwr6X1Nhw6OLme5usuBWYBvuQ==}
 
@@ -5339,6 +5501,9 @@ packages:
 
   core-js-compat@3.45.0:
     resolution: {integrity: sha512-gRoVMBawZg0OnxaVv3zpqLLxaHmsubEGyTnqdpI/CEBvX4JadI1dMSHxagThprYRtSVbuQxvi6iUatdPxohHpA==}
+
+  core-js@3.42.0:
+    resolution: {integrity: sha512-Sz4PP4ZA+Rq4II21qkNqOEDTDrCvcANId3xpIgB34NDkWc3UduWj2dqEtN9yZIq8Dk3HyPI33x9sqqU5C8sr0g==}
 
   core-js@3.47.0:
     resolution: {integrity: sha512-c3Q2VVkGAUyupsjRnaNX6u8Dq2vAdzm9iuPj5FW0fRxzlxgq9Q39MDq10IvmQSpLgHQNyQzQmOo6bgGHmH3NNg==}
@@ -8547,6 +8712,19 @@ packages:
       typescript:
         optional: true
 
+  rsbuild-plugin-dts@0.7.0:
+    resolution: {integrity: sha512-1N3lIeKmEXrcu5jxw8RFUhc5rN35WVHR+j2Hw5gE5mhPCMtGpCpMKeSPUoRdWbfNuzjmSlln6nCLoMRdMAv+oA==}
+    engines: {node: '>=16.7.0'}
+    peerDependencies:
+      '@microsoft/api-extractor': ^7
+      '@rsbuild/core': 1.x
+      typescript: ^5
+    peerDependenciesMeta:
+      '@microsoft/api-extractor':
+        optional: true
+      typescript:
+        optional: true
+
   rsbuild-plugin-publint@0.3.4:
     resolution: {integrity: sha512-0oIeQlTNRQoiyi2K5RT6C0+3q8J1HZEX66pkTtDAvmNNHiLf+YyBn2bx8S2w5T7MEVt323ULKoGV4rRROIOatQ==}
     peerDependencies:
@@ -9360,6 +9538,10 @@ packages:
   tsconfig-paths@3.15.0:
     resolution: {integrity: sha512-2Ac2RgzDe/cn48GvOe3M+o82pEFewD3UPbyoUHHdKasHwJKjds4fLXWf/Ux5kATBKN20oaFGu+jbElp1pos0mg==}
 
+  tsconfig-paths@4.2.0:
+    resolution: {integrity: sha512-NoZ4roiN7LnbKn9QqE1amc9DJfzvZXxF4xDavcOWt1BPkdx+m+0gJuPM+S0vCe7zTJMYUP0R8pO2XMr+Y8oLIg==}
+    engines: {node: '>=6'}
+
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
@@ -9992,28 +10174,55 @@ snapshots:
   '@ast-grep/napi-darwin-arm64@0.37.0':
     optional: true
 
+  '@ast-grep/napi-darwin-arm64@0.38.7':
+    optional: true
+
   '@ast-grep/napi-darwin-x64@0.37.0':
+    optional: true
+
+  '@ast-grep/napi-darwin-x64@0.38.7':
     optional: true
 
   '@ast-grep/napi-linux-arm64-gnu@0.37.0':
     optional: true
 
+  '@ast-grep/napi-linux-arm64-gnu@0.38.7':
+    optional: true
+
   '@ast-grep/napi-linux-arm64-musl@0.37.0':
+    optional: true
+
+  '@ast-grep/napi-linux-arm64-musl@0.38.7':
     optional: true
 
   '@ast-grep/napi-linux-x64-gnu@0.37.0':
     optional: true
 
+  '@ast-grep/napi-linux-x64-gnu@0.38.7':
+    optional: true
+
   '@ast-grep/napi-linux-x64-musl@0.37.0':
+    optional: true
+
+  '@ast-grep/napi-linux-x64-musl@0.38.7':
     optional: true
 
   '@ast-grep/napi-win32-arm64-msvc@0.37.0':
     optional: true
 
+  '@ast-grep/napi-win32-arm64-msvc@0.38.7':
+    optional: true
+
   '@ast-grep/napi-win32-ia32-msvc@0.37.0':
     optional: true
 
+  '@ast-grep/napi-win32-ia32-msvc@0.38.7':
+    optional: true
+
   '@ast-grep/napi-win32-x64-msvc@0.37.0':
+    optional: true
+
+  '@ast-grep/napi-win32-x64-msvc@0.38.7':
     optional: true
 
   '@ast-grep/napi@0.37.0':
@@ -10027,6 +10236,18 @@ snapshots:
       '@ast-grep/napi-win32-arm64-msvc': 0.37.0
       '@ast-grep/napi-win32-ia32-msvc': 0.37.0
       '@ast-grep/napi-win32-x64-msvc': 0.37.0
+
+  '@ast-grep/napi@0.38.7':
+    optionalDependencies:
+      '@ast-grep/napi-darwin-arm64': 0.38.7
+      '@ast-grep/napi-darwin-x64': 0.38.7
+      '@ast-grep/napi-linux-arm64-gnu': 0.38.7
+      '@ast-grep/napi-linux-arm64-musl': 0.38.7
+      '@ast-grep/napi-linux-x64-gnu': 0.38.7
+      '@ast-grep/napi-linux-x64-musl': 0.38.7
+      '@ast-grep/napi-win32-arm64-msvc': 0.38.7
+      '@ast-grep/napi-win32-ia32-msvc': 0.38.7
+      '@ast-grep/napi-win32-x64-msvc': 0.38.7
 
   '@aws-crypto/crc32@5.2.0':
     dependencies:
@@ -12091,6 +12312,14 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.34.9':
     optional: true
 
+  '@rsbuild/core@1.3.19':
+    dependencies:
+      '@rspack/core': 1.7.6(@swc/helpers@0.5.18)
+      '@rspack/lite-tapable': 1.0.1
+      '@swc/helpers': 0.5.18
+      core-js: 3.42.0
+      jiti: 2.6.1
+
   '@rsbuild/core@1.7.3':
     dependencies:
       '@rspack/core': 1.7.6(@swc/helpers@0.5.18)
@@ -12107,13 +12336,13 @@ snapshots:
     optionalDependencies:
       core-js: 3.48.0
 
-  '@rsbuild/plugin-babel@1.1.0(@rsbuild/core@1.7.3)':
+  '@rsbuild/plugin-babel@1.1.0(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-proposal-decorators': 7.29.0(@babel/core@7.29.0)
       '@babel/plugin-transform-class-properties': 7.28.6(@babel/core@7.29.0)
       '@babel/preset-typescript': 7.28.5(@babel/core@7.29.0)
-      '@rsbuild/core': 1.7.3
+      '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
       '@types/babel__core': 7.20.5
       deepmerge: 4.3.1
       reduce-configs: 1.1.1
@@ -12153,9 +12382,9 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 1.7.3
 
-  '@rsbuild/plugin-less@1.6.0(@rsbuild/core@1.7.3)':
+  '@rsbuild/plugin-less@1.6.0(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))':
     dependencies:
-      '@rsbuild/core': 1.7.3
+      '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
       deepmerge: 4.3.1
       reduce-configs: 1.1.1
 
@@ -12176,6 +12405,15 @@ snapshots:
       reduce-configs: 1.1.1
       sass-embedded: 1.97.3
 
+  '@rsbuild/plugin-sass@1.5.0(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))':
+    dependencies:
+      '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
+      deepmerge: 4.3.1
+      loader-utils: 2.0.4
+      postcss: 8.5.6
+      reduce-configs: 1.1.1
+      sass-embedded: 1.97.3
+
   '@rsbuild/plugin-source-build@1.0.4(@rsbuild/core@1.7.3)':
     dependencies:
       fast-glob: 3.3.3
@@ -12183,19 +12421,6 @@ snapshots:
       yaml: 2.8.2
     optionalDependencies:
       '@rsbuild/core': 1.7.3
-
-  '@rsbuild/plugin-type-check@1.3.3(@rsbuild/core@1.7.3)(@rspack/core@1.7.6(@swc/helpers@0.5.18))(tslib@2.8.1)(typescript@5.9.3)':
-    dependencies:
-      deepmerge: 4.3.1
-      json5: 2.2.3
-      reduce-configs: 1.1.1
-      ts-checker-rspack-plugin: 1.2.6(@rspack/core@1.7.6(@swc/helpers@0.5.18))(tslib@2.8.1)(typescript@5.9.3)
-    optionalDependencies:
-      '@rsbuild/core': 1.7.3
-    transitivePeerDependencies:
-      - '@rspack/core'
-      - tslib
-      - typescript
 
   '@rsbuild/plugin-type-check@1.3.3(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(@rspack/core@1.7.6(@swc/helpers@0.5.18))(tslib@2.8.1)(typescript@5.9.3)':
     dependencies:
@@ -12213,6 +12438,10 @@ snapshots:
   '@rsbuild/plugin-typed-css-modules@1.2.1(@rsbuild/core@1.7.3)':
     optionalDependencies:
       '@rsbuild/core': 1.7.3
+
+  '@rsbuild/plugin-typed-css-modules@1.2.1(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))':
+    optionalDependencies:
+      '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
 
   '@rsdoctor/client@1.2.3': {}
 
@@ -12338,6 +12567,15 @@ snapshots:
     transitivePeerDependencies:
       - '@typescript/native-preview'
 
+  '@rslib/core@0.7.0(@microsoft/api-extractor@7.56.3(@types/node@24.10.13))(typescript@5.9.3)':
+    dependencies:
+      '@rsbuild/core': 1.3.19
+      rsbuild-plugin-dts: 0.7.0(@microsoft/api-extractor@7.56.3(@types/node@24.10.13))(@rsbuild/core@1.3.19)(typescript@5.9.3)
+      tinyglobby: 0.2.15
+    optionalDependencies:
+      '@microsoft/api-extractor': 7.56.3(@types/node@24.10.13)
+      typescript: 5.9.3
+
   '@rspack/binding-darwin-arm64@1.7.6':
     optional: true
 
@@ -12425,6 +12663,8 @@ snapshots:
       - utf-8-validate
       - webpack
       - webpack-cli
+
+  '@rspack/lite-tapable@1.0.1': {}
 
   '@rspack/lite-tapable@1.1.0': {}
 
@@ -13644,6 +13884,17 @@ snapshots:
       loupe: 3.1.4
       tinyrainbow: 2.0.0
 
+  '@vue/reactivity@3.5.0':
+    dependencies:
+      '@vue/shared': 3.5.0
+
+  '@vue/runtime-core@3.5.0':
+    dependencies:
+      '@vue/reactivity': 3.5.0
+      '@vue/shared': 3.5.0
+
+  '@vue/shared@3.5.0': {}
+
   '@webassemblyjs/ast@1.14.1':
     dependencies:
       '@webassemblyjs/helper-numbers': 1.13.2
@@ -14368,6 +14619,8 @@ snapshots:
   core-js-compat@3.45.0:
     dependencies:
       browserslist: 4.28.1
+
+  core-js@3.42.0: {}
 
   core-js@3.47.0: {}
 
@@ -18251,6 +18504,18 @@ snapshots:
       '@typescript/native-preview': 7.0.0-dev.20260212.1
       typescript: 5.9.3
 
+  rsbuild-plugin-dts@0.7.0(@microsoft/api-extractor@7.56.3(@types/node@24.10.13))(@rsbuild/core@1.3.19)(typescript@5.9.3):
+    dependencies:
+      '@ast-grep/napi': 0.38.7
+      '@rsbuild/core': 1.3.19
+      magic-string: 0.30.21
+      picocolors: 1.1.1
+      tinyglobby: 0.2.15
+      tsconfig-paths: 4.2.0
+    optionalDependencies:
+      '@microsoft/api-extractor': 7.56.3(@types/node@24.10.13)
+      typescript: 5.9.3
+
   rsbuild-plugin-publint@0.3.4(@rsbuild/core@1.7.3):
     dependencies:
       picocolors: 1.1.1
@@ -18264,12 +18529,6 @@ snapshots:
       publint: 0.3.17
     optionalDependencies:
       '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
-
-  rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@1.7.3)(tailwindcss@3.4.19):
-    dependencies:
-      tailwindcss: 3.4.19
-    optionalDependencies:
-      '@rsbuild/core': 1.7.3
 
   rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(tailwindcss@3.4.19):
     dependencies:
@@ -19168,6 +19427,12 @@ snapshots:
     dependencies:
       '@types/json5': 0.0.29
       json5: 1.0.2
+      minimist: 1.2.8
+      strip-bom: 3.0.0
+
+  tsconfig-paths@4.2.0:
+    dependencies:
+      json5: 2.2.3
       minimist: 1.2.8
       strip-bom: 3.0.0
 

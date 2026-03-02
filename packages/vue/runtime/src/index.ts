@@ -18,67 +18,67 @@
 import {
   createRenderer,
   // Re-export types need explicit imports for isolatedDeclarations
-  type App,
-  type Component,
-  type ComponentPublicInstance,
-} from '@vue/runtime-core'
+} from '@vue/runtime-core';
+import type {
+  App,
+  Component,
+  ComponentPublicInstance,
+} from '@vue/runtime-core';
 
-import { registerMount } from './app-registry.js'
-import { nodeOps } from './node-ops.js'
-import { createPageRoot, type ShadowElement } from './shadow-element.js'
+import { nodeOps } from './node-ops.js';
+import { createPageRoot } from './shadow-element.js';
+import type { ShadowElement } from './shadow-element.js';
 
-export type { App, Component, ComponentPublicInstance, ShadowElement }
+export type { App, Component, ComponentPublicInstance, ShadowElement };
 
-const { createApp: _createApp, render } = createRenderer<
-  ShadowElement,
-  ShadowElement
->(nodeOps)
-
-export { render }
+const _renderer = createRenderer<ShadowElement, ShadowElement>(nodeOps);
+const _createApp = _renderer.createApp;
 
 // ---------------------------------------------------------------------------
-// createApp – defers mount until Lynx renderPage fires
+// createApp – mounts immediately when called (main-thread renderPage runs
+// before the background bundle is initialised by Lynx, so page root id=1
+// is always ready by the time app.mount() executes)
 // ---------------------------------------------------------------------------
 
 export interface VueLynxApp {
-  mount(): void
-  use(plugin: unknown, ...options: unknown[]): VueLynxApp
-  provide(key: unknown, value: unknown): VueLynxApp
-  config: App['config']
-  [key: string]: unknown
+  mount(): void;
+  use(plugin: unknown, ...options: unknown[]): VueLynxApp;
+  provide(key: unknown, value: unknown): VueLynxApp;
+  config: App['config'];
+  [key: string]: unknown;
 }
 
 export function createApp(
   rootComponent: Component,
   rootProps?: Record<string, unknown>,
 ): VueLynxApp {
-  const internalApp = _createApp(rootComponent, rootProps)
+  const internalApp = _createApp(rootComponent, rootProps);
 
   const app: VueLynxApp = {
-    get config() { return internalApp.config },
+    get config() {
+      return internalApp.config;
+    },
 
     use(plugin: unknown, ...options: unknown[]): VueLynxApp {
-      internalApp.use(plugin as Parameters<App['use']>[0], ...options)
-      return app
+      internalApp.use(plugin as Parameters<App['use']>[0], ...options);
+      return app;
     },
 
     provide(key: unknown, value: unknown): VueLynxApp {
       internalApp.provide(
-        key as Parameters<App['provide']>[0],
+        key,
         value,
-      )
-      return app
+      );
+      return app;
     },
 
     mount(): void {
-      registerMount(() => {
-        const root = createPageRoot()
-        internalApp.mount(root)
-      })
+      const root = createPageRoot();
+      internalApp.mount(root);
     },
-  }
+  };
 
-  return app
+  return app;
 }
 
 // ---------------------------------------------------------------------------
@@ -112,4 +112,4 @@ export {
   watch,
   watchEffect,
   watchPostEffect,
-} from '@vue/runtime-core'
+} from '@vue/runtime-core';
