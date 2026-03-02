@@ -102,14 +102,14 @@ export class WebEncodePlugin {
             customSections: encodeOptions.customSections ?? {},
             elementTemplates: encodeOptions['elementTemplates'] ?? {},
           };
-          const isExperimentalWebBinary = !!process
+          const isExperimentalWebBinary = process
             .env['EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE'];
-          if (isExperimentalWebBinary) {
+          if (isExperimentalWebBinary === 'true') {
             const { encode } = await import('@lynx-js/web-core-wasm/encode')
               .catch(
                 () => {
                   throw new Error(
-                    `FLAG EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE IS INTERNAL USED ONLY`,
+                    `cannot enable the flat EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE, please contact developers`,
                   );
                 },
               );
