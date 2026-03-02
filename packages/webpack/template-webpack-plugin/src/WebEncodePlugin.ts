@@ -117,7 +117,7 @@ export class WebEncodePlugin {
               buffer: Buffer.from(encode(tasmJSONInfo as TasmJSONInfo)),
               debugInfo: '',
             };
-          } else {
+          } else if (isExperimentalWebBinary == null /*undefined or null */) {
             return {
               buffer: Buffer.from(
                 JSON.stringify({
@@ -133,6 +133,11 @@ export class WebEncodePlugin {
               ),
               debugInfo: '',
             };
+          } else {
+            // only allow 'true' or undefined/null
+            throw new Error(
+              `unknown value of EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE: ${isExperimentalWebBinary}, This is an experimental flag, please remove this flag.`,
+            );
           }
         });
       },
