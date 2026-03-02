@@ -1,18 +1,28 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+import { useCallback, useEffect, useRef, useState } from 'react';
+
 import type { LynxTemplate } from '@lynx-js/web-constants';
-import { Header } from './components/Header';
-import { EditorPane, type EditorPaneHandle } from './components/EditorPane';
-import { PreviewPane } from './components/PreviewPane';
-import {
-  ResizablePanelGroup,
-  ResizablePanel,
-  ResizableHandle,
-} from './components/ui/resizable';
+
 import { buildLynxTemplate } from './bundler/template-builder.js';
-import { samples } from './samples.js';
-import { getInitialState, saveToUrl, saveSampleToUrl } from './url-state.js';
-import { saveToLocalStorage, loadFromLocalStorage, clearLocalStorage } from './local-storage.js';
+import { EditorPane } from './components/EditorPane.js';
+import type { EditorPaneHandle } from './components/EditorPane.js';
+import { Header } from './components/Header.js';
+import { PreviewPane } from './components/PreviewPane.js';
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from './components/ui/resizable.js';
 import { useConsole } from './console/useConsole.js';
+import {
+  clearLocalStorage,
+  loadFromLocalStorage,
+  saveToLocalStorage,
+} from './local-storage.js';
+import { samples } from './samples.js';
+import { getInitialState, saveSampleToUrl, saveToUrl } from './url-state.js';
 
 const MOBILE_BREAKPOINT = 768;
 const SESSION_ID = Math.random().toString(36).slice(2);
@@ -31,7 +41,10 @@ function useIsMobile() {
 }
 
 // Resolve initial code and sample index from URL > localStorage > default
-function resolveInitial(): { code: { mainThread: string; background: string; css: string }; sampleIndex: number | null } {
+function resolveInitial(): {
+  code: { mainThread: string; background: string; css: string };
+  sampleIndex: number | null;
+} {
   const urlState = getInitialState();
 
   if (urlState?.type === 'custom') {
@@ -39,9 +52,13 @@ function resolveInitial(): { code: { mainThread: string; background: string; css
   }
 
   if (urlState?.type === 'sample') {
-    const sample = samples[urlState.sampleIndex]!;
+    const sample = samples[urlState.sampleIndex];
     return {
-      code: { mainThread: sample.mainThread, background: sample.background, css: sample.css },
+      code: {
+        mainThread: sample.mainThread,
+        background: sample.background,
+        css: sample.css,
+      },
       sampleIndex: urlState.sampleIndex,
     };
   }
@@ -51,9 +68,13 @@ function resolveInitial(): { code: { mainThread: string; background: string; css
     return { code: cached, sampleIndex: null };
   }
 
-  const defaultSample = samples[0]!;
+  const defaultSample = samples[0];
   return {
-    code: { mainThread: defaultSample.mainThread, background: defaultSample.background, css: defaultSample.css },
+    code: {
+      mainThread: defaultSample.mainThread,
+      background: defaultSample.background,
+      css: defaultSample.css,
+    },
     sampleIndex: 0,
   };
 }
@@ -63,12 +84,16 @@ const initial = resolveInitial();
 export function App() {
   const [layout, setLayout] = useState<'rows' | 'cols'>('rows');
   const [isDark, setIsDark] = useState(true);
-  const [sampleIndex, setSampleIndex] = useState<number | null>(initial.sampleIndex);
+  const [sampleIndex, setSampleIndex] = useState<number | null>(
+    initial.sampleIndex,
+  );
   const [timingText, setTimingText] = useState('');
   const [template, setTemplate] = useState<LynxTemplate | null>(null);
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const isMobile = useIsMobile();
-  const { entries: consoleEntries, clear: clearConsole } = useConsole(SESSION_ID);
+  const { entries: consoleEntries, clear: clearConsole } = useConsole(
+    SESSION_ID,
+  );
 
   const editorPaneRef = useRef<EditorPaneHandle>(null);
 
@@ -86,7 +111,12 @@ export function App() {
     const t0 = performance.now();
     const { background, mainThread, css } = editor.getCode();
 
-    const { template: newTemplate, timing } = buildLynxTemplate(mainThread, background, css, SESSION_ID);
+    const { template: newTemplate, timing } = buildLynxTemplate(
+      mainThread,
+      background,
+      css,
+      SESSION_ID,
+    );
     const t2 = performance.now();
 
     setTemplate(newTemplate);
@@ -137,7 +167,10 @@ export function App() {
   const handleToggleTheme = useCallback(() => {
     setIsDark((prev) => {
       const next = !prev;
-      document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
+      document.documentElement.setAttribute(
+        'data-theme',
+        next ? 'dark' : 'light',
+      );
       editorPaneRef.current?.editor?.setDarkMode(next);
       return next;
     });
@@ -146,7 +179,7 @@ export function App() {
   const handleSampleChange = useCallback(
     (index: number) => {
       setSampleIndex(index);
-      const sample = samples[index]!;
+      const sample = samples[index];
       const code = {
         background: sample.background,
         mainThread: sample.mainThread,
@@ -157,23 +190,27 @@ export function App() {
       clearLocalStorage();
       saveSampleToUrl(index);
       rebuild();
+      // setCode() triggers Monaco's onChange which queues a debouncedRebuild;
+      // cancel it so the sample isn't immediately overwritten as custom code.
+      clearTimeout(timerRef.current);
     },
     [rebuild],
   );
 
   const handleShare = useCallback(() => {
-    if (sampleIndex !== null) {
-      saveSampleToUrl(sampleIndex);
-    } else {
+    if (sampleIndex === null) {
       const editor = editorPaneRef.current?.editor;
       if (!editor) return;
       saveToUrl(editor.getCode());
+    } else {
+      saveSampleToUrl(sampleIndex);
     }
+    // eslint-disable-next-line n/no-unsupported-features/node-builtins, @typescript-eslint/no-floating-promises
     navigator.clipboard.writeText(window.location.href);
   }, [sampleIndex]);
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className='flex flex-col h-screen'>
       <Header
         layout={layout}
         onToggleLayout={handleToggleLayout}
@@ -187,42 +224,57 @@ export function App() {
         onMobileTabChange={setMobileTab}
       />
 
-      {isMobile ? (
-        <div className="flex-1 min-h-0">
-          <div
-            className="h-full"
-            style={{ display: mobileTab === 'editor' ? 'block' : 'none' }}
-          >
-            <EditorPane
-              ref={editorPaneRef}
-              layout="rows"
-              defaultCode={initial.code}
-              onChange={debouncedRebuild}
-            />
+      {isMobile
+        ? (
+          <div className='flex-1 min-h-0'>
+            <div
+              className='h-full'
+              style={{ display: mobileTab === 'editor' ? 'block' : 'none' }}
+            >
+              <EditorPane
+                ref={editorPaneRef}
+                layout='rows'
+                defaultCode={initial.code}
+                onChange={debouncedRebuild}
+              />
+            </div>
+            <div
+              className='h-full'
+              style={{ display: mobileTab === 'preview' ? 'block' : 'none' }}
+            >
+              <PreviewPane
+                template={template}
+                timingText={timingText}
+                consoleEntries={consoleEntries}
+                onConsoleClear={clearConsole}
+              />
+            </div>
           </div>
-          <div
-            className="h-full"
-            style={{ display: mobileTab === 'preview' ? 'block' : 'none' }}
+        )
+        : (
+          <ResizablePanelGroup
+            orientation='horizontal'
+            className='flex-1 min-h-0'
           >
-            <PreviewPane template={template} timingText={timingText} consoleEntries={consoleEntries} onConsoleClear={clearConsole} />
-          </div>
-        </div>
-      ) : (
-        <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
-          <ResizablePanel defaultSize={60} minSize={20}>
-            <EditorPane
-              ref={editorPaneRef}
-              layout={layout}
-              defaultCode={initial.code}
-              onChange={debouncedRebuild}
-            />
-          </ResizablePanel>
-          <ResizableHandle />
-          <ResizablePanel defaultSize={40} minSize={20}>
-            <PreviewPane template={template} timingText={timingText} consoleEntries={consoleEntries} onConsoleClear={clearConsole} />
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      )}
+            <ResizablePanel defaultSize={60} minSize={20}>
+              <EditorPane
+                ref={editorPaneRef}
+                layout={layout}
+                defaultCode={initial.code}
+                onChange={debouncedRebuild}
+              />
+            </ResizablePanel>
+            <ResizableHandle />
+            <ResizablePanel defaultSize={40} minSize={20}>
+              <PreviewPane
+                template={template}
+                timingText={timingText}
+                consoleEntries={consoleEntries}
+                onConsoleClear={clearConsole}
+              />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        )}
     </div>
   );
 }
