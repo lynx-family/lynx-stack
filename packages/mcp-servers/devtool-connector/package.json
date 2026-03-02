@@ -26,13 +26,13 @@
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",
-    "@types/node": "^24.10.0",
+    "@types/node": "^24.10.13",
     "@yume-chan/adb": "catalog:adb",
     "@yume-chan/adb-server-node-tcp": "catalog:adb",
     "@yume-chan/stream-extra": "catalog:adb",
     "commander": "^13.1.0",
     "debug": "^4.4.3",
-    "rsbuild-plugin-publint": "^0.3.3",
+    "rsbuild-plugin-publint": "0.3.4",
     "typescript": "^5.9.3",
     "usbmux-client": "^0.2.1"
   },
