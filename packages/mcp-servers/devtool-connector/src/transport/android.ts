@@ -19,8 +19,6 @@ import type {
 const debug = createDebug('devtool-mcp-server:connector:android');
 
 const KNOWNS_APPS: App[] = [
-  { packageName: 'com.ss.android.ugc.aweme', name: 'Douyin' },
-  { packageName: 'com.lynx.uiapp', name: 'Lynx Example' },
   { packageName: 'com.lynx.explorer', name: 'Lynx Explorer' },
 ];
 

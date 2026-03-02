@@ -4,7 +4,6 @@
 
 import type { NetConnectOpts } from 'node:net';
 import { Duplex } from 'node:stream';
-import { ReadableStream } from 'node:stream/web';
 import type { WritableStream } from 'node:stream/web';
 
 import createDebug from 'debug';
@@ -51,7 +50,7 @@ export class iOSTransport implements Transport {
 
     const { readable, writable } = Duplex.toWeb(conn);
     return {
-      readable: ReadableStream.from(readable),
+      readable,
       writable: writable as WritableStream<Uint8Array>,
       [Symbol.asyncDispose]() {
         signal?.removeEventListener('abort', abortHandler);
