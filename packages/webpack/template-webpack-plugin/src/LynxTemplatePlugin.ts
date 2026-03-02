@@ -757,13 +757,31 @@ class LynxTemplatePluginImpl {
       cssPlugins,
       enableCSSSelector,
     );
+
+    let templateDebugUrl = '';
+    const debugInfoPath = path.posix.format({
+      dir: intermediate,
+      base: 'debug-info.json',
+    });
+    // TODO: Support publicPath function
+    if (
+      typeof compiler.options.output.publicPath === 'string'
+      && compiler.options.output.publicPath !== 'auto'
+      && compiler.options.output.publicPath !== '/'
+    ) {
+      templateDebugUrl = new URL(
+        debugInfoPath,
+        compiler.options.output.publicPath,
+      ).toString();
+    }
+
     const encodeRawData: EncodeRawData = {
       compilerOptions: {
         enableFiberArch: true,
         useLepusNG: true,
         enableReuseContext: true,
         bundleModuleMode: 'ReturnByFunction',
-        templateDebugUrl: '',
+        templateDebugUrl,
 
         debugInfoOutside,
         defaultDisplayLinear,
@@ -843,23 +861,6 @@ class LynxTemplatePluginImpl {
         filename: lepusCode.filename,
       },
     };
-
-    const debugInfoPath = path.posix.format({
-      dir: intermediate,
-      base: 'debug-info.json',
-    });
-
-    // TODO: Support publicPath function
-    if (
-      typeof compiler.options.output.publicPath === 'string'
-      && compiler.options.output.publicPath !== 'auto'
-      && compiler.options.output.publicPath !== '/'
-    ) {
-      resolvedEncodeOptions.compilerOptions['templateDebugUrl'] = new URL(
-        debugInfoPath,
-        compiler.options.output.publicPath,
-      ).toString();
-    }
 
     const { RawSource } = compiler.webpack.sources;
 
