@@ -90,6 +90,10 @@ export function App() {
   );
   const [timingText, setTimingText] = useState('');
   const [template, setTemplate] = useState<LynxTemplate | null>(null);
+  const pendingTimingRef = useRef<
+    | { css: number | null; assemble: number; t0: number; buildEnd: number }
+    | null
+  >(null);
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const isMobile = useIsMobile();
   const { entries: consoleEntries, clear: clearConsole } = useConsole(
@@ -98,11 +102,33 @@ export function App() {
 
   const editorPaneRef = useRef<EditorPaneHandle>(null);
 
+  const handleRenderComplete = useCallback(() => {
+    const pending = pendingTimingRef.current;
+    if (!pending) return;
+    const renderEnd = performance.now();
+    const renderTime = renderEnd - pending.buildEnd;
+    const totalTime = renderEnd - pending.t0;
+    // Show µs for sub-millisecond values so they don't round to 0.00ms
+    const fmt = (v: number) =>
+      v >= 1 ? `${v.toFixed(1)}ms` : `${(v * 1000).toFixed(0)}µs`;
+    const cssText = pending.css === null ? '-' : fmt(pending.css);
+    setTimingText(
+      [
+        `css: ${cssText}`,
+        `asm: ${fmt(pending.assemble)}`,
+        `render: ${fmt(renderTime)}`,
+        `total: ${fmt(totalTime)}`,
+      ].join('  \u00b7  '),
+    );
+    pendingTimingRef.current = null;
+  }, []);
+
   const rebuild = useCallback(() => {
     const editor = editorPaneRef.current?.editor;
     if (!editor) return;
 
     clearConsole();
+    setTimingText('');
 
     const t0 = performance.now();
     const { background, mainThread, css } = editor.getCode();
@@ -113,20 +139,16 @@ export function App() {
       css,
       SESSION_ID,
     );
-    const t2 = performance.now();
+    const buildEnd = performance.now();
+
+    pendingTimingRef.current = {
+      css: timing['css-serializer'],
+      assemble: timing.assemble,
+      t0,
+      buildEnd,
+    };
 
     setTemplate(newTemplate);
-    const t3 = performance.now();
-
-    const ms = (v: number) => `${v.toFixed(2)}ms`;
-    setTimingText(
-      [
-        `css-serializer: ${ms(timing['css-serializer'])}`,
-        `assemble: ${ms(timing.assemble)}`,
-        `render: ${ms(t3 - t2)}`,
-        `total: ${ms(t3 - t0)}`,
-      ].join('  \u00b7  '),
-    );
   }, [clearConsole]);
 
   // Debounced rebuild + persist
@@ -255,6 +277,7 @@ export function App() {
                   consoleEntries={consoleEntries}
                   onConsoleClear={clearConsole}
                   isDark={isDark}
+                  onLoad={handleRenderComplete}
                 />
               </div>
             </div>
@@ -280,6 +303,7 @@ export function App() {
                   consoleEntries={consoleEntries}
                   onConsoleClear={clearConsole}
                   isDark={isDark}
+                  onLoad={handleRenderComplete}
                 />
               </ResizablePanel>
             </ResizablePanelGroup>

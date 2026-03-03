@@ -20,15 +20,15 @@ export function EditorWindowHeader(
   if (collapsed && layout === 'cols') {
     return (
       <div
-        className='flex flex-col items-center flex-1 min-h-0 pt-1.5 pb-3 select-none'
+        className='flex flex-col items-center flex-1 min-h-0 pt-1.5 pb-3 select-none cursor-pointer'
         style={{ background: 'var(--repl-bg-surface)' }}
+        onClick={onToggle}
+        title='Expand'
       >
         <Button
           variant='ghost'
           size='icon'
-          className='h-[18px] w-5 shrink-0 text-base font-mono'
-          onClick={onToggle}
-          title='Expand'
+          className='h-5 w-5 shrink-0 text-base font-mono pointer-events-none'
           style={{ color: 'var(--repl-text-faint)' }}
         >
           <Plus className='h-3 w-3' />
@@ -49,11 +49,13 @@ export function EditorWindowHeader(
   // Normal horizontal header (rows mode, or cols mode when expanded).
   return (
     <div
-      className='flex items-center justify-between min-h-[26px] py-1.5 px-3 shrink-0 select-none'
+      className='flex items-center justify-between h-7 px-3 shrink-0 select-none cursor-pointer'
       style={{
         background: 'var(--repl-bg-surface)',
         borderBottom: '1px solid var(--repl-border)',
       }}
+      onClick={onToggle}
+      title={collapsed ? 'Expand' : 'Collapse'}
     >
       <span
         className='text-[11px] font-mono tracking-wide lowercase'
@@ -64,9 +66,7 @@ export function EditorWindowHeader(
       <Button
         variant='ghost'
         size='icon'
-        className='h-[18px] w-5 text-base font-mono'
-        onClick={onToggle}
-        title={collapsed ? 'Expand' : 'Collapse'}
+        className='h-5 w-5 text-base font-mono pointer-events-none'
         style={{ color: 'var(--repl-text-faint)' }}
       >
         {collapsed

@@ -1,3 +1,8 @@
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+/* eslint-disable import/order */
+
 // UI Tree
 import uiTreeCreatingElements from './examples/ui-tree-creating-elements/main-thread.js?raw';
 import uiTreeElementTypes from './examples/ui-tree-element-types/main-thread.js?raw';
@@ -10,10 +15,12 @@ import stylingCssClassesMain from './examples/styling-css-classes-and-scoping/ma
 import stylingCssClassesCss from './examples/styling-css-classes-and-scoping/index.css?raw';
 
 // Interactivity
-import interactivityEventMain from './examples/interactivity-event-handling/main-thread.js?raw';
-import interactivityEventBg from './examples/interactivity-event-handling/background.js?raw';
-import interactivitySelectorQuery from './examples/interactivity-selector-query/main-thread.js?raw';
-import interactivityGetById from './examples/interactivity-get-element-by-id/main-thread.js?raw';
+import interactivityEventBgMain from './examples/interactivity-event-bg/main-thread.js?raw';
+import interactivityEventBgBg from './examples/interactivity-event-bg/background.js?raw';
+import interactivityEventMtMain from './examples/interactivity-event-main-thread/main-thread.js?raw';
+import interactivityRefsBgMain from './examples/interactivity-refs-bg/main-thread.js?raw';
+import interactivityRefsBgBg from './examples/interactivity-refs-bg/background.js?raw';
+import interactivityRefsMtMain from './examples/interactivity-refs-main-thread/main-thread.js?raw';
 
 // Attributes & Data
 import attributesSetAndGet from './examples/attributes-set-and-get/main-thread.js?raw';
@@ -37,8 +44,8 @@ import globalSystemInfo from './examples/global-system-info/main-thread.js?raw';
 import globalFetchMain from './examples/global-fetch/main-thread.js?raw';
 import globalFetchBg from './examples/global-fetch/background.js?raw';
 import globalProps from './examples/global-props/main-thread.js?raw';
-import globalConsoleMain from './examples/global-console/main-thread.js?raw';
-import globalConsoleBg from './examples/global-console/background.js?raw';
+import globalPropsThemeMain from './examples/global-props-theme/main-thread.js?raw';
+import globalPropsThemeBg from './examples/global-props-theme/background.js?raw';
 
 // Demos
 import demoCounterMain from './examples/demo-background-counter/main-thread.js?raw';
@@ -129,23 +136,30 @@ export const samples: Sample[] = [
 
   // ── Interactivity ───────────────────────────────────────────────────────
   {
-    name: 'Event Handling',
+    name: 'Event Handling (Background)',
     category: 'Interactivity',
-    mainThread: interactivityEventMain,
-    background: interactivityEventBg,
+    mainThread: interactivityEventBgMain,
+    background: interactivityEventBgBg,
     css: '',
   },
   {
-    name: 'SelectorQuery & Measurement',
+    name: 'Event Handling (Main Thread)',
     category: 'Interactivity',
-    mainThread: interactivitySelectorQuery,
+    mainThread: interactivityEventMtMain,
     background: '',
     css: '',
   },
   {
-    name: 'getElementById',
+    name: 'Element Refs (Background)',
     category: 'Interactivity',
-    mainThread: interactivityGetById,
+    mainThread: interactivityRefsBgMain,
+    background: interactivityRefsBgBg,
+    css: '',
+  },
+  {
+    name: 'Element Refs (Main Thread)',
+    category: 'Interactivity',
+    mainThread: interactivityRefsMtMain,
     background: '',
     css: '',
   },
@@ -221,10 +235,10 @@ export const samples: Sample[] = [
     css: '',
   },
   {
-    name: 'Console API',
+    name: 'Theme via globalProps',
     category: 'Global APIs',
-    mainThread: globalConsoleMain,
-    background: globalConsoleBg,
+    mainThread: globalPropsThemeMain,
+    background: globalPropsThemeBg,
     css: '',
   },
 

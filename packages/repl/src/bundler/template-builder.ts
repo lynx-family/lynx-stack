@@ -1,3 +1,4 @@
+/* eslint-disable headers/header-format */
 import type { LynxTemplate, StyleInfo } from '@lynx-js/web-constants';
 
 import { processCSS } from './css-processor.js';
@@ -8,7 +9,10 @@ export function buildLynxTemplate(
   background: string,
   css: string,
   sessionId: string,
-): { template: LynxTemplate; timing: { 'css-serializer': number; assemble: number } } {
+): {
+  template: LynxTemplate;
+  timing: { 'css-serializer': number | null; assemble: number };
+} {
   const mainThreadWithFallback = `${mainThread}
 
 if (typeof globalThis.renderPage !== 'function') {
@@ -16,11 +20,13 @@ if (typeof globalThis.renderPage !== 'function') {
 }
 `;
 
-  const mainThreadCode = getConsoleWrapperCode('main-thread', sessionId) + mainThreadWithFallback;
-  const backgroundCode = getConsoleWrapperCode('background', sessionId) + background;
+  const mainThreadCode = getConsoleWrapperCode('main-thread', sessionId)
+    + mainThreadWithFallback;
+  const backgroundCode = getConsoleWrapperCode('background', sessionId)
+    + background;
 
   let styleInfo: StyleInfo = {};
-  let cssSerializerTime = 0;
+  let cssSerializerTime: number | null = null;
   if (css.trim()) {
     const t = performance.now();
     styleInfo = processCSS(css);
@@ -45,5 +51,8 @@ if (typeof globalThis.renderPage !== 'function') {
   };
   const assembleTime = performance.now() - assembleStart;
 
-  return { template, timing: { 'css-serializer': cssSerializerTime, assemble: assembleTime } };
+  return {
+    template,
+    timing: { 'css-serializer': cssSerializerTime, assemble: assembleTime },
+  };
 }
