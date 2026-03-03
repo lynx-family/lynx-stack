@@ -8,7 +8,7 @@ import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { setupDocument } from '../../src/document';
 import { setupPage, snapshotInstanceManager } from '../../src/snapshot';
-import { initProfileHook } from '../../src/debug/profile';
+import { initProfileHook } from '../../src/debug/profileHooks';
 import { useState } from '../../src/index';
 import { COMPONENT, DIFF, DIFF2, DIFFED, HOOKS, LIST, RENDER, VNODE } from '../../src/renderToOpcodes/constants';
 

@@ -221,5 +221,37 @@ describe('Gesture Configuration', () => {
       pan.enabled(false);
       expect(pan.execId).toBe(2);
     });
+
+    test('execId should not increment on identical config change', () => {
+      const pan = new PanGesture();
+      expect(pan.execId).toBe(0);
+
+      pan.minDistance(10);
+      expect(pan.execId).toBe(1);
+
+      // Re-applying same config should not increment
+      pan.minDistance(10);
+      expect(pan.execId).toBe(1);
+
+      pan.enabled(false);
+      expect(pan.execId).toBe(2);
+
+      // Re-applying same config should not increment
+      pan.enabled(false);
+      expect(pan.execId).toBe(2);
+    });
+
+    test('execId should not increment when setting duplicate relationships', () => {
+      const pan1 = new PanGesture();
+      const tap1 = new TapGesture();
+      expect(pan1.execId).toBe(0);
+
+      pan1.externalSimultaneous(tap1);
+      expect(pan1.execId).toBe(1);
+
+      // Setting same relationship should not increment
+      pan1.externalSimultaneous(tap1);
+      expect(pan1.execId).toBe(1);
+    });
   });
 });
