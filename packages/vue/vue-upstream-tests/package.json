@@ -2,19 +2,24 @@
   "name": "@lynx-js/vue-upstream-tests",
   "version": "0.1.0",
   "private": true,
-  "description": "Run vuejs/core runtime-core tests against Lynx ShadowElement renderer",
+  "description": "Run vuejs/core upstream tests (runtime-core, runtime-dom, reactivity, shared) against Lynx pipeline",
   "type": "module",
   "scripts": {
     "test": "vitest run",
+    "test:dom": "vitest run --config vitest.dom.config.ts",
+    "test:dom:watch": "vitest --config vitest.dom.config.ts",
     "test:watch": "vitest",
     "vuejs:init": "git submodule update --init --depth 1 packages/vue/vue-upstream-tests/core",
     "vuejs:status": "cd core && git log --oneline -1"
   },
   "devDependencies": {
+    "@lynx-js/testing-environment": "workspace:*",
+    "@lynx-js/vue-main-thread": "workspace:*",
     "@lynx-js/vue-runtime": "workspace:*",
     "@vue/reactivity": "^3.5.0",
     "@vue/runtime-core": "^3.5.0",
     "@vue/shared": "^3.5.0",
+    "jsdom": "^25.0.0",
     "vitest": "^3.0.0"
   }
 }

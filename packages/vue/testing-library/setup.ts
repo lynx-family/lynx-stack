@@ -25,6 +25,12 @@ const lynxTestingEnv = new LynxTestingEnv(jsdom);
 
 lynxTestingEnv.switchToMainThread();
 
+// Stub registerWorkletInternal — entry-main.ts may contain demo worklet
+// registrations that require the worklet-runtime chunk (not available in tests).
+if (typeof (globalThis as any).registerWorkletInternal === 'undefined') {
+  (globalThis as any).registerWorkletInternal = () => {};
+}
+
 // The main-thread entry-main.ts sets globalThis.renderPage, vuePatchUpdate, etc.
 await import('@lynx-js/vue-main-thread');
 
