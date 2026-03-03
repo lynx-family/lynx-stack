@@ -48,15 +48,10 @@ export class XTextTruncation
     return !this.#hasInlineTruncation && !this.#tailColorConvert;
   }
   get #hasInlineTruncation() {
-    if (CSS.supports('selector(:has(inline-truncation))')) {
-      return this.#dom.matches(':has(inline-truncation)');
-    } else {
-      const candidateElement = this.#dom.querySelector('inline-truncation');
-      if (candidateElement?.parentElement === this.#dom) {
-        return true;
-      }
-    }
-    return false;
+    return !!this.#findValidInlineTruncation();
+  }
+  #findValidInlineTruncation(): Element | null {
+    return this.#dom.querySelector(':scope > inline-truncation');
   }
   get #doExpensiveLineLayoutCalculation() {
     return (
@@ -157,7 +152,7 @@ export class XTextTruncation
       const currentLineText = end - start;
       if (this.#hasInlineTruncation) {
         this.#dom.setAttribute(XTextTruncation.showInlineTruncation, '');
-        const inlineTruncation = this.#dom.querySelector('inline-truncation')!;
+        const inlineTruncation = this.#findValidInlineTruncation()!;
         const inlineTruncationBoundingRect = inlineTruncation
           .getBoundingClientRect();
         const parentWidth = parentBondingRect!.width;
