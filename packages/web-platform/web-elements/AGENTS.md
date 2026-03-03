@@ -86,9 +86,11 @@ To verify specific test cases or fixtures manually:
 - **Main Thread**: These elements run on the main thread. Minimize heavy computation in `attributeChangedCallback`.
 - **Batching**: Group DOM updates.
 
-## Shadow DOM Structure (`htmlTemplates.ts`)
+## Shadow DOM Structure (`htmlTemplates.ts` & `src/template.rs`)
 
 The internal structure of web elements is defined in `src/elements/htmlTemplates.ts`. This ensures consistency and encapsulates implementation details. Agents should refer to this file to understand the shadow tree hierarchy (e.g., `ScrollView`'s observer containers, `XInput`'s inner `<input>` element).
+
+**CRITICAL SYNCHRONIZATION**: The templates in `htmlTemplates.ts` are strictly mirrored in the Rust sub-package at `src/template.rs` (a pure Rust lib). Any modifications, additions, or removals of templates in `htmlTemplates.ts` **MUST** be exactly replicated in `src/template.rs`. There is an automated test (`tests/template_sync.rs`) that verifies the generated strings from both TypeScript and Rust match exactly.
 
 ## Implementation Guidelines for New Elements
 

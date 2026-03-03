@@ -35,7 +35,7 @@ export class MainThreadWasmContext {
     get_events(unique_id: number): EventInfo[];
     get_unique_id_by_component_id(component_id: string): number | undefined;
     constructor(root_node: Node, mts_binding: any, config_enable_css_selector: boolean);
-    push_style_sheet(template_manager: TemplateManager, entry_name: string, is_entry_template: boolean): void;
+    push_style_sheet(style_info: StyleSheetResource, entry_name?: string | null): void;
     /**
      *
      *   * key: String
@@ -146,11 +146,10 @@ export class Selector {
     push_one_selector_section(selector_type: string, value: string): void;
 }
 
-export class TemplateManager {
+export class StyleSheetResource {
     free(): void;
     [Symbol.dispose](): void;
-    add_style_info(template_name: string, buf: Uint8Array, document: Document): void;
-    constructor();
+    constructor(buffer: Uint8Array, _document: any);
 }
 
 /**
@@ -191,7 +190,7 @@ export interface InitOutput {
     readonly __wbg_set_eventinfo_event_handler: (a: number, b: any) => void;
     readonly __wbg_set_eventinfo_event_name: (a: number, b: number, c: number) => void;
     readonly __wbg_set_eventinfo_event_type: (a: number, b: number, c: number) => void;
-    readonly __wbg_templatemanager_free: (a: number, b: number) => void;
+    readonly __wbg_stylesheetresource_free: (a: number, b: number) => void;
     readonly add_inline_style_raw_string_key: (a: any, b: number, c: number, d: number, e: number) => void;
     readonly decode_style_info: (a: any, b: number, c: number, d: number) => [number, number, number];
     readonly encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number) => [number, number, number];
@@ -215,7 +214,7 @@ export interface InitOutput {
     readonly mainthreadwasmcontext_get_events: (a: number, b: number) => [number, number];
     readonly mainthreadwasmcontext_get_unique_id_by_component_id: (a: number, b: number, c: number) => number;
     readonly mainthreadwasmcontext_new: (a: any, b: any, c: number) => number;
-    readonly mainthreadwasmcontext_push_style_sheet: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly mainthreadwasmcontext_push_style_sheet: (a: number, b: number, c: number, d: number) => [number, number];
     readonly mainthreadwasmcontext_set_config: (a: number, b: number, c: any) => [number, number];
     readonly mainthreadwasmcontext_set_css_id: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly mainthreadwasmcontext_set_dataset: (a: number, b: number, c: any, d: any) => [number, number];
@@ -235,8 +234,7 @@ export interface InitOutput {
     readonly selector_push_one_selector_section: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly set_inline_styles_in_str: (a: any, b: number, c: number) => number;
     readonly set_inline_styles_number_key: (a: any, b: number, c: number, d: number) => void;
-    readonly templatemanager_add_style_info: (a: number, b: number, c: number, d: any, e: any) => [number, number];
-    readonly templatemanager_new: () => number;
+    readonly stylesheetresource_new: (a: any, b: any) => [number, number, number];
     readonly selector_new: () => number;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

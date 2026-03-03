@@ -319,7 +319,7 @@ describe('alog', () => {
       {
         "handlerName": "-2:0:",
         "type": "bindEvent:tap",
-        "snapshotInstanceType": "__snapshot_426db_test_1",
+        "snapshotType": "__snapshot_426db_test_1",
         "jsFunctionName": ""
       }",
         ],
@@ -328,7 +328,7 @@ describe('alog', () => {
       {
         "handlerName": "-2:1:",
         "type": "catchEvent:focus",
-        "snapshotInstanceType": "__snapshot_426db_test_1",
+        "snapshotType": "__snapshot_426db_test_1",
         "jsFunctionName": "handleFocus"
       }",
         ],

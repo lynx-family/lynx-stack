@@ -18,6 +18,8 @@ jobs:
         project:
           - path: ./examples/react
             name: example-react
+          - path: ./examples/react-main-thread-function
+            name: example-react-main-thread-function
           - path: ./packages/web-platform/web-explorer
             name: web-explorer
           - path: ./packages/rspeedy/core

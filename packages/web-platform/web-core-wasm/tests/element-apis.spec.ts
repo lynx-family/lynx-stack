@@ -4,6 +4,13 @@ import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElem
 import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
 import { vi } from 'vitest';
 import { cssIdAttribute } from '../ts/constants.js';
+import {
+  createElementAPI as createServerElementAPI,
+  SSRBinding,
+} from '../ts/server/elementAPIs/createElementAPI.js';
+import { wasmInstance } from '../ts/client/wasm.js';
+import { encodeCSS } from '../ts/encode/encodeCSS.js';
+
 describe('Element APIs', () => {
   let lynxViewDom: HTMLElement;
   let rootDom: ShadowRoot;
@@ -64,6 +71,12 @@ describe('Element APIs', () => {
   test('__CreateView', () => {
     const ret = mtsGlobalThis.__CreateView(0);
     expect(mtsGlobalThis.__GetTag(ret)).toBe('view');
+  });
+
+  test('__CreatePage tag reverse mapping', () => {
+    const ret = mtsGlobalThis.__CreatePage('test', 0);
+    // Even though it uses 'div' under the hood, __GetTag should reverse-map to 'page'
+    expect(mtsGlobalThis.__GetTag(ret)).toBe('page');
   });
 
   test('__CreateScrollView', () => {
@@ -1321,5 +1334,111 @@ describe('Element APIs', () => {
     expect(spy).toHaveBeenCalledWith(element);
     expect(classes).toEqual(expect.arrayContaining(['foo', 'bar']));
     expect(classes.length).toBe(2);
+  });
+
+  describe('Server Element APIs SSR Propagation', () => {
+    test('create element infer css id from parent component in SSR', () => {
+      const binding: SSRBinding = {
+        ssrResult: '',
+      };
+      const config = {
+        enableCSSSelector: true,
+        defaultOverflowVisible: false,
+        defaultDisplayLinear: true,
+      };
+      const { globalThisAPIs: api, wasmContext: wasmCtx } =
+        createServerElementAPI(
+          binding,
+          undefined,
+          '',
+          config,
+        );
+
+      const root = api.__CreatePage('page', 0);
+      const parentComponent = api.__CreateComponent(
+        api.__GetElementUniqueID(root),
+        'id',
+        100,
+        'test_entry',
+        'name',
+      );
+      const parentComponentUniqueId = api.__GetElementUniqueID(parentComponent);
+      const view = api.__CreateElement('view', parentComponentUniqueId);
+
+      api.__AppendElement(parentComponent, view);
+      api.__AppendElement(root, parentComponent);
+
+      const viewUid = api.__GetElementUniqueID(view);
+      const html = wasmCtx.generate_html(viewUid);
+
+      expect(html).toContain('l-css-id="100"');
+    });
+
+    test('create element wont infer css id if parent css id is 0 in SSR', () => {
+      const binding: SSRBinding = {
+        ssrResult: '',
+      };
+      const config = {
+        enableCSSSelector: true,
+        defaultOverflowVisible: false,
+        defaultDisplayLinear: true,
+      };
+      const { globalThisAPIs: api, wasmContext: wasmCtx } =
+        createServerElementAPI(
+          binding,
+          undefined,
+          '',
+          config,
+        );
+
+      const root = api.__CreatePage('page', 0);
+      const parentComponent = api.__CreateComponent(
+        api.__GetElementUniqueID(root),
+        'id',
+        0,
+        'test_entry',
+        'name',
+      );
+      const parentComponentUniqueId = api.__GetElementUniqueID(parentComponent);
+      const view = api.__CreateElement('view', parentComponentUniqueId);
+
+      api.__AppendElement(parentComponent, view);
+      api.__AppendElement(root, parentComponent);
+
+      const viewUid = api.__GetElementUniqueID(view);
+      const html = wasmCtx.generate_html(viewUid);
+    });
+  });
+
+  test('push_style_sheet', () => {
+    const { StyleSheetResource } = wasmInstance;
+    const encodedRawStyleInfo = encodeCSS({
+      '0': [
+        {
+          type: 'StyleRule',
+          selectorText: { value: '.test' },
+          style: [{ name: 'color', value: 'red' }],
+          variables: {},
+        },
+      ],
+    });
+    const encodedStyleInfo = wasmInstance.decode_style_info(
+      encodedRawStyleInfo,
+      undefined,
+      true,
+    );
+    const resource = new StyleSheetResource(encodedStyleInfo, document);
+    mtsBinding.wasmContext!.push_style_sheet(resource);
+
+    const page = mtsGlobalThis.__CreatePage('page', 0);
+    const view = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AddClass(view, 'test');
+    mtsGlobalThis.__AppendElement(page, view);
+    mtsGlobalThis.__FlushElementTree();
+
+    const styleElement = rootDom.querySelector('style');
+    expect(styleElement).not.toBeNull();
+    expect(styleElement!.textContent).toContain('.test');
+    expect(styleElement!.textContent).toContain('color:red');
   });
 });

@@ -174,7 +174,7 @@ The CI runs these checks (replicate locally for confidence):
 5. **TypeScript compilation**: Part of `pnpm turbo build`
 6. **Unit tests**: `pnpm test` (vitest-based, requires build)
 7. **E2E tests**: Web platform tests with Playwright
-8. **Rust tests**: `cargo test --all-features` in Rust packages
+8. **Rust tests**: `cargo test --all-targets --all-features` in Rust packages
 9. **Type checking**: `pnpm -r run test:type`
 
 ### GitHub Workflows

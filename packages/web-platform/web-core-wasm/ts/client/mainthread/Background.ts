@@ -99,8 +99,7 @@ export class BackgroundThread implements AsyncDisposable {
   ) {
     this.#lynxGroupId = lynxGroupId;
     this.#lynxViewInstance = lynxViewInstance;
-    const btsRpc = new Rpc(undefined, 'main-to-bg');
-    this.#rpc = btsRpc;
+    this.#rpc = new Rpc(undefined, 'main-to-bg');
     this.jsContext = new LynxCrossThreadContext({
       rpc: this.#rpc,
       receiveEventEndpoint: dispatchJSContextOnMainThreadEndpoint,

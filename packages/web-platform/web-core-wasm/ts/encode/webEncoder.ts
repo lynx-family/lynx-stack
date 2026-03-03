@@ -6,7 +6,11 @@
 import type * as CSS from '@lynx-js/css-serializer';
 import type { ElementTemplateData } from '../types/index.js';
 import { encodeCSS } from './encodeCSS.js';
-import { MagicHeader, TemplateSectionLabel } from '../constants.js';
+import {
+  MagicHeader0,
+  MagicHeader1,
+  TemplateSectionLabel,
+} from '../constants.js';
 
 function encodeAsJSON(map: Record<string, unknown>): Uint8Array {
   const jsonString = JSON.stringify(map);
@@ -108,8 +112,10 @@ export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
   const buffer = new Uint8Array(bufferLength);
   let offset = 0;
   const dataView = new DataView(buffer.buffer);
-  dataView.setBigUint64(offset, BigInt(MagicHeader), true);
-  offset += 8;
+  dataView.setUint32(offset, MagicHeader0, true);
+  offset += 4;
+  dataView.setUint32(offset, MagicHeader1, true);
+  offset += 4;
 
   // Version
   dataView.setUint32(offset, 1, true);

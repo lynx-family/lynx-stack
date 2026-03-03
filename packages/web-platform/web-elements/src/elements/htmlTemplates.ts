@@ -2,6 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+// --- IMPORTANT SYNCHRONIZATION NOTICE ---
+// The templates defined in this file are mirrored in the pure Rust library `web_elements`.
+// If you modify, add, or remove any template in this file, you MUST ALSO update
+// the corresponding Rust implementation in `src/template.rs` to ensure they
+// remain exactly synchronized. Tests enforce this parity.
+// ----------------------------------------
+
 export const templateScrollView = `<style>
   .placeholder-dom {
     display: none;
@@ -86,7 +93,7 @@ export const templateScrollView = `<style>
     part="bot-fade-mask"
   ></div>`;
 export const templateXAudioTT = `<audio id="audio"></audio>`;
-const XSSDetector = /<\s*script/g;
+const XSSDetector = /<\s*script/;
 export const templateXImage = (attributes: { src?: string }) => {
   const { src } = attributes;
   if (src && XSSDetector.test(src)) {

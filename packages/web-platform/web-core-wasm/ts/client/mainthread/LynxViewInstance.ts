@@ -24,9 +24,22 @@ import { createElementAPI } from './elementAPIs/createElementAPI.js';
 import { createMainThreadGlobalAPIs } from './createMainThreadGlobalAPIs.js';
 import { templateManager } from './TemplateManager.js';
 import { loadAllWebElements } from '../webElementsDynamicLoader.js';
+// @ts-expect-error
+import IN_SHADOW_CSS_MODERN from '../../../css/in_shadow.css?inline';
 import type { LynxViewElement } from './LynxView.js';
-import { templateManagerWasm } from '../wasm.js';
+loadAllWebElements().catch((e) => {
+  console.error('[lynx-web] Failed to load web elements', e);
+});
 
+const IN_SHADOW_CSS = URL.createObjectURL(
+  new Blob([IN_SHADOW_CSS_MODERN], { type: 'text/css' }),
+);
+const linkElement = document.createElement('link');
+linkElement.rel = 'stylesheet';
+linkElement.href = IN_SHADOW_CSS;
+linkElement.type = 'text/css';
+linkElement.fetchPriority = 'high';
+linkElement.blocking = 'render';
 const pixelRatio = window.devicePixelRatio;
 const screenWidth = window.screen.availWidth * pixelRatio;
 const screenHeight = window.screen.availHeight * pixelRatio;
@@ -57,10 +70,7 @@ export class LynxViewInstance implements AsyncDisposable {
   readonly i18nManager: I18nManager;
   readonly exposureServices: ExposureServices;
   readonly webElementsLoadingPromises: Promise<void>[] = [];
-  readonly styleReadyPromise: Promise<void>;
-  readonly styleReadyResolve: () => void;
 
-  #renderPageFunction: ((data: Cloneable) => void) | null = null;
   #queryComponentCache: Map<string, Promise<unknown>> = new Map();
   #pageConfig?: PageConfig;
   #nativeModulesMap: NativeModulesMap;
@@ -80,15 +90,9 @@ export class LynxViewInstance implements AsyncDisposable {
     napiModulesMap: NapiModulesMap = {},
     initI18nResources?: InitI18nResources,
   ) {
+    this.rootDom.append(linkElement.cloneNode(false));
     this.#nativeModulesMap = nativeModulesMap;
     this.#napiModulesMap = napiModulesMap;
-    let resolve!: () => void;
-    const promise = new Promise<void>((res) => {
-      resolve = res;
-    });
-    this.styleReadyPromise = promise;
-    this.styleReadyResolve = resolve;
-    this.parentDom.style.display = 'none';
     this.mainThreadGlobalThis = mtsRealm.globalWindow as
       & typeof globalThis
       & MainThreadGlobalThis;
@@ -130,34 +134,23 @@ export class LynxViewInstance implements AsyncDisposable {
         this,
       ),
     );
-    Object.defineProperty(this.mainThreadGlobalThis, 'renderPage', {
-      get: () => {
-        return this.#renderPageFunction;
-      },
-      set: (v) => {
-        this.#renderPageFunction = v;
-        this.onMTSScriptsExecuted();
-      },
-      configurable: true,
-      enumerable: true,
-    });
   }
 
   onStyleInfoReady(
     currentUrl: string,
   ) {
     if (this.mtsWasmBinding.wasmContext) {
-      this.mtsWasmBinding.wasmContext.push_style_sheet(
-        templateManagerWasm!,
-        currentUrl,
-        this.templateUrl === currentUrl,
-      );
+      const resource = templateManager.getStyleSheet(currentUrl);
+      if (resource) {
+        this.mtsWasmBinding.wasmContext.push_style_sheet(
+          resource,
+          this.templateUrl === currentUrl ? undefined : currentUrl,
+        );
+      }
     }
-    this.parentDom.style.display = 'flex';
-    this.styleReadyResolve();
   }
 
-  onMTSScriptsLoaded(currentUrl: string, isLazy: boolean) {
+  async onMTSScriptsLoaded(currentUrl: string, isLazy: boolean) {
     this.backgroundThread.markTiming('lepus_execute_start');
     const urlMap = templateManager.getTemplate(currentUrl)
       ?.lepusCode as Record<string, string>;
@@ -166,21 +159,15 @@ export class LynxViewInstance implements AsyncDisposable {
       urlMap,
     );
     if (!isLazy) {
-      this.mtsRealm.loadScript(
+      await this.mtsRealm.loadScript(
         urlMap['root']!,
       );
+      this.onMTSScriptsExecuted();
     }
   }
 
-  async onMTSScriptsExecuted() {
+  onMTSScriptsExecuted() {
     this.backgroundThread.markTiming('lepus_execute_end');
-
-    this.webElementsLoadingPromises.push(loadAllWebElements());
-
-    await Promise.all([
-      ...this.webElementsLoadingPromises,
-      this.styleReadyPromise,
-    ]);
     this.webElementsLoadingPromises.length = 0;
     this.backgroundThread.markTiming('data_processor_start');
     const processedData = this.mainThreadGlobalThis.processData
@@ -198,7 +185,7 @@ export class LynxViewInstance implements AsyncDisposable {
       this.#nativeModulesMap,
       this.#napiModulesMap,
     );
-    this.#renderPageFunction?.(processedData);
+    this.mainThreadGlobalThis.renderPage?.(processedData);
     this.mainThreadGlobalThis.__FlushElementTree();
   }
 

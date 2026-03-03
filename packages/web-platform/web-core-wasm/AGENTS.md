@@ -58,7 +58,14 @@ Runs the application logic (BTS).
 - **`createNativeApp.ts`**: Creates the `NativeApp` interface, which mimics the native Lynx environment for the application code. It proxies commands (like `createElement`) to the main thread via RPC.
 - **`createBackgroundLynx.ts`**: Sets up the global `lynx` object in the worker.
 
-### 3. Encoder (`ts/encode`)
+### 3. Server Runtime (`ts/server`)
+
+TypeScript bindings for Server-Side Rendering (SSR).
+
+- **`wasm.ts`**: Loads the server-specific Wasm binary.
+- **`elementAPIs/createElementAPI.ts`**: Implements `ElementPAPIs` and returns the `wasmContext` for the server, using `MainThreadServerContext` to generate HTML strings instead of manipulating DOM.
+
+### 4. Encoder (`ts/encode`)
 
 Build-time utilities.
 
@@ -91,8 +98,8 @@ This package uses a hybrid build system involving `pnpm`, `rsbuild`, and `cargo`
   1. Compiles Rust to Wasm (`wasm32-unknown-unknown`) using `cargo`.
   2. Generates high-performance JS bindings with `wasm-bindgen`.
   3. Optimizes the binary size with `wasm-opt`.
-  4. Builds two variants: `client` (browser runtime) and `encode` (build tool).
-- **`pnpm test`**: Runs `vitest`.
+  4. Builds three variants: `client` (browser runtime), `server` (SSR), and `encode` (build tool).
+- **`pnpm test`**: Runs `vitest`. Note: If you modify Rust code, you must run `pnpm build:wasm` first for the changes to take effect in the tests.
 
 ### Configuration
 
@@ -105,6 +112,11 @@ This package uses a hybrid build system involving `pnpm`, `rsbuild`, and `cargo`
 - **`tests/encode.spec.ts`**: Verifies that the CSS encoder correctly serializes various CSS rules.
 - **`tests/lazy-load.spec.ts`**: Ensures that custom elements are loaded dynamically only when needed.
 - **Rust Tests**: run `cargo test --all-features` and `cargo test --target wasm32-unknown-unknown --all-features` separately.
+- **Server E2E Tests (`packages/web-platform/web-core-wasm-e2e`)**:
+  - Located in `packages/web-platform/web-core-wasm-e2e`.
+  - Uses `vitest` to run tests against the **built artifacts** (e.g., `dist/api-globalThis.web.bundle`).
+  - Verifies server-side execution of templates using `executeTemplate` and isolated VM contexts.
+  - Run with `pnpm test` inside the `web-core-wasm-e2e` directory.
 
 ## Guidelines for LLMs
 

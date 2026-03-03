@@ -1,7 +1,7 @@
 import './jsdom.js';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { encode, type TasmJSONInfo } from '../ts/encode/index.js';
-import { MagicHeader } from '../ts/constants.js';
+import { MagicHeader0, MagicHeader1 } from '../ts/constants.js';
 import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
 
 // Import the worker script to execute it and register the handler
@@ -61,8 +61,10 @@ describe('Template Manager', () => {
 
     // Verify version in encoded buffer
     const view = new DataView(encoded.buffer);
-    const magic = view.getBigUint64(0, true);
-    expect(magic).toBe(BigInt(MagicHeader));
+    const magic0 = view.getUint32(0, true);
+    const magic1 = view.getUint32(4, true);
+    expect(magic0).toBe(MagicHeader0);
+    expect(magic1).toBe(MagicHeader1);
     const version = view.getUint32(8, true);
     expect(version).toBe(1);
 

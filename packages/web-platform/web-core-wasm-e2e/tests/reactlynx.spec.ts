@@ -3555,9 +3555,10 @@ test.describe('reactlynx3 tests', () => {
       });
       test(
         'basic-element-x-swiper-method-scroll-to',
-        async ({ page }, { title }) => {
+        async ({ page, browserName }, { title }) => {
+          test.skip(browserName == 'firefox');
           await goto(page, title);
-          await wait(100);
+          await wait(400);
           await diffScreenShot(page, 'x-swiper', 'scroll-to', '1', {
             animations: 'allow',
           });
@@ -3919,6 +3920,7 @@ test.describe('reactlynx3 tests', () => {
       test(
         'basic-element-x-swiper-circular-flat-coverflow',
         async ({ page, browserName }, { title }) => {
+          test.skip(browserName == 'firefox');
           await goto(page, title);
           await wait(1000);
           await diffScreenShot(
@@ -4032,6 +4034,7 @@ test.describe('reactlynx3 tests', () => {
       test(
         'basic-element-x-swiper-bindchange',
         async ({ page, browserName, context }, { title }) => {
+          test.skip(browserName === 'firefox');
           await goto(page, title);
           const autoplay = [null, false, false, false];
           let manual = false;

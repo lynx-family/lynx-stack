@@ -48,23 +48,22 @@ test.describe('web core tests', () => {
     test.skip(browserName === 'firefox');
     await goto(page);
     await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {
-        const root = globalThis.runtime.__CreatePage('0', '0', {});
-        const element = globalThis.runtime.__CreateElement('view', '0', {});
-        globalThis.runtime.__AppendElement(root, element);
-        const component = globalThis.runtime.__CreateComponent(
-          '1',
-          '0-13826000',
-          '0',
-          '',
-          '',
-          '',
-          {},
-          {},
-        );
-        globalThis.runtime.__AddClass(component, 'wrapper');
-        globalThis.runtime.__AppendElement(element, component);
-      };
+      const root = globalThis.runtime.__CreatePage('0', '0', {});
+      const element = globalThis.runtime.__CreateElement('view', '0', {});
+      globalThis.runtime.__AppendElement(root, element);
+      const component = globalThis.runtime.__CreateComponent(
+        '1',
+        '0-13826000',
+        '0',
+        '',
+        '',
+        '',
+        {},
+        {},
+      );
+      globalThis.runtime.__AddClass(component, 'wrapper');
+      globalThis.runtime.__AppendElement(element, component);
+      globalThis.runtime.__FlushElementTree();
     });
     await wait(200);
     const backWorker = await getBackgroundThreadWorker(page);
@@ -91,9 +90,6 @@ test.describe('web core tests', () => {
       'firefox flaky',
     );
     await goto(page);
-    await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-    });
     const worker = await getBackgroundThreadWorker(page);
     const importedValue = await worker!.evaluate(async () => {
       const { promise, resolve } = Promise.withResolvers<string>();
@@ -113,9 +109,6 @@ test.describe('web core tests', () => {
       'firefox flaky',
     );
     await goto(page);
-    await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-    });
     const worker = await getBackgroundThreadWorker(page);
     const [hello, world] = await worker!.evaluate(async () => {
       const chunk1 = Promise.withResolvers<string>();
@@ -143,9 +136,7 @@ test.describe('web core tests', () => {
       'firefox flaky',
     );
     await goto(page);
-    await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-    });
+
     const worker = await getBackgroundThreadWorker(page);
     const [hello, world] = await worker!.evaluate(async () => {
       const chunk1 = Promise.withResolvers<string>();
@@ -167,9 +158,7 @@ test.describe('web core tests', () => {
 
   test('loadLepusChunk', async ({ page, browserName }) => {
     await goto(page);
-    await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-    });
+
     const [success, fail] = await page.evaluate(async () => {
       return [
         globalThis.runtime.__LoadLepusChunk('manifest-chunk2.js'),
@@ -184,9 +173,7 @@ test.describe('web core tests', () => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
-    await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-    });
+
     await wait(3000);
     const backWorker = await getBackgroundThreadWorker(page);
     const jsonContent = await backWorker.evaluate(() => {
@@ -209,9 +196,7 @@ test.describe('web core tests', () => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
-    await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-    });
+
     const backgroundWorker = await getBackgroundThreadWorker(page);
     const ret = await backgroundWorker!.evaluate(async () => {
       const { promise, resolve } = Promise.withResolvers<string>();
@@ -256,9 +241,7 @@ test.describe('web core tests', () => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
-    await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-    });
+
     await wait(3000);
     const backWorker = await getBackgroundThreadWorker(page);
     let successCallback = false;
@@ -287,9 +270,7 @@ test.describe('web core tests', () => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
-    await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-    });
+
     await wait(3000);
     const backWorker = await getBackgroundThreadWorker(page);
     let successCallback = false;
@@ -320,9 +301,7 @@ test.describe('web core tests', () => {
     test.skip(browserName === 'firefox');
     await goto(page);
     await wait(200);
-    await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-    });
+
     await wait(3000);
     const backWorker = await getBackgroundThreadWorker(page);
     let successDispatchNapiModule = false;
@@ -351,7 +330,6 @@ test.describe('web core tests', () => {
     test.skip(browserName === 'firefox');
     await goto(page);
     const success = await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
       if (
         JSON.stringify(globalThis.runtime._I18nResourceTranslation({
           locale: 'en',
@@ -382,7 +360,6 @@ test.describe('web core tests', () => {
       );
     });
     await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
       globalThis.runtime._I18nResourceTranslation({
         locale: 'en',
         channel: '2',
@@ -400,7 +377,6 @@ test.describe('web core tests', () => {
     test.skip(browserName === 'firefox');
     await goto(page);
     const first = await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
       if (
         globalThis.runtime._I18nResourceTranslation({
           locale: 'en',
@@ -444,7 +420,6 @@ test.describe('web core tests', () => {
     });
     await wait(500);
     const second = await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
       if (
         JSON.stringify(globalThis.runtime._I18nResourceTranslation({
           locale: 'en',
@@ -463,9 +438,7 @@ test.describe('web core tests', () => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
-    await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-    });
+
     await wait(500);
     const backWorker = await getBackgroundThreadWorker(page);
     const first = await backWorker?.evaluate(() =>
@@ -490,9 +463,7 @@ test.describe('web core tests', () => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
-    await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-    });
+
     await wait(500);
     const backWorker = await getBackgroundThreadWorker(page);
     const first = await backWorker?.evaluate(() =>
@@ -541,9 +512,7 @@ test.describe('web core tests', () => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
-    await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-    });
+
     await wait(500);
     let success = false;
     await page.on('console', async (message) => {
@@ -575,9 +544,7 @@ test.describe('web core tests', () => {
     // firefox dose not support this.
     test.skip(browserName === 'firefox');
     await goto(page);
-    await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-    });
+
     await wait(500);
     let success = false;
     await page.on('console', async (message) => {
@@ -632,9 +599,7 @@ test.describe('web core tests', () => {
     // firefox not support
     test.skip(browserName === 'firefox');
     await goto(page);
-    await page.evaluate(() => {
-      globalThis.runtime.renderPage = () => {};
-    });
+
     const backWorker = await getBackgroundThreadWorker(page);
     const isSuccess = await backWorker.evaluate(() => {
       return new Promise(resolve => {

@@ -2,9 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-export const cssIdAttribute = /*#__PURE__*/ 'l-css-id' as const;
-
 export const lynxUniqueIdAttribute = /*#__PURE__*/ 'l-uid' as const;
+
+export const cssIdAttribute = /*#__PURE__*/ 'l-css-id' as const;
 
 export const lynxEntryNameAttribute = /*#__PURE__*/ 'l-e-name' as const;
 
@@ -48,7 +48,8 @@ export const LynxEventNameToW3cCommon: Record<string, string> =
     Object.entries(W3cEventNameToLynx).map(([k, v]) => [v, k]),
   );
 
-export const MagicHeader = /*#__PURE__*/ 0x464F525741524453; // random magic number for verifying the stream is a Lynx encoded template
+export const MagicHeader0 = /*#__PURE__*/ 0x41524453; // 'SDRA'
+export const MagicHeader1 = /*#__PURE__*/ 0x464F5257; // 'WROF'
 
 export const TemplateSectionLabel = /*#__PURE__*/ {
   Manifest: 1,

@@ -8,20 +8,20 @@ mod constants;
 pub mod css_tokenizer;
 #[cfg(feature = "client")]
 mod js_binding;
-#[cfg(feature = "client")]
 mod main_thread;
+
 mod style_transformer;
+
 mod template;
 pub mod utils;
 
 #[cfg(feature = "client")]
 pub use main_thread::{
-  element_apis::{
-    element_data::{EventHandler, LynxElementData},
-    event_apis::EventInfo,
+  client::{
+    element_apis::event_apis::EventInfo, main_thread_context::MainThreadWasmContext,
+    style_manager::StyleManager,
   },
-  main_thread_context::MainThreadWasmContext,
-  style_manager::StyleManager,
+  element_data::LynxElementData,
 };
 pub use style_transformer::{Generator, StyleTransformer};
 pub use template::template_sections::style_info::{
@@ -33,6 +33,4 @@ pub use template::template_sections::style_info::{
 };
 
 #[cfg(feature = "client")]
-pub use template::{
-  template_sections::style_info::style_sheet_resource::StyleSheetResource, TemplateManager,
-};
+pub use template::template_sections::style_info::style_sheet_resource::StyleSheetResource;

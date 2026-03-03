@@ -1,5 +1,19 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.12.9
+
+### Patch Changes
+
+- Add alias for `use-sync-external-store/with-selector.js` and `use-sync-external-store/shim/with-selector.js` pointing to @lynx-js/use-sync-external-store. ([#2200](https://github.com/lynx-family/lynx-stack/pull/2200))
+
+- Updated dependencies [[`9033e2d`](https://github.com/lynx-family/lynx-stack/commit/9033e2d6c7c0c2405ecbbf73446239dd65b4a177)]:
+  - @lynx-js/template-webpack-plugin@0.10.4
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.9
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/react-webpack-plugin@0.7.4
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+
 ## 0.12.8
 
 ### Patch Changes

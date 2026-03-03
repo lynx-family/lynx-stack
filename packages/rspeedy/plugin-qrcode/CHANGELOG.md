@@ -1,5 +1,11 @@
 # @lynx-js/qrcode-rsbuild-plugin
 
+## 0.4.6
+
+### Patch Changes
+
+- Print all entries with all schema URLs in non-TTY environments instead of only showing the first entry's QR code. ([#2227](https://github.com/lynx-family/lynx-stack/pull/2227))
+
 ## 0.4.5
 
 ### Patch Changes

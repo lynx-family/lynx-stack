@@ -141,8 +141,10 @@ abstract class BaseGesture<
   }
 
   updateConfig = (k: string, v: unknown): this => {
-    this.execId += 1;
-    (this.config as Record<string, unknown>)[k] = v;
+    if ((this.config as Record<string, unknown>)[k] !== v) {
+      this.execId += 1;
+      (this.config as Record<string, unknown>)[k] = v;
+    }
     return this;
   };
 
@@ -150,7 +152,9 @@ abstract class BaseGesture<
     k: keyof typeof this.callbacks,
     cb: GestureCallback<TEvent>,
   ): this => {
-    this.execId += 1;
+    if (!(k in this.callbacks)) {
+      this.execId += 1;
+    }
     // Wrapped callback is compatible with GestureCallback<TEvent> at runtime
     this.callbacks[k] = wrapCallback<TEvent>(
       cb,
@@ -189,51 +193,43 @@ abstract class BaseGesture<
     return this.updateCallback('onTouchesCancel', cb);
   };
 
-  externalWaitFor = (gesture: GestureKind): this => {
+  private addRelation = (
+    gesture: GestureKind,
+    relationArrayName: 'waitFor' | 'simultaneousWith' | 'continueWith',
+  ): this => {
     if (gesture === this) {
       return this;
     }
-    this.execId += 1;
-    if (gesture.type === GestureTypeInner.COMPOSED) {
-      this.waitFor = this.waitFor.concat(gesture.toGestureArray());
-    } else {
-      this.waitFor.push(
-        gesture as BaseGesture<BaseGestureConfig, GestureChangeEvent>,
-      );
+    const gestures = gesture.type === GestureTypeInner.COMPOSED
+      ? gesture.toGestureArray()
+      : [gesture as BaseGesture<BaseGestureConfig, GestureChangeEvent>];
+    const relationArray = this[relationArrayName];
+    const existingIds = new Set(relationArray.map(g => g.id));
+    const newGestures = gestures.filter(g => {
+      // Filter out self
+      if ((g as unknown) === this || g.id === this.id) return false;
+      // Filter out existing and dedupe
+      if (existingIds.has(g.id)) return false;
+      existingIds.add(g.id);
+      return true;
+    });
+    if (newGestures.length > 0) {
+      this.execId += 1;
+      this[relationArrayName] = relationArray.concat(newGestures);
     }
     return this;
+  };
+
+  externalWaitFor = (gesture: GestureKind): this => {
+    return this.addRelation(gesture, 'waitFor');
   };
 
   externalSimultaneous = (gesture: GestureKind): this => {
-    if (gesture === this) {
-      return this;
-    }
-    this.execId += 1;
-    if (gesture.type === GestureTypeInner.COMPOSED) {
-      this.simultaneousWith = this.simultaneousWith.concat(
-        gesture.toGestureArray(),
-      );
-    } else {
-      this.simultaneousWith.push(
-        gesture as BaseGesture<BaseGestureConfig, GestureChangeEvent>,
-      );
-    }
-    return this;
+    return this.addRelation(gesture, 'simultaneousWith');
   };
 
   externalContinueWith = (gesture: GestureKind): this => {
-    if (gesture === this) {
-      return this;
-    }
-    this.execId += 1;
-    if (gesture.type === GestureTypeInner.COMPOSED) {
-      this.continueWith = this.continueWith.concat(gesture.toGestureArray());
-    } else {
-      this.continueWith.push(
-        gesture as BaseGesture<BaseGestureConfig, GestureChangeEvent>,
-      );
-    }
-    return this;
+    return this.addRelation(gesture, 'continueWith');
   };
 
   toGestureArray = (): BaseGesture<BaseGestureConfig, GestureChangeEvent>[] => {
@@ -284,7 +280,9 @@ abstract class ContinuousGesture<
     k: keyof typeof this.callbacks,
     cb: GestureCallback<TEvent>,
   ): this => {
-    this.execId += 1;
+    if (!(k in this.callbacks)) {
+      this.execId += 1;
+    }
     // Wrapped callback is compatible with GestureCallback<TEvent> at runtime
     this.callbacks[k] = wrapCallback<TEvent>(
       cb,

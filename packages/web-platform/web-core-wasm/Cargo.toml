@@ -13,6 +13,7 @@ lazy_static = { workspace = true }
 rkyv = { version = "0.7" }
 wasm-bindgen = { workspace = true }
 web-sys = { workspace = true, optional = true, features = ["CssStyleRule", "HtmlCollection", "CssStyleDeclaration", "CssRule", "CssRuleList", "HtmlElement", "HtmlTemplateElement", "HtmlStyleElement", "DocumentFragment", "Document", "NodeList", "DomTokenList", "CssStyleSheet"] }
+web_elements = { path = "../web-elements" }
 [features]
 default = []
 encode = []

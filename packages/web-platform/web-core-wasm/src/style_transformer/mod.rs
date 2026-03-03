@@ -12,16 +12,16 @@
 /// - `transformer`: Defines `StyleTransformer` and `Generator` trait for processing styles.
 /// - `rules`: Defines transformation rules for CSS properties.
 /// - `inline_style`: Handles transformation of inline styles.
-#[cfg(feature = "client")]
+#[cfg(any(feature = "client", feature = "server"))]
 mod inline_style;
 mod rules;
 mod token_transformer;
 mod transformer;
-#[cfg(feature = "client")]
-pub(crate) use inline_style::{
-  transform_inline_style_key_value_vec, transform_inline_style_string,
-};
-#[cfg(feature = "client")]
+#[cfg(any(feature = "client", feature = "server"))]
+pub(crate) use inline_style::transform_inline_style_key_value_vec;
+#[cfg(any(feature = "client", feature = "server"))]
+pub(crate) use inline_style::transform_inline_style_string;
+#[cfg(any(feature = "client", feature = "server"))]
 pub(crate) use rules::query_transform_rules;
 pub use transformer::Generator;
 pub use transformer::StyleTransformer;

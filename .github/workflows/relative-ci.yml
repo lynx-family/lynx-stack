@@ -20,6 +20,9 @@ jobs:
           - path: ./examples/react
             name: example-react
             key: RELATIVE_CI_PROJECT_EXAMPLES_REACT_KEY
+          - path: ./examples/react-main-thread-function
+            name: example-react-main-thread-function
+            key: RELATIVE_CI_PROJECT_EXAMPLES_REACT_MAIN_THREAD_FUNCTION_KEY
           - path: ./packages/web-platform/web-explorer
             name: web-explorer
             key: RELATIVE_CI_PROJECT_WEB_EXPLORER_KEY
@@ -30,6 +33,7 @@ jobs:
     name: Upload ${{ matrix.project.name }}
     env:
       RELATIVE_CI_PROJECT_EXAMPLES_REACT_KEY: ${{ secrets.RELATIVE_CI_PROJECT_EXAMPLES_REACT_KEY }}
+      RELATIVE_CI_PROJECT_EXAMPLES_REACT_MAIN_THREAD_FUNCTION_KEY: ${{ secrets.RELATIVE_CI_PROJECT_EXAMPLES_REACT_MAIN_THREAD_FUNCTION_KEY }}
       RELATIVE_CI_PROJECT_WEB_EXPLORER_KEY: ${{ secrets.RELATIVE_CI_PROJECT_WEB_EXPLORER_KEY }}
       RELATIVE_CI_PROJECT_RSPEEDY_CORE_KEY: ${{ secrets.RELATIVE_CI_PROJECT_RSPEEDY_CORE_KEY }}
     steps:
