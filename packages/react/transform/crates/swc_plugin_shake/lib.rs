@@ -286,6 +286,8 @@ fn get_class_member_name(c: &ClassMember) -> Option<String> {
     ClassMember::AutoAccessor(accessor) => match &accessor.key {
       Key::Private(name) => Some(name.name.to_string()),
       Key::Public(name) => name.as_ident().map(|i| i.sym.to_string()),
+      #[cfg(swc_ast_unknown)]
+      _ => panic!("unknown node"),
     },
   }
 }
