@@ -1,9 +1,7 @@
 import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { pluginWebPlatform } from '@lynx-js/web-platform-rsbuild-plugin';
-import path from 'path';
-
-const webPlatformRoot = path.resolve(__dirname, '../web-platform');
+import path from 'node:path';
 
 export default defineConfig({
   source: {
@@ -14,6 +12,7 @@ export default defineConfig({
   },
   output: {
     target: 'web',
+    assetPrefix: process.env.ASSET_PREFIX,
     distPath: {
       root: 'dist',
     },
@@ -32,10 +31,14 @@ export default defineConfig({
           && warning.message.includes('require function is used in a way'),
         (warning) =>
           warning.module?.resource?.includes('monaco-editor')
-          && warning.message.includes('"__filename" is used and has been mocked'),
+          && warning.message.includes(
+            '"__filename" is used and has been mocked',
+          ),
         (warning) =>
           warning.module?.resource?.includes('monaco-editor')
-          && warning.message.includes('"__dirname" is used and has been mocked'),
+          && warning.message.includes(
+            '"__dirname" is used and has been mocked',
+          ),
       ],
       resolve: {
         alias: {

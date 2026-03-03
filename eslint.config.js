@@ -73,6 +73,8 @@ export default tseslint.config(
 
       // REPL examples use Lynx platform globals and are not subject to lint rules
       'packages/repl/src/examples/**',
+      // REPL build config is not part of the TS project
+      'packages/repl/rsbuild.config.ts',
 
       // TODO: enable eslint for react
       // react
