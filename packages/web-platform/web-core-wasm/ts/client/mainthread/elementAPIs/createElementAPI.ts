@@ -44,17 +44,7 @@ import type {
   UpdateListInfoAttributeValue,
 } from '../../../types/index.js';
 import type { WASMJSBinding } from './WASMJSBinding.js';
-// @ts-expect-error
-import IN_SHADOW_CSS_MODERN from '../../../../css/in_shadow.css?inline';
 import { requestIdleCallbackImpl } from '../utils/requestIdleCallback.js';
-
-const IN_SHADOW_CSS = URL.createObjectURL(
-  new Blob([IN_SHADOW_CSS_MODERN], { type: 'text/css' }),
-);
-const linkElement = document.createElement('link');
-linkElement.rel = 'stylesheet';
-linkElement.href = IN_SHADOW_CSS;
-linkElement.type = 'text/css';
 
 const {
   MainThreadWasmContext,
@@ -71,7 +61,6 @@ export function createElementAPI(
   config_default_display_linear: boolean,
   config_default_overflow_visible: boolean,
 ): ElementPAPIs {
-  rootDom.append(linkElement.cloneNode(false));
   const wasmContext = new MainThreadWasmContext(
     rootDom,
     mtsBinding,
