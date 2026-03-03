@@ -15,26 +15,19 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./debug-router-connector.js": {
-      "types": "./debug-router-connector.d.ts",
-      "import": "./debug-router-connector.js",
-      "default": "./debug-router-connector.js"
-    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": "./dist/main.js",
   "files": [
-    "debug-router-connector.js",
-    "debug-router-connector.d.ts",
     "dist"
   ],
   "scripts": {
     "build": "rslib build"
   },
   "dependencies": {
-    "@lynx-js/debug-router-connector": "0.0.6"
+    "@lynx-js/devtool-connector": "workspace:*"
   },
   "devDependencies": {
     "@microsoft/api-extractor": "^7.57.6",

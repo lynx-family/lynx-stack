@@ -1,18 +1,17 @@
-// Copyright 2025 The Lynx Authors. All rights reserved.
+// Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import * as z from 'zod';
 
 export const clientId = z
-  .number()
+  .string()
   .describe(
     'The clientId to list sessions. Use `Device_listClients` to get the ID.',
   );
 
 export const deviceId = z.string()
-  .optional()
   .describe(
-    'The deviceId. Use the `Device_listDevices` to get ID for a devices. Omit to get all clients.',
+    'The deviceId. Use `Device_listDevices` to get the ID for a device.',
   );
 
 // https://chromedevtools.github.io/devtools-protocol/tot/DOM/#type-NodeId

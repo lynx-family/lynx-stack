@@ -4,20 +4,18 @@
 import { clientId } from '../../schema/index.ts';
 import { defineTool } from '../defineTool.ts';
 
-export const ListSessions = /*#__PURE__*/ defineTool({
-  name: 'Device_listSessions',
-  description: 'List all opened sessions',
+export const ClosePage = /*#__PURE__*/ defineTool({
+  name: 'Device_closePage',
+  description: 'Close the current page',
   schema: {
     clientId,
   },
   annotations: {
-    readOnlyHint: true,
+    readOnlyHint: false,
   },
-  async handler({ params }, response, context) {
+  async handler({ params }, _, context) {
     const connector = context.connector();
 
-    const sessions = await connector.sendListSessionMessage(params.clientId);
-
-    response.appendLines(JSON.stringify(sessions));
+    await connector.sendAppMessage(params.clientId, 'App.closePage');
   },
 });

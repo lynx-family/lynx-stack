@@ -1,10 +1,18 @@
-// Copyright 2025 The Lynx Authors. All rights reserved.
+// Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import 'core-js/modules/es.promise.with-resolvers.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { ensureLynxConnected } from './connector.ts';
+
+import { Connector } from '@lynx-js/devtool-connector';
+import {
+  AndroidTransport,
+  DesktopTransport,
+  iOSTransport,
+} from '@lynx-js/devtool-connector/transport';
+import type { Transport } from '@lynx-js/devtool-connector/transport';
+
 import { McpContext } from './McpContext.ts';
 import { McpResponse } from './McpResponse.ts';
 import { GetBackgroundColors } from './tools/CSS/GetBackgroundColors.ts';
@@ -15,11 +23,11 @@ import { GetStyleSheetText } from './tools/CSS/GetStyleSheetText.ts';
 import { GetScriptSource } from './tools/Debugger/GetScriptSource.ts';
 import { ListScripts } from './tools/Debugger/ListScripts.ts';
 import type { ToolDefinition } from './tools/defineTool.ts';
+import { ClosePage } from './tools/Device/ClosePage.ts';
 import { ListClients } from './tools/Device/ListClients.ts';
 import { ListDevices } from './tools/Device/ListDevices.ts';
 import { ListSessions } from './tools/Device/ListSessions.ts';
 import { OpenPage } from './tools/Device/OpenPage.ts';
-import { Reconnect } from './tools/Device/Reconnect.ts';
 import { GetAttributes } from './tools/DOM/GetAttributes.ts';
 import { GetBoxModel } from './tools/DOM/GetBoxModel.ts';
 import { GetDocument } from './tools/DOM/GetDocument.ts';
@@ -52,11 +60,11 @@ const TOOLS = [
   ListScripts,
 
   // Device
+  ClosePage,
   ListClients,
   ListDevices,
   ListSessions,
   OpenPage,
-  Reconnect,
 
   // DOM
   GetAttributes,
@@ -85,7 +93,14 @@ const TOOLS = [
   ListConsole,
 ] as unknown as ToolDefinition[];
 
-export function registerTool(mcpServer: McpServer, tool: ToolDefinition): void {
+export function registerTool(
+  mcpServer: McpServer,
+  tool: ToolDefinition,
+  transports: Transport[],
+): void {
+  if (!tool.schema) {
+    throw new Error('Tool schema is required');
+  }
   mcpServer.registerTool(
     tool.name,
     {
@@ -93,13 +108,13 @@ export function registerTool(mcpServer: McpServer, tool: ToolDefinition): void {
       inputSchema: tool.schema,
       annotations: tool.annotations,
     },
-    async (params): Promise<CallToolResult> => {
+    async (params, extra): Promise<CallToolResult> => {
       const response = new McpResponse();
-      const connector = await ensureLynxConnected();
+      const connector = new Connector(transports);
       const context = await McpContext.withConnector(connector);
       try {
-        await tool.handler({ params }, response, context);
-        const content = await response.handle(tool.name, context);
+        await tool.handler({ params, extra }, response, context);
+        const content = await response.handle(tool.name);
 
         return { content };
       } catch (error) {
@@ -118,13 +133,35 @@ export function registerTool(mcpServer: McpServer, tool: ToolDefinition): void {
   );
 }
 
-export function setupServer(mcpServer: McpServer): void {
+export function setupServer(
+  mcpServer: McpServer,
+  transports?: Transport[],
+): void {
   for (const tool of TOOLS) {
-    registerTool(mcpServer, tool);
+    registerTool(mcpServer, tool, transports ?? createDefaultTransports());
   }
 
   return;
 }
 
-export { defineTool, type ToolDefinition } from './tools/defineTool.ts';
+function createDefaultTransports(): Transport[] {
+  return [
+    new iOSTransport(),
+    new AndroidTransport({
+      host: '127.0.0.1', // Node.js 18 does not support ::1
+      port: 5037,
+    }),
+    new DesktopTransport(),
+  ];
+}
+
+// TODO: export from '@lynx-js/devtool-mcp-server/transport'
+export {
+  AndroidTransport,
+  DesktopTransport,
+  iOSTransport,
+} from '@lynx-js/devtool-connector/transport';
+export type { Transport } from '@lynx-js/devtool-connector/transport';
+
 export * as Schema from './schema/index.ts';
+export { defineTool, type ToolDefinition } from './tools/defineTool.ts';
