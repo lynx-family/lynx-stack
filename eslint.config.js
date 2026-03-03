@@ -98,6 +98,7 @@ export default tseslint.config(
       // testing-library
       'packages/testing-library/**',
       'packages/react/testing-library/**',
+      'packages/react/preact-upstream-tests/**',
 
       // gesture-runtime-testing
       'packages/lynx/gesture-runtime/__test__/**',

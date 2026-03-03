@@ -1,0 +1,364 @@
+{
+  "unsupported_features": [
+    {
+      "category": "lynx_not_web",
+      "keywords": ["getLog", "clearLog"],
+      "comment": "DOM mutation order — pipeline routes through <page> root, producing different mutation sequences"
+    },
+    {
+      "category": "lynx_not_web",
+      "keywords": ["MutationObserver"],
+      "comment": "Lynx environment does not provide MutationObserver"
+    },
+    {
+      "category": "lynx_not_web",
+      "keywords": ["dangerouslySetInnerHTML"],
+      "comment": "Lynx does not support dangerouslySetInnerHTML"
+    }
+  ],
+
+  "skip_list": [
+    {
+      "category": "dual_thread",
+      "tests": [
+        "should not render falsy values",
+        "should render NaN as text content",
+        "should clear falsy attributes",
+        "should not render falsy attributes on hydrate"
+      ],
+      "comment": "JSON.stringify(NaN) → null — NaN is lost in BSI→patch IPC serialization"
+    },
+    {
+      "category": "dual_thread",
+      "tests": ["should render bigint as text content"],
+      "comment": "JSON.stringify(BigInt) throws — BigInt cannot cross BSI→patch IPC boundary"
+    },
+    {
+      "category": "dual_thread",
+      "tests": ["should serialize object props as attributes"],
+      "comment": "JSON.stringify strips custom toString() — object identity lost in IPC serialization"
+    },
+    {
+      "category": "dual_thread",
+      "tests": [
+        "should keep c.base up to date if a nested child component changes DOM nodes",
+        "should not update sibling c.base if child component changes DOM nodes",
+        "should not update parent c.base if child component changes DOM nodes and it is not first child component",
+        "should update parent c.base if child component changes DOM nodes and it is first non-null child component",
+        "should not update parent c.base if child component changes DOM nodes and a parent is not first child component",
+        "should update parent c.base if first child becomes null",
+        "should update parent c.base if first child becomes non-null",
+        "should update parent c.base if first non-null child becomes null with multiple null siblings",
+        "should update parent c.base if a null child returns DOM with multiple null siblings",
+        "should update parent c.base to null if last child becomes null",
+        "should update parent c.base if last child returns dom",
+        "should not update parent if it is a DOM node"
+      ],
+      "comment": "component.base returns BSI (background thread), not a DOM node"
+    },
+    {
+      "category": "lynx_not_web",
+      "tests": [
+        "should set enumerable boolean attribute",
+        "should allow setting contentEditable to false",
+        "should not clear falsy DOM properties",
+        "should mask value on password input elements",
+        "should not throw when changing contentEditable to undefined or null",
+        "should support subsequent renders w/ defaultValue",
+        "should support subsequent renders w/ defaultChecked"
+      ],
+      "comment": "Web DOM IDL properties (value, checked, contentEditable, spellcheck, …) — Preact does dom[prop]=val but BSI has no IDL property, causing a different code path in setProperty()"
+    },
+    {
+      "category": "dual_thread",
+      "tests": [
+        "should not execute append operation when child is at last",
+        "should always diff `checked` and `value` properties against the DOM"
+      ],
+      "comment": "Refs return BSI, not DOM node — tests call ref.focus(), ref.value, etc."
+    },
+    {
+      "category": "dual_thread",
+      "tests": [
+        "is invoked after refs are set"
+      ],
+      "comment": "BSI ref timing — ref callback receives BSI object (background thread), test asserts DOM node is set before componentDidMount/componentDidUpdate lifecycle hook fires"
+    },
+    {
+      "category": "dual_thread",
+      "tests": [
+        "should be called after children are mounted"
+      ],
+      "comment": "Pipeline timing — DOM check in componentDidUpdate fires before children's main-thread patches are applied via IPC"
+    },
+    {
+      "category": "dual_thread",
+      "tests": [
+        "can be set by another component",
+        "should handle queued useState"
+      ],
+      "comment": "setupRerender() timing — cross-component useState update triggers rerender before pipeline IPC roundtrip syncs DOM to scratch"
+    },
+    {
+      "category": "dual_thread",
+      "tests": [
+        "can be dispatched by another component"
+      ],
+      "comment": "setupRerender() timing — cross-component useReducer dispatch triggers rerender before pipeline IPC roundtrip syncs DOM to scratch"
+    },
+    {
+      "category": "dual_thread",
+      "tests": [
+        "hooks should be called in right order"
+      ],
+      "comment": "useEffect order — BSI commit hook changes Preact's internal microtask/effect queue ordering, causing effects to fire in a different sequence than the test expects"
+    },
+    {
+      "category": "dual_thread",
+      "tests": [
+        "should correctly display DOM",
+        "should invoke layout effects after subtree is fully connected"
+      ],
+      "comment": "useLayoutEffect DOM check — DOM content/connectivity assertion inside layout effect fires before main-thread patch IPC roundtrip completes"
+    },
+    {
+      "category": "dual_thread",
+      "tests": [
+        "should run layout affects after all refs are invoked"
+      ],
+      "comment": "BSI ref + layout effect timing — ref.current contains BSI (background thread object), not DOM node; document.body.contains(ref.current) fails"
+    },
+    {
+      "category": "dual_thread",
+      "tests": [
+        "can access refs from within a layout effect callback",
+        "should have a right call order with correct dom ref",
+        "parent and child refs should be set before all effects"
+      ],
+      "comment": "BSI refs in effect callbacks — tests read ref.current expecting DOM nodes (tagName, querySelector, etc.) but ref.current is BSI"
+    },
+    {
+      "category": "dual_thread",
+      "tests": [
+        "should not duplicate in lists where an item throws and the parent catches and returns a differing type"
+      ],
+      "comment": "Error boundary with list diffing — pipeline timing causes extra mount/unmount cycles when error boundary catches during list reconciliation, duplicating items"
+    }
+  ],
+
+  "nocompile_skip_list": [
+    {
+      "category": "lynx_not_web",
+      "tests": [
+        "should clear falsy input values",
+        "should allow <input list /> to pass through as an attribute"
+      ],
+      "comment": "No-compile path lacks DOM IDL/property parity for these cases; compiled snapshot path already passes"
+    },
+    {
+      "category": "lynx_not_web",
+      "tests": [
+        "should set checked attribute on custom elements without checked property",
+        "should support false aria-* attributes",
+        "should re-render nested components"
+      ],
+      "comment": "Boolean-to-attribute serialization mismatch is no-compile specific; compiled mode already passes these tests"
+    },
+    {
+      "category": "dual_thread",
+      "tests": ["should reorder Fragment children"],
+      "comment": "BSI .type field collision only reproduces in no-compile mode; compiled mode passes"
+    },
+    {
+      "category": "dual_thread",
+      "tests": [
+        "handles errors correctly",
+        "orders effects effectively",
+        "should cancel effects from a disposed render",
+        "should not rerun committed effects",
+        "should not schedule effects that have no change"
+      ],
+      "comment": "useEffect scheduling — BSI shim interaction with Preact's no-compile effect queue causes incorrect ordering/cancellation; compiled snapshot path already passes these"
+    }
+  ],
+
+  "compiler_skip_list": [
+    {
+      "category": "test_methodology",
+      "tests": [
+        "should render functional components",
+        "should render components with props",
+        "should not serialize function props as attributes",
+        "should initialize props & context but not state in Component constructor"
+      ],
+      "comment": "Compiler serializes event handlers as attributes (e.g. onbaz=\"2:0:onBaz\") and changes render() return signature — tests assert on exact innerHTML or spy on render calls"
+    },
+    {
+      "category": "test_methodology",
+      "tests": [
+        "should render components",
+        "should render components that don't call Component constructor",
+        "should render components that don't call Component constructor and don't initialize state",
+        "should render components that don't inherit from Component",
+        "should render components that don't inherit from Component (unistore pattern)",
+        "should render components that don't inherit from Component and don't initialize state",
+        "should render components that don't pass args into the Component constructor (unistore pattern)",
+        "should render Component classes that don't pass args into the Component constructor",
+        "should render nested functional components"
+      ],
+      "comment": "Compiler changes component render return value (snapshot type instead of raw vnode) — spy-based assertions on render() return value fail"
+    },
+    {
+      "category": "test_methodology",
+      "tests": [
+        "should be a VNode with a DOM node child",
+        "should be an array with multiple children",
+        "should be ignored when explicit children exist",
+        "should support passing children as a prop"
+      ],
+      "comment": "Compiler transforms children into snapshot types — children.type becomes '__snapshot_xxx' instead of 'span', and spread children are serialized as JSON attributes instead of rendered"
+    },
+    {
+      "category": "test_methodology",
+      "tests": [
+        "should render sibling array children",
+        "should swap nested fragments correctly",
+        "should allow VNode reuse"
+      ],
+      "comment": "Compiler wraps text in <wrapper> — DOM structure changes (childNodes count, serializeHtml output) beyond innerHTML patching"
+    },
+    {
+      "category": "test_methodology",
+      "tests": [
+        "should preserve state when moving keyed children components",
+        "should reorder child pairs",
+        "should retain state for inserted children"
+      ],
+      "comment": "Compiler changes component identity — keyed children reorder/insert causes different mount/unmount cycles"
+    },
+    {
+      "category": "lynx_not_web",
+      "tests": [
+        "should keep value of uncontrolled checkboxes",
+        "should keep value of uncontrolled inputs",
+        "should not emit when value does not update"
+      ],
+      "comment": "Compiler-generated snapshots don't set DOM IDL properties (value, checked) — these go through snapshot values array instead of direct dom[prop]=val"
+    },
+    {
+      "category": "test_methodology",
+      "tests": [
+        "should handle hole prepend",
+        "should handle hole replace",
+        "should handle hole insert",
+        "should handle hole apppend"
+      ],
+      "comment": "Compiler changes component identity — keyed hole operations cause extra mount/unmount cycles due to snapshot type changes"
+    },
+    {
+      "category": "dual_thread",
+      "tests": [
+        "should be called when applying a DOM ref",
+        "should be called when unmounting a ref",
+        "should bubble up when ref throws on component that is not an error boundary"
+      ],
+      "comment": "Compiled mode ref attachment — snapshot create/ensureElements delays ref binding, causing ref-throwing error boundary tests to fire at wrong lifecycle phase"
+    },
+    {
+      "category": "test_methodology",
+      "tests": [
+        "returns an array containing a VNode with a DOM node child",
+        "returns an array with multiple children"
+      ],
+      "comment": "Compiler transforms element VNodes into snapshot types — toChildArray result has type='__snapshot_xxx' instead of 'span', breaking type identity assertions"
+    },
+    {
+      "category": "lynx_not_web",
+      "tests": [
+        "should maintain focus when hydrating"
+      ],
+      "comment": "Compiled snapshot path sets input attributes via update[] functions — type attribute timing differs, causing input not to match expected type='text' during hydration focus test"
+    }
+  ],
+
+  "permanent_skip_list": [
+    {
+      "category": "test_methodology",
+      "tests": [
+        "should reconcile mutated DOM attributes",
+        "should remove attributes on pre-existing DOM"
+      ],
+      "comment": "Test mutates or pre-populates jsdom directly — BSI has no access to main-thread DOM state"
+    },
+    {
+      "category": "lynx_not_web",
+      "tests": ["should support the <template> tag"],
+      "comment": "BSI has no .content DocumentFragment — web-specific <template> API"
+    },
+    {
+      "category": "test_methodology",
+      "tests": ["handle shuffled (stress test)"],
+      "comment": "Exceeds 5s timeout due to pipeline overhead per commit"
+    },
+    {
+      "category": "dual_thread",
+      "tests": [
+        "should call getSnapshotBeforeUpdate before mutations are committed"
+      ],
+      "comment": "Dual-thread gap — getSnapshotBeforeUpdate must read DOM before patch is applied, but background thread cannot observe main-thread DOM state; the pre-patch snapshot is structurally inaccessible"
+    },
+    {
+      "category": "dual_thread",
+      "tests": [
+        "should be invoked when dom does (DidMount, WillUnmount) or does not (WillMount, DidUnmount) exist"
+      ],
+      "comment": "DOM existence in lifecycle hooks — test checks scratch.firstChild during componentWillMount (expects null) and componentWillUnmount (expects present), but pipeline's <page> element is always initialized before render"
+    },
+    {
+      "category": "dual_thread",
+      "tests": [
+        "should maintain context"
+      ],
+      "comment": "TIMEOUT — requestAnimationFrame-driven context update conflicts with pipeline commit hook; the render loop never settles"
+    },
+    {
+      "category": "dual_thread",
+      "tests": [
+        "support render roots from an effect"
+      ],
+      "comment": "TIMEOUT — creating a new render root inside useEffect conflicts with pipeline's single _lastScratch/_currentMtRoot global state, causing the effect to loop indefinitely"
+    },
+    {
+      "category": "lynx_not_web",
+      "tests": [
+        "should only register on* functions as handlers",
+        "should only register truthy values as handlers",
+        "should support native event names",
+        "should support camel-case event names",
+        "should update event handlers",
+        "should remove event handlers",
+        "should register events not appearing on dom nodes",
+        "should use capturing for event props ending with *Capture",
+        "should support both capturing and non-capturing events on the same element",
+        "should support (got|lost)PointerCapture events",
+        "should support camel-case focus event names"
+      ],
+      "comment": "Event registration tests — spy on DOM element.addEventListener but BSI event stubs register on the background thread and never reach jsdom. Lynx has its own event model separate from the Web DOM event system."
+    },
+    {
+      "category": "lynx_not_web",
+      "tests": [
+        "should maintain focus when moving the input around",
+        "should maintain focus when adding children around input",
+        "should maintain focus when adding children around input (unkeyed)",
+        "should maintain focus when conditional elements around input",
+        "should maintain focus when removing elements around input",
+        "should  maintain focus when removing element directly before input",
+        "should maintain focus when adding input next to the current input",
+        "should keep focus in Fragments",
+        "should keep text selection"
+      ],
+      "comment": "Focus/selection DOM APIs — element.focus() and setSelectionRange require browser-level focus management which is absent in the Lynx dual-thread pipeline. Lynx has its own focus model."
+    }
+  ]
+}

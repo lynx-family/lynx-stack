@@ -1,0 +1,16 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "target": "ESNext",
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "resolveJsonModule": true,
+  },
+  "include": [
+    "vitest.config.ts",
+    "vitest.compiled.config.ts",
+    "vitest.shared.ts",
+    "vitest.workspace.ts",
+  ],
+}

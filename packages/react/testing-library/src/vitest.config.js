@@ -3,6 +3,8 @@ import { VitestPackageInstaller } from 'vitest/node';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
+import { transformReactLynxPlugin } from './transformReactLynxPlugin.js';
+export { transformReactLynxPlugin } from './transformReactLynxPlugin.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -201,83 +203,6 @@ export const createVitestConfig = async (options) => {
     };
   }
 
-  function transformReactLynxPlugin() {
-    return {
-      name: 'transformReactLynxPlugin',
-      enforce: 'pre',
-      transform(sourceText, sourcePath) {
-        const id = sourcePath;
-        // Only transform JS files
-        // Using the same regex as rspack's `CHAIN_ID.RULE.JS` rule
-        const regex = /\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)(\?.*)?$/;
-        if (!regex.test(id)) return null;
-
-        const { transformReactLynxSync } = require(
-          '@lynx-js/react/transform',
-        );
-        // relativePath should be stable between different runs with different cwd
-        const relativePath = normalizeSlashes(path.relative(
-          __dirname,
-          sourcePath,
-        ));
-        const basename = path.basename(sourcePath);
-        const result = transformReactLynxSync(sourceText, {
-          mode: 'test',
-          pluginName: '',
-          filename: basename,
-          sourcemap: true,
-          snapshot: {
-            preserveJsx: false,
-            runtimePkg: `${runtimePkgName}/internal`,
-            jsxImportSource: runtimePkgName,
-            filename: relativePath,
-            target: 'MIXED',
-          },
-          engineVersion: options?.engineVersion ?? '',
-          dynamicImport: {
-            injectLazyBundle: false,
-            layer: 'test',
-            runtimePkg: `${runtimePkgName}/internal`,
-          },
-          // snapshot: true,
-          directiveDCE: false,
-          defineDCE: false,
-          shake: false,
-          compat: false,
-          worklet: {
-            filename: relativePath,
-            runtimePkg: `${runtimePkgName}/internal`,
-            target: 'MIXED',
-          },
-          refresh: false,
-          cssScope: false,
-        });
-        if (result.errors.length > 0) {
-          // https://rollupjs.org/plugin-development/#this-error
-          result.errors.forEach(error => {
-            this.error(
-              error.text,
-              error.location,
-            );
-          });
-        }
-        if (result.warnings.length > 0) {
-          result.warnings.forEach(warning => {
-            this.warn(
-              warning.text,
-              warning.location,
-            );
-          });
-        }
-
-        return {
-          code: result.code,
-          map: result.map,
-        };
-      },
-    };
-  }
-
   return defineConfig({
     server: {
       fs: {
@@ -292,7 +217,20 @@ export const createVitestConfig = async (options) => {
           transformReactCompilerPlugin(),
         ]
         : []),
-      transformReactLynxPlugin(),
+      transformReactLynxPlugin({
+        runtimePkgName,
+        rootDir: __dirname,
+        engineVersion: options?.engineVersion,
+        dynamicImport: {
+          injectLazyBundle: false,
+          layer: 'test',
+          runtimePkg: `${runtimePkgName}/internal`,
+        },
+        worklet: {
+          runtimePkg: `${runtimePkgName}/internal`,
+          target: 'MIXED',
+        },
+      }),
     ],
     test: {
       environment: require.resolve(
@@ -305,7 +243,3 @@ export const createVitestConfig = async (options) => {
     },
   });
 };
-
-function normalizeSlashes(file) {
-  return file.replaceAll(path.win32.sep, '/');
-}

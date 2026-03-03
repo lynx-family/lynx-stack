@@ -14,6 +14,7 @@ import { GlobalEventEmitter } from './lynx/GlobalEventEmitter.js';
 export { initElementTree } from './lynx/ElementPAPI.js';
 export type { LynxElement } from './lynx/ElementPAPI.js';
 export type { LynxGlobalThis } from './lynx/GlobalThis.js';
+export { applyProp } from './lynx/applyProp.js';
 /**
  * @public
  * The lynx element tree
