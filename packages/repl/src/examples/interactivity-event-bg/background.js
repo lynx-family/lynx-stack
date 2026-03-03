@@ -1,60 +1,36 @@
-const nativeApp = lynx.getNativeApp();
-console.log('[bg] nativeApp:', nativeApp);
-console.log('[bg] nativeApp.tt:', nativeApp.tt);
-console.log('[bg] nativeApp.setCard:', typeof nativeApp.setCard);
+// The background thread handles events dispatched by string handlers.
+//
+// When __AddEvent uses a string like "onIncrement", the runtime sends
+// a publishEvent RPC to the background thread. We register event
+// handler routers on lynxCoreInject.tt — the same object @lynx-js/react uses.
+//
+// lynxCoreInject.tt is available during module initialization, unlike
+// nativeApp.tt which is set later by setCard().
 
-const _setCard = nativeApp.setCard;
-
-nativeApp.setCard = function(tt) {
-  console.log('[bg] setCard called! tt:', tt);
-  console.log('[bg] tt.publishEvent before _setCard:', tt.publishEvent);
-  console.log(
-    '[bg] tt.publicComponentEvent before _setCard:',
-    tt.publicComponentEvent,
-  );
-
-  _setCard(tt);
-
-  console.log('[bg] tt.publishEvent after _setCard:', tt.publishEvent);
-  console.log(
-    '[bg] tt.publicComponentEvent after _setCard:',
-    tt.publicComponentEvent,
-  );
-
-  function routeEvent(handlerName, event) {
-    console.log('[bg] routeEvent called:', handlerName, event);
-    if (typeof globalThis[handlerName] === 'function') {
-      globalThis[handlerName](event);
-    } else {
-      console.log('[bg] handler not found on globalThis:', handlerName);
-    }
+// Route events from the runtime to named handler functions on globalThis.
+function routeEvent(handlerName, event) {
+  if (typeof globalThis[handlerName] === 'function') {
+    globalThis[handlerName](event);
   }
+}
 
-  tt.publishEvent = function(handlerName, event) {
-    console.log('[bg] tt.publishEvent called:', handlerName);
-    routeEvent(handlerName, event);
-  };
-
-  tt.publicComponentEvent = function(_componentId, handlerName, event) {
-    console.log(
-      '[bg] tt.publicComponentEvent called:',
-      _componentId,
-      handlerName,
-    );
-    routeEvent(handlerName, event);
-  };
-
-  console.log('[bg] handlers registered on tt');
+lynxCoreInject.tt.publishEvent = function(handlerName, event) {
+  routeEvent(handlerName, event);
 };
 
-console.log('[bg] setCard wrapper installed');
+lynxCoreInject.tt.publicComponentEvent = function(
+  _componentId,
+  handlerName,
+  event,
+) {
+  routeEvent(handlerName, event);
+};
 
 // ── State & handlers ────────────────────────────────────────────────────
 
 let count = 0;
 
 globalThis.onDecrement = function(_event) {
-  console.log('[bg] onDecrement called, count:', count - 1);
   count--;
   lynx.getCoreContext().dispatchEvent({
     type: 'counterUpdate',
@@ -63,12 +39,9 @@ globalThis.onDecrement = function(_event) {
 };
 
 globalThis.onIncrement = function(_event) {
-  console.log('[bg] onIncrement called, count:', count + 1);
   count++;
   lynx.getCoreContext().dispatchEvent({
     type: 'counterUpdate',
     data: { count },
   });
 };
-
-console.log('[bg] handler functions defined on globalThis');

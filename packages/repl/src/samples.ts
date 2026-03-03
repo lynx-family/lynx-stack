@@ -191,7 +191,7 @@ export const samples: Sample[] = [
 
   // ── Lifecycle & Scheduling ─────────────────────────────────────────────
   {
-    name: 'renderPage & updatePage',
+    name: 'Page Lifecycle',
     category: 'Lifecycle',
     mainThread: lifecycleRenderMain,
     background: lifecycleRenderBg,
@@ -210,6 +210,7 @@ export const samples: Sample[] = [
     mainThread: lifecycleEvents,
     background: '',
     css: '',
+    hidden: true,
   },
 
   // ── Global APIs ───────────────────────────────────────────────────────

@@ -12,14 +12,20 @@
 // Flow: User tap → main thread (string handler)
 //       → publishEvent RPC → background thread (named function)
 //       → background updates state → dispatchEvent → main thread re-renders
+//
+// NOTE: __CreateView(1) / __CreateText(1) — the second argument is the
+// parentComponentUniqueId. The page element always gets uniqueId 1, so
+// passing 1 means "this element belongs to the page component." String
+// event handlers require a valid parentComponentUniqueId to route the
+// event to the correct background thread handler.
 
 globalThis.renderPage = function renderPage() {
   const page = __CreatePage('page', 0);
-  const container = __CreateView(0);
+  const container = __CreateView(1);
   __AppendElement(page, container);
   __SetInlineStyles(container, 'padding:40px; align-items:center;');
 
-  const title = __CreateText(0);
+  const title = __CreateText(1);
   __AppendElement(container, title);
   __AppendElement(title, __CreateRawText('Event Handling: Background Thread'));
   __SetInlineStyles(
@@ -27,7 +33,7 @@ globalThis.renderPage = function renderPage() {
     'font-size:18px; font-weight:700; margin-bottom:8px;',
   );
 
-  const subtitle = __CreateText(0);
+  const subtitle = __CreateText(1);
   __AppendElement(container, subtitle);
   __AppendElement(
     subtitle,
@@ -39,7 +45,7 @@ globalThis.renderPage = function renderPage() {
   );
 
   // Counter display
-  const counter = __CreateText(0);
+  const counter = __CreateText(1);
   const counterRaw = __CreateRawText('0');
   __AppendElement(container, counter);
   __AppendElement(counter, counterRaw);
@@ -49,17 +55,17 @@ globalThis.renderPage = function renderPage() {
   );
 
   // Buttons
-  const row = __CreateView(0);
+  const row = __CreateView(1);
   __AppendElement(container, row);
   __SetInlineStyles(row, 'flex-direction:row; gap:12px;');
 
-  const decBtn = __CreateView(0);
+  const decBtn = __CreateView(1);
   __AppendElement(row, decBtn);
   __SetInlineStyles(
     decBtn,
     'padding:12px 24px; background-color:#ef4444; border-radius:8px;',
   );
-  const decLabel = __CreateText(0);
+  const decLabel = __CreateText(1);
   __AppendElement(decBtn, decLabel);
   __AppendElement(decLabel, __CreateRawText('- 1'));
   __SetInlineStyles(decLabel, 'color:#fff; font-size:16px; font-weight:600;');
@@ -67,13 +73,13 @@ globalThis.renderPage = function renderPage() {
   // String handler name → dispatched to the background thread
   __AddEvent(decBtn, 'bindEvent', 'tap', 'onDecrement');
 
-  const incBtn = __CreateView(0);
+  const incBtn = __CreateView(1);
   __AppendElement(row, incBtn);
   __SetInlineStyles(
     incBtn,
     'padding:12px 24px; background-color:#22c55e; border-radius:8px;',
   );
-  const incLabel = __CreateText(0);
+  const incLabel = __CreateText(1);
   __AppendElement(incBtn, incLabel);
   __AppendElement(incLabel, __CreateRawText('+ 1'));
   __SetInlineStyles(incLabel, 'color:#fff; font-size:16px; font-weight:600;');
@@ -83,13 +89,8 @@ globalThis.renderPage = function renderPage() {
 
   __FlushElementTree();
 
-  console.log('[main] renderPage complete, buttons created');
-  console.log('[main] decBtn event: bindEvent/tap/onDecrement');
-  console.log('[main] incBtn event: bindEvent/tap/onIncrement');
-
   // Main thread listens for state updates from the background thread
   lynx.getJSContext().addEventListener('counterUpdate', (event) => {
-    console.log('[main] received counterUpdate:', event.data);
     __SetAttribute(counterRaw, 'text', String(event.data.count));
     __FlushElementTree();
   });

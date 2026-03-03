@@ -2,20 +2,25 @@
 //
 // The background thread cannot directly access elements — they live on
 // the main thread. Instead, it identifies elements through the event:
-//   event.target.id       — the string ID set via __SetID
-//   event.target.dataset  — data attributes set via __SetDataByKey
+//   event.currentTarget.id       — the string ID set via __SetID
+//   event.currentTarget.dataset  — data attributes set via __SetDataset
 //
 // The background thread uses this info to make decisions, then sends
 // instructions back to the main thread, which finds and updates elements
 // using __QuerySelector("#id").
+//
+// NOTE: __CreateView(1) / __CreateText(1) — the argument is the
+// parentComponentUniqueId. The page element always gets uniqueId 1.
+// String event handlers require a valid parentComponentUniqueId to
+// route events to the background thread.
 
 globalThis.renderPage = function renderPage() {
   const page = __CreatePage('page', 0);
-  const container = __CreateView(0);
+  const container = __CreateView(1);
   __AppendElement(page, container);
   __SetInlineStyles(container, 'padding:40px; align-items:center;');
 
-  const title = __CreateText(0);
+  const title = __CreateText(1);
   __AppendElement(container, title);
   __AppendElement(title, __CreateRawText('Element Refs: Background Thread'));
   __SetInlineStyles(
@@ -23,7 +28,7 @@ globalThis.renderPage = function renderPage() {
     'font-size:18px; font-weight:700; margin-bottom:8px;',
   );
 
-  const subtitle = __CreateText(0);
+  const subtitle = __CreateText(1);
   __AppendElement(container, subtitle);
   __AppendElement(
     subtitle,
@@ -37,7 +42,7 @@ globalThis.renderPage = function renderPage() {
   );
 
   // Status display
-  const status = __CreateText(0);
+  const status = __CreateText(1);
   const statusRaw = __CreateRawText('Tap a card to select it');
   __AppendElement(container, status);
   __AppendElement(status, statusRaw);
@@ -55,14 +60,14 @@ globalThis.renderPage = function renderPage() {
     + 'align-items:center; border-width:2px; border-style:solid;';
 
   for (const item of items) {
-    const card = __CreateView(0);
+    const card = __CreateView(1);
     __AppendElement(container, card);
 
     // __SetID — gives the element a string ID accessible from both threads
     __SetID(card, item.id);
 
-    // __SetDataByKey — attaches data the background thread can read
-    __SetDataByKey(card, 'label', item.label);
+    // __SetDataset — attaches data the background thread can read
+    __SetDataset(card, { label: item.label });
 
     __SetInlineStyles(
       card,
@@ -70,7 +75,7 @@ globalThis.renderPage = function renderPage() {
         + ';',
     );
 
-    const label = __CreateText(0);
+    const label = __CreateText(1);
     __AppendElement(card, label);
     __AppendElement(label, __CreateRawText(item.label));
     __SetInlineStyles(label, 'font-size:16px; font-weight:600;');

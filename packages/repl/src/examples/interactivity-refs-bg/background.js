@@ -1,30 +1,28 @@
 // The background thread receives events with element identity info.
 //
 // It cannot touch elements directly, but it can read:
-//   event.target.id       → string ID from __SetID
-//   event.target.dataset  → data attributes from __SetDataByKey
+//   event.currentTarget.id       → string ID from __SetID
+//   event.currentTarget.dataset  → data attributes from __SetDataset
 //
 // It uses this to maintain state and send instructions to the main thread.
 
-const nativeApp = lynx.getNativeApp();
-const _setCard = nativeApp.setCard;
-
-nativeApp.setCard = function(tt) {
-  _setCard(tt);
-
-  function routeEvent(handlerName, event) {
-    if (typeof globalThis[handlerName] === 'function') {
-      globalThis[handlerName](event);
-    }
+// Register event routers on lynxCoreInject.tt (available during module init).
+function routeEvent(handlerName, event) {
+  if (typeof globalThis[handlerName] === 'function') {
+    globalThis[handlerName](event);
   }
+}
 
-  tt.publishEvent = function(handlerName, event) {
-    routeEvent(handlerName, event);
-  };
+lynxCoreInject.tt.publishEvent = function(handlerName, event) {
+  routeEvent(handlerName, event);
+};
 
-  tt.publicComponentEvent = function(_componentId, handlerName, event) {
-    routeEvent(handlerName, event);
-  };
+lynxCoreInject.tt.publicComponentEvent = function(
+  _componentId,
+  handlerName,
+  event,
+) {
+  routeEvent(handlerName, event);
 };
 
 // ── State & handlers ────────────────────────────────────────────────────
@@ -32,16 +30,20 @@ nativeApp.setCard = function(tt) {
 let selectedId = null;
 
 globalThis.onCardTap = function(event) {
-  // The background thread can read element identity from the event:
-  //   event.target.id       → the element's ID set via __SetID
-  //   event.target.dataset  → data attributes via __SetDataByKey
-  const targetId = event.target.id;
-  const label = event.target.dataset?.label || targetId;
+  // event.target       → the actual DOM element tapped (could be a child)
+  // event.currentTarget → the element the handler is bound to (the card)
+  //
+  // Use currentTarget to reliably read the card's ID and dataset,
+  // since target might be a child element (e.g. the text label).
+  const targetId = event.currentTarget.id;
+  const label = event.currentTarget.dataset?.label || targetId;
+
+  // biome-ignore lint/suspicious/noConsoleLog: intentional debug output in example
   console.log(
     'Background received tap — id:',
     targetId,
     'dataset:',
-    event.target.dataset,
+    event.currentTarget.dataset,
   );
 
   // Toggle selection

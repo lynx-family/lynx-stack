@@ -127,7 +127,6 @@ export function App() {
     const editor = editorPaneRef.current?.editor;
     if (!editor) return;
 
-    clearConsole();
     setTimingText('');
 
     const t0 = performance.now();
@@ -149,7 +148,7 @@ export function App() {
     };
 
     setTemplate(newTemplate);
-  }, [clearConsole]);
+  }, []);
 
   // Debounced rebuild + persist
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -200,9 +199,15 @@ export function App() {
     });
   }, []);
 
+  const handleReload = useCallback(() => {
+    clearConsole();
+    rebuild();
+  }, [clearConsole, rebuild]);
+
   const handleSampleChange = useCallback(
     (index: number) => {
       setSampleIndex(index);
+      clearConsole();
       const sample = samples[index];
       const code = {
         background: sample.background,
@@ -218,7 +223,7 @@ export function App() {
       // cancel it so the sample isn't immediately overwritten as custom code.
       clearTimeout(timerRef.current);
     },
-    [rebuild],
+    [rebuild, clearConsole],
   );
 
   const handleShare = useCallback(() => {
@@ -278,6 +283,7 @@ export function App() {
                   onConsoleClear={clearConsole}
                   isDark={isDark}
                   onLoad={handleRenderComplete}
+                  onReload={handleReload}
                 />
               </div>
             </div>
@@ -304,6 +310,7 @@ export function App() {
                   onConsoleClear={clearConsole}
                   isDark={isDark}
                   onLoad={handleRenderComplete}
+                  onReload={handleReload}
                 />
               </ResizablePanel>
             </ResizablePanelGroup>
