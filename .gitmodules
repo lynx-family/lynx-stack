@@ -2,3 +2,6 @@
 	path = packages/react/preact-upstream-tests/preact
 	url = https://github.com/hzy/preact.git
 	branch = lynx/v10.24.x
+[submodule "packages/vue/vue-upstream-tests/core"]
+	path = packages/vue/vue-upstream-tests/core
+	url = https://github.com/vuejs/core.git

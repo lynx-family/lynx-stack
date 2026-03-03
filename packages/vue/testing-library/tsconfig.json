@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "jsx": "preserve",
+    "types": ["vitest/globals"],
+  },
+  "include": ["src", "setup.ts", "vitest.config.ts"],
+  "references": [
+    { "path": "../runtime" },
+    { "path": "../main-thread" },
+  ],
+}

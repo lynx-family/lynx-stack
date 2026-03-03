@@ -53,6 +53,8 @@
 
       "packages/testing-library/**",
       "packages/react/testing-library/**",
+      "packages/vue/testing-library/**",
+      "packages/vue/vue-upstream-tests/**",
       "packages/lynx/gesture-runtime/__test__/**",
       "packages/motion/__tests__/**",
 

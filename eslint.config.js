@@ -98,6 +98,8 @@ export default tseslint.config(
       // testing-library
       'packages/testing-library/**',
       'packages/react/testing-library/**',
+      'packages/vue/testing-library/**',
+      'packages/vue/vue-upstream-tests/**',
 
       // gesture-runtime-testing
       'packages/lynx/gesture-runtime/__test__/**',

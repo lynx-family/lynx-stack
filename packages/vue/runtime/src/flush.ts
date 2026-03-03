@@ -43,6 +43,11 @@ export function scheduleFlush(): void {
   queuePostFlushCb(doFlush);
 }
 
+/** Reset module state – for testing only. */
+export function resetFlushState(): void {
+  scheduled = false;
+}
+
 function doFlush(): void {
   scheduled = false;
   const ops = takeOps();

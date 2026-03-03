@@ -49,3 +49,9 @@ export function publishEvent(sign: string, data: unknown): void {
     console.info('[vue-bg] NO handler for sign:', sign);
   }
 }
+
+/** Reset all state – for testing only. */
+export function resetRegistry(): void {
+  signCounter = 0;
+  handlers.clear();
+}
