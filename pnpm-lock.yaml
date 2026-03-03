@@ -1647,6 +1647,9 @@ importers:
       '@lynx-js/tasm':
         specifier: 0.0.26
         version: 0.0.26
+      '@lynx-js/web-core-wasm':
+        specifier: workspace:*
+        version: link:../../web-platform/web-core-wasm
       '@lynx-js/webpack-runtime-globals':
         specifier: workspace:^
         version: link:../webpack-runtime-globals
@@ -1666,9 +1669,6 @@ importers:
       '@lynx-js/vitest-setup':
         specifier: workspace:*
         version: link:../../tools/vitest-setup
-      '@lynx-js/web-core-wasm':
-        specifier: workspace:*
-        version: link:../../web-platform/web-core-wasm
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.57.6(@types/node@24.10.13)
