@@ -73,6 +73,9 @@ export default tseslint.config(
 
       // REPL examples use Lynx platform globals and are not subject to lint rules
       'packages/repl/src/examples/**',
+      // REPL components use Vite path aliases and ?raw imports not handled by root tsconfig
+      'packages/repl/src/components/**',
+      'packages/repl/src/editor.ts',
       // REPL build config is not part of the TS project
       'packages/repl/rsbuild.config.ts',
 

@@ -4,7 +4,7 @@ let count = 0;
 setInterval(() => {
   count++;
   lynx.getCoreContext().dispatchEvent({
-    type: "tick",
+    type: 'tick',
     data: { count },
   });
 }, 1000);

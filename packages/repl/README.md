@@ -17,16 +17,16 @@ An alternative approach would be to run a local (or remote) Node.js server that 
 A standard Lynx project goes through 8 steps from source to bundle:
 
 ```
- Step  What happens                        Tool / Plugin
- ────  ──────────────────────────────────   ─────────────────────────────
-  1.   Source Transform (JSX/TS → JS)       rspack loader (SWC)
-  2.   Module Resolution (import/require)   rspack resolver
-  3.   CSS Processing (CSS → LynxStyleNode) @lynx-js/css-serializer
-  4.   Bundling (multi-file → chunks)       rspack
-  5.   Asset Tagging (lynx:main-thread)     MarkMainThreadPlugin
-  6.   Template Assembly (assets → data)    LynxTemplatePlugin
-  7.   Encoding (data → binary/JSON)        @lynx-js/tasm / WebEncodePlugin
-  8.   Emit (write to disk)                 rspack compilation
+Step  What happens                        Tool / Plugin
+────  ──────────────────────────────────   ─────────────────────────────
+ 1.   Source Transform (JSX/TS → JS)       rspack loader (SWC)
+ 2.   Module Resolution (import/require)   rspack resolver
+ 3.   CSS Processing (CSS → LynxStyleNode) @lynx-js/css-serializer
+ 4.   Bundling (multi-file → chunks)       rspack
+ 5.   Asset Tagging (lynx:main-thread)     MarkMainThreadPlugin
+ 6.   Template Assembly (assets → data)    LynxTemplatePlugin
+ 7.   Encoding (data → binary/JSON)        @lynx-js/tasm / WebEncodePlugin
+ 8.   Emit (write to disk)                 rspack compilation
 ```
 
 This REPL **enters at step 6** and takes a shortcut:
@@ -69,9 +69,9 @@ Users who need any of the above should use `rspeedy dev`.
 
 We target two capability levels, both achievable in pure browser:
 
-| Level | Capability | Browser dependency |
-|-------|-----------|-------------------|
-| **L0** (done) | Raw Element PAPI with inline styles | None (zero extra KB) |
-| **L1** (planned) | + CSS class selectors | `@lynx-js/css-serializer` (~200KB gzipped) |
+| Level            | Capability                          | Browser dependency                         |
+| ---------------- | ----------------------------------- | ------------------------------------------ |
+| **L0** (done)    | Raw Element PAPI with inline styles | None (zero extra KB)                       |
+| **L1** (planned) | + CSS class selectors               | `@lynx-js/css-serializer` (~200KB gzipped) |
 
 Higher levels (JSX, module imports, bundle export) are **not planned** — they would move toward `rspeedy dev` territory without matching its DX.

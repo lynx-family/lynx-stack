@@ -4,7 +4,11 @@ const view = __CreateElement('view', 'view', 0);
 __SetAttribute(view, 'style', 'padding: 20; gap: 12;');
 
 const title = __CreateElement('text', 'text', 0);
-__SetAttribute(title, 'style', 'font-size: 18; font-weight: bold; color: #333;');
+__SetAttribute(
+  title,
+  'style',
+  'font-size: 18; font-weight: bold; color: #333;',
+);
 __SetContent(title, 'Console Demo');
 
 const hint = __CreateElement('text', 'text', 0);

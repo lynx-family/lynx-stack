@@ -5,8 +5,8 @@
 
 setTimeout(() => {
   lynx.getCoreContext().dispatchEvent({
-    type: "greeting",
-    data: { message: "Hello from Background Thread!" },
+    type: 'greeting',
+    data: { message: 'Hello from Background Thread!' },
   });
 }, 500);
 
@@ -15,7 +15,7 @@ let count = 0;
 setInterval(() => {
   count++;
   lynx.getCoreContext().dispatchEvent({
-    type: "greeting",
-    data: { message: "Update #" + count + " from background" },
+    type: 'greeting',
+    data: { message: 'Update #' + count + ' from background' },
   });
 }, 2000);

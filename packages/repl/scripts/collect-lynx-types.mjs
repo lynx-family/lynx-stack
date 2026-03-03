@@ -1,12 +1,15 @@
-/**
- * Collects all .d.ts files from @lynx-js/types and generates a JSON map
- * for injection into Monaco editor via addExtraLib.
- *
- * Usage: node scripts/collect-lynx-types.mjs
- */
-import { readFileSync, writeFileSync, readdirSync, statSync, mkdirSync } from 'fs';
-import { join, relative, dirname } from 'path';
-import { fileURLToPath } from 'url';
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+import {
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
+import { dirname, join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -29,8 +32,10 @@ function findPackageDir(packageName) {
   );
   try {
     for (const entry of readdirSync(pnpmDir)) {
-      if (entry.startsWith(packageName.replace('/', '+').replace('@', '') + '@') ||
-          entry.startsWith(packageName.replace('/', '+') + '@')) {
+      if (
+        entry.startsWith(packageName.replace('/', '+').replace('@', '') + '@')
+        || entry.startsWith(packageName.replace('/', '+') + '@')
+      ) {
         const resolved = join(pnpmDir, entry, 'node_modules', packageName);
         try {
           statSync(resolved);
@@ -71,7 +76,8 @@ try {
   csstypeContent = readFileSync(csstypeIndex, 'utf-8');
 } catch {
   console.warn('Warning: csstype/index.d.ts not found, using stub');
-  csstypeContent = 'export interface Properties<TLength = string | 0, TTime = string> { [key: string]: any; }';
+  csstypeContent =
+    'export interface Properties<TLength = string | 0, TTime = string> { [key: string]: any; }';
 }
 
 // Build the output map
@@ -82,7 +88,8 @@ typeMap['node_modules/csstype/index.d.ts'] = csstypeContent;
 
 // Add all @lynx-js/types files
 for (const file of lynxFiles) {
-  typeMap[`node_modules/@lynx-js/types/types/${file.relativePath}`] = file.content;
+  typeMap[`node_modules/@lynx-js/types/types/${file.relativePath}`] =
+    file.content;
 }
 
 // Write JSON output
@@ -93,4 +100,8 @@ writeFileSync(
   JSON.stringify(typeMap, null, 2),
 );
 
-console.log(`Collected ${Object.keys(typeMap).length} type files → src/generated/lynx-types-map.json`);
+console.info(
+  `Collected ${
+    Object.keys(typeMap).length
+  } type files → src/generated/lynx-types-map.json`,
+);

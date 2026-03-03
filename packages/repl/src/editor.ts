@@ -7,13 +7,19 @@ self.MonacoEnvironment = {
   getWorker(_workerId: string, label: string) {
     if (label === 'typescript' || label === 'javascript') {
       return new Worker(
-        new URL('monaco-editor/esm/vs/language/typescript/ts.worker.js', import.meta.url),
+        new URL(
+          'monaco-editor/esm/vs/language/typescript/ts.worker.js',
+          import.meta.url,
+        ),
         { type: 'module' },
       );
     }
     if (label === 'css') {
       return new Worker(
-        new URL('monaco-editor/esm/vs/language/css/css.worker.js', import.meta.url),
+        new URL(
+          'monaco-editor/esm/vs/language/css/css.worker.js',
+          import.meta.url,
+        ),
         { type: 'module' },
       );
     }
@@ -26,7 +32,9 @@ self.MonacoEnvironment = {
 
 export interface EditorInstance {
   getCode(): { background: string; mainThread: string; css: string };
-  setCode(defaults: { background: string; mainThread: string; css: string }): void;
+  setCode(
+    defaults: { background: string; mainThread: string; css: string },
+  ): void;
   setDarkMode(dark: boolean): void;
   dispose(): void;
 }
