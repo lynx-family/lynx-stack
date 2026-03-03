@@ -1,20 +1,21 @@
-// Demonstrates: fetch in the background thread (Web Worker)
+/* eslint-disable headers/header-format, no-undef, n/no-unsupported-features/node-builtins */
+// Demonstrates: fetch in the background thread
 //
-// The standard Fetch API is available in the background thread.
-// Use it for network requests, then dispatch results to the
-// main thread for rendering.
+// In Lynx, use globalThis.fetch() to make network requests
+// from the background thread, then dispatch results to the
+// main thread for rendering via cross-thread events.
 
-fetch("https://jsonplaceholder.typicode.com/todos/1")
+globalThis.fetch('https://jsonplaceholder.typicode.com/todos/1')
   .then((response) => response.json())
   .then((data) => {
     lynx.getCoreContext().dispatchEvent({
-      type: "fetchResult",
+      type: 'fetchResult',
       data: { success: true, payload: data },
     });
   })
   .catch((error) => {
     lynx.getCoreContext().dispatchEvent({
-      type: "fetchResult",
-      data: { success: false, error: error.message },
+      type: 'fetchResult',
+      data: { success: false, error: String(error) },
     });
   });

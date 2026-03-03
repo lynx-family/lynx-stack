@@ -2,7 +2,9 @@
 
 @theme {
   --font-mono: "SF Mono", Monaco, "Cascadia Code", Consolas, monospace;
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+    Cantarell, sans-serif;
 }
 
 /* ── shadcn-ui theme tokens (dark default) ── */
@@ -93,79 +95,117 @@
 }
 
 /* ── Base ── */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/* Tailwind v4 preflight (@layer base) already resets margin/padding/box-sizing.
+   Custom styles go in @layer base so Tailwind utilities can override them. */
 
-html, body, #app {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-  background: var(--repl-bg);
-  color: var(--repl-text);
-  font-family: var(--font-sans);
-}
+@layer base {
+  html, body, #app {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    background: var(--repl-bg);
+    color: var(--repl-text);
+    font-family: var(--font-sans);
+  }
 
-/* ── Header ── */
-.repl-header {
-  background-color: var(--repl-bg-surface) !important;
-  border-bottom: 1px solid var(--repl-border);
-}
-
-/* Native example selector */
-.repl-example-select {
-  cursor: pointer;
-  appearance: auto;
-}
-.repl-example-select option {
-  background: var(--repl-bg-elevated);
-  color: var(--repl-text);
-}
-
-/* ── Preview: lynx-view must fill the flex container ── */
-.preview-content-area {
-  display: flex;
-  flex-direction: column;
-}
-.preview-content-area lynx-view {
-  flex: 1;
-  min-height: 0;
-  min-width: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-/* ── Error overlay ── */
-.error-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  max-height: 40%;
-  background: var(--repl-error-bg);
-  color: var(--repl-error-text);
-  padding: 12px 16px;
-  font-size: 12px;
-  font-family: var(--font-mono);
-  overflow: auto;
-  white-space: pre-wrap;
-  border-top: 2px solid var(--repl-error-border);
-  display: none;
-}
-
-.error-overlay.visible {
-  display: block;
-}
-
-/* ── Mobile layout ── */
-@media (max-width: 767px) {
+  /* ── Header ── */
   .repl-header {
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 6px 10px;
-    min-height: auto;
+    background-color: var(--repl-bg-surface);
+  }
+
+  /* Native example selector */
+  .repl-example-select {
+    cursor: pointer;
+    appearance: auto;
+  }
+  .repl-example-select option {
+    background: var(--repl-bg-elevated);
+    color: var(--repl-text);
+  }
+
+  /* ── Preview: lynx-view must fill the flex container ── */
+  .preview-content-area {
+    display: flex;
+    flex-direction: column;
+  }
+  .preview-content-area lynx-view {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* ── Error overlay ── */
+  .error-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 40%;
+    background: var(--repl-error-bg);
+    color: var(--repl-error-text);
+    padding: 12px 16px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    overflow: auto;
+    white-space: pre-wrap;
+    border-top: 2px solid var(--repl-error-border);
+  }
+
+  /* ── Resize handle ──
+     The handle is 1px in the flex layout (w-px / h-px) so panels sit flush.
+     A ::before pseudo-element extends ±2px for a comfortable 5px hit area.
+     react-resizable-panels sets on Separator:
+       aria-orientation="vertical"   → vertical line   (horizontal panel group)
+       aria-orientation="horizontal" → horizontal line  (vertical panel group)
+       data-separator="inactive|hover|active"                                */
+  .resize-handle {
+    background: var(--repl-border);
+    transition: background-color 150ms, transform 150ms;
+    outline: none;
+  }
+  /* Invisible hit area extending ±2px beyond the 1px line */
+  .resize-handle::before {
+    content: "";
+    position: absolute;
+  }
+  [aria-orientation="vertical"].resize-handle::before {
+    top: 0;
+    bottom: 0;
+    left: -2px;
+    right: -2px;
+  }
+  [aria-orientation="horizontal"].resize-handle::before {
+    left: 0;
+    right: 0;
+    top: -2px;
+    bottom: -2px;
+  }
+  /* Hover / active: subtle semi-transparent highlight + visually widen */
+  .resize-handle:hover {
+    background: color-mix(in srgb, var(--repl-text) 30%, transparent);
+  }
+  [data-separator="active"].resize-handle {
+    background: var(--repl-accent);
+  }
+  [aria-orientation="vertical"].resize-handle:hover,
+  [aria-orientation="vertical"][data-separator="active"].resize-handle {
+    transform: scaleX(5);
+  }
+  [aria-orientation="horizontal"].resize-handle:hover,
+  [aria-orientation="horizontal"][data-separator="active"].resize-handle {
+    transform: scaleY(5);
+  }
+
+  /* ── Mobile layout ── */
+  @media (max-width: 767px) {
+    .repl-header {
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 6px 10px;
+      min-height: auto;
+    }
   }
 }

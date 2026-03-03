@@ -1,8 +1,12 @@
+/* eslint-disable headers/header-format */
 import type { ConsoleSource } from './types.js';
 
 export const CHANNEL_PREFIX = 'lynx-repl-console-';
 
-export function getConsoleWrapperCode(source: ConsoleSource, sessionId: string): string {
+export function getConsoleWrapperCode(
+  source: ConsoleSource,
+  sessionId: string,
+): string {
   return `(function(){
   var _console = typeof console !== 'undefined' ? console : null;
   if (!_console) return;
@@ -39,6 +43,7 @@ export function getConsoleWrapperCode(source: ConsoleSource, sessionId: string):
       }
       try {
         if (!_ch) return;
+        if (args.length > 0 && typeof args[0] === 'string' && args[0].indexOf('This is an issue of lynx-core') !== -1) return;
         _ch.postMessage({
           level: m,
           source: '${source}',
