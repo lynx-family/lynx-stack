@@ -297,6 +297,7 @@ jobs:
       - test-type
       - test-typos
       - test-vitest
+      - web-core-wasm-e2e
       - website
     if: always()
     runs-on: ubuntu-latest

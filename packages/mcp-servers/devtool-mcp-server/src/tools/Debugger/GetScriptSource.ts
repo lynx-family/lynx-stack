@@ -1,4 +1,4 @@
-// Copyright 2025 The Lynx Authors. All rights reserved.
+// Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import fs from 'node:fs/promises';
@@ -31,7 +31,8 @@ export const GetScriptSource = /*#__PURE__*/ defineTool({
     const connector = context.connector();
 
     const { scriptSource } = await connector.sendCDPMessage<
-      { scriptSource: string }
+      { scriptSource: string },
+      { scriptId: string }
     >(
       params.clientId,
       params.sessionId,

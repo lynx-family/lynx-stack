@@ -9,7 +9,7 @@ import { Component } from '../../element-reactive/index.js';
 export class InlineTruncation extends HTMLElement {
   static XEnableCustomTruncation = 'x-text-custom-overflow';
   connectedCallback() {
-    if (!CSS.supports('selector(:has(inline-truncation))')) {
+    if (!CSS.supports('selector(:has(>inline-truncation))')) {
       if (
         this.parentElement?.tagName === 'X-TEXT'
         && !this.matches('inline-truncation ~ inline-truncation')

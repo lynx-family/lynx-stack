@@ -24,11 +24,22 @@ import { createElementAPI } from './elementAPIs/createElementAPI.js';
 import { createMainThreadGlobalAPIs } from './createMainThreadGlobalAPIs.js';
 import { templateManager } from './TemplateManager.js';
 import { loadAllWebElements } from '../webElementsDynamicLoader.js';
+// @ts-expect-error
+import IN_SHADOW_CSS_MODERN from '../../../css/in_shadow.css?inline';
 import type { LynxViewElement } from './LynxView.js';
 loadAllWebElements().catch((e) => {
   console.error('[lynx-web] Failed to load web elements', e);
 });
 
+const IN_SHADOW_CSS = URL.createObjectURL(
+  new Blob([IN_SHADOW_CSS_MODERN], { type: 'text/css' }),
+);
+const linkElement = document.createElement('link');
+linkElement.rel = 'stylesheet';
+linkElement.href = IN_SHADOW_CSS;
+linkElement.type = 'text/css';
+linkElement.fetchPriority = 'high';
+linkElement.blocking = 'render';
 const pixelRatio = window.devicePixelRatio;
 const screenWidth = window.screen.availWidth * pixelRatio;
 const screenHeight = window.screen.availHeight * pixelRatio;
@@ -79,6 +90,7 @@ export class LynxViewInstance implements AsyncDisposable {
     napiModulesMap: NapiModulesMap = {},
     initI18nResources?: InitI18nResources,
   ) {
+    this.rootDom.append(linkElement.cloneNode(false));
     this.#nativeModulesMap = nativeModulesMap;
     this.#napiModulesMap = napiModulesMap;
     this.mainThreadGlobalThis = mtsRealm.globalWindow as
