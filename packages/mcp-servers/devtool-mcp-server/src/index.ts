@@ -38,6 +38,8 @@ import { EmulateTouchFromMouseEvent } from './tools/Input/EmulateTouchFromMouseE
 import { Reload } from './tools/Page/Reload.ts';
 import { TakeScreenshot } from './tools/Page/TakeScreenshot.ts';
 import { ListConsole } from './tools/Runtime/ListConsole.ts';
+import { StartTracing } from './tools/Tracing/StartTracing.ts';
+import { EndTracing } from './tools/Tracing/EndTracing.ts';
 
 const TOOLS = [
   // CSS
@@ -83,6 +85,10 @@ const TOOLS = [
 
   // Runtime
   ListConsole,
+
+  // Tracing
+  StartTracing,
+  EndTracing,
 ] as unknown as ToolDefinition[];
 
 export function registerTool(mcpServer: McpServer, tool: ToolDefinition): void {
