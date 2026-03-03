@@ -105,14 +105,7 @@ export class WebEncodePlugin {
           const isExperimentalWebBinary = process
             .env['EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE'];
           if (isExperimentalWebBinary === 'true') {
-            const { encode } = await import('@lynx-js/web-core-wasm/encode')
-              .catch(
-                () => {
-                  throw new Error(
-                    `cannot enable the flag EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE, please contact developers`,
-                  );
-                },
-              );
+            const { encode } = await import('@lynx-js/web-core-wasm/encode');
             return {
               buffer: Buffer.from(encode(tasmJSONInfo as TasmJSONInfo)),
               debugInfo: '',
