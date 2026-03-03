@@ -15,6 +15,8 @@ extend-exclude = [
   "packages/web-platform/web-tests/tests/react.spec.ts",
   "packages/web-platform/web-tests/tests/react/basic-element-x-overlay-ng-playground-test/index.jsx",
   "packages/web-platform/offscreen-document/src/webworker/OffscreenCSSStyleDeclaration.ts",
+  # Upstream Preact submodule — do not spell-check third-party content
+  "packages/react/preact-upstream-tests/preact/**",
 ]
 
 [default]
@@ -31,3 +33,5 @@ nd = "nd"
 bui = "bui"
 ba = "ba"
 alog = "alog"
+# "apppend" is an intentional typo in an upstream Preact test name that we mirror in our skiplist
+apppend = "apppend"

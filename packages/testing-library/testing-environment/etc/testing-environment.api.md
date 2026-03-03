@@ -7,6 +7,9 @@
 import { JSDOM } from 'jsdom';
 
 // @public
+export function applyProp(el: LynxElement, key: string, value: unknown): void;
+
+// @public
 export type ElementTree = ReturnType<typeof initElementTree>;
 
 // @public

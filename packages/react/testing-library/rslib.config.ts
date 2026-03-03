@@ -36,6 +36,7 @@ export default defineConfig({
           'index': './src/index.jsx',
           'vitest.config': './src/vitest.config.js',
           'vitest-global-setup': './src/vitest-global-setup.js',
+          'transformReactLynxPlugin': './src/transformReactLynxPlugin.js',
         },
       },
       output: {
