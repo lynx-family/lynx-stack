@@ -10,10 +10,8 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "prebuild": "node scripts/collect-lynx-types.mjs",
-    "build": "rsbuild build",
-    "predev": "node scripts/collect-lynx-types.mjs",
-    "dev": "rsbuild dev"
+    "build": "node scripts/collect-lynx-types.mjs && rsbuild build",
+    "dev": "node scripts/collect-lynx-types.mjs && rsbuild dev"
   },
   "dependencies": {
     "@radix-ui/react-select": "^2.2.6",

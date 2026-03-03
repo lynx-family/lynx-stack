@@ -1,6 +1,6 @@
-// Self-contained CSS processor for the REPL.
-// Combines essential logic from @lynx-js/css-serializer and genStyleInfo,
-// avoiding the Node.js `path` dependency that css-serializer has.
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
 
 import * as csstree from 'css-tree';
 
@@ -64,7 +64,7 @@ function transformDeclaration(node: csstree.Declaration): CSSDeclaration {
         item.data = {
           ...n,
           type: 'Raw',
-          value: ` {{${varName}}}${item.next !== null ? ' ' : ''}`,
+          value: ` {{${varName}}}${item.next === null ? '' : ' '}`,
         };
       }
     });
@@ -178,9 +178,11 @@ function parseCSS(content: string): LynxStyleNode[] {
                     selector.children.prependList(parentSelectorList.copy());
                   });
                 }
-                item.next
-                  ? list.insert(subParseChildItem, item.next)
-                  : list.append(subParseChildItem);
+                if (item.next) {
+                  list.insert(subParseChildItem, item.next);
+                } else {
+                  list.append(subParseChildItem);
+                }
               }
             });
           },
@@ -194,7 +196,7 @@ function parseCSS(content: string): LynxStyleNode[] {
     enter: function(
       this: csstree.WalkContext,
       node: csstree.CssNode,
-    ): symbol | void {
+    ): symbol | undefined {
       if (node.type === 'Atrule') {
         if (node.name === 'font-face') {
           result.push({
