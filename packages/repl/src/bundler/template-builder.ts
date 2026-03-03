@@ -4,6 +4,23 @@ import type { LynxTemplate, StyleInfo } from '@lynx-js/web-constants';
 import { processCSS } from './css-processor.js';
 import { getConsoleWrapperCode } from '../console/console-wrapper.js';
 
+// Injects callDestroyLifetimeFun into lynxCoreInject.tt so that lynx-core can
+// register it on multiApps[id] and invoke it safely during card dispose.
+// Mirrors what ReactLynx does in packages/react/runtime/src/lynx/tt.ts,
+// but without the React/worklet-specific teardown — for raw Element PAPI cards
+// the only meaningful cleanup is neutralizing stale event handlers.
+function getBackgroundLifecycleCode(): string {
+  return `(function(){
+  if (typeof lynxCoreInject !== 'undefined' && lynxCoreInject.tt) {
+    lynxCoreInject.tt.callDestroyLifetimeFun = function() {
+      lynxCoreInject.tt.publishEvent = function() {};
+      lynxCoreInject.tt.publicComponentEvent = function() {};
+    };
+  }
+})();
+`;
+}
+
 export function buildLynxTemplate(
   mainThread: string,
   background: string,
@@ -23,6 +40,7 @@ if (typeof globalThis.renderPage !== 'function') {
   const mainThreadCode = getConsoleWrapperCode('main-thread', sessionId)
     + mainThreadWithFallback;
   const backgroundCode = getConsoleWrapperCode('background', sessionId)
+    + getBackgroundLifecycleCode()
     + background;
 
   let styleInfo: StyleInfo = {};
