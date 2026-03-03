@@ -1,3 +1,4 @@
+name: Reusable Test
 on:
   workflow_call:
     secrets:
