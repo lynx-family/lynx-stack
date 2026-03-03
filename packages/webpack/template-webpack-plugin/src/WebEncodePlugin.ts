@@ -136,7 +136,7 @@ export class WebEncodePlugin {
           } else {
             // only allow 'true' or undefined/null
             throw new Error(
-              `unknown value of EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE: ${isExperimentalWebBinary}, This is an experimental flag, please remove this flag.`,
+              `Unknown value of EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE: ${isExperimentalWebBinary}. Expecting "true" or undefined.`,
             );
           }
         });
