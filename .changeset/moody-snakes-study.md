@@ -1,5 +1,6 @@
 ---
 "@lynx-js/rspeedy": patch
+"@lynx-js/template-webpack-plugin": patch
 ---
 
 feat: opt-in the web platform's new binary output format
