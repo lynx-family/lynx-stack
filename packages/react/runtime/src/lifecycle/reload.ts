@@ -22,7 +22,7 @@ import { increaseReloadVersion } from './pass.js';
 import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
 import { shouldDelayUiOps } from './ref/delay.js';
 import { renderMainThread } from './render.js';
-import { profileEnd, profileStart } from '../debug/utils.js';
+import { profileEnd, profileStart } from '../debug/profile.js';
 
 function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {

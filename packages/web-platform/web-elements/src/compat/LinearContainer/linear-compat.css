@@ -26,7 +26,7 @@
   */
 @supports not
   ((content-visibility: auto) and (transition-behavior: allow-discrete) and
-    (width: 1rex)) {
+    (-webkit-box-reflect: above)) {
   * {
     --lynx-display: linear;
     --lynx-linear-weight-sum: 1;
@@ -47,6 +47,7 @@
     --flex-wrap: nowrap;
     --align-self: auto;
   }
+
   [lynx-computed-display="linear"] {
     flex-wrap: nowrap !important;
     flex-direction: column;
@@ -61,11 +62,9 @@
 
   [lynx-computed-display="flex"] > *,
   [lynx-computed-display="flex"] > lynx-wrapper > * {
-    flex: var(
-      --flex,
-      var(--flex-grow) var(--flex-shrink) var(--flex-basis)
-    );
+    flex: var(--flex, var(--flex-grow) var(--flex-shrink) var(--flex-basis));
   }
+
   [lynx-computed-display="linear"] > *,
   [lynx-computed-display="linear"] > lynx-wrapper > * {
     flex-shrink: 0 !important;
@@ -111,6 +110,7 @@
     > * {
     align-self: var(--align-self-column);
   }
+
   [lynx-computed-display="linear"][lynx-linear-orientation="horizontal"] > *,
   [lynx-computed-display="linear"][lynx-linear-orientation="horizontal-reverse"],
   [lynx-computed-display="linear"][lynx-linear-orientation="horizontal"]
