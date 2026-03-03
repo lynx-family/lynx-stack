@@ -10,23 +10,23 @@
 
 declare global {
   /** Build-time macros */
-  const __DEV__: boolean
+  const __DEV__: boolean;
 
   /** Opaque element handle – the actual type is internal to Lynx engine */
-  type LynxElement = object
+  type LynxElement = object;
 
   // -----------------------------------------------------------------------
   // Element creation
   // -----------------------------------------------------------------------
-  function __CreatePage(componentId: string, cssId: number): LynxElement
+  function __CreatePage(componentId: string, cssId: number): LynxElement;
   function __CreateElement(
     tag: string,
     parentComponentUniqueId: number,
     info?: object,
-  ): LynxElement
-  function __CreateText(parentComponentUniqueId: number): LynxElement
-  function __CreateRawText(s: string): LynxElement
-  function __CreateView(parentComponentUniqueId: number): LynxElement
+  ): LynxElement;
+  function __CreateText(parentComponentUniqueId: number): LynxElement;
+  function __CreateRawText(s: string): LynxElement;
+  function __CreateView(parentComponentUniqueId: number): LynxElement;
 
   // -----------------------------------------------------------------------
   // Tree manipulation
@@ -34,16 +34,16 @@ declare global {
   function __AppendElement(
     parent: LynxElement,
     child: LynxElement,
-  ): LynxElement
+  ): LynxElement;
   function __InsertElementBefore(
     parent: LynxElement,
     child: LynxElement,
     ref?: LynxElement,
-  ): LynxElement
+  ): LynxElement;
   function __RemoveElement(
     parent: LynxElement,
     child: LynxElement,
-  ): LynxElement
+  ): LynxElement;
 
   // -----------------------------------------------------------------------
   // Attribute / style / class / id
@@ -52,10 +52,15 @@ declare global {
     e: LynxElement,
     key: string,
     value: unknown,
-  ): void
-  function __SetClasses(e: LynxElement, c: string): void
-  function __SetInlineStyles(e: LynxElement, value: string | object): void
-  function __SetID(e: LynxElement, id: string | null | undefined): void
+  ): void;
+  function __SetClasses(e: LynxElement, c: string): void;
+  function __SetCSSId(
+    elements: LynxElement[],
+    cssId: number,
+    entryName?: string,
+  ): void;
+  function __SetInlineStyles(e: LynxElement, value: string | object): void;
+  function __SetID(e: LynxElement, id: string | null | undefined): void;
 
   // -----------------------------------------------------------------------
   // Events
@@ -65,12 +70,12 @@ declare global {
     eventType: string,
     eventName: string,
     event: unknown,
-  ): void
+  ): void;
 
   // -----------------------------------------------------------------------
   // Flush
   // -----------------------------------------------------------------------
-  function __FlushElementTree(e?: LynxElement): void
+  function __FlushElementTree(e?: LynxElement): void;
 }
 
-export {}
+export {};

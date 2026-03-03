@@ -1,4 +1,4 @@
-import { defineConfig } from '@rslib/core'
+import { defineConfig } from '@rslib/core';
 
 export default defineConfig({
   lib: [
@@ -12,12 +12,14 @@ export default defineConfig({
   source: {
     entry: {
       index: './src/index.ts',
+      'loaders/ignore-css-loader': './src/loaders/ignore-css-loader.ts',
     },
     tsconfigPath: './tsconfig.build.json',
   },
   output: {
     externals: [
       '@rsbuild/core',
+      '@rsbuild/plugin-vue',
       '@lynx-js/runtime-wrapper-webpack-plugin',
       '@lynx-js/template-webpack-plugin',
       '@lynx-js/vue-runtime',
@@ -25,4 +27,4 @@ export default defineConfig({
     ],
     distPath: { root: 'dist' },
   },
-})
+});

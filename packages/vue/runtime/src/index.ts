@@ -23,13 +23,16 @@ import type {
   App,
   Component,
   ComponentPublicInstance,
+  ObjectDirective,
 } from '@vue/runtime-core';
 
-import { nodeOps } from './node-ops.js';
-import { createPageRoot } from './shadow-element.js';
-import type { ShadowElement } from './shadow-element.js';
+import { resetRegistry } from './event-registry.js';
+import { resetFlushState, scheduleFlush } from './flush.js';
+import { nodeOps, resetNodeOpsState } from './node-ops.js';
+import { OP, pushOp, takeOps } from './ops.js';
+import { ShadowElement, createPageRoot } from './shadow-element.js';
 
-export type { App, Component, ComponentPublicInstance, ShadowElement };
+export type { App, Component, ComponentPublicInstance };
 
 const _renderer = createRenderer<ShadowElement, ShadowElement>(nodeOps);
 const _createApp = _renderer.createApp;
@@ -42,6 +45,7 @@ const _createApp = _renderer.createApp;
 
 export interface VueLynxApp {
   mount(): void;
+  unmount(): void;
   use(plugin: unknown, ...options: unknown[]): VueLynxApp;
   provide(key: unknown, value: unknown): VueLynxApp;
   config: App['config'];
@@ -76,6 +80,10 @@ export function createApp(
       const root = createPageRoot();
       internalApp.mount(root);
     },
+
+    unmount(): void {
+      internalApp.unmount();
+    },
   };
 
   return app;
@@ -86,10 +94,10 @@ export function createApp(
 // ---------------------------------------------------------------------------
 
 export {
+  // Composition API
   computed,
   defineAsyncComponent,
   defineComponent,
-  Fragment,
   h,
   inject,
   nextTick,
@@ -112,4 +120,116 @@ export {
   watch,
   watchEffect,
   watchPostEffect,
+  // Block / VNode creation (template compiler runtime helpers)
+  openBlock,
+  createBlock,
+  createElementBlock,
+  createVNode,
+  createElementVNode,
+  createTextVNode,
+  createCommentVNode,
+  createStaticVNode,
+  // Interpolation
+  toDisplayString,
+  // Normalization helpers
+  normalizeClass,
+  normalizeStyle,
+  normalizeProps,
+  mergeProps,
+  // List / conditional
+  renderList,
+  Fragment,
+  KeepAlive,
+  Teleport,
+  Suspense,
+  // Directives
+  withDirectives,
+  // Component resolution
+  resolveComponent,
+  resolveDynamicComponent,
+  resolveDirective,
+  // Slots
+  withCtx,
+  renderSlot,
+  useSlots,
+  defineSlots,
+  // Script setup macros (runtime stubs used in SFCs)
+  defineProps,
+  defineEmits,
+  defineExpose,
+  defineOptions,
+  defineModel,
+  useAttrs,
 } from '@vue/runtime-core';
+
+// ---------------------------------------------------------------------------
+// Stubs for APIs from @vue/runtime-dom that template compiler may reference.
+// These depend on real DOM APIs and cannot be used directly in Lynx.
+// ---------------------------------------------------------------------------
+
+function applyVShow(el: ShadowElement, value: unknown): void {
+  el._vShowHidden = !value;
+  const style = el._vShowHidden ? { ...el._style, display: 'none' } : el._style;
+  pushOp(OP.SET_STYLE, el.id, style);
+  scheduleFlush();
+}
+
+export const vShow: ObjectDirective<ShadowElement, unknown> = {
+  beforeMount(el, { value }) {
+    applyVShow(el, value);
+  },
+  updated(el, { value, oldValue }) {
+    if (value !== oldValue) applyVShow(el, value);
+  },
+};
+
+/** Lynx stub for vModelText. v-model on inputs is not yet supported. */
+export const vModelText = {
+  beforeMount() {
+    console.warn('[vue-lynx] v-model is not supported yet');
+  },
+  beforeUpdate() {/* no-op */},
+};
+
+/** Lynx stub for vModelCheckbox. */
+export const vModelCheckbox = vModelText;
+
+/** Lynx stub for vModelSelect. */
+export const vModelSelect = vModelText;
+
+/** Lynx stub for vModelRadio. */
+export const vModelRadio = vModelText;
+
+/** Lynx stub for withModifiers (event modifier helper). */
+export function withModifiers(
+  fn: (...args: unknown[]) => unknown,
+  _modifiers: string[],
+): (...args: unknown[]) => unknown {
+  return fn;
+}
+
+/** Lynx stub for withKeys (keyboard event modifier helper). */
+export function withKeys(
+  fn: (...args: unknown[]) => unknown,
+  _keys: string[],
+): (...args: unknown[]) => unknown {
+  return fn;
+}
+
+// ---------------------------------------------------------------------------
+// Testing utilities
+// ---------------------------------------------------------------------------
+
+export { ShadowElement, nodeOps, takeOps };
+
+/**
+ * Reset all module-level state between tests.
+ * Must be called before each test to ensure isolation.
+ */
+export function resetForTesting(): void {
+  resetRegistry();
+  resetNodeOpsState();
+  resetFlushState();
+  takeOps(); // drain any leftover ops
+  ShadowElement.nextId = 2;
+}

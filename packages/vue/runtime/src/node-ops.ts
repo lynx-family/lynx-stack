@@ -181,8 +181,10 @@ export const nodeOps: RendererOptions<ShadowElement, ShadowElement> = {
     } else if (key === 'style') {
       const style = nextValue != null && typeof nextValue === 'object'
         ? normalizeStyle(nextValue as Record<string, unknown>)
-        : nextValue;
-      pushOp(OP.SET_STYLE, el.id, style);
+        : {};
+      el._style = style;
+      const effective = el._vShowHidden ? { ...style, display: 'none' } : style;
+      pushOp(OP.SET_STYLE, el.id, effective);
     } else if (key === 'class') {
       pushOp(OP.SET_CLASS, el.id, nextValue);
     } else if (key === 'id') {
@@ -202,3 +204,8 @@ export const nodeOps: RendererOptions<ShadowElement, ShadowElement> = {
     return node.next;
   },
 };
+
+/** Reset module state – for testing only. */
+export function resetNodeOpsState(): void {
+  elementEventSigns.clear();
+}

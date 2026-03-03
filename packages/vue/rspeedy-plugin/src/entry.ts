@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import type { RsbuildPluginAPI } from '@rsbuild/core';
 
@@ -116,9 +117,53 @@ class VueMainThreadPlugin {
 
 const DEFAULT_INTERMEDIATE = '.rspeedy';
 
+const _dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 
-export function applyEntry(api: RsbuildPluginAPI): void {
+export interface ApplyEntryOptions {
+  enableCSSSelector?: boolean;
+}
+
+export function applyEntry(
+  api: RsbuildPluginAPI,
+  opts: ApplyEntryOptions = {},
+): void {
+  // Default to all-in-one chunk splitting to avoid async chunks that break
+  // Lynx's single-file bundle requirement (same as React plugin behaviour).
+  api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+    const userConfig = api.getRsbuildConfig('original');
+    if (!userConfig.performance?.chunkSplit?.strategy) {
+      return mergeRsbuildConfig(config, {
+        performance: { chunkSplit: { strategy: 'all-in-one' } },
+      });
+    }
+    return config;
+  });
+
+  // CSS from .vue <style> blocks: main-thread layer doesn't need any styles.
+  // Add an ignore-css-loader for the main-thread layer to prevent CSS
+  // processing errors (VueLoaderPlugin clones CSS rules for .vue style blocks).
+  api.modifyBundlerChain((chain, { CHAIN_ID, environment }) => {
+    const isLynx = environment.name === 'lynx'
+      || environment.name.startsWith('lynx-');
+    if (!isLynx) return;
+
+    const cssRuleId = CHAIN_ID.RULE.CSS;
+    if (!chain.module.rules.has(cssRuleId)) return;
+
+    const rule = chain.module.rule(cssRuleId);
+    const ruleEntries = rule.entries() as object;
+
+    chain.module
+      .rule(`${cssRuleId}:vue:main-thread`)
+      .merge(ruleEntries)
+      .issuerLayer(LAYERS.MAIN_THREAD)
+      .uses.clear().end()
+      .use('ignore-css')
+      .loader(path.resolve(_dirname, './loaders/ignore-css-loader'))
+      .end();
+  });
+
   api.modifyBundlerChain((chain, { environment, isProd }) => {
     const isRspeedy = api.context.callerName === 'rspeedy';
     if (!isRspeedy) return;
@@ -217,7 +262,8 @@ export function applyEntry(api: RsbuildPluginAPI): void {
                 .replaceAll('[name]', entryName)
                 .replaceAll('[platform]', environment.name),
               intermediate: path.posix.join(DEFAULT_INTERMEDIATE, entryName),
-              enableCSSSelector: false,
+              enableCSSSelector: opts.enableCSSSelector ?? false,
+              enableCSSInvalidation: opts.enableCSSSelector ?? false,
               enableNewGesture: false,
               cssPlugins: [],
             },

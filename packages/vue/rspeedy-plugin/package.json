@@ -3,7 +3,12 @@
   "version": "0.1.0",
   "private": false,
   "description": "A rsbuild / rspeedy plugin for Vue-Lynx",
-  "keywords": ["rsbuild", "vue", "lynx", "vue-lynx"],
+  "keywords": [
+    "rsbuild",
+    "vue",
+    "lynx",
+    "vue-lynx"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
@@ -19,7 +24,11 @@
     "./package.json": "./package.json"
   },
   "types": "./dist/index.d.ts",
-  "files": ["dist", "CHANGELOG.md", "README.md"],
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "README.md"
+  ],
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch"
@@ -31,15 +40,20 @@
     "@lynx-js/vue-runtime": "workspace:*"
   },
   "devDependencies": {
+    "@rsbuild/plugin-vue": "^1.2.6",
     "@rslib/core": "^0.7.0",
     "rsbuild-plugin-publint": "0.3.4",
     "typescript": "^5.0.0"
   },
   "peerDependencies": {
-    "@rsbuild/core": "catalog:rsbuild"
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rsbuild/plugin-vue": "^1.2.6"
   },
   "peerDependenciesMeta": {
     "@rsbuild/core": {
+      "optional": false
+    },
+    "@rsbuild/plugin-vue": {
       "optional": false
     }
   },

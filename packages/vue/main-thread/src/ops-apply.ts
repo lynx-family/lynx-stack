@@ -48,6 +48,9 @@ export function applyOps(ops: unknown[]): void {
           el = __CreateRawText('');
         } else {
           el = __CreateElement(type, 0);
+          // Associate element with CSS scope 0 (common/global CSS)
+          // so the CSS selector engine can match class-based rules.
+          __SetCSSId([el], 0);
         }
         elements.set(id, el);
         break;
@@ -56,6 +59,7 @@ export function applyOps(ops: unknown[]): void {
       case OP.CREATE_TEXT: {
         const id = ops[i++] as number;
         const el = __CreateText(0);
+        __SetCSSId([el], 0);
         elements.set(id, el);
         break;
       }
@@ -169,3 +173,8 @@ export function applyOps(ops: unknown[]): void {
 
 /** Expose elements map so entry-main.ts can seed the page-root entry. */
 export { elements };
+
+/** Reset module state – for testing only. */
+export function resetMainThreadState(): void {
+  elements.clear();
+}

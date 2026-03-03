@@ -21,6 +21,12 @@ export class ShadowElement {
   prev: ShadowElement | null = null;
   next: ShadowElement | null = null;
 
+  // Cached style object (last value passed to patchProp 'style').
+  // Used by vShow to merge display:none without losing the original styles.
+  _style: Record<string, unknown> = {};
+  // Set to true by vShow when the element should be hidden.
+  _vShowHidden = false;
+
   constructor(type: string, forceId?: number) {
     if (forceId === undefined) {
       this.id = ShadowElement.nextId++;

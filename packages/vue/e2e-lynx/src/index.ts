@@ -3,85 +3,27 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * Vue-Lynx dual-thread MVP demo.
+ * Vue-Lynx SFC demo entry.
  *
- * Validates the full pipeline:
- *   BG Thread: Vue reactive system → nodeOps → ops buffer → callLepusMethod
- *   Main Thread: applyOps → PAPI calls → native render
+ * Validates the full SFC pipeline:
+ *   .vue file → @vue/compiler-dom → template render function
+ *   → @lynx-js/vue-runtime nodeOps → ops buffer → callLepusMethod
+ *   → Main Thread applyOps → PAPI → native render
  *
- * Features exercised:
- *   - Static render (h('text', null, 'Hello'))
- *   - Reactive counter (ref + update → BG sends only SET_TEXT op)
- *   - Event handling (bindtap → sign → publishEvent → handler on BG)
+ * SFC features exercised (see App.vue / Counter.vue):
+ *   - <script setup> + defineProps / defineEmits
+ *   - {{ interpolation }}
+ *   - :style / dynamic binding
+ *   - v-if / v-else
+ *   - v-show
+ *   - v-for
+ *   - @tap event
+ *   - child component reference
  */
 
-import {
-  createApp,
-  defineComponent,
-  h,
-  onMounted,
-  ref,
-} from '@lynx-js/vue-runtime';
+import { createApp } from '@lynx-js/vue-runtime';
 
-const Counter = defineComponent({
-  name: 'Counter',
-  setup() {
-    const count = ref(0);
-
-    onMounted(() => {
-      // Auto-increment every 2 s to verify reactive updates work without user input
-      setInterval(() => {
-        count.value++;
-      }, 2000);
-    });
-
-    return () =>
-      h(
-        'view',
-        { style: { display: 'flex', flexDirection: 'column', padding: 16 } },
-        [
-          h('text', { style: { fontSize: 24, color: '#333' } }, [
-            `Count: ${count.value}`,
-          ]),
-          h(
-            'view',
-            {
-              style: {
-                marginTop: 12,
-                padding: '8px 16px',
-                backgroundColor: '#0077ff',
-                borderRadius: 8,
-              },
-              bindtap: (e: unknown) => {
-                console.info(
-                  '[vue-app] bindtap fired! event=',
-                  e,
-                  'count before=',
-                  count.value,
-                );
-                count.value++;
-                console.info('[vue-app] count after=', count.value);
-              },
-            },
-            [h('text', { style: { color: '#fff' } }, ['Tap to increment'])],
-          ),
-        ],
-      );
-  },
-});
-
-const App = defineComponent({
-  name: 'App',
-  setup() {
-    return () =>
-      h('view', { style: { flex: 1 } }, [
-        h('text', { style: { fontSize: 18, margin: 16 } }, [
-          'Vue 3 × Lynx – Dual-Thread MVP',
-        ]),
-        h(Counter),
-      ]);
-  },
-});
+import App from './App.vue';
 
 const app = createApp(App);
 app.mount();
