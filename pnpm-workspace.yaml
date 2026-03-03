@@ -5,6 +5,7 @@ packages:
   - packages/lynx/*
   - packages/mcp-servers/*
   - packages/react
+  - packages/react/preact-upstream-tests
   - packages/react/refresh
   - packages/react/runtime
   - packages/react/testing-library
