@@ -239,6 +239,28 @@ importers:
         specifier: 3.7.0
         version: 3.7.0
 
+  examples/preact-todomvc:
+    dependencies:
+      '@lynx-js/preact':
+        specifier: workspace:*
+        version: link:../../packages/preact
+      preact:
+        specifier: ^10.28.0
+        version: 10.28.0
+    devDependencies:
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-qrcode
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+      '@lynx-js/template-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../packages/webpack/template-webpack-plugin
+      '@lynx-js/types':
+        specifier: 3.7.0
+        version: 3.7.0
+
   examples/react:
     dependencies:
       '@lynx-js/react':
@@ -13732,7 +13754,7 @@ snapshots:
       sirv: 3.0.1
       tinyglobby: 0.2.15
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.13)(@vitest/ui@3.2.4)(jsdom@26.1.0)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.13)(@vitest/ui@3.2.4)(jsdom@27.4.0)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)
 
   '@vitest/utils@3.2.4':
     dependencies:

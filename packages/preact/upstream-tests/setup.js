@@ -88,6 +88,51 @@ globalThis.__AddDataset = (el, key, value) => {
 // elements to COMMON_CSS (ID=0) so class selectors are matched by the CSS engine.
 globalThis.__SetCSSId = () => {};
 
+// __AddEvent shim: exercise the production worklet registration path.
+//
+// In production Lynx, LynxElement.addEventListener registers handlers as
+// worklets via __AddEvent, and Lynx native later calls runWorklet(value, [e]).
+// Without this shim, __AddEvent is undefined and the code falls back to
+// _papiHandle.addEventListener — bypassing the entire production code path.
+//
+// This shim stores the registration AND wires a jsdom listener so that
+// dispatchEvent(new Event('click')) still reaches Preact's handlers.
+// The wrapper (already in _workletMap) is registered directly on the jsdom
+// handle — equivalent to what runWorklet would call in production.
+//
+// Reverse of the _w3cToLynxEvent map in lynx-document.js.
+const _lynxToW3cEvent = { tap: 'click' };
+
+globalThis.__AddEvent = (handle, eventType, eventName, event) => {
+  // For mapped events (e.g. Lynx 'tap' → W3C 'click'), use the W3C name.
+  // For unmapped events (e.g. 'OtherClick', 'focus'), pass through unchanged —
+  // Preact already determined the correct event name when calling addEventListener.
+  const w3cName = _lynxToW3cEvent[eventName] ?? eventName;
+  const useCapture = eventType === 'capture-bind';
+  const slotKey = `__preactEvtShim_${eventType}_${eventName}`;
+
+  // Remove previous jsdom listener registered for this slot.
+  if (handle[slotKey]) {
+    handle.removeEventListener(w3cName, handle[slotKey], useCapture);
+    delete handle[slotKey];
+  }
+
+  if (event == null) return;
+
+  if (event.type === 'worklet' && event.value != null) {
+    // LynxElement.addEventListener stores the wrapper in _workletMap before
+    // calling __AddEvent, so the lookup below always succeeds.
+    const fn = globalThis.lynxWorkletImpl?._workletMap?.[event.value];
+    if (typeof fn === 'function') {
+      handle.addEventListener(w3cName, fn, useCapture);
+      handle[slotKey] = fn;
+    }
+  }
+};
+
+// __FlushElementTree shim: no-op in tests (jsdom mutations are synchronous).
+globalThis.__FlushElementTree = () => {};
+
 // ─── 2. Set options.document to use Element PAPI ────────────────────────────
 
 // The Lynx fork of Preact uses options.document (not the global document) for

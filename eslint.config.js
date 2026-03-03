@@ -109,6 +109,7 @@ export default tseslint.config(
 
       // Out-of-tree experimental packages (not part of main trunk)
       'packages/preact/**',
+      'examples/preact*/**',
 
       // Internal agent/workspace notes (not source code)
       '.context/**',

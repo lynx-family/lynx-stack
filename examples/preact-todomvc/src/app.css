@@ -1,0 +1,200 @@
+/* TodoMVC for Lynx Preact */
+
+:root {
+  background-color: #f5f5f5;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ─── Header ─── */
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 20px;
+  background-color: #f5f5f5;
+}
+
+.title {
+  font-size: 60px;
+  font-weight: 100;
+  color: rgba(175, 47, 47, 0.15);
+  text-align: center;
+}
+
+.new-todo {
+  width: 90%;
+  height: 48px;
+  padding: 0 16px;
+  margin-top: 12px;
+  font-size: 18px;
+  background-color: #fff;
+  border-radius: 4px;
+  color: #4d4d4d;
+}
+
+/* ─── Main ─── */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  margin: 0 16px;
+  border-radius: 4px;
+}
+
+.toggle-all-wrap {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom-width: 1px;
+  border-bottom-color: #e6e6e6;
+}
+
+.toggle-all-icon {
+  font-size: 24px;
+  color: #737373;
+  margin-right: 8px;
+}
+
+.toggle-all-icon.all-checked {
+  color: #4d4d4d;
+}
+
+.toggle-all-label {
+  font-size: 14px;
+  color: #737373;
+}
+
+/* ─── Todo list ─── */
+
+.todo-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 60vh;
+}
+
+.todo-item {
+  display: flex;
+  flex-direction: column;
+  border-bottom-width: 1px;
+  border-bottom-color: #ededed;
+}
+
+.todo-view {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 12px 16px;
+}
+
+.toggle-wrap {
+  margin-right: 12px;
+}
+
+.toggle-icon {
+  font-size: 26px;
+  color: #bddad5;
+}
+
+.toggle-icon.checked {
+  color: #5dc2af;
+}
+
+.todo-label-wrap {
+  flex: 1;
+}
+
+.todo-label {
+  font-size: 18px;
+  color: #4d4d4d;
+  line-height: 28px;
+}
+
+.todo-label.completed-text {
+  color: #d9d9d9;
+  text-decoration: line-through;
+}
+
+.destroy-btn {
+  padding: 4px 8px;
+}
+
+.destroy-text {
+  font-size: 24px;
+  color: #cc9a9a;
+}
+
+/* ─── Edit mode ─── */
+
+.edit-input {
+  width: 90%;
+  height: 44px;
+  padding: 0 12px;
+  margin: 4px 16px 8px 16px;
+  font-size: 18px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  color: #4d4d4d;
+}
+
+/* ─── Footer ─── */
+
+.footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 12px 16px;
+  margin: 0 16px;
+  background-color: #fff;
+  border-radius: 0 0 4px 4px;
+  border-top-width: 1px;
+  border-top-color: #e6e6e6;
+}
+
+.todo-count {
+  font-size: 13px;
+  color: #777;
+}
+
+.filters {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.filter-btn {
+  padding: 4px 8px;
+  margin: 0 4px;
+  border-radius: 3px;
+}
+
+.filter-btn.selected {
+  border-width: 1px;
+  border-color: rgba(175, 47, 47, 0.2);
+}
+
+.filter-text {
+  font-size: 13px;
+  color: #777;
+}
+
+.filter-text.selected {
+  color: #af2f2f;
+}
+
+.clear-btn {
+  padding: 4px 8px;
+}
+
+.clear-text {
+  font-size: 13px;
+  color: #777;
+}

@@ -536,34 +536,23 @@ export class LynxElement {
 
   // ── Events ──
   //
-  // Production path (__AddEvent available): register as main-thread worklet.
-  //   - __AddEvent(handle, 'bindEvent', lynxName, { type: 'worklet', value: { _wkltId } })
-  //   - When native event fires, runWorklet({ _wkltId }, [crossEvent]) is called
-  //   - Our wrapper normalizes crossEvent.type (Lynx 'tap' → W3C 'click') so that
-  //     Preact's proxyEventHandler can look up _listeners[e.type] correctly
+  // Register handlers as worklets via __AddEvent so Lynx native can invoke them.
+  // __AddEvent receives { type: 'worklet', value: "preact_N" } and Lynx calls
+  // runWorklet("preact_N", [crossEvent]) when the event fires.
   //
-  // Test path (no __AddEvent): PAPI handles are jsdom elements; delegate to
-  // papiHandle.addEventListener so sinon spies and DOM dispatch still work.
+  // Wrapper is cached per (this element, type, capture) — NOT on the shared
+  // handler (eventProxy) function. Caching on the handler would cause the wrapper
+  // to be reused across different elements (different test renders), incorrectly
+  // carrying over a stale lynxElement capture from a previous element.
 
   addEventListener(type, handler, useCapture) {
-    if (typeof __AddEvent !== 'function') {
-      if (
-        this._papiHandle
-        && typeof this._papiHandle.addEventListener === 'function'
-      ) {
-        this._papiHandle.addEventListener(type, handler, useCapture);
-      }
-      return;
-    }
-
     const lynxEventName = _w3cToLynxEvent[type] ?? type;
     const eventType = useCapture ? 'capture-bind' : 'bindEvent';
 
-    // One wrapper per (handler function, event type) pair.
-    // Preact reuses the same proxyEventHandler reference across re-renders so
-    // the wrapper — and its _wkltId — is typically created only once per element.
-    const wrapperKey = '_preactEvt_' + type;
-    let wrapper = handler[wrapperKey];
+    // Cache wrapper per element+type+capture on `this` (LynxElement instance).
+    // Each LynxElement gets its own wrapper pointing to the correct lynxElement.
+    const wrapperKey = '_preactEvt_' + type + !!useCapture;
+    let wrapper = this[wrapperKey];
     if (!wrapper) {
       const lynxElement = this; // Proxy — needed as 'this' in proxyEventHandler
       const w3cType = type; // W3C name captured for crossEvent normalization
@@ -578,7 +567,7 @@ export class LynxElement {
         }
         handler.call(lynxElement, e);
       };
-      handler[wrapperKey] = wrapper;
+      this[wrapperKey] = wrapper;
       wrapper._preactWkltId = 'preact_' + (_nextWorkletId++);
     }
 
@@ -592,22 +581,13 @@ export class LynxElement {
   }
 
   removeEventListener(type, handler, useCapture) {
-    if (typeof __AddEvent !== 'function') {
-      if (
-        this._papiHandle
-        && typeof this._papiHandle.removeEventListener === 'function'
-      ) {
-        this._papiHandle.removeEventListener(type, handler, useCapture);
-      }
-      return;
-    }
-
     const lynxEventName = _w3cToLynxEvent[type] ?? type;
     const eventType = useCapture ? 'capture-bind' : 'bindEvent';
-    // Clean up worklet map entry to avoid memory leak.
-    const wrapper = handler['_preactEvt_' + type];
+    // Clean up worklet map entry and remove cached wrapper.
+    const wrapper = this['_preactEvt_' + type + !!useCapture];
     if (wrapper?._preactWkltId && globalThis.lynxWorkletImpl) {
       delete globalThis.lynxWorkletImpl._workletMap[wrapper._preactWkltId];
+      delete this['_preactEvt_' + type + !!useCapture];
     }
     __AddEvent(this._papiHandle, eventType, lynxEventName, undefined);
   }
