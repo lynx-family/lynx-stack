@@ -282,7 +282,6 @@ export class ExternalsLoadingPlugin {
       #genExternalsLoadingCode(
         chunkLayer: string,
       ): string {
-        const fetchCode: string[] = [];
         const loadCode: string[] = [];
         // filter duplicate externals by libraryName or package name to avoid loading the same external multiple times. We keep the last one.
         const externalsMap = new Map<
@@ -299,6 +298,7 @@ export class ExternalsLoadingPlugin {
         } else {
           return '';
         }
+
         for (
           const [pkgName, external] of Object.entries(
             externalsLoadingPluginOptions.externals,
@@ -346,12 +346,41 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
     throw new Error('Failed to fetch external source ' + response.url + ' . The response is ' + JSON.stringify(response), { cause: response })
   }
 }
+
+function createLazyExternal(loader) {
+  let realModule = null;
+  let loading = false;
+
+  function load() {
+    if (realModule) return realModule;
+
+    if (!loading) {
+      loading = true;
+      realModule = loader();
+    }
+
+    return realModule;
+  }
+
+  return new Proxy(function () {}, {
+    get(_, key) {
+      if (key === '__esModule') return true;
+      const mod = load();
+      return mod[key];
+    },
+    apply(_, thisArg, args) {
+      const mod = load();
+      return mod.apply(thisArg, args);
+    },
+  });
+}
 `;
 
+        const symbolDeclarations: string[] = [];
         const hasUrlLibraryNamePairInjected = new Set();
+        let loaderIndex = 0;
 
-        for (let i = 0; i < externals.length; i++) {
-          const [pkgName, external] = externals[i]!;
+        for (const [pkgName, external] of externals) {
           const {
             libraryName,
             url,
@@ -377,35 +406,57 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           }
           hasUrlLibraryNamePairInjected.add(hash);
 
-          fetchCode.push(
-            `const handler${i} = lynx.fetchBundle(${JSON.stringify(url)}, {});`,
+          const symbolVarName = `_symbolForExternal_${loaderIndex}`;
+          symbolDeclarations.push(
+            `const ${symbolVarName} = Symbol.for(${
+              JSON.stringify(libraryNameStr)
+            });`,
           );
 
-          const mountVar = `${
-            getLynxExternalGlobal(
-              externalsLoadingPluginOptions.globalObject,
-            )
-          }[${JSON.stringify(libraryNameStr)}]`;
+          const externalGlobalAccessor = `${
+            getLynxExternalGlobal(externalsLoadingPluginOptions.globalObject)
+          }`;
+
           if (async) {
             loadCode.push(
-              `${mountVar} = ${mountVar} === undefined ? createLoadExternalAsync(handler${i}, ${
-                JSON.stringify(layerOptions.sectionPath)
-              }) : ${mountVar};`,
+              `Object.defineProperty(${externalGlobalAccessor}, ${
+                JSON.stringify(libraryNameStr)
+              }, {
+  get() {
+    if (!this[${symbolVarName}]) {
+      this[${symbolVarName}] = createLoadExternalAsync(lynx.fetchBundle(${
+                JSON.stringify(url)
+              }, {}), ${JSON.stringify(layerOptions.sectionPath)});
+    }
+    return this[${symbolVarName}];
+  },
+  configurable: true
+});`,
             );
-            continue;
+          } else {
+            loadCode.push(
+              `Object.defineProperty(${externalGlobalAccessor}, ${
+                JSON.stringify(libraryNameStr)
+              }, {
+  get() {
+    if (!this[${symbolVarName}]) {
+      this[${symbolVarName}] = createLazyExternal(() => createLoadExternalSync(lynx.fetchBundle(${
+                JSON.stringify(url)
+              }, {}), ${JSON.stringify(layerOptions.sectionPath)}, ${timeout}));
+    }
+    return this[${symbolVarName}];
+  },
+  configurable: true
+});`,
+            );
           }
-
-          loadCode.push(
-            `${mountVar} = ${mountVar} === undefined ? createLoadExternalSync(handler${i}, ${
-              JSON.stringify(layerOptions.sectionPath)
-            }, ${timeout}) : ${mountVar};`,
-          );
+          loaderIndex++;
         }
 
         return [
           runtimeGlobalsInit,
           loadExternalFunc,
-          fetchCode,
+          symbolDeclarations,
           loadCode,
         ].flat().join('\n');
       }
@@ -425,6 +476,62 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
     compiler.hooks.compilation.tap(
       ExternalsLoadingRuntimeModule.name,
       compilation => {
+        const layers: { name: 'mainThread' | 'background'; layer: string }[] = [
+          {
+            name: 'mainThread',
+            layer: externalsLoadingPluginOptions.mainThreadLayer,
+          },
+          {
+            name: 'background',
+            layer: externalsLoadingPluginOptions.backgroundLayer,
+          },
+        ];
+
+        for (const layerInfo of layers) {
+          const libraryConfigs = new Map<
+            string,
+            { sectionPath: string; definedBy: string }
+          >();
+
+          for (
+            const [pkgName, external] of Object.entries(
+              externalsLoadingPluginOptions.externals,
+            )
+          ) {
+            const { libraryName, url } = external;
+            const layerOptions = external[layerInfo.name];
+
+            if (!layerOptions?.sectionPath) {
+              continue; // No config for this layer, nothing to validate.
+            }
+
+            const libraryNameWithDefault = libraryName ?? pkgName;
+            const libraryNameStr = Array.isArray(libraryNameWithDefault)
+              ? libraryNameWithDefault[0]
+              : libraryNameWithDefault;
+            const hash = `${url}-${libraryNameStr}`;
+
+            if (libraryConfigs.has(hash)) {
+              const existingConfig = libraryConfigs.get(hash)!;
+              if (existingConfig.sectionPath !== layerOptions.sectionPath) {
+                compilation.errors.push(
+                  new Error(
+                    `ExternalsLoadingPlugin Error: Conflicting 'sectionPath' configurations found for library "${libraryNameStr}" (from URL "${url}") in the "${layerInfo.name}" layer.\n`
+                      + `- Defined in "${existingConfig.definedBy}": "${existingConfig.sectionPath}"\n`
+                      + `- Defined in "${pkgName}": "${layerOptions.sectionPath}"\n`
+                      + `Please ensure all externals pointing to the same library bundle have a consistent 'sectionPath' for each layer.`,
+                  ),
+                );
+              }
+            } else {
+              libraryConfigs.set(hash, {
+                sectionPath: layerOptions.sectionPath,
+                definedBy: pkgName,
+              });
+            }
+          }
+        }
+
         compilation.hooks.additionalTreeRuntimeRequirements
           .tap(ExternalsLoadingRuntimeModule.name, (chunk) => {
             const modules = compilation.chunkGraph.getChunkModulesIterable(

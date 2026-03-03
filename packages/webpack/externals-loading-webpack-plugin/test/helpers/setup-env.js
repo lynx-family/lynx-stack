@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { createRequire } from 'node:module';
 
+import { vi } from 'vitest';
+
 __injectGlobals(globalThis);
 
 const require = createRequire(import.meta.url);
@@ -19,16 +21,14 @@ function __injectGlobals(target) {
   target.printLogger = process.argv.includes('--verbose');
 
   target.lynx = {
-    fetchBundle: (url) => {
-      return {
-        wait: () => ({ url, code: 0, err: null }),
-        then: (callback) => callback({ url, code: 0, err: null }),
-      };
-    },
-    loadScript: (sectionPath) => {
+    fetchBundle: vi.fn(url => ({
+      wait: () => ({ url, code: 0, err: null }),
+      then: callback => callback({ url, code: 0, err: null }),
+    })),
+    loadScript: vi.fn((sectionPath) => {
       const module = CustomSections[sectionPath] ?? {};
       return module;
-    },
+    }),
   };
 
   target.Lodash = {};
