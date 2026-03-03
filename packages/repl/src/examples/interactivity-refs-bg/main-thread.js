@@ -1,4 +1,3 @@
-/* eslint-disable headers/header-format, no-undef */
 // Demonstrates: Background thread identifying elements via event data
 //
 // The background thread cannot directly access elements — they live on

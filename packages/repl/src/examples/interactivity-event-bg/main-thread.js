@@ -1,4 +1,3 @@
-/* eslint-disable headers/header-format, no-undef */
 // Demonstrates: Event handling on the background thread
 //
 // In Lynx's dual-thread model, string event handlers dispatch events
@@ -84,8 +83,13 @@ globalThis.renderPage = function renderPage() {
 
   __FlushElementTree();
 
+  console.log('[main] renderPage complete, buttons created');
+  console.log('[main] decBtn event: bindEvent/tap/onDecrement');
+  console.log('[main] incBtn event: bindEvent/tap/onIncrement');
+
   // Main thread listens for state updates from the background thread
   lynx.getJSContext().addEventListener('counterUpdate', (event) => {
+    console.log('[main] received counterUpdate:', event.data);
     __SetAttribute(counterRaw, 'text', String(event.data.count));
     __FlushElementTree();
   });

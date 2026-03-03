@@ -1,43 +1,60 @@
-/* eslint-disable headers/header-format, no-undef, no-unused-vars, unicorn/consistent-function-scoping */
-// The background thread handles events dispatched by string handlers.
-//
-// When __AddEvent uses a string like "onIncrement", the runtime sends
-// a publishEvent RPC to the background thread. We register event
-// handler routers on the tt object so the RPC gets connected.
-//
-// Timing: user code runs during requireModule, BEFORE lynx-core calls
-// nativeApp.setCard(tt). So we wrap setCard to register our handlers
-// at the right time — when tt and its lazy property descriptors are ready.
-
 const nativeApp = lynx.getNativeApp();
+console.log('[bg] nativeApp:', nativeApp);
+console.log('[bg] nativeApp.tt:', nativeApp.tt);
+console.log('[bg] nativeApp.setCard:', typeof nativeApp.setCard);
+
 const _setCard = nativeApp.setCard;
 
 nativeApp.setCard = function(tt) {
-  // Let the runtime finish its setup first (registers lazy RPC handlers)
+  console.log('[bg] setCard called! tt:', tt);
+  console.log('[bg] tt.publishEvent before _setCard:', tt.publishEvent);
+  console.log(
+    '[bg] tt.publicComponentEvent before _setCard:',
+    tt.publicComponentEvent,
+  );
+
   _setCard(tt);
 
-  // Now register our event routers — setting these triggers the lazy
-  // property descriptors that connect the RPC endpoints to our functions.
+  console.log('[bg] tt.publishEvent after _setCard:', tt.publishEvent);
+  console.log(
+    '[bg] tt.publicComponentEvent after _setCard:',
+    tt.publicComponentEvent,
+  );
+
   function routeEvent(handlerName, event) {
+    console.log('[bg] routeEvent called:', handlerName, event);
     if (typeof globalThis[handlerName] === 'function') {
       globalThis[handlerName](event);
+    } else {
+      console.log('[bg] handler not found on globalThis:', handlerName);
     }
   }
 
   tt.publishEvent = function(handlerName, event) {
+    console.log('[bg] tt.publishEvent called:', handlerName);
     routeEvent(handlerName, event);
   };
 
   tt.publicComponentEvent = function(_componentId, handlerName, event) {
+    console.log(
+      '[bg] tt.publicComponentEvent called:',
+      _componentId,
+      handlerName,
+    );
     routeEvent(handlerName, event);
   };
+
+  console.log('[bg] handlers registered on tt');
 };
+
+console.log('[bg] setCard wrapper installed');
 
 // ── State & handlers ────────────────────────────────────────────────────
 
 let count = 0;
 
 globalThis.onDecrement = function(_event) {
+  console.log('[bg] onDecrement called, count:', count - 1);
   count--;
   lynx.getCoreContext().dispatchEvent({
     type: 'counterUpdate',
@@ -46,9 +63,12 @@ globalThis.onDecrement = function(_event) {
 };
 
 globalThis.onIncrement = function(_event) {
+  console.log('[bg] onIncrement called, count:', count + 1);
   count++;
   lynx.getCoreContext().dispatchEvent({
     type: 'counterUpdate',
     data: { count },
   });
 };
+
+console.log('[bg] handler functions defined on globalThis');

@@ -71,6 +71,9 @@ export default tseslint.config(
       'packages/react/transform/index.cjs',
       'packages/react/transform/**/index.d.ts',
 
+      // REPL examples use Lynx platform globals and are not subject to lint rules
+      'packages/repl/src/examples/**',
+
       // TODO: enable eslint for react
       // react
       'packages/react/types/**',

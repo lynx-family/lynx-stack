@@ -1,4 +1,3 @@
-/* eslint-disable headers/header-format, no-undef */
 // Demonstrates: Element types and their props
 //
 // Lynx provides several built-in element types, each with specific

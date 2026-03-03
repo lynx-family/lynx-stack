@@ -1,4 +1,3 @@
-/* eslint-disable headers/header-format, no-undef */
 // Demonstrates: reacting to globalProps.theme changes
 //
 // The REPL host calls sendGlobalEvent("themeChanged") whenever the
