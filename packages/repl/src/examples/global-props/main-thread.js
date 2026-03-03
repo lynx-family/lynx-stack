@@ -1,4 +1,3 @@
-/* eslint-disable headers/header-format, no-undef */
 // Demonstrates: lynx.__globalProps
 //
 // __globalProps holds application-wide properties set by the host

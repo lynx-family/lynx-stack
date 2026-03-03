@@ -1,4 +1,3 @@
-/* eslint-disable headers/header-format, no-undef, no-unused-vars */
 // Demonstrates: Direct element access on the main thread
 //
 // The main thread has full access to elements:

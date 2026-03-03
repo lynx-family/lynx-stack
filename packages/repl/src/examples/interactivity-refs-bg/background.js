@@ -1,4 +1,3 @@
-/* eslint-disable headers/header-format, no-undef, unicorn/consistent-function-scoping */
 // The background thread receives events with element identity info.
 //
 // It cannot touch elements directly, but it can read:
@@ -38,8 +37,6 @@ globalThis.onCardTap = function(event) {
   //   event.target.dataset  → data attributes via __SetDataByKey
   const targetId = event.target.id;
   const label = event.target.dataset?.label || targetId;
-
-  // biome-ignore lint/suspicious/noConsoleLog: intentional debug output in example
   console.log(
     'Background received tap — id:',
     targetId,

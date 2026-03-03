@@ -1,4 +1,3 @@
-/* eslint-disable headers/header-format, no-undef, n/no-unsupported-features/node-builtins */
 // Demonstrates: fetch in the background thread
 //
 // In Lynx, use globalThis.fetch() to make network requests

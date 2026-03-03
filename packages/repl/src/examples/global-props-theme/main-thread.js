@@ -1,4 +1,3 @@
-/* eslint-disable headers/header-format, no-undef */
 // Demonstrates: theming via globalProps
 //
 // lynx.__globalProps.theme is set by the REPL host to "dark" or

@@ -1,4 +1,3 @@
-/* eslint-disable headers/header-format, no-undef, no-unused-vars */
 // Demonstrates: Event handling directly on the main thread
 //
 // Unlike string handlers (which dispatch to the background thread),

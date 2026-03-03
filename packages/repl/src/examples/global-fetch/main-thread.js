@@ -1,4 +1,3 @@
-/* eslint-disable headers/header-format, no-undef */
 // Demonstrates: fetch API + cross-thread rendering
 //
 // The background thread uses globalThis.fetch() to load remote data,
