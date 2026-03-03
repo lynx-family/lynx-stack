@@ -25,6 +25,8 @@ const OP = {
   SET_STYLE: 8,
   SET_CLASS: 9,
   SET_ID: 10,
+  SET_WORKLET_EVENT: 11,
+  SET_MT_REF: 12,
 } as const;
 
 /** Map from BG-thread ShadowElement id → Lynx Main Thread element handle */
@@ -158,6 +160,65 @@ export function applyOps(ops: unknown[]): void {
         const idStr = ops[i++] as string | null | undefined;
         const el = elements.get(id);
         if (el) __SetID(el, idStr);
+        break;
+      }
+
+      case OP.SET_WORKLET_EVENT: {
+        const id = ops[i++] as number;
+        const eventType = ops[i++] as string;
+        const eventName = ops[i++] as string;
+        const ctx = ops[i++];
+        const el = elements.get(id);
+        console.info(
+          '[vue-mt] SET_WORKLET_EVENT id=',
+          id,
+          'type=',
+          eventType,
+          'name=',
+          eventName,
+          'ctx=',
+          ctx,
+          'el found=',
+          el != null,
+        );
+        if (el) {
+          __AddEvent(el, eventType, eventName, {
+            type: 'worklet',
+            value: ctx,
+          });
+        }
+        break;
+      }
+
+      case OP.SET_MT_REF: {
+        const id = ops[i++] as number;
+        const refImpl = ops[i++];
+        const el = elements.get(id);
+        console.info(
+          '[vue-mt] SET_MT_REF id=',
+          id,
+          'refImpl=',
+          refImpl,
+          'el found=',
+          el != null,
+        );
+        // Store in workletRefMap so worklet-runtime can resolve _wvid → element.
+        // lynxWorkletImpl is provided by @lynx-js/react/worklet-runtime when
+        // loaded on the Main Thread. Phase 1: just log for verification.
+        if (
+          el
+          && typeof globalThis !== 'undefined'
+          && 'lynxWorkletImpl' in (globalThis as Record<string, unknown>)
+        ) {
+          const impl = (globalThis as Record<string, unknown>)[
+            'lynxWorkletImpl'
+          ] as {
+            _refImpl?: {
+              updateWorkletRef(ref: unknown, el: LynxElement): void;
+            };
+          };
+          impl._refImpl?.updateWorkletRef(refImpl, el);
+        }
         break;
       }
 

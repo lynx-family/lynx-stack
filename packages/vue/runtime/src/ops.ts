@@ -17,6 +17,8 @@
  *   SET_STYLE:    [8, id, styleValue]   styleValue is string | object
  *   SET_CLASS:    [9, id, classString]
  *   SET_ID:       [10, id, idString]
+ *   SET_WORKLET_EVENT: [11, id, eventType, eventName, workletCtx]
+ *   SET_MT_REF:   [12, id, refImpl]
  */
 export const OP = {
   CREATE: 0,
@@ -30,18 +32,20 @@ export const OP = {
   SET_STYLE: 8,
   SET_CLASS: 9,
   SET_ID: 10,
-} as const
+  SET_WORKLET_EVENT: 11,
+  SET_MT_REF: 12,
+} as const;
 
-let buffer: unknown[] = []
+let buffer: unknown[] = [];
 
 export function pushOp(...args: unknown[]): void {
   for (const arg of args) {
-    buffer.push(arg)
+    buffer.push(arg);
   }
 }
 
 export function takeOps(): unknown[] {
-  const b = buffer
-  buffer = []
-  return b
+  const b = buffer;
+  buffer = [];
+  return b;
 }

@@ -150,6 +150,40 @@ export const nodeOps: RendererOptions<ShadowElement, ShadowElement> = {
     _prevValue: unknown,
     nextValue: unknown,
   ): void {
+    // ------------------------------------------------------------------
+    // Main-thread worklet props: :main-thread-bindtap, :main-thread-ref
+    // ------------------------------------------------------------------
+    if (key.startsWith('main-thread-')) {
+      const suffix = key.slice('main-thread-'.length);
+      if (suffix === 'ref') {
+        // MainThreadRef — send the serialised { _wvid, _initValue } to MT
+        if (
+          nextValue != null && typeof nextValue === 'object'
+          && '_wvid' in (nextValue as Record<string, unknown>)
+        ) {
+          pushOp(
+            OP.SET_MT_REF,
+            el.id,
+            (nextValue as { toJSON(): unknown }).toJSON(),
+          );
+        }
+      } else {
+        // Worklet event — suffix is an event key like "bindtap", "bindscroll"
+        const event = parseEventProp(suffix);
+        if (event && nextValue != null) {
+          pushOp(
+            OP.SET_WORKLET_EVENT,
+            el.id,
+            event.type,
+            event.name,
+            nextValue,
+          );
+        }
+      }
+      scheduleFlush();
+      return;
+    }
+
     const event = parseEventProp(key);
 
     if (event) {

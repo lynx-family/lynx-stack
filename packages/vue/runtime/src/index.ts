@@ -26,8 +26,14 @@ import type {
   ObjectDirective,
 } from '@vue/runtime-core';
 
+import { runOnMainThread } from './cross-thread.js';
 import { resetRegistry } from './event-registry.js';
 import { resetFlushState, scheduleFlush } from './flush.js';
+import {
+  MainThreadRef,
+  resetMainThreadRefState,
+  useMainThreadRef,
+} from './main-thread-ref.js';
 import { nodeOps, resetNodeOpsState } from './node-ops.js';
 import { OP, pushOp, takeOps } from './ops.js';
 import { ShadowElement, createPageRoot } from './shadow-element.js';
@@ -222,6 +228,12 @@ export function withKeys(
 
 export { ShadowElement, nodeOps, takeOps };
 
+// ---------------------------------------------------------------------------
+// Main Thread Script (MTS) APIs
+// ---------------------------------------------------------------------------
+
+export { MainThreadRef, useMainThreadRef, runOnMainThread };
+
 /**
  * Reset all module-level state between tests.
  * Must be called before each test to ensure isolation.
@@ -230,6 +242,7 @@ export function resetForTesting(): void {
   resetRegistry();
   resetNodeOpsState();
   resetFlushState();
+  resetMainThreadRefState();
   takeOps(); // drain any leftover ops
   ShadowElement.nextId = 2;
 }
