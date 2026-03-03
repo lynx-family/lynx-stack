@@ -169,7 +169,6 @@ describe('should build external bundle', () => {
   })
 
   it('should build css into external bundle', async () => {
-    vi.stubEnv('DEBUG', 'rsbuild,rslib,rspack')
     const fixtureDir = path.join(__dirname, './fixtures/css-lib')
     const rslibConfig = defineExternalBundleRslibConfig({
       source: {

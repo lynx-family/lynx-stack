@@ -327,6 +327,7 @@ function createLoadExternalAsync(handler, sectionPath) {
           ${
           isMainThreadLayer
             ? `
+          // TODO: Use configured layer suffix instead of hard-coded __main-thread for CSS section lookup.
           const styleSheet = __LoadStyleSheet(sectionPath.replace('__main-thread', '') + ':CSS', response.url);
           if (styleSheet !== null) {
             __AdoptStyleSheet(styleSheet);
@@ -353,6 +354,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
       ${
           isMainThreadLayer
             ? `
+      // TODO: Use configured layer suffix instead of hard-coded __main-thread for CSS section lookup.
       const styleSheet = __LoadStyleSheet(sectionPath.replace('__main-thread', '') + ':CSS', response.url);
       if (styleSheet !== null) {
         __AdoptStyleSheet(styleSheet);
