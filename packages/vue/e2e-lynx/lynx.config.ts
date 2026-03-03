@@ -12,6 +12,7 @@ export default defineConfig({
       'h-counter': './src/h-counter.ts',
       todomvc: './src/todomvc/index.ts',
       'mts-demo': './src/mts-demo/index.ts',
+      'mts-draggable': './src/mts-draggable/index.ts',
     },
   },
   plugins: [

@@ -21,6 +21,7 @@ const PLUGIN_TEMPLATE = 'lynx:vue-template';
 const PLUGIN_RUNTIME_WRAPPER = 'lynx:vue-runtime-wrapper';
 const PLUGIN_ENCODE = 'lynx:vue-encode';
 const PLUGIN_MARK_MAIN_THREAD = 'lynx:vue-mark-main-thread';
+const PLUGIN_WORKLET_RUNTIME = 'lynx:vue-worklet-runtime';
 
 /** Minimal typing for the webpack Compilation object (avoids importing @rspack/core). */
 interface WebpackCompilation {
@@ -110,6 +111,61 @@ class VueMainThreadPlugin {
             }
           },
         );
+      },
+    );
+  }
+}
+
+/**
+ * VueWorkletRuntimePlugin injects the React worklet-runtime as a Lepus chunk
+ * named 'worklet-runtime' so that __LoadLepusChunk('worklet-runtime', ...)
+ * can load it at runtime. Native Lynx requires this chunk to be present for
+ * worklet event dispatch (main-thread:bindtap etc.) to work.
+ */
+class VueWorkletRuntimePlugin {
+  constructor(private readonly workletRuntimePath: string) {}
+
+  apply(compiler: WebpackCompiler): void {
+    compiler.hooks.thisCompilation.tap(
+      PLUGIN_WORKLET_RUNTIME,
+      (compilation) => {
+        // @ts-expect-error Rspack x Webpack compilation type mismatch
+        const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
+          compilation,
+        ) as {
+          beforeEncode: {
+            tap(
+              name: string,
+              fn: (args: Record<string, unknown>) => Record<string, unknown>,
+            ): void;
+          };
+        };
+        const { RawSource } = compiler.webpack.sources;
+        hooks.beforeEncode.tap(PLUGIN_WORKLET_RUNTIME, (args) => {
+          const encodeData = args['encodeData'] as {
+            lepusCode: {
+              root?: { source: { source(): string } };
+              chunks: Array<{
+                name: string;
+                source: unknown;
+                info: Record<string, unknown>;
+              }>;
+            };
+          };
+          const lepusCode = encodeData.lepusCode;
+          // Always include worklet-runtime when we have main-thread code.
+          // (Phase 2 could gate this on registerWorkletInternal presence.)
+          if (lepusCode.root) {
+            lepusCode.chunks.push({
+              name: 'worklet-runtime',
+              source: new RawSource(
+                fs.readFileSync(this.workletRuntimePath, 'utf8'),
+              ),
+              info: { 'lynx:main-thread': true },
+            });
+          }
+          return args;
+        });
       },
     );
   }
@@ -291,6 +347,15 @@ export function applyEntry(
       chain
         .plugin(PLUGIN_MARK_MAIN_THREAD)
         .use(VueMainThreadPlugin, [mainThreadFilenames, flatBundlePath])
+        .end();
+
+      // Resolve worklet-runtime from @lynx-js/react (reuse existing impl)
+      const workletRuntimePath = require.resolve(
+        '@lynx-js/react/worklet-runtime',
+      );
+      chain
+        .plugin(PLUGIN_WORKLET_RUNTIME)
+        .use(VueWorkletRuntimePlugin, [workletRuntimePath])
         .end();
     }
 

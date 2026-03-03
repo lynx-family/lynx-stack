@@ -167,7 +167,7 @@ export function applyOps(ops: unknown[]): void {
         const id = ops[i++] as number;
         const eventType = ops[i++] as string;
         const eventName = ops[i++] as string;
-        const ctx = ops[i++];
+        const ctx = ops[i++] as Record<string, unknown>;
         const el = elements.get(id);
         console.info(
           '[vue-mt] SET_WORKLET_EVENT id=',
@@ -182,6 +182,10 @@ export function applyOps(ops: unknown[]): void {
           el != null,
         );
         if (el) {
+          // Native Lynx requires _workletType on the value to route the event
+          // to runWorklet() instead of publishEvent(). React sets this in
+          // workletEvent.ts:53 — we stamp it here on the MT side.
+          ctx['_workletType'] = 'main-thread';
           __AddEvent(el, eventType, eventName, {
             type: 'worklet',
             value: ctx,
@@ -203,8 +207,9 @@ export function applyOps(ops: unknown[]): void {
           el != null,
         );
         // Store in workletRefMap so worklet-runtime can resolve _wvid → element.
-        // lynxWorkletImpl is provided by @lynx-js/react/worklet-runtime when
-        // loaded on the Main Thread. Phase 1: just log for verification.
+        // The worklet-runtime's updateWorkletRef expects the ref to already exist
+        // in _workletRefMap (populated during React's hydration step). For Vue,
+        // we pre-register the ref before calling updateWorkletRef.
         if (
           el
           && typeof globalThis !== 'undefined'
@@ -214,10 +219,26 @@ export function applyOps(ops: unknown[]): void {
             'lynxWorkletImpl'
           ] as {
             _refImpl?: {
+              _workletRefMap?: Record<
+                number,
+                { current: unknown; _wvid: number }
+              >;
               updateWorkletRef(ref: unknown, el: LynxElement): void;
             };
           };
-          impl._refImpl?.updateWorkletRef(refImpl, el);
+          // Pre-register the ref in the worklet-runtime's ref map so
+          // updateWorkletRef can find it (Vue refs aren't hydrated like React).
+          const ref = refImpl as { _wvid?: number; _initValue?: unknown };
+          if (impl._refImpl && ref._wvid != null) {
+            const refMap = impl._refImpl._workletRefMap;
+            if (refMap && !(ref._wvid in refMap)) {
+              refMap[ref._wvid] = {
+                current: ref._initValue ?? null,
+                _wvid: ref._wvid,
+              };
+            }
+            impl._refImpl.updateWorkletRef(refImpl, el);
+          }
         }
         break;
       }

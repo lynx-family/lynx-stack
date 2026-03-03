@@ -5,11 +5,11 @@
 <!--
   MtsDemo.vue — Phase 1 Main Thread Script demo
 
-  Tests the full ops plumbing for worklet events:
-    BG patchProp → SET_WORKLET_EVENT op → MT applyOps → __AddEvent(worklet)
+  Replicates the React MTS example: tap the box → it rotates 360°
+  (animation runs entirely on the Main Thread, zero thread crossings).
 
-  Since Phase 1 has no SWC transform, the worklet context objects are
-  hand-crafted to simulate what the compiler would produce.
+  Phase 1: worklet context objects are hand-crafted (no SWC transform).
+  The _wkltId values must match registerWorkletInternal calls in entry-main.ts.
 -->
 <script setup lang="ts">
 import { ref } from 'vue'
@@ -17,14 +17,17 @@ import { useMainThreadRef } from '@lynx-js/vue-runtime'
 
 // Hand-crafted worklet context — simulates what the SWC transform would
 // produce from a `<script main-thread>` block.
+// _wkltId MUST match the registerWorkletInternal call in entry-main.ts.
 const onTapCtx = {
   _wkltId: 'mts-demo:onTap',
-  _closure: {},
+  _workletType: 'main-thread',
+  _c: {},
 }
 
 const onScrollCtx = {
   _wkltId: 'mts-demo:onScroll',
-  _closure: {},
+  _workletType: 'main-thread',
+  _c: {},
 }
 
 // MainThreadRef for element reference
@@ -39,53 +42,45 @@ function onBgTap() {
 </script>
 
 <template>
-  <view :style="{ display: 'flex', flexDirection: 'column', padding: 16 }">
-    <text :style="{ fontSize: 18, color: '#333', marginBottom: 12 }">
-      MTS Demo (Phase 1)
+  <view :style="{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 20 }">
+    <text :style="{ fontSize: 20, color: '#333', marginBottom: 16 }">
+      Vue × Lynx MTS Demo
+    </text>
+    <text :style="{ fontSize: 12, color: '#999', marginBottom: 20 }">
+      Tap the blue box — animation runs on Main Thread
     </text>
 
-    <!-- Worklet event binding via :main-thread-bindtap -->
+    <!-- Worklet event: tap → rotate 360° on Main Thread (zero thread crossings) -->
     <view
       :main-thread-bindtap="onTapCtx"
       :main-thread-ref="boxRef"
       :style="{
-        padding: 16,
+        width: 120,
+        height: 120,
         backgroundColor: '#0077ff',
-        borderRadius: 8,
-        marginBottom: 8,
+        borderRadius: 16,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
       }"
     >
-      <text :style="{ color: '#fff', fontSize: 14 }">
-        MT Tap (worklet event)
-      </text>
-    </view>
-
-    <!-- Worklet scroll binding -->
-    <view
-      :main-thread-bindscroll="onScrollCtx"
-      :style="{
-        padding: 16,
-        backgroundColor: '#00aa55',
-        borderRadius: 8,
-        marginBottom: 8,
-      }"
-    >
-      <text :style="{ color: '#fff', fontSize: 14 }">
-        MT Scroll (worklet event)
+      <text :style="{ color: '#fff', fontSize: 16, fontWeight: 'bold' }">
+        Tap me
       </text>
     </view>
 
     <!-- Regular BG-thread tap for comparison / regression check -->
     <view
       :style="{
-        padding: 16,
+        padding: '12px 24px',
         backgroundColor: tapCount > 3 ? '#ff4400' : '#666',
         borderRadius: 8,
       }"
       @tap="onBgTap"
     >
       <text :style="{ color: '#fff', fontSize: 14 }">
-        BG Tap: {{ tapCount }}
+        BG Tap count: {{ tapCount }}
       </text>
     </view>
   </view>
