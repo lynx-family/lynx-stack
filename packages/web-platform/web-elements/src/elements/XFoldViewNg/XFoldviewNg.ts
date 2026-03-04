@@ -6,57 +6,111 @@
 import { Component } from '../../element-reactive/index.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { XFoldviewNgEvents } from './XFoldviewNgEvents.js';
+import { XFoldviewNgTouchEventsHandler } from './XFoldviewNgTouchEventsHandler.js';
 import { scrollContainerDom } from '../common/constants.js';
-import type { XFoldviewSlotNg } from './XFoldviewSlotNg.js';
 import { LinearContainer } from '../../compat/index.js';
 
-export const scrollableLength = Symbol('scrollableLength');
 export const isHeaderShowing = Symbol('isHeaderShowing');
-export const resizeObserver = Symbol('resizeObserver');
-export const slotKid = Symbol('slotKid');
+export const updateHeaderHeight = Symbol('updateHeaderHeight');
+export const updateToolbarHeight = Symbol('updateToolbarHeight');
+export const scrollCallbacks = Symbol('scrollCallbacks');
 
 @Component<typeof XFoldviewNg>('x-foldview-ng', [
   LinearContainer,
   CommonEventsAndMethods,
   XFoldviewNgEvents,
+  XFoldviewNgTouchEventsHandler,
 ])
 export class XFoldviewNg extends HTMLElement {
   static readonly notToFilterFalseAttributes = new Set(['scroll-enable']);
-  [slotKid]?: XFoldviewSlotNg;
-  [resizeObserver]?: ResizeObserver = new ResizeObserver((resizeEntries) => {
-    for (const resize of resizeEntries) {
-      if (resize.target.tagName === 'X-FOLDVIEW-HEADER-NG') {
-        this.#headerHeight = resize.contentRect.height;
-      } else if (resize.target.tagName === 'X-FOLDVIEW-TOOLBAR-NG') {
-        this.#toolbarHeight = resize.contentRect.height;
-      }
-    }
-    if (this[slotKid]) {
-      this[slotKid].style.top = `${this.#headerHeight - this.#toolbarHeight}px`;
-    }
-  });
   #headerHeight: number = 0;
   #toolbarHeight: number = 0;
+  [scrollCallbacks]: Set<() => void> = new Set();
 
-  get [scrollableLength](): number {
+  [updateHeaderHeight](height: number) {
+    this.#headerHeight = height;
+    this.style.setProperty(
+      '--foldview-scroll-height',
+      this.scrollHeight + 'px',
+    );
+  }
+
+  [updateToolbarHeight](height: number) {
+    this.#toolbarHeight = height;
+    this.style.setProperty(
+      '--foldview-scroll-height',
+      this.scrollHeight + 'px',
+    );
+  }
+
+  override get scrollHeight(): number {
     return this.#headerHeight - this.#toolbarHeight;
   }
   get [isHeaderShowing](): boolean {
     // This behavior cannot be reproduced in the current test, but can be reproduced in Android WebView
-    return this[scrollableLength] - this.scrollTop >= 1;
+    return this.scrollHeight - this.scrollTop >= 1;
   }
 
+  get scrollableLength(): number {
+    return this.scrollHeight;
+  }
+
+  #scrollTop: number = 0;
+
   override get scrollTop() {
-    return super.scrollTop;
+    return this.#scrollTop;
   }
 
   override set scrollTop(value: number) {
-    if (value > this[scrollableLength]) {
-      value = this[scrollableLength];
+    if (value > this.scrollHeight) {
+      value = this.scrollHeight;
     } else if (value < 0) {
       value = 0;
     }
-    super.scrollTop = value;
+    if (this.#scrollTop === value) {
+      return;
+    }
+    this.#scrollTop = value;
+    this.style.setProperty(
+      '--foldview-scroll-top',
+      (0 - value).toString() + 'px',
+    );
+    this.dispatchEvent(new Event('scroll'));
+    for (const callback of this[scrollCallbacks]) {
+      callback();
+    }
+  }
+
+  override scrollTo(options?: ScrollToOptions): void;
+  override scrollTo(x: number, y: number): void;
+  override scrollTo(arg1?: any, arg2?: any): void {
+    if (typeof arg1 === 'object') {
+      const { top, behavior } = arg1;
+      if (typeof top === 'number') {
+        if (behavior === 'smooth') {
+          // TODO: implement smooth scroll if needed, for now just instant
+          this.scrollTop = top;
+        } else {
+          this.scrollTop = top;
+        }
+      }
+    } else if (typeof arg2 === 'number') {
+      this.scrollTop = arg2;
+    }
+  }
+
+  override scrollBy(options?: ScrollToOptions): void;
+  override scrollBy(x: number, y: number): void;
+  override scrollBy(arg1?: any, arg2?: any): void {
+    if (typeof arg1 === 'object') {
+      const { top, behavior } = arg1;
+      this.scrollTo({
+        top: (typeof top === 'number' ? top : 0) + this.scrollTop,
+        behavior,
+      });
+    } else {
+      this.scrollTo(0, this.scrollTop + (arg2 || 0));
+    }
   }
 
   setFoldExpanded(params: { offset: string; smooth: boolean }) {
@@ -70,10 +124,5 @@ export class XFoldviewNg extends HTMLElement {
 
   get [scrollContainerDom]() {
     return this;
-  }
-
-  disconnectedCallback() {
-    this[resizeObserver]?.disconnect();
-    this[resizeObserver] = undefined;
   }
 }

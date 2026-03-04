@@ -23,33 +23,33 @@ test.describe('x-foldview-ng wheel', () => {
   }) => {
     test.skip(browserName === 'webkit', 'mouse wheel unsupported on webkit');
     await goto(page, title);
-    const foldview = page.locator('#foldview');
+    await wait(200);
     const scrollview = page.locator('#inner-scroll');
-    await page.locator('#inner-scroll').hover();
-
-    await foldview.evaluate((dom: HTMLElement) => {
-      dom.scrollTop = 0;
-    });
-    await scrollview.evaluate((dom: HTMLElement) => {
-      dom.scrollTop = 0;
+    await page.locator('#inner-scroll').hover({
+      force: true,
+      position: { x: 50, y: 50 },
     });
 
-    const foldviewInitial = await foldview.evaluate((dom: HTMLElement) =>
-      dom.scrollTop
+    const foldviewInitial = await page.evaluate(() =>
+      (document.querySelector('#foldview') as HTMLElement).scrollTop
     );
-    const scrollViewInitial = await scrollview.evaluate((dom: HTMLElement) =>
-      dom.scrollTop
+    const scrollViewInitial = await page.evaluate(() =>
+      (document.querySelector('#inner-scroll') as HTMLElement).scrollTop
     );
 
     await page.mouse.wheel(0, 120);
     await wait(200);
 
     expect(
-      await foldview.evaluate((dom: HTMLElement) => dom.scrollTop),
+      await page.evaluate(() =>
+        (document.querySelector('#foldview') as HTMLElement).scrollTop
+      ),
       'wheel-outer-scrolls-first',
     ).toBeGreaterThan(foldviewInitial);
     expect(
-      await scrollview.evaluate((dom: HTMLElement) => dom.scrollTop),
+      await page.evaluate(() =>
+        (document.querySelector('#inner-scroll') as HTMLElement).scrollTop
+      ),
       'wheel-inner-not-scrolled-before-header',
     ).toBe(scrollViewInitial);
   });
@@ -59,34 +59,38 @@ test.describe('x-foldview-ng wheel', () => {
   }) => {
     test.skip(browserName === 'webkit', 'mouse wheel unsupported on webkit');
     await goto(page, title);
-    const foldview = page.locator('#foldview');
+    await wait(200);
     const scrollview = page.locator('#inner-scroll');
-    await page.locator('#inner-scroll').hover();
-
-    await foldview.evaluate((dom: HTMLElement) => {
-      dom.scrollTop = 0;
-    });
-    await scrollview.evaluate((dom: HTMLElement) => {
-      dom.scrollTop = 0;
+    await page.locator('#inner-scroll').hover({
+      force: true,
+      position: { x: 50, y: 50 },
     });
 
-    await foldview.evaluate((dom: HTMLElement) => {
-      dom.scrollTop = dom.scrollHeight;
+    await page.evaluate(() => {
+      const foldview = document.querySelector('#foldview') as HTMLElement;
+      const scrollview = document.querySelector('#inner-scroll') as HTMLElement;
+      foldview.scrollTop = 0;
+      scrollview.scrollTop = 0;
+      foldview.scrollTop = foldview.scrollHeight;
     });
     await wait(100);
 
-    const foldviewBeforeInner = await foldview.evaluate((dom: HTMLElement) =>
-      dom.scrollTop
+    const foldviewBeforeInner = await page.evaluate(() =>
+      (document.querySelector('#foldview') as HTMLElement).scrollTop
     );
     await page.mouse.wheel(0, 200);
     await wait(200);
 
     expect(
-      await scrollview.evaluate((dom: HTMLElement) => dom.scrollTop),
+      await page.evaluate(() =>
+        (document.querySelector('#inner-scroll') as HTMLElement).scrollTop
+      ),
       'wheel-continues-to-inner-scroll',
     ).toBeGreaterThan(0);
     expect(
-      await foldview.evaluate((dom: HTMLElement) => dom.scrollTop),
+      await page.evaluate(() =>
+        (document.querySelector('#foldview') as HTMLElement).scrollTop
+      ),
       'wheel-outer-stays-at-end',
     ).toBeGreaterThanOrEqual(foldviewBeforeInner);
   });

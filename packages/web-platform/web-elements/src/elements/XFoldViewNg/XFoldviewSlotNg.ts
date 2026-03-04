@@ -5,8 +5,6 @@
 */
 import { Component } from '../../element-reactive/index.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
-import { XFoldviewSlotNgTouchEventsHandler } from './XFoldviewSlotNgTouchEventsHandler.js';
-import { slotKid, type XFoldviewNg } from './XFoldviewNg.js';
 import { LinearContainer } from '../../compat/index.js';
 
 @Component<typeof XFoldviewSlotNg>(
@@ -14,13 +12,7 @@ import { LinearContainer } from '../../compat/index.js';
   [
     LinearContainer,
     CommonEventsAndMethods,
-    XFoldviewSlotNgTouchEventsHandler,
   ],
 )
 export class XFoldviewSlotNg extends HTMLElement {
-  connectedCallback() {
-    if (this.matches('x-foldview-ng>x-foldview-slot-ng:first-of-type')) {
-      (this.parentElement as XFoldviewNg | null)![slotKid] = this;
-    }
-  }
 }
