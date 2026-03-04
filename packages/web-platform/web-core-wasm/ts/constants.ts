@@ -82,6 +82,23 @@ export const TemplateSectionLabel = /*#__PURE__*/ {
   CustomSections: 4,
   ElementTemplates: 5,
   Configurations: 6,
+/**
+ * Section labels used in the binary Lynx Bundle encoding format.
+ *
+ * @remarks
+ * `BackgroundThreadScript` corresponds to "Manifest" in legacy code.
+ * `MainThreadScript` corresponds to "LepusCode" in legacy code.
+ * Wire values are unchanged.
+ */
+export const BundleSectionLabel = /*#__PURE__*/ {
+  /** Background Thread Script (BTS). Legacy name: "Manifest". */
+  BackgroundThreadScript: 1,
+  StyleInfo: 2,
+  /** Main Thread Script (MTS). Legacy name: "LepusCode". */
+  MainThreadScript: 3,
+  CustomSections: 4,
+  ElementTemplates: 5,
+  Configurations: 6,
 } as const;
 
 /**
