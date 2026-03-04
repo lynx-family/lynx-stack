@@ -167,6 +167,37 @@ describe('should build external bundle', () => {
     )
     expect(decodedResult['engine-version']).toBe('3.5')
   })
+
+  it('should build css into external bundle', async () => {
+    const fixtureDir = path.join(__dirname, './fixtures/css-lib')
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          index: path.join(fixtureDir, 'index.ts'),
+        },
+      },
+      id: 'css-bundle',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist'),
+        },
+      },
+      plugins: [pluginReactLynx()],
+    })
+
+    await build(rslibConfig)
+
+    const decodedResult = await decodeTemplate(
+      path.join(fixtureDir, 'dist', 'css-bundle.lynx.bundle'),
+    )
+
+    // Check custom-sections for CSS keys
+    expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
+      'index',
+      'index:CSS',
+      'index__main-thread',
+    ])
+  })
 })
 
 describe('debug mode artifacts', () => {
