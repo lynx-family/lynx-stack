@@ -26,6 +26,7 @@ export function useConsole(sessionId: string) {
     }
     const buffer: ConsoleEntry[] = [];
     let scheduled = false;
+    let rafId: number | undefined;
 
     channel.onmessage = (event: MessageEvent<ConsoleMessage>) => {
       const msg = event.data;
@@ -38,14 +39,19 @@ export function useConsole(sessionId: string) {
       });
       if (!scheduled) {
         scheduled = true;
-        requestAnimationFrame(() => {
+        rafId = requestAnimationFrame(() => {
           setEntries(prev => [...prev, ...buffer.splice(0)]);
           scheduled = false;
         });
       }
     };
 
-    return () => channel.close();
+    return () => {
+      if (rafId !== undefined) {
+        cancelAnimationFrame(rafId);
+      }
+      channel.close();
+    };
   }, [sessionId]);
 
   const clear = useCallback(() => {

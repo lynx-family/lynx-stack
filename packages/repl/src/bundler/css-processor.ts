@@ -78,13 +78,15 @@ function transformDeclaration(node: csstree.Declaration): CSSDeclaration {
         const firstOperator = varFunctionValues[1]?.type === 'Operator'
           ? varFunctionValues[1].value
           : undefined;
-        const varDefaultValueNode = varFunctionValues[2];
+        const varDefaultValueNodes = varFunctionValues.slice(2);
 
         if (!varName || (firstOperator && firstOperator !== ',')) {
           throw new Error(`illegal css value ${csstree.generate(n)}`);
         }
-        if (varDefaultValueNode) {
-          const currentDefaultValueText = csstree.generate(varDefaultValueNode);
+        if (varDefaultValueNodes.length > 0) {
+          const currentDefaultValueText = varDefaultValueNodes
+            .map(node => csstree.generate(node))
+            .join('');
           defaultValueMap[varName] = currentDefaultValueText;
           item.data = {
             ...n,

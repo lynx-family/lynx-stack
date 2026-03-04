@@ -16,7 +16,7 @@ type InitialState =
   | null;
 
 /**
- * Base64-encode a CodeState object (UTF-8 safe).
+ * Base64-encode a CodeState object (UTF-8 safe via TextEncoder).
  */
 export function encodeCode(code: CodeState): string {
   const json = JSON.stringify({
@@ -24,7 +24,12 @@ export function encodeCode(code: CodeState): string {
     background: code.background,
     css: code.css,
   });
-  return btoa(unescape(encodeURIComponent(json)));
+  const bytes = new TextEncoder().encode(json);
+  let binary = '';
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary);
 }
 
 /**
@@ -32,13 +37,17 @@ export function encodeCode(code: CodeState): string {
  */
 function decodeCode(encoded: string): CodeState | null {
   try {
-    const json = decodeURIComponent(escape(atob(encoded)));
-    const parsed = JSON.parse(json) as CodeState;
+    const binary = atob(encoded);
+    const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+    const json = new TextDecoder().decode(bytes);
+    const parsed = JSON.parse(json) as Partial<CodeState>;
     if (typeof parsed.mainThread === 'string') {
       return {
         mainThread: parsed.mainThread,
-        background: parsed.background ?? '',
-        css: parsed.css ?? '',
+        background: typeof parsed.background === 'string'
+          ? parsed.background
+          : '',
+        css: typeof parsed.css === 'string' ? parsed.css : '',
       };
     }
   } catch {
@@ -48,11 +57,11 @@ function decodeCode(encoded: string): CodeState | null {
 }
 
 /**
- * Read the initial state from the URL.
- * Priority: ?c= (custom code) > ?s= (sample index) > null (fallback).
+ * Read the initial state from the URL hash.
+ * Priority: #c= (custom code) > #s= (sample index) > null (fallback).
  */
 export function getInitialState(): InitialState {
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.location.hash.slice(1));
 
   const encodedCode = params.get('c');
   if (encodedCode) {
@@ -72,22 +81,26 @@ export function getInitialState(): InitialState {
 }
 
 /**
- * Update the URL with encoded custom code (replaceState to avoid history spam).
+ * Update the URL hash with encoded custom code (replaceState to avoid history spam).
  */
 export function saveToUrl(code: CodeState): void {
   const encoded = encodeCode(code);
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  params.delete('s');
+  params.set('c', encoded);
   const url = new URL(window.location.href);
-  url.searchParams.delete('s');
-  url.searchParams.set('c', encoded);
+  url.hash = params.toString();
   window.history.replaceState({}, '', url);
 }
 
 /**
- * Update the URL with a sample index.
+ * Update the URL hash with a sample index.
  */
 export function saveSampleToUrl(sampleIndex: number): void {
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  params.delete('c');
+  params.set('s', String(sampleIndex));
   const url = new URL(window.location.href);
-  url.searchParams.delete('c');
-  url.searchParams.set('s', String(sampleIndex));
+  url.hash = params.toString();
   window.history.replaceState({}, '', url);
 }

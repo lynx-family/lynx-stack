@@ -1,8 +1,12 @@
-/* eslint-disable headers/header-format, sort-imports, import/order, n/file-extension-in-import, @typescript-eslint/no-unnecessary-type-assertion */
-import { useRef, useEffect, useState } from 'react';
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
 import { Trash2 } from 'lucide-react';
-import { Button } from './ui/button';
+import { useEffect, useRef, useState } from 'react';
+
 import type { ConsoleEntry, ConsoleSource } from '../console/types.js';
+import { Button } from './ui/button.js';
 
 type FilterTab = 'all' | ConsoleSource;
 
@@ -135,7 +139,7 @@ function ConsoleEntryRow({ entry }: { entry: ConsoleEntry }) {
     },
   };
 
-  const style = levelStyles[entry.level] || levelStyles.log!;
+  const style = levelStyles[entry.level] ?? levelStyles.log;
   const sourceLabel = entry.source === 'main-thread' ? 'MT' : 'BG';
 
   return (

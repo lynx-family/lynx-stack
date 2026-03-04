@@ -16,7 +16,7 @@ An alternative approach would be to run a local (or remote) Node.js server that 
 
 A standard Lynx project goes through 8 steps from source to bundle:
 
-```
+```text
 Step  What happens                        Tool / Plugin
 ────  ──────────────────────────────────   ─────────────────────────────
  1.   Source Transform (JSX/TS → JS)       rspack loader (SWC)
@@ -31,7 +31,7 @@ Step  What happens                        Tool / Plugin
 
 This REPL **enters at step 6** and takes a shortcut:
 
-```
+```text
  rspeedy dev (full pipeline):
    [1] → [2] → [3] → [4] → [5] → [6] → [7] → [8] → lynx-view (via URL fetch)
 

@@ -41,7 +41,10 @@ jobs:
         env:
           ASSET_PREFIX: ${{ steps.pages.outputs.base_path }}/repl/
       - name: Copy REPL into website output
-        run: cp -r packages/repl/dist website/doc_build/repl
+        run: |
+          rm -rf website/doc_build/repl
+          mkdir -p website/doc_build
+          cp -r packages/repl/dist website/doc_build/repl
       - name: Upload artifact
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
