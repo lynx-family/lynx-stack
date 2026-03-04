@@ -59,6 +59,7 @@ export const defaultExternalBundleLibConfig: LibConfig = {
         },
       },
     },
+    target: 'web',
   },
   source: {
     include: [/node_modules/],
