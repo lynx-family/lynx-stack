@@ -315,6 +315,12 @@ export const initElementTree = () => {
       };
     }
 
+    __RemoveGestureDetector(e: LynxElement, id: number) {
+      if (e.gesture?.['id'] === id) {
+        delete e.gesture;
+      }
+    }
+
     __GetDataset(e: LynxElement) {
       return e.dataset;
     }

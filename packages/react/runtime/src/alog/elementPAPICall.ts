@@ -42,6 +42,7 @@ const fiberElementPAPINameList = [
   '__OnLifecycleEvent',
   '__QueryComponent',
   '__SetGestureDetector',
+  '__RemoveGestureDetector',
 ];
 
 export function initElementPAPICallAlog(globalWithIndex: Record<string, unknown> = globalThis): void {

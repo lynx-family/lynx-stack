@@ -10,6 +10,88 @@ function isSerializedGesture(gesture: GestureKind): boolean {
   return gesture.__isSerialized ?? false;
 }
 
+function getSerializedBaseGesture(gesture: GestureKind | undefined): BaseGesture | undefined {
+  if (!gesture || !isSerializedGesture(gesture)) {
+    return undefined;
+  }
+
+  if (gesture.type !== GestureTypeInner.COMPOSED) {
+    return gesture as BaseGesture;
+  }
+
+  return undefined;
+}
+
+function appendUniqueSerializedBaseGestures(
+  gesture: GestureKind | undefined,
+  out: BaseGesture[],
+  seenIds: Set<number>,
+): void {
+  if (!gesture || !isSerializedGesture(gesture)) {
+    return;
+  }
+
+  if (gesture.type === GestureTypeInner.COMPOSED) {
+    for (const subGesture of (gesture as ComposedGesture).gestures) {
+      appendUniqueSerializedBaseGestures(subGesture, out, seenIds);
+    }
+    return;
+  }
+
+  const baseGesture = gesture as BaseGesture;
+  if (seenIds.has(baseGesture.id)) {
+    return;
+  }
+  seenIds.add(baseGesture.id);
+  out.push(baseGesture);
+}
+
+function collectOldGestureInfo(
+  oldGesture: GestureKind | undefined,
+): {
+  uniqOldBaseGestures: BaseGesture[];
+  oldBaseGesturesById: Map<number, BaseGesture>;
+} {
+  const uniqOldBaseGestures: BaseGesture[] = [];
+  const oldBaseGesturesById = new Map<number, BaseGesture>();
+  appendOldGestureInfo(oldGesture, uniqOldBaseGestures, oldBaseGesturesById);
+
+  return {
+    uniqOldBaseGestures,
+    oldBaseGesturesById,
+  };
+}
+
+function appendOldGestureInfo(
+  gesture: GestureKind | undefined,
+  out: BaseGesture[],
+  byId: Map<number, BaseGesture>,
+): void {
+  if (!gesture || !isSerializedGesture(gesture)) {
+    return;
+  }
+
+  if (gesture.type === GestureTypeInner.COMPOSED) {
+    for (const subGesture of (gesture as ComposedGesture).gestures) {
+      appendOldGestureInfo(subGesture, out, byId);
+    }
+    return;
+  }
+
+  const oldBaseGesture = gesture as BaseGesture;
+  if (!byId.has(oldBaseGesture.id)) {
+    byId.set(oldBaseGesture.id, oldBaseGesture);
+    out.push(oldBaseGesture);
+  }
+}
+
+function removeGestureDetector(dom: FiberElement, id: number): void {
+  // Keep compatibility with old runtimes where remove API is not exposed.
+  if (typeof __RemoveGestureDetector === 'function') {
+    __RemoveGestureDetector(dom, id);
+  }
+}
+
 function getGestureInfo(
   gesture: BaseGesture,
   oldGesture: BaseGesture | undefined,
@@ -58,24 +140,61 @@ export function processGesture(
     domSet: boolean;
   },
 ): void {
-  if (!gesture || !isSerializedGesture(gesture)) {
+  const domSet = gestureOptions?.domSet === true;
+  const { uniqOldBaseGestures, oldBaseGesturesById } = collectOldGestureInfo(oldGesture);
+
+  // Fast path for the most common case: single base gesture update.
+  const singleBaseGesture = getSerializedBaseGesture(gesture);
+  const singleOldBaseGesture = getSerializedBaseGesture(oldGesture);
+  if (singleBaseGesture && (!oldGesture || singleOldBaseGesture)) {
+    if (!domSet) {
+      __SetAttribute(dom, 'has-react-gesture', true);
+      __SetAttribute(dom, 'flatten', false);
+    }
+
+    if (singleOldBaseGesture) {
+      // On update, remove old detector first to avoid stale callbacks.
+      removeGestureDetector(dom, singleOldBaseGesture.id);
+    }
+
+    const { config, relationMap } = getGestureInfo(singleBaseGesture, singleOldBaseGesture, isFirstScreen, dom);
+    __SetGestureDetector(
+      dom,
+      singleBaseGesture.id,
+      singleBaseGesture.type,
+      config,
+      relationMap,
+    );
     return;
   }
 
-  if (!(gestureOptions && gestureOptions.domSet)) {
+  const uniqBaseGestures: BaseGesture[] = [];
+  appendUniqueSerializedBaseGestures(gesture, uniqBaseGestures, new Set<number>());
+
+  if (uniqBaseGestures.length === 0) {
+    for (const oldBaseGesture of oldBaseGesturesById.values()) {
+      removeGestureDetector(dom, oldBaseGesture.id);
+    }
+
+    if (!domSet) {
+      __SetAttribute(dom, 'has-react-gesture', null);
+    }
+    return;
+  }
+
+  if (!domSet) {
     __SetAttribute(dom, 'has-react-gesture', true);
     __SetAttribute(dom, 'flatten', false);
   }
 
-  if (gesture.type === GestureTypeInner.COMPOSED) {
-    for (const [index, subGesture] of (gesture as ComposedGesture).gestures.entries()) {
-      processGesture(dom, subGesture, (oldGesture as ComposedGesture)?.gestures[index], isFirstScreen, {
-        domSet: true,
-      });
-    }
-  } else {
-    const baseGesture = gesture as BaseGesture;
-    const oldBaseGesture = oldGesture as BaseGesture | undefined;
+  // On update, remove old detectors first to avoid stale callbacks.
+  for (const oldBaseGesture of oldBaseGesturesById.values()) {
+    removeGestureDetector(dom, oldBaseGesture.id);
+  }
+
+  for (const [index, baseGesture] of uniqBaseGestures.entries()) {
+    const oldBaseGesture = oldBaseGesturesById.get(baseGesture.id)
+      ?? uniqOldBaseGestures[index];
 
     const { config, relationMap } = getGestureInfo(baseGesture, oldBaseGesture, isFirstScreen, dom);
     __SetGestureDetector(
