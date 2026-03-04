@@ -24,12 +24,14 @@ export function loadFromLocalStorage(): CodeState | null {
     // eslint-disable-next-line n/no-unsupported-features/node-builtins -- localStorage is a browser API, not Node.js
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as CodeState;
+    const parsed = JSON.parse(raw) as Partial<CodeState>;
     if (typeof parsed.mainThread === 'string') {
       return {
         mainThread: parsed.mainThread,
-        background: parsed.background ?? '',
-        css: parsed.css ?? '',
+        background: typeof parsed.background === 'string'
+          ? parsed.background
+          : '',
+        css: typeof parsed.css === 'string' ? parsed.css : '',
       };
     }
   } catch {
