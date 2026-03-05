@@ -35,4 +35,14 @@ function __injectGlobals(target) {
 
   target.lynxCoreInject = {};
   target.lynxCoreInject.tt = {};
+
+  target.__LoadStyleSheet = () => {
+    return {};
+  };
+  target.__AdoptStyleSheet = () => {
+    //
+  };
+  target.__FlushElementTree = () => {
+    //
+  };
 }
