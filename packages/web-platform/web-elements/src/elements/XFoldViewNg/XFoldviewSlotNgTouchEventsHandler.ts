@@ -98,6 +98,7 @@ export class XFoldviewSlotNgTouchEventsHandler
       element,
     ): element is Element =>
       element instanceof Element && this.#dom.contains(element)
+      && element !== this.#dom
     );
     const { clientX, clientY } = event;
     const pointElements = document.elementsFromPoint(clientX, clientY).filter(
@@ -126,7 +127,7 @@ export class XFoldviewSlotNgTouchEventsHandler
   #touchStart = (event: TouchEvent) => {
     const { pageX, pageY } = event.touches.item(0)!;
     this.#elements = document.elementsFromPoint(pageX, pageY).filter(e =>
-      this.#dom.contains(e)
+      this.#dom.contains(e) && e !== this.#dom
     );
     this.#previousPageY = pageY;
     this.#previousPageX = pageX;
