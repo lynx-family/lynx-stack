@@ -62,11 +62,8 @@ export class XFoldviewNg extends HTMLElement {
   }
 
   override set scrollTop(value: number) {
-    if (value > this.scrollHeight) {
-      value = this.scrollHeight;
-    } else if (value < 0) {
-      value = 0;
-    }
+    const maxScroll = Math.max(this.scrollHeight, 0);
+    value = Math.max(0, Math.min(value, maxScroll));
     if (this.#scrollTop === value) {
       return;
     }

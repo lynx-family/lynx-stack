@@ -10,8 +10,8 @@ export class XFoldviewNgTouchEventsHandler
 {
   #childrenElemsntsScrollTop: WeakMap<Element, number> = new WeakMap();
   #elements?: Element[];
-  #previousPageY: number = 0;
-  #previousPageX: number = 0;
+  #previousClientY: number = 0;
+  #previousClientX: number = 0;
   #scrollingVertically: boolean | null = null;
   #currentScrollingElement?: Element;
   #deltaY: number = 0;
@@ -86,9 +86,9 @@ export class XFoldviewNgTouchEventsHandler
 
     const touch = event.touches.item(0)!;
     const { clientX, clientY } = touch;
-    const deltaY = this.#previousPageY! - clientY;
+    const deltaY = this.#previousClientY! - clientY;
     if (this.#scrollingVertically === null) {
-      const deltaX = this.#previousPageX! - clientX;
+      const deltaX = this.#previousClientX! - clientX;
       this.#scrollingVertically = Math.abs(deltaY) > Math.abs(deltaX);
     }
     if (this.#scrollingVertically === false) {
@@ -98,7 +98,7 @@ export class XFoldviewNgTouchEventsHandler
       event.preventDefault();
     }
     this.#handleScrollDelta(deltaY);
-    this.#previousPageY = clientY;
+    this.#previousClientY = clientY;
   };
 
   #handleWheel = (event: WheelEvent) => {
@@ -133,7 +133,7 @@ export class XFoldviewNgTouchEventsHandler
   // Removed #getParentElement
 
   #touchStart = (event: TouchEvent) => {
-    const { pageX, pageY } = event.touches.item(0)!;
+    const { clientX, clientY } = event.touches.item(0)!;
     // For nested foldviews, we only handle if this foldview is the closest one
     const pathElements = event.composedPath();
     const closestFoldview = pathElements.find(el =>
@@ -144,11 +144,11 @@ export class XFoldviewNgTouchEventsHandler
       return;
     }
 
-    this.#elements = document.elementsFromPoint(pageX, pageY).filter(e =>
+    this.#elements = document.elementsFromPoint(clientX, clientY).filter(e =>
       this.#dom.contains(e) && this.#dom !== e
     );
-    this.#previousPageY = pageY;
-    this.#previousPageX = pageX;
+    this.#previousClientY = clientY;
+    this.#previousClientX = clientX;
     for (const element of this.#elements) {
       this.#childrenElemsntsScrollTop.set(element, element.scrollTop);
     }
