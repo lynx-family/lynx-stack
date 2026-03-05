@@ -1400,6 +1400,37 @@ test.describe('web-elements test suite', () => {
     );
 
     test(
+      'x-viewpager-ng/event-willchange',
+      async ({ page, browserName, context }, {
+        title,
+      }) => {
+        test.skip(browserName !== 'chromium', 'cannot swipe');
+        await gotoWebComponentPage(page, title);
+        const willchangeEventValue = await page
+          .locator('#target')
+          .evaluateHandle((target) => {
+            let detail = { index: -1 };
+            target.addEventListener('willchange', (e) => {
+              detail.index = (e as any).detail.index;
+            });
+            return detail;
+          });
+        const cdpSession = await context.newCDPSession(page);
+        let touchRelease = await dragAndHold(cdpSession, {
+          x: 190,
+          y: 100,
+          xDistance: -150,
+          yDistance: 0,
+        });
+        await wait(500);
+        await touchRelease();
+        await wait(1000);
+        const index = (await willchangeEventValue.jsonValue()).index;
+        expect(index).toBe(1);
+      },
+    );
+
+    test(
       'x-viewpager-ng/selecttab-method-not-smooth',
       async ({ page, browserName, context }, {
         title,
