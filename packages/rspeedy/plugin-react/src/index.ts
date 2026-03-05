@@ -24,13 +24,18 @@ export type {
   ShakeVisitorConfig,
 } from '@lynx-js/react-transform'
 
+/**
+ * The exposed Lynx Bundle Plugin API.
+ *
+ * @public
+ */
 interface LynxBundlePlugin {
   getLynxTemplatePluginHooks:
     typeof InnerLynxTemplatePlugin.getLynxTemplatePluginHooks
 }
 
 // We only export types here
-// It is encouraged to use `api.useExposed(Symbol.for('LynxTemplatePlugin'))`
+// It is encouraged to use `api.useExposed(Symbol.for('LynxBundlePlugin'))`
 // to access the actual API
 export type { LynxBundlePlugin }
 export type { BundleHooks }

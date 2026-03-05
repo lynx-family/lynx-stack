@@ -28,7 +28,8 @@ import { createLynxAsyncChunksRuntimeModule } from './LynxAsyncChunksRuntimeModu
 /**
  * @deprecated The name `OriginManifest` is a legacy artifact. "Manifest" here
  * refers to Background Thread Script (BTS) chunks in the official Lynx
- * specification.
+ * specification. Use the inline record type directly or see
+ * {@link EncodeOptions.manifest}.
  */
 export type OriginManifest = Record<string, {
   content: string;
@@ -1108,8 +1109,9 @@ export function predicateNonHotModuleReplacementAsset(
 // ---------------------------------------------------------------------------
 
 /**
- * @deprecated Use {@link LynxTemplatePlugin} (class) directly, or the
- * preferred alias {@link LynxBundlePlugin} for new code.
+ * Preferred canonical plugin name aligned with the official Lynx specification.
+ *
+ * @public
  */
 export const LynxBundlePlugin: typeof LynxTemplatePlugin = LynxTemplatePlugin;
 

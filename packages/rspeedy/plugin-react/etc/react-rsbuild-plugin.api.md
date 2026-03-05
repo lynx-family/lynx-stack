@@ -51,9 +51,7 @@ export interface ExtractStrConfig {
 
 export { LAYERS }
 
-// Warning: (ae-missing-release-tag) "LynxBundlePlugin" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
+// @public
 interface LynxBundlePlugin {
     // (undocumented)
     getLynxTemplatePluginHooks: typeof LynxTemplatePlugin_2.getLynxTemplatePluginHooks;

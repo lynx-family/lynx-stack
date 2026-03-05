@@ -9,7 +9,7 @@ import { encodeCSS } from './encodeCSS.js';
 import {
   MagicHeader0,
   MagicHeader1,
-  TemplateSectionLabel,
+  BundleSectionLabel,
 } from '../constants.js';
 
 function encodeAsJSON(map: Record<string, unknown>): Uint8Array {
@@ -111,9 +111,9 @@ export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
     /*section length*/
     + 4 + 4 + encodedConfigurations.length // Configurations
     + 4 + 4 + encodedStyleInfo.length // Style Info
-    + 4 + 4 + encodedLepusCode.length // Lepus Code
+    + 4 + 4 + encodedLepusCode.length // Main Thread Script
     + 4 + 4 + encodedCustomSections.length // Custom Sections
-    + 4 + 4 + encodedManifest.length // Manifest
+    + 4 + 4 + encodedManifest.length // Background Thread Script
   ;
 
   // generate final buffer in order
@@ -130,36 +130,36 @@ export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
   offset += 4;
 
   // Configurations
-  dataView.setUint32(offset, TemplateSectionLabel.Configurations, true); // section label
+  dataView.setUint32(offset, BundleSectionLabel.Configurations, true); // section label
   offset += 4;
   dataView.setUint32(offset, encodedConfigurations.length, true); // section length
   offset += 4;
   buffer.set(encodedConfigurations, offset);
   offset += encodedConfigurations.length;
 
-  // Lepus Code
-  dataView.setUint32(offset, TemplateSectionLabel.LepusCode, true); // section label
+  // Main Thread Script
+  dataView.setUint32(offset, BundleSectionLabel.MainThreadScript, true); // section label
   offset += 4;
   dataView.setUint32(offset, encodedLepusCode.length, true); // section length
   offset += 4;
   buffer.set(encodedLepusCode, offset);
   offset += encodedLepusCode.length;
   // Custom Sections
-  dataView.setUint32(offset, TemplateSectionLabel.CustomSections, true); // section label
+  dataView.setUint32(offset, BundleSectionLabel.CustomSections, true); // section label
   offset += 4;
   dataView.setUint32(offset, encodedCustomSections.length, true); // section length
   offset += 4;
   buffer.set(encodedCustomSections, offset);
   offset += encodedCustomSections.length;
   // Style Info
-  dataView.setUint32(offset, TemplateSectionLabel.StyleInfo, true); // section label
+  dataView.setUint32(offset, BundleSectionLabel.StyleInfo, true); // section label
   offset += 4;
   dataView.setUint32(offset, encodedStyleInfo.length, true); // section length
   offset += 4;
   buffer.set(encodedStyleInfo, offset);
   offset += encodedStyleInfo.length;
-  // Manifest
-  dataView.setUint32(offset, TemplateSectionLabel.Manifest, true); // section label
+  // Background Thread Script
+  dataView.setUint32(offset, BundleSectionLabel.BackgroundThreadScript, true); // section label
   offset += 4;
   dataView.setUint32(offset, encodedManifest.length, true); // section length
   offset += 4;

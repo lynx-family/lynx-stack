@@ -76,9 +76,7 @@ export interface EncodeOptions {
     manifest: Record<string, string | undefined>;
 }
 
-// Warning: (ae-missing-release-tag) "LynxBundlePlugin" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public @deprecated (undocumented)
+// @public
 export const LynxBundlePlugin: typeof LynxTemplatePlugin;
 
 // @public
@@ -168,6 +166,6 @@ export class WebEncodePlugin {
 
 // Warnings were encountered during analysis:
 //
-// lib/LynxTemplatePlugin.d.ts:88:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
+// lib/LynxTemplatePlugin.d.ts:89:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
 
 ```
