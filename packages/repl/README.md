@@ -39,7 +39,7 @@ This REPL **enters at step 6** and takes a shortcut:
                               [3'] → [6'] ─────────→ lynx-view (via callback)
 ```
 
-- **Step 3' (planned):** Parse user CSS in-browser via `@lynx-js/css-serializer` (pure JS, based on `csstree`) and `genStyleInfo` (pure TS) to produce `styleInfo`.
+- **Step 3':** Parse user CSS in-browser via `css-tree` (pure JS) and a simplified `genStyleInfo` (adapted from `@lynx-js/css-serializer`) to produce `styleInfo`.
 - **Step 6':** Directly construct a `LynxTemplate` JS object from the user's code strings and the processed `styleInfo`. No webpack compilation, no asset pipeline.
 - **Delivery:** The template object is handed to `<lynx-view>` via the `customTemplateLoader` callback — no encoding, no file I/O, no URL fetch.
 
@@ -50,7 +50,7 @@ Steps 1, 2, 4, 5 are skipped entirely because the user writes final-form JS (no 
 What this REPL **can** do:
 
 - All Element PAPIs (`__CreateElement`, `__AppendElement`, `__AddInlineStyle`, etc.)
-- CSS class selectors, `@keyframes`, `@font-face`, CSS variables (after L1 is implemented)
+- CSS class selectors, `@keyframes`, `@font-face`, CSS variables
 - Inline styles via `__AddInlineStyle`
 - Real-time preview with Lynx Web runtime (`<lynx-view>`)
 - Dual-thread model: main-thread.js (Lepus) + background.js (Web Worker)
@@ -69,9 +69,9 @@ Users who need any of the above should use `rspeedy dev`.
 
 We target two capability levels, both achievable in pure browser:
 
-| Level            | Capability                          | Browser dependency                         |
-| ---------------- | ----------------------------------- | ------------------------------------------ |
-| **L0** (done)    | Raw Element PAPI with inline styles | None (zero extra KB)                       |
-| **L1** (planned) | + CSS class selectors               | `@lynx-js/css-serializer` (~200KB gzipped) |
+| Level         | Capability                          | Browser dependency          |
+| ------------- | ----------------------------------- | --------------------------- |
+| **L0** (done) | Raw Element PAPI with inline styles | None (zero extra KB)        |
+| **L1** (done) | + CSS class selectors               | `css-tree` (~200KB gzipped) |
 
 Higher levels (JSX, module imports, bundle export) are **not planned** — they would move toward `rspeedy dev` territory without matching its DX.

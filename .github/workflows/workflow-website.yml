@@ -37,9 +37,10 @@ jobs:
         run: |
           pnpm turbo --filter website build:docs
       - name: Build REPL
-        run: pnpm --filter @lynx-js/repl build
-        env:
-          ASSET_PREFIX: ${{ steps.pages.outputs.base_path }}/repl/
+        run: |
+          BASE_PATH='${{ steps.pages.outputs.base_path }}'
+          export ASSET_PREFIX="${BASE_PATH%/}/repl/"
+          pnpm --filter @lynx-js/repl build
       - name: Copy REPL into website output
         run: |
           rm -rf website/doc_build/repl
