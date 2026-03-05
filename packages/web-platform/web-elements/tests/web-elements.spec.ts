@@ -2130,8 +2130,6 @@ test.describe('web-elements test suite', () => {
     test(
       'get-visible-cells',
       async ({ page, browserName }, { titlePath }) => {
-        // contentvisibilityautostatechange not propagate
-        if (browserName === 'webkit' || browserName === 'firefox') test.skip(); // cannot wheel
         const title = getTitle(titlePath);
         await gotoWebComponentPage(page, title);
         await wait(1000);
@@ -2143,7 +2141,7 @@ test.describe('web-elements test suite', () => {
           });
         const data = await cells.jsonValue();
         expect(
-          Array.isArray(data),
+          Array.isArray(data) && data.length > 0,
         ).toBeTruthy();
       },
     );
