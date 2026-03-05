@@ -34,6 +34,7 @@
     "dev": "rslib build --watch"
   },
   "dependencies": {
+    "@lynx-js/react": "workspace:*",
     "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/vue-main-thread": "workspace:*",

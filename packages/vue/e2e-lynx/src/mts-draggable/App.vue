@@ -10,8 +10,7 @@
     - MTDraggable: updated directly on Main Thread via setStyleProperty (smooth)
     - BGDraggable: updated via Background Thread reactive state (laggy)
 
-  Phase 1: worklet context objects are hand-crafted (no SWC transform).
-  The _wkltId values must match registerWorkletInternal calls in entry-main.ts.
+  Phase 2: uses 'main thread' directive with SWC worklet transform.
 -->
 <script setup lang="ts">
 import { ref } from 'vue'
@@ -23,19 +22,23 @@ import BackgroundDraggable from './BackgroundDraggable.vue'
 const DEFAULT_X = 0
 const DEFAULT_Y = 500
 
-// --- Main Thread Scroll Handler (worklet context) ---
-const onMTScrollCtx = {
-  _wkltId: 'mts-draggable:onScroll',
-  _workletType: 'main-thread',
-  _c: {} as Record<string, unknown>,
-}
-
 // MainThreadRef for the MT draggable box
 const mtDraggableRef = useMainThreadRef(null)
 
-// Stamp the ref's _wvid into the worklet context so the MT handler
-// can resolve it via lynxWorkletImpl._refImpl._workletRefMap
-onMTScrollCtx._c = { _mtRef: mtDraggableRef.toJSON() }
+// Main Thread scroll handler — SWC captures mtDraggableRef in _c.
+// On MT, the worklet-runtime hydrates _wvid refs, providing .current
+// that points to the actual PAPI element.
+const onMTScroll = (event: { detail?: { scrollTop?: number } }) => {
+  'main thread'
+  const scrollTop = event.detail?.scrollTop ?? 0
+  const newY = DEFAULT_Y - scrollTop
+
+  // mtDraggableRef is captured from _c — on MT it's hydrated as { current: element }
+  const el = (mtDraggableRef as unknown as { current?: { setStyleProperty?(k: string, v: string): void } }).current
+  if (el?.setStyleProperty) {
+    el.setStyleProperty('transform', `translate(${DEFAULT_X}px, ${newY}px)`)
+  }
+}
 
 // --- Background Thread Scroll Handler ---
 const bgPosX = ref(DEFAULT_X)
@@ -55,7 +58,7 @@ function onBGScroll(event: { detail?: { scrollTop?: number } }) {
       <scroll-view
         :style="{ width: '50%', height: '100%' }"
         scroll-orientation="vertical"
-        :main-thread-bindscroll="onMTScrollCtx"
+        :main-thread-bindscroll="onMTScroll"
         @scroll="onBGScroll"
       >
         <view :style="{ backgroundColor: 'yellow', width: '100%', height: 500 }" />

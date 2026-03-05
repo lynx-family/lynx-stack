@@ -3,13 +3,17 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * MainThreadRef — a cross-thread reference that bridges Background and Main
- * Thread state.
+ * MainThreadRef — a cross-thread value binding, NOT a Vue reactive ref.
  *
- * On the Background Thread, the ref carries a `_wvid` (worklet value id) that
- * the worklet runtime on the Main Thread uses to resolve the actual value
- * (e.g. a PAPI element handle).
+ * On the Background Thread, `.value` returns the initial value (read-only).
+ * On the Main Thread (inside a worklet function), `.value` resolves to the
+ * actual PAPI element or state via the worklet-runtime's ref implementation.
  *
+ * The `_wvid` (worklet value id) bridges the two threads: the Background
+ * Thread serializes it in the ops buffer, and the Main Thread's worklet-runtime
+ * uses it to look up the real element handle in `lynxWorkletImpl._refImpl`.
+ *
+ * The name follows React Lynx convention for worklet-runtime compatibility.
  * Uses `.value` (Vue convention) instead of `.current` (React convention).
  */
 

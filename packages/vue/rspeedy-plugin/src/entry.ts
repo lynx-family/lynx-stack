@@ -16,6 +16,10 @@ import {
 } from '@lynx-js/template-webpack-plugin';
 
 import { LAYERS } from './layers.js';
+import {
+  clearLepusRegistrations,
+  takeAllLepusRegistrations,
+} from './worklet-registry.js';
 
 const PLUGIN_TEMPLATE = 'lynx:vue-template';
 const PLUGIN_RUNTIME_WRAPPER = 'lynx:vue-runtime-wrapper';
@@ -46,7 +50,10 @@ interface WebpackCompilation {
 /** Minimal typing for the webpack Compiler object (avoids importing @rspack/core). */
 interface WebpackCompiler {
   webpack: {
-    Compilation: { PROCESS_ASSETS_STAGE_ADDITIONAL: number };
+    Compilation: {
+      PROCESS_ASSETS_STAGE_ADDITIONAL: number;
+      PROCESS_ASSETS_STAGE_PRE_PROCESS: number;
+    };
     sources: { RawSource: new(source: string) => unknown };
   };
   hooks: {
@@ -88,6 +95,19 @@ class VueMainThreadPlugin {
     compiler.hooks.thisCompilation.tap(
       PLUGIN_MARK_MAIN_THREAD,
       (compilation) => {
+        // Clear stale registrations at the start of each compilation
+        // (watch-mode safety: prevents leftover registrations from prior builds)
+        compilation.hooks.processAssets.tap(
+          {
+            name: `${PLUGIN_MARK_MAIN_THREAD}:clear`,
+            stage:
+              compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_PRE_PROCESS,
+          },
+          () => {
+            clearLepusRegistrations();
+          },
+        );
+
         compilation.hooks.processAssets.tap(
           {
             name: PLUGIN_MARK_MAIN_THREAD,
@@ -95,13 +115,18 @@ class VueMainThreadPlugin {
           },
           () => {
             const flatCode = fs.readFileSync(this.flatBundlePath, 'utf8');
+            // Append LEPUS registrations collected by worklet-loader
+            const registrations = takeAllLepusRegistrations();
+            const fullCode = registrations
+              ? flatCode + '\n' + registrations
+              : flatCode;
             const RawSource = compiler.webpack.sources.RawSource;
             for (const filename of this.mainThreadFilenames) {
               const asset = compilation.getAsset(filename);
               if (asset) {
                 compilation.updateAsset(
                   filename,
-                  new RawSource(flatCode),
+                  new RawSource(fullCode),
                   {
                     ...asset.info,
                     'lynx:main-thread': true,
@@ -129,8 +154,8 @@ class VueWorkletRuntimePlugin {
     compiler.hooks.thisCompilation.tap(
       PLUGIN_WORKLET_RUNTIME,
       (compilation) => {
-        // @ts-expect-error Rspack x Webpack compilation type mismatch
         const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
+          // @ts-expect-error Rspack x Webpack compilation type mismatch
           compilation,
         ) as {
           beforeEncode: {
@@ -217,6 +242,24 @@ export function applyEntry(
       .uses.clear().end()
       .use('ignore-css')
       .loader(path.resolve(_dirname, './loaders/ignore-css-loader'))
+      .end();
+  });
+
+  // Worklet loader: runs SWC transform on BG-layer .js/.ts files to extract
+  // 'main thread' directive functions into worklet context objects (BG) and
+  // registerWorkletInternal calls (MT, collected via worklet-registry).
+  api.modifyBundlerChain((chain, { environment }) => {
+    const isLynx = environment.name === 'lynx'
+      || environment.name.startsWith('lynx-');
+    if (!isLynx) return;
+
+    chain.module
+      .rule('vue:worklet')
+      .issuerLayer(LAYERS.BACKGROUND)
+      .test(/\.(?:[cm]?[jt]sx?|vue)$/)
+      .exclude.add(/node_modules/).end()
+      .use('worklet-loader')
+      .loader(path.resolve(_dirname, './loaders/worklet-loader'))
       .end();
   });
 

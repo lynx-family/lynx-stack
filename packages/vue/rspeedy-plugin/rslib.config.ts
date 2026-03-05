@@ -13,6 +13,7 @@ export default defineConfig({
     entry: {
       index: './src/index.ts',
       'loaders/ignore-css-loader': './src/loaders/ignore-css-loader.ts',
+      'loaders/worklet-loader': './src/loaders/worklet-loader.ts',
     },
     tsconfigPath: './tsconfig.build.json',
   },
@@ -20,6 +21,8 @@ export default defineConfig({
     externals: [
       '@rsbuild/core',
       '@rsbuild/plugin-vue',
+      '@lynx-js/react',
+      '@lynx-js/react/transform',
       '@lynx-js/runtime-wrapper-webpack-plugin',
       '@lynx-js/template-webpack-plugin',
       '@lynx-js/vue-runtime',

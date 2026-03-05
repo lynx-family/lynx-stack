@@ -27,6 +27,16 @@ declare global {
   function __CreateText(parentComponentUniqueId: number): LynxElement;
   function __CreateRawText(s: string): LynxElement;
   function __CreateView(parentComponentUniqueId: number): LynxElement;
+  function __CreateList(
+    parentComponentUniqueId: number,
+    // biome-ignore lint/suspicious/noExplicitAny: PAPI callback signature is opaque
+    componentAtIndex: (...args: any[]) => any,
+    // biome-ignore lint/suspicious/noExplicitAny: PAPI callback signature is opaque
+    enqueueComponent: (...args: any[]) => void,
+    info?: object,
+    // biome-ignore lint/suspicious/noExplicitAny: PAPI callback signature is opaque
+    componentAtIndexes?: (...args: any[]) => void,
+  ): LynxElement;
 
   // -----------------------------------------------------------------------
   // Tree manipulation
@@ -73,9 +83,14 @@ declare global {
   ): void;
 
   // -----------------------------------------------------------------------
+  // Element identity
+  // -----------------------------------------------------------------------
+  function __GetElementUniqueID(e: LynxElement): number;
+
+  // -----------------------------------------------------------------------
   // Flush
   // -----------------------------------------------------------------------
-  function __FlushElementTree(e?: LynxElement): void;
+  function __FlushElementTree(e?: LynxElement, options?: object): void;
 }
 
 export {};

@@ -13,6 +13,17 @@ export default defineConfig({
       todomvc: './src/todomvc/index.ts',
       'mts-demo': './src/mts-demo/index.ts',
       'mts-draggable': './src/mts-draggable/index.ts',
+      // Raw worklet context demos (no SWC transform, require hand-crafted registrations)
+      'mts-demo-raw': './src/mts-demo-raw/index.ts',
+      'mts-draggable-raw': './src/mts-draggable-raw/index.ts',
+      // Gallery tutorial entries (progressive)
+      'gallery-image-card': './src/gallery/ImageCard/index.ts',
+      'gallery-like-card': './src/gallery/LikeCard/index.ts',
+      'gallery-list': './src/gallery/GalleryList/index.ts',
+      'gallery-scrollbar': './src/gallery/GalleryScrollbar/index.ts',
+      'gallery-scrollbar-compare':
+        './src/gallery/GalleryScrollbarCompare/index.ts',
+      'gallery-complete': './src/gallery/GalleryComplete/index.ts',
     },
   },
   plugins: [

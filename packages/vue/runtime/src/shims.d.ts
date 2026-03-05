@@ -8,10 +8,10 @@
 
 declare global {
   /** Build-time macros replaced by DefinePlugin */
-  const __DEV__: boolean
-  const __VUE_OPTIONS_API__: boolean
-  const __VUE_PROD_DEVTOOLS__: boolean
-  const __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: boolean
+  const __DEV__: boolean;
+  const __VUE_OPTIONS_API__: boolean;
+  const __VUE_PROD_DEVTOOLS__: boolean;
+  const __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: boolean;
 
   /** Lynx BG Thread global – available in Background Thread only */
   const lynx: {
@@ -20,12 +20,23 @@ declare global {
         name: string,
         data: unknown,
         callback?: () => void,
-      ): void
-    }
-  }
+      ): void;
+    };
+    getCoreContext(): {
+      dispatchEvent(event: { type: string; data: string }): void;
+      addEventListener(
+        type: string,
+        handler: (event: { data?: unknown }) => void,
+      ): void;
+      removeEventListener(
+        type: string,
+        handler: (event: { data?: unknown }) => void,
+      ): void;
+    };
+  };
 
   /** Injected by entry-background.ts; called by Lynx Native on event fire */
-  function publishEvent(sign: string, data: unknown): void
+  function publishEvent(sign: string, data: unknown): void;
 }
 
-export {}
+export {};

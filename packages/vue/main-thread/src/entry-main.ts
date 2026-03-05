@@ -13,7 +13,7 @@
  *   - globalThis.vuePatchUpdate – receives ops from Background Thread
  */
 
-import { applyOps, elements } from './ops-apply.js';
+import { applyOps, elements, resetMainThreadState } from './ops-apply.js';
 
 const g = globalThis as Record<string, unknown>;
 
@@ -61,6 +61,11 @@ g['processData'] = function(data: unknown, _processorName?: string): unknown {
 // target the root can resolve it correctly.
 g['renderPage'] = function(_data: unknown): void {
   console.info('[vue-mt] renderPage called');
+  // Clear all element state from the previous page. This is essential for:
+  // 1. Testing: prevents duplicate batch detection from skipping ops
+  //    when ShadowElement IDs restart from 2 between test renders.
+  // 2. Hot reload: ensures stale element handles don't persist.
+  resetMainThreadState();
   const page = __CreatePage('0', 0);
   elements.set(PAGE_ROOT_ID, page);
   __FlushElementTree(page);
@@ -80,22 +85,20 @@ g['updateGlobalProps'] = function(_data: unknown): void {
 // Called by the BG Thread via callLepusMethod('vuePatchUpdate', { data }).
 g['vuePatchUpdate'] = function({ data }: { data: string }): void {
   const ops = JSON.parse(data) as unknown[];
-  console.info(
-    '[vue-mt] vuePatchUpdate: ops.length=',
-    ops.length,
-    'raw:',
-    data.slice(0, 200),
-  );
   applyOps(ops);
 };
 
 // ---------------------------------------------------------------------------
-// Phase 1 demo worklet registrations
+// Hand-crafted worklet registrations for *-raw demo entries.
 //
-// These simulate what the SWC transform (Phase 2) would generate from
-// <script main-thread> blocks.  Each registerWorkletInternal call stores
-// a function body in lynxWorkletImpl._workletMap keyed by _wkltId.
-// When native fires the event, runWorklet() looks it up and executes it.
+// The non-raw demos (mts-demo, mts-draggable) use the SWC worklet transform
+// which auto-generates registerWorkletInternal calls from 'main thread'
+// directive annotations. The *-raw demos use hand-crafted worklet context
+// objects and require matching registrations here.
+//
+// Each registerWorkletInternal call stores a function body in
+// lynxWorkletImpl._workletMap keyed by _wkltId. When native fires the
+// event, runWorklet() looks it up and executes it.
 // ---------------------------------------------------------------------------
 declare function registerWorkletInternal(
   type: string,
@@ -103,49 +106,47 @@ declare function registerWorkletInternal(
   fn: (this: Record<string, unknown>, ...args: unknown[]) => unknown,
 ): void;
 
-// Tap handler — rotates the element 360° (matches React MTS example)
+// mts-demo-raw: Scroll handler — moves element to track scroll position
 registerWorkletInternal(
   'main-thread',
-  'mts-demo:onTap',
-  function(this: Record<string, unknown>, event: Record<string, unknown>) {
-    const target = (event as {
-      currentTarget?: {
-        animate?(keyframes: unknown[], options: unknown): void;
-        setStyleProperty?(key: string, value: string): void;
+  'mts-demo-raw:onScroll',
+  function(this: Record<string, unknown>, ...args: unknown[]) {
+    const event = args[0] as Record<string, unknown>;
+    const detail = (event as { detail?: { scrollTop?: number } }).detail;
+    const scrollTop = detail?.scrollTop ?? 0;
+
+    const INITIAL_Y = 400;
+    const newY = INITIAL_Y - scrollTop;
+
+    const c = this['_c'] as { _mtRef?: { _wvid?: number } } | undefined;
+    if (!c?._mtRef?._wvid) return;
+
+    const wvid = c._mtRef._wvid;
+    const impl = (globalThis as Record<string, unknown>)['lynxWorkletImpl'] as {
+      _refImpl?: {
+        _workletRefMap?: Record<
+          number,
+          { current: { setStyleProperty?(k: string, v: string): void } | null }
+        >;
       };
-    }).currentTarget;
-    if (!target) return;
-    if (typeof target.animate === 'function') {
-      target.animate(
-        [{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }],
-        { duration: 1000, iterations: 1 },
-      );
-    } else if (typeof target.setStyleProperty === 'function') {
-      target.setStyleProperty('background-color', 'red');
+    } | undefined;
+
+    const refEntry = impl?._refImpl?._workletRefMap?.[wvid];
+    if (
+      refEntry?.current
+      && typeof refEntry.current.setStyleProperty === 'function'
+    ) {
+      refEntry.current.setStyleProperty('transform', `translateY(${newY}px)`);
     }
   },
 );
 
-// Scroll handler — changes opacity on scroll
+// mts-draggable-raw: Scroll handler — moves element via setStyleProperty
 registerWorkletInternal(
   'main-thread',
-  'mts-demo:onScroll',
-  function(this: Record<string, unknown>, event: Record<string, unknown>) {
-    console.info('[mts-demo] onScroll worklet fired on MT', event);
-  },
-);
-
-// ---------------------------------------------------------------------------
-// MTS Draggable demo — scroll handler
-//
-// Reads event.detail.scrollTop and moves the MT-ref element via
-// setStyleProperty("transform", ...) — zero thread crossings.
-// Matches React example: starts at y=500, moves up as scrollTop increases.
-// ---------------------------------------------------------------------------
-registerWorkletInternal(
-  'main-thread',
-  'mts-draggable:onScroll',
-  function(this: Record<string, unknown>, event: Record<string, unknown>) {
+  'mts-draggable-raw:onScroll',
+  function(this: Record<string, unknown>, ...args: unknown[]) {
+    const event = args[0] as Record<string, unknown>;
     const detail = (event as { detail?: { scrollTop?: number } }).detail;
     const scrollTop = detail?.scrollTop ?? 0;
 
@@ -154,7 +155,6 @@ registerWorkletInternal(
     const newX = DEFAULT_X;
     const newY = DEFAULT_Y - scrollTop;
 
-    // Resolve the MT ref from the worklet context's captured _c._mtRef
     const c = this['_c'] as { _mtRef?: { _wvid?: number } } | undefined;
     if (!c?._mtRef?._wvid) return;
 
@@ -177,6 +177,96 @@ registerWorkletInternal(
         'transform',
         `translate(${newX}px, ${newY}px)`,
       );
+    }
+  },
+);
+
+// gallery: MTS scrollbar — updates thumb position/height on scroll
+registerWorkletInternal(
+  'main-thread',
+  'gallery:adjustScrollbarMTS',
+  function(this: Record<string, unknown>, ...args: unknown[]) {
+    const event = args[0] as Record<string, unknown>;
+    const detail = (event as {
+      detail?: { scrollTop?: number; scrollHeight?: number };
+    }).detail;
+    const scrollTop = detail?.scrollTop ?? 0;
+    const scrollHeight = detail?.scrollHeight ?? 1;
+
+    const sysInfo = (globalThis as Record<string, unknown>)['SystemInfo'] as
+      | { pixelHeight?: number; pixelRatio?: number }
+      | undefined;
+    const listHeight =
+      (sysInfo?.pixelHeight ?? 600) / (sysInfo?.pixelRatio ?? 1) - 48;
+
+    const scrollbarHeight = listHeight * (listHeight / scrollHeight);
+    const scrollbarTop = listHeight * (scrollTop / scrollHeight);
+
+    const c = this['_c'] as { _thumbRef?: { _wvid?: number } } | undefined;
+    if (!c?._thumbRef?._wvid) return;
+
+    const wvid = c._thumbRef._wvid;
+    const impl = (globalThis as Record<string, unknown>)['lynxWorkletImpl'] as {
+      _refImpl?: {
+        _workletRefMap?: Record<
+          number,
+          { current: { setStyleProperty?(k: string, v: string): void } | null }
+        >;
+      };
+    } | undefined;
+
+    const refEntry = impl?._refImpl?._workletRefMap?.[wvid];
+    if (
+      refEntry?.current
+      && typeof refEntry.current.setStyleProperty === 'function'
+    ) {
+      refEntry.current.setStyleProperty('height', `${scrollbarHeight}px`);
+      refEntry.current.setStyleProperty('top', `${scrollbarTop}px`);
+    }
+  },
+);
+
+// gallery: ScrollbarCompare MTS — no -48 offset (full screen height)
+registerWorkletInternal(
+  'main-thread',
+  'gallery:adjustScrollbarCompare',
+  function(this: Record<string, unknown>, ...args: unknown[]) {
+    const event = args[0] as Record<string, unknown>;
+    const detail = (event as {
+      detail?: { scrollTop?: number; scrollHeight?: number };
+    }).detail;
+    const scrollTop = detail?.scrollTop ?? 0;
+    const scrollHeight = detail?.scrollHeight ?? 1;
+
+    const sysInfo = (globalThis as Record<string, unknown>)['SystemInfo'] as
+      | { pixelHeight?: number; pixelRatio?: number }
+      | undefined;
+    const listHeight = (sysInfo?.pixelHeight ?? 600)
+      / (sysInfo?.pixelRatio ?? 1);
+
+    const scrollbarHeight = listHeight * (listHeight / scrollHeight);
+    const scrollbarTop = listHeight * (scrollTop / scrollHeight);
+
+    const c = this['_c'] as { _thumbRef?: { _wvid?: number } } | undefined;
+    if (!c?._thumbRef?._wvid) return;
+
+    const wvid = c._thumbRef._wvid;
+    const impl = (globalThis as Record<string, unknown>)['lynxWorkletImpl'] as {
+      _refImpl?: {
+        _workletRefMap?: Record<
+          number,
+          { current: { setStyleProperty?(k: string, v: string): void } | null }
+        >;
+      };
+    } | undefined;
+
+    const refEntry = impl?._refImpl?._workletRefMap?.[wvid];
+    if (
+      refEntry?.current
+      && typeof refEntry.current.setStyleProperty === 'function'
+    ) {
+      refEntry.current.setStyleProperty('height', `${scrollbarHeight}px`);
+      refEntry.current.setStyleProperty('top', `${scrollbarTop}px`);
     }
   },
 );

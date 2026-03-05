@@ -129,8 +129,34 @@ export const nodeOps: RendererOptions<ShadowElement, ShadowElement> = {
     parent: ShadowElement,
     anchor?: ShadowElement | null,
   ): void {
+    // Always update the shadow tree (Vue needs it for internal diffing).
     parent.insertBefore(child, anchor ?? null);
-    const anchorId = anchor ? anchor.id : -1;
+
+    // Lynx's native <list> only accepts <list-item> children.
+    // Vue's v-for creates comment anchor nodes as fragment markers —
+    // skip sending them to the Main Thread to avoid NSInvalidArgumentException.
+    if (
+      parent.type === 'list'
+      && (child.type === '#comment' || child.type === '#text')
+    ) {
+      return;
+    }
+
+    // If the anchor is a comment node inside a <list>, it was never inserted
+    // on the Main Thread. Walk forward to find the next real (non-comment)
+    // sibling so __InsertElementBefore has a valid reference.
+    let resolvedAnchor: ShadowElement | null = anchor ?? null;
+    if (parent.type === 'list') {
+      while (
+        resolvedAnchor
+        && (resolvedAnchor.type === '#comment'
+          || resolvedAnchor.type === '#text')
+      ) {
+        resolvedAnchor = resolvedAnchor.next;
+      }
+    }
+
+    const anchorId = resolvedAnchor ? resolvedAnchor.id : -1;
     pushOp(OP.INSERT, parent.id, child.id, anchorId);
     scheduleFlush();
   },

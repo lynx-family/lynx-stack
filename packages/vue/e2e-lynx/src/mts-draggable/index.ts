@@ -3,14 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * MTS Draggable Demo — replicates React Lynx's main-thread-draggable example.
+ * MTS Draggable Demo — Phase 2 SWC worklet transform.
  *
  * Shows two boxes that track a scroll-view's scroll position:
  *   - Left box: updated via Main Thread (smooth, zero thread crossings)
  *   - Right box: updated via Background Thread (laggy, 2 thread crossings)
  *
- * Demonstrates the performance advantage of Main Thread Script for
- * gesture-driven animations.
+ * The 'main thread' directive is processed by the SWC worklet transform.
  */
 
 import { createApp } from '@lynx-js/vue-runtime';

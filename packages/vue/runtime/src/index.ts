@@ -29,6 +29,7 @@ import type {
 import { runOnMainThread } from './cross-thread.js';
 import { resetRegistry } from './event-registry.js';
 import { resetFlushState, scheduleFlush } from './flush.js';
+import { resetFunctionCallState } from './function-call.js';
 import {
   MainThreadRef,
   resetMainThreadRefState,
@@ -243,6 +244,7 @@ export function resetForTesting(): void {
   resetNodeOpsState();
   resetFlushState();
   resetMainThreadRefState();
+  resetFunctionCallState();
   takeOps(); // drain any leftover ops
   ShadowElement.nextId = 2;
 }
