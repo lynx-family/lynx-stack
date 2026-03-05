@@ -38,7 +38,9 @@
   "devDependencies": {
     "@lynx-js/test-tools": "workspace:*",
     "@rspack/core": "catalog:rspack",
-    "foo": "./test/foo"
+    "bar": "./test/helpers/external-bundle-mock/bar",
+    "baz": "./test/helpers/external-bundle-mock/baz",
+    "foo": "./test/helpers/external-bundle-mock/foo"
   },
   "engines": {
     "node": ">=18"
