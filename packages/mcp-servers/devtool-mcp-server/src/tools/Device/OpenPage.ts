@@ -32,9 +32,9 @@ export const OpenPage = /*#__PURE__*/ defineTool({
             type: 'url',
             url: params.url,
           },
-          sender: params.clientId,
+          sender: -1,
         },
-        from: params.clientId,
+        from: -1,
       });
     }
   },
