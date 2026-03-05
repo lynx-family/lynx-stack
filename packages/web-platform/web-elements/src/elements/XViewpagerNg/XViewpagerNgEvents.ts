@@ -75,6 +75,24 @@ export class XViewpagerNgEvents
   };
   #touchEndHandler = () => {
     this.#isDragging = false;
+    if (this.#enableWillChange) {
+      const scrollContainer = this.#getScrollContainer();
+      const oneItemWidth = this.#dom.clientWidth;
+      if (oneItemWidth > 0) {
+        const scrollLeft = scrollContainer.scrollLeft;
+        let targetIndex = Math.round(scrollLeft / oneItemWidth);
+        targetIndex = Math.max(
+          0,
+          Math.min(targetIndex, this.#dom.children.length - 1),
+        );
+        this.#dom.dispatchEvent(
+          new CustomEvent('willchange', {
+            ...commonComponentEventSetting,
+            detail: { index: targetIndex },
+          }),
+        );
+      }
+    }
   };
 
   #enableChange = false;
@@ -82,6 +100,12 @@ export class XViewpagerNgEvents
   _enableChangeEvent(status: boolean) {
     this.#enableChange = status;
     this.#enableScrollEventListener();
+  }
+
+  #enableWillChange: boolean = false;
+  @registerEventEnableStatusChangeHandler('willchange')
+  _enableWillChangeEvent(status: boolean) {
+    this.#enableWillChange = status;
   }
 
   #enableOffsetChange: boolean = false;
