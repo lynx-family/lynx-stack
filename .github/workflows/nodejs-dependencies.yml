@@ -36,4 +36,4 @@ jobs:
           package-manager-cache: false
       - run: |
           pnpm dedupe --check
-          pnpm dlx sherif@latest -i tailwindcss -i @types/react
+          pnpm dlx sherif@latest -i tailwindcss
