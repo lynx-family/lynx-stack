@@ -24,7 +24,7 @@ describe('pluginLynxConfig', () => {
 
     await expect(() => rspeedy.initConfigs()).rejects
       .toThrowErrorMatchingInlineSnapshot(`
-      [Error: [pluginLynxConfig] No \`LynxTemplatePlugin\` exposed to the plugin API (​https://rsbuild.rs/plugins/dev/core#apiexpose​).
+      [Error: [pluginLynxConfig] No \`LynxBundlePlugin\` exposed to the plugin API (​https://rsbuild.rs/plugins/dev/core#apiexpose​).
 
       Please upgrade Rspeedy and plugins to latest version.
 
@@ -50,7 +50,7 @@ describe('pluginLynxConfig', () => {
 
     await expect(() => rspeedy.initConfigs()).rejects
       .toThrowErrorMatchingInlineSnapshot(`
-      [Error: [pluginLynxConfig] No \`LynxTemplatePlugin\` exposed to the plugin API (​https://rsbuild.rs/plugins/dev/core#apiexpose​).
+      [Error: [pluginLynxConfig] No \`LynxBundlePlugin\` exposed to the plugin API (​https://rsbuild.rs/plugins/dev/core#apiexpose​).
 
       Please upgrade @lynx-js/react-rsbuild-plugin to latest version.
 
@@ -80,7 +80,7 @@ describe('pluginLynxConfig', () => {
 
     await expect(() => rspeedy.initConfigs()).rejects
       .toThrowErrorMatchingInlineSnapshot(`
-      [Error: [pluginLynxConfig] No \`LynxTemplatePlugin\` exposed to the plugin API (​https://rsbuild.rs/plugins/dev/core#apiexpose​).
+      [Error: [pluginLynxConfig] No \`LynxBundlePlugin\` exposed to the plugin API (​https://rsbuild.rs/plugins/dev/core#apiexpose​).
 
       Please upgrade @lynx-js/vue-rsbuild-plugin to latest version.
 
