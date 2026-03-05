@@ -20,6 +20,7 @@ export default defineConfig({
       'gallery-image-card': './src/gallery/ImageCard/index.ts',
       'gallery-like-card': './src/gallery/LikeCard/index.ts',
       'gallery-list': './src/gallery/GalleryList/index.ts',
+      'gallery-autoscroll': './src/gallery/GalleryAutoScroll/index.ts',
       'gallery-scrollbar': './src/gallery/GalleryScrollbar/index.ts',
       'gallery-scrollbar-compare':
         './src/gallery/GalleryScrollbarCompare/index.ts',

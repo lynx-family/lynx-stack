@@ -3,23 +3,21 @@
      LICENSE file in the root directory of this source tree. -->
 
 <!--
-  Gallery.vue — Gallery with both BTS and MTS scrollbars side by side.
+  Gallery.vue — Gallery with auto-scroll feature.
 
-  Shows the BTS scrollbar (right: 3px, gradient) next to the MTS scrollbar
-  (right: 14px, darkkhaki) to visually compare lag vs smoothness.
-  Matching React's ScrollbarCompare entry.
+  Demonstrates invoking native element methods via
+  lynx.createSelectorQuery().select().invoke() to start auto-scrolling.
+  Matching React's AddAutoScroll entry.
 
-  Tutorial step: gallery-scrollbar-compare
+  Tutorial step: gallery-autoscroll
 -->
 <script setup lang="ts">
-import { ref, onMounted, nextTick, useMainThreadRef } from '@lynx-js/vue-runtime';
+import { onMounted, nextTick } from '@lynx-js/vue-runtime';
 
 import { furnituresPictures } from '../Pictures/furnituresPictures';
 import { calculateEstimatedSize } from '../utils';
 
 import LikeImageCard from '../Components/LikeImageCard.vue';
-import NiceScrollbar from './NiceScrollbar.vue';
-import NiceScrollbarMTS from './NiceScrollbarMTS.vue';
 
 declare const lynx: {
   createSelectorQuery(): {
@@ -30,24 +28,6 @@ declare const lynx: {
     };
   };
 };
-
-const scrollbarRef = ref<InstanceType<typeof NiceScrollbar> | null>(null);
-const scrollbarThumbRef = useMainThreadRef(null);
-
-// BTS scroll handler
-function onScroll(event: { detail?: { scrollTop?: number; scrollHeight?: number } }) {
-  const scrollTop = event.detail?.scrollTop ?? 0;
-  const scrollHeight = event.detail?.scrollHeight ?? 0;
-  scrollbarRef.value?.adjustScrollbar(scrollTop, scrollHeight);
-}
-
-// MTS scroll handler (worklet context)
-const onScrollMTSCtx = {
-  _wkltId: 'gallery:adjustScrollbarCompare',
-  _workletType: 'main-thread',
-  _c: {} as Record<string, unknown>,
-};
-onScrollMTSCtx._c = { _thumbRef: scrollbarThumbRef.toJSON() };
 
 onMounted(() => {
   nextTick(() => {
@@ -65,17 +45,12 @@ onMounted(() => {
 
 <template>
   <view class="gallery-wrapper">
-    <NiceScrollbar ref="scrollbarRef" />
-    <NiceScrollbarMTS :thumb-ref="scrollbarThumbRef" />
     <list
       class="list"
       list-type="waterfall"
       :column-count="2"
       scroll-orientation="vertical"
       custom-list-name="list-container"
-      @scroll="onScroll"
-      :main-thread-bindscroll="onScrollMTSCtx"
-      :scroll-event-throttle="0"
     >
       <list-item
         v-for="(pic, i) in furnituresPictures"

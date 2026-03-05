@@ -16,11 +16,7 @@ const App = defineComponent({
       h(
         'view',
         { class: 'gallery-wrapper single-card' },
-        [
-          h('view', { style: { width: 200 } }, [
-            h(LikeImageCard, { picture }),
-          ]),
-        ],
+        [h(LikeImageCard, { picture })],
       );
   },
 });

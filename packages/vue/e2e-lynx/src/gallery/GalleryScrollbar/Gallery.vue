@@ -12,13 +12,23 @@
   Tutorial step: gallery-scrollbar
 -->
 <script setup lang="ts">
-import { ref } from '@lynx-js/vue-runtime';
+import { ref, onMounted, nextTick } from '@lynx-js/vue-runtime';
 
 import { furnituresPictures } from '../Pictures/furnituresPictures';
 import { calculateEstimatedSize } from '../utils';
 
 import LikeImageCard from '../Components/LikeImageCard.vue';
 import NiceScrollbar from './NiceScrollbar.vue';
+
+declare const lynx: {
+  createSelectorQuery(): {
+    select(selector: string): {
+      invoke(options: { method: string; params: Record<string, string> }): {
+        exec(): void;
+      };
+    };
+  };
+};
 
 const scrollbarRef = ref<InstanceType<typeof NiceScrollbar> | null>(null);
 
@@ -27,10 +37,24 @@ function onScroll(event: { detail?: { scrollTop?: number; scrollHeight?: number 
   const scrollHeight = event.detail?.scrollHeight ?? 0;
   scrollbarRef.value?.adjustScrollbar(scrollTop, scrollHeight);
 }
+
+onMounted(() => {
+  nextTick(() => {
+    lynx
+      .createSelectorQuery()
+      .select('[custom-list-name="list-container"]')
+      .invoke({
+        method: 'autoScroll',
+        params: { rate: '60', start: 'true' },
+      })
+      .exec();
+  });
+});
 </script>
 
 <template>
   <view class="gallery-wrapper">
+    <NiceScrollbar ref="scrollbarRef" />
     <list
       class="list"
       list-type="waterfall"
@@ -38,6 +62,7 @@ function onScroll(event: { detail?: { scrollTop?: number; scrollHeight?: number 
       scroll-orientation="vertical"
       custom-list-name="list-container"
       @scroll="onScroll"
+      :scroll-event-throttle="0"
     >
       <list-item
         v-for="(pic, i) in furnituresPictures"
@@ -48,6 +73,5 @@ function onScroll(event: { detail?: { scrollTop?: number; scrollHeight?: number 
         <LikeImageCard :picture="pic" />
       </list-item>
     </list>
-    <NiceScrollbar ref="scrollbarRef" />
   </view>
 </template>

@@ -12,13 +12,23 @@
   Tutorial step: gallery-complete
 -->
 <script setup lang="ts">
-import { useMainThreadRef } from '@lynx-js/vue-runtime';
+import { onMounted, nextTick, useMainThreadRef } from '@lynx-js/vue-runtime';
 
 import { furnituresPictures } from '../Pictures/furnituresPictures';
 import { calculateEstimatedSize } from '../utils';
 
 import LikeImageCard from '../Components/LikeImageCard.vue';
 import NiceScrollbarMTS from './NiceScrollbarMTS.vue';
+
+declare const lynx: {
+  createSelectorQuery(): {
+    select(selector: string): {
+      invoke(options: { method: string; params: Record<string, string> }): {
+        exec(): void;
+      };
+    };
+  };
+};
 
 // MainThreadRef for the scrollbar thumb element
 const scrollbarThumbRef = useMainThreadRef(null);
@@ -32,10 +42,24 @@ const onScrollMTSCtx = {
 
 // Stamp the ref's _wvid into the closure so the MT handler can resolve it
 onScrollMTSCtx._c = { _thumbRef: scrollbarThumbRef.toJSON() };
+
+onMounted(() => {
+  nextTick(() => {
+    lynx
+      .createSelectorQuery()
+      .select('[custom-list-name="list-container"]')
+      .invoke({
+        method: 'autoScroll',
+        params: { rate: '60', start: 'true' },
+      })
+      .exec();
+  });
+});
 </script>
 
 <template>
   <view class="gallery-wrapper">
+    <NiceScrollbarMTS :thumb-ref="scrollbarThumbRef" />
     <list
       class="list"
       list-type="waterfall"
@@ -43,6 +67,7 @@ onScrollMTSCtx._c = { _thumbRef: scrollbarThumbRef.toJSON() };
       scroll-orientation="vertical"
       custom-list-name="list-container"
       :main-thread-bindscroll="onScrollMTSCtx"
+      :scroll-event-throttle="0"
     >
       <list-item
         v-for="(pic, i) in furnituresPictures"
@@ -53,6 +78,5 @@ onScrollMTSCtx._c = { _thumbRef: scrollbarThumbRef.toJSON() };
         <LikeImageCard :picture="pic" />
       </list-item>
     </list>
-    <NiceScrollbarMTS :thumb-ref="scrollbarThumbRef" />
   </view>
 </template>

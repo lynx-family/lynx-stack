@@ -22,10 +22,6 @@ defineProps<{
   <view
     class="scrollbar"
     :main-thread-ref="thumbRef"
-    :style="{
-      height: '60px',
-      top: '0px',
-    }"
   >
     <view class="scrollbar-effect glow" />
   </view>

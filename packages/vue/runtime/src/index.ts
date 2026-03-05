@@ -16,6 +16,7 @@
  */
 
 import {
+  nextTick as _vueNextTick,
   createRenderer,
   // Re-export types need explicit imports for isolatedDeclarations
 } from '@vue/runtime-core';
@@ -28,7 +29,7 @@ import type {
 
 import { runOnMainThread } from './cross-thread.js';
 import { resetRegistry } from './event-registry.js';
-import { resetFlushState, scheduleFlush } from './flush.js';
+import { resetFlushState, scheduleFlush, waitForFlush } from './flush.js';
 import { resetFunctionCallState } from './function-call.js';
 import {
   MainThreadRef,
@@ -100,6 +101,24 @@ export function createApp(
 // Re-export commonly used Vue APIs
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// nextTick – patched to wait for the main-thread ops acknowledgement.
+//
+// Vue's built-in nextTick resolves after the BG scheduler flush cycle, but
+// in Lynx's dual-thread model the main thread has not yet applied the ops.
+// We chain on waitForFlush() so that user code (e.g. element queries inside
+// onMounted + nextTick) sees fully-materialised elements.
+// ---------------------------------------------------------------------------
+
+export function nextTick(fn?: () => void): Promise<void> {
+  if (fn) {
+    return _vueNextTick()
+      .then(() => waitForFlush())
+      .then(fn);
+  }
+  return _vueNextTick().then(() => waitForFlush());
+}
+
 export {
   // Composition API
   computed,
@@ -107,7 +126,7 @@ export {
   defineComponent,
   h,
   inject,
-  nextTick,
+  // nextTick — exported above (patched version)
   onBeforeMount,
   onBeforeUnmount,
   onBeforeUpdate,

@@ -37,6 +37,27 @@ declare var lynx:
 
 let scheduled = false;
 
+// ---------------------------------------------------------------------------
+// Main-thread acknowledgement tracking
+//
+// In Lynx's dual-thread architecture, `callLepusMethod` sends ops to the main
+// thread asynchronously.  Vue's built-in `nextTick` resolves as soon as the BG
+// flush cycle finishes — but the main thread has not yet applied the ops at
+// that point.  We track a promise that resolves when the MT calls back, and
+// expose `waitForFlush()` so the runtime can chain it into `nextTick`.
+// ---------------------------------------------------------------------------
+
+let pendingAckResolve: (() => void) | null = null;
+let pendingAckPromise: Promise<void> | null = null;
+
+/**
+ * Returns a promise that resolves once the most recent ops batch has been
+ * applied on the main thread.  If no ops are in flight, resolves immediately.
+ */
+export function waitForFlush(): Promise<void> {
+  return pendingAckPromise ?? Promise.resolve();
+}
+
 export function scheduleFlush(): void {
   if (scheduled) return;
   scheduled = true;
@@ -46,31 +67,30 @@ export function scheduleFlush(): void {
 /** Reset module state – for testing only. */
 export function resetFlushState(): void {
   scheduled = false;
+  pendingAckResolve = null;
+  pendingAckPromise = null;
 }
 
 function doFlush(): void {
   scheduled = false;
   const ops = takeOps();
-  console.info(
-    '[vue-bg] doFlush: ops.length=',
-    ops.length,
-    'lynx type:',
-    typeof lynx,
-  );
   if (ops.length === 0) return;
-  // Temporary: log first 300 chars of ops to verify SET_EVENT (op code 6) is present
-  // `lynx` is the Lynx BG runtime object injected by RuntimeWrapperWebpackPlugin
-  // as a closure parameter – access it as a bare identifier, NOT via globalThis.
+
+  // Create the ack promise BEFORE sending so that any `nextTick` call that
+  // resolves after this point will chain on it.
+  pendingAckPromise = new Promise<void>((resolve) => {
+    pendingAckResolve = resolve;
+  });
+
   const app = lynx?.getNativeApp?.();
-  console.info(
-    '[vue-bg] doFlush: getNativeApp()=',
-    app == null ? String(app) : 'object',
-  );
   app?.callLepusMethod?.(
     'vuePatchUpdate',
     { data: JSON.stringify(ops) },
     () => {
-      console.info('[vue-bg] doFlush: callLepusMethod ack');
+      // Main thread has finished applying the ops — resolve the promise.
+      pendingAckResolve?.();
+      pendingAckResolve = null;
+      pendingAckPromise = null;
     },
   );
 }
