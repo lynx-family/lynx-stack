@@ -757,12 +757,15 @@ importers:
 
   packages/rspeedy/lynx-bundle-rslib-config:
     dependencies:
+      '@lynx-js/css-serializer':
+        specifier: workspace:*
+        version: link:../../tools/css-serializer
       '@lynx-js/runtime-wrapper-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/runtime-wrapper-webpack-plugin
       '@lynx-js/tasm':
-        specifier: 0.0.20
-        version: 0.0.20
+        specifier: 0.0.26
+        version: 0.0.26
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*
@@ -1679,8 +1682,8 @@ importers:
         specifier: workspace:*
         version: link:../../tools/css-serializer
       '@lynx-js/tasm':
-        specifier: 0.0.20
-        version: 0.0.20
+        specifier: 0.0.26
+        version: 0.0.26
       '@lynx-js/web-core-wasm':
         specifier: workspace:*
         version: link:../../web-platform/web-core-wasm
@@ -3066,8 +3069,8 @@ packages:
   '@lynx-js/preact-devtools@5.0.1':
     resolution: {integrity: sha512-ayUU8PJ0TVWABbd5/d/04KI18W9RY4kkaRekBXXbRE/eBkGMZ3lVJ0zOB+B+85B9RUpvEVK2FleqJkS+qBKG6Q==}
 
-  '@lynx-js/tasm@0.0.20':
-    resolution: {integrity: sha512-ezMq43s59jqFuQ1YygpsUuZmGXw4XH+00RsB5RVmkYZuHQxEaLt/ECTOixF+9RixvAyhmxzF2eSURvmNckO9xg==}
+  '@lynx-js/tasm@0.0.26':
+    resolution: {integrity: sha512-WmcuTYh/KfdRqriT7+Qg8iwxsCDN4PKbCuXoN35npn23p33grpSNW306DJi9tX7LzP2vDZkOjxulSOknfiB/0Q==}
 
   '@lynx-js/trace-processor@0.0.1':
     resolution: {integrity: sha512-Zyl74cKi+BDggeXroLQG4frbBuiQ0DB0yH0C3pMkUHWv17abWTdJ2mw/H9Cd1QiIr+aQHn1U2SRtsrbkmWMtJw==}
@@ -10802,7 +10805,7 @@ snapshots:
       errorstacks: 2.4.1
       htm: 3.1.1
 
-  '@lynx-js/tasm@0.0.20': {}
+  '@lynx-js/tasm@0.0.26': {}
 
   '@lynx-js/trace-processor@0.0.1':
     dependencies:
