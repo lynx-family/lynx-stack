@@ -27,6 +27,7 @@ const OP = {
   SET_ID: 10,
   SET_WORKLET_EVENT: 11,
   SET_MT_REF: 12,
+  INIT_MT_REF: 13,
 } as const;
 
 /** Map from BG-thread ShadowElement id → Lynx Main Thread element handle */
@@ -403,6 +404,37 @@ export function applyOps(ops: unknown[]): void {
               };
             }
             impl._refImpl.updateWorkletRef(refImpl, el);
+          }
+        }
+        break;
+      }
+
+      case OP.INIT_MT_REF: {
+        // Register a value-only MainThreadRef in the worklet-runtime's ref map.
+        // Value-only refs (e.g. useMainThreadRef<number>(0)) are NOT bound to
+        // elements, so they never go through SET_MT_REF. Without this, worklet
+        // functions that access them get undefined from _workletRefMap lookup.
+        const wvid = ops[i++] as number;
+        const initValue = ops[i++];
+        if (
+          typeof globalThis !== 'undefined'
+          && 'lynxWorkletImpl' in (globalThis as Record<string, unknown>)
+        ) {
+          const impl = (globalThis as Record<string, unknown>)[
+            'lynxWorkletImpl'
+          ] as {
+            _refImpl?: {
+              _workletRefMap?: Record<
+                number,
+                { current: unknown; _wvid: number }
+              >;
+            };
+          };
+          if (impl._refImpl) {
+            const refMap = impl._refImpl._workletRefMap;
+            if (refMap && !(wvid in refMap)) {
+              refMap[wvid] = { current: initValue, _wvid: wvid };
+            }
           }
         }
         break;

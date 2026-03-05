@@ -24,6 +24,10 @@ export default defineConfig({
       'gallery-scrollbar-compare':
         './src/gallery/GalleryScrollbarCompare/index.ts',
       'gallery-complete': './src/gallery/GalleryComplete/index.ts',
+      // Swiper tutorial entries (progressive: static → MTS → full)
+      'swiper-empty': './src/swiper/SwiperEmpty/index.ts',
+      'swiper-mts': './src/swiper/SwiperMTS/index.ts',
+      swiper: './src/swiper/Swiper/index.ts',
     },
   },
   plugins: [

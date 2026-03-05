@@ -14,8 +14,12 @@
  * uses it to look up the real element handle in `lynxWorkletImpl._refImpl`.
  *
  * The name follows React Lynx convention for worklet-runtime compatibility.
- * Uses `.value` (Vue convention) instead of `.current` (React convention).
+ * Both `.value` (Vue convention) and `.current` (worklet convention) are
+ * provided. Use `.current` inside `'main thread'` functions for type
+ * compatibility with the worklet-runtime's hydrated ref objects.
  */
+
+import { OP, pushOp } from './ops.js';
 
 let nextWvid = 1;
 
@@ -29,6 +33,11 @@ export class MainThreadRef<T = unknown> {
   constructor(initValue: T) {
     this._wvid = nextWvid++;
     this._initValue = initValue;
+    // Push INIT_MT_REF op so the Main Thread registers this ref in
+    // _workletRefMap before any worklet function tries to access it.
+    // This is critical for value-only refs (not bound to elements) —
+    // without this, the worklet-runtime resolves the _wvid to undefined.
+    pushOp(OP.INIT_MT_REF, this._wvid, initValue);
   }
 
   /**
@@ -45,6 +54,24 @@ export class MainThreadRef<T = unknown> {
       console.warn(
         '[vue-lynx] MainThreadRef.value is read-only on the Background Thread. '
           + 'Write to .value only inside <script main-thread> functions.',
+      );
+    }
+  }
+
+  /**
+   * `.current` access — worklet convention alias for `.value`.
+   * Use inside `'main thread'` functions where the worklet-runtime
+   * hydrates refs with `.current` property.
+   */
+  get current(): T {
+    return this._initValue;
+  }
+
+  set current(_v: T) {
+    if (__DEV__) {
+      console.warn(
+        '[vue-lynx] MainThreadRef.current is read-only on the Background Thread. '
+          + 'Write to .current only inside main-thread functions.',
       );
     }
   }

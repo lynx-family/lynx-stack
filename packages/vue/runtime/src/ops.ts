@@ -19,6 +19,7 @@
  *   SET_ID:       [10, id, idString]
  *   SET_WORKLET_EVENT: [11, id, eventType, eventName, workletCtx]
  *   SET_MT_REF:   [12, id, refImpl]
+ *   INIT_MT_REF:  [13, wvid, initValue]  – register value-only ref in worklet ref map
  */
 export const OP = {
   CREATE: 0,
@@ -34,6 +35,7 @@ export const OP = {
   SET_ID: 10,
   SET_WORKLET_EVENT: 11,
   SET_MT_REF: 12,
+  INIT_MT_REF: 13,
 } as const;
 
 let buffer: unknown[] = [];
