@@ -104,8 +104,8 @@ describe('pluginLynxConfig', () => {
           {
             name: 'test',
             setup(api: RsbuildPluginAPI) {
-              api.expose(Symbol.for('LynxTemplatePlugin'), {
-                LynxTemplatePlugin,
+              api.expose(Symbol.for('LynxBundlePlugin'), {
+                LynxBundlePlugin: LynxTemplatePlugin,
               })
             },
           },

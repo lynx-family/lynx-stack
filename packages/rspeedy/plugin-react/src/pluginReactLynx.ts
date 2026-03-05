@@ -391,12 +391,13 @@ export function pluginReactLynx(
 
         api.expose(Symbol.for('LAYERS'), LAYERS)
         const exposedLynxBundlePlugin = {
-          LynxTemplatePlugin: {
+          LynxBundlePlugin: {
             getLynxTemplatePluginHooks: LynxTemplatePlugin
               .getLynxTemplatePluginHooks.bind(LynxTemplatePlugin),
           },
         }
         api.expose(Symbol.for('LynxBundlePlugin'), exposedLynxBundlePlugin)
+        // Backward compat: expose under old symbol too
         api.expose(Symbol.for('LynxTemplatePlugin'), exposedLynxBundlePlugin)
         const require = createRequire(import.meta.url)
 

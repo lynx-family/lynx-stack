@@ -12,7 +12,7 @@ describe('Expose', () => {
   test('LynxTemplatePlugin', async () => {
     const { pluginReactLynx } = await import('../src/index.js')
 
-    let expose: { LynxTemplatePlugin: LynxTemplatePlugin } | undefined
+    let expose: { LynxBundlePlugin: LynxTemplatePlugin } | undefined
     let beforeEncodeArgs:
       | Parameters<Parameters<TemplateHooks['beforeEncode']['tap']>[1]>[0]
       | undefined
@@ -31,8 +31,8 @@ describe('Expose', () => {
             name: 'pluginThatUsesTemplateHooks',
             setup(api) {
               expose = api.useExposed<
-                { LynxTemplatePlugin: LynxTemplatePlugin }
-              >(Symbol.for('LynxTemplatePlugin'))
+                { LynxBundlePlugin: LynxTemplatePlugin }
+              >(Symbol.for('LynxBundlePlugin'))
               api.modifyBundlerChain(chain => {
                 const PLUGIN_NAME = 'pluginThatUsesTemplateHooks'
                 chain.plugin(PLUGIN_NAME).use({
@@ -40,7 +40,7 @@ describe('Expose', () => {
                     compiler.hooks.compilation.tap(
                       PLUGIN_NAME,
                       compilation => {
-                        const templateHooks = expose!.LynxTemplatePlugin
+                        const templateHooks = expose!.LynxBundlePlugin
                           .getLynxTemplatePluginHooks(
                             compilation as unknown as Parameters<
                               LynxTemplatePlugin['getLynxTemplatePluginHooks']
