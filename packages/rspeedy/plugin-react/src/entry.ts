@@ -57,6 +57,15 @@ export function applyEntry(
 
   api.modifyBundlerChain(async (chain, { environment, isDev, isProd }) => {
     const mainThreadChunks: string[] = []
+    const { resolve } = api.useExposed<
+      { resolve: (request: string) => Promise<string> }
+    >(Symbol.for('@lynx-js/react/internal:resolve'))!
+    const workletRuntimePath = await resolve(
+      `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,
+    )
+    const lepusChunkNames = getLepusChunkNames({
+      workletRuntimePath,
+    })
 
     const rsbuildConfig = api.getRsbuildConfig()
     const userConfig = api.getRsbuildConfig('original')
@@ -235,8 +244,11 @@ export function applyEntry(
               })
             },
             targetSdkVersion,
-            // Inject runtime wrapper for all `.js` but not `main-thread.js` and `main-thread.[hash].js`.
-            test: /^(?!.*main-thread(?:\.[A-Fa-f0-9]*)?\.js$).*\.js$/,
+            // Inject runtime wrapper for all `.js` except chunks that should keep
+            // plain executable output (main-thread + all lepus chunks).
+            test: createRuntimeWrapperTestPattern(
+              lepusChunkNames,
+            ),
             experimental_isLazyBundle,
           }])
           .end()
@@ -261,10 +273,6 @@ export function applyEntry(
       extractStr = false
     }
 
-    const { resolve } = api.useExposed<
-      { resolve: (request: string) => Promise<string> }
-    >(Symbol.for('@lynx-js/react/internal:resolve'))!
-
     chain
       .plugin(PLUGIN_NAME_REACT)
       .after(PLUGIN_NAME_TEMPLATE)
@@ -277,9 +285,7 @@ export function applyEntry(
         extractStr,
         experimental_isLazyBundle,
         profile: getDefaultProfile(),
-        workletRuntimePath: await resolve(
-          `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,
-        ),
+        workletRuntimePath,
       }])
 
     function getDefaultProfile(): boolean | undefined {
@@ -386,4 +392,32 @@ function getHash(
   } else {
     return EMPTY_HASH
   }
+}
+
+function createRuntimeWrapperTestPattern(lepusChunkNames: string[]): RegExp {
+  const excluded = [
+    'main-thread',
+    ...lepusChunkNames,
+  ]
+  const escaped = excluded.map((name) => escapeRegExp(name))
+    .join('|')
+  return new RegExp(
+    `^(?!.*(?:${escaped})(?:\\.[^/.]+)?\\.js$).*\\.js$`,
+  )
+}
+
+function escapeRegExp(input: string): string {
+  return input.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function getLepusChunkNames(options: {
+  workletRuntimePath: string
+}): string[] {
+  const chunkNames: string[] = []
+
+  if (options.workletRuntimePath) {
+    chunkNames.push('worklet-runtime')
+  }
+
+  return chunkNames
 }

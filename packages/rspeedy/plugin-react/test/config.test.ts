@@ -2417,6 +2417,40 @@ describe('Config', () => {
     )
   })
 
+  test('runtime wrapper excludes lepus chunks and main-thread assets', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const rspeedy = await createRspeedy({
+      rspeedyConfig: {
+        mode: 'production',
+        plugins: [
+          pluginReactLynx(),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rspeedy.initConfigs()
+    const runtimeWrapperPlugin = config?.plugins?.find(
+      p => p?.constructor.name === 'RuntimeWrapperWebpackPlugin',
+    )
+
+    if (!runtimeWrapperPlugin) {
+      expect.fail('Should have RuntimeWrapperWebpackPlugin instance')
+    }
+
+    const runtimeWrapperPluginWithOptions = runtimeWrapperPlugin as {
+      options: { test: RegExp }
+    }
+    const testRule = runtimeWrapperPluginWithOptions.options.test
+    expect(testRule).toBeInstanceOf(RegExp)
+
+    expect(testRule.test('.rspeedy/main/main-thread.js')).toBe(false)
+    // `worklet-runtime` is currently the only lepus chunk.
+    expect(testRule.test('static/js/worklet-runtime.js')).toBe(false)
+    expect(testRule.test('static/js/worklet-runtime.abcd1234.js')).toBe(false)
+    expect(testRule.test('.rspeedy/main/background.js')).toBe(true)
+  })
+
   describe('environment', () => {
     test('lynx environment', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
