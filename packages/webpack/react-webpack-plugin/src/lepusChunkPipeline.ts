@@ -7,11 +7,14 @@ import invariant from 'tiny-invariant';
 
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 
+import { moduleHasWorkletUsage } from './workletMetadata.js';
+
 const WORKLET_RUNTIME_CHUNK_NAME: string = 'worklet-runtime';
 
 interface LepusChunkPipelineItem {
   chunkName: string;
   sourcePath: string;
+  shouldCompile: (module: unknown) => boolean;
   shouldInject: (lepusRootSource: string | undefined) => boolean;
 }
 
@@ -34,6 +37,7 @@ function createLepusChunkPipeline(
     chunks.push({
       chunkName: WORKLET_RUNTIME_CHUNK_NAME,
       sourcePath: options.workletRuntimePath,
+      shouldCompile: moduleHasWorkletUsage,
       shouldInject: (lepusRootSource) =>
         lepusRootSource?.includes('registerWorkletInternal') ?? false,
     });
@@ -46,21 +50,85 @@ function injectLepusChunkEntries(
   compiler: Compiler,
   lepusChunkPipeline: LepusChunkPipelineItem[],
 ): void {
-  for (const chunk of lepusChunkPipeline) {
-    if (hasEntry(compiler, chunk.chunkName)) {
-      continue;
-    }
-
-    // Build lepus runtime chunks through the standard entry pipeline so
-    // source maps can be discovered from compilation assets/chunks.
-    new compiler.webpack.EntryPlugin(
-      compiler.context,
-      chunk.sourcePath,
-      {
-        name: chunk.chunkName,
-      },
-    ).apply(compiler);
+  if (lepusChunkPipeline.length === 0) {
+    return;
   }
+
+  compiler.hooks.make.tapAsync(
+    'ReactWebpackPlugin:LepusChunkEntry',
+    (compilation, callback) => {
+      const requestedChunkNames = new Set<string>();
+      const queuedChunkByName = new Map<string, LepusChunkPipelineItem>();
+
+      compilation.hooks.succeedModule.tap(
+        'ReactWebpackPlugin:LepusChunkEntry',
+        (module) => {
+          for (const chunk of lepusChunkPipeline) {
+            if (!chunk.shouldCompile(module)) {
+              continue;
+            }
+            requestedChunkNames.add(chunk.chunkName);
+            queuedChunkByName.set(chunk.chunkName, chunk);
+          }
+        },
+      );
+
+      compilation.hooks.finishModules.tapAsync(
+        'ReactWebpackPlugin:LepusChunkEntry',
+        (_modules, finishCallback) => {
+          const queuedChunks = [...requestedChunkNames]
+            .filter(name => !hasEntry(compiler, name))
+            .map(name => queuedChunkByName.get(name))
+            .filter((chunk): chunk is LepusChunkPipelineItem => Boolean(chunk));
+
+          if (queuedChunks.length === 0) {
+            finishCallback();
+            return;
+          }
+
+          let pending = queuedChunks.length;
+          let settled = false;
+          const done = (error?: Error) => {
+            if (settled) {
+              return;
+            }
+            if (error) {
+              settled = true;
+              finishCallback(error);
+              return;
+            }
+            pending -= 1;
+            if (pending === 0) {
+              settled = true;
+              finishCallback();
+            }
+          };
+
+          for (const chunk of queuedChunks) {
+            const dependency = compiler.webpack.EntryPlugin.createDependency(
+              chunk.sourcePath,
+            );
+            // Build lepus runtime chunks through the standard entry pipeline so
+            // source maps can be discovered from compilation assets/chunks.
+            compilation.addEntry(
+              compiler.context,
+              dependency,
+              { name: chunk.chunkName },
+              (error) => {
+                if (error) {
+                  done(error);
+                  return;
+                }
+                done();
+              },
+            );
+          }
+        },
+      );
+
+      callback();
+    },
+  );
 }
 
 function excludeLepusChunksFromTemplate(
