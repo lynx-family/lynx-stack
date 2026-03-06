@@ -2,7 +2,22 @@ import type { LynxView } from './LynxView.js';
 
 const idToElementNode = new WeakMap<LynxView, WeakRef<ElementNode>[]>();
 
+/**
+ * Represents a DOM element in a Lynx page.
+ *
+ * Wraps a CDP `nodeId` and provides methods for inspecting attributes,
+ * computed styles, and simulating user interactions like taps.
+ */
 export class ElementNode {
+  /**
+   * Get or create an ElementNode for the given node ID within a LynxView.
+   *
+   * Nodes are cached per LynxView using `WeakRef` to allow reuse and GC.
+   *
+   * @param id - The CDP node ID.
+   * @param lynxView - The owning LynxView instance.
+   * @returns An `ElementNode` bound to the given node.
+   */
   static fromId(id: number, lynxView: LynxView): ElementNode {
     const currentViewMap = idToElementNode.get(lynxView);
     if (currentViewMap) {
@@ -25,6 +40,12 @@ export class ElementNode {
 
   constructor(public readonly nodeId: number, private _lynxView: LynxView) {}
 
+  /**
+   * Simulate a tap (touch press + release) on the center of this element.
+   *
+   * Uses `DOM.getBoxModel` to find the element's center coordinates,
+   * then dispatches `mousePressed` and `mouseReleased` events.
+   */
   async tap(): Promise<void> {
     const { model } = await this._lynxView._channel.send('DOM.getBoxModel', {
       nodeId: this.nodeId,
@@ -61,6 +82,12 @@ export class ElementNode {
     });
   }
 
+  /**
+   * Get the value of a named attribute on this element.
+   *
+   * @param name - The attribute name. Use `'id'` for the Lynx `idSelector` attribute.
+   * @returns The attribute value, or `null` if the attribute is not present.
+   */
   async getAttribute(name: string): Promise<string | null> {
     if (name === 'id') {
       name = 'idSelector';
@@ -77,6 +104,11 @@ export class ElementNode {
     return attributes[name] ?? null;
   }
 
+  /**
+   * Get all computed CSS styles for this element.
+   *
+   * @returns A `Map` of CSS property names to their computed values.
+   */
   async computedStyleMap(): Promise<Map<string, string>> {
     const map = new Map<string, string>();
     const ret = await this._lynxView._channel.send(

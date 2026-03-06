@@ -1,17 +1,62 @@
-import {
-  DebugRouterConnector,
-  MultiOpenStatus,
-} from '@lynx-js/debug-router-connector';
+import { Connector } from '@lynx-js/devtool-connector';
+import { AndroidTransport } from '@lynx-js/devtool-connector/transport';
 import { LynxView } from './LynxView.js';
 
 import { execSync } from 'child_process';
 
-export class Lynx {
-  private _connector: DebugRouterConnector | null = null;
-  private _currentClient: any | null = null;
-  private _currentClientId: number = -1;
+/**
+ * Options for configuring the connection to a Lynx device.
+ */
+export interface ConnectOptions {
+  /**
+   * ADB device serial to target (e.g. `"localhost:5555"`, `"emulator-5554"`).
+   * When multiple ADB devices are connected, use this to select the correct one.
+   * If omitted, uses the first available device.
+   */
+  deviceId?: string;
+  /**
+   * App package name to launch on the device.
+   * @default "com.lynx.explorer"
+   */
+  appPackage?: string;
+}
 
-  static async connect(): Promise<Lynx> {
+const DEFAULT_APP_PACKAGE = 'com.lynx.explorer';
+
+/**
+ * Main entry point for the kitten-lynx testing framework.
+ *
+ * Provides Puppeteer-like APIs for connecting to a Lynx app running on an
+ * Android device (physical or emulator) via ADB and the Chrome DevTools Protocol.
+ *
+ * @example
+ * ```typescript
+ * const lynx = await Lynx.connect({ deviceId: 'localhost:5555' });
+ * const page = await lynx.newPage();
+ * await page.goto('http://example.com/bundle.lynx.bundle');
+ * const content = await page.content();
+ * await lynx.close();
+ * ```
+ */
+export class Lynx {
+  private _connector: Connector | null = null;
+  private _currentClient: any | null = null;
+  private _currentClientId: string = '';
+
+  /**
+   * Connect to a Lynx app on an Android device.
+   *
+   * Discovers ADB devices, restarts the target app, and waits for a Lynx
+   * devtool client to become available.
+   *
+   * @param options - Connection options to specify target device and app package.
+   * @returns A connected `Lynx` instance ready for creating pages.
+   * @throws If no Lynx client is found after 10 seconds of polling.
+   */
+  static async connect(options?: ConnectOptions): Promise<Lynx> {
+    const targetDevice = options?.deviceId;
+    const appPackage = options?.appPackage ?? DEFAULT_APP_PACKAGE;
+
     try {
       const output = execSync('adb devices').toString();
       const lines = output.split('\n');
@@ -26,14 +71,19 @@ export class Lynx {
         }
       }
 
-      for (const deviceId of adbDevices) {
+      // If a specific device is requested, only restart that one
+      const devicesToRestart = targetDevice
+        ? adbDevices.filter(d => d === targetDevice)
+        : adbDevices;
+
+      for (const deviceId of devicesToRestart) {
         try {
           console.log(
-            `[Lynx] Restarting com.lynx.explorer on device ${deviceId}...`,
+            `[Lynx] Restarting ${appPackage} on device ${deviceId}...`,
           );
-          execSync(`adb -s ${deviceId} shell am force-stop com.lynx.explorer`);
+          execSync(`adb -s ${deviceId} shell am force-stop ${appPackage}`);
           execSync(
-            `adb -s ${deviceId} shell monkey -p com.lynx.explorer -c android.intent.category.LAUNCHER 1`,
+            `adb -s ${deviceId} shell monkey -p ${appPackage} -c android.intent.category.LAUNCHER 1`,
           );
         } catch (e) {
           console.error(
@@ -50,95 +100,43 @@ export class Lynx {
 
     const lynx = new Lynx();
 
-    lynx._connector = new DebugRouterConnector({
-      manualConnect: true,
-      enableWebSocket: true, // Used for local debugging in docker/adb
-      enableDesktop: true,
-    });
+    lynx._connector = new Connector([new AndroidTransport()]);
 
-    const { promise: startedPromise, resolve: startedResolve } = Promise
-      .withResolvers<void>();
-
-    // Auto-remove connector upon disconnect
-    lynx._connector.setMultiOpenCallback({
-      statusChanged(status: MultiOpenStatus) {
-        if (status === MultiOpenStatus.unattached) {
-          lynx._connector = null;
-        }
-      },
-    });
-
-    await lynx._connector.startWSServer();
-
-    lynx._connector.on('device-connected', (device) => {
-      device.startWatchClient();
-    });
-
-    const { promise: clientPromise, resolve: clientResolve } = Promise
-      .withResolvers<number>();
-
-    lynx._connector.on('client-connected', async (client) => {
-      startedResolve(); // Unblock initial wait
-      clientResolve(client.clientId());
-    });
-
-    if (lynx._connector.devices.size === 0) {
-      const devices = await lynx._connector.connectDevices(1000);
-      if (devices.length === 0) {
-        throw new Error('Failed to connect to Lynx: no device found.');
-      }
-      for (const device of devices) {
-        device.startWatchClient();
-      }
+    let clients = await lynx._connector.listClients();
+    let attempts = 0;
+    while (clients.length === 0 && attempts < 20) {
+      await new Promise(r => setTimeout(r, 500));
+      clients = await lynx._connector.listClients();
+      attempts++;
     }
 
-    const usbClients = lynx._connector.getAllUsbClients();
-    if (usbClients.length > 0) {
-      lynx._currentClient = usbClients[0];
-      lynx._currentClientId = usbClients[0]!.clientId();
-    } else {
-      const existingClients = lynx._connector.getAllAppClients();
-      if (existingClients.length > 0) {
-        lynx._currentClient = existingClients[0];
-        lynx._currentClientId = existingClients[0]!.clientId();
-      } else {
-        // Wait until a client is attached
-        const clientId = await clientPromise;
-        const allUsbs = lynx._connector.getAllUsbClients();
-        lynx._currentClient = allUsbs.find((c: any) =>
-          c.clientId() === clientId
-        ) || null;
-        lynx._currentClientId = clientId;
-      }
+    // Filter clients by deviceId if specified (client.id format: "deviceId:port")
+    if (targetDevice) {
+      clients = clients.filter(c => c.id.startsWith(targetDevice + ':'));
     }
 
-    // Force enable devtools toggle if required
-    lynx._connector.sendMessageToApp(
-      lynx._currentClientId,
-      JSON.stringify({
-        event: 'Customized',
-        data: {
-          type: 'SetGlobalSwitch',
-          data: {
-            client_id: lynx._currentClientId,
-            message: JSON.stringify({
-              global_key: 'enable_devtool',
-              global_value: true,
-              id: 10000,
-            }),
-            session_id: -1,
-          },
-          sender: lynx._currentClientId,
-        },
-        from: lynx._currentClientId,
-      }),
-    );
+    if (clients.length === 0) {
+      throw new Error(
+        targetDevice
+          ? `Failed to connect to Lynx: no client found on device "${targetDevice}" after 10 seconds.`
+          : 'Failed to connect to Lynx: no client found after 10 seconds.',
+      );
+    }
+
+    lynx._currentClient = clients[0];
+    lynx._currentClientId = clients[0]!.id;
 
     return lynx;
   }
 
+  /**
+   * Create a new page (LynxView) for navigating and interacting with Lynx content.
+   *
+   * @returns A new {@link LynxView} instance bound to the current client.
+   * @throws If not connected. Call {@link Lynx.connect} first.
+   */
   async newPage(): Promise<LynxView> {
-    if (!this._connector || this._currentClientId === -1) {
+    if (!this._connector || this._currentClientId === '') {
       throw new Error('Not connected. Call Lynx.connect() first.');
     }
     return new LynxView(
@@ -148,12 +146,10 @@ export class Lynx {
     );
   }
 
+  /**
+   * Close the connection and release resources.
+   */
   async close(): Promise<void> {
-    if (this._connector) {
-      if (this._connector.wss) {
-        this._connector.wss.close();
-      }
-      this._connector = null;
-    }
+    this._connector = null;
   }
 }

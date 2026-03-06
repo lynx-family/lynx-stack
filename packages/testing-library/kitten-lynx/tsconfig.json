@@ -13,6 +13,11 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@lynx-js/devtool-connector": ["../../mcp-servers/devtool-connector/dist/index.d.ts"],
+      "@lynx-js/devtool-connector/transport": ["../../mcp-servers/devtool-connector/dist/transport/index.d.ts"],
+    },
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"],
