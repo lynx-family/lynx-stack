@@ -1,11 +1,18 @@
-import type { DebugRouterConnector } from '@lynx-js/debug-router-connector';
+import type { Connector } from '@lynx-js/devtool-connector';
 
 const sessionIdToChannel: Record<string, WeakRef<CDPChannel>> = {};
 type Quad = [number, number, number, number, number, number, number, number];
+/**
+ * Represents a node in the DOM tree returned by `DOM.getDocument`.
+ */
 export interface NodeInfoInGetDocument {
+  /** Unique DOM node identifier. */
   nodeId: number;
+  /** Child nodes of this node. */
   children: NodeInfoInGetDocument[];
+  /** Flat array of alternating attribute name/value pairs. */
   attributes: string[];
+  /** The node's tag name (e.g. `'view'`, `'text'`). */
   nodeName: string;
 }
 interface Protocol {
@@ -78,12 +85,30 @@ interface Protocol {
   };
 }
 
+/**
+ * A stateless CDP (Chrome DevTools Protocol) channel for sending commands
+ * to a specific Lynx session.
+ *
+ * Each `send()` call is a short-lived request/response via the `Connector`.
+ * Channels are cached per session ID using `WeakRef` to allow reuse.
+ */
 export class CDPChannel {
   private _id = 0;
+  /**
+   * Get or create a CDPChannel for the given session.
+   *
+   * Channels are cached per `sessionId` using `WeakRef`. If a previously
+   * created channel for the same session is still alive, it is reused.
+   *
+   * @param sessionId - The Lynx devtool session ID.
+   * @param clientId - The client identifier (format: `"deviceId:port"`).
+   * @param connector - The `Connector` instance for sending messages.
+   * @returns A `CDPChannel` bound to the specified session.
+   */
   static from(
     sessionId: number,
-    clientId: number,
-    connector: DebugRouterConnector,
+    clientId: string,
+    connector: Connector,
   ): CDPChannel {
     const maybeChannel = sessionIdToChannel[sessionId]?.deref();
     if (maybeChannel) return maybeChannel;
@@ -94,101 +119,27 @@ export class CDPChannel {
     }
   }
   constructor(
-    private _connector: DebugRouterConnector,
-    private _clientId: number,
+    private _connector: Connector,
+    private _clientId: string,
     private _sessionId: number,
   ) {}
 
+  /**
+   * Send a CDP command and return the result.
+   *
+   * @param method - The CDP method name (e.g. `'DOM.getDocument'`, `'Page.navigate'`).
+   * @param params - The parameters for the CDP method.
+   * @returns The CDP response for the given method.
+   */
   async send<T extends keyof Protocol>(
     method: T,
     params: Protocol[T]['params'],
   ): Promise<Protocol[T]['return']> {
-    const id = ++this._id;
-
-    const { promise, resolve, reject } = Promise.withResolvers<
-      Protocol[T]['return']
-    >();
-
-    const msgId = `CDP-${id}`;
-    const listener = (
-      { message, id: sourceId }: { message: string; id: number },
-    ) => {
-      const parsed = JSON.parse(message);
-      if (parsed.event !== 'Customized' || parsed.data?.type !== 'CDP') {
-        return;
-      }
-
-      const cdpData = parsed.data.data;
-      if (cdpData.session_id !== this._sessionId) return;
-
-      const cdpMessage = typeof cdpData.message === 'string'
-        ? JSON.parse(cdpData.message)
-        : cdpData.message;
-      if (cdpMessage.id !== id) return;
-
-      this._connector.off('usb-client-message', listener);
-
-      if (cdpMessage.error) {
-        reject(new Error(cdpMessage.error.message));
-      } else {
-        resolve(cdpMessage.result);
-      }
-    };
-
-    this._connector.on('usb-client-message', listener);
-
-    this._connector.sendMessageToApp(
+    return await this._connector.sendCDPMessage<Protocol[T]['return']>(
       this._clientId,
-      JSON.stringify({
-        event: 'Customized',
-        data: {
-          type: 'CDP',
-          data: {
-            client_id: this._clientId,
-            session_id: this._sessionId,
-            message: {
-              method,
-              id,
-              params,
-            },
-          },
-          sender: this._clientId,
-        },
-        from: this._clientId,
-      }),
+      this._sessionId,
+      method,
+      params as any,
     );
-
-    // Add simple timeout
-    setTimeout(() => {
-      this._connector.off('usb-client-message', listener);
-      reject(new Error(`Timeout waiting for CDP method: ${method}`));
-    }, 5000);
-
-    return promise;
-  }
-
-  onEvent(method: string, listener: (params: any) => void): () => void {
-    const handler = (
-      { message, id: sourceId }: { message: string; id: number },
-    ) => {
-      const parsed = JSON.parse(message);
-      if (parsed.event !== 'Customized' || parsed.data?.type !== 'CDP') {
-        return;
-      }
-
-      const cdpData = parsed.data.data;
-      if (cdpData.session_id !== this._sessionId) return;
-
-      const cdpMessage = typeof cdpData.message === 'string'
-        ? JSON.parse(cdpData.message)
-        : cdpData.message;
-
-      if (cdpMessage.method === method) {
-        listener(cdpMessage.params);
-      }
-    };
-
-    this._connector.on('usb-client-message', handler);
-    return () => this._connector.off('usb-client-message', handler);
   }
 }

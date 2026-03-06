@@ -4,13 +4,12 @@ This document provides context, architecture guidelines, and workflows for agent
 
 ## Overview
 
-`kitten-lynx` is a Puppeteer-like testing library designed for interacting with the Lynx browser engine and Lynx Explorer Android application. It utilizes the `@lynx-js/debug-router-connector` to establish WebSocket connections via ADB to an Android Emulator running the `com.lynx.explorer` app.
+`kitten-lynx` is a Puppeteer-like testing library designed for interacting with the Lynx browser engine and Lynx Explorer Android application. It utilizes the `@lynx-js/devtool-connector` (stateless, short-lived connection architecture) to communicate with Lynx apps running on Android devices via ADB.
 
 Through the Chrome DevTools Protocol (CDP), `kitten-lynx` enables:
 
 - Starting and tearing down `LynxView` instances.
-- Spawning pages using deep link intents (`adb shell am start`).
-- Navigating and reading the DOM structure.
+- Navigating to Lynx bundle URLs and reading the DOM structure.
 - Querying elements via `DOM.querySelector`.
 - Reading styles, attributes, and precise boundary boxes of elements.
 - Simulating native touches through `Input.emulateTouchFromMouseEvent`.
@@ -19,10 +18,16 @@ Through the Chrome DevTools Protocol (CDP), `kitten-lynx` enables:
 
 ### Connections & Sessions
 
-1. **Lynx.ts**: The entry point. Handles `DebugRouterConnector` initialization, spawning devices, waiting for a client attachment, and enabling DevTools switches inside Lynx (`enable_devtool`).
-2. **LynxView.ts**: Manages individual pages. Executes `adb` intents to start the Lynx Shell Activity for a specific URL, then establishes a CDP session utilizing `onAttachedToTarget`.
-3. **CDPChannel.ts**: A wrapper that abstracts sending and receiving asynchronous `Customized` CDP commands over the router.
+1. **Lynx.ts**: The entry point. Initializes `Connector` with `AndroidTransport`, discovers ADB devices, restarts the target app, and polls `listClients()` to find the Lynx client. Accepts `ConnectOptions` to target a specific device and app package.
+2. **LynxView.ts**: Manages individual pages. Attaches to a CDP session via `sendListSessionMessage()`, sends `Page.navigate` to load a Lynx bundle, then polls sessions by URL to find and re-attach to the correct session (apps may have multiple Lynx views).
+3. **CDPChannel.ts**: A stateless wrapper that sends CDP commands via `connector.sendCDPMessage()`. Each call is a short-lived request/response — no persistent connection is maintained.
 4. **ElementNode.ts**: A wrapper around `nodeId`s matching an element. Implements interactive methods like `getAttribute()`, `computedStyleMap()`, and `tap()`.
+
+### Key Design Patterns
+
+- **Stateless connector**: The `devtool-connector` does not maintain persistent WebSocket connections. Each `sendCDPMessage` / `sendListSessionMessage` call is a self-contained request through ADB/USB transport.
+- **Retry-based initialization**: After restarting the app, polling loops handle the delay before the devtool server is ready. `onAttachedToTarget()` only assigns `_channel` after all CDP domain enables succeed, making the whole operation retryable.
+- **Session URL matching**: After `Page.navigate`, the Lynx runtime creates a new session for the navigated URL. `goto()` polls `sendListSessionMessage()` and matches sessions by URL (full URL, filename, or suffix) to find the correct one.
 
 ### Prerequisites
 
@@ -32,6 +37,14 @@ For the library to interact successfully:
 - Inside the emulator, the Lynx Explorer APK must be installed.
 - ADB port `5555` should be exposed or forwarded to control the emulator programmatically.
 - Typical commands use `pnpm run test` starting `vitest` logic inside the Node wrapper.
+
+### Known Gotchas
+
+- **`Page.navigate` does not work like Chrome**: In Lynx, `Page.navigate` tells the runtime to load a new bundle, which creates a **new session** rather than updating the current one in place. You must poll `sendListSessionMessage()` to find the new session by URL and re-attach to it.
+- **`App.openPage` is not implemented** in Lynx Explorer 3.6.0. Do not rely on `sendAppMessage('App.openPage')` for navigation.
+- **Docker emulator has no internet**: The Android emulator in Docker cannot reach external hosts. For tests using remote bundle URLs, use `adb reverse` port forwarding to serve bundles locally, or ensure the Docker network allows outbound traffic.
+- **Multiple ADB targets**: When multiple ADB devices are connected (e.g. physical phone + emulator), use `ConnectOptions.deviceId` to target a specific one. Otherwise the first available client is used, which may be on the wrong device.
+- **CDP timeouts**: The connector uses a 5-second `AbortSignal.timeout`. Keep test operations tolerant of emulator boot/warm-up times.
 
 ## Adding Features
 
