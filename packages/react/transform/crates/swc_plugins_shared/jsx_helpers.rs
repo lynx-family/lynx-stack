@@ -62,6 +62,8 @@ pub fn jsx_name(name: JSXElementName) -> Box<Expr> {
             obj: convert_obj(e.obj),
             prop: MemberProp::Ident(e.prop),
           }),
+          #[cfg(swc_ast_unknown)]
+          _ => panic!("unknown node"),
         })
         .into()
       }
@@ -71,6 +73,8 @@ pub fn jsx_name(name: JSXElementName) -> Box<Expr> {
         prop: MemberProp::Ident(prop),
       }))
     }
+    #[cfg(swc_ast_unknown)]
+    _ => panic!("unknown node"),
   }
 }
 
@@ -78,6 +82,8 @@ pub fn jsx_attr_name(name: &JSXAttrName) -> Atom {
   match name {
     JSXAttrName::Ident(ref id) => id.sym.clone(),
     JSXAttrName::JSXNamespacedName(ref name) => format!("{}:{}", name.ns.sym, name.name.sym).into(),
+    #[cfg(swc_ast_unknown)]
+    _ => panic!("unknown node"),
   }
 }
 
@@ -94,6 +100,8 @@ pub fn jsx_attr_value(value: Option<JSXAttrValue>) -> Box<Expr> {
     Some(JSXAttrValue::JSXExprContainer(JSXExprContainer { expr, .. })) => match expr {
       JSXExpr::Expr(expr) => expr,
       JSXExpr::JSXEmptyExpr(_) => Box::new(Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))),
+      #[cfg(swc_ast_unknown)]
+      _ => panic!("unknown node"),
     },
     Some(JSXAttrValue::JSXElement(jsx)) => Box::new(Expr::JSXElement(jsx)),
     Some(JSXAttrValue::JSXFragment(jsx)) => Box::new(Expr::JSXFragment(jsx)),
@@ -101,6 +109,8 @@ pub fn jsx_attr_value(value: Option<JSXAttrValue>) -> Box<Expr> {
       span: DUMMY_SP,
       value: true,
     }))),
+    #[cfg(swc_ast_unknown)]
+    Some(_) => panic!("unknown node"),
   }
 }
 
@@ -130,6 +140,8 @@ pub fn jsx_props_to_obj(jsx: &JSXElement) -> Option<ObjectLit> {
       JSXAttrOrSpread::SpreadElement(v) => {
         obj.props.push(PropOrSpread::Spread(v.clone()));
       }
+      #[cfg(swc_ast_unknown)]
+      _ => panic!("unknown node"),
     }
   }
   Some(obj)
@@ -186,10 +198,14 @@ pub fn jsx_children_to_expr(children: Vec<JSXElementChild>) -> Expr {
       JSXElementChild::JSXExprContainer(JSXExprContainer { expr, .. }) => match expr {
         JSXExpr::Expr(expr) => Some(*expr),
         JSXExpr::JSXEmptyExpr(_) => None,
+        #[cfg(swc_ast_unknown)]
+        _ => panic!("unknown node"),
       },
       JSXElementChild::JSXElement(jsx) => Some(Expr::JSXElement(jsx)),
       JSXElementChild::JSXFragment(jsx) => Some(Expr::JSXFragment(jsx)),
       JSXElementChild::JSXSpreadChild(_) => None,
+      #[cfg(swc_ast_unknown)]
+      _ => panic!("unknown node"),
     })
     .filter(|x| x.is_some())
     .collect();

@@ -18,3 +18,6 @@ serde_json = { workspace = true, features = ["preserve_order"] }
 sha-1 = { workspace = true }
 swc_core = { workspace = true, features = ["ecma_parser", "ecma_utils", "ecma_quote", "ecma_visit", "testing_transform", "ecma_transforms_react"] }
 swc_plugins_shared = { path = "../swc_plugins_shared" }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(swc_ast_unknown)'] }

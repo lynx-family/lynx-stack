@@ -2,3 +2,8 @@
 [alias]
 # Alias to build actual plugin binary for the specified target.
 build-wasi = "build --target wasm32-wasip1"
+
+[target.'cfg(target_arch = "wasm32")']
+rustflags = [
+  "--cfg=swc_ast_unknown",
+]

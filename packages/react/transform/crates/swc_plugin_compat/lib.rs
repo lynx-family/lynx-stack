@@ -647,6 +647,8 @@ where
               ..
             }) => false,
             JSXAttrOrSpread::SpreadElement(_) => false,
+            #[cfg(swc_ast_unknown)]
+            _ => panic!("unknown node"),
           })
         } else {
           false
@@ -672,6 +674,8 @@ where
         JSXElementName::JSXNamespacedName(_) => {
           unreachable!("Unexpected JSXNamespacedName in component is polyfill - expected Ident")
         }
+        #[cfg(swc_ast_unknown)]
+        _ => panic!("unknown node"),
       }
       self.emit_deprecation_warning(
         n.span,
@@ -741,6 +745,8 @@ where
             (JSXAttrName::Ident(_), _) => false,
             (JSXAttrName::JSXNamespacedName(_), None) => false,
             (JSXAttrName::JSXNamespacedName(_), Some(_)) => false,
+            #[cfg(swc_ast_unknown)]
+            _ => false,
           },
           JSXAttrOrSpread::SpreadElement(spread) => {
             if matches!(
@@ -762,6 +768,8 @@ where
             }
             true
           }
+          #[cfg(swc_ast_unknown)]
+          _ => panic!("unknown node"),
         });
 
         if matches!(self.opts.add_component_element, Either::A(true)) && has_spread {
@@ -876,8 +884,12 @@ where
               }
               true
             }
+            #[cfg(swc_ast_unknown)]
+            _ => panic!("unknown node"),
           },
           JSXAttrOrSpread::SpreadElement(_) => true,
+          #[cfg(swc_ast_unknown)]
+          _ => panic!("unknown node"),
         });
       }
 
@@ -980,6 +992,8 @@ where
             });
           }
         }
+        #[cfg(swc_ast_unknown)]
+        _ => panic!("unknown node"),
       }
     }
 
@@ -992,6 +1006,8 @@ where
         }
       }
       JSXAttrName::JSXNamespacedName(_) => {}
+      #[cfg(swc_ast_unknown)]
+      _ => panic!("unknown node"),
     }
 
     n.visit_mut_children_with(self);
@@ -1022,6 +1038,8 @@ where
       }
       JSXElementName::JSXMemberExpr(_) => {}
       JSXElementName::JSXNamespacedName(_) => {}
+      #[cfg(swc_ast_unknown)]
+      _ => panic!("unknown node"),
     }
   }
 
