@@ -9,7 +9,8 @@ let worklet = {
         y1: this.y1
     }
 };
-loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a77b:test:1", function(event: Event) {
+const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
+__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a77b:test:1", function(event: Event) {
     const worklet = lynxWorkletImpl._workletMap["a77b:test:1"].bind(this);
     let { y1 } = this["_c"];
     "main thread";

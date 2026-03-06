@@ -23,7 +23,8 @@ let onTapLepus = {
     },
     _wkltId: "a123:test:1"
 };
-loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a123:test:1", function() {
+const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
+__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a123:test:1", function() {
     const onTapLepus = lynxWorkletImpl._workletMap["a123:test:1"].bind(this);
     let { aaaa, cccc, hhhh, llll, oooo, rrrr, uuuu } = this["_c"];
     "main thread";

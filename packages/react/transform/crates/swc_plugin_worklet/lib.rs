@@ -18,6 +18,7 @@ use swc_core::ecma::ast::*;
 use swc_core::ecma::utils::prepend_stmts;
 use swc_core::ecma::visit::VisitMutWith;
 use swc_core::ecma::visit::{noop_visit_mut_type, VisitMut};
+use swc_core::quote;
 use worklet_type::WorkletType;
 
 use swc_plugins_shared::{target::TransformTarget, transform_mode::TransformMode};
@@ -60,6 +61,7 @@ pub struct WorkletVisitor {
   named_imports: HashSet<String>,
   hasher: WorkletHash,
   shared_identifiers: FxHashSet<Id>,
+  load_worklet_runtime_added: bool,
 }
 
 impl Default for WorkletVisitor {
@@ -515,13 +517,6 @@ impl VisitMut for WorkletVisitor {
 
   fn visit_mut_module_items(&mut self, n: &mut Vec<ModuleItem>) {
     n.visit_mut_children_with(self);
-    n.extend(
-      self
-        .stmts_to_insert_at_top_level
-        .iter_mut()
-        .filter(|stmt| !stmt.is_empty())
-        .map(|stmt| stmt.take().into()),
-    );
   }
 
   fn visit_mut_module(&mut self, n: &mut Module) {
@@ -547,6 +542,15 @@ impl VisitMut for WorkletVisitor {
     }
 
     n.visit_mut_children_with(self);
+
+    // Add global loadWorkletRuntime call if needed
+    if self.named_imports.contains("loadWorkletRuntime") && !self.load_worklet_runtime_added {
+      self.stmts_to_insert_at_top_level.insert(
+        0,
+        quote!("const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry)" as Stmt)
+      );
+      self.load_worklet_runtime_added = true;
+    }
 
     let mut specifiers = self.named_imports.iter().collect::<Vec<_>>();
 
@@ -621,6 +625,14 @@ impl VisitMut for WorkletVisitor {
         .into_iter(),
       );
     }
+    // Add statements to insert at top level after processing all items
+    n.body.extend(
+      self
+        .stmts_to_insert_at_top_level
+        .iter_mut()
+        .filter(|stmt| !stmt.is_empty())
+        .map(|stmt| stmt.take().into()),
+    );
   }
 }
 
@@ -686,6 +698,7 @@ impl WorkletVisitor {
       hasher: WorkletHash::new(),
       named_imports: HashSet::default(),
       shared_identifiers: FxHashSet::default(),
+      load_worklet_runtime_added: false,
     }
   }
 

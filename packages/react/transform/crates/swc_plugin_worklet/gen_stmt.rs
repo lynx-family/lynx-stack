@@ -183,7 +183,7 @@ impl StmtGen {
 
     if target == TransformTarget::LEPUS {
       named_imports.insert("loadWorkletRuntime".into());
-      quote!("loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal($type_, $hash, $fn_)" as Stmt,
+      quote!("__workletRuntimeLoaded && registerWorkletInternal($type_, $hash, $fn_)" as Stmt,
         type_: Expr = Expr::Lit(worklet_type.type_str().into()),
         hash: Expr = hash,
         fn_: Expr = Expr::Fn(FnExpr {
