@@ -46,7 +46,7 @@
     "@rspack/core": "catalog:rspack",
     "css-loader": "^7.1.4",
     "mini-css-extract-plugin": "^2.10.0",
-    "webpack": "^5.105.2"
+    "webpack": "^5.105.4"
   },
   "engines": {
     "node": ">=18"
