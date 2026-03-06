@@ -5,9 +5,8 @@
 */
 import { Component } from '../../element-reactive/index.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
-import { resizeObserver, type XFoldviewNg } from './XFoldviewNg.js';
-import { getCombinedDirectParentElement } from '../common/getCombinedParentElement.js';
 import { LinearContainer } from '../../compat/index.js';
+import { updateHeaderHeight, XFoldviewNg } from './XFoldviewNg.js';
 
 @Component<typeof XFoldviewHeaderNg>(
   'x-foldview-header-ng',
@@ -17,19 +16,34 @@ import { LinearContainer } from '../../compat/index.js';
   ],
 )
 export class XFoldviewHeaderNg extends HTMLElement {
-  #parentResizeObserver: ResizeObserver | undefined = undefined;
+  #resizeObserver?: ResizeObserver;
+
   connectedCallback() {
-    const parentElement = getCombinedDirectParentElement<XFoldviewNg>(
-      this,
-      'X-FOLDVIEW-NG',
-    );
-    this.#parentResizeObserver = parentElement?.[resizeObserver];
-    this.#parentResizeObserver?.observe(this);
+    this.#resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        this.#updateParent(entry.contentRect.height);
+      }
+    });
+    this.#resizeObserver.observe(this);
+    this.#updateParent(this.clientHeight);
   }
 
-  dispose() {
-    this.#parentResizeObserver?.unobserve(
-      this,
-    );
+  disconnectedCallback() {
+    this.#resizeObserver?.disconnect();
+    this.#resizeObserver = undefined;
+  }
+
+  #updateParent(height: number) {
+    let parent = this.parentElement;
+    while (parent) {
+      if (parent instanceof XFoldviewNg) {
+        parent[updateHeaderHeight](height);
+        break;
+      }
+      if (parent.tagName !== 'LYNX-WRAPPER') {
+        break;
+      }
+      parent = parent.parentElement;
+    }
   }
 }

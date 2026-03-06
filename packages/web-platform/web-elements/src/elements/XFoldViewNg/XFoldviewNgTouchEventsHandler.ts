@@ -5,21 +5,19 @@
 */
 import type { AttributeReactiveClass } from '../../element-reactive/index.js';
 import { isHeaderShowing, type XFoldviewNg } from './XFoldviewNg.js';
-import type { XFoldviewSlotNg } from './XFoldviewSlotNg.js';
-export class XFoldviewSlotNgTouchEventsHandler
-  implements InstanceType<AttributeReactiveClass<typeof XFoldviewSlotNg>>
+export class XFoldviewNgTouchEventsHandler
+  implements InstanceType<AttributeReactiveClass<typeof XFoldviewNg>>
 {
-  #parentScrollTop: number = 0;
   #childrenElemsntsScrollTop: WeakMap<Element, number> = new WeakMap();
   #elements?: Element[];
-  #previousPageY: number = 0;
-  #previousPageX: number = 0;
+  #previousClientY: number = 0;
+  #previousClientX: number = 0;
   #scrollingVertically: boolean | null = null;
   #currentScrollingElement?: Element;
   #deltaY: number = 0;
-  #dom: XFoldviewSlotNg;
+  #dom: XFoldviewNg;
   static observedAttributes = [];
-  constructor(dom: XFoldviewSlotNg) {
+  constructor(dom: XFoldviewNg) {
     this.#dom = dom;
 
     this.#dom.addEventListener('touchmove', this.#handleTouch, {
@@ -82,15 +80,15 @@ export class XFoldviewSlotNgTouchEventsHandler
   }
 
   #handleTouch = (event: TouchEvent) => {
-    const parentElement = this.#getParentElement();
-    if (!parentElement) {
+    if (this.#dom.getAttribute('scroll-enable') === 'false') {
       return;
     }
+
     const touch = event.touches.item(0)!;
-    const { pageY, pageX } = touch;
-    const deltaY = this.#previousPageY! - pageY;
+    const { clientX, clientY } = touch;
+    const deltaY = this.#previousClientY! - clientY;
     if (this.#scrollingVertically === null) {
-      const deltaX = this.#previousPageX! - pageX;
+      const deltaX = this.#previousClientX! - clientX;
       this.#scrollingVertically = Math.abs(deltaY) > Math.abs(deltaX);
     }
     if (this.#scrollingVertically === false) {
@@ -99,13 +97,12 @@ export class XFoldviewSlotNgTouchEventsHandler
     if (event.cancelable) {
       event.preventDefault();
     }
-    this.#handleScrollDelta(deltaY, parentElement);
-    this.#previousPageY = pageY;
+    this.#handleScrollDelta(deltaY);
+    this.#previousClientY = clientY;
   };
 
   #handleWheel = (event: WheelEvent) => {
-    const parentElement = this.#getParentElement();
-    if (!parentElement) {
+    if (this.#dom.getAttribute('scroll-enable') === 'false') {
       return;
     }
     if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
@@ -122,7 +119,6 @@ export class XFoldviewSlotNgTouchEventsHandler
       e => this.#dom.contains(e),
     );
     this.#elements = [...new Set([...pathElements, ...pointElements])];
-    this.#parentScrollTop = parentElement.scrollTop;
     if (this.#elements) {
       for (const element of this.#elements) {
         this.#childrenElemsntsScrollTop.set(element, element.scrollTop);
@@ -131,24 +127,28 @@ export class XFoldviewSlotNgTouchEventsHandler
     if (event.cancelable) {
       event.preventDefault();
     }
-    this.#handleScrollDelta(event.deltaY, parentElement);
+    this.#handleScrollDelta(event.deltaY);
   };
 
-  #getParentElement(): XFoldviewNg | void {
-    const parentElement = this.#dom.parentElement;
-    if (parentElement && parentElement.tagName === 'X-FOLDVIEW-NG') {
-      return parentElement as XFoldviewNg;
-    }
-  }
+  // Removed #getParentElement
 
   #touchStart = (event: TouchEvent) => {
-    const { pageX, pageY } = event.touches.item(0)!;
-    this.#elements = document.elementsFromPoint(pageX, pageY).filter(e =>
-      this.#dom.contains(e) && e !== this.#dom
+    const { clientX, clientY } = event.touches.item(0)!;
+    // For nested foldviews, we only handle if this foldview is the closest one
+    const pathElements = event.composedPath();
+    const closestFoldview = pathElements.find(el =>
+      el instanceof Element && el.tagName === 'X-FOLDVIEW-NG'
     );
-    this.#previousPageY = pageY;
-    this.#previousPageX = pageX;
-    this.#parentScrollTop = this.#getParentElement()?.scrollTop ?? 0;
+    if (closestFoldview !== this.#dom) {
+      this.#elements = [];
+      return;
+    }
+
+    this.#elements = document.elementsFromPoint(clientX, clientY).filter(e =>
+      this.#dom.contains(e) && this.#dom !== e
+    );
+    this.#previousClientY = clientY;
+    this.#previousClientX = clientX;
     for (const element of this.#elements) {
       this.#childrenElemsntsScrollTop.set(element, element.scrollTop);
     }
@@ -159,10 +159,9 @@ export class XFoldviewSlotNgTouchEventsHandler
   #touchEnd = () => {
     this.#scrollingVertically = null;
     if (this.#currentScrollingElement) {
-      const parentElement = this.#getParentElement();
       if (
-        this.#currentScrollingElement === parentElement
-        && !parentElement[isHeaderShowing]
+        this.#currentScrollingElement === this.#dom
+        && !this.#dom[isHeaderShowing]
       ) {
         return;
       }
@@ -175,24 +174,18 @@ export class XFoldviewSlotNgTouchEventsHandler
 
   #handleScrollDelta(
     deltaY: number,
-    parentElement: XFoldviewNg,
   ) {
     const scrollableKidY = this.#getTheMostScrollableKid(deltaY);
     if (
-      (parentElement[isHeaderShowing] && deltaY > 0
+      (this.#dom[isHeaderShowing] && deltaY > 0
         || (deltaY < 0 && !scrollableKidY))
       // deltaY > 0: swipe up (folding header)
       // scroll the foldview if its scrollable
-      || (!parentElement[isHeaderShowing] && !scrollableKidY)
+      || (!this.#dom[isHeaderShowing] && !scrollableKidY)
       // all sub doms are scrolled
     ) {
-      parentElement.scrollBy({
-        top: deltaY,
-        behavior: 'smooth',
-      });
-      this.#parentScrollTop += deltaY;
-      parentElement.scrollTop = this.#parentScrollTop;
-      this.#currentScrollingElement = parentElement;
+      this.#dom.scrollTop += deltaY;
+      this.#currentScrollingElement = this.#dom;
     } else if (scrollableKidY) {
       this.#currentScrollingElement = scrollableKidY;
       this.#scrollKid(scrollableKidY, deltaY);

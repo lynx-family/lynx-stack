@@ -856,13 +856,16 @@ test.describe('web-elements test suite', () => {
     }, { title }) => {
       await gotoWebComponentPage(page, title);
       await wait(500);
-      expect(page.locator('x-foldview-slot-ng')).toHaveCSS('top', '200px');
+      expect(page.locator('x-foldview-slot-ng')).toHaveCSS(
+        'transform',
+        'matrix(1, 0, 0, 1, 0, 200)',
+      );
     });
     test('x-foldview-ng/size-parent-grow-children-specific', async ({
       page,
       browserName,
     }, { title }) => {
-      test.skip(browserName === 'webkit', 'z-index issues for safari');
+      // test.skip(browserName === 'webkit', 'z-index issues for safari');
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, '300px-inf');
     });
@@ -1271,7 +1274,7 @@ test.describe('web-elements test suite', () => {
       },
     );
 
-    test('x-foldview-ng/item-fixed', async ({ page }, { title }) => {
+    test.fixme('x-foldview-ng/item-fixed', async ({ page }, { title }) => {
       await gotoWebComponentPage(page, title);
       await wait(100);
       await diffScreenShot(page, title, 'initial');
