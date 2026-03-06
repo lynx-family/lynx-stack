@@ -1607,7 +1607,8 @@ export function bar() {
               },
               _wkltId: "da39:75a1b:1"
           };
-          loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:75a1b:1", function(event) {
+          const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
+          __workletRuntimeLoaded && registerWorkletInternal("main-thread", "da39:75a1b:1", function(event) {
               const getCurrentDelta = lynxWorkletImpl._workletMap["da39:75a1b:1"].bind(this);
               let { foo } = this["_c"];
               "main thread";
@@ -1643,7 +1644,8 @@ export function bar() {
               },
               _wkltId: "da39:75a1b:1"
           };
-          loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:75a1b:1", function(event) {
+          const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
+          __workletRuntimeLoaded && registerWorkletInternal("main-thread", "da39:75a1b:1", function(event) {
               const getCurrentDelta = lynxWorkletImpl._workletMap["da39:75a1b:1"].bind(this);
               let { foo } = this["_c"];
               "main thread";
@@ -1708,7 +1710,8 @@ export function foo(event) {
           },
           _wkltId: "da39:64631:1"
       };
-      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:64631:1", function(event) {
+      const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
+      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "da39:64631:1", function(event) {
           const foo = lynxWorkletImpl._workletMap["da39:64631:1"].bind(this);
           let { bar, qux } = this["_c"];
           "main thread";
@@ -1768,12 +1771,13 @@ console.log(bar)
           _wkltId: "da39:80ef4:2"
       };
       console.log(bar);
-      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:80ef4:1", function() {
+      const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
+      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "da39:80ef4:1", function() {
           const foo = lynxWorkletImpl._workletMap["da39:80ef4:1"].bind(this);
           "main thread";
           return null;
       });
-      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:80ef4:2", function() {
+      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "da39:80ef4:2", function() {
           const bar = lynxWorkletImpl._workletMap["da39:80ef4:2"].bind(this);
           let { foo } = this["_c"];
           "main thread";
@@ -1821,7 +1825,8 @@ function getCurrentDelta(event) {
     expect(code).toMatchInlineSnapshot(`
       "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
       var loadWorkletRuntime = __loadWorkletRuntime;
-      loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "da39:059d0:1", function(event) {
+      const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
+      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "da39:059d0:1", function(event) {
           lynxWorkletImpl._workletMap["da39:059d0:1"].bind(this);
           let { foo, a, b } = this["_c"];
           "main thread";
