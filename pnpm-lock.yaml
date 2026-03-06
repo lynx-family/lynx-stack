@@ -199,6 +199,34 @@ importers:
         specifier: ^18.3.28
         version: 18.3.28
 
+  examples/gesture:
+    dependencies:
+      '@lynx-js/gesture-runtime':
+        specifier: workspace:*
+        version: link:../../packages/lynx/gesture-runtime
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+    devDependencies:
+      '@lynx-js/preact-devtools':
+        specifier: ^5.0.1
+        version: 5.0.1
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-qrcode
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-react
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+      '@lynx-js/types':
+        specifier: 3.7.0
+        version: 3.7.0
+      '@types/react':
+        specifier: ^18.3.28
+        version: 18.3.28
+
   examples/motion:
     dependencies:
       '@lynx-js/motion':

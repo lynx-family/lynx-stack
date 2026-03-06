@@ -48,6 +48,7 @@ export const initElementTree: () => {
     __AddDataset(e: LynxElement, key: string, value: string): void;
     __SetDataset(e: LynxElement, dataset: any): void;
     __SetGestureDetector(e: LynxElement, id: number, type: number, config: any, relationMap: Record<string, number[]>): void;
+    __RemoveGestureDetector(e: LynxElement, id: number): void;
     __GetDataset(e: LynxElement): DOMStringMap;
     __RemoveElement(parent: LynxElement, child: LynxElement): void;
     __InsertElementBefore(parent: LynxElement, child: LynxElement, ref?: LynxElement | undefined): void;
