@@ -7,11 +7,7 @@ import type { Compilation, Compiler } from 'webpack';
 import type { LynxStyleNode } from '@lynx-js/css-serializer';
 import type { TasmJSONInfo } from '@lynx-js/web-core-wasm/encode';
 
-import {
-  LynxTemplatePlugin,
-  isDebug,
-  isRsdoctor,
-} from './LynxTemplatePlugin.js';
+import { LynxBundlePlugin, isDebug, isRsdoctor } from './LynxTemplatePlugin.js';
 import { genStyleInfo } from './web/genStyleInfo.js';
 
 export class WebEncodePlugin {
@@ -26,7 +22,7 @@ export class WebEncodePlugin {
     compiler.hooks.thisCompilation.tap(
       WebEncodePlugin.name,
       (compilation) => {
-        const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
+        const hooks = LynxBundlePlugin.getLynxTemplatePluginHooks(
           compilation,
         );
 

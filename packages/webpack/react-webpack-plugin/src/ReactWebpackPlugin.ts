@@ -9,7 +9,7 @@ import type { Chunk, Compilation, Compiler } from '@rspack/core';
 import invariant from 'tiny-invariant';
 
 import type { ExtractStrConfig } from '@lynx-js/react/transform';
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+import { LynxBundlePlugin } from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { LAYERS } from './layer.js';
@@ -257,7 +257,7 @@ class ReactWebpackPlugin {
 
       // TODO: replace LynxTemplatePlugin types with Rspack
       // @ts-expect-error Rspack x Webpack compilation not match
-      const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
+      const hooks = LynxBundlePlugin.getLynxTemplatePluginHooks(compilation);
 
       const { RawSource, ConcatSource } = compiler.webpack.sources;
       hooks.beforeEncode.tap(
