@@ -51,10 +51,20 @@ export const LynxEventNameToW3cCommon: Record<string, string> =
 export const MagicHeader0 = /*#__PURE__*/ 0x41524453; // 'SDRA'
 export const MagicHeader1 = /*#__PURE__*/ 0x464F5257; // 'WROF'
 
-export const TemplateSectionLabel = /*#__PURE__*/ {
-  Manifest: 1,
+/**
+ * Section labels used in the binary Lynx Bundle encoding format.
+ *
+ * @remarks
+ * `BackgroundThreadScript` corresponds to "Manifest" in legacy code.
+ * `MainThreadScript` corresponds to "LepusCode" in legacy code.
+ * Wire values are unchanged.
+ */
+export const BundleSectionLabel = /*#__PURE__*/ {
+  /** Background Thread Script (BTS). Legacy name: "Manifest". */
+  BackgroundThreadScript: 1,
   StyleInfo: 2,
-  LepusCode: 3,
+  /** Main Thread Script (MTS). Legacy name: "LepusCode". */
+  MainThreadScript: 3,
   CustomSections: 4,
   ElementTemplates: 5,
   Configurations: 6,

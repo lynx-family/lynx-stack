@@ -3,7 +3,7 @@ import { decodeTemplate } from '../ts/server/decode.js';
 import {
   MagicHeader0,
   MagicHeader1,
-  TemplateSectionLabel,
+  BundleSectionLabel,
 } from '../ts/constants.js';
 import * as wasm from '../ts/server/wasm.js';
 
@@ -138,7 +138,7 @@ describe('decodeTemplate', () => {
     const buffer = createTemplate({
       sections: [
         {
-          label: TemplateSectionLabel.Configurations,
+          label: BundleSectionLabel.Configurations,
           content: new Uint8Array(content),
         },
       ],
@@ -154,7 +154,7 @@ describe('decodeTemplate', () => {
 
     const buffer = createTemplate({
       sections: [
-        { label: TemplateSectionLabel.LepusCode, content },
+        { label: BundleSectionLabel.MainThreadScript, content },
       ],
     });
 
@@ -172,7 +172,7 @@ describe('decodeTemplate', () => {
 
     const buffer = createTemplate({
       sections: [
-        { label: TemplateSectionLabel.StyleInfo, content },
+        { label: BundleSectionLabel.StyleInfo, content },
       ],
     });
 
@@ -189,7 +189,7 @@ describe('decodeTemplate', () => {
 
     const buffer = createTemplate({
       sections: [
-        { label: TemplateSectionLabel.CustomSections, content: customData },
+        { label: BundleSectionLabel.CustomSections, content: customData },
       ],
     });
 

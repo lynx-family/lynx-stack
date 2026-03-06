@@ -197,7 +197,8 @@ export interface PluginReactLynxOptions {
   enableRemoveCSSScope?: boolean | undefined
 
   /**
-   * This flag controls when MainThread (Lepus) transfers control to Background after the first screen
+   * This flag controls when Main Thread Script (MTS) transfers
+   * control to Background Thread Script (BTS) after the first screen.
    *
    * This flag has two options:
    *
@@ -205,8 +206,8 @@ export interface PluginReactLynxOptions {
    *
    * `"jsReady"`: Transfer when background (JS Runtime) is ready
    *
-   * After handing over control, MainThread (Lepus) runtime can no longer respond to data updates,
-   * and data updates will be forwarded to background (JS Runtime) and processed __asynchronously__
+   * After handing over control, Main Thread Script (MTS) runtime can no longer respond to data updates,
+   * and data updates will be forwarded to Background Thread Script (BTS) and processed __asynchronously__
    *
    * @defaultValue "immediately"
    */
@@ -252,8 +253,8 @@ export interface PluginReactLynxOptions {
   targetSdkVersion?: string
 
   /**
-   * Merge same string literals in JS and Lepus to reduce output bundle size.
-   * Set to `false` to disable.
+   * Merge same string literals in JS and Main Thread Script (MTS)
+   * to reduce output bundle size. Set to `false` to disable.
    *
    * @defaultValue false
    */
@@ -389,15 +390,15 @@ export function pluginReactLynx(
         }
 
         api.expose(Symbol.for('LAYERS'), LAYERS)
-        // Only expose `LynxTemplatePlugin.getLynxTemplatePluginHooks` to avoid
-        // other breaking changes in `LynxTemplatePlugin`
-        // breaks `pluginReactLynx`
-        api.expose(Symbol.for('LynxTemplatePlugin'), {
-          LynxTemplatePlugin: {
+        const exposedLynxBundlePlugin = {
+          LynxBundlePlugin: {
             getLynxTemplatePluginHooks: LynxTemplatePlugin
               .getLynxTemplatePluginHooks.bind(LynxTemplatePlugin),
           },
-        })
+        }
+        api.expose(Symbol.for('LynxBundlePlugin'), exposedLynxBundlePlugin)
+        // Backward compat: expose under old symbol too
+        api.expose(Symbol.for('LynxTemplatePlugin'), exposedLynxBundlePlugin)
         const require = createRequire(import.meta.url)
 
         const { version } = require('../package.json') as { version: string }

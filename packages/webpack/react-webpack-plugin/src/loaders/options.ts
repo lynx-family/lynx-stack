@@ -15,6 +15,7 @@ import type {
 
 const PLUGIN_NAME = 'react:webpack';
 const JSX_IMPORT_SOURCE = {
+  // `lepus` is a legacy path segment for Main Thread Script (MTS).
   MAIN_THREAD: '@lynx-js/react/lepus',
   BACKGROUND: '@lynx-js/react',
 };

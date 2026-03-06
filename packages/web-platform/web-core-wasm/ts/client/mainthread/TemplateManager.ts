@@ -4,7 +4,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { TemplateSectionLabel } from '../../constants.js';
+import { BundleSectionLabel } from '../../constants.js';
 import type { LynxViewInstance } from './LynxViewInstance.js';
 import type {
   MainMessage,
@@ -194,13 +194,13 @@ export class TemplateManager {
     ]);
     const { label, data, url, config } = msg;
     switch (label) {
-      case TemplateSectionLabel.Configurations: {
+      case BundleSectionLabel.Configurations: {
         instance.backgroundThread.markTiming('decode_start');
         this.#setConfig(url, data);
         instance.onPageConfigReady(data);
         break;
       }
-      case TemplateSectionLabel.StyleInfo: {
+      case BundleSectionLabel.StyleInfo: {
         const resource = new StyleSheetResource(
           new Uint8Array(data as ArrayBuffer),
           document,
@@ -212,18 +212,18 @@ export class TemplateManager {
         instance.onStyleInfoReady(url);
         break;
       }
-      case TemplateSectionLabel.LepusCode: {
+      case BundleSectionLabel.MainThreadScript: {
         const blobMap = data as Record<string, string>;
         this.#setLepusCode(url, blobMap);
         instance.onMTSScriptsLoaded(url, config!['isLazy'] === 'true');
         break;
       }
 
-      case TemplateSectionLabel.CustomSections: {
+      case BundleSectionLabel.CustomSections: {
         this.#setCustomSection(url, data);
         break;
       }
-      case TemplateSectionLabel.Manifest: {
+      case BundleSectionLabel.BackgroundThreadScript: {
         const blobMap = data as Record<string, string>;
         this.#setBackgroundCode(url, blobMap);
         instance.onBTSScriptsLoaded(url);

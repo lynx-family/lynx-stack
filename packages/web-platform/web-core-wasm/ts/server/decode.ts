@@ -1,5 +1,5 @@
 import {
-  TemplateSectionLabel,
+  BundleSectionLabel,
   MagicHeader0,
   MagicHeader1,
 } from '../constants.js';
@@ -72,13 +72,13 @@ export function decodeTemplate(buffer: Uint8Array): DecodedTemplate {
     offset += length;
 
     switch (label) {
-      case TemplateSectionLabel.Configurations: {
+      case BundleSectionLabel.Configurations: {
         const decoder = new TextDecoder('utf-16le');
         const jsonString = decoder.decode(content);
         config = JSON.parse(jsonString);
         break;
       }
-      case TemplateSectionLabel.StyleInfo: {
+      case BundleSectionLabel.StyleInfo: {
         const buffer = decode_style_info(
           content,
           config['isLazy'] === 'true' ? '' : undefined, // URL is not available in synchronous decode usually, or passed as arg? The user req says "uint8array as params decode directly". Assuming URL is empty or unneeded for sync server decode unless specified.
@@ -87,17 +87,17 @@ export function decodeTemplate(buffer: Uint8Array): DecodedTemplate {
         styleInfo = buffer;
         break;
       }
-      case TemplateSectionLabel.LepusCode: {
+      case BundleSectionLabel.MainThreadScript: {
         lepusCode = decodeBinaryMap(content);
         break;
       }
-      case TemplateSectionLabel.CustomSections: {
+      case BundleSectionLabel.CustomSections: {
         const decoder = new TextDecoder('utf-16le');
         customSections = JSON.parse(decoder.decode(content));
         break;
       }
-      case TemplateSectionLabel.Manifest:
-      case TemplateSectionLabel.ElementTemplates: {
+      case BundleSectionLabel.BackgroundThreadScript:
+      case BundleSectionLabel.ElementTemplates: {
         // Ignore these sections for now
         break;
       }

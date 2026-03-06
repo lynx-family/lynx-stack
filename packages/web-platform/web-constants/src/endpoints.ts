@@ -95,6 +95,13 @@ export const flushElementTreeEndpoint = createRpcEndpoint<
   void
 >('flushElementTree', false, true);
 
+/**
+ * Calls a method on the Main Thread Script (MTS) runtime.
+ *
+ * @remarks
+ * `callLepusMethod` is a legacy endpoint name. "Lepus" is the legacy term
+ * for Main Thread Script (MTS) in the Lynx specification.
+ */
 export const callLepusMethodEndpoint = createRpcEndpoint<
   [name: string, data: unknown],
   void
