@@ -46,7 +46,7 @@
     "@lynx-js/vitest-setup": "workspace:*",
     "@rslib/core": "^0.19.6",
     "vitest": "^3.2.4",
-    "webpack": "^5.105.2"
+    "webpack": "^5.105.4"
   },
   "engines": {
     "node": ">=18"
