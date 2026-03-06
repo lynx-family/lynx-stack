@@ -1,5 +1,12 @@
 # @lynx-js/web-core-wasm
 
+## 0.0.5
+
+### Patch Changes
+
+- Updated dependencies [[`4963907`](https://github.com/lynx-family/lynx-stack/commit/49639072a46399378ca7e1279eb8e8f2282d7bfe), [`8fd936a`](https://github.com/lynx-family/lynx-stack/commit/8fd936a47de753b53ecdd90968d96756d90ec552), [`0d41253`](https://github.com/lynx-family/lynx-stack/commit/0d412531665736acbfe4f052239cb9bfff997b58), [`d32c4c6`](https://github.com/lynx-family/lynx-stack/commit/d32c4c6fb5a583819b39da77fa41d8199de5e1b9), [`7518b72`](https://github.com/lynx-family/lynx-stack/commit/7518b729ca11861bb8c18565b8aa318f4e90dd42), [`fca9d4a`](https://github.com/lynx-family/lynx-stack/commit/fca9d4ab47ef033d66bfb32c12afc7a24250fd58)]:
+  - @lynx-js/web-elements@0.12.0
+
 ## 0.0.4
 
 ### Patch Changes

@@ -1,5 +1,23 @@
 # @lynx-js/web-elements
 
+## 0.12.0
+
+### Minor Changes
+
+- feat: add `willchange` event to `x-viewpager-ng` ([#2305](https://github.com/lynx-family/lynx-stack/pull/2305))
+
+### Patch Changes
+
+- fix: firefox `@supports(width:1rex)` ([#2288](https://github.com/lynx-family/lynx-stack/pull/2288))
+
+- fix: check computed overflow style in `getTheMostScrollableKid` to avoid treating `overflow: visible` elements as scroll containers ([#2309](https://github.com/lynx-family/lynx-stack/pull/2309))
+
+- fix: the inline-truncation should only work as a direct child of x-text ([#2287](https://github.com/lynx-family/lynx-stack/pull/2287))
+
+- fix: getVisibleCells cannot work in firefox due to contentvisibilityautostatechange not propagate list-item ([#2308](https://github.com/lynx-family/lynx-stack/pull/2308))
+
+- fix: foldview stuck issue ([#2304](https://github.com/lynx-family/lynx-stack/pull/2304))
+
 ## 0.11.3
 
 ### Patch Changes

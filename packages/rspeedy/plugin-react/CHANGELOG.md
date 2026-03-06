@@ -1,5 +1,19 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.12.10
+
+### Patch Changes
+
+- Support bundle and load css in external bundle ([#2143](https://github.com/lynx-family/lynx-stack/pull/2143))
+
+- Updated dependencies [[`59f2933`](https://github.com/lynx-family/lynx-stack/commit/59f293305342e5bc15efa5292c377179a7046a6b), [`453e006`](https://github.com/lynx-family/lynx-stack/commit/453e006c0e96f580031971b21ae577b8945fe984)]:
+  - @lynx-js/template-webpack-plugin@0.10.5
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+  - @lynx-js/react-webpack-plugin@0.7.4
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.10
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+
 ## 0.12.9
 
 ### Patch Changes
