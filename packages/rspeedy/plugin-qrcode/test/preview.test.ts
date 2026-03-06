@@ -196,6 +196,38 @@ describe('Preview', () => {
     })
   })
 
+  test('preview without entry', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    const { renderUnicodeCompact } = await import('uqr')
+
+    const { selectKey, isCancel } = await import('@clack/prompts')
+    vi.mocked(selectKey).mockResolvedValue('foo')
+    vi.mocked(isCancel).mockReturnValue(true)
+
+    vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
+
+    const rsbuild = await createRsbuild({
+      rsbuildConfig: {
+        plugins: [
+          pluginStubRspeedyAPI(),
+          pluginQRCode(),
+        ],
+        source: {
+          entry: {},
+        },
+        server: {
+          port: getRandomNumberInRange(3000, 50000),
+        },
+      },
+    })
+
+    const { server } = await rsbuild.preview({ checkDistDir: false })
+
+    expect(renderUnicodeCompact).not.toBeCalled()
+
+    await server.close()
+  })
+
   test('preview without environment lynx', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const { renderUnicodeCompact } = await import('uqr')
@@ -229,37 +261,5 @@ describe('Preview', () => {
 
     await server.close()
     expect(exit).not.toBeCalled()
-  })
-
-  test('preview without entry', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
-    const { renderUnicodeCompact } = await import('uqr')
-
-    const { selectKey, isCancel } = await import('@clack/prompts')
-    vi.mocked(selectKey).mockResolvedValue('foo')
-    vi.mocked(isCancel).mockReturnValue(true)
-
-    vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
-
-    const rsbuild = await createRsbuild({
-      rsbuildConfig: {
-        plugins: [
-          pluginStubRspeedyAPI(),
-          pluginQRCode(),
-        ],
-        source: {
-          entry: {},
-        },
-        server: {
-          port: getRandomNumberInRange(3000, 50000),
-        },
-      },
-    })
-
-    const { server } = await rsbuild.preview({ checkDistDir: false })
-
-    expect(renderUnicodeCompact).not.toBeCalled()
-
-    await server.close()
   })
 })
