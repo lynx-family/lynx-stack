@@ -46,10 +46,11 @@ const pkg = JSON.parse(await readFile(pkgPath!, 'utf-8')) as {
 
 const MCP_SERVER_NAME = 'lynx-docs';
 
-function registerResources(
+async function crawlAndRegisterResources(
   baseURL: string,
   mcpServer: McpServer,
   fromMarkdownText: string,
+  visited: Set<string> = new Set(),
 ) {
   const tree = fromMarkdown(fromMarkdownText); // verify markdown is valid
 
@@ -86,13 +87,59 @@ function registerResources(
     }
   });
 
-  linkUrls.forEach((link, strippedUrl) => {
+  for (const [strippedUrl, link] of linkUrls) {
     // Generate a title for the resource by converting the link node back to markdown
     // NOTE: The title generation is complex because link titles may contain nested formatting, DON'T just use link.title
     const title = toMarkdown({ ...link, type: 'root' }).trim();
 
     if (!title) {
-      return;
+      continue;
+    }
+
+    if (strippedUrl.endsWith('llms.txt')) {
+      if (visited.has(strippedUrl)) {
+        continue;
+      }
+
+      debug(`Recursively fetching index: ${link.url}`);
+      try {
+        const response = await fetch(link.url);
+        if (!response.ok) {
+          debug(`Failed to fetch nested index ${link.url}: ${response.status} ${response.statusText}`);
+          continue;
+        }
+        const nestedMarkdown = await response.text();
+        visited.add(strippedUrl);
+
+        mcpServer.registerResource(
+          title,
+          `lynx-docs://${strippedUrl}`,
+          {
+            title,
+            description: title,
+            mimeType: 'text/markdown',
+          },
+          () => ({
+            contents: [
+              {
+                uri: `lynx-docs://${strippedUrl}`,
+                text: nestedMarkdown,
+                mimeType: 'text/markdown',
+              },
+            ],
+          }),
+        );
+
+        await crawlAndRegisterResources(
+          baseURL,
+          mcpServer,
+          nestedMarkdown,
+          visited,
+        );
+      } catch (e) {
+        debug(`Failed to fetch nested index ${link.url}: %o`, e);
+      }
+      continue;
     }
 
     debug(
@@ -107,17 +154,23 @@ function registerResources(
         description: title,
         mimeType: 'text/markdown',
       },
-      async () => ({
-        contents: [
-          {
-            uri: `lynx-docs://${strippedUrl}`,
-            text: await fetch(link.url).then((res) => res.text()),
-            mimeType: 'text/markdown',
-          },
-        ],
-      }),
+      async () => {
+        const response = await fetch(link.url);
+        if (!response.ok) {
+           throw new Error(`Failed to fetch resource ${link.url}: ${response.status} ${response.statusText}`);
+        }
+        return {
+          contents: [
+            {
+              uri: `lynx-docs://${strippedUrl}`,
+              text: await response.text(),
+              mimeType: 'text/markdown',
+            },
+          ],
+        };
+      },
     );
-  });
+  }
 }
 
 async function main(baseUrl: string) {
@@ -166,7 +219,13 @@ For any questions or requirements regarding Lynx:
     }),
   );
 
-  registerResources(baseUrl, mcpServer, ROOT_DOC_MARKDOWN);
+  const visited = new Set<string>(['llms.txt']);
+  await crawlAndRegisterResources(
+    baseUrl,
+    mcpServer,
+    ROOT_DOC_MARKDOWN,
+    visited,
+  );
 
   const transport = new StdioServerTransport();
   await mcpServer.connect(transport);
