@@ -57,29 +57,14 @@ function injectLepusChunkEntries(
   compiler.hooks.make.tapAsync(
     'ReactWebpackPlugin:LepusChunkEntry',
     (compilation, callback) => {
-      const requestedChunkNames = new Set<string>();
-      const queuedChunkByName = new Map<string, LepusChunkPipelineItem>();
-
-      compilation.hooks.succeedModule.tap(
-        'ReactWebpackPlugin:LepusChunkEntry',
-        (module) => {
-          for (const chunk of lepusChunkPipeline) {
-            if (!chunk.shouldCompile(module)) {
-              continue;
-            }
-            requestedChunkNames.add(chunk.chunkName);
-            queuedChunkByName.set(chunk.chunkName, chunk);
-          }
-        },
-      );
-
       compilation.hooks.finishModules.tapAsync(
         'ReactWebpackPlugin:LepusChunkEntry',
-        (_modules, finishCallback) => {
-          const queuedChunks = [...requestedChunkNames]
-            .filter(name => !hasEntry(compiler, name))
-            .map(name => queuedChunkByName.get(name))
-            .filter((chunk): chunk is LepusChunkPipelineItem => Boolean(chunk));
+        (modules, finishCallback) => {
+          const allModules = [...modules];
+          const queuedChunks = lepusChunkPipeline.filter((chunk) =>
+            !hasEntry(compiler, chunk.chunkName)
+            && allModules.some(module => chunk.shouldCompile(module))
+          );
 
           if (queuedChunks.length === 0) {
             finishCallback();

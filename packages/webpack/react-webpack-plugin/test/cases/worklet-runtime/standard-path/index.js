@@ -41,8 +41,5 @@ it('should inject worklet-runtime from compiled asset content', async () => {
   expect(injected.includes('sourceMappingURL=worklet-runtime.js.map')).toBe(
     true,
   );
-  expect(
-    injected.startsWith('(function(){')
-      || injected.includes('function __webpack_require__('),
-  ).toBe(true);
+  expect(injected.startsWith('(function(){')).toBe(true);
 });
