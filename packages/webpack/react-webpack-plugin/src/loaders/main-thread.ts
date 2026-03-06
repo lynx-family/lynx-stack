@@ -7,6 +7,10 @@ import type { LoaderDefinitionFunction } from '@rspack/core';
 
 import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
+import {
+  detectWorkletUsage,
+  setModuleWorkletUsage,
+} from '../workletMetadata.js';
 
 const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
   content,
@@ -30,6 +34,8 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     content,
     getMainThreadTransformOptions.call(this, swcInputSourceMap),
   );
+  const hasWorklet = detectWorkletUsage(result.code);
+  setModuleWorkletUsage(this, hasWorklet);
 
   if (result.errors.length > 0) {
     for (const error of result.errors) {

@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 
 import type { Chunk, Compilation, Compiler } from '@rspack/core';
@@ -13,6 +12,14 @@ import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { LAYERS } from './layer.js';
+import {
+  createIsolatedLepusChunkSource,
+  createLepusChunkPipeline,
+  excludeLepusChunksFromTemplate,
+  getLepusChunkGeneratedAssetNames,
+  getLepusChunkPrimaryJsAsset,
+  injectLepusChunkEntries,
+} from './lepusChunkPipeline.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 
 const require = createRequire(import.meta.url);
@@ -156,6 +163,10 @@ class ReactWebpackPlugin {
       this.options,
     );
     const { BannerPlugin, DefinePlugin, EnvironmentPlugin } = compiler.webpack;
+    const lepusChunkPipeline = createLepusChunkPipeline(options);
+
+    injectLepusChunkEntries(compiler, lepusChunkPipeline);
+    excludeLepusChunksFromTemplate(compiler, lepusChunkPipeline);
 
     if (!options.experimental_isLazyBundle) {
       new BannerPlugin({
@@ -264,17 +275,25 @@ class ReactWebpackPlugin {
         this.constructor.name,
         (args) => {
           const lepusCode = args.encodeData.lepusCode;
-          if (
-            lepusCode.root?.source.source().toString()?.includes(
-              'registerWorkletInternal',
-            )
-          ) {
+          const lepusRootSource = lepusCode.root?.source.source().toString();
+          for (const chunk of lepusChunkPipeline) {
+            if (!chunk.shouldInject(lepusRootSource)) {
+              continue;
+            }
+
+            const chunkAsset = getLepusChunkPrimaryJsAsset(
+              compilation,
+              chunk.chunkName,
+            );
+
+            const compiledChunkSource = chunkAsset.source.source().toString();
+            const injectedChunkSource = createIsolatedLepusChunkSource(
+              compiledChunkSource,
+            );
+
             lepusCode.chunks.push({
-              name: 'worklet-runtime',
-              source: new RawSource(fs.readFileSync(
-                options.workletRuntimePath,
-                'utf8',
-              )),
+              name: chunk.chunkName,
+              source: new RawSource(injectedChunkSource),
               info: {
                 ['lynx:main-thread']: true,
               },
@@ -324,6 +343,30 @@ class ReactWebpackPlugin {
           chunkName
             ?.replaceAll(`-react__background`, '')
             ?.replaceAll(`-react__main-thread`, ''),
+      );
+
+      compilation.hooks.processAssets.tap(
+        {
+          name: `${this.constructor.name}:lepus-chunk-cleanup`,
+          // Run after normal report-stage consumers (e.g. sourcemap upload)
+          // so lepus chunk files can participate in toolchain processing
+          // but still not leak into final output assets.
+          stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT
+            + 1000,
+        },
+        () => {
+          for (const chunk of lepusChunkPipeline) {
+            const assetNames = getLepusChunkGeneratedAssetNames(
+              compilation,
+              chunk.chunkName,
+            );
+            for (const assetName of assetNames) {
+              if (compilation.getAsset(assetName)) {
+                compilation.deleteAsset(assetName);
+              }
+            }
+          }
+        },
       );
     });
   }
