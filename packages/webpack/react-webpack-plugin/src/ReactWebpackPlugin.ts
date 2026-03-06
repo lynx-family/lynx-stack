@@ -215,7 +215,7 @@ class ReactWebpackPlugin {
         }
         onceForChunkSet.add(chunk);
 
-        if (chunk.name?.includes(':background')) {
+        if (!chunk.name?.includes('__main-thread')) {
           return;
         }
 
