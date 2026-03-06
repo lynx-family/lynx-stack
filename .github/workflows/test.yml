@@ -255,21 +255,30 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
       run: |
-        # 1. Install and configure Docker
-        sudo apt-get update
-        sudo apt-get install -y docker.io
-        sudo systemctl start docker
+        # 1. Initialize Waydroid properties
+        sudo waydroid prop set persist.waydroid.adb_enabled 1
+        sudo waydroid prop set persist.adb.tcp.port 5555
+        sudo waydroid prop set ro.adb.secure 0
 
-        # 2. Build and start the Android emulator container
-        sudo docker build -t kitten-lynx packages/testing-library/kitten-lynx
-        sudo docker run -d \
-          --name kitten-lynx-android \
-          --device /dev/kvm \
-          --privileged \
-          -p 5556:5556 \
-          kitten-lynx
+        # 2. Start Waydroid session with headless compositor
+        weston --backend=headless-backend.so --socket=wayland-1 --idle-time=0 &
+        export WAYLAND_DISPLAY=wayland-1
+        waydroid session start &
 
-        # 3. Run the tests
+        # 3. Wait for Waydroid to boot
+        echo "Waiting for waydroid to boot..."
+        sleep 10
+        adb wait-for-device
+        while [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" != "1" ]; do
+            sleep 2
+        done
+        echo "Waydroid is ready."
+
+        # 4. Install Lynx Explorer
+        wget -q https://github.com/lynx-family/lynx/releases/download/3.6.0/LynxExplorer-noasan-release.apk -O LynxExplorer.apk
+        waydroid app install LynxExplorer.apk
+
+        # 5. Run the tests
         pnpm --filter @lynx-test/kitten-lynx run test
 
   test-typos:
