@@ -55,7 +55,7 @@ export class LynxEncodePlugin {
    *
    * ```js
    * // webpack.config.js
-   * import { LynxEncodePlugin } from '@lynx-js/template-webpack-plugin'
+   * import { LynxEncodePlugin } from '@lynx-js/bundle-webpack-plugin'
    * export default {
    *   plugins: [
    *     new LynxEncodePlugin({

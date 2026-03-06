@@ -12,6 +12,7 @@ import { createRequire } from 'node:module'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 
+import { LynxTemplatePlugin } from '@lynx-js/bundle-webpack-plugin'
 import type { Config } from '@lynx-js/config-rsbuild-plugin'
 import { pluginReactAlias } from '@lynx-js/react-alias-rsbuild-plugin'
 import type {
@@ -21,7 +22,6 @@ import type {
   ShakeVisitorConfig,
 } from '@lynx-js/react-transform'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
 import { applyBackgroundOnly } from './backgroundOnly.js'
 import { applyCSS } from './css.js'

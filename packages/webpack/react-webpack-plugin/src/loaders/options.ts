@@ -34,7 +34,7 @@ export interface ReactLoaderOptions {
   compat?: CompatVisitorConfig | undefined;
 
   /**
-   * {@inheritdoc @lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.enableRemoveCSSScope}
+   * {@inheritdoc @lynx-js/bundle-webpack-plugin#LynxTemplatePluginOptions.enableRemoveCSSScope}
    */
   enableRemoveCSSScope?: boolean | undefined;
   /**

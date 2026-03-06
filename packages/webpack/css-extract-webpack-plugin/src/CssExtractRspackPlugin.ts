@@ -11,7 +11,7 @@ import type {
   RspackError,
 } from '@rspack/core';
 
-import { CSS, LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+import { CSS, LynxTemplatePlugin } from '@lynx-js/bundle-webpack-plugin';
 
 /**
  * The options for {@link @lynx-js/css-extract-webpack-plugin#CssExtractRspackPlugin}

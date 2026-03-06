@@ -16,6 +16,6 @@
     "vitest.config.ts",
   ],
   "references": [
-    { "path": "../template-webpack-plugin/tsconfig.build.json" },
+    { "path": "../bundle-webpack-plugin/tsconfig.build.json" },
   ],
 }

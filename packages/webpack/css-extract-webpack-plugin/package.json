@@ -48,8 +48,8 @@
     "mini-css-extract-plugin": "^2.10.0"
   },
   "devDependencies": {
+    "@lynx-js/bundle-webpack-plugin": "workspace:*",
     "@lynx-js/css-serializer": "workspace:*",
-    "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/test-tools": "workspace:*",
     "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
@@ -59,7 +59,7 @@
     "webpack": "^5.105.2"
   },
   "peerDependencies": {
-    "@lynx-js/template-webpack-plugin": "^0.10.0"
+    "@lynx-js/bundle-webpack-plugin": "^0.10.0"
   },
   "engines": {
     "node": ">=18"

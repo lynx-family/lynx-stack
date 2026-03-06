@@ -11,7 +11,7 @@ const config: UserWorkspaceConfig = defineProject({
     env: {
       DEBUG: 'rspeedy',
     },
-    name: 'webpack/template',
+    name: 'webpack/bundle',
     setupFiles: ['@lynx-js/vitest-setup/setup.ts'],
   },
 });

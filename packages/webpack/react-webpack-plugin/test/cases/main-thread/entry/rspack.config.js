@@ -1,6 +1,6 @@
 import { expect } from 'vitest';
 
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+import { LynxTemplatePlugin } from '@lynx-js/bundle-webpack-plugin';
 
 import { createConfig } from '../../../create-react-config.js';
 

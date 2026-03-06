@@ -17,7 +17,7 @@ reviews:
       instructions: |
         Apply when the PR contains changes to either
           - `./packages/web-platform/**`
-          - `./packages/webpack/template-webpack-plugin/src/WebEncodePlugin.ts`
+          - `./packages/webpack/bundle-webpack-plugin/src/WebEncodePlugin.ts`
         Or when the linked issue has label "platform:Web"
     - label: "framework:React"
       instructions: |

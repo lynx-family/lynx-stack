@@ -1,7 +1,7 @@
 import {
   LynxEncodePlugin,
   LynxTemplatePlugin,
-} from '@lynx-js/template-webpack-plugin';
+} from '@lynx-js/bundle-webpack-plugin';
 
 import { createConfig } from '../../../create-react-config.js';
 
