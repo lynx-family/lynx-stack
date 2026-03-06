@@ -57,6 +57,9 @@
       "packages/motion/__tests__/**",
 
       "packages/rspeedy/lynx-bundle-rslib-config/test/fixtures/**",
+
+      // REPL examples use Lynx platform globals and are not subject to lint rules
+      "packages/repl/src/examples/**",
     ],
     "rules": {
       // We are migrating from ESLint to Biome

@@ -1,0 +1,211 @@
+@import "tailwindcss";
+
+@theme {
+  --font-mono: "SF Mono", Monaco, "Cascadia Code", Consolas, monospace;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+    Cantarell, sans-serif;
+}
+
+/* ── shadcn-ui theme tokens (dark default) ── */
+:root, [data-theme="dark"] {
+  --background: 0 0% 12%;
+  --foreground: 0 0% 80%;
+  --card: 0 0% 15%;
+  --card-foreground: 0 0% 80%;
+  --popover: 0 0% 15%;
+  --popover-foreground: 0 0% 80%;
+  --primary: 207 90% 40%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 24%;
+  --secondary-foreground: 0 0% 80%;
+  --muted: 0 0% 15%;
+  --muted-foreground: 0 0% 53%;
+  --accent: 0 0% 24%;
+  --accent-foreground: 0 0% 80%;
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 24%;
+  --input: 0 0% 24%;
+  --ring: 207 90% 40%;
+  --radius: 0.375rem;
+
+  /* REPL-specific tokens */
+  --repl-bg: #1e1e1e;
+  --repl-bg-surface: #252526;
+  --repl-bg-elevated: #2d2d2d;
+  --repl-bg-input: #3c3c3c;
+  --repl-border: #3c3c3c;
+  --repl-text: #ccc;
+  --repl-text-muted: #9d9d9d;
+  --repl-text-subtle: #888;
+  --repl-text-dim: #6a6a6a;
+  --repl-text-faint: #555;
+  --repl-accent: #007acc;
+  --repl-preview-bg: #fff;
+  --repl-error-bg: rgba(30, 0, 0, 0.95);
+  --repl-error-text: #ff6b6b;
+  --repl-error-border: #ff4444;
+  --repl-console-info: #4fc3f7;
+  --repl-console-warn: #ffb74d;
+  --repl-console-warn-bg: rgba(255, 183, 77, 0.06);
+  --repl-console-error-bg: rgba(255, 0, 0, 0.04);
+}
+
+[data-theme="light"] {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 20%;
+  --card: 0 0% 96%;
+  --card-foreground: 0 0% 20%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 20%;
+  --primary: 207 90% 36%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 91%;
+  --secondary-foreground: 0 0% 20%;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 45%;
+  --accent: 0 0% 91%;
+  --accent-foreground: 0 0% 20%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 83%;
+  --input: 0 0% 83%;
+  --ring: 207 90% 36%;
+
+  --repl-bg: #ffffff;
+  --repl-bg-surface: #f5f5f5;
+  --repl-bg-elevated: #fafafa;
+  --repl-bg-input: #e8e8e8;
+  --repl-border: #d4d4d4;
+  --repl-text: #333;
+  --repl-text-muted: #666;
+  --repl-text-subtle: #777;
+  --repl-text-dim: #999;
+  --repl-text-faint: #aaa;
+  --repl-accent: #0066b8;
+  --repl-preview-bg: #fff;
+  --repl-error-bg: rgba(255, 240, 240, 0.95);
+  --repl-error-text: #d32f2f;
+  --repl-error-border: #ef5350;
+  --repl-console-info: #0277bd;
+  --repl-console-warn: #e65100;
+  --repl-console-warn-bg: rgba(255, 152, 0, 0.08);
+  --repl-console-error-bg: rgba(255, 0, 0, 0.06);
+}
+
+/* ── Base ── */
+/* Tailwind v4 preflight (@layer base) already resets margin/padding/box-sizing.
+   Custom styles go in @layer base so Tailwind utilities can override them. */
+
+@layer base {
+  html, body, #app {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    background: var(--repl-bg);
+    color: var(--repl-text);
+    font-family: var(--font-sans);
+  }
+
+  /* ── Header ── */
+  .repl-header {
+    background-color: var(--repl-bg-surface);
+  }
+
+  /* Native example selector */
+  .repl-example-select {
+    cursor: pointer;
+    appearance: auto;
+  }
+  .repl-example-select option {
+    background: var(--repl-bg-elevated);
+    color: var(--repl-text);
+  }
+
+  /* ── Preview: lynx-view must fill the flex container ── */
+  .preview-content-area {
+    display: flex;
+    flex-direction: column;
+  }
+  .preview-content-area lynx-view {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* ── Error overlay ── */
+  .error-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 40%;
+    background: var(--repl-error-bg);
+    color: var(--repl-error-text);
+    padding: 12px 16px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    overflow: auto;
+    white-space: pre-wrap;
+    border-top: 2px solid var(--repl-error-border);
+  }
+
+  /* ── Resize handle ──
+     The handle is 1px in the flex layout (w-px / h-px) so panels sit flush.
+     A ::before pseudo-element extends ±2px for a comfortable 5px hit area.
+     react-resizable-panels sets on Separator:
+       aria-orientation="vertical"   → vertical line   (horizontal panel group)
+       aria-orientation="horizontal" → horizontal line  (vertical panel group)
+       data-separator="inactive|hover|active"                                */
+  .resize-handle {
+    background: var(--repl-border);
+    transition: background-color 150ms, transform 150ms;
+    outline: none;
+  }
+  /* Invisible hit area extending ±2px beyond the 1px line */
+  .resize-handle::before {
+    content: "";
+    position: absolute;
+  }
+  [aria-orientation="vertical"].resize-handle::before {
+    top: 0;
+    bottom: 0;
+    left: -2px;
+    right: -2px;
+  }
+  [aria-orientation="horizontal"].resize-handle::before {
+    left: 0;
+    right: 0;
+    top: -2px;
+    bottom: -2px;
+  }
+  /* Hover / active: subtle semi-transparent highlight + visually widen */
+  .resize-handle:hover {
+    background: color-mix(in srgb, var(--repl-text) 30%, transparent);
+  }
+  [data-separator="active"].resize-handle {
+    background: var(--repl-accent);
+  }
+  [aria-orientation="vertical"].resize-handle:hover,
+  [aria-orientation="vertical"][data-separator="active"].resize-handle {
+    transform: scaleX(5);
+  }
+  [aria-orientation="horizontal"].resize-handle:hover,
+  [aria-orientation="horizontal"][data-separator="active"].resize-handle {
+    transform: scaleY(5);
+  }
+
+  /* ── Mobile layout ── */
+  @media (max-width: 767px) {
+    .repl-header {
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 6px 10px;
+      min-height: auto;
+    }
+  }
+}
