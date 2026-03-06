@@ -19,6 +19,7 @@ export interface CommonOptions {
   noEnv?: boolean
   mode?: RsbuildMode
   root?: string
+  logLevel?: 'info' | 'warn' | 'error' | 'silent'
 }
 
 function applyCommonOptions(command: Command) {
@@ -42,6 +43,10 @@ function applyCommonOptions(command: Command) {
     .option(
       '-r --root <root>',
       'set the project root directory (absolute path or relative to cwd)',
+    )
+    .option(
+      '--log-level <level>',
+      'Set the log level (info | warn | error | silent)',
     )
 }
 
