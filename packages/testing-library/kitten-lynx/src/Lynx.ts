@@ -57,74 +57,70 @@ export class Lynx {
     const targetDevice = options?.deviceId;
     const appPackage = options?.appPackage ?? DEFAULT_APP_PACKAGE;
 
-    try {
-      const output = execSync('adb devices').toString();
-      const lines = output.split('\n');
-      const adbDevices = [];
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i]?.trim();
-        if (line && line.endsWith('device')) {
-          const parts = line.split('\t');
-          if (parts.length >= 1 && parts[0]) {
-            adbDevices.push(parts[0]);
-          }
-        }
-      }
-
-      // If a specific device is requested, only restart that one
-      const devicesToRestart = targetDevice
-        ? adbDevices.filter(d => d === targetDevice)
-        : adbDevices;
-
-      for (const deviceId of devicesToRestart) {
-        try {
-          console.log(
-            `[Lynx] Restarting ${appPackage} on device ${deviceId}...`,
-          );
-          execSync(`adb -s ${deviceId} shell am force-stop ${appPackage}`);
-          execSync(
-            `adb -s ${deviceId} shell monkey -p ${appPackage} -c android.intent.category.LAUNCHER 1`,
-          );
-        } catch (e) {
-          console.error(
-            `[Lynx] Failed to restart app on device ${deviceId}:`,
-            e,
-          );
-        }
-      }
-    } catch (e) {
-      console.warn(
-        '[Lynx] Failed to list ADB devices or adb is not available.',
-      );
-    }
-
     const lynx = new Lynx();
-
     lynx._connector = new Connector([new AndroidTransport()]);
 
-    let clients = await lynx._connector.listClients();
-    let attempts = 0;
-    while (clients.length === 0 && attempts < 20) {
-      await new Promise(r => setTimeout(r, 500));
-      clients = await lynx._connector.listClients();
-      attempts++;
+    let deviceIdToUse = targetDevice;
+    if (!deviceIdToUse) {
+      const devices = await lynx._connector.listDevices();
+      if (devices.length === 0) {
+        throw new Error('Failed to connect to Lynx: no devices found.');
+      }
+
+      for (const device of devices) {
+        try {
+          const apps = await lynx._connector.listAvailableApps(device.id);
+          if (apps.some(app => app.packageName === appPackage)) {
+            deviceIdToUse = device.id;
+            break;
+          }
+        } catch (e) {
+          // Ignore errors checking apps on a specific device
+        }
+      }
+
+      if (!deviceIdToUse) {
+        deviceIdToUse = devices[0]!.id;
+      }
     }
 
-    // Filter clients by deviceId if specified (client.id format: "deviceId:port")
-    if (targetDevice) {
-      clients = clients.filter(c => c.id.startsWith(targetDevice + ':'));
-    }
-
-    if (clients.length === 0) {
-      throw new Error(
-        targetDevice
-          ? `Failed to connect to Lynx: no client found on device "${targetDevice}" after 10 seconds.`
-          : 'Failed to connect to Lynx: no client found after 10 seconds.',
+    console.log(
+      `[Lynx] Restarting ${appPackage} on device ${deviceIdToUse}...`,
+    );
+    try {
+      execSync(`adb -s ${deviceIdToUse} shell am force-stop ${appPackage}`);
+    } catch (e) {
+      console.error(
+        `[Lynx] Failed to force-stop app on device ${deviceIdToUse}:`,
+        e,
       );
     }
 
-    lynx._currentClient = clients[0];
-    lynx._currentClientId = clients[0]!.id;
+    try {
+      await lynx._connector.openApp(deviceIdToUse, appPackage);
+    } catch (e) {
+      console.error(`[Lynx] Failed to open app on device ${deviceIdToUse}:`, e);
+      throw e;
+    }
+
+    const clients = await lynx._connector.listClients();
+
+    // Filter clients by deviceId and target package
+    const encodedDeviceId = encodeURIComponent(deviceIdToUse);
+    const matchedClients = clients.filter(
+      c =>
+        c.id.startsWith(encodedDeviceId + ':')
+        && c.info.AppProcessName === appPackage,
+    );
+
+    if (matchedClients.length === 0) {
+      throw new Error(
+        `Failed to connect to Lynx: no client found for ${appPackage} on device "${deviceIdToUse}".`,
+      );
+    }
+
+    lynx._currentClient = matchedClients[0];
+    lynx._currentClientId = matchedClients[0]!.id;
 
     return lynx;
   }
