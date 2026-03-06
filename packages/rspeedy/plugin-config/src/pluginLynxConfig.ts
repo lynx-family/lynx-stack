@@ -113,9 +113,9 @@ export function pluginLynxConfig(
 
       api.modifyBundlerChain(chain => {
         const exposed = api.useExposed<
-          { LynxBundlePlugin: typeof LynxTemplatePlugin }
+          { LynxTemplatePlugin: typeof LynxTemplatePlugin }
         >(
-          Symbol.for('LynxBundlePlugin'),
+          Symbol.for('LynxTemplatePlugin'),
         )
 
         if (!exposed) {
@@ -131,7 +131,7 @@ export function pluginLynxConfig(
 
           throw new Error(
             `\
-[pluginLynxConfig] No \`LynxBundlePlugin\` exposed to ${
+[pluginLynxConfig] No \`LynxTemplatePlugin\` exposed to ${
               link(
                 'the plugin API',
                 'https://rsbuild.rs/plugins/dev/core#apiexpose',
@@ -150,7 +150,7 @@ See ${
           )
         }
 
-        const { LynxBundlePlugin: LynxTemplatePluginClass } = exposed
+        const { LynxTemplatePlugin: LynxTemplatePluginClass } = exposed
 
         chain.plugin('lynx:config').use(LynxConfigWebpackPlugin<Config>, [
           {

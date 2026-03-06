@@ -390,15 +390,15 @@ export function pluginReactLynx(
         }
 
         api.expose(Symbol.for('LAYERS'), LAYERS)
-        const exposedLynxBundlePlugin = {
-          LynxBundlePlugin: {
+        // Only expose `LynxTemplatePlugin.getLynxTemplatePluginHooks` to avoid
+        // other breaking changes in `LynxTemplatePlugin`
+        // breaks `pluginReactLynx`
+        api.expose(Symbol.for('LynxTemplatePlugin'), {
+          LynxTemplatePlugin: {
             getLynxTemplatePluginHooks: LynxTemplatePlugin
               .getLynxTemplatePluginHooks.bind(LynxTemplatePlugin),
           },
-        }
-        api.expose(Symbol.for('LynxBundlePlugin'), exposedLynxBundlePlugin)
-        // Backward compat: expose under old symbol too
-        api.expose(Symbol.for('LynxTemplatePlugin'), exposedLynxBundlePlugin)
+        })
         const require = createRequire(import.meta.url)
 
         const { version } = require('../package.json') as { version: string }
