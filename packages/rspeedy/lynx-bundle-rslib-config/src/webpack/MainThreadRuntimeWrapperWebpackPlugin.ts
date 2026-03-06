@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import type { BannerPlugin, Compiler } from 'webpack'
 
+const PLUGIN_NAME = 'MainThreadRuntimeWrapperWebpackPlugin'
+
 /**
  * The options of {@link MainThreadRuntimeWrapperWebpackPlugin}.
  *
@@ -46,5 +48,45 @@ export class MainThreadRuntimeWrapperWebpackPlugin {
 })()`,
       footer: true,
     }).apply(compiler)
+
+    const { RuntimeGlobals, RuntimeModule } = compiler.webpack
+    class MyCustomRuntimeModule extends RuntimeModule {
+      constructor() {
+        super(
+          'Lynx externals loading consumer modules',
+          RuntimeModule.STAGE_ATTACH,
+        )
+      }
+      override generate() {
+        return `
+__webpack_require__.i.push(function (options) {
+  var moduleId = options.id;
+  var globalModules = globalThis[Symbol.for('__LYNX_WEBPACK_MODULES__')];
+  if (globalModules && globalModules[moduleId]) {
+    options.factory = globalModules[moduleId];
+  }
+});
+`
+      }
+    }
+
+    compiler.hooks.thisCompilation.tap('MyRuntimePlugin', (compilation) => {
+      compilation.hooks.additionalTreeRuntimeRequirements.tap(
+        PLUGIN_NAME,
+        (_chunk, runtimeRequirements) => {
+          runtimeRequirements.add(RuntimeGlobals.interceptModuleExecution)
+        },
+      )
+
+      compilation.hooks.runtimeRequirementInTree
+        .for(RuntimeGlobals.interceptModuleExecution)
+        .tap(
+          PLUGIN_NAME,
+          (chunk) => {
+            // 注册自定义 RuntimeModule
+            compilation.addRuntimeModule(chunk, new MyCustomRuntimeModule())
+          },
+        )
+    })
   }
 }

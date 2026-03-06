@@ -16,4 +16,5 @@ export default defineExternalBundleRslibConfig({
     minify: false,
     globalObject: 'globalThis',
   },
+  mode: process.env['NODE_ENV'] === 'production' ? 'production' : 'development',
 });

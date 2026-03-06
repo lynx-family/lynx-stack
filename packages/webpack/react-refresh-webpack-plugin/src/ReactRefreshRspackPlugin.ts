@@ -139,13 +139,14 @@ export class ReactRefreshRspackPlugin {
     compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
       compilation.hooks.runtimeModule.tap(PLUGIN_NAME, (runtimeModule) => {
         if (runtimeModule.name === 'hot_module_replacement') {
-          this.#appendInterceptRuntimeModule(runtimeModule);
+          this.#appendInterceptRuntimeModule(compiler, runtimeModule);
         }
       });
     });
   }
 
   #appendInterceptRuntimeModule(
+    compiler: Compiler,
     runtimeModule: RuntimeModule,
   ) {
     runtimeModule.source!.source = Buffer.concat([
@@ -157,7 +158,11 @@ export class ReactRefreshRspackPlugin {
           'utf-8',
         )
           .replaceAll('$MAIN_THREAD_LAYER$', LAYERS.MAIN_THREAD)
-          .replaceAll('$BACKGROUND_LAYER$', LAYERS.BACKGROUND),
+          .replaceAll('$BACKGROUND_LAYER$', LAYERS.BACKGROUND)
+          .replaceAll(
+            '__DEV__',
+            JSON.stringify(compiler.options.mode === 'development'),
+          ),
       ),
 
       // TODO: merge this with the webpack plugin

@@ -7,6 +7,7 @@
 import type { BannerPlugin } from 'webpack';
 import type { Compiler } from 'webpack';
 import type { LibConfig } from '@rslib/core';
+import type { Rsbuild } from '@rslib/core';
 import type { RslibConfig } from '@rslib/core';
 
 // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@lynx-js/lynx-bundle-rslib-config" does not have an export "LibConfig"

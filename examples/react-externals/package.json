@@ -7,7 +7,9 @@
     "build": "npm run build:comp-lib && npm run build:reactlynx && rspeedy build",
     "build:comp-lib": "rslib build --config rslib-comp-lib.config.ts",
     "build:reactlynx": "rslib build --config rslib-reactlynx.config.ts",
-    "dev": "rspeedy dev"
+    "dev": "rspeedy dev",
+    "dev:comp-lib": "NODE_ENV=development rslib build --config rslib-comp-lib.config.ts",
+    "dev:reactlynx": "NODE_ENV=development rslib build --config rslib-reactlynx.config.ts"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*"
