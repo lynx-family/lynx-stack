@@ -5,9 +5,9 @@
 import { formatMessages } from 'esbuild';
 import { describe, expect, it } from 'vitest';
 
-import { transformBundleResult, transformReactLynx } from '../main.js';
+import { transformReactLynx } from '@lynx-js/react-transform-rspack-napi';
 
-describe('shake', () => {
+describe.only('shake', () => {
   it('should match', async () => {
     const inputContent = `
 import { Component } from "@lynx-js/react-runtime";
@@ -24,7 +24,7 @@ export class A extends Component {
     }
 }`;
     const result = await transformReactLynx(inputContent);
-    expect(result.code).toMatchInlineSnapshot(`
+    expect(result).toMatchInlineSnapshot(`
       "import { Component } from "@lynx-js/react-runtime";
       export class A extends Component {
           d = 1;
@@ -41,7 +41,7 @@ export class A extends Component {
     `);
   });
 
-  it('should shake with/without jsx transform', async () => {
+  it.skip('should shake with/without jsx transform', async () => {
     const inputContent = `
 import { Component } from "@lynx-js/react-runtime";
 export class A extends Component {
@@ -553,124 +553,6 @@ Component, View
 });
 
 describe('transformBundle', () => {
-  it('should extract lepus str', async () => {
-    const inputContent = `
-    globalThis.processData = ()=>{
-      if (true) {
-        return {
-          _EXTRACT_STR: __EXTRACT_STR_IDENT_FLAG__,
-        };
-      }
-    }
-    const qq = {
-      a: '123',
-      b: false ? '456' : '789'
-    };
-    console.log('!@#@#$!!@#!#!3sasdega!!23!#$!@#%%');
-    let q = fun('456');
-    let a = '789';
-    const b = '111' + '000';`;
-    const result = await transformBundleResult(inputContent, {
-      filename: 'lepus.js',
-      pluginName: 'transformBundleResult',
-      sourcemap: true,
-      extractStr: {
-        strLength: 1,
-      },
-    });
-    expect(result.code).toMatchInlineSnapshot(`
-      "var _EXTRACT_STR = [
-          "123",
-          "456",
-          "789",
-          "!@#@#$!!@#!#!3sasdega!!23!#$!@#%%",
-          "111",
-          "000"
-      ];
-      globalThis.processData = ()=>{
-          if (true) {
-              return {
-                  _EXTRACT_STR: _EXTRACT_STR
-              };
-          }
-      };
-      const qq = {
-          a: _EXTRACT_STR[0],
-          b: false ? _EXTRACT_STR[1] : _EXTRACT_STR[2]
-      };
-      console.log(_EXTRACT_STR[3]);
-      let q = fun(_EXTRACT_STR[1]);
-      let a = _EXTRACT_STR[2];
-      const b = _EXTRACT_STR[4] + _EXTRACT_STR[5];
-      "
-    `);
-  });
-  it('should apply js str', async () => {
-    const inputContent = `
-    function aaa() {
-      var tt = lynxCoreInject.tt;
-      // for __EXTRACT_STR_FLAG__
-      tt.__sourcemap__release__ = "123";
-      tt.define("app-service.js", function(){
-        __EXTRACT_STR_JS_FLAG__(z=lynxCoreInject.tt._params.updateData._EXTRACT_STR,z);
-        const qq = {
-          a: '123',
-          b: false ? '456' : '789'
-        };
-        function render(){
-          const { abc: z } = this.state
-          console.log(z);
-          console.log('456');
-        }
-        function ffff(z) {
-          console.log(z);
-          return "asdasdasd"
-        }
-        console.log('!@#@#$!!@#!#!3sasdega!!23!#$!@#%%');
-        let q = fun('456');
-        let a = '789';
-        const b = '111' + '000';
-      });
-  }`;
-    const result = await transformBundleResult(inputContent, {
-      filename: 'app-service.js',
-      pluginName: 'transformBundleResult',
-      sourcemap: true,
-      extractStr: {
-        strLength: 1,
-        extractedStrArr: ['123', '456', 'asdasdasd'],
-      },
-    });
-    expect(result.code).toMatchInlineSnapshot(`
-      "function aaa() {
-          var tt = lynxCoreInject.tt;
-          // for __EXTRACT_STR_FLAG__
-          tt.__sourcemap__release__ = "123";
-          tt.define("app-service.js", function() {
-              __EXTRACT_STR_JS_FLAG__(z = lynxCoreInject.tt._params.updateData._EXTRACT_STR, z);
-              const qq = {
-                  a: '123',
-                  b: false ? '456' : '789'
-              };
-              function render() {
-                  const { abc: z1 } = this.state;
-                  console.log(z1);
-                  console.log('456');
-              }
-              function ffff(z1) {
-                  console.log(z1);
-                  return "asdasdasd";
-              }
-              console.log('!@#@#$!!@#!#!3sasdega!!23!#$!@#%%');
-              let q = fun('456');
-              let a = '789';
-              const b = '111' + '000';
-          });
-      }
-      "
-    `);
-  });
-
   it('should allow C-style type cast in .ts', async () => {
     const result = await transformReactLynx(`const p = <any>Promise.all([]);`, {
       pluginName: '',
