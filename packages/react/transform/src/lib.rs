@@ -210,6 +210,8 @@ pub struct TransformNodiffOptions {
   pub dynamic_import: Option<Either<bool, DynamicImportVisitorConfig>>,
   /// @internal
   pub inject: Option<Either<bool, InjectVisitorConfig>>,
+  /// @internal
+  pub verbatim_module_syntax: Option<bool>,
   pub input_source_map: Option<String>,
 }
 
@@ -236,6 +238,7 @@ impl Default for TransformNodiffOptions {
       worklet: Either::A(false),
       dynamic_import: Some(Either::B(Default::default())),
       inject: Some(Either::A(false)),
+      verbatim_module_syntax: Some(false),
       input_source_map: None,
     }
   }
@@ -326,7 +329,6 @@ fn transform_react_lynx_inner(
         top_level_mark,
         simplify::Config {
           dce: simplify::dce::Config {
-            preserve_imports_with_side_effects: false,
             top_retain: top_retain.clone(),
             ..Default::default()
           },
@@ -454,7 +456,6 @@ fn transform_react_lynx_inner(
       top_level_mark,
       simplify::Config {
         dce: simplify::dce::Config {
-          preserve_imports_with_side_effects: false,
           top_retain: top_retain.clone(),
           ..Default::default()
         },
@@ -557,8 +558,7 @@ fn transform_react_lynx_inner(
       resolver(unresolved_mark, top_level_mark, true),
       typescript::typescript(
         typescript::Config {
-          verbatim_module_syntax: false,
-          import_not_used_as_values: typescript::ImportsNotUsedAsValues::Remove,
+          verbatim_module_syntax: options.verbatim_module_syntax.unwrap_or(false),
           ..Default::default()
         },
         unresolved_mark,

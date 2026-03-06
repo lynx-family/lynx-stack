@@ -116,6 +116,80 @@ export class A extends Component {
       "
     `);
   });
+
+
+  it('should preserve unused imports when verbatimModuleSyntax is true', async () => {
+    const inputContent = `
+import { Container } from '@tt-live-lynx/fan-club-components';
+import { OfflineManageContent } from './content';
+
+export default function App(): JSX.Element {
+  if (__LEPUS__) {
+    return (
+      <Container isError={false} isLoading={true}>
+        <></>
+      </Container>
+    );
+  }
+}
+`;
+
+    const cfg = {
+      pluginName: '',
+      filename: '',
+      sourcemap: false,
+      cssScope: false,
+      jsx: false,
+      directiveDCE: false,
+      defineDCE: {
+        define: {
+          __LEPUS__: 'true',
+          __JS__: 'false',
+        },
+      },
+      shake: false,
+      compat: true,
+      worklet: false,
+      refresh: false,
+    }
+
+    {
+      const result = await transformReactLynx(inputContent, cfg);
+    expect(result.code).toMatchInlineSnapshot(`
+      "import { jsx as _jsx, Fragment as _Fragment } from "@lynx-js/react/jsx-runtime";
+      import { Container } from '@tt-live-lynx/fan-club-components';
+      export default function App() {
+          return /*#__PURE__*/ _jsx(Container, {
+              isError: false,
+              isLoading: true,
+              children: /*#__PURE__*/ _jsx(_Fragment, {})
+          });
+      }
+      "
+    `);
+      expect(result.code).not.contain("import './content'")
+    }
+    {
+      const result = await transformReactLynx(inputContent, {
+        ...cfg,
+        verbatimModuleSyntax: true,
+      });
+      expect(result.code).toMatchInlineSnapshot(`
+        "import { jsx as _jsx, Fragment as _Fragment } from "@lynx-js/react/jsx-runtime";
+        import { Container } from '@tt-live-lynx/fan-club-components';
+        import './content';
+        export default function App() {
+            return /*#__PURE__*/ _jsx(Container, {
+                isError: false,
+                isLoading: true,
+                children: /*#__PURE__*/ _jsx(_Fragment, {})
+            });
+        }
+        "
+      `);
+      expect(result.code).contain("import './content';")
+    }
+  });
 });
 
 describe('jsx', () => {
@@ -1232,7 +1306,8 @@ X();
     expect(
       result.code,
     ).toMatchInlineSnapshot(`
-      "function X() {
+      "import "./a";
+      function X() {
           return;
       }
       X();
