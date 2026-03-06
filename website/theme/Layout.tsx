@@ -14,7 +14,7 @@ export const Layout = () => {
           href='https://lynxjs.org'
           storage={false}
           message={lang === 'en'
-            ? 'This is the dev preview website. Checkout the document at lynxjs.org'
+            ? 'This is the dev preview website. Check out the document at lynxjs.org'
             : '这是开发预览网站。请访问正式文档 lynxjs.org'}
         />
       }
