@@ -5,7 +5,7 @@ import { createConfig } from '../../../create-react-config.js';
 import {
   LynxEncodePlugin,
   LynxTemplatePlugin,
-} from '@lynx-js/template-webpack-plugin';
+} from '@lynx-js/bundle-webpack-plugin';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

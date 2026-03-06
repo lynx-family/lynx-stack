@@ -19,6 +19,7 @@
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
+    "@lynx-js/bundle-webpack-plugin": "workspace:*",
     "@lynx-js/chunk-loading-webpack-plugin": "workspace:*",
     "@lynx-js/config-rsbuild-plugin": "workspace:*",
     "@lynx-js/css-extract-webpack-plugin": "workspace:*",
@@ -32,7 +33,6 @@
     "@lynx-js/react-webpack-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
-    "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/webpack-runtime-globals": "workspace:*",
     "@microsoft/api-documenter": "~7.23.38",
     "@microsoft/api-extractor-model": "^7.33.4",

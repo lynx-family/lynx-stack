@@ -362,7 +362,7 @@ export class LynxTemplatePlugin {
    *
    * ```js
    * // webpack.config.js
-   * import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
+   * import { LynxTemplatePlugin } from '@lynx-js/bundle-webpack-plugin'
    * export default {
    *   plugins: [
    *     new LynxTemplatePlugin({

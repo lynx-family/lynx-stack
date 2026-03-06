@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+import { LynxTemplatePlugin } from '@lynx-js/bundle-webpack-plugin';
 
 /**
  * Use `JSON.stringify` to mock the encode of `@lynx-js/tasm` to help better testing.

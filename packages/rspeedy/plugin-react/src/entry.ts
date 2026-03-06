@@ -11,14 +11,14 @@ import type {
 } from '@rsbuild/core'
 import type { UndefinedOnPartialDeep } from 'type-fest'
 
-import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
-import type { ExposedAPI } from '@lynx-js/rspeedy'
-import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 import {
   LynxEncodePlugin,
   LynxTemplatePlugin,
   WebEncodePlugin,
-} from '@lynx-js/template-webpack-plugin'
+} from '@lynx-js/bundle-webpack-plugin'
+import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
+import type { ExposedAPI } from '@lynx-js/rspeedy'
+import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 

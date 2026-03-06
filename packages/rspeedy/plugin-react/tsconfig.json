@@ -7,7 +7,7 @@
   "include": ["src", "test", "vitest.config.ts"],
   "references": [
     { "path": "../../webpack/runtime-wrapper-webpack-plugin/tsconfig.build.json" },
-    { "path": "../../webpack/template-webpack-plugin/tsconfig.build.json" },
+    { "path": "../../webpack/bundle-webpack-plugin/tsconfig.build.json" },
     { "path": "../../webpack/react-webpack-plugin/tsconfig.build.json" },
     { "path": "../../webpack/react-refresh-webpack-plugin/tsconfig.build.json" },
     { "path": "../core/tsconfig.build.json" },

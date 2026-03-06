@@ -3,9 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, test } from 'vitest'
 
+import type { LynxTemplatePlugin } from '@lynx-js/bundle-webpack-plugin'
 import { pluginLynxConfig } from '@lynx-js/config-rsbuild-plugin'
 import { createRspeedy } from '@lynx-js/rspeedy'
-import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
 import { pluginReactLynx } from '../src/pluginReactLynx.js'
 

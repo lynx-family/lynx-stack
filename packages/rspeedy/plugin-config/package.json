@@ -40,8 +40,8 @@
     "@lynx-js/type-config": "3.6.0"
   },
   "devDependencies": {
+    "@lynx-js/bundle-webpack-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
-    "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/test-tools": "workspace:*",
     "@rollup/plugin-typescript": "^12.3.0",
     "@rsbuild/core": "catalog:rsbuild",

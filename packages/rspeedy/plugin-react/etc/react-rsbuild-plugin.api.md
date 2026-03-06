@@ -5,9 +5,9 @@
 ```ts
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin';
-import type { LynxTemplatePlugin as LynxTemplatePlugin_2 } from '@lynx-js/template-webpack-plugin';
+import type { LynxTemplatePlugin as LynxTemplatePlugin_2 } from '@lynx-js/bundle-webpack-plugin';
 import type { RsbuildPlugin } from '@rsbuild/core';
-import type { TemplateHooks } from '@lynx-js/template-webpack-plugin';
+import type { TemplateHooks } from '@lynx-js/bundle-webpack-plugin';
 
 // @public
 export interface AddComponentElementConfig {

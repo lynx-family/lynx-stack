@@ -1,7 +1,7 @@
 import {
   LynxTemplatePlugin,
   LynxEncodePlugin,
-} from '@lynx-js/template-webpack-plugin'
+} from '@lynx-js/bundle-webpack-plugin'
 import { compilerOptionsKeys, configKeys } from '@lynx-js/type-config'
 
 import { LynxConfigWebpackPlugin } from '../../../../src/LynxConfigWebpackPlugin'
