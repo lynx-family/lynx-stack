@@ -1,5 +1,5 @@
-import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-var loadWorkletRuntime = __loadWorkletRuntime;
+import { loadWorkletRuntime as __loadWorkletRuntime, workletCapture as __workletCapture } from "@lynx-js/react";
+var loadWorkletRuntime = __loadWorkletRuntime, workletCapture = __workletCapture;
 function App() {
     let X = {
         _c: {
