@@ -1,18 +1,19 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createRequire } from 'node:module';
+import * as bar from './external-bundle-mock/bar/index.js';
+import * as baz from './external-bundle-mock/baz/index.js';
+import * as foo from './external-bundle-mock/foo/index.js';
 
 __injectGlobals(globalThis);
-
-const require = createRequire(import.meta.url);
-
-// eslint-disable-next-line import/no-commonjs
-const foo = require('../foo/index');
 
 const CustomSections = {
   'background': foo,
   'mainThread': foo,
+  'Bar__background': bar,
+  'Bar__mainThread': bar,
+  'Baz__background': baz,
+  'Baz__mainThread': baz,
 };
 
 function __injectGlobals(target) {

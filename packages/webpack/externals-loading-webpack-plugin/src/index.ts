@@ -282,8 +282,8 @@ export class ExternalsLoadingPlugin {
       #genExternalsLoadingCode(
         chunkLayer: string,
       ): string {
-        const fetchCode: string[] = [];
-        const loadCode: string[] = [];
+        const url2fetchCode: Map<string, string> = new Map();
+        const loadCode: Set<string> = new Set();
         // filter duplicate externals by libraryName or package name to avoid loading the same external multiple times. We keep the last one.
         const externalsMap = new Map<
           string | string[],
@@ -404,8 +404,9 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           }
           hasUrlLibraryNamePairInjected.add(hash);
 
-          fetchCode.push(
-            `const handler${i} = lynx.fetchBundle(${JSON.stringify(url)}, {});`,
+          url2fetchCode.set(
+            url,
+            `lynx.fetchBundle(${JSON.stringify(url)}, {});`,
           );
 
           const mountVar = `${
@@ -414,7 +415,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             )
           }[${JSON.stringify(libraryNameStr)}]`;
           if (async) {
-            loadCode.push(
+            loadCode.add(
               `${mountVar} = ${mountVar} === undefined ? createLoadExternalAsync(handler${i}, ${
                 JSON.stringify(layerOptions.sectionPath)
               }) : ${mountVar};`,
@@ -422,8 +423,10 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             continue;
           }
 
-          loadCode.push(
-            `${mountVar} = ${mountVar} === undefined ? createLoadExternalSync(handler${i}, ${
+          loadCode.add(
+            `${mountVar} = ${mountVar} === undefined ? createLoadExternalSync(handler${
+              [...url2fetchCode.keys()].indexOf(url)
+            }, ${
               JSON.stringify(layerOptions.sectionPath)
             }, ${timeout}) : ${mountVar};`,
           );
@@ -432,9 +435,11 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
         return [
           runtimeGlobalsInit,
           loadExternalFunc,
-          fetchCode,
-          loadCode,
-        ].flat().join('\n');
+          ...[...url2fetchCode.values()].map((fetchCode, index) =>
+            `const handler${index} = ${fetchCode};`
+          ),
+          ...loadCode,
+        ].join('\n');
       }
     }
 
