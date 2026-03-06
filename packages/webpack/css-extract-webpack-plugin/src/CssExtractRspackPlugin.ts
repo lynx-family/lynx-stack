@@ -11,7 +11,7 @@ import type {
   RspackError,
 } from '@rspack/core';
 
-import { CSS, LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+import { CSS, LynxBundlePlugin } from '@lynx-js/template-webpack-plugin';
 
 /**
  * The options for {@link @lynx-js/css-extract-webpack-plugin#CssExtractRspackPlugin}
@@ -24,7 +24,7 @@ interface CssExtractRspackPluginOptions
   /**
    * plugins passed to parser
    */
-  cssPlugins: Parameters<typeof LynxTemplatePlugin.convertCSSChunksToMap>[1];
+  cssPlugins: Parameters<typeof LynxBundlePlugin.convertCSSChunksToMap>[1];
 
   /**
    * The name of non-initial CSS chunk files
@@ -162,7 +162,7 @@ class CssExtractRspackPluginImpl {
       if (
         this.isHMREnabled(compiler)
       ) {
-        const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
+        const hooks = LynxBundlePlugin.getLynxTemplatePluginHooks(
           // @ts-expect-error Rspack to Webpack Compilation
           compilation,
         );
@@ -178,7 +178,7 @@ class CssExtractRspackPluginImpl {
             if (!hotUpdateFilePath) {
               continue;
             }
-            const css = LynxTemplatePlugin.convertCSSChunksToMap(
+            const css = LynxBundlePlugin.convertCSSChunksToMap(
               content,
               options.cssPlugins,
               Boolean(

@@ -64,7 +64,7 @@ const LynxTemplatePluginHooksMap = new WeakMap<Compilation, TemplateHooks>();
  *     compiler.hooks.compilation.tap("MyPlugin", (compilation) => {
  *       console.log("The compiler is starting a new compilation...");
  *
- *       LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(
+ *       LynxBundlePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(
  *         "MyPlugin", // <-- Set a meaningful name here for stacktraces
  *         (data, cb) => {
  *           // Manipulate the content
@@ -139,7 +139,7 @@ export interface TemplateHooks {
 
 /**
  * Add hooks to the webpack compilation object to allow foreign plugins to
- * extend the LynxTemplatePlugin
+ * extend the LynxBundlePlugin
  */
 function createLynxTemplatePluginHooks(): TemplateHooks {
   return {
@@ -332,11 +332,11 @@ interface EncodeRawData {
 }
 
 /**
- * LynxTemplatePlugin
+ * LynxBundlePlugin
  *
  * @public
  */
-export class LynxTemplatePlugin {
+export class LynxBundlePlugin {
   constructor(private options?: LynxTemplatePluginOptions | undefined) {}
 
   /**
@@ -355,18 +355,18 @@ export class LynxTemplatePlugin {
   }
 
   /**
-   * `defaultOptions` is the default options that the {@link LynxTemplatePlugin} uses.
+   * `defaultOptions` is the default options that the {@link LynxBundlePlugin} uses.
    *
    * @example
    * `defaultOptions` can be used to change part of the option and keep others as the default value.
    *
    * ```js
    * // webpack.config.js
-   * import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
+   * import { LynxBundlePlugin } from '@lynx-js/template-webpack-plugin'
    * export default {
    *   plugins: [
-   *     new LynxTemplatePlugin({
-   *       ...LynxTemplatePlugin.defaultOptions,
+   *     new LynxBundlePlugin({
+   *       ...LynxBundlePlugin.defaultOptions,
    *       enableRemoveCSSScope: true,
    *     }),
    *   ],
@@ -439,10 +439,17 @@ export class LynxTemplatePlugin {
   apply(compiler: Compiler): void {
     new LynxTemplatePluginImpl(
       compiler,
-      Object.assign({}, LynxTemplatePlugin.defaultOptions, this.options),
+      Object.assign({}, LynxBundlePlugin.defaultOptions, this.options),
     );
   }
 }
+
+/**
+ * @deprecated Use {@link LynxBundlePlugin} instead.
+ *
+ * @public
+ */
+export const LynxTemplatePlugin: typeof LynxBundlePlugin = LynxBundlePlugin;
 
 interface Hash {
   /**
@@ -530,7 +537,7 @@ class LynxTemplatePluginImpl {
         compiler.webpack,
       );
 
-      const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
+      const hooks = LynxBundlePlugin.getLynxTemplatePluginHooks(compilation);
 
       compilation.hooks.runtimeRequirementInTree.for(
         RuntimeGlobals.lynxAsyncChunkIds,
@@ -630,7 +637,7 @@ class LynxTemplatePluginImpl {
       return asyncChunkGroups;
     }
 
-    const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
+    const hooks = LynxBundlePlugin.getLynxTemplatePluginHooks(compilation);
 
     asyncChunkGroups = groupBy(
       compilation.chunkGroups
@@ -658,7 +665,7 @@ class LynxTemplatePluginImpl {
 
     const intermediateRoot = path.dirname(this.#options.intermediate);
 
-    const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
+    const hooks = LynxBundlePlugin.getLynxTemplatePluginHooks(compilation);
 
     // We cache the encoded template so that it will not be encoded twice
     if (!LynxTemplatePluginImpl.#encodedTemplate.has(compilation)) {
@@ -831,7 +838,7 @@ class LynxTemplatePluginImpl {
       ),
       customSections: {},
     };
-    const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
+    const hooks = LynxBundlePlugin.getLynxTemplatePluginHooks(
       compilation,
     );
 

@@ -45,6 +45,18 @@ export interface EncodeOptions {
 }
 
 // @public
+export class LynxBundlePlugin {
+    constructor(options?: LynxTemplatePluginOptions | undefined);
+    apply(compiler: Compiler): void;
+    static convertCSSChunksToMap(cssChunks: string[], plugins: CSS.Plugin[], enableCSSSelector: boolean): {
+        cssMap: Record<string, CSS.LynxStyleNode[]>;
+        cssSource: Record<string, string>;
+    };
+    static defaultOptions: Readonly<Required<LynxTemplatePluginOptions>>;
+    static getLynxTemplatePluginHooks(compilation: Compilation): TemplateHooks;
+}
+
+// @public
 export class LynxEncodePlugin {
     constructor(options?: LynxEncodePluginOptions | undefined);
     apply(compiler: Compiler): void;
@@ -64,17 +76,10 @@ export interface LynxEncodePluginOptions {
     inlineScripts?: InlineChunkConfig | undefined;
 }
 
-// @public
-export class LynxTemplatePlugin {
-    constructor(options?: LynxTemplatePluginOptions | undefined);
-    apply(compiler: Compiler): void;
-    static convertCSSChunksToMap(cssChunks: string[], plugins: CSS.Plugin[], enableCSSSelector: boolean): {
-        cssMap: Record<string, CSS.LynxStyleNode[]>;
-        cssSource: Record<string, string>;
-    };
-    static defaultOptions: Readonly<Required<LynxTemplatePluginOptions>>;
-    static getLynxTemplatePluginHooks(compilation: Compilation): TemplateHooks;
-}
+// Warning: (ae-missing-release-tag) "LynxTemplatePlugin" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public @deprecated (undocumented)
+export const LynxTemplatePlugin: typeof LynxBundlePlugin;
 
 // @public
 export interface LynxTemplatePluginOptions {

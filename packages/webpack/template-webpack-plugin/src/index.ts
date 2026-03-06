@@ -11,7 +11,7 @@
 import { Plugins } from '@lynx-js/css-serializer';
 import * as CSS from '@lynx-js/css-serializer';
 
-export { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
+export { LynxBundlePlugin, LynxTemplatePlugin } from './LynxTemplatePlugin.js';
 export type {
   LynxTemplatePluginOptions,
   TemplateHooks,
