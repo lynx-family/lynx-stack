@@ -213,12 +213,26 @@ export class XList extends HTMLElement {
   }
 
   getVisibleCells = () => {
-    const cells = Object.values(this.#cellsMap);
-    const children = Array.from(this.children).filter(node => {
+    let cells = Object.values(this.#cellsMap);
+    const children = Array.from(this.children).filter((node) => {
       return node.tagName === 'LIST-ITEM';
     });
 
-    return cells.map(cell => {
+    // firfox cannot triiger contentvisibilityautostatechange event of list-item
+    if (cells.length === 0) {
+      const listRect = this.#getListContainer().getBoundingClientRect();
+      cells = children.filter((cell) => {
+        const rect = cell.getBoundingClientRect();
+        return (
+          rect.bottom >= listRect.top
+          && rect.top <= listRect.bottom
+          && rect.right >= listRect.left
+          && rect.left <= listRect.right
+        );
+      });
+    }
+
+    return cells.map((cell) => {
       const rect = cell.getBoundingClientRect();
 
       return {

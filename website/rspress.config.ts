@@ -718,6 +718,10 @@ const config: UserConfig = defineConfig({
         link: '/guide/installation',
       },
       {
+        text: 'REPL',
+        link: '/repl',
+      },
+      {
         text: 'API',
         items: [
           {

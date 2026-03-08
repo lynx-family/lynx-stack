@@ -68,6 +68,9 @@ export const ListConsole = /*#__PURE__*/ defineTool({
       params.clientId,
       ReadableStream.from([{
         sessionId: params.sessionId,
+        method: 'Page.enable',
+      }, {
+        sessionId: params.sessionId,
         method: 'Runtime.enable',
       }]),
     );
