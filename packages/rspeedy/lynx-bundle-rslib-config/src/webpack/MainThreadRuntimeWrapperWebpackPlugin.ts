@@ -77,7 +77,7 @@ __webpack_require__.i.push(function (options) {
       : process.env['NODE_ENV'] === 'development'
 
     if (isDev) {
-      compiler.hooks.thisCompilation.tap('MyRuntimePlugin', (compilation) => {
+      compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
         compilation.hooks.additionalTreeRuntimeRequirements.tap(
           PLUGIN_NAME,
           (_chunk, runtimeRequirements) => {
