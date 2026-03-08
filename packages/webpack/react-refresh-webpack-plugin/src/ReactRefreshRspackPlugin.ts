@@ -149,7 +149,10 @@ export class ReactRefreshRspackPlugin {
     compiler: Compiler,
     runtimeModule: RuntimeModule,
   ) {
-    runtimeModule.source!.source = Buffer.concat([
+    const isDev = process.env['NODE_ENV'] === 'development'
+      || compiler.options.mode === 'development';
+
+    const sourceBuffers = [
       Buffer.from(runtimeModule.source!.source as Buffer),
 
       Buffer.from(
@@ -159,14 +162,12 @@ export class ReactRefreshRspackPlugin {
         )
           .replaceAll('$MAIN_THREAD_LAYER$', LAYERS.MAIN_THREAD)
           .replaceAll('$BACKGROUND_LAYER$', LAYERS.BACKGROUND)
-          .replaceAll(
-            '__DEV__',
-            JSON.stringify(compiler.options.mode === 'development'),
-          ),
+          .replaceAll('__DEV__', JSON.stringify(isDev)),
       ),
+    ];
 
-      // TODO: merge this with the webpack plugin
-      Buffer.from(`
+    // TODO: merge this with the webpack plugin
+    sourceBuffers.push(Buffer.from(`
 // noop fns to prevent runtime errors during initialization
 if (typeof globalThis !== "undefined") {
   globalThis.$RefreshReg$ = function () {};
@@ -175,7 +176,8 @@ if (typeof globalThis !== "undefined") {
       return type;
     };
   };
-}`),
-    ]);
+}`));
+
+    runtimeModule.source!.source = Buffer.concat(sourceBuffers);
   }
 }

@@ -50,7 +50,7 @@ export class MainThreadRuntimeWrapperWebpackPlugin {
     }).apply(compiler)
 
     const { RuntimeGlobals, RuntimeModule } = compiler.webpack
-    class MyCustomRuntimeModule extends RuntimeModule {
+    class LoadingConsumerModulesRuntimeModule extends RuntimeModule {
       constructor() {
         super(
           'Lynx externals loading consumer modules',
@@ -70,23 +70,30 @@ __webpack_require__.i.push(function (options) {
       }
     }
 
-    compiler.hooks.thisCompilation.tap('MyRuntimePlugin', (compilation) => {
-      compilation.hooks.additionalTreeRuntimeRequirements.tap(
-        PLUGIN_NAME,
-        (_chunk, runtimeRequirements) => {
-          runtimeRequirements.add(RuntimeGlobals.interceptModuleExecution)
-        },
-      )
+    const isDev = process.env['NODE_ENV'] === 'development'
+      || compiler.options.mode === 'development'
 
-      compilation.hooks.runtimeRequirementInTree
-        .for(RuntimeGlobals.interceptModuleExecution)
-        .tap(
+    if (isDev) {
+      compiler.hooks.thisCompilation.tap('MyRuntimePlugin', (compilation) => {
+        compilation.hooks.additionalTreeRuntimeRequirements.tap(
           PLUGIN_NAME,
-          (chunk) => {
-            // 注册自定义 RuntimeModule
-            compilation.addRuntimeModule(chunk, new MyCustomRuntimeModule())
+          (_chunk, runtimeRequirements) => {
+            runtimeRequirements.add(RuntimeGlobals.interceptModuleExecution)
           },
         )
-    })
+
+        compilation.hooks.runtimeRequirementInTree
+          .for(RuntimeGlobals.interceptModuleExecution)
+          .tap(
+            PLUGIN_NAME,
+            (chunk) => {
+              compilation.addRuntimeModule(
+                chunk,
+                new LoadingConsumerModulesRuntimeModule(),
+              )
+            },
+          )
+      })
+    }
   }
 }

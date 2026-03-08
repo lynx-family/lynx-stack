@@ -145,7 +145,14 @@ export class ReactRefreshWebpackPlugin {
               'utf-8',
             )
               .replaceAll('$MAIN_THREAD_LAYER$', LAYERS.MAIN_THREAD)
-              .replaceAll('$BACKGROUND_LAYER$', LAYERS.BACKGROUND);
+              .replaceAll('$BACKGROUND_LAYER$', LAYERS.BACKGROUND)
+              .replaceAll(
+                '__DEV__',
+                JSON.stringify(
+                  process.env['NODE_ENV'] === 'development'
+                    || compiler.options.mode === 'development',
+                ),
+              );
           }
         }
 
