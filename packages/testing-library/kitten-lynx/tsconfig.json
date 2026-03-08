@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["ESNext", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@lynx-js/devtool-connector": ["../../mcp-servers/devtool-connector/dist/index.d.ts"],
+      "@lynx-js/devtool-connector/transport": ["../../mcp-servers/devtool-connector/dist/transport/index.d.ts"],
+    },
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"],
+}

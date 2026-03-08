@@ -169,13 +169,38 @@ export class AndroidTransport implements Transport {
       '1',
     ]);
     debug(`openApp LAUNCHER output ${output}`);
-    if (output.includes('No activities found')) {
-      throw new Error(
-        `No launchable activity found for package ${packageName}.`,
+
+    if (!output.includes('Events injected:')) {
+      debug('openApp monkey failed, trying fallback to am start');
+      const dumpsysOutput = await adb.subprocess.noneProtocol.spawnWaitText([
+        'dumpsys',
+        'package',
+        packageName,
+      ]);
+      const mainActionIndex = dumpsysOutput.indexOf(
+        'android.intent.action.MAIN:',
       );
-    }
-    if (output.includes('monkey aborted')) {
-      throw new Error(`Failed to open app ${packageName}.`);
+      if (mainActionIndex !== -1) {
+        const slice = dumpsysOutput.slice(
+          mainActionIndex,
+          mainActionIndex + 200,
+        );
+        const match = slice.match(/([a-zA-Z0-9._]+\/[a-zA-Z0-9._]+)/);
+        if (match?.[1]) {
+          debug(`openApp am start fallback: ${match[1]}`);
+          const amOutput = await adb.subprocess.noneProtocol.spawnWaitText([
+            'am',
+            'start',
+            '-n',
+            match[1],
+          ]);
+          debug(`openApp am start output: ${amOutput}`);
+          return;
+        }
+      }
+      throw new Error(
+        `Failed to open app ${packageName}: monkey aborted and fallback failed.`,
+      );
     }
   }
 }

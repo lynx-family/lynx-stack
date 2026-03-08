@@ -75,6 +75,7 @@ jobs:
     with:
       runs-on: lynx-custom-container
       is-web: true
+      container-image: mcr.microsoft.com/playwright:v1.58.2-noble
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
         pnpm --filter @lynx-js/web-tests run lh || echo "Lighthouse failed"
@@ -91,6 +92,7 @@ jobs:
     with:
       runs-on: lynx-custom-container
       is-web: true
+      container-image: mcr.microsoft.com/playwright:v1.58.2-noble
       codecov-flags: "e2e"
       web-report-path: "packages/web-platform/web-elements/playwright-report"
       run: |
@@ -116,6 +118,7 @@ jobs:
     with:
       runs-on: lynx-custom-container
       is-web: true
+      container-image: mcr.microsoft.com/playwright:v1.58.2-noble
       web-report-name: "playwright-${{ matrix.thread }}-${{ matrix.render }}-shard${{ matrix.shard }}"
       codecov-flags: "e2e"
       run: |
@@ -143,6 +146,7 @@ jobs:
     with:
       runs-on: lynx-custom-container
       is-web: true
+      container-image: mcr.microsoft.com/playwright:v1.58.2-noble
       web-report-name: "playwright-${{ matrix.render }}-shard${{ matrix.shard }}"
       web-report-path: "packages/web-platform/web-core-wasm-e2e/playwright-report"
       codecov-flags: "e2e"
@@ -242,6 +246,41 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: pnpm -r run test:type
+  kitten-lynx-android-emulator:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    name: Kitten Lynx Android Emulator Test
+    with:
+      runs-on: lynx-ubuntu-24.04-xlarge
+      run: |
+        # 1. Initialize Waydroid properties
+        sudo waydroid prop set persist.waydroid.adb_enabled 1
+        sudo waydroid prop set persist.adb.tcp.port 5555
+        sudo waydroid prop set ro.adb.secure 0
+
+        # 2. Start Waydroid session with headless compositor
+        weston --backend=headless-backend.so --socket=wayland-1 --idle-time=0 &
+        export WAYLAND_DISPLAY=wayland-1
+        waydroid session start &
+
+        # 3. Wait for Waydroid to boot
+        echo "Waiting for waydroid to boot..."
+        sleep 10
+        adb wait-for-device
+        while [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" != "1" ]; do
+            sleep 2
+        done
+        echo "Waydroid is ready."
+
+        # 4. Install Lynx Explorer
+        wget -q https://github.com/lynx-family/lynx/releases/download/3.6.0/LynxExplorer-noasan-release.apk -O LynxExplorer.apk
+        waydroid app install LynxExplorer.apk
+
+        # 5. Run the tests
+        pnpm --filter @lynx-test/kitten-lynx run test
+
   test-typos:
     runs-on: lynx-ubuntu-24.04-medium
     steps:
@@ -280,6 +319,7 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
+        --exclude packages/testing-library/kitten-lynx/**
   website:
     needs: build
     uses: ./.github/workflows/workflow-website.yml
@@ -288,6 +328,7 @@ jobs:
       - benchmark
       - code-style-check
       - eslint
+      - kitten-lynx-android-emulator
       - playwright-linux
       - playwright-web-elements
       - test-api
