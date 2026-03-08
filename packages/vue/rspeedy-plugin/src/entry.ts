@@ -13,12 +13,13 @@ import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-pl
 import {
   LynxEncodePlugin,
   LynxTemplatePlugin,
+  WebEncodePlugin,
 } from '@lynx-js/template-webpack-plugin';
 
 import { LAYERS } from './layers.js';
 import {
   clearLepusRegistrations,
-  takeAllLepusRegistrations,
+  getAllLepusRegistrations,
 } from './worklet-registry.js';
 
 const PLUGIN_TEMPLATE = 'lynx:vue-template';
@@ -26,6 +27,7 @@ const PLUGIN_RUNTIME_WRAPPER = 'lynx:vue-runtime-wrapper';
 const PLUGIN_ENCODE = 'lynx:vue-encode';
 const PLUGIN_MARK_MAIN_THREAD = 'lynx:vue-mark-main-thread';
 const PLUGIN_WORKLET_RUNTIME = 'lynx:vue-worklet-runtime';
+const PLUGIN_WEB_ENCODE = 'lynx:vue-web-encode';
 
 /** Minimal typing for the webpack Compilation object (avoids importing @rspack/core). */
 interface WebpackCompilation {
@@ -89,6 +91,7 @@ class VueMainThreadPlugin {
   constructor(
     private readonly mainThreadFilenames: string[],
     private readonly flatBundlePath: string,
+    private readonly devRegistrationsPath?: string,
   ) {}
 
   apply(compiler: WebpackCompiler): void {
@@ -96,17 +99,11 @@ class VueMainThreadPlugin {
       PLUGIN_MARK_MAIN_THREAD,
       (compilation) => {
         // Clear stale registrations at the start of each compilation
-        // (watch-mode safety: prevents leftover registrations from prior builds)
-        compilation.hooks.processAssets.tap(
-          {
-            name: `${PLUGIN_MARK_MAIN_THREAD}:clear`,
-            stage:
-              compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_PRE_PROCESS,
-          },
-          () => {
-            clearLepusRegistrations();
-          },
-        );
+        // (watch-mode safety: prevents leftover registrations from prior builds).
+        // Must run here (before module build) rather than in processAssets,
+        // so that parallel environments (lynx + web) can all read the same
+        // registrations without one draining the shared Map before the other.
+        clearLepusRegistrations();
 
         compilation.hooks.processAssets.tap(
           {
@@ -114,12 +111,20 @@ class VueMainThreadPlugin {
             stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
           },
           () => {
-            const flatCode = fs.readFileSync(this.flatBundlePath, 'utf8');
+            let fullCode = fs.readFileSync(this.flatBundlePath, 'utf8');
             // Append LEPUS registrations collected by worklet-loader
-            const registrations = takeAllLepusRegistrations();
-            const fullCode = registrations
-              ? flatCode + '\n' + registrations
-              : flatCode;
+            const registrations = getAllLepusRegistrations();
+            if (registrations) {
+              fullCode += '\n' + registrations;
+            }
+            // In dev mode, append hand-crafted worklet registrations
+            // (e.g. gallery demos). Excluded from production builds.
+            if (this.devRegistrationsPath) {
+              fullCode += '\n' + fs.readFileSync(
+                this.devRegistrationsPath,
+                'utf8',
+              );
+            }
             const RawSource = compiler.webpack.sources.RawSource;
             for (const filename of this.mainThreadFilenames) {
               const asset = compilation.getAsset(filename);
@@ -227,7 +232,9 @@ export function applyEntry(
   api.modifyBundlerChain((chain, { CHAIN_ID, environment }) => {
     const isLynx = environment.name === 'lynx'
       || environment.name.startsWith('lynx-');
-    if (!isLynx) return;
+    const isWeb = environment.name === 'web'
+      || environment.name.startsWith('web-');
+    if (!isLynx && !isWeb) return;
 
     const cssRuleId = CHAIN_ID.RULE.CSS;
     if (!chain.module.rules.has(cssRuleId)) return;
@@ -251,7 +258,9 @@ export function applyEntry(
   api.modifyBundlerChain((chain, { environment }) => {
     const isLynx = environment.name === 'lynx'
       || environment.name.startsWith('lynx-');
-    if (!isLynx) return;
+    const isWeb = environment.name === 'web'
+      || environment.name.startsWith('web-');
+    if (!isLynx && !isWeb) return;
 
     chain.module
       .rule('vue:worklet')
@@ -269,6 +278,8 @@ export function applyEntry(
 
     const isLynx = environment.name === 'lynx'
       || environment.name.startsWith('lynx-');
+    const isWeb = environment.name === 'web'
+      || environment.name.startsWith('web-');
 
     const entries = chain.entryPoints.entries() ?? {};
 
@@ -304,7 +315,7 @@ export function applyEntry(
         `${entryName}/background${isProd ? '.[contenthash:8]' : ''}.js`,
       );
 
-      if (isLynx) {
+      if (isLynx || isWeb) {
         mainThreadFilenames.push(mainThreadName);
       }
 
@@ -341,7 +352,7 @@ export function applyEntry(
       // ----------------------------------------------------------------
       // LynxTemplatePlugin – packages both bundles into .lynx.bundle
       // ----------------------------------------------------------------
-      if (isLynx) {
+      if (isLynx || isWeb) {
         const templateFilename = (
           typeof environment.config.output.filename === 'object'
             ? (environment.config.output.filename as { bundle?: string })
@@ -360,7 +371,7 @@ export function applyEntry(
               filename: templateFilename
                 .replaceAll('[name]', entryName)
                 .replaceAll('[platform]', environment.name),
-              intermediate: path.posix.join(DEFAULT_INTERMEDIATE, entryName),
+              intermediate: path.posix.join(intermediate, entryName),
               enableCSSSelector: opts.enableCSSSelector ?? false,
               enableCSSInvalidation: opts.enableCSSSelector ?? false,
               enableNewGesture: false,
@@ -376,7 +387,7 @@ export function applyEntry(
     // a pre-built flat bundle and mark with lynx:main-thread: true so that
     // LynxTemplatePlugin routes it to lepusCode.root (Lepus bytecode).
     // ------------------------------------------------------------------
-    if (isLynx && mainThreadFilenames.length > 0) {
+    if ((isLynx || isWeb) && mainThreadFilenames.length > 0) {
       // Resolve the pre-built flat bundle next to the package.json so that
       // it works even before the package exposes an explicit export path.
       const pkgRoot = path.dirname(
@@ -387,9 +398,16 @@ export function applyEntry(
         'dist',
         'main-thread-bundled.js',
       );
+      const devRegistrationsPath = isProd
+        ? undefined
+        : path.join(pkgRoot, 'dist', 'dev-worklet-registrations.js');
       chain
         .plugin(PLUGIN_MARK_MAIN_THREAD)
-        .use(VueMainThreadPlugin, [mainThreadFilenames, flatBundlePath])
+        .use(VueMainThreadPlugin, [
+          mainThreadFilenames,
+          flatBundlePath,
+          devRegistrationsPath,
+        ])
         .end();
 
       // Resolve worklet-runtime from @lynx-js/react (reuse existing impl)
@@ -417,6 +435,13 @@ export function applyEntry(
         .end()
         .plugin(PLUGIN_ENCODE)
         .use(LynxEncodePlugin, [{}])
+        .end();
+    }
+
+    if (isWeb) {
+      chain
+        .plugin(PLUGIN_WEB_ENCODE)
+        .use(WebEncodePlugin, [])
         .end();
     }
 

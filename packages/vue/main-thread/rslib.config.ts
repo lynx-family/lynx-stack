@@ -17,7 +17,10 @@ export default defineConfig({
       bundle: true,
       dts: false,
       source: {
-        entry: { 'main-thread-bundled': './src/entry-main.ts' },
+        entry: {
+          'main-thread-bundled': './src/entry-main.ts',
+          'dev-worklet-registrations': './src/dev-worklet-registrations.ts',
+        },
       },
       output: {
         distPath: { root: 'dist' },

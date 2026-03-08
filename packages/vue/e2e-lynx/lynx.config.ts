@@ -6,16 +6,16 @@ import { defineConfig } from '@lynx-js/rspeedy';
 import { pluginVueLynx } from '@lynx-js/vue-rsbuild-plugin';
 
 export default defineConfig({
+  environments: {
+    web: {},
+    lynx: {},
+  },
   source: {
     entry: {
       main: './src/index.ts',
       'h-counter': './src/h-counter.ts',
       todomvc: './src/todomvc/index.ts',
-      'mts-demo': './src/mts-demo/index.ts',
       'mts-draggable': './src/mts-draggable/index.ts',
-      // Raw worklet context demos (no SWC transform, require hand-crafted registrations)
-      'mts-demo-raw': './src/mts-demo-raw/index.ts',
-      'mts-draggable-raw': './src/mts-draggable-raw/index.ts',
       // Gallery tutorial entries (progressive)
       'gallery-image-card': './src/gallery/ImageCard/index.ts',
       'gallery-like-card': './src/gallery/LikeCard/index.ts',

@@ -28,12 +28,10 @@ export function addLepusRegistration(resourcePath: string, code: string): void {
   getMap().set(resourcePath, code);
 }
 
-export function takeAllLepusRegistrations(): string {
+export function getAllLepusRegistrations(): string {
   const map = getMap();
   if (map.size === 0) return '';
-  const joined = Array.from(map.values()).join('\n');
-  map.clear();
-  return joined;
+  return Array.from(map.values()).join('\n');
 }
 
 export function clearLepusRegistrations(): void {
