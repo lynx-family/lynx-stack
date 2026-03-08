@@ -13,7 +13,8 @@
  *   - globalThis.vuePatchUpdate – receives ops from Background Thread
  */
 
-import { applyOps, elements, resetMainThreadState } from './ops-apply.js';
+import { elements } from './element-registry.js';
+import { applyOps, resetMainThreadState } from './ops-apply.js';
 
 const g = globalThis as Record<string, unknown>;
 

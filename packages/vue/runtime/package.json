@@ -41,6 +41,7 @@
     "dev": "rslib build --watch"
   },
   "dependencies": {
+    "@lynx-js/vue-internal": "workspace:*",
     "@vue/runtime-core": "^3.5.0"
   },
   "devDependencies": {

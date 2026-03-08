@@ -35,6 +35,9 @@
     "build": "rslib build",
     "dev": "rslib build --watch"
   },
+  "dependencies": {
+    "@lynx-js/vue-internal": "workspace:*"
+  },
   "devDependencies": {
     "@rslib/core": "^0.7.0",
     "typescript": "^5.0.0"

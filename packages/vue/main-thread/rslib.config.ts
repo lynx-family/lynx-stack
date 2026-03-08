@@ -16,6 +16,7 @@ export default defineConfig({
       syntax: 'es2020',
       bundle: true,
       dts: false,
+      autoExternal: false,
       source: {
         entry: {
           'main-thread-bundled': './src/entry-main.ts',

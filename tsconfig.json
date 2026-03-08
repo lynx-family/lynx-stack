@@ -129,6 +129,9 @@
       "path": "./packages/motion"
     },
     {
+      "path": "./packages/vue/shared/tsconfig.json"
+    },
+    {
       "path": "./packages/vue/runtime/tsconfig.build.json"
     },
     {
