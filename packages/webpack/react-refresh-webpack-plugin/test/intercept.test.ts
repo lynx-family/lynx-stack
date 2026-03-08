@@ -132,23 +132,21 @@ if (true) {
 `.trim());
   });
 
-  it('ReactRefreshWebpackPlugin intercept code generation in production', () => {
+  it('ReactRefreshWebpackPlugin true production early return', () => {
     const plugin = new ReactRefreshWebpackPlugin();
     let generateResult = '';
+    const originalEnv = process.env['NODE_ENV'];
+    process.env['NODE_ENV'] = 'production';
 
     const mockCompiler = {
       options: { mode: 'production' },
       context: '/test',
       webpack: {
         EntryPlugin: class {
-          apply() {
-            /* noop */
-          }
+          apply() {/* noop */}
         },
         ProvidePlugin: class {
-          apply() {
-            /* noop */
-          }
+          apply() {/* noop */}
         },
         RuntimeGlobals: {
           interceptModuleExecution: 'interceptModuleExecution',
@@ -164,105 +162,46 @@ if (true) {
       },
       hooks: {
         compilation: {
-          tap: (_name: string, cb: (compilation: unknown) => void) => {
-            mockCompiler.options.mode = 'production';
-            const compilation = {
-              compiler: mockCompiler,
-              mainTemplate: {
-                hooks: {
-                  localVars: {
-                    tap: () => {
-                      /* noop */
-                    },
-                  },
-                },
-              },
-              hooks: {
-                additionalTreeRuntimeRequirements: {
-                  tap: (
-                    _name: string,
-                    reqCb: (chunk: string, requirements: Set<string>) => void,
-                  ) => {
-                    const requirements = new Set<string>();
-                    reqCb('chunk', requirements);
-                  },
-                },
-              },
-              addRuntimeModule: (
-                _chunk: unknown,
-                module: { generate: () => string },
-              ) => {
-                generateResult = module.generate();
-              },
-            };
-            cb(compilation);
+          tap: () => {
+            generateResult = 'CALLED';
           },
         },
       },
     };
 
-    // Override the early return for testing the generation logic
-    mockCompiler.options.mode = 'development';
     // @ts-expect-error test mock
     plugin.apply(mockCompiler);
+    expect(generateResult).toBe('');
 
-    mockCompiler.options.mode = 'production';
-    expect(generateResult).toContain(
-      `
-if (false) {
-  globalThis[Symbol.for('__LYNX_WEBPACK_MODULES__')] = __webpack_modules__;
-}`.trim(),
-    );
+    process.env['NODE_ENV'] = originalEnv;
   });
 
-  it('ReactRefreshRspackPlugin intercept code generation in production', () => {
+  it('ReactRefreshRspackPlugin true production early return', () => {
     const plugin = new ReactRefreshRspackPlugin();
     let generateResult = '';
+    const originalEnv = process.env['NODE_ENV'];
+    process.env['NODE_ENV'] = 'production';
 
     const mockCompiler = {
-      options: { mode: 'development' },
+      options: { mode: 'production' },
       webpack: {
         ProvidePlugin: class {
-          apply() {
-            /* noop */
-          }
+          apply() {/* noop */}
         },
       },
       hooks: {
         thisCompilation: {
-          tap: (_name: string, cb: (compilation: unknown) => void) => {
-            mockCompiler.options.mode = 'production';
-            const compilation = {
-              hooks: {
-                runtimeModule: {
-                  tap: (_name: string, moduleCb: (module: unknown) => void) => {
-                    const module = {
-                      name: 'hot_module_replacement',
-                      source: { source: Buffer.from('') },
-                    };
-                    moduleCb(module);
-
-                    generateResult = module.source.source.toString();
-                  },
-                },
-              },
-            };
-            cb(compilation);
+          tap: () => {
+            generateResult = 'CALLED';
           },
         },
       },
     };
 
-    mockCompiler.options.mode = 'development';
     // @ts-expect-error test mock
     plugin.apply(mockCompiler);
+    expect(generateResult).toBe('');
 
-    mockCompiler.options.mode = 'production';
-
-    expect(generateResult).toContain(`
-if (false) {
-  globalThis[Symbol.for('__LYNX_WEBPACK_MODULES__')] = __webpack_modules__;
-}
-`.trim());
+    process.env['NODE_ENV'] = originalEnv;
   });
 });

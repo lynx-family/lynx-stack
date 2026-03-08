@@ -117,8 +117,9 @@ export class ReactRefreshRspackPlugin {
    * @param compiler - the rspack compiler
    */
   apply(compiler: Compiler): void {
-    const isDev = process.env['NODE_ENV'] === 'development'
-      || compiler.options.mode === 'development';
+    const isDev = compiler.options.mode
+      ? compiler.options.mode === 'development'
+      : process.env['NODE_ENV'] === 'development';
 
     if (!isDev) {
       return;
@@ -139,19 +140,16 @@ export class ReactRefreshRspackPlugin {
     compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
       compilation.hooks.runtimeModule.tap(PLUGIN_NAME, (runtimeModule) => {
         if (runtimeModule.name === 'hot_module_replacement') {
-          this.#appendInterceptRuntimeModule(compiler, runtimeModule);
+          this.#appendInterceptRuntimeModule(runtimeModule, isDev);
         }
       });
     });
   }
 
   #appendInterceptRuntimeModule(
-    compiler: Compiler,
     runtimeModule: RuntimeModule,
+    isDev: boolean,
   ) {
-    const isDev = process.env['NODE_ENV'] === 'development'
-      || compiler.options.mode === 'development';
-
     const sourceBuffers = [
       Buffer.from(runtimeModule.source!.source as Buffer),
 
