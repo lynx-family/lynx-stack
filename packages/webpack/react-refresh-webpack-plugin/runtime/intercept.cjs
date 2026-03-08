@@ -72,3 +72,11 @@ __webpack_require__.i.push(function(options) {
     }
   };
 });
+
+// In dev mode, externals will use "@lynx-js/react/internal" as module id
+// instead of "(react:background)/./node_modules/.pnpm/.../node_modules/@lynx-js/react/runtime/lib/internal.js"
+// externals bundle cannot access modules inside the consumer page
+// we have to expose it to make hmr work
+if (__DEV__) {
+  globalThis[Symbol.for('__LYNX_WEBPACK_MODULES__')] = __webpack_modules__;
+}
