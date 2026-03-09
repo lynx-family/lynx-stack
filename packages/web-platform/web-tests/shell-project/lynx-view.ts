@@ -1,11 +1,10 @@
 // Copyright 2023 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { LynxView } from '@lynx-js/web-core';
-import '@lynx-js/web-core';
+import type { LynxViewElement as LynxView } from '@lynx-js/web-core-wasm/client';
+import '@lynx-js/web-core-wasm/client';
 import '@lynx-js/web-elements/all';
 import '@lynx-js/web-elements/index.css';
-import '@lynx-js/web-core/index.css';
 import './index.css';
 
 export const lynxViewTests = (

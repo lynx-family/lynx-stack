@@ -43,7 +43,6 @@ export type INapiModulesCall = (
  * @property {string} url [required] (attribute: "url") The url of the entry of your Lynx card
  * @property {Cloneable} globalProps [optional] (attribute: "global-props") The globalProps value of this Lynx card
  * @property {Cloneable} initData [optional] (attribute: "init-data") The initial data of this Lynx card
- * @property {Record<string,string>} overrideLynxTagToHTMLTagMap [optional] use this property/attribute to override the lynx tag -> html tag map
  * @property {NativeModulesMap} nativeModulesMap [optional] use to customize NativeModules. key is module-name, value is esm url.
  * @property {NativeModulesCall} onNativeModulesCall [optional] the NativeModules value handler. Arguments will be cached before this property is assigned.
  * @property {"auto" | null} height [optional] (attribute: "height") set it to "auto" for height auto-sizing
@@ -52,7 +51,6 @@ export type INapiModulesCall = (
  * @property {INapiModulesCall} onNapiModulesCall [optional] the NapiModule value handler.
  * @property {string[]} injectStyleRules [optional] the css rules which will be injected into shadowroot. Each items will be inserted by `insertRule` method. @see https://developer.mozilla.org/docs/Web/API/CSSStyleSheet/insertRule
  * @property {number} lynxGroupId [optional] (attribute: "lynx-group-id") the background shared context id, which is used to share webworker between different lynx cards
- * @property {(string)=>Promise<LynxTemplate>} customTemplateLoader [optional] the custom template loader, which is used to load the template
  * @property {InitI18nResources} initI18nResources [optional] (attribute: "init-i18n-resources") the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation
  *
  * @event error lynx card fired an error
@@ -200,25 +198,6 @@ export class LynxViewElement extends HTMLElement {
     options: I18nResourceTranslationOptions,
   ) {
     this.#instance?.i18nManager.updateData(data, options);
-  }
-
-  #overrideLynxTagToHTMLTagMap: Record<string, string> = {
-    'page': 'div',
-  };
-  /**
-   * @public
-   * @property
-   * @default {page: 'div'}
-   */
-  get overrideLynxTagToHTMLTagMap(): Record<string, string> {
-    return this.#overrideLynxTagToHTMLTagMap;
-  }
-  set overrideLynxTagToHTMLTagMap(val: string | Record<string, string>) {
-    if (typeof val === 'string') {
-      this.#overrideLynxTagToHTMLTagMap = JSON.parse(val);
-    } else {
-      this.#overrideLynxTagToHTMLTagMap = val;
-    }
   }
 
   #cachedNativeModulesCall: Array<

@@ -1,6 +1,5 @@
-import '@lynx-js/web-core';
-import type { LynxView } from '@lynx-js/web-core';
-import '@lynx-js/web-core/index.css';
+import '@lynx-js/web-core-wasm/client';
+import type { LynxViewElement as LynxView } from '@lynx-js/web-core-wasm/client';
 import '@lynx-js/web-elements/index.css';
 import '@lynx-js/web-elements/all';
 

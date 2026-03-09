@@ -1,6 +1,6 @@
 /* eslint-disable headers/header-format, sort-imports, import/order, n/file-extension-in-import */
 import { RotateCw } from 'lucide-react';
-import type { LynxTemplate } from '@lynx-js/web-constants';
+import type { LynxTemplate } from '@lynx-js/web-core-wasm/client';
 import { LynxPreview } from './LynxPreview';
 import { ConsolePanel } from './ConsolePanel';
 import {

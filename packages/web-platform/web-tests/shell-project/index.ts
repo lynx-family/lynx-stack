@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { LynxTemplate, LynxView } from '@lynx-js/web-core';
+import type { LynxViewElement as LynxView } from '@lynx-js/web-core-wasm/client';
 import { lynxViewTests } from './lynx-view.ts';
 
 const ENABLE_MULTI_THREAD = !!process.env.ENABLE_MULTI_THREAD;
@@ -56,34 +56,7 @@ if (casename) {
     }
 
     if (casename.includes('custom-template-loader')) {
-      lynxView.customTemplateLoader = async () => {
-        const template = {
-          styleInfo: {},
-          pageConfig: {
-            enableCSSSelector: true,
-            enableRemoveCSSScope: true,
-            defaultDisplayLinear: true,
-            defaultOverflowVisible: true,
-            enableJSDataProcessor: false,
-          },
-          customSections: {},
-          lepusCode: {
-            root: `
-            
-              let root = __CreatePage('page', 0);
-              __AddInlineStyle(root, 'min-height', '80px');
-              __AddInlineStyle(root, 'width', '80px');
-              __AddInlineStyle(root, 'background', 'green');
-              __SetID(root, 'target');
-              __FlushElementTree();
-            `,
-          },
-          manifest: {
-            '/app-service.js': '',
-          },
-        } as LynxTemplate;
-        return template;
-      };
+      // custom template loader is not supported by web-core-wasm
     }
 
     if (casename === 'api-createLynxView-browserConfig') {

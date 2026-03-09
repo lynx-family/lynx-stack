@@ -1,7 +1,9 @@
 /* eslint-disable headers/header-format, sort-imports, import/order, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, n/no-unsupported-features/node-builtins, @typescript-eslint/prefer-nullish-coalescing */
 import { useRef, useEffect, useState, useCallback } from 'react';
-import type { LynxTemplate } from '@lynx-js/web-constants';
-import type { LynxView } from '@lynx-js/web-core';
+import type {
+  LynxViewElement as LynxView,
+  LynxTemplate,
+} from '@lynx-js/web-core-wasm/client';
 
 let renderCounter = 0;
 
