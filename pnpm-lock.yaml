@@ -1686,9 +1686,15 @@ importers:
       '@rspack/core':
         specifier: 1.7.7
         version: 1.7.7(@swc/helpers@0.5.18)
+      bar:
+        specifier: ./test/helpers/external-bundle-mock/bar
+        version: link:test/helpers/external-bundle-mock/bar
+      baz:
+        specifier: ./test/helpers/external-bundle-mock/baz
+        version: link:test/helpers/external-bundle-mock/baz
       foo:
-        specifier: ./test/foo
-        version: link:test/foo
+        specifier: ./test/helpers/external-bundle-mock/foo
+        version: link:test/helpers/external-bundle-mock/foo
 
   packages/webpack/react-refresh-webpack-plugin:
     devDependencies:

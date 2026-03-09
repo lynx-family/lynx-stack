@@ -8,4 +8,13 @@ import { describeCases } from '@lynx-js/test-tools';
 describeCases({
   name: 'externals-loading',
   casePath: path.join(__dirname, 'cases'),
+  beforeExecute: () => {
+    if (lynx[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]) {
+      delete lynx[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')];
+    }
+  },
 });
+
+declare global {
+  var lynx: Record<symbol, unknown>;
+}
