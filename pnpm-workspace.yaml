@@ -4,6 +4,7 @@ packages:
   - packages/background-only
   - packages/lynx/*
   - packages/vue/*
+  - packages/vue/examples/*
   - packages/mcp-servers/*
   - packages/react
   - packages/react/refresh

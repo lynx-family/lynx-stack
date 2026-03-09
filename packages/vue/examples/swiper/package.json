@@ -1,0 +1,24 @@
+{
+  "name": "@lynx-js/vue-example-swiper",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vue-Lynx swiper tutorial examples",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "rspeedy build",
+    "dev": "rspeedy dev"
+  },
+  "dependencies": {
+    "@lynx-js/vue-runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/vue-rsbuild-plugin": "workspace:*",
+    "@rsbuild/plugin-vue": "^1.2.6",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
