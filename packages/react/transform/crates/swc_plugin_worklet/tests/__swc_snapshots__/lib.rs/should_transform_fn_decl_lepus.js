@@ -6,7 +6,8 @@ export default {
     },
     _wkltId: "a123:test:1"
 };
-loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a123:test:1", function(exposureArgs) {
+const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
+__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a123:test:1", function(exposureArgs) {
     let { x } = this["_c"];
     'main thread';
     console.log('useExposure2');

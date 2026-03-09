@@ -14,7 +14,8 @@ let onTapLepus = {
         }
     }
 };
-loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a123:test:1", function(event: ReactLynx.Worklet.ITouchEvent) {
+const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
+__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a123:test:1", function(event: ReactLynx.Worklet.ITouchEvent) {
     const onTapLepus = lynxWorkletImpl._workletMap["a123:test:1"].bind(this);
     let { _jsFn1, _jsFn2, _jsFn3 } = this["_jsFn"];
     "main thread";
