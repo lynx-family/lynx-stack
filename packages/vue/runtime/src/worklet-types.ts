@@ -7,10 +7,20 @@
  * Mirrors the types used by @lynx-js/react/worklet-runtime.
  */
 
+export interface JsFnHandle {
+  _jsFnId?: number;
+  _fn?: (...args: unknown[]) => unknown;
+  _execId?: number;
+  _error?: string;
+  _isFirstScreen?: boolean;
+}
+
 export interface Worklet {
   _wkltId: string;
   _workletType?: string;
   _c?: Record<string, unknown>;
+  _execId?: number;
+  _jsFn?: Record<string, unknown>;
   [key: string]: unknown;
 }
 

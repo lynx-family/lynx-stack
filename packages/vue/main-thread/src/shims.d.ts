@@ -12,6 +12,19 @@ declare global {
   /** Build-time macros */
   const __DEV__: boolean;
 
+  /** Lynx runtime — cross-thread communication */
+  const lynx: {
+    getJSContext(): {
+      dispatchEvent(event: { type: string; data: string }): void;
+      addEventListener(
+        type: string,
+        handler: (event: { data?: unknown }) => void,
+      ): void;
+    };
+    SystemInfo?: Record<string, unknown>;
+    [key: string]: unknown;
+  };
+
   /** Opaque element handle – the actual type is internal to Lynx engine */
   type LynxElement = object;
 

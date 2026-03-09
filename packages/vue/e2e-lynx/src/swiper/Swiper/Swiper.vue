@@ -3,12 +3,12 @@
 
   Touch dragging: runs on Main Thread via 'main thread' directive (zero latency).
   Snap animation: requestAnimationFrame-based loop on MT (smooth easing).
-  Indicator: BG-thread state updated via duplicate touch tracking. Indicator
-  click → runOnMainThread to animate the swiper to the target page.
+  Indicator: BG-thread state synced via runOnBackground from MT touch handler.
+  Indicator click → runOnMainThread to animate the swiper to the target page.
 -->
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useMainThreadRef, runOnMainThread } from '@lynx-js/vue-runtime';
+import { useMainThreadRef, runOnMainThread, runOnBackground } from '@lynx-js/vue-runtime';
 import SwiperItem from '../Components/SwiperItem.vue';
 import Indicator from '../Components/Indicator.vue';
 
@@ -35,11 +35,6 @@ const cancelAnimRef = useMainThreadRef<(() => void) | null>(null);
 
 // --- Background Thread state for indicator ---
 const currentIndex = ref(0);
-
-// BG-side offset tracking (mirrors MT for indicator sync)
-let bgOffset = 0;
-let bgTouchStartX = 0;
-let bgTouchStartOffset = 0;
 
 // --- MTS helpers ---
 function mtUpdateStyle(offset: number) {
@@ -120,43 +115,21 @@ const handleTouchEnd = () => {
   const upperBound = -(dataLength - 1) * itemWidth;
   const target = Math.min(lowerBound, Math.max(upperBound, nearestPage));
   mtAnimate(currentOffsetRef.current, target, 300);
+  // Sync indicator to BG via runOnBackground
+  const index = Math.round(-target / itemWidth);
+  runOnBackground(updateCurrentIndex)(index);
   touchStartXRef.current = 0;
   touchStartOffsetRef.current = 0;
 };
 
-// --- BG touch handlers (duplicate tracking for indicator) ---
-function onBGTouchStart(e: { touches?: Array<{ clientX?: number }> }) {
-  bgTouchStartX = e.touches?.[0]?.clientX ?? 0;
-  bgTouchStartOffset = bgOffset;
-}
-
-function onBGTouchMove(e: { touches?: Array<{ clientX?: number }> }) {
-  const delta = (e.touches?.[0]?.clientX ?? 0) - bgTouchStartX;
-  bgOffset = bgTouchStartOffset + delta;
-  // Clamp and update indicator
-  const lowerBound = 0;
-  const upperBound = -(dataLength - 1) * itemWidth;
-  bgOffset = Math.min(lowerBound, Math.max(upperBound, bgOffset));
-  const index = Math.round(-bgOffset / itemWidth);
-  if (currentIndex.value !== index) {
-    currentIndex.value = index;
-  }
-}
-
-function onBGTouchEnd() {
-  // Snap to nearest page (mirrors MT logic)
-  const nearestPage = Math.round(bgOffset / itemWidth) * itemWidth;
-  const lowerBound = 0;
-  const upperBound = -(dataLength - 1) * itemWidth;
-  bgOffset = Math.min(lowerBound, Math.max(upperBound, nearestPage));
-  const index = Math.round(-bgOffset / itemWidth);
+// --- BG function called from MT via runOnBackground ---
+function updateCurrentIndex(index: number) {
   currentIndex.value = index;
 }
 
 // --- Indicator click → animate via runOnMainThread ---
 function handleItemClick(index: number) {
   currentIndex.value = index;
-  bgOffset = -index * itemWidth;
   runOnMainThread(mtAnimateToIndex)(index);
 }
 
@@ -176,9 +149,6 @@ function mtAnimateToIndex(index: number) {
       :main-thread-bindtouchstart="handleTouchStart"
       :main-thread-bindtouchmove="handleTouchMove"
       :main-thread-bindtouchend="handleTouchEnd"
-      @touchstart="onBGTouchStart"
-      @touchmove="onBGTouchMove"
-      @touchend="onBGTouchEnd"
     >
       <SwiperItem
         v-for="(pic, index) in data"

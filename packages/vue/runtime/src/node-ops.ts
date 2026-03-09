@@ -7,7 +7,9 @@ import type { RendererOptions } from '@vue/runtime-core';
 import { register, unregister, updateHandler } from './event-registry.js';
 import { scheduleFlush } from './flush.js';
 import { OP, pushOp } from './ops.js';
+import { registerWorkletCtx } from './run-on-background.js';
 import { ShadowElement } from './shadow-element.js';
+import type { Worklet } from './worklet-types.js';
 
 // ---------------------------------------------------------------------------
 // Style normalisation – numeric values → 'Npx' (Lynx requires units)
@@ -197,6 +199,7 @@ export const nodeOps: RendererOptions<ShadowElement, ShadowElement> = {
         // Worklet event — suffix is an event key like "bindtap", "bindscroll"
         const event = parseEventProp(suffix);
         if (event && nextValue != null) {
+          registerWorkletCtx(nextValue as Worklet);
           pushOp(
             OP.SET_WORKLET_EVENT,
             el.id,

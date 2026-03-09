@@ -15,13 +15,17 @@
 
 import { elements } from './element-registry.js';
 import { applyOps, resetMainThreadState } from './ops-apply.js';
+import { runOnBackground } from './run-on-background-mt.js';
 
 const g = globalThis as Record<string, unknown>;
 
 // Expose SystemInfo on globalThis (the worklet-runtime reads it).
 // In React's main-thread bundle this is done by the generated snapshot code.
-declare const lynx: Record<string, unknown>;
-g['SystemInfo'] = (typeof lynx !== 'undefined' && lynx['SystemInfo']) ?? {};
+g['SystemInfo'] = (typeof lynx !== 'undefined' && lynx.SystemInfo) ?? {};
+
+// Register runOnBackground as a global — extracted LEPUS worklet code calls it
+// as a bare identifier (the SWC transform generates `runOnBackground(_jsFnK)`).
+g['runOnBackground'] = runOnBackground;
 
 // Load the worklet-runtime Lepus chunk which provides:
 //   globalThis.runWorklet, globalThis.registerWorkletInternal,

@@ -38,7 +38,12 @@ import {
 } from './main-thread-ref.js';
 import { nodeOps, resetNodeOpsState } from './node-ops.js';
 import { OP, pushOp, takeOps } from './ops.js';
+import {
+  resetRunOnBackgroundState,
+  runOnBackground,
+} from './run-on-background.js';
 import { ShadowElement, createPageRoot } from './shadow-element.js';
+import { transformToWorklet } from './transform-to-worklet.js';
 
 export type { App, Component, ComponentPublicInstance };
 
@@ -252,7 +257,13 @@ export { ShadowElement, nodeOps, takeOps };
 // Main Thread Script (MTS) APIs
 // ---------------------------------------------------------------------------
 
-export { MainThreadRef, useMainThreadRef, runOnMainThread };
+export {
+  MainThreadRef,
+  useMainThreadRef,
+  runOnMainThread,
+  runOnBackground,
+  transformToWorklet,
+};
 
 /**
  * Reset all module-level state between tests.
@@ -264,6 +275,7 @@ export function resetForTesting(): void {
   resetFlushState();
   resetMainThreadRefState();
   resetFunctionCallState();
+  resetRunOnBackgroundState();
   takeOps(); // drain any leftover ops
   ShadowElement.nextId = 2;
 }
