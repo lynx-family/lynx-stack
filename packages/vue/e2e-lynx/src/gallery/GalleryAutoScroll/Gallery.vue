@@ -12,29 +12,20 @@
   Tutorial step: gallery-autoscroll
 -->
 <script setup lang="ts">
-import { onMounted, nextTick } from '@lynx-js/vue-runtime';
+import { onMounted, nextTick, useTemplateRef } from '@lynx-js/vue-runtime';
+import type { ShadowElement } from '@lynx-js/vue-runtime';
 
 import { furnituresPictures } from '../Pictures/furnituresPictures';
 import { calculateEstimatedSize } from '../utils';
 
 import LikeImageCard from '../Components/LikeImageCard.vue';
 
-declare const lynx: {
-  createSelectorQuery(): {
-    select(selector: string): {
-      invoke(options: { method: string; params: Record<string, string> }): {
-        exec(): void;
-      };
-    };
-  };
-};
+const listRef = useTemplateRef<ShadowElement>('listRef');
 
 onMounted(() => {
   nextTick(() => {
-    lynx
-      .createSelectorQuery()
-      .select('[custom-list-name="list-container"]')
-      .invoke({
+    listRef.value
+      ?.invoke({
         method: 'autoScroll',
         params: { rate: '60', start: 'true' },
       })
@@ -46,11 +37,11 @@ onMounted(() => {
 <template>
   <view class="gallery-wrapper">
     <list
+      ref="listRef"
       class="list"
       list-type="waterfall"
       :column-count="2"
       scroll-orientation="vertical"
-      custom-list-name="list-container"
     >
       <list-item
         v-for="(pic, i) in furnituresPictures"

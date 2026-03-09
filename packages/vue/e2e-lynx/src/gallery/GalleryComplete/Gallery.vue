@@ -12,7 +12,8 @@
   Tutorial step: gallery-complete
 -->
 <script setup lang="ts">
-import { onMounted, nextTick, useMainThreadRef } from '@lynx-js/vue-runtime';
+import { onMounted, nextTick, useMainThreadRef, useTemplateRef } from '@lynx-js/vue-runtime';
+import type { ShadowElement } from '@lynx-js/vue-runtime';
 
 import { furnituresPictures } from '../Pictures/furnituresPictures';
 import { calculateEstimatedSize } from '../utils';
@@ -20,19 +21,11 @@ import { calculateEstimatedSize } from '../utils';
 import LikeImageCard from '../Components/LikeImageCard.vue';
 import NiceScrollbarMTS from './NiceScrollbarMTS.vue';
 
-declare const lynx: {
-  createSelectorQuery(): {
-    select(selector: string): {
-      invoke(options: { method: string; params: Record<string, string> }): {
-        exec(): void;
-      };
-    };
-  };
-};
 declare const SystemInfo: { pixelHeight: number; pixelRatio: number };
 
 // MainThreadRef for the scrollbar thumb element
 const scrollbarThumbRef = useMainThreadRef(null);
+const listRef = useTemplateRef<ShadowElement>('listRef');
 
 // MTS scrollbar adjuster — runs directly on Main Thread, no thread crossings
 function adjustScrollbarMTS(
@@ -55,10 +48,8 @@ const onScrollMTS = (event: { detail: { scrollTop: number; scrollHeight: number 
 
 onMounted(() => {
   nextTick(() => {
-    lynx
-      .createSelectorQuery()
-      .select('[custom-list-name="list-container"]')
-      .invoke({
+    listRef.value
+      ?.invoke({
         method: 'autoScroll',
         params: { rate: '60', start: 'true' },
       })
@@ -71,11 +62,11 @@ onMounted(() => {
   <view class="gallery-wrapper">
     <NiceScrollbarMTS :thumb-ref="scrollbarThumbRef" />
     <list
+      ref="listRef"
       class="list"
       list-type="waterfall"
       :column-count="2"
       scroll-orientation="vertical"
-      custom-list-name="list-container"
       :main-thread-bindscroll="onScrollMTS"
       :scroll-event-throttle="0"
     >

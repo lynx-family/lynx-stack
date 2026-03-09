@@ -1,5 +1,48 @@
 # Vue Template Ref → NodesRef Implementation
 
+## Implementation Result
+
+**Status**: Implemented & verified on LynxExplorer.
+
+### What was done
+
+1. **MT: `vue-ref-{id}` selector attribute** (`ops-apply.ts`)
+   - Every non-comment element gets `__SetAttribute(el, 'vue-ref-${id}', 1)` in CREATE and CREATE_TEXT handlers
+   - Zero wire overhead — purely MT-side, no extra ops
+
+2. **BG: NodesRef methods on ShadowElement** (`shadow-element.ts`)
+   - 8 methods: `invoke`, `setNativeProps`, `fields`, `path`, `animate`, `playAnimation`, `pauseAnimation`, `cancelAnimation`
+   - `_selector` getter: `[vue-ref-{id}]` — unique attribute selector per element
+   - `_select()`: `lynx.createSelectorQuery().select(this._selector)`
+   - Minimal `LynxNodesRef` / `LynxSelectorQuery` interfaces in `shims.d.ts` (structurally compatible with `@lynx-js/types`)
+
+3. **Re-export `useTemplateRef`** from `@vue/runtime-core` via `index.ts`
+
+4. **Gallery e2e migration** — all 4 gallery entries converted from manual `lynx.createSelectorQuery().select('[custom-list-name="..."]')` to `useTemplateRef<ShadowElement>('listRef')` + `listRef.value?.invoke(...)`:
+   - `GalleryAutoScroll` — removed `declare const lynx`, removed `custom-list-name` attr
+   - `GalleryScrollbar` — same
+   - `GalleryScrollbarCompare` — same
+   - `GalleryComplete` — same
+
+5. **Tests** — 3 new tests in `ops-coverage.test.ts`:
+   - `vue-ref-{id}` attribute set on MT elements
+   - `ShadowElement` has all NodesRef methods
+   - `_selector` returns correct attribute selector format
+
+### Test results
+
+- testing-library: 31/31 pass (28 existing + 3 new)
+- vue-upstream-tests: 778/875 pass, 97 skipped, 0 failures
+- LynxExplorer: gallery-autoscroll autoScroll confirmed working via template ref
+
+### Key design decisions
+
+- **Methods on ShadowElement directly** (not a Proxy wrapper like React): Vue's `createRenderer` doesn't expose a `setRef` hook, so ref assignment returns whatever `createElement()` returns. Adding methods to `ShadowElement` is idiomatic — same as `HTMLElement` carrying DOM methods in browser Vue.
+- **Attribute on every element** (not just ref'd ones): simpler, no extra BG→MT signaling needed. The `vue-ref-{id}` attribute is tiny and the element already exists. React Lynx sets `react-ref-{id}-{idx}` lazily per-ref, but Vue doesn't have the same snapshot-based ref control.
+- **Swiper files unchanged**: they use `useMainThreadRef` for 60fps MT-side manipulation (correct pattern for their use case).
+
+---
+
 ## Context
 
 Currently, Vue Lynx's template refs (`ref="x"`) return raw `ShadowElement` objects — lightweight BG-thread tree nodes with no platform API. Users can't call `invoke()`, `setNativeProps()`, etc. on them.

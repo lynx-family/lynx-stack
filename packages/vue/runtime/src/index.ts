@@ -191,6 +191,7 @@ export {
   defineOptions,
   defineModel,
   useAttrs,
+  useTemplateRef,
 } from '@vue/runtime-core';
 
 // ---------------------------------------------------------------------------

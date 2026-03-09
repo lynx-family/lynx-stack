@@ -14,6 +14,7 @@ import {
   ref,
   nextTick,
   useMainThreadRef,
+  ShadowElement,
 } from '@lynx-js/vue-runtime';
 import { render } from '../index.js';
 
@@ -202,5 +203,43 @@ describe('SET_WORKLET_EVENT', () => {
     // The component renders without errors, meaning SET_WORKLET_EVENT was processed
     expect(container.querySelector('view')).not.toBeNull();
     expect(container.querySelector('text')!.textContent).toBe('worklet');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Template Ref → NodesRef (vue-ref-{id} attribute + ShadowElement methods)
+// ---------------------------------------------------------------------------
+
+describe('template ref / NodesRef', () => {
+  it('sets vue-ref-{id} attribute on MT elements', () => {
+    const Comp = defineComponent({
+      render() {
+        return h('view', null, [h('text', null, 'hello')]);
+      },
+    });
+
+    const { container } = render(Comp);
+    // Every non-comment element should have a vue-ref-{id} attribute
+    const view = container.querySelector('view');
+    expect(view).not.toBeNull();
+    // The view element's id is 2 (first element after page root id=1)
+    expect(view!.hasAttribute('vue-ref-2')).toBe(true);
+  });
+
+  it('ShadowElement has NodesRef methods', () => {
+    const el = new ShadowElement('view');
+    expect(typeof el.invoke).toBe('function');
+    expect(typeof el.setNativeProps).toBe('function');
+    expect(typeof el.fields).toBe('function');
+    expect(typeof el.path).toBe('function');
+    expect(typeof el.animate).toBe('function');
+    expect(typeof el.playAnimation).toBe('function');
+    expect(typeof el.pauseAnimation).toBe('function');
+    expect(typeof el.cancelAnimation).toBe('function');
+  });
+
+  it('ShadowElement._selector returns correct attribute selector', () => {
+    const el = new ShadowElement('view', 42);
+    expect(el._selector).toBe('[vue-ref-42]');
   });
 });

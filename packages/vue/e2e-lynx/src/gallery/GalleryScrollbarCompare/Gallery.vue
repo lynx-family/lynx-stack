@@ -12,7 +12,8 @@
   Tutorial step: gallery-scrollbar-compare
 -->
 <script setup lang="ts">
-import { ref, onMounted, nextTick, useMainThreadRef } from '@lynx-js/vue-runtime';
+import { ref, onMounted, nextTick, useMainThreadRef, useTemplateRef } from '@lynx-js/vue-runtime';
+import type { ShadowElement } from '@lynx-js/vue-runtime';
 
 import { furnituresPictures } from '../Pictures/furnituresPictures';
 import { calculateEstimatedSize } from '../utils';
@@ -21,19 +22,11 @@ import LikeImageCard from '../Components/LikeImageCard.vue';
 import NiceScrollbar from './NiceScrollbar.vue';
 import NiceScrollbarMTS from './NiceScrollbarMTS.vue';
 
-declare const lynx: {
-  createSelectorQuery(): {
-    select(selector: string): {
-      invoke(options: { method: string; params: Record<string, string> }): {
-        exec(): void;
-      };
-    };
-  };
-};
 declare const SystemInfo: { pixelHeight: number; pixelRatio: number };
 
 const scrollbarRef = ref<InstanceType<typeof NiceScrollbar> | null>(null);
 const scrollbarThumbRef = useMainThreadRef(null);
+const listRef = useTemplateRef<ShadowElement>('listRef');
 
 // BTS scroll handler
 function onScroll(event: { detail?: { scrollTop?: number; scrollHeight?: number } }) {
@@ -63,10 +56,8 @@ const onScrollMTS = (event: { detail: { scrollTop: number; scrollHeight: number 
 
 onMounted(() => {
   nextTick(() => {
-    lynx
-      .createSelectorQuery()
-      .select('[custom-list-name="list-container"]')
-      .invoke({
+    listRef.value
+      ?.invoke({
         method: 'autoScroll',
         params: { rate: '60', start: 'true' },
       })
@@ -80,11 +71,11 @@ onMounted(() => {
     <NiceScrollbar ref="scrollbarRef" />
     <NiceScrollbarMTS :thumb-ref="scrollbarThumbRef" />
     <list
+      ref="listRef"
       class="list"
       list-type="waterfall"
       :column-count="2"
       scroll-orientation="vertical"
-      custom-list-name="list-container"
       @scroll="onScroll"
       :main-thread-bindscroll="onScrollMTS"
       :scroll-event-throttle="0"

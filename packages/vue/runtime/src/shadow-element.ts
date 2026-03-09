@@ -36,6 +36,71 @@ export class ShadowElement {
     this.type = type;
   }
 
+  // ---------------------------------------------------------------------------
+  // NodesRef — structurally compatible with @lynx-js/types NodesRef.
+  // Each method creates a SelectorQuery targeting this element via its unique
+  // `vue-ref-{id}` attribute (set on the MT side during element creation).
+  // ---------------------------------------------------------------------------
+
+  /** CSS attribute selector that uniquely identifies this element on MT. */
+  get _selector(): string {
+    return `[vue-ref-${this.id}]`;
+  }
+
+  private _select(): LynxNodesRef {
+    return lynx.createSelectorQuery().select(this._selector);
+  }
+
+  invoke(options: {
+    method: string;
+    params?: Record<string, unknown>;
+    success?(res: unknown): void;
+    fail?(res: { code: number; data?: unknown }): void;
+  }): LynxSelectorQuery {
+    return this._select().invoke(options);
+  }
+
+  setNativeProps(
+    nativeProps: Record<string, unknown>,
+  ): LynxSelectorQuery {
+    return this._select().setNativeProps(nativeProps);
+  }
+
+  fields(
+    fieldsParam: Record<string, boolean>,
+    callback: (
+      data: Record<string, unknown> | null,
+      status: { data: string; code: number },
+    ) => void,
+  ): LynxSelectorQuery {
+    return this._select().fields(fieldsParam, callback);
+  }
+
+  path(
+    callback: (
+      data: unknown,
+      status: { data: string; code: number },
+    ) => void,
+  ): LynxSelectorQuery {
+    return this._select().path(callback);
+  }
+
+  animate(animations: unknown): LynxSelectorQuery {
+    return this._select().animate(animations);
+  }
+
+  playAnimation(ids: string[] | string): LynxSelectorQuery {
+    return this._select().playAnimation(ids);
+  }
+
+  pauseAnimation(ids: string[] | string): LynxSelectorQuery {
+    return this._select().pauseAnimation(ids);
+  }
+
+  cancelAnimation(ids: string[] | string): LynxSelectorQuery {
+    return this._select().cancelAnimation(ids);
+  }
+
   insertBefore(child: ShadowElement, anchor: ShadowElement | null): void {
     // Detach from current parent first
     if (child.parent) {
