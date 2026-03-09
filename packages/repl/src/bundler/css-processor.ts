@@ -256,7 +256,7 @@ function parseCSS(content: string): LynxStyleNode[] {
   return result;
 }
 
-// --- genStyleInfo (adapted from template-webpack-plugin/src/web/genStyleInfo.ts) ---
+// --- genStyleInfo (adapted from bundle-webpack-plugin/src/web/genStyleInfo.ts) ---
 
 function genStyleInfo(
   cssMap: Record<string, LynxStyleNode[]>,

@@ -5,7 +5,7 @@
 import pick from 'object.pick'
 import type { Compiler } from 'webpack'
 
-import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
+import type { LynxTemplatePlugin } from '@lynx-js/bundle-webpack-plugin'
 
 export class LynxConfigWebpackPlugin<Config extends object> {
   constructor(

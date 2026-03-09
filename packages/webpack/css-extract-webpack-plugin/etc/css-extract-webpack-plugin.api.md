@@ -7,7 +7,7 @@
 import type { Compiler } from 'webpack';
 import type { Compiler as Compiler_2 } from '@rspack/core';
 import type { CssExtractRspackPluginOptions as CssExtractRspackPluginOptions_2 } from '@rspack/core';
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+import { LynxTemplatePlugin } from '@lynx-js/bundle-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 
 // @public

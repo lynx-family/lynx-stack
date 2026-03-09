@@ -8,11 +8,11 @@ import path from 'node:path'
 import type { RsbuildInstance, Rspack } from '@rsbuild/core'
 import { describe, expect, test, vi } from 'vitest'
 
-import type { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 import type {
   LynxEncodePlugin,
   LynxTemplatePlugin,
-} from '@lynx-js/template-webpack-plugin'
+} from '@lynx-js/bundle-webpack-plugin'
+import type { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'

@@ -8,7 +8,7 @@ import { mockLynxEncodePlugin } from '../../../../test/plugins.js'
 import { CssExtractRspackPlugin } from '../../../../src/index'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
+import { LynxTemplatePlugin } from '@lynx-js/bundle-webpack-plugin'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 

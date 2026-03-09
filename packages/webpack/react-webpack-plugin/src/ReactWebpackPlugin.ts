@@ -8,8 +8,8 @@ import { createRequire } from 'node:module';
 import type { Chunk, Compilation, Compiler } from '@rspack/core';
 import invariant from 'tiny-invariant';
 
+import { LynxTemplatePlugin } from '@lynx-js/bundle-webpack-plugin';
 import type { ExtractStrConfig } from '@lynx-js/react/transform';
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { LAYERS } from './layer.js';

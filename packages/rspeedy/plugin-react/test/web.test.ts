@@ -5,8 +5,8 @@ import path from 'node:path'
 
 import { describe, expect, test, vi } from 'vitest'
 
-import { WebEncodePlugin } from '@lynx-js/template-webpack-plugin'
-import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
+import { WebEncodePlugin } from '@lynx-js/bundle-webpack-plugin'
+import type { LynxTemplatePlugin } from '@lynx-js/bundle-webpack-plugin'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'

@@ -4,8 +4,8 @@
 import color from 'picocolors'
 import link from 'terminal-link'
 
+import type { LynxTemplatePlugin } from '@lynx-js/bundle-webpack-plugin'
 import type { RsbuildPlugin } from '@lynx-js/rspeedy'
-import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 import type {
   CompilerOptions as LynxCompilerOptions,
   Config as LynxConfig,

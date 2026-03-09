@@ -7,7 +7,7 @@ import path from 'node:path'
 import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
 import { describe, expect, test, vi } from 'vitest'
 
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
+import { LynxTemplatePlugin } from '@lynx-js/bundle-webpack-plugin'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
