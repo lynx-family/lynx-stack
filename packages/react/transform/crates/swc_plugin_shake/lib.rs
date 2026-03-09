@@ -6,6 +6,7 @@ use swc_core::{
 };
 
 mod is_component_class;
+#[cfg(not(target_arch = "wasm32"))]
 pub mod napi;
 
 /// {@inheritdoc PluginReactLynxOptions.shake}

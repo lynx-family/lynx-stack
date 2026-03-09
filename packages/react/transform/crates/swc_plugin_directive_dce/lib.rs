@@ -10,6 +10,7 @@ use swc_core::{
 
 use swc_plugins_shared::target::TransformTarget;
 
+#[cfg(not(target_arch = "wasm32"))]
 pub mod napi;
 
 trait Eliminate {

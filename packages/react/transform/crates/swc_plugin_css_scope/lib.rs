@@ -12,6 +12,7 @@ use swc_core::{
 };
 use swc_plugins_shared::utils::calc_hash;
 
+#[cfg(not(target_arch = "wasm32"))]
 pub mod napi;
 
 /// CSSScope refers to the
