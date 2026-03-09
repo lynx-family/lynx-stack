@@ -40,6 +40,11 @@ declare global {
   function __CreateText(parentComponentUniqueId: number): LynxElement;
   function __CreateRawText(s: string): LynxElement;
   function __CreateView(parentComponentUniqueId: number): LynxElement;
+  function __CreateImage(parentComponentUniqueId: number): LynxElement;
+  function __CreateScrollView(parentComponentUniqueId: number): LynxElement;
+  function __CreateWrapperElement(
+    parentComponentUniqueId: number,
+  ): LynxElement;
   function __CreateList(
     parentComponentUniqueId: number,
     // biome-ignore lint/suspicious/noExplicitAny: PAPI callback signature is opaque

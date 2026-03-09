@@ -29,19 +29,29 @@ declare const lynx: {
     };
   };
 };
+declare const SystemInfo: { pixelHeight: number; pixelRatio: number };
 
 // MainThreadRef for the scrollbar thumb element
 const scrollbarThumbRef = useMainThreadRef(null);
 
-// Hand-crafted worklet context (Phase 1 — simulates SWC transform output)
-const onScrollMTSCtx = {
-  _wkltId: 'gallery:adjustScrollbarMTS',
-  _workletType: 'main-thread',
-  _c: {} as Record<string, unknown>,
-};
+// MTS scrollbar adjuster — runs directly on Main Thread, no thread crossings
+function adjustScrollbarMTS(
+  scrollTop: number,
+  scrollHeight: number,
+  ref: { current?: { setStyleProperty?(k: string, v: string): void } },
+) {
+  'main thread';
+  const listHeight = SystemInfo.pixelHeight / SystemInfo.pixelRatio - 48;
+  const scrollbarHeight = listHeight * (listHeight / scrollHeight);
+  const scrollbarTop = listHeight * (scrollTop / scrollHeight);
+  ref.current?.setStyleProperty?.('height', `${scrollbarHeight}px`);
+  ref.current?.setStyleProperty?.('top', `${scrollbarTop}px`);
+}
 
-// Stamp the ref's _wvid into the closure so the MT handler can resolve it
-onScrollMTSCtx._c = { _thumbRef: scrollbarThumbRef.toJSON() };
+const onScrollMTS = (event: { detail: { scrollTop: number; scrollHeight: number } }) => {
+  'main thread';
+  adjustScrollbarMTS(event.detail.scrollTop, event.detail.scrollHeight, scrollbarThumbRef);
+};
 
 onMounted(() => {
   nextTick(() => {
@@ -66,7 +76,7 @@ onMounted(() => {
       :column-count="2"
       scroll-orientation="vertical"
       custom-list-name="list-container"
-      :main-thread-bindscroll="onScrollMTSCtx"
+      :main-thread-bindscroll="onScrollMTS"
       :scroll-event-throttle="0"
     >
       <list-item

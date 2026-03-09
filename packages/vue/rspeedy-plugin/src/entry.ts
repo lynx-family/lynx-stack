@@ -374,7 +374,9 @@ export function applyEntry(
               intermediate: path.posix.join(intermediate, entryName),
               enableCSSSelector: opts.enableCSSSelector ?? false,
               enableCSSInvalidation: opts.enableCSSSelector ?? false,
+              enableRemoveCSSScope: true,
               enableNewGesture: false,
+              removeDescendantSelectorScope: true,
               cssPlugins: [],
             },
           ])

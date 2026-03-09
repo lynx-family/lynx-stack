@@ -29,6 +29,25 @@ import {
   resetWorkletState,
 } from './worklet-apply.js';
 
+/**
+ * Use typed PAPI creators for known element types.
+ * Native Lynx may set up type-specific internals (e.g. overflow clipping
+ * for View, hardware-accelerated decoding for Image) via the typed functions
+ * that the generic __CreateElement does not.
+ */
+function createTypedElement(type: string, id: number): LynxElement {
+  switch (type) {
+    case 'view':
+      return __CreateView(id);
+    case 'image':
+      return __CreateImage(id);
+    case 'scroll-view':
+      return __CreateScrollView(id);
+    default:
+      return __CreateElement(type, id);
+  }
+}
+
 export function applyOps(ops: unknown[]): void {
   const len = ops.length;
   if (len === 0) return;
@@ -62,12 +81,20 @@ export function applyOps(ops: unknown[]): void {
         } else if (type === 'list') {
           el = createListElement(id);
         } else {
-          el = __CreateElement(type, 0);
+          // Use typed PAPI creators for known element types.
+          // Native Lynx sets up type-specific internals (e.g. overflow
+          // clipping for __CreateView) that __CreateElement may skip.
+          el = createTypedElement(type, 0);
           // Associate element with CSS scope 0 (common/global CSS)
           // so the CSS selector engine can match class-based rules.
           __SetCSSId([el], 0);
         }
         elements.set(id, el);
+        // Set selector attribute for BG-thread NodesRef queries.
+        // Comment nodes (__CreateRawText) can't have attributes.
+        if (type !== '__comment') {
+          __SetAttribute(el, `vue-ref-${id}`, 1);
+        }
         break;
       }
 
@@ -76,6 +103,8 @@ export function applyOps(ops: unknown[]): void {
         const el = __CreateText(0);
         __SetCSSId([el], 0);
         elements.set(id, el);
+        // Set selector attribute for BG-thread NodesRef queries
+        __SetAttribute(el, `vue-ref-${id}`, 1);
         break;
       }
 
