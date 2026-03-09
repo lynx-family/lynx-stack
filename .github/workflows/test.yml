@@ -255,11 +255,17 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
       run: |
-        # 0. Install Waydroid
+        # 0. Install Waydroid and kernel modules
         sudo apt-get update
-        sudo apt-get install -y curl ca-certificates
+        sudo apt-get install -y curl ca-certificates software-properties-common linux-headers-$(uname -r) kmod
+        sudo add-apt-repository -y ppa:morphis/anbox-support
+        sudo apt-get update
+        sudo apt-get install -y anbox-modules-dkms
+        sudo modprobe binder_linux || true
+        sudo modprobe ashmem_linux || true
+
         curl https://repo.waydro.id | sudo bash
-        sudo apt-get install -y waydroid weston kmod
+        sudo apt-get install -y waydroid weston
 
         # 1. Initialize Waydroid properties
         sudo waydroid init -f -s VANILLA
