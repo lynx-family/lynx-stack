@@ -12,7 +12,8 @@ let enableScroll = {
 let makeVelocityIfRequired = {
     _wkltId: "a123:test:2"
 };
-loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a123:test:1", function(enable: boolean) {
+const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
+__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a123:test:1", function(enable: boolean) {
     const enableScroll = lynxWorkletImpl._workletMap["a123:test:1"].bind(this);
     let { containerID, a, b, f } = this["_c"];
     'main thread';
@@ -22,7 +23,7 @@ loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined 
         e: f
     }).e;
 });
-loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a123:test:2", function(nodeRef: MainThreadRef<Velocity>, velocity: boolean) {
+__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a123:test:2", function(nodeRef: MainThreadRef<Velocity>, velocity: boolean) {
     const makeVelocityIfRequired = lynxWorkletImpl._workletMap["a123:test:2"].bind(this);
     'main thread';
     class Velocity implements Velocity {
