@@ -23,7 +23,7 @@ use swc_core::{
 mod attr_name;
 mod slot_marker;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "napi")]
 pub mod napi;
 
 use swc_plugins_shared::{

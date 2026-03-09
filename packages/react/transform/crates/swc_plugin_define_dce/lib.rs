@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use std::{collections::HashMap, fmt::Debug};
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "napi")]
 pub mod napi;
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]

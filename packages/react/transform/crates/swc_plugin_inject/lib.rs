@@ -11,7 +11,7 @@ use swc_core::{
   },
 };
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "napi")]
 pub mod napi;
 
 #[derive(Debug, PartialEq, Clone)]

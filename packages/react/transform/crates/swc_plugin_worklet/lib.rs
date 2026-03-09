@@ -23,7 +23,7 @@ use worklet_type::WorkletType;
 
 use swc_plugins_shared::{target::TransformTarget, transform_mode::TransformMode};
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "napi")]
 pub mod napi;
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]
