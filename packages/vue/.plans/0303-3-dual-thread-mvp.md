@@ -401,3 +401,61 @@ packages/vue/
 | BG shadow tree (BackgroundSnapshotInstance)        | `packages/react/runtime/src/backgroundSnapshot.ts`                 |
 | Event sign lookup from BG                          | `packages/react/runtime/src/lynx/tt.ts` (L204-249)                 |
 | PAPI type declarations                             | `.context/vue-vine/packages/runtime-lynx/src/shims.d.ts`           |
+
+---
+
+## 实现后总结
+
+### 实际实现 vs 计划偏差
+
+#### 1. Build 工具：tsdown → rslib
+
+计划中用 `tsdown.config.ts` 打包 runtime/main-thread/rspeedy-plugin 三个包。实际使用 **rslib**（`@rslib/core`），与 monorepo 其他包保持一致。
+
+关键配置：`bundle: false`——runtime 包不能打成单 bundle，因为多 entry point 共享 singleton state（ops buffer、event registry）。
+
+#### 2. 立即挂载，不等 renderPage
+
+计划中写 "在 `renderPage` 中触发 Vue 首次渲染"。实际发现 Lynx **不在 BG Thread 上调用 `renderPage`**——那是 Main Thread 的事。
+
+**BG Thread 的生命周期**：`__init_card_bundle__(lynxCoreInject)` → AMD wrapper 执行 → entry-background.ts 初始化。此时 Main Thread 的 `renderPage` 已经跑完（page root id=1 已创建），所以 Vue 可以 **直接 `app.mount()`**，无需等待。
+
+#### 3. 双重 bundle evaluation 问题
+
+Lynx 对 `__init_card_bundle__` 调用两次（两次独立的 globalThis/lynxCoreInject）。BG 侧的 guard 无效（各自独立 scope），导致 ops 会发两份。
+
+**解决**：MT 侧 `applyOps` 开头检测：如果第一个 CREATE op 的 id 已经在 elements Map 中，说明是重复 batch，直接 skip 整个 ops 数组。
+
+#### 4. `ShadowElement.nextId` 从 2 开始
+
+Page root element 在 MT 上始终是 id=1（由 `renderPage` 创建）。BG 侧 `ShadowElement.nextId` 从 2 开始，避免 id 冲突。
+
+#### 5. entry-background.ts 需要设置双路径 publishEvent
+
+事件回调需要同时设置 `lynxCoreInject.tt.publishEvent` **和** `globalThis.publishEvent`。Lynx 从 `lynxCoreInject.tt` 路径调用，但某些场景走 `globalThis`。`lynxCoreInject` 是 AMD closure 变量，不在 globalThis 上。
+
+#### 6. `VueMainThreadPlugin` flat-bundle 方案
+
+计划中假设 main-thread 代码直接通过 webpack entry 打包。实际遇到 **`chunkLoading: 'lynx'` 导致 module factory 不执行** 的问题（`StartupChunkDependenciesPlugin` 的 `hasChunkEntryDependentChunks(chunk)` 返回 false）。
+
+**解决**：rslib 预编译 main-thread → `dist/main-thread-bundled.js`，`VueMainThreadPlugin` 在 `PROCESS_ASSETS_STAGE_ADDITIONAL` 阶段用 `fs.readFileSync` 读入并替换 webpack asset。
+
+#### 7. Comment node → `__CreateRawText('')`
+
+Vue 的 Fragment/v-if anchor 用 comment node。Lynx 没有 comment 元素类型，用 `__CreateRawText('')` 创建零大小文本节点作为不可见占位符。
+
+### 已验证的 MVP 能力
+
+| 能力                        | 状态 | 验证方式                                |
+| --------------------------- | ---- | --------------------------------------- |
+| 基础渲染（view/text/image） | ✅   | counter demo、todomvc                   |
+| CSS inline styles           | ✅   | backgroundColor, padding, fontSize 等   |
+| 响应式更新                  | ✅   | setInterval 自增 counter                |
+| 事件（bindtap）             | ✅   | 物理点击触发 handler                    |
+| CSS class + selector        | ✅   | gallery demo（enableCSSSelector: true） |
+| v-if / v-for                | ✅   | todomvc                                 |
+| `<list>` 虚拟列表           | ✅   | gallery waterfall list                  |
+| MTS worklet 事件            | ✅   | mts-demo、swiper                        |
+| MainThreadRef 元素绑定      | ✅   | mts-draggable、swiper                   |
+| MainThreadRef 值状态        | ✅   | swiper（INIT_MT_REF fix）               |
+| runOnMainThread             | ✅   | swiper indicator click                  |
