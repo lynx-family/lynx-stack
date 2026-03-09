@@ -255,7 +255,14 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-xlarge
       run: |
+        # 0. Install Waydroid
+        sudo apt-get update
+        sudo apt-get install -y curl ca-certificates
+        curl https://repo.waydro.id | sudo bash
+        sudo apt-get install -y waydroid weston
+
         # 1. Initialize Waydroid properties
+        sudo waydroid init -f -s VANILLA
         sudo waydroid prop set persist.waydroid.adb_enabled 1
         sudo waydroid prop set persist.adb.tcp.port 5555
         sudo waydroid prop set ro.adb.secure 0
