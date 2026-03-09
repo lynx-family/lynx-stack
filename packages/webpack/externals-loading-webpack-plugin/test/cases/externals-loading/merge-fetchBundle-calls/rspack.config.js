@@ -52,6 +52,28 @@ export default {
             sectionPath: 'Baz__mainThread',
           },
         },
+        'baz/sub2?async': {
+          libraryName: ['Baz', 'Sub2'],
+          url: 'https://example.com/common.bundle',
+          async: true,
+          background: {
+            sectionPath: 'Baz__background',
+          },
+          mainThread: {
+            sectionPath: 'Baz__mainThread',
+          },
+        },
+        'qux': {
+          libraryName: 'Qux',
+          url: 'https://example.com/common.bundle',
+          async: true,
+          background: {
+            sectionPath: 'Qux__background',
+          },
+          mainThread: {
+            sectionPath: 'Qux__mainThread',
+          },
+        },
       },
     },
   ),

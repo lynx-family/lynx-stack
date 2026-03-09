@@ -4,6 +4,7 @@
 import * as bar from './external-bundle-mock/bar/index.js';
 import * as baz from './external-bundle-mock/baz/index.js';
 import * as foo from './external-bundle-mock/foo/index.js';
+import * as qux from './external-bundle-mock/qux/index.js';
 
 __injectGlobals(globalThis);
 
@@ -14,6 +15,8 @@ const CustomSections = {
   'Bar__mainThread': bar,
   'Baz__background': baz,
   'Baz__mainThread': baz,
+  'Qux__background': qux,
+  'Qux__mainThread': qux,
 };
 
 function __injectGlobals(target) {

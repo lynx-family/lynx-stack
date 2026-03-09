@@ -377,8 +377,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
 
         const hasUrlLibraryNamePairInjected = new Set();
 
-        for (let i = 0; i < externals.length; i++) {
-          const [pkgName, external] = externals[i]!;
+        for (const [pkgName, external] of externals) {
           const {
             libraryName,
             url,
@@ -416,9 +415,9 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           }[${JSON.stringify(libraryNameStr)}]`;
           if (async) {
             loadCode.add(
-              `${mountVar} = ${mountVar} === undefined ? createLoadExternalAsync(handler${i}, ${
-                JSON.stringify(layerOptions.sectionPath)
-              }) : ${mountVar};`,
+              `${mountVar} = ${mountVar} === undefined ? createLoadExternalAsync(handler${
+                [...url2fetchCode.keys()].indexOf(url)
+              }, ${JSON.stringify(layerOptions.sectionPath)}) : ${mountVar};`,
             );
             continue;
           }
