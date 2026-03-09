@@ -1,0 +1,51 @@
+{
+  "name": "@lynx-js/repl",
+  "version": "0.0.1",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/repl"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/collect-lynx-types.mjs && rsbuild build",
+    "dev": "node scripts/collect-lynx-types.mjs && rsbuild dev"
+  },
+  "dependencies": {
+    "@radix-ui/react-select": "^2.2.6",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.575.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-resizable-panels": "^4.6.5",
+    "tailwind-merge": "^3.4.0"
+  },
+  "devDependencies": {
+    "@lynx-js/lynx-core": "0.1.3",
+    "@lynx-js/type-element-api": "0.0.3",
+    "@lynx-js/types": "3.7.0",
+    "@lynx-js/web-constants": "workspace:*",
+    "@lynx-js/web-core": "workspace:*",
+    "@lynx-js/web-elements": "workspace:*",
+    "@lynx-js/web-mainthread-apis": "workspace:*",
+    "@lynx-js/web-platform-rsbuild-plugin": "workspace:*",
+    "@lynx-js/web-worker-rpc": "workspace:*",
+    "@lynx-js/web-worker-runtime": "workspace:*",
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rsbuild/plugin-react": "^1.4.5",
+    "@tailwindcss/postcss": "^4.2.1",
+    "@types/css-tree": "^2.3.11",
+    "@types/react": "npm:@types/react@^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "css-tree": "^3.1.0",
+    "hyphenate-style-name": "^1.1.0",
+    "monaco-editor": "^0.52.2",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.2.1",
+    "tslib": "^2.8.1",
+    "wasm-feature-detect": "^1.8.0"
+  }
+}
