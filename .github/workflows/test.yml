@@ -253,45 +253,37 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     name: Kitten Lynx Android Emulator Test
     with:
-      runs-on: lynx-ubuntu-24.04-xlarge
+      runs-on: lynx-ubuntu-22.04-physical-medium
       run: |
-        # 0. Install Waydroid and kernel modules
+        # 1. Install dependencies for Android Emulator
         sudo apt-get update
-        sudo apt-get install -y curl ca-certificates software-properties-common linux-headers-$(uname -r) kmod
-        sudo add-apt-repository -y ppa:morphis/anbox-support
-        sudo apt-get update
-        sudo apt-get install -y anbox-modules-dkms
-        sudo modprobe binder_linux || true
-        sudo modprobe ashmem_linux || true
+        sudo apt-get install -y libvirt-daemon-system libvirt-clients bridge-utils socat cpu-checker qemu-kvm
 
-        curl https://repo.waydro.id | sudo bash
-        sudo apt-get install -y waydroid weston
+        # 2. Set up Android SDK environment
+        # The runner seems to have a messy SDK structure. Let's try to install the required image.
+        yes | sdkmanager --licenses || true
+        sdkmanager "system-images;android-34;google_apis;x86_64"
 
-        # 1. Initialize Waydroid properties
-        sudo waydroid init -f -s VANILLA
-        sudo waydroid prop set persist.waydroid.adb_enabled 1
-        sudo waydroid prop set persist.adb.tcp.port 5555
-        sudo waydroid prop set ro.adb.secure 0
+        # 3. Create AVD
+        echo "no" | avdmanager create avd -n test_device -k "system-images;android-34;google_apis;x86_64" --device "pixel" --force
 
-        # 2. Start Waydroid session with headless compositor
-        weston --backend=headless-backend.so --socket=wayland-1 --idle-time=0 &
-        export WAYLAND_DISPLAY=wayland-1
-        waydroid session start &
+        # 4. Start Emulator
+        echo "Starting emulator..."
+        ${ANDROID_HOME}/emulator/emulator -avd test_device -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect &
 
-        # 3. Wait for Waydroid to boot
-        echo "Waiting for waydroid to boot..."
-        sleep 10
+        # 5. Wait for boot
+        echo "Waiting for emulator to boot..."
         adb wait-for-device
         while [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" != "1" ]; do
             sleep 2
         done
-        echo "Waydroid is ready."
+        echo "Emulator is ready."
 
-        # 4. Install Lynx Explorer
+        # 6. Install Lynx Explorer
         wget -q https://github.com/lynx-family/lynx/releases/download/3.6.0/LynxExplorer-noasan-release.apk -O LynxExplorer.apk
-        waydroid app install LynxExplorer.apk
+        adb install -r LynxExplorer.apk
 
-        # 5. Run the tests
+        # 7. Run the tests
         pnpm --filter @lynx-test/kitten-lynx run test
 
   test-typos:
