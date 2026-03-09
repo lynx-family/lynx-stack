@@ -96,9 +96,8 @@ export class ReactRefreshWebpackPlugin {
    * @param compiler - the webpack compiler
    */
   apply(compiler: Compiler): void {
-    const isDev = compiler.options.mode
-      ? compiler.options.mode === 'development'
-      : process.env['NODE_ENV'] === 'development';
+    const isDev = process.env['NODE_ENV'] === 'development'
+      || compiler.options.mode === 'development';
 
     if (!isDev) {
       return;
@@ -146,11 +145,7 @@ export class ReactRefreshWebpackPlugin {
               'utf-8',
             )
               .replaceAll('$MAIN_THREAD_LAYER$', LAYERS.MAIN_THREAD)
-              .replaceAll('$BACKGROUND_LAYER$', LAYERS.BACKGROUND)
-              .replaceAll(
-                '__DEV__',
-                JSON.stringify(isDev),
-              );
+              .replaceAll('$BACKGROUND_LAYER$', LAYERS.BACKGROUND);
           }
         }
 

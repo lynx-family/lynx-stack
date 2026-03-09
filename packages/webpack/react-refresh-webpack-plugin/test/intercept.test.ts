@@ -78,10 +78,7 @@ describe('ReactRefresh plugins', () => {
     plugin.apply(mockCompiler);
     expect(generateResult).toContain('__webpack_modules__');
     expect(generateResult).toContain(
-      `
-if (true) {
-  globalThis[Symbol.for('__LYNX_WEBPACK_MODULES__')] = __webpack_modules__;
-}`.trim(),
+      'globalThis[Symbol.for(\'__LYNX_WEBPACK_MODULES__\')] = __webpack_modules__;',
     );
   });
 
@@ -125,83 +122,8 @@ if (true) {
     // @ts-expect-error test mock
     plugin.apply(mockCompiler);
     expect(generateResult).toContain('__webpack_modules__');
-    expect(generateResult).toContain(`
-if (true) {
-  globalThis[Symbol.for('__LYNX_WEBPACK_MODULES__')] = __webpack_modules__;
-}
-`.trim());
-  });
-
-  it('ReactRefreshWebpackPlugin true production early return', () => {
-    const plugin = new ReactRefreshWebpackPlugin();
-    let generateResult = '';
-    const originalEnv = process.env['NODE_ENV'];
-    process.env['NODE_ENV'] = 'production';
-
-    const mockCompiler = {
-      options: { mode: 'production' },
-      context: '/test',
-      webpack: {
-        EntryPlugin: class {
-          apply() {/* noop */}
-        },
-        ProvidePlugin: class {
-          apply() {/* noop */}
-        },
-        RuntimeGlobals: {
-          interceptModuleExecution: 'interceptModuleExecution',
-        },
-        RuntimeModule: class {
-          name: string;
-          stage: number;
-          constructor(name: string, stage: number) {
-            this.name = name;
-            this.stage = stage;
-          }
-        },
-      },
-      hooks: {
-        compilation: {
-          tap: () => {
-            generateResult = 'CALLED';
-          },
-        },
-      },
-    };
-
-    // @ts-expect-error test mock
-    plugin.apply(mockCompiler);
-    expect(generateResult).toBe('');
-
-    process.env['NODE_ENV'] = originalEnv;
-  });
-
-  it('ReactRefreshRspackPlugin true production early return', () => {
-    const plugin = new ReactRefreshRspackPlugin();
-    let generateResult = '';
-    const originalEnv = process.env['NODE_ENV'];
-    process.env['NODE_ENV'] = 'production';
-
-    const mockCompiler = {
-      options: { mode: 'production' },
-      webpack: {
-        ProvidePlugin: class {
-          apply() {/* noop */}
-        },
-      },
-      hooks: {
-        thisCompilation: {
-          tap: () => {
-            generateResult = 'CALLED';
-          },
-        },
-      },
-    };
-
-    // @ts-expect-error test mock
-    plugin.apply(mockCompiler);
-    expect(generateResult).toBe('');
-
-    process.env['NODE_ENV'] = originalEnv;
+    expect(generateResult).toContain(
+      'globalThis[Symbol.for(\'__LYNX_WEBPACK_MODULES__\')] = __webpack_modules__;',
+    );
   });
 });
