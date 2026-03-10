@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { rsbuild } from '@rslib/core'
-import type { LibConfig, Rsbuild, RslibConfig, Rspack } from '@rslib/core'
+import type { LibConfig, RslibConfig, Rspack } from '@rslib/core'
 
 import { RuntimeWrapperWebpackPlugin as BackgroundRuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 
@@ -44,7 +44,7 @@ export const defaultExternalBundleLibConfig: LibConfig = {
     },
   },
   output: {
-    minify: {
+    minify: process.env['NODE_ENV'] === 'development' ? false : {
       jsOptions: {
         minimizerOptions: {
           compress: {
@@ -86,7 +86,6 @@ export interface OutputConfig extends LibOutputConfig {
 
 export interface ExternalBundleLibConfig extends LibConfig {
   output?: OutputConfig
-  mode?: Rsbuild.RsbuildMode
 }
 
 function transformExternals(
@@ -181,8 +180,6 @@ export function defineExternalBundleRslibConfig(
   userLibConfig: ExternalBundleLibConfig,
   encodeOptions: EncodeOptions = {},
 ): RslibConfig {
-  const { mode = 'production' } = userLibConfig
-
   return {
     lib: [
       // eslint-disable-next-line import/namespace
@@ -200,12 +197,6 @@ export function defineExternalBundleRslibConfig(
         },
       ),
     ],
-    mode,
-    tools: {
-      rspack: {
-        mode,
-      },
-    },
     plugins: [
       externalBundleEntryRsbuildPlugin(),
       externalBundleRsbuildPlugin(encodeOptions.engineVersion),

@@ -13,8 +13,6 @@ export default defineExternalBundleRslibConfig({
   ],
   output: {
     cleanDistPath: false,
-    minify: false,
     globalObject: 'globalThis',
   },
-  mode: process.env['NODE_ENV'] === 'production' ? 'production' : 'development',
 });

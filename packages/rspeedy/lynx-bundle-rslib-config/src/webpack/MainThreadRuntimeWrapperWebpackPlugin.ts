@@ -72,9 +72,8 @@ __webpack_require__.i.push(function (options) {
       }
     }
 
-    const isDev = compiler.options.mode
-      ? compiler.options.mode === 'development'
-      : process.env['NODE_ENV'] === 'development'
+    const isDev = process.env['NODE_ENV'] === 'development'
+      || compiler.options.mode === 'development'
 
     if (isDev) {
       compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {

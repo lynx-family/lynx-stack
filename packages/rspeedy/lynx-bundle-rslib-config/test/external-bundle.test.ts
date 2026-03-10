@@ -200,6 +200,7 @@ describe('should build external bundle', () => {
   })
 
   it('should include LoadingConsumerModulesRuntimeModule in the main-thread bundle', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
     const rslibConfig = defineExternalBundleRslibConfig({
       source: {
         entry: {
@@ -213,7 +214,6 @@ describe('should build external bundle', () => {
         },
         minify: false,
       },
-      mode: 'development',
       plugins: [pluginReactLynx()],
     })
 
@@ -227,13 +227,14 @@ describe('should build external bundle', () => {
     expect(decodedResult['custom-sections']['utils__main-thread']).toContain(
       'var globalModules = globalThis[Symbol.for(\'__LYNX_WEBPACK_MODULES__\')];',
     )
+    vi.unstubAllEnvs()
   })
 })
 
 describe('mode configuration', () => {
   const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
 
-  it('should apply production mode by default', () => {
+  it('should not apply mode by default', () => {
     const rslibConfig = defineExternalBundleRslibConfig({
       source: {
         entry: {
@@ -242,28 +243,15 @@ describe('mode configuration', () => {
       },
       id: 'utils-mode-default',
     })
-    expect(rslibConfig.mode).toBe('production')
-    expect(rslibConfig.tools?.rspack).toMatchObject({ mode: 'production' })
+    expect(rslibConfig.mode).toBe(undefined)
   })
 
-  it('should respect custom mode and apply to rspack', () => {
-    const rslibConfig = defineExternalBundleRslibConfig({
-      source: {
-        entry: {
-          utils: path.join(fixtureDir, 'index.ts'),
-        },
-      },
-      id: 'utils-mode-dev',
-      mode: 'development',
-    })
-    expect(rslibConfig.mode).toBe('development')
-    expect(rslibConfig.tools?.rspack).toMatchObject({ mode: 'development' })
-  })
-
-  const buildWithMode = async (
-    mode: 'development' | 'production',
+  const buildWithNodeEnv = async (
+    nodeEnv: 'development' | 'production',
     id: string,
   ) => {
+    const prevNodeEnv = process.env['NODE_ENV']
+    process.env['NODE_ENV'] = nodeEnv
     const config = defineExternalBundleRslibConfig({
       source: {
         entry: {
@@ -271,19 +259,22 @@ describe('mode configuration', () => {
         },
       },
       id,
-      mode,
       output: {
         distPath: { root: path.join(fixtureDir, 'dist') },
       },
       plugins: [pluginReactLynx()],
     })
     await build(config)
-    return decodeTemplate(path.join(fixtureDir, `dist/${id}.lynx.bundle`))
+    const result = await decodeTemplate(
+      path.join(fixtureDir, `dist/${id}.lynx.bundle`),
+    )
+    process.env['NODE_ENV'] = prevNodeEnv
+    return result
   }
 
   it('should output different artifacts for development and production modes', async () => {
-    const devResult = await buildWithMode('development', 'utils-dev')
-    const prodResult = await buildWithMode('production', 'utils-prod')
+    const devResult = await buildWithNodeEnv('development', 'utils-dev')
+    const prodResult = await buildWithNodeEnv('production', 'utils-prod')
 
     const devMainThread = devResult['custom-sections']['utils__main-thread']!
     const prodMainThread = prodResult['custom-sections']['utils__main-thread']!
