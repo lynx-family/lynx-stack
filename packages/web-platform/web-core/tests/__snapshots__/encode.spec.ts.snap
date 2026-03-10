@@ -10,6 +10,8 @@ exports[`encodeCSS > css cascading order 1`] = `".foo:not([l-e-name]){background
 
 exports[`encodeCSS > font-family-at-rule 1`] = `"@font-face{font-family:"MyFont";src:url('myfont.woff');}"`;
 
+exports[`encodeCSS > keyframes-rule 1`] = `"@keyframes my-animation{from{opacity:0;}to{opacity:1;}}"`;
+
 exports[`encodeCSS > non ascii characters 1`] = `".class145[[data-status="complete"]]:before:not([l-e-name]){content:"✓ ";}"`;
 
 exports[`encodeCSS > normal css 1`] = `".foo:not([l-e-name]){background:red;}"`;

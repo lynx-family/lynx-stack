@@ -1,4 +1,5 @@
 import type { Selector } from '../../encode/encodeCSS.js';
+import type { RawStyleInfo } from '../../server/wasm.js';
 import { wasmInstance } from '../wasm.js';
 
 interface CSSRule {
@@ -40,6 +41,9 @@ export function loadStyleFromJSON(
       // For now, I will omit imports if they are strings, or try to parse if they look like IDs.
       // Actually, in the ecosystem, imports might not be fully supported in JSON mode yet or resolved differently.
       // I will log or ignore for now, focusing on Rules.
+    }
+    if (info.content) {
+      parseAndPushContentRules(rawStyleInfo, cssId, info.content.join('\n'));
     }
 
     // Handle rules
@@ -130,4 +134,18 @@ function parseAndPushSelector(selector: Selector, s: string) {
   } else {
     selector.push_one_selector_section('TypeSelector', s);
   }
+}
+
+function parseAndPushContentRules(
+  rawStyleInfo: RawStyleInfo,
+  cssId: number,
+  content: string,
+) {
+  const rule = new wasmInstance.Rule('StyleRule');
+  const prelude = new wasmInstance.RulePrelude();
+  const selector = new wasmInstance.Selector();
+  selector.push_one_selector_section('UnknownText', '{}' + content); // this is a hack We put it into selector section and use a {} to make the prior part be a valid rule (`{}` means corresponding block)
+  prelude.push_selector(selector);
+  rule.set_prelude(prelude);
+  rawStyleInfo.push_rule(cssId, rule);
 }

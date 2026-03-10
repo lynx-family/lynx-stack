@@ -241,6 +241,26 @@ describe('encodeCSS', () => {
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
+  test('keyframes-rule', () => {
+    const cssMap = {
+      '0': CSS.parse(`
+        @keyframes my-animation {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+      `).root,
+    };
+    const buffer = encodeCSS(cssMap);
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
+    expect(decodedString.trim()).toMatchSnapshot();
+  });
+
   test('scoped css', () => {
     const cssMap = {
       '1': CSS.parse(`
