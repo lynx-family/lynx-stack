@@ -11,6 +11,8 @@ import type { RefImpl } from './workletRef.js';
 declare global {
   var lynxWorkletImpl: {
     _workletMap: Record<string, (...args: unknown[]) => unknown>;
+    // biome-ignore lint/suspicious/noExplicitAny: legacy
+    _mainThreadValueClassMap: Record<string, new(...args: any[]) => any>;
     _jsFunctionLifecycleManager?: JsFunctionLifecycleManager;
     // for pre-0.99 compatibility
     _eventDelayImpl: EventDelayImpl;

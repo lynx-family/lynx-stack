@@ -5,6 +5,8 @@ import { initApiEnv } from './api/lynxApi.js';
 import { initEventListeners } from './listeners.js';
 import { initWorklet } from './workletRuntime.js';
 
+export { registerMainThreadValueClass, getMainThreadValueClassMap } from './workletRef.js';
+
 if (globalThis.lynxWorkletImpl === undefined) {
   initWorklet();
   initApiEnv();

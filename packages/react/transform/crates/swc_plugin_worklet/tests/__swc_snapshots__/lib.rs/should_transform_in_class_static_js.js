@@ -1,3 +1,5 @@
+import { workletCapture as __workletCapture } from "@lynx-js/react";
+var workletCapture = __workletCapture;
 let a = 1;
 class App extends Component {
     static onTapLepus = {
