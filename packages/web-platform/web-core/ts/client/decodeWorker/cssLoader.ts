@@ -114,8 +114,12 @@ function parseAndPushSelector(selector: Selector, s: string) {
     ) {
       tag = tag.substring(1, tag.length - 1);
     }
-    const typeName = tag.includes('-') ? tag : `x-${tag}`;
-    selector.push_one_selector_section('TypeSelector', typeName);
+    if (tag === 'page') {
+      selector.push_one_selector_section('AttributeSelector', 'part="page"');
+    } else {
+      const typeName = tag.includes('-') ? tag : `x-${tag}`;
+      selector.push_one_selector_section('TypeSelector', typeName);
+    }
   } else if (s.startsWith('[')) {
     // Attribute: [attr=val]
     // Remove enclosing []
