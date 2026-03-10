@@ -39,6 +39,7 @@
     "@lynx-js/vue-internal": "workspace:*"
   },
   "devDependencies": {
+    "@lynx-js/type-element-api": "0.0.3",
     "@rslib/core": "^0.7.0",
     "typescript": "^5.0.0"
   },

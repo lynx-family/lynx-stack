@@ -10,6 +10,13 @@
  * id=1 is reserved for the page root (created via __CreatePage on Main Thread).
  * Regular elements start from id=2.
  */
+import type {
+  AnimationV2,
+  NodesRef,
+  SelectorQuery,
+  uiMethodOptions,
+} from '@lynx-js/types';
+
 export class ShadowElement {
   static nextId = 2; // 1 is reserved for the page root
 
@@ -37,9 +44,10 @@ export class ShadowElement {
   }
 
   // ---------------------------------------------------------------------------
-  // NodesRef — structurally compatible with @lynx-js/types NodesRef.
-  // Each method creates a SelectorQuery targeting this element via its unique
-  // `vue-ref-{id}` attribute (set on the MT side during element creation).
+  // NodesRef — delegates to the real NodesRef returned by
+  // lynx.createSelectorQuery().select(), using types from @lynx-js/types.
+  // Each method targets this element via its unique `vue-ref-{id}` attribute
+  // (set on the MT side during element creation).
   // ---------------------------------------------------------------------------
 
   /** CSS attribute selector that uniquely identifies this element on MT. */
@@ -47,22 +55,17 @@ export class ShadowElement {
     return `[vue-ref-${this.id}]`;
   }
 
-  private _select(): LynxNodesRef {
+  private _select(): NodesRef {
     return lynx.createSelectorQuery().select(this._selector);
   }
 
-  invoke(options: {
-    method: string;
-    params?: Record<string, unknown>;
-    success?(res: unknown): void;
-    fail?(res: { code: number; data?: unknown }): void;
-  }): LynxSelectorQuery {
+  invoke(options: uiMethodOptions): SelectorQuery {
     return this._select().invoke(options);
   }
 
   setNativeProps(
     nativeProps: Record<string, unknown>,
-  ): LynxSelectorQuery {
+  ): SelectorQuery {
     return this._select().setNativeProps(nativeProps);
   }
 
@@ -72,7 +75,7 @@ export class ShadowElement {
       data: Record<string, unknown> | null,
       status: { data: string; code: number },
     ) => void,
-  ): LynxSelectorQuery {
+  ): SelectorQuery {
     return this._select().fields(fieldsParam, callback);
   }
 
@@ -81,23 +84,23 @@ export class ShadowElement {
       data: unknown,
       status: { data: string; code: number },
     ) => void,
-  ): LynxSelectorQuery {
+  ): SelectorQuery {
     return this._select().path(callback);
   }
 
-  animate(animations: unknown): LynxSelectorQuery {
+  animate(animations: AnimationV2[] | AnimationV2): SelectorQuery {
     return this._select().animate(animations);
   }
 
-  playAnimation(ids: string[] | string): LynxSelectorQuery {
+  playAnimation(ids: string[] | string): SelectorQuery {
     return this._select().playAnimation(ids);
   }
 
-  pauseAnimation(ids: string[] | string): LynxSelectorQuery {
+  pauseAnimation(ids: string[] | string): SelectorQuery {
     return this._select().pauseAnimation(ids);
   }
 
-  cancelAnimation(ids: string[] | string): LynxSelectorQuery {
+  cancelAnimation(ids: string[] | string): SelectorQuery {
     return this._select().cancelAnimation(ids);
   }
 

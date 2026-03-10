@@ -45,6 +45,7 @@
     "@vue/runtime-core": "^3.5.0"
   },
   "devDependencies": {
+    "@lynx-js/types": "3.7.0",
     "@rslib/core": "^0.7.0",
     "rsbuild-plugin-publint": "0.3.4",
     "typescript": "^5.0.0"

@@ -87,7 +87,7 @@ export function applyOps(ops: unknown[]): void {
           el = createTypedElement(type, 0);
           // Associate element with CSS scope 0 (common/global CSS)
           // so the CSS selector engine can match class-based rules.
-          __SetCSSId([el], 0);
+          __SetCSSId(el, 0);
         }
         elements.set(id, el);
         // Set selector attribute for BG-thread NodesRef queries.
@@ -101,7 +101,7 @@ export function applyOps(ops: unknown[]): void {
       case OP.CREATE_TEXT: {
         const id = ops[i++] as number;
         const el = __CreateText(0);
-        __SetCSSId([el], 0);
+        __SetCSSId(el, 0);
         elements.set(id, el);
         // Set selector attribute for BG-thread NodesRef queries
         __SetAttribute(el, `vue-ref-${id}`, 1);
@@ -121,7 +121,7 @@ export function applyOps(ops: unknown[]): void {
             __AppendElement(parent, child);
           } else {
             const anchor = elements.get(anchorId);
-            __InsertElementBefore(parent, child, anchor);
+            if (anchor) __InsertElementBefore(parent, child, anchor);
           }
         }
         break;
@@ -177,7 +177,7 @@ export function applyOps(ops: unknown[]): void {
           'el found=',
           el != null,
         );
-        if (el) __AddEvent(el, eventType, eventName, sign);
+        if (el) __AddEvent(el, eventType, eventName, sign as string);
         break;
       }
 
@@ -207,7 +207,7 @@ export function applyOps(ops: unknown[]): void {
         const id = ops[i++] as number;
         const idStr = ops[i++] as string | null | undefined;
         const el = elements.get(id);
-        if (el) __SetID(el, idStr);
+        if (el) __SetID(el, idStr ?? undefined);
         break;
       }
 
