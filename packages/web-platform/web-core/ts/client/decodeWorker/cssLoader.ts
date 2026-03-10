@@ -1,3 +1,4 @@
+import type { Selector } from '../../encode/encodeCSS.js';
 import { wasmInstance } from '../wasm.js';
 
 interface CSSRule {
@@ -97,11 +98,24 @@ export function loadStyleFromJSON(
   );
 }
 
-function parseAndPushSelector(selector: any, s: string) {
+function parseAndPushSelector(selector: Selector, s: string) {
   if (s.startsWith('.')) {
     selector.push_one_selector_section('ClassSelector', s.substring(1));
   } else if (s.startsWith('#')) {
     selector.push_one_selector_section('IdSelector', s.substring(1));
+  } else if (
+    s.startsWith('[') && s.startsWith('[lynx-tag=') && s.endsWith(']')
+  ) {
+    // Handling [lynx-tag="tag_name"] or [lynx-tag='tag_name'] or [lynx-tag=tag_name]
+    let tag = s.substring('[lynx-tag='.length, s.length - 1);
+    if (
+      (tag.startsWith('"') && tag.endsWith('"'))
+      || (tag.startsWith('\'') && tag.endsWith('\''))
+    ) {
+      tag = tag.substring(1, tag.length - 1);
+    }
+    const typeName = tag.includes('-') ? tag : `x-${tag}`;
+    selector.push_one_selector_section('TypeSelector', typeName);
   } else if (s.startsWith('[')) {
     // Attribute: [attr=val]
     // Remove enclosing []
@@ -110,12 +124,6 @@ function parseAndPushSelector(selector: any, s: string) {
   } else if (s === '*') {
     selector.push_one_selector_section('UniversalSelector', '*');
   } else {
-    // Type selector
-    // It comes as [lynx-tag="div"] usually.
-    let content = s;
-    if (s.startsWith('[') && s.endsWith(']')) {
-      content = s.substring(1, s.length - 1);
-    }
-    selector.push_one_selector_section('AttributeSelector', content);
+    selector.push_one_selector_section('TypeSelector', s);
   }
 }
