@@ -33,5 +33,5 @@ describe('kitten-lynx testing framework', () => {
       // Perform a tap action to verify the method executes successfully
       await expect(rootElement.tap()).resolves.toBeUndefined();
     }
-  }, 30000); // Increase timeout to 30s as connecting/launching emulator app can be slow
+  }, 60000); // Increase timeout to 60s as connecting/launching emulator app can be slow
 });

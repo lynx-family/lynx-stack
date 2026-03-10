@@ -49,13 +49,8 @@ export class LynxView {
   async goto(url: string, _options?: unknown): Promise<void> {
     // Attach to any existing session first so we can send Page.navigate
     if (!this._channel) {
-      for (let attempt = 0; attempt < 20; attempt++) {
+      for (let attempt = 0; attempt < 60; attempt++) {
         try {
-          await this._connector.setGlobalSwitch(
-            this._clientId,
-            'enable_devtool',
-            true,
-          );
           const sessions = await this._connector.sendListSessionMessage(
             this._clientId,
           );
@@ -87,7 +82,7 @@ export class LynxView {
 
     // Poll for the session whose URL matches the navigated bundle
     let matchedSessionId: number | undefined;
-    for (let attempt = 0; attempt < 20; attempt++) {
+    for (let attempt = 0; attempt < 60; attempt++) {
       await new Promise(r => setTimeout(r, 500));
       try {
         const sessions = await this._connector.sendListSessionMessage(
