@@ -8,5 +8,6 @@ export interface PageConfig {
   defaultOverflowVisible: 'true' | 'false';
   enableJSDataProcessor: 'true' | 'false';
   isLazy: 'true' | 'false';
+  appType?: string;
   cardType: string;
 }

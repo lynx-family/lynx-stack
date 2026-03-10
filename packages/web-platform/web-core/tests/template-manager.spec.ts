@@ -338,9 +338,46 @@ describe('Template Manager', () => {
     expect(mockLynxViewInstance.onStyleInfoReady).toHaveBeenCalled();
 
     // Verify script decoding (LepusCode)
-    // The worker sends section: LepusCode with a blob URL map.
-    // TemplateManager handles this but doesn't expose the blob map directly easily in tests unless we mock the handler side effect or inspect mockLynxViewInstance.
-    // TemplateManager calls lynxViewInstance.onMTSScriptsLoaded(url, data).
     expect(mockLynxViewInstance.onMTSScriptsLoaded).toHaveBeenCalled();
+  });
+
+  test('should detect lazy appType from lepusCode.root prefix for json template', async () => {
+    const jsonContent = {
+      'lepusCode': {
+        'root': '(function (globDynamicComponentEntry) {})',
+      },
+      'pageConfig': {},
+    };
+
+    const jsonString = JSON.stringify(jsonContent);
+    const encoded = new TextEncoder().encode(jsonString);
+
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoded);
+        controller.close();
+      },
+    });
+
+    (globalThis.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      body: stream,
+    });
+
+    const templateUrl = 'http://example.com/lazy.json';
+    await templateManager.fetchBundle(
+      templateUrl,
+      Promise.resolve(mockLynxViewInstance),
+    );
+
+    // Verify config has appType = lazy and isLazy = true
+    expect(mockLynxViewInstance.onPageConfigReady).toHaveBeenCalledWith(
+      expect.objectContaining({
+        appType: 'lazy',
+        isLazy: 'true',
+      }),
+    );
   });
 });

@@ -314,6 +314,15 @@ async function handleJSON(
   if (json.pageConfig) {
     config = { ...json.pageConfig };
   }
+  if (json.lepusCode?.root && typeof json.lepusCode.root === 'string') {
+    const appType = json.appType
+      ?? (json.lepusCode.root.startsWith('(function (globDynamicComponentEntry')
+        ? 'lazy'
+        : 'card');
+    config.appType = config.appType ?? appType;
+    config.isLazy = (appType === 'card') ? 'false' : 'true';
+  }
+
   if (overrideConfig) {
     config = { ...config, ...overrideConfig };
   }
