@@ -13,6 +13,9 @@ export default defineConfig({
       index: './src/index.ts',
       'loaders/ignore-css-loader': './src/loaders/ignore-css-loader.ts',
       'loaders/worklet-loader': './src/loaders/worklet-loader.ts',
+      'loaders/worklet-loader-mt': './src/loaders/worklet-loader-mt.ts',
+      'loaders/vue-sfc-script-extractor':
+        './src/loaders/vue-sfc-script-extractor.ts',
     },
     tsconfigPath: './tsconfig.build.json',
   },

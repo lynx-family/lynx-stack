@@ -57,10 +57,6 @@ explain how things work
 
 queuePostFlushCb
 
-### vs. Vine
-
-How much does it reuse Vue (more or less than us)
-
 ### Single-threaded official "react" on Lynx
 
 More branding support than "preact"

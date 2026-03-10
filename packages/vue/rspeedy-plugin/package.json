@@ -34,6 +34,7 @@
     "dev": "rslib build --watch"
   },
   "dependencies": {
+    "@lynx-js/css-extract-webpack-plugin": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
     "@lynx-js/template-webpack-plugin": "workspace:*",

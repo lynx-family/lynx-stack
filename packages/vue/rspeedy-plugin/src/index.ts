@@ -23,6 +23,7 @@
 import type { RsbuildPlugin } from '@rsbuild/core';
 import { pluginVue } from '@rsbuild/plugin-vue';
 
+import { applyCSS } from './css.js';
 import { applyEntry } from './entry.js';
 import { LAYERS } from './layers.js';
 
@@ -106,8 +107,7 @@ export function pluginVueLynx(
       name: 'lynx:vue',
       // Must run after pluginVue ('rsbuild:vue') so that our modifyBundlerChain
       // can see the CHAIN_ID.RULE.VUE rule created by pluginVue.
-      pre: ['lynx:rsbuild:plugin-api', 'lynx:config'],
-      post: ['rsbuild:vue'],
+      pre: ['lynx:rsbuild:plugin-api', 'lynx:config', 'rsbuild:vue'],
 
       setup(api) {
         api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
@@ -130,18 +130,23 @@ export function pluginVueLynx(
           });
         });
 
-        api.modifyBundlerChain((chain, { CHAIN_ID }) => {
+        api.modifyBundlerChain((chain) => {
           // "vue" → "@lynx-js/vue-runtime" ensures template compiler output
           // imports from the same module instance (singleton shared state)
           chain.resolve.alias.set('vue', '@lynx-js/vue-runtime');
-
-          // Constrain .vue rule to BG layer only (main-thread entry never imports .vue files)
-          if (chain.module.rules.has(CHAIN_ID.RULE.VUE)) {
-            chain.module.rule(CHAIN_ID.RULE.VUE)
-              .issuerLayer(LAYERS.BACKGROUND);
-          }
         });
 
+        // NOTE: vue-loader runs on ALL layers (no issuerLayer constraint).
+        // On the MT layer, vue-loader processes .vue files into connector code
+        // with sub-module imports. The worklet-loader-mt (enforce: 'post')
+        // then filters out template/style imports and only follows the script
+        // sub-module, ensuring the LEPUS transform sees the same compiled
+        // script content as the BG worklet-loader → matching _wkltId hashes.
+
+        applyCSS(api, {
+          enableCSSSelector,
+          enableCSSInvalidation: enableCSSSelector,
+        });
         applyEntry(api, { enableCSSSelector, debugInfoOutside });
       },
     },

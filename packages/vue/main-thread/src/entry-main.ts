@@ -93,6 +93,6 @@ g['vuePatchUpdate'] = function({ data }: { data: string }): void {
   applyOps(ops);
 };
 
-// Worklet registrations are appended here by the SWC worklet transform.
-// In dev mode, the plugin also appends dev-worklet-registrations.js
-// (hand-crafted registrations for gallery e2e demos).
+// Worklet registrations are included in this bundle via webpack's dependency
+// graph — user code on the MT layer is processed by worklet-loader-mt which
+// extracts registerWorkletInternal() calls per-entry.

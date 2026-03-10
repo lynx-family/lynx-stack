@@ -2,30 +2,14 @@ import { defineConfig } from '@rslib/core';
 
 export default defineConfig({
   lib: [
-    // Unbundled ESM – used for TypeScript consumers and type declarations
+    // Unbundled ESM – webpack imports entry-main.ts as a regular module
+    // on the main-thread layer. The old flat-bundle build is no longer needed
+    // since VueMarkMainThreadPlugin no longer replaces webpack-generated content.
     {
       format: 'esm',
       syntax: 'es2022',
       bundle: false,
       dts: true,
-    },
-    // Bundled flat script – consumed by the rsbuild plugin as the raw
-    // main-thread Lepus script (no webpack module-system wrapping needed).
-    {
-      format: 'esm',
-      syntax: 'es2020',
-      bundle: true,
-      dts: false,
-      autoExternal: false,
-      source: {
-        entry: {
-          'main-thread-bundled': './src/entry-main.ts',
-          'dev-worklet-registrations': './src/dev-worklet-registrations.ts',
-        },
-      },
-      output: {
-        distPath: { root: 'dist' },
-      },
     },
   ],
   source: {

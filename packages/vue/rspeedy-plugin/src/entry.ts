@@ -17,10 +17,6 @@ import {
 } from '@lynx-js/template-webpack-plugin';
 
 import { LAYERS } from './layers.js';
-import {
-  clearLepusRegistrations,
-  getAllLepusRegistrations,
-} from './worklet-registry.js';
 
 const PLUGIN_TEMPLATE = 'lynx:vue-template';
 const PLUGIN_RUNTIME_WRAPPER = 'lynx:vue-runtime-wrapper';
@@ -29,6 +25,11 @@ const PLUGIN_MARK_MAIN_THREAD = 'lynx:vue-mark-main-thread';
 const PLUGIN_WORKLET_RUNTIME = 'lynx:vue-worklet-runtime';
 const PLUGIN_WEB_ENCODE = 'lynx:vue-web-encode';
 
+/** Minimal typing for a webpack Chunk (avoids importing @rspack/core). */
+interface WebpackChunk {
+  getEntryOptions(): { layer?: string } | undefined;
+}
+
 /** Minimal typing for the webpack Compilation object (avoids importing @rspack/core). */
 interface WebpackCompilation {
   hooks: {
@@ -36,6 +37,12 @@ interface WebpackCompilation {
       tap(
         options: { name: string; stage: number },
         callback: () => void,
+      ): void;
+    };
+    additionalTreeRuntimeRequirements: {
+      tap(
+        name: string,
+        callback: (chunk: WebpackChunk, set: Set<string>) => void,
       ): void;
     };
   };
@@ -56,6 +63,7 @@ interface WebpackCompiler {
       PROCESS_ASSETS_STAGE_ADDITIONAL: number;
       PROCESS_ASSETS_STAGE_PRE_PROCESS: number;
     };
+    RuntimeGlobals: { startup: string };
     sources: { RawSource: new(source: string) => unknown };
   };
   hooks: {
@@ -69,69 +77,55 @@ interface WebpackCompiler {
 }
 
 /**
- * VueMainThreadPlugin replaces the webpack-generated main-thread.js bundle with
- * a pre-built flat ESM script and marks it with `lynx:main-thread: true`.
+ * VueMarkMainThreadPlugin does two things:
  *
- * WHY: rspeedy sets `chunkLoading: 'lynx'` globally.  With this setting webpack's
- * StartupChunkDependenciesPlugin only generates a startup call
- * (`__webpack_require__(entryId)`) when `hasChunkEntryDependentChunks(chunk)` is
- * true.  For the simple main-thread entry (no async imports) that condition is
- * false, so the module factories inside `__webpack_modules__` never execute.
- * This means `globalThis.renderPage`, `globalThis.vuePatchUpdate`, etc. are never
- * assigned and Lepus throws "renderPage is not a function".
+ * 1. Forces webpack to generate startup code for MT entry chunks.
+ *    WHY: rspeedy sets `chunkLoading: 'lynx'` globally. The Lynx
+ *    `StartupChunkDependenciesPlugin` only adds `RuntimeGlobals.startup` when
+ *    `hasChunkEntryDependentChunks(chunk)` is true. For MT entries without
+ *    async chunk dependencies this is false, so webpack never generates the
+ *    `__webpack_require__(entryModuleId)` startup call. Module factories
+ *    (including entry-main.ts which sets globalThis.renderPage etc.) never
+ *    execute. We fix this by explicitly requesting `RuntimeGlobals.startup`
+ *    for any chunk whose entry layer is MAIN_THREAD.
  *
- * The background bundle is fine because RuntimeWrapperWebpackPlugin wraps it in an
- * AMD `tt.define(...)` factory which acts as the startup mechanism.
- *
- * Fix: rslib builds entry-main.ts as a flat bundled ESM (no module wrapping).
- * We replace the webpack asset content with that flat script so every assignment
- * runs at the top level when Lepus evaluates the script.
+ * 2. Marks webpack-generated main-thread assets with `lynx:main-thread: true`
+ *    so that LynxTemplatePlugin routes them to lepusCode.root (Lepus bytecode).
  */
-class VueMainThreadPlugin {
-  constructor(
-    private readonly mainThreadFilenames: string[],
-    private readonly flatBundlePath: string,
-    private readonly devRegistrationsPath?: string,
-  ) {}
+class VueMarkMainThreadPlugin {
+  constructor(private readonly mainThreadFilenames: string[]) {}
 
   apply(compiler: WebpackCompiler): void {
+    const { RuntimeGlobals } = compiler.webpack;
+
     compiler.hooks.thisCompilation.tap(
       PLUGIN_MARK_MAIN_THREAD,
       (compilation) => {
-        // Clear stale registrations at the start of each compilation
-        // (watch-mode safety: prevents leftover registrations from prior builds).
-        // Must run here (before module build) rather than in processAssets,
-        // so that parallel environments (lynx + web) can all read the same
-        // registrations without one draining the shared Map before the other.
-        clearLepusRegistrations();
+        // Force startup code generation for MT entry chunks so that
+        // entry module factories actually execute.
+        compilation.hooks.additionalTreeRuntimeRequirements.tap(
+          PLUGIN_MARK_MAIN_THREAD,
+          (chunk, set) => {
+            const entryOptions = chunk.getEntryOptions();
+            if (entryOptions?.layer === LAYERS.MAIN_THREAD) {
+              set.add(RuntimeGlobals.startup);
+            }
+          },
+        );
 
+        // Mark MT assets with lynx:main-thread: true for LynxTemplatePlugin.
         compilation.hooks.processAssets.tap(
           {
             name: PLUGIN_MARK_MAIN_THREAD,
             stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
           },
           () => {
-            let fullCode = fs.readFileSync(this.flatBundlePath, 'utf8');
-            // Append LEPUS registrations collected by worklet-loader
-            const registrations = getAllLepusRegistrations();
-            if (registrations) {
-              fullCode += '\n' + registrations;
-            }
-            // In dev mode, append hand-crafted worklet registrations
-            // (e.g. gallery demos). Excluded from production builds.
-            if (this.devRegistrationsPath) {
-              fullCode += '\n' + fs.readFileSync(
-                this.devRegistrationsPath,
-                'utf8',
-              );
-            }
-            const RawSource = compiler.webpack.sources.RawSource;
             for (const filename of this.mainThreadFilenames) {
               const asset = compilation.getAsset(filename);
               if (asset) {
                 compilation.updateAsset(
                   filename,
-                  new RawSource(fullCode),
+                  asset.source,
                   {
                     ...asset.info,
                     'lynx:main-thread': true,
@@ -227,35 +221,8 @@ export function applyEntry(
     return config;
   });
 
-  // CSS from .vue <style> blocks: main-thread layer doesn't need any styles.
-  // Add an ignore-css-loader for the main-thread layer to prevent CSS
-  // processing errors (VueLoaderPlugin clones CSS rules for .vue style blocks).
-  api.modifyBundlerChain((chain, { CHAIN_ID, environment }) => {
-    const isLynx = environment.name === 'lynx'
-      || environment.name.startsWith('lynx-');
-    const isWeb = environment.name === 'web'
-      || environment.name.startsWith('web-');
-    if (!isLynx && !isWeb) return;
-
-    const cssRuleId = CHAIN_ID.RULE.CSS;
-    if (!chain.module.rules.has(cssRuleId)) return;
-
-    const rule = chain.module.rule(cssRuleId);
-    const ruleEntries = rule.entries() as object;
-
-    chain.module
-      .rule(`${cssRuleId}:vue:main-thread`)
-      .merge(ruleEntries)
-      .issuerLayer(LAYERS.MAIN_THREAD)
-      .uses.clear().end()
-      .use('ignore-css')
-      .loader(path.resolve(_dirname, './loaders/ignore-css-loader'))
-      .end();
-  });
-
-  // Worklet loader: runs SWC transform on BG-layer .js/.ts files to extract
-  // 'main thread' directive functions into worklet context objects (BG) and
-  // registerWorkletInternal calls (MT, collected via worklet-registry).
+  // Worklet loader (BG layer): runs SWC JS-target transform on BG-layer
+  // .js/.ts/.vue files to replace 'main thread' functions with context objects.
   api.modifyBundlerChain((chain, { environment }) => {
     const isLynx = environment.name === 'lynx'
       || environment.name.startsWith('lynx-');
@@ -270,6 +237,72 @@ export function applyEntry(
       .exclude.add(/node_modules/).end()
       .use('worklet-loader')
       .loader(path.resolve(_dirname, './loaders/worklet-loader'))
+      .end();
+  });
+
+  // MT-layer loaders: process user code to extract LEPUS worklet registrations.
+  // Vue SFC files → extract <script> content → LEPUS transform.
+  // JS/TS files → LEPUS transform directly.
+  //
+  // IMPORTANT: The bootstrap packages (@lynx-js/vue-main-thread and its deps)
+  // must be excluded — they set up globalThis.renderPage/processData/etc. and
+  // must execute as-is. In pnpm workspaces, these resolve to real paths under
+  // packages/vue/ (not node_modules), so we exclude them explicitly.
+  api.modifyBundlerChain((chain, { environment }) => {
+    const isLynx = environment.name === 'lynx'
+      || environment.name.startsWith('lynx-');
+    const isWeb = environment.name === 'web'
+      || environment.name.startsWith('web-');
+    if (!isLynx && !isWeb) return;
+
+    // Resolve bootstrap package directories to exclude from MT loaders.
+    // entry-main.ts imports from @lynx-js/vue-main-thread (same package)
+    // and @lynx-js/vue-internal (ops enum). Both must pass through as-is.
+    const mainThreadPkgDir = path.dirname(
+      require.resolve('@lynx-js/vue-main-thread/package.json'),
+    );
+    // @lynx-js/vue-internal is a transitive dep (ops-apply.ts imports OP enum)
+    let vueInternalPkgDir: string | undefined;
+    try {
+      vueInternalPkgDir = path.dirname(
+        require.resolve('@lynx-js/vue-internal/package.json'),
+      );
+    } catch {
+      // Optional — may not exist in all setups
+    }
+
+    // Vue SFC on MT: vue-loader processes .vue on all layers (no issuerLayer
+    // constraint). This enforce:'post' rule runs worklet-loader-mt AFTER
+    // vue-loader, so it sees vue-loader's connector output (imports to
+    // template/script/style sub-modules). extractLocalImports filters out
+    // template/style imports, keeping only the script sub-module.
+    // The script sub-module then matches the vue:worklet-mt rule below
+    // (via .ts match resource extension), ensuring both BG and MT worklet
+    // transforms see the same @vue/compiler-sfc compiled script content,
+    // producing matching _wkltId hashes.
+    chain.module
+      .rule('vue:mt-sfc')
+      .enforce('post')
+      .issuerLayer(LAYERS.MAIN_THREAD)
+      .test(/\.vue$/)
+      .use('worklet-loader-mt')
+      .loader(path.resolve(_dirname, './loaders/worklet-loader-mt'))
+      .end();
+
+    // JS/TS on MT: LEPUS worklet transform (extract registerWorkletInternal calls)
+    const workletMtExclude = chain.module
+      .rule('vue:worklet-mt')
+      .issuerLayer(LAYERS.MAIN_THREAD)
+      .test(/\.[cm]?[jt]sx?$/)
+      .exclude
+      .add(/node_modules/)
+      .add(mainThreadPkgDir);
+    if (vueInternalPkgDir) {
+      workletMtExclude.add(vueInternalPkgDir);
+    }
+    workletMtExclude.end()
+      .use('worklet-loader-mt')
+      .loader(path.resolve(_dirname, './loaders/worklet-loader-mt'))
       .end();
   });
 
@@ -321,15 +354,17 @@ export function applyEntry(
       }
 
       // ----------------------------------------------------------------
-      // Main Thread bundle – only the PAPI bootstrap, no Vue runtime
+      // Main Thread bundle – PAPI bootstrap + user code (worklet registrations)
       // ----------------------------------------------------------------
+      // Both BG and MT layers import the same user code. On the MT layer,
+      // vue-sfc-script-extractor + worklet-loader-mt strip everything except
+      // registerWorkletInternal() calls. webpack's dependency graph provides
+      // natural per-entry isolation (each entry sees only its own worklets).
       chain
         .entry(mainThreadEntry)
         .add({
           layer: LAYERS.MAIN_THREAD,
-          // The main-thread bundle contains ONLY entry-main.ts.
-          // User Vue components must NOT be included here.
-          import: [require.resolve('@lynx-js/vue-main-thread')],
+          import: [require.resolve('@lynx-js/vue-main-thread'), ...imports],
           filename: mainThreadName,
         })
         .end();
@@ -387,31 +422,13 @@ export function applyEntry(
     }
 
     // ------------------------------------------------------------------
-    // VueMainThreadPlugin – replace webpack-generated main-thread.js with
-    // a pre-built flat bundle and mark with lynx:main-thread: true so that
-    // LynxTemplatePlugin routes it to lepusCode.root (Lepus bytecode).
+    // VueMarkMainThreadPlugin – mark MT assets with lynx:main-thread: true
+    // so LynxTemplatePlugin routes them to lepusCode.root (Lepus bytecode).
     // ------------------------------------------------------------------
     if ((isLynx || isWeb) && mainThreadFilenames.length > 0) {
-      // Resolve the pre-built flat bundle next to the package.json so that
-      // it works even before the package exposes an explicit export path.
-      const pkgRoot = path.dirname(
-        require.resolve('@lynx-js/vue-main-thread/package.json'),
-      );
-      const flatBundlePath = path.join(
-        pkgRoot,
-        'dist',
-        'main-thread-bundled.js',
-      );
-      const devRegistrationsPath = isProd
-        ? undefined
-        : path.join(pkgRoot, 'dist', 'dev-worklet-registrations.js');
       chain
         .plugin(PLUGIN_MARK_MAIN_THREAD)
-        .use(VueMainThreadPlugin, [
-          mainThreadFilenames,
-          flatBundlePath,
-          devRegistrationsPath,
-        ])
+        .use(VueMarkMainThreadPlugin, [mainThreadFilenames])
         .end();
 
       // Resolve worklet-runtime from @lynx-js/react (reuse existing impl)
