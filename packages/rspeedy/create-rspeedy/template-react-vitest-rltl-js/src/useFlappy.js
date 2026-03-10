@@ -7,6 +7,7 @@ import { createFlappy } from './lib/flappy.js'
  *
  * Returns `[y, jump]` — a state value and a stable callback.
  * The game loop runs automatically; cleanup happens on unmount.
+ * Options are read once on mount and not reactive to later changes.
  *
  * @param {object} [options]
  * @returns {[number, () => void]}

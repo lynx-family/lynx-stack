@@ -59,7 +59,7 @@ export function createFlappy(
 
   function jump() {
     // Stack impulse on rapid taps, clamped to one full jumpForce
-    velocity = Math.min(velocity + jumpForce * stackFactor, jumpForce)
+    velocity = Math.max(velocity + jumpForce * stackFactor, jumpForce)
     if (!timer) {
       loop()
     }
