@@ -16,10 +16,11 @@ describe('kitten-lynx testing framework', () => {
     const page = await lynx.newPage();
 
     await page.goto(
-      'http://10.91.84.156:3000/main.lynx.bundle',
+      'https://lynxjs.org/next/lynx-examples/hello-world/dist/main.lynx.bundle',
     );
 
     const content = await page.content();
+    console.log('[Test] Page content:', content);
     expect(content).toContain('have fun');
 
     const rootElement = await page.locator('view');

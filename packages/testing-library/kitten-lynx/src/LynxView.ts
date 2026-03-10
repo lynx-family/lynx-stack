@@ -51,6 +51,11 @@ export class LynxView {
     if (!this._channel) {
       for (let attempt = 0; attempt < 20; attempt++) {
         try {
+          await this._connector.setGlobalSwitch(
+            this._clientId,
+            'enable_devtool',
+            true,
+          );
           const sessions = await this._connector.sendListSessionMessage(
             this._clientId,
           );
