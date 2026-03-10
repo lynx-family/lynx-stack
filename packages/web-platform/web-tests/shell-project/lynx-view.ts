@@ -3,8 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 import type { LynxViewElement as LynxView } from '@lynx-js/web-core/client';
 import '@lynx-js/web-core/client';
-import '@lynx-js/web-elements/all';
-import '@lynx-js/web-elements/index.css';
 import './index.css';
 
 export const lynxViewTests = (

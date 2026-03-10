@@ -7,6 +7,7 @@ import {
   lynxElementTemplateMarkerAttribute,
   lynxPartIdAttribute,
   uniqueIdSymbol,
+  ErrorCode,
 } from '../../../constants.js';
 
 import type {
@@ -36,6 +37,8 @@ import type {
   SetIDPAPI,
   SwapElementPAPI,
   UpdateListCallbacksPAPI,
+  InvokeUIMethodPAPI,
+  QuerySelectorPAPI,
 } from '../../../types/index.js';
 
 export const __AppendElement: AppendElementPAPI = /*#__PURE__*/ (
@@ -216,4 +219,61 @@ export const __UpdateListCallbacks: UpdateListCallbacksPAPI = /*#__PURE__*/ (
   const decoratedElement = element as DecoratedHTMLElement;
   decoratedElement.componentAtIndex = componentAtIndex;
   decoratedElement.enqueueComponent = enqueueComponent;
+};
+
+const methodAlias: Record<
+  string,
+  (element: Element, params: unknown) => unknown
+> = {
+  'boundingClientRect': (element) => {
+    const rect = element.getBoundingClientRect();
+    return {
+      id: element.id,
+      width: rect.width,
+      height: rect.height,
+      left: rect.left,
+      right: rect.right,
+      top: rect.top,
+      bottom: rect.bottom,
+    };
+  },
+};
+
+export const __InvokeUIMethod: InvokeUIMethodPAPI = /*#__PURE__*/ (
+  element,
+  method,
+  params,
+  callback,
+) => {
+  let code = ErrorCode.UNKNOWN;
+  let data: any = undefined;
+  try {
+    const aliasMethod = methodAlias[method];
+    const hasDomMethod = typeof (element as any)[method] === 'function';
+    if (!aliasMethod && !hasDomMethod) {
+      code = ErrorCode.METHOD_NOT_FOUND;
+    } else {
+      if (aliasMethod) {
+        data = aliasMethod(element, params);
+      } else {
+        data = (element as any)[method](params);
+      }
+      code = ErrorCode.SUCCESS;
+    }
+  } catch (e) {
+    console.error(
+      `[lynx-web] invokeUIMethod: apply method failed with`,
+      e,
+      element,
+    );
+    code = ErrorCode.PARAM_INVALID;
+  }
+  callback({ code, data });
+};
+
+export const __QuerySelector: QuerySelectorPAPI = /*#__PURE__*/ (
+  element,
+  selector,
+) => {
+  return element.querySelector(selector);
 };

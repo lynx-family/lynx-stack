@@ -9,7 +9,6 @@
   ],
   "references": [
     /** packages-start */
-    { "path": "../web-elements/tsconfig.json" },
     /** packages-end */
   ],
 }

@@ -9,6 +9,7 @@ import type {
   PerformancePipelineOptions,
 } from './index.js';
 import type { MainThreadLynx } from './MainThreadLynx.js';
+import type { InvokeCallbackRes } from './NativeApp.js';
 import type { ProcessDataCallback } from './ProcessDataCallback.js';
 import type { UpdateDataOptions } from './UpdateDataOptions.js';
 
@@ -329,6 +330,17 @@ export type QueryComponentPAPI = (
     };
   }) => void,
 ) => null;
+export type InvokeUIMethodPAPI = (
+  element: HTMLElement,
+  method: string,
+  params: object,
+  callback: (result: InvokeCallbackRes) => void,
+) => void;
+
+export type QuerySelectorPAPI = (
+  element: HTMLElement,
+  selector: string,
+) => unknown;
 export interface ElementPAPIs {
   // __GetTemplateParts currently only provided by the thread-strategy = "all-on-ui" (default)
   __GetTemplateParts: GetTemplatePartsPAPI;
@@ -388,6 +400,8 @@ export interface ElementPAPIs {
   __GetPageElement: GetPageElementPAPI;
   __GetAttributeByName: GetAttributeByNamePAPI;
   __ElementAnimate: ElementAnimatePAPI;
+  __InvokeUIMethod: InvokeUIMethodPAPI;
+  __QuerySelector: QuerySelectorPAPI;
   __FlushElementTree: (
     _subTree?: unknown,
     options?: FlushElementTreeOptions,

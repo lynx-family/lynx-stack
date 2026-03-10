@@ -1,2 +1,2 @@
-import '@lynx-js/web-elements/index.css';
+import '@lynx-js/web-core/client';
 import './index.css';

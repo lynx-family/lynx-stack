@@ -35,8 +35,10 @@
     "@playwright/test": "^1.58.2",
     "@rspack/cli": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
+    "css-loader": "^7.1.4",
     "nyc": "^17.1.0",
     "source-map-loader": "^5.0.0",
+    "style-loader": "^4.0.0",
     "tslib": "^2.8.1",
     "v8-to-istanbul": "^9.3.0"
   }
