@@ -255,25 +255,9 @@ jobs:
     with:
       runs-on: lynx-ubuntu-22.04-physical-medium
       run: |
-        # 1. Install dependencies for Android Emulator
-        sudo apt-get update
-        sudo apt-get install -y libvirt-daemon-system libvirt-clients bridge-utils socat cpu-checker qemu-kvm
-
-        # 2. Set up Android SDK environment
-        # The runner seems to have a messy SDK structure. Let's find the SDK root.
-        export ANDROID_HOME=${ANDROID_HOME:-/home/runner/Android}
-        echo "Using ANDROID_HOME: $ANDROID_HOME"
-
-        # Accept licenses and install image using explicit sdk_root
-        yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
-        sdkmanager --sdk_root=$ANDROID_HOME "system-images;android-34;google_apis;x86_64"
-
-        # 3. Create AVD
-        echo "no" | avdmanager create avd -n test_device -k "system-images;android-34;google_apis;x86_64" --device "pixel" --force
-
         # 4. Start Emulator
         echo "Starting emulator..."
-        ${ANDROID_HOME}/emulator/emulator -avd test_device -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect &
+        ${ANDROID_HOME}/emulator/emulator -avd Nexus_5_API_28 -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect &
 
         # 5. Wait for boot
         echo "Waiting for emulator to boot..."
