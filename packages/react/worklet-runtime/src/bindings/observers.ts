@@ -18,7 +18,9 @@ export function onWorkletCtxUpdate(
   isFirstScreen: boolean,
   element: ElementNode,
 ): void {
-  globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager?.addRef(worklet._execId!, worklet);
+  if (worklet._execId !== undefined) {
+    globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager?.addRef(worklet._execId, worklet);
+  }
   if (isFirstScreen && oldWorklet) {
     globalThis.lynxWorkletImpl?._hydrateCtx(worklet, oldWorklet);
   }
