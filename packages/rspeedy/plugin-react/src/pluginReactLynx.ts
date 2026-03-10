@@ -25,6 +25,7 @@ import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
 import { applyBackgroundOnly } from './backgroundOnly.js'
 import { applyCSS } from './css.js'
+import { applyShakeBackgroundDataProcessors } from './dataProcessors.js'
 import { applyEntry } from './entry.js'
 import { applyGenerator } from './generator.js'
 import { applyLazy } from './lazy.js'
@@ -347,6 +348,7 @@ export function pluginReactLynx(
         applyEntry(api, resolvedOptions)
         applyBackgroundOnly(api)
         applyGenerator(api, resolvedOptions)
+        applyShakeBackgroundDataProcessors(api)
         applyLoaders(api, resolvedOptions)
         applyRefresh(api)
         applySplitChunksRule(api)
