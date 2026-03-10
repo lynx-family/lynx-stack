@@ -8,7 +8,6 @@ members = [
   "packages/react/transform/swc-plugin-reactlynx-compat",
   "packages/web-platform/web-core-wasm",
   "packages/web-platform/web-elements",
-  "packages/web-platform/web-mainthread-apis",
 ]
 
 [workspace.dependencies]
