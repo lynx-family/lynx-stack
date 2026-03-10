@@ -122,6 +122,12 @@ export class Lynx {
     lynx._currentClient = matchedClients[0];
     lynx._currentClientId = matchedClients[0]!.id;
 
+    await lynx._connector.setGlobalSwitch(
+      lynx._currentClientId,
+      'enable_devtool',
+      true,
+    );
+
     return lynx;
   }
 
