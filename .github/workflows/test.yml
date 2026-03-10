@@ -260,9 +260,13 @@ jobs:
         sudo apt-get install -y libvirt-daemon-system libvirt-clients bridge-utils socat cpu-checker qemu-kvm
 
         # 2. Set up Android SDK environment
-        # The runner seems to have a messy SDK structure. Let's try to install the required image.
-        yes | sdkmanager --licenses || true
-        sdkmanager "system-images;android-34;google_apis;x86_64"
+        # The runner seems to have a messy SDK structure. Let's find the SDK root.
+        export ANDROID_HOME=${ANDROID_HOME:-/home/runner/Android}
+        echo "Using ANDROID_HOME: $ANDROID_HOME"
+
+        # Accept licenses and install image using explicit sdk_root
+        yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
+        sdkmanager --sdk_root=$ANDROID_HOME "system-images;android-34;google_apis;x86_64"
 
         # 3. Create AVD
         echo "no" | avdmanager create avd -n test_device -k "system-images;android-34;google_apis;x86_64" --device "pixel" --force
