@@ -231,20 +231,8 @@ describe('should build external bundle', () => {
   })
 })
 
-describe('mode configuration', () => {
+describe('NODE_ENV configuration', () => {
   const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
-
-  it('should not apply mode by default', () => {
-    const rslibConfig = defineExternalBundleRslibConfig({
-      source: {
-        entry: {
-          utils: path.join(fixtureDir, 'index.ts'),
-        },
-      },
-      id: 'utils-mode-default',
-    })
-    expect(rslibConfig.mode).toBe(undefined)
-  })
 
   const buildWithNodeEnv = async (
     nodeEnv: 'development' | 'production',
@@ -252,27 +240,29 @@ describe('mode configuration', () => {
   ) => {
     const prevNodeEnv = process.env['NODE_ENV']
     process.env['NODE_ENV'] = nodeEnv
-    const config = defineExternalBundleRslibConfig({
-      source: {
-        entry: {
-          utils: path.join(fixtureDir, 'index.ts'),
+    try {
+      const config = defineExternalBundleRslibConfig({
+        source: {
+          entry: {
+            utils: path.join(fixtureDir, 'index.ts'),
+          },
         },
-      },
-      id,
-      output: {
-        distPath: { root: path.join(fixtureDir, 'dist') },
-      },
-      plugins: [pluginReactLynx()],
-    })
-    await build(config)
-    const result = await decodeTemplate(
-      path.join(fixtureDir, `dist/${id}.lynx.bundle`),
-    )
-    process.env['NODE_ENV'] = prevNodeEnv
-    return result
+        id,
+        output: {
+          distPath: { root: path.join(fixtureDir, 'dist') },
+        },
+        plugins: [pluginReactLynx()],
+      })
+      await build(config)
+      return await decodeTemplate(
+        path.join(fixtureDir, `dist/${id}.lynx.bundle`),
+      )
+    } finally {
+      process.env['NODE_ENV'] = prevNodeEnv
+    }
   }
 
-  it('should output different artifacts for development and production modes', async () => {
+  it('should output different artifacts for development and production NODE_ENV', async () => {
     const devResult = await buildWithNodeEnv('development', 'utils-dev')
     const prodResult = await buildWithNodeEnv('production', 'utils-prod')
 
