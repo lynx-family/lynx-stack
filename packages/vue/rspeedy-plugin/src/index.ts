@@ -50,9 +50,16 @@ export interface PluginVueLynxOptions {
    * Whether to enable CSS selector support in the Lynx template.
    * When enabled, CSS from Vue `<style>` blocks and imported CSS files
    * will be compiled into the Lynx bundle and applied via class selectors.
-   * @defaultValue false
+   * @defaultValue true
    */
   enableCSSSelector?: boolean;
+
+  /**
+   * Whether to place debug info outside the template bundle.
+   * Reduces template size in dev builds.
+   * @defaultValue true
+   */
+  debugInfoOutside?: boolean;
 }
 
 /**
@@ -67,8 +74,12 @@ export interface PluginVueLynxOptions {
 export function pluginVueLynx(
   options: PluginVueLynxOptions = {},
 ): RsbuildPlugin[] {
-  const { optionsApi = true, prodDevtools = false, enableCSSSelector = true } =
-    options;
+  const {
+    optionsApi = true,
+    prodDevtools = false,
+    enableCSSSelector = true,
+    debugInfoOutside = true,
+  } = options;
 
   return [
     // ① Official Vue SFC support (rspack-vue-loader + VueLoaderPlugin)
@@ -131,7 +142,7 @@ export function pluginVueLynx(
           }
         });
 
-        applyEntry(api, { enableCSSSelector });
+        applyEntry(api, { enableCSSSelector, debugInfoOutside });
       },
     },
   ];

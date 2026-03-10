@@ -208,6 +208,7 @@ const require = createRequire(import.meta.url);
 
 export interface ApplyEntryOptions {
   enableCSSSelector?: boolean;
+  debugInfoOutside?: boolean;
 }
 
 export function applyEntry(
@@ -372,6 +373,7 @@ export function applyEntry(
                 .replaceAll('[name]', entryName)
                 .replaceAll('[platform]', environment.name),
               intermediate: path.posix.join(intermediate, entryName),
+              debugInfoOutside: opts.debugInfoOutside ?? true,
               enableCSSSelector: opts.enableCSSSelector ?? true,
               enableCSSInvalidation: opts.enableCSSSelector ?? true,
               enableRemoveCSSScope: true,
