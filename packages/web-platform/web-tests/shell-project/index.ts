@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { LynxViewElement as LynxView } from '@lynx-js/web-core-wasm/client';
+import type { LynxViewElement as LynxView } from '@lynx-js/web-core/client';
 import { lynxViewTests } from './lynx-view.ts';
 
 const ENABLE_MULTI_THREAD = !!process.env.ENABLE_MULTI_THREAD;
@@ -56,7 +56,7 @@ if (casename) {
     }
 
     if (casename.includes('custom-template-loader')) {
-      // custom template loader is not supported by web-core-wasm
+      // custom template loader is not supported by web-core
     }
 
     if (casename === 'api-createLynxView-browserConfig') {

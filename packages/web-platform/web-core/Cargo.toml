@@ -1,5 +1,5 @@
 [package]
-name = "web-core-wasm"
+name = "web-core"
 version = "0.0.0"
 edition = "2021"
 

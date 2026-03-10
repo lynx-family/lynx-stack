@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { test, expect, swipe, dragAndHold } from '@lynx-js/playwright-fixtures';
 import type { Page } from '@playwright/test';
-import type { LynxViewElement } from '@lynx-js/web-core-wasm/client';
+import type { LynxViewElement } from '@lynx-js/web-core/client';
 const isSSR = !!process.env['ENABLE_SSR'];
 
 const wait = async (ms: number) => {

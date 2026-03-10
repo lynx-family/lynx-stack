@@ -101,7 +101,7 @@ export const HTML_TAG_TO_LYNX_TAG_MAP: Record<string, string> =
   );
 
 /**
- * also see packages/web-platform/web-core-wasm/src/constants.rs
+ * also see packages/web-platform/web-core/src/constants.rs
  */
 export const LYNX_TAG_TO_DYNAMIC_LOAD_TAG_ID: Record<string, number> =
   /*#__PURE__*/ Object

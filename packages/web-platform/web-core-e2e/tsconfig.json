@@ -10,6 +10,6 @@
     "./shell-project/**/*.ts",
   ],
   "references": [
-    { "path": "../web-core-wasm" },
+    { "path": "../web-core" },
   ],
 }

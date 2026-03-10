@@ -1,4 +1,4 @@
-import type { LynxViewElement } from '@lynx-js/web-core-wasm/client';
+import type { LynxViewElement } from '@lynx-js/web-core/client';
 import './index.css';
 
 export const lynxViewTests = (

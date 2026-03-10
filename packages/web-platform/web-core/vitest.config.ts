@@ -7,7 +7,7 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   test: {
-    name: 'web-platform/web-core-wasm',
+    name: 'web-platform/web-core',
     include: ['./tests/*.spec.ts'],
     exclude: ['./tests/*.bench.spec.ts'],
     benchmark: {

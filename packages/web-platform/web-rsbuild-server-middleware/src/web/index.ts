@@ -1,7 +1,7 @@
-import '@lynx-js/web-core-wasm/client';
+import '@lynx-js/web-core/client';
 import '@lynx-js/web-elements/index.css';
 import './index.css';
-import type { LynxViewElement as LynxView } from '@lynx-js/web-core-wasm/client';
+import type { LynxViewElement as LynxView } from '@lynx-js/web-core/client';
 
 const INIT_DATA_KEY = 'lynx-web-core-init-data';
 const GLOBAL_PROPS_KEY = 'lynx-web-core-global-props';

@@ -1,5 +1,5 @@
 {
-  "name": "@lynx-js/web-core-wasm-e2e",
+  "name": "@lynx-js/web-core-e2e",
   "version": "0.0.0",
   "private": true,
   "license": "Apache-2.0",
@@ -21,7 +21,7 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
-    "@lynx-js/web-core-wasm": "workspace:*",
+    "@lynx-js/web-core": "workspace:*",
     "@playwright/test": "^1.58.2",
     "@rsbuild/core": "catalog:rsbuild",
     "nyc": "^17.1.0",

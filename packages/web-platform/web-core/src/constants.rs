@@ -40,8 +40,8 @@ lazy_static::lazy_static! {
   );
 
   /**
-   * See packages/web-platform/web-core-wasm/ts/client/webElementsDynamicLoader.ts
-   * This is a replica of the map in  packages/web-platform/web-core-wasm/ts/constants.ts
+   * See packages/web-platform/web-core/ts/client/webElementsDynamicLoader.ts
+   * This is a replica of the map in  packages/web-platform/web-core/ts/constants.ts
    */
   pub static ref LYNX_TAG_TO_DYNAMIC_LOAD_TAG_ID: FnvHashMap<&'static str, usize> = FnvHashMap::from_iter(vec![
     ("list", 0),

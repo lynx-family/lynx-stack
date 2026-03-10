@@ -1,4 +1,4 @@
-import { executeTemplate } from '@lynx-js/web-core-wasm/server';
+import { executeTemplate } from '@lynx-js/web-core/server';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';

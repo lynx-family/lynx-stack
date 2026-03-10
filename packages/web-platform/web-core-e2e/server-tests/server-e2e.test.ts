@@ -2,7 +2,7 @@ import { test, expect } from 'vitest';
 import * as path from 'path';
 import * as fs from 'fs';
 import { format } from 'prettier';
-import { executeTemplate } from '@lynx-js/web-core-wasm/server';
+import { executeTemplate } from '@lynx-js/web-core/server';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

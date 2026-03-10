@@ -12,7 +12,7 @@ const cargoOutput = path.join(
   'target',
   'wasm32-unknown-unknown',
   'release',
-  'web_core_wasm.wasm',
+  'web_core.wasm',
 );
 const cargoOutputDebug = path.join(
   '..',
@@ -21,7 +21,7 @@ const cargoOutputDebug = path.join(
   'target',
   'wasm32-unknown-unknown',
   'debug',
-  'web_core_wasm.wasm',
+  'web_core.wasm',
 );
 // build the standard wasm package
 

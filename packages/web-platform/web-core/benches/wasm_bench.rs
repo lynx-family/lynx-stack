@@ -2,8 +2,8 @@
 
 use wasm_bindgen_test::{wasm_bindgen_bench, wasm_bindgen_test_configure, Criterion};
 
-use web_core_wasm::css_tokenizer::tokenize::{self, Parser};
-use web_core_wasm::{
+use web_core::css_tokenizer::tokenize::{self, Parser};
+use web_core::{
   Generator, RawStyleInfo, Rule, RulePrelude, Selector, StyleInfoDecoder, StyleTransformer,
 };
 

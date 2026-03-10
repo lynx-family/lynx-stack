@@ -1,10 +1,10 @@
 # Web Core WASM
 
-This package (`packages/web-platform/web-core-wasm`) is the high-performance core of the Lynx Web Platform, implemented primarily in Rust and compiled to WebAssembly (WASM). It handles computation-intensive tasks and facilitates the interaction between the Lynx runtime and the browser DOM.
+This package (`packages/web-platform/web-core`) is the high-performance core of the Lynx Web Platform, implemented primarily in Rust and compiled to WebAssembly (WASM). It handles computation-intensive tasks and facilitates the interaction between the Lynx runtime and the browser DOM.
 
 ## Overview
 
-The `web-core-wasm` package bridges the gap between Lynx's native-like architecture and the web platform. Its primary responsibilities include:
+The `web-core` package bridges the gap between Lynx's native-like architecture and the web platform. Its primary responsibilities include:
 
 1. **CSS Processing**: High-performance tokenization and transformation of Lynx-specific CSS (e.g., `rpx` units, `linear` layout) into standard Web CSS.
 2. **Template Management**: efficient binary serialization (`encode`) and deserialization (`decode`) of style templates using `rkyv`.
@@ -112,11 +112,11 @@ This package uses a hybrid build system involving `pnpm`, `rsbuild`, and `cargo`
 - **`tests/encode.spec.ts`**: Verifies that the CSS encoder correctly serializes various CSS rules.
 - **`tests/lazy-load.spec.ts`**: Ensures that custom elements are loaded dynamically only when needed.
 - **Rust Tests**: run `cargo test --all-features` and `cargo test --target wasm32-unknown-unknown --all-features` separately.
-- **Server E2E Tests (`packages/web-platform/web-core-wasm-e2e`)**:
-  - Located in `packages/web-platform/web-core-wasm-e2e`.
+- **Server E2E Tests (`packages/web-platform/web-core-e2e`)**:
+  - Located in `packages/web-platform/web-core-e2e`.
   - Uses `vitest` to run tests against the **built artifacts** (e.g., `dist/api-globalThis.web.bundle`).
   - Verifies server-side execution of templates using `executeTemplate` and isolated VM contexts.
-  - Run with `pnpm test` inside the `web-core-wasm-e2e` directory.
+  - Run with `pnpm test` inside the `web-core-e2e` directory.
 
 ## Guidelines for LLMs
 
@@ -137,8 +137,8 @@ This package uses a hybrid build system involving `pnpm`, `rsbuild`, and `cargo`
 ### Rust (wasm32)
 
 - Run: cargo bench --target wasm32-unknown-unknown --all-features
-- Bench entry: packages/web-platform/web-core-wasm/benches/wasm_bench.rs
-- Bench helper module: packages/web-platform/web-core-wasm/benches/support/bench_support.rs
+- Bench entry: packages/web-platform/web-core/benches/wasm_bench.rs
+- Bench helper module: packages/web-platform/web-core/benches/support/bench_support.rs
 
 Notes:
 

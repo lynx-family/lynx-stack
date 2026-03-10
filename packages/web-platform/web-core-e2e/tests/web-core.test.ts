@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { test, expect } from '@lynx-js/playwright-fixtures';
-import type { LynxViewElement } from '@lynx-js/web-core-wasm/client';
+import type { LynxViewElement } from '@lynx-js/web-core/client';
 import type { Page, Worker } from '@playwright/test';
 
 declare global {

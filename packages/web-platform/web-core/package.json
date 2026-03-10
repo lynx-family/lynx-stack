@@ -1,11 +1,11 @@
 {
-  "name": "@lynx-js/web-core-wasm",
-  "version": "0.0.6",
+  "name": "@lynx-js/web-core",
+  "version": "0.19.8",
   "description": "This is an internal experimental package, do not use",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
-    "directory": "packages/web-platform/web-core-wasm"
+    "directory": "packages/web-platform/web-core"
   },
   "license": "Apache-2.0",
   "sideEffects": true,

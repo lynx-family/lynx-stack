@@ -29,7 +29,7 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
-    "@lynx-js/web-core-wasm": "workspace:*",
+    "@lynx-js/web-core": "workspace:*",
     "@lynx-js/web-platform-rsbuild-plugin": "workspace:*",
     "@lynx-js/web-rsbuild-server-middleware": "workspace:*",
     "@playwright/test": "^1.58.2",

@@ -47,7 +47,7 @@ export default defineConfig({
         attrs: {
           module: 'true',
           src:
-            '/node_modules/@lynx-js/web-core-wasm/dist/client_prod/static/js/client.js',
+            '/node_modules/@lynx-js/web-core/dist/client_prod/static/js/client.js',
         },
       },
       {
@@ -56,7 +56,7 @@ export default defineConfig({
         attrs: {
           rel: 'stylesheet',
           href:
-            '/node_modules/@lynx-js/web-core-wasm/dist/client_prod/static/css/client.css',
+            '/node_modules/@lynx-js/web-core/dist/client_prod/static/css/client.css',
         },
       },
     ],

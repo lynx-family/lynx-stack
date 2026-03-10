@@ -5,13 +5,13 @@ import * as path from 'path';
 export default defineConfig({
   resolve: {
     alias: {
-      '@lynx-js/web-core-wasm/server': path.resolve(
+      '@lynx-js/web-core/server': path.resolve(
         __dirname,
-        '../web-core-wasm/ts/server/index.ts',
+        '../web-core/ts/server/index.ts',
       ),
-      '@lynx-js/web-core-wasm': path.resolve(
+      '@lynx-js/web-core': path.resolve(
         __dirname,
-        '../web-core-wasm/ts/client/index.ts',
+        '../web-core/ts/client/index.ts',
       ),
     },
   },

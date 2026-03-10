@@ -6,7 +6,7 @@ members = [
   "packages/react/transform/crates/*",
   "packages/react/transform/swc-plugin-reactlynx",
   "packages/react/transform/swc-plugin-reactlynx-compat",
-  "packages/web-platform/web-core-wasm",
+  "packages/web-platform/web-core",
   "packages/web-platform/web-elements",
 ]
 

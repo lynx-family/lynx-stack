@@ -7,7 +7,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { executeTemplate } from '@lynx-js/web-core-wasm/server';
+import { executeTemplate } from '@lynx-js/web-core/server';
 import type { IncomingMessage, ServerResponse } from 'http';
 
 const __filename = fileURLToPath(import.meta.url);
