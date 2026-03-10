@@ -306,7 +306,7 @@ export function applyEntry(
       .end();
   });
 
-  api.modifyBundlerChain((chain, { environment, isProd }) => {
+  api.modifyBundlerChain((chain, { environment, isDev, isProd }) => {
     const isRspeedy = api.context.callerName === 'rspeedy';
     if (!isRspeedy) return;
 
@@ -314,6 +314,11 @@ export function applyEntry(
       || environment.name.startsWith('lynx-');
     const isWeb = environment.name === 'web'
       || environment.name.startsWith('web-');
+
+    // HMR / Live Reload flags (same logic as React plugin)
+    const { hmr, liveReload } = environment.config.dev ?? {};
+    const enabledHMR = isDev && !isWeb && hmr !== false;
+    const enabledLiveReload = isDev && !isWeb && liveReload !== false;
 
     const entries = chain.entryPoints.entries() ?? {};
 
@@ -367,6 +372,14 @@ export function applyEntry(
           import: [require.resolve('@lynx-js/vue-main-thread'), ...imports],
           filename: mainThreadName,
         })
+        .when(enabledHMR, entry => {
+          entry.prepend({
+            layer: LAYERS.MAIN_THREAD,
+            import: require.resolve(
+              '@lynx-js/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs',
+            ),
+          });
+        })
         .end();
 
       // ----------------------------------------------------------------
@@ -382,6 +395,18 @@ export function applyEntry(
         .prepend({
           layer: LAYERS.BACKGROUND,
           import: require.resolve('@lynx-js/vue-runtime/entry-background'),
+        })
+        .when(enabledHMR, entry => {
+          entry.prepend({
+            layer: LAYERS.BACKGROUND,
+            import: '@rspack/core/hot/dev-server',
+          });
+        })
+        .when(enabledHMR || enabledLiveReload, entry => {
+          entry.prepend({
+            layer: LAYERS.BACKGROUND,
+            import: '@lynx-js/webpack-dev-transport/client',
+          });
         })
         .end();
 
