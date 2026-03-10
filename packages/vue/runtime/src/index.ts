@@ -125,33 +125,73 @@ export function nextTick(fn?: () => void): Promise<void> {
 }
 
 export {
-  // Composition API
+  // ---------------------------------------------------------------------------
+  // Composition API — Reactivity
+  // ---------------------------------------------------------------------------
   computed,
-  defineAsyncComponent,
-  defineComponent,
-  h,
-  inject,
-  // nextTick — exported above (patched version)
+  customRef,
+  reactive,
+  readonly,
+  ref,
+  shallowReactive,
+  shallowRef,
+  shallowReadonly,
+  toRaw,
+  toRef,
+  toRefs,
+  toValue,
+  triggerRef,
+  unref,
+  isRef,
+  isReactive,
+  isReadonly,
+  isProxy,
+  isShallow,
+  markRaw,
+  // ---------------------------------------------------------------------------
+  // Composition API — Lifecycle hooks
+  // ---------------------------------------------------------------------------
   onBeforeMount,
   onBeforeUnmount,
   onBeforeUpdate,
   onMounted,
   onUnmounted,
   onUpdated,
-  provide,
-  reactive,
-  readonly,
-  ref,
-  shallowReactive,
-  shallowRef,
-  toRaw,
-  toRef,
-  toRefs,
-  unref,
+  onErrorCaptured,
+  onRenderTracked,
+  onRenderTriggered,
+  // ---------------------------------------------------------------------------
+  // Composition API — Watchers
+  // ---------------------------------------------------------------------------
   watch,
   watchEffect,
   watchPostEffect,
+  watchSyncEffect,
+  onWatcherCleanup,
+  // ---------------------------------------------------------------------------
+  // Composition API — Dependency injection
+  // ---------------------------------------------------------------------------
+  inject,
+  provide,
+  // ---------------------------------------------------------------------------
+  // Composition API — Scope API
+  // ---------------------------------------------------------------------------
+  effectScope,
+  getCurrentScope,
+  onScopeDispose,
+  // ---------------------------------------------------------------------------
+  // Component utilities
+  // ---------------------------------------------------------------------------
+  defineAsyncComponent,
+  defineComponent,
+  getCurrentInstance,
+  h,
+  useId,
+  useModel,
+  hasInjectionContext,
+  // ---------------------------------------------------------------------------
   // Block / VNode creation (template compiler runtime helpers)
+  // ---------------------------------------------------------------------------
   openBlock,
   createBlock,
   createElementBlock,
@@ -159,40 +199,199 @@ export {
   createElementVNode,
   createTextVNode,
   createCommentVNode,
-  createStaticVNode,
-  // Interpolation
+  cloneVNode,
+  isVNode,
+  // ---------------------------------------------------------------------------
+  // VNode type symbols
+  // ---------------------------------------------------------------------------
+  Fragment,
+  Text,
+  Comment,
+  // ---------------------------------------------------------------------------
+  // Interpolation & normalization helpers
+  // ---------------------------------------------------------------------------
   toDisplayString,
-  // Normalization helpers
   normalizeClass,
   normalizeStyle,
   normalizeProps,
   mergeProps,
-  // List / conditional
+  camelize,
+  capitalize,
+  // ---------------------------------------------------------------------------
+  // List / conditional / built-in components
+  // ---------------------------------------------------------------------------
   renderList,
-  Fragment,
-  KeepAlive,
-  Teleport,
   Suspense,
+  // ---------------------------------------------------------------------------
   // Directives
+  // ---------------------------------------------------------------------------
   withDirectives,
+  // ---------------------------------------------------------------------------
   // Component resolution
+  // ---------------------------------------------------------------------------
   resolveComponent,
   resolveDynamicComponent,
   resolveDirective,
+  // ---------------------------------------------------------------------------
   // Slots
+  // ---------------------------------------------------------------------------
   withCtx,
   renderSlot,
   useSlots,
   defineSlots,
+  createSlots,
+  // ---------------------------------------------------------------------------
   // Script setup macros (runtime stubs used in SFCs)
+  // ---------------------------------------------------------------------------
   defineProps,
   defineEmits,
   defineExpose,
   defineOptions,
   defineModel,
+  withDefaults,
   useAttrs,
   useTemplateRef,
+  // ---------------------------------------------------------------------------
+  // Template compiler helpers (SFC compiler output references these)
+  // ---------------------------------------------------------------------------
+  withMemo,
+  setBlockTracking,
+  pushScopeId,
+  popScopeId,
+  withScopeId,
+  toHandlerKey,
+  toHandlers,
+  // ---------------------------------------------------------------------------
+  // Misc
+  // ---------------------------------------------------------------------------
+  version,
 } from '@vue/runtime-core';
+
+// ---------------------------------------------------------------------------
+// Deprecated — SSR APIs (not applicable to Lynx)
+// ---------------------------------------------------------------------------
+
+/**
+ * @deprecated Lynx has no server-side rendering. This hook will never be called.
+ * Use onMounted() for data fetching in Lynx.
+ */
+export function onServerPrefetch(_fn: () => unknown): void {
+  if (__DEV__) {
+    console.warn(
+      '[vue-lynx] onServerPrefetch is not supported — Lynx has no SSR.',
+    );
+  }
+}
+
+/**
+ * @deprecated Lynx has no SSR context. Returns undefined.
+ */
+export function useSSRContext(): undefined {
+  if (__DEV__) {
+    console.warn(
+      '[vue-lynx] useSSRContext is not available — Lynx has no SSR.',
+    );
+  }
+  return undefined;
+}
+
+// ---------------------------------------------------------------------------
+// Deprecated — renderer features not implemented in Vue Lynx
+// ---------------------------------------------------------------------------
+
+/**
+ * @deprecated Vue Lynx does not implement `insertStaticContent`.
+ * Static VNodes will throw at mount time. Use `h()` / `createVNode()` instead.
+ */
+export function createStaticVNode(
+  _content: string,
+  _numberOfNodes: number,
+): never {
+  throw new Error(
+    '[vue-lynx] createStaticVNode is not supported — the Lynx renderer does not implement insertStaticContent.',
+  );
+}
+
+/**
+ * @deprecated Vue Lynx does not implement `insertStaticContent`.
+ * Static VNodes cannot be rendered. Use `Text` or `Comment` instead.
+ */
+export const Static: symbol = Symbol.for('v-stc');
+
+/**
+ * @deprecated KeepAlive requires an internal storage container created via
+ * `createElement('div')`. In Vue Lynx this creates an orphan element on the
+ * Main Thread with no visual tree parent, causing undefined native behaviour.
+ * Component caching is not supported.
+ */
+export function KeepAlive(): void {
+  if (__DEV__) {
+    console.warn(
+      '[vue-lynx] KeepAlive is not supported — Lynx renderer has no element recycling.',
+    );
+  }
+}
+
+/**
+ * @deprecated onActivated depends on KeepAlive, which is not supported in Lynx.
+ * This hook will never be called. Use onMounted() instead.
+ */
+export function onActivated(_fn: () => void): void {
+  if (__DEV__) {
+    console.warn(
+      '[vue-lynx] onActivated is not supported — KeepAlive is not available.',
+    );
+  }
+}
+
+/**
+ * @deprecated onDeactivated depends on KeepAlive, which is not supported in Lynx.
+ * This hook will never be called. Use onUnmounted() instead.
+ */
+export function onDeactivated(_fn: () => void): void {
+  if (__DEV__) {
+    console.warn(
+      '[vue-lynx] onDeactivated is not supported — KeepAlive is not available.',
+    );
+  }
+}
+
+/**
+ * @deprecated Teleport requires `querySelector` renderer option to resolve
+ * string targets (e.g. `to="#modal"`). Vue Lynx does not implement
+ * `querySelector`. In dev mode, Vue will warn and the content will not be
+ * teleported. Direct element references are also unsupported because Lynx
+ * native elements are not accessible from the Background Thread.
+ */
+export function Teleport(): void {
+  if (__DEV__) {
+    console.warn(
+      '[vue-lynx] Teleport is not supported — Lynx renderer has no querySelector.',
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Intentionally NOT re-exported — @vue/runtime-core internal APIs
+// ---------------------------------------------------------------------------
+// These are implementation details not part of Vue's public API:
+//
+// Reactivity internals:  effect, ReactiveEffect, stop, proxyRefs,
+//                        TrackOpTypes, TriggerOpTypes
+// Error internals:       callWithErrorHandling, callWithAsyncErrorHandling,
+//                        handleError, ErrorCodes, ErrorTypeStrings
+// Dev/debug internals:   warn, devtools, setDevtoolsHook, initCustomFormatter,
+//                        registerRuntimeCompiler, DeprecationTypes, compatUtils
+// Rendering internals:   isMemoSame, isRuntimeOnly, guardReactiveProps,
+//                        transformVNodeArgs, assertNumber
+// Transition internals:  BaseTransition, BaseTransitionPropsValidators,
+//                        resolveTransitionHooks, setTransitionHooks,
+//                        getTransitionRawChildren, useTransitionState
+// SSR internals:         ssrContextKey, ssrUtils, createHydrationRenderer
+// Hydration (SSR):       hydrateOnIdle, hydrateOnVisible,
+//                        hydrateOnMediaQuery, hydrateOnInteraction
+// Compat:                resolveFilter
+// ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
 // Stubs for APIs from @vue/runtime-dom that template compiler may reference.
