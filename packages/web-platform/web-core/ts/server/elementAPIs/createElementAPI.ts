@@ -425,6 +425,12 @@ export function createElementAPI(
           id ?? '',
         );
       }) as SetIDPAPI,
+      __InvokeUIMethod: () => {
+        throw new Error('Not yet Implemented');
+      },
+      __QuerySelector: () => {
+        throw new Error('Not yet Implemented');
+      },
     },
     wasmContext,
   };

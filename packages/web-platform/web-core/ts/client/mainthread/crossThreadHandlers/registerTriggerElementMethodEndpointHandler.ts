@@ -6,6 +6,7 @@ import { triggerElementMethodEndpoint } from '../../endpoints.js';
 import type { LynxViewInstance } from '../LynxViewInstance.js';
 import type { ElementAnimationOptions } from '../../../types/index.js';
 import { AnimationOperation } from '../../../constants.js';
+import { __QuerySelector } from '../elementAPIs/pureElementPAPIs.js';
 
 export function registerTriggerElementMethodEndpointHandler(
   rpc: Rpc,
@@ -25,7 +26,10 @@ export function registerTriggerElementMethodEndpointHandler(
           case AnimationOperation.START:
             animationMap.set(
               options.id,
-              lynxViewInstance.rootDom.querySelector(id)?.animate(
+              (__QuerySelector(
+                lynxViewInstance.rootDom as unknown as HTMLElement,
+                id,
+              ) as Element | null)?.animate(
                 options.keyframes,
                 options.timingOptions,
               ),

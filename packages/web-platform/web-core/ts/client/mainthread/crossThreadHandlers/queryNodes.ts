@@ -4,6 +4,7 @@
 
 import { ErrorCode, IdentifierType } from '../../../constants.js';
 import type { LynxViewInstance } from '../LynxViewInstance.js';
+import { __QuerySelector } from '../elementAPIs/pureElementPAPIs.js';
 
 export function queryNodes(
   lynxViewInstance: LynxViewInstance,
@@ -68,7 +69,10 @@ export function queryNodes(
   if (first_only) {
     let targetElement: Element | null = null;
     try {
-      targetElement = queryRoot.querySelector(selector);
+      targetElement = __QuerySelector(
+        queryRoot as HTMLElement,
+        selector,
+      ) as Element | null;
     } catch (e) {
       console.error(`[lynx-web] cannot use selector: ${selector}`);
       error?.(ErrorCode.SELECTOR_NOT_SUPPORTED);

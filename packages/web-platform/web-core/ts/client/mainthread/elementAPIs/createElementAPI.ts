@@ -36,6 +36,8 @@ import {
   __GetElementUniqueID,
   __GetTemplateParts,
   __UpdateListCallbacks,
+  __InvokeUIMethod,
+  __QuerySelector,
 } from './pureElementPAPIs.js';
 import type {
   AddEventPAPI,
@@ -525,6 +527,8 @@ export function createElementAPI(
         }
       };
     })(),
+    __InvokeUIMethod,
+    __QuerySelector,
     __FlushElementTree: (_, options) => {
       const pipelineId = options?.pipelineOptions?.pipelineID;
       const backgroundThread = mtsBinding.lynxViewInstance.backgroundThread;
