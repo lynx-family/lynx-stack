@@ -1,5 +1,13 @@
 # @lynx-js/externals-loading-webpack-plugin
 
+## 0.0.4
+
+### Patch Changes
+
+- perf: optimize external bundle loading by merging multiple `fetchBundle` calls for the same URL into a single request. ([#2307](https://github.com/lynx-family/lynx-stack/pull/2307))
+
+- Support bundle and load css in external bundle ([#2143](https://github.com/lynx-family/lynx-stack/pull/2143))
+
 ## 0.0.3
 
 ### Patch Changes

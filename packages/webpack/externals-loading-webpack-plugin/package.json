@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/externals-loading-webpack-plugin",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A webpack plugin to load lynx external bundles.",
   "keywords": [
     "webpack",
@@ -38,7 +38,9 @@
   "devDependencies": {
     "@lynx-js/test-tools": "workspace:*",
     "@rspack/core": "catalog:rspack",
-    "foo": "./test/foo"
+    "bar": "./test/helpers/external-bundle-mock/bar",
+    "baz": "./test/helpers/external-bundle-mock/baz",
+    "foo": "./test/helpers/external-bundle-mock/foo"
   },
   "engines": {
     "node": ">=18"
