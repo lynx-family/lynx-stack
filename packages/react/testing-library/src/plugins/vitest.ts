@@ -1,62 +1,69 @@
-import { defineConfig } from 'vitest/config';
+// Copyright 2025 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+import type { ResolvedConfig, Vite } from 'vitest/node';
 import { VitestPackageInstaller } from 'vitest/node';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
-async function ensurePackagesInstalled() {
-  const installer = new VitestPackageInstaller();
-  const installed = await installer.ensureInstalled(
-    'jsdom',
-    process.cwd(),
-  );
-  if (!installed) {
-    console.log('ReactLynx Testing Library requires jsdom to be installed.');
-    process.exit(1);
-  }
+export interface TestingLibraryOptions {
+  /**
+   * The package name of the ReactLynx runtime package.
+   *
+   * @default `@lynx-js/react`
+   */
+  runtimePkgName?: string;
+
+  /**
+   * The engine version to use for the transform.
+   *
+   * @default `''`
+   */
+  engineVersion?: string;
+
+  /**
+   * Enable experimental React Compiler support.
+   *
+   * Requires `@babel/core`, `babel-plugin-react-compiler`,
+   * `@babel/plugin-syntax-jsx`, and `@babel/plugin-syntax-typescript`
+   * to be installed in your project.
+   *
+   * @default `false`
+   */
+  experimental_enableReactCompiler?: boolean;
 }
 
-/**
- * @returns {import('vitest/config').ViteUserConfig}
- */
-export const createVitestConfig = async (options) => {
-  await ensurePackagesInstalled();
-
+export function testingLibraryPlugin(
+  options?: TestingLibraryOptions,
+): Vite.Plugin[] {
   const runtimeOSSPkgName = '@lynx-js/react';
   const runtimePkgName = options?.runtimePkgName ?? runtimeOSSPkgName;
-  const runtimeDir = path.dirname(require.resolve(`${runtimePkgName}/package.json`));
+  const runtimeDir = path.dirname(
+    require.resolve(`${runtimePkgName}/package.json`),
+  );
   const runtimeOSSDir = path.dirname(
     require.resolve(`${runtimeOSSPkgName}/package.json`, {
       paths: [runtimeDir, __dirname],
     }),
   );
+
   const preactDir = path.dirname(
     require.resolve('preact/package.json', {
       paths: [runtimeOSSDir],
     }),
   );
 
-  const generateAlias = (pkgName, pkgDir, resolveDir) => {
-    const pkgExports = require(path.join(pkgDir, 'package.json')).exports;
-    const pkgAlias = [];
-    Object.keys(pkgExports).forEach((key) => {
-      const name = path.posix.join(pkgName, key);
-      pkgAlias.push({
-        find: new RegExp('^' + name + '$'),
-        replacement: require.resolve(name, {
-          paths: [resolveDir, __dirname],
-        }),
-      });
-    });
-    return pkgAlias;
-  };
-
-  const runtimeOSSAlias = generateAlias(runtimeOSSPkgName, runtimeOSSDir, runtimeDir);
-  let runtimeAlias = [];
+  const runtimeOSSAlias = generateAlias(
+    runtimeOSSPkgName,
+    runtimeOSSDir,
+    runtimeDir,
+  );
+  let runtimeAlias: Vite.Alias[] = [];
   if (runtimePkgName !== runtimeOSSPkgName) {
     runtimeAlias = generateAlias(runtimePkgName, runtimeDir, __dirname);
   }
@@ -85,11 +92,11 @@ export const createVitestConfig = async (options) => {
     },
   ];
 
-  function transformReactCompilerPlugin() {
-    let rootContext, compilerDeps, babel;
+  function transformReactCompilerPlugin(): Vite.Plugin {
+    let rootContext: string, compilerDeps: ReturnType<typeof resolveCompilerDeps>, babel: any;
 
-    function resolveCompilerDeps(rootContext) {
-      const missingBabelPackages = [];
+    function resolveCompilerDeps(rootContext: string) {
+      const missingBabelPackages: string[] = [];
       const [
         babelPath,
         babelPluginReactCompilerPath,
@@ -132,9 +139,9 @@ export const createVitestConfig = async (options) => {
       name: 'transformReactCompilerPlugin',
       enforce: 'pre',
       config(config) {
-        rootContext = config.root;
+        rootContext = config.root!;
 
-        const reactCompilerRuntimeAlias = [];
+        const reactCompilerRuntimeAlias: Vite.Alias[] = [];
         try {
           reactCompilerRuntimeAlias.push(
             {
@@ -150,14 +157,15 @@ export const createVitestConfig = async (options) => {
             },
           );
         } catch (e) {
-          // console.log('react-compiler-runtime not found, skip alias');
+          // react-compiler-runtime not found, skip alias
         }
 
+        // @ts-ignore
         config.test.alias.push(...reactCompilerRuntimeAlias);
 
         compilerDeps = resolveCompilerDeps(rootContext);
         const { babelPath } = compilerDeps;
-        babel = require(babelPath);
+        babel = require(babelPath!);
       },
       async transform(sourceText, sourcePath) {
         if (/\.(?:jsx|tsx)$/.test(sourcePath)) {
@@ -192,7 +200,7 @@ export const createVitestConfig = async (options) => {
               );
             }
           } catch (e) {
-            this.error(e);
+            this.error(e as Error);
           }
         }
 
@@ -201,10 +209,15 @@ export const createVitestConfig = async (options) => {
     };
   }
 
-  function transformReactLynxPlugin() {
+  let config: ResolvedConfig;
+
+  function transformReactLynxPlugin(): Vite.Plugin {
     return {
       name: 'transformReactLynxPlugin',
       enforce: 'pre',
+      async buildStart() {
+        await ensurePackagesInstalled();
+      },
       transform(sourceText, sourcePath) {
         const id = sourcePath;
         // Only transform JS files
@@ -214,12 +227,11 @@ export const createVitestConfig = async (options) => {
 
         const { transformReactLynxSync } = require(
           '@lynx-js/react/transform',
-        );
+        ) as typeof import('@lynx-js/react/transform');
         // relativePath should be stable between different runs with different cwd
-        const relativePath = normalizeSlashes(path.relative(
-          __dirname,
-          sourcePath,
-        ));
+        const relativePath = normalizeSlashes(
+          path.relative(config.root, sourcePath),
+        );
         const basename = path.basename(sourcePath);
         const result = transformReactLynxSync(sourceText, {
           mode: 'test',
@@ -252,60 +264,88 @@ export const createVitestConfig = async (options) => {
           refresh: false,
           cssScope: false,
         });
+
         if (result.errors.length > 0) {
           // https://rollupjs.org/plugin-development/#this-error
-          result.errors.forEach(error => {
-            this.error(
-              error.text,
-              error.location,
-            );
+          result.errors.forEach((error) => {
+            this.error(error.text ?? 'Unknown error', {
+              line: 1,
+              column: 1,
+              ...error.location,
+            });
           });
         }
         if (result.warnings.length > 0) {
-          result.warnings.forEach(warning => {
-            this.warn(
-              warning.text,
-              warning.location,
-            );
+          result.warnings.forEach((warning) => {
+            this.warn(warning.text ?? 'Unknown warning', {
+              line: 1,
+              column: 1,
+              ...warning.location,
+            });
           });
         }
 
         return {
           code: result.code,
-          map: result.map,
+          map: result.map!,
         };
+      },
+      config: () => ({
+        test: {
+          environment: require.resolve(
+            `${runtimeOSSDir}/testing-library/dist/env/vitest`,
+          ),
+          globals: true,
+          setupFiles: [
+            require.resolve('../setupFiles/vitest'),
+          ],
+          alias: [...runtimeOSSAlias, ...runtimeAlias, ...preactAlias, ...reactAlias],
+        },
+      }),
+      configResolved(_config) {
+        // @ts-ignore
+        config = _config;
       },
     };
   }
 
-  return defineConfig({
-    server: {
-      fs: {
-        allow: [
-          path.join(__dirname, '..'),
-        ],
-      },
-    },
-    plugins: [
-      ...(options?.experimental_enableReactCompiler
-        ? [
-          transformReactCompilerPlugin(),
-        ]
-        : []),
-      transformReactLynxPlugin(),
-    ],
-    test: {
-      environment: require.resolve(
-        './env/vitest',
-      ),
-      globals: true,
-      setupFiles: [path.join(__dirname, 'vitest-global-setup')],
-      alias: [...runtimeOSSAlias, ...runtimeAlias, ...preactAlias, ...reactAlias],
-      include: options?.include ?? ['src/**/*.test.{js,jsx,ts,tsx}'],
-    },
-  });
-};
+  return [
+    ...(options?.experimental_enableReactCompiler
+      ? [transformReactCompilerPlugin()]
+      : []),
+    transformReactLynxPlugin(),
+  ];
+}
 
-function normalizeSlashes(file) {
+async function ensurePackagesInstalled() {
+  const installer = new VitestPackageInstaller();
+  const installed = await installer.ensureInstalled('jsdom', process.cwd());
+  if (!installed) {
+    console.log('ReactLynx Testing Library requires jsdom to be installed.');
+    process.exit(1);
+  }
+}
+
+function generateAlias(pkgName: string, pkgDir: string, resolveDir: string) {
+  const pkgExports = require(path.join(pkgDir, 'package.json')).exports;
+  if (!pkgExports || typeof pkgExports !== 'object') {
+    return [];
+  }
+  const pkgAlias: Vite.Alias[] = [];
+  Object.keys(pkgExports).forEach((key) => {
+    const name = path.posix.join(pkgName, key);
+    // Escape special regex characters in the package name
+    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    pkgAlias.push({
+      find: new RegExp('^' + escapedName + '$'),
+      replacement: require.resolve(name, {
+        paths: [resolveDir, __dirname],
+      }),
+    });
+  });
+  return pkgAlias;
+}
+
+function normalizeSlashes(file: string) {
   return file.replaceAll(path.win32.sep, '/');
 }

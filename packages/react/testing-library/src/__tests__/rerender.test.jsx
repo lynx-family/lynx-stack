@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import { render } from '..';
-import { expect } from 'vitest';
+import { expect, vi } from 'vitest';
 import { useEffect, useState } from '@lynx-js/react';
 
 test('rerender will re-render the element', async () => {

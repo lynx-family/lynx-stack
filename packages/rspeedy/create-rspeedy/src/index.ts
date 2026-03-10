@@ -8,7 +8,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { Argv } from 'create-rstack'
-import { checkCancel, create, multiselect, select } from 'create-rstack'
+import { checkCancel, create, select } from 'create-rstack'
 
 type LANG = 'js' | 'ts'
 
@@ -67,22 +67,31 @@ async function getTemplateName({ template }: Argv) {
     }),
   )
 
-  const tools = checkCancel<string[]>(
-    await multiselect({
-      message:
-        'Select development tools (Use <space> to select, <enter> to continue)',
-      required: false,
+  const tools = []
+  const testingTools = checkCancel<string>(
+    await select({
+      message: 'Select testing framework',
       options: [
         {
           value: 'vitest-rltl',
-          label: 'Add ReactLynx Testing Library for unit testing',
+          label: 'Vitest',
+        },
+        {
+          value: 'rstest-rltl',
+          label: 'Rstest',
+          hint: 'recommended',
+        },
+        {
+          value: '',
+          label: 'Skip',
         },
       ],
-      initialValues: [
-        'vitest-rltl',
-      ],
+      initialValue: 'vitest-rltl',
     }),
   )
+  if (testingTools) {
+    tools.push(testingTools)
+  }
 
   return composeTemplateName({
     template: 'react',

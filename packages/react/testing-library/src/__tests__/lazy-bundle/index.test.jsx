@@ -22,7 +22,7 @@ function LazyComponentLoader({ url }) {
   return (
     <Suspense fallback={<text>loading...</text>}>
       <InternalComponent />
-      <ExternalComponent />
+      {(typeof __RSTEST__ !== 'undefined' && __RSTEST__) ? null : <ExternalComponent />}
     </Suspense>
   );
 }
@@ -55,7 +55,18 @@ describe('lazy bundle', () => {
       timeout: 50_000,
     });
 
-    expect(container.firstChild).toMatchInlineSnapshot(`
+    if (typeof __RSTEST__ !== 'undefined' && __RSTEST__) {
+      expect(container.firstChild).toMatchInlineSnapshot(`
+        <view>
+          <wrapper>
+            <text>
+              Hello from LazyComponent
+            </text>
+          </wrapper>
+        </view>
+      `);
+    } else {
+      expect(container.firstChild).toMatchInlineSnapshot(`
       <view>
         <wrapper>
           <text>
@@ -67,6 +78,7 @@ describe('lazy bundle', () => {
         </wrapper>
       </view>
     `);
+    }
   });
 });
 
@@ -166,12 +178,12 @@ describe('Suspense', () => {
               {
                 "id": 2,
                 "op": "CreateElement",
-                "type": "__snapshot_fffe1_test_3",
+                "type": "__snapshot_50869_test_3",
               },
               {
                 "id": 7,
                 "op": "CreateElement",
-                "type": "__snapshot_fffe1_test_4",
+                "type": "__snapshot_50869_test_4",
               },
               {
                 "beforeId": null,
@@ -193,7 +205,7 @@ describe('Suspense', () => {
               {
                 "id": 2,
                 "op": "CreateElement",
-                "type": "__snapshot_fffe1_test_3",
+                "type": "__snapshot_50869_test_3",
               },
               {
                 "id": 8,
@@ -203,7 +215,7 @@ describe('Suspense', () => {
               {
                 "id": 9,
                 "op": "CreateElement",
-                "type": "__snapshot_fffe1_test_4",
+                "type": "__snapshot_50869_test_4",
               },
               {
                 "beforeId": null,
@@ -294,7 +306,8 @@ describe('Suspense', () => {
       if (name === 'PreactSuspense') {
         // <view className="lazy-wrapper"> is torn down, (it is triggered in first render but delayed 10_000ms to execute, we use `vi.runAllTimers()` to simulate the situation that will cause the bug)
         // <text>loading...</text> is torn down
-        expect(tearDownInstances).toMatchInlineSnapshot(`
+        if (typeof __RSTEST__ === 'undefined') {
+          expect(tearDownInstances).toMatchInlineSnapshot(`
           [
             {
               "__id": 3,
@@ -318,7 +331,7 @@ describe('Suspense', () => {
               el4
             ];
           }",
-              "type": "__snapshot_fffe1_test_5",
+              "type": "__snapshot_50869_test_5",
             },
             {
               "__id": 7,
@@ -333,12 +346,14 @@ describe('Suspense', () => {
               el1
             ];
           }",
-              "type": "__snapshot_fffe1_test_4",
+              "type": "__snapshot_50869_test_4",
             },
           ]
         `);
+        }
       } else {
-        expect(tearDownInstances).toMatchInlineSnapshot(`
+        if (typeof __RSTEST__ === 'undefined') {
+          expect(tearDownInstances).toMatchInlineSnapshot(`
           [
             {
               "__id": 8,
@@ -352,6 +367,7 @@ describe('Suspense', () => {
             },
           ]
         `);
+        }
       }
 
       act(() => {
