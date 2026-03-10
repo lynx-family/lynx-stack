@@ -372,8 +372,8 @@ export function applyEntry(
                 .replaceAll('[name]', entryName)
                 .replaceAll('[platform]', environment.name),
               intermediate: path.posix.join(intermediate, entryName),
-              enableCSSSelector: opts.enableCSSSelector ?? false,
-              enableCSSInvalidation: opts.enableCSSSelector ?? false,
+              enableCSSSelector: opts.enableCSSSelector ?? true,
+              enableCSSInvalidation: opts.enableCSSSelector ?? true,
               enableRemoveCSSScope: true,
               enableNewGesture: false,
               removeDescendantSelectorScope: true,

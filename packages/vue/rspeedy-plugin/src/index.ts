@@ -67,7 +67,7 @@ export interface PluginVueLynxOptions {
 export function pluginVueLynx(
   options: PluginVueLynxOptions = {},
 ): RsbuildPlugin[] {
-  const { optionsApi = true, prodDevtools = false, enableCSSSelector = false } =
+  const { optionsApi = true, prodDevtools = false, enableCSSSelector = true } =
     options;
 
   return [
