@@ -33,7 +33,7 @@ import type {
   WorkerStartMessage,
 } from '../../types/index.js';
 import { LynxCrossThreadContext } from '../LynxCrossThreadContext.js';
-import { systemInfo, type LynxViewInstance } from './LynxViewInstance.js';
+import { type LynxViewInstance } from './LynxViewInstance.js';
 import { registerInvokeUIMethodHandler } from './crossThreadHandlers/registerInvokeUIMethodHandler.js';
 import { registerNativePropsHandler } from './crossThreadHandlers/registerSetNativePropsHandler.js';
 import { registerGetPathInfoHandler } from './crossThreadHandlers/registerGetPathInfoHandler.js';
@@ -155,7 +155,7 @@ export class BackgroundThread implements AsyncDisposable {
     this.#webWorker.postMessage(
       {
         mainThreadMessagePort: messageChannel.port2,
-        systemInfo,
+        systemInfo: this.#lynxViewInstance.systemInfo,
         initData,
         globalProps,
         cardType,

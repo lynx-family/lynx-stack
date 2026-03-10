@@ -43,13 +43,18 @@ linkElement.blocking = 'render';
 const pixelRatio = window.devicePixelRatio;
 const screenWidth = window.screen.availWidth * pixelRatio;
 const screenHeight = window.screen.availHeight * pixelRatio;
-export const systemInfo = Object.freeze({
-  ...systemInfoBase,
-  // some information only available on main thread, we should read and pass to worker
-  pixelRatio,
-  pixelWidth: screenWidth,
-  pixelHeight: screenHeight,
-});
+export function createSystemInfo(
+  browserConfig?: Record<string, any>,
+): Record<string, any> {
+  return Object.freeze({
+    ...systemInfoBase,
+    // some information only available on main thread, we should read and pass to worker
+    pixelRatio,
+    pixelWidth: screenWidth,
+    pixelHeight: screenHeight,
+    ...browserConfig,
+  });
+}
 
 export interface LynxViewConfigs {
   templateUrl: string;
@@ -77,6 +82,7 @@ export class LynxViewInstance implements AsyncDisposable {
   #napiModulesMap: NapiModulesMap;
 
   lepusCodeUrls = new Map<string, Record<string, string>>();
+  systemInfo: Record<string, any>;
 
   constructor(
     public readonly parentDom: LynxViewElement,
@@ -89,7 +95,9 @@ export class LynxViewInstance implements AsyncDisposable {
     nativeModulesMap: NativeModulesMap = {},
     napiModulesMap: NapiModulesMap = {},
     initI18nResources?: InitI18nResources,
+    browserConfig?: Record<string, any>,
   ) {
+    this.systemInfo = createSystemInfo(browserConfig);
     this.rootDom.append(linkElement.cloneNode(false));
     this.#nativeModulesMap = nativeModulesMap;
     this.#napiModulesMap = napiModulesMap;

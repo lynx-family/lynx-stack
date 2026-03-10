@@ -20,6 +20,13 @@ import(
   /* webpackFetchPriority: "high" */
   './LynxViewInstance.js'
 );
+export interface BrowserConfig {
+  pixelRatio?: number;
+  pixelWidth?: number;
+  pixelHeight?: number;
+  [key: string]: any;
+}
+
 export type INapiModulesCall = (
   name: string,
   data: any,
@@ -79,6 +86,7 @@ export class LynxViewElement extends HTMLElement {
     'url',
     'global-props',
     'init-data',
+    'browser-config',
   ];
   /**
    * @private
@@ -110,6 +118,26 @@ export class LynxViewElement extends HTMLElement {
    * @property
    */
   onNapiModulesCall: NapiModulesCall | undefined;
+
+  #browserConfig?: BrowserConfig;
+  /**
+   * @public
+   * @property browserConfig
+   */
+  get browserConfig(): BrowserConfig | undefined {
+    return this.#browserConfig;
+  }
+  set browserConfig(val: string | BrowserConfig | undefined) {
+    if (typeof val === 'string') {
+      try {
+        this.#browserConfig = JSON.parse(val);
+      } catch (e) {
+        console.error('Invalid browser-config', e);
+      }
+    } else {
+      this.#browserConfig = val;
+    }
+  }
 
   constructor() {
     super();
@@ -309,6 +337,9 @@ export class LynxViewElement extends HTMLElement {
         case 'global-props':
           this.#globalProps = JSON.parse(newValue);
           break;
+        case 'browser-config':
+          this.browserConfig = JSON.parse(newValue);
+          break;
         case 'init-data':
           this.#initData = JSON.parse(newValue);
           break;
@@ -390,6 +421,7 @@ export class LynxViewElement extends HTMLElement {
               this.nativeModulesMap,
               this.napiModulesMap,
               this.#initI18nResources,
+              this.browserConfig,
             );
           });
           templateManager.fetchBundle(this.#url, lynxViewInstance);
@@ -401,10 +433,20 @@ export class LynxViewElement extends HTMLElement {
       });
     }
   }
+
+  #upgradeProperty(prop: string) {
+    if (Object.prototype.hasOwnProperty.call(this, prop)) {
+      const value = (this as any)[prop];
+      delete (this as any)[prop];
+      (this as any)[prop] = value;
+    }
+  }
+
   /**
    * @private
    */
   connectedCallback() {
+    this.#upgradeProperty('browserConfig');
     if (this.url) {
       this.#url = this.url;
     }

@@ -9,7 +9,7 @@ import type {
   MainThreadLynx,
 } from '../../types/index.js';
 import { templateManager } from './TemplateManager.js';
-import { systemInfo, type LynxViewInstance } from './LynxViewInstance.js';
+import { type LynxViewInstance } from './LynxViewInstance.js';
 
 function createMainThreadLynx(
   lynxViewInstance: LynxViewInstance,
@@ -40,7 +40,7 @@ function createMainThreadLynx(
     markPipelineTiming: lynxViewInstance.backgroundThread.markTiming.bind(
       lynxViewInstance.backgroundThread,
     ),
-    SystemInfo: systemInfo,
+    SystemInfo: lynxViewInstance.systemInfo,
     setTimeout: setTimeoutBrowserImpl,
     clearTimeout: clearTimeoutBrowserImpl,
     setInterval: setIntervalBrowserImpl,
@@ -54,7 +54,7 @@ export function createMainThreadGlobalAPIs(
   let releaseSetting = '';
   return {
     __globalProps: lynxViewInstance.globalprops,
-    SystemInfo: systemInfo,
+    SystemInfo: lynxViewInstance.systemInfo,
     lynx: createMainThreadLynx(
       lynxViewInstance,
     ),
