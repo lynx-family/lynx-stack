@@ -271,7 +271,29 @@ jobs:
         wget -q https://github.com/lynx-family/lynx/releases/download/3.6.0/LynxExplorer-noasan-release.apk -O LynxExplorer.apk
         adb install -r LynxExplorer.apk
 
-        # 7. Run the tests
+        # 7. Start Lynx Explorer and verify
+        echo "Starting Lynx Explorer..."
+        if ! adb shell pm list packages | grep -q com.lynx.explorer; then
+          echo "Error: com.lynx.explorer is not installed!"
+          exit 1
+        fi
+        adb shell monkey -p com.lynx.explorer -c android.intent.category.LAUNCHER 1
+
+        echo "Waiting for Lynx Explorer to start..."
+        MAX_RETRIES=10
+        RETRY_COUNT=0
+        while ! adb shell pidof com.lynx.explorer > /dev/null; do
+          if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+            echo "Error: com.lynx.explorer failed to start!"
+            exit 1
+          fi
+          echo "Waiting... ($RETRY_COUNT/$MAX_RETRIES)"
+          sleep 2
+          RETRY_COUNT=$((RETRY_COUNT+1))
+        done
+        echo "Lynx Explorer is running."
+
+        # 8. Run the tests
         pnpm --filter @lynx-test/kitten-lynx run test
 
   test-typos:
