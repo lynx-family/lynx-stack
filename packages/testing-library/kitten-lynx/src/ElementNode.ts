@@ -1,6 +1,6 @@
-import type { LynxView } from './LynxView.js';
+import type { KittenLynxView } from './KittenLynxView.js';
 
-const idToElementNode = new WeakMap<LynxView, WeakRef<ElementNode>[]>();
+const idToElementNode = new WeakMap<KittenLynxView, WeakRef<ElementNode>[]>();
 
 /**
  * Represents a DOM element in a Lynx page.
@@ -15,10 +15,10 @@ export class ElementNode {
    * Nodes are cached per LynxView using `WeakRef` to allow reuse and GC.
    *
    * @param id - The CDP node ID.
-   * @param lynxView - The owning LynxView instance.
+   * @param lynxView - The owning KittenLynxView instance.
    * @returns An `ElementNode` bound to the given node.
    */
-  static fromId(id: number, lynxView: LynxView): ElementNode {
+  static fromId(id: number, lynxView: KittenLynxView): ElementNode {
     const currentViewMap = idToElementNode.get(lynxView);
     if (currentViewMap) {
       const couldBeElementNode = currentViewMap[id]?.deref();
@@ -38,7 +38,10 @@ export class ElementNode {
     return node;
   }
 
-  constructor(public readonly nodeId: number, private _lynxView: LynxView) {}
+  constructor(
+    public readonly nodeId: number,
+    private _lynxView: KittenLynxView,
+  ) {}
 
   /**
    * Simulate a tap (touch press + release) on the center of this element.

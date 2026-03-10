@@ -1,4 +1,4 @@
 export { Lynx } from './Lynx.js';
-export { LynxView } from './LynxView.js';
+export { KittenLynxView } from './KittenLynxView.js';
 export { ElementNode } from './ElementNode.js';
 export { CDPChannel } from './CDPChannel.js';

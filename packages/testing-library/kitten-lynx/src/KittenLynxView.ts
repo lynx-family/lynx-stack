@@ -2,8 +2,9 @@ import type { Connector } from '@lynx-js/devtool-connector';
 import { CDPChannel } from './CDPChannel.js';
 import type { NodeInfoInGetDocument } from './CDPChannel.js';
 import { ElementNode } from './ElementNode.js';
+import { setTimeout } from 'node:timers/promises';
 
-const idToLynxView: Record<string, WeakRef<LynxView>> = {};
+const idToKittenLynxView: Record<string, WeakRef<KittenLynxView>> = {};
 
 /**
  * Represents a Lynx page instance, similar to Puppeteer's `Page`.
@@ -11,7 +12,7 @@ const idToLynxView: Record<string, WeakRef<LynxView>> = {};
  * Provides methods for navigating to Lynx bundle URLs, querying the DOM,
  * and reading page content. Created via {@link Lynx.newPage}.
  */
-export class LynxView {
+export class KittenLynxView {
   private static incId = 1;
   private _root?: ElementNode;
   _channel!: CDPChannel;
@@ -23,8 +24,8 @@ export class LynxView {
    * @param id - The string representation of the LynxView's numeric ID.
    * @returns The LynxView if still alive, or `undefined` if garbage-collected.
    */
-  static getLynxViewById(id: string): LynxView | undefined {
-    return idToLynxView[id]?.deref();
+  static getKittenLynxViewById(id: string): KittenLynxView | undefined {
+    return idToKittenLynxView[id]?.deref();
   }
 
   constructor(
@@ -32,8 +33,8 @@ export class LynxView {
     private _clientId: string,
     private _client?: any,
   ) {
-    this.id = LynxView.incId++;
-    idToLynxView[this.id.toString()] = new WeakRef(this);
+    this.id = KittenLynxView.incId++;
+    idToKittenLynxView[this.id.toString()] = new WeakRef(this);
   }
 
   /**
@@ -47,71 +48,86 @@ export class LynxView {
    * @throws If no session can be attached or no session matches the URL.
    */
   async goto(url: string, _options?: unknown): Promise<void> {
-    // Attach to any existing session first so we can send Page.navigate
+    const urlPath = url.split('/').pop() || url;
+
+    // Wait until the Lynx app has booted and registered its devtool server.
+    // We confirm this by waiting until at least one session is reported.
     if (!this._channel) {
-      for (let attempt = 0; attempt < 60; attempt++) {
+      const startTime = Date.now();
+      let ready = false;
+      while (Date.now() - startTime < 60000) {
         try {
           const sessions = await this._connector.sendListSessionMessage(
             this._clientId,
           );
           if (sessions.length > 0) {
-            const sessionId = sessions[sessions.length - 1]!.session_id;
-            await this.onAttachedToTarget(sessionId);
+            ready = true;
             break;
           }
-        } catch {
-          // Session listing or CDP enable failed — app may still be initializing
+        } catch (error: any) {
+          // ignore error while booting
         }
-        await new Promise(r => setTimeout(r, 500));
+        await setTimeout(500);
       }
-
-      if (!this._channel) {
-        throw new Error('Failed to attach to a session');
+      if (!ready) {
+        throw new Error(
+          'Timeout waiting for Lynx App devtool to boot completely before navigation',
+        );
       }
     }
 
-    // Navigate via CDP Page.navigate
     try {
-      await this._channel.send('Page.navigate', { url });
+      const msg = await this._connector.sendAppMessage(
+        this._clientId,
+        'App.openPage',
+        {
+          url,
+        },
+      );
     } catch {
-      // ignore — not all Lynx versions support this
+      const msg = await this._connector.sendMessage(this._clientId, {
+        event: 'Customized',
+        data: {
+          type: 'OpenCard',
+          data: {
+            type: 'url',
+            url,
+          },
+          sender: -1,
+        },
+        from: -1,
+      });
     }
-
-    // Extract the bundle filename from the URL for matching
-    const urlPath = url.split('/').pop() || url;
 
     // Poll for the session whose URL matches the navigated bundle
     let matchedSessionId: number | undefined;
-    for (let attempt = 0; attempt < 60; attempt++) {
-      await new Promise(r => setTimeout(r, 500));
+    const navStartTime = Date.now();
+    while (Date.now() - navStartTime < 30000) {
+      await setTimeout(500);
       try {
         const sessions = await this._connector.sendListSessionMessage(
           this._clientId,
         );
+
         const matched = sessions.find(
-          s => s.url === url || s.url === urlPath || url.endsWith(s.url),
+          s =>
+            s.url === url || s.url === urlPath || url.endsWith(s.url)
+            || s.url.endsWith(urlPath),
         );
         if (matched) {
           matchedSessionId = matched.session_id;
           break;
         }
-      } catch {
-        // ignore and retry
+      } catch (error: any) {
+        console.error(error);
       }
     }
 
-    // Re-attach to the correct session if it differs from the current one
-    if (matchedSessionId !== undefined) {
-      this._channel = undefined as any;
-      for (let attempt = 0; attempt < 10; attempt++) {
-        try {
-          await this.onAttachedToTarget(matchedSessionId);
-          break;
-        } catch {
-          await new Promise(r => setTimeout(r, 500));
-        }
-      }
+    console.log('matchedSessionId', matchedSessionId);
+    if (matchedSessionId === undefined) {
+      throw new Error('cannot find session for URL: ' + url);
     }
+    await this.onAttachedToTarget(matchedSessionId);
 
     if (!this._channel) {
       throw new Error('Failed to attach to session for URL: ' + url);
@@ -163,18 +179,12 @@ export class LynxView {
         this._clientId,
         this._connector,
       );
-      // Enable DOM and Page agents — may fail if devtool server isn't ready
-      await Promise.all([
-        channel.send('Runtime.enable' as any, {}),
-        channel.send('Page.enable' as any, {}).catch(() => {}),
-        channel.send('DOM.enable' as any, {}).catch(() => {}),
-      ]);
+
       const response = await channel.send('DOM.getDocument', {
         depth: -1,
       });
       const root = response.root.children[0]!;
       this._root = ElementNode.fromId(root.nodeId, this);
-      // Only set channel after everything succeeds
       this._channel = channel;
     }
   }

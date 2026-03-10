@@ -20,7 +20,6 @@ describe('kitten-lynx testing framework', () => {
     );
 
     const content = await page.content();
-    console.log('[Test] Page content:', content);
     expect(content).toContain('have fun');
 
     const rootElement = await page.locator('view');

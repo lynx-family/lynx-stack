@@ -1,6 +1,6 @@
 import { Connector } from '@lynx-js/devtool-connector';
 import { AndroidTransport } from '@lynx-js/devtool-connector/transport';
-import { LynxView } from './LynxView.js';
+import { KittenLynxView } from './KittenLynxView.js';
 
 import { execSync } from 'child_process';
 
@@ -60,28 +60,38 @@ export class Lynx {
     const lynx = new Lynx();
     lynx._connector = new Connector([new AndroidTransport()]);
 
-    let deviceIdToUse = targetDevice;
-    if (!deviceIdToUse) {
-      const devices = await lynx._connector.listDevices();
-      if (devices.length === 0) {
-        throw new Error('Failed to connect to Lynx: no devices found.');
-      }
+    const devices = await lynx._connector.listDevices();
+    if (devices.length === 0) {
+      throw new Error('Failed to connect to Lynx: no devices found.');
+    }
 
-      for (const device of devices) {
-        try {
-          const apps = await lynx._connector.listAvailableApps(device.id);
-          if (apps.some(app => app.packageName === appPackage)) {
-            deviceIdToUse = device.id;
-            break;
-          }
-        } catch (e) {
-          // Ignore errors checking apps on a specific device
+    let devicesToSearch = devices;
+    if (targetDevice) {
+      devicesToSearch = devices.filter(d => d.id === targetDevice);
+      if (devicesToSearch.length === 0) {
+        throw new Error(
+          `Failed to connect to Lynx: device ${targetDevice} not found.`,
+        );
+      }
+    }
+
+    let deviceIdToUse: string | undefined;
+    for (const device of devicesToSearch) {
+      try {
+        const apps = await lynx._connector.listAvailableApps(device.id);
+        if (apps.some(app => app.packageName === appPackage)) {
+          deviceIdToUse = device.id;
+          break;
         }
+      } catch (e) {
+        console.error(e);
       }
+    }
 
-      if (!deviceIdToUse) {
-        deviceIdToUse = devices[0]!.id;
-      }
+    if (!deviceIdToUse) {
+      throw new Error(
+        `Failed to connect to Lynx: app ${appPackage} not found on any available device.`,
+      );
     }
 
     console.log(
@@ -137,11 +147,11 @@ export class Lynx {
    * @returns A new {@link LynxView} instance bound to the current client.
    * @throws If not connected. Call {@link Lynx.connect} first.
    */
-  async newPage(): Promise<LynxView> {
+  async newPage(): Promise<KittenLynxView> {
     if (!this._connector || this._currentClientId === '') {
       throw new Error('Not connected. Call Lynx.connect() first.');
     }
-    return new LynxView(
+    return new KittenLynxView(
       this._connector,
       this._currentClientId,
       this._currentClient,
