@@ -1323,6 +1323,9 @@ importers:
       '@lynx-js/web-worker-rpc':
         specifier: workspace:*
         version: link:../web-worker-rpc
+      wasm-feature-detect:
+        specifier: ^1.8.0
+        version: 1.8.0
     devDependencies:
       '@lynx-js/css-serializer':
         specifier: workspace:*
@@ -1354,9 +1357,6 @@ importers:
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
-      wasm-feature-detect:
-        specifier: ^1.8.0
-        version: 1.8.0
 
   packages/web-platform/web-core-e2e:
     devDependencies:

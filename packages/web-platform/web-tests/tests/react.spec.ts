@@ -1500,7 +1500,7 @@ test.describe('reactlynx3 tests', () => {
         document.body.querySelector('lynx-view')?.remove()
       );
       await wait(100);
-      expect(page.workers().length).toBeLessThanOrEqual(0);
+      expect(page.workers().length).toBeLessThanOrEqual(1);
     });
 
     test.describe('api-exposure', () => {

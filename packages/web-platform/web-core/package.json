@@ -62,7 +62,8 @@
   },
   "dependencies": {
     "@lynx-js/web-elements": "workspace:*",
-    "@lynx-js/web-worker-rpc": "workspace:*"
+    "@lynx-js/web-worker-rpc": "workspace:*",
+    "wasm-feature-detect": "^1.8.0"
   },
   "devDependencies": {
     "@lynx-js/css-serializer": "workspace:*",
@@ -74,8 +75,7 @@
     "eslint-plugin-compat": "^6.2.0",
     "fb-dotslash": "^0.5.8",
     "jsdom": "^27.4.0",
-    "tslib": "^2.8.1",
-    "wasm-feature-detect": "^1.8.0"
+    "tslib": "^2.8.1"
   },
   "peerDependencies": {
     "@lynx-js/css-serializer": "workspace:*",
