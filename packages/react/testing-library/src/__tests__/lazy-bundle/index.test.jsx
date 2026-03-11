@@ -308,48 +308,48 @@ describe('Suspense', () => {
         // <text>loading...</text> is torn down
         if (typeof __RSTEST__ === 'undefined') {
           expect(tearDownInstances).toMatchInlineSnapshot(`
-          [
-            {
-              "__id": 3,
-              "create": "function() {
-            const pageId = __vite_ssr_import_1__.__pageId;
-            const el = __CreateView(pageId);
-            __SetClasses(el, "lazy-wrapper");
-            const el1 = __CreateWrapperElement(pageId);
-            __AppendElement(el, el1);
-            const el2 = __CreateText(pageId);
-            __AppendElement(el, el2);
-            const el3 = __CreateRawText("Hello, ReactLynx");
-            __AppendElement(el2, el3);
-            const el4 = __CreateWrapperElement(pageId);
-            __AppendElement(el, el4);
-            return [
-              el,
-              el1,
-              el2,
-              el3,
-              el4
-            ];
-          }",
-              "type": "__snapshot_50869_test_5",
-            },
-            {
-              "__id": 7,
-              "create": "function() {
-            const pageId = __vite_ssr_import_1__.__pageId;
-            const el = __CreateText(pageId);
-            __SetClasses(el, "loading");
-            const el1 = __CreateRawText("loading...");
-            __AppendElement(el, el1);
-            return [
-              el,
-              el1
-            ];
-          }",
-              "type": "__snapshot_50869_test_4",
-            },
-          ]
-        `);
+            [
+              {
+                "__id": 3,
+                "create": "function() {
+              const pageId = __vite_ssr_import_1__.__pageId;
+              const el = __CreateView(pageId);
+              __SetClasses(el, "lazy-wrapper");
+              const el1 = __CreateWrapperElement(pageId);
+              __AppendElement(el, el1);
+              const el2 = __CreateText(pageId);
+              __AppendElement(el, el2);
+              const el3 = __CreateRawText("Hello, ReactLynx");
+              __AppendElement(el2, el3);
+              const el4 = __CreateWrapperElement(pageId);
+              __AppendElement(el, el4);
+              return [
+                el,
+                el1,
+                el2,
+                el3,
+                el4
+              ];
+            }",
+                "type": "__snapshot_50869_test_5",
+              },
+              {
+                "__id": 7,
+                "create": "function() {
+              const pageId = __vite_ssr_import_1__.__pageId;
+              const el = __CreateText(pageId);
+              __SetClasses(el, "loading");
+              const el1 = __CreateRawText("loading...");
+              __AppendElement(el, el1);
+              return [
+                el,
+                el1
+              ];
+            }",
+                "type": "__snapshot_50869_test_4",
+              },
+            ]
+          `);
         }
       } else {
         if (typeof __RSTEST__ === 'undefined') {
