@@ -1,0 +1,15 @@
+@media screen {
+  @supports (display: grid) {
+    .container {
+      display: grid;
+    }
+  }
+}
+
+@layer base {
+  @media print {
+    .page {
+      margin: 0;
+    }
+  }
+}

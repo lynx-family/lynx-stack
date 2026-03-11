@@ -108,3 +108,19 @@ test('set-string-mark', () => {
     }),
   ).toMatchSnapshot();
 });
+
+test('media', () => {
+  expect(parse(readCode('media')).root).toMatchSnapshot();
+});
+
+test('supports', () => {
+  expect(parse(readCode('supports')).root).toMatchSnapshot();
+});
+
+test('layer', () => {
+  expect(parse(readCode('layer')).root).toMatchSnapshot();
+});
+
+test('nested-at-rules', () => {
+  expect(parse(readCode('nested-at-rules')).root).toMatchSnapshot();
+});
