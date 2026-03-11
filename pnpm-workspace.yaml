@@ -59,7 +59,7 @@ catalogs:
 
   # Rstest monorepo packages
   rstest:
-    "@rstest/core": "0.0.10"
+    "@rstest/core": "0.8.1"
 
 overrides:
   "@rspack/core": "$@rspack/core"
