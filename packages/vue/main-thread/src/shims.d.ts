@@ -18,6 +18,23 @@ declare global {
   /** Alias for ElementRef — keeps ops-apply.ts changes minimal. */
   type LynxElement = ElementRef;
 
+  /**
+   * Override @lynx-js/type-element-api's __SetCSSId to accept an array.
+   *
+   * The native PAPI accepts a single element, but the web PAPI
+   * (`@lynx-js/web-mainthread-apis`) iterates with `for..of`, requiring
+   * an array. Passing `[el]` works on both platforms.
+   *
+   * TODO(huxpro): Fix upstream — @lynx-js/type-element-api should declare
+   * `__SetCSSId(node: ElementRef | ElementRef[], ...)` to match the web
+   * PAPI and React's types (`FiberElement | FiberElement[]`).
+   */
+  function __SetCSSId(
+    nodes: ElementRef[],
+    cssId: number,
+    entryName?: string,
+  ): void;
+
   /** Lynx runtime — cross-thread communication */
   const lynx: {
     getJSContext(): {

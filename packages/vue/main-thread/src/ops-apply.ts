@@ -87,7 +87,7 @@ export function applyOps(ops: unknown[]): void {
           el = createTypedElement(type, 0);
           // Associate element with CSS scope 0 (common/global CSS)
           // so the CSS selector engine can match class-based rules.
-          __SetCSSId(el, 0);
+          __SetCSSId([el], 0);
         }
         elements.set(id, el);
         // Set selector attribute for BG-thread NodesRef queries.
@@ -101,7 +101,7 @@ export function applyOps(ops: unknown[]): void {
       case OP.CREATE_TEXT: {
         const id = ops[i++] as number;
         const el = __CreateText(0);
-        __SetCSSId(el, 0);
+        __SetCSSId([el], 0);
         elements.set(id, el);
         // Set selector attribute for BG-thread NodesRef queries
         __SetAttribute(el, `vue-ref-${id}`, 1);

@@ -158,7 +158,7 @@ export function createListElement(id: number): LynxElement {
     {},
     cbs.componentAtIndexes,
   );
-  __SetCSSId(el, 0);
+  __SetCSSId([el], 0);
   return el;
 }
 
