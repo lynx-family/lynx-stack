@@ -33,27 +33,20 @@ Through the Chrome DevTools Protocol (CDP), `kitten-lynx` enables:
 
 For the library to interact successfully:
 
-- The host machine (or CI environment) must have **Waydroid** installed and initialized. Waydroid provides a much lighter and faster Android environment compared to Docker-based emulators.
-- The Waydroid container must be running (e.g. `waydroid session start`).
-- ADB must be authorized. To avoid manual authorization prompts (especially in CI), configure Waydroid properties before starting:
-  ```bash
-  sudo waydroid prop set persist.waydroid.adb_enabled 1
-  sudo waydroid prop set persist.adb.tcp.port 5555
-  sudo waydroid prop set ro.adb.secure 0
-  ```
-- The Lynx Explorer APK must be installed inside Waydroid (`waydroid app install /path/to/LynxExplorer.apk`).
+- The host machine (or CI environment) must have an Android environment (emulator or real device) running with ADB enabled and authorized.
+- The Lynx Explorer APK must be installed on the device (e.g., `adb install /path/to/LynxExplorer.apk`). The latest apk chould be found here `https://github.com/lynx-family/lynx/releases`
 - Typical commands use `pnpm run test` starting `vitest` logic inside the Node wrapper.
 
 ### Known Gotchas
 
 - **`Page.navigate` does not work like Chrome**: In Lynx, `Page.navigate` tells the runtime to load a new bundle, which creates a **new session** rather than updating the current one in place. You must poll `sendListSessionMessage()` to find the new session by URL and re-attach to it.
 - **`App.openPage` is not implemented** in Lynx Explorer 3.6.0. Do not rely on `sendAppMessage('App.openPage')` for navigation.
-- **Network access & Local Serving**: Waydroid shares the host's network. However, if the container lacks direct internet access (common in some CI setups):
+- **Network access & Local Serving**: If the Android environment lacks direct internet access to your host machine's local server (common in some CI setups):
   1. Serve your Lynx bundles from the host (e.g., `python3 -m http.server 8080`).
-  2. Use `adb reverse tcp:8080 tcp:8080` to map the host port into Waydroid.
+  2. Use `adb reverse tcp:8080 tcp:8080` to map the host port to the device.
   3. Navigate to `http://localhost:8080/your.bundle`.
-- **Multiple ADB targets**: When multiple ADB devices are connected (e.g. physical phone + Waydroid), use `ConnectOptions.deviceId` to target a specific one (e.g. `192.168.240.112:5555`). Otherwise the first available client is used, which may be on the wrong device.
-- **CDP timeouts**: The connector uses a 5-second `AbortSignal.timeout`. Keep test operations tolerant of Waydroid boot/warm-up times.
+- **Multiple ADB targets**: When multiple ADB devices are connected (e.g. physical phone + emulator), use `ConnectOptions.deviceId` to target a specific one (e.g. `192.168.240.112:5555`). Otherwise the first available client is used, which may be on the wrong device.
+- **CDP timeouts**: The connector uses a 5-second `AbortSignal.timeout`. Keep test operations tolerant of emulator boot/warm-up times.
 
 ## Adding Features
 
