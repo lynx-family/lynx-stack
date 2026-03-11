@@ -26,8 +26,9 @@ function getLoaderOptions(
   const {
     compat,
     enableRemoveCSSScope,
-    defineDCE,
     shake,
+    defineDCE,
+    engineVersion,
 
     experimental_isLazyBundle,
   } = options
@@ -38,6 +39,7 @@ function getLoaderOptions(
     isDynamicComponent: experimental_isLazyBundle,
     inlineSourcesContent,
     defineDCE,
+    engineVersion,
     ...isMainThread
       ? {
         shake,

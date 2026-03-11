@@ -160,8 +160,23 @@ export function testingLibraryPlugin(
           // react-compiler-runtime not found, skip alias
         }
 
-        // @ts-ignore
-        config.test.alias.push(...reactCompilerRuntimeAlias);
+        let mergedAlias: Vite.Alias[] = [...reactCompilerRuntimeAlias];
+        if (config.test?.alias) {
+          if (Array.isArray(config.test.alias)) {
+            mergedAlias = [...config.test.alias, ...mergedAlias];
+          } else {
+            mergedAlias = [
+              ...Object.entries(config.test.alias).map(([key, value]) => ({
+                find: key,
+                replacement: value,
+              })),
+              ...mergedAlias,
+            ];
+          }
+        }
+
+        config.test = config.test || {};
+        config.test.alias = mergedAlias;
 
         compilerDeps = resolveCompilerDeps(rootContext);
         const { babelPath } = compilerDeps;
