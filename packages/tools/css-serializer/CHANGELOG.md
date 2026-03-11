@@ -1,5 +1,11 @@
 # @lynx-js/css-serializer
 
+## 0.2.0
+
+### Minor Changes
+
+- Add support for `@media`, `@supports`, and `@layer` at-rules.
+
 ## 0.1.4
 
 ### Patch Changes
