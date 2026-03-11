@@ -34,17 +34,24 @@ import {
  * Native Lynx may set up type-specific internals (e.g. overflow clipping
  * for View, hardware-accelerated decoding for Image) via the typed functions
  * that the generic __CreateElement does not.
+ *
+ * @param parentComponentUniqueId - The unique ID of the parent component.
+ *   Must be 1 (page root) for web PAPI event dispatch: the web runtime
+ *   reads `l-p-comp-uid` to route events via `lynxUniqueIdToElement[uid]`.
  */
-function createTypedElement(type: string, id: number): LynxElement {
+function createTypedElement(
+  type: string,
+  parentComponentUniqueId: number,
+): LynxElement {
   switch (type) {
     case 'view':
-      return __CreateView(id);
+      return __CreateView(parentComponentUniqueId);
     case 'image':
-      return __CreateImage(id);
+      return __CreateImage(parentComponentUniqueId);
     case 'scroll-view':
-      return __CreateScrollView(id);
+      return __CreateScrollView(parentComponentUniqueId);
     default:
-      return __CreateElement(type, id);
+      return __CreateElement(type, parentComponentUniqueId);
   }
 }
 
@@ -84,7 +91,7 @@ export function applyOps(ops: unknown[]): void {
           // Use typed PAPI creators for known element types.
           // Native Lynx sets up type-specific internals (e.g. overflow
           // clipping for __CreateView) that __CreateElement may skip.
-          el = createTypedElement(type, 0);
+          el = createTypedElement(type, 1);
           // Associate element with CSS scope 0 (common/global CSS)
           // so the CSS selector engine can match class-based rules.
           __SetCSSId([el], 0);
@@ -100,7 +107,7 @@ export function applyOps(ops: unknown[]): void {
 
       case OP.CREATE_TEXT: {
         const id = ops[i++] as number;
-        const el = __CreateText(0);
+        const el = __CreateText(1);
         __SetCSSId([el], 0);
         elements.set(id, el);
         // Set selector attribute for BG-thread NodesRef queries

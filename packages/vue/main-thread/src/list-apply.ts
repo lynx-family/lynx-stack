@@ -152,7 +152,7 @@ export function createListElement(id: number): LynxElement {
   listItemsReported.set(id, 0);
   const cbs = createListCallbacks(id);
   const el = __CreateList(
-    0,
+    1,
     cbs.componentAtIndex,
     cbs.enqueueComponent,
     {},

@@ -47,8 +47,16 @@ if (typeof __LoadLepusChunk === 'undefined') {
   if (typeof globDynamicComponentEntry !== 'undefined') {
     chunkOpts['dynamicComponentEntry'] = globDynamicComponentEntry;
   }
-  __LoadLepusChunk('worklet-runtime', chunkOpts);
-  console.info('[vue-mt] worklet-runtime chunk loaded');
+  const loaded = __LoadLepusChunk('worklet-runtime', chunkOpts);
+  if (loaded) {
+    console.info('[vue-mt] worklet-runtime chunk loaded');
+  } else {
+    console.error(
+      '[vue-mt] __LoadLepusChunk("worklet-runtime") returned false — '
+        + 'registerWorkletInternal will not be available. '
+        + 'Check browser console for loadScriptSync errors.',
+    );
+  }
 }
 
 /** PAGE_ROOT_ID must match the value in runtime/src/shadow-element.ts */
