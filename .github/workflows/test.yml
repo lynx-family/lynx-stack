@@ -339,7 +339,7 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
-        --exclude packages/testing-library/kitten-lynx/**
+        --exclude packages/testing-library/kitten-lynx/vitest.config.ts
   website:
     needs: build
     uses: ./.github/workflows/workflow-website.yml

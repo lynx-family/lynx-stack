@@ -34,7 +34,7 @@ Through the Chrome DevTools Protocol (CDP), `kitten-lynx` enables:
 For the library to interact successfully:
 
 - The host machine (or CI environment) must have an Android environment (emulator or real device) running with ADB enabled and authorized.
-- The Lynx Explorer APK must be installed on the device (e.g., `adb install /path/to/LynxExplorer.apk`). The latest apk chould be found here `https://github.com/lynx-family/lynx/releases`
+- The Lynx Explorer APK must be installed on the device (e.g., `adb install /path/to/LynxExplorer.apk`). The latest apk could be found here `https://github.com/lynx-family/lynx/releases`
 - Typical commands use `pnpm run test` starting `vitest` logic inside the Node wrapper.
 
 ### Known Gotchas
