@@ -418,6 +418,7 @@ export const initElementTree = () => {
       return ele.getAttribute(name);
     }
 
+    /** @internal */
     animationMap = new Map<
       string,
       { element: LynxElement; state: string; keyframes?: any[]; options?: any }

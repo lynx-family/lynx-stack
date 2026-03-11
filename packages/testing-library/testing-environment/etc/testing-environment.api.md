@@ -58,6 +58,13 @@ export const initElementTree: () => {
     __CreateList(parentComponentUniqueId: number, componentAtIndex: any, enqueueComponent: any): LynxElement;
     __GetTag(ele: LynxElement): string;
     __GetAttributeByName(ele: LynxElement, name: string): string | null;
+    animationMap: Map<string, {
+        element: LynxElement;
+        state: string;
+        keyframes?: any[];
+        options?: any;
+    }>;
+    __ElementAnimate(element: LynxElement, args: [number, string, ...any[]]): void;
     clear(): void;
     toTree(): LynxElement | undefined;
     enterListItemAtIndex(e: LynxElement, index: number, ...args: any[]): number;

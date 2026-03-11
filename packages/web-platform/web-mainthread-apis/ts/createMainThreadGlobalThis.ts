@@ -783,7 +783,7 @@ export function createMainThreadGlobalThis(
     return el;
   };
 
-  const animationMap = new Map<string, globalThis.Animation | undefined>();
+  const animationMap = new Map<string, Animation>();
 
   const mapTimingOptions = (
     options?: Record<string, string | number>,
@@ -813,13 +813,17 @@ export function createMainThreadGlobalThis(
       case AnimationOperation.START: {
         const keyframes = args[2];
         const options = args[3];
-        animationMap.set(
-          name,
-          element.animate(
-            keyframes as Keyframe[],
-            mapTimingOptions(options),
-          ),
+        animationMap.get(name)?.cancel();
+        const animation = element.animate(
+          keyframes as Keyframe[],
+          mapTimingOptions(options),
         );
+        animation.oncancel = animation.onfinish = () => {
+          if (animationMap.get(name) === animation) {
+            animationMap.delete(name);
+          }
+        };
+        animationMap.set(name, animation);
         break;
       }
       case AnimationOperation.PLAY:
@@ -830,6 +834,7 @@ export function createMainThreadGlobalThis(
         break;
       case AnimationOperation.CANCEL:
         animationMap.get(name)?.cancel();
+        animationMap.delete(name);
         break;
       case AnimationOperation.FINISH:
         animationMap.get(name)?.finish();

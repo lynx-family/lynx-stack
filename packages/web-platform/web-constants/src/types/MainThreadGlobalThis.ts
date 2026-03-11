@@ -332,12 +332,12 @@ export type ElementAnimatePAPI = (
   element: HTMLElement,
   args:
     | [
-      operation: number,
+      operation: 0,
       name: string,
       keyframes: Record<string, string | number>[],
       options?: Record<string, string | number>,
     ]
-    | [operation: number, name: string],
+    | [operation: 1 | 2 | 3 | 4, name: string],
 ) => void;
 
 export interface ElementPAPIs {
