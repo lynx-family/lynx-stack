@@ -1,5 +1,4 @@
 import { options } from 'preact';
-import { expect } from 'vitest';
 
 import { BackgroundSnapshotInstance } from '../../../../runtime/lib/backgroundSnapshot.js';
 import { clearCommitTaskId, replaceCommitHook } from '../../../../runtime/lib/lifecycle/patch/commit.js';
