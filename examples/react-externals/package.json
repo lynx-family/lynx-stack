@@ -6,7 +6,9 @@
   "scripts": {
     "build": "npm run build:comp-lib && npm run build:reactlynx && rspeedy build",
     "build:comp-lib": "rslib build --config rslib-comp-lib.config.ts",
+    "build:comp-lib:dev": "cross-env NODE_ENV=development rslib build --config rslib-comp-lib.config.ts",
     "build:reactlynx": "rslib build --config rslib-reactlynx.config.ts",
+    "build:reactlynx:dev": "cross-env NODE_ENV=development rslib build --config rslib-reactlynx.config.ts",
     "dev": "rspeedy dev"
   },
   "dependencies": {
@@ -20,6 +22,7 @@
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/types": "3.7.0",
-    "@types/react": "^18.3.28"
+    "@types/react": "^18.3.28",
+    "cross-env": "^7.0.3"
   }
 }
