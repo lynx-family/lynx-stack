@@ -113,7 +113,16 @@ export class Lynx {
       throw e;
     }
 
+    console.log(
+      `[Lynx] Waiting 2 seconds for app to initialize before listing clients...`,
+    );
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
     const clients = await lynx._connector.listClients();
+    console.log(`[Lynx] Found ${clients.length} clients in total.`);
+    for (const c of clients) {
+      console.log(`[Lynx] Client ID: ${c.id}, App: ${c.info?.AppProcessName}`);
+    }
 
     // Filter clients by deviceId and target package
     const encodedDeviceId = encodeURIComponent(deviceIdToUse);

@@ -53,19 +53,36 @@ export class KittenLynxView {
     // Wait until the Lynx app has booted and registered its devtool server.
     // We confirm this by waiting until at least one session is reported.
     if (!this._channel) {
+      console.log(`[goto] Waiting for devtool to boot...`);
       const startTime = Date.now();
       let ready = false;
+      let bootLoops = 0;
       while (Date.now() - startTime < 60000) {
+        bootLoops++;
         try {
           const sessions = await this._connector.sendListSessionMessage(
             this._clientId,
           );
+          if (bootLoops % 10 === 0) {
+            console.log(
+              `[goto] list sessions returned ${sessions.length} sessions (loop ${bootLoops})`,
+            );
+          }
           if (sessions.length > 0) {
+            console.log(
+              `[goto] Devtool booted in ${Date.now() - startTime}ms. Sessions:`,
+              JSON.stringify(sessions),
+            );
             ready = true;
             break;
           }
         } catch (error: any) {
-          // ignore error while booting
+          if (bootLoops % 10 === 0) {
+            console.error(
+              `[goto] list sessions error (loop ${bootLoops}):`,
+              error.message || error,
+            );
+          }
         }
         await setTimeout(500);
       }
@@ -76,6 +93,7 @@ export class KittenLynxView {
       }
     }
 
+    console.log(`[goto] Sending App.openPage to URL: ${url}`);
     try {
       const msg = await this._connector.sendAppMessage(
         this._clientId,
@@ -84,30 +102,53 @@ export class KittenLynxView {
           url,
         },
       );
-    } catch {
-      const msg = await this._connector.sendMessage(this._clientId, {
-        event: 'Customized',
-        data: {
-          type: 'OpenCard',
+      console.log(`[goto] App.openPage succeeded:`, msg);
+    } catch (e: any) {
+      console.log(
+        `[goto] App.openPage failed, falling back to Customized OpenCard. Error:`,
+        e.message,
+      );
+      try {
+        const msg = await this._connector.sendMessage(this._clientId, {
+          event: 'Customized',
           data: {
-            type: 'url',
-            url,
+            type: 'OpenCard',
+            data: {
+              type: 'url',
+              url,
+            },
+            sender: -1,
           },
-          sender: -1,
-        },
-        from: -1,
-      });
+          from: -1,
+        });
+        console.log(`[goto] Customized OpenCard succeeded:`, msg);
+      } catch (fallbackErr: any) {
+        console.error(
+          `[goto] Customized OpenCard failed:`,
+          fallbackErr.message,
+        );
+      }
     }
 
     // Poll for the session whose URL matches the navigated bundle
+    console.log(`[goto] Polling for session matching URL: ${url}`);
     let matchedSessionId: number | undefined;
     const navStartTime = Date.now();
+    let pollLoops = 0;
     while (Date.now() - navStartTime < 30000) {
+      pollLoops++;
       await setTimeout(500);
       try {
         const sessions = await this._connector.sendListSessionMessage(
           this._clientId,
         );
+
+        if (pollLoops % 10 === 0) {
+          console.log(
+            `[goto] (Loop ${pollLoops}) Available sessions:`,
+            JSON.stringify(sessions.map(s => s.url)),
+          );
+        }
 
         const matched = sessions.find(
           s =>
@@ -115,15 +156,31 @@ export class KittenLynxView {
             || s.url.endsWith(urlPath),
         );
         if (matched) {
+          console.log(
+            `[goto] Found matched session after ${
+              Date.now() - navStartTime
+            }ms: id=${matched.session_id}, url=${matched.url}`,
+          );
           matchedSessionId = matched.session_id;
           break;
         }
       } catch (error: any) {
-        console.error(error);
+        if (pollLoops % 10 === 0) {
+          console.error(
+            `[goto] list sessions error in polling (loop ${pollLoops}):`,
+            error.message || error,
+          );
+        }
       }
     }
 
-    console.log('matchedSessionId', matchedSessionId);
+    if (matchedSessionId === undefined) {
+      console.error(
+        `[goto] Failed to find session for URL after 30000ms: ${url}`,
+      );
+    } else {
+      console.log('matchedSessionId', matchedSessionId);
+    }
     if (matchedSessionId === undefined) {
       throw new Error('cannot find session for URL: ' + url);
     }

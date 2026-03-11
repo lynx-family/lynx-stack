@@ -294,7 +294,12 @@ jobs:
         echo "Lynx Explorer is running."
 
         # 8. Run the tests
-        pnpm --filter @lynx-test/kitten-lynx run test
+        if ! pnpm --filter @lynx-test/kitten-lynx run test; then
+          echo "Tests failed! Dumping ADB logcat..."
+          adb logcat -d > adb_logcat_dump.txt
+          cat adb_logcat_dump.txt | tail -n 1000
+          exit 1
+        fi
 
   test-typos:
     runs-on: lynx-ubuntu-24.04-medium
