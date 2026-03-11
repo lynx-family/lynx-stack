@@ -68,7 +68,7 @@ export class KittenLynxView {
               `[goto] list sessions returned ${sessions.length} sessions (loop ${bootLoops})`,
             );
           }
-          if (sessions.length > 0) {
+          if (Array.isArray(sessions)) {
             console.log(
               `[goto] Devtool booted in ${Date.now() - startTime}ms. Sessions:`,
               JSON.stringify(sessions),
