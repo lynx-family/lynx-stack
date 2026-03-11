@@ -55,9 +55,12 @@ class WorkletExecIdMap extends IndexMap<Worklet> {
     const worklet = this.get(execId);
     if (!worklet) return undefined;
 
+    const visited = new Set<object>();
     const search = (value: unknown): JsFnHandle | undefined => {
       if (value === null || typeof value !== 'object') return undefined;
       const obj = value as Record<string, unknown>;
+      if (visited.has(obj)) return undefined;
+      visited.add(obj);
       if ('_jsFnId' in obj && obj['_jsFnId'] === fnId) {
         return obj as JsFnHandle;
       }
