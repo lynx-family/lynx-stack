@@ -328,6 +328,18 @@ export type QuerySelectorPAPI = (
   selector: string,
 ) => unknown;
 
+export type ElementAnimatePAPI = (
+  element: HTMLElement,
+  args:
+    | [
+      operation: number,
+      name: string,
+      keyframes: Record<string, string | number>[],
+      options?: Record<string, string | number>,
+    ]
+    | [operation: number, name: string],
+) => void;
+
 export interface ElementPAPIs {
   __ElementFromBinary: ElementFromBinaryPAPI;
 
@@ -394,6 +406,7 @@ export interface ElementPAPIs {
   ) => void;
   __InvokeUIMethod: InvokeUIMethodPAPI;
   __QuerySelector: QuerySelectorPAPI;
+  __ElementAnimate: ElementAnimatePAPI;
 }
 
 export interface MainThreadGlobalThis extends ElementPAPIs {
