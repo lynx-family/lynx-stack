@@ -12,6 +12,7 @@ use swc_core::{
 };
 use swc_plugins_shared::utils::calc_hash;
 
+#[cfg(feature = "napi")]
 pub mod napi;
 
 /// CSSScope refers to the

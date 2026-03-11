@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use std::{collections::HashMap, fmt::Debug};
 
+#[cfg(feature = "napi")]
 pub mod napi;
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]

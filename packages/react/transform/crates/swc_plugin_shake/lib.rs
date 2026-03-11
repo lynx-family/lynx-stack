@@ -6,6 +6,7 @@ use swc_core::{
 };
 
 mod is_component_class;
+#[cfg(feature = "napi")]
 pub mod napi;
 
 /// {@inheritdoc PluginReactLynxOptions.shake}
