@@ -75,7 +75,6 @@ jobs:
     with:
       runs-on: lynx-custom-container
       is-web: true
-      container-image: mcr.microsoft.com/playwright:v1.58.2-noble
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
         pnpm --filter @lynx-js/web-tests run lh || echo "Lighthouse failed"
@@ -92,7 +91,6 @@ jobs:
     with:
       runs-on: lynx-custom-container
       is-web: true
-      container-image: mcr.microsoft.com/playwright:v1.58.2-noble
       codecov-flags: "e2e"
       web-report-path: "packages/web-platform/web-elements/playwright-report"
       run: |
@@ -118,7 +116,6 @@ jobs:
     with:
       runs-on: lynx-custom-container
       is-web: true
-      container-image: mcr.microsoft.com/playwright:v1.58.2-noble
       web-report-name: "playwright-${{ matrix.thread }}-${{ matrix.render }}-shard${{ matrix.shard }}"
       codecov-flags: "e2e"
       run: |
@@ -146,7 +143,6 @@ jobs:
     with:
       runs-on: lynx-custom-container
       is-web: true
-      container-image: mcr.microsoft.com/playwright:v1.58.2-noble
       web-report-name: "playwright-${{ matrix.render }}-shard${{ matrix.shard }}"
       web-report-path: "packages/web-platform/web-core-wasm-e2e/playwright-report"
       codecov-flags: "e2e"
@@ -339,7 +335,6 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
-        --exclude packages/testing-library/kitten-lynx/vitest.config.ts
   website:
     needs: build
     uses: ./.github/workflows/workflow-website.yml
@@ -348,7 +343,6 @@ jobs:
       - benchmark
       - code-style-check
       - eslint
-      - kitten-lynx-android-emulator
       - playwright-linux
       - playwright-web-elements
       - test-api

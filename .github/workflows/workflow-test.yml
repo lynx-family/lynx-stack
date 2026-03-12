@@ -18,9 +18,6 @@ on:
         required: false
         type: boolean
         default: false
-      container-image:
-        required: false
-        type: string
       web-report-name:
         required: false
         type: string
@@ -46,8 +43,7 @@ jobs:
     runs-on: ${{ inputs.runs-on }}
     permissions: {}
     container:
-      image: ${{ inputs.container-image || null }}
-      options: --user 0
+      image: ${{ inputs.is-web && 'mcr.microsoft.com/playwright:v1.58.2-noble' || null }}
       env:
         CI: 1
         TURBO_TELEMETRY_DISABLED: 1
