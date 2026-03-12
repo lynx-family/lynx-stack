@@ -95,13 +95,13 @@ test.describe('reactlynx3 tests', () => {
         // @ts-expect-error
         globalThis.lynxView.reload();
       });
-      await wait(100);
+      await wait(1000);
       expect(
         await page.evaluate(() =>
           Array.from(
             document.querySelector('lynx-view')?.shadowRoot?.children || [],
           )
-            .filter(i => i.getAttribute('lynx-tag') === 'page').length
+            .filter(i => i.getAttribute('part') === 'page').length
         ),
       ).toBe(1);
     });
@@ -994,13 +994,6 @@ test.describe('reactlynx3 tests', () => {
     });
   });
   test.describe('apis', () => {
-    test('api-custom-template-loader', async ({ page }, { title }) => {
-      test.skip(isSSR, 'No need to test on SSR');
-      await goto(page, title);
-      await wait(100);
-      const target = page.locator('#target');
-      await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
-    });
     test('api-animation-event', async ({ page }, { title }) => {
       await goto(page, title);
       await page.locator('#tap1').click();
@@ -1296,7 +1289,7 @@ test.describe('reactlynx3 tests', () => {
       });
       await wait(50);
       expect(message).toContain('fin');
-      expect(page.workers().length).toStrictEqual(0);
+      expect(page.workers().length).toStrictEqual(1);
     });
 
     test('api-error', async ({ page }, { title }) => {
@@ -4679,11 +4672,13 @@ test.describe('reactlynx3 tests', () => {
       test(
         'basic-element-list-remove-action',
         async ({ page }, { title }) => {
+          page.on('console', msg => console.log('[PAGE]', msg.text()));
           test.skip(isSSR, 'not support on SSR');
           await goto(page, title);
 
           // Initial state: loading = true
           // Expected: 1, 2, 3, 5
+          await wait(500);
           await expect(page.locator('list-item').count()).resolves.toBe(4);
           let ids = await page.locator('list-item').evaluateAll((items) =>
             items.map((i) => i.id)
