@@ -1,4 +1,4 @@
-# @lynx-test/kitten-lynx
+# @lynx-js/kitten-lynx-test-infra
 
 This document provides context, architecture guidelines, and workflows for agents interacting with the `kitten-lynx` framework.
 

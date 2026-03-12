@@ -290,7 +290,7 @@ jobs:
         echo "Lynx Explorer is running."
 
         # 8. Run the tests
-        if ! pnpm --filter @lynx-test/kitten-lynx run test; then
+        if ! pnpm --filter @lynx-js/kitten-lynx-test-infra run test; then
           echo "Tests failed! Dumping ADB logcat..."
           adb logcat -d > adb_logcat_dump.txt
           cat adb_logcat_dump.txt | tail -n 1000

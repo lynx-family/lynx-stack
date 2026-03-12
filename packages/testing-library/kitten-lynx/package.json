@@ -1,5 +1,5 @@
 {
-  "name": "@lynx-test/kitten-lynx",
+  "name": "@lynx-js/kitten-lynx-test-infra",
   "version": "0.1.0",
   "description": "A testing framework executing the Lynx explorer Android application",
   "keywords": [
