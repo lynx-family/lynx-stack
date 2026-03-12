@@ -44,14 +44,21 @@ export class Lynx {
   private _currentClientId: string = '';
 
   /**
-   * Connect to a Lynx app on an Android device.
+   * Main setup method. Connects to the Lynx app devtool server over ADB.
    *
-   * Discovers ADB devices, restarts the target app, and waits for a Lynx
-   * devtool client to become available.
+   * **Agent Guide on the Connection Flow:**
+   * 1. Discovers the target ADB device (physical Android or emulator).
+   * 2. Force-stops the target app to ensure a clean state (`adb shell am force-stop`).
+   * 3. Launches the application (usually Lynx Explorer) on the device.
+   * 4. Queries the `Connector` for available clients and matches by device ID and package name.
+   * 5. Enables the master devtool switch (`enable_devtool`).
    *
-   * @param options - Connection options to specify target device and app package.
-   * @returns A connected `Lynx` instance ready for creating pages.
-   * @throws If no Lynx client is found after 10 seconds of polling.
+   * **When to use:**
+   * This should be the first method invoked in any test script or interaction flow.
+   *
+   * @param options - Configure connection variables, such as `appPackage` and `deviceId` (useful if multiple devices are attached).
+   * @returns A Promise resolving to a connected `Lynx` instance ready to spawn new pages.
+   * @throws Errors if devices aren't found, the app is missing, or the target client fails to initialize.
    */
   static async connect(options?: ConnectOptions): Promise<Lynx> {
     const targetDevice = options?.deviceId;
@@ -151,10 +158,15 @@ export class Lynx {
   }
 
   /**
-   * Create a new page (LynxView) for navigating and interacting with Lynx content.
+   * Spawns a new page representation for the connected Lynx environment.
    *
-   * @returns A new {@link LynxView} instance bound to the current client.
-   * @throws If not connected. Call {@link Lynx.connect} first.
+   * **Agent Usage:**
+   * Similar to Puppeteer's `browser.newPage()`. Once you have a `Lynx` connection instance safely created
+   * via `Lynx.connect()`, call this method to obtain a `KittenLynxView`. You can then call `post.goto(url)`
+   * on the view to navigate to a Lynx Bundle.
+   *
+   * @returns A Promise resolving to a new `KittenLynxView` instance bound to the active ADB client.
+   * @throws Error if the Lynx connection isn't properly initialized first.
    */
   async newPage(): Promise<KittenLynxView> {
     if (!this._connector || this._currentClientId === '') {
@@ -168,7 +180,13 @@ export class Lynx {
   }
 
   /**
-   * Close the connection and release resources.
+   * Closes the active ADB/CDP connection and releases associated resources.
+   *
+   * **Agent Usage:**
+   * Ensure this is called in your test's teardown block (e.g., in `afterAll()`) to prevent
+   * floating Node.js processes or hanging ADB connections that can ruin subsequent test runs.
+   *
+   * @returns A Promise resolving when the cleanup operation is fully processed.
    */
   async close(): Promise<void> {
     this._connector = null;

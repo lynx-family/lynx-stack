@@ -19,15 +19,29 @@ export class KittenLynxView {
   readonly id: number;
 
   /**
-   * Retrieve a previously created LynxView by its string ID.
+   * Retrieves a previously created `KittenLynxView` instance using its stringified numeric ID.
    *
-   * @param id - The string representation of the LynxView's numeric ID.
-   * @returns The LynxView if still alive, or `undefined` if garbage-collected.
+   * **Why this is useful for Agents:**
+   * This is primarily used for cross-referencing or finding an existing view without passing the object reference around.
+   *
+   * @param id - The string representation of the LynxView's numeric ID (e.g., `'1'`, `'2'`).
+   * @returns The `KittenLynxView` instance if it is still alive in memory, or `undefined` if it has been garbage-collected.
    */
   static getKittenLynxViewById(id: string): KittenLynxView | undefined {
     return idToKittenLynxView[id]?.deref();
   }
 
+  /**
+   * Initializes a new `KittenLynxView` instance.
+   *
+   * **Note for Agents:**
+   * You generally should avoid calling this constructor directly. Instead, use `Lynx.newPage()` to properly
+   * initialize a `KittenLynxView` instance bound to the active ADB connection and client.
+   *
+   * @param _connector - The low-level `Connector` instance used to dispatch CDP messages over ADB/USB.
+   * @param _clientId - The unique client identifier (typically `<deviceId>:<port>`).
+   * @param _client - Optional client metadata object containing internal app states.
+   */
   constructor(
     private _connector: Connector,
     private _clientId: string,
@@ -38,14 +52,20 @@ export class KittenLynxView {
   }
 
   /**
-   * Navigate to a Lynx bundle URL.
+   * Navigates the Lynx App to a specific Lynx bundle URL and attaches to the corresponding CDP session.
    *
-   * Attaches to an existing CDP session, sends `Page.navigate`, then polls
-   * for the session whose URL matches the target bundle. Re-attaches to
-   * the matched session and refreshes the DOM tree.
+   * **How it works (Crucial for Agents to understand):**
+   * Unlike standard web browsers, calling `Page.navigate` in Lynx creates a **new** debugging session
+   * instead of reusing the current one. This method abstracts away that complexity by:
+   * 1. Waiting for the devtool server to boot.
+   * 2. Sending an `App.openPage` (or a fallback message) to trigger the navigation.
+   * 3. **Polling the session list** over ADB to find a new session whose URL matches the target bundle URL.
+   * 4. Automatically re-attaching to the matched session and fetching the initial DOM tree (`DOM.getDocument`).
    *
-   * @param url - The Lynx bundle URL to navigate to.
-   * @throws If no session can be attached or no session matches the URL.
+   * @param url - The absolute URL of the Lynx bundle to navigate to (e.g., `'http://localhost:8080/dist/main.lynx.bundle'`).
+   * @param _options - Currently unused. Reserved for future navigation options.
+   * @throws An error if it times out waiting for the devtool server to boot (60s limit).
+   * @throws An error if the specific session for the URL cannot be found (30s limit) or cannot be attached.
    */
   async goto(url: string, _options?: unknown): Promise<void> {
     const urlPath = url.split('/').pop() || url;
@@ -199,11 +219,16 @@ export class KittenLynxView {
   }
 
   /**
-   * Find the first element matching a CSS selector in the current page.
+   * Locates the first DOM element matching the provided CSS selector in the current page.
    *
-   * @param selector - A CSS selector string (e.g. `'view'`, `'#my-id'`).
-   * @returns The matched {@link ElementNode}, or `undefined` if not found.
-   * @throws If no page has been loaded yet. Call {@link goto} first.
+   * **Agent Usage:**
+   * This operates identically to `document.querySelector` or Playwright's `page.locator()`.
+   * It relies on the `DOM` CDP domain. Always ensure that `goto()` has completed successfully before calling this,
+   * otherwise the DOM tree will not exist.
+   *
+   * @param selector - A valid CSS selector string targeting the desired element (e.g., `'view'`, `'#submit-btn'`, `'.container > text'`).
+   * @returns A promise resolving to an `ElementNode` containing methods to interact with the element, or `undefined` if no node matched.
+   * @throws Error if the method is called before a page is loaded via `goto()`.
    */
   async locator(selector: string): Promise<ElementNode | undefined> {
     if (!this._root) {
@@ -220,14 +245,17 @@ export class KittenLynxView {
   }
 
   /**
-   * Attach to a CDP session by session ID and enable required domains.
+   * Attaches the LynxView to a specific Lynx devtool session and initializes the CDP channel.
    *
-   * Creates a {@link CDPChannel}, enables `Runtime`, `Page`, and `DOM` domains,
-   * and fetches the initial document tree. Only sets `_channel` after all
-   * operations succeed, making this method safely retryable.
+   * **Internal Mechanics:**
+   * This method creates a `CDPChannel` for the specific `sessionId` and immediately fires
+   * a `DOM.getDocument` request to cache the root document node. This must succeed for the page to be interactable.
    *
-   * @param sessionId - The Lynx devtool session ID to attach to.
-   * @internal
+   * **Note for Agents:**
+   * This is generally marked as internal, but it is not `private`. You normally do not need to call this manually,
+   * as `goto()` handles session attachment automatically.
+   *
+   * @param sessionId - The numeric Lynx devtool session ID to attach to, discovered via `sendListSessionMessage`.
    */
   async onAttachedToTarget(sessionId: number) {
     if (!this._channel) {
@@ -265,12 +293,14 @@ export class KittenLynxView {
   }
 
   /**
-   * Serialize the current page's DOM tree to an HTML-like string.
+   * Serializes the current page's entire DOM tree into an HTML-like string format.
    *
-   * Fetches a fresh `DOM.getDocument` snapshot and recursively converts
-   * all nodes to a string representation with tag names and attributes.
+   * **Agent Usage:**
+   * This is highly useful for debugging and logging the current state of the Lynx App DOM.
+   * It forces a fresh `DOM.getDocument` snapshot from the CDP server and recursively walks the tree
+   * to build a string containing tags and attributes (e.g., `<view id="main"><text>...</text></view>`).
    *
-   * @returns The serialized DOM content of the page.
+   * @returns A promise resolving to a string representing the serialized DOM content of the page.
    */
   async content(): Promise<string> {
     const document = await this._channel.send('DOM.getDocument', {

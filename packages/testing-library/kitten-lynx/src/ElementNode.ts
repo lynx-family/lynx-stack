@@ -10,13 +10,16 @@ const idToElementNode = new WeakMap<KittenLynxView, WeakRef<ElementNode>[]>();
  */
 export class ElementNode {
   /**
-   * Get or create an ElementNode for the given node ID within a LynxView.
+   * Retrieves or creates an `ElementNode` instance corresponding to a specific Lynx DOM node ID.
    *
-   * Nodes are cached per LynxView using `WeakRef` to allow reuse and GC.
+   * **Agent Caching Strategy:**
+   * Nodes are aggressively cached per `KittenLynxView` instance using `WeakRef`.
+   * This means if an Agent queries the same DOM node twice before garbage collection,
+   * it returns the same `ElementNode` reference, reducing memory overhead during extensive DOM crawling.
    *
-   * @param id - The CDP node ID.
-   * @param lynxView - The owning KittenLynxView instance.
-   * @returns An `ElementNode` bound to the given node.
+   * @param id - The numeric CDP node ID to wrap.
+   * @param lynxView - The `KittenLynxView` instance this node belongs to.
+   * @returns An `ElementNode` bound to the provided node ID and view.
    */
   static fromId(id: number, lynxView: KittenLynxView): ElementNode {
     const currentViewMap = idToElementNode.get(lynxView);
@@ -38,16 +41,35 @@ export class ElementNode {
     return node;
   }
 
+  /**
+   * Initializes a new `ElementNode` instance to represent a Lynx Component or Tag.
+   *
+   * **Note for Agents:**
+   * Similar to `KittenLynxView`, you should rarely call this directly.
+   * Rely on `KittenLynxView.locator()` or `ElementNode.fromId()` for instantiations.
+   *
+   * @param nodeId - The unique CDP numeric ID denoting this element in the Lynx renderer.
+   * @param _lynxView - The parent `KittenLynxView` instance used to dispatch subsequent CDP queries.
+   */
   constructor(
     public readonly nodeId: number,
     private _lynxView: KittenLynxView,
   ) {}
 
   /**
-   * Simulate a tap (touch press + release) on the center of this element.
+   * Simulates a native user tap (touch press followed by touch release) directly on the center of this element.
    *
-   * Uses `DOM.getBoxModel` to find the element's center coordinates,
-   * then dispatches `mousePressed` and `mouseReleased` events.
+   * **Internal Mechanics (For Agents):**
+   * This is not a simulated DOM event (like `element.click()` in Web). It is a highly accurate native-layer
+   * gesture dispatch:
+   * 1. Fetches the exact boundary coordinates via `DOM.getBoxModel`.
+   * 2. Calculates the absolute center `(x, y)` of the content box.
+   * 3. Dispatches an `Input.emulateTouchFromMouseEvent` (`'mousePressed'`) over the ADB bridge.
+   * 4. Waits 50ms, then dispatches the corresponding `'mouseReleased'`.
+   *
+   * **Crucial:** Ensure the element is visible on the screen before calling this, or the coordinate calculation might fail or hit nothing.
+   *
+   * @throws Error if the layout box model cannot be computed natively.
    */
   async tap(): Promise<void> {
     const { model } = await this._lynxView._channel.send('DOM.getBoxModel', {
@@ -86,10 +108,15 @@ export class ElementNode {
   }
 
   /**
-   * Get the value of a named attribute on this element.
+   * Retrieves the string value of a specified attribute on this element.
    *
-   * @param name - The attribute name. Use `'id'` for the Lynx `idSelector` attribute.
-   * @returns The attribute value, or `null` if the attribute is not present.
+   * **Agent Quirk / Gotcha:**
+   * In Lynx, standard web `id="foo"` attributes are actually stored as `idSelector="foo"` internally.
+   * This library provides a seamless shim: if you query `getAttribute('id')`, it automatically
+   * queries `idSelector` instead. No manual handling of `idSelector` is required on your part.
+   *
+   * @param name - The name of the attribute to fetch.
+   * @returns A promise resolving to the string value of the attribute, or `null` if the attribute does not exist.
    */
   async getAttribute(name: string): Promise<string | null> {
     if (name === 'id') {
@@ -108,9 +135,15 @@ export class ElementNode {
   }
 
   /**
-   * Get all computed CSS styles for this element.
+   * Fetches all actively computed CSS properties for this specific element.
    *
-   * @returns A `Map` of CSS property names to their computed values.
+   * **Agent Usage:**
+   * This relies on `CSS.getComputedStyleForNode`. It returns the fully resolved style values
+   * post-layout calculation (e.g., resolving `100%` into absolute `px` values).
+   * It is highly recommended to use this for visual assertions (e.g., verifying a box is indeed `display: none`
+   * or has a specific `background-color`).
+   *
+   * @returns A promise resolving to a native JS `Map`, where keys are CSS property names and values are their computed string expressions.
    */
   async computedStyleMap(): Promise<Map<string, string>> {
     const map = new Map<string, string>();

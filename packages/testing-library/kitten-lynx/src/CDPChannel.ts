@@ -95,15 +95,16 @@ interface Protocol {
 export class CDPChannel {
   private _id = 0;
   /**
-   * Get or create a CDPChannel for the given session.
+   * Retrieves or instantiates a stateless `CDPChannel` for a specific Lynx session.
    *
-   * Channels are cached per `sessionId` using `WeakRef`. If a previously
-   * created channel for the same session is still alive, it is reused.
+   * **Design pattern (For Agents):**
+   * This testing library uses a **stateless** CDP architecture to avoid hanging Websocket connections
+   * over unstable ADB links. Channels are cached per `sessionId` via `WeakRef` to reduce allocations.
    *
-   * @param sessionId - The Lynx devtool session ID.
-   * @param clientId - The client identifier (format: `"deviceId:port"`).
-   * @param connector - The `Connector` instance for sending messages.
-   * @returns A `CDPChannel` bound to the specified session.
+   * @param sessionId - The numeric Lynx devtool session ID assigned by the Lynx runtime.
+   * @param clientId - The unique device-port identifier for the client app (e.g., `"emulator-5554:40121"`).
+   * @param connector - The active `Connector` instance powering the ADB transport.
+   * @returns A `CDPChannel` reference bound to the requested session.
    */
   static from(
     sessionId: number,
@@ -118,6 +119,17 @@ export class CDPChannel {
       return channel;
     }
   }
+  /**
+   * Constructs a new CDP Channel strictly bound to a single Lynx session.
+   *
+   * **Note for Agents:**
+   * Favor using `CDPChannel.from()` over manually newing up a channel, as `from()` handles
+   * WeakRef caching to minimize memory footprint.
+   *
+   * @param _connector - Low-level ADB transport controller.
+   * @param _clientId - Bound devtool target identification string.
+   * @param _sessionId - Narrowly scoped Lynx view session ID.
+   */
   constructor(
     private _connector: Connector,
     private _clientId: string,
@@ -125,11 +137,20 @@ export class CDPChannel {
   ) {}
 
   /**
-   * Send a CDP command and return the result.
+   * Dispatches a strongly-typed Chrome DevTools Protocol (CDP) method command and awaits its return block.
    *
-   * @param method - The CDP method name (e.g. `'DOM.getDocument'`, `'Page.navigate'`).
-   * @param params - The parameters for the CDP method.
-   * @returns The CDP response for the given method.
+   * **Agent Usage:**
+   * This is the beating heart of all interactions in `kitten-lynx`. Instead of maintaining a socket,
+   * every `send(...)` call constructs a self-contained ADB request and awaits the isolated response.
+   *
+   * **Typings:**
+   * Notice that the generics strictly bind to the `Protocol` interface defined at the top of this file.
+   * If you need to invoke a CDP command that TypeScript rejects, you must update the `Protocol` interface first!
+   *
+   * @typeParam T - The literal string name of the CDP method (e.g., `'DOM.getDocument'`, `'Page.navigate'`).
+   * @param method - The command to send to the Lynx devtool server.
+   * @param params - A strongly-typed payload object required by the CDP method.
+   * @returns A promise resolving to a strongly-typed response object matching the expected return structure of the `method`.
    */
   async send<T extends keyof Protocol>(
     method: T,
