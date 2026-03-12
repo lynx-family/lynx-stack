@@ -66,9 +66,16 @@ export function loadStyleFromJSON(
             parseAndPushSelector(selector, s);
           }
           for (const s of pseudoClass) {
-            // Strip leading :
-            const val = s.startsWith(':') ? s.substring(1) : s;
-            selector.push_one_selector_section('PseudoClassSelector', val);
+            if (s === '::part(input)::placeholder') {
+              selector.push_one_selector_section(
+                'PseudoElementSelector',
+                'placeholder',
+              );
+            } else {
+              // Strip leading :
+              const val = s.startsWith(':') ? s.substring(1) : s;
+              selector.push_one_selector_section('PseudoClassSelector', val);
+            }
           }
           for (const s of pseudoElement) {
             // Strip leading ::
