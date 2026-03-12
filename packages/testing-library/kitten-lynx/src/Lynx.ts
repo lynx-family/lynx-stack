@@ -1,8 +1,8 @@
 import { Connector } from '@lynx-js/devtool-connector';
 import { AndroidTransport } from '@lynx-js/devtool-connector/transport';
+import { AdbServerClient } from '@yume-chan/adb';
+import { AdbServerNodeTcpConnector } from '@yume-chan/adb-server-node-tcp';
 import { KittenLynxView } from './KittenLynxView.js';
-
-import { execSync } from 'child_process';
 
 /**
  * Options for configuring the connection to a Lynx device.
@@ -105,7 +105,19 @@ export class Lynx {
       `[Lynx] Restarting ${appPackage} on device ${deviceIdToUse}...`,
     );
     try {
-      execSync(`adb -s ${deviceIdToUse} shell am force-stop ${appPackage}`);
+      const client = new AdbServerClient(
+        new AdbServerNodeTcpConnector({ port: 5037 }),
+      );
+      const adb = await client.createAdb({ serial: deviceIdToUse });
+      try {
+        await adb.subprocess.noneProtocol.spawnWaitText([
+          'am',
+          'force-stop',
+          appPackage,
+        ]);
+      } finally {
+        await adb.close();
+      }
     } catch (e) {
       console.error(
         `[Lynx] Failed to force-stop app on device ${deviceIdToUse}:`,

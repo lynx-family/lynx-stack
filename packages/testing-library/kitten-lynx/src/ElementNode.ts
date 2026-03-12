@@ -1,4 +1,5 @@
 import type { KittenLynxView } from './KittenLynxView.js';
+import { setTimeout } from 'node:timers/promises';
 
 const idToElementNode = new WeakMap<KittenLynxView, WeakRef<ElementNode>[]>();
 
@@ -89,21 +90,20 @@ export class ElementNode {
       );
     }
 
-    const timestamp = Date.now();
     await this._lynxView._channel.send('Input.emulateTouchFromMouseEvent', {
       type: 'mousePressed',
       x,
       y,
       button: 'left',
-      timestamp,
     });
+
+    await setTimeout(50);
 
     await this._lynxView._channel.send('Input.emulateTouchFromMouseEvent', {
       type: 'mouseReleased',
       x,
       y,
       button: 'left',
-      timestamp: timestamp + 50,
     });
   }
 

@@ -76,7 +76,7 @@ interface Protocol {
       type: 'mousePressed' | 'mouseReleased' | 'mouseMoved';
       x: number;
       y: number;
-      timestamp: number;
+      timestamp?: number;
       button: 'left' | 'middle' | 'right';
       deltaX?: number;
       deltaY?: number;
@@ -93,7 +93,6 @@ interface Protocol {
  * Channels are cached per session ID using `WeakRef` to allow reuse.
  */
 export class CDPChannel {
-  private _id = 0;
   /**
    * Retrieves or instantiates a stateless `CDPChannel` for a specific Lynx session.
    *
