@@ -2,10 +2,10 @@ import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-conf
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 
 export default defineExternalBundleRslibConfig({
-  id: 'react',
+  id: process.env.NODE_ENV === 'development' ? 'react-dev' : 'react-prod',
   source: {
     entry: {
-      'ReactLynx': './external-bundle/ReactLynx.ts',
+      'ReactLynx': './src/index.ts',
     },
   },
   plugins: [
@@ -13,6 +13,5 @@ export default defineExternalBundleRslibConfig({
   ],
   output: {
     cleanDistPath: false,
-    globalObject: 'globalThis',
   },
 });

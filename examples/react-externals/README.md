@@ -11,6 +11,7 @@ In this example, we show:
 ```bash
 pnpm build:reactlynx
 pnpm build:comp-lib
-pnpx http-server -p 8080 dist
-EXTERNAL_BUNDLE_PREFIX=http://${YOUR_IP_HERE}:8080 pnpm dev
+pnpm dev
 ```
+
+The dev server will automatically serve the ReactLynx runtime and the component library bundles.

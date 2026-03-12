@@ -9,7 +9,7 @@
     "checkJs": true,
     "isolatedDeclarations": false,
   },
-  "include": ["src", "external-bundle", "lynx.config.js", "rslib-comp-lib.config.ts", "rslib-reactlynx.config.ts"],
+  "include": ["src", "external-bundle", "lynx.config.ts", "rslib-comp-lib.config.ts", "rslib-reactlynx.config.ts"],
   "references": [
     { "path": "../../packages/react/tsconfig.json" },
     { "path": "../../packages/rspeedy/core/tsconfig.build.json" },
