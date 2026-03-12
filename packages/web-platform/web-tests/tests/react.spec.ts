@@ -2136,7 +2136,7 @@ test.describe('reactlynx3 tests', () => {
           document.querySelector('lynx-view')!.setAttribute('height', '100vh');
           document.querySelector('lynx-view')!.setAttribute(
             'style',
-            'width: 100vw; height: 100vh',
+            'display:flex; width: 100vw; height: 100vh',
           );
         });
         await wait(100);
