@@ -27,23 +27,18 @@ export function loadStyleFromJSON(
 
     // Handle imports
     if (info.imports) {
-      // imports in StyleInfo are filenames/hrefs, but RawStyleInfo expects cssIds.
-      // Wait, genStyleInfo output imports as string hrefs?
-      // RawStyleInfo: imports: Vec<i32>
-      // It seems genStyleInfo.ts produces imports array of strings, but RawStyleInfo needs integers.
-      // If the JSON only contains strings, we might have a problem mapping them back to IDs unless we have a map.
-      // However, WebEncodePlugin usually handles mapping.
-      // Let's check genStyleInfo again.
-      // node.type === 'ImportRule' => imports.push(node.href).
-      // If imports are paths, we can't easily convert to ID without extra info.
-      // BUT, current usage of imports in RawStyleInfo is strictly ID-based.
-      // If the input JSON has hrefs, we might skip imports or error.
-      // For now, I will omit imports if they are strings, or try to parse if they look like IDs.
-      // Actually, in the ecosystem, imports might not be fully supported in JSON mode yet or resolved differently.
-      // I will log or ignore for now, focusing on Rules.
+      info.imports.forEach(importIdStr => {
+        const importId = parseInt(importIdStr, 10);
+        if (!isNaN(importId)) {
+          rawStyleInfo.append_import(cssId, importId);
+        }
+      });
     }
     if (info.content) {
-      parseAndPushContentRules(rawStyleInfo, cssId, info.content.join('\n'));
+      const contentStr = info.content.join('\n').trim();
+      if (contentStr.length > 0) {
+        parseAndPushContentRules(rawStyleInfo, cssId, contentStr);
+      }
     }
 
     // Handle rules
