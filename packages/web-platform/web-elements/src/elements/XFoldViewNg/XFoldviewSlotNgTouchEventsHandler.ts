@@ -37,10 +37,27 @@ export class XFoldviewSlotNgTouchEventsHandler
     });
   }
 
+  #isScrollContainer(element: Element): boolean {
+    let overflowY: string;
+    if (typeof element.computedStyleMap === 'function') {
+      try {
+        overflowY = element.computedStyleMap().get('overflow-y')?.toString()
+          ?? 'visible';
+      } catch {
+        overflowY = getComputedStyle(element).overflowY || 'visible';
+      }
+    } else {
+      overflowY = getComputedStyle(element).overflowY || 'visible';
+    }
+    return overflowY === 'auto' || overflowY === 'scroll'
+      || overflowY === 'hidden' || overflowY === 'overlay';
+  }
+
   #getTheMostScrollableKid(delta: number) {
     const scrollableKid = this.#elements?.find((element) => {
       if (
-        element.scrollHeight > element.clientHeight
+        this.#isScrollContainer(element)
+        && element.scrollHeight > element.clientHeight
       ) {
         const couldScrollNear = delta < 0
           && element.scrollTop !== 0;

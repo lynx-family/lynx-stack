@@ -15,13 +15,15 @@ use std::vec;
 use swc_core::common::util::take::Take;
 use swc_core::common::{errors::HANDLER, Span, Spanned, DUMMY_SP};
 use swc_core::ecma::ast::*;
-use swc_core::ecma::utils::prepend_stmts;
+use swc_core::ecma::utils::{prepend_stmts, private_ident};
 use swc_core::ecma::visit::VisitMutWith;
 use swc_core::ecma::visit::{noop_visit_mut_type, VisitMut};
+use swc_core::quote;
 use worklet_type::WorkletType;
 
 use swc_plugins_shared::{target::TransformTarget, transform_mode::TransformMode};
 
+#[cfg(feature = "napi")]
 pub mod napi;
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]
@@ -60,6 +62,8 @@ pub struct WorkletVisitor {
   named_imports: HashSet<String>,
   hasher: WorkletHash,
   shared_identifiers: FxHashSet<Id>,
+  worklet_runtime_loaded: bool,
+  worklet_runtime_loaded_ident: Ident,
 }
 
 impl Default for WorkletVisitor {
@@ -117,6 +121,7 @@ impl VisitMut for WorkletVisitor {
           &mut collector,
           true,
           &mut self.named_imports,
+          self.worklet_runtime_loaded_ident.clone(),
         );
 
         // For JS worklets, the ctx object is later converted to a function by `transformWorklet(..)`
@@ -242,6 +247,7 @@ impl VisitMut for WorkletVisitor {
           &mut collector,
           true,
           &mut self.named_imports,
+          self.worklet_runtime_loaded_ident.clone(),
         );
 
         if should_use_getter {
@@ -322,6 +328,7 @@ impl VisitMut for WorkletVisitor {
       &mut collector,
       false,
       &mut self.named_imports,
+      self.worklet_runtime_loaded_ident.clone(),
     );
 
     *n = VarDecl {
@@ -392,6 +399,7 @@ impl VisitMut for WorkletVisitor {
           &mut collector,
           false,
           &mut self.named_imports,
+          self.worklet_runtime_loaded_ident.clone(),
         );
 
         *n = *worklet_object_expr;
@@ -424,6 +432,7 @@ impl VisitMut for WorkletVisitor {
           &mut collector,
           false,
           &mut self.named_imports,
+          self.worklet_runtime_loaded_ident.clone(),
         );
 
         *n = *worklet_object_expr;
@@ -502,6 +511,7 @@ impl VisitMut for WorkletVisitor {
       &mut collector,
       false,
       &mut self.named_imports,
+      self.worklet_runtime_loaded_ident.clone(),
     );
 
     *n = ModuleDecl::ExportDefaultExpr(ExportDefaultExpr {
@@ -515,13 +525,6 @@ impl VisitMut for WorkletVisitor {
 
   fn visit_mut_module_items(&mut self, n: &mut Vec<ModuleItem>) {
     n.visit_mut_children_with(self);
-    n.extend(
-      self
-        .stmts_to_insert_at_top_level
-        .iter_mut()
-        .filter(|stmt| !stmt.is_empty())
-        .map(|stmt| stmt.take().into()),
-    );
   }
 
   fn visit_mut_module(&mut self, n: &mut Module) {
@@ -547,6 +550,15 @@ impl VisitMut for WorkletVisitor {
     }
 
     n.visit_mut_children_with(self);
+
+    // Add global loadWorkletRuntime call if needed
+    if self.named_imports.contains("loadWorkletRuntime") && !self.worklet_runtime_loaded {
+      self.stmts_to_insert_at_top_level.insert(
+        0,
+        quote!("const $loaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry)" as Stmt, loaded = self.worklet_runtime_loaded_ident.clone()),
+      );
+      self.worklet_runtime_loaded = true;
+    }
 
     let mut specifiers = self.named_imports.iter().collect::<Vec<_>>();
 
@@ -621,6 +633,14 @@ impl VisitMut for WorkletVisitor {
         .into_iter(),
       );
     }
+    // Add statements to insert at top level after processing all items
+    n.body.extend(
+      self
+        .stmts_to_insert_at_top_level
+        .iter_mut()
+        .filter(|stmt| !stmt.is_empty())
+        .map(|stmt| stmt.take().into()),
+    );
   }
 }
 
@@ -686,6 +706,8 @@ impl WorkletVisitor {
       hasher: WorkletHash::new(),
       named_imports: HashSet::default(),
       shared_identifiers: FxHashSet::default(),
+      worklet_runtime_loaded: false,
+      worklet_runtime_loaded_ident: private_ident!("__workletRuntimeLoaded"),
     }
   }
 
@@ -2686,6 +2708,65 @@ class App extends Component {
         console.log('useExposure2');
         console.log(exposureArgs);
         x;
+      }
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.ts".into(),
+          target: TransformTarget::LEPUS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_add_worklet_runtime_ident_with_outer_ident,
+    r#"
+      const __workletRuntimeLoaded = false;
+      console.log(__workletRuntimeLoaded);
+
+      function foo() {
+        "main thread";
+        return 1;
+      }
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.ts".into(),
+          target: TransformTarget::LEPUS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_add_worklet_runtime_ident_with_inner_ident,
+    r#"
+      function foo() {
+        "main thread";
+        const __workletRuntimeLoaded = false;
+        console.log(__workletRuntimeLoaded);
+        return 1;
       }
     "#
   );

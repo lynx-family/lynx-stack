@@ -198,7 +198,7 @@ export class BackgroundSnapshotInstance {
             v.__snapshot_def.refAndSpreadIndexes?.forEach((i) => {
               const value = v.__values![i] as unknown;
               if (value && (typeof value === 'object' || typeof value === 'function')) {
-                if ('__spread' in value && 'ref' in value) {
+                if ('__spread' in value && 'ref' in value && value.ref) {
                   applyRef(value.ref as Ref, null);
                 } else if ('__ref' in value) {
                   applyRef(value as Ref, null);

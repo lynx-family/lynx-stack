@@ -282,8 +282,8 @@ export class ExternalsLoadingPlugin {
       #genExternalsLoadingCode(
         chunkLayer: string,
       ): string {
-        const fetchCode: string[] = [];
-        const loadCode: string[] = [];
+        const url2fetchCode: Map<string, string> = new Map();
+        const loadCode: Set<string> = new Set();
         // filter duplicate externals by libraryName or package name to avoid loading the same external multiple times. We keep the last one.
         const externalsMap = new Map<
           string | string[],
@@ -328,10 +328,14 @@ function createLoadExternalAsync(handler, sectionPath) {
           isMainThreadLayer
             ? `
           // TODO: Use configured layer suffix instead of hard-coded __main-thread for CSS section lookup.
-          const styleSheet = __LoadStyleSheet(sectionPath.replace('__main-thread', '') + ':CSS', response.url);
-          if (styleSheet !== null) {
-            __AdoptStyleSheet(styleSheet);
-            __FlushElementTree();
+          if (typeof __LoadStyleSheet === 'function') {
+            const styleSheet = __LoadStyleSheet(sectionPath.replace('__main-thread', '') + ':CSS', response.url);
+            if (styleSheet !== null) {
+              __AdoptStyleSheet(styleSheet);
+              __FlushElementTree();
+            }
+          } else {
+            console.warn('__LoadStyleSheet is not defined. Failed to load CSS for ' + sectionPath + ' in ' + response.url + '. __LoadStyleSheet is only available in LynxSDK >= 3.7');
           }
             `
             : ''
@@ -356,10 +360,14 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           isMainThreadLayer
             ? `
       // TODO: Use configured layer suffix instead of hard-coded __main-thread for CSS section lookup.
-      const styleSheet = __LoadStyleSheet(sectionPath.replace('__main-thread', '') + ':CSS', response.url);
-      if (styleSheet !== null) {
-        __AdoptStyleSheet(styleSheet);
-        __FlushElementTree();
+      if (typeof __LoadStyleSheet === 'function') {
+        const styleSheet = __LoadStyleSheet(sectionPath.replace('__main-thread', '') + ':CSS', response.url);
+        if (styleSheet !== null) {
+          __AdoptStyleSheet(styleSheet);
+          __FlushElementTree();
+        }
+      } else {
+        console.warn('__LoadStyleSheet is not defined. Failed to load CSS for ' + sectionPath + ' in ' + response.url + '. __LoadStyleSheet is only available in LynxSDK >= 3.7');
       }
           `
             : ''
@@ -377,8 +385,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
 
         const hasUrlLibraryNamePairInjected = new Set();
 
-        for (let i = 0; i < externals.length; i++) {
-          const [pkgName, external] = externals[i]!;
+        for (const [pkgName, external] of externals) {
           const {
             libraryName,
             url,
@@ -404,8 +411,9 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           }
           hasUrlLibraryNamePairInjected.add(hash);
 
-          fetchCode.push(
-            `const handler${i} = lynx.fetchBundle(${JSON.stringify(url)}, {});`,
+          url2fetchCode.set(
+            url,
+            `lynx.fetchBundle(${JSON.stringify(url)}, {});`,
           );
 
           const mountVar = `${
@@ -414,16 +422,18 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             )
           }[${JSON.stringify(libraryNameStr)}]`;
           if (async) {
-            loadCode.push(
-              `${mountVar} = ${mountVar} === undefined ? createLoadExternalAsync(handler${i}, ${
-                JSON.stringify(layerOptions.sectionPath)
-              }) : ${mountVar};`,
+            loadCode.add(
+              `${mountVar} = ${mountVar} === undefined ? createLoadExternalAsync(handler${
+                [...url2fetchCode.keys()].indexOf(url)
+              }, ${JSON.stringify(layerOptions.sectionPath)}) : ${mountVar};`,
             );
             continue;
           }
 
-          loadCode.push(
-            `${mountVar} = ${mountVar} === undefined ? createLoadExternalSync(handler${i}, ${
+          loadCode.add(
+            `${mountVar} = ${mountVar} === undefined ? createLoadExternalSync(handler${
+              [...url2fetchCode.keys()].indexOf(url)
+            }, ${
               JSON.stringify(layerOptions.sectionPath)
             }, ${timeout}) : ${mountVar};`,
           );
@@ -432,9 +442,11 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
         return [
           runtimeGlobalsInit,
           loadExternalFunc,
-          fetchCode,
-          loadCode,
-        ].flat().join('\n');
+          ...[...url2fetchCode.values()].map((fetchCode, index) =>
+            `const handler${index} = ${fetchCode};`
+          ),
+          ...loadCode,
+        ].join('\n');
       }
     }
 

@@ -40,7 +40,6 @@ export default defineExternalBundleRslibConfig({
       '@lynx-js/react/debug': ['ReactLynx', 'ReactDebug'],
       'preact': ['ReactLynx', 'Preact'],
     },
-    minify: false,
     globalObject: 'globalThis',
   },
 });

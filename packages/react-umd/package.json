@@ -1,0 +1,44 @@
+{
+  "name": "@lynx-js/react-umd",
+  "version": "0.0.1-alpha-1",
+  "description": "UMD build for ReactLynx",
+  "keywords": [
+    "ReactLynx",
+    "rspeedy",
+    "externals",
+    "external bundle",
+    "umd"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/react-umd"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Yiming Li",
+    "email": "yimingli.cs@gmail.com"
+  },
+  "type": "module",
+  "exports": {
+    "./dev": "./dist/react-dev.lynx.bundle",
+    "./prod": "./dist/react-prod.lynx.bundle"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rimraf dist && pnpm build:development && pnpm build:production",
+    "build:development": "cross-env NODE_ENV=development rslib build",
+    "build:production": "rslib build"
+  },
+  "devDependencies": {
+    "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "cross-env": "^7.0.3",
+    "rimraf": "^6.1.3"
+  }
+}

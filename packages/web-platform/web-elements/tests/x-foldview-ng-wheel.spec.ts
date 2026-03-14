@@ -90,4 +90,41 @@ test.describe('x-foldview-ng wheel', () => {
       'wheel-outer-stays-at-end',
     ).toBeGreaterThanOrEqual(foldviewBeforeInner);
   });
+
+  test('x-foldview-ng/wheel-overflow-visible-child', async ({
+    page,
+    browserName,
+  }, {
+    title,
+  }) => {
+    test.skip(browserName === 'webkit', 'mouse wheel unsupported on webkit');
+    await goto(page, title);
+    const foldview = page.locator('#foldview');
+    const scrollview = page.locator('#inner-scroll');
+    const overflowVisibleWrapper = page.locator('#overflow-visible-wrapper');
+
+    // Scroll the foldview header fully away
+    await foldview.evaluate((dom: HTMLElement) => {
+      dom.scrollTop = dom.scrollHeight;
+    });
+    await wait(100);
+
+    // Hover over the overflow:visible wrapper (inside scroll-view)
+    await overflowVisibleWrapper.hover();
+
+    // Reset scroll positions
+    await scrollview.evaluate((dom: HTMLElement) => {
+      dom.scrollTop = 0;
+    });
+
+    // Wheel down over the overflow:visible area
+    await page.mouse.wheel(0, 200);
+    await wait(200);
+
+    // The scroll-view should scroll, not the overflow:visible wrapper
+    expect(
+      await scrollview.evaluate((dom: HTMLElement) => dom.scrollTop),
+      'scroll-view-should-scroll-not-overflow-visible-wrapper',
+    ).toBeGreaterThan(0);
+  });
 });
