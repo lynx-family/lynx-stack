@@ -51,10 +51,9 @@ function injectTt(): void {
 }
 
 function onLifecycleEvent([type, data]: [LifecycleConstant, unknown]) {
-  const hasRootRendered = CHILDREN in __root;
   // never called `render(<App/>, __root)`
   // happens if user call `root.render()` async
-  if (!hasRootRendered) {
+  if (!(CHILDREN in __root)) {
     delayLifecycleEvent(type, data);
     return;
   }
@@ -192,12 +191,10 @@ function flushDelayedLifecycleEvents(): void {
   // avoid stackoverflow
   if (flushingDelayedLifecycleEvents) return;
   flushingDelayedLifecycleEvents = true;
-  if (delayedLifecycleEvents) {
-    for (const e of delayedLifecycleEvents) {
-      onLifecycleEvent(e);
-    }
-    delayedLifecycleEvents.length = 0;
+  for (const e of delayedLifecycleEvents) {
+    onLifecycleEvent(e);
   }
+  delayedLifecycleEvents.length = 0;
   flushingDelayedLifecycleEvents = false;
 }
 
