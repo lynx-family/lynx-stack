@@ -25,6 +25,10 @@
       "@lynx-js/rspeedy",
       "create-rspeedy",
       "upgrade-rspeedy"
+    ],
+    [
+      "@lynx-js/react",
+      "@lynx-js/react-umd"
     ]
   ],
   "linked": [],
