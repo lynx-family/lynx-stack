@@ -169,7 +169,10 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
         | DecoratedHTMLElement
         | null;
     }
-    const eventObject = createCrossThreadEvent(event);
+    const eventObject = createCrossThreadEvent(
+      event,
+      () => this.lynxViewInstance.rootDom.host.getBoundingClientRect(),
+    );
     this.wasmContext?.common_event_handler(
       eventObject,
       bubblePath.slice(0, bubblePathLength),

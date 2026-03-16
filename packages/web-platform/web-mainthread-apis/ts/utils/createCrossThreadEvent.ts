@@ -27,6 +27,7 @@ function toCloneableObject(obj: any): CloneableObject {
 export function createCrossThreadEvent(
   domEvent: MinimalRawEventObject,
   eventName: string,
+  getContainerRect?: () => DOMRect,
 ): LynxCrossThreadEvent {
   const targetElement = domEvent.target as HTMLElement;
   const currentTargetElement = (domEvent
@@ -55,35 +56,52 @@ export function createCrossThreadEvent(
     const touch = [...touchEvent.touches as unknown as Touch[]];
     const targetTouches = [...touchEvent.targetTouches as unknown as Touch[]];
     const changedTouches = [...touchEvent.changedTouches as unknown as Touch[]];
+    const adjustTouch = (t: CloneableObject): CloneableObject => {
+      if (getContainerRect) {
+        const rect = getContainerRect();
+        return {
+          ...t,
+          clientX: (t.clientX as number) - rect.left,
+          clientY: (t.clientY as number) - rect.top,
+          pageX: (t.pageX as number) - rect.left,
+          pageY: (t.pageY as number) - rect.top,
+        };
+      }
+      return t;
+    };
     Object.assign(otherProperties, {
-      touches: isTrusted ? touch.map(toCloneableObject) : touch,
+      touches: isTrusted
+        ? touch.map(toCloneableObject).map(adjustTouch)
+        : touch,
       targetTouches: isTrusted
-        ? targetTouches.map(
-          toCloneableObject,
-        )
+        ? targetTouches.map(toCloneableObject).map(adjustTouch)
         : targetTouches,
       changedTouches: isTrusted
-        ? changedTouches.map(
-          toCloneableObject,
-        )
+        ? changedTouches.map(toCloneableObject).map(adjustTouch)
         : changedTouches,
     });
   } else if (type.startsWith('mouse')) {
     const mouseEvent = domEvent as MouseEvent;
+    const rect = getContainerRect?.();
+    const offsetX = rect?.left ?? 0;
+    const offsetY = rect?.top ?? 0;
     Object.assign(otherProperties, {
       button: mouseEvent.button,
       buttons: mouseEvent.buttons,
-      x: mouseEvent.x,
-      y: mouseEvent.y,
-      pageX: mouseEvent.pageX,
-      pageY: mouseEvent.pageY,
-      clientX: mouseEvent.clientX,
-      clientY: mouseEvent.clientY,
+      x: mouseEvent.clientX - offsetX,
+      y: mouseEvent.clientY - offsetY,
+      pageX: mouseEvent.clientX - offsetX,
+      pageY: mouseEvent.clientY - offsetY,
+      clientX: mouseEvent.clientX - offsetX,
+      clientY: mouseEvent.clientY - offsetY,
     });
   } else if (type === 'click') {
+    const rect = getContainerRect?.();
+    const offsetX = rect?.left ?? 0;
+    const offsetY = rect?.top ?? 0;
     detail = {
-      x: (domEvent as MouseEvent).x,
-      y: (domEvent as MouseEvent).y,
+      x: (domEvent as MouseEvent).clientX - offsetX,
+      y: (domEvent as MouseEvent).clientY - offsetY,
     };
   }
   const currentTargetDatasetString = currentTargetElement?.getAttribute(
