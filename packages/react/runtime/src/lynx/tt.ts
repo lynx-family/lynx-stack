@@ -36,9 +36,7 @@ function injectTt(): void {
   const tt = lynxCoreInject.tt;
   tt.OnLifecycleEvent = onLifecycleEvent;
   tt.publishEvent = delayedPublishEvent;
-  tt.publicComponentEvent = (_componentId, handlerName, data) => {
-    delayedPublishEvent(handlerName, data);
-  };
+  tt.publicComponentEvent = (_componentId, handlerName, data) => delayedPublishEvent(handlerName, data);
   tt.callDestroyLifetimeFun = () => {
     removeCtxNotFoundEventListener();
     destroyWorklet();
@@ -147,9 +145,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       }
 
       lynxCoreInject.tt.publishEvent = publishEvent;
-      lynxCoreInject.tt.publicComponentEvent = (_componentId, handlerName, d) => {
-        publishEvent(handlerName, d);
-      };
+      lynxCoreInject.tt.publicComponentEvent = (_componentId, handlerName, d) => publishEvent(handlerName, d);
 
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
