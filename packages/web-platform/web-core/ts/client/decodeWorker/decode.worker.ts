@@ -110,7 +110,7 @@ self.onmessage = async (
     try {
       const response = await fetch(fetchUrl, {
         headers: {
-          'Content-Type': 'octet-stream',
+          'Accept': 'application/octet-stream, application/json',
         },
       });
       if (!response.body || response.status !== 200) {
