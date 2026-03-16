@@ -6,11 +6,13 @@
  * Types of dynamic parts that can be updated in a snapshot
  * These are determined at compile time through static analysis
  */
-export const enum DynamicPartType {
-  Attr = 0, // Regular attribute updates
-  Spread, // Spread operator in JSX
-  Slot, // Slot for component children
-  Children, // Regular children updates
-  ListChildren, // List/array children updates
-  MultiChildren, // Multiple children updates (compat layer)
-}
+export const DynamicPartType = {
+  Attr: 0, // Regular attribute updates
+  Spread: 1, // Spread operator in JSX
+  Slot: 2, // Slot for component children
+  Children: 3, // Regular children updates
+  ListChildren: 4, // List/array children updates
+  MultiChildren: 5, // Multiple children updates (compat layer)
+} as const;
+
+export type DynamicPartType = (typeof DynamicPartType)[keyof typeof DynamicPartType];
