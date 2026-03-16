@@ -74,6 +74,79 @@ impl ExtractStrVisitor {
       is_found_str_flag: false,
     }
   }
+
+  // Returns the string table index for an extractable string
+  fn get_str_index(&mut self, str_value: &str) -> Option<f64> {
+    if str_value.len() < self.opts.str_length as usize {
+      return None;
+    }
+
+    match &self.extracted_str_arr {
+      // for js: get index in extracted_str_arr
+      Some(arr) => arr.iter().position(|x| x == str_value).map(|i| i as f64),
+      // for lepus: get index in select_str_vec
+      None => {
+        let position = self.select_str_vec.iter().position(|x| x == str_value);
+        Some(match position {
+          Some(i) => i as f64,
+          None => {
+            let i = self.select_str_vec.len();
+            self.select_str_vec.push(str_value.to_string());
+            i as f64
+          }
+        })
+      }
+    }
+  }
+
+  // Builds the member expression that reads a value from the extracted string table.
+  fn get_extracted_str_expr(&self, index: f64) -> Expr {
+    Expr::Member(MemberExpr {
+      span: DUMMY_SP,
+      obj: Box::new(Expr::Ident(self.arr_name.clone())),
+      prop: MemberProp::Computed(ComputedPropName {
+        span: DUMMY_SP,
+        expr: Box::new(Expr::Lit(Lit::Num(Number {
+          value: index,
+          span: DUMMY_SP,
+          raw: None,
+        }))),
+      }),
+    })
+  }
+
+  // Creates a template literal quasi element with the provided text content.
+  fn create_tpl_element(value: &str, tail: bool) -> TplElement {
+    TplElement {
+      span: DUMMY_SP,
+      tail,
+      cooked: Some(value.into()),
+      raw: value.into(),
+    }
+  }
+
+  // Splits a template quasi into leading whitespace, core text, and trailing whitespace.
+  fn split_tpl_quasi(value: &str) -> (&str, &str, &str) {
+    let prefix_len = value
+      .char_indices()
+      .find(|(_, ch)| !ch.is_whitespace())
+      .map_or(value.len(), |(idx, _)| idx);
+    let suffix_start = value
+      .char_indices()
+      .rev()
+      .find(|(_, ch)| !ch.is_whitespace())
+      .map_or(0, |(idx, ch)| idx + ch.len_utf8());
+
+    if prefix_len >= suffix_start {
+      return (value, "", "");
+    }
+
+    (
+      &value[..prefix_len],
+      &value[prefix_len..suffix_start],
+      &value[suffix_start..],
+    )
+  }
 }
 
 impl VisitMut for ExtractStrVisitor {
@@ -148,49 +221,44 @@ impl VisitMut for ExtractStrVisitor {
       match expr {
         Expr::Lit(Lit::Str(str)) => {
           let str_value = str.value.to_string_lossy();
-          if str_value.len() < self.opts.str_length as usize {
+          let Some(index) = self.get_str_index(str_value.as_ref()) else {
             return;
-          }
-          let str_value_ref = str_value.as_ref();
-          let index: f64 = match &self.extracted_str_arr {
-            Some(arr) => {
-              // js
-              let position = arr.iter().position(|x| x == str_value_ref);
-              match position {
-                Some(i) => i as f64,
-                None => {
-                  expr.visit_mut_children_with(self);
-                  return;
-                }
-              }
-            }
-            None => {
-              // lepus
-              let position = self.select_str_vec.iter().position(|x| x == str_value_ref);
-              match position {
-                Some(i) => i as f64,
-                None => {
-                  let i = self.select_str_vec.len();
-                  self.select_str_vec.push(str_value_ref.to_string());
-                  i as f64
-                }
-              }
-            }
           };
-          let container = Expr::Ident(self.arr_name.clone());
-          let index_expr = Expr::Lit(Lit::Num(Number {
-            value: index,
-            span: DUMMY_SP,
-            raw: None,
-          }));
-          *expr = Expr::Member(MemberExpr {
-            span: DUMMY_SP,
-            obj: Box::new(container),
-            prop: MemberProp::Computed(ComputedPropName {
-              span: DUMMY_SP,
-              expr: Box::new(index_expr),
-            }),
-          });
+          *expr = self.get_extracted_str_expr(index);
+        }
+        Expr::Tpl(tpl) => {
+          tpl.exprs.visit_mut_with(self);
+
+          let mut next_quasis = Vec::with_capacity(tpl.quasis.len());
+          let mut next_exprs = Vec::with_capacity(tpl.exprs.len() * 2);
+
+          for (idx, quasi) in tpl.quasis.iter().enumerate() {
+            let quasi_value = quasi
+              .cooked
+              .as_ref()
+              .map(|value| value.to_string_lossy().into_owned())
+              .unwrap_or_else(|| quasi.raw.to_string());
+            let (prefix, core, suffix) = Self::split_tpl_quasi(&quasi_value);
+
+            if let Some(index) = self.get_str_index(core) {
+              next_quasis.push(Self::create_tpl_element(prefix, false));
+              next_exprs.push(Box::new(self.get_extracted_str_expr(index)));
+              next_quasis.push(Self::create_tpl_element(suffix, false));
+            } else {
+              next_quasis.push(Self::create_tpl_element(&quasi_value, false));
+            }
+
+            if let Some(inner_expr) = tpl.exprs.get(idx) {
+              next_exprs.push(inner_expr.clone());
+            }
+          }
+
+          if let Some(last_quasi) = next_quasis.last_mut() {
+            last_quasi.tail = true;
+          }
+
+          tpl.quasis = next_quasis;
+          tpl.exprs = next_exprs;
         }
         _ => {
           expr.visit_mut_children_with(self);
@@ -288,6 +356,28 @@ mod tests {
         const b = '111' + '000';
       });
     }
+  "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(ExtractStrVisitor::new(ExtractStrConfig {
+        str_length: 1,
+        extracted_str_arr: None
+      })),
+      hygiene_with_config(Default::default()),
+    ),
+    should_extract_tpl_str,
+    r#"
+    const greeting = `Hello ${name}`;
+    const suffix = `${value} world`;
+    const wrapped = `${left} middle ${right}`;
+    const spaces = ` ${content} `;
   "#
   );
 }
