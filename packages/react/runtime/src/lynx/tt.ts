@@ -147,7 +147,9 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       }
 
       lynxCoreInject.tt.publishEvent = publishEvent;
-      lynxCoreInject.tt.publicComponentEvent = publicComponentEvent;
+      lynxCoreInject.tt.publicComponentEvent = (_componentId, handlerName, d) => {
+        publishEvent(handlerName, d);
+      };
 
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
@@ -253,10 +255,6 @@ function publishEvent(handlerName: string, data: EventDataType) {
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
-}
-
-function publicComponentEvent(_componentId: string, handlerName: string, data: EventDataType) {
-  publishEvent(handlerName, data);
 }
 
 function updateGlobalProps(newData: Record<string, any>): void {
