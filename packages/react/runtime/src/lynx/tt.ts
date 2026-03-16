@@ -36,7 +36,9 @@ function injectTt(): void {
   const tt = lynxCoreInject.tt;
   tt.OnLifecycleEvent = onLifecycleEvent;
   tt.publishEvent = delayedPublishEvent;
-  tt.publicComponentEvent = delayedPublicComponentEvent;
+  tt.publicComponentEvent = (_componentId, handlerName, data) => {
+    delayedPublishEvent(handlerName, data);
+  };
   tt.callDestroyLifetimeFun = () => {
     removeCtxNotFoundEventListener();
     destroyWorklet();
@@ -255,10 +257,6 @@ function publishEvent(handlerName: string, data: EventDataType) {
 
 function publicComponentEvent(_componentId: string, handlerName: string, data: EventDataType) {
   publishEvent(handlerName, data);
-}
-
-function delayedPublicComponentEvent(_componentId: string, handlerName: string, data: EventDataType) {
-  delayedPublishEvent(handlerName, data);
 }
 
 function updateGlobalProps(newData: Record<string, any>): void {
