@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 export async function loadTemplate(caseName) {
   return await readFile(
-    path.join(__dirname, 'dist', 'ssr', caseName, 'index.web.bundle'),
+    path.join(__dirname, 'dist', 'ssr', caseName, 'index.web.json'),
   );
 }
 export async function SSR(rawTemplate, caseName, projectName = 'fp-only') {
