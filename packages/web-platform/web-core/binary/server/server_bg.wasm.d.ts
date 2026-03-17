@@ -11,6 +11,7 @@ export const decode_style_info: (a: any, b: number, c: number, d: number) => [nu
 export const encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number) => [number, number, number];
 export const get_font_face_content: (a: any) => [number, number, number, number];
 export const get_style_content: (a: any) => [number, number, number, number];
+export const init_server_in_shadow_css: (a: number, b: number) => void;
 export const mainthreadservercontext_add_class: (a: number, b: number, c: number, d: number) => [number, number];
 export const mainthreadservercontext_add_inline_style_raw_string_key: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
 export const mainthreadservercontext_append_child: (a: number, b: number, c: number) => void;

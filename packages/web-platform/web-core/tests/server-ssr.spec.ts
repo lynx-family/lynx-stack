@@ -4,7 +4,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('../css/in_shadow.css?inline', () => ({
+  default: '/* INJECTED_SHADOW_CSS */',
+}));
+
 import { createElementAPI, type SSRBinding } from '../ts/server/index.js';
 import { MainThreadServerContext } from '../ts/server/wasm.js';
 
@@ -46,6 +51,7 @@ describe('Server SSR', () => {
     // Debug output
     console.log('Generated HTML:', html);
 
+    expect(html).toContain('/* INJECTED_SHADOW_CSS */');
     expect(html).toContain('<div part="page"');
     expect(html).toContain('<x-view');
     expect(html).toContain('id="main"');

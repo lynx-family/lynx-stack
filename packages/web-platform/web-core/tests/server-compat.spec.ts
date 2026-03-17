@@ -4,7 +4,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('../css/in_shadow.css?inline', () => ({
+  default: '/* INJECTED_SHADOW_CSS */',
+}));
+
 import { createElementAPI } from '../ts/server/index.js';
 
 describe('Server Compat Tests', () => {

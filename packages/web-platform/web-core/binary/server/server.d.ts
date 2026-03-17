@@ -132,3 +132,5 @@ export function encode_legacy_json_generated_raw_style_info(raw_style_info: RawS
 export function get_font_face_content(buffer: Uint8Array): string;
 
 export function get_style_content(buffer: Uint8Array): string;
+
+export function init_server_in_shadow_css(css: string): void;

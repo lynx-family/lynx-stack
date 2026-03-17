@@ -47,7 +47,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rsbuild build",
+    "build": "rsbuild build && rslib build",
     "build:wasm": "node ./scripts/build.js",
     "test": "vitest run"
   },
@@ -71,6 +71,7 @@
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-eslint": "1.2.1",
     "@rsbuild/plugin-source-build": "1.0.4",
+    "@rslib/core": "^0.19.6",
     "binaryen": "^125.0.0",
     "eslint-plugin-compat": "^6.2.0",
     "fb-dotslash": "^0.5.8",

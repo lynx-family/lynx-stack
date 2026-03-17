@@ -4,7 +4,14 @@ import tseslint from 'typescript-eslint';
 export default defineConfig(
   compat.configs['flat/recommended'],
   {
-    ignores: ['dist/**', 'binary/**', 'css/**', 'scripts/**', 'tests/**'],
+    ignores: [
+      'dist/**',
+      'binary/**',
+      'css/**',
+      'scripts/**',
+      'tests/**',
+      '.rslib/**',
+    ],
   },
   {
     files: ['**/*.ts'],

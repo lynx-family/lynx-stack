@@ -12,7 +12,19 @@ use crate::style_transformer::{
 use crate::template::template_sections::style_info::css_property::CSSProperty;
 use crate::template::template_sections::style_info::StyleSheetResource;
 use std::borrow::Cow;
+use std::cell::RefCell;
 use wasm_bindgen::prelude::*;
+
+thread_local! {
+  static SERVER_IN_SHADOW_CSS: RefCell<String> = RefCell::new(String::new());
+}
+
+#[wasm_bindgen]
+pub fn init_server_in_shadow_css(css: &str) {
+  SERVER_IN_SHADOW_CSS.with(|cell| {
+    *cell.borrow_mut() = css.to_string();
+  });
+}
 
 #[wasm_bindgen]
 pub struct MainThreadServerContext {
@@ -263,12 +275,15 @@ impl MainThreadServerContext {
 
   pub fn generate_html(&self, element_id: usize) -> String {
     let mut buffer = String::with_capacity(4096);
-    buffer.push_str("<lynx-view");
+    buffer.push_str("<lynx-view ssr");
     if !self.view_attributes.is_empty() {
       buffer.push(' ');
       buffer.push_str(&self.view_attributes);
     }
     buffer.push_str(r#"><template shadowrootmode="open"><style>"#);
+    SERVER_IN_SHADOW_CSS.with(|css| {
+      buffer.push_str(&css.borrow());
+    });
     buffer.push_str(&self.style_manager.get_css_string());
     buffer.push_str("</style>");
     self.render_element(element_id, &mut buffer);
@@ -402,7 +417,9 @@ mod tests {
     let html = ctx.generate_html(div_id);
 
     // Check structural correctness (attributes/style order might vary in HashMaps)
-    assert!(html.starts_with("<lynx-view><template shadowrootmode=\"open\"><style></style><div"));
+    assert!(
+      html.starts_with("<lynx-view ssr><template shadowrootmode=\"open\"><style></style><div")
+    );
     assert!(html.contains("id=\"container\""));
     assert!(html.contains("style=\"")); // checks for style attribute presence
     assert!(html.contains("color:red;"));

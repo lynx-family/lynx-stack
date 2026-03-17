@@ -15,6 +15,7 @@ export async function SSR(rawTemplate, caseName, projectName = 'fp-only') {
     { mockData: 'mockData' },
     {},
     [],
+    'height="auto"',
   );
   return ssrHtml;
 }

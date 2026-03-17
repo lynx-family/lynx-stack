@@ -1,16 +1,20 @@
-import { describe, it, expect } from 'vitest';
-import { createElementAPI } from '../ts/server/index.js';
-import { MainThreadServerContext, SSRBinding } from '../ts/server/wasm.js';
+import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('../css/in_shadow.css?inline', () => ({
+  default: '/* INJECTED_SHADOW_CSS_BULK */',
+}));
+
+import { createElementAPI, type SSRBinding } from '../ts/server/index.js';
 
 describe('Server SSR Bulk Styles', () => {
   it('should handle object-based SetInlineStyles', () => {
-    const binding: SSRBinding = {};
+    const binding: SSRBinding = { ssrResult: '' };
     const config = { enableCSSSelector: true };
     const { globalThisAPIs: api, wasmContext: wasmCtx } = createElementAPI(
       binding,
       undefined,
       '',
-      config,
+      config as any,
     );
 
     const el = api.__CreateElement('view', 0);
@@ -34,13 +38,13 @@ describe('Server SSR Bulk Styles', () => {
   });
 
   it('should handle numeric values in SetInlineStyles', () => {
-    const binding: SSRBinding = {};
+    const binding: SSRBinding = { ssrResult: '' };
     const config = { enableCSSSelector: true };
     const { globalThisAPIs: api, wasmContext: wasmCtx } = createElementAPI(
       binding,
       undefined,
       '',
-      config,
+      config as any,
     );
 
     const el = api.__CreateElement('view', 0);

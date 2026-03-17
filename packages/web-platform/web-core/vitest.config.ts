@@ -19,6 +19,18 @@ export default defineConfig({
   },
   plugins: [
     {
+      name: 'transform-in-shadow-css',
+      enforce: 'pre',
+      load(id) {
+        if (id.includes('in_shadow.css')) {
+          if (id.includes('bulk')) {
+            return `export default "/* INJECTED_SHADOW_CSS_BULK */";`;
+          }
+          return `export default "/* INJECTED_SHADOW_CSS */";`;
+        }
+      },
+    },
+    {
       name: 'transform-debug-wasm',
       transform(code, id) {
         if (id.endsWith('ts/client/wasm.ts')) {
