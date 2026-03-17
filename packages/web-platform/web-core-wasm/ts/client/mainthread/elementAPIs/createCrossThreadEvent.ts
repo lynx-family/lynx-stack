@@ -54,10 +54,10 @@ export function createCrossThreadEvent(
         const rect = getContainerRect();
         return {
           ...t,
-          clientX: (t.clientX as number) - rect.left,
-          clientY: (t.clientY as number) - rect.top,
-          pageX: (t.pageX as number) - rect.left,
-          pageY: (t.pageY as number) - rect.top,
+          clientX: (t['clientX'] as number) - rect.left,
+          clientY: (t['clientY'] as number) - rect.top,
+          pageX: (t['pageX'] as number) - rect.left,
+          pageY: (t['pageY'] as number) - rect.top,
         };
       }
       return t;
