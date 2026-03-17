@@ -569,7 +569,9 @@ describe('transformBundle', () => {
     console.log('!@#@#$!!@#!#!3sasdega!!23!#$!@#%%');
     let q = fun('456');
     let a = '789';
-    const b = '111' + '000';`;
+    const b = '111' + '000';
+    const tpl = \`Hello \${a}\`;
+    const wrapped = \`\${a} middle \${b}\`;`;
     const result = await transformBundleResult(inputContent, {
       filename: 'lepus.js',
       pluginName: 'transformBundleResult',
@@ -585,7 +587,9 @@ describe('transformBundle', () => {
           "789",
           "!@#@#$!!@#!#!3sasdega!!23!#$!@#%%",
           "111",
-          "000"
+          "000",
+          "Hello",
+          "middle"
       ];
       globalThis.processData = ()=>{
           if (true) {
@@ -602,6 +606,8 @@ describe('transformBundle', () => {
       let q = fun(_EXTRACT_STR[1]);
       let a = _EXTRACT_STR[2];
       const b = _EXTRACT_STR[4] + _EXTRACT_STR[5];
+      const tpl = \`\${_EXTRACT_STR[6]} \${a}\`;
+      const wrapped = \`\${a} \${_EXTRACT_STR[7]} \${b}\`;
       "
     `);
   });
@@ -630,6 +636,8 @@ describe('transformBundle', () => {
         let q = fun('456');
         let a = '789';
         const b = '111' + '000';
+        const tpl = \`Hello \${a}\`;
+        const wrapped = \`\${a} middle \${b}\`;
       });
   }`;
     const result = await transformBundleResult(inputContent, {
@@ -665,6 +673,8 @@ describe('transformBundle', () => {
               let q = fun('456');
               let a = '789';
               const b = '111' + '000';
+              const tpl = \`Hello \${a}\`;
+              const wrapped = \`\${a} middle \${b}\`;
           });
       }
       "

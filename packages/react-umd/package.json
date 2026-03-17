@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react-umd",
-  "version": "0.0.1-alpha-1",
+  "version": "0.116.5",
   "description": "UMD build for ReactLynx",
   "keywords": [
     "ReactLynx",

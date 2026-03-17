@@ -81,79 +81,109 @@ describe('Config', () => {
     expect(config.resolve.alias).toHaveProperty(
       'preact$',
       expect.stringContaining(
-        '/preact/dist/preact.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/dist/preact.mjs'.replaceAll('/', path.sep),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat$',
       expect.stringContaining(
-        '/preact/compat/dist/compat.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/compat/dist/compat.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/debug$',
       expect.stringContaining(
-        '/preact/debug/dist/debug.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/debug/dist/debug.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/devtools$',
       expect.stringContaining(
-        '/preact/devtools/dist/devtools.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/devtools/dist/devtools.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/hooks$',
       expect.stringContaining(
-        '/preact/hooks/dist/hooks.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/hooks/dist/hooks.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/test-utils$',
       expect.stringContaining(
-        '/preact/test-utils/dist/testUtils.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/test-utils/dist/testUtils.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/jsx-runtime$',
       expect.stringContaining(
-        '/preact/jsx-runtime/dist/jsxRuntime.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/jsx-runtime/dist/jsxRuntime.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/jsx-dev-runtime$',
       expect.stringContaining(
-        '/preact/jsx-runtime/dist/jsxRuntime.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/jsx-runtime/dist/jsxRuntime.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/client$',
       expect.stringContaining(
-        '/preact/compat/client.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/compat/client.mjs'.replaceAll('/', path.sep),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/server$',
       expect.stringContaining(
-        '/preact/compat/server.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/compat/server.mjs'.replaceAll('/', path.sep),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/jsx-runtime$',
       expect.stringContaining(
-        '/preact/compat/jsx-runtime.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/compat/jsx-runtime.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/jsx-dev-runtime$',
       expect.stringContaining(
-        '/preact/compat/jsx-dev-runtime.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/compat/jsx-dev-runtime.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/scheduler$',
       expect.stringContaining(
-        '/preact/compat/scheduler.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/compat/scheduler.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
@@ -1691,7 +1721,7 @@ describe('Config', () => {
           {
             "name": "lib-preact",
             "priority": 0,
-            "test": /node_modules\\[\\\\\\\\/\\]\\(\\.\\*\\?\\[\\\\\\\\/\\]\\)\\?\\(\\?:preact\\|preact\\[\\\\\\\\/\\]compat\\|preact\\[\\\\\\\\/\\]hooks\\|preact\\[\\\\\\\\/\\]jsx-runtime\\)\\[\\\\\\\\/\\]/,
+            "test": /node_modules\\[\\\\\\\\/\\]\\(\\.\\*\\?\\[\\\\\\\\/\\]\\)\\?\\(\\?:\\(\\?:internal-\\)\\?preact\\|\\(\\?:internal-\\)\\?preact\\[\\\\\\\\/\\]compat\\|\\(\\?:internal-\\)\\?preact\\[\\\\\\\\/\\]hooks\\|\\(\\?:internal-\\)\\?preact\\[\\\\\\\\/\\]jsx-runtime\\)\\[\\\\\\\\/\\]/,
           }
         `)
     })
