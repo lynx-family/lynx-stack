@@ -18,7 +18,7 @@ const cleanJsFiles = (dir: string) => {
   }
 };
 
-cleanJsFiles(path.join(__dirname, 'dist/server'));
+cleanJsFiles(path.join(__dirname, 'dist', 'server'));
 
 export default defineConfig({
   lib: [

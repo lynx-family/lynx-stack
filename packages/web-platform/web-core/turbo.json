@@ -9,7 +9,7 @@
     },
     "build": {
       "dependsOn": ["build:wasm"],
-      "inputs": ["src/**", "ts/**", "index.css", "*.ts"],
+      "inputs": ["src/**", "ts/**", "css/**", "*.ts"],
       "outputs": ["dist/**"]
     }
   }

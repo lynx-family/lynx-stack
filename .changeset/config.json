@@ -9,7 +9,7 @@
   "commit": false,
   "fixed": [
     [
-      "@lynx-js/web-core-server",
+      "@lynx-js/web-core",
       "@lynx-js/web-worker-rpc",
       "@lynx-js/web-rsbuild-server-middleware"
     ],
