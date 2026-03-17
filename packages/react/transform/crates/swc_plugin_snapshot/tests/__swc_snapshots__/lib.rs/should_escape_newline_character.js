@@ -2,26 +2,42 @@ import * as ReactLynx from "@lynx-js/react";
 const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId);
-        const el1 = __CreateView(pageId);
+        const el = __CreateView(pageId, {
+            nodeIndex: 1050571824
+        });
+        const el1 = __CreateView(pageId, {
+            nodeIndex: 2813394755
+        });
         __SetClasses(el1, "123 456");
         __AppendElement(el, el1);
-        const el2 = __CreateView(pageId);
+        const el2 = __CreateView(pageId, {
+            nodeIndex: 3661784109
+        });
         __SetClasses(el2, "123 456");
         __AppendElement(el, el2);
-        const el3 = __CreateView(pageId);
+        const el3 = __CreateView(pageId, {
+            nodeIndex: 1724963666
+        });
         __SetClasses(el3, "123  456");
         __AppendElement(el, el3);
-        const el4 = __CreateView(pageId);
+        const el4 = __CreateView(pageId, {
+            nodeIndex: 246914077
+        });
         __SetClasses(el4, "123\\n456");
         __AppendElement(el, el4);
-        const el5 = __CreateView(pageId);
+        const el5 = __CreateView(pageId, {
+            nodeIndex: 2257838780
+        });
         __SetClasses(el5, "123 456");
         __AppendElement(el, el5);
-        const el6 = __CreateView(pageId);
+        const el6 = __CreateView(pageId, {
+            nodeIndex: 2111619658
+        });
         __SetClasses(el6, "123  456");
         __AppendElement(el, el6);
-        const el7 = __CreateView(pageId);
+        const el7 = __CreateView(pageId, {
+            nodeIndex: 217695684
+        });
         __SetClasses(el7, "123\\t456");
         __AppendElement(el, el7);
         const el8 = __CreateElement("svg", pageId);

@@ -66,8 +66,15 @@ export const elementTree = new (class {
     return json;
   }
 
-  __CreateView(parentComponentUniqueId: number) {
-    return this.__CreateElement('view', parentComponentUniqueId);
+  __CreateView(
+    parentComponentUniqueId: number,
+    info?: { nodeIndex?: number },
+  ) {
+    const element = this.__CreateElement('view', parentComponentUniqueId);
+    if (info?.nodeIndex !== undefined) {
+      element.props.nodeIndex = info.nodeIndex;
+    }
+    return element;
   }
   __FirstElement(e: Element) {
     return e.children[0];

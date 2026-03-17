@@ -2,7 +2,9 @@ import * as ReactLynx from "@lynx-js/react";
 const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId);
+        const el = __CreateView(pageId, {
+            nodeIndex: 1050571824
+        });
         __SetInlineStyles(el, "background-color:red;width:100%;height:100%;display:flex;justify-content:center;align-items:center;border-radius:50%;opacity:0.5");
         return [
             el
@@ -12,7 +14,9 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1
 const __snapshot_da39a_test_2 = "__snapshot_da39a_test_2";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2)=>ReactLynx.createSnapshot(__snapshot_da39a_test_2, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId);
+        const el = __CreateView(pageId, {
+            nodeIndex: 1491878293
+        });
         __SetInlineStyles(el, "background-color: red;");
         return [
             el

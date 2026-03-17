@@ -33,7 +33,12 @@ declare global {
   ): FiberElement;
   declare function __CreateText(parentComponentUniqueId: number): FiberElement;
   declare function __CreateImage(parentComponentUniqueId: number): FiberElement;
-  declare function __CreateView(parentComponentUniqueId: number): FiberElement;
+  declare function __CreateView(
+    parentComponentUniqueId: number,
+    info?: {
+      nodeIndex?: number;
+    },
+  ): FiberElement;
   declare function __CreateRawText(s: string): FiberElement;
   declare function __CreateList(
     parentComponentUniqueId: number,

@@ -35,7 +35,7 @@ use swc_plugins_shared::{
   },
   target::TransformTarget,
   transform_mode::TransformMode,
-  utils::calc_hash,
+  utils::{calc_hash, calc_hash_number},
 };
 
 use self::{
@@ -260,13 +260,19 @@ where
   dynamic_parts: Vec<DynamicPart>,
   dynamic_part_visitor: &'a mut V,
   key: Option<JSXAttrValue>,
+  filename: String,
 }
 
 impl<'a, V> DynamicPartExtractor<'a, V>
 where
   V: VisitMut,
 {
-  fn new(runtime_id: Expr, dynamic_part_count: i32, dynamic_part_visitor: &'a mut V) -> Self {
+  fn new(
+    runtime_id: Expr,
+    dynamic_part_count: i32,
+    dynamic_part_visitor: &'a mut V,
+    filename: String,
+  ) -> Self {
     DynamicPartExtractor {
       page_id: Lazy::new(|| private_ident!("pageId")),
       runtime_id,
@@ -280,7 +286,12 @@ where
       dynamic_parts: vec![],
       dynamic_part_visitor,
       key: None,
+      filename,
     }
+  }
+
+  fn node_index_from_span(&self, span: Span) -> u32 {
+    calc_hash_number(&format!("{}:{}", self.filename, span.lo.0))
   }
 
   fn static_stmt_from_jsx_element(&mut self, n: &JSXElement, el: Ident) -> Stmt {
@@ -291,9 +302,14 @@ where
       match tag.as_ref() {
         "view" => {
           static_stmt = quote!(
-            r#"const $element = __CreateView($page_id)"# as Stmt,
+            r#"const $element = __CreateView($page_id, { nodeIndex: $node_index })"# as Stmt,
             element = el.clone(),
             page_id = self.page_id.clone(),
+            node_index: Expr = Expr::Lit(Lit::Num(Number {
+              span: DUMMY_SP,
+              value: self.node_index_from_span(n.opening.span) as f64,
+              raw: None,
+            })),
           );
         }
         "scroll-view" => {
@@ -1179,6 +1195,7 @@ where
       self.runtime_id.clone(),
       wrap_dynamic_part.dynamic_part_count,
       self,
+      self.cfg.filename.clone(),
     );
 
     node.visit_mut_with(&mut dynamic_part_extractor);
