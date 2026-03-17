@@ -235,13 +235,6 @@ export class KittenLynxView {
     if (!this._channel) {
       throw new Error('Failed to attach to session for URL: ' + url);
     }
-
-    // Refresh the DOM tree from the attached session
-    const response = await this._channel.send('DOM.getDocument', {
-      depth: -1,
-    });
-    const root = response.root.children[0]!;
-    this._root = ElementNode.fromId(root.nodeId, this);
   }
 
   /**
