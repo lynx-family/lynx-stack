@@ -16,7 +16,7 @@ use std::cell::RefCell;
 use wasm_bindgen::prelude::*;
 
 thread_local! {
-  static SERVER_IN_SHADOW_CSS: RefCell<String> = RefCell::new(String::new());
+  static SERVER_IN_SHADOW_CSS: RefCell<String> = const { RefCell::new(String::new()) };
 }
 
 #[wasm_bindgen]
