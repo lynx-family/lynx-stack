@@ -113,6 +113,18 @@ export class KittenLynxView {
       }
     }
 
+    let existingSessionIds = new Set<number>();
+    try {
+      const existing = await this._connector.sendListSessionMessage(
+        this._clientId,
+      );
+      if (Array.isArray(existing)) {
+        existing.forEach(s => existingSessionIds.add(s.session_id));
+      }
+    } catch (e) {
+      // ignore
+    }
+
     console.log(`[goto] Sending App.openPage to URL: ${url}`);
     try {
       const msg = await this._connector.sendAppMessage(
@@ -170,11 +182,25 @@ export class KittenLynxView {
           );
         }
 
-        const matched = sessions.find(
+        const newSessionMatches = sessions.filter(
           s =>
-            s.url === url || s.url === urlPath || url.endsWith(s.url)
-            || s.url.endsWith(urlPath),
+            !existingSessionIds.has(s.session_id)
+            && (s.url === url || s.url === urlPath || url.endsWith(s.url)
+              || s.url.endsWith(urlPath)),
         );
+        let matched = newSessionMatches[0];
+
+        if (!matched) {
+          const suffixMatches = sessions.filter(
+            s =>
+              s.url === url || s.url === urlPath || url.endsWith(s.url)
+              || s.url.endsWith(urlPath),
+          );
+          if (suffixMatches.length === 1) {
+            matched = suffixMatches[0];
+          }
+        }
+
         if (matched) {
           console.log(
             `[goto] Found matched session after ${
@@ -258,20 +284,18 @@ export class KittenLynxView {
    * @param sessionId - The numeric Lynx devtool session ID to attach to, discovered via `sendListSessionMessage`.
    */
   async onAttachedToTarget(sessionId: number) {
-    if (!this._channel) {
-      const channel = CDPChannel.from(
-        sessionId,
-        this._clientId,
-        this._connector,
-      );
+    const channel = CDPChannel.from(
+      sessionId,
+      this._clientId,
+      this._connector,
+    );
 
-      const response = await channel.send('DOM.getDocument', {
-        depth: -1,
-      });
-      const root = response.root.children[0]!;
-      this._root = ElementNode.fromId(root.nodeId, this);
-      this._channel = channel;
-    }
+    const response = await channel.send('DOM.getDocument', {
+      depth: -1,
+    });
+    const root = response.root.children[0]!;
+    this._channel = channel;
+    this._root = ElementNode.fromId(root.nodeId, this);
   }
 
   #contentToStringImpl(buffer: string[], node: NodeInfoInGetDocument) {

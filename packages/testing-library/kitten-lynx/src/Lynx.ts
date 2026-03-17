@@ -201,6 +201,11 @@ export class Lynx {
    * @returns A Promise resolving when the cleanup operation is fully processed.
    */
   async close(): Promise<void> {
+    if (this._connector) {
+      await this._connector.close();
+    }
     this._connector = null;
+    this._currentClient = null;
+    this._currentClientId = '';
   }
 }

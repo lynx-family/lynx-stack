@@ -258,8 +258,15 @@ jobs:
         # 5. Wait for boot
         echo "Waiting for emulator to boot..."
         adb wait-for-device
+        BOOT_TIMEOUT=60
+        BOOT_ELAPSED=0
         while [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" != "1" ]; do
+            if [ $BOOT_ELAPSED -ge $BOOT_TIMEOUT ]; then
+              echo "Error: Emulator failed to boot within ${BOOT_TIMEOUT} seconds!"
+              exit 1
+            fi
             sleep 2
+            BOOT_ELAPSED=$((BOOT_ELAPSED+2))
         done
         echo "Emulator is ready."
 

@@ -45,8 +45,8 @@ Here is the blueprint for a standard test written using `kitten-lynx` and `vites
 
 ```typescript
 import { expect, test, beforeAll, afterAll } from 'vitest';
-import { Lynx } from '@lynx-js/kitten-lynx';
-import type { KittenLynxView } from '@lynx-js/kitten-lynx';
+import { Lynx } from '@lynx-js/kitten-lynx-test-infra';
+import type { KittenLynxView } from '@lynx-js/kitten-lynx-test-infra';
 
 let lynx: Lynx;
 let page: KittenLynxView;
