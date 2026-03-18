@@ -129,13 +129,16 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
 
       // TODO: It seems `delayedEvents` and `delayedLifecycleEvents` should be merged into one array to ensure the proper order of events.
       flushDelayedLifecycleEvents();
-      for (const [handlerName, data] of delayedEvents) {
-        // eslint-disable-next-line prefer-const
-        let [idStr, ...rest] = handlerName.split(':');
-        while (jsReadyEventIdSwap[idStr!]) idStr = jsReadyEventIdSwap[idStr!]?.toString();
-        publishEvent([idStr, ...rest].join(':'), data);
+      const queuedDelayedEvents = delayedEvents;
+      if (queuedDelayedEvents) {
+        for (const [handlerName, data] of queuedDelayedEvents) {
+          // eslint-disable-next-line prefer-const
+          let [idStr, ...rest] = handlerName.split(':');
+          while (jsReadyEventIdSwap[idStr!]) idStr = jsReadyEventIdSwap[idStr!]?.toString();
+          publishEvent([idStr, ...rest].join(':'), data);
+        }
+        queuedDelayedEvents.length = 0;
       }
-      delayedEvents.length = 0;
 
       lynxCoreInject.tt.publishEvent = publishEvent;
 
