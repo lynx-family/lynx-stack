@@ -14,7 +14,7 @@ import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-ru
 import type { BackgroundSnapshotInstance } from '../backgroundSnapshot.js';
 import { ListUpdateInfoRecording } from '../listUpdateInfo.js';
 import { __pendingListUpdates } from '../pendingListUpdates.js';
-import { SnapshotInstance } from '../snapshot.js';
+import type { SnapshotInstance } from '../snapshot.js';
 import { isDirectOrDeepEqual, isEmptyObject, pick } from '../utils.js';
 import { updateEvent } from './event.js';
 import { updateGesture } from './gesture.js';
@@ -40,6 +40,93 @@ const noFlattenAttributes = /* @__PURE__ */ new Set<string>([
   'exposure-id',
 ]);
 
+function createFakeSnapshot(
+  snapshot: SnapshotInstance,
+  index: number,
+  value: unknown,
+  target?: Record<string, unknown>,
+  key?: string,
+  extras?: object,
+): SnapshotInstance {
+  return {
+    __values: {
+      get [index]() {
+        return value;
+      },
+      set [index](v: unknown) {
+        if (target && key) target[key] = v;
+      },
+    },
+    __id: snapshot.__id,
+    __elements: snapshot.__elements,
+    ...extras,
+  } as SnapshotInstance;
+}
+
+function updateAttribute(
+  snapshot: SnapshotInstance,
+  index: number,
+  elementIndex: number,
+  key: string,
+  value: unknown,
+  oldValue: unknown,
+  target: Record<string, unknown>,
+): void {
+  let match: RegExpMatchArray | null = null;
+  if (key === 'className') {
+    __SetClasses(snapshot.__elements![elementIndex]!, (value ?? '') as string);
+  } else if (key === 'style') {
+    if (!isDirectOrDeepEqual(value, oldValue)) {
+      __SetInlineStyles(snapshot.__elements![elementIndex]!, value ?? '');
+    }
+  } else if (key === 'id') {
+    __SetID(snapshot.__elements![elementIndex]!, (value ?? null) as string);
+  } else if (key.startsWith('data-')) {
+    // collected in dataset
+  } else if (key === 'ref') {
+    const fakeSnapshot = createFakeSnapshot(snapshot, index, value, target, key);
+    updateRef(fakeSnapshot, index, oldValue as string | null, elementIndex);
+  } else if (key.endsWith(':ref')) {
+    snapshot.__worklet_ref_set ??= new Set();
+    const fakeSnapshot = createFakeSnapshot(snapshot, index, value, undefined, undefined, {
+      __worklet_ref_set: snapshot.__worklet_ref_set,
+    });
+    updateWorkletRef(
+      fakeSnapshot,
+      index,
+      oldValue as WorkletRefImpl<Element> | Worklet | null | undefined,
+      elementIndex,
+      key.slice(0, -4),
+    );
+  } else if (key.endsWith(':gesture')) {
+    const workletType = key.slice(0, -8);
+    const fakeSnapshot = createFakeSnapshot(snapshot, index, value);
+    updateGesture(fakeSnapshot, index, oldValue, elementIndex, workletType);
+  } else if ((match = eventRegExp.exec(key))) {
+    const workletType = match[2];
+    const eventType = eventTypeMap[match[3]!]!;
+    const eventName = match[4]!;
+    const fakeSnapshot = createFakeSnapshot(snapshot, index, value, target, key);
+    if (workletType) {
+      updateWorkletEvent(
+        fakeSnapshot,
+        index,
+        oldValue as Worklet,
+        elementIndex,
+        workletType,
+        eventType,
+        eventName,
+      );
+    } else {
+      updateEvent(fakeSnapshot, index, oldValue, elementIndex, eventType, eventName, key);
+    }
+  } else if (platformInfoAttributes.has(key)) {
+    // ignore
+  } else {
+    __SetAttribute(snapshot.__elements![elementIndex]!, key, value ?? null);
+  }
+}
+
 function updateSpread(
   snapshot: SnapshotInstance,
   index: number,
@@ -64,15 +151,7 @@ function updateSpread(
       snapshot.__listItemPlatformInfo = platformInfo;
 
       // The fakeSnapshot is missing `__parent`, so no `ListUpdateInfoRecording#onSetAttribute` will be called
-      const fakeSnapshot = {
-        __values: {
-          get [index]() {
-            return platformInfo;
-          },
-        },
-        __id: snapshot.__id,
-        __elements: snapshot.__elements,
-      } as SnapshotInstance;
+      const fakeSnapshot = createFakeSnapshot(snapshot, index, platformInfo);
       updateListItemPlatformInfo(fakeSnapshot, index, oldPlatformInfo, elementIndex);
     }
   }
@@ -88,101 +167,10 @@ function updateSpread(
   }
 
   const dataset: Record<string, unknown> = {};
-  let match: RegExpMatchArray | null = null;
   for (const key in newValue) {
     const v = newValue[key];
     if (v !== oldValue[key]) {
-      if (key === 'className') {
-        __SetClasses(snapshot.__elements[elementIndex]!, v as string);
-      } else if (key === 'style') {
-        if (!isDirectOrDeepEqual(v, oldValue[key])) {
-          __SetInlineStyles(snapshot.__elements[elementIndex]!, v);
-        }
-      } else if (key === 'id') {
-        __SetID(snapshot.__elements[elementIndex]!, v as string);
-      } else if (key.startsWith('data-')) {
-        // collected below
-      } else if (key === 'ref') {
-        const fakeSnapshot = {
-          __values: {
-            get [index]() {
-              return v;
-            },
-            set [index](value: unknown) {
-              // Modifications to the ref value should be reflected in the corresponding position of the spread.
-              newValue[key] = value;
-            },
-          },
-          __id: snapshot.__id,
-          __elements: snapshot.__elements,
-        } as SnapshotInstance;
-        updateRef(fakeSnapshot, index, oldValue[key] as string | null, elementIndex);
-      } else if (key.endsWith(':ref')) {
-        snapshot.__worklet_ref_set ??= new Set();
-        const fakeSnapshot = {
-          __values: {
-            get [index]() {
-              return v;
-            },
-          },
-          __id: snapshot.__id,
-          __elements: snapshot.__elements,
-          __worklet_ref_set: snapshot.__worklet_ref_set,
-        } as SnapshotInstance;
-        updateWorkletRef(
-          fakeSnapshot,
-          index,
-          oldValue[key] as WorkletRefImpl<Element> | Worklet | null | undefined,
-          elementIndex,
-          key.slice(0, -4),
-        );
-      } else if (key.endsWith(':gesture')) {
-        const workletType = key.slice(0, -8);
-        const fakeSnapshot = {
-          __values: {
-            get [index]() {
-              return v;
-            },
-          },
-          __id: snapshot.__id,
-          __elements: snapshot.__elements,
-        } as SnapshotInstance;
-        updateGesture(fakeSnapshot, index, oldValue[key], elementIndex, workletType);
-      } else if ((match = eventRegExp.exec(key))) {
-        const workletType = match[2];
-        const eventType = eventTypeMap[match[3]!]!;
-        const eventName = match[4]!;
-        const fakeSnapshot = {
-          __values: {
-            get [index]() {
-              return v;
-            },
-            set [index](value: unknown) {
-              // Modifications to the event value should be reflected in the corresponding position of the spread.
-              newValue[key] = value;
-            },
-          },
-          __id: snapshot.__id,
-          __elements: snapshot.__elements,
-        } as SnapshotInstance;
-        if (workletType) {
-          updateWorkletEvent(
-            fakeSnapshot,
-            index,
-            oldValue[key] as Worklet,
-            elementIndex,
-            workletType,
-            eventType,
-            eventName,
-          );
-        } else {
-          updateEvent(fakeSnapshot, index, oldValue[key], elementIndex, eventType, eventName, key);
-        }
-      } else if (platformInfoAttributes.has(key)) {
-        // ignore
-      } else {
-        __SetAttribute(snapshot.__elements[elementIndex]!, key, v);
-      }
+      updateAttribute(snapshot, index, elementIndex, key, v, oldValue[key], newValue);
     }
 
     // collect data regardless of whether it has changed
@@ -194,99 +182,10 @@ function updateSpread(
   let hasOldDataset = false;
   for (const key in oldValue) {
     if (!(key in newValue)) {
-      if (key === 'className') {
-        __SetClasses(snapshot.__elements[elementIndex]!, '');
-      } else if (key === 'style') {
-        __SetInlineStyles(snapshot.__elements[elementIndex]!, '');
-      } else if (key === 'id') {
-        __SetID(snapshot.__elements[elementIndex]!, null);
-      } else if (key.startsWith('data-')) {
-        // collected below
-      } else if (key === 'ref') {
-        const fakeSnapshot = {
-          __values: {
-            get [index]() {
-              return undefined;
-            },
-            set [index](value: unknown) {
-              // Modifications to the ref value should be reflected in the corresponding position of the spread.
-              newValue[key] = value;
-            },
-          },
-          __id: snapshot.__id,
-          __elements: snapshot.__elements,
-        } as SnapshotInstance;
-        updateRef(fakeSnapshot, index, oldValue[key] as string | null, elementIndex);
-      } else if (key.endsWith(':ref')) {
-        snapshot.__worklet_ref_set ??= new Set();
-        const fakeSnapshot = {
-          __values: {
-            get [index]() {
-              return undefined;
-            },
-          },
-          __id: snapshot.__id,
-          __elements: snapshot.__elements,
-          __worklet_ref_set: snapshot.__worklet_ref_set,
-        } as SnapshotInstance;
-        updateWorkletRef(
-          fakeSnapshot,
-          index,
-          oldValue[key] as WorkletRefImpl<Element> | Worklet | null | undefined,
-          elementIndex,
-          key.slice(0, -4),
-        );
-      } else if (key.endsWith(':gesture')) {
-        const workletType = key.slice(0, -8);
-        const fakeSnapshot = {
-          __values: {
-            get [index]() {
-              return undefined;
-            },
-          },
-          __id: snapshot.__id,
-          __elements: snapshot.__elements,
-        } as SnapshotInstance;
-        updateGesture(fakeSnapshot, index, oldValue[key], elementIndex, workletType);
-      } else if ((match = eventRegExp.exec(key))) {
-        const workletType = match[2];
-        const eventType = eventTypeMap[match[3]!]!;
-        const eventName = match[4]!;
-        const fakeSnapshot = {
-          __values: {
-            get [index]() {
-              return undefined;
-            },
-            set [index](value: unknown) {
-              newValue[key] = value;
-            },
-          },
-          __id: snapshot.__id,
-          __elements: snapshot.__elements,
-        } as SnapshotInstance;
-        if (workletType) {
-          updateWorkletEvent(
-            fakeSnapshot,
-            index,
-            oldValue[key] as Worklet,
-            elementIndex,
-            workletType,
-            eventType,
-            eventName,
-          );
-        } else {
-          updateEvent(fakeSnapshot, index, oldValue[key], elementIndex, eventType, eventName, key);
-        }
-      } else if (platformInfoAttributes.has(key)) {
-        // ignore
-      } else {
-        __SetAttribute(snapshot.__elements[elementIndex]!, key, null);
+      updateAttribute(snapshot, index, elementIndex, key, undefined, oldValue[key], newValue);
+      if (key.startsWith('data-')) {
+        hasOldDataset = true;
       }
-    }
-
-    // collect data regardless of whether it has changed
-    if (key.startsWith('data-')) {
-      hasOldDataset = true;
     }
   }
 
@@ -305,8 +204,9 @@ function transformSpread(
   let hasNoFlattenAttributes = false;
   for (const key in spread) {
     let value = spread[key];
-    if (key === '__spread') {}
-    else if (key === 'class' || key === 'className') {
+    if (key === '__spread') {
+      continue;
+    } else if (key === 'class' || key === 'className') {
       value ??= '';
       result['className'] = value;
     } else if (key === 'ref') {

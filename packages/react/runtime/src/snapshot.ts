@@ -445,7 +445,11 @@ export class SnapshotInstance {
     a.__nextSibling = null;
     a.__previousSibling = null;
 
-    this.childNodes.map(c => c.takeElements()).forEach(node => a.__insertBefore(node));
+    let child = this.__firstChild;
+    while (child) {
+      a.__insertBefore(child.takeElements());
+      child = child.__nextSibling;
+    }
 
     a.__elements = this.__elements;
     a.__element_root = this.__element_root;
@@ -692,8 +696,7 @@ export class SnapshotInstance {
   }
 
   callUpdateIfNotDirectOrDeepEqual(index: number, oldValue: any, newValue: any): void {
-    if (isDirectOrDeepEqual(oldValue, newValue)) {}
-    else {
+    if (!isDirectOrDeepEqual(oldValue, newValue)) {
       this.__snapshot_def.update![index]!(this, index, oldValue);
     }
   }
