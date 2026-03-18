@@ -1222,6 +1222,18 @@ importers:
         specifier: ^1.5.1
         version: 1.5.1(@babel/core@7.29.0)(vite@5.4.2(@types/node@24.10.13)(lightningcss@1.31.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6))
 
+  packages/testing-library/kitten-lynx:
+    dependencies:
+      '@lynx-js/devtool-connector':
+        specifier: workspace:*
+        version: link:../../mcp-servers/devtool-connector
+      '@yume-chan/adb':
+        specifier: catalog:adb
+        version: 2.5.1
+      '@yume-chan/adb-server-node-tcp':
+        specifier: catalog:adb
+        version: 2.5.2
+
   packages/testing-library/testing-environment:
     devDependencies:
       '@testing-library/jest-dom':
