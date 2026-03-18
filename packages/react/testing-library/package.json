@@ -15,8 +15,10 @@
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/testing-environment": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
+    "@rstest/adapter-rsbuild": "^0.2.3",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1"
   }

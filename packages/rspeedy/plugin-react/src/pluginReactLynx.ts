@@ -31,7 +31,6 @@ import { applyLazy } from './lazy.js'
 import { applyLoaders, applyTestingLoaders } from './loaders.js'
 import { applyNodeEnv } from './nodeEnv.js'
 import { applyRefresh } from './refresh.js'
-import { applyRstest } from './rstest.js'
 import { applySplitChunksRule } from './splitChunks.js'
 import { applySWC } from './swc.js'
 import { applyUseSyncExternalStore } from './useSyncExternalStore.js'
@@ -345,9 +344,6 @@ export function pluginReactLynx(
           })
         }
 
-        if (isRstest) {
-          applyRstest(api)
-        }
         if (!isRstest) {
           applyCSS(api, resolvedOptions)
         }

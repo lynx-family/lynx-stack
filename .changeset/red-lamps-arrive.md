@@ -7,18 +7,15 @@ Support rstest for testing library, you can use rstest with RLTL now:
 Create a config file `rstest.config.ts` with the following content:
 
 ```ts
-import { defineConfig, RstestConfig } from '@rstest/core';
-import lynxConfig from './lynx.config.js';
+import { defineConfig } from '@rstest/core';
+import { withLynxConfig } from '@lynx-js/react/testing-library/rstest-adapter';
 
 export default defineConfig({
-  ...lynxConfig as RstestConfig,
-  testEnvironment: 'jsdom',
-  setupFiles: [
-    require.resolve('@lynx-js/react/testing-library/setupFiles/rstest'),
-  ],
-  globals: true,
+  extends: withLynxConfig(),
 });
 ```
+
+`@lynx-js/react/testing-library/rstest-adapter` will automatically load your `lynx.config.ts` and apply the same configuration to rstest, so you can keep your test environment consistent with your development environment.
 
 And then use rstest as usual:
 

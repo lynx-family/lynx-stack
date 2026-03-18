@@ -16,6 +16,7 @@ export default defineConfig({
           'pure': './src/pure.jsx',
           'env/index': './src/env/index.ts',
           'plugins/index': './src/plugins/index.ts',
+          'rstest-adapter': './src/rstest-adapter.ts',
         },
       },
       output: {
@@ -24,6 +25,9 @@ export default defineConfig({
           /^\.\.\/\.\.\/runtime\/lib/,
           /^preact/,
           /^vitest/,
+          '@rstest/core',
+          '@rsbuild/core',
+          '@lynx-js/rspeedy',
         ],
       },
     },

@@ -22,7 +22,7 @@ function LazyComponentLoader({ url }) {
   return (
     <Suspense fallback={<text>loading...</text>}>
       <InternalComponent />
-      {(typeof __RSTEST__ !== 'undefined' && __RSTEST__) ? null : <ExternalComponent />}
+      {process.env.RSTEST ? null : <ExternalComponent />}
     </Suspense>
   );
 }
@@ -55,7 +55,7 @@ describe('lazy bundle', () => {
       timeout: 50_000,
     });
 
-    if (typeof __RSTEST__ !== 'undefined' && __RSTEST__) {
+    if (process.env.RSTEST) {
       expect(container.firstChild).toMatchInlineSnapshot(`
         <view>
           <wrapper>
@@ -306,7 +306,7 @@ describe('Suspense', () => {
       if (name === 'PreactSuspense') {
         // <view className="lazy-wrapper"> is torn down, (it is triggered in first render but delayed 10_000ms to execute, we use `vi.runAllTimers()` to simulate the situation that will cause the bug)
         // <text>loading...</text> is torn down
-        if (typeof __RSTEST__ === 'undefined') {
+        if (!process.env.RSTEST) {
           expect(tearDownInstances).toMatchInlineSnapshot(`
             [
               {
@@ -352,7 +352,7 @@ describe('Suspense', () => {
           `);
         }
       } else {
-        if (typeof __RSTEST__ === 'undefined') {
+        if (!process.env.RSTEST) {
           expect(tearDownInstances).toMatchInlineSnapshot(`
           [
             {
