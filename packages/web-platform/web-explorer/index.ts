@@ -1,7 +1,5 @@
 import '@lynx-js/web-core/client';
 import type { LynxViewElement as LynxView } from '@lynx-js/web-core/client';
-import '@lynx-js/web-elements/index.css';
-import '@lynx-js/web-elements/all';
 
 const video = document.getElementById('qr-scanner') as HTMLVideoElement;
 let lynxView = document.getElementById('lynx-view') as LynxView;
