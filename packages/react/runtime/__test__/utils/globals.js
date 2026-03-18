@@ -149,6 +149,7 @@ function injectGlobals() {
   globalThis.__REF_FIRE_IMMEDIATELY__ = false;
   globalThis.__ENABLE_SSR__ = true;
   globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
+  globalThis.__GLOBAL_PROPS_MODE__ = 'reactive';
   globalThis.globDynamicComponentEntry = '__Card__';
   globalThis.lynxCoreInject = {};
   globalThis.lynxCoreInject.tt = {
