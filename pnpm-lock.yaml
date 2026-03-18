@@ -282,7 +282,7 @@ importers:
         version: 3.7.0
       '@rsbuild/plugin-babel':
         specifier: 1.1.0
-        version: 1.1.0(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
+        version: 1.1.0(@rsbuild/core@1.7.3)
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -1140,10 +1140,10 @@ importers:
         version: link:../../web-platform/web-elements
       '@rsbuild/plugin-less':
         specifier: 1.6.0
-        version: 1.6.0(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
+        version: 1.6.0(@rsbuild/core@1.7.3)
       '@rsbuild/plugin-sass':
         specifier: 1.5.0
-        version: 1.5.0(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
+        version: 1.5.0(@rsbuild/core@1.7.3)
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -1158,7 +1158,7 @@ importers:
         version: 1.1.1
       rsbuild-plugin-tailwindcss:
         specifier: 0.2.4
-        version: 0.2.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(tailwindcss@4.2.1)
+        version: 0.2.4(@rsbuild/core@1.7.3)(tailwindcss@4.2.1)
       rslog:
         specifier: ^1.3.2
         version: 1.3.2
@@ -1242,7 +1242,7 @@ importers:
         version: 3.7.0
       '@rsbuild/plugin-babel':
         specifier: 1.1.0
-        version: 1.1.0(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
+        version: 1.1.0(@rsbuild/core@1.7.3)
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -2008,13 +2008,13 @@ importers:
         version: 7.33.4(@types/node@24.10.13)
       '@rsbuild/plugin-sass':
         specifier: 1.5.0
-        version: 1.5.0(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
+        version: 1.5.0(@rsbuild/core@1.7.3)
       '@rsbuild/plugin-type-check':
         specifier: 1.3.4
-        version: 1.3.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(@rspack/core@1.7.7(@swc/helpers@0.5.18))(tslib@2.8.1)(typescript@5.9.3)
+        version: 1.3.4(@rsbuild/core@1.7.3)(@rspack/core@1.7.7(@swc/helpers@0.5.18))(tslib@2.8.1)(typescript@5.9.3)
       '@rsbuild/plugin-typed-css-modules':
         specifier: 1.2.2
-        version: 1.2.2(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
+        version: 1.2.2(@rsbuild/core@1.7.3)
       '@rspress/core':
         specifier: 2.0.3
         version: 2.0.3(@types/react@19.2.14)(core-js@3.48.0)
@@ -4449,9 +4449,6 @@ packages:
 
   '@types/bonjour@3.5.13':
     resolution: {integrity: sha512-z9fJ5Im06zvUL548KvYNecEVlA7cVDkGUi6kZusb04mpyEFKCIZJvloCcmpmLaIahDpOQGHaHmG6imtPMmPXGQ==}
-
-  '@types/chai@5.2.2':
-    resolution: {integrity: sha512-8kB30R7Hwqf40JPiKhVzodJs2Qc1ZJ5zuT3uzw5Hq/dhNCl3G3l83jfpdI1e20BP348+fV7VIL/+FxaXkqBmWg==}
 
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
@@ -12161,13 +12158,13 @@ snapshots:
     optionalDependencies:
       core-js: 3.48.0
 
-  '@rsbuild/plugin-babel@1.1.0(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))':
+  '@rsbuild/plugin-babel@1.1.0(@rsbuild/core@1.7.3)':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-proposal-decorators': 7.29.0(@babel/core@7.29.0)
       '@babel/plugin-transform-class-properties': 7.28.6(@babel/core@7.29.0)
       '@babel/preset-typescript': 7.28.5(@babel/core@7.29.0)
-      '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
+      '@rsbuild/core': 1.7.3
       '@types/babel__core': 7.20.5
       deepmerge: 4.3.1
       reduce-configs: 1.1.1
@@ -12207,9 +12204,9 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 1.7.3
 
-  '@rsbuild/plugin-less@1.6.0(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))':
+  '@rsbuild/plugin-less@1.6.0(@rsbuild/core@1.7.3)':
     dependencies:
-      '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
+      '@rsbuild/core': 1.7.3
       deepmerge: 4.3.1
       reduce-configs: 1.1.1
 
@@ -12238,15 +12235,6 @@ snapshots:
       reduce-configs: 1.1.1
       sass-embedded: 1.97.3
 
-  '@rsbuild/plugin-sass@1.5.0(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))':
-    dependencies:
-      '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
-      deepmerge: 4.3.1
-      loader-utils: 2.0.4
-      postcss: 8.5.6
-      reduce-configs: 1.1.1
-      sass-embedded: 1.97.3
-
   '@rsbuild/plugin-source-build@1.0.4(@rsbuild/core@1.7.3)':
     dependencies:
       fast-glob: 3.3.3
@@ -12254,6 +12242,19 @@ snapshots:
       yaml: 2.8.2
     optionalDependencies:
       '@rsbuild/core': 1.7.3
+
+  '@rsbuild/plugin-type-check@1.3.4(@rsbuild/core@1.7.3)(@rspack/core@1.7.7(@swc/helpers@0.5.18))(tslib@2.8.1)(typescript@5.9.3)':
+    dependencies:
+      deepmerge: 4.3.1
+      json5: 2.2.3
+      reduce-configs: 1.1.1
+      ts-checker-rspack-plugin: 1.3.0(@rspack/core@1.7.7(@swc/helpers@0.5.18))(tslib@2.8.1)(typescript@5.9.3)
+    optionalDependencies:
+      '@rsbuild/core': 1.7.3
+    transitivePeerDependencies:
+      - '@rspack/core'
+      - tslib
+      - typescript
 
   '@rsbuild/plugin-type-check@1.3.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(@rspack/core@1.7.7(@swc/helpers@0.5.18))(tslib@2.8.1)(typescript@5.9.3)':
     dependencies:
@@ -12271,10 +12272,6 @@ snapshots:
   '@rsbuild/plugin-typed-css-modules@1.2.2(@rsbuild/core@1.7.3)':
     optionalDependencies:
       '@rsbuild/core': 1.7.3
-
-  '@rsbuild/plugin-typed-css-modules@1.2.2(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))':
-    optionalDependencies:
-      '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
 
   '@rsdoctor/client@1.2.3': {}
 
@@ -12940,10 +12937,6 @@ snapshots:
     dependencies:
       '@types/node': 24.10.13
 
-  '@types/chai@5.2.2':
-    dependencies:
-      '@types/deep-eql': 4.0.2
-
   '@types/chai@5.2.3':
     dependencies:
       '@types/deep-eql': 4.0.2
@@ -13401,7 +13394,7 @@ snapshots:
 
   '@vitest/expect@3.2.4':
     dependencies:
-      '@types/chai': 5.2.2
+      '@types/chai': 5.2.3
       '@vitest/spy': 3.2.4
       '@vitest/utils': 3.2.4
       chai: 5.2.1
@@ -18162,15 +18155,15 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
 
+  rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@1.7.3)(tailwindcss@4.2.1):
+    dependencies:
+      tailwindcss: 4.2.1
+    optionalDependencies:
+      '@rsbuild/core': 1.7.3
+
   rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(tailwindcss@3.4.19):
     dependencies:
       tailwindcss: 3.4.19
-    optionalDependencies:
-      '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
-
-  rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(tailwindcss@4.2.1):
-    dependencies:
-      tailwindcss: 4.2.1
     optionalDependencies:
       '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
 
@@ -19388,7 +19381,7 @@ snapshots:
 
   vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.13)(@vitest/ui@3.2.4)(jsdom@27.4.0)(lightningcss@1.31.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6):
     dependencies:
-      '@types/chai': 5.2.2
+      '@types/chai': 5.2.3
       '@vitest/expect': 3.2.4
       '@vitest/mocker': 3.2.4(vite@5.4.2(@types/node@24.10.13)(lightningcss@1.31.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6))
       '@vitest/pretty-format': 3.2.4
