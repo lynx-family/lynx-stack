@@ -8,6 +8,28 @@ Similar to [react-testing-library](https://github.com/testing-library/react-test
 
 ## Setup
 
+### Rstest
+
+Setup rstest with `@lynx-js/react/testing-library/rstest-adapter`:
+
+```ts
+// rstest.config.ts
+import { defineConfig } from '@rstest/core';
+import { withLynxConfig } from '@lynx-js/react/testing-library/rstest-adapter';
+
+export default defineConfig({
+  extends: withLynxConfig(),
+});
+```
+
+`@lynx-js/react/testing-library/rstest-adapter` will automatically load your `lynx.config.ts` and apply the same configuration to rstest, so you can keep your test environment consistent with your development environment.
+
+Then you can start writing tests and run them with rstest!
+
+For more usage detail, see https://rstest.rs/
+
+### Vitest
+
 Setup vitest:
 
 ```js
@@ -29,9 +51,9 @@ Then you can start writing tests and run them with vitest!
 
 ## Usage
 
-```js
+```jsx
 import '@testing-library/jest-dom';
-import { test, expect } from 'vitest';
+import { test, expect } from 'vitest'; // or '@rstest/core'
 import { render } from '@lynx-js/react/testing-library';
 
 test('renders options.wrapper around node', async () => {

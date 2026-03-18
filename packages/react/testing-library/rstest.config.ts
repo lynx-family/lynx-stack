@@ -16,7 +16,6 @@ export default defineConfig({
   ],
   source: {
     define: {
-      __RSTEST__: 'true',
       __ALOG__: 'true',
     },
   },

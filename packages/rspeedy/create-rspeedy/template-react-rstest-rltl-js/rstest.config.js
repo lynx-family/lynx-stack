@@ -1,11 +1,6 @@
 import { defineConfig } from '@rstest/core'
-import lynxConfig from './lynx.config.js'
+import { withLynxConfig } from '@lynx-js/react/testing-library/rstest-adapter'
 
 export default defineConfig({
-  ...lynxConfig,
-  testEnvironment: 'jsdom',
-  setupFiles: [
-    require.resolve('@lynx-js/react/testing-library/setupFiles/rstest'),
-  ],
-  globals: true,
+  extends: withLynxConfig(),
 })

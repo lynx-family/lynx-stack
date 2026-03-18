@@ -104,6 +104,10 @@
       "types": "./testing-library/dist/vitest.config.d.ts",
       "default": "./testing-library/dist/vitest.config.js"
     },
+    "./testing-library/rstest-adapter": {
+      "types": "./testing-library/dist/rstest-adapter.d.ts",
+      "default": "./testing-library/dist/rstest-adapter.js"
+    },
     "./testing-library/setupFiles/rstest": "./testing-library/dist/setupFiles/rstest.js",
     "./package.json": "./package.json"
   },
@@ -184,10 +188,14 @@
   },
   "peerDependencies": {
     "@lynx-js/types": "*",
+    "@rstest/core": "*",
     "@types/react": "^18"
   },
   "peerDependenciesMeta": {
     "@lynx-js/types": {
+      "optional": true
+    },
+    "@rstest/core": {
       "optional": true
     }
   }

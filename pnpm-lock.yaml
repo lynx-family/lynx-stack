@@ -553,6 +553,9 @@ importers:
 
   packages/react:
     dependencies:
+      '@rstest/core':
+        specifier: '*'
+        version: 0.8.1(jsdom@27.4.0)
       preact:
         specifier: npm:@hongzhiyuan/preact@10.28.0-fc4af453
         version: '@hongzhiyuan/preact@10.28.0-fc4af453'
@@ -605,12 +608,18 @@ importers:
       '@lynx-js/react-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../rspeedy/plugin-react
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../rspeedy/core
       '@lynx-js/testing-environment':
         specifier: workspace:*
         version: link:../../testing-library/testing-environment
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 1.7.3
+      '@rstest/adapter-rsbuild':
+        specifier: ^0.2.3
+        version: 0.2.3(@rsbuild/core@1.7.3)(@rstest/core@0.8.1(jsdom@27.4.0))
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -1198,6 +1207,9 @@ importers:
       '@babel/preset-typescript':
         specifier: ^7.28.5
         version: 7.28.5(@babel/core@7.29.0)
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../../rspeedy/plugin-qrcode
       '@lynx-js/react-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../../rspeedy/plugin-react
@@ -1207,6 +1219,9 @@ importers:
       '@lynx-js/types':
         specifier: 3.7.0
         version: 3.7.0
+      '@rsbuild/plugin-babel':
+        specifier: 1.1.0
+        version: 1.1.0(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -4069,6 +4084,12 @@ packages:
 
   '@rstack-dev/doc-ui@1.12.3':
     resolution: {integrity: sha512-5W70pjRxxwyNT3R4kTYDE8cPaMjsJKXMeZQn7+Q54+RCJ1ahN4pADnpaY7WvSEBWkjXdI4IR4GGvBs7nSU/8MA==}
+
+  '@rstest/adapter-rsbuild@0.2.3':
+    resolution: {integrity: sha512-ZKQkY3wI+PLyPJR41xFrAQ0AmenUivo5l1/g97p00+nk1peGMr9gjUxg5gqt3M7qLQZ0RiJZX/KPkPeOltd4lQ==}
+    peerDependencies:
+      '@rsbuild/core': '*'
+      '@rstest/core': '>=0.7.7'
 
   '@rstest/core@0.8.1':
     resolution: {integrity: sha512-7d/2fm2V91pVx/rRtZ2gl6Zh4hVMivtDl4RgHFhBOrxi//UwhKISeF5gS/CSwpCgfOf10TzJRXqdI17ueUBNMQ==}
@@ -12546,6 +12567,11 @@ snapshots:
       - '@emotion/is-prop-valid'
       - react
       - react-dom
+
+  '@rstest/adapter-rsbuild@0.2.3(@rsbuild/core@1.7.3)(@rstest/core@0.8.1(jsdom@27.4.0))':
+    dependencies:
+      '@rsbuild/core': 1.7.3
+      '@rstest/core': 0.8.1(jsdom@27.4.0)
 
   '@rstest/core@0.8.1(jsdom@27.4.0)':
     dependencies:
