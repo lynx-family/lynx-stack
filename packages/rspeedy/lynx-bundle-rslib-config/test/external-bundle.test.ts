@@ -198,6 +198,84 @@ describe('should build external bundle', () => {
       'index__main-thread',
     ])
   })
+
+  it('should include LoadingConsumerModulesRuntimeModule in the main-thread bundle', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      id: 'utils-runtime-module',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist'),
+        },
+        minify: false,
+      },
+      plugins: [pluginReactLynx()],
+    })
+
+    await build(rslibConfig)
+
+    const decodedResult = await decodeTemplate(
+      path.join(fixtureDir, 'dist/utils-runtime-module.lynx.bundle'),
+    )
+
+    // Check if the runtime module code injected by LoadingConsumerModulesRuntimeModule is present
+    expect(decodedResult['custom-sections']['utils__main-thread']).toContain(
+      'var globalModules = globalThis[Symbol.for(\'__LYNX_WEBPACK_MODULES__\')];',
+    )
+    vi.unstubAllEnvs()
+  })
+})
+
+describe('NODE_ENV configuration', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+
+  const buildWithNodeEnv = async (
+    nodeEnv: 'development' | 'production',
+    id: string,
+  ) => {
+    const prevNodeEnv = process.env['NODE_ENV']
+    process.env['NODE_ENV'] = nodeEnv
+    try {
+      const config = defineExternalBundleRslibConfig({
+        source: {
+          entry: {
+            utils: path.join(fixtureDir, 'index.ts'),
+          },
+        },
+        id,
+        output: {
+          distPath: { root: path.join(fixtureDir, 'dist') },
+        },
+        plugins: [pluginReactLynx()],
+      })
+      await build(config)
+      return await decodeTemplate(
+        path.join(fixtureDir, `dist/${id}.lynx.bundle`),
+      )
+    } finally {
+      process.env['NODE_ENV'] = prevNodeEnv
+    }
+  }
+
+  it('should output different artifacts for development and production NODE_ENV', async () => {
+    const devResult = await buildWithNodeEnv('development', 'utils-dev')
+    const prodResult = await buildWithNodeEnv('production', 'utils-prod')
+
+    const devMainThread = devResult['custom-sections']['utils__main-thread']!
+    const prodMainThread = prodResult['custom-sections']['utils__main-thread']!
+
+    // The produced artifacts should be different
+    expect(devMainThread).not.toBe(prodMainThread)
+
+    // __DEV__ macro should be replaced differently
+    expect(devMainThread).toMatch(/isDev:\s*(!0|true)/)
+    expect(prodMainThread).toMatch(/isDev:\s*(!1|false)/)
+  })
 })
 
 describe('debug mode artifacts', () => {
@@ -385,19 +463,19 @@ describe('pluginReactLynx', () => {
           "@lynx-js/react/runtime-components$": "<WORKSPACE>/packages/react/components/lib/index.js",
           "@lynx-js/react/worklet-runtime/bindings$": "<WORKSPACE>/packages/react/worklet-runtime/lib/bindings/index.js",
           "@swc/helpers": "<WORKSPACE>/node_modules/<PNPM_INNER>/@swc/helpers",
-          "preact$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/dist/preact.mjs",
-          "preact/compat$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/compat/dist/compat.mjs",
-          "preact/compat/client$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/compat/client.mjs",
-          "preact/compat/jsx-dev-runtime$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/compat/jsx-dev-runtime.mjs",
-          "preact/compat/jsx-runtime$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/compat/jsx-runtime.mjs",
-          "preact/compat/scheduler$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/compat/scheduler.mjs",
-          "preact/compat/server$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/compat/server.mjs",
-          "preact/debug$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/debug/dist/debug.mjs",
-          "preact/devtools$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/devtools/dist/devtools.mjs",
-          "preact/hooks$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/hooks/dist/hooks.mjs",
-          "preact/jsx-dev-runtime$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/jsx-runtime/dist/jsxRuntime.mjs",
-          "preact/jsx-runtime$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/jsx-runtime/dist/jsxRuntime.mjs",
-          "preact/test-utils$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@hongzhiyuan/preact/test-utils/dist/testUtils.mjs",
+          "preact$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/dist/preact.mjs",
+          "preact/compat$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/dist/compat.mjs",
+          "preact/compat/client$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/client.mjs",
+          "preact/compat/jsx-dev-runtime$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/jsx-dev-runtime.mjs",
+          "preact/compat/jsx-runtime$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/jsx-runtime.mjs",
+          "preact/compat/scheduler$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/scheduler.mjs",
+          "preact/compat/server$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/server.mjs",
+          "preact/debug$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/debug/dist/debug.mjs",
+          "preact/devtools$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/devtools/dist/devtools.mjs",
+          "preact/hooks$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/hooks/dist/hooks.mjs",
+          "preact/jsx-dev-runtime$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/jsx-runtime/dist/jsxRuntime.mjs",
+          "preact/jsx-runtime$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/jsx-runtime/dist/jsxRuntime.mjs",
+          "preact/test-utils$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/test-utils/dist/testUtils.mjs",
           "react$": "<WORKSPACE>/packages/react/runtime/lib/index.js",
           "react-compiler-runtime": "<WORKSPACE>/node_modules/<PNPM_INNER>/react-compiler-runtime",
           "use-sync-external-store$": "<WORKSPACE>/packages/use-sync-external-store/index.js",

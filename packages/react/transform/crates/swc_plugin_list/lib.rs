@@ -189,6 +189,7 @@ mod tests {
   };
 
   use super::ListVisitor;
+  #[cfg(feature = "napi")]
   use swc_plugin_snapshot::napi::{JSXTransformer, JSXTransformerConfig};
   use swc_plugins_shared::{target_napi::TransformTarget, transform_mode_napi::TransformMode};
 
@@ -292,6 +293,7 @@ mod tests {
     "#
   );
 
+  #[cfg(feature = "napi")]
   test!(
     module,
     Syntax::Es(EsSyntax {

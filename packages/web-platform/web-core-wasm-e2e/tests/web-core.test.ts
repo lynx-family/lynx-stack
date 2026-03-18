@@ -595,6 +595,194 @@ test.describe('web core tests', () => {
     await wait(500);
     expect(success).toBeTruthy();
   });
+  test('__ElementAnimate START creates animation', async ({ page, browserName }) => {
+    // firefox not support
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    await page.evaluate(() => {
+      const root = globalThis.runtime.__CreatePage('0', '0', {});
+      const element = globalThis.runtime.__CreateElement('view', '0', {});
+      globalThis.runtime.__AppendElement(root, element);
+      globalThis.runtime.__FlushElementTree();
+      globalThis.runtime.__ElementAnimate(element, [
+        0, /* START */
+        'test-anim-1',
+        [{ opacity: '0' }, { opacity: '1' }],
+        { duration: 1000, fillMode: 'forwards' },
+      ]);
+    });
+    await wait(100);
+    const animations = await page.evaluate(() => {
+      const lynxView = document.querySelector('lynx-view') as any;
+      const root = lynxView?.shadowRoot ?? lynxView;
+      const el = root?.querySelector('x-view');
+      return el?.getAnimations().length ?? 0;
+    });
+    expect(animations).toBe(1);
+  });
+
+  test('__ElementAnimate PAUSE pauses animation', async ({ page, browserName }) => {
+    // firefox not support
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    await page.evaluate(() => {
+      const root = globalThis.runtime.__CreatePage('0', '0', {});
+      const element = globalThis.runtime.__CreateElement('view', '0', {});
+      globalThis.runtime.__AppendElement(root, element);
+      globalThis.runtime.__FlushElementTree();
+      globalThis.runtime.__ElementAnimate(element, [
+        0, /* START */
+        'test-anim-pause',
+        [{ opacity: '0' }, { opacity: '1' }],
+        { duration: 5000 },
+      ]);
+      globalThis.runtime.__ElementAnimate(element, [
+        2,
+        /* PAUSE */ 'test-anim-pause',
+      ]);
+    });
+    await wait(100);
+    const playState = await page.evaluate(() => {
+      const lynxView = document.querySelector('lynx-view') as any;
+      const root = lynxView?.shadowRoot ?? lynxView;
+      const el = root?.querySelector('x-view');
+      const anims = el?.getAnimations() ?? [];
+      return anims[0]?.playState;
+    });
+    expect(playState).toBe('paused');
+  });
+
+  test('__ElementAnimate PLAY resumes paused animation', async ({ page, browserName }) => {
+    // firefox not support
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    await page.evaluate(() => {
+      const root = globalThis.runtime.__CreatePage('0', '0', {});
+      const element = globalThis.runtime.__CreateElement('view', '0', {});
+      globalThis.runtime.__AppendElement(root, element);
+      globalThis.runtime.__FlushElementTree();
+      globalThis.runtime.__ElementAnimate(element, [
+        0, /* START */
+        'test-anim-play',
+        [{ opacity: '0' }, { opacity: '1' }],
+        { duration: 5000 },
+      ]);
+      globalThis.runtime.__ElementAnimate(element, [
+        2,
+        /* PAUSE */ 'test-anim-play',
+      ]);
+      globalThis.runtime.__ElementAnimate(element, [
+        1,
+        /* PLAY */ 'test-anim-play',
+      ]);
+    });
+    await wait(100);
+    const playState = await page.evaluate(() => {
+      const lynxView = document.querySelector('lynx-view') as any;
+      const root = lynxView?.shadowRoot ?? lynxView;
+      const el = root?.querySelector('x-view');
+      const anims = el?.getAnimations() ?? [];
+      return anims[0]?.playState;
+    });
+    expect(playState).toBe('running');
+  });
+
+  test('__ElementAnimate CANCEL removes animation', async ({ page, browserName }) => {
+    // firefox not support
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    await page.evaluate(() => {
+      const root = globalThis.runtime.__CreatePage('0', '0', {});
+      const element = globalThis.runtime.__CreateElement('view', '0', {});
+      globalThis.runtime.__AppendElement(root, element);
+      globalThis.runtime.__FlushElementTree();
+      globalThis.runtime.__ElementAnimate(element, [
+        0, /* START */
+        'test-anim-cancel',
+        [{ opacity: '0' }, { opacity: '1' }],
+        { duration: 5000, fillMode: 'forwards' },
+      ]);
+      globalThis.runtime.__ElementAnimate(element, [
+        3,
+        /* CANCEL */ 'test-anim-cancel',
+      ]);
+    });
+    await wait(100);
+    const animations = await page.evaluate(() => {
+      const lynxView = document.querySelector('lynx-view') as any;
+      const root = lynxView?.shadowRoot ?? lynxView;
+      const el = root?.querySelector('x-view');
+      return el?.getAnimations().length ?? 0;
+    });
+    expect(animations).toBe(0);
+  });
+
+  test('__ElementAnimate FINISH finishes animation', async ({ page, browserName }) => {
+    // firefox not support
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    await page.evaluate(() => {
+      const root = globalThis.runtime.__CreatePage('0', '0', {});
+      const element = globalThis.runtime.__CreateElement('view', '0', {});
+      globalThis.runtime.__AppendElement(root, element);
+      globalThis.runtime.__FlushElementTree();
+      globalThis.runtime.__ElementAnimate(element, [
+        0, /* START */
+        'test-anim-finish',
+        [{ opacity: '0' }, { opacity: '1' }],
+        { duration: 5000, fillMode: 'forwards' },
+      ]);
+      globalThis.runtime.__ElementAnimate(element, [
+        4,
+        /* FINISH */ 'test-anim-finish',
+      ]);
+    });
+    await wait(100);
+    const playState = await page.evaluate(() => {
+      const lynxView = document.querySelector('lynx-view') as any;
+      const root = lynxView?.shadowRoot ?? lynxView;
+      const el = root?.querySelector('x-view');
+      const anims = el?.getAnimations() ?? [];
+      return anims[0]?.playState;
+    });
+    expect(playState).toBe('finished');
+  });
+
+  test('__ElementAnimate START replaces existing animation with same name', async ({ page, browserName }) => {
+    // firefox not support
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    await page.evaluate(() => {
+      const root = globalThis.runtime.__CreatePage('0', '0', {});
+      const element = globalThis.runtime.__CreateElement('view', '0', {});
+      globalThis.runtime.__AppendElement(root, element);
+      globalThis.runtime.__FlushElementTree();
+      // Start first animation
+      globalThis.runtime.__ElementAnimate(element, [
+        0, /* START */
+        'test-anim-replace',
+        [{ opacity: '0' }, { opacity: '1' }],
+        { duration: 5000, fillMode: 'forwards' },
+      ]);
+      // Start second animation with same name — should cancel the first
+      globalThis.runtime.__ElementAnimate(element, [
+        0, /* START */
+        'test-anim-replace',
+        [{ transform: 'translateX(0px)' }, { transform: 'translateX(100px)' }],
+        { duration: 5000, fillMode: 'forwards' },
+      ]);
+    });
+    await wait(100);
+    const animations = await page.evaluate(() => {
+      const lynxView = document.querySelector('lynx-view') as any;
+      const root = lynxView?.shadowRoot ?? lynxView;
+      const el = root?.querySelector('x-view');
+      return el?.getAnimations().length ?? 0;
+    });
+    // Only 1 animation should remain (the replaced one was cancelled)
+    expect(animations).toBe(1);
+  });
+
   test('source-map-release', async ({ page, browserName }) => {
     // firefox not support
     test.skip(browserName === 'firefox');

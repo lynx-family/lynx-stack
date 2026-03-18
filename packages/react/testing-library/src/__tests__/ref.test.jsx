@@ -460,4 +460,26 @@ describe('element ref', () => {
     expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(2);
     vi.resetAllMocks();
   });
+
+  it('spread undefined ref should work', () => {
+    let setProps, setShowChild;
+    const Child = () => {
+      const [props, _setProps] = useState({ ref: undefined });
+      setProps = _setProps;
+
+      return <view {...props} />;
+    };
+    const App = () => {
+      let [showChild, _setShowChild] = useState(true);
+      setShowChild = _setShowChild;
+
+      return showChild && <Child />;
+    };
+
+    render(<App />);
+
+    act(() => {
+      setShowChild(false);
+    });
+  });
 });

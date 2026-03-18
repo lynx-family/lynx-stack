@@ -1,3 +1,7 @@
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
 export * as React from '@lynx-js/react';
 export * as ReactInternal from '@lynx-js/react/internal';
 export * as ReactJSXDevRuntime from '@lynx-js/react/jsx-dev-runtime';

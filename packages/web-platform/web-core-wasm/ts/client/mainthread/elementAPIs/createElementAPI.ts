@@ -1,6 +1,7 @@
 import { wasmInstance } from '../../wasm.js';
 
 import {
+  AnimationOperation,
   LYNX_TAG_TO_HTML_TAG_MAP,
   LYNX_TIMING_FLAG_ATTRIBUTE,
   lynxDefaultDisplayLinearAttribute,
@@ -462,6 +463,68 @@ export function createElementAPI(
     __GetElementUniqueID,
     __UpdateListCallbacks,
     __SwapElement,
+    __ElementAnimate: (() => {
+      const animationMap = new Map<string, Animation>();
+      const mapTimingOptions = (
+        options?: Record<string, string | number>,
+      ): KeyframeAnimationOptions | undefined => {
+        if (!options) return undefined;
+        const result: KeyframeAnimationOptions = {};
+        if ('duration' in options) {
+          result.duration = Number(options['duration']);
+        }
+        if ('delay' in options) result.delay = Number(options['delay']);
+        if ('direction' in options) {
+          result.direction = options['direction'] as PlaybackDirection;
+        }
+        if ('iterationCount' in options) {
+          result.iterations = options['iterationCount'] === 'infinite'
+            ? Infinity
+            : Number(options['iterationCount']);
+        }
+        if ('fillMode' in options) {
+          result.fill = options['fillMode'] as FillMode;
+        }
+        if ('timingFunction' in options) {
+          result.easing = options['timingFunction'] as string;
+        }
+        return result;
+      };
+      return (element: HTMLElement, args: any) => {
+        const [operation, name] = args;
+        switch (operation) {
+          case AnimationOperation.START: {
+            const keyframes = args[2];
+            const options = args[3];
+            animationMap.get(name)?.cancel();
+            const animation = element.animate(
+              keyframes as Keyframe[],
+              mapTimingOptions(options),
+            );
+            animation.oncancel = animation.onfinish = () => {
+              if (animationMap.get(name) === animation) {
+                animationMap.delete(name);
+              }
+            };
+            animationMap.set(name, animation);
+            break;
+          }
+          case AnimationOperation.PLAY:
+            animationMap.get(name)?.play();
+            break;
+          case AnimationOperation.PAUSE:
+            animationMap.get(name)?.pause();
+            break;
+          case AnimationOperation.CANCEL:
+            animationMap.get(name)?.cancel();
+            animationMap.delete(name);
+            break;
+          case AnimationOperation.FINISH:
+            animationMap.get(name)?.finish();
+            break;
+        }
+      };
+    })(),
     __FlushElementTree: (_, options) => {
       const pipelineId = options?.pipelineOptions?.pipelineID;
       const backgroundThread = mtsBinding.lynxViewInstance.backgroundThread;

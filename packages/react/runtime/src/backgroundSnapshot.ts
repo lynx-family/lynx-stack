@@ -68,17 +68,6 @@ export class BackgroundSnapshotInstance {
   private __nextSibling: BackgroundSnapshotInstance | null = null;
   private __removed_from_tree?: boolean;
 
-  private get isDetached(): boolean {
-    let node: BackgroundSnapshotInstance | null = this;
-    while (node) {
-      if (node.__removed_from_tree) {
-        return true;
-      }
-      node = node.__parent;
-    }
-    return false;
-  }
-
   get parentNode(): BackgroundSnapshotInstance | null {
     return this.__parent;
   }
@@ -97,9 +86,7 @@ export class BackgroundSnapshotInstance {
 
   // This will be called in `lazy`/`Suspense`.
   appendChild(child: BackgroundSnapshotInstance): void {
-    if (!this.isDetached) {
-      return this.insertBefore(child);
-    }
+    return this.insertBefore(child);
   }
 
   insertBefore(
@@ -198,7 +185,7 @@ export class BackgroundSnapshotInstance {
             v.__snapshot_def.refAndSpreadIndexes?.forEach((i) => {
               const value = v.__values![i] as unknown;
               if (value && (typeof value === 'object' || typeof value === 'function')) {
-                if ('__spread' in value && 'ref' in value) {
+                if ('__spread' in value && 'ref' in value && value.ref) {
                   applyRef(value.ref as Ref, null);
                 } else if ('__ref' in value) {
                   applyRef(value as Ref, null);

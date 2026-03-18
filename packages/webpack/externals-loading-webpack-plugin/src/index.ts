@@ -328,10 +328,14 @@ function createLoadExternalAsync(handler, sectionPath) {
           isMainThreadLayer
             ? `
           // TODO: Use configured layer suffix instead of hard-coded __main-thread for CSS section lookup.
-          const styleSheet = __LoadStyleSheet(sectionPath.replace('__main-thread', '') + ':CSS', response.url);
-          if (styleSheet !== null) {
-            __AdoptStyleSheet(styleSheet);
-            __FlushElementTree();
+          if (typeof __LoadStyleSheet === 'function') {
+            const styleSheet = __LoadStyleSheet(sectionPath.replace('__main-thread', '') + ':CSS', response.url);
+            if (styleSheet !== null) {
+              __AdoptStyleSheet(styleSheet);
+              __FlushElementTree();
+            }
+          } else {
+            console.warn('__LoadStyleSheet is not defined. Failed to load CSS for ' + sectionPath + ' in ' + response.url + '. __LoadStyleSheet is only available in LynxSDK >= 3.7');
           }
             `
             : ''
@@ -356,10 +360,14 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           isMainThreadLayer
             ? `
       // TODO: Use configured layer suffix instead of hard-coded __main-thread for CSS section lookup.
-      const styleSheet = __LoadStyleSheet(sectionPath.replace('__main-thread', '') + ':CSS', response.url);
-      if (styleSheet !== null) {
-        __AdoptStyleSheet(styleSheet);
-        __FlushElementTree();
+      if (typeof __LoadStyleSheet === 'function') {
+        const styleSheet = __LoadStyleSheet(sectionPath.replace('__main-thread', '') + ':CSS', response.url);
+        if (styleSheet !== null) {
+          __AdoptStyleSheet(styleSheet);
+          __FlushElementTree();
+        }
+      } else {
+        console.warn('__LoadStyleSheet is not defined. Failed to load CSS for ' + sectionPath + ' in ' + response.url + '. __LoadStyleSheet is only available in LynxSDK >= 3.7');
       }
           `
             : ''

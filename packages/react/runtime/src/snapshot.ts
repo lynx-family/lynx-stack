@@ -186,7 +186,7 @@ export const backgroundSnapshotInstanceManager: {
     const si = values.get(id)!;
     // For PreactDevtools, on first hydration,
     // PreactDevtools can get the real snapshot instance id in main-thread
-    if (__DEV__) {
+    if (__DEV__ && __BACKGROUND__) {
       lynx.getJSModule('GlobalEventEmitter').emit('onBackgroundSnapshotInstanceUpdateId', [
         {
           backgroundSnapshotInstance: si,

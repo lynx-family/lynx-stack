@@ -283,6 +283,18 @@ export type SetCSSIdPAPI = (
   entryName: string | undefined,
 ) => void;
 
+export type ElementAnimatePAPI = (
+  element: HTMLElement,
+  args:
+    | [
+      operation: 0,
+      name: string,
+      keyframes: Record<string, string | number>[],
+      options?: Record<string, string | number>,
+    ]
+    | [operation: 1 | 2 | 3 | 4, name: string],
+) => void;
+
 export type GetPageElementPAPI = () => HTMLElement | undefined;
 
 export type MarkTemplateElementPAPI = (
@@ -375,6 +387,7 @@ export interface ElementPAPIs {
   __SetCSSId: SetCSSIdPAPI;
   __GetPageElement: GetPageElementPAPI;
   __GetAttributeByName: GetAttributeByNamePAPI;
+  __ElementAnimate: ElementAnimatePAPI;
   __FlushElementTree: (
     _subTree?: unknown,
     options?: FlushElementTreeOptions,

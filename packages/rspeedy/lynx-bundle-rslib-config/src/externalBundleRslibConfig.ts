@@ -44,7 +44,7 @@ export const defaultExternalBundleLibConfig: LibConfig = {
     },
   },
   output: {
-    minify: {
+    minify: process.env['NODE_ENV'] === 'development' ? false : {
       jsOptions: {
         minimizerOptions: {
           compress: {

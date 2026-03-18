@@ -21,6 +21,7 @@ import interactivityEventMtMain from './examples/interactivity-event-main-thread
 import interactivityRefsBgMain from './examples/interactivity-refs-bg/main-thread.js?raw';
 import interactivityRefsBgBg from './examples/interactivity-refs-bg/background.js?raw';
 import interactivityRefsMtMain from './examples/interactivity-refs-main-thread/main-thread.js?raw';
+import interactivityElementAnimateMain from './examples/interactivity-element-animate/main-thread.js?raw';
 
 // Attributes & Data
 import attributesSetAndGet from './examples/attributes-set-and-get/main-thread.js?raw';
@@ -160,6 +161,13 @@ export const samples: Sample[] = [
     name: 'Element Refs (Main Thread)',
     category: 'Interactivity',
     mainThread: interactivityRefsMtMain,
+    background: '',
+    css: '',
+  },
+  {
+    name: 'Element Animate',
+    category: 'Interactivity',
+    mainThread: interactivityElementAnimateMain,
     background: '',
     css: '',
   },

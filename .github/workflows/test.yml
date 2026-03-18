@@ -265,6 +265,63 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: pnpm -r run test:type
+  kitten-lynx-android-emulator:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    name: Kitten Lynx Android Emulator Test
+    with:
+      runs-on: lynx-ubuntu-22.04-physical-medium
+      run: |
+        # 4. Start Emulator
+        echo "Starting emulator..."
+        ${ANDROID_HOME}/emulator/emulator -avd Nexus_5_API_28 -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect &
+
+        # 5. Wait for boot
+        echo "Waiting for emulator to boot..."
+        adb wait-for-device
+        BOOT_TIMEOUT=60
+        BOOT_ELAPSED=0
+        while [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" != "1" ]; do
+            if [ $BOOT_ELAPSED -ge $BOOT_TIMEOUT ]; then
+              echo "Error: Emulator failed to boot within ${BOOT_TIMEOUT} seconds!"
+              exit 1
+            fi
+            sleep 2
+            BOOT_ELAPSED=$((BOOT_ELAPSED+2))
+        done
+        echo "Emulator is ready."
+
+        # 6. Install Lynx Explorer
+        wget -q https://github.com/lynx-family/lynx/releases/download/3.6.0/LynxExplorer-noasan-release.apk -O LynxExplorer.apk
+        adb install -r LynxExplorer.apk
+
+        # 7. Start Lynx Explorer and verify
+        echo "Starting Lynx Explorer..."
+        if ! adb shell pm list packages | grep -q com.lynx.explorer; then
+          echo "Error: com.lynx.explorer is not installed!"
+          exit 1
+        fi
+        adb shell monkey -p com.lynx.explorer -c android.intent.category.LAUNCHER 1
+
+        echo "Waiting for Lynx Explorer to start..."
+        MAX_RETRIES=10
+        RETRY_COUNT=0
+        while ! adb shell pidof com.lynx.explorer > /dev/null; do
+          if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+            echo "Error: com.lynx.explorer failed to start!"
+            exit 1
+          fi
+          echo "Waiting... ($RETRY_COUNT/$MAX_RETRIES)"
+          sleep 2
+          RETRY_COUNT=$((RETRY_COUNT+1))
+        done
+        echo "Lynx Explorer is running."
+
+        # 8. Run the tests
+        pnpm --filter @lynx-js/kitten-lynx-test-infra run test --coverage --reporter=github-actions --reporter=dot --reporter=junit --outputFile=test-report.junit.xml --coverage.reporter='json' --coverage.reporter='text' --testTimeout=50000 --no-cache --logHeapUsage --silent
+
   test-typos:
     runs-on: lynx-ubuntu-24.04-medium
     steps:

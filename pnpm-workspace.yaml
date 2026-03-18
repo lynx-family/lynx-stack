@@ -14,6 +14,7 @@ packages:
   - packages/react/transform/swc-plugin-reactlynx
   - packages/react/transform/swc-plugin-reactlynx-compat
   - packages/react/worklet-runtime
+  - packages/react-umd
   - packages/rspeedy/*
   - packages/tailwind-preset
   - packages/testing-library/*
