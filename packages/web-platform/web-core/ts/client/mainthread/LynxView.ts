@@ -410,6 +410,11 @@ export class LynxViewElement extends HTMLElement {
             /* webpackFetchPriority: "high" */
             './LynxViewInstance.js'
           ).then(({ LynxViewInstance }) => {
+            const isSSR = this.hasAttribute('ssr');
+            if (isSSR) {
+              this.removeAttribute('ssr');
+            }
+
             return new LynxViewInstance(
               this,
               this.initData,
@@ -417,6 +422,7 @@ export class LynxViewElement extends HTMLElement {
               this.#url!,
               this.shadowRoot!,
               mtsRealm,
+              isSSR,
               lynxGroupId,
               this.nativeModulesMap,
               this.napiModulesMap,

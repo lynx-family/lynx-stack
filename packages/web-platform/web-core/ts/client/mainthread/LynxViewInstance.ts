@@ -56,18 +56,6 @@ export function createSystemInfo(
   });
 }
 
-export interface LynxViewConfigs {
-  templateUrl: string;
-  initData: Cloneable;
-  globalProps: Cloneable;
-  shadowRoot: ShadowRoot;
-  nativeModulesMap: NativeModulesMap;
-  napiModulesMap: NapiModulesMap;
-  tagMap: Record<string, string>;
-  lynxGroupId: number | undefined;
-  initI18nResources: InitI18nResources;
-}
-
 export class LynxViewInstance implements AsyncDisposable {
   readonly mainThreadGlobalThis: MainThreadGlobalThis;
   readonly mtsWasmBinding: WASMJSBinding;
@@ -91,6 +79,7 @@ export class LynxViewInstance implements AsyncDisposable {
     public readonly templateUrl: string,
     public readonly rootDom: ShadowRoot,
     public readonly mtsRealm: JSRealm,
+    private isSSR: boolean,
     lynxGroupId: number | undefined,
     nativeModulesMap: NativeModulesMap = {},
     napiModulesMap: NapiModulesMap = {},
@@ -98,7 +87,9 @@ export class LynxViewInstance implements AsyncDisposable {
     browserConfig?: Record<string, any>,
   ) {
     this.systemInfo = createSystemInfo(browserConfig);
-    this.rootDom.append(linkElement.cloneNode(false));
+    if (!isSSR) {
+      this.rootDom.append(linkElement.cloneNode(false));
+    }
     this.#nativeModulesMap = nativeModulesMap;
     this.#napiModulesMap = napiModulesMap;
     this.mainThreadGlobalThis = mtsRealm.globalWindow as
@@ -193,6 +184,9 @@ export class LynxViewInstance implements AsyncDisposable {
       this.#nativeModulesMap,
       this.#napiModulesMap,
     );
+    if (this.isSSR) {
+      this.rootDom.querySelector('[part="page"]')?.remove();
+    }
     this.mainThreadGlobalThis.renderPage?.(processedData);
     this.mainThreadGlobalThis.__FlushElementTree();
   }
