@@ -410,6 +410,8 @@ export function createElementAPI(
         }
       }) as AddInlineStylePAPI,
 
+      __ElementAnimate: () => {},
+
       __FlushElementTree: (() => {
         if (pageElementId !== undefined) {
           mtsBinding.ssrResult = wasmContext.generate_html(pageElementId);

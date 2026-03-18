@@ -28,7 +28,7 @@ export function useFlappy(
   const [y, setY] = useState(0)
   const engineRef = useRef<FlappyEngine | null>(null)
 
-  if (!engineRef.current) {
+  if (engineRef.current == null) {
     engineRef.current = createFlappy((newY) => {
       setY(newY)
     }, options)

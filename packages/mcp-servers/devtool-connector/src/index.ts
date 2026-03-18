@@ -119,6 +119,12 @@ export class Connector {
       .flatMap(({ value }) => value);
   }
 
+  async close(): Promise<void> {
+    await Promise.allSettled(
+      this.#transports.map(t => t.close()),
+    );
+  }
+
   async listAvailableApps(deviceId: string): Promise<App[]> {
     const transport = await this.#findTransportWithDeviceId(deviceId);
 
