@@ -23,8 +23,8 @@
     },
     "./server": {
       "types": "./dist/server/index.d.ts",
-      "import": "./dist/server/index.js",
-      "default": "./dist/server/index.js"
+      "import": "./dist/server_prod/index.js",
+      "default": "./dist/server_prod/index.js"
     },
     "./client.prod.js": {
       "default": "./dist/client_prod/static/js/client.js"
