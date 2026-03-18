@@ -142,7 +142,7 @@ export function pluginDev(
                     })
                     if (environmentName === 'web') {
                       finalUrls.push({
-                        label: `Web Preview`,
+                        label: `∟ Preview`,
                         url: new URL(
                           `/__web_preview?casename=${
                             encodeURIComponent(pathname)
