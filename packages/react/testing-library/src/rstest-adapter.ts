@@ -4,17 +4,6 @@ import type { RsbuildConfig } from '@rsbuild/core';
 
 export interface TestingLibraryOptions {
   /**
-   * Enable experimental React Compiler support.
-   *
-   * Requires `@babel/core`, `babel-plugin-react-compiler`,
-   * `@babel/plugin-syntax-jsx`, and `@babel/plugin-syntax-typescript`
-   * to be installed in your project.
-   *
-   * @default `false`
-   */
-  experimental_enableReactCompiler?: boolean;
-
-  /**
    * The root path of the project.
    *
    * @default `process.cwd()`
