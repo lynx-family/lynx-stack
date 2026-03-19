@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from '@lynx-js/react';
 
-import { createFlappy } from './lib/flappy.js';
-import type { FlappyEngine, FlappyOptions } from './lib/flappy.js';
+import { createFlappy } from './flappy.js';
+import type { FlappyEngine, FlappyOptions } from './flappy.js';
 
 /**
  * React hook for flappy-bird physics.
