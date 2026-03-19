@@ -17,8 +17,8 @@ import {
 } from '../uiThread/startUIThread.js';
 import type { RpcCallType } from '@lynx-js/web-worker-rpc';
 const pixelRatio = window.devicePixelRatio;
-const screenWidth = window.screen.availWidth * pixelRatio;
-const screenHeight = window.screen.availHeight * pixelRatio;
+const screenWidth = document.documentElement.clientWidth * pixelRatio;
+const screenHeight = document.documentElement.clientHeight * pixelRatio;
 
 export interface LynxViewConfigs {
   templateUrl: string;
@@ -33,6 +33,11 @@ export interface LynxViewConfigs {
   threadStrategy: 'all-on-ui' | 'multi-thread';
   initI18nResources: InitI18nResources;
   ssr?: SSRDumpInfo;
+  browserConfig?: {
+    pixelRatio?: number;
+    pixelWidth?: number;
+    pixelHeight?: number;
+  };
 }
 
 export interface LynxView {
@@ -64,6 +69,7 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
     threadStrategy = 'multi-thread',
     initI18nResources,
     ssr,
+    browserConfig,
   } = configs;
   return startUIThread(
     templateUrl,
@@ -74,9 +80,9 @@ export function createLynxView(configs: LynxViewConfigs): LynxView {
       nativeModulesMap,
       napiModulesMap,
       browserConfig: {
-        pixelRatio: window.devicePixelRatio,
-        pixelWidth: screenWidth,
-        pixelHeight: screenHeight,
+        pixelRatio: browserConfig?.pixelRatio ?? window.devicePixelRatio,
+        pixelWidth: browserConfig?.pixelWidth ?? screenWidth,
+        pixelHeight: browserConfig?.pixelHeight ?? screenHeight,
       },
       initI18nResources,
     },

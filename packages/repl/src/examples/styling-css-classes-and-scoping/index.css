@@ -1,0 +1,25 @@
+.card {
+  background-color: #f8fafc;
+  border-radius: 12px;
+  padding: 24px;
+  width: 260px;
+  align-items: center;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.scoped-label {
+  font-size: 13px;
+  color: #7c3aed;
+  font-weight: 600;
+}

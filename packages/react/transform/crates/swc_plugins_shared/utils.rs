@@ -87,6 +87,10 @@ pub fn get_relative_path(cwd: &str, filename: &str) -> String {
   }
 }
 
+// keep webpack runtime variables
+// https://rspack.rs/api/runtime-api/module-variables#runtime
+pub const WEBPACK_VARS: &[&str] = &["__webpack_require__", "__webpack_public_path__"];
+
 #[cfg(test)]
 mod tests {
   use super::*;

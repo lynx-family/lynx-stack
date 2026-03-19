@@ -18,6 +18,10 @@ describe('Plugins - SWC', () => {
     expect(getLoaderOptions(config, 'builtin:swc-loader'))
       .toMatchInlineSnapshot(`
         {
+          "collectTypeScriptInfo": {
+            "exportedEnum": true,
+            "typeExports": true,
+          },
           "isModule": "unknown",
           "jsc": {
             "experimental": {
@@ -39,12 +43,6 @@ describe('Plugins - SWC', () => {
               "legacyDecorator": false,
             },
           },
-          "rspackExperiments": {
-            "collectTypeScriptInfo": {
-              "exportedEnum": true,
-              "typeExports": true,
-            },
-          },
         }
       `)
   })
@@ -59,6 +57,10 @@ describe('Plugins - SWC', () => {
     expect(getLoaderOptions(config, 'builtin:swc-loader'))
       .toMatchInlineSnapshot(`
         {
+          "collectTypeScriptInfo": {
+            "exportedEnum": false,
+            "typeExports": true,
+          },
           "isModule": "unknown",
           "jsc": {
             "experimental": {
@@ -78,12 +80,6 @@ describe('Plugins - SWC', () => {
             "transform": {
               "decoratorVersion": "2022-03",
               "legacyDecorator": false,
-            },
-          },
-          "rspackExperiments": {
-            "collectTypeScriptInfo": {
-              "exportedEnum": false,
-              "typeExports": true,
             },
           },
         }
@@ -116,6 +112,10 @@ describe('Plugins - SWC', () => {
     expect(getLoaderOptions(config, 'builtin:swc-loader'))
       .toMatchInlineSnapshot(`
         {
+          "collectTypeScriptInfo": {
+            "exportedEnum": false,
+            "typeExports": true,
+          },
           "isModule": "unknown",
           "jsc": {
             "experimental": {
@@ -138,12 +138,6 @@ describe('Plugins - SWC', () => {
             },
           },
           "minify": true,
-          "rspackExperiments": {
-            "collectTypeScriptInfo": {
-              "exportedEnum": false,
-              "typeExports": true,
-            },
-          },
         }
       `)
   })

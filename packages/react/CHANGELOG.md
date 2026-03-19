@@ -1,5 +1,194 @@
 # @lynx-js/react
 
+## 0.116.5
+
+### Patch Changes
+
+- Improve React runtime hook profiling. ([#2235](https://github.com/lynx-family/lynx-stack/pull/2235))
+  Enable Profiling recording first, then enter the target page so the trace includes full render/hydrate phases.
+
+  - Record trace events for `useEffect` / `useLayoutEffect` hook entry, callback, and cleanup phases.
+  - Log trace events for `useState` setter calls.
+  - Wire `profileFlowId` support in debug profile utilities and attach flow IDs to related hook traces.
+  - Instrument hydrate/background snapshot profiling around patch operations with richer args (e.g. snapshot id/type, dynamic part index, value type, and source when available).
+  - Capture vnode source mapping in dev and use it in profiling args to improve trace attribution.
+  - Expand debug test coverage for profile utilities, hook profiling behavior, vnode source mapping, and hydrate profiling branches.
+
+- refactor: call loadWorkletRuntime once in each module ([#2315](https://github.com/lynx-family/lynx-stack/pull/2315))
+
+## 0.116.4
+
+### Patch Changes
+
+- Support `ReactLynx::hooks::setState` trace for function components. ([#2198](https://github.com/lynx-family/lynx-stack/pull/2198))
+
+- fix: properly cleanup `__DestroyLifetime` listeners and listCallbacks in `snapshotDestroyList`. ([#2224](https://github.com/lynx-family/lynx-stack/pull/2224))
+
+## 0.116.3
+
+### Patch Changes
+
+- fix: remove `lynx.createSelectorQuery` deprecated warning in production ([#2195](https://github.com/lynx-family/lynx-stack/pull/2195))
+
+- Add a DEV-only guard that detects MainThread flush loops caused by re-entrant MTS handlers. ([#2159](https://github.com/lynx-family/lynx-stack/pull/2159))
+
+  This typically happens when a MainThread handler (e.g. event callback or `MainThreadRef`) performs UI mutations (like `Element.setStyleProperty`, `setStyleProperties`, `setAttribute`, or `invoke`) that synchronously trigger a flush which re-enters the handler again.
+
+- Avoid DEV_ONLY_SetSnapshotEntryName on standalone lazy bundle. ([#2184](https://github.com/lynx-family/lynx-stack/pull/2184))
+
+- Add alog and trace for BTS event handlers. ([#2102](https://github.com/lynx-family/lynx-stack/pull/2102))
+
+- fix: Main thread functions cannot access properties on `this` before hydration completes. ([#2194](https://github.com/lynx-family/lynx-stack/pull/2194))
+
+  This fixes the `cannot convert to object` error.
+
+- Remove element api calls alog by default, and only enable it when `__ALOG_ELEMENT_API__` is defined to `true` or environment variable `REACT_ALOG_ELEMENT_API` is set to `true`. ([#2192](https://github.com/lynx-family/lynx-stack/pull/2192))
+
+- fix: captured variables in main thread functions within class components do not update correctly ([#2197](https://github.com/lynx-family/lynx-stack/pull/2197))
+
+## 0.116.2
+
+### Patch Changes
+
+- Fix "TypeError: not a function" error caused by `replaceAll` not supported in ES5. ([#2142](https://github.com/lynx-family/lynx-stack/pull/2142))
+
+- Bump `swc_core` v56. ([#2154](https://github.com/lynx-family/lynx-stack/pull/2154))
+
+- Use `disableDeprecatedWarning` option to suppress BROKEN warnings during compilation. ([#2157](https://github.com/lynx-family/lynx-stack/pull/2157))
+
+  1. BROKEN: `getNodeRef`/`getNodeRefFromRoot`/`createSelectorQuery` on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.
+  2. BROKEN: `getElementById` on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.getElementById instead.
+
+- Fix memory leak by clearing list callbacks when \_\_DestroyLifetime event is triggered. ([#2112](https://github.com/lynx-family/lynx-stack/pull/2112))
+
+## 0.116.1
+
+### Patch Changes
+
+- Fix the issue that lazy bundle HMR will lost CSS. ([#2134](https://github.com/lynx-family/lynx-stack/pull/2134))
+
+## 0.116.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Bump Preact from [10.24.0](https://github.com/preactjs/preact/commit/1807173df5e18b6b1a3cd667ee2a31af37f4282b) to [10.28.0](https://github.com/preactjs/preact/commit/f7693b72ecb4a40c66e6e47f54e2d4edc374c9f0), see diffs at [hzy/preact#6](https://github.com/hzy/preact/pull/6). ([#2042](https://github.com/lynx-family/lynx-stack/pull/2042))
+
+### Patch Changes
+
+- Add safety checks for compilation macros to prevent runtime errors when they are undefined. ([#2110](https://github.com/lynx-family/lynx-stack/pull/2110))
+
+  Replaces direct usage of `__PROFILE__`, `__MAIN_THREAD__`, `__BACKGROUND__` with `typeof` checks.
+
+  This improves robustness by checking variable existence before access, preventing runtime errors in environments where compilation macros are not defined.
+
+## 0.115.4
+
+### Patch Changes
+
+- fix: unable to access `MainThreadRef` in some scenarios ([#1996](https://github.com/lynx-family/lynx-stack/pull/1996))
+
+- Add `getComputedStyleProperty` for `MainThread.Element` to retrieve computed style values synchronously. ([#2005](https://github.com/lynx-family/lynx-stack/pull/2005))
+
+  **Requires Lynx SDK >= 3.5**
+
+  ```typescript
+  function getStyle(ele: MainThread.Element) {
+    'main thread';
+    const width = ele.getComputedStyleProperty('width'); // Returns 300px
+    const transformMatrix = ele.getComputedStyleProperty('transform'); // Returns matrix(2, 0, 0, 2, 200, 400)
+  }
+  ```
+
+## 0.115.3
+
+### Patch Changes
+
+- Add dual-thread commutation logs for troubleshooting when `REACT_ALOG=true` or global define `__ALOG__` is set. ([#2081](https://github.com/lynx-family/lynx-stack/pull/2081))
+
+- Use error cause to simplify the error msg of lazy bundle loading. User can catch the error cause to get the original result: ([#2056](https://github.com/lynx-family/lynx-stack/pull/2056))
+
+  ```ts
+  const LazyComponent = lazy(async () => {
+    try {
+      const mod = await import('./lazy-bundle');
+      return mod.default;
+    } catch (error) {
+      console.error(`Lazy Bundle load failed message: ${error.message}`);
+      // User can catch the error cause to get the original result
+      console.error(`Lazy Bundle load failed result: ${error.cause}`);
+      throw error;
+    }
+  });
+  ```
+
+## 0.115.2
+
+### Patch Changes
+
+- Fix `undefined factory (react:background)/./node_modules/.pnpm/@lynx-js+react...` error when loading a standalone lazy bundle after hydration. ([#2048](https://github.com/lynx-family/lynx-stack/pull/2048))
+
+- Partially fix "main-thread.js exception: TypeError: cannot read property '\_\_elements' of undefined" by recursively calling `snapshotDestroyList`. ([#2041](https://github.com/lynx-family/lynx-stack/pull/2041))
+
+- Fix a bug where React throws `CtxNotFound` error when lazy bundle resolves after unmount. ([#2003](https://github.com/lynx-family/lynx-stack/pull/2003))
+
+## 0.115.1
+
+### Patch Changes
+
+- Auto define lynx.loadLazyBundle when using `import(/* relative path */)`. ([#1956](https://github.com/lynx-family/lynx-stack/pull/1956))
+
+- feat: support declaring cross-thread shared modules via Import Attributes, enabling Main Thread Functions to call standard JS functions directly. ([#1968](https://github.com/lynx-family/lynx-stack/pull/1968))
+
+  - Usage: Add `with { runtime: "shared" }` to the `import` statement. For example:
+
+    ```ts
+    import { func } from './utils.js' with { runtime: 'shared' };
+
+    function worklet() {
+      'main thread';
+      func(); // callable inside a main thread function
+    }
+    ```
+
+  - Limitations:
+    - Only directly imported identifiers are treated as shared; assigning the import to a new variable will result in the loss of this shared capability.
+    - Functions defined within shared modules do not automatically become Main Thread Functions. Accessing main-thread-only APIs (e.g., `MainThreadRef`) will cause errors.
+
+## 0.115.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Delay the `createSnapshot` operation to `Snapshot` constructor to speed up IFR. ([#1899](https://github.com/lynx-family/lynx-stack/pull/1899))
+
+  This change refactors how snapshots are created and registered:
+
+  - Removed the `entryUniqID` function
+  - Snapshots are now lazily created via `snapshotCreatorMap` instead of eagerly at bundle load time
+  - Snapshot IDs are generated at compile time and only prefixed with `${globDynamicComponentEntry}:` for standalone lazy bundles
+
+  **⚠️ Lazy Bundle Compatibility:**
+
+  - **Backward compatibility (new runtime → old lazy bundles)**: ✅ **Supported**. Old lazy bundles will work with the new runtime.
+
+  - **Forward compatibility (old runtime → new lazy bundles)**: ❌ **NOT Supported**. Lower version consumers **will not be able to load lazy bundles produced by this version** due to the changed snapshot creation mechanism.
+
+  **Migration guidance**:
+  If you are using lazy bundles, ensure all consumers are upgraded to this version or later **before** deploying lazy bundles built with this version. For monorepo setups, coordinate the upgrade across all consuming applications.
+
+### Patch Changes
+
+- Preserve assignments to webpack runtime variables like `__webpack_public_path__`, `__webpack_require__.p`, etc. ([#1958](https://github.com/lynx-family/lynx-stack/pull/1958))
+
+- Fixed blank screen issues with nested lists. Lazily created nested lists were being flushed but not properly recorded, causing rendering failures. ([#1963](https://github.com/lynx-family/lynx-stack/pull/1963))
+
+- fix: export `createRef` and `useRef` from `@lynx-js/react/legacy-react-runtime` ([#1953](https://github.com/lynx-family/lynx-stack/pull/1953))
+
+## 0.114.5
+
+### Patch Changes
+
+- Reduce `__SetInlineStyles` element API call when attrs in spread not changed ([#1919](https://github.com/lynx-family/lynx-stack/pull/1919))
+
 ## 0.114.4
 
 ### Patch Changes

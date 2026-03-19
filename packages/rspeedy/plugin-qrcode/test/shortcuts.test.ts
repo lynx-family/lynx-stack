@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { RsbuildPluginAPI } from '@rsbuild/core'
-import { describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { registerConsoleShortcuts } from '../src/shortcuts.js'
 
@@ -17,6 +17,118 @@ describe('PluginQRCode - CLI Shortcuts', () => {
       config: { filename: '[name].[platform].bundle' },
     }),
   } as unknown as RsbuildPluginAPI
+
+  beforeEach(() => {
+    Object.defineProperty(process.stdin, 'isTTY', {
+      value: true,
+      configurable: true,
+    })
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: true,
+      configurable: true,
+    })
+
+    return () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: undefined,
+        configurable: true,
+      })
+      Object.defineProperty(process.stdout, 'isTTY', {
+        value: undefined,
+        configurable: true,
+      })
+    }
+  })
+
+  describe('non-TTY mode', () => {
+    beforeEach(() => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: undefined,
+        configurable: true,
+      })
+      Object.defineProperty(process.stdout, 'isTTY', {
+        value: undefined,
+        configurable: true,
+      })
+    })
+
+    test('prints all entries with all schema URLs', async () => {
+      const writeSpy = vi.spyOn(process.stdout, 'write').mockReturnValue(true)
+
+      await registerConsoleShortcuts({
+        api: mockedRsbuildAPI,
+        entries: ['foo', 'bar'],
+        schema: i => i,
+        port: 3000,
+      })
+
+      expect(writeSpy).toHaveBeenCalledTimes(1)
+      const output = writeSpy.mock.calls[0]![0] as string
+      expect(output).toContain('foo')
+      expect(output).toContain('bar')
+      expect(output).toContain('https://example.com/foo.lynx.bundle')
+      expect(output).toContain('https://example.com/bar.lynx.bundle')
+      writeSpy.mockRestore()
+    })
+
+    test('calls onPrint for every schema URL', async () => {
+      const onPrint = vi.fn()
+
+      await registerConsoleShortcuts({
+        api: mockedRsbuildAPI,
+        entries: ['foo', 'bar'],
+        schema: i => i,
+        port: 3000,
+        onPrint,
+      })
+
+      expect(onPrint).toHaveBeenCalledTimes(2)
+      expect(onPrint).toHaveBeenCalledWith(
+        'https://example.com/foo.lynx.bundle',
+      )
+      expect(onPrint).toHaveBeenCalledWith(
+        'https://example.com/bar.lynx.bundle',
+      )
+    })
+
+    test('does not enter interactive loop', async () => {
+      const { selectKey } = await import('@clack/prompts')
+
+      await registerConsoleShortcuts({
+        api: mockedRsbuildAPI,
+        entries: ['foo'],
+        schema: i => i,
+        port: 3000,
+      })
+
+      expect(vi.mocked(selectKey)).not.toHaveBeenCalled()
+    })
+
+    test('prints multiple schema URLs per entry', async () => {
+      const writeSpy = vi.spyOn(process.stdout, 'write').mockReturnValue(true)
+      const onPrint = vi.fn()
+
+      await registerConsoleShortcuts({
+        api: mockedRsbuildAPI,
+        entries: ['foo', 'bar'],
+        schema: url => ({
+          schemaA: `schemaA://${url}`,
+          schemaB: `schemaB://${url}`,
+        }),
+        port: 3000,
+        onPrint,
+      })
+
+      expect(writeSpy).toHaveBeenCalledTimes(1)
+      const output = writeSpy.mock.calls[0]![0] as string
+      expect(output).toContain('schemaA://https://example.com/foo.lynx.bundle')
+      expect(output).toContain('schemaB://https://example.com/foo.lynx.bundle')
+      expect(output).toContain('schemaA://https://example.com/bar.lynx.bundle')
+      expect(output).toContain('schemaB://https://example.com/bar.lynx.bundle')
+      expect(onPrint).toHaveBeenCalledTimes(4)
+      writeSpy.mockRestore()
+    })
+  })
 
   test('open page', async () => {
     vi.stubEnv('NODE_ENV', 'development')

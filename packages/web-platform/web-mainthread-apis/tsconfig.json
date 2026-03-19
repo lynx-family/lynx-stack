@@ -2,11 +2,11 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "composite": true,
-    "rootDir": "./src",
+    "rootDir": "./ts",
     "outDir": "./dist",
     "lib": ["ESNext", "DOM"],
   },
-  "include": ["src"],
+  "include": ["ts"],
   "references": [
     {
       "path": "../web-constants",

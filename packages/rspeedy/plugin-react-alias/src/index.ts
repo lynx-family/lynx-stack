@@ -6,7 +6,6 @@ import path from 'node:path'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 import gte from 'semver/functions/gte.js'
-import type { ResolveResult } from 'unrs-resolver'
 
 export interface Options {
   lazy?: boolean | undefined
@@ -35,14 +34,6 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
       const { version } = require(reactLynxPkg) as { version: string }
 
       const reactLynxDir = path.dirname(reactLynxPkg)
-      const resolve = createLazyResolver(
-        rootPath ?? api.context.rootPath,
-        lazy ? ['lazy', 'import'] : ['import'],
-      )
-      const resolvePreact = createLazyResolver(reactLynxDir, ['import'])
-      api.expose(Symbol.for('@lynx-js/react/internal:resolve'), {
-        resolve,
-      })
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
         return mergeRsbuildConfig(config, {
@@ -52,11 +43,23 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         })
       })
 
-      api.modifyBundlerChain(async (chain, { isProd, environment }) => {
+      api.modifyBundlerChain(async (chain, { isProd, environment, rspack }) => {
         if (Object.hasOwn(environment, S_PLUGIN_REACT_ALIAS)) {
           // This environment has already been processed
           return
         }
+        const resolve = createLazyResolver(
+          rspack,
+          rootPath ?? api.context.rootPath,
+          lazy ? ['lazy', 'import'] : ['import'],
+        )
+        const resolvePreact = createLazyResolver(rspack, reactLynxDir, [
+          'import',
+        ])
+        api.expose(Symbol.for('@lynx-js/react/internal:resolve'), {
+          resolve,
+        })
+
         Object.defineProperty(environment, S_PLUGIN_REACT_ALIAS, {
           value: true,
         })
@@ -211,11 +214,16 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
 }
 
 export function createLazyResolver(
+  rspack: typeof import('@rspack/core').rspack,
   directory: string,
   conditionNames: string[],
 ) {
+  const { ResolverFactory } = rspack.experiments.resolver
   let lazyExports: Record<string, string>
-  let resolverLazy: (directory: string, request: string) => ResolveResult
+  let resolverLazy: (
+    directory: string,
+    request: string,
+  ) => { error?: string, path?: string }
 
   return async (
     request: string,
@@ -226,8 +234,10 @@ export function createLazyResolver(
 
     if (lazyExports[request] === undefined) {
       if (!resolverLazy) {
-        const { ResolverFactory } = await import('unrs-resolver')
-        const resolver = new ResolverFactory({ conditionNames })
+        const resolver = new ResolverFactory({
+          conditionNames,
+          enablePnp: true,
+        })
         resolverLazy = (dir: string, req: string) => resolver.sync(dir, req)
       }
       const resolveResult = resolverLazy(directory, request)

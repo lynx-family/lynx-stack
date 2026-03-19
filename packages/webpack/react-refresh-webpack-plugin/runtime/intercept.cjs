@@ -72,3 +72,5 @@ __webpack_require__.i.push(function(options) {
     }
   };
 });
+
+globalThis[Symbol.for('__LYNX_WEBPACK_MODULES__')] = __webpack_modules__;

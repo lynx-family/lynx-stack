@@ -9,7 +9,6 @@ import { Component, useState } from '@lynx-js/react';
 
 import { render } from '..';
 import { __pendingListUpdates } from '../../../runtime/lib/pendingListUpdates.js';
-import { prettyFormatSnapshotPatch } from '../../../runtime/lib/debug/formatPatch.js';
 
 describe('list', () => {
   it('basic', async () => {
@@ -32,7 +31,7 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_d0c07_test_2","item-key":0},{"position":1,"type":"__snapshot_d0c07_test_2","item-key":1},{"position":2,"type":"__snapshot_d0c07_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -43,14 +42,16 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_d0c07_test_2","item-key":0},{"position":1,"type":"__snapshot_d0c07_test_2","item-key":1},{"position":2,"type":"__snapshot_d0c07_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="0"
           >
-            <text>
-              0
-            </text>
+            <wrapper>
+              <text>
+                0
+              </text>
+            </wrapper>
           </list-item>
         </list>
       </page>
@@ -60,47 +61,55 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_d0c07_test_2","item-key":0},{"position":1,"type":"__snapshot_d0c07_test_2","item-key":1},{"position":2,"type":"__snapshot_d0c07_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="0"
           >
-            <text>
-              0
-            </text>
+            <wrapper>
+              <text>
+                0
+              </text>
+            </wrapper>
           </list-item>
           <list-item
             item-key="1"
           >
-            <text>
-              1
-            </text>
+            <wrapper>
+              <text>
+                1
+              </text>
+            </wrapper>
           </list-item>
         </list>
       </page>
     `);
     expect(uid0).toMatchInlineSnapshot(`2`);
-    expect(uid1).toMatchInlineSnapshot(`5`);
+    expect(uid1).toMatchInlineSnapshot(`6`);
     elementTree.leaveListItem(list, uid0);
     expect(__pendingListUpdates.values).toMatchInlineSnapshot(`{}`);
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_d0c07_test_2","item-key":0},{"position":1,"type":"__snapshot_d0c07_test_2","item-key":1},{"position":2,"type":"__snapshot_d0c07_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="0"
           >
-            <text>
-              0
-            </text>
+            <wrapper>
+              <text>
+                0
+              </text>
+            </wrapper>
           </list-item>
           <list-item
             item-key="1"
           >
-            <text>
-              1
-            </text>
+            <wrapper>
+              <text>
+                1
+              </text>
+            </wrapper>
           </list-item>
         </list>
       </page>
@@ -112,21 +121,25 @@ describe('list', () => {
     expect(container).toMatchInlineSnapshot(`
       <page>
         <list
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_2","item-key":0},{"position":1,"type":"__Card__:__snapshot_a9e46_test_2","item-key":1},{"position":2,"type":"__Card__:__snapshot_a9e46_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_d0c07_test_2","item-key":0},{"position":1,"type":"__snapshot_d0c07_test_2","item-key":1},{"position":2,"type":"__snapshot_d0c07_test_2","item-key":2}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="2"
           >
-            <text>
-              2
-            </text>
+            <wrapper>
+              <text>
+                2
+              </text>
+            </wrapper>
           </list-item>
           <list-item
             item-key="1"
           >
-            <text>
-              1
-            </text>
+            <wrapper>
+              <text>
+                1
+              </text>
+            </wrapper>
           </list-item>
         </list>
       </page>
@@ -190,7 +203,7 @@ describe('list', () => {
         >
           <list
             style="width:100%;height:100%"
-            update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"0","full-span":true},{"position":1,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"1","full-span":true},{"position":2,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"2","full-span":true},{"position":3,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"3","full-span":true},{"position":4,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"4","full-span":true},{"position":5,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]}]"
+            update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_d0c07_test_7","item-key":"0","full-span":true},{"position":1,"type":"__snapshot_d0c07_test_7","item-key":"1","full-span":true},{"position":2,"type":"__snapshot_d0c07_test_7","item-key":"2","full-span":true},{"position":3,"type":"__snapshot_d0c07_test_7","item-key":"3","full-span":true},{"position":4,"type":"__snapshot_d0c07_test_7","item-key":"4","full-span":true},{"position":5,"type":"__snapshot_d0c07_test_7","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]}]"
           />
         </view>
       </page>
@@ -208,19 +221,21 @@ describe('list', () => {
         full-span="true"
         item-key="3"
       >
-        <view>
-          <text>
-            3
-          </text>
-          <text>
-            3
-          </text>
-        </view>
-        <view>
-          <text>
-            hello
-          </text>
-        </view>
+        <wrapper>
+          <view>
+            <text>
+              3
+            </text>
+            <text>
+              3
+            </text>
+          </view>
+          <view>
+            <text>
+              hello
+            </text>
+          </view>
+        </wrapper>
       </list-item>
     `);
 
@@ -263,19 +278,21 @@ describe('list', () => {
         full-span="true"
         item-key="1"
       >
-        <view>
-          <text>
-            1
-          </text>
-          <text>
-            1
-          </text>
-        </view>
-        <view>
-          <text>
-            hello
-          </text>
-        </view>
+        <wrapper>
+          <view>
+            <text>
+              1
+            </text>
+            <text>
+              1
+            </text>
+          </view>
+          <view>
+            <text>
+              hello
+            </text>
+          </view>
+        </wrapper>
       </list-item>
     `);
 
@@ -286,19 +303,21 @@ describe('list', () => {
             full-span="true"
             item-key="1"
           >
-            <view>
-              <text>
-                1
-              </text>
-              <text>
-                1
-              </text>
-            </view>
-            <view>
-              <text>
-                hello
-              </text>
-            </view>
+            <wrapper>
+              <view>
+                <text>
+                  1
+                </text>
+                <text>
+                  1
+                </text>
+              </view>
+              <view>
+                <text>
+                  hello
+                </text>
+              </view>
+            </wrapper>
           </list-item>,
           "item-key",
           "1",
@@ -308,19 +327,21 @@ describe('list', () => {
             full-span="true"
             item-key="1"
           >
-            <view>
-              <text>
-                1
-              </text>
-              <text>
-                1
-              </text>
-            </view>
-            <view>
-              <text>
-                hello
-              </text>
-            </view>
+            <wrapper>
+              <view>
+                <text>
+                  1
+                </text>
+                <text>
+                  1
+                </text>
+              </view>
+              <view>
+                <text>
+                  hello
+                </text>
+              </view>
+            </wrapper>
           </list-item>,
           "full-span",
           true,
@@ -345,6 +366,102 @@ describe('list', () => {
             full-span="true"
             item-key="1"
           >
+            <wrapper>
+              <view>
+                <text>
+                  1
+                </text>
+                <text>
+                  1
+                </text>
+              </view>
+              <view>
+                <text>
+                  hello
+                </text>
+              </view>
+            </wrapper>
+          </list-item>,
+          {
+            "elementID": 33,
+            "listID": 2,
+            "operationID": undefined,
+            "triggerLayout": true,
+          },
+        ],
+      ]
+    `);
+
+    expect(list).toMatchInlineSnapshot(`
+      <list
+        style="width:100%;height:100%"
+        update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_d0c07_test_7","item-key":"0","full-span":true},{"position":1,"type":"__snapshot_d0c07_test_7","item-key":"1","full-span":true},{"position":2,"type":"__snapshot_d0c07_test_7","item-key":"2","full-span":true},{"position":3,"type":"__snapshot_d0c07_test_7","item-key":"3","full-span":true},{"position":4,"type":"__snapshot_d0c07_test_7","item-key":"4","full-span":true},{"position":5,"type":"__snapshot_d0c07_test_7","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]},{"insertAction":[],"removeAction":[3],"updateAction":[]}]"
+      >
+        <list-item
+          full-span="true"
+          item-key="4"
+        >
+          <wrapper>
+            <view>
+              <text>
+                4
+              </text>
+              <text>
+                4
+              </text>
+            </view>
+            <view>
+              <text>
+                hello
+              </text>
+            </view>
+          </wrapper>
+        </list-item>
+        <list-item
+          full-span="true"
+          item-key="5"
+        >
+          <wrapper>
+            <view>
+              <text>
+                5
+              </text>
+              <text>
+                5
+              </text>
+            </view>
+            <view>
+              <text>
+                hello
+              </text>
+            </view>
+          </wrapper>
+        </list-item>
+        <list-item
+          full-span="true"
+          item-key="2"
+        >
+          <wrapper>
+            <view>
+              <text>
+                2
+              </text>
+              <text>
+                2
+              </text>
+            </view>
+            <view>
+              <text>
+                hello
+              </text>
+            </view>
+          </wrapper>
+        </list-item>
+        <list-item
+          full-span="true"
+          item-key="1"
+        >
+          <wrapper>
             <view>
               <text>
                 1
@@ -358,96 +475,60 @@ describe('list', () => {
                 hello
               </text>
             </view>
-          </list-item>,
-          {
-            "elementID": 30,
-            "listID": 2,
-            "operationID": undefined,
-            "triggerLayout": true,
-          },
-        ],
-      ]
-    `);
-
-    expect(list).toMatchInlineSnapshot(`
-      <list
-        style="width:100%;height:100%"
-        update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"0","full-span":true},{"position":1,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"1","full-span":true},{"position":2,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"2","full-span":true},{"position":3,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"3","full-span":true},{"position":4,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"4","full-span":true},{"position":5,"type":"__Card__:__snapshot_a9e46_test_6","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]},{"insertAction":[],"removeAction":[3],"updateAction":[]}]"
-      >
-        <list-item
-          full-span="true"
-          item-key="4"
-        >
-          <view>
-            <text>
-              4
-            </text>
-            <text>
-              4
-            </text>
-          </view>
-          <view>
-            <text>
-              hello
-            </text>
-          </view>
-        </list-item>
-        <list-item
-          full-span="true"
-          item-key="5"
-        >
-          <view>
-            <text>
-              5
-            </text>
-            <text>
-              5
-            </text>
-          </view>
-          <view>
-            <text>
-              hello
-            </text>
-          </view>
-        </list-item>
-        <list-item
-          full-span="true"
-          item-key="2"
-        >
-          <view>
-            <text>
-              2
-            </text>
-            <text>
-              2
-            </text>
-          </view>
-          <view>
-            <text>
-              hello
-            </text>
-          </view>
-        </list-item>
-        <list-item
-          full-span="true"
-          item-key="1"
-        >
-          <view>
-            <text>
-              1
-            </text>
-            <text>
-              1
-            </text>
-          </view>
-          <view>
-            <text>
-              hello
-            </text>
-          </view>
+          </wrapper>
         </list-item>
       </list>
     `);
+  });
+
+  it('should recursively destroy list', async () => {
+    let setHide;
+    const Comp = () => {
+      const [hide, _setHide] = useState(false);
+      setHide = _setHide;
+
+      if (hide) return null;
+
+      return (
+        <view
+          style={{
+            width: '100vw',
+            height: '100vh',
+          }}
+        >
+          {
+            <list
+              style={{
+                width: '100%',
+                height: '100%',
+              }}
+            >
+              {Array(6)
+                .fill(0)
+                .map((v, i) => i).map((v) => {
+                  return (
+                    <list-item item-key={`${v}`} key={v} full-span>
+                      <view>
+                        {'Hello'}
+                      </view>
+                    </list-item>
+                  );
+                })}
+            </list>
+          }
+        </view>
+      );
+    };
+
+    const { container } = render(<Comp />);
+
+    const list = container.firstChild.firstChild;
+    const uid0 = elementTree.enterListItemAtIndex(list, 0);
+
+    // Hide all
+    act(() => {
+      setHide(true);
+    });
   });
 });
 
@@ -480,7 +561,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_10","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_d0c07_test_17","item-key":"x"},{"position":1,"type":"__snapshot_d0c07_test_19","item-key":"0"},{"position":2,"type":"__snapshot_d0c07_test_19","item-key":"1"},{"position":3,"type":"__snapshot_d0c07_test_19","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -504,7 +585,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_10","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_d0c07_test_17","item-key":"x"},{"position":1,"type":"__snapshot_d0c07_test_19","item-key":"0"},{"position":2,"type":"__snapshot_d0c07_test_19","item-key":"1"},{"position":3,"type":"__snapshot_d0c07_test_19","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -516,7 +597,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_10","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_12","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_d0c07_test_17","item-key":"x"},{"position":1,"type":"__snapshot_d0c07_test_19","item-key":"0"},{"position":2,"type":"__snapshot_d0c07_test_19","item-key":"1"},{"position":3,"type":"__snapshot_d0c07_test_19","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="x"
@@ -627,7 +708,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_15","item-key":"x"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_17","item-key":"0"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_17","item-key":"1"},{"position":3,"type":"__Card__:__snapshot_a9e46_test_17","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_d0c07_test_22","item-key":"x"},{"position":1,"type":"__snapshot_d0c07_test_24","item-key":"0"},{"position":2,"type":"__snapshot_d0c07_test_24","item-key":"1"},{"position":3,"type":"__snapshot_d0c07_test_24","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -685,7 +766,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_d0c07_test_27","item-key":"0"},{"position":1,"type":"__snapshot_d0c07_test_27","item-key":"1"},{"position":2,"type":"__snapshot_d0c07_test_27","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -705,7 +786,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_d0c07_test_27","item-key":"0"},{"position":1,"type":"__snapshot_d0c07_test_27","item-key":"1"},{"position":2,"type":"__snapshot_d0c07_test_27","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         />
       </page>
     `);
@@ -724,7 +805,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
         <list
           custom-list-name="list-container"
           style="height: 700rpx; width: 700rpx; background-color: #f0f0f0;"
-          update-list-info="[{"insertAction":[{"position":0,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"0"},{"position":1,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"1"},{"position":2,"type":"__Card__:__snapshot_a9e46_test_20","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
+          update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_d0c07_test_27","item-key":"0"},{"position":1,"type":"__snapshot_d0c07_test_27","item-key":"1"},{"position":2,"type":"__snapshot_d0c07_test_27","item-key":"2"}],"removeAction":[],"updateAction":[]}]"
         >
           <list-item
             item-key="2"
@@ -809,7 +890,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
             "rLynxFirstScreen",
             {
               "jsReadyEventIdSwap": {},
-              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__Card__:__snapshot_a9e46_test_23","children":[{"id":-3,"type":"__Card__:__snapshot_a9e46_test_24","values":[{"item-key":0}],"children":[{"id":-4,"type":"__Card__:__snapshot_a9e46_test_22","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-5,"type":"__Card__:__snapshot_a9e46_test_25","children":[{"id":-12,"type":null,"values":[0],"__slotIndex":0}],"__slotIndex":0}],"__slotIndex":0}],"__slotIndex":0},{"id":-6,"type":"__Card__:__snapshot_a9e46_test_24","values":[{"item-key":1}],"children":[{"id":-7,"type":"__Card__:__snapshot_a9e46_test_22","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-8,"type":"__Card__:__snapshot_a9e46_test_25","children":[{"id":-13,"type":null,"values":[1],"__slotIndex":0}],"__slotIndex":0}],"__slotIndex":0}],"__slotIndex":0},{"id":-9,"type":"__Card__:__snapshot_a9e46_test_24","values":[{"item-key":2}],"children":[{"id":-10,"type":"__Card__:__snapshot_a9e46_test_22","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-11,"type":"__Card__:__snapshot_a9e46_test_25","children":[{"id":-14,"type":null,"values":[2],"__slotIndex":0}],"__slotIndex":0}],"__slotIndex":0}],"__slotIndex":0}],"__slotIndex":0}]}",
+              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_d0c07_test_30","children":[{"id":-3,"type":"__snapshot_d0c07_test_31","values":[{"item-key":0}],"children":[{"id":-4,"type":"__snapshot_d0c07_test_29","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-5,"type":"__snapshot_d0c07_test_32","children":[{"id":-12,"type":null,"values":[0]}]}]}]},{"id":-6,"type":"__snapshot_d0c07_test_31","values":[{"item-key":1}],"children":[{"id":-7,"type":"__snapshot_d0c07_test_29","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-8,"type":"__snapshot_d0c07_test_32","children":[{"id":-13,"type":null,"values":[1]}]}]}]},{"id":-9,"type":"__snapshot_d0c07_test_31","values":[{"item-key":2}],"children":[{"id":-10,"type":"__snapshot_d0c07_test_29","values":[{"style":{"backgroundColor":"red","margin":"12px"}}],"children":[{"id":-11,"type":"__snapshot_d0c07_test_32","children":[{"id":-14,"type":null,"values":[2]}]}]}]}]}]}",
             },
           ],
         ],

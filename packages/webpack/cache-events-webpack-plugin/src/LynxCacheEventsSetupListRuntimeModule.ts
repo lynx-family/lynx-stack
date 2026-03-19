@@ -130,6 +130,45 @@ ${LynxRuntimeGlobals.lynxCacheEventsSetupList} = ${
         }
       }
     }`,
+              `{
+      name: 'globalThis',
+      setup: () => {
+        const g = globalThis;
+        const methodsToMock = [
+          'loadDynamicComponent',
+        ];
+        const methodsToOldFn = {};
+        const methodsToMockFn = {};
+
+        methodsToMock.forEach(methodName => {
+          // biome-ignore lint/complexity/useOptionalChain: optional chain not supported here
+          methodsToOldFn[methodName] = g[methodName] && g[methodName].bind(g);
+          g[methodName] = methodsToMockFn[methodName] = (...args) => {
+            if (${LynxRuntimeGlobals.lynxCacheEvents}.loaded) {
+              // biome-ignore lint/complexity/useOptionalChain: optional chain not supported here
+              return methodsToOldFn[methodName]
+                && methodsToOldFn[methodName](...args);
+            }
+
+            ${LynxRuntimeGlobals.lynxCacheEvents}.cachedActions.push({
+              type: 'globalThisMethod',
+              data: {
+                type: methodName,
+                args,
+              },
+            });
+          };
+        });
+
+        return () => {
+          ${LynxRuntimeGlobals.lynxCacheEvents}.cachedActions.forEach(action => {
+            if (action.type === 'globalThisMethod') {
+              g[action.data.type](...action.data.args);
+            }
+          });
+        }
+      },
+    }`,
             ]).join(',')
             + ']',
         )

@@ -61,7 +61,9 @@ use swc_plugin_shake::napi::{ShakeVisitor, ShakeVisitorConfig};
 use swc_plugin_snapshot::napi::{JSXTransformer, JSXTransformerConfig};
 use swc_plugin_worklet::napi::{WorkletVisitor, WorkletVisitorConfig};
 use swc_plugins_shared::{
-  engine_version::is_engine_version_ge, transform_mode_napi::TransformMode, utils::calc_hash,
+  engine_version::is_engine_version_ge,
+  transform_mode_napi::TransformMode,
+  utils::{calc_hash, WEBPACK_VARS},
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -317,6 +319,7 @@ fn transform_react_lynx_inner(
 
     let unresolved_mark = Mark::new();
     let top_level_mark = Mark::new();
+    let top_retain = WEBPACK_VARS.iter().map(|&s| s.into()).collect::<Vec<_>>();
 
     let simplify_pass_1 = Optional::new(
       simplifier(
@@ -324,6 +327,7 @@ fn transform_react_lynx_inner(
         simplify::Config {
           dce: simplify::dce::Config {
             preserve_imports_with_side_effects: false,
+            top_retain: top_retain.clone(),
             ..Default::default()
           },
           ..Default::default()
@@ -451,6 +455,7 @@ fn transform_react_lynx_inner(
       simplify::Config {
         dce: simplify::dce::Config {
           preserve_imports_with_side_effects: false,
+          top_retain: top_retain.clone(),
           ..Default::default()
         },
         ..Default::default()

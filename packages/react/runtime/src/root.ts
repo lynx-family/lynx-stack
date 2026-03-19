@@ -29,9 +29,9 @@ function setRoot(root: typeof __root): void {
   }
 }
 
-if (__MAIN_THREAD__) {
+if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
   setRoot(new SnapshotInstance('root'));
-} else if (__BACKGROUND__) {
+} else if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
   setRoot(new BackgroundSnapshotInstance('root'));
 }
 

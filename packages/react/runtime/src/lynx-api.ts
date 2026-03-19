@@ -7,7 +7,7 @@ import { useState } from 'preact/hooks';
 import type { Consumer, FC, ReactNode } from 'react';
 
 import { factory, withInitDataInState } from './compat/initData.js';
-import { profileEnd, profileStart } from './debug/utils.js';
+import { profileEnd, profileStart } from './debug/profile.js';
 import { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';
 import { LifecycleConstant } from './lifecycleConstant.js';
 import { flushDelayedLifecycleEvents } from './lynx/tt.js';
@@ -84,16 +84,16 @@ export interface Root {
 export const root: Root = {
   render: (jsx: ReactNode): void => {
     /* v8 ignore next 2 */
-    if (__MAIN_THREAD__) {
+    if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
       __root.__jsx = jsx;
     } else {
       __root.__jsx = jsx;
-      if (__PROFILE__) {
+      if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileStart('ReactLynx::renderBackground');
       }
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       render(jsx, __root as any);
-      if (__PROFILE__) {
+      if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileEnd();
       }
       if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {

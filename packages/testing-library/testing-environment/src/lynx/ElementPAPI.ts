@@ -79,6 +79,7 @@ export const initElementTree = () => {
     __CreatePage(_tag: string, parentComponentUniqueId: number) {
       const page = this.__CreateElement('page', parentComponentUniqueId);
       this.root = page;
+      document.body.innerHTML = '';
       lynxTestingEnv.jsdom.window.document.body.appendChild(page);
       return page;
     }
@@ -415,6 +416,51 @@ export const initElementTree = () => {
     __GetAttributeByName(ele: LynxElement, name: string) {
       // return ele.props[name];
       return ele.getAttribute(name);
+    }
+
+    /** @internal */
+    animationMap = new Map<
+      string,
+      { element: LynxElement; state: string; keyframes?: any[]; options?: any }
+    >();
+
+    __ElementAnimate(
+      element: LynxElement,
+      args: [number, string, ...any[]],
+    ) {
+      const [operation, name] = args;
+      switch (operation) {
+        case 0 /* START */: {
+          const keyframes = args[2];
+          const options = args[3];
+          this.animationMap.set(name, {
+            element,
+            state: 'running',
+            keyframes,
+            options,
+          });
+          break;
+        }
+        case 1 /* PLAY */: {
+          const anim = this.animationMap.get(name);
+          if (anim) anim.state = 'running';
+          break;
+        }
+        case 2 /* PAUSE */: {
+          const anim = this.animationMap.get(name);
+          if (anim) anim.state = 'paused';
+          break;
+        }
+        case 3 /* CANCEL */: {
+          this.animationMap.delete(name);
+          break;
+        }
+        case 4 /* FINISH */: {
+          const anim = this.animationMap.get(name);
+          if (anim) anim.state = 'finished';
+          break;
+        }
+      }
     }
 
     clear() {

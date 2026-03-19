@@ -6,8 +6,6 @@ import * as lynxTemplate from '../resources/web-core.main-thread.json' with {
 };
 import { createMainThreadGlobalThis } from '@lynx-js/web-mainthread-apis';
 import { initOffscreenDocument } from '@lynx-js/offscreen-document/main';
-import { initWasm } from '@lynx-js/web-style-transformer';
-await initWasm();
 import {
   _onEvent,
   OffscreenDocument,
@@ -17,7 +15,6 @@ import {
   lynxTagAttribute,
   lynxUniqueIdAttribute,
   type MainThreadGlobalThis,
-  type WebFiberElementImpl,
 } from '@lynx-js/web-constants';
 
 const ENABLE_MULTI_THREAD = !!process.env.ENABLE_MULTI_THREAD;
@@ -49,7 +46,7 @@ const { decodeOperation } = ENABLE_MULTI_THREAD
   : {};
 
 function serializeElementThreadElement(
-  element: WebFiberElementImpl,
+  element: HTMLElement,
 ): ComparableElementJson {
   const parent = runtime.__GetParent(element);
   const tag = runtime.__GetTag(element);

@@ -6,6 +6,7 @@ import { logger } from '@rsbuild/core'
 
 import { exit } from './exit.js'
 import { debug } from '../debug.js'
+import { rsbuildVersion, rspackVersion, version } from '../version.js'
 
 function initNodeEnv(argv: string[]) {
   if (!process.env['NODE_ENV']) {
@@ -32,10 +33,6 @@ export async function main(
     // biome-ignore lint/suspicious/noConsoleLog: <explanation>
     console.log()
   }
-
-  const { version, rsbuildVersion, rspackVersion } = await import(
-    '../version.js'
-  )
 
   logger.greet(
     `  Rspeedy v${version} (Rsbuild v${rsbuildVersion}, Rspack v${rspackVersion})\n`,

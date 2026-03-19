@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { profileEnd, profileStart } from './debug/utils.js';
+import { profileEnd, profileStart } from './debug/profile.js';
 import { hydrate } from './hydrate.js';
 import { componentAtIndexFactory, enqueueComponentFactory } from './list.js';
 import type { SnapshotInstance } from './snapshot.js';
@@ -85,7 +85,7 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
     // });
     const updateListInfo = this.__toAttribute();
 
-    if (__PROFILE__) {
+    if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       const listID = __GetElementUniqueID(listElement);
       profileStart(`ReactLynx::listFlush::updateListInfo`, {
         args: {
@@ -104,7 +104,7 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
       componentAtIndexes,
     );
 
-    if (__PROFILE__) {
+    if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileEnd();
     }
     return this.list.__id;

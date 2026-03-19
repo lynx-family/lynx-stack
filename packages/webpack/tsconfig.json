@@ -14,6 +14,7 @@
     { "path": "./react-refresh-webpack-plugin/tsconfig.build.json" },
     { "path": "./webpack-runtime-globals/tsconfig.build.json" },
     { "path": "./cache-events-webpack-plugin/tsconfig.build.json" },
+    { "path": "./externals-loading-webpack-plugin/tsconfig.build.json" },
     /** packages-end */
   ],
   "include": [],

@@ -26,6 +26,12 @@ interface Options {
 export async function registerConsoleShortcuts(
   options: Options,
 ): Promise<() => void> {
+  // Non-TTY: print structured list of all entries and return early
+  if (!(process.stdin.isTTY && process.stdout.isTTY)) {
+    await printNonTTY(options)
+    return () => {/* noop */}
+  }
+
   const [
     { default: showQRCode },
   ] = await Promise.all([
@@ -53,6 +59,32 @@ export async function registerConsoleShortcuts(
     gExistingShortcuts.delete(options)
   }
   return off
+}
+
+async function printNonTTY(options: Options): Promise<void> {
+  const lines: string[] = []
+  const urls: string[] = []
+
+  for (const entry of options.entries) {
+    const devUrls = generateDevUrls(
+      options.api,
+      entry,
+      options.schema,
+      options.port,
+    )
+
+    lines.push(entry)
+    for (const [schemaName, url] of Object.entries(devUrls)) {
+      lines.push(`  ${schemaName}: ${url}`)
+      urls.push(url)
+    }
+  }
+
+  process.stdout.write(lines.join('\n') + '\n')
+
+  for (const url of urls) {
+    await options.onPrint?.(url)
+  }
 }
 
 async function loop(

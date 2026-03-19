@@ -33,7 +33,7 @@ import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValu
 import { getReloadVersion } from '../pass.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
-import { profileEnd, profileStart } from '../../debug/utils.js';
+import { profileEnd, profileStart } from '../../debug/profile.js';
 import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
@@ -106,7 +106,7 @@ function replaceCommitHook(): void {
       commitQueue,
     ) => {
       // Skip commit phase for MT runtime
-      if (__MAIN_THREAD__) {
+      if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
         // for testing only
         commitQueue.length = 0;
         return;
@@ -193,7 +193,7 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: GlobalPatchOption
   // );
   // console.debug('commitPatchUpdate:', prettyFormatSnapshotPatch(patchList.patchList[0]?.snapshotPatch));
 
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::commitChanges');
   }
   markTiming('packChangesStart');
@@ -212,7 +212,7 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: GlobalPatchOption
     obj.patchOptions.pipelineOptions = globalPipelineOptions;
     setPipeline(undefined);
   }
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
 

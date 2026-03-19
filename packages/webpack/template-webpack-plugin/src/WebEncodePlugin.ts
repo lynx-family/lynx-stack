@@ -4,6 +4,9 @@
 
 import type { Compilation, Compiler } from 'webpack';
 
+import type { LynxStyleNode } from '@lynx-js/css-serializer';
+import type { TasmJSONInfo } from '@lynx-js/web-core-wasm/encode';
+
 import {
   LynxTemplatePlugin,
   isDebug,
@@ -49,8 +52,6 @@ export class WebEncodePlugin {
           stage: WebEncodePlugin.BEFORE_ENCODE_HOOK_STAGE,
         }, (encodeOptions) => {
           const { encodeData } = encodeOptions;
-          const { cssMap } = encodeData.css;
-          const styleInfo = genStyleInfo(cssMap);
 
           const [name, content] = last(Object.entries(encodeData.manifest))!;
 
@@ -66,7 +67,6 @@ export class WebEncodePlugin {
           }
 
           Object.assign(encodeData, {
-            styleInfo,
             manifest: {
               // `app-service.js` is the entry point of a template.
               '/app-service.js': content,
@@ -82,27 +82,56 @@ export class WebEncodePlugin {
           return encodeOptions;
         });
 
-        hooks.encode.tap({
+        hooks.encode.tapPromise({
           name: WebEncodePlugin.name,
           stage: WebEncodePlugin.ENCODE_HOOK_STAGE,
-        }, ({ encodeOptions }) => {
-          return {
-            buffer: Buffer.from(JSON.stringify({
-              styleInfo: encodeOptions['styleInfo'],
-              manifest: encodeOptions.manifest,
-              cardType: encodeOptions['cardType'],
-              appType: encodeOptions['appType'],
-              pageConfig: encodeOptions['pageConfig'],
-              lepusCode: {
-                // flatten the lepusCode to a single object
-                ...encodeOptions.lepusCode.lepusChunk,
-                root: encodeOptions.lepusCode.root,
-              },
-              customSections: encodeOptions.customSections,
-              elementTemplate: encodeOptions['elementTemplate'],
-            })),
-            debugInfo: '',
+        }, async ({ encodeOptions }) => {
+          const tasmJSONInfo: Record<string, unknown> = {
+            styleInfo: (encodeOptions['css'] as {
+              cssMap: Record<string, LynxStyleNode[]>;
+            }).cssMap,
+            manifest: encodeOptions.manifest as Record<string, string>,
+            cardType: encodeOptions['cardType'] as string,
+            appType: encodeOptions['appType'] as string,
+            pageConfig: encodeOptions['pageConfig'] as Record<string, unknown>,
+            lepusCode: {
+              // flatten the lepusCode to a single object
+              ...encodeOptions.lepusCode.lepusChunk,
+              root: encodeOptions.lepusCode.root!,
+            },
+            customSections: encodeOptions.customSections ?? {},
+            elementTemplates: encodeOptions['elementTemplates'] ?? {},
           };
+          const isExperimentalWebBinary = process
+            .env['EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE'];
+          if (isExperimentalWebBinary === 'true') {
+            const { encode } = await import('@lynx-js/web-core-wasm/encode');
+            return {
+              buffer: Buffer.from(encode(tasmJSONInfo as TasmJSONInfo)),
+              debugInfo: '',
+            };
+          } else if (isExperimentalWebBinary == null /*undefined or null */) {
+            return {
+              buffer: Buffer.from(
+                JSON.stringify({
+                  ...tasmJSONInfo,
+                  styleInfo: genStyleInfo(
+                    tasmJSONInfo['styleInfo'] as Record<
+                      string,
+                      LynxStyleNode[]
+                    >,
+                  ),
+                }),
+                'utf-8',
+              ),
+              debugInfo: '',
+            };
+          } else {
+            // only allow 'true' or undefined/null
+            throw new Error(
+              `Unknown value of EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE: ${isExperimentalWebBinary}. Expecting "true" or undefined.`,
+            );
+          }
         });
       },
     );

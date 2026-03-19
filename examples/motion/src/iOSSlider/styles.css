@@ -1,0 +1,46 @@
+.case-container {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #555;
+}
+
+.slider {
+  width: 100px;
+  height: 225px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 40px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  outline: none;
+  box-shadow: 0px 0px 0px 4px #0d63f800;
+  transition: box-shadow 0.15s;
+}
+
+.indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-color: #f5f5f5;
+  transform-origin: center bottom;
+  transform: scaleY(0.5);
+}
+
+.icon-container {
+  position: relative;
+  z-index: 1;
+}
+
+.icon {
+  position: relative;
+  z-index: 1;
+  bottom: 20px;
+  width: 48px;
+  height: 48px;
+}

@@ -7,5 +7,7 @@
   "include": ["src", "test", "vitest.config.ts"],
   "references": [
     { "path": "../webpack-runtime-globals/tsconfig.build.json" },
+    { "path": "../../tools/css-serializer" },
+    { "path": "../../web-platform/web-core-wasm" },
   ],
 }

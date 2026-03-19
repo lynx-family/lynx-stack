@@ -1,9 +1,34 @@
-// Copyright 2025 The Lynx Authors. All rights reserved.
+// Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { ReadableStream } from 'node:stream/web';
+import { setTimeout } from 'node:timers/promises';
+
 import * as z from 'zod';
+
 import { clientId, sessionId } from '../../schema/index.ts';
 import { defineTool } from '../defineTool.ts';
+
+interface ConsoleCallFrame {
+  url: string;
+  lineNumber: number;
+  columnNumber: number;
+}
+
+interface ConsoleStackTrace {
+  callFrames: ConsoleCallFrame[];
+}
+
+interface ConsoleArg {
+  value?: unknown;
+}
+
+interface ConsoleMessage {
+  type: string;
+  args: ConsoleArg[];
+  stackTrace?: ConsoleStackTrace;
+  url?: string;
+}
 
 export const ListConsole = /*#__PURE__*/ defineTool({
   name: 'Runtime_listConsole',
@@ -34,29 +59,66 @@ export const ListConsole = /*#__PURE__*/ defineTool({
 
     const {
       offset = 0,
-      limit = Number.POSITIVE_INFINITY,
+      limit = 100,
       includeStackTraces = false,
       level = ['info', 'log', 'warning', 'error'],
     } = params;
 
-    const consoleMessages = connector.getConsole(
+    await using stream = await connector.sendCDPStream(
       params.clientId,
-      params.sessionId,
+      ReadableStream.from([{
+        sessionId: params.sessionId,
+        method: 'Page.enable',
+      }, {
+        sessionId: params.sessionId,
+        method: 'Runtime.enable',
+      }]),
     );
 
+    const messages: ConsoleMessage[] = [];
+
+    const reader = stream.getReader();
+    const IDLE_TIMEOUT = 200;
+    const MAX_TOTAL_TIME = 2000;
+    const startTime = Date.now();
+
+    try {
+      while (Date.now() - startTime < MAX_TOTAL_TIME) {
+        const result = await Promise.race([
+          reader.read(),
+          setTimeout(IDLE_TIMEOUT, 'timeout' as const),
+        ]);
+        if (result === 'timeout') {
+          await reader.cancel();
+          break;
+        }
+
+        const { done, value } = result;
+        if (done) break;
+
+        if (value.method === 'Runtime.consoleAPICalled') {
+          messages.push(value.params as ConsoleMessage);
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+
     response.appendLines(
-      ...consoleMessages
+      ...messages
+        .filter(msg => (level as string[]).includes(msg.type))
         .slice(offset, offset + limit)
-        .filter(msg => level.includes(msg.type))
         .map(({ args, type, url, stackTrace }) =>
-          `- [${type}] ${args.map(i => i.value).join(' ')} ${
-            (includeStackTraces || type === 'error')
-              ? stackTrace.callFrames.map(frame =>
+          `- [${type}] ${args.map((i) => i.value).join(' ')} ${
+            (includeStackTraces || type === 'error') && stackTrace
+              ? stackTrace.callFrames.map((frame) =>
                 `\n  - ${frame.url}:${frame.lineNumber}:${frame.columnNumber}`
               ).join(
                 '',
               )
-              : `(at ${url})`
+              : (url
+                ? `(at ${url})`
+                : '')
           }`
         ),
     );

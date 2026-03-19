@@ -1,5 +1,33 @@
 # upgrade-rspeedy
 
+## 0.13.5
+
+## 0.13.4
+
+## 0.13.3
+
+## 0.13.2
+
+## 0.13.1
+
+### Patch Changes
+
+- Fix the issue `rslib-runtime.js` was not published in dist folder. ([#2122](https://github.com/lynx-family/lynx-stack/pull/2122))
+
+## 0.13.0
+
+## 0.12.5
+
+## 0.12.4
+
+## 0.12.3
+
+## 0.12.2
+
+## 0.12.1
+
+## 0.12.0
+
 ## 0.11.9
 
 ## 0.11.8

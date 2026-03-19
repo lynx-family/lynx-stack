@@ -12,7 +12,9 @@ it('should not have Component in output', async () => {
   const content = await fs.promises.readFile(__filename, 'utf-8');
 
   if (__JS__) {
-    expect(content).not.toContain(['V', 'i', 'e', 'w'].join(''));
+    expect(content.replaceAll('__CreateView', '')).not.toContain(
+      ['V', 'i', 'e', 'w'].join(''),
+    );
   }
   expect(content).not.toContain(['react', 'components'].join('-'));
 });

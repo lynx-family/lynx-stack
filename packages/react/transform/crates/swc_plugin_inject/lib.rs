@@ -11,6 +11,7 @@ use swc_core::{
   },
 };
 
+#[cfg(feature = "napi")]
 pub mod napi;
 
 #[derive(Debug, PartialEq, Clone)]

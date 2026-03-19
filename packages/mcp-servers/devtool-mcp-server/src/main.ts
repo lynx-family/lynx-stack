@@ -1,16 +1,14 @@
 #!/usr/bin/env node
 
-// Copyright 2025 The Lynx Authors. All rights reserved.
+// Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { defaultLogger } from '@lynx-js/debug-router-connector';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
 import pkg from '../package.json' with { type: 'json' };
 
 async function main() {
-  defaultLogger.setLevel('silent');
   const { setupServer } = await import('./index.ts');
   const mcpServer = new McpServer({
     name: 'Lynx DevTool',
@@ -27,9 +25,9 @@ Glossary:
 Tool selection guidance:
   1. All tools have name '<DOMAIN>_<METHOD_NAME>'. <DOMAIN> is the domain of the tool, e.g., 'CSS', 'DOM', 'Debugger', 'Runtime', etc. Most of the tools would have the same functionality with Chrome DevTools Protocol. See documentation at: https://chromedevtools.github.io/devtools-protocol/tot/<DOMAIN>/#method-<METHOD_NAME>.
 
-Tool usage guidance:
-  1. Most of the tools would require a 'clientId' and a 'sessionId' parameter to identify the target client and session. You can get the list of connected devices, clients and sessions using the 'Device.listDevices', 'Device.listClients' and 'Device.listSessions' tools.
-`,
+      Tool usage guidance:
+      1. Most of the tools would require a 'clientId' and a 'sessionId' parameter to identify the target client and session. You can get the list of connected devices, clients and sessions using the 'Device_listDevices', 'Device_listClients' and 'Device_listSessions' tools.
+      `,
   });
 
   setupServer(mcpServer);

@@ -11,7 +11,7 @@
     "composite": true,
     "outDir": "./lib",
     "rootDir": "./src",
-    "baseUrl": "./",
+    "module": "nodenext",
 
     "resolveJsonModule": true,
   },

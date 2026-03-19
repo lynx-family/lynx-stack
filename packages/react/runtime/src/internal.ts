@@ -14,11 +14,18 @@ import { loadLazyBundle } from './lynx/lazy-bundle.js';
 import { __root } from './root.js';
 import { DynamicPartType } from './snapshot/dynamicPartType.js';
 import { snapshotCreateList } from './snapshot/list.js';
-import { SnapshotInstance, __page, __pageId, createSnapshot, snapshotManager } from './snapshot.js';
+import { SnapshotInstance, __page, __pageId, createSnapshot, snapshotCreatorMap, snapshotManager } from './snapshot.js';
 
 export { __page, __pageId, __root };
 
-export { BackgroundSnapshotInstance, SnapshotInstance, snapshotCreateList, createSnapshot, snapshotManager };
+export {
+  BackgroundSnapshotInstance,
+  SnapshotInstance,
+  snapshotCreateList,
+  createSnapshot,
+  snapshotManager,
+  snapshotCreatorMap,
+};
 
 export const __DynamicPartSlot: DynamicPartType = DynamicPartType.Slot;
 export const __DynamicPartMultiChildren: DynamicPartType = DynamicPartType.MultiChildren;

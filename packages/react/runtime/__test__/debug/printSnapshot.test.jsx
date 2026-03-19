@@ -7,7 +7,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { backgroundSnapshotInstanceManager, snapshotInstanceManager } from '../../src/snapshot';
 import { elementTree } from '../utils/nativeMethod';
 import { BackgroundSnapshotInstance } from '../../src/backgroundSnapshot';
-import { printSnapshotInstance } from '../../src/debug/printSnapshot';
+import { printSerializedSnapshotInstance, printSnapshotInstance } from '../../src/debug/printSnapshot';
+import { SnapshotInstance } from '../../src/snapshot';
 
 const HOLE = null;
 
@@ -64,10 +65,44 @@ describe('printSnapshotInstance', () => {
     printSnapshotInstance(bsi1, log);
     expect(msg).toMatchInlineSnapshot(`
       "
-      | 1(__Card__:__snapshot_a94a8_test_1): undefined
-        | 2(__Card__:__snapshot_a94a8_test_2): undefined
-          | 4(__Card__:__snapshot_a94a8_test_3): ["attr 1","attr 2"]
-        | 3(__Card__:__snapshot_a94a8_test_2): undefined
+      | 1(__snapshot_a94a8_test_1): undefined
+        | 2(__snapshot_a94a8_test_2): undefined
+          | 4(__snapshot_a94a8_test_3): ["attr 1","attr 2"]
+        | 3(__snapshot_a94a8_test_2): undefined
+      "
+    `);
+  });
+
+  it('SnapshotInstance', async function() {
+    const si1 = new SnapshotInstance(snapshot1);
+    const si2 = new SnapshotInstance(snapshot2);
+    const si22 = new SnapshotInstance(snapshot2);
+    const si3 = new SnapshotInstance(snapshot3);
+    si1.insertBefore(si2);
+    si1.insertBefore(si22);
+    si2.insertBefore(si3);
+    si3.setAttribute(0, 'attr 1');
+    si3.setAttribute(1, 'attr 2');
+    si3.setAttribute('__1', 'attr 2');
+    printSnapshotInstance(si1, log);
+    expect(msg).toMatchInlineSnapshot(`
+      "
+      | -2(__snapshot_a94a8_test_1): undefined
+        | -3(__snapshot_a94a8_test_2): undefined
+          | -5(__snapshot_a94a8_test_3): ["attr 1","attr 2"]
+        | -4(__snapshot_a94a8_test_2): undefined
+      "
+    `);
+
+    const serialized = JSON.stringify(si1);
+    msg = '\n';
+    printSerializedSnapshotInstance(JSON.parse(serialized), log);
+    expect(msg).toMatchInlineSnapshot(`
+      "
+      | -2(__snapshot_a94a8_test_1): undefined
+        | -3(__snapshot_a94a8_test_2): undefined
+          | -5(__snapshot_a94a8_test_3): ["attr 1","attr 2"]
+        | -4(__snapshot_a94a8_test_2): undefined
       "
     `);
   });
@@ -83,6 +118,32 @@ describe('printSnapshotInstance', () => {
     bsi3.setAttribute(0, 'attr 1');
     bsi3.setAttribute(1, 'attr 2');
     printSnapshotInstance(bsi1);
+    expect(msg).toMatchInlineSnapshot(`
+      "
+      "
+    `);
+  });
+
+  it('printToScreen for SnapshotInstance', async function() {
+    const si1 = new SnapshotInstance(snapshot1);
+    const si2 = new SnapshotInstance(snapshot2);
+    const si22 = new SnapshotInstance(snapshot2);
+    const si3 = new SnapshotInstance(snapshot3);
+    si1.insertBefore(si2);
+    si1.insertBefore(si22);
+    si2.insertBefore(si3);
+    si3.setAttribute(0, 'attr 1');
+    si3.setAttribute(1, 'attr 2');
+    si3.setAttribute('__1', 'attr 2');
+    printSnapshotInstance(si1);
+    expect(msg).toMatchInlineSnapshot(`
+      "
+      "
+    `);
+
+    const serialized = JSON.stringify(si1);
+    msg = '\n';
+    printSerializedSnapshotInstance(JSON.parse(serialized));
     expect(msg).toMatchInlineSnapshot(`
       "
       "

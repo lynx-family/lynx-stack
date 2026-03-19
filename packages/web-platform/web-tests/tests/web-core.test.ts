@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 // @ts-nocheck
-import { test, expect } from './coverage-fixture.js';
+import { test, expect } from '@lynx-js/playwright-fixtures';
 import type { Page, Worker } from '@playwright/test';
 
 const ENABLE_MULTI_THREAD = !!process.env.ENABLE_MULTI_THREAD;
@@ -712,5 +712,41 @@ test.describe('web core tests', () => {
     });
     await wait(1000);
     expect(isSuccess).toBeTruthy();
+  });
+  test('should not throw error when removed immediately after connected', async ({ page }) => {
+    const errors: Error[] = [];
+    page.on('pageerror', (err) => {
+      errors.push(err);
+    });
+
+    await goto(page);
+
+    // Evaluate in browser context
+    await page.evaluate(async () => {
+      // Verify DOM behavior assumption
+      const div = document.createElement('div');
+      const shadow = div.attachShadow({ mode: 'open' });
+      const style = document.createElement('style');
+      shadow.appendChild(style);
+      document.body.appendChild(div);
+      if (!style.sheet) throw new Error('Sheet should exist when connected');
+
+      document.body.removeChild(div);
+      if (style.sheet) {
+        throw new Error('Sheet should be null when disconnected');
+      }
+
+      // Create a new lynx-view
+      const view = document.createElement('lynx-view');
+      // Connect it
+      document.body.appendChild(view);
+      // Immediately disconnect it
+      document.body.removeChild(view);
+
+      // Wait a bit to ensure microtasks run
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+
+    expect(errors.length).toBe(0);
   });
 });

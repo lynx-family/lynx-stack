@@ -30,8 +30,17 @@ it('should generate correct foo template', async () => {
   const content = await readFile(tasmJSONPath, 'utf-8');
   const { sourceContent, manifest } = JSON.parse(content);
   expect(sourceContent).toHaveProperty('appType', 'DynamicComponent');
+
+  expect(manifest).toHaveProperty('/app-service.js');
+  // should not have requireModuleAsyncCache polyfill
+  expect(manifest['/app-service.js']).not.toContain('var moduleCache = {}');
+
   expect(manifest).toHaveProperty(
     '/foo:background.rspack.bundle.js',
     expect.stringContaining('function foo()'),
   );
+
+  it('inlined scripts should not have syntax error', () => {
+    eval(manifest['/app-service.js']);
+  });
 });

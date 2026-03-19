@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<!-- Copyright 2023 The Lynx Authors. All rights reserved.
+Licensed under the Apache License Version 2.0 that can be found in the
+LICENSE file in the root directory of this source tree. -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>web playground</title>
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta content="default" name="apple-mobile-web-app-status-bar-style">
+    <meta content="telephone=no" name="format-detection">
+    <meta content="portrait" name="screen-orientation">
+    <meta
+      content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+      name="viewport"
+    >
+    <meta content="portrait" name="x5-orientation" />
+    <link
+      href="/main.css"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <script src="/main.js" defer></script>
+    <x-view style="height: 100%; width: 100%">
+      <x-view
+        flatten="false"
+        style="overflow: hidden; width: 100%; height: 450px; background-color: grey; background-size: 100% 100%; background: url(/tests/fixtures/resources/firefox-logo.png)"
+      >
+        <x-blur-view
+          blur-radius="25"
+          style="width: 100%; height: 100px; margin-top: 200px"
+        >
+          <text>Backdrop-filter 25, with background</text>
+        </x-blur-view>
+      </x-view>
+    </x-view>
+  </body>
+</html>

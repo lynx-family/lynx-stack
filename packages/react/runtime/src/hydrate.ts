@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { profileEnd, profileStart } from './debug/utils.js';
+import { profileEnd, profileStart } from './debug/profile.js';
 import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from './list.js';
 import { __pendingListUpdates } from './pendingListUpdates.js';
 import { DynamicPartType } from './snapshot/dynamicPartType.js';
@@ -396,7 +396,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           updateAction,
         };
 
-        if (__PROFILE__) {
+        if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
           profileStart('ReactLynx::listHydrate::updateListInfo', {
             args: {
               'list id': String(listID),
@@ -419,7 +419,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         // avoid the newly created list's (behind snapshot instance `after`) "update-list-info" being recorded.
         __pendingListUpdates.clear(after.__id);
 
-        if (__PROFILE__) {
+        if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
           profileEnd();
         }
         break;

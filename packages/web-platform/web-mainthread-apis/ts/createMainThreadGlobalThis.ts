@@ -1,0 +1,1031 @@
+// Copyright 2023 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
+import {
+  type LynxTemplate,
+  type PageConfig,
+  type FlushElementTreeOptions,
+  type Cloneable,
+  type BrowserConfig,
+  lynxUniqueIdAttribute,
+  type publishEventEndpoint,
+  type publicComponentEventEndpoint,
+  type reportErrorEndpoint,
+  type RpcCallType,
+  type LynxContextEventTarget,
+  systemInfo,
+  type AddEventPAPI,
+  type GetEventsPAPI,
+  type GetEventPAPI,
+  type MainThreadGlobalThis,
+  type SetEventsPAPI,
+  type CreateElementPAPI,
+  parentComponentUniqueIdAttribute,
+  componentIdAttribute,
+  LynxEventNameToW3cByTagName,
+  LynxEventNameToW3cCommon,
+  type LynxEventType,
+  lynxTagAttribute,
+  type MainThreadScriptEvent,
+  W3cEventNameToLynx,
+  type LynxRuntimeInfo,
+  type CreateViewPAPI,
+  type CreateTextPAPI,
+  type CreateImagePAPI,
+  type CreateScrollViewPAPI,
+  type CreateWrapperElementPAPI,
+  type CreatePagePAPI,
+  cssIdAttribute,
+  lynxDefaultDisplayLinearAttribute,
+  type CreateRawTextPAPI,
+  type CreateListPAPI,
+  type CreateComponentPAPI,
+  type SetAttributePAPI,
+  type SetAttributePAPIUpdateListInfo,
+  type UpdateListInfoAttributeValue,
+  __lynx_timing_flag,
+  type UpdateListCallbacksPAPI,
+  type SwapElementPAPI,
+  type SetCSSIdPAPI,
+  type AddClassPAPI,
+  type SetClassesPAPI,
+  type GetPageElementPAPI,
+  type MinimalRawEventObject,
+  type I18nResourceTranslationOptions,
+  lynxDisposedAttribute,
+  type SSRHydrateInfo,
+  type SSRDehydrateHooks,
+  type ElementTemplateData,
+  type ElementFromBinaryPAPI,
+  type JSRealm,
+  type QueryComponentPAPI,
+  lynxEntryNameAttribute,
+  ErrorCode,
+  type QuerySelectorPAPI,
+  type InvokeUIMethodPAPI,
+  type ElementAnimatePAPI,
+  AnimationOperation,
+} from '@lynx-js/web-constants';
+import { createMainThreadLynx } from './createMainThreadLynx.js';
+import {
+  __AddClass,
+  __AddConfig,
+  __AddDataset,
+  __AddInlineStyle,
+  __AppendElement,
+  __ElementIsEqual,
+  __FirstElement,
+  __GetAttributes,
+  __GetChildren,
+  __GetClasses,
+  __GetComponentID,
+  __GetDataByKey,
+  __GetDataset,
+  __GetElementConfig,
+  __GetElementUniqueID,
+  __GetID,
+  __GetParent,
+  __GetTag,
+  __GetTemplateParts,
+  __InsertElementBefore,
+  __LastElement,
+  __MarkPartElement,
+  __MarkTemplateElement,
+  __NextElement,
+  __RemoveElement,
+  __ReplaceElement,
+  __ReplaceElements,
+  __SetClasses,
+  __SetConfig,
+  __SetCSSId,
+  __SetDataset,
+  __SetID,
+  __SetInlineStyles,
+  __UpdateComponentID,
+  __UpdateComponentInfo,
+  __GetAttributeByName,
+} from './pureElementPAPIs.js';
+import { createCrossThreadEvent } from './utils/createCrossThreadEvent.js';
+
+const exposureRelatedAttributes = new Set<string>([
+  'exposure-id',
+  'exposure-area',
+  'exposure-screen-margin-top',
+  'exposure-screen-margin-right',
+  'exposure-screen-margin-bottom',
+  'exposure-screen-margin-left',
+  'exposure-ui-margin-top',
+  'exposure-ui-margin-right',
+  'exposure-ui-margin-bottom',
+  'exposure-ui-margin-left',
+]);
+
+export interface MainThreadRuntimeCallbacks {
+  mainChunkReady: () => void;
+  flushElementTree: (
+    options: FlushElementTreeOptions | undefined,
+    timingFlags: string[],
+    exposureChangedElements: HTMLElement[],
+  ) => void;
+  _ReportError: RpcCallType<typeof reportErrorEndpoint>;
+  __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
+  markTiming: (pipelineId: string, timingKey: string) => void;
+  publishEvent: RpcCallType<typeof publishEventEndpoint>;
+  publicComponentEvent: RpcCallType<typeof publicComponentEventEndpoint>;
+  _I18nResourceTranslation: (
+    options: I18nResourceTranslationOptions,
+  ) => unknown | undefined;
+  updateCssOGStyle: (
+    uniqueId: number,
+    newClassName: string,
+    cssID: string | null,
+    entryName: string | null,
+  ) => void;
+  __QueryComponent: QueryComponentPAPI;
+}
+
+export interface MainThreadRuntimeConfig {
+  pageConfig: PageConfig;
+  globalProps: unknown;
+  callbacks: MainThreadRuntimeCallbacks;
+  lynxTemplate: LynxTemplate;
+  browserConfig: BrowserConfig;
+  tagMap: Record<string, string>;
+  rootDom:
+    & Pick<Element, 'append' | 'addEventListener'>
+    & Partial<Pick<ShadowRoot, 'querySelectorAll' | 'cloneNode'>>;
+  jsContext: LynxContextEventTarget;
+  ssrHydrateInfo?: SSRHydrateInfo;
+  ssrHooks?: SSRDehydrateHooks;
+  mtsRealm: JSRealm;
+  document: Document;
+}
+
+export function createMainThreadGlobalThis(
+  config: MainThreadRuntimeConfig,
+): MainThreadGlobalThis {
+  let timingFlags: string[] = [];
+  const {
+    callbacks,
+    tagMap,
+    pageConfig,
+    lynxTemplate,
+    rootDom,
+    globalProps,
+    ssrHydrateInfo,
+    ssrHooks,
+    mtsRealm,
+    document,
+  } = config;
+  const { elementTemplate, lepusCode } = lynxTemplate;
+  const lynxUniqueIdToElement: WeakRef<HTMLElement>[] =
+    ssrHydrateInfo?.lynxUniqueIdToElement ?? [];
+  const elementToRuntimeInfoMap: WeakMap<HTMLElement, LynxRuntimeInfo> =
+    new WeakMap();
+
+  let pageElement: HTMLElement | undefined = lynxUniqueIdToElement[1]
+    ?.deref();
+  let uniqueIdInc = lynxUniqueIdToElement.length || 1;
+  const exposureChangedElements = new Set<HTMLElement>();
+
+  const commonHandler = (event: Event, capture: boolean) => {
+    if (!event.currentTarget) {
+      return;
+    }
+    // The `capture false` event should not be triggered during the capture-phase
+    // The `capture true` event should not be triggered during the bubbling phase
+    if (
+      (event.eventPhase === Event.CAPTURING_PHASE && capture === false)
+      || (event.eventPhase === Event.BUBBLING_PHASE && capture === true)
+    ) {
+      return;
+    }
+    const currentTarget = event.currentTarget as HTMLElement;
+    // When the event is triggered by the target element, `event.eventPhase` is always `target`, and the listener type is determined by the passed-in `capture`.
+    // When the event is triggered by a non-target element, the listener type is determined by `event.eventPhase` (1, 3).
+    const isCapture = event.eventPhase === Event.AT_TARGET
+      ? capture
+      : event.eventPhase === event.CAPTURING_PHASE;
+    const lynxEventName = W3cEventNameToLynx[event.type] ?? event.type;
+    const runtimeInfo = elementToRuntimeInfoMap.get(
+      currentTarget as any as HTMLElement,
+    );
+    if (runtimeInfo) {
+      const handlerInfos = (isCapture
+        ? runtimeInfo.eventHandlerMap[lynxEventName]?.capture
+        : runtimeInfo.eventHandlerMap[lynxEventName]?.bind) as unknown as {
+          handler: string | { type: 'worklet'; value: unknown };
+        }[];
+      let stopPropagation = false;
+      if (handlerInfos) {
+        for (const handlerInfo of handlerInfos) {
+          const hname = handlerInfo.handler;
+          const crossThreadEvent = createCrossThreadEvent(
+            event as MinimalRawEventObject,
+            lynxEventName,
+          );
+          if (typeof hname === 'string') {
+            const parentComponentUniqueId = Number(
+              currentTarget.getAttribute(parentComponentUniqueIdAttribute)!,
+            );
+            const parentComponent =
+              lynxUniqueIdToElement[parentComponentUniqueId]!
+                .deref()!;
+            const componentId =
+              parentComponent?.getAttribute(lynxTagAttribute) !== 'page'
+                ? parentComponent?.getAttribute(componentIdAttribute)
+                  ?? undefined
+                : undefined;
+            if (componentId) {
+              callbacks.publicComponentEvent(
+                componentId,
+                hname,
+                crossThreadEvent,
+              );
+            } else {
+              callbacks.publishEvent(
+                hname,
+                crossThreadEvent,
+              );
+            }
+            if (handlerInfos.length === 1) {
+              stopPropagation = true;
+            }
+          } else if (hname) {
+            (crossThreadEvent as MainThreadScriptEvent).target.elementRefptr =
+              event.target;
+            if (crossThreadEvent.currentTarget) {
+              (crossThreadEvent as MainThreadScriptEvent).currentTarget!
+                .elementRefptr = event.currentTarget;
+            }
+            (mtsRealm.globalWindow as typeof globalThis & MainThreadGlobalThis)
+              .runWorklet?.(hname.value, [crossThreadEvent]);
+          }
+        }
+      }
+      return stopPropagation;
+    }
+    return false;
+  };
+  const captureHandler = (e: Event) => {
+    commonHandler(e, true);
+  };
+  const defaultHandler = (e: Event) => {
+    commonHandler(e, false);
+  };
+  const commonCatchHandler = (event: Event, isCapture: boolean) => {
+    const handlerTriggered = commonHandler(event, isCapture);
+    if (handlerTriggered) event.stopPropagation();
+  };
+  const catchCaptureHandler = (e: Event) => {
+    commonCatchHandler(e, true);
+  };
+  const defaultCatchHandler = (e: Event) => {
+    commonCatchHandler(e, false);
+  };
+  const __AddEvent: AddEventPAPI = (
+    element,
+    eventType,
+    eventName,
+    newEventHandler,
+  ) => {
+    eventName = eventName.toLowerCase();
+    const isCatch = eventType === 'catchEvent' || eventType === 'capture-catch';
+    const isCapture = eventType.startsWith('capture');
+    const runtimeInfo = elementToRuntimeInfoMap.get(element) ?? {
+      eventHandlerMap: {},
+      componentAtIndex: undefined,
+      enqueueComponent: undefined,
+    };
+    const handlerList = (isCapture
+      ? runtimeInfo.eventHandlerMap[eventName]?.capture
+      : runtimeInfo.eventHandlerMap[eventName]?.bind) as unknown as any[];
+    const currentHandler = handlerList && handlerList.length > 0;
+    const currentRegisteredHandler = isCatch
+      ? (isCapture ? catchCaptureHandler : defaultCatchHandler)
+      : (isCapture ? captureHandler : defaultHandler);
+    if (currentHandler) {
+      if (!newEventHandler) {
+        /**
+         * remove handler
+         */
+        element.removeEventListener(eventName, currentRegisteredHandler, {
+          capture: isCapture,
+        });
+        // remove the exposure id if the exposure-id is a placeholder value
+        const isExposure = eventName === 'uiappear'
+          || eventName === 'uidisappear';
+        if (isExposure && element.getAttribute('exposure-id') === '-1') {
+          mtsGlobalThis.__SetAttribute(element, 'exposure-id', null);
+        }
+        if (runtimeInfo.eventHandlerMap[eventName]) {
+          if (isCapture) {
+            runtimeInfo.eventHandlerMap[eventName]!.capture = undefined;
+          } else {
+            runtimeInfo.eventHandlerMap[eventName]!.bind = undefined;
+          }
+        }
+      }
+    } else {
+      /**
+       * append new handler
+       */
+      if (newEventHandler) {
+        const htmlEventName =
+          LynxEventNameToW3cByTagName[element.tagName]?.[eventName]
+            ?? LynxEventNameToW3cCommon[eventName] ?? eventName;
+        element.addEventListener(htmlEventName, currentRegisteredHandler, {
+          capture: isCapture,
+        });
+        // add exposure id if no exposure-id is set
+        const isExposure = eventName === 'uiappear'
+          || eventName === 'uidisappear';
+        if (isExposure && element.getAttribute('exposure-id') === null) {
+          mtsGlobalThis.__SetAttribute(element, 'exposure-id', '-1');
+        }
+      }
+    }
+    if (newEventHandler) {
+      const info = {
+        type: eventType,
+        handler: newEventHandler,
+      };
+      if (!runtimeInfo.eventHandlerMap[eventName]) {
+        runtimeInfo.eventHandlerMap[eventName] = {
+          capture: undefined,
+          bind: undefined,
+        };
+      }
+      let targetList = (isCapture
+        ? runtimeInfo.eventHandlerMap[eventName]!.capture
+        : runtimeInfo.eventHandlerMap[eventName]!.bind) as unknown as any[];
+
+      if (!Array.isArray(targetList)) {
+        targetList = targetList ? [targetList] : [];
+      }
+
+      const typeOfNew = typeof newEventHandler;
+      const index = targetList.findIndex((h: any) =>
+        typeof h.handler === typeOfNew
+      );
+      if (index !== -1) {
+        targetList[index] = info;
+      } else {
+        targetList.push(info);
+      }
+
+      if (isCapture) {
+        runtimeInfo.eventHandlerMap[eventName]!.capture = targetList as any;
+      } else {
+        runtimeInfo.eventHandlerMap[eventName]!.bind = targetList as any;
+      }
+    }
+    elementToRuntimeInfoMap.set(element, runtimeInfo);
+  };
+
+  const __GetEvent: GetEventPAPI = (
+    element,
+    eventName,
+    eventType,
+  ) => {
+    const runtimeInfo = elementToRuntimeInfoMap.get(element);
+    if (runtimeInfo) {
+      eventName = eventName.toLowerCase();
+      const isCapture = eventType.startsWith('capture');
+      const handler = (isCapture
+        ? runtimeInfo.eventHandlerMap[eventName]?.capture
+        : runtimeInfo.eventHandlerMap[eventName]?.bind) as unknown as any[];
+      if (Array.isArray(handler)) {
+        return handler[0]?.handler;
+      }
+      return (handler as any)?.handler;
+    } else {
+      return undefined;
+    }
+  };
+
+  const __GetEvents: GetEventsPAPI = (element) => {
+    const eventHandlerMap =
+      elementToRuntimeInfoMap.get(element)?.eventHandlerMap ?? {};
+    const eventInfos: {
+      type: LynxEventType;
+      name: string;
+      function: string | { type: 'worklet'; value: unknown } | undefined;
+    }[] = [];
+    for (const [lynxEventName, info] of Object.entries(eventHandlerMap)) {
+      for (const atomInfo of [info.bind, info.capture]) {
+        if (atomInfo) {
+          const handlerList = (Array.isArray(atomInfo)
+            ? atomInfo
+            : [atomInfo]) as any[];
+          for (const item of handlerList) {
+            const { type, handler } = item;
+            if (handler) {
+              eventInfos.push({
+                type: type as LynxEventType,
+                name: lynxEventName,
+                function: handler,
+              });
+            }
+          }
+        }
+      }
+    }
+    return eventInfos;
+  };
+
+  const __SetEvents: SetEventsPAPI = (
+    element,
+    listeners,
+  ) => {
+    for (
+      const { type: eventType, name: lynxEventName, function: eventHandler }
+        of listeners
+    ) {
+      __AddEvent(element, eventType, lynxEventName, eventHandler);
+    }
+  };
+
+  const __CreateElement: CreateElementPAPI = (
+    tag,
+    parentComponentUniqueId,
+  ) => {
+    const uniqueId = uniqueIdInc++;
+    const htmlTag = tagMap[tag] ?? tag;
+    const element = document.createElement(
+      htmlTag,
+    ) as unknown as HTMLElement;
+    lynxUniqueIdToElement[uniqueId] = new WeakRef(element);
+    const parentComponentCssID = lynxUniqueIdToElement[parentComponentUniqueId]
+      ?.deref()?.getAttribute(cssIdAttribute);
+    parentComponentCssID && parentComponentCssID !== '0'
+      && element.setAttribute(cssIdAttribute, parentComponentCssID);
+    element.setAttribute(lynxTagAttribute, tag);
+    element.setAttribute(lynxUniqueIdAttribute, uniqueId + '');
+    element.setAttribute(
+      parentComponentUniqueIdAttribute,
+      parentComponentUniqueId + '',
+    );
+    return element;
+  };
+
+  const __CreateView: CreateViewPAPI = (
+    parentComponentUniqueId: number,
+  ) => __CreateElement('view', parentComponentUniqueId);
+
+  const __CreateText: CreateTextPAPI = (
+    parentComponentUniqueId: number,
+  ) => __CreateElement('text', parentComponentUniqueId);
+
+  const __CreateRawText: CreateRawTextPAPI = (
+    text: string,
+  ) => {
+    const element = __CreateElement('raw-text', -1);
+    element.setAttribute('text', text);
+    return element;
+  };
+
+  const __CreateImage: CreateImagePAPI = (
+    parentComponentUniqueId: number,
+  ) => __CreateElement('image', parentComponentUniqueId);
+
+  const __CreateScrollView: CreateScrollViewPAPI = (
+    parentComponentUniqueId: number,
+  ) => __CreateElement('scroll-view', parentComponentUniqueId);
+
+  const __CreateWrapperElement: CreateWrapperElementPAPI = (
+    parentComponentUniqueId: number,
+  ) => __CreateElement('lynx-wrapper', parentComponentUniqueId);
+
+  const __CreatePage: CreatePagePAPI = (
+    componentID,
+    cssID,
+  ) => {
+    const page = __CreateElement('page', 0);
+    page.setAttribute('part', 'page');
+    page.setAttribute(cssIdAttribute, cssID + '');
+    page.setAttribute(parentComponentUniqueIdAttribute, '1');
+    page.setAttribute(componentIdAttribute, componentID);
+    __MarkTemplateElement(page);
+    if (pageConfig.defaultDisplayLinear === false) {
+      page.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
+    }
+    if (pageConfig.defaultOverflowVisible === true) {
+      page.setAttribute('lynx-default-overflow-visible', 'true');
+    }
+    pageElement = page;
+    return page;
+  };
+
+  const __CreateList: CreateListPAPI = (
+    parentComponentUniqueId,
+    componentAtIndex,
+    enqueueComponent,
+  ) => {
+    const list = __CreateElement('list', parentComponentUniqueId);
+    const runtimeInfo: LynxRuntimeInfo = {
+      eventHandlerMap: {},
+      componentAtIndex: componentAtIndex,
+      enqueueComponent: enqueueComponent,
+    };
+    elementToRuntimeInfoMap.set(list, runtimeInfo);
+    return list;
+  };
+
+  const __CreateComponent: CreateComponentPAPI = (
+    componentParentUniqueID,
+    componentID,
+    cssID,
+    _,
+    name,
+  ) => {
+    const component = __CreateElement('view', componentParentUniqueID);
+    component.setAttribute(cssIdAttribute, cssID + '');
+    component.setAttribute(componentIdAttribute, componentID);
+    component.setAttribute('name', name);
+    return component;
+  };
+
+  const __SetAttribute: SetAttributePAPI & SetAttributePAPIUpdateListInfo = (
+    element,
+    key,
+    value,
+  ) => {
+    const tag = element.getAttribute(lynxTagAttribute)!;
+    if (tag === 'list' && key === 'update-list-info') {
+      const listInfo = value as UpdateListInfoAttributeValue;
+      const { insertAction, removeAction } = listInfo;
+      queueMicrotask(() => {
+        const runtimeInfo = elementToRuntimeInfoMap.get(element);
+        if (runtimeInfo) {
+          const componentAtIndex = runtimeInfo.componentAtIndex;
+          const enqueueComponent = runtimeInfo.enqueueComponent;
+          const uniqueId = __GetElementUniqueID(element);
+          removeAction.forEach((position, i) => {
+            // remove list-item
+            const removedEle = element.children[position - i] as HTMLElement;
+            if (removedEle) {
+              const sign = __GetElementUniqueID(removedEle);
+              enqueueComponent?.(element, uniqueId, sign);
+              element.removeChild(removedEle);
+            }
+          });
+          for (const action of insertAction) {
+            const childSign = componentAtIndex?.(
+              element,
+              uniqueId,
+              action.position,
+              0,
+              false,
+            ) as number | undefined;
+            if (typeof childSign === 'number') {
+              const childElement = lynxUniqueIdToElement[childSign]?.deref();
+              if (childElement) {
+                const referenceNode = element.children[action.position];
+                if (referenceNode !== childElement) {
+                  element.insertBefore(childElement, referenceNode || null);
+                }
+              }
+            }
+          }
+        }
+      });
+    } else {
+      value == null
+        ? element.removeAttribute(key)
+        : element.setAttribute(key, value + '');
+      if (key === __lynx_timing_flag && value) {
+        timingFlags.push(value as string);
+      }
+      if (exposureRelatedAttributes.has(key)) {
+        // if the attribute is related to exposure, we need to mark the element as changed
+        exposureChangedElements.add(element);
+      }
+    }
+  };
+
+  const __UpdateListCallbacks: UpdateListCallbacksPAPI = (
+    element,
+    componentAtIndex,
+    enqueueComponent,
+  ) => {
+    const runtimeInfo = elementToRuntimeInfoMap.get(element) ?? {
+      eventHandlerMap: {},
+      componentAtIndex: componentAtIndex,
+      enqueueComponent: enqueueComponent,
+      uniqueId: __GetElementUniqueID(element),
+    };
+    runtimeInfo.componentAtIndex = componentAtIndex;
+    runtimeInfo.enqueueComponent = enqueueComponent;
+    elementToRuntimeInfoMap.set(element, runtimeInfo);
+  };
+  const __SwapElement: SwapElementPAPI = (
+    childA,
+    childB,
+  ) => {
+    const temp = document.createElement('div');
+    childA.replaceWith(temp);
+    childB.replaceWith(childA);
+    temp.replaceWith(childB);
+  };
+
+  const __SetCSSIdForCSSOG: SetCSSIdPAPI = (
+    elements,
+    cssId,
+    entryName,
+  ) => {
+    for (const element of elements) {
+      element.setAttribute(cssIdAttribute, cssId + '');
+      entryName && element.setAttribute(lynxEntryNameAttribute, entryName);
+      const cls = element.getAttribute('class');
+      cls && __SetClassesForCSSOG(element, cls);
+    }
+  };
+
+  const __AddClassForCSSOG: AddClassPAPI = (
+    element,
+    className,
+  ) => {
+    const newClassName =
+      ((element.getAttribute('class') ?? '') + ' ' + className)
+        .trim();
+    element.setAttribute('class', newClassName);
+    const cssId = element.getAttribute(cssIdAttribute);
+    const uniqueId = Number(element.getAttribute(lynxUniqueIdAttribute));
+    const entryName = element.getAttribute(lynxEntryNameAttribute);
+    callbacks.updateCssOGStyle(
+      uniqueId,
+      newClassName,
+      cssId,
+      entryName,
+    );
+  };
+
+  const __SetClassesForCSSOG: SetClassesPAPI = (
+    element,
+    classNames,
+  ) => {
+    __SetClasses(element, classNames);
+    const cssId = element.getAttribute(cssIdAttribute);
+    const uniqueId = Number(element.getAttribute(lynxUniqueIdAttribute));
+    const entryName = element.getAttribute(lynxEntryNameAttribute);
+    callbacks.updateCssOGStyle(
+      uniqueId,
+      classNames ?? '',
+      cssId,
+      entryName,
+    );
+  };
+
+  const __LoadLepusChunk: (path: string) => boolean = (path) => {
+    try {
+      path = lepusCode?.[path] ?? path;
+      mtsRealm.loadScriptSync(path);
+      return true;
+    } catch (e) {
+      console.error(`failed to load lepus chunk ${path}`, e);
+      return false;
+    }
+  };
+
+  const __FlushElementTree: (
+    _subTree: unknown,
+    options: FlushElementTreeOptions | undefined,
+  ) => void = (
+    _subTree,
+    options,
+  ) => {
+    const timingFlagsCopied = timingFlags;
+    timingFlags = [];
+    if (
+      pageElement && !pageElement.parentNode
+      && pageElement.getAttribute(lynxDisposedAttribute) !== ''
+    ) {
+      rootDom.append(pageElement);
+    }
+    const exposureChangedElementsArray = Array.from(exposureChangedElements);
+    exposureChangedElements.clear();
+    callbacks.flushElementTree(
+      options,
+      timingFlagsCopied,
+      exposureChangedElementsArray,
+    );
+  };
+
+  const __InvokeUIMethod: InvokeUIMethodPAPI = (
+    element,
+    method,
+    params,
+    callback,
+  ) => {
+    try {
+      if (method === 'boundingClientRect') {
+        const rect = (element as HTMLElement).getBoundingClientRect();
+        callback({
+          code: ErrorCode.SUCCESS,
+          data: {
+            id: (element as HTMLElement).id,
+            width: rect.width,
+            height: rect.height,
+            left: rect.left,
+            right: rect.right,
+            top: rect.top,
+            bottom: rect.bottom,
+          },
+        });
+        return;
+      }
+      if (typeof (element as any)[method] === 'function') {
+        const data = (element as any)[method](params);
+        callback({
+          code: ErrorCode.SUCCESS,
+          data,
+        });
+        return;
+      }
+      callback({
+        code: ErrorCode.METHOD_NOT_FOUND,
+      });
+    } catch (e) {
+      console.error(
+        `[lynx-web] invokeUIMethod: apply method failed with`,
+        e,
+        element,
+      );
+      callback({
+        code: ErrorCode.PARAM_INVALID,
+      });
+    }
+  };
+
+  const __QuerySelector: QuerySelectorPAPI = (
+    element,
+    selector,
+  ) => {
+    if (!element) return null;
+    const el = (element as HTMLElement).querySelector(selector);
+    if (el) {
+      if (!(el as any).invoke) {
+        (el as any).invoke = (method: string, params: object) => {
+          return new Promise((resolve, reject) => {
+            __InvokeUIMethod(el as HTMLElement, method, params, (res) => {
+              if (res.code === ErrorCode.SUCCESS) {
+                resolve(res.data);
+              } else {
+                reject(res);
+              }
+            });
+          });
+        };
+      }
+    }
+    return el;
+  };
+
+  const animationMap = new Map<string, Animation>();
+
+  const mapTimingOptions = (
+    options?: Record<string, string | number>,
+  ): KeyframeAnimationOptions | undefined => {
+    if (!options) return undefined;
+    const result: KeyframeAnimationOptions = {};
+    if ('duration' in options) result.duration = Number(options['duration']);
+    if ('delay' in options) result.delay = Number(options['delay']);
+    if ('direction' in options) {
+      result.direction = options['direction'] as PlaybackDirection;
+    }
+    if ('iterationCount' in options) {
+      result.iterations = options['iterationCount'] === 'infinite'
+        ? Infinity
+        : Number(options['iterationCount']);
+    }
+    if ('fillMode' in options) result.fill = options['fillMode'] as FillMode;
+    if ('timingFunction' in options) {
+      result.easing = options['timingFunction'] as string;
+    }
+    return result;
+  };
+
+  const __ElementAnimate: ElementAnimatePAPI = (element, args) => {
+    const [operation, name] = args;
+    switch (operation) {
+      case AnimationOperation.START: {
+        const keyframes = args[2];
+        const options = args[3];
+        animationMap.get(name)?.cancel();
+        const animation = element.animate(
+          keyframes as Keyframe[],
+          mapTimingOptions(options),
+        );
+        animation.oncancel = animation.onfinish = () => {
+          if (animationMap.get(name) === animation) {
+            animationMap.delete(name);
+          }
+        };
+        animationMap.set(name, animation);
+        break;
+      }
+      case AnimationOperation.PLAY:
+        animationMap.get(name)?.play();
+        break;
+      case AnimationOperation.PAUSE:
+        animationMap.get(name)?.pause();
+        break;
+      case AnimationOperation.CANCEL:
+        animationMap.get(name)?.cancel();
+        animationMap.delete(name);
+        break;
+      case AnimationOperation.FINISH:
+        animationMap.get(name)?.finish();
+        break;
+    }
+  };
+
+  const __GetPageElement: GetPageElementPAPI = () => {
+    return pageElement;
+  };
+
+  const templateIdToTemplate: Record<string, HTMLTemplateElement> = {};
+
+  const createElementForElementTemplateData = (
+    data: ElementTemplateData,
+    parentComponentUniId: number,
+  ): HTMLElement => {
+    const element = __CreateElement(data.type, parentComponentUniId);
+    __SetID(element, data.id);
+    data.class && __SetClasses(element, data.class.join(' '));
+    for (const [key, value] of Object.entries(data.attributes || {})) {
+      __SetAttribute(element, key, value);
+    }
+    for (const [key, value] of Object.entries(data.builtinAttributes || {})) {
+      if (key === 'dirtyID' && value === data.id) {
+        __MarkPartElement(element, value);
+      }
+      __SetAttribute(element, key, value);
+    }
+    for (const childData of data.children || []) {
+      __AppendElement(
+        element,
+        createElementForElementTemplateData(childData, parentComponentUniId),
+      );
+    }
+    data.dataset !== undefined && __SetDataset(element, data.dataset);
+    return element;
+  };
+
+  const applyEventsForElementTemplate: (
+    data: ElementTemplateData,
+    element: HTMLElement,
+  ) => void = (data, element) => {
+    const uniqueId = uniqueIdInc++;
+    element.setAttribute(lynxUniqueIdAttribute, uniqueId + '');
+    for (const event of data.events || []) {
+      const { type, name, value } = event;
+      __AddEvent(element, type, name, value);
+    }
+    for (let ii = 0; ii < (data.children || []).length; ii++) {
+      const childData = (data.children || [])[ii];
+      const childElement = element.children[ii] as HTMLElement;
+      if (childData && childElement) {
+        applyEventsForElementTemplate(childData, childElement);
+      }
+    }
+  };
+
+  const __ElementFromBinary: ElementFromBinaryPAPI = (
+    templateId,
+    parentComponentUniId,
+  ) => {
+    const elementTemplateData = elementTemplate[templateId];
+    if (elementTemplateData) {
+      let clonedElements: HTMLElement[];
+      if (templateIdToTemplate[templateId]) {
+        clonedElements = Array.from(
+          (templateIdToTemplate[templateId].content.cloneNode(
+            true,
+          ) as DocumentFragment).children,
+        ) as unknown as HTMLElement[];
+      } else {
+        clonedElements = elementTemplateData.map(data =>
+          createElementForElementTemplateData(data, parentComponentUniId)
+        );
+        if (rootDom.cloneNode) {
+          const template = document.createElement(
+            'template',
+          ) as unknown as HTMLTemplateElement;
+          template.content.append(...clonedElements as unknown as Node[]);
+          templateIdToTemplate[templateId] = template;
+          rootDom.append(template);
+          return __ElementFromBinary(templateId, parentComponentUniId);
+        }
+      }
+      for (let ii = 0; ii < clonedElements.length; ii++) {
+        const data = elementTemplateData[ii];
+        const element = clonedElements[ii];
+        if (data && element) {
+          applyEventsForElementTemplate(data, element);
+        }
+      }
+      clonedElements.forEach(__MarkTemplateElement);
+      return clonedElements;
+    }
+    return [];
+  };
+
+  let release = '';
+  const isCSSOG = !pageConfig.enableCSSSelector;
+  const SystemInfo = {
+    ...systemInfo,
+    ...config.browserConfig,
+  };
+  const mtsGlobalThis: MainThreadGlobalThis = {
+    __ElementFromBinary,
+    __GetTemplateParts: rootDom.querySelectorAll
+      ? __GetTemplateParts
+      : undefined,
+    __MarkTemplateElement,
+    __MarkPartElement,
+    __AddEvent: ssrHooks?.__AddEvent ?? __AddEvent,
+    __GetEvent,
+    __GetEvents,
+    __SetEvents,
+    __AppendElement,
+    __ElementIsEqual,
+    __FirstElement,
+    __GetChildren,
+    __GetParent,
+    __InsertElementBefore,
+    __LastElement,
+    __NextElement,
+    __RemoveElement,
+    __ReplaceElement,
+    __ReplaceElements,
+    __AddConfig,
+    __AddDataset,
+    __GetAttributes,
+    __GetComponentID,
+    __GetDataByKey,
+    __GetDataset,
+    __GetElementConfig,
+    __GetElementUniqueID,
+    __GetID,
+    __GetTag,
+    __SetConfig,
+    __SetDataset,
+    __SetID,
+    __UpdateComponentID,
+    __UpdateComponentInfo,
+    __CreateElement,
+    __CreateView,
+    __CreateText,
+    __CreateComponent,
+    __CreatePage,
+    __CreateRawText,
+    __CreateImage,
+    __CreateScrollView,
+    __CreateWrapperElement,
+    __CreateList,
+    __SetAttribute,
+    __SwapElement,
+    __UpdateListCallbacks,
+    __GetConfig: __GetElementConfig,
+    __GetAttributeByName,
+    __GetClasses,
+    __AddClass: isCSSOG ? __AddClassForCSSOG : __AddClass,
+    __SetClasses: isCSSOG ? __SetClassesForCSSOG : __SetClasses,
+    __AddInlineStyle,
+    __SetCSSId: isCSSOG ? __SetCSSIdForCSSOG : __SetCSSId,
+    __SetInlineStyles,
+    __LoadLepusChunk,
+    __GetPageElement,
+    __globalProps: globalProps,
+    __QueryComponent: callbacks.__QueryComponent,
+    SystemInfo,
+    lynx: createMainThreadLynx(config, SystemInfo),
+    _ReportError: (err, _) => callbacks._ReportError(err, _, release),
+    _SetSourceMapRelease: (errInfo) => release = errInfo?.release,
+    __OnLifecycleEvent: callbacks.__OnLifecycleEvent,
+    __FlushElementTree,
+    _I18nResourceTranslation: callbacks._I18nResourceTranslation,
+    _AddEventListener: () => {},
+    renderPage: undefined,
+    __InvokeUIMethod,
+    __QuerySelector,
+    __ElementAnimate,
+  };
+  Object.assign(mtsRealm.globalWindow, mtsGlobalThis);
+  Object.defineProperty(mtsRealm.globalWindow, 'renderPage', {
+    get() {
+      return mtsGlobalThis.renderPage;
+    },
+    set(v) {
+      mtsGlobalThis.renderPage = v;
+      queueMicrotask(callbacks.mainChunkReady);
+    },
+    configurable: true,
+    enumerable: true,
+  });
+
+  return mtsRealm.globalWindow as typeof globalThis & MainThreadGlobalThis;
+}

@@ -6,7 +6,6 @@ use std::{
 
 use once_cell::sync::Lazy;
 use swc_core::{
-  atoms as swc_atoms,
   common::{
     comments::{CommentKind, Comments},
     errors::HANDLER,
@@ -22,6 +21,8 @@ use swc_core::{
 };
 
 mod attr_name;
+
+#[cfg(feature = "napi")]
 pub mod napi;
 
 use swc_plugins_shared::{
@@ -736,14 +737,12 @@ where
                         })) => {
                           let expr = &**expr;
                           if is_literal(expr) {
-                            let s = get_string_inline_style_from_literal(expr, span);
-
-                            if s.is_some() {
+                            if let Some(s) = get_string_inline_style_from_literal(expr, span) {
                               // <view style={{backgroundColor: "red"}} />;
                               // <view style={`background-color: red;`} />;
                               let s = Lit::Str(Str {
                                 span: *span,
-                                value: s.unwrap().into(),
+                                value: s.into(),
                                 raw: None,
                               });
                               let stmt = quote!(
@@ -1335,18 +1334,18 @@ where
     };
 
     let snapshot_create_call = quote!(
-        r#"$runtime_id.createSnapshot(
-             $snapshot_uid,
+        r#"$runtime_id.snapshotCreatorMap[$snapshot_id] = ($snapshot_id) => $runtime_id.createSnapshot(
+             $snapshot_id,
              $snapshot_creator,
              $snapshot_dynamic_parts_def,
              $slot,
              $css_id,
              globDynamicComponentEntry,
-             $snapshot_refs_and_spread_index
+             $snapshot_refs_and_spread_index,
+             true
         )"# as Expr,
         runtime_id: Expr = self.runtime_id.clone(),
-        // FIXME(colinaaa): Use snapshot_uid with entry_name
-        snapshot_uid: Expr = Expr::Lit(Lit::Str(snapshot_uid.into())),
+        snapshot_id = snapshot_id.clone(),
         snapshot_creator: Expr = snapshot_creator,
         snapshot_dynamic_parts_def: Expr = match (target, snapshot_dynamic_part_def.len()) {
           (TransformTarget::JS, _) | (_, 0) => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
@@ -1365,14 +1364,25 @@ where
         // has_multi_children: Expr = Expr::Lit(Lit::Num(Number { span: DUMMY_SP, value: wrap_dynamic_part.dynamic_part_count as f64, raw: None })),
     );
 
-    let snapshot_def = ModuleItem::Stmt(quote!(
-        r#"const $snapshot_id = $snapshot_create_call"#
+    let mut entry_snapshot_uid = quote!("$snapshot_uid" as Expr, snapshot_uid: Expr = Expr::Lit(Lit::Str(snapshot_uid.clone().into())));
+    if matches!(self.cfg.is_dynamic_component, Some(true)) {
+      entry_snapshot_uid = quote!("`${globDynamicComponentEntry}:${$snapshot_uid}`" as Expr, snapshot_uid: Expr = Expr::Lit(Lit::Str(snapshot_uid.clone().into())));
+    }
+
+    let entry_snapshot_uid_def = ModuleItem::Stmt(quote!(
+        r#"const $snapshot_id = $entry_snapshot_uid"#
             as Stmt,
         snapshot_id = snapshot_id.clone(),
+        entry_snapshot_uid: Expr = entry_snapshot_uid.clone(),
+    ));
+    let snapshot_def = ModuleItem::Stmt(quote!(
+        r#"$snapshot_create_call"#
+            as Stmt,
         snapshot_create_call: Expr = snapshot_create_call,
     ));
 
     self.current_snapshot_id = Some(snapshot_id.clone());
+    self.current_snapshot_defs.push(entry_snapshot_uid_def);
     self.current_snapshot_defs.push(snapshot_def);
 
     *node =
@@ -1418,11 +1428,11 @@ where
   }
 
   fn visit_mut_module_items(&mut self, n: &mut Vec<ModuleItem>) {
-    let mut new_items: Vec<ModuleItem> = vec![];
-    for item in n.iter_mut() {
+    let mut new_items: Vec<ModuleItem> = Vec::with_capacity(n.len());
+    for mut item in n.take() {
       item.visit_mut_with(self);
       new_items.extend(self.current_snapshot_defs.take());
-      new_items.push(item.take());
+      new_items.push(item);
     }
 
     if let Some(module_item) = &self.runtime_components_module_item {
@@ -1439,31 +1449,34 @@ where
       self.parse_directives(span);
     }
 
-    if matches!(self.cfg.is_dynamic_component, Some(true)) && self.css_id_value.is_none() {
+    if self.css_id_value.is_none() && matches!(self.cfg.is_dynamic_component, Some(true)) {
       self.css_id_value = Some(Expr::Lit(Lit::Num(0.into())));
     }
 
     n.visit_mut_children_with(self);
-    if let Some(Expr::Ident(runtime_id)) = Lazy::<Expr>::get(&self.runtime_id) {
-      prepend_stmt(
-        &mut n.body,
-        ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
-          span: DUMMY_SP,
-          specifiers: vec![ImportSpecifier::Namespace(ImportStarAsSpecifier {
+
+    if let Expr::Ident(runtime_id) = &*self.runtime_id {
+      if self.snapshot_counter > 0 {
+        prepend_stmt(
+          &mut n.body,
+          ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
             span: DUMMY_SP,
-            local: runtime_id.clone(),
-          })],
-          src: Box::new(Str {
-            span: DUMMY_SP,
-            raw: None,
-            value: self.cfg.runtime_pkg.clone().into(),
-          }),
-          type_only: Default::default(),
-          // asserts: Default::default(),
-          with: Default::default(),
-          phase: ImportPhase::Evaluation,
-        })),
-      );
+            specifiers: vec![ImportSpecifier::Namespace(ImportStarAsSpecifier {
+              span: DUMMY_SP,
+              local: runtime_id.clone(),
+            })],
+            src: Box::new(Str {
+              span: DUMMY_SP,
+              raw: None,
+              value: self.cfg.runtime_pkg.clone().into(),
+            }),
+            type_only: Default::default(),
+            // asserts: Default::default(),
+            with: Default::default(),
+            phase: ImportPhase::Evaluation,
+          })),
+        );
+      }
     }
   }
 }

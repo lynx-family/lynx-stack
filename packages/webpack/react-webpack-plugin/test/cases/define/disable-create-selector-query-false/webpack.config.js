@@ -2,6 +2,7 @@ import { ReactWebpackPlugin } from '../../../../src';
 
 /** @type {import('webpack').Configuration} */
 export default {
+  mode: 'development',
   module: {
     rules: [
       {

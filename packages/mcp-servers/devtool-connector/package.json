@@ -1,0 +1,64 @@
+{
+  "name": "@lynx-js/devtool-connector",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/mcp-servers/devtool-connector"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./transport": {
+      "types": "./src/transport/index.ts",
+      "import": "./src/transport/index.ts",
+      "default": "./src/transport/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.12",
+    "@types/node": "^24.10.13",
+    "@yume-chan/adb": "catalog:adb",
+    "@yume-chan/adb-server-node-tcp": "catalog:adb",
+    "@yume-chan/stream-extra": "catalog:adb",
+    "commander": "^13.1.0",
+    "debug": "^4.4.3",
+    "rsbuild-plugin-publint": "0.3.4",
+    "typescript": "^5.9.3",
+    "usbmux-client": "^0.2.1"
+  },
+  "engines": {
+    "node": ">=18.19"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "./transport": {
+        "types": "./dist/transport/index.d.ts",
+        "import": "./dist/transport/index.js",
+        "default": "./dist/transport/index.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts"
+  }
+}

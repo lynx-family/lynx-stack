@@ -12,6 +12,7 @@ use swc_core::{
 };
 use swc_plugins_shared::utils::calc_hash;
 
+#[cfg(feature = "napi")]
 pub mod napi;
 
 /// CSSScope refers to the
@@ -154,12 +155,13 @@ where
         // Is CSS files
         //
         // Add cssId to the import
-        import_decl.src = Box::new(Str {
-          span: import_decl.src.span,
+        let span = import_decl.src.span;
+        *import_decl.src = Str {
+          span,
           raw: None,
           // TODO(wangqingyu): deal with src that already have query(`?`)
           value: format!("{}?cssId={}", src_value.as_ref(), self.css_id).into(),
-        });
+        };
         has_css_import = true;
       }
     }

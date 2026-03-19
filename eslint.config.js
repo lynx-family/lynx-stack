@@ -33,6 +33,7 @@ export default tseslint.config(
       '**/test/js',
       '**/dist/**',
       '**/lib/**',
+      'website/doc_build/**',
       '.changeset/*',
       '**/CHANGELOG.md',
       '**/etc/*.md',
@@ -70,6 +71,14 @@ export default tseslint.config(
       'packages/react/transform/index.cjs',
       'packages/react/transform/**/index.d.ts',
 
+      // REPL examples use Lynx platform globals and are not subject to lint rules
+      'packages/repl/src/examples/**',
+      // REPL components use Vite path aliases and ?raw imports not handled by root tsconfig
+      'packages/repl/src/components/**',
+      'packages/repl/src/editor.ts',
+      // REPL build config is not part of the TS project
+      'packages/repl/rsbuild.config.ts',
+
       // TODO: enable eslint for react
       // react
       'packages/react/types/**',
@@ -97,6 +106,14 @@ export default tseslint.config(
       // testing-library
       'packages/testing-library/**',
       'packages/react/testing-library/**',
+
+      // gesture-runtime-testing
+      'packages/lynx/gesture-runtime/__test__/**',
+      // motion tests
+      'packages/motion/__tests__/**',
+      // TODO: enable eslint for tailwind-preset
+      // tailwind-preset
+      'packages/tailwind-preset/**',
     ],
   },
   js.configs.recommended,
@@ -319,6 +336,11 @@ export default tseslint.config(
     },
     rules: {
       ...vitest.configs.recommended.rules,
+      // These rules are newly introduced in vitest's recommended set and have
+      // significant existing violations across the repo. Keep them disabled for
+      // now to avoid churn when updating linting deps.
+      'vitest/no-conditional-expect': 'off',
+      'vitest/no-interpolation-in-snapshots': 'off',
     },
     settings: {
       vitest: {
