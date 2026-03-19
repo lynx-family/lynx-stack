@@ -129,8 +129,11 @@ globalThis.onInjectBackgroundThreadGlobals = (target) => {
   // intercept lynxCoreInject assignments to lynxTestingEnv.backgroundThread.globalThis.lynxCoreInject
   const oldLynxCoreInject = globalThis.lynxCoreInject;
   globalThis.lynxCoreInject = target.lynxCoreInject;
-  injectTt();
-  globalThis.lynxCoreInject = oldLynxCoreInject;
+  try {
+    injectTt();
+  } finally {
+    globalThis.lynxCoreInject = oldLynxCoreInject;
+  }
 
   // re-init global snapshot patch to undefined
   deinitGlobalSnapshotPatch();
