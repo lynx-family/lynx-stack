@@ -158,6 +158,101 @@ impl MainThreadServerContext {
     if let Some(Some(parent)) = self.elements.get_mut(parent_id) {
       parent.append_child(child_id);
     }
+    if let Some(Some(child)) = self.elements.get_mut(child_id) {
+      child.parent_id = Some(parent_id);
+    }
+  }
+
+  pub fn insert_before(&mut self, parent_id: usize, child_id: usize, ref_id: Option<usize>) {
+    if let Some(Some(parent)) = self.elements.get_mut(parent_id) {
+      if let Some(ref_id) = ref_id {
+        if let Some(index) = parent.children.iter().position(|&id| id == ref_id) {
+          parent.children.insert(index, child_id);
+        } else {
+          parent.children.push(child_id);
+        }
+      } else {
+        parent.children.push(child_id);
+      }
+    }
+    if let Some(Some(child)) = self.elements.get_mut(child_id) {
+      child.parent_id = Some(parent_id);
+    }
+  }
+
+  pub fn remove_child(&mut self, parent_id: usize, child_id: usize) {
+    if let Some(Some(parent)) = self.elements.get_mut(parent_id) {
+      parent.children.retain(|&id| id != child_id);
+    }
+    if let Some(Some(child)) = self.elements.get_mut(child_id) {
+      child.parent_id = None;
+    }
+  }
+
+  pub fn replace_element(&mut self, new_child_id: usize, old_child_id: usize) {
+    let parent_id = if let Some(Some(old_child)) = self.elements.get(old_child_id) {
+      old_child.parent_id
+    } else {
+      None
+    };
+    if let Some(parent_id) = parent_id {
+      if let Some(Some(parent)) = self.elements.get_mut(parent_id) {
+        if let Some(index) = parent.children.iter().position(|&id| id == old_child_id) {
+          parent.children[index] = new_child_id;
+        }
+      }
+      if let Some(Some(new_child)) = self.elements.get_mut(new_child_id) {
+        new_child.parent_id = Some(parent_id);
+      }
+      if let Some(Some(old_child)) = self.elements.get_mut(old_child_id) {
+        old_child.parent_id = None;
+      }
+    }
+  }
+
+  pub fn replace_elements(
+    &mut self,
+    parent_id: usize,
+    new_children_ids: Vec<usize>,
+    old_children_ids: Vec<usize>,
+  ) {
+    if let Some(Some(parent)) = self.elements.get_mut(parent_id) {
+      if old_children_ids.is_empty() {
+        for &new_id in &new_children_ids {
+          parent.children.push(new_id);
+        }
+      } else {
+        let first_old_id = old_children_ids[0];
+        let mut insert_index = parent.children.len();
+        if let Some(pos) = parent.children.iter().position(|&id| id == first_old_id) {
+          insert_index = pos;
+        }
+        parent.children.retain(|id| !old_children_ids.contains(id));
+
+        for (i, &new_id) in new_children_ids.iter().enumerate() {
+          parent.children.insert(insert_index + i, new_id);
+        }
+      }
+    }
+
+    for old_id in old_children_ids {
+      if let Some(Some(old_child)) = self.elements.get_mut(old_id) {
+        old_child.parent_id = None;
+      }
+    }
+    for new_id in new_children_ids {
+      if let Some(Some(new_child)) = self.elements.get_mut(new_id) {
+        new_child.parent_id = Some(parent_id);
+      }
+    }
+  }
+
+  pub fn get_parent(&self, child_id: usize) -> Option<usize> {
+    if let Some(Some(child)) = self.elements.get(child_id) {
+      child.parent_id
+    } else {
+      None
+    }
   }
 
   pub fn set_attribute(&mut self, element_id: usize, key: String, value: String) {

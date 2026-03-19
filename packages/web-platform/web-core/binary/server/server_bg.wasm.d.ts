@@ -21,10 +21,15 @@ export const mainthreadservercontext_get_attribute: (a: number, b: number, c: nu
 export const mainthreadservercontext_get_attributes: (a: number, b: number) => [number, number, number];
 export const mainthreadservercontext_get_inline_styles_in_key_value_vec: (a: number, b: number, c: number, d: number) => void;
 export const mainthreadservercontext_get_page_css: (a: number) => [number, number];
+export const mainthreadservercontext_get_parent: (a: number, b: number) => number;
 export const mainthreadservercontext_get_tag: (a: number, b: number) => [number, number];
+export const mainthreadservercontext_insert_before: (a: number, b: number, c: number, d: number) => void;
 export const mainthreadservercontext_new: (a: number, b: number, c: number) => number;
 export const mainthreadservercontext_push_style_sheet: (a: number, b: number, c: number, d: number) => [number, number];
 export const mainthreadservercontext_remove_attribute: (a: number, b: number, c: number, d: number) => void;
+export const mainthreadservercontext_remove_child: (a: number, b: number, c: number) => void;
+export const mainthreadservercontext_replace_element: (a: number, b: number, c: number) => void;
+export const mainthreadservercontext_replace_elements: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
 export const mainthreadservercontext_set_attribute: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
 export const mainthreadservercontext_set_css_id: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
 export const mainthreadservercontext_set_inline_styles_in_str: (a: number, b: number, c: number, d: number) => number;

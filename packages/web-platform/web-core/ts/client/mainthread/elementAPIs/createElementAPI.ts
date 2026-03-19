@@ -259,20 +259,21 @@ export function createElementAPI(
       key,
       value,
     ) => {
-      if (typeof value != 'string') {
-        value = (value as number).toString();
+      let valStr: string | null = null;
+      if (value != null) {
+        valStr = value.toString();
       }
       if (typeof key === 'number') {
         return set_inline_styles_number_key(
           element,
           key,
-          value as string | null,
+          valStr,
         );
       } else {
         return add_inline_style_raw_string_key(
           element,
           key.toString(),
-          value as string | null,
+          valStr,
         );
       }
     },
@@ -295,9 +296,15 @@ export function createElementAPI(
         } else if (!value) {
           element.removeAttribute('style');
         } else {
+          const vec: string[] = [];
+          for (const [k, v] of Object.entries(value)) {
+            if (v != null) {
+              vec.push(k, v.toString());
+            }
+          }
           get_inline_styles_in_key_value_vec(
             element,
-            Object.entries(value).flat().map((item) => item.toString()),
+            vec,
           );
         }
       }

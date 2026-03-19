@@ -76,6 +76,13 @@ import {
   getUniqueId,
   type ServerElement,
 } from './pureElementAPIs.js';
+import type {
+  GetParentPAPI,
+  InsertElementBeforePAPI,
+  RemoveElementPAPI,
+  ReplaceElementPAPI,
+  ReplaceElementsPAPI,
+} from '../../types/IElementPAPI.js';
 
 export type SSRBinding = {
   ssrResult: string;
@@ -171,7 +178,14 @@ export function createElementAPI(
         if (!cls) return [];
         return cls.split(/\s+/).filter((c) => c.length > 0);
       }) as GetClassesPAPI,
-      __GetParent,
+      __GetParent: ((element: HTMLElement) => {
+        const id = getUniqueId(element);
+        const parentId = wasmContext.get_parent(id);
+        if (parentId !== undefined) {
+          return { [uniqueIdSymbol]: parentId } as unknown as HTMLElement;
+        }
+        return null;
+      }) as GetParentPAPI,
       __GetChildren,
       __AddEvent,
       __GetEvent,
@@ -191,8 +205,16 @@ export function createElementAPI(
       __FirstElement,
       __LastElement,
       __NextElement,
-      __RemoveElement,
-      __ReplaceElement,
+      __RemoveElement: ((parent: HTMLElement, child: HTMLElement) => {
+        const parentId = getUniqueId(parent);
+        const childId = getUniqueId(child);
+        wasmContext.remove_child(parentId, childId);
+      }) as RemoveElementPAPI,
+      __ReplaceElement: ((newElement: HTMLElement, oldElement: HTMLElement) => {
+        const newId = getUniqueId(newElement);
+        const oldId = getUniqueId(oldElement);
+        wasmContext.replace_element(newId, oldId);
+      }) as ReplaceElementPAPI,
       __SwapElement,
 
       __SetCSSId,
@@ -215,8 +237,32 @@ export function createElementAPI(
       __MarkPartElement,
       __GetTemplateParts,
       __GetPageElement,
-      __InsertElementBefore,
-      __ReplaceElements,
+      __InsertElementBefore: ((
+        parent: HTMLElement,
+        child: HTMLElement,
+        ref: HTMLElement | null | undefined,
+      ) => {
+        const parentId = getUniqueId(parent);
+        const childId = getUniqueId(child);
+        const refId = ref ? getUniqueId(ref) : undefined;
+        wasmContext.insert_before(parentId, childId, refId);
+      }) as InsertElementBeforePAPI,
+      __ReplaceElements: ((
+        parent: HTMLElement,
+        newChildren: HTMLElement[] | HTMLElement,
+        oldChildren: HTMLElement[] | HTMLElement | null | undefined,
+      ) => {
+        const parentId = getUniqueId(parent);
+        const newArr = Array.isArray(newChildren) ? newChildren : [newChildren];
+        const newIds = new Uint32Array(newArr.map(getUniqueId));
+
+        const oldArr = oldChildren
+          ? (Array.isArray(oldChildren) ? oldChildren : [oldChildren])
+          : [];
+        const oldIds = new Uint32Array(oldArr.map(getUniqueId));
+
+        wasmContext.replace_elements(parentId, newIds, oldIds);
+      }) as ReplaceElementsPAPI,
 
       // Context-Dependent Methods
       __CreateView: ((parentComponentUniqueId: number) => {
@@ -378,9 +424,15 @@ export function createElementAPI(
           } else if (!value) {
             wasmContext.remove_attribute(uniqueId, 'style');
           } else {
+            const vec: string[] = [];
+            for (const [k, v] of Object.entries(value)) {
+              if (v != null) {
+                vec.push(k, v.toString());
+              }
+            }
             wasmContext.get_inline_styles_in_key_value_vec(
               uniqueId,
-              Object.entries(value).flat().map((item) => item.toString()),
+              vec,
             );
           }
         }
@@ -392,20 +444,21 @@ export function createElementAPI(
         value: string | number | null | undefined,
       ) => {
         const uniqueId = (element as ServerElement)[uniqueIdSymbol];
-        if (typeof value != 'string') {
-          value = (value as number).toString();
+        let valStr: string | null = null;
+        if (value != null) {
+          valStr = value.toString();
         }
         if (typeof key === 'number') {
           return wasmContext.set_inline_styles_number_key(
             uniqueId,
             key,
-            value as string | null,
+            valStr,
           );
         } else {
           return wasmContext.add_inline_style_raw_string_key(
             uniqueId,
             key.toString(),
-            value as string | null,
+            valStr,
           );
         }
       }) as AddInlineStylePAPI,

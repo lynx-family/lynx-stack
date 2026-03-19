@@ -13,10 +13,15 @@ export class MainThreadServerContext {
     get_attributes(element_id: number): object;
     get_inline_styles_in_key_value_vec(element_id: number, k_v_vec: string[]): void;
     get_page_css(): string;
+    get_parent(child_id: number): number | undefined;
     get_tag(element_id: number): string | undefined;
+    insert_before(parent_id: number, child_id: number, ref_id?: number | null): void;
     constructor(view_attributes: string, enable_css_selector: boolean);
     push_style_sheet(resource: StyleSheetResource, entry_name?: string | null): void;
     remove_attribute(element_id: number, key: string): void;
+    remove_child(parent_id: number, child_id: number): void;
+    replace_element(new_child_id: number, old_child_id: number): void;
+    replace_elements(parent_id: number, new_children_ids: Uint32Array, old_children_ids: Uint32Array): void;
     set_attribute(element_id: number, key: string, value: string): void;
     set_css_id(elements_unique_id: Uint32Array, css_id: number, entry_name?: string | null): void;
     set_inline_styles_in_str(element_id: number, styles: string): boolean;

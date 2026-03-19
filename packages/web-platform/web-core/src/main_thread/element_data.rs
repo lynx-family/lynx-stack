@@ -44,6 +44,10 @@ pub struct LynxElementData {
   #[cfg(feature = "server")]
   #[with(rkyv::with::Skip)]
   pub(crate) children: Vec<usize>,
+
+  #[cfg(feature = "server")]
+  #[with(rkyv::with::Skip)]
+  pub(crate) parent_id: Option<usize>,
 }
 
 impl LynxElementData {
@@ -65,6 +69,8 @@ impl LynxElementData {
       attributes: FnvHashMap::default(),
       #[cfg(feature = "server")]
       children: Vec::new(),
+      #[cfg(feature = "server")]
+      parent_id: None,
     }
   }
 }

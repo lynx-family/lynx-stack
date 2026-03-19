@@ -41,7 +41,13 @@ export function executeTemplate(
       result.customSections as unknown as Record<string, Cloneable>,
     ),
     __OnLifecycleEvent: () => {},
+    _ReportError: (err: Error) => {
+      console.error(err);
+    },
     ...elementAPIs,
+    __QueryComponent: () => {
+      return null;
+    },
   };
 
   const context = vm.createContext(sandbox);
