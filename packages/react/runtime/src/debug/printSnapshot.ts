@@ -2,16 +2,17 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { BackgroundSnapshotInstance } from '../backgroundSnapshot.js';
+import type { BackgroundDOM } from '../backgroundSnapshot.js';
 import { SnapshotInstance } from '../snapshot.js';
 import type { SerializedSnapshotInstance } from '../snapshot.js';
 import { logDebug } from './debug.js';
 
 export function printSnapshotInstance(
-  instance: BackgroundSnapshotInstance | SnapshotInstance,
+  instance: BackgroundDOM | SnapshotInstance,
   log?: (...data: any[]) => void,
 ): void {
   const impl = (
-    instance: BackgroundSnapshotInstance | SnapshotInstance,
+    instance: BackgroundDOM | SnapshotInstance,
     level: number,
   ) => {
     let msg = '';
@@ -51,13 +52,13 @@ export function printSerializedSnapshotInstance(
 }
 
 export function printSnapshotInstanceToString(
-  instance: SnapshotInstance | BackgroundSnapshotInstance | SerializedSnapshotInstance,
+  instance: SnapshotInstance | BackgroundDOM | SerializedSnapshotInstance,
 ): string {
   const logArr: string[] = [];
   if (instance instanceof SnapshotInstance || instance instanceof BackgroundSnapshotInstance) {
-    printSnapshotInstance(instance, logArr.push.bind(logArr));
+    printSnapshotInstance(instance as SnapshotInstance | BackgroundDOM, logArr.push.bind(logArr));
   } else {
-    printSerializedSnapshotInstance(instance, logArr.push.bind(logArr));
+    printSerializedSnapshotInstance(instance as SerializedSnapshotInstance, logArr.push.bind(logArr));
   }
   return logArr.join('\n');
 }

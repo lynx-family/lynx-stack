@@ -41,7 +41,7 @@ describe('background render', () => {
 
     globalEnvManager.switchToBackground();
     root.render(<Comp />);
-    expect(__root.__firstChild.__firstChild.__values).toEqual(['Hello World']);
+    expect(__root.firstChild.firstChild.__values).toEqual(['Hello World']);
   });
 
   it('should render component synchronously during background initial render', async () => {
@@ -62,6 +62,6 @@ describe('background render', () => {
     globalEnvManager.switchToBackground();
     root.render(<Comp />);
     process();
-    expect(__root.__firstChild.__firstChild.__values).toEqual([88]);
+    expect(__root.firstChild.firstChild.__values).toEqual([88]);
   });
 });

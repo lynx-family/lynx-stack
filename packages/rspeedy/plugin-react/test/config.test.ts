@@ -81,13 +81,13 @@ describe('Config', () => {
     expect(config.resolve.alias).toHaveProperty(
       'preact$',
       expect.stringContaining(
-        '@lynx-js/internal-preact/dist/preact.mjs'.replaceAll('/', path.sep),
+        'preact/dist/preact.mjs'.replaceAll('/', path.sep),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat$',
       expect.stringContaining(
-        '@lynx-js/internal-preact/compat/dist/compat.mjs'.replaceAll(
+        'preact/compat/dist/compat.mjs'.replaceAll(
           '/',
           path.sep,
         ),
@@ -96,7 +96,7 @@ describe('Config', () => {
     expect(config.resolve.alias).toHaveProperty(
       'preact/debug$',
       expect.stringContaining(
-        '@lynx-js/internal-preact/debug/dist/debug.mjs'.replaceAll(
+        'preact/debug/dist/debug.mjs'.replaceAll(
           '/',
           path.sep,
         ),
@@ -105,7 +105,7 @@ describe('Config', () => {
     expect(config.resolve.alias).toHaveProperty(
       'preact/devtools$',
       expect.stringContaining(
-        '@lynx-js/internal-preact/devtools/dist/devtools.mjs'.replaceAll(
+        'preact/devtools/dist/devtools.mjs'.replaceAll(
           '/',
           path.sep,
         ),
@@ -114,7 +114,7 @@ describe('Config', () => {
     expect(config.resolve.alias).toHaveProperty(
       'preact/hooks$',
       expect.stringContaining(
-        '@lynx-js/internal-preact/hooks/dist/hooks.mjs'.replaceAll(
+        'preact/hooks/dist/hooks.mjs'.replaceAll(
           '/',
           path.sep,
         ),
@@ -123,7 +123,7 @@ describe('Config', () => {
     expect(config.resolve.alias).toHaveProperty(
       'preact/test-utils$',
       expect.stringContaining(
-        '@lynx-js/internal-preact/test-utils/dist/testUtils.mjs'.replaceAll(
+        'preact/test-utils/dist/testUtils.mjs'.replaceAll(
           '/',
           path.sep,
         ),
@@ -132,7 +132,7 @@ describe('Config', () => {
     expect(config.resolve.alias).toHaveProperty(
       'preact/jsx-runtime$',
       expect.stringContaining(
-        '@lynx-js/internal-preact/jsx-runtime/dist/jsxRuntime.mjs'.replaceAll(
+        'preact/jsx-runtime/dist/jsxRuntime.mjs'.replaceAll(
           '/',
           path.sep,
         ),
@@ -141,7 +141,7 @@ describe('Config', () => {
     expect(config.resolve.alias).toHaveProperty(
       'preact/jsx-dev-runtime$',
       expect.stringContaining(
-        '@lynx-js/internal-preact/jsx-runtime/dist/jsxRuntime.mjs'.replaceAll(
+        'preact/jsx-runtime/dist/jsxRuntime.mjs'.replaceAll(
           '/',
           path.sep,
         ),
@@ -150,19 +150,19 @@ describe('Config', () => {
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/client$',
       expect.stringContaining(
-        '@lynx-js/internal-preact/compat/client.mjs'.replaceAll('/', path.sep),
+        'preact/compat/client.mjs'.replaceAll('/', path.sep),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/server$',
       expect.stringContaining(
-        '@lynx-js/internal-preact/compat/server.mjs'.replaceAll('/', path.sep),
+        'preact/compat/server.mjs'.replaceAll('/', path.sep),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/jsx-runtime$',
       expect.stringContaining(
-        '@lynx-js/internal-preact/compat/jsx-runtime.mjs'.replaceAll(
+        'preact/compat/jsx-runtime.mjs'.replaceAll(
           '/',
           path.sep,
         ),
@@ -171,7 +171,7 @@ describe('Config', () => {
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/jsx-dev-runtime$',
       expect.stringContaining(
-        '@lynx-js/internal-preact/compat/jsx-dev-runtime.mjs'.replaceAll(
+        'preact/compat/jsx-dev-runtime.mjs'.replaceAll(
           '/',
           path.sep,
         ),
@@ -180,7 +180,7 @@ describe('Config', () => {
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/scheduler$',
       expect.stringContaining(
-        '@lynx-js/internal-preact/compat/scheduler.mjs'.replaceAll(
+        'preact/compat/scheduler.mjs'.replaceAll(
           '/',
           path.sep,
         ),

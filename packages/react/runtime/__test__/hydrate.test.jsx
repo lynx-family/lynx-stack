@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { elementTree } from './utils/nativeMethod';
-import { BackgroundSnapshotInstance, hydrate } from '../src/backgroundSnapshot';
+import { setupDom, hydrate } from '../src/backgroundSnapshot';
 import { backgroundSnapshotInstanceManager, SnapshotInstance, snapshotInstanceManager } from '../src/snapshot';
 
 const HOLE = null;
@@ -90,13 +90,13 @@ describe('dual-runtime hydrate', () => {
     `);
 
     {
-      const aa = new BackgroundSnapshotInstance(s);
+      const aa = setupDom({ type: s });
 
-      const bb1 = new BackgroundSnapshotInstance(s1);
-      const bb2 = new BackgroundSnapshotInstance(s2);
-      const bb3 = new BackgroundSnapshotInstance(s1);
-      const bb4 = new BackgroundSnapshotInstance(s1);
-      const bb5 = new BackgroundSnapshotInstance(s1);
+      const bb1 = setupDom({ type: s1 });
+      const bb2 = setupDom({ type: s2 });
+      const bb3 = setupDom({ type: s1 });
+      const bb4 = setupDom({ type: s1 });
+      const bb5 = setupDom({ type: s1 });
       bb1.setAttribute(0, '~id');
       bb5.setAttribute(0, '~id2');
       aa.insertBefore(bb1);
@@ -105,9 +105,9 @@ describe('dual-runtime hydrate', () => {
       aa.insertBefore(bb4);
       aa.insertBefore(bb5);
 
-      const cc1 = new BackgroundSnapshotInstance(s3);
-      const cc2 = new BackgroundSnapshotInstance(s3);
-      const cc3 = new BackgroundSnapshotInstance(s1);
+      const cc1 = setupDom({ type: s3 });
+      const cc2 = setupDom({ type: s3 });
+      const cc3 = setupDom({ type: s1 });
       cc3.setAttribute(0, '~id3');
       bb2.insertBefore(cc1);
       bb2.insertBefore(cc2);
@@ -184,11 +184,11 @@ describe('dual-runtime hydrate', () => {
     a.insertBefore(b3);
     a.insertBefore(b4);
 
-    const aa = new BackgroundSnapshotInstance(s);
+    const aa = setupDom({ type: s });
 
-    const bb1 = new BackgroundSnapshotInstance(s1);
-    const bb2 = new BackgroundSnapshotInstance(s1);
-    const bb3 = new BackgroundSnapshotInstance(s1);
+    const bb1 = setupDom({ type: s1 });
+    const bb2 = setupDom({ type: s1 });
+    const bb3 = setupDom({ type: s1 });
     aa.insertBefore(bb1);
     aa.insertBefore(bb2);
     aa.insertBefore(bb3);
@@ -214,12 +214,12 @@ describe('dual-runtime hydrate', () => {
     a.insertBefore(b3);
     a.insertBefore(b4);
 
-    const aa = new BackgroundSnapshotInstance(s);
+    const aa = setupDom({ type: s });
 
-    const bb1 = new BackgroundSnapshotInstance(s1);
-    const bb2 = new BackgroundSnapshotInstance(s2);
-    const bb3 = new BackgroundSnapshotInstance(s1);
-    const bb4 = new BackgroundSnapshotInstance(s1);
+    const bb1 = setupDom({ type: s1 });
+    const bb2 = setupDom({ type: s2 });
+    const bb3 = setupDom({ type: s1 });
+    const bb4 = setupDom({ type: s1 });
     aa.insertBefore(bb1);
     aa.insertBefore(bb2);
     aa.insertBefore(bb3);
@@ -236,10 +236,10 @@ describe('dual-runtime hydrate', () => {
   });
 
   it('should works - upon empty render', async function() {
-    const aa = new BackgroundSnapshotInstance('root');
+    const aa = setupDom({ type: 'root' });
 
-    const bb1 = new BackgroundSnapshotInstance(s1);
-    const bb2 = new BackgroundSnapshotInstance(s2);
+    const bb1 = setupDom({ type: s1 });
+    const bb2 = setupDom({ type: s2 });
     aa.insertBefore(bb1);
     aa.insertBefore(bb2);
 
@@ -292,14 +292,14 @@ describe('dual-runtime hydrate - with slot (multi-children)', () => {
     b1.insertBefore(c2);
     b2.insertBefore(c3);
 
-    const aa = new BackgroundSnapshotInstance(s);
-    const bb1 = new BackgroundSnapshotInstance(slot1);
-    const bb2 = new BackgroundSnapshotInstance(slot2);
+    const aa = setupDom({ type: s });
+    const bb1 = setupDom({ type: slot1 });
+    const bb2 = setupDom({ type: slot2 });
     aa.insertBefore(bb1);
     aa.insertBefore(bb2);
-    const cc1 = new BackgroundSnapshotInstance(s1);
-    const cc2 = new BackgroundSnapshotInstance(s1);
-    const cc3 = new BackgroundSnapshotInstance(s1);
+    const cc1 = setupDom({ type: s1 });
+    const cc2 = setupDom({ type: s1 });
+    const cc3 = setupDom({ type: s1 });
     bb1.insertBefore(cc1);
     bb2.insertBefore(cc2);
     bb2.insertBefore(cc3);

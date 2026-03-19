@@ -3,14 +3,19 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { render } from 'preact';
+import { options, render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { hydrate } from '../../src/backgroundSnapshot';
+import { hydrate, setupDom } from '../../src/backgroundSnapshot';
 import { useState } from '../../src/index';
 import { initGlobalSnapshotPatch, takeGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch';
 import { snapshotPatchApply } from '../../src/lifecycle/patch/snapshotPatchApply';
-import { backgroundSnapshotInstanceManager, setupPage, snapshotInstanceManager } from '../../src/snapshot';
+import {
+  backgroundSnapshotInstanceManager,
+  setupPage,
+  SnapshotInstance,
+  snapshotInstanceManager,
+} from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree } from '../utils/nativeMethod';
 
@@ -23,10 +28,10 @@ beforeAll(() => {
 
 beforeEach(() => {
   globalEnvManager.switchToMainThread();
-  scratch = document.createElement('root');
+  scratch = new SnapshotInstance('root');
   scratch.ensureElements();
   globalEnvManager.switchToBackground();
-  scratchBackground = document.createElement('root');
+  scratchBackground = setupDom({ type: 'root' });
 });
 
 afterEach(() => {

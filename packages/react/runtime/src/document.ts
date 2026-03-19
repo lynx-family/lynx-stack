@@ -1,84 +1,69 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
+
+import { options } from 'preact';
+import type { ContainerNode, VNode } from 'preact';
+
+import { setupDom } from './backgroundSnapshot.js';
+import type { BackgroundDOM } from './backgroundSnapshot.js';
+import { setRoot } from './root.js';
 import { SnapshotInstance } from './snapshot.js';
 
-/**
- * This module implements an Interface Adapter Pattern to integrate Preact's
- * rendering system with Lynx's custom Snapshot-based virtual DOM.
- *
- * It works by:
- * 1. Defining a minimal {@link Document}-like interface that Preact expects
- * 2. Implementing this interface to return our {@link Snapshot} instances
- * 3. Maintaining the same method signatures as the standard DOM API
- *
- * This allows Preact to build its virtual tree using our Snapshot system
- * without knowing it's not working with a real DOM.
- */
+type SnapshotDocumentNode = BackgroundDOM | SnapshotInstance;
 
-/**
- * Defines the minimal document interface that Preact expects, depending on
- * which thread is running.
- */
 interface SnapshotDocumentAdapter {
-  createElement(type: string): BackgroundSnapshotInstance | SnapshotInstance;
-  createElementNS(ns: string | null, type: string): BackgroundSnapshotInstance | SnapshotInstance;
-  createTextNode(text: string): BackgroundSnapshotInstance | SnapshotInstance;
+  createElement(type: string): SnapshotDocumentNode;
+  createElementNS(ns: string | null, type: string): SnapshotDocumentNode;
+  createTextNode(text: string): SnapshotDocumentNode & { data?: string };
 }
 
-const document: SnapshotDocumentAdapter = {} as SnapshotDocumentAdapter;
+export const document: SnapshotDocumentAdapter = {} as SnapshotDocumentAdapter;
 
-/**
- * Sets up the document interface for the background thread.
- * All DOM operations are intercepted to create {@link BackgroundSnapshotInstance}.
- */
-function setupBackgroundDocument(): void {
-  document.createElement = function(type: string) {
-    return new BackgroundSnapshotInstance(type);
-  };
-  document.createElementNS = function(_ns: string, type: string) {
-    return new BackgroundSnapshotInstance(type);
-  };
-  document.createTextNode = function(text: string) {
-    const i = new BackgroundSnapshotInstance(null as unknown as string);
-    i.setAttribute(0, text);
-    Object.defineProperty(i, 'data', {
-      set(v) {
-        i.setAttribute(0, v);
-      },
-    });
-    return i;
-  };
+function setupTextNodeData<T extends { setAttribute(key: string | number, value: unknown): void }>(
+  node: T,
+  text: string,
+): T & { data?: string } {
+  node.setAttribute(0, text);
+  Object.defineProperty(node, 'data', {
+    configurable: true,
+    enumerable: false,
+    set(value) {
+      node.setAttribute(0, value);
+    },
+  });
+  return node as T & { data?: string };
 }
 
-/**
- * Sets up the document interface for the main thread.
- * All DOM operations are intercepted to create {@link SnapshotInstance}.
- */
-function setupDocument(): void {
-  document.createElement = function(type: string) {
-    return new SnapshotInstance(type);
-  };
-  document.createElementNS = function(_ns: string, type: string) {
-    return new SnapshotInstance(type);
-  };
-  document.createTextNode = function(text: string) {
-    const i = new SnapshotInstance(null as unknown as string);
-    i.setAttribute(0, text);
-    Object.defineProperty(i, 'data', {
-      set(v) {
-        i.setAttribute(0, v);
-      },
-    });
-    return i;
-  };
+export function setupBackgroundDocument(): void {
+  document.createElement = (type: string) => setupDom({ type } as BackgroundDOM);
+  document.createElementNS = (_ns: string | null, type: string) => setupDom({ type } as BackgroundDOM);
+  document.createTextNode = (text: string) =>
+    setupTextNodeData(
+      setupDom({ type: null as unknown as string } as BackgroundDOM),
+      text,
+    );
+
+  options.setupDom = setupDom;
+  setRoot(setupDom({ type: 'root' } as BackgroundDOM));
+  globalThis.document = document as unknown as Document;
 }
 
-// if (__JS__) {
-//   setupBackgroundDocument();
-// } else if (__LEPUS__) {
-//   setupDocument();
-// }
+export function setupDocument(): void {
+  document.createElement = (type: string) => new SnapshotInstance(type);
+  document.createElementNS = (_ns: string | null, type: string) => new SnapshotInstance(type);
+  document.createTextNode = (text: string) =>
+    setupTextNodeData(
+      new SnapshotInstance(null as unknown as string),
+      text,
+    );
 
-export { document, setupBackgroundDocument, setupDocument };
+  options.setupDom = (vnode: VNode) => {
+    const snapshotVNode = vnode as VNode & SnapshotInstance & ContainerNode;
+    Object.assign(snapshotVNode, new SnapshotInstance(vnode.type as string));
+    Object.setPrototypeOf(snapshotVNode, SnapshotInstance.prototype);
+    return snapshotVNode;
+  };
+  setRoot(new SnapshotInstance('root'));
+  globalThis.document = document as unknown as Document;
+}

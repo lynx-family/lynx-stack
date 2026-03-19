@@ -1,8 +1,7 @@
-import { Component, render } from 'preact';
+import { Component, render, options } from 'preact';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
 import { BackgroundSnapshotInstance } from '../../src/backgroundSnapshot';
-import { setupBackgroundDocument } from '../../src/document';
 import { backgroundSnapshotInstanceManager, setupPage, SnapshotInstance } from '../../src/snapshot';
 import { backgroundSnapshotInstanceToJSON } from '../utils/debug';
 import { useState } from 'preact/compat';
@@ -11,22 +10,30 @@ import { globalEnvManager } from '../utils/envManager';
 
 /** @type {SnapshotInstance} */
 let scratch;
+let switchToBackground = globalEnvManager.switchToBackground.bind(globalEnvManager);
 
 beforeAll(() => {
-  setupBackgroundDocument();
   setupPage(__CreatePage('0', 0));
 
-  BackgroundSnapshotInstance.prototype.toJSON = backgroundSnapshotInstanceToJSON;
+  globalEnvManager.switchToBackground = () => {
+    switchToBackground();
+    const oldSetupDom = options.setupDom;
+    options.setupDom = (vnode) => {
+      vnode = oldSetupDom(vnode);
+      vnode.toJSON = backgroundSnapshotInstanceToJSON;
+      return vnode;
+    };
+  };
 
   globalEnvManager.switchToBackground();
 });
 
 afterAll(() => {
-  delete BackgroundSnapshotInstance.prototype.toJSON;
+  globalEnvManager.switchToBackground = switchToBackground;
 });
 
 beforeEach(() => {
-  scratch = document.createElement('root');
+  scratch = options.setupDom({ type: 'root' });
   lynx.__initData = {};
 });
 

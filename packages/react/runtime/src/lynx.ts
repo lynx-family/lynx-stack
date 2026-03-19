@@ -7,11 +7,11 @@ import './hooks/react.js';
 
 import { initElementPAPICallAlog } from './alog/elementPAPICall.js';
 import { initAlog } from './alog/index.js';
+import { setupDom } from './backgroundSnapshot.js';
 import { setupComponentStack } from './debug/component-stack.js';
 import { isProfiling } from './debug/profile.js';
 import { initProfileHook } from './debug/profileHooks.js';
 import { setupVNodeSourceHook } from './debug/vnodeSource.js';
-import { document, setupBackgroundDocument } from './document.js';
 import { replaceCommitHook } from './lifecycle/patch/commit.js';
 import { addCtxNotFoundEventListener } from './lifecycle/patch/error.js';
 import { injectUpdateMainThread } from './lifecycle/patch/updateMainThread.js';
@@ -26,7 +26,7 @@ import { injectUpdateMTRefInitValue } from './worklet/ref/updateInitValue.js';
 export { runWithForce } from './lynx/runWithForce.js';
 
 // @ts-expect-error Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature
-if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__ && typeof globalThis.processEvalResult === 'undefined') {
+if (__MAIN_THREAD__ && typeof globalThis.processEvalResult === 'undefined') {
   // @ts-expect-error Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature
   globalThis.processEvalResult = <T>(result: ((schema: string) => T) | undefined, schema: string) => {
     return result?.(schema);
@@ -60,10 +60,8 @@ if (typeof __ALOG_ELEMENT_API__ !== 'undefined' && __ALOG_ELEMENT_API__) {
 }
 
 if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
-  // Trick Preact and TypeScript to accept our custom document adapter.
-  options.document = document as unknown as Document;
   options.requestAnimationFrame = lynxQueueMicrotask;
-  setupBackgroundDocument();
+  options.setupDom = setupDom;
   injectTt();
   addCtxNotFoundEventListener();
 

@@ -8,6 +8,8 @@
  * This is the mirror of main thread's {@link SnapshotInstance}:
  */
 
+import type { ContainerNode, VNode } from 'preact';
+
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { profileEnd, profileStart } from './debug/profile.js';
@@ -39,6 +41,46 @@ import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { isDirectOrDeepEqual } from './utils.js';
 import { onPostWorkletCtx } from './worklet/ctx.js';
 
+export interface BackgroundDOM extends
+  VNode,
+  Omit<
+    ContainerNode,
+    | 'appendChild'
+    | 'childNodes'
+    | 'contains'
+    | 'firstChild'
+    | 'insertBefore'
+    | 'nodeType'
+    | 'parentNode'
+    | 'removeChild'
+  >
+{
+  type: string;
+  nodeType: 1;
+  parentNode: BackgroundDOM | null;
+  firstChild: BackgroundDOM | null;
+  lastChild: BackgroundDOM | null;
+  previousSibling: BackgroundDOM | null;
+  nextSibling: BackgroundDOM | null;
+  childNodes: BackgroundDOM[];
+  __id: number;
+  __values: any[] | undefined;
+  __snapshot_def: Snapshot;
+  __extraProps?: Record<string, unknown> | undefined;
+  __parent: BackgroundDOM | null;
+  __firstChild: BackgroundDOM | null;
+  __lastChild: BackgroundDOM | null;
+  __previousSibling: BackgroundDOM | null;
+  __nextSibling: BackgroundDOM | null;
+  __removed_from_tree?: boolean;
+  contains(other: ContainerNode | null): boolean;
+  insertBefore(node: ContainerNode, child: ContainerNode | null): ContainerNode;
+  appendChild(node: ContainerNode): ContainerNode;
+  removeChild(child: ContainerNode): ContainerNode;
+  tearDown(): void;
+  setAttribute(key: string | number, value: unknown): void;
+}
+
 export class BackgroundSnapshotInstance {
   constructor(public type: string) {
     // Suspense uses 'div'
@@ -51,7 +93,7 @@ export class BackgroundSnapshotInstance {
     }
     this.__snapshot_def = snapshotManager.values.get(type)!;
     const id = this.__id = backgroundSnapshotInstanceManager.nextId += 1;
-    backgroundSnapshotInstanceManager.values.set(id, this);
+    backgroundSnapshotInstanceManager.values.set(id, this as unknown as BackgroundDOM);
 
     __globalSnapshotPatch?.push(SnapshotOperation.CreateElement, type, id);
   }
@@ -61,126 +103,169 @@ export class BackgroundSnapshotInstance {
   __snapshot_def: Snapshot;
   __extraProps?: Record<string, unknown> | undefined;
 
-  private __parent: BackgroundSnapshotInstance | null = null;
-  private __firstChild: BackgroundSnapshotInstance | null = null;
-  private __lastChild: BackgroundSnapshotInstance | null = null;
-  private __previousSibling: BackgroundSnapshotInstance | null = null;
-  private __nextSibling: BackgroundSnapshotInstance | null = null;
-  private __removed_from_tree?: boolean;
+  __parent: BackgroundDOM | null = null;
+  __firstChild: BackgroundDOM | null = null;
+  __lastChild: BackgroundDOM | null = null;
+  __previousSibling: BackgroundDOM | null = null;
+  __nextSibling: BackgroundDOM | null = null;
+  __removed_from_tree?: boolean;
 
-  get parentNode(): BackgroundSnapshotInstance | null {
+  get nodeType(): 1 {
+    return 1;
+  }
+
+  set nodeType(_nodeType: 1) {}
+
+  get parentNode(): BackgroundDOM | null {
     return this.__parent;
   }
 
-  get nextSibling(): BackgroundSnapshotInstance | null {
+  set parentNode(parentNode: BackgroundDOM | null) {
+    this.__parent = parentNode;
+  }
+
+  get firstChild(): BackgroundDOM | null {
+    return this.__firstChild;
+  }
+
+  set firstChild(firstChild: BackgroundDOM | null) {
+    this.__firstChild = firstChild;
+  }
+
+  get lastChild(): BackgroundDOM | null {
+    return this.__lastChild;
+  }
+
+  set lastChild(lastChild: BackgroundDOM | null) {
+    this.__lastChild = lastChild;
+  }
+
+  get previousSibling(): BackgroundDOM | null {
+    return this.__previousSibling;
+  }
+
+  set previousSibling(previousSibling: BackgroundDOM | null) {
+    this.__previousSibling = previousSibling;
+  }
+
+  get nextSibling(): BackgroundDOM | null {
     return this.__nextSibling;
+  }
+
+  set nextSibling(nextSibling: BackgroundDOM | null) {
+    this.__nextSibling = nextSibling;
   }
 
   // get isConnected() {
   //   return !!this.__parent;
   // }
 
-  // contains(child: BackgroundSnapshotInstance): boolean {
-  //   return child.parentNode === this;
-  // }
+  contains(child: ContainerNode | null): boolean {
+    return (child as BackgroundDOM | null)?.parentNode === (this as unknown as BackgroundDOM);
+  }
 
   // This will be called in `lazy`/`Suspense`.
-  appendChild(child: BackgroundSnapshotInstance): void {
-    return this.insertBefore(child);
+  appendChild(child: ContainerNode): ContainerNode {
+    return this.insertBefore(child, null);
   }
 
   insertBefore(
-    node: BackgroundSnapshotInstance,
-    beforeNode?: BackgroundSnapshotInstance,
-  ): void {
-    if (node.__removed_from_tree) {
-      node.__removed_from_tree = false;
+    node: ContainerNode,
+    beforeNode: ContainerNode | null = null,
+  ): ContainerNode {
+    const backgroundNode = node as BackgroundDOM;
+    const backgroundBeforeNode = beforeNode as BackgroundDOM | null;
+    if (backgroundNode.__removed_from_tree) {
+      backgroundNode.__removed_from_tree = false;
       // This is only called by `lazy`/`Suspense` through `appendChild` so beforeNode is always undefined.
       /* v8 ignore next */
-      reconstructInstanceTree([node], this.__id, beforeNode?.__id);
+      reconstructInstanceTree([backgroundNode], this.__id, backgroundBeforeNode?.__id);
     } else {
       __globalSnapshotPatch?.push(
         SnapshotOperation.InsertBefore,
         this.__id,
-        node.__id,
-        beforeNode?.__id,
+        backgroundNode.__id,
+        backgroundBeforeNode?.__id,
       );
     }
 
     // If the node already has a parent, remove it from its current parent
-    const p = node.__parent;
+    const p = backgroundNode.__parent;
     if (p) {
-      if (node.__previousSibling) {
-        node.__previousSibling.__nextSibling = node.__nextSibling;
+      if (backgroundNode.__previousSibling) {
+        backgroundNode.__previousSibling.__nextSibling = backgroundNode.__nextSibling;
       } else {
-        p.__firstChild = node.__nextSibling;
+        p.__firstChild = backgroundNode.__nextSibling;
       }
 
-      if (node.__nextSibling) {
-        node.__nextSibling.__previousSibling = node.__previousSibling;
+      if (backgroundNode.__nextSibling) {
+        backgroundNode.__nextSibling.__previousSibling = backgroundNode.__previousSibling;
       } else {
-        p.__lastChild = node.__previousSibling;
+        p.__lastChild = backgroundNode.__previousSibling;
       }
     }
 
     // If beforeNode is not provided, add the new node as the last child
-    if (beforeNode) {
+    if (backgroundBeforeNode) {
       // If beforeNode is provided, insert the new node before beforeNode
-      if (beforeNode.__previousSibling) {
-        beforeNode.__previousSibling.__nextSibling = node;
-        node.__previousSibling = beforeNode.__previousSibling;
+      if (backgroundBeforeNode.__previousSibling) {
+        backgroundBeforeNode.__previousSibling.__nextSibling = backgroundNode;
+        backgroundNode.__previousSibling = backgroundBeforeNode.__previousSibling;
       } else {
-        this.__firstChild = node;
-        node.__previousSibling = null;
+        this.__firstChild = backgroundNode;
+        backgroundNode.__previousSibling = null;
       }
-      beforeNode.__previousSibling = node;
-      node.__nextSibling = beforeNode;
-      node.__parent = this;
+      backgroundBeforeNode.__previousSibling = backgroundNode;
+      backgroundNode.__nextSibling = backgroundBeforeNode;
+      backgroundNode.__parent = this as unknown as BackgroundDOM;
     } else {
       if (this.__lastChild) {
-        this.__lastChild.__nextSibling = node;
-        node.__previousSibling = this.__lastChild;
+        this.__lastChild.__nextSibling = backgroundNode;
+        backgroundNode.__previousSibling = this.__lastChild;
       } else {
-        this.__firstChild = node;
-        node.__previousSibling = null;
+        this.__firstChild = backgroundNode;
+        backgroundNode.__previousSibling = null;
       }
-      this.__lastChild = node;
-      node.__parent = this;
-      node.__nextSibling = null;
+      this.__lastChild = backgroundNode;
+      backgroundNode.__parent = this as unknown as BackgroundDOM;
+      backgroundNode.__nextSibling = null;
     }
+
+    return backgroundNode;
   }
 
-  removeChild(node: BackgroundSnapshotInstance): void {
+  removeChild(node: ContainerNode): ContainerNode {
+    const backgroundNode = node as BackgroundDOM;
     __globalSnapshotPatch?.push(
       SnapshotOperation.RemoveChild,
       this.__id,
-      node.__id,
+      backgroundNode.__id,
     );
-    node.__removed_from_tree = true;
+    backgroundNode.__removed_from_tree = true;
 
-    if (node.__parent !== this) {
+    if (backgroundNode.__parent !== (this as unknown as BackgroundDOM)) {
       throw new Error('The node to be removed is not a child of this node.');
     }
 
-    if (node.__previousSibling) {
-      node.__previousSibling.__nextSibling = node.__nextSibling;
+    if (backgroundNode.__previousSibling) {
+      backgroundNode.__previousSibling.__nextSibling = backgroundNode.__nextSibling;
     } else {
-      this.__firstChild = node.__nextSibling;
+      this.__firstChild = backgroundNode.__nextSibling;
     }
 
-    if (node.__nextSibling) {
-      node.__nextSibling.__previousSibling = node.__previousSibling;
+    if (backgroundNode.__nextSibling) {
+      backgroundNode.__nextSibling.__previousSibling = backgroundNode.__previousSibling;
     } else {
-      this.__lastChild = node.__previousSibling;
+      this.__lastChild = backgroundNode.__previousSibling;
     }
 
-    node.__parent = null;
-    node.__previousSibling = null;
-    node.__nextSibling = null;
+    backgroundNode.__parent = null;
+    backgroundNode.__previousSibling = null;
+    backgroundNode.__nextSibling = null;
 
     queueRefAttrUpdate(
       () => {
-        traverseSnapshotInstance(node, v => {
+        traverseSnapshotInstance(backgroundNode, v => {
           if (v.__values) {
             v.__snapshot_def.refAndSpreadIndexes?.forEach((i) => {
               const value = v.__values![i] as unknown;
@@ -200,7 +285,9 @@ export class BackgroundSnapshotInstance {
       0,
     );
 
-    globalBackgroundSnapshotInstancesToRemove.push(node.__id);
+    globalBackgroundSnapshotInstancesToRemove.push(backgroundNode.__id);
+
+    return backgroundNode;
   }
 
   tearDown(): void {
@@ -212,8 +299,8 @@ export class BackgroundSnapshotInstance {
     });
   }
 
-  get childNodes(): BackgroundSnapshotInstance[] {
-    const nodes: BackgroundSnapshotInstance[] = [];
+  get childNodes(): BackgroundDOM[] {
+    const nodes: BackgroundDOM[] = [];
     let node = this.__firstChild;
     while (node) {
       nodes.push(node);
@@ -315,7 +402,7 @@ export class BackgroundSnapshotInstance {
       const newValueObj = newValue as Record<string, unknown>;
       if ('__spread' in newValueObj) {
         const oldSpread = (oldValue as { __spread?: Record<string, unknown> } | undefined)?.__spread;
-        const newSpread = transformSpread(this, index, newValueObj);
+        const newSpread = transformSpread(this as unknown as BackgroundDOM, index, newValueObj);
         const needUpdate = !isDirectOrDeepEqual(oldSpread, newSpread);
         // use __spread to cache the transform result for next diff
         newValueObj['__spread'] = newSpread;
@@ -377,7 +464,7 @@ export class BackgroundSnapshotInstance {
 
 export function hydrate(
   before: SerializedSnapshotInstance,
-  after: BackgroundSnapshotInstance,
+  after: BackgroundDOM,
 ): SnapshotPatch {
   const shouldProfile = typeof __PROFILE__ !== 'undefined' && __PROFILE__;
   if (shouldProfile) {
@@ -388,7 +475,7 @@ export function hydrate(
 
     const helper = (
       before: SerializedSnapshotInstance,
-      after: BackgroundSnapshotInstance,
+      after: BackgroundDOM,
     ) => {
       hydrationMap.set(after.__id, before.id);
       backgroundSnapshotInstanceManager.updateId(after.__id, before.id);
@@ -635,7 +722,7 @@ export function hydrate(
   }
 }
 
-function reconstructInstanceTree(afters: BackgroundSnapshotInstance[], parentId: number, targetId?: number): void {
+function reconstructInstanceTree(afters: BackgroundDOM[], parentId: number, targetId?: number): void {
   for (const child of afters) {
     const id = child.__id;
     __globalSnapshotPatch?.push(SnapshotOperation.CreateElement, child.type, id);
@@ -651,4 +738,12 @@ function reconstructInstanceTree(afters: BackgroundSnapshotInstance[], parentId:
     reconstructInstanceTree(child.childNodes, id);
     __globalSnapshotPatch?.push(SnapshotOperation.InsertBefore, parentId, id, targetId);
   }
+}
+
+export function setupDom(vnode: VNode): BackgroundDOM {
+  const dom = new BackgroundSnapshotInstance(vnode.type as string);
+  const backgroundDom = Object.assign(vnode, dom) as BackgroundDOM;
+  Object.setPrototypeOf(backgroundDom, BackgroundSnapshotInstance.prototype);
+  backgroundSnapshotInstanceManager.values.set(dom.__id, backgroundDom);
+  return backgroundDom;
 }
