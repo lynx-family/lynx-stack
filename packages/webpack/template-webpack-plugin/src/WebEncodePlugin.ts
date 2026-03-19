@@ -68,7 +68,7 @@ export class WebEncodePlugin {
 
           Object.assign(encodeData, {
             manifest: {
-              // `app-service.js` is the entry point of a template.
+              // `/app-service.js` is the conventional BTS entry point in a Lynx Bundle.
               '/app-service.js': content,
             },
             customSections: encodeData.customSections,

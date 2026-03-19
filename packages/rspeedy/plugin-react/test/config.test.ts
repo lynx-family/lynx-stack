@@ -1955,6 +1955,7 @@ describe('Config', () => {
             lynx: {},
           },
           plugins: [
+            pluginStubRspeedyAPI(),
             pluginReactLynx({
               defineDCE: { define: { __SOME_MACRO__: 'false' } },
             }),
@@ -1987,6 +1988,7 @@ describe('Config', () => {
             lynx: {},
           },
           plugins: [
+            pluginStubRspeedyAPI(),
             pluginReactLynx({
               defineDCE: {
                 define: {

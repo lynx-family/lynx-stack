@@ -44,8 +44,8 @@ interface ReactWebpackPluginOptions {
   mainThreadChunks?: string[] | undefined;
 
   /**
-   * Merge same string literals in JS and Lepus to reduce output bundle size.
-   * Set to `false` to disable.
+   * Merge same string literals in JS and Main Thread Script (MTS)
+   * to reduce output bundle size. Set to `false` to disable.
    *
    * @defaultValue false
    */

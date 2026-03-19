@@ -25,6 +25,12 @@ import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { createLynxAsyncChunksRuntimeModule } from './LynxAsyncChunksRuntimeModule.js';
 
+/**
+ * @deprecated The name `OriginManifest` is a legacy artifact. "Manifest" here
+ * refers to Background Thread Script (BTS) chunks in the official Lynx
+ * specification. Use the inline record type directly or see
+ * {@link EncodeOptions.manifest}.
+ */
 export type OriginManifest = Record<string, {
   content: string;
   size: number;
@@ -36,8 +42,23 @@ export type OriginManifest = Record<string, {
  * @public
  */
 export interface EncodeOptions {
+  /**
+   * Background Thread Script (BTS) chunks.
+   *
+   * @remarks
+   * In the official Lynx specification this is called "Background Thread
+   * Script" (BTS). The field name `manifest` is a legacy artifact.
+   */
   manifest: Record<string, string | undefined>;
   compilerOptions: Record<string, string | boolean>;
+  /**
+   * Main Thread Script (MTS) and its associated chunks.
+   *
+   * @remarks
+   * In the official Lynx specification this is called "Main Thread Script"
+   * (MTS). The field name `lepusCode` is a legacy artifact. The inner
+   * `lepusChunk` field holds additional MTS chunks.
+   */
   lepusCode: {
     root: string | undefined;
     lepusChunk: Record<string, string>;
@@ -51,10 +72,10 @@ export interface EncodeOptions {
   [k: string]: unknown;
 }
 
-const LynxTemplatePluginHooksMap = new WeakMap<Compilation, TemplateHooks>();
+const LynxTemplatePluginHooksMap = new WeakMap<Compilation, BundleHooks>();
 
 /**
- * To allow other plugins to alter the Template, this plugin executes
+ * To allow other plugins to alter the Bundle, this plugin executes
  * {@link https://github.com/webpack/tapable | tapable} hooks.
  *
  * @example
@@ -80,7 +101,7 @@ const LynxTemplatePluginHooksMap = new WeakMap<Compilation, TemplateHooks>();
  *
  * @public
  */
-export interface TemplateHooks {
+export interface BundleHooks {
   /**
    * Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template.
    *
@@ -141,7 +162,7 @@ export interface TemplateHooks {
  * Add hooks to the webpack compilation object to allow foreign plugins to
  * extend the LynxTemplatePlugin
  */
-function createLynxTemplatePluginHooks(): TemplateHooks {
+function createLynxTemplatePluginHooks(): BundleHooks {
   return {
     asyncChunkName: new SyncWaterfallHook(['pluginArgs']),
     beforeEncode: new AsyncSeriesWaterfallHook(['pluginArgs']),
@@ -152,11 +173,11 @@ function createLynxTemplatePluginHooks(): TemplateHooks {
 }
 
 /**
- * The options for LynxTemplatePlugin
+ * The options for {@link LynxTemplatePlugin}.
  *
  * @public
  */
-export interface LynxTemplatePluginOptions {
+export interface LynxBundlePluginOptions {
   /**
    * The file to write the template to.
    * Supports subdirectories eg: `assets/template.js`.
@@ -304,7 +325,11 @@ interface EncodeRawData {
     [k: string]: string | boolean;
   };
   /**
-   * main-thread
+   * Main Thread Script (MTS) assets.
+   *
+   * @remarks
+   * The field name `lepusCode` is a legacy artifact. In the official Lynx
+   * specification this is called "Main Thread Script" (MTS).
    */
   lepusCode: {
     root: Asset | undefined;
@@ -312,7 +337,11 @@ interface EncodeRawData {
     filename: string | undefined;
   };
   /**
-   * background thread
+   * Background Thread Script (BTS) assets.
+   *
+   * @remarks
+   * The field name `manifest` is a legacy artifact. In the official Lynx
+   * specification this is called "Background Thread Script" (BTS).
    */
   manifest: Record<string, string>;
   css: {
@@ -332,17 +361,25 @@ interface EncodeRawData {
 }
 
 /**
- * LynxTemplatePlugin
+ * The core webpack / rspack plugin that orchestrates Lynx Bundle assembly and
+ * encoding.
+ *
+ * @remarks
+ * In the official Lynx specification the output artifact is called a "Bundle".
+ * The class name `LynxTemplatePlugin` is a legacy artifact.
+ *
+ * @deprecated Use {@link LynxBundlePlugin} instead. This alias is retained for
+ * backward compatibility.
  *
  * @public
  */
 export class LynxTemplatePlugin {
-  constructor(private options?: LynxTemplatePluginOptions | undefined) {}
+  constructor(private options?: LynxBundlePluginOptions | undefined) {}
 
   /**
    * Returns all public hooks of the Lynx template webpack plugin for the given compilation
    */
-  static getLynxTemplatePluginHooks(compilation: Compilation): TemplateHooks {
+  static getLynxTemplatePluginHooks(compilation: Compilation): BundleHooks {
     let hooks = LynxTemplatePluginHooksMap.get(compilation);
     // Setup the hooks only once
     if (hooks === undefined) {
@@ -375,8 +412,8 @@ export class LynxTemplatePlugin {
    *
    * @public
    */
-  static defaultOptions: Readonly<Required<LynxTemplatePluginOptions>> = Object
-    .freeze<Required<LynxTemplatePluginOptions>>({
+  static defaultOptions: Readonly<Required<LynxBundlePluginOptions>> = Object
+    .freeze<Required<LynxBundlePluginOptions>>({
       filename: '[name].bundle',
       lazyBundleFilename: 'async/[name].[fullhash].bundle',
       intermediate: '.rspeedy',
@@ -464,7 +501,7 @@ class LynxTemplatePluginImpl {
 
   constructor(
     compiler: Compiler,
-    options: Required<LynxTemplatePluginOptions>,
+    options: Required<LynxBundlePluginOptions>,
   ) {
     this.#options = options;
 
@@ -1025,7 +1062,7 @@ class LynxTemplatePluginImpl {
     return assets;
   }
 
-  #options: Required<LynxTemplatePluginOptions>;
+  #options: Required<LynxBundlePluginOptions>;
 }
 
 interface AssetsInformationByGroups {
@@ -1066,3 +1103,24 @@ export function predicateNonHotModuleReplacementAsset(
       ?? assetMetaInformation.development
   );
 }
+
+// ---------------------------------------------------------------------------
+// Deprecated aliases — retained for backward compatibility.
+// ---------------------------------------------------------------------------
+
+/**
+ * Preferred canonical plugin name aligned with the official Lynx specification.
+ *
+ * @public
+ */
+export const LynxBundlePlugin: typeof LynxTemplatePlugin = LynxTemplatePlugin;
+
+/**
+ * @deprecated Use {@link BundleHooks} instead.
+ */
+export type TemplateHooks = BundleHooks;
+
+/**
+ * @deprecated Use {@link LynxBundlePluginOptions} instead.
+ */
+export type LynxTemplatePluginOptions = LynxBundlePluginOptions;

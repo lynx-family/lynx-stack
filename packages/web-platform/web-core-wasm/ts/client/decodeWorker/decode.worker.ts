@@ -1,5 +1,5 @@
 import {
-  TemplateSectionLabel,
+  BundleSectionLabel,
   MagicHeader0,
   MagicHeader1,
 } from '../../constants.js';
@@ -208,7 +208,7 @@ async function handleStream(
     }
 
     switch (label) {
-      case TemplateSectionLabel.Configurations: {
+      case BundleSectionLabel.Configurations: {
         config = overrideConfig
           ? { ...decodeJSONMap<string>(content), ...overrideConfig }
           : decodeJSONMap<string>(content);
@@ -217,7 +217,7 @@ async function handleStream(
         );
         break;
       }
-      case TemplateSectionLabel.StyleInfo: {
+      case BundleSectionLabel.StyleInfo: {
         await wasmModuleLoadedPromise;
         const buffer = wasmInstance.decode_style_info(
           content,
@@ -238,7 +238,7 @@ async function handleStream(
         );
         break;
       }
-      case TemplateSectionLabel.LepusCode: {
+      case BundleSectionLabel.MainThreadScript: {
         const codeMap = decodeBinaryMap(content);
         const isLazy = config['isLazy'] === 'true';
         const blobMap: Record<string, string> = {};
@@ -262,14 +262,14 @@ async function handleStream(
         );
         break;
       }
-      case TemplateSectionLabel.ElementTemplates: {
+      case BundleSectionLabel.ElementTemplates: {
         postMessage(
           { type: 'section', label, url, data: content } as MainMessage,
           [content.buffer],
         );
         break;
       }
-      case TemplateSectionLabel.CustomSections: {
+      case BundleSectionLabel.CustomSections: {
         postMessage(
           { type: 'section', label, url, data: content.buffer } as MainMessage,
           {
@@ -278,7 +278,7 @@ async function handleStream(
         );
         break;
       }
-      case TemplateSectionLabel.Manifest: {
+      case BundleSectionLabel.BackgroundThreadScript: {
         const codeMap = decodeBinaryMap(content);
         const blobMap: Record<string, string> = {};
         for (const [key, code] of Object.entries(codeMap)) {
@@ -322,7 +322,7 @@ async function handleJSON(
   );
   postMessage({
     type: 'section',
-    label: TemplateSectionLabel.Configurations,
+    label: BundleSectionLabel.Configurations,
     url,
     data: config,
   } as MainMessage);
@@ -338,7 +338,7 @@ async function handleJSON(
     postMessage(
       {
         type: 'section',
-        label: TemplateSectionLabel.StyleInfo,
+        label: BundleSectionLabel.StyleInfo,
         url,
         data: buffer.buffer,
         config,
@@ -368,7 +368,7 @@ async function handleJSON(
     }
     postMessage({
       type: 'section',
-      label: TemplateSectionLabel.LepusCode,
+      label: BundleSectionLabel.MainThreadScript,
       url,
       data: blobMap,
       config,
@@ -387,7 +387,7 @@ async function handleJSON(
     }
     postMessage({
       type: 'section',
-      label: TemplateSectionLabel.Manifest,
+      label: BundleSectionLabel.BackgroundThreadScript,
       url,
       data: blobMap,
     } as MainMessage);
@@ -402,7 +402,7 @@ async function handleJSON(
     // So passing object is fine!
     postMessage({
       type: 'section',
-      label: TemplateSectionLabel.CustomSections,
+      label: BundleSectionLabel.CustomSections,
       url,
       data: json.customSections,
     } as MainMessage);

@@ -14,7 +14,7 @@ import {
   decode_style_info,
 } from '../binary/encode/encode.js';
 import { encode, TasmJSONInfo } from '../ts/encode/webEncoder.js';
-import { TemplateSectionLabel } from '../ts/constants.js';
+import { BundleSectionLabel } from '../ts/constants.js';
 
 describe('RawStyleInfo', () => {
   test('should encode StyleRule correctly', () => {
@@ -389,7 +389,7 @@ describe('webEncoder', () => {
       offset += 4;
       const length = view.getUint32(offset, true);
       offset += 4;
-      if (label === TemplateSectionLabel.ElementTemplates) {
+      if (label === BundleSectionLabel.ElementTemplates) {
         throw new Error('ElementTemplates section should not be present');
       }
       offset += length;

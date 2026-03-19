@@ -3,4 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 export { createLynxView } from './apis/createLynxView.js';
 export { LynxView } from './apis/LynxView.js';
+/** @deprecated Use {@link LynxBundle} instead. `LynxTemplate` is a legacy name. */
 export type { LynxTemplate } from '@lynx-js/web-constants';
+export type { LynxBundle } from '@lynx-js/web-constants';

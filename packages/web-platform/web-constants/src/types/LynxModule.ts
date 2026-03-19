@@ -18,7 +18,16 @@ export type ElementTemplateData = {
   dataset?: Record<string, string>;
 };
 
-export interface LynxTemplate {
+/**
+ * Represents a Lynx Bundle — the compiled artifact containing all necessary
+ * resources (stylesheet, scripts, serialized element tree) for a Lynx
+ * application to run.
+ *
+ * @remarks
+ * This interface corresponds to the "Bundle" concept in the official Lynx
+ * specification.
+ */
+export interface LynxBundle {
   styleInfo: StyleInfo;
   pageConfig: PageConfig;
   customSections: {
@@ -28,10 +37,27 @@ export interface LynxTemplate {
     };
   };
   cardType?: string;
+  /**
+   * Main Thread Script (MTS) — code that runs on the main thread (UI thread).
+   *
+   * @remarks
+   * In the official Lynx specification this is called "Main Thread Script"
+   * (MTS). The field name `lepusCode` is a legacy artifact that cannot be
+   * renamed as it is part of the wire format.
+   */
   lepusCode: {
     root: string;
     [key: string]: string;
   };
+  /**
+   * Background Thread Script (BTS) — code that runs on the background thread.
+   *
+   * @remarks
+   * In the official Lynx specification this is called "Background Thread
+   * Script" (BTS). The field name `manifest` is a legacy artifact that cannot
+   * be renamed as it is part of the wire format. The key `'/app-service.js'`
+   * is a conventional entry point name for BTS.
+   */
   manifest: {
     '/app-service.js': string;
     [key: string]: string;
@@ -40,6 +66,11 @@ export interface LynxTemplate {
   version?: number;
   appType: 'card' | 'lazy';
 }
+
+/**
+ * @deprecated Use {@link LynxBundle} instead.
+ */
+export type LynxTemplate = LynxBundle;
 
 export type BTSChunkEntry = (
   postMessage: undefined,

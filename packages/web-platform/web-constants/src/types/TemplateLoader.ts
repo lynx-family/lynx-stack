@@ -1,3 +1,11 @@
-import type { LynxTemplate } from './LynxModule.js';
+import type { LynxBundle } from './LynxModule.js';
 
-export type TemplateLoader = (url: string) => Promise<LynxTemplate>;
+/**
+ * Loads a Lynx Bundle from the given URL.
+ */
+export type BundleLoader = (url: string) => Promise<LynxBundle>;
+
+/**
+ * @deprecated Use {@link BundleLoader} instead.
+ */
+export type TemplateLoader = BundleLoader;

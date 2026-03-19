@@ -149,6 +149,7 @@ export interface MainThreadRuntimeConfig {
   pageConfig: PageConfig;
   globalProps: unknown;
   callbacks: MainThreadRuntimeCallbacks;
+  /** The Lynx Bundle (legacy field name: `lynxTemplate`). */
   lynxTemplate: LynxTemplate;
   browserConfig: BrowserConfig;
   tagMap: Record<string, string>;
@@ -678,6 +679,13 @@ export function createMainThreadGlobalThis(
     );
   };
 
+  /**
+   * Loads a Main Thread Script (MTS) chunk by path.
+   *
+   * @remarks
+   * `__LoadLepusChunk` is a legacy function name. "Lepus" is the legacy term
+   * for Main Thread Script (MTS) in the Lynx specification.
+   */
   const __LoadLepusChunk: (path: string) => boolean = (path) => {
     try {
       path = lepusCode?.[path] ?? path;
