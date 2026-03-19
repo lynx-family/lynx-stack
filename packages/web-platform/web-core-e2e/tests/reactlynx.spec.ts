@@ -1705,7 +1705,7 @@ test.describe('reactlynx3 tests', () => {
         });
         await goto(page, title);
         await page.locator('#button').click();
-        await wait(100);
+        await wait(200);
         expect(message).toContain('pass:dataset1');
         expect(message).toContain('pass:dataset2');
       });
