@@ -54,11 +54,14 @@ function createBeforeTree() {
   const root = new SnapshotInstance(ROOT);
 
   const a = new SnapshotInstance(ITEM_A);
+  a.__slotIndex = 0;
   a.setAttribute(0, 'a-old');
   a.setAttribute('meta', 'meta-old');
 
   const b = new SnapshotInstance(ITEM_B);
+  b.__slotIndex = 0;
   const c = new SnapshotInstance(ITEM_C);
+  c.__slotIndex = 0;
 
   root.insertBefore(a);
   root.insertBefore(b);
@@ -71,7 +74,9 @@ function createAfterTree(metaValue) {
   const root = new BackgroundSnapshotInstance(ROOT);
 
   const b = new BackgroundSnapshotInstance(ITEM_B);
+  b.__slotIndex = 0;
   const a = new BackgroundSnapshotInstance(ITEM_A);
+  a.__slotIndex = 0;
   a.setAttribute(0, 'a-new');
   a.setAttribute('meta', metaValue);
 
@@ -84,8 +89,11 @@ function createAfterTree(metaValue) {
 function createBeforeTreeWithDefinedTargetMove() {
   const root = new SnapshotInstance(ROOT);
   const a = new SnapshotInstance(ITEM_A);
+  a.__slotIndex = 0;
   const b = new SnapshotInstance(ITEM_B);
+  b.__slotIndex = 0;
   const c = new SnapshotInstance(ITEM_C);
+  c.__slotIndex = 0;
 
   root.insertBefore(a);
   root.insertBefore(b);
@@ -97,8 +105,11 @@ function createBeforeTreeWithDefinedTargetMove() {
 function createAfterTreeWithDefinedTargetMove() {
   const root = new BackgroundSnapshotInstance(ROOT);
   const b = new BackgroundSnapshotInstance(ITEM_B);
+  b.__slotIndex = 0;
   const a = new BackgroundSnapshotInstance(ITEM_A);
+  a.__slotIndex = 0;
   const c = new BackgroundSnapshotInstance(ITEM_C);
+  c.__slotIndex = 0;
 
   root.insertBefore(b);
   root.insertBefore(a);
@@ -223,7 +234,7 @@ describe('backgroundSnapshot profile', () => {
           }),
           expect.objectContaining({
             op: SnapshotOperation.InsertBefore,
-            args: [before.id, before.children[0].id, undefined, undefined],
+            args: [before.id, before.children[0].id, undefined, 0],
           }),
         ]),
       );

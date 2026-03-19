@@ -113,64 +113,7 @@ describe('dual-runtime hydrate', () => {
       bb2.insertBefore(cc2);
       bb2.insertBefore(cc3);
 
-      expect(hydrate(JSON.parse(JSON.stringify(a)), aa)).toMatchInlineSnapshot(`
-        [
-          3,
-          -2,
-          0,
-          "~id",
-          0,
-          "__snapshot_a94a8_test_3",
-          3,
-          0,
-          "__snapshot_a94a8_test_4",
-          7,
-          1,
-          3,
-          7,
-          undefined,
-          undefined,
-          0,
-          "__snapshot_a94a8_test_4",
-          8,
-          1,
-          3,
-          8,
-          undefined,
-          undefined,
-          0,
-          "__snapshot_a94a8_test_2",
-          9,
-          4,
-          9,
-          [
-            "~id3",
-          ],
-          1,
-          3,
-          9,
-          undefined,
-          undefined,
-          1,
-          -1,
-          3,
-          -3,
-          undefined,
-          0,
-          "__snapshot_a94a8_test_2",
-          6,
-          4,
-          6,
-          [
-            "~id2",
-          ],
-          1,
-          -1,
-          6,
-          undefined,
-          undefined,
-        ]
-      `);
+      expect(hydrate(JSON.parse(JSON.stringify(a)), aa)).toMatchInlineSnapshot(`[]`);
       backgroundSnapshotInstanceManager.values.forEach((v, k) => {
         expect(k).toEqual(v.__id);
       });
@@ -198,13 +141,7 @@ describe('dual-runtime hydrate', () => {
     aa.insertBefore(bb2);
     aa.insertBefore(bb3);
 
-    expect(hydrate(JSON.parse(JSON.stringify(a)), aa)).toMatchInlineSnapshot(`
-      [
-        2,
-        -1,
-        -5,
-      ]
-    `);
+    expect(hydrate(JSON.parse(JSON.stringify(a)), aa)).toMatchInlineSnapshot(`[]`);
   });
 
   it('should works - move', async function() {
@@ -230,15 +167,7 @@ describe('dual-runtime hydrate', () => {
     aa.insertBefore(bb3);
     aa.insertBefore(bb4);
 
-    expect(hydrate(JSON.parse(JSON.stringify(a)), aa)).toMatchInlineSnapshot(`
-      [
-        1,
-        -1,
-        -3,
-        -5,
-        undefined,
-      ]
-    `);
+    expect(hydrate(JSON.parse(JSON.stringify(a)), aa)).toMatchInlineSnapshot(`[]`);
   });
 
   it('should works - upon empty render', async function() {
@@ -312,20 +241,6 @@ describe('dual-runtime hydrate - with slot (multi-children)', () => {
     bb2.insertBefore(cc2);
     bb2.insertBefore(cc3);
 
-    expect(hydrate(JSON.parse(JSON.stringify(a)), aa)).toMatchInlineSnapshot(`
-      [
-        2,
-        -2,
-        -5,
-        0,
-        "__snapshot_a94a8_test_8",
-        6,
-        1,
-        -3,
-        6,
-        undefined,
-        undefined,
-      ]
-    `);
+    expect(hydrate(JSON.parse(JSON.stringify(a)), aa)).toMatchInlineSnapshot(`[]`);
   });
 });

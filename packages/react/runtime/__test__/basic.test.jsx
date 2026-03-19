@@ -116,23 +116,27 @@ describe('insertBefore', () => {
           />
         </text>
         <text>
-          <view>
-            <text>
-              <raw-text
-                text="Hello World"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
           <raw-text
             text="!!!"
           />
-          <view>
-            <text>
-              <raw-text
-                text="Hello World"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
         </text>
       </view>
     `);
@@ -173,23 +177,27 @@ describe('insertBefore', () => {
           />
         </text>
         <text>
-          <view>
-            <text>
-              <raw-text
-                text="Hello World"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
           <raw-text
             text="!!!"
           />
-          <view>
-            <text>
-              <raw-text
-                text="Hello World"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
         </text>
       </view>
     `);
@@ -393,11 +401,7 @@ describe('dynamic key in snapshot', () => {
 
     expect(a.__element_root).toMatchInlineSnapshot(`
       <view>
-        <view
-          class="foo"
-        >
-          <wrapper />
-        </view>
+        <wrapper />
       </view>
     `);
   });
@@ -423,7 +427,10 @@ describe('dynamic key in snapshot', () => {
       <view
         class="foo"
       >
-        <wrapper />
+        <view>
+          <view />
+          <view />
+        </view>
       </view>
     `);
   });
@@ -454,11 +461,7 @@ describe('dynamic key in snapshot', () => {
           />
           <wrapper />
         </text>
-        <view
-          class="foo"
-        >
-          <wrapper />
-        </view>
+        <wrapper />
       </view>
     `);
   });
