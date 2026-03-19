@@ -145,8 +145,7 @@ export NODE_OPTIONS="--max-old-space-size=32768"
 - `packages/web-platform/` - **Lynx for Web**: Web platform implementation
   - `web-core/` - Core web runtime
   - `web-elements/` - DOM element implementations
-  - `web-worker-runtime/` - Web worker support
-  - `web-tests/` - E2E test suite (Playwright)
+  - `web-core-e2e` - e2e tests
 
 - `packages/testing-library/` - Testing infrastructure
 - `packages/tools/` - Build and development utilities
