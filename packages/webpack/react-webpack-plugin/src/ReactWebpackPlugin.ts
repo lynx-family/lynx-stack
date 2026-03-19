@@ -157,7 +157,32 @@ class ReactWebpackPlugin {
     );
     const { BannerPlugin, DefinePlugin, EnvironmentPlugin } = compiler.webpack;
 
-    if (!options.experimental_isLazyBundle) {
+    if (options.experimental_isLazyBundle) {
+      // We use two BannerPlugins to wrap the lazy bundle.
+      // The stage is set to 401 (OPTIMIZE_SIZE + 1).
+      // - If stage is too low (e.g. Stage <=400), the minifier hasn't run and the asset might be empty for lazy bundles.
+      // - If stage is too high (e.g. Stage >=500), it runs after sourcemap finalization or TASM encoding hooks,
+      //   resulting in empty or misaligned sourcemaps in the final output.
+      // 401 is the "sweet spot": after minification, but ahead of mapping and encoding hooks.
+      const stage =
+        compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE + 1;
+
+      new BannerPlugin({
+        banner:
+          `(function (globDynamicComponentEntry) {\n  const module = { exports: {} }\n  const exports = module.exports;\n`,
+        raw: true,
+        stage,
+        test: options.mainThreadChunks!,
+      }).apply(compiler);
+
+      new BannerPlugin({
+        banner: `\n  ;return module.exports\n})`,
+        footer: true,
+        raw: true,
+        stage,
+        test: options.mainThreadChunks!,
+      }).apply(compiler);
+    } else {
       new BannerPlugin({
         // TODO: handle cases that do not have `'use strict'`
         banner:
@@ -262,7 +287,7 @@ class ReactWebpackPlugin {
       // @ts-expect-error Rspack x Webpack compilation not match
       const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
 
-      const { RawSource, ConcatSource } = compiler.webpack.sources;
+      const { RawSource } = compiler.webpack.sources;
       hooks.beforeEncode.tap(
         this.constructor.name,
         (args) => {
@@ -286,38 +311,6 @@ class ReactWebpackPlugin {
           return args;
         },
       );
-
-      // Inject `module.exports` for async main-thread chunks
-      hooks.beforeEncode.tap(this.constructor.name, (args) => {
-        const { encodeData } = args;
-
-        // A lazy bundle may not have main-thread code
-        if (!encodeData.lepusCode.root) {
-          return args;
-        }
-
-        if (encodeData.sourceContent.appType === 'card') {
-          return args;
-        }
-
-        // We inject `module.exports` for each async template.
-        compilation.updateAsset(
-          encodeData.lepusCode.root.name,
-          (old) =>
-            new ConcatSource(
-              `\
-(function (globDynamicComponentEntry) {
-  const module = { exports: {} }
-  const exports = module.exports;
-`,
-              old,
-              `
-  ;return module.exports
-})`,
-            ),
-        );
-        return args;
-      });
 
       // The react-transform will add `-react__${LAYER}` to the webpackChunkName.
       // We replace it with an empty string here to make sure main-thread & background chunk match.
