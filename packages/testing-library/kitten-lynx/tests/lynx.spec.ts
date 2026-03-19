@@ -42,6 +42,7 @@ describe('kitten-lynx testing framework', () => {
             const entryName = Object.keys(entries)[0] || 'main';
             bundlePath = '/'
               + name.replace('[name]', entryName).replace('[platform]', 'lynx');
+            console.log(bundlePath);
           });
         },
       },
