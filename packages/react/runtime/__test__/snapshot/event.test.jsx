@@ -324,7 +324,7 @@ describe('eventUpdate', () => {
         -2,
         3,
         undefined,
-        0,
+        undefined,
       ]
     `);
     globalEnvManager.switchToMainThread();
@@ -955,7 +955,7 @@ describe('event in spread', () => {
         -2,
         3,
         undefined,
-        0,
+        undefined,
       ]
     `);
     globalEnvManager.switchToMainThread();
