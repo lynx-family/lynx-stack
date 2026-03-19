@@ -4,6 +4,7 @@
 
 ```ts
 
+import { Children } from 'react';
 import { cloneElement } from 'react';
 import { Component } from 'react';
 import type { ComponentClass } from 'react';
@@ -33,6 +34,8 @@ import { useReducer } from 'react';
 import { useRef } from 'react';
 import { useState } from 'react';
 import { useSyncExternalStore } from 'react';
+
+export { Children }
 
 export { cloneElement }
 
