@@ -36,7 +36,6 @@
   },
   "devDependencies": {
     "@lynx-js/preact-devtools": "^5.0.1",
-    "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",

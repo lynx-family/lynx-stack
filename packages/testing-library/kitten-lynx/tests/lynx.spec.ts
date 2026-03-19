@@ -8,13 +8,13 @@ import os from 'node:os';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Using Rspeedy Node API resolving instead of child_process
-
-import { execSync } from 'node:child_process';
+import { AdbServerClient } from '@yume-chan/adb';
+import { AdbServerNodeTcpConnector } from '@yume-chan/adb-server-node-tcp';
 
 describe('kitten-lynx testing framework', () => {
   let lynx: Lynx;
   let devServer: any;
+  let adb: any;
   let bundleUrl: string;
   let devPort: number;
 
@@ -56,7 +56,16 @@ describe('kitten-lynx testing framework', () => {
 
     // Use ADB port forwarding
     try {
-      execSync(`adb reverse tcp:${devPort} tcp:${devPort}`);
+      const client = new AdbServerClient(
+        new AdbServerNodeTcpConnector({ port: 5037 }),
+      );
+      const devices = await client.getDevices();
+      const connectedDevice = devices.find(d => d.state === 'device')
+        || devices[0];
+      if (connectedDevice) {
+        adb = await client.createAdb({ serial: connectedDevice.serial });
+        await adb.reverse.addExternal(`tcp:${devPort}`, `tcp:${devPort}`);
+      }
     } catch (e) {
       console.warn(`Failed to run adb reverse for port ${devPort}`, e);
     }
@@ -68,7 +77,10 @@ describe('kitten-lynx testing framework', () => {
 
   afterAll(async () => {
     try {
-      execSync(`adb reverse --remove tcp:${devPort}`);
+      if (adb) {
+        await adb.reverse.remove(`tcp:${devPort}`);
+        await adb.close();
+      }
     } catch (e) {
       // Ignore
     }
