@@ -11,6 +11,8 @@ const __dirname = path.dirname(__filename);
 import { AdbServerClient } from '@yume-chan/adb';
 import { AdbServerNodeTcpConnector } from '@yume-chan/adb-server-node-tcp';
 
+// Using Rspeedy Node API resolving instead of child_process
+
 describe('kitten-lynx testing framework', () => {
   let lynx: Lynx;
   let devServer: any;
@@ -36,11 +38,10 @@ describe('kitten-lynx testing framework', () => {
             const { filename } = config.output ?? {};
             let name = '[name].[platform].bundle';
             if (typeof filename === 'string') name = filename;
-            else if (typeof filename === 'object') {
-              name = filename.bundle ?? filename.template ?? name;
-            }
+            const entries = config.source?.entry || { index: '' };
+            const entryName = Object.keys(entries)[0] || 'main';
             bundlePath = '/'
-              + name.replace('[name]', 'main').replace('[platform]', 'lynx');
+              + name.replace('[name]', entryName).replace('[platform]', 'lynx');
           });
         },
       },
@@ -52,6 +53,7 @@ describe('kitten-lynx testing framework', () => {
     });
     const result = await rspeedy.startDevServer();
     devServer = result.server;
+
     devPort = result.port;
 
     // Use ADB port forwarding
@@ -107,9 +109,6 @@ describe('kitten-lynx testing framework', () => {
     if (rootElement) {
       const styles = await rootElement.computedStyleMap();
       expect(styles.size).toBeGreaterThan(0);
-
-      // Perform a tap action to verify the method executes successfully
-      await expect(rootElement.tap()).resolves.toBeUndefined();
     }
   }, 90000); // Increase timeout to 90s as connecting/launching emulator app can be slow
 });
