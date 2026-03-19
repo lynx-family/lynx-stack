@@ -2,14 +2,28 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { ToolsConfig } from '@rsbuild/core'
-import type { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin'
+import type { RsdoctorRspackPluginOptions as RawRsdoctorRspackPluginOptions } from '@rsdoctor/core'
 
 import type { CssExtract } from './css-extract.js'
 import type { CssLoader } from './css-loader.js'
 
-export type RsdoctorRspackPluginOptions = ConstructorParameters<
-  typeof RsdoctorRspackPlugin<[]>
->[0]
+/**
+ * Simplified options type for `tools.rsdoctor`.
+ *
+ * Keep this type free of deeply nested/intersection utility types to ensure
+ * typia can generate validators from `Config`.
+ *
+ * @public
+ */
+export interface RsdoctorRspackPluginOptions
+  extends Omit<RawRsdoctorRspackPluginOptions<[]>, 'linter'>
+{
+  linter?: {
+    rules?: Record<string, unknown>
+    level?: 'Ignore' | 'Warn' | 'Error'
+    extends?: unknown[]
+  }
+}
 
 /**
  * {@inheritdoc Config.tools}

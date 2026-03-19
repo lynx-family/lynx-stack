@@ -61,12 +61,13 @@
     "@lynx-js/websocket": "workspace:^",
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-css-minimizer": "1.1.1",
-    "@rsdoctor/rspack-plugin": "1.2.3"
+    "@rsdoctor/rspack-plugin": "~1.5.6"
   },
   "devDependencies": {
     "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@rollup/plugin-typescript": "^12.3.0",
+    "@rsdoctor/core": "~1.5.6",
     "chokidar": "^4.0.3",
     "commander": "^13.1.0",
     "eventemitter3": "^5.0.4",
