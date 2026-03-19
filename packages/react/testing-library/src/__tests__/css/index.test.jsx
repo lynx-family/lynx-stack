@@ -34,7 +34,7 @@ describe('CSS', () => {
     `);
   });
   it('should render a component with CSS module styles object', () => {
-    // to be an string
+    // to be a string
     expect(style3.baz).toBeTypeOf('string');
 
     const TestComponent = () => <text style={style3.baz}>Hello World</text>;
