@@ -108,7 +108,6 @@
       "types": "./testing-library/dist/rstest-adapter.d.ts",
       "default": "./testing-library/dist/rstest-adapter.js"
     },
-    "./testing-library/setupFiles/rstest": "./testing-library/dist/setupFiles/rstest.js",
     "./package.json": "./package.json"
   },
   "types": "./types/react.d.ts",

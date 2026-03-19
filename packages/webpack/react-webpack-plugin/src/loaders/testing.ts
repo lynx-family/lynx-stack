@@ -18,7 +18,13 @@ function testingLoader(
   content: string,
 ): void {
   const require = createRequire(import.meta.url);
-  const { transformPath = '@lynx-js/react/transform' } = this.getOptions();
+  const {
+    compat = false,
+    defineDCE = { define: {} },
+    engineVersion = '',
+    shake = false,
+    transformPath = '@lynx-js/react/transform',
+  } = this.getOptions();
   const { transformReactLynxSync } = require(
     transformPath,
   ) as typeof import('@lynx-js/react/transform');
@@ -44,9 +50,10 @@ function testingLoader(
       },
       // snapshot: true,
       directiveDCE: false,
-      defineDCE: false,
-      shake: false,
-      compat: false,
+      defineDCE,
+      shake,
+      compat,
+      engineVersion,
       worklet: {
         filename,
         runtimePkg: RUNTIME_PKG,

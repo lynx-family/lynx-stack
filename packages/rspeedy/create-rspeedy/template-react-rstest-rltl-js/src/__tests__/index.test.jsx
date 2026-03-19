@@ -75,7 +75,7 @@ test('App', async () => {
               <text
                 style="font-style:italic;color:rgba(255, 255, 255, 0.85)"
               >
-                 src/App.tsx 
+                 src/App.jsx 
               </text>
               to see updates!
             </text>

@@ -21,7 +21,7 @@ export default defineConfig({
   },
   testEnvironment: 'jsdom',
   setupFiles: [
-    require.resolve('@lynx-js/react/testing-library/setupFiles/rstest'),
+    require.resolve('./src/setupFiles/rstest.js'),
   ],
   globals: true,
   resolve: {

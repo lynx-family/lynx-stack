@@ -12,15 +12,16 @@ import { GlobalEventEmitter } from './lynx/GlobalEventEmitter.js';
 export { initElementTree } from './lynx/ElementPAPI.js';
 export type { LynxElement } from './lynx/ElementPAPI.js';
 export type { LynxGlobalThis } from './lynx/GlobalThis.js';
+
+/**
+ * The host environment used to initialize `LynxTestingEnv`.
+ *
+ * @public
+ */
 export interface LynxEnv {
   window: Window & typeof globalThis;
 }
 
-type LynxEnvironmentGlobal = typeof globalThis & {
-  lynxEnv?: LynxEnv;
-  lynxTestingEnv?: LynxTestingEnv;
-  Node?: typeof Node;
-};
 /**
  * @public
  * The lynx element tree
@@ -63,8 +64,17 @@ declare global {
   function onInitWorkletRuntime(): void;
 }
 
+/**
+ * Installs a `LynxTestingEnv` instance and its required globals onto a target.
+ *
+ * @public
+ */
 export function installLynxTestingEnv(
-  target: LynxEnvironmentGlobal,
+  target: typeof globalThis & {
+    lynxEnv?: LynxEnv;
+    lynxTestingEnv?: LynxTestingEnv;
+    Node?: typeof Node;
+  },
   env: LynxEnv,
 ): void {
   target.lynxEnv = env;
@@ -72,8 +82,17 @@ export function installLynxTestingEnv(
   target.Node = env.window.Node;
 }
 
+/**
+ * Removes the globals installed by `installLynxTestingEnv`.
+ *
+ * @public
+ */
 export function uninstallLynxTestingEnv(
-  target: LynxEnvironmentGlobal,
+  target: typeof globalThis & {
+    lynxEnv?: LynxEnv;
+    lynxTestingEnv?: LynxTestingEnv;
+    Node?: typeof Node;
+  },
 ): void {
   delete target.lynxTestingEnv;
   delete target.lynxEnv;
