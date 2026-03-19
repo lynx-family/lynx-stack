@@ -273,14 +273,14 @@ describe('suspense', () => {
             "childId": 3,
             "op": "InsertBefore",
             "parentId": 2,
-            "slotIndex": 0,
+            "slotIndex": null,
           },
           {
             "beforeId": null,
             "childId": 2,
             "op": "InsertBefore",
             "parentId": -1,
-            "slotIndex": 0,
+            "slotIndex": null,
           },
           {
             "childId": -3,
@@ -297,14 +297,14 @@ describe('suspense', () => {
             "childId": 7,
             "op": "InsertBefore",
             "parentId": 3,
-            "slotIndex": 0,
+            "slotIndex": null,
           },
           {
             "beforeId": null,
             "childId": 2,
             "op": "InsertBefore",
             "parentId": -1,
-            "slotIndex": 0,
+            "slotIndex": null,
           },
         ]
       `);

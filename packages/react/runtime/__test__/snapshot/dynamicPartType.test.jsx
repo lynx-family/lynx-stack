@@ -10,6 +10,7 @@ import { elementTree } from '../utils/nativeMethod';
 import { prettyFormatSnapshotPatch } from '../../src/debug/formatPatch';
 import { renderOpcodesInto } from '../../src/opcodes';
 import renderToString from '../../src/renderToOpcodes';
+import { clearListGlobal, gRecycleMap, gSignMap } from '../../src/list';
 import { jsx } from '../../lepus/jsx-runtime';
 import { globalEnvManager } from '../utils/envManager';
 
@@ -17,6 +18,7 @@ const HOLE = null;
 
 afterEach(() => {
   elementTree.clear();
+  clearListGlobal();
 });
 
 describe('legacy DynamicPartType should work', () => {
@@ -123,37 +125,37 @@ describe('legacy DynamicPartType should work', () => {
       expect(prettyFormatSnapshotPatch(backgroundHydrate(JSON.parse(JSON.stringify(a)), aa))).toMatchInlineSnapshot(`
         [
           {
-            "childId": -7,
+            "childId": -11,
             "op": "RemoveChild",
-            "parentId": -6,
+            "parentId": -10,
           },
           {
             "id": 3,
             "op": "CreateElement",
-            "type": "__Card__:__snapshot_a94a8_test_3",
+            "type": "__snapshot_a94a8_test_3",
           },
           {
             "beforeId": undefined,
             "childId": 3,
             "op": "InsertBefore",
-            "parentId": -6,
+            "parentId": -10,
             "slotIndex": undefined,
           },
           {
-            "childId": -9,
+            "childId": -13,
             "op": "RemoveChild",
-            "parentId": -8,
+            "parentId": -12,
           },
           {
             "id": 5,
             "op": "CreateElement",
-            "type": "__Card__:__snapshot_a94a8_test_4",
+            "type": "__snapshot_a94a8_test_4",
           },
           {
             "beforeId": undefined,
             "childId": 5,
             "op": "InsertBefore",
-            "parentId": -8,
+            "parentId": -12,
             "slotIndex": undefined,
           },
         ]
@@ -364,7 +366,7 @@ describe('legacy DynamicPartType should work', () => {
             "__slotIndex": undefined,
             "children": undefined,
             "extraProps": undefined,
-            "id": -22,
+            "id": -26,
             "type": "__Card__:s0",
             "values": undefined,
           },
@@ -414,7 +416,7 @@ describe('legacy DynamicPartType should work', () => {
             "__slotIndex": undefined,
             "children": undefined,
             "extraProps": undefined,
-            "id": -26,
+            "id": -30,
             "type": "__Card__:s0",
             "values": undefined,
           },
@@ -424,8 +426,8 @@ describe('legacy DynamicPartType should work', () => {
             "__slotIndex": undefined,
             "children": undefined,
             "extraProps": undefined,
-            "id": -25,
-            "type": "__Card__:__snapshot_a94a8_test_7",
+            "id": -29,
+            "type": "__snapshot_a94a8_test_7",
             "values": undefined,
           },
           0,
@@ -455,5 +457,195 @@ describe('legacy DynamicPartType should work', () => {
         </page>
       `);
     });
+  });
+});
+
+describe('DynamicPartType v2 should work', () => {
+  const slotV2Host = ReactLynx.createSnapshot(
+    'slot_v2_host',
+    function() {
+      const pageId = ReactLynx.__pageId;
+      const el = __CreateView(pageId);
+      return [el];
+    },
+    null,
+    [
+      [
+        ReactLynx.__DynamicPartSlotV2,
+        0,
+      ],
+    ],
+    undefined,
+    globDynamicComponentEntry,
+    null,
+  );
+
+  const listSlotV2Host = ReactLynx.createSnapshot(
+    'list_slot_v2_host',
+    function() {
+      const pageId = ReactLynx.__pageId;
+      const el = __CreateElement('list', pageId);
+      return [el];
+    },
+    null,
+    [
+      [
+        ReactLynx.__DynamicPartListSlotV2,
+        0,
+      ],
+    ],
+    undefined,
+    globDynamicComponentEntry,
+    null,
+  );
+
+  const slotTextA = __SNAPSHOT__(<text>A</text>);
+  const slotTextB = __SNAPSHOT__(<text>B</text>);
+  const listItemA = __SNAPSHOT__(
+    <list-item>
+      <text>A</text>
+    </list-item>,
+  );
+  const listItemB = __SNAPSHOT__(
+    <list-item>
+      <text>B</text>
+    </list-item>,
+  );
+
+  it('renderToString should treat named children props as slot children', () => {
+    const opcodes = renderToString(
+      jsx(slotV2Host, {
+        $0: <text>named child</text>,
+      }),
+    );
+
+    expect(opcodes).toEqual([
+      0,
+      expect.objectContaining({
+        type: '__Card__:slot_v2_host',
+      }),
+      0,
+      0,
+      expect.objectContaining({
+        type: expect.stringMatching(/^__snapshot_/),
+      }),
+      0,
+      1,
+      1,
+    ]);
+  });
+
+  it('hydrate should diff SlotV2 children by slot index', () => {
+    setupPage(__CreatePage('0', 0));
+
+    const before = new SnapshotInstance(slotV2Host);
+    before.ensureElements();
+
+    const beforeChild = new SnapshotInstance(slotTextA);
+    beforeChild.__slotIndex = 0;
+    before.insertBefore(beforeChild);
+
+    expect(before.__element_root).toMatchInlineSnapshot(`
+      <view>
+        <text>
+          <raw-text
+            text="A"
+          />
+        </text>
+      </view>
+    `);
+
+    const after = new SnapshotInstance(slotV2Host);
+    const afterChild = new SnapshotInstance(slotTextB);
+    afterChild.__slotIndex = 0;
+    after.insertBefore(afterChild);
+
+    hydrate(before, after);
+
+    expect(before.__element_root).toMatchInlineSnapshot(`
+      <view>
+        <text>
+          <raw-text
+            text="B"
+          />
+        </text>
+      </view>
+    `);
+  });
+
+  it('background hydrate should diff SlotV2 children by slot index', () => {
+    setupPage(__CreatePage('0', 0));
+
+    const before = new SnapshotInstance(slotV2Host);
+    const beforeChild = new SnapshotInstance(slotTextA);
+    beforeChild.__slotIndex = 0;
+    before.insertBefore(beforeChild);
+
+    const after = new BackgroundSnapshotInstance(slotV2Host);
+    const afterChild = new BackgroundSnapshotInstance(slotTextB);
+    afterChild.__slotIndex = 0;
+    after.insertBefore(afterChild);
+
+    const patch = prettyFormatSnapshotPatch(
+      backgroundHydrate(JSON.parse(JSON.stringify(before)), after),
+    );
+
+    expect(patch).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          op: 'RemoveChild',
+          parentId: before.__id,
+          childId: before.childNodes[0].__id,
+        }),
+        expect.objectContaining({
+          op: 'CreateElement',
+          type: slotTextB,
+        }),
+        expect.objectContaining({
+          op: 'InsertBefore',
+          parentId: before.__id,
+          beforeId: undefined,
+          slotIndex: 0,
+        }),
+      ]),
+    );
+  });
+
+  it('hydrate should diff ListSlotV2 children by slot index', () => {
+    setupPage(__CreatePage('0', 0));
+
+    const before = new SnapshotInstance(listSlotV2Host);
+    before.ensureElements();
+
+    const listID = __GetElementUniqueID(before.__element_root);
+    gSignMap[listID] = new Map();
+    gRecycleMap[listID] = new Map();
+
+    const beforeChild = new SnapshotInstance(listItemA);
+    beforeChild.__slotIndex = 0;
+    beforeChild.__listItemPlatformInfo = { 'item-key': 0 };
+    before.insertBefore(beforeChild);
+
+    const after = new SnapshotInstance(listSlotV2Host);
+    const afterChild = new SnapshotInstance(listItemB);
+    afterChild.__slotIndex = 0;
+    afterChild.__listItemPlatformInfo = { 'item-key': 0 };
+    after.insertBefore(afterChild);
+
+    hydrate(before, after);
+
+    expect(__GetAttributeByName(before.__element_root, 'update-list-info')).toEqual([
+      {
+        insertAction: [
+          {
+            position: 0,
+            type: listItemB,
+            'item-key': 0,
+          },
+        ],
+        removeAction: [0],
+        updateAction: [],
+      },
+    ]);
   });
 });

@@ -967,7 +967,7 @@ describe('renderOpcodesInto', () => {
       </page>
     `);
 
-    const [vnodeA, vnodeB, vnodeC, vnodeC2, vnodeD] = scratch.__firstChild.props.$0;
+    const [vnodeA, vnodeB, vnodeC, vnodeC2, vnodeD] = scratch.__firstChild.props.children;
 
     expect(vnodeA).not.toHaveProperty('__elements');
     expect(vnodeA).not.toHaveProperty('__element_root');
@@ -979,7 +979,7 @@ describe('renderOpcodesInto', () => {
     expect(vnodeD).not.toHaveProperty('__element_root');
 
     {
-      const componentVNodeC = vnodeC2.props.$0;
+      const componentVNodeC = vnodeC2.props.children;
       expect(componentVNodeC.type).toBe(Fragment);
       expect(componentVNodeC.props.children).toHaveLength(4);
       // FIXME(hzy): there is still a cycle reference
@@ -990,8 +990,8 @@ describe('renderOpcodesInto', () => {
       });
     }
 
-    expect(vnodeD.props.$0).toHaveLength(4);
-    vnodeD.props.$0.forEach((vnode) => {
+    expect(vnodeD.props.children).toHaveLength(4);
+    vnodeD.props.children.forEach((vnode) => {
       expect(vnode).not.toHaveProperty('__elements');
       expect(vnode).not.toHaveProperty('__element_root');
     });
