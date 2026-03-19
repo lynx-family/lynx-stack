@@ -866,7 +866,7 @@ class LynxTemplatePluginImpl {
 
     if (isDebug() || isDev) {
       compilation.emitAsset(
-        path.format({
+        path.posix.format({
           dir: intermediate,
           base: 'tasm.json',
         }),
@@ -877,7 +877,7 @@ class LynxTemplatePluginImpl {
       Object.entries(resolvedEncodeOptions.lepusCode.lepusChunk).forEach(
         ([name, content]) => {
           compilation.emitAsset(
-            path.format({
+            path.posix.format({
               dir: intermediate,
               name,
               ext: '.js',
