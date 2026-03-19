@@ -223,7 +223,7 @@ describe('backgroundSnapshot profile', () => {
           }),
           expect.objectContaining({
             op: SnapshotOperation.InsertBefore,
-            args: [before.id, before.children[0].id, undefined],
+            args: [before.id, before.children[0].id, undefined, undefined],
           }),
         ]),
       );

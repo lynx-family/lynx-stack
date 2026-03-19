@@ -24,8 +24,7 @@ export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: 
         childrenRef.current = bsi;
       }
     },
-    $0: children,
-  });
+  }, children);
 
   const newFallback = __createElement('wrapper', {
     ref: (bsi: BackgroundSnapshotInstance) => {
@@ -37,8 +36,7 @@ export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: 
         childrenRef.current = undefined;
       }
     },
-    $0: fallback,
-  });
+  }, fallback);
 
   return __createElement(PreactSuspense, { fallback: newFallback }, newChildren);
 };
