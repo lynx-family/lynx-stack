@@ -12,6 +12,9 @@ vi.stubGlobal("__RenderContent", (vnode) => {
       children[+(key.slice(1))] = vnode.props[key];
     }
   }
+  if (children != null && !Array.isArray(children)) {
+    children = [children];
+  }
   createFn(children);
   return vnode;
 });
