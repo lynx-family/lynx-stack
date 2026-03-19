@@ -116,6 +116,43 @@ describe('Children', () => {
       expect(results[0].type).toBe('wrapper');
       expect(results[1].type).toBe('wrapper');
     });
+
+    describe('dev mode freeze behavior', () => {
+      it('should freeze the returned array in dev mode', () => {
+        const children = [
+          createElement('div', { key: '1' }),
+          createElement('span', { key: '2' }),
+        ];
+        const results = Children.map(children, (child) => child);
+        expect(Object.isFrozen(results)).toBe(true);
+      });
+
+      it('should throw when trying to push into mapped result', () => {
+        'use strict';
+        const children = [createElement('div', { key: '1' })];
+        const results = Children.map(children, (child) => child);
+
+        expect(() => {
+          results.push(createElement('span', { key: '2' }));
+        }).toThrow();
+      });
+
+      it('should allow non-mutating operations on mapped result', () => {
+        const children = [
+          createElement('div', { key: '1' }),
+          createElement('span', { key: '2' }),
+        ];
+        const results = Children.map(children, (child) => child);
+
+        // spread into a new array is fine
+        const extended = [...results, createElement('p', { key: '3' })];
+        expect(extended).toHaveLength(3);
+
+        // .filter returns a new (unfrozen) array
+        const filtered = results.filter((child) => child.type === 'div');
+        expect(filtered).toHaveLength(1);
+      });
+    });
   });
 
   describe('Children.toArray', () => {

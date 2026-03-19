@@ -8,9 +8,14 @@ import { Children as PreactChildren } from 'preact/compat';
 /**
  * Wrapped `Children` utilities.
  *
- * All methods delegate to Preact's `Children` except `toArray`, which
- * `Object.freeze`s the result in `__DEV__` to surface accidental mutations
- * (push / splice / sort) that break compile-time snapshot optimizations.
+ * `toArray` and `map` `Object.freeze` their returned arrays in `__DEV__` to
+ * surface accidental mutations (push / splice / sort) that break compile-time
+ * snapshot optimizations.
+ *
+ * **Known difference from React:** `forEach` delegates to Preact's
+ * implementation, which returns an array (same as `map`) instead of
+ * `undefined`. This is a Preact quirk and will not be fixed upstream.
+ * Callers should not rely on the return value.
  */
 export const Children: {
   forEach: typeof PreactChildren.forEach;
@@ -20,9 +25,16 @@ export const Children: {
   toArray: (children: ComponentChild | ComponentChild[]) => readonly any[];
 } = {
   forEach: PreactChildren.forEach,
-  map: PreactChildren.map,
   count: PreactChildren.count,
   only: PreactChildren.only,
+
+  map(children: any, fn: any): any[] {
+    const arr = PreactChildren.map(children, fn);
+    if (__DEV__) {
+      Object.freeze(arr);
+    }
+    return arr;
+  },
 
   toArray(children: any): readonly any[] {
     const arr = PreactChildren.toArray(children);
