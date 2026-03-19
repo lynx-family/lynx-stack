@@ -174,7 +174,7 @@
     "api-extractor": "api-extractor run --verbose"
   },
   "dependencies": {
-    "preact": "npm:@lynx-js/internal-preact@10.28.4-ee7bb26"
+    "preact": "https://pkg.pr.new/lynx-family/internal-preact/preact@b28bfc1"
   },
   "devDependencies": {
     "@lynx-js/types": "3.7.0",
