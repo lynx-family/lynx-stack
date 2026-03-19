@@ -30,12 +30,15 @@ import { COMMIT } from '../../renderToOpcodes/constants.js';
 import { applyQueuedRefs } from '../../snapshot/ref.js';
 import { backgroundSnapshotInstanceManager, traverseSnapshotInstance } from '../../snapshot.js';
 import { hook, isEmptyObject } from '../../utils.js';
-import { takeWorkletRefInitValuePatch } from '../../worklet/workletRefPool.js';
+import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValue.js';
 import { getReloadVersion } from '../pass.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
-import { profileEnd, profileStart } from '../../debug/utils.js';
-import { delayedRunOnMainThreadData, takeDelayedRunOnMainThreadData } from '../../worklet/runOnMainThread.js';
+import { profileEnd, profileStart } from '../../debug/profile.js';
+import {
+  delayedRunOnMainThreadData,
+  takeDelayedRunOnMainThreadData,
+} from '../../worklet/call/delayedRunOnMainThreadData.js';
 import { isRendering } from '../isRendering.js';
 
 let globalFlushOptions: FlushOptions = {};
@@ -58,7 +61,6 @@ interface Patch {
   // TODO: ref: do we need `id`?
   id: number;
   snapshotPatch?: SnapshotPatch;
-  workletRefInitValuePatch?: [id: number, value: unknown][];
 }
 
 /**
@@ -114,7 +116,7 @@ function replaceCommitHook(): void {
       commitQueue,
     ) => {
       // Skip commit phase for MT runtime
-      if (__MAIN_THREAD__) {
+      if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
         // for testing only
         commitQueue.length = 0;
         return;
@@ -143,12 +145,13 @@ function replaceCommitHook(): void {
         }
       });
 
+      sendMTRefInitValueToMainThread();
+
       // Collect patches for this update
       const snapshotPatch = takeGlobalSnapshotPatch();
       const flushOptions = takeGlobalFlushOptions();
       const patchOptions = takeGlobalPatchOptions();
-      const workletRefInitValuePatch = takeWorkletRefInitValuePatch();
-      if (!snapshotPatch && workletRefInitValuePatch.length === 0) {
+      if (!snapshotPatch) {
         // before hydration, skip patch
         applyQueuedRefs();
         originalPreactCommit?.(vnode, commitQueue);
@@ -161,9 +164,6 @@ function replaceCommitHook(): void {
       // TODO: check all fields in `flushOptions` from runtime3
       if (snapshotPatch?.length) {
         patch.snapshotPatch = snapshotPatch;
-      }
-      if (workletRefInitValuePatch.length) {
-        patch.workletRefInitValuePatch = workletRefInitValuePatch;
       }
       const patchList: PatchList = {
         patchList: [patch],
@@ -204,7 +204,7 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: GlobalPatchOption
   // );
   // console.debug('commitPatchUpdate:', prettyFormatSnapshotPatch(patchList.patchList[0]?.snapshotPatch));
 
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::commitChanges');
   }
   markTiming('packChangesStart');
@@ -223,7 +223,7 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: GlobalPatchOption
     obj.patchOptions.pipelineOptions = globalPipelineOptions;
     setPipeline(undefined);
   }
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
 

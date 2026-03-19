@@ -1,5 +1,166 @@
 # @lynx-js/web-constants
 
+## 0.19.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.19.8
+
+## 0.19.7
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.19.7
+
+## 0.19.6
+
+### Patch Changes
+
+- feat: add main-thread API: \_\_QuerySelector ([#2115](https://github.com/lynx-family/lynx-stack/pull/2115))
+
+- fix: when a list-item is deleted from list, the deleted list-item is still showed incorrectly. ([#1092](https://github.com/lynx-family/lynx-stack/pull/1092))
+
+  This is because the `enqueueComponent` method does not delete the node from the Element Tree. It is only to maintain the display node on RL, and lynx web needs to delete the dom additionally.
+
+- feat: support main thread invoke ui method ([#2104](https://github.com/lynx-family/lynx-stack/pull/2104))
+
+- feat: support lynx.reload() ([#2127](https://github.com/lynx-family/lynx-stack/pull/2127))
+
+- Updated dependencies [[`f7133c1`](https://github.com/lynx-family/lynx-stack/commit/f7133c137f094063e991dfa0e993ea92177aa173)]:
+  - @lynx-js/web-worker-rpc@0.19.6
+
+## 0.19.5
+
+### Patch Changes
+
+- Updated dependencies [[`a91173c`](https://github.com/lynx-family/lynx-stack/commit/a91173c986ce3f358f1c11c788ca46a0529c701d)]:
+  - @lynx-js/web-worker-rpc@0.19.5
+
+## 0.19.4
+
+### Patch Changes
+
+- Updated dependencies [[`bba05e2`](https://github.com/lynx-family/lynx-stack/commit/bba05e2ed06cca8009ad415fd9777e8334a0887a)]:
+  - @lynx-js/web-worker-rpc@0.19.4
+
+## 0.19.3
+
+### Patch Changes
+
+- Updated dependencies [[`986761d`](https://github.com/lynx-family/lynx-stack/commit/986761dd1e9e631f8118faec68188f29f78e9236)]:
+  - @lynx-js/web-worker-rpc@0.19.3
+
+## 0.19.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.19.2
+
+## 0.19.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.19.1
+
+## 0.19.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.19.0
+
+## 0.18.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.18.4
+
+## 0.18.3
+
+### Patch Changes
+
+- feat: add \_\_GetSourceMapRelease API for nativeApp. ([#1923](https://github.com/lynx-family/lynx-stack/pull/1923))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.18.3
+
+## 0.18.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.18.2
+
+## 0.18.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.18.1
+
+## 0.18.0
+
+### Patch Changes
+
+- fix: ([#1837](https://github.com/lynx-family/lynx-stack/pull/1837))
+
+  1. `LynxView.updateData()` cannot trigger `dataProcessor`.
+
+  2. **This is a break change:** The second parameter of `LynxView.updateData()` has been changed from `UpdateDataType` to `string`, which is the `processorName` (default is `default` which will use `defaultDataProcessor`). This change is to better align with Native. The current complete type is as follows:
+
+  ```ts
+  LynxView.updateData(data: Cloneable, processorName?: string | undefined, callback?: (() => void) | undefined): void
+  ```
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.18.0
+
+## 0.17.2
+
+### Patch Changes
+
+- feat: support load bts chunk from remote address ([#1834](https://github.com/lynx-family/lynx-stack/pull/1834))
+
+  - re-support chunk splitting
+  - support lynx.requireModule with a json file
+  - support lynx.requireModule, lynx.requireModuleAsync with a remote url
+  - support to add a breakpoint in chrome after reloading the web page
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.17.2
+
+## 0.17.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.17.1
+
+## 0.17.0
+
+### Patch Changes
+
+- fix: avoid duplicate style transformation ([#1748](https://github.com/lynx-family/lynx-stack/pull/1748))
+
+  After this commit, we use DAG methods to handle the styleInfos
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.17.0
+
+## 0.16.1
+
+### Patch Changes
+
+- feat: supports lazy bundle. (This feature requires `@lynx-js/lynx-core >= 0.1.3`) ([#1235](https://github.com/lynx-family/lynx-stack/pull/1235))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.16.1
+
 ## 0.16.0
 
 ### Minor Changes

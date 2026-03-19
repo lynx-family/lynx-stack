@@ -3,13 +3,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { noop } from './hook';
-
 import { render, options } from 'preact';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { setupPage, snapshotInstanceManager } from '../../src/snapshot';
-import { initProfileHook } from '../../src/debug/profile';
+import { initProfileHook } from '../../src/debug/profileHooks';
 
 describe('profile', () => {
   let scratch;
@@ -24,12 +22,28 @@ describe('profile', () => {
   });
 
   test('original options hooks should be called', async () => {
+    const noop = vi.fn();
+    const oldDiff = options.__b;
+    const oldDiff2 = options._diff2;
+    const oldRender = options.__r;
+    const oldDiffed = options.diffed;
+
+    options.__b = noop;
+    options._diff2 = noop;
+    options.__r = noop;
+    options.diffed = noop;
+
     render(
       null,
       scratch,
     );
 
     expect(noop).toBeCalledTimes(4);
+
+    options.__b = oldDiff;
+    options._diff2 = oldDiff2;
+    options.__r = oldRender;
+    options.diffed = oldDiffed;
   });
 
   test('diff and render should be profiled', async () => {

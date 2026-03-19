@@ -6,6 +6,9 @@ export type {
   RpcEndpoint,
   RpcEndpointSync,
   RpcEndpointSyncVoid,
+  RpcEndpointAsync,
+  RpcEndpointAsyncVoid,
+  RpcEndpointAsyncWithTransfer,
 } from './RpcEndpoint.js';
 export { createRpcEndpoint } from './RpcEndpoint.js';
 export type * from './TypeUtils.js';

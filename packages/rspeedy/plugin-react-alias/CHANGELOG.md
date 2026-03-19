@@ -1,5 +1,70 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.12.10
+
+## 0.12.9
+
+## 0.12.8
+
+## 0.12.7
+
+## 0.12.6
+
+## 0.12.5
+
+## 0.12.4
+
+## 0.12.3
+
+## 0.12.2
+
+## 0.12.1
+
+## 0.12.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Use resolver from Rspack. ([#1964](https://github.com/lynx-family/lynx-stack/pull/1964))
+
+  The `createLazyResolver` now requires an `rspack` parameter:
+
+  ```diff
+  - function createLazyResolver(directory: string, conditionNames: string[]): (request: string) => Promise<string>;
+  + function createLazyResolver(rspack: rspack, directory: string, conditionNames: string[]): (request: string) => Promise<string>;
+  ```
+
+### Patch Changes
+
+- Support Yarn Plug'n'Play. ([#1964](https://github.com/lynx-family/lynx-stack/pull/1964))
+
+## 0.11.4
+
+## 0.11.3
+
+## 0.11.2
+
+## 0.11.1
+
+## 0.11.0
+
+## 0.10.14
+
+### Patch Changes
+
+- Allow customization of the react$ alias. ([#1653](https://github.com/lynx-family/lynx-stack/pull/1653))
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    resolve: {
+      alias: {
+        react$: '@lynx-js/react/compat',
+      },
+    },
+  })
+  ```
+
 ## 0.10.13
 
 ### Patch Changes

@@ -7,6 +7,7 @@ import type { FC } from 'react';
 
 import './lynx.js';
 
+import { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
 import type { BackgroundDOM } from './backgroundSnapshot.js';
 import { factory as factory2 } from './compat/componentIs.js';
 import { useMemo } from './hooks/react.js';
@@ -14,11 +15,19 @@ import { loadLazyBundle } from './lynx/lazy-bundle.js';
 import { __root } from './root.js';
 import { DynamicPartType } from './snapshot/dynamicPartType.js';
 import { snapshotCreateList } from './snapshot/list.js';
-import { SnapshotInstance, __page, __pageId, createSnapshot, snapshotManager } from './snapshot.js';
+import { SnapshotInstance, __page, __pageId, createSnapshot, snapshotCreatorMap, snapshotManager } from './snapshot.js';
 
 export { __page, __pageId, __root };
 
-export { type BackgroundDOM, SnapshotInstance, snapshotCreateList, createSnapshot, snapshotManager };
+export {
+  BackgroundSnapshotInstance,
+  type BackgroundDOM,
+  SnapshotInstance,
+  snapshotCreateList,
+  createSnapshot,
+  snapshotCreatorMap,
+  snapshotManager,
+};
 
 export const __DynamicPartSlot: DynamicPartType = DynamicPartType.Slot;
 export const __DynamicPartMultiChildren: DynamicPartType = DynamicPartType.MultiChildren;
@@ -59,7 +68,7 @@ export const __ComponentIsPolyfill: FC<{ is: string }> = /* @__PURE__ */ factory
 
 export { loadLazyBundle } from './lynx/lazy-bundle.js';
 
-export { transformToWorklet } from './worklet/transformToWorklet.js';
+export { transformToWorklet } from './worklet/call/transformToWorklet.js';
 export { registerWorkletOnBackground } from './worklet/hmr.js';
 
 export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';

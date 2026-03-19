@@ -17,6 +17,7 @@ export const CHILDREN = '__k';
 export const PARENT = '__';
 export const MASK = '__m';
 export const DOM = '__e';
+export const ORIGINAL = '__v';
 
 // Component properties
 export const VNODE = '__v';
@@ -26,3 +27,9 @@ export const NEXT_STATE = '__s';
 export const CHILD_DID_SUSPEND = '__c';
 export const RENDER_CALLBACKS = '__h';
 export const HOOK = '__h';
+
+// Hooks properties
+export const HOOKS = '__H';
+export const LIST = '__';
+export const VALUE = '__';
+export const NEXT_VALUE = '__N';

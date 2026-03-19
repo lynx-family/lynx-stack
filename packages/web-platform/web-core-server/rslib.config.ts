@@ -30,6 +30,9 @@ const config: RslibConfig = defineConfig({
       output: {
         wasmLoading: 'async-node',
       },
+      experiments: {
+        futureDefaults: true,
+      },
     },
   },
 });

@@ -7,3 +7,9 @@ export interface MarkTiming {
   pipelineId?: string;
   timeStamp: number;
 }
+
+export type MarkTimingInternal = (
+  timingKey: string,
+  pipelineId?: string,
+  timeStamp?: number,
+) => void;

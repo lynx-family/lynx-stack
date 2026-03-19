@@ -5,77 +5,30 @@
 import type { LynxTemplate } from '../types/LynxModule.js';
 
 const currentSupportedTemplateVersion = 2;
-const globalDisallowedVars = ['navigator', 'postMessage'];
+const globalDisallowedVars = ['navigator', 'postMessage', 'window'];
 type templateUpgrader = (template: LynxTemplate) => LynxTemplate;
 const templateUpgraders: templateUpgrader[] = [
   (template) => {
-    const defaultInjectStr = [
-      'Card',
-      'setTimeout',
-      'setInterval',
-      'clearInterval',
-      'clearTimeout',
-      'NativeModules',
-      'Component',
-      'ReactLynx',
-      'nativeAppId',
-      'Behavior',
-      'LynxJSBI',
-      'lynx',
-
-      // BOM API
-      'window',
-      'document',
-      'frames',
-      'location',
-      'navigator',
-      'localStorage',
-      'history',
-      'Caches',
-      'screen',
-      'alert',
-      'confirm',
-      'prompt',
-      'fetch',
-      'XMLHttpRequest',
-      '__WebSocket__', // We would provide `WebSocket` using `ProvidePlugin`
-      'webkit',
-      'Reporter',
-      'print',
-      'global',
-
-      // Lynx API
-      'requestAnimationFrame',
-      'cancelAnimationFrame',
-    ].join(',');
-    template.appType = template.lepusCode.root.startsWith(
+    template.appType = template.appType ?? (template.lepusCode.root.startsWith(
         '(function (globDynamicComponentEntry',
       )
       ? 'lazy'
-      : 'card';
-    /**
-     * The template version 1 has no module wrapper for bts code
-     */
-    template.manifest = Object.fromEntries(
-      Object.entries(template.manifest).map(([key, value]) => [
-        key,
-        `module.exports={init: (lynxCoreInject) => { var {${defaultInjectStr}} = lynxCoreInject.tt; var module = {exports:null}; ${value}\n return module.exports; } }`,
-      ]),
-    ) as typeof template.manifest;
-    template.lepusCode = Object.fromEntries(
-      Object.entries(template.lepusCode).map(([key, value]) => [
-        key,
-        `(()=>{${value}\n})();`,
-      ]),
-    ) as typeof template.lepusCode;
+      : 'card');
     template.version = 2;
+    template.lepusCode = Object.fromEntries(
+      Object.entries(template.lepusCode).filter(([_, content]) =>
+        typeof content === 'string'
+      ),
+    ) as typeof template.lepusCode;
     return template;
   },
 ];
 
 const generateModuleContent = (
+  fileName: string,
   content: string,
   eager: boolean,
+  appType: 'card' | 'lazy',
 ) =>
   /**
    * About the `allFunctionsCalledOnLoad` directive:
@@ -92,30 +45,37 @@ const generateModuleContent = (
     '\n(function() { "use strict"; const ',
     globalDisallowedVars.join('=void 0,'),
     '=void 0;\n',
+    appType !== 'card' ? 'module.exports=\n' : '',
     content,
     '\n})()',
+    '\n//# sourceURL=',
+    fileName,
   ].join('');
 
 async function generateJavascriptUrl<T extends Record<string, string | {}>>(
   obj: T,
   createJsModuleUrl: (content: string, name: string) => Promise<string>,
   eager: boolean,
-  templateName?: string,
+  appType: 'card' | 'lazy',
+  templateName: string,
 ): Promise<T> {
-  const processEntry = async ([name, content]: [string, string]) => [
-    name,
-    await createJsModuleUrl(
-      generateModuleContent(
-        content,
-        eager,
-      ),
-      `${templateName}-${name.replaceAll('/', '')}.js`,
-    ),
-  ];
   return Promise.all(
     (Object.entries(obj).filter(([_, content]) =>
       typeof content === 'string'
-    ) as [string, string][]).map(processEntry),
+    ) as [string, string][]).map(async ([name, content]) => {
+      return [
+        name,
+        await createJsModuleUrl(
+          generateModuleContent(
+            `${templateName}/${name.replaceAll('/', '_')}.js`,
+            content,
+            eager,
+            appType,
+          ),
+          `${templateName}-${name.replaceAll('/', '_')}.js`,
+        ),
+      ];
+    }),
   ).then(
     Object.fromEntries,
   );
@@ -126,7 +86,7 @@ export async function generateTemplate(
   createJsModuleUrl:
     | ((content: string, name: string) => Promise<string>)
     | ((content: string) => string),
-  templateName?: string,
+  templateName: string,
 ): Promise<LynxTemplate> {
   template.version = template.version ?? 1;
   if (template.version > currentSupportedTemplateVersion) {
@@ -147,12 +107,7 @@ export async function generateTemplate(
       template.lepusCode,
       createJsModuleUrl as (content: string, name: string) => Promise<string>,
       true,
-      templateName,
-    ),
-    manifest: await generateJavascriptUrl(
-      template.manifest,
-      createJsModuleUrl as (content: string, name: string) => Promise<string>,
-      false,
+      template.appType!,
       templateName,
     ),
   };

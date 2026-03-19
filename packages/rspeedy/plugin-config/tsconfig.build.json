@@ -1,0 +1,16 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "plugins": [
+      {
+        "transform": "typia/lib/transform",
+      },
+    ],
+    "composite": true,
+    "outDir": "./lib",
+    "baseUrl": "./",
+    "rootDir": "./src",
+    "declarationMap": true,
+  },
+  "include": ["src"],
+}

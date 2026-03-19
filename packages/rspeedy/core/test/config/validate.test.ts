@@ -1843,11 +1843,13 @@ describe('Config Validation', () => {
       ).toThrowErrorMatchingInlineSnapshot(`
         [Error: Invalid configuration.
 
+        Invalid config on \`$input.resolve.extensions\`.
+          - Expect to be (Array<string> | undefined)
+          - Got: string
+
         Unknown property: \`$input.resolve.aliasFields\` in configuration
 
         Unknown property: \`$input.resolve.conditionNames\` in configuration
-
-        Unknown property: \`$input.resolve.extensions\` in configuration
 
         Unknown property: \`$input.resolve.extensionAlias\` in configuration
         ]
@@ -1998,6 +2000,17 @@ describe('Config Validation', () => {
         { host: '0.0.0.0' },
         { port: 8000 },
         { host: 'example.com', port: 3000 },
+        { cors: true },
+        { cors: false },
+        { cors: { origin: 'https://example.com' } },
+        { cors: { origin: /example/ } },
+        {
+          cors: {
+            origin: (origin, callback) => {
+              callback(null, origin ?? '*')
+            },
+          },
+        },
       ]
 
       cases.forEach(server => {
@@ -2036,12 +2049,42 @@ describe('Config Validation', () => {
           ]
         `)
 
+      expect(() => validate({ server: { cors: null } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Invalid config on \`$input.server.cors\`.
+            - Expect to be (boolean | e.CorsOptions | undefined)
+            - Got: null
+          ]
+        `)
+
       expect(() => validate({ server: { headers: 123 } }))
         .toThrowErrorMatchingInlineSnapshot(`
           [Error: Invalid configuration.
 
           Invalid config on \`$input.server.headers\`.
             - Expect to be (Record<string, string | string[]> | undefined)
+            - Got: number
+          ]
+        `)
+
+      expect(() => validate({ server: { cors: 123 } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Invalid config on \`$input.server.cors\`.
+            - Expect to be (boolean | e.CorsOptions | undefined)
+            - Got: number
+          ]
+        `)
+
+      expect(() => validate({ server: { cors: { origin: 123 } } }))
+        .toThrowErrorMatchingInlineSnapshot(`
+          [Error: Invalid configuration.
+
+          Invalid config on \`$input.server.cors.origin\`.
+            - Expect to be (Array<string | boolean | RegExp> | RegExp | boolean | string | undefined)
             - Got: number
           ]
         `)

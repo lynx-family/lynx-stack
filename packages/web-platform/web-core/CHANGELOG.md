@@ -1,5 +1,286 @@
 # @lynx-js/web-core
 
+## 0.19.8
+
+### Patch Changes
+
+- fix: avoid error when LynxView is removed immediately after connected ([#2182](https://github.com/lynx-family/lynx-stack/pull/2182))
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.8
+  - @lynx-js/web-mainthread-apis@0.19.8
+  - @lynx-js/web-worker-rpc@0.19.8
+  - @lynx-js/web-worker-runtime@0.19.8
+
+## 0.19.7
+
+### Patch Changes
+
+- feat: add browser config of lynx-view, now you can customize the browser config of lynx-view: ([#2140](https://github.com/lynx-family/lynx-stack/pull/2140))
+
+  ```
+  lynxView.browserConfig = {
+    pixelRatio: 1,
+    pixelWidth: 1234,
+    pixelHeight: 5678,
+  }
+  ```
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.7
+  - @lynx-js/web-mainthread-apis@0.19.7
+  - @lynx-js/web-worker-rpc@0.19.7
+  - @lynx-js/web-worker-runtime@0.19.7
+
+## 0.19.6
+
+### Patch Changes
+
+- fix: avoid crash on CPUs that do not support SIMD ([#2133](https://github.com/lynx-family/lynx-stack/pull/2133))
+
+- feat: support lynx.reload() ([#2127](https://github.com/lynx-family/lynx-stack/pull/2127))
+
+- Updated dependencies [[`179f984`](https://github.com/lynx-family/lynx-stack/commit/179f9844adf00ff4b2cd450ffb943649441c87d3), [`f7133c1`](https://github.com/lynx-family/lynx-stack/commit/f7133c137f094063e991dfa0e993ea92177aa173), [`6c2b51a`](https://github.com/lynx-family/lynx-stack/commit/6c2b51a661ae244eb40671f63f29ee971e084ed4), [`556fe9f`](https://github.com/lynx-family/lynx-stack/commit/556fe9fded90945a7926093897288d5302c314d3), [`5b589ab`](https://github.com/lynx-family/lynx-stack/commit/5b589ab53b01a8e2357d3ccbb159edab004086d3)]:
+  - @lynx-js/web-constants@0.19.6
+  - @lynx-js/web-mainthread-apis@0.19.6
+  - @lynx-js/web-worker-rpc@0.19.6
+  - @lynx-js/web-worker-runtime@0.19.6
+
+## 0.19.5
+
+### Patch Changes
+
+- fix: pixelWidth and pixelHeight use client instead of screen ([#2055](https://github.com/lynx-family/lynx-stack/pull/2055))
+
+- Updated dependencies [[`a91173c`](https://github.com/lynx-family/lynx-stack/commit/a91173c986ce3f358f1c11c788ca46a0529c701d)]:
+  - @lynx-js/web-worker-rpc@0.19.5
+  - @lynx-js/web-constants@0.19.5
+  - @lynx-js/web-worker-runtime@0.19.5
+  - @lynx-js/web-mainthread-apis@0.19.5
+
+## 0.19.4
+
+### Patch Changes
+
+- Updated dependencies [[`bba05e2`](https://github.com/lynx-family/lynx-stack/commit/bba05e2ed06cca8009ad415fd9777e8334a0887a)]:
+  - @lynx-js/web-worker-rpc@0.19.4
+  - @lynx-js/web-constants@0.19.4
+  - @lynx-js/web-worker-runtime@0.19.4
+  - @lynx-js/web-mainthread-apis@0.19.4
+
+## 0.19.3
+
+### Patch Changes
+
+- Updated dependencies [[`986761d`](https://github.com/lynx-family/lynx-stack/commit/986761dd1e9e631f8118faec68188f29f78e9236)]:
+  - @lynx-js/web-worker-rpc@0.19.3
+  - @lynx-js/web-constants@0.19.3
+  - @lynx-js/web-worker-runtime@0.19.3
+  - @lynx-js/web-mainthread-apis@0.19.3
+
+## 0.19.2
+
+### Patch Changes
+
+- chore: mark the "multi-thread" deprecated ([#2030](https://github.com/lynx-family/lynx-stack/pull/2030))
+
+  **NOTICE This will be a breaking change in the future**
+
+  mark the thread strategy "multi-thread" as deprecated.
+
+  Please use "all-on-ui" instead. If you still want to use multi-thread mode, please try to use a cross-origin isolated iframe.
+
+  A console warning will be printed if `thread-strategy` is set to `multi-thread`.
+
+- fix csp issue for mts realm ([#1998](https://github.com/lynx-family/lynx-stack/pull/1998))
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.2
+  - @lynx-js/web-mainthread-apis@0.19.2
+  - @lynx-js/web-worker-rpc@0.19.2
+  - @lynx-js/web-worker-runtime@0.19.2
+
+## 0.19.1
+
+### Patch Changes
+
+- fix: support CSP for mts ([#1994](https://github.com/lynx-family/lynx-stack/pull/1994))
+
+- Updated dependencies [[`f7256d5`](https://github.com/lynx-family/lynx-stack/commit/f7256d5bd920b2f6c0cadab44455585c35621b35)]:
+  - @lynx-js/web-mainthread-apis@0.19.1
+  - @lynx-js/web-worker-runtime@0.19.1
+  - @lynx-js/web-constants@0.19.1
+  - @lynx-js/web-worker-rpc@0.19.1
+
+## 0.19.0
+
+### Minor Changes
+
+- feat: new flex:val impl ([#1979](https://github.com/lynx-family/lynx-stack/pull/1979))
+
+### Patch Changes
+
+- Updated dependencies [[`40c3a1a`](https://github.com/lynx-family/lynx-stack/commit/40c3a1a0436701e46b505301c4ba66a8f68de7c0), [`46bd5ee`](https://github.com/lynx-family/lynx-stack/commit/46bd5eea324d0c8348f44b3d0b437e745411ab5c)]:
+  - @lynx-js/web-mainthread-apis@0.19.0
+  - @lynx-js/web-worker-runtime@0.19.0
+  - @lynx-js/web-constants@0.19.0
+  - @lynx-js/web-worker-rpc@0.19.0
+
+## 0.18.4
+
+### Patch Changes
+
+- feat: builtinTagTransformMap add `'x-input-ng': 'x-input'` ([#1932](https://github.com/lynx-family/lynx-stack/pull/1932))
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.18.4
+  - @lynx-js/web-mainthread-apis@0.18.4
+  - @lynx-js/web-worker-rpc@0.18.4
+  - @lynx-js/web-worker-runtime@0.18.4
+
+## 0.18.3
+
+### Patch Changes
+
+- Updated dependencies [[`fece7d0`](https://github.com/lynx-family/lynx-stack/commit/fece7d0a92fa76948488373757a27dff52a90437), [`e1db63f`](https://github.com/lynx-family/lynx-stack/commit/e1db63fac8a351f98711b9b47acbb871f7a23701), [`ebc1a60`](https://github.com/lynx-family/lynx-stack/commit/ebc1a606318e9809e8a07457e18536b59be12a18)]:
+  - @lynx-js/web-mainthread-apis@0.18.3
+  - @lynx-js/web-worker-runtime@0.18.3
+  - @lynx-js/web-constants@0.18.3
+  - @lynx-js/web-worker-rpc@0.18.3
+
+## 0.18.2
+
+### Patch Changes
+
+- feat: builtinTagTransformMap add `'input': 'x-input'` ([#1907](https://github.com/lynx-family/lynx-stack/pull/1907))
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.18.2
+  - @lynx-js/web-mainthread-apis@0.18.2
+  - @lynx-js/web-worker-rpc@0.18.2
+  - @lynx-js/web-worker-runtime@0.18.2
+
+## 0.18.1
+
+### Patch Changes
+
+- fix: mts freeze after reload() ([#1892](https://github.com/lynx-family/lynx-stack/pull/1892))
+
+  The mts may be freezed after reload() called.
+
+  We fixed it by waiting until the all-on-ui Javascript realm implementation, an iframe, to be fully loaded.
+
+- Updated dependencies [[`70a18fc`](https://github.com/lynx-family/lynx-stack/commit/70a18fce0083743e4516eefc91c0392d748b855f)]:
+  - @lynx-js/web-mainthread-apis@0.18.1
+  - @lynx-js/web-worker-runtime@0.18.1
+  - @lynx-js/web-constants@0.18.1
+  - @lynx-js/web-worker-rpc@0.18.1
+
+## 0.18.0
+
+### Minor Changes
+
+- fix: ([#1837](https://github.com/lynx-family/lynx-stack/pull/1837))
+
+  1. `LynxView.updateData()` cannot trigger `dataProcessor`.
+
+  2. **This is a break change:** The second parameter of `LynxView.updateData()` has been changed from `UpdateDataType` to `string`, which is the `processorName` (default is `default` which will use `defaultDataProcessor`). This change is to better align with Native. The current complete type is as follows:
+
+  ```ts
+  LynxView.updateData(data: Cloneable, processorName?: string | undefined, callback?: (() => void) | undefined): void
+  ```
+
+### Patch Changes
+
+- Updated dependencies [[`77397fd`](https://github.com/lynx-family/lynx-stack/commit/77397fd535cf60556f8f82f7ef8dae8a623d1625), [`7d90ed5`](https://github.com/lynx-family/lynx-stack/commit/7d90ed52a20fd7665a3517507800e7e29426f6f9)]:
+  - @lynx-js/web-worker-runtime@0.18.0
+  - @lynx-js/web-constants@0.18.0
+  - @lynx-js/web-mainthread-apis@0.18.0
+  - @lynx-js/web-worker-rpc@0.18.0
+
+## 0.17.2
+
+### Patch Changes
+
+- feat: support load bts chunk from remote address ([#1834](https://github.com/lynx-family/lynx-stack/pull/1834))
+
+  - re-support chunk splitting
+  - support lynx.requireModule with a json file
+  - support lynx.requireModule, lynx.requireModuleAsync with a remote url
+  - support to add a breakpoint in chrome after reloading the web page
+
+- Updated dependencies [[`a35a245`](https://github.com/lynx-family/lynx-stack/commit/a35a2452e5355bda3c475f9a750a86085e0cf56a)]:
+  - @lynx-js/web-worker-runtime@0.17.2
+  - @lynx-js/web-constants@0.17.2
+  - @lynx-js/web-mainthread-apis@0.17.2
+  - @lynx-js/web-worker-rpc@0.17.2
+
+## 0.17.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.17.1
+  - @lynx-js/web-mainthread-apis@0.17.1
+  - @lynx-js/web-worker-rpc@0.17.1
+  - @lynx-js/web-worker-runtime@0.17.1
+
+## 0.17.0
+
+### Minor Changes
+
+- break(web): temporary remove support for chunk split ([#1739](https://github.com/lynx-family/lynx-stack/pull/1739))
+
+  Since the global variables cannot be accessed in the splited chunk, we temporary remove supporting for chunk spliting
+
+  Developers could easily remove the chunk Split settings in Rspeedy for migration
+
+  ```
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    performance: {
+      chunkSplit: {
+        strategy: 'all-in-one',
+      },
+    },
+  })
+  ```
+
+### Patch Changes
+
+- fix: lazy component load error ([#1794](https://github.com/lynx-family/lynx-stack/pull/1794))
+
+  Some special version template may have chunk loading error. We fixed it.
+
+- fix: avoid duplicate style transformation ([#1748](https://github.com/lynx-family/lynx-stack/pull/1748))
+
+  After this commit, we use DAG methods to handle the styleInfos
+
+- fix: add sandbox attribute to iframe for enhanced security ([#1709](https://github.com/lynx-family/lynx-stack/pull/1709))
+
+- fix: the default template loader won't fetch twice for one url ([#1709](https://github.com/lynx-family/lynx-stack/pull/1709))
+
+- Updated dependencies [[`721635d`](https://github.com/lynx-family/lynx-stack/commit/721635de6c1d2d617c7cbaa86e7d816c42d62930), [`93d707b`](https://github.com/lynx-family/lynx-stack/commit/93d707b82a59f7256952e21da6dcad2999f8233d), [`d150ed4`](https://github.com/lynx-family/lynx-stack/commit/d150ed440a4f1e9d9a3a2911adf6e6fa39a0c589)]:
+  - @lynx-js/web-mainthread-apis@0.17.0
+  - @lynx-js/web-constants@0.17.0
+  - @lynx-js/web-worker-runtime@0.17.0
+  - @lynx-js/web-worker-rpc@0.17.0
+
+## 0.16.1
+
+### Patch Changes
+
+- refactor: improve chunk loading ([#1703](https://github.com/lynx-family/lynx-stack/pull/1703))
+
+- feat: supports lazy bundle. (This feature requires `@lynx-js/lynx-core >= 0.1.3`) ([#1235](https://github.com/lynx-family/lynx-stack/pull/1235))
+
+- Updated dependencies [[`608f375`](https://github.com/lynx-family/lynx-stack/commit/608f375e20732cc4c9f141bfbf9800ba6896100b)]:
+  - @lynx-js/web-mainthread-apis@0.16.1
+  - @lynx-js/web-worker-runtime@0.16.1
+  - @lynx-js/web-constants@0.16.1
+  - @lynx-js/web-worker-rpc@0.16.1
+
 ## 0.16.0
 
 ### Minor Changes
@@ -1341,7 +1622,7 @@
   ```
   * @param {string} url [required] The url of the entry of your Lynx card
   * @param {Cloneable} globalProps [optional] The globalProps value of this Lynx card
-  * @param {Cloneable} initData [oprional] The initial data of this Lynx card
+  * @param {Cloneable} initData [optional] The initial data of this Lynx card
   * @param {Record<string,string>} overrideLynxTagToHTMLTagMap [optional] use this property/attribute to override the lynx tag -> html tag map
   * @param {NativeModulesCallHandler} onNativeModulesCall [optional] the NativeModules.bridge.call value handler. Arguments will be cached before this property is assigned.
   *

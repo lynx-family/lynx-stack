@@ -140,4 +140,43 @@ export interface Resolve {
    * ```
    */
   dedupe?: string[] | undefined
+
+  /**
+   * Automatically resolve file extensions when importing modules. This means you can import files without explicitly writing their extensions.
+   *
+   * Default: `['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json', '.cjs']`
+   *
+   * For example, if importing './index', Rsbuild will try to resolve using the following order:
+   *
+   * - `./index.ts`
+   *
+   * - `./index.tsx`
+   *
+   * - `./index.mjs`
+   *
+   * - `./index.js`
+   *
+   * - `./index.jsx`
+   *
+   * - `./index.json`
+   *
+   * - `./index.cjs`
+   *
+   * @remarks
+   * The difference between `resolve.extensions` and `tools.rspack.resolve.extensions`:
+   *
+   * `resolve.extensions`: Completely overrides Rspeedy's default resolution.
+   *
+   * `tools.rspack.resolve.extensions`: Merges with the default configuration using [`webpack-merge`](https://github.com/survivejs/webpack-merge).
+   *
+   * @example
+   * ```js
+   * export default {
+   *   resolve: {
+   *     extensions: ['.ts', '.tsx', '.js'],
+   *   },
+   * }
+   * ```
+   */
+  extensions?: string[] | undefined
 }

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!-- Copyright 2024 The Lynx Authors. All rights reserved.
+ Licensed under the Apache License Version 2.0 that can be found in the
+ LICENSE file in the root directory of this source tree. -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>web playground</title>
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta content="default" name="apple-mobile-web-app-status-bar-style">
+    <meta content="telephone=no" name="format-detection">
+    <meta content="portrait" name="screen-orientation">
+    <meta
+      content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+      name="viewport"
+    >
+    <meta content="portrait" name="x5-orientation" />
+
+    <link
+      href="/main.css"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <script src="/main.js" defer></script>
+    <script type="module">
+    document.querySelector('#target').addEventListener(
+        'layoutchange',
+        (ev) => {
+          console.log('layoutchange', ev.detail);
+          Object.assign(globalThis, { detail: ev.detail });
+        },
+      );
+      document.querySelector('#target').addEventListener('click', () => {
+        document.querySelector('#target').style.width = '200px';
+      });
+    </script>
+    <x-view class="page">
+      <x-view
+        id="target"
+        style="width: 100px; height: 400px; background-color: aquamarine"
+      >
+      </x-view>
+    </x-view>
+  </body>
+</html>

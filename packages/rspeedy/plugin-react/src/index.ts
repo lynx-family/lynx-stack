@@ -8,6 +8,11 @@
  * A rsbuild plugin that integrates with ReactLynx.
  */
 
+import type {
+  LynxTemplatePlugin as InnerLynxTemplatePlugin,
+  TemplateHooks,
+} from '@lynx-js/template-webpack-plugin'
+
 export { pluginReactLynx } from './pluginReactLynx.js'
 export type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
@@ -18,5 +23,15 @@ export type {
   ExtractStrConfig,
   ShakeVisitorConfig,
 } from '@lynx-js/react-transform'
+
+interface LynxTemplatePlugin {
+  getLynxTemplatePluginHooks:
+    typeof InnerLynxTemplatePlugin.getLynxTemplatePluginHooks
+}
+
+// We only export types here
+// It is encouraged to use `api.useExposed(Symbol.for('LynxTemplatePlugin'))`
+// to access the actual API
+export type { LynxTemplatePlugin, TemplateHooks }
 
 export { LAYERS } from '@lynx-js/react-webpack-plugin'

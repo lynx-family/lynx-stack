@@ -3,15 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { ClosureValueType } from '@lynx-js/react/worklet-runtime/bindings';
-import {
-  runRunOnMainThreadTask,
-  setEomShouldFlushElementTree,
-  updateWorkletRefInitValueChanges,
-} from '@lynx-js/react/worklet-runtime/bindings';
+import { runRunOnMainThreadTask, setEomShouldFlushElementTree } from '@lynx-js/react/worklet-runtime/bindings';
 
 import type { PatchList, PatchOptions } from './commit.js';
 import { setMainThreadHydrating } from './isMainThreadHydrating.js';
 import { snapshotPatchApply } from './snapshotPatchApply.js';
+import { prettyFormatSnapshotPatch } from '../../debug/formatPatch.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { markTiming, setPipeline } from '../../lynx/performance.js';
 import { __pendingListUpdates } from '../../pendingListUpdates.js';
@@ -34,7 +31,6 @@ function updateMainThread(
   if (flowIds) {
     lynx.performance.profileStart('ReactLynx::patch', {
       flowId: flowIds[0],
-      // @ts-expect-error flowIds is not defined in the type, for now
       flowIds,
     });
   }
@@ -42,7 +38,27 @@ function updateMainThread(
   setPipeline(patchOptions.pipelineOptions);
   markTiming('mtsRenderStart');
   markTiming('parseChangesStart');
-  const { patchList, flushOptions = {}, delayedRunOnMainThreadData } = JSON.parse(data) as PatchList;
+  const parsedData = JSON.parse(data) as PatchList;
+  const { patchList, flushOptions = {}, delayedRunOnMainThreadData } = parsedData;
+
+  if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+    console.alog?.(
+      '[ReactLynxDebug] BTS -> MTS updateMainThread:\n' + JSON.stringify(
+        {
+          data: {
+            ...parsedData,
+            patchList: parsedData.patchList.map(patch => ({
+              ...patch,
+              snapshotPatch: prettyFormatSnapshotPatch(patch.snapshotPatch),
+            })),
+          },
+          patchOptions,
+        },
+        null,
+        2,
+      ),
+    );
+  }
 
   markTiming('parseChangesEnd');
   markTiming('patchChangesStart');
@@ -50,8 +66,7 @@ function updateMainThread(
     setMainThreadHydrating(true);
   }
   try {
-    for (const { snapshotPatch, workletRefInitValuePatch } of patchList) {
-      updateWorkletRefInitValueChanges(workletRefInitValuePatch);
+    for (const { snapshotPatch } of patchList) {
       __pendingListUpdates.clearAttachedLists();
       if (snapshotPatch) {
         snapshotPatchApply(snapshotPatch);

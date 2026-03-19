@@ -77,14 +77,14 @@ function updateSpread(
     }
   }
 
-  if (!snapshot.__elements) {
-    return;
-  }
-
   if ('__spread' in newValue) {
     // first screen
     newValue = transformSpread(snapshot, index, newValue);
     snapshot.__values![index] = newValue;
+  }
+
+  if (!snapshot.__elements) {
+    return;
   }
 
   const dataset: Record<string, unknown> = {};
@@ -95,7 +95,9 @@ function updateSpread(
       if (key === 'className') {
         __SetClasses(snapshot.__elements[elementIndex]!, v as string);
       } else if (key === 'style') {
-        __SetInlineStyles(snapshot.__elements[elementIndex]!, v as string);
+        if (!isDirectOrDeepEqual(v, oldValue[key])) {
+          __SetInlineStyles(snapshot.__elements[elementIndex]!, v);
+        }
       } else if (key === 'id') {
         __SetID(snapshot.__elements[elementIndex]!, v as string);
       } else if (key.startsWith('data-')) {

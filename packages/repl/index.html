@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lynx REPL</title>
+    <!-- Critical CSS: prevent flash of white background before main CSS loads.
+         Uses the CSS variable so the background adapts when the theme changes;
+         the fallback #1e1e1e is only used during the brief initial load. -->
+    <style>
+    html, body, #app {
+      background: var(--repl-bg, #1e1e1e);
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>

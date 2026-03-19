@@ -1,0 +1,7 @@
+#target {
+  width: 100px;
+  height: 100px;
+  --nested-bg-color: pink;
+  --bg-color: var(--nested-bg-color);
+  background: var(--bg-color);
+}

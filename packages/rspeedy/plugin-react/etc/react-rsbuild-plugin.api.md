@@ -5,7 +5,9 @@
 ```ts
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin';
+import type { LynxTemplatePlugin as LynxTemplatePlugin_2 } from '@lynx-js/template-webpack-plugin';
 import type { RsbuildPlugin } from '@rsbuild/core';
+import type { TemplateHooks } from '@lynx-js/template-webpack-plugin';
 
 // @public
 export interface AddComponentElementConfig {
@@ -46,6 +48,14 @@ export interface ExtractStrConfig {
 
 export { LAYERS }
 
+// Warning: (ae-missing-release-tag) "LynxTemplatePlugin" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface LynxTemplatePlugin {
+    // (undocumented)
+    getLynxTemplatePluginHooks: typeof LynxTemplatePlugin_2.getLynxTemplatePluginHooks;
+}
+
 // @public
 export function pluginReactLynx(userOptions?: PluginReactLynxOptions): RsbuildPlugin[];
 
@@ -62,9 +72,7 @@ export interface PluginReactLynxOptions {
     enableCSSInheritance?: boolean;
     enableCSSInvalidation?: boolean;
     enableCSSSelector?: boolean;
-    enableICU?: boolean;
     enableNewGesture?: boolean;
-    enableParallelElement?: boolean;
     enableRemoveCSSScope?: boolean | undefined;
     enableSSR?: boolean;
     engineVersion?: string;
@@ -72,7 +80,6 @@ export interface PluginReactLynxOptions {
     experimental_isLazyBundle?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady';
-    pipelineSchedulerConfig?: number;
     removeDescendantSelectorScope?: boolean;
     shake?: Partial<ShakeVisitorConfig> | undefined;
     // @deprecated
@@ -85,5 +92,7 @@ export interface ShakeVisitorConfig {
     removeCallParams: Array<string>
     retainProp: Array<string>
 }
+
+export { TemplateHooks }
 
 ```

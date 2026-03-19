@@ -1,10 +1,11 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
-import type { RsbuildInstance } from '@rsbuild/core'
+import type { RsbuildInstance, Rspack } from '@rsbuild/core'
 import { describe, expect, test, vi } from 'vitest'
 
 import type { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
@@ -80,79 +81,109 @@ describe('Config', () => {
     expect(config.resolve.alias).toHaveProperty(
       'preact$',
       expect.stringContaining(
-        '/preact/dist/preact.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/dist/preact.mjs'.replaceAll('/', path.sep),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat$',
       expect.stringContaining(
-        '/preact/compat/dist/compat.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/compat/dist/compat.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/debug$',
       expect.stringContaining(
-        '/preact/debug/dist/debug.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/debug/dist/debug.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/devtools$',
       expect.stringContaining(
-        '/preact/devtools/dist/devtools.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/devtools/dist/devtools.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/hooks$',
       expect.stringContaining(
-        '/preact/hooks/dist/hooks.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/hooks/dist/hooks.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/test-utils$',
       expect.stringContaining(
-        '/preact/test-utils/dist/testUtils.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/test-utils/dist/testUtils.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/jsx-runtime$',
       expect.stringContaining(
-        '/preact/jsx-runtime/dist/jsxRuntime.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/jsx-runtime/dist/jsxRuntime.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/jsx-dev-runtime$',
       expect.stringContaining(
-        '/preact/jsx-runtime/dist/jsxRuntime.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/jsx-runtime/dist/jsxRuntime.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/client$',
       expect.stringContaining(
-        '/preact/compat/client.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/compat/client.mjs'.replaceAll('/', path.sep),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/server$',
       expect.stringContaining(
-        '/preact/compat/server.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/compat/server.mjs'.replaceAll('/', path.sep),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/jsx-runtime$',
       expect.stringContaining(
-        '/preact/compat/jsx-runtime.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/compat/jsx-runtime.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/jsx-dev-runtime$',
       expect.stringContaining(
-        '/preact/compat/jsx-dev-runtime.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/compat/jsx-dev-runtime.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/scheduler$',
       expect.stringContaining(
-        '/preact/compat/scheduler.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/compat/scheduler.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
@@ -168,6 +199,12 @@ describe('Config', () => {
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store/with-selector.js$',
+      expect.stringContaining(
+        '/use-sync-external-store/with-selector.js'.replaceAll('/', path.sep),
+      ),
+    )
+    expect(config.resolve.alias).toHaveProperty(
       'use-sync-external-store/shim$',
       expect.stringContaining(
         '/use-sync-external-store/index.js'.replaceAll('/', path.sep),
@@ -175,6 +212,12 @@ describe('Config', () => {
     )
     expect(config.resolve.alias).toHaveProperty(
       'use-sync-external-store/shim/with-selector$',
+      expect.stringContaining(
+        '/use-sync-external-store/with-selector.js'.replaceAll('/', path.sep),
+      ),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      'use-sync-external-store/shim/with-selector.js$',
       expect.stringContaining(
         '/use-sync-external-store/with-selector.js'.replaceAll('/', path.sep),
       ),
@@ -386,6 +429,7 @@ describe('Config', () => {
         "compat": undefined,
         "defineDCE": undefined,
         "enableRemoveCSSScope": true,
+        "engineVersion": "3.2",
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
       }
@@ -412,6 +456,7 @@ describe('Config', () => {
         "compat": undefined,
         "defineDCE": undefined,
         "enableRemoveCSSScope": undefined,
+        "engineVersion": "3.2",
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
       }
@@ -1354,8 +1399,8 @@ describe('Config', () => {
           "main": {
             "filename": ".rspeedy/main/background.js",
             "import": [
-              "@lynx-js/react/refresh",
               "@lynx-js/webpack-dev-transport/client",
+              "@lynx-js/react/refresh",
               "@rspack/core/hot/dev-server",
               "./fixtures/basic.tsx",
             ],
@@ -1404,8 +1449,8 @@ describe('Config', () => {
           "main": {
             "filename": ".rspeedy/main/background.[contenthash].js",
             "import": [
-              "@lynx-js/react/refresh",
               "@lynx-js/webpack-dev-transport/client",
+              "@lynx-js/react/refresh",
               "@rspack/core/hot/dev-server",
               "./fixtures/basic.tsx",
             ],
@@ -1676,7 +1721,7 @@ describe('Config', () => {
           {
             "name": "lib-preact",
             "priority": 0,
-            "test": /node_modules\\[\\\\\\\\/\\]\\(\\.\\*\\?\\[\\\\\\\\/\\]\\)\\?\\(\\?:preact\\|preact\\[\\\\\\\\/\\]compat\\|preact\\[\\\\\\\\/\\]hooks\\|preact\\[\\\\\\\\/\\]jsx-runtime\\)\\[\\\\\\\\/\\]/,
+            "test": /node_modules\\[\\\\\\\\/\\]\\(\\.\\*\\?\\[\\\\\\\\/\\]\\)\\?\\(\\?:\\(\\?:internal-\\)\\?preact\\|\\(\\?:internal-\\)\\?preact\\[\\\\\\\\/\\]compat\\|\\(\\?:internal-\\)\\?preact\\[\\\\\\\\/\\]hooks\\|\\(\\?:internal-\\)\\?preact\\[\\\\\\\\/\\]jsx-runtime\\)\\[\\\\\\\\/\\]/,
           }
         `)
     })
@@ -1923,6 +1968,56 @@ describe('Config', () => {
         expect.fail('build should succeed')
       }
     })
+
+    test('defineDCE should correctly eliminate dead code for compilation macros', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      // Production build with typical macro definitions
+      vi.stubEnv('NODE_ENV', 'production')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          source: {
+            entry: {
+              main: new URL('./fixtures/defineDCE/macros.js', import.meta.url)
+                .pathname,
+            },
+          },
+          environments: {
+            lynx: {},
+          },
+          plugins: [
+            pluginReactLynx({
+              defineDCE: {
+                define: {
+                  __PROFILE__: 'false',
+                },
+              },
+            }),
+          ],
+        },
+      })
+
+      try {
+        await rsbuild.build()
+      } catch (_error) {
+        expect.fail('build should succeed')
+      }
+
+      const distPath = path.join(
+        rsbuild.context.distPath,
+        '.rspeedy/main',
+        'main-thread.js',
+      )
+
+      if (!existsSync(distPath)) {
+        expect.fail(`Build output should exist at ${distPath}`)
+      }
+
+      const builtCode = readFileSync(distPath, 'utf8')
+      expect(builtCode).not.toContain('profileStart(\'test\')')
+      expect(builtCode).toContain('Config is: profile-off-mode')
+    })
   })
 
   test('default LynxTemplatePlugin options', async () => {
@@ -1961,14 +2056,11 @@ describe('Config', () => {
         "enableCSSInheritance": false,
         "enableCSSInvalidation": true,
         "enableCSSSelector": true,
-        "enableICU": false,
         "enableNewGesture": false,
-        "enableParallelElement": true,
         "enableRemoveCSSScope": true,
         "experimental_isLazyBundle": false,
         "filename": "main.lynx.bundle",
         "intermediate": ".rspeedy/main",
-        "pipelineSchedulerConfig": 65536,
         "removeDescendantSelectorScope": true,
         "targetSdkVersion": "3.2",
       }
@@ -2077,8 +2169,8 @@ describe('Config', () => {
             "main": {
               "filename": ".rspeedy/main/background.[contenthash:8].js",
               "import": [
-                "@lynx-js/react/refresh",
                 "@lynx-js/webpack-dev-transport/client",
+                "@lynx-js/react/refresh",
                 "@rspack/core/hot/dev-server",
                 "./src/index.js",
               ],
@@ -2353,6 +2445,106 @@ describe('Config', () => {
       'workletRuntimePath',
       require.resolve('@lynx-js/react/worklet-runtime'),
     )
+  })
+
+  describe('environment', () => {
+    test('lynx environment', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          environments: { lynx: {} },
+          plugins: [
+            pluginReactLynx(),
+          ],
+        },
+      })
+
+      const configs = await rspeedy.initConfigs()
+
+      expect(configs.length).toBe(1)
+
+      expect(configs[0]!.name).toBe('lynx')
+    })
+
+    test('lynx variant environment', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          environments: {
+            lynx: {},
+            'lynx-foo': { output: { distPath: 'dist/foo' } },
+          },
+          plugins: [
+            pluginReactLynx(),
+          ],
+        },
+      })
+
+      const configs = await rspeedy.initConfigs()
+
+      expect(configs.length).toBe(2)
+
+      expect(configs[0]!.name).toBe('lynx')
+      expect(configs[1]!.name).toBe('lynx-foo')
+      // only lynx output will be emitted to `.rspeedy`
+      expect(
+        (configs[1]?.entry as Record<string, Rspack.EntryDescription>)?.['main']
+          ?.filename,
+      ).toBe('.rspeedy/main/background.js')
+    })
+
+    test('web environment', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          environments: { web: {} },
+          plugins: [
+            pluginReactLynx(),
+          ],
+        },
+      })
+
+      const configs = await rspeedy.initConfigs()
+
+      expect(configs.length).toBe(1)
+
+      expect(configs[0]!.name).toBe('web')
+    })
+
+    test('web variant environment', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          environments: {
+            web: {},
+            'web-foo': { output: { distPath: 'dist/foo' } },
+          },
+          plugins: [
+            pluginReactLynx(),
+          ],
+        },
+      })
+
+      const configs = await rspeedy.initConfigs()
+
+      expect(configs.length).toBe(2)
+
+      expect(configs[0]!.name).toBe('web')
+      expect(configs[1]!.name).toBe('web-foo')
+
+      expect(
+        (configs[0]?.entry as Record<string, Rspack.EntryDescription>)?.['main']
+          ?.filename,
+      ).toBe('main/background.js')
+      expect(
+        (configs[1]?.entry as Record<string, Rspack.EntryDescription>)?.['main']
+          ?.filename,
+      ).toBe('main/background.js')
+    })
   })
 })
 
@@ -2799,6 +2991,28 @@ describe('MPA Config', () => {
         ".rspeedy/foo/main-thread.js",
         ".rspeedy/bar/main-thread.js",
         ".rspeedy/baz/main-thread.js",
+      ]
+    `)
+  })
+
+  test('default value of resolve.dedupe', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rspeedy = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx(),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    await rspeedy.initConfigs()
+    const rsbuildConfig = rspeedy.getNormalizedConfig()
+
+    expect(rsbuildConfig.resolve?.dedupe).toMatchInlineSnapshot(`
+      [
+        "react-compiler-runtime",
       ]
     `)
   })

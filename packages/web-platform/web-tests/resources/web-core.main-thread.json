@@ -8,10 +8,12 @@
   "manifest": {
     "/app-service.js": "globalThis.runtime = lynxCoreInject.tt; globalThis.__lynx_worker_type = 'background'",
     "/manifest-chunk.js": "module.exports = 'hello';",
-    "/manifest-chunk2.js": "module.exports = 'world';"
+    "/manifest-chunk2.js": "module.exports = 'world';",
+    "/json": "{}"
   },
   "customSections": {},
   "cardType": "react",
+  "appType": "card",
   "pageConfig": {
     "enableFiberArch": true,
     "useLepusNG": true,
@@ -23,7 +25,6 @@
     "enableCSSInvalidation": true,
     "enableCSSSelector": true,
     "enableLepusDebug": false,
-    "enableParallelElement": true,
     "enableRemoveCSSScope": true,
     "targetSdkVersion": "2.10"
   },

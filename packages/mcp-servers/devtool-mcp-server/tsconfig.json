@@ -1,0 +1,16 @@
+{
+  // Visit https://aka.ms/tsconfig to read more about this file
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+
+    "lib": ["ES2024.Promise", "ES2022"],
+    "module": "nodenext",
+
+    "isolatedDeclarations": false,
+    "noEmit": true,
+  },
+  "include": [
+    "src",
+  ],
+}

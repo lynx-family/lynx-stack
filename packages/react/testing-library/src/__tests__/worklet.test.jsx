@@ -439,21 +439,10 @@ describe('worklet', () => {
     expect(callLepusMethodCalls).toMatchInlineSnapshot(`
       [
         [
-          "rLynxChange",
+          "rLynxChangeRefInitValue",
           {
-            "data": "{"patchList":[{"id":1,"workletRefInitValuePatch":[[1,null],[2,0]]}]}",
-            "patchOptions": {
-              "pipelineOptions": {
-                "dsl": "reactLynx",
-                "needTimestamps": true,
-                "pipelineID": "pipelineID",
-                "pipelineOrigin": "reactLynxHydrate",
-                "stage": "hydrate",
-              },
-              "reloadVersion": 0,
-            },
+            "data": "[[1,null],[2,0]]",
           },
-          [Function],
         ],
         [
           "rLynxChange",

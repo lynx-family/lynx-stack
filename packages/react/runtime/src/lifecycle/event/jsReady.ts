@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { profileEnd, profileStart } from '../../debug/utils.js';
+import { profileEnd, profileStart } from '../../debug/profile.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { __root } from '../../root.js';
 
@@ -11,12 +11,12 @@ let jsReadyEventIdSwap: Record<string | number, number>;
 function jsReady(): void {
   isJSReady = true;
 
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::transferRoot');
     profileStart('ReactLynx::serializeRoot');
   }
   const root = JSON.stringify(__root);
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
   __OnLifecycleEvent([
@@ -26,7 +26,7 @@ function jsReady(): void {
       jsReadyEventIdSwap,
     },
   ]);
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
   jsReadyEventIdSwap = {};

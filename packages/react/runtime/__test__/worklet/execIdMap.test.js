@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { WorkletExecIdMap } from '../../src/worklet/execMap';
+import { WorkletExecIdMap } from '../../src/worklet/call/execMap';
 
 beforeEach(() => {
   SystemInfo.lynxSdkVersion = '999.999';

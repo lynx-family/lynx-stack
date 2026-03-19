@@ -6,10 +6,12 @@ import { process, render } from 'preact';
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
 import type { FirstScreenData } from '../lifecycleConstant.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from './performance.js';
-import { hydrate } from '../backgroundSnapshot.js';
+import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import type { BackgroundDOM } from '../backgroundSnapshot.js';
 import { runWithForce } from './runWithForce.js';
-import { profileEnd, profileStart } from '../debug/utils.js';
+import { printSnapshotInstanceToString } from '../debug/printSnapshot.js';
+import { profileEnd, profileStart } from '../debug/profile.js';
+import { getSnapshotVNodeSource } from '../debug/vnodeSource.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEvents.js';
 import { delayLifecycleEvent, delayedLifecycleEvents } from '../lifecycle/event/delayLifecycleEvents.js';
@@ -22,8 +24,12 @@ import { CHILDREN } from '../renderToOpcodes/constants.js';
 import { __root } from '../root.js';
 import { backgroundSnapshotInstanceManager } from '../snapshot.js';
 import type { SerializedSnapshotInstance } from '../snapshot.js';
+import {
+  delayedRunOnMainThreadData,
+  takeDelayedRunOnMainThreadData,
+} from '../worklet/call/delayedRunOnMainThreadData.js';
 import { destroyWorklet } from '../worklet/destroy.js';
-import { delayedRunOnMainThreadData, takeDelayedRunOnMainThreadData } from '../worklet/runOnMainThread.js';
+import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.js';
 
 export { runWithForce };
 
@@ -54,7 +60,7 @@ function onLifecycleEvent([type, data]: [LifecycleConstant, unknown]) {
     return;
   }
 
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart(`OnLifecycleEvent::${type}`);
   }
 
@@ -64,7 +70,7 @@ function onLifecycleEvent([type, data]: [LifecycleConstant, unknown]) {
     lynx.reportError(e as Error);
   }
 
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
 }
@@ -79,19 +85,46 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         processErr = e;
       }
       const { root: lepusSide, jsReadyEventIdSwap } = data as FirstScreenData;
-      if (__PROFILE__) {
+      if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileStart('ReactLynx::hydrate');
       }
       beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
       markTiming('hydrateParseSnapshotStart');
       const before = JSON.parse(lepusSide) as SerializedSnapshotInstance;
+      if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+        console.alog?.(
+          '[ReactLynxDebug] MTS -> BTS OnLifecycleEvent:\n' + JSON.stringify(
+            {
+              ...data as object,
+              // use parsed lepusSide to avoid extra escape characters ('\\')
+              root: before,
+            },
+            null,
+            2,
+          ),
+        );
+        console.alog?.(
+          '[ReactLynxDebug] SnapshotInstance tree for first screen hydration:\n'
+            + printSnapshotInstanceToString(before),
+        );
+        console.alog?.(
+          '[ReactLynxDebug] BackgroundSnapshotInstance tree before hydration:\n'
+            + printSnapshotInstanceToString(__root as BackgroundSnapshotInstance),
+        );
+      }
       markTiming('hydrateParseSnapshotEnd');
       markTiming('diffVdomStart');
       const snapshotPatch = hydrate(
         before,
         __root as BackgroundDOM,
       );
-      if (__PROFILE__) {
+      if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+        console.alog?.(
+          '[ReactLynxDebug] BackgroundSnapshotInstance after hydration:\n'
+            + printSnapshotInstanceToString(__root as BackgroundSnapshotInstance),
+        );
+      }
+      if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileEnd();
       }
       markTiming('diffVdomEnd');
@@ -126,7 +159,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         patchList.delayedRunOnMainThreadData = takeDelayedRunOnMainThreadData();
       }
       const obj = commitPatchUpdate(patchList, { isHydration: true });
-
+      sendMTRefInitValueToMainThread();
       lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
         globalCommitTaskMap.forEach((commitTask, id) => {
           if (id > commitTaskId) {
@@ -149,7 +182,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       break;
     }
     case LifecycleConstant.publishEvent: {
-      const { handlerName, data: d } = data as { handlerName: string; data: unknown };
+      const { handlerName, data: d } = data as { handlerName: string; data: EventDataType };
       lynxCoreInject.tt.publishEvent(handlerName, d);
       break;
     }
@@ -170,25 +203,63 @@ function flushDelayedLifecycleEvents(): void {
   flushingDelayedLifecycleEvents = false;
 }
 
-function publishEvent(handlerName: string, data: unknown) {
+function publishEvent(handlerName: string, data: EventDataType) {
   lynxCoreInject.tt.callBeforePublishEvent?.(data);
+  let snapshotId: number | undefined;
+  const getSnapshotId = () => snapshotId ??= Number(handlerName.split(':')[0]);
   const eventHandler = backgroundSnapshotInstanceManager.getValueBySign(
     handlerName,
-  );
+  ) as ((data: unknown) => void) | undefined;
+
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+    const currentSnapshotId = getSnapshotId();
+    profileStart(`ReactLynx::publishEvent`, {
+      args: {
+        handlerName,
+        type: data.type,
+        snapshotType: backgroundSnapshotInstanceManager.values.get(
+          currentSnapshotId,
+        )?.type ?? '',
+        source: getSnapshotVNodeSource(currentSnapshotId) ?? '',
+        jsFunctionName: eventHandler?.name ?? '',
+      },
+    });
+  }
+  if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+    const currentSnapshotId = getSnapshotId();
+    console.alog?.(
+      `[ReactLynxDebug] BTS received event:\n` + JSON.stringify(
+        {
+          handlerName,
+          type: data.type,
+          snapshotType: backgroundSnapshotInstanceManager.values.get(
+            currentSnapshotId,
+          )?.type ?? '',
+          jsFunctionName: eventHandler?.name ?? '',
+        },
+        null,
+        2,
+      ),
+    );
+  }
+
   if (eventHandler) {
     try {
-      (eventHandler as (...args: unknown[]) => void)(data);
+      eventHandler(data);
     } catch (e) {
       lynx.reportError(e as Error);
     }
   }
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+    profileEnd();
+  }
 }
 
-function publicComponentEvent(_componentId: string, handlerName: string, data: unknown) {
+function publicComponentEvent(_componentId: string, handlerName: string, data: EventDataType) {
   publishEvent(handlerName, data);
 }
 
-function delayedPublicComponentEvent(_componentId: string, handlerName: string, data: unknown) {
+function delayedPublicComponentEvent(_componentId: string, handlerName: string, data: EventDataType) {
   delayedPublishEvent(handlerName, data);
 }
 

@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 // @ts-nocheck
-import { test, expect } from './coverage-fixture.js';
+import { test, expect } from '@lynx-js/playwright-fixtures';
 import type { Page, Worker } from '@playwright/test';
 
 const ENABLE_MULTI_THREAD = !!process.env.ENABLE_MULTI_THREAD;
@@ -203,6 +203,24 @@ test.describe('web core tests', () => {
     });
     expect(success).toBe(true);
     expect(fail).toBe(false);
+  });
+
+  test('api-nativeApp-readScript', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    const mainWorker = await getMainThreadWorker(page);
+    await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+    });
+    await wait(3000);
+    const backWorker = await getBackgroundThreadWorker(page);
+    const jsonContent = await backWorker.evaluate(() => {
+      const nativeApp = globalThis.runtime.lynx.getNativeApp();
+      return nativeApp.readScript('json');
+    });
+    await wait(100);
+    expect(jsonContent).toBe('{}');
   });
   test('registerDataProcessor-as-global-var-update', async ({ page, browserName }) => {
     await goto(page);
@@ -671,5 +689,64 @@ test.describe('web core tests', () => {
     );
     await wait(500);
     expect(height).toBe('100px');
+  });
+  test('source-map-release', async ({ page, browserName }) => {
+    // firefox not support
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    const mainWorker = await getMainThreadWorker(page);
+    await mainWorker.evaluate(() => {
+      globalThis.runtime.renderPage = () => {};
+    });
+    const backWorker = await getBackgroundThreadWorker(page);
+    const isSuccess = await backWorker.evaluate(() => {
+      return new Promise(resolve => {
+        globalThis.runtime.lynx.getNativeApp().__SetSourceMapRelease({
+          message: 'd73160119ef7e77776246caca2a7b98e',
+        });
+        resolve(
+          globalThis.runtime.lynx.getNativeApp().__GetSourceMapRelease()
+            === 'd73160119ef7e77776246caca2a7b98e',
+        );
+      });
+    });
+    await wait(1000);
+    expect(isSuccess).toBeTruthy();
+  });
+  test('should not throw error when removed immediately after connected', async ({ page }) => {
+    const errors: Error[] = [];
+    page.on('pageerror', (err) => {
+      errors.push(err);
+    });
+
+    await goto(page);
+
+    // Evaluate in browser context
+    await page.evaluate(async () => {
+      // Verify DOM behavior assumption
+      const div = document.createElement('div');
+      const shadow = div.attachShadow({ mode: 'open' });
+      const style = document.createElement('style');
+      shadow.appendChild(style);
+      document.body.appendChild(div);
+      if (!style.sheet) throw new Error('Sheet should exist when connected');
+
+      document.body.removeChild(div);
+      if (style.sheet) {
+        throw new Error('Sheet should be null when disconnected');
+      }
+
+      // Create a new lynx-view
+      const view = document.createElement('lynx-view');
+      // Connect it
+      document.body.appendChild(view);
+      // Immediately disconnect it
+      document.body.removeChild(view);
+
+      // Wait a bit to ensure microtasks run
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+
+    expect(errors.length).toBe(0);
   });
 });

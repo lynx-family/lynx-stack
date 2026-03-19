@@ -1,0 +1,9 @@
+#!/bin/sh
+basedir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+
+if [ ! -f "$basedir/../dist/bin/benchx_cli" ]; then
+  echo "Acting as noop as './dist/bin/benchx_cli' not found. Please run 'CI=1 pnpm build' in packages/lynx/benchx_cli first." >&2
+  exit 0
+fi
+
+exec "$basedir/../dist/bin/benchx_cli" "$@"

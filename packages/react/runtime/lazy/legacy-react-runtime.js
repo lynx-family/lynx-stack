@@ -9,11 +9,13 @@ export const {
   PureComponent,
   __runInJS,
   createContext,
+  createRef,
   lazy,
   useCallback,
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   useState,
 } = target[sExportsLegacyReactRuntime];
 

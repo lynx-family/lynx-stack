@@ -20,9 +20,9 @@ import type {
 } from 'webpack';
 
 import type * as CSS from '@lynx-js/css-serializer';
+import { cssChunksToMap } from '@lynx-js/css-serializer';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
-import { cssChunksToMap } from './css/cssChunksToMap.js';
 import { createLynxAsyncChunksRuntimeModule } from './LynxAsyncChunksRuntimeModule.js';
 
 export type OriginManifest = Record<string, {
@@ -41,6 +41,7 @@ export interface EncodeOptions {
   lepusCode: {
     root: string | undefined;
     lepusChunk: Record<string, string>;
+    filename: string | undefined;
   };
   // `customSections` option only takes effect on Lynx >= 2.16.
   customSections: Record<string, {
@@ -63,7 +64,7 @@ const LynxTemplatePluginHooksMap = new WeakMap<Compilation, TemplateHooks>();
  *     compiler.hooks.compilation.tap("MyPlugin", (compilation) => {
  *       console.log("The compiler is starting a new compilation...");
  *
- *       LynxTemplatePlugin.getCompilationHooks(compilation).beforeEmit.tapAsync(
+ *       LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(
  *         "MyPlugin", // <-- Set a meaningful name here for stacktraces
  *         (data, cb) => {
  *           // Manipulate the content
@@ -123,6 +124,7 @@ export interface TemplateHooks {
     outputName: string;
     mainThreadAssets: Asset[];
     cssChunks: Asset[];
+    entryNames: string[];
   }>;
 
   /**
@@ -236,11 +238,6 @@ export interface LynxTemplatePluginOptions {
   enableAccessibilityElement: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableICU}
-   */
-  enableICU: boolean;
-
-  /**
    * Use Android View level APIs and system implementations.
    */
   enableA11y: boolean;
@@ -266,19 +263,9 @@ export interface LynxTemplatePluginOptions {
   enableNewGesture: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableParallelElement}
-   */
-  enableParallelElement?: boolean;
-
-  /**
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope}
    */
   enableRemoveCSSScope: boolean;
-
-  /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.pipelineSchedulerConfig}
-   */
-  pipelineSchedulerConfig: number;
 
   /**
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.removeDescendantSelectorScope}
@@ -322,6 +309,7 @@ interface EncodeRawData {
   lepusCode: {
     root: Asset | undefined;
     chunks: Asset[];
+    filename: string | undefined;
   };
   /**
    * background thread
@@ -398,17 +386,14 @@ export class LynxTemplatePlugin {
       // lynx-specific
       customCSSInheritanceList: undefined,
       debugInfoOutside: true,
-      enableICU: false,
       enableA11y: true,
       enableAccessibilityElement: false,
       enableCSSInheritance: false,
       enableCSSInvalidation: false,
       enableCSSSelector: true,
       enableNewGesture: false,
-      enableParallelElement: true,
       defaultDisplayLinear: true,
       enableRemoveCSSScope: false,
-      pipelineSchedulerConfig: 0x00010000,
       targetSdkVersion: '3.2',
       defaultOverflowVisible: true,
       removeDescendantSelectorScope: false,
@@ -487,57 +472,55 @@ class LynxTemplatePluginImpl {
 
     this.hash = createHash(compiler.options.output.hashFunction ?? 'xxhash64');
 
-    compiler.hooks.initialize.tap(this.name, () => {
-      // entryName to fileName conversion function
-      const userOptionFilename = this.#options.filename;
+    // entryName to fileName conversion function
+    const userOptionFilename = this.#options.filename;
 
-      const filenameFunction = typeof userOptionFilename === 'function'
-        ? userOptionFilename
-        // Replace '[name]' with entry name
-        : (entryName: string) =>
-          userOptionFilename.replace(/\[name\]/g, entryName);
+    const filenameFunction = typeof userOptionFilename === 'function'
+      ? userOptionFilename
+      // Replace '[name]' with entry name
+      : (entryName: string) =>
+        userOptionFilename.replace(/\[name\]/g, entryName);
 
-      /** output filenames for the given entry names */
-      const entryNames = Object.keys(compiler.options.entry);
-      const outputFileNames = new Set(
-        (entryNames.length > 0 ? entryNames : ['main']).map((name) =>
-          filenameFunction(name)
-        ),
-      );
+    /** output filenames for the given entry names */
+    const entryNames = Object.keys(compiler.options.entry);
+    const outputFileNames = new Set(
+      (entryNames.length > 0 ? entryNames : ['main']).map((name) =>
+        filenameFunction(name)
+      ),
+    );
 
-      outputFileNames.forEach((outputFileName) => {
-        // convert absolute filename into relative so that webpack can
-        // generate it at correct location
-        let filename = outputFileName;
-        if (path.resolve(filename) === path.normalize(filename)) {
-          filename = path.relative(
-            /** Once initialized the path is always a string */
-            compiler.options.output.path!,
-            filename,
-          );
-        }
+    outputFileNames.forEach((outputFileName) => {
+      // convert absolute filename into relative so that webpack can
+      // generate it at correct location
+      let filename = outputFileName;
+      if (path.resolve(filename) === path.normalize(filename)) {
+        filename = path.relative(
+          /** Once initialized the path is always a string */
+          compiler.options.output.path!,
+          filename,
+        );
+      }
 
-        compiler.hooks.thisCompilation.tap(this.name, (compilation) => {
-          compilation.hooks.processAssets.tapPromise(
-            {
-              name: this.name,
-              stage:
-                /**
-                 * Generate the html after minification and dev tooling is done
-                 * and source-map is generated
-                 */
-                compiler.webpack.Compilation
-                  .PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
-            },
-            () => {
-              return this.#generateTemplate(
-                compiler,
-                compilation,
-                filename,
-              );
-            },
-          );
-        });
+      compiler.hooks.thisCompilation.tap(this.name, (compilation) => {
+        compilation.hooks.processAssets.tapPromise(
+          {
+            name: this.name,
+            stage:
+              /**
+               * Generate the html after minification and dev tooling is done
+               * and source-map is generated
+               */
+              compiler.webpack.Compilation
+                .PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
+          },
+          () => {
+            return this.#generateTemplate(
+              compiler,
+              compilation,
+              filename,
+            );
+          },
+        );
       });
     });
 
@@ -687,43 +670,51 @@ class LynxTemplatePluginImpl {
     )!;
 
     await Promise.all(
-      Object.entries(asyncChunkGroups).map(([entryName, chunkGroups]) => {
-        const chunkNames =
-          // We use the chunk name(provided by `webpackChunkName`) as filename
-          chunkGroups
-            .filter(cg => cg.name !== null && cg.name !== undefined)
-            .map(cg => hooks.asyncChunkName.call(cg.name!));
+      Object.entries(asyncChunkGroups).map(
+        ([_entryName, chunkGroups]): Promise<void> => {
+          const entryNames = // We use the chunk name(provided by `webpackChunkName`) as filename
+            chunkGroups
+              .filter(cg => cg.name !== null && cg.name !== undefined).map(cg =>
+                cg.name!
+              );
 
-        const filename = Array.from(new Set(chunkNames)).join('_');
+          const chunkNames = entryNames.map(name =>
+            hooks.asyncChunkName.call(name)
+          );
 
-        // If no filename is found, avoid generating async template
-        if (!filename) {
-          return;
-        }
+          const filename = Array.from(new Set(chunkNames)).join('_');
 
-        const filenameTemplate = this.#getAsyncFilenameTemplate(filename);
+          // If no filename is found, avoid generating async template
+          if (!filename) {
+            return Promise.resolve();
+          }
 
-        // Ignore the encoded templates
-        if (encodedTemplate.has(filenameTemplate)) {
-          return;
-        }
+          const filenameTemplate = this.#getAsyncFilenameTemplate(filename);
 
-        encodedTemplate.add(filenameTemplate);
+          // Ignore the encoded templates
+          if (encodedTemplate.has(filenameTemplate)) {
+            return Promise.resolve();
+          }
 
-        const asyncAssetsInfoByGroups = this.#getAssetsInformationByFilenames(
-          compilation,
-          chunkGroups.flatMap(cg => cg.getFiles()),
-        );
+          encodedTemplate.add(filenameTemplate);
 
-        return this.#encodeByAssetsInformation(
-          compilation,
-          asyncAssetsInfoByGroups,
-          [entryName],
-          filenameTemplate,
-          path.join(intermediateRoot, 'async', filename),
-          /** isAsync */ true,
-        );
-      }),
+          const asyncAssetsInfoByGroups = this.#getAssetsInformationByFilenames(
+            compilation,
+            chunkGroups.flatMap(cg => cg.getFiles()).filter(chunkFile =>
+              predicateNonHotModuleReplacementAsset(chunkFile, compilation)
+            ),
+          );
+
+          return this.#encodeByAssetsInformation(
+            compilation,
+            asyncAssetsInfoByGroups,
+            entryNames,
+            filenameTemplate,
+            path.join(intermediateRoot, 'async', filename),
+            /** isAsync */ true,
+          );
+        },
+      ),
     );
   }
 
@@ -741,16 +732,13 @@ class LynxTemplatePluginImpl {
       customCSSInheritanceList,
       debugInfoOutside,
       defaultDisplayLinear,
-      enableICU,
       enableA11y,
       enableAccessibilityElement,
       enableCSSInheritance,
       enableCSSInvalidation,
       enableCSSSelector,
       enableNewGesture,
-      enableParallelElement,
       enableRemoveCSSScope,
-      pipelineSchedulerConfig,
       removeDescendantSelectorScope,
       targetSdkVersion,
       defaultOverflowVisible,
@@ -761,7 +749,7 @@ class LynxTemplatePluginImpl {
     const isDev = process.env['NODE_ENV'] === 'development'
       || compiler.options.mode === 'development';
 
-    const css = cssChunksToMap(
+    const initialCSS = cssChunksToMap(
       assetsInfoByGroups.css
         .map(chunk => compilation.getAsset(chunk.name))
         .filter((v): v is Asset => !!v)
@@ -769,20 +757,37 @@ class LynxTemplatePluginImpl {
       cssPlugins,
       enableCSSSelector,
     );
+
+    let templateDebugUrl = '';
+    const debugInfoPath = path.posix.format({
+      dir: intermediate,
+      base: 'debug-info.json',
+    });
+    // TODO: Support publicPath function
+    if (
+      typeof compiler.options.output.publicPath === 'string'
+      && compiler.options.output.publicPath !== 'auto'
+      && compiler.options.output.publicPath !== '/'
+    ) {
+      templateDebugUrl = new URL(
+        debugInfoPath,
+        compiler.options.output.publicPath,
+      ).toString();
+    }
+
     const encodeRawData: EncodeRawData = {
       compilerOptions: {
         enableFiberArch: true,
         useLepusNG: true,
         enableReuseContext: true,
         bundleModuleMode: 'ReturnByFunction',
-        templateDebugUrl: '',
+        templateDebugUrl,
 
         debugInfoOutside,
         defaultDisplayLinear,
         enableCSSInvalidation,
         enableCSSSelector,
         enableLepusDebug: isDev,
-        enableParallelElement,
         enableRemoveCSSScope,
         targetSdkVersion,
         defaultOverflowVisible,
@@ -793,7 +798,6 @@ class LynxTemplatePluginImpl {
         config: {
           lepusStrict: true,
           useNewSwiper: true,
-          enableICU,
           enableNewIntersectionObserver: true,
           enableNativeList: true,
           enableA11y,
@@ -801,18 +805,24 @@ class LynxTemplatePluginImpl {
           customCSSInheritanceList,
           enableCSSInheritance,
           enableNewGesture,
-          pipelineSchedulerConfig,
           removeDescendantSelectorScope,
         },
       },
       css: {
-        ...css,
+        ...initialCSS,
         chunks: assetsInfoByGroups.css,
       },
       lepusCode: {
         // TODO: support multiple lepus chunks
         root: assetsInfoByGroups.mainThread[0],
         chunks: [],
+        filename: (() => {
+          const name = assetsInfoByGroups.mainThread[0]?.name;
+          if (name) {
+            return path.basename(name);
+          }
+          return undefined;
+        })(),
       },
       manifest: Object.fromEntries(
         assetsInfoByGroups.backgroundThread.map(asset => {
@@ -831,7 +841,7 @@ class LynxTemplatePluginImpl {
       entryNames,
     });
 
-    const { lepusCode } = encodeData;
+    const { lepusCode, css } = encodeData;
 
     const resolvedEncodeOptions: EncodeOptions = {
       ...encodeData,
@@ -848,25 +858,9 @@ class LynxTemplatePluginImpl {
             return [asset.name, asset.source.source().toString()];
           }),
         ),
+        filename: lepusCode.filename,
       },
     };
-
-    const debugInfoPath = path.posix.format({
-      dir: intermediate,
-      base: 'debug-info.json',
-    });
-
-    // TODO: Support publicPath function
-    if (
-      typeof compiler.options.output.publicPath === 'string'
-      && compiler.options.output.publicPath !== 'auto'
-      && compiler.options.output.publicPath !== '/'
-    ) {
-      resolvedEncodeOptions.compilerOptions['templateDebugUrl'] = new URL(
-        debugInfoPath,
-        compiler.options.output.publicPath,
-      ).toString();
-    }
 
     const { RawSource } = compiler.webpack.sources;
 
@@ -914,6 +908,7 @@ class LynxTemplatePluginImpl {
         mainThreadAssets: [lepusCode.root, ...encodeData.lepusCode.chunks]
           .filter(i => i !== undefined),
         cssChunks: assetsInfoByGroups.css,
+        entryNames,
       });
 
       compilation.emitAsset(filename, new RawSource(template, false));
@@ -973,17 +968,9 @@ class LynxTemplatePluginImpl {
       /** entryPointUnfilteredFiles - also includes hot module update files */
       const entryPointUnfilteredFiles = compilation.entrypoints.get(entryName)!
         .getFiles();
-      return entryPointUnfilteredFiles.filter((chunkFile) => {
-        const asset = compilation.getAsset(chunkFile);
-
-        // Prevent hot-module files from being included:
-        const assetMetaInformation = asset?.info ?? {};
-
-        return !(
-          assetMetaInformation.hotModuleReplacement
-            ?? assetMetaInformation.development
-        );
-      });
+      return entryPointUnfilteredFiles.filter((chunkFile) =>
+        predicateNonHotModuleReplacementAsset(chunkFile, compilation)
+      );
     });
 
     return this.#getAssetsInformationByFilenames(compilation, filenames);
@@ -1063,4 +1050,19 @@ export function isDebug(): boolean {
 
 export function isRsdoctor(): boolean {
   return process.env['RSDOCTOR'] === 'true';
+}
+
+export function predicateNonHotModuleReplacementAsset(
+  chunkFile: string,
+  compilation: Compilation,
+): boolean {
+  const asset = compilation.getAsset(chunkFile);
+
+  // Prevent hot-module files from being included:
+  const assetMetaInformation = asset?.info ?? {};
+
+  return !(
+    assetMetaInformation.hotModuleReplacement
+      ?? assetMetaInformation.development
+  );
 }

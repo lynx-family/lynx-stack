@@ -7,10 +7,10 @@ import { __root } from '../root.js';
 import { delayedEvents } from './event/delayEvents.js';
 import { delayedLifecycleEvents } from './event/delayLifecycleEvents.js';
 import { globalCommitTaskMap } from './patch/commit.js';
-import { profileEnd, profileStart } from '../debug/utils.js';
+import { profileEnd, profileStart } from '../debug/profile.js';
 
 function destroyBackground(): void {
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::destroyBackground');
   }
 
@@ -27,7 +27,7 @@ function destroyBackground(): void {
   if (delayedEvents) {
     delayedEvents.length = 0;
   }
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
 }

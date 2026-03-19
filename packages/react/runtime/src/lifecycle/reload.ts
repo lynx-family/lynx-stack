@@ -17,16 +17,15 @@ import { destroyBackground } from './destroy.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
 import { SnapshotInstance, __page, snapshotInstanceManager } from '../snapshot.js';
 import { isEmptyObject } from '../utils.js';
-import { destroyWorklet } from '../worklet/destroy.js';
 import { clearJSReadyEventIdSwap, isJSReady } from './event/jsReady.js';
 import { increaseReloadVersion } from './pass.js';
 import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
 import { shouldDelayUiOps } from './ref/delay.js';
 import { renderMainThread } from './render.js';
-import { profileEnd, profileStart } from '../debug/utils.js';
+import { profileEnd, profileStart } from '../debug/profile.js';
 
 function reloadMainThread(data: unknown, options: UpdatePageOption): void {
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::reloadMainThread');
   }
 
@@ -36,7 +35,6 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
     Object.assign(lynx.__initData, data);
   }
 
-  destroyWorklet();
   snapshotInstanceManager.clear();
   __pendingListUpdates.clearAttachedLists();
   clearJSReadyEventIdSwap();
@@ -64,14 +62,14 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
 
   __FlushElementTree(__page, options);
 
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
   return;
 }
 
 function reloadBackground(updateData: Record<string, any>): void {
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::reloadBackground');
   }
 
@@ -88,7 +86,7 @@ function reloadBackground(updateData: Record<string, any>): void {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   render(__root.__jsx, __root as any);
 
-  if (__PROFILE__) {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
 }

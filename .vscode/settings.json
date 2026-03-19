@@ -38,4 +38,6 @@
   "typescript.preferences.preferTypeOnlyAutoImports": true,
   "typescript.preferences.importModuleSpecifierEnding": "js",
   "rust-analyzer.check.command": "clippy",
+  "rust-analyzer.check.features": "all",
+  "rust-analyzer.cargo.features": "all",
 }

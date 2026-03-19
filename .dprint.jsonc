@@ -57,6 +57,7 @@
     "**/expected/**",
     "**/rspack-expected/**",
     "packages/**/test/**/hotCases/**",
+    "packages/web-platform/**/binary/**/*.d.ts",
   ],
   "plugins": [
     "https://plugins.dprint.dev/dockerfile-0.3.2.wasm",

@@ -6,8 +6,8 @@ import path from 'node:path';
 
 import {
   ECompilerType,
+  HotRunnerFactory,
   HotSnapshotProcessor,
-  HotStepRunnerFactory,
   describeByWalk,
 } from '@rspack/test-tools';
 import type { TCompilerOptions } from '@rspack/test-tools';
@@ -51,7 +51,7 @@ function createCase(name: string, src: string, dist: string, cwd: string) {
       const caseName = `${name} - ${compilerType}`;
       const caseConfigFile = path.join(src, `${compilerType}.config.js`);
       const compilerDist = path.join(dist, compilerType);
-      const runner = createRunner(src, compilerDist, HotStepRunnerFactory);
+      const runner = createRunner(src, compilerDist, HotRunnerFactory);
 
       describe(caseName, async () => {
         if (!fs.existsSync(caseConfigFile)) {

@@ -15,11 +15,7 @@
       "@lynx-js/web-mainthread-apis",
       "@lynx-js/web-worker-rpc",
       "@lynx-js/web-worker-runtime",
-      "@lynx-js/web-style-transformer"
-    ],
-    [
-      "@lynx-js/web-elements",
-      "@lynx-js/web-elements-template"
+      "@lynx-js/web-rsbuild-server-middleware"
     ],
     [
       "@lynx-js/react-rsbuild-plugin",
@@ -29,6 +25,10 @@
       "@lynx-js/rspeedy",
       "create-rspeedy",
       "upgrade-rspeedy"
+    ],
+    [
+      "@lynx-js/react",
+      "@lynx-js/react-umd"
     ]
   ],
   "linked": [],
@@ -41,7 +41,8 @@
   },
   "ignore": [
     "@lynx-js/web-tests",
-    "@lynx-js/example-react"
+    "@lynx-js/example-react",
+    "@lynx-js/web-core-wasm-e2e"
   ],
   "changedFilePatterns": [
     "src/**"

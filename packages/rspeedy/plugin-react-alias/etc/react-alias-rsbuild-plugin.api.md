@@ -5,11 +5,12 @@
 ```ts
 
 import type { RsbuildPlugin } from '@rsbuild/core';
+import { rspack } from '@rspack/core';
 
 // Warning: (ae-missing-release-tag) "createLazyResolver" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function createLazyResolver(directory: string, conditionNames: string[]): (request: string) => Promise<string>;
+export function createLazyResolver(rspack: rspack, directory: string, conditionNames: string[]): (request: string) => Promise<string>;
 
 // Warning: (ae-missing-release-tag) "Options" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //

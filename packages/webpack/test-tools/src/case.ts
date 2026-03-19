@@ -87,7 +87,7 @@ function createCase(
             name: caseName,
             compilerType,
             root: cwd,
-            runable: true,
+            runable: true, // spellchecker:disable-line
           }),
         );
       });

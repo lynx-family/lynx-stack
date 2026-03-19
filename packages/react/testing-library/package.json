@@ -6,13 +6,15 @@
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",
-    "test": "vitest",
+    "test": "npm run test:base && npm run test:3.1",
+    "test:3.1": "vitest --config vitest.3.1.config.ts",
+    "test:base": "vitest",
     "test:ui": "vitest --ui"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/testing-environment": "workspace:*",
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.8.0"
+    "@testing-library/jest-dom": "^6.9.1"
   }
 }

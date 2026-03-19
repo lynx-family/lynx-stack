@@ -10,6 +10,7 @@
     "bench:003-hello-list": "benchx_cli run dist/003-hello-list.lynx.bundle --wait-for-id=stop-benchmark-true",
     "bench:004-various-update": "benchx_cli run dist/004-various-update.lynx.bundle --wait-for-id=stop-benchmark-true",
     "bench:005-load-script": "benchx_cli run dist/005-load-script.lynx.bundle",
+    "bench:006-static-raw-text": "benchx_cli run dist/006-static-raw-text.lynx.bundle --wait-for-id=stop-benchmark-true",
     "build": "rspeedy build",
     "dev": "rspeedy dev",
     "perfetto": "pnpm run --sequential --stream --aggregate-output '/^perfetto:.*/'",
@@ -18,22 +19,24 @@
     "perfetto:003-hello-list": "benchx_cli -o dist/003-hello-list.ptrace run dist/003-hello-list.lynx.bundle --wait-for-id=stop-benchmark-true",
     "perfetto:004-various-update": "benchx_cli -o dist/004-various-update.ptrace run dist/004-various-update.lynx.bundle --wait-for-id=stop-benchmark-true",
     "perfetto:005-load-script": "benchx_cli -o dist/005-load-script.ptrace run dist/005-load-script.lynx.bundle",
-    "test": "echo 'No tests specified'"
+    "perfetto:006-static-raw-text": "benchx_cli -o dist/006-static-raw-text.ptrace run dist/006-static-raw-text.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "test": "npm run perfetto && node scripts/detectLeak.mjs"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*",
     "benchx_cli": "workspace:*",
     "empathic": "^2.0.0",
     "event-target-polyfill": "^0.0.4",
-    "magic-string": "^0.30.18",
-    "tinybench": "^5.0.1"
+    "magic-string": "^0.30.21",
+    "tinybench": "^5.1.0"
   },
   "devDependencies": {
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
-    "@lynx-js/type-element-api": "0.0.2",
-    "@lynx-js/types": "3.4.11",
-    "@types/react": "^18.3.23"
+    "@lynx-js/trace-processor": "^0.0.1",
+    "@lynx-js/type-element-api": "0.0.3",
+    "@lynx-js/types": "3.7.0",
+    "@types/react": "^18.3.28"
   }
 }

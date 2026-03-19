@@ -23,7 +23,7 @@ Rsbuild 提供了一套强大的插件系统，允许用户进行功能扩展。
 - [TypeScript 类型检查插件](https://github.com/rspack-contrib/rsbuild-plugin-type-check): 在独立进程中进行 TypeScript 类型检查
 - [图片压缩插件](https://github.com/rspack-contrib/rsbuild-plugin-image-compress): 压缩图片资源
 - [Typed CSS Module 插件](https://github.com/rspack-contrib/rsbuild-plugin-typed-css-modules): 为 CSS Modules 生成 TypeScript 声明文件
-- [Tailwind CSS 插件](https://github.com/rspack-contrib/rsbuild-plugin-tailwindcss): 接入 Tailwind CSS V3
+- [Tailwind CSS 插件](https://github.com/rstackjs/rsbuild-plugin-tailwindcss): 接入 Tailwind CSS V3
 
 ### Rspack/Webpack 插件
 

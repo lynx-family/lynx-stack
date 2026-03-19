@@ -1,0 +1,134 @@
+/*
+// Copyright 2024 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+*/
+.title {
+  text-align: center;
+  font-size: 26px;
+  margin-bottom: 10px;
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+.block {
+  top: 200px;
+  border: 1px solid black;
+}
+
+.test-card {
+  display: linear;
+  linear-direction: column;
+  background-color: #fff;
+  padding-bottom: 20px;
+  padding-top: 200px;
+  height: 700px;
+}
+
+.box {
+  display: linear;
+  linear-direction: column;
+  border-width: 1px;
+  border-color: #000;
+  margin-top: 5px;
+  overflow: visible;
+  width: 100vw;
+}
+
+.h1 {
+  font-size: 18px;
+  margin-top: 10px;
+}
+
+.word {
+  color: black;
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+
+.text-inner {
+  background-color: black;
+  height: 16px;
+  width: 50px;
+}
+
+.text-inner-text {
+  color: #fff;
+}
+
+.button {
+  padding: 16px;
+  background-color: #119988;
+}
+
+.button-text {
+  color: #fff;
+}
+
+.dialog-overlay {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  overflow: hidden;
+  background-color: rgba(255, 0, 0, 0.2);
+}
+
+.dialog-overlay2 {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  background-color: rgba(0, 0, 255, 0.2);
+}
+
+.dialog-overlay3 {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  background-color: rgba(0, 255, 0, 0.2);
+}
+
+.dialog-container {
+  width: 200px;
+  height: 500px;
+  background-color: grey;
+  justify-content: center;
+  align-items: center;
+}
+
+.dialog {
+  background-color: red;
+  width: 200px;
+  height: 400px;
+  align-items: center;
+  justify-content: center;
+}
+
+.dialog-text {
+  color: #000;
+}
+
+.desc {
+  margin-bottom: 20px;
+}
+
+.close-view {
+  width: 150px;
+  height: 150px;
+  background-color: blue;
+}
+
+.close-view3 {
+  width: 75px;
+  height: 75px;
+  background-color: green;
+}

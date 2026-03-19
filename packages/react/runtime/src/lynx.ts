@@ -5,10 +5,13 @@ import { options } from 'preact';
 // to make sure preact's hooks to register earlier than ours
 import './hooks/react.js';
 
+import { initElementPAPICallAlog } from './alog/elementPAPICall.js';
 import { initAlog } from './alog/index.js';
 import { setupDom } from './backgroundSnapshot.js';
 import { setupComponentStack } from './debug/component-stack.js';
-import { initProfileHook } from './debug/profile.js';
+import { isProfiling } from './debug/profile.js';
+import { initProfileHook } from './debug/profileHooks.js';
+import { setupVNodeSourceHook } from './debug/vnodeSource.js';
 import { replaceCommitHook } from './lifecycle/patch/commit.js';
 import { addCtxNotFoundEventListener } from './lifecycle/patch/error.js';
 import { injectUpdateMainThread } from './lifecycle/patch/updateMainThread.js';
@@ -18,6 +21,7 @@ import { injectLepusMethods } from './lynx/injectLepusMethods.js';
 import { initTimingAPI } from './lynx/performance.js';
 import { injectTt } from './lynx/tt.js';
 import { lynxQueueMicrotask } from './utils.js';
+import { injectUpdateMTRefInitValue } from './worklet/ref/updateInitValue.js';
 
 export { runWithForce } from './lynx/runWithForce.js';
 
@@ -29,9 +33,10 @@ if (__MAIN_THREAD__ && typeof globalThis.processEvalResult === 'undefined') {
   };
 }
 
-if (__MAIN_THREAD__) {
+if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
   injectCalledByNative();
   injectUpdateMainThread();
+  injectUpdateMTRefInitValue();
   if (__DEV__) {
     injectLepusMethods();
   }
@@ -42,7 +47,7 @@ if (__DEV__) {
 }
 
 // We are profiling both main-thread and background.
-if (__MAIN_THREAD__ && __PROFILE__) {
+if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__ && typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
   initProfileHook();
 }
 
@@ -50,8 +55,11 @@ if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
   // We are logging both main-thread and background.
   initAlog();
 }
+if (typeof __ALOG_ELEMENT_API__ !== 'undefined' && __ALOG_ELEMENT_API__) {
+  initElementPAPICallAlog();
+}
 
-if (__BACKGROUND__) {
+if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
   options.requestAnimationFrame = lynxQueueMicrotask;
   options.setupDom = setupDom;
   injectTt();
@@ -61,7 +69,10 @@ if (__BACKGROUND__) {
   else {
     replaceCommitHook();
     initTimingAPI();
-    if (lynx.performance?.isProfileRecording?.()) {
+    if (__DEV__ && isProfiling) {
+      setupVNodeSourceHook();
+    }
+    if (isProfiling) {
       initProfileHook();
     }
   }

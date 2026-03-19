@@ -1,6 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import type { IncomingMessage } from 'node:http'
+
 import type { RsbuildPlugin } from '@rsbuild/core'
 import { describe, expect, test } from 'vitest'
 
@@ -14,7 +16,9 @@ describe('Config - toRsBuildConfig', () => {
       })
       expect(rsbuildConfig.dev).toMatchInlineSnapshot(`
         {
+          "hmr": true,
           "lazyCompilation": false,
+          "liveReload": true,
           "progressBar": true,
           "watchFiles": undefined,
           "writeToDisk": true,
@@ -337,9 +341,11 @@ describe('Config - toRsBuildConfig', () => {
       })
 
       expect(rsbuildConfig.environments).toHaveProperty('web')
-      expect(rsbuildConfig.environments?.['web']?.output?.distPath?.root).toBe(
-        'web',
-      )
+      expect(rsbuildConfig.environments?.['web']?.output?.distPath)
+        .toHaveProperty(
+          'root',
+          'web',
+        )
       expect(rsbuildConfig.environments).toHaveProperty('lynx')
     })
   })
@@ -405,7 +411,7 @@ describe('Config - toRsBuildConfig', () => {
         },
       })
 
-      expect(rsbuildConfig.output?.distPath?.root).toBe('foo')
+      expect(rsbuildConfig.output?.distPath).toHaveProperty('root', 'foo')
     })
 
     test('transform output.inlineScripts', () => {
@@ -615,6 +621,64 @@ describe('Config - toRsBuildConfig', () => {
         },
       })
       expect(rsbuildConfig.resolve?.aliasStrategy).toBeUndefined()
+    })
+  })
+
+  describe('Server', () => {
+    test('transform server.compress: undefined (no server)', () => {
+      const rsbuildConfig = toRsbuildConfig({})
+      expect(rsbuildConfig.server?.compress).toBeUndefined()
+    })
+
+    test('transform server.compress: undefined (empty server)', () => {
+      const rsbuildConfig = toRsbuildConfig({ server: {} })
+      expect(rsbuildConfig.server?.compress).toBeUndefined()
+    })
+
+    test('transform server.compress: false', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        server: { compress: false },
+      })
+      expect(rsbuildConfig.server?.compress).toBe(false)
+    })
+
+    test('transform server.compress: true', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        server: { compress: true },
+      })
+      expect(rsbuildConfig.server?.compress).toBe(true)
+    })
+
+    test('transform server.compress: { level } object format', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        server: { compress: { level: 6 } },
+      })
+      expect(rsbuildConfig.server?.compress).toMatchInlineSnapshot(`
+        {
+          "level": 6,
+        }
+      `)
+    })
+
+    test('transform server.compress: { filter } object format', () => {
+      const filter = (req: IncomingMessage) =>
+        !(req.url ?? '').startsWith('/nozip')
+      const rsbuildConfig = toRsbuildConfig({
+        server: { compress: { filter } },
+      })
+      expect(
+        rsbuildConfig.server
+          && typeof rsbuildConfig.server.compress === 'object',
+      ).toBe(true)
+      const compress = rsbuildConfig.server!.compress as {
+        filter: typeof filter
+      }
+      expect(typeof compress.filter).toBe('function')
+      const expectFunction = compress.filter
+      expect(expectFunction({ url: '/nozip/a.js' } as IncomingMessage)).toBe(
+        false,
+      )
+      expect(expectFunction({ url: '/ok/b.js' } as IncomingMessage)).toBe(true)
     })
   })
 

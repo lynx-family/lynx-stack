@@ -9,7 +9,7 @@ import { globalPipelineOptions, setPipeline } from '../../src/lynx/performance.j
 import { __root, setRoot } from '../../src/root.js';
 import { SnapshotInstance, backgroundSnapshotInstanceManager, snapshotInstanceManager } from '../../src/snapshot.js';
 import { hydrationMap } from '../../src/snapshotInstanceHydrationMap.js';
-import { clearWorkletRefLastIdForTesting } from '../../src/worklet/workletRef.js';
+import { clearWorkletRefLastIdForTesting } from '../../src/worklet/ref/workletRef.js';
 import { setupDom, type BackgroundDOM } from '../../src/backgroundSnapshot.js';
 import { options, type VNode } from 'preact';
 

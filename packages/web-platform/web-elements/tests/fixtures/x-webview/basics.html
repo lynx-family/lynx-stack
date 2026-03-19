@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+    body {
+      margin: 0;
+    }
+    x-webview {
+      width: 300px;
+      height: 200px;
+      background: #eee;
+      display: flex;
+    }
+    </style>
+    <link href="/main.css" rel="stylesheet" />
+    <script src="/main.js" defer></script>
+  </head>
+  <body>
+    <x-webview id="webview" src="https://example.com"></x-webview>
+    <script>
+    const webview = document.getElementById('webview');
+      webview.addEventListener('bindload', (e) => {
+        console.log('bindload fired', e.detail);
+        window._bindload_fired = true;
+      });
+      webview.addEventListener('bindmessage', (e) => {
+        console.log('bindmessage fired', e.detail);
+        window._bindmessage_fired = true;
+        window._bindmessage_data = e.detail;
+      });
+    </script>
+  </body>
+</html>

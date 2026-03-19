@@ -12,12 +12,19 @@ import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
 import { destroyWorklet } from '../../src/worklet/destroy';
 import { clearConfigCacheForTesting } from '../../src/worklet/functionality';
-import { MainThreadRef, useMainThreadRef } from '../../src/worklet/workletRef';
+import { MainThreadRef, useMainThreadRef } from '../../src/worklet/ref/workletRef';
 import { globalEnvManager } from '../utils/envManager';
+import { injectUpdateMTRefInitValue } from '../../src/worklet/ref/updateInitValue';
+
+const Comp = () => {
+  const ref = useMainThreadRef(233);
+  return <view></view>;
+};
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));
   injectUpdateMainThread();
+  injectUpdateMTRefInitValue();
   replaceCommitHook();
   globalThis.lynxWorkletImpl = {
     _refImpl: {
@@ -71,11 +78,6 @@ describe('WorkletRef in js', () => {
   });
 
   it('should send init value to the main thread', () => {
-    const Comp = () => {
-      const ref = useMainThreadRef(233);
-      return <view></view>;
-    };
-
     // main thread render
     {
       __root.__jsx = <Comp />;
@@ -99,14 +101,10 @@ describe('WorkletRef in js', () => {
       expect(rLynxChange).toMatchInlineSnapshot(`
         [
           [
-            "rLynxChange",
+            "rLynxChangeRefInitValue",
             {
-              "data": "{"patchList":[{"id":1,"workletRefInitValuePatch":[[1,233]]}]}",
-              "patchOptions": {
-                "reloadVersion": 0,
-              },
+              "data": "[[1,233]]",
             },
-            [Function],
           ],
           [
             "rLynxChange",
@@ -214,6 +212,69 @@ describe('WorkletRef in js', () => {
           ],
         ]
       `);
+    }
+  });
+
+  it('should send init value to the main thread even after reloadTemplate', () => {
+    // main thread render
+    {
+      __root.__jsx = <Comp />;
+      renderPage();
+    }
+
+    // background render
+    {
+      globalEnvManager.switchToBackground();
+      render(<Comp />, __root);
+    }
+
+    // main thread reload
+    {
+      globalEnvManager.switchToMainThread();
+      updatePage({}, { reloadTemplate: true });
+    }
+
+    // hydrate
+    {
+      // LifecycleConstant.firstScreen
+      globalEnvManager.switchToBackground();
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+
+      // rLynxChange
+      globalEnvManager.switchToMainThread();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls;
+      expect(rLynxChange).toMatchInlineSnapshot(`
+        [
+          [
+            "rLynxChangeRefInitValue",
+            {
+              "data": "[[1,233]]",
+            },
+          ],
+          [
+            "rLynxChange",
+            {
+              "data": "{"patchList":[{"snapshotPatch":[],"id":6}]}",
+              "patchOptions": {
+                "isHydration": true,
+                "pipelineOptions": {
+                  "dsl": "reactLynx",
+                  "needTimestamps": true,
+                  "pipelineID": "pipelineID",
+                  "pipelineOrigin": "reactLynxHydrate",
+                  "stage": "hydrate",
+                },
+                "reloadVersion": 1,
+              },
+            },
+            [Function],
+          ],
+        ]
+      `);
+      globalThis[rLynxChange[0][0]](rLynxChange[0][1]);
+      expect(globalThis.lynxWorkletImpl._refImpl.updateWorkletRefInitValueChanges).toBeCalledTimes(1);
+      globalThis[rLynxChange[1][0]](rLynxChange[1][1]);
+      expect(globalThis.lynxWorkletImpl._refImpl.updateWorkletRefInitValueChanges).toBeCalledTimes(1);
     }
   });
 });

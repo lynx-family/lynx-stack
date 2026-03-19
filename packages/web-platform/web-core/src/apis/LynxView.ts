@@ -19,7 +19,6 @@ import {
   type NapiModulesMap,
   type NativeModulesCall,
   type NativeModulesMap,
-  type UpdateDataType,
 } from '@lynx-js/web-constants';
 
 export type INapiModulesCall = (
@@ -44,7 +43,7 @@ export type INapiModulesCall = (
 /**
  * @property {string} url [required] (attribute: "url") The url of the entry of your Lynx card
  * @property {Cloneable} globalProps [optional] (attribute: "global-props") The globalProps value of this Lynx card
- * @property {Cloneable} initData [oprional] (attribute: "init-data") The initial data of this Lynx card
+ * @property {Cloneable} initData [optional] (attribute: "init-data") The initial data of this Lynx card
  * @property {Record<string,string>} overrideLynxTagToHTMLTagMap [optional] use this property/attribute to override the lynx tag -> html tag map
  * @property {NativeModulesMap} nativeModulesMap [optional] use to customize NativeModules. key is module-name, value is esm url.
  * @property {NativeModulesCall} onNativeModulesCall [optional] the NativeModules value handler. Arguments will be cached before this property is assigned.
@@ -55,7 +54,6 @@ export type INapiModulesCall = (
  * @property {"false" | "true" | null} injectHeadLinks [optional] (attribute: "inject-head-links") @default true set it to "false" to disable injecting the <link href="" ref="stylesheet"> styles into shadowroot
  * @property {string[]} injectStyleRules [optional] the css rules which will be injected into shadowroot. Each items will be inserted by `insertRule` method. @see https://developer.mozilla.org/docs/Web/API/CSSStyleSheet/insertRule
  * @property {number} lynxGroupId [optional] (attribute: "lynx-group-id") the background shared context id, which is used to share webworker between different lynx cards
- * @property {"all-on-ui" | "multi-thread"} threadStrategy [optional] @default "multi-thread" (attribute: "thread-strategy") controls the thread strategy for current lynx view
  * @property {(string)=>Promise<LynxTemplate>} customTemplateLoader [optional] the custom template loader, which is used to load the template
  * @property {InitI18nResources} initI18nResources [optional] (attribute: "init-i18n-resources") the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation
  *
@@ -94,7 +92,6 @@ export class LynxView extends HTMLElement {
   );
   #instance?: LynxViewInstance;
 
-  #connected = false;
   #url?: string;
   /**
    * @public
@@ -274,10 +271,10 @@ export class LynxView extends HTMLElement {
    */
   updateData(
     data: Cloneable,
-    updateDataType: UpdateDataType,
+    processorName?: string,
     callback?: () => void,
   ) {
-    this.#instance?.updateData(data, updateDataType, callback);
+    this.#instance?.updateData(data, processorName, callback);
   }
 
   /**
@@ -345,6 +342,7 @@ export class LynxView extends HTMLElement {
   /**
    * @param
    * @property
+   * @deprecated multi-thread is deprecated, please use "all-on-ui" instead. If you still want to use multi-thread mode, please try to use a cross-origin isolated iframe.
    */
   get threadStrategy(): 'all-on-ui' | 'multi-thread' {
     // @ts-expect-error
@@ -397,6 +395,16 @@ export class LynxView extends HTMLElement {
   customTemplateLoader?: (url: string) => Promise<LynxTemplate>;
 
   /**
+   * @public
+   * allow user to customize the browser config
+   */
+  browserConfig?: {
+    pixelRatio?: number;
+    pixelWidth?: number;
+    pixelHeight?: number;
+  };
+
+  /**
    * @private the flag to group all changes into one render operation
    */
   #rendering = false;
@@ -405,10 +413,13 @@ export class LynxView extends HTMLElement {
    * @private
    */
   #render() {
-    if (!this.#rendering && this.#connected) {
+    if (!this.#rendering && this.isConnected) {
       this.#rendering = true;
       queueMicrotask(() => {
         this.#rendering = false;
+        if (!this.isConnected) {
+          return;
+        }
         const ssrData = this.getAttribute('ssr');
         if (this.#instance) {
           this.disconnectedCallback();
@@ -421,6 +432,8 @@ export class LynxView extends HTMLElement {
             'image': 'x-image',
             'list': 'x-list',
             'svg': 'x-svg',
+            'input': 'x-input',
+            'x-input-ng': 'x-input',
             ...this.overrideLynxTagToHTMLTagMap,
           };
           if (!this.shadowRoot) {
@@ -430,6 +443,11 @@ export class LynxView extends HTMLElement {
           const threadStrategy = (this.threadStrategy ?? 'all-on-ui') as
             | 'all-on-ui'
             | 'multi-thread';
+          if (threadStrategy === 'multi-thread') {
+            console.warn(
+              `[LynxView] multi-thread strategy is deprecated, please use "all-on-ui" instead. If you still want to use multi-thread mode, please try to use a cross-origin isolated iframe.`,
+            );
+          }
           const lynxView = createLynxView({
             threadStrategy,
             tagMap,
@@ -441,6 +459,7 @@ export class LynxView extends HTMLElement {
             napiModulesMap: this.#napiModulesMap,
             lynxGroupId,
             initI18nResources: this.#initI18nResources,
+            browserConfig: this.browserConfig,
             callbacks: {
               nativeModulesCall: (
                 ...args: [name: string, data: any, moduleName: string]
@@ -474,6 +493,9 @@ export class LynxView extends HTMLElement {
                 );
               },
               customTemplateLoader: this.customTemplateLoader,
+              reload: () => {
+                this.reload();
+              },
             },
             ssr: ssrData
               ? JSON.parse(decodeURI(ssrData)) as SSRDumpInfo
@@ -509,7 +531,6 @@ export class LynxView extends HTMLElement {
    * @private
    */
   connectedCallback() {
-    this.#connected = true;
     this.#render();
   }
 }

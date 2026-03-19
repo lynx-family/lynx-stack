@@ -18,5 +18,6 @@
     { "path": "../../packages/rspeedy/core/tsconfig.build.json" },
     { "path": "../../packages/rspeedy/plugin-qrcode/tsconfig.build.json" },
     { "path": "../../packages/rspeedy/plugin-react/tsconfig.build.json" },
+    { "path": "../../packages/rspeedy/plugin-config/tsconfig.build.json" },
   ],
 }

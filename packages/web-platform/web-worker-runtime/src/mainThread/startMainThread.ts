@@ -17,7 +17,7 @@ import {
   multiThreadExposureChangedEndpoint,
   lynxUniqueIdAttribute,
   type JSRealm,
-  type MainThreadGlobalThis,
+  loadTemplateMultiThread,
 } from '@lynx-js/web-constants';
 import { Rpc } from '@lynx-js/web-worker-rpc';
 import { createMarkTimingInternal } from './crossThreadHandlers/createMainthreadMarkTimingInternal.js';
@@ -90,7 +90,8 @@ export async function startMainThreadWorker(
   const sendMultiThreadExposureChangedEndpoint = uiThreadRpc.createCall(
     multiThreadExposureChangedEndpoint,
   );
-  const { startMainThread } = prepareMainThreadAPIs(
+  const loadTemplate = uiThreadRpc.createCall(loadTemplateMultiThread);
+  const { startMainThread, handleUpdatedData } = prepareMainThreadAPIs(
     backgroundThreadRpc,
     document, // rootDom
     document,
@@ -111,6 +112,9 @@ export async function startMainThreadWorker(
       i18nResources.setData(initI18nResources);
       return i18nResources;
     },
+    loadTemplate,
+    undefined,
+    false,
   );
   uiThreadRpc.registerHandler(
     mainThreadStartEndpoint,
@@ -118,11 +122,11 @@ export async function startMainThreadWorker(
       await startMainThread(config);
       registerUpdateDataHandler(
         uiThreadRpc,
-        globalThis as typeof globalThis & MainThreadGlobalThis,
+        handleUpdatedData,
       );
     },
   );
-  uiThreadRpc?.registerHandler(updateI18nResourcesEndpoint, data => {
+  uiThreadRpc.registerHandler(updateI18nResourcesEndpoint, data => {
     i18nResources.setData(data as InitI18nResources);
   });
 }

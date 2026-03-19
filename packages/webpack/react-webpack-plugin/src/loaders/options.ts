@@ -76,6 +76,10 @@ export interface ReactLoaderOptions {
    * @internal
    */
   transformPath?: string | undefined;
+  /**
+   * The engine version.
+   */
+  engineVersion?: string | undefined;
 }
 
 function normalizeSlashes(file: string) {
@@ -84,6 +88,7 @@ function normalizeSlashes(file: string) {
 
 function getCommonOptions(
   this: LoaderContext<ReactLoaderOptions>,
+  inputSourceMap: string | undefined,
 ) {
   const filename = normalizeSlashes(
     path.relative(this.rootContext, this.resourcePath),
@@ -94,6 +99,7 @@ function getCommonOptions(
     enableRemoveCSSScope,
     inlineSourcesContent,
     isDynamicComponent,
+    engineVersion,
     defineDCE = { define: {} },
   } = this.getOptions();
 
@@ -148,6 +154,7 @@ function getCommonOptions(
     // See: https://github.com/swc-project/pkgs/blob/d096fdc1ac372ac045894bdda3180ef99bbcbe33/packages/swc-loader/src/index.js#L42
     sourceFileName: this.resourcePath,
     sourcemap: this.sourceMap,
+    ...(inputSourceMap && { inputSourceMap }),
     sourceMapColumns: this.sourceMap && !this.hot,
     inlineSourcesContent: inlineSourcesContent ?? !this.hot,
     snapshot: {
@@ -163,6 +170,7 @@ function getCommonOptions(
       filename,
       isDynamicComponent: isDynamicComponent ?? false,
     },
+    engineVersion: engineVersion ?? '',
     syntaxConfig: JSON.stringify({
       syntax,
       decorators: true,
@@ -188,8 +196,9 @@ function getCommonOptions(
 
 export function getMainThreadTransformOptions(
   this: LoaderContext<ReactLoaderOptions>,
+  inputSourceMap: string | undefined,
 ): TransformNodiffOptions {
-  const commonOptions = getCommonOptions.call(this);
+  const commonOptions = getCommonOptions.call(this, inputSourceMap);
 
   const { shake } = this.getOptions();
 
@@ -269,8 +278,9 @@ export function getMainThreadTransformOptions(
 
 export function getBackgroundTransformOptions(
   this: LoaderContext<ReactLoaderOptions>,
+  inputSourceMap: string | undefined,
 ): TransformNodiffOptions {
-  const commonOptions = getCommonOptions.call(this);
+  const commonOptions = getCommonOptions.call(this, inputSourceMap);
   return {
     ...commonOptions,
     compat: typeof commonOptions.compat === 'object'
