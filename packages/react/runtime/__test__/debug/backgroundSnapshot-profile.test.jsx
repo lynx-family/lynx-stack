@@ -86,6 +86,35 @@ function createAfterTree(metaValue) {
   return root;
 }
 
+function createBeforeTreeWithProfileInsert() {
+  const root = new SnapshotInstance(ROOT);
+  const a = new SnapshotInstance(ITEM_A);
+  a.__slotIndex = 0;
+  const c = new SnapshotInstance(ITEM_C);
+  c.__slotIndex = 0;
+
+  root.insertBefore(a);
+  root.insertBefore(c);
+
+  return JSON.parse(JSON.stringify(root));
+}
+
+function createAfterTreeWithProfileInsert() {
+  const root = new BackgroundSnapshotInstance(ROOT);
+  const b = new BackgroundSnapshotInstance(ITEM_B);
+  b.__slotIndex = 0;
+  const a = new BackgroundSnapshotInstance(ITEM_A);
+  a.__slotIndex = 0;
+  const c = new BackgroundSnapshotInstance(ITEM_C);
+  c.__slotIndex = 0;
+
+  root.insertBefore(b);
+  root.insertBefore(a);
+  root.insertBefore(c);
+
+  return root;
+}
+
 function createBeforeTreeWithDefinedTargetMove() {
   const root = new SnapshotInstance(ROOT);
   const a = new SnapshotInstance(ITEM_A);
@@ -265,6 +294,58 @@ describe('backgroundSnapshot profile', () => {
       ).toBe(true);
       expect(
         insertBeforeCalls.some(([, option]) => option?.args?.targetId === ''),
+      ).toBe(true);
+    });
+
+    it('should profile reconstructInstanceTree for inserted children', () => {
+      globalThis.__PROFILE__ = true;
+
+      const before = createBeforeTreeWithProfileInsert();
+      const after = createAfterTreeWithProfileInsert();
+
+      lynx.performance.profileStart.mockClear();
+      lynx.performance.profileEnd.mockClear();
+
+      hydrate(before, after);
+
+      const reconstructCalls = lynx.performance.profileStart.mock.calls.filter(
+        ([traceName]) => traceName === 'ReactLynx::BSI::reconstructInstanceTree',
+      );
+
+      expect(reconstructCalls).toHaveLength(1);
+      expect(reconstructCalls[0][1]).toEqual(
+        expect.objectContaining({
+          args: expect.objectContaining({
+            id: String(after.childNodes[0].__id),
+            snapshotType: after.childNodes[0].type,
+          }),
+        }),
+      );
+    });
+
+    it('should profile move branch with defined target id', () => {
+      globalThis.__PROFILE__ = true;
+
+      const before = createBeforeTreeWithDefinedTargetMove();
+      const after = createAfterTreeWithDefinedTargetMove();
+
+      lynx.performance.profileStart.mockClear();
+      lynx.performance.profileEnd.mockClear();
+
+      const patch = hydrate(before, after);
+      const operations = decodePatch(patch);
+      const moveWithDefinedTarget = operations.find(({ op, args }) => (
+        op === SnapshotOperation.InsertBefore
+        && args[0] === before.id
+        && args[2] === before.children[2].id
+      ));
+      const insertBeforeCalls = lynx.performance.profileStart.mock.calls.filter(
+        ([traceName]) => traceName === 'ReactLynx::hydrate::insertBefore',
+      );
+
+      expect(moveWithDefinedTarget).toBeDefined();
+      expect(
+        insertBeforeCalls.some(([, option]) => option?.args?.targetId === String(before.children[2].id)),
       ).toBe(true);
     });
 

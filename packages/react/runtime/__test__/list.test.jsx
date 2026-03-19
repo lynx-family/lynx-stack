@@ -1640,11 +1640,11 @@ describe('list reload', () => {
   it('list-item with same type - move', () => {
     const b = new SnapshotInstance(s1);
     b.ensureElements();
-    const root = b.__element_root;
 
     const b1 = new SnapshotInstance(s11);
     b1.__slotIndex = 0;
     b.insertBefore(b1);
+    const listRef = b1.__elements[0];
 
     const s3 = __SNAPSHOT__(
       <list-item item-key={HOLE}>
@@ -1659,87 +1659,63 @@ describe('list reload', () => {
     );
 
     const d1 = new SnapshotInstance(s3); // a
+    d1.__slotIndex = 0;
     const d2 = new SnapshotInstance(s3); // b
+    d2.__slotIndex = 0;
     const d3 = new SnapshotInstance(s4); // c
+    d3.__slotIndex = 0;
     const d4 = new SnapshotInstance(s3); // d
+    d4.__slotIndex = 0;
 
     d1.setAttribute(0, { 'item-key': 'a' });
     d2.setAttribute(0, { 'item-key': 'b' });
     d3.setAttribute(0, { 'item-key': 'c' });
     d4.setAttribute(0, { 'item-key': 'd' });
-    b.insertBefore(d1);
-    b.insertBefore(d2);
-    b.insertBefore(d3);
-    b.insertBefore(d4);
+    b1.insertBefore(d1);
+    b1.insertBefore(d2);
+    b1.insertBefore(d3);
+    b1.insertBefore(d4);
 
     __pendingListUpdates.flush();
 
     const bb = new SnapshotInstance(s1);
+    const bb1 = new SnapshotInstance(s11);
+    bb1.__slotIndex = 0;
+    bb.insertBefore(bb1);
     {
       const d1 = new SnapshotInstance(s3); // a
+      d1.__slotIndex = 0;
       const d2 = new SnapshotInstance(s4); // c
+      d2.__slotIndex = 0;
       const d3 = new SnapshotInstance(s3); // b
+      d3.__slotIndex = 0;
       const d4 = new SnapshotInstance(s3); // d
+      d4.__slotIndex = 0;
       d1.setAttribute(0, { 'item-key': 'a' });
       d2.setAttribute(0, { 'item-key': 'c' });
       d3.setAttribute(0, { 'item-key': 'b' });
       d4.setAttribute(0, { 'item-key': 'd' });
-      bb.insertBefore(d1);
-      bb.insertBefore(d2);
-      bb.insertBefore(d3);
-      bb.insertBefore(d4);
+      bb1.insertBefore(d1);
+      bb1.insertBefore(d2);
+      bb1.insertBefore(d3);
+      bb1.insertBefore(d4);
     }
 
     hydrate(b, bb);
-    b.unRenderElements();
 
-    expect(root).toMatchInlineSnapshot(`
-      <view>
-        <text>
-          <raw-text
-            text="111"
-          />
-        </text>
-        <wrapper>
-          <list-item
-            item-key="a"
-          >
-            <text>
-              <raw-text
-                text="World"
-              />
-            </text>
-          </list-item>
-          <list-item
-            item-key="b"
-          >
-            <text>
-              <raw-text
-                text="World"
-              />
-            </text>
-          </list-item>
-          <list-item
-            item-key="c"
-          >
-            <text>
-              <raw-text
-                text="Hello"
-              />
-            </text>
-          </list-item>
-          <list-item
-            item-key="d"
-          >
-            <text>
-              <raw-text
-                text="World"
-              />
-            </text>
-          </list-item>
-        </wrapper>
-      </view>
-    `);
+    expect(listRef.props['update-list-info'].at(-1)).toEqual(
+      expect.objectContaining({
+        insertAction: [
+          expect.objectContaining({
+            'item-key': 'b',
+            position: 2,
+            type: s3,
+          }),
+        ],
+        removeAction: [1],
+        updateAction: [],
+      }),
+    );
   });
 
   it('list-item with same type - with one list-item rendered', () => {
