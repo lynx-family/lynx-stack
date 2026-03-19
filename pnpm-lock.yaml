@@ -1233,6 +1233,34 @@ importers:
       '@yume-chan/adb-server-node-tcp':
         specifier: catalog:adb
         version: 2.5.2
+    devDependencies:
+      '@lynx-js/preact-devtools':
+        specifier: ^5.0.1
+        version: 5.0.1
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../rspeedy/plugin-qrcode
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../react
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../rspeedy/plugin-react
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../rspeedy/core
+      '@lynx-js/types':
+        specifier: 3.7.0
+        version: 3.7.0
+      '@types/react':
+        specifier: ^18.3.28
+        version: 18.3.28
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.13)(@vitest/ui@3.2.4)(jsdom@27.4.0)(lightningcss@1.31.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)
 
   packages/testing-library/testing-environment:
     devDependencies:
