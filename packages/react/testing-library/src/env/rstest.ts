@@ -1,7 +1,6 @@
 import { LynxTestingEnv } from './index.js';
 
-// @ts-ignore
-global.jsdom = {
+global.lynxEnv = {
   window,
 };
 const lynxTestingEnv = new LynxTestingEnv();

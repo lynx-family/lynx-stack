@@ -80,12 +80,12 @@ export const initElementTree = () => {
       const page = this.__CreateElement('page', parentComponentUniqueId);
       this.root = page;
       document.body.innerHTML = '';
-      lynxTestingEnv.jsdom.window.document.body.appendChild(page);
+      lynxTestingEnv.env.window.document.body.appendChild(page);
       return page;
     }
 
     __CreateRawText(text: string): LynxElement {
-      const element = lynxTestingEnv.jsdom.window.document
+      const element = lynxTestingEnv.env.window.document
         .createTextNode(
           text,
         ) as unknown as LynxElement;
@@ -110,7 +110,7 @@ export const initElementTree = () => {
         return this.__CreateRawText('');
       }
 
-      const element = lynxTestingEnv.jsdom.window.document
+      const element = lynxTestingEnv.env.window.document
         .createElement(
           tag,
         ) as LynxElement;

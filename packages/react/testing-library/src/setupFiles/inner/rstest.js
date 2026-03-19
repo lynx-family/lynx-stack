@@ -1,11 +1,3 @@
-import { LynxTestingEnv } from '../../env';
-
-global.jsdom = {
-  window,
-};
-const lynxTestingEnv = new LynxTestingEnv();
-global.lynxTestingEnv = lynxTestingEnv;
-
 const {
   onInjectBackgroundThreadGlobals,
 } = globalThis;
@@ -15,7 +7,7 @@ globalThis.onInjectBackgroundThreadGlobals = (target) => {
     onInjectBackgroundThreadGlobals(target);
   }
 
-  target.lynx.requireModuleAsync = async (url, callback) => {
+  target.lynx.requireModuleAsync = async (url, _callback) => {
     throw new Error('lynx.requireModuleAsync not implemented for rstest');
   };
 };

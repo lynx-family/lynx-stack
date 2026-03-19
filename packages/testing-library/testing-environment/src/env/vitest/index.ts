@@ -1,6 +1,5 @@
-import { builtinEnvironments, Environment } from 'vitest/environments';
-import { LynxTestingEnv } from '@lynx-js/testing-environment';
-import { JSDOM } from 'jsdom';
+import { builtinEnvironments, type Environment } from 'vitest/environments';
+import { installLynxTestingEnv, uninstallLynxTestingEnv } from '../../index.js';
 
 const env = {
   name: 'lynxTestingEnv',
@@ -9,17 +8,17 @@ const env = {
     const fakeGlobal: {
       jsdom?: any;
     } = {};
-    await builtinEnvironments.jsdom.setup(fakeGlobal, {});
+    const jsdomEnvironment = await builtinEnvironments.jsdom.setup(
+      fakeGlobal,
+      {},
+    );
 
-    const lynxTestingEnv = new LynxTestingEnv(fakeGlobal.jsdom as JSDOM);
-    global.lynxTestingEnv = lynxTestingEnv;
-    global.Node = lynxTestingEnv.jsdom.window.Node;
+    installLynxTestingEnv(global, fakeGlobal.jsdom);
 
     return {
-      teardown(global) {
-        delete global.lynxTestingEnv;
-        delete global.jsdom;
-        delete global.Node;
+      async teardown(global) {
+        await jsdomEnvironment.teardown(fakeGlobal);
+        uninstallLynxTestingEnv(global);
       },
     };
   },
