@@ -95,7 +95,9 @@ function updateSpread(
       if (key === 'className') {
         __SetClasses(snapshot.__elements[elementIndex]!, v as string);
       } else if (key === 'style') {
-        __SetInlineStyles(snapshot.__elements[elementIndex]!, v as string);
+        if (!isDirectOrDeepEqual(v, oldValue[key])) {
+          __SetInlineStyles(snapshot.__elements[elementIndex]!, v);
+        }
       } else if (key === 'id') {
         __SetID(snapshot.__elements[elementIndex]!, v as string);
       } else if (key.startsWith('data-')) {

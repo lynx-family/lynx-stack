@@ -29,9 +29,7 @@ impl napi::bindgen_prelude::FromNapiValue for InjectAs {
     // }
 
     let array_val = <Vec<String>>::from_napi_value(env, napi_val);
-    if array_val.is_ok() {
-      let v = array_val.unwrap();
-
+    if let Ok(v) = array_val {
       return match v[0].as_str() {
         "expr" => Ok(InjectAs::Expr(v[1].clone())),
         "importDefault" => Ok(InjectAs::ImportDefault(v[1].clone())),

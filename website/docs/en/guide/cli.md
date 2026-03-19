@@ -2,20 +2,6 @@
 
 Rspeedy comes with a lightweight CLI that includes commands such as `dev` and `build`.
 
-## Using the global Rspeedy version
-
-You can invoke Rspeedy using `npx rspeedy`, but it's more convenient to also install it globally so that it's always available in your shell `PATH`:
-
-```bash
-# Install the Rspeedy globally
-npm install --global @lynx-js/rspeedy
-```
-
-:::info What if the globally installed Rspeedy binary is the wrong version?
-
-Just like [Rush](https://rushstack.io/), Rspeedy implements a "version selector" feature that will automatically discover your local `node_modules` folder and invoke `./node_modules/.bin/rspeedy`, ensuring that the correct version is used.
-:::
-
 ## Using Node.js TypeScript support
 
 If the version of Node.js you are using supports TypeScript:
@@ -51,7 +37,6 @@ Usage: rspeedy <command> [options]
 
 Options:
   -V, --version      output the version number
-  --unmanaged        Force to use the unmanaged version of Rspeedy, instead of the locally installed.
   -h, --help         display help for command
 
 Commands:

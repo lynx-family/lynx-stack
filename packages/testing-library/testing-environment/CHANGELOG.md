@@ -1,5 +1,23 @@
 # @lynx-js/testing-environment
 
+## 0.1.11
+
+### Patch Changes
+
+- Remove element api calls alog by default, and only enable it when `__ALOG_ELEMENT_API__` is defined to `true` or environment variable `REACT_ALOG_ELEMENT_API` is set to `true`. ([#2192](https://github.com/lynx-family/lynx-stack/pull/2192))
+
+## 0.1.10
+
+### Patch Changes
+
+- Fix the error "lynxTestingEnv is not defined" ([#2118](https://github.com/lynx-family/lynx-stack/pull/2118))
+
+## 0.1.9
+
+### Patch Changes
+
+- Fix duplicated `<page />` elements on body when multiple `__CreatePage` called. ([#2065](https://github.com/lynx-family/lynx-stack/pull/2065))
+
 ## 0.1.8
 
 ### Patch Changes

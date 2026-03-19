@@ -1,5 +1,67 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.10.5
+
+### Patch Changes
+
+- feat: allow `templateDebugUrl` to be customized via `output.publicPath` or the `beforeEncode` hook. ([#2274](https://github.com/lynx-family/lynx-stack/pull/2274))
+
+- feat: opt-in the web platform's new binary output format ([#2281](https://github.com/lynx-family/lynx-stack/pull/2281))
+
+  Introduce a new flag to enable the new binary output format.
+
+  Currently it's an internal-use-only flag that will be removed in the future; set the corresponding environment variable to 'true' to enable it.
+
+- Updated dependencies []:
+  - @lynx-js/web-core-wasm@0.0.5
+
+## 0.10.4
+
+### Patch Changes
+
+- Move `cssChunksToMap` implementation from `@lynx-js/template-webpack-plugin` to `@lynx-js/css-serializer` for future reuse. ([#2269](https://github.com/lynx-family/lynx-stack/pull/2269))
+
+- Updated dependencies [[`9033e2d`](https://github.com/lynx-family/lynx-stack/commit/9033e2d6c7c0c2405ecbbf73446239dd65b4a177)]:
+  - @lynx-js/css-serializer@0.1.4
+
+## 0.10.3
+
+### Patch Changes
+
+- Fix "Failed to load CSS update file" for lazy bundle ([#2150](https://github.com/lynx-family/lynx-stack/pull/2150))
+
+- Fix "TypeError: cannot read property 'call' of undefined" error of lazy bundle HMR. ([#2146](https://github.com/lynx-family/lynx-stack/pull/2146))
+
+## 0.10.2
+
+### Patch Changes
+
+- Polyfill `lynx.requireModuleAsync` to allow cache same parallel requests. ([#2108](https://github.com/lynx-family/lynx-stack/pull/2108))
+
+## 0.10.1
+
+### Patch Changes
+
+- fix: pass updated css from encodeData to resolvedEncodeOptions ([#2053](https://github.com/lynx-family/lynx-stack/pull/2053))
+
+  Previously, the initial CSS was used in resolvedEncodeOptions instead of the potentially updated CSS from encodeData after the beforeEncode hook. This fix ensures resolvedEncodeOptions receives the latest CSS data.
+
+## 0.10.0
+
+### Minor Changes
+
+- Merge all css chunk and generate a `.css.hot-update.json` file for each bundle. ([#1965](https://github.com/lynx-family/lynx-stack/pull/1965))
+
+## 0.9.2
+
+### Patch Changes
+
+- Set main thread JS basename to `lepusCode.filename` in tasm encode data. It will ensure a filename is reported on MTS error without devtools enabled. ([#1949](https://github.com/lynx-family/lynx-stack/pull/1949))
+
+- Upgrade `@lynx-js/tasm` to `0.0.20`. ([#1943](https://github.com/lynx-family/lynx-stack/pull/1943))
+
+- refactor: move web style info generation to the encode phase ([#1975](https://github.com/lynx-family/lynx-stack/pull/1975))
+
 ## 0.9.1
 
 ### Patch Changes

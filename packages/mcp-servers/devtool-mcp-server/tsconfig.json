@@ -4,13 +4,13 @@
   "compilerOptions": {
     "allowImportingTsExtensions": true,
 
-    "lib": ["ES2024.Promise"],
+    "lib": ["ES2024.Promise", "ES2022"],
+    "module": "nodenext",
 
     "isolatedDeclarations": false,
     "noEmit": true,
   },
   "include": [
-    "debug-router-connector.*",
     "src",
   ],
 }

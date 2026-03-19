@@ -6,10 +6,10 @@ describe('BackgroundSnapshotInstance', () => {
   let root, child1, child2, child3;
 
   beforeEach(() => {
-    root = new BackgroundSnapshotInstance('');
-    child1 = new BackgroundSnapshotInstance('');
-    child2 = new BackgroundSnapshotInstance('');
-    child3 = new BackgroundSnapshotInstance('');
+    root = new BackgroundSnapshotInstance(null);
+    child1 = new BackgroundSnapshotInstance(null);
+    child2 = new BackgroundSnapshotInstance(null);
+    child3 = new BackgroundSnapshotInstance(null);
   });
 
   it('insertBefore', () => {

@@ -7,3 +7,4 @@ export * as csstree from 'css-tree';
 export * as Plugins from './plugins/index.js';
 export type * from './types/index.js';
 export { parse } from './parse.js';
+export * from './css/index.js';

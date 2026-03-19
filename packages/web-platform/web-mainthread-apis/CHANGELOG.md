@@ -1,5 +1,91 @@
 # @lynx-js/web-mainthread-apis
 
+## 0.19.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.8
+
+## 0.19.7
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.7
+
+## 0.19.6
+
+### Patch Changes
+
+- feat: add main-thread API: \_\_QuerySelector ([#2115](https://github.com/lynx-family/lynx-stack/pull/2115))
+
+- fix: when a list-item is deleted from list, the deleted list-item is still showed incorrectly. ([#1092](https://github.com/lynx-family/lynx-stack/pull/1092))
+
+  This is because the `enqueueComponent` method does not delete the node from the Element Tree. It is only to maintain the display node on RL, and lynx web needs to delete the dom additionally.
+
+- feat: support main thread invoke ui method ([#2104](https://github.com/lynx-family/lynx-stack/pull/2104))
+
+- fix: mts && bts events can be binded both ([#2121](https://github.com/lynx-family/lynx-stack/pull/2121))
+
+- Updated dependencies [[`179f984`](https://github.com/lynx-family/lynx-stack/commit/179f9844adf00ff4b2cd450ffb943649441c87d3), [`f7133c1`](https://github.com/lynx-family/lynx-stack/commit/f7133c137f094063e991dfa0e993ea92177aa173), [`6c2b51a`](https://github.com/lynx-family/lynx-stack/commit/6c2b51a661ae244eb40671f63f29ee971e084ed4), [`5b589ab`](https://github.com/lynx-family/lynx-stack/commit/5b589ab53b01a8e2357d3ccbb159edab004086d3)]:
+  - @lynx-js/web-constants@0.19.6
+
+## 0.19.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.5
+
+## 0.19.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.4
+
+## 0.19.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.3
+
+## 0.19.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.2
+
+## 0.19.1
+
+### Patch Changes
+
+- fix: fix reload lynx-view when `enableCSSSelector` false may cause css style lost ([#1982](https://github.com/lynx-family/lynx-stack/pull/1982))
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.1
+
+## 0.19.0
+
+### Patch Changes
+
+- fix: capture and bind event listener should be trigger correctly ([#1972](https://github.com/lynx-family/lynx-stack/pull/1972))
+
+- fix: the l-p-comp-uid of page should be '1' ([#1970](https://github.com/lynx-family/lynx-stack/pull/1970))
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.19.0
+
+## 0.18.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-constants@0.18.4
+
 ## 0.18.3
 
 ### Patch Changes

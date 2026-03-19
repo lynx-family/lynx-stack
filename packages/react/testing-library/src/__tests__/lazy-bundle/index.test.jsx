@@ -166,26 +166,24 @@ describe('Suspense', () => {
               {
                 "id": 2,
                 "op": "CreateElement",
-                "type": "__Card__:__snapshot_fffe1_test_3",
+                "type": "__snapshot_50869_test_3",
               },
               {
-                "id": 5,
+                "id": 7,
                 "op": "CreateElement",
-                "type": "__Card__:__snapshot_fffe1_test_4",
+                "type": "__snapshot_50869_test_4",
               },
               {
                 "beforeId": null,
-                "childId": 5,
+                "childId": 7,
                 "op": "InsertBefore",
                 "parentId": 2,
-                "slotIndex": 0,
               },
               {
                 "beforeId": null,
                 "childId": 2,
                 "op": "InsertBefore",
                 "parentId": -1,
-                "slotIndex": 0,
               },
             ]
           `);
@@ -195,38 +193,35 @@ describe('Suspense', () => {
               {
                 "id": 2,
                 "op": "CreateElement",
-                "type": "__Card__:__snapshot_fffe1_test_3",
+                "type": "__snapshot_50869_test_3",
               },
               {
-                "id": 6,
+                "id": 8,
                 "op": "CreateElement",
                 "type": "wrapper",
               },
               {
-                "id": 7,
+                "id": 9,
                 "op": "CreateElement",
-                "type": "__Card__:__snapshot_fffe1_test_4",
+                "type": "__snapshot_50869_test_4",
               },
               {
                 "beforeId": null,
-                "childId": 7,
+                "childId": 9,
                 "op": "InsertBefore",
-                "parentId": 6,
-                "slotIndex": 0,
+                "parentId": 8,
               },
               {
                 "beforeId": null,
-                "childId": 6,
+                "childId": 8,
                 "op": "InsertBefore",
                 "parentId": 2,
-                "slotIndex": 0,
               },
               {
                 "beforeId": null,
                 "childId": 2,
                 "op": "InsertBefore",
                 "parentId": -1,
-                "slotIndex": 0,
               },
             ]
           `);
@@ -310,35 +305,31 @@ describe('Suspense', () => {
             const el1 = __CreateWrapperElement(pageId);
             __AppendElement(el, el1);
             const el2 = __CreateText(pageId);
+            __SetAttribute(el2, "text", "Hello, ReactLynx");
             __AppendElement(el, el2);
-            const el3 = __CreateRawText("Hello, ReactLynx");
-            __AppendElement(el2, el3);
-            const el4 = __CreateWrapperElement(pageId);
-            __AppendElement(el, el4);
+            const el3 = __CreateWrapperElement(pageId);
+            __AppendElement(el, el3);
             return [
               el,
               el1,
               el2,
-              el3,
-              el4
+              el3
             ];
           }",
-              "type": "__Card__:__snapshot_fffe1_test_5",
+              "type": "__snapshot_50869_test_5",
             },
             {
-              "__id": 5,
+              "__id": 7,
               "create": "function() {
             const pageId = __vite_ssr_import_1__.__pageId;
             const el = __CreateText(pageId);
             __SetClasses(el, "loading");
-            const el1 = __CreateRawText("loading...");
-            __AppendElement(el, el1);
+            __SetAttribute(el, "text", "loading...");
             return [
-              el,
-              el1
+              el
             ];
           }",
-              "type": "__Card__:__snapshot_fffe1_test_4",
+              "type": "__snapshot_50869_test_4",
             },
           ]
         `);
@@ -346,7 +337,7 @@ describe('Suspense', () => {
         expect(tearDownInstances).toMatchInlineSnapshot(`
           [
             {
-              "__id": 6,
+              "__id": 8,
               "create": "create () {
                               /* v8 ignore start */ if (__JS__ && !__DEV__) return [];
                               /* v8 ignore stop */ return [

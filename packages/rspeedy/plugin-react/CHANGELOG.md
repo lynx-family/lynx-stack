@@ -1,5 +1,149 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.12.10
+
+### Patch Changes
+
+- Support bundle and load css in external bundle ([#2143](https://github.com/lynx-family/lynx-stack/pull/2143))
+
+- Updated dependencies [[`59f2933`](https://github.com/lynx-family/lynx-stack/commit/59f293305342e5bc15efa5292c377179a7046a6b), [`453e006`](https://github.com/lynx-family/lynx-stack/commit/453e006c0e96f580031971b21ae577b8945fe984)]:
+  - @lynx-js/template-webpack-plugin@0.10.5
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+  - @lynx-js/react-webpack-plugin@0.7.4
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.10
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+
+## 0.12.9
+
+### Patch Changes
+
+- Add alias for `use-sync-external-store/with-selector.js` and `use-sync-external-store/shim/with-selector.js` pointing to @lynx-js/use-sync-external-store. ([#2200](https://github.com/lynx-family/lynx-stack/pull/2200))
+
+- Updated dependencies [[`9033e2d`](https://github.com/lynx-family/lynx-stack/commit/9033e2d6c7c0c2405ecbbf73446239dd65b4a177)]:
+  - @lynx-js/template-webpack-plugin@0.10.4
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.9
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/react-webpack-plugin@0.7.4
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+
+## 0.12.8
+
+### Patch Changes
+
+- Updated dependencies [[`4240138`](https://github.com/lynx-family/lynx-stack/commit/424013867a33c44bf1c95f6b0a80a07646ebce2b)]:
+  - @lynx-js/react-webpack-plugin@0.7.4
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.8
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/template-webpack-plugin@0.10.3
+
+## 0.12.7
+
+### Patch Changes
+
+- Updated dependencies [[`92881e7`](https://github.com/lynx-family/lynx-stack/commit/92881e7c5553f755dc52bba526d83757bbb05da8), [`1a5f2a1`](https://github.com/lynx-family/lynx-stack/commit/1a5f2a1fb0489edc57c1f71deba43a763bb3bbee)]:
+  - @lynx-js/template-webpack-plugin@0.10.3
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+  - @lynx-js/react-webpack-plugin@0.7.3
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.7
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+
+## 0.12.6
+
+### Patch Changes
+
+- Support using `pluginReactLynx` in Rslib. ([#2114](https://github.com/lynx-family/lynx-stack/pull/2114))
+
+- Updated dependencies [[`4cd7182`](https://github.com/lynx-family/lynx-stack/commit/4cd71828a073e27ac3a2f5accded53e42e663215)]:
+  - @lynx-js/template-webpack-plugin@0.10.2
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.6
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/react-webpack-plugin@0.7.3
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+
+## 0.12.5
+
+### Patch Changes
+
+- Support reading config from `pluginLynxConfig`. ([#2054](https://github.com/lynx-family/lynx-stack/pull/2054))
+
+- Updated dependencies []:
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.5
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/react-webpack-plugin@0.7.3
+
+## 0.12.4
+
+### Patch Changes
+
+- ([#2051](https://github.com/lynx-family/lynx-stack/pull/2051))
+
+- Updated dependencies []:
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.4
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/react-webpack-plugin@0.7.3
+
+## 0.12.3
+
+### Patch Changes
+
+- expose LAYERS via `api.expose` for other rsbuild plugins. ([#2006](https://github.com/lynx-family/lynx-stack/pull/2006))
+
+- Updated dependencies [[`cd89bf9`](https://github.com/lynx-family/lynx-stack/commit/cd89bf9e3fc8ed4658dfb6c983584376416d620f)]:
+  - @lynx-js/template-webpack-plugin@0.10.1
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.3
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/react-webpack-plugin@0.7.3
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+
+## 0.12.2
+
+### Patch Changes
+
+- Support environment variants to enable multiple configurations for the same targets. ([#1969](https://github.com/lynx-family/lynx-stack/pull/1969))
+
+- Updated dependencies []:
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.2
+
+## 0.12.1
+
+### Patch Changes
+
+- Avoid injecting hot update runtime when dev.hmr or dev.liveReload is set to false. ([#1980](https://github.com/lynx-family/lynx-stack/pull/1980))
+
+- Updated dependencies [[`553ece1`](https://github.com/lynx-family/lynx-stack/commit/553ece1e025b1f4feae353310c21b2e159f1f03a), [`8cdb69d`](https://github.com/lynx-family/lynx-stack/commit/8cdb69d4b2cc3e9925a2494ee8a889d7af17e2e9), [`8cdb69d`](https://github.com/lynx-family/lynx-stack/commit/8cdb69d4b2cc3e9925a2494ee8a889d7af17e2e9)]:
+  - @lynx-js/react-webpack-plugin@0.7.3
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+  - @lynx-js/template-webpack-plugin@0.10.0
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.1
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+
+## 0.12.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Require `@lynx-js/rspeedy` 0.12.0. ([#1951](https://github.com/lynx-family/lynx-stack/pull/1951))
+
+### Patch Changes
+
+- Support Yarn Plug'n'Play. ([#1964](https://github.com/lynx-family/lynx-stack/pull/1964))
+
+- Updated dependencies [[`738d44d`](https://github.com/lynx-family/lynx-stack/commit/738d44d685870d7c3f64a1be7139e8d7af498feb), [`5bbb439`](https://github.com/lynx-family/lynx-stack/commit/5bbb43981580f917f59819cd4ff7972b9737a341), [`3692a16`](https://github.com/lynx-family/lynx-stack/commit/3692a169ae443124de0e9f7a288318f5dfba13b0), [`d2e290b`](https://github.com/lynx-family/lynx-stack/commit/d2e290b67971ead5bedbcc1e34dd7f3bf4a6f5f3), [`738d44d`](https://github.com/lynx-family/lynx-stack/commit/738d44d685870d7c3f64a1be7139e8d7af498feb)]:
+  - @lynx-js/react-alias-rsbuild-plugin@0.12.0
+  - @lynx-js/css-extract-webpack-plugin@0.6.5
+  - @lynx-js/template-webpack-plugin@0.9.2
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.4
+  - @lynx-js/react-webpack-plugin@0.7.2
+
 ## 0.11.4
 
 ### Patch Changes

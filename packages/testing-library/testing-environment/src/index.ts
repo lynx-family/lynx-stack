@@ -144,6 +144,13 @@ function createPolyfills() {
     type,
     data,
   }) => {
+    // Avoid ReferenceError: lynxTestingEnv is not defined
+    // This error happens because worklet runtime may dispatch event
+    // after the vitest environment is torn down
+    if (!globalThis.lynxTestingEnv) {
+      return;
+    }
+
     const origin = __MAIN_THREAD__ ? 'CoreContext' : 'JSContext';
     // Switch to another thread
     if (origin === 'CoreContext') {
@@ -233,6 +240,7 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   target.__DEV__ = true;
   target.__PROFILE__ = true;
   target.__ALOG__ = true;
+  target.__ALOG_ELEMENT_API__ = true;
   target.__JS__ = false;
   target.__LEPUS__ = true;
   target.__BACKGROUND__ = false;
@@ -242,8 +250,36 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   target.__TESTING_FORCE_RENDER_TO_OPCODE__ = false;
   target.__ENABLE_SSR__ = false;
   target.globDynamicComponentEntry = '__Card__';
+
+  const native = {
+    _listeners: {} as Record<string, ((event: any) => void)[]>,
+    onTriggerEvent: undefined as ((event: any) => void) | undefined,
+    postMessage: ((_message: any) => {}),
+    addEventListener: ((type: string, listener: (event: any) => void) => {
+      if (!native._listeners[type]) {
+        native._listeners[type] = [];
+      }
+      native._listeners[type].push(listener);
+    }),
+    removeEventListener: ((type: string, listener: (event: any) => void) => {
+      if (native._listeners[type]) {
+        native._listeners[type] = native._listeners[type].filter(l =>
+          l !== listener
+        );
+      }
+    }),
+    dispatchEvent: ((event: { type: string; data?: any }) => {
+      const listeners = native._listeners[event.type];
+      if (listeners) {
+        listeners.forEach(listener => listener(event));
+      }
+      return { canceled: false };
+    }),
+  };
+
   target.lynx = {
     performance,
+    getNative: () => native,
     getCoreContext: (() => CoreContext),
     /*
 
@@ -343,6 +379,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
   target.__DEV__ = true;
   target.__PROFILE__ = true;
   target.__ALOG__ = true;
+  target.__ALOG_ELEMENT_API__ = true;
   target.__JS__ = true;
   target.__LEPUS__ = false;
   target.__BACKGROUND__ = true;

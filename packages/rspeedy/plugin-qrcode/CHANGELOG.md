@@ -1,5 +1,23 @@
 # @lynx-js/qrcode-rsbuild-plugin
 
+## 0.4.6
+
+### Patch Changes
+
+- Print all entries with all schema URLs in non-TTY environments instead of only showing the first entry's QR code. ([#2227](https://github.com/lynx-family/lynx-stack/pull/2227))
+
+## 0.4.5
+
+### Patch Changes
+
+- Only register console shortcuts when running in TTY environments ([#2202](https://github.com/lynx-family/lynx-stack/pull/2202))
+
+## 0.4.4
+
+### Patch Changes
+
+- Bump `@clack/prompts` v1.0 ([#2171](https://github.com/lynx-family/lynx-stack/pull/2171))
+
 ## 0.4.3
 
 ### Patch Changes

@@ -3,5 +3,7 @@
     "dprint.dprint",
     "editorconfig.editorconfig",
     "typescriptteam.native-preview",
+    "ms-vscode.wasm-dwarf-debugging",
+    "rust-lang.rust-analyzer",
   ],
 }

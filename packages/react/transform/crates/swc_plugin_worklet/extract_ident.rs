@@ -14,6 +14,7 @@ use swc_core::quote;
 
 pub struct ExtractingIdentsCollectorConfig {
   pub custom_global_ident_names: Option<Vec<String>>,
+  pub shared_identifiers: Option<FxHashSet<Id>>,
 }
 
 struct ScopeEnv {
@@ -67,12 +68,30 @@ impl ExtractingIdentsCollector {
     self.values_extracted.take()
   }
 
+  pub fn has_extracted_values_props(&self) -> bool {
+    self
+      .values_extracted
+      .as_object()
+      .is_some_and(|obj| !obj.props.is_empty())
+  }
+
   pub fn take_idents(&mut self) -> Vec<Ident> {
     self.idents_to_extract.take()
   }
 
   pub fn take_this_expr(&mut self) -> Box<Expr> {
     self.this_expr_to_extract.take()
+  }
+
+  pub fn has_extracted_this_props(&self) -> bool {
+    self
+      .this_expr_to_extract
+      .as_object()
+      .is_some_and(|obj| !obj.props.is_empty())
+  }
+
+  pub fn has_extracted_js_fns(&self) -> bool {
+    !self.js_fns_to_extract.is_empty()
   }
 
   pub fn take_js_fns(&mut self) -> Vec<(IdentName, Box<Expr>)> {
@@ -164,12 +183,15 @@ impl ExtractingIdentsCollector {
       .into()
     };
 
-    if prop.is_some() {
-      if path.len() == 1 {
-        *prop.unwrap() = new_prop;
+    match prop {
+      Some(prop) => {
+        if path.len() == 1 {
+          *prop = new_prop;
+        }
       }
-    } else {
-      props.push(new_prop);
+      None => {
+        props.push(new_prop);
+      }
     }
 
     if path.len() > 1 {
@@ -252,6 +274,13 @@ impl VisitMut for ExtractingIdentsCollector {
   }
 
   fn visit_mut_ident(&mut self, n: &mut Ident) {
+    // Skip shared identifiers from shared-runtime imports
+    if let Some(ref shared_idents) = self.cfg.shared_identifiers {
+      if shared_idents.contains(&n.to_id()) {
+        return;
+      }
+    }
+
     if !self
       .scope_env
       .iter()

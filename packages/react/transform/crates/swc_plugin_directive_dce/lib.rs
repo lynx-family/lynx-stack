@@ -10,6 +10,7 @@ use swc_core::{
 
 use swc_plugins_shared::target::TransformTarget;
 
+#[cfg(feature = "napi")]
 pub mod napi;
 
 trait Eliminate {

@@ -1,0 +1,37 @@
+{
+  "name": "@lynx-js/kitten-lynx-test-infra",
+  "version": "0.1.0",
+  "description": "A testing framework executing the Lynx explorer Android application",
+  "keywords": [
+    "Lynx",
+    "testing",
+    "android",
+    "emulator"
+  ],
+  "author": {
+    "name": "lynx-stack"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@lynx-js/devtool-connector": "workspace:*",
+    "@yume-chan/adb": "catalog:adb",
+    "@yume-chan/adb-server-node-tcp": "catalog:adb"
+  }
+}

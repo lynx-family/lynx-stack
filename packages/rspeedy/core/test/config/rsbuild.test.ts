@@ -341,9 +341,11 @@ describe('Config - toRsBuildConfig', () => {
       })
 
       expect(rsbuildConfig.environments).toHaveProperty('web')
-      expect(rsbuildConfig.environments?.['web']?.output?.distPath?.root).toBe(
-        'web',
-      )
+      expect(rsbuildConfig.environments?.['web']?.output?.distPath)
+        .toHaveProperty(
+          'root',
+          'web',
+        )
       expect(rsbuildConfig.environments).toHaveProperty('lynx')
     })
   })
@@ -409,7 +411,7 @@ describe('Config - toRsBuildConfig', () => {
         },
       })
 
-      expect(rsbuildConfig.output?.distPath?.root).toBe('foo')
+      expect(rsbuildConfig.output?.distPath).toHaveProperty('root', 'foo')
     })
 
     test('transform output.inlineScripts', () => {

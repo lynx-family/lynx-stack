@@ -103,8 +103,8 @@ impl Visit for BindingCollector {
       node.visit_children_with(self);
     }
 
-    if node.ident.is_some() {
-      self.add(node.ident.as_ref().unwrap());
+    if let Some(ident) = node.ident.as_ref() {
+      self.add(ident);
     }
   }
 

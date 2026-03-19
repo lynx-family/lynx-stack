@@ -8,6 +8,7 @@ import { injectUpdateMainThread } from '../../runtime/lib/lifecycle/patch/update
 import { injectUpdateMTRefInitValue } from '../../runtime/lib/worklet/ref/updateInitValue.js';
 import { injectCalledByNative } from '../../runtime/lib/lynx/calledByNative.js';
 import { flushDelayedLifecycleEvents, injectTt } from '../../runtime/lib/lynx/tt.js';
+import { initElementPAPICallAlog } from '../../runtime/lib/alog/elementPAPICall.js';
 import { addCtxNotFoundEventListener } from '../../runtime/lib/lifecycle/patch/error.js';
 import { setRoot } from '../../runtime/lib/root.js';
 import {
@@ -113,6 +114,10 @@ globalThis.onInjectMainThreadGlobals = (target) => {
   target._document = setupDocument({});
 
   target.globalPipelineOptions = undefined;
+
+  if (typeof __ALOG_ELEMENT_API__ !== 'undefined' && __ALOG_ELEMENT_API__) {
+    initElementPAPICallAlog(target);
+  }
 };
 globalThis.onInjectBackgroundThreadGlobals = (target) => {
   if (onInjectBackgroundThreadGlobals) {

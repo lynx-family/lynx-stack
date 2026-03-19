@@ -6,7 +6,7 @@
 ## Asset Files
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 3311
+- Update: main.LAST_HASH.hot-update.js, size: 3555
 
 ## Manifest
 
@@ -34,35 +34,36 @@ var globDynamicComponentEntry;
 "use strict";
 exports.ids = ["main"];
 exports.modules = {
-"./app.jsx": 
+"./app.jsx"
 /*!*****************!*\
   !*** ./app.jsx ***!
   \*****************/
-(function (module, __webpack_exports__, __webpack_require__) {
+(module, __webpack_exports__, __webpack_require__) {
 __webpack_require__.r(__webpack_exports__);
 __webpack_require__.d(__webpack_exports__, {
   App: () => (App)
 });
-/* ESM import */var _lynx_js_react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @lynx-js/react/jsx-dev-runtime */ "../../../../../../react/runtime/jsx-dev-runtime/index.js");
+/* import */ var _lynx_js_react_jsx_dev_runtime__rspack_import_0 = __webpack_require__(/*! @lynx-js/react/jsx-dev-runtime */ "../../../../../../react/runtime/jsx-dev-runtime/index.js");
 /* module decorator */ module = __webpack_require__.hmd(module);
 /* provided dependency */ var __prefresh_utils__ = __webpack_require__(/*! ../../../../runtime/refresh.cjs */ "../../../../runtime/refresh.cjs");
 
-const __snapshot_4953c_4d7b7_1 = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .createSnapshot */.createSnapshot)("__snapshot_4953c_4d7b7_1", function() {
-    const pageId = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__pageId */.__pageId);
-    const el = __CreateView(pageId);
-    const el1 = __CreateText(pageId);
-    __AppendElement(el, el1);
-    const el2 = __CreateRawText("content 2");
-    __AppendElement(el1, el2);
-    return [
-        el,
-        el1,
-        el2
-    ];
-}, null, null, undefined, globDynamicComponentEntry, null);
+const __snapshot_4953c_4d7b7_1 = "__snapshot_4953c_4d7b7_1";
+(__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .snapshotCreatorMap */.snapshotCreatorMap)[__snapshot_4953c_4d7b7_1] = (__snapshot_4953c_4d7b7_1)=>(__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .createSnapshot */.createSnapshot)(__snapshot_4953c_4d7b7_1, function() {
+        const pageId = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__pageId */.__pageId);
+        const el = __CreateView(pageId);
+        const el1 = __CreateText(pageId);
+        __AppendElement(el, el1);
+        const el2 = __CreateRawText("content 2");
+        __AppendElement(el1, el2);
+        return [
+            el,
+            el1,
+            el2
+        ];
+    }, null, null, undefined, globDynamicComponentEntry, null, true);
 function App() {
     __RenderContent(`content 2`);
-    return /*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxDEV)(__snapshot_4953c_4d7b7_1, {}, void 0, false, {
+    return /*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__rspack_import_0.jsxDEV)(__snapshot_4953c_4d7b7_1, {}, void 0, false, {
         fileName: "<ROOT>/packages/webpack/react-refresh-webpack-plugin/test/hotCases/jsx/basic/app.jsx",
         lineNumber: 3,
         columnNumber: 10
@@ -122,7 +123,7 @@ if (moduleHot) {
 }
 
 
-}),
+},
 
 };
 exports.runtime = function(__webpack_require__) {

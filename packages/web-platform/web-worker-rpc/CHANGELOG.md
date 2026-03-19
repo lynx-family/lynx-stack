@@ -1,5 +1,43 @@
 # @lynx-js/web-worker-rpc
 
+## 0.19.8
+
+## 0.19.7
+
+## 0.19.6
+
+### Patch Changes
+
+- fix: when a list-item is deleted from list, the deleted list-item is still showed incorrectly. ([#1092](https://github.com/lynx-family/lynx-stack/pull/1092))
+
+  This is because the `enqueueComponent` method does not delete the node from the Element Tree. It is only to maintain the display node on RL, and lynx web needs to delete the dom additionally.
+
+## 0.19.5
+
+### Patch Changes
+
+- Use the scoped `@lynx-js/source-field` for source build resolution. ([#2096](https://github.com/lynx-family/lynx-stack/pull/2096))
+
+## 0.19.4
+
+### Patch Changes
+
+- Ensure the `default` export entry is last in the package exports map. ([#2075](https://github.com/lynx-family/lynx-stack/pull/2075))
+
+## 0.19.3
+
+### Patch Changes
+
+- feat: support lazy message port assigning in web-worker-rpc ([#2040](https://github.com/lynx-family/lynx-stack/pull/2040))
+
+## 0.19.2
+
+## 0.19.1
+
+## 0.19.0
+
+## 0.18.4
+
 ## 0.18.3
 
 ## 0.18.2

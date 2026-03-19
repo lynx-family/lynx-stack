@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { LynxTemplate } from '@lynx-js/web-core';
+import type { LynxTemplate, LynxView } from '@lynx-js/web-core';
 import { lynxViewTests } from './lynx-view.ts';
 
 const ENABLE_MULTI_THREAD = !!process.env.ENABLE_MULTI_THREAD;
@@ -21,7 +21,7 @@ if (casename) {
     hasdir ? `/${casename2}` : ''
   }`;
   const lynxView = isSSR
-    ? document.querySelector('lynx-view')!
+    ? document.querySelector('lynx-view')! as LynxView
     : undefined;
   lynxViewTests(lynxView => {
     lynxView.setAttribute('url', `${dir}/index.web.json`);
@@ -57,7 +57,7 @@ if (casename) {
 
     if (casename.includes('custom-template-loader')) {
       lynxView.customTemplateLoader = async () => {
-        const template: LynxTemplate = {
+        const template = {
           styleInfo: {},
           pageConfig: {
             enableCSSSelector: true,
@@ -81,8 +81,16 @@ if (casename) {
           manifest: {
             '/app-service.js': '',
           },
-        };
+        } as LynxTemplate;
         return template;
+      };
+    }
+
+    if (casename === 'api-createLynxView-browserConfig') {
+      lynxView.browserConfig = {
+        pixelRatio: 1,
+        pixelWidth: 1234,
+        pixelHeight: 5678,
       };
     }
   }, lynxView);

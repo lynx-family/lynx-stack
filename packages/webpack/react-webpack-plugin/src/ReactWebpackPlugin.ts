@@ -173,17 +173,24 @@ class ReactWebpackPlugin {
       DEBUG: null,
     }).apply(compiler);
 
+    const isDev = process.env['NODE_ENV'] === 'development'
+      || compiler.options.mode === 'development';
+
     new DefinePlugin({
-      __DEV__: JSON.stringify(compiler.options.mode === 'development'),
+      __DEV__: isDev,
       // We enable profile by default in development.
       // It can also be disabled by environment variable `REACT_PROFILE=false`
       __PROFILE__: JSON.stringify(
         process.env['REACT_PROFILE']
           ?? options.profile
-          ?? compiler.options.mode === 'development',
+          ?? isDev,
       ),
       // User can enable ALog by environment variable `REACT_ALOG=true`
       __ALOG__: JSON.stringify(Boolean(process.env['REACT_ALOG'])),
+      // User can enable ALog of element API calls by environment variable `REACT_ALOG_ELEMENT_API=true`
+      __ALOG_ELEMENT_API__: JSON.stringify(
+        Boolean(process.env['REACT_ALOG_ELEMENT_API']),
+      ),
       __EXTRACT_STR__: JSON.stringify(Boolean(options.extractStr)),
       __FIRST_SCREEN_SYNC_TIMING__: JSON.stringify(
         options.firstScreenSyncTiming,

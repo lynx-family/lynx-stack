@@ -1,14 +1,15 @@
-const __snapshot_da39a_test_1 = require('@lynx-js/react/internal').createSnapshot("__snapshot_da39a_test_1", function() {
-    const pageId = require('@lynx-js/react/internal').__pageId;
-    const el = __CreateView(pageId);
-    return [
-        el
-    ];
-}, [
-    (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateSpread(snapshot, index, oldValue, 0)
-], null, undefined, globDynamicComponentEntry, [
-    0
-]);
+const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
+require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_1, function() {
+        const pageId = require('@lynx-js/react/internal').__pageId;
+        const el = __CreateView(pageId);
+        return [
+            el
+        ];
+    }, [
+        (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateSpread(snapshot, index, oldValue, 0)
+    ], null, undefined, globDynamicComponentEntry, [
+        0
+    ], true);
 <__snapshot_da39a_test_1 values={[
     {
         ...{

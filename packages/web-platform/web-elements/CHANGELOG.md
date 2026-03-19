@@ -1,5 +1,130 @@
 # @lynx-js/web-elements
 
+## 0.12.0
+
+### Minor Changes
+
+- feat: add `willchange` event to `x-viewpager-ng` ([#2305](https://github.com/lynx-family/lynx-stack/pull/2305))
+
+### Patch Changes
+
+- fix: firefox `@supports(width:1rex)` ([#2288](https://github.com/lynx-family/lynx-stack/pull/2288))
+
+- fix: check computed overflow style in `getTheMostScrollableKid` to avoid treating `overflow: visible` elements as scroll containers ([#2309](https://github.com/lynx-family/lynx-stack/pull/2309))
+
+- fix: the inline-truncation should only work as a direct child of x-text ([#2287](https://github.com/lynx-family/lynx-stack/pull/2287))
+
+- fix: getVisibleCells cannot work in firefox due to contentvisibilityautostatechange not propagate list-item ([#2308](https://github.com/lynx-family/lynx-stack/pull/2308))
+
+- fix: foldview stuck issue ([#2304](https://github.com/lynx-family/lynx-stack/pull/2304))
+
+## 0.11.3
+
+### Patch Changes
+
+- fix: firefox 147+ layout issue ([#2205](https://github.com/lynx-family/lynx-stack/pull/2205))
+
+## 0.11.2
+
+### Patch Changes
+
+- Add scrollHeight/scrollWidth getters to XList. ([#2156](https://github.com/lynx-family/lynx-stack/pull/2156))
+
+- Inherit padding styles for x-input elements. ([#2199](https://github.com/lynx-family/lynx-stack/pull/2199))
+
+- Remove the default lazy-loading attribute from x-image elements. ([#2186](https://github.com/lynx-family/lynx-stack/pull/2186))
+
+- Fix x-input number type forwarding to the inner input element. ([#2193](https://github.com/lynx-family/lynx-stack/pull/2193))
+
+## 0.11.1
+
+### Patch Changes
+
+- feat: add wheel event handling and corresponding tests for x-foldview-ng ([#2145](https://github.com/lynx-family/lynx-stack/pull/2145))
+
+## 0.11.0
+
+### Minor Changes
+
+- feat: integrate the LinearContainer Compat plugin ([#2100](https://github.com/lynx-family/lynx-stack/pull/2100))
+
+  **This is a BREAKING CHANGE**
+
+  Now we integrated the `LinearCompat` into @lynx-js/web-elements. Developers can safely remove the following imports:
+
+  ```js
+  import '@lynx-js/web-elements/compat/LinearContainer';
+  ```
+
+  ```js
+  import '@lynx-js/web-elements-compat/LinearContainer';
+  ```
+
+### Patch Changes
+
+- fix: list-item `contain` property changes from `size` to `layout paint`, because the size of the `list-item` can be expanded by its children. ([#2043](https://github.com/lynx-family/lynx-stack/pull/2043))
+
+- Use the scoped `@lynx-js/source-field` for source build resolution. ([#2096](https://github.com/lynx-family/lynx-stack/pull/2096))
+
+## 0.10.1
+
+### Patch Changes
+
+- feat: implement x-webview component ([#2061](https://github.com/lynx-family/lynx-stack/pull/2061))
+
+- feat: support `recyclable="false"` on `list-item` and enable overflow visibility ([#2069](https://github.com/lynx-family/lynx-stack/pull/2069))
+
+## 0.10.0
+
+### Minor Changes
+
+- chore: migrate all @lynx-js/web-elements-\* packages into one ([#2057](https://github.com/lynx-family/lynx-stack/pull/2057))
+
+  ### Before
+
+  ```js
+  import '@lynx-js/web-elements-template';
+  import '@lynx-js/web-elements-compat/LinearContainer';
+  ```
+
+  ### After
+
+  ```js
+  import '@lynx-js/web-elements/html-templates';
+  import '@lynx-js/web-elements/compat/LinearContainer';
+  ```
+
+### Patch Changes
+
+- refactor: change code structure for improved readability and maintainability ([#2004](https://github.com/lynx-family/lynx-stack/pull/2004))
+
+  - enable noUnusedLocals for web-elements
+  - add source field for supporting @rsbuild/plugin-source-build
+
+  This is a part of #1937
+
+## 0.9.0
+
+### Minor Changes
+
+- feat: new flex:val impl ([#1979](https://github.com/lynx-family/lynx-stack/pull/1979))
+
+### Patch Changes
+
+- fix: x-input display should add !important to avoid override ([#1960](https://github.com/lynx-family/lynx-stack/pull/1960))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.9.0
+
+## 0.8.11
+
+### Patch Changes
+
+- fix: when estimated-main-axis-size-px is not set, should use the height of list ([#1930](https://github.com/lynx-family/lynx-stack/pull/1930))
+
+- Updated dependencies []:
+  - @lynx-js/web-elements-template@0.8.11
+
 ## 0.8.10
 
 ### Patch Changes

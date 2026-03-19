@@ -6,6 +6,9 @@ edition = "2021"
 [lib]
 path = "lib.rs"
 
+[features]
+napi = ["swc_plugins_shared/napi"]
+
 [dependencies]
-swc_core = { workspace = true, features = ["base", "ecma_parser", "__visit", "__testing_transform"] }
+swc_core = { workspace = true, features = ["ecma_parser", "ecma_visit", "testing_transform"] }
 swc_plugins_shared = { path = "../swc_plugins_shared" }

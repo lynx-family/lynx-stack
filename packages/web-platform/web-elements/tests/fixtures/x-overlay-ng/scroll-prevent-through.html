@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1.0,user-scalable=no"
+    >
+    <link
+      href="/main.css"
+      rel="stylesheet"
+    />
+    <style>
+    .outer-scroll {
+      height: 200vh;
+      background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
+    }
+    .outer-content {
+      padding: 20px;
+    }
+    .outer-item {
+      height: 80px;
+      margin: 10px;
+      background: white;
+      border: 1px solid #ccc;
+    }
+    .inner-scroll {
+      height: 300px;
+      width: 80%;
+      margin: 50px auto;
+      background: white;
+      border-radius: 8px;
+    }
+    .inner-content {
+      padding: 20px;
+    }
+    .inner-title {
+      margin: 0 0 20px 0;
+    }
+    .inner-item {
+      height: 100px;
+      margin: 10px 0;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    </style>
+  </head>
+  <body>
+    <script src="/main.js" defer></script>
+    <div class="outer-scroll">
+      <!-- Outer scrollable content -->
+      <div class="outer-content">
+        <div class="outer-item">Outer Content 1</div>
+        <div class="outer-item">Outer Content 2</div>
+        <div class="outer-item">Outer Content 3</div>
+        <div class="outer-item">Outer Content 4</div>
+        <div class="outer-item">Outer Content 5</div>
+        <div class="outer-item">Outer Content 6</div>
+        <div class="outer-item">Outer Content 7</div>
+        <div class="outer-item">Outer Content 8</div>
+        <div class="outer-item">Outer Content 9</div>
+        <div class="outer-item">Outer Content 10</div>
+      </div>
+
+      <!-- Overlay visible by default -->
+      <x-overlay-ng visible="true" events-pass-through="{false}">
+        <scroll-view scroll-y="true" class="inner-scroll">
+          <x-view class="inner-content">
+            <h3 class="inner-title">Inner ScrollView</h3>
+            <div class="inner-item">Inner Item 1</div>
+            <div class="inner-item">Inner Item 2</div>
+            <div class="inner-item">Inner Item 3</div>
+            <div class="inner-item">Inner Item 4</div>
+            <div class="inner-item">Inner Item 5</div>
+            <div class="inner-item">Inner Item 6</div>
+            <div class="inner-item">Inner Item 7</div>
+            <div class="inner-item">Inner Item 8</div>
+            <div class="inner-item">Inner Item 9</div>
+            <div class="inner-item">Inner Item 10</div>
+          </x-view>
+        </scroll-view>
+      </x-overlay-ng>
+    </div>
+  </body>
+</html>

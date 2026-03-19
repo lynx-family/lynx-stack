@@ -9,7 +9,7 @@ crate-type = ["cdylib"]
 [dependencies]
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-swc_core = { workspace = true, features = ["base", "ecma_plugin_transform", "ecma_visit", "ecma_utils", "ecma_quote", "ecma_parser"] }
+swc_core = { workspace = true, features = ["ecma_visit", "ecma_plugin_transform"] }
 swc_plugin_compat = { path = "../crates/swc_plugin_compat" }
 
 # .cargo/config.toml defines few alias to build plugin.

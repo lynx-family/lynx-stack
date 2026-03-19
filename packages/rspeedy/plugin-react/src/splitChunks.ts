@@ -64,7 +64,7 @@ export const applySplitChunksRule: (
     extraGroups['preact'] = {
       name: 'lib-preact',
       test:
-        /node_modules[\\/](.*?[\\/])?(?:preact|preact[\\/]compat|preact[\\/]hooks|preact[\\/]jsx-runtime)[\\/]/,
+        /node_modules[\\/](.*?[\\/])?(?:(?:internal-)?preact|(?:internal-)?preact[\\/]compat|(?:internal-)?preact[\\/]hooks|(?:internal-)?preact[\\/]jsx-runtime)[\\/]/,
       priority: 0,
     }
 

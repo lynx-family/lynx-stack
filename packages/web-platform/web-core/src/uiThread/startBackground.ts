@@ -19,6 +19,7 @@ import { registerTriggerElementMethodEndpointHandler } from './crossThreadHandle
 import type { StartUIThreadCallbacks } from './startUIThread.js';
 import { registerReportErrorHandler } from './crossThreadHandlers/registerReportErrorHandler.js';
 import { registerGetPathInfoHandler } from './crossThreadHandlers/registerGetPathInfoHandler.js';
+import { registerReloadHandler } from './crossThreadHandlers/registerReloadHandler.js';
 
 export function startBackground(
   backgroundRpc: Rpc,
@@ -59,6 +60,10 @@ export function startBackground(
     backgroundRpc,
     'app-service.js',
     callbacks.onError,
+  );
+  registerReloadHandler(
+    backgroundRpc,
+    callbacks.reload,
   );
 
   const sendGlobalEvent = backgroundRpc.createCall(sendGlobalEventEndpoint);

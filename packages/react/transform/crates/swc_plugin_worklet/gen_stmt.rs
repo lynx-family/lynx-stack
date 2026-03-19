@@ -4,13 +4,26 @@ use crate::worklet_type::WorkletType;
 use crate::TransformMode;
 use std::collections::HashSet;
 use std::vec;
-use swc_core::atoms as swc_atoms;
 use swc_core::common::DUMMY_SP;
 use swc_core::ecma::ast::*;
 use swc_core::{quote, quote_expr};
 use swc_plugins_shared::target::TransformTarget;
 
 pub struct StmtGen {}
+
+struct RegisterWorkletParams<'a> {
+  mode: TransformMode,
+  target: TransformTarget,
+  worklet_type: WorkletType,
+  function_name: Ident,
+  function: Box<Function>,
+  extracted_idents: Vec<Ident>,
+  extracted_js_fns: Vec<(IdentName, Box<Expr>)>,
+  hash: Expr,
+  is_class_member: bool,
+  named_imports: &'a mut HashSet<String>,
+  worklet_runtime_loaded_ident: Ident,
+}
 
 impl StmtGen {
   pub fn transform_worklet(
@@ -23,6 +36,7 @@ impl StmtGen {
     ident_collector: &mut ExtractingIdentsCollector,
     is_class_member: bool,
     named_imports: &mut HashSet<String>,
+    worklet_runtime_loaded_ident: Ident,
   ) -> (Box<Expr>, Stmt) {
     let hash = Expr::Lit(hash.into());
     let extracted_value = ident_collector.take_values();
@@ -42,9 +56,9 @@ impl StmtGen {
         hash.clone(),
         named_imports,
       ),
-      StmtGen::gen_register_worklet_stmt(
+      StmtGen::gen_register_worklet_stmt(RegisterWorkletParams {
         mode,
-        if target == TransformTarget::MIXED {
+        target: if target == TransformTarget::MIXED {
           TransformTarget::LEPUS
         } else {
           target
@@ -57,7 +71,8 @@ impl StmtGen {
         hash,
         is_class_member,
         named_imports,
-      ),
+        worklet_runtime_loaded_ident,
+      }),
     )
   }
 
@@ -137,7 +152,7 @@ impl StmtGen {
     }
 
     let worklet_props = extracted_this_expr.expect_object().props;
-    if target == TransformTarget::JS && !worklet_props.is_empty() {
+    if !worklet_props.is_empty() {
       props.push(
         SpreadElement {
           dot3_token: DUMMY_SP,
@@ -161,18 +176,21 @@ impl StmtGen {
   /*
    * registerWorklet($type, $hash, $function);
    */
-  fn gen_register_worklet_stmt(
-    mode: TransformMode,
-    target: TransformTarget,
-    worklet_type: WorkletType,
-    function_name: Ident,
-    function: Box<Function>,
-    extracted_idents: Vec<Ident>,
-    extracted_js_fns: Vec<(IdentName, Box<Expr>)>,
-    hash: Expr,
-    is_class_member: bool,
-    named_imports: &mut HashSet<String>,
-  ) -> Stmt {
+  fn gen_register_worklet_stmt(params: RegisterWorkletParams) -> Stmt {
+    let RegisterWorkletParams {
+      mode,
+      target,
+      worklet_type,
+      function_name,
+      function,
+      extracted_idents,
+      extracted_js_fns,
+      hash,
+      is_class_member,
+      named_imports,
+      worklet_runtime_loaded_ident,
+    } = params;
+
     let function_to_register = Box::new(StmtGen::gen_function_to_register(
       function,
       function_name,
@@ -184,7 +202,8 @@ impl StmtGen {
 
     if target == TransformTarget::LEPUS {
       named_imports.insert("loadWorkletRuntime".into());
-      quote!("loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal($type_, $hash, $fn_)" as Stmt,
+      quote!("$loaded && registerWorkletInternal($type_, $hash, $fn_)" as Stmt,
+        loaded: Expr = Expr::Ident(worklet_runtime_loaded_ident.clone()),
         type_: Expr = Expr::Lit(worklet_type.type_str().into()),
         hash: Expr = hash,
         fn_: Expr = Expr::Fn(FnExpr {

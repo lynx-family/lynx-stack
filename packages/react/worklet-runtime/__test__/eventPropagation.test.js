@@ -34,6 +34,7 @@ describe('EventPropagation', () => {
     });
     globalThis.registerWorklet('main-thread', '1', fn);
     const ret = globalThis.runWorklet({ _wkltId: '1' }, [{
+      type: 'uiappear',
       target: {},
       currentTarget: {},
     }], {

@@ -174,7 +174,7 @@ The CI runs these checks (replicate locally for confidence):
 5. **TypeScript compilation**: Part of `pnpm turbo build`
 6. **Unit tests**: `pnpm test` (vitest-based, requires build)
 7. **E2E tests**: Web platform tests with Playwright
-8. **Rust tests**: `cargo test` in Rust packages
+8. **Rust tests**: `cargo test --all-targets --all-features` in Rust packages
 9. **Type checking**: `pnpm -r run test:type`
 
 ### GitHub Workflows
@@ -245,6 +245,7 @@ These instructions were generated through comprehensive analysis and testing of 
 - Includes E2E test suite requiring Playwright
 - Many packages have complex interdependencies
 - Contains performance-critical rendering code
+- See `packages/web-platform/web-core-wasm/AGENTS.md` for specific instructions on `web-core-wasm`.
 
 Remember: This is a complex, multi-language monorepo. Always allow extra time for builds and tests, and follow the exact command sequences provided.
 

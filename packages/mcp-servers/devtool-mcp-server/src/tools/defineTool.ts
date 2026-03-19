@@ -1,23 +1,30 @@
-// Copyright 2025 The Lynx Authors. All rights reserved.
+// Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+
+import type { RequestHandlerExtra } from '@modelcontextprotocol/sdk/shared/protocol.js';
+import type {
+  ServerNotification,
+  ServerRequest,
+} from '@modelcontextprotocol/sdk/types.js';
 import type * as z from 'zod';
-import type { DebugRouterConnector } from '../connector.ts';
+
+import type { Connector } from '@lynx-js/devtool-connector';
 
 export interface Request<Schema extends z.ZodRawShape> {
   params: z.objectOutputType<Schema, z.ZodTypeAny>;
+  extra: RequestHandlerExtra<ServerRequest, ServerNotification>;
 }
 
 export interface Response {
-  setIncludeClients(value: boolean, deviceId?: string): void;
-  setIncludeDevices(value: boolean): void;
+  setIncludeResponseTitle(value: boolean): void;
   appendLines(...lines: string[]): void;
 
   attachImage(value: ImageContentData): void;
 }
 
 export interface Context {
-  connector(): DebugRouterConnector;
+  connector(): Connector;
 }
 
 export interface ImageContentData {

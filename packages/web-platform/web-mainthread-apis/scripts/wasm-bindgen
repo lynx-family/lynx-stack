@@ -1,0 +1,102 @@
+#!/usr/bin/env dotslash
+
+// AUTO GENERATED. DO NOT MODIFY
+
+// This is generated with
+// `uv run https://gist.githubusercontent.com/colinaaa/090b404e09f6628be90076765b4d455d/raw/dotslash-publish-release.py --config ./scripts/dotslash-config.json --local-config --repo wasm-bindgen/wasm-bindgen --output ./scripts --tag 0.2.108`
+
+{
+  "name": "wasm-bindgen",
+  "platforms": {
+    "macos-x86_64": {
+      "size": 8247951,
+      "hash": "blake3",
+      "digest": "19e0b44c9f35d26efafe97b88589a1ef72ad0d331613956f67b4749cf667eb65",
+      "format": "tar.gz",
+      "path": "wasm-bindgen-0.2.108-x86_64-apple-darwin/wasm-bindgen",
+      "providers": [
+        {
+          "url": "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.108/wasm-bindgen-0.2.108-x86_64-apple-darwin.tar.gz"
+        },
+        {
+          "type": "github-release",
+          "repo": "https://github.com/wasm-bindgen/wasm-bindgen",
+          "tag": "0.2.108",
+          "name": "wasm-bindgen-0.2.108-x86_64-apple-darwin.tar.gz"
+        }
+      ]
+    },
+    "macos-aarch64": {
+      "size": 7768678,
+      "hash": "blake3",
+      "digest": "f2c1d62addbe2f7844a15ea43095bcf509aa55b086bfb98133d578b6c9fb431c",
+      "format": "tar.gz",
+      "path": "wasm-bindgen-0.2.108-aarch64-apple-darwin/wasm-bindgen",
+      "providers": [
+        {
+          "url": "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.108/wasm-bindgen-0.2.108-aarch64-apple-darwin.tar.gz"
+        },
+        {
+          "type": "github-release",
+          "repo": "https://github.com/wasm-bindgen/wasm-bindgen",
+          "tag": "0.2.108",
+          "name": "wasm-bindgen-0.2.108-aarch64-apple-darwin.tar.gz"
+        }
+      ]
+    },
+    "linux-x86_64": {
+      "size": 11183940,
+      "hash": "blake3",
+      "digest": "867164429f210c2a84f604792ac2f4f668ae195c148b6e269cae7a770c0e96ca",
+      "format": "tar.gz",
+      "path": "wasm-bindgen-0.2.108-x86_64-unknown-linux-musl/wasm-bindgen",
+      "providers": [
+        {
+          "url": "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.108/wasm-bindgen-0.2.108-x86_64-unknown-linux-musl.tar.gz"
+        },
+        {
+          "type": "github-release",
+          "repo": "https://github.com/wasm-bindgen/wasm-bindgen",
+          "tag": "0.2.108",
+          "name": "wasm-bindgen-0.2.108-x86_64-unknown-linux-musl.tar.gz"
+        }
+      ]
+    },
+    "linux-aarch64": {
+      "size": 11036303,
+      "hash": "blake3",
+      "digest": "a95fafebe3696e73444cd0e11e5e4b61bfebc35a8dd603cb24dba37c3249ddb4",
+      "format": "tar.gz",
+      "path": "wasm-bindgen-0.2.108-aarch64-unknown-linux-gnu/wasm-bindgen",
+      "providers": [
+        {
+          "url": "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.108/wasm-bindgen-0.2.108-aarch64-unknown-linux-gnu.tar.gz"
+        },
+        {
+          "type": "github-release",
+          "repo": "https://github.com/wasm-bindgen/wasm-bindgen",
+          "tag": "0.2.108",
+          "name": "wasm-bindgen-0.2.108-aarch64-unknown-linux-gnu.tar.gz"
+        }
+      ]
+    },
+    "windows-x86_64": {
+      "size": 7338345,
+      "hash": "blake3",
+      "digest": "dbb4847d2eff71578cb88174671ca7f74b31d5c32be4fde3e40823856433f597",
+      "format": "tar.gz",
+      "path": "wasm-bindgen-0.2.108-x86_64-pc-windows-msvc/wasm-bindgen.exe",
+      "providers": [
+        {
+          "url": "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.108/wasm-bindgen-0.2.108-x86_64-pc-windows-msvc.tar.gz"
+        },
+        {
+          "type": "github-release",
+          "repo": "https://github.com/wasm-bindgen/wasm-bindgen",
+          "tag": "0.2.108",
+          "name": "wasm-bindgen-0.2.108-x86_64-pc-windows-msvc.tar.gz"
+        }
+      ]
+    }
+  }
+}

@@ -40,6 +40,9 @@ it('manifest only contains /app-service.js', async () => {
   expect(manifest).not.toHaveProperty('/foo:background.rspack.bundle.js');
   expect(manifest).toHaveProperty('/app-service.js');
 
+  // should have requireModuleAsyncCache polyfill
+  expect(manifest['/app-service.js']).toContain('var moduleCache = {}');
+
   expect(manifest['/app-service.js']).toContain(
     `lynx.requireModuleAsync(\"/foo:background.rspack.bundle.js\")`,
   );
@@ -47,4 +50,8 @@ it('manifest only contains /app-service.js', async () => {
   expect(manifest['/app-service.js']).not.toContain(
     `module.exports=;`,
   );
+
+  it('inlined scripts should not have syntax error', () => {
+    eval(manifest['/app-service.js']);
+  });
 });

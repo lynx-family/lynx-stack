@@ -6,10 +6,14 @@ class App extends Component {
         _c: {
             a
         },
-        _wkltId: "a77b:test:1"
+        _wkltId: "a77b:test:1",
+        ...{
+            a: this.a
+        }
     };
 }
-loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry) && registerWorkletInternal("main-thread", "a77b:test:1", function(event) {
+const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
+__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a77b:test:1", function(event) {
     let { a } = this["_c"];
     "main thread";
     console.log(a);

@@ -7,6 +7,9 @@ edition = "2021"
 path = "lib.rs"
 
 [dependencies]
-napi = { workspace = true }
-napi-derive = { workspace = true }
+napi = { workspace = true, optional = true }
+napi-derive = { workspace = true, optional = true }
 serde = { workspace = true, features = ["derive"] }
+
+[features]
+napi = ["dep:napi", "dep:napi-derive"]
