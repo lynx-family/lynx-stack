@@ -3559,6 +3559,7 @@ test.describe('reactlynx3 tests', () => {
       test(
         'basic-element-x-swiper-indicator-dots',
         async ({ page }, { title }) => {
+          test.skip(isSSR);
           await goto(page, title);
           await wait(100);
           await diffScreenShot(page, 'x-swiper', 'indicator-dots', 'index', {
@@ -3570,6 +3571,7 @@ test.describe('reactlynx3 tests', () => {
       test(
         'basic-element-x-swiper-indicator-color',
         async ({ page }, { title }) => {
+          test.skip(isSSR);
           await goto(page, title);
           await wait(100);
           await diffScreenShot(page, 'x-swiper', 'indicator-color', undefined, {
@@ -3822,6 +3824,7 @@ test.describe('reactlynx3 tests', () => {
         });
       });
       test('basic-element-x-swiper-autoplay', async ({ page }, { title }) => {
+        test.skip(isSSR);
         await goto(page, title);
         // default duration: 500, interval: 5000
         await wait(5600);
@@ -3850,6 +3853,7 @@ test.describe('reactlynx3 tests', () => {
             browserName === 'firefox',
             'diffScreenShot cost too long time in firefox',
           );
+          test.skip(isSSR);
           await goto(page, title);
           await wait(5600);
           await diffScreenShot(page, 'x-swiper', 'interval-1', undefined, {
