@@ -254,6 +254,12 @@ export interface PluginReactLynxOptions {
   /**
    * Configure the update mode of `lynx.__globalProps`.
    *
+   * This flag has two options:
+   *
+   * `'reactive'`: `UpdateGlobalProps` will trigger update automatically.
+   *
+   * `'event'`: `UpdateGlobalProps` will trigger global event and users need to trigger update in the event handler.
+   *
    * @defaultValue `'reactive'`
    */
   globalPropsMode?: 'reactive' | 'event'

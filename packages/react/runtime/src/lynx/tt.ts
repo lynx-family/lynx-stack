@@ -263,10 +263,12 @@ function delayedPublicComponentEvent(_componentId: string, handlerName: string, 
 }
 
 function updateGlobalProps(newData: Record<string, any>): void {
-  Object.assign(lynx.__globalProps, newData);
-
-  // only when __GLOBAL_PROPS_MODE__ is reactive, we need to batch the update with updateFromRoot
-  if (typeof __GLOBAL_PROPS_MODE__ === 'undefined' || __GLOBAL_PROPS_MODE__ === 'reactive') {
+  if (typeof __GLOBAL_PROPS_MODE__ !== 'undefined' && __GLOBAL_PROPS_MODE__ === 'event') {
+    // COW when modify `lynx.__globalProps` to make sure Provider & Consumer works
+    lynx.__globalProps = Object.assign({}, lynx.__globalProps, newData);
+  } else {
+    // only when __GLOBAL_PROPS_MODE__ is reactive, we need to batch the update with updateFromRoot
+    Object.assign(lynx.__globalProps, newData);
     // Our purpose is to make sure SYNC setState inside `emit`'s listeners
     // can be batched with updateFromRoot
     // This is already done because updateFromRoot will consume all dirty flags marked by
@@ -276,7 +278,7 @@ function updateGlobalProps(newData: Record<string, any>): void {
       runWithForce(() => render(__root.__jsx, __root as any));
     });
   }
-  lynxCoreInject.tt.GlobalEventEmitter.emit('onGlobalPropsChanged', undefined);
+  lynxCoreInject.tt.GlobalEventEmitter.emit('onGlobalPropsChanged', [lynx.__globalProps]);
 }
 
 function updateCardData(newData: Record<string, any>, options?: Record<string, any>): void {
