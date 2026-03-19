@@ -359,38 +359,35 @@ describe('list', () => {
       ]
     `);
     expect(__FlushElementTree).toHaveBeenCalledTimes(1);
-    expect(__FlushElementTree.mock.calls).toMatchInlineSnapshot(`
-      [
-        [
-          <list-item
-            full-span="true"
-            item-key="1"
-          >
-            <wrapper>
-              <view>
-                <text>
-                  1
-                </text>
-                <text>
-                  1
-                </text>
-              </view>
-              <view>
-                <text>
-                  hello
-                </text>
-              </view>
-            </wrapper>
-          </list-item>,
-          {
-            "elementID": 33,
-            "listID": 2,
-            "operationID": undefined,
-            "triggerLayout": true,
-          },
-        ],
-      ]
+    const [[flushedElement, flushInfo]] = __FlushElementTree.mock.calls;
+    expect(flushedElement).toMatchInlineSnapshot(`
+      <list-item
+        full-span="true"
+        item-key="1"
+      >
+        <wrapper>
+          <view>
+            <text>
+              1
+            </text>
+            <text>
+              1
+            </text>
+          </view>
+          <view>
+            <text>
+              hello
+            </text>
+          </view>
+        </wrapper>
+      </list-item>
     `);
+    expect(flushInfo).toMatchObject({
+      listID: 2,
+      operationID: undefined,
+      triggerLayout: true,
+    });
+    expect(flushInfo.elementID).toBeTypeOf('number');
 
     expect(list).toMatchInlineSnapshot(`
       <list

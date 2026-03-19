@@ -207,7 +207,7 @@ jobs:
         pnpm run build --mode development
         pnpm run lint
         pnpm run test
-        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react-vitest-rltl --dir create-rspeedy-regression-vitest-rltl
+        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react-vitest-rltl --dir create-rspeedy-regression-vitest-rltl --tools eslint
         cd create-rspeedy-regression-vitest-rltl
         pnpm install --registry=http://localhost:4873
         pnpm run build
