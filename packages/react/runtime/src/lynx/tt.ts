@@ -6,7 +6,7 @@ import { process, render } from 'preact';
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
 import type { FirstScreenData } from '../lifecycleConstant.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from './performance.js';
-import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
+import { hydrate } from '../backgroundSnapshot.js';
 import type { BackgroundDOM } from '../backgroundSnapshot.js';
 import { runWithForce } from './runWithForce.js';
 import { printSnapshotInstanceToString } from '../debug/printSnapshot.js';
@@ -109,7 +109,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         );
         console.alog?.(
           '[ReactLynxDebug] BackgroundSnapshotInstance tree before hydration:\n'
-            + printSnapshotInstanceToString(__root as BackgroundSnapshotInstance),
+            + printSnapshotInstanceToString(__root as BackgroundDOM),
         );
       }
       markTiming('hydrateParseSnapshotEnd');
@@ -121,7 +121,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
         console.alog?.(
           '[ReactLynxDebug] BackgroundSnapshotInstance after hydration:\n'
-            + printSnapshotInstanceToString(__root as BackgroundSnapshotInstance),
+            + printSnapshotInstanceToString(__root as BackgroundDOM),
         );
       }
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
