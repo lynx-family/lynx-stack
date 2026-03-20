@@ -80,6 +80,7 @@ export interface PluginReactLynxOptions {
     experimental_isLazyBundle?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady';
+    globalPropsMode?: 'reactive' | 'event';
     removeDescendantSelectorScope?: boolean;
     shake?: Partial<ShakeVisitorConfig> | undefined;
     // @deprecated

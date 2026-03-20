@@ -670,6 +670,60 @@ describe('Config', () => {
       expect(firstScreenSyncTiming).toBe('immediately')
     })
 
+    test('globalPropsMode defaults to "reactive"', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      const ReactWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+
+      expect(ReactWebpackPlugin).toBeDefined()
+
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const { globalPropsMode } = ReactWebpackPlugin?.options ?? {}
+      expect(globalPropsMode).toBe('reactive')
+    })
+
+    test('globalPropsMode respects configuration', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx({ globalPropsMode: 'event' }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      const ReactWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+
+      expect(ReactWebpackPlugin).toBeDefined()
+
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const { globalPropsMode } = ReactWebpackPlugin?.options ?? {}
+      expect(globalPropsMode).toBe('event')
+    })
+
     test('environments.lynx.output.inlineScripts: false', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
       const rsbuild = await createRspeedy({

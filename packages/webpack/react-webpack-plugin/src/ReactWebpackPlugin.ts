@@ -34,6 +34,11 @@ interface ReactWebpackPluginOptions {
   firstScreenSyncTiming?: 'immediately' | 'jsReady';
 
   /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode}
+   */
+  globalPropsMode?: 'reactive' | 'event';
+
+  /**
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableSSR}
    */
   enableSSR?: boolean;
@@ -137,6 +142,7 @@ class ReactWebpackPlugin {
     .freeze<Required<ReactWebpackPluginOptions>>({
       disableCreateSelectorQueryIncompatibleWarning: false,
       firstScreenSyncTiming: 'immediately',
+      globalPropsMode: 'reactive',
       enableSSR: false,
       mainThreadChunks: [],
       extractStr: false,
@@ -195,6 +201,7 @@ class ReactWebpackPlugin {
       __FIRST_SCREEN_SYNC_TIMING__: JSON.stringify(
         options.firstScreenSyncTiming,
       ),
+      __GLOBAL_PROPS_MODE__: JSON.stringify(options.globalPropsMode),
       __ENABLE_SSR__: JSON.stringify(options.enableSSR),
       __DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__: JSON.stringify(
         options.disableCreateSelectorQueryIncompatibleWarning,

@@ -47,6 +47,7 @@ export function applyEntry(
     enableNewGesture,
     enableRemoveCSSScope,
     firstScreenSyncTiming,
+    globalPropsMode,
     enableSSR,
     removeDescendantSelectorScope,
     targetSdkVersion,
@@ -272,6 +273,7 @@ export function applyEntry(
         disableCreateSelectorQueryIncompatibleWarning: compat
           ?.disableCreateSelectorQueryIncompatibleWarning ?? false,
         firstScreenSyncTiming,
+        globalPropsMode,
         enableSSR,
         mainThreadChunks,
         extractStr,

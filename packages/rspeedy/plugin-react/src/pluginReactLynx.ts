@@ -252,6 +252,19 @@ export interface PluginReactLynxOptions {
   targetSdkVersion?: string
 
   /**
+   * Configure the update mode of `lynx.__globalProps`.
+   *
+   * This flag has two options:
+   *
+   * `'reactive'`: `UpdateGlobalProps` will trigger update automatically.
+   *
+   * `'event'`: `UpdateGlobalProps` will trigger global event and users need to trigger update in the event handler.
+   *
+   * @defaultValue `'reactive'`
+   */
+  globalPropsMode?: 'reactive' | 'event'
+
+  /**
    * Merge same string literals in JS and Lepus to reduce output bundle size.
    * Set to `false` to disable.
    *
@@ -310,6 +323,8 @@ export function pluginReactLynx(
     targetSdkVersion: '',
     engineVersion: '',
     extractStr: false,
+
+    globalPropsMode: 'reactive',
 
     experimental_isLazyBundle: false,
   }
