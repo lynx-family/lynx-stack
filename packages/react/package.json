@@ -87,6 +87,14 @@
       "types": "./worklet-runtime/lib/bindings/index.d.ts",
       "default": "./worklet-runtime/lib/bindings/index.js"
     },
+    "./mtc-runtime": {
+      "types": "./mtc-runtime/lib/index.d.ts",
+      "default": "./mtc-runtime/dist/main.js"
+    },
+    "./mtc-dev-runtime": {
+      "types": "./mtc-runtime/lib/index.d.ts",
+      "default": "./mtc-runtime/dist/dev.js"
+    },
     "./legacy-react-runtime": {
       "types": "./runtime/lib/legacy-react-runtime/index.d.ts",
       "lazy": "./runtime/lazy/legacy-react-runtime.js",
