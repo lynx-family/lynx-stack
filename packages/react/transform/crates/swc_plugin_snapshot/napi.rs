@@ -26,6 +26,8 @@ pub struct JSXTransformerConfig {
   pub target: TransformTarget,
   /// @internal
   pub is_dynamic_component: Option<bool>,
+  /// Module specifiers containing MTC component exports.
+  pub mtc_modules: Option<Vec<String>>,
 }
 
 impl Default for JSXTransformerConfig {
@@ -37,6 +39,7 @@ impl Default for JSXTransformerConfig {
       filename: Default::default(),
       target: TransformTarget::LEPUS,
       is_dynamic_component: Some(false),
+      mtc_modules: None,
     }
   }
 }
@@ -50,6 +53,7 @@ impl From<JSXTransformerConfig> for CoreJSXTransformerConfig {
       filename: val.filename,
       target: val.target.into(),
       is_dynamic_component: val.is_dynamic_component,
+      mtc_modules: val.mtc_modules.unwrap_or_default(),
     }
   }
 }
@@ -63,6 +67,11 @@ impl From<CoreJSXTransformerConfig> for JSXTransformerConfig {
       filename: val.filename,
       target: val.target.into(),
       is_dynamic_component: val.is_dynamic_component,
+      mtc_modules: if val.mtc_modules.is_empty() {
+        None
+      } else {
+        Some(val.mtc_modules)
+      },
     }
   }
 }

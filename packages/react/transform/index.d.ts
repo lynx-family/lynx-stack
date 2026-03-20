@@ -563,6 +563,8 @@ export interface JsxTransformerConfig {
   target: 'LEPUS' | 'JS' | 'MIXED'
   /** @internal */
   isDynamicComponent?: boolean
+  /** Module specifiers containing MTC component exports. */
+  mtcModules?: string[]
 }
 export interface WorkletVisitorConfig {
   /**

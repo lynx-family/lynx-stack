@@ -31,6 +31,7 @@ export const __DynamicPartSlot: DynamicPartType = DynamicPartType.Slot;
 export const __DynamicPartMultiChildren: DynamicPartType = DynamicPartType.MultiChildren;
 export const __DynamicPartChildren: DynamicPartType = DynamicPartType.Children;
 export const __DynamicPartListChildren: DynamicPartType = DynamicPartType.ListChildren;
+export const __DynamicPartMtcBoundary: DynamicPartType = DynamicPartType.MtcBoundary;
 export { __DynamicPartChildren_0 } from './snapshot.js';
 
 export { updateSpread } from './snapshot/spread.js';
