@@ -992,6 +992,12 @@ pub struct JSXTransformerConfig {
   pub target: TransformTarget,
   /// @internal
   pub is_dynamic_component: Option<bool>,
+  /// List of module specifiers that contain MTC (Main Thread Component) exports.
+  /// When a JSX element references a component from one of these modules,
+  /// the plugin generates an mtc-boundary snapshot type instead of a normal
+  /// component call.
+  #[serde(default)]
+  pub mtc_modules: Vec<String>,
 }
 
 impl Default for JSXTransformerConfig {
@@ -1003,6 +1009,7 @@ impl Default for JSXTransformerConfig {
       filename: Default::default(),
       target: TransformTarget::LEPUS,
       is_dynamic_component: Some(false),
+      mtc_modules: vec![],
     }
   }
 }

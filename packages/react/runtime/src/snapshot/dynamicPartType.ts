@@ -13,4 +13,5 @@ export const enum DynamicPartType {
   Children, // Regular children updates
   ListChildren, // List/array children updates
   MultiChildren, // Multiple children updates (compat layer)
+  MtcBoundary, // MTC component boundary (main-thread component island)
 }
