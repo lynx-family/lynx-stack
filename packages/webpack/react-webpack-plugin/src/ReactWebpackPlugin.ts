@@ -287,67 +287,74 @@ class ReactWebpackPlugin {
         },
       );
 
-      compilation.hooks.processAssets.tap(
-        {
-          name: this.constructor.name,
-          // This wrapper must be injected after size/minify optimizations have
-          // produced stable JS, but before devtool plugins finalize sourcemaps and
-          // later encode hooks consume the wrapped asset.
-          //
-          // - Too early (<= OPTIMIZE_SIZE): the wrapper is added before the
-          //   minimizer runs. For lazy bundles, the minimizer can treat the wrapped
-          //   content as removable and collapse the emitted asset down to empty code.
-          // - Too late (>= DEV_TOOLING): SourceMapDevToolPlugin emits `.map` assets
-          //   and rewrites JS with `sourceMappingURL` in DEV_TOOLING. If we prepend
-          //   wrapper lines after that point, the generated JS shifts but mappings do
-          //   not.
-          //
-          // OPTIMIZE_SIZE + 1 is the safe window where both the emitted code and its
-          // sourcemap stay aligned.
-          stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE
-            + 1,
-        },
-        () => {
-          compilation.chunkGroups.forEach(chunkGroup => {
-            const isDynamicImport = !chunkGroup.isInitial()
-              && chunkGroup.origins.every(
-                origin => origin.module?.layer === LAYERS.MAIN_THREAD,
-              );
-
-            chunkGroup.chunks.forEach(chunk => {
-              for (const file of chunk.files) {
-                if (!file.endsWith('.js')) {
-                  continue;
-                }
-
-                const shouldInjectWrapper = isDynamicImport
-                  || (options.experimental_isLazyBundle
-                    && options.mainThreadChunks?.includes(file));
-                if (!shouldInjectWrapper) {
-                  continue;
-                }
-
-                const asset = compilation.getAsset(file);
-                if (!asset) {
-                  continue;
-                }
-
-                compilation.updateAsset(
-                  file,
-                  old =>
-                    new ConcatSource(
-                      `(function (globDynamicComponentEntry) {\n`,
-                      `  const module = { exports: {} }\n`,
-                      `  const exports = module.exports;\n`,
-                      old,
-                      `\n  ;return module.exports\n})`,
-                    ),
+      if (
+        compiler.options.plugins.some(
+          (p) => p instanceof LynxTemplatePlugin,
+        )
+      ) {
+        compilation.hooks.processAssets.tap(
+          {
+            name: this.constructor.name,
+            // This wrapper must be injected after size/minify optimizations have
+            // produced stable JS, but before devtool plugins finalize sourcemaps and
+            // later encode hooks consume the wrapped asset.
+            //
+            // - Too early (<= OPTIMIZE_SIZE): the wrapper is added before the
+            //   minimizer runs. For lazy bundles, the minimizer can treat the wrapped
+            //   content as removable and collapse the emitted asset down to empty code.
+            // - Too late (>= DEV_TOOLING): SourceMapDevToolPlugin emits `.map` assets
+            //   and rewrites JS with `sourceMappingURL` in DEV_TOOLING. If we prepend
+            //   wrapper lines after that point, the generated JS shifts but mappings do
+            //   not.
+            //
+            // OPTIMIZE_SIZE + 1 is the safe window where both the emitted code and its
+            // sourcemap stay aligned.
+            stage:
+              compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE
+              + 1,
+          },
+          () => {
+            compilation.chunkGroups.forEach(chunkGroup => {
+              const isDynamicImport = !chunkGroup.isInitial()
+                && chunkGroup.origins.every(
+                  origin => origin.module?.layer === LAYERS.MAIN_THREAD,
                 );
-              }
+
+              chunkGroup.chunks.forEach(chunk => {
+                for (const file of chunk.files) {
+                  if (!file.endsWith('.js')) {
+                    continue;
+                  }
+
+                  const shouldInjectWrapper = isDynamicImport
+                    || (options.experimental_isLazyBundle
+                      && options.mainThreadChunks?.includes(file));
+                  if (!shouldInjectWrapper) {
+                    continue;
+                  }
+
+                  const asset = compilation.getAsset(file);
+                  if (!asset) {
+                    continue;
+                  }
+
+                  compilation.updateAsset(
+                    file,
+                    old =>
+                      new ConcatSource(
+                        `(function (globDynamicComponentEntry) {\n`,
+                        `  const module = { exports: {} }\n`,
+                        `  const exports = module.exports;\n`,
+                        old,
+                        `\n  ;return module.exports\n})`,
+                      ),
+                  );
+                }
+              });
             });
-          });
-        },
-      );
+          },
+        );
+      }
 
       // The react-transform will add `-react__${LAYER}` to the webpackChunkName.
       // We replace it with an empty string here to make sure main-thread & background chunk match.
