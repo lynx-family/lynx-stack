@@ -176,7 +176,7 @@ class ReactWebpackPlugin {
     // sourcemap stay aligned.
     const moduleExportsWrapperStage =
       compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE + 1;
-    let moduleExportsWrapperTest: string[] | RegExp = asyncMainThreadChunkTest;
+    let moduleExportsWrapperTest;
 
     if (options.experimental_isLazyBundle) {
       moduleExportsWrapperTest = [
@@ -184,6 +184,7 @@ class ReactWebpackPlugin {
         asyncMainThreadChunkTest,
       ];
     } else {
+      moduleExportsWrapperTest = asyncMainThreadChunkTest;
       new BannerPlugin({
         // TODO: handle cases that do not have `'use strict'`
         banner:
