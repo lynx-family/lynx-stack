@@ -2,6 +2,7 @@
 pub enum WorkletType {
   Element,
   UI,
+  Background,
 }
 
 impl WorkletType {
@@ -10,6 +11,8 @@ impl WorkletType {
       Some(WorkletType::Element)
     } else if directive == "use worklet" {
       Some(WorkletType::UI)
+    } else if directive == "use background" || directive == "background" {
+      Some(WorkletType::Background)
     } else {
       None
     }
@@ -19,6 +22,7 @@ impl WorkletType {
     match self {
       WorkletType::Element => "main-thread",
       WorkletType::UI => "ui",
+      WorkletType::Background => "background",
     }
   }
 }

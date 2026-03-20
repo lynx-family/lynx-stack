@@ -1867,3 +1867,115 @@ export class A extends Component {}
     `);
   });
 });
+
+describe('background worklet type', () => {
+  it('should transform "use background" directive on LEPUS target', async () => {
+    const { code } = await transformReactLynx(
+      `\
+export function fetchData() {
+  "use background";
+  return getData();
+}
+`,
+      {
+        pluginName: '',
+        filename: '',
+        sourcemap: false,
+        cssScope: false,
+        jsx: false,
+        directiveDCE: true,
+        defineDCE: {
+          define: {
+            __LEPUS__: 'true',
+            __JS__: 'false',
+          },
+        },
+        shake: false,
+        compat: true,
+        refresh: false,
+        worklet: {
+          target: 'LEPUS',
+          filename: '',
+          runtimePkg: '@lynx-js/react',
+        },
+      },
+    );
+
+    // On LEPUS target, the function body should be kept and registered
+    expect(code).toContain('registerWorkletInternal("background"');
+    expect(code).toContain('"use background"');
+  });
+
+  it('should transform "use background" directive on JS target', async () => {
+    const { code } = await transformReactLynx(
+      `\
+export function fetchData() {
+  "use background";
+  return getData();
+}
+`,
+      {
+        pluginName: '',
+        filename: '',
+        sourcemap: false,
+        cssScope: false,
+        jsx: false,
+        directiveDCE: true,
+        defineDCE: {
+          define: {
+            __LEPUS__: 'false',
+            __JS__: 'true',
+          },
+        },
+        shake: false,
+        compat: true,
+        refresh: false,
+        worklet: {
+          target: 'JS',
+          filename: '',
+          runtimePkg: '@lynx-js/react',
+          mode: 'development',
+        },
+      },
+    );
+
+    // On JS target in dev mode, registerWorkletOnBackground is emitted
+    expect(code).toContain('_wkltId');
+    expect(code).toContain('registerWorkletOnBackground("background"');
+  });
+
+  it('should transform "background" directive alias', async () => {
+    const { code } = await transformReactLynx(
+      `\
+export function handler() {
+  "background";
+  doWork();
+}
+`,
+      {
+        pluginName: '',
+        filename: '',
+        sourcemap: false,
+        cssScope: false,
+        jsx: false,
+        directiveDCE: true,
+        defineDCE: {
+          define: {
+            __LEPUS__: 'true',
+            __JS__: 'false',
+          },
+        },
+        shake: false,
+        compat: true,
+        refresh: false,
+        worklet: {
+          target: 'LEPUS',
+          filename: '',
+          runtimePkg: '@lynx-js/react',
+        },
+      },
+    );
+
+    expect(code).toContain('registerWorkletInternal("background"');
+  });
+});
