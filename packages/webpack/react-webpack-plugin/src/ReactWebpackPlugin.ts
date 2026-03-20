@@ -308,43 +308,44 @@ class ReactWebpackPlugin {
             + 1,
         },
         () => {
-          const chunkGroups = options.experimental_isLazyBundle
-            ? compilation.chunkGroups
-            : compilation.chunkGroups
-              .filter(cg => !cg.isInitial())
-              .filter(cg =>
-                cg.origins.every(
-                  origin => origin.module?.layer === LAYERS.MAIN_THREAD,
-                )
+          compilation.chunkGroups.forEach(chunkGroup => {
+            const isDynamicImport = !chunkGroup.isInitial()
+              && chunkGroup.origins.every(
+                origin => origin.module?.layer === LAYERS.MAIN_THREAD,
               );
 
-          chunkGroups
-            .forEach(chunkGroup => {
-              chunkGroup.chunks.forEach(chunk => {
-                for (const file of chunk.files) {
-                  if (!file.endsWith('.js')) {
-                    continue;
-                  }
-
-                  const asset = compilation.getAsset(file);
-                  if (!asset) {
-                    continue;
-                  }
-
-                  compilation.updateAsset(
-                    file,
-                    old =>
-                      new ConcatSource(
-                        `(function (globDynamicComponentEntry) {\n`,
-                        `  const module = { exports: {} }\n`,
-                        `  const exports = module.exports;\n`,
-                        old,
-                        `\n  ;return module.exports\n})`,
-                      ),
-                  );
+            chunkGroup.chunks.forEach(chunk => {
+              for (const file of chunk.files) {
+                if (!file.endsWith('.js')) {
+                  continue;
                 }
-              });
+
+                const shouldInjectWrapper = isDynamicImport
+                  || (options.experimental_isLazyBundle
+                    && options.mainThreadChunks?.includes(file));
+                if (!shouldInjectWrapper) {
+                  continue;
+                }
+
+                const asset = compilation.getAsset(file);
+                if (!asset) {
+                  continue;
+                }
+
+                compilation.updateAsset(
+                  file,
+                  old =>
+                    new ConcatSource(
+                      `(function (globDynamicComponentEntry) {\n`,
+                      `  const module = { exports: {} }\n`,
+                      `  const exports = module.exports;\n`,
+                      old,
+                      `\n  ;return module.exports\n})`,
+                    ),
+                );
+              }
             });
+          });
         },
       );
 
