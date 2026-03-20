@@ -15,6 +15,11 @@ export const SnapshotOperation = {
   SetAttribute: 3,
   SetAttributes: 4,
 
+  // MTC (Main Thread Component) operations
+  MtcMount: 10,
+  MtcUpdate: 11,
+  MtcUnmount: 12,
+
   DEV_ONLY_AddSnapshot: 100,
   DEV_ONLY_RegisterWorklet: 101,
   DEV_ONLY_SetSnapshotEntryName: 102,
@@ -32,6 +37,15 @@ export const SnapshotOperationParams: Record<number, { name: string; params: str
     params: ['id', /* number */ 'dynamicPartIndex', /* number */ 'value' /* any */],
   },
   [SnapshotOperation.SetAttributes]: { name: 'SetAttributes', params: ['id', /* number */ 'values' /* any */] },
+  [SnapshotOperation.MtcMount]: {
+    name: 'MtcMount',
+    params: ['snapshotInstanceId', /* number */ 'componentHash', /* string */ 'propsValues' /* any */],
+  },
+  [SnapshotOperation.MtcUpdate]: {
+    name: 'MtcUpdate',
+    params: ['snapshotInstanceId', /* number */ 'propsValues' /* any */],
+  },
+  [SnapshotOperation.MtcUnmount]: { name: 'MtcUnmount', params: ['snapshotInstanceId' /* number */] },
   [SnapshotOperation.DEV_ONLY_AddSnapshot]: {
     name: 'DEV_ONLY_AddSnapshot',
     params: [
