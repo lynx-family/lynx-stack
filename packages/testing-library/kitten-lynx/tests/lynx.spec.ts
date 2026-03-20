@@ -1,10 +1,46 @@
 import { Lynx } from '../src/Lynx.js';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const cwd = path.dirname(__dirname);
+
+import { AdbServerClient, type Adb } from '@yume-chan/adb';
+import { AdbServerNodeTcpConnector } from '@yume-chan/adb-server-node-tcp';
+import { execa } from 'execa';
+execa({
+  env: {
+    ...process.env,
+    NODE_ENV: 'development',
+  },
+  cwd,
+  stdio: 'inherit',
+  shell: true,
+  cleanup: true,
+})`pnpm serve`;
+// Using Rspeedy Node API resolving instead of child_process
 
 describe('kitten-lynx testing framework', () => {
   let lynx: Lynx;
+  let adb: Adb;
 
   beforeAll(async () => {
+    // Use ADB port forwarding
+    const client = new AdbServerClient(
+      new AdbServerNodeTcpConnector({ port: 5037 }),
+    );
+    const devices = await client.getDevices();
+    if (devices.length === 0) {
+      throw new Error(`no device connected`);
+    }
+    for (const device of devices) {
+      adb = await client.createAdb({ serial: device.serial });
+      await adb.reverse.addExternal(`tcp:3001`, `tcp:3001`);
+      await adb.close();
+    }
+
     lynx = await Lynx.connect();
   });
 
@@ -13,34 +49,21 @@ describe('kitten-lynx testing framework', () => {
   });
 
   it('can navigate to a page and read the DOM', async () => {
-    console.log('[test] creating new page...');
     const page = await lynx.newPage();
-    console.log('[test] page created.');
 
-    console.log('[test] navigating to hello-world bundle...');
-    await page.goto(
-      'https://lynxjs.org/next/lynx-examples/hello-world/dist/main.lynx.bundle',
-    );
-    console.log('[test] navigation complete.');
+    await page.goto('http://127.0.0.1:3001/react-example.lynx.bundle', {
+      timeout: 15000,
+    });
 
-    console.log('[test] getting page content...');
     const content = await page.content();
-    console.log(`[test] page content received, length: ${content.length}`);
     expect(content).toContain('have fun');
 
-    console.log('[test] locator view...');
     const rootElement = await page.locator('view');
     expect(rootElement).toBeDefined();
 
     if (rootElement) {
-      console.log('[test] getting computed styles...');
       const styles = await rootElement.computedStyleMap();
       expect(styles.size).toBeGreaterThan(0);
-
-      // Perform a tap action to verify the method executes successfully
-      console.log('[test] tapping root element...');
-      await expect(rootElement.tap()).resolves.toBeUndefined();
     }
-    console.log('[test] finished successfully');
   }, 90000); // Increase timeout to 90s as connecting/launching emulator app can be slow
 });

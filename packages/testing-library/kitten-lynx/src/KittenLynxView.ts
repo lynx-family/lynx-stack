@@ -67,7 +67,8 @@ export class KittenLynxView {
    * @throws An error if it times out waiting for the devtool server to boot (60s limit).
    * @throws An error if the specific session for the URL cannot be found (30s limit) or cannot be attached.
    */
-  async goto(url: string, _options?: unknown): Promise<void> {
+  async goto(url: string, options?: { timeout?: number }): Promise<void> {
+    const timeout = options?.timeout ?? 30000;
     const urlPath = url.split('/').pop() || url;
 
     // Wait until the Lynx app has booted and registered its devtool server.
@@ -167,7 +168,7 @@ export class KittenLynxView {
     let matchedSessionId: number | undefined;
     const navStartTime = Date.now();
     let pollLoops = 0;
-    while (Date.now() - navStartTime < 30000) {
+    while (Date.now() - navStartTime < timeout) {
       pollLoops++;
       await setTimeout(500);
       try {
@@ -222,7 +223,7 @@ export class KittenLynxView {
 
     if (matchedSessionId === undefined) {
       console.error(
-        `[goto] Failed to find session for URL after 30000ms: ${url}`,
+        `[goto] Failed to find session for URL after ${timeout}ms: ${url}`,
       );
     } else {
       console.log('matchedSessionId', matchedSessionId);
@@ -283,6 +284,7 @@ export class KittenLynxView {
       this._connector,
     );
 
+    await channel.send('DOM.enable' as any, {});
     const response = await channel.send('DOM.getDocument', {
       depth: -1,
     });
