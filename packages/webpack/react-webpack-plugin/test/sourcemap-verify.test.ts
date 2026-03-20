@@ -71,7 +71,7 @@ async function captureAssets(
             compilation.hooks.processAssets.tap(
               {
                 name: 'TestPlugin',
-                // Hook in after BannerPlugin wrapper injection, before final cleanup.
+                // Hook in after wrapper injection, before final cleanup.
                 stage: compiler.webpack.Compilation
                   .PROCESS_ASSETS_STAGE_DEV_TOOLING,
               },
@@ -160,7 +160,6 @@ describe('Lazy Bundle Sourcemap Verification', () => {
 
     const mainThreadFiles = [...capturedAssets.keys()];
 
-    // ── 1. Both initial and async main-thread assets were captured ─────────
     expect(
       mainThreadFiles,
       'Should capture the initial main-thread asset',

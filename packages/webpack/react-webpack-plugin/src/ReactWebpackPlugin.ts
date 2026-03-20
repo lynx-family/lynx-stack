@@ -157,34 +157,7 @@ class ReactWebpackPlugin {
     );
     const { BannerPlugin, DefinePlugin, EnvironmentPlugin } = compiler.webpack;
 
-    // dynamic-import-generated chunks
-    const asyncMainThreadChunkTest =
-      /react__main-thread(?:\.[A-Fa-f0-9]+)?\.js$/;
-    // This wrapper must be injected after size/minify optimizations have
-    // produced stable JS, but before devtool plugins finalize sourcemaps and
-    // later encode hooks consume the wrapped asset.
-    //
-    // - Too early (<= OPTIMIZE_SIZE): the wrapper is added before the
-    //   minimizer runs. For lazy bundles, the minimizer can treat the wrapped
-    //   content as removable and collapse the emitted asset down to empty code.
-    // - Too late (>= DEV_TOOLING): SourceMapDevToolPlugin emits `.map` assets
-    //   and rewrites JS with `sourceMappingURL` in DEV_TOOLING. If we prepend
-    //   wrapper lines after that point, the generated JS shifts but mappings do
-    //   not.
-    //
-    // OPTIMIZE_SIZE + 1 is the safe window where both the emitted code and its
-    // sourcemap stay aligned.
-    const moduleExportsWrapperStage =
-      compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE + 1;
-    let moduleExportsWrapperTest;
-
-    if (options.experimental_isLazyBundle) {
-      moduleExportsWrapperTest = [
-        ...options.mainThreadChunks!,
-        asyncMainThreadChunkTest,
-      ];
-    } else {
-      moduleExportsWrapperTest = asyncMainThreadChunkTest;
+    if (!options.experimental_isLazyBundle) {
       new BannerPlugin({
         // TODO: handle cases that do not have `'use strict'`
         banner:
@@ -193,21 +166,6 @@ class ReactWebpackPlugin {
         test: options.mainThreadChunks!,
       }).apply(compiler);
     }
-    new BannerPlugin({
-      banner:
-        `(function (globDynamicComponentEntry) {\n  const module = { exports: {} }\n  const exports = module.exports;\n`,
-      raw: true,
-      stage: moduleExportsWrapperStage,
-      test: moduleExportsWrapperTest,
-    }).apply(compiler);
-
-    new BannerPlugin({
-      banner: `\n  ;return module.exports\n})`,
-      footer: true,
-      raw: true,
-      stage: moduleExportsWrapperStage,
-      test: moduleExportsWrapperTest,
-    }).apply(compiler);
 
     new EnvironmentPlugin({
       // Default values of null and undefined behave differently.
@@ -304,7 +262,7 @@ class ReactWebpackPlugin {
       // @ts-expect-error Rspack x Webpack compilation not match
       const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
 
-      const { RawSource } = compiler.webpack.sources;
+      const { RawSource, ConcatSource } = compiler.webpack.sources;
       hooks.beforeEncode.tap(
         this.constructor.name,
         (args) => {
@@ -326,6 +284,67 @@ class ReactWebpackPlugin {
             });
           }
           return args;
+        },
+      );
+
+      compilation.hooks.processAssets.tap(
+        {
+          name: this.constructor.name,
+          // This wrapper must be injected after size/minify optimizations have
+          // produced stable JS, but before devtool plugins finalize sourcemaps and
+          // later encode hooks consume the wrapped asset.
+          //
+          // - Too early (<= OPTIMIZE_SIZE): the wrapper is added before the
+          //   minimizer runs. For lazy bundles, the minimizer can treat the wrapped
+          //   content as removable and collapse the emitted asset down to empty code.
+          // - Too late (>= DEV_TOOLING): SourceMapDevToolPlugin emits `.map` assets
+          //   and rewrites JS with `sourceMappingURL` in DEV_TOOLING. If we prepend
+          //   wrapper lines after that point, the generated JS shifts but mappings do
+          //   not.
+          //
+          // OPTIMIZE_SIZE + 1 is the safe window where both the emitted code and its
+          // sourcemap stay aligned.
+          stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE
+            + 1,
+        },
+        () => {
+          const chunkGroups = options.experimental_isLazyBundle
+            ? compilation.chunkGroups
+            : compilation.chunkGroups
+              .filter(cg => !cg.isInitial())
+              .filter(cg =>
+                cg.origins.every(
+                  origin => origin.module?.layer === LAYERS.MAIN_THREAD,
+                )
+              );
+
+          chunkGroups
+            .forEach(chunkGroup => {
+              chunkGroup.chunks.forEach(chunk => {
+                for (const file of chunk.files) {
+                  if (!file.endsWith('.js')) {
+                    continue;
+                  }
+
+                  const asset = compilation.getAsset(file);
+                  if (!asset) {
+                    continue;
+                  }
+
+                  compilation.updateAsset(
+                    file,
+                    old =>
+                      new ConcatSource(
+                        `(function (globDynamicComponentEntry) {\n`,
+                        `  const module = { exports: {} }\n`,
+                        `  const exports = module.exports;\n`,
+                        old,
+                        `\n  ;return module.exports\n})`,
+                      ),
+                  );
+                }
+              });
+            });
         },
       );
 
