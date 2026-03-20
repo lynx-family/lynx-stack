@@ -107,11 +107,17 @@ async function captureAssets(
 
   await new Promise<void>((resolve, reject) => {
     testCompiler.run((err, stats) => {
-      if (err ?? stats?.hasErrors()) {
-        reject(err ?? new Error(stats!.toString()));
-        return;
-      }
-      resolve();
+      const runErr = err ?? (stats?.hasErrors()
+        ? new Error(stats.toString())
+        : undefined);
+
+      testCompiler.close(closeErr => {
+        if (runErr ?? closeErr) {
+          reject(runErr ?? closeErr!);
+          return;
+        }
+        resolve();
+      });
     });
   });
 
