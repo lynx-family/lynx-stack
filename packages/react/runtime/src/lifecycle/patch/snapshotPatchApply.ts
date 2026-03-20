@@ -14,6 +14,7 @@
  */
 
 import { sendCtxNotFoundEventToBackground } from './error.js';
+import { patchHandlerRegistry } from './patchHandlerRegistry.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { SnapshotOperation } from './snapshotPatch.js';
 import { SnapshotInstance, snapshotCreatorMap, snapshotInstanceManager } from '../../snapshot.js';
@@ -116,6 +117,15 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         //   }
         //   break;
         // }
+      default: {
+        const handler = patchHandlerRegistry.get(snapshotPatch[i] as number);
+        if (handler) {
+          i = handler(snapshotPatch, i);
+        } else if (__DEV__) {
+          console.warn('[ReactLynx] Unknown snapshot operation:', snapshotPatch[i]);
+        }
+        break;
+      }
     }
   }
 }
