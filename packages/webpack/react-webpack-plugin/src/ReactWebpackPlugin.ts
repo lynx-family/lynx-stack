@@ -156,33 +156,33 @@ class ReactWebpackPlugin {
       this.options,
     );
     const { BannerPlugin, DefinePlugin, EnvironmentPlugin } = compiler.webpack;
+    const asyncMainThreadChunkTest =
+      /react__main-thread(?:\.[A-Fa-f0-9]+)?\.js$/;
+    const moduleExportsWrapperTest = options.experimental_isLazyBundle
+      ? [
+        ...options.mainThreadChunks!,
+        // dynamic-import-generated chunks
+        asyncMainThreadChunkTest,
+      ]
+      : asyncMainThreadChunkTest;
+    // This wrapper must be injected after size/minify optimizations have
+    // produced stable JS, but before devtool plugins finalize sourcemaps and
+    // later encode hooks consume the wrapped asset.
+    //
+    // - Too early (<= OPTIMIZE_SIZE): the wrapper is added before the
+    //   minimizer runs. For lazy bundles, the minimizer can treat the wrapped
+    //   content as removable and collapse the emitted asset down to empty code.
+    // - Too late (>= DEV_TOOLING): SourceMapDevToolPlugin emits `.map` assets
+    //   and rewrites JS with `sourceMappingURL` in DEV_TOOLING. If we prepend
+    //   wrapper lines after that point, the generated JS shifts but mappings do
+    //   not.
+    //
+    // OPTIMIZE_SIZE + 1 is the safe window where both the emitted code and its
+    // sourcemap stay aligned.
+    const moduleExportsWrapperStage =
+      compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE + 1;
 
-    if (options.experimental_isLazyBundle) {
-      // We use two BannerPlugins to wrap the lazy bundle.
-      // The stage is set to 401 (OPTIMIZE_SIZE + 1).
-      // - If stage is too low (e.g. Stage <=400), the minifier hasn't run and the asset might be empty for lazy bundles.
-      // - If stage is too high (e.g. Stage >=500), it runs after sourcemap finalization or TASM encoding hooks,
-      //   resulting in empty or misaligned sourcemaps in the final output.
-      // 401 is the "sweet spot": after minification, but ahead of mapping and encoding hooks.
-      const stage =
-        compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE + 1;
-
-      new BannerPlugin({
-        banner:
-          `(function (globDynamicComponentEntry) {\n  const module = { exports: {} }\n  const exports = module.exports;\n`,
-        raw: true,
-        stage,
-        test: options.mainThreadChunks!,
-      }).apply(compiler);
-
-      new BannerPlugin({
-        banner: `\n  ;return module.exports\n})`,
-        footer: true,
-        raw: true,
-        stage,
-        test: options.mainThreadChunks!,
-      }).apply(compiler);
-    } else {
+    if (!options.experimental_isLazyBundle) {
       new BannerPlugin({
         // TODO: handle cases that do not have `'use strict'`
         banner:
@@ -191,6 +191,21 @@ class ReactWebpackPlugin {
         test: options.mainThreadChunks!,
       }).apply(compiler);
     }
+    new BannerPlugin({
+      banner:
+        `(function (globDynamicComponentEntry) {\n  const module = { exports: {} }\n  const exports = module.exports;\n`,
+      raw: true,
+      stage: moduleExportsWrapperStage,
+      test: moduleExportsWrapperTest,
+    }).apply(compiler);
+
+    new BannerPlugin({
+      banner: `\n  ;return module.exports\n})`,
+      footer: true,
+      raw: true,
+      stage: moduleExportsWrapperStage,
+      test: moduleExportsWrapperTest,
+    }).apply(compiler);
 
     new EnvironmentPlugin({
       // Default values of null and undefined behave differently.
