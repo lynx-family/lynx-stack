@@ -156,15 +156,10 @@ class ReactWebpackPlugin {
       this.options,
     );
     const { BannerPlugin, DefinePlugin, EnvironmentPlugin } = compiler.webpack;
+
+    // dynamic-import-generated chunks
     const asyncMainThreadChunkTest =
       /react__main-thread(?:\.[A-Fa-f0-9]+)?\.js$/;
-    const moduleExportsWrapperTest = options.experimental_isLazyBundle
-      ? [
-        ...options.mainThreadChunks!,
-        // dynamic-import-generated chunks
-        asyncMainThreadChunkTest,
-      ]
-      : asyncMainThreadChunkTest;
     // This wrapper must be injected after size/minify optimizations have
     // produced stable JS, but before devtool plugins finalize sourcemaps and
     // later encode hooks consume the wrapped asset.
@@ -181,8 +176,14 @@ class ReactWebpackPlugin {
     // sourcemap stay aligned.
     const moduleExportsWrapperStage =
       compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE + 1;
+    let moduleExportsWrapperTest: string[] | RegExp = asyncMainThreadChunkTest;
 
-    if (!options.experimental_isLazyBundle) {
+    if (options.experimental_isLazyBundle) {
+      moduleExportsWrapperTest = [
+        ...options.mainThreadChunks!,
+        asyncMainThreadChunkTest,
+      ];
+    } else {
       new BannerPlugin({
         // TODO: handle cases that do not have `'use strict'`
         banner:
