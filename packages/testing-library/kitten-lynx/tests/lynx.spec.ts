@@ -38,18 +38,13 @@ describe('kitten-lynx testing framework', () => {
     for (const device of devices) {
       adb = await client.createAdb({ serial: device.serial });
       await adb.reverse.addExternal(`tcp:3001`, `tcp:3001`);
+      await adb.close();
     }
 
     lynx = await Lynx.connect();
   });
 
   afterAll(async () => {
-    try {
-      // await adb.reverse.remove(`tcp:3001`);
-      await adb.close();
-    } catch (e) {
-      // Ignore
-    }
     await lynx?.close();
   });
 
