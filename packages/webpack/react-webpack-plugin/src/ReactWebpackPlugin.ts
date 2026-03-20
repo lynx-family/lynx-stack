@@ -74,6 +74,12 @@ interface ReactWebpackPluginOptions {
    * The file path of `@lynx-js/react/worklet-runtime`.
    */
   workletRuntimePath: string;
+
+  /**
+   * The file path of `@lynx-js/react/mtc-runtime`.
+   * When not provided, MTC (Main Thread Component) support is disabled.
+   */
+  mtcRuntimePath?: string;
 }
 
 /**
@@ -149,6 +155,7 @@ class ReactWebpackPlugin {
       experimental_isLazyBundle: false,
       profile: undefined,
       workletRuntimePath: '',
+      mtcRuntimePath: '',
     });
 
   /**
@@ -283,6 +290,24 @@ class ReactWebpackPlugin {
               name: 'worklet-runtime',
               source: new RawSource(fs.readFileSync(
                 options.workletRuntimePath,
+                'utf8',
+              )),
+              info: {
+                ['lynx:main-thread']: true,
+              },
+            });
+          }
+          // Detect MTC usage and inject mtc-runtime chunk
+          if (
+            options.mtcRuntimePath
+            && lepusCode.root?.source.source().toString()?.includes(
+              'registerMTC',
+            )
+          ) {
+            lepusCode.chunks.push({
+              name: 'mtc-runtime',
+              source: new RawSource(fs.readFileSync(
+                options.mtcRuntimePath,
                 'utf8',
               )),
               info: {
