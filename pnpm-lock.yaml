@@ -1258,6 +1258,9 @@ importers:
       jpeg-js:
         specifier: ^0.4.4
         version: 0.4.4
+      rsbuild-plugin-publint:
+        specifier: 0.3.4
+        version: 0.3.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
       typescript:
         specifier: ^5.9.3
         version: 5.9.3

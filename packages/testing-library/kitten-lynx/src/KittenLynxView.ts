@@ -368,8 +368,8 @@ export class KittenLynxView {
       });
 
       for await (const msg of stream) {
-        if (msg.method === 'Lynx.screenshotCaptured') {
-          const data = msg.params?.data;
+        if ((msg as any).method === 'Lynx.screenshotCaptured') {
+          const data = (msg as any).params?.data;
           if (data) {
             buffer = Buffer.from(data, 'base64');
             break; // Stop listening after receiving the first frame
