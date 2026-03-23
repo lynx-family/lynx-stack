@@ -329,4 +329,54 @@ export class KittenLynxView {
     this.#contentToStringImpl(buffer, document.root);
     return buffer.join('');
   }
+
+  /**
+   * Captures a screenshot of the page.
+   *
+   * @param options - Screenshot options, such as path, format, and quality.
+   * @returns A Buffer with the image data.
+   */
+  async screenshot(options?: {
+    path?: string;
+    format?: 'jpeg' | 'png' | 'webp';
+    quality?: number;
+  }): Promise<Buffer> {
+    const { ReadableStream } = await import('node:stream/web');
+    const sessionId = (this._channel as any)._sessionId;
+
+    const stream = await this._connector.sendCDPStream(
+      this._clientId,
+      ReadableStream.from([
+        { method: 'Lynx.getScreenshot', sessionId } as any,
+      ]),
+    );
+
+    let buffer: Buffer | undefined;
+
+    try {
+      for await (const msg of stream) {
+        if (msg.method === 'Lynx.screenshotCaptured') {
+          const data = (msg.params as any).data;
+          if (data) {
+            buffer = Buffer.from(data, 'base64');
+            break;
+          }
+        }
+      }
+    } finally {
+      if (typeof stream[Symbol.asyncDispose] === 'function') {
+        await stream[Symbol.asyncDispose]();
+      }
+    }
+
+    if (!buffer) {
+      throw new Error('Failed to capture screenshot');
+    }
+
+    if (options?.path) {
+      const fs = await import('node:fs/promises');
+      await fs.writeFile(options.path, buffer);
+    }
+    return buffer;
+  }
 }

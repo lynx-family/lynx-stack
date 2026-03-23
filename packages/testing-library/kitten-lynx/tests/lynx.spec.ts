@@ -96,4 +96,23 @@ describe('kitten-lynx testing framework', () => {
     expect(await page.locator('.Logo--react')).toBeUndefined();
     expect(await page.locator('.Logo--lynx')).toBeDefined();
   });
+
+  it('can take a screenshot', async () => {
+    const fs = await import('node:fs/promises');
+    const screenshotPath = path.join(__dirname, 'test-screenshot.png');
+
+    // Clean up before test just in case
+    await fs.rm(screenshotPath, { force: true });
+
+    const buffer = await page.screenshot({ path: screenshotPath });
+    expect(buffer).toBeInstanceOf(Buffer);
+    expect(buffer.length).toBeGreaterThan(0);
+
+    // Check if file was created
+    const stats = await fs.stat(screenshotPath);
+    expect(stats.size).toBeGreaterThan(0);
+
+    // Clean up after test
+    await fs.rm(screenshotPath, { force: true });
+  });
 });
