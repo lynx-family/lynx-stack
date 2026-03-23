@@ -344,26 +344,40 @@ export class KittenLynxView {
     const { ReadableStream } = await import('node:stream/web');
     const sessionId = (this._channel as any)._sessionId;
 
+    let pushMessage!: (msg: any) => void;
+    let closeStream!: () => void;
+    const inputStream = new ReadableStream({
+      start(controller) {
+        pushMessage = (msg) => controller.enqueue(msg);
+        closeStream = () => controller.close();
+      },
+    });
+
     const stream = await this._connector.sendCDPStream(
       this._clientId,
-      ReadableStream.from([
-        { method: 'Lynx.getScreenshot', sessionId } as any,
-      ]),
+      inputStream,
     );
 
     let buffer: Buffer | undefined;
 
     try {
+      pushMessage({
+        method: 'Lynx.getScreenshot',
+        params: {},
+        sessionId,
+      });
+
       for await (const msg of stream) {
         if (msg.method === 'Lynx.screenshotCaptured') {
-          const data = (msg.params as any).data;
+          const data = msg.params?.data;
           if (data) {
             buffer = Buffer.from(data, 'base64');
-            break;
+            break; // Stop listening after receiving the first frame
           }
         }
       }
     } finally {
+      closeStream();
       if (typeof stream[Symbol.asyncDispose] === 'function') {
         await stream[Symbol.asyncDispose]();
       }

@@ -11,6 +11,9 @@ export default defineConfig({
       'react-example': './test-fixture/cases/react-example/index.tsx',
     },
   },
+  output: {
+    assetPrefix: 'http://127.0.0.1:3001/',
+  },
   plugins: [
     pluginReactLynx(),
   ],

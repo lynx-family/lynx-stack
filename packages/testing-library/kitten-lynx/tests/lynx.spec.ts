@@ -2,7 +2,7 @@ import { Lynx } from '../src/Lynx.js';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-
+import jpeg from 'jpeg-js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const cwd = path.dirname(__dirname);
@@ -98,21 +98,23 @@ describe('kitten-lynx testing framework', () => {
   });
 
   it('can take a screenshot', async () => {
-    const fs = await import('node:fs/promises');
-    const screenshotPath = path.join(__dirname, 'test-screenshot.png');
-
-    // Clean up before test just in case
-    await fs.rm(screenshotPath, { force: true });
-
-    const buffer = await page.screenshot({ path: screenshotPath });
+    const buffer = await page.screenshot();
     expect(buffer).toBeInstanceOf(Buffer);
     expect(buffer.length).toBeGreaterThan(0);
 
-    // Check if file was created
-    const stats = await fs.stat(screenshotPath);
-    expect(stats.size).toBeGreaterThan(0);
-
-    // Clean up after test
-    await fs.rm(screenshotPath, { force: true });
+    // Assert the screenshot is not a completely white image
+    const rawImageData = jpeg.decode(buffer, { useTArray: true });
+    let hasNonWhite = false;
+    for (let i = 0; i < rawImageData.data.length; i += 4) {
+      if (
+        rawImageData.data[i] !== 255
+        || rawImageData.data[i + 1] !== 255
+        || rawImageData.data[i + 2] !== 255
+      ) {
+        hasNonWhite = true;
+        break;
+      }
+    }
+    expect(hasNonWhite).toBe(true);
   });
 });
