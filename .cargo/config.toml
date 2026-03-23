@@ -3,3 +3,12 @@ rustflags = ["--cfg", "wasm_js"]
 
 [target.wasm32-unknown-unknown]
 runner = "wasm-bindgen-test-runner"
+
+# macOS: napi symbols (_napi_*) are resolved at runtime by Node.js, not at
+# link time. Tell the macOS linker to allow undefined symbols in dylibs so
+# that cdylib crates (react-transform, swc_plugin_reactlynx) link correctly.
+[target.aarch64-apple-darwin]
+rustflags = ["--cfg", "wasm_js", "-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+[target.x86_64-apple-darwin]
+rustflags = ["--cfg", "wasm_js", "-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]

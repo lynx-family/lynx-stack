@@ -63,6 +63,7 @@ export default tseslint.config(
       'packages/{rspeedy,webpack}/*/test/**/hotCases/**',
       'packages/{rspeedy,webpack}/*/test/**/diagnostic/**',
       'packages/{rspeedy,webpack}/*/test/**/fixtures/**',
+      'packages/vue/transform/**/tests/fixtures/**',
       'packages/webpack/**/runtime/**',
       'packages/webpack/css-extract-webpack-plugin/test/js/**',
       'packages/webpack/css-extract-webpack-plugin/test/rspack-js/**',

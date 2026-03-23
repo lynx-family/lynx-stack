@@ -117,18 +117,20 @@ export function applyOps(ops: unknown[]): void {
         const eventName = ops[i++] as string;
         const sign = ops[i++];
         const el = elements.get(id);
-        console.info(
-          '[vue-mt] SET_EVENT id=',
-          id,
-          'type=',
-          eventType,
-          'name=',
-          eventName,
-          'sign=',
-          sign,
-          'el found=',
-          el != null,
-        );
+        if (__DEV__) {
+          console.info(
+            '[vue-mt] SET_EVENT id=',
+            id,
+            'type=',
+            eventType,
+            'name=',
+            eventName,
+            'sign=',
+            sign,
+            'el found=',
+            el != null,
+          );
+        }
         if (el) __AddEvent(el, eventType, eventName, sign);
         break;
       }
@@ -169,18 +171,20 @@ export function applyOps(ops: unknown[]): void {
         const eventName = ops[i++] as string;
         const ctx = ops[i++];
         const el = elements.get(id);
-        console.info(
-          '[vue-mt] SET_WORKLET_EVENT id=',
-          id,
-          'type=',
-          eventType,
-          'name=',
-          eventName,
-          'ctx=',
-          ctx,
-          'el found=',
-          el != null,
-        );
+        if (__DEV__) {
+          console.info(
+            '[vue-mt] SET_WORKLET_EVENT id=',
+            id,
+            'type=',
+            eventType,
+            'name=',
+            eventName,
+            'ctx=',
+            ctx,
+            'el found=',
+            el != null,
+          );
+        }
         if (el) {
           __AddEvent(el, eventType, eventName, {
             type: 'worklet',
@@ -194,14 +198,16 @@ export function applyOps(ops: unknown[]): void {
         const id = ops[i++] as number;
         const refImpl = ops[i++];
         const el = elements.get(id);
-        console.info(
-          '[vue-mt] SET_MT_REF id=',
-          id,
-          'refImpl=',
-          refImpl,
-          'el found=',
-          el != null,
-        );
+        if (__DEV__) {
+          console.info(
+            '[vue-mt] SET_MT_REF id=',
+            id,
+            'refImpl=',
+            refImpl,
+            'el found=',
+            el != null,
+          );
+        }
         // Store in workletRefMap so worklet-runtime can resolve _wvid → element.
         // lynxWorkletImpl is provided by @lynx-js/react/worklet-runtime when
         // loaded on the Main Thread. Phase 1: just log for verification.

@@ -283,11 +283,12 @@ export function applyEntry(
       const pkgRoot = path.dirname(
         require.resolve('@lynx-js/vue-main-thread/package.json'),
       );
-      const flatBundlePath = path.join(
-        pkgRoot,
-        'dist',
-        'main-thread-bundled.js',
-      );
+      // Use the dev bundle (with __DEV__ = true) in development builds,
+      // and the minified prod bundle (with __DEV__ = false) in production.
+      const bundleFile = isProd
+        ? 'main-thread-bundled.js'
+        : 'main-thread-bundled.dev.js';
+      const flatBundlePath = path.join(pkgRoot, 'dist', bundleFile);
       chain
         .plugin(PLUGIN_MARK_MAIN_THREAD)
         .use(VueMainThreadPlugin, [mainThreadFilenames, flatBundlePath])

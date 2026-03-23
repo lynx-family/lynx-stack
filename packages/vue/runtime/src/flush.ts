@@ -51,26 +51,31 @@ export function resetFlushState(): void {
 function doFlush(): void {
   scheduled = false;
   const ops = takeOps();
-  console.info(
-    '[vue-bg] doFlush: ops.length=',
-    ops.length,
-    'lynx type:',
-    typeof lynx,
-  );
+  if (__DEV__) {
+    console.info(
+      '[vue-bg] doFlush: ops.length=',
+      ops.length,
+      'lynx type:',
+      typeof lynx,
+    );
+  }
   if (ops.length === 0) return;
-  // Temporary: log first 300 chars of ops to verify SET_EVENT (op code 6) is present
   // `lynx` is the Lynx BG runtime object injected by RuntimeWrapperWebpackPlugin
   // as a closure parameter – access it as a bare identifier, NOT via globalThis.
   const app = lynx?.getNativeApp?.();
-  console.info(
-    '[vue-bg] doFlush: getNativeApp()=',
-    app == null ? String(app) : 'object',
-  );
+  if (__DEV__) {
+    console.info(
+      '[vue-bg] doFlush: getNativeApp()=',
+      app == null ? String(app) : 'object',
+    );
+  }
   app?.callLepusMethod?.(
     'vuePatchUpdate',
     { data: JSON.stringify(ops) },
-    () => {
-      console.info('[vue-bg] doFlush: callLepusMethod ack');
-    },
+    __DEV__
+      ? () => {
+        console.info('[vue-bg] doFlush: callLepusMethod ack');
+      }
+      : () => {/* no-op */},
   );
 }

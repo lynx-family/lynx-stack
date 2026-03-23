@@ -9,18 +9,34 @@ export default defineConfig({
       bundle: false,
       dts: true,
     },
-    // Bundled flat script – consumed by the rsbuild plugin as the raw
-    // main-thread Lepus script (no webpack module-system wrapping needed).
+    // Bundled flat script (production) – __DEV__ = false, minified.
     {
       format: 'esm',
       syntax: 'es2020',
       bundle: true,
       dts: false,
       source: {
+        define: { __DEV__: 'false' },
         entry: { 'main-thread-bundled': './src/entry-main.ts' },
       },
       output: {
         distPath: { root: 'dist' },
+        minify: true,
+      },
+    },
+    // Bundled flat script (development) – __DEV__ = true, source-mapped.
+    {
+      format: 'esm',
+      syntax: 'es2020',
+      bundle: true,
+      dts: false,
+      source: {
+        define: { __DEV__: 'true' },
+        entry: { 'main-thread-bundled.dev': './src/entry-main.ts' },
+      },
+      output: {
+        distPath: { root: 'dist' },
+        sourceMap: { js: 'inline-source-map' },
       },
     },
   ],
