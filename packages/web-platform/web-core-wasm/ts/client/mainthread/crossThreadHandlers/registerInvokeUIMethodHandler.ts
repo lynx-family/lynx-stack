@@ -7,28 +7,32 @@ import { ErrorCode } from '../../../constants.js';
 import { invokeUIMethodEndpoint } from '../../endpoints.js';
 import type { LynxViewInstance } from '../LynxViewInstance.js';
 
-const methodAlias: Record<
-  string,
-  (element: Element, params: unknown) => unknown
-> = {
-  'boundingClientRect': (element) => {
-    const rect = element.getBoundingClientRect();
-    return {
-      id: element.id,
-      width: rect.width,
-      height: rect.height,
-      left: rect.left,
-      right: rect.right,
-      top: rect.top,
-      bottom: rect.bottom,
-    };
-  },
-};
+function createMethodAlias(
+  lynxViewInstance: LynxViewInstance,
+): Record<string, (element: Element, params: unknown) => unknown> {
+  return {
+    'boundingClientRect': (element) => {
+      const rect = element.getBoundingClientRect();
+      const containerRect = lynxViewInstance.rootDom.host
+        .getBoundingClientRect();
+      return {
+        id: element.id,
+        width: rect.width,
+        height: rect.height,
+        left: rect.left - containerRect.left,
+        right: rect.right - containerRect.left,
+        top: rect.top - containerRect.top,
+        bottom: rect.bottom - containerRect.top,
+      };
+    },
+  };
+}
 
 export function registerInvokeUIMethodHandler(
   rpc: Rpc,
   lynxViewInstance: LynxViewInstance,
 ) {
+  const methodAlias = createMethodAlias(lynxViewInstance);
   rpc.registerHandler(
     invokeUIMethodEndpoint,
     (

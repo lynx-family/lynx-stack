@@ -178,6 +178,9 @@ export function createMainThreadGlobalThis(
     mtsRealm,
     document,
   } = config;
+  const getContainerRect = (): DOMRect =>
+    ((rootDom as ShadowRoot).host ?? rootDom as Element)
+      .getBoundingClientRect();
   const { elementTemplate, lepusCode } = lynxTemplate;
   const lynxUniqueIdToElement: WeakRef<HTMLElement>[] =
     ssrHydrateInfo?.lynxUniqueIdToElement ?? [];
@@ -224,6 +227,7 @@ export function createMainThreadGlobalThis(
           const crossThreadEvent = createCrossThreadEvent(
             event as MinimalRawEventObject,
             lynxEventName,
+            getContainerRect,
           );
           if (typeof hname === 'string') {
             const parentComponentUniqueId = Number(
@@ -722,16 +726,17 @@ export function createMainThreadGlobalThis(
     try {
       if (method === 'boundingClientRect') {
         const rect = (element as HTMLElement).getBoundingClientRect();
+        const containerRect = getContainerRect();
         callback({
           code: ErrorCode.SUCCESS,
           data: {
             id: (element as HTMLElement).id,
             width: rect.width,
             height: rect.height,
-            left: rect.left,
-            right: rect.right,
-            top: rect.top,
-            bottom: rect.bottom,
+            left: rect.left - containerRect.left,
+            right: rect.right - containerRect.left,
+            top: rect.top - containerRect.top,
+            bottom: rect.bottom - containerRect.top,
           },
         });
         return;
