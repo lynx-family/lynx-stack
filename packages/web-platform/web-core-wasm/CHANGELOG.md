@@ -1,5 +1,14 @@
 # @lynx-js/web-core-wasm
 
+## 0.0.6
+
+### Patch Changes
+
+- reexports essential utils & types in @lynx-js/web-elements from @lynx-js/web-core-wasm/client ([#2321](https://github.com/lynx-family/lynx-stack/pull/2321))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.19.9
+
 ## 0.0.5
 
 ### Patch Changes
