@@ -128,7 +128,7 @@ function findScriptMainThreadBlock(source: string): ScriptBlock | null {
   };
 }
 
-interface SetupScriptBlock {
+interface ScriptContentBlock {
   /** Offset of the first character inside the block (after the opening tag). */
   contentStart: number;
   /** Offset of the `<` in `</script>`. */
@@ -136,7 +136,7 @@ interface SetupScriptBlock {
 }
 
 /** Locate `<script setup ...>...</script>`. */
-function findScriptSetupBlock(source: string): SetupScriptBlock | null {
+function findScriptSetupBlock(source: string): ScriptContentBlock | null {
   // eslint-disable-next-line regexp/no-contradiction-with-assertion
   const openRe = /^<script\b(?=[^>]*\bsetup\b)[^>]*>/im;
   const openMatch = openRe.exec(source);
@@ -150,8 +150,38 @@ function findScriptSetupBlock(source: string): SetupScriptBlock | null {
 }
 
 /**
- * Remove the `<script main-thread>` block from `source` and append
- * `declarations` to the `<script setup>` block's content.
+ * Locate the plain `<script>` block — i.e. a script block that has neither
+ * `setup` nor `main-thread` attributes.  Used as a fallback injection target
+ * for h-bundle components that use `setup() { return () => h(...) }` directly
+ * instead of a `<script setup>` + `<template>`.
+ */
+function findPlainScriptBlock(source: string): ScriptContentBlock | null {
+  // eslint-disable-next-line regexp/no-contradiction-with-assertion
+  const openRe = /^<script\b(?![^>]*\b(?:setup|main-thread)\b)[^>]*>/im;
+  const openMatch = openRe.exec(source);
+  if (!openMatch) return null;
+
+  const contentStart = openMatch.index + openMatch[0].length;
+  const closeIndex = source.indexOf('</script>', contentStart);
+  if (closeIndex === -1) return null;
+
+  return { contentStart, contentEnd: closeIndex };
+}
+
+/**
+ * Remove the `<script main-thread>` block from `source` and inject
+ * `declarations` into the best available script block:
+ *
+ *   1. `<script setup>` — appended just before `</script>`.
+ *      The declarations land in setup scope and are auto-exposed to the
+ *      template (standard SFC pattern).
+ *
+ *   2. Plain `<script>` fallback — injected just before `export default`
+ *      (or appended before `</script>` if no `export default` is found).
+ *      This supports h-bundle components that have no `<template>` and use
+ *      `setup() { return () => h(...) }` inside a plain `<script>` block.
+ *      The worklet context constants land at module scope and are captured
+ *      by the setup closure.
  */
 function injectIntoScriptSetup(
   source: string,
@@ -161,19 +191,42 @@ function injectIntoScriptSetup(
   // 1. Remove the <script main-thread> block.
   const without = source.slice(0, mtBlock.start) + source.slice(mtBlock.end);
 
-  // 2. Find <script setup> in the modified source.
+  const INJECTED_COMMENT =
+    '// [vue-main-thread-pre-loader: injected worklet context objects]\n';
+
+  // 2a. Prefer <script setup>.
   const setup = findScriptSetupBlock(without);
-  if (!setup) {
-    // No setup block — nothing to inject into; return without the MT block.
-    return without;
+  if (setup) {
+    return (
+      without.slice(0, setup.contentEnd)
+      + '\n'
+      + INJECTED_COMMENT
+      + declarations
+      + '\n'
+      + without.slice(setup.contentEnd)
+    );
   }
 
-  // 3. Inject declarations just before the closing </script>.
-  return (
-    without.slice(0, setup.contentEnd)
-    + '\n// [vue-main-thread-pre-loader: injected worklet context objects]\n'
-    + declarations
-    + '\n'
-    + without.slice(setup.contentEnd)
-  );
+  // 2b. Fall back to plain <script> — inject before `export default` so the
+  //     constants are in module scope when setup() closes over them.
+  const plain = findPlainScriptBlock(without);
+  if (plain) {
+    const content = without.slice(plain.contentStart, plain.contentEnd);
+    const exportDefaultIdx = content.search(/^export\s+default\b/m);
+    const insertAt = exportDefaultIdx === -1
+      ? plain.contentEnd // no export default — append before </script>
+      : plain.contentStart + exportDefaultIdx;
+
+    return (
+      without.slice(0, insertAt)
+      + '\n'
+      + INJECTED_COMMENT
+      + declarations
+      + '\n\n'
+      + without.slice(insertAt)
+    );
+  }
+
+  // No script block to inject into — return without the MT block.
+  return without;
 }

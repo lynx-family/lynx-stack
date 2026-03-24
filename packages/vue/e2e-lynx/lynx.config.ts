@@ -12,6 +12,7 @@ export default defineConfig({
       'h-counter': './src/h-counter.ts',
       todomvc: './src/todomvc/index.ts',
       'mts-demo': './src/mts-demo/index.ts',
+      'h-bundle-demo': './src/h-bundle-demo/index.ts',
     },
   },
   plugins: [

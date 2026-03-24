@@ -3,29 +3,36 @@
      LICENSE file in the root directory of this source tree. -->
 
 <!--
-  MtsDemo.vue — Phase 1 Main Thread Script demo
+  MtsDemo.vue — Main Thread Script demo
 
   Tests the full ops plumbing for worklet events:
     BG patchProp → SET_WORKLET_EVENT op → MT applyOps → __AddEvent(worklet)
 
-  Since Phase 1 has no SWC transform, the worklet context objects are
-  hand-crafted to simulate what the compiler would produce.
+  The <script main-thread> block is transformed by vue-main-thread-pre-loader:
+    BG build  → exports become worklet context objects injected into <script setup>
+    MT build  → exports become registerWorkletInternal() calls on the Lepus thread
 -->
+<script main-thread lang="ts">
+export function onTap(event: any): void {
+  // Runs on the Main Thread (Lepus) — zero thread crossings.
+  // Dim the element on tap to give visual feedback.
+  event.currentTarget.setStyleProperty('opacity', '0.6');
+}
+
+export function onScroll(event: any): void {
+  // Scroll position arrives directly on the Main Thread.
+  const top = (event.detail?.scrollTop ?? 0).toFixed(0);
+  event.currentTarget.setStyleProperty('opacity', String(1 - Math.min(top, 100) / 200));
+}
+</script>
+
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useMainThreadRef } from '@lynx-js/vue-runtime'
 
-// Hand-crafted worklet context — simulates what the SWC transform would
-// produce from a `<script main-thread>` block.
-const onTapCtx = {
-  _wkltId: 'mts-demo:onTap',
-  _closure: {},
-}
-
-const onScrollCtx = {
-  _wkltId: 'mts-demo:onScroll',
-  _closure: {},
-}
+// NOTE: `onTap` and `onScroll` worklet context objects are injected here
+// by vue-main-thread-pre-loader at build time.  They look like:
+//   const onTap = { _wkltId: 'src/mts-demo/MtsDemo.vue:onTap', _closure: {} }
 
 // MainThreadRef for element reference
 const boxRef = useMainThreadRef(null)
@@ -41,12 +48,12 @@ function onBgTap() {
 <template>
   <view :style="{ display: 'flex', flexDirection: 'column', padding: 16 }">
     <text :style="{ fontSize: 18, color: '#333', marginBottom: 12 }">
-      MTS Demo (Phase 1)
+      MTS Demo
     </text>
 
     <!-- Worklet event binding via :main-thread-bindtap -->
     <view
-      :main-thread-bindtap="onTapCtx"
+      :main-thread-bindtap="onTap"
       :main-thread-ref="boxRef"
       :style="{
         padding: 16,
@@ -62,7 +69,7 @@ function onBgTap() {
 
     <!-- Worklet scroll binding -->
     <view
-      :main-thread-bindscroll="onScrollCtx"
+      :main-thread-bindscroll="onScroll"
       :style="{
         padding: 16,
         backgroundColor: '#00aa55',
