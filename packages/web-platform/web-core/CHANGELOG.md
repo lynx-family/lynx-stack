@@ -1,18 +1,10 @@
 # @lynx-js/web-core
 
-## 0.19.9
-
-### Patch Changes
-
-- Updated dependencies [[`2efecc2`](https://github.com/lynx-family/lynx-stack/commit/2efecc252c746831e7566e3c81fd7b04a45c5dbf)]:
-  - @lynx-js/web-constants@0.19.9
-  - @lynx-js/web-mainthread-apis@0.19.9
-  - @lynx-js/web-worker-runtime@0.19.9
-  - @lynx-js/web-worker-rpc@0.19.9
-
 ## 0.19.8
 
 ### Patch Changes
+
+- reexports essential utils & types in @lynx-js/web-elements from @lynx-js/web-core-wasm/client ([#2321](https://github.com/lynx-family/lynx-stack/pull/2321))
 
 - fix: avoid error when LynxView is removed immediately after connected ([#2182](https://github.com/lynx-family/lynx-stack/pull/2182))
 

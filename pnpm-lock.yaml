@@ -702,27 +702,12 @@ importers:
       '@lynx-js/types':
         specifier: 3.7.0
         version: 3.7.0
-      '@lynx-js/web-constants':
-        specifier: workspace:*
-        version: link:../web-platform/web-constants
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../web-platform/web-core
-      '@lynx-js/web-elements':
-        specifier: workspace:*
-        version: link:../web-platform/web-elements
-      '@lynx-js/web-mainthread-apis':
-        specifier: workspace:*
-        version: link:../web-platform/web-mainthread-apis
       '@lynx-js/web-platform-rsbuild-plugin':
         specifier: workspace:*
         version: link:../web-platform/web-rsbuild-plugin
-      '@lynx-js/web-worker-rpc':
-        specifier: workspace:*
-        version: link:../web-platform/web-worker-rpc
-      '@lynx-js/web-worker-runtime':
-        specifier: workspace:*
-        version: link:../web-platform/web-worker-runtime
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 1.7.3
@@ -1317,8 +1302,6 @@ importers:
         specifier: workspace:*
         version: link:../react
 
-  packages/web-platform/offscreen-document: {}
-
   packages/web-platform/playwright-fixtures:
     dependencies:
       nyc:
@@ -1332,73 +1315,17 @@ importers:
         specifier: ^1.58.2
         version: 1.58.2
 
-  packages/web-platform/web-constants:
-    dependencies:
-      '@lynx-js/web-worker-rpc':
-        specifier: workspace:*
-        version: link:../web-worker-rpc
-    devDependencies:
-      '@lynx-js/offscreen-document':
-        specifier: workspace:*
-        version: link:../offscreen-document
-
   packages/web-platform/web-core:
     dependencies:
-      '@lynx-js/offscreen-document':
-        specifier: workspace:*
-        version: link:../offscreen-document
-      '@lynx-js/web-constants':
-        specifier: workspace:*
-        version: link:../web-constants
-      '@lynx-js/web-mainthread-apis':
-        specifier: workspace:*
-        version: link:../web-mainthread-apis
-      '@lynx-js/web-worker-rpc':
-        specifier: workspace:*
-        version: link:../web-worker-rpc
-      '@lynx-js/web-worker-runtime':
-        specifier: workspace:*
-        version: link:../web-worker-runtime
-    devDependencies:
-      '@lynx-js/lynx-core':
-        specifier: 0.1.3
-        version: 0.1.3
-      '@lynx-js/web-elements':
-        specifier: workspace:*
-        version: link:../web-elements
-
-  packages/web-platform/web-core-server:
-    devDependencies:
-      '@lynx-js/offscreen-document':
-        specifier: workspace:*
-        version: link:../offscreen-document
-      '@lynx-js/web-constants':
-        specifier: workspace:*
-        version: link:../web-constants
-      '@lynx-js/web-elements':
-        specifier: workspace:*
-        version: link:../web-elements
-      '@lynx-js/web-mainthread-apis':
-        specifier: workspace:*
-        version: link:../web-mainthread-apis
-      '@lynx-js/web-worker-rpc':
-        specifier: workspace:*
-        version: link:../web-worker-rpc
-      rsbuild-plugin-arethetypeswrong:
-        specifier: 0.2.0
-        version: 0.2.0(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(typescript@5.9.3)
-      rsbuild-plugin-publint:
-        specifier: 0.3.4
-        version: 0.3.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
-
-  packages/web-platform/web-core-wasm:
-    dependencies:
       '@lynx-js/web-elements':
         specifier: workspace:*
         version: link:../web-elements
       '@lynx-js/web-worker-rpc':
         specifier: workspace:*
         version: link:../web-worker-rpc
+      wasm-feature-detect:
+        specifier: ^1.8.0
+        version: 1.8.0
     devDependencies:
       '@lynx-js/css-serializer':
         specifier: workspace:*
@@ -1415,6 +1342,9 @@ importers:
       '@rsbuild/plugin-source-build':
         specifier: 1.0.4
         version: 1.0.4(@rsbuild/core@1.7.3)
+      '@rslib/core':
+        specifier: ^0.19.6
+        version: 0.19.6(@microsoft/api-extractor@7.57.6(@types/node@24.10.13))(@typescript/native-preview@7.0.0-dev.20260212.1)(typescript@5.9.3)
       binaryen:
         specifier: ^125.0.0
         version: 125.0.0
@@ -1430,11 +1360,8 @@ importers:
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
-      wasm-feature-detect:
-        specifier: ^1.8.0
-        version: 1.8.0
 
-  packages/web-platform/web-core-wasm-e2e:
+  packages/web-platform/web-core-e2e:
     devDependencies:
       '@lynx-js/playwright-fixtures':
         specifier: workspace:*
@@ -1448,9 +1375,9 @@ importers:
       '@lynx-js/rspeedy':
         specifier: workspace:*
         version: link:../../rspeedy/core
-      '@lynx-js/web-core-wasm':
+      '@lynx-js/web-core':
         specifier: workspace:*
-        version: link:../web-core-wasm
+        version: link:../web-core
       '@playwright/test':
         specifier: ^1.58.2
         version: 1.58.2
@@ -1496,9 +1423,6 @@ importers:
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../web-core
-      '@lynx-js/web-elements':
-        specifier: workspace:*
-        version: link:../web-elements
       '@lynx-js/web-platform-rsbuild-plugin':
         specifier: workspace:*
         version: link:../web-rsbuild-plugin
@@ -1511,25 +1435,6 @@ importers:
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
-
-  packages/web-platform/web-mainthread-apis:
-    dependencies:
-      '@lynx-js/web-constants':
-        specifier: workspace:*
-        version: link:../web-constants
-      hyphenate-style-name:
-        specifier: ^1.1.0
-        version: 1.1.0
-      wasm-feature-detect:
-        specifier: ^1.8.0
-        version: 1.8.0
-    devDependencies:
-      binaryen:
-        specifier: ^125.0.0
-        version: 125.0.0
-      fb-dotslash:
-        specifier: ^0.5.8
-        version: 0.5.8
 
   packages/web-platform/web-rsbuild-plugin:
     dependencies:
@@ -1582,9 +1487,6 @@ importers:
       '@lynx-js/lynx-core':
         specifier: 0.1.3
         version: 0.1.3
-      '@lynx-js/offscreen-document':
-        specifier: workspace:*
-        version: link:../offscreen-document
       '@lynx-js/playwright-fixtures':
         specifier: workspace:*
         version: link:../playwright-fixtures
@@ -1597,30 +1499,15 @@ importers:
       '@lynx-js/rspeedy':
         specifier: workspace:*
         version: link:../../rspeedy/core
-      '@lynx-js/web-constants':
-        specifier: workspace:*
-        version: link:../web-constants
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../web-core
-      '@lynx-js/web-core-server':
-        specifier: workspace:*
-        version: link:../web-core-server
-      '@lynx-js/web-elements':
-        specifier: workspace:*
-        version: link:../web-elements
-      '@lynx-js/web-mainthread-apis':
-        specifier: workspace:*
-        version: link:../web-mainthread-apis
       '@lynx-js/web-platform-rsbuild-plugin':
         specifier: workspace:*
         version: link:../web-rsbuild-plugin
       '@lynx-js/web-rsbuild-server-middleware':
         specifier: workspace:*
         version: link:../web-rsbuild-server-middleware
-      '@lynx-js/webpack-dev-transport':
-        specifier: workspace:*
-        version: link:../../webpack/webpack-dev-transport
       '@playwright/test':
         specifier: ^1.58.2
         version: 1.58.2
@@ -1630,12 +1517,18 @@ importers:
       '@rspack/core':
         specifier: 1.7.7
         version: 1.7.7(@swc/helpers@0.5.18)
+      css-loader:
+        specifier: ^7.1.4
+        version: 7.1.4(@rspack/core@1.7.7(@swc/helpers@0.5.18))(webpack@5.105.2)
       nyc:
         specifier: ^17.1.0
         version: 17.1.0
       source-map-loader:
         specifier: ^5.0.0
         version: 5.0.0(webpack@5.105.2)
+      style-loader:
+        specifier: ^4.0.0
+        version: 4.0.0(webpack@5.105.2)
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -1644,25 +1537,6 @@ importers:
         version: 9.3.0
 
   packages/web-platform/web-worker-rpc: {}
-
-  packages/web-platform/web-worker-runtime:
-    dependencies:
-      '@lynx-js/offscreen-document':
-        specifier: workspace:*
-        version: link:../offscreen-document
-      '@lynx-js/web-constants':
-        specifier: workspace:*
-        version: link:../web-constants
-      '@lynx-js/web-mainthread-apis':
-        specifier: workspace:*
-        version: link:../web-mainthread-apis
-      '@lynx-js/web-worker-rpc':
-        specifier: workspace:*
-        version: link:../web-worker-rpc
-    devDependencies:
-      '@lynx-js/lynx-core':
-        specifier: 0.1.3
-        version: 0.1.3
 
   packages/webpack/cache-events-webpack-plugin:
     dependencies:
@@ -1854,9 +1728,9 @@ importers:
       '@lynx-js/tasm':
         specifier: 0.0.26
         version: 0.0.26
-      '@lynx-js/web-core-wasm':
+      '@lynx-js/web-core':
         specifier: workspace:*
-        version: link:../../web-platform/web-core-wasm
+        version: link:../../web-platform/web-core
       '@lynx-js/webpack-runtime-globals':
         specifier: workspace:^
         version: link:../webpack-runtime-globals
@@ -2354,8 +2228,8 @@ packages:
     peerDependencies:
       '@babel/core': ^7.0.0-0
 
-  '@babel/plugin-transform-react-jsx@7.27.1':
-    resolution: {integrity: sha512-2KH4LWGSrJIkVf5tSiBFYuXDAoWRq2MMwgivCf+93dd0GQi8RXLjKA/0EvRnVV5G0hrHczsquXuD01L8s6dmBw==}
+  '@babel/plugin-transform-react-jsx@7.28.6':
+    resolution: {integrity: sha512-61bxqhiRfAACulXSLd/GxqmAedUSrRZIu/cbaT18T1CetkTmtDN15it7i80ru4DVqRK1WMxQhXs+Lf9kajm5Ow==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -9466,6 +9340,12 @@ packages:
     resolution: {integrity: sha512-k55yxKHwaXnpYGsOzg4Vl8+tDrWylxDEpknGjhTiZB8dFRU5rTo9CAzeycivxV3s+zlTKwrs6WxMxR95n26kwg==}
     engines: {node: '>=0.10.0'}
 
+  style-loader@4.0.0:
+    resolution: {integrity: sha512-1V4WqhhZZgjVAVJyt7TdDPZoPBPNHbekX4fWnCJL1yQukhCeZhJySUL+gL9y6sNdN95uEOS83Y55SqHcP7MzLA==}
+    engines: {node: '>= 18.12.0'}
+    peerDependencies:
+      webpack: ^5.27.0
+
   style-to-js@1.1.16:
     resolution: {integrity: sha512-/Q6ld50hKYPH3d/r6nr117TZkHR0w0kGGIVfpG9N6D8NymRPM9RqCUv4pRpJ62E5DqOYx2AFpbZMyCPnjQCnOw==}
 
@@ -10690,11 +10570,11 @@ snapshots:
   '@babel/plugin-transform-react-jsx-development@7.27.1(@babel/core@7.29.0)':
     dependencies:
       '@babel/core': 7.29.0
-      '@babel/plugin-transform-react-jsx': 7.27.1(@babel/core@7.29.0)
+      '@babel/plugin-transform-react-jsx': 7.28.6(@babel/core@7.29.0)
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/plugin-transform-react-jsx@7.27.1(@babel/core@7.29.0)':
+  '@babel/plugin-transform-react-jsx@7.28.6(@babel/core@7.29.0)':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/helper-annotate-as-pure': 7.27.3
@@ -10728,7 +10608,7 @@ snapshots:
       '@babel/helper-plugin-utils': 7.28.6
       '@babel/helper-validator-option': 7.27.1
       '@babel/plugin-transform-react-display-name': 7.28.0(@babel/core@7.29.0)
-      '@babel/plugin-transform-react-jsx': 7.27.1(@babel/core@7.29.0)
+      '@babel/plugin-transform-react-jsx': 7.28.6(@babel/core@7.29.0)
       '@babel/plugin-transform-react-jsx-development': 7.27.1(@babel/core@7.29.0)
       '@babel/plugin-transform-react-pure-annotations': 7.27.1(@babel/core@7.29.0)
     transitivePeerDependencies:
@@ -18191,12 +18071,6 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 1.7.3
 
-  rsbuild-plugin-arethetypeswrong@0.2.0(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(typescript@5.9.3):
-    dependencies:
-      typescript: 5.9.3
-    optionalDependencies:
-      '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
-
   rsbuild-plugin-dts@0.19.6(@microsoft/api-extractor@7.57.6(@types/node@24.10.13))(@rsbuild/core@1.7.3)(@typescript/native-preview@7.0.0-dev.20260212.1)(typescript@5.9.3):
     dependencies:
       '@ast-grep/napi': 0.37.0
@@ -18824,6 +18698,10 @@ snapshots:
   strip-outer@1.0.1:
     dependencies:
       escape-string-regexp: 1.0.5
+
+  style-loader@4.0.0(webpack@5.105.2):
+    dependencies:
+      webpack: 5.105.2
 
   style-to-js@1.1.16:
     dependencies:
