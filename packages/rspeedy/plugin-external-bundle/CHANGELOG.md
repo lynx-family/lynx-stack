@@ -1,5 +1,12 @@
 # @lynx-js/external-bundle-rsbuild-plugin
 
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies [[`ed566f0`](https://github.com/lynx-family/lynx-stack/commit/ed566f0fe6a14ffae59d21bd2c5e5dd2755f28a4)]:
+  - @lynx-js/externals-loading-webpack-plugin@0.0.5
+
 ## 0.0.3
 
 ### Patch Changes

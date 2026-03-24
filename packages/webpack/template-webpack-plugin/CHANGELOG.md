@@ -1,5 +1,12 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.10.6
+
+### Patch Changes
+
+- Updated dependencies [[`d034dae`](https://github.com/lynx-family/lynx-stack/commit/d034dae124f8a96faa11028b131173703e49b23f)]:
+  - @lynx-js/web-core-wasm@0.0.6
+
 ## 0.10.5
 
 ### Patch Changes

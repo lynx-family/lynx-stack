@@ -1,5 +1,14 @@
 # @lynx-js/web-constants
 
+## 0.19.9
+
+### Patch Changes
+
+- Implement `__ElementAnimate` PAPI for web platform animation lifecycle ([#2329](https://github.com/lynx-family/lynx-stack/pull/2329))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.19.9
+
 ## 0.19.8
 
 ### Patch Changes
