@@ -26,10 +26,11 @@ export interface ExternalsLoadingPluginOptions {
 export interface ExternalValue {
     async?: boolean;
     background?: LayerOptions;
+    bundlePath?: string;
     libraryName?: string | string[];
     mainThread?: LayerOptions;
     timeout?: number;
-    url: string;
+    url?: string;
 }
 
 // @public

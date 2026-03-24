@@ -12,7 +12,9 @@ export default defineExternalBundleRslibConfig({
     pluginReactLynx(),
   ],
   output: {
-    cleanDistPath: false,
+    distPath: {
+      root: 'dist-external-bundle',
+    },
     dataUriLimit: Number.POSITIVE_INFINITY,
     externalsPresets: {
       reactlynx: true,

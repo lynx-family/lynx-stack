@@ -5,12 +5,38 @@
 ```ts
 
 import type { ExternalsLoadingPluginOptions } from '@lynx-js/externals-loading-webpack-plugin';
+import type { ExternalValue } from '@lynx-js/externals-loading-webpack-plugin';
 import type { RsbuildPlugin } from '@rsbuild/core';
+
+// @public
+export interface ExternalsPresets {
+    reactlynx?: boolean | ReactLynxExternalsPresetOptions;
+}
 
 // @public
 export function pluginExternalBundle(options: PluginExternalBundleOptions): RsbuildPlugin;
 
 // @public
-export type PluginExternalBundleOptions = Pick<ExternalsLoadingPluginOptions, 'externals' | 'globalObject'>;
+export interface PluginExternalBundleOptions extends Pick<ExternalsLoadingPluginOptions, 'globalObject'> {
+    externalBundleRoot?: string;
+    externals?: Record<string, PluginExternalValue>;
+    externalsPresets?: ExternalsPresets;
+}
+
+// @public
+export interface PluginExternalValue extends Omit<ExternalValue, 'url'> {
+    bundlePath?: string;
+    // @deprecated
+    url?: string;
+}
+
+// @public
+export interface ReactLynxExternalsPresetOptions {
+    bundlePath?: string;
+    // @deprecated
+    url?: string;
+}
+
+// (No @packageDocumentation comment for this package)
 
 ```
