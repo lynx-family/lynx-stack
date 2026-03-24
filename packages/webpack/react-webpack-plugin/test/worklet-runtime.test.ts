@@ -13,7 +13,7 @@ interface WorkletRuntimeCase {
   caseName: string;
   expectedChunkNames: string[];
   expectedInitSignatureCount: number;
-  expectedRegisterCount: number;
+  expectedRegisterIdCount: number;
 }
 
 interface BuildOutput {
@@ -62,6 +62,14 @@ function countOccurrences(source: string, needle: string): number {
   }
 
   return count;
+}
+
+function extractRegisteredWorkletIds(source: string): string[] {
+  const matches = source.matchAll(
+    /registerWorkletInternal\(\\"main-thread\\",\s*\\"([^\\"]+)\\"/g,
+  );
+
+  return Array.from(matches, match => match[1]);
 }
 
 async function buildCase(caseName: string): Promise<BuildOutput> {
@@ -134,13 +142,13 @@ describe('worklet-runtime bundler guardrails', () => {
       caseName: 'chunk',
       expectedChunkNames: ['worklet-runtime'],
       expectedInitSignatureCount: 1,
-      expectedRegisterCount: 2,
+      expectedRegisterIdCount: 2,
     },
     {
       caseName: 'not-using',
       expectedChunkNames: [],
       expectedInitSignatureCount: 0,
-      expectedRegisterCount: 0,
+      expectedRegisterIdCount: 0,
     },
   ])(
     'should emit the expected worklet chunks for $caseName',
@@ -148,11 +156,14 @@ describe('worklet-runtime bundler guardrails', () => {
       caseName,
       expectedChunkNames,
       expectedInitSignatureCount,
-      expectedRegisterCount,
+      expectedRegisterIdCount,
     }) => {
       const { lepusChunk, mainThreadSource } = await buildCase(caseName);
       const workletRuntimeChunks = Object.keys(lepusChunk).filter(
         name => name === 'worklet-runtime',
+      );
+      const registeredWorkletIds = extractRegisteredWorkletIds(
+        mainThreadSource,
       );
 
       expect(workletRuntimeChunks).toEqual(expectedChunkNames);
@@ -170,12 +181,10 @@ describe('worklet-runtime bundler guardrails', () => {
         expect(expectedInitSignatureCount).toBe(0);
       }
 
-      expect(
-        countOccurrences(
-          mainThreadSource,
-          'registerWorkletInternal(',
-        ),
-      ).toBe(expectedRegisterCount);
+      expect(registeredWorkletIds).toHaveLength(expectedRegisterIdCount);
+      expect(new Set(registeredWorkletIds).size).toBe(
+        expectedRegisterIdCount,
+      );
     },
   );
 });
