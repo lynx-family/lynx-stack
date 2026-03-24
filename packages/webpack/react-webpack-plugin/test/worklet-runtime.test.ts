@@ -13,6 +13,12 @@ interface WorkletRuntimeCase {
   caseName: string;
   expectedChunkNames: string[];
   expectedInitSignatureCount: number;
+  expectedRegisterCount: number;
+}
+
+interface BuildOutput {
+  lepusChunk: Record<string, string>;
+  mainThreadSource: string;
 }
 
 const casesRoot = path.resolve(
@@ -58,7 +64,7 @@ function countOccurrences(source: string, needle: string): number {
   return count;
 }
 
-async function buildCase(caseName: string) {
+async function buildCase(caseName: string): Promise<BuildOutput> {
   const caseDir = path.join(casesRoot, caseName);
   const caseConfigPath = path.join(caseDir, 'rspack.config.js');
   const outputPath = path.join(distRoot, caseName);
@@ -113,7 +119,13 @@ async function buildCase(caseName: string) {
 
   const tasmPath = path.join(outputPath, '.rspeedy', 'tasm.json');
   const tasm = await fs.readFile(tasmPath, 'utf8');
-  return parseLepusChunk(tasm, caseName);
+  const mainThreadPath = path.join(outputPath, 'main__main-thread.js');
+  const mainThreadSource = await fs.readFile(mainThreadPath, 'utf8');
+
+  return {
+    lepusChunk: parseLepusChunk(tasm, caseName),
+    mainThreadSource,
+  };
 }
 
 describe('worklet-runtime bundler guardrails', () => {
@@ -122,11 +134,13 @@ describe('worklet-runtime bundler guardrails', () => {
       caseName: 'chunk',
       expectedChunkNames: ['worklet-runtime'],
       expectedInitSignatureCount: 1,
+      expectedRegisterCount: 2,
     },
     {
       caseName: 'not-using',
       expectedChunkNames: [],
       expectedInitSignatureCount: 0,
+      expectedRegisterCount: 0,
     },
   ])(
     'should emit the expected worklet chunks for $caseName',
@@ -134,8 +148,9 @@ describe('worklet-runtime bundler guardrails', () => {
       caseName,
       expectedChunkNames,
       expectedInitSignatureCount,
+      expectedRegisterCount,
     }) => {
-      const lepusChunk = await buildCase(caseName);
+      const { lepusChunk, mainThreadSource } = await buildCase(caseName);
       const workletRuntimeChunks = Object.keys(lepusChunk).filter(
         name => name === 'worklet-runtime',
       );
@@ -154,6 +169,13 @@ describe('worklet-runtime bundler guardrails', () => {
         expect(lepusChunk['worklet-runtime']).toBeUndefined();
         expect(expectedInitSignatureCount).toBe(0);
       }
+
+      expect(
+        countOccurrences(
+          mainThreadSource,
+          'registerWorkletInternal(',
+        ),
+      ).toBe(expectedRegisterCount);
     },
   );
 });
