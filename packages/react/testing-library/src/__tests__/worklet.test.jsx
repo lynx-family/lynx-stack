@@ -592,7 +592,8 @@ describe('worklet', () => {
     expect(callLepusMethodCalls[0][0]).toBe('rLynxChange');
 
     const patchData = JSON.parse(callLepusMethodCalls[0][1].data);
-    const workletIds = patchData.patchList[0].snapshotPatch
+    const workletIds = patchData.patchList
+      .flatMap(item => Array.isArray(item.snapshotPatch) ? item.snapshotPatch : [])
       .filter(item => typeof item === 'object' && item !== null && '_wkltId' in item)
       .map(item => item._wkltId);
 

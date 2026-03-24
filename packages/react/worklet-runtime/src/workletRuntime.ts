@@ -16,6 +16,7 @@ import { profile } from './utils/profile.js';
 import { getFromWorkletRefMap, initWorkletRef } from './workletRef.js';
 
 function initWorklet(): void {
+  workletCache = new WeakMap();
   globalThis.lynxWorkletImpl = {
     _workletMap: {},
     _refImpl: initWorkletRef(),
@@ -106,7 +107,7 @@ function validateWorklet(ctx: unknown): ctx is Worklet {
   return typeof ctx === 'object' && ctx !== null && ('_wkltId' in ctx || '_lepusWorkletHash' in ctx);
 }
 
-const workletCache = new WeakMap<object, ClosureValueType | ((...args: unknown[]) => unknown)>();
+let workletCache = new WeakMap<object, ClosureValueType | ((...args: unknown[]) => unknown)>();
 
 function transformWorklet(ctx: Worklet, isWorklet: true): (...args: unknown[]) => unknown;
 function transformWorklet(
