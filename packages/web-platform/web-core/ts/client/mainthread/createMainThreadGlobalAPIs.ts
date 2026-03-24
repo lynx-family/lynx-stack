@@ -64,9 +64,14 @@ export function createMainThreadGlobalAPIs(
         data,
       });
     },
-    __LoadLepusChunk: (path) => {
+    __LoadLepusChunk: (
+      path,
+      config?: { dynamicComponentEntry?: string; chunkType?: number },
+    ) => {
       try {
-        path = lynxViewInstance.lepusCodeUrls.get(lynxViewInstance.templateUrl)
+        const entryUrl = config?.dynamicComponentEntry
+          ?? lynxViewInstance.templateUrl;
+        path = lynxViewInstance.lepusCodeUrls.get(entryUrl)
           ?.[path] ?? path;
         lynxViewInstance.mtsRealm!.loadScriptSync(path);
         return true;
