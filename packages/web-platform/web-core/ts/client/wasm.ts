@@ -32,7 +32,28 @@ const wasmLoaded = Promise.all([referenceTypes(), simd()]).then(
         ),
       ]);
     } else {
-      throw new Error('WASM not supported');
+      return Promise.all([
+        import(
+          /* webpackMode: "lazy" */
+          /* webpackFetchPriority: "low" */
+          /* webpackPrefetch: false */
+          /* webpackPreload: false */
+          '../../binary/client_legacy/client.js'
+        ) as any,
+        isWorker ? undefined : WebAssembly.compileStreaming(
+          fetch(
+            new URL(
+              /* webpackChunkName: "legacy-wasm" */
+              /* webpackMode: "lazy" */
+              /* webpackFetchPriority: "low" */
+              /* webpackPrefetch: false */
+              /* webpackPreload: false */
+              '../../binary/client_legacy/client_bg.wasm',
+              import.meta.url,
+            ),
+          ),
+        ),
+      ]);
     }
   },
 );

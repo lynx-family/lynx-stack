@@ -31,8 +31,13 @@ function build(
   wasmBindgenArgs,
   optimizeArgs,
   isNode = false,
+  overrideOutDir = undefined,
 ) {
-  const outDir = path.join(packageRoot, 'binary', featureName);
+  const outDir = path.join(
+    packageRoot,
+    'binary',
+    overrideOutDir ?? featureName,
+  );
   const outputWasmName = `${featureName}`;
   const outputWasmDebugName = `${featureName}_debug`;
   const outputWasm = path.join(outDir, outputWasmName);
@@ -54,7 +59,7 @@ function build(
     { cwd: packageRoot, stdio: 'inherit' },
   );
   execSync(
-    `pnpm wasm-opt --enable-bulk-memory  ${optimizeArgs} ${outputWasm}_bg.wasm -O4 -o ${outputWasm}_bg.wasm`,
+    `pnpm wasm-opt --enable-bulk-memory  ${optimizeArgs} ${outputWasm}_bg.wasm -o ${outputWasm}_bg.wasm`,
     { cwd: packageRoot, stdio: 'inherit' },
   );
   // build debug
@@ -90,15 +95,23 @@ function build(
 
 build(
   'client',
-  '-C target_feature=+bulk-memory,+sign-ext,+simd128,+reference-types,+nontrapping-fptoint,+mutable-globals',
+  '-C opt-level=3 -C target_feature=+bulk-memory,+sign-ext,+simd128,+reference-types,+nontrapping-fptoint,+mutable-globals',
   '',
-  '--enable-bulk-memory-opt --enable-sign-ext --enable-simd --enable-reference-types --enable-nontrapping-float-to-int --enable-mutable-globals',
+  '-O4 --enable-bulk-memory-opt --enable-sign-ext --enable-simd --enable-reference-types --enable-nontrapping-float-to-int --enable-mutable-globals',
+);
+build(
+  'client',
+  '-C opt-level=z -C target_feature=+bulk-memory -C strip=symbols',
+  '',
+  '-Oz --enable-nontrapping-float-to-int',
+  false,
+  'client_legacy',
 );
 build(
   'server',
-  '-C target_feature=+bulk-memory,+sign-ext,+simd128,+reference-types,+nontrapping-fptoint,+mutable-globals',
+  '-C opt-level=3 -C target_feature=+bulk-memory,+sign-ext,+simd128,+reference-types,+nontrapping-fptoint,+mutable-globals',
   '',
-  '--enable-bulk-memory-opt --enable-sign-ext --enable-simd --enable-reference-types --enable-nontrapping-float-to-int --enable-mutable-globals',
+  '-O4 --enable-bulk-memory-opt --enable-sign-ext --enable-simd --enable-reference-types --enable-nontrapping-float-to-int --enable-mutable-globals',
   true,
 );
 build('encode', '', '', '--all-features', true);
