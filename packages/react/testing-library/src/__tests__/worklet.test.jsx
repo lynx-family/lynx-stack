@@ -551,4 +551,66 @@ describe('worklet', () => {
       `);
     vi.resetAllMocks();
   });
+
+  it('multiple main-thread worklets should work together when background thread is enabled', () => {
+    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
+    expect(callLepusMethodCalls).toMatchInlineSnapshot(`[]`);
+
+    globalThis.firstCb = vi.fn();
+    globalThis.secondCb = vi.fn();
+
+    const Comp = () => {
+      return (
+        <view>
+          <view
+            main-thread:bindtap={(event) => {
+              'main thread';
+              globalThis.firstCb(event.key);
+            }}
+          >
+            <text>first</text>
+          </view>
+          <view
+            main-thread:bindtap={(event) => {
+              'main thread';
+              globalThis.secondCb(event.key);
+            }}
+          >
+            <text>second</text>
+          </view>
+        </view>
+      );
+    };
+
+    const { container } = render(<Comp />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+
+    expect(callLepusMethodCalls).toHaveLength(1);
+    expect(callLepusMethodCalls[0][0]).toBe('rLynxChange');
+
+    const patchData = JSON.parse(callLepusMethodCalls[0][1].data);
+    const workletIds = patchData.patchList[0].snapshotPatch
+      .filter(item => typeof item === 'object' && item !== null && '_wkltId' in item)
+      .map(item => item._wkltId);
+
+    expect(workletIds).toHaveLength(2);
+    expect(new Set(workletIds).size).toBe(2);
+
+    const [, firstView, secondView] = container.querySelectorAll('view');
+    fireEvent.tap(firstView, {
+      key: 'first-key',
+    });
+    fireEvent.tap(secondView, {
+      key: 'second-key',
+    });
+
+    expect(globalThis.firstCb).toBeCalledTimes(1);
+    expect(globalThis.firstCb).toBeCalledWith('first-key');
+    expect(globalThis.secondCb).toBeCalledTimes(1);
+    expect(globalThis.secondCb).toBeCalledWith('second-key');
+    vi.resetAllMocks();
+  });
 });
