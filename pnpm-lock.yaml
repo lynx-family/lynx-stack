@@ -1378,6 +1378,9 @@ importers:
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../web-core
+      '@lynx-js/web-rsbuild-server-middleware':
+        specifier: workspace:*
+        version: link:../web-rsbuild-server-middleware
       '@playwright/test':
         specifier: ^1.58.2
         version: 1.58.2

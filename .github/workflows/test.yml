@@ -77,7 +77,7 @@ jobs:
       is-web: true
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
-        pnpm --filter @lynx-js/web-tests run lh || echo "Lighthouse failed"
+        pnpm --filter @lynx-js/web-core-e2e run lh || echo "Lighthouse failed"
   playwright-web-elements:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
