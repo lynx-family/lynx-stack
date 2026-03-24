@@ -164,6 +164,71 @@ export function applyEntry(
       .end();
   });
 
+  // <script main-thread> blocks in .vue files — pre-loader runs before
+  // vue-loader to transform main-thread code per webpack layer.
+  //
+  //   BG layer: extracts the block, transforms via SWC (→ worklet context
+  //   objects), strips `export` keywords, injects into <script setup> scope,
+  //   removes the block. vue-loader then processes the modified .vue normally,
+  //   making the worklet contexts available in the template:
+  //     :main-thread-bindtap="onTap"
+  //
+  //   MT layer: extracts the block, transforms (→ registerWorkletInternal()
+  //   calls), replaces the entire .vue with a minimal flat <script>. No-op for
+  //   Phase 1 since user .vue files are not in the MT entry — wired up ready
+  //   for Phase 2 when worklet registrations are needed in the MT bundle.
+  api.modifyBundlerChain((chain, { environment }) => {
+    const isLynx = environment.name === 'lynx'
+      || environment.name.startsWith('lynx-');
+    if (!isLynx) return;
+
+    const preLoaderPath = path.resolve(
+      _dirname,
+      './loaders/vue-main-thread-pre-loader',
+    );
+    const nullLoaderPath = path.resolve(_dirname, './loaders/null-loader');
+
+    // BG layer: transform <script main-thread> before vue-loader.
+    chain.module
+      .rule('vue:main-thread-pre:bg')
+      .test(/\.vue$/)
+      .enforce('pre')
+      .issuerLayer(LAYERS.BACKGROUND)
+      .use('vue-main-thread-pre-bg')
+      .loader(preLoaderPath)
+      .options({ target: 'BG' })
+      .end();
+
+    // MT layer: extract <script main-thread>, replace .vue with flat script.
+    chain.module
+      .rule('vue:main-thread-pre:mt')
+      .test(/\.vue$/)
+      .enforce('pre')
+      .issuerLayer(LAYERS.MAIN_THREAD)
+      .use('vue-main-thread-pre-mt')
+      .loader(preLoaderPath)
+      .options({ target: 'MT' })
+      .end();
+
+    // MT layer: silence <template> virtual modules.
+    chain.module
+      .rule('vue:template:mt')
+      .resourceQuery(/\btype=template\b/)
+      .issuerLayer(LAYERS.MAIN_THREAD)
+      .use('null-loader-template')
+      .loader(nullLoaderPath)
+      .end();
+
+    // MT layer: silence <script setup> virtual modules.
+    chain.module
+      .rule('vue:script:mt')
+      .resourceQuery(/\btype=script\b/)
+      .issuerLayer(LAYERS.MAIN_THREAD)
+      .use('null-loader-script')
+      .loader(nullLoaderPath)
+      .end();
+  });
+
   api.modifyBundlerChain((chain, { environment, isProd }) => {
     const isRspeedy = api.context.callerName === 'rspeedy';
     if (!isRspeedy) return;

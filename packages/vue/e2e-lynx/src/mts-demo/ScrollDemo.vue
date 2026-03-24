@@ -2,85 +2,60 @@
      Licensed under the Apache License Version 2.0 that can be found in the
      LICENSE file in the root directory of this source tree. -->
 
-<!--
-  ScrollDemo.vue — <scroll-view> + main-thread scroll worklet test
-
-  Uses a real <scroll-view> so scroll events actually fire.
-  Three worklet handlers give clear visual feedback:
-    bindscrolltouchstart  → indicator turns blue  (finger down / scroll begins)
-    bindscrolltouchend    → indicator turns green (finger up  / scroll ends)
-    bindscroll            → indicator shows live scrollTop value
-
-  The indicator element is accessed via :main-thread-ref so the worklets can
-  mutate it directly on the Main Thread with zero thread crossings.
--->
-
 <script main-thread lang="ts">
-export function onScrollStart(event: any): void {
-  // Finger touched the scroll-view — highlight the indicator immediately.
+// MT worklet — runs on Lepus, zero bridge crossings.
+// Scroll-view bg turns blue while scrolling, green when settled.
+export function onMtScroll(event: any): void {
   event.currentTarget.setStyleProperty('background-color', '#0055ff')
-  event.currentTarget.setStyleProperty('opacity', '1')
 }
-
-export function onScrollEnd(event: any): void {
-  // Finger lifted — show settled state.
+export function onMtScrollEnd(event: any): void {
   event.currentTarget.setStyleProperty('background-color', '#00aa55')
-  event.currentTarget.setStyleProperty('opacity', '0.85')
-}
-
-export function onScroll(event: any): void {
-  // Fires continuously during scroll — dim slightly to show motion.
-  const top = event.detail?.scrollTop ?? 0
-  const opacity = String(Math.max(0.5, 1 - top / 800))
-  event.currentTarget.setStyleProperty('opacity', opacity)
 }
 </script>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import { useMainThreadRef } from '@lynx-js/vue-runtime'
 
-// onScrollStart, onScrollEnd, onScroll injected by vue-main-thread-pre-loader
 const scrollViewRef = useMainThreadRef(null)
+
+// BG-thread scroll tracking via Vue reactivity (confirmed working).
+const scrollTop = ref(0)
+const debugColor = computed(() => {
+  if (scrollTop.value < 5) return '#888'
+  return scrollTop.value > 250 ? '#ff8800' : '#0055ff'
+})
+
+function onBgScroll(e: any) {
+  scrollTop.value = Math.round(e.detail?.scrollTop ?? 0)
+}
 </script>
 
 <template>
   <view :style="{ display: 'flex', flexDirection: 'column' }">
-    <!-- Status indicator — worklets read/write this element via main-thread-ref -->
-    <view
-      :style="{
-        padding: 10,
-        backgroundColor: '#888',
-        borderRadius: 6,
-        marginBottom: 8,
-        alignItems: 'center',
-      }"
-    >
-      <text :style="{ color: '#fff', fontSize: 13 }">
-        Scroll status (watch colour)
-      </text>
-    </view>
-
-    <!-- scroll-view: the actual scrollable container -->
+    <!-- Scroll-view bg = MT worklet target (blue while scrolling, green settled).
+         Transparent rows let the bg colour show through. -->
     <scroll-view
       :main-thread-ref="scrollViewRef"
-      :main-thread-bindbindscrolltouchstart="onScrollStart"
-      :main-thread-bindbindscrolltouchend="onScrollEnd"
-      :main-thread-bindscroll="onScroll"
-      scroll-y
-      :style="{ height: 240, backgroundColor: '#f5f5f5', borderRadius: 8 }"
+      :main-thread-bindscroll="onMtScroll"
+      :main-thread-bindscrollend="onMtScrollEnd"
+      :scroll-y="true"
+      @scroll="onBgScroll"
+      :style="{ height: 240, backgroundColor: '#888', borderRadius: 8, marginBottom: 8 }"
     >
       <view
         v-for="n in 20"
         :key="n"
-        :style="{
-          padding: 14,
-          borderBottomWidth: 1,
-          borderBottomColor: '#ddd',
-          backgroundColor: n % 2 === 0 ? '#fff' : '#fafafa',
-        }"
+        :style="{ padding: 14, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.2)' }"
       >
-        <text :style="{ fontSize: 14, color: '#333' }">Row {{ n }}</text>
+        <text :style="{ fontSize: 14, color: '#fff' }">Row {{ n }}</text>
       </view>
     </scroll-view>
+
+    <!-- BG debug panel — colour + text driven by Vue reactivity.
+         Changes = BG scroll events fire. Scroll-view bg not changing = MT worklets pending. -->
+    <view :style="{ padding: 10, backgroundColor: debugColor, borderRadius: 6 }">
+      <text :style="{ color: '#fff', fontSize: 13 }">BG scrollTop: {{ scrollTop }}px</text>
+    </view>
   </view>
 </template>

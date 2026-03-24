@@ -18,20 +18,14 @@ export function onTap(event: any): void {
   // Dim the element on tap to give visual feedback.
   event.currentTarget.setStyleProperty('opacity', '0.6');
 }
-
-export function onScroll(event: any): void {
-  // Scroll position arrives directly on the Main Thread.
-  const top = (event.detail?.scrollTop ?? 0).toFixed(0);
-  event.currentTarget.setStyleProperty('opacity', String(1 - Math.min(top, 100) / 200));
-}
 </script>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useMainThreadRef } from '@lynx-js/vue-runtime'
 
-// NOTE: `onTap` and `onScroll` worklet context objects are injected here
-// by vue-main-thread-pre-loader at build time.  They look like:
+// NOTE: `onTap` worklet context object is injected here by vue-main-thread-pre-loader
+// at build time.  It looks like:
 //   const onTap = { _wkltId: 'src/mts-demo/MtsDemo.vue:onTap', _closure: {} }
 
 // MainThreadRef for element reference
@@ -46,7 +40,7 @@ function onBgTap() {
 </script>
 
 <template>
-  <view :style="{ display: 'flex', flexDirection: 'column', padding: 16 }">
+  <scroll-view :scroll-y="true" :style="{ display: 'flex', flexDirection: 'column', padding: 16 }">
     <text :style="{ fontSize: 18, color: '#333', marginBottom: 12 }">
       MTS Demo
     </text>
@@ -67,20 +61,7 @@ function onBgTap() {
       </text>
     </view>
 
-    <!-- Worklet scroll binding -->
-    <view
-      :main-thread-bindscroll="onScroll"
-      :style="{
-        padding: 16,
-        backgroundColor: '#00aa55',
-        borderRadius: 8,
-        marginBottom: 8,
-      }"
-    >
-      <text :style="{ color: '#fff', fontSize: 14 }">
-        MT Scroll (worklet event)
-      </text>
-    </view>
+
 
     <!-- Regular BG-thread tap for comparison / regression check -->
     <view
@@ -95,5 +76,5 @@ function onBgTap() {
         BG Tap: {{ tapCount }}
       </text>
     </view>
-  </view>
+  </scroll-view>
 </template>
