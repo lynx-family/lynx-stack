@@ -12,6 +12,7 @@ import { describe, expect, it } from 'vitest';
 interface WorkletRuntimeCase {
   caseName: string;
   expectedChunkNames: string[];
+  expectedInitSignatureCount: number;
 }
 
 const casesRoot = path.resolve(
@@ -44,6 +45,17 @@ function parseLepusChunk(
   }
 
   return data.lepusCode.lepusChunk as Record<string, string>;
+}
+
+function countOccurrences(source: string, needle: string): number {
+  let count = 0;
+  let index = -1;
+
+  while ((index = source.indexOf(needle, index + 1)) !== -1) {
+    count += 1;
+  }
+
+  return count;
 }
 
 async function buildCase(caseName: string) {
@@ -109,14 +121,20 @@ describe('worklet-runtime bundler guardrails', () => {
     {
       caseName: 'chunk',
       expectedChunkNames: ['worklet-runtime'],
+      expectedInitSignatureCount: 1,
     },
     {
       caseName: 'not-using',
       expectedChunkNames: [],
+      expectedInitSignatureCount: 0,
     },
   ])(
     'should emit the expected worklet chunks for $caseName',
-    async ({ caseName, expectedChunkNames }) => {
+    async ({
+      caseName,
+      expectedChunkNames,
+      expectedInitSignatureCount,
+    }) => {
       const lepusChunk = await buildCase(caseName);
       const workletRuntimeChunks = Object.keys(lepusChunk).filter(
         name => name === 'worklet-runtime',
@@ -126,8 +144,15 @@ describe('worklet-runtime bundler guardrails', () => {
 
       if (expectedChunkNames.length > 0) {
         expect(lepusChunk['worklet-runtime'].length).toBeGreaterThan(0);
+        expect(
+          countOccurrences(
+            lepusChunk['worklet-runtime'],
+            'globalThis.lynxWorkletImpl = {',
+          ),
+        ).toBe(expectedInitSignatureCount);
       } else {
         expect(lepusChunk['worklet-runtime']).toBeUndefined();
+        expect(expectedInitSignatureCount).toBe(0);
       }
     },
   );
