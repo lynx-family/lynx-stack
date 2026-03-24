@@ -583,7 +583,7 @@ describe('worklet', () => {
       );
     };
 
-    const { container } = render(<Comp />, {
+    const { container, getByText } = render(<Comp />, {
       enableMainThread: true,
       enableBackgroundThread: true,
     });
@@ -599,7 +599,8 @@ describe('worklet', () => {
     expect(workletIds).toHaveLength(2);
     expect(new Set(workletIds).size).toBe(2);
 
-    const [, firstView, secondView] = container.querySelectorAll('view');
+    const firstView = getByText('first').parentNode;
+    const secondView = getByText('second').parentNode;
     fireEvent.tap(firstView, {
       key: 'first-key',
     });

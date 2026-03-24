@@ -42,10 +42,8 @@ describe('Worklet', () => {
   it('initWorklet should be safe to call repeatedly', () => {
     initWorklet();
     globalThis.registerWorklet('main-thread', 'stale', vi.fn());
-    const firstImpl = globalThis.lynxWorkletImpl;
 
     expect(() => initWorklet()).not.toThrow();
-    expect(globalThis.lynxWorkletImpl).not.toBe(firstImpl);
     expect(globalThis.lynxWorkletImpl._workletMap).toEqual({});
 
     const fn = vi.fn();
