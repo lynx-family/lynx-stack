@@ -55,10 +55,11 @@ Object.assign(
 // --- Import ops-apply internals for the bridge ------------------------------
 
 // ops-apply.ts exports applyOps, elements, resetMainThreadState.
-// Since it's the same Node.js process, module-level state is shared
-// across thread contexts.
+// IMPORTANT: import from dist/ (not src/) so this shares the same module
+// instance as @lynx-js/vue-main-thread (dist/entry-main.js → dist/ops-apply.js).
+// Both must reference the same Map so bridge registrations are visible to applyOps.
 const { applyOps, elements, resetMainThreadState } = await import(
-  '../../main-thread/src/ops-apply.js'
+  '../../main-thread/dist/ops-apply.js'
 );
 
 // --- Wire Background Thread globals ----------------------------------------

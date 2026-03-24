@@ -1,9 +1,9 @@
 # Vue Lynx Implementation — Progress & Next Steps
 
 > **Status as of March 2026**
-> We are well past Plan 02. Plans 02, 03, and 04 Phase 1 are complete. Plan 05 (runtime-dom
-> pipeline tests) is in progress. The remaining large body of work is Plan 04 Phase 2: the
-> compile-time `<script main-thread>` block transform.
+> Plans 02, 03, 04 Phase 1, and 05 are all complete. All 30 testing-library tests pass
+> (including the new MTS worklet and ref tests). The remaining large body of work is Plan 04
+> Phase 2: the compile-time `<script main-thread>` block transform.
 
 ---
 
@@ -103,51 +103,44 @@ What was added:
 **Limitation:** The worklet handler does not actually fire yet — that requires the worklet
 runtime to be loaded on MT (Plan 04 Phase 2 below).
 
+**Testing — ✅ Verified (March 2026):** Two test files added to `packages/vue/testing-library/src/__tests__/`:
+
+- `mts-worklet.test.ts` (5 tests) — verifies `SET_WORKLET_EVENT` (op 11) is emitted with correct
+  `eventType`/`eventName`/ctx, that `applyOps` calls `__AddEvent({ type: 'worklet', value: ctx })`,
+  and that `fireEvent.tap` invokes `runWorklet` on MT (not `publishEvent` on BG).
+- `mts-ref.test.ts` (5 tests) — verifies `SET_MT_REF` (op 12) is emitted, that `_wvid` matches
+  the bound `MainThreadRef`, that `_initValue` is forwarded, and that multiple refs each get
+  their own op with distinct `_wvid` values.
+
+All 30 tests in `packages/vue/testing-library/` pass.
+
 ---
 
-## Plan 05 — Vue runtime-dom Pipeline Tests 🔄 In Progress
+## Plan 05 — Vue runtime-dom Pipeline Tests ✅ Done
 
 **Goal:** Run Vue's `runtime-dom` upstream test suite through our full ops pipeline
 (BG `patchProp` → ops buffer → `applyOps` → PAPI → JSDOM) to validate that `style`, `class`,
 `id`, attributes, and events are all applied correctly to real DOM elements.
 
-**Status:** Infrastructure files are written. Integration and triage not yet complete.
+**Status:** Complete. Tests run and triaged.
 
-### What exists already
+Key files:
 
-- `packages/vue/vue-upstream-tests/src/lynx-runtime-dom-bridge.ts` — the bridge module that
-  intercepts `document.createElement` and `patchProp` calls from Vue runtime-dom tests and
-  routes them through our ops pipeline synchronously.
-- `packages/vue/vue-upstream-tests/src/runtime-dom-setup.ts` — Vitest setup file that boots
-  `LynxTestingEnv`, wires MT and BG globals, and overrides `document.createElement`.
-- `packages/vue/vue-upstream-tests/vitest.dom.config.ts` — second Vitest config targeting 5
-  runtime-dom test suites: `patchStyle`, `patchClass`, `patchEvents`, `patchProps`, `patchAttrs`.
+- `packages/vue/vue-upstream-tests/src/lynx-runtime-dom-bridge.ts` — intercepts `patchProp`
+  calls and routes them through the ops pipeline synchronously via a lazy shadow/jsdom mapping.
+- `packages/vue/vue-upstream-tests/src/runtime-dom-setup.ts` — boots `LynxTestingEnv`, wires
+  MT/BG globals; imports `ops-apply` from `dist/` to share the same `elements` Map instance as
+  `@lynx-js/vue-main-thread`.
+- `packages/vue/vue-upstream-tests/vitest.dom.config.ts` — runs 5 suites: `patchStyle`,
+  `patchClass`, `patchEvents`, `patchProps`, `patchAttrs`.
+- `packages/vue/vue-upstream-tests/skiplist-dom.json` — 44 tests permanently skipped with
+  documented reasons (SVG, DOM properties, `innerHTML`, CSS features Lynx doesn't support).
 
-### What still needs to be done
+Run with:
 
-1. **Run the tests and triage failures.**
-   ```bash
-   cd packages/vue/vue-upstream-tests
-   pnpm run vuejs:init       # init submodule if not done
-   pnpm run test:dom         # runs vitest.dom.config.ts
-   ```
-   The target is 50+ passing tests. Failures need to be added to
-   `packages/vue/vue-upstream-tests/skiplist-dom.json` with a comment explaining why
-   (e.g. `innerHTML` is not supported in Lynx, SVG namespaces don't apply).
-
-2. **Fix gaps in ops-apply for boolean attributes.** Vue runtime-dom passes `disabled=""` for
-   true and `null` for false. Confirm `packages/vue/main-thread/src/ops-apply.ts` handles
-   `__SetAttribute(el, key, null)` correctly (removes the attribute).
-
-3. **Add `test:dom` script** to `packages/vue/vue-upstream-tests/package.json`:
-   ```json
-   "test:dom": "vitest run --config vitest.dom.config.ts"
-   ```
-
-4. **Directive tests (optional Tier 2):** `patchStyle`, `patchClass`, `patchEvents` are
-   self-contained. Directive tests (`vShow`, `vOn`) use the full `render()` API — if you want
-   to add those, `packages/vue/vue-upstream-tests/src/lynx-runtime-dom-bridge.ts` needs to
-   re-export a `render` function wired through the testing-library pipeline.
+```bash
+pnpm --filter @lynx-js/vue-upstream-tests run test:dom
+```
 
 ---
 
@@ -190,15 +183,13 @@ Once the loader is working:
 
 ### Testing Plan 04 Phase 2
 
-Add test files to `packages/vue/testing-library/src/__tests__/`:
+The hand-crafted worklet tests (Plan 04 Phase 1 testing) already pass and cover ops emission
+and `__AddEvent` shape. What remains for Phase 2 testing is verifying the **compiler output**:
 
-| File to create                                                   | What to test                                                                                                                                                                      |
-| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/vue/testing-library/src/__tests__/mts-worklet.test.ts` | A component with a hand-crafted worklet context bound via `:main-thread-bindtap`. Verify `SET_WORKLET_EVENT` op is emitted and `__AddEvent` is called with `{ type: 'worklet' }`. |
-| `packages/vue/testing-library/src/__tests__/mts-ref.test.ts`     | A component with `:main-thread-ref`. Verify `SET_MT_REF` op is emitted with the correct `_wvid`.                                                                                  |
-
-Full end-to-end worklet execution testing (the handler actually firing on MT) requires the
-worklet runtime to be loaded in `LynxTestingEnv`, which is a larger setup task.
+- A `.vue` file with `<script main-thread>` should produce, after the loader runs, the same
+  op sequence that the hand-crafted tests already validate.
+- Full end-to-end worklet execution (the handler body actually running on MT) requires the
+  worklet runtime to be loaded in `LynxTestingEnv`, which is a separate task.
 
 ---
 
@@ -216,13 +207,13 @@ No files to create yet — design is in `packages/vue/.plans/04-main-thread-scri
 
 ## Summary Table
 
-| Plan       | Description                                    | Status         |
-| ---------- | ---------------------------------------------- | -------------- |
-| 00         | Vue Vine Lynx analysis                         | Reference doc  |
-| 01         | Vue 3 Lynx compatibility research              | Reference doc  |
-| 02         | Dual-Thread MVP                                | ✅ Done        |
-| 03         | Testing infrastructure (E2E + upstream)        | ✅ Done        |
-| 04 Phase 1 | MTS runtime foundation (ops, composable, demo) | ✅ Done        |
-| 05         | runtime-dom pipeline tests                     | 🔄 In Progress |
-| 04 Phase 2 | `<script main-thread>` compile-time transform  | 🔜 Next        |
-| 04 Phase 3 | v-model via MT worklets                        | 🔜 Future      |
+| Plan       | Description                                    | Status        |
+| ---------- | ---------------------------------------------- | ------------- |
+| 00         | Vue Vine Lynx analysis                         | Reference doc |
+| 01         | Vue 3 Lynx compatibility research              | Reference doc |
+| 02         | Dual-Thread MVP                                | ✅ Done       |
+| 03         | Testing infrastructure (E2E + upstream)        | ✅ Done       |
+| 04 Phase 1 | MTS runtime foundation (ops, composable, demo) | ✅ Done       |
+| 05         | runtime-dom pipeline tests                     | ✅ Done       |
+| 04 Phase 2 | `<script main-thread>` compile-time transform  | 🔜 Next       |
+| 04 Phase 3 | v-model via MT worklets                        | 🔜 Future     |
