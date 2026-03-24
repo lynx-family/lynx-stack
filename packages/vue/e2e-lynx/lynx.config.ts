@@ -13,6 +13,7 @@ export default defineConfig({
       todomvc: './src/todomvc/index.ts',
       'mts-demo': './src/mts-demo/index.ts',
       'h-bundle-demo': './src/h-bundle-demo/index.ts',
+      'scroll-demo': './src/scroll-demo/index.ts',
     },
   },
   plugins: [
