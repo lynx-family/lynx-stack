@@ -69,8 +69,10 @@ export function createMainThreadGlobalAPIs(
       config?: { dynamicComponentEntry?: string; chunkType?: number },
     ) => {
       try {
-        const entryUrl = config?.dynamicComponentEntry
-          ?? lynxViewInstance.templateUrl;
+        let entryUrl = config?.dynamicComponentEntry;
+        if (!entryUrl || entryUrl === '__Card__') {
+          entryUrl = lynxViewInstance.templateUrl;
+        }
         path = lynxViewInstance.lepusCodeUrls.get(entryUrl)
           ?.[path] ?? path;
         lynxViewInstance.mtsRealm!.loadScriptSync(path);
