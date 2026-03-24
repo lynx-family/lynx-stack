@@ -24,7 +24,7 @@ export function withLynxConfig(
   options?: TestingLibraryOptions,
 ): ExtendConfigFn {
   return async () => {
-    const { loadConfig } = await import('@lynx-js/rspeedy');
+    const { loadConfig, toRsbuildConfig } = await import('@lynx-js/rspeedy');
     const lynxConfig = await loadConfig({
       cwd: options?.rootPath,
       configPath: options?.configPath,
@@ -33,7 +33,7 @@ export function withLynxConfig(
     const { toRstestConfig } = await import('@rstest/adapter-rsbuild');
 
     const rstestConfig = toRstestConfig({
-      rsbuildConfig: lynxConfig.content as RsbuildConfig,
+      rsbuildConfig: toRsbuildConfig(lynxConfig.content) as RsbuildConfig,
     });
 
     return {

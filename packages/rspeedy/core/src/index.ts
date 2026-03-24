@@ -28,6 +28,7 @@ export {
 } from './create-rspeedy.js'
 export { logger } from '@rsbuild/core'
 export { mergeRspeedyConfig } from './config/mergeRspeedyConfig.js'
+export { toRsbuildConfig } from './config/rsbuild/index.js'
 
 // Config
 export { defineConfig } from './config/defineConfig.js'
