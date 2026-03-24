@@ -68,9 +68,48 @@ export const defaultExternalBundleLibConfig: LibConfig = {
 
 export type Externals = Record<string, string | string[]>
 
+export interface ExternalsPresets {
+  reactlynx?: boolean
+}
+
+const presetsMap: Record<keyof ExternalsPresets, Externals> = {
+  reactlynx: {
+    '@lynx-js/react': ['ReactLynx', 'React'],
+    '@lynx-js/react/internal': ['ReactLynx', 'ReactInternal'],
+    '@lynx-js/react/jsx-dev-runtime': ['ReactLynx', 'ReactJSXDevRuntime'],
+    '@lynx-js/react/jsx-runtime': ['ReactLynx', 'ReactJSXRuntime'],
+    '@lynx-js/react/lepus/jsx-dev-runtime': [
+      'ReactLynx',
+      'ReactJSXLepusDevRuntime',
+    ],
+    '@lynx-js/react/lepus/jsx-runtime': ['ReactLynx', 'ReactJSXLepusRuntime'],
+    '@lynx-js/react/experimental/lazy/import': [
+      'ReactLynx',
+      'ReactLazyImport',
+    ],
+    '@lynx-js/react/legacy-react-runtime': [
+      'ReactLynx',
+      'ReactLegacyRuntime',
+    ],
+    '@lynx-js/react/runtime-components': ['ReactLynx', 'ReactComponents'],
+    '@lynx-js/react/worklet-runtime/bindings': [
+      'ReactLynx',
+      'ReactWorkletRuntime',
+    ],
+    '@lynx-js/react/debug': ['ReactLynx', 'ReactDebug'],
+    'preact': ['ReactLynx', 'Preact'],
+  },
+}
+
 export type LibOutputConfig = Required<LibConfig>['output']
 
 export interface OutputConfig extends LibOutputConfig {
+  /**
+   * Presets for external libraries.
+   *
+   * Same as https://rspack.rs/config/externals#externalspresets but for Lynx.
+   */
+  externalsPresets?: ExternalsPresets
   externals?: Externals
   /**
    * This option indicates what global object will be used to mount the library.
@@ -89,9 +128,18 @@ export interface ExternalBundleLibConfig extends LibConfig {
 }
 
 function transformExternals(
+  externalsPresets?: ExternalsPresets,
   externals?: Externals,
   globalObject?: string,
 ): Required<LibOutputConfig>['externals'] {
+  if (externalsPresets?.reactlynx) {
+    externals ??= {}
+    externals = {
+      ...presetsMap.reactlynx,
+      ...externals,
+    }
+  }
+
   if (!externals) return {}
 
   return function({ request }, callback) {
@@ -190,6 +238,7 @@ export function defineExternalBundleRslibConfig(
           output: {
             ...userLibConfig.output,
             externals: transformExternals(
+              userLibConfig.output?.externalsPresets,
               userLibConfig.output?.externals,
               userLibConfig.output?.globalObject,
             ),
