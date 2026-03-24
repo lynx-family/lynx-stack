@@ -18,8 +18,11 @@ const wait = async (ms: number) => {
   });
 };
 
-const goto = async (page: Page, title?: string) => {
-  await page.goto('/?resourceName=web-core.main-thread.json', {
+const goto = async (
+  page: Page,
+  resourceName: string = 'web-core.main-thread.json',
+) => {
+  await page.goto(`/?resourceName=${resourceName}`, {
     waitUntil: 'load',
   });
   await wait(500);
@@ -167,6 +170,35 @@ test.describe('web core tests', () => {
     });
     expect(success).toBe(true);
     expect(fail).toBe(false);
+  });
+
+  test('api-enableJSDataProcessor disables processData', async ({ page, browserName }) => {
+    test.skip(browserName === 'firefox');
+    await goto(page, 'web-core.enable-js-data-processor.json');
+
+    await page.evaluate(() => {
+      const root = globalThis.runtime.__CreatePage('0', '0', {});
+      const element = globalThis.runtime.__CreateElement('view', '0', {});
+      globalThis.runtime.__AppendElement(root, element);
+      globalThis.runtime.__FlushElementTree();
+    });
+
+    const worker = await getBackgroundThreadWorker(page);
+
+    await page.evaluate(() => {
+      const lynxView = document.querySelector('lynx-view') as LynxViewElement;
+      lynxView.updateData({ mock: 'data' });
+    });
+
+    await wait(300);
+
+    const isProcessed = await worker.evaluate(() => {
+      return (globalThis as any).__lastData?.processed === true;
+    });
+
+    // Because enableJSDataProcessor is true, the processData logic should NOT run
+    // so if we pass some mock data, it should not have `.processed = true`!
+    expect(isProcessed).toBeFalsy();
   });
 
   test('api-nativeApp-readScript', async ({ page, browserName }) => {
