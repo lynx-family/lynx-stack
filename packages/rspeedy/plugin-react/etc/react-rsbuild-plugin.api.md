@@ -81,6 +81,10 @@ export interface PluginReactLynxOptions {
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady';
     globalPropsMode?: 'reactive' | 'event';
+    optimizeBundleSize?: boolean | {
+        mainThread?: boolean;
+        background?: boolean;
+    };
     removeDescendantSelectorScope?: boolean;
     shake?: Partial<ShakeVisitorConfig> | undefined;
     // @deprecated
