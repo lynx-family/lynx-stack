@@ -1,5 +1,5 @@
 ---
-"@lynx-js/web-core": major
+"@lynx-js/web-core": minor
 ---
 
 **This is a breaking change**
