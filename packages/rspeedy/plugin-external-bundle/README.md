@@ -17,6 +17,12 @@
 npm install -D @lynx-js/external-bundle-rsbuild-plugin
 ```
 
+If you want to use the built-in `reactlynx` preset, also install:
+
+```bash
+npm install -D @lynx-js/react-umd
+```
+
 ## Usage
 
 ```ts
@@ -28,16 +34,82 @@ export default {
   plugins: [
     pluginReactLynx(),
     pluginExternalBundle({
+      externalBundleRoot: 'dist-external-bundle',
+      externalsPresets: {
+        reactlynx: true,
+      },
       externals: {
-        lodash: {
-          url: 'http://lodash.lynx.bundle',
-          background: { sectionPath: 'background' },
-          mainThread: { sectionPath: 'mainThread' },
+        'lodash-es': {
+          bundlePath: 'lodash-es.lynx.bundle',
+          background: { sectionPath: 'lodash-es' },
+          mainThread: { sectionPath: 'lodash-es__main-thread' },
+          async: false,
+        },
+        './components': {
+          bundlePath: 'comp.lynx.bundle',
+          background: { sectionPath: 'component' },
+          mainThread: { sectionPath: 'component__main-thread' },
         },
       },
     }),
   ],
 }
+```
+
+## `bundlePath` vs `url`
+
+Prefer `bundlePath` for bundles that belong to the current project.
+
+- `bundlePath`
+  - resolves through the runtime public path
+  - lets the plugin serve local bundles in development
+  - lets the plugin emit managed bundle assets during build
+- `url`
+  - uses a fully resolved address directly
+  - is better only when the bundle is hosted outside the current build output, such as on a CDN
+
+For the built-in `reactlynx` preset, `bundlePath` is especially recommended because the plugin will automatically emit `react.lynx.bundle` by resolving `@lynx-js/react-umd/dev` or `@lynx-js/react-umd/prod`.
+
+## Building project-owned external bundles
+
+`externalBundleRoot` tells the plugin where your local external bundles live before they are emitted into the final app output.
+
+For example, if your component library is built into `dist-external-bundle`, set:
+
+```ts
+pluginExternalBundle({
+  externalBundleRoot: 'dist-external-bundle',
+  externals: {
+    './components': {
+      bundlePath: 'comp.lynx.bundle',
+      background: { sectionPath: 'component' },
+      mainThread: { sectionPath: 'component__main-thread' },
+    },
+  },
+})
+```
+
+Then:
+
+- development serves `dist-external-bundle/comp.lynx.bundle`
+- production emits that bundle into the app output
+
+## ReactLynx preset
+
+`externalsPresets.reactlynx` expands the standard ReactLynx module requests automatically, so you do not need to write the full externals map by hand.
+
+Use it together with `@lynx-js/lynx-bundle-rslib-config` when producing external bundles:
+
+```ts
+import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'
+
+export default defineExternalBundleRslibConfig({
+  output: {
+    externalsPresets: {
+      reactlynx: true,
+    },
+  },
+})
 ```
 
 ## Documentation
