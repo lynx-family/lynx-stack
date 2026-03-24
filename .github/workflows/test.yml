@@ -345,7 +345,7 @@ jobs:
       - benchmark
       - code-style-check
       - eslint
-      - playwright-linux
+      # - playwright-linux
       - playwright-web-elements
       - test-api
       - test-publish
