@@ -9,9 +9,19 @@
  */
 export {
   defineExternalBundleRslibConfig,
+  builtInExternalsPresetDefinitions,
   defaultExternalBundleLibConfig,
+  reactLynxExternalsPreset,
 } from './externalBundleRslibConfig.js'
-export type { EncodeOptions } from './externalBundleRslibConfig.js'
+export type {
+  EncodeOptions,
+  ExternalBundleLibConfig,
+  Externals,
+  ExternalsPresetDefinition,
+  ExternalsPresetDefinitions,
+  ExternalsPresets,
+  OutputConfig,
+} from './externalBundleRslibConfig.js'
 export { ExternalBundleWebpackPlugin } from './webpack/ExternalBundleWebpackPlugin.js'
 export type { ExternalBundleWebpackPluginOptions } from './webpack/ExternalBundleWebpackPlugin.js'
 export { MainThreadRuntimeWrapperWebpackPlugin } from './webpack/MainThreadRuntimeWrapperWebpackPlugin.js'

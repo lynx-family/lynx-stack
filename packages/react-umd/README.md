@@ -41,9 +41,6 @@ export default defineExternalBundleRslibConfig({
   },
   plugins: [pluginReactLynx()],
   output: {
-    distPath: {
-      root: 'dist-external-bundle',
-    },
     externalsPresets: {
       reactlynx: true,
     },
@@ -66,7 +63,6 @@ export default defineConfig({
   plugins: [
     pluginReactLynx(),
     pluginExternalBundle({
-      externalBundleRoot: 'dist-external-bundle',
       externalsPresets: {
         reactlynx: true,
       },

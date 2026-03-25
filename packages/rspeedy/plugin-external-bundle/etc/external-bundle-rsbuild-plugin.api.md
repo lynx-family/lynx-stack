@@ -9,9 +9,31 @@ import type { ExternalValue } from '@lynx-js/externals-loading-webpack-plugin';
 import type { RsbuildPlugin } from '@rsbuild/core';
 
 // @public
+export const builtInExternalsPresetDefinitions: ExternalsPresetDefinitions;
+
+// @public
+export interface ExternalsPresetContext {
+    rootPath: string;
+}
+
+// @public
+export interface ExternalsPresetDefinition {
+    extends?: string | string[];
+    resolveExternals?: (value: boolean | object, context: ExternalsPresetContext) => ExternalsLoadingPluginOptions['externals'];
+    resolveManagedAssets?: (value: boolean | object, context: ExternalsPresetContext) => Map<string, string> | Record<string, string>;
+}
+
+// @public
+export type ExternalsPresetDefinitions = Record<string, ExternalsPresetDefinition>;
+
+// @public
 export interface ExternalsPresets {
+    [presetName: string]: boolean | object | undefined;
     reactlynx?: boolean | ReactLynxExternalsPresetOptions;
 }
+
+// @public
+export function normalizeBundlePath(bundlePath: string): string;
 
 // @public
 export function pluginExternalBundle(options: PluginExternalBundleOptions): RsbuildPlugin;
@@ -20,6 +42,7 @@ export function pluginExternalBundle(options: PluginExternalBundleOptions): Rsbu
 export interface PluginExternalBundleOptions extends Pick<ExternalsLoadingPluginOptions, 'globalObject'> {
     externalBundleRoot?: string;
     externals?: Record<string, PluginExternalValue>;
+    externalsPresetDefinitions?: ExternalsPresetDefinitions;
     externalsPresets?: ExternalsPresets;
 }
 

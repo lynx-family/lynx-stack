@@ -938,6 +938,9 @@ importers:
         specifier: workspace:*
         version: link:../../webpack/externals-loading-webpack-plugin
     devDependencies:
+      '@lynx-js/react-umd':
+        specifier: workspace:*
+        version: link:../../react-umd
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.57.6(@types/node@24.10.13)

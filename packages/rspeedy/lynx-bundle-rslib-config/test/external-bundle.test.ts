@@ -26,6 +26,33 @@ async function build(rslibConfig: RslibConfig) {
   return await rslib.build()
 }
 
+function resolveExternal(
+  rslibConfig: RslibConfig,
+  request: string,
+) {
+  const externalsResolver = rslibConfig.lib[0]?.output?.externals as
+    | ((
+      data: { request?: string },
+      callback: (error?: Error, result?: unknown) => void,
+    ) => void)
+    | undefined
+
+  return new Promise<unknown>((resolve, reject) => {
+    if (!externalsResolver) {
+      reject(new Error('Expected output.externals to be configured'))
+      return
+    }
+
+    externalsResolver({ request }, (error, result) => {
+      if (error) {
+        reject(error)
+        return
+      }
+      resolve(result)
+    })
+  })
+}
+
 describe('define config', () => {
   it('should return entry config', () => {
     const rslibConfig = defineExternalBundleRslibConfig({
@@ -453,6 +480,90 @@ describe('mount externals library', () => {
       .toContain(
         'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
       )
+  })
+
+  it('should allow extending the built-in reactlynx preset', async () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      id: 'utils-reactlynx-custom-extend',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist'),
+        },
+        externalsPresets: {
+          reactlynxPlus: true,
+        },
+        externalsPresetDefinitions: {
+          reactlynxPlus: {
+            extends: 'reactlynx',
+            externals: {
+              '@lynx-js/react': ['CustomRuntime', 'React'],
+            },
+          },
+        },
+        minify: false,
+        globalObject: 'globalThis',
+      },
+      plugins: [pluginReactLynx()],
+    })
+    await expect(resolveExternal(rslibConfig, '@lynx-js/react')).resolves
+      .toEqual([
+        'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
+        'CustomRuntime',
+        'React',
+      ])
+    await expect(resolveExternal(rslibConfig, '@lynx-js/react/jsx-runtime'))
+      .resolves.toEqual([
+        'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
+        'ReactLynx',
+        'ReactJSXRuntime',
+      ])
+  })
+
+  it('should allow custom externals presets that are not built in', async () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      id: 'utils-custom-preset',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist'),
+        },
+        externalsPresets: {
+          tux: true,
+        },
+        externalsPresetDefinitions: {
+          tux: {
+            externals: {
+              '@lynx-js/react': ['TuxRuntime', 'React'],
+              '@lynx-js/react/jsx-runtime': ['TuxRuntime', 'ReactJSXRuntime'],
+            },
+          },
+        },
+        minify: false,
+        globalObject: 'globalThis',
+      },
+      plugins: [pluginReactLynx()],
+    })
+    await expect(resolveExternal(rslibConfig, '@lynx-js/react')).resolves
+      .toEqual([
+        'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
+        'TuxRuntime',
+        'React',
+      ])
+    await expect(resolveExternal(rslibConfig, '@lynx-js/react/jsx-runtime'))
+      .resolves.toEqual([
+        'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
+        'TuxRuntime',
+        'ReactJSXRuntime',
+      ])
   })
 
   it('should mount externals library to globalThis', async () => {

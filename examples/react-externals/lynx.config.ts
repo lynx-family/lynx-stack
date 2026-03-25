@@ -15,7 +15,6 @@ export default defineConfig({
       },
     }),
     pluginExternalBundle({
-      externalBundleRoot: 'dist-external-bundle',
       externalsPresets: {
         reactlynx: true,
       },

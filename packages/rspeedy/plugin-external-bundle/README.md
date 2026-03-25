@@ -34,7 +34,6 @@ export default {
   plugins: [
     pluginReactLynx(),
     pluginExternalBundle({
-      externalBundleRoot: 'dist-external-bundle',
       externalsPresets: {
         reactlynx: true,
       },
@@ -78,7 +77,6 @@ For example, if your component library is built into `dist-external-bundle`, set
 
 ```ts
 pluginExternalBundle({
-  externalBundleRoot: 'dist-external-bundle',
   externals: {
     './components': {
       bundlePath: 'comp.lynx.bundle',
@@ -97,6 +95,32 @@ Then:
 ## ReactLynx preset
 
 `externalsPresets.reactlynx` expands the standard ReactLynx module requests automatically, so you do not need to write the full externals map by hand.
+
+If your app needs business-specific presets, define them next to
+`externalsPresets`:
+
+```ts
+pluginExternalBundle({
+  externalsPresets: {
+    tux: true,
+  },
+  externalsPresetDefinitions: {
+    tux: {
+      resolveExternals() {
+        return {
+          '@acme/tux': {
+            libraryName: ['TuxRuntime', 'Tux'],
+            bundlePath: 'tux.lynx.bundle',
+            background: { sectionPath: 'TuxRuntime' },
+            mainThread: { sectionPath: 'TuxRuntime__main-thread' },
+            async: false,
+          },
+        }
+      },
+    },
+  },
+})
+```
 
 Use it together with `@lynx-js/lynx-bundle-rslib-config` when producing external bundles:
 

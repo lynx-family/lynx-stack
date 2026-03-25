@@ -26,7 +26,7 @@ import { pluginStubLayers } from './stub-layers.plugin.js'
 class MockResponse extends Writable {
   headers = new Map<string, string>()
 
-  _write(
+  override _write(
     _chunk: unknown,
     _encoding: BufferEncoding,
     callback: (error?: Error | null) => void,
@@ -87,6 +87,7 @@ describe('pluginExternalBundle', () => {
     let capturedPlugins: unknown[] = []
 
     const rsbuild = await createRsbuild({
+      cwd: __dirname,
       rsbuildConfig: {
         dev: {
           assetPrefix: 'http://example.com/assets/',
@@ -143,6 +144,7 @@ describe('pluginExternalBundle', () => {
     const { pluginExternalBundle } = await import('../src/index.js')
 
     const rsbuild = await createRsbuild({
+      cwd: __dirname,
       rsbuildConfig: {
         source: {
           entry: {
@@ -176,6 +178,7 @@ describe('pluginExternalBundle', () => {
     let capturedPlugins: unknown[] = []
 
     const rsbuild = await createRsbuild({
+      cwd: __dirname,
       rsbuildConfig: {
         source: {
           entry: {
@@ -212,6 +215,7 @@ describe('pluginExternalBundle', () => {
     let capturedPlugins: unknown[] = []
 
     const rsbuild = await createRsbuild({
+      cwd: __dirname,
       rsbuildConfig: {
         dev: {
           assetPrefix: 'http://example.com/assets/',
@@ -260,6 +264,7 @@ describe('pluginExternalBundle', () => {
     let capturedPlugins: unknown[] = []
 
     const rsbuild = await createRsbuild({
+      cwd: __dirname,
       rsbuildConfig: {
         dev: {
           assetPrefix: 'http://100.82.226.164:<port>/',
@@ -306,6 +311,7 @@ describe('pluginExternalBundle', () => {
 
     try {
       const rsbuild = await createRsbuild({
+        cwd: __dirname,
         rsbuildConfig: {
           output: {
             distPath: {
@@ -345,6 +351,7 @@ describe('pluginExternalBundle', () => {
     let capturedPlugins: unknown[] = []
 
     const rsbuild = await createRsbuild({
+      cwd: __dirname,
       rsbuildConfig: {
         dev: {
           assetPrefix: 'http://example.com/assets/',
@@ -385,12 +392,73 @@ describe('pluginExternalBundle', () => {
     expect(rsbuild.getNormalizedConfig().dev?.setupMiddlewares).toBeUndefined()
   })
 
+  test('should allow custom externals presets from plugin options', async () => {
+    const { pluginExternalBundle } = await import('../src/index.js')
+
+    let capturedPlugins: unknown[] = []
+
+    const rsbuild = await createRsbuild({
+      cwd: __dirname,
+      rsbuildConfig: {
+        source: {
+          entry: {
+            main: './fixtures/basic.tsx',
+          },
+        },
+        tools: {
+          rspack(config) {
+            capturedPlugins = config.plugins || []
+            return config
+          },
+        },
+        plugins: [
+          pluginStubLayers(),
+          pluginExternalBundle({
+            externalsPresets: {
+              tux: true,
+            },
+            externalsPresetDefinitions: {
+              tux: {
+                resolveExternals() {
+                  return {
+                    '@acme/tux': {
+                      libraryName: ['TuxRuntime', 'Tux'],
+                      bundlePath: 'tux.lynx.bundle',
+                      background: { sectionPath: 'TuxRuntime' },
+                      mainThread: { sectionPath: 'TuxRuntime__main-thread' },
+                      async: false,
+                    },
+                  }
+                },
+              },
+            },
+          }),
+        ],
+      },
+    })
+
+    await rsbuild.inspectConfig()
+
+    const externalBundlePlugin = getExternalsLoadingPlugin(capturedPlugins)
+    const externals = getExternalsLoadingPluginOptions(externalBundlePlugin)
+      .externals
+
+    expect(externals?.['@acme/tux']).toMatchObject({
+      libraryName: ['TuxRuntime', 'Tux'],
+      bundlePath: 'tux.lynx.bundle',
+      background: { sectionPath: 'TuxRuntime' },
+      mainThread: { sectionPath: 'TuxRuntime__main-thread' },
+      async: false,
+    })
+  })
+
   test('should resolve explicit external bundle paths against assetPrefix', async () => {
     const { pluginExternalBundle } = await import('../src/index.js')
 
     let capturedPlugins: unknown[] = []
 
     const rsbuild = await createRsbuild({
+      cwd: __dirname,
       rsbuildConfig: {
         dev: {
           assetPrefix: 'http://example.com/assets/',
@@ -449,6 +517,7 @@ describe('pluginExternalBundle', () => {
 
     try {
       const rsbuild = await createRsbuild({
+        cwd: __dirname,
         rsbuildConfig: {
           source: {
             entry: {
@@ -478,9 +547,13 @@ describe('pluginExternalBundle', () => {
       const setupMiddlewares = rsbuild.getNormalizedConfig().dev
         ?.setupMiddlewares as SetupMiddlewares[] | undefined
       expect(setupMiddlewares).toHaveLength(1)
+      const firstSetupMiddleware = setupMiddlewares?.[0]
+      expect(firstSetupMiddleware).toBeDefined()
 
-      const middlewares = setupMiddlewares?.[0]([]) ?? []
+      const middlewares = firstSetupMiddleware ? firstSetupMiddleware([]) : []
       expect(middlewares).toHaveLength(1)
+      const firstMiddleware = middlewares[0]
+      expect(firstMiddleware).toBeDefined()
 
       let nextCalled = false
       const res = new MockResponse()
@@ -489,11 +562,11 @@ describe('pluginExternalBundle', () => {
         res.on('error', reject)
       })
 
-      middlewares[0](
+      firstMiddleware!(
         {
           url: '/nested/comp-lib.lynx.bundle',
         } as IncomingMessage & { url?: string },
-        res as ServerResponse,
+        res as unknown as ServerResponse,
         () => {
           nextCalled = true
         },
@@ -529,6 +602,7 @@ describe('pluginExternalBundle', () => {
 
     try {
       const rsbuild = await createRsbuild({
+        cwd: __dirname,
         rsbuildConfig: {
           output: {
             distPath: {
@@ -581,6 +655,7 @@ describe('pluginExternalBundle', () => {
     let capturedPlugins: unknown[] = []
 
     const rsbuild = await createRsbuild({
+      cwd: __dirname,
       rsbuildConfig: {
         source: {
           entry: {
@@ -629,6 +704,7 @@ describe('pluginExternalBundle', () => {
     let capturedPlugins: unknown[] = []
 
     const rsbuild = await createRsbuild({
+      cwd: __dirname,
       rsbuildConfig: {
         source: {
           entry: {

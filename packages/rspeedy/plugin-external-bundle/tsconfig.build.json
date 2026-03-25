@@ -6,7 +6,7 @@
     "rootDir": "./src",
   },
   "references": [
-    { "path": "../core/tsconfig.build.json" },
+    { "path": "../../webpack/externals-loading-webpack-plugin/tsconfig.build.json" },
   ],
   "include": ["src"],
 }

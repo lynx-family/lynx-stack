@@ -28,6 +28,7 @@ interface ExposedLayers {
 
 const require = createRequire(import.meta.url)
 
+const DEFAULT_REACT_UMD_PACKAGE_NAME = '@lynx-js/react-umd'
 const REACT_LYNX_BUNDLE_FILE_NAME = 'react.lynx.bundle'
 
 const reactLynxExternalTemplate = {
@@ -105,6 +106,22 @@ const reactLynxExternalTemplate = {
   },
 } satisfies Record<string, Omit<ExternalValue, 'url'>>
 
+type ExternalsPresetValue = boolean | object
+
+type ManagedBundleAssets = Map<string, string>
+
+function toManagedBundleAssets(
+  assets?: ManagedBundleAssets | Record<string, string>,
+): ManagedBundleAssets {
+  if (!assets) {
+    return new Map()
+  }
+  if (assets instanceof Map) {
+    return new Map(assets)
+  }
+  return new Map(Object.entries(assets))
+}
+
 /**
  * Options for the built-in `reactlynx` externals preset.
  *
@@ -124,6 +141,16 @@ export interface ReactLynxExternalsPresetOptions {
    * @defaultValue `'react.lynx.bundle'`
    */
   bundlePath?: string
+
+  /**
+   * Package name that provides the ReactLynx runtime bundle.
+   *
+   * Override this when wrapping the plugin for another distribution, such as
+   * `@byted-lynx/react-umd`.
+   *
+   * @defaultValue `'@lynx-js/react-umd'`
+   */
+  reactUmdPackageName?: string
 
   /**
    * Override the runtime bundle URL directly.
@@ -148,7 +175,70 @@ export interface ExternalsPresets {
    * Load the ReactLynx runtime bundle and wire its standard module globals.
    */
   reactlynx?: boolean | ReactLynxExternalsPresetOptions
+
+  /**
+   * Additional custom preset flags.
+   */
+  [presetName: string]: boolean | object | undefined
 }
+
+/**
+ * Context passed to externals preset resolvers.
+ *
+ * @public
+ */
+export interface ExternalsPresetContext {
+  /**
+   * The current Rsbuild project root path.
+   */
+  rootPath: string
+}
+
+/**
+ * Definition for a named externals preset.
+ *
+ * @public
+ */
+export interface ExternalsPresetDefinition {
+  /**
+   * Other preset names to apply before the current preset.
+   */
+  extends?: string | string[]
+
+  /**
+   * Resolve external request mappings contributed by this preset.
+   */
+  resolveExternals?: (
+    value: boolean | object,
+    context: ExternalsPresetContext,
+  ) => ExternalsLoadingPluginOptions['externals']
+
+  /**
+   * Resolve managed bundle assets contributed by this preset.
+   */
+  resolveManagedAssets?: (
+    value: boolean | object,
+    context: ExternalsPresetContext,
+  ) => Map<string, string> | Record<string, string>
+}
+
+/**
+ * Available externals preset definitions.
+ *
+ * @public
+ */
+export type ExternalsPresetDefinitions = Record<
+  string,
+  ExternalsPresetDefinition
+>
+
+/**
+ * Built-in externals preset definitions.
+ *
+ * @public
+ */
+export const builtInExternalsPresetDefinitions: ExternalsPresetDefinitions =
+  createBuiltInExternalsPresetDefinitions()
 
 /**
  * Options for the external-bundle-rsbuild-plugin.
@@ -181,6 +271,14 @@ export interface PluginExternalBundleOptions extends
    * Built-in externals presets.
    */
   externalsPresets?: ExternalsPresets
+
+  /**
+   * Definitions for custom externals presets enabled by `externalsPresets`.
+   *
+   * Use this to add business-specific presets such as `tux`, or to extend a
+   * built-in preset through `extends`.
+   */
+  externalsPresetDefinitions?: ExternalsPresetDefinitions
 }
 
 /**
@@ -220,21 +318,214 @@ function normalizeReactLynxPreset(
   return preset === true ? {} : preset
 }
 
-function normalizeBundlePath(bundlePath: string): string {
+/**
+ * Normalize a public bundle path by removing leading slashes.
+ *
+ * @public
+ */
+export function normalizeBundlePath(bundlePath: string): string {
   return bundlePath.replace(/^\/+/, '')
 }
 
-function getReactLynxBundlePath(): string {
+function createBuiltInExternalsPresetDefinitions(): ExternalsPresetDefinitions {
+  return {
+    reactlynx: {
+      resolveExternals(value) {
+        return createReactLynxExternals(
+          normalizeReactLynxPreset(value as ExternalsPresets['reactlynx']),
+        )
+      },
+      resolveManagedAssets(value, context) {
+        const preset = normalizeReactLynxPreset(
+          value as ExternalsPresets['reactlynx'],
+        )
+        if (!preset || preset.url) {
+          return new Map()
+        }
+        return new Map([
+          [
+            getDefaultReactLynxBundlePath(preset),
+            getReactLynxBundlePath(
+              context.rootPath,
+              preset.reactUmdPackageName ?? DEFAULT_REACT_UMD_PACKAGE_NAME,
+            ),
+          ],
+        ])
+      },
+    },
+  }
+}
+
+function getReactLynxBundlePath(
+  rootPath: string,
+  reactUmdPackageName: string,
+): string {
   const reactUmdExport = process.env['NODE_ENV'] === 'production'
-    ? '@lynx-js/react-umd/prod'
-    : '@lynx-js/react-umd/dev'
+    ? `${reactUmdPackageName}/prod`
+    : `${reactUmdPackageName}/dev`
   try {
-    return require.resolve(reactUmdExport)
+    return require.resolve(reactUmdExport, { paths: [rootPath] })
   } catch {
     throw new Error(
-      `external-bundle-rsbuild-plugin requires \`${reactUmdExport}\` when \`externalsPresets.reactlynx\` is enabled. Install a compatible \`@lynx-js/react-umd\` peer dependency.`,
+      `external-bundle-rsbuild-plugin requires \`${reactUmdExport}\` when \`externalsPresets.reactlynx\` is enabled. Install a compatible \`${reactUmdPackageName}\` into your devDependencies.`,
     )
   }
+}
+
+function mergePresetDefinitions(
+  baseDefinition: ExternalsPresetDefinition,
+  extraDefinition: ExternalsPresetDefinition,
+): ExternalsPresetDefinition {
+  const baseExtends = baseDefinition.extends
+    ? (Array.isArray(baseDefinition.extends)
+      ? baseDefinition.extends
+      : [baseDefinition.extends])
+    : []
+  const extraExtends = extraDefinition.extends
+    ? (Array.isArray(extraDefinition.extends)
+      ? extraDefinition.extends
+      : [extraDefinition.extends])
+    : []
+
+  return {
+    extends: [...baseExtends, ...extraExtends],
+    resolveExternals(value, context) {
+      return {
+        ...(baseDefinition.resolveExternals?.(value, context) ?? {}),
+        ...(extraDefinition.resolveExternals?.(value, context) ?? {}),
+      }
+    },
+    resolveManagedAssets(value, context) {
+      const assets = toManagedBundleAssets(
+        baseDefinition.resolveManagedAssets?.(value, context),
+      )
+      for (
+        const [bundlePath, sourcePath] of toManagedBundleAssets(
+          extraDefinition.resolveManagedAssets?.(value, context),
+        )
+      ) {
+        assets.set(bundlePath, sourcePath)
+      }
+      return assets
+    },
+  }
+}
+
+function resolvePresetDefinitions(
+  presetDefinitions?: ExternalsPresetDefinitions,
+): ExternalsPresetDefinitions {
+  const resolvedDefinitions: ExternalsPresetDefinitions = {
+    ...createBuiltInExternalsPresetDefinitions(),
+  }
+
+  for (
+    const [presetName, presetDefinition] of Object.entries(
+      presetDefinitions ?? {},
+    )
+  ) {
+    const builtInDefinition = builtInExternalsPresetDefinitions[presetName]
+    resolvedDefinitions[presetName] = builtInDefinition
+      ? mergePresetDefinitions(builtInDefinition, presetDefinition)
+      : presetDefinition
+  }
+
+  return resolvedDefinitions
+}
+
+function resolvePresetResult(
+  presetName: string,
+  presetValue: ExternalsPresetValue,
+  presetDefinitions: ExternalsPresetDefinitions,
+  resolving: string[],
+  context: ExternalsPresetContext,
+): {
+  externals: ExternalsLoadingPluginOptions['externals']
+  managedAssets: ManagedBundleAssets
+} {
+  const presetDefinition = presetDefinitions[presetName]
+  if (!presetDefinition) {
+    throw new Error(
+      `Unknown externals preset "${presetName}". Define it in \`externalsPresetDefinitions\` before enabling it in \`externalsPresets\`.`,
+    )
+  }
+
+  if (resolving.includes(presetName)) {
+    throw new Error(
+      `Circular externals preset dependency detected: ${
+        [...resolving, presetName].join(' -> ')
+      }`,
+    )
+  }
+
+  const externals = {}
+  const managedAssets = new Map<string, string>()
+  const nextResolving = [...resolving, presetName]
+  const inheritedPresetNames = presetDefinition.extends
+    ? (Array.isArray(presetDefinition.extends)
+      ? presetDefinition.extends
+      : [presetDefinition.extends])
+    : []
+
+  for (const inheritedPresetName of inheritedPresetNames) {
+    const inheritedResult = resolvePresetResult(
+      inheritedPresetName,
+      true,
+      presetDefinitions,
+      nextResolving,
+      context,
+    )
+    Object.assign(externals, inheritedResult.externals)
+    for (const [bundlePath, sourcePath] of inheritedResult.managedAssets) {
+      managedAssets.set(bundlePath, sourcePath)
+    }
+  }
+
+  Object.assign(
+    externals,
+    presetDefinition.resolveExternals?.(presetValue, context) ?? {},
+  )
+  for (
+    const [bundlePath, sourcePath] of toManagedBundleAssets(
+      presetDefinition.resolveManagedAssets?.(presetValue, context),
+    )
+  ) {
+    managedAssets.set(bundlePath, sourcePath)
+  }
+
+  return { externals, managedAssets }
+}
+
+function resolvePresetExternals(
+  externalsPresets: ExternalsPresets | undefined,
+  presetDefinitions: ExternalsPresetDefinitions,
+  context: ExternalsPresetContext,
+): {
+  externals: ExternalsLoadingPluginOptions['externals']
+  managedAssets: ManagedBundleAssets
+} {
+  const externals = {}
+  const managedAssets = new Map<string, string>()
+
+  for (
+    const [presetName, presetValue] of Object.entries(externalsPresets ?? {})
+  ) {
+    if (!presetValue) {
+      continue
+    }
+    const resolvedPreset = resolvePresetResult(
+      presetName,
+      presetValue,
+      presetDefinitions,
+      [],
+      context,
+    )
+    Object.assign(externals, resolvedPreset.externals)
+    for (const [bundlePath, sourcePath] of resolvedPreset.managedAssets) {
+      managedAssets.set(bundlePath, sourcePath)
+    }
+  }
+
+  return { externals, managedAssets }
 }
 
 function createReactLynxExternals(
@@ -267,7 +558,10 @@ class EmitManagedBundleAssetsPlugin {
         compilation.hooks.processAssets.tap(
           {
             name: EmitManagedBundleAssetsPlugin.name,
-            stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+            // Emit managed bundle files after optimization so binary template
+            // assets such as `*.template.js` are not treated as JS chunks by
+            // later minification stages.
+            stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT,
           },
           () => {
             const { RawSource } = compiler.webpack.sources
@@ -316,76 +610,24 @@ function joinUrlPath(base: string | undefined, bundlePath: string) {
   return `${normalizedBase.replace(/\/$/, '')}/${normalizedBundlePath}`
 }
 
-function getDistPathRoot(
-  distPath: string | { root?: string } | undefined,
-): string | undefined {
-  if (typeof distPath === 'string') {
-    return distPath
-  }
-  return distPath?.root
-}
-
-function getConfigDistPathRoot(
-  config: {
-    output?: unknown
-  },
-): string | undefined {
-  if (!config.output || typeof config.output !== 'object') {
-    return undefined
-  }
-
-  const output = config.output as {
-    distPath?: string | { root?: string }
-  }
-  return getDistPathRoot(output.distPath)
-}
-
-function getOutputDistRoot(
-  api: RsbuildPluginAPI,
-  config: {
-    output?: unknown
-  },
-): string {
-  const originalConfig = api.getRsbuildConfig('original')
-  const distRoot = getConfigDistPathRoot(config)
-    ?? getDistPathRoot(originalConfig.output?.distPath)
-    ?? 'dist'
-
-  return path.resolve(api.context.rootPath, distRoot)
-}
-
 function getExternalBundleRoot(
   options: PluginExternalBundleOptions,
   api: RsbuildPluginAPI,
-  config: {
-    output?: unknown
-  },
 ): string {
-  if (options.externalBundleRoot) {
-    return path.resolve(api.context.rootPath, options.externalBundleRoot)
-  }
-
-  return getOutputDistRoot(api, config)
+  return path.resolve(
+    api.context.rootPath,
+    options.externalBundleRoot ?? 'dist-external-bundle',
+  )
 }
 
 function getManagedBundleAssets(
   options: PluginExternalBundleOptions,
-  reactLynxPreset: ReactLynxExternalsPresetOptions | undefined,
+  presetManagedAssets: ManagedBundleAssets,
   api: RsbuildPluginAPI,
-  config: {
-    output?: unknown
-  },
 ): Map<string, string> {
-  const assets = new Map<string, string>()
+  const assets = new Map<string, string>(presetManagedAssets)
 
-  if (reactLynxPreset && !reactLynxPreset.url) {
-    assets.set(
-      getDefaultReactLynxBundlePath(reactLynxPreset),
-      getReactLynxBundlePath(),
-    )
-  }
-
-  const externalBundleRoot = getExternalBundleRoot(options, api, config)
+  const externalBundleRoot = getExternalBundleRoot(options, api)
   for (const external of Object.values(options.externals ?? {})) {
     if (external.url || !external.bundlePath) {
       continue
@@ -405,20 +647,16 @@ function getManagedBundleAssets(
 
 function getLocalBundleAssets(
   options: PluginExternalBundleOptions,
-  reactLynxPreset: ReactLynxExternalsPresetOptions | undefined,
+  presetManagedAssets: ManagedBundleAssets,
   api: RsbuildPluginAPI,
-  config: {
-    output?: unknown
-  },
   serverBase: string | undefined,
 ): Map<string, string> {
   const assets = new Map<string, string>()
   for (
     const [bundlePath, sourcePath] of getManagedBundleAssets(
       options,
-      reactLynxPreset,
+      presetManagedAssets,
       api,
-      config,
     )
   ) {
     assets.set(
@@ -476,16 +714,22 @@ export function pluginExternalBundle(
   return {
     name: 'lynx:external-bundle',
     setup(api) {
-      const reactLynxPreset = normalizeReactLynxPreset(
-        options.externalsPresets?.reactlynx,
+      const presetDefinitions = resolvePresetDefinitions(
+        options.externalsPresetDefinitions,
+      )
+      const presetResolution = resolvePresetExternals(
+        options.externalsPresets,
+        presetDefinitions,
+        {
+          rootPath: api.context.rootPath,
+        },
       )
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
         const localBundleAssets = getLocalBundleAssets(
           options,
-          reactLynxPreset,
+          presetResolution.managedAssets,
           api,
-          config,
           config.server?.base,
         )
 
@@ -535,23 +779,17 @@ export function pluginExternalBundle(
           )
         }
 
-        const reactLynxExternals = reactLynxPreset
-          ? createReactLynxExternals(
-            reactLynxPreset,
-          )
-          : {}
         const explicitExternals = resolvePluginExternals(
           options.externals,
         )
         const externals = {
-          ...reactLynxExternals,
+          ...presetResolution.externals,
           ...explicitExternals,
         }
         const managedBundleAssets = getManagedBundleAssets(
           options,
-          reactLynxPreset,
+          presetResolution.managedAssets,
           api,
-          config,
         )
 
         config.plugins = config.plugins || []
