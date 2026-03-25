@@ -64,6 +64,14 @@ export function applyEntry(
     const enableChunkSplitting =
       rsbuildConfig.performance?.chunkSplit?.strategy !== 'all-in-one'
 
+    const { resolve } = api.useExposed<
+      { resolve: (request: string) => Promise<string> }
+    >(Symbol.for('@lynx-js/react/internal:resolve'))!
+
+    const workletRuntimePath = await resolve(
+      `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,
+    )
+
     const isRspeedy = api.context.callerName === 'rspeedy'
     if (isRspeedy) {
       // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
@@ -128,7 +136,7 @@ export function applyEntry(
           .entry(mainThreadEntry)
           .add({
             layer: LAYERS.MAIN_THREAD,
-            import: imports,
+            import: [...imports, workletRuntimePath],
             filename: mainThreadName,
           })
           .when(enabledHMR, entry => {
@@ -262,10 +270,6 @@ export function applyEntry(
       extractStr = false
     }
 
-    const { resolve } = api.useExposed<
-      { resolve: (request: string) => Promise<string> }
-    >(Symbol.for('@lynx-js/react/internal:resolve'))!
-
     chain
       .plugin(PLUGIN_NAME_REACT)
       .after(PLUGIN_NAME_TEMPLATE)
@@ -279,9 +283,7 @@ export function applyEntry(
         extractStr,
         experimental_isLazyBundle,
         profile: getDefaultProfile(),
-        workletRuntimePath: await resolve(
-          `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,
-        ),
+        workletRuntimePath,
       }])
 
     function getDefaultProfile(): boolean | undefined {
