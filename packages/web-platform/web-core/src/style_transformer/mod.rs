@@ -15,7 +15,7 @@
 #[cfg(any(feature = "client", feature = "server"))]
 mod inline_style;
 mod rules;
-mod token_transformer;
+pub mod token_transformer;
 mod transformer;
 #[cfg(any(feature = "client", feature = "server"))]
 pub(crate) use inline_style::transform_inline_style_key_value_vec;

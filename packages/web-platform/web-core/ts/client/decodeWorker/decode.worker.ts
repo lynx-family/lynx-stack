@@ -106,7 +106,7 @@ self.onmessage = async (
     wasmInstance.initSync({ module: wasmModule });
     wasmModuleLoadedResolve();
   } else if (data.type === 'load') {
-    const { url, fetchUrl, overrideConfig } = data;
+    const { url, fetchUrl, overrideConfig, transformVW, transformVH } = data;
     try {
       const response = await fetch(fetchUrl, {
         headers: {
@@ -117,7 +117,7 @@ self.onmessage = async (
         throw new Error(`Failed to fetch template: ${response.statusText}`);
       }
       const reader = response.body.getReader();
-      await handleStream(url, reader, overrideConfig);
+      await handleStream(url, reader, transformVW, transformVH, overrideConfig);
       postMessage({ type: 'done', url } as MainMessage);
     } catch (error) {
       postMessage(
@@ -129,6 +129,8 @@ self.onmessage = async (
 async function handleStream(
   url: string,
   reader: ReadableStreamDefaultReader<Uint8Array>,
+  transformVW: boolean,
+  transformVH: boolean,
   overrideConfig?: Partial<PageConfig>,
 ) {
   const streamReader = new StreamReader(reader);
@@ -146,7 +148,7 @@ async function handleStream(
     const decoder = new TextDecoder();
     const jsonStr = decoder.decode(headerBytes) + decoder.decode(rest);
     const json = JSON.parse(jsonStr);
-    await handleJSON(json, url, overrideConfig);
+    await handleJSON(json, url, transformVW, transformVH, overrideConfig);
     return;
   }
 
@@ -223,6 +225,8 @@ async function handleStream(
           content,
           config['isLazy'] === 'true' ? url : undefined,
           config['enableCSSSelector'] === 'true',
+          transformVW,
+          transformVH,
         );
         postMessage(
           {
@@ -307,6 +311,8 @@ async function handleStream(
 async function handleJSON(
   json: any,
   url: string,
+  transformVW: boolean,
+  transformVH: boolean,
   overrideConfig?: Partial<PageConfig>,
 ) {
   // Configurations
@@ -342,6 +348,8 @@ async function handleJSON(
     const buffer = loadStyleFromJSON(
       json.styleInfo,
       config['enableCSSSelector'] === 'true',
+      transformVW,
+      transformVH,
       config['isLazy'] === 'true' ? url : undefined,
     );
     postMessage(

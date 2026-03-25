@@ -13,6 +13,8 @@ export interface InitMessage extends DecodeWorkerMessage {
 export interface LoadTemplateMessage extends DecodeWorkerMessage {
   type: 'load';
   fetchUrl: string;
+  transformVW: boolean;
+  transformVH: boolean;
   overrideConfig?: Record<string, string>;
 }
 

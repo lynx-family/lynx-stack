@@ -7,6 +7,12 @@
 lynx-view {
   contain: strict;
   display: none;
+  width: 100%;
+  container-name: lynx-view;
+  container-type: inline-size;
+  --rpx-unit: 1cqw;
+  --vw-unit: 1vw;
+  --vh-unit: 1vh;
 }
 
 lynx-view[ssr] {
@@ -27,6 +33,24 @@ lynx-view[width="auto"] {
 lynx-view::part(page) {
   height: 100%;
   width: 100%;
+  --rpx-unit: inherit;
+  --vw-unit: inherit;
+  --vh-unit: inherit;
+}
+
+@property --rpx-unit {
+  syntax: "<length>";
+  inherits: true;
+}
+
+@property --vw-unit {
+  syntax: "<length>";
+  inherits: true;
+}
+
+@property --vh-unit {
+  syntax: "<length>";
+  inherits: true;
 }
 
 @property --lynx-display {

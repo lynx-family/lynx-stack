@@ -87,6 +87,8 @@ export class LynxViewElement extends HTMLElement {
     'global-props',
     'init-data',
     'browser-config',
+    'transform-vw',
+    'transform-vh',
   ];
   /**
    * @private
@@ -136,6 +138,42 @@ export class LynxViewElement extends HTMLElement {
       }
     } else {
       this.#browserConfig = val;
+    }
+  }
+
+  #transformVW: boolean = false;
+  /**
+   * @public
+   * @property transformVW
+   * Enable evaluating vw subset to the current LynxView container width
+   */
+  get transformVW(): boolean {
+    return this.#transformVW;
+  }
+  set transformVW(val: boolean) {
+    this.#transformVW = val;
+    if (val) {
+      this.setAttribute('transform-vw', '');
+    } else {
+      this.removeAttribute('transform-vw');
+    }
+  }
+
+  #transformVH: boolean = false;
+  /**
+   * @public
+   * @property transformVH
+   * Enable evaluating vh subset to the current LynxView container height
+   */
+  get transformVH(): boolean {
+    return this.#transformVH;
+  }
+  set transformVH(val: boolean) {
+    this.#transformVH = val;
+    if (val) {
+      this.setAttribute('transform-vh', '');
+    } else {
+      this.removeAttribute('transform-vh');
     }
   }
 
@@ -343,6 +381,12 @@ export class LynxViewElement extends HTMLElement {
         case 'init-data':
           this.#initData = JSON.parse(newValue);
           break;
+        case 'transform-vw':
+          this.transformVW = newValue !== 'false' && newValue !== null;
+          break;
+        case 'transform-vh':
+          this.transformVH = newValue !== 'false' && newValue !== null;
+          break;
       }
     }
   }
@@ -427,10 +471,18 @@ export class LynxViewElement extends HTMLElement {
               this.nativeModulesMap,
               this.napiModulesMap,
               this.#initI18nResources,
+              this.transformVW,
+              this.transformVH,
               this.browserConfig,
             );
           });
-          templateManager.fetchBundle(this.#url, lynxViewInstance);
+          templateManager.fetchBundle(
+            this.#url,
+            lynxViewInstance,
+            this.transformVW,
+            this.transformVH,
+            undefined, // overrideConfig
+          );
 
           const lynxGroupId = this.lynxGroupId;
           this.#instance = await lynxViewInstance;
@@ -453,6 +505,8 @@ export class LynxViewElement extends HTMLElement {
    */
   connectedCallback() {
     this.#upgradeProperty('browserConfig');
+    this.#upgradeProperty('transformVW');
+    this.#upgradeProperty('transformVH');
     if (this.url) {
       this.#url = this.url;
     }

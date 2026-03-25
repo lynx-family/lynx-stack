@@ -45,6 +45,8 @@ export class TemplateManager {
   public fetchBundle(
     url: string,
     lynxViewInstancePromise: Promise<LynxViewInstance>,
+    transformVW: boolean,
+    transformVH: boolean,
     overrideConfig?: Record<string, string>,
   ): Promise<void> {
     if (this.#templates.has(url) && !overrideConfig) {
@@ -60,13 +62,21 @@ export class TemplateManager {
       })();
     } else {
       this.createTemplate(url);
-      return this.#load(url, lynxViewInstancePromise, overrideConfig);
+      return this.#load(
+        url,
+        lynxViewInstancePromise,
+        transformVW,
+        transformVH,
+        overrideConfig,
+      );
     }
   }
 
   async #load(
     url: string,
     lynxViewInstancePromise: Promise<LynxViewInstance>,
+    transformVW: boolean,
+    transformVH: boolean,
     overrideConfig?: Partial<PageConfig>,
   ): Promise<void> {
     const currentTime = performance.now() + performance.timeOrigin;
@@ -85,6 +95,8 @@ export class TemplateManager {
       type: 'load',
       url,
       fetchUrl: (new URL(url, location.href)).toString(),
+      transformVW,
+      transformVH,
       overrideConfig,
     };
     this.#worker!.postMessage(msg);

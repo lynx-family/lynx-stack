@@ -84,6 +84,8 @@ export class LynxViewInstance implements AsyncDisposable {
     nativeModulesMap: NativeModulesMap = {},
     napiModulesMap: NapiModulesMap = {},
     initI18nResources?: InitI18nResources,
+    private readonly transformVW: boolean = false,
+    private readonly transformVH: boolean = false,
     browserConfig?: Record<string, any>,
   ) {
     this.systemInfo = createSystemInfo(browserConfig);
@@ -128,6 +130,8 @@ export class LynxViewInstance implements AsyncDisposable {
         enableCSSSelector,
         defaultDisplayLinear,
         defaultOverflowVisible,
+        this.transformVW,
+        this.transformVH,
       ),
       createMainThreadGlobalAPIs(
         this,
@@ -224,9 +228,15 @@ export class LynxViewInstance implements AsyncDisposable {
     if (this.#queryComponentCache.has(url)) {
       return this.#queryComponentCache.get(url)!;
     }
-    const promise = templateManager.fetchBundle(url, Promise.resolve(this), {
-      enableCSSSelector: this.#pageConfig!['enableCSSSelector'],
-    })
+    const promise = templateManager.fetchBundle(
+      url,
+      Promise.resolve(this),
+      this.transformVW,
+      this.transformVH,
+      {
+        enableCSSSelector: this.#pageConfig!['enableCSSSelector'],
+      },
+    )
       .then(async () => {
         const urlMap = this.lepusCodeUrls.get(url);
         const rootUrl = urlMap?.['root'];

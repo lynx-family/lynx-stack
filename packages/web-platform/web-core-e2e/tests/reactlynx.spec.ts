@@ -375,6 +375,48 @@ test.describe('reactlynx3 tests', () => {
         'rgb(255, 255, 0)',
       ); // yellow
     });
+    test('basic-rpx-unit', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const lynxView = await page.locator('lynx-view');
+      await lynxView.evaluate((node) => {
+        node.style.width = '50px';
+      });
+      const target = await page.locator('#target');
+      await expect(target).toHaveCSS('height', '10px'); // 20cqw, 50 / 100 * 20 = 10px
+      await expect(target).toHaveCSS('width', '10px');
+    });
+
+    test('basic-vw-vh-unit', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const lynxView = await page.locator('lynx-view');
+      await lynxView.evaluate((node: any) => {
+        node.style.width = '50px';
+        node.style.height = '100px';
+        node.transformVW = true;
+        node.transformVH = true;
+        node.reload();
+      });
+      await wait(500); // Wait for the reload to rebuild the CSS properly
+
+      const target = await page.locator('#target');
+      // container is 50x100. target asks for 50vw x 50vh.
+      // With transform switches on, it falls back to container query height and width.
+      // So width = 50cqw = 25px, height = 50cqh = 50px
+      await expect(target).toHaveCSS('width', '25px');
+      await expect(target).toHaveCSS('height', '50px');
+
+      // Now disable switches and assert it breaks out of the container dimension limits
+      await lynxView.evaluate((node: any) => {
+        node.transformVW = false;
+        node.transformVH = false;
+        node.reload();
+      });
+      await wait(500); // Wait for the reload to rebuild the CSS properly
+      await expect(target).not.toHaveCSS('width', '25px');
+      await expect(target).not.toHaveCSS('height', '50px');
+    });
     test('basic-image', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);

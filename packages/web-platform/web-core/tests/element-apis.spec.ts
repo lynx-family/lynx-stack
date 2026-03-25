@@ -401,6 +401,40 @@ describe('Element APIs', () => {
     expect(targetStyle).toContain('30px');
     expect(targetStyle).toContain('10px');
   });
+  test('__SetInlineStyles with rpx', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    let target = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__SetID(target, 'target');
+    mtsGlobalThis.__SetInlineStyles(target, 'margin: 10rpx; width: 50.5rpx;');
+    mtsGlobalThis.__AppendElement(root, target);
+    mtsGlobalThis.__FlushElementTree();
+    const targetDom = rootDom.querySelector('#target') as HTMLElement;
+    const targetStyle = targetDom.getAttribute('style');
+    expect(targetStyle).toContain('calc(10 * var(--rpx-unit))');
+    expect(targetStyle).toContain('calc(50.5 * var(--rpx-unit))');
+  });
+
+  test('__SetInlineStyles with vw and vh when enabled', () => {
+    const mtsGlobalThisUnits = createElementAPI(
+      rootDom,
+      mtsBinding,
+      true,
+      true,
+      true,
+      true, // transformVW
+      true, // transformVH
+    );
+    const root = mtsGlobalThisUnits.__CreatePage('page', 0);
+    let target = mtsGlobalThisUnits.__CreateView(0);
+    mtsGlobalThisUnits.__SetID(target, 'target');
+    mtsGlobalThisUnits.__SetInlineStyles(target, 'width: 50vw; height: 100vh;');
+    mtsGlobalThisUnits.__AppendElement(root, target);
+    mtsGlobalThisUnits.__FlushElementTree();
+    const targetDom = rootDom.querySelector('#target') as HTMLElement;
+    const targetStyle = targetDom.getAttribute('style');
+    expect(targetStyle).toContain('calc(50 * var(--vw-unit))');
+    expect(targetStyle).toContain('calc(100 * var(--vh-unit))');
+  });
 
   test('__GetConfig__AddConfig', () => {
     let root = mtsGlobalThis.__CreatePage('page', 0);
