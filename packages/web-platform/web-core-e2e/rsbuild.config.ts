@@ -1,9 +1,11 @@
 import { defineConfig } from '@rsbuild/core';
 import { fileURLToPath } from 'node:url';
 import { ssrMiddleware } from './shell-project/devMiddleware.js';
+import { createWebVirtualFilesMiddleware } from '@lynx-js/web-rsbuild-server-middleware';
 
 const __filename = fileURLToPath(import.meta.url);
 const port = process.env.PORT ?? 3080;
+const main = createWebVirtualFilesMiddleware('/middleware');
 export default defineConfig({
   source: {
     entry: {
@@ -24,6 +26,7 @@ export default defineConfig({
     setupMiddlewares: [
       (middlewares: any) => {
         middlewares.unshift(ssrMiddleware);
+        middlewares.push(main);
         return middlewares;
       },
     ],
@@ -33,6 +36,11 @@ export default defineConfig({
     publicDir: [
       {
         name: '.',
+        copyOnBuild: false,
+        watch: false,
+      },
+      {
+        name: '../web-elements/tests/fixtures',
         copyOnBuild: false,
         watch: false,
       },

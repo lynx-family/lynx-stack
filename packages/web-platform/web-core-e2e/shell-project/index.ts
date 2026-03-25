@@ -158,6 +158,13 @@ if (casename) {
   if (casename === 'api-inject-style-rules') {
     lynxView.injectStyleRules = [`.injected-style-rules{background:green}`];
   }
+  if (casename === 'api-createLynxView-browserConfig') {
+    lynxView.browserConfig = {
+      pixelRatio: 1,
+      pixelWidth: 1234,
+      pixelHeight: 5678,
+    };
+  }
   lynxView.setAttribute('url', lynxTemplateUrl);
   lynxView.id = 'lynxview1';
   if (casename2) {
