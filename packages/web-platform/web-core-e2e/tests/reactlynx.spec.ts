@@ -392,8 +392,8 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       const lynxView = await page.locator('lynx-view');
       await lynxView.evaluate((node: any) => {
-        node.style.width = '50px';
-        node.style.height = '100px';
+        node.style.setProperty('--vh-unit', '10px');
+        node.style.setProperty('--vw-unit', '10px');
         node.transformVW = true;
         node.transformVH = true;
         node.reload();
@@ -404,8 +404,8 @@ test.describe('reactlynx3 tests', () => {
       // container is 50x100. target asks for 50vw x 50vh.
       // With transform switches on, it falls back to container query height and width.
       // So width = 50cqw = 25px, height = 50cqh = 50px
-      await expect(target).toHaveCSS('width', '25px');
-      await expect(target).toHaveCSS('height', '50px');
+      await expect(target).toHaveCSS('width', '500px');
+      await expect(target).toHaveCSS('height', '500px');
 
       // Now disable switches and assert it breaks out of the container dimension limits
       await lynxView.evaluate((node: any) => {
