@@ -170,7 +170,6 @@ export class LynxViewInstance implements AsyncDisposable {
     this.webElementsLoadingPromises.length = 0;
     this.backgroundThread.markTiming('data_processor_start');
     const processedData = this.#pageConfig?.['enableJSDataProcessor'] !== 'true'
-        && (this.#pageConfig?.['enableJSDataProcessor'] as unknown) !== true
         && this.mainThreadGlobalThis.processData
       ? this.mainThreadGlobalThis.processData?.(this.initData)
       : this.initData;
