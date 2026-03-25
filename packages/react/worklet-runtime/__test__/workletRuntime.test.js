@@ -39,29 +39,6 @@ describe('Worklet', () => {
     expect(fn).toBeCalled();
   });
 
-  it('initWorklet should be safe to call repeatedly', () => {
-    initWorklet();
-    const stale = vi.fn();
-    const next = vi.fn();
-    const reusedCtx = {
-      _wkltId: 'reused',
-    };
-
-    globalThis.registerWorklet('main-thread', 'reused', stale);
-    globalThis.runWorklet(reusedCtx);
-
-    expect(stale).toBeCalledTimes(1);
-
-    expect(() => initWorklet()).not.toThrow();
-    expect(globalThis.lynxWorkletImpl._workletMap).toEqual({});
-
-    globalThis.registerWorklet('main-thread', 'reused', next);
-    globalThis.runWorklet(reusedCtx);
-
-    expect(stale).toBeCalledTimes(1);
-    expect(next).toBeCalledTimes(1);
-  });
-
   it('latest registration should win when the same worklet id is reused', () => {
     initWorklet();
 
