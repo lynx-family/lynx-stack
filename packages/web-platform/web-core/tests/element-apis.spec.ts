@@ -436,6 +436,55 @@ describe('Element APIs', () => {
     expect(targetStyle).toContain('calc(100 * var(--vh-unit))');
   });
 
+  test('__SetInlineStyles with object and vw/vh when enabled', () => {
+    const mtsGlobalThisUnits = createElementAPI(
+      rootDom,
+      mtsBinding,
+      true,
+      true,
+      true,
+      true, // transformVW
+      true, // transformVH
+    );
+    const root = mtsGlobalThisUnits.__CreatePage('page', 0);
+    let target = mtsGlobalThisUnits.__CreateView(0);
+    mtsGlobalThisUnits.__SetID(target, 'target');
+    mtsGlobalThisUnits.__SetInlineStyles(target, {
+      width: '50vw',
+      height: '100vh',
+    });
+    mtsGlobalThisUnits.__AppendElement(root, target);
+    mtsGlobalThisUnits.__FlushElementTree();
+    const targetDom = rootDom.querySelector('#target') as HTMLElement;
+    const targetStyle = targetDom.getAttribute('style');
+    expect(targetStyle).toBe('width:50vw;height:100vh;');
+  });
+
+  test('__SetAttribute style with rpx, vw, vh', () => {
+    const mtsGlobalThisUnits = createElementAPI(
+      rootDom,
+      mtsBinding,
+      true,
+      true,
+      true,
+      true, // transformVW
+      true, // transformVH
+    );
+    const root = mtsGlobalThisUnits.__CreatePage('page', 0);
+    let target = mtsGlobalThisUnits.__CreateView(0);
+    mtsGlobalThisUnits.__SetID(target, 'target');
+    mtsGlobalThisUnits.__SetAttribute(
+      target,
+      'style',
+      'width: 50vw; height: 100vh; margin: 10rpx;',
+    );
+    mtsGlobalThisUnits.__AppendElement(root, target);
+    mtsGlobalThisUnits.__FlushElementTree();
+    const targetDom = rootDom.querySelector('#target') as HTMLElement;
+    const targetStyle = targetDom.getAttribute('style');
+    expect(targetStyle).toBe('width: 50vw; height: 100vh; margin: 10rpx;');
+  });
+
   test('__GetConfig__AddConfig', () => {
     let root = mtsGlobalThis.__CreatePage('page', 0);
     mtsGlobalThis.__AddConfig(root, 'key1', 'value1');
@@ -1373,6 +1422,73 @@ describe('Element APIs', () => {
   });
 
   describe('Server Element APIs SSR Propagation', () => {
+    test('ssr __SetInlineStyles and __SetAttribute style transformations', () => {
+      const binding: SSRBinding = { ssrResult: '' };
+      const config = {
+        enableCSSSelector: true,
+        defaultOverflowVisible: false,
+        defaultDisplayLinear: true,
+        transformVW: true,
+        transformVH: true,
+      };
+      const { globalThisAPIs: api, wasmContext: wasmCtx } =
+        createServerElementAPI(binding, undefined, '', config);
+
+      const root = api.__CreatePage('page', 0);
+
+      const view1 = api.__CreateElement('view', api.__GetElementUniqueID(root));
+      api.__SetAttribute(
+        view1,
+        'style',
+        'width: 50vw; height: 100vh; margin: 10rpx;',
+      );
+      api.__AppendElement(root, view1);
+
+      const view2 = api.__CreateElement('view', api.__GetElementUniqueID(root));
+      api.__SetInlineStyles(
+        view2,
+        'width: 50vw; height: 100vh; margin: 10rpx;',
+      );
+      api.__AppendElement(root, view2);
+
+      const view3 = api.__CreateElement('view', api.__GetElementUniqueID(root));
+      api.__SetInlineStyles(view3, {
+        width: '50vw',
+        height: '100vh',
+        margin: '10rpx',
+      });
+      api.__AppendElement(root, view3);
+
+      api.__FlushElementTree();
+
+      const html1 = wasmCtx.generate_html(api.__GetElementUniqueID(view1));
+      expect(html1).toContain('calc(50 * var(--vw-unit))');
+      expect(html1).toContain('calc(100 * var(--vh-unit))');
+      expect(html1).toContain('calc(10 * var(--rpx-unit))');
+
+      const html2 = wasmCtx.generate_html(api.__GetElementUniqueID(view2));
+      expect(html2).toContain('calc(50 * var(--vw-unit))');
+      expect(html2).toContain('calc(100 * var(--vh-unit))');
+      expect(html2).toContain('calc(10 * var(--rpx-unit))');
+
+      const html3 = wasmCtx.generate_html(api.__GetElementUniqueID(view3));
+      expect(html3).toContain('style="width:50vw;height:100vh;margin:10rpx;"');
+
+      const view4 = api.__CreateElement('view', api.__GetElementUniqueID(root));
+      api.__SetAttribute(
+        view4,
+        'style',
+        'width: 50vw; height: 100vh; margin: 10rpx;',
+      );
+      api.__AppendElement(root, view4);
+      api.__FlushElementTree();
+
+      const html4 = wasmCtx.generate_html(api.__GetElementUniqueID(view4));
+      expect(html4).toContain('calc(50 * var(--vw-unit))');
+      expect(html4).toContain('calc(100 * var(--vh-unit))');
+      expect(html4).toContain('calc(10 * var(--rpx-unit))');
+    });
+
     test('create element infer css id from parent component in SSR', () => {
       const binding: SSRBinding = {
         ssrResult: '',

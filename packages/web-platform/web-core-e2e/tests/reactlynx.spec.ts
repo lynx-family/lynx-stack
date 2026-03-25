@@ -401,9 +401,6 @@ test.describe('reactlynx3 tests', () => {
       await wait(500); // Wait for the reload to rebuild the CSS properly
 
       const target = await page.locator('#target');
-      // container is 50x100. target asks for 50vw x 50vh.
-      // With transform switches on, it falls back to container query height and width.
-      // So width = 50cqw = 25px, height = 50cqh = 50px
       await expect(target).toHaveCSS('width', '500px');
       await expect(target).toHaveCSS('height', '500px');
 
