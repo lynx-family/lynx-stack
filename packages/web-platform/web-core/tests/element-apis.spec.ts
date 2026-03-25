@@ -10,6 +10,8 @@ import {
 } from '../ts/server/elementAPIs/createElementAPI.js';
 import { wasmInstance } from '../ts/client/wasm.js';
 import { encodeCSS } from '../ts/encode/encodeCSS.js';
+import { createMainThreadGlobalAPIs } from '../ts/client/mainthread/createMainThreadGlobalAPIs.js';
+import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
 
 describe('Element APIs', () => {
   let lynxViewDom: HTMLElement;
@@ -1440,5 +1442,53 @@ describe('Element APIs', () => {
     expect(styleElement).not.toBeNull();
     expect(styleElement!.textContent).toContain('.test');
     expect(styleElement!.textContent).toContain('color:red');
+  });
+
+  test('__LoadLepusChunk with dynamicComponentEntry', () => {
+    const originalCancelAnimationFrame = globalThis.cancelAnimationFrame;
+    globalThis.cancelAnimationFrame = vi.fn();
+
+    const lynxViewInstance = {
+      templateUrl: 'app.js',
+      globalprops: {},
+      systemInfo: {},
+      backgroundThread: {
+        markTiming: vi.fn(),
+        jsContext: { dispatchEvent: vi.fn() },
+      },
+      lepusCodeUrls: new Map([
+        ['app.js', { 'chunk.js': 'app-chunk.js' }],
+        ['dynamic.js', { 'chunk.js': 'dynamic-chunk.js' }],
+      ]),
+      mtsRealm: { loadScriptSync: vi.fn() },
+      i18nManager: { _I18nResourceTranslation: vi.fn() },
+    } as unknown as LynxViewInstance;
+
+    const apis = createMainThreadGlobalAPIs(lynxViewInstance);
+
+    // Testing default fallback
+    const result1 = apis.__LoadLepusChunk('chunk.js');
+    expect(result1).toBe(true);
+    expect(lynxViewInstance.mtsRealm!.loadScriptSync).toHaveBeenCalledWith(
+      'app-chunk.js',
+    );
+
+    // Testing dynamicComponentEntry
+    const result2 = apis.__LoadLepusChunk('chunk.js', {
+      dynamicComponentEntry: 'dynamic.js',
+    });
+    expect(result2).toBe(true);
+    expect(lynxViewInstance.mtsRealm!.loadScriptSync).toHaveBeenCalledWith(
+      'dynamic-chunk.js',
+    );
+
+    // Testing non-existing code url (should fallback to path)
+    const result3 = apis.__LoadLepusChunk('other.js', {
+      dynamicComponentEntry: 'dynamic.js',
+    });
+    expect(result3).toBe(true);
+    expect(lynxViewInstance.mtsRealm!.loadScriptSync).toHaveBeenCalledWith(
+      'other.js',
+    );
   });
 });

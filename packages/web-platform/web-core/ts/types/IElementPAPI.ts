@@ -413,7 +413,10 @@ export interface MainThreadGlobalAPIs {
   _ReportError: (error: Error, _: unknown) => void;
   _SetSourceMapRelease: (errInfo: JSErrorInfo) => void;
   __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
-  __LoadLepusChunk: (path: string) => boolean;
+  __LoadLepusChunk: (
+    path: string,
+    config?: { dynamicComponentEntry?: string; chunkType?: number },
+  ) => boolean;
   _I18nResourceTranslation: (
     options: I18nResourceTranslationOptions,
   ) => unknown | undefined;

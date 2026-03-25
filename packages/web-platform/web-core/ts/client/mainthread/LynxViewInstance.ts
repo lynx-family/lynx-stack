@@ -169,7 +169,8 @@ export class LynxViewInstance implements AsyncDisposable {
     this.backgroundThread.markTiming('lepus_execute_end');
     this.webElementsLoadingPromises.length = 0;
     this.backgroundThread.markTiming('data_processor_start');
-    const processedData = this.mainThreadGlobalThis.processData
+    const processedData = this.#pageConfig?.['enableJSDataProcessor'] !== 'true'
+        && this.mainThreadGlobalThis.processData
       ? this.mainThreadGlobalThis.processData?.(this.initData)
       : this.initData;
     this.backgroundThread.markTiming('data_processor_end');
@@ -249,7 +250,8 @@ export class LynxViewInstance implements AsyncDisposable {
     data: Cloneable,
     processorName?: string,
   ): Promise<void> {
-    const processedData = this.mainThreadGlobalThis.processData
+    const processedData = this.#pageConfig!['enableJSDataProcessor'] !== 'true'
+        && this.mainThreadGlobalThis.processData
       ? this.mainThreadGlobalThis.processData(data, processorName)
       : data;
     this.mainThreadGlobalThis.updatePage?.(processedData, { processorName });

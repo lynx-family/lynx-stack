@@ -80,7 +80,9 @@ export function executeTemplate(
     const renderPageFunction = sandbox['renderPage'];
     if (typeof renderPageFunction === 'function') {
       const processData = sandbox['processData'];
-      const processedData = processData
+      const processedData = (config['enableJSDataProcessor'] !== 'true'
+          && config['enableJSDataProcessor'] !== true)
+          && processData
         ? processData(initData)
         : initData;
       renderPageFunction(processedData);
