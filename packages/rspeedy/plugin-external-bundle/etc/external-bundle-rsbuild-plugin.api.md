@@ -41,10 +41,13 @@ export function pluginExternalBundle(options: PluginExternalBundleOptions): Rsbu
 // @public
 export interface PluginExternalBundleOptions extends Pick<ExternalsLoadingPluginOptions, 'globalObject'> {
     externalBundleRoot?: string;
-    externals?: Record<string, PluginExternalValue>;
+    externals?: Record<string, PluginExternalConfig>;
     externalsPresetDefinitions?: ExternalsPresetDefinitions;
     externalsPresets?: ExternalsPresets;
 }
+
+// @public
+export type PluginExternalConfig = PluginExternalValue | string;
 
 // @public
 export interface PluginExternalValue extends Omit<ExternalValue, 'url'> {
@@ -56,6 +59,7 @@ export interface PluginExternalValue extends Omit<ExternalValue, 'url'> {
 // @public
 export interface ReactLynxExternalsPresetOptions {
     bundlePath?: string;
+    reactUmdPackageName?: string;
     // @deprecated
     url?: string;
 }

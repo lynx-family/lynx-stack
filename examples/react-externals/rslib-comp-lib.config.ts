@@ -5,7 +5,7 @@ export default defineExternalBundleRslibConfig({
   id: 'comp-lib',
   source: {
     entry: {
-      'CompLib': './external-bundle/CompLib.tsx',
+      './App.js': './external-bundle/CompLib.tsx',
     },
   },
   plugins: [

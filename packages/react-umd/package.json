@@ -21,10 +21,12 @@
   },
   "type": "module",
   "exports": {
+    "./entry": "./src/index.js",
     "./dev": "./dist/react-dev.lynx.bundle",
     "./prod": "./dist/react-prod.lynx.bundle"
   },
   "files": [
+    "src",
     "dist",
     "CHANGELOG.md",
     "README.md"

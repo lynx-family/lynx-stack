@@ -140,6 +140,54 @@ describe('pluginExternalBundle', () => {
     })
   })
 
+  test('should expand string shorthand externals config', async () => {
+    const { pluginExternalBundle } = await import('../src/index.js')
+
+    let capturedPlugins: unknown[] = []
+
+    const rsbuild = await createRsbuild({
+      cwd: __dirname,
+      rsbuildConfig: {
+        source: {
+          entry: {
+            main: './fixtures/basic.tsx',
+          },
+        },
+        tools: {
+          rspack(config) {
+            capturedPlugins = config.plugins || []
+            return config
+          },
+        },
+        plugins: [
+          pluginStubLayers(),
+          pluginExternalBundle({
+            externals: {
+              './App.js': 'comp-lib.template.js',
+            },
+          }),
+        ],
+      },
+    })
+
+    await rsbuild.inspectConfig()
+
+    const externalBundlePlugin = getExternalsLoadingPlugin(capturedPlugins)
+    expect(externalBundlePlugin).toMatchObject({
+      options: {
+        externals: {
+          './App.js': {
+            libraryName: './App.js',
+            bundlePath: 'comp-lib.template.js',
+            background: { sectionPath: './App.js' },
+            mainThread: { sectionPath: './App.js__main-thread' },
+            async: true,
+          },
+        },
+      },
+    })
+  })
+
   test('should throw error if LAYERS is not exposed', async () => {
     const { pluginExternalBundle } = await import('../src/index.js')
 
@@ -207,6 +255,36 @@ describe('pluginExternalBundle', () => {
         externals: {},
       },
     })
+  })
+
+  test('should throw when an external is missing both url and bundlePath', async () => {
+    const { pluginExternalBundle } = await import('../src/index.js')
+
+    const rsbuild = await createRsbuild({
+      cwd: __dirname,
+      rsbuildConfig: {
+        source: {
+          entry: {
+            main: './fixtures/basic.tsx',
+          },
+        },
+        plugins: [
+          pluginStubLayers(),
+          pluginExternalBundle({
+            externals: {
+              lodash: {
+                background: { sectionPath: 'background' },
+                mainThread: { sectionPath: 'mainThread' },
+              },
+            },
+          }),
+        ],
+      },
+    })
+
+    await expect(rsbuild.inspectConfig()).rejects.toThrow(
+      'external-bundle-rsbuild-plugin requires `url` or `bundlePath` for external "lodash".',
+    )
   })
 
   test('should expand the reactlynx preset with the normalized asset prefix', async () => {

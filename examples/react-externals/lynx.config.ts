@@ -19,13 +19,7 @@ export default defineConfig({
         reactlynx: true,
       },
       externals: {
-        './App.js': {
-          libraryName: 'CompLib',
-          bundlePath: 'comp-lib.lynx.bundle',
-          background: { sectionPath: 'CompLib' },
-          mainThread: { sectionPath: 'CompLib__main-thread' },
-          async: true,
-        },
+        './App.js': 'comp-lib.lynx.bundle',
       },
       globalObject: 'globalThis',
     }),

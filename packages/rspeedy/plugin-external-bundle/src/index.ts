@@ -265,7 +265,7 @@ export interface PluginExternalBundleOptions extends
   /**
    * Additional explicit externals to load.
    */
-  externals?: Record<string, PluginExternalValue>
+  externals?: Record<string, PluginExternalConfig>
 
   /**
    * Built-in externals presets.
@@ -308,6 +308,19 @@ export interface PluginExternalValue extends Omit<ExternalValue, 'url'> {
    */
   url?: string
 }
+
+/**
+ * External bundle shorthand accepted by `pluginExternalBundle`.
+ *
+ * When a string is provided, it is treated as `bundlePath` and the plugin will
+ * infer:
+ * - `libraryName`: the external request key
+ * - `background.sectionPath`: the external request key
+ * - `mainThread.sectionPath`: `${request}__main-thread`
+ *
+ * @public
+ */
+export type PluginExternalConfig = PluginExternalValue | string
 
 function normalizeReactLynxPreset(
   preset: ExternalsPresets['reactlynx'],
@@ -628,7 +641,10 @@ function getManagedBundleAssets(
   const assets = new Map<string, string>(presetManagedAssets)
 
   const externalBundleRoot = getExternalBundleRoot(options, api)
-  for (const external of Object.values(options.externals ?? {})) {
+  for (
+    const [request, rawExternal] of Object.entries(options.externals ?? {})
+  ) {
+    const external = normalizePluginExternal(request, rawExternal)
     if (external.url || !external.bundlePath) {
       continue
     }
@@ -675,7 +691,44 @@ function resolvePluginExternals(
     return {}
   }
 
-  return externals
+  for (const [request, external] of Object.entries(externals)) {
+    const normalizedExternal = normalizePluginExternal(request, external)
+    if (normalizedExternal.url || normalizedExternal.bundlePath) {
+      continue
+    }
+
+    throw new Error(
+      `external-bundle-rsbuild-plugin requires \`url\` or \`bundlePath\` for external "${request}".`,
+    )
+  }
+
+  return Object.fromEntries(
+    Object.entries(externals).map(([request, external]) => [
+      request,
+      normalizePluginExternal(request, external),
+    ]),
+  )
+}
+
+function normalizePluginExternal(
+  request: string,
+  external: PluginExternalConfig,
+): PluginExternalValue {
+  if (typeof external !== 'string') {
+    return external
+  }
+
+  return {
+    bundlePath: external,
+    libraryName: request,
+    background: {
+      sectionPath: request,
+    },
+    mainThread: {
+      sectionPath: `${request}__main-thread`,
+    },
+    async: true,
+  }
 }
 
 /**

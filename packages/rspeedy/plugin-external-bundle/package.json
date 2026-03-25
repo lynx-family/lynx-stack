@@ -45,14 +45,6 @@
     "@microsoft/api-extractor": "catalog:",
     "@rsbuild/core": "catalog:rsbuild"
   },
-  "peerDependencies": {
-    "@lynx-js/react-umd": "^0.117.0"
-  },
-  "peerDependenciesMeta": {
-    "@lynx-js/react-umd": {
-      "optional": true
-    }
-  },
   "engines": {
     "node": ">=18"
   }

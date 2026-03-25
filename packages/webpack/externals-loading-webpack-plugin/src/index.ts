@@ -239,6 +239,18 @@ function getLynxExternalGlobal(globalObject?: string) {
   return `${globalObject ?? 'lynx'}[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]`;
 }
 
+function validateExternals(externals: Record<string, ExternalValue>): void {
+  for (const [request, external] of Object.entries(externals)) {
+    if (external.url || external.bundlePath) {
+      continue;
+    }
+
+    throw new Error(
+      `ExternalsLoadingPlugin requires \`url\` or \`bundlePath\` for external "${request}".`,
+    );
+  }
+}
+
 /**
  * The webpack plugin to load lynx external bundles.
  *
@@ -274,7 +286,9 @@ function getLynxExternalGlobal(globalObject?: string) {
  * @public
  */
 export class ExternalsLoadingPlugin {
-  constructor(private options: ExternalsLoadingPluginOptions) {}
+  constructor(private options: ExternalsLoadingPluginOptions) {
+    validateExternals(this.options.externals);
+  }
 
   apply(compiler: Compiler): void {
     const { RuntimeModule } = compiler.webpack;
@@ -373,6 +387,7 @@ function createLoadExternalAsync(handler, sectionPath) {
     })
   })
 }
+
 function createLoadExternalSync(handler, sectionPath, timeout) {
   const response = handler.wait(timeout)
   if (response.code === 0) {
