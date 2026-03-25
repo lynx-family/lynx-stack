@@ -57,7 +57,7 @@ function extractExportedNames(source: string): string[] {
  *
  *   export function onTap(event) { ... }
  *   →
- *   export const onTap = { _wkltId: 'src/foo/Bar.vue:onTap', _closure: {} };
+ *   export const onTap = { _wkltId: 'src/foo/Bar.vue:onTap', _c: {} };
  *
  * The function bodies are intentionally discarded — they run on the Main
  * Thread (registered via the MT bundle), not in the BG JS engine.
@@ -69,7 +69,7 @@ function transformToBg(source: string, filename: string): string {
       (name) =>
         `export const ${name} = { _wkltId: ${
           JSON.stringify(`${filename}:${name}`)
-        }, _closure: {} };`,
+        }, _c: {} };`,
     )
     .join('\n');
 }

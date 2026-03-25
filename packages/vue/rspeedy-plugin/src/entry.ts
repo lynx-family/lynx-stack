@@ -59,8 +59,8 @@ interface WebpackCompiler {
 }
 
 /**
- * VueMainThreadPlugin replaces the webpack-generated main-thread.js bundle with
- * a pre-built flat ESM script and marks it with `lynx:main-thread: true`.
+ * VueMainThreadPlugin prepends a pre-built flat ESM script to the
+ * webpack-generated main-thread.js bundle and marks it with `lynx:main-thread: true`.
  *
  * WHY: rspeedy sets `chunkLoading: 'lynx'` globally.  With this setting webpack's
  * StartupChunkDependenciesPlugin only generates a startup call
@@ -74,8 +74,10 @@ interface WebpackCompiler {
  * AMD `tt.define(...)` factory which acts as the startup mechanism.
  *
  * Fix: rslib builds entry-main.ts as a flat bundled ESM (no module wrapping).
- * We replace the webpack asset content with that flat script so every assignment
- * runs at the top level when Lepus evaluates the script.
+ * We prepend that flat script before the webpack output so:
+ *   1. Flat bundle — sets up `renderPage`, `vuePatchUpdate`, PAPI executor
+ *   2. Worklet runtime — defines `registerWorkletInternal`, `runWorklet`
+ *   3. User .vue registrations — `registerWorkletInternal(...)` calls from MT layer
  */
 class VueMainThreadPlugin {
   constructor(
@@ -98,9 +100,11 @@ class VueMainThreadPlugin {
             for (const filename of this.mainThreadFilenames) {
               const asset = compilation.getAsset(filename);
               if (asset) {
+                const existingCode = (asset.source as { source(): string })
+                  .source();
                 compilation.updateAsset(
                   filename,
-                  new RawSource(flatCode),
+                  new RawSource(flatCode + '\n' + existingCode),
                   {
                     ...asset.info,
                     'lynx:main-thread': true,
@@ -219,10 +223,12 @@ export function applyEntry(
       .loader(nullLoaderPath)
       .end();
 
-    // MT layer: silence <script setup> virtual modules.
+    // MT layer: silence <script setup> virtual modules (but not plain <script> worklet registrations).
     chain.module
       .rule('vue:script:mt')
-      .resourceQuery(/\btype=script\b/)
+      .resourceQuery(
+        /\btype=script\b[^&]*&setup=true|\bsetup=true\b[^&]*&type=script/,
+      )
       .issuerLayer(LAYERS.MAIN_THREAD)
       .use('null-loader-script')
       .loader(nullLoaderPath)
@@ -281,9 +287,11 @@ export function applyEntry(
         .entry(mainThreadEntry)
         .add({
           layer: LAYERS.MAIN_THREAD,
-          // The main-thread bundle contains ONLY entry-main.ts.
-          // User Vue components must NOT be included here.
-          import: [require.resolve('@lynx-js/vue-main-thread')],
+          import: [
+            require.resolve('@lynx-js/react/worklet-runtime'), // must run before registrations
+            ...imports, // user .vue → registerWorkletInternal calls
+            require.resolve('@lynx-js/vue-main-thread'), // renderPage, vuePatchUpdate
+          ],
           filename: mainThreadName,
         })
         .end();

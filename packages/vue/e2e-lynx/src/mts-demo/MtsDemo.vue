@@ -13,10 +13,14 @@
     MT build  → exports become registerWorkletInternal() calls on the Lepus thread
 -->
 <script main-thread lang="ts">
+const COLORS = ['#0077ff', '#ff4400', '#00aa44', '#aa00ff', '#ff9900'];
+let colorIndex = 0;
+
 export function onTap(event: any): void {
   // Runs on the Main Thread (Lepus) — zero thread crossings.
-  // Dim the element on tap to give visual feedback.
-  event.currentTarget.setStyleProperty('opacity', '0.6');
+  // Cycle through colours on each tap.
+  colorIndex = (colorIndex + 1) % COLORS.length;
+  event.currentTarget.setStyleProperty('background-color', COLORS[colorIndex]);
 }
 </script>
 
@@ -56,12 +60,13 @@ function onBgTap() {
         marginBottom: 8,
       }"
     >
-      <text :style="{ color: '#fff', fontSize: 14 }">
-        MT Tap (worklet event)
+      <text :style="{ color: '#fff', fontSize: 14, fontWeight: 'bold' }">
+        Main Thread (Worklet Event)
+      </text>
+      <text :style="{ color: '#fff', fontSize: 12, marginTop: 4 }">
+        Tap to cycle colour — runs on MT, no BG crossing
       </text>
     </view>
-
-
 
     <!-- Regular BG-thread tap for comparison / regression check -->
     <view
@@ -72,8 +77,11 @@ function onBgTap() {
       }"
       @tap="onBgTap"
     >
-      <text :style="{ color: '#fff', fontSize: 14 }">
-        BG Tap: {{ tapCount }}
+      <text :style="{ color: '#fff', fontSize: 14, fontWeight: 'bold' }">
+        Background Thread (Regular Event)
+      </text>
+      <text :style="{ color: '#fff', fontSize: 12, marginTop: 4 }">
+        Tap count: {{ tapCount }}
       </text>
     </view>
   </scroll-view>
