@@ -562,6 +562,22 @@ test.describe('reactlynx3 tests', () => {
       },
     );
     test(
+      'basic-lazy-component-mts-bindtap',
+      async ({ page }, { title }) => {
+        test.skip(isSSR, 'Lazy Component not support on SSR');
+        await goto(page, title);
+        await wait(500);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await target.click();
+        await wait(100);
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+      },
+    );
+    test(
       'basic-lazy-component-fail',
       async ({ page }, { title }) => {
         test.skip(isSSR, 'Lazy Component not support on SSR');
