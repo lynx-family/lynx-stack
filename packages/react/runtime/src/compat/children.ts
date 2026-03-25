@@ -18,19 +18,22 @@ import { Children as PreactChildren } from 'preact/compat';
  * Callers should not rely on the return value.
  */
 export const Children: {
-  forEach: typeof PreactChildren.forEach;
+  forEach: (children: ComponentChild | ComponentChild[], fn: (child: ComponentChild, index: number) => void, thisArg?: any) => void;
   map: typeof PreactChildren.map;
   count: typeof PreactChildren.count;
   only: typeof PreactChildren.only;
   toArray: (children: ComponentChild | ComponentChild[]) => readonly any[];
 } = {
-  forEach: PreactChildren.forEach,
   count: PreactChildren.count,
   only: PreactChildren.only,
 
-  map(children: any, fn: any): any[] {
-    const arr = PreactChildren.map(children, fn);
-    if (__DEV__) {
+  forEach(children: any, fn: any, thisArg?: any): void {
+    PreactChildren.forEach(children, thisArg ? fn.bind(thisArg) : fn);
+  },
+
+  map(children: any, fn: any, thisArg?: any): ReturnType<typeof PreactChildren.map> {
+    const arr = PreactChildren.map(children, thisArg ? fn.bind(thisArg) : fn);
+    if (__DEV__ && arr != null) {
       Object.freeze(arr);
     }
     return arr;

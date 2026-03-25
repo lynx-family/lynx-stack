@@ -379,4 +379,33 @@ describe('children api', () => {
     expect([...results]).toHaveLength(2);
     expect(results.filter(() => true)).toHaveLength(2);
   });
+
+  it('Children.map returns null when children is null', function() {
+    const result = Children.map(null, (child) => child);
+    expect(result).toBeNull();
+  });
+
+  it('Children.map respects thisArg binding', function() {
+    const context = { multiplier: 2 };
+    let seenThis;
+    let results;
+    const Comp = (props) => {
+      results = Children.map(
+        props.children,
+        function(child, index) {
+          seenThis = this;
+          return child;
+        },
+        context,
+      );
+      return results;
+    };
+    __root.__jsx = (
+      <Comp>
+        <view />
+      </Comp>
+    );
+    renderPage();
+    expect(seenThis).toBe(context);
+  });
 });
