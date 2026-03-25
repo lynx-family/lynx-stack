@@ -55,6 +55,47 @@ export default {
 }
 ```
 
+If your external bundle request key already matches the produced section names,
+you can use the shorthand string form:
+
+```ts
+pluginExternalBundle({
+  externalsPresets: {
+    reactlynx: true,
+  },
+  externals: {
+    './App.js': 'comp.lynx.bundle',
+  },
+})
+```
+
+The shorthand expands to the same `bundlePath` plus default:
+
+- `libraryName = './App.js'`
+- `background.sectionPath = './App.js'`
+- `mainThread.sectionPath = './App.js__main-thread'`
+- `async = true`
+
+If you need custom section names or a custom exported library name, use the
+full object form instead:
+
+```ts
+pluginExternalBundle({
+  externalsPresets: {
+    reactlynx: true,
+  },
+  externals: {
+    './App.js': {
+      libraryName: 'CompLib',
+      bundlePath: 'comp.lynx.bundle',
+      background: { sectionPath: 'CompLib' },
+      mainThread: { sectionPath: 'CompLib__main-thread' },
+      async: true,
+    },
+  },
+})
+```
+
 ## `bundlePath` vs `url`
 
 Prefer `bundlePath` for bundles that belong to the current project.
@@ -71,9 +112,9 @@ For the built-in `reactlynx` preset, `bundlePath` is especially recommended beca
 
 ## Building project-owned external bundles
 
-`externalBundleRoot` tells the plugin where your local external bundles live before they are emitted into the final app output.
+By default, `pluginExternalBundle` reads project-owned external bundles from `dist-external-bundle` before emitting them into the final app output.
 
-For example, if your component library is built into `dist-external-bundle`, set:
+If you use that default directory, no extra config is needed:
 
 ```ts
 pluginExternalBundle({
@@ -92,6 +133,8 @@ Then:
 - development serves `dist-external-bundle/comp.lynx.bundle`
 - production emits that bundle into the app output
 
+If your local external bundles live somewhere else, set `externalBundleRoot` explicitly.
+
 ## ReactLynx preset
 
 `externalsPresets.reactlynx` expands the standard ReactLynx module requests automatically, so you do not need to write the full externals map by hand.
@@ -102,17 +145,44 @@ If your app needs business-specific presets, define them next to
 ```ts
 pluginExternalBundle({
   externalsPresets: {
-    tux: true,
+    lynxUi: true,
   },
   externalsPresetDefinitions: {
-    tux: {
+    lynxUi: {
       resolveExternals() {
         return {
-          '@acme/tux': {
-            libraryName: ['TuxRuntime', 'Tux'],
-            bundlePath: 'tux.lynx.bundle',
-            background: { sectionPath: 'TuxRuntime' },
-            mainThread: { sectionPath: 'TuxRuntime__main-thread' },
+          '@lynx-js/lynx-ui': {
+            libraryName: ['LynxUI', 'UI'],
+            bundlePath: 'lynx-ui.lynx.bundle',
+            background: { sectionPath: 'LynxUI' },
+            mainThread: { sectionPath: 'LynxUI__main-thread' },
+            async: false,
+          },
+        }
+      },
+    },
+  },
+})
+```
+
+If you want to extend the built-in `reactlynx` preset instead of defining a
+completely separate one, use `extends`:
+
+```ts
+pluginExternalBundle({
+  externalsPresets: {
+    reactlynxPlus: true,
+  },
+  externalsPresetDefinitions: {
+    reactlynxPlus: {
+      extends: 'reactlynx',
+      resolveExternals() {
+        return {
+          '@lynx-js/lynx-ui': {
+            libraryName: ['LynxUI', 'UI'],
+            bundlePath: 'lynx-ui.lynx.bundle',
+            background: { sectionPath: 'LynxUI' },
+            mainThread: { sectionPath: 'LynxUI__main-thread' },
             async: false,
           },
         }

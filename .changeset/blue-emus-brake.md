@@ -6,4 +6,4 @@
 
 feat: support `bundlePath`-based external bundles and dedicated external bundle roots.
 
-Also add `@lynx-js/react-umd` src exports for reuse.
+Also add `@lynx-js/react-umd` `dev` and `prod` export entries for external-bundle tooling.

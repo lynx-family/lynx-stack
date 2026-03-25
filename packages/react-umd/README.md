@@ -36,7 +36,7 @@ export default defineExternalBundleRslibConfig({
   id: 'comp',
   source: {
     entry: {
-      component: './src/components/index.js',
+      './components': './src/components/index.js',
     },
   },
   plugins: [pluginReactLynx()],
@@ -48,7 +48,48 @@ export default defineExternalBundleRslibConfig({
 });
 ```
 
-That preset maps the standard ReactLynx module requests to the globals exposed by the React UMD bundle.
+That preset maps the standard ReactLynx module requests to the globals exposed by the React UMD bundle. Using the same `./components` request key on both sides keeps the produced external section names aligned with the host app shorthand configuration.
+
+If you need extra business-specific presets, you can define them alongside
+`externalsPresets`:
+
+```ts
+export default defineExternalBundleRslibConfig({
+  output: {
+    externalsPresets: {
+      reactlynx: true,
+      lynxUi: true,
+    },
+    externalsPresetDefinitions: {
+      lynxUi: {
+        externals: {
+          '@lynx-js/lynx-ui': ['LynxUI', 'UI'],
+        },
+      },
+    },
+  },
+});
+```
+
+You can also extend the built-in preset directly:
+
+```ts
+export default defineExternalBundleRslibConfig({
+  output: {
+    externalsPresets: {
+      reactlynxPlus: true,
+    },
+    externalsPresetDefinitions: {
+      reactlynxPlus: {
+        extends: 'reactlynx',
+        externals: {
+          '@lynx-js/lynx-ui': ['LynxUI', 'UI'],
+        },
+      },
+    },
+  },
+});
+```
 
 ### Consuming external bundles in a Lynx app
 
@@ -67,10 +108,31 @@ export default defineConfig({
         reactlynx: true,
       },
       externals: {
+        './components': 'comp.lynx.bundle',
+      },
+    }),
+  ],
+});
+```
+
+If you need custom section names instead of deriving them from the request key,
+use the full object form:
+
+```ts
+export default defineConfig({
+  plugins: [
+    pluginReactLynx(),
+    pluginExternalBundle({
+      externalsPresets: {
+        reactlynx: true,
+      },
+      externals: {
         './components': {
+          libraryName: 'CompLib',
           bundlePath: 'comp.lynx.bundle',
-          background: { sectionPath: 'component' },
-          mainThread: { sectionPath: 'component__main-thread' },
+          background: { sectionPath: 'CompLib' },
+          mainThread: { sectionPath: 'CompLib__main-thread' },
+          async: true,
         },
       },
     }),
@@ -83,6 +145,9 @@ When the preset uses `bundlePath` instead of an explicit `url`, the plugin will:
 - resolve `@lynx-js/react-umd/dev` or `@lynx-js/react-umd/prod`
 - emit `react.lynx.bundle` into the app output
 - load it through the runtime public path
+
+The same extension pattern is available on the consumer side through
+`pluginExternalBundle({ externalsPresetDefinitions })`.
 
 ## Manual Hosting
 
