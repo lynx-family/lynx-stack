@@ -77,7 +77,7 @@ jobs:
       is-web: true
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
-        pnpm --filter @lynx-js/web-tests run lh || echo "Lighthouse failed"
+        pnpm --filter @lynx-js/web-core-e2e run lh || echo "Lighthouse failed"
   playwright-web-elements:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -98,38 +98,38 @@ jobs:
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
         pnpm --filter @lynx-js/web-elements run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/2
         pnpm --filter @lynx-js/web-elements run coverage:ci
-  playwright-linux:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    name: Playwright ${{ matrix.thread }}-${{ matrix.render }} (${{ matrix.shard }}/3)
-    strategy:
-      fail-fast: false
-      matrix:
-        thread: [ALL_ON_UI]
-        render: [SSR, CSR]
-        shard: [1, 2, 3]
-        # exclude:
-        #   - thread: MULTI_THREAD
-        #     render: SSR
-    with:
-      runs-on: lynx-custom-container
-      is-web: true
-      web-report-name: "playwright-${{ matrix.thread }}-${{ matrix.render }}-shard${{ matrix.shard }}"
-      codecov-flags: "e2e"
-      run: |
-        if [ "${{ matrix.thread }}" = "MULTI_THREAD" ]; then
-          export ENABLE_MULTI_THREAD=true
-        fi
-        if [ "${{ matrix.render }}" = "SSR" ]; then
-          export ENABLE_SSR=true
-        fi
-        export NODE_OPTIONS="--max-old-space-size=32768"
-        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/3
-        pnpm --filter @lynx-js/web-tests run coverage:ci
-  web-core-wasm-e2e:
+  # playwright-linux:
+  #   needs: build
+  #   uses: ./.github/workflows/workflow-test.yml
+  #   secrets:
+  #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  #   name: Playwright ${{ matrix.thread }}-${{ matrix.render }} (${{ matrix.shard }}/3)
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       thread: [ALL_ON_UI]
+  #       render: [SSR, CSR]
+  #       shard: [1, 2, 3]
+  #       # exclude:
+  #       #   - thread: MULTI_THREAD
+  #       #     render: SSR
+  #   with:
+  #     runs-on: lynx-custom-container
+  #     is-web: true
+  #     web-report-name: "playwright-${{ matrix.thread }}-${{ matrix.render }}-shard${{ matrix.shard }}"
+  #     codecov-flags: "e2e"
+  #     run: |
+  #       if [ "${{ matrix.thread }}" = "MULTI_THREAD" ]; then
+  #         export ENABLE_MULTI_THREAD=true
+  #       fi
+  #       if [ "${{ matrix.render }}" = "SSR" ]; then
+  #         export ENABLE_SSR=true
+  #       fi
+  #       export NODE_OPTIONS="--max-old-space-size=32768"
+  #       export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+  #       pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/3
+  #       pnpm --filter @lynx-js/web-tests run coverage:ci
+  web-core-e2e:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
     secrets:
@@ -144,7 +144,7 @@ jobs:
       runs-on: lynx-custom-container
       is-web: true
       web-report-name: "playwright-${{ matrix.render }}-shard${{ matrix.shard }}"
-      web-report-path: "packages/web-platform/web-core-wasm-e2e/playwright-report"
+      web-report-path: "packages/web-platform/web-core-e2e/playwright-report"
       codecov-flags: "e2e"
       run: |
         if [ "${{ matrix.render }}" = "SSR" ]; then
@@ -152,7 +152,7 @@ jobs:
         fi
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-        pnpm --filter @lynx-js/web-core-wasm-e2e run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/2
+        pnpm --filter @lynx-js/web-core-e2e run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/2
   test-api:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -345,7 +345,7 @@ jobs:
       - benchmark
       - code-style-check
       - eslint
-      - playwright-linux
+      # - playwright-linux
       - playwright-web-elements
       - test-api
       - test-publish
@@ -354,7 +354,7 @@ jobs:
       - test-type
       - test-typos
       - test-vitest
-      - web-core-wasm-e2e
+      - web-core-e2e
       - website
     if: always()
     runs-on: ubuntu-latest

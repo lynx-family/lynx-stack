@@ -14,7 +14,6 @@ extend-exclude = [
   "packages/web-platform/web-tests/tests/react.spec.ts-snapshots/*",
   "packages/web-platform/web-tests/tests/react.spec.ts",
   "packages/web-platform/web-tests/tests/react/basic-element-x-overlay-ng-playground-test/index.jsx",
-  "packages/web-platform/offscreen-document/src/webworker/OffscreenCSSStyleDeclaration.ts",
 ]
 
 [default]
