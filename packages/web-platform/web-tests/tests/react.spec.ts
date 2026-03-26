@@ -512,6 +512,23 @@ test.describe('reactlynx3 tests', () => {
       expect(scrollTopAfter).toBeGreaterThan(100);
     });
 
+    test('basic-main-query-selector-all', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const scrollViews = page.locator('scroll-view');
+      const thirdScrollView = scrollViews.nth(2);
+      const scrollTopBefore = await thirdScrollView.evaluate((node) =>
+        node.scrollTop
+      );
+      expect(scrollTopBefore).toBe(0);
+      await page.locator('#tap-me').click();
+      await wait(3000);
+      const scrollTopAfter = await thirdScrollView.evaluate((node) =>
+        node.scrollTop
+      );
+      expect(scrollTopAfter).toBeGreaterThan(50);
+    });
+
     // lazy component
     test(
       'basic-lazy-component',
