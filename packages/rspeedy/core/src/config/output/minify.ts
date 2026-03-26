@@ -84,4 +84,55 @@ export interface Minify {
    * ```
    */
   jsOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined
+
+  /**
+   * {@link Minify.mainThreadOptions} is used to override
+   * {@link Minify.jsOptions} for main-thread bundles.
+   *
+   * @remarks
+   *
+   * This option is deep-merged into {@link Minify.jsOptions}.
+   * It is mainly used together with ReactLynx dual-thread outputs so that
+   * main-thread and background-thread bundles can use different compress rules.
+   *
+   * @example
+   *
+   * ```ts
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * export default defineConfig({
+   *   output: {
+   *     minify: {
+   *       jsOptions: {
+   *         minimizerOptions: {
+   *           compress: {
+   *             pure_funcs: ['console.log'],
+   *           },
+   *         },
+   *       },
+   *       mainThreadOptions: {
+   *         minimizerOptions: {
+   *           compress: {
+   *             pure_funcs: ['NativeModules.call', 'lynx.getJSModule'],
+   *           },
+   *         },
+   *       },
+   *     },
+   *   },
+   * })
+   * ```
+   */
+  mainThreadOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined
+
+  /**
+   * {@link Minify.backgroundOptions} is used to override
+   * {@link Minify.jsOptions} for background-thread bundles.
+   *
+   * @remarks
+   *
+   * This option is deep-merged into {@link Minify.jsOptions}.
+   * It is mainly used together with ReactLynx dual-thread outputs so that
+   * main-thread and background-thread bundles can use different compress rules.
+   */
+  backgroundOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined
 }

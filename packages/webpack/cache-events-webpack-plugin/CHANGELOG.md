@@ -1,5 +1,11 @@
 # @lynx-js/cache-events-webpack-plugin
 
+## 0.0.3
+
+### Patch Changes
+
+- Cache `globalThis.loadDynamicComponent` in the cache events runtime and add tests covering tt methods, performance events, and globalThis replay behavior. ([#2343](https://github.com/lynx-family/lynx-stack/pull/2343))
+
 ## 0.0.2
 
 ### Patch Changes

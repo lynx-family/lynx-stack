@@ -1,5 +1,11 @@
 # @lynx-js/testing-environment
 
+## 0.1.12
+
+### Patch Changes
+
+- Implement `__ElementAnimate` PAPI for web platform animation lifecycle ([#2329](https://github.com/lynx-family/lynx-stack/pull/2329))
+
 ## 0.1.11
 
 ### Patch Changes

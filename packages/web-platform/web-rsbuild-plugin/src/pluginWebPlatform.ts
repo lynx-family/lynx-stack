@@ -10,7 +10,8 @@ import type { RsbuildPlugin } from '@rsbuild/core';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const getNativeModulesPathRule = (nativeModulesPath: string) => ({
-  test: /backgroundThread[\\/]background-apis[\\/]createNativeModules\.js$/,
+  test:
+    /client[\\/]background[\\/]background-apis[\\/]createNativeModules\.js$/,
   loader: path.resolve(
     __dirname,
     './loaders/native-modules.js',
@@ -21,7 +22,7 @@ export const getNativeModulesPathRule = (nativeModulesPath: string) => ({
 });
 
 export const getNapiModulesPathRule = (napiModulesPath: string) => ({
-  test: /backgroundThread[\\/]background-apis[\\/]createNapiLoader\.js$/,
+  test: /client[\\/]background[\\/]background-apis[\\/]createNapiLoader\.js$/,
   loader: path.resolve(
     __dirname,
     './loaders/napi-modules.js',

@@ -1453,6 +1453,29 @@ class X extends Component {
 });
 
 describe('worklet', () => {
+  const lepusWorkletOptions = {
+    pluginName: '',
+    filename: '',
+    sourcemap: false,
+    cssScope: false,
+    jsx: false,
+    directiveDCE: true,
+    defineDCE: {
+      define: {
+        __LEPUS__: 'true',
+        __JS__: 'false',
+      },
+    },
+    shake: false,
+    compat: true,
+    refresh: false,
+    worklet: {
+      target: 'LEPUS',
+      filename: '',
+      runtimePkg: '@lynx-js/react',
+    },
+  };
+
   it('should error on unsupported runtime import attribute', async () => {
     const result = await transformReactLynx(
       `\
@@ -1570,6 +1593,21 @@ export function bar() {
     );
   });
 
+  it('should not inject runtime when no worklet exists', async () => {
+    const { code } = await transformReactLynx(
+      `\
+export function getCurrentDelta(event) {
+  return foo.bar.baz;
+}
+`,
+      lepusWorkletOptions,
+    );
+
+    expect(code).not.toContain('loadWorkletRuntime');
+    expect(code).not.toContain('registerWorkletInternal');
+    expect(code).not.toContain('_wkltId');
+  });
+
   for (const target of ['LEPUS', 'JS', 'MIXED']) {
     it('member expression', async () => {
       const { code } = await transformReactLynx(
@@ -1626,6 +1664,8 @@ export function bar() {
           });
           "
         `);
+        expect(code).toContain('loadWorkletRuntime');
+        expect(code).toContain('registerWorkletInternal("main-thread"');
       } else if (target === 'JS') {
         expect(code).toMatchInlineSnapshot(`
           "export let getCurrentDelta = {
@@ -1640,6 +1680,8 @@ export function bar() {
           };
           "
         `);
+        expect(code).not.toContain('loadWorkletRuntime');
+        expect(code).not.toContain('registerWorkletInternal');
       } else if (target === 'MIXED') {
         expect(code).toMatchInlineSnapshot(`
           "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
@@ -1663,6 +1705,8 @@ export function bar() {
           });
           "
         `);
+        expect(code).toContain('loadWorkletRuntime');
+        expect(code).toContain('registerWorkletInternal("main-thread"');
       }
     });
   }
@@ -1729,6 +1773,8 @@ export function foo(event) {
       });
       "
     `);
+    expect((code.match(/registerWorkletInternal/g) ?? []).length).toBe(1);
+    expect((code.match(/const __workletRuntimeLoaded = loadWorkletRuntime/g) ?? []).length).toBe(1);
   });
 
   it('nested', async () => {
@@ -1795,6 +1841,8 @@ console.log(bar)
       });
       "
     `);
+    expect((code.match(/registerWorkletInternal/g) ?? []).length).toBe(2);
+    expect((code.match(/const __workletRuntimeLoaded = loadWorkletRuntime/g) ?? []).length).toBe(1);
   });
 
   it('use multiple times', async () => {
@@ -1845,6 +1893,8 @@ function getCurrentDelta(event) {
       });
       "
     `);
+    expect((code.match(/registerWorkletInternal/g) ?? []).length).toBe(1);
+    expect((code.match(/const __workletRuntimeLoaded = loadWorkletRuntime/g) ?? []).length).toBe(1);
   });
 
   it('should keep webpack runtime variables', async () => {
