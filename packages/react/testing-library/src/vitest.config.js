@@ -44,6 +44,12 @@ export const createVitestConfig = async (options) => {
     const pkgExports = require(path.join(pkgDir, 'package.json')).exports;
     const pkgAlias = [];
     Object.keys(pkgExports).forEach((key) => {
+      if (
+        pkgName === '@lynx-js/react'
+        && key === './worklet-runtime/bindings'
+      ) {
+        return;
+      }
       const name = path.posix.join(pkgName, key);
       pkgAlias.push({
         find: new RegExp('^' + name + '$'),
@@ -60,6 +66,19 @@ export const createVitestConfig = async (options) => {
   if (runtimePkgName !== runtimeOSSPkgName) {
     runtimeAlias = generateAlias(runtimePkgName, runtimeDir, __dirname);
   }
+  const workletRuntimeBindingsAlias = [
+    {
+      find: /^@lynx-js\/react\/worklet-runtime\/bindings$/,
+      replacement: path.join(
+        runtimeOSSDir,
+        'runtime',
+        'lib',
+        'worklet-runtime',
+        'bindings',
+        'index.js',
+      ),
+    },
+  ];
   const preactAlias = generateAlias('preact', preactDir, runtimeOSSDir);
   preactAlias.forEach((alias) => {
     alias.replacement = alias.replacement.replace(/\.js$/, '.mjs');
@@ -295,12 +314,16 @@ export const createVitestConfig = async (options) => {
       transformReactLynxPlugin(),
     ],
     test: {
-      environment: require.resolve(
-        './env/vitest',
-      ),
+      environment: path.join(__dirname, 'env', 'vitest.ts'),
       globals: true,
       setupFiles: [path.join(__dirname, 'vitest-global-setup')],
-      alias: [...runtimeOSSAlias, ...runtimeAlias, ...preactAlias, ...reactAlias],
+      alias: [
+        ...workletRuntimeBindingsAlias,
+        ...runtimeOSSAlias,
+        ...runtimeAlias,
+        ...preactAlias,
+        ...reactAlias,
+      ],
       include: options?.include ?? ['src/**/*.test.{js,jsx,ts,tsx}'],
     },
   });
