@@ -128,7 +128,7 @@ pub fn set_inline_styles_in_str(
 }
 
 #[wasm_bindgen]
-pub fn get_inline_styles_in_key_value_vec(
+pub fn set_inline_styles_in_key_value_vec(
   dom: &web_sys::HtmlElement,
   k_v_vec: Vec<String>,
   transform_vw: bool,

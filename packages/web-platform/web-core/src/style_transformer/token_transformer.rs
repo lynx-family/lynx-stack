@@ -25,32 +25,38 @@ pub(crate) fn transform_one_token<'a>(
 ) -> (u8, Cow<'a, str>) {
   match token_type {
     DIMENSION_TOKEN => {
-      if token_value.len() > 3 && token_value.to_ascii_lowercase().ends_with("rpx") {
-        let value = &token_value[..token_value.len() - 3];
-        return (
-          token_type,
-          Cow::Owned(format!("calc({value} * var(--rpx-unit))")),
-        );
+      let len = token_value.len();
+      if len > 3 {
+        let suffix = &token_value[len - 3..];
+        if suffix.eq_ignore_ascii_case("rpx") {
+          let value = &token_value[..len - 3];
+          return (
+            token_type,
+            Cow::Owned(format!("calc({value} * var(--rpx-unit))")),
+          );
+        } else if suffix.eq_ignore_ascii_case("ppx") {
+          let value = &token_value[..len - 3];
+          return (
+            token_type,
+            Cow::Owned(format!("calc({value} * var(--ppx-unit))")),
+          );
+        }
       }
-      if config.transform_vw
-        && token_value.len() > 2
-        && token_value.to_ascii_lowercase().ends_with("vw")
-      {
-        let value = &token_value[..token_value.len() - 2];
-        return (
-          token_type,
-          Cow::Owned(format!("calc({value} * var(--vw-unit))")),
-        );
-      }
-      if config.transform_vh
-        && token_value.len() > 2
-        && token_value.to_ascii_lowercase().ends_with("vh")
-      {
-        let value = &token_value[..token_value.len() - 2];
-        return (
-          token_type,
-          Cow::Owned(format!("calc({value} * var(--vh-unit))")),
-        );
+      if len > 2 {
+        let suffix = &token_value[len - 2..];
+        if config.transform_vw && suffix.eq_ignore_ascii_case("vw") {
+          let value = &token_value[..len - 2];
+          return (
+            token_type,
+            Cow::Owned(format!("calc({value} * var(--vw-unit))")),
+          );
+        } else if config.transform_vh && suffix.eq_ignore_ascii_case("vh") {
+          let value = &token_value[..len - 2];
+          return (
+            token_type,
+            Cow::Owned(format!("calc({value} * var(--vh-unit))")),
+          );
+        }
       }
       (token_type, Cow::Borrowed(token_value))
     }
@@ -84,6 +90,18 @@ mod tests {
   fn test_transform_rpx_case_insensitive() {
     let (_, tv) = transform_one_token(DIMENSION_TOKEN, "100RPX", &TransformerConfig::default());
     assert_eq!(tv, "calc(100 * var(--rpx-unit))");
+  }
+
+  #[test]
+  fn test_transform_ppx() {
+    let (_, tv) = transform_one_token(DIMENSION_TOKEN, "100ppx", &TransformerConfig::default());
+    assert_eq!(tv, "calc(100 * var(--ppx-unit))");
+  }
+
+  #[test]
+  fn test_transform_ppx_case_insensitive() {
+    let (_, tv) = transform_one_token(DIMENSION_TOKEN, "100PPX", &TransformerConfig::default());
+    assert_eq!(tv, "calc(100 * var(--ppx-unit))");
   }
 
   #[test]

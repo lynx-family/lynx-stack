@@ -340,7 +340,7 @@ impl MainThreadServerContext {
     true
   }
 
-  pub fn get_inline_styles_in_key_value_vec(&mut self, element_id: usize, k_v_vec: Vec<String>) {
+  pub fn set_inline_styles_in_key_value_vec(&mut self, element_id: usize, k_v_vec: Vec<String>) {
     let transformed_style_str = transform_inline_style_key_value_vec(
       k_v_vec,
       &crate::style_transformer::token_transformer::TransformerConfig {

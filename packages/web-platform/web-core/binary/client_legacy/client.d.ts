@@ -166,9 +166,9 @@ export function encode_legacy_json_generated_raw_style_info(raw_style_info: RawS
 
 export function get_font_face_content(buffer: Uint8Array): string;
 
-export function get_inline_styles_in_key_value_vec(dom: HTMLElement, k_v_vec: string[], transform_vw: boolean, transform_vh: boolean): void;
-
 export function get_style_content(buffer: Uint8Array): string;
+
+export function set_inline_styles_in_key_value_vec(dom: HTMLElement, k_v_vec: string[], transform_vw: boolean, transform_vh: boolean): void;
 
 export function set_inline_styles_in_str(dom: HTMLElement, styles: string, transform_vw: boolean, transform_vh: boolean): boolean;
 
@@ -195,7 +195,6 @@ export interface InitOutput {
     readonly decode_style_info: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
     readonly encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
     readonly get_font_face_content: (a: number, b: number) => void;
-    readonly get_inline_styles_in_key_value_vec: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly get_style_content: (a: number, b: number) => void;
     readonly mainthreadwasmcontext_add_cross_thread_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
     readonly mainthreadwasmcontext_add_dataset: (a: number, b: number, c: number, d: number, e: number) => void;
@@ -232,6 +231,7 @@ export interface InitOutput {
     readonly ruleprelude_new: () => number;
     readonly ruleprelude_push_selector: (a: number, b: number) => void;
     readonly selector_push_one_selector_section: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly set_inline_styles_in_key_value_vec: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly set_inline_styles_in_str: (a: number, b: number, c: number, d: number, e: number) => number;
     readonly set_inline_styles_number_key: (a: number, b: number, c: number, d: number) => void;
     readonly stylesheetresource_new: (a: number, b: number, c: number) => void;

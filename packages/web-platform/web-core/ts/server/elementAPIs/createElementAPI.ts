@@ -434,7 +434,7 @@ export function createElementAPI(
                 vec.push(k, v.toString());
               }
             }
-            wasmContext.get_inline_styles_in_key_value_vec(
+            wasmContext.set_inline_styles_in_key_value_vec(
               uniqueId,
               vec,
             );
