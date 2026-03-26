@@ -9,7 +9,7 @@
     "jsxImportSource": "./",
   },
   "references": [{
-    "path": "../worklet-runtime/tsconfig.json",
+    "path": "./tsconfig.worklet-runtime.json",
   }],
   "include": [
     "debug",
@@ -19,5 +19,8 @@
     "src",
     "types/types.d.ts",
     "types/internal-preact.d.ts",
+  ],
+  "exclude": [
+    "src/worklet-runtime",
   ],
 }

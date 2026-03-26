@@ -1,0 +1,15 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./lib/worklet-runtime",
+    "rootDir": "./src/worklet-runtime",
+    "stripInternal": true,
+    "target": "ESNext",
+    "lib": ["es2021"],
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "resolveJsonModule": true
+  },
+  "include": ["src/worklet-runtime/**/*"]
+}
