@@ -54,7 +54,7 @@ const {
   add_inline_style_raw_string_key,
   set_inline_styles_number_key,
   set_inline_styles_in_str,
-  get_inline_styles_in_key_value_vec,
+  set_inline_styles_in_key_value_vec,
 } = wasmInstance;
 
 export function createElementAPI(
@@ -306,7 +306,7 @@ export function createElementAPI(
               vec.push(k, v.toString());
             }
           }
-          get_inline_styles_in_key_value_vec(
+          set_inline_styles_in_key_value_vec(
             element,
             vec,
             transform_vw,

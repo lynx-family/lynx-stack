@@ -387,6 +387,30 @@ test.describe('reactlynx3 tests', () => {
       await expect(target).toHaveCSS('width', '10px');
     });
 
+    test('basic-rpx-unit-js-value', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const lynxView = await page.locator('lynx-view');
+      await lynxView.evaluate((node) => {
+        node.style.width = '50px';
+      });
+      const target = await page.locator('#target');
+      await expect(target).toHaveCSS('height', '10px'); // 20cqw, 50 / 100 * 20 = 10px
+      await expect(target).toHaveCSS('width', '10px');
+    });
+
+    test('basic-ppx-unit', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const lynxView = await page.locator('lynx-view');
+      await lynxView.evaluate((node) => {
+        node.style.width = '50px';
+      });
+      const target = await page.locator('#target');
+      await expect(target).toHaveCSS('height', '10px'); // 20cqw, 50 / 100 * 20 = 10px
+      await expect(target).toHaveCSS('width', '10px');
+    });
+
     test('basic-vw-vh-unit', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);

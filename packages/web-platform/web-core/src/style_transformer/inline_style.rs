@@ -60,7 +60,11 @@ pub(crate) fn transform_inline_style_key_value_vec(
       key = value;
     } else {
       let name = hyphenate_style_name(&key);
-      transformer.on_declaration_parsed(name.into(), value, false);
+      use crate::css_tokenizer::tokenize::Parser;
+      transformer.on_token(crate::css_tokenizer::token_types::IDENT_TOKEN, &name);
+      transformer.on_token(crate::css_tokenizer::token_types::COLON_TOKEN, ":");
+      crate::css_tokenizer::tokenize::tokenize(&value, transformer);
+      transformer.on_token(crate::css_tokenizer::token_types::SEMICOLON_TOKEN, ";");
     }
   }
 
@@ -272,5 +276,14 @@ mod tests {
     let source = "linear-layout-gravity: start;";
     let result = transform_inline_style_string(source, &TransformerConfig::default());
     assert_eq!(result, "--align-self-row:start;--align-self-column:start;");
+  }
+
+  #[test]
+  fn rpx_unit_in_key_value_vec() {
+    let result = transform_inline_style_key_value_vec(
+      vec!["height".to_string(), "100rpx".to_string()],
+      &TransformerConfig::default(),
+    );
+    assert_eq!(result, "height:calc(100 * var(--rpx-unit));");
   }
 }

@@ -18,7 +18,6 @@ export const add_inline_style_raw_string_key: (a: any, b: number, c: number, d: 
 export const decode_style_info: (a: any, b: number, c: number, d: number, e: number, f: number) => [number, number, number];
 export const encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number, number];
 export const get_font_face_content: (a: any) => [number, number, number, number];
-export const get_inline_styles_in_key_value_vec: (a: any, b: number, c: number, d: number, e: number) => void;
 export const get_style_content: (a: any) => [number, number, number, number];
 export const mainthreadwasmcontext_add_cross_thread_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
 export const mainthreadwasmcontext_add_dataset: (a: number, b: number, c: any, d: any) => [number, number];
@@ -55,6 +54,7 @@ export const rule_set_prelude: (a: number, b: number) => void;
 export const ruleprelude_new: () => number;
 export const ruleprelude_push_selector: (a: number, b: number) => void;
 export const selector_push_one_selector_section: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+export const set_inline_styles_in_key_value_vec: (a: any, b: number, c: number, d: number, e: number) => void;
 export const set_inline_styles_in_str: (a: any, b: number, c: number, d: number, e: number) => number;
 export const set_inline_styles_number_key: (a: any, b: number, c: number, d: number) => void;
 export const stylesheetresource_new: (a: any, b: any) => [number, number, number];
