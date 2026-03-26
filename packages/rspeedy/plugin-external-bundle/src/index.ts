@@ -32,6 +32,12 @@ const DEFAULT_REACT_UMD_PACKAGE_NAME = '@lynx-js/react-umd'
 const REACT_LYNX_BUNDLE_FILE_NAME = 'react.lynx.bundle'
 
 const reactLynxExternalTemplate = {
+  'react': {
+    libraryName: ['ReactLynx', 'React'],
+    background: { sectionPath: 'ReactLynx' },
+    mainThread: { sectionPath: 'ReactLynx__main-thread' },
+    async: false,
+  },
   '@lynx-js/react': {
     libraryName: ['ReactLynx', 'React'],
     background: { sectionPath: 'ReactLynx' },

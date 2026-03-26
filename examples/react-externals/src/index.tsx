@@ -1,4 +1,6 @@
 import '@lynx-js/react/debug';
+import { Fragment } from 'react';
+
 import { root } from '@lynx-js/react';
 
 import { App } from './App.js';
@@ -6,7 +8,10 @@ import { App } from './App.js';
 import './index.css';
 
 root.render(
-  <App />,
+  // biome-ignore lint/style/useFragmentSyntax: Just to demonstrate import react is external
+  <Fragment>
+    <App />,
+  </Fragment>,
 );
 
 if (import.meta.webpackHot) {

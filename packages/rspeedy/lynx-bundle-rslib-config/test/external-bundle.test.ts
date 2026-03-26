@@ -415,6 +415,19 @@ describe('mount externals library', () => {
       plugins: [pluginReactLynx()],
     })
 
+    await expect(resolveExternal(rslibConfig, 'react')).resolves
+      .toEqual([
+        'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
+        'ReactLynx',
+        'React',
+      ])
+    await expect(resolveExternal(rslibConfig, '@lynx-js/react')).resolves
+      .toEqual([
+        'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
+        'ReactLynx',
+        'React',
+      ])
+
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(

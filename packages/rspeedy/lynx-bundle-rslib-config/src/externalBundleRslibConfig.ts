@@ -85,6 +85,7 @@ export type Externals = Record<string, string | string[]>
  * @public
  */
 export const reactLynxExternalsPreset: Externals = {
+  'react': ['ReactLynx', 'React'],
   '@lynx-js/react': ['ReactLynx', 'React'],
   '@lynx-js/react/internal': ['ReactLynx', 'ReactInternal'],
   '@lynx-js/react/jsx-dev-runtime': ['ReactLynx', 'ReactJSXDevRuntime'],

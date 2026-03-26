@@ -326,6 +326,13 @@ describe('pluginExternalBundle', () => {
     const externals = getExternalsLoadingPluginOptions(externalBundlePlugin)
       .externals
 
+    expect(externals?.['react']).toMatchObject({
+      libraryName: ['ReactLynx', 'React'],
+      bundlePath: 'react.lynx.bundle',
+      background: { sectionPath: 'ReactLynx' },
+      mainThread: { sectionPath: 'ReactLynx__main-thread' },
+      async: false,
+    })
     expect(externals?.['@lynx-js/react']).toMatchObject({
       libraryName: ['ReactLynx', 'React'],
       bundlePath: 'react.lynx.bundle',
