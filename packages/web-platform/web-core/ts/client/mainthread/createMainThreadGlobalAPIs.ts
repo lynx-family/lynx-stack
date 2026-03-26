@@ -32,7 +32,7 @@ function createMainThreadLynx(
     },
     __globalProps: lynxViewInstance.globalprops,
     getCustomSectionSync(key: string) {
-      return (templateManager.getTemplate(
+      return (templateManager.getBundle(
         lynxViewInstance.templateUrl,
       )?.customSections as any)?.[key]
         ?.content;

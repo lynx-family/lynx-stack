@@ -155,7 +155,7 @@ export class LynxViewInstance implements AsyncDisposable {
 
   async onMTSScriptsLoaded(currentUrl: string, isLazy: boolean) {
     this.backgroundThread.markTiming('lepus_execute_start');
-    const urlMap = templateManager.getTemplate(currentUrl)
+    const urlMap = templateManager.getBundle(currentUrl)
       ?.lepusCode as Record<string, string>;
     this.lepusCodeUrls.set(
       currentUrl,
@@ -181,8 +181,8 @@ export class LynxViewInstance implements AsyncDisposable {
     this.backgroundThread.startWebWorker(
       processedData,
       this.globalprops,
-      templateManager.getTemplate(this.templateUrl)!.config!.cardType,
-      templateManager.getTemplate(this.templateUrl)?.customSections as Record<
+      templateManager.getBundle(this.templateUrl)!.config!.cardType,
+      templateManager.getBundle(this.templateUrl)?.customSections as Record<
         string,
         Cloneable
       >,
@@ -197,7 +197,7 @@ export class LynxViewInstance implements AsyncDisposable {
   }
 
   async onBTSScriptsLoaded(url: string) {
-    const btsUrls = templateManager.getTemplate(url)
+    const btsUrls = templateManager.getBundle(url)
       ?.backgroundCode as Record<
         string,
         string

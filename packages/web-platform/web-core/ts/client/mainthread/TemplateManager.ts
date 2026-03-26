@@ -24,7 +24,9 @@ const wasm = import(
 );
 
 export class TemplateManager {
-  readonly #templates: Map<string, DecodedTemplate> = new Map();
+  readonly #bundles: Map<string, DecodedTemplate> = new Map();
+  readonly #loadingBundles: Map<string, DecodedTemplate> = new Map();
+  readonly #loadingPromises: Map<string, Promise<void>> = new Map();
   readonly #lynxViewInstancesMap: Map<
     string,
     Promise<LynxViewInstance>
@@ -49,10 +51,10 @@ export class TemplateManager {
     transformVH: boolean,
     overrideConfig?: Record<string, string>,
   ): Promise<void> {
-    if (this.#templates.has(url) && !overrideConfig) {
+    if (this.#bundles.has(url) && !overrideConfig) {
       return (async () => {
-        const template = this.#templates.get(url);
-        const config = (template?.config || {}) as PageConfig;
+        const bundle = this.#bundles.get(url);
+        const config = (bundle?.config || {}) as PageConfig;
         const lynxViewInstance = await lynxViewInstancePromise;
         lynxViewInstance.backgroundThread.markTiming('decode_start');
         lynxViewInstance.onPageConfigReady(config);
@@ -60,15 +62,28 @@ export class TemplateManager {
         lynxViewInstance.onMTSScriptsLoaded(url, config.isLazy === 'true');
         lynxViewInstance.onBTSScriptsLoaded(url);
       })();
+    } else if (this.#loadingPromises.has(url)) {
+      return this.#loadingPromises.get(url)!.then(async () => {
+        const bundle = this.#bundles.get(url);
+        const config = (bundle?.config || {}) as PageConfig;
+        const lynxViewInstance = await lynxViewInstancePromise;
+        lynxViewInstance.backgroundThread.markTiming('decode_start');
+        lynxViewInstance.onPageConfigReady(config);
+        lynxViewInstance.onStyleInfoReady(url);
+        lynxViewInstance.onMTSScriptsLoaded(url, config.isLazy === 'true');
+        lynxViewInstance.onBTSScriptsLoaded(url);
+      });
     } else {
-      this.createTemplate(url);
-      return this.#load(
+      this.createBundle(url);
+      const promise = this.#load(
         url,
         lynxViewInstancePromise,
         transformVW,
         transformVH,
         overrideConfig,
       );
+      this.#loadingPromises.set(url, promise);
+      return promise;
     }
   }
 
@@ -100,7 +115,7 @@ export class TemplateManager {
       overrideConfig,
     };
     this.#worker!.postMessage(msg);
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       this.#pendingResolves.set(url, { resolve, reject });
     });
   }
@@ -174,13 +189,19 @@ export class TemplateManager {
         this.#handleSection(msg, lynxViewInstancePromise);
         break;
       case 'error':
-        console.error(`Error decoding template ${url}:`, msg.error);
+        console.error(`Error decoding bundle ${url}:`, msg.error);
         this.#cleanup(url);
-        this.#removeTemplate(url);
+        this.#removeBundle(url);
         this.#rejectPromise(url, new Error(msg.error));
+        this.#loadingPromises.delete(url);
         break;
       case 'done':
         this.#cleanup(url);
+        const bundle = this.#loadingBundles.get(url);
+        if (bundle) {
+          this.#bundles.set(url, bundle);
+          this.#loadingBundles.delete(url);
+        }
         /* TODO: The promise resolution is deferred inside .then() without error handling.
          *
          */
@@ -188,6 +209,7 @@ export class TemplateManager {
           instance.backgroundThread.markTiming('decode_end');
           instance.backgroundThread.markTiming('load_template_start');
           this.#resolvePromise(url);
+          this.#loadingPromises.delete(url);
         });
         break;
     }
@@ -217,9 +239,9 @@ export class TemplateManager {
           new Uint8Array(data as ArrayBuffer),
           document,
         );
-        const template = this.#templates.get(url);
-        if (template) {
-          template.styleSheet = resource;
+        const bundle = this.#loadingBundles.get(url);
+        if (bundle) {
+          bundle.styleSheet = resource;
         }
         instance.onStyleInfoReady(url);
         break;
@@ -250,53 +272,71 @@ export class TemplateManager {
     this.#lynxViewInstancesMap.delete(url);
   }
 
-  createTemplate(url: string) {
-    if (this.#templates.has(url)) {
-      // remove the template and revoke URLs
-      const template = this.#templates.get(url);
-      if (template) {
-        if (template.lepusCode) {
-          for (const blobUrl of Object.values(template.lepusCode)) {
+  createBundle(url: string) {
+    if (this.#bundles.has(url)) {
+      const bundle = this.#bundles.get(url);
+      if (bundle) {
+        if (bundle.lepusCode) {
+          for (const blobUrl of Object.values(bundle.lepusCode)) {
             URL.revokeObjectURL(blobUrl);
           }
         }
-        if (template.backgroundCode) {
-          for (const blobUrl of Object.values(template.backgroundCode)) {
+        if (bundle.backgroundCode) {
+          for (const blobUrl of Object.values(bundle.backgroundCode)) {
             URL.revokeObjectURL(blobUrl);
           }
         }
-        if (template.styleSheet) {
-          template.styleSheet.free();
+        if (bundle.styleSheet) {
+          bundle.styleSheet.free();
         }
       }
-      this.#templates.delete(url);
+      this.#bundles.delete(url);
     }
-    this.#templates.set(url, {});
+    if (this.#loadingBundles.has(url)) {
+      const bundle = this.#loadingBundles.get(url);
+      if (bundle) {
+        if (bundle.lepusCode) {
+          for (const blobUrl of Object.values(bundle.lepusCode)) {
+            URL.revokeObjectURL(blobUrl);
+          }
+        }
+        if (bundle.backgroundCode) {
+          for (const blobUrl of Object.values(bundle.backgroundCode)) {
+            URL.revokeObjectURL(blobUrl);
+          }
+        }
+        if (bundle.styleSheet) {
+          bundle.styleSheet.free();
+        }
+      }
+      this.#loadingBundles.delete(url);
+    }
+    this.#loadingBundles.set(url, {});
   }
 
-  #removeTemplate(url: string) {
-    this.createTemplate(url); // This actually clears it in current logic
-    this.#templates.delete(url);
+  #removeBundle(url: string) {
+    this.createBundle(url); // This actually clears it in current logic
+    this.#loadingBundles.delete(url);
   }
 
   #setConfig(url: string, config: PageConfig) {
-    const template = this.#templates.get(url);
-    if (template) {
-      template.config = config;
+    const bundle = this.#loadingBundles.get(url);
+    if (bundle) {
+      bundle.config = config;
     }
   }
 
   #setLepusCode(url: string, lepusCode: Record<string, string>) {
-    const template = this.#templates.get(url);
-    if (template) {
-      template.lepusCode = lepusCode;
+    const bundle = this.#loadingBundles.get(url);
+    if (bundle) {
+      bundle.lepusCode = lepusCode;
     }
   }
 
   #setCustomSection(url: string, customSections: Record<string, any>) {
-    const template = this.#templates.get(url);
-    if (template) {
-      template.customSections = customSections;
+    const bundle = this.#loadingBundles.get(url);
+    if (bundle) {
+      bundle.customSections = customSections;
     }
   }
 
@@ -304,18 +344,18 @@ export class TemplateManager {
     url: string,
     backgroundCode: Record<string, string>,
   ) {
-    const template = this.#templates.get(url);
-    if (template) {
-      template.backgroundCode = backgroundCode;
+    const bundle = this.#loadingBundles.get(url);
+    if (bundle) {
+      bundle.backgroundCode = backgroundCode;
     }
   }
 
-  public getTemplate(url: string): DecodedTemplate | undefined {
-    return this.#templates.get(url);
+  public getBundle(url: string): DecodedTemplate | undefined {
+    return this.#bundles.get(url) || this.#loadingBundles.get(url);
   }
 
   public getStyleSheet(url: string): any {
-    return this.#templates.get(url)?.styleSheet;
+    return this.getBundle(url)?.styleSheet;
   }
 }
 
