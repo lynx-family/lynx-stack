@@ -146,8 +146,10 @@ When the preset uses `bundlePath` instead of an explicit `url`, the plugin will:
 - emit `react.lynx.bundle` into the app output
 - load it through the runtime public path
 
-The same extension pattern is available on the consumer side through
-`pluginExternalBundle({ externalsPresetDefinitions })`.
+Consumer-side preset extension is also supported through
+`pluginExternalBundle({ externalsPresetDefinitions })`, but those definitions
+use `resolveExternals` / `resolveManagedAssets` callbacks rather than inline
+`externals`.
 
 ## Manual Hosting
 
