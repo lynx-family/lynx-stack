@@ -90,6 +90,13 @@ export interface ExternalsLoadingPluginOptions {
    * @default 'lynx'
    */
   globalObject?: 'lynx' | 'globalThis' | undefined;
+
+  /**
+   * The timeout in milliseconds for loading the externals.
+   *
+   * @defaultValue 2000
+   */
+  timeout?: number | undefined;
 }
 
 /**
@@ -428,7 +435,8 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             url,
             bundlePath,
             async = true,
-            timeout: timeoutInMs = 2000,
+            timeout: timeoutInMs = externalsLoadingPluginOptions.timeout
+              ?? 2000,
           } = external;
           const layerOptions = external[layer];
           // Lynx fetchBundle timeout is in seconds

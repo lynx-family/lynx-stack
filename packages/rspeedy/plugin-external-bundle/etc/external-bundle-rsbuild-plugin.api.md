@@ -39,7 +39,7 @@ export function normalizeBundlePath(bundlePath: string): string;
 export function pluginExternalBundle(options: PluginExternalBundleOptions): RsbuildPlugin;
 
 // @public
-export interface PluginExternalBundleOptions extends Pick<ExternalsLoadingPluginOptions, 'globalObject'> {
+export interface PluginExternalBundleOptions extends Pick<ExternalsLoadingPluginOptions, 'globalObject' | 'timeout'> {
     externalBundleRoot?: string;
     externals?: Record<string, PluginExternalConfig>;
     externalsPresetDefinitions?: ExternalsPresetDefinitions;

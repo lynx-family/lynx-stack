@@ -203,6 +203,13 @@ export interface ExternalBundleLibConfig extends LibConfig {
   output?: OutputConfig
 }
 
+/**
+ * Resolve a single preset into the final external map that Rslib should use.
+ *
+ * This walks `extends` recursively so a business preset can layer on top of a
+ * built-in preset such as `reactlynx`, while still detecting unknown preset
+ * names and circular references early.
+ */
 function resolvePresetExternals(
   presetName: string,
   presetDefinitions: ExternalsPresetDefinitions,
@@ -230,7 +237,7 @@ function resolvePresetExternals(
       ? presetDefinition.extends
       : [presetDefinition.extends])
     : []
-
+  // recursively resolve extended presets
   for (const inheritedPresetName of inheritedPresetNames) {
     Object.assign(
       mergedExternals,
@@ -247,6 +254,13 @@ function resolvePresetExternals(
   return mergedExternals
 }
 
+/**
+ * Merge user-provided preset definitions with the built-in preset table.
+ *
+ * A custom definition with the same name as a built-in preset is treated as an
+ * extension of that preset instead of a full replacement, so callers can
+ * augment `reactlynx` without re-declaring all of its default externals.
+ */
 function resolvePresetDefinitions(
   presetDefinitions?: ExternalsPresetDefinitions,
 ): ExternalsPresetDefinitions {
@@ -289,6 +303,14 @@ function resolvePresetDefinitions(
   return resolvedDefinitions
 }
 
+/**
+ * Convert Lynx-friendly preset/object config into the low-level Rslib
+ * `output.externals` callback.
+ *
+ * This is the bridge between:
+ * - preset-based config exposed by `defineExternalBundleRslibConfig`, and
+ * - the final `var` externals shape consumed by Rspack/Rslib.
+ */
 function transformExternals(
   externalsPresets?: ExternalsPresets,
   externals?: Externals,
@@ -433,6 +455,14 @@ interface ExposedLayers {
   readonly MAIN_THREAD: string
 }
 
+/**
+ * Rewrite user entries into explicit background/main-thread entries.
+ *
+ * External bundles are emitted per thread, so a single logical entry without
+ * an explicit layer is expanded into two concrete entries:
+ * - `<name>` for background
+ * - `<name>__main-thread` for main thread
+ */
 const externalBundleEntryRsbuildPlugin = (): rsbuild.RsbuildPlugin => ({
   name: 'lynx:external-bundle-entry',
   // ensure dsl plugin has exposed LAYERS
@@ -445,7 +475,7 @@ const externalBundleEntryRsbuildPlugin = (): rsbuild.RsbuildPlugin => ({
 
     if (!LAYERS) {
       throw new Error(
-        'external-bundle-rsbuild-plugin requires exposed `LAYERS`. Please install a DSL plugin, for example `pluginReactLynx` for ReactLynx.',
+        'lynx-bundle-rslib-config requires exposed `LAYERS`. Please install a DSL plugin, for example `pluginReactLynx` for ReactLynx.',
       )
     }
 

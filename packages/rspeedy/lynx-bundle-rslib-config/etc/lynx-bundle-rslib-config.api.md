@@ -60,7 +60,9 @@ export interface ExternalsPresetDefinition {
 export type ExternalsPresetDefinitions = Record<string, ExternalsPresetDefinition>;
 
 // @public
-export type ExternalsPresets = Record<string, boolean>;
+export type ExternalsPresets = {
+    reactlynx?: boolean;
+} & Record<string, boolean>;
 
 // @public
 export class MainThreadRuntimeWrapperWebpackPlugin {
