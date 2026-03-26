@@ -4,6 +4,11 @@
     "composite": true,
     "outDir": "./lib",
     "baseUrl": "./",
+    "paths": {
+      "@lynx-js/react/worklet-runtime/bindings": [
+        "./src/worklet-runtime/bindings/index.ts",
+      ],
+    },
     "rootDir": "./src",
     "jsx": "react-jsx",
     "jsxImportSource": "./",
