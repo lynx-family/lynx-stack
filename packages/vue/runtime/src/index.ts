@@ -190,21 +190,21 @@ export const vShow: ObjectDirective<ShadowElement, unknown> = {
 };
 
 /** Lynx stub for vModelText. v-model on inputs is not yet supported. */
-export const vModelText = {
-  beforeMount() {
+export const vModelText: { beforeMount(): void; beforeUpdate(): void } = {
+  beforeMount(): void {
     console.warn('[vue-lynx] v-model is not supported yet');
   },
-  beforeUpdate() {/* no-op */},
+  beforeUpdate(): void {/* no-op */},
 };
 
 /** Lynx stub for vModelCheckbox. */
-export const vModelCheckbox = vModelText;
+export const vModelCheckbox: typeof vModelText = vModelText;
 
 /** Lynx stub for vModelSelect. */
-export const vModelSelect = vModelText;
+export const vModelSelect: typeof vModelText = vModelText;
 
 /** Lynx stub for vModelRadio. */
-export const vModelRadio = vModelText;
+export const vModelRadio: typeof vModelText = vModelText;
 
 /** Lynx stub for withModifiers (event modifier helper). */
 export function withModifiers(

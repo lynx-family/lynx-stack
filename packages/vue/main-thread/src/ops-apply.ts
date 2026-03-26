@@ -30,7 +30,7 @@ const OP = {
 } as const;
 
 /** Map from BG-thread ShadowElement id → Lynx Main Thread element handle */
-const elements = new Map<number, LynxElement>();
+const elements: Map<number, LynxElement> = new Map<number, LynxElement>();
 
 export function applyOps(ops: unknown[]): void {
   const len = ops.length;
@@ -196,7 +196,7 @@ export function applyOps(ops: unknown[]): void {
 
       case OP.SET_MT_REF: {
         const id = ops[i++] as number;
-        const refImpl = ops[i++];
+        const refImpl = ops[i++] as { _wvid: number; _initValue: unknown };
         const el = elements.get(id);
         if (__DEV__) {
           console.info(
@@ -209,8 +209,10 @@ export function applyOps(ops: unknown[]): void {
           );
         }
         // Store in workletRefMap so worklet-runtime can resolve _wvid → element.
-        // lynxWorkletImpl is provided by @lynx-js/react/worklet-runtime when
-        // loaded on the Main Thread. Phase 1: just log for verification.
+        // lynxWorkletImpl is provided by @lynx-js/react/worklet-runtime.
+        // We must call updateWorkletRefInitValueChanges first to create the map
+        // entry — updateWorkletRef only reads _workletRefMap[wvid] for positive
+        // wvids and crashes if the entry doesn't exist yet.
         if (
           el
           && typeof globalThis !== 'undefined'
@@ -221,8 +223,14 @@ export function applyOps(ops: unknown[]): void {
           ] as {
             _refImpl?: {
               updateWorkletRef(ref: unknown, el: LynxElement): void;
+              updateWorkletRefInitValueChanges(
+                changes: [number, unknown][],
+              ): void;
             };
           };
+          impl._refImpl?.updateWorkletRefInitValueChanges([
+            [refImpl._wvid, refImpl._initValue],
+          ]);
           impl._refImpl?.updateWorkletRef(refImpl, el);
         }
         break;

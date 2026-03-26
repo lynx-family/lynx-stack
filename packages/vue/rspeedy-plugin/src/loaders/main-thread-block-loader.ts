@@ -80,7 +80,7 @@ function transformToBg(source: string, filename: string): string {
  *   export function onTap(event) { ... }
  *   →
  *   function onTap(event) { ... }
- *   registerWorkletInternal('src/foo/Bar.vue:onTap', onTap);
+ *   registerWorkletInternal('main-thread', 'src/foo/Bar.vue:onTap', onTap);
  */
 function transformToMt(source: string, filename: string): string {
   const names = extractExportedNames(source);
@@ -88,7 +88,7 @@ function transformToMt(source: string, filename: string): string {
   const registrations = names
     .map(
       (name) =>
-        `registerWorkletInternal(${
+        `registerWorkletInternal("main-thread", ${
           JSON.stringify(`${filename}:${name}`)
         }, ${name});`,
     )

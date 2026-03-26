@@ -193,6 +193,13 @@ export function applyEntry(
     const nullLoaderPath = path.resolve(_dirname, './loaders/null-loader');
 
     // BG layer: transform <script main-thread> before vue-loader.
+    // Only runs on the main .vue file — vue-loader caches the transformed
+    // SFC descriptor from this pass and re-uses it for all virtual
+    // sub-requests (e.g. *.vue.ts?vue&type=script), so the pre-loader does
+    // not need to intercept those sub-requests.
+    // (Contrast with the null-loader rules below, which use resourceQuery to
+    // silence specific sub-request modules after vue-loader has already
+    // created them.)
     chain.module
       .rule('vue:main-thread-pre:bg')
       .test(/\.vue$/)

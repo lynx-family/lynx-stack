@@ -13,6 +13,11 @@ export default defineConfig({
     entry: {
       index: './src/index.ts',
       'loaders/ignore-css-loader': './src/loaders/ignore-css-loader.ts',
+      'loaders/vue-main-thread-pre-loader':
+        './src/loaders/vue-main-thread-pre-loader.ts',
+      'loaders/main-thread-block-loader':
+        './src/loaders/main-thread-block-loader.ts',
+      'loaders/null-loader': './src/loaders/null-loader.ts',
     },
     tsconfigPath: './tsconfig.build.json',
   },

@@ -63,9 +63,10 @@ export default function vueMainThreadPreLoader(
   runSwcTransform(mtBlock.content.trim(), relativeFilename, target, {})
     .then((transformed: string) => {
       if (target === 'MT') {
+        const langAttr = mtBlock.lang ? ` lang="${mtBlock.lang}"` : '';
         callback(
           null,
-          `<script>\n${transformed}\n</script>\n<template></template>`,
+          `<script${langAttr}>\n${transformed}\n</script>\n<template></template>`,
         );
       } else {
         // Strip `export` to turn module exports into local setup declarations.
@@ -91,6 +92,8 @@ interface ScriptBlock {
   start: number;
   /** End offset just after `</script>`. */
   end: number;
+  /** The `lang` attribute value from the opening tag (e.g. `"ts"`), or null. */
+  lang: string | null;
 }
 
 /**
@@ -121,10 +124,12 @@ function findScriptMainThreadBlock(source: string): ScriptBlock | null {
   const closeIndex = source.indexOf('</script>', contentStart);
   if (closeIndex === -1) return null;
 
+  const langMatch = /\blang=["']([^"']+)["']/.exec(openMatch[0]);
   return {
     content: source.slice(contentStart, closeIndex),
     start: openMatch.index,
     end: closeIndex + '</script>'.length,
+    lang: langMatch ? (langMatch[1] ?? null) : null,
   };
 }
 

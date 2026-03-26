@@ -17,6 +17,15 @@ import { applyOps, elements } from './ops-apply.js';
 
 const g = globalThis as Record<string, unknown>;
 
+// Older Lynx SDK versions do not provide `SystemInfo` as a Lepus global.
+// The worklet-runtime (@lynx-js/react/worklet-runtime) calls SystemInfo.lynxSdkVersion
+// at module evaluation time to gate optional features (e.g. jsFunctionLifecycleManager).
+// Without this shim, the worklet-runtime throws ReferenceError and aborts before it can
+// register globalThis.registerWorkletInternal / globalThis.runWorklet.
+if (typeof g['SystemInfo'] === 'undefined') {
+  g['SystemInfo'] = { lynxSdkVersion: '1.0' };
+}
+
 /** PAGE_ROOT_ID must match the value in runtime/src/shadow-element.ts */
 const PAGE_ROOT_ID = 1;
 
