@@ -153,6 +153,7 @@ jobs:
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
         pnpm --filter @lynx-js/web-core-e2e run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/2
+        pnpm --filter @lynx-js/web-core-e2e run coverage:ci
   test-api:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
