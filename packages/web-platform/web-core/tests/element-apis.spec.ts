@@ -414,6 +414,19 @@ describe('Element APIs', () => {
     expect(targetStyle).toContain('calc(50.5 * var(--rpx-unit))');
   });
 
+  test('__SetInlineStyles with ppx', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    let target = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__SetID(target, 'target');
+    mtsGlobalThis.__SetInlineStyles(target, 'margin: 10ppx; width: 50.5ppx;');
+    mtsGlobalThis.__AppendElement(root, target);
+    mtsGlobalThis.__FlushElementTree();
+    const targetDom = rootDom.querySelector('#target') as HTMLElement;
+    const targetStyle = targetDom.getAttribute('style');
+    expect(targetStyle).toContain('calc(10 * var(--ppx-unit))');
+    expect(targetStyle).toContain('calc(50.5 * var(--ppx-unit))');
+  });
+
   test('__SetInlineStyles with vw and vh when enabled', () => {
     const mtsGlobalThisUnits = createElementAPI(
       rootDom,
@@ -457,10 +470,12 @@ describe('Element APIs', () => {
     mtsGlobalThisUnits.__FlushElementTree();
     const targetDom = rootDom.querySelector('#target') as HTMLElement;
     const targetStyle = targetDom.getAttribute('style');
-    expect(targetStyle).toBe('width:50vw;height:100vh;');
+    expect(targetStyle).toBe(
+      'width:calc(50 * var(--vw-unit));height:calc(100 * var(--vh-unit));',
+    );
   });
 
-  test('__SetAttribute style with rpx, vw, vh', () => {
+  test('__SetAttribute style with rpx, ppx, vw, vh', () => {
     const mtsGlobalThisUnits = createElementAPI(
       rootDom,
       mtsBinding,
@@ -476,13 +491,15 @@ describe('Element APIs', () => {
     mtsGlobalThisUnits.__SetAttribute(
       target,
       'style',
-      'width: 50vw; height: 100vh; margin: 10rpx;',
+      'width: 50vw; height: 100vh; margin: 10rpx; padding: 5ppx;',
     );
     mtsGlobalThisUnits.__AppendElement(root, target);
     mtsGlobalThisUnits.__FlushElementTree();
     const targetDom = rootDom.querySelector('#target') as HTMLElement;
     const targetStyle = targetDom.getAttribute('style');
-    expect(targetStyle).toBe('width: 50vw; height: 100vh; margin: 10rpx;');
+    expect(targetStyle).toBe(
+      'width: 50vw; height: 100vh; margin: 10rpx; padding: 5ppx;',
+    );
   });
 
   test('__GetConfig__AddConfig', () => {
@@ -1471,8 +1488,10 @@ describe('Element APIs', () => {
       expect(html2).toContain('calc(100 * var(--vh-unit))');
       expect(html2).toContain('calc(10 * var(--rpx-unit))');
 
-      const html3 = wasmCtx.generate_html(api.__GetElementUniqueID(view3));
-      expect(html3).toContain('style="width:50vw;height:100vh;margin:10rpx;"');
+      const html3 = wasmCtx.generate_html(true);
+      expect(html3).toContain(
+        'style="width:calc(50 * var(--vw-unit));height:calc(100 * var(--vh-unit));margin:calc(10 * var(--rpx-unit));"',
+      );
 
       const view4 = api.__CreateElement('view', api.__GetElementUniqueID(root));
       api.__SetAttribute(

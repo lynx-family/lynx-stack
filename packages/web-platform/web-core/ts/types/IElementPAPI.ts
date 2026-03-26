@@ -338,7 +338,15 @@ export type InvokeUIMethodPAPI = (
 export type QuerySelectorPAPI = (
   element: HTMLElement,
   selector: string,
+  options?: unknown,
 ) => unknown;
+
+export type QuerySelectorAllPAPI = (
+  element: HTMLElement,
+  selector: string,
+  options?: unknown,
+) => unknown[];
+
 export interface ElementPAPIs {
   // __GetTemplateParts currently only provided by the thread-strategy = "all-on-ui" (default)
   __GetTemplateParts: GetTemplatePartsPAPI;
@@ -400,6 +408,7 @@ export interface ElementPAPIs {
   __ElementAnimate: ElementAnimatePAPI;
   __InvokeUIMethod: InvokeUIMethodPAPI;
   __QuerySelector: QuerySelectorPAPI;
+  __QuerySelectorAll: QuerySelectorAllPAPI;
   __FlushElementTree: (
     _subTree?: unknown,
     options?: FlushElementTreeOptions,

@@ -11,7 +11,6 @@ export class MainThreadServerContext {
     generate_html(element_id: number): string;
     get_attribute(element_id: number, key: string): string | undefined;
     get_attributes(element_id: number): object;
-    get_inline_styles_in_key_value_vec(element_id: number, k_v_vec: string[]): void;
     get_page_css(): string;
     get_parent(child_id: number): number | undefined;
     get_tag(element_id: number): string | undefined;
@@ -24,6 +23,7 @@ export class MainThreadServerContext {
     replace_elements(parent_id: number, new_children_ids: Uint32Array, old_children_ids: Uint32Array): void;
     set_attribute(element_id: number, key: string, value: string): void;
     set_css_id(elements_unique_id: Uint32Array, css_id: number, entry_name?: string | null): void;
+    set_inline_styles_in_key_value_vec(element_id: number, k_v_vec: string[]): void;
     set_inline_styles_in_str(element_id: number, styles: string): boolean;
     set_inline_styles_number_key(element_id: number, key: number, value?: string | null): void;
     update_css_og_style(unique_id: number, entry_name?: string | null): void;
