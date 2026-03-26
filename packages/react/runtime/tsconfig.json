@@ -20,7 +20,4 @@
     "types/types.d.ts",
     "types/internal-preact.d.ts",
   ],
-  "exclude": [
-    "src/worklet-runtime",
-  ],
 }
