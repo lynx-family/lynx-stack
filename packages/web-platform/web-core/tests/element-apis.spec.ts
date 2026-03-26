@@ -470,7 +470,9 @@ describe('Element APIs', () => {
     mtsGlobalThisUnits.__FlushElementTree();
     const targetDom = rootDom.querySelector('#target') as HTMLElement;
     const targetStyle = targetDom.getAttribute('style');
-    expect(targetStyle).toBe('width:50vw;height:100vh;');
+    expect(targetStyle).toBe(
+      'width:calc(50 * var(--vw-unit));height:calc(100 * var(--vh-unit));',
+    );
   });
 
   test('__SetAttribute style with rpx, ppx, vw, vh', () => {
@@ -1486,8 +1488,10 @@ describe('Element APIs', () => {
       expect(html2).toContain('calc(100 * var(--vh-unit))');
       expect(html2).toContain('calc(10 * var(--rpx-unit))');
 
-      const html3 = wasmCtx.generate_html(api.__GetElementUniqueID(view3));
-      expect(html3).toContain('style="width:50vw;height:100vh;margin:10rpx;"');
+      const html3 = wasmCtx.generate_html(true);
+      expect(html3).toContain(
+        'style="width:calc(50 * var(--vw-unit));height:calc(100 * var(--vh-unit));margin:calc(10 * var(--rpx-unit));"',
+      );
 
       const view4 = api.__CreateElement('view', api.__GetElementUniqueID(root));
       api.__SetAttribute(
