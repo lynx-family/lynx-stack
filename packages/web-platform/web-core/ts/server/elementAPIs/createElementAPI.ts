@@ -488,6 +488,9 @@ export function createElementAPI(
       __QuerySelector: () => {
         throw new Error('Not yet Implemented');
       },
+      __QuerySelectorAll: () => {
+        throw new Error('Not yet Implemented');
+      },
     },
     wasmContext,
   };

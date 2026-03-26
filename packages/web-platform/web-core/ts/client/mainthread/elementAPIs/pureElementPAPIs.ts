@@ -39,6 +39,7 @@ import type {
   UpdateListCallbacksPAPI,
   InvokeUIMethodPAPI,
   QuerySelectorPAPI,
+  QuerySelectorAllPAPI,
 } from '../../../types/index.js';
 
 export const __AppendElement: AppendElementPAPI = /*#__PURE__*/ (
@@ -274,6 +275,15 @@ export const __InvokeUIMethod: InvokeUIMethodPAPI = /*#__PURE__*/ (
 export const __QuerySelector: QuerySelectorPAPI = /*#__PURE__*/ (
   element,
   selector,
+  _options?,
 ) => {
   return element.querySelector(selector);
+};
+
+export const __QuerySelectorAll: QuerySelectorAllPAPI = /*#__PURE__*/ (
+  element,
+  selector,
+  _options?,
+) => {
+  return Array.from(element.querySelectorAll(selector));
 };
