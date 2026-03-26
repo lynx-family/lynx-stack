@@ -1,9 +1,9 @@
 ---
 "@lynx-js/external-bundle-rsbuild-plugin": minor
 "@lynx-js/externals-loading-webpack-plugin": minor
-"@lynx-js/react-umd": patch
+"@lynx-js/lynx-bundle-rslib-config": minor
 ---
 
-feat: support `bundlePath`-based external bundles and dedicated external bundle roots.
+**BREAKING CHANGE**:
 
-Also add `@lynx-js/react-umd` `dev` and `prod` export entries for external-bundle tooling.
+Simplify the API for external bundle builds by `externalsPresets` and `externalsPresetDefinitions`.

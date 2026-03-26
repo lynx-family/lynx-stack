@@ -119,7 +119,9 @@ export const reactLynxExternalsPreset: Externals = {
  *
  * @public
  */
-export type ExternalsPresets = Record<string, boolean>
+export type ExternalsPresets = {
+  reactlynx?: boolean
+} & Record<string, boolean>
 
 /**
  * Definition for a named externals preset.
@@ -174,7 +176,7 @@ export type OutputConfig = Required<LibConfig>['output'] & {
   /**
    * Definitions for custom externals presets enabled by `externalsPresets`.
    *
-   * Use this to add business-specific presets such as `tux`, or to extend a
+   * Use this to add business-specific presets such as `@lynx-js/lynx-ui`, or to extend a
    * built-in preset through `extends`.
    */
   externalsPresetDefinitions?: ExternalsPresetDefinitions

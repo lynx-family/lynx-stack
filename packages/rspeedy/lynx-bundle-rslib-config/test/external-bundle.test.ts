@@ -537,13 +537,13 @@ describe('mount externals library', () => {
           root: path.join(fixtureDir, 'dist'),
         },
         externalsPresets: {
-          tux: true,
+          lynxUi: true,
         },
         externalsPresetDefinitions: {
-          tux: {
+          lynxUi: {
             externals: {
-              '@lynx-js/react': ['TuxRuntime', 'React'],
-              '@lynx-js/react/jsx-runtime': ['TuxRuntime', 'ReactJSXRuntime'],
+              '@lynx-js/react': ['LynxUI', 'React'],
+              '@lynx-js/react/jsx-runtime': ['LynxUI', 'ReactJSXRuntime'],
             },
           },
         },
@@ -555,13 +555,13 @@ describe('mount externals library', () => {
     await expect(resolveExternal(rslibConfig, '@lynx-js/react')).resolves
       .toEqual([
         'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
-        'TuxRuntime',
+        'LynxUI',
         'React',
       ])
     await expect(resolveExternal(rslibConfig, '@lynx-js/react/jsx-runtime'))
       .resolves.toEqual([
         'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
-        'TuxRuntime',
+        'LynxUI',
         'ReactJSXRuntime',
       ])
   })

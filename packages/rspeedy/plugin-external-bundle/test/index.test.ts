@@ -216,7 +216,7 @@ describe('pluginExternalBundle', () => {
 
     // The error should be thrown during config inspection/build
     await expect(rsbuild.inspectConfig()).rejects.toThrow(
-      'external-bundle-rsbuild-plugin requires exposed `LAYERS`.',
+      'external-bundle-rsbuild-plugin requires exposed `LAYERS`. Please install a DSL plugin, for example `pluginReactLynx` for ReactLynx.',
     )
   })
 
@@ -493,17 +493,17 @@ describe('pluginExternalBundle', () => {
           pluginStubLayers(),
           pluginExternalBundle({
             externalsPresets: {
-              tux: true,
+              lynxUi: true,
             },
             externalsPresetDefinitions: {
-              tux: {
+              lynxUi: {
                 resolveExternals() {
                   return {
-                    '@acme/tux': {
-                      libraryName: ['TuxRuntime', 'Tux'],
-                      bundlePath: 'tux.lynx.bundle',
-                      background: { sectionPath: 'TuxRuntime' },
-                      mainThread: { sectionPath: 'TuxRuntime__main-thread' },
+                    '@lynx-js/lynx-ui': {
+                      libraryName: ['LynxUI', 'UI'],
+                      bundlePath: 'lynx-ui.lynx.bundle',
+                      background: { sectionPath: 'LynxUI' },
+                      mainThread: { sectionPath: 'LynxUI__main-thread' },
                       async: false,
                     },
                   }
@@ -521,11 +521,11 @@ describe('pluginExternalBundle', () => {
     const externals = getExternalsLoadingPluginOptions(externalBundlePlugin)
       .externals
 
-    expect(externals?.['@acme/tux']).toMatchObject({
-      libraryName: ['TuxRuntime', 'Tux'],
-      bundlePath: 'tux.lynx.bundle',
-      background: { sectionPath: 'TuxRuntime' },
-      mainThread: { sectionPath: 'TuxRuntime__main-thread' },
+    expect(externals?.['@lynx-js/lynx-ui']).toMatchObject({
+      libraryName: ['LynxUI', 'UI'],
+      bundlePath: 'lynx-ui.lynx.bundle',
+      background: { sectionPath: 'LynxUI' },
+      mainThread: { sectionPath: 'LynxUI__main-thread' },
       async: false,
     })
   })

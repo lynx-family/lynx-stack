@@ -268,14 +268,16 @@ export interface PluginExternalBundleOptions extends
   externals?: Record<string, PluginExternalConfig>
 
   /**
-   * Built-in externals presets.
+   * Presets for external libraries.
+   *
+   * Same as https://rspack.rs/config/externals#externalspresets but for Lynx.
    */
   externalsPresets?: ExternalsPresets
 
   /**
    * Definitions for custom externals presets enabled by `externalsPresets`.
    *
-   * Use this to add business-specific presets such as `tux`, or to extend a
+   * Use this to add business-specific presets such as `lynxUi`, or to extend a
    * built-in preset through `extends`.
    */
   externalsPresetDefinitions?: ExternalsPresetDefinitions
@@ -828,7 +830,7 @@ export function pluginExternalBundle(
 
         if (!LAYERS) {
           throw new Error(
-            'external-bundle-rsbuild-plugin requires exposed `LAYERS`.',
+            'external-bundle-rsbuild-plugin requires exposed `LAYERS`. Please install a DSL plugin, for example `pluginReactLynx` for ReactLynx.',
           )
         }
 

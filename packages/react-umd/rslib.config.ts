@@ -13,6 +13,5 @@ export default defineExternalBundleRslibConfig({
   ],
   output: {
     distPath: './dist',
-    cleanDistPath: false,
   },
 });

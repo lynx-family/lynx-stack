@@ -1,5 +1,5 @@
 ---
-"@lynx-js/lynx-bundle-rslib-config": minor
+"@lynx-js/react-umd": patch
 ---
 
-feat: add a `reactlynx` externals preset for external bundle builds.
+Add a new `entry` export to `@lynx-js/react-umd` for reuse by wrapper libraries of `@lynx-js/react`.
