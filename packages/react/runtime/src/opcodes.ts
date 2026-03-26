@@ -6,12 +6,10 @@ import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap
 import { CHILDREN } from './renderToOpcodes/constants.js';
 import { SnapshotInstance } from './snapshot.js';
 
-const enum Opcode {
-  Begin = 0,
-  End,
-  Attr,
-  Text,
-}
+const OpcodeBegin = 0;
+const OpcodeEnd = 1;
+const OpcodeAttr = 2;
+const OpcodeText = 3;
 
 interface SSRFiberElement {
   ssrID: string;
@@ -28,7 +26,7 @@ export function ssrHydrateByOpcodes(
   for (let i = 0; i < opcodes.length;) {
     const opcode = opcodes[i];
     switch (opcode) {
-      case Opcode.Begin: {
+      case OpcodeBegin: {
         const p = top;
         const [type, __id, elements] = opcodes[i + 1] as SSRSnapshotInstance;
         top = new SnapshotInstance(type, __id);
@@ -39,7 +37,7 @@ export function ssrHydrateByOpcodes(
         i += 2;
         break;
       }
-      case Opcode.End: {
+      case OpcodeEnd: {
         // @ts-ignore
         top[CHILDREN] = undefined;
 
@@ -75,7 +73,7 @@ export function ssrHydrateByOpcodes(
         i += 1;
         break;
       }
-      case Opcode.Attr: {
+      case OpcodeAttr: {
         const key = opcodes[i + 1];
         const value = opcodes[i + 2];
         top.setAttribute(key, value);
@@ -83,7 +81,7 @@ export function ssrHydrateByOpcodes(
         i += 3;
         break;
       }
-      case Opcode.Text: {
+      case OpcodeText: {
         const [[type, __id, elements], text] = opcodes[i + 1] as [SSRSnapshotInstance, string];
         const s = new SnapshotInstance(type, __id);
         s.setAttribute(0, text);
@@ -103,7 +101,7 @@ export function renderOpcodesInto(opcodes: any[], into: SnapshotInstance): void 
   for (let i = 0; i < opcodes.length;) {
     const opcode = opcodes[i];
     switch (opcode) {
-      case Opcode.Begin: {
+      case OpcodeBegin: {
         const p = top;
         top = opcodes[i + 1];
         // @ts-ignore
@@ -118,7 +116,7 @@ export function renderOpcodesInto(opcodes: any[], into: SnapshotInstance): void 
         i += 2;
         break;
       }
-      case Opcode.End: {
+      case OpcodeEnd: {
         // @ts-ignore
         top[CHILDREN] = undefined;
 
@@ -129,7 +127,7 @@ export function renderOpcodesInto(opcodes: any[], into: SnapshotInstance): void 
         i += 1;
         break;
       }
-      case Opcode.Attr: {
+      case OpcodeAttr: {
         const key = opcodes[i + 1];
         const value = opcodes[i + 2];
         top.setAttribute(key, value);
@@ -137,7 +135,7 @@ export function renderOpcodesInto(opcodes: any[], into: SnapshotInstance): void 
         i += 3;
         break;
       }
-      case Opcode.Text: {
+      case OpcodeText: {
         const text = opcodes[i + 1];
         const s = new SnapshotInstance(null as unknown as string);
         if (__ENABLE_SSR__) {
