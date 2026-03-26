@@ -7,8 +7,8 @@ import {
   getFromWorkletRefMap,
   removeValueFromWorkletRefMap,
   updateWorkletRefInitValueChanges,
-} from '../src/workletRef';
-import { initWorklet } from '../src/workletRuntime';
+} from '../../runtime/src/worklet-runtime/workletRef';
+import { initWorklet } from '../../runtime/src/worklet-runtime/workletRuntime';
 
 beforeEach(() => {
   globalThis.SystemInfo = {
