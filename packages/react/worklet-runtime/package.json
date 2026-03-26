@@ -31,7 +31,7 @@
     "src"
   ],
   "scripts": {
-    "build": "rslib build",
+    "build": "node ./scripts/build.mjs",
     "test": "vitest run --coverage"
   },
   "devDependencies": {

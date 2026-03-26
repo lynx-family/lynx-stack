@@ -3,13 +3,17 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "dependsOn": [],
+      "dependsOn": [
+        "@lynx-js/react-runtime#build"
+      ],
       "inputs": [
         "src/**",
+        "scripts/build.mjs",
         "rslib.config.ts"
       ],
       "outputs": [
-        "dist"
+        "dist",
+        "lib"
       ]
     }
   }
