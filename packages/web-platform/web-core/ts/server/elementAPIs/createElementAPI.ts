@@ -96,11 +96,15 @@ export function createElementAPI(
     enableCSSSelector: boolean;
     defaultOverflowVisible: boolean;
     defaultDisplayLinear: boolean;
+    transformVW: boolean;
+    transformVH: boolean;
   },
 ): { globalThisAPIs: ElementPAPIs; wasmContext: MainThreadServerContext } {
   const wasmContext = new MainThreadServerContext(
     viewAttributes,
     config.enableCSSSelector,
+    config.transformVW,
+    config.transformVH,
   );
   if (styleInfo) {
     const resource = new StyleSheetResource(styleInfo, undefined);

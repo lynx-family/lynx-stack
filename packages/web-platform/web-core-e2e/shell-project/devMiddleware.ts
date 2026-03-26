@@ -63,6 +63,8 @@ export async function ssrMiddleware(
         {}, // initData
         {}, // globalProps
         {}, // initI18nResources
+        false,
+        false,
         viewAttributes,
       );
 

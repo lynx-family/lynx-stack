@@ -46,13 +46,21 @@ pub fn decode_style_info(
   buffer: js_sys::Uint8Array,
   entry_name: Option<String>,
   config_enable_css_selector: bool,
+  transform_vw: bool,
+  transform_vh: bool,
 ) -> Result<js_sys::Uint8Array, wasm_bindgen::JsError> {
   let buf = buffer.to_vec();
   let data = unsafe { rkyv::from_bytes_unchecked::<RawStyleInfo>(&buf) }
     .map_err(|e| wasm_bindgen::JsError::new(&format!("Failed to decode RawStyleInfo: {e:?}")))?;
 
-  let decode_data: DecodedStyleData =
-    StyleInfoDecoder::new(data, entry_name, config_enable_css_selector)?.into();
+  let decode_data: DecodedStyleData = StyleInfoDecoder::new(
+    data,
+    entry_name,
+    config_enable_css_selector,
+    transform_vw,
+    transform_vh,
+  )?
+  .into();
 
   let serialized = rkyv::to_bytes::<_, 1024>(&decode_data).map_err(|e| {
     wasm_bindgen::JsError::new(&format!("Failed to encode DecodedStyleData: {e:?}"))
@@ -66,9 +74,17 @@ pub fn encode_legacy_json_generated_raw_style_info(
   raw_style_info: RawStyleInfo,
   config_enable_css_selector: bool,
   entry_name: Option<String>,
+  transform_vw: bool,
+  transform_vh: bool,
 ) -> Result<js_sys::Uint8Array, wasm_bindgen::JsError> {
-  let decode_data: DecodedStyleData =
-    StyleInfoDecoder::new(raw_style_info, entry_name, config_enable_css_selector)?.into();
+  let decode_data: DecodedStyleData = StyleInfoDecoder::new(
+    raw_style_info,
+    entry_name,
+    config_enable_css_selector,
+    transform_vw,
+    transform_vh,
+  )?
+  .into();
   let serialized = rkyv::to_bytes::<_, 1024>(&decode_data).map_err(|e| {
     wasm_bindgen::JsError::new(&format!("Failed to encode DecodedStyleData: {e:?}"))
   })?;

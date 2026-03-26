@@ -85,6 +85,8 @@ describe('Template Manager', () => {
     await templateManager.fetchBundle(
       templateUrl,
       Promise.resolve(mockLynxViewInstance),
+      false,
+      false,
     );
 
     // Verify data using getCustomSection
@@ -121,6 +123,8 @@ describe('Template Manager', () => {
       templateManager.fetchBundle(
         templateUrl,
         Promise.resolve(mockLynxViewInstance),
+        false,
+        false,
       ),
     )
       .rejects.toThrow('Unsupported version: 2');
@@ -163,6 +167,8 @@ describe('Template Manager', () => {
     await templateManager.fetchBundle(
       'http://example.com/template',
       Promise.resolve(mockLynxViewInstance),
+      false,
+      false,
     );
 
     // Verify data using getCustomSection
@@ -217,6 +223,8 @@ describe('Template Manager', () => {
       templateManager.fetchBundle(
         templateUrl,
         Promise.resolve(mockLynxViewInstance),
+        false,
+        false,
       ),
     ).rejects.toThrow('Stream failed');
 
@@ -248,6 +256,8 @@ describe('Template Manager', () => {
     await templateManager.fetchBundle(
       templateUrl,
       Promise.resolve(mockLynxViewInstance),
+      false,
+      false,
       overrideConfig as any,
     );
 
@@ -321,6 +331,8 @@ describe('Template Manager', () => {
     await templateManager.fetchBundle(
       templateUrl,
       Promise.resolve(mockLynxViewInstance),
+      false,
+      false,
     );
 
     // Verify config
@@ -370,6 +382,8 @@ describe('Template Manager', () => {
     await templateManager.fetchBundle(
       templateUrl,
       Promise.resolve(mockLynxViewInstance),
+      false,
+      false,
     );
 
     // Verify config has appType = lazy and isLazy = true

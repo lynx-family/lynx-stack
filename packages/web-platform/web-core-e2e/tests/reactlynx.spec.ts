@@ -375,6 +375,45 @@ test.describe('reactlynx3 tests', () => {
         'rgb(255, 255, 0)',
       ); // yellow
     });
+    test('basic-rpx-unit', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const lynxView = await page.locator('lynx-view');
+      await lynxView.evaluate((node) => {
+        node.style.width = '50px';
+      });
+      const target = await page.locator('#target');
+      await expect(target).toHaveCSS('height', '10px'); // 20cqw, 50 / 100 * 20 = 10px
+      await expect(target).toHaveCSS('width', '10px');
+    });
+
+    test('basic-vw-vh-unit', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const lynxView = await page.locator('lynx-view');
+      await lynxView.evaluate((node: any) => {
+        node.style.setProperty('--vh-unit', '10px');
+        node.style.setProperty('--vw-unit', '10px');
+        node.transformVW = true;
+        node.transformVH = true;
+        node.reload();
+      });
+      await wait(500); // Wait for the reload to rebuild the CSS properly
+
+      const target = await page.locator('#target');
+      await expect(target).toHaveCSS('width', '500px');
+      await expect(target).toHaveCSS('height', '500px');
+
+      // Now disable switches and assert it breaks out of the container dimension limits
+      await lynxView.evaluate((node: any) => {
+        node.transformVW = false;
+        node.transformVH = false;
+        node.reload();
+      });
+      await wait(500); // Wait for the reload to rebuild the CSS properly
+      await expect(target).not.toHaveCSS('width', '25px');
+      await expect(target).not.toHaveCSS('height', '50px');
+    });
     test('basic-image', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);

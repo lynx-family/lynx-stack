@@ -14,7 +14,11 @@ export interface DecodedTemplate {
   customSections?: Record<string, any>;
 }
 
-export function decodeTemplate(buffer: Uint8Array): DecodedTemplate {
+export function decodeTemplate(
+  buffer: Uint8Array,
+  transformVW: boolean,
+  transformVH: boolean,
+): DecodedTemplate {
   if (buffer.length < 8) {
     throw new Error('Buffer too short for Magic Header');
   }
@@ -83,6 +87,8 @@ export function decodeTemplate(buffer: Uint8Array): DecodedTemplate {
           content,
           config['isLazy'] === 'true' ? '' : undefined, // URL is not available in synchronous decode usually, or passed as arg? The user req says "uint8array as params decode directly". Assuming URL is empty or unneeded for sync server decode unless specified.
           config['enableCSSSelector'] === 'true',
+          transformVW,
+          transformVH,
         );
         styleInfo = buffer;
         break;

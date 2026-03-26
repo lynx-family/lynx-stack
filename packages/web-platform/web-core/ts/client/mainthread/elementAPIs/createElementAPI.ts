@@ -63,6 +63,8 @@ export function createElementAPI(
   config_enable_css_selector: boolean,
   config_default_display_linear: boolean,
   config_default_overflow_visible: boolean,
+  transform_vw: boolean,
+  transform_vh: boolean,
 ): ElementPAPIs {
   const wasmContext = new MainThreadWasmContext(
     rootDom,
@@ -289,6 +291,8 @@ export function createElementAPI(
             !set_inline_styles_in_str(
               element,
               value,
+              transform_vw,
+              transform_vh,
             )
           ) {
             element.setAttribute('style', value);
@@ -305,6 +309,8 @@ export function createElementAPI(
           get_inline_styles_in_key_value_vec(
             element,
             vec,
+            transform_vw,
+            transform_vh,
           );
         }
       }

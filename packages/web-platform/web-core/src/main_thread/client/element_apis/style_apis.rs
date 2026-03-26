@@ -105,8 +105,19 @@ pub fn set_inline_styles_number_key(dom: &web_sys::HtmlElement, key: usize, valu
   }
 }
 #[wasm_bindgen]
-pub fn set_inline_styles_in_str(dom: &web_sys::HtmlElement, styles: String) -> bool {
-  let transformed_style_str = transform_inline_style_string(&styles);
+pub fn set_inline_styles_in_str(
+  dom: &web_sys::HtmlElement,
+  styles: String,
+  transform_vw: bool,
+  transform_vh: bool,
+) -> bool {
+  let transformed_style_str = transform_inline_style_string(
+    &styles,
+    &crate::style_transformer::token_transformer::TransformerConfig {
+      transform_vw,
+      transform_vh,
+    },
+  );
   // we compare the transformed style string with the original one
   // The reason is copy utf-8 string from wasm to js is expensive
   if transformed_style_str == styles {
@@ -117,7 +128,18 @@ pub fn set_inline_styles_in_str(dom: &web_sys::HtmlElement, styles: String) -> b
 }
 
 #[wasm_bindgen]
-pub fn get_inline_styles_in_key_value_vec(dom: &web_sys::HtmlElement, k_v_vec: Vec<String>) {
-  let transformed_style_str = transform_inline_style_key_value_vec(k_v_vec);
+pub fn get_inline_styles_in_key_value_vec(
+  dom: &web_sys::HtmlElement,
+  k_v_vec: Vec<String>,
+  transform_vw: bool,
+  transform_vh: bool,
+) {
+  let transformed_style_str = transform_inline_style_key_value_vec(
+    k_v_vec,
+    &crate::style_transformer::token_transformer::TransformerConfig {
+      transform_vw,
+      transform_vh,
+    },
+  );
   let _ = dom.set_attribute("style", &transformed_style_str);
 }
