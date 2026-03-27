@@ -17,6 +17,7 @@ export default defineConfig({
       css: '[name].css',
     },
     assetPrefix: 'auto',
+    module: true,
   },
   performance: {
     chunkSplit: {
