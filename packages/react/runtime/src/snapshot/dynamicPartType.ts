@@ -16,3 +16,8 @@ export const DynamicPartType = {
 } as const;
 
 export type DynamicPartType = (typeof DynamicPartType)[keyof typeof DynamicPartType];
+
+/**
+ * Default dynamic part for children
+ */
+export const __DynamicPartChildren_0: [DynamicPartType, number][] = [[DynamicPartType.Children, 0]];

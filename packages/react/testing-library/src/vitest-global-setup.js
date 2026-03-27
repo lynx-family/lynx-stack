@@ -1,7 +1,6 @@
 import { options } from 'preact';
 import { expect } from 'vitest';
 
-import { BackgroundSnapshotInstance } from '../../runtime/lib/backgroundSnapshot.js';
 import { clearCommitTaskId, replaceCommitHook } from '../../runtime/lib/lifecycle/patch/commit.js';
 import { deinitGlobalSnapshotPatch } from '../../runtime/lib/lifecycle/patch/snapshotPatch.js';
 import { injectUpdateMainThread } from '../../runtime/lib/lifecycle/patch/updateMainThread.js';
@@ -13,9 +12,10 @@ import { addCtxNotFoundEventListener } from '../../runtime/lib/lifecycle/patch/e
 import { setRoot } from '../../runtime/lib/root.js';
 import {
   SnapshotInstance,
+  BackgroundSnapshotInstance,
   backgroundSnapshotInstanceManager,
   snapshotInstanceManager,
-} from '../../runtime/lib/snapshot.js';
+} from '../../runtime/lib/snapshot/index.js';
 import { destroyWorklet } from '../../runtime/lib/worklet/destroy.js';
 import { initApiEnv } from '../../worklet-runtime/lib/api/lynxApi.js';
 import { initEventListeners } from '../../worklet-runtime/lib/listeners.js';

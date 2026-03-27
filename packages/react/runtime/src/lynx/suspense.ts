@@ -8,8 +8,8 @@ import { useRef } from 'preact/hooks';
 
 import { createElement as createElementMainThread } from '@lynx-js/react/lepus';
 
-import type { BackgroundSnapshotInstance } from '../backgroundSnapshot.js';
 import { globalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/commit.js';
+import type { BackgroundSnapshotInstance } from '../snapshot/backgroundSnapshot.js';
 
 export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: VNode }> = (
   { children, fallback },

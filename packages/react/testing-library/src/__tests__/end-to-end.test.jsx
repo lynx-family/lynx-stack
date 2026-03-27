@@ -2,7 +2,7 @@ import '@testing-library/jest-dom';
 import { Component } from 'preact';
 import { expect } from 'vitest';
 import { render, screen, waitForElementToBeRemoved } from '..';
-import { snapshotInstanceManager } from '../../../runtime/lib/snapshot.js';
+import { snapshotInstanceManager } from '../../../runtime/lib/snapshot/index.js';
 
 const fetchAMessage = () =>
   new Promise((resolve) => {

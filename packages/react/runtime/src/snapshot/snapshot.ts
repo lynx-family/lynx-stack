@@ -3,125 +3,27 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * Core snapshot system that implements a compiler-hinted virtual DOM.
+ * Main thread snapshot implementation that runs in the main thread.
  *
- * Key components:
- * 1. {@link Snapshot}: Template definition generated at compile time
- * 2. {@link SnapshotInstance}: Runtime instance in the main thread
- * 3. {@link BackgroundSnapshotInstance}: Runtime instance in the background thread
- *
- * The system uses static analysis to identify dynamic parts and generate
- * optimized update instructions, avoiding full virtual DOM diffing.
+ * This is the mirror of background's {@link BackgroundSnapshotInstance}:
  */
 
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
-import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
-import { clearSnapshotVNodeSource, moveSnapshotVNodeSource } from './debug/vnodeSource.js';
-import { SnapshotOperation, __globalSnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
-import { ListUpdateInfoRecording } from './listUpdateInfo.js';
-import { __pendingListUpdates } from './pendingListUpdates.js';
-import { DynamicPartType } from './snapshot/dynamicPartType.js';
-import { snapshotDestroyList } from './snapshot/list.js';
-import type { PlatformInfo } from './snapshot/platformInfo.js';
-import { unref } from './snapshot/ref.js';
-import { isDirectOrDeepEqual } from './utils.js';
-
-/**
- * A snapshot definition that contains all the information needed to create and update elements
- * This is generated at compile time through static analysis of the JSX
- */
-export interface Snapshot {
-  create: null | ((ctx: SnapshotInstance) => FiberElement[]);
-  update: null | ((ctx: SnapshotInstance, index: number, oldValue: any) => void)[];
-  slot: [DynamicPartType, number][];
-
-  isListHolder?: boolean;
-  cssId?: number | undefined;
-  entryName?: string | undefined;
-  refAndSpreadIndexes?: number[] | null;
-}
-
-export let __page: FiberElement;
-export let __pageId = 0;
-export function setupPage(page: FiberElement): void {
-  __page = page;
-  __pageId = __GetElementUniqueID(page);
-}
-
-export function clearPage(): void {
-  __page = undefined as unknown as FiberElement;
-  __pageId = 0;
-}
-
-export const __DynamicPartChildren_0: [DynamicPartType, number][] = [[DynamicPartType.Children, 0]];
-
-export const snapshotManager: {
-  values: Map<string, Snapshot>;
-} = {
-  values: /* @__PURE__ */ new Map<string, Snapshot>([
-    [
-      'root',
-      {
-        create() {
-          /* v8 ignore start */
-          if (__JS__ && !__DEV__) {
-            return [];
-          }
-          /* v8 ignore stop */
-          return [__page!];
-        },
-        update: [],
-        slot: __DynamicPartChildren_0,
-        isListHolder: false,
-        cssId: 0,
-      },
-    ],
-    [
-      'wrapper',
-      {
-        create() {
-          /* v8 ignore start */
-          if (__JS__ && !__DEV__) {
-            return [];
-          }
-          /* v8 ignore stop */
-          return [__CreateWrapperElement(__pageId)];
-        },
-        update: [],
-        slot: __DynamicPartChildren_0,
-        isListHolder: false,
-      },
-    ],
-    [
-      null as unknown as string,
-      {
-        create() {
-          /* v8 ignore start */
-          if (__JS__ && !__DEV__) {
-            return [];
-          }
-          /* v8 ignore stop */
-          return [__CreateRawText('')];
-        },
-        update: [
-          ctx => {
-            /* v8 ignore start */
-            if (__JS__ && !__DEV__) {
-              return;
-            }
-            /* v8 ignore stop */
-            if (ctx.__elements) {
-              __SetAttribute(ctx.__elements[0]!, 'text', ctx.__values![0]);
-            }
-          },
-        ],
-        slot: [],
-        isListHolder: false,
-      },
-    ],
-  ]),
-};
+import { clearSnapshotVNodeSource } from '../debug/vnodeSource.js';
+import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
+import { ListUpdateInfoRecording } from '../listUpdateInfo.js';
+import { __pendingListUpdates } from '../pendingListUpdates.js';
+import { DEFAULT_CSS_ID, DEFAULT_ENTRY_NAME } from './constants.js';
+import { snapshotManager } from './definition.js';
+import type { Snapshot } from './definition.js';
+import { DynamicPartType, __DynamicPartChildren_0 } from './dynamicPartType.js';
+import { snapshotDestroyList } from './list.js';
+import type { PlatformInfo } from './platformInfo.js';
+import { unref } from './ref.js';
+import type { SerializedSnapshotInstance } from './types.js';
+import { traverseSnapshotInstance } from './utils.js';
+import { isDirectOrDeepEqual } from '../utils.js';
 
 export const snapshotInstanceManager: {
   nextId: number;
@@ -164,135 +66,6 @@ if (__DEV__ && __JS__) {
     },
   });
 }
-
-export const backgroundSnapshotInstanceManager: {
-  nextId: number;
-  values: Map<number, BackgroundSnapshotInstance>;
-  clear(): void;
-  updateId(id: number, newId: number): void;
-  getValueBySign(str: string): unknown;
-} = {
-  nextId: 0,
-  values: /* @__PURE__ */ new Map<number, BackgroundSnapshotInstance>(),
-  clear() {
-    // not resetting `nextId` to prevent id collision
-    this.values.clear();
-    if (__DEV__) {
-      clearSnapshotVNodeSource();
-    }
-  },
-  updateId(id: number, newId: number) {
-    const values = this.values;
-    const si = values.get(id)!;
-    // For PreactDevtools, on first hydration,
-    // PreactDevtools can get the real snapshot instance id in main-thread
-    if (__DEV__ && __BACKGROUND__) {
-      lynx.getJSModule('GlobalEventEmitter').emit('onBackgroundSnapshotInstanceUpdateId', [
-        {
-          backgroundSnapshotInstance: si,
-          oldId: id,
-          newId,
-        },
-      ]);
-    }
-    values.delete(id);
-    values.set(newId, si);
-    si.__id = newId;
-    if (__DEV__) {
-      moveSnapshotVNodeSource(id, newId);
-    }
-  },
-  getValueBySign(str: string): unknown {
-    const res = str?.split(':');
-    if (!res || (res.length != 2 && res.length != 3)) {
-      throw new Error('Invalid ctx format: ' + str);
-    }
-    const id = Number(res[0]);
-    const expIndex = Number(res[1]);
-    const ctx = this.values.get(id);
-    if (!ctx) {
-      return null;
-    }
-    const spreadKey = res[2];
-    if (res[1] === '__extraProps') {
-      if (spreadKey) {
-        return ctx.__extraProps![spreadKey];
-      }
-      throw new Error('unreachable');
-    } else {
-      if (spreadKey) {
-        return (ctx.__values![expIndex] as { [spreadKey]: unknown })[spreadKey];
-      } else {
-        return ctx.__values![expIndex];
-      }
-    }
-  },
-};
-
-export function entryUniqID(uniqID: string, entryName?: string): string {
-  return entryName ? `${entryName}:${uniqID}` : uniqID;
-}
-
-export function createSnapshot(
-  uniqID: string,
-  create: Snapshot['create'] | null,
-  update: Snapshot['update'] | null,
-  slot: Snapshot['slot'],
-  cssId: number | undefined,
-  entryName: string | undefined,
-  refAndSpreadIndexes: number[] | null,
-  isLazySnapshotSupported: boolean = false,
-): string {
-  if (!isLazySnapshotSupported) {
-    uniqID = entryUniqID(uniqID, entryName);
-  }
-  // For Lazy Bundle, their entryName is not DEFAULT_ENTRY_NAME.
-  // We need to set the entryName correctly for HMR
-  if (
-    __DEV__ && __JS__ && __globalSnapshotPatch && entryName && entryName !== DEFAULT_ENTRY_NAME
-    // `uniqID` will be `https://example.com/main.lynx.bundle:__snapshot_835da_eff1e_1` when loading a standalone lazy bundle after hydration.
-    && !uniqID.includes(':')
-  ) {
-    __globalSnapshotPatch.push(
-      SnapshotOperation.DEV_ONLY_SetSnapshotEntryName,
-      uniqID,
-      entryName,
-    );
-  }
-
-  const s: Snapshot = { create, update, slot, cssId, entryName, refAndSpreadIndexes };
-  snapshotManager.values.set(uniqID, s);
-  if (slot && slot[0] && slot[0][0] === DynamicPartType.ListChildren) {
-    s.isListHolder = true;
-  }
-  return uniqID;
-}
-
-export interface WithChildren {
-  childNodes: WithChildren[];
-}
-
-export function traverseSnapshotInstance<I extends WithChildren>(
-  si: I,
-  callback: (si: I) => void,
-): void {
-  const c = si.childNodes;
-  callback(si);
-  for (const vv of c) {
-    traverseSnapshotInstance(vv as I, callback);
-  }
-}
-
-export interface SerializedSnapshotInstance {
-  id: number;
-  type: string;
-  values?: any[] | undefined;
-  extraProps?: Record<string, unknown> | undefined;
-  children?: SerializedSnapshotInstance[] | undefined;
-}
-
-const DEFAULT_ENTRY_NAME = '__Card__';
-const DEFAULT_CSS_ID = 0;
 
 /**
  * The runtime instance of a {@link Snapshot} on the main thread that manages

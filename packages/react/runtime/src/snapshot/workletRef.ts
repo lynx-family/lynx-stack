@@ -6,7 +6,7 @@ import { onWorkletCtxUpdate, runWorkletCtx, updateWorkletRef as update } from '@
 import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { isMainThreadHydrating } from '../lifecycle/patch/isMainThreadHydrating.js';
-import type { SnapshotInstance } from '../snapshot.js';
+import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
 let mtRefQueue: (WorkletRefImpl<Element> | Worklet | Element)[] = [];
 
