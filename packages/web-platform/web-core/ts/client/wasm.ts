@@ -34,6 +34,7 @@ const wasmLoaded = Promise.all([referenceTypes(), simd()]).then(
     } else {
       return Promise.all([
         import(
+          /* webpackChunkName: "legacy-wasm-js" */
           /* webpackMode: "lazy" */
           /* webpackFetchPriority: "low" */
           /* webpackPrefetch: false */
