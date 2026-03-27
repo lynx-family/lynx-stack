@@ -11,10 +11,10 @@
 
 import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
-import type { BackgroundSnapshotInstance } from '../backgroundSnapshot.js';
+import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
 import { ListUpdateInfoRecording } from '../listUpdateInfo.js';
 import { __pendingListUpdates } from '../pendingListUpdates.js';
-import { SnapshotInstance } from '../snapshot.js';
+import { SnapshotInstance } from '../snapshot/snapshot.js';
 import { isDirectOrDeepEqual, isEmptyObject, pick } from '../utils.js';
 import { updateEvent } from './event.js';
 import { updateGesture } from './gesture.js';

@@ -12,8 +12,8 @@ import { prettyFormatSnapshotPatch } from '../../debug/formatPatch.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { markTiming, setPipeline } from '../../lynx/performance.js';
 import { __pendingListUpdates } from '../../pendingListUpdates.js';
+import { __page } from '../../snapshot/definition.js';
 import { applyRefQueue } from '../../snapshot/workletRef.js';
-import { __page } from '../../snapshot.js';
 import { isMtsEnabled } from '../../worklet/functionality.js';
 import { getReloadVersion } from '../pass.js';
 
