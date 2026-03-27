@@ -202,14 +202,14 @@ export class TemplateManager {
           this.#bundles.set(url, bundle);
           this.#loadingBundles.delete(url);
         }
+        this.#resolvePromise(url);
+        this.#loadingPromises.delete(url);
         /* TODO: The promise resolution is deferred inside .then() without error handling.
          *
          */
         lynxViewInstancePromise.then((instance) => {
           instance.backgroundThread.markTiming('decode_end');
           instance.backgroundThread.markTiming('load_template_start');
-          this.#resolvePromise(url);
-          this.#loadingPromises.delete(url);
         });
         break;
     }
