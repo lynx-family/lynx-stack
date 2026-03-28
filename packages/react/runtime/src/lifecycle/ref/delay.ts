@@ -4,7 +4,7 @@
 
 import type { NodesRef, SelectorQuery } from '@lynx-js/types';
 
-import { hydrationMap } from '../../snapshotInstanceHydrationMap.js';
+import { hydrationMap } from '../../snapshot/snapshotInstanceHydrationMap.js';
 
 type FunctionPropertyNames<T> = {
   [K in keyof T]: T[K] extends (...args: unknown[]) => unknown ? K : never;

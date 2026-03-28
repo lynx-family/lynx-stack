@@ -8,7 +8,6 @@
   },
   "include": ["src/node"],
   "references": [
-    { "path": "../web-core/tsconfig.json" },
     { "path": "../web-elements/tsconfig.json" },
   ],
 }

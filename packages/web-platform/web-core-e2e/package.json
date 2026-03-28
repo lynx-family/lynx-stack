@@ -1,0 +1,33 @@
+{
+  "name": "@lynx-js/web-core-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "bench": "vitest bench",
+    "build": "pnpm dlx premove dist && pnpm run --stream \"/^build:.*/\"",
+    "build:csr": "node ./scripts/generate-build-command.js",
+    "coverage": "nyc report --cwd=$(realpath ../)",
+    "coverage:ci": "nyc report --cwd=$(realpath ../) --reporter=lcov",
+    "lh": "pnpm dlx @lhci/cli autorun",
+    "serve": "rsbuild dev",
+    "test": "playwright test",
+    "test:debug": "playwright test --ui",
+    "test:install": "playwright install --with-deps chromium firefox webkit",
+    "test:update": "playwright test --ui --update-snapshots"
+  },
+  "devDependencies": {
+    "@lynx-js/playwright-fixtures": "workspace:*",
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/web-core": "workspace:*",
+    "@lynx-js/web-rsbuild-server-middleware": "workspace:*",
+    "@playwright/test": "^1.58.2",
+    "@rsbuild/core": "catalog:rsbuild",
+    "nyc": "^17.1.0",
+    "prettier": "^3.8.1",
+    "vitest": "^3.2.4"
+  }
+}

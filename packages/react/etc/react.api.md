@@ -67,6 +67,22 @@ export { forwardRef }
 export { Fragment }
 
 // @public
+export interface GlobalProps {
+}
+
+// Warning: (tsdoc-undefined-tag) The TSDoc tag "@group" is not defined in this configuration
+//
+// @public
+export const GlobalPropsConsumer: Consumer<GlobalProps>;
+
+// Warning: (tsdoc-undefined-tag) The TSDoc tag "@group" is not defined in this configuration
+//
+// @public
+export const GlobalPropsProvider: FC<{
+    children?: ReactNode | undefined;
+}>;
+
+// @public
 export interface InitData {
 }
 
@@ -135,6 +151,12 @@ export { useDebugValue }
 export const useEffect: (effect: EffectCallback, deps?: DependencyList) => void;
 
 export { useErrorBoundary }
+
+// @public
+export const useGlobalProps: () => GlobalProps;
+
+// @public
+export const useGlobalPropsChanged: (callback: (data: GlobalProps) => void) => void;
 
 export { useImperativeHandle }
 

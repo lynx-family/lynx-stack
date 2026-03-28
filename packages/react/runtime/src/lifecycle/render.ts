@@ -12,7 +12,7 @@ import { profileEnd, profileStart } from '../debug/profile.js';
 import { renderOpcodesInto } from '../opcodes.js';
 import { render as renderToString } from '../renderToOpcodes/index.js';
 import { __root } from '../root.js';
-import { SnapshotInstance } from '../snapshot.js';
+import { SnapshotInstance } from '../snapshot/snapshot.js';
 
 function renderMainThread(): void {
   let opcodes;
