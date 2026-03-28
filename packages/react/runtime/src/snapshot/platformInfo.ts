@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { ListUpdateInfoRecording } from '../listUpdateInfo.js';
 import { __pendingListUpdates } from '../pendingListUpdates.js';
-import { SnapshotInstance } from '../snapshot.js';
+import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
 const platformInfoVirtualAttributes: Set<string> = /* @__PURE__ */ new Set<string>([
   'reuse-identifier',

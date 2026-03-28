@@ -48,6 +48,25 @@ describe('define config', () => {
     })
     expect(rslibConfig.lib[0]?.syntax).toBe('es2019')
   })
+
+  it('should preserve default minify jsOptions when output.minify is true', () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      output: {
+        minify: true,
+      },
+    })
+
+    expect(rslibConfig.lib[0]?.output?.minify).toMatchObject({
+      jsOptions: {
+        minimizerOptions: {
+          compress: {
+            negate_iife: false,
+            side_effects: false,
+          },
+        },
+      },
+    })
+  })
 })
 
 describe('should build external bundle', () => {

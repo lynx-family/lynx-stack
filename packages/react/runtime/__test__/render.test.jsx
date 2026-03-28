@@ -12,7 +12,7 @@ import { __root } from '../src/root';
 import { setupPage, SnapshotInstance, snapshotInstanceManager } from '../src/snapshot';
 import { globalEnvManager } from './utils/envManager';
 import { elementTree } from './utils/nativeMethod';
-import { backgroundSnapshotInstanceManager } from '../src/snapshot';
+import { backgroundSnapshotInstanceManager } from '../src/backgroundSnapshot';
 import { prettyFormatSnapshotPatch } from '../src/debug/formatPatch';
 import { root } from '../src/lynx-api';
 

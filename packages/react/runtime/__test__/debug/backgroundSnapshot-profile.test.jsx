@@ -6,17 +6,18 @@
 import { options, render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
-import { BackgroundSnapshotInstance, hydrate } from '../../src/backgroundSnapshot';
 import { setupDocument } from '../../src/document';
 import { setupVNodeSourceHook } from '../../src/debug/vnodeSource';
 import { SnapshotOperation, SnapshotOperationParams } from '../../src/lifecycle/patch/snapshotPatch';
 import { DIFFED, DOM } from '../../src/renderToOpcodes/constants';
 import { __root } from '../../src/root';
 import {
-  backgroundSnapshotInstanceManager,
   setupPage,
   SnapshotInstance,
   snapshotInstanceManager,
+  BackgroundSnapshotInstance,
+  backgroundSnapshotInstanceManager,
+  hydrate,
 } from '../../src/snapshot';
 import { elementTree } from '../utils/nativeMethod';
 
@@ -248,13 +249,11 @@ describe('backgroundSnapshot profile', () => {
       );
 
       expect(
-        setAttributeCalls.some(([, option]) => (
+        setAttributeCalls.some(([, option]) =>
           option?.args?.dynamicPartIndex === 'meta' && option?.args?.valueType === 'null'
-        )),
+        ),
       ).toBe(true);
-      expect(
-        insertBeforeCalls.some(([, option]) => option?.args?.targetId === ''),
-      ).toBe(true);
+      expect(insertBeforeCalls.some(([, option]) => option?.args?.targetId === '')).toBe(true);
     });
 
     it('should apply non-profile move branch with defined target id', () => {
@@ -265,11 +264,9 @@ describe('backgroundSnapshot profile', () => {
 
       const patch = hydrate(before, after);
       const operations = decodePatch(patch);
-      const moveWithDefinedTarget = operations.find(({ op, args }) => (
-        op === SnapshotOperation.InsertBefore
-        && args[0] === before.id
-        && args[2] !== undefined
-      ));
+      const moveWithDefinedTarget = operations.find(
+        ({ op, args }) => op === SnapshotOperation.InsertBefore && args[0] === before.id && args[2] !== undefined,
+      );
 
       expect(moveWithDefinedTarget).toBeDefined();
     });

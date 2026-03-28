@@ -1,5 +1,4 @@
 /* eslint-disable headers/header-format */
-import type { LynxTemplate, StyleInfo } from '@lynx-js/web-constants';
 
 import { processCSS } from './css-processor.js';
 import { getConsoleWrapperCode } from '../console/console-wrapper.js';
@@ -27,7 +26,7 @@ export function buildLynxTemplate(
   css: string,
   sessionId: string,
 ): {
-  template: LynxTemplate;
+  template: unknown;
   timing: { 'css-serializer': number | null; assemble: number };
 } {
   const mainThreadWithFallback = `${mainThread}
@@ -43,7 +42,7 @@ if (typeof globalThis.renderPage !== 'function') {
     + getBackgroundLifecycleCode()
     + background;
 
-  let styleInfo: StyleInfo = {};
+  let styleInfo: unknown = {};
   let cssSerializerTime: number | null = null;
   if (css.trim()) {
     const t = performance.now();
@@ -52,7 +51,7 @@ if (typeof globalThis.renderPage !== 'function') {
   }
 
   const assembleStart = performance.now();
-  const template: LynxTemplate = {
+  const template: unknown = {
     lepusCode: { root: mainThreadCode },
     manifest: { '/app-service.js': backgroundCode },
     styleInfo,

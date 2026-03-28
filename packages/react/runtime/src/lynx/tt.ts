@@ -6,7 +6,6 @@ import { process, render } from 'preact';
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
 import type { FirstScreenData } from '../lifecycleConstant.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from './performance.js';
-import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import { runWithForce } from './runWithForce.js';
 import { printSnapshotInstanceToString } from '../debug/printSnapshot.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
@@ -21,8 +20,12 @@ import { runDelayedUiOps } from '../lifecycle/ref/delay.js';
 import { reloadBackground } from '../lifecycle/reload.js';
 import { CHILDREN } from '../renderToOpcodes/constants.js';
 import { __root } from '../root.js';
-import { backgroundSnapshotInstanceManager } from '../snapshot.js';
-import type { SerializedSnapshotInstance } from '../snapshot.js';
+import {
+  BackgroundSnapshotInstance,
+  backgroundSnapshotInstanceManager,
+  hydrate,
+} from '../snapshot/backgroundSnapshot.js';
+import type { SerializedSnapshotInstance } from '../snapshot/types.js';
 import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
@@ -263,17 +266,22 @@ function delayedPublicComponentEvent(_componentId: string, handlerName: string, 
 }
 
 function updateGlobalProps(newData: Record<string, any>): void {
-  Object.assign(lynx.__globalProps, newData);
-
-  // Our purpose is to make sure SYNC setState inside `emit`'s listeners
-  // can be batched with updateFromRoot
-  // This is already done because updateFromRoot will consume all dirty flags marked by
-  // the setState, and setState's flush will be a noop. No extra diffs will be needed.
-  void Promise.resolve().then(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    runWithForce(() => render(__root.__jsx, __root as any));
-  });
-  lynxCoreInject.tt.GlobalEventEmitter.emit('onGlobalPropsChanged', undefined);
+  if (typeof __GLOBAL_PROPS_MODE__ !== 'undefined' && __GLOBAL_PROPS_MODE__ === 'event') {
+    // COW when modify `lynx.__globalProps` to make sure Provider & Consumer works
+    lynx.__globalProps = Object.assign({}, lynx.__globalProps, newData);
+  } else {
+    // only when __GLOBAL_PROPS_MODE__ is reactive, we need to batch the update with updateFromRoot
+    Object.assign(lynx.__globalProps, newData);
+    // Our purpose is to make sure SYNC setState inside `emit`'s listeners
+    // can be batched with updateFromRoot
+    // This is already done because updateFromRoot will consume all dirty flags marked by
+    // the setState, and setState's flush will be a noop. No extra diffs will be needed.
+    void Promise.resolve().then(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      runWithForce(() => render(__root.__jsx, __root as any));
+    });
+  }
+  lynxCoreInject.tt.GlobalEventEmitter.emit('onGlobalPropsChanged', [lynx.__globalProps]);
 }
 
 function updateCardData(newData: Record<string, any>, options?: Record<string, any>): void {

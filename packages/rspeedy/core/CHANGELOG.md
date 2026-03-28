@@ -1,5 +1,15 @@
 # @lynx-js/rspeedy
 
+## 0.13.6
+
+### Patch Changes
+
+- Rename Web Preview label to fix URL alignment ([#2355](https://github.com/lynx-family/lynx-stack/pull/2355))
+
+- Updated dependencies [[`799fda8`](https://github.com/lynx-family/lynx-stack/commit/799fda8bc1cc14af2fd340eb806f5cfbac3c3fe3)]:
+  - @lynx-js/cache-events-webpack-plugin@0.0.3
+  - @lynx-js/web-rsbuild-server-middleware@0.19.9
+
 ## 0.13.5
 
 ### Patch Changes

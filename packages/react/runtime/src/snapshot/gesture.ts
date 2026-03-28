@@ -4,7 +4,7 @@
 import { processGesture } from '../gesture/processGesture.js';
 import type { GestureKind } from '../gesture/types.js';
 import { isMainThreadHydrating } from '../lifecycle/patch/isMainThreadHydrating.js';
-import { SnapshotInstance } from '../snapshot.js';
+import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
 export function updateGesture(
   snapshot: SnapshotInstance,

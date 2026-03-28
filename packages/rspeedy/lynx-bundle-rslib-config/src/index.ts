@@ -9,7 +9,7 @@
  */
 export {
   defineExternalBundleRslibConfig,
-  defaultExternalBundleLibConfig,
+  DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG as defaultExternalBundleLibConfig,
 } from './externalBundleRslibConfig.js'
 export type { EncodeOptions } from './externalBundleRslibConfig.js'
 export { ExternalBundleWebpackPlugin } from './webpack/ExternalBundleWebpackPlugin.js'

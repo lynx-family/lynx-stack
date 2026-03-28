@@ -1,12 +1,9 @@
 /* eslint-disable headers/header-format, sort-imports, import/order, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, n/no-unsupported-features/node-builtins, @typescript-eslint/prefer-nullish-coalescing */
 import { useRef, useEffect, useState, useCallback } from 'react';
-import type { LynxTemplate } from '@lynx-js/web-constants';
-import type { LynxView } from '@lynx-js/web-core';
-
-let renderCounter = 0;
+import type { LynxViewElement as LynxView } from '@lynx-js/web-core/client';
 
 interface LynxPreviewProps {
-  template: LynxTemplate | null;
+  template: Record<string, string | boolean | number> | null;
   isDark: boolean;
   onLoad?: () => void;
 }
@@ -83,8 +80,10 @@ export function LynxPreview({ template, isDark, onLoad }: LynxPreviewProps) {
     setError(null);
     setIsLoading(true);
 
-    lynxView.customTemplateLoader = async () => template;
-    lynxView.url = `repl://template/v${renderCounter++}`;
+    const blobUrl = URL.createObjectURL(
+      new Blob([JSON.stringify(template)], { type: 'application/json' }),
+    );
+    lynxView.url = blobUrl;
 
     // lynx-view has no load event. The url setter schedules teardown+boot via
     // queueMicrotask, so our Promise microtask (queued after) runs once the
@@ -112,6 +111,7 @@ export function LynxPreview({ template, isDark, onLoad }: LynxPreviewProps) {
     });
 
     return () => {
+      URL.revokeObjectURL(blobUrl);
       observer?.disconnect();
     };
   }, [template, onLoad]);

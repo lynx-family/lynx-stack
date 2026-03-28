@@ -525,6 +525,22 @@ describe('Config Validation', () => {
         {
           css: true,
         },
+        {
+          mainThreadOptions: {
+            minimizerOptions: {
+              compress: {
+                pure_funcs: ['lynx.getJSModule'],
+              },
+            },
+          },
+          backgroundOptions: {
+            minimizerOptions: {
+              compress: {
+                pure_funcs: ['lynx.registerDataProcessors'],
+              },
+            },
+          },
+        },
       ]
 
       cases.forEach(minify => {
@@ -692,6 +708,28 @@ describe('Config Validation', () => {
         Unknown property: \`$input.minify\` in configuration
         ]
       `)
+
+      expect(() =>
+        validate({
+          output: {
+            minify: {
+              mainThreadOptions: null,
+            },
+          },
+        })
+      ).toThrowError(/\$input\.output\.minify\.mainThreadOptions/)
+
+      expect(() =>
+        validate({
+          output: {
+            minify: {
+              backgroundOptions: {
+                keepFnames: true,
+              },
+            },
+          },
+        })
+      ).toThrowError(/\$input\.output\.minify\.backgroundOptions\.keepFnames/)
 
       expect(() =>
         validate({

@@ -1,41 +1,97 @@
 {
   "name": "@lynx-js/web-core",
   "version": "0.19.8",
-  "private": false,
-  "description": "",
-  "keywords": [],
+  "description": "This is an internal experimental package, do not use",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/web-platform/web-core"
   },
   "license": "Apache-2.0",
+  "sideEffects": true,
   "type": "module",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
+  "exports": {
+    "./encode": {
+      "types": "./dist/encode/index.d.ts",
+      "import": "./dist/encode/index.js",
+      "default": "./dist/encode/index.js"
+    },
+    "./client": {
+      "types": "./dist/client/index.d.ts",
+      "import": "./dist/client/index.js",
+      "default": "./dist/client/index.js"
+    },
+    "./server": {
+      "types": "./dist/server/index.d.ts",
+      "import": "./dist/server_prod/index.js",
+      "default": "./dist/server_prod/index.js"
+    },
+    "./client.prod.js": {
+      "default": "./dist/client_prod/static/js/client.js"
+    },
+    "./client.prod.css": {
+      "default": "./dist/client_prod/static/css/client.css"
+    }
+  },
+  "main": "./dist/client/index.js",
   "files": [
     "dist",
+    "binary",
+    "css",
     "!dist/**/*.js.map",
+    "*.d.ts",
+    "*.js",
     "LICENSE.txt",
     "Notice.txt",
     "CHANGELOG.md",
-    "README.md",
-    "index.css",
-    "**/*.css"
+    "README.md"
   ],
+  "scripts": {
+    "build": "rsbuild build && rslib build",
+    "build:wasm": "node ./scripts/build.js",
+    "test": "vitest run"
+  },
+  "browserslist": {
+    "production": [
+      "Chrome >= 92",
+      "Safari >= 16.4"
+    ],
+    "development": [
+      "last 1 chrome version"
+    ]
+  },
   "dependencies": {
-    "@lynx-js/offscreen-document": "workspace:*",
-    "@lynx-js/web-constants": "workspace:*",
-    "@lynx-js/web-mainthread-apis": "workspace:*",
+    "@lynx-js/web-elements": "workspace:*",
     "@lynx-js/web-worker-rpc": "workspace:*",
-    "@lynx-js/web-worker-runtime": "workspace:*"
+    "wasm-feature-detect": "^1.8.0"
   },
   "devDependencies": {
+    "@lynx-js/css-serializer": "workspace:*",
     "@lynx-js/lynx-core": "0.1.3",
-    "@lynx-js/web-elements": "workspace:*"
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rsbuild/plugin-eslint": "1.2.1",
+    "@rsbuild/plugin-source-build": "1.0.4",
+    "@rslib/core": "^0.19.6",
+    "binaryen": "^125.0.0",
+    "eslint-plugin-compat": "^6.2.0",
+    "fb-dotslash": "^0.5.8",
+    "jsdom": "^27.4.0",
+    "tslib": "^2.8.1"
   },
   "peerDependencies": {
+    "@lynx-js/css-serializer": "workspace:*",
     "@lynx-js/lynx-core": "0.1.3",
-    "@lynx-js/web-elements": ">0.7.7"
+    "tslib": "^2.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@lynx-js/css-serializer": {
+      "optional": true
+    },
+    "@lynx-js/lynx-core": {
+      "optional": true
+    },
+    "tslib": {
+      "optional": true
+    }
   }
 }

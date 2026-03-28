@@ -2,8 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { LifecycleConstant } from './lifecycleConstant.js';
+import type { SnapshotInstance } from './snapshot/snapshot.js';
 import { applyRefQueue } from './snapshot/workletRef.js';
-import type { SnapshotInstance } from './snapshot.js';
 import { maybePromise } from './utils.js';
 
 export const gSignMap: Record<number, Map<number, SnapshotInstance>> = {};

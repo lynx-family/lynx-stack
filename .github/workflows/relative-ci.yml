@@ -23,6 +23,9 @@ jobs:
           - path: ./examples/react-main-thread-function
             name: example-react-main-thread-function
             key: RELATIVE_CI_PROJECT_EXAMPLES_REACT_MAIN_THREAD_FUNCTION_KEY
+          - path: ./examples/react-externals
+            name: example-react-externals
+            key: RELATIVE_CI_PROJECT_EXAMPLES_REACT_EXTERNALS_KEY
           - path: ./packages/web-platform/web-explorer
             name: web-explorer
             key: RELATIVE_CI_PROJECT_WEB_EXPLORER_KEY
@@ -34,6 +37,7 @@ jobs:
     env:
       RELATIVE_CI_PROJECT_EXAMPLES_REACT_KEY: ${{ secrets.RELATIVE_CI_PROJECT_EXAMPLES_REACT_KEY }}
       RELATIVE_CI_PROJECT_EXAMPLES_REACT_MAIN_THREAD_FUNCTION_KEY: ${{ secrets.RELATIVE_CI_PROJECT_EXAMPLES_REACT_MAIN_THREAD_FUNCTION_KEY }}
+      RELATIVE_CI_PROJECT_EXAMPLES_REACT_EXTERNALS_KEY: ${{ secrets.RELATIVE_CI_PROJECT_EXAMPLES_REACT_EXTERNALS_KEY }}
       RELATIVE_CI_PROJECT_WEB_EXPLORER_KEY: ${{ secrets.RELATIVE_CI_PROJECT_WEB_EXPLORER_KEY }}
       RELATIVE_CI_PROJECT_RSPEEDY_CORE_KEY: ${{ secrets.RELATIVE_CI_PROJECT_RSPEEDY_CORE_KEY }}
     steps:
