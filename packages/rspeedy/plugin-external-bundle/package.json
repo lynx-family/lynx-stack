@@ -41,6 +41,7 @@
     "@lynx-js/externals-loading-webpack-plugin": "workspace:*"
   },
   "devDependencies": {
+    "@lynx-js/react-umd": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@rsbuild/core": "catalog:rsbuild"
   },

@@ -9,19 +9,26 @@ import type { Compiler } from 'webpack';
 import type { LibConfig } from '@rslib/core';
 import type { RslibConfig } from '@rslib/core';
 
+// @public
+export const builtInExternalsPresetDefinitions: ExternalsPresetDefinitions;
+
 // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@lynx-js/lynx-bundle-rslib-config" does not have an export "LibConfig"
 //
 // @public
 export const defaultExternalBundleLibConfig: LibConfig;
 
-// Warning: (ae-forgotten-export) The symbol "ExternalBundleLibConfig" needs to be exported by the entry point index.d.ts
-//
 // @public
 export function defineExternalBundleRslibConfig(userLibConfig: ExternalBundleLibConfig, encodeOptions?: EncodeOptions): RslibConfig;
 
 // @public
 export interface EncodeOptions {
     engineVersion?: string;
+}
+
+// @public
+export interface ExternalBundleLibConfig extends LibConfig {
+    // (undocumented)
+    output?: OutputConfig;
 }
 
 // @public
@@ -41,6 +48,23 @@ export interface ExternalBundleWebpackPluginOptions {
 }
 
 // @public
+export type Externals = Record<string, string | string[]>;
+
+// @public
+export interface ExternalsPresetDefinition {
+    extends?: string | string[];
+    externals?: Externals;
+}
+
+// @public
+export type ExternalsPresetDefinitions = Record<string, ExternalsPresetDefinition>;
+
+// @public
+export type ExternalsPresets = {
+    reactlynx?: boolean;
+} & Record<string, boolean>;
+
+// @public
 export class MainThreadRuntimeWrapperWebpackPlugin {
     constructor(options?: Partial<MainThreadRuntimeWrapperWebpackPluginOptions>);
     // (undocumented)
@@ -51,5 +75,16 @@ export class MainThreadRuntimeWrapperWebpackPlugin {
 export interface MainThreadRuntimeWrapperWebpackPluginOptions {
     test: BannerPlugin['options']['test'];
 }
+
+// @public
+export type OutputConfig = Required<LibConfig>['output'] & {
+    externalsPresets?: ExternalsPresets;
+    externalsPresetDefinitions?: ExternalsPresetDefinitions;
+    externals?: Externals;
+    globalObject?: 'lynx' | 'globalThis';
+};
+
+// @public
+export const reactLynxExternalsPreset: Externals;
 
 ```
