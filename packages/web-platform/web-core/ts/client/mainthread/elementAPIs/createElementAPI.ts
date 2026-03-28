@@ -38,6 +38,7 @@ import {
   __UpdateListCallbacks,
   __InvokeUIMethod,
   __QuerySelector,
+  __QuerySelectorAll,
 } from './pureElementPAPIs.js';
 import type {
   AddEventPAPI,
@@ -54,7 +55,7 @@ const {
   add_inline_style_raw_string_key,
   set_inline_styles_number_key,
   set_inline_styles_in_str,
-  get_inline_styles_in_key_value_vec,
+  set_inline_styles_in_key_value_vec,
 } = wasmInstance;
 
 export function createElementAPI(
@@ -63,6 +64,8 @@ export function createElementAPI(
   config_enable_css_selector: boolean,
   config_default_display_linear: boolean,
   config_default_overflow_visible: boolean,
+  transform_vw: boolean,
+  transform_vh: boolean,
 ): ElementPAPIs {
   const wasmContext = new MainThreadWasmContext(
     rootDom,
@@ -289,6 +292,8 @@ export function createElementAPI(
             !set_inline_styles_in_str(
               element,
               value,
+              transform_vw,
+              transform_vh,
             )
           ) {
             element.setAttribute('style', value);
@@ -302,9 +307,11 @@ export function createElementAPI(
               vec.push(k, v.toString());
             }
           }
-          get_inline_styles_in_key_value_vec(
+          set_inline_styles_in_key_value_vec(
             element,
             vec,
+            transform_vw,
+            transform_vh,
           );
         }
       }
@@ -551,6 +558,7 @@ export function createElementAPI(
     })(),
     __InvokeUIMethod,
     __QuerySelector,
+    __QuerySelectorAll,
     __FlushElementTree: (_, options) => {
       const pipelineId = options?.pipelineOptions?.pipelineID;
       const backgroundThread = mtsBinding.lynxViewInstance.backgroundThread;

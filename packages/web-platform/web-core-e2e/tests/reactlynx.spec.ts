@@ -239,6 +239,41 @@ test.describe('reactlynx3 tests', () => {
         page.locator('#wheat'),
       ).toHaveAttribute('style', /wheat/g);
     });
+    test('api-createLynxView-browserConfig', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const width = page.locator('#width');
+      const height = page.locator('#height');
+      await expect(width).toHaveText('1234');
+      await expect(height).toHaveText('5678');
+    });
+
+    test('basic-bindtap-simultaneous', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await target.click();
+      await wait(100);
+      await expect(await target.getAttribute('style')).toContain('green'); // BTS check
+      await expect(await target.getAttribute('data-mts-clicked')).toBe('true'); // MTS check
+      await expect(page.locator('#bts-status')).toHaveText('BTS Clicked');
+    });
+
+    test('basic-main-query-selector', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const scrollView = page.locator('scroll-view');
+      const scrollTopBefore = await scrollView.evaluate((node) =>
+        node.scrollTop
+      );
+      expect(scrollTopBefore).toBe(0);
+      await page.locator('#tap-me').click();
+      await wait(3000);
+      const scrollTopAfter = await scrollView.evaluate((node) =>
+        node.scrollTop
+      );
+      expect(scrollTopAfter).toBeGreaterThan(100);
+    });
 
     test('basic-lynx-reload', async ({ page }, { title }) => {
       await goto(page, title);
@@ -339,6 +374,69 @@ test.describe('reactlynx3 tests', () => {
         'background-color',
         'rgb(255, 255, 0)',
       ); // yellow
+    });
+    test('basic-rpx-unit', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const lynxView = await page.locator('lynx-view');
+      await lynxView.evaluate((node) => {
+        node.style.width = '50px';
+      });
+      const target = await page.locator('#target');
+      await expect(target).toHaveCSS('height', '10px'); // 20cqw, 50 / 100 * 20 = 10px
+      await expect(target).toHaveCSS('width', '10px');
+    });
+
+    test('basic-rpx-unit-js-value', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const lynxView = await page.locator('lynx-view');
+      await lynxView.evaluate((node) => {
+        node.style.width = '50px';
+      });
+      const target = await page.locator('#target');
+      await expect(target).toHaveCSS('height', '10px'); // 20cqw, 50 / 100 * 20 = 10px
+      await expect(target).toHaveCSS('width', '10px');
+    });
+
+    test('basic-ppx-unit', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const lynxView = await page.locator('lynx-view');
+      await lynxView.evaluate((node) => {
+        node.style.width = '50px';
+      });
+      const target = await page.locator('#target');
+      await expect(target).toHaveCSS('height', '10px'); // 20cqw, 50 / 100 * 20 = 10px
+      await expect(target).toHaveCSS('width', '10px');
+    });
+
+    test('basic-vw-vh-unit', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const lynxView = await page.locator('lynx-view');
+      await lynxView.evaluate((node: any) => {
+        node.style.setProperty('--vh-unit', '10px');
+        node.style.setProperty('--vw-unit', '10px');
+        node.transformVW = true;
+        node.transformVH = true;
+        node.reload();
+      });
+      await wait(500); // Wait for the reload to rebuild the CSS properly
+
+      const target = await page.locator('#target');
+      await expect(target).toHaveCSS('width', '500px');
+      await expect(target).toHaveCSS('height', '500px');
+
+      // Now disable switches and assert it breaks out of the container dimension limits
+      await lynxView.evaluate((node: any) => {
+        node.transformVW = false;
+        node.transformVH = false;
+        node.reload();
+      });
+      await wait(500); // Wait for the reload to rebuild the CSS properly
+      await expect(target).not.toHaveCSS('width', '25px');
+      await expect(target).not.toHaveCSS('height', '50px');
     });
     test('basic-image', async ({ page }, { title }) => {
       await goto(page, title);
@@ -524,6 +622,22 @@ test.describe('reactlynx3 tests', () => {
           'background-color',
           'rgb(0, 128, 0)',
         ); // green
+      },
+    );
+    test(
+      'basic-lazy-component-mts-bindtap',
+      async ({ page }, { title }) => {
+        test.skip(isSSR, 'Lazy Component not support on SSR');
+        await goto(page, title);
+        await wait(500);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        ); // pink
+        await target.click();
+        await wait(100);
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },
     );
     test(

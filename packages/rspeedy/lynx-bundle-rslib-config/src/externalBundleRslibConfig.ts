@@ -24,12 +24,28 @@ export interface EncodeOptions {
   engineVersion?: string
 }
 
+const DEFAULT_EXTERNAL_BUNDLE_MINIFY_CONFIG = {
+  jsOptions: {
+    minimizerOptions: {
+      compress: {
+        /**
+         * the module wrapper iife need to be kept to provide the return value
+         * for the module loader in lynx_core.js
+         */
+        negate_iife: false,
+        // Allow return in module wrapper
+        side_effects: false,
+      },
+    },
+  },
+}
+
 /**
  * The default lib config{@link LibConfig} for external bundle.
  *
  * @public
  */
-export const defaultExternalBundleLibConfig: LibConfig = {
+export const DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG: LibConfig = {
   format: 'cjs',
   syntax: 'es2015',
   autoExtension: false,
@@ -44,21 +60,9 @@ export const defaultExternalBundleLibConfig: LibConfig = {
     },
   },
   output: {
-    minify: process.env['NODE_ENV'] === 'development' ? false : {
-      jsOptions: {
-        minimizerOptions: {
-          compress: {
-            /**
-             * the module wrapper iife need to be kept to provide the return value
-             * for the module loader in lynx_core.js
-             */
-            negate_iife: false,
-            // Allow return in module wrapper
-            side_effects: false,
-          },
-        },
-      },
-    },
+    minify: process.env['NODE_ENV'] === 'development'
+      ? false
+      : DEFAULT_EXTERNAL_BUNDLE_MINIFY_CONFIG,
     target: 'web',
     dataUriLimit: Number.POSITIVE_INFINITY,
     distPath: {
@@ -424,15 +428,20 @@ export function defineExternalBundleRslibConfig(
   userLibConfig: ExternalBundleLibConfig,
   encodeOptions: EncodeOptions = {},
 ): RslibConfig {
+  const normalizedOutputMinify = userLibConfig.output?.minify === true
+    ? DEFAULT_EXTERNAL_BUNDLE_MINIFY_CONFIG
+    : userLibConfig.output?.minify
+
   return {
     lib: [
       // eslint-disable-next-line import/namespace
       rsbuild.mergeRsbuildConfig<LibConfig>(
-        defaultExternalBundleLibConfig,
+        DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG,
         {
           ...userLibConfig,
           output: {
             ...userLibConfig.output,
+            minify: normalizedOutputMinify,
             externals: transformExternals(
               userLibConfig.output?.externalsPresets,
               userLibConfig.output?.externals,

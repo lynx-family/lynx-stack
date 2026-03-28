@@ -16,7 +16,7 @@ export function registerTriggerComponentEventHandler(
       params,
     ) => {
       const componentDom = lynxViewInstance.mtsWasmBinding
-        .getElementByComponentId(id);
+        .getElementByComponentId(params.componentId);
       componentDom?.dispatchEvent(
         new CustomEvent(id, {
           ...params.eventOption,

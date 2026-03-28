@@ -6,8 +6,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { elementTree } from './utils/nativeMethod';
-import { setupPage } from '../src/snapshot';
-import { BackgroundSnapshotInstance } from '../src/backgroundSnapshot';
+import { setupPage, BackgroundSnapshotInstance } from '../src/snapshot';
 import { cloneElement, createRef } from '../src/index';
 import { __root } from '../src/root';
 import { globalEnvManager } from './utils/envManager';

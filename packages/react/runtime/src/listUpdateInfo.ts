@@ -5,7 +5,7 @@
 import { profileEnd, profileStart } from './debug/profile.js';
 import { hydrate } from './hydrate.js';
 import { componentAtIndexFactory, enqueueComponentFactory } from './list.js';
-import type { SnapshotInstance } from './snapshot.js';
+import type { SnapshotInstance } from './snapshot/snapshot.js';
 
 export interface ListUpdateInfo {
   flush(): number | undefined;

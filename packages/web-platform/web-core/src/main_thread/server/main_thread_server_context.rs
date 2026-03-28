@@ -32,17 +32,26 @@ pub struct MainThreadServerContext {
   style_manager: StyleManagerServer,
   view_attributes: String,
   enable_css_selector: bool,
+  transform_vw: bool,
+  transform_vh: bool,
 }
 
 #[wasm_bindgen]
 impl MainThreadServerContext {
   #[wasm_bindgen(constructor)]
-  pub fn new(view_attributes: String, enable_css_selector: bool) -> Self {
+  pub fn new(
+    view_attributes: String,
+    enable_css_selector: bool,
+    transform_vw: bool,
+    transform_vh: bool,
+  ) -> Self {
     Self {
       elements: Vec::new(),
       style_manager: StyleManagerServer::new(),
       view_attributes,
       enable_css_selector,
+      transform_vw,
+      transform_vh,
     }
   }
 
@@ -258,7 +267,13 @@ impl MainThreadServerContext {
   pub fn set_attribute(&mut self, element_id: usize, key: String, value: String) {
     if let Some(Some(element)) = self.elements.get_mut(element_id) {
       if key == "style" {
-        let transformed = transform_inline_style_string(&value);
+        let transformed = transform_inline_style_string(
+          &value,
+          &crate::style_transformer::token_transformer::TransformerConfig {
+            transform_vw: self.transform_vw,
+            transform_vh: self.transform_vh,
+          },
+        );
         element.set_attribute(key, transformed);
       } else {
         element.set_attribute(key, value);
@@ -309,7 +324,13 @@ impl MainThreadServerContext {
   }
 
   pub fn set_inline_styles_in_str(&mut self, element_id: usize, styles: String) -> bool {
-    let transformed_style_str = transform_inline_style_string(&styles);
+    let transformed_style_str = transform_inline_style_string(
+      &styles,
+      &crate::style_transformer::token_transformer::TransformerConfig {
+        transform_vw: self.transform_vw,
+        transform_vh: self.transform_vh,
+      },
+    );
     if transformed_style_str == styles {
       return false;
     }
@@ -319,8 +340,14 @@ impl MainThreadServerContext {
     true
   }
 
-  pub fn get_inline_styles_in_key_value_vec(&mut self, element_id: usize, k_v_vec: Vec<String>) {
-    let transformed_style_str = transform_inline_style_key_value_vec(k_v_vec);
+  pub fn set_inline_styles_in_key_value_vec(&mut self, element_id: usize, k_v_vec: Vec<String>) {
+    let transformed_style_str = transform_inline_style_key_value_vec(
+      k_v_vec,
+      &crate::style_transformer::token_transformer::TransformerConfig {
+        transform_vw: self.transform_vw,
+        transform_vh: self.transform_vh,
+      },
+    );
     if let Some(Some(element)) = self.elements.get_mut(element_id) {
       element.set_attribute("style".to_string(), transformed_style_str);
     }
@@ -497,7 +524,7 @@ mod tests {
 
   #[test]
   fn test_html_generation() {
-    let mut ctx = MainThreadServerContext::new("".to_string(), true);
+    let mut ctx = MainThreadServerContext::new("".to_string(), true, false, false);
 
     // Create <div>
     let div_id = ctx.create_element("div".to_string(), None, None, None);
@@ -528,7 +555,7 @@ mod tests {
 
   #[test]
   fn test_set_style_empty_value() {
-    let mut ctx = MainThreadServerContext::new("".to_string(), true);
+    let mut ctx = MainThreadServerContext::new("".to_string(), true, false, false);
     let div_id = ctx.create_element("div".to_string(), None, None, None);
 
     // This should not panic

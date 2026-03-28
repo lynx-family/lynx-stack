@@ -10,6 +10,8 @@ import {
 } from '../ts/server/elementAPIs/createElementAPI.js';
 import { wasmInstance } from '../ts/client/wasm.js';
 import { encodeCSS } from '../ts/encode/encodeCSS.js';
+import { createMainThreadGlobalAPIs } from '../ts/client/mainthread/createMainThreadGlobalAPIs.js';
+import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
 
 describe('Element APIs', () => {
   let lynxViewDom: HTMLElement;
@@ -398,6 +400,106 @@ describe('Element APIs', () => {
     expect(targetStyle).toContain('20px');
     expect(targetStyle).toContain('30px');
     expect(targetStyle).toContain('10px');
+  });
+  test('__SetInlineStyles with rpx', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    let target = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__SetID(target, 'target');
+    mtsGlobalThis.__SetInlineStyles(target, 'margin: 10rpx; width: 50.5rpx;');
+    mtsGlobalThis.__AppendElement(root, target);
+    mtsGlobalThis.__FlushElementTree();
+    const targetDom = rootDom.querySelector('#target') as HTMLElement;
+    const targetStyle = targetDom.getAttribute('style');
+    expect(targetStyle).toContain('calc(10 * var(--rpx-unit))');
+    expect(targetStyle).toContain('calc(50.5 * var(--rpx-unit))');
+  });
+
+  test('__SetInlineStyles with ppx', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    let target = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__SetID(target, 'target');
+    mtsGlobalThis.__SetInlineStyles(target, 'margin: 10ppx; width: 50.5ppx;');
+    mtsGlobalThis.__AppendElement(root, target);
+    mtsGlobalThis.__FlushElementTree();
+    const targetDom = rootDom.querySelector('#target') as HTMLElement;
+    const targetStyle = targetDom.getAttribute('style');
+    expect(targetStyle).toContain('calc(10 * var(--ppx-unit))');
+    expect(targetStyle).toContain('calc(50.5 * var(--ppx-unit))');
+  });
+
+  test('__SetInlineStyles with vw and vh when enabled', () => {
+    const mtsGlobalThisUnits = createElementAPI(
+      rootDom,
+      mtsBinding,
+      true,
+      true,
+      true,
+      true, // transformVW
+      true, // transformVH
+    );
+    const root = mtsGlobalThisUnits.__CreatePage('page', 0);
+    let target = mtsGlobalThisUnits.__CreateView(0);
+    mtsGlobalThisUnits.__SetID(target, 'target');
+    mtsGlobalThisUnits.__SetInlineStyles(target, 'width: 50vw; height: 100vh;');
+    mtsGlobalThisUnits.__AppendElement(root, target);
+    mtsGlobalThisUnits.__FlushElementTree();
+    const targetDom = rootDom.querySelector('#target') as HTMLElement;
+    const targetStyle = targetDom.getAttribute('style');
+    expect(targetStyle).toContain('calc(50 * var(--vw-unit))');
+    expect(targetStyle).toContain('calc(100 * var(--vh-unit))');
+  });
+
+  test('__SetInlineStyles with object and vw/vh when enabled', () => {
+    const mtsGlobalThisUnits = createElementAPI(
+      rootDom,
+      mtsBinding,
+      true,
+      true,
+      true,
+      true, // transformVW
+      true, // transformVH
+    );
+    const root = mtsGlobalThisUnits.__CreatePage('page', 0);
+    let target = mtsGlobalThisUnits.__CreateView(0);
+    mtsGlobalThisUnits.__SetID(target, 'target');
+    mtsGlobalThisUnits.__SetInlineStyles(target, {
+      width: '50vw',
+      height: '100vh',
+    });
+    mtsGlobalThisUnits.__AppendElement(root, target);
+    mtsGlobalThisUnits.__FlushElementTree();
+    const targetDom = rootDom.querySelector('#target') as HTMLElement;
+    const targetStyle = targetDom.getAttribute('style');
+    expect(targetStyle).toBe(
+      'width:calc(50 * var(--vw-unit));height:calc(100 * var(--vh-unit));',
+    );
+  });
+
+  test('__SetAttribute style with rpx, ppx, vw, vh', () => {
+    const mtsGlobalThisUnits = createElementAPI(
+      rootDom,
+      mtsBinding,
+      true,
+      true,
+      true,
+      true, // transformVW
+      true, // transformVH
+    );
+    const root = mtsGlobalThisUnits.__CreatePage('page', 0);
+    let target = mtsGlobalThisUnits.__CreateView(0);
+    mtsGlobalThisUnits.__SetID(target, 'target');
+    mtsGlobalThisUnits.__SetAttribute(
+      target,
+      'style',
+      'width: 50vw; height: 100vh; margin: 10rpx; padding: 5ppx;',
+    );
+    mtsGlobalThisUnits.__AppendElement(root, target);
+    mtsGlobalThisUnits.__FlushElementTree();
+    const targetDom = rootDom.querySelector('#target') as HTMLElement;
+    const targetStyle = targetDom.getAttribute('style');
+    expect(targetStyle).toBe(
+      'width: 50vw; height: 100vh; margin: 10rpx; padding: 5ppx;',
+    );
   });
 
   test('__GetConfig__AddConfig', () => {
@@ -1337,6 +1439,75 @@ describe('Element APIs', () => {
   });
 
   describe('Server Element APIs SSR Propagation', () => {
+    test('ssr __SetInlineStyles and __SetAttribute style transformations', () => {
+      const binding: SSRBinding = { ssrResult: '' };
+      const config = {
+        enableCSSSelector: true,
+        defaultOverflowVisible: false,
+        defaultDisplayLinear: true,
+        transformVW: true,
+        transformVH: true,
+      };
+      const { globalThisAPIs: api, wasmContext: wasmCtx } =
+        createServerElementAPI(binding, undefined, '', config);
+
+      const root = api.__CreatePage('page', 0);
+
+      const view1 = api.__CreateElement('view', api.__GetElementUniqueID(root));
+      api.__SetAttribute(
+        view1,
+        'style',
+        'width: 50vw; height: 100vh; margin: 10rpx;',
+      );
+      api.__AppendElement(root, view1);
+
+      const view2 = api.__CreateElement('view', api.__GetElementUniqueID(root));
+      api.__SetInlineStyles(
+        view2,
+        'width: 50vw; height: 100vh; margin: 10rpx;',
+      );
+      api.__AppendElement(root, view2);
+
+      const view3 = api.__CreateElement('view', api.__GetElementUniqueID(root));
+      api.__SetInlineStyles(view3, {
+        width: '50vw',
+        height: '100vh',
+        margin: '10rpx',
+      });
+      api.__AppendElement(root, view3);
+
+      api.__FlushElementTree();
+
+      const html1 = wasmCtx.generate_html(api.__GetElementUniqueID(view1));
+      expect(html1).toContain('calc(50 * var(--vw-unit))');
+      expect(html1).toContain('calc(100 * var(--vh-unit))');
+      expect(html1).toContain('calc(10 * var(--rpx-unit))');
+
+      const html2 = wasmCtx.generate_html(api.__GetElementUniqueID(view2));
+      expect(html2).toContain('calc(50 * var(--vw-unit))');
+      expect(html2).toContain('calc(100 * var(--vh-unit))');
+      expect(html2).toContain('calc(10 * var(--rpx-unit))');
+
+      const html3 = wasmCtx.generate_html(true);
+      expect(html3).toContain(
+        'style="width:calc(50 * var(--vw-unit));height:calc(100 * var(--vh-unit));margin:calc(10 * var(--rpx-unit));"',
+      );
+
+      const view4 = api.__CreateElement('view', api.__GetElementUniqueID(root));
+      api.__SetAttribute(
+        view4,
+        'style',
+        'width: 50vw; height: 100vh; margin: 10rpx;',
+      );
+      api.__AppendElement(root, view4);
+      api.__FlushElementTree();
+
+      const html4 = wasmCtx.generate_html(api.__GetElementUniqueID(view4));
+      expect(html4).toContain('calc(50 * var(--vw-unit))');
+      expect(html4).toContain('calc(100 * var(--vh-unit))');
+      expect(html4).toContain('calc(10 * var(--rpx-unit))');
+    });
+
     test('create element infer css id from parent component in SSR', () => {
       const binding: SSRBinding = {
         ssrResult: '',
@@ -1440,5 +1611,53 @@ describe('Element APIs', () => {
     expect(styleElement).not.toBeNull();
     expect(styleElement!.textContent).toContain('.test');
     expect(styleElement!.textContent).toContain('color:red');
+  });
+
+  test('__LoadLepusChunk with dynamicComponentEntry', () => {
+    const originalCancelAnimationFrame = globalThis.cancelAnimationFrame;
+    globalThis.cancelAnimationFrame = vi.fn();
+
+    const lynxViewInstance = {
+      templateUrl: 'app.js',
+      globalprops: {},
+      systemInfo: {},
+      backgroundThread: {
+        markTiming: vi.fn(),
+        jsContext: { dispatchEvent: vi.fn() },
+      },
+      lepusCodeUrls: new Map([
+        ['app.js', { 'chunk.js': 'app-chunk.js' }],
+        ['dynamic.js', { 'chunk.js': 'dynamic-chunk.js' }],
+      ]),
+      mtsRealm: { loadScriptSync: vi.fn() },
+      i18nManager: { _I18nResourceTranslation: vi.fn() },
+    } as unknown as LynxViewInstance;
+
+    const apis = createMainThreadGlobalAPIs(lynxViewInstance);
+
+    // Testing default fallback
+    const result1 = apis.__LoadLepusChunk('chunk.js');
+    expect(result1).toBe(true);
+    expect(lynxViewInstance.mtsRealm!.loadScriptSync).toHaveBeenCalledWith(
+      'app-chunk.js',
+    );
+
+    // Testing dynamicComponentEntry
+    const result2 = apis.__LoadLepusChunk('chunk.js', {
+      dynamicComponentEntry: 'dynamic.js',
+    });
+    expect(result2).toBe(true);
+    expect(lynxViewInstance.mtsRealm!.loadScriptSync).toHaveBeenCalledWith(
+      'dynamic-chunk.js',
+    );
+
+    // Testing non-existing code url (should fallback to path)
+    const result3 = apis.__LoadLepusChunk('other.js', {
+      dynamicComponentEntry: 'dynamic.js',
+    });
+    expect(result3).toBe(true);
+    expect(lynxViewInstance.mtsRealm!.loadScriptSync).toHaveBeenCalledWith(
+      'other.js',
+    );
   });
 });

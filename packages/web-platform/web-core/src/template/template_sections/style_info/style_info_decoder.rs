@@ -26,6 +26,8 @@ pub struct StyleInfoDecoder {
   is_processing_font_face: bool,
   temp_child_rules_buffer: String,
   config_enable_css_selector: bool,
+  transform_vw: bool,
+  transform_vh: bool,
   entry_name: Option<String>,
   css_og_current_processing_css_ids: Option<Vec<i32>>,
   css_og_current_processing_class_selector_names: Option<Vec<String>>,
@@ -36,6 +38,8 @@ impl StyleInfoDecoder {
     raw_style_info: RawStyleInfo,
     entry_name: Option<String>,
     config_enable_css_selector: bool,
+    transform_vw: bool,
+    transform_vh: bool,
   ) -> Result<Self, wasm_bindgen::JsError> {
     let flattened_style_info: FlattenedStyleInfo = raw_style_info.into();
     let mut decoded_style_info = StyleInfoDecoder {
@@ -49,6 +53,8 @@ impl StyleInfoDecoder {
       },
       entry_name,
       config_enable_css_selector,
+      transform_vw,
+      transform_vh,
       is_processing_font_face: false,
       css_og_current_processing_css_ids: None,
       css_og_current_processing_class_selector_names: None,
@@ -277,7 +283,13 @@ impl StyleInfoDecoder {
       &mut self.style_content
     })
     .push('{');
-    let mut transformer = StyleTransformer::new(self);
+    let mut transformer = StyleTransformer::new(
+      self,
+      crate::style_transformer::token_transformer::TransformerConfig {
+        transform_vw: self.transform_vw,
+        transform_vh: self.transform_vh,
+      },
+    );
 
     for decl in declaration_block.declarations.into_iter() {
       transformer.on_half_parsed_declaration(decl);
@@ -365,7 +377,14 @@ mod test {
     config_enable_css_selector: bool,
     entry_name: Option<String>,
   ) -> StyleInfoDecoder {
-    StyleInfoDecoder::new(raw_style_info, entry_name, config_enable_css_selector).unwrap()
+    StyleInfoDecoder::new(
+      raw_style_info,
+      entry_name,
+      config_enable_css_selector,
+      false,
+      false,
+    )
+    .unwrap()
   }
 
   #[test]
@@ -892,8 +911,8 @@ mod tests_roundtrip {
       let decoded_raw = unsafe { rkyv::from_bytes_unchecked::<RawStyleInfo>(&buf) }
         .expect("RawStyleInfo decode should succeed");
 
-      let decoder =
-        StyleInfoDecoder::new(decoded_raw, None, true).expect("StyleInfoDecoder should succeed");
+      let decoder = StyleInfoDecoder::new(decoded_raw, None, true, false, false)
+        .expect("StyleInfoDecoder should succeed");
       let decoded_string = decoder.style_content;
 
       assert!(decoded_string.contains(".card > x-view:where([l-css-id=\"1\"]):not([l-e-name])"));
@@ -943,8 +962,8 @@ mod tests_roundtrip {
       let decoded_raw = unsafe { rkyv::from_bytes_unchecked::<RawStyleInfo>(&buf) }
         .expect("RawStyleInfo decode should succeed");
 
-      let decoder =
-        StyleInfoDecoder::new(decoded_raw, None, true).expect("StyleInfoDecoder should succeed");
+      let decoder = StyleInfoDecoder::new(decoded_raw, None, true, false, false)
+        .expect("StyleInfoDecoder should succeed");
       let decoded_string = decoder.style_content;
 
       // Note: Custom properties (unknown properties) lose their name in the new optimizations.

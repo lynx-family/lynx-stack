@@ -84,6 +84,8 @@ export class LynxViewInstance implements AsyncDisposable {
     nativeModulesMap: NativeModulesMap = {},
     napiModulesMap: NapiModulesMap = {},
     initI18nResources?: InitI18nResources,
+    private readonly transformVW: boolean = false,
+    private readonly transformVH: boolean = false,
     browserConfig?: Record<string, any>,
   ) {
     this.systemInfo = createSystemInfo(browserConfig);
@@ -128,6 +130,8 @@ export class LynxViewInstance implements AsyncDisposable {
         enableCSSSelector,
         defaultDisplayLinear,
         defaultOverflowVisible,
+        this.transformVW,
+        this.transformVH,
       ),
       createMainThreadGlobalAPIs(
         this,
@@ -151,7 +155,7 @@ export class LynxViewInstance implements AsyncDisposable {
 
   async onMTSScriptsLoaded(currentUrl: string, isLazy: boolean) {
     this.backgroundThread.markTiming('lepus_execute_start');
-    const urlMap = templateManager.getTemplate(currentUrl)
+    const urlMap = templateManager.getBundle(currentUrl)
       ?.lepusCode as Record<string, string>;
     this.lepusCodeUrls.set(
       currentUrl,
@@ -169,15 +173,16 @@ export class LynxViewInstance implements AsyncDisposable {
     this.backgroundThread.markTiming('lepus_execute_end');
     this.webElementsLoadingPromises.length = 0;
     this.backgroundThread.markTiming('data_processor_start');
-    const processedData = this.mainThreadGlobalThis.processData
+    const processedData = this.#pageConfig?.['enableJSDataProcessor'] !== 'true'
+        && this.mainThreadGlobalThis.processData
       ? this.mainThreadGlobalThis.processData?.(this.initData)
       : this.initData;
     this.backgroundThread.markTiming('data_processor_end');
     this.backgroundThread.startWebWorker(
       processedData,
       this.globalprops,
-      templateManager.getTemplate(this.templateUrl)!.config!.cardType,
-      templateManager.getTemplate(this.templateUrl)?.customSections as Record<
+      templateManager.getBundle(this.templateUrl)!.config!.cardType,
+      templateManager.getBundle(this.templateUrl)?.customSections as Record<
         string,
         Cloneable
       >,
@@ -192,7 +197,7 @@ export class LynxViewInstance implements AsyncDisposable {
   }
 
   async onBTSScriptsLoaded(url: string) {
-    const btsUrls = templateManager.getTemplate(url)
+    const btsUrls = templateManager.getBundle(url)
       ?.backgroundCode as Record<
         string,
         string
@@ -223,9 +228,15 @@ export class LynxViewInstance implements AsyncDisposable {
     if (this.#queryComponentCache.has(url)) {
       return this.#queryComponentCache.get(url)!;
     }
-    const promise = templateManager.fetchBundle(url, Promise.resolve(this), {
-      enableCSSSelector: this.#pageConfig!['enableCSSSelector'],
-    })
+    const promise = templateManager.fetchBundle(
+      url,
+      Promise.resolve(this),
+      this.transformVW,
+      this.transformVH,
+      {
+        enableCSSSelector: this.#pageConfig!['enableCSSSelector'],
+      },
+    )
       .then(async () => {
         const urlMap = this.lepusCodeUrls.get(url);
         const rootUrl = urlMap?.['root'];
@@ -249,7 +260,8 @@ export class LynxViewInstance implements AsyncDisposable {
     data: Cloneable,
     processorName?: string,
   ): Promise<void> {
-    const processedData = this.mainThreadGlobalThis.processData
+    const processedData = this.#pageConfig!['enableJSDataProcessor'] !== 'true'
+        && this.mainThreadGlobalThis.processData
       ? this.mainThreadGlobalThis.processData(data, processorName)
       : data;
     this.mainThreadGlobalThis.updatePage?.(processedData, { processorName });

@@ -160,17 +160,17 @@ export class StyleSheetResource {
  */
 export function add_inline_style_raw_string_key(dom: HTMLElement, key: string, value?: string | null): void;
 
-export function decode_style_info(buffer: Uint8Array, entry_name: string | null | undefined, config_enable_css_selector: boolean): Uint8Array;
+export function decode_style_info(buffer: Uint8Array, entry_name: string | null | undefined, config_enable_css_selector: boolean, transform_vw: boolean, transform_vh: boolean): Uint8Array;
 
-export function encode_legacy_json_generated_raw_style_info(raw_style_info: RawStyleInfo, config_enable_css_selector: boolean, entry_name?: string | null): Uint8Array;
+export function encode_legacy_json_generated_raw_style_info(raw_style_info: RawStyleInfo, config_enable_css_selector: boolean, entry_name: string | null | undefined, transform_vw: boolean, transform_vh: boolean): Uint8Array;
 
 export function get_font_face_content(buffer: Uint8Array): string;
 
-export function get_inline_styles_in_key_value_vec(dom: HTMLElement, k_v_vec: string[]): void;
-
 export function get_style_content(buffer: Uint8Array): string;
 
-export function set_inline_styles_in_str(dom: HTMLElement, styles: string): boolean;
+export function set_inline_styles_in_key_value_vec(dom: HTMLElement, k_v_vec: string[], transform_vw: boolean, transform_vh: boolean): void;
+
+export function set_inline_styles_in_str(dom: HTMLElement, styles: string, transform_vw: boolean, transform_vh: boolean): boolean;
 
 export function set_inline_styles_number_key(dom: HTMLElement, key: number, value?: string | null): void;
 
@@ -192,10 +192,9 @@ export interface InitOutput {
     readonly __wbg_set_eventinfo_event_type: (a: number, b: number, c: number) => void;
     readonly __wbg_stylesheetresource_free: (a: number, b: number) => void;
     readonly add_inline_style_raw_string_key: (a: any, b: number, c: number, d: number, e: number) => void;
-    readonly decode_style_info: (a: any, b: number, c: number, d: number) => [number, number, number];
-    readonly encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number) => [number, number, number];
+    readonly decode_style_info: (a: any, b: number, c: number, d: number, e: number, f: number) => [number, number, number];
+    readonly encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number, number];
     readonly get_font_face_content: (a: any) => [number, number, number, number];
-    readonly get_inline_styles_in_key_value_vec: (a: any, b: number, c: number) => void;
     readonly get_style_content: (a: any) => [number, number, number, number];
     readonly mainthreadwasmcontext_add_cross_thread_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
     readonly mainthreadwasmcontext_add_dataset: (a: number, b: number, c: any, d: any) => [number, number];
@@ -232,7 +231,8 @@ export interface InitOutput {
     readonly ruleprelude_new: () => number;
     readonly ruleprelude_push_selector: (a: number, b: number) => void;
     readonly selector_push_one_selector_section: (a: number, b: number, c: number, d: number, e: number) => [number, number];
-    readonly set_inline_styles_in_str: (a: any, b: number, c: number) => number;
+    readonly set_inline_styles_in_key_value_vec: (a: any, b: number, c: number, d: number, e: number) => void;
+    readonly set_inline_styles_in_str: (a: any, b: number, c: number, d: number, e: number) => number;
     readonly set_inline_styles_number_key: (a: any, b: number, c: number, d: number) => void;
     readonly stylesheetresource_new: (a: any, b: any) => [number, number, number];
     readonly selector_new: () => number;

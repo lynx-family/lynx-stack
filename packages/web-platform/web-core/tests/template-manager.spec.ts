@@ -85,10 +85,12 @@ describe('Template Manager', () => {
     await templateManager.fetchBundle(
       templateUrl,
       Promise.resolve(mockLynxViewInstance),
+      false,
+      false,
     );
 
     // Verify data using getCustomSection
-    const customSections = templateManager.getTemplate(templateUrl)
+    const customSections = templateManager.getBundle(templateUrl)
       ?.customSections;
     const decoder = new TextDecoder('utf-16le');
     const decodedCustomSections = JSON.parse(
@@ -121,21 +123,23 @@ describe('Template Manager', () => {
       templateManager.fetchBundle(
         templateUrl,
         Promise.resolve(mockLynxViewInstance),
+        false,
+        false,
       ),
     )
       .rejects.toThrow('Unsupported version: 2');
 
     // Verify template is removed
-    expect(templateManager.getTemplate(templateUrl)?.customSections)
+    expect(templateManager.getBundle(templateUrl)?.customSections)
       .toBeUndefined();
   });
 
   /*
   test('should throw error for create same template twice', () => {
     const templateUrl = 'http://example.com/template_duplicate_url_test';
-    templateManager.createTemplate(templateUrl);
+    templateManager.createBundle(templateUrl);
     expect(() => {
-      templateManager.createTemplate(templateUrl);
+      templateManager.createBundle(templateUrl);
     }).toThrow();
   });
   */
@@ -163,10 +167,12 @@ describe('Template Manager', () => {
     await templateManager.fetchBundle(
       'http://example.com/template',
       Promise.resolve(mockLynxViewInstance),
+      false,
+      false,
     );
 
     // Verify data using getCustomSection
-    const customSections = templateManager.getTemplate(
+    const customSections = templateManager.getBundle(
       'http://example.com/template',
     )?.customSections;
     const decoder = new TextDecoder('utf-16le');
@@ -179,17 +185,17 @@ describe('Template Manager', () => {
   /*
   test('should remove template correctly', () => {
     const templateUrl = 'http://example.com/template_to_remove';
-    templateManager.createTemplate(templateUrl);
+    templateManager.createBundle(templateUrl);
 
     // Manually set a custom section to verify existence
     templateManager.setCustomSection(templateUrl, { test: 'data' });
-    expect(templateManager.getTemplate(templateUrl)?.customSections).toEqual({
+    expect(templateManager.getBundle(templateUrl)?.customSections).toEqual({
       test: 'data',
     });
 
-    templateManager.removeTemplate(templateUrl);
+    templateManager.removeBundle(templateUrl);
 
-    expect(templateManager.getTemplate(templateUrl)?.customSections)
+    expect(templateManager.getBundle(templateUrl)?.customSections)
       .toBeUndefined();
   });
   */
@@ -217,10 +223,12 @@ describe('Template Manager', () => {
       templateManager.fetchBundle(
         templateUrl,
         Promise.resolve(mockLynxViewInstance),
+        false,
+        false,
       ),
     ).rejects.toThrow('Stream failed');
 
-    expect(templateManager.getTemplate(templateUrl)?.customSections)
+    expect(templateManager.getBundle(templateUrl)?.customSections)
       .toBeUndefined();
   });
 
@@ -248,6 +256,8 @@ describe('Template Manager', () => {
     await templateManager.fetchBundle(
       templateUrl,
       Promise.resolve(mockLynxViewInstance),
+      false,
+      false,
       overrideConfig as any,
     );
 
@@ -321,6 +331,8 @@ describe('Template Manager', () => {
     await templateManager.fetchBundle(
       templateUrl,
       Promise.resolve(mockLynxViewInstance),
+      false,
+      false,
     );
 
     // Verify config
@@ -370,6 +382,8 @@ describe('Template Manager', () => {
     await templateManager.fetchBundle(
       templateUrl,
       Promise.resolve(mockLynxViewInstance),
+      false,
+      false,
     );
 
     // Verify config has appType = lazy and isLazy = true
@@ -379,5 +393,64 @@ describe('Template Manager', () => {
         isLazy: 'true',
       }),
     );
+  });
+
+  test('should not result in partial bundle when fetchBundle is called twice concurrently', async () => {
+    const encoded = encode(sampleTasm);
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        // Enqueue with a small delay so concurrent requests wait
+        await new Promise(resolve => setTimeout(resolve, 10));
+        controller.enqueue(encoded);
+        controller.close();
+      },
+    });
+
+    (globalThis.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      body: stream,
+    });
+
+    const instance1 = {
+      ...mockLynxViewInstance,
+      onPageConfigReady: vi.fn(),
+      backgroundThread: { markTiming: vi.fn() },
+    };
+    const instance2 = {
+      ...mockLynxViewInstance,
+      onPageConfigReady: vi.fn(),
+      backgroundThread: { markTiming: vi.fn() },
+    };
+
+    // Trigger both concurrently
+    await Promise.all([
+      templateManager.fetchBundle(
+        'http://example.com/template_concurrent',
+        Promise.resolve(instance1 as unknown as LynxViewInstance),
+        false,
+        false,
+      ),
+      templateManager.fetchBundle(
+        'http://example.com/template_concurrent',
+        Promise.resolve(instance2 as unknown as LynxViewInstance),
+        false,
+        false,
+      ),
+    ]);
+
+    // Verify both finish correctly
+    const customSections = templateManager.getBundle(
+      'http://example.com/template_concurrent',
+    )?.customSections;
+    const decoder = new TextDecoder('utf-16le');
+    const decodedCustomSections = JSON.parse(
+      decoder.decode(customSections as unknown as Uint8Array),
+    );
+    expect(decodedCustomSections).toEqual(sampleTasm.customSections);
+    expect(instance1.onPageConfigReady).toHaveBeenCalled();
+    expect(instance2.onPageConfigReady).toHaveBeenCalled();
   });
 });

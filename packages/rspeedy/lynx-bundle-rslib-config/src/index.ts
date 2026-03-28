@@ -10,8 +10,8 @@
 export {
   defineExternalBundleRslibConfig,
   builtInExternalsPresetDefinitions,
-  defaultExternalBundleLibConfig,
   reactLynxExternalsPreset,
+  DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG as defaultExternalBundleLibConfig,
 } from './externalBundleRslibConfig.js'
 export type {
   EncodeOptions,

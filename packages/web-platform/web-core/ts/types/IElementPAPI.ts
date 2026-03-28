@@ -338,7 +338,15 @@ export type InvokeUIMethodPAPI = (
 export type QuerySelectorPAPI = (
   element: HTMLElement,
   selector: string,
+  options?: unknown,
 ) => unknown;
+
+export type QuerySelectorAllPAPI = (
+  element: HTMLElement,
+  selector: string,
+  options?: unknown,
+) => unknown[];
+
 export interface ElementPAPIs {
   // __GetTemplateParts currently only provided by the thread-strategy = "all-on-ui" (default)
   __GetTemplateParts: GetTemplatePartsPAPI;
@@ -400,6 +408,7 @@ export interface ElementPAPIs {
   __ElementAnimate: ElementAnimatePAPI;
   __InvokeUIMethod: InvokeUIMethodPAPI;
   __QuerySelector: QuerySelectorPAPI;
+  __QuerySelectorAll: QuerySelectorAllPAPI;
   __FlushElementTree: (
     _subTree?: unknown,
     options?: FlushElementTreeOptions,
@@ -413,7 +422,10 @@ export interface MainThreadGlobalAPIs {
   _ReportError: (error: Error, _: unknown) => void;
   _SetSourceMapRelease: (errInfo: JSErrorInfo) => void;
   __OnLifecycleEvent: (lifeCycleEvent: Cloneable) => void;
-  __LoadLepusChunk: (path: string) => boolean;
+  __LoadLepusChunk: (
+    path: string,
+    config?: { dynamicComponentEntry?: string; chunkType?: number },
+  ) => boolean;
   _I18nResourceTranslation: (
     options: I18nResourceTranslationOptions,
   ) => unknown | undefined;

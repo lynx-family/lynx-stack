@@ -25,6 +25,7 @@ export function registerNapiModulesCallHandler(
         name,
         data,
         moduleName,
+        lynxViewInstance.parentDom,
         dispatchNapiModules,
       );
     },

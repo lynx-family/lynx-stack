@@ -16,7 +16,8 @@ export const pluginScriptLoad = () => ({
         new rspack.BannerPlugin({
           stage: rspack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
           raw: true,
-          banner: () => {
+          banner: ({ filename }) => {
+            if (filename.endsWith('.css')) return '';
             return `\
 const runAfterLoadScript = (() => {
   const q = [];
@@ -37,6 +38,7 @@ if (typeof Codspeed !== "undefined") {
           footer: true,
           raw: true,
           banner: ({ filename }) => {
+            if (filename.endsWith('.css')) return '';
             // TODO(hzy): avoid hardcoded case dir
             const caseDir = `benchmark/react`;
             const chunkName = filename.replace(/^\.rspeedy\//, '');

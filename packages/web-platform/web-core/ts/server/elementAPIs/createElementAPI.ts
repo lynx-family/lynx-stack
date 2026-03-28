@@ -96,11 +96,15 @@ export function createElementAPI(
     enableCSSSelector: boolean;
     defaultOverflowVisible: boolean;
     defaultDisplayLinear: boolean;
+    transformVW: boolean;
+    transformVH: boolean;
   },
 ): { globalThisAPIs: ElementPAPIs; wasmContext: MainThreadServerContext } {
   const wasmContext = new MainThreadServerContext(
     viewAttributes,
     config.enableCSSSelector,
+    config.transformVW,
+    config.transformVH,
   );
   if (styleInfo) {
     const resource = new StyleSheetResource(styleInfo, undefined);
@@ -430,7 +434,7 @@ export function createElementAPI(
                 vec.push(k, v.toString());
               }
             }
-            wasmContext.get_inline_styles_in_key_value_vec(
+            wasmContext.set_inline_styles_in_key_value_vec(
               uniqueId,
               vec,
             );
@@ -482,6 +486,9 @@ export function createElementAPI(
         throw new Error('Not yet Implemented');
       },
       __QuerySelector: () => {
+        throw new Error('Not yet Implemented');
+      },
+      __QuerySelectorAll: () => {
         throw new Error('Not yet Implemented');
       },
     },

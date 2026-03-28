@@ -3,7 +3,7 @@
  * Licensed under the Apache License Version 2.0 that can be found in the
  * LICENSE file in the root directory of this source tree.
  */
-use super::token_transformer::transform_one_token;
+use super::token_transformer::{transform_one_token, TransformerConfig};
 #[cfg(any(feature = "client", feature = "server", test))]
 use crate::css_tokenizer::tokenize;
 use crate::css_tokenizer::{
@@ -17,6 +17,7 @@ use super::rules::query_transform_rules;
 
 pub struct StyleTransformer<'a, T: Generator> {
   generator: &'a mut T,
+  config: TransformerConfig,
 
   status: usize,
   current_property_id: Option<CSSProperty>,
@@ -32,7 +33,7 @@ pub trait Generator {
 
 impl<'a, T: Generator> Parser for StyleTransformer<'a, T> {
   fn on_token(&mut self, token_type: u8, token_value: &str) {
-    let (token_type, token_value) = transform_one_token(token_type, token_value);
+    let (token_type, token_value) = transform_one_token(token_type, token_value, &self.config);
     //https://drafts.csswg.org/css-syntax-3/#consume-declaration
     // on_token(type, start, offset);
     /*
@@ -127,9 +128,10 @@ impl<'a, T: Generator> Parser for StyleTransformer<'a, T> {
   }
 }
 impl<'a, T: Generator> StyleTransformer<'a, T> {
-  pub fn new(generator: &'a mut T) -> Self {
+  pub fn new(generator: &'a mut T, config: TransformerConfig) -> Self {
     StyleTransformer {
       generator,
+      config,
       status: 0,
       current_property_id: None,
       current_value: String::with_capacity(8),
@@ -197,7 +199,7 @@ impl<'a, T: Generator> StyleTransformer<'a, T> {
         .value_token_list
         .iter()
         .map(|t| {
-          let (_, token_value) = transform_one_token(t.token_type, &t.value);
+          let (_, token_value) = transform_one_token(t.token_type, &t.value, &self.config);
           token_value
         })
         .collect(),
@@ -220,6 +222,8 @@ fn generate_one_declaration(
 
 #[cfg(test)]
 mod tests {
+  use crate::style_transformer::token_transformer::TransformerConfig;
+
   use super::Generator;
 
   struct TestTransformer {
@@ -237,10 +241,14 @@ mod tests {
   }
 
   fn parse_css(css: &str) -> (TestTransformer, &str) {
+    parse_css_with_config(css, Default::default())
+  }
+
+  fn parse_css_with_config(css: &str, config: TransformerConfig) -> (TestTransformer, &str) {
     let mut test_transformer = TestTransformer {
       declarations: Vec::new(),
     };
-    let mut style_transformer = super::StyleTransformer::new(&mut test_transformer);
+    let mut style_transformer = super::StyleTransformer::new(&mut test_transformer, config);
     style_transformer.parse(css);
     (test_transformer, css)
   }
@@ -305,6 +313,52 @@ mod tests {
     // Invalid: starting with non-ident
     let (transformer, _) = parse_css("123: red;");
     assert_eq!(transformer.declarations.len(), 0);
+  }
+
+  #[test]
+  fn test_vw_transformation() {
+    let (transformer, _) = parse_css_with_config(
+      "width: 100vw;",
+      TransformerConfig {
+        transform_vw: true,
+        ..Default::default()
+      },
+    );
+    assert_eq!(transformer.declarations.len(), 1);
+    assert_eq!(
+      transformer.declarations[0],
+      "width:calc(100 * var(--vw-unit));"
+    );
+  }
+
+  #[test]
+  fn test_vw_transformation_disabled() {
+    let (transformer, _) = parse_css("width: 100vw;");
+    assert_eq!(transformer.declarations.len(), 1);
+    assert_eq!(transformer.declarations[0], "width:100vw;");
+  }
+
+  #[test]
+  fn test_vh_transformation() {
+    let (transformer, _) = parse_css_with_config(
+      "height: 100vh;",
+      TransformerConfig {
+        transform_vh: true,
+        ..Default::default()
+      },
+    );
+    assert_eq!(transformer.declarations.len(), 1);
+    assert_eq!(
+      transformer.declarations[0],
+      "height:calc(100 * var(--vh-unit));"
+    );
+  }
+
+  #[test]
+  fn test_vh_transformation_disabled() {
+    let (transformer, _) = parse_css("height: 100vh;");
+    assert_eq!(transformer.declarations.len(), 1);
+    assert_eq!(transformer.declarations[0], "height:100vh;");
   }
 
   #[test]

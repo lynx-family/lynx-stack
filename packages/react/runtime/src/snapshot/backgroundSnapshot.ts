@@ -10,34 +10,99 @@
 
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { profileEnd, profileStart } from './debug/profile.js';
-import { getSnapshotVNodeSource } from './debug/vnodeSource.js';
-import { processGestureBackground } from './gesture/processGestureBagkround.js';
-import type { GestureKind } from './gesture/types.js';
-import { diffArrayAction, diffArrayLepus } from './hydrate.js';
-import { globalBackgroundSnapshotInstancesToRemove } from './lifecycle/patch/commit.js';
-import type { SnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
+import { profileEnd, profileStart } from '../debug/profile.js';
+import { clearSnapshotVNodeSource, getSnapshotVNodeSource, moveSnapshotVNodeSource } from '../debug/vnodeSource.js';
+import { processGestureBackground } from '../gesture/processGestureBagkround.js';
+import type { GestureKind } from '../gesture/types.js';
+import { diffArrayAction, diffArrayLepus } from '../hydrate.js';
+import { snapshotManager } from './definition.js';
+import type { Snapshot } from './definition.js';
+import { DynamicPartType } from './dynamicPartType.js';
+import { applyRef, clearQueuedRefs, queueRefAttrUpdate } from './ref.js';
+import type { Ref } from './ref.js';
+import { snapshotCreatorMap } from './snapshot.js';
+import { hydrationMap } from './snapshotInstanceHydrationMap.js';
+import { transformSpread } from './spread.js';
+import type { SerializedSnapshotInstance } from './types.js';
+import { traverseSnapshotInstance } from './utils.js';
+import { globalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/globalState.js';
 import {
   SnapshotOperation,
   __globalSnapshotPatch,
   initGlobalSnapshotPatch,
   takeGlobalSnapshotPatch,
-} from './lifecycle/patch/snapshotPatch.js';
-import { globalPipelineOptions } from './lynx/performance.js';
-import { DynamicPartType } from './snapshot/dynamicPartType.js';
-import { applyRef, clearQueuedRefs, queueRefAttrUpdate } from './snapshot/ref.js';
-import type { Ref } from './snapshot/ref.js';
-import { transformSpread } from './snapshot/spread.js';
-import type { SerializedSnapshotInstance, Snapshot } from './snapshot.js';
-import {
-  backgroundSnapshotInstanceManager,
-  snapshotCreatorMap,
-  snapshotManager,
-  traverseSnapshotInstance,
-} from './snapshot.js';
-import { hydrationMap } from './snapshotInstanceHydrationMap.js';
-import { isDirectOrDeepEqual } from './utils.js';
-import { onPostWorkletCtx } from './worklet/ctx.js';
+} from '../lifecycle/patch/snapshotPatch.js';
+import type { SnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
+import { globalPipelineOptions } from '../lynx/performance.js';
+import { isDirectOrDeepEqual } from '../utils.js';
+import { onPostWorkletCtx } from '../worklet/ctx.js';
+
+/**
+ * Background snapshot instance manager that manages all background snapshot instances.
+ */
+export const backgroundSnapshotInstanceManager: {
+  nextId: number;
+  values: Map<number, BackgroundSnapshotInstance>;
+  clear(): void;
+  updateId(id: number, newId: number): void;
+  getValueBySign(str: string): unknown;
+} = {
+  nextId: 0,
+  values: /* @__PURE__ */ new Map<number, BackgroundSnapshotInstance>(),
+  clear() {
+    // not resetting `nextId` to prevent id collision
+    this.values.clear();
+    if (__DEV__) {
+      clearSnapshotVNodeSource();
+    }
+  },
+  updateId(id: number, newId: number) {
+    const values = this.values;
+    const si = values.get(id)!;
+    // For PreactDevtools, on first hydration,
+    // PreactDevtools can get the real snapshot instance id in main-thread
+    if (__DEV__ && __BACKGROUND__) {
+      lynx.getJSModule('GlobalEventEmitter').emit('onBackgroundSnapshotInstanceUpdateId', [
+        {
+          backgroundSnapshotInstance: si,
+          oldId: id,
+          newId,
+        },
+      ]);
+    }
+    values.delete(id);
+    values.set(newId, si);
+    si.__id = newId;
+    if (__DEV__) {
+      moveSnapshotVNodeSource(id, newId);
+    }
+  },
+  getValueBySign(str: string): unknown {
+    const res = str?.split(':');
+    if (!res || (res.length != 2 && res.length != 3)) {
+      throw new Error('Invalid ctx format: ' + str);
+    }
+    const id = Number(res[0]);
+    const expIndex = Number(res[1]);
+    const ctx = this.values.get(id);
+    if (!ctx) {
+      return null;
+    }
+    const spreadKey = res[2];
+    if (res[1] === '__extraProps') {
+      if (spreadKey) {
+        return ctx.__extraProps![spreadKey];
+      }
+      throw new Error('unreachable');
+    } else {
+      if (spreadKey) {
+        return (ctx.__values![expIndex] as { [spreadKey]: unknown })[spreadKey];
+      } else {
+        return ctx.__values![expIndex];
+      }
+    }
+  },
+};
 
 export class BackgroundSnapshotInstance {
   constructor(public type: string) {

@@ -32,7 +32,7 @@ function createMainThreadLynx(
     },
     __globalProps: lynxViewInstance.globalprops,
     getCustomSectionSync(key: string) {
-      return (templateManager.getTemplate(
+      return (templateManager.getBundle(
         lynxViewInstance.templateUrl,
       )?.customSections as any)?.[key]
         ?.content;
@@ -64,9 +64,16 @@ export function createMainThreadGlobalAPIs(
         data,
       });
     },
-    __LoadLepusChunk: (path) => {
+    __LoadLepusChunk: (
+      path,
+      config?: { dynamicComponentEntry?: string; chunkType?: number },
+    ) => {
       try {
-        path = lynxViewInstance.lepusCodeUrls.get(lynxViewInstance.templateUrl)
+        let entryUrl = config?.dynamicComponentEntry;
+        if (!entryUrl || entryUrl === '__Card__') {
+          entryUrl = lynxViewInstance.templateUrl;
+        }
+        path = lynxViewInstance.lepusCodeUrls.get(entryUrl)
           ?.[path] ?? path;
         lynxViewInstance.mtsRealm!.loadScriptSync(path);
         return true;

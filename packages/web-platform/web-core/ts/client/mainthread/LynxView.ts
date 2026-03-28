@@ -15,6 +15,7 @@ import { lynxDisposedAttribute } from '../../constants.js';
 import { createIFrameRealm } from './createIFrameRealm.js';
 import type { LynxViewInstance } from './LynxViewInstance.js';
 import { templateManager } from './TemplateManager.js';
+export type { NapiModulesCall };
 import(
   /* webpackChunkName: "web-core-main-chunk" */
   /* webpackFetchPriority: "high" */
@@ -26,21 +27,6 @@ export interface BrowserConfig {
   pixelHeight?: number;
   [key: string]: any;
 }
-
-export type INapiModulesCall = (
-  name: string,
-  data: any,
-  moduleName: string,
-  lynxView: LynxViewElement,
-  dispatchNapiModules: (data: Cloneable) => void,
-) =>
-  | Promise<{ data: unknown; transfer?: Transferable[] } | undefined>
-  | {
-    data: unknown;
-    transfer?: Transferable[];
-  }
-  | undefined
-  | Promise<undefined>;
 
 /**
  * Based on our experiences, these elements are almost used in all lynx cards.
@@ -55,7 +41,7 @@ export type INapiModulesCall = (
  * @property {"auto" | null} height [optional] (attribute: "height") set it to "auto" for height auto-sizing
  * @property {"auto" | null} width [optional] (attribute: "width") set it to "auto" for width auto-sizing
  * @property {NapiModulesMap} napiModulesMap [optional] the napiModule which is called in lynx-core. key is module-name, value is esm url.
- * @property {INapiModulesCall} onNapiModulesCall [optional] the NapiModule value handler.
+ * @property {NapiModulesCall} onNapiModulesCall [optional] the NapiModule value handler.
  * @property {string[]} injectStyleRules [optional] the css rules which will be injected into shadowroot. Each items will be inserted by `insertRule` method. @see https://developer.mozilla.org/docs/Web/API/CSSStyleSheet/insertRule
  * @property {number} lynxGroupId [optional] (attribute: "lynx-group-id") the background shared context id, which is used to share webworker between different lynx cards
  * @property {InitI18nResources} initI18nResources [optional] (attribute: "init-i18n-resources") the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation
@@ -87,6 +73,8 @@ export class LynxViewElement extends HTMLElement {
     'global-props',
     'init-data',
     'browser-config',
+    'transform-vw',
+    'transform-vh',
   ];
   /**
    * @private
@@ -136,6 +124,42 @@ export class LynxViewElement extends HTMLElement {
       }
     } else {
       this.#browserConfig = val;
+    }
+  }
+
+  #transformVW: boolean = false;
+  /**
+   * @public
+   * @property transformVW
+   * Enable evaluating vw subset to the current LynxView container width
+   */
+  get transformVW(): boolean {
+    return this.#transformVW;
+  }
+  set transformVW(val: boolean) {
+    this.#transformVW = val;
+    if (val) {
+      this.setAttribute('transform-vw', '');
+    } else {
+      this.removeAttribute('transform-vw');
+    }
+  }
+
+  #transformVH: boolean = false;
+  /**
+   * @public
+   * @property transformVH
+   * Enable evaluating vh subset to the current LynxView container height
+   */
+  get transformVH(): boolean {
+    return this.#transformVH;
+  }
+  set transformVH(val: boolean) {
+    this.#transformVH = val;
+    if (val) {
+      this.setAttribute('transform-vh', '');
+    } else {
+      this.removeAttribute('transform-vh');
     }
   }
 
@@ -343,6 +367,12 @@ export class LynxViewElement extends HTMLElement {
         case 'init-data':
           this.#initData = JSON.parse(newValue);
           break;
+        case 'transform-vw':
+          this.transformVW = newValue !== 'false' && newValue !== null;
+          break;
+        case 'transform-vh':
+          this.transformVH = newValue !== 'false' && newValue !== null;
+          break;
       }
     }
   }
@@ -427,10 +457,18 @@ export class LynxViewElement extends HTMLElement {
               this.nativeModulesMap,
               this.napiModulesMap,
               this.#initI18nResources,
+              this.transformVW,
+              this.transformVH,
               this.browserConfig,
             );
           });
-          templateManager.fetchBundle(this.#url, lynxViewInstance);
+          templateManager.fetchBundle(
+            this.#url,
+            lynxViewInstance,
+            this.transformVW,
+            this.transformVH,
+            undefined, // overrideConfig
+          );
 
           const lynxGroupId = this.lynxGroupId;
           this.#instance = await lynxViewInstance;
@@ -453,6 +491,8 @@ export class LynxViewElement extends HTMLElement {
    */
   connectedCallback() {
     this.#upgradeProperty('browserConfig');
+    this.#upgradeProperty('transformVW');
+    this.#upgradeProperty('transformVH');
     if (this.url) {
       this.#url = this.url;
     }
