@@ -8,7 +8,7 @@ import { __pendingListUpdates } from './pendingListUpdates.js';
 import { DynamicPartType } from './snapshot/dynamicPartType.js';
 import type { PlatformInfo } from './snapshot/platformInfo.js';
 import { unref } from './snapshot/ref.js';
-import type { SnapshotInstance } from './snapshot.js';
+import type { SnapshotInstance } from './snapshot/snapshot.js';
 import { isEmptyObject } from './utils.js';
 
 const UNREACHABLE_ITEM_KEY_NOT_FOUND = 'UNREACHABLE_ITEM_KEY_NOT_FOUND';

@@ -145,8 +145,7 @@ export NODE_OPTIONS="--max-old-space-size=32768"
 - `packages/web-platform/` - **Lynx for Web**: Web platform implementation
   - `web-core/` - Core web runtime
   - `web-elements/` - DOM element implementations
-  - `web-worker-runtime/` - Web worker support
-  - `web-tests/` - E2E test suite (Playwright)
+  - `web-core-e2e` - e2e tests
 
 - `packages/testing-library/` - Testing infrastructure
 - `packages/tools/` - Build and development utilities
@@ -245,7 +244,7 @@ These instructions were generated through comprehensive analysis and testing of 
 - Includes E2E test suite requiring Playwright
 - Many packages have complex interdependencies
 - Contains performance-critical rendering code
-- See `packages/web-platform/web-core-wasm/AGENTS.md` for specific instructions on `web-core-wasm`.
+- See `packages/web-platform/web-core/AGENTS.md` for specific instructions on `web-core`.
 
 Remember: This is a complex, multi-language monorepo. Always allow extra time for builds and tests, and follow the exact command sequences provided.
 

@@ -134,6 +134,39 @@ describe('Plugins - Minify', () => {
     )
   })
 
+  test('minify.thread-specific js minimizers', async () => {
+    const rsbuild = await createStubRspeedy({
+      output: {
+        minify: {
+          jsOptions: {
+            minimizerOptions: {
+              compress: {
+                pure_funcs: ['console.log'],
+              },
+            },
+          },
+          mainThreadOptions: {
+            minimizerOptions: {
+              compress: {
+                pure_funcs: ['lynx.getJSModule'],
+              },
+            },
+          },
+          backgroundOptions: {
+            minimizerOptions: {
+              compress: {
+                pure_funcs: ['lynx.registerDataProcessors'],
+              },
+            },
+          },
+        },
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+    expect(config.optimization?.minimizer).toMatchSnapshot()
+  })
+
   describe('CSS', () => {
     test('css: false', async () => {
       const rsbuild = await createStubRspeedy({

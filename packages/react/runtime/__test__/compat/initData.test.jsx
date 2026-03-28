@@ -1,9 +1,13 @@
 import { Component, render } from 'preact';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
-import { BackgroundSnapshotInstance } from '../../src/backgroundSnapshot';
 import { setupBackgroundDocument } from '../../src/document';
-import { backgroundSnapshotInstanceManager, setupPage, SnapshotInstance } from '../../src/snapshot';
+import {
+  setupPage,
+  SnapshotInstance,
+  BackgroundSnapshotInstance,
+  backgroundSnapshotInstanceManager,
+} from '../../src/snapshot';
 import { backgroundSnapshotInstanceToJSON } from '../utils/debug';
 import { useState } from 'preact/compat';
 import { useInitData, withInitDataInState } from '../../src/lynx-api';
@@ -49,7 +53,7 @@ describe('initData', () => {
     render(<App />, scratch);
     _setD(1);
     lynx.__initData = {
-      'key1': 'value1',
+      key1: 'value1',
     };
     lynx.getJSModule('GlobalEventEmitter').emit('onDataChanged');
     _setD(2);
@@ -83,7 +87,7 @@ describe('withInitDataInState', () => {
     const tt = lynxCoreInject.tt;
     expect(app.state).toMatchInlineSnapshot(`{}`);
     tt.updateCardData({
-      'key2': 'value2',
+      key2: 'value2',
     });
     expect(lynx.__initData).toMatchInlineSnapshot(`
       {
@@ -111,7 +115,7 @@ describe('withInitDataInState', () => {
     const tt = lynxCoreInject.tt;
     expect(app.state).toMatchInlineSnapshot(`{}`);
     tt.updateCardData({
-      'key3': 'value3',
+      key3: 'value3',
     });
     await waitSchedule();
     // state is updated
@@ -121,7 +125,7 @@ describe('withInitDataInState', () => {
       }
     `);
     app.setState({
-      'key3': null,
+      key3: null,
     });
     await waitSchedule();
     expect(app.state).toMatchInlineSnapshot(`

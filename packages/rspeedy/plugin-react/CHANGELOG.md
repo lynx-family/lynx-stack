@@ -1,5 +1,30 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.13.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: ([#2319](https://github.com/lynx-family/lynx-stack/pull/2319))
+
+  Change preact package from `@hongzhiyuan/preact` to `@lynx-js/internal-preact`.
+
+  Upgrade preact from [f7693b72](https://github.com/preactjs/preact/commit/f7693b72ecb4a40c66e6e47f54e2d4edc374c9f0) to [55254ef7](https://github.com/preactjs/preact/commit/55254ef7021e563cc1a86fb816058964a1b6a29a), see diffs at [f7693b72...55254ef7](https://github.com/preactjs/preact/compare/f7693b72ecb4a40c66e6e47f54e2d4edc374c9f0...preactjs:preact:55254ef7021e563cc1a86fb816058964a1b6a29a?expand=1).
+
+- feat: add `globalPropsMode` option to `PluginReactLynxOptions` ([#2346](https://github.com/lynx-family/lynx-stack/pull/2346))
+
+  - When configured to `"event"`, `updateGlobalProps` will only trigger a global event and skip the `runWithForce` flow.
+  - Defaults to `"reactive"`, which means `updateGlobalProps` will trigger re-render automatically.
+
+### Patch Changes
+
+- Updated dependencies [[`f1129ea`](https://github.com/lynx-family/lynx-stack/commit/f1129ea0a84096354a86bc3436c7b0efc109d768), [`27f1cff`](https://github.com/lynx-family/lynx-stack/commit/27f1cffbea99585b547aff669b8e230533987036), [`ed566f0`](https://github.com/lynx-family/lynx-stack/commit/ed566f0fe6a14ffae59d21bd2c5e5dd2755f28a4), [`402ec2b`](https://github.com/lynx-family/lynx-stack/commit/402ec2b34bce286181493e171f95e6a4257a1907)]:
+  - @lynx-js/react-webpack-plugin@0.8.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.5
+  - @lynx-js/react-alias-rsbuild-plugin@0.13.0
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/template-webpack-plugin@0.10.6
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+
 ## 0.12.10
 
 ### Patch Changes

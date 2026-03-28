@@ -1,1 +1,0 @@
-# @lynx-js/worker-rpc

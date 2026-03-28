@@ -1,5 +1,11 @@
 # @lynx-js/lynx-bundle-rslib-config
 
+## 0.2.3
+
+### Patch Changes
+
+- Fix snapshot not found error when dev with external bundle ([#2316](https://github.com/lynx-family/lynx-stack/pull/2316))
+
 ## 0.2.2
 
 ### Patch Changes

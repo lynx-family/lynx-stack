@@ -3915,7 +3915,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8145dd1593bf0fb137dbfa85b8be79ec560a447298955877804640e40c2d6ea"
 
 [[package]]
-name = "web-core-wasm"
+name = "web-core"
 version = "0.0.0"
 dependencies = [
  "fnv",
@@ -3926,15 +3926,6 @@ dependencies = [
  "wasm-bindgen-test",
  "web-sys",
  "web_elements",
-]
-
-[[package]]
-name = "web-mainthread-apis"
-version = "0.0.0"
-dependencies = [
- "js-sys",
- "lazy_static",
- "wasm-bindgen",
 ]
 
 [[package]]

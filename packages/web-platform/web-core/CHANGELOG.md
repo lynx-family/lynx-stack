@@ -4,6 +4,8 @@
 
 ### Patch Changes
 
+- reexports essential utils & types in @lynx-js/web-elements from @lynx-js/web-core-wasm/client ([#2321](https://github.com/lynx-family/lynx-stack/pull/2321))
+
 - fix: avoid error when LynxView is removed immediately after connected ([#2182](https://github.com/lynx-family/lynx-stack/pull/2182))
 
 - Updated dependencies []:

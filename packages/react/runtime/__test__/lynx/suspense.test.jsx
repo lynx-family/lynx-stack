@@ -11,13 +11,17 @@ import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
 import '../../src/lynx/component';
 import { __root } from '../../src/root';
-import { setupPage, SnapshotInstance, snapshotInstanceManager } from '../../src/snapshot';
+import {
+  setupPage,
+  SnapshotInstance,
+  snapshotInstanceManager,
+  BackgroundSnapshotInstance,
+  backgroundSnapshotInstanceManager,
+} from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree } from '../utils/nativeMethod';
-import { backgroundSnapshotInstanceManager } from '../../src/snapshot';
 import { prettyFormatSnapshotPatch } from '../../src/debug/formatPatch';
 import { createSuspender } from '../createSuspender';
-import { BackgroundSnapshotInstance } from '../../src/backgroundSnapshot';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));

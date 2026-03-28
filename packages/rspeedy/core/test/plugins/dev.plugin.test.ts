@@ -763,7 +763,7 @@ describe('Plugins - Dev', () => {
     })
 
     expect(printedUrls).toContainEqual({
-      'label': 'Web Preview',
+      'label': '∟ Preview',
       'url': 'http://example.com:8080/__web_preview?casename=main.web.bundle',
     })
   })

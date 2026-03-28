@@ -3,9 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
-import type { SnapshotInstance } from '../snapshot.js';
 import { workletUnRef } from './workletRef.js';
 import { RefProxy } from '../lifecycle/ref/delay.js';
+import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
 const refsToClear: Ref[] = [];
 const refsToApply: (Ref | [snapshotInstanceId: number, expIndex: number])[] = [];

@@ -30,6 +30,7 @@ import { applyGenerator } from './generator.js'
 import { applyLazy } from './lazy.js'
 import { applyLoaders } from './loaders.js'
 import { applyNodeEnv } from './nodeEnv.js'
+import { applyOptimizeBundleSize } from './optimizeBundleSize.js'
 import { applyRefresh } from './refresh.js'
 import { applySplitChunksRule } from './splitChunks.js'
 import { applySWC } from './swc.js'
@@ -252,6 +253,20 @@ export interface PluginReactLynxOptions {
   targetSdkVersion?: string
 
   /**
+   * Configure the update mode of `lynx.__globalProps`.
+   *
+   * This flag has two options:
+   *
+   * `'reactive'`: `UpdateGlobalProps` will trigger update automatically.
+   *
+   * `'event'`: `UpdateGlobalProps` will trigger global event and users need to trigger update in the event handler.
+   *
+   * @defaultValue `'reactive'`
+   * @public
+   */
+  globalPropsMode?: 'reactive' | 'event'
+
+  /**
    * Merge same string literals in JS and Lepus to reduce output bundle size.
    * Set to `false` to disable.
    *
@@ -265,6 +280,22 @@ export interface PluginReactLynxOptions {
    * @alpha
    */
   experimental_isLazyBundle?: boolean
+
+  /**
+   * Optimize bundle size by removing unused code by Minify.mainThreadOptions and Minify.backgroundOptions.
+   *
+   * When optimizeBundleSize or optimizeBundleSize.mainThread is true, main-thread code will be optimized.
+   * When optimizeBundleSize or optimizeBundleSize.background is true, background code will be optimized.
+   *
+   * @defaultValue `false`
+   * @public
+   */
+  optimizeBundleSize?:
+    | boolean
+    | {
+      mainThread?: boolean
+      background?: boolean
+    }
 }
 
 /**
@@ -311,7 +342,10 @@ export function pluginReactLynx(
     engineVersion: '',
     extractStr: false,
 
+    globalPropsMode: 'reactive',
+
     experimental_isLazyBundle: false,
+    optimizeBundleSize: false,
   }
   const resolvedOptions = Object.assign(defaultOptions, userOptions, {
     // Use `engineVersion` to override the default values
@@ -383,6 +417,10 @@ export function pluginReactLynx(
 
           return config
         })
+
+        if (resolvedOptions.optimizeBundleSize) {
+          applyOptimizeBundleSize(api, resolvedOptions)
+        }
 
         if (resolvedOptions.experimental_isLazyBundle) {
           applyLazy(api)

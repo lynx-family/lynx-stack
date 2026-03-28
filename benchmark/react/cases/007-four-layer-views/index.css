@@ -1,0 +1,33 @@
+.root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.outer {
+  margin: 1px;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+.block1 {
+  margin: 1px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.block2 {
+  margin: 1px;
+  height: 100%;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.block3 {
+  width: 15%;
+  height: 15%;
+  margin: 1px;
+}
