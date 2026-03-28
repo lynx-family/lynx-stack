@@ -20,5 +20,8 @@ sha-1 = { workspace = true }
 sugar_path = { workspace = true }
 swc_core = { workspace = true, features = ["ecma_ast", "ecma_utils", "swc_atoms"] }
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(swc_ast_unknown)'] }
+
 [features]
 napi = ["dep:napi", "dep:napi-derive"]
