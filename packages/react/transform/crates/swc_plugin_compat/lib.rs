@@ -21,6 +21,7 @@ use swc_plugins_shared::target::TransformTarget;
 mod is_component_class;
 mod simplify_ctor_like_react_lynx_2;
 
+#[cfg(feature = "napi")]
 pub mod napi;
 
 type Stack<T> = Vec<T>;

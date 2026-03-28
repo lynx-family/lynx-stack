@@ -81,79 +81,109 @@ describe('Config', () => {
     expect(config.resolve.alias).toHaveProperty(
       'preact$',
       expect.stringContaining(
-        '/preact/dist/preact.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/dist/preact.mjs'.replaceAll('/', path.sep),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat$',
       expect.stringContaining(
-        '/preact/compat/dist/compat.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/compat/dist/compat.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/debug$',
       expect.stringContaining(
-        '/preact/debug/dist/debug.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/debug/dist/debug.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/devtools$',
       expect.stringContaining(
-        '/preact/devtools/dist/devtools.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/devtools/dist/devtools.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/hooks$',
       expect.stringContaining(
-        '/preact/hooks/dist/hooks.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/hooks/dist/hooks.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/test-utils$',
       expect.stringContaining(
-        '/preact/test-utils/dist/testUtils.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/test-utils/dist/testUtils.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/jsx-runtime$',
       expect.stringContaining(
-        '/preact/jsx-runtime/dist/jsxRuntime.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/jsx-runtime/dist/jsxRuntime.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/jsx-dev-runtime$',
       expect.stringContaining(
-        '/preact/jsx-runtime/dist/jsxRuntime.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/jsx-runtime/dist/jsxRuntime.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/client$',
       expect.stringContaining(
-        '/preact/compat/client.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/compat/client.mjs'.replaceAll('/', path.sep),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/server$',
       expect.stringContaining(
-        '/preact/compat/server.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/compat/server.mjs'.replaceAll('/', path.sep),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/jsx-runtime$',
       expect.stringContaining(
-        '/preact/compat/jsx-runtime.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/compat/jsx-runtime.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/jsx-dev-runtime$',
       expect.stringContaining(
-        '/preact/compat/jsx-dev-runtime.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/compat/jsx-dev-runtime.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/compat/scheduler$',
       expect.stringContaining(
-        '/preact/compat/scheduler.mjs'.replaceAll('/', path.sep),
+        '@lynx-js/internal-preact/compat/scheduler.mjs'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config.resolve.alias).toHaveProperty(
@@ -638,6 +668,60 @@ describe('Config', () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const { firstScreenSyncTiming } = ReactWebpackPlugin?.options ?? {}
       expect(firstScreenSyncTiming).toBe('immediately')
+    })
+
+    test('globalPropsMode defaults to "reactive"', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      const ReactWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+
+      expect(ReactWebpackPlugin).toBeDefined()
+
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const { globalPropsMode } = ReactWebpackPlugin?.options ?? {}
+      expect(globalPropsMode).toBe('reactive')
+    })
+
+    test('globalPropsMode respects configuration', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx({ globalPropsMode: 'event' }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      const ReactWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+
+      expect(ReactWebpackPlugin).toBeDefined()
+
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const { globalPropsMode } = ReactWebpackPlugin?.options ?? {}
+      expect(globalPropsMode).toBe('event')
     })
 
     test('environments.lynx.output.inlineScripts: false', async () => {
@@ -1691,7 +1775,7 @@ describe('Config', () => {
           {
             "name": "lib-preact",
             "priority": 0,
-            "test": /node_modules\\[\\\\\\\\/\\]\\(\\.\\*\\?\\[\\\\\\\\/\\]\\)\\?\\(\\?:preact\\|preact\\[\\\\\\\\/\\]compat\\|preact\\[\\\\\\\\/\\]hooks\\|preact\\[\\\\\\\\/\\]jsx-runtime\\)\\[\\\\\\\\/\\]/,
+            "test": /node_modules\\[\\\\\\\\/\\]\\(\\.\\*\\?\\[\\\\\\\\/\\]\\)\\?\\(\\?:\\(\\?:internal-\\)\\?preact\\|\\(\\?:internal-\\)\\?preact\\[\\\\\\\\/\\]compat\\|\\(\\?:internal-\\)\\?preact\\[\\\\\\\\/\\]hooks\\|\\(\\?:internal-\\)\\?preact\\[\\\\\\\\/\\]jsx-runtime\\)\\[\\\\\\\\/\\]/,
           }
         `)
     })
@@ -1987,6 +2071,88 @@ describe('Config', () => {
       const builtCode = readFileSync(distPath, 'utf8')
       expect(builtCode).not.toContain('profileStart(\'test\')')
       expect(builtCode).toContain('Config is: profile-off-mode')
+    })
+
+    test('minify should remove thread-specific pure funcs from built outputs', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      vi.stubEnv('NODE_ENV', 'production')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          source: {
+            entry: {
+              main: new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
+                .pathname,
+            },
+          },
+          output: {
+            filenameHash: false,
+            minify: {
+              js: true,
+              jsOptions: {
+                minimizerOptions: {
+                  compress: {
+                    pure_funcs: ['console.info'],
+                  },
+                },
+              },
+              mainThreadOptions: {
+                minimizerOptions: {
+                  compress: {
+                    pure_funcs: ['NativeModules.call'],
+                  },
+                },
+              },
+              backgroundOptions: {
+                minimizerOptions: {
+                  compress: {
+                    pure_funcs: ['lynx.registerDataProcessors'],
+                  },
+                },
+              },
+            },
+          },
+          environments: {
+            lynx: {},
+          },
+          plugins: [pluginReactLynx()],
+        },
+      })
+
+      try {
+        await rsbuild.build()
+      } catch (_error) {
+        expect.fail('build should succeed')
+      }
+
+      const mainThreadPath = path.join(
+        rsbuild.context.distPath,
+        '.rspeedy/main',
+        'main-thread.js',
+      )
+      const backgroundPath = path.join(
+        rsbuild.context.distPath,
+        '.rspeedy/main',
+        'background.js',
+      )
+
+      if (!existsSync(mainThreadPath) || !existsSync(backgroundPath)) {
+        expect.fail('expected main-thread and background outputs to exist')
+      }
+
+      const mainThreadCode = readFileSync(mainThreadPath, 'utf8')
+      const backgroundCode = readFileSync(backgroundPath, 'utf8')
+
+      expect(mainThreadCode).not.toContain('background-only')
+      expect(mainThreadCode).toContain('main-thread-only')
+      expect(mainThreadCode).not.toContain('default console.info')
+      expect(mainThreadCode).toContain('default console.warn')
+
+      expect(backgroundCode).toContain('background-only')
+      expect(backgroundCode).not.toContain('main-thread-only')
+      expect(backgroundCode).not.toContain('default console.info')
+      expect(backgroundCode).toContain('default console.warn')
     })
   })
 

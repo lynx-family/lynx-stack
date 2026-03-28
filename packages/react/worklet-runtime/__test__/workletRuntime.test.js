@@ -39,6 +39,22 @@ describe('Worklet', () => {
     expect(fn).toBeCalled();
   });
 
+  it('latest registration should win when the same worklet id is reused', () => {
+    initWorklet();
+
+    const first = vi.fn();
+    const second = vi.fn();
+    globalThis.registerWorklet('main-thread', '1', first);
+    globalThis.registerWorklet('main-thread', '1', second);
+
+    globalThis.runWorklet({
+      _wkltId: '1',
+    });
+
+    expect(first).not.toBeCalled();
+    expect(second).toBeCalled();
+  });
+
   it('worklet should be called with arguments', async () => {
     initWorklet();
 

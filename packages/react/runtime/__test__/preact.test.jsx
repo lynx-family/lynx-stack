@@ -2,7 +2,6 @@ import { cloneElement, Component, render } from 'preact';
 import { Suspense, lazy } from 'preact/compat';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { BackgroundSnapshotInstance, hydrate } from '../src/backgroundSnapshot';
 import { setupBackgroundDocument, setupDocument } from '../src/document';
 import { globalBackgroundSnapshotInstancesToRemove } from '../src/lifecycle/patch/commit';
 import {
@@ -13,10 +12,12 @@ import {
 import { runWithForce } from '../src/lynx/tt';
 import {
   SnapshotInstance,
-  backgroundSnapshotInstanceManager,
   setupPage,
   snapshotInstanceManager,
   traverseSnapshotInstance,
+  backgroundSnapshotInstanceManager,
+  BackgroundSnapshotInstance,
+  hydrate,
 } from '../src/snapshot';
 import { backgroundSnapshotInstanceToJSON, snapshotInstanceToJSON } from './utils/debug.js';
 import { globalEnvManager } from './utils/envManager';
@@ -253,16 +254,12 @@ describe('document', () => {
             {result
               ? (
                 <view class='succ'>
-                  <text lynx-test-tag={'result' + idx}>
-                    {text ? text : 'Succ'}
-                  </text>
+                  <text lynx-test-tag={'result' + idx}>{text ? text : 'Succ'}</text>
                 </view>
               )
               : (
                 <view class='err'>
-                  <text lynx-test-tag={'result' + idx}>
-                    {text ? text : 'Err'}
-                  </text>
+                  <text lynx-test-tag={'result' + idx}>{text ? text : 'Err'}</text>
                 </view>
               )}
           </view>
@@ -359,8 +356,7 @@ describe('document - background', () => {
       </root>
     `);
 
-    expect([...backgroundSnapshotInstanceManager.values.keys()])
-      .toMatchInlineSnapshot(`
+    expect([...backgroundSnapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
       [
         1,
         2,
@@ -388,8 +384,7 @@ describe('document - background', () => {
         </__snapshot_a94a8_test_15>
       </root>
     `);
-    expect([...backgroundSnapshotInstanceManager.values.keys()])
-      .toMatchInlineSnapshot(`
+    expect([...backgroundSnapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
         [
           1,
           2,
@@ -671,8 +666,7 @@ describe('document - dual-runtime', () => {
     `);
     delete BackgroundSnapshotInstance.prototype.toJSON;
 
-    expect(hydrate(JSON.parse(JSON.stringify(root)), backgroundRoot))
-      .toMatchInlineSnapshot(`
+    expect(hydrate(JSON.parse(JSON.stringify(root)), backgroundRoot)).toMatchInlineSnapshot(`
         [
           3,
           -88,
@@ -778,7 +772,6 @@ describe('document - dual-runtime', () => {
     `);
     delete BackgroundSnapshotInstance.prototype.toJSON;
 
-    expect(hydrate(JSON.parse(JSON.stringify(root)), backgroundRoot))
-      .toMatchInlineSnapshot(`[]`);
+    expect(hydrate(JSON.parse(JSON.stringify(root)), backgroundRoot)).toMatchInlineSnapshot(`[]`);
   });
 });

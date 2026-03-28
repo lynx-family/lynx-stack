@@ -8,3 +8,6 @@ export { HomeLayout } from './HomeLayout/index.jsx';
 // The eslint-plugin-import cannot resolve `@rspress/core`
 // eslint-disable-next-line import/export
 export * from '@rspress/core/theme-original';
+
+// eslint-disable-next-line import/export
+export { Layout } from './Layout.jsx';

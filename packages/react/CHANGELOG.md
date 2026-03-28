@@ -1,5 +1,55 @@
 # @lynx-js/react
 
+## 0.117.0
+
+### Minor Changes
+
+- feat: export `GlobalPropsProvider`, `GlobalPropsConsumer`, `useGlobalProps` and `useGlobalPropsChanged` for `__globalProps` ([#2346](https://github.com/lynx-family/lynx-stack/pull/2346))
+
+  - `GlobalPropsProvider`: A Provider component that accepts `children`. It is used to provide the `lynx.__globalProps` context.
+  - `GlobalPropsConsumer`: A Consumer component that accepts a function as a child. It is used to consume the `lynx.__globalProps` context.
+  - `useGlobalProps`: A hook that returns the `lynx.__globalProps` object. It triggers a re-render when `lynx.__globalProps` changes.
+  - `useGlobalPropsChanged`: A hook that accepts a callback function. The callback is invoked when `lynx.__globalProps` changes.
+
+  Note: When `globalPropsMode` is not set to `'event'` (default is `'reactive'`), these APIs will be ineffective (pass-through) and will log a warning in development mode, as updates are triggered automatically by full re-render.
+
+- **BREAKING CHANGE**: ([#2319](https://github.com/lynx-family/lynx-stack/pull/2319))
+
+  Change preact package from `@hongzhiyuan/preact` to `@lynx-js/internal-preact`.
+
+  Upgrade preact from [f7693b72](https://github.com/preactjs/preact/commit/f7693b72ecb4a40c66e6e47f54e2d4edc374c9f0) to [55254ef7](https://github.com/preactjs/preact/commit/55254ef7021e563cc1a86fb816058964a1b6a29a), see diffs at [f7693b72...55254ef7](https://github.com/preactjs/preact/compare/f7693b72ecb4a40c66e6e47f54e2d4edc374c9f0...preactjs:preact:55254ef7021e563cc1a86fb816058964a1b6a29a?expand=1).
+
+- feat: add `globalPropsMode` option to `PluginReactLynxOptions` ([#2346](https://github.com/lynx-family/lynx-stack/pull/2346))
+
+  - When configured to `"event"`, `updateGlobalProps` will only trigger a global event and skip the `runWithForce` flow.
+  - Defaults to `"reactive"`, which means `updateGlobalProps` will trigger re-render automatically.
+
+### Patch Changes
+
+- Add `__BACKGROUND__` guard on `onBackgroundSnapshotInstanceUpdateId` event to prevent bundling to main-thread on dev environment. ([#2332](https://github.com/lynx-family/lynx-stack/pull/2332))
+
+- refactor: extract static string in template literal ([#2334](https://github.com/lynx-family/lynx-stack/pull/2334))
+
+- fix: avoid crash when spread undefined ref ([#2333](https://github.com/lynx-family/lynx-stack/pull/2333))
+
+- Avoid registering lifecycle refs for main-thread functions (MTF) that have not received an `execId` during `renderPage()` first-screen binding. ([#2320](https://github.com/lynx-family/lynx-stack/pull/2320))
+
+## 0.116.5
+
+### Patch Changes
+
+- Improve React runtime hook profiling. ([#2235](https://github.com/lynx-family/lynx-stack/pull/2235))
+  Enable Profiling recording first, then enter the target page so the trace includes full render/hydrate phases.
+
+  - Record trace events for `useEffect` / `useLayoutEffect` hook entry, callback, and cleanup phases.
+  - Log trace events for `useState` setter calls.
+  - Wire `profileFlowId` support in debug profile utilities and attach flow IDs to related hook traces.
+  - Instrument hydrate/background snapshot profiling around patch operations with richer args (e.g. snapshot id/type, dynamic part index, value type, and source when available).
+  - Capture vnode source mapping in dev and use it in profiling args to improve trace attribution.
+  - Expand debug test coverage for profile utilities, hook profiling behavior, vnode source mapping, and hydrate profiling branches.
+
+- refactor: call loadWorkletRuntime once in each module ([#2315](https://github.com/lynx-family/lynx-stack/pull/2315))
+
 ## 0.116.4
 
 ### Patch Changes

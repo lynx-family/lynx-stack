@@ -3,7 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import type { SocketConnectOpts } from 'node:net';
 
-import { type Adb, AdbServerClient } from '@yume-chan/adb';
+import { AdbServerClient } from '@yume-chan/adb';
+import type { Adb } from '@yume-chan/adb';
 import { AdbServerNodeTcpConnector } from '@yume-chan/adb-server-node-tcp';
 import createDebug from 'debug';
 
@@ -14,7 +15,7 @@ import type {
   OpenAppOptions,
   Transport,
   TransportConnectOptions,
-} from './transport.ts';
+} from './transport.js';
 
 const debug = createDebug('devtool-mcp-server:connector:android');
 
@@ -159,6 +160,46 @@ export class AndroidTransport implements Transport {
       debug(`openApp clear data output ${output}`);
     }
 
+    // Attempt to use cmd package resolve-activity like appium-adb
+    try {
+      const resolveOutput = await adb.subprocess.noneProtocol.spawnWaitText([
+        'cmd',
+        'package',
+        'resolve-activity',
+        '--brief',
+        packageName,
+      ]);
+      const lines = resolveOutput.split('\n').map((line) => line.trim());
+      const activityName = lines.find((line) => line.includes('/'));
+
+      if (
+        activityName
+        && activityName !== 'android/com.android.internal.app.ResolverActivity'
+      ) {
+        debug(`openApp am start: ${activityName}`);
+        const amOutput = await adb.subprocess.noneProtocol.spawnWaitText([
+          'am',
+          'start',
+          '-a',
+          'android.intent.action.MAIN',
+          '-c',
+          'android.intent.category.LAUNCHER',
+          '-f',
+          '0x10200000',
+          '-n',
+          activityName,
+        ]);
+        debug(`openApp am start output: ${amOutput}`);
+        if (!(/^error:/im.exec(amOutput))) {
+          return;
+        }
+      }
+    } catch (e) {
+      debug(`openApp cmd package resolve-activity failed: %o`, e);
+    }
+
+    // Fallback to monkey
+    debug('openApp trying fallback to monkey');
     const output = await adb.subprocess.noneProtocol.spawnWaitText([
       // adb shell monkey -p <package_name> -c android.intent.category.LAUNCHER 1
       'monkey',
@@ -169,13 +210,11 @@ export class AndroidTransport implements Transport {
       '1',
     ]);
     debug(`openApp LAUNCHER output ${output}`);
-    if (output.includes('No activities found')) {
+
+    if (!output.includes('Events injected:')) {
       throw new Error(
-        `No launchable activity found for package ${packageName}.`,
+        `Failed to open app ${packageName}: appium-adb style activation and monkey fallback both failed.`,
       );
-    }
-    if (output.includes('monkey aborted')) {
-      throw new Error(`Failed to open app ${packageName}.`);
     }
   }
 }

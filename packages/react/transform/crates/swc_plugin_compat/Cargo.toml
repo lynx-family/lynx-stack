@@ -8,8 +8,8 @@ path = "lib.rs"
 
 [dependencies]
 convert_case = { workspace = true }
-napi = { workspace = true }
-napi-derive = { workspace = true }
+napi = { workspace = true, optional = true }
+napi-derive = { workspace = true, optional = true }
 once_cell = { workspace = true }
 regex = { workspace = true }
 rustc-hash = { workspace = true }
@@ -19,3 +19,6 @@ swc_plugins_shared = { path = "../swc_plugins_shared" }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(swc_ast_unknown)'] }
+
+[features]
+napi = ["dep:napi", "dep:napi-derive", "swc_plugins_shared/napi"]

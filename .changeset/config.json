@@ -10,11 +10,7 @@
   "fixed": [
     [
       "@lynx-js/web-core",
-      "@lynx-js/web-core-server",
-      "@lynx-js/web-constants",
-      "@lynx-js/web-mainthread-apis",
       "@lynx-js/web-worker-rpc",
-      "@lynx-js/web-worker-runtime",
       "@lynx-js/web-rsbuild-server-middleware"
     ],
     [
@@ -25,6 +21,10 @@
       "@lynx-js/rspeedy",
       "create-rspeedy",
       "upgrade-rspeedy"
+    ],
+    [
+      "@lynx-js/react",
+      "@lynx-js/react-umd"
     ]
   ],
   "linked": [],
@@ -38,7 +38,7 @@
   "ignore": [
     "@lynx-js/web-tests",
     "@lynx-js/example-react",
-    "@lynx-js/web-core-wasm-e2e"
+    "@lynx-js/web-core-e2e"
   ],
   "changedFilePatterns": [
     "src/**"

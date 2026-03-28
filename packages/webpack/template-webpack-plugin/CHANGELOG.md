@@ -1,5 +1,27 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.10.6
+
+### Patch Changes
+
+- Updated dependencies [[`d034dae`](https://github.com/lynx-family/lynx-stack/commit/d034dae124f8a96faa11028b131173703e49b23f)]:
+  - @lynx-js/web-core-wasm@0.0.6
+
+## 0.10.5
+
+### Patch Changes
+
+- feat: allow `templateDebugUrl` to be customized via `output.publicPath` or the `beforeEncode` hook. ([#2274](https://github.com/lynx-family/lynx-stack/pull/2274))
+
+- feat: opt-in the web platform's new binary output format ([#2281](https://github.com/lynx-family/lynx-stack/pull/2281))
+
+  Introduce a new flag to enable the new binary output format.
+
+  Currently it's an internal-use-only flag that will be removed in the future; set the corresponding environment variable to 'true' to enable it.
+
+- Updated dependencies []:
+  - @lynx-js/web-core-wasm@0.0.5
+
 ## 0.10.4
 
 ### Patch Changes

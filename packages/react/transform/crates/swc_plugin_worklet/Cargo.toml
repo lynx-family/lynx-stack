@@ -6,10 +6,13 @@ edition = "2021"
 [lib]
 path = "lib.rs"
 
+[features]
+napi = ["dep:napi", "dep:napi-derive", "swc_plugins_shared/napi"]
+
 [dependencies]
 hex = { workspace = true }
-napi = { workspace = true }
-napi-derive = { workspace = true }
+napi = { workspace = true, optional = true }
+napi-derive = { workspace = true, optional = true }
 once_cell = { workspace = true }
 rustc-hash = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

@@ -12,6 +12,7 @@ function __injectGlobals(target) {
   target.__LEPUS__ = false;
   target.__REF_FIRE_IMMEDIATELY__ = false;
   target.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
+  target.__GLOBAL_PROPS_MODE__ = 'reactive';
   target.lynx = {
     getJSModule: (moduleName) => {
       if (moduleName === 'GlobalEventEmitter') {

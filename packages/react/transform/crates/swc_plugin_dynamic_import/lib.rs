@@ -17,6 +17,7 @@ use swc_core::{
 
 use swc_plugins_shared::utils::jsonify;
 
+#[cfg(feature = "napi")]
 pub mod napi;
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]

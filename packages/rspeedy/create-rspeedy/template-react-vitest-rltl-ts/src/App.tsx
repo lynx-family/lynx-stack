@@ -4,11 +4,13 @@ import './App.css'
 import arrow from './assets/arrow.png'
 import lynxLogo from './assets/lynx-logo.png'
 import reactLynxLogo from './assets/react-logo.png'
+import { useFlappy } from './useFlappy.js'
 
 export function App(props: {
   onRender?: () => void
 }) {
   const [alterLogo, setAlterLogo] = useState(false)
+  const [logoY, jump] = useFlappy()
 
   useEffect(() => {
     console.info('Hello, ReactLynx')
@@ -21,11 +23,15 @@ export function App(props: {
   }, [])
 
   return (
-    <view>
+    <view bindtap={jump}>
       <view className='Background' />
       <view className='App'>
         <view className='Banner'>
-          <view className='Logo' bindtap={onTap}>
+          <view
+            className='Logo'
+            style={{ transform: `translateY(${logoY}px)` }}
+            bindtap={onTap}
+          >
             {alterLogo
               ? <image src={reactLynxLogo} className='Logo--react' />
               : <image src={lynxLogo} className='Logo--lynx' />}

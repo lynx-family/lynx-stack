@@ -1,6 +1,7 @@
 it('should inject env variables', () => {
   /* eslint-disable */
   expect(__FIRST_SCREEN_SYNC_TIMING__).toBe('immediately');
+  expect(__GLOBAL_PROPS_MODE__).toBe('reactive');
   expect(__EXTRACT_STR__).toBe(false);
   expect(__DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__).toBe(false);
   expect(__PROFILE__).toBe(false);

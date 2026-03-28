@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-elements",
-  "version": "0.11.3",
+  "version": "0.12.0",
   "private": false,
   "repository": {
     "type": "git",
@@ -12,6 +12,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "@lynx-js/source-field": "./src/elements/index.ts",
       "types": "./dist/elements/index.d.ts",
       "default": "./dist/elements/index.js"
     },

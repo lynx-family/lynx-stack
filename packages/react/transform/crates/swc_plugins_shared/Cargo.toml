@@ -9,8 +9,8 @@ path = "lib.rs"
 [dependencies]
 convert_case = { workspace = true }
 hex = { workspace = true }
-napi = { workspace = true }
-napi-derive = { workspace = true }
+napi = { workspace = true, optional = true }
+napi-derive = { workspace = true, optional = true }
 once_cell = { workspace = true }
 regex = { workspace = true }
 semver = { workspace = true }
@@ -22,3 +22,6 @@ swc_core = { workspace = true, features = ["ecma_ast", "ecma_utils", "swc_atoms"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(swc_ast_unknown)'] }
+
+[features]
+napi = ["dep:napi", "dep:napi-derive"]

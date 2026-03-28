@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/lynx-bundle-rslib-config",
-  "version": "0.2.1",
+  "version": "0.2.3",
   "description": "The rsbuild config for building Lynx bundle",
   "keywords": [
     "Rsbuild",
@@ -36,8 +36,9 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@lynx-js/css-serializer": "workspace:*",
     "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
-    "@lynx-js/tasm": "0.0.20"
+    "@lynx-js/tasm": "0.0.26"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
