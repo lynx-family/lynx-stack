@@ -69,6 +69,14 @@ pub fn calc_hash(s: &str) -> String {
   hex::encode(sum)[0..5].to_string()
 }
 
+pub fn calc_hash_number(s: &str) -> u32 {
+  let mut hasher = Sha1::new();
+  hasher.update(s.as_bytes());
+  let sum = hasher.finalize();
+
+  u32::from_be_bytes(sum[0..4].try_into().unwrap())
+}
+
 pub fn get_relative_path(cwd: &str, filename: &str) -> String {
   let cwd_path = cwd.replace('\\', "/").as_path().normalize();
   let file_path = filename.replace('\\', "/").as_path().normalize();

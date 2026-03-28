@@ -7,7 +7,9 @@ import { styles0, styles1 } from "./foo.modules.css?cssId=1185352";
 const __snapshot_2d408_test_1 = "__snapshot_2d408_test_1";
 ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_1] = (__snapshot_2d408_test_1)=>ReactLynx.createSnapshot(__snapshot_2d408_test_1, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId);
+        const el = __CreateView(pageId, {
+            nodeIndex: 1931123107
+        });
         return [
             el
         ];

@@ -10,7 +10,7 @@ mod swc_plugin_extract_str;
 mod swc_plugin_refresh;
 mod swc_plugin_worklet_post_process;
 
-use std::vec;
+use std::{cell::RefCell, rc::Rc, vec};
 
 use napi::{bindgen_prelude::AsyncTask, Either, Env, Task};
 
@@ -58,7 +58,10 @@ use swc_plugin_dynamic_import::napi::{DynamicImportVisitor, DynamicImportVisitor
 use swc_plugin_inject::napi::{InjectVisitor, InjectVisitorConfig};
 use swc_plugin_refresh::{RefreshVisitor, RefreshVisitorConfig};
 use swc_plugin_shake::napi::{ShakeVisitor, ShakeVisitorConfig};
-use swc_plugin_snapshot::napi::{JSXTransformer, JSXTransformerConfig};
+use swc_plugin_snapshot::{
+  napi::{JSXTransformer, JSXTransformerConfig, NodeIndexRecord as SnapshotNodeIndexRecord},
+  NodeIndexRecord as CoreNodeIndexRecord,
+};
 use swc_plugin_worklet::napi::{WorkletVisitor, WorkletVisitorConfig};
 use swc_plugins_shared::{
   engine_version::is_engine_version_ge,
@@ -250,6 +253,7 @@ pub struct TransformNodiffOutput {
   pub errors: Vec<esbuild::PartialMessage>,
   // #[napi(ts_type = "Array<import('esbuild').PartialMessage>")]
   pub warnings: Vec<esbuild::PartialMessage>,
+  pub node_index_records: Vec<SnapshotNodeIndexRecord>,
 }
 
 /// A multi emitter that forwards to multiple emitters.
@@ -269,6 +273,17 @@ impl Emitter for MultiEmitter {
       emitter.emit(db);
     }
   }
+}
+
+fn clone_node_index_records(
+  node_index_records: &Rc<RefCell<Vec<CoreNodeIndexRecord>>>,
+) -> Vec<SnapshotNodeIndexRecord> {
+  node_index_records
+    .borrow()
+    .iter()
+    .cloned()
+    .map(Into::into)
+    .collect()
 }
 
 pub struct TransformTask {
@@ -296,6 +311,8 @@ fn transform_react_lynx_inner(
   let emitter = Box::new(MultiEmitter::new(vec![esbuild_emitter]));
   let handler = Handler::with_emitter(true, false, emitter);
 
+  let node_index_records: Rc<RefCell<Vec<CoreNodeIndexRecord>>> = Rc::new(RefCell::new(vec![]));
+
   let result = GLOBALS.set(&Default::default(), || {
     let program = c.parse_js(
       fm,
@@ -313,6 +330,7 @@ fn transform_react_lynx_inner(
           map: None,
           errors: errors.read().unwrap().clone(),
           warnings: warnings.read().unwrap().clone(),
+          node_index_records: clone_node_index_records(&node_index_records),
         };
       }
     };
@@ -428,8 +446,10 @@ fn transform_react_lynx_inner(
           snapshot_plugin_config,
           Some(&comments),
           options.mode.unwrap_or(TransformMode::Production),
+          Some(cm.clone()),
         )
-        .with_content_hash(content_hash.clone()),
+        .with_content_hash(content_hash.clone())
+        .with_node_index_records(node_index_records.clone()),
       ),
       enabled,
     );
@@ -631,6 +651,7 @@ fn transform_react_lynx_inner(
         map: result.map,
         errors: vec![],
         warnings: vec![],
+        node_index_records: clone_node_index_records(&node_index_records),
       },
       Err(_) => {
         return TransformNodiffOutput {
@@ -638,6 +659,7 @@ fn transform_react_lynx_inner(
           map: None,
           errors: errors.read().unwrap().clone(),
           warnings: warnings.read().unwrap().clone(),
+          node_index_records: clone_node_index_records(&node_index_records),
         };
       }
     }
@@ -648,6 +670,7 @@ fn transform_react_lynx_inner(
     map: result.map,
     errors: errors.read().unwrap().clone(),
     warnings: warnings.read().unwrap().clone(),
+    node_index_records: clone_node_index_records(&node_index_records),
   };
 
   r

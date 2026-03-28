@@ -300,11 +300,15 @@ describe('Suspense', () => {
               "__id": 3,
               "create": "function() {
             const pageId = __vite_ssr_import_1__.__pageId;
-            const el = __CreateView(pageId);
+            const el = __CreateView(pageId, {
+              nodeIndex: 4037919275
+            });
             __SetClasses(el, "lazy-wrapper");
             const el1 = __CreateWrapperElement(pageId);
             __AppendElement(el, el1);
-            const el2 = __CreateText(pageId);
+            const el2 = __CreateText(pageId, {
+              nodeIndex: 1374537470
+            });
             __AppendElement(el, el2);
             const el3 = __CreateRawText("Hello, ReactLynx");
             __AppendElement(el2, el3);
@@ -324,7 +328,9 @@ describe('Suspense', () => {
               "__id": 7,
               "create": "function() {
             const pageId = __vite_ssr_import_1__.__pageId;
-            const el = __CreateText(pageId);
+            const el = __CreateText(pageId, {
+              nodeIndex: 2733629192
+            });
             __SetClasses(el, "loading");
             const el1 = __CreateRawText("loading...");
             __AppendElement(el, el1);

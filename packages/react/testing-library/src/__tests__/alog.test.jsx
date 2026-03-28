@@ -70,10 +70,10 @@ describe('alog', () => {
           "[MainThread Component Render] name: App",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #4: __CreateView(0) => VIEW#1",
+          "[ReactLynxDebug] FiberElement API call #4: __CreateView(0, {"nodeIndex":79393794}) => VIEW#1",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #5: __CreateText(0) => TEXT#2",
+          "[ReactLynxDebug] FiberElement API call #5: __CreateText(0, {"nodeIndex":3043634868}) => TEXT#2",
         ],
         [
           "[ReactLynxDebug] FiberElement API call #6: __AddDataset(TEXT#2, "testid", "count-text")",
@@ -130,7 +130,7 @@ describe('alog', () => {
           "[ReactLynxDebug] FiberElement API call #23: __ReplaceElement(WRAPPER#8, WRAPPER#5)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #24: __CreateView(0) => VIEW#9",
+          "[ReactLynxDebug] FiberElement API call #24: __CreateView(0, {"nodeIndex":3229541520}) => VIEW#9",
         ],
         [
           "[ReactLynxDebug] FiberElement API call #25: __CreateRawText("Class Component") => #text#10",
@@ -142,7 +142,7 @@ describe('alog', () => {
           "[ReactLynxDebug] FiberElement API call #27: __AppendElement(WRAPPER#8, VIEW#9)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #28: __CreateView(0) => VIEW#11",
+          "[ReactLynxDebug] FiberElement API call #28: __CreateView(0, {"nodeIndex":2599663223}) => VIEW#11",
         ],
         [
           "[ReactLynxDebug] FiberElement API call #29: __CreateRawText("Function Component") => #text#12",

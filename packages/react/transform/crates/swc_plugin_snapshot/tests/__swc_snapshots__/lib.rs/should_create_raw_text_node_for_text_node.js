@@ -2,7 +2,9 @@ import * as ReactLynx from "@lynx-js/react";
 const __snapshot_da39a_test_2 = "__snapshot_da39a_test_2";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2)=>ReactLynx.createSnapshot(__snapshot_da39a_test_2, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateText(pageId);
+        const el = __CreateText(pageId, {
+            nodeIndex: 330376436
+        });
         return [
             el
         ];
@@ -10,8 +12,12 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2
 const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId);
-        const el1 = __CreateText(pageId);
+        const el = __CreateView(pageId, {
+            nodeIndex: 2943021278
+        });
+        const el1 = __CreateText(pageId, {
+            nodeIndex: 1609852884
+        });
         __AppendElement(el, el1);
         const el2 = __CreateWrapperElement(pageId);
         __AppendElement(el1, el2);
@@ -19,14 +25,20 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1
         __AppendElement(el1, el3);
         const el4 = __CreateWrapperElement(pageId);
         __AppendElement(el, el4);
-        const el5 = __CreateText(pageId);
+        const el5 = __CreateText(pageId, {
+            nodeIndex: 3781563087
+        });
         __AppendElement(el, el5);
         const el6 = __CreateRawText("Hello");
         __AppendElement(el5, el6);
-        const el7 = __CreateText(pageId);
+        const el7 = __CreateText(pageId, {
+            nodeIndex: 3339745380
+        });
         __SetAttribute(el7, "text", "ReactLynx 2");
         __AppendElement(el5, el7);
-        const el8 = __CreateElement("x-text", pageId);
+        const el8 = __CreateElement("x-text", pageId, {
+            nodeIndex: 5108387
+        });
         __AppendElement(el, el8);
         const el9 = __CreateRawText("Hello, ReactLynx 3");
         __AppendElement(el8, el9);

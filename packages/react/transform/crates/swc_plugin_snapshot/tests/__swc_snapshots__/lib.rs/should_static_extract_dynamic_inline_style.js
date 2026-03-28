@@ -2,7 +2,9 @@ import * as ReactLynx from "@lynx-js/react";
 const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId);
+        const el = __CreateView(pageId, {
+            nodeIndex: 2943021278
+        });
         __SetInlineStyles(el, "background-color: red;");
         return [
             el
@@ -12,7 +14,9 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1
 const __snapshot_da39a_test_2 = "__snapshot_da39a_test_2";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2)=>ReactLynx.createSnapshot(__snapshot_da39a_test_2, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId);
+        const el = __CreateView(pageId, {
+            nodeIndex: 3966161542
+        });
         return [
             el
         ];
@@ -29,7 +33,9 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2
 const __snapshot_da39a_test_3 = "__snapshot_da39a_test_3";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_3] = (__snapshot_da39a_test_3)=>ReactLynx.createSnapshot(__snapshot_da39a_test_3, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId);
+        const el = __CreateView(pageId, {
+            nodeIndex: 1871263481
+        });
         return [
             el
         ];
@@ -50,7 +56,9 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_3] = (__snapshot_da39a_test_3
 const __snapshot_da39a_test_4 = "__snapshot_da39a_test_4";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_4] = (__snapshot_da39a_test_4)=>ReactLynx.createSnapshot(__snapshot_da39a_test_4, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId);
+        const el = __CreateView(pageId, {
+            nodeIndex: 2477386082
+        });
         return [
             el
         ];

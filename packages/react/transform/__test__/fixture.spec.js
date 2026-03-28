@@ -7,6 +7,14 @@ import { describe, expect, it } from 'vitest';
 
 import { transformBundleResult, transformReactLynx } from '../main.js';
 
+const TEST_FILENAMES = {
+  shake: '/path/to/shake.js',
+  jsxListItem: '/path/to/list-item.js',
+  addComponentElement: '/path/to/add-component-element.js',
+  simplifyCtorLikeReactLynx2: '/path/to/simplify-ctor.js',
+  defineDceShake: '/path/to/define-dce-shake.js',
+};
+
 describe('shake', () => {
   it('should match', async () => {
     const inputContent = `
@@ -62,7 +70,7 @@ export class A extends Component {
     const __cfg = (jsx) => ({
       mode: 'test',
       pluginName: '',
-      filename: '',
+      filename: TEST_FILENAMES.shake,
       sourcemap: false,
       cssScope: false,
       jsx,
@@ -79,20 +87,33 @@ export class A extends Component {
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       import { Component } from "@lynx-js/react/legacy-react-runtime";
-      const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
-      ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
+      const __snapshot_5d88a_test_1 = "__snapshot_5d88a_test_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_5d88a_test_1] = (__snapshot_5d88a_test_1)=>ReactLynx.createSnapshot(__snapshot_5d88a_test_1, function() {
               const pageId = ReactLynx.__pageId;
-              const el = __CreateView(pageId);
+              const el = __CreateView(pageId, {
+                  nodeIndex: 1903991381
+              });
               return [
                   el
               ];
           }, null, null, undefined, globDynamicComponentEntry, null, true);
       export class A extends Component {
           render() {
-              return /*#__PURE__*/ _jsx(__snapshot_da39a_test_1, {});
+              return /*#__PURE__*/ _jsx(__snapshot_5d88a_test_1, {});
           }
       }
       "
+    `);
+    expect(result.nodeIndexRecords).toMatchInlineSnapshot(`
+      [
+        {
+          "columnNumber": 14,
+          "filename": "/path/to/shake.js",
+          "lineNumber": 13,
+          "nodeIndex": 1903991381,
+          "snapshotId": "__snapshot_5d88a_test_1",
+        },
+      ]
     `);
 
     const result2 = await transformReactLynx(inputContent, __cfg(false));
@@ -100,20 +121,33 @@ export class A extends Component {
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       import { Component } from "@lynx-js/react/legacy-react-runtime";
-      const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
-      ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
+      const __snapshot_5d88a_test_1 = "__snapshot_5d88a_test_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_5d88a_test_1] = (__snapshot_5d88a_test_1)=>ReactLynx.createSnapshot(__snapshot_5d88a_test_1, function() {
               const pageId = ReactLynx.__pageId;
-              const el = __CreateView(pageId);
+              const el = __CreateView(pageId, {
+                  nodeIndex: 1903991381
+              });
               return [
                   el
               ];
           }, null, null, undefined, globDynamicComponentEntry, null, true);
       export class A extends Component {
           render() {
-              return /*#__PURE__*/ _jsx(__snapshot_da39a_test_1, {});
+              return /*#__PURE__*/ _jsx(__snapshot_5d88a_test_1, {});
           }
       }
       "
+    `);
+    expect(result2.nodeIndexRecords).toMatchInlineSnapshot(`
+      [
+        {
+          "columnNumber": 14,
+          "filename": "/path/to/shake.js",
+          "lineNumber": 13,
+          "nodeIndex": 1903991381,
+          "snapshotId": "__snapshot_5d88a_test_1",
+        },
+      ]
     `);
   });
 });
@@ -146,6 +180,7 @@ describe('jsx', () => {
       });
       ",
         "errors": [],
+        "nodeIndexRecords": [],
         "warnings": [],
       }
     `);
@@ -154,8 +189,8 @@ describe('jsx', () => {
   it('<list-item defer item-key="1" />', async () => {
     const result = await transformReactLynx('const jsx = <list><list-item defer item-key="1" /></list>;', {
       pluginName: '',
-      filename: '',
-      sourceFileName: '',
+      filename: TEST_FILENAMES.jsxListItem,
+      sourceFileName: TEST_FILENAMES.jsxListItem,
       defineDCE: true,
       sourcemap: false,
       compat: false,
@@ -170,23 +205,24 @@ describe('jsx', () => {
       experimental_moduleCompress: false,
     });
 
-    expect(result).toMatchInlineSnapshot(`
-      {
-        "code": "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+    expect(result.code).toMatchInlineSnapshot(`
+      "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       import * as ReactLynxRuntimeComponents from '@lynx-js/react/runtime-components';
-      const __snapshot_da39a_04d8c_2 = "__snapshot_da39a_04d8c_2";
-      ReactLynx.snapshotCreatorMap[__snapshot_da39a_04d8c_2] = (__snapshot_da39a_04d8c_2)=>ReactLynx.createSnapshot(__snapshot_da39a_04d8c_2, function() {
+      const __snapshot_37835_04d8c_2 = "__snapshot_37835_04d8c_2";
+      ReactLynx.snapshotCreatorMap[__snapshot_37835_04d8c_2] = (__snapshot_37835_04d8c_2)=>ReactLynx.createSnapshot(__snapshot_37835_04d8c_2, function() {
               const pageId = ReactLynx.__pageId;
-              const el = __CreateElement("list-item", pageId);
+              const el = __CreateElement("list-item", pageId, {
+                  nodeIndex: 4032331665
+              });
               return [
                   el
               ];
           }, [
               (snapshot, index, oldValue)=>ReactLynx.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
           ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null, true);
-      const __snapshot_da39a_04d8c_1 = "__snapshot_da39a_04d8c_1";
-      ReactLynx.snapshotCreatorMap[__snapshot_da39a_04d8c_1] = (__snapshot_da39a_04d8c_1)=>ReactLynx.createSnapshot(__snapshot_da39a_04d8c_1, function(snapshotInstance) {
+      const __snapshot_37835_04d8c_1 = "__snapshot_37835_04d8c_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_37835_04d8c_1] = (__snapshot_37835_04d8c_1)=>ReactLynx.createSnapshot(__snapshot_37835_04d8c_1, function(snapshotInstance) {
               const pageId = ReactLynx.__pageId;
               const el = ReactLynx.snapshotCreateList(pageId, snapshotInstance, 0);
               return [
@@ -198,9 +234,9 @@ describe('jsx', () => {
                   0
               ]
           ], undefined, globDynamicComponentEntry, null, true);
-      /*#__PURE__*/ _jsx(__snapshot_da39a_04d8c_1, {
+      /*#__PURE__*/ _jsx(__snapshot_37835_04d8c_1, {
           children: /*#__PURE__*/ _jsx(ReactLynxRuntimeComponents.DeferredListItem, {
-              renderListItem: (__c)=>_jsx(__snapshot_da39a_04d8c_2, {
+              renderListItem: (__c)=>_jsx(__snapshot_37835_04d8c_2, {
                       values: [
                           {
                               "item-key": "1"
@@ -212,10 +248,20 @@ describe('jsx', () => {
               defer: true
           })
       });
-      ",
-        "errors": [],
-        "warnings": [],
-      }
+      "
+    `);
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toEqual([]);
+    expect(result.nodeIndexRecords).toMatchInlineSnapshot(`
+      [
+        {
+          "columnNumber": 19,
+          "filename": "/path/to/list-item.js",
+          "lineNumber": 1,
+          "nodeIndex": 4032331665,
+          "snapshotId": "__snapshot_37835_04d8c_2",
+        },
+      ]
     `);
   });
 });
@@ -239,6 +285,7 @@ describe('errors and warnings', () => {
             "text": "Expected '</', got '<eof>'",
           },
         ],
+        "nodeIndexRecords": [],
         "warnings": [],
       }
     `);
@@ -277,6 +324,7 @@ Component, View
       Component, View;
       ",
         "errors": [],
+        "nodeIndexRecords": [],
         "warnings": [
           {
             "location": {
@@ -321,7 +369,7 @@ Component, View
 
     const cfg = {
       pluginName: '',
-      filename: '',
+      filename: TEST_FILENAMES.addComponentElement,
       sourcemap: false,
       cssScope: false,
       jsx: {
@@ -371,7 +419,7 @@ Component, View
         [
           "▲ [WARNING] addComponentElement: component with JSXSpread is ignored to avoid badcase, you can switch addComponentElement.compilerOnly to false to enable JSXSpread support
 
-            :1:7:
+            /path/to/add-component-element.js:1:7:
               1 │ <Comp {...s}/>;
                 ╵        ~~~
 
@@ -400,10 +448,12 @@ Component, View
         "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
         import * as ReactLynx from "@lynx-js/react";
         import * as ReactLynx1 from "@lynx-js/react/internal";
-        const __snapshot_da39a_89b7f_1 = "__snapshot_da39a_89b7f_1";
-        ReactLynx.snapshotCreatorMap[__snapshot_da39a_89b7f_1] = (__snapshot_da39a_89b7f_1)=>ReactLynx.createSnapshot(__snapshot_da39a_89b7f_1, function() {
+        const __snapshot_5cbee_89b7f_1 = "__snapshot_5cbee_89b7f_1";
+        ReactLynx.snapshotCreatorMap[__snapshot_5cbee_89b7f_1] = (__snapshot_5cbee_89b7f_1)=>ReactLynx.createSnapshot(__snapshot_5cbee_89b7f_1, function() {
                 const pageId = ReactLynx.__pageId;
-                const el = __CreateView(pageId);
+                const el = __CreateView(pageId, {
+                    nodeIndex: 807059096
+                });
                 return [
                     el
                 ];
@@ -412,7 +462,7 @@ Component, View
             ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, [
                 0
             ], true);
-        /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>/*#__PURE__*/ _jsx(__snapshot_da39a_89b7f_1, {
+        /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>_jsx(__snapshot_5cbee_89b7f_1, {
                 values: [
                     {
                         ...__spread,
@@ -424,6 +474,17 @@ Component, View
             ...s
         }));
         "
+      `);
+      expect(result.nodeIndexRecords).toMatchInlineSnapshot(`
+        [
+          {
+            "columnNumber": 1,
+            "filename": "/path/to/add-component-element.js",
+            "lineNumber": 1,
+            "nodeIndex": 807059096,
+            "snapshotId": "__snapshot_5cbee_89b7f_1",
+          },
+        ]
       `);
     }
   });
@@ -887,7 +948,7 @@ export default class App extends Component {
 `,
       {
         pluginName: 'transform',
-        filename: '',
+        filename: TEST_FILENAMES.simplifyCtorLikeReactLynx2,
         sourcemap: false,
         cssScope: false,
         jsx: false,
@@ -913,10 +974,12 @@ export default class App extends Component {
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       let c = 1;
-      const __snapshot_da39a_b7447_1 = "__snapshot_da39a_b7447_1";
-      ReactLynx.snapshotCreatorMap[__snapshot_da39a_b7447_1] = (__snapshot_da39a_b7447_1)=>ReactLynx.createSnapshot(__snapshot_da39a_b7447_1, function() {
+      const __snapshot_c00a0_b7447_1 = "__snapshot_c00a0_b7447_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_c00a0_b7447_1] = (__snapshot_c00a0_b7447_1)=>ReactLynx.createSnapshot(__snapshot_c00a0_b7447_1, function() {
               const pageId = ReactLynx.__pageId;
-              const el = __CreateView(pageId);
+              const el = __CreateView(pageId, {
+                  nodeIndex: 1957983667
+              });
               return [
                   el
               ];
@@ -924,7 +987,7 @@ export default class App extends Component {
       export default class App extends Component {
           a() {}
           render() {
-              return /*#__PURE__*/ _jsx(__snapshot_da39a_b7447_1, {});
+              return /*#__PURE__*/ _jsx(__snapshot_c00a0_b7447_1, {});
           }
           state = ((()=>{
               if (!__LEPUS__) this.a();
@@ -933,6 +996,17 @@ export default class App extends Component {
           });
       }
       "
+    `);
+    expect(result.nodeIndexRecords).toMatchInlineSnapshot(`
+      [
+        {
+          "columnNumber": 12,
+          "filename": "/path/to/simplify-ctor.js",
+          "lineNumber": 16,
+          "nodeIndex": 1957983667,
+          "snapshotId": "__snapshot_c00a0_b7447_1",
+        },
+      ]
     `);
   });
 });
@@ -1089,7 +1163,7 @@ X();
 `,
       {
         pluginName: '',
-        filename: '',
+        filename: TEST_FILENAMES.defineDceShake,
         sourcemap: false,
         cssScope: false,
         jsx: false,
@@ -1161,7 +1235,7 @@ X5();
 `,
       {
         pluginName: '',
-        filename: '',
+        filename: TEST_FILENAMES.defineDceShake,
         sourcemap: false,
         cssScope: false,
         jsx: false,
@@ -1409,7 +1483,7 @@ class X extends Component {
 `,
       {
         pluginName: '',
-        filename: '',
+        filename: TEST_FILENAMES.defineDceShake,
         sourcemap: false,
         cssScope: false,
         jsx: false,
@@ -1432,10 +1506,12 @@ class X extends Component {
     ).toMatchInlineSnapshot(`
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
-      const __snapshot_da39a_e2935_1 = "__snapshot_da39a_e2935_1";
-      ReactLynx.snapshotCreatorMap[__snapshot_da39a_e2935_1] = (__snapshot_da39a_e2935_1)=>ReactLynx.createSnapshot(__snapshot_da39a_e2935_1, function() {
+      const __snapshot_f9adb_e2935_1 = "__snapshot_f9adb_e2935_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_f9adb_e2935_1] = (__snapshot_f9adb_e2935_1)=>ReactLynx.createSnapshot(__snapshot_f9adb_e2935_1, function() {
               const pageId = ReactLynx.__pageId;
-              const el = __CreateView(pageId);
+              const el = __CreateView(pageId, {
+                  nodeIndex: 422691188
+              });
               return [
                   el
               ];
@@ -1443,11 +1519,22 @@ class X extends Component {
       class X extends Component {
           constructor(){}
           render() {
-              return /*#__PURE__*/ _jsx(__snapshot_da39a_e2935_1, {});
+              return /*#__PURE__*/ _jsx(__snapshot_f9adb_e2935_1, {});
           }
       }
       /*#__PURE__*/ _jsx(X, {});
       "
+    `);
+    expect(result.nodeIndexRecords).toMatchInlineSnapshot(`
+      [
+        {
+          "columnNumber": 12,
+          "filename": "/path/to/define-dce-shake.js",
+          "lineNumber": 15,
+          "nodeIndex": 422691188,
+          "snapshotId": "__snapshot_f9adb_e2935_1",
+        },
+      ]
     `);
   });
 });

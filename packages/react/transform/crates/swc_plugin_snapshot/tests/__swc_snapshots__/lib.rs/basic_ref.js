@@ -2,16 +2,24 @@ import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
 const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
 require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_1, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
-        const el = __CreateView(pageId);
-        const el1 = __CreateText(pageId);
+        const el = __CreateView(pageId, {
+            nodeIndex: 3339745380
+        });
+        const el1 = __CreateText(pageId, {
+            nodeIndex: 744218277
+        });
         __AppendElement(el, el1);
         const el2 = __CreateRawText("1");
         __AppendElement(el1, el2);
-        const el3 = __CreateText(pageId);
+        const el3 = __CreateText(pageId, {
+            nodeIndex: 433399569
+        });
         __AppendElement(el, el3);
         const el4 = __CreateRawText("2");
         __AppendElement(el3, el4);
-        const el5 = __CreateText(pageId);
+        const el5 = __CreateText(pageId, {
+            nodeIndex: 3451528561
+        });
         __AppendElement(el, el5);
         const el6 = __CreateRawText("3");
         __AppendElement(el5, el6);

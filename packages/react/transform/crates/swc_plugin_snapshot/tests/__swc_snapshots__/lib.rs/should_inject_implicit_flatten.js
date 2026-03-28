@@ -2,7 +2,9 @@ import * as ReactLynx from "@lynx-js/react";
 const __snapshot_da39a_test_2 = "__snapshot_da39a_test_2";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2)=>ReactLynx.createSnapshot(__snapshot_da39a_test_2, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId);
+        const el = __CreateView(pageId, {
+            nodeIndex: 1266021126
+        });
         __SetClasses(el, 'commdityV1TextVerticalWrapper');
         return [
             el
@@ -11,14 +13,22 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2
 const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId);
-        const el1 = __CreateView(pageId);
+        const el = __CreateView(pageId, {
+            nodeIndex: 2943021278
+        });
+        const el1 = __CreateView(pageId, {
+            nodeIndex: 1609852884
+        });
         __SetClasses(el1, 'commdityV1Wrapper');
         __AppendElement(el, el1);
-        const el2 = __CreateView(pageId);
+        const el2 = __CreateView(pageId, {
+            nodeIndex: 2412096929
+        });
         __SetClasses(el2, 'dotComm');
         __AppendElement(el1, el2);
-        const el3 = __CreateView(pageId);
+        const el3 = __CreateView(pageId, {
+            nodeIndex: 1871263481
+        });
         __SetClasses(el3, 'commdityV1TextWrapper');
         __AppendElement(el1, el3);
         const el4 = __CreateWrapperElement(pageId);

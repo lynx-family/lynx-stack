@@ -3,7 +3,9 @@ import * as ReactLynx from "@lynx-js/react";
 const __snapshot_2d408_test_1 = "__snapshot_2d408_test_1";
 ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_1] = (__snapshot_2d408_test_1)=>ReactLynx.createSnapshot(__snapshot_2d408_test_1, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId);
+        const el = __CreateView(pageId, {
+            nodeIndex: 2774895927
+        });
         return [
             el
         ];
@@ -12,7 +14,9 @@ ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_1] = (__snapshot_2d408_test_1
 const __snapshot_2d408_test_2 = "__snapshot_2d408_test_2";
 ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_2] = (__snapshot_2d408_test_2)=>ReactLynx.createSnapshot(__snapshot_2d408_test_2, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateText(pageId);
+        const el = __CreateText(pageId, {
+            nodeIndex: 2469948610
+        });
         const el1 = __CreateRawText("foo");
         __AppendElement(el, el1);
         return [
@@ -24,7 +28,9 @@ ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_2] = (__snapshot_2d408_test_2
 const __snapshot_2d408_test_3 = "__snapshot_2d408_test_3";
 ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_3] = (__snapshot_2d408_test_3)=>ReactLynx.createSnapshot(__snapshot_2d408_test_3, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId);
+        const el = __CreateView(pageId, {
+            nodeIndex: 3877576761
+        });
         return [
             el
         ];
@@ -37,7 +43,9 @@ function Foo() {
 const __snapshot_2d408_test_4 = "__snapshot_2d408_test_4";
 ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_4] = (__snapshot_2d408_test_4)=>ReactLynx.createSnapshot(__snapshot_2d408_test_4, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId);
+        const el = __CreateView(pageId, {
+            nodeIndex: 1526596934
+        });
         return [
             el
         ];

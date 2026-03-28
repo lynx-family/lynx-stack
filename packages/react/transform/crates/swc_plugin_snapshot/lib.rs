@@ -2,6 +2,7 @@ use serde::Deserialize;
 use std::{
   cell::RefCell,
   collections::{HashMap, HashSet},
+  rc::Rc,
 };
 
 use once_cell::sync::Lazy;
@@ -9,8 +10,9 @@ use swc_core::{
   common::{
     comments::{CommentKind, Comments},
     errors::HANDLER,
+    sync::Lrc,
     util::take::Take,
-    Mark, Span, Spanned, SyntaxContext, DUMMY_SP,
+    Mark, SourceMap, Span, Spanned, SyntaxContext, DUMMY_SP,
   },
   ecma::{
     ast::{JSXExpr, *},
@@ -35,7 +37,7 @@ use swc_plugins_shared::{
   },
   target::TransformTarget,
   transform_mode::TransformMode,
-  utils::calc_hash,
+  utils::{calc_hash, calc_hash_number},
 };
 
 use self::{
@@ -103,6 +105,15 @@ static NO_FLATTEN_ATTRIBUTES: Lazy<HashSet<String>> = Lazy::new(|| {
     "exposure-id".to_string(),
   ])
 });
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct NodeIndexRecord {
+  pub node_index: u32,
+  pub filename: String,
+  pub line_number: u32,
+  pub column_number: u32,
+  pub snapshot_id: String,
+}
 
 #[derive(Debug)]
 pub enum DynamicPart {
@@ -244,9 +255,10 @@ impl DynamicPart {
   }
 }
 
-pub struct DynamicPartExtractor<'a, V>
+pub struct DynamicPartExtractor<'a, V, F>
 where
   V: VisitMut,
+  F: Fn(Span) -> Expr,
 {
   page_id: Lazy<Ident>,
   runtime_id: Expr,
@@ -260,13 +272,20 @@ where
   dynamic_parts: Vec<DynamicPart>,
   dynamic_part_visitor: &'a mut V,
   key: Option<JSXAttrValue>,
+  node_index_fn: F,
 }
 
-impl<'a, V> DynamicPartExtractor<'a, V>
+impl<'a, V, F> DynamicPartExtractor<'a, V, F>
 where
   V: VisitMut,
+  F: Fn(Span) -> Expr,
 {
-  fn new(runtime_id: Expr, dynamic_part_count: i32, dynamic_part_visitor: &'a mut V) -> Self {
+  fn new(
+    runtime_id: Expr,
+    dynamic_part_count: i32,
+    dynamic_part_visitor: &'a mut V,
+    node_index_fn: F,
+  ) -> Self {
     DynamicPartExtractor {
       page_id: Lazy::new(|| private_ident!("pageId")),
       runtime_id,
@@ -280,7 +299,12 @@ where
       dynamic_parts: vec![],
       dynamic_part_visitor,
       key: None,
+      node_index_fn,
     }
+  }
+
+  fn node_index_expr_from_span(&self, span: Span) -> Expr {
+    (self.node_index_fn)(span)
   }
 
   fn static_stmt_from_jsx_element(&mut self, n: &JSXElement, el: Ident) -> Stmt {
@@ -291,37 +315,42 @@ where
       match tag.as_ref() {
         "view" => {
           static_stmt = quote!(
-            r#"const $element = __CreateView($page_id)"# as Stmt,
+            r#"const $element = __CreateView($page_id, { nodeIndex: $node_index })"# as Stmt,
             element = el.clone(),
             page_id = self.page_id.clone(),
+            node_index: Expr = self.node_index_expr_from_span(n.opening.span)
           );
         }
         "scroll-view" => {
           static_stmt = quote!(
-            r#"const $element = __CreateScrollView($page_id)"# as Stmt,
+            r#"const $element = __CreateScrollView($page_id, { nodeIndex: $node_index })"# as Stmt,
             element = el.clone(),
             page_id = self.page_id.clone(),
+            node_index: Expr = self.node_index_expr_from_span(n.opening.span)
           );
         }
         "x-scroll-view" => {
           static_stmt = quote!(
-            r#"const $element = __CreateScrollView($page_id, { tag: "x-scroll-view" })"# as Stmt,
+            r#"const $element = __CreateScrollView($page_id, { nodeIndex: $node_index })"# as Stmt,
             element = el.clone(),
             page_id = self.page_id.clone(),
+            node_index: Expr = self.node_index_expr_from_span(n.opening.span)
           );
         }
         "image" => {
           static_stmt = quote!(
-            r#"const $element = __CreateImage($page_id)"# as Stmt,
+            r#"const $element = __CreateImage($page_id, { nodeIndex: $node_index })"# as Stmt,
             element = el.clone(),
             page_id = self.page_id.clone(),
+            node_index: Expr = self.node_index_expr_from_span(n.opening.span)
           );
         }
         "text" => {
           static_stmt = quote!(
-            r#"const $element = __CreateText($page_id)"# as Stmt,
+            r#"const $element = __CreateText($page_id, { nodeIndex: $node_index })"# as Stmt,
             element = el.clone(),
             page_id = self.page_id.clone(),
+            node_index: Expr = self.node_index_expr_from_span(n.opening.span)
           );
         }
         "wrapper" => {
@@ -344,17 +373,19 @@ where
         }
         "frame" => {
           static_stmt = quote!(
-            r#"const $element = __CreateFrame($page_id)"# as Stmt,
+            r#"const $element = __CreateFrame($page_id, { nodeIndex: $node_index })"# as Stmt,
             element = el.clone(),
             page_id = self.page_id.clone(),
+            node_index: Expr = self.node_index_expr_from_span(n.opening.span)
           );
         }
         _ => {
           static_stmt = quote!(
-              r#"const $element = __CreateElement($name, $page_id)"# as Stmt,
+              r#"const $element = __CreateElement($name, $page_id, { nodeIndex: $node_index })"# as Stmt,
               element = el.clone(),
               name: Expr = Expr::Lit(Lit::Str(str)),
               page_id = self.page_id.clone(),
+              node_index: Expr = self.node_index_expr_from_span(n.opening.span)
           );
         }
       };
@@ -364,9 +395,10 @@ where
   }
 }
 
-impl<V> VisitMut for DynamicPartExtractor<'_, V>
+impl<V, F> VisitMut for DynamicPartExtractor<'_, V, F>
 where
   V: VisitMut,
+  F: Fn(Span) -> Expr,
 {
   fn visit_mut_jsx_element(&mut self, n: &mut JSXElement) {
     if jsx_is_internal_slot(n) {
@@ -1045,6 +1077,8 @@ where
   current_snapshot_defs: Vec<ModuleItem>,
   current_snapshot_id: Option<Ident>,
   comments: Option<C>,
+  pub node_index_records: Rc<RefCell<Vec<NodeIndexRecord>>>,
+  pub source_map: Option<Lrc<SourceMap>>,
 }
 
 impl<C> JSXTransformer<C>
@@ -1056,7 +1090,12 @@ where
     self
   }
 
-  pub fn new(cfg: JSXTransformerConfig, comments: Option<C>, mode: TransformMode) -> Self {
+  pub fn new(
+    cfg: JSXTransformerConfig,
+    comments: Option<C>,
+    mode: TransformMode,
+    source_map: Option<Lrc<SourceMap>>,
+  ) -> Self {
     JSXTransformer {
       filename_hash: calc_hash(&cfg.filename.clone()),
       content_hash: "test".into(),
@@ -1077,6 +1116,8 @@ where
       current_snapshot_defs: vec![],
       current_snapshot_id: None,
       comments,
+      node_index_records: Rc::new(RefCell::new(vec![])),
+      source_map,
     }
   }
 
@@ -1197,10 +1238,46 @@ where
 
     let target = self.cfg.target;
     let runtime_id = self.runtime_id.clone();
+    let filename_hash = self.filename_hash.clone();
+    let content_hash = self.content_hash.clone();
+    let node_index_records = self.node_index_records.clone();
+    let filename = self.cfg.filename.clone();
+    let snapshot_uid_for_captured = snapshot_uid.clone();
+    let source_map = self.source_map.clone();
+    let node_index_fn = move |span: Span| {
+      let node_index =
+        calc_hash_number(&format!("{}:{}:{}", filename_hash, content_hash, span.lo.0));
+
+      // record node index
+      let mut line_number = 0;
+      let mut column_number = 0;
+      if span.lo.0 > 0 {
+        if let Some(cm) = &source_map {
+          let loc = cm.lookup_char_pos(span.lo);
+          line_number = loc.line as u32;
+          column_number = loc.col.0 as u32 + 1;
+        }
+      }
+      node_index_records.borrow_mut().push(NodeIndexRecord {
+        node_index,
+        filename: filename.clone(),
+        line_number,
+        column_number,
+        snapshot_id: snapshot_uid_for_captured.clone(),
+      });
+
+      Expr::Lit(Lit::Num(Number {
+        span: DUMMY_SP,
+        value: node_index as f64,
+        raw: None,
+      }))
+    };
+
     let mut dynamic_part_extractor = DynamicPartExtractor::new(
       self.runtime_id.clone(),
       wrap_dynamic_part.dynamic_part_count,
       self,
+      node_index_fn,
     );
 
     node.visit_mut_with(&mut dynamic_part_extractor);
@@ -1631,6 +1708,7 @@ mod tests {
           },
           Some(t.comments.clone()),
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
       )
     },
@@ -1663,6 +1741,7 @@ mod tests {
           },
           Some(t.comments.clone()),
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
       )
     },
@@ -1695,6 +1774,7 @@ mod tests {
           },
           Some(t.comments.clone()),
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
       )
     },
@@ -1729,6 +1809,7 @@ mod tests {
           },
           Some(t.comments.clone()),
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
       )
     },
@@ -1765,6 +1846,7 @@ mod tests {
           },
           Some(t.comments.clone()),
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
       )
     },
@@ -1797,6 +1879,7 @@ mod tests {
           },
           Some(t.comments.clone()),
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
       )
     },
@@ -1824,6 +1907,7 @@ mod tests {
           },
           Some(t.comments.clone()),
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
       )
     },
@@ -1852,6 +1936,7 @@ mod tests {
       },
       Some(t.comments.clone()),
       TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     basic_component,
     // Input codes
@@ -1875,6 +1960,7 @@ mod tests {
       },
       Some(t.comments.clone()),
       TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     page_component,
     // Input codes
@@ -1901,6 +1987,7 @@ mod tests {
       },
       Some(t.comments.clone()),
       TransformMode::Development,
+      Some(t.cm.clone()),
     )),
     page_element_dev,
     // Input codes
@@ -1927,6 +2014,7 @@ mod tests {
       },
       Some(t.comments.clone()),
       TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     page_element,
     // Input codes
@@ -1952,7 +2040,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     basic_component_with_static_sibling,
     // Input codes
@@ -1981,6 +2070,7 @@ mod tests {
           },
           None,
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2028,6 +2118,7 @@ mod tests {
           },
           None,
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2070,7 +2161,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     basic_expr_container,
     // Input codes
@@ -2093,7 +2185,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     basic_expr_container_with_static_sibling,
     // Input codes
@@ -2117,7 +2210,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_inject_implicit_flatten,
     // Input codes
@@ -2151,7 +2245,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     basic_list,
     // Input codes
@@ -2177,7 +2272,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     basic_list_with_fragment,
     // Input codes
@@ -2213,6 +2309,7 @@ mod tests {
           },
           None,
           TransformMode::Test,
+          None,
         )),
       )
     },
@@ -2238,7 +2335,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_static_extract_inline_style,
     // Input codes
@@ -2269,7 +2367,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_static_extract_dynamic_inline_style,
     // Input codes
@@ -2293,7 +2392,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_extract_css_id_without_css_id,
     // Input codes
@@ -2317,7 +2417,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_extract_css_id,
     // Input codes
@@ -2345,7 +2446,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_extract_css_id_dynamic_component,
     // Input codes
@@ -2373,7 +2475,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_extract_css_id_dynamic_component_without_css_id,
     // Input codes
@@ -2402,6 +2505,7 @@ mod tests {
           },
           None,
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2445,6 +2549,7 @@ mod tests {
         },
         None,
         TransformMode::Test,
+        None,
       ))
     },
     inline_style_literal,
@@ -2469,6 +2574,7 @@ mod tests {
         },
         None,
         TransformMode::Test,
+        None,
       ))
     },
     inline_style_literal_unknown_property,
@@ -2493,6 +2599,7 @@ mod tests {
         },
         None,
         TransformMode::Test,
+        None,
       ))
     },
     empty_module,
@@ -2517,6 +2624,7 @@ mod tests {
         },
         None,
         TransformMode::Development,
+        None,
       ))
     },
     mode_development_spread,
@@ -2545,6 +2653,7 @@ mod tests {
           },
           None,
           TransformMode::Development,
+          Some(t.cm.clone()),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2597,6 +2706,7 @@ mod tests {
           },
           None,
           TransformMode::Development,
+          Some(t.cm.clone()),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2651,6 +2761,7 @@ mod tests {
           },
           None,
           TransformMode::Development,
+          Some(t.cm.clone()),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2705,6 +2816,7 @@ mod tests {
           },
           None,
           TransformMode::Development,
+          Some(t.cm.clone()),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2757,6 +2869,7 @@ mod tests {
           },
           None,
           TransformMode::Development,
+          Some(t.cm.clone()),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2803,6 +2916,7 @@ mod tests {
       },
       Some(t.comments.clone()),
       TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_escape_newline_character,
     // Input codes
@@ -2853,6 +2967,7 @@ aaaaa
       },
       Some(t.comments.clone()),
       TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_wrap_dynamic_key,
     // Input codes
@@ -2878,6 +2993,7 @@ aaaaa
       },
       Some(t.comments.clone()),
       TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_set_attribute_for_text_node,
     // Input codes
@@ -2906,6 +3022,7 @@ aaaaa
       },
       Some(t.comments.clone()),
       TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_create_raw_text_node_for_text_node,
     // Input codes

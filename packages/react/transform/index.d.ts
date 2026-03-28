@@ -44,6 +44,13 @@ export interface PartialLocation {
   lineText?: string
   suggestion?: string
 }
+export interface NodeIndexRecord {
+  nodeIndex: number
+  filename: string
+  lineNumber: number
+  columnNumber: number
+  snapshotId: string
+}
 export interface DarkModeConfig {
   /**
    * @public
@@ -617,6 +624,7 @@ export interface TransformNodiffOutput {
   map?: string
   errors: Array<PartialMessage>
   warnings: Array<PartialMessage>
+  nodeIndexRecords: Array<NodeIndexRecord>
 }
 export function transformReactLynxSync(code: string, options?: TransformNodiffOptions | undefined | null): TransformNodiffOutput
 export function transformReactLynx(code: string, options?: TransformNodiffOptions | undefined | null): Promise<TransformNodiffOutput>

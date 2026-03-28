@@ -2,22 +2,36 @@ import * as ReactLynx from "@lynx-js/react";
 const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId);
-        const el1 = __CreateText(pageId);
+        const el = __CreateView(pageId, {
+            nodeIndex: 2943021278
+        });
+        const el1 = __CreateText(pageId, {
+            nodeIndex: 1609852884
+        });
         __SetAttribute(el1, "text", "Hello World 0");
         __AppendElement(el, el1);
-        const el2 = __CreateText(pageId);
+        const el2 = __CreateText(pageId, {
+            nodeIndex: 3121972658
+        });
         __SetAttribute(el2, "text", " ");
         __AppendElement(el, el2);
-        const el3 = __CreateText(pageId);
+        const el3 = __CreateText(pageId, {
+            nodeIndex: 765241597
+        });
         __AppendElement(el, el3);
-        const el4 = __CreateText(pageId);
+        const el4 = __CreateText(pageId, {
+            nodeIndex: 2621956690
+        });
         __SetClasses(el4, "hello");
         __SetAttribute(el4, "text", "Hello World 1");
         __AppendElement(el, el4);
-        const el5 = __CreateText(pageId);
+        const el5 = __CreateText(pageId, {
+            nodeIndex: 4183970036
+        });
         __AppendElement(el, el5);
-        const el6 = __CreateText(pageId);
+        const el6 = __CreateText(pageId, {
+            nodeIndex: 1253881342
+        });
         __SetAttribute(el6, "text", "Hello Lynx");
         __SetAttribute(el6, "text", "Hello World 3");
         __AppendElement(el, el6);

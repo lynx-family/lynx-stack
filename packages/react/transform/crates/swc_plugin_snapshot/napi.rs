@@ -1,12 +1,15 @@
+use std::{cell::RefCell, rc::Rc};
+
 use napi_derive::napi;
 use swc_core::{
-  common::comments::Comments,
+  common::{comments::Comments, sync::Lrc, SourceMap},
   ecma::{ast::*, visit::VisitMut},
 };
 use swc_plugins_shared::{target_napi::TransformTarget, transform_mode_napi::TransformMode};
 
 use crate::{
   JSXTransformer as CoreJSXTransformer, JSXTransformerConfig as CoreJSXTransformerConfig,
+  NodeIndexRecord as CoreNodeIndexRecord,
 };
 
 /// @internal
@@ -26,6 +29,41 @@ pub struct JSXTransformerConfig {
   pub target: TransformTarget,
   /// @internal
   pub is_dynamic_component: Option<bool>,
+}
+
+/// @internal
+#[napi(object)]
+#[derive(Clone, Debug)]
+pub struct NodeIndexRecord {
+  pub node_index: u32,
+  pub filename: String,
+  pub line_number: u32,
+  pub column_number: u32,
+  pub snapshot_id: String,
+}
+
+impl From<NodeIndexRecord> for CoreNodeIndexRecord {
+  fn from(val: NodeIndexRecord) -> Self {
+    Self {
+      node_index: val.node_index,
+      filename: val.filename,
+      line_number: val.line_number,
+      column_number: val.column_number,
+      snapshot_id: val.snapshot_id,
+    }
+  }
+}
+
+impl From<CoreNodeIndexRecord> for NodeIndexRecord {
+  fn from(val: CoreNodeIndexRecord) -> Self {
+    Self {
+      node_index: val.node_index,
+      filename: val.filename,
+      line_number: val.line_number,
+      column_number: val.column_number,
+      snapshot_id: val.snapshot_id,
+    }
+  }
 }
 
 impl Default for JSXTransformerConfig {
@@ -72,6 +110,7 @@ where
   C: Comments + Clone,
 {
   inner: CoreJSXTransformer<C>,
+  pub node_index_records: Rc<RefCell<Vec<CoreNodeIndexRecord>>>,
 }
 
 impl<C> JSXTransformer<C>
@@ -83,9 +122,25 @@ where
     self
   }
 
-  pub fn new(cfg: JSXTransformerConfig, comments: Option<C>, mode: TransformMode) -> Self {
+  pub fn with_node_index_records(
+    mut self,
+    node_index_records: Rc<RefCell<Vec<CoreNodeIndexRecord>>>,
+  ) -> Self {
+    self.inner.node_index_records = node_index_records.clone();
+    self.node_index_records = node_index_records;
+    self
+  }
+
+  pub fn new(
+    cfg: JSXTransformerConfig,
+    comments: Option<C>,
+    mode: TransformMode,
+    source_map: Option<Lrc<SourceMap>>,
+  ) -> Self {
+    let inner = CoreJSXTransformer::new(cfg.into(), comments, mode.into(), source_map);
     Self {
-      inner: CoreJSXTransformer::new(cfg.into(), comments, mode.into()),
+      node_index_records: inner.node_index_records.clone(),
+      inner,
     }
   }
 }
