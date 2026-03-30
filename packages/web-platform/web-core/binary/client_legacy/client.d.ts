@@ -21,7 +21,7 @@ export class MainThreadWasmContext {
     add_cross_thread_event(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: string | null): void;
     add_dataset(unique_id: number, key: any, value: any): void;
     add_run_worklet_event(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: any | null): void;
-    common_event_handler(event: any, bubble_unique_id_path: Uint32Array, event_name: string): void;
+    common_event_handler(event: any, bubble_unique_id_path: Uint32Array, event_name: string, is_bubble: boolean): void;
     create_element_common(parent_component_unique_id: number, dom: HTMLElement, css_id?: number | null, component_id?: string | null): number;
     dispatch_event_by_path(bubble_unique_id_path: Uint32Array, event_name: string, is_capture: boolean, serialized_event: any): boolean;
     get_component_id(unique_id: number): string | undefined;
@@ -199,7 +199,7 @@ export interface InitOutput {
     readonly mainthreadwasmcontext_add_cross_thread_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
     readonly mainthreadwasmcontext_add_dataset: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly mainthreadwasmcontext_add_run_worklet_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
-    readonly mainthreadwasmcontext_common_event_handler: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly mainthreadwasmcontext_common_event_handler: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
     readonly mainthreadwasmcontext_create_element_common: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
     readonly mainthreadwasmcontext_dispatch_event_by_path: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
     readonly mainthreadwasmcontext_get_component_id: (a: number, b: number, c: number) => void;
