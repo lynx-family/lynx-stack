@@ -279,10 +279,15 @@ impl MainThreadWasmContext {
     event: JsValue,
     bubble_unique_id_path: Vec<usize>,
     event_name: &str,
+    is_bubble: bool,
   ) {
     let caught = self.dispatch_event_by_path(&bubble_unique_id_path, event_name, true, &event);
     if !caught {
-      self.dispatch_event_by_path(&bubble_unique_id_path, event_name, false, &event);
+      if is_bubble {
+        self.dispatch_event_by_path(&bubble_unique_id_path, event_name, false, &event);
+      } else if let Some(target_id) = bubble_unique_id_path.first() {
+        self.dispatch_event_by_path(&[*target_id], event_name, false, &event);
+      }
     }
   }
 }
