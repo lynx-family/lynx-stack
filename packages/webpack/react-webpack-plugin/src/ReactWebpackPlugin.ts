@@ -414,11 +414,12 @@ class ReactWebpackPlugin {
               compilation,
               args.entryNames,
             );
+            const nodeIndexAssetName = path.posix.format({
+              dir: args.intermediate,
+              base: NODE_INDEX_ASSET_NAME,
+            });
             compilation.emitAsset(
-              path.posix.format({
-                dir: args.intermediate,
-                base: NODE_INDEX_ASSET_NAME,
-              }),
+              nodeIndexAssetName,
               new RawSource(
                 JSON.stringify(
                   createNodeIndexMapAsset(
@@ -430,6 +431,7 @@ class ReactWebpackPlugin {
                 ),
               ),
             );
+            args.intermediateAssets.push(nodeIndexAssetName);
           }
 
           return args;

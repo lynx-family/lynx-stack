@@ -51,7 +51,7 @@ export class WebEncodePlugin {
           name: WebEncodePlugin.name,
           stage: WebEncodePlugin.BEFORE_ENCODE_HOOK_STAGE,
         }, (encodeOptions) => {
-          const { encodeData } = encodeOptions;
+          const { encodeData, intermediateAssets } = encodeOptions;
 
           const [name, content] = last(Object.entries(encodeData.manifest))!;
 
@@ -61,6 +61,7 @@ export class WebEncodePlugin {
               encodeData.lepusCode.root,
               ...encodeData.lepusCode.chunks,
               ...encodeData.css.chunks,
+              ...intermediateAssets.map((assetName) => ({ name: assetName })),
             ]
               .filter(asset => asset !== undefined)
               .forEach(asset => inlinedAssets.add(asset.name));

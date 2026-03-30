@@ -24,12 +24,23 @@ module.exports = {
       compiler.outputPath,
       '.rspeedy/main/node-index-map.json',
     );
-    if (!fs.existsSync(mainNodeIndexPath)) {
-      throw new Error(`Node index asset should exist: ${mainNodeIndexPath}`);
+    if (fs.existsSync(mainNodeIndexPath)) {
+      throw new Error(
+        `Node index asset should be cleaned after encode: ${mainNodeIndexPath}`,
+      );
     }
 
+    const capturedMainNodeIndexPath = path.join(
+      compiler.outputPath,
+      '.rspeedy/main/captured-node-index-map.json',
+    );
+    if (!fs.existsSync(capturedMainNodeIndexPath)) {
+      throw new Error(
+        `Captured node index asset should exist: ${capturedMainNodeIndexPath}`,
+      );
+    }
     const mainNodeIndex = JSON.parse(
-      fs.readFileSync(mainNodeIndexPath, 'utf8'),
+      fs.readFileSync(capturedMainNodeIndexPath, 'utf8'),
     );
     if (mainNodeIndex.version !== 1) {
       throw new Error('Main node index asset should expose version 1');
@@ -61,12 +72,19 @@ module.exports = {
     const asyncNodeIndexFile = asyncEntries.find(entry =>
       entry.endsWith('node-index-map.json')
     );
-    if (!asyncNodeIndexFile) {
-      throw new Error('Async node index asset should exist');
+    if (asyncNodeIndexFile) {
+      throw new Error('Async node index asset should be cleaned after encode');
+    }
+
+    const capturedAsyncNodeIndexFile = asyncEntries.find(entry =>
+      entry.endsWith('captured-node-index-map.json')
+    );
+    if (!capturedAsyncNodeIndexFile) {
+      throw new Error('Captured async node index asset should exist');
     }
 
     const asyncNodeIndex = JSON.parse(
-      fs.readFileSync(path.join(asyncRoot, asyncNodeIndexFile), 'utf8'),
+      fs.readFileSync(path.join(asyncRoot, capturedAsyncNodeIndexFile), 'utf8'),
     );
     if (asyncNodeIndex.version !== 1) {
       throw new Error('Async node index asset should expose version 1');

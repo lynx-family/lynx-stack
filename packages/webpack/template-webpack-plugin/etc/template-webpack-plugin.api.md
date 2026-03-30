@@ -126,6 +126,7 @@ export interface TemplateHooks {
         filenameTemplate: string;
         entryNames: string[];
         intermediate: string;
+        intermediateAssets: string[];
     }>;
     // @alpha
     encode: AsyncSeriesBailHook<{
