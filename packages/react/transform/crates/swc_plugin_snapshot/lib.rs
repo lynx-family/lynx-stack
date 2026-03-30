@@ -1045,6 +1045,8 @@ pub struct JSXTransformerConfig {
   /// @internal
   pub target: TransformTarget,
   /// @internal
+  pub enable_node_index: bool,
+  /// @internal
   pub is_dynamic_component: Option<bool>,
 }
 
@@ -1056,6 +1058,7 @@ impl Default for JSXTransformerConfig {
       jsx_import_source: Some("@lynx-js/react".into()),
       filename: Default::default(),
       target: TransformTarget::LEPUS,
+      enable_node_index: false,
       is_dynamic_component: Some(false),
     }
   }

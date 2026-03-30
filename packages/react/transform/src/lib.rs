@@ -441,16 +441,21 @@ fn transform_react_lynx_inner(
     );
 
     let snapshot_plugin = Optional::new(
-      visit_mut_pass(
-        JSXTransformer::new(
-          snapshot_plugin_config,
+      visit_mut_pass({
+        let snapshot_plugin = JSXTransformer::new(
+          snapshot_plugin_config.clone(),
           Some(&comments),
           options.mode.unwrap_or(TransformMode::Production),
           Some(cm.clone()),
         )
-        .with_content_hash(content_hash.clone())
-        .with_node_index_records(node_index_records.clone()),
-      ),
+        .with_content_hash(content_hash.clone());
+
+        if snapshot_plugin_config.enable_node_index {
+          snapshot_plugin.with_node_index_records(node_index_records.clone())
+        } else {
+          snapshot_plugin
+        }
+      }),
       enabled,
     );
 
