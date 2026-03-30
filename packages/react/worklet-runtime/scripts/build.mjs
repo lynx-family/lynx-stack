@@ -1,20 +1,18 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { execFile } from 'node:child_process';
+import { exec } from 'node:child_process';
 import { copyFile, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
-const execFileAsync = promisify(execFile);
+const execAsync = promisify(exec);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageDir = path.resolve(__dirname, '..');
 const runtimeDir = path.resolve(packageDir, '../runtime');
 const runtimeBuildDir = path.resolve(runtimeDir, 'lib/worklet-runtime');
 const workletRuntimeLibDir = path.resolve(packageDir, 'lib');
-const pnpmCmd = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
-
 async function rewriteCopiedSourceMaps(dir) {
   const entries = await readdir(dir);
 
@@ -60,7 +58,7 @@ async function copyDirectory(sourceDir, targetDir) {
   }));
 }
 
-await execFileAsync(pnpmCmd, ['run', 'build:worklet-runtime'], {
+await execAsync('pnpm run build:worklet-runtime', {
   cwd: runtimeDir,
   env: {
     ...process.env,
@@ -73,7 +71,7 @@ await mkdir(packageDir, { recursive: true });
 await copyDirectory(runtimeBuildDir, workletRuntimeLibDir);
 await rewriteCopiedSourceMaps(workletRuntimeLibDir);
 
-await execFileAsync(pnpmCmd, ['exec', 'rslib', 'build'], {
+await execAsync('pnpm exec rslib build', {
   cwd: packageDir,
   env: {
     ...process.env,
