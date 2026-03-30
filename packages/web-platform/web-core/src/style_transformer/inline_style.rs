@@ -190,6 +190,19 @@ mod tests {
   }
 
   #[test]
+  fn transform_color_with_css_var() {
+    let source = "color: var(--color)";
+    let result = transform_inline_style_string(source, &TransformerConfig::default());
+    assert!(result.contains("color:var(--color)"));
+  }
+  #[test]
+  fn transform_color_with_css_var_and_fallback() {
+    let source = "color: var(--color, blue)";
+    let result = transform_inline_style_string(source, &TransformerConfig::default());
+    assert!(result.contains("color:var(--color, blue)"));
+  }
+
+  #[test]
   fn flex_1() {
     let source = "flex:1;";
     let result = transform_inline_style_string(source, &TransformerConfig::default());
