@@ -172,6 +172,74 @@ test.describe('web core tests', () => {
     expect(fail).toBe(false);
   });
 
+  test('__QueryComponent without processEvalResult', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+
+    await page.evaluate(() => {
+      delete (globalThis as any).runtime.processEvalResult;
+    });
+
+    const evalResult = await page.evaluate(async () => {
+      return new Promise((resolve) => {
+        globalThis.addEventListener('unhandledrejection', (e) => {
+          resolve({ error: e.reason?.message ?? String(e.reason) });
+        });
+        globalThis.runtime.__QueryComponent(
+          '/resources/mock-component.json',
+          (res: any) => {
+            resolve(res);
+          },
+        );
+      });
+    });
+
+    expect(evalResult).toMatchObject({
+      code: 0,
+    });
+    expect((evalResult as any).data.url).toBe('/resources/mock-component.json');
+    expect((evalResult as any).data.evalResult).toEqual({
+      mockResult: 'MOCKED_EVAL_RESULT',
+    });
+  });
+
+  test('__QueryComponent with processEvalResult', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+
+    await page.evaluate(() => {
+      (globalThis as any).runtime.processEvalResult = (
+        exports: any,
+        url: string,
+      ) => {
+        return 'OVERRIDDEN_MOCKED_EVAL_RESULT';
+      };
+    });
+
+    const evalResult = await page.evaluate(async () => {
+      return new Promise((resolve) => {
+        globalThis.addEventListener('unhandledrejection', (e) => {
+          resolve({ error: e.reason?.message ?? String(e.reason) });
+        });
+        globalThis.runtime.__QueryComponent(
+          '/resources/mock-component.json',
+          (res: any) => {
+            resolve(res);
+          },
+        );
+      });
+    });
+
+    expect(evalResult).toMatchObject({
+      code: 0,
+    });
+    expect((evalResult as any).data.evalResult).toBe(
+      'OVERRIDDEN_MOCKED_EVAL_RESULT',
+    );
+  });
+
   test('api-enableJSDataProcessor disables processData', async ({ page, browserName }) => {
     test.skip(browserName === 'firefox');
     await goto(page, 'web-core.enable-js-data-processor.json');

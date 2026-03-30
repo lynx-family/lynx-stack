@@ -249,7 +249,7 @@ export class LynxViewInstance implements AsyncDisposable {
         lepusRootChunkExport = this.mainThreadGlobalThis.processEvalResult?.(
           lepusRootChunkExport,
           url,
-        );
+        ) ?? lepusRootChunkExport;
         return lepusRootChunkExport;
       });
     this.#queryComponentCache.set(url, promise);
