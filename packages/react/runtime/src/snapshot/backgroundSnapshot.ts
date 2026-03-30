@@ -282,9 +282,6 @@ export class BackgroundSnapshotInstance {
     let node = this.__firstChild;
     while (node) {
       nodes.push(node);
-      if (node === this.__lastChild) {
-        break;
-      }
       node = node.__nextSibling;
     }
     return nodes;
