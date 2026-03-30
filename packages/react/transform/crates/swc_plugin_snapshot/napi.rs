@@ -28,7 +28,7 @@ pub struct JSXTransformerConfig {
   #[napi(ts_type = "'LEPUS' | 'JS' | 'MIXED'")]
   pub target: TransformTarget,
   /// @internal
-  pub enable_node_index: bool,
+  pub enable_node_index: Option<bool>,
   /// @internal
   pub is_dynamic_component: Option<bool>,
 }
@@ -76,7 +76,7 @@ impl Default for JSXTransformerConfig {
       jsx_import_source: Some("@lynx-js/react".into()),
       filename: Default::default(),
       target: TransformTarget::LEPUS,
-      enable_node_index: false,
+      enable_node_index: Some(false),
       is_dynamic_component: Some(false),
     }
   }
@@ -90,7 +90,7 @@ impl From<JSXTransformerConfig> for CoreJSXTransformerConfig {
       jsx_import_source: val.jsx_import_source,
       filename: val.filename,
       target: val.target.into(),
-      enable_node_index: val.enable_node_index,
+      enable_node_index: val.enable_node_index.unwrap_or(false),
       is_dynamic_component: val.is_dynamic_component,
     }
   }
@@ -104,7 +104,7 @@ impl From<CoreJSXTransformerConfig> for JSXTransformerConfig {
       jsx_import_source: val.jsx_import_source,
       filename: val.filename,
       target: val.target.into(),
-      enable_node_index: val.enable_node_index,
+      enable_node_index: Some(val.enable_node_index),
       is_dynamic_component: val.is_dynamic_component,
     }
   }

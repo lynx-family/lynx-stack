@@ -4,23 +4,47 @@
 
 ```ts
 
-import { AddComponentElementConfig } from '@lynx-js/react-transform';
-import { CompatVisitorConfig } from '@lynx-js/react-transform';
-import { DefineDceVisitorConfig } from '@lynx-js/react-transform';
-import { ExtractStrConfig } from '@lynx-js/react-transform';
 import { LAYERS } from '@lynx-js/react-webpack-plugin';
 import type { LynxTemplatePlugin as LynxTemplatePlugin_2 } from '@lynx-js/template-webpack-plugin';
 import type { RsbuildPlugin } from '@rsbuild/core';
-import { ShakeVisitorConfig } from '@lynx-js/react-transform';
 import type { TemplateHooks } from '@lynx-js/template-webpack-plugin';
 
-export { AddComponentElementConfig }
+// @public
+export interface AddComponentElementConfig {
+    compilerOnly: boolean
+}
 
-export { CompatVisitorConfig }
+// @public
+export interface CompatVisitorConfig {
+    addComponentElement: boolean | AddComponentElementConfig
+    additionalComponentAttributes: Array<string>
+    componentsPkg: Array<string>
+    // Warning: (ae-forgotten-export) The symbol "DarkModeConfig" needs to be exported by the entry point index.d.ts
+    //
+    // @deprecated (undocumented)
+    darkMode?: boolean | DarkModeConfig
+    disableDeprecatedWarning: boolean
+    newRuntimePkg: string
+    oldRuntimePkg: Array<string>
+    // @deprecated
+    removeComponentAttrRegex?: string
+    // @deprecated
+    simplifyCtorLikeReactLynx2: boolean
+    // @internal (undocumented)
+    target: 'LEPUS' | 'JS' | 'MIXED'
+}
 
-export { DefineDceVisitorConfig }
+// @public
+export interface DefineDceVisitorConfig {
+    define: Record<string, string>
+}
 
-export { ExtractStrConfig }
+// @public
+export interface ExtractStrConfig {
+    // @internal (undocumented)
+    extractedStrArr?: Array<string>
+    strLength: number
+}
 
 export { LAYERS }
 
@@ -67,7 +91,12 @@ export interface PluginReactLynxOptions {
     targetSdkVersion?: string;
 }
 
-export { ShakeVisitorConfig }
+// @public
+export interface ShakeVisitorConfig {
+    pkgName: Array<string>
+    removeCallParams: Array<string>
+    retainProp: Array<string>
+}
 
 export { TemplateHooks }
 

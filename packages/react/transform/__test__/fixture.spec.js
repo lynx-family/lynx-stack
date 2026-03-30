@@ -73,6 +73,14 @@ export class A extends Component {
       filename: TEST_FILENAMES.shake,
       sourcemap: false,
       cssScope: false,
+      snapshot: {
+        preserveJsx: false,
+        runtimePkg: '@lynx-js/react',
+        jsxImportSource: '@lynx-js/react',
+        filename: TEST_FILENAMES.shake,
+        target: 'MIXED',
+        enableNodeIndex: true,
+      },
       jsx,
       directiveDCE: false,
       defineDCE: false,
@@ -212,9 +220,7 @@ describe('jsx', () => {
       const __snapshot_37835_04d8c_2 = "__snapshot_37835_04d8c_2";
       ReactLynx.snapshotCreatorMap[__snapshot_37835_04d8c_2] = (__snapshot_37835_04d8c_2)=>ReactLynx.createSnapshot(__snapshot_37835_04d8c_2, function() {
               const pageId = ReactLynx.__pageId;
-              const el = __CreateElement("list-item", pageId, {
-                  nodeIndex: 4032331665
-              });
+              const el = __CreateElement("list-item", pageId);
               return [
                   el
               ];
@@ -252,17 +258,6 @@ describe('jsx', () => {
     `);
     expect(result.errors).toEqual([]);
     expect(result.warnings).toEqual([]);
-    expect(result.nodeIndexRecords).toMatchInlineSnapshot(`
-      [
-        {
-          "columnNumber": 19,
-          "filename": "/path/to/list-item.js",
-          "lineNumber": 1,
-          "nodeIndex": 4032331665,
-          "snapshotId": "__snapshot_37835_04d8c_2",
-        },
-      ]
-    `);
   });
 });
 
@@ -451,9 +446,7 @@ Component, View
         const __snapshot_5cbee_89b7f_1 = "__snapshot_5cbee_89b7f_1";
         ReactLynx.snapshotCreatorMap[__snapshot_5cbee_89b7f_1] = (__snapshot_5cbee_89b7f_1)=>ReactLynx.createSnapshot(__snapshot_5cbee_89b7f_1, function() {
                 const pageId = ReactLynx.__pageId;
-                const el = __CreateView(pageId, {
-                    nodeIndex: 807059096
-                });
+                const el = __CreateView(pageId);
                 return [
                     el
                 ];
@@ -474,17 +467,6 @@ Component, View
             ...s
         }));
         "
-      `);
-      expect(result.nodeIndexRecords).toMatchInlineSnapshot(`
-        [
-          {
-            "columnNumber": 1,
-            "filename": "/path/to/add-component-element.js",
-            "lineNumber": 1,
-            "nodeIndex": 807059096,
-            "snapshotId": "__snapshot_5cbee_89b7f_1",
-          },
-        ]
       `);
     }
   });
@@ -977,9 +959,7 @@ export default class App extends Component {
       const __snapshot_c00a0_b7447_1 = "__snapshot_c00a0_b7447_1";
       ReactLynx.snapshotCreatorMap[__snapshot_c00a0_b7447_1] = (__snapshot_c00a0_b7447_1)=>ReactLynx.createSnapshot(__snapshot_c00a0_b7447_1, function() {
               const pageId = ReactLynx.__pageId;
-              const el = __CreateView(pageId, {
-                  nodeIndex: 1957983667
-              });
+              const el = __CreateView(pageId);
               return [
                   el
               ];
@@ -996,17 +976,6 @@ export default class App extends Component {
           });
       }
       "
-    `);
-    expect(result.nodeIndexRecords).toMatchInlineSnapshot(`
-      [
-        {
-          "columnNumber": 12,
-          "filename": "/path/to/simplify-ctor.js",
-          "lineNumber": 16,
-          "nodeIndex": 1957983667,
-          "snapshotId": "__snapshot_c00a0_b7447_1",
-        },
-      ]
     `);
   });
 });
@@ -1509,9 +1478,7 @@ class X extends Component {
       const __snapshot_f9adb_e2935_1 = "__snapshot_f9adb_e2935_1";
       ReactLynx.snapshotCreatorMap[__snapshot_f9adb_e2935_1] = (__snapshot_f9adb_e2935_1)=>ReactLynx.createSnapshot(__snapshot_f9adb_e2935_1, function() {
               const pageId = ReactLynx.__pageId;
-              const el = __CreateView(pageId, {
-                  nodeIndex: 422691188
-              });
+              const el = __CreateView(pageId);
               return [
                   el
               ];
@@ -1524,17 +1491,6 @@ class X extends Component {
       }
       /*#__PURE__*/ _jsx(X, {});
       "
-    `);
-    expect(result.nodeIndexRecords).toMatchInlineSnapshot(`
-      [
-        {
-          "columnNumber": 12,
-          "filename": "/path/to/define-dce-shake.js",
-          "lineNumber": 15,
-          "nodeIndex": 422691188,
-          "snapshotId": "__snapshot_f9adb_e2935_1",
-        },
-      ]
     `);
   });
 });

@@ -22,7 +22,7 @@ export interface JsxTransformerConfig {
   /** @internal */
   target: 'LEPUS' | 'JS' | 'MIXED';
   /** @internal */
-  enableNodeIndex: boolean;
+  enableNodeIndex?: boolean;
   /** @internal */
   isDynamicComponent?: boolean;
 }

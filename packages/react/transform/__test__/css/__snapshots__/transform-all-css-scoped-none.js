@@ -5,9 +5,7 @@ import bar from './bar.css';
 const __snapshot_2d408_test_1 = "__snapshot_2d408_test_1";
 ReactLynx.snapshotCreatorMap[__snapshot_2d408_test_1] = (__snapshot_2d408_test_1)=>ReactLynx.createSnapshot(__snapshot_2d408_test_1, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId, {
-            nodeIndex: 3740137978
-        });
+        const el = __CreateView(pageId);
         return [
             el
         ];

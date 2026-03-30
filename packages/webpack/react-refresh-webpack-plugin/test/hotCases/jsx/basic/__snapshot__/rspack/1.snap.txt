@@ -6,7 +6,7 @@
 ## Asset Files
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 3649
+- Update: main.LAST_HASH.hot-update.js, size: 3555
 
 ## Manifest
 
@@ -50,12 +50,8 @@ __webpack_require__.d(__webpack_exports__, {
 const __snapshot_4953c_4d7b7_1 = "__snapshot_4953c_4d7b7_1";
 (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .snapshotCreatorMap */.snapshotCreatorMap)[__snapshot_4953c_4d7b7_1] = (__snapshot_4953c_4d7b7_1)=>(__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .createSnapshot */.createSnapshot)(__snapshot_4953c_4d7b7_1, function() {
         const pageId = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__pageId */.__pageId);
-        const el = __CreateView(pageId, {
-            nodeIndex: 2498608091
-        });
-        const el1 = __CreateText(pageId, {
-            nodeIndex: 1428165588
-        });
+        const el = __CreateView(pageId);
+        const el1 = __CreateText(pageId);
         __AppendElement(el, el1);
         const el2 = __CreateRawText("content 2");
         __AppendElement(el1, el2);

@@ -3,9 +3,7 @@ import * as ReactLynx from "@lynx-js/react";
 const __snapshot_da39a_4683e_1 = "__snapshot_da39a_4683e_1";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_4683e_1] = (__snapshot_da39a_4683e_1)=>ReactLynx.createSnapshot(__snapshot_da39a_4683e_1, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId, {
-            nodeIndex: 3990597635
-        });
+        const el = __CreateView(pageId);
         return [
             el
         ];
@@ -14,9 +12,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_4683e_1] = (__snapshot_da39a_4683e
 const __snapshot_da39a_4683e_2 = "__snapshot_da39a_4683e_2";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_4683e_2] = (__snapshot_da39a_4683e_2)=>ReactLynx.createSnapshot(__snapshot_da39a_4683e_2, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateText(pageId, {
-            nodeIndex: 2475601367
-        });
+        const el = __CreateText(pageId);
         const el1 = __CreateRawText("foo");
         __AppendElement(el, el1);
         return [
@@ -28,9 +24,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_4683e_2] = (__snapshot_da39a_4683e
 const __snapshot_da39a_4683e_3 = "__snapshot_da39a_4683e_3";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_4683e_3] = (__snapshot_da39a_4683e_3)=>ReactLynx.createSnapshot(__snapshot_da39a_4683e_3, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId, {
-            nodeIndex: 349429739
-        });
+        const el = __CreateView(pageId);
         return [
             el
         ];
@@ -43,9 +37,7 @@ function Foo() {
 const __snapshot_da39a_4683e_4 = "__snapshot_da39a_4683e_4";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_4683e_4] = (__snapshot_da39a_4683e_4)=>ReactLynx.createSnapshot(__snapshot_da39a_4683e_4, function() {
         const pageId = ReactLynx.__pageId;
-        const el = __CreateView(pageId, {
-            nodeIndex: 2836731083
-        });
+        const el = __CreateView(pageId);
         return [
             el
         ];

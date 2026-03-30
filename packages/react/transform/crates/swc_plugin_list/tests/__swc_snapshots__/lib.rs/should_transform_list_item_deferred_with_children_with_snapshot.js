@@ -2,9 +2,7 @@ import * as ReactLynxRuntimeComponents from '@lynx-js/react/runtime-components';
 const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
 require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_1, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
-        const el = __CreateElement("list-item", pageId, {
-            nodeIndex: 2943021278
-        });
+        const el = __CreateElement("list-item", pageId);
         __SetInlineStyles(el, "color: red; width: 100rpx;");
         __SetClasses(el, "x");
         return [
@@ -17,9 +15,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] =
 const __snapshot_da39a_test_2 = "__snapshot_da39a_test_2";
 require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_2, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
-        const el = __CreateView(pageId, {
-            nodeIndex: 3339745380
-        });
+        const el = __CreateView(pageId);
         return [
             el
         ];
@@ -27,9 +23,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_2] =
 const __snapshot_da39a_test_3 = "__snapshot_da39a_test_3";
 require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_3] = (__snapshot_da39a_test_3)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_3, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
-        const el = __CreateText(pageId, {
-            nodeIndex: 1682727629
-        });
+        const el = __CreateText(pageId);
         return [
             el
         ];
@@ -37,9 +31,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_3] =
 const __snapshot_da39a_test_4 = "__snapshot_da39a_test_4";
 require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_4] = (__snapshot_da39a_test_4)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_4, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
-        const el = __CreateImage(pageId, {
-            nodeIndex: 4098041616
-        });
+        const el = __CreateImage(pageId);
         return [
             el
         ];
@@ -57,9 +49,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_4] =
 const __snapshot_da39a_test_5 = "__snapshot_da39a_test_5";
 require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_5] = (__snapshot_da39a_test_5)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_5, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
-        const el = __CreateElement("list-item", pageId, {
-            nodeIndex: 3793009301
-        });
+        const el = __CreateElement("list-item", pageId);
         __SetInlineStyles(el, "color: red; width: 100rpx;");
         __SetClasses(el, "x");
         return [
@@ -72,9 +62,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_5] =
 const __snapshot_da39a_test_6 = "__snapshot_da39a_test_6";
 require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_6] = (__snapshot_da39a_test_6)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_6, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
-        const el = __CreateView(pageId, {
-            nodeIndex: 1502036913
-        });
+        const el = __CreateView(pageId);
         return [
             el
         ];
@@ -88,9 +76,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_6] =
 const __snapshot_da39a_test_7 = "__snapshot_da39a_test_7";
 require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_7] = (__snapshot_da39a_test_7)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_7, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
-        const el = __CreateElement("list-item", pageId, {
-            nodeIndex: 209699714
-        });
+        const el = __CreateElement("list-item", pageId);
         __SetInlineStyles(el, "color: red; width: 100rpx;");
         __SetClasses(el, "x");
         return [

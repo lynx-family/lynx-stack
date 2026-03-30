@@ -272,6 +272,7 @@ where
   dynamic_parts: Vec<DynamicPart>,
   dynamic_part_visitor: &'a mut V,
   key: Option<JSXAttrValue>,
+  enable_node_index: bool,
   node_index_fn: F,
 }
 
@@ -284,6 +285,7 @@ where
     runtime_id: Expr,
     dynamic_part_count: i32,
     dynamic_part_visitor: &'a mut V,
+    enable_node_index: bool,
     node_index_fn: F,
   ) -> Self {
     DynamicPartExtractor {
@@ -299,12 +301,62 @@ where
       dynamic_parts: vec![],
       dynamic_part_visitor,
       key: None,
+      enable_node_index,
       node_index_fn,
     }
   }
 
   fn node_index_expr_from_span(&self, span: Span) -> Expr {
     (self.node_index_fn)(span)
+  }
+
+  fn node_index_config_expr(&self, span: Span) -> Expr {
+    Expr::Object(ObjectLit {
+      span: DUMMY_SP,
+      props: vec![PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
+        key: PropName::Ident(IdentName::new("nodeIndex".into(), DUMMY_SP)),
+        value: Box::new(self.node_index_expr_from_span(span)),
+      })))],
+    })
+  }
+
+  fn static_stmt_from_create_call(
+    &self,
+    element: Ident,
+    callee: &str,
+    mut args: Vec<Expr>,
+    span: Span,
+  ) -> Stmt {
+    if self.enable_node_index {
+      args.push(self.node_index_config_expr(span));
+    }
+
+    Stmt::Decl(Decl::Var(Box::new(VarDecl {
+      ctxt: SyntaxContext::default(),
+      span: DUMMY_SP,
+      kind: VarDeclKind::Const,
+      declare: false,
+      decls: vec![VarDeclarator {
+        span: DUMMY_SP,
+        definite: false,
+        name: Pat::Ident(element.into()),
+        init: Some(Box::new(Expr::Call(CallExpr {
+          ctxt: SyntaxContext::default(),
+          span: DUMMY_SP,
+          callee: Callee::Expr(Box::new(Expr::Ident(
+            IdentName::new(callee.into(), DUMMY_SP).into(),
+          ))),
+          args: args
+            .into_iter()
+            .map(|expr| ExprOrSpread {
+              spread: None,
+              expr: Box::new(expr),
+            })
+            .collect(),
+          type_args: None,
+        }))),
+      }],
+    })))
   }
 
   fn static_stmt_from_jsx_element(&mut self, n: &JSXElement, el: Ident) -> Stmt {
@@ -314,43 +366,43 @@ where
       let tag = str.value.to_string_lossy();
       match tag.as_ref() {
         "view" => {
-          static_stmt = quote!(
-            r#"const $element = __CreateView($page_id, { nodeIndex: $node_index })"# as Stmt,
-            element = el.clone(),
-            page_id = self.page_id.clone(),
-            node_index: Expr = self.node_index_expr_from_span(n.opening.span)
+          static_stmt = self.static_stmt_from_create_call(
+            el.clone(),
+            "__CreateView",
+            vec![Expr::Ident(self.page_id.clone())],
+            n.opening.span,
           );
         }
         "scroll-view" => {
-          static_stmt = quote!(
-            r#"const $element = __CreateScrollView($page_id, { nodeIndex: $node_index })"# as Stmt,
-            element = el.clone(),
-            page_id = self.page_id.clone(),
-            node_index: Expr = self.node_index_expr_from_span(n.opening.span)
+          static_stmt = self.static_stmt_from_create_call(
+            el.clone(),
+            "__CreateScrollView",
+            vec![Expr::Ident(self.page_id.clone())],
+            n.opening.span,
           );
         }
         "x-scroll-view" => {
-          static_stmt = quote!(
-            r#"const $element = __CreateScrollView($page_id, { nodeIndex: $node_index })"# as Stmt,
-            element = el.clone(),
-            page_id = self.page_id.clone(),
-            node_index: Expr = self.node_index_expr_from_span(n.opening.span)
+          static_stmt = self.static_stmt_from_create_call(
+            el.clone(),
+            "__CreateScrollView",
+            vec![Expr::Ident(self.page_id.clone())],
+            n.opening.span,
           );
         }
         "image" => {
-          static_stmt = quote!(
-            r#"const $element = __CreateImage($page_id, { nodeIndex: $node_index })"# as Stmt,
-            element = el.clone(),
-            page_id = self.page_id.clone(),
-            node_index: Expr = self.node_index_expr_from_span(n.opening.span)
+          static_stmt = self.static_stmt_from_create_call(
+            el.clone(),
+            "__CreateImage",
+            vec![Expr::Ident(self.page_id.clone())],
+            n.opening.span,
           );
         }
         "text" => {
-          static_stmt = quote!(
-            r#"const $element = __CreateText($page_id, { nodeIndex: $node_index })"# as Stmt,
-            element = el.clone(),
-            page_id = self.page_id.clone(),
-            node_index: Expr = self.node_index_expr_from_span(n.opening.span)
+          static_stmt = self.static_stmt_from_create_call(
+            el.clone(),
+            "__CreateText",
+            vec![Expr::Ident(self.page_id.clone())],
+            n.opening.span,
           );
         }
         "wrapper" => {
@@ -372,20 +424,19 @@ where
           );
         }
         "frame" => {
-          static_stmt = quote!(
-            r#"const $element = __CreateFrame($page_id, { nodeIndex: $node_index })"# as Stmt,
-            element = el.clone(),
-            page_id = self.page_id.clone(),
-            node_index: Expr = self.node_index_expr_from_span(n.opening.span)
+          static_stmt = self.static_stmt_from_create_call(
+            el.clone(),
+            "__CreateFrame",
+            vec![Expr::Ident(self.page_id.clone())],
+            n.opening.span,
           );
         }
         _ => {
-          static_stmt = quote!(
-              r#"const $element = __CreateElement($name, $page_id, { nodeIndex: $node_index })"# as Stmt,
-              element = el.clone(),
-              name: Expr = Expr::Lit(Lit::Str(str)),
-              page_id = self.page_id.clone(),
-              node_index: Expr = self.node_index_expr_from_span(n.opening.span)
+          static_stmt = self.static_stmt_from_create_call(
+            el.clone(),
+            "__CreateElement",
+            vec![Expr::Lit(Lit::Str(str)), Expr::Ident(self.page_id.clone())],
+            n.opening.span,
           );
         }
       };
@@ -1045,6 +1096,7 @@ pub struct JSXTransformerConfig {
   /// @internal
   pub target: TransformTarget,
   /// @internal
+  #[serde(default)]
   pub enable_node_index: bool,
   /// @internal
   pub is_dynamic_component: Option<bool>,
@@ -1280,6 +1332,7 @@ where
       self.runtime_id.clone(),
       wrap_dynamic_part.dynamic_part_count,
       self,
+      self.cfg.enable_node_index,
       node_index_fn,
     );
 
@@ -1707,6 +1760,7 @@ mod tests {
         visit_mut_pass(JSXTransformer::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
+            enable_node_index: true,
             ..Default::default()
           },
           Some(t.comments.clone()),
@@ -1740,6 +1794,7 @@ mod tests {
         visit_mut_pass(JSXTransformer::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
+            enable_node_index: true,
             ..Default::default()
           },
           Some(t.comments.clone()),
@@ -1773,6 +1828,7 @@ mod tests {
         visit_mut_pass(JSXTransformer::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
+            enable_node_index: true,
             ..Default::default()
           },
           Some(t.comments.clone()),

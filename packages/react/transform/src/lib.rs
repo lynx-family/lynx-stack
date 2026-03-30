@@ -450,7 +450,7 @@ fn transform_react_lynx_inner(
         )
         .with_content_hash(content_hash.clone());
 
-        if snapshot_plugin_config.enable_node_index {
+        if snapshot_plugin_config.enable_node_index.unwrap_or(false) {
           snapshot_plugin.with_node_index_records(node_index_records.clone())
         } else {
           snapshot_plugin
