@@ -25,6 +25,7 @@ export const LAYERS: {
 export interface ReactLoaderOptions {
     compat?: CompatVisitorConfig | undefined;
     defineDCE?: DefineDceVisitorConfig | undefined;
+    enableNodeIndex?: boolean | undefined;
     enableRemoveCSSScope?: boolean | undefined;
     engineVersion?: string | undefined;
     inlineSourcesContent?: boolean | undefined;
