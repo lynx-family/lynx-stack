@@ -15,7 +15,8 @@
     "src"
   ],
   "scripts": {
-    "build": "tsc -b tsconfig.worklet-runtime.json",
+    "build": "tsc -b tsconfig.json",
+    "build:worklet-runtime": "tsc -b tsconfig.worklet-runtime.json",
     "test": "vitest run --coverage"
   },
   "devDependencies": {

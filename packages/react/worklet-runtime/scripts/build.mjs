@@ -60,7 +60,7 @@ async function copyDirectory(sourceDir, targetDir) {
   }));
 }
 
-await execFileAsync(pnpmCmd, ['run', 'build'], {
+await execFileAsync(pnpmCmd, ['run', 'build:worklet-runtime'], {
   cwd: runtimeDir,
   env: {
     ...process.env,
