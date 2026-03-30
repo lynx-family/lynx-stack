@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": [
-        "@lynx-js/react-runtime#build"
+        "@lynx-js/react-runtime#build:worklet-runtime"
       ],
       "inputs": [
         "src/**",

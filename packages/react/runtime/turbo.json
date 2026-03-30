@@ -5,11 +5,30 @@
     "build": {
       "dependsOn": [],
       "inputs": [
+        "debug/**",
+        "jsx-dev-runtime/**",
+        "jsx-runtime/**",
+        "lepus/**",
+        "src/**",
+        "types/**",
+        "tsconfig.json",
+        "tsconfig.worklet-runtime.json"
+      ],
+      "outputs": [
+        "lib/**",
+        "tsconfig.tsbuildinfo",
+        "tsconfig.worklet-runtime.tsbuildinfo"
+      ]
+    },
+    "build:worklet-runtime": {
+      "dependsOn": [],
+      "inputs": [
         "src/worklet-runtime/**",
         "tsconfig.worklet-runtime.json"
       ],
       "outputs": [
-        "lib/worklet-runtime/**"
+        "lib/worklet-runtime/**",
+        "tsconfig.worklet-runtime.tsbuildinfo"
       ]
     }
   }
