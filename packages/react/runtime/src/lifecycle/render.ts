@@ -15,10 +15,13 @@ import { __root } from '../root.js';
 import { SnapshotInstance } from '../snapshot/snapshot.js';
 
 function renderMainThread(): void {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+    profileStart('ReactLynx::renderMainThread');
+  }
   let opcodes;
   try {
     if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-      profileStart('ReactLynx::renderMainThread');
+      profileStart('ReactLynx::renderToString');
     }
     opcodes = renderToString(__root.__jsx, undefined);
   } catch (e) {
@@ -47,6 +50,9 @@ function renderMainThread(): void {
   renderOpcodesInto(opcodes, __root as any);
   if (__ENABLE_SSR__) {
     __root.__opcodes = opcodes;
+  }
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+    profileEnd();
   }
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
