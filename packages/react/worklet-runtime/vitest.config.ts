@@ -12,6 +12,7 @@ const config: ViteUserConfig = defineConfig({
         'dist/**',
         'lib/**',
         'rslib.config.ts',
+        'scripts/build.mjs',
         'src/api/lepusQuerySelector.ts',
         'src/api/lynxApi.ts',
         'src/bindings/**',
