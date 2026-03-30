@@ -7,6 +7,7 @@ import { createRequire } from 'module';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
+const vitestEnvFilename = path.basename(__dirname) === 'dist' ? 'vitest.js' : 'vitest.ts';
 
 async function ensurePackagesInstalled() {
   const installer = new VitestPackageInstaller();
@@ -314,7 +315,7 @@ export const createVitestConfig = async (options) => {
       transformReactLynxPlugin(),
     ],
     test: {
-      environment: path.join(__dirname, 'env', 'vitest.ts'),
+      environment: path.join(__dirname, 'env', vitestEnvFilename),
       globals: true,
       setupFiles: [path.join(__dirname, 'vitest-global-setup')],
       alias: [
