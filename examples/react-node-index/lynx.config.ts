@@ -120,7 +120,7 @@ function pluginMockNodeIndexUpload(): RsbuildPlugin {
                     name: 'example:mock-node-index-upload',
                     stage: 1000,
                   },
-                  args => {
+                  async args => {
                     const assetName = path.posix.format({
                       dir: args.intermediate,
                       base: NODE_INDEX_MAP_ASSET,
@@ -144,9 +144,9 @@ function pluginMockNodeIndexUpload(): RsbuildPlugin {
                               ...nodeIndexMap,
                               meta: {
                                 ...(
-                                  typeof nodeIndexMap.meta === 'object'
-                                    && nodeIndexMap.meta !== null
-                                    ? nodeIndexMap.meta as Record<
+                                  typeof nodeIndexMap['meta'] === 'object'
+                                    && nodeIndexMap['meta'] !== null
+                                    ? nodeIndexMap['meta'] as Record<
                                       string,
                                       unknown
                                     >
@@ -162,12 +162,16 @@ function pluginMockNodeIndexUpload(): RsbuildPlugin {
                       );
                     }
 
-                    args.encodeData.compilerOptions = {
-                      ...args.encodeData.compilerOptions,
-                      nodeIndexMapUrl: mockUploadNodeIndexMap(
+                    const nodeIndexMapUrl = await Promise.resolve(
+                      mockUploadNodeIndexMap(
                         args.filenameTemplate,
                         args.intermediate,
                       ),
+                    );
+
+                    args.encodeData.compilerOptions = {
+                      ...args.encodeData.compilerOptions,
+                      nodeIndexMapUrl,
                     };
 
                     return args;
