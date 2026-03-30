@@ -71,9 +71,9 @@ export interface PluginReactLynxOptions {
     enableAccessibilityElement?: boolean;
     enableCSSInheritance?: boolean;
     enableCSSInvalidation?: boolean;
-    enableNodeIndex?: boolean;
     enableCSSSelector?: boolean;
     enableNewGesture?: boolean;
+    enableNodeIndex?: boolean;
     enableRemoveCSSScope?: boolean | undefined;
     enableSSR?: boolean;
     engineVersion?: string;
