@@ -1,0 +1,66 @@
+.Screen {
+  min-height: 100%;
+  padding: 32px 24px;
+  background: linear-gradient(180deg, #0c1222 0%, #172544 100%);
+}
+
+.Hero {
+  margin-bottom: 24px;
+}
+
+.Eyebrow {
+  margin-bottom: 8px;
+  color: #89b4ff;
+  font-size: 24px;
+}
+
+.Title {
+  margin-bottom: 12px;
+  color: #ffffff;
+  font-size: 42px;
+  font-weight: 700;
+}
+
+.Description {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 26px;
+  line-height: 36px;
+}
+
+.Button {
+  margin-bottom: 24px;
+  padding: 20px 24px;
+  border-radius: 999px;
+  background-color: #7ee787;
+}
+
+.ButtonLabel {
+  color: #08210d;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.Hint {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 24px;
+  line-height: 34px;
+}
+
+.Card {
+  padding: 24px;
+  border-radius: 24px;
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.CardTitle {
+  margin-bottom: 12px;
+  color: #ffffff;
+  font-size: 30px;
+  font-weight: 600;
+}
+
+.CardBody {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 24px;
+  line-height: 34px;
+}

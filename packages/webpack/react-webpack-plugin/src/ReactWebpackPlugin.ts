@@ -4,6 +4,7 @@
 
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
+import path from 'node:path';
 
 import type { Chunk, Compilation, Compiler } from '@rspack/core';
 import invariant from 'tiny-invariant';
@@ -16,6 +17,115 @@ import { LAYERS } from './layer.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 
 const require = createRequire(import.meta.url);
+const NODE_INDEX_RECORDS_BUILD_INFO = 'lynxNodeIndexRecords';
+const NODE_INDEX_ASSET_NAME = 'node-index-map.json';
+
+interface NodeIndexRecord {
+  nodeIndex: number;
+  filename: string;
+  lineNumber: number;
+  columnNumber: number;
+  snapshotId: string;
+}
+
+interface NodeIndexMapAsset {
+  version: 1;
+  sources: string[];
+  mappings: [number, number, number, number][];
+}
+
+interface ModuleWithNodeIndexBuildInfo {
+  identifier?: () => string;
+  buildInfo?: Record<string, unknown>;
+  modules?: Iterable<ModuleWithNodeIndexBuildInfo>;
+}
+
+function collectNodeIndexRecordsFromModule(
+  module: ModuleWithNodeIndexBuildInfo,
+): NodeIndexRecord[] {
+  const records = module.buildInfo?.[NODE_INDEX_RECORDS_BUILD_INFO];
+  if (Array.isArray(records)) {
+    return records as NodeIndexRecord[];
+  }
+
+  if (module.modules) {
+    return Array.from(module.modules)
+      .flatMap(nestedModule => collectNodeIndexRecordsFromModule(nestedModule));
+  }
+
+  return [];
+}
+
+function compareNodeIndexRecord(
+  a: NodeIndexRecord,
+  b: NodeIndexRecord,
+): number {
+  return a.filename.localeCompare(b.filename)
+    || a.lineNumber - b.lineNumber
+    || a.columnNumber - b.columnNumber
+    || a.nodeIndex - b.nodeIndex;
+}
+
+function normalizeNodeIndexSource(
+  projectRoot: string,
+  filename: string,
+): string {
+  const normalizedFilename = filename.replaceAll(
+    path.win32.sep,
+    path.posix.sep,
+  );
+
+  if (normalizedFilename.length === 0) {
+    return normalizedFilename;
+  }
+
+  if (path.isAbsolute(filename)) {
+    return path.posix.normalize(
+      path.relative(projectRoot, filename).replaceAll(
+        path.win32.sep,
+        path.posix.sep,
+      ),
+    );
+  }
+
+  return path.posix.normalize(normalizedFilename);
+}
+
+function createNodeIndexMapAsset(
+  projectRoot: string,
+  records: NodeIndexRecord[],
+): NodeIndexMapAsset {
+  const sources: string[] = [];
+  const sourceIndexes = new Map<string, number>();
+  const mappings: [number, number, number, number][] = [];
+
+  for (const record of records) {
+    if (!record.filename) {
+      continue;
+    }
+
+    const source = normalizeNodeIndexSource(projectRoot, record.filename);
+    const sourceIndex = sourceIndexes.get(source) ?? sources.length;
+
+    if (!sourceIndexes.has(source)) {
+      sourceIndexes.set(source, sourceIndex);
+      sources.push(source);
+    }
+
+    mappings.push([
+      record.nodeIndex,
+      sourceIndex,
+      record.lineNumber,
+      record.columnNumber,
+    ]);
+  }
+
+  return {
+    version: 1,
+    sources,
+    mappings,
+  };
+}
 
 /**
  * The options for ReactWebpackPlugin
@@ -23,6 +133,13 @@ const require = createRequire(import.meta.url);
  * @public
  */
 interface ReactWebpackPluginOptions {
+  /**
+   * Whether to emit node-index-map assets for tasm encode.
+   *
+   * @defaultValue `false`
+   */
+  enableNodeIndex?: boolean;
+
   /**
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat.disableCreateSelectorQueryIncompatibleWarning}
    */
@@ -140,6 +257,7 @@ class ReactWebpackPlugin {
    */
   static defaultOptions: Readonly<Required<ReactWebpackPluginOptions>> = Object
     .freeze<Required<ReactWebpackPluginOptions>>({
+      enableNodeIndex: false,
       disableCreateSelectorQueryIncompatibleWarning: false,
       firstScreenSyncTiming: 'immediately',
       globalPropsMode: 'reactive',
@@ -290,6 +408,30 @@ class ReactWebpackPlugin {
               },
             });
           }
+
+          if (options.enableNodeIndex) {
+            const nodeIndexRecords = this.#collectNodeIndexRecords(
+              compilation,
+              args.entryNames,
+            );
+            compilation.emitAsset(
+              path.posix.format({
+                dir: args.intermediate,
+                base: NODE_INDEX_ASSET_NAME,
+              }),
+              new RawSource(
+                JSON.stringify(
+                  createNodeIndexMapAsset(
+                    compilation.compiler.context,
+                    nodeIndexRecords,
+                  ),
+                  null,
+                  2,
+                ),
+              ),
+            );
+          }
+
           return args;
         },
       );
@@ -388,6 +530,45 @@ class ReactWebpackPlugin {
         'lynx:main-thread': true,
       },
     );
+  }
+
+  #collectNodeIndexRecords(
+    compilation: Compilation,
+    entryNames: string[],
+  ): NodeIndexRecord[] {
+    const moduleSet = new Set<ModuleWithNodeIndexBuildInfo>();
+
+    for (const entryName of entryNames) {
+      const chunkGroup = compilation.namedChunkGroups.get(entryName)
+        ?? compilation.entrypoints.get(entryName);
+      if (!chunkGroup) {
+        continue;
+      }
+
+      for (const chunk of chunkGroup.chunks) {
+        for (
+          const module of compilation.chunkGraph.getChunkModulesIterable(chunk)
+        ) {
+          moduleSet.add(module as ModuleWithNodeIndexBuildInfo);
+        }
+      }
+    }
+
+    const deduped = new Map<string, NodeIndexRecord>();
+    for (const module of moduleSet) {
+      for (const record of collectNodeIndexRecordsFromModule(module)) {
+        const key = [
+          record.nodeIndex,
+          record.filename,
+          record.lineNumber,
+          record.columnNumber,
+          record.snapshotId,
+        ].join(':');
+        deduped.set(key, record);
+      }
+    }
+
+    return Array.from(deduped.values()).sort(compareNodeIndexRecord);
   }
 }
 

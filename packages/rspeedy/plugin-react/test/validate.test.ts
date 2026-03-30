@@ -171,6 +171,19 @@ describe('Validation', () => {
       `)
   })
 
+  test('enableNodeIndex', () => {
+    expect(validateConfig({ enableNodeIndex: true })).toStrictEqual({
+      enableNodeIndex: true,
+    })
+    expect(() => validateConfig({ enableNodeIndex: null }))
+      .toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid config on pluginReactLynx: \`$input.enableNodeIndex\`.
+          - Expect to be (boolean | undefined)
+          - Got: null
+        ]
+      `)
+  })
+
   test('enableCSSSelector', () => {
     expect(validateConfig({ enableCSSSelector: true })).toStrictEqual({
       enableCSSSelector: true,

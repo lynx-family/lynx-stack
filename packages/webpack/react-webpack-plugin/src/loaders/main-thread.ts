@@ -8,6 +8,8 @@ import type { LoaderDefinitionFunction } from '@rspack/core';
 import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
+const NODE_INDEX_RECORDS_BUILD_INFO = 'lynxNodeIndexRecords';
+
 const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
   content,
   sourceMap,
@@ -86,6 +88,18 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
       // Webpack or legacy Rspack
       this.emitWarning(new Error(warning.text));
     }
+  }
+
+  const currentModule = (this as typeof this & {
+    _module?: {
+      buildInfo?: Record<string, unknown>;
+    };
+  })._module;
+  const buildInfo = currentModule?.buildInfo as
+    | Record<string, unknown>
+    | undefined;
+  if (buildInfo) {
+    buildInfo[NODE_INDEX_RECORDS_BUILD_INFO] = result.nodeIndexRecords;
   }
 
   this.callback(

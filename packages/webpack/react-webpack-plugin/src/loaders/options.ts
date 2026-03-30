@@ -43,6 +43,11 @@ export interface ReactLoaderOptions {
   jsx?: JsxTransformerConfig | undefined;
 
   /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableNodeIndex}
+   */
+  enableNodeIndex?: boolean | undefined;
+
+  /**
    * Enable the Fast Refresh for ReactLynx.
    */
   refresh?: boolean | undefined;
@@ -97,6 +102,7 @@ function getCommonOptions(
   const {
     compat,
     enableRemoveCSSScope,
+    enableNodeIndex,
     inlineSourcesContent,
     isDynamicComponent,
     engineVersion,
@@ -166,6 +172,7 @@ function getCommonOptions(
         // This allows serializing the updated runtime code to Lepus using `Function.prototype.toString`.
         ? 'MIXED'
         : 'JS',
+      enableNodeIndex: enableNodeIndex ?? false,
       runtimePkg: RUNTIME_PKG,
       filename,
       isDynamicComponent: isDynamicComponent ?? false,

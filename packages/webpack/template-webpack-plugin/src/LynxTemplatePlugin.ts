@@ -97,6 +97,7 @@ export interface TemplateHooks {
     encodeData: EncodeRawData;
     filenameTemplate: string;
     entryNames: string[];
+    intermediate: string;
   }>;
 
   /**
@@ -840,6 +841,7 @@ class LynxTemplatePluginImpl {
       encodeData: encodeRawData,
       filenameTemplate,
       entryNames,
+      intermediate,
     });
 
     const { lepusCode, css } = encodeData;

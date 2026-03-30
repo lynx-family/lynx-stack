@@ -14,6 +14,7 @@ export function applyLoaders(
   const {
     compat,
     enableRemoveCSSScope,
+    enableNodeIndex,
     shake,
     defineDCE,
     engineVersion,
@@ -92,6 +93,7 @@ export function applyLoaders(
         .options({
           compat,
           enableRemoveCSSScope,
+          enableNodeIndex,
           inlineSourcesContent,
           isDynamicComponent: experimental_isLazyBundle,
           engineVersion,

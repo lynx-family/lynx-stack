@@ -5,7 +5,9 @@ import {
 
 import { createConfig } from '../../../create-react-config.js';
 
-const config = createConfig(undefined, {
+const config = createConfig({
+  enableNodeIndex: true,
+}, {
   mainThreadChunks: [
     'main__main-thread.js',
     './lazy.jsx-react__main-thread.js',

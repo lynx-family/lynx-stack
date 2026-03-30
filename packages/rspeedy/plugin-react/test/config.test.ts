@@ -15,6 +15,7 @@ import type {
 } from '@lynx-js/template-webpack-plugin'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
+import { getLoaderOptions } from './getLoaderOptions.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 
 describe('Config', () => {
@@ -483,6 +484,83 @@ describe('Config', () => {
       }
     `)
   })
+
+  test('enableNodeIndex defaults to false', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const { ReactWebpackPlugin } = await import('@lynx-js/react-webpack-plugin')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx(),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    expect(
+      getLoaderOptions<Record<string, unknown>>(
+        config!,
+        ReactWebpackPlugin.loaders.MAIN_THREAD,
+      ),
+    ).toMatchObject({
+      enableNodeIndex: false,
+    })
+
+    const reactWebpackPlugin = config?.plugins?.find((
+      plugin,
+    ): plugin is ReactWebpackPlugin =>
+      plugin?.constructor.name === 'ReactWebpackPlugin'
+    )
+
+    expect(reactWebpackPlugin).toBeDefined()
+    // @ts-expect-error private field
+    expect(reactWebpackPlugin?.options).toMatchObject({
+      enableNodeIndex: false,
+    })
+  })
+
+  test('enableNodeIndex can be enabled explicitly', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const { ReactWebpackPlugin } = await import('@lynx-js/react-webpack-plugin')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx({
+            enableNodeIndex: true,
+          }),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    expect(
+      getLoaderOptions<Record<string, unknown>>(
+        config!,
+        ReactWebpackPlugin.loaders.MAIN_THREAD,
+      ),
+    ).toMatchObject({
+      enableNodeIndex: true,
+    })
+
+    const reactWebpackPlugin = config?.plugins?.find((
+      plugin,
+    ): plugin is ReactWebpackPlugin =>
+      plugin?.constructor.name === 'ReactWebpackPlugin'
+    )
+
+    expect(reactWebpackPlugin).toBeDefined()
+    // @ts-expect-error private field
+    expect(reactWebpackPlugin?.options).toMatchObject({
+      enableNodeIndex: true,
+    })
+  })
+
   test('not sideEffects: false when enableRemoveCSSScope: false', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 

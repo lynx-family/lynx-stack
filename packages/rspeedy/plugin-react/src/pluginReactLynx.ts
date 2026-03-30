@@ -44,6 +44,13 @@ import { validateConfig } from './validate.js'
  */
 export interface PluginReactLynxOptions {
   /**
+   * Enable node index generation and node-index-map asset emission.
+   *
+   * @defaultValue `false`
+   */
+  enableNodeIndex?: boolean
+
+  /**
    * The `compat` option controls compatibilities with ReactLynx2.0.
    *
    * @remarks
@@ -328,6 +335,7 @@ export function pluginReactLynx(
     enableAccessibilityElement: false,
     enableCSSInheritance: false,
     enableCSSInvalidation: true,
+    enableNodeIndex: false,
     enableCSSSelector: true,
     enableNewGesture: false,
     enableRemoveCSSScope: true,
