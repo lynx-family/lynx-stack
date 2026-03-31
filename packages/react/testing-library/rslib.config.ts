@@ -22,10 +22,12 @@ export default defineConfig({
       output: {
         externals: [
           /^@lynx-js\/react/,
+          '@lynx-js/testing-environment',
           /^\.\.\/\.\.\/runtime\/lib/,
           /^preact/,
           /^vitest/,
           '@rstest/core',
+          '@rstest/adapter-rsbuild',
           '@rsbuild/core',
           '@lynx-js/rspeedy',
         ],
