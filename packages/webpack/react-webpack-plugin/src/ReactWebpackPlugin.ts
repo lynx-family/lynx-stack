@@ -18,7 +18,7 @@ import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResul
 
 const require = createRequire(import.meta.url);
 const UI_SOURCE_MAP_RECORDS_BUILD_INFO = 'lynxUiSourceMapRecords';
-const UI_SOURCE_MAP_ASSET_NAME = 'ui-source-map.json';
+const DEBUG_METADATA_ASSET_NAME = 'debug-metadata.json';
 
 interface UiSourceMapRecord {
   uiSourceMap: number;
@@ -28,11 +28,21 @@ interface UiSourceMapRecord {
   snapshotId: string;
 }
 
-interface UiSourceMapAsset {
+interface UiSourceMapData {
   version: 1;
   sources: string[];
   mappings: [number, number, number][];
   uiMaps: number[];
+}
+
+interface DebugMetadataAsset {
+  uiSourceMap: UiSourceMapData;
+  meta: {
+    templateDebug: {
+      templateUrl: string;
+      templateDebugUrl: string;
+    };
+  };
 }
 
 interface ModuleWithUiSourceMapBuildInfo {
@@ -94,10 +104,33 @@ function normalizeUiSourceMapSource(
   return path.posix.normalize(normalizedFilename);
 }
 
-function createUiSourceMapAsset(
+function resolveTemplateUrl(
+  filenameTemplate: string,
+  publicPath: Compiler['options']['output']['publicPath'],
+): string {
+  const normalizedTemplate = filenameTemplate.replaceAll(
+    path.win32.sep,
+    path.posix.sep,
+  );
+
+  if (
+    typeof publicPath === 'string'
+    && publicPath !== 'auto'
+    && publicPath !== '/'
+  ) {
+    return new URL(normalizedTemplate, publicPath).toString();
+  }
+
+  return normalizedTemplate;
+}
+
+function createDebugMetadataAsset(
   projectRoot: string,
   records: UiSourceMapRecord[],
-): UiSourceMapAsset {
+  filenameTemplate: string,
+  publicPath: Compiler['options']['output']['publicPath'],
+  templateDebugUrl: string,
+): DebugMetadataAsset {
   const sources: string[] = [];
   const sourceIndexes = new Map<string, number>();
   const mappings: [number, number, number][] = [];
@@ -125,10 +158,18 @@ function createUiSourceMapAsset(
   }
 
   return {
-    version: 1,
-    sources,
-    mappings,
-    uiMaps,
+    uiSourceMap: {
+      version: 1,
+      sources,
+      mappings,
+      uiMaps,
+    },
+    meta: {
+      templateDebug: {
+        templateUrl: resolveTemplateUrl(filenameTemplate, publicPath),
+        templateDebugUrl,
+      },
+    },
   };
 }
 
@@ -139,7 +180,7 @@ function createUiSourceMapAsset(
  */
 interface ReactWebpackPluginOptions {
   /**
-   * Whether to emit ui-source-map assets for tasm encode.
+   * Whether to emit debug-metadata assets for tasm encode.
    *
    * @defaultValue `false`
    */
@@ -419,24 +460,30 @@ class ReactWebpackPlugin {
               compilation,
               args.entryNames,
             );
-            const uiSourceMapAssetName = path.posix.format({
+            const debugMetadataAssetName = path.posix.format({
               dir: args.intermediate,
-              base: UI_SOURCE_MAP_ASSET_NAME,
+              base: DEBUG_METADATA_ASSET_NAME,
             });
             compilation.emitAsset(
-              uiSourceMapAssetName,
+              debugMetadataAssetName,
               new RawSource(
                 JSON.stringify(
-                  createUiSourceMapAsset(
+                  createDebugMetadataAsset(
                     compilation.compiler.context,
                     uiSourceMapRecords,
+                    args.filenameTemplate,
+                    compiler.options.output.publicPath,
+                    String(
+                      args.encodeData.compilerOptions['templateDebugUrl']
+                        ?? '',
+                    ),
                   ),
                   null,
                   2,
                 ),
               ),
             );
-            args.intermediateAssets.push(uiSourceMapAssetName);
+            args.intermediateAssets.push(debugMetadataAssetName);
           }
 
           return args;

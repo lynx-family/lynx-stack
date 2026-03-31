@@ -8,8 +8,8 @@ import { defineConfig } from '@lynx-js/rspeedy';
 import type { RsbuildPlugin, Rspack } from '@lynx-js/rspeedy';
 import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 
-const UI_SOURCE_MAP_ASSET = 'ui-source-map.json';
-const MOCK_UPLOAD_BASE_URL = 'https://mock-ui-source-map-upload.lynx.dev/';
+const DEBUG_METADATA_ASSET = 'debug-metadata.json';
+const MOCK_UPLOAD_BASE_URL = 'https://mock-debug-metadata-upload.lynx.dev/';
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 interface GitMetadata {
@@ -63,7 +63,7 @@ function getGitMetadata(): GitMetadata {
   };
 }
 
-function mockUploadUiSourceMap(
+function mockUploadDebugMetadata(
   filenameTemplate: string,
   intermediate: string,
 ): string {
@@ -77,7 +77,7 @@ function mockUploadUiSourceMap(
   );
   const assetPath = path.posix.join(
     normalizedIntermediate.replace(/^\.\//, ''),
-    UI_SOURCE_MAP_ASSET,
+    DEBUG_METADATA_ASSET,
   );
 
   return new URL(
@@ -86,9 +86,9 @@ function mockUploadUiSourceMap(
   ).toString();
 }
 
-function pluginMockUiSourceMapUpload(): RsbuildPlugin {
+function pluginMockDebugMetadataUpload(): RsbuildPlugin {
   return {
-    name: 'example:mock-ui-source-map-upload',
+    name: 'example:mock-debug-metadata-upload',
     setup(api) {
       const git = getGitMetadata();
 
@@ -99,14 +99,14 @@ function pluginMockUiSourceMapUpload(): RsbuildPlugin {
 
         if (!exposed) {
           throw new Error(
-            '[example:mock-ui-source-map-upload] Missing exposed LynxTemplatePlugin',
+            '[example:mock-debug-metadata-upload] Missing exposed LynxTemplatePlugin',
           );
         }
 
-        chain.plugin('example:mock-ui-source-map-upload').use({
+        chain.plugin('example:mock-debug-metadata-upload').use({
           apply(compiler) {
             compiler.hooks.thisCompilation.tap(
-              'example:mock-ui-source-map-upload',
+              'example:mock-debug-metadata-upload',
               compilation => {
                 const hooks = exposed.LynxTemplatePlugin
                   .getLynxTemplatePluginHooks(
@@ -117,41 +117,40 @@ function pluginMockUiSourceMapUpload(): RsbuildPlugin {
 
                 hooks.beforeEncode.tapPromise(
                   {
-                    name: 'example:mock-ui-source-map-upload',
+                    name: 'example:mock-debug-metadata-upload',
                     stage: 1000,
                   },
                   async args => {
                     const assetName = path.posix.format({
                       dir: args.intermediate,
-                      base: UI_SOURCE_MAP_ASSET,
+                      base: DEBUG_METADATA_ASSET,
                     });
-                    const uiSourceMapAsset = compilation.getAsset(assetName);
+                    const debugMetadataAsset = compilation.getAsset(assetName);
 
-                    if (uiSourceMapAsset) {
-                      const currentContent = uiSourceMapAsset.source
+                    if (debugMetadataAsset) {
+                      const currentContent = debugMetadataAsset.source
                         .source()
                         .toString();
-                      const uiSourceMap = JSON.parse(currentContent) as Record<
+                      const debugMetadata = JSON.parse(
+                        currentContent,
+                      ) as Record<
                         string,
                         unknown
                       >;
+                      const currentMeta =
+                        typeof debugMetadata['meta'] === 'object'
+                          && debugMetadata['meta'] !== null
+                          ? debugMetadata['meta'] as Record<string, unknown>
+                          : {};
 
                       compilation.updateAsset(
                         assetName,
                         new compiler.webpack.sources.RawSource(
                           JSON.stringify(
                             {
-                              ...uiSourceMap,
+                              ...debugMetadata,
                               meta: {
-                                ...(
-                                  typeof uiSourceMap['meta'] === 'object'
-                                    && uiSourceMap['meta'] !== null
-                                    ? uiSourceMap['meta'] as Record<
-                                      string,
-                                      unknown
-                                    >
-                                    : {}
-                                ),
+                                ...currentMeta,
                                 git,
                               },
                             },
@@ -162,8 +161,8 @@ function pluginMockUiSourceMapUpload(): RsbuildPlugin {
                       );
                     }
 
-                    const uiSourceMapUrl = await Promise.resolve(
-                      mockUploadUiSourceMap(
+                    const debugMetadataUrl = await Promise.resolve(
+                      mockUploadDebugMetadata(
                         args.filenameTemplate,
                         args.intermediate,
                       ),
@@ -171,7 +170,7 @@ function pluginMockUiSourceMapUpload(): RsbuildPlugin {
 
                     args.encodeData.sourceContent.config = {
                       ...args.encodeData.sourceContent.config,
-                      uiSourceMapUrl,
+                      debugMetadataUrl,
                     };
 
                     return args;
@@ -201,7 +200,7 @@ export default defineConfig({
     pluginReactLynx({
       enableUiSourceMap: true,
     }),
-    pluginMockUiSourceMapUpload(),
+    pluginMockDebugMetadataUpload(),
     pluginQRCode({
       schema(url) {
         return `${url}?fullscreen=true`;

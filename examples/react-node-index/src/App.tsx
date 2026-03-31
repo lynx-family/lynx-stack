@@ -11,7 +11,7 @@ export function App() {
     <view className='Screen'>
       <view className='Hero'>
         <text className='Eyebrow'>ReactLynx UI Source Map</text>
-        <text className='Title'>Emit uiSourceMapUrl from beforeEncode</text>
+        <text className='Title'>Emit debugMetadataUrl from beforeEncode</text>
         <text className='Description'>
           This example turns on UI source map emission explicitly and injects a
           mocked uploaded URL into tasm encode data.
@@ -32,7 +32,7 @@ export function App() {
       <Suspense
         fallback={
           <text className='Hint'>
-            Uploading ui-source-map and loading chunk...
+            Uploading debug metadata and loading chunk...
           </text>
         }
       >
@@ -41,7 +41,7 @@ export function App() {
           : (
             <text className='Hint'>
               Tap the button to load a lazy component and generate a second
-              ui-source-map URL.
+              debug metadata URL.
             </text>
           )}
       </Suspense>

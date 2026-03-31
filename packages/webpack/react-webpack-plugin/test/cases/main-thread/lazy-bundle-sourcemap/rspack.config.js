@@ -46,12 +46,12 @@ export default {
               },
               () => {
                 compilation.getAssets()
-                  .filter(asset => asset.name.endsWith('ui-source-map.json'))
+                  .filter(asset => asset.name.endsWith('debug-metadata.json'))
                   .forEach((asset) => {
                     compilation.emitAsset(
                       asset.name.replace(
-                        'ui-source-map.json',
-                        'captured-ui-source-map.json',
+                        'debug-metadata.json',
+                        'captured-debug-metadata.json',
                       ),
                       asset.source,
                     );

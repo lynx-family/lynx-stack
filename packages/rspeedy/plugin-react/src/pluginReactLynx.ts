@@ -44,7 +44,7 @@ import { validateConfig } from './validate.js'
  */
 export interface PluginReactLynxOptions {
   /**
-   * Enable UI source map generation and ui-source-map asset emission.
+   * Enable UI source map generation and debug-metadata asset emission.
    *
    * @defaultValue `false`
    */
@@ -305,6 +305,47 @@ export interface PluginReactLynxOptions {
     }
 }
 
+type PluginReactLynxRuntimeOptions =
+  & PluginReactLynxOptions
+  & {
+    enableNodeIndex?: boolean
+  }
+
+function normalizePluginReactLynxOptions(
+  userOptions?: PluginReactLynxRuntimeOptions,
+): PluginReactLynxOptions | undefined {
+  if (!userOptions) {
+    return undefined
+  }
+
+  const enableUiSourceMap = userOptions.enableUiSourceMap
+    ?? userOptions.enableNodeIndex
+
+  return {
+    ...userOptions,
+    ...(enableUiSourceMap === undefined
+      ? {}
+      : { enableUiSourceMap }),
+  }
+}
+
+function toLegacyValidationOptions(
+  userOptions?: PluginReactLynxRuntimeOptions,
+): PluginReactLynxRuntimeOptions | undefined {
+  if (!userOptions) {
+    return undefined
+  }
+
+  const { enableUiSourceMap, ...rest } = userOptions
+
+  return enableUiSourceMap === undefined
+    ? rest
+    : {
+      ...rest,
+      enableNodeIndex: enableUiSourceMap,
+    }
+}
+
 /**
  * Create a rsbuild plugin for ReactLynx.
  *
@@ -322,10 +363,22 @@ export interface PluginReactLynxOptions {
 export function pluginReactLynx(
   userOptions?: PluginReactLynxOptions,
 ): RsbuildPlugin[] {
-  validateConfig(userOptions)
+  const runtimeOptions = normalizePluginReactLynxOptions(
+    userOptions as PluginReactLynxRuntimeOptions | undefined,
+  )
 
-  const engineVersion = userOptions?.engineVersion
-    ?? userOptions?.targetSdkVersion ?? '3.2'
+  try {
+    validateConfig(runtimeOptions)
+  } catch {
+    validateConfig(
+      toLegacyValidationOptions(
+        userOptions as PluginReactLynxRuntimeOptions | undefined,
+      ) as PluginReactLynxOptions | undefined,
+    )
+  }
+
+  const engineVersion = runtimeOptions?.engineVersion
+    ?? runtimeOptions?.targetSdkVersion ?? '3.2'
 
   const defaultOptions: Required<PluginReactLynxOptions> = {
     compat: undefined,
@@ -355,7 +408,7 @@ export function pluginReactLynx(
     experimental_isLazyBundle: false,
     optimizeBundleSize: false,
   }
-  const resolvedOptions = Object.assign(defaultOptions, userOptions, {
+  const resolvedOptions = Object.assign(defaultOptions, runtimeOptions, {
     // Use `engineVersion` to override the default values
     targetSdkVersion: engineVersion,
     engineVersion,
