@@ -44,7 +44,7 @@ describe('React - Include', () => {
           "not": /\\[\\\\\\\\/\\]node_modules\\[\\\\\\\\/\\]/,
         },
         /\\\\\\.\\(\\?:ts\\|tsx\\|jsx\\|mts\\|cts\\)\\$/,
-        "<WORKSPACE>/packages/react",
+        "<ROOT>/packages/react",
       ]
     `)
   })

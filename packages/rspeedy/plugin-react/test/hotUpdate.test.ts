@@ -34,7 +34,7 @@ describe('hot update', () => {
         "main__main-thread": {
           "filename": ".rspeedy/main/main-thread.js",
           "import": [
-            "<WORKSPACE>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
+            "<ROOT>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
             "./src/index.js",
           ],
           "layer": "react:main-thread",
@@ -72,7 +72,7 @@ describe('hot update', () => {
         "main__main-thread": {
           "filename": ".rspeedy/main/main-thread.js",
           "import": [
-            "<WORKSPACE>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
+            "<ROOT>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
             "./src/index.js",
           ],
           "layer": "react:main-thread",
