@@ -79,7 +79,7 @@ export class A extends Component {
         jsxImportSource: '@lynx-js/react',
         filename: TEST_FILENAMES.shake,
         target: 'MIXED',
-        enableNodeIndex: true,
+        enableUiSourceMap: true,
       },
       jsx,
       directiveDCE: false,
@@ -112,14 +112,14 @@ export class A extends Component {
       }
       "
     `);
-    expect(result.nodeIndexRecords).toMatchInlineSnapshot(`
+    expect(result.uiSourceMapRecords).toMatchInlineSnapshot(`
       [
         {
           "columnNumber": 14,
           "filename": "/path/to/shake.js",
           "lineNumber": 13,
-          "nodeIndex": 1903991381,
           "snapshotId": "__snapshot_5d88a_test_1",
+          "uiSourceMap": 1903991381,
         },
       ]
     `);
@@ -146,14 +146,14 @@ export class A extends Component {
       }
       "
     `);
-    expect(result2.nodeIndexRecords).toMatchInlineSnapshot(`
+    expect(result2.uiSourceMapRecords).toMatchInlineSnapshot(`
       [
         {
           "columnNumber": 14,
           "filename": "/path/to/shake.js",
           "lineNumber": 13,
-          "nodeIndex": 1903991381,
           "snapshotId": "__snapshot_5d88a_test_1",
+          "uiSourceMap": 1903991381,
         },
       ]
     `);
@@ -188,7 +188,7 @@ describe('jsx', () => {
       });
       ",
         "errors": [],
-        "nodeIndexRecords": [],
+        "uiSourceMapRecords": [],
         "warnings": [],
       }
     `);
@@ -280,7 +280,7 @@ describe('errors and warnings', () => {
             "text": "Expected '</', got '<eof>'",
           },
         ],
-        "nodeIndexRecords": [],
+        "uiSourceMapRecords": [],
         "warnings": [],
       }
     `);
@@ -319,7 +319,7 @@ Component, View
       Component, View;
       ",
         "errors": [],
-        "nodeIndexRecords": [],
+        "uiSourceMapRecords": [],
         "warnings": [
           {
             "location": {

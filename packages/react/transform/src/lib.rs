@@ -59,8 +59,8 @@ use swc_plugin_inject::napi::{InjectVisitor, InjectVisitorConfig};
 use swc_plugin_refresh::{RefreshVisitor, RefreshVisitorConfig};
 use swc_plugin_shake::napi::{ShakeVisitor, ShakeVisitorConfig};
 use swc_plugin_snapshot::{
-  napi::{JSXTransformer, JSXTransformerConfig, NodeIndexRecord as SnapshotNodeIndexRecord},
-  NodeIndexRecord as CoreNodeIndexRecord,
+  napi::{JSXTransformer, JSXTransformerConfig, UISourceMapRecord as SnapshotUISourceMapRecord},
+  UISourceMapRecord as CoreUISourceMapRecord,
 };
 use swc_plugin_worklet::napi::{WorkletVisitor, WorkletVisitorConfig};
 use swc_plugins_shared::{
@@ -253,7 +253,7 @@ pub struct TransformNodiffOutput {
   pub errors: Vec<esbuild::PartialMessage>,
   // #[napi(ts_type = "Array<import('esbuild').PartialMessage>")]
   pub warnings: Vec<esbuild::PartialMessage>,
-  pub node_index_records: Vec<SnapshotNodeIndexRecord>,
+  pub ui_source_map_records: Vec<SnapshotUISourceMapRecord>,
 }
 
 /// A multi emitter that forwards to multiple emitters.
@@ -275,10 +275,10 @@ impl Emitter for MultiEmitter {
   }
 }
 
-fn clone_node_index_records(
-  node_index_records: &Rc<RefCell<Vec<CoreNodeIndexRecord>>>,
-) -> Vec<SnapshotNodeIndexRecord> {
-  node_index_records
+fn clone_ui_source_map_records(
+  ui_source_map_records: &Rc<RefCell<Vec<CoreUISourceMapRecord>>>,
+) -> Vec<SnapshotUISourceMapRecord> {
+  ui_source_map_records
     .borrow()
     .iter()
     .cloned()
@@ -311,7 +311,8 @@ fn transform_react_lynx_inner(
   let emitter = Box::new(MultiEmitter::new(vec![esbuild_emitter]));
   let handler = Handler::with_emitter(true, false, emitter);
 
-  let node_index_records: Rc<RefCell<Vec<CoreNodeIndexRecord>>> = Rc::new(RefCell::new(vec![]));
+  let ui_source_map_records: Rc<RefCell<Vec<CoreUISourceMapRecord>>> =
+    Rc::new(RefCell::new(vec![]));
 
   let result = GLOBALS.set(&Default::default(), || {
     let program = c.parse_js(
@@ -330,7 +331,7 @@ fn transform_react_lynx_inner(
           map: None,
           errors: errors.read().unwrap().clone(),
           warnings: warnings.read().unwrap().clone(),
-          node_index_records: clone_node_index_records(&node_index_records),
+          ui_source_map_records: clone_ui_source_map_records(&ui_source_map_records),
         };
       }
     };
@@ -450,8 +451,8 @@ fn transform_react_lynx_inner(
         )
         .with_content_hash(content_hash.clone());
 
-        if snapshot_plugin_config.enable_node_index.unwrap_or(false) {
-          snapshot_plugin.with_node_index_records(node_index_records.clone())
+        if snapshot_plugin_config.enable_ui_source_map.unwrap_or(false) {
+          snapshot_plugin.with_ui_source_map_records(ui_source_map_records.clone())
         } else {
           snapshot_plugin
         }
@@ -656,7 +657,7 @@ fn transform_react_lynx_inner(
         map: result.map,
         errors: vec![],
         warnings: vec![],
-        node_index_records: clone_node_index_records(&node_index_records),
+        ui_source_map_records: clone_ui_source_map_records(&ui_source_map_records),
       },
       Err(_) => {
         return TransformNodiffOutput {
@@ -664,7 +665,7 @@ fn transform_react_lynx_inner(
           map: None,
           errors: errors.read().unwrap().clone(),
           warnings: warnings.read().unwrap().clone(),
-          node_index_records: clone_node_index_records(&node_index_records),
+          ui_source_map_records: clone_ui_source_map_records(&ui_source_map_records),
         };
       }
     }
@@ -675,7 +676,7 @@ fn transform_react_lynx_inner(
     map: result.map,
     errors: errors.read().unwrap().clone(),
     warnings: warnings.read().unwrap().clone(),
-    node_index_records: clone_node_index_records(&node_index_records),
+    ui_source_map_records: clone_ui_source_map_records(&ui_source_map_records),
   };
 
   r

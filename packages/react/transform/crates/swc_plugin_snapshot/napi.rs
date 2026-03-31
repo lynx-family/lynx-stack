@@ -9,7 +9,7 @@ use swc_plugins_shared::{target_napi::TransformTarget, transform_mode_napi::Tran
 
 use crate::{
   JSXTransformer as CoreJSXTransformer, JSXTransformerConfig as CoreJSXTransformerConfig,
-  NodeIndexRecord as CoreNodeIndexRecord,
+  UISourceMapRecord as CoreUISourceMapRecord,
 };
 
 /// @internal
@@ -28,7 +28,7 @@ pub struct JSXTransformerConfig {
   #[napi(ts_type = "'LEPUS' | 'JS' | 'MIXED'")]
   pub target: TransformTarget,
   /// @internal
-  pub enable_node_index: Option<bool>,
+  pub enable_ui_source_map: Option<bool>,
   /// @internal
   pub is_dynamic_component: Option<bool>,
 }
@@ -36,18 +36,18 @@ pub struct JSXTransformerConfig {
 /// @internal
 #[napi(object)]
 #[derive(Clone, Debug)]
-pub struct NodeIndexRecord {
-  pub node_index: u32,
+pub struct UISourceMapRecord {
+  pub ui_source_map: u32,
   pub filename: String,
   pub line_number: u32,
   pub column_number: u32,
   pub snapshot_id: String,
 }
 
-impl From<NodeIndexRecord> for CoreNodeIndexRecord {
-  fn from(val: NodeIndexRecord) -> Self {
+impl From<UISourceMapRecord> for CoreUISourceMapRecord {
+  fn from(val: UISourceMapRecord) -> Self {
     Self {
-      node_index: val.node_index,
+      ui_source_map: val.ui_source_map,
       filename: val.filename,
       line_number: val.line_number,
       column_number: val.column_number,
@@ -56,10 +56,10 @@ impl From<NodeIndexRecord> for CoreNodeIndexRecord {
   }
 }
 
-impl From<CoreNodeIndexRecord> for NodeIndexRecord {
-  fn from(val: CoreNodeIndexRecord) -> Self {
+impl From<CoreUISourceMapRecord> for UISourceMapRecord {
+  fn from(val: CoreUISourceMapRecord) -> Self {
     Self {
-      node_index: val.node_index,
+      ui_source_map: val.ui_source_map,
       filename: val.filename,
       line_number: val.line_number,
       column_number: val.column_number,
@@ -76,7 +76,7 @@ impl Default for JSXTransformerConfig {
       jsx_import_source: Some("@lynx-js/react".into()),
       filename: Default::default(),
       target: TransformTarget::LEPUS,
-      enable_node_index: Some(false),
+      enable_ui_source_map: Some(false),
       is_dynamic_component: Some(false),
     }
   }
@@ -90,7 +90,7 @@ impl From<JSXTransformerConfig> for CoreJSXTransformerConfig {
       jsx_import_source: val.jsx_import_source,
       filename: val.filename,
       target: val.target.into(),
-      enable_node_index: val.enable_node_index.unwrap_or(false),
+      enable_ui_source_map: val.enable_ui_source_map.unwrap_or(false),
       is_dynamic_component: val.is_dynamic_component,
     }
   }
@@ -104,7 +104,7 @@ impl From<CoreJSXTransformerConfig> for JSXTransformerConfig {
       jsx_import_source: val.jsx_import_source,
       filename: val.filename,
       target: val.target.into(),
-      enable_node_index: Some(val.enable_node_index),
+      enable_ui_source_map: Some(val.enable_ui_source_map),
       is_dynamic_component: val.is_dynamic_component,
     }
   }
@@ -115,7 +115,7 @@ where
   C: Comments + Clone,
 {
   inner: CoreJSXTransformer<C>,
-  pub node_index_records: Rc<RefCell<Vec<CoreNodeIndexRecord>>>,
+  pub ui_source_map_records: Rc<RefCell<Vec<CoreUISourceMapRecord>>>,
 }
 
 impl<C> JSXTransformer<C>
@@ -127,12 +127,12 @@ where
     self
   }
 
-  pub fn with_node_index_records(
+  pub fn with_ui_source_map_records(
     mut self,
-    node_index_records: Rc<RefCell<Vec<CoreNodeIndexRecord>>>,
+    ui_source_map_records: Rc<RefCell<Vec<CoreUISourceMapRecord>>>,
   ) -> Self {
-    self.inner.node_index_records = node_index_records.clone();
-    self.node_index_records = node_index_records;
+    self.inner.ui_source_map_records = ui_source_map_records.clone();
+    self.ui_source_map_records = ui_source_map_records;
     self
   }
 
@@ -144,7 +144,7 @@ where
   ) -> Self {
     let inner = CoreJSXTransformer::new(cfg.into(), comments, mode.into(), source_map);
     Self {
-      node_index_records: inner.node_index_records.clone(),
+      ui_source_map_records: inner.ui_source_map_records.clone(),
       inner,
     }
   }

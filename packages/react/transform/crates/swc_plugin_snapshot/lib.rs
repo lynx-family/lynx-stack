@@ -107,8 +107,8 @@ static NO_FLATTEN_ATTRIBUTES: Lazy<HashSet<String>> = Lazy::new(|| {
 });
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct NodeIndexRecord {
-  pub node_index: u32,
+pub struct UISourceMapRecord {
+  pub ui_source_map: u32,
   pub filename: String,
   pub line_number: u32,
   pub column_number: u32,
@@ -272,7 +272,7 @@ where
   dynamic_parts: Vec<DynamicPart>,
   dynamic_part_visitor: &'a mut V,
   key: Option<JSXAttrValue>,
-  enable_node_index: bool,
+  enable_ui_source_map: bool,
   node_index_fn: F,
 }
 
@@ -285,7 +285,7 @@ where
     runtime_id: Expr,
     dynamic_part_count: i32,
     dynamic_part_visitor: &'a mut V,
-    enable_node_index: bool,
+    enable_ui_source_map: bool,
     node_index_fn: F,
   ) -> Self {
     DynamicPartExtractor {
@@ -301,7 +301,7 @@ where
       dynamic_parts: vec![],
       dynamic_part_visitor,
       key: None,
-      enable_node_index,
+      enable_ui_source_map,
       node_index_fn,
     }
   }
@@ -327,7 +327,7 @@ where
     mut args: Vec<Expr>,
     span: Span,
   ) -> Stmt {
-    if self.enable_node_index {
+    if self.enable_ui_source_map {
       args.push(self.node_index_config_expr(span));
     }
 
@@ -1097,7 +1097,7 @@ pub struct JSXTransformerConfig {
   pub target: TransformTarget,
   /// @internal
   #[serde(default)]
-  pub enable_node_index: bool,
+  pub enable_ui_source_map: bool,
   /// @internal
   pub is_dynamic_component: Option<bool>,
 }
@@ -1110,7 +1110,7 @@ impl Default for JSXTransformerConfig {
       jsx_import_source: Some("@lynx-js/react".into()),
       filename: Default::default(),
       target: TransformTarget::LEPUS,
-      enable_node_index: false,
+      enable_ui_source_map: false,
       is_dynamic_component: Some(false),
     }
   }
@@ -1132,7 +1132,7 @@ where
   current_snapshot_defs: Vec<ModuleItem>,
   current_snapshot_id: Option<Ident>,
   comments: Option<C>,
-  pub node_index_records: Rc<RefCell<Vec<NodeIndexRecord>>>,
+  pub ui_source_map_records: Rc<RefCell<Vec<UISourceMapRecord>>>,
   pub source_map: Option<Lrc<SourceMap>>,
 }
 
@@ -1171,7 +1171,7 @@ where
       current_snapshot_defs: vec![],
       current_snapshot_id: None,
       comments,
-      node_index_records: Rc::new(RefCell::new(vec![])),
+      ui_source_map_records: Rc::new(RefCell::new(vec![])),
       source_map,
     }
   }
@@ -1295,15 +1295,15 @@ where
     let runtime_id = self.runtime_id.clone();
     let filename_hash = self.filename_hash.clone();
     let content_hash = self.content_hash.clone();
-    let node_index_records = self.node_index_records.clone();
+    let ui_source_map_records = self.ui_source_map_records.clone();
     let filename = self.cfg.filename.clone();
     let snapshot_uid_for_captured = snapshot_uid.clone();
     let source_map = self.source_map.clone();
     let node_index_fn = move |span: Span| {
-      let node_index =
+      let ui_source_map =
         calc_hash_number(&format!("{}:{}:{}", filename_hash, content_hash, span.lo.0));
 
-      // record node index
+      // record ui source map entry
       let mut line_number = 0;
       let mut column_number = 0;
       if span.lo.0 > 0 {
@@ -1313,8 +1313,8 @@ where
           column_number = loc.col.0 as u32 + 1;
         }
       }
-      node_index_records.borrow_mut().push(NodeIndexRecord {
-        node_index,
+      ui_source_map_records.borrow_mut().push(UISourceMapRecord {
+        ui_source_map,
         filename: filename.clone(),
         line_number,
         column_number,
@@ -1323,7 +1323,7 @@ where
 
       Expr::Lit(Lit::Num(Number {
         span: DUMMY_SP,
-        value: node_index as f64,
+        value: ui_source_map as f64,
         raw: None,
       }))
     };
@@ -1332,7 +1332,7 @@ where
       self.runtime_id.clone(),
       wrap_dynamic_part.dynamic_part_count,
       self,
-      self.cfg.enable_node_index,
+      self.cfg.enable_ui_source_map,
       node_index_fn,
     );
 
@@ -1760,7 +1760,7 @@ mod tests {
         visit_mut_pass(JSXTransformer::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
-            enable_node_index: true,
+            enable_ui_source_map: true,
             ..Default::default()
           },
           Some(t.comments.clone()),
@@ -1794,7 +1794,7 @@ mod tests {
         visit_mut_pass(JSXTransformer::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
-            enable_node_index: true,
+            enable_ui_source_map: true,
             ..Default::default()
           },
           Some(t.comments.clone()),
@@ -1828,7 +1828,7 @@ mod tests {
         visit_mut_pass(JSXTransformer::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
-            enable_node_index: true,
+            enable_ui_source_map: true,
             ..Default::default()
           },
           Some(t.comments.clone()),

@@ -44,8 +44,8 @@ export interface PartialLocation {
   lineText?: string
   suggestion?: string
 }
-export interface NodeIndexRecord {
-  nodeIndex: number
+export interface UiSourceMapRecord {
+  uiSourceMap: number
   filename: string
   lineNumber: number
   columnNumber: number
@@ -569,7 +569,7 @@ export interface JsxTransformerConfig {
   /** @internal */
   target: 'LEPUS' | 'JS' | 'MIXED'
   /** @internal */
-  enableNodeIndex?: boolean
+  enableUiSourceMap?: boolean
   /** @internal */
   isDynamicComponent?: boolean
 }
@@ -626,7 +626,7 @@ export interface TransformNodiffOutput {
   map?: string
   errors: Array<PartialMessage>
   warnings: Array<PartialMessage>
-  nodeIndexRecords: Array<NodeIndexRecord>
+  uiSourceMapRecords: Array<UiSourceMapRecord>
 }
 export function transformReactLynxSync(code: string, options?: TransformNodiffOptions | undefined | null): TransformNodiffOutput
 export function transformReactLynx(code: string, options?: TransformNodiffOptions | undefined | null): Promise<TransformNodiffOutput>
