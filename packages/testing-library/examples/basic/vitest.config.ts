@@ -7,6 +7,7 @@ const defaultConfig = await createVitestConfig({
 const config = defineConfig({
   test: {
     name: 'testing-library/examples/basic',
+    globals: true,
   },
 });
 

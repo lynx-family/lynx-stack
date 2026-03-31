@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import '@testing-library/jest-dom';
-import { expect, test, vi } from 'vitest';
 import { render, getQueriesForElement } from '@lynx-js/react/testing-library';
 // @ts-expect-error preact is aliased to the dep of @lynx-js/react
 import { Component as PreacComponent } from 'preact';

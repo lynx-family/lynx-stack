@@ -3,6 +3,7 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "@lynx-js/react",
+    "types": ["vitest/globals"],
 
     /* Disable emitting files from a compilation. */
     "noEmit": true,
