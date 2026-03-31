@@ -109,7 +109,6 @@ static NO_FLATTEN_ATTRIBUTES: Lazy<HashSet<String>> = Lazy::new(|| {
 #[derive(Clone, Debug, Deserialize)]
 pub struct UISourceMapRecord {
   pub ui_source_map: u32,
-  pub filename: String,
   pub line_number: u32,
   pub column_number: u32,
   pub snapshot_id: String,
@@ -1296,7 +1295,6 @@ where
     let filename_hash = self.filename_hash.clone();
     let content_hash = self.content_hash.clone();
     let ui_source_map_records = self.ui_source_map_records.clone();
-    let filename = self.cfg.filename.clone();
     let snapshot_uid_for_captured = snapshot_uid.clone();
     let source_map = self.source_map.clone();
     let node_index_fn = move |span: Span| {
@@ -1315,7 +1313,6 @@ where
       }
       ui_source_map_records.borrow_mut().push(UISourceMapRecord {
         ui_source_map,
-        filename: filename.clone(),
         line_number,
         column_number,
         snapshot_id: snapshot_uid_for_captured.clone(),

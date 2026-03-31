@@ -277,12 +277,19 @@ impl Emitter for MultiEmitter {
 
 fn clone_ui_source_map_records(
   ui_source_map_records: &Rc<RefCell<Vec<CoreUISourceMapRecord>>>,
+  filename: &str,
 ) -> Vec<SnapshotUISourceMapRecord> {
   ui_source_map_records
     .borrow()
     .iter()
     .cloned()
-    .map(Into::into)
+    .map(|record| SnapshotUISourceMapRecord {
+      ui_source_map: record.ui_source_map,
+      filename: filename.to_string(),
+      line_number: record.line_number,
+      column_number: record.column_number,
+      snapshot_id: record.snapshot_id,
+    })
     .collect()
 }
 
@@ -331,7 +338,10 @@ fn transform_react_lynx_inner(
           map: None,
           errors: errors.read().unwrap().clone(),
           warnings: warnings.read().unwrap().clone(),
-          ui_source_map_records: clone_ui_source_map_records(&ui_source_map_records),
+          ui_source_map_records: clone_ui_source_map_records(
+            &ui_source_map_records,
+            &options.filename,
+          ),
         };
       }
     };
@@ -408,7 +418,7 @@ fn transform_react_lynx_inner(
     let (snapshot_plugin_config, enabled) = match &options.snapshot.unwrap_or(Either::A(true)) {
       Either::A(config) => (
         JSXTransformerConfig {
-          filename: options.filename,
+          filename: options.filename.clone(),
           ..Default::default()
         },
         *config,
@@ -441,6 +451,8 @@ fn transform_react_lynx_inner(
       enabled && !snapshot_plugin_config.preserve_jsx,
     );
 
+    let enable_ui_source_map = snapshot_plugin_config.enable_ui_source_map.unwrap_or(false);
+
     let snapshot_plugin = Optional::new(
       visit_mut_pass({
         let snapshot_plugin = JSXTransformer::new(
@@ -451,7 +463,7 @@ fn transform_react_lynx_inner(
         )
         .with_content_hash(content_hash.clone());
 
-        if snapshot_plugin_config.enable_ui_source_map.unwrap_or(false) {
+        if enable_ui_source_map {
           snapshot_plugin.with_ui_source_map_records(ui_source_map_records.clone())
         } else {
           snapshot_plugin
@@ -657,7 +669,10 @@ fn transform_react_lynx_inner(
         map: result.map,
         errors: vec![],
         warnings: vec![],
-        ui_source_map_records: clone_ui_source_map_records(&ui_source_map_records),
+        ui_source_map_records: clone_ui_source_map_records(
+          &ui_source_map_records,
+          &options.filename,
+        ),
       },
       Err(_) => {
         return TransformNodiffOutput {
@@ -665,7 +680,10 @@ fn transform_react_lynx_inner(
           map: None,
           errors: errors.read().unwrap().clone(),
           warnings: warnings.read().unwrap().clone(),
-          ui_source_map_records: clone_ui_source_map_records(&ui_source_map_records),
+          ui_source_map_records: clone_ui_source_map_records(
+            &ui_source_map_records,
+            &options.filename,
+          ),
         };
       }
     }
@@ -676,7 +694,7 @@ fn transform_react_lynx_inner(
     map: result.map,
     errors: errors.read().unwrap().clone(),
     warnings: warnings.read().unwrap().clone(),
-    ui_source_map_records: clone_ui_source_map_records(&ui_source_map_records),
+    ui_source_map_records: clone_ui_source_map_records(&ui_source_map_records, &options.filename),
   };
 
   r

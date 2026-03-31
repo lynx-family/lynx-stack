@@ -8,11 +8,10 @@ import { describe, expect, it } from 'vitest';
 import { transformBundleResult, transformReactLynx } from '../main.js';
 
 const TEST_FILENAMES = {
-  shake: '/path/to/shake.js',
-  jsxListItem: '/path/to/list-item.js',
-  addComponentElement: '/path/to/add-component-element.js',
-  simplifyCtorLikeReactLynx2: '/path/to/simplify-ctor.js',
-  defineDceShake: '/path/to/define-dce-shake.js',
+  uiSourceMap: '/path/to/src/ui-source-map.js',
+};
+const TEST_SNAPSHOT_FILENAMES = {
+  uiSourceMap: 'src/ui-source-map.js',
 };
 
 describe('shake', () => {
@@ -70,17 +69,9 @@ export class A extends Component {
     const __cfg = (jsx) => ({
       mode: 'test',
       pluginName: '',
-      filename: TEST_FILENAMES.shake,
+      filename: '',
       sourcemap: false,
       cssScope: false,
-      snapshot: {
-        preserveJsx: false,
-        runtimePkg: '@lynx-js/react',
-        jsxImportSource: '@lynx-js/react',
-        filename: TEST_FILENAMES.shake,
-        target: 'MIXED',
-        enableUiSourceMap: true,
-      },
       jsx,
       directiveDCE: false,
       defineDCE: false,
@@ -95,33 +86,20 @@ export class A extends Component {
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       import { Component } from "@lynx-js/react/legacy-react-runtime";
-      const __snapshot_5d88a_test_1 = "__snapshot_5d88a_test_1";
-      ReactLynx.snapshotCreatorMap[__snapshot_5d88a_test_1] = (__snapshot_5d88a_test_1)=>ReactLynx.createSnapshot(__snapshot_5d88a_test_1, function() {
+      const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
               const pageId = ReactLynx.__pageId;
-              const el = __CreateView(pageId, {
-                  nodeIndex: 1903991381
-              });
+              const el = __CreateView(pageId);
               return [
                   el
               ];
           }, null, null, undefined, globDynamicComponentEntry, null, true);
       export class A extends Component {
           render() {
-              return /*#__PURE__*/ _jsx(__snapshot_5d88a_test_1, {});
+              return /*#__PURE__*/ _jsx(__snapshot_da39a_test_1, {});
           }
       }
       "
-    `);
-    expect(result.uiSourceMapRecords).toMatchInlineSnapshot(`
-      [
-        {
-          "columnNumber": 14,
-          "filename": "/path/to/shake.js",
-          "lineNumber": 13,
-          "snapshotId": "__snapshot_5d88a_test_1",
-          "uiSourceMap": 1903991381,
-        },
-      ]
     `);
 
     const result2 = await transformReactLynx(inputContent, __cfg(false));
@@ -129,31 +107,57 @@ export class A extends Component {
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       import { Component } from "@lynx-js/react/legacy-react-runtime";
-      const __snapshot_5d88a_test_1 = "__snapshot_5d88a_test_1";
-      ReactLynx.snapshotCreatorMap[__snapshot_5d88a_test_1] = (__snapshot_5d88a_test_1)=>ReactLynx.createSnapshot(__snapshot_5d88a_test_1, function() {
+      const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
               const pageId = ReactLynx.__pageId;
-              const el = __CreateView(pageId, {
-                  nodeIndex: 1903991381
-              });
+              const el = __CreateView(pageId);
               return [
                   el
               ];
           }, null, null, undefined, globDynamicComponentEntry, null, true);
       export class A extends Component {
           render() {
-              return /*#__PURE__*/ _jsx(__snapshot_5d88a_test_1, {});
+              return /*#__PURE__*/ _jsx(__snapshot_da39a_test_1, {});
           }
       }
       "
     `);
-    expect(result2.uiSourceMapRecords).toMatchInlineSnapshot(`
+  });
+});
+
+describe('ui source map', () => {
+  it('should use the top-level filename for exported uiSourceMapRecords', async () => {
+    const result = await transformReactLynx('const node = <view />;', {
+      mode: 'test',
+      pluginName: '',
+      filename: TEST_FILENAMES.uiSourceMap,
+      sourcemap: false,
+      cssScope: false,
+      snapshot: {
+        preserveJsx: false,
+        runtimePkg: '@lynx-js/react',
+        jsxImportSource: '@lynx-js/react',
+        filename: TEST_SNAPSHOT_FILENAMES.uiSourceMap,
+        target: 'MIXED',
+        enableUiSourceMap: true,
+      },
+      jsx: true,
+      directiveDCE: false,
+      defineDCE: false,
+      shake: false,
+      compat: false,
+      worklet: false,
+      refresh: false,
+    });
+
+    expect(result.uiSourceMapRecords).toMatchInlineSnapshot(`
       [
         {
           "columnNumber": 14,
-          "filename": "/path/to/shake.js",
-          "lineNumber": 13,
-          "snapshotId": "__snapshot_5d88a_test_1",
-          "uiSourceMap": 1903991381,
+          "filename": "/path/to/src/ui-source-map.js",
+          "lineNumber": 1,
+          "snapshotId": "__snapshot_cf7b3_test_1",
+          "uiSourceMap": 222048564,
         },
       ]
     `);
@@ -197,8 +201,8 @@ describe('jsx', () => {
   it('<list-item defer item-key="1" />', async () => {
     const result = await transformReactLynx('const jsx = <list><list-item defer item-key="1" /></list>;', {
       pluginName: '',
-      filename: TEST_FILENAMES.jsxListItem,
-      sourceFileName: TEST_FILENAMES.jsxListItem,
+      filename: '',
+      sourceFileName: '',
       defineDCE: true,
       sourcemap: false,
       compat: false,
@@ -213,12 +217,13 @@ describe('jsx', () => {
       experimental_moduleCompress: false,
     });
 
-    expect(result.code).toMatchInlineSnapshot(`
-      "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "code": "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       import * as ReactLynxRuntimeComponents from '@lynx-js/react/runtime-components';
-      const __snapshot_37835_04d8c_2 = "__snapshot_37835_04d8c_2";
-      ReactLynx.snapshotCreatorMap[__snapshot_37835_04d8c_2] = (__snapshot_37835_04d8c_2)=>ReactLynx.createSnapshot(__snapshot_37835_04d8c_2, function() {
+      const __snapshot_da39a_04d8c_2 = "__snapshot_da39a_04d8c_2";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_04d8c_2] = (__snapshot_da39a_04d8c_2)=>ReactLynx.createSnapshot(__snapshot_da39a_04d8c_2, function() {
               const pageId = ReactLynx.__pageId;
               const el = __CreateElement("list-item", pageId);
               return [
@@ -227,8 +232,8 @@ describe('jsx', () => {
           }, [
               (snapshot, index, oldValue)=>ReactLynx.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
           ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null, true);
-      const __snapshot_37835_04d8c_1 = "__snapshot_37835_04d8c_1";
-      ReactLynx.snapshotCreatorMap[__snapshot_37835_04d8c_1] = (__snapshot_37835_04d8c_1)=>ReactLynx.createSnapshot(__snapshot_37835_04d8c_1, function(snapshotInstance) {
+      const __snapshot_da39a_04d8c_1 = "__snapshot_da39a_04d8c_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_04d8c_1] = (__snapshot_da39a_04d8c_1)=>ReactLynx.createSnapshot(__snapshot_da39a_04d8c_1, function(snapshotInstance) {
               const pageId = ReactLynx.__pageId;
               const el = ReactLynx.snapshotCreateList(pageId, snapshotInstance, 0);
               return [
@@ -240,9 +245,9 @@ describe('jsx', () => {
                   0
               ]
           ], undefined, globDynamicComponentEntry, null, true);
-      /*#__PURE__*/ _jsx(__snapshot_37835_04d8c_1, {
+      /*#__PURE__*/ _jsx(__snapshot_da39a_04d8c_1, {
           children: /*#__PURE__*/ _jsx(ReactLynxRuntimeComponents.DeferredListItem, {
-              renderListItem: (__c)=>_jsx(__snapshot_37835_04d8c_2, {
+              renderListItem: (__c)=>_jsx(__snapshot_da39a_04d8c_2, {
                       values: [
                           {
                               "item-key": "1"
@@ -254,10 +259,12 @@ describe('jsx', () => {
               defer: true
           })
       });
-      "
+      ",
+        "errors": [],
+        "uiSourceMapRecords": [],
+        "warnings": [],
+      }
     `);
-    expect(result.errors).toEqual([]);
-    expect(result.warnings).toEqual([]);
   });
 });
 
@@ -364,7 +371,7 @@ Component, View
 
     const cfg = {
       pluginName: '',
-      filename: TEST_FILENAMES.addComponentElement,
+      filename: '',
       sourcemap: false,
       cssScope: false,
       jsx: {
@@ -414,7 +421,7 @@ Component, View
         [
           "▲ [WARNING] addComponentElement: component with JSXSpread is ignored to avoid badcase, you can switch addComponentElement.compilerOnly to false to enable JSXSpread support
 
-            /path/to/add-component-element.js:1:7:
+            :1:7:
               1 │ <Comp {...s}/>;
                 ╵        ~~~
 
@@ -443,8 +450,8 @@ Component, View
         "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
         import * as ReactLynx from "@lynx-js/react";
         import * as ReactLynx1 from "@lynx-js/react/internal";
-        const __snapshot_5cbee_89b7f_1 = "__snapshot_5cbee_89b7f_1";
-        ReactLynx.snapshotCreatorMap[__snapshot_5cbee_89b7f_1] = (__snapshot_5cbee_89b7f_1)=>ReactLynx.createSnapshot(__snapshot_5cbee_89b7f_1, function() {
+        const __snapshot_da39a_89b7f_1 = "__snapshot_da39a_89b7f_1";
+        ReactLynx.snapshotCreatorMap[__snapshot_da39a_89b7f_1] = (__snapshot_da39a_89b7f_1)=>ReactLynx.createSnapshot(__snapshot_da39a_89b7f_1, function() {
                 const pageId = ReactLynx.__pageId;
                 const el = __CreateView(pageId);
                 return [
@@ -455,7 +462,7 @@ Component, View
             ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, [
                 0
             ], true);
-        /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>_jsx(__snapshot_5cbee_89b7f_1, {
+        /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>_jsx(__snapshot_da39a_89b7f_1, {
                 values: [
                     {
                         ...__spread,
@@ -930,7 +937,7 @@ export default class App extends Component {
 `,
       {
         pluginName: 'transform',
-        filename: TEST_FILENAMES.simplifyCtorLikeReactLynx2,
+        filename: '',
         sourcemap: false,
         cssScope: false,
         jsx: false,
@@ -956,8 +963,8 @@ export default class App extends Component {
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       let c = 1;
-      const __snapshot_c00a0_b7447_1 = "__snapshot_c00a0_b7447_1";
-      ReactLynx.snapshotCreatorMap[__snapshot_c00a0_b7447_1] = (__snapshot_c00a0_b7447_1)=>ReactLynx.createSnapshot(__snapshot_c00a0_b7447_1, function() {
+      const __snapshot_da39a_b7447_1 = "__snapshot_da39a_b7447_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_b7447_1] = (__snapshot_da39a_b7447_1)=>ReactLynx.createSnapshot(__snapshot_da39a_b7447_1, function() {
               const pageId = ReactLynx.__pageId;
               const el = __CreateView(pageId);
               return [
@@ -967,7 +974,7 @@ export default class App extends Component {
       export default class App extends Component {
           a() {}
           render() {
-              return /*#__PURE__*/ _jsx(__snapshot_c00a0_b7447_1, {});
+              return /*#__PURE__*/ _jsx(__snapshot_da39a_b7447_1, {});
           }
           state = ((()=>{
               if (!__LEPUS__) this.a();
@@ -1132,7 +1139,7 @@ X();
 `,
       {
         pluginName: '',
-        filename: TEST_FILENAMES.defineDceShake,
+        filename: '',
         sourcemap: false,
         cssScope: false,
         jsx: false,
@@ -1204,7 +1211,7 @@ X5();
 `,
       {
         pluginName: '',
-        filename: TEST_FILENAMES.defineDceShake,
+        filename: '',
         sourcemap: false,
         cssScope: false,
         jsx: false,
@@ -1452,7 +1459,7 @@ class X extends Component {
 `,
       {
         pluginName: '',
-        filename: TEST_FILENAMES.defineDceShake,
+        filename: '',
         sourcemap: false,
         cssScope: false,
         jsx: false,
@@ -1475,8 +1482,8 @@ class X extends Component {
     ).toMatchInlineSnapshot(`
       "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
-      const __snapshot_f9adb_e2935_1 = "__snapshot_f9adb_e2935_1";
-      ReactLynx.snapshotCreatorMap[__snapshot_f9adb_e2935_1] = (__snapshot_f9adb_e2935_1)=>ReactLynx.createSnapshot(__snapshot_f9adb_e2935_1, function() {
+      const __snapshot_da39a_e2935_1 = "__snapshot_da39a_e2935_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_e2935_1] = (__snapshot_da39a_e2935_1)=>ReactLynx.createSnapshot(__snapshot_da39a_e2935_1, function() {
               const pageId = ReactLynx.__pageId;
               const el = __CreateView(pageId);
               return [
@@ -1486,7 +1493,7 @@ class X extends Component {
       class X extends Component {
           constructor(){}
           render() {
-              return /*#__PURE__*/ _jsx(__snapshot_f9adb_e2935_1, {});
+              return /*#__PURE__*/ _jsx(__snapshot_da39a_e2935_1, {});
           }
       }
       /*#__PURE__*/ _jsx(X, {});

@@ -48,7 +48,6 @@ impl From<UISourceMapRecord> for CoreUISourceMapRecord {
   fn from(val: UISourceMapRecord) -> Self {
     Self {
       ui_source_map: val.ui_source_map,
-      filename: val.filename,
       line_number: val.line_number,
       column_number: val.column_number,
       snapshot_id: val.snapshot_id,
@@ -60,7 +59,7 @@ impl From<CoreUISourceMapRecord> for UISourceMapRecord {
   fn from(val: CoreUISourceMapRecord) -> Self {
     Self {
       ui_source_map: val.ui_source_map,
-      filename: val.filename,
+      filename: String::new(),
       line_number: val.line_number,
       column_number: val.column_number,
       snapshot_id: val.snapshot_id,
