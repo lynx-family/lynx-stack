@@ -48,7 +48,10 @@ module.exports = {
     if (
       !Array.isArray(mainNodeIndex.sources)
       || !Array.isArray(mainNodeIndex.mappings)
+      || !Array.isArray(mainNodeIndex.uiMaps)
       || mainNodeIndex.mappings.length === 0
+      || mainNodeIndex.uiMaps.length === 0
+      || mainNodeIndex.mappings.length !== mainNodeIndex.uiMaps.length
     ) {
       throw new Error('Main node index asset should contain records');
     }
@@ -58,10 +61,25 @@ module.exports = {
       throw new Error('Main node index asset should include index.jsx records');
     }
     if (
+      !mainNodeIndex.uiMaps.some(uiMap => Number.isInteger(uiMap))
+    ) {
+      throw new Error('Main node index uiMaps should contain nodeIndex values');
+    }
+    if (
+      !mainNodeIndex.mappings.some((mapping, index) =>
+        Array.isArray(mapping)
+        && mapping.length === 3
+        && Number.isInteger(mainNodeIndex.uiMaps[index])
+        && mainNodeIndex.sources[mapping[0]] === 'index.jsx'
+      )
+    ) {
+      throw new Error('Main node index uiMaps should point to index.jsx');
+    }
+    if (
       !mainNodeIndex.mappings.some(mapping =>
         Array.isArray(mapping)
-        && mapping.length === 4
-        && mainNodeIndex.sources[mapping[1]] === 'index.jsx'
+        && mapping.length === 3
+        && mainNodeIndex.sources[mapping[0]] === 'index.jsx'
       )
     ) {
       throw new Error('Main node index mappings should point to index.jsx');
@@ -92,7 +110,10 @@ module.exports = {
     if (
       !Array.isArray(asyncNodeIndex.sources)
       || !Array.isArray(asyncNodeIndex.mappings)
+      || !Array.isArray(asyncNodeIndex.uiMaps)
       || asyncNodeIndex.mappings.length === 0
+      || asyncNodeIndex.uiMaps.length === 0
+      || asyncNodeIndex.mappings.length !== asyncNodeIndex.uiMaps.length
     ) {
       throw new Error('Async node index asset should contain records');
     }
@@ -102,10 +123,27 @@ module.exports = {
       throw new Error('Async node index asset should include lazy.jsx records');
     }
     if (
+      !asyncNodeIndex.uiMaps.some(uiMap => Number.isInteger(uiMap))
+    ) {
+      throw new Error(
+        'Async node index uiMaps should contain nodeIndex values',
+      );
+    }
+    if (
+      !asyncNodeIndex.mappings.some((mapping, index) =>
+        Array.isArray(mapping)
+        && mapping.length === 3
+        && Number.isInteger(asyncNodeIndex.uiMaps[index])
+        && asyncNodeIndex.sources[mapping[0]] === 'lazy.jsx'
+      )
+    ) {
+      throw new Error('Async node index uiMaps should point to lazy.jsx');
+    }
+    if (
       !asyncNodeIndex.mappings.some(mapping =>
         Array.isArray(mapping)
-        && mapping.length === 4
-        && asyncNodeIndex.sources[mapping[1]] === 'lazy.jsx'
+        && mapping.length === 3
+        && asyncNodeIndex.sources[mapping[0]] === 'lazy.jsx'
       )
     ) {
       throw new Error('Async node index mappings should point to lazy.jsx');

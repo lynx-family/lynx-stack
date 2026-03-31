@@ -31,7 +31,8 @@ interface NodeIndexRecord {
 interface NodeIndexMapAsset {
   version: 1;
   sources: string[];
-  mappings: [number, number, number, number][];
+  mappings: [number, number, number][];
+  uiMaps: number[];
 }
 
 interface ModuleWithNodeIndexBuildInfo {
@@ -97,7 +98,8 @@ function createNodeIndexMapAsset(
 ): NodeIndexMapAsset {
   const sources: string[] = [];
   const sourceIndexes = new Map<string, number>();
-  const mappings: [number, number, number, number][] = [];
+  const mappings: [number, number, number][] = [];
+  const uiMaps: number[] = [];
 
   for (const record of records) {
     if (!record.filename) {
@@ -113,17 +115,18 @@ function createNodeIndexMapAsset(
     }
 
     mappings.push([
-      record.nodeIndex,
       sourceIndex,
       record.lineNumber,
       record.columnNumber,
     ]);
+    uiMaps.push(record.nodeIndex);
   }
 
   return {
     version: 1,
     sources,
     mappings,
+    uiMaps,
   };
 }
 
