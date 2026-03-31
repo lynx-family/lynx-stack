@@ -1643,8 +1643,7 @@ export function getCurrentDelta(event) {
 
       if (target === 'LEPUS') {
         expect(code).toMatchInlineSnapshot(`
-          "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-          var loadWorkletRuntime = __loadWorkletRuntime;
+          "import "@lynx-js/react/worklet-runtime";
           export let getCurrentDelta = {
               _c: {
                   foo: {
@@ -1655,8 +1654,7 @@ export function getCurrentDelta(event) {
               },
               _wkltId: "da39:75a1b:1"
           };
-          const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-          __workletRuntimeLoaded && registerWorkletInternal("main-thread", "da39:75a1b:1", function(event) {
+          registerWorkletInternal("main-thread", "da39:75a1b:1", function(event) {
               const getCurrentDelta = lynxWorkletImpl._workletMap["da39:75a1b:1"].bind(this);
               let { foo } = this["_c"];
               "main thread";
@@ -1664,7 +1662,7 @@ export function getCurrentDelta(event) {
           });
           "
         `);
-        expect(code).toContain('loadWorkletRuntime');
+        expect(code).toContain('import "@lynx-js/react/worklet-runtime"');
         expect(code).toContain('registerWorkletInternal("main-thread"');
       } else if (target === 'JS') {
         expect(code).toMatchInlineSnapshot(`
@@ -1684,8 +1682,7 @@ export function getCurrentDelta(event) {
         expect(code).not.toContain('registerWorkletInternal');
       } else if (target === 'MIXED') {
         expect(code).toMatchInlineSnapshot(`
-          "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-          var loadWorkletRuntime = __loadWorkletRuntime;
+          "import "@lynx-js/react/worklet-runtime";
           export let getCurrentDelta = {
               _c: {
                   foo: {
@@ -1696,8 +1693,7 @@ export function getCurrentDelta(event) {
               },
               _wkltId: "da39:75a1b:1"
           };
-          const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-          __workletRuntimeLoaded && registerWorkletInternal("main-thread", "da39:75a1b:1", function(event) {
+          registerWorkletInternal("main-thread", "da39:75a1b:1", function(event) {
               const getCurrentDelta = lynxWorkletImpl._workletMap["da39:75a1b:1"].bind(this);
               let { foo } = this["_c"];
               "main thread";
@@ -1705,7 +1701,7 @@ export function getCurrentDelta(event) {
           });
           "
         `);
-        expect(code).toContain('loadWorkletRuntime');
+        expect(code).toContain('import "@lynx-js/react/worklet-runtime"');
         expect(code).toContain('registerWorkletInternal("main-thread"');
       }
     });
@@ -1744,8 +1740,7 @@ export function foo(event) {
     );
 
     expect(code).toMatchInlineSnapshot(`
-      "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-      var loadWorkletRuntime = __loadWorkletRuntime;
+      "import "@lynx-js/react/worklet-runtime";
       export let foo = {
           _c: {
               bar: {
@@ -1764,8 +1759,7 @@ export function foo(event) {
           },
           _wkltId: "da39:64631:1"
       };
-      const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "da39:64631:1", function(event) {
+      registerWorkletInternal("main-thread", "da39:64631:1", function(event) {
           const foo = lynxWorkletImpl._workletMap["da39:64631:1"].bind(this);
           let { bar, qux } = this["_c"];
           "main thread";
@@ -1774,7 +1768,7 @@ export function foo(event) {
       "
     `);
     expect((code.match(/registerWorkletInternal/g) ?? []).length).toBe(1);
-    expect((code.match(/const __workletRuntimeLoaded = loadWorkletRuntime/g) ?? []).length).toBe(1);
+    expect((code.match(/import "@lynx-js\/react\/worklet-runtime";/g) ?? []).length).toBe(1);
   });
 
   it('nested', async () => {
@@ -1815,8 +1809,7 @@ console.log(bar)
     );
 
     expect(code).toMatchInlineSnapshot(`
-      "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-      var loadWorkletRuntime = __loadWorkletRuntime;
+      "import "@lynx-js/react/worklet-runtime";
       let foo = {
           _wkltId: "da39:80ef4:1"
       };
@@ -1827,13 +1820,12 @@ console.log(bar)
           _wkltId: "da39:80ef4:2"
       };
       console.log(bar);
-      const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "da39:80ef4:1", function() {
+      registerWorkletInternal("main-thread", "da39:80ef4:1", function() {
           const foo = lynxWorkletImpl._workletMap["da39:80ef4:1"].bind(this);
           "main thread";
           return null;
       });
-      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "da39:80ef4:2", function() {
+      registerWorkletInternal("main-thread", "da39:80ef4:2", function() {
           const bar = lynxWorkletImpl._workletMap["da39:80ef4:2"].bind(this);
           let { foo } = this["_c"];
           "main thread";
@@ -1842,7 +1834,7 @@ console.log(bar)
       "
     `);
     expect((code.match(/registerWorkletInternal/g) ?? []).length).toBe(2);
-    expect((code.match(/const __workletRuntimeLoaded = loadWorkletRuntime/g) ?? []).length).toBe(1);
+    expect((code.match(/import "@lynx-js\/react\/worklet-runtime";/g) ?? []).length).toBe(1);
   });
 
   it('use multiple times', async () => {
@@ -1881,10 +1873,8 @@ function getCurrentDelta(event) {
     );
 
     expect(code).toMatchInlineSnapshot(`
-      "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-      var loadWorkletRuntime = __loadWorkletRuntime;
-      const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "da39:059d0:1", function(event) {
+      "import "@lynx-js/react/worklet-runtime";
+      registerWorkletInternal("main-thread", "da39:059d0:1", function(event) {
           lynxWorkletImpl._workletMap["da39:059d0:1"].bind(this);
           let { foo, a, b } = this["_c"];
           "main thread";
@@ -1894,7 +1884,7 @@ function getCurrentDelta(event) {
       "
     `);
     expect((code.match(/registerWorkletInternal/g) ?? []).length).toBe(1);
-    expect((code.match(/const __workletRuntimeLoaded = loadWorkletRuntime/g) ?? []).length).toBe(1);
+    expect((code.match(/import "@lynx-js\/react\/worklet-runtime";/g) ?? []).length).toBe(1);
   });
 
   it('should keep webpack runtime variables', async () => {
