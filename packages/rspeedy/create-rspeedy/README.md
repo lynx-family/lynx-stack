@@ -21,6 +21,50 @@ npx create-rspeedy --dir my-project
 npx create-rspeedy -d my-project
 ```
 
+## Using Custom Templates
+
+### NPM Package Templates
+
+You can use any npm package as a template:
+
+```bash
+# Using npm package name
+npm create rspeedy@latest my-project -- --template my-template-package
+
+# Using scoped package
+npm create rspeedy@latest my-project -- --template @scope/template-package
+
+# Using explicit npm: prefix
+npm create rspeedy@latest my-project -- --template npm:my-template-package
+
+# With specific version
+npm create rspeedy@latest my-project -- --template my-template-package --template-version 1.2.3
+```
+
+### Template Package Structure
+
+Your npm template package should have one of the following structures:
+
+```
+my-template-package/
+├── template/              # Preferred
+│   ├── package.json
+│   ├── src/
+│   └── ...
+├── templates/
+│   └── app/              # Alternative
+│       ├── package.json
+│       └── ...
+└── (root)                # Fallback
+    ├── package.json
+    └── ...
+```
+
+### Template Caching
+
+- Templates with `latest` version are always re-installed
+- Specific versions are cached in `.temp-templates/` for faster reuse
+
 ## Documentation
 
 https://lynxjs.org/rspeedy

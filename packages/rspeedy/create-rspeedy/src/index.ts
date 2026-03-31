@@ -10,6 +10,8 @@ import { fileURLToPath } from 'node:url'
 import type { Argv } from 'create-rstack'
 import { checkCancel, create, multiselect, select } from 'create-rstack'
 
+import { isNpmTemplate, resolveCustomTemplate } from './template-manager.js'
+
 type LANG = 'js' | 'ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -93,28 +95,100 @@ async function getTemplateName({ template }: Argv) {
   })
 }
 
-void create({
-  root: path.resolve(__dirname, '..'),
-  name: 'rspeedy',
-  templates: TEMPLATES.map(({ template, tools, lang }) =>
-    composeTemplateName({ template, lang, tools })
-  ),
-  version: devDependencies,
-  getTemplateName,
-  mapESLintTemplate(templateName) {
-    const lang = TEMPLATES.find(({ template }) =>
-      templateName.startsWith(template)
-    )?.lang
+// Extended Argv with template version support
+interface ExtendedArgv extends Argv {
+  templateVersion?: string
+  'template-version'?: string
+}
 
-    if (!lang) return null
+// Parse CLI arguments to extract template version
+function parseArgv(): ExtendedArgv {
+  const argv = process.argv.slice(2)
+  const result: ExtendedArgv = {}
 
-    switch (lang) {
-      case 'js':
-        return 'react-js'
-      case 'ts':
-        return 'react-ts'
-      default:
-        return null
+  for (const arg of argv) {
+    const index = argv.indexOf(arg)
+    if (arg === '--template-version' || arg === '--tv') {
+      result.templateVersion = argv[index + 1]
+      result['template-version'] = result.templateVersion
+    } else if (arg === '--template' || arg === '-t') {
+      result.template = argv[index + 1]
+    } else if (arg === '--dir' || arg === '-d') {
+      result.dir = argv[index + 1]
+    } else if (!arg.startsWith('-') && !result.dir) {
+      result.dir = arg
     }
-  },
-})
+  }
+
+  return result
+}
+
+// Main entry point
+async function main() {
+  const argv = parseArgv()
+
+  // Handle npm template specially
+  if (typeof argv.template === 'string' && isNpmTemplate(argv.template)) {
+    const templateVersion = argv.templateVersion ?? argv['template-version']
+    const templatePath = resolveCustomTemplate(
+      argv.template,
+      templateVersion,
+    )
+
+    // Create a temporary template directory name
+    const templateName = `npm-${Date.now()}`
+
+    // Copy npm template to a temporary local template directory
+    const tempTemplateDir = path.join(
+      path.resolve(__dirname, '..'),
+      `template-${templateName}`,
+    )
+
+    // Copy the resolved template to our template directory
+    const fs = await import('node:fs')
+    fs.cpSync(templatePath, tempTemplateDir, { recursive: true })
+
+    // Call create with the temporary template
+    await create({
+      root: path.resolve(__dirname, '..'),
+      name: 'rspeedy',
+      templates: [templateName],
+      version: devDependencies,
+      getTemplateName: async () => templateName,
+      mapESLintTemplate: () => null,
+    })
+
+    // Clean up temporary template directory
+    fs.rmSync(tempTemplateDir, { recursive: true, force: true })
+    return
+  }
+
+  // Standard create-rspeedy flow
+  await create({
+    root: path.resolve(__dirname, '..'),
+    name: 'rspeedy',
+    templates: TEMPLATES.map(({ template, tools, lang }) =>
+      composeTemplateName({ template, lang, tools })
+    ),
+    version: devDependencies,
+    getTemplateName,
+    mapESLintTemplate(templateName) {
+      const lang = TEMPLATES.find(({ template }) =>
+        templateName.startsWith(template)
+      )?.lang
+
+      if (!lang) return null
+
+      switch (lang) {
+        case 'js':
+          return 'react-js'
+        case 'ts':
+          return 'react-ts'
+        default:
+          return null
+      }
+    },
+  })
+}
+
+void main()
