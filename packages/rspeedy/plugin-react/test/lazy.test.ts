@@ -1,7 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import fs from 'node:fs/promises'
+import fs, { mkdtemp, readFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
@@ -11,6 +12,31 @@ import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
+
+async function findFiles(root: string, matcher: (path: string) => boolean) {
+  const found: string[] = []
+  const pending = [root]
+
+  while (pending.length > 0) {
+    const current = pending.pop()!
+    const entries = await fs.readdir(current, { withFileTypes: true })
+
+    for (const entry of entries) {
+      const entryPath = path.join(current, entry.name)
+
+      if (entry.isDirectory()) {
+        pending.push(entryPath)
+        continue
+      }
+
+      if (entry.isFile() && matcher(entryPath)) {
+        found.push(entryPath)
+      }
+    }
+  }
+
+  return found
+}
 
 describe('Lazy', () => {
   test('alias for react', async () => {
@@ -420,6 +446,73 @@ describe('Lazy', () => {
       if (tmpContent !== undefined) {
         await fs.writeFile(lazyComponentUrl, tmpContent)
       }
+      vi.unstubAllEnvs()
+    }
+  })
+
+  test('new lazy bundle main-thread output should use direct worklet runtime model', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+
+    const tmp = await mkdtemp(path.join(tmpdir(), 'rspeedy-react-lazy-worklet'))
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        source: {
+          entry: {
+            main: new URL(
+              './fixtures/lazy-bundle-worklet/index.tsx',
+              import.meta.url,
+            ).pathname,
+          },
+        },
+        output: {
+          distPath: {
+            root: tmp,
+          },
+          filenameHash: false,
+          minify: false,
+        },
+        plugins: [
+          pluginReactLynx({
+            experimental_isLazyBundle: true,
+          }),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    try {
+      const result = await rsbuild.build()
+      await result.close()
+
+      const mainThreadAssets = await findFiles(
+        tmp,
+        filePath => filePath.endsWith('react__main-thread.js'),
+      )
+      const backgroundAssets = await findFiles(
+        tmp,
+        filePath => filePath.endsWith('react__background.js'),
+      )
+
+      expect(mainThreadAssets).toHaveLength(1)
+      expect(backgroundAssets).toHaveLength(1)
+
+      const mainThreadSource = await readFile(mainThreadAssets[0]!, 'utf-8')
+      const backgroundSource = await readFile(backgroundAssets[0]!, 'utf-8')
+
+      expect(mainThreadSource).toContain('registerWorkletInternal')
+      expect(mainThreadSource).toContain('globalThis.lynxWorkletImpl = {')
+      expect(mainThreadSource).not.toContain('__workletRuntimeLoaded')
+      expect(mainThreadSource).not.toContain('loadWorkletRuntime(')
+
+      expect(backgroundSource).toContain('registerWorkletOnBackground')
+      expect(backgroundSource).toContain(
+        '../../../react/runtime/lazy/internal.js',
+      )
+      expect(backgroundSource).not.toContain('globalThis.lynxWorkletImpl = {')
+      expect(backgroundSource).not.toContain('loadWorkletRuntime(')
+    } finally {
       vi.unstubAllEnvs()
     }
   })

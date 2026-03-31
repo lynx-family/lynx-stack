@@ -313,6 +313,7 @@ export function getBackgroundTransformOptions(
     shake: false,
     worklet: {
       ...commonOptions.worklet,
+      runtimePkg: RUNTIME_PKG,
       target: 'JS',
     },
     directiveDCE: {
