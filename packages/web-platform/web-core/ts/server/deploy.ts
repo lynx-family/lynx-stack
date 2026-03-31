@@ -14,9 +14,15 @@ export function executeTemplate(
   _initI18nResources: InitI18nResources,
   transformVW: boolean,
   transformVH: boolean,
+  transformREM: boolean,
   viewAttributes?: string,
 ): string | undefined {
-  const result = decodeTemplate(templateBuffer, transformVW, transformVH);
+  const result = decodeTemplate(
+    templateBuffer,
+    transformVW,
+    transformVH,
+    transformREM,
+  );
   const config = result.config;
 
   const binding: SSRBinding = { ssrResult: '' };
@@ -30,6 +36,7 @@ export function executeTemplate(
       defaultDisplayLinear: config['defaultDisplayLinear'] !== 'false', // Default to true if not present or 'true'
       transformVW: transformVW,
       transformVH: transformVH,
+      transformREM: transformREM,
     },
   );
 

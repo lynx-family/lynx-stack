@@ -48,6 +48,7 @@ pub fn decode_style_info(
   config_enable_css_selector: bool,
   transform_vw: bool,
   transform_vh: bool,
+  transform_rem: bool,
 ) -> Result<js_sys::Uint8Array, wasm_bindgen::JsError> {
   let buf = buffer.to_vec();
   let data = unsafe { rkyv::from_bytes_unchecked::<RawStyleInfo>(&buf) }
@@ -59,6 +60,7 @@ pub fn decode_style_info(
     config_enable_css_selector,
     transform_vw,
     transform_vh,
+    transform_rem,
   )?
   .into();
 
@@ -76,6 +78,7 @@ pub fn encode_legacy_json_generated_raw_style_info(
   entry_name: Option<String>,
   transform_vw: bool,
   transform_vh: bool,
+  transform_rem: bool,
 ) -> Result<js_sys::Uint8Array, wasm_bindgen::JsError> {
   let decode_data: DecodedStyleData = StyleInfoDecoder::new(
     raw_style_info,
@@ -83,6 +86,7 @@ pub fn encode_legacy_json_generated_raw_style_info(
     config_enable_css_selector,
     transform_vw,
     transform_vh,
+    transform_rem,
   )?
   .into();
   let serialized = rkyv::to_bytes::<_, 1024>(&decode_data).map_err(|e| {

@@ -109,9 +109,9 @@ export class StyleInfoDecoder {
     [Symbol.dispose](): void;
 }
 
-export function decode_style_info(buffer: Uint8Array, entry_name: string | null | undefined, config_enable_css_selector: boolean, transform_vw: boolean, transform_vh: boolean): Uint8Array;
+export function decode_style_info(buffer: Uint8Array, entry_name: string | null | undefined, config_enable_css_selector: boolean, transform_vw: boolean, transform_vh: boolean, transform_rem: boolean): Uint8Array;
 
-export function encode_legacy_json_generated_raw_style_info(raw_style_info: RawStyleInfo, config_enable_css_selector: boolean, entry_name: string | null | undefined, transform_vw: boolean, transform_vh: boolean): Uint8Array;
+export function encode_legacy_json_generated_raw_style_info(raw_style_info: RawStyleInfo, config_enable_css_selector: boolean, entry_name: string | null | undefined, transform_vw: boolean, transform_vh: boolean, transform_rem: boolean): Uint8Array;
 
 export function get_font_face_content(buffer: Uint8Array): string;
 

@@ -15,7 +15,7 @@ export class MainThreadServerContext {
     get_parent(child_id: number): number | undefined;
     get_tag(element_id: number): string | undefined;
     insert_before(parent_id: number, child_id: number, ref_id?: number | null): void;
-    constructor(view_attributes: string, enable_css_selector: boolean, transform_vw: boolean, transform_vh: boolean);
+    constructor(view_attributes: string, enable_css_selector: boolean, transform_vw: boolean, transform_vh: boolean, transform_rem: boolean);
     push_style_sheet(resource: StyleSheetResource, entry_name?: string | null): void;
     remove_attribute(element_id: number, key: string): void;
     remove_child(parent_id: number, child_id: number): void;
@@ -130,9 +130,9 @@ export class StyleSheetResource {
     constructor(buffer: Uint8Array, _document: any);
 }
 
-export function decode_style_info(buffer: Uint8Array, entry_name: string | null | undefined, config_enable_css_selector: boolean, transform_vw: boolean, transform_vh: boolean): Uint8Array;
+export function decode_style_info(buffer: Uint8Array, entry_name: string | null | undefined, config_enable_css_selector: boolean, transform_vw: boolean, transform_vh: boolean, transform_rem: boolean): Uint8Array;
 
-export function encode_legacy_json_generated_raw_style_info(raw_style_info: RawStyleInfo, config_enable_css_selector: boolean, entry_name: string | null | undefined, transform_vw: boolean, transform_vh: boolean): Uint8Array;
+export function encode_legacy_json_generated_raw_style_info(raw_style_info: RawStyleInfo, config_enable_css_selector: boolean, entry_name: string | null | undefined, transform_vw: boolean, transform_vh: boolean, transform_rem: boolean): Uint8Array;
 
 export function get_font_face_content(buffer: Uint8Array): string;
 
