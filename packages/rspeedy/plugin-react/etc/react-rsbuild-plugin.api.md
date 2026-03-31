@@ -73,9 +73,9 @@ export interface PluginReactLynxOptions {
     enableCSSInvalidation?: boolean;
     enableCSSSelector?: boolean;
     enableNewGesture?: boolean;
-    enableNodeIndex?: boolean;
     enableRemoveCSSScope?: boolean | undefined;
     enableSSR?: boolean;
+    enableUiSourceMap?: boolean;
     engineVersion?: string;
     // @alpha
     experimental_isLazyBundle?: boolean;

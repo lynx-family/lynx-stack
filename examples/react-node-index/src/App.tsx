@@ -10,11 +10,11 @@ export function App() {
   return (
     <view className='Screen'>
       <view className='Hero'>
-        <text className='Eyebrow'>ReactLynx Node Index</text>
-        <text className='Title'>Emit nodeIndexMapUrl from beforeEncode</text>
+        <text className='Eyebrow'>ReactLynx UI Source Map</text>
+        <text className='Title'>Emit uiSourceMapUrl from beforeEncode</text>
         <text className='Description'>
-          This example turns on node index explicitly and injects a mocked
-          uploaded URL into tasm encode data.
+          This example turns on UI source map emission explicitly and injects a
+          mocked uploaded URL into tasm encode data.
         </text>
       </view>
 
@@ -32,7 +32,7 @@ export function App() {
       <Suspense
         fallback={
           <text className='Hint'>
-            Uploading node-index-map and loading chunk...
+            Uploading ui-source-map and loading chunk...
           </text>
         }
       >
@@ -41,7 +41,7 @@ export function App() {
           : (
             <text className='Hint'>
               Tap the button to load a lazy component and generate a second
-              node-index-map URL.
+              ui-source-map URL.
             </text>
           )}
       </Suspense>

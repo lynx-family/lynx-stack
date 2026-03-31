@@ -20,133 +20,144 @@ module.exports = {
       throw new Error('Sourcemap mappings should not be empty');
     }
 
-    const mainNodeIndexPath = path.join(
+    const mainUiSourceMapPath = path.join(
       compiler.outputPath,
-      '.rspeedy/main/node-index-map.json',
+      '.rspeedy/main/ui-source-map.json',
     );
-    if (fs.existsSync(mainNodeIndexPath)) {
+    if (fs.existsSync(mainUiSourceMapPath)) {
       throw new Error(
-        `Node index asset should be cleaned after encode: ${mainNodeIndexPath}`,
+        `UI source map asset should be cleaned after encode: ${mainUiSourceMapPath}`,
       );
     }
 
-    const capturedMainNodeIndexPath = path.join(
+    const capturedMainUiSourceMapPath = path.join(
       compiler.outputPath,
-      '.rspeedy/main/captured-node-index-map.json',
+      '.rspeedy/main/captured-ui-source-map.json',
     );
-    if (!fs.existsSync(capturedMainNodeIndexPath)) {
+    if (!fs.existsSync(capturedMainUiSourceMapPath)) {
       throw new Error(
-        `Captured node index asset should exist: ${capturedMainNodeIndexPath}`,
+        `Captured UI source map asset should exist: ${capturedMainUiSourceMapPath}`,
       );
     }
-    const mainNodeIndex = JSON.parse(
-      fs.readFileSync(capturedMainNodeIndexPath, 'utf8'),
+    const mainUiSourceMap = JSON.parse(
+      fs.readFileSync(capturedMainUiSourceMapPath, 'utf8'),
     );
-    if (mainNodeIndex.version !== 1) {
-      throw new Error('Main node index asset should expose version 1');
+    if (mainUiSourceMap.version !== 1) {
+      throw new Error('Main UI source map asset should expose version 1');
     }
     if (
-      !Array.isArray(mainNodeIndex.sources)
-      || !Array.isArray(mainNodeIndex.mappings)
-      || !Array.isArray(mainNodeIndex.uiMaps)
-      || mainNodeIndex.mappings.length === 0
-      || mainNodeIndex.uiMaps.length === 0
-      || mainNodeIndex.mappings.length !== mainNodeIndex.uiMaps.length
+      !Array.isArray(mainUiSourceMap.sources)
+      || !Array.isArray(mainUiSourceMap.mappings)
+      || !Array.isArray(mainUiSourceMap.uiMaps)
+      || mainUiSourceMap.mappings.length === 0
+      || mainUiSourceMap.uiMaps.length === 0
+      || mainUiSourceMap.mappings.length !== mainUiSourceMap.uiMaps.length
     ) {
-      throw new Error('Main node index asset should contain records');
+      throw new Error('Main UI source map asset should contain records');
     }
     if (
-      !mainNodeIndex.sources.includes('index.jsx')
+      !mainUiSourceMap.sources.includes('index.jsx')
     ) {
-      throw new Error('Main node index asset should include index.jsx records');
+      throw new Error(
+        'Main UI source map asset should include index.jsx records',
+      );
     }
     if (
-      !mainNodeIndex.uiMaps.some(uiMap => Number.isInteger(uiMap))
+      !mainUiSourceMap.uiMaps.some(uiMap => Number.isInteger(uiMap))
     ) {
-      throw new Error('Main node index uiMaps should contain nodeIndex values');
+      throw new Error(
+        'Main UI source map uiMaps should contain uiSourceMap values',
+      );
     }
     if (
-      !mainNodeIndex.mappings.some((mapping, index) =>
+      !mainUiSourceMap.mappings.some((mapping, index) =>
         Array.isArray(mapping)
         && mapping.length === 3
-        && Number.isInteger(mainNodeIndex.uiMaps[index])
-        && mainNodeIndex.sources[mapping[0]] === 'index.jsx'
+        && Number.isInteger(mainUiSourceMap.uiMaps[index])
+        && mainUiSourceMap.sources[mapping[0]] === 'index.jsx'
       )
     ) {
-      throw new Error('Main node index uiMaps should point to index.jsx');
+      throw new Error('Main UI source map uiMaps should point to index.jsx');
     }
     if (
-      !mainNodeIndex.mappings.some(mapping =>
+      !mainUiSourceMap.mappings.some(mapping =>
         Array.isArray(mapping)
         && mapping.length === 3
-        && mainNodeIndex.sources[mapping[0]] === 'index.jsx'
+        && mainUiSourceMap.sources[mapping[0]] === 'index.jsx'
       )
     ) {
-      throw new Error('Main node index mappings should point to index.jsx');
+      throw new Error('Main UI source map mappings should point to index.jsx');
     }
 
     const asyncRoot = path.join(compiler.outputPath, '.rspeedy/async');
     const asyncEntries = fs.readdirSync(asyncRoot, { recursive: true });
-    const asyncNodeIndexFile = asyncEntries.find(entry =>
-      entry.endsWith('node-index-map.json')
+    const asyncUiSourceMapFile = asyncEntries.find(entry =>
+      entry.endsWith('ui-source-map.json')
     );
-    if (asyncNodeIndexFile) {
-      throw new Error('Async node index asset should be cleaned after encode');
+    if (asyncUiSourceMapFile) {
+      throw new Error(
+        'Async UI source map asset should be cleaned after encode',
+      );
     }
 
-    const capturedAsyncNodeIndexFile = asyncEntries.find(entry =>
-      entry.endsWith('captured-node-index-map.json')
+    const capturedAsyncUiSourceMapFile = asyncEntries.find(entry =>
+      entry.endsWith('captured-ui-source-map.json')
     );
-    if (!capturedAsyncNodeIndexFile) {
-      throw new Error('Captured async node index asset should exist');
+    if (!capturedAsyncUiSourceMapFile) {
+      throw new Error('Captured async UI source map asset should exist');
     }
 
-    const asyncNodeIndex = JSON.parse(
-      fs.readFileSync(path.join(asyncRoot, capturedAsyncNodeIndexFile), 'utf8'),
+    const asyncUiSourceMap = JSON.parse(
+      fs.readFileSync(
+        path.join(asyncRoot, capturedAsyncUiSourceMapFile),
+        'utf8',
+      ),
     );
-    if (asyncNodeIndex.version !== 1) {
-      throw new Error('Async node index asset should expose version 1');
+    if (asyncUiSourceMap.version !== 1) {
+      throw new Error('Async UI source map asset should expose version 1');
     }
     if (
-      !Array.isArray(asyncNodeIndex.sources)
-      || !Array.isArray(asyncNodeIndex.mappings)
-      || !Array.isArray(asyncNodeIndex.uiMaps)
-      || asyncNodeIndex.mappings.length === 0
-      || asyncNodeIndex.uiMaps.length === 0
-      || asyncNodeIndex.mappings.length !== asyncNodeIndex.uiMaps.length
+      !Array.isArray(asyncUiSourceMap.sources)
+      || !Array.isArray(asyncUiSourceMap.mappings)
+      || !Array.isArray(asyncUiSourceMap.uiMaps)
+      || asyncUiSourceMap.mappings.length === 0
+      || asyncUiSourceMap.uiMaps.length === 0
+      || asyncUiSourceMap.mappings.length !== asyncUiSourceMap.uiMaps.length
     ) {
-      throw new Error('Async node index asset should contain records');
+      throw new Error('Async UI source map asset should contain records');
     }
     if (
-      !asyncNodeIndex.sources.includes('lazy.jsx')
-    ) {
-      throw new Error('Async node index asset should include lazy.jsx records');
-    }
-    if (
-      !asyncNodeIndex.uiMaps.some(uiMap => Number.isInteger(uiMap))
+      !asyncUiSourceMap.sources.includes('lazy.jsx')
     ) {
       throw new Error(
-        'Async node index uiMaps should contain nodeIndex values',
+        'Async UI source map asset should include lazy.jsx records',
       );
     }
     if (
-      !asyncNodeIndex.mappings.some((mapping, index) =>
-        Array.isArray(mapping)
-        && mapping.length === 3
-        && Number.isInteger(asyncNodeIndex.uiMaps[index])
-        && asyncNodeIndex.sources[mapping[0]] === 'lazy.jsx'
-      )
+      !asyncUiSourceMap.uiMaps.some(uiMap => Number.isInteger(uiMap))
     ) {
-      throw new Error('Async node index uiMaps should point to lazy.jsx');
+      throw new Error(
+        'Async UI source map uiMaps should contain uiSourceMap values',
+      );
     }
     if (
-      !asyncNodeIndex.mappings.some(mapping =>
+      !asyncUiSourceMap.mappings.some((mapping, index) =>
         Array.isArray(mapping)
         && mapping.length === 3
-        && asyncNodeIndex.sources[mapping[0]] === 'lazy.jsx'
+        && Number.isInteger(asyncUiSourceMap.uiMaps[index])
+        && asyncUiSourceMap.sources[mapping[0]] === 'lazy.jsx'
       )
     ) {
-      throw new Error('Async node index mappings should point to lazy.jsx');
+      throw new Error('Async UI source map uiMaps should point to lazy.jsx');
+    }
+    if (
+      !asyncUiSourceMap.mappings.some(mapping =>
+        Array.isArray(mapping)
+        && mapping.length === 3
+        && asyncUiSourceMap.sources[mapping[0]] === 'lazy.jsx'
+      )
+    ) {
+      throw new Error('Async UI source map mappings should point to lazy.jsx');
     }
   },
 };

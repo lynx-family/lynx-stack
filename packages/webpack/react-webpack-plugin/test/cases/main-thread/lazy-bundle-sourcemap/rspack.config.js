@@ -6,7 +6,7 @@ import {
 import { createConfig } from '../../../create-react-config.js';
 
 const config = createConfig({
-  enableNodeIndex: true,
+  enableUiSourceMap: true,
 }, {
   mainThreadChunks: [
     'main__main-thread.js',
@@ -37,21 +37,21 @@ export default {
     {
       apply(compiler) {
         compiler.hooks.thisCompilation.tap(
-          'CaptureNodeIndexMapPlugin',
+          'CaptureUiSourceMapPlugin',
           (compilation) => {
             compilation.hooks.processAssets.tap(
               {
-                name: 'CaptureNodeIndexMapPlugin',
+                name: 'CaptureUiSourceMapPlugin',
                 stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT,
               },
               () => {
                 compilation.getAssets()
-                  .filter(asset => asset.name.endsWith('node-index-map.json'))
+                  .filter(asset => asset.name.endsWith('ui-source-map.json'))
                   .forEach((asset) => {
                     compilation.emitAsset(
                       asset.name.replace(
-                        'node-index-map.json',
-                        'captured-node-index-map.json',
+                        'ui-source-map.json',
+                        'captured-ui-source-map.json',
                       ),
                       asset.source,
                     );

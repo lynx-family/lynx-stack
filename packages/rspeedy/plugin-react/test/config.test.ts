@@ -485,7 +485,7 @@ describe('Config', () => {
     `)
   })
 
-  test('enableNodeIndex defaults to false', async () => {
+  test('enableUiSourceMap defaults to false', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     const { ReactWebpackPlugin } = await import('@lynx-js/react-webpack-plugin')
 
@@ -506,7 +506,7 @@ describe('Config', () => {
         ReactWebpackPlugin.loaders.MAIN_THREAD,
       ),
     ).toMatchObject({
-      enableNodeIndex: false,
+      enableUiSourceMap: false,
     })
 
     const reactWebpackPlugin = config?.plugins?.find((
@@ -518,11 +518,11 @@ describe('Config', () => {
     expect(reactWebpackPlugin).toBeDefined()
     // @ts-expect-error private field
     expect(reactWebpackPlugin?.options).toMatchObject({
-      enableNodeIndex: false,
+      enableUiSourceMap: false,
     })
   })
 
-  test('enableNodeIndex can be enabled explicitly', async () => {
+  test('enableUiSourceMap can be enabled explicitly', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     const { ReactWebpackPlugin } = await import('@lynx-js/react-webpack-plugin')
 
@@ -530,7 +530,7 @@ describe('Config', () => {
       rspeedyConfig: {
         plugins: [
           pluginReactLynx({
-            enableNodeIndex: true,
+            enableUiSourceMap: true,
           }),
           pluginStubRspeedyAPI(),
         ],
@@ -545,7 +545,7 @@ describe('Config', () => {
         ReactWebpackPlugin.loaders.MAIN_THREAD,
       ),
     ).toMatchObject({
-      enableNodeIndex: true,
+      enableUiSourceMap: true,
     })
 
     const reactWebpackPlugin = config?.plugins?.find((
@@ -557,7 +557,7 @@ describe('Config', () => {
     expect(reactWebpackPlugin).toBeDefined()
     // @ts-expect-error private field
     expect(reactWebpackPlugin?.options).toMatchObject({
-      enableNodeIndex: true,
+      enableUiSourceMap: true,
     })
   })
 

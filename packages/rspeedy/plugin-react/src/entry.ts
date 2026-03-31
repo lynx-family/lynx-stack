@@ -44,7 +44,7 @@ export function applyEntry(
     enableCSSInheritance,
     enableCSSInvalidation,
     enableCSSSelector,
-    enableNodeIndex,
+    enableUiSourceMap,
     enableNewGesture,
     enableRemoveCSSScope,
     firstScreenSyncTiming,
@@ -271,7 +271,7 @@ export function applyEntry(
       .plugin(PLUGIN_NAME_REACT)
       .after(PLUGIN_NAME_TEMPLATE)
       .use(ReactWebpackPlugin, [{
-        enableNodeIndex,
+        enableUiSourceMap,
         disableCreateSelectorQueryIncompatibleWarning: compat
           ?.disableCreateSelectorQueryIncompatibleWarning ?? false,
         firstScreenSyncTiming,

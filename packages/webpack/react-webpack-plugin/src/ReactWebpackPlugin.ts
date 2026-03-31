@@ -17,57 +17,59 @@ import { LAYERS } from './layer.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 
 const require = createRequire(import.meta.url);
-const NODE_INDEX_RECORDS_BUILD_INFO = 'lynxNodeIndexRecords';
-const NODE_INDEX_ASSET_NAME = 'node-index-map.json';
+const UI_SOURCE_MAP_RECORDS_BUILD_INFO = 'lynxUiSourceMapRecords';
+const UI_SOURCE_MAP_ASSET_NAME = 'ui-source-map.json';
 
-interface NodeIndexRecord {
-  nodeIndex: number;
+interface UiSourceMapRecord {
+  uiSourceMap: number;
   filename: string;
   lineNumber: number;
   columnNumber: number;
   snapshotId: string;
 }
 
-interface NodeIndexMapAsset {
+interface UiSourceMapAsset {
   version: 1;
   sources: string[];
   mappings: [number, number, number][];
   uiMaps: number[];
 }
 
-interface ModuleWithNodeIndexBuildInfo {
+interface ModuleWithUiSourceMapBuildInfo {
   identifier?: () => string;
   buildInfo?: Record<string, unknown>;
-  modules?: Iterable<ModuleWithNodeIndexBuildInfo>;
+  modules?: Iterable<ModuleWithUiSourceMapBuildInfo>;
 }
 
-function collectNodeIndexRecordsFromModule(
-  module: ModuleWithNodeIndexBuildInfo,
-): NodeIndexRecord[] {
-  const records = module.buildInfo?.[NODE_INDEX_RECORDS_BUILD_INFO];
+function collectUiSourceMapRecordsFromModule(
+  module: ModuleWithUiSourceMapBuildInfo,
+): UiSourceMapRecord[] {
+  const records = module.buildInfo?.[UI_SOURCE_MAP_RECORDS_BUILD_INFO];
   if (Array.isArray(records)) {
-    return records as NodeIndexRecord[];
+    return records as UiSourceMapRecord[];
   }
 
   if (module.modules) {
     return Array.from(module.modules)
-      .flatMap(nestedModule => collectNodeIndexRecordsFromModule(nestedModule));
+      .flatMap(nestedModule =>
+        collectUiSourceMapRecordsFromModule(nestedModule)
+      );
   }
 
   return [];
 }
 
-function compareNodeIndexRecord(
-  a: NodeIndexRecord,
-  b: NodeIndexRecord,
+function compareUiSourceMapRecord(
+  a: UiSourceMapRecord,
+  b: UiSourceMapRecord,
 ): number {
   return a.filename.localeCompare(b.filename)
     || a.lineNumber - b.lineNumber
     || a.columnNumber - b.columnNumber
-    || a.nodeIndex - b.nodeIndex;
+    || a.uiSourceMap - b.uiSourceMap;
 }
 
-function normalizeNodeIndexSource(
+function normalizeUiSourceMapSource(
   projectRoot: string,
   filename: string,
 ): string {
@@ -92,10 +94,10 @@ function normalizeNodeIndexSource(
   return path.posix.normalize(normalizedFilename);
 }
 
-function createNodeIndexMapAsset(
+function createUiSourceMapAsset(
   projectRoot: string,
-  records: NodeIndexRecord[],
-): NodeIndexMapAsset {
+  records: UiSourceMapRecord[],
+): UiSourceMapAsset {
   const sources: string[] = [];
   const sourceIndexes = new Map<string, number>();
   const mappings: [number, number, number][] = [];
@@ -106,7 +108,7 @@ function createNodeIndexMapAsset(
       continue;
     }
 
-    const source = normalizeNodeIndexSource(projectRoot, record.filename);
+    const source = normalizeUiSourceMapSource(projectRoot, record.filename);
     const sourceIndex = sourceIndexes.get(source) ?? sources.length;
 
     if (!sourceIndexes.has(source)) {
@@ -119,7 +121,7 @@ function createNodeIndexMapAsset(
       record.lineNumber,
       record.columnNumber,
     ]);
-    uiMaps.push(record.nodeIndex);
+    uiMaps.push(record.uiSourceMap);
   }
 
   return {
@@ -137,11 +139,11 @@ function createNodeIndexMapAsset(
  */
 interface ReactWebpackPluginOptions {
   /**
-   * Whether to emit node-index-map assets for tasm encode.
+   * Whether to emit ui-source-map assets for tasm encode.
    *
    * @defaultValue `false`
    */
-  enableNodeIndex?: boolean;
+  enableUiSourceMap?: boolean;
 
   /**
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat.disableCreateSelectorQueryIncompatibleWarning}
@@ -260,7 +262,7 @@ class ReactWebpackPlugin {
    */
   static defaultOptions: Readonly<Required<ReactWebpackPluginOptions>> = Object
     .freeze<Required<ReactWebpackPluginOptions>>({
-      enableNodeIndex: false,
+      enableUiSourceMap: false,
       disableCreateSelectorQueryIncompatibleWarning: false,
       firstScreenSyncTiming: 'immediately',
       globalPropsMode: 'reactive',
@@ -412,29 +414,29 @@ class ReactWebpackPlugin {
             });
           }
 
-          if (options.enableNodeIndex) {
-            const nodeIndexRecords = this.#collectNodeIndexRecords(
+          if (options.enableUiSourceMap) {
+            const uiSourceMapRecords = this.#collectUiSourceMapRecords(
               compilation,
               args.entryNames,
             );
-            const nodeIndexAssetName = path.posix.format({
+            const uiSourceMapAssetName = path.posix.format({
               dir: args.intermediate,
-              base: NODE_INDEX_ASSET_NAME,
+              base: UI_SOURCE_MAP_ASSET_NAME,
             });
             compilation.emitAsset(
-              nodeIndexAssetName,
+              uiSourceMapAssetName,
               new RawSource(
                 JSON.stringify(
-                  createNodeIndexMapAsset(
+                  createUiSourceMapAsset(
                     compilation.compiler.context,
-                    nodeIndexRecords,
+                    uiSourceMapRecords,
                   ),
                   null,
                   2,
                 ),
               ),
             );
-            args.intermediateAssets.push(nodeIndexAssetName);
+            args.intermediateAssets.push(uiSourceMapAssetName);
           }
 
           return args;
@@ -537,11 +539,11 @@ class ReactWebpackPlugin {
     );
   }
 
-  #collectNodeIndexRecords(
+  #collectUiSourceMapRecords(
     compilation: Compilation,
     entryNames: string[],
-  ): NodeIndexRecord[] {
-    const moduleSet = new Set<ModuleWithNodeIndexBuildInfo>();
+  ): UiSourceMapRecord[] {
+    const moduleSet = new Set<ModuleWithUiSourceMapBuildInfo>();
 
     for (const entryName of entryNames) {
       const chunkGroup = compilation.namedChunkGroups.get(entryName)
@@ -554,16 +556,16 @@ class ReactWebpackPlugin {
         for (
           const module of compilation.chunkGraph.getChunkModulesIterable(chunk)
         ) {
-          moduleSet.add(module as ModuleWithNodeIndexBuildInfo);
+          moduleSet.add(module as ModuleWithUiSourceMapBuildInfo);
         }
       }
     }
 
-    const deduped = new Map<string, NodeIndexRecord>();
+    const deduped = new Map<string, UiSourceMapRecord>();
     for (const module of moduleSet) {
-      for (const record of collectNodeIndexRecordsFromModule(module)) {
+      for (const record of collectUiSourceMapRecordsFromModule(module)) {
         const key = [
-          record.nodeIndex,
+          record.uiSourceMap,
           record.filename,
           record.lineNumber,
           record.columnNumber,
@@ -573,7 +575,7 @@ class ReactWebpackPlugin {
       }
     }
 
-    return Array.from(deduped.values()).sort(compareNodeIndexRecord);
+    return Array.from(deduped.values()).sort(compareUiSourceMapRecord);
   }
 }
 

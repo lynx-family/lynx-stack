@@ -25,8 +25,8 @@ export const LAYERS: {
 export interface ReactLoaderOptions {
     compat?: CompatVisitorConfig | undefined;
     defineDCE?: DefineDceVisitorConfig | undefined;
-    enableNodeIndex?: boolean | undefined;
     enableRemoveCSSScope?: boolean | undefined;
+    enableUiSourceMap?: boolean | undefined;
     engineVersion?: string | undefined;
     inlineSourcesContent?: boolean | undefined;
     jsx?: JsxTransformerConfig | undefined;
@@ -45,8 +45,8 @@ export class ReactWebpackPlugin {
 // @public
 export interface ReactWebpackPluginOptions {
     disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
-    enableNodeIndex?: boolean;
     enableSSR?: boolean;
+    enableUiSourceMap?: boolean;
     // @alpha
     experimental_isLazyBundle?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;

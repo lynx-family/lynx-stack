@@ -8,7 +8,7 @@ import type { LoaderDefinitionFunction } from '@rspack/core';
 import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
-const NODE_INDEX_RECORDS_BUILD_INFO = 'lynxNodeIndexRecords';
+const UI_SOURCE_MAP_RECORDS_BUILD_INFO = 'lynxUiSourceMapRecords';
 
 const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
   content,
@@ -99,7 +99,7 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     | Record<string, unknown>
     | undefined;
   if (buildInfo) {
-    buildInfo[NODE_INDEX_RECORDS_BUILD_INFO] = result.nodeIndexRecords;
+    buildInfo[UI_SOURCE_MAP_RECORDS_BUILD_INFO] = result.uiSourceMapRecords;
   }
 
   this.callback(

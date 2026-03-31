@@ -8,8 +8,8 @@ import { defineConfig } from '@lynx-js/rspeedy';
 import type { RsbuildPlugin, Rspack } from '@lynx-js/rspeedy';
 import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 
-const NODE_INDEX_MAP_ASSET = 'node-index-map.json';
-const MOCK_UPLOAD_BASE_URL = 'https://mock-node-index-upload.lynx.dev/';
+const UI_SOURCE_MAP_ASSET = 'ui-source-map.json';
+const MOCK_UPLOAD_BASE_URL = 'https://mock-ui-source-map-upload.lynx.dev/';
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 interface GitMetadata {
@@ -63,7 +63,7 @@ function getGitMetadata(): GitMetadata {
   };
 }
 
-function mockUploadNodeIndexMap(
+function mockUploadUiSourceMap(
   filenameTemplate: string,
   intermediate: string,
 ): string {
@@ -77,7 +77,7 @@ function mockUploadNodeIndexMap(
   );
   const assetPath = path.posix.join(
     normalizedIntermediate.replace(/^\.\//, ''),
-    NODE_INDEX_MAP_ASSET,
+    UI_SOURCE_MAP_ASSET,
   );
 
   return new URL(
@@ -86,9 +86,9 @@ function mockUploadNodeIndexMap(
   ).toString();
 }
 
-function pluginMockNodeIndexUpload(): RsbuildPlugin {
+function pluginMockUiSourceMapUpload(): RsbuildPlugin {
   return {
-    name: 'example:mock-node-index-upload',
+    name: 'example:mock-ui-source-map-upload',
     setup(api) {
       const git = getGitMetadata();
 
@@ -99,14 +99,14 @@ function pluginMockNodeIndexUpload(): RsbuildPlugin {
 
         if (!exposed) {
           throw new Error(
-            '[example:mock-node-index-upload] Missing exposed LynxTemplatePlugin',
+            '[example:mock-ui-source-map-upload] Missing exposed LynxTemplatePlugin',
           );
         }
 
-        chain.plugin('example:mock-node-index-upload').use({
+        chain.plugin('example:mock-ui-source-map-upload').use({
           apply(compiler) {
             compiler.hooks.thisCompilation.tap(
-              'example:mock-node-index-upload',
+              'example:mock-ui-source-map-upload',
               compilation => {
                 const hooks = exposed.LynxTemplatePlugin
                   .getLynxTemplatePluginHooks(
@@ -117,21 +117,21 @@ function pluginMockNodeIndexUpload(): RsbuildPlugin {
 
                 hooks.beforeEncode.tapPromise(
                   {
-                    name: 'example:mock-node-index-upload',
+                    name: 'example:mock-ui-source-map-upload',
                     stage: 1000,
                   },
                   async args => {
                     const assetName = path.posix.format({
                       dir: args.intermediate,
-                      base: NODE_INDEX_MAP_ASSET,
+                      base: UI_SOURCE_MAP_ASSET,
                     });
-                    const nodeIndexMapAsset = compilation.getAsset(assetName);
+                    const uiSourceMapAsset = compilation.getAsset(assetName);
 
-                    if (nodeIndexMapAsset) {
-                      const currentContent = nodeIndexMapAsset.source
+                    if (uiSourceMapAsset) {
+                      const currentContent = uiSourceMapAsset.source
                         .source()
                         .toString();
-                      const nodeIndexMap = JSON.parse(currentContent) as Record<
+                      const uiSourceMap = JSON.parse(currentContent) as Record<
                         string,
                         unknown
                       >;
@@ -141,12 +141,12 @@ function pluginMockNodeIndexUpload(): RsbuildPlugin {
                         new compiler.webpack.sources.RawSource(
                           JSON.stringify(
                             {
-                              ...nodeIndexMap,
+                              ...uiSourceMap,
                               meta: {
                                 ...(
-                                  typeof nodeIndexMap['meta'] === 'object'
-                                    && nodeIndexMap['meta'] !== null
-                                    ? nodeIndexMap['meta'] as Record<
+                                  typeof uiSourceMap['meta'] === 'object'
+                                    && uiSourceMap['meta'] !== null
+                                    ? uiSourceMap['meta'] as Record<
                                       string,
                                       unknown
                                     >
@@ -162,8 +162,8 @@ function pluginMockNodeIndexUpload(): RsbuildPlugin {
                       );
                     }
 
-                    const nodeIndexMapUrl = await Promise.resolve(
-                      mockUploadNodeIndexMap(
+                    const uiSourceMapUrl = await Promise.resolve(
+                      mockUploadUiSourceMap(
                         args.filenameTemplate,
                         args.intermediate,
                       ),
@@ -171,7 +171,7 @@ function pluginMockNodeIndexUpload(): RsbuildPlugin {
 
                     args.encodeData.sourceContent.config = {
                       ...args.encodeData.sourceContent.config,
-                      nodeIndexMapUrl,
+                      uiSourceMapUrl,
                     };
 
                     return args;
@@ -199,9 +199,9 @@ export default defineConfig({
   },
   plugins: [
     pluginReactLynx({
-      enableNodeIndex: true,
+      enableUiSourceMap: true,
     }),
-    pluginMockNodeIndexUpload(),
+    pluginMockUiSourceMapUpload(),
     pluginQRCode({
       schema(url) {
         return `${url}?fullscreen=true`;

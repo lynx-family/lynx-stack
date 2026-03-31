@@ -171,13 +171,13 @@ describe('Validation', () => {
       `)
   })
 
-  test('enableNodeIndex', () => {
-    expect(validateConfig({ enableNodeIndex: true })).toStrictEqual({
-      enableNodeIndex: true,
+  test('enableUiSourceMap', () => {
+    expect(validateConfig({ enableUiSourceMap: true })).toStrictEqual({
+      enableUiSourceMap: true,
     })
-    expect(() => validateConfig({ enableNodeIndex: null }))
+    expect(() => validateConfig({ enableUiSourceMap: null }))
       .toThrowErrorMatchingInlineSnapshot(`
-        [Error: Invalid config on pluginReactLynx: \`$input.enableNodeIndex\`.
+        [Error: Invalid config on pluginReactLynx: \`$input.enableUiSourceMap\`.
           - Expect to be (boolean | undefined)
           - Got: null
         ]
