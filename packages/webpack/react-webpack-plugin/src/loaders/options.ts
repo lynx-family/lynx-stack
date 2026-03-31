@@ -182,7 +182,7 @@ function getCommonOptions(
     // TODO: config
     worklet: {
       filename: filename,
-      runtimePkg: RUNTIME_PKG,
+      runtimePkg: PUBLIC_RUNTIME_PKG,
       target: 'MIXED',
     },
     directiveDCE: false,

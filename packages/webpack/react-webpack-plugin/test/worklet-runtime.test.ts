@@ -12,7 +12,7 @@ import { describe, expect, it } from 'vitest';
 interface WorkletRuntimeCase {
   caseName: string;
   expectedChunkNames: string[];
-  expectedInitSignatureCount: number;
+  expectedMainThreadInitSignatureCount: number;
   expectedRegisterIdCount: number;
 }
 
@@ -92,38 +92,49 @@ async function buildCase(caseName: string): Promise<BuildOutput> {
     },
   };
 
-  await new Promise<Stats>((resolve, reject) => {
-    const compiler = rspack(config);
-    compiler.run((error, stats) => {
-      compiler.close(closeError => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        if (closeError) {
-          reject(closeError);
-          return;
-        }
-        if (!stats) {
-          reject(new Error(`Missing stats for case ${caseName}`));
-          return;
-        }
-        if (stats.hasErrors()) {
-          reject(
-            new Error(
-              stats.toString({
-                all: false,
-                errors: true,
-                errorDetails: true,
-              }),
-            ),
-          );
-          return;
-        }
-        resolve(stats);
+  const previousUseNapi = process.env['USE_NAPI'];
+  process.env['USE_NAPI'] = '1';
+
+  try {
+    await new Promise<Stats>((resolve, reject) => {
+      const compiler = rspack(config);
+      compiler.run((error, stats) => {
+        compiler.close(closeError => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          if (closeError) {
+            reject(closeError);
+            return;
+          }
+          if (!stats) {
+            reject(new Error(`Missing stats for case ${caseName}`));
+            return;
+          }
+          if (stats.hasErrors()) {
+            reject(
+              new Error(
+                stats.toString({
+                  all: false,
+                  errors: true,
+                  errorDetails: true,
+                }),
+              ),
+            );
+            return;
+          }
+          resolve(stats);
+        });
       });
     });
-  });
+  } finally {
+    if (previousUseNapi === undefined) {
+      delete process.env['USE_NAPI'];
+    } else {
+      process.env['USE_NAPI'] = previousUseNapi;
+    }
+  }
 
   const tasmPath = path.join(outputPath, '.rspeedy', 'tasm.json');
   const tasm = await fs.readFile(tasmPath, 'utf8');
@@ -140,14 +151,14 @@ describe('worklet-runtime bundler guardrails', () => {
   it.each<WorkletRuntimeCase>([
     {
       caseName: 'chunk',
-      expectedChunkNames: ['worklet-runtime'],
-      expectedInitSignatureCount: 1,
+      expectedChunkNames: [],
+      expectedMainThreadInitSignatureCount: 1,
       expectedRegisterIdCount: 2,
     },
     {
       caseName: 'not-using',
       expectedChunkNames: [],
-      expectedInitSignatureCount: 0,
+      expectedMainThreadInitSignatureCount: 0,
       expectedRegisterIdCount: 0,
     },
   ])(
@@ -155,7 +166,7 @@ describe('worklet-runtime bundler guardrails', () => {
     async ({
       caseName,
       expectedChunkNames,
-      expectedInitSignatureCount,
+      expectedMainThreadInitSignatureCount,
       expectedRegisterIdCount,
     }) => {
       const { lepusChunk, mainThreadSource } = await buildCase(caseName);
@@ -167,19 +178,14 @@ describe('worklet-runtime bundler guardrails', () => {
       );
 
       expect(workletRuntimeChunks).toEqual(expectedChunkNames);
-
-      if (expectedChunkNames.length > 0) {
-        expect(lepusChunk['worklet-runtime'].length).toBeGreaterThan(0);
-        expect(
-          countOccurrences(
-            lepusChunk['worklet-runtime'],
-            'globalThis.lynxWorkletImpl = {',
-          ),
-        ).toBe(expectedInitSignatureCount);
-      } else {
-        expect(lepusChunk['worklet-runtime']).toBeUndefined();
-        expect(expectedInitSignatureCount).toBe(0);
-      }
+      expect(lepusChunk['worklet-runtime']).toBeUndefined();
+      expect(
+        countOccurrences(
+          mainThreadSource,
+          'globalThis.lynxWorkletImpl = {',
+        ),
+      ).toBe(expectedMainThreadInitSignatureCount);
+      expect(mainThreadSource).not.toContain('__workletRuntimeLoaded');
 
       expect(registeredWorkletIds).toHaveLength(expectedRegisterIdCount);
       expect(new Set(registeredWorkletIds).size).toBe(
