@@ -8,7 +8,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { Argv } from 'create-rstack'
-import { checkCancel, create, multiselect, select } from 'create-rstack'
+import { checkCancel, copyFolder, create, select } from 'create-rstack'
 
 type LANG = 'js' | 'ts'
 
@@ -24,26 +24,21 @@ const { devDependencies } = require('../package.json') as {
 interface Template {
   template: string
   lang: LANG
-  tools?: Record<string, string> | undefined
 }
 
 const composeTemplateName = ({
   template,
-  tools,
   lang,
 }: {
   template: string
-  tools?: Record<string, string> | undefined
   lang: LANG
 }) => {
-  const toolsKeys = (tools ? Object.keys(tools) : []).sort()
-  const toolsStr = toolsKeys.length > 0 ? `-${toolsKeys.join('-')}` : ''
-  return `${template}${toolsStr}-${lang}`
+  return `${template}-${lang}`
 }
 
 const TEMPLATES: Template[] = [
-  { template: 'react', tools: {}, lang: 'ts' },
-  { template: 'react', tools: {}, lang: 'js' },
+  { template: 'react', lang: 'ts' },
+  { template: 'react', lang: 'js' },
 ] as const
 
 async function getTemplateName({ template }: Argv) {
@@ -51,6 +46,9 @@ async function getTemplateName({ template }: Argv) {
     const pair = template.split('-')
     const lang = pair[pair.length - 1]
     if (lang && ['js', 'ts'].includes(lang)) {
+      if (pair[0] === 'react') {
+        return `react-${lang}`
+      }
       return template
     }
     // default to ts
@@ -67,46 +65,42 @@ async function getTemplateName({ template }: Argv) {
     }),
   )
 
-  const tools = checkCancel<string[]>(
-    await multiselect({
-      message:
-        'Select development tools (Use <space> to select, <enter> to continue)',
-      required: false,
-      options: [
-        {
-          value: 'vitest-rltl',
-          label: 'Add ReactLynx Testing Library for unit testing',
-        },
-      ],
-      initialValues: [
-        'vitest-rltl',
-      ],
-    }),
-  )
-
   return composeTemplateName({
     template: 'react',
     lang: language,
-    tools: Object.fromEntries(
-      tools.map((tool) => [tool, tool]),
-    ),
   })
 }
 
 void create({
   root: path.resolve(__dirname, '..'),
   name: 'rspeedy',
-  templates: TEMPLATES.map(({ template, tools, lang }) =>
-    composeTemplateName({ template, lang, tools })
+  templates: TEMPLATES.map(({ template, lang }) =>
+    composeTemplateName({ template, lang })
   ),
   version: devDependencies,
   getTemplateName,
+  extraTools: [
+    {
+      value: 'vitest-rltl',
+      label: 'ReactLynx Testing Library - unit testing',
+      order: 'pre',
+      when: (templateName) =>
+        templateName === 'react-js' || templateName === 'react-ts',
+      action: ({ distFolder, addAgentsMdSearchDirs }) => {
+        const from = path.resolve(__dirname, '..', 'template-react-vitest-rltl')
+        copyFolder({
+          from,
+          to: distFolder,
+          isMergePackageJson: true,
+        })
+        addAgentsMdSearchDirs(from)
+      },
+    },
+  ],
   mapESLintTemplate(templateName) {
-    const lang = TEMPLATES.find(({ template }) =>
-      templateName.startsWith(template)
-    )?.lang
+    const lang = templateName.split('-').at(-1)
 
-    if (!lang) return null
+    if (lang !== 'js' && lang !== 'ts') return null
 
     switch (lang) {
       case 'js':
