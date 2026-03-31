@@ -15,3 +15,6 @@ napi-derive = { workspace = true, optional = true }
 serde = { workspace = true, features = ["derive"] }
 swc_core = { workspace = true, features = ["ecma_parser", "ecma_visit", "testing_transform"] }
 swc_plugins_shared = { path = "../swc_plugins_shared" }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(swc_ast_unknown)'] }

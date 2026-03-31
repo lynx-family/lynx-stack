@@ -759,8 +759,9 @@ class LynxTemplatePluginImpl {
     );
 
     let templateDebugUrl = '';
+    const intermediatePosix = intermediate.replace(/\\/g, '/');
     const debugInfoPath = path.posix.format({
-      dir: intermediate,
+      dir: intermediatePosix,
       base: 'debug-info.json',
     });
     // TODO: Support publicPath function
@@ -866,8 +867,8 @@ class LynxTemplatePluginImpl {
 
     if (isDebug() || isDev) {
       compilation.emitAsset(
-        path.format({
-          dir: intermediate,
+        path.posix.format({
+          dir: intermediatePosix,
           base: 'tasm.json',
         }),
         new RawSource(
@@ -877,8 +878,8 @@ class LynxTemplatePluginImpl {
       Object.entries(resolvedEncodeOptions.lepusCode.lepusChunk).forEach(
         ([name, content]) => {
           compilation.emitAsset(
-            path.format({
-              dir: intermediate,
+            path.posix.format({
+              dir: intermediatePosix,
               name,
               ext: '.js',
             }),

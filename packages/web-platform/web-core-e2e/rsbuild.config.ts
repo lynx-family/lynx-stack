@@ -53,7 +53,7 @@ export default defineConfig({
         tag: 'script',
         append: false,
         attrs: {
-          module: 'true',
+          type: 'module',
           src:
             '/node_modules/@lynx-js/web-core/dist/client_prod/static/js/client.js',
         },

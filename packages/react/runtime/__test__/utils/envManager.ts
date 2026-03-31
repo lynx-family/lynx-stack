@@ -2,15 +2,18 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { getJSModule } from './jsModule.js';
-import { BackgroundSnapshotInstance } from '../../src/backgroundSnapshot.js';
+import {
+  BackgroundSnapshotInstance,
+  backgroundSnapshotInstanceManager,
+} from '../../src/snapshot/backgroundSnapshot.js';
 import { setupBackgroundDocument, setupDocument } from '../../src/document.js';
 import { deinitGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch.js';
 import { shouldDelayUiOps } from '../../src/lifecycle/ref/delay.js';
 import { clearListGlobal } from '../../src/list.js';
 import { globalPipelineOptions, setPipeline } from '../../src/lynx/performance.js';
 import { __root, setRoot } from '../../src/root.js';
-import { SnapshotInstance, backgroundSnapshotInstanceManager, snapshotInstanceManager } from '../../src/snapshot.js';
-import { hydrationMap } from '../../src/snapshotInstanceHydrationMap.js';
+import { SnapshotInstance, snapshotInstanceManager } from '../../src/snapshot/snapshot.js';
+import { hydrationMap } from '../../src/snapshot/snapshotInstanceHydrationMap.js';
 import { clearWorkletRefLastIdForTesting } from '../../src/worklet/ref/workletRef.js';
 
 export class EnvManager {

@@ -23,22 +23,26 @@ import { options } from 'preact';
 
 import type { RunWorkletCtxData } from '@lynx-js/react/worklet-runtime/bindings';
 
+import {
+  globalBackgroundSnapshotInstancesToRemove,
+  setGlobalBackgroundSnapshotInstancesToRemove,
+} from './globalState.js';
+import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
+import type { SnapshotPatch } from './snapshotPatch.js';
+import { profileEnd, profileStart } from '../../debug/profile.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../lynx/performance.js';
 import { COMMIT } from '../../renderToOpcodes/constants.js';
+import { backgroundSnapshotInstanceManager } from '../../snapshot/backgroundSnapshot.js';
 import { applyQueuedRefs } from '../../snapshot/ref.js';
-import { backgroundSnapshotInstanceManager } from '../../snapshot.js';
 import { hook, isEmptyObject } from '../../utils.js';
-import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValue.js';
-import { getReloadVersion } from '../pass.js';
-import type { SnapshotPatch } from './snapshotPatch.js';
-import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
-import { profileEnd, profileStart } from '../../debug/profile.js';
 import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../worklet/call/delayedRunOnMainThreadData.js';
+import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValue.js';
 import { isRendering } from '../isRendering.js';
+import { getReloadVersion } from '../pass.js';
 
 let globalFlushOptions: FlushOptions = {};
 
@@ -50,8 +54,6 @@ function takeGlobalFlushOptions() {
 
 const globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map<number, () => void>();
 let nextCommitTaskId = 1;
-
-let globalBackgroundSnapshotInstancesToRemove: number[] = [];
 
 /**
  * A single patch operation.
@@ -119,7 +121,7 @@ function replaceCommitHook(): void {
       markTiming('diffVdomEnd');
 
       const backgroundSnapshotInstancesToRemove = globalBackgroundSnapshotInstancesToRemove;
-      globalBackgroundSnapshotInstancesToRemove = [];
+      setGlobalBackgroundSnapshotInstancesToRemove([]);
 
       const commitTaskId = genCommitTaskId();
 
@@ -151,7 +153,7 @@ function replaceCommitHook(): void {
         id: commitTaskId,
       };
       // TODO: check all fields in `flushOptions` from runtime3
-      if (snapshotPatch?.length) {
+      if (snapshotPatch.length) {
         patch.snapshotPatch = snapshotPatch;
       }
       const patchList: PatchList = {
@@ -160,7 +162,7 @@ function replaceCommitHook(): void {
       if (!isEmptyObject(flushOptions)) {
         patchList.flushOptions = flushOptions;
       }
-      if (snapshotPatch && delayedRunOnMainThreadData.length) {
+      if (delayedRunOnMainThreadData.length) {
         patchList.delayedRunOnMainThreadData = takeDelayedRunOnMainThreadData();
       }
       const obj = commitPatchUpdate(patchList, patchOptions);

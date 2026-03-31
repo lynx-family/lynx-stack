@@ -5,7 +5,7 @@ import { options } from 'preact';
 import type { ComponentClass, VNode } from 'preact';
 
 import { DIFFED, DOM } from '../renderToOpcodes/constants.js';
-import type { SnapshotInstance } from '../snapshot.js';
+import type { SnapshotInstance } from '../snapshot/snapshot.js';
 import { getDisplayName } from '../utils.js';
 
 export function initRenderAlog(): void {

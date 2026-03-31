@@ -103,6 +103,7 @@ export const lynxViewTests = (
     name,
     data,
     moduleName,
+    _dom,
     dispatchNapiModules,
   ) => {
     if (name === 'getColor' && moduleName === 'color_methods') {

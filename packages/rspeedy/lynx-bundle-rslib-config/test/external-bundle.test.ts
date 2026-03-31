@@ -26,6 +26,33 @@ async function build(rslibConfig: RslibConfig) {
   return await rslib.build()
 }
 
+function resolveExternal(
+  rslibConfig: RslibConfig,
+  request: string,
+) {
+  const externalsResolver = rslibConfig.lib[0]?.output?.externals as
+    | ((
+      data: { request?: string },
+      callback: (error?: Error, result?: unknown) => void,
+    ) => void)
+    | undefined
+
+  return new Promise<unknown>((resolve, reject) => {
+    if (!externalsResolver) {
+      reject(new Error('Expected output.externals to be configured'))
+      return
+    }
+
+    externalsResolver({ request }, (error, result) => {
+      if (error) {
+        reject(error)
+        return
+      }
+      resolve(result)
+    })
+  })
+}
+
 describe('define config', () => {
   it('should return entry config', () => {
     const rslibConfig = defineExternalBundleRslibConfig({
@@ -47,6 +74,25 @@ describe('define config', () => {
       syntax: 'es2019',
     })
     expect(rslibConfig.lib[0]?.syntax).toBe('es2019')
+  })
+
+  it('should preserve default minify jsOptions when output.minify is true', () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      output: {
+        minify: true,
+      },
+    })
+
+    expect(rslibConfig.lib[0]?.output?.minify).toMatchObject({
+      jsOptions: {
+        minimizerOptions: {
+          compress: {
+            negate_iife: false,
+            side_effects: false,
+          },
+        },
+      },
+    })
   })
 })
 
@@ -328,8 +374,9 @@ describe('debug mode artifacts', () => {
 })
 
 describe('mount externals library', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+
   it('should mount externals library to lynx by default', async () => {
-    const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
     const rslibConfig = defineExternalBundleRslibConfig({
       source: {
         entry: {
@@ -365,8 +412,193 @@ describe('mount externals library', () => {
       'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
     )
   })
+
+  it('should apply reactlynx externals preset to the final bundle', async () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      id: 'utils-reactlynx-preset',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist'),
+        },
+        externalsPresets: {
+          reactlynx: true,
+        },
+        minify: false,
+        globalObject: 'globalThis',
+      },
+      plugins: [pluginReactLynx()],
+    })
+
+    await expect(resolveExternal(rslibConfig, 'react')).resolves
+      .toEqual([
+        'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
+        'ReactLynx',
+        'React',
+      ])
+    await expect(resolveExternal(rslibConfig, '@lynx-js/react')).resolves
+      .toEqual([
+        'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
+        'ReactLynx',
+        'React',
+      ])
+
+    await build(rslibConfig)
+
+    const decodedResult = await decodeTemplate(
+      path.join(
+        fixtureDir,
+        'dist/utils-reactlynx-preset.lynx.bundle',
+      ),
+    )
+    expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
+      'utils',
+      'utils__main-thread',
+    ])
+    expect(decodedResult['custom-sections']['utils']).toContain(
+      'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
+    )
+    expect(decodedResult['custom-sections']['utils__main-thread']).toContain(
+      'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
+    )
+  })
+
+  it('should let explicit externals override the reactlynx preset', async () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      id: 'utils-reactlynx-preset-override',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist'),
+        },
+        externalsPresets: {
+          reactlynx: true,
+        },
+        externals: {
+          '@lynx-js/react': ['CustomRuntime', 'React'],
+        },
+        minify: false,
+        globalObject: 'globalThis',
+      },
+      plugins: [pluginReactLynx()],
+    })
+
+    await build(rslibConfig)
+
+    const decodedResult = await decodeTemplate(
+      path.join(
+        fixtureDir,
+        'dist/utils-reactlynx-preset-override.lynx.bundle',
+      ),
+    )
+    expect(decodedResult['custom-sections']['utils']).toContain(
+      'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].CustomRuntime.React',
+    )
+    expect(decodedResult['custom-sections']['utils__main-thread']).toContain(
+      'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].CustomRuntime.React',
+    )
+    expect(decodedResult['custom-sections']['utils']).not.toContain(
+      'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
+    )
+    expect(decodedResult['custom-sections']['utils__main-thread']).not
+      .toContain(
+        'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
+      )
+  })
+
+  it('should allow extending the built-in reactlynx preset', async () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      id: 'utils-reactlynx-custom-extend',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist'),
+        },
+        externalsPresets: {
+          reactlynxPlus: true,
+        },
+        externalsPresetDefinitions: {
+          reactlynxPlus: {
+            extends: 'reactlynx',
+            externals: {
+              '@lynx-js/react': ['CustomRuntime', 'React'],
+            },
+          },
+        },
+        minify: false,
+        globalObject: 'globalThis',
+      },
+      plugins: [pluginReactLynx()],
+    })
+    await expect(resolveExternal(rslibConfig, '@lynx-js/react')).resolves
+      .toEqual([
+        'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
+        'CustomRuntime',
+        'React',
+      ])
+    await expect(resolveExternal(rslibConfig, '@lynx-js/react/jsx-runtime'))
+      .resolves.toEqual([
+        'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
+        'ReactLynx',
+        'ReactJSXRuntime',
+      ])
+  })
+
+  it('should allow custom externals presets that are not built in', async () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      id: 'utils-custom-preset',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist'),
+        },
+        externalsPresets: {
+          lynxUi: true,
+        },
+        externalsPresetDefinitions: {
+          lynxUi: {
+            externals: {
+              '@lynx-js/react': ['LynxUI', 'React'],
+              '@lynx-js/react/jsx-runtime': ['LynxUI', 'ReactJSXRuntime'],
+            },
+          },
+        },
+        minify: false,
+        globalObject: 'globalThis',
+      },
+      plugins: [pluginReactLynx()],
+    })
+    await expect(resolveExternal(rslibConfig, '@lynx-js/react')).resolves
+      .toEqual([
+        'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
+        'LynxUI',
+        'React',
+      ])
+    await expect(resolveExternal(rslibConfig, '@lynx-js/react/jsx-runtime'))
+      .resolves.toEqual([
+        'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
+        'LynxUI',
+        'ReactJSXRuntime',
+      ])
+  })
+
   it('should mount externals library to globalThis', async () => {
-    const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
     const rslibConfig = defineExternalBundleRslibConfig({
       source: {
         entry: {

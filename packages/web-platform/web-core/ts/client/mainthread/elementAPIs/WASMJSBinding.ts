@@ -174,6 +174,7 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
       eventObject,
       bubblePath.slice(0, bubblePathLength),
       eventObject.type,
+      event.bubbles,
     );
   };
 

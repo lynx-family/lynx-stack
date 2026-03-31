@@ -4,11 +4,14 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { backgroundSnapshotInstanceManager, snapshotInstanceManager } from '../../src/snapshot';
 import { elementTree } from '../utils/nativeMethod';
-import { BackgroundSnapshotInstance } from '../../src/backgroundSnapshot';
+import {
+  BackgroundSnapshotInstance,
+  backgroundSnapshotInstanceManager,
+  SnapshotInstance,
+  snapshotInstanceManager,
+} from '../../src/snapshot';
 import { printSerializedSnapshotInstance, printSnapshotInstance } from '../../src/debug/printSnapshot';
-import { SnapshotInstance } from '../../src/snapshot';
 
 const HOLE = null;
 

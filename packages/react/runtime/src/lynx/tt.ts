@@ -6,7 +6,6 @@ import { process, render } from 'preact';
 import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
 import type { FirstScreenData } from '../lifecycleConstant.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from './performance.js';
-import { BackgroundSnapshotInstance, hydrate } from '../backgroundSnapshot.js';
 import { runWithForce } from './runWithForce.js';
 import { printSnapshotInstanceToString } from '../debug/printSnapshot.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
@@ -21,8 +20,12 @@ import { runDelayedUiOps } from '../lifecycle/ref/delay.js';
 import { reloadBackground } from '../lifecycle/reload.js';
 import { CHILDREN } from '../renderToOpcodes/constants.js';
 import { __root } from '../root.js';
-import { backgroundSnapshotInstanceManager } from '../snapshot.js';
-import type { SerializedSnapshotInstance } from '../snapshot.js';
+import {
+  BackgroundSnapshotInstance,
+  backgroundSnapshotInstanceManager,
+  hydrate,
+} from '../snapshot/backgroundSnapshot.js';
+import type { SerializedSnapshotInstance } from '../snapshot/types.js';
 import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,

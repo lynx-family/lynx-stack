@@ -6,11 +6,10 @@
 import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { hydrate } from '../../src/backgroundSnapshot';
 import { useState } from '../../src/index';
 import { initGlobalSnapshotPatch, takeGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch';
 import { snapshotPatchApply } from '../../src/lifecycle/patch/snapshotPatchApply';
-import { backgroundSnapshotInstanceManager, setupPage, snapshotInstanceManager } from '../../src/snapshot';
+import { setupPage, snapshotInstanceManager, hydrate, backgroundSnapshotInstanceManager } from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree } from '../utils/nativeMethod';
 
@@ -56,7 +55,9 @@ describe('spreadUpdate', () => {
       });
       return (
         <view>
-          <text {...spread} data-outside={'outside'}>1</text>
+          <text {...spread} data-outside={'outside'}>
+            1
+          </text>
         </view>
       );
     }

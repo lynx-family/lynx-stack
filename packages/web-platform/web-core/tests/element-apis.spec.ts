@@ -1264,6 +1264,44 @@ describe('Element APIs', () => {
     );
   });
 
+  test('event with bubbles: false should not bubble to parent', () => {
+    vi.spyOn(mtsBinding, 'addEventListener');
+    vi.spyOn(mtsBinding, 'publishEvent');
+    let page = mtsGlobalThis.__CreatePage('0', 0);
+    let parent = mtsGlobalThis.__CreateComponent(
+      0,
+      'id1',
+      0,
+      'test_entry',
+      'name',
+      'path',
+      {},
+      {},
+    );
+    let parentUid = mtsGlobalThis.__GetElementUniqueID(parent);
+    let child = mtsGlobalThis.__CreateView(parentUid);
+    mtsGlobalThis.__AppendElement(page, parent);
+    mtsGlobalThis.__AppendElement(parent, child);
+    mtsGlobalThis.__SetID(parent, 'parent_id');
+    mtsGlobalThis.__SetID(child, 'child_id');
+    mtsGlobalThis.__AddEvent(parent, 'bindEvent', 'tap', 'parent_hname');
+    mtsGlobalThis.__AddEvent(child, 'bindEvent', 'tap', 'child_hname');
+    mtsGlobalThis.__FlushElementTree();
+    const event = new window.Event('click', { bubbles: false });
+    rootDom.querySelector('#child_id')?.dispatchEvent(event);
+    expect(mtsBinding.addEventListener).toBeCalledWith('tap');
+    expect(mtsBinding.publishEvent).toBeCalledTimes(1);
+    expect(mtsBinding.publishEvent).toBeCalledWith(
+      'child_hname',
+      'id1',
+      expect.any(Object),
+      expect.any(Number),
+      undefined,
+      expect.any(Number),
+      undefined,
+    );
+  });
+
   test('__UpdateComponentInfo', () => {
     let ele = mtsGlobalThis.__CreateComponent(
       0,

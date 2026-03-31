@@ -7,7 +7,7 @@ import { createRef } from 'preact';
 import { Component } from 'preact';
 import { expect } from 'vitest';
 import { __globalSnapshotPatch } from '../../../runtime/lib/lifecycle/patch/snapshotPatch.js';
-import { snapshotInstanceManager } from '../../../runtime/lib/snapshot.js';
+import { snapshotInstanceManager } from '../../../runtime/lib/snapshot/index.js';
 
 test('render calls useEffect immediately', async () => {
   const cb = vi.fn();

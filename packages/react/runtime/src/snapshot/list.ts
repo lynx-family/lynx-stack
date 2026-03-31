@@ -4,7 +4,7 @@
 
 import { hydrate } from '../hydrate.js';
 import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from '../list.js';
-import type { SnapshotInstance } from '../snapshot.js';
+import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
 const destroyLifetimeHandlerMap = new Map<number, () => void>();
 

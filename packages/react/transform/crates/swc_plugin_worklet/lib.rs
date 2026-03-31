@@ -543,6 +543,8 @@ impl VisitMut for WorkletVisitor {
               ImportSpecifier::Namespace(ns) => {
                 self.shared_identifiers.insert(ns.local.to_id());
               }
+              #[cfg(swc_ast_unknown)]
+              _ => panic!("unknown node"),
             }
           }
         }

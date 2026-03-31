@@ -17,14 +17,11 @@ const setIsRendering = () => {
   });
 };
 
-hook(options, RENDER_COMPONENT, (old, ...args) => {
+const onRenderHook = <T extends unknown[]>(old: ((...args: T) => void) | undefined, ...args: T) => {
   /* v8 ignore next */
-  old?.(...args);
+  if (old) old(...args);
   setIsRendering();
-});
+};
 
-hook(options, ROOT, (old, ...args) => {
-  /* v8 ignore next */
-  old?.(...args);
-  setIsRendering();
-});
+hook(options, RENDER_COMPONENT, onRenderHook);
+hook(options, ROOT, onRenderHook);

@@ -172,6 +172,74 @@ test.describe('web core tests', () => {
     expect(fail).toBe(false);
   });
 
+  test('__QueryComponent without processEvalResult', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+
+    await page.evaluate(() => {
+      delete (globalThis as any).runtime.processEvalResult;
+    });
+
+    const evalResult = await page.evaluate(async () => {
+      return new Promise((resolve) => {
+        globalThis.addEventListener('unhandledrejection', (e) => {
+          resolve({ error: e.reason?.message ?? String(e.reason) });
+        });
+        globalThis.runtime.__QueryComponent(
+          '/resources/mock-component.json',
+          (res: any) => {
+            resolve(res);
+          },
+        );
+      });
+    });
+
+    expect(evalResult).toMatchObject({
+      code: 0,
+    });
+    expect((evalResult as any).data.url).toBe('/resources/mock-component.json');
+    expect((evalResult as any).data.evalResult).toEqual({
+      mockResult: 'MOCKED_EVAL_RESULT',
+    });
+  });
+
+  test('__QueryComponent with processEvalResult', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+
+    await page.evaluate(() => {
+      (globalThis as any).runtime.processEvalResult = (
+        exports: any,
+        url: string,
+      ) => {
+        return 'OVERRIDDEN_MOCKED_EVAL_RESULT';
+      };
+    });
+
+    const evalResult = await page.evaluate(async () => {
+      return new Promise((resolve) => {
+        globalThis.addEventListener('unhandledrejection', (e) => {
+          resolve({ error: e.reason?.message ?? String(e.reason) });
+        });
+        globalThis.runtime.__QueryComponent(
+          '/resources/mock-component.json',
+          (res: any) => {
+            resolve(res);
+          },
+        );
+      });
+    });
+
+    expect(evalResult).toMatchObject({
+      code: 0,
+    });
+    expect((evalResult as any).data.evalResult).toBe(
+      'OVERRIDDEN_MOCKED_EVAL_RESULT',
+    );
+  });
+
   test('api-enableJSDataProcessor disables processData', async ({ page, browserName }) => {
     test.skip(browserName === 'firefox');
     await goto(page, 'web-core.enable-js-data-processor.json');
@@ -813,6 +881,102 @@ test.describe('web core tests', () => {
     });
     // Only 1 animation should remain (the replaced one was cancelled)
     expect(animations).toBe(1);
+  });
+
+  test('__ElementAnimate FINISH replaces existing animation with same name', async ({ page, browserName }) => {
+    // firefox not support
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    await page.evaluate(() => {
+      const root = globalThis.runtime.__CreatePage('0', '0', {});
+      const element = globalThis.runtime.__CreateElement('view', '0', {});
+      globalThis.runtime.__AppendElement(root, element);
+      globalThis.runtime.__FlushElementTree();
+      // Start first animation
+      globalThis.runtime.__ElementAnimate(element, [
+        0, /* START */
+        'test-anim-replace-finish',
+        [{ opacity: '0' }, { opacity: '1' }],
+        { duration: 5000 },
+      ]);
+      // Finish the animation
+      globalThis.runtime.__ElementAnimate(element, [
+        4, /* FINISH */
+        'test-anim-replace-finish',
+      ]);
+      // Start second animation with same name - should override the FINISH state
+      globalThis.runtime.__ElementAnimate(element, [
+        0, /* START */
+        'test-anim-replace-finish',
+        [{ opacity: '1' }, { opacity: '0.5' }],
+        { duration: 5000, fillMode: 'forwards' },
+      ]);
+    });
+    await wait(100);
+    const playState = await page.evaluate(() => {
+      const lynxView = document.querySelector('lynx-view') as any;
+      const root = lynxView?.shadowRoot ?? lynxView;
+      const el = root?.querySelector('x-view');
+      const anims = el?.getAnimations() ?? [];
+      return anims[0]?.playState;
+    });
+    // The second animation is running, so playState should be 'running'
+    expect(playState).toBe('running');
+  });
+
+  test('api-triggerComponentEvent dispatches CustomEvent on component', async ({ page, browserName }) => {
+    test.skip(browserName === 'firefox');
+    await goto(page);
+    await page.evaluate(() => {
+      const root = globalThis.runtime.__CreatePage('0', '0', {});
+      const component = globalThis.runtime.__CreateComponent(
+        '1',
+        'my-test-comp',
+        '0',
+        '',
+        '',
+        '',
+        {},
+        {},
+      );
+      globalThis.runtime.__AppendElement(root, component);
+      globalThis.runtime.__FlushElementTree();
+
+      (window as any).__eventReceived = null;
+      window.addEventListener('my-custom-event', (e: Event) => {
+        const ce = e as CustomEvent;
+        (window as any).__eventReceived = {
+          type: ce.type,
+          detail: ce.detail,
+          bubbles: ce.bubbles,
+          composed: ce.composed,
+        };
+      });
+    });
+
+    await wait(200);
+    const backWorker = await getBackgroundThreadWorker(page);
+    await backWorker.evaluate(() => {
+      globalThis.runtime.lynx.getNativeApp().triggerComponentEvent(
+        'my-custom-event',
+        {
+          componentId: 'my-test-comp',
+          eventOption: { bubbles: true, composed: true },
+          eventDetail: { foo: 'bar' },
+        },
+      );
+    });
+
+    await wait(500);
+    const result = await page.evaluate(() => {
+      return (window as any).__eventReceived;
+    });
+
+    expect(result).not.toBeNull();
+    expect(result.type).toBe('my-custom-event');
+    expect(result.detail).toEqual({ foo: 'bar' });
+    expect(result.bubbles).toBe(true);
+    expect(result.composed).toBe(true);
   });
 
   test('source-map-release', async ({ page, browserName }) => {

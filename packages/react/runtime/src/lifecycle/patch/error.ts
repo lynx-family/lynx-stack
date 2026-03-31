@@ -2,7 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { backgroundSnapshotInstanceManager, snapshotManager } from '../../snapshot.js';
+import { backgroundSnapshotInstanceManager } from '../../snapshot/backgroundSnapshot.js';
+import { snapshotManager } from '../../snapshot/definition.js';
 
 export const ctxNotFoundType = 'Lynx.Error.CtxNotFound';
 

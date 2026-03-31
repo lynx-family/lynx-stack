@@ -23,7 +23,6 @@ export function applyRefresh(api: RsbuildPluginAPI): void {
       await applyRefreshRules(api, chain, CHAIN_ID, ReactRefreshWebpackPlugin)
     }
   })
-
   api.modifyBundlerChain(async (chain, { isProd, CHAIN_ID }) => {
     if (!isProd) {
       // biome-ignore lint/correctness/useHookAtTopLevel: not react hooks
