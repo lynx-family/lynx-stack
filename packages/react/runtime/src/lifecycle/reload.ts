@@ -14,8 +14,8 @@ import { LifecycleConstant } from '../lifecycleConstant.js';
 import { __pendingListUpdates } from '../pendingListUpdates.js';
 import { __root, setRoot } from '../root.js';
 import { destroyBackground } from './destroy.js';
+import { SnapshotInstance, snapshotInstanceManager } from '../snapshot/snapshot.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
-import { SnapshotInstance, __page, snapshotInstanceManager } from '../snapshot.js';
 import { isEmptyObject } from '../utils.js';
 import { clearJSReadyEventIdSwap, isJSReady } from './event/jsReady.js';
 import { increaseReloadVersion } from './pass.js';
@@ -23,6 +23,7 @@ import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
 import { shouldDelayUiOps } from './ref/delay.js';
 import { renderMainThread } from './render.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
+import { __page } from '../snapshot/definition.js';
 
 function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {

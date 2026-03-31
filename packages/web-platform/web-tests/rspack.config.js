@@ -23,7 +23,6 @@ const config = {
   cache: false,
   entry: {
     main: './shell-project/index.ts',
-    'main-thread-test': './shell-project/mainthread-test.ts',
     'web-core': './shell-project/web-core.ts',
     'fp-only': './shell-project/fp-only.ts',
   },
@@ -74,21 +73,6 @@ const config = {
       chunks: ['main'],
       scriptLoading: 'module',
       filename: 'ssr.html',
-    }),
-    new rspack.HtmlRspackPlugin({
-      title: 'mainthread-test',
-      meta: {
-        viewport:
-          'width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no',
-        'apple-mobile-web-app-capable': 'yes',
-        'apple-mobile-web-app-status-bar-style': 'default',
-        'screen-orientation': 'portrait',
-        'format-detection': 'telephone=no',
-        'x5-orientation': 'portrait',
-      },
-      chunks: ['main-thread-test'],
-      scriptLoading: 'module',
-      filename: 'main-thread-test.html',
     }),
     new rspack.HtmlRspackPlugin({
       title: 'lynx-for-web-core-test',
@@ -230,7 +214,27 @@ const config = {
     rules: [
       {
         test: /\.css$/,
-        type: 'css',
+        oneOf: [
+          {
+            resourceQuery: /inline/,
+            use: [
+              {
+                loader: 'css-loader',
+                options: {
+                  exportType: 'string',
+                },
+              },
+            ],
+            type: 'javascript/auto',
+          },
+          {
+            use: [
+              'style-loader',
+              'css-loader',
+            ],
+            type: 'javascript/auto',
+          },
+        ],
       },
       {
         test: /\.tsx$|\.ts$/,
@@ -265,6 +269,7 @@ const config = {
   },
   experiments: {
     futureDefaults: true,
+    css: false,
   },
   // TODO: enable lazy compilation
   lazyCompilation: false,

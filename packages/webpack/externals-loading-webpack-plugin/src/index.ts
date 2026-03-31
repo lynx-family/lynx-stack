@@ -90,6 +90,13 @@ export interface ExternalsLoadingPluginOptions {
    * @default 'lynx'
    */
   globalObject?: 'lynx' | 'globalThis' | undefined;
+
+  /**
+   * The timeout in milliseconds for loading the externals.
+   *
+   * @defaultValue 2000
+   */
+  timeout?: number | undefined;
 }
 
 /**
@@ -99,9 +106,23 @@ export interface ExternalsLoadingPluginOptions {
  */
 export interface ExternalValue {
   /**
-   * The bundle url of the library. The library source should be placed in `customSections`.
+   * The final bundle URL to fetch directly at runtime.
+   *
+   * Use this when the external bundle is hosted outside the current build
+   * output, such as on a CDN. If both `url` and `bundlePath` are provided,
+   * `url` takes precedence because it is already the fully resolved address.
    */
-  url: string;
+  url?: string;
+
+  /**
+   * The bundle path resolved against the runtime public path.
+   *
+   * Prefer this over `url` when the bundle should follow the active
+   * `publicPath`. The runtime will load it with `publicPath + bundlePath`,
+   * which keeps external bundle resolution aligned with the current build
+   * output without hard-coding an absolute URL into the generated runtime code.
+   */
+  bundlePath?: string;
 
   /**
    * The name of the library. Same as https://webpack.js.org/configuration/externals/#string.
@@ -225,6 +246,18 @@ function getLynxExternalGlobal(globalObject?: string) {
   return `${globalObject ?? 'lynx'}[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]`;
 }
 
+function validateExternals(externals: Record<string, ExternalValue>): void {
+  for (const [request, external] of Object.entries(externals)) {
+    if (external.url || external.bundlePath) {
+      continue;
+    }
+
+    throw new Error(
+      `ExternalsLoadingPlugin requires \`url\` or \`bundlePath\` for external "${request}".`,
+    );
+  }
+}
+
 /**
  * The webpack plugin to load lynx external bundles.
  *
@@ -260,20 +293,30 @@ function getLynxExternalGlobal(globalObject?: string) {
  * @public
  */
 export class ExternalsLoadingPlugin {
-  constructor(private options: ExternalsLoadingPluginOptions) {}
+  constructor(private options: ExternalsLoadingPluginOptions) {
+    validateExternals(this.options.externals);
+  }
 
   apply(compiler: Compiler): void {
     const { RuntimeModule } = compiler.webpack;
 
     const externalsLoadingPluginOptions = this.options;
+    const externals = externalsLoadingPluginOptions.externals ?? {};
 
     class ExternalsLoadingRuntimeModule extends RuntimeModule {
-      constructor(private options: { layer: string }) {
-        super('externals-loading-runtime');
+      constructor(
+        public runtimeRequirements: Set<string>,
+        private options: { layer: string },
+      ) {
+        super(
+          'externals-loading-runtime',
+          RuntimeModule.STAGE_TRIGGER,
+        );
+        this.runtimeRequirements = runtimeRequirements;
       }
 
       override generate() {
-        if (!this.chunk?.name || !externalsLoadingPluginOptions.externals) {
+        if (!this.chunk?.name || !externals) {
           return '';
         }
         return this.#genExternalsLoadingCode(this.options.layer);
@@ -302,14 +345,14 @@ export class ExternalsLoadingPlugin {
         const isMainThreadLayer = layer === 'mainThread';
         for (
           const [pkgName, external] of Object.entries(
-            externalsLoadingPluginOptions.externals,
+            externals,
           )
         ) {
           externalsMap.set(external.libraryName ?? pkgName, external);
         }
-        const externals = Array.from(externalsMap.entries());
+        const finalExternals = Array.from(externalsMap.entries());
 
-        if (externals.length === 0) {
+        if (finalExternals.length === 0) {
           return '';
         }
         const lynxExternalGlobal = getLynxExternalGlobal(
@@ -351,6 +394,7 @@ function createLoadExternalAsync(handler, sectionPath) {
     })
   })
 }
+
 function createLoadExternalSync(handler, sectionPath, timeout) {
   const response = handler.wait(timeout)
   if (response.code === 0) {
@@ -385,12 +429,14 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
 
         const hasUrlLibraryNamePairInjected = new Set();
 
-        for (const [pkgName, external] of externals) {
+        for (const [pkgName, external] of finalExternals) {
           const {
             libraryName,
             url,
+            bundlePath,
             async = true,
-            timeout: timeoutInMs = 2000,
+            timeout: timeoutInMs = externalsLoadingPluginOptions.timeout
+              ?? 2000,
           } = external;
           const layerOptions = external[layer];
           // Lynx fetchBundle timeout is in seconds
@@ -405,15 +451,27 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             ? libraryNameWithDefault[0]
             : libraryNameWithDefault;
 
-          const hash = `${url}-${libraryNameStr}`;
+          const normalizedExternal = bundlePath
+            ? {
+              ...external,
+              bundlePath: bundlePath.replace(/^\/+/, ''),
+            }
+            : external;
+          const urlKey = url ?? `bundlePath:${normalizedExternal.bundlePath}`;
+          const hash = `${urlKey}-${libraryNameStr}`;
           if (hasUrlLibraryNamePairInjected.has(hash)) {
             continue;
           }
           hasUrlLibraryNamePairInjected.add(hash);
 
+          const fetchExpr = normalizedExternal.url
+            ? JSON.stringify(normalizedExternal.url)
+            : `${compiler.webpack.RuntimeGlobals.publicPath} + ${
+              JSON.stringify(normalizedExternal.bundlePath)
+            }`;
           url2fetchCode.set(
-            url,
-            `lynx.fetchBundle(${JSON.stringify(url)}, {});`,
+            urlKey,
+            `lynx.fetchBundle(${fetchExpr}, {});`,
           );
 
           const mountVar = `${
@@ -424,7 +482,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           if (async) {
             loadCode.add(
               `${mountVar} = ${mountVar} === undefined ? createLoadExternalAsync(handler${
-                [...url2fetchCode.keys()].indexOf(url)
+                [...url2fetchCode.keys()].indexOf(urlKey)
               }, ${JSON.stringify(layerOptions.sectionPath)}) : ${mountVar};`,
             );
             continue;
@@ -432,7 +490,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
 
           loadCode.add(
             `${mountVar} = ${mountVar} === undefined ? createLoadExternalSync(handler${
-              [...url2fetchCode.keys()].indexOf(url)
+              [...url2fetchCode.keys()].indexOf(urlKey)
             }, ${
               JSON.stringify(layerOptions.sectionPath)
             }, ${timeout}) : ${mountVar};`,
@@ -465,26 +523,34 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
       ExternalsLoadingRuntimeModule.name,
       compilation => {
         compilation.hooks.additionalTreeRuntimeRequirements
-          .tap(ExternalsLoadingRuntimeModule.name, (chunk) => {
-            const modules = compilation.chunkGraph.getChunkModulesIterable(
-              chunk,
-            );
-            let layer: string | undefined;
-            for (const module of modules) {
-              if (module.layer) {
-                layer = module.layer;
-                break;
+          .tap(
+            ExternalsLoadingRuntimeModule.name,
+            (chunk, runtimeRequirements) => {
+              const modules = compilation.chunkGraph.getChunkModulesIterable(
+                chunk,
+              );
+              let layer: string | undefined;
+              for (const module of modules) {
+                if (module.layer) {
+                  layer = module.layer;
+                  break;
+                }
               }
-            }
-            if (!layer) {
-              // Skip chunks without a layer
-              return;
-            }
-            compilation.addRuntimeModule(
-              chunk,
-              new ExternalsLoadingRuntimeModule({ layer }),
-            );
-          });
+              if (!layer) {
+                // Skip chunks without a layer
+                return;
+              }
+              runtimeRequirements.add(
+                compiler.webpack.RuntimeGlobals.publicPath,
+              );
+              compilation.addRuntimeModule(
+                chunk,
+                new ExternalsLoadingRuntimeModule(runtimeRequirements, {
+                  layer,
+                }),
+              );
+            },
+          );
       },
     );
   }

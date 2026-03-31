@@ -441,6 +441,8 @@ where
         .any(|attr_or_spread| match attr_or_spread {
           JSXAttrOrSpread::SpreadElement(_) => true,
           JSXAttrOrSpread::JSXAttr(_) => false,
+          #[cfg(swc_ast_unknown)]
+          _ => panic!("unknown node"),
         });
 
       if jsx_is_list_item(n) {
@@ -471,6 +473,8 @@ where
               JSXAttrOrSpread::SpreadElement(_spread) => {
                 return false;
               }
+              #[cfg(swc_ast_unknown)]
+              _ => panic!("unknown node"),
             }
 
             true
@@ -507,7 +511,11 @@ where
               _ => true,
             },
             JSXAttrName::JSXNamespacedName(_) => true,
+            #[cfg(swc_ast_unknown)]
+            _ => panic!("unknown node"),
           },
+          #[cfg(swc_ast_unknown)]
+          _ => panic!("unknown node"),
         });
 
       if has_spread_element {
@@ -590,6 +598,8 @@ where
                         })) => {}
                         Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
                         Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
+                        #[cfg(swc_ast_unknown)]
+                        _ => panic!("unknown node"),
                       };
                     }
                     AttrName::Dataset(name) => {
@@ -629,6 +639,8 @@ where
                         })) => {}
                         Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
                         Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
+                        #[cfg(swc_ast_unknown)]
+                        _ => panic!("unknown node"),
                       };
                     }
                     AttrName::Event(..) | AttrName::Ref => {
@@ -694,6 +706,8 @@ where
                         })) => {}
                         Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
                         Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
+                        #[cfg(swc_ast_unknown)]
+                        _ => panic!("unknown node"),
                       };
                     }
                     AttrName::Class => {
@@ -734,6 +748,8 @@ where
                         })) => {}
                         Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
                         Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
+                        #[cfg(swc_ast_unknown)]
+                        _ => panic!("unknown node"),
                       };
                     }
                     AttrName::ID => {
@@ -764,6 +780,8 @@ where
                         })) => {}
                         Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
                         Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
+                        #[cfg(swc_ast_unknown)]
+                        _ => panic!("unknown node"),
                       };
                     }
                     AttrName::ListItemPlatformInfo => unreachable!("Unexpected ListItemPlatformInfo attribute in static JSX processing"),
@@ -795,8 +813,12 @@ where
                     _ => todo!(),
                   }
                 }
+                #[cfg(swc_ast_unknown)]
+                _ => panic!("unknown node"),
               };
             }
+            #[cfg(swc_ast_unknown)]
+            _ => panic!("unknown node"),
           });
       }
 

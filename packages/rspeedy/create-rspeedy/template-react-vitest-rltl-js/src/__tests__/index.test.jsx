@@ -39,7 +39,7 @@ test('App', async () => {
           >
             <view
               class="Logo"
-              style="transform:translateY(0px)"
+              style="transform: translateY(0px);"
             >
               <image
                 class="Logo--lynx"

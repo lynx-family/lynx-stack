@@ -10,8 +10,9 @@ import { ssrHydrateByOpcodes } from '../opcodes.js';
 import { __pendingListUpdates } from '../pendingListUpdates.js';
 import { __root, setRoot } from '../root.js';
 import { markTiming, setPipeline } from './performance.js';
+import { __page, setupPage } from '../snapshot/definition.js';
+import { SnapshotInstance } from '../snapshot/snapshot.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
-import { SnapshotInstance, __page, setupPage } from '../snapshot.js';
 import { isEmptyObject } from '../utils.js';
 
 function ssrEncode() {

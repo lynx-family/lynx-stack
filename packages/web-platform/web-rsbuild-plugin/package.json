@@ -38,7 +38,7 @@
     "vitest": "^3.2.4"
   },
   "peerDependencies": {
-    "@lynx-js/web-core": ">0.13.0",
+    "@lynx-js/web-core": ">0.0.0",
     "@rsbuild/core": "*"
   }
 }

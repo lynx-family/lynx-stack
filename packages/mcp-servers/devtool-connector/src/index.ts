@@ -31,7 +31,12 @@ import type {
   Transport,
   TransportConnectOptions,
 } from './transport/transport.ts';
-import { isInitializeResponse, isListSessionResponse } from './types.ts';
+import {
+  isGetGlobalSwitchResponse,
+  isInitializeResponse,
+  isListSessionResponse,
+  isSetGlobalSwitchResponse,
+} from './types.ts';
 import type {
   AppInfo,
   CDPRequestMessage,
@@ -117,6 +122,12 @@ export class Connector {
     return results
       .filter(result => result.status === 'fulfilled')
       .flatMap(({ value }) => value);
+  }
+
+  async close(): Promise<void> {
+    await Promise.allSettled(
+      this.#transports.map(t => t.close()),
+    );
   }
 
   async listAvailableApps(deviceId: string): Promise<App[]> {
@@ -261,7 +272,9 @@ export class Connector {
             options.port,
           ),
         ],
-        output: [],
+        output: [
+          new FilterTransformStream(isGetGlobalSwitchResponse),
+        ],
       },
     );
 
@@ -282,7 +295,9 @@ export class Connector {
       input: [
         new GlobalSwitchRequestTransformStream('SetGlobalSwitch', options.port),
       ],
-      output: [],
+      output: [
+        new FilterTransformStream(isSetGlobalSwitchResponse),
+      ],
     });
   }
 
@@ -463,7 +478,9 @@ export class Connector {
             input: [
               new GlobalSwitchRequestTransformStream('SetGlobalSwitch', port),
             ],
-            output: [],
+            output: [
+              new FilterTransformStream(isSetGlobalSwitchResponse),
+            ],
           },
         );
       } catch (err) {

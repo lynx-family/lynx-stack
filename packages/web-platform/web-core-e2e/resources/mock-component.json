@@ -1,0 +1,9 @@
+{
+  "appType": "lazy",
+  "lepusCode": {
+    "root": "({ mockResult: 'MOCKED_EVAL_RESULT' })"
+  },
+  "pageConfig": {
+    "enableCSSSelector": true
+  }
+}

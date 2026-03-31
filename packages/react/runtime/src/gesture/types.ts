@@ -3,17 +3,19 @@
 // LICENSE file in the root directory of this source tree.
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
-export enum GestureTypeInner {
-  COMPOSED = -1,
-  PAN = 0,
-  FLING = 1,
-  DEFAULT = 2,
-  TAP = 3,
-  LONGPRESS = 4,
-  ROTATION = 5,
-  PINCH = 6,
-  NATIVE = 7,
-}
+export const GestureTypeInner = {
+  COMPOSED: -1,
+  PAN: 0,
+  FLING: 1,
+  DEFAULT: 2,
+  TAP: 3,
+  LONGPRESS: 4,
+  ROTATION: 5,
+  PINCH: 6,
+  NATIVE: 7,
+} as const;
+
+export type GestureTypeInner = (typeof GestureTypeInner)[keyof typeof GestureTypeInner];
 
 export interface GestureKind {
   type: GestureTypeInner;
@@ -22,7 +24,7 @@ export interface GestureKind {
 }
 
 export interface ComposedGesture extends GestureKind {
-  type: GestureTypeInner.COMPOSED;
+  type: (typeof GestureTypeInner)['COMPOSED'];
   gestures: GestureKind[];
 }
 

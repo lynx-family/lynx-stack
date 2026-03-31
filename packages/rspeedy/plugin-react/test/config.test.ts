@@ -670,6 +670,60 @@ describe('Config', () => {
       expect(firstScreenSyncTiming).toBe('immediately')
     })
 
+    test('globalPropsMode defaults to "reactive"', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      const ReactWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+
+      expect(ReactWebpackPlugin).toBeDefined()
+
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const { globalPropsMode } = ReactWebpackPlugin?.options ?? {}
+      expect(globalPropsMode).toBe('reactive')
+    })
+
+    test('globalPropsMode respects configuration', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx({ globalPropsMode: 'event' }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      const ReactWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+
+      expect(ReactWebpackPlugin).toBeDefined()
+
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const { globalPropsMode } = ReactWebpackPlugin?.options ?? {}
+      expect(globalPropsMode).toBe('event')
+    })
+
     test('environments.lynx.output.inlineScripts: false', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
       const rsbuild = await createRspeedy({
@@ -1409,7 +1463,7 @@ describe('Config', () => {
           "main__main-thread": {
             "filename": ".rspeedy/main/main-thread.js",
             "import": [
-              "<WORKSPACE>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
+              "<ROOT>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
               "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
@@ -1459,7 +1513,7 @@ describe('Config', () => {
           "main__main-thread": {
             "filename": ".rspeedy/main/main-thread.js",
             "import": [
-              "<WORKSPACE>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
+              "<ROOT>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
               "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
@@ -2018,6 +2072,88 @@ describe('Config', () => {
       expect(builtCode).not.toContain('profileStart(\'test\')')
       expect(builtCode).toContain('Config is: profile-off-mode')
     })
+
+    test('minify should remove thread-specific pure funcs from built outputs', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      vi.stubEnv('NODE_ENV', 'production')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          source: {
+            entry: {
+              main: new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
+                .pathname,
+            },
+          },
+          output: {
+            filenameHash: false,
+            minify: {
+              js: true,
+              jsOptions: {
+                minimizerOptions: {
+                  compress: {
+                    pure_funcs: ['console.info'],
+                  },
+                },
+              },
+              mainThreadOptions: {
+                minimizerOptions: {
+                  compress: {
+                    pure_funcs: ['NativeModules.call'],
+                  },
+                },
+              },
+              backgroundOptions: {
+                minimizerOptions: {
+                  compress: {
+                    pure_funcs: ['lynx.registerDataProcessors'],
+                  },
+                },
+              },
+            },
+          },
+          environments: {
+            lynx: {},
+          },
+          plugins: [pluginReactLynx()],
+        },
+      })
+
+      try {
+        await rsbuild.build()
+      } catch (_error) {
+        expect.fail('build should succeed')
+      }
+
+      const mainThreadPath = path.join(
+        rsbuild.context.distPath,
+        '.rspeedy/main',
+        'main-thread.js',
+      )
+      const backgroundPath = path.join(
+        rsbuild.context.distPath,
+        '.rspeedy/main',
+        'background.js',
+      )
+
+      if (!existsSync(mainThreadPath) || !existsSync(backgroundPath)) {
+        expect.fail('expected main-thread and background outputs to exist')
+      }
+
+      const mainThreadCode = readFileSync(mainThreadPath, 'utf8')
+      const backgroundCode = readFileSync(backgroundPath, 'utf8')
+
+      expect(mainThreadCode).not.toContain('background-only')
+      expect(mainThreadCode).toContain('main-thread-only')
+      expect(mainThreadCode).not.toContain('default console.info')
+      expect(mainThreadCode).toContain('default console.warn')
+
+      expect(backgroundCode).toContain('background-only')
+      expect(backgroundCode).not.toContain('main-thread-only')
+      expect(backgroundCode).not.toContain('default console.info')
+      expect(backgroundCode).toContain('default console.warn')
+    })
   })
 
   test('default LynxTemplatePlugin options', async () => {
@@ -2179,7 +2315,7 @@ describe('Config', () => {
             "main__main-thread": {
               "filename": ".rspeedy/main/main-thread.js",
               "import": [
-                "<WORKSPACE>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
+                "<ROOT>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
                 "./src/index.js",
               ],
               "layer": "react:main-thread",
