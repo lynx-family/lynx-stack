@@ -10,11 +10,11 @@ import '../global.js';
  * @returns A boolean indicating whether the Lepus chunk was loaded and initialized successfully.
  */
 function loadWorkletRuntime(__schema?: string): boolean {
-  if (typeof __LoadLepusChunk === 'undefined') {
-    return false;
-  }
   if (globalThis.lynxWorkletImpl) {
     return true;
+  }
+  if (typeof __LoadLepusChunk === 'undefined') {
+    return false;
   }
   return __LoadLepusChunk('worklet-runtime', {
     dynamicComponentEntry: __schema,

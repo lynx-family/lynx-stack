@@ -29,7 +29,6 @@ function initWorklet(): void {
   if (isRunOnBackgroundEnabled()) {
     globalThis.lynxWorkletImpl._jsFunctionLifecycleManager = new JsFunctionLifecycleManager();
   }
-
   globalThis.registerWorklet = registerWorklet;
   globalThis.registerWorkletInternal = registerWorklet;
   globalThis.runWorklet = runWorklet;
