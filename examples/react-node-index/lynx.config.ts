@@ -169,8 +169,8 @@ function pluginMockNodeIndexUpload(): RsbuildPlugin {
                       ),
                     );
 
-                    args.encodeData.compilerOptions = {
-                      ...args.encodeData.compilerOptions,
+                    args.encodeData.sourceContent.config = {
+                      ...args.encodeData.sourceContent.config,
                       nodeIndexMapUrl,
                     };
 
