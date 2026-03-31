@@ -62,6 +62,21 @@ describe('Lazy Exports', () => {
     );
   });
 
+  test('bridge worklet-related internal exports through target symbol', async () => {
+    const realAPIs = Object.assign(
+      {},
+      await import('@lynx-js/react/internal'),
+    );
+    const { sExportsReactInternal, target } = await import('../lazy/target.js');
+
+    expect(target[sExportsReactInternal]).toBeDefined();
+    expect(ReactInternalExports.loadWorkletRuntime).toBe(realAPIs.loadWorkletRuntime);
+    expect(ReactInternalExports.loadWorkletRuntime).toBe(target[sExportsReactInternal].loadWorkletRuntime);
+    expect(ReactInternalExports.registerWorkletOnBackground).toBe(
+      target[sExportsReactInternal].registerWorkletOnBackground,
+    );
+  });
+
   test('export APIs from "jsx-runtime"', async () => {
     const realAPIs = Object.assign(
       {},

@@ -180,4 +180,27 @@ describe('test', () => {
       </text>
     `);
   });
+
+  it('__LoadLepusChunk should delegate worklet-runtime to the main-thread hook and restore the calling thread', () => {
+    const hook = vi.fn(() => {
+      expect(__MAIN_THREAD__).toBe(true);
+      return true;
+    });
+
+    lynxTestingEnv.mainThread.globalThis.onInitWorkletRuntime = hook;
+    lynxTestingEnv.switchToBackgroundThread();
+
+    expect(__MAIN_THREAD__).toBe(false);
+    expect(__BACKGROUND__).toBe(true);
+    expect(__LoadLepusChunk('worklet-runtime')).toBe(true);
+    expect(hook).toHaveBeenCalledTimes(1);
+    expect(__MAIN_THREAD__).toBe(false);
+    expect(__BACKGROUND__).toBe(true);
+  });
+
+  it('__LoadLepusChunk should reject unknown chunk names', () => {
+    expect(() => __LoadLepusChunk('unknown-chunk')).toThrowError(
+      'Unknown chunk name: unknown-chunk',
+    );
+  });
 });
