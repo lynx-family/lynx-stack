@@ -58,7 +58,6 @@ expect.addSnapshotSerializer(
     features: {
       escapeDoubleQuotes: false,
     },
-    workspace: path.join(__dirname, '..', '..', '..'),
   }),
 );
 
