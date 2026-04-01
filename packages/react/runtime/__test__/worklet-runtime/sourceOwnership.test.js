@@ -7,6 +7,18 @@ import { loadWorkletRuntime } from '../../src/worklet-runtime/bindings/loadRunti
 import { ensureHostWorkletRuntime } from '../../src/worklet-runtime/host';
 import * as runtimeWorkletRuntimeModule from '../../src/worklet-runtime/workletRuntime';
 
+const LEGACY_SCHEMA = 'legacy://schema';
+const LEGACY_CHUNK_OPTIONS = {
+  dynamicComponentEntry: LEGACY_SCHEMA,
+  chunkType: 0,
+};
+
+function expectWorkletRuntimeReady() {
+  expect(globalThis.lynxWorkletImpl).toBeDefined();
+  expect(globalThis.registerWorklet).toBeTypeOf('function');
+  expect(globalThis.runWorklet).toBeTypeOf('function');
+}
+
 describe('source ownership', () => {
   beforeEach(() => {
     vi.resetModules();
@@ -43,9 +55,7 @@ describe('source ownership', () => {
 
     await import('../../src/worklet-runtime/index');
 
-    expect(globalThis.lynxWorkletImpl).toBeDefined();
-    expect(globalThis.registerWorklet).toBeTypeOf('function');
-    expect(globalThis.runWorklet).toBeTypeOf('function');
+    expectWorkletRuntimeReady();
   });
 
   it('should expose a host-owned runtime capability that initializes the shared runtime state', () => {
@@ -53,41 +63,39 @@ describe('source ownership', () => {
 
     expect(ensureHostWorkletRuntime()).toBe(true);
 
-    expect(globalThis.lynxWorkletImpl).toBeDefined();
-    expect(globalThis.registerWorklet).toBeTypeOf('function');
-    expect(globalThis.runWorklet).toBeTypeOf('function');
+    expectWorkletRuntimeReady();
   });
 
   it('should preserve the legacy false return when chunk loading is unavailable', () => {
     expect(globalThis.__LoadLepusChunk).toBeUndefined();
 
-    expect(loadWorkletRuntime('legacy://schema')).toBe(false);
+    expect(loadWorkletRuntime(LEGACY_SCHEMA)).toBe(false);
   });
 
   it('should preserve the legacy chunk-load path when lynxWorkletImpl is only a falsy placeholder', () => {
     globalThis.lynxWorkletImpl = null;
     globalThis.__LoadLepusChunk = vi.fn(() => false);
 
-    expect(loadWorkletRuntime('legacy://schema')).toBe(false);
-    expect(globalThis.__LoadLepusChunk).toHaveBeenCalledWith('worklet-runtime', {
-      dynamicComponentEntry: 'legacy://schema',
-      chunkType: 0,
-    });
+    expect(loadWorkletRuntime(LEGACY_SCHEMA)).toBe(false);
+    expect(globalThis.__LoadLepusChunk).toHaveBeenCalledWith(
+      'worklet-runtime',
+      LEGACY_CHUNK_OPTIONS,
+    );
   });
 
   it('should let legacy loadWorkletRuntime short-circuit once the host-owned runtime is ready', () => {
     globalThis.__LoadLepusChunk = vi.fn(() => false);
 
-    expect(loadWorkletRuntime('legacy://schema')).toBe(false);
-    expect(globalThis.__LoadLepusChunk).toHaveBeenCalledWith('worklet-runtime', {
-      dynamicComponentEntry: 'legacy://schema',
-      chunkType: 0,
-    });
+    expect(loadWorkletRuntime(LEGACY_SCHEMA)).toBe(false);
+    expect(globalThis.__LoadLepusChunk).toHaveBeenCalledWith(
+      'worklet-runtime',
+      LEGACY_CHUNK_OPTIONS,
+    );
 
     vi.mocked(globalThis.__LoadLepusChunk).mockClear();
     ensureHostWorkletRuntime();
 
-    expect(loadWorkletRuntime('legacy://schema')).toBe(true);
+    expect(loadWorkletRuntime(LEGACY_SCHEMA)).toBe(true);
     expect(globalThis.__LoadLepusChunk).not.toHaveBeenCalled();
   });
 
@@ -96,6 +104,6 @@ describe('source ownership', () => {
 
     ensureHostWorkletRuntime();
 
-    expect(loadWorkletRuntime('legacy://schema')).toBe(true);
+    expect(loadWorkletRuntime(LEGACY_SCHEMA)).toBe(true);
   });
 });

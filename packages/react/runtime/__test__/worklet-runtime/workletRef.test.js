@@ -10,6 +10,12 @@ import {
 } from '../../src/worklet-runtime/workletRef';
 import { initWorklet } from '../../src/worklet-runtime/workletRuntime';
 
+function expectMissingRef(id) {
+  expect(() => getFromWorkletRefMap({ _wvid: id })).toThrow(
+    `MainThreadRef is not initialized: ${id}`,
+  );
+}
+
 beforeEach(() => {
   globalThis.SystemInfo = {
     lynxSdkVersion: '2.16',
@@ -26,14 +32,10 @@ describe('WorkletRef', () => {
     updateWorkletRefInitValueChanges([[1, 'ref1'], [2, 'ref2']]);
     expect(getFromWorkletRefMap({ _wvid: 1 }).current).toBe('ref1');
     expect(getFromWorkletRefMap({ _wvid: 2 }).current).toBe('ref2');
-    expect(() => getFromWorkletRefMap({ _wvid: 3 })).toThrow(
-      'MainThreadRef is not initialized: 3',
-    );
+    expectMissingRef(3);
 
     removeValueFromWorkletRefMap(1);
-    expect(() => getFromWorkletRefMap({ _wvid: 1 })).toThrow(
-      'MainThreadRef is not initialized: 1',
-    );
+    expectMissingRef(1);
     expect(getFromWorkletRefMap({ _wvid: 2 }).current).toBe('ref2');
 
     globalThis.lynxWorkletImpl._refImpl.updateWorkletRef({
@@ -121,15 +123,9 @@ describe('WorkletRef', () => {
     };
     // If the refs are not used in the first screen, they will not be hydrated
     globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
-    expect(() => getFromWorkletRefMap({ _wvid: 1 })).toThrow(
-      'MainThreadRef is not initialized: 1',
-    );
-    expect(() => getFromWorkletRefMap({ _wvid: 2 })).toThrow(
-      'MainThreadRef is not initialized: 2',
-    );
-    expect(() => getFromWorkletRefMap({ _wvid: 3 })).toThrow(
-      'MainThreadRef is not initialized: 3',
-    );
+    expectMissingRef(1);
+    expectMissingRef(2);
+    expectMissingRef(3);
     expect(globalThis.lynxWorkletImpl._refImpl._firstScreenWorkletRefMap)
       .toMatchInlineSnapshot(`{}`);
 
@@ -239,12 +235,8 @@ describe('WorkletRef', () => {
     };
     // If the refs are not used in the first screen, they will not be hydrated
     globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
-    expect(() => getFromWorkletRefMap({ _wvid: 1 })).toThrow(
-      'MainThreadRef is not initialized: 1',
-    );
-    expect(() => getFromWorkletRefMap({ _wvid: 2 })).toThrow(
-      'MainThreadRef is not initialized: 2',
-    );
+    expectMissingRef(1);
+    expectMissingRef(2);
 
     // If the refs are used in the first screen, they will be hydrated
     globalThis.registerWorklet('main-thread', 'ctx1', function() {
@@ -309,12 +301,8 @@ describe('WorkletRef', () => {
     };
     // If the refs are not used in the first screen, they will not be hydrated
     globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
-    expect(() => getFromWorkletRefMap({ _wvid: 1 })).toThrow(
-      'MainThreadRef is not initialized: 1',
-    );
-    expect(() => getFromWorkletRefMap({ _wvid: 2 })).toThrow(
-      'MainThreadRef is not initialized: 2',
-    );
+    expectMissingRef(1);
+    expectMissingRef(2);
 
     // If the refs are used in the first screen, they will be hydrated
     globalThis.registerWorklet('main-thread', 'ctx1', function() {
