@@ -32,7 +32,6 @@ SOFTWARE.
 // LICENSE file in the root directory of this source tree.
 
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { createSnapshotSerializer } from 'path-serializer';
 import { beforeAll, expect } from 'vitest';
@@ -50,15 +49,11 @@ beforeAll((suite) => {
   globalThis.printLogger = process.argv.includes('--verbose');
 });
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 expect.addSnapshotSerializer(
   createSnapshotSerializer({
     features: {
       escapeDoubleQuotes: false,
     },
-    workspace: path.join(__dirname, '..', '..', '..'),
   }),
 );
 

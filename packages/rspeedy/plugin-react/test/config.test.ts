@@ -1463,7 +1463,7 @@ describe('Config', () => {
           "main__main-thread": {
             "filename": ".rspeedy/main/main-thread.js",
             "import": [
-              "<WORKSPACE>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
+              "<ROOT>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
               "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
@@ -1513,7 +1513,7 @@ describe('Config', () => {
           "main__main-thread": {
             "filename": ".rspeedy/main/main-thread.js",
             "import": [
-              "<WORKSPACE>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
+              "<ROOT>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
               "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
@@ -2315,7 +2315,7 @@ describe('Config', () => {
             "main__main-thread": {
               "filename": ".rspeedy/main/main-thread.js",
               "import": [
-                "<WORKSPACE>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
+                "<ROOT>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
                 "./src/index.js",
               ],
               "layer": "react:main-thread",

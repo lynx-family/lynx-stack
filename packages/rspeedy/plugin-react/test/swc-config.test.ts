@@ -54,7 +54,7 @@ describe('SWC configuration', () => {
           "isModule": "unknown",
           "jsc": {
             "experimental": {
-              "cacheRoot": "<WORKSPACE>/packages/rspeedy/plugin-react/test/node_modules/.cache/.swc",
+              "cacheRoot": "<ROOT>/packages/rspeedy/plugin-react/test/node_modules/.cache/.swc",
               "keepImportAttributes": true,
             },
             "externalHelpers": true,
@@ -146,7 +146,7 @@ describe('SWC configuration', () => {
         },
         /\\\\\\.\\(\\?:ts\\|tsx\\|jsx\\|mts\\|cts\\)\\$/,
         /\\[\\\\\\\\/\\]@rsbuild\\[\\\\\\\\/\\]core\\[\\\\\\\\/\\]dist\\[\\\\\\\\/\\]/,
-        "<WORKSPACE>/packages/react",
+        "<ROOT>/packages/react",
         /\\\\\\.\\(\\?:js\\|mjs\\|cjs\\)\\$/,
       ]
     `)
@@ -334,7 +334,7 @@ describe('SWC configuration', () => {
         },
         /\\\\\\.\\(\\?:ts\\|tsx\\|jsx\\|mts\\|cts\\)\\$/,
         /\\[\\\\\\\\/\\]@rsbuild\\[\\\\\\\\/\\]core\\[\\\\\\\\/\\]dist\\[\\\\\\\\/\\]/,
-        "<WORKSPACE>/packages/react",
+        "<ROOT>/packages/react",
       ]
     `)
   })
