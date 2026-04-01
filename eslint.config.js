@@ -87,6 +87,7 @@ export default tseslint.config(
       'packages/react/runtime/jsx-runtime/**',
       'packages/react/runtime/lazy/**',
       'packages/react/runtime/lepus/**',
+      'packages/react/runtime/worklet-runtime/**',
       'packages/react/runtime/src/renderToOpcodes/**',
       'packages/react/runtime/types/**',
 

@@ -170,7 +170,9 @@
     "README.zh.md"
   ],
   "scripts": {
-    "api-extractor": "api-extractor run --verbose"
+    "api-extractor": "api-extractor run --verbose",
+    "prepack": "pnpm --dir runtime run build:publish-worklet-runtime",
+    "prepublishOnly": "pnpm --dir runtime run build:publish-worklet-runtime"
   },
   "dependencies": {
     "preact": "npm:@lynx-js/internal-preact@10.28.4-4842985"

@@ -166,12 +166,12 @@ describe('Suspense', () => {
               {
                 "id": 2,
                 "op": "CreateElement",
-                "type": "__snapshot_fffe1_test_3",
+                "type": "__snapshot_61729_test_3",
               },
               {
                 "id": 7,
                 "op": "CreateElement",
-                "type": "__snapshot_fffe1_test_4",
+                "type": "__snapshot_61729_test_4",
               },
               {
                 "beforeId": null,
@@ -193,7 +193,7 @@ describe('Suspense', () => {
               {
                 "id": 2,
                 "op": "CreateElement",
-                "type": "__snapshot_fffe1_test_3",
+                "type": "__snapshot_61729_test_3",
               },
               {
                 "id": 8,
@@ -203,7 +203,7 @@ describe('Suspense', () => {
               {
                 "id": 9,
                 "op": "CreateElement",
-                "type": "__snapshot_fffe1_test_4",
+                "type": "__snapshot_61729_test_4",
               },
               {
                 "beforeId": null,
@@ -318,7 +318,7 @@ describe('Suspense', () => {
               el4
             ];
           }",
-              "type": "__snapshot_fffe1_test_5",
+              "type": "__snapshot_61729_test_5",
             },
             {
               "__id": 7,
@@ -333,7 +333,7 @@ describe('Suspense', () => {
               el1
             ];
           }",
-              "type": "__snapshot_fffe1_test_4",
+              "type": "__snapshot_61729_test_4",
             },
           ]
         `);

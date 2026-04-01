@@ -16,8 +16,8 @@
   ],
   "scripts": {
     "build": "tsc -b tsconfig.json",
-    "build:publish-worklet-runtime": "pnpm exec rslib build -c rslib.worklet-runtime.config.ts",
-    "build:worklet-runtime": "tsc -b tsconfig.worklet-runtime.json",
+    "build:publish-worklet-runtime": "pnpm run build:worklet-runtime && pnpm exec rslib build -c rslib.worklet-runtime.config.ts",
+    "build:worklet-runtime": "tsc -b --force tsconfig.worklet-runtime.json",
     "test": "vitest run --coverage"
   },
   "devDependencies": {
