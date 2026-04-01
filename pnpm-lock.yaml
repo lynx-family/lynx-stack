@@ -19,6 +19,9 @@ catalogs:
     '@microsoft/api-extractor':
       specifier: 7.57.6
       version: 7.57.6
+    '@rslib/core':
+      specifier: 0.19.6
+      version: 0.19.6
   rsbuild:
     '@rsbuild/core':
       specifier: 1.7.4
@@ -604,6 +607,9 @@ importers:
       '@lynx-js/types':
         specifier: 3.7.0
         version: 3.7.0
+      '@rslib/core':
+        specifier: 'catalog:'
+        version: 0.19.6(@microsoft/api-extractor@7.57.6(@types/node@24.10.13))(@typescript/native-preview@7.0.0-dev.20260212.1)(typescript@5.9.3)
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -659,12 +665,6 @@ importers:
   packages/react/transform/swc-plugin-reactlynx: {}
 
   packages/react/transform/swc-plugin-reactlynx-compat: {}
-
-  packages/react/worklet-runtime:
-    devDependencies:
-      '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
 
   packages/repl:
     dependencies:

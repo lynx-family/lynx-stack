@@ -34,6 +34,7 @@ resolutionMode: "lowest-direct"
 # Default catalogs
 catalog:
   "@microsoft/api-extractor": "7.57.6"
+  "@rslib/core": "0.19.6"
 
 catalogs:
   adb:
