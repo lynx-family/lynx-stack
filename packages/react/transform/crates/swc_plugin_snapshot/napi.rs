@@ -37,7 +37,7 @@ pub struct JSXTransformerConfig {
 #[napi(object)]
 #[derive(Clone, Debug)]
 pub struct UISourceMapRecord {
-  pub ui_source_map: u32,
+  pub ui_source_map: i32,
   pub filename: String,
   pub line_number: u32,
   pub column_number: u32,

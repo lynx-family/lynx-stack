@@ -108,7 +108,7 @@ static NO_FLATTEN_ATTRIBUTES: Lazy<HashSet<String>> = Lazy::new(|| {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct UISourceMapRecord {
-  pub ui_source_map: u32,
+  pub ui_source_map: i32,
   pub line_number: u32,
   pub column_number: u32,
   pub snapshot_id: String,
