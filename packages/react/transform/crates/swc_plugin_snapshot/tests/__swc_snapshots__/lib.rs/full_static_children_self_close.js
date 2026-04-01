@@ -3,7 +3,7 @@ const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
         const pageId = ReactLynx.__pageId;
         const el = __CreateView(pageId, {
-            nodeIndex: 2943021278
+            nodeIndex: 795537630
         });
         __SetClasses(el, "parent");
         const el1 = __CreateView(pageId, {
@@ -12,7 +12,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1
         __SetClasses(el1, "child");
         __AppendElement(el, el1);
         const el2 = __CreateView(pageId, {
-            nodeIndex: 2187792574
+            nodeIndex: 40308926
         });
         __SetClasses(el2, "child");
         __AppendElement(el, el2);
