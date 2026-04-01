@@ -3,9 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AnimationOperation } from '../../../runtime/src/worklet-runtime/api/animation/animation';
-import { Element, setShouldFlush } from '../../../runtime/src/worklet-runtime/api/element';
-import { initWorklet } from '../../../runtime/src/worklet-runtime/workletRuntime';
+import { AnimationOperation } from '../../../src/worklet-runtime/api/animation/animation';
+import { Element, setShouldFlush } from '../../../src/worklet-runtime/api/element';
+import { initWorklet } from '../../../src/worklet-runtime/workletRuntime';
 
 beforeEach(() => {
   globalThis.SystemInfo = {

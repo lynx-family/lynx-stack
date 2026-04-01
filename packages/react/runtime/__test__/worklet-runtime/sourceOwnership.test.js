@@ -3,9 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { loadWorkletRuntime } from '../../runtime/src/worklet-runtime/bindings/loadRuntime';
-import { ensureHostWorkletRuntime } from '../../runtime/src/worklet-runtime/host';
-import * as runtimeWorkletRuntimeModule from '../../runtime/src/worklet-runtime/workletRuntime';
+import { loadWorkletRuntime } from '../../src/worklet-runtime/bindings/loadRuntime';
+import { ensureHostWorkletRuntime } from '../../src/worklet-runtime/host';
+import * as runtimeWorkletRuntimeModule from '../../src/worklet-runtime/workletRuntime';
 
 describe('source ownership', () => {
   beforeEach(() => {
@@ -41,17 +41,7 @@ describe('source ownership', () => {
   it('should initialize the runtime-owned top-level entry', async () => {
     expect(globalThis.lynxWorkletImpl).toBeUndefined();
 
-    await import('../../runtime/src/worklet-runtime/index');
-
-    expect(globalThis.lynxWorkletImpl).toBeDefined();
-    expect(globalThis.registerWorklet).toBeTypeOf('function');
-    expect(globalThis.runWorklet).toBeTypeOf('function');
-  });
-
-  it('should keep the legacy package top-level entry as a working facade', async () => {
-    expect(globalThis.lynxWorkletImpl).toBeUndefined();
-
-    await import('../src/index');
+    await import('../../src/worklet-runtime/index');
 
     expect(globalThis.lynxWorkletImpl).toBeDefined();
     expect(globalThis.registerWorklet).toBeTypeOf('function');
