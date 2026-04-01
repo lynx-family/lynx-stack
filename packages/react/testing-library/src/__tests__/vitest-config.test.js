@@ -13,8 +13,12 @@ describe('createVitestConfig', () => {
     const alias = config.test.alias;
 
     const runtimeAlias = alias.find((entry) => String(entry.find) === String(/^@lynx-js\/react\/worklet-runtime$/));
-    const devRuntimeAlias = alias.find((entry) => String(entry.find) === String(/^@lynx-js\/react\/worklet-dev-runtime$/));
-    const legacyRuntimeAlias = alias.find((entry) => String(entry.find) === String(/^@lynx-js\/react\/internal\/worklet-runtime$/));
+    const devRuntimeAlias = alias.find((entry) =>
+      String(entry.find) === String(/^@lynx-js\/react\/worklet-dev-runtime$/)
+    );
+    const legacyRuntimeAlias = alias.find((entry) =>
+      String(entry.find) === String(/^@lynx-js\/react\/internal\/worklet-runtime$/)
+    );
 
     expect(runtimeAlias?.replacement).toBe(
       path.join(process.cwd(), 'src', 'env', 'worklet-runtime.ts'),
