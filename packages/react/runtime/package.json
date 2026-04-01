@@ -16,6 +16,7 @@
   ],
   "scripts": {
     "build": "tsc -b tsconfig.json",
+    "build:publish-worklet-runtime": "pnpm exec rslib build -c rslib.worklet-runtime.config.ts",
     "build:worklet-runtime": "tsc -b tsconfig.worklet-runtime.json",
     "test": "vitest run --coverage"
   },
@@ -23,6 +24,7 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-transform": "workspace:*",
     "@lynx-js/types": "3.7.0",
+    "@rslib/core": "catalog:",
     "@types/react": "^18.3.28",
     "pretty-format": "^30.2.0"
   },

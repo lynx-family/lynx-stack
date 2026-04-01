@@ -30,6 +30,18 @@
         "lib/worklet-runtime/**",
         "tsconfig.worklet-runtime.tsbuildinfo"
       ]
+    },
+    "build:publish-worklet-runtime": {
+      "dependsOn": [
+        "build:worklet-runtime"
+      ],
+      "inputs": [
+        "lib/worklet-runtime/**",
+        "rslib.worklet-runtime.config.ts"
+      ],
+      "outputs": [
+        "worklet-runtime/**"
+      ]
     }
   }
 }

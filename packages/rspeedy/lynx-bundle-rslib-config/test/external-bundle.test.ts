@@ -693,7 +693,7 @@ describe('pluginReactLynx', () => {
           "@lynx-js/react/internal$": "<ROOT>/packages/react/runtime/lib/internal.js",
           "@lynx-js/react/legacy-react-runtime$": "<ROOT>/packages/react/runtime/lib/legacy-react-runtime/index.js",
           "@lynx-js/react/runtime-components$": "<ROOT>/packages/react/components/lib/index.js",
-          "@lynx-js/react/worklet-runtime/bindings$": "<ROOT>/packages/react/worklet-runtime/lib/bindings/index.js",
+          "@lynx-js/react/worklet-runtime/bindings$": "<ROOT>/packages/react/runtime/lib/worklet-runtime/bindings/index.js",
           "@swc/helpers": "<ROOT>/node_modules/<PNPM_INNER>/@swc/helpers",
           "preact$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/dist/preact.mjs",
           "preact/compat$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/dist/compat.mjs",
