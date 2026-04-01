@@ -8,6 +8,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 const vitestEnvFilename = path.basename(__dirname) === 'dist' ? 'vitest.js' : 'vitest.ts';
+const workletRuntimeShimFilename = path.basename(__dirname) === 'dist'
+  ? 'worklet-runtime.js'
+  : 'worklet-runtime.ts';
 
 async function ensurePackagesInstalled() {
   const installer = new VitestPackageInstaller();
@@ -47,7 +50,11 @@ export const createVitestConfig = async (options) => {
     Object.keys(pkgExports).forEach((key) => {
       if (
         pkgName === '@lynx-js/react'
-        && key === './worklet-runtime/bindings'
+        && (
+          key === './worklet-runtime'
+          || key === './worklet-dev-runtime'
+          || key === './worklet-runtime/bindings'
+        )
       ) {
         return;
       }
@@ -68,6 +75,38 @@ export const createVitestConfig = async (options) => {
     runtimeAlias = generateAlias(runtimePkgName, runtimeDir, __dirname);
   }
   const workletRuntimeBindingsAlias = [
+    {
+      find: /^@lynx-js\/react\/worklet-runtime$/,
+      replacement: path.join(
+        __dirname,
+        'env',
+        workletRuntimeShimFilename,
+      ),
+    },
+    {
+      find: /^@lynx-js\/react\/worklet-dev-runtime$/,
+      replacement: path.join(
+        __dirname,
+        'env',
+        workletRuntimeShimFilename,
+      ),
+    },
+    {
+      find: /^@lynx-js\/react\/internal\/worklet-runtime$/,
+      replacement: path.join(
+        __dirname,
+        'env',
+        workletRuntimeShimFilename,
+      ),
+    },
+    {
+      find: /^@lynx-js\/react\/internal\/worklet-dev-runtime$/,
+      replacement: path.join(
+        __dirname,
+        'env',
+        workletRuntimeShimFilename,
+      ),
+    },
     {
       find: /^@lynx-js\/react\/worklet-runtime\/bindings$/,
       replacement: path.join(
@@ -267,6 +306,7 @@ export const createVitestConfig = async (options) => {
           worklet: {
             filename: relativePath,
             runtimePkg: `${runtimePkgName}/internal`,
+            runtimeEntryPkg: runtimePkgName,
             target: 'MIXED',
           },
           refresh: false,

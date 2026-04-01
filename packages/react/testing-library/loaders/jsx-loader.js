@@ -34,6 +34,7 @@ export default function jsxLoader(source) {
     worklet: {
       filename: relativePath,
       runtimePkg: `${runtimePkgName}/internal`,
+      runtimeEntryPkg: runtimePkgName,
       target: 'MIXED',
     },
     refresh: false,

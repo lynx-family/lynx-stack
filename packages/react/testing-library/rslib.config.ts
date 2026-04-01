@@ -15,6 +15,7 @@ export default defineConfig({
         entry: {
           'pure': './src/pure.jsx',
           'env/vitest': './src/env/vitest.ts',
+          'env/worklet-runtime': './src/env/worklet-runtime.ts',
         },
       },
       output: {

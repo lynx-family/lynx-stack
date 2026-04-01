@@ -22,6 +22,7 @@ pub struct WorkletVisitorConfig {
   #[napi(ts_type = "'LEPUS' | 'JS' | 'MIXED'")]
   pub target: TransformTarget,
   pub runtime_pkg: String,
+  pub runtime_entry_pkg: Option<String>,
 }
 
 impl Default for WorkletVisitorConfig {
@@ -31,6 +32,7 @@ impl Default for WorkletVisitorConfig {
       target: TransformTarget::LEPUS,
       custom_global_ident_names: None,
       runtime_pkg: "NoDiff".into(),
+      runtime_entry_pkg: None,
     }
   }
 }
@@ -42,6 +44,7 @@ impl From<WorkletVisitorConfig> for CoreConfig {
       target: val.target.into(),
       custom_global_ident_names: val.custom_global_ident_names,
       runtime_pkg: val.runtime_pkg,
+      runtime_entry_pkg: val.runtime_entry_pkg,
     }
   }
 }
@@ -53,6 +56,7 @@ impl From<CoreConfig> for WorkletVisitorConfig {
       target: val.target.into(),
       custom_global_ident_names: val.custom_global_ident_names,
       runtime_pkg: val.runtime_pkg,
+      runtime_entry_pkg: val.runtime_entry_pkg,
     }
   }
 }

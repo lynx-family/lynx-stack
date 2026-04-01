@@ -199,6 +199,7 @@ export interface WorkletVisitorConfig {
   /** @internal */
   target: 'LEPUS' | 'JS' | 'MIXED';
   runtimePkg: string;
+  runtimeEntryPkg?: string;
 }
 
 export interface ReactLynxTransformOptions {

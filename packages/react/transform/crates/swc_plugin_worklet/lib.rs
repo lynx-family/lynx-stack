@@ -40,6 +40,7 @@ pub struct WorkletVisitorConfig {
   /// @internal
   pub target: TransformTarget,
   pub runtime_pkg: String,
+  pub runtime_entry_pkg: Option<String>,
 }
 
 impl Default for WorkletVisitorConfig {
@@ -49,6 +50,7 @@ impl Default for WorkletVisitorConfig {
       target: TransformTarget::LEPUS,
       custom_global_ident_names: None,
       runtime_pkg: "NoDiff".into(),
+      runtime_entry_pkg: None,
     }
   }
 }
@@ -555,9 +557,14 @@ impl VisitMut for WorkletVisitor {
     let mut prepended_items: Vec<ModuleItem> = vec![];
 
     if self.needs_worklet_runtime_import {
+      let runtime_entry_pkg = self
+        .cfg
+        .runtime_entry_pkg
+        .as_ref()
+        .unwrap_or(&self.cfg.runtime_pkg);
       let runtime_entry = match self.mode {
-        TransformMode::Development => format!("{}/worklet-dev-runtime", self.cfg.runtime_pkg),
-        _ => format!("{}/worklet-runtime", self.cfg.runtime_pkg),
+        TransformMode::Development => format!("{}/worklet-dev-runtime", runtime_entry_pkg),
+        _ => format!("{}/worklet-runtime", runtime_entry_pkg),
       };
       prepended_items.push(ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
         span: DUMMY_SP,
@@ -766,6 +773,7 @@ mod tests {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -795,6 +803,7 @@ function worklet(event: Event) {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -824,6 +833,7 @@ function worklet(event: Event) {
           target: TransformTarget::MIXED,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -853,6 +863,7 @@ function worklet(event: Event) {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -882,6 +893,7 @@ function worklet(event: Event) {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -921,6 +933,7 @@ function X(event) {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -960,6 +973,7 @@ function X(event) {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -994,6 +1008,7 @@ function worklet(event: Event) {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1028,6 +1043,7 @@ function worklet(event: Event) {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1062,6 +1078,7 @@ function worklet(event: Event) {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1095,6 +1112,7 @@ function worklet(event: Event) {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1131,6 +1149,7 @@ import { sharedRuntime as sr } from './utils.js' with {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1164,6 +1183,7 @@ function worklet(event: Event) {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1195,6 +1215,7 @@ function Y(event) {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1228,6 +1249,7 @@ function App() {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1255,6 +1277,7 @@ let X = (event) => {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1282,6 +1305,7 @@ let X = function (event) {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1313,6 +1337,7 @@ class App extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1344,6 +1369,7 @@ class App extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1374,6 +1400,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1404,6 +1431,7 @@ class App extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1434,6 +1462,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1465,6 +1494,7 @@ class App extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1496,6 +1526,7 @@ class App extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1526,6 +1557,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1556,6 +1588,7 @@ class App extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1586,6 +1619,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1618,6 +1652,7 @@ function X() {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1655,6 +1690,7 @@ function A() {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1691,6 +1727,7 @@ class Bpp extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1721,6 +1758,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1749,6 +1787,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1779,6 +1818,7 @@ class App extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1809,6 +1849,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: Some(vec!["myCustomGlobal".to_string()]),
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1840,6 +1881,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1872,6 +1914,7 @@ class App extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1901,6 +1944,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1930,6 +1974,7 @@ class App extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -1970,6 +2015,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2010,6 +2056,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2039,6 +2086,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2067,6 +2115,7 @@ class App extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2095,6 +2144,7 @@ class App extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2147,6 +2197,7 @@ class App extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2174,6 +2225,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2201,6 +2253,7 @@ class App extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2239,6 +2292,7 @@ class App extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2280,6 +2334,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2321,6 +2376,7 @@ class App extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2364,6 +2420,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2407,6 +2464,7 @@ class App extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2513,6 +2571,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2619,6 +2678,7 @@ class App extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2649,6 +2709,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2678,6 +2739,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2707,6 +2769,7 @@ class App extends Component {
           target: TransformTarget::JS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2736,6 +2799,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
@@ -2766,6 +2830,7 @@ class App extends Component {
           target: TransformTarget::LEPUS,
           custom_global_ident_names: None,
           runtime_pkg: "@lynx-js/react".into(),
+          runtime_entry_pkg: None,
         }
       )),
       hygiene()
