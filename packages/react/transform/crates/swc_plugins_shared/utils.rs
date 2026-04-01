@@ -74,7 +74,9 @@ pub fn calc_hash_number(s: &str) -> i32 {
   hasher.update(s.as_bytes());
   let sum = hasher.finalize();
 
-  i32::from_be_bytes(sum[0..4].try_into().unwrap())
+  let hash = u32::from_be_bytes(sum[0..4].try_into().unwrap()) & i32::MAX as u32;
+
+  hash as i32
 }
 
 pub fn get_relative_path(cwd: &str, filename: &str) -> String {
