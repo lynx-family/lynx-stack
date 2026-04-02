@@ -8,14 +8,14 @@ Create a config file `rstest.config.ts` with the following content:
 
 ```ts
 import { defineConfig } from '@rstest/core';
-import { withLynxConfig } from '@lynx-js/react/testing-library/rstest-adapter';
+import { withLynxConfig } from '@lynx-js/react/testing-library/rstest-config';
 
 export default defineConfig({
   extends: withLynxConfig(),
 });
 ```
 
-`@lynx-js/react/testing-library/rstest-adapter` will automatically load your `lynx.config.ts` and apply the same configuration to rstest, so you can keep your test environment consistent with your development environment.
+`@lynx-js/react/testing-library/rstest-config` will automatically load your `lynx.config.ts` and apply the same configuration to rstest, so you can keep your test environment consistent with your development environment.
 
 And then use rstest as usual:
 

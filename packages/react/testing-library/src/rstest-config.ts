@@ -37,6 +37,16 @@ function createDefaultRstestConfig(): ExtendConfig {
   };
 }
 
+function normalizeSetupFiles(
+  setupFiles: ExtendConfig['setupFiles'],
+): string[] {
+  if (!setupFiles) {
+    return [];
+  }
+
+  return Array.isArray(setupFiles) ? setupFiles : [setupFiles];
+}
+
 async function applyRstestConfigModifier(
   config: ExtendConfig,
   modifyRstestConfig?: (config: ExtendConfig) => ExtendConfig | Promise<ExtendConfig>,
@@ -74,7 +84,12 @@ export function withLynxConfig(
       rsbuildConfig: lynxConfig.content as RsbuildConfig,
     });
     const defaultConfig = createDefaultRstestConfig();
-    const setupFiles = defaultConfig.setupFiles ?? require.resolve('./setupFiles/rstest');
+    const setupFiles = Array.from(
+      new Set([
+        ...normalizeSetupFiles(rstestConfig.setupFiles),
+        ...normalizeSetupFiles(defaultConfig.setupFiles),
+      ]),
+    );
 
     const mergedConfig: ExtendConfig = {
       ...rstestConfig,
