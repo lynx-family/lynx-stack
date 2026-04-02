@@ -2583,6 +2583,19 @@ describe('Config', () => {
     )
   })
 
+  test('worklet runtime bindings resolve to the shell package build output', () => {
+    const require = createRequire(import.meta.url)
+
+    expect(
+      require.resolve('@lynx-js/react/worklet-runtime/bindings'),
+    ).toContain(
+      '/packages/react/worklet-runtime/lib/bindings/index.js'.replaceAll(
+        '/',
+        path.sep,
+      ),
+    )
+  })
+
   describe('environment', () => {
     test('lynx environment', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
