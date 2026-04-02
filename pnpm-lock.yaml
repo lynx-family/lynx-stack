@@ -556,9 +556,6 @@ importers:
 
   packages/react:
     dependencies:
-      '@rstest/core':
-        specifier: '*'
-        version: 0.8.1(jsdom@27.4.0)
       preact:
         specifier: npm:@lynx-js/internal-preact@10.28.4-4842985
         version: '@lynx-js/internal-preact@10.28.4-4842985'
