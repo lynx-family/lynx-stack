@@ -2716,12 +2716,12 @@ describe('Config', () => {
       ).toMatchInlineSnapshot(`
         [
           [
-            "<WORKSPACE>/node_modules/<PNPM_INNER>/@rspack/core/dist/cssExtractLoader.js",
-            "<WORKSPACE>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
+            "<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/cssExtractLoader.js",
+            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
             "builtin:lightningcss-loader",
           ],
           [
-            "<WORKSPACE>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
+            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
             "builtin:lightningcss-loader",
           ],
           [],
@@ -2743,7 +2743,7 @@ describe('Config', () => {
         [
           [
             "builtin:swc-loader",
-            "<WORKSPACE>/packages/webpack/react-webpack-plugin/lib/loaders/testing.js",
+            "<ROOT>/packages/webpack/react-webpack-plugin/lib/loaders/testing.js",
           ],
           [],
           [],
