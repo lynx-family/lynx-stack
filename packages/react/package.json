@@ -191,14 +191,10 @@
   },
   "peerDependencies": {
     "@lynx-js/types": "*",
-    "@rstest/core": "*",
     "@types/react": "^18"
   },
   "peerDependenciesMeta": {
     "@lynx-js/types": {
-      "optional": true
-    },
-    "@rstest/core": {
       "optional": true
     }
   }
