@@ -190,15 +190,11 @@
     "@types/react": "^18.3.28"
   },
   "peerDependencies": {
-    "@lynx-js/rspeedy": "*",
     "@lynx-js/types": "*",
     "@rstest/core": "*",
     "@types/react": "^18"
   },
   "peerDependenciesMeta": {
-    "@lynx-js/rspeedy": {
-      "optional": true
-    },
     "@lynx-js/types": {
       "optional": true
     },
