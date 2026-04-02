@@ -104,6 +104,10 @@
       "types": "./testing-library/dist/vitest.config.d.ts",
       "default": "./testing-library/dist/vitest.config.js"
     },
+    "./testing-library/plugins": {
+      "types": "./testing-library/dist/plugins/index.d.ts",
+      "default": "./testing-library/dist/plugins/index.js"
+    },
     "./testing-library/rstest-adapter": {
       "types": "./testing-library/dist/rstest-adapter.d.ts",
       "default": "./testing-library/dist/rstest-adapter.js"

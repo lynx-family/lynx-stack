@@ -1,11 +1,13 @@
-import { defineConfig, mergeConfig } from 'vitest/config';
-import { createVitestConfig } from './dist/vitest.config';
+import { defineConfig } from 'vitest/config';
+import { vitestTestingLibraryPlugin } from './dist/plugins/index.js';
 
-const defaultConfig = await createVitestConfig({
-  runtimePkgName: '@lynx-js/react',
-  engineVersion: '3.1',
-});
-const config = defineConfig({
+export default defineConfig({
+  plugins: [
+    vitestTestingLibraryPlugin({
+      runtimePkgName: '@lynx-js/react',
+      engineVersion: '3.1',
+    }),
+  ],
   test: {
     name: 'react/testing-library/engine-3.1',
     include: [
@@ -13,5 +15,3 @@ const config = defineConfig({
     ],
   },
 });
-
-export default mergeConfig(defaultConfig, config);

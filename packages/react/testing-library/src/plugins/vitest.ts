@@ -40,7 +40,7 @@ export interface TestingLibraryOptions {
 
 export function testingLibraryPlugin(
   options?: TestingLibraryOptions,
-): Vite.Plugin[] {
+): Vite.PluginOption {
   const runtimeOSSPkgName = '@lynx-js/react';
   const runtimePkgName = options?.runtimePkgName ?? runtimeOSSPkgName;
   const runtimeDir = path.dirname(
