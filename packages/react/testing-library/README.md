@@ -10,19 +10,35 @@ Similar to [react-testing-library](https://github.com/testing-library/react-test
 
 ### Rstest
 
-Setup rstest with `@lynx-js/react/testing-library/rstest-adapter`:
+Setup rstest with `@lynx-js/react/testing-library/rstest-config`.
+
+Recommended for library projects:
+
+```ts
+import { defineConfig } from '@rstest/core';
+import { withDefaultConfig } from '@lynx-js/react/testing-library/rstest-config';
+
+export default defineConfig({
+  extends: withDefaultConfig(),
+});
+```
+
+Use `withLynxConfig` when you want to reuse your app's `lynx.config.ts`:
 
 ```ts
 // rstest.config.ts
 import { defineConfig } from '@rstest/core';
-import { withLynxConfig } from '@lynx-js/react/testing-library/rstest-adapter';
+import { withLynxConfig } from '@lynx-js/react/testing-library/rstest-config';
 
 export default defineConfig({
   extends: withLynxConfig(),
 });
 ```
 
-`@lynx-js/react/testing-library/rstest-adapter` will automatically load your `lynx.config.ts` and apply the same configuration to rstest, so you can keep your test environment consistent with your development environment.
+Difference between `withLynxConfig` and `withDefaultConfig`:
+
+- `withLynxConfig`: app-oriented. Loads your `lynx.config.ts` and converts it to rstest config, so rspeedy/lynx settings are reused in tests.
+- `withDefaultConfig`: library-oriented. Only applies testing-library defaults (`jsdom`, setup files, globals) and lets you provide the rest via `modifyRstestConfig`.
 
 Then you can start writing tests and run them with rstest!
 

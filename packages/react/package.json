@@ -108,9 +108,9 @@
       "types": "./testing-library/dist/plugins/index.d.ts",
       "default": "./testing-library/dist/plugins/index.js"
     },
-    "./testing-library/rstest-adapter": {
-      "types": "./testing-library/dist/rstest-adapter.d.ts",
-      "default": "./testing-library/dist/rstest-adapter.js"
+    "./testing-library/rstest-config": {
+      "types": "./testing-library/dist/rstest-config.d.ts",
+      "default": "./testing-library/dist/rstest-config.js"
     },
     "./package.json": "./package.json"
   },

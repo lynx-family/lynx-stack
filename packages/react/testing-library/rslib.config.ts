@@ -16,7 +16,7 @@ export default defineConfig({
           'pure': './src/pure.jsx',
           'env/index': './src/env/index.ts',
           'plugins/index': './src/plugins/index.ts',
-          'rstest-adapter': './src/rstest-adapter.ts',
+          'rstest-config': './src/rstest-config.ts',
         },
       },
       output: {
