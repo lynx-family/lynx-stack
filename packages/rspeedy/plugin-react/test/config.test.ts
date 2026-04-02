@@ -2029,13 +2029,18 @@ describe('Config', () => {
       // Production build with typical macro definitions
       vi.stubEnv('NODE_ENV', 'production')
 
+      const entryName = 'defineDCE'
       const rsbuild = await createRspeedy({
         rspeedyConfig: {
           source: {
             entry: {
-              main: new URL('./fixtures/defineDCE/macros.js', import.meta.url)
-                .pathname,
+              [entryName]:
+                new URL('./fixtures/defineDCE/macros.js', import.meta.url)
+                  .pathname,
             },
+          },
+          output: {
+            cleanDistPath: false,
           },
           environments: {
             lynx: {},
@@ -2060,7 +2065,8 @@ describe('Config', () => {
 
       const distPath = path.join(
         rsbuild.context.distPath,
-        '.rspeedy/main',
+        '.rspeedy',
+        entryName,
         'main-thread.js',
       )
 
@@ -2078,16 +2084,19 @@ describe('Config', () => {
 
       vi.stubEnv('NODE_ENV', 'production')
 
+      const entryName = 'pure-funcs'
       const rsbuild = await createRspeedy({
         rspeedyConfig: {
           source: {
             entry: {
-              main: new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
-                .pathname,
+              [entryName]:
+                new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
+                  .pathname,
             },
           },
           output: {
             filenameHash: false,
+            cleanDistPath: false,
             minify: {
               js: true,
               jsOptions: {
@@ -2128,12 +2137,14 @@ describe('Config', () => {
 
       const mainThreadPath = path.join(
         rsbuild.context.distPath,
-        '.rspeedy/main',
+        '.rspeedy',
+        entryName,
         'main-thread.js',
       )
       const backgroundPath = path.join(
         rsbuild.context.distPath,
-        '.rspeedy/main',
+        '.rspeedy',
+        entryName,
         'background.js',
       )
 
