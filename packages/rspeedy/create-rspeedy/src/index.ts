@@ -97,6 +97,12 @@ void create({
       },
     },
   ],
+  extraSkills: [
+    {
+      label: 'Lynx DevTool',
+      skills: ['lynx-community/skills/lynx-devtool'],
+    },
+  ],
   mapESLintTemplate(templateName) {
     const lang = templateName.split('-').at(-1)
 
