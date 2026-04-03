@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { existsSync, readFileSync } from 'node:fs'
+import { mkdtemp } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 import { describe, expect, test, vi } from 'vitest'
@@ -9,6 +11,28 @@ import { describe, expect, test, vi } from 'vitest'
 import type { RspeedyInstance } from '@lynx-js/rspeedy'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
+
+async function createIsolatedRspeedy(
+  options: Parameters<typeof createRspeedy>[0],
+): Promise<Awaited<ReturnType<typeof createRspeedy>>> {
+  const root = await mkdtemp(path.join(tmpdir(), 'rspeedy-react-optimize-'))
+
+  return await createRspeedy({
+    ...options,
+    rspeedyConfig: {
+      ...options.rspeedyConfig,
+      output: {
+        ...options.rspeedyConfig?.output,
+        // These tests only need isolated build artifacts. Keeping the original
+        // cwd preserves package resolution while avoiding cross-test writes to
+        // the shared default `.rspeedy` directory under the test folder.
+        distPath: {
+          root,
+        },
+      },
+    },
+  })
+}
 
 async function getCode(rsbuild: RspeedyInstance, entryName: string) {
   try {
@@ -43,7 +67,7 @@ describe('optimizeBundleSize', () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     vi.stubEnv('NODE_ENV', 'production')
     const entryName = 'optimizeBundleSize-0'
-    const rsbuild = await createRspeedy({
+    const rsbuild = await createIsolatedRspeedy({
       rspeedyConfig: {
         source: {
           entry: {
@@ -88,7 +112,7 @@ describe('optimizeBundleSize', () => {
     vi.stubEnv('NODE_ENV', 'production')
 
     const entryName = 'optimizeBundleSize-1'
-    const rsbuild = await createRspeedy({
+    const rsbuild = await createIsolatedRspeedy({
       rspeedyConfig: {
         source: {
           entry: {
@@ -141,7 +165,7 @@ describe('optimizeBundleSize', () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     vi.stubEnv('NODE_ENV', 'production')
     const entryName = 'optimizeBundleSize-2'
-    const rsbuild = await createRspeedy({
+    const rsbuild = await createIsolatedRspeedy({
       rspeedyConfig: {
         source: {
           entry: {
@@ -193,7 +217,7 @@ describe('optimizeBundleSize', () => {
     vi.stubEnv('NODE_ENV', 'production')
 
     const entryName = 'optimizeBundleSize-3'
-    const rsbuild = await createRspeedy({
+    const rsbuild = await createIsolatedRspeedy({
       rspeedyConfig: {
         source: {
           entry: {
