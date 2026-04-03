@@ -18,6 +18,8 @@ export const PARENT = '__';
 export const MASK = '__m';
 export const DOM = '__e';
 export const ORIGINAL = '__v';
+export const INDEX = '__i';
+export const FLAGS = '__u';
 
 // Component properties
 export const VNODE = '__v';
