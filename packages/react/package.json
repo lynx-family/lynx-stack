@@ -76,16 +76,16 @@
       }
     },
     "./worklet-runtime": {
-      "types": "./worklet-runtime/lib/index.d.ts",
+      "types": "./runtime/lib/worklet-runtime/index.d.ts",
       "default": "./worklet-runtime/dist/main.js"
     },
     "./worklet-dev-runtime": {
-      "types": "./worklet-runtime/lib/index.d.ts",
+      "types": "./runtime/lib/worklet-runtime/index.d.ts",
       "default": "./worklet-runtime/dist/dev.js"
     },
     "./worklet-runtime/bindings": {
-      "types": "./worklet-runtime/lib/bindings/index.d.ts",
-      "default": "./worklet-runtime/lib/bindings/index.js"
+      "types": "./runtime/lib/worklet-runtime/bindings/index.d.ts",
+      "default": "./runtime/lib/worklet-runtime/bindings/index.js"
     },
     "./legacy-react-runtime": {
       "types": "./runtime/lib/legacy-react-runtime/index.d.ts",
@@ -143,13 +143,13 @@
         "./components/lib/index.d.ts"
       ],
       "worklet-runtime": [
-        "./worklet-runtime/lib/index.d.ts"
+        "./runtime/lib/worklet-runtime/index.d.ts"
       ],
       "worklet-dev-runtime": [
-        "./worklet-runtime/lib/index.d.ts"
+        "./runtime/lib/worklet-runtime/index.d.ts"
       ],
       "worklet-runtime/bindings": [
-        "./worklet-runtime/lib/bindings/index.d.ts"
+        "./runtime/lib/worklet-runtime/bindings/index.d.ts"
       ],
       "legacy-react-runtime": [
         "./runtime/lib/legacy-react-runtime/index.d.ts"

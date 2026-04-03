@@ -36,18 +36,19 @@ describe('runtime-local worklet-runtime source layout', () => {
     }
   });
 
-  test('reads package metadata from built outputs instead of shell sources', () => {
+  test('keeps the shell package focused on dist-only worklet bundle outputs', () => {
     const workletRuntimePackageJson = JSON.parse(
       fs.readFileSync(workletRuntimePackageJsonPath, 'utf8'),
     );
 
     expect(workletRuntimePackageJson.exports['.']).toEqual({
-      types: './lib/index.d.ts',
-      default: './lib/index.js',
+      default: './dist/main.js',
     });
-    expect(workletRuntimePackageJson.main).toBe('lib/index.js');
-    expect(workletRuntimePackageJson.module).toBe('lib/index.js');
-    expect(workletRuntimePackageJson.types).toBe('lib/index.d.ts');
+    expect(workletRuntimePackageJson.exports['./dev']).toEqual({
+      default: './dist/dev.js',
+    });
+    expect(workletRuntimePackageJson.main).toBe('dist/main.js');
+    expect(workletRuntimePackageJson.module).toBe('dist/main.js');
     expect(
       fs.existsSync(path.join(reactPackagesDir, 'worklet-runtime', 'src')),
     ).toBe(false);
@@ -57,16 +58,16 @@ describe('runtime-local worklet-runtime source layout', () => {
     const reactPackageJson = JSON.parse(fs.readFileSync(reactPackageJsonPath, 'utf8'));
 
     expect(reactPackageJson.exports['./worklet-runtime']).toEqual({
-      types: './worklet-runtime/lib/index.d.ts',
+      types: './runtime/lib/worklet-runtime/index.d.ts',
       default: './worklet-runtime/dist/main.js',
     });
     expect(reactPackageJson.exports['./worklet-dev-runtime']).toEqual({
-      types: './worklet-runtime/lib/index.d.ts',
+      types: './runtime/lib/worklet-runtime/index.d.ts',
       default: './worklet-runtime/dist/dev.js',
     });
     expect(reactPackageJson.exports['./worklet-runtime/bindings']).toEqual({
-      types: './worklet-runtime/lib/bindings/index.d.ts',
-      default: './worklet-runtime/lib/bindings/index.js',
+      types: './runtime/lib/worklet-runtime/bindings/index.d.ts',
+      default: './runtime/lib/worklet-runtime/bindings/index.js',
     });
   });
 });

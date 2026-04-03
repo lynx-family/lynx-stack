@@ -2,7 +2,7 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
-    "outDir": "lib",
+    "outDir": "../runtime/lib/worklet-runtime",
     "rootDir": "../runtime/src/worklet-runtime",
     "stripInternal": true,
     "target": "ESNext",

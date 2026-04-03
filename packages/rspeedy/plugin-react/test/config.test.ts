@@ -2627,16 +2627,17 @@ describe('Config', () => {
     )
   })
 
-  test('worklet runtime bindings resolve to the shell package build output', () => {
+  test('worklet runtime bindings resolve to the runtime-owned build output', () => {
     const require = createRequire(import.meta.url)
 
     expect(
       require.resolve('@lynx-js/react/worklet-runtime/bindings'),
     ).toContain(
-      '/packages/react/worklet-runtime/lib/bindings/index.js'.replaceAll(
-        '/',
-        path.sep,
-      ),
+      '/packages/react/runtime/lib/worklet-runtime/bindings/index.js'
+        .replaceAll(
+          '/',
+          path.sep,
+        ),
     )
   })
 
