@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { JsFunctionLifecycleManager } from '../src/jsFunctionLifecycle';
+import { JsFunctionLifecycleManager } from '../../runtime/src/worklet-runtime/jsFunctionLifecycle';
 
 let events = [];
 beforeEach(() => {

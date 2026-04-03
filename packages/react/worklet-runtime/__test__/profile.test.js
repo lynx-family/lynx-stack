@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { profile } from '../src/utils/profile';
+import { profile } from '../../runtime/src/worklet-runtime/utils/profile';
 
 describe('profile', () => {
   const originalProfile = console.profile;

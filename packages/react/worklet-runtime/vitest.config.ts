@@ -13,7 +13,6 @@ const config: ViteUserConfig = defineConfig({
       exclude: [
         'dist/**',
         'lib/**',
-        'src/**',
         'rslib.config.ts',
         '../runtime/src/worklet-runtime/api/lepusQuerySelector.ts',
         '../runtime/src/worklet-runtime/api/lynxApi.ts',
