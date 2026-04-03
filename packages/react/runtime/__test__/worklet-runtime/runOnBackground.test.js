@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { initWorklet } from '../../runtime/src/worklet-runtime/workletRuntime';
+import { initWorklet } from '../../src/worklet-runtime/workletRuntime';
 
 beforeEach(() => {
   globalThis.SystemInfo = {

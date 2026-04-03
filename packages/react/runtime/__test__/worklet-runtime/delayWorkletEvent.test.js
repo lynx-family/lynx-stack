@@ -7,9 +7,9 @@ import {
   clearDelayedWorklets,
   delayExecUntilJsReady,
   runDelayedWorklet,
-} from '../../runtime/src/worklet-runtime/delayWorkletEvent';
-import { updateWorkletRefInitValueChanges } from '../../runtime/src/worklet-runtime/workletRef';
-import { initWorklet } from '../../runtime/src/worklet-runtime/workletRuntime';
+} from '../../src/worklet-runtime/delayWorkletEvent';
+import { updateWorkletRefInitValueChanges } from '../../src/worklet-runtime/workletRef';
+import { initWorklet } from '../../src/worklet-runtime/workletRuntime';
 
 beforeEach(() => {
   globalThis.SystemInfo = {

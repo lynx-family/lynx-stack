@@ -7,10 +7,13 @@ import {
   getFromWorkletRefMap,
   removeValueFromWorkletRefMap,
   updateWorkletRefInitValueChanges,
-} from '../../runtime/src/worklet-runtime/workletRef';
-import { initWorklet } from '../../runtime/src/worklet-runtime/workletRuntime';
+} from '../../src/worklet-runtime/workletRef';
+import { initWorklet } from '../../src/worklet-runtime/workletRuntime';
+
+const originalDev = globalThis.__DEV__;
 
 beforeEach(() => {
+  globalThis.__DEV__ = false;
   globalThis.SystemInfo = {
     lynxSdkVersion: '2.16',
   };
@@ -18,6 +21,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  globalThis.__DEV__ = originalDev;
   delete globalThis.lynxWorkletImpl;
 });
 
