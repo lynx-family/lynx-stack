@@ -87,6 +87,7 @@ export default defineConfig({
         'src/index.ts',
         'src/lynx.ts',
         'src/root.ts',
+        'src/worklet-runtime/**',
         'src/debug/component-stack.ts',
         'src/debug/debug.ts',
         'src/debug/utils.ts',

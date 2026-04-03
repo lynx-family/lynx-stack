@@ -438,4 +438,22 @@ export default tseslint.config(
       'headers/header-format': 'off',
     },
   },
+  {
+    files: [
+      'packages/react/worklet-runtime/src/*.ts',
+      'packages/react/worklet-runtime/src/*/*.ts',
+      'packages/react/worklet-runtime/src/*/*/*.ts',
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: './packages/react/worklet-runtime/tsconfig.eslint.json',
+        projectService: false,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      'headers/header-format': 'off',
+      'import/export': 'off',
+    },
+  },
 );

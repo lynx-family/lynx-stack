@@ -5,6 +5,7 @@
     "build": {
       "dependsOn": [],
       "inputs": [
+        "../runtime/src/worklet-runtime/**",
         "src/**",
         "rslib.config.ts"
       ],

@@ -40,7 +40,7 @@ export function isEmptyObject(obj?: object): obj is Record<string, never> {
 }
 
 export function isSdkVersionGt(major: number, minor: number): boolean {
-  const lynxSdkVersion: string = SystemInfo.lynxSdkVersion || '1.0';
+  const lynxSdkVersion: string = SystemInfo.lynxSdkVersion ?? '1.0';
   const version = lynxSdkVersion.split('.');
   return Number(version[0]) > major || (Number(version[0]) == major && Number(version[1]) > minor);
 }
