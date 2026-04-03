@@ -523,6 +523,32 @@ export interface ShakeVisitorConfig {
    */
   retainProp: Array<string>
   /**
+   * Function names whose calls should be replaced with `undefined` during transformation
+   *
+   * @example
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+   *
+   * export default defineConfig({
+   *   plugins: [
+   *     pluginReactLynx({
+   *       shake: {
+   *         removeCall: ['useMyCustomEffect']
+   *       }
+   *     })
+   *   ]
+   * })
+   * ```
+   *
+   * @remarks
+   * Default value: `['useEffect', 'useLayoutEffect', '__runInJS', 'useLynxGlobalEventListener', 'useImperativeHandle']`
+   * The provided values will be merged with the default values instead of replacing them.
+   *
+   * @public
+   */
+  removeCall: Array<string>
+  /**
    * Function names whose parameters should be removed during transformation
    *
    * @example
@@ -542,7 +568,7 @@ export interface ShakeVisitorConfig {
    * ```
    *
    * @remarks
-   * Default value: `['useEffect', 'useLayoutEffect', '__runInJS', 'useLynxGlobalEventListener', 'useImperativeHandle']`
+   * Default value: `[]`
    * The provided values will be merged with the default values instead of replacing them.
    *
    * @public

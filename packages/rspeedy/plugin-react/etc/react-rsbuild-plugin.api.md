@@ -94,6 +94,7 @@ export interface PluginReactLynxOptions {
 // @public
 export interface ShakeVisitorConfig {
     pkgName: Array<string>
+    removeCall: Array<string>
     removeCallParams: Array<string>
     retainProp: Array<string>
 }

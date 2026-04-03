@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use std::collections::HashMap;
 use swc_core::{
+  common::DUMMY_SP,
   ecma::ast::*,
   ecma::visit::{VisitMut, VisitMutWith, VisitWith},
 };
@@ -63,6 +64,31 @@ pub struct ShakeVisitorConfig {
   /// @public
   pub retain_prop: Vec<String>,
 
+  /// Function names whose calls should be replaced with `undefined` during transformation
+  ///
+  /// @example
+  /// ```js
+  /// import { defineConfig } from '@lynx-js/rspeedy'
+  /// import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+  ///
+  /// export default defineConfig({
+  ///   plugins: [
+  ///     pluginReactLynx({
+  ///       shake: {
+  ///         removeCall: ['useMyCustomEffect']
+  ///       }
+  ///     })
+  ///   ]
+  /// })
+  /// ```
+  ///
+  /// @remarks
+  /// Default value: `['useEffect', 'useLayoutEffect', '__runInJS', 'useLynxGlobalEventListener', 'useImperativeHandle']`
+  /// The provided values will be merged with the default values instead of replacing them.
+  ///
+  /// @public
+  pub remove_call: Vec<String>,
+
   /// Function names whose parameters should be removed during transformation
   ///
   /// @example
@@ -82,7 +108,7 @@ pub struct ShakeVisitorConfig {
   /// ```
   ///
   /// @remarks
-  /// Default value: `['useEffect', 'useLayoutEffect', '__runInJS', 'useLynxGlobalEventListener', 'useImperativeHandle']`
+  /// Default value: `[]`
   /// The provided values will be merged with the default values instead of replacing them.
   ///
   /// @public
@@ -102,7 +128,7 @@ impl Default for ShakeVisitorConfig {
       "contextType",
       "defaultProps",
     ];
-    let default_remove_call_params = [
+    let default_remove_call = [
       "useEffect",
       "useLayoutEffect",
       "__runInJS",
@@ -112,10 +138,8 @@ impl Default for ShakeVisitorConfig {
     ShakeVisitorConfig {
       pkg_name: default_pkg_name.iter().map(|x| x.to_string()).collect(),
       retain_prop: default_retain_prop.iter().map(|x| x.to_string()).collect(),
-      remove_call_params: default_remove_call_params
-        .iter()
-        .map(|x| x.to_string())
-        .collect(),
+      remove_call: default_remove_call.iter().map(|x| x.to_string()).collect(),
+      remove_call_params: Vec::new(),
     }
   }
 }
@@ -138,6 +162,19 @@ impl ShakeVisitor {
       import_ids: Vec::new(),
     }
   }
+
+  /// Returns true when the call targets a configured runtime import.
+  ///
+  /// This shared check is used by both:
+  /// - `remove_call`, where the whole call expression is removed/replaced
+  /// - `remove_call_params`, where only the call arguments are cleared
+  fn should_remove_call(&self, n: &CallExpr, target_calls: &[String]) -> bool {
+    if let Some(fn_name) = n.callee.as_expr().and_then(|s| s.as_ident()) {
+      self.import_ids.contains(&fn_name.to_id()) && target_calls.contains(&fn_name.sym.to_string())
+    } else {
+      false
+    }
+  }
 }
 
 impl Default for ShakeVisitor {
@@ -147,6 +184,28 @@ impl Default for ShakeVisitor {
 }
 
 impl VisitMut for ShakeVisitor {
+  fn visit_mut_stmt(&mut self, n: &mut Stmt) {
+    if let Stmt::Expr(expr_stmt) = n {
+      if let Expr::Call(call_expr) = &*expr_stmt.expr {
+        if self.should_remove_call(call_expr, &self.opts.remove_call) {
+          *n = Stmt::Empty(EmptyStmt { span: DUMMY_SP });
+          return;
+        }
+      }
+    }
+    n.visit_mut_children_with(self);
+  }
+
+  fn visit_mut_expr(&mut self, n: &mut Expr) {
+    if let Expr::Call(call_expr) = n {
+      if self.should_remove_call(call_expr, &self.opts.remove_call) {
+        *n = Expr::Ident(Ident::new("undefined".into(), DUMMY_SP, Default::default()));
+        return;
+      }
+    }
+    n.visit_mut_children_with(self);
+  }
+
   /**
    * labeling import stmt
    */
@@ -176,15 +235,8 @@ impl VisitMut for ShakeVisitor {
    * labeling function call
    */
   fn visit_mut_call_expr(&mut self, n: &mut CallExpr) {
-    if let Some(fn_name) = n.callee.as_expr().and_then(|s| s.as_ident()) {
-      if self.import_ids.contains(&fn_name.to_id())
-        && self
-          .opts
-          .remove_call_params
-          .contains(&fn_name.sym.to_string())
-      {
-        n.args.clear();
-      }
+    if self.should_remove_call(n, &self.opts.remove_call_params) {
+      n.args.clear();
     }
     n.visit_mut_children_with(self);
   }
@@ -302,7 +354,7 @@ mod tests {
     ecma::{transforms::base::resolver, visit::visit_mut_pass},
   };
 
-  use crate::ShakeVisitor;
+  use crate::{ShakeVisitor, ShakeVisitorConfig};
 
   test!(
     module,
@@ -319,6 +371,68 @@ mod tests {
         return <view></view>
       }
     }
+    "#
+  );
+
+  test!(
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(ShakeVisitor::new(Default::default())),
+    ),
+    should_remove_use_effect_call,
+    r#"
+    import { useEffect } from "@lynx-js/react-runtime";
+    const myUseEffect = useEffect;
+    export function A () {
+      useEffect(()=>{
+        console.log("remove useEffect")
+      })
+      myUseEffect(()=>{
+        console.log("remove myUseEffect")
+      })
+    }
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(ShakeVisitor::new(Default::default())),
+    ),
+    should_not_remove_call_in_scope_id,
+    r#"
+    import { useEffect } from '@lynx-js/react-runtime'
+    {
+      const useEffect = () => {};
+      useEffect(() => {});
+    }
+    useEffect(() => {});
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(ShakeVisitor::new(Default::default())),
+    ),
+    should_replace_use_effect_call_with_undefined,
+    r#"
+    import { useEffect } from '@lynx-js/react-runtime'
+    const a = useEffect(() => {});
     "#
   );
 
@@ -484,13 +598,21 @@ mod tests {
 
   test!(
     Default::default(),
-    |_| visit_mut_pass(ShakeVisitor::default()),
+    |_| visit_mut_pass(ShakeVisitor::new(ShakeVisitorConfig {
+      remove_call: Vec::new(),
+      remove_call_params: vec!["useEffect".to_string()],
+      ..Default::default()
+    })),
     should_remove_use_effect_param,
     r#"
     import { useEffect } from "@lynx-js/react-runtime";
+    const myUseEffect = useEffect;
     export function A () {
       useEffect(()=>{
-        console.log("remove")
+        console.log("remove useEffect")
+      })
+      myUseEffect(()=>{
+        console.log("remove myUseEffect")
       })
     }
     "#
@@ -504,7 +626,11 @@ mod tests {
     }),
     |_| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(ShakeVisitor::new(Default::default())),
+      visit_mut_pass(ShakeVisitor::new(ShakeVisitorConfig {
+        remove_call_params: vec!["useEffect".to_string()],
+        remove_call: Vec::new(),
+        ..Default::default()
+      })),
     ),
     should_not_remove_in_scope_id,
     r#"

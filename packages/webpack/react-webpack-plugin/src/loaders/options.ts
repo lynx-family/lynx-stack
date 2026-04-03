@@ -257,14 +257,15 @@ export function getMainThreadTransformOptions(
         'defaultProps',
         ...(shake?.retainProp ?? []),
       ],
-      removeCallParams: [
+      removeCall: [
         'useEffect',
         'useLayoutEffect',
         '__runInJS',
         'useLynxGlobalEventListener',
         'useImperativeHandle',
-        ...(shake?.removeCallParams ?? []),
+        ...(shake?.removeCall ?? []),
       ],
+      removeCallParams: shake?.removeCallParams ?? [],
     },
     worklet: {
       ...commonOptions.worklet,
