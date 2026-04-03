@@ -2594,7 +2594,7 @@ describe('Config', () => {
     )
   })
 
-  test('worklet runtime bindings resolve to the shell package build output', () => {
+  test('worklet runtime bindings resolve to the worklet-runtime build output', () => {
     const require = createRequire(import.meta.url)
 
     expect(

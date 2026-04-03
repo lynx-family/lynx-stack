@@ -3,8 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { onWorkletCtxUpdate } from '../src/bindings/observers';
-import { initWorklet } from '../src/workletRuntime';
+import { onWorkletCtxUpdate } from '../../runtime/src/worklet-runtime/bindings/observers';
+import { initWorklet } from '../../runtime/src/worklet-runtime/workletRuntime';
 
 beforeEach(() => {
   globalThis.SystemInfo = {
