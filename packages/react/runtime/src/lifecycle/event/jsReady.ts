@@ -4,6 +4,7 @@
 import { profileEnd, profileStart } from '../../debug/profile.js';
 import { LifecycleConstant } from '../../lifecycleConstant.js';
 import { __root } from '../../root.js';
+import { SnapshotInstance } from '../../snapshot/snapshot.js';
 
 let isJSReady: boolean;
 let jsReadyEventIdSwap: Record<string | number, number>;
@@ -15,7 +16,7 @@ function jsReady(): void {
     profileStart('ReactLynx::transferRoot');
     profileStart('ReactLynx::serializeRoot');
   }
-  const root = JSON.stringify(__root);
+  const root = (__root as SnapshotInstance).serializeRoot();
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }

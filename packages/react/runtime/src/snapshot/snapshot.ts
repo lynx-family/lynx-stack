@@ -464,6 +464,43 @@ export class SnapshotInstance {
     };
   }
 
+  serializeRoot(): string {
+    return this.serializeNode();
+  }
+
+  private serializeNode(): string {
+    let json = '{"id":' + this.__id + ',"type":' + JSON.stringify(this.type);
+
+    if (this.__values !== undefined) {
+      json += ',"values":' + JSON.stringify(this.__values);
+    }
+
+    if (this.__extraProps !== undefined) {
+      json += ',"extraProps":' + JSON.stringify(this.__extraProps);
+    }
+
+    const firstChild = this.__firstChild;
+    if (firstChild) {
+      json += ',"children":[';
+
+      let child: SnapshotInstance | null = firstChild;
+      let isFirst = true;
+      while (child) {
+        if (!isFirst) {
+          json += ',';
+        }
+
+        json += child.serializeNode();
+        child = child.__nextSibling;
+        isFirst = false;
+      }
+
+      json += ']';
+    }
+
+    return json + '}';
+  }
+
   callUpdateIfNotDirectOrDeepEqual(index: number, oldValue: any, newValue: any): void {
     if (isDirectOrDeepEqual(oldValue, newValue)) {}
     else {

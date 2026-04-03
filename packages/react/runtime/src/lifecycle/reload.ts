@@ -56,7 +56,7 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
     __OnLifecycleEvent([
       LifecycleConstant.firstScreen, /* FIRST_SCREEN */
       {
-        root: JSON.stringify(__root),
+        root: (__root as SnapshotInstance).serializeRoot(),
       },
     ]);
   }
