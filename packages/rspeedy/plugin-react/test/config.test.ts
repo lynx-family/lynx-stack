@@ -2,7 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { existsSync, readFileSync } from 'node:fs'
+import { mkdtemp } from 'node:fs/promises'
 import { createRequire } from 'node:module'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 import type { RsbuildInstance, Rspack } from '@rsbuild/core'
@@ -16,6 +18,27 @@ import type {
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
+
+async function createRspeedyWithTempDistRoot(
+  options: Parameters<typeof createRspeedy>[0],
+): Promise<Awaited<ReturnType<typeof createRspeedy>>> {
+  const root = await mkdtemp(path.join(tmpdir(), 'rspeedy-react-config-'))
+
+  return await createRspeedy({
+    ...options,
+    rspeedyConfig: {
+      ...options.rspeedyConfig,
+      output: {
+        ...options.rspeedyConfig?.output,
+        // These cases assert on emitted files, so they need isolated build
+        // output without changing cwd-based module resolution.
+        distPath: {
+          root,
+        },
+      },
+    },
+  })
+}
 
 describe('Config', () => {
   test('alias with development', async () => {
@@ -880,7 +903,7 @@ describe('Config', () => {
       vi.stubEnv('NODE_ENV', 'production')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-      const rsbuild = await createRspeedy({
+      const rsbuild = await createRspeedyWithTempDistRoot({
         rspeedyConfig: {
           source: {
             entry: {
@@ -923,7 +946,7 @@ describe('Config', () => {
       vi.stubEnv('NODE_ENV', 'production')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-      const rsbuild = await createRspeedy({
+      const rsbuild = await createRspeedyWithTempDistRoot({
         rspeedyConfig: {
           source: {
             entry: {
