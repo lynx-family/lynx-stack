@@ -7,10 +7,10 @@ import {
   useDebugValue,
   useErrorBoundary,
   useId,
-  useImperativeHandle,
   useMemo,
   useEffect as usePreactEffect,
   useState as usePreactState,
+  useImperativeHandle as usePreactUseImperativeHandle,
   useReducer,
   useRef,
 } from 'preact/hooks';
@@ -20,6 +20,7 @@ import type { DependencyList, EffectCallback } from 'react';
 import type { TraceOption } from '@lynx-js/types';
 
 import { isProfiling, profileEnd, profileFlowId, profileStart } from '../debug/profile.js';
+import { noop } from '../utils.js';
 
 type GenericSetState = Dispatch<StateUpdater<unknown>>;
 
@@ -135,9 +136,11 @@ const useState: typeof usePreactState = isProfiling
  *
  * @public
  */
-const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = isProfiling
-  ? useEffectProfiled
-  : usePreactEffect;
+const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = __BACKGROUND__
+  ? (isProfiling
+    ? useEffectProfiled
+    : usePreactEffect)
+  : noop;
 
 /**
  * `useLayoutEffect` is now an alias of `useEffect`. Use `useEffect` instead.
@@ -151,9 +154,13 @@ const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = isPro
  *
  * @deprecated `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React.
  */
-const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) => void = isProfiling
-  ? useLayoutEffectProfiled
-  : usePreactEffect;
+const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) => void = __BACKGROUND__
+  ? (isProfiling
+    ? useLayoutEffectProfiled
+    : usePreactEffect)
+  : noop;
+
+const useImperativeHandle: typeof usePreactUseImperativeHandle = __BACKGROUND__ ? usePreactUseImperativeHandle : noop;
 
 export {
   // preact
