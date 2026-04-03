@@ -1,5 +1,168 @@
 # @lynx-js/web-core
 
+## 0.20.0
+
+### Minor Changes
+
+- **This is a breaking change** ([#2322](https://github.com/lynx-family/lynx-stack/pull/2322))
+
+  ## Architectural Upgrade: `web-core-wasm` replaces `web-core`
+
+  This release marks a major architectural upgrade for the web platform. The experimental, WASM-powered engine formerly known as `web-core-wasm` has been fully stabilized and merged into the main branch, completely replacing the previous pure JS/TS based `web-core` implementation. This consolidation massively improves execution performance and aligns the API boundaries of the Web platform directly with other native Lynx implementations.
+
+  ### 🎉 Added Features
+
+  - **Core API Enhancements**: Successfully exposed and supported `__QuerySelector` and `__InvokeUIMethod` methods.
+  - **Security & CSP Compliance**: Added a `nonce` attribute to the iframe's `srcdoc` script execution, strengthening Content Security Policy (CSP) compliance.
+  - **`<lynx-view>` Parameter Enhancements**:
+    - Added the `browser-config` attribute and property to `<lynx-view>`. Development environments can now supply a `BrowserConfig` object (e.g., configuring `pixelRatio`, `pixelWidth`, `pixelHeight`) allowing the `systemInfo` payload to be dynamically configured at the instance level.
+
+  ### 🔄 Changed Features
+
+  - **Legacy JSON Backwards Compatibility**: Delivered comprehensive fixes and optimizations to deeply support legacy JSON output templates:
+    - Added support for lazy loading execution mode (`lazy usage`).
+    - Implemented the correct decoding and handling of `@keyframe` animation rules.
+    - Rectified rule scoping matching including scoped CSS, root selectors, and type selectors.
+  - **Ecosystem Migration**: Updated testing and ecosystem applications (such as `web-explorer` and `shell-project`) to migrate away from obsolete fragmented dependencies. The new WASM architecture seamlessly integrates Element APIs and CSS directly inside the core client module, requiring a much simpler initialization footprint.
+
+    **Before (Legacy `web-core` + `web-elements`):**
+
+    ```typescript
+    // Required multiple imports to assemble the environment
+    import '@lynx-js/web-core/client';
+    import type { LynxViewElement as LynxView } from '@lynx-js/web-core';
+
+    // Had to manually import separate elements and their CSS
+    import '@lynx-js/web-elements/index.css';
+    import '@lynx-js/web-elements/all';
+
+    const lynxView = document.createElement('lynx-view') as LynxView;
+    // ...
+    ```
+
+    **After (New `web-core` unified architecture):**
+
+    ```typescript
+    // The new engine natively registers Web Components and injects fundamental CSS
+    import '@lynx-js/web-core/client';
+    import type { LynxViewElement as LynxView } from '@lynx-js/web-core/client';
+
+    const lynxView = document.createElement('lynx-view') as LynxView;
+    // ...
+    ```
+
+    _(Applications can now drop `@lynx-js/web-elements` entirely from their `package.json` dependencies)._
+
+  - **Dependency & Boot Sequence Improvements**: Re-architected module loading pathways. Promoted `wasm-feature-detect` directly to a core dependency, and hardened the web worker count initialization assertions.
+  - **Initialization Optimizations**: Converted `SERVER_IN_SHADOW_CSS` initialization bounds to use compilation-time constant expressions for better optimization.
+
+  ### 🗑️ Deleted Features & Structural Deprecations
+
+  - **`<lynx-view>` Parameter Removals**:
+    - Removed the `thread-strategy` property and attribute. Historically, this permitted consumers to toggle between `'multi-thread'` and `'all-on-ui'` modes depending on how they wanted the background logic to be executed. The WASM-driven architecture enforces a consolidated concurrency model, deprecating this `<lynx-view>` attribute entirely.
+    - Removed the `overrideLynxTagToHTMLTagMap` property/attribute. HTML tag overriding mechanism has been deprecated in the new engine.
+    - Removed the `customTemplateLoader` property handler from `<lynx-view>`.
+    - Removed the `inject-head-links` property and attribute (`injectHeadLinks`), which previously was used to automatically inject `<link rel="stylesheet">` tags from the document head into the `lynx-view` shadow root.
+  - **Fragmented Packages Removal**: The new cohesive WASM architecture native to `@lynx-js/web-core` handles cross-thread communication, worker boundaries, and rendering loops uniformly. Consequently, multiple obsolete packages have been completely removed from the workspace:
+    - `@lynx-js/web-mainthread-apis`
+    - `@lynx-js/web-worker-runtime`
+    - `@lynx-js/web-core-server`
+    - `@lynx-js/web-core-wasm-e2e` (transitioned into standard test suites)
+
+- Added support for `rpx` unit ([#2377](https://github.com/lynx-family/lynx-stack/pull/2377))
+
+  **This is a breaking change**
+
+  The following Styles has been added to `web-core`
+
+  ```css
+  lynx-view {
+    width: 100%;
+    container-name: lynx-view;
+    container-type: inline-size;
+    --rpx-unit: 1cqw;
+  }
+  ```
+
+  Check MDN for the details about these styles:
+
+  - https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/container-name
+  - https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/container-type
+  - https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Containment/Container_queries
+
+  ### how it works?
+
+  For the following code
+
+  ```html
+  <view style="height:1rpx"></view>
+  ```
+
+  it will be transformed to
+
+  ```html
+  <view style="height:calc(1 * var(--rpx-unit))"></view>
+  ```
+
+  Therefore you could use any `<length>` value to replace the unit, for example:
+
+  ```html
+  <lynx-view style="--rpx-unit:1px"></lynx-view>
+  ```
+
+  By default, the --rpx-unit value is `1cqw`
+
+- Added support for transform `vw` and `vh` unit ([#2377](https://github.com/lynx-family/lynx-stack/pull/2377))
+
+  Add `transform-vw` and `transform-vh` attributes and properties on `<lynx-view>`.
+
+  For the following code
+
+  ```html
+  <view style="height:1vw"></view>
+  ```
+
+  If the `transform-vw` is enabled `<lynx-view transform-vw="true">`, it will be transformed to
+
+  ```html
+  <view style="height:calc(1 * var(--vw-unit))"></view>
+  ```
+
+  Therefore you could use any `<length>` value to replace the unit, for example:
+
+  ```html
+  <lynx-view style="--vw-unit:1px"></lynx-view>
+  ```
+
+### Patch Changes
+
+- feat(web-core): add `is_bubble` parameter to `common_event_handler` to properly handle non-bubbling events like `window.Event('click', { bubbles: false })`. ([#2399](https://github.com/lynx-family/lynx-stack/pull/2399))
+
+- chore: update readme ([#2380](https://github.com/lynx-family/lynx-stack/pull/2380))
+
+- fix: the output format should be module ([#2388](https://github.com/lynx-family/lynx-stack/pull/2388))
+
+- opt: use opt-level 3 to compile wasm ([#2371](https://github.com/lynx-family/lynx-stack/pull/2371))
+
+- fix(web-core): avoid partial bundle loading and double fetching when fetchBundle is called concurrently for the same url. ([#2386](https://github.com/lynx-family/lynx-stack/pull/2386))
+
+- fix(web-core): fallback to the original export chunk when `processEvalResult` is absent during `queryComponent` execution ([#2399](https://github.com/lynx-family/lynx-stack/pull/2399))
+
+- fix: tokenizing inline style values correctly to support rpx and ppx unit conversion ([#2381](https://github.com/lynx-family/lynx-stack/pull/2381))
+
+  This fixes an issue where the `transform_inline_style_key_value_vec` API bypassed the CSS tokenizer, preventing dimension units like `rpx` or `ppx` from being successfully transformed into `calc` strings when specified via inline styles.
+
+- feat: add mts lynx.querySelectorAll API ([#2382](https://github.com/lynx-family/lynx-stack/pull/2382))
+
+- fix: mts in lazy component ([#2375](https://github.com/lynx-family/lynx-stack/pull/2375))
+
+- fix: enableJSDataProcessor not work ([#2372](https://github.com/lynx-family/lynx-stack/pull/2372))
+
+- feat: add `ppx` unit support for CSS, transforming to `calc(... * var(--ppx-unit))` directly. ([#2381](https://github.com/lynx-family/lynx-stack/pull/2381))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.20.0
+
 ## 0.19.8
 
 ### Patch Changes

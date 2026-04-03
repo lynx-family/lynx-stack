@@ -1,5 +1,11 @@
 # @lynx-js/react
 
+## 0.117.1
+
+### Patch Changes
+
+- Update preact version to simplify `setProperty` implementation ([#2367](https://github.com/lynx-family/lynx-stack/pull/2367))
+
 ## 0.117.0
 
 ### Minor Changes
