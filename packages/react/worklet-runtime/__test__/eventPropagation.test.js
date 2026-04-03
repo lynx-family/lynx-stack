@@ -3,9 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { initApiEnv } from '../src/api/lynxApi';
-import { RunWorkletSource } from '../src/bindings/types';
-import { initWorklet } from '../src/workletRuntime';
+import { initApiEnv } from '../../runtime/src/worklet-runtime/api/lynxApi';
+import { RunWorkletSource } from '../../runtime/src/worklet-runtime/bindings/types';
+import { initWorklet } from '../../runtime/src/worklet-runtime/workletRuntime';
 
 describe('EventPropagation', () => {
   const consoleMock = vi.spyOn(console, 'warn').mockImplementation(() => undefined);

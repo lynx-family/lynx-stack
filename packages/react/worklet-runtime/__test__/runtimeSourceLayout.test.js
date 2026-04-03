@@ -10,7 +10,11 @@ import { describe, expect, test } from 'vitest';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const reactPackagesDir = path.resolve(__dirname, '..', '..');
 const reactPackageJsonPath = path.join(reactPackagesDir, 'package.json');
-const shellPackageDir = path.join(reactPackagesDir, 'worklet-runtime');
+const workletRuntimePackageJsonPath = path.join(
+  reactPackagesDir,
+  'worklet-runtime',
+  'package.json',
+);
 const runtimeWorkletRuntimeDir = path.join(
   reactPackagesDir,
   'runtime',
@@ -32,19 +36,21 @@ describe('runtime-local worklet-runtime source layout', () => {
     }
   });
 
-  test('keeps the worklet-runtime shell sources as thin re-export entrypoints', () => {
-    expect(
-      fs.readFileSync(path.join(shellPackageDir, 'src', 'index.ts'), 'utf8'),
-    ).toContain('export * from \'../../runtime/src/worklet-runtime/index.js\';');
-
-    expect(
-      fs.readFileSync(
-        path.join(shellPackageDir, 'src', 'bindings', 'index.ts'),
-        'utf8',
-      ),
-    ).toContain(
-      'export * from \'../../../runtime/src/worklet-runtime/bindings/index.js\';',
+  test('reads package metadata from built outputs instead of shell sources', () => {
+    const workletRuntimePackageJson = JSON.parse(
+      fs.readFileSync(workletRuntimePackageJsonPath, 'utf8'),
     );
+
+    expect(workletRuntimePackageJson.exports['.']).toEqual({
+      types: './lib/index.d.ts',
+      default: './lib/index.js',
+    });
+    expect(workletRuntimePackageJson.main).toBe('lib/index.js');
+    expect(workletRuntimePackageJson.module).toBe('lib/index.js');
+    expect(workletRuntimePackageJson.types).toBe('lib/index.d.ts');
+    expect(
+      fs.existsSync(path.join(reactPackagesDir, 'worklet-runtime', 'src')),
+    ).toBe(false);
   });
 
   test('preserves the public worklet-runtime export targets on @lynx-js/react', () => {

@@ -3,9 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { clearDelayedWorklets, delayExecUntilJsReady, runDelayedWorklet } from '../src/delayWorkletEvent';
-import { updateWorkletRefInitValueChanges } from '../src/workletRef';
-import { initWorklet } from '../src/workletRuntime';
+import {
+  clearDelayedWorklets,
+  delayExecUntilJsReady,
+  runDelayedWorklet,
+} from '../../runtime/src/worklet-runtime/delayWorkletEvent';
+import { updateWorkletRefInitValueChanges } from '../../runtime/src/worklet-runtime/workletRef';
+import { initWorklet } from '../../runtime/src/worklet-runtime/workletRuntime';
 
 beforeEach(() => {
   globalThis.SystemInfo = {

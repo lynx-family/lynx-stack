@@ -3,16 +3,16 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Element, setShouldFlush } from '../src/api/element';
-import { RunWorkletSource } from '../src/bindings/types';
+import { Element, setShouldFlush } from '../../runtime/src/worklet-runtime/api/element';
+import { RunWorkletSource } from '../../runtime/src/worklet-runtime/bindings/types';
 import {
   mainThreadFlushLoopMark,
   mainThreadFlushLoopOnFlushMicrotask,
   mainThreadFlushLoopReport,
   mainThreadFlushLoopReset,
-} from '../src/utils/mainThreadFlushLoopGuard';
-import { getFromWorkletRefMap } from '../src/workletRef';
-import { initWorklet } from '../src/workletRuntime';
+} from '../../runtime/src/worklet-runtime/utils/mainThreadFlushLoopGuard';
+import { getFromWorkletRefMap } from '../../runtime/src/worklet-runtime/workletRef';
+import { initWorklet } from '../../runtime/src/worklet-runtime/workletRuntime';
 
 describe('MainThread flush loop guard (worklet-runtime only)', () => {
   beforeEach(() => {
