@@ -1,5 +1,26 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.14.0
+
+### Minor Changes
+
+- feat: support `optimizeBundleSize` option to remove unused code for main-thread and background. ([#2336](https://github.com/lynx-family/lynx-stack/pull/2336))
+
+  - If `optimizeBundleSize` is `true` or `optimizeBundleSize.background` is `true`, `lynx.registerDataProcessors` calls will be marked as pure for the background thread output.
+  - If `optimizeBundleSize` is `true` or `optimizeBundleSize.mainThread` is `true`, `NativeModules.call` and `lynx.getJSModule` calls will be marked as pure for the main-thread output.
+
+### Patch Changes
+
+- refactor: remove `modifyWebpackChain` since Rsbuild 2.0 dropped webpack support ([#2397](https://github.com/lynx-family/lynx-stack/pull/2397))
+
+- Updated dependencies [[`9193711`](https://github.com/lynx-family/lynx-stack/commit/919371167f4136f2ee975075d8e73d2986b20a8f)]:
+  - @lynx-js/template-webpack-plugin@0.10.7
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+  - @lynx-js/react-webpack-plugin@0.8.0
+  - @lynx-js/react-alias-rsbuild-plugin@0.14.0
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.5
+
 ## 0.13.0
 
 ### Minor Changes
