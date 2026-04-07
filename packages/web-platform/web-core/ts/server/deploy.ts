@@ -14,14 +14,14 @@ export function executeTemplate(
   _initI18nResources: InitI18nResources,
   transformVW: boolean,
   transformVH: boolean,
-  transformREM: boolean,
   viewAttributes?: string,
+  transformREM?: boolean,
 ): string | undefined {
   const result = decodeTemplate(
     templateBuffer,
     transformVW,
     transformVH,
-    transformREM,
+    !!transformREM,
   );
   const config = result.config;
 
@@ -36,7 +36,7 @@ export function executeTemplate(
       defaultDisplayLinear: config['defaultDisplayLinear'] !== 'false', // Default to true if not present or 'true'
       transformVW: transformVW,
       transformVH: transformVH,
-      transformREM: transformREM,
+      transformREM: !!transformREM,
     },
   );
 
