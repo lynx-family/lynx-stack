@@ -100,7 +100,8 @@ void create({
   extraSkills: [
     {
       label: 'Lynx DevTool',
-      skills: ['lynx-community/skills/lynx-devtool'],
+      source: 'lynx-community/skills',
+      value: 'lynx-devtool',
     },
   ],
   mapESLintTemplate(templateName) {
