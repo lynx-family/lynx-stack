@@ -8,7 +8,12 @@ import * as csstree from 'css-tree';
 import { generateHref } from './generateHref.js';
 import { toLoc } from './toLoc.js';
 import { toString } from './toString.js';
-import type { Declaration, LynxStyleNode } from './types/LynxStyleNode.js';
+import type {
+  Declaration,
+  LayerRule,
+  LynxStyleNode,
+  StyleRule,
+} from './types/LynxStyleNode.js';
 import { Severity } from './types/Plugin.js';
 import type { ParserError, Plugin } from './types/Plugin.js';
 
@@ -110,6 +115,94 @@ function transformDeclaration(
       valLoc: toLoc(node.value.loc!.end, 1),
     };
   }
+}
+
+function transformStyleRule(
+  node: csstree.Rule,
+  errors: ParserError[],
+): StyleRule {
+  const preludeText = toString(node.prelude);
+  return {
+    type: 'StyleRule',
+    style: transformBlock(node.block, errors),
+    selectorText: {
+      value: preludeText,
+      loc: toLoc(node.prelude.loc!.end),
+    },
+    variables: Object.fromEntries(
+      node.block.children.toArray().filter(node =>
+        node.type === 'Declaration' && node.property.startsWith('--')
+      ).map((node) => {
+        return [
+          (node as csstree.Declaration).property,
+          toString((node as csstree.Declaration).value)
+          + ((node as csstree.Declaration).important
+            ? ' !important'
+            : ''),
+        ];
+      }),
+    ),
+  };
+}
+
+function transformAtRuleContent(
+  block: csstree.Block | null,
+  errors: ParserError[],
+  options: { filename: string; projectRoot: string },
+): LynxStyleNode[] {
+  if (!block) return [];
+
+  const rules: LynxStyleNode[] = [];
+
+  for (const child of block.children.toArray()) {
+    if (child.type === 'Rule') {
+      rules.push(transformStyleRule(child, errors));
+    } else if (child.type === 'Atrule') {
+      // Handle nested at-rules
+      if (child.name === 'media') {
+        const preludeText = child.prelude ? toString(child.prelude) : '';
+        rules.push({
+          type: 'MediaRule',
+          prelude: {
+            value: preludeText,
+            loc: child.prelude
+              ? toLoc(child.prelude.loc!.end)
+              : toLoc(child.loc!.start),
+          },
+          rules: transformAtRuleContent(child.block, errors, options),
+        });
+      } else if (child.name === 'supports') {
+        const preludeText = child.prelude ? toString(child.prelude) : '';
+        rules.push({
+          type: 'SupportsRule',
+          prelude: {
+            value: preludeText,
+            loc: child.prelude
+              ? toLoc(child.prelude.loc!.end)
+              : toLoc(child.loc!.start),
+          },
+          rules: transformAtRuleContent(child.block, errors, options),
+        });
+      } else if (child.name === 'layer') {
+        const preludeText = child.prelude ? toString(child.prelude) : '';
+        const layerRule: LayerRule = {
+          type: 'LayerRule',
+          rules: transformAtRuleContent(child.block, errors, options),
+        };
+        if (preludeText) {
+          layerRule.prelude = {
+            value: preludeText,
+            loc: child.prelude
+              ? toLoc(child.prelude.loc!.end)
+              : toLoc(child.loc!.start),
+          };
+        }
+        rules.push(layerRule);
+      }
+    }
+  }
+
+  return rules;
 }
 
 export function transformBlock(
@@ -272,31 +365,61 @@ export function parse(content: string, options: {
             href: generateHref(projectRoot, filename, origin),
           });
           return this.skip;
+        } else if (node.name === 'media') {
+          const preludeText = node.prelude ? toString(node.prelude) : '';
+          result.push({
+            type: 'MediaRule',
+            prelude: {
+              value: preludeText,
+              loc: node.prelude
+                ? toLoc(node.prelude.loc!.end)
+                : toLoc(node.loc!.start),
+            },
+            rules: transformAtRuleContent(node.block, errors, {
+              filename,
+              projectRoot,
+            }),
+          });
+          return this.skip;
+        } else if (node.name === 'supports') {
+          const preludeText = node.prelude ? toString(node.prelude) : '';
+          result.push({
+            type: 'SupportsRule',
+            prelude: {
+              value: preludeText,
+              loc: node.prelude
+                ? toLoc(node.prelude.loc!.end)
+                : toLoc(node.loc!.start),
+            },
+            rules: transformAtRuleContent(node.block, errors, {
+              filename,
+              projectRoot,
+            }),
+          });
+          return this.skip;
+        } else if (node.name === 'layer') {
+          const preludeText = node.prelude ? toString(node.prelude) : '';
+          const layerRule: LayerRule = {
+            type: 'LayerRule',
+            rules: transformAtRuleContent(node.block, errors, {
+              filename,
+              projectRoot,
+            }),
+          };
+          if (preludeText) {
+            layerRule.prelude = {
+              value: preludeText,
+              loc: node.prelude
+                ? toLoc(node.prelude.loc!.end)
+                : toLoc(node.loc!.start),
+            };
+          }
+          result.push(layerRule);
+          return this.skip;
         }
         return this.skip;
       } else if (node.type === 'Rule') {
-        const preludeText = toString(node.prelude);
-        result.push({
-          type: 'StyleRule',
-          style: transformBlock(node.block, errors),
-          selectorText: {
-            value: preludeText,
-            loc: toLoc(node.prelude.loc!.end),
-          },
-          variables: Object.fromEntries(
-            node.block.children.toArray().filter(node =>
-              node.type === 'Declaration' && node.property.startsWith('--')
-            ).map((node) => {
-              return [
-                (node as csstree.Declaration).property,
-                toString((node as csstree.Declaration).value)
-                + ((node as csstree.Declaration).important
-                  ? ' !important'
-                  : ''),
-              ];
-            }),
-          ),
-        });
+        result.push(transformStyleRule(node, errors));
         return this.skip;
       }
     },

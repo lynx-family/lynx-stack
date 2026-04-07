@@ -1,0 +1,17 @@
+@layer utilities {
+  .text-red {
+    color: red;
+  }
+}
+
+@layer {
+  .anonymous {
+    display: block;
+  }
+}
+
+@layer components {
+  .btn {
+    padding: 10px;
+  }
+}

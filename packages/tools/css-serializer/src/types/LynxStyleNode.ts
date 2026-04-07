@@ -53,8 +53,29 @@ export interface KeyframesRule {
   styles: KeyframesStyle[];
 }
 
+export interface MediaRule {
+  type: 'MediaRule';
+  prelude: Value;
+  rules: LynxStyleNode[];
+}
+
+export interface SupportsRule {
+  type: 'SupportsRule';
+  prelude: Value;
+  rules: LynxStyleNode[];
+}
+
+export interface LayerRule {
+  type: 'LayerRule';
+  prelude?: Value;
+  rules: LynxStyleNode[];
+}
+
 export type LynxStyleNode =
   | StyleRule
   | FontFaceRule
   | ImportRule
-  | KeyframesRule;
+  | KeyframesRule
+  | MediaRule
+  | SupportsRule
+  | LayerRule;
