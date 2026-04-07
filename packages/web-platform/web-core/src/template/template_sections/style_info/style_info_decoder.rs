@@ -916,7 +916,7 @@ mod tests_roundtrip {
       let decoded_raw = unsafe { rkyv::from_bytes_unchecked::<RawStyleInfo>(&buf) }
         .expect("RawStyleInfo decode should succeed");
 
-      let decoder = StyleInfoDecoder::new(decoded_raw, None, true, false, false)
+      let decoder = StyleInfoDecoder::new(decoded_raw, None, true, false, false, false)
         .expect("StyleInfoDecoder should succeed");
       let decoded_string = decoder.style_content;
 
@@ -967,7 +967,7 @@ mod tests_roundtrip {
       let decoded_raw = unsafe { rkyv::from_bytes_unchecked::<RawStyleInfo>(&buf) }
         .expect("RawStyleInfo decode should succeed");
 
-      let decoder = StyleInfoDecoder::new(decoded_raw, None, true, false, false)
+      let decoder = StyleInfoDecoder::new(decoded_raw, None, true, false, false, false)
         .expect("StyleInfoDecoder should succeed");
       let decoded_string = decoder.style_content;
 
