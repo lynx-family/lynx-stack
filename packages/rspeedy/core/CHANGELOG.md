@@ -1,5 +1,18 @@
 # @lynx-js/rspeedy
 
+## 0.14.0
+
+### Minor Changes
+
+- feat: add `Minify.mainThreadOptions` and `Minify.backgroundOptions` for thread-specific minifier. ([#2336](https://github.com/lynx-family/lynx-stack/pull/2336))
+
+### Patch Changes
+
+- Bump Rsbuild v1.7.4 with Rspack v1.7.10. ([#2384](https://github.com/lynx-family/lynx-stack/pull/2384))
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.20.0
+
 ## 0.13.6
 
 ### Patch Changes

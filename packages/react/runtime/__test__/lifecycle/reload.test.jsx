@@ -123,7 +123,7 @@ describe('reload', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"patchList":[{"id":3,"snapshotPatch":[3,-5,0,{"dataX2":"WorldX2"},3,-8,0,"update",3,-6,0,{"attr":{"dataX2":"WorldX2"}}]}]}",
+          "data": "{"patchList":[{"id":3,"snapshotPatch":[3,-5,0,{"dataX2":"WorldX2"},3,-7,0,"update",3,-8,0,{"attr":{"dataX2":"WorldX2"}}]}]}",
           "patchOptions": {
             "flowIds": [
               666,
@@ -234,7 +234,7 @@ describe('reload', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"patchList":[{"id":4,"snapshotPatch":[3,-8,0,"???"]}]}",
+          "data": "{"patchList":[{"id":4,"snapshotPatch":[3,-7,0,"???"]}]}",
           "patchOptions": {
             "flowIds": [
               666,
@@ -305,7 +305,7 @@ describe('reload', () => {
             [
               "rLynxFirstScreen",
               {
-                "root": "{"id":-9,"type":"root","children":[{"id":-13,"type":"__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-10,"type":"__snapshot_a94a8_test_3","children":[{"id":-15,"type":null,"values":["Enjoy"]}]},{"id":-11,"type":"__snapshot_a94a8_test_4","children":[{"id":-16,"type":null,"values":["World"]}]},{"id":-12,"type":"wrapper","children":[{"id":-14,"type":"__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}]}]}]}]}",
+                "root": "{"id":-9,"type":"root","children":[{"id":-13,"type":"__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-10,"type":"__snapshot_a94a8_test_3","children":[{"id":-14,"type":null,"values":["Enjoy"]}]},{"id":-11,"type":"__snapshot_a94a8_test_4","children":[{"id":-15,"type":null,"values":["World"]}]},{"id":-12,"type":"wrapper","children":[{"id":-16,"type":"__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}]}]}]}]}",
               },
             ],
           ],
@@ -386,7 +386,7 @@ describe('reload', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"patchList":[{"id":8,"snapshotPatch":[3,-16,0,"update"]}]}",
+          "data": "{"patchList":[{"id":8,"snapshotPatch":[3,-15,0,"update"]}]}",
           "patchOptions": {
             "flowIds": [
               666,
@@ -535,7 +535,7 @@ describe('reload', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"patchList":[{"id":11,"snapshotPatch":[3,-5,0,{"dataX2":"WorldX2"},3,-8,0,"update",3,-6,0,{"attr":{"dataX2":"WorldX2"}}]}]}",
+          "data": "{"patchList":[{"id":11,"snapshotPatch":[3,-5,0,{"dataX2":"WorldX2"},3,-7,0,"update",3,-8,0,{"attr":{"dataX2":"WorldX2"}}]}]}",
           "patchOptions": {
             "flowIds": [
               666,
@@ -650,7 +650,7 @@ describe('reload', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"patchList":[{"id":12,"snapshotPatch":[3,-8,0,"???"]}]}",
+          "data": "{"patchList":[{"id":12,"snapshotPatch":[3,-7,0,"???"]}]}",
           "patchOptions": {
             "flowIds": [
               666,
@@ -723,7 +723,7 @@ describe('reload', () => {
             [
               "rLynxFirstScreen",
               {
-                "root": "{"id":-9,"type":"root","children":[{"id":-15,"type":"__snapshot_a94a8_test_5","children":[{"id":-13,"type":"__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-10,"type":"__snapshot_a94a8_test_3","children":[{"id":-16,"type":null,"values":["Enjoy"]}]},{"id":-11,"type":"__snapshot_a94a8_test_4","children":[{"id":-17,"type":null,"values":["World"]}]},{"id":-12,"type":"wrapper","children":[{"id":-14,"type":"__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}]}]}]}]}]}",
+                "root": "{"id":-9,"type":"root","children":[{"id":-10,"type":"__snapshot_a94a8_test_5","children":[{"id":-14,"type":"__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-11,"type":"__snapshot_a94a8_test_3","children":[{"id":-15,"type":null,"values":["Enjoy"]}]},{"id":-12,"type":"__snapshot_a94a8_test_4","children":[{"id":-16,"type":null,"values":["World"]}]},{"id":-13,"type":"wrapper","children":[{"id":-17,"type":"__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}]}]}]}]}]}",
               },
             ],
           ],
@@ -806,7 +806,7 @@ describe('reload', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"patchList":[{"id":16,"snapshotPatch":[3,-17,0,"update"]}]}",
+          "data": "{"patchList":[{"id":16,"snapshotPatch":[3,-16,0,"update"]}]}",
           "patchOptions": {
             "flowIds": [
               666,
@@ -1314,7 +1314,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
                 "-8": -16,
                 "-9": -17,
               },
-              "root": "{"id":-17,"type":"root","children":[{"id":-21,"type":"__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-18,"type":"__snapshot_a94a8_test_3","children":[{"id":-23,"type":null,"values":["Hello 2"]}]},{"id":-19,"type":"__snapshot_a94a8_test_4","children":[{"id":-24,"type":null,"values":["World"]}]},{"id":-20,"type":"wrapper","children":[{"id":-22,"type":"__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}]}]}]}]}",
+              "root": "{"id":-17,"type":"root","children":[{"id":-21,"type":"__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-18,"type":"__snapshot_a94a8_test_3","children":[{"id":-22,"type":null,"values":["Hello 2"]}]},{"id":-19,"type":"__snapshot_a94a8_test_4","children":[{"id":-23,"type":null,"values":["World"]}]},{"id":-20,"type":"wrapper","children":[{"id":-24,"type":"__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}]}]}]}]}",
             },
           ],
         ]
@@ -1874,7 +1874,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
             "rLynxFirstScreen",
             {
               "jsReadyEventIdSwap": {},
-              "root": "{"id":-17,"type":"root","children":[{"id":-21,"type":"__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-18,"type":"__snapshot_a94a8_test_3","children":[{"id":-23,"type":null,"values":["Hello 2"]}]},{"id":-19,"type":"__snapshot_a94a8_test_4","children":[{"id":-24,"type":null,"values":["World"]}]},{"id":-20,"type":"wrapper","children":[{"id":-22,"type":"__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}]}]}]}]}",
+              "root": "{"id":-17,"type":"root","children":[{"id":-21,"type":"__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-18,"type":"__snapshot_a94a8_test_3","children":[{"id":-22,"type":null,"values":["Hello 2"]}]},{"id":-19,"type":"__snapshot_a94a8_test_4","children":[{"id":-23,"type":null,"values":["World"]}]},{"id":-20,"type":"wrapper","children":[{"id":-24,"type":"__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}]}]}]}]}",
             },
           ],
         ]
