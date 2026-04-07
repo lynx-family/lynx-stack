@@ -95,59 +95,59 @@ export function ssrHydrateByOpcodes(
   }
 }
 
-export function renderOpcodesInto(opcodes: any[], into: SnapshotInstance): void {
-  let top: SnapshotInstance = into;
-  const stack: SnapshotInstance[] = [into];
-  for (let i = 0; i < opcodes.length;) {
-    const opcode = opcodes[i];
-    switch (opcode) {
-      case OpcodeBegin: {
-        const p = top;
-        top = opcodes[i + 1];
-        // @ts-ignore
-        if (top.__parent) {
-          // already inserted
-          top = new SnapshotInstance(top.type);
-          opcodes[i + 1] = top;
-        }
-        p.insertBefore(top);
-        stack.push(top);
+// export function renderOpcodesInto(opcodes: any[], into: SnapshotInstance): void {
+//   let top: SnapshotInstance = into;
+//   const stack: SnapshotInstance[] = [into];
+//   for (let i = 0; i < opcodes.length;) {
+//     const opcode = opcodes[i];
+//     switch (opcode) {
+//       case OpcodeBegin: {
+//         const p = top;
+//         top = opcodes[i + 1];
+//         // @ts-ignore
+//         if (top.__parent) {
+//           // already inserted
+//           top = new SnapshotInstance(top.type);
+//           opcodes[i + 1] = top;
+//         }
+//         p.insertBefore(top);
+//         stack.push(top);
 
-        i += 2;
-        break;
-      }
-      case OpcodeEnd: {
-        // @ts-ignore
-        top[CHILDREN] = undefined;
+//         i += 2;
+//         break;
+//       }
+//       case OpcodeEnd: {
+//         // @ts-ignore
+//         top[CHILDREN] = undefined;
 
-        stack.pop();
-        const p = stack[stack.length - 1];
-        top = p!;
+//         stack.pop();
+//         const p = stack[stack.length - 1];
+//         top = p!;
 
-        i += 1;
-        break;
-      }
-      case OpcodeAttr: {
-        const key = opcodes[i + 1];
-        const value = opcodes[i + 2];
-        top.setAttribute(key, value);
+//         i += 1;
+//         break;
+//       }
+//       case OpcodeAttr: {
+//         const key = opcodes[i + 1];
+//         const value = opcodes[i + 2];
+//         top.setAttribute(key, value);
 
-        i += 3;
-        break;
-      }
-      case OpcodeText: {
-        const text = opcodes[i + 1];
-        const s = new SnapshotInstance(null as unknown as string);
-        if (__ENABLE_SSR__) {
-          // We need store the just created SnapshotInstance, or it will be lost when we leave the function
-          opcodes[i + 1] = [s, text];
-        }
-        s.setAttribute(0, text);
-        top.insertBefore(s);
+//         i += 3;
+//         break;
+//       }
+//       case OpcodeText: {
+//         const text = opcodes[i + 1];
+//         const s = new SnapshotInstance(null as unknown as string);
+//         if (__ENABLE_SSR__) {
+//           // We need store the just created SnapshotInstance, or it will be lost when we leave the function
+//           opcodes[i + 1] = [s, text];
+//         }
+//         s.setAttribute(0, text);
+//         top.insertBefore(s);
 
-        i += 2;
-        break;
-      }
-    }
-  }
-}
+//         i += 2;
+//         break;
+//       }
+//     }
+//   }
+// }

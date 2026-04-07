@@ -431,6 +431,16 @@ export class SnapshotInstance {
     });
   }
 
+  // remove all children from start or this.__firstChild
+  removeChildren(start: SnapshotInstance | null = this.__firstChild): void {
+    let nodeToRemove = start;
+    while (nodeToRemove) {
+      const next = nodeToRemove.__nextSibling;
+      this.removeChild(nodeToRemove);
+      nodeToRemove = next;
+    }
+  }
+
   setAttribute(key: string | number, value: any): void {
     if (key === 'values') {
       const oldValues = this.__values;
