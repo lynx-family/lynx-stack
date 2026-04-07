@@ -1,5 +1,5 @@
 ---
-"@lynx-js/css-serializer": minor
+"@lynx-js/css-serializer": patch
 ---
 
 feat: add support for @media, @supports, and @layer at-rules
