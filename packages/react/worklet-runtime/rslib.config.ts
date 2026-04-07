@@ -15,7 +15,7 @@ export default defineConfig({
           __DEV__: 'true',
         },
         entry: {
-          dev: './src/index.ts',
+          dev: '../runtime/src/worklet-runtime/index.ts',
         },
       },
       output: {
@@ -33,7 +33,7 @@ export default defineConfig({
           __DEV__: 'false',
         },
         entry: {
-          main: './src/index.ts',
+          main: '../runtime/src/worklet-runtime/index.ts',
         },
       },
       output: {

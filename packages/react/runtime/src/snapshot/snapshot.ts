@@ -80,6 +80,10 @@ export class SnapshotInstance {
   __elements?: FiberElement[] | undefined;
   __element_root?: FiberElement | undefined;
   __values?: unknown[] | undefined;
+  // current slot index for dynamic parts
+  // only increment when inserting dynamic parts
+  // when removing dynamic parts, the slot index will not change
+  // cause there would be a wrapper to keep the slot index stable
   __current_slot_index = 0;
   __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
   __listItemPlatformInfo?: PlatformInfo;
