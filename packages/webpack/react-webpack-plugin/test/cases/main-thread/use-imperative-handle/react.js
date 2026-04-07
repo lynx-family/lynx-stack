@@ -21,10 +21,10 @@ export default forwardRef(function App(_, ref) {
   }, []);
 
   useMyEffect(() => {
-    // TODO: import alias is not removed
+    console.info('This should not exist in main-thread');
   });
 
   React.useEffect(() => {
-    // TODO: default import is not removed
+    console.info('This should not exist in main-thread');
   });
 });
