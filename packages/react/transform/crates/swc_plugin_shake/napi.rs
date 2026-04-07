@@ -57,6 +57,31 @@ pub struct ShakeVisitorConfig {
   /// @public
   pub retain_prop: Vec<String>,
 
+  /// Function names whose calls should be replaced with `undefined` during transformation
+  ///
+  /// @example
+  /// ```js
+  /// import { defineConfig } from '@lynx-js/rspeedy'
+  /// import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+  ///
+  /// export default defineConfig({
+  ///   plugins: [
+  ///     pluginReactLynx({
+  ///       shake: {
+  ///         removeCall: ['useMyCustomEffect']
+  ///       }
+  ///     })
+  ///   ]
+  /// })
+  /// ```
+  ///
+  /// @remarks
+  /// Default value: `['useEffect', 'useLayoutEffect', '__runInJS', 'useLynxGlobalEventListener', 'useImperativeHandle']`
+  /// The provided values will be merged with the default values instead of replacing them.
+  ///
+  /// @public
+  pub remove_call: Vec<String>,
+
   /// Function names whose parameters should be removed during transformation
   ///
   /// @example
@@ -76,7 +101,7 @@ pub struct ShakeVisitorConfig {
   /// ```
   ///
   /// @remarks
-  /// Default value: `['useEffect', 'useLayoutEffect', '__runInJS', 'useLynxGlobalEventListener', 'useImperativeHandle']`
+  /// Default value: `[]`
   /// The provided values will be merged with the default values instead of replacing them.
   ///
   /// @public
@@ -96,7 +121,7 @@ impl Default for ShakeVisitorConfig {
       "contextType",
       "defaultProps",
     ];
-    let default_remove_call_params = [
+    let default_remove_call = [
       "useEffect",
       "useLayoutEffect",
       "__runInJS",
@@ -106,10 +131,8 @@ impl Default for ShakeVisitorConfig {
     ShakeVisitorConfig {
       pkg_name: default_pkg_name.iter().map(|x| x.to_string()).collect(),
       retain_prop: default_retain_prop.iter().map(|x| x.to_string()).collect(),
-      remove_call_params: default_remove_call_params
-        .iter()
-        .map(|x| x.to_string())
-        .collect(),
+      remove_call: default_remove_call.iter().map(|x| x.to_string()).collect(),
+      remove_call_params: Vec::new(),
     }
   }
 }
@@ -119,6 +142,7 @@ impl From<ShakeVisitorConfig> for CoreConfig {
     CoreConfig {
       pkg_name: val.pkg_name,
       retain_prop: val.retain_prop,
+      remove_call: val.remove_call,
       remove_call_params: val.remove_call_params,
     }
   }
@@ -129,6 +153,7 @@ impl From<CoreConfig> for ShakeVisitorConfig {
     ShakeVisitorConfig {
       pkg_name: val.pkg_name,
       retain_prop: val.retain_prop,
+      remove_call: val.remove_call,
       remove_call_params: val.remove_call_params,
     }
   }
@@ -152,6 +177,14 @@ impl Default for ShakeVisitor {
 }
 
 impl VisitMut for ShakeVisitor {
+  fn visit_mut_stmt(&mut self, n: &mut Stmt) {
+    self.inner.visit_mut_stmt(n);
+  }
+
+  fn visit_mut_expr(&mut self, n: &mut Expr) {
+    self.inner.visit_mut_expr(n);
+  }
+
   fn visit_mut_import_decl(&mut self, n: &mut ImportDecl) {
     self.inner.visit_mut_import_decl(n);
   }
