@@ -1,11 +1,10 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-
-import { profileEnd, profileStart } from './debug/profile.js';
-import { hydrate } from './hydrate.js';
 import { componentAtIndexFactory, enqueueComponentFactory } from './list.js';
-import type { SnapshotInstance } from './snapshot/snapshot.js';
+import { profileEnd, profileStart } from '../debug/profile.js';
+import { hydrate } from '../renderToOpcodes/hydrate.js';
+import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
 export interface ListUpdateInfo {
   flush(): number | undefined;

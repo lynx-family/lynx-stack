@@ -2,9 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { hydrate } from './hydrate.js';
-import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from './list.js';
-import { CHILDREN } from './renderToOpcodes/constants.js';
-import { SnapshotInstance } from './snapshot/snapshot.js';
+import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from '../list/list.js';
+import { CHILDREN } from './constants.js';
+import { SnapshotInstance } from '../snapshot/snapshot.js';
 
 const OpcodeBegin = 0;
 const OpcodeEnd = 1;

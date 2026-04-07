@@ -4,7 +4,7 @@
 
 import { EventEmitter } from '@lynx-js/types';
 
-import { LifecycleConstant } from '../src/lifecycleConstant.js';
+import { LifecycleConstant } from '../src/lifecycle/constant.js';
 import { Lynx as LynxApi } from '../src/lynx-api.js';
 import type { InitData, InitDataRaw } from '../src/lynx-api.js';
 

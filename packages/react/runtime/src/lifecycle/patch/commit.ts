@@ -30,7 +30,7 @@ import {
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { profileEnd, profileStart } from '../../debug/profile.js';
-import { LifecycleConstant } from '../../lifecycleConstant.js';
+import { LifecycleConstant } from '../../lifecycle/constant.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../lynx/performance.js';
 import { COMMIT } from '../../renderToOpcodes/constants.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot/backgroundSnapshot.js';
