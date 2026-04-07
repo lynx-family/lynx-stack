@@ -54,7 +54,9 @@ jobs:
       - name: API Check
         run: pnpm turbo api-extractor
       - name: Changeset Check
-        run: pnpm changeset status --since=origin/main
+        run: pnpm changeset status --since=origin/main --output .changeset-status.json
+      - name: Major Bump Check
+        run: node .github/scripts/check-no-major-changeset.cjs .changeset-status.json
 
   eslint:
     needs: build
