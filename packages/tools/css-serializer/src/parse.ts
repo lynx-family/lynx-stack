@@ -204,7 +204,22 @@ function transformAtRuleContent(
           style: transformBlock(child.block!, errors),
         });
       } else if (child.name === 'keyframes') {
-        if (!child.block) continue;
+        if (!child.block) {
+          errors.push({
+            severity: Severity.Error,
+            name: 'illegal',
+            message: `illegal nested keyframes`,
+            range: {
+              start: child.prelude
+                ? toLoc(child.prelude.loc!.end)
+                : toLoc(child.loc!.start),
+              end: child.prelude
+                ? toLoc(child.prelude.loc!.end)
+                : toLoc(child.loc!.start),
+            },
+          });
+          continue;
+        }
         rules.push({
           type: 'KeyframesRule',
           name: {
