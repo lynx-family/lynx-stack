@@ -3,7 +3,7 @@
   "compilerOptions": {
     "noEmit": false,
     "outDir": "lib",
-    "rootDir": "src",
+    "rootDir": "../runtime/src/worklet-runtime",
     "stripInternal": true,
     "target": "ESNext",
     "lib": ["es2021"],
@@ -12,5 +12,5 @@
     "resolveJsonModule": true,
     "composite": true,
   },
-  "include": ["src"],
+  "include": ["../runtime/src/worklet-runtime/**/*"],
 }

@@ -591,13 +591,18 @@ describe('WorkletRef', () => {
   });
 
   it('invalid ref type', async function() {
+    const reportError = lynx.reportError;
+    lynx.reportError = vi.fn();
     // main thread render
     {
       __root.__jsx = createCompMT1('number');
-      expect(() => renderPage()).toThrowError(
-        'MainThreadRef: main-thread:ref must be of type MainThreadRef or main-thread function.',
-      );
+      renderPage();
     }
+    expect(lynx.reportError).toHaveBeenCalledTimes(1);
+    expect(lynx.reportError).toHaveBeenCalledWith(
+      new Error('MainThreadRef: main-thread:ref must be of type MainThreadRef or main-thread function.'),
+    );
+    lynx.reportError = reportError;
   });
 });
 

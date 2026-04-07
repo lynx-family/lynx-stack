@@ -80,6 +80,10 @@ export class SnapshotInstance {
   __elements?: FiberElement[] | undefined;
   __element_root?: FiberElement | undefined;
   __values?: unknown[] | undefined;
+  // current slot index for dynamic parts
+  // only increment when inserting dynamic parts
+  // when removing dynamic parts, the slot index will not change
+  // cause there would be a wrapper to keep the slot index stable
   __current_slot_index = 0;
   __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
   __listItemPlatformInfo?: PlatformInfo;
@@ -425,6 +429,16 @@ export class SnapshotInstance {
       delete v.__element_root;
       snapshotInstanceManager.values.delete(v.__id);
     });
+  }
+
+  // remove all children from start or this.__firstChild
+  removeChildren(start: SnapshotInstance | null = this.__firstChild): void {
+    let nodeToRemove = start;
+    while (nodeToRemove) {
+      const next = nodeToRemove.__nextSibling;
+      this.removeChild(nodeToRemove);
+      nodeToRemove = next;
+    }
   }
 
   setAttribute(key: string | number, value: any): void {

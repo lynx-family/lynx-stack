@@ -2,11 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { existsSync, readFileSync } from 'node:fs'
+import { mkdtemp, rm } from 'node:fs/promises'
 import { createRequire } from 'node:module'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 import type { RsbuildInstance, Rspack } from '@rsbuild/core'
-import { describe, expect, test, vi } from 'vitest'
+import { afterAll, describe, expect, test, vi } from 'vitest'
 
 import type { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 import type {
@@ -16,6 +18,37 @@ import type {
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
+
+const tempDirs: string[] = []
+
+afterAll(async () => {
+  await Promise.all(tempDirs.map(async (dir) => {
+    await rm(dir, { recursive: true, force: true })
+  }))
+})
+
+async function createRspeedyWithTempDistRoot(
+  options: Parameters<typeof createRspeedy>[0],
+): Promise<Awaited<ReturnType<typeof createRspeedy>>> {
+  const root = await mkdtemp(path.join(tmpdir(), 'rspeedy-react-config-'))
+  tempDirs.push(root)
+
+  return await createRspeedy({
+    ...options,
+    rspeedyConfig: {
+      ...options.rspeedyConfig,
+      output: {
+        ...options.rspeedyConfig?.output,
+        // These cases assert on emitted files, so they need isolated build
+        // output without changing cwd-based module resolution.
+        distPath: {
+          ...options.rspeedyConfig?.output?.distPath,
+          root,
+        },
+      },
+    },
+  })
+}
 
 describe('Config', () => {
   test('alias with development', async () => {
@@ -880,7 +913,7 @@ describe('Config', () => {
       vi.stubEnv('NODE_ENV', 'production')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-      const rsbuild = await createRspeedy({
+      const rsbuild = await createRspeedyWithTempDistRoot({
         rspeedyConfig: {
           source: {
             entry: {
@@ -923,7 +956,7 @@ describe('Config', () => {
       vi.stubEnv('NODE_ENV', 'production')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-      const rsbuild = await createRspeedy({
+      const rsbuild = await createRspeedyWithTempDistRoot({
         rspeedyConfig: {
           source: {
             entry: {
@@ -2029,13 +2062,18 @@ describe('Config', () => {
       // Production build with typical macro definitions
       vi.stubEnv('NODE_ENV', 'production')
 
+      const entryName = 'defineDCE'
       const rsbuild = await createRspeedy({
         rspeedyConfig: {
           source: {
             entry: {
-              main: new URL('./fixtures/defineDCE/macros.js', import.meta.url)
-                .pathname,
+              [entryName]:
+                new URL('./fixtures/defineDCE/macros.js', import.meta.url)
+                  .pathname,
             },
+          },
+          output: {
+            cleanDistPath: false,
           },
           environments: {
             lynx: {},
@@ -2060,7 +2098,8 @@ describe('Config', () => {
 
       const distPath = path.join(
         rsbuild.context.distPath,
-        '.rspeedy/main',
+        '.rspeedy',
+        entryName,
         'main-thread.js',
       )
 
@@ -2078,16 +2117,19 @@ describe('Config', () => {
 
       vi.stubEnv('NODE_ENV', 'production')
 
+      const entryName = 'pure-funcs'
       const rsbuild = await createRspeedy({
         rspeedyConfig: {
           source: {
             entry: {
-              main: new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
-                .pathname,
+              [entryName]:
+                new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
+                  .pathname,
             },
           },
           output: {
             filenameHash: false,
+            cleanDistPath: false,
             minify: {
               js: true,
               jsOptions: {
@@ -2128,12 +2170,14 @@ describe('Config', () => {
 
       const mainThreadPath = path.join(
         rsbuild.context.distPath,
-        '.rspeedy/main',
+        '.rspeedy',
+        entryName,
         'main-thread.js',
       )
       const backgroundPath = path.join(
         rsbuild.context.distPath,
-        '.rspeedy/main',
+        '.rspeedy',
+        entryName,
         'background.js',
       )
 
@@ -2580,6 +2624,19 @@ describe('Config', () => {
     expect(reactWebpackPluginInstance.options).toHaveProperty(
       'workletRuntimePath',
       require.resolve('@lynx-js/react/worklet-runtime'),
+    )
+  })
+
+  test('worklet runtime bindings resolve to the shell package build output', () => {
+    const require = createRequire(import.meta.url)
+
+    expect(
+      require.resolve('@lynx-js/react/worklet-runtime/bindings'),
+    ).toContain(
+      '/packages/react/worklet-runtime/lib/bindings/index.js'.replaceAll(
+        '/',
+        path.sep,
+      ),
     )
   })
 

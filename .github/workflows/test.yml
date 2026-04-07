@@ -192,7 +192,7 @@ jobs:
         node packages/tools/canary-release/snapshot.js
         pnpm --recursive publish --no-git-checks --access public --registry=http://localhost:4873
         cd `mktemp -d`
-        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir create-rspeedy-regression --tools eslint
+        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir create-rspeedy-regression --tools eslint --skill lynx-devtool
         cd create-rspeedy-regression
         npx --registry http://localhost:4873 upgrade-rspeedy-canary@latest
         pnpm install --registry=http://localhost:4873
@@ -200,7 +200,7 @@ jobs:
         pnpm run build --mode development
         pnpm run lint
         cd `mktemp -d`
-        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react-vitest-rltl --dir create-rspeedy-regression-vitest-rltl --tools eslint
+        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir create-rspeedy-regression-vitest-rltl --tools eslint,vitest-rltl
         cd create-rspeedy-regression-vitest-rltl
         npx --registry http://localhost:4873 upgrade-rspeedy-canary@latest
         pnpm install --registry=http://localhost:4873

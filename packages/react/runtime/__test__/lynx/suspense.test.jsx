@@ -384,9 +384,8 @@ describe('suspense', () => {
       expect([...snapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
         [
           -1,
-          -2,
           -3,
-          -4,
+          -5,
         ]
       `);
     }
@@ -486,7 +485,6 @@ describe('suspense', () => {
       expect([...snapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
         [
           -1,
-          -2,
         ]
       `);
 
@@ -1590,7 +1588,7 @@ describe('suspense', () => {
         .toMatchInlineSnapshot(`
           [
             {
-              "childId": -4,
+              "childId": -2,
               "op": "RemoveChild",
               "parentId": -1,
             },
