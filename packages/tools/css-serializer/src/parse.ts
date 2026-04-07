@@ -10,6 +10,7 @@ import { toLoc } from './toLoc.js';
 import { toString } from './toString.js';
 import type {
   Declaration,
+  LayerRule,
   LynxStyleNode,
   StyleRule,
 } from './types/LynxStyleNode.js';
@@ -184,18 +185,19 @@ function transformAtRuleContent(
         });
       } else if (child.name === 'layer') {
         const preludeText = child.prelude ? toString(child.prelude) : '';
-        rules.push({
+        const layerRule: LayerRule = {
           type: 'LayerRule',
-          prelude: preludeText
-            ? {
-              value: preludeText,
-              loc: child.prelude
-                ? toLoc(child.prelude.loc!.end)
-                : toLoc(child.loc!.start),
-            }
-            : undefined,
           rules: transformAtRuleContent(child.block, errors, options),
-        });
+        };
+        if (preludeText) {
+          layerRule.prelude = {
+            value: preludeText,
+            loc: child.prelude
+              ? toLoc(child.prelude.loc!.end)
+              : toLoc(child.loc!.start),
+          };
+        }
+        rules.push(layerRule);
       } else if (child.name === 'font-face') {
         rules.push({
           type: 'FontFaceRule',
@@ -447,21 +449,22 @@ export function parse(content: string, options: {
           return this.skip;
         } else if (node.name === 'layer') {
           const preludeText = node.prelude ? toString(node.prelude) : '';
-          result.push({
+          const layerRule: LayerRule = {
             type: 'LayerRule',
-            prelude: preludeText
-              ? {
-                value: preludeText,
-                loc: node.prelude
-                  ? toLoc(node.prelude.loc!.end)
-                  : toLoc(node.loc!.start),
-              }
-              : undefined,
             rules: transformAtRuleContent(node.block, errors, {
               filename,
               projectRoot,
             }),
-          });
+          };
+          if (preludeText) {
+            layerRule.prelude = {
+              value: preludeText,
+              loc: node.prelude
+                ? toLoc(node.prelude.loc!.end)
+                : toLoc(node.loc!.start),
+            };
+          }
+          result.push(layerRule);
           return this.skip;
         }
         return this.skip;

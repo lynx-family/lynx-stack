@@ -2344,7 +2344,6 @@ exports[`layer 1`] = `
     "type": "LayerRule",
   },
   {
-    "prelude": undefined,
     "rules": [
       {
         "selectorText": {
