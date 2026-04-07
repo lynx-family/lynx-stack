@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { executeTemplate } from '../ts/server/deploy.js';
 import * as decodeModule from '../ts/server/decode.js';
+import type { DecodedTemplate } from '../ts/server/decode.js';
 import * as createElementAPIModule from '../ts/server/elementAPIs/createElementAPI.js';
+import type { MainThreadServerContext } from '../ts/server/wasm.js';
+import type { ElementPAPIs } from '../ts/types/index.js';
 
 vi.mock('../ts/server/decode.js', () => ({
   decodeTemplate: vi.fn(),
@@ -27,17 +30,16 @@ describe('executeTemplate', () => {
       createElementAPIModule.createElementAPI,
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     mockDecodeTemplate.mockReturnValue({
       config: { enableCSSSelector: 'true' },
       lepusCode: {},
       styleInfo: new Uint8Array(),
-    } as any);
+    } as DecodedTemplate);
 
     mockCreateElementAPI.mockReturnValue({
-      globalThisAPIs: {},
-      wasmContext: {} as any,
-    } as any);
+      globalThisAPIs: {} as ElementPAPIs,
+      wasmContext: {} as MainThreadServerContext,
+    });
 
     const dummyBuffer = Buffer.from('test');
 
