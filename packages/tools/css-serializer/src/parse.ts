@@ -112,6 +112,21 @@ function transformDeclaration(
   }
 }
 
+function transformVariables(block: csstree.Block): Record<string, string> {
+  return Object.fromEntries(
+    block.children.toArray().filter((node) => {
+      return node.type === 'Declaration' && node.property.startsWith('--');
+    }).map((node) => {
+      const declaration = node as csstree.Declaration;
+      return [
+        declaration.property,
+        toString(declaration.value)
+        + (declaration.important ? ' !important' : ''),
+      ];
+    }),
+  );
+}
+
 export function transformBlock(
   block: csstree.Block,
   errors: ParserError[],
@@ -244,6 +259,7 @@ export function parse(content: string, options: {
                   value: preludeText,
                   loc: toLoc(rule.prelude.loc!.start, preludeText.length),
                 },
+                variables: transformVariables(rule.block),
                 style: transformBlock(rule.block, errors),
               };
             }),
@@ -283,19 +299,7 @@ export function parse(content: string, options: {
             value: preludeText,
             loc: toLoc(node.prelude.loc!.end),
           },
-          variables: Object.fromEntries(
-            node.block.children.toArray().filter(node =>
-              node.type === 'Declaration' && node.property.startsWith('--')
-            ).map((node) => {
-              return [
-                (node as csstree.Declaration).property,
-                toString((node as csstree.Declaration).value)
-                + ((node as csstree.Declaration).important
-                  ? ' !important'
-                  : ''),
-              ];
-            }),
-          ),
+          variables: transformVariables(node.block),
         });
         return this.skip;
       }

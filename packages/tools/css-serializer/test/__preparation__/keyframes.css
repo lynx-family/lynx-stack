@@ -33,3 +33,20 @@
     c: none;
   }
 }
+
+@keyframes testKeyframeDeclaration {
+  0% {
+    --bg-color: red;
+    background-color: var(--bg-color);
+  }
+
+  50% {
+    --bg-color: green;
+    background-color: var(--bg-color);
+  }
+
+  100% {
+    --bg-color: blue;
+    background-color: var(--bg-color);
+  }
+}

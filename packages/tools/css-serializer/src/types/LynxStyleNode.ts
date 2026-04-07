@@ -45,6 +45,7 @@ export interface ImportRule {
 }
 export interface KeyframesStyle {
   keyText: Value;
+  variables: Record<string, string>;
   style: Declaration[];
 }
 export interface KeyframesRule {
