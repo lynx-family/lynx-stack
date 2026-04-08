@@ -1474,12 +1474,17 @@ describe('Element APIs', () => {
     const publishSpy = vi.spyOn(mtsBinding, 'publishEvent');
 
     // Register global-bind on element2
-    mtsGlobalThis.__AddEvent(element2, 'global-bind', 'tap', 'global-handler');
+    mtsGlobalThis.__AddEvent(
+      element2,
+      'global-bindevent',
+      'tap',
+      'global-handler',
+    );
 
-    // Get events should include global-bind
+    // Get events should include global-bindevent
     const events = mtsGlobalThis.__GetEvents(element2);
     const found = events.some((e: any) =>
-      e.event_name === 'tap' && e.event_type === 'global-bind'
+      e.event_name === 'tap' && e.event_type === 'global-bindevent'
     );
     expect(found).toBe(true);
 
@@ -1499,8 +1504,8 @@ describe('Element APIs', () => {
       undefined,
     );
 
-    // Unregister global-bind
-    mtsGlobalThis.__AddEvent(element2, 'global-bind', 'tap', null as any);
+    // Unregister global-bindevent
+    mtsGlobalThis.__AddEvent(element2, 'global-bindevent', 'tap', null as any);
     publishSpy.mockClear();
 
     // Simulate event on element1 again, should not broadcast

@@ -35,16 +35,14 @@ impl MainThreadWasmContext {
     let event_type = event_type.to_ascii_lowercase();
     self.enable_event(&event_name);
 
-    if event_type == "global-bindevent" || event_type == "global-bind" {
-      if event_handler_identifier.is_some() {
-        self
-          .global_bind_events
-          .entry(event_name.clone())
-          .or_default()
-          .insert(unique_id);
-      } else if let Some(set) = self.global_bind_events.get_mut(&event_name) {
-        set.remove(&unique_id);
-      }
+    if (event_type == "global-bindevent" || event_type == "global-bind")
+      && event_handler_identifier.is_some()
+    {
+      self
+        .global_bind_events
+        .entry(event_name.clone())
+        .or_default()
+        .insert(unique_id);
     }
 
     let is_allowlisted = constants::ELEMENT_REACTIVE_EVENTS.contains(event_name_str);
@@ -96,16 +94,12 @@ impl MainThreadWasmContext {
     let event_type = event_type.to_ascii_lowercase();
     self.enable_event(&event_name);
 
-    if event_type == "global-bindevent" {
-      if event_handler_identifier.is_some() {
-        self
-          .global_bind_events
-          .entry(event_name.clone())
-          .or_default()
-          .insert(unique_id);
-      } else if let Some(set) = self.global_bind_events.get_mut(&event_name) {
-        set.remove(&unique_id);
-      }
+    if event_type == "global-bindevent" && event_handler_identifier.is_some() {
+      self
+        .global_bind_events
+        .entry(event_name.clone())
+        .or_default()
+        .insert(unique_id);
     }
 
     let is_allowlisted = constants::ELEMENT_REACTIVE_EVENTS.contains(event_name_str);
@@ -167,7 +161,7 @@ impl MainThreadWasmContext {
       "capture-bind",
       "catchevent",
       "capture-catch",
-      "global-bind",
+      "global-bindevent",
     ];
     let binding = self.get_element_data_by_unique_id(unique_id).unwrap();
     let element_data = binding.borrow();
@@ -358,11 +352,7 @@ impl MainThreadWasmContext {
         let current_target_element_data = binding.borrow();
 
         let bind_handler = current_target_element_data
-          .get_framework_cross_thread_event_handler(&event_name_lowercase, "global-bindevent")
-          .or_else(|| {
-            current_target_element_data
-              .get_framework_cross_thread_event_handler(&event_name_lowercase, "global-bind")
-          });
+          .get_framework_cross_thread_event_handler(&event_name_lowercase, "global-bindevent");
 
         if let Some(handler) = bind_handler {
           let current_target_parent_component_id = {
@@ -387,7 +377,7 @@ impl MainThreadWasmContext {
         }
 
         let run_worklet_handler = current_target_element_data
-          .get_framework_run_worklet_event_handler(&event_name_lowercase, "global-bind");
+          .get_framework_run_worklet_event_handler(&event_name_lowercase, "global-bindevent");
         if let Some(handler) = run_worklet_handler {
           self.mts_binding.publish_mts_event(
             &handler,
