@@ -42,10 +42,8 @@ impl MainThreadWasmContext {
           .entry(event_name.clone())
           .or_default()
           .insert(unique_id);
-      } else {
-        if let Some(set) = self.global_bind_events.get_mut(&event_name) {
-          set.remove(&unique_id);
-        }
+      } else if let Some(set) = self.global_bind_events.get_mut(&event_name) {
+        set.remove(&unique_id);
       }
     }
 
