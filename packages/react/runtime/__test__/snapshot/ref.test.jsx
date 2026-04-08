@@ -11,7 +11,7 @@ import { RefProxy, runDelayedUiOps, shouldDelayUiOps } from '../../src/lifecycle
 import { Component, createRef, useState } from '../../src/index';
 import { clearCommitTaskId, replaceCommitHook } from '../../src/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
-import { __pendingListUpdates } from '../../src/pendingListUpdates';
+import { __pendingListUpdates } from '../../src/list/pendingListUpdates';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';

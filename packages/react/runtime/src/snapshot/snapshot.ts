@@ -10,10 +10,6 @@
 
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { clearSnapshotVNodeSource } from '../debug/vnodeSource.js';
-import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
-import { ListUpdateInfoRecording } from '../listUpdateInfo.js';
-import { __pendingListUpdates } from '../pendingListUpdates.js';
 import { DEFAULT_CSS_ID, DEFAULT_ENTRY_NAME } from './constants.js';
 import { snapshotManager } from './definition.js';
 import type { Snapshot } from './definition.js';
@@ -23,6 +19,10 @@ import type { PlatformInfo } from './platformInfo.js';
 import { unref } from './ref.js';
 import type { SerializedSnapshotInstance } from './types.js';
 import { traverseSnapshotInstance } from './utils.js';
+import { clearSnapshotVNodeSource } from '../debug/vnodeSource.js';
+import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
+import { ListUpdateInfoRecording } from '../list/listUpdateInfo.js';
+import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import { isDirectOrDeepEqual } from '../utils.js';
 
 export const snapshotInstanceManager: {

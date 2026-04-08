@@ -6,7 +6,7 @@ import { globalEnvManager } from './utils/envManager';
 import { waitSchedule } from './utils/nativeMethod';
 import { globalCommitTaskMap, replaceCommitHook } from '../src/lifecycle/patch/commit';
 import { deinitGlobalSnapshotPatch, initGlobalSnapshotPatch } from '../src/lifecycle/patch/snapshotPatch';
-import { LifecycleConstant } from '../src/lifecycleConstant';
+import { LifecycleConstant } from '../src/lifecycle/constant';
 import { CATCH_ERROR } from '../src/renderToOpcodes/constants';
 import { __root } from '../src/root';
 import { setupPage, backgroundSnapshotInstanceManager } from '../src/snapshot';

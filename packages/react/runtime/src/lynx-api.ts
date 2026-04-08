@@ -9,7 +9,7 @@ import type { Consumer, FC, ReactNode } from 'react';
 import { factory, withInitDataInState } from './compat/initData.js';
 import { profileEnd, profileStart } from './debug/profile.js';
 import { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';
-import { LifecycleConstant } from './lifecycleConstant.js';
+import { LifecycleConstant } from './lifecycle/constant.js';
 import { flushDelayedLifecycleEvents } from './lynx/tt.js';
 import { __root } from './root.js';
 

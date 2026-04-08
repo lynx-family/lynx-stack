@@ -9,7 +9,7 @@ import {
 import { setupBackgroundDocument, setupDocument } from '../../src/document.js';
 import { deinitGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch.js';
 import { shouldDelayUiOps } from '../../src/lifecycle/ref/delay.js';
-import { clearListGlobal } from '../../src/list.js';
+import { clearListGlobal } from '../../src/list/list.js';
 import { globalPipelineOptions, setPipeline } from '../../src/lynx/performance.js';
 import { __root, setRoot } from '../../src/root.js';
 import { SnapshotInstance, snapshotInstanceManager } from '../../src/snapshot/snapshot.js';
