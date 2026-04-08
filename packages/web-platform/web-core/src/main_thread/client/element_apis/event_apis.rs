@@ -325,14 +325,6 @@ impl MainThreadWasmContext {
     event_name: &str,
     serialized_event: &JsValue,
   ) {
-    let event_name = match event_name {
-      "click" => "tap",
-      "touchstart" => "touchstart",
-      "touchmove" => "touchmove",
-      "touchend" => "touchend",
-      "touchcancel" => "touchcancel",
-      _ => event_name,
-    };
     let event_name_lowercase = event_name.to_ascii_lowercase();
     let target_unique_id = bubble_unique_id_path.first().cloned().unwrap_or_default();
 
