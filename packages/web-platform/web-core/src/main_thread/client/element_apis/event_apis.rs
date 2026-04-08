@@ -35,6 +35,20 @@ impl MainThreadWasmContext {
     let event_type = event_type.to_ascii_lowercase();
     self.enable_event(&event_name);
 
+    if event_type == "global-bindevent" || event_type == "global-bind" {
+      if event_handler_identifier.is_some() {
+        self
+          .global_bind_events
+          .entry(event_name.clone())
+          .or_default()
+          .insert(unique_id);
+      } else {
+        if let Some(set) = self.global_bind_events.get_mut(&event_name) {
+          set.remove(&unique_id);
+        }
+      }
+    }
+
     let is_allowlisted = constants::ELEMENT_REACTIVE_EVENTS.contains(event_name_str);
     let mut should_enable = false;
     let mut should_disable = false;
@@ -83,6 +97,18 @@ impl MainThreadWasmContext {
     let event_name_str = event_name.as_str();
     let event_type = event_type.to_ascii_lowercase();
     self.enable_event(&event_name);
+
+    if event_type == "global-bindevent" {
+      if event_handler_identifier.is_some() {
+        self
+          .global_bind_events
+          .entry(event_name.clone())
+          .or_default()
+          .insert(unique_id);
+      } else if let Some(set) = self.global_bind_events.get_mut(&event_name) {
+        set.remove(&unique_id);
+      }
+    }
 
     let is_allowlisted = constants::ELEMENT_REACTIVE_EVENTS.contains(event_name_str);
     let mut should_enable = false;
@@ -138,7 +164,13 @@ impl MainThreadWasmContext {
 
   pub fn get_events(&self, unique_id: usize) -> Vec<EventInfo> {
     let mut event_infos: Vec<EventInfo> = vec![];
-    let event_types = vec!["bindevent", "capture-bind", "catchevent", "capture-catch"];
+    let event_types = vec![
+      "bindevent",
+      "capture-bind",
+      "catchevent",
+      "capture-catch",
+      "global-bind",
+    ];
     let binding = self.get_element_data_by_unique_id(unique_id).unwrap();
     let element_data = binding.borrow();
     for event_type in event_types {
@@ -287,6 +319,87 @@ impl MainThreadWasmContext {
         self.dispatch_event_by_path(&bubble_unique_id_path, event_name, false, &event);
       } else if let Some(target_id) = bubble_unique_id_path.first() {
         self.dispatch_event_by_path(&[*target_id], event_name, false, &event);
+      }
+    }
+
+    if is_bubble {
+      self.dispatch_global_bind_event(&bubble_unique_id_path, event_name, &event);
+    }
+  }
+
+  pub fn dispatch_global_bind_event(
+    &self,
+    bubble_unique_id_path: &[usize],
+    event_name: &str,
+    serialized_event: &JsValue,
+  ) {
+    let event_name = match event_name {
+      "click" => "tap",
+      "touchstart" => "touchstart",
+      "touchmove" => "touchmove",
+      "touchend" => "touchend",
+      "touchcancel" => "touchcancel",
+      _ => event_name,
+    };
+    let event_name_lowercase = event_name.to_ascii_lowercase();
+    let target_unique_id = bubble_unique_id_path.first().cloned().unwrap_or_default();
+
+    let target_element_dataset =
+      if let Some(binding) = self.get_element_data_by_unique_id(target_unique_id) {
+        binding.borrow().dataset.clone()
+      } else {
+        None
+      };
+
+    if let Some(global_bind_ids) = self.global_bind_events.get(&event_name_lowercase) {
+      for unique_id in global_bind_ids {
+        let binding = match self.get_element_data_by_unique_id(*unique_id) {
+          Some(b) => b,
+          None => continue,
+        };
+        let current_target_element_data = binding.borrow();
+
+        let bind_handler = current_target_element_data
+          .get_framework_cross_thread_event_handler(&event_name_lowercase, "global-bindevent")
+          .or_else(|| {
+            current_target_element_data
+              .get_framework_cross_thread_event_handler(&event_name_lowercase, "global-bind")
+          });
+
+        if let Some(handler) = bind_handler {
+          let current_target_parent_component_id = {
+            let parent_component_unique_id = current_target_element_data.parent_component_unique_id;
+            if self.page_element_unique_id == Some(parent_component_unique_id) {
+              None
+            } else {
+              self
+                .get_element_data_by_unique_id(parent_component_unique_id)
+                .and_then(|binding| binding.borrow().component_id.clone())
+            }
+          };
+          self.mts_binding.publish_event(
+            &handler,
+            current_target_parent_component_id.as_deref(),
+            serialized_event,
+            target_unique_id,
+            &target_element_dataset.clone().into(),
+            *unique_id,
+            &current_target_element_data.dataset.clone().into(),
+          );
+        }
+
+        let run_worklet_handler = current_target_element_data
+          .get_framework_run_worklet_event_handler(&event_name_lowercase, "global-bind");
+        if let Some(handler) = run_worklet_handler {
+          self.mts_binding.publish_mts_event(
+            &handler,
+            serialized_event,
+            target_unique_id,
+            &target_element_dataset.clone().into(),
+            *unique_id,
+            &current_target_element_data.dataset.clone().into(),
+          );
+        }
       }
     }
   }

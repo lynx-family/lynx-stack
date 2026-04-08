@@ -25,6 +25,7 @@ pub struct MainThreadWasmContext {
   pub(super) mts_binding: RustMainthreadContextBinding,
   pub(super) config_enable_css_selector: bool,
   pub(super) style_manager: StyleManager,
+  pub(super) global_bind_events: FnvHashMap<String, FnvHashSet<usize>>,
 }
 
 impl MainThreadWasmContext {
@@ -57,6 +58,7 @@ impl MainThreadWasmContext {
       page_element_unique_id: None,
       config_enable_css_selector,
       style_manager,
+      global_bind_events: FnvHashMap::default(),
     }
   }
 
