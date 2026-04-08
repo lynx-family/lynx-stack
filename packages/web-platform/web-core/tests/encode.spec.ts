@@ -124,6 +124,31 @@ describe('encodeCSS', () => {
     expect(buffer.length).toBeGreaterThan(0);
   });
 
+  test('should encode KeyframesRule with CSS variables', () => {
+    const css = `
+      @keyframes my-animation-with-vars {
+        from {
+          --my-var: 0;
+          opacity: var(--my-var);
+        }
+        to {
+          --my-var: 1;
+          opacity: var(--my-var);
+        }
+      }
+    `;
+    const cssMap = {
+      '1': CSS.parse(css).root,
+    };
+    const buffer = encodeCSS(cssMap);
+    expect(buffer).toBeInstanceOf(Uint8Array);
+    expect(buffer.length).toBeGreaterThan(0);
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
+    expect(decodedString.trim()).toMatchSnapshot();
+  });
+
   test('should handle complex selectors', () => {
     const css = `
       div > .foo + #bar[attr="val"]::before:hover {

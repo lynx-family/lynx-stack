@@ -59,6 +59,12 @@ export function encodeCSS(
 
           keyFrameChildrenRule.set_prelude(prelude);
 
+          for (
+            const [key, value] of Object.entries(keyframesStyle.variables ?? {})
+          ) {
+            keyFrameChildrenRule.push_declaration(key, value);
+          }
+
           for (const decl of keyframesStyle.style) {
             keyFrameChildrenRule.push_declaration(decl.name, decl.value);
           }

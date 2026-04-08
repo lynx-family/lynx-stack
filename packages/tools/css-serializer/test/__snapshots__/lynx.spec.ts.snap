@@ -2030,6 +2030,7 @@ exports[`keyframes 1`] = `
             "value": "translateX(0%)",
           },
         ],
+        "variables": {},
       },
       {
         "keyText": {
@@ -2053,6 +2054,7 @@ exports[`keyframes 1`] = `
             "value": "translateX(100%)",
           },
         ],
+        "variables": {},
       },
     ],
     "type": "KeyframesRule",
@@ -2100,6 +2102,7 @@ exports[`keyframes 1`] = `
             "value": "0",
           },
         ],
+        "variables": {},
       },
       {
         "keyText": {
@@ -2123,6 +2126,7 @@ exports[`keyframes 1`] = `
             "value": "50px",
           },
         ],
+        "variables": {},
       },
       {
         "keyText": {
@@ -2146,6 +2150,7 @@ exports[`keyframes 1`] = `
             "value": "50px",
           },
         ],
+        "variables": {},
       },
       {
         "keyText": {
@@ -2181,6 +2186,7 @@ exports[`keyframes 1`] = `
             "value": "100%",
           },
         ],
+        "variables": {},
       },
     ],
     "type": "KeyframesRule",
@@ -2216,6 +2222,7 @@ exports[`keyframes 1`] = `
             "value": "1",
           },
         ],
+        "variables": {},
       },
       {
         "keyText": {
@@ -2251,6 +2258,7 @@ exports[`keyframes 1`] = `
             "value": "3",
           },
         ],
+        "variables": {},
       },
       {
         "keyText": {
@@ -2274,6 +2282,7 @@ exports[`keyframes 1`] = `
             "value": "5",
           },
         ],
+        "variables": {},
       },
       {
         "keyText": {
@@ -2297,6 +2306,112 @@ exports[`keyframes 1`] = `
             "value": "none",
           },
         ],
+        "variables": {},
+      },
+    ],
+    "type": "KeyframesRule",
+  },
+  {
+    "name": {
+      "loc": {
+        "column": 37,
+        "line": 37,
+      },
+      "value": "test-keyframe-declaration",
+    },
+    "styles": [
+      {
+        "keyText": {
+          "loc": {
+            "column": 5,
+            "line": 38,
+          },
+          "value": "0%",
+        },
+        "style": [
+          {
+            "defaultValue": "",
+            "defaultValueMap": {
+              "--bg-color": "",
+            },
+            "keyLoc": {
+              "column": 21,
+              "line": 40,
+            },
+            "name": "background-color",
+            "type": "css_var",
+            "valLoc": {
+              "column": 39,
+              "line": 40,
+            },
+            "value": "{{--bg-color}}",
+          },
+        ],
+        "variables": {
+          "--bg-color": "red",
+        },
+      },
+      {
+        "keyText": {
+          "loc": {
+            "column": 6,
+            "line": 43,
+          },
+          "value": "50%",
+        },
+        "style": [
+          {
+            "defaultValue": "",
+            "defaultValueMap": {
+              "--bg-color": "",
+            },
+            "keyLoc": {
+              "column": 21,
+              "line": 45,
+            },
+            "name": "background-color",
+            "type": "css_var",
+            "valLoc": {
+              "column": 39,
+              "line": 45,
+            },
+            "value": "{{--bg-color}}",
+          },
+        ],
+        "variables": {
+          "--bg-color": "green",
+        },
+      },
+      {
+        "keyText": {
+          "loc": {
+            "column": 7,
+            "line": 48,
+          },
+          "value": "100%",
+        },
+        "style": [
+          {
+            "defaultValue": "",
+            "defaultValueMap": {
+              "--bg-color": "",
+            },
+            "keyLoc": {
+              "column": 21,
+              "line": 50,
+            },
+            "name": "background-color",
+            "type": "css_var",
+            "valLoc": {
+              "column": 39,
+              "line": 50,
+            },
+            "value": "{{--bg-color}}",
+          },
+        ],
+        "variables": {
+          "--bg-color": "blue",
+        },
       },
     ],
     "type": "KeyframesRule",
