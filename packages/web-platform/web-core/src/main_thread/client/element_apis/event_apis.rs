@@ -35,16 +35,6 @@ impl MainThreadWasmContext {
     let event_type = event_type.to_ascii_lowercase();
     self.enable_event(&event_name);
 
-    if (event_type == "global-bindevent" || event_type == "global-bind")
-      && event_handler_identifier.is_some()
-    {
-      self
-        .global_bind_events
-        .entry(event_name.clone())
-        .or_default()
-        .insert(unique_id);
-    }
-
     let is_allowlisted = constants::ELEMENT_REACTIVE_EVENTS.contains(event_name_str);
     let mut should_enable = false;
     let mut should_disable = false;
@@ -63,9 +53,32 @@ impl MainThreadWasmContext {
 
       element_data.replace_framework_cross_thread_event_handler(
         event_name.clone(),
-        event_type,
-        event_handler_identifier,
+        event_type.clone(),
+        event_handler_identifier.clone(),
       );
+
+      if event_type == "global-bindevent" {
+        if event_handler_identifier.is_some() {
+          self
+            .global_bind_events
+            .entry(event_name.clone())
+            .or_default()
+            .insert(unique_id);
+        }
+        if element_data
+          .get_framework_cross_thread_event_handler(&event_name, &event_type)
+          .is_none()
+          && element_data
+            .get_framework_run_worklet_event_handler(&event_name, &event_type)
+            .is_none()
+        {
+          self
+            .global_bind_events
+            .entry(event_name.clone())
+            .or_default()
+            .remove(&unique_id);
+        }
+      }
     }
     if should_enable {
       if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
@@ -156,16 +169,9 @@ impl MainThreadWasmContext {
 
   pub fn get_events(&self, unique_id: usize) -> Vec<EventInfo> {
     let mut event_infos: Vec<EventInfo> = vec![];
-    let event_types = vec![
-      "bindevent",
-      "capture-bind",
-      "catchevent",
-      "capture-catch",
-      "global-bindevent",
-    ];
     let binding = self.get_element_data_by_unique_id(unique_id).unwrap();
     let element_data = binding.borrow();
-    for event_type in event_types {
+    for event_type in constants::EVENT_TYPES.iter() {
       for event_name in self.enabled_events.iter() {
         if let Some(event_handlers) =
           element_data.get_framework_cross_thread_event_handler(event_name, event_type)
