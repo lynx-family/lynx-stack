@@ -86,6 +86,7 @@ export class LynxViewInstance implements AsyncDisposable {
     initI18nResources?: InitI18nResources,
     private readonly transformVW: boolean = false,
     private readonly transformVH: boolean = false,
+    private readonly transformREM: boolean = false,
     browserConfig?: Record<string, any>,
   ) {
     this.systemInfo = createSystemInfo(browserConfig);
@@ -132,6 +133,7 @@ export class LynxViewInstance implements AsyncDisposable {
         defaultOverflowVisible,
         this.transformVW,
         this.transformVH,
+        this.transformREM,
       ),
       createMainThreadGlobalAPIs(
         this,
@@ -233,6 +235,7 @@ export class LynxViewInstance implements AsyncDisposable {
       Promise.resolve(this),
       this.transformVW,
       this.transformVH,
+      this.transformREM,
       {
         enableCSSSelector: this.#pageConfig!['enableCSSSelector'],
       },

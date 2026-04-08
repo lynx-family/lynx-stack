@@ -66,6 +66,7 @@ export function createElementAPI(
   config_default_overflow_visible: boolean,
   transform_vw: boolean,
   transform_vh: boolean,
+  transform_rem: boolean,
 ): ElementPAPIs {
   const wasmContext = new MainThreadWasmContext(
     rootDom,
@@ -294,6 +295,7 @@ export function createElementAPI(
               value,
               transform_vw,
               transform_vh,
+              transform_rem,
             )
           ) {
             element.setAttribute('style', value);
@@ -312,6 +314,7 @@ export function createElementAPI(
             vec,
             transform_vw,
             transform_vh,
+            transform_rem,
           );
         }
       }

@@ -18,6 +18,7 @@ export function decodeTemplate(
   buffer: Uint8Array,
   transformVW: boolean,
   transformVH: boolean,
+  transformREM: boolean,
 ): DecodedTemplate {
   if (buffer.length < 8) {
     throw new Error('Buffer too short for Magic Header');
@@ -89,6 +90,7 @@ export function decodeTemplate(
           config['enableCSSSelector'] === 'true',
           transformVW,
           transformVH,
+          transformREM,
         );
         styleInfo = buffer;
         break;
