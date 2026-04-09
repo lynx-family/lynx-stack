@@ -68,6 +68,9 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           jsxRuntimeMainThread,
           jsxDevRuntimeBackground,
           jsxDevRuntimeMainThread,
+          preactHooks,
+          hooksBackground,
+          hooksMainThread,
           reactLepusBackground,
           reactLepusMainThread,
           reactCompat,
@@ -76,6 +79,9 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           resolve('@lynx-js/react/lepus/jsx-runtime'),
           resolve('@lynx-js/react/jsx-dev-runtime'),
           resolve('@lynx-js/react/lepus/jsx-dev-runtime'),
+          resolvePreact('preact/hooks'),
+          resolve('@lynx-js/react/hooks'),
+          resolve('@lynx-js/react/lepus/hooks'),
           resolve('@lynx-js/react'),
           resolve('@lynx-js/react/lepus'),
           gte(version, '0.111.9999')
@@ -96,6 +102,12 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           mainThread: reactLepusMainThread,
         }
 
+        const reactHooks = {
+          mainThread: hooksMainThread,
+          background: hooksBackground,
+          preact: preactHooks,
+        }
+
         // dprint-ignore
         chain
           .module
@@ -110,6 +122,9 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
                   .set('@lynx-js/react/lepus$', reactLepus.mainThread)
                   .set('@lynx-js/react/lepus/jsx-runtime', jsxRuntime.mainThread)
                   .set('@lynx-js/react/lepus/jsx-dev-runtime', jsxDevRuntime.mainThread)
+                  .set('preact/hooks', reactHooks.mainThread)
+                  .set('@lynx-js/react/hooks', reactHooks.mainThread)
+                  .set('@lynx-js/react/lepus/hooks', reactHooks.mainThread)
                 .end()
               .end()
             .end()
@@ -121,7 +136,8 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
                   .set('react/jsx-dev-runtime', jsxDevRuntime.background)
                   .set('@lynx-js/react/jsx-runtime', jsxRuntime.background)
                   .set('@lynx-js/react/jsx-dev-runtime', jsxDevRuntime.background)
-                  .set('@lynx-js/react/lepus$', reactLepus.background)
+                  .set('preact/hooks', reactHooks.preact)
+                  .set('@lynx-js/react/hooks', reactHooks.background)
                 .end()
               .end()
             .end()
@@ -134,6 +150,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           // 'debug',
           'experimental/lazy/import',
           'internal',
+          'internal/constants',
           'legacy-react-runtime',
           'runtime-components',
           'worklet-runtime/bindings',
@@ -187,7 +204,6 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           'preact/compat',
           'preact/debug',
           'preact/devtools',
-          'preact/hooks',
           'preact/test-utils',
           'preact/jsx-runtime',
           'preact/jsx-dev-runtime',

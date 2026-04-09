@@ -37,6 +37,10 @@
       "types": "./runtime/lib/document.d.ts",
       "default": "./runtime/lib/document.js"
     },
+    "./internal/constants": {
+      "types": "./runtime/lib/constants.d.ts",
+      "default": "./runtime/lib/constants.js"
+    },
     "./jsx-runtime": {
       "types": "./runtime/jsx-runtime/index.d.ts",
       "lazy": "./runtime/lazy/jsx-runtime.js",
@@ -54,6 +58,14 @@
     "./lepus/jsx-dev-runtime": {
       "types": "./runtime/jsx-runtime/index.d.ts",
       "default": "./runtime/lepus/jsx-runtime/index.js"
+    },
+    "./hooks": {
+      "types": "./runtime/lib/hooks/react.d.ts",
+      "default": "./runtime/lib/hooks/react.js"
+    },
+    "./lepus/hooks": {
+      "types": "./runtime/lib/hooks/react.d.ts",
+      "default": "./runtime/lepus/hooks/index.js"
     },
     "./lepus": {
       "types": "./runtime/lepus/index.d.ts",
@@ -115,11 +127,20 @@
       "experimental/lazy/import": [
         "./runtime/lazy/import.d.ts"
       ],
+      "hooks": [
+        "./runtime/lib/hooks/react.d.ts"
+      ],
+      "lepus/hooks": [
+        "./runtime/lib/hooks/react.d.ts"
+      ],
       "internal": [
         "./runtime/lib/internal.d.ts"
       ],
       "internal/document": [
         "./runtime/lib/document.d.ts"
+      ],
+      "internal/constants": [
+        "./runtime/lib/constants.d.ts"
       ],
       "jsx-runtime": [
         "./runtime/jsx-runtime/index.d.ts"

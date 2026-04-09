@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 
 import { createRsbuild } from '@rsbuild/core'
 import type { RsbuildPlugin } from '@rsbuild/core'
+import type { RuleSetRule } from '@rspack/core'
 import { describe, expect, test, vi } from 'vitest'
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
@@ -62,6 +63,13 @@ describe('React - alias', () => {
     )
 
     expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/react/internal/constants$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/constants.js'.replaceAll('/', path.sep),
+      ),
+    )
+
+    expect(config.resolve.alias).toHaveProperty(
       '@lynx-js/react/experimental/lazy/import$',
       expect.stringContaining(
         '/packages/react/runtime/lazy/import.js'.replaceAll('/', path.sep),
@@ -105,14 +113,8 @@ describe('React - alias', () => {
         ),
       ),
     )
-    expect(config.resolve.alias).toHaveProperty(
+    expect(config.resolve.alias).not.toHaveProperty(
       'preact/hooks$',
-      expect.stringContaining(
-        '@lynx-js/internal-preact/hooks/dist/hooks.mjs'.replaceAll(
-          '/',
-          path.sep,
-        ),
-      ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/test-utils$',
@@ -233,8 +235,126 @@ describe('React - alias', () => {
     )
 
     expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/react/internal/constants$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/constants.js'.replaceAll('/', path.sep),
+      ),
+    )
+
+    expect(config.resolve.alias).toHaveProperty(
       '@lynx-js/react/debug$',
       false,
+    )
+  })
+
+  test('layered lepus hooks alias for main thread', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    const { pluginReactAlias } = await import('../src/index.js')
+
+    const rsbuild = await createRsbuild({
+      rsbuildConfig: {
+        plugins: [
+          pluginReactAlias({
+            LAYERS,
+          }),
+        ],
+      },
+      cwd: path.dirname(fileURLToPath(import.meta.url)),
+    })
+
+    const [config] = await rsbuild.initConfigs()
+    if (!config?.module?.rules) {
+      expect.fail('should have config.module.rules')
+    }
+
+    const mainThreadRule = config.module.rules.find((rule) => {
+      if (!rule || typeof rule !== 'object') {
+        return false
+      }
+      return rule.issuerLayer === LAYERS.MAIN_THREAD && !!rule.resolve?.alias
+    }) as RuleSetRule
+
+    if (!mainThreadRule || !mainThreadRule.resolve?.alias) {
+      expect.fail('should have main-thread alias rule')
+    }
+
+    expect(mainThreadRule.resolve.alias).toHaveProperty(
+      'preact/hooks',
+      expect.stringContaining(
+        '/packages/react/runtime/lepus/hooks/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+    expect(mainThreadRule.resolve.alias).toHaveProperty(
+      '@lynx-js/react/hooks',
+      expect.stringContaining(
+        '/packages/react/runtime/lepus/hooks/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+    expect(mainThreadRule.resolve.alias).toHaveProperty(
+      '@lynx-js/react/lepus/hooks',
+      expect.stringContaining(
+        '/packages/react/runtime/lepus/hooks/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+  })
+
+  test('layered hooks alias for background', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    const { pluginReactAlias } = await import('../src/index.js')
+
+    const rsbuild = await createRsbuild({
+      rsbuildConfig: {
+        plugins: [
+          pluginReactAlias({
+            LAYERS,
+          }),
+        ],
+      },
+      cwd: path.dirname(fileURLToPath(import.meta.url)),
+    })
+
+    const [config] = await rsbuild.initConfigs()
+    if (!config?.module?.rules) {
+      expect.fail('should have config.module.rules')
+    }
+
+    const backgroundRule = config.module.rules.find((rule) => {
+      if (!rule || typeof rule !== 'object') {
+        return false
+      }
+      return rule.issuerLayer === LAYERS.BACKGROUND && !!rule.resolve?.alias
+    }) as RuleSetRule
+
+    if (!backgroundRule || !backgroundRule.resolve?.alias) {
+      expect.fail('should have background alias rule')
+    }
+
+    expect(backgroundRule.resolve.alias).toHaveProperty(
+      '@lynx-js/react/hooks',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/hooks/react.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+    expect(backgroundRule.resolve.alias).toHaveProperty(
+      'preact/hooks',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/hooks/react.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
     )
   })
 
