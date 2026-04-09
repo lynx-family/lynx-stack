@@ -125,7 +125,9 @@ export function createElementAPI(
       );
     }
     if (eventName === 'uiappear' || eventName === 'uidisappear') {
-      const element = wasmContext.get_dom_by_unique_id(uniqueId);
+      const element = wasmContext.get_dom_by_unique_id(uniqueId)?.deref() as
+        | HTMLElement
+        | undefined;
       if (element) {
         mtsBinding.markExposureRelatedElementByUniqueId(
           element,
@@ -433,7 +435,8 @@ export function createElementAPI(
               false,
             ) as number | undefined;
             if (typeof childSign === 'number') {
-              const childElement = wasmContext.get_dom_by_unique_id(childSign);
+              const childElement = wasmContext.get_dom_by_unique_id(childSign)
+                ?.deref() as HTMLElement | undefined;
               if (childElement) {
                 const referenceNode = element.children[action.position];
                 if (referenceNode !== childElement) {
