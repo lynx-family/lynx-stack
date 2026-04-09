@@ -70,7 +70,9 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   }
 
   getElementByUniqueId(uniqueId: number): HTMLElement | undefined {
-    return this.wasmContext?.get_dom_by_unique_id(uniqueId)?.deref();
+    return this.wasmContext?.get_dom_by_unique_id(uniqueId)?.deref() as
+      | HTMLElement
+      | undefined;
   }
 
   getElementByComponentId(
