@@ -35,6 +35,8 @@ impl MainThreadWasmContext {
     let event_type = event_type.to_ascii_lowercase();
     self.enable_event(&event_name);
 
+    let has_handler = event_handler_identifier.is_some();
+
     let is_allowlisted = constants::ELEMENT_REACTIVE_EVENTS.contains(event_name_str);
     let mut should_enable = false;
     let mut should_disable = false;
@@ -54,32 +56,14 @@ impl MainThreadWasmContext {
       element_data.replace_framework_cross_thread_event_handler(
         event_name.clone(),
         event_type.clone(),
-        event_handler_identifier.clone(),
+        event_handler_identifier,
       );
-
-      if event_type == "global-bindevent" {
-        if event_handler_identifier.is_some() {
-          self
-            .global_bind_events
-            .entry(event_name.clone())
-            .or_default()
-            .insert(unique_id);
-        }
-        if element_data
-          .get_framework_cross_thread_event_handler(&event_name, &event_type)
-          .is_none()
-          && element_data
-            .get_framework_run_worklet_event_handler(&event_name, &event_type)
-            .is_none()
-        {
-          self
-            .global_bind_events
-            .entry(event_name.clone())
-            .or_default()
-            .remove(&unique_id);
-        }
-      }
     }
+
+    if event_type == "global-bindevent" {
+      self.update_global_bind_events(unique_id, &event_name, has_handler);
+    }
+
     if should_enable {
       if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
         self
@@ -107,13 +91,7 @@ impl MainThreadWasmContext {
     let event_type = event_type.to_ascii_lowercase();
     self.enable_event(&event_name);
 
-    if event_type == "global-bindevent" && event_handler_identifier.is_some() {
-      self
-        .global_bind_events
-        .entry(event_name.clone())
-        .or_default()
-        .insert(unique_id);
-    }
+    let has_handler = event_handler_identifier.is_some();
 
     let is_allowlisted = constants::ELEMENT_REACTIVE_EVENTS.contains(event_name_str);
     let mut should_enable = false;
@@ -133,10 +111,15 @@ impl MainThreadWasmContext {
 
       element_data.replace_framework_run_worklet_event_handler(
         event_name.clone(),
-        event_type,
+        event_type.clone(),
         event_handler_identifier,
       );
     }
+
+    if event_type == "global-bindevent" {
+      self.update_global_bind_events(unique_id, &event_name, has_handler);
+    }
+
     if should_enable {
       if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
         self
@@ -148,6 +131,29 @@ impl MainThreadWasmContext {
         self
           .mts_binding
           .disable_element_event(element, event_name_str);
+      }
+    }
+  }
+
+  fn update_global_bind_events(&mut self, unique_id: usize, event_name: &str, has_handler: bool) {
+    if has_handler {
+      self
+        .global_bind_events
+        .entry(event_name.to_string())
+        .or_default()
+        .insert(unique_id);
+    } else if let Some(binding) = self.get_element_data_by_unique_id(unique_id) {
+      let element_data = binding.borrow();
+      if element_data
+        .get_framework_cross_thread_event_handler(event_name, "global-bindevent")
+        .is_none()
+        && element_data
+          .get_framework_run_worklet_event_handler(event_name, "global-bindevent")
+          .is_none()
+      {
+        if let Some(ids) = self.global_bind_events.get_mut(event_name) {
+          ids.remove(&unique_id);
+        }
       }
     }
   }
