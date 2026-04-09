@@ -23,9 +23,10 @@ export const mainthreadwasmcontext_add_cross_thread_event: (a: number, b: number
 export const mainthreadwasmcontext_add_dataset: (a: number, b: number, c: number, d: number, e: number) => void;
 export const mainthreadwasmcontext_add_run_worklet_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
 export const mainthreadwasmcontext_common_event_handler: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
-export const mainthreadwasmcontext_create_element_common: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
+export const mainthreadwasmcontext_create_element_common: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
 export const mainthreadwasmcontext_dispatch_event_by_path: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
 export const mainthreadwasmcontext_dispatch_global_bind_event: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+export const mainthreadwasmcontext_gc: (a: number) => void;
 export const mainthreadwasmcontext_get_component_id: (a: number, b: number, c: number) => void;
 export const mainthreadwasmcontext_get_config: (a: number, b: number, c: number) => void;
 export const mainthreadwasmcontext_get_css_id_by_unique_id: (a: number, b: number) => number;

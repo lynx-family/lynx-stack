@@ -140,6 +140,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
@@ -148,6 +149,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
@@ -156,13 +158,18 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
     __CreateRawText(text) {
       const dom = document.createElement('raw-text') as DecoratedHTMLElement;
       dom.setAttribute('text', text);
-      dom[uniqueIdSymbol] = wasmContext.create_element_common(-1, dom);
+      dom[uniqueIdSymbol] = wasmContext.create_element_common(
+        -1,
+        dom,
+        new WeakRef(dom),
+      );
       return dom;
     },
     __CreateScrollView(parentComponentUniqueId) {
@@ -171,6 +178,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
@@ -181,6 +189,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
@@ -195,6 +204,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
         cssID,
         componentID,
       );
@@ -213,6 +223,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
@@ -223,6 +234,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
@@ -234,6 +246,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         0,
         dom,
+        new WeakRef(dom),
         cssID,
         componentID,
       );
@@ -591,6 +604,7 @@ export function createElementAPI(
           timingFlagsAll,
           pipelineId,
         );
+        wasmContext.gc();
       });
       timingFlags.length = 0;
       const enabledExposureElements = [

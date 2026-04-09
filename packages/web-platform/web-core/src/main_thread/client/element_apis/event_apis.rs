@@ -66,13 +66,13 @@ impl MainThreadWasmContext {
 
     if should_enable {
       if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
-        self
+        let _ = self
           .mts_binding
           .enable_element_event(element, event_name_str);
       }
     } else if should_disable {
       if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
-        self
+        let _ = self
           .mts_binding
           .disable_element_event(element, event_name_str);
       }
@@ -122,13 +122,13 @@ impl MainThreadWasmContext {
 
     if should_enable {
       if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
-        self
+        let _ = self
           .mts_binding
           .enable_element_event(element, event_name_str);
       }
     } else if should_disable {
       if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
-        self
+        let _ = self
           .mts_binding
           .disable_element_event(element, event_name_str);
       }

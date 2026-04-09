@@ -17,7 +17,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub struct MainThreadWasmContext {
   pub(super) unique_id_to_element_map: Vec<Option<Rc<RefCell<Box<LynxElementData>>>>>,
-  pub(super) unique_id_to_dom_map: FnvHashMap<usize, web_sys::HtmlElement>,
+  pub(super) unique_id_to_dom_map: FnvHashMap<usize, js_sys::WeakRef>,
   pub(super) timing_flags: Vec<String>,
 
   pub(super) enabled_events: FnvHashSet<String>,
@@ -78,6 +78,7 @@ impl MainThreadWasmContext {
     self: &mut MainThreadWasmContext,
     parent_component_unique_id: usize,
     dom: web_sys::HtmlElement,
+    dom_ref: js_sys::WeakRef,
     css_id: Option<i32>,
     component_id: Option<String>,
   ) -> usize {
@@ -111,11 +112,11 @@ impl MainThreadWasmContext {
     self
       .unique_id_to_element_map
       .push(Some(Rc::new(RefCell::new(element_data))));
-    self.unique_id_to_dom_map.insert(unique_id, dom.clone());
+    self.unique_id_to_dom_map.insert(unique_id, dom_ref);
     unique_id
   }
 
-  pub fn get_dom_by_unique_id(&self, unique_id: usize) -> Option<web_sys::HtmlElement> {
+  pub fn get_dom_by_unique_id(&self, unique_id: usize) -> Option<js_sys::WeakRef> {
     self.unique_id_to_dom_map.get(&unique_id).cloned()
   }
 
@@ -145,10 +146,18 @@ impl MainThreadWasmContext {
       .map(|element_data_cell| element_data_cell.borrow().css_id)
   }
 
-  // pub fn gc(&mut self) {
-  //   self.unique_id_to_element_map.retain(|_, value| {
-  //     let dom = value.get_dom();
-  //     dom.is_connected()
-  //   });
-  // }
+  pub fn gc(&mut self) {
+    let mut ids_to_remove = Vec::new();
+    for (unique_id, weak_ref) in self.unique_id_to_dom_map.iter() {
+      if weak_ref.deref().is_none() {
+        ids_to_remove.push(*unique_id);
+      }
+    }
+    for id in ids_to_remove {
+      self.unique_id_to_dom_map.remove(&id);
+      if let Some(element_data) = self.unique_id_to_element_map.get_mut(id) {
+        *element_data = None;
+      }
+    }
+  }
 }

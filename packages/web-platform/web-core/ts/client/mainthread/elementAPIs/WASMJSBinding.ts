@@ -60,13 +60,17 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   }
 
   getClassList(
-    element: HTMLElement,
+    elementRef: WeakRef<HTMLElement>,
   ): string[] {
-    return [...(element.classList as unknown as string[])];
+    const element = elementRef.deref();
+    if (element) {
+      return [...(element.classList as unknown as string[])];
+    }
+    return [];
   }
 
   getElementByUniqueId(uniqueId: number): HTMLElement | undefined {
-    return this.wasmContext?.get_dom_by_unique_id(uniqueId);
+    return this.wasmContext?.get_dom_by_unique_id(uniqueId)?.deref();
   }
 
   getElementByComponentId(
@@ -203,17 +207,33 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     );
   }
 
-  enableElementEvent(element: HTMLElement, eventName: string) {
+  enableElementEvent(elementRef: WeakRef<HTMLElement>, eventName: string) {
+    const element = elementRef.deref();
     if (element) {
       // @ts-expect-error
       element.enableEvent?.(LynxEventNameToW3cCommon[eventName] ?? eventName);
     }
   }
 
-  disableElementEvent(element: HTMLElement, eventName: string) {
+  disableElementEvent(elementRef: WeakRef<HTMLElement>, eventName: string) {
+    const element = elementRef.deref();
     if (element) {
       // @ts-expect-error
       element.disableEvent?.(LynxEventNameToW3cCommon[eventName] ?? eventName);
+    }
+  }
+
+  setAttribute(elementRef: WeakRef<HTMLElement>, name: string, value: string) {
+    const element = elementRef.deref();
+    if (element) {
+      element.setAttribute(name, value);
+    }
+  }
+
+  removeAttribute(elementRef: WeakRef<HTMLElement>, name: string) {
+    const element = elementRef.deref();
+    if (element) {
+      element.removeAttribute(name);
     }
   }
 }
