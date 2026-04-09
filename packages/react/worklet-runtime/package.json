@@ -6,29 +6,17 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+      "default": "./dist/main.js"
     },
-    "./bindings": {
-      "types": "./lib/bindings/index.d.ts",
-      "default": "./lib/bindings/index.js"
+    "./dev": {
+      "default": "./dist/dev.js"
     }
   },
-  "main": "src/index.ts",
-  "module": "src/index.ts",
-  "types": "src/index.ts",
-  "typesVersions": {
-    "*": {
-      "bindings": [
-        "./lib/bindings/index.d.ts"
-      ]
-    }
-  },
+  "main": "dist/main.js",
+  "module": "dist/main.js",
   "files": [
     "CHANGELOG.md",
-    "dist",
-    "lib",
-    "src"
+    "dist"
   ],
   "scripts": {
     "build": "rslib build",

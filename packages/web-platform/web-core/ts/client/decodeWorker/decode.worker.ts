@@ -106,7 +106,14 @@ self.onmessage = async (
     wasmInstance.initSync({ module: wasmModule });
     wasmModuleLoadedResolve();
   } else if (data.type === 'load') {
-    const { url, fetchUrl, overrideConfig, transformVW, transformVH } = data;
+    const {
+      url,
+      fetchUrl,
+      overrideConfig,
+      transformVW,
+      transformVH,
+      transformREM,
+    } = data;
     try {
       const response = await fetch(fetchUrl, {
         headers: {
@@ -117,7 +124,14 @@ self.onmessage = async (
         throw new Error(`Failed to fetch template: ${response.statusText}`);
       }
       const reader = response.body.getReader();
-      await handleStream(url, reader, transformVW, transformVH, overrideConfig);
+      await handleStream(
+        url,
+        reader,
+        transformVW,
+        transformVH,
+        transformREM,
+        overrideConfig,
+      );
       postMessage({ type: 'done', url } as MainMessage);
     } catch (error) {
       postMessage(
@@ -131,6 +145,7 @@ async function handleStream(
   reader: ReadableStreamDefaultReader<Uint8Array>,
   transformVW: boolean,
   transformVH: boolean,
+  transformREM: boolean,
   overrideConfig?: Partial<PageConfig>,
 ) {
   const streamReader = new StreamReader(reader);
@@ -148,7 +163,14 @@ async function handleStream(
     const decoder = new TextDecoder();
     const jsonStr = decoder.decode(headerBytes) + decoder.decode(rest);
     const json = JSON.parse(jsonStr);
-    await handleJSON(json, url, transformVW, transformVH, overrideConfig);
+    await handleJSON(
+      json,
+      url,
+      transformVW,
+      transformVH,
+      transformREM,
+      overrideConfig,
+    );
     return;
   }
 
@@ -227,6 +249,7 @@ async function handleStream(
           config['enableCSSSelector'] === 'true',
           transformVW,
           transformVH,
+          transformREM,
         );
         postMessage(
           {
@@ -313,6 +336,7 @@ async function handleJSON(
   url: string,
   transformVW: boolean,
   transformVH: boolean,
+  transformREM: boolean,
   overrideConfig?: Partial<PageConfig>,
 ) {
   // Configurations
@@ -350,6 +374,7 @@ async function handleJSON(
       config['enableCSSSelector'] === 'true',
       transformVW,
       transformVH,
+      transformREM,
       config['isLazy'] === 'true' ? url : undefined,
     );
     postMessage(

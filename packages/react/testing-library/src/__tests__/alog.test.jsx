@@ -61,15 +61,6 @@ describe('alog', () => {
           "[ReactLynxDebug] FiberElement API call #3: __SetCSSId([PAGE#0], 0)",
         ],
         [
-          "[MainThread Component Render] name: ClassComponent",
-        ],
-        [
-          "[MainThread Component Render] name: FunctionComponent",
-        ],
-        [
-          "[MainThread Component Render] name: App",
-        ],
-        [
           "[ReactLynxDebug] FiberElement API call #4: __CreateView(0) => VIEW#1",
         ],
         [
@@ -140,6 +131,9 @@ describe('alog', () => {
         ],
         [
           "[ReactLynxDebug] FiberElement API call #27: __AppendElement(WRAPPER#8, VIEW#9)",
+        ],
+        [
+          "[MainThread Component Render] name: ClassComponent",
         ],
         [
           "[ReactLynxDebug] FiberElement API call #28: __CreateView(0) => VIEW#11",
@@ -311,7 +305,7 @@ describe('alog', () => {
               "snapshotPatch": [
                 {
                   "op": "SetAttribute",
-                  "id": -7,
+                  "id": -4,
                   "dynamicPartIndex": 0,
                   "value": 1
                 }
@@ -478,7 +472,7 @@ describe('alog', () => {
                   "type": "wrapper",
                   "children": [
                     {
-                      "id": -7,
+                      "id": -4,
                       "type": null,
                       "values": [
                         0
@@ -487,7 +481,7 @@ describe('alog', () => {
                   ]
                 },
                 {
-                  "id": -4,
+                  "id": -5,
                   "type": "wrapper",
                   "children": [
                     {
@@ -658,7 +652,7 @@ describe('alog', () => {
               "snapshotPatch": [
                 {
                   "op": "SetAttribute",
-                  "id": -7,
+                  "id": -4,
                   "dynamicPartIndex": 0,
                   "value": 0
                 }
@@ -764,7 +758,7 @@ describe('alog', () => {
               "snapshotPatch": [
                 {
                   "op": "SetAttribute",
-                  "id": -7,
+                  "id": -4,
                   "dynamicPartIndex": 0,
                   "value": 1
                 }

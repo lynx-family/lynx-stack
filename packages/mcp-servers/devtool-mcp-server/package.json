@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/devtool-mcp-server",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "The Lynx DevTool for coding agent.",
   "repository": {
     "type": "git",

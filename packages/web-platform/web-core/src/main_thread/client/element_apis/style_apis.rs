@@ -110,12 +110,14 @@ pub fn set_inline_styles_in_str(
   styles: String,
   transform_vw: bool,
   transform_vh: bool,
+  transform_rem: bool,
 ) -> bool {
   let transformed_style_str = transform_inline_style_string(
     &styles,
     &crate::style_transformer::token_transformer::TransformerConfig {
       transform_vw,
       transform_vh,
+      transform_rem,
     },
   );
   // we compare the transformed style string with the original one
@@ -133,12 +135,14 @@ pub fn set_inline_styles_in_key_value_vec(
   k_v_vec: Vec<String>,
   transform_vw: bool,
   transform_vh: bool,
+  transform_rem: bool,
 ) {
   let transformed_style_str = transform_inline_style_key_value_vec(
     k_v_vec,
     &crate::style_transformer::token_transformer::TransformerConfig {
       transform_vw,
       transform_vh,
+      transform_rem,
     },
   );
   let _ = dom.set_attribute("style", &transformed_style_str);

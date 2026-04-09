@@ -87,6 +87,7 @@ describe('Template Manager', () => {
       Promise.resolve(mockLynxViewInstance),
       false,
       false,
+      false,
     );
 
     // Verify data using getCustomSection
@@ -123,6 +124,7 @@ describe('Template Manager', () => {
       templateManager.fetchBundle(
         templateUrl,
         Promise.resolve(mockLynxViewInstance),
+        false,
         false,
         false,
       ),
@@ -167,6 +169,7 @@ describe('Template Manager', () => {
     await templateManager.fetchBundle(
       'http://example.com/template',
       Promise.resolve(mockLynxViewInstance),
+      false,
       false,
       false,
     );
@@ -225,6 +228,7 @@ describe('Template Manager', () => {
         Promise.resolve(mockLynxViewInstance),
         false,
         false,
+        false,
       ),
     ).rejects.toThrow('Stream failed');
 
@@ -256,6 +260,7 @@ describe('Template Manager', () => {
     await templateManager.fetchBundle(
       templateUrl,
       Promise.resolve(mockLynxViewInstance),
+      false,
       false,
       false,
       overrideConfig as any,
@@ -333,6 +338,7 @@ describe('Template Manager', () => {
       Promise.resolve(mockLynxViewInstance),
       false,
       false,
+      false,
     );
 
     // Verify config
@@ -384,6 +390,7 @@ describe('Template Manager', () => {
       Promise.resolve(mockLynxViewInstance),
       false,
       false,
+      false,
     );
 
     // Verify config has appType = lazy and isLazy = true
@@ -432,10 +439,12 @@ describe('Template Manager', () => {
         Promise.resolve(instance1 as unknown as LynxViewInstance),
         false,
         false,
+        false,
       ),
       templateManager.fetchBundle(
         'http://example.com/template_concurrent',
         Promise.resolve(instance2 as unknown as LynxViewInstance),
+        false,
         false,
         false,
       ),

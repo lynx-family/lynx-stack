@@ -2,11 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { existsSync, readFileSync } from 'node:fs'
+import { mkdtemp, rm } from 'node:fs/promises'
 import { createRequire } from 'node:module'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 import type { RsbuildInstance, Rspack } from '@rsbuild/core'
-import { describe, expect, test, vi } from 'vitest'
+import { afterAll, describe, expect, test, vi } from 'vitest'
 
 import type { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 import type {
@@ -16,6 +18,37 @@ import type {
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
+
+const tempDirs: string[] = []
+
+afterAll(async () => {
+  await Promise.all(tempDirs.map(async (dir) => {
+    await rm(dir, { recursive: true, force: true })
+  }))
+})
+
+async function createRspeedyWithTempDistRoot(
+  options: Parameters<typeof createRspeedy>[0],
+): Promise<Awaited<ReturnType<typeof createRspeedy>>> {
+  const root = await mkdtemp(path.join(tmpdir(), 'rspeedy-react-config-'))
+  tempDirs.push(root)
+
+  return await createRspeedy({
+    ...options,
+    rspeedyConfig: {
+      ...options.rspeedyConfig,
+      output: {
+        ...options.rspeedyConfig?.output,
+        // These cases assert on emitted files, so they need isolated build
+        // output without changing cwd-based module resolution.
+        distPath: {
+          ...options.rspeedyConfig?.output?.distPath,
+          root,
+        },
+      },
+    },
+  })
+}
 
 describe('Config', () => {
   test('alias with development', async () => {
@@ -880,7 +913,7 @@ describe('Config', () => {
       vi.stubEnv('NODE_ENV', 'production')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-      const rsbuild = await createRspeedy({
+      const rsbuild = await createRspeedyWithTempDistRoot({
         rspeedyConfig: {
           source: {
             entry: {
@@ -923,7 +956,7 @@ describe('Config', () => {
       vi.stubEnv('NODE_ENV', 'production')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-      const rsbuild = await createRspeedy({
+      const rsbuild = await createRspeedyWithTempDistRoot({
         rspeedyConfig: {
           source: {
             entry: {
@@ -2591,6 +2624,20 @@ describe('Config', () => {
     expect(reactWebpackPluginInstance.options).toHaveProperty(
       'workletRuntimePath',
       require.resolve('@lynx-js/react/worklet-runtime'),
+    )
+  })
+
+  test('worklet runtime bindings resolve to the runtime-owned build output', () => {
+    const require = createRequire(import.meta.url)
+
+    expect(
+      require.resolve('@lynx-js/react/worklet-runtime/bindings'),
+    ).toContain(
+      '/packages/react/runtime/lib/worklet-runtime/bindings/index.js'
+        .replaceAll(
+          '/',
+          path.sep,
+        ),
     )
   })
 

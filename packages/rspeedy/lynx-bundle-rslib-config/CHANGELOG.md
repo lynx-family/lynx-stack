@@ -1,5 +1,17 @@
 # @lynx-js/lynx-bundle-rslib-config
 
+## 0.3.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: ([#2370](https://github.com/lynx-family/lynx-stack/pull/2370))
+
+  Simplify the API for external bundle builds by `externalsPresets` and `externalsPresetDefinitions`.
+
+### Patch Changes
+
+- Preserve the default external-bundle `output.minify.jsOptions` when users set `output.minify: true` in `defineExternalBundleRslibConfig`, so required minifier options are not lost. ([#2390](https://github.com/lynx-family/lynx-stack/pull/2390))
+
 ## 0.2.3
 
 ### Patch Changes
