@@ -5,10 +5,17 @@
     "build": {
       "dependsOn": [
         "@lynx-js/react-refresh#build",
+        "@lynx-js/react-runtime#build",
         "@lynx-js/react-transform#build:wasm",
-        "@lynx-js/react-worklet-runtime#build",
         "@lynx-js/reactlynx-testing-library#build",
         "@lynx-js/testing-environment#build"
+      ],
+      "inputs": [
+        "runtime/src/worklet-runtime/**",
+        "rslib.config.ts"
+      ],
+      "outputs": [
+        "runtime/worklet-runtime/**"
       ]
     }
   }

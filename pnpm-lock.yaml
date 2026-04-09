@@ -660,12 +660,6 @@ importers:
 
   packages/react/transform/swc-plugin-reactlynx-compat: {}
 
-  packages/react/worklet-runtime:
-    devDependencies:
-      '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
-
   packages/repl:
     dependencies:
       '@radix-ui/react-select':

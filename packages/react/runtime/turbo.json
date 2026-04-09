@@ -5,11 +5,16 @@
     "build": {
       "dependsOn": [],
       "inputs": [
-        "../runtime/src/worklet-runtime/**",
-        "rslib.config.ts"
+        "debug/**",
+        "jsx-dev-runtime/**",
+        "jsx-runtime/**",
+        "lepus/**",
+        "src/**",
+        "types/**",
+        "tsconfig.json"
       ],
       "outputs": [
-        "dist"
+        "lib/**"
       ]
     }
   }
