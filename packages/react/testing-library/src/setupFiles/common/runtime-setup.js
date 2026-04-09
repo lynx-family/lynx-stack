@@ -16,9 +16,9 @@ import {
   snapshotInstanceManager,
 } from '../../../../runtime/lib/snapshot/index.js';
 import { destroyWorklet } from '../../../../runtime/lib/worklet/destroy.js';
-import { initApiEnv } from '../../../../worklet-runtime/lib/api/lynxApi.js';
-import { initEventListeners } from '../../../../worklet-runtime/lib/listeners.js';
-import { initWorklet } from '../../../../worklet-runtime/lib/workletRuntime.js';
+import { initApiEnv } from '../../../../runtime/lib/worklet-runtime/api/lynxApi.js';
+import { initEventListeners } from '../../../../runtime/lib/worklet-runtime/listeners.js';
+import { initWorklet } from '../../../../runtime/lib/worklet-runtime/workletRuntime.js';
 
 const {
   onInjectMainThreadGlobals,
