@@ -77,11 +77,11 @@
     },
     "./worklet-runtime": {
       "types": "./runtime/lib/worklet-runtime/index.d.ts",
-      "default": "./worklet-runtime/dist/main.js"
+      "default": "./runtime/worklet-runtime/main.js"
     },
     "./worklet-dev-runtime": {
       "types": "./runtime/lib/worklet-runtime/index.d.ts",
-      "default": "./worklet-runtime/dist/dev.js"
+      "default": "./runtime/worklet-runtime/dev.js"
     },
     "./worklet-runtime/bindings": {
       "types": "./runtime/lib/worklet-runtime/bindings/index.d.ts",
@@ -163,7 +163,6 @@
     "transform",
     "types",
     "docs",
-    "worklet-runtime",
     "testing-library",
     "CHANGELOG.md",
     "internal.js",
@@ -171,6 +170,7 @@
     "README.zh.md"
   ],
   "scripts": {
+    "build": "rslib build",
     "api-extractor": "api-extractor run --verbose"
   },
   "dependencies": {

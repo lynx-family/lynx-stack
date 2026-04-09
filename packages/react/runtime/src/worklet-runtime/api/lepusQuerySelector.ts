@@ -13,12 +13,20 @@ class PageElement {
 }
 
 export function querySelector(cssSelector: string): Element | null {
-  const element = __QuerySelector(PageElement.get(), cssSelector, {});
+  const pageElement = PageElement.get();
+  if (!pageElement) {
+    return null;
+  }
+  const element = __QuerySelector(pageElement, cssSelector, {});
   return element ? new Element(element) : null;
 }
 
 export function querySelectorAll(cssSelector: string): Element[] {
-  return __QuerySelectorAll(PageElement.get(), cssSelector, {}).map(
+  const pageElement = PageElement.get();
+  if (!pageElement) {
+    return [];
+  }
+  return __QuerySelectorAll(pageElement, cssSelector, {}).map(
     (element) => {
       return new Element(element);
     },
