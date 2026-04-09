@@ -1,14 +1,15 @@
 // Copyright 2023 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { Rpc } from '@lynx-js/web-worker-rpc';
+import { Rpc } from '@lynx-js/web-worker-rpc';
 import { queryNodes } from './queryNodes.js';
-import { setNativePropsEndpoint } from '../../endpoints.js';
 import type { LynxViewInstance } from '../LynxViewInstance.js';
+import { setElementPropertyOrAttribute } from '../utils/setElementPropertyOrAttribute.js';
+import { setNativePropsEndpoint } from '../../endpoints.js';
 
 function applyNativeProps(element: Element, nativeProps: Record<string, any>) {
   for (const key in nativeProps) {
-    const value = nativeProps[key] as string;
+    const value = nativeProps[key];
     if (key === 'text' && element?.tagName === 'X-TEXT') {
       if (
         element.firstElementChild
@@ -23,7 +24,7 @@ function applyNativeProps(element: Element, nativeProps: Record<string, any>) {
     ) {
       (element as HTMLElement).style.setProperty(key, value);
     } else {
-      element.setAttribute(key, value);
+      setElementPropertyOrAttribute(element, key, value);
     }
   }
 }

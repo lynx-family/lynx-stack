@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>typewriter-effect</title>
+    <meta content="width=device-width,initial-scale=1.0" name="viewport">
+    <link href="/main.css" rel="stylesheet" />
+  </head>
+  <body>
+    <script src="/main.js" defer></script>
+    <x-view class="page">
+      <x-markdown id="markdown"></x-markdown>
+    </x-view>
+    <script>
+    const el = document.getElementById('markdown');
+      el.addEventListener(
+        'binddrawStart',
+        () => (window._drawStart = true),
+      );
+      el.addEventListener('bindanimationStep', (e) => {
+        if (e.detail.animationStep >= e.detail.maxAnimationStep) {
+          window._animationComplete = true;
+        }
+      });
+      el.setAttribute(
+        'content',
+        `# Title\n\nthis is **bold** and *italic*.TTTTT`,
+      );
+      el.setAttribute('animation-type', 'typewriter');
+      el.setAttribute('animation-velocity', '20');
+      el.setAttribute('content-complete', 'false');
+      el.setAttribute(
+        'markdown-style',
+        JSON.stringify({
+          typewriterCursor: {
+            customCursor: 'none',
+          },
+        }),
+      );
+      el.setAttribute(
+        'markdown-effect',
+        JSON.stringify({
+          type: 'text-mask',
+          color:
+            'linear-gradient(90deg, #ffffff00 0%, rgb(255, 255, 255) 100%)',
+          rangeStart: -4,
+          rangeEnd: -1,
+        }),
+      );
+    </script>
+  </body>
+</html>

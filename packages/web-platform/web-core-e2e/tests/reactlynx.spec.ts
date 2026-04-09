@@ -3199,12 +3199,16 @@ test.describe('reactlynx3 tests', () => {
       // input/bindinput test-case start
       test('basic-element-x-input-bindinput', async ({ page }, { title }) => {
         await goto(page, title);
-        await page.locator('input').press('Enter');
-        await wait(200);
-        await page.locator('input').fill('foobar');
-        await wait(200);
-        const result = await page.locator('.result').first().innerText();
-        expect(result).toBe('foobar-6-6');
+        const input = page.locator('input');
+        const result = page.locator('.result').first();
+
+        // Firefox CI can be slower to finish mounting/binding handlers; wait for initial render first.
+        await expect(input).toBeVisible();
+        await expect(input).toHaveValue('bindinput');
+
+        await input.press('Enter');
+        await input.fill('foobar');
+        await expect(result).toHaveText('foobar-6-6');
       });
       // input/bindinput test-case start for <input>
       test('basic-element-input-bindinput', async ({ page }, { title }) => {
