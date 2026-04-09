@@ -84,6 +84,7 @@ export default defineConfig({
         'vitest.config.ts',
         '__test__/utils/**',
         'lib/**',
+        'worklet-runtime/**',
         'src/index.ts',
         'src/lynx.ts',
         'src/root.ts',
