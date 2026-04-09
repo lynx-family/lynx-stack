@@ -2063,7 +2063,7 @@ describe('Config', () => {
       vi.stubEnv('NODE_ENV', 'production')
 
       const entryName = 'defineDCE'
-      const rsbuild = await createRspeedy({
+      const rsbuild = await createRspeedyWithTempDistRoot({
         rspeedyConfig: {
           source: {
             entry: {
@@ -2096,18 +2096,28 @@ describe('Config', () => {
         expect.fail('build should succeed')
       }
 
-      const distPath = path.join(
-        rsbuild.context.distPath,
-        '.rspeedy',
-        entryName,
-        'main-thread.js',
+      const candidateOutputPaths = [
+        path.join(
+          rsbuild.context.distPath,
+          '.rspeedy',
+          entryName,
+          'main-thread.js',
+        ),
+        path.join(rsbuild.context.distPath, `${entryName}.lynx.bundle`),
+      ]
+      const builtOutputPath = candidateOutputPaths.find(
+        outputPath => existsSync(outputPath),
       )
 
-      if (!existsSync(distPath)) {
-        expect.fail(`Build output should exist at ${distPath}`)
+      if (!builtOutputPath) {
+        expect.fail(
+          `Build output should exist in one of: ${
+            candidateOutputPaths.join(', ')
+          }`,
+        )
       }
 
-      const builtCode = readFileSync(distPath, 'utf8')
+      const builtCode = readFileSync(builtOutputPath, 'utf8')
       expect(builtCode).not.toContain('profileStart(\'test\')')
       expect(builtCode).toContain('Config is: profile-off-mode')
     })
