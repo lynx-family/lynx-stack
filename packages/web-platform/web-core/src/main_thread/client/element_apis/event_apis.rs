@@ -347,51 +347,55 @@ impl MainThreadWasmContext {
         None
       };
 
-    if let Some(global_bind_ids) = self.global_bind_events.get(&event_name_lowercase) {
-      for unique_id in global_bind_ids {
-        let binding = match self.get_element_data_by_unique_id(*unique_id) {
-          Some(b) => b,
-          None => continue,
+    let global_bind_ids: Vec<usize> = self
+      .global_bind_events
+      .get(&event_name_lowercase)
+      .map(|ids| ids.iter().copied().collect())
+      .unwrap_or_default();
+
+    for unique_id in global_bind_ids {
+      let binding = match self.get_element_data_by_unique_id(unique_id) {
+        Some(b) => b,
+        None => continue,
+      };
+      let current_target_element_data = binding.borrow();
+
+      let bind_handler = current_target_element_data
+        .get_framework_cross_thread_event_handler(&event_name_lowercase, "global-bindevent");
+
+      if let Some(handler) = bind_handler {
+        let current_target_parent_component_id = {
+          let parent_component_unique_id = current_target_element_data.parent_component_unique_id;
+          if self.page_element_unique_id == Some(parent_component_unique_id) {
+            None
+          } else {
+            self
+              .get_element_data_by_unique_id(parent_component_unique_id)
+              .and_then(|binding| binding.borrow().component_id.clone())
+          }
         };
-        let current_target_element_data = binding.borrow();
+        self.mts_binding.publish_event(
+          &handler,
+          current_target_parent_component_id.as_deref(),
+          serialized_event,
+          target_unique_id,
+          &target_element_dataset.clone().into(),
+          unique_id,
+          &current_target_element_data.dataset.clone().into(),
+        );
+      }
 
-        let bind_handler = current_target_element_data
-          .get_framework_cross_thread_event_handler(&event_name_lowercase, "global-bindevent");
-
-        if let Some(handler) = bind_handler {
-          let current_target_parent_component_id = {
-            let parent_component_unique_id = current_target_element_data.parent_component_unique_id;
-            if self.page_element_unique_id == Some(parent_component_unique_id) {
-              None
-            } else {
-              self
-                .get_element_data_by_unique_id(parent_component_unique_id)
-                .and_then(|binding| binding.borrow().component_id.clone())
-            }
-          };
-          self.mts_binding.publish_event(
-            &handler,
-            current_target_parent_component_id.as_deref(),
-            serialized_event,
-            target_unique_id,
-            &target_element_dataset.clone().into(),
-            *unique_id,
-            &current_target_element_data.dataset.clone().into(),
-          );
-        }
-
-        let run_worklet_handler = current_target_element_data
-          .get_framework_run_worklet_event_handler(&event_name_lowercase, "global-bindevent");
-        if let Some(handler) = run_worklet_handler {
-          self.mts_binding.publish_mts_event(
-            &handler,
-            serialized_event,
-            target_unique_id,
-            &target_element_dataset.clone().into(),
-            *unique_id,
-            &current_target_element_data.dataset.clone().into(),
-          );
-        }
+      let run_worklet_handler = current_target_element_data
+        .get_framework_run_worklet_event_handler(&event_name_lowercase, "global-bindevent");
+      if let Some(handler) = run_worklet_handler {
+        self.mts_binding.publish_mts_event(
+          &handler,
+          serialized_event,
+          target_unique_id,
+          &target_element_dataset.clone().into(),
+          unique_id,
+          &current_target_element_data.dataset.clone().into(),
+        );
       }
     }
   }
