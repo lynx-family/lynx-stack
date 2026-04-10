@@ -7,10 +7,32 @@ import {
   BackgroundSnapshotInstance,
   hydrate,
 } from '../src/snapshot';
+import { SnapshotOperationParams } from '../src/lifecycle/patch/snapshotPatch';
+import { __pendingListUpdates } from '../src/list/pendingListUpdates';
+import { getItemKeyOf } from '../src/renderToOpcodes/hydrate';
 
 const HOLE = null;
 
+export function formatSnapshotPatch(patch) {
+  const out = [];
+  for (let i = 0; i < patch.length;) {
+    const op = patch[i];
+    const meta = SnapshotOperationParams[op];
+    if (!meta) {
+      out.push(`UnknownOp(${String(op)})`);
+      i += 1;
+      continue;
+    }
+    const argc = meta.params.length;
+    const args = patch.slice(i + 1, i + 1 + argc);
+    out.push(`${meta.name}(${args.map(a => JSON.stringify(a)).join(', ')})`);
+    i += 1 + argc;
+  }
+  return out;
+}
+
 beforeEach(() => {
+  __pendingListUpdates.clearAttachedLists();
   backgroundSnapshotInstanceManager.clear();
   backgroundSnapshotInstanceManager.nextId = 0;
   snapshotInstanceManager.clear();
@@ -323,5 +345,192 @@ describe('dual-runtime hydrate - with slot (multi-children)', () => {
         undefined,
       ]
     `);
+  });
+});
+
+describe('dual-runtime hydrate - with list', () => {
+  const listHolder = __SNAPSHOT__(
+    <list id='list'>
+      {HOLE}
+    </list>,
+  );
+  const listItem = __SNAPSHOT__(
+    <list-item item-key={HOLE}>
+      <text>Item</text>
+    </list-item>,
+  );
+
+  it('should works - list', () => {
+    const mtsList = new SnapshotInstance(listHolder);
+    mtsList.ensureElements();
+    const listRef = mtsList.__elements[0];
+
+    const mtsListItem0 = new SnapshotInstance(listItem);
+    mtsListItem0.setAttribute(0, { 'item-key': 'mts-list-item-0' });
+    const mtsListItem1 = new SnapshotInstance(listItem);
+    mtsListItem1.setAttribute(0, { 'item-key': 'mts-list-item-1' });
+    const mtsListItem2 = new SnapshotInstance(listItem);
+    mtsListItem2.setAttribute(0, { 'item-key': 'mts-list-item-2' });
+    mtsList.insertBefore(mtsListItem0);
+    mtsList.insertBefore(mtsListItem1);
+    mtsList.insertBefore(mtsListItem2);
+    __pendingListUpdates.flush();
+    expect(listRef).toMatchInlineSnapshot(`
+      <list
+        id="list"
+        update-list-info={
+          [
+            {
+              "insertAction": [
+                {
+                  "item-key": "mts-list-item-0",
+                  "position": 0,
+                  "type": "__snapshot_a94a8_test_10",
+                },
+                {
+                  "item-key": "mts-list-item-1",
+                  "position": 1,
+                  "type": "__snapshot_a94a8_test_10",
+                },
+                {
+                  "item-key": "mts-list-item-2",
+                  "position": 2,
+                  "type": "__snapshot_a94a8_test_10",
+                },
+              ],
+              "removeAction": [],
+              "updateAction": [],
+            },
+          ]
+        }
+      />
+    `);
+    const getItemKeyFromValues = (values) => {
+      for (let index = 0; index < values?.length; index++) {
+        const value = values[index];
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          if ('item-key' in value) {
+            return value['item-key'] ?? undefined;
+          }
+        }
+      }
+      return undefined;
+    };
+    mtsList.childNodes.forEach((node, index) => {
+      const itemKey = getItemKeyFromValues(node.__values);
+      expect(itemKey).toBeTypeOf('string');
+      expect(itemKey).toBe(`mts-list-item-${index}`);
+    });
+
+    const btsList = new BackgroundSnapshotInstance(listHolder);
+    const btsListItem0 = new BackgroundSnapshotInstance(listItem);
+    btsListItem0.setAttribute(0, { 'item-key': 'bts-list-item-0' });
+    const btsListItem1 = new BackgroundSnapshotInstance(listItem);
+    btsListItem1.setAttribute(0, { 'item-key': 'bts-list-item-1' });
+    const btsListItem2 = new BackgroundSnapshotInstance(listItem);
+    btsListItem2.setAttribute(0, { 'item-key': 'bts-list-item-2' });
+    btsList.insertBefore(btsListItem0);
+    btsList.insertBefore(btsListItem1);
+    btsList.insertBefore(btsListItem2);
+
+    btsList.childNodes.forEach((node, index) => {
+      const itemKey = getItemKeyFromValues(node.__values);
+      expect(itemKey).toBeTypeOf('string');
+      expect(itemKey).toBe(`bts-list-item-${index}`);
+    });
+    const patches = hydrate(JSON.parse(JSON.stringify(mtsList)), btsList);
+    expect(patches).toMatchInlineSnapshot(`
+      [
+        2,
+        -1,
+        -2,
+        2,
+        -1,
+        -3,
+        2,
+        -1,
+        -4,
+        0,
+        "__snapshot_a94a8_test_10",
+        2,
+        4,
+        2,
+        [
+          {
+            "item-key": "bts-list-item-0",
+          },
+        ],
+        1,
+        -1,
+        2,
+        undefined,
+        0,
+        "__snapshot_a94a8_test_10",
+        3,
+        4,
+        3,
+        [
+          {
+            "item-key": "bts-list-item-1",
+          },
+        ],
+        1,
+        -1,
+        3,
+        undefined,
+        0,
+        "__snapshot_a94a8_test_10",
+        4,
+        4,
+        4,
+        [
+          {
+            "item-key": "bts-list-item-2",
+          },
+        ],
+        1,
+        -1,
+        4,
+        undefined,
+      ]
+    `);
+    expect(formatSnapshotPatch(patches)).toMatchInlineSnapshot(`
+      [
+        "RemoveChild(-1, -2)",
+        "RemoveChild(-1, -3)",
+        "RemoveChild(-1, -4)",
+        "CreateElement("__snapshot_a94a8_test_10", 2)",
+        "SetAttributes(2, [{"item-key":"bts-list-item-0"}])",
+        "InsertBefore(-1, 2, )",
+        "CreateElement("__snapshot_a94a8_test_10", 3)",
+        "SetAttributes(3, [{"item-key":"bts-list-item-1"}])",
+        "InsertBefore(-1, 3, )",
+        "CreateElement("__snapshot_a94a8_test_10", 4)",
+        "SetAttributes(4, [{"item-key":"bts-list-item-2"}])",
+        "InsertBefore(-1, 4, )",
+      ]
+    `);
+  });
+});
+
+describe('renderToOpcodes hydrate - getItemKeyOf', () => {
+  it('should get item-key from __listItemPlatformInfo', () => {
+    expect(getItemKeyOf({ __listItemPlatformInfo: { 'item-key': 'k' } }, true)).toBe('k');
+  });
+
+  it('should return undefined when __listItemPlatformInfo has no item-key', () => {
+    expect(getItemKeyOf({ __listItemPlatformInfo: {} }, true)).toBe(undefined);
+  });
+
+  it('should get item-key from values when before node', () => {
+    expect(getItemKeyOf({ values: [null, 1, { 'item-key': 'k2' }] }, true)).toBe('k2');
+  });
+
+  it('should return undefined when values includes item-key undefined', () => {
+    expect(getItemKeyOf({ values: [{ 'item-key': undefined }] }, true)).toBe(undefined);
+  });
+
+  it('should get item-key from __values when after node', () => {
+    expect(getItemKeyOf({ __values: [{ 'item-key': 'k3' }] }, false)).toBe('k3');
   });
 });
