@@ -136,6 +136,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           'internal',
           'legacy-react-runtime',
           'runtime-components',
+          'worklet-runtime/init',
           'worklet-runtime/bindings',
         ]
 

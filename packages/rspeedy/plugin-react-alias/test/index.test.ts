@@ -238,6 +238,70 @@ describe('React - alias', () => {
     )
   })
 
+  test('alias worklet-runtime init to source entry', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    const { pluginReactAlias } = await import('../src/index.js')
+
+    const rsbuild = await createRsbuild({
+      rsbuildConfig: {
+        plugins: [
+          pluginReactAlias({
+            LAYERS,
+          }),
+        ],
+      },
+      cwd: path.dirname(fileURLToPath(import.meta.url)),
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    if (!config?.resolve?.alias) {
+      expect.fail('should have config.resolve.alias')
+    }
+
+    expect(
+      config.resolve.alias['@lynx-js/react/worklet-runtime/init$'],
+    ).toEqual(
+      expect.stringContaining(
+        '/packages/react/runtime/src/worklet-runtime/init.ts'
+          .replaceAll('/', path.sep),
+      ),
+    )
+  })
+
+  test('alias worklet-runtime init to source entry in lazy mode', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    const { pluginReactAlias } = await import('../src/index.js')
+
+    const rsbuild = await createRsbuild({
+      rsbuildConfig: {
+        plugins: [
+          pluginReactAlias({
+            LAYERS,
+            lazy: true,
+          }),
+        ],
+      },
+      cwd: path.dirname(fileURLToPath(import.meta.url)),
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    if (!config?.resolve?.alias) {
+      expect.fail('should have config.resolve.alias')
+    }
+
+    expect(
+      config.resolve.alias['@lynx-js/react/worklet-runtime/init$'],
+    ).toEqual(
+      expect.stringContaining(
+        '/packages/react/runtime/src/worklet-runtime/init.ts'
+          .replaceAll('/', path.sep),
+      ),
+    )
+  })
+
+  // eslint-disable-next-line vitest/no-disabled-tests -- Existing coverage placeholder for duplicate plugin registration.
   test.skip('alias once', async () => {
     vi.stubEnv('NODE_ENV', 'production')
     const { pluginReactAlias } = await import('../src/index.js')

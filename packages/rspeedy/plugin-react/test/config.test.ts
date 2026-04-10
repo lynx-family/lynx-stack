@@ -2651,6 +2651,20 @@ describe('Config', () => {
     )
   })
 
+  test('worklet runtime init resolves to the source entry', () => {
+    const require = createRequire(import.meta.url)
+
+    expect(
+      require.resolve('@lynx-js/react/worklet-runtime/init'),
+    ).toContain(
+      '/packages/react/runtime/src/worklet-runtime/init.ts'
+        .replaceAll(
+          '/',
+          path.sep,
+        ),
+    )
+  })
+
   describe('environment', () => {
     test('lynx environment', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
