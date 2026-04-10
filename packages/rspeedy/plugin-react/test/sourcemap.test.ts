@@ -158,10 +158,10 @@ describe('Sourcemap', () => {
     expect(sourceMapFiles).toEqual([
       '.rspeedy/main/background.js.map',
       '.rspeedy/main/main-thread.js.map',
+      '.rspeedy/main/main.css.map',
       'static/js/async/lazy-bundle-comp.jsx-react__background.js.map',
       'static/js/async/lazy-bundle-comp.jsx-react__main-thread.js.map',
     ])
-    expect(sourceMapFiles).not.toContain('.rspeedy/main/main.css.map')
   }, 25_000)
 
   test(

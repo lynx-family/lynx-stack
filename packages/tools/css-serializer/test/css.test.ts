@@ -415,6 +415,89 @@ describe('CSS', () => {
         '--bar': 'blue',
       });
     });
+
+    test('preserves bundle locations after debundle', () => {
+      const { cssMap } = cssChunksToMap(
+        [
+          `\
+.root {
+  color: red;
+}
+
+@cssId "1000" "foo.css" {
+  .foo {
+    color: blue;
+  }
+}
+
+.tail {
+  color: green;
+}
+`,
+        ],
+        [CSSPlugins.parserPlugins.removeFunctionWhiteSpace()],
+        true,
+      );
+
+      expect(cssMap[1]?.[0]).toMatchObject({
+        type: 'StyleRule',
+        selectorText: {
+          value: '.foo',
+          loc: {
+            line: 6,
+          },
+        },
+        style: [
+          {
+            name: 'color',
+            keyLoc: {
+              line: 7,
+            },
+            valLoc: {
+              line: 7,
+            },
+          },
+        ],
+      });
+    });
+
+    test('keeps bundle locations', () => {
+      const { cssMap, cssSource } = cssChunksToMap(
+        [{
+          content: `\
+@cssId "1000" "foo.css" {
+  .foo {
+    color: blue;
+  }
+}
+`,
+        }],
+        [CSSPlugins.parserPlugins.removeFunctionWhiteSpace()],
+        true,
+      );
+
+      expect(cssSource[1]).toBe('/cssId/1.css');
+      expect(cssMap[1]?.[0]).toMatchObject({
+        type: 'StyleRule',
+        selectorText: {
+          value: '.foo',
+          loc: {
+            line: 2,
+          },
+        },
+        style: [
+          {
+            name: 'color',
+            keyLoc: {
+              line: 3,
+            },
+            valLoc: {
+              line: 3,
+            },
+          },
+        ],
+      });
+    });
   });
 
   describe('debundle', () => {

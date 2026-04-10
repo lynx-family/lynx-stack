@@ -9,13 +9,28 @@ import * as cssTree from 'css-tree';
 const COMMON_CSS = '/common.css';
 const COMMON_CSS_ID = 0;
 
+interface CSSPosition {
+  column: number;
+  line: number;
+  offset: number;
+}
+
+interface CSSSegment {
+  content: string;
+  start: CSSPosition;
+}
+
 export function debundleCSS(
   code: string,
   css: Map<number, string[]>,
   enableCSSSelector: boolean,
+  preserveLocations: boolean = false,
 ): void {
-  const ast = cssTree.parse(code);
+  const ast = cssTree.parse(code, {
+    positions: preserveLocations,
+  });
 
+  const fileKeyToCSSSegments = new Map<string, CSSSegment[]>();
   const fileKeyToCSSContent = new Map<string, string>();
   const cssIdToFileKeys = new Map<number, Set<string>>();
   const fileKeyToCSSId = new Map<string, number>([[COMMON_CSS, COMMON_CSS_ID]]);
@@ -54,7 +69,14 @@ export function debundleCSS(
             cssIdToFileKeys.set(cssId, fileKeys);
           }
           fileKeys.add(fileKey);
-          if (!fileKeyToCSSContent.has(fileKey)) {
+          if (preserveLocations) {
+            if (!fileKeyToCSSSegments.has(fileKey)) {
+              fileKeyToCSSSegments.set(
+                fileKey,
+                getBlockSegments(code, node.block),
+              );
+            }
+          } else if (!fileKeyToCSSContent.has(fileKey)) {
             fileKeyToCSSContent.set(
               fileKey,
               cssTree.generate({
@@ -71,7 +93,9 @@ export function debundleCSS(
 
   // If there are Rules left in the AST(e.g.: some rules that are not in `@file {}`),
   // we treat them as global styles. Global styles should be added to COMMON_CSS(cssId: 0).
-  const commonCss = cssTree.generate(ast);
+  const commonCss = preserveLocations
+    ? buildStylesheetFromSegments(getTopLevelSegments(code, ast))
+    : cssTree.generate(ast);
   if (commonCss) {
     emplaceCSSStyleSheet(css, COMMON_CSS_ID, commonCss);
   }
@@ -84,12 +108,22 @@ export function debundleCSS(
   //
   // Note that the `Map.prototype.keys()` returns an iterator in insertion order.
   // This will make sure that the stylesheets are created in the same order of CSS.
-  Array.from(fileKeyToCSSContent.keys()).forEach((fileKey, index) => {
+  const fileKeys = preserveLocations
+    ? Array.from(fileKeyToCSSSegments.keys())
+    : Array.from(fileKeyToCSSContent.keys());
+
+  fileKeys.forEach((fileKey, index) => {
     // Starts from 1
     // 0 is the common CSS
     index = index + 1;
     fileKeyToCSSId.set(fileKey, index);
-    emplaceCSSStyleSheet(css, index, fileKeyToCSSContent.get(fileKey));
+    emplaceCSSStyleSheet(
+      css,
+      index,
+      preserveLocations
+        ? buildStylesheetFromSegments(fileKeyToCSSSegments.get(fileKey)!)
+        : fileKeyToCSSContent.get(fileKey)!,
+    );
   });
   // TODO: remove /cssId/0.css if not exists in the cssMap
 
@@ -110,6 +144,100 @@ export function debundleCSS(
       ).join('\n'),
     );
   });
+}
+
+function getBlockSegments(
+  code: string,
+  block: cssTree.Block,
+): CSSSegment[] {
+  const children = block.children.toArray();
+
+  if (children.length === 0) {
+    return [];
+  }
+
+  const firstChildLoc = getLoc(children[0]!);
+  const lastChildLoc = getLoc(children[children.length - 1]!);
+
+  return [{
+    content: code.slice(firstChildLoc.start.offset, lastChildLoc.end.offset),
+    start: firstChildLoc.start,
+  }];
+}
+
+function getTopLevelSegments(
+  code: string,
+  ast: cssTree.CssNode,
+): CSSSegment[] {
+  if (ast.type !== 'StyleSheet') {
+    return [];
+  }
+
+  return ast.children.toArray().map((node) => {
+    const loc = getLoc(node);
+    return {
+      content: code.slice(loc.start.offset, loc.end.offset),
+      start: loc.start,
+    };
+  });
+}
+
+function buildStylesheetFromSegments(segments: CSSSegment[]): string {
+  let result = '';
+  let line = 1;
+  let column = 1;
+
+  for (const segment of segments) {
+    const lineBreaks = Math.max(segment.start.line - line, 0);
+    if (lineBreaks > 0) {
+      result += '\n'.repeat(lineBreaks);
+      line += lineBreaks;
+      column = 1;
+    }
+
+    const spaces = Math.max(segment.start.column - column, 0);
+    if (spaces > 0) {
+      result += ' '.repeat(spaces);
+      column += spaces;
+    }
+
+    result += segment.content;
+    ({ line, column } = getPositionAfterContent(line, column, segment.content));
+  }
+
+  return result;
+}
+
+function getPositionAfterContent(
+  line: number,
+  column: number,
+  content: string,
+): Pick<CSSPosition, 'line' | 'column'> {
+  for (let i = 0; i < content.length; i++) {
+    if (content[i] === '\n') {
+      line += 1;
+      column = 1;
+    } else {
+      column += 1;
+    }
+  }
+
+  return { line, column };
+}
+
+function getLoc(node: cssTree.CssNode): {
+  end: CSSPosition;
+  start: CSSPosition;
+} {
+  const loc = node.loc;
+  if (!loc) {
+    throw new Error('Expected css node location to exist.');
+  }
+
+  return {
+    start: loc.start as CSSPosition,
+    end: loc.end as CSSPosition,
+  };
 }
 
 function emplaceCSSStyleSheet<K, V>(map: Map<K, V[]>, key: K, value: V) {

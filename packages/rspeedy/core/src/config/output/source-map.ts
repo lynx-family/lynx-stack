@@ -78,9 +78,11 @@ export interface SourceMap {
    *
    * @remarks
    *
-   * Defaults to `false`.
+   * Defaults to `true`.
    *
    * @example
+   *
+   * Disable CSS sourcemap.
    *
    * ```js
    * import { defineConfig } from '@lynx-js/rspeedy'
@@ -88,8 +90,7 @@ export interface SourceMap {
    * export default defineConfig({
    *   output: {
    *     sourceMap: {
-   *       js: 'cheap-module-source-map',
-   *       css: true,
+   *       css: false,
    *     },
    *   },
    * })

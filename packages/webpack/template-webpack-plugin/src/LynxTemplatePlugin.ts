@@ -413,6 +413,16 @@ export class LynxTemplatePlugin {
    * @param options - The encode options.
    * @returns The CSS map and css source.
    *
+   * @remarks
+   *
+   * This helper currently forwards to `cssChunksToMap`.
+   *
+   * The returned `cssSource` is keyed by `cssId` and uses the synthetic
+   * filename format `/cssId/<id>.css`.
+   *
+   * This helper does not remap generated `loc` fields to original source
+   * coordinates.
+   *
    * @example
    * ```
    * (console.log(await convertCSSChunksToMap(
@@ -425,7 +435,11 @@ export class LynxTemplatePlugin {
    * ```
    */
   static convertCSSChunksToMap(
-    cssChunks: string[],
+    cssChunks: Array<
+      string | {
+        content: string;
+      }
+    >,
     plugins: CSS.Plugin[],
     enableCSSSelector: boolean,
   ): {
