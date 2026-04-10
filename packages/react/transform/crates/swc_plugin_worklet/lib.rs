@@ -15,10 +15,9 @@ use std::vec;
 use swc_core::common::util::take::Take;
 use swc_core::common::{errors::HANDLER, Span, Spanned, DUMMY_SP};
 use swc_core::ecma::ast::*;
-use swc_core::ecma::utils::{prepend_stmts, private_ident};
+use swc_core::ecma::utils::prepend_stmts;
 use swc_core::ecma::visit::VisitMutWith;
 use swc_core::ecma::visit::{noop_visit_mut_type, VisitMut};
-use swc_core::quote;
 use worklet_type::WorkletType;
 
 use swc_plugins_shared::{target::TransformTarget, transform_mode::TransformMode};
@@ -62,8 +61,7 @@ pub struct WorkletVisitor {
   named_imports: HashSet<String>,
   hasher: WorkletHash,
   shared_identifiers: FxHashSet<Id>,
-  worklet_runtime_loaded: bool,
-  worklet_runtime_loaded_ident: Ident,
+  should_inject_runtime_init: bool,
 }
 
 impl Default for WorkletVisitor {
@@ -121,7 +119,7 @@ impl VisitMut for WorkletVisitor {
           &mut collector,
           true,
           &mut self.named_imports,
-          self.worklet_runtime_loaded_ident.clone(),
+          &mut self.should_inject_runtime_init,
         );
 
         // For JS worklets, the ctx object is later converted to a function by `transformWorklet(..)`
@@ -247,7 +245,7 @@ impl VisitMut for WorkletVisitor {
           &mut collector,
           true,
           &mut self.named_imports,
-          self.worklet_runtime_loaded_ident.clone(),
+          &mut self.should_inject_runtime_init,
         );
 
         if should_use_getter {
@@ -328,7 +326,7 @@ impl VisitMut for WorkletVisitor {
       &mut collector,
       false,
       &mut self.named_imports,
-      self.worklet_runtime_loaded_ident.clone(),
+      &mut self.should_inject_runtime_init,
     );
 
     *n = VarDecl {
@@ -399,7 +397,7 @@ impl VisitMut for WorkletVisitor {
           &mut collector,
           false,
           &mut self.named_imports,
-          self.worklet_runtime_loaded_ident.clone(),
+          &mut self.should_inject_runtime_init,
         );
 
         *n = *worklet_object_expr;
@@ -432,7 +430,7 @@ impl VisitMut for WorkletVisitor {
           &mut collector,
           false,
           &mut self.named_imports,
-          self.worklet_runtime_loaded_ident.clone(),
+          &mut self.should_inject_runtime_init,
         );
 
         *n = *worklet_object_expr;
@@ -511,7 +509,7 @@ impl VisitMut for WorkletVisitor {
       &mut collector,
       false,
       &mut self.named_imports,
-      self.worklet_runtime_loaded_ident.clone(),
+      &mut self.should_inject_runtime_init,
     );
 
     *n = ModuleDecl::ExportDefaultExpr(ExportDefaultExpr {
@@ -553,87 +551,92 @@ impl VisitMut for WorkletVisitor {
 
     n.visit_mut_children_with(self);
 
-    // Add global loadWorkletRuntime call if needed
-    if self.named_imports.contains("loadWorkletRuntime") && !self.worklet_runtime_loaded {
-      self.stmts_to_insert_at_top_level.insert(
-        0,
-        quote!("const $loaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry)" as Stmt, loaded = self.worklet_runtime_loaded_ident.clone()),
-      );
-      self.worklet_runtime_loaded = true;
-    }
-
     let mut specifiers = self.named_imports.iter().collect::<Vec<_>>();
+    let mut prepended_items = vec![];
+
+    if self.should_inject_runtime_init {
+      prepended_items.push(ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+        span: DUMMY_SP,
+        phase: ImportPhase::Evaluation,
+        specifiers: vec![],
+        src: Box::new(Str {
+          span: DUMMY_SP,
+          raw: None,
+          value: format!("{}/worklet-runtime/init", self.cfg.runtime_pkg).into(),
+        }),
+        type_only: Default::default(),
+        with: Default::default(),
+      })));
+    }
 
     if !specifiers.is_empty() {
       // Sort to keep the output consistent
       specifiers.sort();
 
-      prepend_stmts(
-        &mut n.body,
-        vec![
-          ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
-            span: DUMMY_SP,
-            phase: ImportPhase::Evaluation,
-            specifiers: specifiers
-              .iter()
-              .map(|imported| {
-                ImportSpecifier::Named(ImportNamedSpecifier {
-                  span: DUMMY_SP,
-                  is_type_only: false,
-                  local: Ident {
-                    ctxt: Default::default(),
-                    span: DUMMY_SP,
-                    sym: format!("__{imported}").into(),
-                    optional: false,
-                  },
-                  imported: Some(ModuleExportName::Ident(Ident {
-                    ctxt: Default::default(),
-                    span: DUMMY_SP,
-                    sym: imported.as_str().into(),
-                    optional: false,
-                  })),
-                })
-              })
-              .collect::<Vec<_>>(),
-            src: Box::new(Str {
+      prepended_items.push(ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+        span: DUMMY_SP,
+        phase: ImportPhase::Evaluation,
+        specifiers: specifiers
+          .iter()
+          .map(|imported| {
+            ImportSpecifier::Named(ImportNamedSpecifier {
               span: DUMMY_SP,
-              raw: None,
-              value: self.cfg.runtime_pkg.clone().into(),
-            }),
-            type_only: Default::default(),
-            with: Default::default(),
-          })),
-          ModuleItem::Stmt(Stmt::Decl(Decl::Var(Box::new(VarDecl {
-            ctxt: Default::default(),
-            span: DUMMY_SP,
-            kind: VarDeclKind::Var,
-            declare: false,
-            decls: specifiers
-              .into_iter()
-              .map(|name| VarDeclarator {
+              is_type_only: false,
+              local: Ident {
+                ctxt: Default::default(),
                 span: DUMMY_SP,
-                name: Pat::Ident(
-                  Ident {
-                    ctxt: Default::default(),
-                    span: DUMMY_SP,
-                    sym: name.as_str().into(),
-                    optional: false,
-                  }
-                  .into(),
-                ),
-                init: Some(Box::new(Expr::Ident(Ident {
-                  ctxt: Default::default(),
-                  span: DUMMY_SP,
-                  sym: format!("__{name}").into(),
-                  optional: false,
-                }))),
-                definite: false,
-              })
-              .collect(),
-          })))),
-        ]
-        .into_iter(),
-      );
+                sym: format!("__{imported}").into(),
+                optional: false,
+              },
+              imported: Some(ModuleExportName::Ident(Ident {
+                ctxt: Default::default(),
+                span: DUMMY_SP,
+                sym: imported.as_str().into(),
+                optional: false,
+              })),
+            })
+          })
+          .collect::<Vec<_>>(),
+        src: Box::new(Str {
+          span: DUMMY_SP,
+          raw: None,
+          value: self.cfg.runtime_pkg.clone().into(),
+        }),
+        type_only: Default::default(),
+        with: Default::default(),
+      })));
+      prepended_items.push(ModuleItem::Stmt(Stmt::Decl(Decl::Var(Box::new(VarDecl {
+        ctxt: Default::default(),
+        span: DUMMY_SP,
+        kind: VarDeclKind::Var,
+        declare: false,
+        decls: specifiers
+          .into_iter()
+          .map(|name| VarDeclarator {
+            span: DUMMY_SP,
+            name: Pat::Ident(
+              Ident {
+                ctxt: Default::default(),
+                span: DUMMY_SP,
+                sym: name.as_str().into(),
+                optional: false,
+              }
+              .into(),
+            ),
+            init: Some(Box::new(Expr::Ident(Ident {
+              ctxt: Default::default(),
+              span: DUMMY_SP,
+              sym: format!("__{name}").into(),
+              optional: false,
+            }))),
+            definite: false,
+          })
+          .collect(),
+      })))));
+    }
+
+    if !prepended_items.is_empty() {
+      prepend_stmts(&mut n.body, prepended_items.into_iter());
     }
     // Add statements to insert at top level after processing all items
     n.body.extend(
@@ -708,8 +711,7 @@ impl WorkletVisitor {
       hasher: WorkletHash::new(),
       named_imports: HashSet::default(),
       shared_identifiers: FxHashSet::default(),
-      worklet_runtime_loaded: false,
-      worklet_runtime_loaded_ident: private_ident!("__workletRuntimeLoaded"),
+      should_inject_runtime_init: false,
     }
   }
 
