@@ -72,4 +72,28 @@ export interface SourceMap {
     | Rspack.DevTool
     | undefined
     | `${Exclude<Rspack.DevTool, false | 'eval'>}-debugids`
+
+  /**
+   * Whether to generate CSS source maps.
+   *
+   * @remarks
+   *
+   * Defaults to `false`.
+   *
+   * @example
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * export default defineConfig({
+   *   output: {
+   *     sourceMap: {
+   *       js: 'cheap-module-source-map',
+   *       css: true,
+   *     },
+   *   },
+   * })
+   * ```
+   */
+  css?: boolean | undefined
 }

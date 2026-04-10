@@ -10,7 +10,9 @@ import path from 'node:path'
 import type { RsbuildPlugin } from '@rsbuild/core'
 import { SourceMapConsumer } from 'source-map'
 import type { NullableMappedPosition, RawSourceMap } from 'source-map'
-import { beforeAll, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
+
+import type { Output } from '@lynx-js/rspeedy'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 
@@ -20,126 +22,199 @@ const functionNames = [
   'function renderComponent',
 ]
 
-describe('Sourcemap', async () => {
+async function buildSourcemapFixture(
+  sourceMap: Output['sourceMap'] = undefined,
+) {
   const tmp = await mkdtemp(path.join(tmpdir(), 'rspeedy-react-test'))
-  beforeAll(async () => {
-    vi.stubEnv('DEBUG', 'rspeedy')
 
-    const { pluginReactLynx } = await import('../src/index.js')
+  vi.stubEnv('DEBUG', 'rspeedy')
 
-    const rsbuild = await createRspeedy({
-      rspeedyConfig: {
-        source: {
-          entry: {
-            main: new URL('./fixtures/sourcemap/index.tsx', import.meta.url)
-              .pathname,
-          },
+  const { pluginReactLynx } = await import('../src/index.js')
+
+  const rsbuild = await createRspeedy({
+    rspeedyConfig: {
+      source: {
+        entry: {
+          main: new URL('./fixtures/sourcemap/index.tsx', import.meta.url)
+            .pathname,
         },
-        output: {
-          distPath: {
-            root: tmp,
-          },
-          filenameHash: false,
-          minify: false,
+      },
+      output: {
+        distPath: {
+          root: tmp,
         },
-        plugins: [
-          pluginReactLynx(),
-          // This is to simulate cases that there
-          // are other loaders before our @lynx-js/react/transform
-          // we can pass the sourcemap from previous loaders to our transform
-          {
-            name: 'swc-loader-before-swc-transform',
-            setup(api) {
-              api.modifyBundlerChain((chain) => {
-                const rule = chain.module.rule(
-                  'swc-loader-before-swc-transform',
-                )
-                rule
-                  .test(/\.[jt]sx$/)
-                  .use('swc-loader-before-swc-transform')
-                  .loader('builtin:swc-loader')
-                  .options({
-                    jsc: {
-                      parser: {
-                        syntax: 'typescript',
-                        tsx: true,
-                      },
-                      transform: {
-                        react: {
-                          runtime: 'automatic',
-                        },
+        filenameHash: false,
+        minify: false,
+        sourceMap,
+      },
+      plugins: [
+        pluginReactLynx(),
+        {
+          name: 'test',
+          pre: ['lynx:react'],
+          setup(api) {
+            api.modifyBundlerChain((chain, { CHAIN_ID }) => {
+              const rule = chain.module
+                .rules.get('css:react:main-thread')
+                .uses.get(CHAIN_ID.USE.IGNORE_CSS)
+              rule.loader(
+                // add .ts suffix to ignore-css-loader
+                // this workaround is needed because vitest
+                // runs on our ts files.
+                rule.get('loader') as string + '.ts',
+              )
+            })
+          },
+        } as RsbuildPlugin,
+        // This is to simulate cases that there
+        // are other loaders before our @lynx-js/react/transform
+        // we can pass the sourcemap from previous loaders to our transform
+        {
+          name: 'swc-loader-before-swc-transform',
+          setup(api) {
+            api.modifyBundlerChain((chain) => {
+              const rule = chain.module.rule(
+                'swc-loader-before-swc-transform',
+              )
+              rule
+                .test(/\.[jt]sx$/)
+                .use('swc-loader-before-swc-transform')
+                .loader('builtin:swc-loader')
+                .options({
+                  jsc: {
+                    parser: {
+                      syntax: 'typescript',
+                      tsx: true,
+                    },
+                    transform: {
+                      react: {
+                        runtime: 'automatic',
                       },
                     },
-                    sourceMaps: true,
-                  })
-                  .end()
-              })
-            },
-          } as RsbuildPlugin,
-        ],
-      },
-    })
+                  },
+                  sourceMaps: true,
+                })
+                .end()
+            })
+          },
+        } as RsbuildPlugin,
+      ],
+    },
+  })
 
-    const result = await rsbuild.build()
-    await result.close()
-  }, 50000)
+  const result = await rsbuild.build()
+  await result.close()
 
-  test('sourcemap should map from compiled code to original source code', async () => {
-    // find all `*.js.map` files inside tmp
-    const sourceMapFiles = []
-    for await (
-      const file of glob([
-        path.join(tmp, '**/*.js.map'),
-        // for files inside `.rspeedy`
-        path.join(tmp, '.*/**/*.js.map'),
-      ])
-    ) {
-      sourceMapFiles.push(normalizeSlashes(path.relative(tmp, file)))
-    }
+  return tmp
+}
 
-    expect(sourceMapFiles).toMatchInlineSnapshot(`
+async function getSourceMapFiles(tmp: string) {
+  const sourceMapFiles: string[] = []
+  for await (
+    const file of glob([
+      path.join(tmp, '**/*.map'),
+      // for files inside `.rspeedy`
+      path.join(tmp, '.*/**/*.map'),
+    ])
+  ) {
+    sourceMapFiles.push(normalizeSlashes(path.relative(tmp, file)))
+  }
+
+  return sourceMapFiles
+}
+
+describe('Sourcemap', () => {
+  test('js sourcemaps are emitted by default', async () => {
+    const tmp = await buildSourcemapFixture(undefined)
+    const sourceMapFiles = await getSourceMapFiles(tmp)
+
+    expect(sourceMapFiles).toEqual([
+      '.rspeedy/main/background.js.map',
+      '.rspeedy/main/main-thread.js.map',
+      'static/js/async/lazy-bundle-comp.jsx-react__background.js.map',
+      'static/js/async/lazy-bundle-comp.jsx-react__main-thread.js.map',
+    ])
+    expect(sourceMapFiles).not.toContain('.rspeedy/main/main.css.map')
+  }, 25_000)
+
+  test(
+    'sourcemap should map from compiled code to original source code',
+    async () => {
+      const tmp = await buildSourcemapFixture({ css: true })
+
+      // find all `*.map` files inside tmp
+      const sourceMapFiles = await getSourceMapFiles(tmp)
+
+      expect(sourceMapFiles).toMatchInlineSnapshot(`
       [
         ".rspeedy/main/background.js.map",
         ".rspeedy/main/main-thread.js.map",
+        ".rspeedy/main/main.css.map",
         "static/js/async/lazy-bundle-comp.jsx-react__background.js.map",
         "static/js/async/lazy-bundle-comp.jsx-react__main-thread.js.map",
       ]
     `)
+      expect(sourceMapFiles).toContain('.rspeedy/main/main.css.map')
 
-    const backgroundSource = await readFile(
-      path.join(tmp, '.rspeedy/main/background.js'),
-      'utf-8',
-    )
-    const backgroundSourceMap = JSON.parse(
-      await readFile(
-        path.join(tmp, '.rspeedy/main/background.js.map'),
+      const cssSource = await readFile(
+        path.join(tmp, '.rspeedy/main/main.css'),
         'utf-8',
-      ),
-    ) as RawSourceMap
+      )
+      const cssSourceMap = JSON.parse(
+        await readFile(
+          path.join(tmp, '.rspeedy/main/main.css.map'),
+          'utf-8',
+        ),
+      ) as RawSourceMap
+      const cssConsumer = await new SourceMapConsumer(cssSourceMap)
+      const cssLine = cssSource
+        .split('\n')
+        .findIndex(line => line.includes('.app')) + 1
+      const cssColumn = cssSource
+        .split('\n')
+        .at(cssLine - 1)!
+        .indexOf('.app') + 1
+      const cssSourcePosition = cssConsumer.originalPositionFor({
+        line: cssLine,
+        column: cssColumn,
+      })
 
-    const consumer = await new SourceMapConsumer(backgroundSourceMap)
-    const functionName2Source: Record<string, NullableMappedPosition> = {}
-    functionNames.forEach((name) => {
-      const backgroundSourceLines = backgroundSource.split('\n')
-      let line = -1, column = -1
-      backgroundSourceLines.forEach((lineContent, index) => {
-        if (lineContent.includes(name)) {
-          line = index + 1
-          column = lineContent.indexOf(name) + 1
+      expect(path.basename(cssSourcePosition.source ?? '')).toBe('index.css')
+
+      const backgroundSource = await readFile(
+        path.join(tmp, '.rspeedy/main/background.js'),
+        'utf-8',
+      )
+      const backgroundSourceMap = JSON.parse(
+        await readFile(
+          path.join(tmp, '.rspeedy/main/background.js.map'),
+          'utf-8',
+        ),
+      ) as RawSourceMap
+
+      const consumer = await new SourceMapConsumer(backgroundSourceMap)
+      const functionName2Source: Record<string, NullableMappedPosition> = {}
+      functionNames.forEach((name) => {
+        const backgroundSourceLines = backgroundSource.split('\n')
+        let line = -1, column = -1
+        backgroundSourceLines.forEach((lineContent, index) => {
+          if (lineContent.includes(name)) {
+            line = index + 1
+            column = lineContent.indexOf(name) + 1
+          }
+        })
+        functionName2Source[name] = consumer
+          .originalPositionFor({
+            line,
+            column,
+          })
+        if (functionName2Source[name].source) {
+          functionName2Source[name].source = path.basename(
+            functionName2Source[name].source,
+          )
         }
       })
-      functionName2Source[name] = consumer
-        .originalPositionFor({
-          line,
-          column,
-        })
-      if (functionName2Source[name].source) {
-        functionName2Source[name].source = path.basename(
-          functionName2Source[name].source,
-        )
-      }
-    })
-    expect(functionName2Source).toMatchInlineSnapshot(`
+      expect(functionName2Source).toMatchInlineSnapshot(`
       {
         "function renderComponent": {
           "column": 0,
@@ -149,19 +224,21 @@ describe('Sourcemap', async () => {
         },
         "functionThatThrows": {
           "column": 0,
-          "line": 18,
+          "line": 19,
           "name": null,
           "source": "index.tsx",
         },
         "innerFunction": {
           "column": 0,
-          "line": 13,
+          "line": 14,
           "name": null,
           "source": "index.tsx",
         },
       }
     `)
-  })
+    },
+    25_000,
+  )
 })
 
 function normalizeSlashes(file: string) {
