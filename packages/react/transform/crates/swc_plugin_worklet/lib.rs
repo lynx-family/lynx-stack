@@ -562,7 +562,7 @@ impl VisitMut for WorkletVisitor {
         src: Box::new(Str {
           span: DUMMY_SP,
           raw: None,
-          value: format!("{}/worklet-runtime/init", self.cfg.runtime_pkg).into(),
+          value: self.worklet_runtime_init_path().into(),
         }),
         type_only: Default::default(),
         with: Default::default(),
@@ -697,6 +697,17 @@ fn is_shared_runtime_import(import_decl: &ImportDecl) -> bool {
 }
 
 impl WorkletVisitor {
+  fn worklet_runtime_init_path(&self) -> String {
+    format!(
+      "{}/worklet-runtime/init",
+      self
+        .cfg
+        .runtime_pkg
+        .strip_suffix("/internal")
+        .unwrap_or(self.cfg.runtime_pkg.as_str())
+    )
+  }
+
   pub fn with_content_hash(mut self, content_hash: String) -> Self {
     self.content_hash = content_hash;
     self

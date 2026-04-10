@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('worklet-runtime init entry', () => {
   beforeEach(() => {
+    vi.resetModules();
     globalThis.SystemInfo = {
       lynxSdkVersion: '2.16',
     };
@@ -25,5 +26,21 @@ describe('worklet-runtime init entry', () => {
     expect(globalThis.registerWorklet).toBeTypeOf('function');
     expect(globalThis.registerWorkletInternal).toBeTypeOf('function');
     expect(globalThis.runWorklet).toBeTypeOf('function');
+  });
+
+  it('should skip re-initialization when the runtime source executes again', async () => {
+    await import('@lynx-js/react/worklet-runtime/init');
+
+    const workletImpl = globalThis.lynxWorkletImpl;
+    const registerWorklet = globalThis.registerWorklet;
+    const registerWorkletInternal = globalThis.registerWorkletInternal;
+    const runWorklet = globalThis.runWorklet;
+
+    await import('../../src/worklet-runtime/index.ts?repeat-init');
+
+    expect(globalThis.lynxWorkletImpl).toBe(workletImpl);
+    expect(globalThis.registerWorklet).toBe(registerWorklet);
+    expect(globalThis.registerWorkletInternal).toBe(registerWorkletInternal);
+    expect(globalThis.runWorklet).toBe(runWorklet);
   });
 });

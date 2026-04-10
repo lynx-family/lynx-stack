@@ -1503,6 +1503,7 @@ class X extends Component {
 });
 
 describe('worklet', () => {
+  const internalWorkletRuntimePkg = '@lynx-js/react/internal';
   const lepusWorkletOptions = {
     pluginName: '',
     filename: '',
@@ -1522,7 +1523,7 @@ describe('worklet', () => {
     worklet: {
       target: 'LEPUS',
       filename: '',
-      runtimePkg: '@lynx-js/react',
+      runtimePkg: internalWorkletRuntimePkg,
     },
   };
 
@@ -1554,7 +1555,7 @@ export function bar() {
         worklet: {
           target: 'LEPUS',
           filename: '',
-          runtimePkg: '@lynx-js/react',
+          runtimePkg: internalWorkletRuntimePkg,
         },
       },
     );
@@ -1593,7 +1594,7 @@ export function bar() {
         worklet: {
           target: 'LEPUS',
           filename: '',
-          runtimePkg: '@lynx-js/react',
+          runtimePkg: internalWorkletRuntimePkg,
         },
       },
     );
@@ -1632,7 +1633,7 @@ export function bar() {
         worklet: {
           target: 'LEPUS',
           filename: '',
-          runtimePkg: '@lynx-js/react',
+          runtimePkg: internalWorkletRuntimePkg,
         },
       },
     );
@@ -1686,7 +1687,7 @@ export function getCurrentDelta(event) {
           worklet: {
             target,
             filename: '',
-            runtimePkg: '@lynx-js/react',
+            runtimePkg: internalWorkletRuntimePkg,
           },
         },
       );
@@ -1713,6 +1714,7 @@ export function getCurrentDelta(event) {
           "
         `);
         expect(code).toContain('"@lynx-js/react/worklet-runtime/init"');
+        expect(code).not.toContain('@lynx-js/react/internal/worklet-runtime/init');
         expect(code).toContain('registerWorkletInternal("main-thread"');
       } else if (target === 'JS') {
         expect(code).toMatchInlineSnapshot(`
@@ -1752,6 +1754,7 @@ export function getCurrentDelta(event) {
           "
         `);
         expect(code).toContain('"@lynx-js/react/worklet-runtime/init"');
+        expect(code).not.toContain('@lynx-js/react/internal/worklet-runtime/init');
         expect(code).toContain('registerWorkletInternal("main-thread"');
       }
     });
@@ -1784,7 +1787,7 @@ export function foo(event) {
         worklet: {
           target: 'LEPUS',
           filename: '',
-          runtimePkg: '@lynx-js/react',
+          runtimePkg: internalWorkletRuntimePkg,
         },
       },
     );
@@ -1853,7 +1856,7 @@ console.log(bar)
         worklet: {
           target: 'LEPUS',
           filename: '',
-          runtimePkg: '@lynx-js/react',
+          runtimePkg: internalWorkletRuntimePkg,
         },
       },
     );
@@ -1917,7 +1920,7 @@ function getCurrentDelta(event) {
         worklet: {
           target: 'LEPUS',
           filename: '',
-          runtimePkg: '@lynx-js/react',
+          runtimePkg: internalWorkletRuntimePkg,
         },
       },
     );
