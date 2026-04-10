@@ -35,6 +35,8 @@ impl MainThreadWasmContext {
     let event_type = event_type.to_ascii_lowercase();
     self.enable_event(&event_name);
 
+    let has_handler = event_handler_identifier.is_some();
+
     let is_allowlisted = constants::ELEMENT_REACTIVE_EVENTS.contains(event_name_str);
     let mut should_enable = false;
     let mut should_disable = false;
@@ -53,10 +55,15 @@ impl MainThreadWasmContext {
 
       element_data.replace_framework_cross_thread_event_handler(
         event_name.clone(),
-        event_type,
+        event_type.clone(),
         event_handler_identifier,
       );
     }
+
+    if event_type == "global-bindevent" {
+      self.update_global_bind_events(unique_id, &event_name, has_handler);
+    }
+
     if should_enable {
       if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
         self
@@ -84,6 +91,8 @@ impl MainThreadWasmContext {
     let event_type = event_type.to_ascii_lowercase();
     self.enable_event(&event_name);
 
+    let has_handler = event_handler_identifier.is_some();
+
     let is_allowlisted = constants::ELEMENT_REACTIVE_EVENTS.contains(event_name_str);
     let mut should_enable = false;
     let mut should_disable = false;
@@ -102,10 +111,15 @@ impl MainThreadWasmContext {
 
       element_data.replace_framework_run_worklet_event_handler(
         event_name.clone(),
-        event_type,
+        event_type.clone(),
         event_handler_identifier,
       );
     }
+
+    if event_type == "global-bindevent" {
+      self.update_global_bind_events(unique_id, &event_name, has_handler);
+    }
+
     if should_enable {
       if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
         self
@@ -117,6 +131,29 @@ impl MainThreadWasmContext {
         self
           .mts_binding
           .disable_element_event(element, event_name_str);
+      }
+    }
+  }
+
+  fn update_global_bind_events(&mut self, unique_id: usize, event_name: &str, has_handler: bool) {
+    if has_handler {
+      self
+        .global_bind_events
+        .entry(event_name.to_string())
+        .or_default()
+        .insert(unique_id);
+    } else if let Some(binding) = self.get_element_data_by_unique_id(unique_id) {
+      let element_data = binding.borrow();
+      if element_data
+        .get_framework_cross_thread_event_handler(event_name, "global-bindevent")
+        .is_none()
+        && element_data
+          .get_framework_run_worklet_event_handler(event_name, "global-bindevent")
+          .is_none()
+      {
+        if let Some(ids) = self.global_bind_events.get_mut(event_name) {
+          ids.remove(&unique_id);
+        }
       }
     }
   }
@@ -138,10 +175,9 @@ impl MainThreadWasmContext {
 
   pub fn get_events(&self, unique_id: usize) -> Vec<EventInfo> {
     let mut event_infos: Vec<EventInfo> = vec![];
-    let event_types = vec!["bindevent", "capture-bind", "catchevent", "capture-catch"];
     let binding = self.get_element_data_by_unique_id(unique_id).unwrap();
     let element_data = binding.borrow();
-    for event_type in event_types {
+    for event_type in constants::EVENT_TYPES.iter() {
       for event_name in self.enabled_events.iter() {
         if let Some(event_handlers) =
           element_data.get_framework_cross_thread_event_handler(event_name, event_type)
@@ -287,6 +323,79 @@ impl MainThreadWasmContext {
         self.dispatch_event_by_path(&bubble_unique_id_path, event_name, false, &event);
       } else if let Some(target_id) = bubble_unique_id_path.first() {
         self.dispatch_event_by_path(&[*target_id], event_name, false, &event);
+      }
+    }
+
+    if is_bubble {
+      self.dispatch_global_bind_event(&bubble_unique_id_path, event_name, &event);
+    }
+  }
+
+  pub fn dispatch_global_bind_event(
+    &self,
+    bubble_unique_id_path: &[usize],
+    event_name: &str,
+    serialized_event: &JsValue,
+  ) {
+    let event_name_lowercase = event_name.to_ascii_lowercase();
+    let target_unique_id = bubble_unique_id_path.first().cloned().unwrap_or_default();
+
+    let target_element_dataset =
+      if let Some(binding) = self.get_element_data_by_unique_id(target_unique_id) {
+        binding.borrow().dataset.clone()
+      } else {
+        None
+      };
+
+    let global_bind_ids: Vec<usize> = self
+      .global_bind_events
+      .get(&event_name_lowercase)
+      .map(|ids| ids.iter().copied().collect())
+      .unwrap_or_default();
+
+    for unique_id in global_bind_ids {
+      let binding = match self.get_element_data_by_unique_id(unique_id) {
+        Some(b) => b,
+        None => continue,
+      };
+      let current_target_element_data = binding.borrow();
+
+      let bind_handler = current_target_element_data
+        .get_framework_cross_thread_event_handler(&event_name_lowercase, "global-bindevent");
+
+      if let Some(handler) = bind_handler {
+        let current_target_parent_component_id = {
+          let parent_component_unique_id = current_target_element_data.parent_component_unique_id;
+          if self.page_element_unique_id == Some(parent_component_unique_id) {
+            None
+          } else {
+            self
+              .get_element_data_by_unique_id(parent_component_unique_id)
+              .and_then(|binding| binding.borrow().component_id.clone())
+          }
+        };
+        self.mts_binding.publish_event(
+          &handler,
+          current_target_parent_component_id.as_deref(),
+          serialized_event,
+          target_unique_id,
+          &target_element_dataset.clone().into(),
+          unique_id,
+          &current_target_element_data.dataset.clone().into(),
+        );
+      }
+
+      let run_worklet_handler = current_target_element_data
+        .get_framework_run_worklet_event_handler(&event_name_lowercase, "global-bindevent");
+      if let Some(handler) = run_worklet_handler {
+        self.mts_binding.publish_mts_event(
+          &handler,
+          serialized_event,
+          target_unique_id,
+          &target_element_dataset.clone().into(),
+          unique_id,
+          &current_target_element_data.dataset.clone().into(),
+        );
       }
     }
   }

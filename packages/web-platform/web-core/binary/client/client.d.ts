@@ -24,6 +24,7 @@ export class MainThreadWasmContext {
     common_event_handler(event: any, bubble_unique_id_path: Uint32Array, event_name: string, is_bubble: boolean): void;
     create_element_common(parent_component_unique_id: number, dom: HTMLElement, css_id?: number | null, component_id?: string | null): number;
     dispatch_event_by_path(bubble_unique_id_path: Uint32Array, event_name: string, is_capture: boolean, serialized_event: any): boolean;
+    dispatch_global_bind_event(bubble_unique_id_path: Uint32Array, event_name: string, serialized_event: any): void;
     get_component_id(unique_id: number): string | undefined;
     get_config(unique_id: number): object;
     get_css_id_by_unique_id(unique_id: number): number | undefined;
@@ -202,6 +203,7 @@ export interface InitOutput {
     readonly mainthreadwasmcontext_common_event_handler: (a: number, b: any, c: number, d: number, e: number, f: number, g: number) => void;
     readonly mainthreadwasmcontext_create_element_common: (a: number, b: number, c: any, d: number, e: number, f: number) => number;
     readonly mainthreadwasmcontext_dispatch_event_by_path: (a: number, b: number, c: number, d: number, e: number, f: number, g: any) => number;
+    readonly mainthreadwasmcontext_dispatch_global_bind_event: (a: number, b: number, c: number, d: number, e: number, f: any) => void;
     readonly mainthreadwasmcontext_get_component_id: (a: number, b: number) => [number, number, number, number];
     readonly mainthreadwasmcontext_get_config: (a: number, b: number) => [number, number, number];
     readonly mainthreadwasmcontext_get_css_id_by_unique_id: (a: number, b: number) => number;
