@@ -7,6 +7,9 @@ const sExportsReactLepus = Symbol.for(
 const sExportsReactInternal = Symbol.for(
   '__REACT_LYNX_EXPORTS__(@lynx-js/react/internal)',
 );
+const sExportsReactConstants = Symbol.for(
+  '__REACT_LYNX_EXPORTS__(@lynx-js/react/constants)',
+);
 const sExportsJSXRuntime = Symbol.for(
   '__REACT_LYNX_EXPORTS__(@lynx-js/react/jsx-runtime)',
 );
@@ -24,6 +27,7 @@ it('should not have experimental/lazy/import imported', () => {
     expect(lynx[sExportsReact]).toBeUndefined();
     expect(lynx[sExportsReactLepus]).toBeUndefined();
     expect(lynx[sExportsReactInternal]).toBeUndefined();
+    expect(lynx[sExportsReactConstants]).toBeUndefined();
     expect(lynx[sExportsJSXRuntime]).toBeUndefined();
     expect(lynx[sExportsJSXDevRuntime]).toBeUndefined();
     expect(lynx[sExportsLegacyReactRuntime]).toBeUndefined();
@@ -31,6 +35,7 @@ it('should not have experimental/lazy/import imported', () => {
     expect(globalThis[sExportsReact]).toBeUndefined();
     expect(globalThis[sExportsReactLepus]).toBeUndefined();
     expect(globalThis[sExportsReactInternal]).toBeUndefined();
+    expect(globalThis[sExportsReactConstants]).toBeUndefined();
     expect(globalThis[sExportsJSXRuntime]).toBeUndefined();
     expect(globalThis[sExportsJSXDevRuntime]).toBeUndefined();
     expect(globalThis[sExportsLegacyReactRuntime]).toBeUndefined();

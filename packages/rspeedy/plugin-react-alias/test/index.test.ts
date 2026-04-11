@@ -40,6 +40,10 @@ describe('React - alias', () => {
       '@lynx-js/react/internal',
     )
 
+    expect(config.resolve.alias).not.toHaveProperty(
+      '@lynx-js/react/constants',
+    )
+
     expect(config.resolve.alias).toHaveProperty(
       'react$',
       expect.stringContaining(
@@ -58,6 +62,13 @@ describe('React - alias', () => {
       '@lynx-js/react/internal$',
       expect.stringContaining(
         '/packages/react/runtime/lib/internal.js'.replaceAll('/', path.sep),
+      ),
+    )
+
+    expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/react/constants$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/constants.js'.replaceAll('/', path.sep),
       ),
     )
 
@@ -211,6 +222,10 @@ describe('React - alias', () => {
       '@lynx-js/react/internal',
     )
 
+    expect(config.resolve.alias).not.toHaveProperty(
+      '@lynx-js/react/constants',
+    )
+
     expect(config.resolve.alias).toHaveProperty(
       'react$',
       expect.stringContaining(
@@ -229,6 +244,13 @@ describe('React - alias', () => {
       '@lynx-js/react/internal$',
       expect.stringContaining(
         '/packages/react/runtime/lib/internal.js'.replaceAll('/', path.sep),
+      ),
+    )
+
+    expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/react/constants$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/constants.js'.replaceAll('/', path.sep),
       ),
     )
 
@@ -337,6 +359,16 @@ describe('React - alias', () => {
         '@lynx-js/react/internal$',
         expect.stringContaining(
           '/packages/react/runtime/lib/internal.js'.replaceAll('/', path.sep),
+        ),
+      )
+
+      expect(webConfig.resolve.alias).toHaveProperty(
+        '@lynx-js/react/constants$',
+        expect.stringContaining(
+          '/packages/react/runtime/lib/constants.js'.replaceAll(
+            '/',
+            path.sep,
+          ),
         ),
       )
     })

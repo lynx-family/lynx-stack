@@ -78,6 +78,10 @@ describe('Config', () => {
       '@lynx-js/react/internal',
     )
 
+    expect(config.resolve.alias).not.toHaveProperty(
+      '@lynx-js/react/constants',
+    )
+
     expect(config.resolve.alias).toHaveProperty(
       '@lynx-js/react$',
       expect.stringContaining(
@@ -282,6 +286,10 @@ describe('Config', () => {
 
     expect(config.resolve.alias).not.toHaveProperty(
       '@lynx-js/react/internal',
+    )
+
+    expect(config.resolve.alias).not.toHaveProperty(
+      '@lynx-js/react/constants',
     )
 
     expect(config.resolve.alias).toHaveProperty(

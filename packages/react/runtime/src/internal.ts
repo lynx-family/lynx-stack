@@ -17,8 +17,6 @@ import { DynamicPartType } from './snapshot/dynamicPartType.js';
 import { snapshotCreateList } from './snapshot/list.js';
 import { SnapshotInstance, snapshotCreatorMap } from './snapshot/snapshot.js';
 
-export { CHILDREN, COMPONENT, DIFF, DIRTY, DOM, FLAGS, INDEX, PARENT } from './renderToOpcodes/constants.js';
-
 export { __page, __pageId, __root };
 
 export {

@@ -37,6 +37,11 @@
       "types": "./runtime/lib/document.d.ts",
       "default": "./runtime/lib/document.js"
     },
+    "./constants": {
+      "types": "./runtime/lib/constants.d.ts",
+      "lazy": "./runtime/lazy/constants.js",
+      "default": "./runtime/lib/constants.js"
+    },
     "./jsx-runtime": {
       "types": "./runtime/jsx-runtime/index.d.ts",
       "lazy": "./runtime/lazy/jsx-runtime.js",
@@ -120,6 +125,9 @@
       ],
       "internal/document": [
         "./runtime/lib/document.d.ts"
+      ],
+      "constants": [
+        "./runtime/lib/constants.d.ts"
       ],
       "jsx-runtime": [
         "./runtime/jsx-runtime/index.d.ts"

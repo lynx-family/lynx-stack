@@ -50,6 +50,12 @@ const reactLynxExternalTemplate = {
     mainThread: { sectionPath: 'ReactLynx__main-thread' },
     async: false,
   },
+  '@lynx-js/react/constants': {
+    libraryName: ['ReactLynx', 'ReactConstants'],
+    background: { sectionPath: 'ReactLynx' },
+    mainThread: { sectionPath: 'ReactLynx__main-thread' },
+    async: false,
+  },
   '@lynx-js/react/jsx-dev-runtime': {
     libraryName: ['ReactLynx', 'ReactJSXDevRuntime'],
     background: { sectionPath: 'ReactLynx' },

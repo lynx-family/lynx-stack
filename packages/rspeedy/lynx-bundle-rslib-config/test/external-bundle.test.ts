@@ -688,6 +688,7 @@ describe('pluginReactLynx', () => {
           "@lynx-js/preact-devtools$": false,
           "@lynx-js/react$": "<ROOT>/packages/react/runtime/lib/index.js",
           "@lynx-js/react/compat$": "<ROOT>/packages/react/runtime/compat/index.js",
+          "@lynx-js/react/constants$": "<ROOT>/packages/react/runtime/lib/constants.js",
           "@lynx-js/react/debug$": false,
           "@lynx-js/react/experimental/lazy/import$": "<ROOT>/packages/react/runtime/lazy/import.js",
           "@lynx-js/react/internal$": "<ROOT>/packages/react/runtime/lib/internal.js",

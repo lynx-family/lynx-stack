@@ -1,7 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { CHILDREN, COMPONENT, DIFF, DIRTY, DOM, FLAGS, INDEX, PARENT, SnapshotInstance } from '@lynx-js/react/internal';
+import { SnapshotInstance } from '@lynx-js/react/internal';
+import { CHILDREN, COMPONENT, DIFF, DIRTY, DOM, FLAGS, INDEX, PARENT } from '@lynx-js/react/constants';
 
 function createVNode(type, props, _key) {
   if (typeof type === 'string') {

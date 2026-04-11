@@ -47,9 +47,16 @@ describe('Lazy', () => {
     expect(config?.resolve?.alias).not.toHaveProperty(
       '@lynx-js/react/internal',
     )
+    expect(config?.resolve?.alias).not.toHaveProperty(
+      '@lynx-js/react/constants',
+    )
     expect(config?.resolve?.alias).toHaveProperty(
       '@lynx-js/react/internal$',
       expect.stringContaining('lazy/internal'.replaceAll('/', path.sep)),
+    )
+    expect(config?.resolve?.alias).toHaveProperty(
+      '@lynx-js/react/constants$',
+      expect.stringContaining('lazy/constants'.replaceAll('/', path.sep)),
     )
   })
 

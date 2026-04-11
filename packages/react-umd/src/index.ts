@@ -4,6 +4,7 @@
 
 export * as React from '@lynx-js/react';
 export * as ReactInternal from '@lynx-js/react/internal';
+export * as ReactConstants from '@lynx-js/react/constants';
 export * as ReactJSXDevRuntime from '@lynx-js/react/jsx-dev-runtime';
 export * as ReactJSXRuntime from '@lynx-js/react/jsx-runtime';
 export * as ReactJSXLepusDevRuntime from '@lynx-js/react/lepus/jsx-dev-runtime';

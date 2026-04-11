@@ -92,6 +92,7 @@ export const reactLynxExternalsPreset: Externals = {
   'react': ['ReactLynx', 'React'],
   '@lynx-js/react': ['ReactLynx', 'React'],
   '@lynx-js/react/internal': ['ReactLynx', 'ReactInternal'],
+  '@lynx-js/react/constants': ['ReactLynx', 'ReactConstants'],
   '@lynx-js/react/jsx-dev-runtime': ['ReactLynx', 'ReactJSXDevRuntime'],
   '@lynx-js/react/jsx-runtime': ['ReactLynx', 'ReactJSXRuntime'],
   '@lynx-js/react/lepus/jsx-dev-runtime': [
