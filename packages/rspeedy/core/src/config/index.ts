@@ -165,7 +165,7 @@ export interface Config {
    * @defaultValue undefined
    *
    * @remarks
-   * Rspeedy use the plugin APIs from {@link https://rsbuild.rs/plugins/dev/index | Rsbuild}. See the corresponding document for developing a plugin.
+   * Rspeedy uses the plugin APIs from {@link https://rsbuild.rs/plugins/dev/index | Rsbuild}. See the corresponding document for developing a plugin.
    */
   plugins?: RsbuildPlugins | undefined
 }
