@@ -325,7 +325,7 @@ export interface Output {
   /**
    * The {@link Output.inlineScripts} option controls whether to inline scripts into Lynx bundle (`.lynx.bundle`).
    *
-   * @defaultValue `true` unless `performance.chunkSplit.strategy` is explicitly set to a value other than `'all-in-one'`, in which case it defaults to `false`
+   * @defaultValue Rspeedy defaults this to `true` and only switches it to `false` when the user explicitly sets `performance.chunkSplit.strategy` to a value other than `'all-in-one'`.
    *
    * @remarks
    *

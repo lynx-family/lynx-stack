@@ -28,7 +28,7 @@ export interface Config {
   /**
    * The {@link Config.environments} option is used to set the output environment.
    *
-   * @defaultValue `{ lynx: {} }`
+   * @defaultValue When this option is unset, Rspeedy passes `{ lynx: {} }` to Rsbuild.
    *
    * @remarks
    *

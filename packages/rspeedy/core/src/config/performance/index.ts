@@ -82,7 +82,7 @@ export interface Performance {
   /**
    * Whether capture timing information in the build time and the runtime, the same as the {@link https://rspack.dev/config/other-options#profile | profile} config of Rspack.
    *
-   * @defaultValue Enabled when `DEBUG` contains `rspeedy`; otherwise disabled
+   * @defaultValue Rspeedy sets this to `true` when `DEBUG` contains `rspeedy`; otherwise it leaves the option unset.
    *
    * @example
    *
