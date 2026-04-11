@@ -1,5 +1,23 @@
 # @lynx-js/react
 
+## 0.118.0
+
+### Minor Changes
+
+- refactor: create SnapshotInstance in renderToString directly ([#2393](https://github.com/lynx-family/lynx-stack/pull/2393))
+
+- Add `removeCall` for shake function calls. Its initial default value matches the hooks that were previously in `removeCallParams`, and `removeCallParams` now defaults to empty. ([#2423](https://github.com/lynx-family/lynx-stack/pull/2423))
+
+  `removeCall` removes matched runtime hook calls entirely, replacing them with `undefined` in expression positions and dropping them in statement positions. `removeCallParams` keeps the existing behavior of preserving the call while stripping its arguments.
+
+### Patch Changes
+
+- Improve `shake.removeCall` and `shake.removeCallParams` in the React transform so they also match aliased runtime imports such as `import { useEffect as myUseEffect } ...` and member calls such as `ReactLynxRuntime.useEffect(...)` from default or namespace runtime imports. ([#2437](https://github.com/lynx-family/lynx-stack/pull/2437))
+
+- Create element without ref for suspense in main thread. ([#2426](https://github.com/lynx-family/lynx-stack/pull/2426))
+
+- refactor: make `useEffect`, `useLayoutEffect` and `useImperativeHandle` no-op on the main thread ([#2424](https://github.com/lynx-family/lynx-stack/pull/2424))
+
 ## 0.117.1
 
 ### Patch Changes
