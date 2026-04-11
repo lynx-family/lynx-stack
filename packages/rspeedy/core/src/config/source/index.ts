@@ -17,11 +17,15 @@ export interface Source {
    * {@inheritdoc Resolve.alias}
    *
    * @deprecated - Use {@link Resolve.alias} instead.
+   *
+   * @defaultValue undefined
    */
   alias?: Record<string, string | false | string[]> | undefined
 
   /**
-   * Include additional files that should be treated as static assets. Defaults to be `undefined`.
+   * Include additional files that should be treated as static assets.
+   *
+   * @defaultValue undefined
    *
    * @remarks
    *
@@ -49,6 +53,8 @@ export interface Source {
   /**
    * Used to configure the decorators syntax.
    *
+   * @defaultValue undefined
+   *
    * @remarks
    *
    * See {@link Decorators.version} for more information.
@@ -57,6 +63,8 @@ export interface Source {
 
   /**
    * The `define` options is used to define some values or expressions at compile time.
+   *
+   * @defaultValue undefined
    *
    * @example
    *
@@ -156,10 +164,6 @@ export interface Source {
   /**
    * The {@link Entry} option is used to set the entry module.
    *
-   * @remarks
-   *
-   * If no value is provided, the default value `'./src/index.js'` will be used.
-   *
    * @defaultValue `'./src/index.js'`
    *
    * @example
@@ -226,6 +230,8 @@ export interface Source {
   /**
    * The `source.exclude` is used to specify JavaScript files that should be excluded from compilation.
    *
+   * @defaultValue undefined
+   *
    * @remarks
    *
    * By default, Rsbuild compiles JavaScript files in the current directory and TypeScript/JSX files
@@ -287,6 +293,8 @@ export interface Source {
 
   /**
    * The `source.include` is used to specify additional JavaScript files that need to be compiled.
+   *
+   * @defaultValue When unset, Rsbuild compiles JavaScript files in the current directory and TypeScript or JSX files in all directories, while excluding JavaScript files under `node_modules`.
    *
    * @remarks
    *
@@ -365,6 +373,8 @@ export interface Source {
    * Add a script before the entry file of each page. This script will be executed before the page code.
    * It can be used to execute global logics, such as injecting polyfills, setting global styles, etc.
    *
+   * @defaultValue undefined
+   *
    * @remarks
    *
    * See {@link https://rsbuild.dev/config/source/pre-entry | source.preEntry} for more details.
@@ -386,6 +396,8 @@ export interface Source {
 
   /**
    * The {@link TransformImport} option transforms the import paths to enable modular imports from subpaths of third-party packages, similar to the functionality provided by {@link https://npmjs.com/package/babel-plugin-import | babel-plugin-import}.
+   *
+   * @defaultValue undefined
    *
    * @example
    *
@@ -421,7 +433,9 @@ export interface Source {
   transformImport?: TransformImport[] | undefined
 
   /**
-   * Configure a custom `tsconfig.json` file path to use, can be a relative or absolute path. Defaults to be `./tsconfig.json`.
+   * Configure a custom `tsconfig.json` file path to use, can be a relative or absolute path.
+   *
+   * @defaultValue `'./tsconfig.json'`
    *
    * @remarks
    *

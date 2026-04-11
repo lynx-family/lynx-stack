@@ -12,8 +12,10 @@ export interface Server {
   /**
    * Configure the base path of the server.
    *
+   * @defaultValue `'/'`
+   *
    * @remarks
-   * By default, the base path of the server is `/`, and users can access lynx bundle through `http://<host>:<port>/main.lynx.bundle`
+   * Users can access lynx bundle through `http://<host>:<port>/main.lynx.bundle` by default.
    *
    * If you want to access lynx bundle through `http://<host>:<port>/foo/main.lynx.bundle`, you can change `server.base` to `/foo`
    *
@@ -35,7 +37,7 @@ export interface Server {
   /**
    * Configure whether to enable {@link https://developer.mozilla.org/en-US/docs/Glossary/gzip_compression | gzip compression } for static assets served by the dev server or preview server.
    *
-   * Default: true
+   * @defaultValue true
    *
    * See {@link https://rsbuild.rs/config/server/compress | Rsbuild - server.compress } for details.
    *
@@ -89,6 +91,8 @@ export interface Server {
   /**
    * Configure CORS for the dev server or preview server.
    *
+   * @defaultValue Uses Rsbuild's default CORS options.
+   *
    * - Set to an object to enable CORS with the specified options.
    *
    * - Set to `true` to enable CORS with the default options (allows all origins, not recommended).
@@ -114,6 +118,8 @@ export interface Server {
   /**
    * Adds headers to all responses.
    *
+   * @defaultValue undefined
+   *
    * @example
    *
    * ```js
@@ -132,8 +138,10 @@ export interface Server {
   /**
    * Specify the host that the Rspeedy Server listens to.
    *
+   * @defaultValue undefined
+   *
    * @remarks
-   * By default, the server listens on local network IP, for example, `192.168.1.50`, verify your local net IP by the command `ifconfig` on your system for (en0 for MacOS and eth0 for LinuxOS users). In case you have multiple local network IP(s) particularly when you are running dockers on the host machine, then you can specify your desired host IP.
+   * During `rspeedy dev`, if `server.host` is unset, the dev plugin resolves dev-server-related URLs and client host settings with a detected local IPv4 address, such as `192.168.1.50`. If you have multiple network interfaces, set `server.host` explicitly to choose the desired address.
    *
    * @example
    *
@@ -153,8 +161,10 @@ export interface Server {
   /**
    * Specify the port that the Rspeedy Server listens to.
    *
+   * @defaultValue Rsbuild defaults this option to `3000`.
+   *
    * @remarks
-   * By default, the server listens on port `3000` and automatically increments the port number when the port is occupied.
+   * By default, the server automatically increments the port number when the configured port is occupied.
    *
    * @example
    *
@@ -173,6 +183,8 @@ export interface Server {
 
   /**
    * Configure proxy rules for the dev server or preview server to proxy requests to the specified service.
+   *
+   * @defaultValue undefined
    *
    * @example
    *
@@ -193,7 +205,9 @@ export interface Server {
   /**
    * When a port is occupied, Rspeedy will automatically increment the port number until an available port is found.
    *
-   * Set strictPort to true and Rspeedy will throw an exception when the port is occupied.
+   * @defaultValue false
+   *
+   * By default, strict port mode is disabled. Set strictPort to true and Rspeedy will throw an exception when the port is occupied.
    */
   strictPort?: boolean | undefined
 }

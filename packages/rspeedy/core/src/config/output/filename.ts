@@ -13,11 +13,9 @@ export interface Filename {
   /**
    * The name of the bundle files.
    *
+   * @defaultValue `'[name].[platform].bundle'`
+   *
    * @remarks
-   *
-   * Default values:
-   *
-   * - `'[name].[platform].bundle'`
    *
    * The following placeholder is supported:
    *
@@ -66,11 +64,9 @@ export interface Filename {
    *
    * Use {@link Filename.bundle} instead.
    *
+   * @defaultValue `'[name].[platform].bundle'`
+   *
    * @remarks
-   *
-   * Default values:
-   *
-   * - `'[name].lynx.bundle'`
    *
    * The following placeholder is supported:
    *
@@ -114,12 +110,7 @@ export interface Filename {
   /**
    * The name of the JavaScript files.
    *
-   * @remarks
-   *
-   * Default values:
-   *
-   * - Development: `'[name].js'`
-   * - Production: `'[name].[contenthash:8].js'`
+   * @defaultValue `'[name].js'` in development, `'[name].[contenthash:8].js'` in production web builds, and `'[name].js'` in production node builds
    *
    * @example
    *
@@ -149,11 +140,7 @@ export interface Filename {
   /**
    * The name of the CSS files.
    *
-   * @remarks
-   *
-   * Default values:
-   *
-   * - `'[name].css'`
+   * @defaultValue `'[name]/[name].css'`
    *
    * @example
    *
@@ -183,66 +170,42 @@ export interface Filename {
   /**
    * The name of the SVG images.
    *
-   * @remarks
-   *
-   * Default values:
-   *
-   * - `'[name].[contenthash:8].svg'`
+   * @defaultValue `'[name].[contenthash:8].svg'`
    */
   svg?: Rspack.AssetModuleFilename | undefined
 
   /**
    * The name of the font files.
    *
-   * @remarks
-   *
-   * Default values:
-   *
-   * - `'[name].[contenthash:8][ext]'`
+   * @defaultValue `'[name].[contenthash:8][ext]'`
    */
   font?: Rspack.AssetModuleFilename | undefined
 
   /**
    * The name of non-SVG images.
    *
-   * @remarks
-   *
-   * Default values:
-   *
-   * - `'[name].[contenthash:8][ext]'`
+   * @defaultValue `'[name].[contenthash:8][ext]'`
    */
   image?: Rspack.AssetModuleFilename | undefined
 
   /**
    * The name of media assets, such as video.
    *
-   * @remarks
-   *
-   * Default values:
-   *
-   * - `'[name].[contenthash:8][ext]'`
+   * @defaultValue `'[name].[contenthash:8][ext]'`
    */
   media?: Rspack.AssetModuleFilename | undefined
 
   /**
    * The name of WebAssembly files.
    *
-   * @remarks
-   *
-   * Default values:
-   *
-   * - `'[hash].module.wasm'`
+   * @defaultValue `'[contenthash:8].module.wasm'`
    */
   wasm?: Rspack.WebassemblyModuleFilename
 
   /**
    * The name of other assets, except for above (image, svg, font, html, wasm...)
    *
-   * @remarks
-   *
-   * Default values:
-   *
-   * - `'[name].[contenthash:8][ext]'`
+   * @defaultValue `'[name].[contenthash:8][ext]'`
    */
   assets?: Rspack.AssetModuleFilename
 }

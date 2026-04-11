@@ -20,6 +20,8 @@ export interface Tools {
   /**
    * The {@link Tools.bundlerChain} changes the options of {@link https://www.rspack.dev | Rspack} using {@link https://github.com/rspack-contrib/rspack-chain | rspack-chain}.
    *
+   * @defaultValue undefined
+   *
    * @example
    *
    * ```js
@@ -40,6 +42,8 @@ export interface Tools {
 
   /**
    * The {@link CssLoader} controls the options of {@link https://github.com/webpack-contrib/css-loader | css-loader}.
+   *
+   * @defaultValue Uses defaults derived from `output.cssModules` and `output.sourceMap`, with `importLoaders` set to `1` for CSS files and `2` for Sass/Less files.
    *
    * @remarks
    *
@@ -63,11 +67,18 @@ export interface Tools {
 
   /**
    * The {@link CssExtract} controls the options of {@link https://www.rspack.dev/plugins/rspack/css-extract-rspack-plugin | CssExtractRspackPlugin}
+   *
+   * @defaultValue undefined
    */
   cssExtract?: CssExtract | undefined
 
   /**
    * The {@link Tools.rsdoctor} controls the options of {@link https://rsdoctor.dev/ | Rsdoctor}.
+   *
+   * @defaultValue undefined
+   *
+   * @remarks
+   * Setting `RSDOCTOR=true` enables Rsdoctor. When it is enabled, Rspeedy merges additional plugin defaults during config normalization.
    *
    * @example
    *
@@ -91,6 +102,8 @@ export interface Tools {
 
   /**
    * The {@link Tools.rspack} controls the options of {@link https://www.rspack.dev/ | Rspack}.
+   *
+   * @defaultValue undefined
    *
    * @example
    *
@@ -178,6 +191,8 @@ export interface Tools {
 
   /**
    * The {@link Tools.swc} controls the options of {@link https://rspack.dev/guide/features/builtin-swc-loader | builtin:swc-loader}.
+   *
+   * @defaultValue undefined
    */
   swc?: ToolsConfig['swc'] | undefined
 }

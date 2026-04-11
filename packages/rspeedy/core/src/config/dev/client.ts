@@ -11,9 +11,7 @@ export interface Client {
   /**
    * The path to websocket.
    *
-   * @remarks
-   *
-   * Defaults to `require.resolve('@lynx-js/websocket')`
+   * @defaultValue `require.resolve('@lynx-js/websocket')`
    */
   websocketTransport?: string | undefined
 }

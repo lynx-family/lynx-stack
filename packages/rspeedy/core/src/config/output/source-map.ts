@@ -12,9 +12,9 @@ export interface SourceMap {
   /**
    * How the source map should be generated. Setting it to `false` will disable the source map.
    *
-   * @remarks
+   * @defaultValue When `output.sourceMap` is an object and `js` is unset, it defaults to `'cheap-module-source-map'` in development and `false` in production.
    *
-   * Defaults to `'cheap-module-source-map'` at development, `false` at production.
+   * @remarks
    *
    * See {@link https://rspack.dev/config/devtool | Rspack - Devtool} for details.
    *

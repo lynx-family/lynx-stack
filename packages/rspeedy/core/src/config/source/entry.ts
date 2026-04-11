@@ -16,10 +16,6 @@ export interface EntryDescription {
   /**
    * The path to the entry module(s).
    *
-   * @remarks
-   *
-   * If no value is provided, the default value `src/index.js` will be used.
-   *
    * @defaultValue `'./src/index.js'`
    */
   import?: string | string[] | undefined
@@ -27,6 +23,8 @@ export interface EntryDescription {
   // TODO(doc): inherit from `output.publicPath`.
   /**
    * This is an important option when using on-demand-loading or loading external resources like images, files, etc. If an incorrect value is specified you'll receive 404 errors while loading these resources.
+   *
+   * @defaultValue undefined
    *
    * @see https://webpack.js.org/configuration/output/#outputpublicpath
    */
