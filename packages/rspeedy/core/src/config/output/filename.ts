@@ -140,7 +140,7 @@ export interface Filename {
   /**
    * The name of the CSS files.
    *
-   * @defaultValue `'[name].css'` in development and `'[name].[contenthash:8].css'` in production
+   * @defaultValue `'[name]/[name].css'`
    *
    * @example
    *

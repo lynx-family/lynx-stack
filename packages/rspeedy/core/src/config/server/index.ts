@@ -161,7 +161,7 @@ export interface Server {
   /**
    * Specify the port that the Rspeedy Server listens to.
    *
-   * @defaultValue 3000
+   * @defaultValue Rsbuild defaults this option to `3000`.
    *
    * @remarks
    * By default, the server automatically increments the port number when the configured port is occupied.
