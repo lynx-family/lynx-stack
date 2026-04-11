@@ -1,5 +1,13 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.9.0
+
+### Minor Changes
+
+- Add `removeCall` for shake function calls. Its initial default value matches the hooks that were previously in `removeCallParams`, and `removeCallParams` now defaults to empty. ([#2423](https://github.com/lynx-family/lynx-stack/pull/2423))
+
+  `removeCall` removes matched runtime hook calls entirely, replacing them with `undefined` in expression positions and dropping them in statement positions. `removeCallParams` keeps the existing behavior of preserving the call while stripping its arguments.
+
 ## 0.8.0
 
 ### Minor Changes

@@ -1,5 +1,21 @@
 # @lynx-js/css-serializer
 
+## 0.1.5
+
+### Patch Changes
+
+- feat: add support for @media, @supports, and @layer at-rules ([#2330](https://github.com/lynx-family/lynx-stack/pull/2330))
+
+  Add support for additional CSS at-rules in the CSS serializer:
+
+  - `@media` - for media queries
+  - `@supports` - for feature queries
+  - `@layer` - for cascade layers (both named and anonymous)
+
+  The parser now handles these at-rules with proper recursive parsing support for nested at-rules.
+
+- feat: support custom property declaration in keyframe rule ([#2429](https://github.com/lynx-family/lynx-stack/pull/2429))
+
 ## 0.1.4
 
 ### Patch Changes
