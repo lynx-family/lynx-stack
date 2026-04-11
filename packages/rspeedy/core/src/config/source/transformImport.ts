@@ -11,6 +11,8 @@ export interface TransformImport {
   /**
    * Whether to convert camelCase imports to kebab-case.
    *
+   * @defaultValue Rsbuild defaults this option to `true`.
+   *
    * @example
    *
    * - Input:
@@ -26,7 +28,7 @@ export interface TransformImport {
    * import ButtonGroup from 'foo/button-group'
    * ```
    *
-   * When set to `false` or `undefined`:
+   * When set to `false`:
    * ```js
    * import ButtonGroup from 'foo/ButtonGroup'
    * ```
@@ -35,6 +37,8 @@ export interface TransformImport {
 
   /**
    * Customize the transformed path.
+   *
+   * @defaultValue undefined
    *
    * @remarks
    *
@@ -67,9 +71,7 @@ export interface TransformImport {
   /**
    * Used to splice the transformed path, the splicing rule is `${libraryName}/${libraryDirectory}/${member}`, where member is the imported member.
    *
-   * @remarks
-   *
-   * The default value is `'lib'`.
+   * @defaultValue `'lib'`
    *
    * @example
    *
@@ -90,6 +92,8 @@ export interface TransformImport {
   /**
    * Whether to convert import statements to default imports.
    *
+   * @defaultValue Rsbuild defaults this option to `true`.
+   *
    * @example
    *
    * - Input:
@@ -105,7 +109,7 @@ export interface TransformImport {
    * import Button from 'foo/button'
    * ```
    *
-   * When set to `false` or `undefined`:
+   * When set to `false`:
    * ```js
    * import { Button } from 'foo/button'
    * ```

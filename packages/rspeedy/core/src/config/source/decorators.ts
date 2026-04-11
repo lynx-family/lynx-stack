@@ -11,6 +11,8 @@ export interface Decorators {
   /**
    * Specify the decorator syntax version to be used.
    *
+   * @defaultValue `'2022-03'`
+   *
    * @remarks
    *
    * If you want to know the differences between different decorators versions, you can refer to: {@link https://github.com/tc39/proposal-decorators?tab=readme-ov-file#how-does-this-proposal-compare-to-other-versions-of-decorators | How does this proposal compare to other versions of decorators?}

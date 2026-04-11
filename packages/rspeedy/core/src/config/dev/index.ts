@@ -12,7 +12,12 @@ import type { Client } from './client.js'
 export interface Dev {
   /**
    * The {@link Dev.assetPrefix} is used to set the URL prefix for static assets during development.
+   *
+   * @defaultValue undefined
+   *
    * @remarks
+   *
+   * During `rspeedy dev`, if this option is not set to `false`, the dev plugin normalizes it to `http://<detected-host>:<port>/` and appends `server.base` when configured.
    *
    * The functionality of {@link Dev.assetPrefix} is basically the same as the {@link https://www.rspack.dev/config/output#outputpublicpath | output.publicPath}
    * config in Rspack. With the following differences:
@@ -72,15 +77,17 @@ export interface Dev {
 
   /**
    * Configuration of the development client.
+   *
+   * @defaultValue undefined
    */
   client?: Client | undefined
 
   /**
    * Whether to enable Hot Module Replacement (HMR).
    *
-   * @remarks
+   * @defaultValue true
    *
-   * Defaults to `true`.
+   * @remarks
    *
    * By default, Rspeedy uses HMR as the preferred method to update modules. If HMR is disabled or cannot be used in certain scenarios, it will automatically fallback to {@link Dev.liveReload}.
    *
@@ -120,7 +127,7 @@ export interface Dev {
   /**
    * Whether to enable live reload functionality.
    *
-   * Defaults to `true`.
+   * @defaultValue true
    *
    * Live reload is used as a fallback when {@link Dev.hmr} is disabled or cannot be used in certain scenarios. When enabled, the page will automatically refresh when source files are changed.
    *
@@ -160,6 +167,8 @@ export interface Dev {
   /**
    * Watch specified files and directories for changes. When a file change is detected, it can trigger a page reload or restart the dev server.
    *
+   * @defaultValue undefined
+   *
    * @example
    *
    * - Specify the files and directories watched for changes.
@@ -198,6 +207,8 @@ export interface Dev {
   /**
    * Used to control whether the build artifacts of the development environment are written to the disk.
    *
+   * @defaultValue true
+   *
    * @remarks
    *
    * This is bypassed to {@link https://github.com/webpack/webpack-dev-middleware?tab=readme-ov-file#writetodisk | `webpack-dev-middleware`}.
@@ -224,7 +235,7 @@ export interface Dev {
   /**
    * Whether to display progress bar during compilation.
    *
-   * Defaults to `true`.
+   * @defaultValue true
    *
    * @example
    *

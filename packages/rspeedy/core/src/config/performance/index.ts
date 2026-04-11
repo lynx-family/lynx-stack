@@ -35,6 +35,8 @@ export interface Performance {
   /**
    * Enable or configure persistent build cache.
    *
+   * @defaultValue false
+   *
    * @beta This feature is experimental and may be changed in the future.
    *
    * @example
@@ -72,15 +74,15 @@ export interface Performance {
 
   /**
    * {@link Performance.chunkSplit} is used to configure the chunk splitting strategy.
+   *
+   * @defaultValue For web builds, Rsbuild currently uses `{ strategy: 'split-by-experience' }` when this option is unset.
    */
   chunkSplit?: ChunkSplit | ChunkSplitBySize | ChunkSplitCustom | undefined
 
   /**
    * Whether capture timing information in the build time and the runtime, the same as the {@link https://rspack.dev/config/other-options#profile | profile} config of Rspack.
    *
-   * @remarks
-   *
-   * This option would be `true` when `DEBUG` environment variable contains `rspeedy`.
+   * @defaultValue Enabled when `DEBUG` contains `rspeedy`; otherwise disabled
    *
    * @example
    *
@@ -104,6 +106,8 @@ export interface Performance {
 
   /**
    * Whether to remove `console.[methodName]` in production build.
+   *
+   * @defaultValue false
    *
    * @example
    *
@@ -137,6 +141,8 @@ export interface Performance {
 
   /**
    * Whether to print the file sizes after production build.
+   *
+   * @defaultValue true
    *
    * {@link Performance.printFileSize}
    *

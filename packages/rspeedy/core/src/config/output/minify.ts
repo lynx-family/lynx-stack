@@ -13,6 +13,8 @@ export interface Minify {
   /**
    * Whether enable the CSS minification.
    *
+   * @defaultValue When `output.minify` is enabled and `css` is unset, this defaults to `true`.
+   *
    * @remarks
    *
    * When building for production, {@link https://github.com/rspack-contrib/rsbuild-plugin-css-minimizer | @rsbuild/plugin-css-minimizer} is used to minify CSS assets for better transmission efficiency.
@@ -38,6 +40,8 @@ export interface Minify {
   /**
    * Whether enable the JavaScript minification.
    *
+   * @defaultValue When `output.minify` is enabled and `js` is unset, this defaults to `true`.
+   *
    * @example
    *
    * - Disable the JavaScript minification.
@@ -58,6 +62,8 @@ export interface Minify {
 
   /**
    * {@link Minify.jsOptions} is used to configure SWC minification options.
+   *
+   * @defaultValue When JavaScript minification is enabled and `jsOptions` is unset, this defaults to `{}`.
    *
    * @remarks
    *
@@ -88,6 +94,8 @@ export interface Minify {
   /**
    * {@link Minify.mainThreadOptions} is used to override
    * {@link Minify.jsOptions} for main-thread bundles.
+   *
+   * @defaultValue undefined
    *
    * @remarks
    *
@@ -127,6 +135,8 @@ export interface Minify {
   /**
    * {@link Minify.backgroundOptions} is used to override
    * {@link Minify.jsOptions} for background-thread bundles.
+   *
+   * @defaultValue undefined
    *
    * @remarks
    *
