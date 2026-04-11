@@ -39,7 +39,7 @@
 
 ### 使用 `resolve.alias` 配置
 
-Rsbuild 提供 [resolve.alias](../../api/rspeedy.resolve.alias) 配置项，对应 webpack/Rspack 原生的 [resolve.alias](https://rspack.dev/config/resolve#resolvealias) 配置。可通过对象或函数形式进行配置。
+Rsbuild 提供 [resolve.alias](../../api/rspeedy.resolve.alias) 配置项，对应 webpack/Rspack 原生的 [resolve.alias](https://rspack.rs/config/resolve#resolvealias) 配置。可通过对象或函数形式进行配置。
 
 #### 使用场景
 

@@ -33,7 +33,7 @@ export interface Source {
    * Through the source.assetsInclude config, you can specify additional file types that should be treated as static assets.
    * These added static assets are processed using the same rules as the built-in supported static assets。
    *
-   * The usage of `source.assetsInclude` is consistent with {@link https://rspack.dev/config/module#condition | Condition}
+   * The usage of `source.assetsInclude` is consistent with {@link https://rspack.rs/config/module#condition | Condition}
    * in Rspack, which supports passing in strings, regular expressions, arrays of conditions, or logical conditions
    * to match the module path or assets.
    *
@@ -237,7 +237,7 @@ export interface Source {
    * By default, Rsbuild compiles JavaScript files in the current directory and TypeScript/JSX files
    * in all directories. Through the `source.exclude` config, you can specify files or directories
    * that should be excluded from compilation.
-   * The usage of `source.exclude` is consistent with {@link https://rspack.dev/config/module#ruleexclude | Rule.exclude}
+   * The usage of `source.exclude` is consistent with {@link https://rspack.rs/config/module#ruleexclude | Rule.exclude}
    * in Rspack, which supports passing in strings or regular expressions to match module paths.
    *
    * @example
@@ -304,7 +304,7 @@ export interface Source {
    *
    * Through the `source.include` config, you can specify directories or modules
    * that need to be compiled by Rsbuild.
-   * The usage of `source.include` is consistent with {@link https://rspack.dev/config/module#ruleinclude |  Rule.include}
+   * The usage of `source.include` is consistent with {@link https://rspack.rs/config/module#ruleinclude |  Rule.include}
    * in Rspack, which supports passing in strings or regular expressions to match the module path.
    *
    * @example
@@ -377,7 +377,7 @@ export interface Source {
    *
    * @remarks
    *
-   * See {@link https://rsbuild.dev/config/source/pre-entry | source.preEntry} for more details.
+   * See {@link https://rsbuild.rs/config/source/pre-entry | source.preEntry} for more details.
    *
    * @example
    *

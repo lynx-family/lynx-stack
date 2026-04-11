@@ -43,7 +43,7 @@ const require = createRequire(import.meta.url);
  * @public
  *
  * CssExtractRspackPlugin is the CSS extract plugin for Lynx.
- * It works just like the {@link https://www.rspack.dev/plugins/rspack/css-extract-rspack-plugin.html | CssExtractRspackPlugin} in Web.
+ * It works just like the {@link https://rspack.rs/plugins/rspack/css-extract-rspack-plugin.html | CssExtractRspackPlugin} in Web.
  *
  * @example
  * ```js

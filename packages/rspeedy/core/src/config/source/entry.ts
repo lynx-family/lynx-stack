@@ -6,7 +6,7 @@
  * The `EntryDescription` describes a entry. It is useful when the project has multiple entries with different configuration.
  *
  * @remarks
- * It is similar with the {@link https://www.rspack.dev/config/entry#entry-description-object | Entry Description Object} of Rspack.
+ * It is similar with the {@link https://rspack.rs/config/entry#entry-description-object | Entry Description Object} of Rspack.
  * But only a few properties that Lynx supports is allowed.
  *
  * @public
