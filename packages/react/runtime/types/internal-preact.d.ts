@@ -20,6 +20,15 @@ declare module 'preact' {
     ): void;
     /** root */
     __?(vnode: VNode, parentDom: any): void;
+    /** _hook */
+    __h?: (component: Component, index: number, type: number) => void;
+  }
+
+  interface PreactContext<T> {
+    /** __id */
+    __c: number;
+    /** __defaultValue */
+    __: T;
   }
 
   export type HookState = Record<string, unknown>;
@@ -29,7 +38,7 @@ declare module 'preact' {
     /** The list of hooks a component uses */
     __?: HookState[];
     /** List of Effects to be invoked after the next frame is rendered */
-    _pendingEffects: EffectHookState[];
+    __h: EffectHookState[];
   }
 
   interface VNode {
@@ -37,6 +46,12 @@ declare module 'preact' {
     __c?: Component | null;
     /** _original */
     __v?: number;
+    /** _parent */
+    __?: VNode | null;
+    /** _mask */
+    __m?: [number, number];
+    /** _children */
+    __k?: VNode[];
   }
 
   interface Component<P = {}, S = {}> {

@@ -144,14 +144,8 @@ describe('Config', () => {
         ),
       ),
     )
-    expect(config.resolve.alias).toHaveProperty(
+    expect(config.resolve.alias).not.toHaveProperty(
       'preact/hooks$',
-      expect.stringContaining(
-        '@lynx-js/internal-preact/hooks/dist/hooks.mjs'.replaceAll(
-          '/',
-          path.sep,
-        ),
-      ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/test-utils$',

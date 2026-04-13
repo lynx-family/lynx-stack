@@ -55,6 +55,14 @@
       "types": "./runtime/jsx-runtime/index.d.ts",
       "default": "./runtime/lepus/jsx-runtime/index.js"
     },
+    "./hooks": {
+      "types": "./runtime/lib/hooks/react.d.ts",
+      "default": "./runtime/lib/hooks/react.js"
+    },
+    "./lepus/hooks": {
+      "types": "./runtime/lib/hooks/react.d.ts",
+      "default": "./runtime/lib/hooks/mainThread.js"
+    },
     "./lepus": {
       "types": "./runtime/lepus/index.d.ts",
       "lazy": "./runtime/lazy/react-lepus.js",
@@ -122,6 +130,12 @@
       ],
       "experimental/lazy/import": [
         "./runtime/lazy/import.d.ts"
+      ],
+      "hooks": [
+        "./runtime/lib/hooks/react.d.ts"
+      ],
+      "lepus/hooks": [
+        "./runtime/lib/hooks/react.d.ts"
       ],
       "internal": [
         "./runtime/lib/internal.d.ts"
