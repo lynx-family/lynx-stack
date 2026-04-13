@@ -69,8 +69,15 @@ const sExportsJSXDevRuntime = Symbol.for(
 
 function evaluateStandaloneLazyMainThread(
   source: string,
-  hostLoadWorkletRuntime: ReturnType<typeof vi.fn>,
 ) {
+  const factory = vm.runInThisContext(source) as (
+    globDynamicComponentEntry: string,
+  ) => Record<string, unknown>
+
+  return factory('__Card__')
+}
+
+function withFakeHostEnvironment<T>(run: () => T): T {
   const symbolValues = new Map([
     [sExportsReact, globalThis[sExportsReact]],
     [sExportsReactInternal, globalThis[sExportsReactInternal]],
@@ -92,15 +99,9 @@ function evaluateStandaloneLazyMainThread(
     ['registerWorklet', globalThis.registerWorklet],
     ['runWorklet', globalThis.runWorklet],
     ['lynxWorkletImpl', globalThis.lynxWorkletImpl],
+    ['__LoadLepusChunk', globalThis.__LoadLepusChunk],
     ['SystemInfo', globalThis.SystemInfo],
   ])
-
-  const jsxRuntime = {
-    Fragment: Symbol.for('Fragment'),
-    jsx: (type: unknown, props: unknown) => ({ type, props }),
-    jsxs: (type: unknown, props: unknown) => ({ type, props }),
-    jsxDEV: (type: unknown, props: unknown) => ({ type, props }),
-  }
 
   Object.assign(globalThis, {
     __DEV__: true,
@@ -141,25 +142,13 @@ function evaluateStandaloneLazyMainThread(
     cancelAnimationFrame: vi.fn(),
   })
 
-  globalThis[sExportsReact] = {}
-  globalThis[sExportsReactInternal] = {
-    loadWorkletRuntime: hostLoadWorkletRuntime,
-    snapshotCreatorMap: {},
-  }
-  globalThis[sExportsJSXRuntime] = jsxRuntime
-  globalThis[sExportsJSXDevRuntime] = jsxRuntime
-
   delete globalThis.registerWorkletInternal
   delete globalThis.registerWorklet
   delete globalThis.runWorklet
   delete globalThis.lynxWorkletImpl
 
   try {
-    const factory = vm.runInThisContext(source) as (
-      globDynamicComponentEntry: string,
-    ) => Record<string, unknown>
-
-    return factory('__Card__')
+    return run()
   } finally {
     for (const [key, value] of globalValues) {
       restoreStringGlobal(key, value)
@@ -386,16 +375,59 @@ describe('Lazy', () => {
       expect(source).toContain('registerWorkletInternal("main-thread"')
       expect(source).not.toContain('__workletRuntimeLoaded')
 
-      const hostLoadWorkletRuntime = vi.fn(() => {
-        throw new Error('standalone lazy bundle should not call host fallback')
-      })
-      const exports = evaluateStandaloneLazyMainThread(
-        source,
-        hostLoadWorkletRuntime,
+      const hostDistRoot = path.join(
+        path.dirname(new URL(import.meta.url).pathname),
+        'dist/mixed-version-host',
       )
+      const hostRsbuild = await createRspeedy({
+        rspeedyConfig: {
+          source: {
+            entry: {
+              main: new URL(
+                './fixtures/mixed-version-host/index.ts',
+                import.meta.url,
+              ).pathname,
+            },
+          },
+          output: {
+            distPath: {
+              root: './dist/mixed-version-host',
+            },
+          },
+          plugins: [
+            pluginReactLynx(),
+          ],
+        },
+      })
 
-      expect(exports).toHaveProperty('default')
-      expect(hostLoadWorkletRuntime).not.toHaveBeenCalled()
+      await hostRsbuild.build()
+
+      const hostAssets = await collectJsAssets(hostDistRoot)
+      const hostMainThreadAssets = [...hostAssets.entries()].filter(([name]) =>
+        name.includes('main-thread')
+      )
+      expect(hostMainThreadAssets).toHaveLength(1)
+
+      const [, hostSource] = hostMainThreadAssets[0]!
+
+      withFakeHostEnvironment(() => {
+        vm.runInThisContext(hostSource)
+
+        const hostInternal = globalThis[sExportsReactInternal] as {
+          loadWorkletRuntime: (...args: unknown[]) => unknown
+        }
+        expect(hostInternal).toBeDefined()
+
+        const hostLoadWorkletRuntime = vi.fn(() => {
+          throw new Error('new lazy bundle should not need host worklet chunk')
+        })
+        globalThis.__LoadLepusChunk = hostLoadWorkletRuntime
+
+        const exports = evaluateStandaloneLazyMainThread(source)
+
+        expect(exports).toHaveProperty('default')
+        expect(hostLoadWorkletRuntime).not.toHaveBeenCalled()
+      })
     } finally {
       vi.unstubAllEnvs()
     }
