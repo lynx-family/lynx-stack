@@ -9,11 +9,29 @@ import type { LynxTemplatePlugin as LynxTemplatePluginClass } from './LynxTempla
 
 export const DEBUG_METADATA_ASSET_NAME = 'debug-metadata.json';
 
+/**
+ * The options of the {@link LynxDebugMetadataPlugin}.
+ *
+ * @public
+ */
 export interface LynxDebugMetadataPluginOptions {
+  /**
+   * The name of the debug metadata asset.
+   *
+   * @defaultValue 'debug-metadata.json'
+   */
   debugMetadataAssetName?: string;
+  /**
+   * The LynxTemplatePlugin class.
+   */
   LynxTemplatePlugin: typeof LynxTemplatePluginClass;
 }
 
+/**
+ * The LynxDebugMetadataPlugin is a webpack plugin that adds debug metadata to the output.
+ *
+ * @public
+ */
 export class LynxDebugMetadataPlugin {
   constructor(protected options?: LynxDebugMetadataPluginOptions | undefined) {}
   /**
@@ -82,7 +100,7 @@ export class LynxDebugMetadataPluginImpl {
           );
           const debugMetadataAssetName = path.posix.format({
             dir: args.intermediate,
-            base: DEBUG_METADATA_ASSET_NAME,
+            base: this.options.debugMetadataAssetName,
           });
           compilation.emitAsset(
             debugMetadataAssetName,
@@ -105,7 +123,7 @@ export class LynxDebugMetadataPluginImpl {
   }
 }
 
-const UI_SOURCE_MAP_RECORDS_BUILD_INFO = 'lynxUiSourceMapRecords';
+export const UI_SOURCE_MAP_RECORDS_BUILD_INFO = 'lynxUiSourceMapRecords';
 
 export interface UiSourceMapRecord {
   uiSourceMap: number;
@@ -137,19 +155,24 @@ export interface ModuleWithUiSourceMapBuildInfo {
 export function collectUiSourceMapRecordsFromModule(
   module: ModuleWithUiSourceMapBuildInfo,
 ): UiSourceMapRecord[] {
-  const records = module.buildInfo?.[UI_SOURCE_MAP_RECORDS_BUILD_INFO];
-  if (Array.isArray(records)) {
-    return records as UiSourceMapRecord[];
+  const uiSourceMapRecords: UiSourceMapRecord[] = [];
+  if (Array.isArray(module.buildInfo?.[UI_SOURCE_MAP_RECORDS_BUILD_INFO])) {
+    uiSourceMapRecords.push(
+      ...module.buildInfo
+        ?.[UI_SOURCE_MAP_RECORDS_BUILD_INFO] as UiSourceMapRecord[],
+    );
   }
 
   if (module.modules) {
-    return Array.from(module.modules)
-      .flatMap(nestedModule =>
-        collectUiSourceMapRecordsFromModule(nestedModule)
-      );
+    Array.from(module.modules)
+      .forEach(nestedModule => {
+        uiSourceMapRecords.push(
+          ...collectUiSourceMapRecordsFromModule(nestedModule),
+        );
+      });
   }
 
-  return [];
+  return uiSourceMapRecords;
 }
 
 export function compareUiSourceMapRecord(

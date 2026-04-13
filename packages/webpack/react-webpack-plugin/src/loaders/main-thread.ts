@@ -3,14 +3,15 @@
 // LICENSE file in the root directory of this source tree.
 import { createRequire } from 'node:module';
 
-import type { LoaderDefinitionFunction } from '@rspack/core';
+import type { LoaderContext, LoaderDefinitionFunction } from '@rspack/core';
+
+import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '@lynx-js/template-webpack-plugin';
 
 import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
-const UI_SOURCE_MAP_RECORDS_BUILD_INFO = 'lynxUiSourceMapRecords';
-
 const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
+  this: LoaderContext<ReactLoaderOptions>,
   content,
   sourceMap,
 ): void {
