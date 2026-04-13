@@ -2,10 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { processGesture } from '../../src/gesture/processGesture.js';
 
-vi.mock('@lynx-js/react/worklet-runtime/bindings', () => ({
-  onWorkletCtxUpdate: vi.fn(),
-}));
-
 function createSerializedGesture(id: number) {
   return {
     id,
