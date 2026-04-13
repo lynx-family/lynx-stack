@@ -96,6 +96,7 @@ export class LynxDebugMetadataPluginImpl {
               ),
             ),
           );
+          args.intermediateAssets.push(debugMetadataAssetName);
 
           return args;
         },
