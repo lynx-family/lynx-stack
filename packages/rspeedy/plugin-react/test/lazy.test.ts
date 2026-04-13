@@ -95,6 +95,11 @@ function withFakeHostEnvironment<T>(run: () => T): T {
     ['lynx', globalThis.lynx],
     ['requestAnimationFrame', globalThis.requestAnimationFrame],
     ['cancelAnimationFrame', globalThis.cancelAnimationFrame],
+    // The generated host/lazy assets may touch timer globals while bootstrapping.
+    ['setTimeout', globalThis.setTimeout],
+    ['clearTimeout', globalThis.clearTimeout],
+    ['setInterval', globalThis.setInterval],
+    ['clearInterval', globalThis.clearInterval],
     ['registerWorkletInternal', globalThis.registerWorkletInternal],
     ['registerWorklet', globalThis.registerWorklet],
     ['runWorklet', globalThis.runWorklet],
