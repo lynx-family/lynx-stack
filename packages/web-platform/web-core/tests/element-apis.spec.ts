@@ -1576,9 +1576,9 @@ describe('Element APIs', () => {
     mtsGlobalThis.__AppendElement(root, element);
 
     const spy = vi.spyOn(mtsBinding, 'getClassList');
-    const classes = mtsBinding.getClassList(element);
+    const classes = mtsBinding.getClassList(new WeakRef(element));
 
-    expect(spy).toHaveBeenCalledWith(element);
+    expect(spy).toHaveBeenCalledWith(expect.any(WeakRef));
     expect(classes).toEqual(expect.arrayContaining(['foo', 'bar']));
     expect(classes.length).toBe(2);
   });

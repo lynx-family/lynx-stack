@@ -23,12 +23,22 @@ impl MainThreadWasmContext {
       {
         let element = self.unique_id_to_dom_map.get(&unique_id).expect_throw("El");
         if let Some(entry_name) = &entry_name {
-          let _ = element.set_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE, entry_name);
+          let _ = self.mts_binding.set_attribute(
+            element,
+            constants::LYNX_ENTRY_NAME_ATTRIBUTE,
+            entry_name,
+          );
         }
         if css_id != 0 {
-          let _ = element.set_attribute(constants::CSS_ID_ATTRIBUTE, &css_id.to_string());
+          let _ = self.mts_binding.set_attribute(
+            element,
+            constants::CSS_ID_ATTRIBUTE,
+            &css_id.to_string(),
+          );
         } else {
-          let _ = element.remove_attribute(constants::CSS_ID_ATTRIBUTE);
+          let _ = self
+            .mts_binding
+            .remove_attribute(element, constants::CSS_ID_ATTRIBUTE);
         }
         {
           let element_data_cell = self.get_element_data_by_unique_id(unique_id).unwrap_throw();
@@ -54,7 +64,10 @@ impl MainThreadWasmContext {
     self.style_manager.update_css_og_style(
       unique_id,
       element_data.css_id,
-      self.mts_binding.get_class_name_list(element),
+      self
+        .mts_binding
+        .get_class_name_list(element)
+        .unwrap_or_default(),
       entry_name,
     )?;
     Ok(())
