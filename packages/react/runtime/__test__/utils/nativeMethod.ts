@@ -19,6 +19,15 @@ interface ElementOptions {
 
 export let uiSignNext = 0;
 export const parentMap = new WeakMap<Element, Element>();
+let gestureDetectorMap = new WeakMap<
+  Element,
+  Map<number, {
+    id: number;
+    type: number;
+    config: any;
+    relationMap: Record<string, number[]>;
+  }>
+>();
 // export const elementPrototype = Object.create(null);
 export const options: ElementOptions = {};
 
@@ -185,12 +194,40 @@ export const elementTree = new (class {
   }
 
   __SetGestureDetector(e: Element, id: number, type: number, config: any, relationMap: Record<string, number[]>) {
-    e.props.gesture = {
+    const detector = {
       id,
       type,
       config,
       relationMap,
     };
+    let detectors = gestureDetectorMap.get(e);
+    if (!detectors) {
+      detectors = new Map();
+      gestureDetectorMap.set(e, detectors);
+    }
+    detectors.set(id, detector);
+    e.props.gesture = detector;
+  }
+
+  __RemoveGestureDetector(e: Element, id: number) {
+    const detectors = gestureDetectorMap.get(e);
+    detectors?.delete(id);
+    if (e.props.gesture?.id === id) {
+      const latestDetector = detectors ? [...detectors.values()].at(-1) : undefined;
+      if (latestDetector) {
+        e.props.gesture = latestDetector;
+      } else {
+        delete e.props.gesture;
+      }
+    }
+  }
+
+  __GetGestureDetector(e: Element, id: number) {
+    return gestureDetectorMap.get(e)?.get(id);
+  }
+
+  __GetGestureDetectorIds(e: Element) {
+    return [...(gestureDetectorMap.get(e)?.keys() ?? [])];
   }
 
   __GetDataset(e: Element) {
@@ -317,6 +354,7 @@ export const elementTree = new (class {
   clear() {
     this.root = undefined;
     uiSignNext = 0;
+    gestureDetectorMap = new WeakMap();
   }
 
   toTree() {
