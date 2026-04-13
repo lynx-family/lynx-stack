@@ -24,6 +24,7 @@ import { cssChunksToMap } from '@lynx-js/css-serializer';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { createLynxAsyncChunksRuntimeModule } from './LynxAsyncChunksRuntimeModule.js';
+import { LynxDebugMetadataPlugin } from './LynxDebugMetadataPlugin.js';
 
 export type OriginManifest = Record<string, {
   content: string;
@@ -443,6 +444,9 @@ export class LynxTemplatePlugin {
       compiler,
       Object.assign({}, LynxTemplatePlugin.defaultOptions, this.options),
     );
+    new LynxDebugMetadataPlugin({
+      LynxTemplatePlugin,
+    }).apply(compiler);
   }
 }
 

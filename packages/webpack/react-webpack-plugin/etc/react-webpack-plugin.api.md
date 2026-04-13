@@ -46,7 +46,6 @@ export class ReactWebpackPlugin {
 export interface ReactWebpackPluginOptions {
     disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
     enableSSR?: boolean;
-    enableUiSourceMap?: boolean;
     // @alpha
     experimental_isLazyBundle?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;

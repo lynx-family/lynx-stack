@@ -4,7 +4,6 @@
 
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
-import path from 'node:path';
 
 import type { Chunk, Compilation, Compiler } from '@rspack/core';
 import invariant from 'tiny-invariant';
@@ -17,161 +16,6 @@ import { LAYERS } from './layer.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 
 const require = createRequire(import.meta.url);
-const UI_SOURCE_MAP_RECORDS_BUILD_INFO = 'lynxUiSourceMapRecords';
-const DEBUG_METADATA_ASSET_NAME = 'debug-metadata.json';
-
-interface UiSourceMapRecord {
-  uiSourceMap: number;
-  filename: string;
-  lineNumber: number;
-  columnNumber: number;
-  snapshotId: string;
-}
-
-interface UiSourceMapData {
-  version: 1;
-  sources: string[];
-  mappings: [number, number, number][];
-  uiMaps: number[];
-}
-
-interface DebugMetadataAsset {
-  uiSourceMap: UiSourceMapData;
-  meta: {
-    templateDebug: {
-      templateUrl: string;
-      templateDebugUrl: string;
-    };
-  };
-}
-
-interface ModuleWithUiSourceMapBuildInfo {
-  identifier?: () => string;
-  buildInfo?: Record<string, unknown>;
-  modules?: Iterable<ModuleWithUiSourceMapBuildInfo>;
-}
-
-function collectUiSourceMapRecordsFromModule(
-  module: ModuleWithUiSourceMapBuildInfo,
-): UiSourceMapRecord[] {
-  const records = module.buildInfo?.[UI_SOURCE_MAP_RECORDS_BUILD_INFO];
-  if (Array.isArray(records)) {
-    return records as UiSourceMapRecord[];
-  }
-
-  if (module.modules) {
-    return Array.from(module.modules)
-      .flatMap(nestedModule =>
-        collectUiSourceMapRecordsFromModule(nestedModule)
-      );
-  }
-
-  return [];
-}
-
-function compareUiSourceMapRecord(
-  a: UiSourceMapRecord,
-  b: UiSourceMapRecord,
-): number {
-  return a.filename.localeCompare(b.filename)
-    || a.lineNumber - b.lineNumber
-    || a.columnNumber - b.columnNumber
-    || a.uiSourceMap - b.uiSourceMap;
-}
-
-function normalizeUiSourceMapSource(
-  projectRoot: string,
-  filename: string,
-): string {
-  const normalizedFilename = filename.replaceAll(
-    path.win32.sep,
-    path.posix.sep,
-  );
-
-  if (normalizedFilename.length === 0) {
-    return normalizedFilename;
-  }
-
-  if (path.isAbsolute(filename)) {
-    return path.posix.normalize(
-      path.relative(projectRoot, filename).replaceAll(
-        path.win32.sep,
-        path.posix.sep,
-      ),
-    );
-  }
-
-  return path.posix.normalize(normalizedFilename);
-}
-
-function resolveTemplateUrl(
-  filenameTemplate: string,
-  publicPath: Compiler['options']['output']['publicPath'],
-): string {
-  const normalizedTemplate = filenameTemplate.replaceAll(
-    path.win32.sep,
-    path.posix.sep,
-  );
-
-  if (
-    typeof publicPath === 'string'
-    && publicPath !== 'auto'
-    && publicPath !== '/'
-  ) {
-    return new URL(normalizedTemplate, publicPath).toString();
-  }
-
-  return normalizedTemplate;
-}
-
-function createDebugMetadataAsset(
-  projectRoot: string,
-  records: UiSourceMapRecord[],
-  filenameTemplate: string,
-  publicPath: Compiler['options']['output']['publicPath'],
-  templateDebugUrl: string,
-): DebugMetadataAsset {
-  const sources: string[] = [];
-  const sourceIndexes = new Map<string, number>();
-  const mappings: [number, number, number][] = [];
-  const uiMaps: number[] = [];
-
-  for (const record of records) {
-    if (!record.filename) {
-      continue;
-    }
-
-    const source = normalizeUiSourceMapSource(projectRoot, record.filename);
-    const sourceIndex = sourceIndexes.get(source) ?? sources.length;
-
-    if (!sourceIndexes.has(source)) {
-      sourceIndexes.set(source, sourceIndex);
-      sources.push(source);
-    }
-
-    mappings.push([
-      sourceIndex,
-      record.lineNumber,
-      record.columnNumber,
-    ]);
-    uiMaps.push(record.uiSourceMap);
-  }
-
-  return {
-    uiSourceMap: {
-      version: 1,
-      sources,
-      mappings,
-      uiMaps,
-    },
-    meta: {
-      templateDebug: {
-        templateUrl: resolveTemplateUrl(filenameTemplate, publicPath),
-        templateDebugUrl,
-      },
-    },
-  };
-}
 
 /**
  * The options for ReactWebpackPlugin
@@ -179,13 +23,6 @@ function createDebugMetadataAsset(
  * @public
  */
 interface ReactWebpackPluginOptions {
-  /**
-   * Whether to emit debug-metadata assets for tasm encode.
-   *
-   * @defaultValue `false`
-   */
-  enableUiSourceMap?: boolean;
-
   /**
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat.disableCreateSelectorQueryIncompatibleWarning}
    */
@@ -303,7 +140,6 @@ class ReactWebpackPlugin {
    */
   static defaultOptions: Readonly<Required<ReactWebpackPluginOptions>> = Object
     .freeze<Required<ReactWebpackPluginOptions>>({
-      enableUiSourceMap: false,
       disableCreateSelectorQueryIncompatibleWarning: false,
       firstScreenSyncTiming: 'immediately',
       globalPropsMode: 'reactive',
@@ -454,38 +290,6 @@ class ReactWebpackPlugin {
               },
             });
           }
-
-          if (options.enableUiSourceMap) {
-            const uiSourceMapRecords = this.#collectUiSourceMapRecords(
-              compilation,
-              args.entryNames,
-            );
-            const debugMetadataAssetName = path.posix.format({
-              dir: args.intermediate,
-              base: DEBUG_METADATA_ASSET_NAME,
-            });
-            compilation.emitAsset(
-              debugMetadataAssetName,
-              new RawSource(
-                JSON.stringify(
-                  createDebugMetadataAsset(
-                    compilation.compiler.context,
-                    uiSourceMapRecords,
-                    args.filenameTemplate,
-                    compiler.options.output.publicPath,
-                    String(
-                      args.encodeData.compilerOptions['templateDebugUrl']
-                        ?? '',
-                    ),
-                  ),
-                  null,
-                  2,
-                ),
-              ),
-            );
-            args.intermediateAssets.push(debugMetadataAssetName);
-          }
-
           return args;
         },
       );
@@ -584,45 +388,6 @@ class ReactWebpackPlugin {
         'lynx:main-thread': true,
       },
     );
-  }
-
-  #collectUiSourceMapRecords(
-    compilation: Compilation,
-    entryNames: string[],
-  ): UiSourceMapRecord[] {
-    const moduleSet = new Set<ModuleWithUiSourceMapBuildInfo>();
-
-    for (const entryName of entryNames) {
-      const chunkGroup = compilation.namedChunkGroups.get(entryName)
-        ?? compilation.entrypoints.get(entryName);
-      if (!chunkGroup) {
-        continue;
-      }
-
-      for (const chunk of chunkGroup.chunks) {
-        for (
-          const module of compilation.chunkGraph.getChunkModulesIterable(chunk)
-        ) {
-          moduleSet.add(module as ModuleWithUiSourceMapBuildInfo);
-        }
-      }
-    }
-
-    const deduped = new Map<string, UiSourceMapRecord>();
-    for (const module of moduleSet) {
-      for (const record of collectUiSourceMapRecordsFromModule(module)) {
-        const key = [
-          record.uiSourceMap,
-          record.filename,
-          record.lineNumber,
-          record.columnNumber,
-          record.snapshotId,
-        ].join(':');
-        deduped.set(key, record);
-      }
-    }
-
-    return Array.from(deduped.values()).sort(compareUiSourceMapRecord);
   }
 }
 
