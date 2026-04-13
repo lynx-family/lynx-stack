@@ -19,7 +19,7 @@ export interface Dev {
    *
    * During `rspeedy dev`, if this option is not set to `false`, the dev plugin normalizes it to `http://<detected-host>:<port>/` and appends `server.base` when configured.
    *
-   * The functionality of {@link Dev.assetPrefix} is basically the same as the {@link https://www.rspack.dev/config/output#outputpublicpath | output.publicPath}
+   * The functionality of {@link Dev.assetPrefix} is basically the same as the {@link https://rspack.rs/config/output#outputpublicpath | output.publicPath}
    * config in Rspack. With the following differences:
    *
    * - `dev.assetPrefix` only takes effect during development.

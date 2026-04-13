@@ -81,7 +81,7 @@ export interface Config {
    *
    * If the value of `mode` is `'development'`:
    *
-   * - Enable HMR and register the {@link https://rspack.dev/plugins/webpack/hot-module-replacement-plugin | HotModuleReplacementPlugin}.
+   * - Enable HMR and register the {@link https://rspack.rs/plugins/webpack/hot-module-replacement-plugin | HotModuleReplacementPlugin}.
    *
    * - Generate JavaScript source maps, but do not generate CSS source maps. See {@link Output.sourceMap} for details.
    *
@@ -97,7 +97,7 @@ export interface Config {
    *
    * If the value of `mode` is `'production'`:
    *
-   * - Enable JavaScript code minification and register the {@link https://rspack.dev/plugins/rspack/swc-js-minimizer-rspack-plugin | SwcJsMinimizerRspackPlugin}.
+   * - Enable JavaScript code minification and register the {@link https://rspack.rs/plugins/rspack/swc-js-minimizer-rspack-plugin | SwcJsMinimizerRspackPlugin}.
    *
    * - Generated JavaScript and CSS filenames will have hash suffixes, see {@link Output.filenameHash}.
    *
@@ -165,7 +165,7 @@ export interface Config {
    * @defaultValue undefined
    *
    * @remarks
-   * Rspeedy use the plugin APIs from {@link https://rsbuild.dev/plugins/dev/index | Rsbuild}. See the corresponding document for developing a plugin.
+   * Rspeedy uses the plugin APIs from {@link https://rsbuild.rs/plugins/dev/index | Rsbuild}. See the corresponding document for developing a plugin.
    */
   plugins?: RsbuildPlugins | undefined
 }

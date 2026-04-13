@@ -67,7 +67,7 @@ export interface Minify {
    *
    * @remarks
    *
-   * For detailed configurations, please refer to {@link https://rspack.dev/plugins/rspack/swc-js-minimizer-rspack-plugin | SwcJsMinimizerRspackPlugin}.
+   * For detailed configurations, please refer to {@link https://rspack.rs/plugins/rspack/swc-js-minimizer-rspack-plugin | SwcJsMinimizerRspackPlugin}.
    *
    * @example
    *

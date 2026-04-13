@@ -21,7 +21,7 @@ export interface Output {
    *
    * @remarks
    *
-   * The functionality of {@link Output.assetPrefix} is basically the same as the {@link https://www.rspack.dev/config/output#outputpublicpath | output.publicPath}
+   * The functionality of {@link Output.assetPrefix} is basically the same as the {@link https://rspack.rs/config/output#outputpublicpath | output.publicPath}
    * config in Rspack. With the following differences:
    *
    * - `output.assetPrefix` only takes effect in the production build.
@@ -45,6 +45,12 @@ export interface Output {
 
   /**
    * The {@link Output.cleanDistPath} option determines whether all files in the output directory (default: `dist`) are removed before the build starts.
+   *
+   * @remarks
+   *
+   * By default, if the output directory is a subdirectory of the project root path, Rspeedy will automatically clean all files in the build directory.
+   *
+   * When {@link https://rsbuild.rs/config/output/dist-path#root-directory | output.distPath.root} is an external directory or the same as the project root directory, `cleanDistPath` is not enabled by default to prevent accidental deletion of files from other directories.
    *
    * @defaultValue Automatically enabled when `output.distPath.root` is a subdirectory of the project root; otherwise disabled.
    *
@@ -82,7 +88,7 @@ export interface Output {
    *
    * @remarks
    *
-   * For more options, see {@link https://rspack.dev/plugins/rspack/copy-rspack-plugin | Rspack.CopyRspackPlugin}.
+   * For more options, see {@link https://rspack.rs/plugins/rspack/copy-rspack-plugin | Rspack.CopyRspackPlugin}.
    *
    * @example
    *
@@ -234,7 +240,7 @@ export interface Output {
    *
    * @remarks
    *
-   * More options can be found at {@link https://rsbuild.dev/config/output/dist-path | Rsbuild - distPath}.
+   * More options can be found at {@link https://rsbuild.rs/config/output/dist-path | Rsbuild - distPath}.
    *
    * @example
    *
@@ -329,7 +335,7 @@ export interface Output {
    *
    * @remarks
    *
-   * This is different with {@link https://rsbuild.dev/config/output/inline-scripts | output.inlineScripts } since we normally want to inline scripts in Lynx bundle (`.lynx.bundle`).
+   * This is different with {@link https://rsbuild.rs/config/output/inline-scripts | output.inlineScripts } since we normally want to inline scripts in Lynx bundle (`.lynx.bundle`).
    *
    * There are two points that need to be especially noted:
    *

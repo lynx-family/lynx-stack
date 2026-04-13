@@ -28,8 +28,8 @@ You can find the source code of all official plugins in [lynx-stack](https://git
 
 The following Rsbuild plugins can be used in Rspeedy.
 
-- [Sass Plugin](https://rsbuild.dev/plugins/list/plugin-sass): Use Sass as the CSS preprocessor.
-- [Less Plugin](https://rsbuild.dev/plugins/list/plugin-less): Use Less as the CSS preprocessor.
+- [Sass Plugin](https://rsbuild.rs/plugins/list/plugin-sass): Use Sass as the CSS preprocessor.
+- [Less Plugin](https://rsbuild.rs/plugins/list/plugin-less): Use Less as the CSS preprocessor.
 - [ESLint Plugin](https://github.com/rspack-contrib/rsbuild-plugin-eslint): Run ESLint checks during the compilation.
 - [Type Check Plugin](https://github.com/rspack-contrib/rsbuild-plugin-type-check): Run TypeScript type checker on a separate process.
 - [Image Compress Plugin](https://github.com/rspack-contrib/rsbuild-plugin-image-compress): Compress the image assets.
@@ -54,14 +54,14 @@ If none of the existing ecosystem plugins meet your requirements, you might cons
 
 ### Rsbuild Plugin API
 
-See [Rsbuild - Plugin Hooks](https://rsbuild.dev/plugins/dev/hooks) for more details.
+See [Rsbuild - Plugin Hooks](https://rsbuild.rs/plugins/dev/hooks) for more details.
 
 ### Rspack Plugin API
 
-See [Rspack - Compiler Hooks](https://rspack.dev/api/plugin-api/compiler-hooks) and [Rspack - Compilation Hooks](https://rspack.dev/api/plugin-api/compilation-hooks) for more details.
+See [Rspack - Compiler Hooks](https://rspack.rs/api/plugin-api/compiler-hooks) and [Rspack - Compilation Hooks](https://rspack.rs/api/plugin-api/compilation-hooks) for more details.
 
 [`tools.rspack.plugins`]: /api/rspeedy.tools.rspack#example-4
-[BannerPlugin]: https://rspack.dev/plugins/webpack/banner-plugin
-[DefinePlugin]: https://rspack.dev/plugins/webpack/define-plugin
-[EnvironmentPlugin]: https://rspack.dev/plugins/webpack/environment-plugin
-[ProvidePlugin]: https://rspack.dev/plugins/webpack/provide-plugin
+[BannerPlugin]: https://rspack.rs/plugins/webpack/banner-plugin
+[DefinePlugin]: https://rspack.rs/plugins/webpack/define-plugin
+[EnvironmentPlugin]: https://rspack.rs/plugins/webpack/environment-plugin
+[ProvidePlugin]: https://rspack.rs/plugins/webpack/provide-plugin

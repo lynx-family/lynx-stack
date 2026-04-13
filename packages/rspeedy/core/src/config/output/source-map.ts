@@ -16,7 +16,7 @@ export interface SourceMap {
    *
    * @remarks
    *
-   * See {@link https://rspack.dev/config/devtool | Rspack - Devtool} for details.
+   * See {@link https://rspack.rs/config/devtool | Rspack - Devtool} for details.
    *
    * @example
    *

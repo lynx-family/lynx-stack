@@ -80,7 +80,7 @@ export interface Performance {
   chunkSplit?: ChunkSplit | ChunkSplitBySize | ChunkSplitCustom | undefined
 
   /**
-   * Whether capture timing information in the build time and the runtime, the same as the {@link https://rspack.dev/config/other-options#profile | profile} config of Rspack.
+   * Whether capture timing information in the build time and the runtime, the same as the {@link https://rspack.rs/config/other-options#profile | profile} config of Rspack.
    *
    * @defaultValue Rspeedy sets this to `true` when `DEBUG` contains `rspeedy`; otherwise it leaves the option unset.
    *
@@ -146,7 +146,7 @@ export interface Performance {
    *
    * {@link Performance.printFileSize}
    *
-   * See {@link https://rsbuild.dev/config/performance/print-file-size | Rsbuild - performance.printFileSize} for details.
+   * See {@link https://rsbuild.rs/config/performance/print-file-size | Rsbuild - performance.printFileSize} for details.
    *
    * @example
    *

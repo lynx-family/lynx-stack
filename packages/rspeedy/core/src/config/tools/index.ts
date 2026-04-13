@@ -18,7 +18,7 @@ export type RsdoctorRspackPluginOptions = ConstructorParameters<
  */
 export interface Tools {
   /**
-   * The {@link Tools.bundlerChain} changes the options of {@link https://www.rspack.dev | Rspack} using {@link https://github.com/rspack-contrib/rspack-chain | rspack-chain}.
+   * The {@link Tools.bundlerChain} changes the options of {@link https://rspack.rs | Rspack} using {@link https://github.com/rspack-contrib/rspack-chain | rspack-chain}.
    *
    * @defaultValue undefined
    *
@@ -66,7 +66,7 @@ export interface Tools {
   cssLoader?: CssLoader | undefined
 
   /**
-   * The {@link CssExtract} controls the options of {@link https://www.rspack.dev/plugins/rspack/css-extract-rspack-plugin | CssExtractRspackPlugin}
+   * The {@link CssExtract} controls the options of {@link https://rspack.rs/plugins/rspack/css-extract-rspack-plugin | CssExtractRspackPlugin}
    *
    * @defaultValue undefined
    */
@@ -101,7 +101,7 @@ export interface Tools {
   rsdoctor?: RsdoctorRspackPluginOptions | undefined
 
   /**
-   * The {@link Tools.rspack} controls the options of {@link https://www.rspack.dev/ | Rspack}.
+   * The {@link Tools.rspack} controls the options of {@link https://rspack.rs/ | Rspack}.
    *
    * @defaultValue undefined
    *
@@ -123,7 +123,7 @@ export interface Tools {
    * })
    * ```
    *
-   * See {@link https://www.rspack.dev/config/index | Rspack - Configuration} for details.
+   * See {@link https://rspack.rs/config/index | Rspack - Configuration} for details.
    *
    * @example
    *
@@ -144,7 +144,7 @@ export interface Tools {
    * })
    * ```
    *
-   * See {@link https://rsbuild.dev/config/tools/rspack#env | Rsbuild - tools.rspack} for details.
+   * See {@link https://rsbuild.rs/config/tools/rspack#env | Rsbuild - tools.rspack} for details.
    *
    * @example
    *
@@ -166,7 +166,7 @@ export interface Tools {
    * })
    * ```
    *
-   * See {@link https://rsbuild.dev/config/tools/rspack#mergeconfig | Rsbuild - tools.rspack} for details.
+   * See {@link https://rsbuild.rs/config/tools/rspack#mergeconfig | Rsbuild - tools.rspack} for details.
    *
    * @example
    *
@@ -185,12 +185,12 @@ export interface Tools {
    * })
    * ```
    *
-   * See {@link https://rsbuild.dev/config/tools/rspack#appendplugins | Rsbuild - tools.rspack} for details.
+   * See {@link https://rsbuild.rs/config/tools/rspack#appendplugins | Rsbuild - tools.rspack} for details.
    */
   rspack?: ToolsConfig['rspack'] | undefined
 
   /**
-   * The {@link Tools.swc} controls the options of {@link https://rspack.dev/guide/features/builtin-swc-loader | builtin:swc-loader}.
+   * The {@link Tools.swc} controls the options of {@link https://rspack.rs/guide/features/builtin-swc-loader | builtin:swc-loader}.
    *
    * @defaultValue undefined
    */
