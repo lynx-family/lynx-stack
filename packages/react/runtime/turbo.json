@@ -1,0 +1,21 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": [],
+      "inputs": [
+        "debug/**",
+        "jsx-dev-runtime/**",
+        "jsx-runtime/**",
+        "lepus/**",
+        "src/**",
+        "types/**",
+        "tsconfig.json"
+      ],
+      "outputs": [
+        "lib/**"
+      ]
+    }
+  }
+}

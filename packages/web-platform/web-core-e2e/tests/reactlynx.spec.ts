@@ -114,6 +114,19 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       await expect(await target.getAttribute('style')).toContain('pink');
     });
+    test('basic-global-bind', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      const observer = page.locator('#observer');
+
+      await target.click();
+      await wait(100);
+      await expect(await observer.getAttribute('style')).toContain('green');
+      await target.click();
+      await wait(100);
+      await expect(await observer.getAttribute('style')).toContain('pink');
+    });
     test('basic-bindtap-detail', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);

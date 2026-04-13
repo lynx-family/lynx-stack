@@ -10,11 +10,15 @@
 export interface CssExtract {
   /**
    * {@inheritdoc @lynx-js/css-extract-webpack-plugin#LoaderOptions}
+   *
+   * @defaultValue undefined
    */
   loaderOptions?: CssExtractRspackLoaderOptions | undefined
 
   /**
    * {@inheritdoc @lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions}
+   *
+   * @defaultValue undefined
    */
   pluginOptions?: CssExtractRspackPluginOptions | undefined
 }
@@ -58,6 +62,8 @@ export interface CssExtractRspackLoaderOptions {
    * ```
    *
    * @public
+   *
+   * @defaultValue true
    */
   esModule?: boolean | undefined
 }
@@ -70,11 +76,15 @@ export interface CssExtractRspackLoaderOptions {
 export interface CssExtractRspackPluginOptions {
   /**
    * {@inheritdoc @lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions.ignoreOrder}
+   *
+   * @defaultValue undefined
    */
   ignoreOrder?: boolean | undefined
 
   /**
    * {@inheritdoc @lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions.pathinfo}
+   *
+   * @defaultValue undefined
    */
   pathinfo?: boolean | undefined
 }

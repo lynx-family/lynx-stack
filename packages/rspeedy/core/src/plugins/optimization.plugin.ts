@@ -26,7 +26,7 @@ export function pluginOptimization(): RsbuildPlugin {
 
         if (isProd) {
           // Avoid entry being wrapped by IIFE
-          // See: https://rspack.dev/config/optimization#optimizationavoidentryiife
+          // See: https://rspack.rs/config/optimization#optimizationavoidentryiife
           chain
             .optimization
             .avoidEntryIife(true)

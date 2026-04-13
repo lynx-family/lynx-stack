@@ -30,7 +30,7 @@ import {
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { profileEnd, profileStart } from '../../debug/profile.js';
-import { LifecycleConstant } from '../../lifecycleConstant.js';
+import { LifecycleConstant } from '../../lifecycle/constant.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../lynx/performance.js';
 import { COMMIT } from '../../renderToOpcodes/constants.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot/backgroundSnapshot.js';
@@ -153,7 +153,7 @@ function replaceCommitHook(): void {
         id: commitTaskId,
       };
       // TODO: check all fields in `flushOptions` from runtime3
-      if (snapshotPatch?.length) {
+      if (snapshotPatch.length) {
         patch.snapshotPatch = snapshotPatch;
       }
       const patchList: PatchList = {
@@ -162,7 +162,7 @@ function replaceCommitHook(): void {
       if (!isEmptyObject(flushOptions)) {
         patchList.flushOptions = flushOptions;
       }
-      if (snapshotPatch && delayedRunOnMainThreadData.length) {
+      if (delayedRunOnMainThreadData.length) {
         patchList.delayedRunOnMainThreadData = takeDelayedRunOnMainThreadData();
       }
       const obj = commitPatchUpdate(patchList, patchOptions);

@@ -61,15 +61,6 @@ describe('alog', () => {
           "[ReactLynxDebug] FiberElement API call #3: __SetCSSId([PAGE#0], 0)",
         ],
         [
-          "[MainThread Component Render] name: ClassComponent",
-        ],
-        [
-          "[MainThread Component Render] name: FunctionComponent",
-        ],
-        [
-          "[MainThread Component Render] name: App",
-        ],
-        [
           "[ReactLynxDebug] FiberElement API call #4: __CreateView(0) => VIEW#1",
         ],
         [
@@ -142,6 +133,9 @@ describe('alog', () => {
           "[ReactLynxDebug] FiberElement API call #27: __AppendElement(WRAPPER#8, VIEW#9)",
         ],
         [
+          "[MainThread Component Render] name: ClassComponent",
+        ],
+        [
           "[ReactLynxDebug] FiberElement API call #28: __CreateView(0) => VIEW#11",
         ],
         [
@@ -154,7 +148,13 @@ describe('alog', () => {
           "[ReactLynxDebug] FiberElement API call #31: __AppendElement(WRAPPER#8, VIEW#11)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #32: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"{\\"id\\":-1,\\"type\\":\\"root\\",\\"children\\":[{\\"id\\":-2,\\"type\\":\\"__snapshot_426db_test_1\\",\\"values\\":[\\"-2:0:\\",\\"-2:1:\\"],\\"children\\":[{\\"id\\":-3,\\"type\\":\\"wrapper\\",\\"children\\":[{\\"id\\":-7,\\"type\\":null,\\"values\\":[0]}]},{\\"id\\":-4,\\"type\\":\\"wrapper\\",\\"children\\":[{\\"id\\":-5,\\"type\\":\\"__snapshot_426db_test_2\\"},{\\"id\\":-6,\\"type\\":\\"__snapshot_426db_test_3\\"}]}]}]}","jsReadyEventIdSwap":{}}])",
+          "[MainThread Component Render] name: FunctionComponent",
+        ],
+        [
+          "[MainThread Component Render] name: App",
+        ],
+        [
+          "[ReactLynxDebug] FiberElement API call #32: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"{\\"id\\":-1,\\"type\\":\\"root\\",\\"children\\":[{\\"id\\":-2,\\"type\\":\\"__snapshot_426db_test_1\\",\\"values\\":[\\"-2:0:\\",\\"-2:1:\\"],\\"children\\":[{\\"id\\":-3,\\"type\\":\\"wrapper\\",\\"children\\":[{\\"id\\":-4,\\"type\\":null,\\"values\\":[0]}]},{\\"id\\":-5,\\"type\\":\\"wrapper\\",\\"children\\":[{\\"id\\":-6,\\"type\\":\\"__snapshot_426db_test_2\\"},{\\"id\\":-7,\\"type\\":\\"__snapshot_426db_test_3\\"}]}]}]}","jsReadyEventIdSwap":{}}])",
         ],
         [
           "[ReactLynxDebug] BTS -> MTS updateMainThread:
@@ -193,7 +193,7 @@ describe('alog', () => {
               "snapshotPatch": [
                 {
                   "op": "SetAttribute",
-                  "id": -7,
+                  "id": -4,
                   "dynamicPartIndex": 0,
                   "value": 1
                 }
@@ -255,7 +255,7 @@ describe('alog', () => {
                   "type": "wrapper",
                   "children": [
                     {
-                      "id": -7,
+                      "id": -4,
                       "type": null,
                       "values": [
                         0
@@ -264,15 +264,15 @@ describe('alog', () => {
                   ]
                 },
                 {
-                  "id": -4,
+                  "id": -5,
                   "type": "wrapper",
                   "children": [
                     {
-                      "id": -5,
+                      "id": -6,
                       "type": "__snapshot_426db_test_2"
                     },
                     {
-                      "id": -6,
+                      "id": -7,
                       "type": "__snapshot_426db_test_3"
                     }
                   ]
@@ -289,10 +289,10 @@ describe('alog', () => {
       | -1(root): undefined
         | -2(__snapshot_426db_test_1): ["-2:0:","-2:1:"]
           | -3(wrapper): undefined
-            | -7(null): [0]
-          | -4(wrapper): undefined
-            | -5(__snapshot_426db_test_2): undefined
-            | -6(__snapshot_426db_test_3): undefined",
+            | -4(null): [0]
+          | -5(wrapper): undefined
+            | -6(__snapshot_426db_test_2): undefined
+            | -7(__snapshot_426db_test_3): undefined",
         ],
         [
           "[ReactLynxDebug] BackgroundSnapshotInstance tree before hydration:
@@ -309,10 +309,10 @@ describe('alog', () => {
       | -1(root): undefined
         | -2(__snapshot_426db_test_1): [null,null]
           | -3(wrapper): undefined
-            | -7(null): [0]
-          | -4(wrapper): undefined
-            | -5(__snapshot_426db_test_2): undefined
-            | -6(__snapshot_426db_test_3): undefined",
+            | -4(null): [0]
+          | -5(wrapper): undefined
+            | -6(__snapshot_426db_test_2): undefined
+            | -7(__snapshot_426db_test_3): undefined",
         ],
         [
           "[ReactLynxDebug] BTS received event:
@@ -333,10 +333,10 @@ describe('alog', () => {
       }",
         ],
         [
-          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_426db_test_2, __id: -5",
+          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_426db_test_2, __id: -6",
         ],
         [
-          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_426db_test_3, __id: -6",
+          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_426db_test_3, __id: -7",
         ],
         [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_426db_test_1, __id: -2",
@@ -363,7 +363,7 @@ describe('alog', () => {
               "snapshotPatch": [
                 {
                   "op": "SetAttribute",
-                  "id": -7,
+                  "id": -4,
                   "dynamicPartIndex": 0,
                   "value": 0
                 }
@@ -394,10 +394,10 @@ describe('alog', () => {
     expect(lynxTestingEnv.backgroundThread.console.alog.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_426db_test_2, __id: -5",
+          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_426db_test_2, __id: -6",
         ],
         [
-          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_426db_test_3, __id: -6",
+          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_426db_test_3, __id: -7",
         ],
         [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_426db_test_1, __id: -2",
@@ -424,7 +424,7 @@ describe('alog', () => {
               "snapshotPatch": [
                 {
                   "op": "SetAttribute",
-                  "id": -7,
+                  "id": -4,
                   "dynamicPartIndex": 0,
                   "value": 1
                 }
@@ -455,10 +455,10 @@ describe('alog', () => {
     expect(lynxTestingEnv.backgroundThread.console.alog.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_426db_test_2, __id: -5",
+          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_426db_test_2, __id: -6",
         ],
         [
-          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_426db_test_3, __id: -6",
+          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_426db_test_3, __id: -7",
         ],
         [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_426db_test_1, __id: -2",

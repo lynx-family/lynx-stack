@@ -49,6 +49,7 @@ export class TemplateManager {
     lynxViewInstancePromise: Promise<LynxViewInstance>,
     transformVW: boolean,
     transformVH: boolean,
+    transformREM: boolean,
     overrideConfig?: Record<string, string>,
   ): Promise<void> {
     if (this.#bundles.has(url) && !overrideConfig) {
@@ -80,6 +81,7 @@ export class TemplateManager {
         lynxViewInstancePromise,
         transformVW,
         transformVH,
+        transformREM,
         overrideConfig,
       );
       this.#loadingPromises.set(url, promise);
@@ -92,6 +94,7 @@ export class TemplateManager {
     lynxViewInstancePromise: Promise<LynxViewInstance>,
     transformVW: boolean,
     transformVH: boolean,
+    transformREM: boolean,
     overrideConfig?: Partial<PageConfig>,
   ): Promise<void> {
     const currentTime = performance.now() + performance.timeOrigin;
@@ -112,6 +115,7 @@ export class TemplateManager {
       fetchUrl: (new URL(url, location.href)).toString(),
       transformVW,
       transformVH,
+      transformREM,
       overrideConfig,
     };
     this.#worker!.postMessage(msg);

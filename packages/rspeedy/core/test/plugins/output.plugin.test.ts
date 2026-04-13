@@ -557,7 +557,7 @@ describe('Plugins - Output', () => {
 
       const config = await rsbuild.unwrapConfig()
 
-      expect(config.output?.path).toMatchInlineSnapshot(`"<WORKSPACE>/dist"`)
+      expect(config.output?.path).toMatchInlineSnapshot(`"<ROOT>/dist"`)
       expect(config.output?.filename).toMatchInlineSnapshot(
         `"static/js/[name].js"`,
       )
@@ -587,7 +587,7 @@ describe('Plugins - Output', () => {
 
       const config = await rsbuild.unwrapConfig()
 
-      expect(config.output?.path).toMatchInlineSnapshot(`"<WORKSPACE>/foo"`)
+      expect(config.output?.path).toMatchInlineSnapshot(`"<ROOT>/foo"`)
     })
 
     test('absolute root', async () => {

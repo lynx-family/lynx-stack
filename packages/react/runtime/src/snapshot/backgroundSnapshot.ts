@@ -10,11 +10,6 @@
 
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { profileEnd, profileStart } from '../debug/profile.js';
-import { clearSnapshotVNodeSource, getSnapshotVNodeSource, moveSnapshotVNodeSource } from '../debug/vnodeSource.js';
-import { processGestureBackground } from '../gesture/processGestureBagkround.js';
-import type { GestureKind } from '../gesture/types.js';
-import { diffArrayAction, diffArrayLepus } from '../hydrate.js';
 import { snapshotManager } from './definition.js';
 import type { Snapshot } from './definition.js';
 import { DynamicPartType } from './dynamicPartType.js';
@@ -25,6 +20,10 @@ import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { transformSpread } from './spread.js';
 import type { SerializedSnapshotInstance } from './types.js';
 import { traverseSnapshotInstance } from './utils.js';
+import { profileEnd, profileStart } from '../debug/profile.js';
+import { clearSnapshotVNodeSource, getSnapshotVNodeSource, moveSnapshotVNodeSource } from '../debug/vnodeSource.js';
+import { processGestureBackground } from '../gesture/processGestureBagkround.js';
+import type { GestureKind } from '../gesture/types.js';
 import { globalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/globalState.js';
 import {
   SnapshotOperation,
@@ -34,6 +33,7 @@ import {
 } from '../lifecycle/patch/snapshotPatch.js';
 import type { SnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import { globalPipelineOptions } from '../lynx/performance.js';
+import { diffArrayAction, diffArrayLepus } from '../renderToOpcodes/hydrate.js';
 import { isDirectOrDeepEqual } from '../utils.js';
 import { onPostWorkletCtx } from '../worklet/ctx.js';
 
@@ -282,9 +282,6 @@ export class BackgroundSnapshotInstance {
     let node = this.__firstChild;
     while (node) {
       nodes.push(node);
-      if (node === this.__lastChild) {
-        break;
-      }
       node = node.__nextSibling;
     }
     return nodes;

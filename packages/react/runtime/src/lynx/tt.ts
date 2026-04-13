@@ -3,13 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 import { process, render } from 'preact';
 
-import { LifecycleConstant, NativeUpdateDataType } from '../lifecycleConstant.js';
-import type { FirstScreenData } from '../lifecycleConstant.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from './performance.js';
 import { runWithForce } from './runWithForce.js';
 import { printSnapshotInstanceToString } from '../debug/printSnapshot.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { getSnapshotVNodeSource } from '../debug/vnodeSource.js';
+import { LifecycleConstant, NativeUpdateDataType } from '../lifecycle/constant.js';
+import type { FirstScreenData } from '../lifecycle/constant.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEvents.js';
 import { delayLifecycleEvent, delayedLifecycleEvents } from '../lifecycle/event/delayLifecycleEvents.js';

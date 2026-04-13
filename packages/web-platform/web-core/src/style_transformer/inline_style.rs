@@ -30,6 +30,7 @@ pub(crate) fn transform_inline_style_string(source: &str, config: &TransformerCo
     TransformerConfig {
       transform_vw: config.transform_vw,
       transform_vh: config.transform_vh,
+      transform_rem: config.transform_rem,
     },
   );
   transformer.parse(source);
@@ -49,6 +50,7 @@ pub(crate) fn transform_inline_style_key_value_vec(
     TransformerConfig {
       transform_vw: config.transform_vw,
       transform_vh: config.transform_vh,
+      transform_rem: config.transform_rem,
     },
   );
 
@@ -187,6 +189,19 @@ mod tests {
       result,
       "font-size:24px;--lynx-text-bg-color:initial;-webkit-background-clip:initial;background-clip:initial;color:blue;"
     );
+  }
+
+  #[test]
+  fn transform_color_with_css_var() {
+    let source = "color: var(--color)";
+    let result = transform_inline_style_string(source, &TransformerConfig::default());
+    assert!(result.contains("color:var(--color)"));
+  }
+  #[test]
+  fn transform_color_with_css_var_and_fallback() {
+    let source = "color: var(--color, blue)";
+    let result = transform_inline_style_string(source, &TransformerConfig::default());
+    assert!(result.contains("color:var(--color, blue)"));
   }
 
   #[test]

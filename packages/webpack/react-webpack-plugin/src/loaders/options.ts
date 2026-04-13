@@ -245,6 +245,8 @@ export function getMainThreadTransformOptions(
       // so never pass true to shake to rust
       pkgName: [
         'react',
+        'preact/hooks',
+        'preact/compat',
         PUBLIC_RUNTIME_PKG,
         `${PUBLIC_RUNTIME_PKG}/legacy-react-runtime`,
         RUNTIME_PKG,
@@ -264,14 +266,15 @@ export function getMainThreadTransformOptions(
         'defaultProps',
         ...(shake?.retainProp ?? []),
       ],
-      removeCallParams: [
+      removeCall: [
         'useEffect',
         'useLayoutEffect',
         '__runInJS',
         'useLynxGlobalEventListener',
         'useImperativeHandle',
-        ...(shake?.removeCallParams ?? []),
+        ...(shake?.removeCall ?? []),
       ],
+      removeCallParams: shake?.removeCallParams ?? [],
     },
     worklet: {
       ...commonOptions.worklet,

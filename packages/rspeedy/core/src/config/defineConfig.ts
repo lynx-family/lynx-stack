@@ -13,6 +13,8 @@ export interface ConfigParams {
   /**
    * The value of `process.env['NODE_ENV']`
    *
+   * @defaultValue When `loadConfig` evaluates a config function, this value is `process.env.NODE_ENV ?? 'production'`
+   *
    * @remarks
    * Common values include (non-exhaustive):
    * - `'production'`
@@ -24,6 +26,8 @@ export interface ConfigParams {
   env: 'production' | 'development' | 'test' | (string & Record<never, never>)
   /**
    * The CLI command of Rspeedy.
+   *
+   * @defaultValue When `loadConfig` evaluates a config function, this value is `process.argv[2] ?? 'build'`
    *
    * @remarks
    *

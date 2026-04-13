@@ -1,5 +1,13 @@
 # @lynx-js/react-umd
 
+## 0.118.0
+
+## 0.117.1
+
+### Patch Changes
+
+- Add a new `entry` export to `@lynx-js/react-umd` for reuse by wrapper libraries of `@lynx-js/react`. ([#2370](https://github.com/lynx-family/lynx-stack/pull/2370))
+
 ## 0.117.0
 
 ### Minor Changes

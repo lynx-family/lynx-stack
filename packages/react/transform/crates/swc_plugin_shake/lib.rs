@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use std::collections::HashMap;
 use swc_core::{
+  common::DUMMY_SP,
   ecma::ast::*,
   ecma::visit::{VisitMut, VisitMutWith, VisitWith},
 };
@@ -63,6 +64,31 @@ pub struct ShakeVisitorConfig {
   /// @public
   pub retain_prop: Vec<String>,
 
+  /// Function names whose calls should be replaced with `undefined` during transformation
+  ///
+  /// @example
+  /// ```js
+  /// import { defineConfig } from '@lynx-js/rspeedy'
+  /// import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+  ///
+  /// export default defineConfig({
+  ///   plugins: [
+  ///     pluginReactLynx({
+  ///       shake: {
+  ///         removeCall: ['useMyCustomEffect']
+  ///       }
+  ///     })
+  ///   ]
+  /// })
+  /// ```
+  ///
+  /// @remarks
+  /// Default value: `['useEffect', 'useLayoutEffect', '__runInJS', 'useLynxGlobalEventListener', 'useImperativeHandle']`
+  /// The provided values will be merged with the default values instead of replacing them.
+  ///
+  /// @public
+  pub remove_call: Vec<String>,
+
   /// Function names whose parameters should be removed during transformation
   ///
   /// @example
@@ -82,7 +108,7 @@ pub struct ShakeVisitorConfig {
   /// ```
   ///
   /// @remarks
-  /// Default value: `['useEffect', 'useLayoutEffect', '__runInJS', 'useLynxGlobalEventListener', 'useImperativeHandle']`
+  /// Default value: `[]`
   /// The provided values will be merged with the default values instead of replacing them.
   ///
   /// @public
@@ -102,7 +128,7 @@ impl Default for ShakeVisitorConfig {
       "contextType",
       "defaultProps",
     ];
-    let default_remove_call_params = [
+    let default_remove_call = [
       "useEffect",
       "useLayoutEffect",
       "__runInJS",
@@ -112,30 +138,80 @@ impl Default for ShakeVisitorConfig {
     ShakeVisitorConfig {
       pkg_name: default_pkg_name.iter().map(|x| x.to_string()).collect(),
       retain_prop: default_retain_prop.iter().map(|x| x.to_string()).collect(),
-      remove_call_params: default_remove_call_params
-        .iter()
-        .map(|x| x.to_string())
-        .collect(),
+      remove_call: default_remove_call.iter().map(|x| x.to_string()).collect(),
+      remove_call_params: Vec::new(),
     }
   }
 }
 
 pub struct ShakeVisitor {
   opts: ShakeVisitorConfig,
-  is_runtime_import: bool,
   current_method_name: Option<String>,
   current_method_ref_names: Option<Vec<(String, String)>>,
-  import_ids: Vec<Id>,
+  import_ids: HashMap<Id, String>,
 }
 
 impl ShakeVisitor {
   pub fn new(opts: ShakeVisitorConfig) -> Self {
     ShakeVisitor {
       opts,
-      is_runtime_import: false,
       current_method_name: None,
       current_method_ref_names: None,
-      import_ids: Vec::new(),
+      import_ids: HashMap::new(),
+    }
+  }
+
+  /// Returns true when the call targets a configured runtime import.
+  ///
+  /// This shared check is used by both:
+  /// - `remove_call`, where the whole call expression is removed/replaced
+  /// - `remove_call_params`, where only the call arguments are cleared
+  fn should_remove_call(&self, n: &CallExpr, target_calls: &[String]) -> bool {
+    let Some(callee) = n.callee.as_expr() else {
+      // Skip non-expression callees such as `super(...)` and `import(...)`.
+      return false;
+    };
+
+    // Case 1: direct calls like `useEffect(...)` or `myUseEffect(...)`.
+    if let Some(fn_name) = callee.as_ident() {
+      return self
+        .import_ids
+        .get(&fn_name.to_id())
+        .is_some_and(|imported_name| {
+          target_calls.contains(imported_name) || target_calls.contains(&fn_name.sym.to_string())
+        });
+    }
+
+    // Case 2: member calls like `ReactLynxRuntime.useEffect(...)`.
+    // We only support member access on top-level runtime imports collected in `import_ids`.
+    let Some(member) = callee.as_member() else {
+      return false;
+    };
+    let Expr::Ident(object_ident) = &*member.obj else {
+      return false;
+    };
+    let Some(imported_name) = self.import_ids.get(&object_ident.to_id()) else {
+      return false;
+    };
+
+    // Only `default import` and `namespace import` can legally produce runtime member calls.
+    if imported_name != "default" && imported_name != "*" {
+      return false;
+    }
+
+    match &member.prop {
+      // Dot access: `ReactLynxRuntime.useEffect`
+      MemberProp::Ident(prop_ident) => target_calls.contains(&prop_ident.sym.to_string()),
+      // Computed string access: `ReactLynxRuntime["useEffect"]`
+      MemberProp::Computed(computed) => computed
+        .expr
+        .as_lit()
+        .and_then(|lit| match lit {
+          Lit::Str(str) => Some(str.value.to_string_lossy().into_owned()),
+          _ => None,
+        })
+        .is_some_and(|prop_name| target_calls.contains(&prop_name)),
+      _ => false,
     }
   }
 }
@@ -147,8 +223,31 @@ impl Default for ShakeVisitor {
 }
 
 impl VisitMut for ShakeVisitor {
+  fn visit_mut_stmt(&mut self, n: &mut Stmt) {
+    if let Stmt::Expr(expr_stmt) = n {
+      if let Expr::Call(call_expr) = &*expr_stmt.expr {
+        if self.should_remove_call(call_expr, &self.opts.remove_call) {
+          *n = Stmt::Empty(EmptyStmt { span: DUMMY_SP });
+          return;
+        }
+      }
+    }
+    n.visit_mut_children_with(self);
+  }
+
+  fn visit_mut_expr(&mut self, n: &mut Expr) {
+    if let Expr::Call(call_expr) = n {
+      if self.should_remove_call(call_expr, &self.opts.remove_call) {
+        *n = Expr::Ident(Ident::new("undefined".into(), DUMMY_SP, Default::default()));
+        return;
+      }
+    }
+    n.visit_mut_children_with(self);
+  }
+
   /**
-   * labeling import stmt
+   * Record runtime imports as `local_id -> imported_name` so aliased imports
+   * like `import { useEffect as myUseEffect }` still match `useEffect`.
    */
   fn visit_mut_import_decl(&mut self, n: &mut ImportDecl) {
     let import_src = n.src.value.to_string_lossy();
@@ -158,17 +257,45 @@ impl VisitMut for ShakeVisitor {
       .iter()
       .any(|pkg| pkg == import_src.as_ref())
     {
-      self.is_runtime_import = true;
-    }
-    n.visit_mut_children_with(self);
-    self.is_runtime_import = false;
-  }
-  /**
-   * labeling identifiers of the import by id
-   */
-  fn visit_mut_ident(&mut self, n: &mut Ident) {
-    if self.is_runtime_import {
-      self.import_ids.push(n.to_id())
+      for specifier in &n.specifiers {
+        match specifier {
+          ImportSpecifier::Named(named) => {
+            // Example:
+            //   import { useEffect } from "@lynx-js/react-runtime";
+            //   import { useEffect as myUseEffect } from "@lynx-js/react-runtime";
+            // Result:
+            //   import_ids[useEffect(local id)] = "useEffect"
+            //   import_ids[myUseEffect(local id)] = "useEffect"
+            let imported_name = named
+              .imported
+              .as_ref()
+              .map(|imported| match imported {
+                ModuleExportName::Ident(ident) => ident.sym.to_string(),
+                ModuleExportName::Str(str) => str.value.to_string_lossy().into_owned(),
+              })
+              .unwrap_or_else(|| named.local.sym.to_string());
+            self.import_ids.insert(named.local.to_id(), imported_name);
+          }
+          ImportSpecifier::Default(default) => {
+            // Example:
+            //   import ReactLynxRuntime from "@lynx-js/react-runtime";
+            // Result:
+            //   import_ids[ReactLynxRuntime(local id)] = "default"
+            self
+              .import_ids
+              .insert(default.local.to_id(), "default".to_string());
+          }
+          ImportSpecifier::Namespace(namespace) => {
+            // Example:
+            //   import * as ReactLynxRuntime from "@lynx-js/react-runtime";
+            // Result:
+            //   import_ids[ReactLynxRuntime(local id)] = "*"
+            self
+              .import_ids
+              .insert(namespace.local.to_id(), "*".to_string());
+          }
+        }
+      }
     }
     n.visit_mut_children_with(self);
   }
@@ -176,15 +303,8 @@ impl VisitMut for ShakeVisitor {
    * labeling function call
    */
   fn visit_mut_call_expr(&mut self, n: &mut CallExpr) {
-    if let Some(fn_name) = n.callee.as_expr().and_then(|s| s.as_ident()) {
-      if self.import_ids.contains(&fn_name.to_id())
-        && self
-          .opts
-          .remove_call_params
-          .contains(&fn_name.sym.to_string())
-      {
-        n.args.clear();
-      }
+    if self.should_remove_call(n, &self.opts.remove_call_params) {
+      n.args.clear();
     }
     n.visit_mut_children_with(self);
   }
@@ -302,7 +422,7 @@ mod tests {
     ecma::{transforms::base::resolver, visit::visit_mut_pass},
   };
 
-  use crate::ShakeVisitor;
+  use crate::{ShakeVisitor, ShakeVisitorConfig};
 
   test!(
     module,
@@ -319,6 +439,68 @@ mod tests {
         return <view></view>
       }
     }
+    "#
+  );
+
+  test!(
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(ShakeVisitor::new(Default::default())),
+    ),
+    should_remove_use_effect_call,
+    r#"
+    import { useEffect } from "@lynx-js/react-runtime";
+    const myUseEffect = useEffect;
+    export function A () {
+      useEffect(()=>{
+        console.log("remove useEffect")
+      })
+      myUseEffect(()=>{
+        console.log("remove myUseEffect")
+      })
+    }
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(ShakeVisitor::new(Default::default())),
+    ),
+    should_not_remove_call_in_scope_id,
+    r#"
+    import { useEffect } from '@lynx-js/react-runtime'
+    {
+      const useEffect = () => {};
+      useEffect(() => {});
+    }
+    useEffect(() => {});
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(ShakeVisitor::new(Default::default())),
+    ),
+    should_replace_use_effect_call_with_undefined,
+    r#"
+    import { useEffect } from '@lynx-js/react-runtime'
+    const a = useEffect(() => {});
     "#
   );
 
@@ -484,13 +666,155 @@ mod tests {
 
   test!(
     Default::default(),
-    |_| visit_mut_pass(ShakeVisitor::default()),
+    |_| visit_mut_pass(ShakeVisitor::new(ShakeVisitorConfig {
+      remove_call: Vec::new(),
+      remove_call_params: vec!["useEffect".to_string()],
+      ..Default::default()
+    })),
     should_remove_use_effect_param,
     r#"
     import { useEffect } from "@lynx-js/react-runtime";
+    const myUseEffect = useEffect;
     export function A () {
       useEffect(()=>{
-        console.log("remove")
+        console.log("remove useEffect")
+      })
+      myUseEffect(()=>{
+        console.log("remove myUseEffect")
+      })
+    }
+    "#
+  );
+
+  test!(
+    Default::default(),
+    |_| visit_mut_pass(ShakeVisitor::new(ShakeVisitorConfig {
+      remove_call: vec!["useEffect".to_string()],
+      remove_call_params: Vec::new(),
+      ..Default::default()
+    })),
+    should_remove_aliased_use_effect_call,
+    r#"
+    import { useEffect as myUseEffect } from "@lynx-js/react-runtime";
+    export function A () {
+      myUseEffect(()=>{
+        console.log("keep aliased useEffect")
+      })
+    }
+    "#
+  );
+
+  test!(
+    Default::default(),
+    |_| visit_mut_pass(ShakeVisitor::new(ShakeVisitorConfig {
+      remove_call: vec!["myUseEffect".to_string()],
+      remove_call_params: Vec::new(),
+      ..Default::default()
+    })),
+    should_remove_aliased_use_effect_call_by_local_name,
+    r#"
+    import { useEffect as myUseEffect } from "@lynx-js/react-runtime";
+    export function A () {
+      myUseEffect(()=>{
+        console.log("remove aliased useEffect by local name")
+      })
+    }
+    "#
+  );
+
+  test!(
+    Default::default(),
+    |_| visit_mut_pass(ShakeVisitor::new(ShakeVisitorConfig {
+      remove_call: vec!["useEffect".to_string()],
+      remove_call_params: Vec::new(),
+      ..Default::default()
+    })),
+    should_remove_default_and_namespace_runtime_import_calls,
+    r#"
+    import ReactLynxRuntime from "@lynx-js/react-runtime";
+    import * as ReactLynxRuntimeNS from "@lynx-js/react-runtime";
+    export function A () {
+      ReactLynxRuntime['useEffect'](()=>{
+        console.log("remove default import member call")
+      })
+      ReactLynxRuntimeNS.useEffect(()=>{
+        console.log("remove namespace import member call")
+      })
+    }
+    "#
+  );
+
+  test!(
+    Default::default(),
+    |_| visit_mut_pass(ShakeVisitor::new(ShakeVisitorConfig {
+      remove_call: Vec::new(),
+      remove_call_params: vec!["useEffect".to_string()],
+      ..Default::default()
+    })),
+    should_remove_default_and_namespace_runtime_import_params,
+    r#"
+    import ReactLynxRuntime from "@lynx-js/react-runtime";
+    import * as ReactLynxRuntimeNS from "@lynx-js/react-runtime";
+    export function A () {
+      ReactLynxRuntime.useEffect(()=>{
+        console.log("remove default import member call")
+      })
+      ReactLynxRuntimeNS.useEffect(()=>{
+        console.log("remove namespace import member call")
+      })
+    }
+    "#
+  );
+
+  test!(
+    Default::default(),
+    |_| visit_mut_pass(ShakeVisitor::new(ShakeVisitorConfig {
+      remove_call: Vec::new(),
+      remove_call_params: vec!["myUseEffect".to_string()],
+      ..Default::default()
+    })),
+    should_remove_aliased_use_effect_param_by_local_name,
+    r#"
+    import { useEffect as myUseEffect } from "@lynx-js/react-runtime";
+    export function A () {
+      myUseEffect(()=>{
+        console.log("remove aliased useEffect by local name")
+      })
+    }
+    "#
+  );
+
+  test!(
+    Default::default(),
+    |_| visit_mut_pass(ShakeVisitor::new(ShakeVisitorConfig {
+      remove_call: Vec::new(),
+      remove_call_params: vec!["useEffect".to_string()],
+      ..Default::default()
+    })),
+    should_remove_aliased_use_effect_param,
+    r#"
+    import { useEffect as myUseEffect } from "@lynx-js/react-runtime";
+    export function A () {
+      myUseEffect(()=>{
+        console.log("keep aliased useEffect")
+      })
+    }
+    "#
+  );
+
+  test!(
+    Default::default(),
+    |_| visit_mut_pass(ShakeVisitor::new(ShakeVisitorConfig {
+      remove_call: vec!["useEffect".to_string()],
+      remove_call_params: Vec::new(),
+      ..Default::default()
+    })),
+    should_keep_use_effect_call_from_custom_runtime,
+    r#"
+    import { useEffect } from "@lynx-js/custom-react-runtime";
+    export function A () {
+      useEffect(()=>{
+        console.log("keep useEffect from custom runtime")
       })
     }
     "#
@@ -504,7 +828,11 @@ mod tests {
     }),
     |_| (
       resolver(Mark::new(), Mark::new(), true),
-      visit_mut_pass(ShakeVisitor::new(Default::default())),
+      visit_mut_pass(ShakeVisitor::new(ShakeVisitorConfig {
+        remove_call_params: vec!["useEffect".to_string()],
+        remove_call: Vec::new(),
+        ..Default::default()
+      })),
     ),
     should_not_remove_in_scope_id,
     r#"

@@ -17,9 +17,11 @@ export interface Output {
   /**
    * The {@link Output.assetPrefix} is used to set the URL prefix for static assets.
    *
+   * @defaultValue undefined
+   *
    * @remarks
    *
-   * The functionality of {@link Output.assetPrefix} is basically the same as the {@link https://www.rspack.dev/config/output#outputpublicpath | output.publicPath}
+   * The functionality of {@link Output.assetPrefix} is basically the same as the {@link https://rspack.rs/config/output#outputpublicpath | output.publicPath}
    * config in Rspack. With the following differences:
    *
    * - `output.assetPrefix` only takes effect in the production build.
@@ -48,7 +50,9 @@ export interface Output {
    *
    * By default, if the output directory is a subdirectory of the project root path, Rspeedy will automatically clean all files in the build directory.
    *
-   * When {@link https://rsbuild.dev/config/output/dist-path#root-directory | output.distPath.root} is an external directory or the same as the project root directory, `cleanDistPath` is not enabled by default to prevent accidental deletion of files from other directories.
+   * When {@link https://rsbuild.rs/config/output/dist-path#root-directory | output.distPath.root} is an external directory or the same as the project root directory, `cleanDistPath` is not enabled by default to prevent accidental deletion of files from other directories.
+   *
+   * @defaultValue Automatically enabled when `output.distPath.root` is a subdirectory of the project root; otherwise disabled.
    *
    * @example
    *
@@ -80,9 +84,11 @@ export interface Output {
   /**
    * The {@link Output.copy} option is used for copying files to the dist directory.
    *
+   * @defaultValue undefined
+   *
    * @remarks
    *
-   * For more options, see {@link https://rspack.dev/plugins/rspack/copy-rspack-plugin | Rspack.CopyRspackPlugin}.
+   * For more options, see {@link https://rspack.rs/plugins/rspack/copy-rspack-plugin | Rspack.CopyRspackPlugin}.
    *
    * @example
    *
@@ -126,6 +132,8 @@ export interface Output {
   /**
    * The {@link CssModules} option is used for the customization of CSS Modules configurations.
    *
+   * @defaultValue undefined
+   *
    * @remarks
    *
    * The CSS module is enabled for `*.module.css`, `*.module.scss` and `*.module.less`.
@@ -166,9 +174,7 @@ export interface Output {
   /**
    * The {@link Output.dataUriLimit} option is used to set the size threshold to inline static assets such as images and fonts.
    *
-   * @remarks
-   *
-   * The default value of `dataUriLimit` is 2kB.
+   * @defaultValue 2048
    *
    * @example
    *
@@ -230,9 +236,11 @@ export interface Output {
   /**
    * Set the directory of the dist files.
    *
+   * @defaultValue Uses Rsbuild's default distPath configuration with `root: 'dist'`.
+   *
    * @remarks
    *
-   * More options can be found at {@link https://rsbuild.dev/config/output/dist-path | Rsbuild - distPath}.
+   * More options can be found at {@link https://rsbuild.rs/config/output/dist-path | Rsbuild - distPath}.
    *
    * @example
    *
@@ -254,6 +262,8 @@ export interface Output {
   /**
    * The {@link Filename} determines the name of the JavaScript bundle file to be output. These bundles will be written to the directory specified by output.path.
    *
+   * @defaultValue `{ bundle: '[name].[platform].bundle', template: '[name].[platform].bundle' }`
+   *
    * @remarks
    *
    * If a string is provided, it will be used as {@link Filename.bundle}.
@@ -273,6 +283,8 @@ export interface Output {
 
   /**
    * The {@link Output.filenameHash} option controls whether to add a hash value to the filename after the production build.
+   *
+   * @defaultValue In production web builds, Rsbuild defaults this option to `true`; development builds and non-web outputs omit hashes by default.
    *
    * @remarks
    *
@@ -319,11 +331,11 @@ export interface Output {
   /**
    * The {@link Output.inlineScripts} option controls whether to inline scripts into Lynx bundle (`.lynx.bundle`).
    *
+   * @defaultValue Rspeedy defaults this to `true` and only switches it to `false` when the user explicitly sets `performance.chunkSplit.strategy` to a value other than `'all-in-one'`.
+   *
    * @remarks
    *
-   * If no value is provided, the default value would be `true`, which means all background thread scripts will be inlined.
-   *
-   * This is different with {@link https://rsbuild.dev/config/output/inline-scripts | output.inlineScripts } since we normally want to inline scripts in Lynx bundle (`.lynx.bundle`).
+   * This is different with {@link https://rsbuild.rs/config/output/inline-scripts | output.inlineScripts } since we normally want to inline scripts in Lynx bundle (`.lynx.bundle`).
    *
    * There are two points that need to be especially noted:
    *
@@ -349,9 +361,9 @@ export interface Output {
   /**
    * The {@link Output.legalComments} controls how to handle the legal comment.
    *
-   * @remarks
+   * @defaultValue `'none'`
    *
-   * If no value is provided, the default value would be `'none'`.
+   * @remarks
    *
    * This is different with Rsbuild since we normally do not want a `.LEGAL.txt` file in Lynx outputs.
    *
@@ -367,6 +379,8 @@ export interface Output {
 
   /**
    * The {@link Minify} configures whether to enable code minification in the production build, or to configure minimizer options.
+   *
+   * @defaultValue `true` in production builds and `false` otherwise
    *
    * @example
    *
@@ -384,6 +398,8 @@ export interface Output {
 
   /**
    * The {@link SourceMap} configures whether and how to generate source-map for outputs.
+   *
+   * @defaultValue When this option is unset, JavaScript source maps use `'cheap-module-source-map'` in development and are otherwise disabled; CSS source maps are disabled.
    */
   sourceMap?: boolean | SourceMap | undefined
 }

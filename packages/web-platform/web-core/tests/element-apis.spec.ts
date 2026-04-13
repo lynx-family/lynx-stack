@@ -1264,6 +1264,44 @@ describe('Element APIs', () => {
     );
   });
 
+  test('event with bubbles: false should not bubble to parent', () => {
+    vi.spyOn(mtsBinding, 'addEventListener');
+    vi.spyOn(mtsBinding, 'publishEvent');
+    let page = mtsGlobalThis.__CreatePage('0', 0);
+    let parent = mtsGlobalThis.__CreateComponent(
+      0,
+      'id1',
+      0,
+      'test_entry',
+      'name',
+      'path',
+      {},
+      {},
+    );
+    let parentUid = mtsGlobalThis.__GetElementUniqueID(parent);
+    let child = mtsGlobalThis.__CreateView(parentUid);
+    mtsGlobalThis.__AppendElement(page, parent);
+    mtsGlobalThis.__AppendElement(parent, child);
+    mtsGlobalThis.__SetID(parent, 'parent_id');
+    mtsGlobalThis.__SetID(child, 'child_id');
+    mtsGlobalThis.__AddEvent(parent, 'bindEvent', 'tap', 'parent_hname');
+    mtsGlobalThis.__AddEvent(child, 'bindEvent', 'tap', 'child_hname');
+    mtsGlobalThis.__FlushElementTree();
+    const event = new window.Event('click', { bubbles: false });
+    rootDom.querySelector('#child_id')?.dispatchEvent(event);
+    expect(mtsBinding.addEventListener).toBeCalledWith('tap');
+    expect(mtsBinding.publishEvent).toBeCalledTimes(1);
+    expect(mtsBinding.publishEvent).toBeCalledWith(
+      'child_hname',
+      'id1',
+      expect.any(Object),
+      expect.any(Number),
+      undefined,
+      expect.any(Number),
+      undefined,
+    );
+  });
+
   test('__UpdateComponentInfo', () => {
     let ele = mtsGlobalThis.__CreateComponent(
       0,
@@ -1423,6 +1461,113 @@ describe('Element APIs', () => {
     expect(disableSpy).toHaveBeenCalledWith(expect.anything(), 'input');
   });
 
+  test('should handle global-bind events for cross-thread handlers', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const element1 = mtsGlobalThis.__CreateView(0);
+    const element2 = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AppendElement(root, element1);
+    mtsGlobalThis.__AppendElement(root, element2);
+    mtsGlobalThis.__SetID(element1, 'global_bind_target');
+    mtsGlobalThis.__SetID(element2, 'global_bind_watcher');
+    mtsGlobalThis.__FlushElementTree();
+
+    const publishSpy = vi.spyOn(mtsBinding, 'publishEvent');
+
+    // Register global-bind on element2
+    mtsGlobalThis.__AddEvent(
+      element2,
+      'global-bindevent',
+      'tap',
+      'global-handler',
+    );
+
+    // Get events should include global-bindevent
+    const events = mtsGlobalThis.__GetEvents(element2);
+    const found = events.some((e: any) =>
+      e.event_name === 'tap' && e.event_type === 'global-bindevent'
+    );
+    expect(found).toBe(true);
+
+    // Simulate event on element1
+    rootDom.querySelector('#global_bind_target')?.dispatchEvent(
+      new window.Event('click', { bubbles: true }),
+    );
+
+    expect(publishSpy).toHaveBeenCalledTimes(1);
+    expect(publishSpy).toHaveBeenCalledWith(
+      'global-handler',
+      undefined,
+      expect.any(Object),
+      expect.any(Number),
+      undefined,
+      expect.any(Number),
+      undefined,
+    );
+
+    // Unregister global-bindevent
+    mtsGlobalThis.__AddEvent(element2, 'global-bindevent', 'tap', null as any);
+    publishSpy.mockClear();
+
+    // Simulate event on element1 again, should not broadcast
+    rootDom.querySelector('#global_bind_target')?.dispatchEvent(
+      new window.Event('click', { bubbles: true }),
+    );
+    expect(publishSpy).toHaveBeenCalledTimes(0);
+  });
+
+  test('should handle global-bind events for run-worklet handlers', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const element1 = mtsGlobalThis.__CreateView(0);
+    const element2 = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AppendElement(root, element1);
+    mtsGlobalThis.__AppendElement(root, element2);
+    mtsGlobalThis.__SetID(element1, 'global_bind_target_worklet');
+    mtsGlobalThis.__SetID(element2, 'global_bind_watcher_worklet');
+    mtsGlobalThis.__FlushElementTree();
+
+    const runWorkletSpy = vi.spyOn(mtsBinding, 'runWorklet');
+
+    // Register global-bind on element2
+    mtsGlobalThis.__AddEvent(
+      element2,
+      'global-bindevent',
+      'tap',
+      { name: 'worklet-handler' } as any,
+    );
+
+    // Get events should include global-bindevent
+    const events = mtsGlobalThis.__GetEvents(element2);
+    const found = events.some((e: any) =>
+      e.event_name === 'tap' && e.event_type === 'global-bindevent'
+    );
+    expect(found).toBe(true);
+
+    // Simulate event on element1
+    rootDom.querySelector('#global_bind_target_worklet')?.dispatchEvent(
+      new window.Event('click', { bubbles: true }),
+    );
+
+    expect(runWorkletSpy).toHaveBeenCalledTimes(1);
+    expect(runWorkletSpy).toHaveBeenCalledWith(
+      { name: 'worklet-handler' },
+      expect.any(Object),
+      expect.any(Number),
+      undefined,
+      expect.any(Number),
+      undefined,
+    );
+
+    // Unregister global-bindevent
+    mtsGlobalThis.__AddEvent(element2, 'global-bindevent', 'tap', null as any);
+    runWorkletSpy.mockClear();
+
+    // Simulate event on element1 again, should not broadcast
+    rootDom.querySelector('#global_bind_target_worklet')?.dispatchEvent(
+      new window.Event('click', { bubbles: true }),
+    );
+    expect(runWorkletSpy).toHaveBeenCalledTimes(0);
+  });
+
   test('getClassList', () => {
     const root = mtsGlobalThis.__CreatePage('page', 0);
     const element = mtsGlobalThis.__CreateView(0);
@@ -1431,9 +1576,9 @@ describe('Element APIs', () => {
     mtsGlobalThis.__AppendElement(root, element);
 
     const spy = vi.spyOn(mtsBinding, 'getClassList');
-    const classes = mtsBinding.getClassList(element);
+    const classes = mtsBinding.getClassList(new WeakRef(element));
 
-    expect(spy).toHaveBeenCalledWith(element);
+    expect(spy).toHaveBeenCalledWith(expect.any(WeakRef));
     expect(classes).toEqual(expect.arrayContaining(['foo', 'bar']));
     expect(classes.length).toBe(2);
   });

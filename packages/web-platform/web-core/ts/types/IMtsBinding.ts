@@ -37,9 +37,17 @@ export interface RustMainthreadContextBinding {
     toEnable: boolean,
   ): void;
 
-  enableElementEvent(element: HTMLElement, eventName: string): void;
+  enableElementEvent(element: WeakRef<HTMLElement>, eventName: string): void;
 
-  disableElementEvent(element: HTMLElement, eventName: string): void;
+  disableElementEvent(element: WeakRef<HTMLElement>, eventName: string): void;
 
-  getClassList(element: HTMLElement): string[];
+  getClassList(element: WeakRef<HTMLElement>): string[];
+
+  setAttribute(
+    element: WeakRef<HTMLElement>,
+    name: string,
+    value: string,
+  ): void;
+
+  removeAttribute(element: WeakRef<HTMLElement>, name: string): void;
 }

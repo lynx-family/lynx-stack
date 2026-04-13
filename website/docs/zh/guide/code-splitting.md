@@ -2,7 +2,7 @@
 
 > Rspack 支持代码分割特性，允许让你对代码进行分割，控制生成的资源体积和资源数量来获取资源加载性能的提升。
 >
-> [Rspack - 代码分割](https://rspack.dev/zh/guide/optimization/code-splitting)
+> [Rspack - 代码分割](https://rspack.rs/zh/guide/optimization/code-splitting)
 
 ## 懒加载组件
 

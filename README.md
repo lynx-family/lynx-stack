@@ -56,7 +56,7 @@ Thanks to:
 - [Preact](https://preactjs.com/) for creating a lightweight and efficient UI library that served as a foundation for the ReactLynx project.
 - [React](https://react.dev/) for creating a comprehensive and intuitive library for building user interfaces that inspires the programming model of Lynx.
 - [React Native](https://reactnative.dev/) for groundbreaking work in allowing developers to create truly native apps using JavaScript and React.
-- [Rspack](https://rspack.dev/) for providing a fast and flexible build tool that has significantly enhanced the build performance of Lynx projects.
+- [Rspack](https://rspack.rs/) for providing a fast and flexible build tool that has significantly enhanced the build performance of Lynx projects.
 - [React Native for Web](https://necolas.github.io/react-native-web/) project for inspiring the Lynx for Web project, motivating our architectural design with its accessible implementation and interoperability with React DOM.
 - [SWC](https://github.com/swc-project/swc) project created by [@kdy1](https://github.com/kdy1), which turbocharges ReactLynx's code transformation with Rust-powered efficiency, achieving sub-second build times and frictionless developer experience.
 

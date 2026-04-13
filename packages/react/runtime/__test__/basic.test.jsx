@@ -136,6 +136,103 @@ describe('insertBefore', () => {
     `);
   });
 
+  it('keeps __current_slot_index stable when removing content inside slot wrappers', async function() {
+    const snapshot1 = __SNAPSHOT__(
+      <view>
+        <text>
+          {HOLE}!!!{HOLE}
+        </text>
+      </view>,
+    );
+
+    const snapshot2 = __SNAPSHOT__(
+      <view>
+        <text>Hello World</text>
+      </view>,
+    );
+
+    const a = new SnapshotInstance(snapshot1);
+    a.ensureElements();
+
+    // Insert two wrappers for stable slot index
+    const b = new SnapshotInstance('wrapper');
+    const c = new SnapshotInstance('wrapper');
+    expect(a.__current_slot_index).toBe(0);
+    a.insertBefore(b);
+    expect(a.__current_slot_index).toBe(1);
+    a.insertBefore(c);
+    expect(a.__current_slot_index).toBe(2);
+    expect(a.__element_root).toMatchInlineSnapshot(`
+      <view>
+        <text>
+          <wrapper />
+          <raw-text
+            text="!!!"
+          />
+          <wrapper />
+        </text>
+      </view>
+    `);
+
+    const d = new SnapshotInstance(snapshot2);
+    const e = new SnapshotInstance(snapshot2);
+
+    b.insertBefore(d);
+    c.insertBefore(e);
+
+    expect(a.__current_slot_index).toBe(2);
+    expect(a.__element_root).toMatchInlineSnapshot(`
+      <view>
+        <text>
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
+          <raw-text
+            text="!!!"
+          />
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
+        </text>
+      </view>
+    `);
+
+    b.removeChild(d);
+
+    expect(a.__current_slot_index).toBe(2);
+    expect(a.__element_root).toMatchInlineSnapshot(`
+      <view>
+        <text>
+          <wrapper />
+          <raw-text
+            text="!!!"
+          />
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
+        </text>
+      </view>
+    `);
+  });
+
   it('snapshot slot count = 2 - delayed ensureElements', async function() {
     const snapshot1 = __SNAPSHOT__(
       <view>

@@ -103,4 +103,12 @@ lazy_static::lazy_static! {
     "scrolltoupperedge",
     "scrolltoloweredge"
   ]);
+
+  pub static ref EVENT_TYPES: Vec<&'static str> = vec![
+    "bindevent",
+    "capture-bind",
+    "catchevent",
+    "capture-catch",
+    "global-bindevent",
+  ];
 }

@@ -3,14 +3,19 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "./lib",
+    // Keep incremental metadata under lib so clearing generated outputs also
+    // invalidates the runtime build cache for worklet-runtime artifacts.
+    "tsBuildInfoFile": "./lib/tsconfig.tsbuildinfo",
     "baseUrl": "./",
+    "paths": {
+      // Resolve the public bindings specifier back to source while building
+      // runtime itself, so the emitted lib output never becomes its own input.
+      "@lynx-js/react/worklet-runtime/bindings": ["./src/worklet-runtime/bindings/index.ts"],
+    },
     "rootDir": "./src",
     "jsx": "react-jsx",
     "jsxImportSource": "./",
   },
-  "references": [{
-    "path": "../worklet-runtime/tsconfig.json",
-  }],
   "include": [
     "debug",
     "jsx-dev-runtime",

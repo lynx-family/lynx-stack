@@ -11,6 +11,7 @@ use std::borrow::Cow;
 pub struct TransformerConfig {
   pub transform_vw: bool,
   pub transform_vh: bool,
+  pub transform_rem: bool,
 }
 
 /**
@@ -39,6 +40,12 @@ pub(crate) fn transform_one_token<'a>(
           return (
             token_type,
             Cow::Owned(format!("calc({value} * var(--ppx-unit))")),
+          );
+        } else if config.transform_rem && suffix.eq_ignore_ascii_case("rem") {
+          let value = &token_value[..len - 3];
+          return (
+            token_type,
+            Cow::Owned(format!("calc({value} * var(--rem-unit))")),
           );
         }
       }
@@ -140,6 +147,25 @@ mod tests {
   fn test_transform_vh_disabled() {
     let (_, tv) = transform_one_token(DIMENSION_TOKEN, "100vh", &TransformerConfig::default());
     assert_eq!(tv, "100vh");
+  }
+
+  #[test]
+  fn test_transform_rem() {
+    let (_, tv) = transform_one_token(
+      DIMENSION_TOKEN,
+      "2rem",
+      &TransformerConfig {
+        transform_rem: true,
+        ..Default::default()
+      },
+    );
+    assert_eq!(tv, "calc(2 * var(--rem-unit))");
+  }
+
+  #[test]
+  fn test_transform_rem_disabled() {
+    let (_, tv) = transform_one_token(DIMENSION_TOKEN, "2rem", &TransformerConfig::default());
+    assert_eq!(tv, "2rem");
   }
 
   #[test]

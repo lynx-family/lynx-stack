@@ -1,5 +1,22 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.10.8
+
+### Patch Changes
+
+- Updated dependencies [[`156d64d`](https://github.com/lynx-family/lynx-stack/commit/156d64da67e83dfc92e63568cee602c21db873cf), [`5151fcf`](https://github.com/lynx-family/lynx-stack/commit/5151fcf32310339a1b4634c5aec921363f423e01), [`b630df2`](https://github.com/lynx-family/lynx-stack/commit/b630df27ae9a21f3d0466ec6858ef05626ee975a), [`59d11b2`](https://github.com/lynx-family/lynx-stack/commit/59d11b2549e5d2ca2ef18c5fe238c468e6db7d9a)]:
+  - @lynx-js/css-serializer@0.1.5
+  - @lynx-js/web-core@0.20.1
+
+## 0.10.7
+
+### Patch Changes
+
+- use path.posix.format instead of path.format to ensure consistent path separators across platforms ([#2359](https://github.com/lynx-family/lynx-stack/pull/2359))
+
+- Updated dependencies [[`75960cd`](https://github.com/lynx-family/lynx-stack/commit/75960cdcb3ed343e0f9746ba4d3f909d06c64ae2), [`518c310`](https://github.com/lynx-family/lynx-stack/commit/518c310ee38cd7b54e8e5ac5c0a0d27cc63a5189), [`863469e`](https://github.com/lynx-family/lynx-stack/commit/863469e7eae3e1a69181ff148309bf1037d1eb5e), [`dc18c5c`](https://github.com/lynx-family/lynx-stack/commit/dc18c5c191b6df8608e4707bf15bf9d89f2baf6e), [`7d242f3`](https://github.com/lynx-family/lynx-stack/commit/7d242f398930a941d3f18b1ca63dc78138a09351), [`62bebcf`](https://github.com/lynx-family/lynx-stack/commit/62bebcf66662b3473ab7e173f78d5c355f2d95ad), [`75960cd`](https://github.com/lynx-family/lynx-stack/commit/75960cdcb3ed343e0f9746ba4d3f909d06c64ae2), [`182f568`](https://github.com/lynx-family/lynx-stack/commit/182f56808444fd6c4b7a65f634f8cca537bc4d0b), [`1aa051d`](https://github.com/lynx-family/lynx-stack/commit/1aa051dec603af0008ad0c941a7ba869279acb03), [`6b46f7e`](https://github.com/lynx-family/lynx-stack/commit/6b46f7e9200ee38999c6257ee5a8a3f4261746b8), [`fcda36a`](https://github.com/lynx-family/lynx-stack/commit/fcda36a7c3cd7521a482911aff15be0e17637de1), [`182f568`](https://github.com/lynx-family/lynx-stack/commit/182f56808444fd6c4b7a65f634f8cca537bc4d0b), [`138f727`](https://github.com/lynx-family/lynx-stack/commit/138f7270e39e344ed4b1fecd8a0aef7908a3acd3), [`138f727`](https://github.com/lynx-family/lynx-stack/commit/138f7270e39e344ed4b1fecd8a0aef7908a3acd3)]:
+  - @lynx-js/web-core@0.20.0
+
 ## 0.10.6
 
 ### Patch Changes
