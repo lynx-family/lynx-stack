@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 
 import type { Chunk, Compilation, Compiler } from '@rspack/core';
@@ -269,31 +268,7 @@ class ReactWebpackPlugin {
       // TODO: replace LynxTemplatePlugin types with Rspack
       // @ts-expect-error Rspack x Webpack compilation not match
       const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
-
-      const { RawSource, ConcatSource } = compiler.webpack.sources;
-      hooks.beforeEncode.tap(
-        this.constructor.name,
-        (args) => {
-          const lepusCode = args.encodeData.lepusCode;
-          if (
-            lepusCode.root?.source.source().toString()?.includes(
-              'registerWorkletInternal',
-            )
-          ) {
-            lepusCode.chunks.push({
-              name: 'worklet-runtime',
-              source: new RawSource(fs.readFileSync(
-                options.workletRuntimePath,
-                'utf8',
-              )),
-              info: {
-                ['lynx:main-thread']: true,
-              },
-            });
-          }
-          return args;
-        },
-      );
+      const { ConcatSource } = compiler.webpack.sources;
 
       if (
         compiler.options.plugins.some(

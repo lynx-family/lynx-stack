@@ -12,7 +12,7 @@ import { describe, expect, it } from 'vitest';
 interface WorkletRuntimeCase {
   caseName: string;
   expectedChunkNames: string[];
-  expectedInitSignatureCount: number;
+  expectedInlineInitSignatureCount: number;
   expectedRegisterIdCount: number;
 }
 
@@ -140,14 +140,14 @@ describe('worklet-runtime bundler guardrails', () => {
   it.each<WorkletRuntimeCase>([
     {
       caseName: 'chunk',
-      expectedChunkNames: ['worklet-runtime'],
-      expectedInitSignatureCount: 1,
+      expectedChunkNames: [],
+      expectedInlineInitSignatureCount: 1,
       expectedRegisterIdCount: 2,
     },
     {
       caseName: 'not-using',
       expectedChunkNames: [],
-      expectedInitSignatureCount: 0,
+      expectedInlineInitSignatureCount: 0,
       expectedRegisterIdCount: 0,
     },
   ])(
@@ -155,7 +155,7 @@ describe('worklet-runtime bundler guardrails', () => {
     async ({
       caseName,
       expectedChunkNames,
-      expectedInitSignatureCount,
+      expectedInlineInitSignatureCount,
       expectedRegisterIdCount,
     }) => {
       const { lepusChunk, mainThreadSource } = await buildCase(caseName);
@@ -170,16 +170,16 @@ describe('worklet-runtime bundler guardrails', () => {
 
       if (expectedChunkNames.length > 0) {
         expect(lepusChunk['worklet-runtime'].length).toBeGreaterThan(0);
-        expect(
-          countOccurrences(
-            lepusChunk['worklet-runtime'],
-            'globalThis.lynxWorkletImpl = {',
-          ),
-        ).toBe(expectedInitSignatureCount);
       } else {
         expect(lepusChunk['worklet-runtime']).toBeUndefined();
-        expect(expectedInitSignatureCount).toBe(0);
       }
+
+      expect(
+        countOccurrences(
+          mainThreadSource,
+          'globalThis.lynxWorkletImpl = {',
+        ),
+      ).toBe(expectedInlineInitSignatureCount);
 
       expect(registeredWorkletIds).toHaveLength(expectedRegisterIdCount);
       expect(new Set(registeredWorkletIds).size).toBe(
