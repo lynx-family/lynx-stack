@@ -6,7 +6,7 @@ import type { logger } from '@rsbuild/core'
 import type { Config } from './config/index.js'
 
 /**
- * The exposed API of Rspeedy. Can be used in Rsbuild plugin with {@link https://rsbuild.dev/plugins/dev/core#apiuseexposed | api.useExposed}.
+ * The exposed API of Rspeedy. Can be used in Rsbuild plugin with {@link https://rsbuild.rs/plugins/dev/core#apiuseexposed | api.useExposed}.
  *
  * @public
  *

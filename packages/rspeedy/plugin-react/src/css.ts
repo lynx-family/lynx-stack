@@ -32,7 +32,7 @@ export function applyCSS(
       // - disables `style-loader`
       // - enables CssExtractRspackPlugin
       // - disables `experiment.css`(which is all we need)
-      // See: https://rsbuild.dev/config/output/inject-styles
+      // See: https://rsbuild.rs/config/output/inject-styles
       output: { injectStyles: false },
     })
   })

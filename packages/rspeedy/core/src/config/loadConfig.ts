@@ -62,7 +62,18 @@ export const resolveConfigPath = (
  * @public
  */
 export interface LoadConfigOptions {
+  /**
+   * The config file path to load.
+   *
+   * @defaultValue Automatically resolves `lynx.config.ts`, `lynx.config.js`, `lynx.config.mts`, or `lynx.config.mjs` from `cwd`
+   */
   configPath?: string | undefined
+
+  /**
+   * The working directory used to resolve the config path.
+   *
+   * @defaultValue `process.cwd()`
+   */
   cwd?: string | undefined
 }
 

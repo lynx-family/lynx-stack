@@ -1,5 +1,25 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.15.0
+
+### Minor Changes
+
+- Add `removeCall` for shake function calls. Its initial default value matches the hooks that were previously in `removeCallParams`, and `removeCallParams` now defaults to empty. ([#2423](https://github.com/lynx-family/lynx-stack/pull/2423))
+
+  `removeCall` removes matched runtime hook calls entirely, replacing them with `undefined` in expression positions and dropping them in statement positions. `removeCallParams` keeps the existing behavior of preserving the call while stripping its arguments.
+
+### Patch Changes
+
+- Support `@lynx-js/react` 0.118.0. ([#2432](https://github.com/lynx-family/lynx-stack/pull/2432))
+
+- Updated dependencies [[`1f4f117`](https://github.com/lynx-family/lynx-stack/commit/1f4f1171a35a00d2c9f2ae9ecff50be2626ca5bb)]:
+  - @lynx-js/react-webpack-plugin@0.9.0
+  - @lynx-js/react-alias-rsbuild-plugin@0.15.0
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.5
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+  - @lynx-js/template-webpack-plugin@0.10.8
+
 ## 0.14.0
 
 ### Minor Changes

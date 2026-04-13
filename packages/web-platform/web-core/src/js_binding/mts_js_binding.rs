@@ -36,24 +36,39 @@ extern "C" {
   #[wasm_bindgen(method, js_name = "addEventListener")]
   pub fn add_event_listener(this: &RustMainthreadContextBinding, event_name: &str);
 
-  #[wasm_bindgen(method, js_name = "enableElementEvent")]
+  #[wasm_bindgen(method, catch, js_name = "enableElementEvent")]
   pub fn enable_element_event(
     this: &RustMainthreadContextBinding,
-    element: &web_sys::HtmlElement,
+    element: &js_sys::WeakRef,
     event_name: &str,
-  );
+  ) -> Result<(), JsValue>;
 
-  #[wasm_bindgen(method, js_name = "disableElementEvent")]
+  #[wasm_bindgen(method, catch, js_name = "disableElementEvent")]
   pub fn disable_element_event(
     this: &RustMainthreadContextBinding,
-    element: &web_sys::HtmlElement,
+    element: &js_sys::WeakRef,
     event_name: &str,
-  );
+  ) -> Result<(), JsValue>;
 
-  #[wasm_bindgen(method, js_name = "getClassList")]
+  #[wasm_bindgen(method, catch, js_name = "getClassList")]
   pub fn get_class_name_list(
     this: &RustMainthreadContextBinding,
-    element: &web_sys::HtmlElement,
-  ) -> Vec<String>;
+    element: &js_sys::WeakRef,
+  ) -> Result<Vec<String>, JsValue>;
+
+  #[wasm_bindgen(method, catch, js_name = "setAttribute")]
+  pub fn set_attribute(
+    this: &RustMainthreadContextBinding,
+    element: &js_sys::WeakRef,
+    name: &str,
+    value: &str,
+  ) -> Result<(), JsValue>;
+
+  #[wasm_bindgen(method, catch, js_name = "removeAttribute")]
+  pub fn remove_attribute(
+    this: &RustMainthreadContextBinding,
+    element: &js_sys::WeakRef,
+    name: &str,
+  ) -> Result<(), JsValue>;
 
 }

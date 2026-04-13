@@ -15,6 +15,7 @@
     "src"
   ],
   "scripts": {
+    "build": "tsc --build",
     "test": "vitest run --coverage"
   },
   "devDependencies": {

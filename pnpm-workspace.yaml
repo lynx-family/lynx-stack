@@ -13,7 +13,6 @@ packages:
   - packages/react/transform/rspack-napi
   - packages/react/transform/swc-plugin-reactlynx
   - packages/react/transform/swc-plugin-reactlynx-compat
-  - packages/react/worklet-runtime
   - packages/react-umd
   - packages/rspeedy/*
   - packages/tailwind-preset
@@ -34,7 +33,7 @@ resolutionMode: "lowest-direct"
 
 # Default catalogs
 catalog:
-  "@microsoft/api-extractor": "7.57.6"
+  "@microsoft/api-extractor": "7.58.2"
 
 catalogs:
   adb:

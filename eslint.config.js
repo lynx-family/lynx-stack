@@ -87,6 +87,8 @@ export default tseslint.config(
       'packages/react/runtime/jsx-runtime/**',
       'packages/react/runtime/lazy/**',
       'packages/react/runtime/lepus/**',
+      // Generated worklet bundles are published assets, not source files.
+      'packages/react/runtime/worklet-runtime/**',
       'packages/react/runtime/src/renderToOpcodes/**',
       'packages/react/runtime/types/**',
 

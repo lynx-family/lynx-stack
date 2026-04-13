@@ -26,6 +26,8 @@ import {
   RENDER,
   SKIP_EFFECTS,
   VNODE,
+  HOOK,
+  CHILD_DID_SUSPEND,
 } from './constants.js';
 
 /** @typedef {import('preact').VNode} VNode */
@@ -87,7 +89,7 @@ export function renderToString(vnode: any, context: any, into: SnapshotInstance)
 
 // Installed as setState/forceUpdate for function components
 function markAsDirty() {
-  this.__d = true;
+  this[DIRTY] = true;
 }
 
 const EMPTY_OBJ = {};
@@ -165,9 +167,10 @@ function _renderToString(
     return;
   }
 
+  let vnodeType = typeof vnode;
   // Text VNodes: escape as HTML
-  if (typeof vnode !== 'object') {
-    if (typeof vnode === 'function') return;
+  if (vnodeType !== 'object') {
+    if (vnodeType === 'function') return;
     renderToTextNode(into, vnode + '', opcodes);
     return;
   }
@@ -225,15 +228,15 @@ function _renderToString(
         component = vnode[COMPONENT];
       } else {
         component = {
-          __v: vnode,
+          [VNODE]: vnode,
           props,
           context: cctx,
           // silently drop state updates
           setState: markAsDirty,
           forceUpdate: markAsDirty,
-          __d: true,
+          [DIRTY]: true,
           // hooks
-          __h: [],
+          [HOOK]: [],
         };
         vnode[COMPONENT] = component;
         component.constructor = type;
@@ -288,9 +291,10 @@ function _renderToString(
           ? lastChild.__nextSibling
           : into.__firstChild,
       );
-      if (e && typeof e === 'object' && e.then && component && /* _childDidSuspend */ component.__c) {
-        component.setState({ /* _suspended */ __a: true });
-
+      if (e && typeof e === 'object' && e.then && component && /* _childDidSuspend */ component[CHILD_DID_SUSPEND]) {
+        component[NEXT_STATE] = assign({}, component[NEXT_STATE], {
+          /* _suspended */ __a: true,
+        });
         if (component[DIRTY]) {
           rendered = renderClassComponent(vnode, context);
           component = vnode[COMPONENT];
@@ -367,7 +371,8 @@ function _renderToString(
     }
   }
 
-  if (typeof children === 'string' || typeof children === 'number') {
+  let childrenType = typeof children;
+  if (childrenType === 'string' || childrenType === 'number') {
     // single text child
     renderToTextNode(vnode, children, opcodes);
   } else if (children != null && children !== false && children !== true) {

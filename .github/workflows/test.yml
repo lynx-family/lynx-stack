@@ -229,7 +229,6 @@ jobs:
       run: >
         pnpm
         --filter @lynx-js/react-runtime
-        --filter @lynx-js/react-worklet-runtime
         --filter @lynx-js/react-transform
         run test
         --reporter=github-actions

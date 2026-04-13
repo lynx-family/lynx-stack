@@ -1,5 +1,11 @@
 # create-rspeedy
 
+## 0.14.1
+
+### Patch Changes
+
+- Fix the error when installing Lynx DevTool skill. ([#2427](https://github.com/lynx-family/lynx-stack/pull/2427))
+
 ## 0.14.0
 
 ### Patch Changes
