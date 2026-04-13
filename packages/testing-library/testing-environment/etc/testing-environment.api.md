@@ -4,8 +4,6 @@
 
 ```ts
 
-import { JSDOM } from 'jsdom';
-
 // @public
 export type ElementTree = ReturnType<typeof initElementTree>;
 
@@ -75,6 +73,13 @@ export const initElementTree: () => {
 };
 
 // @public
+export function installLynxTestingEnv(target: typeof globalThis & {
+    lynxEnv?: LynxEnv;
+    lynxTestingEnv?: LynxTestingEnv;
+    Node?: typeof Node;
+}, env: LynxEnv): void;
+
+// @public
 export interface LynxElement extends HTMLElement {
     cssId?: string;
     eventMap?: {
@@ -89,6 +94,12 @@ export interface LynxElement extends HTMLElement {
 }
 
 // @public
+export interface LynxEnv {
+    // (undocumented)
+    window: Window & typeof globalThis;
+}
+
+// @public
 export interface LynxGlobalThis {
     // (undocumented)
     [key: string]: any;
@@ -97,14 +108,14 @@ export interface LynxGlobalThis {
 
 // @public
 export class LynxTestingEnv {
-    constructor(jsdom?: JSDOM);
+    constructor(env?: LynxEnv);
     backgroundThread: LynxGlobalThis;
     // (undocumented)
     clearGlobal(): void;
     // (undocumented)
-    injectGlobals(): void;
+    env: LynxEnv;
     // (undocumented)
-    jsdom: JSDOM;
+    injectGlobals(): void;
     mainThread: LynxGlobalThis & ElementTreeGlobals;
     // (undocumented)
     reset(): void;
@@ -116,5 +127,12 @@ export class LynxTestingEnv {
 
 // @public (undocumented)
 export type PickUnderscoreKeys<T> = Pick<T, FilterUnderscoreKeys<T>>;
+
+// @public
+export function uninstallLynxTestingEnv(target: typeof globalThis & {
+    lynxEnv?: LynxEnv;
+    lynxTestingEnv?: LynxTestingEnv;
+    Node?: typeof Node;
+}): void;
 
 ```

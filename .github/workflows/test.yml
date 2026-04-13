@@ -210,6 +210,15 @@ jobs:
         pnpm run build --mode development
         pnpm run lint
         pnpm run test
+        cd `mktemp -d`
+        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir create-rspeedy-regression-rstest-rltl --tools eslint,rstest-rltl
+        cd create-rspeedy-regression-rstest-rltl
+        npx --registry http://localhost:4873 upgrade-rspeedy-canary@latest
+        pnpm install --registry=http://localhost:4873
+        pnpm run build
+        pnpm run build --mode development
+        pnpm run lint
+        pnpm run test
   test-react:
     needs: build
     uses: ./.github/workflows/workflow-test.yml

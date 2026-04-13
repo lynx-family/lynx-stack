@@ -8,30 +8,69 @@ Similar to [react-testing-library](https://github.com/testing-library/react-test
 
 ## Setup
 
+### Rstest
+
+Setup rstest with `@lynx-js/react/testing-library/rstest-config`.
+
+Recommended for library projects:
+
+```ts
+import { defineConfig } from '@rstest/core';
+import { withDefaultConfig } from '@lynx-js/react/testing-library/rstest-config';
+
+export default defineConfig({
+  extends: withDefaultConfig(),
+});
+```
+
+Use `withLynxConfig` when you want to reuse your app's `lynx.config.ts`:
+
+```ts
+// rstest.config.ts
+import { defineConfig } from '@rstest/core';
+import { withLynxConfig } from '@lynx-js/react/testing-library/rstest-config';
+
+export default defineConfig({
+  extends: withLynxConfig(),
+});
+```
+
+Difference between `withLynxConfig` and `withDefaultConfig`:
+
+- `withLynxConfig`: app-oriented. Loads your `lynx.config.ts` and converts it to rstest config, so rspeedy/lynx settings are reused in tests.
+- `withDefaultConfig`: library-oriented. Only applies testing-library defaults (`jsdom`, setup files, globals) and lets you provide the rest via `modifyRstestConfig`.
+
+Then you can start writing tests and run them with rstest!
+
+For more usage detail, see https://rstest.rs/
+
+### Vitest
+
 Setup vitest:
 
 ```js
-// vitest.config.js
-import { defineConfig, mergeConfig } from 'vitest/config';
-import { createVitestConfig } from '@lynx-js/react/testing-library/vitest-config';
+import { defineConfig } from 'vitest/config';
+import { vitestTestingLibraryPlugin } from '@lynx-js/react/testing-library/plugins';
 
-const defaultConfig = createVitestConfig();
-const config = defineConfig({
+export default defineConfig({
+  plugins: [
+    vitestTestingLibraryPlugin(),
+  ],
   test: {
     // ...
   },
 });
-
-export default mergeConfig(defaultConfig, config);
 ```
 
 Then you can start writing tests and run them with vitest!
 
+`createVitestConfig` is still supported for backward compatibility, but is deprecated.
+
 ## Usage
 
-```js
+```jsx
 import '@testing-library/jest-dom';
-import { test, expect } from 'vitest';
+import { test, expect } from 'vitest'; // or '@rstest/core'
 import { render } from '@lynx-js/react/testing-library';
 
 test('renders options.wrapper around node', async () => {

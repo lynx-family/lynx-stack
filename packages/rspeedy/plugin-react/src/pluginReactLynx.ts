@@ -28,7 +28,7 @@ import { applyCSS } from './css.js'
 import { applyEntry } from './entry.js'
 import { applyGenerator } from './generator.js'
 import { applyLazy } from './lazy.js'
-import { applyLoaders } from './loaders.js'
+import { applyLoaders, applyTestingLoaders } from './loaders.js'
 import { applyNodeEnv } from './nodeEnv.js'
 import { applyOptimizeBundleSize } from './optimizeBundleSize.js'
 import { applyRefresh } from './refresh.js'
@@ -389,6 +389,7 @@ export function pluginReactLynx(
       pre: ['lynx:rsbuild:plugin-api', 'lynx:config'],
       setup(api) {
         const isRslib = api.context.callerName === 'rslib'
+        const isRstest = api.context.callerName === 'rstest'
 
         const exposedConfig = api.useExposed<{ config: Config }>(
           Symbol.for('lynx.config'),
@@ -403,11 +404,17 @@ export function pluginReactLynx(
           })
         }
 
-        applyCSS(api, resolvedOptions)
+        if (!isRstest) {
+          applyCSS(api, resolvedOptions)
+        }
         applyEntry(api, resolvedOptions)
         applyBackgroundOnly(api)
         applyGenerator(api, resolvedOptions)
-        applyLoaders(api, resolvedOptions)
+        if (isRstest) {
+          applyTestingLoaders(api, resolvedOptions)
+        } else {
+          applyLoaders(api, resolvedOptions)
+        }
         applyRefresh(api)
         applySplitChunksRule(api)
         applySWC(api)

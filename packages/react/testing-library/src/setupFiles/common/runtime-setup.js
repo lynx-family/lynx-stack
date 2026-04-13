@@ -1,50 +1,24 @@
 import { options } from 'preact';
-import { expect } from 'vitest';
 
-import { clearCommitTaskId, replaceCommitHook } from '../../runtime/lib/lifecycle/patch/commit.js';
-import { deinitGlobalSnapshotPatch } from '../../runtime/lib/lifecycle/patch/snapshotPatch.js';
-import { injectUpdateMainThread } from '../../runtime/lib/lifecycle/patch/updateMainThread.js';
-import { injectUpdateMTRefInitValue } from '../../runtime/lib/worklet/ref/updateInitValue.js';
-import { injectCalledByNative } from '../../runtime/lib/lynx/calledByNative.js';
-import { flushDelayedLifecycleEvents, injectTt } from '../../runtime/lib/lynx/tt.js';
-import { initElementPAPICallAlog } from '../../runtime/lib/alog/elementPAPICall.js';
-import { addCtxNotFoundEventListener } from '../../runtime/lib/lifecycle/patch/error.js';
-import { setRoot } from '../../runtime/lib/root.js';
+import { clearCommitTaskId, replaceCommitHook } from '../../../../runtime/lib/lifecycle/patch/commit.js';
+import { deinitGlobalSnapshotPatch } from '../../../../runtime/lib/lifecycle/patch/snapshotPatch.js';
+import { injectUpdateMainThread } from '../../../../runtime/lib/lifecycle/patch/updateMainThread.js';
+import { injectUpdateMTRefInitValue } from '../../../../runtime/lib/worklet/ref/updateInitValue.js';
+import { injectCalledByNative } from '../../../../runtime/lib/lynx/calledByNative.js';
+import { flushDelayedLifecycleEvents, injectTt } from '../../../../runtime/lib/lynx/tt.js';
+import { initElementPAPICallAlog } from '../../../../runtime/lib/alog/elementPAPICall.js';
+import { addCtxNotFoundEventListener } from '../../../../runtime/lib/lifecycle/patch/error.js';
+import { setRoot } from '../../../../runtime/lib/root.js';
 import {
   SnapshotInstance,
   BackgroundSnapshotInstance,
   backgroundSnapshotInstanceManager,
   snapshotInstanceManager,
-} from '../../runtime/lib/snapshot/index.js';
-import { destroyWorklet } from '../../runtime/lib/worklet/destroy.js';
-import { initApiEnv } from '../../runtime/lib/worklet-runtime/api/lynxApi.js';
-import { initEventListeners } from '../../runtime/lib/worklet-runtime/listeners.js';
-import { initWorklet } from '../../runtime/lib/worklet-runtime/workletRuntime.js';
-
-expect.addSnapshotSerializer({
-  test(val) {
-    return Boolean(
-      val
-        && typeof val === 'object'
-        && Array.isArray(val.refAttr)
-        && Object.prototype.hasOwnProperty.call(val, 'task')
-        && typeof val.exec === 'function',
-    );
-  },
-  print(val, serialize) {
-    const printed = serialize({
-      refAttr: Array.isArray(val.refAttr) ? [...val.refAttr] : val.refAttr,
-      task: val.task,
-    });
-    if (printed.startsWith('Object')) {
-      return printed.replace(/^Object/, 'RefProxy');
-    }
-    if (printed.startsWith('{')) {
-      return `RefProxy ${printed}`;
-    }
-    return printed;
-  },
-});
+} from '../../../../runtime/lib/snapshot/index.js';
+import { destroyWorklet } from '../../../../runtime/lib/worklet/destroy.js';
+import { initApiEnv } from '../../../../runtime/lib/worklet-runtime/api/lynxApi.js';
+import { initEventListeners } from '../../../../runtime/lib/worklet-runtime/listeners.js';
+import { initWorklet } from '../../../../runtime/lib/worklet-runtime/workletRuntime.js';
 
 const {
   onInjectMainThreadGlobals,
@@ -110,8 +84,12 @@ globalThis.onInjectMainThreadGlobals = (target) => {
 
   target.globalPipelineOptions = undefined;
 
-  if (typeof __ALOG_ELEMENT_API__ !== 'undefined' && __ALOG_ELEMENT_API__) {
+  if (
+    typeof target.__ALOG_ELEMENT_API__ !== 'undefined' && target.__ALOG_ELEMENT_API__
+    && !target.__initElementPAPICallAlogInjected
+  ) {
     initElementPAPICallAlog(target);
+    target.__initElementPAPICallAlogInjected = true;
   }
 };
 globalThis.onInjectBackgroundThreadGlobals = (target) => {
@@ -146,13 +124,16 @@ globalThis.onInjectBackgroundThreadGlobals = (target) => {
   target._document = setupBackgroundDocument({});
   target.globalPipelineOptions = undefined;
 
-  target.lynx.requireModuleAsync = async (url, callback) => {
-    try {
-      callback(null, await __vite_ssr_dynamic_import__(url));
-    } catch (err) {
-      callback(err, null);
-    }
-  };
+  // TODO: can we only inject to target(mainThread.globalThis) instead of globalThis?
+  // packages/react/runtime/src/lynx.ts
+  // intercept lynxCoreInject assignments to lynxTestingEnv.backgroundThread.globalThis.lynxCoreInject
+  const oldLynxCoreInject = globalThis.lynxCoreInject;
+  globalThis.lynxCoreInject = target.lynxCoreInject;
+  try {
+    injectTt();
+  } finally {
+    globalThis.lynxCoreInject = oldLynxCoreInject;
+  }
 
   // re-init global snapshot patch to undefined
   deinitGlobalSnapshotPatch();
