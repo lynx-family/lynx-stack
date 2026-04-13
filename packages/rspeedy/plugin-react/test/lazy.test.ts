@@ -12,6 +12,49 @@ import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 
+async function collectJsAssets(
+  rootDir: string,
+  relativeDir = '.',
+): Promise<Map<string, string>> {
+  const dirPath = path.join(rootDir, relativeDir)
+  const entries = await fs.readdir(dirPath, { withFileTypes: true })
+  const assets = new Map<string, string>()
+
+  await Promise.all(entries.map(async (entry) => {
+    const entryRelativePath = path.join(relativeDir, entry.name)
+    if (entry.isDirectory()) {
+      const nestedAssets = await collectJsAssets(rootDir, entryRelativePath)
+      for (const [file, source] of nestedAssets) {
+        assets.set(file, source)
+      }
+      return
+    }
+
+    if (!entry.name.endsWith('.js')) {
+      return
+    }
+
+    const source = await fs.readFile(
+      path.join(rootDir, entryRelativePath),
+      'utf8',
+    )
+    assets.set(path.normalize(entryRelativePath), source)
+  }))
+
+  return assets
+}
+
+async function readLepusChunkNames(tasmPath: string): Promise<string[]> {
+  const source = await fs.readFile(tasmPath, 'utf8')
+  const template = JSON.parse(source) as {
+    lepusCode?: {
+      lepusChunk?: Record<string, string>
+    }
+  }
+
+  return Object.keys(template.lepusCode?.lepusChunk ?? {})
+}
+
 describe('Lazy', () => {
   test('alias for react', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
@@ -172,6 +215,63 @@ describe('Lazy', () => {
 
       vi.unstubAllEnvs()
     })
+  })
+
+  test('standalone lazy bundle worklets should self-bootstrap without host fallback', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const distRoot = path.join(
+      path.dirname(new URL(import.meta.url).pathname),
+      'dist/standalone-lazy-bundle-worklet',
+    )
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        source: {
+          entry: {
+            main: new URL(
+              './fixtures/standalone-lazy-bundle-worklet/index.tsx',
+              import.meta.url,
+            ).pathname,
+          },
+        },
+        output: {
+          distPath: {
+            root: './dist/standalone-lazy-bundle-worklet',
+          },
+        },
+        plugins: [
+          pluginReactLynx({
+            experimental_isLazyBundle: true,
+          }),
+        ],
+      },
+    })
+
+    try {
+      await rsbuild.build()
+
+      const jsAssets = await collectJsAssets(distRoot)
+      const mainThreadAssets = [...jsAssets.entries()].filter(([name]) =>
+        name.includes('main-thread')
+      )
+      const lepusChunkNames = await readLepusChunkNames(
+        path.join(distRoot, '.rspeedy/main/tasm.json'),
+      )
+
+      expect(mainThreadAssets).toHaveLength(1)
+      expect(jsAssets.has(path.normalize('.rspeedy/main/worklet-runtime.js')))
+        .toBe(false)
+      expect(lepusChunkNames).not.toContain('worklet-runtime')
+
+      const [, source] = mainThreadAssets[0]!
+      expect(source).toContain('globalThis.lynxWorkletImpl = {')
+      expect(source).toContain('registerWorkletInternal("main-thread"')
+      expect(source).not.toContain('__workletRuntimeLoaded')
+    } finally {
+      vi.unstubAllEnvs()
+    }
   })
 
   test('lazy bundle beforeEncode entryNames', async () => {

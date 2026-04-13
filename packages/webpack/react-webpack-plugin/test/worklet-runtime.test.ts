@@ -14,6 +14,7 @@ interface WorkletRuntimeCase {
   expectedChunkNames: string[];
   expectedRuntimeInitOwners: string[];
   expectedRuntimeImplementationOwners: string[];
+  expectedRegisterOwners: string[];
   expectedRegisterIdCount: number;
 }
 
@@ -34,6 +35,8 @@ const distRoot = path.resolve(
 );
 const RUNTIME_INIT_OWNER_MARKER = 'worklet-runtime/init.ts?owner=';
 const RUNTIME_IMPLEMENTATION_MARKER = 'globalThis.lynxWorkletImpl = {';
+const REGISTER_WORKLET_MARKER = 'registerWorkletInternal(';
+const LEGACY_FALLBACK_MARKER = '__workletRuntimeLoaded';
 
 function parseLepusChunk(
   source: string,
@@ -206,6 +209,7 @@ describe('worklet-runtime bundler guardrails', () => {
       expectedChunkNames: [],
       expectedRuntimeInitOwners: ['main__main-thread.js'],
       expectedRuntimeImplementationOwners: ['main__main-thread.js'],
+      expectedRegisterOwners: ['main__main-thread.js'],
       expectedRegisterIdCount: 2,
     },
     {
@@ -216,6 +220,10 @@ describe('worklet-runtime bundler guardrails', () => {
         'lazy.jsx-react__main-thread',
       ],
       expectedRuntimeImplementationOwners: ['main__main-thread.js'],
+      expectedRegisterOwners: [
+        'main__main-thread.js',
+        'lazy.jsx-react__main-thread',
+      ],
       expectedRegisterIdCount: 2,
     },
     {
@@ -223,6 +231,7 @@ describe('worklet-runtime bundler guardrails', () => {
       expectedChunkNames: [],
       expectedRuntimeInitOwners: [],
       expectedRuntimeImplementationOwners: [],
+      expectedRegisterOwners: [],
       expectedRegisterIdCount: 0,
     },
   ])(
@@ -232,6 +241,7 @@ describe('worklet-runtime bundler guardrails', () => {
       expectedChunkNames,
       expectedRuntimeInitOwners,
       expectedRuntimeImplementationOwners,
+      expectedRegisterOwners,
       expectedRegisterIdCount,
     }) => {
       const { lepusChunk, jsAssets } = await buildCase(caseName);
@@ -245,6 +255,10 @@ describe('worklet-runtime bundler guardrails', () => {
       const runtimeImplementationOwners = collectAssetOwners(
         jsAssets,
         RUNTIME_IMPLEMENTATION_MARKER,
+      );
+      const registerOwners = collectAssetOwners(
+        jsAssets,
+        REGISTER_WORKLET_MARKER,
       );
       const registeredWorkletIds = [...jsAssets.values()].flatMap(
         source => extractRegisteredWorkletIds(source),
@@ -267,6 +281,11 @@ describe('worklet-runtime bundler guardrails', () => {
         runtimeImplementationOwners,
         expectedRuntimeImplementationOwners,
         'runtime implementation',
+      );
+      expectOwnersToMatch(
+        registerOwners,
+        expectedRegisterOwners,
+        'worklet registration',
       );
 
       for (const [name, source] of jsAssets) {
@@ -291,6 +310,10 @@ describe('worklet-runtime bundler guardrails', () => {
           expect(inlineInitCount).toBe(1);
         } else {
           expect(inlineInitCount).toBe(0);
+        }
+
+        if (registerOwners.includes(name)) {
+          expect(source).not.toContain(LEGACY_FALLBACK_MARKER);
         }
       }
 
