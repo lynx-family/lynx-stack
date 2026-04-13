@@ -57,7 +57,7 @@ describe('worklet-runtime legacy fallback', () => {
   it('should establish the legacy globals when the fallback chunk path loads the runtime', async () => {
     const { loadWorkletRuntime } = await import('@lynx-js/react/internal');
     globalThis.__LoadLepusChunk = vi.fn(async () => {
-      await import('../../src/worklet-runtime/index.ts?legacy-fallback');
+      await import('../../worklet-runtime/main.js?legacy-fallback');
       return true;
     });
 

@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import vm from 'node:vm'
 
 import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
 import { describe, expect, test, vi } from 'vitest'
@@ -53,6 +54,121 @@ async function readLepusChunkNames(tasmPath: string): Promise<string[]> {
   }
 
   return Object.keys(template.lepusCode?.lepusChunk ?? {})
+}
+
+const sExportsReact = Symbol.for('__REACT_LYNX_EXPORTS__(@lynx-js/react)')
+const sExportsReactInternal = Symbol.for(
+  '__REACT_LYNX_EXPORTS__(@lynx-js/react/internal)',
+)
+const sExportsJSXRuntime = Symbol.for(
+  '__REACT_LYNX_EXPORTS__(@lynx-js/react/jsx-runtime)',
+)
+const sExportsJSXDevRuntime = Symbol.for(
+  '__REACT_LYNX_EXPORTS__(@lynx-js/react/jsx-dev-runtime)',
+)
+
+function evaluateStandaloneLazyMainThread(
+  source: string,
+  hostLoadWorkletRuntime: ReturnType<typeof vi.fn>,
+) {
+  const symbolValues = new Map([
+    [sExportsReact, globalThis[sExportsReact]],
+    [sExportsReactInternal, globalThis[sExportsReactInternal]],
+    [sExportsJSXRuntime, globalThis[sExportsJSXRuntime]],
+    [sExportsJSXDevRuntime, globalThis[sExportsJSXDevRuntime]],
+  ])
+  const globalValues = new Map([
+    ['__DEV__', globalThis.__DEV__],
+    ['__PROFILE__', globalThis.__PROFILE__],
+    ['__ALOG__', globalThis.__ALOG__],
+    ['__JS__', globalThis.__JS__],
+    ['__LEPUS__', globalThis.__LEPUS__],
+    ['__BACKGROUND__', globalThis.__BACKGROUND__],
+    ['__MAIN_THREAD__', globalThis.__MAIN_THREAD__],
+    ['lynx', globalThis.lynx],
+    ['requestAnimationFrame', globalThis.requestAnimationFrame],
+    ['cancelAnimationFrame', globalThis.cancelAnimationFrame],
+    ['registerWorkletInternal', globalThis.registerWorkletInternal],
+    ['registerWorklet', globalThis.registerWorklet],
+    ['runWorklet', globalThis.runWorklet],
+    ['lynxWorkletImpl', globalThis.lynxWorkletImpl],
+    ['SystemInfo', globalThis.SystemInfo],
+  ])
+
+  const jsxRuntime = {
+    Fragment: Symbol.for('Fragment'),
+    jsx: (type: unknown, props: unknown) => ({ type, props }),
+    jsxs: (type: unknown, props: unknown) => ({ type, props }),
+    jsxDEV: (type: unknown, props: unknown) => ({ type, props }),
+  }
+
+  Object.assign(globalThis, {
+    __DEV__: true,
+    __PROFILE__: true,
+    __ALOG__: false,
+    __JS__: false,
+    __LEPUS__: true,
+    __BACKGROUND__: false,
+    __MAIN_THREAD__: true,
+    lynx: {
+      performance: {
+        profileStart: vi.fn(),
+        profileEnd: vi.fn(),
+        profileMark: vi.fn(),
+        profileFlowId: vi.fn(() => 1),
+      },
+      getNative: vi.fn(() => ({
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+      getNativeApp: vi.fn(() => ({
+        callLepusMethod: vi.fn(),
+        markTiming: vi.fn(),
+      })),
+      getJSContext: vi.fn(() => ({
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+      createSelectorQuery: vi.fn(() => ({
+        select: vi.fn().mockReturnThis(),
+        exec: vi.fn(),
+      })),
+    },
+    SystemInfo: {
+      lynxSdkVersion: '2.16',
+    },
+    requestAnimationFrame: vi.fn(),
+    cancelAnimationFrame: vi.fn(),
+  })
+
+  globalThis[sExportsReact] = {}
+  globalThis[sExportsReactInternal] = {
+    loadWorkletRuntime: hostLoadWorkletRuntime,
+    snapshotCreatorMap: {},
+  }
+  globalThis[sExportsJSXRuntime] = jsxRuntime
+  globalThis[sExportsJSXDevRuntime] = jsxRuntime
+
+  delete globalThis.registerWorkletInternal
+  delete globalThis.registerWorklet
+  delete globalThis.runWorklet
+  delete globalThis.lynxWorkletImpl
+
+  try {
+    const factory = vm.runInThisContext(source) as (
+      globDynamicComponentEntry: string,
+    ) => Record<string, unknown>
+
+    return factory('__Card__')
+  } finally {
+    for (const [key, value] of globalValues) {
+      restoreStringGlobal(key, value)
+    }
+
+    for (const [key, value] of symbolValues) {
+      restoreSymbolGlobal(key, value)
+    }
+  }
 }
 
 describe('Lazy', () => {
@@ -269,6 +385,17 @@ describe('Lazy', () => {
       expect(source).toContain('globalThis.lynxWorkletImpl = {')
       expect(source).toContain('registerWorkletInternal("main-thread"')
       expect(source).not.toContain('__workletRuntimeLoaded')
+
+      const hostLoadWorkletRuntime = vi.fn(() => {
+        throw new Error('standalone lazy bundle should not call host fallback')
+      })
+      const exports = evaluateStandaloneLazyMainThread(
+        source,
+        hostLoadWorkletRuntime,
+      )
+
+      expect(exports).toHaveProperty('default')
+      expect(hostLoadWorkletRuntime).not.toHaveBeenCalled()
     } finally {
       vi.unstubAllEnvs()
     }
@@ -524,3 +651,20 @@ describe('Lazy', () => {
     }
   })
 })
+function restoreStringGlobal(key: string, value: unknown) {
+  if (typeof value === 'undefined') {
+    delete globalThis[key as keyof typeof globalThis]
+    return
+  }
+
+  ;(globalThis as Record<string, unknown>)[key] = value
+}
+
+function restoreSymbolGlobal(key: symbol, value: unknown) {
+  if (typeof value === 'undefined') {
+    delete globalThis[key]
+    return
+  }
+
+  globalThis[key] = value
+}
