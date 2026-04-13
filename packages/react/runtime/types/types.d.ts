@@ -117,6 +117,7 @@ declare global {
     config: any,
     relationMap: Record<string, number[]>,
   ): void;
+  declare function __RemoveGestureDetector(node: FiberElement, id: number): void;
 
   declare interface FiberElement {}
 

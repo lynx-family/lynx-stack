@@ -4,8 +4,6 @@
 
 ```ts
 
-import { JSDOM } from 'jsdom';
-
 // @public
 export type ElementTree = ReturnType<typeof initElementTree>;
 
@@ -48,6 +46,7 @@ export const initElementTree: () => {
     __AddDataset(e: LynxElement, key: string, value: string): void;
     __SetDataset(e: LynxElement, dataset: any): void;
     __SetGestureDetector(e: LynxElement, id: number, type: number, config: any, relationMap: Record<string, number[]>): void;
+    __RemoveGestureDetector(e: LynxElement, id: number): void;
     __GetDataset(e: LynxElement): DOMStringMap;
     __RemoveElement(parent: LynxElement, child: LynxElement): void;
     __InsertElementBefore(parent: LynxElement, child: LynxElement, ref?: LynxElement | undefined): void;
@@ -74,6 +73,13 @@ export const initElementTree: () => {
 };
 
 // @public
+export function installLynxTestingEnv(target: typeof globalThis & {
+    lynxEnv?: LynxEnv;
+    lynxTestingEnv?: LynxTestingEnv;
+    Node?: typeof Node;
+}, env: LynxEnv): void;
+
+// @public
 export interface LynxElement extends HTMLElement {
     cssId?: string;
     eventMap?: {
@@ -88,6 +94,12 @@ export interface LynxElement extends HTMLElement {
 }
 
 // @public
+export interface LynxEnv {
+    // (undocumented)
+    window: Window & typeof globalThis;
+}
+
+// @public
 export interface LynxGlobalThis {
     // (undocumented)
     [key: string]: any;
@@ -96,14 +108,14 @@ export interface LynxGlobalThis {
 
 // @public
 export class LynxTestingEnv {
-    constructor(jsdom?: JSDOM);
+    constructor(env?: LynxEnv);
     backgroundThread: LynxGlobalThis;
     // (undocumented)
     clearGlobal(): void;
     // (undocumented)
-    injectGlobals(): void;
+    env: LynxEnv;
     // (undocumented)
-    jsdom: JSDOM;
+    injectGlobals(): void;
     mainThread: LynxGlobalThis & ElementTreeGlobals;
     // (undocumented)
     reset(): void;
@@ -115,5 +127,12 @@ export class LynxTestingEnv {
 
 // @public (undocumented)
 export type PickUnderscoreKeys<T> = Pick<T, FilterUnderscoreKeys<T>>;
+
+// @public
+export function uninstallLynxTestingEnv(target: typeof globalThis & {
+    lynxEnv?: LynxEnv;
+    lynxTestingEnv?: LynxTestingEnv;
+    Node?: typeof Node;
+}): void;
 
 ```

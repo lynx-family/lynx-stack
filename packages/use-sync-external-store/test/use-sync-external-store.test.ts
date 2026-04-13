@@ -180,7 +180,9 @@ describe('useSyncExternalStoreWithSelector', () => {
     const store = createExternalStore<State>({
       items: ['A', 'B'],
     });
-    const shallowEqualArray = <T>(a: T[], b: T[]) => {
+    // dprint-ignore <T,> the comma is required to avoid
+    // ts treat T as a JSX element
+    const shallowEqualArray = <T,>(a: T[], b: T[]) => {
       if (a.length !== b.length) {
         return false;
       }

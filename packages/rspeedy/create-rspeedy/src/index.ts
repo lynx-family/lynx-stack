@@ -82,12 +82,28 @@ void create({
   extraTools: [
     {
       value: 'vitest-rltl',
-      label: 'ReactLynx Testing Library - unit testing',
+      label: 'Vitest',
       order: 'pre',
       when: (templateName) =>
         templateName === 'react-js' || templateName === 'react-ts',
       action: ({ distFolder, addAgentsMdSearchDirs }) => {
         const from = path.resolve(__dirname, '..', 'template-react-vitest-rltl')
+        copyFolder({
+          from,
+          to: distFolder,
+          isMergePackageJson: true,
+        })
+        addAgentsMdSearchDirs(from)
+      },
+    },
+    {
+      value: 'rstest-rltl',
+      label: 'Rstest',
+      order: 'pre',
+      when: (templateName) =>
+        templateName === 'react-js' || templateName === 'react-ts',
+      action: ({ distFolder, addAgentsMdSearchDirs }) => {
+        const from = path.resolve(__dirname, '..', 'template-react-rstest-rltl')
         copyFolder({
           from,
           to: distFolder,

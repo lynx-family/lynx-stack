@@ -22,7 +22,7 @@ function LazyComponentLoader({ url }) {
   return (
     <Suspense fallback={<text>loading...</text>}>
       <InternalComponent />
-      <ExternalComponent />
+      {process.env.RSTEST ? null : <ExternalComponent />}
     </Suspense>
   );
 }
@@ -55,7 +55,18 @@ describe('lazy bundle', () => {
       timeout: 50_000,
     });
 
-    expect(container.firstChild).toMatchInlineSnapshot(`
+    if (process.env.RSTEST) {
+      expect(container.firstChild).toMatchInlineSnapshot(`
+        <view>
+          <wrapper>
+            <text>
+              Hello from LazyComponent
+            </text>
+          </wrapper>
+        </view>
+      `);
+    } else {
+      expect(container.firstChild).toMatchInlineSnapshot(`
       <view>
         <wrapper>
           <text>
@@ -67,6 +78,7 @@ describe('lazy bundle', () => {
         </wrapper>
       </view>
     `);
+    }
   });
 });
 
@@ -166,12 +178,12 @@ describe('Suspense', () => {
               {
                 "id": 2,
                 "op": "CreateElement",
-                "type": "__snapshot_fffe1_test_3",
+                "type": "__snapshot_50869_test_3",
               },
               {
                 "id": 7,
                 "op": "CreateElement",
-                "type": "__snapshot_fffe1_test_4",
+                "type": "__snapshot_50869_test_4",
               },
               {
                 "beforeId": null,
@@ -193,7 +205,7 @@ describe('Suspense', () => {
               {
                 "id": 2,
                 "op": "CreateElement",
-                "type": "__snapshot_fffe1_test_3",
+                "type": "__snapshot_50869_test_3",
               },
               {
                 "id": 8,
@@ -203,7 +215,7 @@ describe('Suspense', () => {
               {
                 "id": 9,
                 "op": "CreateElement",
-                "type": "__snapshot_fffe1_test_4",
+                "type": "__snapshot_50869_test_4",
               },
               {
                 "beforeId": null,
@@ -294,51 +306,54 @@ describe('Suspense', () => {
       if (name === 'PreactSuspense') {
         // <view className="lazy-wrapper"> is torn down, (it is triggered in first render but delayed 10_000ms to execute, we use `vi.runAllTimers()` to simulate the situation that will cause the bug)
         // <text>loading...</text> is torn down
-        expect(tearDownInstances).toMatchInlineSnapshot(`
-          [
-            {
-              "__id": 3,
-              "create": "function() {
-            const pageId = __vite_ssr_import_1__.__pageId;
-            const el = __CreateView(pageId);
-            __SetClasses(el, "lazy-wrapper");
-            const el1 = __CreateWrapperElement(pageId);
-            __AppendElement(el, el1);
-            const el2 = __CreateText(pageId);
-            __AppendElement(el, el2);
-            const el3 = __CreateRawText("Hello, ReactLynx");
-            __AppendElement(el2, el3);
-            const el4 = __CreateWrapperElement(pageId);
-            __AppendElement(el, el4);
-            return [
-              el,
-              el1,
-              el2,
-              el3,
-              el4
-            ];
-          }",
-              "type": "__snapshot_fffe1_test_5",
-            },
-            {
-              "__id": 7,
-              "create": "function() {
-            const pageId = __vite_ssr_import_1__.__pageId;
-            const el = __CreateText(pageId);
-            __SetClasses(el, "loading");
-            const el1 = __CreateRawText("loading...");
-            __AppendElement(el, el1);
-            return [
-              el,
-              el1
-            ];
-          }",
-              "type": "__snapshot_fffe1_test_4",
-            },
-          ]
-        `);
+        if (!process.env.RSTEST) {
+          expect(tearDownInstances).toMatchInlineSnapshot(`
+            [
+              {
+                "__id": 3,
+                "create": "function() {
+              const pageId = __vite_ssr_import_1__.__pageId;
+              const el = __CreateView(pageId);
+              __SetClasses(el, "lazy-wrapper");
+              const el1 = __CreateWrapperElement(pageId);
+              __AppendElement(el, el1);
+              const el2 = __CreateText(pageId);
+              __AppendElement(el, el2);
+              const el3 = __CreateRawText("Hello, ReactLynx");
+              __AppendElement(el2, el3);
+              const el4 = __CreateWrapperElement(pageId);
+              __AppendElement(el, el4);
+              return [
+                el,
+                el1,
+                el2,
+                el3,
+                el4
+              ];
+            }",
+                "type": "__snapshot_50869_test_5",
+              },
+              {
+                "__id": 7,
+                "create": "function() {
+              const pageId = __vite_ssr_import_1__.__pageId;
+              const el = __CreateText(pageId);
+              __SetClasses(el, "loading");
+              const el1 = __CreateRawText("loading...");
+              __AppendElement(el, el1);
+              return [
+                el,
+                el1
+              ];
+            }",
+                "type": "__snapshot_50869_test_4",
+              },
+            ]
+          `);
+        }
       } else {
-        expect(tearDownInstances).toMatchInlineSnapshot(`
+        if (!process.env.RSTEST) {
+          expect(tearDownInstances).toMatchInlineSnapshot(`
           [
             {
               "__id": 8,
@@ -352,6 +367,7 @@ describe('Suspense', () => {
             },
           ]
         `);
+        }
       }
 
       act(() => {

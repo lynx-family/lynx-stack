@@ -5,6 +5,8 @@
     "noImplicitAny": false,
     "isolatedDeclarations": false,
     "rootDir": "src",
+    "outDir": "dist",
+    "declarationDir": "dist",
   },
 
   "include": [

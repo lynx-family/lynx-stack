@@ -7,20 +7,69 @@ import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
+function getLoaderOptions(
+  api: RsbuildPluginAPI,
+  options: Required<PluginReactLynxOptions>,
+  isMainThread = false,
+) {
+  const { output } = api.getRsbuildConfig()
+
+  const inlineSourcesContent: boolean = output?.sourceMap === true || !(
+    // `false`
+    output?.sourceMap === false
+    // `false`
+    || output?.sourceMap?.js === false
+    // explicitly disable source content
+    || output?.sourceMap?.js?.includes('nosources')
+  )
+
+  const {
+    compat,
+    enableRemoveCSSScope,
+    shake,
+    defineDCE,
+    engineVersion,
+    enableUiSourceMap,
+
+    experimental_isLazyBundle,
+  } = options
+
+  return {
+    compat,
+    enableRemoveCSSScope,
+    isDynamicComponent: experimental_isLazyBundle,
+    inlineSourcesContent,
+    defineDCE,
+    engineVersion,
+    ...isMainThread
+      ? {
+        enableUiSourceMap,
+        shake,
+      }
+      : {},
+  }
+}
+
+const TESTING_RULE_NAME = 'react:testing'
+export function applyTestingLoaders(
+  api: RsbuildPluginAPI,
+  options: Required<PluginReactLynxOptions>,
+): void {
+  api.modifyBundlerChain((chain, { CHAIN_ID }) => {
+    const rule = chain.module.rules.get(CHAIN_ID.RULE.JS)
+
+    rule
+      .use(TESTING_RULE_NAME)
+      .loader(ReactWebpackPlugin.loaders.TESTING)
+      .options(getLoaderOptions(api, options))
+      .end()
+  })
+}
+
 export function applyLoaders(
   api: RsbuildPluginAPI,
   options: Required<PluginReactLynxOptions>,
 ): void {
-  const {
-    compat,
-    enableRemoveCSSScope,
-    enableUiSourceMap,
-    shake,
-    defineDCE,
-    engineVersion,
-    experimental_isLazyBundle,
-  } = options
-
   api.modifyBundlerChain((chain, { CHAIN_ID }) => {
     const rule = chain.module.rules.get(CHAIN_ID.RULE.JS)
     // The Rsbuild default loaders:
@@ -31,17 +80,6 @@ export function applyLoaders(
     // - Webpack: None
     const uses = rule.uses.entries() ?? {}
 
-    const { output } = api.getRsbuildConfig()
-
-    const inlineSourcesContent: boolean = output?.sourceMap === true || !(
-      // `false`
-      output?.sourceMap === false
-      // `false`
-      || output?.sourceMap?.js === false
-      // explicitly disable source content
-      || output?.sourceMap?.js?.includes('nosources')
-    )
-
     const backgroundRule = rule.oneOf(LAYERS.BACKGROUND)
     // dprint-ignore
     backgroundRule
@@ -51,14 +89,7 @@ export function applyLoaders(
       .end()
       .use(LAYERS.BACKGROUND)
         .loader(ReactWebpackPlugin.loaders.BACKGROUND)
-        .options({
-          compat,
-          enableRemoveCSSScope,
-          isDynamicComponent: experimental_isLazyBundle,
-          inlineSourcesContent,
-          defineDCE,
-          engineVersion,
-        })
+        .options(getLoaderOptions(api, options))
       .end()
 
     const mainThreadRule = rule.oneOf(LAYERS.MAIN_THREAD)
@@ -90,16 +121,7 @@ export function applyLoaders(
       })
       .use(LAYERS.MAIN_THREAD)
         .loader(ReactWebpackPlugin.loaders.MAIN_THREAD)
-        .options({
-          compat,
-          enableRemoveCSSScope,
-          enableUiSourceMap,
-          inlineSourcesContent,
-          isDynamicComponent: experimental_isLazyBundle,
-          engineVersion,
-          shake,
-          defineDCE,
-        })
+        .options(getLoaderOptions(api, options, true))
       .end()
 
     // Clear the Rsbuild default loader.
