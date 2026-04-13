@@ -138,19 +138,14 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           'runtime-components',
           'worklet-runtime/init',
           'worklet-runtime/bindings',
-        ]
+        ].map(entry => `@lynx-js/react/${entry}`)
 
         await Promise.all(
-          transformedEntries
-            .map(entry => `@lynx-js/react/${entry}`)
-            .map(entry =>
-              resolve(entry).then(value => {
-                chain
-                  .resolve
-                  .alias
-                  .set(`${entry}$`, value)
-              })
-            ),
+          transformedEntries.map(entry =>
+            resolve(entry).then(value => {
+              chain.resolve.alias.set(`${entry}$`, value)
+            })
+          ),
         )
 
         if (isProd) {
