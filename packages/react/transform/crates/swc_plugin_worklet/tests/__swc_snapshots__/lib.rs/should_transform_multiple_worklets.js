@@ -1,4 +1,4 @@
-import "@lynx-js/react/worklet-runtime/init";
+import "@lynx-js/react/worklet-runtime/init?owner=a77b-test";
 let X = {
     _c: {
         y1,

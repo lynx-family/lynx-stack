@@ -1,4 +1,4 @@
-import "@lynx-js/react/worklet-runtime/init";
+import "@lynx-js/react/worklet-runtime/init?owner=a123-test";
 const __workletRuntimeLoaded = false;
 console.log(__workletRuntimeLoaded);
 let foo = {

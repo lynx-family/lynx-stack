@@ -19,6 +19,10 @@ impl WorkletHash {
     )
   }
 
+  pub fn calc_module_hash(filename: &str, content_hash: &str) -> String {
+    format!("{}-{}", Self::calc_hash(filename), content_hash)
+  }
+
   fn calc_hash(s: &str) -> String {
     let mut hasher = Sha1::new();
     hasher.update(s.as_bytes());

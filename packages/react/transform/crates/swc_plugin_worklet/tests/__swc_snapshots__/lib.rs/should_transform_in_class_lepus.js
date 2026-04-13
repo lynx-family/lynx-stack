@@ -1,4 +1,4 @@
-import "@lynx-js/react/worklet-runtime/init";
+import "@lynx-js/react/worklet-runtime/init?owner=a77b-test";
 class App extends Component {
     a = 1;
     onTapLepus = {

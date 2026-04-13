@@ -88,7 +88,9 @@ export const applySplitChunksRule: (
 
     rspackConfig.optimization.splitChunks.chunks = function chunks(chunk) {
       // TODO: support `splitChunks.chunks: 'async'`
-      // We don't want main thread to be split
+      // Main-thread assets must stay self-contained. They carry wrapper-sensitive
+      // code and now also own the inlined worklet-runtime bootstrap, including
+      // async lazy main-thread chunks.
       return !chunk.name?.includes('__main-thread')
     }
     return rspackConfig

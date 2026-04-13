@@ -1,4 +1,4 @@
-import "@lynx-js/react/worklet-runtime/init";
+import "@lynx-js/react/worklet-runtime/init?owner=a123-test";
 let onTapLepus = {
     _c: {
         aaaa,

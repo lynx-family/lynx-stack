@@ -1694,7 +1694,7 @@ export function getCurrentDelta(event) {
 
       if (target === 'LEPUS') {
         expect(code).toMatchInlineSnapshot(`
-          "import "@lynx-js/react/worklet-runtime/init";
+          "import "@lynx-js/react/worklet-runtime/init?owner=da39-75a1b";
           export let getCurrentDelta = {
               _c: {
                   foo: {
@@ -1713,7 +1713,9 @@ export function getCurrentDelta(event) {
           });
           "
         `);
-        expect(code).toContain('"@lynx-js/react/worklet-runtime/init"');
+        expect(code).toContain(
+          '"@lynx-js/react/worklet-runtime/init?owner=',
+        );
         expect(code).not.toContain('@lynx-js/react/internal/worklet-runtime/init');
         expect(code).toContain('registerWorkletInternal("main-thread"');
       } else if (target === 'JS') {
@@ -1734,7 +1736,7 @@ export function getCurrentDelta(event) {
         expect(code).not.toContain('registerWorkletInternal');
       } else if (target === 'MIXED') {
         expect(code).toMatchInlineSnapshot(`
-          "import "@lynx-js/react/worklet-runtime/init";
+          "import "@lynx-js/react/worklet-runtime/init?owner=da39-75a1b";
           export let getCurrentDelta = {
               _c: {
                   foo: {
@@ -1753,7 +1755,9 @@ export function getCurrentDelta(event) {
           });
           "
         `);
-        expect(code).toContain('"@lynx-js/react/worklet-runtime/init"');
+        expect(code).toContain(
+          '"@lynx-js/react/worklet-runtime/init?owner=',
+        );
         expect(code).not.toContain('@lynx-js/react/internal/worklet-runtime/init');
         expect(code).toContain('registerWorkletInternal("main-thread"');
       }
@@ -1793,7 +1797,7 @@ export function foo(event) {
     );
 
     expect(code).toMatchInlineSnapshot(`
-      "import "@lynx-js/react/worklet-runtime/init";
+      "import "@lynx-js/react/worklet-runtime/init?owner=da39-64631";
       export let foo = {
           _c: {
               bar: {
@@ -1821,7 +1825,9 @@ export function foo(event) {
       "
     `);
     expect((code.match(/registerWorkletInternal/g) ?? []).length).toBe(1);
-    expect((code.match(/import "@lynx-js\/react\/worklet-runtime\/init"/g) ?? []).length).toBe(1);
+    expect(
+      (code.match(/import "@lynx-js\/react\/worklet-runtime\/init\?owner=/g) ?? []).length,
+    ).toBe(1);
   });
 
   it('nested', async () => {
@@ -1862,7 +1868,7 @@ console.log(bar)
     );
 
     expect(code).toMatchInlineSnapshot(`
-      "import "@lynx-js/react/worklet-runtime/init";
+      "import "@lynx-js/react/worklet-runtime/init?owner=da39-80ef4";
       let foo = {
           _wkltId: "da39:80ef4:1"
       };
@@ -1887,7 +1893,9 @@ console.log(bar)
       "
     `);
     expect((code.match(/registerWorkletInternal/g) ?? []).length).toBe(2);
-    expect((code.match(/import "@lynx-js\/react\/worklet-runtime\/init"/g) ?? []).length).toBe(1);
+    expect(
+      (code.match(/import "@lynx-js\/react\/worklet-runtime\/init\?owner=/g) ?? []).length,
+    ).toBe(1);
   });
 
   it('use multiple times', async () => {
@@ -1926,7 +1934,7 @@ function getCurrentDelta(event) {
     );
 
     expect(code).toMatchInlineSnapshot(`
-      "import "@lynx-js/react/worklet-runtime/init";
+      "import "@lynx-js/react/worklet-runtime/init?owner=da39-059d0";
       registerWorkletInternal("main-thread", "da39:059d0:1", function(event) {
           lynxWorkletImpl._workletMap["da39:059d0:1"].bind(this);
           let { foo, a, b } = this["_c"];
@@ -1937,7 +1945,9 @@ function getCurrentDelta(event) {
       "
     `);
     expect((code.match(/registerWorkletInternal/g) ?? []).length).toBe(1);
-    expect((code.match(/import "@lynx-js\/react\/worklet-runtime\/init"/g) ?? []).length).toBe(1);
+    expect(
+      (code.match(/import "@lynx-js\/react\/worklet-runtime\/init\?owner=/g) ?? []).length,
+    ).toBe(1);
   });
 
   it('should keep webpack runtime variables', async () => {

@@ -1811,6 +1811,19 @@ describe('Config', () => {
             "test": /node_modules\\[\\\\\\\\/\\]\\(\\.\\*\\?\\[\\\\\\\\/\\]\\)\\?\\(\\?:\\(\\?:internal-\\)\\?preact\\|\\(\\?:internal-\\)\\?preact\\[\\\\\\\\/\\]compat\\|\\(\\?:internal-\\)\\?preact\\[\\\\\\\\/\\]hooks\\|\\(\\?:internal-\\)\\?preact\\[\\\\\\\\/\\]jsx-runtime\\)\\[\\\\\\\\/\\]/,
           }
         `)
+
+      const shouldSplit = config.optimization.splitChunks.chunks
+      expect(shouldSplit).toBeTypeOf('function')
+
+      expect(
+        shouldSplit?.({ name: 'main__main-thread' } as never),
+      ).toBe(false)
+      expect(
+        shouldSplit?.({ name: './lazy.jsx-react__main-thread' } as never),
+      ).toBe(false)
+      expect(
+        shouldSplit?.({ name: 'main__background' } as never),
+      ).toBe(true)
     })
 
     test('performance.chunkSplit.strategy: "split-by-experience" along with extractStr: true', async () => {

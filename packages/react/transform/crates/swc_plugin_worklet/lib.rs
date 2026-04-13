@@ -698,13 +698,17 @@ fn is_shared_runtime_import(import_decl: &ImportDecl) -> bool {
 
 impl WorkletVisitor {
   fn worklet_runtime_init_path(&self) -> String {
+    // Give every worklet-bearing module a distinct init specifier so bundlers
+    // keep the owner-scoped bootstrap module in that main-thread asset instead
+    // of hoisting it into an unrelated shared or initial chunk.
     format!(
-      "{}/worklet-runtime/init",
+      "{}/worklet-runtime/init?owner={}",
       self
         .cfg
         .runtime_pkg
         .strip_suffix("/internal")
-        .unwrap_or(self.cfg.runtime_pkg.as_str())
+        .unwrap_or(self.cfg.runtime_pkg.as_str()),
+      WorkletHash::calc_module_hash(&self.cfg.filename, &self.content_hash),
     )
   }
 
