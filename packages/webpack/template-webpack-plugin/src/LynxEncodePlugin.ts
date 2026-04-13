@@ -4,7 +4,7 @@
 
 import type { Chunk, Compiler } from 'webpack';
 
-import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
+import { LynxBundlePlugin } from './LynxTemplatePlugin.js';
 import { getRequireModuleAsyncCachePolyfill } from './polyfill/requireModuleAsync.js';
 
 // https://github.com/web-infra-dev/rsbuild/blob/main/packages/core/src/types/config.ts#L1029
@@ -97,7 +97,7 @@ export class LynxEncodePluginImpl {
       || compiler.options.mode === 'development';
 
     compiler.hooks.thisCompilation.tap(this.name, compilation => {
-      const templateHooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
+      const templateHooks = LynxBundlePlugin.getLynxTemplatePluginHooks(
         compilation,
       );
 
