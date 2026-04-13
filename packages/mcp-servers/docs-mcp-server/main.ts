@@ -105,7 +105,9 @@ async function crawlAndRegisterResources(
       try {
         const response = await fetch(link.url);
         if (!response.ok) {
-          debug(`Failed to fetch nested index ${link.url}: ${response.status} ${response.statusText}`);
+          debug(
+            `Failed to fetch nested index ${link.url}: ${response.status} ${response.statusText}`,
+          );
           continue;
         }
         const nestedMarkdown = await response.text();
@@ -157,7 +159,9 @@ async function crawlAndRegisterResources(
       async () => {
         const response = await fetch(link.url);
         if (!response.ok) {
-           throw new Error(`Failed to fetch resource ${link.url}: ${response.status} ${response.statusText}`);
+          throw new Error(
+            `Failed to fetch resource ${link.url}: ${response.status} ${response.statusText}`,
+          );
         }
         return {
           contents: [
