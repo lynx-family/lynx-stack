@@ -96,6 +96,7 @@ export class LynxDebugMetadataPluginImpl {
               ),
             ),
           );
+          args.intermediateAssets.push(debugMetadataAssetName);
 
           return args;
         },
@@ -161,15 +162,15 @@ export function compareUiSourceMapRecord(
     || a.uiSourceMap - b.uiSourceMap;
 }
 
-export function createDebugMetadataAsset(
-  records: UiSourceMapRecord[],
-): DebugMetadataAsset {
+export function createUiSourceMap(
+  uiSourceMapRecords: UiSourceMapRecord[],
+): UiSourceMapData {
   const sources: string[] = [];
   const sourceIndexes = new Map<string, number>();
   const mappings: [number, number, number][] = [];
   const uiMaps: number[] = [];
 
-  for (const record of records) {
+  for (const record of uiSourceMapRecords) {
     if (!record.filename) {
       continue;
     }
@@ -189,12 +190,18 @@ export function createDebugMetadataAsset(
   }
 
   return {
-    uiSourceMap: {
-      version: 1,
-      sources,
-      mappings,
-      uiMaps,
-    },
+    version: 1,
+    sources,
+    mappings,
+    uiMaps,
+  };
+}
+
+export function createDebugMetadataAsset(
+  uiSourceMapRecords: UiSourceMapRecord[],
+): DebugMetadataAsset {
+  return {
+    uiSourceMap: createUiSourceMap(uiSourceMapRecords),
     meta: {},
   };
 }
