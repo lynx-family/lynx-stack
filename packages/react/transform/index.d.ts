@@ -636,6 +636,8 @@ export interface TransformNodiffOptions {
   dynamicImport?: boolean | DynamicImportVisitorConfig
   /** @internal */
   inject?: boolean | InjectVisitorConfig
+  /** @internal */
+  verbatimModuleSyntax?: boolean
   inputSourceMap?: string
 }
 export interface TransformNodiffOutput {

@@ -41,6 +41,11 @@ export function applyLoaders(
       || output?.sourceMap?.js?.includes('nosources')
     )
 
+    const swcLoaderRule = uses[CHAIN_ID.USE.SWC]!
+      .entries() as Rspack.RuleSetRule
+    const swcLoaderOptions = swcLoaderRule
+      .options as Rspack.SwcLoaderOptions
+
     const backgroundRule = rule.oneOf(LAYERS.BACKGROUND)
     // dprint-ignore
     backgroundRule
@@ -56,6 +61,7 @@ export function applyLoaders(
           isDynamicComponent: experimental_isLazyBundle,
           inlineSourcesContent,
           defineDCE,
+          verbatimModuleSyntax: swcLoaderOptions.jsc?.transform?.verbatimModuleSyntax,
           engineVersion,
         })
       .end()
@@ -71,10 +77,6 @@ export function applyLoaders(
       // If we have swc-loader, replace it with different options.
       .when(uses[CHAIN_ID.USE.SWC] !== undefined, rule => {
         rule.uses.delete(CHAIN_ID.USE.SWC)
-        const swcLoaderRule = uses[CHAIN_ID.USE.SWC]!
-          .entries() as Rspack.RuleSetRule
-        const swcLoaderOptions = swcLoaderRule
-          .options as Rspack.SwcLoaderOptions
         rule.use(CHAIN_ID.USE.SWC)
           .merge(swcLoaderRule)
           .options(
@@ -97,6 +99,7 @@ export function applyLoaders(
           engineVersion,
           shake,
           defineDCE,
+          verbatimModuleSyntax: swcLoaderOptions.jsc?.transform?.verbatimModuleSyntax,
         })
       .end()
 

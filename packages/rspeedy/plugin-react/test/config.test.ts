@@ -465,6 +465,7 @@ describe('Config', () => {
         "engineVersion": "3.2",
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
+        "verbatimModuleSyntax": undefined,
       }
     `)
   })
@@ -492,6 +493,7 @@ describe('Config', () => {
         "engineVersion": "3.2",
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
+        "verbatimModuleSyntax": undefined,
       }
     `)
 
