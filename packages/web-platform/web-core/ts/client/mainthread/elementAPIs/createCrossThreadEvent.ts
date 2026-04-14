@@ -61,6 +61,12 @@ export function createCrossThreadEvent(
         )
         : changedTouches,
     });
+    if (touch[0]) {
+      detail = {
+        x: touch[0].clientX,
+        y: touch[0].clientY,
+      };
+    }
   } else if (type.startsWith('mouse')) {
     const mouseEvent = domEvent as MouseEvent;
     Object.assign(otherProperties, {
