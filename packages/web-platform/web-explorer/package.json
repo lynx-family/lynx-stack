@@ -28,7 +28,7 @@
     "@lynx-js/web-core": "workspace:*",
     "@lynx-js/web-platform-rsbuild-plugin": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rsdoctor/rspack-plugin": "1.2.3",
+    "@rsdoctor/rspack-plugin": "1.5.8",
     "tslib": "^2.8.1"
   }
 }
