@@ -70,6 +70,7 @@ export class BackgroundThread implements AsyncDisposable {
   #batchSendTimingInfo: RpcCallType<typeof markTimingEndpoint>;
 
   readonly jsContext: LynxCrossThreadContext;
+  #messagePort?: MessagePort;
 
   readonly postTimingFlags: RpcCallType<typeof postTimingFlagsEndpoint>;
   readonly sendGlobalEvent: RpcCallType<typeof sendGlobalEventEndpoint>;
@@ -166,6 +167,7 @@ export class BackgroundThread implements AsyncDisposable {
       } as WorkerStartMessage,
       [messageChannel.port2],
     );
+    this.#messagePort = messageChannel.port1;
     this.#rpc.setMessagePort(messageChannel.port1);
   }
 
@@ -303,6 +305,8 @@ export class BackgroundThread implements AsyncDisposable {
     } else {
       this.#webWorker?.terminate();
     }
+    this.#messagePort?.close();
+    this.#messagePort = undefined;
     this.#nextMacroTask && clearTimeout(this.#nextMacroTask);
   }
 }

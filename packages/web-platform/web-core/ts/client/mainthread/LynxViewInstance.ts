@@ -298,8 +298,8 @@ export class LynxViewInstance implements AsyncDisposable {
   }
 
   async [Symbol.asyncDispose]() {
-    this.mtsWasmBinding.dispose();
     await this.backgroundThread[Symbol.asyncDispose]();
+    this.exposureServices.dispose();
     requestIdleCallbackImpl(() => {
       this.mtsWasmBinding.dispose();
     });

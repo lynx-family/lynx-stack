@@ -205,10 +205,7 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
       this.lynxViewInstance.rootDom.removeEventListener(
         eventName,
         this.#commonEventHandler,
-        {
-          passive: true,
-          capture: true,
-        } as any,
+        true,
       );
     }
     this.#addedEventListeners.clear();
