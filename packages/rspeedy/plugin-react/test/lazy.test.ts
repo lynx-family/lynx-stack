@@ -69,6 +69,10 @@ const sExportsJSXDevRuntime = Symbol.for(
 )
 const testDir = path.dirname(fileURLToPath(import.meta.url))
 
+function resolveTestDistRoot(...segments: string[]): string {
+  return path.join(testDir, 'dist', ...segments)
+}
+
 function evaluateStandaloneLazyMainThread(
   source: string,
 ) {
@@ -232,6 +236,7 @@ describe('Lazy', () => {
 
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
       let backgroundJSContent = ''
+      const distRoot = resolveTestDistRoot('standalone-lazy-bundle')
 
       const rsbuild = await createRspeedy({
         rspeedyConfig: {
@@ -246,7 +251,7 @@ describe('Lazy', () => {
           },
           output: {
             distPath: {
-              root: './dist/standalone-lazy-bundle',
+              root: distRoot,
             },
           },
           plugins: [
@@ -333,10 +338,7 @@ describe('Lazy', () => {
     vi.stubEnv('NODE_ENV', 'development')
 
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const distRoot = path.join(
-      testDir,
-      'dist/standalone-lazy-bundle-worklet',
-    )
+    const distRoot = resolveTestDistRoot('standalone-lazy-bundle-worklet')
 
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
@@ -350,7 +352,7 @@ describe('Lazy', () => {
         },
         output: {
           distPath: {
-            root: './dist/standalone-lazy-bundle-worklet',
+            root: distRoot,
           },
         },
         plugins: [
@@ -382,10 +384,7 @@ describe('Lazy', () => {
       expect(source).toContain('registerWorkletInternal("main-thread"')
       expect(source).not.toContain('__workletRuntimeLoaded')
 
-      const hostDistRoot = path.join(
-        testDir,
-        'dist/mixed-version-host',
-      )
+      const hostDistRoot = resolveTestDistRoot('mixed-version-host')
       const hostRsbuild = await createRspeedy({
         rspeedyConfig: {
           source: {
@@ -398,7 +397,7 @@ describe('Lazy', () => {
           },
           output: {
             distPath: {
-              root: './dist/mixed-version-host',
+              root: hostDistRoot,
             },
           },
           plugins: [
@@ -443,6 +442,7 @@ describe('Lazy', () => {
   test('lazy bundle beforeEncode entryNames', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const distRoot = resolveTestDistRoot('lazy-bundle')
 
     const entryNamesOfBeforeEncode: string[][] = []
     let backgroundJSContent = ''
@@ -459,7 +459,7 @@ describe('Lazy', () => {
         },
         output: {
           distPath: {
-            root: './dist/lazy-bundle',
+            root: distRoot,
           },
         },
         plugins: [
@@ -566,6 +566,7 @@ describe('Lazy', () => {
   test('lazy bundle app-service.js should not load hot-update.js', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const distRoot = resolveTestDistRoot('lazy-bundle')
 
     let appServiceJSContent = ''
     let done = false
@@ -592,7 +593,7 @@ describe('Lazy', () => {
         },
         output: {
           distPath: {
-            root: './dist/lazy-bundle',
+            root: distRoot,
           },
         },
         plugins: [
