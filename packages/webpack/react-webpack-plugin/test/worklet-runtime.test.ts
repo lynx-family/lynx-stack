@@ -33,7 +33,7 @@ const distRoot = path.resolve(
   'dist',
   'worklet-runtime',
 );
-const RUNTIME_INIT_OWNER_MARKER = 'worklet-runtime/init.ts?owner=';
+const RUNTIME_INIT_OWNER_MARKER = 'worklet-runtime/init.js?owner=';
 const RUNTIME_IMPLEMENTATION_MARKER = 'globalThis.lynxWorkletImpl = {';
 const REGISTER_WORKLET_MARKER = 'registerWorkletInternal(';
 const LEGACY_FALLBACK_MARKER = '__workletRuntimeLoaded';
