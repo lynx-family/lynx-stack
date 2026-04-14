@@ -428,6 +428,10 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
 `;
 
         const hasUrlLibraryNamePairInjected = new Set();
+        // Track which (urlKey, sectionPath) pairs have already generated a loadScript call.
+        // Maps to the mountVar of the first external that triggered the load, so subsequent
+        // externals sharing the same section can reuse the result without calling loadScript again.
+        const sectionLoadTracker = new Map<string, string>();
 
         for (const [pkgName, external] of finalExternals) {
           const {
@@ -479,6 +483,17 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
               externalsLoadingPluginOptions.globalObject,
             )
           }[${JSON.stringify(libraryNameStr)}]`;
+
+          // If another external already generated a loadScript call for this exact
+          // (bundle, section) pair, reuse its result instead of calling loadScript again.
+          const sectionKey = `${urlKey}||${layerOptions.sectionPath}`;
+          const existingMountVar = sectionLoadTracker.get(sectionKey);
+          if (existingMountVar !== undefined) {
+            loadCode.add(`${mountVar} = ${existingMountVar};`);
+            continue;
+          }
+          sectionLoadTracker.set(sectionKey, mountVar);
+
           if (async) {
             loadCode.add(
               `${mountVar} = ${mountVar} === undefined ? createLoadExternalAsync(handler${
