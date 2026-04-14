@@ -260,7 +260,7 @@ describe('React - alias', () => {
     }
 
     expect(
-      config.resolve.alias['@lynx-js/react/worklet-runtime/init'],
+      config.resolve.alias['@lynx-js/react/worklet-runtime/init$'],
     ).toEqual(
       expect.stringContaining(
         '/packages/react/runtime/src/worklet-runtime/init.ts'
@@ -292,7 +292,7 @@ describe('React - alias', () => {
     }
 
     expect(
-      config.resolve.alias['@lynx-js/react/worklet-runtime/init'],
+      config.resolve.alias['@lynx-js/react/worklet-runtime/init$'],
     ).toEqual(
       expect.stringContaining(
         '/packages/react/runtime/src/worklet-runtime/init.ts'

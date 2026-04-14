@@ -154,12 +154,10 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           },
           {
             request: '@lynx-js/react/worklet-runtime/init',
-            // The generated import carries an owner query, so the alias must
-            // match the bare specifier prefix instead of an exact `$` request.
             // Resolve directly to source so workspace builds keep the runtime
             // on the business compilation path even though published packages
             // expose the compiled lib entry.
-            aliasKey: '@lynx-js/react/worklet-runtime/init',
+            aliasKey: '@lynx-js/react/worklet-runtime/init$',
             resolve: () =>
               Promise.resolve(
                 path.join(
