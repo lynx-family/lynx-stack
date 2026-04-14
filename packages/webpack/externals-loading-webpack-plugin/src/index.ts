@@ -485,11 +485,18 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           }[${JSON.stringify(libraryNameStr)}]`;
 
           // If another external already generated a loadScript call for this exact
-          // (bundle, section) pair, reuse its result instead of calling loadScript again.
-          const sectionKey = `${urlKey}||${layerOptions.sectionPath}`;
+          // (bundle, section, async) triple, reuse its result instead of calling
+          // loadScript again. async is included in the key because sync and async
+          // externals resolve to different runtime shapes (plain value vs Promise),
+          // so they must not be merged even when they share the same section.
+          const sectionKey = `${urlKey}||${layerOptions.sectionPath}||${async}`;
           const existingMountVar = sectionLoadTracker.get(sectionKey);
           if (existingMountVar !== undefined) {
-            loadCode.add(`${mountVar} = ${existingMountVar};`);
+            // Preserve any value the host may have pre-populated for this global,
+            // matching the same === undefined guard used on the primary load path.
+            loadCode.add(
+              `${mountVar} = ${mountVar} === undefined ? ${existingMountVar} : ${mountVar};`,
+            );
             continue;
           }
           sectionLoadTracker.set(sectionKey, mountVar);
