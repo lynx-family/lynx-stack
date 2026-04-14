@@ -7,6 +7,13 @@ import { describe, expect, it } from 'vitest';
 
 import { transformBundleResult, transformReactLynx } from '../main.js';
 
+const TEST_FILENAMES = {
+  uiSourceMap: '/path/to/src/ui-source-map.js',
+};
+const TEST_SNAPSHOT_FILENAMES = {
+  uiSourceMap: 'src/ui-source-map.js',
+};
+
 describe('shake', () => {
   it('should match', async () => {
     const inputContent = `
@@ -118,6 +125,45 @@ export class A extends Component {
   });
 });
 
+describe('ui source map', () => {
+  it('should use the top-level filename for exported uiSourceMapRecords', async () => {
+    const result = await transformReactLynx('const node = <view />;', {
+      mode: 'test',
+      pluginName: '',
+      filename: TEST_FILENAMES.uiSourceMap,
+      sourcemap: false,
+      cssScope: false,
+      snapshot: {
+        preserveJsx: false,
+        runtimePkg: '@lynx-js/react',
+        jsxImportSource: '@lynx-js/react',
+        filename: TEST_SNAPSHOT_FILENAMES.uiSourceMap,
+        target: 'MIXED',
+        enableUiSourceMap: true,
+      },
+      jsx: true,
+      directiveDCE: false,
+      defineDCE: false,
+      shake: false,
+      compat: false,
+      worklet: false,
+      refresh: false,
+    });
+
+    expect(result.uiSourceMapRecords).toMatchInlineSnapshot(`
+      [
+        {
+          "columnNumber": 14,
+          "filename": "/path/to/src/ui-source-map.js",
+          "lineNumber": 1,
+          "snapshotId": "__snapshot_cf7b3_test_1",
+          "uiSourceMap": 222048564,
+        },
+      ]
+    `);
+  });
+});
+
 describe('jsx', () => {
   it('should allow JSXNamespace', async () => {
     const result = await transformReactLynx('const jsx = <Foo main-thread:foo={foo} />', {
@@ -146,6 +192,7 @@ describe('jsx', () => {
       });
       ",
         "errors": [],
+        "uiSourceMapRecords": [],
         "warnings": [],
       }
     `);
@@ -214,6 +261,7 @@ describe('jsx', () => {
       });
       ",
         "errors": [],
+        "uiSourceMapRecords": [],
         "warnings": [],
       }
     `);
@@ -239,6 +287,7 @@ describe('errors and warnings', () => {
             "text": "Expected '</', got '<eof>'",
           },
         ],
+        "uiSourceMapRecords": [],
         "warnings": [],
       }
     `);
@@ -277,6 +326,7 @@ Component, View
       Component, View;
       ",
         "errors": [],
+        "uiSourceMapRecords": [],
         "warnings": [
           {
             "location": {
@@ -412,7 +462,7 @@ Component, View
             ], ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, [
                 0
             ], true);
-        /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>/*#__PURE__*/ _jsx(__snapshot_da39a_89b7f_1, {
+        /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>_jsx(__snapshot_da39a_89b7f_1, {
                 values: [
                     {
                         ...__spread,

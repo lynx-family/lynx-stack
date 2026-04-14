@@ -75,6 +75,7 @@ export interface PluginReactLynxOptions {
     enableNewGesture?: boolean;
     enableRemoveCSSScope?: boolean | undefined;
     enableSSR?: boolean;
+    enableUiSourceMap?: boolean;
     engineVersion?: string;
     // @alpha
     experimental_isLazyBundle?: boolean;

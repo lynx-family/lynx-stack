@@ -44,6 +44,13 @@ export interface PartialLocation {
   lineText?: string
   suggestion?: string
 }
+export interface UiSourceMapRecord {
+  uiSourceMap: number
+  filename: string
+  lineNumber: number
+  columnNumber: number
+  snapshotId: string
+}
 export interface DarkModeConfig {
   /**
    * @public
@@ -588,6 +595,8 @@ export interface JsxTransformerConfig {
   /** @internal */
   target: 'LEPUS' | 'JS' | 'MIXED'
   /** @internal */
+  enableUiSourceMap?: boolean
+  /** @internal */
   isDynamicComponent?: boolean
 }
 export interface WorkletVisitorConfig {
@@ -643,6 +652,7 @@ export interface TransformNodiffOutput {
   map?: string
   errors: Array<PartialMessage>
   warnings: Array<PartialMessage>
+  uiSourceMapRecords: Array<UiSourceMapRecord>
 }
 export function transformReactLynxSync(code: string, options?: TransformNodiffOptions | undefined | null): TransformNodiffOutput
 export function transformReactLynx(code: string, options?: TransformNodiffOptions | undefined | null): Promise<TransformNodiffOutput>
