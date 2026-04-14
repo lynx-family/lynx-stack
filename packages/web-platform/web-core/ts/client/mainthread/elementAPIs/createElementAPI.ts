@@ -68,12 +68,25 @@ export function createElementAPI(
   transform_vh: boolean,
   transform_rem: boolean,
 ): ElementPAPIs {
-  const wasmContext = new MainThreadWasmContext(
+  let wasmContext = new MainThreadWasmContext(
     rootDom,
     mtsBinding,
     config_enable_css_selector,
   );
   mtsBinding.wasmContext = wasmContext;
+  mtsBinding.disposeWasmContext = () => {
+    if (wasmContext) {
+      wasmContext.free();
+    }
+    // @ts-expect-error parameter nullification for GC
+    wasmContext = null;
+    // @ts-expect-error parameter nullification for GC
+    rootDom = null;
+    // @ts-expect-error parameter nullification for GC
+    mtsBinding = null;
+    page = undefined;
+    timingFlags.length = 0;
+  };
   let page: DecoratedHTMLElement | undefined = undefined;
   const timingFlags: string[] = [];
 
