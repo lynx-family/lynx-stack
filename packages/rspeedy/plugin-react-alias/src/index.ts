@@ -132,24 +132,56 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         const transformedEntries = [
           // TODO: add `debug` after bump peerDependencies['@lynx-js/react'] to 0.111.1
           // 'debug',
-          'experimental/lazy/import',
-          'internal',
-          'legacy-react-runtime',
-          'runtime-components',
-          'worklet-runtime/bindings',
-        ]
+          {
+            request: '@lynx-js/react/experimental/lazy/import',
+            aliasKey: '@lynx-js/react/experimental/lazy/import$',
+            resolve,
+          },
+          {
+            request: '@lynx-js/react/internal',
+            aliasKey: '@lynx-js/react/internal$',
+            resolve,
+          },
+          {
+            request: '@lynx-js/react/legacy-react-runtime',
+            aliasKey: '@lynx-js/react/legacy-react-runtime$',
+            resolve,
+          },
+          {
+            request: '@lynx-js/react/runtime-components',
+            aliasKey: '@lynx-js/react/runtime-components$',
+            resolve,
+          },
+          {
+            request: '@lynx-js/react/worklet-runtime/init',
+            // Resolve directly to source so workspace builds keep the runtime
+            // on the business compilation path even though published packages
+            // expose the compiled lib entry.
+            aliasKey: '@lynx-js/react/worklet-runtime/init$',
+            resolve: () =>
+              Promise.resolve(
+                path.join(
+                  reactLynxDir,
+                  'runtime',
+                  'src',
+                  'worklet-runtime',
+                  'init.ts',
+                ),
+              ),
+          },
+          {
+            request: '@lynx-js/react/worklet-runtime/bindings',
+            aliasKey: '@lynx-js/react/worklet-runtime/bindings$',
+            resolve,
+          },
+        ] as const
 
         await Promise.all(
-          transformedEntries
-            .map(entry => `@lynx-js/react/${entry}`)
-            .map(entry =>
-              resolve(entry).then(value => {
-                chain
-                  .resolve
-                  .alias
-                  .set(`${entry}$`, value)
-              })
-            ),
+          transformedEntries.map(({ request, aliasKey, resolve }) =>
+            resolve(request).then(value => {
+              chain.resolve.alias.set(aliasKey, value)
+            })
+          ),
         )
 
         if (isProd) {

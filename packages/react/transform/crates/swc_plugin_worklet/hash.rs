@@ -18,7 +18,6 @@ impl WorkletHash {
       self.last_id
     )
   }
-
   fn calc_hash(s: &str) -> String {
     let mut hasher = Sha1::new();
     hasher.update(s.as_bytes());

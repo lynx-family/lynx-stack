@@ -12,13 +12,15 @@ import { describe, expect, it } from 'vitest';
 interface WorkletRuntimeCase {
   caseName: string;
   expectedChunkNames: string[];
-  expectedInitSignatureCount: number;
+  expectedRuntimeInitOwners: string[];
+  expectedRuntimeImplementationOwners: string[];
+  expectedRegisterOwners: string[];
   expectedRegisterIdCount: number;
 }
 
 interface BuildOutput {
   lepusChunk: Record<string, string>;
-  mainThreadSource: string;
+  jsAssets: Map<string, string>;
 }
 
 const casesRoot = path.resolve(
@@ -31,6 +33,10 @@ const distRoot = path.resolve(
   'dist',
   'worklet-runtime',
 );
+const RUNTIME_INIT_OWNER_MARKER = 'worklet-runtime/init.js';
+const RUNTIME_IMPLEMENTATION_MARKER = 'globalThis.lynxWorkletImpl = {';
+const REGISTER_WORKLET_MARKER = 'registerWorkletInternal(';
+const LEGACY_FALLBACK_MARKER = '__workletRuntimeLoaded';
 
 function parseLepusChunk(
   source: string,
@@ -66,7 +72,7 @@ function countOccurrences(source: string, needle: string): number {
 
 function extractRegisteredWorkletIds(source: string): string[] {
   const matches = source.matchAll(
-    /registerWorkletInternal\(\\"main-thread\\",\s*\\"([^\\"]+)\\"/g,
+    /registerWorkletInternal\((?:\\"|")main-thread(?:\\"|"),\s*(?:\\"|")([^"\\]+)(?:\\"|")/g,
   );
 
   return Array.from(matches, match => match[1]);
@@ -127,27 +133,105 @@ async function buildCase(caseName: string): Promise<BuildOutput> {
 
   const tasmPath = path.join(outputPath, '.rspeedy', 'tasm.json');
   const tasm = await fs.readFile(tasmPath, 'utf8');
-  const mainThreadPath = path.join(outputPath, 'main__main-thread.js');
-  const mainThreadSource = await fs.readFile(mainThreadPath, 'utf8');
+  const jsAssets = await collectJsAssets(outputPath);
 
   return {
     lepusChunk: parseLepusChunk(tasm, caseName),
-    mainThreadSource,
+    jsAssets,
   };
+}
+
+async function collectJsAssets(
+  rootDir: string,
+  relativeDir = '.',
+): Promise<Map<string, string>> {
+  const dirPath = path.join(rootDir, relativeDir);
+  const entries = await fs.readdir(dirPath, { withFileTypes: true });
+  const assets = new Map<string, string>();
+
+  await Promise.all(entries.map(async (entry) => {
+    const entryRelativePath = path.join(relativeDir, entry.name);
+    if (entry.isDirectory()) {
+      const nestedAssets = await collectJsAssets(rootDir, entryRelativePath);
+      for (const [file, source] of nestedAssets) {
+        assets.set(file, source);
+      }
+      return;
+    }
+
+    if (!entry.name.endsWith('.js')) {
+      return;
+    }
+
+    const source = await fs.readFile(
+      path.join(rootDir, entryRelativePath),
+      'utf8',
+    );
+    assets.set(path.normalize(entryRelativePath), source);
+  }));
+
+  return assets;
+}
+
+function isMainThreadAsset(name: string): boolean {
+  return name.endsWith('.js') && name.includes('main-thread');
+}
+
+function collectAssetOwners(
+  jsAssets: Map<string, string>,
+  needle: string,
+): string[] {
+  return [...jsAssets.entries()]
+    .filter(([, source]) => countOccurrences(source, needle) > 0)
+    .map(([name]) => name);
+}
+
+function expectOwnersToMatch(
+  actualOwners: string[],
+  expectedOwners: string[],
+  label: string,
+) {
+  expect(actualOwners).toHaveLength(expectedOwners.length);
+  for (const pattern of expectedOwners) {
+    expect(
+      actualOwners.some(name => name.includes(pattern)),
+      `Expected a ${label} owner matching "${pattern}" in ${
+        actualOwners.join(', ')
+      }`,
+    ).toBe(true);
+  }
 }
 
 describe('worklet-runtime bundler guardrails', () => {
   it.each<WorkletRuntimeCase>([
     {
       caseName: 'chunk',
-      expectedChunkNames: ['worklet-runtime'],
-      expectedInitSignatureCount: 1,
+      expectedChunkNames: [],
+      expectedRuntimeInitOwners: ['main__main-thread.js'],
+      expectedRuntimeImplementationOwners: ['main__main-thread.js'],
+      expectedRegisterOwners: ['main__main-thread.js'],
+      expectedRegisterIdCount: 2,
+    },
+    {
+      caseName: 'lazy',
+      expectedChunkNames: [],
+      expectedRuntimeInitOwners: [
+        'main__main-thread.js',
+        'lazy.jsx-react__main-thread',
+      ],
+      expectedRuntimeImplementationOwners: ['main__main-thread.js'],
+      expectedRegisterOwners: [
+        'main__main-thread.js',
+        'lazy.jsx-react__main-thread',
+      ],
       expectedRegisterIdCount: 2,
     },
     {
       caseName: 'not-using',
       expectedChunkNames: [],
-      expectedInitSignatureCount: 0,
+      expectedRuntimeInitOwners: [],
+      expectedRuntimeImplementationOwners: [],
+      expectedRegisterOwners: [],
       expectedRegisterIdCount: 0,
     },
   ])(
@@ -155,30 +239,82 @@ describe('worklet-runtime bundler guardrails', () => {
     async ({
       caseName,
       expectedChunkNames,
-      expectedInitSignatureCount,
+      expectedRuntimeInitOwners,
+      expectedRuntimeImplementationOwners,
+      expectedRegisterOwners,
       expectedRegisterIdCount,
     }) => {
-      const { lepusChunk, mainThreadSource } = await buildCase(caseName);
+      const { lepusChunk, jsAssets } = await buildCase(caseName);
       const workletRuntimeChunks = Object.keys(lepusChunk).filter(
         name => name === 'worklet-runtime',
       );
-      const registeredWorkletIds = extractRegisteredWorkletIds(
-        mainThreadSource,
+      const runtimeInitOwners = collectAssetOwners(
+        jsAssets,
+        RUNTIME_INIT_OWNER_MARKER,
+      );
+      const runtimeImplementationOwners = collectAssetOwners(
+        jsAssets,
+        RUNTIME_IMPLEMENTATION_MARKER,
+      );
+      const registerOwners = collectAssetOwners(
+        jsAssets,
+        REGISTER_WORKLET_MARKER,
+      );
+      const registeredWorkletIds = [...jsAssets.values()].flatMap(
+        source => extractRegisteredWorkletIds(source),
       );
 
       expect(workletRuntimeChunks).toEqual(expectedChunkNames);
 
       if (expectedChunkNames.length > 0) {
         expect(lepusChunk['worklet-runtime'].length).toBeGreaterThan(0);
-        expect(
-          countOccurrences(
-            lepusChunk['worklet-runtime'],
-            'globalThis.lynxWorkletImpl = {',
-          ),
-        ).toBe(expectedInitSignatureCount);
       } else {
         expect(lepusChunk['worklet-runtime']).toBeUndefined();
-        expect(expectedInitSignatureCount).toBe(0);
+      }
+
+      expectOwnersToMatch(
+        runtimeInitOwners,
+        expectedRuntimeInitOwners,
+        'runtime init',
+      );
+      expectOwnersToMatch(
+        runtimeImplementationOwners,
+        expectedRuntimeImplementationOwners,
+        'runtime implementation',
+      );
+      expectOwnersToMatch(
+        registerOwners,
+        expectedRegisterOwners,
+        'worklet registration',
+      );
+
+      for (const [name, source] of jsAssets) {
+        const inlineInitImportCount = countOccurrences(
+          source,
+          RUNTIME_INIT_OWNER_MARKER,
+        );
+        const inlineInitCount = countOccurrences(
+          source,
+          RUNTIME_IMPLEMENTATION_MARKER,
+        );
+
+        if (runtimeInitOwners.includes(name)) {
+          expect(isMainThreadAsset(name)).toBe(true);
+          expect(inlineInitImportCount).toBeGreaterThan(0);
+        } else {
+          expect(inlineInitImportCount).toBe(0);
+        }
+
+        if (runtimeImplementationOwners.includes(name)) {
+          expect(isMainThreadAsset(name)).toBe(true);
+          expect(inlineInitCount).toBe(1);
+        } else {
+          expect(inlineInitCount).toBe(0);
+        }
+
+        if (registerOwners.includes(name)) {
+          expect(source).not.toContain(LEGACY_FALLBACK_MARKER);
+        }
       }
 
       expect(registeredWorkletIds).toHaveLength(expectedRegisterIdCount);

@@ -27,9 +27,7 @@ const isPlainObject = (obj: unknown): obj is Record<string, unknown> =>
   && typeof obj === 'object'
   && Object.prototype.toString.call(obj) === '[object Object]'
 
-export const applySplitChunksRule: (
-  api: RsbuildPluginAPI,
-) => void = (api): void => {
+export function applySplitChunksRule(api: RsbuildPluginAPI): void {
   // Defaults to `all-in-one`.
   api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
     const userConfig = api.getRsbuildConfig('original')
@@ -88,7 +86,9 @@ export const applySplitChunksRule: (
 
     rspackConfig.optimization.splitChunks.chunks = function chunks(chunk) {
       // TODO: support `splitChunks.chunks: 'async'`
-      // We don't want main thread to be split
+      // Main-thread assets must stay self-contained. They carry wrapper-sensitive
+      // code and now also own the inlined worklet-runtime bootstrap, including
+      // async lazy main-thread chunks.
       return !chunk.name?.includes('__main-thread')
     }
     return rspackConfig

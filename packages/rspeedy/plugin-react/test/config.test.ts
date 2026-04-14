@@ -1811,6 +1811,19 @@ describe('Config', () => {
             "test": /node_modules\\[\\\\\\\\/\\]\\(\\.\\*\\?\\[\\\\\\\\/\\]\\)\\?\\(\\?:\\(\\?:internal-\\)\\?preact\\|\\(\\?:internal-\\)\\?preact\\[\\\\\\\\/\\]compat\\|\\(\\?:internal-\\)\\?preact\\[\\\\\\\\/\\]hooks\\|\\(\\?:internal-\\)\\?preact\\[\\\\\\\\/\\]jsx-runtime\\)\\[\\\\\\\\/\\]/,
           }
         `)
+
+      const shouldSplit = config.optimization.splitChunks.chunks
+      expect(shouldSplit).toBeTypeOf('function')
+
+      expect(
+        shouldSplit?.({ name: 'main__main-thread' } as never),
+      ).toBe(false)
+      expect(
+        shouldSplit?.({ name: './lazy.jsx-react__main-thread' } as never),
+      ).toBe(false)
+      expect(
+        shouldSplit?.({ name: 'main__background' } as never),
+      ).toBe(true)
     })
 
     test('performance.chunkSplit.strategy: "split-by-experience" along with extractStr: true', async () => {
@@ -2644,6 +2657,20 @@ describe('Config', () => {
       require.resolve('@lynx-js/react/worklet-runtime/bindings'),
     ).toContain(
       '/packages/react/runtime/lib/worklet-runtime/bindings/index.js'
+        .replaceAll(
+          '/',
+          path.sep,
+        ),
+    )
+  })
+
+  test('worklet runtime init export resolves to the compiled entry', () => {
+    const require = createRequire(import.meta.url)
+
+    expect(
+      require.resolve('@lynx-js/react/worklet-runtime/init'),
+    ).toContain(
+      '/packages/react/runtime/lib/worklet-runtime/init.js'
         .replaceAll(
           '/',
           path.sep,
