@@ -122,7 +122,7 @@ export class LynxEncodePluginImpl {
         name: this.name,
         stage: LynxEncodePlugin.BEFORE_ENCODE_STAGE,
       }, async (args) => {
-        const { encodeData } = args;
+        const { encodeData, intermediateAssets } = args;
         const { manifest } = encodeData;
 
         const [inlinedManifest, externalManifest] = Object.entries(
@@ -173,6 +173,7 @@ export class LynxEncodePluginImpl {
             ...encodeData.lepusCode.chunks,
             ...Object.keys(inlinedManifest).map(name => ({ name })),
             ...encodeData.css.chunks,
+            ...intermediateAssets.map(name => ({ name })),
           ]
             .filter(asset => asset !== undefined)
             .forEach(asset => inlinedAssets.add(asset.name));

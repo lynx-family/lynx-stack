@@ -44,6 +44,13 @@ import { validateConfig } from './validate.js'
  */
 export interface PluginReactLynxOptions {
   /**
+   * Enable UI source map generation and debug-metadata asset emission.
+   *
+   * @defaultValue `false`
+   */
+  enableUiSourceMap?: boolean
+
+  /**
    * The `compat` option controls compatibilities with ReactLynx2.0.
    *
    * @remarks
@@ -372,6 +379,7 @@ export function pluginReactLynx(
 
     experimental_isLazyBundle: false,
     optimizeBundleSize: false,
+    enableUiSourceMap: false,
   }
   const resolvedOptions = Object.assign(defaultOptions, userOptions, {
     // Use `engineVersion` to override the default values

@@ -54,6 +54,35 @@ describe('Element APIs', () => {
     const element = mtsGlobalThis.__CreateElement('view', 0);
     expect(mtsGlobalThis.__GetTag(element)).toBe('view');
   });
+
+  test('createCrossThreadEvent properly sets touch detail x and y', async () => {
+    const { createCrossThreadEvent } = await import(
+      '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'
+    );
+    const touchEvent = new Event('touchstart') as any;
+    touchEvent.touches = [{ clientX: 100, clientY: 200 }];
+    touchEvent.targetTouches = [];
+    touchEvent.changedTouches = [];
+
+    const lynxEvent = createCrossThreadEvent(touchEvent);
+    expect(lynxEvent.type).toBe('touchstart');
+    expect(lynxEvent.detail).toEqual({ x: 100, y: 200 });
+  });
+
+  test('createCrossThreadEvent sets empty detail if no touches', async () => {
+    const { createCrossThreadEvent } = await import(
+      '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'
+    );
+    const touchEvent = new Event('touchstart') as any;
+    touchEvent.touches = [];
+    touchEvent.targetTouches = [];
+    touchEvent.changedTouches = [];
+
+    const lynxEvent = createCrossThreadEvent(touchEvent);
+    expect(lynxEvent.type).toBe('touchstart');
+    expect(lynxEvent.detail).toEqual({});
+  });
+
   test('__CreateComponent', () => {
     const ret = mtsGlobalThis.__CreateComponent(
       0,

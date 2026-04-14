@@ -29,6 +29,7 @@ function getLoaderOptions(
     shake,
     defineDCE,
     engineVersion,
+    enableUiSourceMap,
 
     experimental_isLazyBundle,
   } = options
@@ -42,6 +43,7 @@ function getLoaderOptions(
     engineVersion,
     ...isMainThread
       ? {
+        enableUiSourceMap,
         shake,
       }
       : {},
