@@ -171,6 +171,8 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
             '@lynx-js/react$',
             reactLepus.background,
           )
+          .set('@lynx-js/react/jsx-runtime', jsxRuntime.background)
+          .set('@lynx-js/react/jsx-dev-runtime', jsxDevRuntime.background)
 
         if (reactCompat) {
           chain

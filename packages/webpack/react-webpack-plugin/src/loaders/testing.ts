@@ -34,6 +34,22 @@ function testingLoader(
       this.resourcePath,
     ),
   );
+  const normalizedCompat = typeof compat === 'object'
+    ? {
+      target: 'MIXED' as const,
+      addComponentElement: compat.addComponentElement ?? false,
+      additionalComponentAttributes: compat.additionalComponentAttributes ?? [],
+      componentsPkg: compat.componentsPkg ?? ['@lynx-js/react-components'],
+      disableDeprecatedWarning: compat.disableDeprecatedWarning ?? false,
+      newRuntimePkg: compat.newRuntimePkg ?? '@lynx-js/react',
+      oldRuntimePkg: compat.oldRuntimePkg ?? ['@lynx-js/react-runtime'],
+      simplifyCtorLikeReactLynx2: compat.simplifyCtorLikeReactLynx2 ?? false,
+      ...(typeof compat.removeComponentAttrRegex === 'string' && {
+        removeComponentAttrRegex: compat.removeComponentAttrRegex,
+      }),
+      darkMode: compat.darkMode ?? false,
+    }
+    : (compat ?? false);
   const result = transformReactLynxSync(
     content,
     {
@@ -52,7 +68,7 @@ function testingLoader(
       directiveDCE: false,
       defineDCE,
       shake,
-      compat,
+      compat: normalizedCompat,
       engineVersion,
       worklet: {
         filename,

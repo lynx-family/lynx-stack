@@ -55,6 +55,26 @@ describe('React - alias', () => {
     )
 
     expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/react/jsx-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/jsx-runtime/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+
+    expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/react/jsx-dev-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/jsx-dev-runtime/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+
+    expect(config.resolve.alias).toHaveProperty(
       '@lynx-js/react/internal$',
       expect.stringContaining(
         '/packages/react/runtime/lib/internal.js'.replaceAll('/', path.sep),
