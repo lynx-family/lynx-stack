@@ -520,6 +520,10 @@ test.describe('reactlynx3 tests', () => {
           'background-color',
           'rgb(0, 128, 0)',
         ); // green
+        expect(page.locator('#target4'), 'has detail.x and detail.y').toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        ); // green
       },
     );
 
