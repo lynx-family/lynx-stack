@@ -243,6 +243,22 @@ describe('should build external bundle', () => {
       'index:CSS',
       'index__main-thread',
     ])
+
+    expect(Array.isArray(decodedResult['custom-sections']['index:CSS'])).toBe(
+      true,
+    )
+    expect(decodedResult['custom-sections']['index:CSS']![0]).toBeTypeOf(
+      'number',
+    )
+
+    expect(decodedResult['custom-sections']['index']).toBeTypeOf('string')
+
+    // MTS should be bytecode
+    expect(
+      Array.isArray(decodedResult['custom-sections']['index__main-thread']),
+    ).toBe(true)
+    expect(decodedResult['custom-sections']['index__main-thread']![0])
+      .toBeTypeOf('number')
   })
 
   it('should include LoadingConsumerModulesRuntimeModule in the main-thread bundle', async () => {

@@ -453,8 +453,9 @@ export function defineExternalBundleRslibConfig(
       ),
     ],
     plugins: [
-      externalBundleEntryRsbuildPlugin(),
-      externalBundleRsbuildPlugin(encodeOptions.engineVersion),
+      externalBundleRsbuildPlugin({
+        engineVersion: encodeOptions.engineVersion,
+      }),
     ],
   }
 }
@@ -472,8 +473,12 @@ interface ExposedLayers {
  * - `<name>` for background
  * - `<name>__main-thread` for main thread
  */
-const externalBundleEntryRsbuildPlugin = (): rsbuild.RsbuildPlugin => ({
-  name: 'lynx:external-bundle-entry',
+const externalBundleRsbuildPlugin = ({
+  engineVersion,
+}: {
+  engineVersion: string | undefined
+}): rsbuild.RsbuildPlugin => ({
+  name: 'lynx:external-bundle',
   // ensure dsl plugin has exposed LAYERS
   enforce: 'post',
   setup(api) {
@@ -488,75 +493,85 @@ const externalBundleEntryRsbuildPlugin = (): rsbuild.RsbuildPlugin => ({
       )
     }
 
-    api.modifyBundlerChain((chain) => {
-      // copy entries
-      const entries = chain.entryPoints.entries() ?? {}
+    api.modifyBundlerChain(
+      async (chain, { environment: { name: libName } }) => {
+        // copy entries
+        const entries = chain.entryPoints.entries() ?? {}
 
-      chain.entryPoints.clear()
+        chain.entryPoints.clear()
 
-      const backgroundEntryName: string[] = []
-      const mainThreadEntryName: string[] = []
+        const backgroundEntryName: string[] = []
+        const mainThreadEntryName: string[] = []
+        const mainThreadChunks: string[] = []
 
-      const addLayeredEntry = (
-        entryName: string,
-        entryValue: Rspack.EntryDescription,
-      ) => {
-        chain
-          .entry(entryName)
-          .add(entryValue)
-          .end()
-      }
+        const addLayeredEntry = (
+          entryName: string,
+          entryValue: Rspack.EntryDescription,
+        ) => {
+          const isMainThread = entryValue.layer === LAYERS.MAIN_THREAD
+          if (isMainThread) {
+            mainThreadChunks.push(entryName + '.js')
+          }
 
-      Object.entries(entries).forEach(([entryName, entryPoint]) => {
-        const entryPointValue = entryPoint.values()
+          chain
+            .entry(entryName)
+            .add(entryValue)
+            .end()
+        }
 
-        for (const value of entryPointValue) {
-          if (typeof value === 'string' || Array.isArray(value)) {
-            const mainThreadEntry = `${entryName}__main-thread`
-            const backgroundEntry = entryName
-            mainThreadEntryName.push(mainThreadEntry)
-            backgroundEntryName.push(backgroundEntry)
-            addLayeredEntry(mainThreadEntry, {
-              import: value,
-              layer: LAYERS.MAIN_THREAD,
-            })
-            addLayeredEntry(backgroundEntry, {
-              import: value,
-              layer: LAYERS.BACKGROUND,
-            })
-          } else {
-            // object
-            const { layer } = value
-            if (layer === LAYERS.MAIN_THREAD) {
-              mainThreadEntryName.push(entryName)
-              addLayeredEntry(entryName, {
-                ...value,
-                layer: LAYERS.MAIN_THREAD,
-              })
-            } else if (layer === LAYERS.BACKGROUND) {
-              backgroundEntryName.push(entryName)
-              addLayeredEntry(entryName, { ...value, layer: LAYERS.BACKGROUND })
-            } else {
-              // not specify layer
+        Object.entries(entries).forEach(([entryName, entryPoint]) => {
+          const entryPointValue = entryPoint.values()
+
+          for (const value of entryPointValue) {
+            if (typeof value === 'string' || Array.isArray(value)) {
               const mainThreadEntry = `${entryName}__main-thread`
               const backgroundEntry = entryName
               mainThreadEntryName.push(mainThreadEntry)
               backgroundEntryName.push(backgroundEntry)
               addLayeredEntry(mainThreadEntry, {
-                ...value,
+                import: value,
                 layer: LAYERS.MAIN_THREAD,
               })
               addLayeredEntry(backgroundEntry, {
-                ...value,
+                import: value,
                 layer: LAYERS.BACKGROUND,
               })
+            } else {
+              // object
+              const { layer } = value
+              if (layer === LAYERS.MAIN_THREAD) {
+                mainThreadEntryName.push(entryName)
+                addLayeredEntry(entryName, {
+                  ...value,
+                  layer: LAYERS.MAIN_THREAD,
+                })
+              } else if (layer === LAYERS.BACKGROUND) {
+                backgroundEntryName.push(entryName)
+                addLayeredEntry(entryName, {
+                  ...value,
+                  layer: LAYERS.BACKGROUND,
+                })
+              } else {
+                // not specify layer
+                const mainThreadEntry = `${entryName}__main-thread`
+                const backgroundEntry = entryName
+                mainThreadEntryName.push(mainThreadEntry)
+                backgroundEntryName.push(backgroundEntry)
+                addLayeredEntry(mainThreadEntry, {
+                  ...value,
+                  layer: LAYERS.MAIN_THREAD,
+                })
+                addLayeredEntry(backgroundEntry, {
+                  ...value,
+                  layer: LAYERS.BACKGROUND,
+                })
+              }
             }
           }
-        }
-      })
-      // add external bundle wrapper
-      // dprint-ignore
-      chain
+        })
+        // add external bundle wrapper
+        // dprint-ignore
+        chain
         .plugin(MainThreadRuntimeWrapperWebpackPlugin.name)
         .use(MainThreadRuntimeWrapperWebpackPlugin, [{
           test: mainThreadEntryName.map((name) => new RegExp(`${escapeRegex(name)}\\.js$`)),
@@ -567,20 +582,11 @@ const externalBundleEntryRsbuildPlugin = (): rsbuild.RsbuildPlugin => ({
           test: backgroundEntryName.map((name) => new RegExp(`${escapeRegex(name)}\\.js$`)),
         }])
         .end()
-    })
-  },
-})
 
-const externalBundleRsbuildPlugin = (
-  engineVersion: string | undefined,
-): rsbuild.RsbuildPlugin => ({
-  name: 'lynx:gen-external-bundle',
-  async setup(api) {
-    const { getEncodeMode } = await import('@lynx-js/tasm')
+        const { getEncodeMode } = await import('@lynx-js/tasm')
 
-    api.modifyBundlerChain((chain, { environment: { name: libName } }) => {
-      // dprint-ignore
-      chain
+        // dprint-ignore
+        chain
         .plugin(ExternalBundleWebpackPlugin.name)
         .use(
           ExternalBundleWebpackPlugin,
@@ -589,11 +595,13 @@ const externalBundleRsbuildPlugin = (
               bundleFileName: `${libName}.lynx.bundle`,
               encode: getEncodeMode(),
               engineVersion,
+              mainThreadChunks,
             },
           ],
         )
         .end()
-    })
+      },
+    )
   },
 })
 
