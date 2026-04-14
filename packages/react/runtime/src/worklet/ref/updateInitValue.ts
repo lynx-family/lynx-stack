@@ -6,7 +6,7 @@ import { updateWorkletRefInitValueChanges } from '@lynx-js/react/worklet-runtime
 
 import { takeWorkletRefInitValuePatch } from './workletRefPool.js';
 import type { workletRefInitValuePatch } from './workletRefPool.js';
-import { LifecycleConstant } from '../../lifecycleConstant.js';
+import { LifecycleConstant } from '../../lifecycle/constant.js';
 
 function updateMTRefInitValue({ data }: { data: string }): void {
   // This update ignores reloadVersion check.

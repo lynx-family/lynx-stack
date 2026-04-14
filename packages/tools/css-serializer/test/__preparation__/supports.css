@@ -1,0 +1,12 @@
+@supports (display: grid) {
+  .container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@supports not (display: grid) {
+  .container {
+    display: flex;
+  }
+}

@@ -12,9 +12,6 @@
       "path": "./components/tsconfig.json",
     },
     {
-      "path": "./worklet-runtime/tsconfig.json",
-    },
-    {
       "path": "./transform/rspack-napi/tsconfig.json",
     }
   ],

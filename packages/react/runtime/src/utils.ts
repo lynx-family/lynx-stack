@@ -6,6 +6,10 @@ import type { ComponentClass } from 'preact';
 
 import { getCurrentVNode, getOwnerStack } from './debug/component-stack.js';
 
+/* v8 ignore start */
+export const noop: (...args: unknown[]) => unknown = () => {};
+/* v8 ignore end */
+
 export function isDirectOrDeepEqual(a: any, b: any): boolean {
   if (a === b) {
     return true;
@@ -40,7 +44,7 @@ export function isEmptyObject(obj?: object): obj is Record<string, never> {
 }
 
 export function isSdkVersionGt(major: number, minor: number): boolean {
-  const lynxSdkVersion: string = SystemInfo.lynxSdkVersion || '1.0';
+  const lynxSdkVersion: string = SystemInfo.lynxSdkVersion ?? '1.0';
   const version = lynxSdkVersion.split('.');
   return Number(version[0]) > major || (Number(version[0]) == major && Number(version[1]) > minor);
 }

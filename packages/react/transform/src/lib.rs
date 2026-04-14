@@ -10,7 +10,7 @@ mod swc_plugin_extract_str;
 mod swc_plugin_refresh;
 mod swc_plugin_worklet_post_process;
 
-use std::vec;
+use std::{cell::RefCell, rc::Rc, vec};
 
 use napi::{bindgen_prelude::AsyncTask, Either, Env, Task};
 
@@ -58,7 +58,10 @@ use swc_plugin_dynamic_import::napi::{DynamicImportVisitor, DynamicImportVisitor
 use swc_plugin_inject::napi::{InjectVisitor, InjectVisitorConfig};
 use swc_plugin_refresh::{RefreshVisitor, RefreshVisitorConfig};
 use swc_plugin_shake::napi::{ShakeVisitor, ShakeVisitorConfig};
-use swc_plugin_snapshot::napi::{JSXTransformer, JSXTransformerConfig};
+use swc_plugin_snapshot::{
+  napi::{JSXTransformer, JSXTransformerConfig, UISourceMapRecord as SnapshotUISourceMapRecord},
+  UISourceMapRecord as CoreUISourceMapRecord,
+};
 use swc_plugin_worklet::napi::{WorkletVisitor, WorkletVisitorConfig};
 use swc_plugins_shared::{
   engine_version::is_engine_version_ge,
@@ -250,6 +253,7 @@ pub struct TransformNodiffOutput {
   pub errors: Vec<esbuild::PartialMessage>,
   // #[napi(ts_type = "Array<import('esbuild').PartialMessage>")]
   pub warnings: Vec<esbuild::PartialMessage>,
+  pub ui_source_map_records: Vec<SnapshotUISourceMapRecord>,
 }
 
 /// A multi emitter that forwards to multiple emitters.
@@ -269,6 +273,24 @@ impl Emitter for MultiEmitter {
       emitter.emit(db);
     }
   }
+}
+
+fn clone_ui_source_map_records(
+  ui_source_map_records: &Rc<RefCell<Vec<CoreUISourceMapRecord>>>,
+  filename: &str,
+) -> Vec<SnapshotUISourceMapRecord> {
+  ui_source_map_records
+    .borrow()
+    .iter()
+    .cloned()
+    .map(|record| SnapshotUISourceMapRecord {
+      ui_source_map: record.ui_source_map,
+      filename: filename.to_string(),
+      line_number: record.line_number,
+      column_number: record.column_number,
+      snapshot_id: record.snapshot_id,
+    })
+    .collect()
 }
 
 pub struct TransformTask {
@@ -296,6 +318,9 @@ fn transform_react_lynx_inner(
   let emitter = Box::new(MultiEmitter::new(vec![esbuild_emitter]));
   let handler = Handler::with_emitter(true, false, emitter);
 
+  let ui_source_map_records: Rc<RefCell<Vec<CoreUISourceMapRecord>>> =
+    Rc::new(RefCell::new(vec![]));
+
   let result = GLOBALS.set(&Default::default(), || {
     let program = c.parse_js(
       fm,
@@ -313,6 +338,10 @@ fn transform_react_lynx_inner(
           map: None,
           errors: errors.read().unwrap().clone(),
           warnings: warnings.read().unwrap().clone(),
+          ui_source_map_records: clone_ui_source_map_records(
+            &ui_source_map_records,
+            &options.filename,
+          ),
         };
       }
     };
@@ -389,7 +418,7 @@ fn transform_react_lynx_inner(
     let (snapshot_plugin_config, enabled) = match &options.snapshot.unwrap_or(Either::A(true)) {
       Either::A(config) => (
         JSXTransformerConfig {
-          filename: options.filename,
+          filename: options.filename.clone(),
           ..Default::default()
         },
         *config,
@@ -422,15 +451,24 @@ fn transform_react_lynx_inner(
       enabled && !snapshot_plugin_config.preserve_jsx,
     );
 
+    let enable_ui_source_map = snapshot_plugin_config.enable_ui_source_map.unwrap_or(false);
+
     let snapshot_plugin = Optional::new(
-      visit_mut_pass(
-        JSXTransformer::new(
-          snapshot_plugin_config,
+      visit_mut_pass({
+        let snapshot_plugin = JSXTransformer::new(
+          snapshot_plugin_config.clone(),
           Some(&comments),
           options.mode.unwrap_or(TransformMode::Production),
+          Some(cm.clone()),
         )
-        .with_content_hash(content_hash.clone()),
-      ),
+        .with_content_hash(content_hash.clone());
+
+        if enable_ui_source_map {
+          snapshot_plugin.with_ui_source_map_records(ui_source_map_records.clone())
+        } else {
+          snapshot_plugin
+        }
+      }),
       enabled,
     );
 
@@ -631,6 +669,10 @@ fn transform_react_lynx_inner(
         map: result.map,
         errors: vec![],
         warnings: vec![],
+        ui_source_map_records: clone_ui_source_map_records(
+          &ui_source_map_records,
+          &options.filename,
+        ),
       },
       Err(_) => {
         return TransformNodiffOutput {
@@ -638,6 +680,10 @@ fn transform_react_lynx_inner(
           map: None,
           errors: errors.read().unwrap().clone(),
           warnings: warnings.read().unwrap().clone(),
+          ui_source_map_records: clone_ui_source_map_records(
+            &ui_source_map_records,
+            &options.filename,
+          ),
         };
       }
     }
@@ -648,6 +694,7 @@ fn transform_react_lynx_inner(
     map: result.map,
     errors: errors.read().unwrap().clone(),
     warnings: warnings.read().unwrap().clone(),
+    ui_source_map_records: clone_ui_source_map_records(&ui_source_map_records, &options.filename),
   };
 
   r

@@ -2,11 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { existsSync, readFileSync } from 'node:fs'
+import { mkdtemp, rm } from 'node:fs/promises'
 import { createRequire } from 'node:module'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 import type { RsbuildInstance, Rspack } from '@rsbuild/core'
-import { describe, expect, test, vi } from 'vitest'
+import { afterAll, describe, expect, test, vi } from 'vitest'
 
 import type { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 import type {
@@ -16,6 +18,37 @@ import type {
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
+
+const tempDirs: string[] = []
+
+afterAll(async () => {
+  await Promise.all(tempDirs.map(async (dir) => {
+    await rm(dir, { recursive: true, force: true })
+  }))
+})
+
+async function createRspeedyWithTempDistRoot(
+  options: Parameters<typeof createRspeedy>[0],
+): Promise<Awaited<ReturnType<typeof createRspeedy>>> {
+  const root = await mkdtemp(path.join(tmpdir(), 'rspeedy-react-config-'))
+  tempDirs.push(root)
+
+  return await createRspeedy({
+    ...options,
+    rspeedyConfig: {
+      ...options.rspeedyConfig,
+      output: {
+        ...options.rspeedyConfig?.output,
+        // These cases assert on emitted files, so they need isolated build
+        // output without changing cwd-based module resolution.
+        distPath: {
+          ...options.rspeedyConfig?.output?.distPath,
+          root,
+        },
+      },
+    },
+  })
+}
 
 describe('Config', () => {
   test('alias with development', async () => {
@@ -880,7 +913,7 @@ describe('Config', () => {
       vi.stubEnv('NODE_ENV', 'production')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-      const rsbuild = await createRspeedy({
+      const rsbuild = await createRspeedyWithTempDistRoot({
         rspeedyConfig: {
           source: {
             entry: {
@@ -923,7 +956,7 @@ describe('Config', () => {
       vi.stubEnv('NODE_ENV', 'production')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-      const rsbuild = await createRspeedy({
+      const rsbuild = await createRspeedyWithTempDistRoot({
         rspeedyConfig: {
           source: {
             entry: {
@@ -2029,13 +2062,18 @@ describe('Config', () => {
       // Production build with typical macro definitions
       vi.stubEnv('NODE_ENV', 'production')
 
-      const rsbuild = await createRspeedy({
+      const entryName = 'defineDCE'
+      const rsbuild = await createRspeedyWithTempDistRoot({
         rspeedyConfig: {
           source: {
             entry: {
-              main: new URL('./fixtures/defineDCE/macros.js', import.meta.url)
-                .pathname,
+              [entryName]:
+                new URL('./fixtures/defineDCE/macros.js', import.meta.url)
+                  .pathname,
             },
+          },
+          output: {
+            cleanDistPath: false,
           },
           environments: {
             lynx: {},
@@ -2058,17 +2096,28 @@ describe('Config', () => {
         expect.fail('build should succeed')
       }
 
-      const distPath = path.join(
-        rsbuild.context.distPath,
-        '.rspeedy/main',
-        'main-thread.js',
+      const candidateOutputPaths = [
+        path.join(
+          rsbuild.context.distPath,
+          '.rspeedy',
+          entryName,
+          'main-thread.js',
+        ),
+        path.join(rsbuild.context.distPath, `${entryName}.lynx.bundle`),
+      ]
+      const builtOutputPath = candidateOutputPaths.find(
+        outputPath => existsSync(outputPath),
       )
 
-      if (!existsSync(distPath)) {
-        expect.fail(`Build output should exist at ${distPath}`)
+      if (!builtOutputPath) {
+        expect.fail(
+          `Build output should exist in one of: ${
+            candidateOutputPaths.join(', ')
+          }`,
+        )
       }
 
-      const builtCode = readFileSync(distPath, 'utf8')
+      const builtCode = readFileSync(builtOutputPath, 'utf8')
       expect(builtCode).not.toContain('profileStart(\'test\')')
       expect(builtCode).toContain('Config is: profile-off-mode')
     })
@@ -2078,16 +2127,19 @@ describe('Config', () => {
 
       vi.stubEnv('NODE_ENV', 'production')
 
+      const entryName = 'pure-funcs'
       const rsbuild = await createRspeedy({
         rspeedyConfig: {
           source: {
             entry: {
-              main: new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
-                .pathname,
+              [entryName]:
+                new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
+                  .pathname,
             },
           },
           output: {
             filenameHash: false,
+            cleanDistPath: false,
             minify: {
               js: true,
               jsOptions: {
@@ -2128,12 +2180,14 @@ describe('Config', () => {
 
       const mainThreadPath = path.join(
         rsbuild.context.distPath,
-        '.rspeedy/main',
+        '.rspeedy',
+        entryName,
         'main-thread.js',
       )
       const backgroundPath = path.join(
         rsbuild.context.distPath,
-        '.rspeedy/main',
+        '.rspeedy',
+        entryName,
         'background.js',
       )
 
@@ -2583,6 +2637,20 @@ describe('Config', () => {
     )
   })
 
+  test('worklet runtime bindings resolve to the runtime-owned build output', () => {
+    const require = createRequire(import.meta.url)
+
+    expect(
+      require.resolve('@lynx-js/react/worklet-runtime/bindings'),
+    ).toContain(
+      '/packages/react/runtime/lib/worklet-runtime/bindings/index.js'
+        .replaceAll(
+          '/',
+          path.sep,
+        ),
+    )
+  })
+
   describe('environment', () => {
     test('lynx environment', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
@@ -2680,6 +2748,75 @@ describe('Config', () => {
         (configs[1]?.entry as Record<string, Rspack.EntryDescription>)?.['main']
           ?.filename,
       ).toBe('main/background.js')
+    })
+  })
+
+  describe('callerName: rstest', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx(),
+        ],
+      },
+      callerName: 'rstest',
+    })
+    const [config] = await rsbuild.initConfigs()
+    interface Rule {
+      test?: RegExp
+      use?: Array<{ loader: string }>
+      [key: string]: unknown
+    }
+
+    const rules = config?.module?.rules as Rule[] | undefined
+
+    test('css rules should be rsbuild default', () => {
+      expect(
+        rules?.filter((rule: Rule) =>
+          rule
+          && typeof rule === 'object'
+          && rule.test
+          && rule.test.toString() === (/\.css$/).toString()
+        ).map((rule: Rule) =>
+          (rule?.use?.map((u: { loader: string }) => u.loader)) ?? []
+        ),
+      ).toMatchInlineSnapshot(`
+        [
+          [
+            "<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/cssExtractLoader.js",
+            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
+            "builtin:lightningcss-loader",
+          ],
+          [
+            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
+            "builtin:lightningcss-loader",
+          ],
+          [],
+        ]
+      `)
+    })
+    test('js loaders should be testing loaders', () => {
+      expect(
+        rules?.filter((rule: Rule) =>
+          rule
+          && typeof rule === 'object'
+          && rule.test
+          && rule.test.toString()
+            === (/\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)$/).toString()
+        ).map((rule: Rule) =>
+          (rule?.use?.map((u: { loader: string }) => u.loader)) ?? []
+        ),
+      ).toMatchInlineSnapshot(`
+        [
+          [
+            "builtin:swc-loader",
+            "<ROOT>/packages/webpack/react-webpack-plugin/lib/loaders/testing.js",
+          ],
+          [],
+          [],
+        ]
+      `)
     })
   })
 })

@@ -34,6 +34,7 @@ pub struct MainThreadServerContext {
   enable_css_selector: bool,
   transform_vw: bool,
   transform_vh: bool,
+  transform_rem: bool,
 }
 
 #[wasm_bindgen]
@@ -44,6 +45,7 @@ impl MainThreadServerContext {
     enable_css_selector: bool,
     transform_vw: bool,
     transform_vh: bool,
+    transform_rem: bool,
   ) -> Self {
     Self {
       elements: Vec::new(),
@@ -52,6 +54,7 @@ impl MainThreadServerContext {
       enable_css_selector,
       transform_vw,
       transform_vh,
+      transform_rem,
     }
   }
 
@@ -272,6 +275,7 @@ impl MainThreadServerContext {
           &crate::style_transformer::token_transformer::TransformerConfig {
             transform_vw: self.transform_vw,
             transform_vh: self.transform_vh,
+            transform_rem: self.transform_rem,
           },
         );
         element.set_attribute(key, transformed);
@@ -329,6 +333,7 @@ impl MainThreadServerContext {
       &crate::style_transformer::token_transformer::TransformerConfig {
         transform_vw: self.transform_vw,
         transform_vh: self.transform_vh,
+        transform_rem: self.transform_rem,
       },
     );
     if transformed_style_str == styles {
@@ -346,6 +351,7 @@ impl MainThreadServerContext {
       &crate::style_transformer::token_transformer::TransformerConfig {
         transform_vw: self.transform_vw,
         transform_vh: self.transform_vh,
+        transform_rem: self.transform_rem,
       },
     );
     if let Some(Some(element)) = self.elements.get_mut(element_id) {
@@ -524,7 +530,7 @@ mod tests {
 
   #[test]
   fn test_html_generation() {
-    let mut ctx = MainThreadServerContext::new("".to_string(), true, false, false);
+    let mut ctx = MainThreadServerContext::new("".to_string(), true, false, false, false);
 
     // Create <div>
     let div_id = ctx.create_element("div".to_string(), None, None, None);
@@ -555,7 +561,7 @@ mod tests {
 
   #[test]
   fn test_set_style_empty_value() {
-    let mut ctx = MainThreadServerContext::new("".to_string(), true, false, false);
+    let mut ctx = MainThreadServerContext::new("".to_string(), true, false, false, false);
     let div_id = ctx.create_element("div".to_string(), None, None, None);
 
     // This should not panic

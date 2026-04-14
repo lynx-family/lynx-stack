@@ -40,6 +40,11 @@ lynx-view::part(page) {
   --vh-unit: inherit;
 }
 
+@property --rem-unit {
+  syntax: "<length>";
+  inherits: true;
+}
+
 @property --rpx-unit {
   syntax: "<length>";
   inherits: true;

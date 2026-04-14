@@ -2,15 +2,49 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { existsSync, readFileSync } from 'node:fs'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 
-import { describe, expect, test, vi } from 'vitest'
+import { afterAll, describe, expect, test, vi } from 'vitest'
 
 import type { RspeedyInstance } from '@lynx-js/rspeedy'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 
-async function getCode(rsbuild: RspeedyInstance) {
+const tempDirs: string[] = []
+
+afterAll(async () => {
+  await Promise.all(tempDirs.map(async (dir) => {
+    await rm(dir, { recursive: true, force: true })
+  }))
+})
+
+async function createIsolatedRspeedy(
+  options: Parameters<typeof createRspeedy>[0],
+): Promise<Awaited<ReturnType<typeof createRspeedy>>> {
+  const root = await mkdtemp(path.join(tmpdir(), 'rspeedy-react-optimize-'))
+  tempDirs.push(root)
+
+  return await createRspeedy({
+    ...options,
+    rspeedyConfig: {
+      ...options.rspeedyConfig,
+      output: {
+        ...options.rspeedyConfig?.output,
+        // These tests only need isolated build artifacts. Keeping the original
+        // cwd preserves package resolution while avoiding cross-test writes to
+        // the shared default `.rspeedy` directory under the test folder.
+        distPath: {
+          ...options.rspeedyConfig?.output?.distPath,
+          root,
+        },
+      },
+    },
+  })
+}
+
+async function getCode(rsbuild: RspeedyInstance, entryName: string) {
   try {
     await rsbuild.build()
   } catch (_error) {
@@ -19,12 +53,14 @@ async function getCode(rsbuild: RspeedyInstance) {
 
   const mainThreadPath = path.join(
     rsbuild.context.distPath,
-    '.rspeedy/main',
+    '.rspeedy',
+    entryName,
     'main-thread.js',
   )
   const backgroundPath = path.join(
     rsbuild.context.distPath,
-    '.rspeedy/main',
+    '.rspeedy',
+    entryName,
     'background.js',
   )
 
@@ -40,12 +76,14 @@ describe('optimizeBundleSize', () => {
   test('basic usage', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     vi.stubEnv('NODE_ENV', 'production')
-    const rsbuild = await createRspeedy({
+    const entryName = 'optimizeBundleSize-0'
+    const rsbuild = await createIsolatedRspeedy({
       rspeedyConfig: {
         source: {
           entry: {
-            main: new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
-              .pathname,
+            [entryName]:
+              new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
+                .pathname,
           },
         },
         output: {
@@ -53,6 +91,7 @@ describe('optimizeBundleSize', () => {
           minify: {
             js: true,
           },
+          cleanDistPath: false,
         },
         environments: {
           lynx: {},
@@ -65,7 +104,7 @@ describe('optimizeBundleSize', () => {
 
     const [config] = await rsbuild.initConfigs()
     expect(config?.optimization?.minimizer).toMatchSnapshot()
-    const { mainThreadCode, backgroundCode } = await getCode(rsbuild)
+    const { mainThreadCode, backgroundCode } = await getCode(rsbuild, entryName)
 
     expect(mainThreadCode).not.toContain('background-only')
     expect(mainThreadCode).toContain('main-thread-only')
@@ -82,16 +121,19 @@ describe('optimizeBundleSize', () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     vi.stubEnv('NODE_ENV', 'production')
 
-    const rsbuild = await createRspeedy({
+    const entryName = 'optimizeBundleSize-1'
+    const rsbuild = await createIsolatedRspeedy({
       rspeedyConfig: {
         source: {
           entry: {
-            main: new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
-              .pathname,
+            [entryName]:
+              new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
+                .pathname,
           },
         },
         output: {
           filenameHash: false,
+          cleanDistPath: false,
           minify: {
             js: true,
             jsOptions: {
@@ -117,7 +159,7 @@ describe('optimizeBundleSize', () => {
     const [config] = await rsbuild.initConfigs()
     expect(config?.optimization?.minimizer).toMatchSnapshot()
 
-    const { mainThreadCode, backgroundCode } = await getCode(rsbuild)
+    const { mainThreadCode, backgroundCode } = await getCode(rsbuild, entryName)
     expect(mainThreadCode).toContain('background-only')
     expect(mainThreadCode).toContain('main-thread-only')
     expect(mainThreadCode).not.toContain('default console.info')
@@ -132,17 +174,19 @@ describe('optimizeBundleSize', () => {
   test('optimize main-thread code', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     vi.stubEnv('NODE_ENV', 'production')
-
-    const rsbuild = await createRspeedy({
+    const entryName = 'optimizeBundleSize-2'
+    const rsbuild = await createIsolatedRspeedy({
       rspeedyConfig: {
         source: {
           entry: {
-            main: new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
-              .pathname,
+            [entryName]:
+              new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
+                .pathname,
           },
         },
         output: {
           filenameHash: false,
+          cleanDistPath: false,
           minify: {
             js: true,
             jsOptions: {
@@ -165,7 +209,7 @@ describe('optimizeBundleSize', () => {
       },
     })
 
-    const { mainThreadCode, backgroundCode } = await getCode(rsbuild)
+    const { mainThreadCode, backgroundCode } = await getCode(rsbuild, entryName)
 
     expect(mainThreadCode).not.toContain('background-only')
     expect(mainThreadCode).toContain('main-thread-only')
@@ -182,16 +226,19 @@ describe('optimizeBundleSize', () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     vi.stubEnv('NODE_ENV', 'production')
 
-    const rsbuild = await createRspeedy({
+    const entryName = 'optimizeBundleSize-3'
+    const rsbuild = await createIsolatedRspeedy({
       rspeedyConfig: {
         source: {
           entry: {
-            main: new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
-              .pathname,
+            [entryName]:
+              new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
+                .pathname,
           },
         },
         output: {
           filenameHash: false,
+          cleanDistPath: false,
           minify: {
             js: true,
             mainThreadOptions: {
@@ -219,7 +266,7 @@ describe('optimizeBundleSize', () => {
       },
     })
 
-    const { mainThreadCode, backgroundCode } = await getCode(rsbuild)
+    const { mainThreadCode, backgroundCode } = await getCode(rsbuild, entryName)
     expect(mainThreadCode).not.toContain('background-only')
     expect(mainThreadCode).toContain('main-thread-only')
     expect(mainThreadCode).not.toContain('default console.info')

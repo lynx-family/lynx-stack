@@ -30,6 +30,7 @@ pub(crate) fn transform_inline_style_string(source: &str, config: &TransformerCo
     TransformerConfig {
       transform_vw: config.transform_vw,
       transform_vh: config.transform_vh,
+      transform_rem: config.transform_rem,
     },
   );
   transformer.parse(source);
@@ -49,6 +50,7 @@ pub(crate) fn transform_inline_style_key_value_vec(
     TransformerConfig {
       transform_vw: config.transform_vw,
       transform_vh: config.transform_vh,
+      transform_rem: config.transform_rem,
     },
   );
 

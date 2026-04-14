@@ -26,6 +26,7 @@ export interface ReactLoaderOptions {
     compat?: CompatVisitorConfig | undefined;
     defineDCE?: DefineDceVisitorConfig | undefined;
     enableRemoveCSSScope?: boolean | undefined;
+    enableUiSourceMap?: boolean | undefined;
     engineVersion?: string | undefined;
     inlineSourcesContent?: boolean | undefined;
     jsx?: JsxTransformerConfig | undefined;
@@ -38,7 +39,7 @@ export class ReactWebpackPlugin {
     constructor(options?: ReactWebpackPluginOptions | undefined);
     apply(compiler: Compiler): void;
     static defaultOptions: Readonly<Required<ReactWebpackPluginOptions>>;
-    static loaders: Record<keyof typeof LAYERS, string>;
+    static loaders: Record<keyof typeof LAYERS | 'TESTING', string>;
 }
 
 // @public

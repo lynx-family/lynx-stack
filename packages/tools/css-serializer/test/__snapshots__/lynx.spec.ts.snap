@@ -2030,6 +2030,7 @@ exports[`keyframes 1`] = `
             "value": "translateX(0%)",
           },
         ],
+        "variables": {},
       },
       {
         "keyText": {
@@ -2053,6 +2054,7 @@ exports[`keyframes 1`] = `
             "value": "translateX(100%)",
           },
         ],
+        "variables": {},
       },
     ],
     "type": "KeyframesRule",
@@ -2100,6 +2102,7 @@ exports[`keyframes 1`] = `
             "value": "0",
           },
         ],
+        "variables": {},
       },
       {
         "keyText": {
@@ -2123,6 +2126,7 @@ exports[`keyframes 1`] = `
             "value": "50px",
           },
         ],
+        "variables": {},
       },
       {
         "keyText": {
@@ -2146,6 +2150,7 @@ exports[`keyframes 1`] = `
             "value": "50px",
           },
         ],
+        "variables": {},
       },
       {
         "keyText": {
@@ -2181,6 +2186,7 @@ exports[`keyframes 1`] = `
             "value": "100%",
           },
         ],
+        "variables": {},
       },
     ],
     "type": "KeyframesRule",
@@ -2216,6 +2222,7 @@ exports[`keyframes 1`] = `
             "value": "1",
           },
         ],
+        "variables": {},
       },
       {
         "keyText": {
@@ -2251,6 +2258,7 @@ exports[`keyframes 1`] = `
             "value": "3",
           },
         ],
+        "variables": {},
       },
       {
         "keyText": {
@@ -2274,6 +2282,7 @@ exports[`keyframes 1`] = `
             "value": "5",
           },
         ],
+        "variables": {},
       },
       {
         "keyText": {
@@ -2297,9 +2306,443 @@ exports[`keyframes 1`] = `
             "value": "none",
           },
         ],
+        "variables": {},
       },
     ],
     "type": "KeyframesRule",
+  },
+  {
+    "name": {
+      "loc": {
+        "column": 37,
+        "line": 37,
+      },
+      "value": "test-keyframe-declaration",
+    },
+    "styles": [
+      {
+        "keyText": {
+          "loc": {
+            "column": 5,
+            "line": 38,
+          },
+          "value": "0%",
+        },
+        "style": [
+          {
+            "defaultValue": "",
+            "defaultValueMap": {
+              "--bg-color": "",
+            },
+            "keyLoc": {
+              "column": 21,
+              "line": 40,
+            },
+            "name": "background-color",
+            "type": "css_var",
+            "valLoc": {
+              "column": 39,
+              "line": 40,
+            },
+            "value": "{{--bg-color}}",
+          },
+        ],
+        "variables": {
+          "--bg-color": "red",
+        },
+      },
+      {
+        "keyText": {
+          "loc": {
+            "column": 6,
+            "line": 43,
+          },
+          "value": "50%",
+        },
+        "style": [
+          {
+            "defaultValue": "",
+            "defaultValueMap": {
+              "--bg-color": "",
+            },
+            "keyLoc": {
+              "column": 21,
+              "line": 45,
+            },
+            "name": "background-color",
+            "type": "css_var",
+            "valLoc": {
+              "column": 39,
+              "line": 45,
+            },
+            "value": "{{--bg-color}}",
+          },
+        ],
+        "variables": {
+          "--bg-color": "green",
+        },
+      },
+      {
+        "keyText": {
+          "loc": {
+            "column": 7,
+            "line": 48,
+          },
+          "value": "100%",
+        },
+        "style": [
+          {
+            "defaultValue": "",
+            "defaultValueMap": {
+              "--bg-color": "",
+            },
+            "keyLoc": {
+              "column": 21,
+              "line": 50,
+            },
+            "name": "background-color",
+            "type": "css_var",
+            "valLoc": {
+              "column": 39,
+              "line": 50,
+            },
+            "value": "{{--bg-color}}",
+          },
+        ],
+        "variables": {
+          "--bg-color": "blue",
+        },
+      },
+    ],
+    "type": "KeyframesRule",
+  },
+]
+`;
+
+exports[`layer 1`] = `
+[
+  {
+    "prelude": {
+      "loc": {
+        "column": 17,
+        "line": 1,
+      },
+      "value": "utilities",
+    },
+    "rules": [
+      {
+        "selectorText": {
+          "loc": {
+            "column": 12,
+            "line": 2,
+          },
+          "value": ".text-red",
+        },
+        "style": [
+          {
+            "keyLoc": {
+              "column": 10,
+              "line": 3,
+            },
+            "name": "color",
+            "valLoc": {
+              "column": 16,
+              "line": 3,
+            },
+            "value": "red",
+          },
+        ],
+        "type": "StyleRule",
+        "variables": {},
+      },
+    ],
+    "type": "LayerRule",
+  },
+  {
+    "rules": [
+      {
+        "selectorText": {
+          "loc": {
+            "column": 13,
+            "line": 8,
+          },
+          "value": ".anonymous",
+        },
+        "style": [
+          {
+            "keyLoc": {
+              "column": 12,
+              "line": 9,
+            },
+            "name": "display",
+            "valLoc": {
+              "column": 20,
+              "line": 9,
+            },
+            "value": "block",
+          },
+        ],
+        "type": "StyleRule",
+        "variables": {},
+      },
+    ],
+    "type": "LayerRule",
+  },
+  {
+    "prelude": {
+      "loc": {
+        "column": 18,
+        "line": 13,
+      },
+      "value": "components",
+    },
+    "rules": [
+      {
+        "selectorText": {
+          "loc": {
+            "column": 7,
+            "line": 14,
+          },
+          "value": ".btn",
+        },
+        "style": [
+          {
+            "keyLoc": {
+              "column": 12,
+              "line": 15,
+            },
+            "name": "padding",
+            "valLoc": {
+              "column": 19,
+              "line": 15,
+            },
+            "value": "10px",
+          },
+        ],
+        "type": "StyleRule",
+        "variables": {},
+      },
+    ],
+    "type": "LayerRule",
+  },
+]
+`;
+
+exports[`media 1`] = `
+[
+  {
+    "prelude": {
+      "loc": {
+        "column": 38,
+        "line": 1,
+      },
+      "value": "screen and (max-width:768px)",
+    },
+    "rules": [
+      {
+        "selectorText": {
+          "loc": {
+            "column": 13,
+            "line": 2,
+          },
+          "value": ".container",
+        },
+        "style": [
+          {
+            "keyLoc": {
+              "column": 10,
+              "line": 3,
+            },
+            "name": "width",
+            "valLoc": {
+              "column": 17,
+              "line": 3,
+            },
+            "value": "100%",
+          },
+          {
+            "keyLoc": {
+              "column": 12,
+              "line": 4,
+            },
+            "name": "padding",
+            "valLoc": {
+              "column": 19,
+              "line": 4,
+            },
+            "value": "10px",
+          },
+        ],
+        "type": "StyleRule",
+        "variables": {},
+      },
+      {
+        "selectorText": {
+          "loc": {
+            "column": 10,
+            "line": 7,
+          },
+          "value": ".header",
+        },
+        "style": [
+          {
+            "keyLoc": {
+              "column": 14,
+              "line": 8,
+            },
+            "name": "font-size",
+            "valLoc": {
+              "column": 21,
+              "line": 8,
+            },
+            "value": "14px",
+          },
+        ],
+        "type": "StyleRule",
+        "variables": {},
+      },
+    ],
+    "type": "MediaRule",
+  },
+  {
+    "prelude": {
+      "loc": {
+        "column": 13,
+        "line": 12,
+      },
+      "value": "print",
+    },
+    "rules": [
+      {
+        "selectorText": {
+          "loc": {
+            "column": 12,
+            "line": 13,
+          },
+          "value": ".no-print",
+        },
+        "style": [
+          {
+            "keyLoc": {
+              "column": 12,
+              "line": 14,
+            },
+            "name": "display",
+            "valLoc": {
+              "column": 19,
+              "line": 14,
+            },
+            "value": "none",
+          },
+        ],
+        "type": "StyleRule",
+        "variables": {},
+      },
+    ],
+    "type": "MediaRule",
+  },
+]
+`;
+
+exports[`nested-at-rules 1`] = `
+[
+  {
+    "prelude": {
+      "loc": {
+        "column": 14,
+        "line": 1,
+      },
+      "value": "screen",
+    },
+    "rules": [
+      {
+        "prelude": {
+          "loc": {
+            "column": 28,
+            "line": 2,
+          },
+          "value": "(display:grid)",
+        },
+        "rules": [
+          {
+            "selectorText": {
+              "loc": {
+                "column": 15,
+                "line": 3,
+              },
+              "value": ".container",
+            },
+            "style": [
+              {
+                "keyLoc": {
+                  "column": 14,
+                  "line": 4,
+                },
+                "name": "display",
+                "valLoc": {
+                  "column": 21,
+                  "line": 4,
+                },
+                "value": "grid",
+              },
+            ],
+            "type": "StyleRule",
+            "variables": {},
+          },
+        ],
+        "type": "SupportsRule",
+      },
+    ],
+    "type": "MediaRule",
+  },
+  {
+    "prelude": {
+      "loc": {
+        "column": 12,
+        "line": 9,
+      },
+      "value": "base",
+    },
+    "rules": [
+      {
+        "prelude": {
+          "loc": {
+            "column": 15,
+            "line": 10,
+          },
+          "value": "print",
+        },
+        "rules": [
+          {
+            "selectorText": {
+              "loc": {
+                "column": 10,
+                "line": 11,
+              },
+              "value": ".page",
+            },
+            "style": [
+              {
+                "keyLoc": {
+                  "column": 13,
+                  "line": 12,
+                },
+                "name": "margin",
+                "valLoc": {
+                  "column": 17,
+                  "line": 12,
+                },
+                "value": "0",
+              },
+            ],
+            "type": "StyleRule",
+            "variables": {},
+          },
+        ],
+        "type": "MediaRule",
+      },
+    ],
+    "type": "LayerRule",
   },
 ]
 `;
@@ -2856,6 +3299,97 @@ exports[`slash-selector 1`] = `
     ],
     "type": "StyleRule",
     "variables": {},
+  },
+]
+`;
+
+exports[`supports 1`] = `
+[
+  {
+    "prelude": {
+      "loc": {
+        "column": 26,
+        "line": 1,
+      },
+      "value": "(display:grid)",
+    },
+    "rules": [
+      {
+        "selectorText": {
+          "loc": {
+            "column": 13,
+            "line": 2,
+          },
+          "value": ".container",
+        },
+        "style": [
+          {
+            "keyLoc": {
+              "column": 12,
+              "line": 3,
+            },
+            "name": "display",
+            "valLoc": {
+              "column": 19,
+              "line": 3,
+            },
+            "value": "grid",
+          },
+          {
+            "keyLoc": {
+              "column": 26,
+              "line": 4,
+            },
+            "name": "grid-template-columns",
+            "valLoc": {
+              "column": 36,
+              "line": 4,
+            },
+            "value": "1fr 1fr",
+          },
+        ],
+        "type": "StyleRule",
+        "variables": {},
+      },
+    ],
+    "type": "SupportsRule",
+  },
+  {
+    "prelude": {
+      "loc": {
+        "column": 30,
+        "line": 8,
+      },
+      "value": "not (display:grid)",
+    },
+    "rules": [
+      {
+        "selectorText": {
+          "loc": {
+            "column": 13,
+            "line": 9,
+          },
+          "value": ".container",
+        },
+        "style": [
+          {
+            "keyLoc": {
+              "column": 12,
+              "line": 10,
+            },
+            "name": "display",
+            "valLoc": {
+              "column": 19,
+              "line": 10,
+            },
+            "value": "flex",
+          },
+        ],
+        "type": "StyleRule",
+        "variables": {},
+      },
+    ],
+    "type": "SupportsRule",
   },
 ]
 `;

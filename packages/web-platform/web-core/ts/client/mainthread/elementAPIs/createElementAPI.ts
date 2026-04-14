@@ -66,6 +66,7 @@ export function createElementAPI(
   config_default_overflow_visible: boolean,
   transform_vw: boolean,
   transform_vh: boolean,
+  transform_rem: boolean,
 ): ElementPAPIs {
   const wasmContext = new MainThreadWasmContext(
     rootDom,
@@ -124,7 +125,9 @@ export function createElementAPI(
       );
     }
     if (eventName === 'uiappear' || eventName === 'uidisappear') {
-      const element = wasmContext.get_dom_by_unique_id(uniqueId);
+      const element = wasmContext.get_dom_by_unique_id(uniqueId)?.deref() as
+        | HTMLElement
+        | undefined;
       if (element) {
         mtsBinding.markExposureRelatedElementByUniqueId(
           element,
@@ -139,6 +142,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
@@ -147,6 +151,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
@@ -155,13 +160,18 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
     __CreateRawText(text) {
       const dom = document.createElement('raw-text') as DecoratedHTMLElement;
       dom.setAttribute('text', text);
-      dom[uniqueIdSymbol] = wasmContext.create_element_common(-1, dom);
+      dom[uniqueIdSymbol] = wasmContext.create_element_common(
+        -1,
+        dom,
+        new WeakRef(dom),
+      );
       return dom;
     },
     __CreateScrollView(parentComponentUniqueId) {
@@ -170,6 +180,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
@@ -180,6 +191,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
@@ -194,6 +206,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
         cssID,
         componentID,
       );
@@ -212,6 +225,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
@@ -222,6 +236,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
@@ -233,6 +248,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         0,
         dom,
+        new WeakRef(dom),
         cssID,
         componentID,
       );
@@ -294,6 +310,7 @@ export function createElementAPI(
               value,
               transform_vw,
               transform_vh,
+              transform_rem,
             )
           ) {
             element.setAttribute('style', value);
@@ -312,6 +329,7 @@ export function createElementAPI(
             vec,
             transform_vw,
             transform_vh,
+            transform_rem,
           );
         }
       }
@@ -417,7 +435,8 @@ export function createElementAPI(
               false,
             ) as number | undefined;
             if (typeof childSign === 'number') {
-              const childElement = wasmContext.get_dom_by_unique_id(childSign);
+              const childElement = wasmContext.get_dom_by_unique_id(childSign)
+                ?.deref() as HTMLElement | undefined;
               if (childElement) {
                 const referenceNode = element.children[action.position];
                 if (referenceNode !== childElement) {
@@ -588,6 +607,7 @@ export function createElementAPI(
           timingFlagsAll,
           pipelineId,
         );
+        wasmContext.gc();
       });
       timingFlags.length = 0;
       const enabledExposureElements = [

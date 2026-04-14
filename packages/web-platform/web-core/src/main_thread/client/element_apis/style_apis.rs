@@ -23,12 +23,22 @@ impl MainThreadWasmContext {
       {
         let element = self.unique_id_to_dom_map.get(&unique_id).expect_throw("El");
         if let Some(entry_name) = &entry_name {
-          let _ = element.set_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE, entry_name);
+          let _ = self.mts_binding.set_attribute(
+            element,
+            constants::LYNX_ENTRY_NAME_ATTRIBUTE,
+            entry_name,
+          );
         }
         if css_id != 0 {
-          let _ = element.set_attribute(constants::CSS_ID_ATTRIBUTE, &css_id.to_string());
+          let _ = self.mts_binding.set_attribute(
+            element,
+            constants::CSS_ID_ATTRIBUTE,
+            &css_id.to_string(),
+          );
         } else {
-          let _ = element.remove_attribute(constants::CSS_ID_ATTRIBUTE);
+          let _ = self
+            .mts_binding
+            .remove_attribute(element, constants::CSS_ID_ATTRIBUTE);
         }
         {
           let element_data_cell = self.get_element_data_by_unique_id(unique_id).unwrap_throw();
@@ -54,7 +64,10 @@ impl MainThreadWasmContext {
     self.style_manager.update_css_og_style(
       unique_id,
       element_data.css_id,
-      self.mts_binding.get_class_name_list(element),
+      self
+        .mts_binding
+        .get_class_name_list(element)
+        .unwrap_or_default(),
       entry_name,
     )?;
     Ok(())
@@ -110,12 +123,14 @@ pub fn set_inline_styles_in_str(
   styles: String,
   transform_vw: bool,
   transform_vh: bool,
+  transform_rem: bool,
 ) -> bool {
   let transformed_style_str = transform_inline_style_string(
     &styles,
     &crate::style_transformer::token_transformer::TransformerConfig {
       transform_vw,
       transform_vh,
+      transform_rem,
     },
   );
   // we compare the transformed style string with the original one
@@ -133,12 +148,14 @@ pub fn set_inline_styles_in_key_value_vec(
   k_v_vec: Vec<String>,
   transform_vw: bool,
   transform_vh: bool,
+  transform_rem: bool,
 ) {
   let transformed_style_str = transform_inline_style_key_value_vec(
     k_v_vec,
     &crate::style_transformer::token_transformer::TransformerConfig {
       transform_vw,
       transform_vh,
+      transform_rem,
     },
   );
   let _ = dom.set_attribute("style", &transformed_style_str);

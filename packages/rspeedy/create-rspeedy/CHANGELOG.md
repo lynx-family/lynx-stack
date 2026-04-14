@@ -1,5 +1,19 @@
 # create-rspeedy
 
+## 0.14.1
+
+### Patch Changes
+
+- Fix the error when installing Lynx DevTool skill. ([#2427](https://github.com/lynx-family/lynx-stack/pull/2427))
+
+## 0.14.0
+
+### Patch Changes
+
+- Add optional Lynx DevTool skill. ([#2421](https://github.com/lynx-family/lynx-stack/pull/2421))
+
+- move Vitest integration to create-rstack extraTools and merge the Vitest templates into a single incremental overlay ([#2408](https://github.com/lynx-family/lynx-stack/pull/2408))
+
 ## 0.13.6
 
 ## 0.13.5

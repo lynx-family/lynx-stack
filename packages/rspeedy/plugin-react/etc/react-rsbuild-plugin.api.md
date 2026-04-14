@@ -75,6 +75,7 @@ export interface PluginReactLynxOptions {
     enableNewGesture?: boolean;
     enableRemoveCSSScope?: boolean | undefined;
     enableSSR?: boolean;
+    enableUiSourceMap?: boolean;
     engineVersion?: string;
     // @alpha
     experimental_isLazyBundle?: boolean;
@@ -94,6 +95,7 @@ export interface PluginReactLynxOptions {
 // @public
 export interface ShakeVisitorConfig {
     pkgName: Array<string>
+    removeCall: Array<string>
     removeCallParams: Array<string>
     retainProp: Array<string>
 }

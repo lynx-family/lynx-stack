@@ -171,6 +171,19 @@ describe('Validation', () => {
       `)
   })
 
+  test('enableUiSourceMap', () => {
+    expect(validateConfig({ enableUiSourceMap: true })).toStrictEqual({
+      enableUiSourceMap: true,
+    })
+    expect(() => validateConfig({ enableUiSourceMap: null }))
+      .toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid config on pluginReactLynx: \`$input.enableUiSourceMap\`.
+          - Expect to be (boolean | undefined)
+          - Got: null
+        ]
+      `)
+  })
+
   test('enableCSSSelector', () => {
     expect(validateConfig({ enableCSSSelector: true })).toStrictEqual({
       enableCSSSelector: true,

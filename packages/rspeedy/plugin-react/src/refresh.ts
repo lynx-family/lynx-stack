@@ -9,12 +9,20 @@ import type {
   RspackChain,
 } from '@rsbuild/core'
 
-import { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'
+import {
+  ReactRefreshRspackPlugin,
+  ReactRefreshWebpackPlugin,
+} from '@lynx-js/react-refresh-webpack-plugin'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
 const PLUGIN_NAME_REACT_REFRESH = 'lynx:react:refresh'
 
 export function applyRefresh(api: RsbuildPluginAPI): void {
+  api.modifyWebpackChain?.(async (chain, { CHAIN_ID, isProd }) => {
+    if (!isProd) {
+      await applyRefreshRules(api, chain, CHAIN_ID, ReactRefreshWebpackPlugin)
+    }
+  })
   api.modifyBundlerChain(async (chain, { isProd, CHAIN_ID }) => {
     if (!isProd) {
       // biome-ignore lint/correctness/useHookAtTopLevel: not react hooks
@@ -32,11 +40,12 @@ export function applyRefresh(api: RsbuildPluginAPI): void {
   })
 }
 
-async function applyRefreshRules(
+async function applyRefreshRules<Bundler extends 'webpack' | 'rspack'>(
   api: RsbuildPluginAPI,
   chain: RspackChain,
   CHAIN_ID: ChainIdentifier,
-  ReactRefreshPlugin: typeof ReactRefreshRspackPlugin,
+  ReactRefreshPlugin: Bundler extends 'rspack' ? typeof ReactRefreshRspackPlugin
+    : typeof ReactRefreshWebpackPlugin,
 ) {
   // biome-ignore lint/correctness/useHookAtTopLevel: not react hooks
   const { resolve } = api.useExposed<

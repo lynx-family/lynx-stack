@@ -4,8 +4,10 @@ const Lazy = lazy(() => import('./lazy.jsx'));
 
 export default function App() {
   return (
-    <Suspense fallback={null}>
-      <Lazy />
-    </Suspense>
+    <view>
+      <Suspense fallback={null}>
+        <Lazy />
+      </Suspense>
+    </view>
   );
 }

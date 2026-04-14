@@ -12,11 +12,43 @@ beforeAll(() => {
   setupPage(__CreatePage('0', 0));
   injectUpdateMainThread();
   replaceCommitHook();
+  globalThis.lynxWorkletImpl = {
+    _refImpl: {
+      clearFirstScreenWorkletRefMap: vi.fn(),
+    },
+    _runOnBackgroundDelayImpl: {
+      runDelayedBackgroundFunctions: vi.fn(),
+    },
+    _hydrateCtx: vi.fn(),
+    _jsFunctionLifecycleManager: {
+      addRef: vi.fn(),
+    },
+    _eventDelayImpl: {
+      runDelayedWorklet: vi.fn(),
+      clearDelayedWorklets: vi.fn(),
+    },
+  };
 });
 
 beforeEach(() => {
   globalEnvManager.resetEnv();
   SystemInfo.lynxSdkVersion = '999.999';
+  globalThis.lynxWorkletImpl = {
+    _refImpl: {
+      clearFirstScreenWorkletRefMap: vi.fn(),
+    },
+    _runOnBackgroundDelayImpl: {
+      runDelayedBackgroundFunctions: vi.fn(),
+    },
+    _hydrateCtx: vi.fn(),
+    _jsFunctionLifecycleManager: {
+      addRef: vi.fn(),
+    },
+    _eventDelayImpl: {
+      runDelayedWorklet: vi.fn(),
+      clearDelayedWorklets: vi.fn(),
+    },
+  };
 });
 
 afterEach(() => {
@@ -357,6 +389,8 @@ describe('Gesture', () => {
       globalEnvManager.switchToMainThread();
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
       globalThis[rLynxChange[0]](rLynxChange[1]);
+      const textElement = __root.__element_root.children[0].children[0];
+      expect(elementTree.__GetGestureDetectorIds(textElement)).toEqual([3]);
 
       expect(__root.__element_root).toMatchInlineSnapshot(`
         <page
@@ -631,6 +665,7 @@ describe('Gesture', () => {
 
 describe('Gesture in spread', () => {
   it('normal gesture', async function() {
+    const spySetGesture = vi.spyOn(globalThis, '__SetGestureDetector');
     function Comp() {
       const gesture = {
         id: 1,
@@ -696,6 +731,29 @@ describe('Gesture in spread', () => {
 
     // Main Thread Render
     {
+      const textElement = __root.__element_root.children[0].children[0];
+      expect(spySetGesture).toHaveBeenCalledTimes(1);
+      expect(spySetGesture).toHaveBeenCalledWith(
+        textElement,
+        1,
+        0,
+        {
+          callbacks: [
+            {
+              name: 'onUpdate',
+              callback: expect.objectContaining({
+                _wkltId: 'bdd4:dd564:2',
+              }),
+            },
+          ],
+        },
+        {
+          waitFor: [],
+          simultaneous: [],
+          continueWith: [],
+        },
+      );
+
       expect(__root.__element_root).toMatchInlineSnapshot(`
         <page
           cssId="default-entry-from-native:0"
@@ -737,6 +795,8 @@ describe('Gesture in spread', () => {
     }
   });
   it('update gesture', async function() {
+    const spySetGesture = vi.spyOn(globalThis, '__SetGestureDetector');
+    const spyRemoveGesture = vi.spyOn(globalThis, '__RemoveGestureDetector');
     let _gesture = {
       id: 1,
       type: 0,
@@ -804,6 +864,8 @@ describe('Gesture in spread', () => {
     {
       globalEnvManager.switchToBackground();
       lynx.getNativeApp().callLepusMethod.mockClear();
+      spySetGesture.mockClear();
+      spyRemoveGesture.mockClear();
 
       _gesture = {
         ..._gesture,
@@ -815,45 +877,32 @@ describe('Gesture in spread', () => {
       globalEnvManager.switchToMainThread();
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
       globalThis[rLynxChange[0]](rLynxChange[1]);
+      const textElement = __root.__element_root.children[0].children[0];
 
-      expect(__root.__element_root).toMatchInlineSnapshot(`
-        <page
-          cssId="default-entry-from-native:0"
-        >
-          <view>
-            <text
-              flatten={false}
-              gesture={
-                {
-                  "config": {
-                    "callbacks": [
-                      {
-                        "callback": {
-                          "_execId": 10,
-                          "_wkltId": "bdd4:dd564:2",
-                        },
-                        "name": "onUpdate",
-                      },
-                    ],
-                  },
-                  "id": 2,
-                  "relationMap": {
-                    "continueWith": [],
-                    "simultaneous": [],
-                    "waitFor": [],
-                  },
-                  "type": 0,
-                }
-              }
-              has-react-gesture={true}
-            >
-              <raw-text
-                text="1"
-              />
-            </text>
-          </view>
-        </page>
-      `);
+      expect(spySetGesture).toHaveBeenCalledTimes(1);
+      const [setTarget, setGestureId, setGestureType, setConfig, setRelationMap] = spySetGesture.mock.calls[0];
+      expect(setTarget).toBe(textElement);
+      expect(setGestureType).toBe(0);
+      expect(typeof setGestureId).toBe('number');
+      expect(setConfig).toMatchObject({
+        callbacks: [
+          {
+            name: 'onUpdate',
+            callback: expect.objectContaining({
+              _wkltId: 'bdd4:dd564:2',
+            }),
+          },
+        ],
+      });
+      expect(setRelationMap).toEqual({
+        waitFor: [],
+        simultaneous: [],
+        continueWith: [],
+      });
+      expect(spyRemoveGesture).toHaveBeenCalledTimes(1);
+      expect(spyRemoveGesture).toHaveBeenCalledWith(textElement, 1);
+      expect(elementTree.__GetGestureDetectorIds(textElement)).toEqual([setGestureId]);
+      expect(textElement.props['has-react-gesture']).toBe(true);
     }
   });
   it('insert gesture', async function() {
@@ -981,6 +1030,8 @@ describe('Gesture in spread', () => {
     }
   });
   it('remove gesture', async function() {
+    const spySetGesture = vi.spyOn(globalThis, '__SetGestureDetector');
+    const spyRemoveGesture = vi.spyOn(globalThis, '__RemoveGestureDetector');
     let _gesture = {
       id: 1,
       type: 0,
@@ -1044,10 +1095,12 @@ describe('Gesture in spread', () => {
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
       globalThis[rLynxChange[0]](rLynxChange[1]);
     }
-    // update
+    // remove
     {
       globalEnvManager.switchToBackground();
       lynx.getNativeApp().callLepusMethod.mockClear();
+      spySetGesture.mockClear();
+      spyRemoveGesture.mockClear();
 
       _gesture = undefined;
 
@@ -1056,20 +1109,215 @@ describe('Gesture in spread', () => {
       globalEnvManager.switchToMainThread();
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
       globalThis[rLynxChange[0]](rLynxChange[1]);
+      const textElement = __root.__element_root.children[0].children[0];
+      expect(spySetGesture).not.toHaveBeenCalled();
+      expect(spyRemoveGesture).toHaveBeenCalledTimes(1);
+      expect(spyRemoveGesture).toHaveBeenCalledWith(textElement, 1);
+      expect(textElement.props['has-react-gesture']).toBeUndefined();
+      expect(elementTree.__GetGestureDetectorIds(textElement).includes(1)).toBe(false);
+    }
+  });
+  it('remove stale detector ids when gesture count shrinks on diff', async function() {
+    const spySetGesture = vi.spyOn(globalThis, '__SetGestureDetector');
+    const spyRemoveGesture = vi.spyOn(globalThis, '__RemoveGestureDetector');
 
-      expect(__root.__element_root).toMatchInlineSnapshot(`
-        <page
-          cssId="default-entry-from-native:0"
-        >
-          <view>
-            <text>
-              <raw-text
-                text="1"
-              />
-            </text>
-          </view>
-        </page>
-      `);
+    const createGesture = (id) => ({
+      id,
+      type: 0,
+      callbacks: {
+        onUpdate: {
+          _wkltId: 'bdd4:dd564:2',
+        },
+      },
+      __isGesture: true,
+      toJSON() {
+        const { toJSON, ...rest } = this;
+        return {
+          ...rest,
+          __isSerialized: true,
+        };
+      },
+    });
+
+    let useComposed = true;
+
+    function Comp() {
+      const gestureA = createGesture(1);
+      const gestureB = createGesture(2);
+      const singleGesture = createGesture(3);
+      const composedGesture = {
+        type: -1,
+        gestures: [gestureA, gestureB],
+        __isGesture: true,
+        toJSON() {
+          return {
+            type: this.type,
+            gestures: this.gestures.map(gesture => gesture.toJSON()),
+            __isSerialized: true,
+          };
+        },
+      };
+
+      const props = {
+        'main-thread:gesture': useComposed ? composedGesture : singleGesture,
+      };
+
+      return (
+        <view>
+          <text {...props}>1</text>
+        </view>
+      );
+    }
+
+    // main thread render
+    {
+      __root.__jsx = <Comp />;
+      renderPage();
+    }
+
+    // background render
+    {
+      globalEnvManager.switchToBackground();
+      render(<Comp />, __root);
+    }
+
+    // hydrate
+    {
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+
+      globalEnvManager.switchToMainThread();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+    }
+
+    // update: composed(2) -> single(1), remove stale detector ids before setting new one
+    {
+      globalEnvManager.switchToBackground();
+      lynx.getNativeApp().callLepusMethod.mockClear();
+      spySetGesture.mockClear();
+      spyRemoveGesture.mockClear();
+      useComposed = false;
+
+      render(<Comp />, __root);
+
+      globalEnvManager.switchToMainThread();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+      const textElement = __root.__element_root.children[0].children[0];
+
+      expect(spySetGesture).toHaveBeenCalledTimes(1);
+      expect(spyRemoveGesture).toHaveBeenCalledTimes(2);
+      expect(spyRemoveGesture).toHaveBeenNthCalledWith(1, textElement, 1);
+      expect(spyRemoveGesture).toHaveBeenNthCalledWith(2, textElement, 2);
+      expect(elementTree.__GetGestureDetectorIds(textElement)).toEqual([3]);
+    }
+  });
+  it('updates reordered composed gesture detectors with one-to-one old matches', async function() {
+    const spySetGesture = vi.spyOn(globalThis, '__SetGestureDetector');
+
+    const createGesture = (id, wkltId) => ({
+      id,
+      type: 0,
+      callbacks: {
+        onUpdate: {
+          _wkltId: wkltId,
+        },
+      },
+      __isGesture: true,
+      toJSON() {
+        const { toJSON, ...rest } = this;
+        return {
+          ...rest,
+          __isSerialized: true,
+        };
+      },
+    });
+
+    let firstRender = true;
+
+    function Comp() {
+      const oldGestureA = createGesture(1, 'old-a');
+      const oldGestureB = createGesture(2, 'old-b');
+      const newGestureB = createGesture(2, 'new-b');
+      const newGestureC = createGesture(3, 'new-c');
+      const gesture = {
+        type: -1,
+        gestures: firstRender ? [oldGestureA, oldGestureB] : [newGestureB, newGestureC],
+        __isGesture: true,
+        toJSON() {
+          return {
+            type: this.type,
+            gestures: this.gestures.map(subGesture => subGesture.toJSON()),
+            __isSerialized: true,
+          };
+        },
+      };
+
+      return (
+        <view>
+          <text main-thread:gesture={gesture}>1</text>
+        </view>
+      );
+    }
+
+    {
+      __root.__jsx = <Comp />;
+      renderPage();
+    }
+
+    {
+      globalEnvManager.switchToBackground();
+      render(<Comp />, __root);
+    }
+
+    {
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+
+      globalEnvManager.switchToMainThread();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+    }
+
+    {
+      globalEnvManager.switchToBackground();
+      lynx.getNativeApp().callLepusMethod.mockClear();
+      spySetGesture.mockClear();
+      firstRender = false;
+
+      render(<Comp />, __root);
+
+      globalEnvManager.switchToMainThread();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+
+      expect(spySetGesture).toHaveBeenNthCalledWith(
+        1,
+        expect.anything(),
+        2,
+        0,
+        expect.objectContaining({
+          callbacks: [
+            expect.objectContaining({
+              callback: expect.objectContaining({ _wkltId: 'new-b' }),
+            }),
+          ],
+        }),
+        expect.any(Object),
+      );
+      expect(spySetGesture).toHaveBeenNthCalledWith(
+        2,
+        expect.anything(),
+        3,
+        0,
+        expect.objectContaining({
+          callbacks: [
+            expect.objectContaining({
+              callback: expect.objectContaining({ _wkltId: 'new-c' }),
+            }),
+          ],
+        }),
+        expect.any(Object),
+      );
     }
   });
 });
