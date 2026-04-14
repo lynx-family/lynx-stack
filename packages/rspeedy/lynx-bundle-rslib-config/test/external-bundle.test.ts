@@ -17,6 +17,41 @@ import { defineExternalBundleRslibConfig } from '../src/index.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+const repoRoot = path.resolve(__dirname, '../../../../')
+const workspaceRoot = path.resolve(repoRoot, '..')
+
+function normalizeSlashes(value: string) {
+  return value.replaceAll('\\', '/')
+}
+
+function normalizeAliasValue(value: unknown) {
+  if (typeof value !== 'string') {
+    return value
+  }
+
+  return normalizeSlashes(value)
+    .replaceAll(normalizeSlashes(repoRoot), '<ROOT>')
+    .replaceAll(normalizeSlashes(workspaceRoot), '<WORKSPACE>')
+    .replace(
+      /<ROOT>\/node_modules\/\.pnpm\/[^/]+\/node_modules/g,
+      '<ROOT>/node_modules/<PNPM_INNER>',
+    )
+    .replace(
+      /<WORKSPACE>\/node_modules\/\.pnpm\/[^/]+\/node_modules/g,
+      '<WORKSPACE>/node_modules/<PNPM_INNER>',
+    )
+}
+
+function normalizeAliases(
+  aliases: Record<string, unknown>,
+) {
+  return Object.fromEntries(
+    Object.entries(aliases).map(([key, value]) => [
+      key,
+      normalizeAliasValue(value),
+    ]),
+  )
+}
 
 async function build(rslibConfig: RslibConfig) {
   const rslib = await createRslib({
@@ -682,7 +717,7 @@ describe('pluginReactLynx', () => {
 
   it('should handle alias', async () => {
     const config = await rslib.inspectConfig()
-    expect(config.origin.bundlerConfigs[0]!.resolve!.alias)
+    expect(normalizeAliases(config.origin.bundlerConfigs[0]!.resolve!.alias))
       .toMatchInlineSnapshot(`
         {
           "@lynx-js/preact-devtools$": false,
@@ -694,22 +729,21 @@ describe('pluginReactLynx', () => {
           "@lynx-js/react/legacy-react-runtime$": "<ROOT>/packages/react/runtime/lib/legacy-react-runtime/index.js",
           "@lynx-js/react/runtime-components$": "<ROOT>/packages/react/components/lib/index.js",
           "@lynx-js/react/worklet-runtime/bindings$": "<ROOT>/packages/react/runtime/lib/worklet-runtime/bindings/index.js",
-          "@swc/helpers": "<ROOT>/node_modules/<PNPM_INNER>/@swc/helpers",
-          "preact$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/dist/preact.mjs",
-          "preact/compat$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/dist/compat.mjs",
-          "preact/compat/client$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/client.mjs",
-          "preact/compat/jsx-dev-runtime$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/jsx-dev-runtime.mjs",
-          "preact/compat/jsx-runtime$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/jsx-runtime.mjs",
-          "preact/compat/scheduler$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/scheduler.mjs",
-          "preact/compat/server$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/server.mjs",
-          "preact/debug$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/debug/dist/debug.mjs",
-          "preact/devtools$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/devtools/dist/devtools.mjs",
-          "preact/hooks$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/hooks/dist/hooks.mjs",
-          "preact/jsx-dev-runtime$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/jsx-runtime/dist/jsxRuntime.mjs",
-          "preact/jsx-runtime$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/jsx-runtime/dist/jsxRuntime.mjs",
-          "preact/test-utils$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/test-utils/dist/testUtils.mjs",
+          "@swc/helpers": "<WORKSPACE>/node_modules/<PNPM_INNER>/@swc/helpers",
+          "preact$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/dist/preact.mjs",
+          "preact/compat$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/dist/compat.mjs",
+          "preact/compat/client$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/client.mjs",
+          "preact/compat/jsx-dev-runtime$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/jsx-dev-runtime.mjs",
+          "preact/compat/jsx-runtime$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/jsx-runtime.mjs",
+          "preact/compat/scheduler$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/scheduler.mjs",
+          "preact/compat/server$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/server.mjs",
+          "preact/debug$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/debug/dist/debug.mjs",
+          "preact/devtools$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/devtools/dist/devtools.mjs",
+          "preact/hooks$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/hooks/dist/hooks.mjs",
+          "preact/jsx-dev-runtime$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/jsx-runtime/dist/jsxRuntime.mjs",
+          "preact/jsx-runtime$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/jsx-runtime/dist/jsxRuntime.mjs",
+          "preact/test-utils$": "<WORKSPACE>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/test-utils/dist/testUtils.mjs",
           "react$": "<ROOT>/packages/react/runtime/lib/index.js",
-          "react-compiler-runtime": "<ROOT>/node_modules/<PNPM_INNER>/react-compiler-runtime",
           "use-sync-external-store$": "<ROOT>/packages/use-sync-external-store/index.js",
           "use-sync-external-store/shim$": "<ROOT>/packages/use-sync-external-store/index.js",
           "use-sync-external-store/shim/with-selector$": "<ROOT>/packages/use-sync-external-store/with-selector.js",

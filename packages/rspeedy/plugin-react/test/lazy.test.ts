@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import vm from 'node:vm'
 
 import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
@@ -66,6 +67,7 @@ const sExportsJSXRuntime = Symbol.for(
 const sExportsJSXDevRuntime = Symbol.for(
   '__REACT_LYNX_EXPORTS__(@lynx-js/react/jsx-dev-runtime)',
 )
+const testDir = path.dirname(fileURLToPath(import.meta.url))
 
 function evaluateStandaloneLazyMainThread(
   source: string,
@@ -332,7 +334,7 @@ describe('Lazy', () => {
 
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     const distRoot = path.join(
-      path.dirname(new URL(import.meta.url).pathname),
+      testDir,
       'dist/standalone-lazy-bundle-worklet',
     )
 
@@ -381,7 +383,7 @@ describe('Lazy', () => {
       expect(source).not.toContain('__workletRuntimeLoaded')
 
       const hostDistRoot = path.join(
-        path.dirname(new URL(import.meta.url).pathname),
+        testDir,
         'dist/mixed-version-host',
       )
       const hostRsbuild = await createRspeedy({

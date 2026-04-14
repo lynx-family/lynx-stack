@@ -80,8 +80,8 @@
       "default": "./runtime/worklet-runtime/main.js"
     },
     "./worklet-runtime/init": {
-      "types": "./runtime/lib/worklet-runtime/index.d.ts",
-      "default": "./runtime/src/worklet-runtime/init.ts"
+      "types": "./runtime/lib/worklet-runtime/init.d.ts",
+      "default": "./runtime/lib/worklet-runtime/init.js"
     },
     "./worklet-dev-runtime": {
       "types": "./runtime/lib/worklet-runtime/index.d.ts",
@@ -158,7 +158,7 @@
         "./runtime/lib/worklet-runtime/index.d.ts"
       ],
       "worklet-runtime/init": [
-        "./runtime/lib/worklet-runtime/index.d.ts"
+        "./runtime/lib/worklet-runtime/init.d.ts"
       ],
       "worklet-dev-runtime": [
         "./runtime/lib/worklet-runtime/index.d.ts"
