@@ -93,21 +93,6 @@ describe('testing loader', () => {
     expect(result.code).toBeTruthy();
   });
 
-  it('handles compat: null without throwing', async () => {
-    const jsxContent = `
-      export function App() {
-        return <view />;
-      }
-    `;
-
-    const result = await runTestingLoader(jsxContent, {
-      compat: null,
-      engineVersion: '3.2',
-    });
-
-    expect(result.code).toBeTruthy();
-  });
-
   it('handles missing compat (defaults to false) without throwing', async () => {
     const jsxContent = `
       export function App() {

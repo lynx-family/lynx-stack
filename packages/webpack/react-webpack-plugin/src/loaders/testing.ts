@@ -34,7 +34,7 @@ function testingLoader(
       this.resourcePath,
     ),
   );
-  const normalizedCompat = compat !== null && typeof compat === 'object'
+  const normalizedCompat = typeof compat === 'object'
     ? {
       target: 'MIXED' as const,
       addComponentElement: compat.addComponentElement ?? false,
