@@ -2,12 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import fs from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import vm from 'node:vm'
 
 import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
-import { describe, expect, test, vi } from 'vitest'
+import { afterAll, describe, expect, test, vi } from 'vitest'
 
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
@@ -67,10 +67,36 @@ const sExportsJSXRuntime = Symbol.for(
 const sExportsJSXDevRuntime = Symbol.for(
   '__REACT_LYNX_EXPORTS__(@lynx-js/react/jsx-dev-runtime)',
 )
-const testDir = path.dirname(fileURLToPath(import.meta.url))
+const tempDirs: string[] = []
 
-function resolveTestDistRoot(...segments: string[]): string {
-  return path.join(testDir, 'dist', ...segments)
+afterAll(async () => {
+  await Promise.all(tempDirs.map(async (dir) => {
+    await fs.rm(dir, { recursive: true, force: true })
+  }))
+})
+
+async function createIsolatedRspeedy(
+  options: Parameters<typeof createRspeedy>[0],
+): Promise<Awaited<ReturnType<typeof createRspeedy>>> {
+  const root = await fs.mkdtemp(path.join(tmpdir(), 'rspeedy-react-lazy-'))
+  tempDirs.push(root)
+
+  return await createRspeedy({
+    ...options,
+    rspeedyConfig: {
+      ...options.rspeedyConfig,
+      output: {
+        ...options.rspeedyConfig?.output,
+        // These tests assert on emitted artifacts and run in a larger suite.
+        // Use isolated output roots so parallel files cannot clean or overwrite
+        // the shared test/dist directory out from under this case.
+        distPath: {
+          ...options.rspeedyConfig?.output?.distPath,
+          root,
+        },
+      },
+    },
+  })
 }
 
 function evaluateStandaloneLazyMainThread(
@@ -84,35 +110,44 @@ function evaluateStandaloneLazyMainThread(
 }
 
 function withFakeHostEnvironment<T>(run: () => T): T {
-  const symbolValues = new Map([
-    [sExportsReact, globalThis[sExportsReact]],
-    [sExportsReactInternal, globalThis[sExportsReactInternal]],
-    [sExportsJSXRuntime, globalThis[sExportsJSXRuntime]],
-    [sExportsJSXDevRuntime, globalThis[sExportsJSXDevRuntime]],
-  ])
-  const globalValues = new Map([
-    ['__DEV__', globalThis.__DEV__],
-    ['__PROFILE__', globalThis.__PROFILE__],
-    ['__ALOG__', globalThis.__ALOG__],
-    ['__JS__', globalThis.__JS__],
-    ['__LEPUS__', globalThis.__LEPUS__],
-    ['__BACKGROUND__', globalThis.__BACKGROUND__],
-    ['__MAIN_THREAD__', globalThis.__MAIN_THREAD__],
-    ['lynx', globalThis.lynx],
-    ['requestAnimationFrame', globalThis.requestAnimationFrame],
-    ['cancelAnimationFrame', globalThis.cancelAnimationFrame],
+  const globalDescriptors = new Map<
+    PropertyKey,
+    PropertyDescriptor | undefined
+  >()
+  const globalsToRestore: PropertyKey[] = [
+    '__DEV__',
+    '__PROFILE__',
+    '__ALOG__',
+    '__JS__',
+    '__LEPUS__',
+    '__BACKGROUND__',
+    '__MAIN_THREAD__',
+    'lynx',
+    'requestAnimationFrame',
+    'cancelAnimationFrame',
     // The generated host/lazy assets may touch timer globals while bootstrapping.
-    ['setTimeout', globalThis.setTimeout],
-    ['clearTimeout', globalThis.clearTimeout],
-    ['setInterval', globalThis.setInterval],
-    ['clearInterval', globalThis.clearInterval],
-    ['registerWorkletInternal', globalThis.registerWorkletInternal],
-    ['registerWorklet', globalThis.registerWorklet],
-    ['runWorklet', globalThis.runWorklet],
-    ['lynxWorkletImpl', globalThis.lynxWorkletImpl],
-    ['__LoadLepusChunk', globalThis.__LoadLepusChunk],
-    ['SystemInfo', globalThis.SystemInfo],
-  ])
+    'setTimeout',
+    'clearTimeout',
+    'setInterval',
+    'clearInterval',
+    'registerWorkletInternal',
+    'registerWorklet',
+    'runWorklet',
+    'lynxWorkletImpl',
+    '__LoadLepusChunk',
+    'SystemInfo',
+    sExportsReact,
+    sExportsReactInternal,
+    sExportsJSXRuntime,
+    sExportsJSXDevRuntime,
+  ]
+
+  for (const key of globalsToRestore) {
+    globalDescriptors.set(
+      key,
+      Object.getOwnPropertyDescriptor(globalThis, key),
+    )
+  }
 
   Object.assign(globalThis, {
     __DEV__: true,
@@ -161,12 +196,8 @@ function withFakeHostEnvironment<T>(run: () => T): T {
   try {
     return run()
   } finally {
-    for (const [key, value] of globalValues) {
-      restoreStringGlobal(key, value)
-    }
-
-    for (const [key, value] of symbolValues) {
-      restoreSymbolGlobal(key, value)
+    for (const [key, descriptor] of globalDescriptors) {
+      restoreGlobalDescriptor(key, descriptor)
     }
   }
 }
@@ -236,9 +267,8 @@ describe('Lazy', () => {
 
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
       let backgroundJSContent = ''
-      const distRoot = resolveTestDistRoot('standalone-lazy-bundle')
 
-      const rsbuild = await createRspeedy({
+      const rsbuild = await createIsolatedRspeedy({
         rspeedyConfig: {
           source: {
             entry: {
@@ -247,11 +277,6 @@ describe('Lazy', () => {
                 import.meta.url,
               )
                 .pathname,
-            },
-          },
-          output: {
-            distPath: {
-              root: distRoot,
             },
           },
           plugins: [
@@ -338,9 +363,8 @@ describe('Lazy', () => {
     vi.stubEnv('NODE_ENV', 'development')
 
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const distRoot = resolveTestDistRoot('standalone-lazy-bundle-worklet')
 
-    const rsbuild = await createRspeedy({
+    const rsbuild = await createIsolatedRspeedy({
       rspeedyConfig: {
         source: {
           entry: {
@@ -348,11 +372,6 @@ describe('Lazy', () => {
               './fixtures/standalone-lazy-bundle-worklet/index.tsx',
               import.meta.url,
             ).pathname,
-          },
-        },
-        output: {
-          distPath: {
-            root: distRoot,
           },
         },
         plugins: [
@@ -365,6 +384,7 @@ describe('Lazy', () => {
 
     try {
       await rsbuild.build()
+      const distRoot = rsbuild.context.distPath
 
       const jsAssets = await collectJsAssets(distRoot)
       const mainThreadAssets = [...jsAssets.entries()].filter(([name]) =>
@@ -384,8 +404,7 @@ describe('Lazy', () => {
       expect(source).toContain('registerWorkletInternal("main-thread"')
       expect(source).not.toContain('__workletRuntimeLoaded')
 
-      const hostDistRoot = resolveTestDistRoot('mixed-version-host')
-      const hostRsbuild = await createRspeedy({
+      const hostRsbuild = await createIsolatedRspeedy({
         rspeedyConfig: {
           source: {
             entry: {
@@ -395,11 +414,6 @@ describe('Lazy', () => {
               ).pathname,
             },
           },
-          output: {
-            distPath: {
-              root: hostDistRoot,
-            },
-          },
           plugins: [
             pluginReactLynx(),
           ],
@@ -407,6 +421,7 @@ describe('Lazy', () => {
       })
 
       await hostRsbuild.build()
+      const hostDistRoot = hostRsbuild.context.distPath
 
       const hostAssets = await collectJsAssets(hostDistRoot)
       const hostMainThreadAssets = [...hostAssets.entries()].filter(([name]) =>
@@ -442,12 +457,11 @@ describe('Lazy', () => {
   test('lazy bundle beforeEncode entryNames', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const distRoot = resolveTestDistRoot('lazy-bundle')
 
     const entryNamesOfBeforeEncode: string[][] = []
     let backgroundJSContent = ''
 
-    const rsbuild = await createRspeedy({
+    const rsbuild = await createIsolatedRspeedy({
       rspeedyConfig: {
         source: {
           entry: {
@@ -455,11 +469,6 @@ describe('Lazy', () => {
               './fixtures/lazy-bundle/index.tsx',
               import.meta.url,
             ).pathname,
-          },
-        },
-        output: {
-          distPath: {
-            root: distRoot,
           },
         },
         plugins: [
@@ -566,7 +575,6 @@ describe('Lazy', () => {
   test('lazy bundle app-service.js should not load hot-update.js', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const distRoot = resolveTestDistRoot('lazy-bundle')
 
     let appServiceJSContent = ''
     let done = false
@@ -581,7 +589,7 @@ describe('Lazy', () => {
         }, 100)
       })
 
-    const rsbuild = await createRspeedy({
+    const rsbuild = await createIsolatedRspeedy({
       rspeedyConfig: {
         source: {
           entry: {
@@ -589,11 +597,6 @@ describe('Lazy', () => {
               './fixtures/lazy-bundle/index.tsx',
               import.meta.url,
             ).pathname,
-          },
-        },
-        output: {
-          distPath: {
-            root: distRoot,
           },
         },
         plugins: [
@@ -691,20 +694,14 @@ describe('Lazy', () => {
     }
   })
 })
-function restoreStringGlobal(key: string, value: unknown) {
-  if (typeof value === 'undefined') {
-    delete globalThis[key as keyof typeof globalThis]
-    return
-  }
-
-  ;(globalThis as Record<string, unknown>)[key] = value
-}
-
-function restoreSymbolGlobal(key: symbol, value: unknown) {
-  if (typeof value === 'undefined') {
+function restoreGlobalDescriptor(
+  key: PropertyKey,
+  descriptor: PropertyDescriptor | undefined,
+) {
+  if (!descriptor) {
     delete globalThis[key]
     return
   }
 
-  globalThis[key] = value
+  Object.defineProperty(globalThis, key, descriptor)
 }

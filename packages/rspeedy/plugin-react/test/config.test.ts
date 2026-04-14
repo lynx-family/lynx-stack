@@ -2664,13 +2664,13 @@ describe('Config', () => {
     )
   })
 
-  test('worklet runtime init resolves to the source entry', () => {
+  test('worklet runtime init export resolves to the compiled entry', () => {
     const require = createRequire(import.meta.url)
 
     expect(
       require.resolve('@lynx-js/react/worklet-runtime/init'),
     ).toContain(
-      '/packages/react/runtime/src/worklet-runtime/init.ts'
+      '/packages/react/runtime/lib/worklet-runtime/init.js'
         .replaceAll(
           '/',
           path.sep,
