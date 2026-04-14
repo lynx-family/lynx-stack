@@ -73,22 +73,20 @@ export function createElementAPI(
     mtsBinding,
     config_enable_css_selector,
   );
+  let page: DecoratedHTMLElement | undefined = undefined;
+  const timingFlags: string[] = [];
+  let disposed = false;
+
   mtsBinding.wasmContext = wasmContext;
   mtsBinding.disposeWasmContext = () => {
+    if (disposed) return;
+    disposed = true;
     if (wasmContext) {
       wasmContext.free();
     }
-    // @ts-expect-error parameter nullification for GC
-    wasmContext = null;
-    // @ts-expect-error parameter nullification for GC
-    rootDom = null;
-    // @ts-expect-error parameter nullification for GC
-    mtsBinding = null;
     page = undefined;
     timingFlags.length = 0;
   };
-  let page: DecoratedHTMLElement | undefined = undefined;
-  const timingFlags: string[] = [];
 
   const __SetCSSId: SetCSSIdPAPI = (elements, cssId, entryName) => {
     const uniqueIds = elements.map(
@@ -616,6 +614,7 @@ export function createElementAPI(
         wasmContext.take_timing_flags(),
       );
       requestIdleCallbackImpl(() => {
+        if (disposed) return;
         mtsBinding.postTimingFlags(
           timingFlagsAll,
           pipelineId,

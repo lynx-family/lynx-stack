@@ -401,28 +401,40 @@ export class LynxViewElement extends HTMLElement {
 
   public injectStyleRules?: string[];
 
+  #disposePromise?: Promise<void>;
+
   /**
    * @private
    */
   disconnectedCallback() {
+    this.#connected = false;
     this.#disposeInstance();
   }
 
   async #disposeInstance() {
-    this.shadowRoot?.querySelector('[part="page"]')
-      ?.setAttribute(
-        lynxDisposedAttribute,
-        '',
-      );
-    const oldInstance = this.#instance;
-    this.#instance = undefined;
-    if (oldInstance) {
-      await oldInstance[Symbol.asyncDispose]();
+    if (this.#disposePromise) {
+      return this.#disposePromise;
     }
-    if (this.shadowRoot) {
-      this.shadowRoot.innerHTML = '';
-      this.shadowRoot.adoptedStyleSheets = [];
-    }
+    const dispose = async () => {
+      this.shadowRoot?.querySelector('[part="page"]')
+        ?.setAttribute(
+          lynxDisposedAttribute,
+          '',
+        );
+      const oldInstance = this.#instance;
+      this.#instance = undefined;
+      if (oldInstance) {
+        await oldInstance[Symbol.asyncDispose]();
+      }
+      if (this.shadowRoot) {
+        this.shadowRoot.innerHTML = '';
+        this.shadowRoot.adoptedStyleSheets = [];
+      }
+    };
+
+    this.#disposePromise = dispose();
+    await this.#disposePromise;
+    this.#disposePromise = undefined;
   }
 
   /**
@@ -440,7 +452,7 @@ export class LynxViewElement extends HTMLElement {
         this.attachShadow({ mode: 'open' });
       }
 
-      if (this.#instance) {
+      if (this.#instance || this.#disposePromise) {
         await this.#disposeInstance();
       }
       const mtsRealmPromise = createIFrameRealm(this.shadowRoot!);

@@ -284,15 +284,10 @@ export class BackgroundThread implements AsyncDisposable {
   }
 
   async [Symbol.asyncDispose](): Promise<void> {
-    await this.#btsReady;
-    /*
-     * TODO:
-     * Potential deadlock if startBTS() was never called.
-     * If [Symbol.asyncDispose]() is invoked on a BackgroundThread instance where startBTS() was never called,
-     * #btsReady will never resolve, causing the disposal to hang indefinitely.
-     * Consider guarding with the existing #btsStarted flag.
-     */
-    await this.#rpc.invoke(disposeEndpoint, []);
+    if (this.#btsStarted) {
+      await this.#btsReady;
+      await this.#rpc.invoke(disposeEndpoint, []);
+    }
     if (this.#lynxGroupId !== undefined) {
       const group =
         BackgroundThread.contextIdToBackgroundWorker[this.#lynxGroupId];
