@@ -5,12 +5,32 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { test as base } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import v8ToIstanbul from 'v8-to-istanbul';
 
 const __dirname = fileURLToPath(import.meta.url);
+const webCoreDist = path.join(
+  __dirname,
+  '..',
+  '..',
+  '..',
+  'web-core',
+  'dist',
+  'client_prod',
+);
+// recursive find all *.map files
+const getWebCoreMappedFiles = () => {
+  try {
+    const files = readdirSync(webCoreDist, { recursive: true });
+    return files
+      .filter((f) => typeof f === 'string' && f.endsWith('.map'))
+      .map((f) => path.join(webCoreDist, (f as string).replace(/\.map$/, '')));
+  } catch (e) {
+    return [];
+  }
+};
 
 export const test: typeof base = base.extend({
   context: async ({ browserName, context }, use, testInfo) => {
@@ -39,7 +59,7 @@ export const test: typeof base = base.extend({
     await Promise.all(
       Array.from(pages.values()).flatMap(async (page, index) => {
         const coverage = await page.coverage.stopJSCoverage();
-        const sourceFilePath = [
+        const sourceFilePaths = [
           path.join(path.dirname(testInfo.file), '..', 'www', 'main.js'),
           path.join(
             path.dirname(testInfo.file),
@@ -49,17 +69,20 @@ export const test: typeof base = base.extend({
             'js',
             'index.js',
           ),
-        ].find((p) => existsSync(p))!;
-        const converter = v8ToIstanbul(
-          sourceFilePath,
-        );
-        await converter.load();
+          ...getWebCoreMappedFiles(),
+        ].filter((p) => existsSync(p));
 
-        for (const entry of coverage) {
-          converter.applyCoverage(entry.functions);
+        const coverageMapData = {};
+        for (const sourceFilePath of sourceFilePaths) {
+          const converter = v8ToIstanbul(sourceFilePath);
+          await converter.load();
+
+          for (const entry of coverage) {
+            converter.applyCoverage(entry.functions);
+          }
+
+          Object.assign(coverageMapData, converter.toIstanbul());
         }
-
-        const coverageMapData = converter.toIstanbul();
 
         return fs.writeFile(
           path.join(

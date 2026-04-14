@@ -38,7 +38,7 @@
     "dist",
     "binary",
     "css",
-    "!dist/**/*.js.map",
+    "!dist/**/*.map",
     "*.d.ts",
     "*.js",
     "LICENSE.txt",
