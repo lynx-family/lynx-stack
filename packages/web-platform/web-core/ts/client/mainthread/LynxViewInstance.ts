@@ -27,6 +27,7 @@ import { loadAllWebElements } from '../webElementsDynamicLoader.js';
 // @ts-expect-error
 import IN_SHADOW_CSS_MODERN from '../../../css/in_shadow.css?inline';
 import type { LynxViewElement } from './LynxView.js';
+import { requestIdleCallbackImpl } from './utils/requestIdleCallback.js';
 loadAllWebElements().catch((e) => {
   console.error('[lynx-web] Failed to load web elements', e);
 });
@@ -297,7 +298,9 @@ export class LynxViewInstance implements AsyncDisposable {
   }
 
   async [Symbol.asyncDispose]() {
-    this.mtsWasmBinding.dispose();
     await this.backgroundThread[Symbol.asyncDispose]();
+    requestIdleCallbackImpl(() => {
+      this.mtsWasmBinding.dispose();
+    });
   }
 }

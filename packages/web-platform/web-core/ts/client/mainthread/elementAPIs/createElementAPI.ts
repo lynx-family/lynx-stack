@@ -83,6 +83,8 @@ export function createElementAPI(
     disposed = true;
     if (wasmContext) {
       wasmContext.free();
+      // @ts-expect-error It's better to throw an Error than triggeing an use-after-free of rust struct
+      wasmContext = null;
     }
     page = undefined;
     timingFlags.length = 0;
