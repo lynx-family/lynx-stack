@@ -22,4 +22,4 @@ exports[`encodeCSS > scoped css, 2 css id 1`] = `".foo:where([l-css-id="1"]):not
 
 exports[`encodeCSS > scoped css, import non existing 1`] = `".foo:where([l-css-id="1"]):not([l-e-name]),.foo:where([l-css-id="20"]):not([l-e-name]),.foo:where([l-css-id="2"]):not([l-e-name]){background:red;}"`;
 
-exports[`encodeCSS > should encode KeyframesRule with CSS variables 1`] = `"@keyframes my-animation-with-vars{from{--my-var:0;opacity:{{--my-var}};}to{--my-var:1;opacity:{{--my-var}};}}"`;
+exports[`encodeCSS > should encode KeyframesRule with CSS variables 1`] = `"@keyframes my-animation-with-vars{from{--my-var:0;opacity:var(--my-var);}to{--my-var:1;opacity:var(--my-var);}}"`;

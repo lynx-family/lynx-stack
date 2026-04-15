@@ -149,6 +149,28 @@ describe('encodeCSS', () => {
     expect(decodedString.trim()).toMatchSnapshot();
   });
 
+  test('should preserve fallback values in css var for keyframes', () => {
+    const css = `
+      @keyframes my-animation-with-vars-fallback {
+        from {
+          opacity: var(--my-var, .6);
+        }
+        to {
+          opacity: var(--my-var, 1);
+        }
+      }
+    `;
+    const cssMap = {
+      '1': CSS.parse(css).root,
+    };
+    const buffer = encodeCSS(cssMap);
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
+    expect(decodedString).toContain('opacity:var(--my-var, .6);');
+    expect(decodedString).toContain('opacity:var(--my-var, 1);');
+  });
+
   test('should handle complex selectors', () => {
     const css = `
       div > .foo + #bar[attr="val"]::before:hover {
@@ -175,6 +197,24 @@ describe('encodeCSS', () => {
     const buffer = encodeCSS(cssMap);
     expect(buffer).toBeInstanceOf(Uint8Array);
     expect(buffer.length).toBeGreaterThan(0);
+  });
+
+  test('should preserve fallback values in css var for color', () => {
+    const css = `
+      .foo {
+        color: var(--Text-TextQuaternary, rgba(22, 24, 35, .6));
+      }
+    `;
+    const cssMap = {
+      '1': CSS.parse(css).root,
+    };
+    const buffer = encodeCSS(cssMap);
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
+    expect(decodedString).toContain(
+      'color:var(--Text-TextQuaternary, rgba(22,24,35,.6));',
+    );
   });
 
   test('should handle ::placeholder selector', () => {
@@ -264,6 +304,24 @@ describe('encodeCSS', () => {
       decode_style_info(buffer, undefined, true),
     );
     expect(decodedString.trim()).toMatchSnapshot();
+  });
+
+  test('font-face should preserve fallback values in css var', () => {
+    const cssMap = {
+      '0': CSS.parse(`
+        @font-face {
+          font-family: var(--font-family, "MyFont");
+          src: url("myfont.woff");
+        }
+      `).root,
+    };
+    const buffer = encodeCSS(cssMap);
+    const decodedString = get_font_face_content(
+      decode_style_info(buffer, undefined, true),
+    );
+    expect(decodedString).toContain(
+      'font-family:var(--font-family, "MyFont");',
+    );
   });
 
   test('keyframes-rule', () => {
