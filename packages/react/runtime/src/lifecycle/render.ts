@@ -28,14 +28,8 @@ function renderMainThread(): void {
     }
   }
 
-  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-    profileStart('ReactLynx::renderOpcodes');
-  }
   if (__ENABLE_SSR__) {
     __root.__opcodes = opcodes;
-  }
-  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-    profileEnd();
   }
 }
 

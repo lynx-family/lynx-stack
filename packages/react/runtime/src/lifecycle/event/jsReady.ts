@@ -12,12 +12,14 @@ function jsReady(): void {
   isJSReady = true;
 
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-    profileStart('ReactLynx::transferRoot');
     profileStart('ReactLynx::serializeRoot');
   }
   const root = JSON.stringify(__root);
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
+  }
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+    profileStart('ReactLynx::transferRoot');
   }
   __OnLifecycleEvent([
     LifecycleConstant.firstScreen, /* FIRST_SCREEN */
