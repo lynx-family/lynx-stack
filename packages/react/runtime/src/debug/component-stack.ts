@@ -32,13 +32,6 @@ import type { VNode } from 'preact';
 
 import { DIFF, DIFFED, RENDER, ROOT } from '../renderToOpcodes/constants.js';
 
-declare module 'preact' {
-  interface Options {
-    /** _root */
-    __?(vnode: VNode, parent: any): void;
-  }
-}
-
 interface PatchedVNode extends VNode {
   _owner?: PatchedVNode | null;
 

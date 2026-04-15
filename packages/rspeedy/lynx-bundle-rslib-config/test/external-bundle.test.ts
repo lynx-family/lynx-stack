@@ -704,7 +704,6 @@ describe('pluginReactLynx', () => {
           "preact/compat/server$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/server.mjs",
           "preact/debug$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/debug/dist/debug.mjs",
           "preact/devtools$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/devtools/dist/devtools.mjs",
-          "preact/hooks$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/hooks/dist/hooks.mjs",
           "preact/jsx-dev-runtime$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/jsx-runtime/dist/jsxRuntime.mjs",
           "preact/jsx-runtime$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/jsx-runtime/dist/jsxRuntime.mjs",
           "preact/test-utils$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/test-utils/dist/testUtils.mjs",
