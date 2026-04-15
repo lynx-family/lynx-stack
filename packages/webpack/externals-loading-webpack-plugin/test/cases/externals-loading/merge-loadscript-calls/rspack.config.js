@@ -45,6 +45,44 @@ export default {
             sectionPath: 'common__main-thread',
           },
         },
+        // Two async externals sharing the same (url, sectionPath). They should merge
+        // via createLoadExternalAsync.
+        'pkg-d': {
+          libraryName: 'PkgD',
+          url: 'https://example.com/async.bundle',
+          async: true,
+          background: {
+            sectionPath: 'shared',
+          },
+          mainThread: {
+            sectionPath: 'shared__main-thread',
+          },
+        },
+        'pkg-e': {
+          libraryName: 'PkgE',
+          url: 'https://example.com/async.bundle',
+          async: true,
+          background: {
+            sectionPath: 'shared',
+          },
+          mainThread: {
+            sectionPath: 'shared__main-thread',
+          },
+        },
+        // A sync external sharing the SAME (url, sectionPath) as the async ones above.
+        // Must NOT be merged with the async group because the runtime shape differs
+        // (plain value vs Promise).
+        'pkg-f': {
+          libraryName: 'PkgF',
+          url: 'https://example.com/async.bundle',
+          async: false,
+          background: {
+            sectionPath: 'shared',
+          },
+          mainThread: {
+            sectionPath: 'shared__main-thread',
+          },
+        },
       },
     },
   ),
