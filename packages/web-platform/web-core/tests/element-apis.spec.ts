@@ -1278,12 +1278,12 @@ describe('Element APIs', () => {
         currentTarget: expect.objectContaining({
           id: 'child_id',
           dataset: expect.any(Object),
-          uniqueId: expect.any(Number),
+          uid: expect.any(Number),
         }),
         target: expect.objectContaining({
           id: 'child_id',
           dataset: expect.any(Object),
-          uniqueId: expect.any(Number),
+          uid: expect.any(Number),
         }),
       }),
       expect.any(Number),

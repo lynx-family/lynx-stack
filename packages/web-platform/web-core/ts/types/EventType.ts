@@ -15,7 +15,7 @@ export interface LynxCrossThreadEventTarget {
     [key: string]: Cloneable;
   };
   id: string | null;
-  uniqueId: number;
+  uid: number;
 }
 
 export interface LynxCrossThreadEvent<
