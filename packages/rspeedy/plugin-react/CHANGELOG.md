@@ -1,5 +1,27 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.16.0
+
+### Minor Changes
+
+- Simplify hooks for main-thread runtime, which only can run during the first screen. ([#2441](https://github.com/lynx-family/lynx-stack/pull/2441))
+
+### Patch Changes
+
+- Support rstest for testing library using a dedicated testing loader. ([#2328](https://github.com/lynx-family/lynx-stack/pull/2328))
+
+- Fix `environments.lynx.performance.profile` so it overrides the default profile behavior for the current environment. ([#2468](https://github.com/lynx-family/lynx-stack/pull/2468))
+
+- Add `enableUiSourceMap` option to enable UI source map generation and debug-metadata asset emission. ([#2402](https://github.com/lynx-family/lynx-stack/pull/2402))
+
+- Updated dependencies [[`a9f8d05`](https://github.com/lynx-family/lynx-stack/commit/a9f8d0548664ea32ebae2072c13f2cf6fee676eb), [`b1ad1b9`](https://github.com/lynx-family/lynx-stack/commit/b1ad1b98ed8d4635ad89fac42fe2fbb7e8e56c39), [`f6184f3`](https://github.com/lynx-family/lynx-stack/commit/f6184f32c3eb160d16ee852da4955765b5ad1398), [`f6184f3`](https://github.com/lynx-family/lynx-stack/commit/f6184f32c3eb160d16ee852da4955765b5ad1398), [`a9f8d05`](https://github.com/lynx-family/lynx-stack/commit/a9f8d0548664ea32ebae2072c13f2cf6fee676eb), [`f542d9c`](https://github.com/lynx-family/lynx-stack/commit/f542d9c98b376d340443b4683ed0c7707beeb5ad)]:
+  - @lynx-js/template-webpack-plugin@0.10.9
+  - @lynx-js/react-webpack-plugin@0.9.1
+  - @lynx-js/react-alias-rsbuild-plugin@0.16.0
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.5
+  - @lynx-js/use-sync-external-store@1.5.0
+
 ## 0.15.0
 
 ### Minor Changes
