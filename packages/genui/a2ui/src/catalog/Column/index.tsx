@@ -38,6 +38,21 @@ export function Column(
         const childWithContext = dataContextPath
           ? { ...child, dataContextPath: dataContextPath }
           : child;
+        const weight = (child as unknown as { weight?: number }).weight;
+        if (typeof weight === 'number' && weight > 0) {
+          return (
+            <view
+              key={childId}
+              className='column-weighted-item'
+              style={{ flex: `${weight} ${weight} 0`, minHeight: 0 }}
+            >
+              <NodeRenderer
+                component={childWithContext}
+                surface={surface}
+              />
+            </view>
+          );
+        }
         return (
           <NodeRenderer
             key={childId}

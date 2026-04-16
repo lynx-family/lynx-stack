@@ -1,0 +1,151 @@
+[
+  {
+    "createSurface": {
+      "surfaceId": "default",
+      "catalogId": "demo-cast-grid"
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "root",
+          "component": "Column",
+          "align": "start",
+          "justify": "start",
+          "children": ["label", "summary", "castGrid"]
+        },
+        {
+          "id": "label",
+          "component": "Text",
+          "variant": "label",
+          "text": "AI generated answer"
+        },
+        {
+          "id": "summary",
+          "component": "Text",
+          "variant": "body",
+          "text": "Short film \"Night Notes\" is a light comedy road story. Below is a cast card demo: copy and names are placeholders, while spacing, alignment, and the stacked card layout stay consistent."
+        },
+        {
+          "id": "castGrid",
+          "component": "Column",
+          "align": "start",
+          "justify": "start",
+          "children": ["castRow-1", "castRow-2"]
+        },
+        {
+          "id": "castRow-1",
+          "component": "Row",
+          "alignment": "start",
+          "distribution": "spaceBetween",
+          "children": ["cast-1", "cast-2", "cast-3"]
+        },
+        {
+          "id": "castRow-2",
+          "component": "Row",
+          "alignment": "start",
+          "distribution": "spaceBetween",
+          "children": ["cast-4", "cast-5", "cast-6"]
+        },
+
+        {
+          "id": "cast-1",
+          "component": "Column",
+          "align": "start",
+          "justify": "start",
+          "weight": 1,
+          "children": ["cast-1-img", "cast-1-name", "cast-1-role"]
+        },
+        {
+          "id": "cast-1-img",
+          "component": "Image",
+          "url": "https://picsum.photos/seed/a2ui-cast-1/96/120"
+        },
+        { "id": "cast-1-name", "component": "Text", "variant": "h5", "text": "Lin Xia" },
+        { "id": "cast-1-role", "component": "Text", "variant": "caption", "text": "as The Pathfinder" },
+
+        {
+          "id": "cast-2",
+          "component": "Column",
+          "align": "start",
+          "justify": "start",
+          "weight": 1,
+          "children": ["cast-2-img", "cast-2-name", "cast-2-role"]
+        },
+        {
+          "id": "cast-2-img",
+          "component": "Image",
+          "url": "https://picsum.photos/seed/a2ui-cast-2/96/120"
+        },
+        { "id": "cast-2-name", "component": "Text", "variant": "h5", "text": "Xu Shuo" },
+        { "id": "cast-2-role", "component": "Text", "variant": "caption", "text": "as The Chronicler" },
+
+        {
+          "id": "cast-3",
+          "component": "Column",
+          "align": "start",
+          "justify": "start",
+          "weight": 1,
+          "children": ["cast-3-img", "cast-3-name", "cast-3-role"]
+        },
+        {
+          "id": "cast-3-img",
+          "component": "Image",
+          "url": "https://picsum.photos/seed/a2ui-cast-3/96/120"
+        },
+        { "id": "cast-3-name", "component": "Text", "variant": "h5", "text": "Qiao Ran" },
+        { "id": "cast-3-role", "component": "Text", "variant": "caption", "text": "as The Guide" },
+
+        {
+          "id": "cast-4",
+          "component": "Column",
+          "align": "start",
+          "justify": "start",
+          "weight": 1,
+          "children": ["cast-4-img", "cast-4-name", "cast-4-role"]
+        },
+        {
+          "id": "cast-4-img",
+          "component": "Image",
+          "url": "https://picsum.photos/seed/a2ui-cast-4/96/120"
+        },
+        { "id": "cast-4-name", "component": "Text", "variant": "h5", "text": "He Yu" },
+        { "id": "cast-4-role", "component": "Text", "variant": "caption", "text": "as The Composer" },
+
+        {
+          "id": "cast-5",
+          "component": "Column",
+          "align": "start",
+          "justify": "start",
+          "weight": 1,
+          "children": ["cast-5-img", "cast-5-name", "cast-5-role"]
+        },
+        {
+          "id": "cast-5-img",
+          "component": "Image",
+          "url": "https://picsum.photos/seed/a2ui-cast-5/96/120"
+        },
+        { "id": "cast-5-name", "component": "Text", "variant": "h5", "text": "Tang Yi" },
+        { "id": "cast-5-role", "component": "Text", "variant": "caption", "text": "as The Courier" },
+
+        {
+          "id": "cast-6",
+          "component": "Column",
+          "align": "start",
+          "justify": "start",
+          "weight": 1,
+          "children": ["cast-6-img", "cast-6-name", "cast-6-role"]
+        },
+        {
+          "id": "cast-6-img",
+          "component": "Image",
+          "url": "https://picsum.photos/seed/a2ui-cast-6/96/120"
+        },
+        { "id": "cast-6-name", "component": "Text", "variant": "h5", "text": "Zhou Ning" },
+        { "id": "cast-6-role", "component": "Text", "variant": "caption", "text": "as The Fixer" }
+      ]
+    }
+  }
+]
