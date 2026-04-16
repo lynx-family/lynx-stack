@@ -57,7 +57,7 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     return {
       dataset: Object.assign(Object.create(null), dataset),
       id: element.id || null,
-      uniqueId,
+      uid: uniqueId,
     };
   }
 
