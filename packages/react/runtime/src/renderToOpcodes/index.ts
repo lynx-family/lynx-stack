@@ -386,10 +386,20 @@ function _renderToString(
     renderToTextNode(vnode, children, opcodes, slotIndex);
   } else if (children != null && children !== false && children !== true) {
     // recurse into this element VNode's children
+    let _slotIndex = slotIndex;
+    if (hasNamedChildren) {
+      // @ts-expect-error children must be an array
+      if (children.length === 1) {
+        children = children[0];
+        _slotIndex = 0;
+      } else {
+        _slotIndex = true;
+      }
+    }
     _renderToString(
       children,
       context,
-      hasNamedChildren ? true : slotIndex,
+      _slotIndex,
       selectValue,
       vnode,
       opcodes,
