@@ -2,12 +2,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { elementTree, nativeMethodQueue } from './utils/nativeMethod';
-import { hydrate } from '../src/hydrate';
-import { __pendingListUpdates } from '../src/pendingListUpdates';
+import { hydrate } from '../src/renderToOpcodes/hydrate';
+import { __pendingListUpdates } from '../src/list/pendingListUpdates';
 import { SnapshotInstance, snapshotInstanceManager } from '../src/snapshot';
 import { __root } from '../src/root';
 import { globalEnvManager } from './utils/envManager';
-import { gRecycleMap, gSignMap } from '../src/list';
+import { gRecycleMap, gSignMap } from '../src/list/list';
 
 const HOLE = null;
 

@@ -75,11 +75,17 @@ export interface PluginReactLynxOptions {
     enableNewGesture?: boolean;
     enableRemoveCSSScope?: boolean | undefined;
     enableSSR?: boolean;
+    enableUiSourceMap?: boolean;
     engineVersion?: string;
     // @alpha
     experimental_isLazyBundle?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady';
+    globalPropsMode?: 'reactive' | 'event';
+    optimizeBundleSize?: boolean | {
+        mainThread?: boolean;
+        background?: boolean;
+    };
     removeDescendantSelectorScope?: boolean;
     shake?: Partial<ShakeVisitorConfig> | undefined;
     // @deprecated
@@ -89,6 +95,7 @@ export interface PluginReactLynxOptions {
 // @public
 export interface ShakeVisitorConfig {
     pkgName: Array<string>
+    removeCall: Array<string>
     removeCallParams: Array<string>
     retainProp: Array<string>
 }

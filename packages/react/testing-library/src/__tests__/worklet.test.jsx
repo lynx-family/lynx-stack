@@ -77,7 +77,7 @@ describe('worklet', () => {
         [
           "rLynxChange",
           {
-            "data": "{"patchList":[{"snapshotPatch":[3,-2,0,{"_wkltId":"a45f:test:2","_workletType":"main-thread","_execId":1}],"id":2}]}",
+            "data": "{"patchList":[{"snapshotPatch":[3,-2,0,{"_wkltId":"15ab:test:2","_workletType":"main-thread","_execId":1}],"id":2}]}",
             "patchOptions": {
               "isHydration": true,
               "pipelineOptions": {
@@ -159,7 +159,7 @@ describe('worklet', () => {
         [
           "rLynxChange",
           {
-            "data": "{"patchList":[{"snapshotPatch":[3,-2,1,{"_c":{"props":{"main-thread:onClick":{"_wkltId":"a45f:test:3"}}},"_wkltId":"a45f:test:4","_execId":1}],"id":2}]}",
+            "data": "{"patchList":[{"snapshotPatch":[3,-2,1,{"_c":{"props":{"main-thread:onClick":{"_wkltId":"15ab:test:3"}}},"_wkltId":"15ab:test:4","_execId":1}],"id":2}]}",
             "patchOptions": {
               "isHydration": true,
               "pipelineOptions": {
@@ -249,7 +249,7 @@ describe('worklet', () => {
         [
           "rLynxChange",
           {
-            "data": "{"patchList":[{"snapshotPatch":[3,-2,0,{"_c":{"props":{"main-thread:onScroll":{"_wkltId":"a45f:test:5"}}},"_wkltId":"a45f:test:6","_execId":1}],"id":2}]}",
+            "data": "{"patchList":[{"snapshotPatch":[3,-2,0,{"_c":{"props":{"main-thread:onScroll":{"_wkltId":"15ab:test:5"}}},"_wkltId":"15ab:test:6","_execId":1}],"id":2}]}",
             "patchOptions": {
               "isHydration": true,
               "pipelineOptions": {
@@ -343,7 +343,7 @@ describe('worklet', () => {
         [
           "rLynxChange",
           {
-            "data": "{"patchList":[{"snapshotPatch":[3,-2,0,{"_wkltId":"a45f:test:8","_jsFn":{"_jsFn1":{"_jsFnId":2,"_fn":"[BackgroundFunction]"}},"_execId":1}],"id":2}]}",
+            "data": "{"patchList":[{"snapshotPatch":[3,-2,0,{"_wkltId":"15ab:test:8","_jsFn":{"_jsFn1":{"_jsFnId":2,"_fn":"[BackgroundFunction]"}},"_execId":1}],"id":2}]}",
             "patchOptions": {
               "isHydration": true,
               "pipelineOptions": {
@@ -447,7 +447,7 @@ describe('worklet', () => {
         [
           "rLynxChange",
           {
-            "data": "{"patchList":[{"snapshotPatch":[3,-2,0,{"_wvid":1},3,-2,1,{"_c":{"ref":{"_wvid":1},"num":{"_wvid":2}},"_wkltId":"a45f:test:9","_execId":1}],"id":2}]}",
+            "data": "{"patchList":[{"snapshotPatch":[3,-2,0,{"_wvid":1},3,-2,1,{"_c":{"ref":{"_wvid":1},"num":{"_wvid":2}},"_wkltId":"15ab:test:9","_execId":1}],"id":2}]}",
             "patchOptions": {
               "isHydration": true,
               "pipelineOptions": {
@@ -549,6 +549,70 @@ describe('worklet', () => {
           ],
         ]
       `);
+    vi.resetAllMocks();
+  });
+
+  it('multiple main-thread worklets should work together when background thread is enabled', () => {
+    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
+    expect(callLepusMethodCalls).toMatchInlineSnapshot(`[]`);
+
+    globalThis.firstCb = vi.fn();
+    globalThis.secondCb = vi.fn();
+
+    const Comp = () => {
+      return (
+        <view>
+          <view
+            main-thread:bindtap={(event) => {
+              'main thread';
+              globalThis.firstCb(event.key);
+            }}
+          >
+            <text>first</text>
+          </view>
+          <view
+            main-thread:bindtap={(event) => {
+              'main thread';
+              globalThis.secondCb(event.key);
+            }}
+          >
+            <text>second</text>
+          </view>
+        </view>
+      );
+    };
+
+    const { container, getByText } = render(<Comp />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+
+    expect(callLepusMethodCalls).toHaveLength(1);
+    expect(callLepusMethodCalls[0][0]).toBe('rLynxChange');
+
+    const patchData = JSON.parse(callLepusMethodCalls[0][1].data);
+    const workletIds = patchData.patchList
+      .flatMap(item => Array.isArray(item.snapshotPatch) ? item.snapshotPatch : [])
+      .filter(item => typeof item === 'object' && item !== null && '_wkltId' in item)
+      .map(item => item._wkltId);
+
+    expect(workletIds).toHaveLength(2);
+    expect(new Set(workletIds).size).toBe(2);
+
+    const firstView = getByText('first').parentNode;
+    const secondView = getByText('second').parentNode;
+    fireEvent.tap(firstView, {
+      key: 'first-key',
+    });
+    fireEvent.tap(secondView, {
+      key: 'second-key',
+    });
+
+    expect(globalThis.firstCb).toBeCalledTimes(1);
+    expect(globalThis.firstCb).toBeCalledWith('first-key');
+    expect(globalThis.secondCb).toBeCalledTimes(1);
+    expect(globalThis.secondCb).toBeCalledWith('second-key');
     vi.resetAllMocks();
   });
 });

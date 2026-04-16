@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react",
-  "version": "0.116.5",
+  "version": "0.118.0",
   "description": "ReactLynx is a framework for developing Lynx applications with familiar React.",
   "repository": {
     "type": "git",
@@ -55,6 +55,14 @@
       "types": "./runtime/jsx-runtime/index.d.ts",
       "default": "./runtime/lepus/jsx-runtime/index.js"
     },
+    "./hooks": {
+      "types": "./runtime/lib/hooks/react.d.ts",
+      "default": "./runtime/lib/hooks/react.js"
+    },
+    "./lepus/hooks": {
+      "types": "./runtime/lib/hooks/react.d.ts",
+      "default": "./runtime/lib/hooks/mainThread.js"
+    },
     "./lepus": {
       "types": "./runtime/lepus/index.d.ts",
       "lazy": "./runtime/lazy/react-lepus.js",
@@ -76,16 +84,16 @@
       }
     },
     "./worklet-runtime": {
-      "types": "./worklet-runtime/lib/index.d.ts",
-      "default": "./worklet-runtime/dist/main.js"
+      "types": "./runtime/lib/worklet-runtime/index.d.ts",
+      "default": "./runtime/worklet-runtime/main.js"
     },
     "./worklet-dev-runtime": {
-      "types": "./worklet-runtime/lib/index.d.ts",
-      "default": "./worklet-runtime/dist/dev.js"
+      "types": "./runtime/lib/worklet-runtime/index.d.ts",
+      "default": "./runtime/worklet-runtime/dev.js"
     },
     "./worklet-runtime/bindings": {
-      "types": "./worklet-runtime/lib/bindings/index.d.ts",
-      "default": "./worklet-runtime/lib/bindings/index.js"
+      "types": "./runtime/lib/worklet-runtime/bindings/index.d.ts",
+      "default": "./runtime/lib/worklet-runtime/bindings/index.js"
     },
     "./legacy-react-runtime": {
       "types": "./runtime/lib/legacy-react-runtime/index.d.ts",
@@ -101,8 +109,16 @@
       "default": "./testing-library/dist/pure.js"
     },
     "./testing-library/vitest-config": {
-      "types": "./testing-library/types/vitest-config.d.ts",
+      "types": "./testing-library/dist/vitest.config.d.ts",
       "default": "./testing-library/dist/vitest.config.js"
+    },
+    "./testing-library/plugins": {
+      "types": "./testing-library/dist/plugins/index.d.ts",
+      "default": "./testing-library/dist/plugins/index.js"
+    },
+    "./testing-library/rstest-config": {
+      "types": "./testing-library/dist/rstest-config.d.ts",
+      "default": "./testing-library/dist/rstest-config.js"
     },
     "./package.json": "./package.json"
   },
@@ -114,6 +130,12 @@
       ],
       "experimental/lazy/import": [
         "./runtime/lazy/import.d.ts"
+      ],
+      "hooks": [
+        "./runtime/lib/hooks/react.d.ts"
+      ],
+      "lepus/hooks": [
+        "./runtime/lib/hooks/react.d.ts"
       ],
       "internal": [
         "./runtime/lib/internal.d.ts"
@@ -143,13 +165,13 @@
         "./components/lib/index.d.ts"
       ],
       "worklet-runtime": [
-        "./worklet-runtime/lib/index.d.ts"
+        "./runtime/lib/worklet-runtime/index.d.ts"
       ],
       "worklet-dev-runtime": [
-        "./worklet-runtime/lib/index.d.ts"
+        "./runtime/lib/worklet-runtime/index.d.ts"
       ],
       "worklet-runtime/bindings": [
-        "./worklet-runtime/lib/bindings/index.d.ts"
+        "./runtime/lib/worklet-runtime/bindings/index.d.ts"
       ],
       "legacy-react-runtime": [
         "./runtime/lib/legacy-react-runtime/index.d.ts"
@@ -163,7 +185,6 @@
     "transform",
     "types",
     "docs",
-    "worklet-runtime",
     "testing-library",
     "CHANGELOG.md",
     "internal.js",
@@ -171,10 +192,11 @@
     "README.zh.md"
   ],
   "scripts": {
-    "api-extractor": "api-extractor run --verbose"
+    "api-extractor": "api-extractor run --verbose",
+    "build": "rslib build"
   },
   "dependencies": {
-    "preact": "https://pkg.pr.new/lynx-family/internal-preact/preact@b28bfc1"
+    "preact": "https://pkg.pr.new/lynx-family/internal-preact/preact@1fe7578"
   },
   "devDependencies": {
     "@lynx-js/types": "3.7.0",

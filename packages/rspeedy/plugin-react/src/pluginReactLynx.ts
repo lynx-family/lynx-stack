@@ -28,8 +28,9 @@ import { applyCSS } from './css.js'
 import { applyEntry } from './entry.js'
 import { applyGenerator } from './generator.js'
 import { applyLazy } from './lazy.js'
-import { applyLoaders } from './loaders.js'
+import { applyLoaders, applyTestingLoaders } from './loaders.js'
 import { applyNodeEnv } from './nodeEnv.js'
+import { applyOptimizeBundleSize } from './optimizeBundleSize.js'
 import { applyRefresh } from './refresh.js'
 import { applySplitChunksRule } from './splitChunks.js'
 import { applySWC } from './swc.js'
@@ -43,11 +44,20 @@ import { validateConfig } from './validate.js'
  */
 export interface PluginReactLynxOptions {
   /**
+   * Enable UI source map generation and debug-metadata asset emission.
+   *
+   * @defaultValue `false`
+   */
+  enableUiSourceMap?: boolean
+
+  /**
    * The `compat` option controls compatibilities with ReactLynx2.0.
    *
    * @remarks
    *
    * These options should only be used for migrating from ReactLynx2.0.
+   *
+   * @defaultValue `undefined`
    */
   compat?:
     | Partial<CompatVisitorConfig> & {
@@ -89,6 +99,8 @@ export interface PluginReactLynxOptions {
    *  ],
    * }
    * ```
+   *
+   * @defaultValue `undefined`
    */
   customCSSInheritanceList?: string[] | undefined
 
@@ -98,6 +110,8 @@ export interface PluginReactLynxOptions {
    * @remarks
    * This is recommended to be set to true to reduce template size.
    *
+   * @defaultValue `true`
+   *
    * @public
    */
   debugInfoOutside?: boolean
@@ -105,14 +119,16 @@ export interface PluginReactLynxOptions {
   /**
    * defaultDisplayLinear controls whether the default value of `display` in CSS is `linear`.
    *
-   * @remarks
-   *
    * If `defaultDisplayLinear === false`, the default `display` would be `flex` instead of `linear`.
+   *
+   * @defaultValue `true`
    */
   defaultDisplayLinear?: boolean
 
   /**
    * enableAccessibilityElement set the default value of `accessibility-element` for all `<view />` elements.
+   *
+   * @defaultValue `false`
    */
   enableAccessibilityElement?: boolean
 
@@ -148,6 +164,8 @@ export interface PluginReactLynxOptions {
    * - `text-shadow`
    *
    * It is recommended to use with {@link PluginReactLynxOptions.customCSSInheritanceList} to avoid performance issues.
+   *
+   * @defaultValue `false`
    */
   enableCSSInheritance?: boolean
 
@@ -164,11 +182,15 @@ export interface PluginReactLynxOptions {
    *
    * We find that collecting invalidation nodes and updating them is a relatively time-consuming process.
    * If there is no such usage and better style matching performance is needed, this feature can be selectively disabled.
+   *
+   * @defaultValue `true`
    */
   enableCSSInvalidation?: boolean
 
   /**
    * enableCSSSelector controls whether enabling the new CSS implementation.
+   *
+   * @defaultValue `true`
    *
    * @public
    */
@@ -223,21 +245,29 @@ export interface PluginReactLynxOptions {
 
   /**
    * removeDescendantSelectorScope is used to remove the scope of descendant selectors.
+   *
+   * @defaultValue `true`
    */
   removeDescendantSelectorScope?: boolean
 
   /**
    * How main-thread code will be shaken.
+   *
+   * @defaultValue `undefined`
    */
   shake?: Partial<ShakeVisitorConfig> | undefined
 
   /**
    * Like `define` in various bundlers, but this one happens at transform time, and a DCE pass will be performed.
+   *
+   * @defaultValue `undefined`
    */
   defineDCE?: Partial<DefineDceVisitorConfig> | undefined
 
   /**
    * `engineVersion` specifies the minimum Lynx Engine version required for an App bundle to function properly.
+   *
+   * @defaultValue `'3.2'`
    *
    * @public
    */
@@ -246,10 +276,26 @@ export interface PluginReactLynxOptions {
   /**
    * targetSdkVersion is used to specify the minimal Lynx Engine version that a App bundle can run on.
    *
+   * @defaultValue `'3.2'`
+   *
    * @public
    * @deprecated `targetSdkVersion` is now an alias of {@link PluginReactLynxOptions.engineVersion}. Use {@link PluginReactLynxOptions.engineVersion} instead.
    */
   targetSdkVersion?: string
+
+  /**
+   * Configure the update mode of `lynx.__globalProps`.
+   *
+   * This flag has two options:
+   *
+   * `'reactive'`: `UpdateGlobalProps` will trigger update automatically.
+   *
+   * `'event'`: `UpdateGlobalProps` will trigger global event and users need to trigger update in the event handler.
+   *
+   * @defaultValue `'reactive'`
+   * @public
+   */
+  globalPropsMode?: 'reactive' | 'event'
 
   /**
    * Merge same string literals in JS and Lepus to reduce output bundle size.
@@ -262,9 +308,27 @@ export interface PluginReactLynxOptions {
   /**
    * Generate standalone lazy bundle.
    *
+   * @defaultValue `false`
+   *
    * @alpha
    */
   experimental_isLazyBundle?: boolean
+
+  /**
+   * Optimize bundle size by removing unused code by Minify.mainThreadOptions and Minify.backgroundOptions.
+   *
+   * When optimizeBundleSize or optimizeBundleSize.mainThread is true, main-thread code will be optimized.
+   * When optimizeBundleSize or optimizeBundleSize.background is true, background code will be optimized.
+   *
+   * @defaultValue `false`
+   * @public
+   */
+  optimizeBundleSize?:
+    | boolean
+    | {
+      mainThread?: boolean
+      background?: boolean
+    }
 }
 
 /**
@@ -311,7 +375,11 @@ export function pluginReactLynx(
     engineVersion: '',
     extractStr: false,
 
+    globalPropsMode: 'reactive',
+
     experimental_isLazyBundle: false,
+    optimizeBundleSize: false,
+    enableUiSourceMap: false,
   }
   const resolvedOptions = Object.assign(defaultOptions, userOptions, {
     // Use `engineVersion` to override the default values
@@ -329,6 +397,7 @@ export function pluginReactLynx(
       pre: ['lynx:rsbuild:plugin-api', 'lynx:config'],
       setup(api) {
         const isRslib = api.context.callerName === 'rslib'
+        const isRstest = api.context.callerName === 'rstest'
 
         const exposedConfig = api.useExposed<{ config: Config }>(
           Symbol.for('lynx.config'),
@@ -343,11 +412,17 @@ export function pluginReactLynx(
           })
         }
 
-        applyCSS(api, resolvedOptions)
+        if (!isRstest) {
+          applyCSS(api, resolvedOptions)
+        }
         applyEntry(api, resolvedOptions)
         applyBackgroundOnly(api)
         applyGenerator(api, resolvedOptions)
-        applyLoaders(api, resolvedOptions)
+        if (isRstest) {
+          applyTestingLoaders(api, resolvedOptions)
+        } else {
+          applyLoaders(api, resolvedOptions)
+        }
         applyRefresh(api)
         applySplitChunksRule(api)
         applySWC(api)
@@ -383,6 +458,10 @@ export function pluginReactLynx(
 
           return config
         })
+
+        if (resolvedOptions.optimizeBundleSize) {
+          applyOptimizeBundleSize(api, resolvedOptions)
+        }
 
         if (resolvedOptions.experimental_isLazyBundle) {
           applyLazy(api)

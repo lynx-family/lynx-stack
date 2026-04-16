@@ -43,20 +43,7 @@ export interface BuildCache {
    * An array of files containing build dependencies.
    * Rspack will use the hash of each of these files to invalidate the persistent cache.
    *
-   * @remarks
-   *
-   * Rspeedy will use the following configuration files as the default build dependencies:
-   *
-   * - `package.json`
-   *
-   * - `tsconfig.json` (or `source.tsconfigPath`)
-   *
-   * - `.env`, `.env.*`
-   *
-   * - `tailwindcss.config.*`
-   *
-   * When using Rspeedy CLI, it will also automatically add
-   * `lynx.config.js` to the build dependencies.
+   * @defaultValue `['package.json', 'tsconfig.json' (or source.tsconfigPath), '.env', '.env.*', 'tailwindcss.config.*']`; when using the Rspeedy CLI with `performance.buildCache` enabled, the loaded `lynx.config.*` file is also added.
    *
    * @example
    *

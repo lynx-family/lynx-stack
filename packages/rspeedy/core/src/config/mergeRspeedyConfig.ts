@@ -36,7 +36,7 @@ import type { Config } from './index.js'
  *
  * @remarks
  *
- * This is actually an alias of {@link https://rsbuild.dev/api/javascript-api/core#mergersbuildconfig | mergeRsbuildConfig}.
+ * This is actually an alias of {@link https://rsbuild.rs/api/javascript-api/core#mergersbuildconfig | mergeRsbuildConfig}.
  *
  * @public
  */

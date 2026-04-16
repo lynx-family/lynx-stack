@@ -10,7 +10,8 @@
 
 // @ts-nocheck
 
-import { Fragment, h, options } from 'preact';
+import { Fragment, h, options, isValidElement } from 'preact';
+import { SnapshotInstance } from '../snapshot/snapshot.js';
 
 import {
   CHILDREN,
@@ -25,6 +26,8 @@ import {
   RENDER,
   SKIP_EFFECTS,
   VNODE,
+  HOOK,
+  CHILD_DID_SUSPEND,
 } from './constants.js';
 
 /** @typedef {import('preact').VNode} VNode */
@@ -41,7 +44,7 @@ let beforeDiff, beforeDiff2, afterDiff, renderHook, ummountHook;
  * @param {VNode} vnode	JSX Element / VNode to render
  * @param {object} [context] Initial root context object
  */
-export function renderToString(vnode: any, context: any): any[] {
+export function renderToString(vnode: any, context: any, into: SnapshotInstance): any[] {
   // Performance optimization: `renderToString` is synchronous and we
   // therefore don't execute any effects. To do that we pass an empty
   // array to `options._commit` (`__c`). But we can go one step further
@@ -71,6 +74,7 @@ export function renderToString(vnode: any, context: any): any[] {
       parent,
       opcodes,
       0,
+      into,
     );
   } finally {
     // options._commit, we don't schedule any effects in this library right now,
@@ -85,7 +89,7 @@ export function renderToString(vnode: any, context: any): any[] {
 
 // Installed as setState/forceUpdate for function components
 function markAsDirty() {
-  this.__d = true;
+  this[DIRTY] = true;
 }
 
 const EMPTY_OBJ = {};
@@ -144,7 +148,9 @@ function renderClassComponent(vnode, context) {
  * @param {number | true} slotIndex
  * @param {any} selectValue
  * @param {VNode} parent
- * @param opcodes
+ * @param {any[]} opcodes
+ * @param {number} opcodesLength
+ * @param {SnapshotInstance} into
  */
 function _renderToString(
   vnode,
@@ -154,17 +160,18 @@ function _renderToString(
   parent,
   opcodes,
   opcodesLength,
+  into,
 ) {
   // Ignore non-rendered VNodes/values
   if (vnode == null || vnode === true || vnode === false || vnode === '') {
     return;
   }
 
+  let vnodeType = typeof vnode;
   // Text VNodes: escape as HTML
-  if (typeof vnode !== 'object') {
-    if (typeof vnode === 'function') return;
-
-    opcodes.push(__OpText, vnode, slotIndex);
+  if (vnodeType !== 'object') {
+    if (vnodeType === 'function') return;
+    renderToTextNode(into, vnode, opcodes, slotIndex);
     return;
   }
 
@@ -175,7 +182,18 @@ function _renderToString(
       const child = vnode[i];
       if (child == null || typeof child === 'boolean') continue;
 
-      _renderToString(child, context, slotIndex === true ? i : slotIndex, selectValue, parent, opcodes, opcodes.length);
+      _renderToString(
+        child,
+        context,
+        slotIndex === true ? i : slotIndex,
+        selectValue,
+        parent,
+        opcodes,
+        /* v8 ignore start */
+        __ENABLE_SSR__ ? opcodes.length : 0,
+        /* v8 ignore end */
+        into,
+      );
     }
     return;
   }
@@ -210,15 +228,15 @@ function _renderToString(
         component = vnode[COMPONENT];
       } else {
         component = {
-          __v: vnode,
+          [VNODE]: vnode,
           props,
           context: cctx,
           // silently drop state updates
           setState: markAsDirty,
           forceUpdate: markAsDirty,
-          __d: true,
+          [DIRTY]: true,
           // hooks
-          __h: [],
+          [HOOK]: [],
         };
         vnode[COMPONENT] = component;
         component.constructor = type;
@@ -251,19 +269,51 @@ function _renderToString(
       && rendered.key == null;
     rendered = isTopLevelFragment ? rendered.props.children : rendered;
 
+    let lastChild = into.__lastChild;
     // Recurse into children before invoking the after-diff hook
     try {
-      _renderToString(rendered, context, slotIndex, selectValue, vnode, opcodes, opcodes.length);
+      _renderToString(
+        rendered,
+        context,
+        slotIndex,
+        selectValue,
+        vnode,
+        opcodes,
+        /* v8 ignore start */
+        __ENABLE_SSR__ ? opcodes.length : 0,
+        /* v8 ignore end */
+        into,
+      );
     } catch (e) {
-      if (e && typeof e === 'object' && e.then && component && /* _childDidSuspend */ component.__c) {
-        component.setState({ /* _suspended */ __a: true });
-
+      // clear existing children
+      into.removeChildren(
+        lastChild
+          ? lastChild.__nextSibling
+          : into.__firstChild,
+      );
+      if (e && typeof e === 'object' && e.then && component && /* _childDidSuspend */ component[CHILD_DID_SUSPEND]) {
+        component[NEXT_STATE] = assign({}, component[NEXT_STATE], {
+          /* _suspended */ __a: true,
+        });
         if (component[DIRTY]) {
           rendered = renderClassComponent(vnode, context);
           component = vnode[COMPONENT];
 
-          opcodes.length = opcodesLength;
-          _renderToString(rendered, context, slotIndex, selectValue, vnode, opcodes, opcodes.length);
+          if (__ENABLE_SSR__) {
+            opcodes.length = opcodesLength;
+          }
+          _renderToString(
+            rendered,
+            context,
+            slotIndex,
+            selectValue,
+            vnode,
+            opcodes,
+            /* v8 ignore start */
+            __ENABLE_SSR__ ? opcodes.length : 0,
+            /* v8 ignore end */
+            into,
+          );
         }
       } else {
         throw e;
@@ -281,7 +331,19 @@ function _renderToString(
   let children;
   let hasNamedChildren = false;
 
-  opcodes.push(__OpBegin, vnode, slotIndex);
+  // hack for runtime test
+  if (process.env['NODE_ENV'] === 'test' && isValidElement(vnode) && typeof vnode.type === 'string') {
+    vnode = Object.assign(new SnapshotInstance(type), vnode, { $$typeof: undefined });
+  }
+  // already inserted
+  if (vnode.__parent) {
+    vnode = new SnapshotInstance(type);
+  }
+  if (__ENABLE_SSR__) {
+    opcodes.push(__OpBegin, vnode, slotIndex);
+  }
+  vnode.__slotIndex = slotIndex;
+  into.insertBefore(vnode);
 
   for (const name in props) {
     const v = props[name];
@@ -311,13 +373,17 @@ function _renderToString(
 
     // write this attribute to the buffer
     if (v != null && v !== false && typeof v !== 'function') {
-      opcodes.push(__OpAttr, name, v);
+      if (__ENABLE_SSR__) {
+        opcodes.push(__OpAttr, name, v);
+      }
+      vnode.setAttribute(name, v);
     }
   }
 
-  if (typeof children === 'string' || typeof children === 'number') {
+  let childrenType = typeof children;
+  if (childrenType === 'string' || childrenType === 'number') {
     // single text child
-    opcodes.push(__OpText, children, 0);
+    renderToTextNode(vnode, children, opcodes, slotIndex);
   } else if (children != null && children !== false && children !== true) {
     // recurse into this element VNode's children
     _renderToString(
@@ -327,7 +393,10 @@ function _renderToString(
       selectValue,
       vnode,
       opcodes,
-      opcodes.length,
+      /* v8 ignore start */
+      __ENABLE_SSR__ ? opcodes.length : 0,
+      /* v8 ignore end */
+      vnode,
     );
   }
 
@@ -335,7 +404,10 @@ function _renderToString(
   vnode[PARENT] = undefined;
   if (ummountHook) ummountHook(vnode);
 
-  opcodes.push(__OpEnd);
+  if (__ENABLE_SSR__) {
+    opcodes.push(__OpEnd);
+  }
+  vnode[CHILDREN] = undefined;
 
   return;
 }
@@ -343,6 +415,18 @@ function _renderToString(
 /** The `.render()` method for a PFC backing instance. */
 function doRender(props, state, context) {
   return this.constructor(props, context);
+}
+
+function renderToTextNode(into: SnapshotInstance, text: string | number, opcodes: Opcode[], slotIndex: number) {
+  const textNode = new SnapshotInstance(null);
+  textNode.__slotIndex = slotIndex;
+  textNode.setAttribute(0, text);
+  into.insertBefore(textNode);
+  if (__ENABLE_SSR__) {
+    // We need store the just created SnapshotInstance, or it will be lost when we leave the function
+    text = [textNode, text];
+    opcodes.push(__OpText, text, slotIndex);
+  }
 }
 
 export default renderToString;

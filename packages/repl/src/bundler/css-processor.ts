@@ -4,8 +4,6 @@
 
 import * as csstree from 'css-tree';
 
-import type { CSSRule, OneInfo, StyleInfo } from '@lynx-js/web-constants';
-
 // --- Simplified parse (adapted from css-serializer/parse.ts) ---
 
 interface Declaration {
@@ -260,7 +258,7 @@ function parseCSS(content: string): LynxStyleNode[] {
 
 function genStyleInfo(
   cssMap: Record<string, LynxStyleNode[]>,
-): StyleInfo {
+): unknown {
   return Object.fromEntries(
     Object.entries(cssMap).map(([cssId, nodes]) => {
       const contentsAtom: string[] = [];
@@ -297,7 +295,7 @@ function genStyleInfo(
           const selectors = ((ast.children.first as csstree.Rule)
             .prelude as csstree.SelectorList).children
             .toArray() as csstree.Selector[];
-          const groupedSelectors: CSSRule['sel'] = [];
+          const groupedSelectors: unknown[] = [];
           for (const selectorList of selectors) {
             let plainSelectors: string[] = [];
             let pseudoClassSelectors: string[] = [];
@@ -356,7 +354,7 @@ function genStyleInfo(
           });
         }
       }
-      const info: OneInfo = {
+      const info: unknown = {
         content: [contentsAtom.join('\n')],
         rules,
       };

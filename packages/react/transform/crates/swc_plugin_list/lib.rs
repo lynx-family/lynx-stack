@@ -233,6 +233,7 @@ mod tests {
           },
           None,
           TransformMode::Test,
+          None,
         )),
       )
     },
@@ -264,6 +265,7 @@ mod tests {
           },
           None,
           TransformMode::Test,
+          None,
         )),
       )
     },
@@ -298,6 +300,7 @@ mod tests {
           },
           None,
           TransformMode::Test,
+          None,
         )),
       )
     },
@@ -346,6 +349,7 @@ mod tests {
           },
           None,
           TransformMode::Development,
+          None,
         )),
       )
     },
@@ -377,6 +381,7 @@ mod tests {
           },
           None,
           TransformMode::Development,
+          None,
         )),
       )
     },
@@ -437,6 +442,7 @@ mod tests {
           },
           None,
           TransformMode::Development,
+          None,
         )),
       )
     },
@@ -598,6 +604,7 @@ mod tests {
           },
           None,
           TransformMode::Development,
+          None,
         )),
       )
     },

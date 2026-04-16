@@ -122,7 +122,7 @@ function useStateWithProfile<S>(
   return [state, tracedSetState];
 }
 
-const useState: typeof usePreactState = isProfiling
+const useState: typeof usePreactState = (__BACKGROUND__ && isProfiling)
   ? useStateWithProfile as typeof usePreactState
   : usePreactState;
 
@@ -135,7 +135,7 @@ const useState: typeof usePreactState = isProfiling
  *
  * @public
  */
-const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = isProfiling
+const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = (__BACKGROUND__ && isProfiling)
   ? useEffectProfiled
   : usePreactEffect;
 
@@ -151,7 +151,7 @@ const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = isPro
  *
  * @deprecated `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React.
  */
-const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) => void = isProfiling
+const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) => void = (__BACKGROUND__ && isProfiling)
   ? useLayoutEffectProfiled
   : usePreactEffect;
 

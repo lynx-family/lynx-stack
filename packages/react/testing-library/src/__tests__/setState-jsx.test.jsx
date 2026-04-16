@@ -81,7 +81,7 @@ test('setState changes jsx', async () => {
         {
           "id": 2,
           "op": "CreateElement",
-          "type": "__Card__:__snapshot_cd8d7_test_4",
+          "type": "__snapshot_c1928_test_4",
         },
         {
           "id": 2,
@@ -93,7 +93,7 @@ test('setState changes jsx', async () => {
         {
           "id": 3,
           "op": "CreateElement",
-          "type": "__Card__:__snapshot_cd8d7_test_1",
+          "type": "__snapshot_c1928_test_1",
         },
         {
           "beforeId": null,
@@ -105,7 +105,7 @@ test('setState changes jsx', async () => {
         {
           "id": 4,
           "op": "CreateElement",
-          "type": "__Card__:__snapshot_cd8d7_test_2",
+          "type": "__snapshot_c1928_test_2",
         },
         {
           "beforeId": null,
@@ -117,7 +117,7 @@ test('setState changes jsx', async () => {
         {
           "id": 5,
           "op": "CreateElement",
-          "type": "__Card__:__snapshot_cd8d7_test_2",
+          "type": "__snapshot_c1928_test_2",
         },
         {
           "beforeId": null,
@@ -129,7 +129,7 @@ test('setState changes jsx', async () => {
         {
           "id": 6,
           "op": "CreateElement",
-          "type": "__Card__:__snapshot_cd8d7_test_2",
+          "type": "__snapshot_c1928_test_2",
         },
         {
           "beforeId": null,
@@ -141,7 +141,7 @@ test('setState changes jsx', async () => {
         {
           "id": 7,
           "op": "CreateElement",
-          "type": "__Card__:__snapshot_cd8d7_test_3",
+          "type": "__snapshot_c1928_test_3",
         },
         {
           "beforeId": null,
@@ -174,7 +174,7 @@ test('setState changes jsx', async () => {
         {
           "id": 8,
           "op": "CreateElement",
-          "type": "__Card__:__snapshot_cd8d7_test_2",
+          "type": "__snapshot_c1928_test_2",
         },
         {
           "beforeId": null,
@@ -201,7 +201,7 @@ test('setState changes jsx', async () => {
         {
           "id": 9,
           "op": "CreateElement",
-          "type": "__Card__:__snapshot_cd8d7_test_1",
+          "type": "__snapshot_c1928_test_1",
         },
         {
           "beforeId": null,
@@ -213,7 +213,7 @@ test('setState changes jsx', async () => {
         {
           "id": 10,
           "op": "CreateElement",
-          "type": "__Card__:__snapshot_cd8d7_test_1",
+          "type": "__snapshot_c1928_test_1",
         },
         {
           "beforeId": null,
@@ -225,7 +225,7 @@ test('setState changes jsx', async () => {
         {
           "id": 11,
           "op": "CreateElement",
-          "type": "__Card__:__snapshot_cd8d7_test_1",
+          "type": "__snapshot_c1928_test_1",
         },
         {
           "beforeId": null,
@@ -233,13 +233,6 @@ test('setState changes jsx', async () => {
           "op": "InsertBefore",
           "parentId": 2,
           "slotIndex": 1,
-        },
-        {
-          "beforeId": null,
-          "childId": 7,
-          "op": "InsertBefore",
-          "parentId": 2,
-          "slotIndex": 2,
         },
       ]
     `);

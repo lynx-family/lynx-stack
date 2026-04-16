@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react-umd",
-  "version": "0.116.5",
+  "version": "0.118.0",
   "description": "UMD build for ReactLynx",
   "keywords": [
     "ReactLynx",
@@ -21,10 +21,12 @@
   },
   "type": "module",
   "exports": {
+    "./entry": "./src/index.js",
     "./dev": "./dist/react-dev.lynx.bundle",
     "./prod": "./dist/react-prod.lynx.bundle"
   },
   "files": [
+    "src",
     "dist",
     "CHANGELOG.md",
     "README.md"

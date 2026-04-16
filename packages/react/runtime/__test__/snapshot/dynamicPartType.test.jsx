@@ -3,14 +3,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as ReactLynx from '../../src/internal';
 import { setupPage, SnapshotInstance, backgroundSnapshotInstanceManager } from '../../src/snapshot';
-import { hydrate } from '../../src/hydrate';
-import { BackgroundSnapshotInstance, hydrate as backgroundHydrate } from '../../src/backgroundSnapshot';
-import { __pendingListUpdates } from '../../src/pendingListUpdates';
+import { hydrate } from '../../src/renderToOpcodes/hydrate';
+import { BackgroundSnapshotInstance, hydrate as backgroundHydrate } from '../../src/snapshot/backgroundSnapshot';
+import { __pendingListUpdates } from '../../src/list/pendingListUpdates';
 import { elementTree } from '../utils/nativeMethod';
 import { prettyFormatSnapshotPatch } from '../../src/debug/formatPatch';
-import { renderOpcodesInto } from '../../src/opcodes';
 import renderToString from '../../src/renderToOpcodes';
-import { clearListGlobal, gRecycleMap, gSignMap } from '../../src/list';
+import { clearListGlobal, gRecycleMap, gSignMap } from '../../src/list/list';
 import { jsx } from '../../lepus/jsx-runtime';
 import { globalEnvManager } from '../utils/envManager';
 
@@ -357,14 +356,27 @@ describe('legacy DynamicPartType should work', () => {
         jsx(s0, {
           children: 'hello',
         }),
+        null,
+        scratch,
       );
 
       expect(opcodes).toMatchInlineSnapshot(`
         [
           0,
           {
-            "__slotIndex": undefined,
-            "children": undefined,
+            "__slotIndex": 0,
+            "children": [
+              {
+                "__slotIndex": 0,
+                "children": undefined,
+                "extraProps": undefined,
+                "id": -27,
+                "type": null,
+                "values": [
+                  "hello",
+                ],
+              },
+            ],
             "extraProps": undefined,
             "id": -26,
             "type": "__Card__:s0",
@@ -372,13 +384,24 @@ describe('legacy DynamicPartType should work', () => {
           },
           0,
           3,
-          "hello",
+          [
+            {
+              "__slotIndex": 0,
+              "children": undefined,
+              "extraProps": undefined,
+              "id": -27,
+              "type": null,
+              "values": [
+                "hello",
+              ],
+            },
+            "hello",
+          ],
           0,
           1,
         ]
       `);
 
-      renderOpcodesInto(opcodes, scratch);
       expect(scratch.__element_root).toMatchInlineSnapshot(`
         <page
           cssId="default-entry-from-native:0"
@@ -407,14 +430,25 @@ describe('legacy DynamicPartType should work', () => {
         jsx(s0, {
           children: <text>children</text>,
         }),
+        null,
+        scratch,
       );
 
       expect(opcodes).toMatchInlineSnapshot(`
         [
           0,
           {
-            "__slotIndex": undefined,
-            "children": undefined,
+            "__slotIndex": 0,
+            "children": [
+              {
+                "__slotIndex": 0,
+                "children": undefined,
+                "extraProps": undefined,
+                "id": -29,
+                "type": "__snapshot_a94a8_test_7",
+                "values": undefined,
+              },
+            ],
             "extraProps": undefined,
             "id": -30,
             "type": "__Card__:s0",
@@ -423,7 +457,7 @@ describe('legacy DynamicPartType should work', () => {
           0,
           0,
           {
-            "__slotIndex": undefined,
+            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -29,
@@ -436,7 +470,6 @@ describe('legacy DynamicPartType should work', () => {
         ]
       `);
 
-      renderOpcodesInto(opcodes, scratch);
       expect(scratch.__element_root).toMatchInlineSnapshot(`
         <page
           cssId="default-entry-from-native:0"
@@ -513,10 +546,15 @@ describe('DynamicPartType v2 should work', () => {
   );
 
   it('renderToString should treat named children props as slot children', () => {
+    const scratch = document.createElement('root');
+    scratch.ensureElements();
+
     const opcodes = renderToString(
       jsx(slotV2Host, {
         $0: <text>named child</text>,
       }),
+      null,
+      scratch,
     );
 
     expect(opcodes).toEqual([

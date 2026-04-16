@@ -1,11 +1,13 @@
-import { defineConfig, mergeConfig } from 'vitest/config';
-import { createVitestConfig } from '@lynx-js/react/testing-library/vitest-config';
+import { defineConfig } from 'vitest/config';
+import { vitestTestingLibraryPlugin } from '@lynx-js/react/testing-library/plugins';
 
-const defaultConfig = await createVitestConfig({
-  runtimePkgName: '@lynx-js/react',
-  experimental_enableReactCompiler: false,
-});
-const config = defineConfig({
+export default defineConfig({
+  plugins: [
+    vitestTestingLibraryPlugin({
+      runtimePkgName: '@lynx-js/react',
+      experimental_enableReactCompiler: false,
+    }),
+  ],
   define: {
     __FORGET__: 'false',
   },
@@ -13,4 +15,3 @@ const config = defineConfig({
     name: 'testing-library/examples/react-compiler-disabled',
   },
 });
-export default mergeConfig(defaultConfig, config);

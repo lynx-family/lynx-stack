@@ -63,7 +63,7 @@ describe('lynx global API', () => {
         {
           "id": 2,
           "op": "CreateElement",
-          "type": "__snapshot_d4b6f_test_1",
+          "type": "__snapshot_034cb_test_1",
         },
         {
           "beforeId": null,

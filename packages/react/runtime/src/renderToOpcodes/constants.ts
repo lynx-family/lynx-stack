@@ -18,6 +18,8 @@ export const PARENT = '__';
 export const MASK = '__m';
 export const DOM = '__e';
 export const ORIGINAL = '__v';
+export const INDEX = '__i';
+export const FLAGS = '__u';
 
 // Component properties
 export const VNODE = '__v';
@@ -33,3 +35,4 @@ export const HOOKS = '__H';
 export const LIST = '__';
 export const VALUE = '__';
 export const NEXT_VALUE = '__N';
+export const PENDING_EFFECTS = '__h';

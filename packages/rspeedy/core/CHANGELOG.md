@@ -1,5 +1,35 @@
 # @lynx-js/rspeedy
 
+## 0.14.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.20.1
+
+## 0.14.0
+
+### Minor Changes
+
+- feat: add `Minify.mainThreadOptions` and `Minify.backgroundOptions` for thread-specific minifier. ([#2336](https://github.com/lynx-family/lynx-stack/pull/2336))
+
+### Patch Changes
+
+- Bump Rsbuild v1.7.4 with Rspack v1.7.10. ([#2384](https://github.com/lynx-family/lynx-stack/pull/2384))
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.20.0
+
+## 0.13.6
+
+### Patch Changes
+
+- Rename Web Preview label to fix URL alignment ([#2355](https://github.com/lynx-family/lynx-stack/pull/2355))
+
+- Updated dependencies [[`799fda8`](https://github.com/lynx-family/lynx-stack/commit/799fda8bc1cc14af2fd340eb806f5cfbac3c3fe3)]:
+  - @lynx-js/cache-events-webpack-plugin@0.0.3
+  - @lynx-js/web-rsbuild-server-middleware@0.19.9
+
 ## 0.13.5
 
 ### Patch Changes
@@ -491,7 +521,7 @@
 
 - Add `callerName` option to `createRspeedy`. ([#757](https://github.com/lynx-family/lynx-stack/pull/757))
 
-  It can be accessed by Rsbuild plugins through [`api.context.callerName`](https://rsbuild.dev/api/javascript-api/instance#contextcallername), and execute different logic based on this identifier.
+  It can be accessed by Rsbuild plugins through [`api.context.callerName`](https://rsbuild.rs/api/javascript-api/instance#contextcallername), and execute different logic based on this identifier.
 
   ```js
   export const myPlugin = {
@@ -622,7 +652,7 @@
 
 - Support `output.distPath.*`. ([#366](https://github.com/lynx-family/lynx-stack/pull/366))
 
-  See [Rsbuild - distPath](https://rsbuild.dev/config/output/dist-path) for all available options.
+  See [Rsbuild - distPath](https://rsbuild.rs/config/output/dist-path) for all available options.
 
 - Support `performance.printFileSize` ([#336](https://github.com/lynx-family/lynx-stack/pull/336))
 

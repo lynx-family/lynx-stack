@@ -14,7 +14,6 @@ if (typeof Codspeed !== 'undefined') {
       !name
       || name === 'ReactLynx::commit'
       || name === 'ReactLynx::commitChanges'
-      || name === 'ReactLynx::transferRoot'
       || name === 'ReactLynx::BSI::setAttribute'
       || name.startsWith('OnLifecycleEvent::')
       || name.startsWith('ReactLynx::diff::')

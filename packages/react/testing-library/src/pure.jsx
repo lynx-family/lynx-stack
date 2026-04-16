@@ -9,7 +9,7 @@ import { act } from 'preact/test-utils';
 import { __root } from '@lynx-js/react/internal';
 
 import { flushDelayedLifecycleEvents } from '../../runtime/lib/lynx/tt.js';
-import { clearPage } from '../../runtime/lib/snapshot.js';
+import { clearPage } from '../../runtime/lib/snapshot/index.js';
 
 export function waitSchedule() {
   return new Promise(resolve => {
@@ -91,7 +91,7 @@ export function render(
       });
     },
     asFragment: () => {
-      const { document } = lynxTestingEnv.jsdom.window;
+      const { document } = lynxTestingEnv.env.window;
       const container = lynxTestingEnv.mainThread.elementTree.root;
       if (typeof document.createRange === 'function') {
         return document
@@ -118,7 +118,7 @@ export function cleanup() {
 
   lynxTestingEnv.mainThread.elementTree.root = undefined;
   clearPage();
-  lynxTestingEnv.jsdom.window.document.body.innerHTML = '';
+  lynxTestingEnv.env.window.document.body.innerHTML = '';
 
   if (isMainThread) {
     globalThis.lynxTestingEnv.switchToMainThread();

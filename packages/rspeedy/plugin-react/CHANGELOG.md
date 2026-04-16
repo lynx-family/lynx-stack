@@ -1,5 +1,71 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.15.0
+
+### Minor Changes
+
+- Add `removeCall` for shake function calls. Its initial default value matches the hooks that were previously in `removeCallParams`, and `removeCallParams` now defaults to empty. ([#2423](https://github.com/lynx-family/lynx-stack/pull/2423))
+
+  `removeCall` removes matched runtime hook calls entirely, replacing them with `undefined` in expression positions and dropping them in statement positions. `removeCallParams` keeps the existing behavior of preserving the call while stripping its arguments.
+
+### Patch Changes
+
+- Support `@lynx-js/react` 0.118.0. ([#2432](https://github.com/lynx-family/lynx-stack/pull/2432))
+
+- Updated dependencies [[`1f4f117`](https://github.com/lynx-family/lynx-stack/commit/1f4f1171a35a00d2c9f2ae9ecff50be2626ca5bb)]:
+  - @lynx-js/react-webpack-plugin@0.9.0
+  - @lynx-js/react-alias-rsbuild-plugin@0.15.0
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.5
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+  - @lynx-js/template-webpack-plugin@0.10.8
+
+## 0.14.0
+
+### Minor Changes
+
+- feat: support `optimizeBundleSize` option to remove unused code for main-thread and background. ([#2336](https://github.com/lynx-family/lynx-stack/pull/2336))
+
+  - If `optimizeBundleSize` is `true` or `optimizeBundleSize.background` is `true`, `lynx.registerDataProcessors` calls will be marked as pure for the background thread output.
+  - If `optimizeBundleSize` is `true` or `optimizeBundleSize.mainThread` is `true`, `NativeModules.call` and `lynx.getJSModule` calls will be marked as pure for the main-thread output.
+
+### Patch Changes
+
+- refactor: remove `modifyWebpackChain` since Rsbuild 2.0 dropped webpack support ([#2397](https://github.com/lynx-family/lynx-stack/pull/2397))
+
+- Updated dependencies [[`9193711`](https://github.com/lynx-family/lynx-stack/commit/919371167f4136f2ee975075d8e73d2986b20a8f)]:
+  - @lynx-js/template-webpack-plugin@0.10.7
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+  - @lynx-js/react-webpack-plugin@0.8.0
+  - @lynx-js/react-alias-rsbuild-plugin@0.14.0
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.5
+
+## 0.13.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: ([#2319](https://github.com/lynx-family/lynx-stack/pull/2319))
+
+  Change preact package from `@hongzhiyuan/preact` to `@lynx-js/internal-preact`.
+
+  Upgrade preact from [f7693b72](https://github.com/preactjs/preact/commit/f7693b72ecb4a40c66e6e47f54e2d4edc374c9f0) to [55254ef7](https://github.com/preactjs/preact/commit/55254ef7021e563cc1a86fb816058964a1b6a29a), see diffs at [f7693b72...55254ef7](https://github.com/preactjs/preact/compare/f7693b72ecb4a40c66e6e47f54e2d4edc374c9f0...preactjs:preact:55254ef7021e563cc1a86fb816058964a1b6a29a?expand=1).
+
+- feat: add `globalPropsMode` option to `PluginReactLynxOptions` ([#2346](https://github.com/lynx-family/lynx-stack/pull/2346))
+
+  - When configured to `"event"`, `updateGlobalProps` will only trigger a global event and skip the `runWithForce` flow.
+  - Defaults to `"reactive"`, which means `updateGlobalProps` will trigger re-render automatically.
+
+### Patch Changes
+
+- Updated dependencies [[`f1129ea`](https://github.com/lynx-family/lynx-stack/commit/f1129ea0a84096354a86bc3436c7b0efc109d768), [`27f1cff`](https://github.com/lynx-family/lynx-stack/commit/27f1cffbea99585b547aff669b8e230533987036), [`ed566f0`](https://github.com/lynx-family/lynx-stack/commit/ed566f0fe6a14ffae59d21bd2c5e5dd2755f28a4), [`402ec2b`](https://github.com/lynx-family/lynx-stack/commit/402ec2b34bce286181493e171f95e6a4257a1907)]:
+  - @lynx-js/react-webpack-plugin@0.8.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.5
+  - @lynx-js/react-alias-rsbuild-plugin@0.13.0
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/template-webpack-plugin@0.10.6
+  - @lynx-js/css-extract-webpack-plugin@0.7.0
+
 ## 0.12.10
 
 ### Patch Changes

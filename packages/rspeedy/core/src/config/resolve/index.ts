@@ -13,6 +13,8 @@ export interface Resolve {
   /**
    * Create aliases to `import` or `require` certain modules more easily.
    *
+   * @defaultValue undefined
+   *
    * @example
    *
    * A trailing `$` can also be added to the given object's keys to signify an exact match:
@@ -94,6 +96,9 @@ export interface Resolve {
   /**
    * Set the strategy for path alias resolution, to control the priority relationship
    * between the `paths` option in `tsconfig.json` and the `resolve.alias` option of Rsbuild.
+   *
+   * @defaultValue `'prefer-tsconfig'`
+   *
    * - `prefer-tsconfig` (default): The `paths` option in `tsconfig.json` will take precedence over the
    * `resolve.alias` option of Rsbuild.
    * - `prefer-alias`: The `resolve.alias` option of Rsbuild will take precedence over the
@@ -118,6 +123,8 @@ export interface Resolve {
 
   /**
    * Force to resolve the specified packages from project root, which is useful for deduplicating packages and reducing the bundle size.
+   *
+   * @defaultValue undefined
    *
    * @remarks
    *
@@ -144,7 +151,7 @@ export interface Resolve {
   /**
    * Automatically resolve file extensions when importing modules. This means you can import files without explicitly writing their extensions.
    *
-   * Default: `['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json', '.cjs']`
+   * @defaultValue `['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json', '.cjs']`
    *
    * For example, if importing './index', Rsbuild will try to resolve using the following order:
    *

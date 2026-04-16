@@ -1,8 +1,8 @@
 import '@testing-library/jest-dom';
 import { Component } from 'preact';
-import { expect } from 'vitest';
+import { expect, vi } from 'vitest';
 import { render, screen, waitForElementToBeRemoved } from '..';
-import { snapshotInstanceManager } from '../../../runtime/lib/snapshot.js';
+import { snapshotInstanceManager } from '../../../runtime/lib/snapshot/index.js';
 
 const fetchAMessage = () =>
   new Promise((resolve) => {
@@ -42,6 +42,7 @@ test('state change will cause re-render', async () => {
   expect(snapshotInstanceManager.values).toMatchInlineSnapshot(`
     Map {
       -1 => {
+        "__slotIndex": undefined,
         "children": undefined,
         "extraProps": undefined,
         "id": -1,
@@ -62,8 +63,10 @@ test('state change will cause re-render', async () => {
   expect(snapshotInstanceManager.values).toMatchInlineSnapshot(`
     Map {
       -1 => {
+        "__slotIndex": undefined,
         "children": [
           {
+            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": 2,
@@ -77,6 +80,7 @@ test('state change will cause re-render', async () => {
         "values": undefined,
       },
       2 => {
+        "__slotIndex": 0,
         "children": undefined,
         "extraProps": undefined,
         "id": 2,
@@ -100,7 +104,7 @@ test('state change will cause re-render', async () => {
       [
         "rLynxChange",
         {
-          "data": "{"patchList":[{"snapshotPatch":[0,"__snapshot_f46c5_test_1",2,1,-1,2,null],"id":2}]}",
+          "data": "{"patchList":[{"snapshotPatch":[0,"__snapshot_f46c5_test_1",2,1,-1,2,null,0],"id":2}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
@@ -118,7 +122,7 @@ test('state change will cause re-render', async () => {
       [
         "rLynxChange",
         {
-          "data": "{"patchList":[{"id":3,"snapshotPatch":[2,-1,2,0,"__snapshot_f46c5_test_2",3,0,null,4,3,4,0,"Hello World",1,3,4,null,1,-1,3,null]}]}",
+          "data": "{"patchList":[{"id":3,"snapshotPatch":[2,-1,2,0,"__snapshot_f46c5_test_2",3,0,null,4,3,4,0,"Hello World",1,3,4,null,0,1,-1,3,null,0]}]}",
           "patchOptions": {
             "pipelineOptions": {
               "dsl": "reactLynx",
@@ -159,6 +163,7 @@ test('it waits for the data to be loaded', async () => {
   expect(snapshotInstanceManager.values).toMatchInlineSnapshot(`
     Map {
       -1 => {
+        "__slotIndex": undefined,
         "children": undefined,
         "extraProps": undefined,
         "id": -1,

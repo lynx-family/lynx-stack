@@ -1,5 +1,63 @@
 # @lynx-js/react
 
+## 0.118.0
+
+### Minor Changes
+
+- refactor: create SnapshotInstance in renderToString directly ([#2393](https://github.com/lynx-family/lynx-stack/pull/2393))
+
+- Add `removeCall` for shake function calls. Its initial default value matches the hooks that were previously in `removeCallParams`, and `removeCallParams` now defaults to empty. ([#2423](https://github.com/lynx-family/lynx-stack/pull/2423))
+
+  `removeCall` removes matched runtime hook calls entirely, replacing them with `undefined` in expression positions and dropping them in statement positions. `removeCallParams` keeps the existing behavior of preserving the call while stripping its arguments.
+
+### Patch Changes
+
+- Improve `shake.removeCall` and `shake.removeCallParams` in the React transform so they also match aliased runtime imports such as `import { useEffect as myUseEffect } ...` and member calls such as `ReactLynxRuntime.useEffect(...)` from default or namespace runtime imports. ([#2437](https://github.com/lynx-family/lynx-stack/pull/2437))
+
+- Create element without ref for suspense in main thread. ([#2426](https://github.com/lynx-family/lynx-stack/pull/2426))
+
+- refactor: make `useEffect`, `useLayoutEffect` and `useImperativeHandle` no-op on the main thread ([#2424](https://github.com/lynx-family/lynx-stack/pull/2424))
+
+## 0.117.1
+
+### Patch Changes
+
+- Update preact version to simplify `setProperty` implementation ([#2367](https://github.com/lynx-family/lynx-stack/pull/2367))
+
+## 0.117.0
+
+### Minor Changes
+
+- feat: export `GlobalPropsProvider`, `GlobalPropsConsumer`, `useGlobalProps` and `useGlobalPropsChanged` for `__globalProps` ([#2346](https://github.com/lynx-family/lynx-stack/pull/2346))
+
+  - `GlobalPropsProvider`: A Provider component that accepts `children`. It is used to provide the `lynx.__globalProps` context.
+  - `GlobalPropsConsumer`: A Consumer component that accepts a function as a child. It is used to consume the `lynx.__globalProps` context.
+  - `useGlobalProps`: A hook that returns the `lynx.__globalProps` object. It triggers a re-render when `lynx.__globalProps` changes.
+  - `useGlobalPropsChanged`: A hook that accepts a callback function. The callback is invoked when `lynx.__globalProps` changes.
+
+  Note: When `globalPropsMode` is not set to `'event'` (default is `'reactive'`), these APIs will be ineffective (pass-through) and will log a warning in development mode, as updates are triggered automatically by full re-render.
+
+- **BREAKING CHANGE**: ([#2319](https://github.com/lynx-family/lynx-stack/pull/2319))
+
+  Change preact package from `@hongzhiyuan/preact` to `@lynx-js/internal-preact`.
+
+  Upgrade preact from [f7693b72](https://github.com/preactjs/preact/commit/f7693b72ecb4a40c66e6e47f54e2d4edc374c9f0) to [55254ef7](https://github.com/preactjs/preact/commit/55254ef7021e563cc1a86fb816058964a1b6a29a), see diffs at [f7693b72...55254ef7](https://github.com/preactjs/preact/compare/f7693b72ecb4a40c66e6e47f54e2d4edc374c9f0...preactjs:preact:55254ef7021e563cc1a86fb816058964a1b6a29a?expand=1).
+
+- feat: add `globalPropsMode` option to `PluginReactLynxOptions` ([#2346](https://github.com/lynx-family/lynx-stack/pull/2346))
+
+  - When configured to `"event"`, `updateGlobalProps` will only trigger a global event and skip the `runWithForce` flow.
+  - Defaults to `"reactive"`, which means `updateGlobalProps` will trigger re-render automatically.
+
+### Patch Changes
+
+- Add `__BACKGROUND__` guard on `onBackgroundSnapshotInstanceUpdateId` event to prevent bundling to main-thread on dev environment. ([#2332](https://github.com/lynx-family/lynx-stack/pull/2332))
+
+- refactor: extract static string in template literal ([#2334](https://github.com/lynx-family/lynx-stack/pull/2334))
+
+- fix: avoid crash when spread undefined ref ([#2333](https://github.com/lynx-family/lynx-stack/pull/2333))
+
+- Avoid registering lifecycle refs for main-thread functions (MTF) that have not received an `execId` during `renderPage()` first-screen binding. ([#2320](https://github.com/lynx-family/lynx-stack/pull/2320))
+
 ## 0.116.5
 
 ### Patch Changes

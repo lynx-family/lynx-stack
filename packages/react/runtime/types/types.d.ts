@@ -4,7 +4,7 @@
 
 import { EventEmitter } from '@lynx-js/types';
 
-import { LifecycleConstant } from '../src/lifecycleConstant.js';
+import { LifecycleConstant } from '../src/lifecycle/constant.js';
 import { Lynx as LynxApi } from '../src/lynx-api.js';
 import type { InitData, InitDataRaw } from '../src/lynx-api.js';
 
@@ -22,6 +22,7 @@ declare global {
   declare const __ALOG__: boolean | undefined;
   declare const __ALOG_ELEMENT_API__: boolean | undefined;
   declare const __ENABLE_SSR__: boolean;
+  declare const __GLOBAL_PROPS_MODE__: 'reactive' | 'event' | undefined;
 
   declare function __CreatePage(componentId: string, cssId: number): FiberElement;
   declare function __CreateElement(
@@ -116,6 +117,7 @@ declare global {
     config: any,
     relationMap: Record<string, number[]>,
   ): void;
+  declare function __RemoveGestureDetector(node: FiberElement, id: number): void;
 
   declare interface FiberElement {}
 

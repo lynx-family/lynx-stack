@@ -116,23 +116,133 @@ describe('insertBefore', () => {
           />
         </text>
         <text>
-          <view>
-            <text>
-              <raw-text
-                text="Hello World"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
           <raw-text
             text="!!!"
           />
-          <view>
-            <text>
-              <raw-text
-                text="Hello World"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
+        </text>
+      </view>
+    `);
+  });
+
+  it('keeps __current_slot_index stable when removing content inside slot wrappers', async function() {
+    const snapshot1 = __SNAPSHOT__(
+      <view>
+        <text>
+          {HOLE}!!!{HOLE}
+        </text>
+      </view>,
+    );
+
+    const snapshot2 = __SNAPSHOT__(
+      <view>
+        <text>Hello World</text>
+      </view>,
+    );
+
+    const a = new SnapshotInstance(snapshot1);
+    a.ensureElements();
+
+    // Insert two wrappers for stable slot index
+    const b = new SnapshotInstance('wrapper');
+    const c = new SnapshotInstance('wrapper');
+    expect(a.__current_slot_index).toBe(0);
+    a.insertBefore(b);
+    expect(a.__current_slot_index).toBe(0);
+    a.insertBefore(c);
+    expect(a.__current_slot_index).toBe(0);
+    expect(a.__element_root).toMatchInlineSnapshot(`
+      <view>
+        <text>
+          <wrapper>
+            <wrapper />
+            <wrapper />
+          </wrapper>
+          <raw-text
+            text="!!!"
+          />
+          <wrapper />
+        </text>
+      </view>
+    `);
+
+    const d = new SnapshotInstance(snapshot2);
+    const e = new SnapshotInstance(snapshot2);
+
+    b.insertBefore(d);
+    c.insertBefore(e);
+
+    expect(a.__current_slot_index).toBe(0);
+    expect(a.__element_root).toMatchInlineSnapshot(`
+      <view>
+        <text>
+          <wrapper>
+            <wrapper>
+              <view>
+                <text>
+                  <raw-text
+                    text="Hello World"
+                  />
+                </text>
+              </view>
+            </wrapper>
+            <wrapper>
+              <view>
+                <text>
+                  <raw-text
+                    text="Hello World"
+                  />
+                </text>
+              </view>
+            </wrapper>
+          </wrapper>
+          <raw-text
+            text="!!!"
+          />
+          <wrapper />
+        </text>
+      </view>
+    `);
+
+    b.removeChild(d);
+
+    expect(a.__current_slot_index).toBe(0);
+    expect(a.__element_root).toMatchInlineSnapshot(`
+      <view>
+        <text>
+          <wrapper>
+            <wrapper />
+            <wrapper>
+              <view>
+                <text>
+                  <raw-text
+                    text="Hello World"
+                  />
+                </text>
+              </view>
+            </wrapper>
+          </wrapper>
+          <raw-text
+            text="!!!"
+          />
+          <wrapper />
         </text>
       </view>
     `);
@@ -173,23 +283,27 @@ describe('insertBefore', () => {
           />
         </text>
         <text>
-          <view>
-            <text>
-              <raw-text
-                text="Hello World"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
           <raw-text
             text="!!!"
           />
-          <view>
-            <text>
-              <raw-text
-                text="Hello World"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
         </text>
       </view>
     `);
@@ -393,11 +507,7 @@ describe('dynamic key in snapshot', () => {
 
     expect(a.__element_root).toMatchInlineSnapshot(`
       <view>
-        <view
-          class="foo"
-        >
-          <wrapper />
-        </view>
+        <wrapper />
       </view>
     `);
   });
@@ -423,7 +533,10 @@ describe('dynamic key in snapshot', () => {
       <view
         class="foo"
       >
-        <wrapper />
+        <view>
+          <view />
+          <view />
+        </view>
       </view>
     `);
   });
@@ -454,11 +567,7 @@ describe('dynamic key in snapshot', () => {
           />
           <wrapper />
         </text>
-        <view
-          class="foo"
-        >
-          <wrapper />
-        </view>
+        <wrapper />
       </view>
     `);
   });

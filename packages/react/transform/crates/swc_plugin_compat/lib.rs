@@ -411,6 +411,37 @@ impl<C> CompatVisitor<C>
 where
   C: Comments + Clone,
 {
+  fn wrap_with_view(
+    &self,
+    component_jsx: &JSXElement,
+    attrs: Vec<JSXAttrOrSpread>,
+    children: Vec<JSXElementChild>,
+  ) -> JSXElement {
+    let opening_span = component_jsx.opening.span;
+    let closing_span = component_jsx
+      .closing
+      .as_ref()
+      .map(|closing| closing.span)
+      .unwrap_or(opening_span);
+    let element_span = component_jsx.span;
+
+    JSXElement {
+      span: element_span,
+      opening: JSXOpeningElement {
+        span: opening_span,
+        name: JSXElementName::Ident(IdentName::new("view".into(), opening_span).into()),
+        self_closing: false,
+        attrs,
+        type_args: None,
+      },
+      children,
+      closing: Some(JSXClosingElement {
+        span: closing_span,
+        name: JSXElementName::Ident(IdentName::new("view".into(), closing_span).into()),
+      }),
+    }
+  }
+
   fn emit_deprecation_warning(&self, span: Span, message: &str) {
     if !self.opts.disable_deprecated_warning {
       HANDLER.with(|handler| handler.struct_span_warn(span, message).emit());
@@ -443,25 +474,14 @@ where
     }
 
     let children_ident = Ident::from("__c");
-    let jsx_name = JSXElementName::Ident(Ident::from("view"));
-    let mut snapshot_jsx = JSXElement {
-      span: DUMMY_SP,
-      opening: JSXOpeningElement {
-        span: DUMMY_SP,
-        name: jsx_name.clone(),
-        attrs: primitive_attrs,
-        self_closing: false,
-        type_args: None,
-      },
-      children: vec![JSXElementChild::JSXExprContainer(JSXExprContainer {
-        span: DUMMY_SP,
+    let mut snapshot_jsx = self.wrap_with_view(
+      &component_jsx,
+      primitive_attrs,
+      vec![JSXElementChild::JSXExprContainer(JSXExprContainer {
+        span: component_jsx.span,
         expr: JSXExpr::Expr(Box::new(Expr::Ident(children_ident.clone()))),
       })],
-      closing: Some(JSXClosingElement {
-        span: DUMMY_SP,
-        name: jsx_name,
-      }),
-    };
+    );
 
     snapshot_jsx.visit_mut_with(self);
 
@@ -648,6 +668,8 @@ where
               ..
             }) => false,
             JSXAttrOrSpread::SpreadElement(_) => false,
+            #[cfg(swc_ast_unknown)]
+            _ => panic!("unknown node"),
           })
         } else {
           false
@@ -673,6 +695,8 @@ where
         JSXElementName::JSXNamespacedName(_) => {
           unreachable!("Unexpected JSXNamespacedName in component is polyfill - expected Ident")
         }
+        #[cfg(swc_ast_unknown)]
+        _ => panic!("unknown node"),
       }
       self.emit_deprecation_warning(
         n.span,
@@ -742,6 +766,8 @@ where
             (JSXAttrName::Ident(_), _) => false,
             (JSXAttrName::JSXNamespacedName(_), None) => false,
             (JSXAttrName::JSXNamespacedName(_), Some(_)) => false,
+            #[cfg(swc_ast_unknown)]
+            _ => false,
           },
           JSXAttrOrSpread::SpreadElement(spread) => {
             if matches!(
@@ -763,6 +789,8 @@ where
             }
             true
           }
+          #[cfg(swc_ast_unknown)]
+          _ => panic!("unknown node"),
         });
 
         if matches!(self.opts.add_component_element, Either::A(true)) && has_spread {
@@ -877,8 +905,12 @@ where
               }
               true
             }
+            #[cfg(swc_ast_unknown)]
+            _ => panic!("unknown node"),
           },
           JSXAttrOrSpread::SpreadElement(_) => true,
+          #[cfg(swc_ast_unknown)]
+          _ => panic!("unknown node"),
         });
       }
 
@@ -894,21 +926,13 @@ where
             compiler_only: true
           })
         ) {
-          *n = JSXElement {
-            span: Default::default(),
-            opening: JSXOpeningElement {
-              span: Default::default(),
-              name: JSXElementName::Ident(IdentName::new("view".into(), Default::default()).into()),
-              self_closing: false,
-              attrs: primitive_attrs,
-              type_args: None,
-            },
-            children: vec![JSXElementChild::JSXElement(Box::new(n.clone()))],
-            closing: Some(JSXClosingElement {
-              span: Default::default(),
-              name: JSXElementName::Ident(IdentName::new("view".into(), Default::default()).into()),
-            }),
-          };
+          let component_jsx = n.clone();
+          let wrapped_child = component_jsx.clone();
+          *n = self.wrap_with_view(
+            &component_jsx,
+            primitive_attrs,
+            vec![JSXElementChild::JSXElement(Box::new(wrapped_child))],
+          );
 
           n.opening.visit_mut_children_with(self);
           n.closing.visit_mut_children_with(self);
@@ -981,6 +1005,8 @@ where
             });
           }
         }
+        #[cfg(swc_ast_unknown)]
+        _ => panic!("unknown node"),
       }
     }
 
@@ -993,6 +1019,8 @@ where
         }
       }
       JSXAttrName::JSXNamespacedName(_) => {}
+      #[cfg(swc_ast_unknown)]
+      _ => panic!("unknown node"),
     }
 
     n.visit_mut_children_with(self);
@@ -1023,6 +1051,8 @@ where
       }
       JSXElementName::JSXMemberExpr(_) => {}
       JSXElementName::JSXNamespacedName(_) => {}
+      #[cfg(swc_ast_unknown)]
+      _ => panic!("unknown node"),
     }
   }
 

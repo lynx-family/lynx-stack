@@ -1,0 +1,105 @@
+:root {
+  --bg: #0a1022;
+  --card: #141e3d;
+  --card-border: #2a3765;
+  --text: #eaf0ff;
+  --text-dim: #9fb0de;
+  --button: #22315f;
+  --button-active: #3c5df6;
+  --box-a: #ff8b3d;
+  --box-b: #28c6a5;
+  --box-off: #6f7b9f;
+}
+
+page {
+  background-color: var(--bg);
+}
+
+.Root {
+  min-height: 100vh;
+  padding: 36rpx 24rpx;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+}
+
+.Card {
+  width: 100%;
+  max-width: 680rpx;
+  padding: 28rpx;
+  border-radius: 24rpx;
+  background: var(--card);
+  border: 2rpx solid var(--card-border);
+  gap: 20rpx;
+}
+
+.Title {
+  color: var(--text);
+  font-size: 44rpx;
+  font-weight: 700;
+}
+
+.Description {
+  color: var(--text-dim);
+  font-size: 28rpx;
+  line-height: 38rpx;
+}
+
+.Controls {
+  flex-direction: column;
+  gap: 14rpx;
+}
+
+.Button {
+  border-radius: 16rpx;
+  background: var(--button);
+  padding: 16rpx 20rpx;
+}
+
+.Button--active {
+  background: var(--button-active);
+}
+
+.ButtonText {
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.ModeText {
+  color: var(--text);
+  font-size: 27rpx;
+}
+
+.Stage {
+  margin-top: 8rpx;
+  height: 560rpx;
+  border-radius: 18rpx;
+  border: 2rpx dashed #4e5e97;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.DragBox {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 24rpx;
+  background: var(--box-a);
+  align-items: center;
+  justify-content: center;
+}
+
+.DragBox--diff {
+  background: var(--box-b);
+}
+
+.DragBox--removed {
+  background: var(--box-off);
+}
+
+.DragBoxText {
+  color: #111827;
+  font-size: 34rpx;
+  font-weight: 800;
+}

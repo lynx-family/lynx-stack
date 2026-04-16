@@ -14,7 +14,7 @@ describe('Plugins - Resolve', () => {
     expect(config.resolve).toMatchInlineSnapshot(`
       {
         "alias": {
-          "@swc/helpers": "<WORKSPACE>/node_modules/<PNPM_INNER>/@swc/helpers",
+          "@swc/helpers": "<ROOT>/node_modules/<PNPM_INNER>/@swc/helpers",
         },
         "aliasFields": [
           "browser",
@@ -55,7 +55,7 @@ describe('Plugins - Resolve', () => {
           "index",
         ],
         "tsConfig": {
-          "configFile": "<WORKSPACE>/tsconfig.json",
+          "configFile": "<ROOT>/tsconfig.json",
           "references": "auto",
         },
       }
@@ -77,7 +77,7 @@ describe('Plugins - Resolve', () => {
     const config = await rsbuild.unwrapConfig()
     expect(config.resolve?.alias).toMatchInlineSnapshot(`
       {
-        "@swc/helpers": "<WORKSPACE>/node_modules/<PNPM_INNER>/@swc/helpers",
+        "@swc/helpers": "<ROOT>/node_modules/<PNPM_INNER>/@swc/helpers",
         "bar$": "bar.jsx",
         "foo": "path/to/foo",
         "ignored": false,

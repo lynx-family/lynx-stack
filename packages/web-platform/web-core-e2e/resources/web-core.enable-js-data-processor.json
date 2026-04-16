@@ -1,0 +1,32 @@
+{
+  "styleInfo": {},
+  "lepusCode": {
+    "root": "const self = globalThis.parent??globalThis;self.runtime = globalThis;self.__lynx_worker_type = 'main'; self.processData = (d) => ({...d, processed: true}); self.registerDataProcessor='pass'; self.registerDataProcessor = registerDataProcessor; self.updatePage = (d) => { self.__lastData = d; };",
+    "manifest-chunk.js": "module.exports = 'hello';",
+    "manifest-chunk2.js": "module.exports = 'world';"
+  },
+  "manifest": {
+    "/app-service.js": "globalThis.runtime = lynxCoreInject.tt; globalThis.runtime.updateData = (d) => { globalThis.__lastData = d; }; globalThis.__lynx_worker_type = 'background'",
+    "/manifest-chunk.js": "module.exports = 'hello';",
+    "/manifest-chunk2.js": "module.exports = 'world';",
+    "/json": "{}"
+  },
+  "customSections": {},
+  "cardType": "react",
+  "appType": "card",
+  "pageConfig": {
+    "enableFiberArch": true,
+    "useLepusNG": true,
+    "enableReuseContext": true,
+    "bundleModuleMode": "ReturnByFunction",
+    "templateDebugUrl": "",
+    "debugInfoOutside": true,
+    "defaultDisplayLinear": true,
+    "enableCSSInvalidation": true,
+    "enableCSSSelector": true,
+    "enableLepusDebug": false,
+    "enableRemoveCSSScope": true,
+    "targetSdkVersion": "2.10",
+    "enableJSDataProcessor": true
+  }
+}

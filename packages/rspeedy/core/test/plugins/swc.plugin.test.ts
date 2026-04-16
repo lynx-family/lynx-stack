@@ -25,7 +25,7 @@ describe('Plugins - SWC', () => {
           "isModule": "unknown",
           "jsc": {
             "experimental": {
-              "cacheRoot": "<WORKSPACE>/node_modules/.cache/.swc",
+              "cacheRoot": "<ROOT>/node_modules/.cache/.swc",
               "keepImportAttributes": true,
             },
             "externalHelpers": true,
@@ -64,7 +64,7 @@ describe('Plugins - SWC', () => {
           "isModule": "unknown",
           "jsc": {
             "experimental": {
-              "cacheRoot": "<WORKSPACE>/node_modules/.cache/.swc",
+              "cacheRoot": "<ROOT>/node_modules/.cache/.swc",
               "keepImportAttributes": true,
             },
             "externalHelpers": true,
@@ -119,7 +119,7 @@ describe('Plugins - SWC', () => {
           "isModule": "unknown",
           "jsc": {
             "experimental": {
-              "cacheRoot": "<WORKSPACE>/node_modules/.cache/.swc",
+              "cacheRoot": "<ROOT>/node_modules/.cache/.swc",
               "keepImportAttributes": true,
             },
             "externalHelpers": true,

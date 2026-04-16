@@ -9,7 +9,7 @@ import type { Consumer, FC, ReactNode } from 'react';
 import { factory, withInitDataInState } from './compat/initData.js';
 import { profileEnd, profileStart } from './debug/profile.js';
 import { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';
-import { LifecycleConstant } from './lifecycleConstant.js';
+import { LifecycleConstant } from './lifecycle/constant.js';
 import { flushDelayedLifecycleEvents } from './lynx/tt.js';
 import { __root } from './root.js';
 
@@ -189,24 +189,138 @@ export const useInitData: () => InitData = /* @__PURE__ */ _InitData.use();
  */
 export const useInitDataChanged: (callback: (data: InitData) => void) => void = /* @__PURE__ */ _InitData.useChanged();
 
-// const {
-//   Provider: GlobalPropsProvider,
-//   Consumer: GlobalPropsConsumer,
-//   // InitDataContext,
-//   use: useGlobalProps,
-//   useChanged: useGlobalPropsChanged,
-// } = /* @__PURE__ */ factory(
-//   {
-//     createContext,
-//     useState,
-//     useEffect,
-//     createElement,
-//   } as any,
-//   "__globalProps",
-//   "onGlobalPropsChanged"
-// );
+/**
+ * The interface you can extends so that the `useGlobalProps` returning value can be customized
+ *
+ * @public
+ */
+export interface GlobalProps {}
 
-// export { GlobalPropsProvider, GlobalPropsConsumer, useGlobalProps, useGlobalPropsChanged };
+const _GlobalProps = typeof __GLOBAL_PROPS_MODE__ !== 'undefined' && __GLOBAL_PROPS_MODE__ === 'event'
+  ? /* @__PURE__ */ factory<GlobalProps>(
+    {
+      createContext,
+      useState,
+      createElement,
+      useLynxGlobalEventListener,
+    },
+    '__globalProps',
+    'onGlobalPropsChanged',
+  )
+  : /* @__PURE__ */ createFallbackGlobalProps();
+
+function warnGlobalPropsMode() {
+  if (typeof __LEPUS__ !== 'undefined' && !__LEPUS__ && typeof __DEV__ !== 'undefined' && __DEV__) {
+    console.warn(
+      `No need to use this API when 'globalPropsMode' is not 'event', `
+        + `updates will be triggered automatically by full re-render. `
+        + `Please set 'globalPropsMode' to 'event' to enable optimized updates.`,
+    );
+  }
+}
+
+function createFallbackGlobalProps() {
+  return {
+    Provider: () => {
+      return ({ children }: { children?: ReactNode | undefined }) => {
+        warnGlobalPropsMode();
+        return children;
+      };
+    },
+    Consumer: () => {
+      return ({ children }: { children: (data: GlobalProps) => ReactNode }) => {
+        warnGlobalPropsMode();
+        return children(lynx.__globalProps);
+      };
+    },
+    use: () => {
+      return (): GlobalProps => {
+        warnGlobalPropsMode();
+        return lynx.__globalProps;
+      };
+    },
+    useChanged: () => {
+      return (callback: (data: GlobalProps) => void): void => {
+        if (!__LEPUS__) {
+          useLynxGlobalEventListener('onGlobalPropsChanged', callback);
+        }
+      };
+    },
+  };
+}
+
+/**
+ * The {@link https://react.dev/reference/react/createContext#provider | Provider} Component that provide `lynx.__globalProps`,
+ * you must wrap your JSX inside it
+ * @group Components
+ *
+ * @example
+ *
+ * ```ts
+ * import { root } from "@lynx-js/react"
+ *
+ * function App() {
+ *   return (
+ *     <GlobalPropsConsumer children={(globalProps) => <view>...</view>}/>
+ *   )
+ * }
+ *
+ * root.render(
+ *   <GlobalPropsProvider>
+ *      <App/>
+ *   </GlobalPropsProvider>
+ * );
+ *
+ * ```
+ *
+ * @public
+ */
+// @ts-expect-error make preact and react types work
+export const GlobalPropsProvider: FC<{ children?: ReactNode | undefined }> = /* @__PURE__ */ _GlobalProps.Provider();
+
+/**
+ * The {@link https://react.dev/reference/react/createContext#consumer | Consumer} Component that provide `lynx.__globalProps`.
+ * This should be used with {@link GlobalPropsProvider}
+ * @group Components
+ * @public
+ */
+// @ts-expect-error make preact and react types work
+export const GlobalPropsConsumer: Consumer<GlobalProps> = /* @__PURE__ */ _GlobalProps.Consumer();
+
+/**
+ * A React Hooks for you to get `lynx.__globalProps`.
+ * If `lynx.__globalProps` is changed, a re-render will be triggered automatically.
+ *
+ * @example
+ *
+ * ```ts
+ * function App() {
+ *   const globalProps = useGlobalProps();
+ *
+ *   globalProps.someProperty // use it
+ * }
+ * ```
+ *
+ * @public
+ */
+export const useGlobalProps: () => GlobalProps = /* @__PURE__ */ _GlobalProps.use();
+
+/**
+ * A React Hooks for you to get notified when `__globalProps` changed.
+ *
+ * @example
+ * ```ts
+ * function App() {
+ *   useGlobalPropsChanged((data) => {
+ *     lynx.__globalProps.someProperty // can use lynx.__globalProps
+ *     data.someProperty // can use data
+ *   })
+ * }
+ * ```
+ * @public
+ */
+export const useGlobalPropsChanged: (callback: (data: GlobalProps) => void) => void = /* @__PURE__ */ _GlobalProps
+  .useChanged();
 
 /**
  * The interface you can extends so that the `defaultDataProcessor` parameter can be customized

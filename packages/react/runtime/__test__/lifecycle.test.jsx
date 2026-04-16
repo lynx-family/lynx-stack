@@ -6,10 +6,10 @@ import { globalEnvManager } from './utils/envManager';
 import { waitSchedule } from './utils/nativeMethod';
 import { globalCommitTaskMap, replaceCommitHook } from '../src/lifecycle/patch/commit';
 import { deinitGlobalSnapshotPatch, initGlobalSnapshotPatch } from '../src/lifecycle/patch/snapshotPatch';
-import { LifecycleConstant } from '../src/lifecycleConstant';
+import { LifecycleConstant } from '../src/lifecycle/constant';
 import { CATCH_ERROR } from '../src/renderToOpcodes/constants';
 import { __root } from '../src/root';
-import { backgroundSnapshotInstanceManager, setupPage } from '../src/snapshot';
+import { setupPage, backgroundSnapshotInstanceManager } from '../src/snapshot';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));
@@ -352,11 +352,7 @@ describe('componentWillUnmount', () => {
       }
 
       render() {
-        return (
-          <view>
-            {showB && <B></B>}
-          </view>
-        );
+        return <view>{showB && <B></B>}</view>;
       }
     }
 
@@ -397,11 +393,7 @@ describe('BackgroundSnapshotInstance remove', () => {
     function Comp() {
       const [show, setShow] = useState(1);
       setShow_ = setShow;
-      return (
-        <view>
-          {show && <text>1</text>}
-        </view>
-      );
+      return <view>{show && <text>1</text>}</view>;
     }
 
     initGlobalSnapshotPatch();
@@ -409,8 +401,7 @@ describe('BackgroundSnapshotInstance remove', () => {
     render(<Comp />, __root);
     await Promise.resolve().then(() => {});
     vi.runAllTimers();
-    expect([...backgroundSnapshotInstanceManager.values.keys()])
-      .toMatchInlineSnapshot(`
+    expect([...backgroundSnapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
         [
           1,
           2,
@@ -424,8 +415,7 @@ describe('BackgroundSnapshotInstance remove', () => {
     vi.runAllTimers();
 
     mtCallbacks[0][2]();
-    expect([...backgroundSnapshotInstanceManager.values.keys()])
-      .toMatchInlineSnapshot(`
+    expect([...backgroundSnapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
         [
           1,
           2,
@@ -434,8 +424,7 @@ describe('BackgroundSnapshotInstance remove', () => {
       `);
     await Promise.resolve().then(() => {});
     vi.runAllTimers();
-    expect([...backgroundSnapshotInstanceManager.values.keys()])
-      .toMatchInlineSnapshot(`
+    expect([...backgroundSnapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
         [
           1,
           2,
@@ -516,11 +505,13 @@ describe('useState', () => {
 
       setShow_ = setShow;
 
-      return show && (
-        <view>
-          <text attr={boolValue}></text>
-          <text attr={objValue}></text>
-        </view>
+      return (
+        show && (
+          <view>
+            <text attr={boolValue}></text>
+            <text attr={objValue}></text>
+          </view>
+        )
       );
     }
 

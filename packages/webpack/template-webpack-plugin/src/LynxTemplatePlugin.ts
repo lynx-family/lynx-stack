@@ -24,6 +24,7 @@ import { cssChunksToMap } from '@lynx-js/css-serializer';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { createLynxAsyncChunksRuntimeModule } from './LynxAsyncChunksRuntimeModule.js';
+import { LynxDebugMetadataPlugin } from './LynxDebugMetadataPlugin.js';
 
 export type OriginManifest = Record<string, {
   content: string;
@@ -97,6 +98,8 @@ export interface TemplateHooks {
     encodeData: EncodeRawData;
     filenameTemplate: string;
     entryNames: string[];
+    intermediate: string;
+    intermediateAssets: string[];
   }>;
 
   /**
@@ -441,6 +444,9 @@ export class LynxTemplatePlugin {
       compiler,
       Object.assign({}, LynxTemplatePlugin.defaultOptions, this.options),
     );
+    new LynxDebugMetadataPlugin({
+      LynxTemplatePlugin,
+    }).apply(compiler);
   }
 }
 
@@ -759,8 +765,9 @@ class LynxTemplatePluginImpl {
     );
 
     let templateDebugUrl = '';
+    const intermediatePosix = intermediate.replace(/\\/g, '/');
     const debugInfoPath = path.posix.format({
-      dir: intermediate,
+      dir: intermediatePosix,
       base: 'debug-info.json',
     });
     // TODO: Support publicPath function
@@ -839,6 +846,8 @@ class LynxTemplatePluginImpl {
       encodeData: encodeRawData,
       filenameTemplate,
       entryNames,
+      intermediate,
+      intermediateAssets: [],
     });
 
     const { lepusCode, css } = encodeData;
@@ -866,8 +875,8 @@ class LynxTemplatePluginImpl {
 
     if (isDebug() || isDev) {
       compilation.emitAsset(
-        path.format({
-          dir: intermediate,
+        path.posix.format({
+          dir: intermediatePosix,
           base: 'tasm.json',
         }),
         new RawSource(
@@ -877,8 +886,8 @@ class LynxTemplatePluginImpl {
       Object.entries(resolvedEncodeOptions.lepusCode.lepusChunk).forEach(
         ([name, content]) => {
           compilation.emitAsset(
-            path.format({
-              dir: intermediate,
+            path.posix.format({
+              dir: intermediatePosix,
               name,
               ext: '.js',
             }),

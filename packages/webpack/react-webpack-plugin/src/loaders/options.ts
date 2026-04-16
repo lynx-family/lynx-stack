@@ -14,12 +14,12 @@ import type {
 } from '@lynx-js/react/transform';
 
 const PLUGIN_NAME = 'react:webpack';
-const JSX_IMPORT_SOURCE = {
+export const JSX_IMPORT_SOURCE = {
   MAIN_THREAD: '@lynx-js/react/lepus',
   BACKGROUND: '@lynx-js/react',
 };
 const PUBLIC_RUNTIME_PKG = '@lynx-js/react';
-const RUNTIME_PKG = '@lynx-js/react/internal';
+export const RUNTIME_PKG = '@lynx-js/react/internal';
 const OLD_RUNTIME_PKG = '@lynx-js/react-runtime';
 const COMPONENT_PKG = '@lynx-js/react-components';
 
@@ -41,6 +41,11 @@ export interface ReactLoaderOptions {
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.jsx}
    */
   jsx?: JsxTransformerConfig | undefined;
+
+  /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableUiSourceMap}
+   */
+  enableUiSourceMap?: boolean | undefined;
 
   /**
    * Enable the Fast Refresh for ReactLynx.
@@ -97,6 +102,7 @@ function getCommonOptions(
   const {
     compat,
     enableRemoveCSSScope,
+    enableUiSourceMap,
     inlineSourcesContent,
     isDynamicComponent,
     engineVersion,
@@ -166,6 +172,7 @@ function getCommonOptions(
         // This allows serializing the updated runtime code to Lepus using `Function.prototype.toString`.
         ? 'MIXED'
         : 'JS',
+      enableUiSourceMap: enableUiSourceMap ?? false,
       runtimePkg: RUNTIME_PKG,
       filename,
       isDynamicComponent: isDynamicComponent ?? false,
@@ -238,6 +245,8 @@ export function getMainThreadTransformOptions(
       // so never pass true to shake to rust
       pkgName: [
         'react',
+        'preact/hooks',
+        'preact/compat',
         PUBLIC_RUNTIME_PKG,
         `${PUBLIC_RUNTIME_PKG}/legacy-react-runtime`,
         RUNTIME_PKG,
@@ -257,14 +266,15 @@ export function getMainThreadTransformOptions(
         'defaultProps',
         ...(shake?.retainProp ?? []),
       ],
-      removeCallParams: [
+      removeCall: [
         'useEffect',
         'useLayoutEffect',
         '__runInJS',
         'useLynxGlobalEventListener',
         'useImperativeHandle',
-        ...(shake?.removeCallParams ?? []),
+        ...(shake?.removeCall ?? []),
       ],
+      removeCallParams: shake?.removeCallParams ?? [],
     },
     worklet: {
       ...commonOptions.worklet,

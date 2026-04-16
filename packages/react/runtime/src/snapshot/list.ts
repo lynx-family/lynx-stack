@@ -2,9 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { hydrate } from '../hydrate.js';
-import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from '../list.js';
-import type { SnapshotInstance } from '../snapshot.js';
+import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from '../list/list.js';
+import { hydrate } from '../renderToOpcodes/hydrate.js';
+import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
 const destroyLifetimeHandlerMap = new Map<number, () => void>();
 

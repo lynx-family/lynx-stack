@@ -22,7 +22,7 @@ function LazyComponentLoader({ url }) {
   return (
     <Suspense fallback={<text>loading...</text>}>
       <InternalComponent />
-      <ExternalComponent />
+      {process.env.RSTEST ? null : <ExternalComponent />}
     </Suspense>
   );
 }
@@ -55,7 +55,18 @@ describe('lazy bundle', () => {
       timeout: 50_000,
     });
 
-    expect(container.firstChild).toMatchInlineSnapshot(`
+    if (process.env.RSTEST) {
+      expect(container.firstChild).toMatchInlineSnapshot(`
+        <view>
+          <wrapper>
+            <text>
+              Hello from LazyComponent
+            </text>
+          </wrapper>
+        </view>
+      `);
+    } else {
+      expect(container.firstChild).toMatchInlineSnapshot(`
       <view>
         <wrapper>
           <text>
@@ -67,6 +78,7 @@ describe('lazy bundle', () => {
         </wrapper>
       </view>
     `);
+    }
   });
 });
 
@@ -169,21 +181,23 @@ describe('Suspense', () => {
                 "type": "__snapshot_50869_test_3",
               },
               {
-                "id": 7,
+                "id": 5,
                 "op": "CreateElement",
                 "type": "__snapshot_50869_test_4",
               },
               {
                 "beforeId": null,
-                "childId": 7,
+                "childId": 5,
                 "op": "InsertBefore",
                 "parentId": 2,
+                "slotIndex": 0,
               },
               {
                 "beforeId": null,
                 "childId": 2,
                 "op": "InsertBefore",
                 "parentId": -1,
+                "slotIndex": 0,
               },
             ]
           `);
@@ -196,32 +210,35 @@ describe('Suspense', () => {
                 "type": "__snapshot_50869_test_3",
               },
               {
-                "id": 8,
+                "id": 6,
                 "op": "CreateElement",
                 "type": "wrapper",
               },
               {
-                "id": 9,
+                "id": 7,
                 "op": "CreateElement",
                 "type": "__snapshot_50869_test_4",
               },
               {
                 "beforeId": null,
-                "childId": 9,
+                "childId": 7,
                 "op": "InsertBefore",
-                "parentId": 8,
+                "parentId": 6,
+                "slotIndex": 0,
               },
               {
                 "beforeId": null,
-                "childId": 8,
+                "childId": 6,
                 "op": "InsertBefore",
                 "parentId": 2,
+                "slotIndex": 0,
               },
               {
                 "beforeId": null,
                 "childId": 2,
                 "op": "InsertBefore",
                 "parentId": -1,
+                "slotIndex": 0,
               },
             ]
           `);
@@ -294,60 +311,68 @@ describe('Suspense', () => {
       if (name === 'PreactSuspense') {
         // <view className="lazy-wrapper"> is torn down, (it is triggered in first render but delayed 10_000ms to execute, we use `vi.runAllTimers()` to simulate the situation that will cause the bug)
         // <text>loading...</text> is torn down
-        expect(tearDownInstances).toMatchInlineSnapshot(`
-          [
-            {
-              "__id": 3,
-              "create": "function() {
-            const pageId = __vite_ssr_import_1__.__pageId;
-            const el = __CreateView(pageId);
-            __SetClasses(el, "lazy-wrapper");
-            const el1 = __CreateWrapperElement(pageId);
-            __AppendElement(el, el1);
-            const el2 = __CreateText(pageId);
-            __SetAttribute(el2, "text", "Hello, ReactLynx");
-            __AppendElement(el, el2);
-            const el3 = __CreateWrapperElement(pageId);
-            __AppendElement(el, el3);
-            return [
-              el,
-              el1,
-              el2,
-              el3
-            ];
-          }",
-              "type": "__snapshot_50869_test_5",
-            },
-            {
-              "__id": 7,
-              "create": "function() {
-            const pageId = __vite_ssr_import_1__.__pageId;
-            const el = __CreateText(pageId);
-            __SetClasses(el, "loading");
-            __SetAttribute(el, "text", "loading...");
-            return [
-              el
-            ];
-          }",
-              "type": "__snapshot_50869_test_4",
-            },
-          ]
-        `);
+        if (!process.env.RSTEST) {
+          expect(tearDownInstances).toMatchInlineSnapshot(`
+            [
+              {
+                "__id": 3,
+                "create": "function() {
+              const pageId = __vite_ssr_import_1__.__pageId;
+              const el = __CreateView(pageId);
+              __SetClasses(el, "lazy-wrapper");
+              const el1 = __CreateWrapperElement(pageId);
+              __AppendElement(el, el1);
+              const el2 = __CreateText(pageId);
+              __AppendElement(el, el2);
+              const el3 = __CreateRawText("Hello, ReactLynx");
+              __AppendElement(el2, el3);
+              const el4 = __CreateWrapperElement(pageId);
+              __AppendElement(el, el4);
+              return [
+                el,
+                el1,
+                el2,
+                el3,
+                el4
+              ];
+            }",
+                "type": "__snapshot_50869_test_5",
+              },
+              {
+                "__id": 5,
+                "create": "function() {
+              const pageId = __vite_ssr_import_1__.__pageId;
+              const el = __CreateText(pageId);
+              __SetClasses(el, "loading");
+              const el1 = __CreateRawText("loading...");
+              __AppendElement(el, el1);
+              return [
+                el,
+                el1
+              ];
+            }",
+                "type": "__snapshot_50869_test_4",
+              },
+            ]
+          `);
+        }
       } else {
-        expect(tearDownInstances).toMatchInlineSnapshot(`
-          [
-            {
-              "__id": 8,
-              "create": "create () {
-                              /* v8 ignore start */ if (__JS__ && !__DEV__) return [];
-                              /* v8 ignore stop */ return [
-                                  __CreateWrapperElement(__pageId)
-                              ];
-                          }",
-              "type": "wrapper",
-            },
-          ]
-        `);
+        if (!process.env.RSTEST) {
+          expect(tearDownInstances).toMatchInlineSnapshot(`
+            [
+              {
+                "__id": 6,
+                "create": "create () {
+                                /* v8 ignore start */ if (__JS__ && !__DEV__) return [];
+                                /* v8 ignore stop */ return [
+                                    __CreateWrapperElement(__pageId)
+                                ];
+                            }",
+                "type": "wrapper",
+              },
+            ]
+          `);
+        }
       }
 
       act(() => {

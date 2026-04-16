@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { options } from 'preact';
-import type { VNode } from 'preact';
 
 import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import { RENDER_COMPONENT, ROOT } from '../renderToOpcodes/constants.js';
@@ -130,23 +129,15 @@ function initTimingAPI(): void {
     }
   };
 
-  hook(options, RENDER_COMPONENT, (old, vnode: VNode, c) => {
+  const onHook = <T extends unknown[]>(old: ((...args: T) => void) | undefined, ...args: T) => {
     helper();
     /* v8 ignore start */
-    if (old) {
-      old(vnode, c);
-    }
+    if (old) old(...args);
     /* v8 ignore stop */
-  });
+  };
 
-  hook(options, ROOT, (old, vnode: VNode, parentDom) => {
-    helper();
-    /* v8 ignore start */
-    if (old) {
-      old(vnode, parentDom);
-    }
-    /* v8 ignore stop */
-  });
+  hook(options, RENDER_COMPONENT, onHook);
+  hook(options, ROOT, onHook);
 }
 
 /**

@@ -5,7 +5,9 @@ import {
 
 import { createConfig } from '../../../create-react-config.js';
 
-const config = createConfig();
+const config = createConfig(undefined, {
+  experimental_isLazyBundle: true,
+});
 
 /** @type {import('@rspack/core').Configuration} */
 export default {

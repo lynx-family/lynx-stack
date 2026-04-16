@@ -49,6 +49,14 @@ export default defineConfig({
         './src/patchProfile.ts',
         './cases/006-static-raw-text/index.tsx',
       ],
+      '007-four-layer-views': [
+        './src/patchProfile.ts',
+        './cases/007-four-layer-views/index.tsx',
+      ],
+      '008-many-use-state': [
+        './src/patchProfile.ts',
+        './cases/008-many-use-state/index.tsx',
+      ],
     },
   },
   plugins: [

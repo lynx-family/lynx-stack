@@ -1,5 +1,30 @@
 # @lynx-js/lynx-bundle-rslib-config
 
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies [[`156d64d`](https://github.com/lynx-family/lynx-stack/commit/156d64da67e83dfc92e63568cee602c21db873cf), [`59d11b2`](https://github.com/lynx-family/lynx-stack/commit/59d11b2549e5d2ca2ef18c5fe238c468e6db7d9a)]:
+  - @lynx-js/css-serializer@0.1.5
+
+## 0.3.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: ([#2370](https://github.com/lynx-family/lynx-stack/pull/2370))
+
+  Simplify the API for external bundle builds by `externalsPresets` and `externalsPresetDefinitions`.
+
+### Patch Changes
+
+- Preserve the default external-bundle `output.minify.jsOptions` when users set `output.minify: true` in `defineExternalBundleRslibConfig`, so required minifier options are not lost. ([#2390](https://github.com/lynx-family/lynx-stack/pull/2390))
+
+## 0.2.3
+
+### Patch Changes
+
+- Fix snapshot not found error when dev with external bundle ([#2316](https://github.com/lynx-family/lynx-stack/pull/2316))
+
 ## 0.2.2
 
 ### Patch Changes

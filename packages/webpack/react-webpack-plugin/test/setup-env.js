@@ -9,6 +9,7 @@ function __injectGlobals(target) {
   target.__MAIN_THREAD__ = false;
   target.__REF_FIRE_IMMEDIATELY__ = false;
   target.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
+  target.__GLOBAL_PROPS_MODE__ = 'reactive';
   target.lynx = {};
   target.lynxCoreInject = {};
   target.lynxCoreInject.tt = {};

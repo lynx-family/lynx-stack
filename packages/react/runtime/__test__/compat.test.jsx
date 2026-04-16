@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { elementTree } from './utils/nativeMethod';
-import { backgroundSnapshotInstanceManager, setupPage, snapshotInstanceManager } from '../src/snapshot';
+import { setupPage, snapshotInstanceManager, backgroundSnapshotInstanceManager } from '../src/snapshot';
 import { ComponentFromReactRuntime, wrapWithLynxComponent } from '../src/compat/lynxComponent';
 import { setupDocument } from '../src/document';
 import { Fragment, render } from 'preact';
@@ -38,7 +38,7 @@ describe('addComponentElement', () => {
       }
     }
 
-    const jsx = wrapWithLynxComponent((__c) => <view>{__c}</view>, <C />);
+    const jsx = wrapWithLynxComponent(__c => <view>{__c}</view>, <C />);
 
     scratch.ensureElements();
     render(jsx, scratch);
@@ -53,7 +53,11 @@ describe('addComponentElement', () => {
     `);
   });
 
-  let snapshot = (__c) => <view id='1' className='2' style='flex: 3'>{__c}</view>;
+  let snapshot = __c => (
+    <view id='1' className='2' style='flex: 3'>
+      {__c}
+    </view>
+  );
   it('should render a fake component element \'view\' - with some component attr', () => {
     class C extends ComponentFromReactRuntime {
       render() {

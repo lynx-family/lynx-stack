@@ -7,6 +7,13 @@ import { describe, expect, it } from 'vitest';
 
 import { transformBundleResult, transformReactLynx } from '../main.js';
 
+const TEST_FILENAMES = {
+  uiSourceMap: '/path/to/src/ui-source-map.js',
+};
+const TEST_SNAPSHOT_FILENAMES = {
+  uiSourceMap: 'src/ui-source-map.js',
+};
+
 describe('shake', () => {
   it('should match', async () => {
     const inputContent = `
@@ -118,6 +125,45 @@ export class A extends Component {
   });
 });
 
+describe('ui source map', () => {
+  it('should use the top-level filename for exported uiSourceMapRecords', async () => {
+    const result = await transformReactLynx('const node = <view />;', {
+      mode: 'test',
+      pluginName: '',
+      filename: TEST_FILENAMES.uiSourceMap,
+      sourcemap: false,
+      cssScope: false,
+      snapshot: {
+        preserveJsx: false,
+        runtimePkg: '@lynx-js/react',
+        jsxImportSource: '@lynx-js/react',
+        filename: TEST_SNAPSHOT_FILENAMES.uiSourceMap,
+        target: 'MIXED',
+        enableUiSourceMap: true,
+      },
+      jsx: true,
+      directiveDCE: false,
+      defineDCE: false,
+      shake: false,
+      compat: false,
+      worklet: false,
+      refresh: false,
+    });
+
+    expect(result.uiSourceMapRecords).toMatchInlineSnapshot(`
+      [
+        {
+          "columnNumber": 14,
+          "filename": "/path/to/src/ui-source-map.js",
+          "lineNumber": 1,
+          "snapshotId": "__snapshot_cf7b3_test_1",
+          "uiSourceMap": 222048564,
+        },
+      ]
+    `);
+  });
+});
+
 describe('jsx', () => {
   it('should allow JSXNamespace', async () => {
     const result = await transformReactLynx('const jsx = <Foo main-thread:foo={foo} />', {
@@ -146,6 +192,7 @@ describe('jsx', () => {
       });
       ",
         "errors": [],
+        "uiSourceMapRecords": [],
         "warnings": [],
       }
     `);
@@ -214,6 +261,7 @@ describe('jsx', () => {
       });
       ",
         "errors": [],
+        "uiSourceMapRecords": [],
         "warnings": [],
       }
     `);
@@ -239,6 +287,7 @@ describe('errors and warnings', () => {
             "text": "Expected '</', got '<eof>'",
           },
         ],
+        "uiSourceMapRecords": [],
         "warnings": [],
       }
     `);
@@ -277,6 +326,7 @@ Component, View
       Component, View;
       ",
         "errors": [],
+        "uiSourceMapRecords": [],
         "warnings": [
           {
             "location": {
@@ -412,7 +462,7 @@ Component, View
             ], ReactLynx.__DynamicPartSlotV2_0, undefined, globDynamicComponentEntry, [
                 0
             ], true);
-        /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>/*#__PURE__*/ _jsx(__snapshot_da39a_89b7f_1, {
+        /*#__PURE__*/ ReactLynx1.wrapWithLynxComponent((__c, __spread)=>_jsx(__snapshot_da39a_89b7f_1, {
                 values: [
                     {
                         ...__spread,
@@ -1453,6 +1503,29 @@ class X extends Component {
 });
 
 describe('worklet', () => {
+  const lepusWorkletOptions = {
+    pluginName: '',
+    filename: '',
+    sourcemap: false,
+    cssScope: false,
+    jsx: false,
+    directiveDCE: true,
+    defineDCE: {
+      define: {
+        __LEPUS__: 'true',
+        __JS__: 'false',
+      },
+    },
+    shake: false,
+    compat: true,
+    refresh: false,
+    worklet: {
+      target: 'LEPUS',
+      filename: '',
+      runtimePkg: '@lynx-js/react',
+    },
+  };
+
   it('should error on unsupported runtime import attribute', async () => {
     const result = await transformReactLynx(
       `\
@@ -1570,6 +1643,21 @@ export function bar() {
     );
   });
 
+  it('should not inject runtime when no worklet exists', async () => {
+    const { code } = await transformReactLynx(
+      `\
+export function getCurrentDelta(event) {
+  return foo.bar.baz;
+}
+`,
+      lepusWorkletOptions,
+    );
+
+    expect(code).not.toContain('loadWorkletRuntime');
+    expect(code).not.toContain('registerWorkletInternal');
+    expect(code).not.toContain('_wkltId');
+  });
+
   for (const target of ['LEPUS', 'JS', 'MIXED']) {
     it('member expression', async () => {
       const { code } = await transformReactLynx(
@@ -1626,6 +1714,8 @@ export function bar() {
           });
           "
         `);
+        expect(code).toContain('loadWorkletRuntime');
+        expect(code).toContain('registerWorkletInternal("main-thread"');
       } else if (target === 'JS') {
         expect(code).toMatchInlineSnapshot(`
           "export let getCurrentDelta = {
@@ -1640,6 +1730,8 @@ export function bar() {
           };
           "
         `);
+        expect(code).not.toContain('loadWorkletRuntime');
+        expect(code).not.toContain('registerWorkletInternal');
       } else if (target === 'MIXED') {
         expect(code).toMatchInlineSnapshot(`
           "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
@@ -1663,6 +1755,8 @@ export function bar() {
           });
           "
         `);
+        expect(code).toContain('loadWorkletRuntime');
+        expect(code).toContain('registerWorkletInternal("main-thread"');
       }
     });
   }
@@ -1729,6 +1823,8 @@ export function foo(event) {
       });
       "
     `);
+    expect((code.match(/registerWorkletInternal/g) ?? []).length).toBe(1);
+    expect((code.match(/const __workletRuntimeLoaded = loadWorkletRuntime/g) ?? []).length).toBe(1);
   });
 
   it('nested', async () => {
@@ -1795,6 +1891,8 @@ console.log(bar)
       });
       "
     `);
+    expect((code.match(/registerWorkletInternal/g) ?? []).length).toBe(2);
+    expect((code.match(/const __workletRuntimeLoaded = loadWorkletRuntime/g) ?? []).length).toBe(1);
   });
 
   it('use multiple times', async () => {
@@ -1845,6 +1943,8 @@ function getCurrentDelta(event) {
       });
       "
     `);
+    expect((code.match(/registerWorkletInternal/g) ?? []).length).toBe(1);
+    expect((code.match(/const __workletRuntimeLoaded = loadWorkletRuntime/g) ?? []).length).toBe(1);
   });
 
   it('should keep webpack runtime variables', async () => {

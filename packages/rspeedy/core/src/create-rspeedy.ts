@@ -41,9 +41,9 @@ export interface CreateRspeedyOptions {
    */
   rspeedyConfig?: Config
   /**
-   * Rspeedy automatically loads the .env file by default, utilizing the [Rsbuild API](https://rsbuild.dev/api/javascript-api/core#load-env-variables).
+   * Rspeedy automatically loads the .env file by default, utilizing the [Rsbuild API](https://rsbuild.rs/api/javascript-api/core#load-env-variables).
    * You can use the environment variables defined in the .env file within your code by accessing them via `import.meta.env.FOO` or `process.env.Foo`.
-   * @see https://rsbuild.dev/guide/advanced/env-vars#env-file
+   * @see https://rsbuild.rs/guide/advanced/env-vars#env-file
    * @defaultValue true
    */
   loadEnv?: CreateRsbuildOptions['loadEnv']
@@ -51,7 +51,7 @@ export interface CreateRspeedyOptions {
    * Only build specified environments.
    * For example, passing `['lynx']` will only build the `lynx` environment.
    * If not specified or passing an empty array, all environments will be built.
-   * @see https://rsbuild.dev/guide/advanced/environments#build-specified-environment
+   * @see https://rsbuild.rs/guide/advanced/environments#build-specified-environment
    * @defaultValue []
    */
   environment?: CreateRsbuildOptions['environment']

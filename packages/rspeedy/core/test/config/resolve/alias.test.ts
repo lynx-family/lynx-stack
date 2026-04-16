@@ -14,7 +14,7 @@ describe('Config - Resolve.alias', () => {
 
     expect(config.resolve?.alias).toMatchInlineSnapshot(`
       {
-        "@swc/helpers": "<WORKSPACE>/node_modules/<PNPM_INNER>/@swc/helpers",
+        "@swc/helpers": "<ROOT>/node_modules/<PNPM_INNER>/@swc/helpers",
       }
     `)
   })

@@ -1,0 +1,248 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`optimizeBundleSize > basic usage 1`] = `
+[
+  SwcJsMinimizerRspackPlugin {
+    "_args": [
+      {
+        "exclude": [
+          /\\.\\*main-thread\\(\\?:\\\\\\.\\[A-Fa-f0-9\\]\\*\\)\\?\\\\\\.js\\$/,
+          /\\.\\*background\\(\\?:\\\\\\.\\[A-Fa-f0-9\\]\\*\\)\\?\\\\\\.js\\$/,
+        ],
+        "extractComments": false,
+        "minimizerOptions": {
+          "compress": {
+            "comparisons": false,
+            "ecma": 2015,
+            "inline": 2,
+            "join_vars": false,
+            "negate_iife": false,
+            "side_effects": false,
+            "toplevel": true,
+          },
+          "format": {
+            "asciiOnly": false,
+            "comments": false,
+            "keep_quoted_props": true,
+          },
+          "mangle": {
+            "toplevel": true,
+          },
+        },
+      },
+    ],
+    "affectedHooks": "compilation",
+    "name": "SwcJsMinimizerRspackPlugin",
+  },
+  CssMinimizerPlugin {
+    "options": {
+      "exclude": undefined,
+      "include": undefined,
+      "minimizer": {
+        "implementation": [Function],
+        "options": {
+          "preset": [
+            "default",
+            {
+              "mergeLonghand": false,
+            },
+          ],
+        },
+      },
+      "parallel": true,
+      "test": /\\\\\\.css\\(\\\\\\?\\.\\*\\)\\?\\$/i,
+      "warningsFilter": [Function],
+    },
+  },
+  SwcJsMinimizerRspackPlugin {
+    "_args": [
+      {
+        "include": [
+          /\\.\\*main-thread\\(\\?:\\\\\\.\\[A-Fa-f0-9\\]\\*\\)\\?\\\\\\.js\\$/,
+        ],
+        "minimizerOptions": {
+          "compress": {
+            "comparisons": false,
+            "ecma": 2015,
+            "inline": 2,
+            "join_vars": false,
+            "negate_iife": false,
+            "pure_funcs": [
+              "NativeModules.call",
+              "lynx.getJSModule",
+            ],
+            "side_effects": false,
+            "toplevel": true,
+          },
+          "format": {
+            "comments": false,
+            "keep_quoted_props": true,
+          },
+          "mangle": {
+            "toplevel": true,
+          },
+        },
+      },
+    ],
+    "affectedHooks": "compilation",
+    "name": "SwcJsMinimizerRspackPlugin",
+  },
+  SwcJsMinimizerRspackPlugin {
+    "_args": [
+      {
+        "include": [
+          /\\.\\*background\\(\\?:\\\\\\.\\[A-Fa-f0-9\\]\\*\\)\\?\\\\\\.js\\$/,
+        ],
+        "minimizerOptions": {
+          "compress": {
+            "comparisons": false,
+            "ecma": 2015,
+            "inline": 2,
+            "join_vars": false,
+            "negate_iife": false,
+            "pure_funcs": [
+              "lynx.registerDataProcessors",
+            ],
+            "side_effects": false,
+            "toplevel": true,
+          },
+          "format": {
+            "comments": false,
+            "keep_quoted_props": true,
+          },
+          "mangle": {
+            "toplevel": true,
+          },
+        },
+      },
+    ],
+    "affectedHooks": "compilation",
+    "name": "SwcJsMinimizerRspackPlugin",
+  },
+]
+`;
+
+exports[`optimizeBundleSize > optimize background code 1`] = `
+[
+  SwcJsMinimizerRspackPlugin {
+    "_args": [
+      {
+        "exclude": [
+          /\\.\\*main-thread\\(\\?:\\\\\\.\\[A-Fa-f0-9\\]\\*\\)\\?\\\\\\.js\\$/,
+          /\\.\\*background\\(\\?:\\\\\\.\\[A-Fa-f0-9\\]\\*\\)\\?\\\\\\.js\\$/,
+        ],
+        "extractComments": false,
+        "minimizerOptions": {
+          "compress": {
+            "comparisons": false,
+            "ecma": 2015,
+            "inline": 2,
+            "join_vars": false,
+            "negate_iife": false,
+            "pure_funcs": [
+              "console.info",
+            ],
+            "side_effects": false,
+            "toplevel": true,
+          },
+          "format": {
+            "asciiOnly": false,
+            "comments": false,
+            "keep_quoted_props": true,
+          },
+          "mangle": {
+            "toplevel": true,
+          },
+        },
+      },
+    ],
+    "affectedHooks": "compilation",
+    "name": "SwcJsMinimizerRspackPlugin",
+  },
+  CssMinimizerPlugin {
+    "options": {
+      "exclude": undefined,
+      "include": undefined,
+      "minimizer": {
+        "implementation": [Function],
+        "options": {
+          "preset": [
+            "default",
+            {
+              "mergeLonghand": false,
+            },
+          ],
+        },
+      },
+      "parallel": true,
+      "test": /\\\\\\.css\\(\\\\\\?\\.\\*\\)\\?\\$/i,
+      "warningsFilter": [Function],
+    },
+  },
+  SwcJsMinimizerRspackPlugin {
+    "_args": [
+      {
+        "include": [
+          /\\.\\*main-thread\\(\\?:\\\\\\.\\[A-Fa-f0-9\\]\\*\\)\\?\\\\\\.js\\$/,
+        ],
+        "minimizerOptions": {
+          "compress": {
+            "comparisons": false,
+            "ecma": 2015,
+            "inline": 2,
+            "join_vars": false,
+            "negate_iife": false,
+            "pure_funcs": [
+              "console.info",
+            ],
+            "side_effects": false,
+            "toplevel": true,
+          },
+          "format": {
+            "comments": false,
+            "keep_quoted_props": true,
+          },
+          "mangle": {
+            "toplevel": true,
+          },
+        },
+      },
+    ],
+    "affectedHooks": "compilation",
+    "name": "SwcJsMinimizerRspackPlugin",
+  },
+  SwcJsMinimizerRspackPlugin {
+    "_args": [
+      {
+        "include": [
+          /\\.\\*background\\(\\?:\\\\\\.\\[A-Fa-f0-9\\]\\*\\)\\?\\\\\\.js\\$/,
+        ],
+        "minimizerOptions": {
+          "compress": {
+            "comparisons": false,
+            "ecma": 2015,
+            "inline": 2,
+            "join_vars": false,
+            "negate_iife": false,
+            "pure_funcs": [
+              "console.info",
+              "lynx.registerDataProcessors",
+            ],
+            "side_effects": false,
+            "toplevel": true,
+          },
+          "format": {
+            "comments": false,
+            "keep_quoted_props": true,
+          },
+          "mangle": {
+            "toplevel": true,
+          },
+        },
+      },
+    ],
+    "affectedHooks": "compilation",
+    "name": "SwcJsMinimizerRspackPlugin",
+  },
+]
+`;

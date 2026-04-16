@@ -9,11 +9,11 @@ import type { PatchList, PatchOptions } from './commit.js';
 import { setMainThreadHydrating } from './isMainThreadHydrating.js';
 import { snapshotPatchApply } from './snapshotPatchApply.js';
 import { prettyFormatSnapshotPatch } from '../../debug/formatPatch.js';
-import { LifecycleConstant } from '../../lifecycleConstant.js';
+import { LifecycleConstant } from '../../lifecycle/constant.js';
+import { __pendingListUpdates } from '../../list/pendingListUpdates.js';
 import { markTiming, setPipeline } from '../../lynx/performance.js';
-import { __pendingListUpdates } from '../../pendingListUpdates.js';
+import { __page } from '../../snapshot/definition.js';
 import { applyRefQueue } from '../../snapshot/workletRef.js';
-import { __page } from '../../snapshot.js';
 import { isMtsEnabled } from '../../worklet/functionality.js';
 import { getReloadVersion } from '../pass.js';
 

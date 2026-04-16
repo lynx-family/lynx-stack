@@ -14,7 +14,7 @@ import { injectTt } from '../../src/lynx/tt';
 import { root } from '../../src/lynx-api';
 import { CHILDREN } from '../../src/renderToOpcodes/constants';
 import { __root } from '../../src/root';
-import { backgroundSnapshotInstanceManager, setupPage } from '../../src/snapshot';
+import { setupPage, backgroundSnapshotInstanceManager } from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree } from '../utils/nativeMethod';
 
@@ -265,11 +265,7 @@ describe('eventUpdate', () => {
     let handleTap1 = vi.fn();
     let show = false;
     function Comp() {
-      return (
-        <view>
-          {show ? <text bindtap={handleTap1}>1</text> : null}
-        </view>
-      );
+      return <view>{show ? <text bindtap={handleTap1}>1</text> : null}</view>;
     }
 
     // main thread render
@@ -324,7 +320,7 @@ describe('eventUpdate', () => {
         -2,
         3,
         undefined,
-        undefined,
+        0,
       ]
     `);
     globalEnvManager.switchToMainThread();
@@ -678,7 +674,9 @@ describe('event in spread', () => {
       return (
         <view>
           <text {...spread1}>1</text>
-          <text bindtouchstart={handleTouchStart} {...spread2}>2</text>
+          <text bindtouchstart={handleTouchStart} {...spread2}>
+            2
+          </text>
         </view>
       );
     }
@@ -895,11 +893,7 @@ describe('event in spread', () => {
     let handleTap1 = vi.fn();
     let spread1 = { bindtap: handleTap1 };
     function Comp() {
-      return (
-        <view>
-          {show ? <text {...spread1}>1</text> : null}
-        </view>
-      );
+      return <view>{show ? <text {...spread1}>1</text> : null}</view>;
     }
 
     // main thread render
@@ -955,7 +949,7 @@ describe('event in spread', () => {
         -2,
         3,
         undefined,
-        undefined,
+        0,
       ]
     `);
     globalEnvManager.switchToMainThread();

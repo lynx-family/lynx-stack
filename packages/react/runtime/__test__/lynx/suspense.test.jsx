@@ -11,13 +11,17 @@ import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
 import '../../src/lynx/component';
 import { __root } from '../../src/root';
-import { setupPage, SnapshotInstance, snapshotInstanceManager } from '../../src/snapshot';
+import {
+  setupPage,
+  SnapshotInstance,
+  snapshotInstanceManager,
+  BackgroundSnapshotInstance,
+  backgroundSnapshotInstanceManager,
+} from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree } from '../utils/nativeMethod';
-import { backgroundSnapshotInstanceManager } from '../../src/snapshot';
 import { prettyFormatSnapshotPatch } from '../../src/debug/formatPatch';
 import { createSuspender } from '../createSuspender';
-import { BackgroundSnapshotInstance } from '../../src/backgroundSnapshot';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));
@@ -273,14 +277,14 @@ describe('suspense', () => {
             "childId": 3,
             "op": "InsertBefore",
             "parentId": 2,
-            "slotIndex": null,
+            "slotIndex": 0,
           },
           {
             "beforeId": null,
             "childId": 2,
             "op": "InsertBefore",
             "parentId": -1,
-            "slotIndex": null,
+            "slotIndex": 0,
           },
           {
             "childId": -3,
@@ -297,14 +301,14 @@ describe('suspense', () => {
             "childId": 7,
             "op": "InsertBefore",
             "parentId": 3,
-            "slotIndex": null,
+            "slotIndex": 0,
           },
           {
             "beforeId": null,
             "childId": 2,
             "op": "InsertBefore",
             "parentId": -1,
-            "slotIndex": null,
+            "slotIndex": 0,
           },
         ]
       `);
@@ -384,9 +388,8 @@ describe('suspense', () => {
       expect([...snapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
         [
           -1,
-          -2,
           -3,
-          -4,
+          -5,
         ]
       `);
     }
@@ -486,7 +489,6 @@ describe('suspense', () => {
       expect([...snapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
         [
           -1,
-          -2,
         ]
       `);
 
@@ -1590,7 +1592,7 @@ describe('suspense', () => {
         .toMatchInlineSnapshot(`
           [
             {
-              "childId": -4,
+              "childId": -2,
               "op": "RemoveChild",
               "parentId": -1,
             },

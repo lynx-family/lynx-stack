@@ -220,9 +220,7 @@ export function loadConfig(loadConfigOptions: LoadConfigOptions): Promise<LoadCo
 
 // @public
 export interface LoadConfigOptions {
-    // (undocumented)
     configPath?: string | undefined;
-    // (undocumented)
     cwd?: string | undefined;
 }
 
@@ -239,9 +237,11 @@ export function mergeRspeedyConfig(...configs: Config[]): Config;
 
 // @public
 export interface Minify {
+    backgroundOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined;
     css?: boolean | undefined;
     js?: boolean | undefined;
     jsOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined;
+    mainThreadOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined;
 }
 
 // @public

@@ -9,12 +9,18 @@ import { render } from 'preact';
 import { useState } from 'preact/compat';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { BackgroundSnapshotInstance } from '../../src/backgroundSnapshot';
 import { setupBackgroundDocument } from '../../src/document';
 import { useLynxGlobalEventListener } from '../../src/lynx-api';
-import { SnapshotInstance, backgroundSnapshotInstanceManager, setupPage } from '../../src/snapshot';
+import {
+  BackgroundSnapshotInstance,
+  backgroundSnapshotInstanceManager,
+  SnapshotInstance,
+  setupPage,
+} from '../../src/snapshot';
 import { backgroundSnapshotInstanceToJSON } from '../utils/debug.js';
 import { elementTree } from '../utils/nativeMethod';
+
+import { globalEnvManager } from '../utils/envManager';
 
 describe('useLynxGlobalEventListener', () => {
   /** @type {SnapshotInstance} */
@@ -29,7 +35,7 @@ describe('useLynxGlobalEventListener', () => {
 
     const lynx = {
       ...globalThis.lynx,
-      getJSModule: (moduleName) => {
+      getJSModule: moduleName => {
         if (moduleName === 'GlobalEventEmitter') {
           return ee;
         }
@@ -43,6 +49,7 @@ describe('useLynxGlobalEventListener', () => {
   });
 
   beforeEach(() => {
+    globalEnvManager.switchToBackground();
     scratch = document.createElement('root');
   });
 
@@ -109,7 +116,7 @@ describe('useLynxGlobalEventListener', () => {
     };
     vi.stubGlobal('lynx', {
       ...globalThis.lynx,
-      getJSModule: (moduleName) => {
+      getJSModule: moduleName => {
         if (moduleName === 'GlobalEventEmitter') {
           return fakeEE;
         }

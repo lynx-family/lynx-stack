@@ -5,15 +5,23 @@
  * notably the {@link https://lynxjs.org/api/engine/element-api | Element PAPI} and {@link https://lynxjs.org/guide/spec#dual-threaded-model | Dual-threaded Model} for use with Node.js.
  */
 
-import EventEmitter from 'events';
-import { JSDOM } from 'jsdom';
+import EventEmitter from 'node:events';
 import { createGlobalThis, LynxGlobalThis } from './lynx/GlobalThis.js';
 import { initElementTree, type LynxElement } from './lynx/ElementPAPI.js';
-import { Console } from 'console';
 import { GlobalEventEmitter } from './lynx/GlobalEventEmitter.js';
 export { initElementTree } from './lynx/ElementPAPI.js';
 export type { LynxElement } from './lynx/ElementPAPI.js';
 export type { LynxGlobalThis } from './lynx/GlobalThis.js';
+
+/**
+ * The host environment used to initialize `LynxTestingEnv`.
+ *
+ * @public
+ */
+export interface LynxEnv {
+  window: Window & typeof globalThis;
+}
+
 /**
  * @public
  * The lynx element tree
@@ -36,6 +44,7 @@ export type PickUnderscoreKeys<T> = Pick<T, FilterUnderscoreKeys<T>>;
 export type ElementTreeGlobals = PickUnderscoreKeys<ElementTree>;
 
 declare global {
+  var lynxEnv: LynxEnv;
   var lynxTestingEnv: LynxTestingEnv;
   var elementTree: ElementTree;
   var __JS__: boolean;
@@ -53,6 +62,41 @@ declare global {
   function onSwitchedToMainThread(): void;
   function onResetLynxTestingEnv(): void;
   function onInitWorkletRuntime(): void;
+}
+
+/**
+ * Installs a `LynxTestingEnv` instance and its required globals onto a target.
+ *
+ * @public
+ */
+export function installLynxTestingEnv(
+  target: typeof globalThis & {
+    lynxEnv?: LynxEnv;
+    lynxTestingEnv?: LynxTestingEnv;
+    Node?: typeof Node;
+  },
+  env: LynxEnv,
+): void {
+  target.lynxEnv = env;
+  target.lynxTestingEnv = new LynxTestingEnv(env);
+  target.Node = env.window.Node;
+}
+
+/**
+ * Removes the globals installed by `installLynxTestingEnv`.
+ *
+ * @public
+ */
+export function uninstallLynxTestingEnv(
+  target: typeof globalThis & {
+    lynxEnv?: LynxEnv;
+    lynxTestingEnv?: LynxTestingEnv;
+    Node?: typeof Node;
+  },
+): void {
+  delete target.lynxTestingEnv;
+  delete target.lynxEnv;
+  delete target.Node;
 }
 
 function __injectElementApi(target?: any) {
@@ -212,18 +256,6 @@ function createPolyfills() {
   };
 }
 
-function createPreconfiguredConsole() {
-  const console = new Console(
-    process.stdout,
-    process.stderr,
-  );
-  console.profile = () => {};
-  console.profileEnd = () => {};
-  // @ts-expect-error Lynx has console.alog
-  console.alog = () => {};
-  return console;
-}
-
 function injectMainThreadGlobals(target?: any, polyfills?: any) {
   __injectElementApi(target);
 
@@ -301,7 +333,10 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   target.requestAnimationFrame = setTimeout;
   target.cancelAnimationFrame = clearTimeout;
 
-  target.console = createPreconfiguredConsole();
+  target.console.profile = console.profile = () => {};
+  target.console.profileEnd = console.profileEnd = () => {};
+  // @ts-expect-error Lynx has console.alog
+  target.console.alog = console.alog = () => {};
 
   target.__LoadLepusChunk = __LoadLepusChunk;
 
@@ -407,7 +442,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
           });
         },
         select: function(selector: string) {
-          const el = lynxTestingEnv.jsdom.window.document.querySelector(
+          const el = lynxTestingEnv.env.window.document.querySelector(
             selector,
           ) as LynxElement;
           if (!el) {
@@ -449,7 +484,10 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
   target.requestAnimationFrame = setTimeout;
   target.cancelAnimationFrame = clearTimeout;
 
-  target.console = createPreconfiguredConsole();
+  target.console.profile = console.profile = () => {};
+  target.console.profileEnd = console.profileEnd = () => {};
+  // @ts-expect-error Lynx has console.alog
+  target.console.alog = console.alog = () => {};
 
   // TODO: user-configurable
   target.SystemInfo = {
@@ -476,8 +514,9 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
  *
  * ```ts
  * import { LynxTestingEnv } from '@lynx-js/testing-environment';
+ * import { JSDOM } from 'jsdom';
  *
- * const lynxTestingEnv = new LynxTestingEnv(new JSDOM());
+ * const lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });
  *
  * lynxTestingEnv.switchToMainThread();
  * // use the main thread Element PAPI
@@ -498,8 +537,9 @@ export class LynxTestingEnv {
    *
    * ```ts
    * import { LynxTestingEnv } from '@lynx-js/testing-environment';
+   * import { JSDOM } from 'jsdom';
    *
-   * const lynxTestingEnv = new LynxTestingEnv(new JSDOM());
+   * const lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });
    *
    * lynxTestingEnv.switchToBackgroundThread();
    * // use the background thread global object
@@ -514,8 +554,9 @@ export class LynxTestingEnv {
    *
    * ```ts
    * import { LynxTestingEnv } from '@lynx-js/testing-environment';
+   * import { JSDOM } from 'jsdom';
    *
-   * const lynxTestingEnv = new LynxTestingEnv(new JSDOM());
+   * const lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });
    *
    * lynxTestingEnv.switchToMainThread();
    * // use the main thread global object
@@ -525,14 +566,15 @@ export class LynxTestingEnv {
    * ```
    */
   mainThread: LynxGlobalThis & ElementTreeGlobals;
-  jsdom: JSDOM;
-  constructor(jsdom?: JSDOM) {
+  env: LynxEnv;
+  constructor(env?: LynxEnv) {
     // Prefer explicit instance; fall back to test runner-provided global.
-    this.jsdom = jsdom ?? global.jsdom;
-    if (!this.jsdom) {
+    this.env = (env ?? global.lynxEnv) as LynxEnv;
+    if (!this.env) {
       throw new Error(
-        'LynxTestingEnv requires a JSDOM instance. Pass one to the constructor, '
-          + 'or ensure your test runner sets global.jsdom (e.g., via a setup file).',
+        'LynxTestingEnv requires an object with a jsdom-like `window`. Pass '
+          + '`{ window }` to the constructor, or ensure your test runner sets '
+          + 'global.lynxEnv to that shape (e.g., via a setup file).',
       );
     }
 
@@ -540,13 +582,13 @@ export class LynxTestingEnv {
     this.mainThread = createGlobalThis() as any;
 
     const globalPolyfills = {
-      console: this.jsdom.window['console'],
+      console: this.env.window['console'],
       // `Event` is required by `fireEvent` in `@testing-library/dom`
-      Event: this.jsdom.window.Event,
+      Event: this.env.window.Event,
       // `window` is required by `getDocument` in `@testing-library/dom`
-      window: this.jsdom.window,
+      window: this.env.window,
       // `document` is required by `screen` in `@testing-library/dom`
-      document: this.jsdom.window.document,
+      document: this.env.window.document,
     };
 
     Object.assign(

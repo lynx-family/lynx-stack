@@ -6,13 +6,10 @@
  * Implements the IFR (Instant First-Frame Rendering) on main thread.
  */
 
-import { isValidElement } from 'preact';
-
 import { profileEnd, profileStart } from '../debug/profile.js';
-import { renderOpcodesInto } from '../opcodes.js';
 import { render as renderToString } from '../renderToOpcodes/index.js';
 import { __root } from '../root.js';
-import { SnapshotInstance } from '../snapshot.js';
+import { SnapshotInstance } from '../snapshot/snapshot.js';
 
 function renderMainThread(): void {
   let opcodes;
@@ -20,36 +17,19 @@ function renderMainThread(): void {
     if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileStart('ReactLynx::renderMainThread');
     }
-    opcodes = renderToString(__root.__jsx, undefined);
+    opcodes = renderToString(__root.__jsx, undefined, __root as SnapshotInstance);
   } catch (e) {
     lynx.reportError(e as Error);
     opcodes = [];
+    (__root as SnapshotInstance).removeChildren();
   } finally {
     if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileEnd();
     }
   }
 
-  if (process.env['NODE_ENV'] === 'test') {
-    opcodes = opcodes.map((opcode) => {
-      if (isValidElement(opcode) && typeof opcode.type === 'string') {
-        return Object.assign(new SnapshotInstance(opcode.type), opcode, { $$typeof: undefined });
-      }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return opcode;
-    });
-  }
-
-  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-    profileStart('ReactLynx::renderOpcodes');
-  }
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  renderOpcodesInto(opcodes, __root as any);
   if (__ENABLE_SSR__) {
     __root.__opcodes = opcodes;
-  }
-  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-    profileEnd();
   }
 }
 

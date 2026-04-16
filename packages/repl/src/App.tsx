@@ -3,8 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { LynxTemplate } from '@lynx-js/web-constants';
-
 import { buildLynxTemplate } from './bundler/template-builder.js';
 import { EditorPane } from './components/EditorPane.js';
 import type { EditorPaneHandle } from './components/EditorPane.js';
@@ -89,7 +87,9 @@ export function App() {
     initial.sampleIndex,
   );
   const [timingText, setTimingText] = useState('');
-  const [template, setTemplate] = useState<LynxTemplate | null>(null);
+  const [template, setTemplate] = useState<Record<string, unknown> | null>(
+    null,
+  );
   const pendingTimingRef = useRef<
     | { css: number | null; assemble: number; t0: number; buildEnd: number }
     | null

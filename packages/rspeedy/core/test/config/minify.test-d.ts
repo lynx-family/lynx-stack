@@ -87,6 +87,25 @@ describe('Config - minify', () => {
     })
   })
 
+  test('minify.threadOptions', () => {
+    assertType<Minify>({
+      mainThreadOptions: {
+        minimizerOptions: {
+          compress: {
+            pure_funcs: ['lynx.getJSModule'],
+          },
+        },
+      },
+      backgroundOptions: {
+        minimizerOptions: {
+          compress: {
+            pure_funcs: ['lynx.registerDataProcessors'],
+          },
+        },
+      },
+    })
+  })
+
   test('minify.extractComments', () => {
     assertType<Minify>({
       jsOptions: { extractComments: false },

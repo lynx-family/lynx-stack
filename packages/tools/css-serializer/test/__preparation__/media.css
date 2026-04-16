@@ -1,0 +1,16 @@
+@media screen and (max-width: 768px) {
+  .container {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .header {
+    font-size: 14px;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none;
+  }
+}

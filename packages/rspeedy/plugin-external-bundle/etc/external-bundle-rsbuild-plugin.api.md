@@ -5,12 +5,65 @@
 ```ts
 
 import type { ExternalsLoadingPluginOptions } from '@lynx-js/externals-loading-webpack-plugin';
+import type { ExternalValue } from '@lynx-js/externals-loading-webpack-plugin';
 import type { RsbuildPlugin } from '@rsbuild/core';
+
+// @public
+export const builtInExternalsPresetDefinitions: ExternalsPresetDefinitions;
+
+// @public
+export interface ExternalsPresetContext {
+    rootPath: string;
+}
+
+// @public
+export interface ExternalsPresetDefinition {
+    extends?: string | string[];
+    resolveExternals?: (value: boolean | object, context: ExternalsPresetContext) => ExternalsLoadingPluginOptions['externals'];
+    resolveManagedAssets?: (value: boolean | object, context: ExternalsPresetContext) => Map<string, string> | Record<string, string>;
+}
+
+// @public
+export type ExternalsPresetDefinitions = Record<string, ExternalsPresetDefinition>;
+
+// @public
+export interface ExternalsPresets {
+    [presetName: string]: boolean | object | undefined;
+    reactlynx?: boolean | ReactLynxExternalsPresetOptions;
+}
+
+// @public
+export function normalizeBundlePath(bundlePath: string): string;
 
 // @public
 export function pluginExternalBundle(options: PluginExternalBundleOptions): RsbuildPlugin;
 
 // @public
-export type PluginExternalBundleOptions = Pick<ExternalsLoadingPluginOptions, 'externals' | 'globalObject'>;
+export interface PluginExternalBundleOptions extends Pick<ExternalsLoadingPluginOptions, 'globalObject' | 'timeout'> {
+    externalBundleRoot?: string;
+    externals?: Record<string, PluginExternalConfig>;
+    externalsPresetDefinitions?: ExternalsPresetDefinitions;
+    externalsPresets?: ExternalsPresets;
+}
+
+// @public
+export type PluginExternalConfig = PluginExternalValue | string;
+
+// @public
+export interface PluginExternalValue extends Omit<ExternalValue, 'url'> {
+    bundlePath?: string;
+    // @deprecated
+    url?: string;
+}
+
+// @public
+export interface ReactLynxExternalsPresetOptions {
+    bundlePath?: string;
+    reactUmdPackageName?: string;
+    // @deprecated
+    url?: string;
+}
+
+// (No @packageDocumentation comment for this package)
 
 ```

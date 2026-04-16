@@ -9,20 +9,21 @@
 
 import { render } from 'preact';
 
-import { hydrate } from '../hydrate.js';
-import { LifecycleConstant } from '../lifecycleConstant.js';
-import { __pendingListUpdates } from '../pendingListUpdates.js';
-import { __root, setRoot } from '../root.js';
 import { destroyBackground } from './destroy.js';
-import { applyRefQueue } from '../snapshot/workletRef.js';
-import { SnapshotInstance, __page, snapshotInstanceManager } from '../snapshot.js';
-import { isEmptyObject } from '../utils.js';
-import { clearJSReadyEventIdSwap, isJSReady } from './event/jsReady.js';
 import { increaseReloadVersion } from './pass.js';
-import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
-import { shouldDelayUiOps } from './ref/delay.js';
 import { renderMainThread } from './render.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
+import { LifecycleConstant } from '../lifecycle/constant.js';
+import { __pendingListUpdates } from '../list/pendingListUpdates.js';
+import { hydrate } from '../renderToOpcodes/hydrate.js';
+import { __root, setRoot } from '../root.js';
+import { __page } from '../snapshot/definition.js';
+import { SnapshotInstance, snapshotInstanceManager } from '../snapshot/snapshot.js';
+import { applyRefQueue } from '../snapshot/workletRef.js';
+import { isEmptyObject } from '../utils.js';
+import { clearJSReadyEventIdSwap, isJSReady } from './event/jsReady.js';
+import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
+import { shouldDelayUiOps } from './ref/delay.js';
 
 function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {

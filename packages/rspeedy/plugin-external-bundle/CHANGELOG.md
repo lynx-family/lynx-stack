@@ -1,5 +1,25 @@
 # @lynx-js/external-bundle-rsbuild-plugin
 
+## 0.1.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: ([#2370](https://github.com/lynx-family/lynx-stack/pull/2370))
+
+  Simplify the API for external bundle builds by `externalsPresets` and `externalsPresetDefinitions`.
+
+### Patch Changes
+
+- Updated dependencies [[`7b7a0c6`](https://github.com/lynx-family/lynx-stack/commit/7b7a0c6ee35e32f9575436cb36b25f2931f43c05)]:
+  - @lynx-js/externals-loading-webpack-plugin@0.1.0
+
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies [[`ed566f0`](https://github.com/lynx-family/lynx-stack/commit/ed566f0fe6a14ffae59d21bd2c5e5dd2755f28a4)]:
+  - @lynx-js/externals-loading-webpack-plugin@0.0.5
+
 ## 0.0.3
 
 ### Patch Changes

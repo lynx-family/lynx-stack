@@ -1,17 +1,18 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { hydrate } from '../hydrate.js';
+import { markTiming, setPipeline } from './performance.js';
+import { LifecycleConstant } from '../lifecycle/constant.js';
 import { isJSReady, jsReady, jsReadyEventIdSwap, resetJSReady } from '../lifecycle/event/jsReady.js';
 import { reloadMainThread } from '../lifecycle/reload.js';
 import { renderMainThread } from '../lifecycle/render.js';
-import { LifecycleConstant } from '../lifecycleConstant.js';
-import { ssrHydrateByOpcodes } from '../opcodes.js';
-import { __pendingListUpdates } from '../pendingListUpdates.js';
+import { __pendingListUpdates } from '../list/pendingListUpdates.js';
+import { hydrate } from '../renderToOpcodes/hydrate.js';
+import { ssrHydrateByOpcodes } from '../renderToOpcodes/opcodes.js';
 import { __root, setRoot } from '../root.js';
-import { markTiming, setPipeline } from './performance.js';
+import { __page, setupPage } from '../snapshot/definition.js';
+import { SnapshotInstance } from '../snapshot/snapshot.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
-import { SnapshotInstance, __page, setupPage } from '../snapshot.js';
 import { isEmptyObject } from '../utils.js';
 
 function ssrEncode() {

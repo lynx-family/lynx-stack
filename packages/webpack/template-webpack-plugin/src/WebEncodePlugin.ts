@@ -5,7 +5,7 @@
 import type { Compilation, Compiler } from 'webpack';
 
 import type { LynxStyleNode } from '@lynx-js/css-serializer';
-import type { TasmJSONInfo } from '@lynx-js/web-core-wasm/encode';
+import type { TasmJSONInfo } from '@lynx-js/web-core/encode';
 
 import {
   LynxTemplatePlugin,
@@ -51,7 +51,7 @@ export class WebEncodePlugin {
           name: WebEncodePlugin.name,
           stage: WebEncodePlugin.BEFORE_ENCODE_HOOK_STAGE,
         }, (encodeOptions) => {
-          const { encodeData } = encodeOptions;
+          const { encodeData, intermediateAssets } = encodeOptions;
 
           const [name, content] = last(Object.entries(encodeData.manifest))!;
 
@@ -61,6 +61,7 @@ export class WebEncodePlugin {
               encodeData.lepusCode.root,
               ...encodeData.lepusCode.chunks,
               ...encodeData.css.chunks,
+              ...intermediateAssets.map((assetName) => ({ name: assetName })),
             ]
               .filter(asset => asset !== undefined)
               .forEach(asset => inlinedAssets.add(asset.name));
@@ -105,7 +106,7 @@ export class WebEncodePlugin {
           const isExperimentalWebBinary = process
             .env['EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE'];
           if (isExperimentalWebBinary === 'true') {
-            const { encode } = await import('@lynx-js/web-core-wasm/encode');
+            const { encode } = await import('@lynx-js/web-core/encode');
             return {
               buffer: Buffer.from(encode(tasmJSONInfo as TasmJSONInfo)),
               debugInfo: '',

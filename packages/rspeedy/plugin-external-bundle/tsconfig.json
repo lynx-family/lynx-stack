@@ -6,6 +6,6 @@
   },
   "include": ["src", "test", "vitest.config.ts"],
   "references": [
-    { "path": "../core/tsconfig.build.json" },
+    { "path": "../../webpack/externals-loading-webpack-plugin/tsconfig.build.json" },
   ],
 }

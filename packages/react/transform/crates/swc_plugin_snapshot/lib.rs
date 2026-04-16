@@ -2,6 +2,7 @@ use serde::Deserialize;
 use std::{
   cell::RefCell,
   collections::{HashMap, HashSet},
+  rc::Rc,
 };
 
 use once_cell::sync::Lazy;
@@ -9,8 +10,9 @@ use swc_core::{
   common::{
     comments::{CommentKind, Comments},
     errors::HANDLER,
+    sync::Lrc,
     util::take::Take,
-    Mark, Span, Spanned, SyntaxContext, DUMMY_SP,
+    Mark, SourceMap, Span, Spanned, SyntaxContext, DUMMY_SP,
   },
   ecma::{
     ast::{JSXExpr, *},
@@ -34,7 +36,7 @@ use swc_plugins_shared::{
   },
   target::TransformTarget,
   transform_mode::TransformMode,
-  utils::calc_hash,
+  utils::{calc_hash, calc_hash_number},
 };
 
 use self::attr_name::AttrName;
@@ -99,6 +101,14 @@ static NO_FLATTEN_ATTRIBUTES: Lazy<HashSet<String>> = Lazy::new(|| {
     "exposure-id".to_string(),
   ])
 });
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct UISourceMapRecord {
+  pub ui_source_map: i32,
+  pub line_number: u32,
+  pub column_number: u32,
+  pub snapshot_id: String,
+}
 
 #[derive(Debug)]
 pub enum DynamicPart {
@@ -238,9 +248,10 @@ impl DynamicPart {
   }
 }
 
-pub struct DynamicPartExtractor<'a, V>
+pub struct DynamicPartExtractor<'a, V, F>
 where
   V: VisitMut,
+  F: Fn(Span) -> Expr,
 {
   page_id: Lazy<Ident>,
   runtime_id: Expr,
@@ -253,13 +264,21 @@ where
   dynamic_parts: Vec<DynamicPart>,
   dynamic_part_visitor: &'a mut V,
   key: Option<JSXAttrValue>,
+  enable_ui_source_map: bool,
+  node_index_fn: F,
 }
 
-impl<'a, V> DynamicPartExtractor<'a, V>
+impl<'a, V, F> DynamicPartExtractor<'a, V, F>
 where
   V: VisitMut,
+  F: Fn(Span) -> Expr,
 {
-  fn new(runtime_id: Expr, dynamic_part_visitor: &'a mut V) -> Self {
+  fn new(
+    runtime_id: Expr,
+    dynamic_part_visitor: &'a mut V,
+    enable_ui_source_map: bool,
+    node_index_fn: F,
+  ) -> Self {
     DynamicPartExtractor {
       page_id: Lazy::new(|| private_ident!("pageId")),
       runtime_id,
@@ -272,7 +291,62 @@ where
       dynamic_parts: vec![],
       dynamic_part_visitor,
       key: None,
+      enable_ui_source_map,
+      node_index_fn,
     }
+  }
+
+  fn node_index_expr_from_span(&self, span: Span) -> Expr {
+    (self.node_index_fn)(span)
+  }
+
+  fn node_index_config_expr(&self, span: Span) -> Expr {
+    Expr::Object(ObjectLit {
+      span: DUMMY_SP,
+      props: vec![PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
+        key: PropName::Ident(IdentName::new("nodeIndex".into(), DUMMY_SP)),
+        value: Box::new(self.node_index_expr_from_span(span)),
+      })))],
+    })
+  }
+
+  fn static_stmt_from_create_call(
+    &self,
+    element: Ident,
+    callee: &str,
+    mut args: Vec<Expr>,
+    span: Span,
+  ) -> Stmt {
+    if self.enable_ui_source_map {
+      args.push(self.node_index_config_expr(span));
+    }
+
+    Stmt::Decl(Decl::Var(Box::new(VarDecl {
+      ctxt: SyntaxContext::default(),
+      span: DUMMY_SP,
+      kind: VarDeclKind::Const,
+      declare: false,
+      decls: vec![VarDeclarator {
+        span: DUMMY_SP,
+        definite: false,
+        name: Pat::Ident(element.into()),
+        init: Some(Box::new(Expr::Call(CallExpr {
+          ctxt: SyntaxContext::default(),
+          span: DUMMY_SP,
+          callee: Callee::Expr(Box::new(Expr::Ident(
+            IdentName::new(callee.into(), DUMMY_SP).into(),
+          ))),
+          args: args
+            .into_iter()
+            .map(|expr| ExprOrSpread {
+              spread: None,
+              expr: Box::new(expr),
+            })
+            .collect(),
+          type_args: None,
+        }))),
+      }],
+    })))
   }
 
   fn static_stmt_from_jsx_element(&mut self, n: &JSXElement, el: Ident) -> Stmt {
@@ -282,38 +356,43 @@ where
       let tag = str.value.to_string_lossy();
       match tag.as_ref() {
         "view" => {
-          static_stmt = quote!(
-            r#"const $element = __CreateView($page_id)"# as Stmt,
-            element = el.clone(),
-            page_id = self.page_id.clone(),
+          static_stmt = self.static_stmt_from_create_call(
+            el.clone(),
+            "__CreateView",
+            vec![Expr::Ident(self.page_id.clone())],
+            n.opening.span,
           );
         }
         "scroll-view" => {
-          static_stmt = quote!(
-            r#"const $element = __CreateScrollView($page_id)"# as Stmt,
-            element = el.clone(),
-            page_id = self.page_id.clone(),
+          static_stmt = self.static_stmt_from_create_call(
+            el.clone(),
+            "__CreateScrollView",
+            vec![Expr::Ident(self.page_id.clone())],
+            n.opening.span,
           );
         }
         "x-scroll-view" => {
-          static_stmt = quote!(
-            r#"const $element = __CreateScrollView($page_id, { tag: "x-scroll-view" })"# as Stmt,
-            element = el.clone(),
-            page_id = self.page_id.clone(),
+          static_stmt = self.static_stmt_from_create_call(
+            el.clone(),
+            "__CreateScrollView",
+            vec![Expr::Ident(self.page_id.clone())],
+            n.opening.span,
           );
         }
         "image" => {
-          static_stmt = quote!(
-            r#"const $element = __CreateImage($page_id)"# as Stmt,
-            element = el.clone(),
-            page_id = self.page_id.clone(),
+          static_stmt = self.static_stmt_from_create_call(
+            el.clone(),
+            "__CreateImage",
+            vec![Expr::Ident(self.page_id.clone())],
+            n.opening.span,
           );
         }
         "text" => {
-          static_stmt = quote!(
-            r#"const $element = __CreateText($page_id)"# as Stmt,
-            element = el.clone(),
-            page_id = self.page_id.clone(),
+          static_stmt = self.static_stmt_from_create_call(
+            el.clone(),
+            "__CreateText",
+            vec![Expr::Ident(self.page_id.clone())],
+            n.opening.span,
           );
         }
         "wrapper" => {
@@ -335,18 +414,19 @@ where
           );
         }
         "frame" => {
-          static_stmt = quote!(
-            r#"const $element = __CreateFrame($page_id)"# as Stmt,
-            element = el.clone(),
-            page_id = self.page_id.clone(),
+          static_stmt = self.static_stmt_from_create_call(
+            el.clone(),
+            "__CreateFrame",
+            vec![Expr::Ident(self.page_id.clone())],
+            n.opening.span,
           );
         }
         _ => {
-          static_stmt = quote!(
-              r#"const $element = __CreateElement($name, $page_id)"# as Stmt,
-              element = el.clone(),
-              name: Expr = Expr::Lit(Lit::Str(str)),
-              page_id = self.page_id.clone(),
+          static_stmt = self.static_stmt_from_create_call(
+            el.clone(),
+            "__CreateElement",
+            vec![Expr::Lit(Lit::Str(str)), Expr::Ident(self.page_id.clone())],
+            n.opening.span,
           );
         }
       };
@@ -356,9 +436,10 @@ where
   }
 }
 
-impl<V> VisitMut for DynamicPartExtractor<'_, V>
+impl<V, F> VisitMut for DynamicPartExtractor<'_, V, F>
 where
   V: VisitMut,
+  F: Fn(Span) -> Expr,
 {
   fn visit_mut_jsx_element_childs(&mut self, n: &mut Vec<JSXElementChild>) {
     if n.is_empty() {
@@ -513,6 +594,8 @@ where
         .any(|attr_or_spread| match attr_or_spread {
           JSXAttrOrSpread::SpreadElement(_) => true,
           JSXAttrOrSpread::JSXAttr(_) => false,
+          #[cfg(swc_ast_unknown)]
+          _ => panic!("unknown node"),
         });
 
       if jsx_is_list_item(n) {
@@ -543,6 +626,8 @@ where
               JSXAttrOrSpread::SpreadElement(_spread) => {
                 return false;
               }
+              #[cfg(swc_ast_unknown)]
+              _ => panic!("unknown node"),
             }
 
             true
@@ -579,7 +664,11 @@ where
               _ => true,
             },
             JSXAttrName::JSXNamespacedName(_) => true,
+            #[cfg(swc_ast_unknown)]
+            _ => panic!("unknown node"),
           },
+          #[cfg(swc_ast_unknown)]
+          _ => panic!("unknown node"),
         });
 
       if has_spread_element {
@@ -662,6 +751,8 @@ where
                         })) => {}
                         Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
                         Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
+                        #[cfg(swc_ast_unknown)]
+                        _ => panic!("unknown node"),
                       };
                     }
                     AttrName::Dataset(name) => {
@@ -701,6 +792,8 @@ where
                         })) => {}
                         Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
                         Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
+                        #[cfg(swc_ast_unknown)]
+                        _ => panic!("unknown node"),
                       };
                     }
                     AttrName::Event(..) | AttrName::Ref => {
@@ -766,6 +859,8 @@ where
                         })) => {}
                         Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
                         Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
+                        #[cfg(swc_ast_unknown)]
+                        _ => panic!("unknown node"),
                       };
                     }
                     AttrName::Class => {
@@ -806,6 +901,8 @@ where
                         })) => {}
                         Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
                         Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
+                        #[cfg(swc_ast_unknown)]
+                        _ => panic!("unknown node"),
                       };
                     }
                     AttrName::ID => {
@@ -836,6 +933,8 @@ where
                         })) => {}
                         Some(JSXAttrValue::JSXElement(_)) => unreachable!("Unexpected JSXElement in JSX attribute value - not supported"),
                         Some(JSXAttrValue::JSXFragment(_)) => unreachable!("Unexpected JSXFragment in JSX attribute value - not supported"),
+                        #[cfg(swc_ast_unknown)]
+                        _ => panic!("unknown node"),
                       };
                     }
                     AttrName::ListItemPlatformInfo => unreachable!("Unexpected ListItemPlatformInfo attribute in static JSX processing"),
@@ -867,8 +966,12 @@ where
                     _ => todo!(),
                   }
                 }
+                #[cfg(swc_ast_unknown)]
+                _ => panic!("unknown node"),
               };
             }
+            #[cfg(swc_ast_unknown)]
+            _ => panic!("unknown node"),
           });
       }
 
@@ -1013,6 +1116,9 @@ pub struct JSXTransformerConfig {
   /// @internal
   pub target: TransformTarget,
   /// @internal
+  #[serde(default)]
+  pub enable_ui_source_map: bool,
+  /// @internal
   pub is_dynamic_component: Option<bool>,
 }
 
@@ -1024,6 +1130,7 @@ impl Default for JSXTransformerConfig {
       jsx_import_source: Some("@lynx-js/react".into()),
       filename: Default::default(),
       target: TransformTarget::LEPUS,
+      enable_ui_source_map: false,
       is_dynamic_component: Some(false),
     }
   }
@@ -1045,6 +1152,8 @@ where
   current_snapshot_defs: Vec<ModuleItem>,
   current_snapshot_id: Option<Ident>,
   comments: Option<C>,
+  pub ui_source_map_records: Rc<RefCell<Vec<UISourceMapRecord>>>,
+  pub source_map: Option<Lrc<SourceMap>>,
 }
 
 impl<C> JSXTransformer<C>
@@ -1056,7 +1165,12 @@ where
     self
   }
 
-  pub fn new(cfg: JSXTransformerConfig, comments: Option<C>, mode: TransformMode) -> Self {
+  pub fn new(
+    cfg: JSXTransformerConfig,
+    comments: Option<C>,
+    mode: TransformMode,
+    source_map: Option<Lrc<SourceMap>>,
+  ) -> Self {
     JSXTransformer {
       filename_hash: calc_hash(&cfg.filename.clone()),
       content_hash: "test".into(),
@@ -1077,6 +1191,8 @@ where
       current_snapshot_defs: vec![],
       current_snapshot_id: None,
       comments,
+      ui_source_map_records: Rc::new(RefCell::new(vec![])),
+      source_map,
     }
   }
 
@@ -1191,7 +1307,45 @@ where
 
     let target = self.cfg.target;
     let runtime_id = self.runtime_id.clone();
-    let mut dynamic_part_extractor = DynamicPartExtractor::new(self.runtime_id.clone(), self);
+    let filename_hash = self.filename_hash.clone();
+    let content_hash = self.content_hash.clone();
+    let ui_source_map_records = self.ui_source_map_records.clone();
+    let snapshot_uid_for_captured = snapshot_uid.clone();
+    let source_map = self.source_map.clone();
+    let node_index_fn = move |span: Span| {
+      let ui_source_map =
+        calc_hash_number(&format!("{}:{}:{}", filename_hash, content_hash, span.lo.0));
+
+      // record ui source map entry
+      let mut line_number = 0;
+      let mut column_number = 0;
+      if span.lo.0 > 0 {
+        if let Some(cm) = &source_map {
+          let loc = cm.lookup_char_pos(span.lo);
+          line_number = loc.line as u32;
+          column_number = loc.col.0 as u32 + 1;
+        }
+      }
+      ui_source_map_records.borrow_mut().push(UISourceMapRecord {
+        ui_source_map,
+        line_number,
+        column_number,
+        snapshot_id: snapshot_uid_for_captured.clone(),
+      });
+
+      Expr::Lit(Lit::Num(Number {
+        span: DUMMY_SP,
+        value: ui_source_map as f64,
+        raw: None,
+      }))
+    };
+
+    let mut dynamic_part_extractor = DynamicPartExtractor::new(
+      self.runtime_id.clone(),
+      self,
+      self.cfg.enable_ui_source_map,
+      node_index_fn,
+    );
 
     node.visit_mut_with(&mut dynamic_part_extractor);
 
@@ -1524,10 +1678,12 @@ mod tests {
         visit_mut_pass(JSXTransformer::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
+            enable_ui_source_map: true,
             ..Default::default()
           },
           Some(t.comments.clone()),
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
       )
     },
@@ -1556,10 +1712,12 @@ mod tests {
         visit_mut_pass(JSXTransformer::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
+            enable_ui_source_map: true,
             ..Default::default()
           },
           Some(t.comments.clone()),
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
       )
     },
@@ -1588,10 +1746,12 @@ mod tests {
         visit_mut_pass(JSXTransformer::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
+            enable_ui_source_map: true,
             ..Default::default()
           },
           Some(t.comments.clone()),
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
       )
     },
@@ -1626,6 +1786,7 @@ mod tests {
           },
           Some(t.comments.clone()),
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
       )
     },
@@ -1662,6 +1823,7 @@ mod tests {
           },
           Some(t.comments.clone()),
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
       )
     },
@@ -1694,6 +1856,7 @@ mod tests {
           },
           Some(t.comments.clone()),
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
       )
     },
@@ -1721,6 +1884,7 @@ mod tests {
           },
           Some(t.comments.clone()),
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
       )
     },
@@ -1749,6 +1913,7 @@ mod tests {
       },
       Some(t.comments.clone()),
       TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     basic_component,
     // Input codes
@@ -1772,6 +1937,7 @@ mod tests {
       },
       Some(t.comments.clone()),
       TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     page_component,
     // Input codes
@@ -1798,6 +1964,7 @@ mod tests {
       },
       Some(t.comments.clone()),
       TransformMode::Development,
+      Some(t.cm.clone()),
     )),
     page_element_dev,
     // Input codes
@@ -1824,6 +1991,7 @@ mod tests {
       },
       Some(t.comments.clone()),
       TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     page_element,
     // Input codes
@@ -1849,7 +2017,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     basic_component_with_static_sibling,
     // Input codes
@@ -1878,6 +2047,7 @@ mod tests {
           },
           None,
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -1925,6 +2095,7 @@ mod tests {
           },
           None,
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -1967,7 +2138,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     basic_expr_container,
     // Input codes
@@ -1990,7 +2162,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     basic_expr_container_with_static_sibling,
     // Input codes
@@ -2014,7 +2187,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_inject_implicit_flatten,
     // Input codes
@@ -2048,7 +2222,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_static_extract_inline_style,
     // Input codes
@@ -2079,7 +2254,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_static_extract_dynamic_inline_style,
     // Input codes
@@ -2103,7 +2279,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_extract_css_id_without_css_id,
     // Input codes
@@ -2127,7 +2304,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_extract_css_id,
     // Input codes
@@ -2155,7 +2333,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_extract_css_id_dynamic_component,
     // Input codes
@@ -2183,7 +2362,8 @@ mod tests {
         ..Default::default()
       },
       Some(t.comments.clone()),
-      TransformMode::Test
+      TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_extract_css_id_dynamic_component_without_css_id,
     // Input codes
@@ -2212,6 +2392,7 @@ mod tests {
           },
           None,
           TransformMode::Test,
+          Some(t.cm.clone()),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2255,6 +2436,7 @@ mod tests {
         },
         None,
         TransformMode::Test,
+        None,
       ))
     },
     inline_style_literal,
@@ -2279,6 +2461,7 @@ mod tests {
         },
         None,
         TransformMode::Test,
+        None,
       ))
     },
     inline_style_literal_unknown_property,
@@ -2303,6 +2486,7 @@ mod tests {
         },
         None,
         TransformMode::Test,
+        None,
       ))
     },
     empty_module,
@@ -2327,6 +2511,7 @@ mod tests {
         },
         None,
         TransformMode::Development,
+        None,
       ))
     },
     mode_development_spread,
@@ -2355,6 +2540,7 @@ mod tests {
           },
           None,
           TransformMode::Development,
+          Some(t.cm.clone()),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2407,6 +2593,7 @@ mod tests {
           },
           None,
           TransformMode::Development,
+          Some(t.cm.clone()),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2461,6 +2648,7 @@ mod tests {
           },
           None,
           TransformMode::Development,
+          Some(t.cm.clone()),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2515,6 +2703,7 @@ mod tests {
           },
           None,
           TransformMode::Development,
+          Some(t.cm.clone()),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2567,6 +2756,7 @@ mod tests {
           },
           None,
           TransformMode::Development,
+          Some(t.cm.clone()),
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2613,6 +2803,7 @@ mod tests {
       },
       Some(t.comments.clone()),
       TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_escape_newline_character,
     // Input codes
@@ -2663,6 +2854,7 @@ aaaaa
       },
       Some(t.comments.clone()),
       TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_wrap_dynamic_key,
     // Input codes
@@ -2688,6 +2880,7 @@ aaaaa
       },
       Some(t.comments.clone()),
       TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_set_attribute_for_text_node,
     // Input codes
@@ -2716,6 +2909,7 @@ aaaaa
       },
       Some(t.comments.clone()),
       TransformMode::Test,
+      Some(t.cm.clone()),
     )),
     should_create_raw_text_node_for_text_node,
     // Input codes

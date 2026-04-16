@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { elementTree } from './utils/nativeMethod';
-import { BackgroundSnapshotInstance, hydrate } from '../src/backgroundSnapshot';
-import { backgroundSnapshotInstanceManager, SnapshotInstance, snapshotInstanceManager } from '../src/snapshot';
+import {
+  SnapshotInstance,
+  snapshotInstanceManager,
+  backgroundSnapshotInstanceManager,
+  BackgroundSnapshotInstance,
+  hydrate,
+} from '../src/snapshot';
 
 const HOLE = null;
 
@@ -179,7 +184,7 @@ describe('dual-runtime hydrate', () => {
     aa.insertBefore(bb2);
 
     // happens when first-screen render is failed
-    expect(hydrate({ 'id': -1, 'type': 'root' }, aa)).toMatchInlineSnapshot(`
+    expect(hydrate({ id: -1, type: 'root' }, aa)).toMatchInlineSnapshot(`
       [
         0,
         "__snapshot_a94a8_test_2",

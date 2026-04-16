@@ -9,6 +9,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { setupDocument } from '../../src/document';
 import { setupPage, snapshotInstanceManager } from '../../src/snapshot';
 import { elementTree } from '../utils/nativeMethod';
+import { globalEnvManager } from '../utils/envManager';
 
 async function importHooksWithProfileRecording(isRecording) {
   const original = lynx.performance.isProfileRecording;
@@ -30,6 +31,7 @@ describe('react hooks profile', () => {
   });
 
   beforeEach(() => {
+    globalEnvManager.switchToBackground();
     snapshotInstanceManager.clear();
     scratch = document.createElement('root');
   });

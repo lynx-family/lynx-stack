@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { BackgroundSnapshotInstance } from '../src/backgroundSnapshot';
 import { globalEnvManager } from './utils/envManager';
 import { elementTree } from './utils/nativeMethod';
 import { registerWorkletOnBackground } from '../src/internal';
@@ -17,6 +16,7 @@ import {
 } from '../src/lifecycle/patch/snapshotPatch';
 import { snapshotPatchApply } from '../src/lifecycle/patch/snapshotPatchApply';
 import {
+  BackgroundSnapshotInstance,
   SnapshotInstance,
   createSnapshot,
   snapshotCreatorMap,

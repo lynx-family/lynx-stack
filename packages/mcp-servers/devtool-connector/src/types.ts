@@ -71,7 +71,21 @@ export type ListSessionRequest = CustomizedEvent<
 >;
 export type ListSessionResponse = CustomizedEvent<'SessionList', Session[]>;
 
-export type GlobalKeys = 'enable_devtool';
+export type GlobalKeys =
+  | 'enable_devtool'
+  | 'enable_logbox'
+  | 'enable_debug_mode'
+  | 'enable_launch_record'
+  | 'enable_quickjs_debug'
+  | 'enable_quickjs_cache'
+  | 'enable_v8'
+  | 'enable_dom_tree'
+  | 'enable_long_press_menu'
+  | 'enable_highlight_touch'
+  | 'enable_preview_screen_shot'
+  | 'enable_pixel_copy'
+  | 'enable_fsp_screenshot'
+  | 'enable_perf_metrics';
 export type GetGlobalSwitchRequest = CustomizedEvent<'GetGlobalSwitch', {
   client_id: number;
   session_id: number;
@@ -122,6 +136,20 @@ export function isListSessionResponse(
 ): response is ListSessionResponse {
   return response.event === 'Customized'
     && response.data.type === 'SessionList';
+}
+
+export function isGetGlobalSwitchResponse(
+  response: Response,
+): response is GetGlobalSwitchResponse {
+  return response.event === 'Customized'
+    && response.data.type === 'GetGlobalSwitch';
+}
+
+export function isSetGlobalSwitchResponse(
+  response: Response,
+): response is SetGlobalSwitchResponse {
+  return response.event === 'Customized'
+    && response.data.type === 'SetGlobalSwitch';
 }
 
 export function isCustomizedResponseWithType<

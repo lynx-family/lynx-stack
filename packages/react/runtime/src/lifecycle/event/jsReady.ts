@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { profileEnd, profileStart } from '../../debug/profile.js';
-import { LifecycleConstant } from '../../lifecycleConstant.js';
+import { LifecycleConstant } from '../../lifecycle/constant.js';
 import { __root } from '../../root.js';
 
 let isJSReady: boolean;
@@ -12,12 +12,14 @@ function jsReady(): void {
   isJSReady = true;
 
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-    profileStart('ReactLynx::transferRoot');
     profileStart('ReactLynx::serializeRoot');
   }
   const root = JSON.stringify(__root);
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
+  }
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+    profileStart('ReactLynx::transferRoot');
   }
   __OnLifecycleEvent([
     LifecycleConstant.firstScreen, /* FIRST_SCREEN */

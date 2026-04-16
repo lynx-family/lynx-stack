@@ -7,21 +7,33 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { elementTree, waitSchedule } from './utils/nativeMethod';
 import { globalEnvManager } from './utils/envManager';
 import { setupDocument } from '../src/document';
-import { renderOpcodesInto } from '../src/opcodes';
-import renderToString from '../src/renderToOpcodes';
+// import { renderOpcodesInto } from '../src/opcodes';
+import renderToStringBase from '../src/renderToOpcodes';
 import { setupPage, SnapshotInstance, snapshotInstanceManager } from '../src/snapshot';
 import { createElement, cloneElement } from '../lepus';
 import { Suspense } from 'preact/compat';
 import { createSuspender } from './createSuspender';
 import { __root } from '../src/root';
 
-describe('renderToOpcodes', () => {
+const renderToString = (element, root = __root) => {
+  return renderToStringBase(element, null, root);
+};
+
+describe('renderToString', () => {
   beforeAll(() => {
     globalEnvManager.switchToMainThread();
   });
 
+  beforeEach(() => {
+    setupPage(__CreatePage('0', 0));
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
+
+    globalEnvManager.resetEnv();
+    elementTree.clear();
+    snapshotInstanceManager.clear();
   });
 
   it('should render hello world', () => {
@@ -39,12 +51,25 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
-          "__slotIndex": undefined,
-          "children": undefined,
+          "__slotIndex": 0,
+          "children": [
+            {
+              "__slotIndex": 0,
+              "children": undefined,
+              "extraProps": undefined,
+              "id": -4,
+              "type": null,
+              "values": [
+                "hello world",
+              ],
+            },
+          ],
           "extraProps": undefined,
           "id": -3,
           "type": "__snapshot_a94a8_test_1",
-          "values": undefined,
+          "values": [
+            "a",
+          ],
         },
         0,
         2,
@@ -53,7 +78,19 @@ describe('renderToOpcodes', () => {
           "a",
         ],
         3,
-        "hello world",
+        [
+          {
+            "__slotIndex": 0,
+            "children": undefined,
+            "extraProps": undefined,
+            "id": -4,
+            "type": null,
+            "values": [
+              "hello world",
+            ],
+          },
+          "hello world",
+        ],
         0,
         1,
       ]
@@ -80,26 +117,69 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
-          "__slotIndex": undefined,
-          "children": undefined,
+          "__slotIndex": 0,
+          "children": [
+            {
+              "__slotIndex": 0,
+              "children": [
+                {
+                  "__slotIndex": 0,
+                  "children": undefined,
+                  "extraProps": undefined,
+                  "id": -5,
+                  "type": null,
+                  "values": [
+                    1000,
+                  ],
+                },
+              ],
+              "extraProps": undefined,
+              "id": -4,
+              "type": "__snapshot_a94a8_test_2",
+              "values": undefined,
+            },
+          ],
           "extraProps": undefined,
-          "id": -4,
+          "id": -2,
           "type": "__snapshot_a94a8_test_3",
           "values": undefined,
         },
         0,
         0,
         {
-          "__slotIndex": undefined,
-          "children": undefined,
+          "__slotIndex": 0,
+          "children": [
+            {
+              "__slotIndex": 0,
+              "children": undefined,
+              "extraProps": undefined,
+              "id": -5,
+              "type": null,
+              "values": [
+                1000,
+              ],
+            },
+          ],
           "extraProps": undefined,
-          "id": -6,
+          "id": -4,
           "type": "__snapshot_a94a8_test_2",
           "values": undefined,
         },
         0,
         3,
-        1000,
+        [
+          {
+            "__slotIndex": 0,
+            "children": undefined,
+            "extraProps": undefined,
+            "id": -5,
+            "type": null,
+            "values": [
+              1000,
+            ],
+          },
+          1000,
+        ],
         0,
         1,
         1,
@@ -129,26 +209,69 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
-          "__slotIndex": undefined,
-          "children": undefined,
+          "__slotIndex": 0,
+          "children": [
+            {
+              "__slotIndex": 0,
+              "children": [
+                {
+                  "__slotIndex": 0,
+                  "children": undefined,
+                  "extraProps": undefined,
+                  "id": -4,
+                  "type": null,
+                  "values": [
+                    1,
+                  ],
+                },
+              ],
+              "extraProps": undefined,
+              "id": -3,
+              "type": "__snapshot_a94a8_test_4",
+              "values": undefined,
+            },
+          ],
           "extraProps": undefined,
-          "id": -7,
+          "id": -2,
           "type": "__snapshot_a94a8_test_5",
           "values": undefined,
         },
         0,
         0,
         {
-          "__slotIndex": undefined,
-          "children": undefined,
+          "__slotIndex": 0,
+          "children": [
+            {
+              "__slotIndex": 0,
+              "children": undefined,
+              "extraProps": undefined,
+              "id": -4,
+              "type": null,
+              "values": [
+                1,
+              ],
+            },
+          ],
           "extraProps": undefined,
-          "id": -8,
+          "id": -3,
           "type": "__snapshot_a94a8_test_4",
           "values": undefined,
         },
         0,
         3,
-        1,
+        [
+          {
+            "__slotIndex": 0,
+            "children": undefined,
+            "extraProps": undefined,
+            "id": -4,
+            "type": null,
+            "values": [
+              1,
+            ],
+          },
+          1,
+        ],
         0,
         1,
         1,
@@ -172,12 +295,15 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
-          "__slotIndex": undefined,
+          "__slotIndex": 0,
           "children": undefined,
           "extraProps": undefined,
-          "id": -9,
+          "id": -2,
           "type": "__snapshot_a94a8_test_6",
-          "values": undefined,
+          "values": [
+            ${random},
+            "hello world",
+          ],
         },
         0,
         2,
@@ -205,16 +331,39 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
-          "__slotIndex": undefined,
-          "children": undefined,
+          "__slotIndex": 0,
+          "children": [
+            {
+              "__slotIndex": 0,
+              "children": undefined,
+              "extraProps": undefined,
+              "id": -3,
+              "type": null,
+              "values": [
+                "111",
+              ],
+            },
+          ],
           "extraProps": undefined,
-          "id": -10,
+          "id": -2,
           "type": "__snapshot_a94a8_test_7",
           "values": undefined,
         },
         0,
         3,
-        "111",
+        [
+          {
+            "__slotIndex": 0,
+            "children": undefined,
+            "extraProps": undefined,
+            "id": -3,
+            "type": null,
+            "values": [
+              "111",
+            ],
+          },
+          "111",
+        ],
         0,
         1,
       ]
@@ -237,16 +386,39 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
-          "__slotIndex": undefined,
-          "children": undefined,
+          "__slotIndex": 0,
+          "children": [
+            {
+              "__slotIndex": 0,
+              "children": undefined,
+              "extraProps": undefined,
+              "id": -3,
+              "type": null,
+              "values": [
+                "111",
+              ],
+            },
+          ],
           "extraProps": undefined,
-          "id": -11,
+          "id": -2,
           "type": "__snapshot_a94a8_test_8",
           "values": undefined,
         },
         0,
         3,
-        "111",
+        [
+          {
+            "__slotIndex": 0,
+            "children": undefined,
+            "extraProps": undefined,
+            "id": -3,
+            "type": null,
+            "values": [
+              "111",
+            ],
+          },
+          "111",
+        ],
         0,
         1,
       ]
@@ -267,16 +439,39 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
-          "__slotIndex": undefined,
-          "children": undefined,
+          "__slotIndex": 0,
+          "children": [
+            {
+              "__slotIndex": 0,
+              "children": undefined,
+              "extraProps": undefined,
+              "id": -3,
+              "type": null,
+              "values": [
+                "111",
+              ],
+            },
+          ],
           "extraProps": undefined,
-          "id": -12,
+          "id": -2,
           "type": "__snapshot_a94a8_test_9",
           "values": undefined,
         },
         0,
         3,
-        "111",
+        [
+          {
+            "__slotIndex": 0,
+            "children": undefined,
+            "extraProps": undefined,
+            "id": -3,
+            "type": null,
+            "values": [
+              "111",
+            ],
+          },
+          "111",
+        ],
         0,
         1,
       ]
@@ -296,26 +491,69 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
-          "__slotIndex": undefined,
-          "children": undefined,
+          "__slotIndex": 0,
+          "children": [
+            {
+              "__slotIndex": 0,
+              "children": [
+                {
+                  "__slotIndex": 0,
+                  "children": undefined,
+                  "extraProps": undefined,
+                  "id": -4,
+                  "type": null,
+                  "values": [
+                    11111,
+                  ],
+                },
+              ],
+              "extraProps": undefined,
+              "id": -3,
+              "type": "__snapshot_a94a8_test_11",
+              "values": undefined,
+            },
+          ],
           "extraProps": undefined,
-          "id": -13,
+          "id": -2,
           "type": "__snapshot_a94a8_test_10",
           "values": undefined,
         },
         0,
         0,
         {
-          "__slotIndex": undefined,
-          "children": undefined,
+          "__slotIndex": 0,
+          "children": [
+            {
+              "__slotIndex": 0,
+              "children": undefined,
+              "extraProps": undefined,
+              "id": -4,
+              "type": null,
+              "values": [
+                11111,
+              ],
+            },
+          ],
           "extraProps": undefined,
-          "id": -14,
+          "id": -3,
           "type": "__snapshot_a94a8_test_11",
           "values": undefined,
         },
         0,
         3,
-        11111,
+        [
+          {
+            "__slotIndex": 0,
+            "children": undefined,
+            "extraProps": undefined,
+            "id": -4,
+            "type": null,
+            "values": [
+              11111,
+            ],
+          },
+          11111,
+        ],
         0,
         1,
         1,
@@ -335,26 +573,69 @@ describe('renderToOpcodes', () => {
       [
         0,
         {
-          "__slotIndex": undefined,
-          "children": undefined,
+          "__slotIndex": 0,
+          "children": [
+            {
+              "__slotIndex": 0,
+              "children": [
+                {
+                  "__slotIndex": 0,
+                  "children": undefined,
+                  "extraProps": undefined,
+                  "id": -7,
+                  "type": null,
+                  "values": [
+                    12345,
+                  ],
+                },
+              ],
+              "extraProps": undefined,
+              "id": -6,
+              "type": "__snapshot_a94a8_test_13",
+              "values": undefined,
+            },
+          ],
           "extraProps": undefined,
-          "id": -15,
+          "id": -5,
           "type": "__snapshot_a94a8_test_12",
           "values": undefined,
         },
         0,
         0,
         {
-          "__slotIndex": undefined,
-          "children": undefined,
+          "__slotIndex": 0,
+          "children": [
+            {
+              "__slotIndex": 0,
+              "children": undefined,
+              "extraProps": undefined,
+              "id": -7,
+              "type": null,
+              "values": [
+                12345,
+              ],
+            },
+          ],
           "extraProps": undefined,
-          "id": -16,
+          "id": -6,
           "type": "__snapshot_a94a8_test_13",
           "values": undefined,
         },
         0,
         3,
-        12345,
+        [
+          {
+            "__slotIndex": 0,
+            "children": undefined,
+            "extraProps": undefined,
+            "id": -7,
+            "type": null,
+            "values": [
+              12345,
+            ],
+          },
+          12345,
+        ],
         0,
         1,
         1,
@@ -660,13 +941,14 @@ describe('renderOpcodesInto', () => {
   it('should render hello world', () => {
     scratch.ensureElements();
 
-    const opcodes = renderToString(
+    renderToString(
       <view>
         <text>Hello World</text>
       </view>,
+      scratch,
     );
 
-    renderOpcodesInto(opcodes, scratch);
+    // renderOpcodesInto(opcodes, scratch);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -685,14 +967,15 @@ describe('renderOpcodesInto', () => {
   it('should render attr', () => {
     scratch.ensureElements();
 
-    const opcodes = renderToString(
+    renderToString(
       <view>
         <text>Hello World</text>
         <raw-text text={'Hello World'.toLowerCase()} />
       </view>,
+      scratch,
     );
 
-    renderOpcodesInto(opcodes, scratch);
+    // renderOpcodesInto(opcodes, scratch);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -714,14 +997,15 @@ describe('renderOpcodesInto', () => {
   it('should render string', () => {
     scratch.ensureElements();
 
-    const opcodes = renderToString(
+    renderToString(
       <view>
         <text>Hello World</text>
         {'aaaa'.toUpperCase()}
       </view>,
+      scratch,
     );
 
-    renderOpcodesInto(opcodes, scratch);
+    // renderOpcodesInto(opcodes, scratch);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -745,14 +1029,15 @@ describe('renderOpcodesInto', () => {
   it('should render with multi-children', () => {
     scratch.ensureElements();
 
-    const opcodes = renderToString(
+    renderToString(
       <view>
         <text>Hello World</text>
         {[<view>A</view>, <view>B</view>, <view>C</view>]}
       </view>,
+      scratch,
     );
 
-    renderOpcodesInto(opcodes, scratch);
+    // renderOpcodesInto(opcodes, scratch);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -799,14 +1084,15 @@ describe('renderOpcodesInto', () => {
       </view>
     );
 
-    const opcodes = renderToString(
+    renderToString(
       <view>
         <text>Hello World</text>
         {[reuse, reuse]}
       </view>,
+      scratch,
     );
 
-    renderOpcodesInto(opcodes, scratch);
+    // renderOpcodesInto(opcodes, scratch);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -864,8 +1150,8 @@ describe('renderOpcodesInto', () => {
       return <view />;
     }
 
-    const opcodes = renderToString(<Counter ref={vi.fn()} count={1} />);
-    renderOpcodesInto(opcodes, scratch);
+    renderToString(<Counter ref={vi.fn()} count={1} />, scratch);
+    // renderOpcodesInto(opcodes, scratch);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -885,8 +1171,8 @@ describe('renderOpcodesInto', () => {
 
     Counter.defaultProps = { count: 1 };
 
-    const opcodes = renderToString(<Counter />);
-    renderOpcodesInto(opcodes, scratch);
+    renderToString(<Counter />, scratch);
+    // renderOpcodesInto(opcodes, scratch);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -899,7 +1185,7 @@ describe('renderOpcodesInto', () => {
   it('should render empty array', () => {
     scratch.ensureElements();
 
-    renderOpcodesInto([], scratch);
+    renderToString([], scratch);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -914,7 +1200,7 @@ describe('renderOpcodesInto', () => {
       return children;
     }
 
-    const opcodes = renderToString(
+    renderToString(
       <view>
         <text>Hello World</text>
         {[
@@ -933,9 +1219,10 @@ describe('renderOpcodesInto', () => {
           <view>D{[<text>D1</text>, <text>D2</text>, <text>D3</text>, <text>D4</text>]}</view>,
         ]}
       </view>,
+      scratch,
     );
 
-    renderOpcodesInto(opcodes, scratch);
+    // renderOpcodesInto(opcodes, scratch);
 
     scratch.__firstChild.removeChild(scratch.__firstChild.__firstChild);
     scratch.__firstChild.removeChild(scratch.__firstChild.__lastChild);
@@ -967,7 +1254,8 @@ describe('renderOpcodesInto', () => {
       </page>
     `);
 
-    const [vnodeA, vnodeB, vnodeC, vnodeC2, vnodeD] = scratch.__firstChild.props.children;
+    debugger;
+    const [vnodeA, vnodeB, vnodeC, vnodeC2, vnodeD] = scratch.__firstChild.props.$0;
 
     expect(vnodeA).not.toHaveProperty('__elements');
     expect(vnodeA).not.toHaveProperty('__element_root');
@@ -979,7 +1267,7 @@ describe('renderOpcodesInto', () => {
     expect(vnodeD).not.toHaveProperty('__element_root');
 
     {
-      const componentVNodeC = vnodeC2.props.children;
+      const componentVNodeC = vnodeC2.props.$0;
       expect(componentVNodeC.type).toBe(Fragment);
       expect(componentVNodeC.props.children).toHaveLength(4);
       // FIXME(hzy): there is still a cycle reference
@@ -990,8 +1278,8 @@ describe('renderOpcodesInto', () => {
       });
     }
 
-    expect(vnodeD.props.children).toHaveLength(4);
-    vnodeD.props.children.forEach((vnode) => {
+    expect(vnodeD.props.$0).toHaveLength(4);
+    vnodeD.props.$0.forEach((vnode) => {
       expect(vnode).not.toHaveProperty('__elements');
       expect(vnode).not.toHaveProperty('__element_root');
     });
@@ -1016,10 +1304,10 @@ describe('createElement', () => {
       [
         0,
         {
-          "__slotIndex": undefined,
+          "__slotIndex": 0,
           "children": undefined,
           "extraProps": undefined,
-          "id": -89,
+          "id": -41,
           "type": "__snapshot_a94a8_test_74",
           "values": undefined,
         },
@@ -1032,10 +1320,10 @@ describe('createElement', () => {
       [
         0,
         {
-          "__slotIndex": undefined,
+          "__slotIndex": 0,
           "children": undefined,
           "extraProps": undefined,
-          "id": -90,
+          "id": -42,
           "type": "__snapshot_a94a8_test_74",
           "values": undefined,
         },
@@ -1056,10 +1344,10 @@ describe('createElement', () => {
       [
         0,
         {
-          "__slotIndex": undefined,
+          "__slotIndex": 0,
           "children": undefined,
           "extraProps": undefined,
-          "id": -91,
+          "id": -43,
           "type": "__snapshot_a94a8_test_75",
           "values": undefined,
         },
@@ -1072,10 +1360,10 @@ describe('createElement', () => {
       [
         0,
         {
-          "__slotIndex": undefined,
+          "__slotIndex": 0,
           "children": undefined,
           "extraProps": undefined,
-          "id": -92,
+          "id": -44,
           "type": "__snapshot_a94a8_test_75",
           "values": undefined,
         },

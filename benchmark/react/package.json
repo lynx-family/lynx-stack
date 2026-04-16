@@ -11,6 +11,8 @@
     "bench:004-various-update": "benchx_cli run dist/004-various-update.lynx.bundle --wait-for-id=stop-benchmark-true",
     "bench:005-load-script": "benchx_cli run dist/005-load-script.lynx.bundle",
     "bench:006-static-raw-text": "benchx_cli run dist/006-static-raw-text.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "bench:007-four-layer-views": "benchx_cli run dist/007-four-layer-views.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "bench:008-many-use-state": "benchx_cli run dist/008-many-use-state.lynx.bundle --wait-for-id=stop-benchmark-true",
     "build": "rspeedy build",
     "dev": "rspeedy dev",
     "perfetto": "pnpm run --sequential --stream --aggregate-output '/^perfetto:.*/'",
@@ -20,6 +22,8 @@
     "perfetto:004-various-update": "benchx_cli -o dist/004-various-update.ptrace run dist/004-various-update.lynx.bundle --wait-for-id=stop-benchmark-true",
     "perfetto:005-load-script": "benchx_cli -o dist/005-load-script.ptrace run dist/005-load-script.lynx.bundle",
     "perfetto:006-static-raw-text": "benchx_cli -o dist/006-static-raw-text.ptrace run dist/006-static-raw-text.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "perfetto:007-four-layer-views": "benchx_cli -o dist/007-four-layer-views.ptrace run dist/007-four-layer-views.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "perfetto:008-many-use-state": "benchx_cli -o dist/008-many-use-state.ptrace run dist/008-many-use-state.lynx.bundle --wait-for-id=stop-benchmark-true",
     "test": "npm run perfetto && node scripts/detectLeak.mjs"
   },
   "dependencies": {

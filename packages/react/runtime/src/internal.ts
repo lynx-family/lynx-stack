@@ -7,14 +7,17 @@ import type { FC } from 'react';
 
 import './lynx.js';
 
-import { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
 import { factory as factory2 } from './compat/componentIs.js';
 import { useMemo } from './hooks/react.js';
 import { loadLazyBundle } from './lynx/lazy-bundle.js';
 import { __root } from './root.js';
+import { BackgroundSnapshotInstance } from './snapshot/backgroundSnapshot.js';
+import { __page, __pageId, createSnapshot, snapshotManager } from './snapshot/definition.js';
 import { DynamicPartType } from './snapshot/dynamicPartType.js';
 import { snapshotCreateList } from './snapshot/list.js';
-import { SnapshotInstance, __page, __pageId, createSnapshot, snapshotCreatorMap, snapshotManager } from './snapshot.js';
+import { SnapshotInstance, snapshotCreatorMap } from './snapshot/snapshot.js';
+
+export { CHILDREN, COMPONENT, DIFF, DIRTY, DOM, FLAGS, INDEX, PARENT } from './renderToOpcodes/constants.js';
 
 export { __page, __pageId, __root };
 
@@ -31,7 +34,7 @@ export const __DynamicPartSlot: DynamicPartType = DynamicPartType.Slot;
 export const __DynamicPartMultiChildren: DynamicPartType = DynamicPartType.MultiChildren;
 export const __DynamicPartChildren: DynamicPartType = DynamicPartType.Children;
 export const __DynamicPartListChildren: DynamicPartType = DynamicPartType.ListChildren;
-export { __DynamicPartChildren_0 } from './snapshot.js';
+export { __DynamicPartChildren_0 } from './snapshot/dynamicPartType.js';
 
 // v2 slot
 export const __DynamicPartSlotV2: DynamicPartType = DynamicPartType.SlotV2;

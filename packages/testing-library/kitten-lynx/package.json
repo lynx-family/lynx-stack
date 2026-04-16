@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/kitten-lynx-test-infra",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "A testing framework executing the Lynx explorer Android application",
   "keywords": [
     "Lynx",
@@ -8,6 +8,11 @@
     "android",
     "emulator"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/testing-library/kitten-lynx"
+  },
   "author": {
     "name": "lynx-stack"
   },
@@ -26,12 +31,26 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "rslib build",
+    "serve": "rspeedy dev",
     "test": "vitest run"
   },
   "dependencies": {
     "@lynx-js/devtool-connector": "workspace:*",
     "@yume-chan/adb": "catalog:adb",
     "@yume-chan/adb-server-node-tcp": "catalog:adb"
+  },
+  "devDependencies": {
+    "@lynx-js/preact-devtools": "^5.0.1",
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/types": "3.7.0",
+    "@types/react": "^18.3.28",
+    "execa": "^9.6.1",
+    "jpeg-js": "^0.4.4",
+    "rsbuild-plugin-publint": "0.3.4",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
   }
 }

@@ -38,7 +38,7 @@ You can refer to the [TypeScript - paths](https://typescriptlang.org/tsconfig#pa
 
 ### Use `resolve.alias` Configuration
 
-Rsbuild provides the [resolve.alias](/api/rspeedy.resolve.alias) configuration option, which corresponds to the webpack/Rspack native [resolve.alias](https://rspack.dev/config/resolve#resolvealias) configuration. You can configure this option using an object or a function.
+Rsbuild provides the [resolve.alias](/api/rspeedy.resolve.alias) configuration option, which corresponds to the webpack/Rspack native [resolve.alias](https://rspack.rs/config/resolve#resolvealias) configuration. You can configure this option using an object or a function.
 
 #### Use Cases
 

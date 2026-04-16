@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/external-bundle-rsbuild-plugin",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "An rsbuild plugin for loading lynx external bundles.",
   "keywords": [
     "rsbuild",
@@ -41,6 +41,7 @@
     "@lynx-js/externals-loading-webpack-plugin": "workspace:*"
   },
   "devDependencies": {
+    "@lynx-js/react-umd": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@rsbuild/core": "catalog:rsbuild"
   },
