@@ -2,6 +2,7 @@ packages:
   - benchmark/react
   - examples/*
   - packages/background-only
+  - packages/genui/*
   - packages/lynx/*
   - packages/mcp-servers/*
   - packages/repl

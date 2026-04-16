@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "isolatedDeclarations": false,
+    "composite": true,
+    "outDir": "./dist",
+    "target": "esnext",
+    "jsx": "react-jsx",
+    "jsxImportSource": "@lynx-js/react",
+    "rootDir": "./src",
+  },
+  "include": ["src"],
+  "references": [],
+}

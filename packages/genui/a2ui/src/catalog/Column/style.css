@@ -1,0 +1,82 @@
+@import "../luna-styles/index.css";
+
+.column {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Alignment */
+.alignment-start {
+  align-items: flex-start;
+}
+
+.alignment-center {
+  align-items: center;
+}
+
+.alignment-end {
+  align-items: flex-end;
+}
+
+.alignment-stretch {
+  align-items: stretch;
+}
+
+/* Distribution */
+.distribution-start {
+  justify-content: flex-start;
+}
+
+.distribution-center {
+  justify-content: center;
+}
+
+.distribution-end {
+  justify-content: flex-end;
+}
+
+.distribution-spaceBetween {
+  justify-content: space-between;
+}
+
+.distribution-spaceAround {
+  justify-content: space-around;
+}
+
+.distribution-spaceEvenly {
+  justify-content: space-evenly;
+}
+
+/* Usage Hints */
+
+/* Section: Large sections of content */
+.col-hint-section {
+  padding: 24px;
+  gap: 24px;
+}
+
+/* Group: Standard logical grouping */
+.col-hint-group {
+  gap: 16px;
+}
+
+/* Compact: Tighter grouping */
+.col-hint-compact {
+  gap: 8px;
+}
+
+/* Screen: Full screen container */
+.col-hint-screen {
+  width: 100%;
+  height: 100%;
+  background-color: var(--canvas);
+}
+
+/* Root Column: Default root container */
+.col-hint-root-column {
+  width: 100%;
+  min-height: 100%;
+  padding: 16px;
+  gap: 16px;
+  background-color: var(--canvas-ambient);
+}

@@ -1,0 +1,37 @@
+.luna-dark {
+  --canvas: #0d0d0d;
+  --canvas-ambient: #000000;
+  --backdrop: rgba(0, 0, 0, 0.7);
+  --content: #f8f8f8;
+  --content-2: #d9d9d9;
+  --content-muted: #b3b3b3;
+  --content-muted-2: #959595;
+  --content-subtle: #6e6e6e;
+  --content-faint: #4f4f4f;
+  --paper: #1a1a1a;
+  --paper-clear: #232323;
+  --primary: #e0e0e0;
+  --primary-2: #a4a4a4;
+  --primary-muted: #7a7a7a;
+  --primary-content: #010101;
+  --primary-content-faded: rgba(0, 0, 0, 0.3);
+  --secondary: #5b5b5b;
+  --secondary-2: #333333;
+  --secondary-content: #e0e0e0;
+  --neutral: #f8f8f8;
+  --neutral-2: #d0d0d0;
+  --neutral-subtle: #656565;
+  --neutral-faint: #505050;
+  --neutral-ambient: #2c2c2c;
+  --neutral-content: #010101;
+  --neutral-veil: rgba(248, 248, 248, 0.5);
+  --neutral-film: rgba(248, 248, 248, 0.08);
+  --line: rgba(248, 248, 248, 0.32);
+  --rule: #333333;
+  --gradient-a: #a7a7a7;
+  --gradient-b: #a5a5a5;
+  --gradient-c: #a1a1a1;
+  --gradient-d: #bababa;
+  --gradient-content: #ffffff;
+  --gradient-content-faded: rgba(255, 255, 255, 0.68);
+}

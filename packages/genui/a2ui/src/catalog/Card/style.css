@@ -1,0 +1,40 @@
+@import "../luna-styles/index.css";
+
+.card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  height: fit-content;
+}
+
+/* Elevated (Default) */
+.card-elevated {
+  background-color: var(--paper);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px var(--backdrop);
+  padding: 16px;
+}
+
+/* Outlined */
+.card-outlined {
+  background-color: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+/* Filled */
+.card-filled {
+  background-color: var(--neutral-film);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+/* Ghost */
+.card-ghost {
+  background-color: transparent;
+  padding: 0;
+}

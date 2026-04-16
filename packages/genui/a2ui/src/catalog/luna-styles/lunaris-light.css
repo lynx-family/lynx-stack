@@ -1,0 +1,37 @@
+.lunaris-light {
+  --canvas: #ffffff;
+  --canvas-ambient: #f4f4f4;
+  --backdrop: rgba(0, 0, 0, 0.1);
+  --content: #010101;
+  --content-2: #333333;
+  --content-muted: #5d5d5d;
+  --content-muted-2: #707070;
+  --content-subtle: #9e9e9e;
+  --content-faint: #d0d0d0;
+  --paper: #f8f8f8;
+  --paper-clear: #ffffff;
+  --primary: #ff1a6e;
+  --primary-2: #ff558e;
+  --primary-muted: #f992b1;
+  --primary-content: #ffffff;
+  --primary-content-faded: rgba(255, 255, 255, 0.4);
+  --secondary: #fbcfdc;
+  --secondary-2: #fce5ed;
+  --secondary-content: #a92d5a;
+  --neutral: #010101;
+  --neutral-2: #333333;
+  --neutral-subtle: #b3b3b3;
+  --neutral-faint: #d9d9d9;
+  --neutral-ambient: #eeeeee;
+  --neutral-content: #f8f8f8;
+  --neutral-veil: rgba(0, 0, 0, 0.24);
+  --neutral-film: rgba(0, 0, 0, 0.05);
+  --line: rgba(0, 0, 0, 0.17);
+  --rule: #e5e5e5;
+  --gradient-a: #ff3d63;
+  --gradient-b: #ff5d99;
+  --gradient-c: #a998bf;
+  --gradient-d: #3dd5e9;
+  --gradient-content: #ffffff;
+  --gradient-content-faded: rgba(255, 255, 255, 0.68);
+}
