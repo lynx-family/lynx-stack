@@ -246,8 +246,8 @@ exports[`executeTemplate should run lepusCode.root from basic-element-x-audio-tt
     <div part="page" lynx-default-overflow-visible="true">
       <x-view
         ><x-audio-tt
+          react-ref--1-1="1"
           src='{"id":"6881187861773765389","artist":"bro","album_title":"","artwork_url":"","play_url":"/resources/ddee519472dd7e73eeb153e78d484db3.mp3","title":"DJ","duration":32,"can_background_play":"1"}'
-          react-ref--2-1="1"
           ><template shadowrootmode="open"
             ><audio id="audio"></audio></template></x-audio-tt
         ><x-text class="text" id="play" text="播放"
@@ -312,8 +312,9 @@ exports[`executeTemplate should run lepusCode.root from basic-element-x-input-va
             ><template shadowrootmode="open"
               ><div id="inner-box" part="inner-box">
                 <slot part="slot"></slot
-                ><slot name="inline-truncation"></slot></div></template
-            ><raw-text text=""></raw-text></x-text></x-view
+                ><slot
+                  name="inline-truncation"
+                ></slot></div></template></x-text></x-view
       ></x-view></div></template
 ></lynx-view>
 "
