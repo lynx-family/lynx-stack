@@ -54,6 +54,7 @@ fn jsx_wrapped(with: &str, n: JSXElement) -> JSXElement {
 pub struct WrapperMarker {
   pub current_is_children_full_dynamic: bool,
   pub dynamic_part_count: i32,
+  pub enable_element_template: bool,
 }
 
 impl VisitMut for WrapperMarker {
@@ -142,6 +143,11 @@ impl VisitMut for WrapperMarker {
 
       let is_list = jsx_is_list(n);
       let is_children_full_dynamic = is_list || jsx_is_children_full_dynamic(n);
+      let should_wrap_element = if self.enable_element_template {
+        false
+      } else {
+        is_children_full_dynamic
+      };
       let has_dynamic_key = jsx_has_dynamic_key(n);
 
       if (is_list || has_dynamic_key) && !n.children.is_empty() {
@@ -151,13 +157,17 @@ impl VisitMut for WrapperMarker {
         })];
       }
 
-      if is_children_full_dynamic {
+      if self.enable_element_template && is_list {
+        return;
+      }
+
+      if should_wrap_element {
         self.dynamic_part_count += 1;
         *n = jsx_wrapped(INTERNAL_SLOT_STR, n.take());
       }
 
       let pre_is_children_full_dynamic = self.current_is_children_full_dynamic;
-      self.current_is_children_full_dynamic = is_children_full_dynamic;
+      self.current_is_children_full_dynamic = should_wrap_element;
       n.visit_mut_children_with(self);
       self.current_is_children_full_dynamic = pre_is_children_full_dynamic;
     }
@@ -188,6 +198,7 @@ mod tests {
         visit_mut_pass(super::WrapperMarker {
           current_is_children_full_dynamic: false,
           dynamic_part_count: 0,
+          enable_element_template: false,
         }),
       )
     },
@@ -236,6 +247,7 @@ mod tests {
         visit_mut_pass(super::WrapperMarker {
           current_is_children_full_dynamic: false,
           dynamic_part_count: 0,
+          enable_element_template: false,
         }),
       )
     },

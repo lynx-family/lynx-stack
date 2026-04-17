@@ -14,6 +14,10 @@
       "lazy": "./runtime/lazy/react.js",
       "default": "./runtime/lib/index.js"
     },
+    "./element-template": {
+      "types": "./runtime/lib/element-template/index.d.ts",
+      "default": "./runtime/lib/element-template/index.js"
+    },
     "./compat": {
       "types": "./runtime/compat/index.d.ts",
       "lazy": "./runtime/lazy/compat.js",
@@ -32,6 +36,10 @@
       "types": "./runtime/lib/internal.d.ts",
       "lazy": "./runtime/lazy/internal.js",
       "default": "./runtime/lib/internal.js"
+    },
+    "./element-template/internal": {
+      "types": "./runtime/lib/element-template/internal.d.ts",
+      "default": "./runtime/lib/element-template/internal.js"
     },
     "./internal/document": {
       "types": "./runtime/lib/document.d.ts",
@@ -128,6 +136,9 @@
       "compat": [
         "./runtime/compat/index.d.ts"
       ],
+      "element-template": [
+        "./runtime/lib/element-template/index.d.ts"
+      ],
       "experimental/lazy/import": [
         "./runtime/lazy/import.d.ts"
       ],
@@ -139,6 +150,9 @@
       ],
       "internal": [
         "./runtime/lib/internal.d.ts"
+      ],
+      "element-template/internal": [
+        "./runtime/lib/element-template/internal.d.ts"
       ],
       "internal/document": [
         "./runtime/lib/document.d.ts"

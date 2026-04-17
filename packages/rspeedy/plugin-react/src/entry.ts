@@ -282,6 +282,8 @@ export function applyEntry(
         workletRuntimePath: await resolve(
           `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,
         ),
+        experimental_enableElementTemplate:
+          options.experimentalEnableElementTemplate,
       }])
 
     function getDefaultProfile(): boolean | undefined {

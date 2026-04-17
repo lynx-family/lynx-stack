@@ -1,0 +1,71 @@
+---
+source: packages/react/transform/crates/swc_plugin_snapshot/tests/element_template.rs
+expression: actual_jsons
+---
+[
+  {
+    "template_id": "_et_da39a_test_1",
+    "template": {
+      "kind": "element",
+      "tag": "view",
+      "attributesArray": [
+        {
+          "kind": "attribute",
+          "key": "class",
+          "binding": "static",
+          "value": "container"
+        },
+        {
+          "kind": "attribute",
+          "key": "id",
+          "binding": "slot",
+          "attrSlotIndex": 0.0
+        }
+      ],
+      "children": [
+        {
+          "kind": "element",
+          "tag": "text",
+          "attributesArray": [
+            {
+              "kind": "attribute",
+              "key": "text",
+              "binding": "static",
+              "value": "Static"
+            }
+          ],
+          "children": []
+        },
+        {
+          "kind": "element",
+          "tag": "image",
+          "attributesArray": [
+            {
+              "kind": "attribute",
+              "key": "src",
+              "binding": "slot",
+              "attrSlotIndex": 1.0
+            }
+          ],
+          "children": []
+        }
+      ]
+    }
+  },
+  {
+    "template_id": "__et_builtin_raw_text__",
+    "template": {
+      "kind": "element",
+      "tag": "raw-text",
+      "attributesArray": [
+        {
+          "kind": "attribute",
+          "key": "text",
+          "binding": "slot",
+          "attrSlotIndex": 0
+        }
+      ],
+      "children": []
+    }
+  }
+]

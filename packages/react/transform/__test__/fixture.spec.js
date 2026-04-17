@@ -164,6 +164,34 @@ describe('ui source map', () => {
   });
 });
 
+describe('element template (experimental)', () => {
+  it('should export compiled element templates when enabled', async () => {
+    const result = await transformReactLynx('const node = <view className="foo" />;', {
+      mode: 'test',
+      pluginName: '',
+      filename: 'test.js',
+      sourcemap: false,
+      cssScope: false,
+      snapshot: {
+        preserveJsx: false,
+        runtimePkg: '@lynx-js/react',
+        filename: 'test.js',
+        target: 'LEPUS',
+        experimentalEnableElementTemplate: true,
+      },
+      jsx: true,
+      directiveDCE: false,
+      defineDCE: false,
+      shake: false,
+      compat: true,
+      worklet: false,
+      refresh: false,
+    });
+
+    expect(result.elementTemplates?.length).toBeGreaterThan(0);
+  });
+});
+
 describe('jsx', () => {
   it('should allow JSXNamespace', async () => {
     const result = await transformReactLynx('const jsx = <Foo main-thread:foo={foo} />', {

@@ -598,6 +598,8 @@ export interface JsxTransformerConfig {
   enableUiSourceMap?: boolean
   /** @internal */
   isDynamicComponent?: boolean
+  /** @internal */
+  experimentalEnableElementTemplate?: boolean
 }
 export interface WorkletVisitorConfig {
   /**
@@ -653,6 +655,12 @@ export interface TransformNodiffOutput {
   errors: Array<PartialMessage>
   warnings: Array<PartialMessage>
   uiSourceMapRecords: Array<UiSourceMapRecord>
+  elementTemplates?: Array<ElementTemplateAsset>
+}
+export interface ElementTemplateAsset {
+  templateId: string
+  compiledTemplate: Record<string, unknown>
+  sourceFile: string
 }
 export function transformReactLynxSync(code: string, options?: TransformNodiffOptions | undefined | null): TransformNodiffOutput
 export function transformReactLynx(code: string, options?: TransformNodiffOptions | undefined | null): Promise<TransformNodiffOutput>

@@ -85,6 +85,13 @@ export interface ReactLoaderOptions {
    * The engine version.
    */
   engineVersion?: string | undefined;
+
+  /**
+   * Whether to enable element template.
+   *
+   * @experimental
+   */
+  experimental_enableElementTemplate?: boolean | undefined;
 }
 
 function normalizeSlashes(file: string) {
@@ -106,6 +113,7 @@ function getCommonOptions(
     inlineSourcesContent,
     isDynamicComponent,
     engineVersion,
+    experimental_enableElementTemplate,
     defineDCE = { define: {} },
   } = this.getOptions();
 
@@ -176,6 +184,8 @@ function getCommonOptions(
       runtimePkg: RUNTIME_PKG,
       filename,
       isDynamicComponent: isDynamicComponent ?? false,
+      experimentalEnableElementTemplate: experimental_enableElementTemplate
+        ?? false,
     },
     engineVersion: engineVersion ?? '',
     syntaxConfig: JSON.stringify({

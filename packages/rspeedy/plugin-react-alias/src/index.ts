@@ -9,6 +9,7 @@ import gte from 'semver/functions/gte.js'
 
 export interface Options {
   lazy?: boolean | undefined
+  elementTemplate?: boolean | undefined
 
   LAYERS: {
     MAIN_THREAD: string
@@ -21,7 +22,7 @@ export interface Options {
 const S_PLUGIN_REACT_ALIAS = Symbol.for('@lynx-js/plugin-react-alias')
 
 export function pluginReactAlias(options: Options): RsbuildPlugin {
-  const { LAYERS, lazy, rootPath } = options ?? {}
+  const { LAYERS, lazy, rootPath, elementTemplate } = options ?? {}
 
   return {
     name: 'lynx:react-alias',
@@ -74,6 +75,8 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           reactLepusBackground,
           reactLepusMainThread,
           reactCompat,
+          elementTemplateEntry,
+          elementTemplateInternalEntry,
         ] = await Promise.all([
           resolve('@lynx-js/react/jsx-runtime'),
           resolve('@lynx-js/react/lepus/jsx-runtime'),
@@ -86,6 +89,12 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           resolve('@lynx-js/react/lepus'),
           gte(version, '0.111.9999')
             ? resolve('@lynx-js/react/compat')
+            : Promise.resolve(null),
+          elementTemplate
+            ? resolve('@lynx-js/react/element-template')
+            : Promise.resolve(null),
+          elementTemplate
+            ? resolve('@lynx-js/react/element-template/internal')
             : Promise.resolve(null),
         ])
 
@@ -146,11 +155,13 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
 
         // react-transform may add imports of the following entries
         // We need to add aliases for that
+        const internalEntry = '@lynx-js/react/internal'
+
         const transformedEntries = [
           // TODO: add `debug` after bump peerDependencies['@lynx-js/react'] to 0.111.1
           // 'debug',
           'experimental/lazy/import',
-          'internal',
+          internalEntry,
           'legacy-react-runtime',
           'runtime-components',
           'worklet-runtime/bindings',
@@ -158,7 +169,11 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
 
         await Promise.all(
           transformedEntries
-            .map(entry => `@lynx-js/react/${entry}`)
+            .map(entry =>
+              entry.startsWith('@lynx-js/react/')
+                ? entry
+                : `@lynx-js/react/${entry}`
+            )
             .map(entry =>
               resolve(entry).then(value => {
                 chain
@@ -168,6 +183,12 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
               })
             ),
         )
+        if (elementTemplate && elementTemplateInternalEntry) {
+          chain
+            .resolve
+            .alias
+            .set('@lynx-js/react/internal$', elementTemplateInternalEntry)
+        }
 
         if (isProd) {
           chain.resolve.alias.set('@lynx-js/react/debug$', false)
@@ -186,7 +207,9 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           .alias
           .set(
             '@lynx-js/react$',
-            reactLepus.background,
+            elementTemplate && elementTemplateEntry
+              ? elementTemplateEntry
+              : reactLepus.background,
           )
           .set('@lynx-js/react/jsx-runtime', jsxRuntime.background)
           .set('@lynx-js/react/jsx-dev-runtime', jsxDevRuntime.background)

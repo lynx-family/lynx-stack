@@ -30,8 +30,8 @@ function getLoaderOptions(
     defineDCE,
     engineVersion,
     enableUiSourceMap,
-
     experimental_isLazyBundle,
+    experimentalEnableElementTemplate,
   } = options
 
   return {
@@ -41,6 +41,7 @@ function getLoaderOptions(
     inlineSourcesContent,
     defineDCE,
     engineVersion,
+    experimental_enableElementTemplate: experimentalEnableElementTemplate,
     ...isMainThread
       ? {
         enableUiSourceMap,

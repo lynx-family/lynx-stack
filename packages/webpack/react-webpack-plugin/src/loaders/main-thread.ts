@@ -34,6 +34,18 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     getMainThreadTransformOptions.call(this, swcInputSourceMap),
   );
 
+  if (result.elementTemplates && result.elementTemplates.length > 0) {
+    interface ModuleWithBuildInfo {
+      buildInfo?: Record<string, unknown>;
+    }
+    const mod = this._module as unknown as ModuleWithBuildInfo | undefined;
+
+    if (mod) {
+      mod.buildInfo ??= {};
+      mod.buildInfo['lynx:element-templates'] = result.elementTemplates;
+    }
+  }
+
   if (result.errors.length > 0) {
     for (const error of result.errors) {
       if (this.experiments?.emitDiagnostic) {

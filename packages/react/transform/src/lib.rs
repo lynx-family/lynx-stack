@@ -59,7 +59,10 @@ use swc_plugin_inject::napi::{InjectVisitor, InjectVisitorConfig};
 use swc_plugin_refresh::{RefreshVisitor, RefreshVisitorConfig};
 use swc_plugin_shake::napi::{ShakeVisitor, ShakeVisitorConfig};
 use swc_plugin_snapshot::{
-  napi::{JSXTransformer, JSXTransformerConfig, UISourceMapRecord as SnapshotUISourceMapRecord},
+  napi::{
+    ElementTemplateAsset, JSXTransformer, JSXTransformerConfig,
+    UISourceMapRecord as SnapshotUISourceMapRecord,
+  },
   UISourceMapRecord as CoreUISourceMapRecord,
 };
 use swc_plugin_worklet::napi::{WorkletVisitor, WorkletVisitorConfig};
@@ -254,6 +257,8 @@ pub struct TransformNodiffOutput {
   // #[napi(ts_type = "Array<import('esbuild').PartialMessage>")]
   pub warnings: Vec<esbuild::PartialMessage>,
   pub ui_source_map_records: Vec<SnapshotUISourceMapRecord>,
+  #[napi(js_name = "elementTemplates")]
+  pub element_templates: Option<Vec<ElementTemplateAsset>>,
 }
 
 /// A multi emitter that forwards to multiple emitters.
@@ -342,6 +347,7 @@ fn transform_react_lynx_inner(
             &ui_source_map_records,
             &options.filename,
           ),
+          element_templates: None,
         };
       }
     };
@@ -452,25 +458,40 @@ fn transform_react_lynx_inner(
     );
 
     let enable_ui_source_map = snapshot_plugin_config.enable_ui_source_map.unwrap_or(false);
+    let export_element_templates = snapshot_plugin_config
+      .experimental_enable_element_template
+      .unwrap_or(false);
 
-    let snapshot_plugin = Optional::new(
-      visit_mut_pass({
-        let snapshot_plugin = JSXTransformer::new(
-          snapshot_plugin_config.clone(),
-          Some(&comments),
-          options.mode.unwrap_or(TransformMode::Production),
-          Some(cm.clone()),
-        )
-        .with_content_hash(content_hash.clone());
+    let (snapshot_plugin, element_templates_collector) = if enabled {
+      let transformer = JSXTransformer::new(
+        snapshot_plugin_config.clone(),
+        Some(&comments),
+        options.mode.unwrap_or(TransformMode::Production),
+        Some(cm.clone()),
+      )
+      .with_content_hash(content_hash.clone());
 
-        if enable_ui_source_map {
-          snapshot_plugin.with_ui_source_map_records(ui_source_map_records.clone())
-        } else {
-          snapshot_plugin
-        }
-      }),
-      enabled,
-    );
+      let transformer = if enable_ui_source_map {
+        transformer.with_ui_source_map_records(ui_source_map_records.clone())
+      } else {
+        transformer
+      };
+
+      let collector = if export_element_templates {
+        Some(transformer.element_templates.clone())
+      } else {
+        None
+      };
+
+      (Optional::new(visit_mut_pass(transformer), true), collector)
+    } else {
+      (Optional::new(visit_mut_pass(JSXTransformer::new(
+        snapshot_plugin_config.clone(),
+        Some(&comments),
+        options.mode.unwrap_or(TransformMode::Production),
+        Some(cm.clone()),
+      )), false), None)
+    };
 
     let list_plugin = Optional::new(
       visit_mut_pass(swc_plugin_list::ListVisitor::new(Some(&comments))),
@@ -664,16 +685,29 @@ fn transform_react_lynx_inner(
     );
 
     match result {
-      Ok(result) => TransformNodiffOutput {
-        code: result.code,
-        map: result.map,
-        errors: vec![],
-        warnings: vec![],
-        ui_source_map_records: clone_ui_source_map_records(
-          &ui_source_map_records,
-          &options.filename,
-        ),
-      },
+      Ok(result) => {
+        let element_templates = element_templates_collector.and_then(|collector| {
+          let templates: Vec<ElementTemplateAsset> =
+            collector.borrow_mut().drain(..).map(|template| template.into()).collect();
+          if templates.is_empty() {
+            None
+          } else {
+            Some(templates)
+          }
+        });
+
+        TransformNodiffOutput {
+          code: result.code,
+          map: result.map,
+          errors: vec![],
+          warnings: vec![],
+          ui_source_map_records: clone_ui_source_map_records(
+            &ui_source_map_records,
+            &options.filename,
+          ),
+          element_templates,
+        }
+      }
       Err(_) => {
         return TransformNodiffOutput {
           code: "".into(),
@@ -684,6 +718,7 @@ fn transform_react_lynx_inner(
             &ui_source_map_records,
             &options.filename,
           ),
+          element_templates: None,
         };
       }
     }
@@ -695,6 +730,9 @@ fn transform_react_lynx_inner(
     errors: errors.read().unwrap().clone(),
     warnings: warnings.read().unwrap().clone(),
     ui_source_map_records: clone_ui_source_map_records(&ui_source_map_records, &options.filename),
+    // Preserve the element-template assets collected in the successful transform
+    // path instead of dropping them in the final wrapper object.
+    element_templates: result.element_templates,
   };
 
   r

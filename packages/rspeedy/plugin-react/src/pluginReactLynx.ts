@@ -315,6 +315,13 @@ export interface PluginReactLynxOptions {
   experimental_isLazyBundle?: boolean
 
   /**
+   * Whether to enable element template.
+   *
+   * @experimental
+   */
+  experimentalEnableElementTemplate?: boolean
+
+  /**
    * Optimize bundle size by removing unused code by Minify.mainThreadOptions and Minify.backgroundOptions.
    *
    * When optimizeBundleSize or optimizeBundleSize.mainThread is true, main-thread code will be optimized.
@@ -378,6 +385,7 @@ export function pluginReactLynx(
     globalPropsMode: 'reactive',
 
     experimental_isLazyBundle: false,
+    experimentalEnableElementTemplate: false,
     optimizeBundleSize: false,
     enableUiSourceMap: false,
   }
@@ -390,6 +398,7 @@ export function pluginReactLynx(
   return [
     pluginReactAlias({
       lazy: resolvedOptions.experimental_isLazyBundle,
+      elementTemplate: resolvedOptions.experimentalEnableElementTemplate,
       LAYERS,
     }),
     {
