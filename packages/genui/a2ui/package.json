@@ -99,14 +99,13 @@
   "devDependencies": {
     "@lynx-js/lynx-ui": "^3.130.0",
     "@lynx-js/lynx-ui-input": "^3.130.0",
-    "@lynx-js/react": "^0.115.2",
+    "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "3.7.0",
-    "@types/react": "^18.3.25",
-    "typescript": "~5.9.3"
+    "@types/react": "^18.3.28"
   },
   "peerDependencies": {
     "@lynx-js/lynx-ui": "^3.130.0",
     "@lynx-js/lynx-ui-input": "^3.130.0",
-    "@lynx-js/react": "^0.115.2"
+    "@lynx-js/react": "workspace:^"
   }
 }
