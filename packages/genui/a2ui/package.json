@@ -1,7 +1,7 @@
 {
   "name": "@lynx-js/a2ui-reactlynx",
   "version": "0.0.0",
-  "private": "true",
+  "private": true,
   "license": "Apache-2.0",
   "type": "module",
   "exports": {
