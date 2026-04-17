@@ -16,7 +16,9 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "test": "vitest run --coverage"
+    "test": "pnpm run test:snapshot && pnpm run test:et",
+    "test:et": "vitest run -c __test__/element-template/vitest.config.ts --coverage",
+    "test:snapshot": "vitest run --coverage"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",

@@ -35,6 +35,7 @@ function transformReactLynxPlugin(): Plugin {
           jsxImportSource: '@lynx-js/react',
           filename: 'test',
           target: 'MIXED',
+          experimentalEnableElementTemplate: false,
         },
         dynamicImport: false,
         // snapshot: true,
@@ -47,8 +48,10 @@ function transformReactLynxPlugin(): Plugin {
         cssScope: false,
       });
 
+      let code = result.code;
+
       return {
-        code: result.code,
+        code,
         map: result.map,
       };
     },
@@ -69,11 +72,13 @@ export default defineConfig({
       '@lynx-js/react/jsx-runtime': path.resolve(__dirname, './jsx-runtime/index.js'),
       '@lynx-js/react/lepus': path.resolve(__dirname, './lepus/index.js'),
       '@lynx-js/react/legacy-react-runtime': path.resolve(__dirname, './src/legacy-react-runtime/index.ts'),
+      '@lynx-js/react/element-template/internal': path.resolve(__dirname, './src/element-template/internal.ts'),
       '@lynx-js/react': path.resolve(__dirname, './src/index.ts'),
     },
   },
   test: {
     name: 'react/runtime',
+    exclude: ['**/node_modules/**', '**/dist/**', '**/__test__/element-template/**'],
     coverage: {
       exclude: [
         'debug',
@@ -108,6 +113,9 @@ export default defineConfig({
         '__test__/page.test.jsx',
         '**/*.d.ts',
         '**/*.test-d.*',
+        '__test__/element-template/**',
+        'src/element-template/**',
+        '__test__/element-template/vitest.config.ts',
       ],
       thresholds: {
         lines: 100,
