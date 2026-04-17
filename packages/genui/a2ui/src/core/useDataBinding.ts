@@ -44,7 +44,17 @@ export function useDataBinding<T = unknown>(
     ? surface.store.getSignal(path, initialValue)
     : undefined;
 
-  const signalValue = signal?.value as T | undefined;
+  const [signalValue, setSignalValue] = useState<T | undefined>(() =>
+    signal?.value as T | undefined
+  );
+
+  useEffect(() => {
+    if (!signal) return;
+    const dispose = effect(() => {
+      setSignalValue(signal.value as T | undefined);
+    });
+    return dispose;
+  }, [signal]);
 
   const currentValue = path
     ? (signalValue ?? (initialValue as T | undefined))

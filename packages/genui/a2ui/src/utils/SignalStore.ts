@@ -7,13 +7,11 @@ import type { Signal } from '@preact/signals';
 export class SignalStore {
   private signals = new Map<string, Signal<unknown>>();
 
-  getSignal(path: string, initialValue: unknown = ''): Signal<unknown> {
-    if (!this.signals.has(path)) {
-      this.signals.set(path, signal(initialValue));
-    }
-    const s = this.signals.get(path)!;
-    if (initialValue && !s.value) {
-      s.value = initialValue;
+  getSignal(path: string, initialValue?: unknown): Signal<unknown> {
+    let s = this.signals.get(path);
+    if (!s) {
+      s = signal(initialValue);
+      this.signals.set(path, s);
     }
     return s;
   }
