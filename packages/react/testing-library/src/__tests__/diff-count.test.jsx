@@ -200,10 +200,10 @@ test('baseline: Counter mount + one update', () => {
       "byType": {
         "Badge": 1,
         "Counter": 1,
-        "Fragment": 2,
+        "Fragment": 1,
         "Leaf": 5,
       },
-      "total": 9,
+      "total": 8,
     }
   `);
 

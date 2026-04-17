@@ -10,7 +10,7 @@
 
 // @ts-nocheck
 
-import { Fragment, h, options, isValidElement } from 'preact';
+import { Fragment, flattenNamedChildren, h, options, isValidElement } from 'preact';
 import { SnapshotInstance } from '../snapshot/snapshot.js';
 
 import {
@@ -185,7 +185,10 @@ function _renderToString(
       _renderToString(
         child,
         context,
-        slotIndex === true ? i : slotIndex,
+        // When the parent was a multi-slot element, `slotIndex` is the
+        // per-child `slotMap` built in `flattenNamedChildren`; otherwise
+        // it's a single number inherited unchanged.
+        isArray(slotIndex) ? slotIndex[i] : slotIndex,
         selectValue,
         parent,
         opcodes,
@@ -386,10 +389,21 @@ function _renderToString(
     renderToTextNode(vnode, children, opcodes, slotIndex);
   } else if (children != null && children !== false && children !== true) {
     // recurse into this element VNode's children
+    let _slotIndex = slotIndex;
+    if (hasNamedChildren) {
+      // Same shape as the `diffElementNodes` multi-slot path in preact:
+      // flatten `$N` values (including arrays inside a single slot) and
+      // pass a per-child `slotMap` via `_slotIndex` so each flattened
+      // child's eventual `__slotIndex` lines up with its original slot.
+      // @ts-expect-error children is an array of slot values
+      const { flat, slotMap } = flattenNamedChildren(children);
+      children = flat;
+      _slotIndex = slotMap;
+    }
     _renderToString(
       children,
       context,
-      hasNamedChildren ? true : slotIndex,
+      _slotIndex,
       selectValue,
       vnode,
       opcodes,
