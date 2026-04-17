@@ -172,6 +172,18 @@ test('setState changes jsx', async () => {
           "parentId": 2,
         },
         {
+          "id": 8,
+          "op": "CreateElement",
+          "type": "__snapshot_c1928_test_2",
+        },
+        {
+          "beforeId": null,
+          "childId": 8,
+          "op": "InsertBefore",
+          "parentId": 2,
+          "slotIndex": 0,
+        },
+        {
           "childId": 4,
           "op": "RemoveChild",
           "parentId": 2,
@@ -185,18 +197,6 @@ test('setState changes jsx', async () => {
           "childId": 6,
           "op": "RemoveChild",
           "parentId": 2,
-        },
-        {
-          "id": 8,
-          "op": "CreateElement",
-          "type": "__snapshot_c1928_test_2",
-        },
-        {
-          "beforeId": null,
-          "childId": 8,
-          "op": "InsertBefore",
-          "parentId": 2,
-          "slotIndex": 0,
         },
         {
           "id": 9,
