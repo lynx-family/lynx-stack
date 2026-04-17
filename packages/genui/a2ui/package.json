@@ -1,9 +1,9 @@
 {
   "name": "@lynx-js/a2ui-reactlynx",
   "version": "0.0.0",
+  "private": "true",
+  "license": "Apache-2.0",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -90,21 +90,23 @@
       "default": "./src/catalog/CheckBox.ts"
     }
   },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "dependencies": {
     "@a2ui/web_core": "0.9.1",
     "@preact/signals": "^2.5.1"
   },
-  "peerDependencies": {
-    "@lynx-js/react": "^0.115.2",
-    "@lynx-js/lynx-ui": "^3.130.0",
-    "@lynx-js/lynx-ui-input": "^3.130.0"
-  },
   "devDependencies": {
-    "@lynx-js/types": "3.7.0",
-    "@lynx-js/react": "^0.115.2",
     "@lynx-js/lynx-ui": "^3.130.0",
     "@lynx-js/lynx-ui-input": "^3.130.0",
-    "typescript": "~5.9.3",
-    "@types/react": "^18.3.25"
+    "@lynx-js/react": "^0.115.2",
+    "@lynx-js/types": "3.7.0",
+    "@types/react": "^18.3.25",
+    "typescript": "~5.9.3"
+  },
+  "peerDependencies": {
+    "@lynx-js/lynx-ui": "^3.130.0",
+    "@lynx-js/lynx-ui-input": "^3.130.0",
+    "@lynx-js/react": "^0.115.2"
   }
 }
