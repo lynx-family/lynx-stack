@@ -23,6 +23,7 @@ declare global {
   declare const __ALOG_ELEMENT_API__: boolean | undefined;
   declare const __ENABLE_SSR__: boolean;
   declare const __GLOBAL_PROPS_MODE__: 'reactive' | 'event' | undefined;
+  declare const __USE_ELEMENT_TEMPLATE__: boolean;
 
   declare function __CreatePage(componentId: string, cssId: number): FiberElement;
   declare function __CreateElement(
@@ -118,6 +119,92 @@ declare global {
     relationMap: Record<string, number[]>,
   ): void;
   declare function __RemoveGestureDetector(node: FiberElement, id: number): void;
+
+  declare interface ElementRef {}
+
+  declare type SerializableValue =
+    | string
+    | number
+    | boolean
+    | null
+    | SerializableValue[]
+    | { [key: string]: SerializableValue };
+
+  declare type RuntimeOptions = Record<string, SerializableValue>;
+
+  declare interface SerializedElementNodeInstance {
+    kind: 'element';
+    tag: string;
+    attributes?: Record<string, SerializableValue>;
+    children?: SerializedElementNode[];
+  }
+
+  declare interface SerializedTemplateInstance {
+    kind: 'templateInstance';
+    templateKey: string;
+    bundleUrl?: string;
+    attributeSlots: SerializableValue[];
+    elementSlots: SerializedElementNode[][];
+    options?: RuntimeOptions;
+  }
+
+  declare type SerializedElementNode =
+    | SerializedElementNodeInstance
+    | SerializedTemplateInstance;
+
+  declare interface SerializedElementTemplate {
+    templateKey: string;
+    bundleUrl?: string;
+    attributeSlots: SerializableValue[];
+    elementSlots: SerializedElementNode[][];
+    options?: RuntimeOptions;
+  }
+
+  declare function __ElementFromBinary(
+    customSectionsPath: string,
+    bundleUrl: string | null | undefined,
+    opcodes: any[] | null | undefined,
+    options: Map<string, any> | undefined | null,
+  ): ElementRef;
+
+  declare function __CreateElementTemplate(
+    templateKey: string,
+    bundleUrl: string | null | undefined,
+    attributeSlots: SerializableValue[] | null | undefined,
+    elementSlots: ElementRef[][] | null | undefined,
+    options?: RuntimeOptions | number | undefined | null,
+  ): ElementRef;
+
+  declare function __SetAttributeOfElementTemplate(
+    templateInstance: ElementRef,
+    attrSlotIndex: number,
+    value: SerializableValue | null,
+    options?: RuntimeOptions | undefined | null,
+  ): void;
+
+  declare function __InsertNodeToElementTemplate(
+    templateInstance: ElementRef,
+    elementSlotIndex: number,
+    node: ElementRef,
+    referenceNode?: ElementRef | null,
+  ): void;
+
+  declare function __RemoveNodeFromElementTemplate(
+    templateInstance: ElementRef,
+    elementSlotIndex: number,
+    node: ElementRef,
+  ): void;
+
+  declare function __SerializeElementTemplate(
+    templateInstance: ElementRef,
+    options?: RuntimeOptions | undefined | null,
+  ): SerializedElementTemplate;
+
+  declare function __PatchElementTemplate(
+    templateInstance: ElementRef,
+    opcodes: any[],
+    options: Map<string, any> | undefined | null,
+  ): void;
 
   declare interface FiberElement {}
 

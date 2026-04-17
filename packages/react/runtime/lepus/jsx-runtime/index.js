@@ -5,6 +5,24 @@ import { CHILDREN, COMPONENT, DIFF, DIRTY, DOM, FLAGS, INDEX, PARENT, SnapshotIn
 
 function createVNode(type, props, _key) {
   if (typeof type === 'string') {
+    if (__USE_ELEMENT_TEMPLATE__) {
+      const normalizedProps = props || {};
+      return {
+        type,
+        props: normalizedProps,
+
+        __k: null,
+        __: null,
+        __b: 0,
+        __e: null,
+        __d: void 0,
+        __c: null,
+        constructor: void 0,
+        // __v: --vnodeId,
+        __i: -1,
+        __u: 0,
+      };
+    }
     const r = new SnapshotInstance(type);
 
     r.props = props;

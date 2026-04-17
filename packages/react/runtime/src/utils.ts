@@ -85,7 +85,7 @@ export function hook<T, K extends keyof T>(
 }
 
 export const lynxQueueMicrotask: typeof lynx.queueMicrotask = /* @__PURE__ */ (() => {
-  if (lynx.queueMicrotask) {
+  if (typeof lynx !== 'undefined' && lynx.queueMicrotask) {
     return (fn) => lynx.queueMicrotask(fn);
   } else if (typeof globalThis.Promise === 'function') {
     const resolved = globalThis.Promise.resolve();
