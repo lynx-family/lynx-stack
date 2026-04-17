@@ -1,0 +1,24 @@
+Array [
+  Object {
+    "attributeSlots": Array [],
+    "elementSlots": Array [
+      Array [
+        Object {
+          "attributeSlots": Array [
+            "Hello",
+          ],
+          "elementSlots": Array [],
+          "kind": "templateInstance",
+          "options": Object {
+            "handleId": -1,
+          },
+          "templateKey": "__et_builtin_raw_text__",
+        },
+      ],
+    ],
+    "options": Object {
+      "handleId": -2,
+    },
+    "templateKey": "_et_d555c_test_1",
+  },
+]

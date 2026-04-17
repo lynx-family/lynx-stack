@@ -1,0 +1,15 @@
+Array [
+  Array [
+    "__CreateElementTemplate",
+    "_et_foo",
+    null,
+    null,
+    null,
+    -1,
+  ],
+  Array [
+    "__AppendElement",
+    "root",
+    "<_et_foo />",
+  ],
+]

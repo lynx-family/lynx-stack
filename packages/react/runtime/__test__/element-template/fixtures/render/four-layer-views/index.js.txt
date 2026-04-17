@@ -1,0 +1,33 @@
+import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+const _et_7a8c6_test_5 = "_et_7a8c6_test_5";
+const _et_7a8c6_test_4 = "_et_7a8c6_test_4";
+const _et_7a8c6_test_3 = "_et_7a8c6_test_3";
+const _et_7a8c6_test_2 = "_et_7a8c6_test_2";
+const _et_7a8c6_test_1 = "_et_7a8c6_test_1";
+export function App() {
+    return /*#__PURE__*/ _jsx(_et_7a8c6_test_1, {
+        children: [
+            Array.from({
+                length: 3
+            }).fill(1).map((index)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_2, {
+                    children: [
+                        Array.from({
+                            length: 16
+                        }).fill(1).map((index)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_3, {
+                                children: [
+                                    Array.from({
+                                        length: 16
+                                    }).fill(1).map((index)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_4, {
+                                            children: [
+                                                Array.from({
+                                                    length: 8
+                                                }).fill(1).map((index)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_5, {}))
+                                            ]
+                                        }))
+                                ]
+                            }))
+                    ]
+                }))
+        ]
+    });
+}

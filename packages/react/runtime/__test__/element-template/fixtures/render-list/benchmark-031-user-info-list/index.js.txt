@@ -1,0 +1,92 @@
+import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+const posts = [
+    {
+        data: {
+            id: 1,
+            coverImage: 'https://example.com/cover-1.png',
+            authorName: 'Ada',
+            likes: 1.2,
+            commentCount: 30
+        }
+    },
+    {
+        data: {
+            id: 2,
+            coverImage: 'https://example.com/cover-2.png',
+            authorName: 'Linus',
+            likes: 2.4,
+            commentCount: 28
+        }
+    },
+    {
+        data: {
+            id: 3,
+            coverImage: 'https://example.com/cover-3.png',
+            authorName: 'Grace',
+            likes: 3.6,
+            commentCount: 45
+        }
+    }
+];
+const _et_7a8c6_test_1 = "_et_7a8c6_test_1";
+const _et_7a8c6_test_2 = "_et_7a8c6_test_2";
+export function App() {
+    const renderCard = (card, index)=>{
+        let indexColor;
+        if (index === 0) indexColor = '#F7283D';
+        else if (index === 1) indexColor = '#F76A4F';
+        else if (index === 2) indexColor = '#F4CB5F';
+        else indexColor = '#AEADB2';
+        return /*#__PURE__*/ _jsx(_et_7a8c6_test_1, {
+            attributeSlots: [
+                {
+                    "item-key": card.id.toString()
+                },
+                {
+                    color: indexColor
+                },
+                card.coverImage
+            ],
+            children: [
+                index + 1,
+                card.authorName,
+                `${card.likes} million people are watching`,
+                `${card.commentCount} M+`
+            ]
+        });
+    };
+    return /*#__PURE__*/ _jsx(_et_7a8c6_test_2, {
+        options: {
+            __elementTemplateList: true,
+            __elementTemplateAttributes: [
+                {
+                    kind: "attribute",
+                    key: "list-type",
+                    binding: "static",
+                    value: "single"
+                },
+                {
+                    kind: "attribute",
+                    key: "style",
+                    binding: "static",
+                    value: "height:100%;width:100%"
+                },
+                {
+                    kind: "attribute",
+                    key: "custom-list-name",
+                    binding: "static",
+                    value: "list-container"
+                },
+                {
+                    kind: "attribute",
+                    key: "experimental-disable-platform-implementation",
+                    binding: "static",
+                    value: true
+                }
+            ]
+        },
+        children: [
+            posts.map((post, index)=>renderCard(post.data, index))
+        ]
+    });
+}

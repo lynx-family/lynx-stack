@@ -1,0 +1,14 @@
+Object {
+  "stream": Array [
+    2,
+    -1,
+    0,
+    Object {
+      "__spread": true,
+      "id": "same",
+      "info": Object {
+        "key": "new",
+      },
+    },
+  ],
+}

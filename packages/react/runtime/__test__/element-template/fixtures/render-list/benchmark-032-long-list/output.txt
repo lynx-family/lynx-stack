@@ -1,0 +1,3 @@
+<view style="width:100%;height:100%">
+  <list custom-list-name="list-container" experimental-disable-platform-implementation="true" style="height:100%;width:100%" />
+</view>

@@ -1,0 +1,88 @@
+"<list column-count=\"2\" custom-list-name=\"list-container\" experimental-disable-platform-implementation=\"true\" list-type=\"waterfall\" style=\"height:100%;width:100%\">
+  <list-item item-key=\"1\">
+    <view class=\"card\">
+      <image alt=\"Card Header\" class=\"header-image\" downsampling=\"true\" mode=\"aspectFill\" src=\"https://example.com/cover-1.png\" />
+      <view class=\"card-body\">
+        <text class=\"card-title\">
+          <raw-text text=\"Waterfall card one\" />
+        </text>
+        <view class=\"card-bottom-info\">
+          <view class=\"author-info\">
+            <image alt=\"Author Avatar\" class=\"author-avatar\" downsampling=\"true\" mode=\"aspectFill\" src=\"https://example.com/avatar-1.png\" />
+            <view class=\"author-text-info\">
+              <text class=\"author-name\">
+                <raw-text text=\"Ada\" />
+              </text>
+            </view>
+          </view>
+          <view class=\"card-stats\">
+            <view class=\"heart-icon liked\">
+              <text text=\"❤️\" />
+            </view>
+            <text class=\"likes-count\">
+              <raw-text text=\"1.2M\" />
+            </text>
+          </view>
+        </view>
+        <view class=\"tags-section\">
+          <text class=\"tag\">
+            <raw-text text=\"react\" />
+          </text>
+          <text class=\"tag\">
+            <raw-text text=\"lynx\" />
+          </text>
+        </view>
+        <text class=\"card-content\">
+          <raw-text text=\"Benchmark waterfall content one\" />
+        </text>
+        <text class=\"creation-date\">
+          <raw-text text=\"Posted on: \" />
+          <raw-text text=\"2025-01-01\" />
+        </text>
+      </view>
+    </view>
+  </list-item>
+  <list-item item-key=\"2\">
+    <view class=\"card\">
+      <image alt=\"Card Header\" class=\"header-image\" downsampling=\"true\" mode=\"aspectFill\" src=\"https://example.com/cover-2.png\" />
+      <view class=\"card-body\">
+        <text class=\"card-title\">
+          <raw-text text=\"Waterfall card two\" />
+        </text>
+        <view class=\"card-bottom-info\">
+          <view class=\"author-info\">
+            <image alt=\"Author Avatar\" class=\"author-avatar\" downsampling=\"true\" mode=\"aspectFill\" src=\"https://example.com/avatar-2.png\" />
+            <view class=\"author-text-info\">
+              <text class=\"author-name\">
+                <raw-text text=\"Linus\" />
+              </text>
+            </view>
+          </view>
+          <view class=\"card-stats\">
+            <view class=\"heart-icon \">
+              <text text=\"❤️\" />
+            </view>
+            <text class=\"likes-count\">
+              <raw-text text=\"980K\" />
+            </text>
+          </view>
+        </view>
+        <view class=\"tags-section\">
+          <text class=\"tag\">
+            <raw-text text=\"et\" />
+          </text>
+          <text class=\"tag\">
+            <raw-text text=\"snapshot\" />
+          </text>
+        </view>
+        <text class=\"card-content\">
+          <raw-text text=\"Benchmark waterfall content two\" />
+        </text>
+        <text class=\"creation-date\">
+          <raw-text text=\"Posted on: \" />
+          <raw-text text=\"2025-01-02\" />
+        </text>
+      </view>
+    </view>
+  </list-item>
+</list>"

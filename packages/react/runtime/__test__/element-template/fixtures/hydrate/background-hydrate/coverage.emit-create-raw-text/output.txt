@@ -1,0 +1,15 @@
+Object {
+  "ops": Array [
+    1,
+    1,
+    "__et_builtin_raw_text__",
+    null,
+    Array [
+      "raw",
+    ],
+    Array [],
+    Object {
+      "handleId": 1,
+    },
+  ],
+}

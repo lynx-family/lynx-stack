@@ -1,0 +1,23 @@
+"<list custom-list-name=\"list-container\" experimental-disable-platform-implementation=\"true\" style=\"height:100%;width:100%\">
+  <list-item item-key=\"0\">
+    <view style={{\"backgroundColor\":\"#FF0033\",\"height\":\"16.8px\"}}>
+      <text>
+        <raw-text text=\"0\" />
+      </text>
+    </view>
+  </list-item>
+  <list-item item-key=\"1\">
+    <view style={{\"backgroundColor\":\"#F76A4F\",\"height\":\"16.8px\"}}>
+      <text>
+        <raw-text text=\"1\" />
+      </text>
+    </view>
+  </list-item>
+  <list-item item-key=\"2\">
+    <view style={{\"backgroundColor\":\"#F4CB5F\",\"height\":\"16.8px\"}}>
+      <text>
+        <raw-text text=\"2\" />
+      </text>
+    </view>
+  </list-item>
+</list>"

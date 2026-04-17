@@ -1,0 +1,22 @@
+Object {
+  "stream": Array [
+    2,
+    -1,
+    0,
+    "BG",
+    1,
+    10,
+    "_et_c2579_test_5",
+    null,
+    Array [],
+    Array [],
+    Object {
+      "handleId": 10,
+    },
+    3,
+    -4,
+    0,
+    10,
+    0,
+  ],
+}

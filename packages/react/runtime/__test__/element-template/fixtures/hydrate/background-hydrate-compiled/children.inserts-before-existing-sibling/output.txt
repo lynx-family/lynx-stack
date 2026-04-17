@@ -1,0 +1,18 @@
+Object {
+  "stream": Array [
+    1,
+    4,
+    "_et_f9aab_test_2",
+    null,
+    Array [],
+    Array [],
+    Object {
+      "handleId": 4,
+    },
+    3,
+    -3,
+    0,
+    4,
+    -1,
+  ],
+}

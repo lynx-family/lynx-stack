@@ -1,0 +1,118 @@
+[
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_2",
+    null,
+    null,
+    null,
+    -1
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_4",
+    null,
+    null,
+    [
+      [
+        {
+          "tag": "text",
+          "attributes": {
+            "text": "Slot Content 1"
+          },
+          "children": [],
+          "templateId": "_et_7a8c6_test_2"
+        }
+      ]
+    ],
+    -2
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_3",
+    null,
+    null,
+    null,
+    -3
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_4",
+    null,
+    null,
+    [
+      [
+        {
+          "tag": "text",
+          "attributes": {
+            "text": "Slot Content 2"
+          },
+          "children": [],
+          "templateId": "_et_7a8c6_test_3"
+        }
+      ]
+    ],
+    -4
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_1",
+    null,
+    null,
+    [
+      [
+        {
+          "tag": "view",
+          "attributes": {},
+          "children": [
+            {
+              "tag": "slot",
+              "attributes": {
+                "slot-id": 0
+              },
+              "children": [
+                {
+                  "tag": "text",
+                  "attributes": {
+                    "text": "Slot Content 1"
+                  },
+                  "children": [],
+                  "templateId": "_et_7a8c6_test_2"
+                }
+              ]
+            }
+          ],
+          "templateId": "_et_7a8c6_test_4"
+        },
+        {
+          "tag": "view",
+          "attributes": {},
+          "children": [
+            {
+              "tag": "slot",
+              "attributes": {
+                "slot-id": 0
+              },
+              "children": [
+                {
+                  "tag": "text",
+                  "attributes": {
+                    "text": "Slot Content 2"
+                  },
+                  "children": [],
+                  "templateId": "_et_7a8c6_test_3"
+                }
+              ]
+            }
+          ],
+          "templateId": "_et_7a8c6_test_4"
+        }
+      ]
+    ],
+    -5
+  ],
+  [
+    "__AppendElement",
+    "0",
+    "<_et_7a8c6_test_1 />"
+  ]
+]

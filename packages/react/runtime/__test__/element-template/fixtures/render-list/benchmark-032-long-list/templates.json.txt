@@ -1,0 +1,114 @@
+[
+  {
+    "templateId": "_et_7a8c6_test_2",
+    "compiledTemplate": {
+      "kind": "element",
+      "tag": "list-item",
+      "attributesArray": [],
+      "children": [
+        {
+          "kind": "element",
+          "tag": "view",
+          "attributesArray": [
+            {
+              "kind": "attribute",
+              "key": "style",
+              "binding": "slot",
+              "attrSlotIndex": 0
+            }
+          ],
+          "children": [
+            {
+              "kind": "element",
+              "tag": "text",
+              "attributesArray": [],
+              "children": [
+                {
+                  "kind": "elementSlot",
+                  "tag": "slot",
+                  "elementSlotIndex": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "sourceFile": "index.tsx"
+  },
+  {
+    "templateId": "_et_7a8c6_test_1",
+    "compiledTemplate": {
+      "kind": "element",
+      "tag": "list",
+      "attributesArray": [
+        {
+          "kind": "attribute",
+          "key": "style",
+          "binding": "static",
+          "value": "height:100%;width:100%"
+        },
+        {
+          "kind": "attribute",
+          "key": "custom-list-name",
+          "binding": "static",
+          "value": "list-container"
+        },
+        {
+          "kind": "attribute",
+          "key": "experimental-disable-platform-implementation",
+          "binding": "static",
+          "value": true
+        }
+      ],
+      "children": [
+        {
+          "kind": "elementSlot",
+          "tag": "slot",
+          "elementSlotIndex": 0
+        }
+      ]
+    },
+    "sourceFile": "index.tsx"
+  },
+  {
+    "templateId": "_et_7a8c6_test_3",
+    "compiledTemplate": {
+      "kind": "element",
+      "tag": "view",
+      "attributesArray": [
+        {
+          "kind": "attribute",
+          "key": "style",
+          "binding": "static",
+          "value": "width:100%;height:100%"
+        }
+      ],
+      "children": [
+        {
+          "kind": "elementSlot",
+          "tag": "slot",
+          "elementSlotIndex": 0
+        }
+      ]
+    },
+    "sourceFile": "index.tsx"
+  },
+  {
+    "templateId": "__et_builtin_raw_text__",
+    "compiledTemplate": {
+      "kind": "element",
+      "tag": "raw-text",
+      "attributesArray": [
+        {
+          "kind": "attribute",
+          "key": "text",
+          "binding": "slot",
+          "attrSlotIndex": 0
+        }
+      ],
+      "children": []
+    },
+    "sourceFile": "index.tsx"
+  }
+]

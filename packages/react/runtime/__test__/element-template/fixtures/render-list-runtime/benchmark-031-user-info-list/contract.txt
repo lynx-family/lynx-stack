@@ -1,0 +1,112 @@
+Object {
+  "flushes": Array [
+    Array [
+      "__FlushElementTree",
+      "<_et_7a8c6_test_1 />",
+      Object {
+        "elementID": 5,
+        "listID": 16,
+        "operationID": 121,
+        "triggerLayout": true,
+      },
+    ],
+    Array [
+      "__FlushElementTree",
+      "<list />",
+      Object {
+        "elementIDs": Array [
+          10,
+          15,
+        ],
+        "listID": 16,
+        "operationIDs": Array [
+          221,
+          321,
+        ],
+        "triggerLayout": true,
+      },
+    ],
+  ],
+  "listAttrs": Array [
+    Array [
+      "__SetAttribute",
+      "<list />",
+      "list-type",
+      "single",
+    ],
+    Array [
+      "__SetInlineStyles",
+      "<list />",
+      "height:100%;width:100%",
+    ],
+    Array [
+      "__SetAttribute",
+      "<list />",
+      "custom-list-name",
+      "list-container",
+    ],
+    Array [
+      "__SetAttribute",
+      "<list />",
+      "experimental-disable-platform-implementation",
+      true,
+    ],
+  ],
+  "platformInfoAttrs": Array [
+    Array [
+      "__SetAttribute",
+      "<_et_7a8c6_test_1 />",
+      "item-key",
+      "1",
+    ],
+    Array [
+      "__SetAttribute",
+      "<_et_7a8c6_test_1 />",
+      "item-key",
+      "2",
+    ],
+    Array [
+      "__SetAttribute",
+      "<_et_7a8c6_test_1 />",
+      "item-key",
+      "3",
+    ],
+  ],
+  "updateListCallbacks": Array [
+    Array [
+      "__UpdateListCallbacks",
+      "<list />",
+      true,
+      true,
+      true,
+    ],
+  ],
+  "updateListInfo": Array [
+    Array [
+      "__SetAttribute",
+      "<list />",
+      "update-list-info",
+      Object {
+        "insertAction": Array [
+          Object {
+            "item-key": "1",
+            "position": 0,
+            "type": "_et_7a8c6_test_1",
+          },
+          Object {
+            "item-key": "2",
+            "position": 1,
+            "type": "_et_7a8c6_test_1",
+          },
+          Object {
+            "item-key": "3",
+            "position": 2,
+            "type": "_et_7a8c6_test_1",
+          },
+        ],
+        "removeAction": Array [],
+        "updateAction": Array [],
+      },
+    ],
+  ],
+}

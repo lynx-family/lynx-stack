@@ -1,0 +1,128 @@
+import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+const posts = [
+    {
+        id: 1,
+        title: 'Card one',
+        likes: 1.2,
+        coverImage: 'https://example.com/cover-1.png',
+        content: 'First benchmark list card',
+        authorName: 'Ada',
+        commentCount: 20,
+        creationDate: '2025-01-01',
+        shareCount: 50
+    },
+    {
+        id: 2,
+        title: 'Card two',
+        likes: 2.5,
+        coverImage: 'https://example.com/cover-2.png',
+        content: 'Second benchmark list card',
+        authorName: 'Linus',
+        commentCount: 18,
+        creationDate: '2025-01-02',
+        shareCount: 35
+    },
+    {
+        id: 3,
+        title: 'Card three',
+        likes: 3.1,
+        coverImage: 'https://example.com/cover-3.png',
+        content: 'Third benchmark list card',
+        authorName: 'Grace',
+        commentCount: 33,
+        creationDate: '2025-01-03',
+        shareCount: 62
+    }
+];
+const _et_7a8c6_test_1 = "_et_7a8c6_test_1";
+const _et_7a8c6_test_2 = "_et_7a8c6_test_2";
+const _et_7a8c6_test_4 = "_et_7a8c6_test_4";
+const _et_7a8c6_test_3 = "_et_7a8c6_test_3";
+const _et_7a8c6_test_5 = "_et_7a8c6_test_5";
+export function App() {
+    const renderCard1 = (card)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_1, {
+            attributeSlots: [
+                {
+                    "item-key": card.id.toString()
+                },
+                card.coverImage
+            ],
+            children: [
+                card.title,
+                `${card.likes} million people are searching`
+            ]
+        });
+    const renderCard2 = (card)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_2, {
+            attributeSlots: [
+                {
+                    "item-key": card.id.toString()
+                },
+                card.coverImage
+            ],
+            children: [
+                card.content,
+                `${card.authorName} ${card.commentCount} comments ${card.creationDate}`
+            ]
+        });
+    const renderCard3 = (card)=>{
+        const images = [
+            card.coverImage,
+            card.coverImage,
+            card.coverImage
+        ];
+        return /*#__PURE__*/ _jsx(_et_7a8c6_test_3, {
+            attributeSlots: [
+                {
+                    "item-key": card.id.toString()
+                }
+            ],
+            children: [
+                card.content,
+                images.map((image, index)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_4, {
+                        attributeSlots: [
+                            image
+                        ]
+                    }, index)),
+                `${card.shareCount} shares ${card.creationDate}`
+            ]
+        });
+    };
+    return /*#__PURE__*/ _jsx(_et_7a8c6_test_5, {
+        options: {
+            __elementTemplateList: true,
+            __elementTemplateAttributes: [
+                {
+                    kind: "attribute",
+                    key: "list-type",
+                    binding: "static",
+                    value: "single"
+                },
+                {
+                    kind: "attribute",
+                    key: "style",
+                    binding: "static",
+                    value: "height:100%;width:100%"
+                },
+                {
+                    kind: "attribute",
+                    key: "custom-list-name",
+                    binding: "static",
+                    value: "list-container"
+                },
+                {
+                    kind: "attribute",
+                    key: "experimental-disable-platform-implementation",
+                    binding: "static",
+                    value: true
+                }
+            ]
+        },
+        children: [
+            posts.map((post, index)=>{
+                if (index % 3 === 0) return renderCard1(post);
+                if (index % 3 === 1) return renderCard2(post);
+                return renderCard3(post);
+            })
+        ]
+    });
+}

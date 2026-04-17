@@ -1,0 +1,39 @@
+Array [
+  Array [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    Array [
+      "Hello",
+    ],
+    Array [],
+    -1,
+  ],
+  Array [
+    "__CreateElementTemplate",
+    "_et_foo",
+    null,
+    Array [
+      "test",
+    ],
+    Array [
+      ,
+      Array [
+        Object {
+          "attributes": Object {
+            "text": "Hello",
+          },
+          "children": Array [],
+          "tag": "raw-text",
+          "templateId": "__et_builtin_raw_text__",
+        },
+      ],
+    ],
+    -2,
+  ],
+  Array [
+    "__AppendElement",
+    "root",
+    "<_et_foo />",
+  ],
+]

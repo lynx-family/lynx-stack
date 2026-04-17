@@ -1,0 +1,20 @@
+Object {
+  "stream": Array [
+    1,
+    4,
+    "__et_builtin_raw_text__",
+    null,
+    Array [
+      2,
+    ],
+    Array [],
+    Object {
+      "handleId": 4,
+    },
+    3,
+    -2,
+    0,
+    4,
+    0,
+  ],
+}

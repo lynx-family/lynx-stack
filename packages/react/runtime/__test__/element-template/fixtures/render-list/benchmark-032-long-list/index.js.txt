@@ -1,0 +1,60 @@
+import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+const colors = [
+    '#FF0033',
+    '#F76A4F',
+    '#F4CB5F',
+    '#AEADB2',
+    '#00A6FF',
+    '#33CC66'
+];
+const _et_7a8c6_test_2 = "_et_7a8c6_test_2";
+const _et_7a8c6_test_1 = "_et_7a8c6_test_1";
+const _et_7a8c6_test_3 = "_et_7a8c6_test_3";
+export function App() {
+    const renderContent = ()=>/*#__PURE__*/ _jsx(_et_7a8c6_test_1, {
+            options: {
+                __elementTemplateList: true,
+                __elementTemplateAttributes: [
+                    {
+                        kind: "attribute",
+                        key: "style",
+                        binding: "static",
+                        value: "height:100%;width:100%"
+                    },
+                    {
+                        kind: "attribute",
+                        key: "custom-list-name",
+                        binding: "static",
+                        value: "list-container"
+                    },
+                    {
+                        kind: "attribute",
+                        key: "experimental-disable-platform-implementation",
+                        binding: "static",
+                        value: true
+                    }
+                ]
+            },
+            children: [
+                colors.map((color, index)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_2, {
+                        attributeSlots: [
+                            {
+                                "item-key": index.toString()
+                            },
+                            {
+                                backgroundColor: color,
+                                height: '16.8px'
+                            }
+                        ],
+                        children: [
+                            index
+                        ]
+                    }))
+            ]
+        });
+    return /*#__PURE__*/ _jsx(_et_7a8c6_test_3, {
+        children: [
+            renderContent()
+        ]
+    });
+}

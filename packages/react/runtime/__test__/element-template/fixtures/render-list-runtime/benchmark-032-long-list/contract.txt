@@ -1,0 +1,121 @@
+Object {
+  "flushes": Array [
+    Array [
+      "__FlushElementTree",
+      "<_et_7a8c6_test_2 />",
+      Object {
+        "elementID": 2,
+        "listID": 13,
+        "operationID": 131,
+        "triggerLayout": true,
+      },
+    ],
+    Array [
+      "__FlushElementTree",
+      "<list />",
+      Object {
+        "elementIDs": Array [
+          4,
+          6,
+        ],
+        "listID": 13,
+        "operationIDs": Array [
+          231,
+          331,
+        ],
+        "triggerLayout": true,
+      },
+    ],
+  ],
+  "listAttrs": Array [
+    Array [
+      "__SetInlineStyles",
+      "<list />",
+      "height:100%;width:100%",
+    ],
+    Array [
+      "__SetAttribute",
+      "<list />",
+      "custom-list-name",
+      "list-container",
+    ],
+    Array [
+      "__SetAttribute",
+      "<list />",
+      "experimental-disable-platform-implementation",
+      true,
+    ],
+  ],
+  "platformInfoAttrs": Array [
+    Array [
+      "__SetAttribute",
+      "<_et_7a8c6_test_2 />",
+      "item-key",
+      "0",
+    ],
+    Array [
+      "__SetAttribute",
+      "<_et_7a8c6_test_2 />",
+      "item-key",
+      "1",
+    ],
+    Array [
+      "__SetAttribute",
+      "<_et_7a8c6_test_2 />",
+      "item-key",
+      "2",
+    ],
+  ],
+  "updateListCallbacks": Array [
+    Array [
+      "__UpdateListCallbacks",
+      "<list />",
+      true,
+      true,
+      true,
+    ],
+  ],
+  "updateListInfo": Array [
+    Array [
+      "__SetAttribute",
+      "<list />",
+      "update-list-info",
+      Object {
+        "insertAction": Array [
+          Object {
+            "item-key": "0",
+            "position": 0,
+            "type": "_et_7a8c6_test_2",
+          },
+          Object {
+            "item-key": "1",
+            "position": 1,
+            "type": "_et_7a8c6_test_2",
+          },
+          Object {
+            "item-key": "2",
+            "position": 2,
+            "type": "_et_7a8c6_test_2",
+          },
+          Object {
+            "item-key": "3",
+            "position": 3,
+            "type": "_et_7a8c6_test_2",
+          },
+          Object {
+            "item-key": "4",
+            "position": 4,
+            "type": "_et_7a8c6_test_2",
+          },
+          Object {
+            "item-key": "5",
+            "position": 5,
+            "type": "_et_7a8c6_test_2",
+          },
+        ],
+        "removeAction": Array [],
+        "updateAction": Array [],
+      },
+    ],
+  ],
+}

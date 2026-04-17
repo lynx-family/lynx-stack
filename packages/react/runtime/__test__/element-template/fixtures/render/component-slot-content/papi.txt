@@ -1,0 +1,75 @@
+[
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_3",
+    null,
+    null,
+    null,
+    -1
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_1",
+    null,
+    null,
+    [
+      [
+        {
+          "tag": "text",
+          "attributes": {
+            "text": "child"
+          },
+          "children": [],
+          "templateId": "_et_7a8c6_test_3"
+        }
+      ]
+    ],
+    -2
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_2",
+    null,
+    null,
+    [
+      [
+        {
+          "tag": "view",
+          "attributes": {},
+          "children": [
+            {
+              "tag": "text",
+              "attributes": {
+                "text": "custom"
+              },
+              "children": []
+            },
+            {
+              "tag": "slot",
+              "attributes": {
+                "slot-id": 0
+              },
+              "children": [
+                {
+                  "tag": "text",
+                  "attributes": {
+                    "text": "child"
+                  },
+                  "children": [],
+                  "templateId": "_et_7a8c6_test_3"
+                }
+              ]
+            }
+          ],
+          "templateId": "_et_7a8c6_test_1"
+        }
+      ]
+    ],
+    -3
+  ],
+  [
+    "__AppendElement",
+    "0",
+    "<_et_7a8c6_test_2 />"
+  ]
+]

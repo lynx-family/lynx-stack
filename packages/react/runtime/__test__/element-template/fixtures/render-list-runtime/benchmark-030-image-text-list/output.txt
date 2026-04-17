@@ -1,0 +1,50 @@
+"<list custom-list-name=\"list-container\" experimental-disable-platform-implementation=\"true\" list-type=\"single\" style=\"height:100%;width:100%\">
+  <list-item item-key=\"1\">
+    <view class=\"card\">
+      <view class=\"card1-container\">
+        <view class=\"card1-left-container\">
+          <text class=\"card1-title\">
+            <raw-text text=\"Card one\" />
+          </text>
+          <view class=\"card1-bottom\">
+            <text class=\"card1-search-red\" text=\"Search\" />
+            <text class=\"card1-search\">
+              <raw-text text=\"1.2 million people are searching\" />
+            </text>
+          </view>
+        </view>
+        <image alt=\"Card Header\" class=\"card1-image\" downsampling=\"true\" mode=\"aspectFill\" src=\"https://example.com/cover-1.png\" />
+      </view>
+    </view>
+  </list-item>
+  <list-item item-key=\"2\">
+    <view class=\"card\">
+      <view class=\"card2-container\">
+        <text class=\"card2-title\">
+          <raw-text text=\"Second benchmark list card\" />
+        </text>
+        <image alt=\"Card Header\" class=\"card2-image\" downsampling=\"true\" mode=\"aspectFill\" src=\"https://example.com/cover-2.png\" />
+        <text class=\"card2-bottom\">
+          <raw-text text=\"Linus 18 comments 2025-01-02\" />
+        </text>
+      </view>
+    </view>
+  </list-item>
+  <list-item item-key=\"3\">
+    <view class=\"card\">
+      <view class=\"card2-container\">
+        <text class=\"card2-title\">
+          <raw-text text=\"Third benchmark list card\" />
+        </text>
+        <view class=\"card3-images\">
+          <image alt=\"Card Header\" class=\"card3-image\" downsampling=\"true\" mode=\"aspectFill\" src=\"https://example.com/cover-3.png\" />
+          <image alt=\"Card Header\" class=\"card3-image\" downsampling=\"true\" mode=\"aspectFill\" src=\"https://example.com/cover-3.png\" />
+          <image alt=\"Card Header\" class=\"card3-image\" downsampling=\"true\" mode=\"aspectFill\" src=\"https://example.com/cover-3.png\" />
+        </view>
+        <text class=\"card2-bottom\">
+          <raw-text text=\"62 shares 2025-01-03\" />
+        </text>
+      </view>
+    </view>
+  </list-item>
+</list>"

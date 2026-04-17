@@ -1,0 +1,141 @@
+import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+const posts = [
+    {
+        id: 1,
+        authorAvatar: 'https://example.com/avatar-1.png',
+        authorName: 'Ada',
+        liked: true,
+        likes: '1.2M',
+        tags: [
+            'react',
+            'lynx'
+        ],
+        title: 'Waterfall card one',
+        content: 'Benchmark waterfall content one',
+        creationDate: '2025-01-01',
+        coverImage: 'https://example.com/cover-1.png'
+    },
+    {
+        id: 2,
+        authorAvatar: 'https://example.com/avatar-2.png',
+        authorName: 'Linus',
+        liked: false,
+        likes: '980K',
+        tags: [
+            'et',
+            'snapshot'
+        ],
+        title: 'Waterfall card two',
+        content: 'Benchmark waterfall content two',
+        creationDate: '2025-01-02',
+        coverImage: 'https://example.com/cover-2.png'
+    }
+];
+const _et_7a8c6_test_1 = "_et_7a8c6_test_1";
+const _et_7a8c6_test_2 = "_et_7a8c6_test_2";
+const _et_7a8c6_test_3 = "_et_7a8c6_test_3";
+const _et_7a8c6_test_4 = "_et_7a8c6_test_4";
+const _et_7a8c6_test_6 = "_et_7a8c6_test_6";
+const _et_7a8c6_test_5 = "_et_7a8c6_test_5";
+const _et_7a8c6_test_7 = "_et_7a8c6_test_7";
+const _et_7a8c6_test_8 = "_et_7a8c6_test_8";
+const _et_7a8c6_test_9 = "_et_7a8c6_test_9";
+export function App() {
+    const renderAuthorInfo = (card)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_1, {
+            attributeSlots: [
+                card.authorAvatar
+            ],
+            children: [
+                card.authorName
+            ]
+        });
+    const HeartIcon = ()=>/*#__PURE__*/ _jsx(_et_7a8c6_test_2, {});
+    const renderCardStats = (card)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_3, {
+            attributeSlots: [
+                `heart-icon ${card.liked ? 'liked' : ''}`
+            ],
+            children: [
+                /*#__PURE__*/ _jsx(HeartIcon, {}),
+                card.likes
+            ]
+        });
+    const renderCardBottomInfo = (card)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_4, {
+            children: [
+                [
+                    renderAuthorInfo(card),
+                    renderCardStats(card)
+                ]
+            ]
+        });
+    const renderCardTags = (card)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_5, {
+            children: [
+                card.tags.map((tag, index)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_6, {
+                        children: [
+                            tag
+                        ]
+                    }, index))
+            ]
+        });
+    const renderCardBody = (card)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_7, {
+            children: [
+                card.title,
+                [
+                    renderCardBottomInfo(card),
+                    renderCardTags(card)
+                ],
+                card.content,
+                card.creationDate
+            ]
+        });
+    const renderCard = (card)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_8, {
+            attributeSlots: [
+                {
+                    "item-key": card.id.toString()
+                },
+                card.coverImage
+            ],
+            children: [
+                renderCardBody(card)
+            ]
+        });
+    return /*#__PURE__*/ _jsx(_et_7a8c6_test_9, {
+        options: {
+            __elementTemplateList: true,
+            __elementTemplateAttributes: [
+                {
+                    kind: "attribute",
+                    key: "list-type",
+                    binding: "static",
+                    value: "waterfall"
+                },
+                {
+                    kind: "attribute",
+                    key: "column-count",
+                    binding: "static",
+                    value: 2
+                },
+                {
+                    kind: "attribute",
+                    key: "style",
+                    binding: "static",
+                    value: "height:100%;width:100%"
+                },
+                {
+                    kind: "attribute",
+                    key: "custom-list-name",
+                    binding: "static",
+                    value: "list-container"
+                },
+                {
+                    kind: "attribute",
+                    key: "experimental-disable-platform-implementation",
+                    binding: "static",
+                    value: true
+                }
+            ]
+        },
+        children: [
+            posts.map((post)=>renderCard(post))
+        ]
+    });
+}

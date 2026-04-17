@@ -1,0 +1,17 @@
+import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+import { Component } from '@lynx-js/react';
+const _et_7a8c6_test_1 = "_et_7a8c6_test_1";
+export class App extends Component {
+    render() {
+        const leading = 'A';
+        const innerText = 'B';
+        const trailing = 'C';
+        return /*#__PURE__*/ _jsx(_et_7a8c6_test_1, {
+            children: [
+                leading,
+                innerText,
+                trailing
+            ]
+        });
+    }
+}

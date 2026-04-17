@@ -1,0 +1,107 @@
+Object {
+  "flushes": Array [
+    Array [
+      "__FlushElementTree",
+      "<_et_7a8c6_test_8 />",
+      Object {
+        "elementID": 16,
+        "listID": 33,
+        "operationID": 101,
+        "triggerLayout": true,
+      },
+    ],
+    Array [
+      "__FlushElementTree",
+      "<list />",
+      Object {
+        "elementIDs": Array [
+          16,
+          32,
+        ],
+        "listID": 33,
+        "operationIDs": Array [
+          201,
+          202,
+        ],
+        "triggerLayout": true,
+      },
+    ],
+  ],
+  "listAttrs": Array [
+    Array [
+      "__SetAttribute",
+      "<list />",
+      "list-type",
+      "waterfall",
+    ],
+    Array [
+      "__SetAttribute",
+      "<list />",
+      "column-count",
+      2,
+    ],
+    Array [
+      "__SetInlineStyles",
+      "<list />",
+      "height:100%;width:100%",
+    ],
+    Array [
+      "__SetAttribute",
+      "<list />",
+      "custom-list-name",
+      "list-container",
+    ],
+    Array [
+      "__SetAttribute",
+      "<list />",
+      "experimental-disable-platform-implementation",
+      true,
+    ],
+  ],
+  "platformInfoAttrs": Array [
+    Array [
+      "__SetAttribute",
+      "<_et_7a8c6_test_8 />",
+      "item-key",
+      "1",
+    ],
+    Array [
+      "__SetAttribute",
+      "<_et_7a8c6_test_8 />",
+      "item-key",
+      "2",
+    ],
+  ],
+  "updateListCallbacks": Array [
+    Array [
+      "__UpdateListCallbacks",
+      "<list />",
+      true,
+      true,
+      true,
+    ],
+  ],
+  "updateListInfo": Array [
+    Array [
+      "__SetAttribute",
+      "<list />",
+      "update-list-info",
+      Object {
+        "insertAction": Array [
+          Object {
+            "item-key": "1",
+            "position": 0,
+            "type": "_et_7a8c6_test_8",
+          },
+          Object {
+            "item-key": "2",
+            "position": 1,
+            "type": "_et_7a8c6_test_8",
+          },
+        ],
+        "removeAction": Array [],
+        "updateAction": Array [],
+      },
+    ],
+  ],
+}

@@ -1,0 +1,16 @@
+Array [
+  1,
+  4,
+  "_et_3634f_test_1",
+  null,
+  Array [],
+  Array [],
+  Object {
+    "handleId": 4,
+  },
+  3,
+  -3,
+  0,
+  4,
+  -1,
+]

@@ -1,0 +1,118 @@
+Array [
+  Object {
+    "attributeSlots": Array [],
+    "elementSlots": Array [
+      Array [
+        Object {
+          "attributeSlots": Array [],
+          "elementSlots": Array [
+            Array [
+              Object {
+                "attributeSlots": Array [],
+                "elementSlots": Array [
+                  Array [
+                    Object {
+                      "attributeSlots": Array [
+                        "item-1",
+                      ],
+                      "elementSlots": Array [],
+                      "kind": "templateInstance",
+                      "options": Object {
+                        "handleId": -1,
+                      },
+                      "templateKey": "__et_builtin_raw_text__",
+                    },
+                  ],
+                ],
+                "kind": "templateInstance",
+                "options": Object {
+                  "handleId": -2,
+                },
+                "templateKey": "_et_e7cc6_test_3",
+              },
+            ],
+          ],
+          "kind": "templateInstance",
+          "options": Object {
+            "handleId": -3,
+          },
+          "templateKey": "_et_e7cc6_test_2",
+        },
+        Object {
+          "attributeSlots": Array [],
+          "elementSlots": Array [
+            Array [
+              Object {
+                "attributeSlots": Array [],
+                "elementSlots": Array [
+                  Array [
+                    Object {
+                      "attributeSlots": Array [
+                        "item-2",
+                      ],
+                      "elementSlots": Array [],
+                      "kind": "templateInstance",
+                      "options": Object {
+                        "handleId": -4,
+                      },
+                      "templateKey": "__et_builtin_raw_text__",
+                    },
+                  ],
+                ],
+                "kind": "templateInstance",
+                "options": Object {
+                  "handleId": -5,
+                },
+                "templateKey": "_et_e7cc6_test_3",
+              },
+            ],
+          ],
+          "kind": "templateInstance",
+          "options": Object {
+            "handleId": -6,
+          },
+          "templateKey": "_et_e7cc6_test_2",
+        },
+        Object {
+          "attributeSlots": Array [],
+          "elementSlots": Array [
+            Array [
+              Object {
+                "attributeSlots": Array [],
+                "elementSlots": Array [
+                  Array [
+                    Object {
+                      "attributeSlots": Array [
+                        "item-3",
+                      ],
+                      "elementSlots": Array [],
+                      "kind": "templateInstance",
+                      "options": Object {
+                        "handleId": -7,
+                      },
+                      "templateKey": "__et_builtin_raw_text__",
+                    },
+                  ],
+                ],
+                "kind": "templateInstance",
+                "options": Object {
+                  "handleId": -8,
+                },
+                "templateKey": "_et_e7cc6_test_3",
+              },
+            ],
+          ],
+          "kind": "templateInstance",
+          "options": Object {
+            "handleId": -9,
+          },
+          "templateKey": "_et_e7cc6_test_2",
+        },
+      ],
+    ],
+    "options": Object {
+      "handleId": -10,
+    },
+    "templateKey": "_et_e7cc6_test_1",
+  },
+]
