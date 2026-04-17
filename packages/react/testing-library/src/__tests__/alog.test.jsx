@@ -151,9 +151,6 @@ describe('alog', () => {
           "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: 5",
         ],
         [
-          "[BackgroundThread Component Render] name: Fragment, uniqID: __snapshot_d6fb6_test_2, __id: 4",
-        ],
-        [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_d6fb6_test_1, __id: 2",
         ],
         [
@@ -274,9 +271,6 @@ describe('alog', () => {
         ],
         [
           "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: -5",
-        ],
-        [
-          "[BackgroundThread Component Render] name: Fragment, uniqID: __snapshot_d6fb6_test_2, __id: -4",
         ],
         [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_d6fb6_test_1, __id: -2",
@@ -421,9 +415,6 @@ describe('alog', () => {
           "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: 5",
         ],
         [
-          "[BackgroundThread Component Render] name: Fragment, uniqID: __snapshot_d6fb6_test_2, __id: 4",
-        ],
-        [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_d6fb6_test_1, __id: 2",
         ],
         [
@@ -546,9 +537,6 @@ describe('alog', () => {
           "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: -5",
         ],
         [
-          "[BackgroundThread Component Render] name: Fragment, uniqID: __snapshot_d6fb6_test_2, __id: -4",
-        ],
-        [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_d6fb6_test_1, __id: -2",
         ],
         [
@@ -606,9 +594,6 @@ describe('alog', () => {
           "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: -5",
         ],
         [
-          "[BackgroundThread Component Render] name: Fragment, uniqID: __snapshot_d6fb6_test_2, __id: -4",
-        ],
-        [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_d6fb6_test_1, __id: -2",
         ],
         [
@@ -656,9 +641,6 @@ describe('alog', () => {
         ],
         [
           "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: -5",
-        ],
-        [
-          "[BackgroundThread Component Render] name: Fragment, uniqID: __snapshot_d6fb6_test_2, __id: -4",
         ],
         [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_d6fb6_test_1, __id: -2",
@@ -718,9 +700,6 @@ describe('alog', () => {
           "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: -5",
         ],
         [
-          "[BackgroundThread Component Render] name: Fragment, uniqID: __snapshot_d6fb6_test_2, __id: -4",
-        ],
-        [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_d6fb6_test_1, __id: -2",
         ],
         [
@@ -768,9 +747,6 @@ describe('alog', () => {
         ],
         [
           "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: -5",
-        ],
-        [
-          "[BackgroundThread Component Render] name: Fragment, uniqID: __snapshot_d6fb6_test_2, __id: -4",
         ],
         [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_d6fb6_test_1, __id: -2",

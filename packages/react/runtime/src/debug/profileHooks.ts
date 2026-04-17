@@ -32,6 +32,38 @@ const format = (val: unknown) => {
   return val;
 };
 
+const __diffCountsByType: Map<string, number> = /* @__PURE__ */ new Map();
+let __totalDiffCount = 0;
+let __diffCountHookInstalled = false;
+
+export function initDiffCountHook(): void {
+  if (__diffCountHookInstalled) return;
+  __diffCountHookInstalled = true;
+  hook(options, DIFF2, (old, vnode, oldVNode) => {
+    if (typeof vnode.type === 'function') {
+      const name = getDisplayName(vnode.type as ComponentClass);
+      __totalDiffCount++;
+      __diffCountsByType.set(name, (__diffCountsByType.get(name) ?? 0) + 1);
+    }
+    old?.(vnode, oldVNode);
+  });
+}
+
+export function getDiffCounts(): {
+  total: number;
+  byType: Record<string, number>;
+} {
+  return {
+    total: __totalDiffCount,
+    byType: Object.fromEntries(__diffCountsByType),
+  };
+}
+
+export function resetDiffCounts(): void {
+  __totalDiffCount = 0;
+  __diffCountsByType.clear();
+}
+
 function safeJsonStringify(val: unknown) {
   const seen = new WeakSet<object>();
 
