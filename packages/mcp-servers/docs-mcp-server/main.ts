@@ -4,6 +4,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { readFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -37,8 +39,14 @@ import { fetch } from 'undici';
 
 const debug = createDebug('lynx-docs-mcp');
 
-const pkgPath = findPackage.up({ cwd: new URL('.', import.meta.url).pathname });
-const pkg = JSON.parse(await readFile(pkgPath!, 'utf-8')) as {
+const moduleDirPath = dirname(fileURLToPath(import.meta.url));
+const pkgPath = findPackage.up({ cwd: moduleDirPath });
+
+if (!pkgPath) {
+  throw new Error(`Failed to locate package.json from ${moduleDirPath}`);
+}
+
+const pkg = JSON.parse(await readFile(pkgPath, 'utf-8')) as {
   version: string;
   name: string;
   description: string;
