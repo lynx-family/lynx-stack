@@ -613,8 +613,8 @@ importers:
   packages/react:
     dependencies:
       preact:
-        specifier: https://pkg.pr.new/lynx-family/internal-preact/preact@b163476
-        version: https://pkg.pr.new/lynx-family/internal-preact/preact@b163476
+        specifier: https://pkg.pr.new/lynx-family/internal-preact/preact@5902017
+        version: https://pkg.pr.new/lynx-family/internal-preact/preact@5902017
     devDependencies:
       '@lynx-js/types':
         specifier: 3.7.0
@@ -8508,8 +8508,8 @@ packages:
   preact@10.28.4:
     resolution: {integrity: sha512-uKFfOHWuSNpRFVTnljsCluEFq57OKT+0QdOiQo8XWnQ/pSvg7OpX5eNOejELXJMWy+BwM2nobz0FkvzmnpCNsQ==}
 
-  preact@https://pkg.pr.new/lynx-family/internal-preact/preact@b163476:
-    resolution: {integrity: sha512-e++RXbKoOLiDGY73bIvk+7LfqlIx+o7E8MtBlwSSLFDn/Gnbe+e88uPCZOqgY9c4uDx16x9A7HOM0Cc5lRjG/A==, tarball: https://pkg.pr.new/lynx-family/internal-preact/preact@b163476}
+  preact@https://pkg.pr.new/lynx-family/internal-preact/preact@5902017:
+    resolution: {integrity: sha512-kZnVJBWmWFGOUIeXL8hbUazuglivoye63ReGL5ROmD57dTNNhsaz9IB0KsvXg6awQdfUjSfEtN7qDDw78QEm1Q==, tarball: https://pkg.pr.new/lynx-family/internal-preact/preact@5902017}
     version: 10.28.4
 
   prelude-ls@1.2.1:
@@ -17665,7 +17665,7 @@ snapshots:
 
   preact@10.28.4: {}
 
-  preact@https://pkg.pr.new/lynx-family/internal-preact/preact@b163476: {}
+  preact@https://pkg.pr.new/lynx-family/internal-preact/preact@5902017: {}
 
   prelude-ls@1.2.1: {}
 
