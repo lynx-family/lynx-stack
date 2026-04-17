@@ -1,5 +1,5 @@
-import { render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { options, render } from 'preact';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useState } from '../../src/index';
 import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
@@ -8,6 +8,9 @@ import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
+
+let prevLynxSdkVersion;
+let prevCommit;
 
 function getSnapshotPatchFromPatchUpdateCall(call) {
   expect(call, 'expected a patch update call').toBeTruthy();
@@ -18,17 +21,26 @@ function getSnapshotPatchFromPatchUpdateCall(call) {
 }
 
 beforeAll(() => {
+  prevCommit = options.commit;
   setupPage(__CreatePage('0', 0));
   injectUpdateMainThread();
   replaceCommitHook();
 });
 
+afterAll(() => {
+  // Prevent leaking global state to other test files.
+  options.commit = prevCommit;
+  delete globalThis.rLynxChange;
+});
+
 beforeEach(() => {
   globalEnvManager.resetEnv();
+  prevLynxSdkVersion = SystemInfo.lynxSdkVersion;
   SystemInfo.lynxSdkVersion = '999.999';
 });
 
 afterEach(() => {
+  SystemInfo.lynxSdkVersion = prevLynxSdkVersion;
   vi.restoreAllMocks();
   elementTree.clear();
 });

@@ -68,10 +68,12 @@ describe('Gesture', () => {
           },
         },
         __isGesture: true,
-        toJSON: () => ({
-          ...gesture,
-          __isSerialized: true,
-        }),
+        toJSON: function() {
+          return {
+            ...this,
+            __isSerialized: true,
+          };
+        },
       };
 
       return (
@@ -171,10 +173,12 @@ describe('Gesture', () => {
         simultaneousWith: [{ id: 2 }],
         continueWith: [{ id: 2 }],
         __isGesture: true,
-        toJSON: () => ({
-          ...panGesture,
-          __isSerialized: true,
-        }),
+        toJSON: function() {
+          return {
+            ...this,
+            __isSerialized: true,
+          };
+        },
       };
       const tapGesture = {
         id: 2,
@@ -186,20 +190,24 @@ describe('Gesture', () => {
         },
         __isGesture: true,
         waitFor: [{ id: 1 }],
-        toJSON: () => ({
-          ...tapGesture,
-          __isSerialized: true,
-        }),
+        toJSON: function() {
+          return {
+            ...this,
+            __isSerialized: true,
+          };
+        },
       };
 
       const gesture = {
         type: -1,
         __isGesture: true,
         gestures: [panGesture, tapGesture],
-        toJSON: () => ({
-          ...gesture,
-          __isSerialized: true,
-        }),
+        toJSON: function() {
+          return {
+            ...this,
+            __isSerialized: true,
+          };
+        },
       };
 
       return (
@@ -302,10 +310,9 @@ describe('Gesture', () => {
           },
         },
         __isGesture: true,
-        toJSON() {
-          const { toJSON, ...rest } = this;
+        toJSON: function() {
           return {
-            ...rest,
+            ...this,
             __isSerialized: true,
           };
         },
@@ -443,10 +450,9 @@ describe('Gesture', () => {
         },
       },
       __isGesture: true,
-      toJSON() {
-        const { toJSON, ...rest } = this;
+      toJSON: function() {
         return {
-          ...rest,
+          ...this,
           __isSerialized: true,
         };
       },
@@ -568,10 +574,12 @@ describe('Gesture', () => {
           minDistance: 100,
         },
         __isGesture: true,
-        toJSON: () => ({
-          ...gesture,
-          __isSerialized: true,
-        }),
+        toJSON: function() {
+          return {
+            ...this,
+            __isSerialized: true,
+          };
+        },
       };
 
       return (
@@ -676,10 +684,12 @@ describe('Gesture in spread', () => {
           },
         },
         __isGesture: true,
-        toJSON: () => ({
-          ...gesture,
-          __isSerialized: true,
-        }),
+        toJSON: function() {
+          return {
+            ...this,
+            __isSerialized: true,
+          };
+        },
       };
 
       const props = {
@@ -806,10 +816,9 @@ describe('Gesture in spread', () => {
         },
       },
       __isGesture: true,
-      toJSON() {
-        const { toJSON, ...rest } = this;
+      toJSON: function() {
         return {
-          ...rest,
+          ...this,
           __isSerialized: true,
         };
       },
@@ -915,10 +924,9 @@ describe('Gesture in spread', () => {
         },
       },
       __isGesture: true,
-      toJSON() {
-        const { toJSON, ...rest } = this;
+      toJSON: function() {
         return {
-          ...rest,
+          ...this,
           __isSerialized: true,
         };
       },
@@ -1041,10 +1049,9 @@ describe('Gesture in spread', () => {
         },
       },
       __isGesture: true,
-      toJSON() {
-        const { toJSON, ...rest } = this;
+      toJSON: function() {
         return {
-          ...rest,
+          ...this,
           __isSerialized: true,
         };
       },

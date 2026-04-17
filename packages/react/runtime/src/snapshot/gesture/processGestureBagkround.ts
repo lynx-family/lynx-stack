@@ -14,16 +14,6 @@ function prepareWorkletForCommit(value: Worklet): Worklet | null {
   return onPostWorkletCtx(copy);
 }
 
-function gestureToJSON(this: Record<string, unknown>): Record<string, unknown> {
-  // Ensure serialization uses the committed object itself instead of any
-  // user-provided `toJSON` implementation that may close over the original object.
-  const { toJSON: _ignoredToJSON, ...rest } = this;
-  return {
-    ...rest,
-    __isSerialized: true,
-  };
-}
-
 /**
  * Prepare a gesture payload to be sent to the main thread.
  *
@@ -34,10 +24,9 @@ function gestureToJSON(this: Record<string, unknown>): Record<string, unknown> {
 export function prepareGestureForCommit(gesture: GestureKind): GestureKind {
   if (gesture.type === GestureTypeInner.COMPOSED) {
     const composed = gesture as ComposedGesture;
-    const committed: ComposedGesture & { toJSON: typeof gestureToJSON } = {
+    const committed: ComposedGesture = {
       ...composed,
       gestures: composed.gestures.map((g) => prepareGestureForCommit(g)),
-      toJSON: gestureToJSON,
     };
     return committed;
   }
@@ -56,10 +45,9 @@ export function prepareGestureForCommit(gesture: GestureKind): GestureKind {
     committedCallbacks[name] = prepareWorkletForCommit(callback)!;
   }
 
-  const committed: BaseGesture & { toJSON: typeof gestureToJSON } = {
+  const committed: BaseGesture = {
     ...baseGesture,
     callbacks: committedCallbacks,
-    toJSON: gestureToJSON,
   };
   return committed;
 }

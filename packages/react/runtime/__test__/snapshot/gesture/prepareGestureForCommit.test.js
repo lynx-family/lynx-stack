@@ -25,7 +25,9 @@ describe('prepareGestureForCommit', () => {
     expect(committed.callbacks).not.toBe(gesture.callbacks);
     expect(committed.callbacks.onUpdate).toBe(null);
 
-    // Committed payload should serialize itself, not rely on the original object's toJSON.
+    expect(committed.toJSON).toBe(gesture.toJSON);
+
+    // Gesture runtime provides toJSON; ensure the committed object still serializes.
     const json = committed.toJSON();
     expect(json.__isSerialized).toBe(true);
   });
