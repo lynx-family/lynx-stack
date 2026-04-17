@@ -5,7 +5,7 @@
     "composite": true,
     "outDir": "./dist",
     "target": "esnext",
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "jsxImportSource": "@lynx-js/react",
     "rootDir": "./src",
   },

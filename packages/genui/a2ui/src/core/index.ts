@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 export * from './types.js';
-export { A2UIRender } from './A2UIRender.js';
+export { A2UIRender } from './A2UIRender.jsx';
 export { BaseClient } from './BaseClient.js';
 export { componentRegistry, type ComponentProps } from './ComponentRegistry.js';
 export { processor, type MessageProcessor } from './processor.js';

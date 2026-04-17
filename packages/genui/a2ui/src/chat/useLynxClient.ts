@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { useCallback, useRef, useState } from '@lynx-js/react';
 
-import type { Message } from './Conversation.js';
+import type { Message } from './Conversation.jsx';
 import { BaseClient } from '../core/BaseClient.js';
 import type { Resource } from '../core/types.js';
 

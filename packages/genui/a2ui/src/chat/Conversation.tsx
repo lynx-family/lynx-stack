@@ -11,7 +11,7 @@ import type { InputRef } from '@lynx-js/lynx-ui-input';
 import { useCallback, useRef, useState } from '@lynx-js/react';
 
 import { useLynxClient } from './useLynxClient.js';
-import { A2UIRender } from '../core/A2UIRender.js';
+import { A2UIRender } from '../core/A2UIRender.jsx';
 import type { Resource } from '../core/types.js';
 
 export interface Message {
