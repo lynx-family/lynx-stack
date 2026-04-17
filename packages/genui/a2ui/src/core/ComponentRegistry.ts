@@ -1,5 +1,9 @@
-import { type ComponentType } from '@lynx-js/react';
-import type { ComponentInstance, Surface } from './types';
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+import type { ComponentType } from '@lynx-js/react';
+
+import type { ComponentInstance, Surface } from './types.js';
 
 export class BaseComponentRegistry<T> {
   private registry = new Map<string, T>();
@@ -26,6 +30,8 @@ export interface ComponentProps {
 
 export type ComponentRenderer = ComponentType<ComponentProps>;
 
-export class ComponentRegistry extends BaseComponentRegistry<ComponentRenderer> {}
+export class ComponentRegistry
+  extends BaseComponentRegistry<ComponentRenderer>
+{}
 
 export const componentRegistry = new ComponentRegistry();

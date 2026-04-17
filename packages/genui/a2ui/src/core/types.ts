@@ -1,5 +1,10 @@
-import * as v0_9 from '@a2ui/web_core/v0_9';
-import { SignalStore } from '../utils/SignalStore';
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+import type * as v0_9 from '@a2ui/web_core/v0_9';
+
+import type { Resource as GenericResource } from '../utils/createResource.js';
+import type { SignalStore } from '../utils/SignalStore.js';
 
 export type SurfaceId = string;
 
@@ -41,14 +46,7 @@ export interface ResourceInfo {
   component?: ComponentInstance;
 }
 
-export interface Resource {
-  id: string;
-  readonly completed: boolean;
-  read: () => ResourceInfo;
-  complete: (result: ResourceInfo) => void;
-  onUpdate: (callback: (result: ResourceInfo) => void) => () => void;
-  promise: Promise<ResourceInfo>;
-}
+export type Resource = GenericResource<ResourceInfo>;
 
 export type ServerToClientMessage = v0_9.A2uiMessage & {
   /**
@@ -68,10 +66,19 @@ export interface UserActionPayload {
 export type A2UIClientEventMessage =
   | string
   | {
-      text?: string;
-      sessionId?: string;
-    }
+    text?: string;
+    sessionId?: string;
+  }
   | {
-      userAction: UserActionPayload;
-      sessionId?: string;
-    };
+    userAction: UserActionPayload;
+    sessionId?: string;
+  };
+
+export interface GenericComponentProps {
+  id?: string;
+  surface: Surface;
+  setValue?: (key: string, value: unknown) => void;
+  sendAction?: (action: Record<string, unknown>) => void;
+  dataContextPath?: string;
+  [key: string]: unknown;
+}

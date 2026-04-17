@@ -1,7 +1,8 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { type Signal, batch, signal } from '@preact/signals';
+import { batch, signal } from '@preact/signals';
+import type { Signal } from '@preact/signals';
 
 export class SignalStore {
   private signals = new Map<string, Signal<unknown>>();

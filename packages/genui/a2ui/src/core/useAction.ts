@@ -1,6 +1,10 @@
-import * as v0_9 from '@a2ui/web_core/v0_9';
-import { processor } from "./processor";
-import type { UserActionPayload } from "./types";
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+import type * as v0_9 from '@a2ui/web_core/v0_9';
+
+import { processor } from './processor.js';
+import type { UserActionPayload } from './types.js';
 
 export interface ActionProps {
   id: string;
@@ -9,14 +13,20 @@ export interface ActionProps {
 }
 
 function isDataBinding(value: unknown): value is v0_9.DataBinding {
-  return !!value && typeof value === 'object' && 'path' in (value as any);
+  return !!value && typeof value === 'object'
+    && 'path' in (value as Record<string, unknown>);
 }
 
 function isFunctionCall(value: unknown): value is v0_9.FunctionCall {
-  return !!value && typeof value === 'object' && 'call' in (value as any);
+  return !!value && typeof value === 'object'
+    && 'call' in (value as Record<string, unknown>);
 }
 
-function resolveFromStore(path: string, surfaceId: string, dataContextPath?: string): unknown {
+function resolveFromStore(
+  path: string,
+  surfaceId: string,
+  dataContextPath?: string,
+): unknown {
   const surface = processor.getOrCreateSurface(surfaceId);
   const store = surface.store;
   const resolvedPath = processor.resolvePath(path, dataContextPath);
@@ -24,7 +34,7 @@ function resolveFromStore(path: string, surfaceId: string, dataContextPath?: str
   const raw = signal.value;
   if (!raw) return raw;
   try {
-    return JSON.parse(raw);
+    return JSON.parse(raw as string);
   } catch {
     return raw;
   }
@@ -35,12 +45,15 @@ function resolveDynamicValue(
   surfaceId: string,
   dataContextPath?: string,
 ): unknown {
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+  if (
+    typeof value === 'string' || typeof value === 'number'
+    || typeof value === 'boolean'
+  ) {
     return value;
   }
 
   if (Array.isArray(value)) {
-    return value.map((v) => v);
+    return value.map((v: unknown) => v);
   }
 
   if (isDataBinding(value)) {
@@ -55,7 +68,7 @@ function resolveDynamicValue(
 }
 
 function resolveFunctionArguments(
-  args: Record<string, any> | undefined,
+  args: Record<string, unknown> | undefined,
   surfaceId: string,
   dataContextPath?: string,
 ): Record<string, unknown> | undefined {
@@ -92,10 +105,12 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-export function useAction(props: ActionProps): { sendAction: (action: any) => Promise<any> } {
+export function useAction(
+  props: ActionProps,
+): { sendAction: (action: v0_9.Action) => Promise<unknown> } {
   const { id, surfaceId, dataContext } = props;
 
-  const sendAction = async (action: v0_9.Action) => {
+  const sendAction = (action: v0_9.Action) => {
     let name = 'unknownAction';
     let context: Record<string, unknown> = {};
 
@@ -105,7 +120,11 @@ export function useAction(props: ActionProps): { sendAction: (action: any) => Pr
       if (ctx) {
         const resolvedContext: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(ctx)) {
-          resolvedContext[key] = resolveDynamicValue(value as any, surfaceId, dataContext);
+          resolvedContext[key] = resolveDynamicValue(
+            value as v0_9.DynamicValue,
+            surfaceId,
+            dataContext,
+          );
         }
         context = resolvedContext;
       }

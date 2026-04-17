@@ -1,7 +1,12 @@
-import * as v0_9 from '@a2ui/web_core/v0_9';
-import type { ComponentProps } from "../../core/ComponentRegistry";
-import { NodeRenderer } from "../../core/A2UIRender";
-import { useDataBinding } from '../../core/useDataBinding';
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+import type * as v0_9 from '@a2ui/web_core/v0_9';
+
+import { NodeRenderer } from '../../core/A2UIRender.js';
+import type { ComponentProps } from '../../core/ComponentRegistry.js';
+import type { GenericComponentProps } from '../../core/types.js';
+import { useDataBinding } from '../../core/useDataBinding.js';
 
 import './style.css';
 
@@ -9,11 +14,30 @@ export interface ListProps extends ComponentProps {
   component: v0_9.AnyComponent & { dataContextPath?: string };
 }
 
-export function List(props: any): any {
+export function List(
+  props: GenericComponentProps,
+): import('@lynx-js/react').ReactNode {
   const { children, surface, dataContextPath, direction = 'vertical' } = props;
 
-  let content: any[] = [];
+  interface ListItem {
+    key: string;
+    component: v0_9.AnyComponent & { dataContextPath?: string };
+  }
 
+  const isDynamic = children && !Array.isArray(children)
+    && typeof children === 'object';
+  const template = isDynamic
+    ? (children as { path: string; componentId: string })
+    : undefined;
+
+  const [listData, , fullPath] = useDataBinding<Record<string, unknown>[]>(
+    template ? { path: template.path } : undefined,
+    surface,
+    dataContextPath,
+    [],
+  );
+
+  let content: (ListItem | null)[] = [];
   if (Array.isArray(children)) {
     content = children.map((childId: string) => {
       const child = surface.components.get(childId);
@@ -27,20 +51,7 @@ export function List(props: any): any {
         component: childWithContext,
       };
     });
-  } else if (children && typeof children === 'object') {
-    const template = children as {
-      path: string;
-      componentId: string;
-    };
-    const dataPath = template.path;
-    const componentId = template.componentId;
-
-    const [listData, , fullPath] = useDataBinding<any[]>(
-      { path: dataPath },
-      surface,
-      dataContextPath,
-      []
-    );
+    const componentId = template?.componentId ?? '';
 
     const items = Array.isArray(listData) ? listData : [];
 
@@ -48,10 +59,9 @@ export function List(props: any): any {
       const child = surface.components.get(componentId);
       if (!child) return null;
 
-      const key =
-        item && typeof item === 'object' && 'key' in item
-          ? String(item.key)
-          : `${index}`;
+      const key = item && typeof item === 'object' && 'key' in item
+        ? String(item['key'])
+        : `${index}`;
 
       const itemPath = `${fullPath}/${index}`;
       const childWithContext = { ...child, dataContextPath: itemPath };
@@ -65,9 +75,9 @@ export function List(props: any): any {
 
   return (
     <list
-      className={`list list-${direction}`}
+      className={`list list-${String(direction)}`}
       scroll-orientation={direction === 'vertical' ? 'vertical' : 'horizontal'}
-      list-type="single"
+      list-type='single'
       span-count={1}
     >
       {content.map((item) => {
@@ -75,7 +85,7 @@ export function List(props: any): any {
         return (
           <list-item key={item.key} item-key={item.key}>
             <NodeRenderer
-              component={item.component as any}
+              component={item.component}
               surface={surface}
             />
           </list-item>

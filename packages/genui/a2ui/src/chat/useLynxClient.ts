@@ -1,12 +1,31 @@
-import { useState, useRef, useCallback } from '@lynx-js/react';
-import { BaseClient } from "../core/BaseClient";
-import { type Message } from "./Conversation";
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+import { useCallback, useRef, useState } from '@lynx-js/react';
+
+import type { Message } from './Conversation.js';
+import { BaseClient } from '../core/BaseClient.js';
+import type { Resource } from '../core/types.js';
 
 export interface UseLynxClientOptions {
   keepHistory?: boolean;
 }
 
-export function useLynxClient(url: string, options: UseLynxClientOptions = {}): any {
+export interface UseLynxClientResult {
+  messages: Message[];
+  sendMessage: (
+    content: string,
+  ) => Promise<{ messageId: string; resource: Resource }>;
+  setMessages: import('@lynx-js/react').Dispatch<
+    import('@lynx-js/react').SetStateAction<Message[]>
+  >;
+  clientRef: import('@lynx-js/react').MutableRefObject<BaseClient | null>;
+}
+
+export function useLynxClient(
+  url: string,
+  options: UseLynxClientOptions = {},
+): UseLynxClientResult {
   const { keepHistory = true } = options;
   const clientRef = useRef<BaseClient | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -33,8 +52,10 @@ export function useLynxClient(url: string, options: UseLynxClientOptions = {}): 
         if (!hasBeginRendering) {
           setMessages((prev) =>
             prev.filter(
-              (m) => m.id !== `${messageId}-agent` && m.id !== `${messageId}-agent-new`,
-            ),
+              (m) =>
+                m.id !== `${messageId}-agent`
+                && m.id !== `${messageId}-agent-new`,
+            )
           );
         }
       };
@@ -49,10 +70,9 @@ export function useLynxClient(url: string, options: UseLynxClientOptions = {}): 
       const client = getClient();
 
       if (keepHistory) {
-        const userMsgId =
-          'user_' +
-          Date.now().toString(36) +
-          Math.random().toString(36).slice(2, 10);
+        const userMsgId = 'user_'
+          + Date.now().toString(36)
+          + Math.random().toString(36).slice(2, 10);
         setMessages((prev) => [
           ...prev,
           {

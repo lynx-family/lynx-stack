@@ -1,6 +1,11 @@
-import * as v0_9 from '@a2ui/web_core/v0_9';
-import type { ComponentProps } from "../../core/ComponentRegistry";
-import { NodeRenderer } from "../../core/A2UIRender";
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+import type * as v0_9 from '@a2ui/web_core/v0_9';
+
+import { NodeRenderer } from '../../core/A2UIRender.js';
+import type { ComponentProps } from '../../core/ComponentRegistry.js';
+import type { GenericComponentProps } from '../../core/types.js';
 
 import './style.css';
 
@@ -8,8 +13,14 @@ export interface RowProps extends ComponentProps {
   component: v0_9.AnyComponent & { dataContextPath?: string };
 }
 
-export function Row(props: any): any {
-  const { children, surface, dataContextPath, justify = 'start', align = 'stretch' } = props;
+export function Row(
+  props: GenericComponentProps,
+): import('@lynx-js/react').ReactNode {
+  const children = props['children'];
+  const surface = props.surface;
+  const dataContextPath = props.dataContextPath;
+  const justify = props['justify'] as string | undefined ?? 'start';
+  const align = props['align'] as string | undefined ?? 'stretch';
   const explicitChildren = Array.isArray(children) ? children : [];
 
   return (
@@ -23,7 +34,7 @@ export function Row(props: any): any {
         return (
           <NodeRenderer
             key={childId}
-            component={childWithContext as any}
+            component={childWithContext}
             surface={surface}
           />
         );

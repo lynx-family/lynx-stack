@@ -1,31 +1,40 @@
-import * as v0_9 from '@a2ui/web_core/v0_9';
-import { type Surface, type ServerToClientMessage, type ComponentInstance } from './types';
-import { SignalStore } from "../utils/SignalStore";
-import { createResource } from "../utils/createResource";
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+import type * as v0_9 from '@a2ui/web_core/v0_9';
 
-export type A2UIEvent = {
-  message: any;
-  resolve: (response: any) => void;
-};
+import type {
+  ComponentInstance,
+  ServerToClientMessage,
+  Surface,
+} from './types.js';
+import { createResource } from '../utils/createResource.js';
+import { SignalStore } from '../utils/SignalStore.js';
 
-function isObject(value: unknown): value is Record<string, any> {
+export interface A2UIEvent {
+  message: Record<string, unknown>;
+  resolve: (response: unknown) => void;
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
 export class MessageProcessor {
   surfaces: Map<string, Surface>;
   private listener: ((event: A2UIEvent) => void) | null = null;
-  private updateListener: ((data: any) => void) | null = null;
+  private updateListener: ((data: Record<string, unknown>) => void) | null =
+    null;
 
   constructor() {
     this.surfaces = new Map();
   }
 
-  onUpdate(callback: (data: any) => void): void {
+  onUpdate(callback: (data: Record<string, unknown>) => void): void {
     this.updateListener = callback;
   }
 
-  dispatch(message: any): Promise<any> {
+  dispatch(message: Record<string, unknown>): Promise<unknown> {
     return new Promise((resolve) => {
       if (this.listener) {
         this.listener({ message, resolve });
@@ -79,7 +88,7 @@ export class MessageProcessor {
     if (path.startsWith('/')) {
       return path;
     }
-    const context = dataContextPath || '';
+    const context = dataContextPath ?? '';
     const cleanContext = context.endsWith('/') ? context.slice(0, -1) : context;
 
     if (path.startsWith('./')) {
@@ -107,8 +116,8 @@ export class MessageProcessor {
     if (!original) return null;
 
     const newId = `${originalId}${newIdSuffix}`;
-    const cloned: ComponentInstance = JSON.parse(JSON.stringify(original));
-    (cloned as unknown as any).id = newId;
+    const cloned = JSON.parse(JSON.stringify(original)) as ComponentInstance;
+    (cloned as unknown as Record<string, unknown>)['id'] = newId;
     cloned.dataContextPath = dataContextPath;
 
     surface.components.set(newId, cloned);
@@ -120,34 +129,37 @@ export class MessageProcessor {
 
     // Recursively clone the subtree below this component.
     const childIds: string[] = [];
-    const anyCloned = cloned as any;
+    const anyCloned = cloned as unknown as Record<string, unknown>;
 
-    if (Array.isArray(anyCloned.children)) {
-      for (const childId of anyCloned.children) {
+    if (Array.isArray(anyCloned['children'])) {
+      for (const childId of anyCloned['children']) {
         if (typeof childId === 'string') {
           childIds.push(childId);
         }
       }
     }
 
-    if (typeof anyCloned.child === 'string') {
-      childIds.push(anyCloned.child);
+    if (typeof anyCloned['child'] === 'string') {
+      childIds.push(anyCloned['child']);
     }
 
-    if (Array.isArray(anyCloned.tabs)) {
-      for (const tab of anyCloned.tabs) {
-        if (tab && typeof tab.child === 'string') {
-          childIds.push(tab.child);
+    if (Array.isArray(anyCloned['tabs'])) {
+      for (const tab of anyCloned['tabs'] as unknown[]) {
+        if (
+          tab && typeof tab === 'object' && 'child' in tab
+          && typeof (tab as Record<string, unknown>)['child'] === 'string'
+        ) {
+          childIds.push((tab as Record<string, unknown>)['child'] as string);
         }
       }
     }
 
-    if (typeof anyCloned.trigger === 'string') {
-      childIds.push(anyCloned.trigger);
+    if (typeof anyCloned['trigger'] === 'string') {
+      childIds.push(anyCloned['trigger']);
     }
 
-    if (typeof anyCloned.content === 'string') {
-      childIds.push(anyCloned.content);
+    if (typeof anyCloned['content'] === 'string') {
+      childIds.push(anyCloned['content']);
     }
 
     const newChildren: string[] = [];
@@ -164,16 +176,20 @@ export class MessageProcessor {
       }
     }
 
-    if (Array.isArray(anyCloned.children)) {
-      anyCloned.children = newChildren;
+    if (Array.isArray(anyCloned['children'])) {
+      anyCloned['children'] = newChildren;
     } else if (newChildren.length > 0) {
-      anyCloned.children = newChildren;
+      anyCloned['children'] = newChildren;
     }
 
     return newId;
   }
 
-  private flattenValue(value: unknown, basePath: string, updates: { path: string; value: any }[]) {
+  private flattenValue(
+    value: unknown,
+    basePath: string,
+    updates: { path: string; value: unknown }[],
+  ) {
     const normalizedBase = basePath === '' ? '/' : basePath;
 
     const push = (path: string, v: unknown) => {
@@ -183,7 +199,9 @@ export class MessageProcessor {
     if (Array.isArray(value)) {
       push(normalizedBase, value);
       value.forEach((item, index) => {
-        const childPath = normalizedBase === '/' ? `/${index}` : `${normalizedBase}/${index}`;
+        const childPath = normalizedBase === '/'
+          ? `/${index}`
+          : `${normalizedBase}/${index}`;
         if (isObject(item) || Array.isArray(item)) {
           push(childPath, item);
           this.flattenValue(item, childPath, updates);
@@ -197,7 +215,9 @@ export class MessageProcessor {
     if (isObject(value)) {
       push(normalizedBase, value);
       for (const [key, v] of Object.entries(value)) {
-        const childPath = normalizedBase === '/' ? `/${key}` : `${normalizedBase}/${key}`;
+        const childPath = normalizedBase === '/'
+          ? `/${key}`
+          : `${normalizedBase}/${key}`;
         if (isObject(v) || Array.isArray(v)) {
           push(childPath, v);
           this.flattenValue(v, childPath, updates);
@@ -215,11 +235,19 @@ export class MessageProcessor {
   processMessages(messages: ServerToClientMessage[]): void {
     for (const message of messages) {
       if ('createSurface' in message && message.createSurface) {
-        const { surfaceId, catalogId, theme, sendDataModel } = message.createSurface;
+        const createSurface = (message as unknown as Record<string, unknown>)[
+          'createSurface'
+        ] as Record<string, unknown>;
+        const surfaceId = createSurface['surfaceId'] as string;
         const surface = this.getOrCreateSurface(surfaceId);
-        surface.catalogId = catalogId;
-        surface.theme = theme;
-        surface.sendDataModel = sendDataModel;
+        const catId = createSurface['catalogId'];
+        if (catId !== undefined) surface.catalogId = catId as string;
+        const t = createSurface['theme'];
+        if (t !== undefined) {
+          surface.theme = t as Readonly<Record<string, unknown>>;
+        }
+        const sData = createSurface['sendDataModel'];
+        if (sData !== undefined) surface.sendDataModel = sData as boolean;
       }
 
       if ('updateComponents' in message && message.updateComponents) {
@@ -231,34 +259,46 @@ export class MessageProcessor {
         for (const item of components as ComponentInstance[]) {
           if (!item.id) continue;
           const existing = surface.components.get(item.id);
-          const dataContextPath = (existing as any)?.dataContextPath;
-          const instance: ComponentInstance = {
-            ...(item as any),
-            dataContextPath,
-          };
+          const dataContextPath = existing?.dataContextPath;
+          const instance = { ...item } as ComponentInstance;
+          if (dataContextPath !== undefined) {
+            instance.dataContextPath = dataContextPath;
+          }
 
-          const anyInstance = instance as any;
+          const anyInstance = instance as unknown as Record<string, unknown>;
           if (
-            anyInstance.children &&
-            !Array.isArray(anyInstance.children) &&
-            typeof anyInstance.children === 'object' &&
-            typeof anyInstance.children.componentId === 'string' &&
-            typeof anyInstance.children.path === 'string'
+            anyInstance['children']
+            && !Array.isArray(anyInstance['children'])
+            && typeof anyInstance['children'] === 'object'
+            && anyInstance['children'] !== null
+            && typeof (anyInstance['children'] as Record<string, unknown>)[
+                'componentId'
+              ] === 'string'
+            && typeof (anyInstance['children'] as Record<string, unknown>)[
+                'path'
+              ] === 'string'
           ) {
-            const templatePath = this.resolvePath(anyInstance.children.path, dataContextPath);
+            const templatePath = this.resolvePath(
+              (anyInstance['children'] as Record<string, unknown>)[
+                'path'
+              ] as string,
+              dataContextPath,
+            );
             instance.__template = {
-              componentId: anyInstance.children.componentId,
+              componentId: (anyInstance['children'] as Record<string, unknown>)[
+                'componentId'
+              ] as string,
               path: templatePath,
             };
           }
 
           // this.resolveComponentPaths(instance, dataContextPath);
 
-          surface.components.set(instance.id as string, instance);
-          updatesMap.set(instance.id as string, instance);
+          surface.components.set(instance.id!, instance);
+          updatesMap.set(instance.id!, instance);
 
-          if (!surface.resources.has(instance.id as string)) {
-            surface.resources.set(instance.id as string, createResource(instance.id as string));
+          if (!surface.resources.has(instance.id!)) {
+            surface.resources.set(instance.id!, createResource(instance.id!));
           }
         }
 
@@ -272,37 +312,42 @@ export class MessageProcessor {
           }
 
           if (surface.rootComponentId) {
-            if (!surface.resources.has(surface.rootComponentId!)) {
-              surface.resources.set(surface.rootComponentId!, createResource(surface.rootComponentId!));
+            if (!surface.resources.has(surface.rootComponentId)) {
+              surface.resources.set(
+                surface.rootComponentId,
+                createResource(surface.rootComponentId),
+              );
             }
             // Signal that rendering can begin for this surface.
             if (this.updateListener) {
               this.updateListener({
                 type: 'beginRendering',
                 surfaceId,
-                messageId: (message as any).messageId,
+                messageId: (message as { messageId?: string }).messageId,
               });
             }
           }
         }
 
         const updates = Array.from(updatesMap.values());
-        if (updates.length > 0) {
-          if (this.updateListener) {
-            this.updateListener({
-              type: 'surfaceUpdate',
-              updates,
-              surfaceId,
-            });
-          }
+        if (updates.length > 0 && this.updateListener) {
+          this.updateListener({
+            type: 'surfaceUpdate',
+            updates,
+            surfaceId,
+          });
         }
       }
 
       if ('updateDataModel' in message && message.updateDataModel) {
-        const { surfaceId, path, value } = message.updateDataModel as any;
+        const { surfaceId, path, value } = message.updateDataModel as {
+          surfaceId: string;
+          path?: string;
+          value?: unknown;
+        };
         const surface = this.getOrCreateSurface(surfaceId);
 
-        const updates: { path: string; value: any }[] = [];
+        const updates: { path: string; value: unknown }[] = [];
 
         if (value !== undefined) {
           const basePath = path && path !== '' ? path : '/';
@@ -320,8 +365,8 @@ export class MessageProcessor {
         const componentUpdates: ComponentInstance[] = [];
 
         for (const component of surface.components.values()) {
-          const anyComponent = component as any;
-          const templateInfo = anyComponent.__template as
+          const anyComponent = component as unknown as Record<string, unknown>;
+          const templateInfo = anyComponent['__template'] as
             | { componentId: v0_9.ComponentId; path: string }
             | undefined;
 
@@ -330,7 +375,9 @@ export class MessageProcessor {
           const dataSignal = surface.store.getSignal(templateInfo.path);
           let data: unknown;
           try {
-            data = dataSignal.value ? JSON.parse(dataSignal.value) : undefined;
+            data = dataSignal.value
+              ? JSON.parse(dataSignal.value as string)
+              : undefined;
           } catch {
             data = undefined;
           }
@@ -371,20 +418,18 @@ export class MessageProcessor {
           }
 
           if (explicitChildren.length > 0) {
-            anyComponent.children = explicitChildren;
+            anyComponent['children'] = explicitChildren;
             componentUpdates.push(component);
             componentUpdates.push(...generatedUpdates);
           }
         }
 
-        if (componentUpdates.length > 0) {
-          if (this.updateListener) {
-            this.updateListener({
-              type: 'surfaceUpdate',
-              updates: componentUpdates,
-              surfaceId,
-            });
-          }
+        if (componentUpdates.length > 0 && this.updateListener) {
+          this.updateListener({
+            type: 'surfaceUpdate',
+            updates: componentUpdates,
+            surfaceId,
+          });
         }
       }
 
@@ -397,7 +442,7 @@ export class MessageProcessor {
             type: 'deleteSurface',
             surfaceId,
             targetId: surface?.rootComponentId ?? surfaceId,
-            messageId: (message as any).messageId,
+            messageId: (message as { messageId?: string }).messageId,
           });
         }
 
