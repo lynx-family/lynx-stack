@@ -285,8 +285,15 @@ export function applyEntry(
       }])
 
     function getDefaultProfile(): boolean | undefined {
-      if (userConfig.performance?.profile !== undefined) {
-        return userConfig.performance.profile
+      const environmentProfile = userConfig.environments?.[environment.name]
+        ?.performance?.profile
+      if (environmentProfile !== undefined) {
+        return environmentProfile
+      }
+
+      const userProfile = userConfig.performance?.profile
+      if (userProfile !== undefined) {
+        return userProfile
       }
 
       if (isDebug()) {

@@ -30,6 +30,12 @@
       "import": "./dist/env/vitest/index.js",
       "require": "./dist/env/vitest/index.cjs",
       "default": "./dist/env/vitest/index.js"
+    },
+    "./env/rstest": {
+      "types": "./dist/env/rstest/index.d.ts",
+      "import": "./dist/env/rstest/index.js",
+      "require": "./dist/env/rstest/index.cjs",
+      "default": "./dist/env/rstest/index.js"
     }
   },
   "main": "./dist/index.cjs",
@@ -39,6 +45,9 @@
     "*": {
       "env/vitest": [
         "./dist/env/vitest/index.d.ts"
+      ],
+      "env/rstest": [
+        "./dist/env/rstest/index.d.ts"
       ]
     }
   },
@@ -50,6 +59,7 @@
     "api-extractor": "api-extractor run --verbose",
     "build": "rslib build",
     "dev": "rslib build --watch",
+    "rstest": "rstest",
     "test": "vitest"
   },
   "devDependencies": {

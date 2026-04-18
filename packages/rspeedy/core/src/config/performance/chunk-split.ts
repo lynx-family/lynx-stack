@@ -12,9 +12,11 @@ export interface ChunkSplit {
   /**
    * The ChunkSplitting strategy.
    *
+   * @defaultValue In Rsbuild's default chunk splitting behavior, the strategy is `'split-by-experience'`.
+   *
    * @remarks
    *
-   * - `split-by-experience`(default): an empirical splitting strategy, automatically splits some commonly used npm packages into chunks of moderate size.
+   * - `split-by-experience`(Rsbuild default): an empirical splitting strategy, automatically splits some commonly used npm packages into chunks of moderate size.
    *
    * - `split-by-module`: split by NPM package granularity, each NPM package corresponds to a chunk.
    *
@@ -68,6 +70,8 @@ export interface ChunkSplit {
   /**
    * Custom Rspack chunk splitting config can be specified.
    *
+   * @defaultValue undefined
+   *
    * @example
    *
    * - Split `@lynx-js/react` and `react-router` into chunk `lib-react`.
@@ -112,7 +116,9 @@ export interface ChunkSplitBySize {
   strategy: 'split-by-size'
 
   /**
-   * The minimum size of a chunk, unit in bytes. Defaults to `10000`.
+   * The minimum size of a chunk, unit in bytes.
+   *
+   * @defaultValue 10000
    *
    * @example
    *
@@ -132,7 +138,9 @@ export interface ChunkSplitBySize {
   minSize?: number | undefined
 
   /**
-   * The maximum size of a chunk, unit in bytes. Defaults to `Number.POSITIVE_INFINITY`.
+   * The maximum size of a chunk, unit in bytes.
+   *
+   * @defaultValue `Number.POSITIVE_INFINITY`
    *
    * @example
    *
@@ -153,6 +161,8 @@ export interface ChunkSplitBySize {
 
   /**
    * {@inheritdoc ChunkSplit.override}
+   *
+   * @defaultValue undefined
    */
   override?: Rspack.Configuration extends {
     optimization?: {
@@ -175,6 +185,8 @@ export interface ChunkSplitCustom {
 
   /**
    * {@inheritdoc ChunkSplit.override}
+   *
+   * @defaultValue undefined
    *
    * @example
    *

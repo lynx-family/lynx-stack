@@ -54,6 +54,35 @@ describe('Element APIs', () => {
     const element = mtsGlobalThis.__CreateElement('view', 0);
     expect(mtsGlobalThis.__GetTag(element)).toBe('view');
   });
+
+  test('createCrossThreadEvent properly sets touch detail x and y', async () => {
+    const { createCrossThreadEvent } = await import(
+      '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'
+    );
+    const touchEvent = new Event('touchstart') as any;
+    touchEvent.touches = [{ clientX: 100, clientY: 200 }];
+    touchEvent.targetTouches = [];
+    touchEvent.changedTouches = [];
+
+    const lynxEvent = createCrossThreadEvent(touchEvent);
+    expect(lynxEvent.type).toBe('touchstart');
+    expect(lynxEvent.detail).toEqual({ x: 100, y: 200 });
+  });
+
+  test('createCrossThreadEvent sets empty detail if no touches', async () => {
+    const { createCrossThreadEvent } = await import(
+      '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'
+    );
+    const touchEvent = new Event('touchstart') as any;
+    touchEvent.touches = [];
+    touchEvent.targetTouches = [];
+    touchEvent.changedTouches = [];
+
+    const lynxEvent = createCrossThreadEvent(touchEvent);
+    expect(lynxEvent.type).toBe('touchstart');
+    expect(lynxEvent.detail).toEqual({});
+  });
+
   test('__CreateComponent', () => {
     const ret = mtsGlobalThis.__CreateComponent(
       0,
@@ -1249,12 +1278,12 @@ describe('Element APIs', () => {
         currentTarget: expect.objectContaining({
           id: 'child_id',
           dataset: expect.any(Object),
-          uniqueId: expect.any(Number),
+          uid: expect.any(Number),
         }),
         target: expect.objectContaining({
           id: 'child_id',
           dataset: expect.any(Object),
-          uniqueId: expect.any(Number),
+          uid: expect.any(Number),
         }),
       }),
       expect.any(Number),
@@ -1461,6 +1490,113 @@ describe('Element APIs', () => {
     expect(disableSpy).toHaveBeenCalledWith(expect.anything(), 'input');
   });
 
+  test('should handle global-bind events for cross-thread handlers', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const element1 = mtsGlobalThis.__CreateView(0);
+    const element2 = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AppendElement(root, element1);
+    mtsGlobalThis.__AppendElement(root, element2);
+    mtsGlobalThis.__SetID(element1, 'global_bind_target');
+    mtsGlobalThis.__SetID(element2, 'global_bind_watcher');
+    mtsGlobalThis.__FlushElementTree();
+
+    const publishSpy = vi.spyOn(mtsBinding, 'publishEvent');
+
+    // Register global-bind on element2
+    mtsGlobalThis.__AddEvent(
+      element2,
+      'global-bindevent',
+      'tap',
+      'global-handler',
+    );
+
+    // Get events should include global-bindevent
+    const events = mtsGlobalThis.__GetEvents(element2);
+    const found = events.some((e: any) =>
+      e.event_name === 'tap' && e.event_type === 'global-bindevent'
+    );
+    expect(found).toBe(true);
+
+    // Simulate event on element1
+    rootDom.querySelector('#global_bind_target')?.dispatchEvent(
+      new window.Event('click', { bubbles: true }),
+    );
+
+    expect(publishSpy).toHaveBeenCalledTimes(1);
+    expect(publishSpy).toHaveBeenCalledWith(
+      'global-handler',
+      undefined,
+      expect.any(Object),
+      expect.any(Number),
+      undefined,
+      expect.any(Number),
+      undefined,
+    );
+
+    // Unregister global-bindevent
+    mtsGlobalThis.__AddEvent(element2, 'global-bindevent', 'tap', null as any);
+    publishSpy.mockClear();
+
+    // Simulate event on element1 again, should not broadcast
+    rootDom.querySelector('#global_bind_target')?.dispatchEvent(
+      new window.Event('click', { bubbles: true }),
+    );
+    expect(publishSpy).toHaveBeenCalledTimes(0);
+  });
+
+  test('should handle global-bind events for run-worklet handlers', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const element1 = mtsGlobalThis.__CreateView(0);
+    const element2 = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AppendElement(root, element1);
+    mtsGlobalThis.__AppendElement(root, element2);
+    mtsGlobalThis.__SetID(element1, 'global_bind_target_worklet');
+    mtsGlobalThis.__SetID(element2, 'global_bind_watcher_worklet');
+    mtsGlobalThis.__FlushElementTree();
+
+    const runWorkletSpy = vi.spyOn(mtsBinding, 'runWorklet');
+
+    // Register global-bind on element2
+    mtsGlobalThis.__AddEvent(
+      element2,
+      'global-bindevent',
+      'tap',
+      { name: 'worklet-handler' } as any,
+    );
+
+    // Get events should include global-bindevent
+    const events = mtsGlobalThis.__GetEvents(element2);
+    const found = events.some((e: any) =>
+      e.event_name === 'tap' && e.event_type === 'global-bindevent'
+    );
+    expect(found).toBe(true);
+
+    // Simulate event on element1
+    rootDom.querySelector('#global_bind_target_worklet')?.dispatchEvent(
+      new window.Event('click', { bubbles: true }),
+    );
+
+    expect(runWorkletSpy).toHaveBeenCalledTimes(1);
+    expect(runWorkletSpy).toHaveBeenCalledWith(
+      { name: 'worklet-handler' },
+      expect.any(Object),
+      expect.any(Number),
+      undefined,
+      expect.any(Number),
+      undefined,
+    );
+
+    // Unregister global-bindevent
+    mtsGlobalThis.__AddEvent(element2, 'global-bindevent', 'tap', null as any);
+    runWorkletSpy.mockClear();
+
+    // Simulate event on element1 again, should not broadcast
+    rootDom.querySelector('#global_bind_target_worklet')?.dispatchEvent(
+      new window.Event('click', { bubbles: true }),
+    );
+    expect(runWorkletSpy).toHaveBeenCalledTimes(0);
+  });
+
   test('getClassList', () => {
     const root = mtsGlobalThis.__CreatePage('page', 0);
     const element = mtsGlobalThis.__CreateView(0);
@@ -1469,9 +1605,9 @@ describe('Element APIs', () => {
     mtsGlobalThis.__AppendElement(root, element);
 
     const spy = vi.spyOn(mtsBinding, 'getClassList');
-    const classes = mtsBinding.getClassList(element);
+    const classes = mtsBinding.getClassList(new WeakRef(element));
 
-    expect(spy).toHaveBeenCalledWith(element);
+    expect(spy).toHaveBeenCalledWith(expect.any(WeakRef));
     expect(classes).toEqual(expect.arrayContaining(['foo', 'bar']));
     expect(classes.length).toBe(2);
   });

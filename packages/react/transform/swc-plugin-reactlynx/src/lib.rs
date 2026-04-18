@@ -211,6 +211,7 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
         snapshot_plugin_config,
         Some(&comments),
         options.mode.unwrap_or(TransformMode::Production),
+        Some(cm.clone()),
       )
       .with_content_hash(content_hash.clone()),
     ),

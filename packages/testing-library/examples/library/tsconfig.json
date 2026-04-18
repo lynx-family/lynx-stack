@@ -1,0 +1,10 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@lynx-js/react",
+    "types": ["vitest/globals", "@rstest/core/globals"],
+    "noEmit": true,
+  },
+  "include": ["src", "tests"],
+}

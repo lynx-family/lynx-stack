@@ -70,6 +70,7 @@ export class BackgroundThread implements AsyncDisposable {
   #batchSendTimingInfo: RpcCallType<typeof markTimingEndpoint>;
 
   readonly jsContext: LynxCrossThreadContext;
+  #messagePort?: MessagePort;
 
   readonly postTimingFlags: RpcCallType<typeof postTimingFlagsEndpoint>;
   readonly sendGlobalEvent: RpcCallType<typeof sendGlobalEventEndpoint>;
@@ -166,6 +167,7 @@ export class BackgroundThread implements AsyncDisposable {
       } as WorkerStartMessage,
       [messageChannel.port2],
     );
+    this.#messagePort = messageChannel.port1;
     this.#rpc.setMessagePort(messageChannel.port1);
   }
 
@@ -284,15 +286,10 @@ export class BackgroundThread implements AsyncDisposable {
   }
 
   async [Symbol.asyncDispose](): Promise<void> {
-    await this.#btsReady;
-    /*
-     * TODO:
-     * Potential deadlock if startBTS() was never called.
-     * If [Symbol.asyncDispose]() is invoked on a BackgroundThread instance where startBTS() was never called,
-     * #btsReady will never resolve, causing the disposal to hang indefinitely.
-     * Consider guarding with the existing #btsStarted flag.
-     */
-    await this.#rpc.invoke(disposeEndpoint, []);
+    if (this.#btsStarted) {
+      await this.#btsReady;
+      await this.#rpc.invoke(disposeEndpoint, []);
+    }
     if (this.#lynxGroupId !== undefined) {
       const group =
         BackgroundThread.contextIdToBackgroundWorker[this.#lynxGroupId];
@@ -308,6 +305,8 @@ export class BackgroundThread implements AsyncDisposable {
     } else {
       this.#webWorker?.terminate();
     }
+    this.#messagePort?.close();
+    this.#messagePort = undefined;
     this.#nextMacroTask && clearTimeout(this.#nextMacroTask);
   }
 }

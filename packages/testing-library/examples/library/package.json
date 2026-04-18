@@ -1,0 +1,18 @@
+{
+  "name": "@lynx-js/testing-library-example-library",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "rstest": "rstest run",
+    "test": "vitest run",
+    "test:rstest": "rstest run",
+    "test:vitest": "vitest run"
+  },
+  "dependencies": {
+    "@lynx-js/react": "workspace:*"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1"
+  }
+}

@@ -1,12 +1,15 @@
+use std::{cell::RefCell, rc::Rc};
+
 use napi_derive::napi;
 use swc_core::{
-  common::comments::Comments,
+  common::{comments::Comments, sync::Lrc, SourceMap},
   ecma::{ast::*, visit::VisitMut},
 };
 use swc_plugins_shared::{target_napi::TransformTarget, transform_mode_napi::TransformMode};
 
 use crate::{
   JSXTransformer as CoreJSXTransformer, JSXTransformerConfig as CoreJSXTransformerConfig,
+  UISourceMapRecord as CoreUISourceMapRecord,
 };
 
 /// @internal
@@ -25,7 +28,43 @@ pub struct JSXTransformerConfig {
   #[napi(ts_type = "'LEPUS' | 'JS' | 'MIXED'")]
   pub target: TransformTarget,
   /// @internal
+  pub enable_ui_source_map: Option<bool>,
+  /// @internal
   pub is_dynamic_component: Option<bool>,
+}
+
+/// @internal
+#[napi(object)]
+#[derive(Clone, Debug)]
+pub struct UISourceMapRecord {
+  pub ui_source_map: i32,
+  pub filename: String,
+  pub line_number: u32,
+  pub column_number: u32,
+  pub snapshot_id: String,
+}
+
+impl From<UISourceMapRecord> for CoreUISourceMapRecord {
+  fn from(val: UISourceMapRecord) -> Self {
+    Self {
+      ui_source_map: val.ui_source_map,
+      line_number: val.line_number,
+      column_number: val.column_number,
+      snapshot_id: val.snapshot_id,
+    }
+  }
+}
+
+impl From<CoreUISourceMapRecord> for UISourceMapRecord {
+  fn from(val: CoreUISourceMapRecord) -> Self {
+    Self {
+      ui_source_map: val.ui_source_map,
+      filename: String::new(),
+      line_number: val.line_number,
+      column_number: val.column_number,
+      snapshot_id: val.snapshot_id,
+    }
+  }
 }
 
 impl Default for JSXTransformerConfig {
@@ -36,6 +75,7 @@ impl Default for JSXTransformerConfig {
       jsx_import_source: Some("@lynx-js/react".into()),
       filename: Default::default(),
       target: TransformTarget::LEPUS,
+      enable_ui_source_map: Some(false),
       is_dynamic_component: Some(false),
     }
   }
@@ -49,6 +89,7 @@ impl From<JSXTransformerConfig> for CoreJSXTransformerConfig {
       jsx_import_source: val.jsx_import_source,
       filename: val.filename,
       target: val.target.into(),
+      enable_ui_source_map: val.enable_ui_source_map.unwrap_or(false),
       is_dynamic_component: val.is_dynamic_component,
     }
   }
@@ -62,6 +103,7 @@ impl From<CoreJSXTransformerConfig> for JSXTransformerConfig {
       jsx_import_source: val.jsx_import_source,
       filename: val.filename,
       target: val.target.into(),
+      enable_ui_source_map: Some(val.enable_ui_source_map),
       is_dynamic_component: val.is_dynamic_component,
     }
   }
@@ -72,6 +114,7 @@ where
   C: Comments + Clone,
 {
   inner: CoreJSXTransformer<C>,
+  pub ui_source_map_records: Rc<RefCell<Vec<CoreUISourceMapRecord>>>,
 }
 
 impl<C> JSXTransformer<C>
@@ -83,9 +126,25 @@ where
     self
   }
 
-  pub fn new(cfg: JSXTransformerConfig, comments: Option<C>, mode: TransformMode) -> Self {
+  pub fn with_ui_source_map_records(
+    mut self,
+    ui_source_map_records: Rc<RefCell<Vec<CoreUISourceMapRecord>>>,
+  ) -> Self {
+    self.inner.ui_source_map_records = ui_source_map_records.clone();
+    self.ui_source_map_records = ui_source_map_records;
+    self
+  }
+
+  pub fn new(
+    cfg: JSXTransformerConfig,
+    comments: Option<C>,
+    mode: TransformMode,
+    source_map: Option<Lrc<SourceMap>>,
+  ) -> Self {
+    let inner = CoreJSXTransformer::new(cfg.into(), comments, mode.into(), source_map);
     Self {
-      inner: CoreJSXTransformer::new(cfg.into(), comments, mode.into()),
+      ui_source_map_records: inner.ui_source_map_records.clone(),
+      inner,
     }
   }
 }

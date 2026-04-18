@@ -220,9 +220,7 @@ export function loadConfig(loadConfigOptions: LoadConfigOptions): Promise<LoadCo
 
 // @public
 export interface LoadConfigOptions {
-    // (undocumented)
     configPath?: string | undefined;
-    // (undocumented)
     cwd?: string | undefined;
 }
 

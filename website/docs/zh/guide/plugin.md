@@ -17,8 +17,8 @@ Rsbuild 提供了一套强大的插件系统，允许用户进行功能扩展。
 
 以下 Rsbuild 插件可直接在 Rspeedy 中使用：
 
-- [Sass 插件](https://rsbuild.dev/plugins/list/plugin-sass): 使用 Sass 作为 CSS 预处理器
-- [Less 插件](https://rsbuild.dev/plugins/list/plugin-less): 使用 Less 作为 CSS 预处理器
+- [Sass 插件](https://rsbuild.rs/plugins/list/plugin-sass): 使用 Sass 作为 CSS 预处理器
+- [Less 插件](https://rsbuild.rs/plugins/list/plugin-less): 使用 Less 作为 CSS 预处理器
 - [ESLint 插件](https://github.com/rspack-contrib/rsbuild-plugin-eslint): 在编译过程中执行 ESLint 检查
 - [TypeScript 类型检查插件](https://github.com/rspack-contrib/rsbuild-plugin-type-check): 在独立进程中进行 TypeScript 类型检查
 - [图片压缩插件](https://github.com/rspack-contrib/rsbuild-plugin-image-compress): 压缩图片资源
@@ -43,14 +43,14 @@ Rspack/Webpack 插件需要配置在 [`tools.rspack.plugins`] 中
 
 ### Rsbuild 插件 API
 
-详见 [Rsbuild - 插件钩子](https://rsbuild.dev/plugins/dev/hooks)
+详见 [Rsbuild - 插件钩子](https://rsbuild.rs/plugins/dev/hooks)
 
 ### Rspack 插件 API
 
-详见 [Rspack - Compiler 钩子](https://rspack.dev/api/plugin-api/compiler-hooks)和 [Rspack - Compilation 钩子](https://rspack.dev/api/plugin-api/compilation-hooks)
+详见 [Rspack - Compiler 钩子](https://rspack.rs/api/plugin-api/compiler-hooks)和 [Rspack - Compilation 钩子](https://rspack.rs/api/plugin-api/compilation-hooks)
 
 [`tools.rspack.plugins`]: ../../api/rspeedy.tools.rspack#example-4
-[Banner 插件]: https://rspack.dev/plugins/webpack/banner-plugin
-[Define 插件]: https://rspack.dev/plugins/webpack/define-plugin
-[Environment 插件]: https://rspack.dev/plugins/webpack/environment-plugin
-[Provide 插件]: https://rspack.dev/plugins/webpack/provide-plugin
+[Banner 插件]: https://rspack.rs/plugins/webpack/banner-plugin
+[Define 插件]: https://rspack.rs/plugins/webpack/define-plugin
+[Environment 插件]: https://rspack.rs/plugins/webpack/environment-plugin
+[Provide 插件]: https://rspack.rs/plugins/webpack/provide-plugin

@@ -9,6 +9,10 @@ export default defineConfig({
     },
   },
   output: {
+    sourceMap: {
+      js: 'source-map',
+      css: true,
+    },
     distPath: {
       root: './dist/client_prod',
     },

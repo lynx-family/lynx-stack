@@ -1,5 +1,69 @@
 # @lynx-js/web-core
 
+## 0.20.1
+
+### Patch Changes
+
+- Added support for the `global-bind` event handling modifier in the web platform runtime. ([#2438](https://github.com/lynx-family/lynx-stack/pull/2438))
+
+  This mechanism enables seamless cross-element event communication without requiring a formal DOM tree relationship, allowing decoupled elements to observe and respond to standard events occurring anywhere within the component tree.
+
+  ### Usage
+
+  Global bindings allow an observer element to react to events triggered on another target element.
+
+  #### 1. Define the Global Subscription
+
+  Attach `global-bindTap` (or any equivalent standard event alias) to your observer element:
+
+  ```jsx
+  <view
+    id='observer'
+    global-bindTap={(event) => {
+      // This will trigger whenever 'tap' is caught by a globally bound event.
+      console.log('Global tap handled!', event);
+    }}
+  />;
+  ```
+
+  #### 2. Trigger the Event anywhere
+
+  The event will be triggered via normal user interaction (such as `tap`) on any other constituent elements:
+
+  ```jsx
+  <view
+    id='target'
+    bindTap={(event) => {
+      // Note: To successfully propagate globally, ensure the event bubbles.
+    }}
+  />;
+  ```
+
+- feat(web-core): add support for configurable rem unit transform ([#2403](https://github.com/lynx-family/lynx-stack/pull/2403))
+
+  - **Description**: Added a new configuration option `transformREM` (also exposed as `transform_rem` on the Rust layer) to the Web Core renderer. When enabled, it recursively converts static `rem` unit values in your styles into dynamic CSS custom properties (`calc(VALUE * var(--rem-unit))`) during template decoding and evaluation. This enables developers to implement responsive font scaling and layout sizing dynamically on the client side simply by modifying the root CSS variable `--rem-unit`.
+
+  - **Usage**:
+    You can enable this feature when working with `LynxView` by setting `transformREM` to `true`, or directly as an HTML attribute `transform-rem`:
+
+    ```html
+    <lynx-view
+      url="https://example.com/template.js"
+      transform-rem="true"
+    ></lynx-view>
+    ```
+
+    ```javascript
+    const lynxView = document.createElement('lynx-view');
+    lynxView.transformREM = true;
+    ```
+
+    With this enabled, a CSS declaration like `font-size: 1.5rem;` is transparently evaluated as `font-size: calc(1.5 * var(--rem-unit));` by the runtime engine.
+
+- Updated dependencies [[`156d64d`](https://github.com/lynx-family/lynx-stack/commit/156d64da67e83dfc92e63568cee602c21db873cf), [`59d11b2`](https://github.com/lynx-family/lynx-stack/commit/59d11b2549e5d2ca2ef18c5fe238c468e6db7d9a)]:
+  - @lynx-js/css-serializer@0.1.5
+  - @lynx-js/web-worker-rpc@0.20.1
+
 ## 0.20.0
 
 ### Minor Changes

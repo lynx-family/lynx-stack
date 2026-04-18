@@ -12,13 +12,9 @@ export interface CssLoader {
   /**
    * The option `importLoaders` allows you to configure how many loaders before `css-loader` should be applied to `@imported` resources and CSS modules imports.
    *
+   * @defaultValue `1` when compiling CSS files and `2` when compiling Sass or Less files
+   *
    * @remarks
-   *
-   * The default value of `importLoaders` is:
-   *
-   * - `1` when compiling CSS files
-   *
-   * - `2` when compiling Sass or Less files
    *
    * See {@link https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#importloaders | css-loader#import-loaders} for details.
    */
@@ -26,6 +22,8 @@ export interface CssLoader {
 
   /**
    * The {@link CssLoaderModules | cssLoader.modules} option enables/disables the CSS Modules specification and setup basic behavior.
+   *
+   * @defaultValue Enables CSS Modules with automatic `*.module.*` detection, camelCase exports, `namedExport: false`, and `localIdentName` inherited from `output.cssModules.localIdentName`.
    *
    * @example
    *
@@ -88,21 +86,29 @@ export interface CssLoader {
 export interface CssLoaderModules {
   /**
    * {@inheritdoc CssModules.auto}
+   *
+   * @defaultValue true
    */
   auto?: boolean | RegExp | ((filename: string) => boolean) | undefined
 
   /**
    * {@inheritdoc CssModules.exportLocalsConvention}
+   *
+   * @defaultValue `'camelCase'`
    */
   exportLocalsConvention?: CssModuleLocalsConvention | undefined
 
   /**
    * {@inheritdoc CssModules.localIdentName}
+   *
+   * @defaultValue `'[local]-[hash:base64:6]'`
    */
   localIdentName?: string | undefined
 
   /**
    * Enables/disables ES modules named export for locals.
+   *
+   * @defaultValue false
    *
    * @example
    *

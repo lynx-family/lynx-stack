@@ -68,14 +68,27 @@ export function createElementAPI(
   transform_vh: boolean,
   transform_rem: boolean,
 ): ElementPAPIs {
-  const wasmContext = new MainThreadWasmContext(
+  let wasmContext = new MainThreadWasmContext(
     rootDom,
     mtsBinding,
     config_enable_css_selector,
   );
-  mtsBinding.wasmContext = wasmContext;
   let page: DecoratedHTMLElement | undefined = undefined;
   const timingFlags: string[] = [];
+  let disposed = false;
+
+  mtsBinding.wasmContext = wasmContext;
+  mtsBinding.disposeWasmContext = () => {
+    if (disposed) return;
+    disposed = true;
+    if (wasmContext) {
+      wasmContext.free();
+      // @ts-expect-error It's better to throw an Error than triggering an use-after-free of rust struct
+      wasmContext = null;
+    }
+    page = undefined;
+    timingFlags.length = 0;
+  };
 
   const __SetCSSId: SetCSSIdPAPI = (elements, cssId, entryName) => {
     const uniqueIds = elements.map(
@@ -125,7 +138,9 @@ export function createElementAPI(
       );
     }
     if (eventName === 'uiappear' || eventName === 'uidisappear') {
-      const element = wasmContext.get_dom_by_unique_id(uniqueId);
+      const element = wasmContext.get_dom_by_unique_id(uniqueId)?.deref() as
+        | HTMLElement
+        | undefined;
       if (element) {
         mtsBinding.markExposureRelatedElementByUniqueId(
           element,
@@ -140,6 +155,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
@@ -148,6 +164,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
@@ -156,13 +173,18 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
     __CreateRawText(text) {
       const dom = document.createElement('raw-text') as DecoratedHTMLElement;
       dom.setAttribute('text', text);
-      dom[uniqueIdSymbol] = wasmContext.create_element_common(-1, dom);
+      dom[uniqueIdSymbol] = wasmContext.create_element_common(
+        -1,
+        dom,
+        new WeakRef(dom),
+      );
       return dom;
     },
     __CreateScrollView(parentComponentUniqueId) {
@@ -171,6 +193,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
@@ -181,6 +204,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
@@ -195,6 +219,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
         cssID,
         componentID,
       );
@@ -213,6 +238,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
@@ -223,6 +249,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
+        new WeakRef(dom),
       );
       return dom;
     },
@@ -234,6 +261,7 @@ export function createElementAPI(
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         0,
         dom,
+        new WeakRef(dom),
         cssID,
         componentID,
       );
@@ -420,7 +448,8 @@ export function createElementAPI(
               false,
             ) as number | undefined;
             if (typeof childSign === 'number') {
-              const childElement = wasmContext.get_dom_by_unique_id(childSign);
+              const childElement = wasmContext.get_dom_by_unique_id(childSign)
+                ?.deref() as HTMLElement | undefined;
               if (childElement) {
                 const referenceNode = element.children[action.position];
                 if (referenceNode !== childElement) {
@@ -587,10 +616,12 @@ export function createElementAPI(
         wasmContext.take_timing_flags(),
       );
       requestIdleCallbackImpl(() => {
+        if (disposed) return;
         mtsBinding.postTimingFlags(
           timingFlagsAll,
           pipelineId,
         );
+        wasmContext.gc();
       });
       timingFlags.length = 0;
       const enabledExposureElements = [

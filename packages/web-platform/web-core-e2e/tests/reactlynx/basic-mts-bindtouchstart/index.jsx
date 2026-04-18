@@ -6,6 +6,7 @@ function App() {
   const [hasTouch, setHasTouch] = useState(false);
   const [hasTargetTouches, setHasTargetTouches] = useState(false);
   const [hasChangedTouches, setHasChangedTouches] = useState(false);
+  const [hasDetailXY, setHasDetailXY] = useState(false);
   return (
     <view
       id='target'
@@ -19,6 +20,12 @@ function App() {
         }
         if (ev.changedTouches[0]) {
           runOnBackground(setHasChangedTouches)(true);
+        }
+        if (
+          ev.detail && typeof ev.detail.x !== 'undefined'
+          && typeof ev.detail.y !== 'undefined'
+        ) {
+          runOnBackground(setHasDetailXY)(true);
         }
       }}
     >
@@ -44,6 +51,14 @@ function App() {
           height: '100px',
           width: '100px',
           background: hasChangedTouches ? 'green' : 'pink',
+        }}
+      />
+      <view
+        id='target4'
+        style={{
+          height: '100px',
+          width: '100px',
+          background: hasDetailXY ? 'green' : 'pink',
         }}
       />
     </view>

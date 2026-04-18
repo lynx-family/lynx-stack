@@ -33,7 +33,7 @@ resolutionMode: "lowest-direct"
 
 # Default catalogs
 catalog:
-  "@microsoft/api-extractor": "7.57.6"
+  "@microsoft/api-extractor": "7.58.2"
 
 catalogs:
   adb:
@@ -56,6 +56,10 @@ catalogs:
     "@rspack/cli": "1.7.9"
     "@rspack/core": "1.7.9"
     "@rspack/test-tools": "1.5.6"
+
+  # Rstest monorepo packages
+  rstest:
+    "@rstest/core": "0.8.1"
 
 overrides:
   "@rspack/core": "$@rspack/core"

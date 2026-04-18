@@ -9,6 +9,19 @@ import {
 // @ts-ignore
 export * from '../../binary/encode/encode.js';
 
+function restoreCSSVarValue(decl: CSS.Declaration): string {
+  return decl.value.replaceAll(/\{\{(--[^}]+)\}\}/g, (_, varName: string) => {
+    const isCSSVarDecl = 'type' in decl && decl.type === 'css_var';
+
+    if (!isCSSVarDecl) {
+      return `var(${varName})`;
+    }
+
+    const fallback = decl.defaultValueMap?.[varName];
+    return fallback ? `var(${varName}, ${fallback})` : `var(${varName})`;
+  });
+}
+
 export function encodeCSS(
   cssMap: Record<string, CSS.LynxStyleNode[]>,
 ): Uint8Array {
@@ -66,7 +79,10 @@ export function encodeCSS(
           }
 
           for (const decl of keyframesStyle.style) {
-            keyFrameChildrenRule.push_declaration(decl.name, decl.value);
+            keyFrameChildrenRule.push_declaration(
+              decl.name,
+              restoreCSSVarValue(decl),
+            );
           }
           rule.push_rule_children(keyFrameChildrenRule);
         }
@@ -74,7 +90,7 @@ export function encodeCSS(
       } else if (node.type === 'FontFaceRule') {
         const rule = new Rule('FontFaceRule');
         for (const decl of node.style) {
-          rule.push_declaration(decl.name, decl.value);
+          rule.push_declaration(decl.name, restoreCSSVarValue(decl));
         }
         rawStyleInfo.push_rule(parsedCssId, rule);
       } else if (node.type === 'StyleRule') {
@@ -129,11 +145,7 @@ export function encodeCSS(
 
         // Declarations
         for (const decl of node.style) {
-          const value = decl.value.replaceAll(
-            /\{\{--([^}]+)\}\}/g,
-            'var(--$1)',
-          );
-          rule.push_declaration(decl.name, value);
+          rule.push_declaration(decl.name, restoreCSSVarValue(decl));
         }
 
         // Variables

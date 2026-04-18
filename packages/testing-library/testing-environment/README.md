@@ -10,7 +10,7 @@ The Element PAPI implementation is based on jsdom, for example `__CreateElement`
 import { LynxTestingEnv } from '@lynx-js/testing-environment';
 import { JSDOM } from 'jsdom';
 
-const lynxTestingEnv = new LynxTestingEnv(new JSDOM());
+const lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });
 ```
 
 To use `@lynx-js/testing-environment`, you will primarily use the `LynxTestingEnv` constructor, which is a named export of the package. You will get back a `LynxTestingEnv` instance, which has a number of methods of useful properties, notably `switchToMainThread` and `switchToBackgroundThread`, which allow you to switch between the main thread and background thread.
@@ -65,6 +65,14 @@ After configuration, you can directly access the `lynxTestingEnv` object globall
 If you want to use `@lynx-js/testing-environment` for unit testing in ReactLynx, you usually don't need to specify this configuration manually.
 
 Please refer to [ReactLynx Testing Library](https://lynxjs.org/react/reactlynx-testing-library.html) to inherit the configuration from `@lynx-js/react/testing-library`.
+
+### Use in Rstest
+
+If your runner already provides a `window` global via jsdom, you can load the shared Lynx test environment with:
+
+```js
+import '@lynx-js/testing-environment/env/rstest';
+```
 
 ## Credits
 

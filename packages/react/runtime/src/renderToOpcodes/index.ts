@@ -292,8 +292,9 @@ function _renderToString(
           : into.__firstChild,
       );
       if (e && typeof e === 'object' && e.then && component && /* _childDidSuspend */ component[CHILD_DID_SUSPEND]) {
-        component.setState({ /* _suspended */ __a: true });
-
+        component[NEXT_STATE] = assign({}, component[NEXT_STATE], {
+          /* _suspended */ __a: true,
+        });
         if (component[DIRTY]) {
           rendered = renderClassComponent(vnode, context);
           component = vnode[COMPONENT];

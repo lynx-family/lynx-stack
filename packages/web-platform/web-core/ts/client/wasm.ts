@@ -4,6 +4,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 import { referenceTypes, simd } from 'wasm-feature-detect';
+import type * as WasmInstanceType from '../../binary/client/client.js';
 const isWorker = typeof WorkerGlobalScope !== 'undefined'
   && self instanceof WorkerGlobalScope;
 const wasmLoaded = Promise.all([referenceTypes(), simd()]).then(
@@ -57,7 +58,7 @@ const wasmLoaded = Promise.all([referenceTypes(), simd()]).then(
       ]);
     }
   },
-);
+) as Promise<[typeof WasmInstanceType, WebAssembly.Module]>;
 export const [wasmInstance, wasmModule] = await wasmLoaded;
 if (!isWorker) {
   wasmInstance.initSync({ module: wasmModule! });

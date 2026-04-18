@@ -1,3 +1,5 @@
+import { beforeAll, test, expect } from 'vitest';
+
 let render;
 
 beforeAll(async () => {
