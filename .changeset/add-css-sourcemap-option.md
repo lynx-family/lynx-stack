@@ -10,8 +10,10 @@ By default, `sourceMap.css` is false. You can set it to true to emit CSS sourcem
 import { defineConfig } from '@lynx-js/rspeedy';
 
 export default defineConfig({
-  sourceMap: {
-    css: true,
+  output: {
+    sourceMap: {
+      css: true,
+    },
   },
 });
 ```
