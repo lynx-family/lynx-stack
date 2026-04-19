@@ -1,5 +1,14 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.10.9
+
+### Patch Changes
+
+- Introduce `LynxDebugMetadataPlugin` to emit debug-metadata assets. ([#2402](https://github.com/lynx-family/lynx-stack/pull/2402))
+
+- Updated dependencies [[`24c4c69`](https://github.com/lynx-family/lynx-stack/commit/24c4c695022de45831cbab8c2c94dc931fedc256), [`7332eb4`](https://github.com/lynx-family/lynx-stack/commit/7332eb4ff7ee736b28d32fb0ef29d1b5d1d5059d), [`fd0cc6e`](https://github.com/lynx-family/lynx-stack/commit/fd0cc6ea8bb67b19ab9fb2203ccb6835405dd8c1), [`e5b0f66`](https://github.com/lynx-family/lynx-stack/commit/e5b0f6681961a444e955ec4f8892c9db5ec3fd43), [`5aa97d8`](https://github.com/lynx-family/lynx-stack/commit/5aa97d8f6da11d8ad8f5fdb4df39a8c39ff80180), [`5c39654`](https://github.com/lynx-family/lynx-stack/commit/5c396543f1c97e626f49a0970974d996edf8d942)]:
+  - @lynx-js/web-core@0.20.2
+
 ## 0.10.8
 
 ### Patch Changes

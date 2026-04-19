@@ -1,5 +1,17 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.16.0
+
+### Minor Changes
+
+- Simplify hooks for main-thread runtime, which only can run during the first screen. ([#2441](https://github.com/lynx-family/lynx-stack/pull/2441))
+
+### Patch Changes
+
+- fix(rstest): add global fallback aliases for `@lynx-js/react/jsx-runtime` and `@lynx-js/react/jsx-dev-runtime` ([#2464](https://github.com/lynx-family/lynx-stack/pull/2464))
+
+  `pluginReactAlias` only aliased these entries inside layer-specific rules (`issuerLayer: BACKGROUND/MAIN_THREAD`). In rstest mode there are no layers, so JSX transformed by the testing loader—which emits `import { jsx } from '@lynx-js/react/jsx-runtime'`—could not be resolved, causing a `Cannot find module '@lynx-js/react/jsx-runtime'` error. Added global (non-layer-specific) fallback aliases pointing to the background jsx-runtime.
+
 ## 0.15.0
 
 ## 0.14.0
