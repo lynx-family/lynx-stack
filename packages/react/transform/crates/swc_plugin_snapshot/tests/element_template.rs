@@ -791,7 +791,7 @@ fn verify_template_json(input: &str, snapshot_name: &str) {
     let comments = SingleThreadedComments::default();
     let element_templates = Rc::new(RefCell::new(vec![]));
 
-    let mut transformer = JSXTransformer::new(
+    let mut transformer = JSXTransformer::new_with_element_templates(
       JSXTransformerConfig {
         preserve_jsx: true,
         experimental_enable_element_template: true,
@@ -799,6 +799,7 @@ fn verify_template_json(input: &str, snapshot_name: &str) {
       },
       Some(comments),
       TransformMode::Test,
+      None,
       Some(element_templates.clone()),
     );
 
@@ -904,10 +905,11 @@ fn transform_to_code_and_templates(
     let comments = SingleThreadedComments::default();
     let element_templates = Rc::new(RefCell::new(vec![]));
 
-    let mut transformer = JSXTransformer::new(
+    let mut transformer = JSXTransformer::new_with_element_templates(
       cfg,
       Some(comments),
       TransformMode::Test,
+      None,
       Some(element_templates.clone()),
     );
 

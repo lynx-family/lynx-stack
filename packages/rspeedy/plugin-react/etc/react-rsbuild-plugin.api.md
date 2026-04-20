@@ -79,6 +79,7 @@ export interface PluginReactLynxOptions {
     engineVersion?: string;
     // @alpha
     experimental_isLazyBundle?: boolean;
+    experimentalEnableElementTemplate?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady';
     globalPropsMode?: 'reactive' | 'event';

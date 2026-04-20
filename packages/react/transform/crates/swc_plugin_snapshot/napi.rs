@@ -9,8 +9,7 @@ use swc_plugins_shared::{target_napi::TransformTarget, transform_mode_napi::Tran
 
 use crate::{
   ElementTemplateAsset as CoreElementTemplateAsset, JSXTransformer as CoreJSXTransformer,
-  JSXTransformerConfig as CoreJSXTransformerConfig,
-  UISourceMapRecord as CoreUISourceMapRecord,
+  JSXTransformerConfig as CoreJSXTransformerConfig, UISourceMapRecord as CoreUISourceMapRecord,
 };
 
 /// @internal

@@ -58,11 +58,6 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     getMainThreadTransformOptions.call(this, swcInputSourceMap),
   );
 
-  syncElementTemplateBuildInfo(
-    this._module as unknown as ModuleWithBuildInfo | undefined,
-    result.elementTemplates,
-  );
-
   if (result.errors.length > 0) {
     for (const error of result.errors) {
       if (this.experiments?.emitDiagnostic) {
@@ -131,6 +126,11 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
   if (buildInfo) {
     buildInfo[UI_SOURCE_MAP_RECORDS_BUILD_INFO] = result.uiSourceMapRecords;
   }
+
+  syncElementTemplateBuildInfo(
+    this._module as unknown as ModuleWithBuildInfo | undefined,
+    result.elementTemplates,
+  );
 
   this.callback(
     null,

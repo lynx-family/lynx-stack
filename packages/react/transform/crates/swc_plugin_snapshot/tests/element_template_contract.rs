@@ -44,10 +44,11 @@ fn transform_fixture(
     let mut module = parser.parse_module().expect("Failed to parse module");
     let element_templates = Rc::new(RefCell::new(vec![]));
 
-    let mut transformer = JSXTransformer::new(
+    let mut transformer = JSXTransformer::new_with_element_templates(
       cfg,
       Some(comments),
       TransformMode::Test,
+      None,
       Some(element_templates.clone()),
     );
 
@@ -377,7 +378,7 @@ fn should_not_keep_et_list_fast_path_for_list_root_spread_props() {
   );
 }
 
-fn find_list_node<'a>(value: &'a Value) -> Option<&'a Value> {
+fn find_list_node(value: &Value) -> Option<&Value> {
   if value["tag"] == "list" {
     return Some(value);
   }

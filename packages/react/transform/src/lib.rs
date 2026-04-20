@@ -463,11 +463,14 @@ fn transform_react_lynx_inner(
       .unwrap_or(false);
 
     let (snapshot_plugin, element_templates_collector) = if enabled {
-      let transformer = JSXTransformer::new(
+      let element_templates_collector =
+        export_element_templates.then(|| Rc::new(RefCell::new(vec![])));
+      let transformer = JSXTransformer::new_with_element_templates(
         snapshot_plugin_config.clone(),
         Some(&comments),
         options.mode.unwrap_or(TransformMode::Production),
         Some(cm.clone()),
+        element_templates_collector.clone(),
       )
       .with_content_hash(content_hash.clone());
 
@@ -477,20 +480,23 @@ fn transform_react_lynx_inner(
         transformer
       };
 
-      let collector = if export_element_templates {
-        Some(transformer.element_templates.clone())
-      } else {
-        None
-      };
-
-      (Optional::new(visit_mut_pass(transformer), true), collector)
+      (
+        Optional::new(visit_mut_pass(transformer), true),
+        element_templates_collector,
+      )
     } else {
-      (Optional::new(visit_mut_pass(JSXTransformer::new(
-        snapshot_plugin_config.clone(),
-        Some(&comments),
-        options.mode.unwrap_or(TransformMode::Production),
-        Some(cm.clone()),
-      )), false), None)
+      (
+        Optional::new(
+          visit_mut_pass(JSXTransformer::new(
+            snapshot_plugin_config.clone(),
+            Some(&comments),
+            options.mode.unwrap_or(TransformMode::Production),
+            Some(cm.clone()),
+          )),
+          false,
+        ),
+        None,
+      )
     };
 
     let list_plugin = Optional::new(
@@ -687,8 +693,11 @@ fn transform_react_lynx_inner(
     match result {
       Ok(result) => {
         let element_templates = element_templates_collector.and_then(|collector| {
-          let templates: Vec<ElementTemplateAsset> =
-            collector.borrow_mut().drain(..).map(|template| template.into()).collect();
+          let templates: Vec<ElementTemplateAsset> = collector
+            .borrow_mut()
+            .drain(..)
+            .map(|template| template.into())
+            .collect();
           if templates.is_empty() {
             None
           } else {

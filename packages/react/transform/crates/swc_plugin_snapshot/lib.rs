@@ -649,7 +649,10 @@ where
     if self.enable_ui_source_map {
       let node_index_expr = self.node_index_config_expr(n.span);
       if let Stmt::Decl(Decl::Var(var_decl)) = &mut static_stmt {
-        if let Some(VarDeclarator { init: Some(init), .. }) = var_decl.decls.get_mut(0) {
+        if let Some(VarDeclarator {
+          init: Some(init), ..
+        }) = var_decl.decls.get_mut(0)
+        {
           if let Expr::Call(call_expr) = init.as_mut() {
             call_expr.args.push(ExprOrSpread {
               spread: None,
@@ -1282,9 +1285,15 @@ where
 
       if self.enable_ui_source_map {
         let node_index_expr = self.node_index_config_expr(n.span);
-        let stmt = self.static_stmts.last_mut().expect("raw text create stmt exists");
+        let stmt = self
+          .static_stmts
+          .last_mut()
+          .expect("raw text create stmt exists");
         if let Stmt::Decl(Decl::Var(var_decl)) = stmt.get_mut() {
-          if let Some(VarDeclarator { init: Some(init), .. }) = var_decl.decls.get_mut(0) {
+          if let Some(VarDeclarator {
+            init: Some(init), ..
+          }) = var_decl.decls.get_mut(0)
+          {
             if let Expr::Call(call_expr) = init.as_mut() {
               call_expr.args.push(ExprOrSpread {
                 spread: None,
@@ -1380,6 +1389,15 @@ where
   }
 
   pub fn new(
+    cfg: JSXTransformerConfig,
+    comments: Option<C>,
+    mode: TransformMode,
+    source_map: Option<Lrc<SourceMap>>,
+  ) -> Self {
+    Self::new_with_element_templates(cfg, comments, mode, source_map, None)
+  }
+
+  pub fn new_with_element_templates(
     cfg: JSXTransformerConfig,
     comments: Option<C>,
     mode: TransformMode,
@@ -1770,7 +1788,7 @@ where
               Expr::Lit(Lit::Str(s)) => Some(Expr::Lit(Lit::Str(s.clone()))),
               Expr::Lit(Lit::Num(n)) => Some(Expr::Lit(Lit::Num(n.clone()))),
               Expr::Lit(Lit::Bool(b)) => Some(Expr::Lit(Lit::Bool(*b))),
-              Expr::Lit(Lit::Null(n)) => Some(Expr::Lit(Lit::Null(n.clone()))),
+              Expr::Lit(Lit::Null(n)) => Some(Expr::Lit(Lit::Null(*n))),
               // TODO: Support complex static values (Object, Array, Template Literal without expressions)
               // See ElementTemplate/Todo-StaticAttributesOpts.md
               _ => None,
@@ -2377,8 +2395,9 @@ where
       // LEPUS ET host nodes rely on children being lowered to slot arrays.
       // Failing fast here keeps the transform/runtime contract explicit instead
       // of silently emitting a shape the main-thread runtime no longer accepts.
-      let lowered_children_expr = lower_lepus_et_children_expr(children_expr.clone(), &self.slot_ident)
-        .expect("LEPUS ET children should already be lowered to slot arrays");
+      let lowered_children_expr =
+        lower_lepus_et_children_expr(children_expr.clone(), &self.slot_ident)
+          .expect("LEPUS ET children should already be lowered to slot arrays");
       Some(JSXAttrOrSpread::JSXAttr(JSXAttr {
         span: DUMMY_SP,
         name: JSXAttrName::Ident(IdentName::new("children".into(), DUMMY_SP)),
@@ -2580,7 +2599,6 @@ mod tests {
           Some(t.comments.clone()),
           TransformMode::Test,
           None,
-          None,
         )),
       )
     },
@@ -2614,7 +2632,6 @@ mod tests {
           Some(t.comments.clone()),
           TransformMode::Test,
           None,
-          None,
         )),
       )
     },
@@ -2647,7 +2664,6 @@ mod tests {
           },
           Some(t.comments.clone()),
           TransformMode::Test,
-          None,
           None,
         )),
       )
@@ -2683,7 +2699,6 @@ mod tests {
           },
           Some(t.comments.clone()),
           TransformMode::Test,
-          None,
           None,
         )),
       )
@@ -2722,7 +2737,6 @@ mod tests {
           Some(t.comments.clone()),
           TransformMode::Test,
           None,
-          None,
         )),
       )
     },
@@ -2756,7 +2770,6 @@ mod tests {
           Some(t.comments.clone()),
           TransformMode::Test,
           None,
-          None,
         )),
       )
     },
@@ -2784,7 +2797,6 @@ mod tests {
           },
           Some(t.comments.clone()),
           TransformMode::Test,
-          None,
           None,
         )),
       )
@@ -2949,7 +2961,6 @@ mod tests {
           None,
           TransformMode::Test,
           None,
-          None,
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -2997,7 +3008,6 @@ mod tests {
           },
           None,
           TransformMode::Test,
-          None,
           None,
         )),
         react::react::<&SingleThreadedComments>(
@@ -3189,7 +3199,6 @@ mod tests {
           },
           None,
           TransformMode::Test,
-          None,
           None,
         )),
       )
@@ -3387,7 +3396,6 @@ mod tests {
           None,
           TransformMode::Test,
           None,
-          None,
         )),
         react::react::<&SingleThreadedComments>(
           t.cm.clone(),
@@ -3432,7 +3440,6 @@ mod tests {
         None,
         TransformMode::Test,
         None,
-        None,
       ))
     },
     inline_style_literal,
@@ -3458,7 +3465,6 @@ mod tests {
         None,
         TransformMode::Test,
         None,
-        None,
       ))
     },
     inline_style_literal_unknown_property,
@@ -3483,7 +3489,6 @@ mod tests {
         },
         None,
         TransformMode::Test,
-        None,
         None,
       ))
     },
