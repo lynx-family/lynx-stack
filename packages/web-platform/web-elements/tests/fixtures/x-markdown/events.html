@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!-- Copyright 2024 The Lynx Authors. All rights reserved.
+ Licensed under the Apache License Version 2.0 that can be found in the
+ LICENSE file in the root directory of this source tree. -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>web playground</title>
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta content="default" name="apple-mobile-web-app-status-bar-style">
+    <meta content="telephone=no" name="format-detection">
+    <meta content="portrait" name="screen-orientation">
+    <meta
+      content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+      name="viewport"
+    >
+    <meta content="portrait" name="x5-orientation" />
+
+    <link
+      href="/main.css"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <script src="/main.js" defer></script>
+    <x-view class="page">
+      <x-markdown id="markdown" content-id="case-1"></x-markdown>
+    </x-view>
+    <script>
+    window._bindlink_detail = null;
+      window._bindimage_detail = null;
+      const content =
+        `this is [link](https://example.com).\n\n![img](/tests/fixtures/resources/firefox-logo.png)`;
+      const markdown = document.getElementById('markdown');
+      markdown.addEventListener('bindlink', (event) => {
+        window._bindlink_detail = event.detail;
+      });
+      markdown.addEventListener('bindimageTap', (event) => {
+        window._bindimage_detail = event.detail;
+      });
+      markdown.setAttribute('content', content);
+    </script>
+  </body>
+</html>
