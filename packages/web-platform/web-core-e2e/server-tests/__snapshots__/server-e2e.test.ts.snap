@@ -73,6 +73,7 @@ exports[`executeTemplate should run lepusCode.root from basic-element-list-basic
                 <div
                   class="observer placeholder-dom"
                   id="upper-threshold-observer"
+                  part="upper-threshold-sentinel"
                 ></div>
               </div>
               <slot part="slot"></slot>
@@ -83,6 +84,7 @@ exports[`executeTemplate should run lepusCode.root from basic-element-list-basic
                 <div
                   class="observer placeholder-dom"
                   id="lower-threshold-observer"
+                  part="lower-threshold-sentinel"
                 ></div>
               </div></div></template></x-list
       ></x-view></div></template

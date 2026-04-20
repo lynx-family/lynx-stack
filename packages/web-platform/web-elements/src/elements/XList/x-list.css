@@ -157,6 +157,37 @@ x-list[x-enable-scrolltoloweredge-event]::part(lower-threshold-observer) {
   display: flex;
 }
 
+x-list[x-enable-scrolltoupper-event]::part(upper-threshold-sentinel),
+x-list[x-enable-scrolltoupperedge-event]::part(upper-threshold-sentinel),
+x-list[x-enable-scrolltolower-event]::part(lower-threshold-sentinel),
+x-list[x-enable-scrolltoloweredge-event]::part(lower-threshold-sentinel) {
+  flex: 0 0 1px;
+}
+
+x-list[x-enable-scrolltoupper-event]::part(upper-threshold-sentinel),
+x-list[x-enable-scrolltoupperedge-event]::part(upper-threshold-sentinel) {
+  margin-bottom: -1px;
+}
+
+x-list[x-enable-scrolltolower-event]::part(lower-threshold-sentinel),
+x-list[x-enable-scrolltoloweredge-event]::part(lower-threshold-sentinel) {
+  margin-top: -1px;
+  transform: translateY(1px);
+}
+
+x-list[scroll-orientation="horizontal"][x-enable-scrolltoupper-event]::part(upper-threshold-sentinel),
+x-list[scroll-orientation="horizontal"][x-enable-scrolltoupperedge-event]::part(upper-threshold-sentinel) {
+  margin-bottom: 0;
+  margin-right: -1px;
+}
+
+x-list[scroll-orientation="horizontal"][x-enable-scrolltolower-event]::part(lower-threshold-sentinel),
+x-list[scroll-orientation="horizontal"][x-enable-scrolltoloweredge-event]::part(lower-threshold-sentinel) {
+  margin-top: 0;
+  margin-left: -1px;
+  transform: translateX(1px);
+}
+
 x-list::part(lower-threshold-observer) {
   flex-direction: column-reverse;
 }
