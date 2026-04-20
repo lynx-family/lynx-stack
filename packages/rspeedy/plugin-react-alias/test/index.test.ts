@@ -405,6 +405,12 @@ describe('React - alias', () => {
           ),
       ),
     )
+    expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/react/internal$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/internal.js'.replaceAll('/', path.sep),
+      ),
+    )
 
     const mainThreadRule = config.module.rules.find((rule) => {
       if (!rule || typeof rule !== 'object') {

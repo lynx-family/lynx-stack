@@ -78,7 +78,6 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           reactLepusMainThread,
           reactCompat,
           elementTemplateEntry,
-          elementTemplateInternalEntry,
         ] = await Promise.all([
           resolve('@lynx-js/react/jsx-runtime'),
           resolve('@lynx-js/react/lepus/jsx-runtime'),
@@ -100,9 +99,6 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
             : Promise.resolve(null),
           elementTemplate
             ? resolve('@lynx-js/react/element-template')
-            : Promise.resolve(null),
-          elementTemplate
-            ? resolve('@lynx-js/react/element-template/internal')
             : Promise.resolve(null),
         ])
 
@@ -195,12 +191,6 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
               })
             ),
         )
-        if (elementTemplate && elementTemplateInternalEntry) {
-          chain
-            .resolve
-            .alias
-            .set('@lynx-js/react/internal$', elementTemplateInternalEntry)
-        }
 
         if (isProd) {
           chain.resolve.alias.set('@lynx-js/react/debug$', false)

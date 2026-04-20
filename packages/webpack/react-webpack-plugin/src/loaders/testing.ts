@@ -6,7 +6,11 @@ import path from 'node:path';
 
 import type { LoaderContext } from '@rspack/core';
 
-import { JSX_IMPORT_SOURCE, RUNTIME_PKG } from './options.js';
+import {
+  INTERNAL_RUNTIME_PKG,
+  JSX_IMPORT_SOURCE,
+  getSnapshotRuntimePkg,
+} from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
 function normalizeSlashes(file: string) {
@@ -60,7 +64,7 @@ function testingLoader(
       sourcemap: true,
       snapshot: {
         preserveJsx: false,
-        runtimePkg: RUNTIME_PKG,
+        runtimePkg: getSnapshotRuntimePkg(experimental_enableElementTemplate),
         jsxImportSource: JSX_IMPORT_SOURCE.BACKGROUND,
         filename,
         target: 'MIXED',
@@ -74,7 +78,7 @@ function testingLoader(
       engineVersion,
       worklet: {
         filename,
-        runtimePkg: RUNTIME_PKG,
+        runtimePkg: INTERNAL_RUNTIME_PKG,
         target: 'MIXED',
       },
       refresh: false,

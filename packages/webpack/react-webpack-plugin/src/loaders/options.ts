@@ -19,7 +19,9 @@ export const JSX_IMPORT_SOURCE = {
   BACKGROUND: '@lynx-js/react',
 };
 const PUBLIC_RUNTIME_PKG = '@lynx-js/react';
-export const RUNTIME_PKG = '@lynx-js/react/internal';
+export const INTERNAL_RUNTIME_PKG = '@lynx-js/react/internal';
+export const ELEMENT_TEMPLATE_INTERNAL_RUNTIME_PKG =
+  '@lynx-js/react/element-template/internal';
 const OLD_RUNTIME_PKG = '@lynx-js/react-runtime';
 const COMPONENT_PKG = '@lynx-js/react-components';
 
@@ -96,6 +98,14 @@ export interface ReactLoaderOptions {
 
 function normalizeSlashes(file: string) {
   return file.replaceAll(path.win32.sep, '/');
+}
+
+export function getSnapshotRuntimePkg(
+  experimentalEnableElementTemplate: boolean | undefined,
+): string {
+  return experimentalEnableElementTemplate
+    ? ELEMENT_TEMPLATE_INTERNAL_RUNTIME_PKG
+    : INTERNAL_RUNTIME_PKG;
 }
 
 function getCommonOptions(
@@ -181,7 +191,7 @@ function getCommonOptions(
         ? 'MIXED'
         : 'JS',
       enableUiSourceMap: enableUiSourceMap ?? false,
-      runtimePkg: RUNTIME_PKG,
+      runtimePkg: getSnapshotRuntimePkg(experimental_enableElementTemplate),
       filename,
       isDynamicComponent: isDynamicComponent ?? false,
       experimentalEnableElementTemplate: experimental_enableElementTemplate
@@ -199,7 +209,7 @@ function getCommonOptions(
     // TODO: config
     worklet: {
       filename: filename,
-      runtimePkg: RUNTIME_PKG,
+      runtimePkg: INTERNAL_RUNTIME_PKG,
       target: 'MIXED',
     },
     directiveDCE: false,
@@ -234,7 +244,7 @@ export function getMainThreadTransformOptions(
     },
     dynamicImport: {
       layer: `react__main-thread`,
-      runtimePkg: RUNTIME_PKG,
+      runtimePkg: INTERNAL_RUNTIME_PKG,
     },
     defineDCE: {
       define: {
@@ -259,7 +269,7 @@ export function getMainThreadTransformOptions(
         'preact/compat',
         PUBLIC_RUNTIME_PKG,
         `${PUBLIC_RUNTIME_PKG}/legacy-react-runtime`,
-        RUNTIME_PKG,
+        INTERNAL_RUNTIME_PKG,
         ...typeof commonOptions.compat === 'object'
           ? commonOptions.compat.oldRuntimePkg
           : [],
@@ -311,7 +321,7 @@ export function getBackgroundTransformOptions(
       : false,
     dynamicImport: {
       layer: `react__background`,
-      runtimePkg: RUNTIME_PKG,
+      runtimePkg: INTERNAL_RUNTIME_PKG,
     },
     snapshot: {
       ...commonOptions.snapshot,
