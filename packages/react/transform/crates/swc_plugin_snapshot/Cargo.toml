@@ -12,7 +12,7 @@ napi = ["dep:napi", "dep:napi-derive", "swc_plugins_shared/napi"]
 [dependencies]
 convert_case = { workspace = true }
 hex = { workspace = true }
-napi = { workspace = true, optional = true }
+napi = { workspace = true, optional = true, features = ["serde-json"] }
 napi-derive = { workspace = true, optional = true }
 once_cell = { workspace = true }
 regex = { workspace = true }

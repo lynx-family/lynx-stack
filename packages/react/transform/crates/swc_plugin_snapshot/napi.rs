@@ -172,7 +172,9 @@ where
     source_map: Option<Lrc<SourceMap>>,
   ) -> Self {
     let element_templates = Rc::new(RefCell::new(vec![]));
-    let inner = CoreJSXTransformer::new(
+    // The napi wrapper owns a side channel for collected element templates, so it
+    // must opt into the collector-aware constructor instead of the default one.
+    let inner = CoreJSXTransformer::new_with_element_templates(
       cfg.into(),
       comments,
       mode.into(),
