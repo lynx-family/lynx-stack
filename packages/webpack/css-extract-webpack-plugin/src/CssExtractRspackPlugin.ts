@@ -216,6 +216,9 @@ class CssExtractRspackPluginImpl {
                   },
                   manifest: {},
                   customSections: {},
+                  // CSS-only hot updates should stay ET-neutral when there is no
+                  // template payload for this incremental encode.
+                  elementTemplate: undefined,
                 },
               });
               const result = {

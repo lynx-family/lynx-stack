@@ -1337,6 +1337,7 @@ pub struct JSXTransformerConfig {
   /// @internal
   pub is_dynamic_component: Option<bool>,
   /// @internal
+  #[serde(default)]
   pub experimental_enable_element_template: bool,
 }
 

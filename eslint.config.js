@@ -90,6 +90,9 @@ export default tseslint.config(
       // Generated worklet bundles are published assets, not source files.
       'packages/react/runtime/worklet-runtime/**',
       'packages/react/runtime/src/renderToOpcodes/**',
+      // ET keeps a fork of the legacy render-to-opcodes port and should follow
+      // the same lint rollout boundary until we can type the whole module.
+      'packages/react/runtime/src/element-template/runtime/render/render-to-opcodes.ts',
       'packages/react/runtime/types/**',
 
       // TODO: enable eslint for react-runtime

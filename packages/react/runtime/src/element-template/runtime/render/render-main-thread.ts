@@ -7,8 +7,8 @@
  */
 
 import { renderOpcodesIntoElementTemplate } from './render-opcodes.js';
-import { profileEnd, profileStart } from '../../../debug/profile.js';
 import { render as renderToString } from './render-to-opcodes.js';
+import { profileEnd, profileStart } from '../../../debug/profile.js';
 import { ElementTemplateLifecycleConstant } from '../../protocol/lifecycle-constant.js';
 import type { SerializedElementTemplate } from '../../protocol/types.js';
 import { __page } from '../page/page.js';

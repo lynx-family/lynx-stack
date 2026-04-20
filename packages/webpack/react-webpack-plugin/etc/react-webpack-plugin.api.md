@@ -28,6 +28,7 @@ export interface ReactLoaderOptions {
     enableRemoveCSSScope?: boolean | undefined;
     enableUiSourceMap?: boolean | undefined;
     engineVersion?: string | undefined;
+    experimental_enableElementTemplate?: boolean | undefined;
     inlineSourcesContent?: boolean | undefined;
     jsx?: JsxTransformerConfig | undefined;
     refresh?: boolean | undefined;
@@ -46,6 +47,7 @@ export class ReactWebpackPlugin {
 export interface ReactWebpackPluginOptions {
     disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
     enableSSR?: boolean;
+    experimental_enableElementTemplate?: boolean;
     // @alpha
     experimental_isLazyBundle?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
