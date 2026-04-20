@@ -22,6 +22,7 @@ function testingLoader(
     compat = false,
     defineDCE = { define: {} },
     engineVersion = '',
+    experimental_enableElementTemplate = false,
     shake = false,
     transformPath = '@lynx-js/react/transform',
   } = this.getOptions();
@@ -63,6 +64,7 @@ function testingLoader(
         jsxImportSource: JSX_IMPORT_SOURCE.BACKGROUND,
         filename,
         target: 'MIXED',
+        experimentalEnableElementTemplate: experimental_enableElementTemplate,
       },
       // snapshot: true,
       directiveDCE: false,

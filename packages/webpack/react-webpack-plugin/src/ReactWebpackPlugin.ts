@@ -16,6 +16,38 @@ import { LAYERS } from './layer.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 
 const require = createRequire(import.meta.url);
+const ELEMENT_TEMPLATE_BUILD_INFO = 'lynx:element-templates';
+
+interface ElementTemplateBuildInfo {
+  templateId: string;
+  compiledTemplate: Record<string, unknown>;
+}
+
+export interface ModuleWithElementTemplateBuildInfo {
+  buildInfo?: Record<string, unknown>;
+  modules?: Iterable<ModuleWithElementTemplateBuildInfo>;
+}
+
+export function collectElementTemplatesFromModule(
+  module: ModuleWithElementTemplateBuildInfo,
+): ElementTemplateBuildInfo[] {
+  const elementTemplates: ElementTemplateBuildInfo[] = [];
+  const templates = module.buildInfo?.[ELEMENT_TEMPLATE_BUILD_INFO];
+
+  if (Array.isArray(templates)) {
+    elementTemplates.push(...templates as ElementTemplateBuildInfo[]);
+  }
+
+  if (module.modules) {
+    Array.from(module.modules).forEach(nestedModule => {
+      elementTemplates.push(
+        ...collectElementTemplatesFromModule(nestedModule),
+      );
+    });
+  }
+
+  return elementTemplates;
+}
 
 /**
  * The options for ReactWebpackPlugin
@@ -392,20 +424,16 @@ class ReactWebpackPlugin {
             const collectedTemplates: Record<string, Record<string, unknown>> =
               {};
             for (const module of compilation.modules) {
-              const buildInfo = module.buildInfo as unknown as
-                | Record<string, unknown>
-                | undefined;
-              const templates = buildInfo?.['lynx:element-templates'] as
-                | Array<{
-                  templateId: string;
-                  compiledTemplate: Record<string, unknown>;
-                }>
-                | undefined;
-              if (templates) {
-                for (const template of templates) {
-                  const { templateId, compiledTemplate } = template;
-                  collectedTemplates[templateId] = compiledTemplate;
-                }
+              // Scope hoisting can move transformed modules under `module.modules`.
+              // We need to recurse here so encode sees the same template set that
+              // other build-info collectors already observe.
+              for (
+                const template of collectElementTemplatesFromModule(
+                  module as ModuleWithElementTemplateBuildInfo,
+                )
+              ) {
+                const { templateId, compiledTemplate } = template;
+                collectedTemplates[templateId] = compiledTemplate;
               }
             }
 

@@ -106,4 +106,20 @@ describe('testing loader', () => {
 
     expect(result.code).toBeTruthy();
   });
+
+  it('forwards element-template mode to the transform', async () => {
+    const jsxContent = `
+      export function App() {
+        return <view className="foo"><text>Hello</text></view>;
+      }
+    `;
+
+    const result = await runTestingLoader(jsxContent, {
+      engineVersion: '3.2',
+      experimental_enableElementTemplate: true,
+    });
+
+    expect(result.code).toContain('const _et_');
+    expect(result.code).not.toContain('const __snapshot_');
+  });
 });
