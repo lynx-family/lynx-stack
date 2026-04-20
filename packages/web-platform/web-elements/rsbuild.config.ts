@@ -11,6 +11,7 @@ export default defineConfig({
   output: {
     assetPrefix: 'auto',
     polyfill: 'off',
+    overrideBrowserslist: ['last 1 Chrome versions'],
     distPath: {
       root: 'www',
       css: '.',

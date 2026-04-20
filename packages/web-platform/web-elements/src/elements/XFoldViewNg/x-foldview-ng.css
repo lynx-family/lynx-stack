@@ -5,12 +5,10 @@
 */
 x-foldview-ng {
   display: flex;
-  overflow-y: scroll !important;
-  overflow-x: clip;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  --foldview-header-height: 0px;
-  scrollbar-width: none;
+  overflow: hidden;
+  overflow: clip !important;
+  --foldview-scroll-top: 0px;
+  --foldview-scroll-height: 0px;
 }
 
 x-foldview-ng::-webkit-scrollbar {
@@ -29,10 +27,6 @@ x-foldview-ng:not([scroll-bar-enable], [scroll-bar-enable="true"])::-webkit-scro
   display: none;
 }
 
-x-foldview-ng[scroll-enable="false"] {
-  overflow-y: hidden;
-}
-
 x-foldview-ng > *,
 x-foldview-header-ng,
 x-foldview-slot-ng,
@@ -48,6 +42,7 @@ x-foldview-ng > lynx-wrapper > x-foldview-slot-ng,
 x-foldview-ng > lynx-wrapper > x-foldview-toolbar-ng {
   display: flex;
 }
+
 x-foldview-toolbar-ng {
   order: 1;
   position: sticky;
@@ -59,6 +54,7 @@ x-foldview-header-ng {
   order: 2;
   flex: 0 0 auto;
   position: absolute;
+  transform: translateY(var(--foldview-scroll-top));
 }
 
 x-foldview-ng[header-over-slot] > x-foldview-slot-ng,
@@ -69,7 +65,11 @@ x-foldview-ng[header-over-slot] > lynx-wrapper > x-foldview-slot-ng {
 x-foldview-slot-ng {
   contain: strict;
   order: 3;
+  transform: translateY(
+    calc(var(--foldview-scroll-height) + var(--foldview-scroll-top))
+  );
 }
+
 x-foldview-slot-ng scroll-view {
   /* avoiding default bounce on ios safari */
   overscroll-behavior-y: none;

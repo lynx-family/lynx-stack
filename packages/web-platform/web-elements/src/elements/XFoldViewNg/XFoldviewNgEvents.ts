@@ -9,7 +9,7 @@ import {
   registerEventEnableStatusChangeHandler,
 } from '../../element-reactive/index.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
-import { scrollableLength, type XFoldviewNg } from './XFoldviewNg.js';
+import { type XFoldviewNg } from './XFoldviewNg.js';
 
 export class XFoldviewNgEvents
   implements InstanceType<AttributeReactiveClass<typeof XFoldviewNg>>
@@ -46,7 +46,7 @@ export class XFoldviewNgEvents
       scrollLength > this.#granularity
       || this.#dom.scrollTop === 0
       || Math.abs(
-          this.#dom.scrollHeight - this.#dom.clientHeight - this.#dom.scrollTop,
+          this.#dom.scrollHeight - this.#dom.scrollTop,
         ) <= 1
     ) {
       this.#pervScroll = currentScrollTop;
@@ -55,7 +55,7 @@ export class XFoldviewNgEvents
           ...commonComponentEventSetting,
           detail: {
             offset: currentScrollTop,
-            height: this.#dom[scrollableLength],
+            height: this.#dom.scrollableLength,
           },
         }),
       );
