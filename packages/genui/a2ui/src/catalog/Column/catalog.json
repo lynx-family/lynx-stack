@@ -1,0 +1,57 @@
+{
+  "Column": {
+    "properties": {
+      "children": {
+        "description": "Static child IDs array or template object.",
+        "oneOf": [
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "componentId": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "componentId",
+              "path"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "justify": {
+        "type": "string",
+        "enum": [
+          "start",
+          "center",
+          "end",
+          "spaceBetween",
+          "spaceAround",
+          "spaceEvenly",
+          "stretch"
+        ]
+      },
+      "align": {
+        "type": "string",
+        "enum": [
+          "center",
+          "end",
+          "start",
+          "stretch"
+        ]
+      }
+    },
+    "required": [
+      "children"
+    ]
+  }
+}

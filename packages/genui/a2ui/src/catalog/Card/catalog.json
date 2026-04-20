@@ -1,0 +1,12 @@
+{
+  "Card": {
+    "properties": {
+      "child": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "child"
+    ]
+  }
+}

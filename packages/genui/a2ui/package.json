@@ -1,0 +1,111 @@
+{
+  "name": "@lynx-js/a2ui-reactlynx",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.js"
+    },
+    "./core": {
+      "types": "./src/core/index.ts",
+      "default": "./src/core/index.js"
+    },
+    "./chat": {
+      "types": "./src/chat/index.ts",
+      "default": "./src/chat/index.js"
+    },
+    "./catalog/all": {
+      "types": "./src/catalog/all.ts",
+      "default": "./src/catalog/all.js"
+    },
+    "./catalog/Text": {
+      "types": "./src/catalog/Text.ts",
+      "default": "./src/catalog/Text.js"
+    },
+    "./catalog/Image": {
+      "types": "./src/catalog/Image.ts",
+      "default": "./src/catalog/Image.js"
+    },
+    "./catalog/Button": {
+      "types": "./src/catalog/Button.ts",
+      "default": "./src/catalog/Button.js"
+    },
+    "./catalog/Row": {
+      "types": "./src/catalog/Row.ts",
+      "default": "./src/catalog/Row.js"
+    },
+    "./catalog/Column": {
+      "types": "./src/catalog/Column.ts",
+      "default": "./src/catalog/Column.js"
+    },
+    "./catalog/List": {
+      "types": "./src/catalog/List.ts",
+      "default": "./src/catalog/List.js"
+    },
+    "./catalog/Card": {
+      "types": "./src/catalog/Card.ts",
+      "default": "./src/catalog/Card.js"
+    },
+    "./catalog/Divider": {
+      "types": "./src/catalog/Divider.ts",
+      "default": "./src/catalog/Divider.js"
+    },
+    "./catalog/TextField": {
+      "types": "./src/catalog/TextField.ts",
+      "default": "./src/catalog/TextField.js"
+    },
+    "./catalog/Icon": {
+      "types": "./src/catalog/Icon.ts",
+      "default": "./src/catalog/Icon.js"
+    },
+    "./catalog/Tabs": {
+      "types": "./src/catalog/Tabs.ts",
+      "default": "./src/catalog/Tabs.js"
+    },
+    "./catalog/Modal": {
+      "types": "./src/catalog/Modal.ts",
+      "default": "./src/catalog/Modal.js"
+    },
+    "./catalog/AudioPlayer": {
+      "types": "./src/catalog/AudioPlayer.ts",
+      "default": "./src/catalog/AudioPlayer.js"
+    },
+    "./catalog/Slider": {
+      "types": "./src/catalog/Slider.ts",
+      "default": "./src/catalog/Slider.js"
+    },
+    "./catalog/DateTimeInput": {
+      "types": "./src/catalog/DateTimeInput.ts",
+      "default": "./src/catalog/DateTimeInput.js"
+    },
+    "./catalog/ChoicePicker": {
+      "types": "./src/catalog/ChoicePicker.ts",
+      "default": "./src/catalog/ChoicePicker.js"
+    },
+    "./catalog/CheckBox": {
+      "types": "./src/catalog/CheckBox.ts",
+      "default": "./src/catalog/CheckBox.js"
+    }
+  },
+  "main": "./src/index.js",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@a2ui/web_core": "0.9.1",
+    "@preact/signals": "^2.5.1"
+  },
+  "devDependencies": {
+    "@lynx-js/lynx-ui": "^3.130.0",
+    "@lynx-js/lynx-ui-input": "^3.130.0",
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/types": "3.7.0",
+    "@types/react": "^18.3.28"
+  },
+  "peerDependencies": {
+    "@lynx-js/lynx-ui": "^3.130.0",
+    "@lynx-js/lynx-ui-input": "^3.130.0",
+    "@lynx-js/react": "workspace:^"
+  }
+}

@@ -24,6 +24,9 @@ coverage:
       default:
         threshold: "1%"
 
+ignore:
+  - "packages/genui/**"
+
 fixes:
   - "/home/runner/_work/lynx-stack::"
 

@@ -6,7 +6,7 @@ import { useState } from 'preact/hooks';
 import { prettyFormatSnapshotPatch } from '../../../runtime/lib/debug/formatPatch';
 
 describe('should only render text when it is not empty', () => {
-  it.only('empty text should not be rendered', () => {
+  it('empty text should not be rendered', () => {
     vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
     const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
     vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');

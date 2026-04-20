@@ -394,6 +394,7 @@ test.describe('reactlynx3 tests', () => {
       const lynxView = await page.locator('lynx-view');
       await lynxView.evaluate((node) => {
         node.style.width = '50px';
+        node.style.setProperty('--rpx-unit', '1cqw');
       });
       const target = await page.locator('#target');
       await expect(target).toHaveCSS('height', '10px'); // 20cqw, 50 / 100 * 20 = 10px
@@ -406,6 +407,7 @@ test.describe('reactlynx3 tests', () => {
       const lynxView = await page.locator('lynx-view');
       await lynxView.evaluate((node) => {
         node.style.width = '50px';
+        node.style.setProperty('--rpx-unit', '1cqw');
       });
       const target = await page.locator('#target');
       await expect(target).toHaveCSS('height', '10px'); // 20cqw, 50 / 100 * 20 = 10px
@@ -450,7 +452,25 @@ test.describe('reactlynx3 tests', () => {
       await wait(500); // Wait for the reload to rebuild the CSS properly
       await expect(target).not.toHaveCSS('width', '25px');
       await expect(target).not.toHaveCSS('height', '50px');
+
+      // now make sure the cqw/cqh work
+      await lynxView.evaluate((node: any) => {
+        node.transformVW = true;
+        node.transformVH = true;
+        node.style.height = '500px';
+        node.style.width = '500px';
+        node.style.minHeight = '500px';
+        node.style.minWidth = '500px';
+        node.style.setProperty('--vh-unit', '1cqh');
+        node.style.setProperty('--vw-unit', '1cqw');
+        node.reload();
+      });
+      await wait(500); // Wait for the reload to rebuild the CSS properly
+
+      await expect(target).toHaveCSS('width', '250px');
+      await expect(target).toHaveCSS('height', '250px');
     });
+
     test('basic-image', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
