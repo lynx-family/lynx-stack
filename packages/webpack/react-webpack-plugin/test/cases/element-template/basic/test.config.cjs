@@ -1,7 +1,5 @@
 /** @type {import("@lynx-js/test-tools").TConfigCaseConfig} */
 module.exports = {
-  bundlePath: [
-    'main__main-thread.js',
-    'main__background.js',
-  ],
+  // This case validates ET encode/template assets in the webpack/rspack config hooks.
+  bundlePath: [],
 };
