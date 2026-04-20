@@ -248,15 +248,15 @@ fn should_keep_element_slot_indices_stable_for_mixed_dynamic_children() {
 
   let children = template["children"].as_array().expect("children array");
   assert_eq!(children[0]["kind"], "element");
-  assert_eq!(children[0]["tag"], "text");
+  assert_eq!(children[0]["type"], "text");
   assert_eq!(children[1]["kind"], "elementSlot");
   assert_eq!(children[1]["elementSlotIndex"].as_f64(), Some(0.0));
-  assert_eq!(children[1]["tag"], "slot");
+  assert_eq!(children[1]["type"], "slot");
   assert_eq!(children[2]["kind"], "element");
-  assert_eq!(children[2]["tag"], "image");
+  assert_eq!(children[2]["type"], "image");
   assert_eq!(children[3]["kind"], "elementSlot");
   assert_eq!(children[3]["elementSlotIndex"].as_f64(), Some(1.0));
-  assert_eq!(children[3]["tag"], "slot");
+  assert_eq!(children[3]["type"], "slot");
 }
 
 #[test]
@@ -297,12 +297,12 @@ fn should_collect_element_template_assets_for_list_children_in_et_mode() {
     .iter()
     .find_map(find_list_node)
     .unwrap_or_else(|| {
-      let template_tags: Vec<_> = template_jsons
+      let template_types: Vec<_> = template_jsons
         .iter()
-        .map(|template| template["tag"].as_str().unwrap_or("<unknown>").to_string())
+        .map(|template| template["type"].as_str().unwrap_or("<unknown>").to_string())
         .collect();
       panic!(
-        "should collect a list element in compiled templates, got root tags: {template_tags:?}"
+        "should collect a list element in compiled templates, got root types: {template_types:?}"
       );
     });
 
@@ -315,7 +315,7 @@ fn should_collect_element_template_assets_for_list_children_in_et_mode() {
     "list should expose one element slot for dynamic children"
   );
   assert_eq!(list_children[0]["kind"], "elementSlot");
-  assert_eq!(list_children[0]["tag"], "slot");
+  assert_eq!(list_children[0]["type"], "slot");
   assert_eq!(list_children[0]["elementSlotIndex"].as_f64(), Some(0.0));
 }
 
@@ -420,7 +420,7 @@ fn should_not_keep_et_list_fast_path_for_list_root_spread_props() {
 }
 
 fn find_list_node(value: &Value) -> Option<&Value> {
-  if value["tag"] == "list" {
+  if value["type"] == "list" {
     return Some(value);
   }
 

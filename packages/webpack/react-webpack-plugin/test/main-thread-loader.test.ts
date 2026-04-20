@@ -72,7 +72,7 @@ describe('main-thread loader', () => {
     expect(buildInfo['lynx:element-templates']).toEqual([
       {
         templateId: '_et_fixture',
-        compiledTemplate: { tag: 'view' },
+        compiledTemplate: { type: 'view' },
         sourceFile: 'fixture.tsx',
       },
     ]);

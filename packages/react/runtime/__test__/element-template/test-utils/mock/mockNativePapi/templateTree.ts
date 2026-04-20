@@ -30,7 +30,7 @@ interface CompiledAttributeDescriptor {
 
 interface CompiledElementNode {
   kind: 'element';
-  tag: string;
+  type: string;
   attributesArray?: CompiledAttributeDescriptor[];
   children?: CompiledTemplateChild[];
   parts?: Record<string, unknown>;
@@ -38,20 +38,20 @@ interface CompiledElementNode {
 
 interface CompiledElementSlotNode {
   kind: 'elementSlot';
-  tag: 'slot';
+  type: 'slot';
   elementSlotIndex: number;
 }
 
 type CompiledTemplateChild = CompiledElementNode | CompiledElementSlotNode;
 
 function isCompiledElementNode(node: unknown): node is CompiledElementNode {
-  return isRecord(node) && node['kind'] === 'element' && typeof node['tag'] === 'string';
+  return isRecord(node) && node['kind'] === 'element' && typeof node['type'] === 'string';
 }
 
 function isCompiledElementSlotNode(node: unknown): node is CompiledElementSlotNode {
   return isRecord(node)
     && node['kind'] === 'elementSlot'
-    && node['tag'] === 'slot'
+    && node['type'] === 'slot'
     && typeof node['elementSlotIndex'] === 'number';
 }
 
@@ -117,7 +117,7 @@ export function instantiateCompiledTemplateNode(
   }
 
   return {
-    tag: node.tag,
+    tag: node.type,
     attributes: applyCompiledAttributes(node, attributeSlots),
     ...(isRecord(node.parts) ? { parts: { ...node.parts } } : {}),
     children: instantiatedChildren,

@@ -10,7 +10,7 @@ const builtinRawTextTemplate = {
   templateId: BUILTIN_RAW_TEXT_TEMPLATE_ID,
   compiledTemplate: {
     kind: 'element',
-    tag: 'raw-text',
+    type: 'raw-text',
     attributesArray: [
       {
         kind: 'attribute',

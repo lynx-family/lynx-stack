@@ -97,22 +97,43 @@ export default {
             expect(args.encodeData.elementTemplate)
               .toMatchInlineSnapshot(`
                 {
-                  "_et_a99d6_54654_1": {
-                    "children": [
+                  "__et_builtin_raw_text__": {
+                    "attributesArray": [
                       {
-                        "attributes": {
-                          "text": "Hello, ",
-                        },
-                        "tag": "text",
-                      },
-                      {
-                        "attributes": {
-                          "part-id": 0,
-                        },
-                        "tag": "slot",
+                        "attrSlotIndex": 0,
+                        "binding": "slot",
+                        "key": "text",
+                        "kind": "attribute",
                       },
                     ],
-                    "tag": "view",
+                    "children": [],
+                    "kind": "element",
+                    "type": "raw-text",
+                  },
+                  "_et_a99d6_54654_1": {
+                    "attributesArray": [],
+                    "children": [
+                      {
+                        "attributesArray": [
+                          {
+                            "binding": "static",
+                            "key": "text",
+                            "kind": "attribute",
+                            "value": "Hello, ",
+                          },
+                        ],
+                        "children": [],
+                        "kind": "element",
+                        "type": "raw-text",
+                      },
+                      {
+                        "elementSlotIndex": 0,
+                        "kind": "elementSlot",
+                        "type": "slot",
+                      },
+                    ],
+                    "kind": "element",
+                    "type": "view",
                   },
                 }
               `);

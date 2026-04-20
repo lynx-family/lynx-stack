@@ -7,12 +7,12 @@ expression: actual_jsons
     "template_id": "_et_da39a_test_1",
     "template": {
       "kind": "element",
-      "tag": "view",
+      "type": "view",
       "attributesArray": [],
       "children": [
         {
           "kind": "element",
-          "tag": "text",
+          "type": "text",
           "attributesArray": [
             {
               "kind": "attribute",
@@ -25,7 +25,7 @@ expression: actual_jsons
         },
         {
           "kind": "element",
-          "tag": "text",
+          "type": "text",
           "attributesArray": [
             {
               "kind": "attribute",
@@ -38,12 +38,12 @@ expression: actual_jsons
         },
         {
           "kind": "element",
-          "tag": "text",
+          "type": "text",
           "attributesArray": [],
           "children": [
             {
               "kind": "elementSlot",
-              "tag": "slot",
+              "type": "slot",
               "elementSlotIndex": 0.0
             }
           ]
@@ -55,7 +55,7 @@ expression: actual_jsons
     "template_id": "__et_builtin_raw_text__",
     "template": {
       "kind": "element",
-      "tag": "raw-text",
+      "type": "raw-text",
       "attributesArray": [
         {
           "kind": "attribute",

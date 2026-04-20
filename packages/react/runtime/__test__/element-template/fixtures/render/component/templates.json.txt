@@ -3,17 +3,17 @@
     "templateId": "_et_7a8c6_test_1",
     "compiledTemplate": {
       "kind": "element",
-      "tag": "view",
+      "type": "view",
       "attributesArray": [],
       "children": [
         {
           "kind": "elementSlot",
-          "tag": "slot",
+          "type": "slot",
           "elementSlotIndex": 0
         },
         {
           "kind": "element",
-          "tag": "text",
+          "type": "text",
           "attributesArray": [
             {
               "kind": "attribute",
@@ -26,12 +26,12 @@
         },
         {
           "kind": "elementSlot",
-          "tag": "slot",
+          "type": "slot",
           "elementSlotIndex": 1
         },
         {
           "kind": "element",
-          "tag": "text",
+          "type": "text",
           "attributesArray": [
             {
               "kind": "attribute",
@@ -44,7 +44,7 @@
         },
         {
           "kind": "elementSlot",
-          "tag": "slot",
+          "type": "slot",
           "elementSlotIndex": 2
         }
       ]
@@ -55,7 +55,7 @@
     "templateId": "__et_builtin_raw_text__",
     "compiledTemplate": {
       "kind": "element",
-      "tag": "raw-text",
+      "type": "raw-text",
       "attributesArray": [
         {
           "kind": "attribute",

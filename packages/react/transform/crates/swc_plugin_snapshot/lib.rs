@@ -1479,7 +1479,7 @@ where
       template_id: BUILTIN_RAW_TEXT_TEMPLATE_ID.to_string(),
       compiled_template: serde_json::json!({
         "kind": "element",
-        "tag": "raw-text",
+        "type": "raw-text",
         "attributesArray": [
           {
             "kind": "attribute",
@@ -1609,7 +1609,7 @@ where
 
   fn element_template_element_slot(&self, element_slot_index: i32) -> Expr {
     quote!(
-      r#"{ kind: "elementSlot", tag: "slot", elementSlotIndex: $element_slot_index }"# as Expr,
+      r#"{ kind: "elementSlot", type: "slot", elementSlotIndex: $element_slot_index }"# as Expr,
       element_slot_index: Expr = i32_to_expr(&element_slot_index),
     )
   }
@@ -1621,7 +1621,7 @@ where
     children: Vec<Expr>,
   ) -> Expr {
     quote!(
-      r#"{ kind: "element", tag: $tag, attributesArray: $attributes, children: $children }"# as Expr,
+      r#"{ kind: "element", type: $tag, attributesArray: $attributes, children: $children }"# as Expr,
       tag: Expr = self.element_template_string_expr(tag),
       attributes: Expr = self.element_template_array_expr(attributes),
       children: Expr = self.element_template_array_expr(children),

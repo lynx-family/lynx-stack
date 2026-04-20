@@ -253,15 +253,15 @@ describe('render transform contract', () => {
     expect(result.code).toContain('__elementTemplateList: true');
 
     const templates = result.elementTemplates ?? [];
-    const listTemplate = templates.find((template) => (template.compiledTemplate as { tag?: string }).tag === 'list');
-    const viewTemplate = templates.find((template) => (template.compiledTemplate as { tag?: string }).tag === 'view');
+    const listTemplate = templates.find((template) => (template.compiledTemplate as { type?: string }).type === 'list');
+    const viewTemplate = templates.find((template) => (template.compiledTemplate as { type?: string }).type === 'view');
 
     expect(listTemplate).toBeDefined();
     expect(viewTemplate).toBeDefined();
     expect((viewTemplate?.compiledTemplate as { children?: unknown[] }).children).toEqual([
       {
         kind: 'elementSlot',
-        tag: 'slot',
+        type: 'slot',
         elementSlotIndex: 0,
       },
     ]);

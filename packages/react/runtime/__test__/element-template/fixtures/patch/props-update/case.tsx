@@ -9,7 +9,7 @@ export function run() {
       templateId: '_et_props_update',
       compiledTemplate: {
         kind: 'element',
-        tag: 'view',
+        type: 'view',
         attributesArray: [
           { kind: 'attribute', binding: 'slot', key: 'id', attrSlotIndex: 0 },
         ],

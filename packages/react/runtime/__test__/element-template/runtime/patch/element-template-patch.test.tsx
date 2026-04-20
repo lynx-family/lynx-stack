@@ -500,9 +500,9 @@ describe('ElementTemplate patch stream (apply)', () => {
         templateId: '_et_patch_parent',
         compiledTemplate: {
           kind: 'element',
-          tag: 'view',
+          type: 'view',
           attributesArray: [],
-          children: [{ kind: 'elementSlot', tag: 'slot', elementSlotIndex: 0 }],
+          children: [{ kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 }],
         },
       },
     ]);

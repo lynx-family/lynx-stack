@@ -21,7 +21,7 @@ export async function run() {
         templateId: '_et_state_update',
         compiledTemplate: {
           kind: 'element',
-          tag: 'view',
+          type: 'view',
           attributesArray: [
             { kind: 'attribute', binding: 'slot', key: 'id', attrSlotIndex: 0 },
           ],

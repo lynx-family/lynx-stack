@@ -15,7 +15,7 @@ describe('collectElementTemplatesFromModule', () => {
         'lynx:element-templates': [
           {
             templateId: 'root-template',
-            compiledTemplate: { tag: 'view' },
+            compiledTemplate: { type: 'view' },
           },
         ],
       },
@@ -25,7 +25,7 @@ describe('collectElementTemplatesFromModule', () => {
             'lynx:element-templates': [
               {
                 templateId: 'nested-template',
-                compiledTemplate: { tag: 'text' },
+                compiledTemplate: { type: 'text' },
               },
             ],
           },
@@ -35,7 +35,7 @@ describe('collectElementTemplatesFromModule', () => {
                 'lynx:element-templates': [
                   {
                     templateId: 'deep-template',
-                    compiledTemplate: { tag: 'image' },
+                    compiledTemplate: { type: 'image' },
                   },
                 ],
               },
@@ -48,15 +48,15 @@ describe('collectElementTemplatesFromModule', () => {
     expect(collectElementTemplatesFromModule(module)).toEqual([
       {
         templateId: 'root-template',
-        compiledTemplate: { tag: 'view' },
+        compiledTemplate: { type: 'view' },
       },
       {
         templateId: 'nested-template',
-        compiledTemplate: { tag: 'text' },
+        compiledTemplate: { type: 'text' },
       },
       {
         templateId: 'deep-template',
-        compiledTemplate: { tag: 'image' },
+        compiledTemplate: { type: 'image' },
       },
     ]);
   });

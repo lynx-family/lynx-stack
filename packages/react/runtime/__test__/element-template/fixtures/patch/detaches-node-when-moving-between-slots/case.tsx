@@ -34,10 +34,10 @@ export function run() {
         templateId: '_et_test_detach',
         compiledTemplate: {
           kind: 'element',
-          tag: 'view',
+          type: 'view',
           children: [
-            { kind: 'elementSlot', tag: 'slot', elementSlotIndex: 0 },
-            { kind: 'elementSlot', tag: 'slot', elementSlotIndex: 1 },
+            { kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 },
+            { kind: 'elementSlot', type: 'slot', elementSlotIndex: 1 },
           ],
         },
       },

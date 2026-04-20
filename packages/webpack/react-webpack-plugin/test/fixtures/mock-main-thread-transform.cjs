@@ -15,7 +15,7 @@ exports.transformReactLynxSync = function transformReactLynxSync(content) {
       ? [
         {
           templateId: '_et_fixture',
-          compiledTemplate: { tag: 'view' },
+          compiledTemplate: { type: 'view' },
           sourceFile: 'fixture.tsx',
         },
       ]

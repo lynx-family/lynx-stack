@@ -39,12 +39,12 @@ describe('renderMainThread contract', () => {
         templateId: '_et_contract_root',
         compiledTemplate: {
           kind: 'element',
-          tag: 'view',
+          type: 'view',
           attributesArray: [
             { kind: 'attribute', key: 'id', binding: 'slot', attrSlotIndex: 0 },
           ],
           children: [
-            { kind: 'elementSlot', tag: 'slot', elementSlotIndex: 0 },
+            { kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 },
           ],
         },
       },

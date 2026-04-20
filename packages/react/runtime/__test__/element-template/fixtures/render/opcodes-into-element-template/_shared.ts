@@ -28,7 +28,7 @@ const templates = [
     templateId: '__et_builtin_raw_text__',
     compiledTemplate: {
       kind: 'element',
-      tag: 'raw-text',
+      type: 'raw-text',
       attributesArray: [
         {
           kind: 'attribute',
@@ -44,7 +44,7 @@ const templates = [
     templateId: '_et_foo',
     compiledTemplate: {
       kind: 'element',
-      tag: 'view',
+      type: 'view',
       attributesArray: [
         {
           kind: 'attribute',
@@ -54,8 +54,8 @@ const templates = [
         },
       ],
       children: [
-        { kind: 'elementSlot', tag: 'slot', elementSlotIndex: 0 },
-        { kind: 'elementSlot', tag: 'slot', elementSlotIndex: 1 },
+        { kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 },
+        { kind: 'elementSlot', type: 'slot', elementSlotIndex: 1 },
       ],
     },
   },
@@ -63,29 +63,29 @@ const templates = [
     templateId: '_et_parent',
     compiledTemplate: {
       kind: 'element',
-      tag: 'view',
+      type: 'view',
       attributesArray: [],
-      children: [{ kind: 'elementSlot', tag: 'slot', elementSlotIndex: 0 }],
+      children: [{ kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 }],
     },
   },
   {
     templateId: '_et_child',
-    compiledTemplate: { kind: 'element', tag: 'view', attributesArray: [], children: [] },
+    compiledTemplate: { kind: 'element', type: 'view', attributesArray: [], children: [] },
   },
   {
     templateId: '_et_outer',
     compiledTemplate: {
       kind: 'element',
-      tag: 'view',
+      type: 'view',
       attributesArray: [],
-      children: [{ kind: 'elementSlot', tag: 'slot', elementSlotIndex: 0 }],
+      children: [{ kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 }],
     },
   },
   {
     templateId: '_et_inner',
     compiledTemplate: {
       kind: 'element',
-      tag: 'view',
+      type: 'view',
       attributesArray: [
         {
           kind: 'attribute',
@@ -94,16 +94,16 @@ const templates = [
           attrSlotIndex: 0,
         },
       ],
-      children: [{ kind: 'elementSlot', tag: 'slot', elementSlotIndex: 0 }],
+      children: [{ kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 }],
     },
   },
   {
     templateId: '_et_child_a',
-    compiledTemplate: { kind: 'element', tag: 'view', attributesArray: [], children: [] },
+    compiledTemplate: { kind: 'element', type: 'view', attributesArray: [], children: [] },
   },
   {
     templateId: '_et_child_b',
-    compiledTemplate: { kind: 'element', tag: 'view', attributesArray: [], children: [] },
+    compiledTemplate: { kind: 'element', type: 'view', attributesArray: [], children: [] },
   },
 ];
 

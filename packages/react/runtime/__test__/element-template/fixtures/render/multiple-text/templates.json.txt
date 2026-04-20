@@ -3,12 +3,12 @@
     "templateId": "_et_7a8c6_test_2",
     "compiledTemplate": {
       "kind": "element",
-      "tag": "text",
+      "type": "text",
       "attributesArray": [],
       "children": [
         {
           "kind": "elementSlot",
-          "tag": "slot",
+          "type": "slot",
           "elementSlotIndex": 0
         }
       ]
@@ -19,12 +19,12 @@
     "templateId": "_et_7a8c6_test_3",
     "compiledTemplate": {
       "kind": "element",
-      "tag": "text",
+      "type": "text",
       "attributesArray": [],
       "children": [
         {
           "kind": "elementSlot",
-          "tag": "slot",
+          "type": "slot",
           "elementSlotIndex": 0
         }
       ]
@@ -35,12 +35,12 @@
     "templateId": "_et_7a8c6_test_1",
     "compiledTemplate": {
       "kind": "element",
-      "tag": "view",
+      "type": "view",
       "attributesArray": [],
       "children": [
         {
           "kind": "element",
-          "tag": "view",
+          "type": "view",
           "attributesArray": [
             {
               "kind": "attribute",
@@ -52,14 +52,14 @@
           "children": [
             {
               "kind": "elementSlot",
-              "tag": "slot",
+              "type": "slot",
               "elementSlotIndex": 0
             }
           ]
         },
         {
           "kind": "element",
-          "tag": "view",
+          "type": "view",
           "attributesArray": [
             {
               "kind": "attribute",
@@ -71,14 +71,14 @@
           "children": [
             {
               "kind": "elementSlot",
-              "tag": "slot",
+              "type": "slot",
               "elementSlotIndex": 1
             }
           ]
         },
         {
           "kind": "element",
-          "tag": "view",
+          "type": "view",
           "attributesArray": [
             {
               "kind": "attribute",
@@ -90,12 +90,12 @@
           "children": [
             {
               "kind": "element",
-              "tag": "text",
+              "type": "text",
               "attributesArray": [],
               "children": [
                 {
                   "kind": "elementSlot",
-                  "tag": "slot",
+                  "type": "slot",
                   "elementSlotIndex": 2
                 }
               ]
@@ -104,7 +104,7 @@
         },
         {
           "kind": "element",
-          "tag": "view",
+          "type": "view",
           "attributesArray": [
             {
               "kind": "attribute",
@@ -116,12 +116,12 @@
           "children": [
             {
               "kind": "element",
-              "tag": "text",
+              "type": "text",
               "attributesArray": [],
               "children": [
                 {
                   "kind": "elementSlot",
-                  "tag": "slot",
+                  "type": "slot",
                   "elementSlotIndex": 3
                 }
               ]
@@ -136,7 +136,7 @@
     "templateId": "__et_builtin_raw_text__",
     "compiledTemplate": {
       "kind": "element",
-      "tag": "raw-text",
+      "type": "raw-text",
       "attributesArray": [
         {
           "kind": "attribute",

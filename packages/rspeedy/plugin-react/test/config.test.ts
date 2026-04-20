@@ -457,6 +457,7 @@ describe('Config', () => {
         "defineDCE": undefined,
         "enableRemoveCSSScope": true,
         "engineVersion": "3.2",
+        "experimental_enableElementTemplate": false,
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
       }
@@ -484,6 +485,7 @@ describe('Config', () => {
         "defineDCE": undefined,
         "enableRemoveCSSScope": undefined,
         "engineVersion": "3.2",
+        "experimental_enableElementTemplate": false,
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
       }
