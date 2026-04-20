@@ -19,6 +19,7 @@ import { destroyWorklet } from '../../../../runtime/lib/worklet/destroy.js';
 import { initApiEnv } from '../../../../runtime/lib/worklet-runtime/api/lynxApi.js';
 import { initEventListeners } from '../../../../runtime/lib/worklet-runtime/listeners.js';
 import { initWorklet } from '../../../../runtime/lib/worklet-runtime/workletRuntime.js';
+import { setupDocument, setupBackgroundDocument } from '../../../../runtime/lib/document.js';
 
 const {
   onInjectMainThreadGlobals,
@@ -60,32 +61,8 @@ globalThis.onInjectMainThreadGlobals = (target) => {
   snapshotInstanceManager.nextId = 0;
   target.__root = new SnapshotInstance('root');
 
-  function setupDocument(document) {
-    document.createElement = function(type, slotIndex = 0) {
-      const si = new SnapshotInstance(type);
-      si.__slotIndex = slotIndex;
-      return si;
-    };
-    document.createElementNS = function(_ns, type, _is, slotIndex = 0) {
-      const si = new SnapshotInstance(type);
-      si.__slotIndex = slotIndex;
-      return si;
-    };
-    document.createTextNode = function(text, slotIndex = 0) {
-      const i = new SnapshotInstance(null);
-      i.__slotIndex = slotIndex;
-      i.setAttribute(0, text);
-      Object.defineProperty(i, 'data', {
-        set(v) {
-          i.setAttribute(0, v);
-        },
-      });
-      return i;
-    };
-    return document;
-  }
-
-  target._document = setupDocument({});
+  target._document = {};
+  setupDocument(target._document);
 
   target.globalPipelineOptions = undefined;
 
@@ -106,27 +83,8 @@ globalThis.onInjectBackgroundThreadGlobals = (target) => {
   backgroundSnapshotInstanceManager.nextId = 0;
   target.__root = new BackgroundSnapshotInstance('root');
 
-  function setupBackgroundDocument(document) {
-    document.createElement = function(type, slotIndex = 0) {
-      return new BackgroundSnapshotInstance(type, slotIndex);
-    };
-    document.createElementNS = function(_ns, type, _is, slotIndex = 0) {
-      return new BackgroundSnapshotInstance(type, slotIndex);
-    };
-    document.createTextNode = function(text, slotIndex = 0) {
-      const i = new BackgroundSnapshotInstance(null, slotIndex);
-      i.setAttribute(0, text);
-      Object.defineProperty(i, 'data', {
-        set(v) {
-          i.setAttribute(0, v);
-        },
-      });
-      return i;
-    };
-    return document;
-  }
-
-  target._document = setupBackgroundDocument({});
+  target._document = {};
+  setupBackgroundDocument(target._document);
   target.globalPipelineOptions = undefined;
 
   // TODO: can we only inject to target(mainThread.globalThis) instead of globalThis?

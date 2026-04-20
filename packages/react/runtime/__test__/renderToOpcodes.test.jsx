@@ -918,6 +918,77 @@ describe('renderToString', () => {
     expect(rendered[16].type).toStrictEqual(resolvedJsx4.type);
     expect(rendered[20].type).toStrictEqual(resolvedJsx5.type);
   });
+
+  it('should only render text when it is not empty', () => {
+    expect(renderToString(
+      <view>
+        <text></text>
+        <text>{''}</text>
+        <text>Static Text</text>
+      </view>,
+    )).toMatchInlineSnapshot(`
+      [
+        0,
+        {
+          "__slotIndex": 0,
+          "children": undefined,
+          "extraProps": undefined,
+          "id": -2,
+          "type": "__snapshot_a94a8_test_47",
+          "values": undefined,
+        },
+        0,
+        1,
+      ]
+    `);
+    expect(renderToString(
+      <view>
+        <text></text>
+        <text>{'Dynamic Text'}</text>
+        <text>Static Text</text>
+      </view>,
+    )).toMatchInlineSnapshot(`
+      [
+        0,
+        {
+          "__slotIndex": 0,
+          "children": [
+            {
+              "__slotIndex": 0,
+              "children": undefined,
+              "extraProps": undefined,
+              "id": -4,
+              "type": null,
+              "values": [
+                "Dynamic Text",
+              ],
+            },
+          ],
+          "extraProps": undefined,
+          "id": -3,
+          "type": "__snapshot_a94a8_test_48",
+          "values": undefined,
+        },
+        0,
+        3,
+        [
+          {
+            "__slotIndex": 0,
+            "children": undefined,
+            "extraProps": undefined,
+            "id": -4,
+            "type": null,
+            "values": [
+              "Dynamic Text",
+            ],
+          },
+          "Dynamic Text",
+        ],
+        0,
+        1,
+      ]
+    `);
+  });
 });
 
 describe('renderOpcodesInto', () => {
@@ -1308,7 +1379,7 @@ describe('createElement', () => {
           "children": undefined,
           "extraProps": undefined,
           "id": -41,
-          "type": "__snapshot_a94a8_test_74",
+          "type": "__snapshot_a94a8_test_76",
           "values": undefined,
         },
         0,
@@ -1324,7 +1395,7 @@ describe('createElement', () => {
           "children": undefined,
           "extraProps": undefined,
           "id": -42,
-          "type": "__snapshot_a94a8_test_74",
+          "type": "__snapshot_a94a8_test_76",
           "values": undefined,
         },
         0,
@@ -1348,7 +1419,7 @@ describe('createElement', () => {
           "children": undefined,
           "extraProps": undefined,
           "id": -43,
-          "type": "__snapshot_a94a8_test_75",
+          "type": "__snapshot_a94a8_test_77",
           "values": undefined,
         },
         0,
@@ -1364,7 +1435,7 @@ describe('createElement', () => {
           "children": undefined,
           "extraProps": undefined,
           "id": -44,
-          "type": "__snapshot_a94a8_test_75",
+          "type": "__snapshot_a94a8_test_77",
           "values": undefined,
         },
         0,

@@ -613,8 +613,8 @@ importers:
   packages/react:
     dependencies:
       preact:
-        specifier: npm:@lynx-js/internal-preact@10.28.4-edd1f6c
-        version: '@lynx-js/internal-preact@10.28.4-edd1f6c'
+        specifier: npm:@lynx-js/internal-preact@10.28.4-dfff9aa
+        version: '@lynx-js/internal-preact@10.28.4-dfff9aa'
     devDependencies:
       '@lynx-js/types':
         specifier: 3.7.0
@@ -3238,8 +3238,8 @@ packages:
   '@leichtgewicht/ip-codec@2.0.5':
     resolution: {integrity: sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw==}
 
-  '@lynx-js/internal-preact@10.28.4-edd1f6c':
-    resolution: {integrity: sha512-13Q7d3rw7shv+bESNMPlI/aMoj+8N96Lf7lXo975KyaAqadVhJd33GKwx2mjgQtRNr4ONcBQEe9704qQTvpv2A==}
+  '@lynx-js/internal-preact@10.28.4-dfff9aa':
+    resolution: {integrity: sha512-i2xFwaWsmfODVfb9oYurZWCBDlnOdXdP/IsfW/R8i9vLtV6eo7I73U4smBINSNtQfSwpdQHooslEFD94RHVqSw==}
 
   '@lynx-js/lynx-core@0.1.3':
     resolution: {integrity: sha512-uWzKKYJUK4Q09ZRZxWSAFINnmZb9piWPbvWF9SkLn+3snBl9u/BJa4ekPRcKWAhBmpbtxWH1x27fxe3Q3p5l3Q==}
@@ -11572,7 +11572,7 @@ snapshots:
 
   '@leichtgewicht/ip-codec@2.0.5': {}
 
-  '@lynx-js/internal-preact@10.28.4-edd1f6c': {}
+  '@lynx-js/internal-preact@10.28.4-dfff9aa': {}
 
   '@lynx-js/lynx-core@0.1.3': {}
 
