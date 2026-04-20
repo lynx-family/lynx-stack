@@ -116,7 +116,11 @@ function clearLegacyGestureState(dom: FiberElement): void {
   __SetAttribute(dom, 'has-react-gesture', null);
   // `flatten` may still be required by unrelated attrs from the same spread
   // (e.g. `clip-radius`), so only clear the gesture-specific legacy state here.
-  __SetAttribute(dom, 'gesture', null);
+  // When `__RemoveGestureDetector` is available, let it own the detector cleanup
+  // so we do not clobber an unrelated user-provided `gesture` attr.
+  if (typeof __RemoveGestureDetector !== 'function') {
+    __SetAttribute(dom, 'gesture', null);
+  }
 }
 
 function getGestureInfo(

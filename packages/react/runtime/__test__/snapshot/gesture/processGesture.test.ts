@@ -150,7 +150,7 @@ describe('processGesture', () => {
     const removedIds = removeGestureDetector.mock.calls.map(([, id]) => id).sort((a, b) => a - b);
     expect(removedIds).toEqual([2]);
     expect(setAttribute).toHaveBeenCalledWith(dom, 'has-react-gesture', null);
-    expect(setAttribute).toHaveBeenCalledWith(dom, 'gesture', null);
+    expect(setAttribute).not.toHaveBeenCalledWith(dom, 'gesture', null);
     expect(setAttribute).not.toHaveBeenCalledWith(dom, 'flatten', null);
   });
 
@@ -203,7 +203,7 @@ describe('processGesture', () => {
     const removedIds = removeGestureDetector.mock.calls.map(([, id]) => id).sort((a, b) => a - b);
     expect(removedIds).toEqual([1, 2]);
     expect(setAttribute).toHaveBeenCalledWith(dom, 'has-react-gesture', null);
-    expect(setAttribute).toHaveBeenCalledWith(dom, 'gesture', null);
+    expect(setAttribute).not.toHaveBeenCalledWith(dom, 'gesture', null);
     expect(setAttribute).not.toHaveBeenCalledWith(dom, 'flatten', null);
   });
 
@@ -229,6 +229,34 @@ describe('processGesture', () => {
     expect(removeGestureDetector).toHaveBeenCalledTimes(2);
     expect(removeGestureDetector).toHaveBeenNthCalledWith(1, dom, 1);
     expect(removeGestureDetector).toHaveBeenNthCalledWith(2, dom, 2);
+    expect(setAttribute).toHaveBeenCalledWith(dom, 'has-react-gesture', null);
+    expect(setAttribute).not.toHaveBeenCalledWith(dom, 'gesture', null);
+    expect(setAttribute).not.toHaveBeenCalledWith(dom, 'flatten', null);
+  });
+
+  it('falls back to clearing gesture attr when remove API is unavailable', () => {
+    const dom = {} as FiberElement;
+    const gesture = createSerializedGesture(1);
+
+    vi.unstubAllGlobals();
+    setAttribute = vi.fn();
+    setGestureDetector = vi.fn();
+    hydrateCtx = vi.fn();
+    vi.stubGlobal('__SetAttribute', setAttribute);
+    vi.stubGlobal('__SetGestureDetector', setGestureDetector);
+    vi.stubGlobal('__RemoveGestureDetector', undefined);
+    vi.stubGlobal('lynxWorkletImpl', {
+      _hydrateCtx: hydrateCtx,
+      _jsFunctionLifecycleManager: {
+        addRef: vi.fn(),
+      },
+      _eventDelayImpl: {
+        runDelayedWorklet: vi.fn(),
+      },
+    });
+
+    processGesture(dom, undefined as any, gesture as any, false);
+
     expect(setAttribute).toHaveBeenCalledWith(dom, 'has-react-gesture', null);
     expect(setAttribute).toHaveBeenCalledWith(dom, 'gesture', null);
     expect(setAttribute).not.toHaveBeenCalledWith(dom, 'flatten', null);
