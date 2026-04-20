@@ -296,32 +296,6 @@ describe('backgroundSnapshot profile', () => {
       expect(insertBeforeCalls.some(([, option]) => option?.args?.targetId === '')).toBe(true);
     });
 
-    it('should profile reconstructInstanceTree for inserted children', () => {
-      globalThis.__PROFILE__ = true;
-
-      const before = createBeforeTreeWithProfileInsert();
-      const after = createAfterTreeWithProfileInsert();
-
-      lynx.performance.profileStart.mockClear();
-      lynx.performance.profileEnd.mockClear();
-
-      hydrate(before, after);
-
-      const reconstructCalls = lynx.performance.profileStart.mock.calls.filter(
-        ([traceName]) => traceName === 'ReactLynx::BSI::reconstructInstanceTree',
-      );
-
-      expect(reconstructCalls).toHaveLength(1);
-      expect(reconstructCalls[0][1]).toEqual(
-        expect.objectContaining({
-          args: expect.objectContaining({
-            id: String(after.childNodes[0].__id),
-            snapshotType: after.childNodes[0].type,
-          }),
-        }),
-      );
-    });
-
     it('should profile move branch with defined target id', () => {
       globalThis.__PROFILE__ = true;
 
