@@ -112,6 +112,13 @@ function removeGestureDetector(dom: FiberElement, id: number): void {
   }
 }
 
+function clearLegacyGestureState(dom: FiberElement): void {
+  __SetAttribute(dom, 'has-react-gesture', null);
+  // `flatten` may still be required by unrelated attrs from the same spread
+  // (e.g. `clip-radius`), so only clear the gesture-specific legacy state here.
+  __SetAttribute(dom, 'gesture', null);
+}
+
 function getGestureInfo(
   gesture: BaseGesture,
   oldGesture: BaseGesture | undefined,
@@ -170,9 +177,7 @@ export function processGesture(
     // Clearing the attrs keeps the legacy main-thread state in sync when
     // gesture props disappear during spread/key-removal updates.
     if (!domSet && oldBaseGesturesById.size > 0) {
-      __SetAttribute(dom, 'has-react-gesture', null);
-      __SetAttribute(dom, 'flatten', null);
-      __SetAttribute(dom, 'gesture', null);
+      clearLegacyGestureState(dom);
     }
     return;
   }
@@ -212,8 +217,8 @@ export function processGesture(
       removeGestureDetector(dom, oldBaseGesture.id);
     }
 
-    if (!domSet) {
-      __SetAttribute(dom, 'has-react-gesture', null);
+    if (!domSet && oldBaseGesturesById.size > 0) {
+      clearLegacyGestureState(dom);
     }
     return;
   }

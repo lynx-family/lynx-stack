@@ -2,12 +2,12 @@ import { options, render } from 'preact';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useState } from '../../src/index';
-import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
-import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
+import { replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
+import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
-import { globalEnvManager } from '../utils/envManager';
-import { elementTree, waitSchedule } from '../utils/nativeMethod';
+import { globalEnvManager } from './utils/envManager';
+import { elementTree, waitSchedule } from './utils/nativeMethod';
 
 let prevLynxSdkVersion;
 let prevCommit;

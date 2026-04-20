@@ -114,22 +114,29 @@ function prepareSpreadForCommit(
   spread: Record<string, unknown>,
   oldSpread: Record<string, unknown> | undefined,
 ): Record<string, unknown> {
-  const committed: Record<string, unknown> = { ...spread };
-  for (const key in committed) {
-    const v = committed[key];
+  let committed: Record<string, unknown> | undefined;
+  for (const key in spread) {
+    const v = spread[key];
     if (key === '__lynx_timing_flag' && oldSpread?.[key] != v && globalPipelineOptions) {
       globalPipelineOptions.needTimestamps = true;
     }
     if (!v || typeof v !== 'object') {
       continue;
     }
-    if ('_wkltId' in (v as Record<string, unknown>)) {
-      committed[key] = prepareWorkletForCommit(v as Worklet);
-    } else if ('__isGesture' in (v as Record<string, unknown>)) {
-      committed[key] = prepareGestureForCommit(v as GestureKind);
+    const valueRecord = v as Record<string, unknown>;
+    let committedValue: unknown;
+    if ('_wkltId' in valueRecord) {
+      committedValue = prepareWorkletForCommit(v as Worklet);
+    } else if ('__isGesture' in valueRecord) {
+      committedValue = prepareGestureForCommit(v as GestureKind);
+    } else {
+      continue;
     }
+
+    committed ??= { ...spread };
+    committed[key] = committedValue;
   }
-  return committed;
+  return committed ?? spread;
 }
 
 export class BackgroundSnapshotInstance {

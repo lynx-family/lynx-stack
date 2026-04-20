@@ -150,6 +150,8 @@ describe('processGesture', () => {
     const removedIds = removeGestureDetector.mock.calls.map(([, id]) => id).sort((a, b) => a - b);
     expect(removedIds).toEqual([2]);
     expect(setAttribute).toHaveBeenCalledWith(dom, 'has-react-gesture', null);
+    expect(setAttribute).toHaveBeenCalledWith(dom, 'gesture', null);
+    expect(setAttribute).not.toHaveBeenCalledWith(dom, 'flatten', null);
   });
 
   it('deduplicates same-id gestures in composed gesture diff', () => {
@@ -201,6 +203,35 @@ describe('processGesture', () => {
     const removedIds = removeGestureDetector.mock.calls.map(([, id]) => id).sort((a, b) => a - b);
     expect(removedIds).toEqual([1, 2]);
     expect(setAttribute).toHaveBeenCalledWith(dom, 'has-react-gesture', null);
+    expect(setAttribute).toHaveBeenCalledWith(dom, 'gesture', null);
+    expect(setAttribute).not.toHaveBeenCalledWith(dom, 'flatten', null);
+  });
+
+  it('clears legacy gesture state without flatten when composed gesture serializes to no base gestures', () => {
+    const dom = {} as FiberElement;
+    const gestureA = createSerializedGesture(1);
+    const gestureB = createSerializedGesture(2);
+    const oldComposed = createSerializedComposedGesture([gestureA, gestureB]);
+    const invalidComposed = createSerializedComposedGesture([
+      {
+        type: 0,
+      } as any,
+    ]);
+
+    processGesture(dom, oldComposed as any, undefined, false);
+    setAttribute.mockClear();
+    setGestureDetector.mockClear();
+    removeGestureDetector.mockClear();
+
+    processGesture(dom, invalidComposed as any, oldComposed as any, false);
+
+    expect(setGestureDetector).not.toHaveBeenCalled();
+    expect(removeGestureDetector).toHaveBeenCalledTimes(2);
+    expect(removeGestureDetector).toHaveBeenNthCalledWith(1, dom, 1);
+    expect(removeGestureDetector).toHaveBeenNthCalledWith(2, dom, 2);
+    expect(setAttribute).toHaveBeenCalledWith(dom, 'has-react-gesture', null);
+    expect(setAttribute).toHaveBeenCalledWith(dom, 'gesture', null);
+    expect(setAttribute).not.toHaveBeenCalledWith(dom, 'flatten', null);
   });
 
   it('removes stale detector ids before setting when gesture count shrinks on diff', () => {

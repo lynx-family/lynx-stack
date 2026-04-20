@@ -14,6 +14,47 @@ function prepareWorkletForCommit(value: Worklet): Worklet | null {
   return onPostWorkletCtx(copy);
 }
 
+function removeUndefinedFields(record: Record<string, unknown>): Record<string, unknown> {
+  const filteredEntries = Object.entries(record).filter(([, value]) => value !== undefined);
+  return Object.fromEntries(filteredEntries);
+}
+
+function serializeCommittedGesture(gesture: GestureKind): Record<string, unknown> {
+  if (gesture.type === GestureTypeInner.COMPOSED) {
+    const composed = gesture as ComposedGesture;
+    return {
+      type: composed.type,
+      gestures: composed.gestures.map((subGesture) => serializeCommittedGesture(subGesture)),
+      __isSerialized: true,
+    };
+  }
+
+  const baseGesture = gesture as BaseGesture;
+  return removeUndefinedFields({
+    config: baseGesture.config,
+    id: baseGesture.id,
+    type: baseGesture.type,
+    simultaneousWith: baseGesture.simultaneousWith?.map(subGesture => ({
+      id: subGesture.id,
+    })) ?? [],
+    waitFor: baseGesture.waitFor?.map(subGesture => ({ id: subGesture.id })) ?? [],
+    continueWith: baseGesture.continueWith?.map(subGesture => ({
+      id: subGesture.id,
+    })) ?? [],
+    callbacks: baseGesture.callbacks,
+    __isSerialized: true,
+  });
+}
+
+function attachCommittedSerializer<TGesture extends GestureKind>(gesture: TGesture): TGesture {
+  const serialize = () => serializeCommittedGesture(gesture);
+
+  return Object.assign(gesture as Record<string, unknown>, {
+    serialize,
+    toJSON: serialize,
+  }) as TGesture;
+}
+
 /**
  * Prepare a gesture payload to be sent to the main thread.
  *
@@ -28,7 +69,7 @@ export function prepareGestureForCommit(gesture: GestureKind): GestureKind {
       ...composed,
       gestures: composed.gestures.map((g) => prepareGestureForCommit(g)),
     };
-    return committed;
+    return attachCommittedSerializer(committed);
   }
 
   const baseGesture = gesture as BaseGesture;
@@ -49,5 +90,5 @@ export function prepareGestureForCommit(gesture: GestureKind): GestureKind {
     ...baseGesture,
     callbacks: committedCallbacks,
   };
-  return committed;
+  return attachCommittedSerializer(committed);
 }

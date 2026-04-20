@@ -1124,6 +1124,81 @@ describe('Gesture in spread', () => {
       expect(elementTree.__GetGestureDetectorIds(textElement).includes(1)).toBe(false);
     }
   });
+  it('keeps flatten when spread removes gesture but retains no-flatten attrs', async function() {
+    const spyRemoveGesture = vi.spyOn(globalThis, '__RemoveGestureDetector');
+    let _gesture = {
+      id: 1,
+      type: 0,
+      callbacks: {
+        onUpdate: {
+          _wkltId: 'bdd4:dd564:2',
+        },
+      },
+      __isGesture: true,
+      toJSON: function() {
+        return {
+          ...this,
+          __isSerialized: true,
+        };
+      },
+    };
+    let keepGesture = true;
+
+    function Comp() {
+      const props = keepGesture
+        ? {
+            'clip-radius': 8,
+            'main-thread:gesture': _gesture,
+          }
+        : {
+            'clip-radius': 8,
+          };
+      return (
+        <view>
+          <text {...props}>1</text>
+        </view>
+      );
+    }
+
+    {
+      __root.__jsx = <Comp />;
+      renderPage();
+    }
+
+    {
+      globalEnvManager.switchToBackground();
+      render(<Comp />, __root);
+    }
+
+    {
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+
+      globalEnvManager.switchToMainThread();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+    }
+
+    {
+      globalEnvManager.switchToBackground();
+      lynx.getNativeApp().callLepusMethod.mockClear();
+      spyRemoveGesture.mockClear();
+      keepGesture = false;
+
+      render(<Comp />, __root);
+
+      globalEnvManager.switchToMainThread();
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+      const textElement = __root.__element_root.children[0].children[0];
+
+      expect(spyRemoveGesture).toHaveBeenCalledTimes(1);
+      expect(spyRemoveGesture).toHaveBeenCalledWith(textElement, 1);
+      expect(textElement.props['clip-radius']).toBe(8);
+      expect(textElement.props.flatten).toBe(false);
+      expect(textElement.props['has-react-gesture']).toBeUndefined();
+      expect(textElement.props.gesture).toBeUndefined();
+    }
+  });
   it('remove stale detector ids when gesture count shrinks on diff', async function() {
     const spySetGesture = vi.spyOn(globalThis, '__SetGestureDetector');
     const spyRemoveGesture = vi.spyOn(globalThis, '__RemoveGestureDetector');
