@@ -1283,27 +1283,6 @@ where
           t: Expr = t.into(),
       )));
 
-      if self.enable_ui_source_map {
-        let node_index_expr = self.node_index_config_expr(n.span);
-        let stmt = self
-          .static_stmts
-          .last_mut()
-          .expect("raw text create stmt exists");
-        if let Stmt::Decl(Decl::Var(var_decl)) = stmt.get_mut() {
-          if let Some(VarDeclarator {
-            init: Some(init), ..
-          }) = var_decl.decls.get_mut(0)
-          {
-            if let Expr::Call(call_expr) = init.as_mut() {
-              call_expr.args.push(ExprOrSpread {
-                spread: None,
-                expr: Box::new(node_index_expr),
-              });
-            }
-          }
-        }
-      }
-
       if let Some(parent_el) = &self.parent_element {
         self.static_stmts.push(RefCell::new(quote!(
             r#"__AppendElement($parent, $child)"# as Stmt,
@@ -2583,6 +2562,7 @@ mod tests {
         visit_mut_pass(JSXTransformer::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
+            enable_ui_source_map: true,
             ..Default::default()
           },
           Some(t.comments.clone()),
@@ -2616,6 +2596,7 @@ mod tests {
         visit_mut_pass(JSXTransformer::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
+            enable_ui_source_map: true,
             ..Default::default()
           },
           Some(t.comments.clone()),
@@ -2649,6 +2630,7 @@ mod tests {
         visit_mut_pass(JSXTransformer::new(
           super::JSXTransformerConfig {
             preserve_jsx: true,
+            enable_ui_source_map: true,
             ..Default::default()
           },
           Some(t.comments.clone()),
