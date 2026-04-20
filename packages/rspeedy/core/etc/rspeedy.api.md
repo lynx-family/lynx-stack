@@ -332,6 +332,7 @@ export interface Source {
 
 // @public
 export interface SourceMap {
+    css?: boolean | undefined;
     js?: Rspack.DevTool | undefined | `${Exclude<Rspack.DevTool, false | 'eval'>}-debugids`;
 }
 

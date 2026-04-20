@@ -1,4 +1,5 @@
 import { root, Suspense, lazy } from '@lynx-js/react'
+import './index.css'
 
 const LazyBundleComp = lazy(() => import('./lazy-bundle-comp.jsx'))
 

@@ -382,8 +382,27 @@ describe('Config - Output', () => {
 
     assertType<Output>({
       sourceMap: {
+        css: true,
+      },
+    })
+
+    assertType<Output>({
+      sourceMap: {
+        css: false,
+      },
+    })
+
+    assertType<Output>({
+      sourceMap: {
         // @ts-expect-error should reject non-devtool value.
         js: 'foo-bar',
+      },
+    })
+
+    assertType<Output>({
+      sourceMap: {
+        // @ts-expect-error should reject non-boolean value.
+        css: 'foo-bar',
       },
     })
   })

@@ -919,6 +919,11 @@ describe('Config Validation', () => {
         { legalComments: 'inline' },
         { legalComments: 'none' },
         { legalComments: 'linked' },
+        { sourceMap: true },
+        { sourceMap: false },
+        { sourceMap: { js: 'cheap-module-source-map' } },
+        { sourceMap: { css: true } },
+        { sourceMap: { js: false, css: false } },
       ]
 
       cases.forEach(output => {
@@ -927,6 +932,23 @@ describe('Config Validation', () => {
     })
 
     test('invalid type', () => {
+      expect(() =>
+        validate({
+          output: {
+            sourceMap: {
+              css: 'true',
+            },
+          },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid configuration.
+
+        Invalid config on \`$input.output.sourceMap.css\`.
+          - Expect to be (boolean | undefined)
+          - Got: string
+        ]
+      `)
+
       expect(() =>
         validate({
           output: {
