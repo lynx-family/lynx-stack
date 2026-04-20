@@ -1,0 +1,76 @@
+@import "../luna-styles/index.css";
+
+.row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap; /* Allow wrapping */
+}
+
+/* Alignment */
+.alignment-start {
+  align-items: flex-start;
+}
+
+.alignment-center {
+  align-items: center;
+}
+
+.alignment-end {
+  align-items: flex-end;
+}
+
+.alignment-stretch {
+  align-items: stretch;
+}
+
+/* Distribution */
+.distribution-start {
+  justify-content: flex-start;
+}
+
+.distribution-center {
+  justify-content: center;
+}
+
+.distribution-end {
+  justify-content: flex-end;
+}
+
+.distribution-spaceBetween {
+  justify-content: space-between;
+}
+
+.distribution-spaceAround {
+  justify-content: space-around;
+}
+
+.distribution-spaceEvenly {
+  justify-content: space-evenly;
+}
+
+/* Usage Hints */
+
+/* Group: Standard horizontal grouping */
+.row-hint-group {
+  gap: 16px;
+}
+
+/* Compact: Tight grouping (e.g., icon + text) */
+.row-hint-compact {
+  gap: 8px;
+}
+
+/* Balanced: Good for space-between layouts */
+.row-hint-balanced {
+  width: 100%;
+}
+
+/* Toolbar: Specific for action bars */
+.row-hint-toolbar {
+  width: 100%;
+  height: 56px;
+  padding: 0 16px;
+  align-items: center;
+  background-color: var(--paper);
+  border-bottom: 1px solid var(--line);
+}

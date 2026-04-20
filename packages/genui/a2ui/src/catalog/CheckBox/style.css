@@ -1,0 +1,24 @@
+@import "../luna-styles/index.css";
+
+.checkbox-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: start;
+  gap: 10px;
+  width: 100%;
+}
+
+.checkbox-input {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border-width: 1.5px;
+  border-color: var(--line);
+  background-color: var(--canvas);
+}
+
+.checkbox-label {
+  font-size: 16px;
+  color: var(--content-2);
+}

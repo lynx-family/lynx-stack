@@ -472,6 +472,31 @@ importers:
 
   packages/background-only: {}
 
+  packages/genui/a2ui:
+    dependencies:
+      '@a2ui/web_core':
+        specifier: 0.9.1
+        version: 0.9.1
+      '@preact/signals':
+        specifier: ^2.5.1
+        version: 2.5.1(preact@10.29.1)
+    devDependencies:
+      '@lynx-js/lynx-ui':
+        specifier: ^3.130.0
+        version: 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-input':
+        specifier: ^3.130.0
+        version: 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../react
+      '@lynx-js/types':
+        specifier: 3.7.0
+        version: 3.7.0
+      '@types/react':
+        specifier: ^18.3.28
+        version: 18.3.28
+
   packages/lynx/benchx_cli:
     dependencies:
       zx:
@@ -1501,7 +1526,7 @@ importers:
     dependencies:
       dompurify:
         specifier: ^3.3.1
-        version: 3.4.0
+        version: 3.3.1
       markdown-it:
         specifier: ^14.1.0
         version: 14.1.0
@@ -2031,6 +2056,9 @@ importers:
         version: 3.4.19
 
 packages:
+
+  '@a2ui/web_core@0.9.1':
+    resolution: {integrity: sha512-qKFKOgdtPqe0TdiEreTlyqw3TuGjxb7NzVuYejWFUVqy1NQNwe7Hcd4zz8EP+MzWXHSo2sjWsGjuvWBWlVcuOQ==}
 
   '@acemir/cssom@0.9.30':
     resolution: {integrity: sha512-9CnlMCI0LmCIq0olalQqdWrJHPzm0/tw3gzOA9zJSgvFX7Xau3D24mAGa4BtwxwY69nsuJW6kQqqCzf/mEcQgg==}
@@ -3238,14 +3266,181 @@ packages:
   '@leichtgewicht/ip-codec@2.0.5':
     resolution: {integrity: sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw==}
 
+  '@lynx-js/gesture-runtime@2.1.1':
+    resolution: {integrity: sha512-zBDOHakuePjw5wPCButExNgcllyFPGqYzqP2CWCWcQaX4gqJmCmYeRKguihyxH6ma6ExxlH/J2x5CHD91ed3bQ==}
+    peerDependencies:
+      '@lynx-js/react': '*'
+      '@lynx-js/types': '*'
+
   '@lynx-js/internal-preact@10.28.4-2d1d67a':
     resolution: {integrity: sha512-CA8rFURvLvksg155ONHZHEa0ZIxWnS4H/UP8vp5PF8aNOFd3D3Z+Lq+0IQP5GyE/9x+jMIvbBXaY3JVVknSphQ==}
 
   '@lynx-js/lynx-core@0.1.3':
     resolution: {integrity: sha512-uWzKKYJUK4Q09ZRZxWSAFINnmZb9piWPbvWF9SkLn+3snBl9u/BJa4ekPRcKWAhBmpbtxWH1x27fxe3Q3p5l3Q==}
 
+  '@lynx-js/lynx-ui-button@3.130.0':
+    resolution: {integrity: sha512-0f13aZROKhTxMEY69rtWlkfvd6NM3A7JwloFQsh2nxcOiABp6dddvzzQJSayt2xAUxRjFl4uh5Rj/ZrQjjCrNw==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-checkbox@3.130.0':
+    resolution: {integrity: sha512-2xgq7oyGjq7CKYiHd/9nO+gzT2T3KSi4gb3EPxqrENDiiDv5im3ePTwzazUuHaWWK+7cHuJgxZIhwQU0Rk6l8w==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-common@3.130.0':
+    resolution: {integrity: sha512-6odzHU1z1PomtmskJUxIpj+TkHq9daOhUb7N0a3LquKxz9wp41qM1r2oDLRHdeUlylfId1F87Bto6F7Ql9+37w==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-dialog@3.130.0':
+    resolution: {integrity: sha512-AFkA7V+xI5EdaA2JShIcK3UAMG1RuaZcWl16f66KNRD1/ZgIQNp7sYOW/bnQmH+BXts7p4ut7NWBNNe5WcSVvQ==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-draggable@3.130.0':
+    resolution: {integrity: sha512-c9Sw0xahJqttWq/M9SmCIc3X0HIS/d47OBk5oNQRHjhJEaGKP23u/22SfCANXboxLhCxCXXv1OVmW/x8O9Wm2A==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-feed-list@3.130.0':
+    resolution: {integrity: sha512-5nUNYzRjSiR94N0LAyZ+b8aj5s6WYJGShohL2piKxw5lDI7PafaYt/i30aj0Q52b7ViB8ZZuD/ZtmbD4pKeRLA==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-form@3.130.0':
+    resolution: {integrity: sha512-hiDetKqgAGSGcuxIaRG/ljNfZrQjh31BtWZDw0aXJZL/ifHqwv2NQHErAPp9mgO8i/5NYYNYQ5Sgs/ophKhUMA==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-input@3.130.0':
+    resolution: {integrity: sha512-CPBbnDARhs5wfX//78+ATXYhGhU/R4SjFTL/Yzvur3Wh+lLFQz1mEvv0BOfUFnd/lEilc9Y9q00h6g7w7WHd3A==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-lazy-component@3.130.0':
+    resolution: {integrity: sha512-Xr4jQBM8mB3VtSxKnxxy0VdAT1M0dE5YWx5mEkpTezGVIX5rU+Ub23VFTtSZeGYWX1EFaleTOR17fsD4+C3CfA==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-list@3.130.0':
+    resolution: {integrity: sha512-MBj7S19iJ3Tnu4qTVFFXMjceQ6pS+Yj84xRqoXdgVO/kvcjTzxJxQJkUt4RvCuvmQ+fOLz3Lt0ePGxVxkOYY+g==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-overlay@3.130.0':
+    resolution: {integrity: sha512-rc11LA4svUdfX7ZG7pjS+7JzoXllmvv6Ng91QwkYbPIuRlcHu/d0VHtd8cPTgkoBevSWCACBIDoIEgONTfyuTA==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-popover@3.130.0':
+    resolution: {integrity: sha512-oP37HtY/KPiDruepLnpaJQQD3WOFINIz3g432xo+wZ+ScAKtZxfQm2pDpeb9eyPejKv9KjNIFexYtoFVMvSFSg==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-presence@3.130.0':
+    resolution: {integrity: sha512-h5a1SNFZdmEcsEJ6NrFcWC/LqEmINDh+LE9+givCvA4IwkYBWvgBQHoe/0LESJV75TC1TlB3L0sULsBVxMvqXg==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-radio-group@3.130.0':
+    resolution: {integrity: sha512-vRylYRYH41BVFCEt2lsOhnZuTcLu5ACcJvOXpCgTItCDsQ/+g1GSzDl37IAwwI4MBUDPG30uwD0+s7JjYjgn0g==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-scroll-view@3.130.0':
+    resolution: {integrity: sha512-Q5iwceQKFZ4TTLI/h5ZGWhBLP880g4Kn1h4jOeSGWUaKFyEUdbEd1DQKZA673q6pftyLoU6OQ66ZUzyX7tlaqA==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-sheet@3.130.0':
+    resolution: {integrity: sha512-OSTgaX5xEJX0cjo9uwwrKcJS8wFZjFr7+yDew7gHK3bv7/FbJUVkJjhyb/bTGMsU+oyUZMUcqTgs1kgiokbPiQ==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-sortable@3.130.0':
+    resolution: {integrity: sha512-gdFKT6WJOaXSyaej28jGHaLqMu3E/FGNOcqgTXdEJmFbOgpvCABRdZ1flfQMd5tmCV64HXcN6KYJ7X3BBG6uTw==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-swipe-action@3.130.0':
+    resolution: {integrity: sha512-usfmTKBxVRsHAQQ3XvJOqqR0XRKc9+Gu+QjQdq7sa85m1xeFUocin0E8rBPuUNh82RAKC8NVgSw/olKWN/hi1Q==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-swiper@3.130.0':
+    resolution: {integrity: sha512-g/kKFEO4hj+pshuJPpugiTqAjiLEr1kaVjTh8GbD40NFo8X+V9tZw92BO1pfVhoRqffqC6gI4mqk7qXqDcqvbA==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui-switch@3.130.0':
+    resolution: {integrity: sha512-AjbqyYAmFI902GrBhsaOsWQdUZjL5RdN8kA3zQfj6c5HzmYqfjWf6Q0HLJP5EoVKl97Inyl8hGlZjECGNEAqVw==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/lynx-ui@3.130.0':
+    resolution: {integrity: sha512-SgzadpXCECf0dYKmrFytU7C+ihxO//z7pOirNMZppe0MOhWrv4Ld0jBt/yWfSv2rBjBRFIyo2xCxn/PM7yq0dw==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.100.0'
+      '@lynx-js/types': '*'
+      '@types/react': ^18
+
+  '@lynx-js/motion@0.0.2':
+    resolution: {integrity: sha512-/oA8yBnWlGsIRxI3FGfdjxFOuKr5j3oLLmn5viW9JeuLRfIg2u+FM+UGiaAl1mZ9xfns1jamK+uax+cPwvW2dA==}
+    peerDependencies:
+      '@lynx-js/react': '*'
+      '@lynx-js/types': '*'
+    peerDependenciesMeta:
+      '@lynx-js/types':
+        optional: true
+
   '@lynx-js/preact-devtools@5.0.1':
     resolution: {integrity: sha512-ayUU8PJ0TVWABbd5/d/04KI18W9RY4kkaRekBXXbRE/eBkGMZ3lVJ0zOB+B+85B9RUpvEVK2FleqJkS+qBKG6Q==}
+
+  '@lynx-js/react-use@0.0.7':
+    resolution: {integrity: sha512-L+snt3B4ti3sCPiMg1+0FQxr/KV1CadV0kTUD/Lj8VBhJ5gK5TiI0tRLSCGUrMZyNlzI9enXlk6C3GIquEo8Fw==}
+    peerDependencies:
+      '@lynx-js/react': '>=0.114.4'
 
   '@lynx-js/tasm@0.0.33':
     resolution: {integrity: sha512-pquTgvCwrcP1VV8Fw/mRrvQDFyeA2Wu2KK3yI24wZYSua14g8AhRAeFpSs9NT6lDaktCnzc1mg+a2GzWoGrVWA==}
@@ -3470,6 +3665,14 @@ packages:
 
   '@polka/url@1.0.0-next.25':
     resolution: {integrity: sha512-j7P6Rgr3mmtdkeDGTe0E/aYyWEWVtc5yFXtHCRHs28/jptDEWfaVOc5T7cblqy1XKPPfCxJc/8DwQ5YgLOZOVQ==}
+
+  '@preact/signals-core@1.14.1':
+    resolution: {integrity: sha512-vxPpfXqrwUe9lpjqfYNjAF/0RF/eFGeLgdJzdmIIZjpOnTmGmAB4BjWone562mJGMRP4frU6iZ6ei3PDsu52Ng==}
+
+  '@preact/signals@2.5.1':
+    resolution: {integrity: sha512-VPjk5YFt7i11Fi4UK0tzaEe5xLwfhUxXL3l89ocxQ5aPz7bRo8M5+N73LjBMPklyXKYKz6YsNo4Smp8n6nplng==}
+    peerDependencies:
+      preact: '>= 10.25.0 || >=11.0.0-0'
 
   '@prefresh/core@1.5.9':
     resolution: {integrity: sha512-IKBKCPaz34OFVC+adiQ2qaTF5qdztO2/4ZPf4KsRTgjKosWqxVXmEbxCiUydYZRY8GVie+DQlKzQr9gt6HQ+EQ==}
@@ -4605,6 +4808,9 @@ packages:
   '@types/istanbul-reports@3.0.4':
     resolution: {integrity: sha512-pk2B1NWalF9toCRu6gjBzR69syFjP4Od8WRAX+0mmf9lAjCRicLOWc+ZrxZHx/0XRjotgkF9t6iaMJ+aXcOdZQ==}
 
+  '@types/js-cookie@2.2.7':
+    resolution: {integrity: sha512-aLkWa0C0vO5b4Sr798E26QgOkss68Un0bLjs7u9qxzPT5CG+8DuNTffWES58YzJs3hrVAOs1wonycqEBqNJubA==}
+
   '@types/jsdom@21.1.7':
     resolution: {integrity: sha512-yOriVnggzrnQ3a9OKOCxaVuSug3w3/SbOj5i7VwXWZEyUNl3bLF9V3MfxGbZKuwqJOQyRfqXyROBB1CoZLFWzA==}
 
@@ -5053,6 +5259,9 @@ packages:
     resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}
     engines: {node: '>=10.0.0'}
     deprecated: this version has critical issues, please update to the latest version
+
+  '@xobotyi/scrollbar-width@1.9.5':
+    resolution: {integrity: sha512-N8tkAACJx2ww8vFMneJmaAgmjAG1tnVBZJRLRcx061tmsLRZHSEZSLuGWnwPtunsSLvSqXQ2wfp7Mgqg1I+2dQ==}
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -5709,6 +5918,9 @@ packages:
     peerDependencies:
       postcss: ^8.0.9
 
+  css-in-js-utils@3.1.0:
+    resolution: {integrity: sha512-fJAcud6B3rRu+KHYk+Bwf+WFL2MDCJJ1XG9x137tJQ0xYxor7XziQtuGFbWNdqrvF4Tk26O3H73nfVqXt/fW1A==}
+
   css-loader@7.1.4:
     resolution: {integrity: sha512-vv3J9tlOl04WjiMvHQI/9tmIrCxVrj6PFbHemBB1iihpeRbi/I4h033eoFIhwxBBqLhI0KYFS7yvynBFhIZfTw==}
     engines: {node: '>= 18.12.0'}
@@ -5748,6 +5960,10 @@ packages:
 
   css-select@5.1.0:
     resolution: {integrity: sha512-nwoRF1rvRRnnCqqY7updORDsuqKzqYJ28+oSMaJMMgOauh3fvwHqMS7EZpIPqK8GL+g9mKxF1vP/ZjSeNjEVHg==}
+
+  css-tree@1.1.3:
+    resolution: {integrity: sha512-tRpdppF7TRazZrjJ6v3stzv93qxRcSsFmW6cX0Zm2NVKpxE1WV1HblnghVv9TreireHkqI/VDEsfolRF1p6y7Q==}
+    engines: {node: '>=8.0.0'}
 
   css-tree@2.2.1:
     resolution: {integrity: sha512-OA0mILzGc1kCOCSJerOeqDxDQ4HOh+G8NbOJFOTgOCzpw7fCBubk0fEyxp8AgOL/jvLgYA/uV0cMbe43ElF1JA==}
@@ -5831,6 +6047,9 @@ packages:
 
   dataloader@1.4.0:
     resolution: {integrity: sha512-68s5jYdlvasItOJnCuI2Q9s4q98g0pCyL3HrcKJu8KNugUl8ahgmZYg38ysLTgQjjXX3H8CJLkAvWrclWfcalw==}
+
+  date-fns@4.1.0:
+    resolution: {integrity: sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==}
 
   debounce@1.2.1:
     resolution: {integrity: sha512-XRRe6Glud4rd/ZGQfiV1ruXSfbvfJedlV9Y6zOlP+2K04vBYiJEte6stfFkCP03aMnY5tsipamumUjL14fofug==}
@@ -6013,8 +6232,8 @@ packages:
     resolution: {integrity: sha512-cgwlv/1iFQiFnU96XXgROh8xTeetsnJiDsTc7TYCLFd9+/WNkIqPTxiM/8pSd8VIrhXGTf1Ny1q1hquVqDJB5w==}
     engines: {node: '>= 4'}
 
-  dompurify@3.4.0:
-    resolution: {integrity: sha512-nolgK9JcaUXMSmW+j1yaSvaEaoXYHwWyGJlkoCTghc97KgGDDSnpoU/PlEnw63Ah+TGKFOyY+X5LnxaWbCSfXg==}
+  dompurify@3.3.1:
+    resolution: {integrity: sha512-qkdCKzLNtrgPFP1Vo+98FRzJnBRGe4ffyCea9IwHB1fyxPOeNTHpLKYGd4Uk9xvNoH0ZoOjwZxNptyMwqrId1Q==}
 
   domutils@3.2.2:
     resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
@@ -6466,8 +6685,14 @@ packages:
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
 
+  fast-shallow-equal@1.0.0:
+    resolution: {integrity: sha512-HPtaa38cPgWvaCFmRNhlc6NG7pv6NUHqjPgVAkWGoB9mQMwYB27/K0CvOM5Czy+qpT3e8XJ6Q4aPAnzpNpzNaw==}
+
   fast-uri@3.1.0:
     resolution: {integrity: sha512-iPeeDKJSWf4IEOasVVrknXpaBV0IApz/gp7S2bb7Z4Lljbl2MGJRqInZiUrQwV16cpzw/D3S5j5Julj/gT52AA==}
+
+  fastest-stable-stringify@2.0.2:
+    resolution: {integrity: sha512-bijHueCGd0LqqNK9b5oCMHc0MluJAx0cwqASgbWMvkO01lCYgIhacVRLcaDz3QnyYIRNJRDwMb41VuT6pHJ91Q==}
 
   fastq@1.17.1:
     resolution: {integrity: sha512-sRVD3lWVIXWg6By68ZN7vho9a1pQcN/WBFaAAsDDFzlJjvoGx0P8z7V1t72grFJfJhu3YPZBuu25f7Kaw2jN1w==}
@@ -6601,6 +6826,20 @@ packages:
   forwarded@0.2.0:
     resolution: {integrity: sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow==}
     engines: {node: '>= 0.6'}
+
+  framer-motion@12.23.12:
+    resolution: {integrity: sha512-6e78rdVtnBvlEVgu6eFEAgG9v3wLnYEboM8I5O5EXvfKC8gxGQB8wXJdhkMy10iVcn05jl6CNw7/HTsTCfwcWg==}
+    peerDependencies:
+      '@emotion/is-prop-valid': '*'
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@emotion/is-prop-valid':
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
 
   framer-motion@12.34.1:
     resolution: {integrity: sha512-kcZyNaYQfvE2LlH6+AyOaJAQV4rGp5XbzfhsZpiSZcwDMfZUHhuxLWeyRzf5I7jip3qKRpuimPA9pXXfr111kQ==}
@@ -7025,6 +7264,9 @@ packages:
   inline-style-parser@0.2.4:
     resolution: {integrity: sha512-0aO8FkhNZlj/ZIbNi7Lxxr12obT7cL1moPfE4tg1LkX7LlLfC6DeX4l2ZEud1ukP9jNQyNnfzQVqwbwmAATY4Q==}
 
+  inline-style-prefixer@7.0.1:
+    resolution: {integrity: sha512-lhYo5qNTQp3EvSSp3sRvXMbVQTLrvGV6DycRMJ5dm2BLMiJ30wpXKdDdgX+GmJZ5uQMucwRKHamXSst3Sj/Giw==}
+
   inquirer@8.2.6:
     resolution: {integrity: sha512-M1WuAmb7pn9zdFRtQYk26ZBoY043Sse0wVDdk4Bppr+JOXyQYybdtvK+l9wUibhtjdjvtoiNy8tk+EgsYIUqKg==}
     engines: {node: '>=12.0.0'}
@@ -7366,6 +7608,9 @@ packages:
 
   jpeg-js@0.4.4:
     resolution: {integrity: sha512-WZzeDOEtTOBK4Mdsar0IqEU5sMr3vSV2RqkAIzUEV2BHnUfKGyswWFPFwK5EeDo93K3FohSHbLAjj0s1Wzd+dg==}
+
+  js-cookie@2.2.1:
+    resolution: {integrity: sha512-HvdH2LzI/EAZcUwA8+0nKNtWHqS+ZmijLA30RwZA0bo7ToCckjK5MkGhjED9KoRcXO6BaGI3I9UIzSA1FKFPOQ==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -7725,6 +7970,9 @@ packages:
   mdast-util-to-string@4.0.0:
     resolution: {integrity: sha512-0H44vDimn51F0YwvxSJSm0eCDOJTRlmN0R1yBh4HLj9wiV1Dn0QoXGbvFAWj2hSItVTlCmBF1hqKlIyUBVFLPg==}
 
+  mdn-data@2.0.14:
+    resolution: {integrity: sha512-dn6wd0uw5GsdswPFfsgMp5NSB0/aDe6fK94YJV/AJDYXL6HVLWBsxeq7js7Ad+mU2K9LAlwpk6kN2D5mwCPVow==}
+
   mdn-data@2.0.28:
     resolution: {integrity: sha512-aylIc7Z9y4yzHYAJNuESG3hfhC+0Ibp/MAMiaOZgNv4pmEdFyfZhhhny4MNiAfWdBQ1RQ2mfDWmM1x8SvGyp8g==}
 
@@ -7982,6 +8230,12 @@ packages:
 
   mz@2.7.0:
     resolution: {integrity: sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q==}
+
+  nano-css@5.6.2:
+    resolution: {integrity: sha512-+6bHaC8dSDGALM1HJjOHVXpuastdu2xFoZlC77Jh4cg+33Zcgm+Gxd+1xsnpZK14eyHObSp82+ll5y3SX75liw==}
+    peerDependencies:
+      react: '*'
+      react-dom: '*'
 
   nano-spawn@2.0.0:
     resolution: {integrity: sha512-tacvGzUY5o2D8CBh2rrwxyNojUsZNU2zjNTzKQrkgGJQTbGAfArVWXSKMBokBeeg6C7OLRGUEyoFlYbfeWQIqw==}
@@ -8752,6 +9006,18 @@ packages:
       '@types/react':
         optional: true
 
+  react-universal-interface@0.6.2:
+    resolution: {integrity: sha512-dg8yXdcQmvgR13RIlZbTRQOoUrDciFVoSBZILwjE2LFISxZZ8loVJKAkuzswl5js8BHda79bIb2b84ehU8IjXw==}
+    peerDependencies:
+      react: '*'
+      tslib: '*'
+
+  react-use@17.6.0:
+    resolution: {integrity: sha512-OmedEScUMKFfzn1Ir8dBxiLLSOzhKe/dPZwVxcujweSj45aNM7BEGPb9BEVIgVEqEXx6f3/TsXzwIktNgUR02g==}
+    peerDependencies:
+      react: '*'
+      react-dom: '*'
+
   react@19.2.4:
     resolution: {integrity: sha512-9nfp2hYpCwOjAN+8TZFGhtWEwgvWHXqESH8qT89AT/lWklpLON22Lc8pEtnpsZz7VmawabSU0gCjnj8aC0euHQ==}
     engines: {node: '>=0.10.0'}
@@ -8879,6 +9145,9 @@ packages:
   requires-port@1.0.0:
     resolution: {integrity: sha512-KigOCHcocU3XODJxsu8i/j8T9tzT4adHiecwORRQ0ZZFcp7ahwXuRU1m+yuO90C5ZUyGeGfocHDI14M3L3yDAQ==}
 
+  resize-observer-polyfill@1.5.1:
+    resolution: {integrity: sha512-LwZrotdHOo12nQuZlHEmtuXdqGoOD0OhaxopaNFxWzInpEgaLWoVuAMbTzixuosCx2nEG58ngzW3vxdWoxIgdg==}
+
   resolve-from@4.0.0:
     resolution: {integrity: sha512-pb/MYmXstAkysRFx8piNI1tGFNQIFA3vkE3Gq4EuA1dF6gHp/+vgZqsCGJapvy8N3Q+4o7FwvquPJcnZ7RYy4g==}
     engines: {node: '>=4'}
@@ -8988,6 +9257,9 @@ packages:
 
   rslog@1.3.2:
     resolution: {integrity: sha512-1YyYXBvN0a2b1MSIDLwDTqqgjDzRKxUg/S/+KO6EAgbtZW1B3fdLHAMhEEtvk1patJYMqcRvlp3HQwnxj7AdGQ==}
+
+  rtl-css-js@1.16.1:
+    resolution: {integrity: sha512-lRQgou1mu19e+Ya0LsTvKrVJ5TYUbqCVPAiImX3UfLTenarvPUl1QFdvu5Z3PYmHT9RCcwIfbjRQBntExyj3Zg==}
 
   run-applescript@7.0.0:
     resolution: {integrity: sha512-9by4Ij99JUr/MCFBUkDKLWK3G9HVXmabKz9U5MlIAIuvuzkiOicRYs8XJLxX+xahD+mLiiCYDqF9dKAgtzKP1A==}
@@ -9186,6 +9458,10 @@ packages:
     resolution: {integrity: sha512-eflK8wEtyOE6+hsaRVPxvUKYCpRgzLqDTb8krvAsRIwOGlHoSgYLgBXoubGgLd2fT41/OUYdb48v4k4WWHQurA==}
     engines: {node: '>= 10.13.0'}
 
+  screenfull@5.2.0:
+    resolution: {integrity: sha512-9BakfsO2aUQN2K9Fdbj87RJIEZ82Q9IGim7FqM5OsebfoFC6ZHXgDq/KvniuLTPdeM8wY2o6Dj3WQ7KeQCj3cA==}
+    engines: {node: '>=0.10.0'}
+
   scroll-into-view-if-needed@3.1.0:
     resolution: {integrity: sha512-49oNpRjWRvnU8NyGVmUaYG4jtTkNonFZI86MmGRDqBphEK2EXT9gdEUoQPZhuBM8yWHxCWbobltqYO5M4XrUvQ==}
 
@@ -9254,6 +9530,10 @@ packages:
   set-function-name@2.0.2:
     resolution: {integrity: sha512-7PGFlmtwsEADb0WYyvCMa1t+yke6daIG4Wirafur5kcf+MhUnPms1UeR0CKQdTZD81yESwMHbtn+TR+dMviakQ==}
     engines: {node: '>= 0.4'}
+
+  set-harmonic-interval@1.0.1:
+    resolution: {integrity: sha512-AhICkFV84tBP1aWqPwLZqFvAwqEoVA9kxNMniGEUvzOlm4vLmOFLiTT3UZ6bziJTy4bOVpzWGTfSCbmaayGx8g==}
+    engines: {node: '>=6.9'}
 
   set-proto@1.0.0:
     resolution: {integrity: sha512-RJRdvCo6IAnPdsvP/7m6bsQqNnn1FCBX5ZNtFL98MmFF/4xAIJTIg1YbHW5DC2W5SKZanrC6i4HsJqlajw/dZw==}
@@ -9364,6 +9644,10 @@ packages:
   source-map-support@0.5.21:
     resolution: {integrity: sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w==}
 
+  source-map@0.5.6:
+    resolution: {integrity: sha512-MjZkVp0NHr5+TPihLcadqnlVoGIoWo4IBHptutGh9wI3ttUYvCG26HkSuDi+K6lsZ25syXJXcctwgyVCt//xqA==}
+    engines: {node: '>=0.10.0'}
+
   source-map@0.6.1:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
@@ -9400,6 +9684,9 @@ packages:
     resolution: {integrity: sha512-o3yWv49B/o4QZk5ZcsALc6t0+eCelPc44zZsLtCQnZPDwFpDYSWcDnrv2TtMmMbQ7uKo3J0HTURCqckw23czNQ==}
     engines: {node: '>=12.0.0'}
 
+  stack-generator@2.0.10:
+    resolution: {integrity: sha512-mwnua/hkqM6pF4k8SnmZ2zfETsRUpWXREfA/goT8SLCV4iOFa4bzOX2nDipWAZFPTjLvQB82f5yaodMVhK0yJQ==}
+
   stack-utils@2.0.6:
     resolution: {integrity: sha512-XlkWvfIm6RmsWtNJx+uqtKLS8eqFbxUg0ZzLXqY0caEy9l7hruX8IpiDnjsLavoBgqCCR71TqWO8MaXYheJ3RQ==}
     engines: {node: '>=10'}
@@ -9409,6 +9696,12 @@ packages:
 
   stackframe@1.3.4:
     resolution: {integrity: sha512-oeVtt7eWQS+Na6F//S4kJ2K2VbRlS9D43mAlMyVpVWovy9o+jfgH8O9agzANzaiLjclA0oYzUXEM4PurhSUChw==}
+
+  stacktrace-gps@3.1.2:
+    resolution: {integrity: sha512-GcUgbO4Jsqqg6RxfyTHFiPxdPqF+3LFmQhm7MgCuYQOYuWyqxo5pwRPz5d/u6/WYJdEnWfK4r+jGbyD8TSggXQ==}
+
+  stacktrace-js@2.0.2:
+    resolution: {integrity: sha512-Je5vBeY4S1r/RnLydLl0TBTi3F2qdfWmYsGvtfZgEI+SCprPppaIhQf5nGcal4gI4cGpCV/duLcAzT1np6sQqg==}
 
   statuses@1.5.0:
     resolution: {integrity: sha512-OpZ3zP+jT1PI7I8nemJX4AKmAX070ZkYPVWV/AaKTJl+tXCTGyVdC1a4SL8RUQYEwk/f34ZX8UTykN68FwrqAA==}
@@ -9527,6 +9820,9 @@ packages:
     peerDependencies:
       postcss: ^8.4.32
 
+  stylis@4.3.6:
+    resolution: {integrity: sha512-yQ3rwFWRfwNUY7H5vpU0wfdkNSnvnJinhF9830Swlaxl03zsOjCfmX0ugac+3LtK0lYSgwL/KXc8oYL3mG4YFQ==}
+
   sucrase@3.35.0:
     resolution: {integrity: sha512-8EbVDiu9iN/nESwxeSxDKe0dunta1GOlHufmSSXxMD2z2/tMZpDMpvXQGsc+ajGo8y2uYUmixaSRUc/QPoQ0GA==}
     engines: {node: '>=16 || 14 >=14.17'}
@@ -9638,6 +9934,10 @@ packages:
     engines: {node: '>=10.18'}
     peerDependencies:
       tslib: ^2
+
+  throttle-debounce@3.0.1:
+    resolution: {integrity: sha512-dTEWWNu6JmeVXY0ZYoPuH5cRIwc0MeGbJwah9KUNYSJwommQpCzTySTpEe8Gs1J23aeWEuAobe4Ag7EHVt/LOg==}
+    engines: {node: '>=10'}
 
   through@2.3.8:
     resolution: {integrity: sha512-w89qg7PI8wAdvX60bMDP+bFoD5Dvhm9oLheFp5O4a2QF0cSBGsBX4qZmadPMvVqlLJBBci+WqGGOAPvcDeNSVg==}
@@ -9771,6 +10071,9 @@ packages:
     resolution: {integrity: sha512-EDyGAwH1gO0Ausm9gV6T2nUvBgXT5kGoCMJPllOaooZ+4VvJiKBdZE7wK18N1deEowhcUptS+5GXZK8U/fvpwA==}
     peerDependencies:
       typescript: '>=4.0.0'
+
+  ts-easing@0.2.0:
+    resolution: {integrity: sha512-Z86EW+fFFh/IFB1fqQ3/+7Zpf9t2ebOAxNI/V6Wo7r5gqiqtxmgTlQ1qbqQcjLKYeSHPTsEmvlJUDg/EuL0uHQ==}
 
   ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
@@ -10353,6 +10656,13 @@ packages:
     hasBin: true
 
 snapshots:
+
+  '@a2ui/web_core@0.9.1':
+    dependencies:
+      '@preact/signals-core': 1.14.1
+      date-fns: 4.1.0
+      zod: 3.25.76
+      zod-to-json-schema: 3.25.1(zod@3.25.76)
 
   '@acemir/cssom@0.9.30': {}
 
@@ -11572,14 +11882,302 @@ snapshots:
 
   '@leichtgewicht/ip-codec@2.0.5': {}
 
+  '@lynx-js/gesture-runtime@2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)':
+    dependencies:
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+
   '@lynx-js/internal-preact@10.28.4-2d1d67a': {}
 
   '@lynx-js/lynx-core@0.1.3': {}
+
+  '@lynx-js/lynx-ui-button@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+      clsx: 2.1.1
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-checkbox@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/lynx-ui-button': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+      clsx: 2.1.1
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-common@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/gesture-runtime': 2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/react-use': 0.0.7(@lynx-js/react@packages+react)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-dialog@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/lynx-ui-button': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-overlay': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-presence': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+      clsx: 2.1.1
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-draggable@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/react-use': 0.0.7(@lynx-js/react@packages+react)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-feed-list@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/gesture-runtime': 2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-list': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-form@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/lynx-ui-button': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-checkbox': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-input': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-radio-group': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-switch': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-input@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-scroll-view': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-lazy-component@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-list@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/gesture-runtime': 2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-overlay@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-popover@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/lynx-ui-button': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-overlay': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-presence': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+      clsx: 2.1.1
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-presence@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+      clsx: 2.1.1
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-radio-group@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/lynx-ui-button': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+      clsx: 2.1.1
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-scroll-view@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/gesture-runtime': 2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-lazy-component': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-sheet@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-dialog': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-overlay': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-presence': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/motion': 0.0.2(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+      clsx: 2.1.1
+    transitivePeerDependencies:
+      - '@emotion/is-prop-valid'
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-sortable@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-draggable': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-swipe-action@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/gesture-runtime': 2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-swiper@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/react-use': 0.0.7(@lynx-js/react@packages+react)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-switch@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)':
+    dependencies:
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+      clsx: 2.1.1
+
+  '@lynx-js/lynx-ui@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/lynx-ui-button': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-checkbox': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-dialog': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-draggable': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-feed-list': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-form': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-input': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-lazy-component': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-list': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-popover': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-presence': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-radio-group': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-scroll-view': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-sheet': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-sortable': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-swipe-action': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-swiper': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lynx-js/lynx-ui-switch': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': 3.7.0
+      '@types/react': 18.3.28
+    transitivePeerDependencies:
+      - '@emotion/is-prop-valid'
+      - react
+      - react-dom
+
+  '@lynx-js/motion@0.0.2(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/react': link:packages/react
+      framer-motion: 12.23.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      motion-dom: 12.23.12
+      motion-utils: 12.23.6
+    optionalDependencies:
+      '@lynx-js/types': 3.7.0
+    transitivePeerDependencies:
+      - '@emotion/is-prop-valid'
+      - react
+      - react-dom
 
   '@lynx-js/preact-devtools@5.0.1':
     dependencies:
       errorstacks: 2.4.1
       htm: 3.1.1
+
+  '@lynx-js/react-use@0.0.7(@lynx-js/react@packages+react)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@lynx-js/react': link:packages/react
+      react-use: 17.6.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+    transitivePeerDependencies:
+      - react
+      - react-dom
 
   '@lynx-js/tasm@0.0.33': {}
 
@@ -11872,6 +12470,13 @@ snapshots:
       playwright: 1.58.2
 
   '@polka/url@1.0.0-next.25': {}
+
+  '@preact/signals-core@1.14.1': {}
+
+  '@preact/signals@2.5.1(preact@10.29.1)':
+    dependencies:
+      '@preact/signals-core': 1.14.1
+      preact: 10.29.1
 
   '@prefresh/core@1.5.9(preact@10.29.1)':
     dependencies:
@@ -13181,6 +13786,8 @@ snapshots:
     dependencies:
       '@types/istanbul-lib-report': 3.0.3
 
+  '@types/js-cookie@2.2.7': {}
+
   '@types/jsdom@21.1.7':
     dependencies:
       '@types/node': 24.10.13
@@ -13682,6 +14289,8 @@ snapshots:
       '@xtuc/long': 4.2.2
 
   '@xmldom/xmldom@0.8.11': {}
+
+  '@xobotyi/scrollbar-width@1.9.5': {}
 
   '@xtuc/ieee754@1.2.0': {}
 
@@ -14351,6 +14960,10 @@ snapshots:
     dependencies:
       postcss: 8.5.6
 
+  css-in-js-utils@3.1.0:
+    dependencies:
+      hyphenate-style-name: 1.1.0
+
   css-loader@7.1.4(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.24(@swc/helpers@0.5.21))):
     dependencies:
       icss-utils: 5.1.0(postcss@8.5.6)
@@ -14398,6 +15011,11 @@ snapshots:
       domhandler: 5.0.3
       domutils: 3.2.2
       nth-check: 2.1.1
+
+  css-tree@1.1.3:
+    dependencies:
+      mdn-data: 2.0.14
+      source-map: 0.6.1
 
   css-tree@2.2.1:
     dependencies:
@@ -14509,6 +15127,8 @@ snapshots:
       is-data-view: 1.0.2
 
   dataloader@1.4.0: {}
+
+  date-fns@4.1.0: {}
 
   debounce@1.2.1: {}
 
@@ -14640,7 +15260,7 @@ snapshots:
     dependencies:
       domelementtype: 2.3.0
 
-  dompurify@3.4.0:
+  dompurify@3.3.1:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 
@@ -15330,7 +15950,11 @@ snapshots:
 
   fast-levenshtein@2.0.6: {}
 
+  fast-shallow-equal@1.0.0: {}
+
   fast-uri@3.1.0: {}
+
+  fastest-stable-stringify@2.0.2: {}
 
   fastq@1.17.1:
     dependencies:
@@ -15466,6 +16090,15 @@ snapshots:
   format@0.2.2: {}
 
   forwarded@0.2.0: {}
+
+  framer-motion@12.23.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+    dependencies:
+      motion-dom: 12.23.12
+      motion-utils: 12.23.6
+      tslib: 2.8.1
+    optionalDependencies:
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
 
   framer-motion@12.34.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -15964,6 +16597,10 @@ snapshots:
 
   inline-style-parser@0.2.4: {}
 
+  inline-style-prefixer@7.0.1:
+    dependencies:
+      css-in-js-utils: 3.1.0
+
   inquirer@8.2.6:
     dependencies:
       ansi-escapes: 4.3.2
@@ -16360,6 +16997,8 @@ snapshots:
   jose@6.1.3: {}
 
   jpeg-js@0.4.4: {}
+
+  js-cookie@2.2.1: {}
 
   js-tokens@4.0.0: {}
 
@@ -16841,6 +17480,8 @@ snapshots:
     dependencies:
       '@types/mdast': 4.0.4
 
+  mdn-data@2.0.14: {}
+
   mdn-data@2.0.28: {}
 
   mdn-data@2.12.2: {}
@@ -17243,6 +17884,19 @@ snapshots:
       any-promise: 1.3.0
       object-assign: 4.1.1
       thenify-all: 1.6.0
+
+  nano-css@5.6.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.5.5
+      css-tree: 1.1.3
+      csstype: 3.2.3
+      fastest-stable-stringify: 2.0.2
+      inline-style-prefixer: 7.0.1
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+      rtl-css-js: 1.16.1
+      stacktrace-js: 2.0.2
+      stylis: 4.3.6
 
   nano-spawn@2.0.0: {}
 
@@ -17961,6 +18615,30 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.14
 
+  react-universal-interface@0.6.2(react@19.2.4)(tslib@2.8.1):
+    dependencies:
+      react: 19.2.4
+      tslib: 2.8.1
+
+  react-use@17.6.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+    dependencies:
+      '@types/js-cookie': 2.2.7
+      '@xobotyi/scrollbar-width': 1.9.5
+      copy-to-clipboard: 3.3.3
+      fast-deep-equal: 3.1.3
+      fast-shallow-equal: 1.0.0
+      js-cookie: 2.2.1
+      nano-css: 5.6.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+      react-universal-interface: 0.6.2(react@19.2.4)(tslib@2.8.1)
+      resize-observer-polyfill: 1.5.1
+      screenfull: 5.2.0
+      set-harmonic-interval: 1.0.1
+      throttle-debounce: 3.0.1
+      ts-easing: 0.2.0
+      tslib: 2.8.1
+
   react@19.2.4: {}
 
   read-cache@1.0.0:
@@ -18158,6 +18836,8 @@ snapshots:
 
   requires-port@1.0.0: {}
 
+  resize-observer-polyfill@1.5.1: {}
+
   resolve-from@4.0.0: {}
 
   resolve-from@5.0.0: {}
@@ -18280,6 +18960,10 @@ snapshots:
       '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
 
   rslog@1.3.2: {}
+
+  rtl-css-js@1.16.1:
+    dependencies:
+      '@babel/runtime': 7.25.4
 
   run-applescript@7.0.0: {}
 
@@ -18442,6 +19126,8 @@ snapshots:
       ajv-formats: 2.1.1(ajv@8.18.0)
       ajv-keywords: 5.1.0(ajv@8.18.0)
 
+  screenfull@5.2.0: {}
+
   scroll-into-view-if-needed@3.1.0:
     dependencies:
       compute-scroll-into-view: 3.1.1
@@ -18559,6 +19245,8 @@ snapshots:
       es-errors: 1.3.0
       functions-have-names: 1.2.3
       has-property-descriptors: 1.0.2
+
+  set-harmonic-interval@1.0.1: {}
 
   set-proto@1.0.0:
     dependencies:
@@ -18709,6 +19397,8 @@ snapshots:
       buffer-from: 1.1.2
       source-map: 0.6.1
 
+  source-map@0.5.6: {}
+
   source-map@0.6.1: {}
 
   source-map@0.7.6: {}
@@ -18756,6 +19446,10 @@ snapshots:
 
   stable-hash-x@0.2.0: {}
 
+  stack-generator@2.0.10:
+    dependencies:
+      stackframe: 1.3.4
+
   stack-utils@2.0.6:
     dependencies:
       escape-string-regexp: 2.0.0
@@ -18763,6 +19457,17 @@ snapshots:
   stackback@0.0.2: {}
 
   stackframe@1.3.4: {}
+
+  stacktrace-gps@3.1.2:
+    dependencies:
+      source-map: 0.5.6
+      stackframe: 1.3.4
+
+  stacktrace-js@2.0.2:
+    dependencies:
+      error-stack-parser: 2.1.4
+      stack-generator: 2.0.10
+      stacktrace-gps: 3.1.2
 
   statuses@1.5.0: {}
 
@@ -18887,6 +19592,8 @@ snapshots:
       browserslist: 4.28.1
       postcss: 8.5.6
       postcss-selector-parser: 7.1.1
+
+  stylis@4.3.6: {}
 
   sucrase@3.35.0:
     dependencies:
@@ -19039,6 +19746,8 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  throttle-debounce@3.0.1: {}
+
   through@2.3.8: {}
 
   thunky@1.1.0: {}
@@ -19149,6 +19858,8 @@ snapshots:
     dependencies:
       picomatch: 4.0.3
       typescript: 5.9.3
+
+  ts-easing@0.2.0: {}
 
   ts-interface-checker@0.1.13: {}
 

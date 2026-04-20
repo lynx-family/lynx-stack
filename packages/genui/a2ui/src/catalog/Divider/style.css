@@ -1,0 +1,19 @@
+@import "../luna-styles/index.css";
+
+.divider {
+  display: block;
+  min-height: 0;
+  overflow: auto;
+  background-color: var(--rule);
+  border: none;
+}
+
+.divider-horizontal {
+  width: 100%;
+  height: 1px;
+}
+
+.divider-vertical {
+  height: 100%;
+  width: 1px;
+}

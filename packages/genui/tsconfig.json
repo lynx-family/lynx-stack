@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["DOM", "ESNext"],
+    "moduleResolution": "Bundler",
+    "esModuleInterop": false,
+  },
+  "references": [
+    /** packages-start */
+    { "path": "./a2ui/tsconfig.json" },
+    /** packages-end */
+  ],
+  "include": [],
+}
