@@ -196,7 +196,7 @@
     "build": "rslib build"
   },
   "dependencies": {
-    "preact": "npm:@lynx-js/internal-preact@10.28.4-4949a48"
+    "preact": "npm:@lynx-js/internal-preact@10.28.4-edd1f6c"
   },
   "devDependencies": {
     "@lynx-js/types": "3.7.0",

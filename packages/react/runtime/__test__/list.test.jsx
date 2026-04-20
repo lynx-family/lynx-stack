@@ -1400,6 +1400,9 @@ describe('list reload', () => {
     const b = new SnapshotInstance(s1);
     b.ensureElements();
     const root = b.__element_root;
+    const b1 = new SnapshotInstance(s11);
+    b1.__slotIndex = 0;
+    b.insertBefore(b1);
 
     const s3 = __SNAPSHOT__(
       <list-item item-key={HOLE}>
@@ -1408,35 +1411,46 @@ describe('list reload', () => {
     );
 
     const d1 = new SnapshotInstance(s3); // a
+    d1.__slotIndex = 0;
     const d2 = new SnapshotInstance(s3); // b
+    d2.__slotIndex = 0;
     const d3 = new SnapshotInstance(s3); // c
+    d3.__slotIndex = 0;
     const d4 = new SnapshotInstance(s3); // d
+    d4.__slotIndex = 0;
 
     d1.setAttribute(0, { 'item-key': 'a' });
     d2.setAttribute(0, { 'item-key': 'b' });
     d3.setAttribute(0, { 'item-key': 'c' });
     d4.setAttribute(0, { 'item-key': 'd' });
-    b.insertBefore(d1);
-    b.insertBefore(d2);
-    b.insertBefore(d3);
-    b.insertBefore(d4);
+    b1.insertBefore(d1);
+    b1.insertBefore(d2);
+    b1.insertBefore(d3);
+    b1.insertBefore(d4);
 
     __pendingListUpdates.flush();
 
     const bb = new SnapshotInstance(s1);
     {
+      const bb1 = new SnapshotInstance(s11);
+      bb1.__slotIndex = 0;
+      bb.insertBefore(bb1);
       const d1 = new SnapshotInstance(s3); // a1
+      d1.__slotIndex = 0;
       const d2 = new SnapshotInstance(s3); // b1
+      d2.__slotIndex = 0;
       const d3 = new SnapshotInstance(s3); // c1
+      d3.__slotIndex = 0;
       const d4 = new SnapshotInstance(s3); // d1
+      d4.__slotIndex = 0;
       d1.setAttribute(0, { 'item-key': 'a1' });
       d2.setAttribute(0, { 'item-key': 'b1' });
       d3.setAttribute(0, { 'item-key': 'c1' });
       d4.setAttribute(0, { 'item-key': 'd1' });
-      bb.insertBefore(d1);
-      bb.insertBefore(d2);
-      bb.insertBefore(d3);
-      bb.insertBefore(d4);
+      bb1.insertBefore(d1);
+      bb1.insertBefore(d2);
+      bb1.insertBefore(d3);
+      bb1.insertBefore(d4);
     }
 
     hydrate(b, bb);
@@ -1450,42 +1464,70 @@ describe('list reload', () => {
           />
         </text>
         <wrapper>
-          <list-item
-            item-key="a"
-          >
-            <text>
-              <raw-text
-                text="World"
-              />
-            </text>
-          </list-item>
-          <list-item
-            item-key="b"
-          >
-            <text>
-              <raw-text
-                text="World"
-              />
-            </text>
-          </list-item>
-          <list-item
-            item-key="c"
-          >
-            <text>
-              <raw-text
-                text="World"
-              />
-            </text>
-          </list-item>
-          <list-item
-            item-key="d"
-          >
-            <text>
-              <raw-text
-                text="World"
-              />
-            </text>
-          </list-item>
+          <list
+            id="list"
+            update-list-info={
+              [
+                {
+                  "insertAction": [
+                    {
+                      "item-key": "a",
+                      "position": 0,
+                      "type": "__snapshot_a94a8_test_42",
+                    },
+                    {
+                      "item-key": "b",
+                      "position": 1,
+                      "type": "__snapshot_a94a8_test_42",
+                    },
+                    {
+                      "item-key": "c",
+                      "position": 2,
+                      "type": "__snapshot_a94a8_test_42",
+                    },
+                    {
+                      "item-key": "d",
+                      "position": 3,
+                      "type": "__snapshot_a94a8_test_42",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+                {
+                  "insertAction": [
+                    {
+                      "item-key": "a1",
+                      "position": 0,
+                      "type": "__snapshot_a94a8_test_42",
+                    },
+                    {
+                      "item-key": "b1",
+                      "position": 1,
+                      "type": "__snapshot_a94a8_test_42",
+                    },
+                    {
+                      "item-key": "c1",
+                      "position": 2,
+                      "type": "__snapshot_a94a8_test_42",
+                    },
+                    {
+                      "item-key": "d1",
+                      "position": 3,
+                      "type": "__snapshot_a94a8_test_42",
+                    },
+                  ],
+                  "removeAction": [
+                    0,
+                    1,
+                    2,
+                    3,
+                  ],
+                  "updateAction": [],
+                },
+              ]
+            }
+          />
         </wrapper>
       </view>
     `);
@@ -1640,6 +1682,7 @@ describe('list reload', () => {
   it('list-item with same type - move', () => {
     const b = new SnapshotInstance(s1);
     b.ensureElements();
+    const root = b.__element_root;
 
     const b1 = new SnapshotInstance(s11);
     b1.__slotIndex = 0;
@@ -1702,20 +1745,65 @@ describe('list reload', () => {
     }
 
     hydrate(b, bb);
+    b.unRenderElements();
 
-    expect(listRef.props['update-list-info'].at(-1)).toEqual(
-      expect.objectContaining({
-        insertAction: [
-          expect.objectContaining({
-            'item-key': 'b',
-            position: 2,
-            type: s3,
-          }),
-        ],
-        removeAction: [1],
-        updateAction: [],
-      }),
-    );
+    expect(root).toMatchInlineSnapshot(`
+      <view>
+        <text>
+          <raw-text
+            text="111"
+          />
+        </text>
+        <wrapper>
+          <list
+            id="list"
+            update-list-info={
+              [
+                {
+                  "insertAction": [
+                    {
+                      "item-key": "a",
+                      "position": 0,
+                      "type": "__snapshot_a94a8_test_44",
+                    },
+                    {
+                      "item-key": "b",
+                      "position": 1,
+                      "type": "__snapshot_a94a8_test_44",
+                    },
+                    {
+                      "item-key": "c",
+                      "position": 2,
+                      "type": "__snapshot_a94a8_test_45",
+                    },
+                    {
+                      "item-key": "d",
+                      "position": 3,
+                      "type": "__snapshot_a94a8_test_44",
+                    },
+                  ],
+                  "removeAction": [],
+                  "updateAction": [],
+                },
+                {
+                  "insertAction": [
+                    {
+                      "item-key": "b",
+                      "position": 2,
+                      "type": "__snapshot_a94a8_test_44",
+                    },
+                  ],
+                  "removeAction": [
+                    1,
+                  ],
+                  "updateAction": [],
+                },
+              ]
+            }
+          />
+        </wrapper>
+      </view>
+    `);
   });
 
   it('list-item with same type - with one list-item rendered', () => {
@@ -4274,20 +4362,185 @@ describe('nested list', () => {
     c31.insertBefore(d3);
     __pendingListUpdates.flush();
 
-    expect(Object.keys(__pendingListUpdates.values).length).toBe(3);
+    expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
+      {
+        "-10": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__snapshot_a94a8_test_89",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+        "-12": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__snapshot_a94a8_test_89",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+        "-14": [
+          {
+            "insertAction": [
+              {
+                "position": 0,
+                "type": "__snapshot_a94a8_test_89",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [],
+          },
+        ],
+      }
+    `);
 
     elementTree.triggerComponentAtIndex(parentListRef, 0);
     elementTree.triggerComponentAtIndex(parentListRef, 1);
+    // enqueue c1
     elementTree.triggerEnqueueComponent(parentListRef, 0);
+    // c3 reuse c1
     elementTree.triggerComponentAtIndex(parentListRef, 2);
+    // c1 re-create
     elementTree.triggerComponentAtIndex(parentListRef, 0);
-
-    expect(parentListRef.children).toHaveLength(4);
-    parentListRef.children.forEach((child) => {
-      expect(child.type).toBe('list-item');
-      expect(child.children[1]?.type).toBe('wrapper');
-      expect(child.children[1]?.children[0]?.type).toBe('list');
-    });
+    // should have 4 list-item now
+    expect(parentListRef).toMatchInlineSnapshot(`
+      <list
+        update-list-info={
+          [
+            {
+              "insertAction": [
+                {
+                  "position": 0,
+                  "type": "__snapshot_a94a8_test_87",
+                },
+                {
+                  "position": 1,
+                  "type": "__snapshot_a94a8_test_87",
+                },
+                {
+                  "position": 2,
+                  "type": "__snapshot_a94a8_test_87",
+                },
+              ],
+              "removeAction": [],
+              "updateAction": [],
+            },
+          ]
+        }
+      >
+        <list-item>
+          <text>
+            <raw-text
+              text="s2"
+            />
+          </text>
+          <wrapper>
+            <list
+              update-list-info={
+                [
+                  {
+                    "insertAction": [
+                      {
+                        "position": 0,
+                        "type": "__snapshot_a94a8_test_89",
+                      },
+                    ],
+                    "removeAction": [],
+                    "updateAction": [],
+                  },
+                ]
+              }
+            />
+          </wrapper>
+        </list-item>
+        <list-item>
+          <text>
+            <raw-text
+              text="s2"
+            />
+          </text>
+          <wrapper>
+            <list
+              update-list-info={
+                [
+                  {
+                    "insertAction": [
+                      {
+                        "position": 0,
+                        "type": "__snapshot_a94a8_test_89",
+                      },
+                    ],
+                    "removeAction": [],
+                    "updateAction": [],
+                  },
+                ]
+              }
+            />
+          </wrapper>
+        </list-item>
+        <list-item>
+          <text>
+            <raw-text
+              text="s2"
+            />
+          </text>
+          <wrapper>
+            <list
+              update-list-info={
+                [
+                  {
+                    "insertAction": [
+                      {
+                        "position": 0,
+                        "type": "__snapshot_a94a8_test_89",
+                      },
+                    ],
+                    "removeAction": [],
+                    "updateAction": [],
+                  },
+                ]
+              }
+            />
+          </wrapper>
+        </list-item>
+        <list-item>
+          <text>
+            <raw-text
+              text="s2"
+            />
+          </text>
+          <wrapper>
+            <list
+              update-list-info={
+                [
+                  {
+                    "insertAction": [
+                      {
+                        "position": 0,
+                        "type": "__snapshot_a94a8_test_89",
+                      },
+                    ],
+                    "removeAction": [
+                      0,
+                    ],
+                    "updateAction": [],
+                  },
+                ]
+              }
+            />
+          </wrapper>
+        </list-item>
+      </list>
+    `);
   });
 
   it('should clear attached lists & should flush during ensureElements', () => {
