@@ -144,14 +144,8 @@ describe('Config', () => {
         ),
       ),
     )
-    expect(config.resolve.alias).toHaveProperty(
+    expect(config.resolve.alias).not.toHaveProperty(
       'preact/hooks$',
-      expect.stringContaining(
-        '@lynx-js/internal-preact/hooks/dist/hooks.mjs'.replaceAll(
-          '/',
-          path.sep,
-        ),
-      ),
     )
     expect(config.resolve.alias).toHaveProperty(
       'preact/test-utils$',
@@ -2539,6 +2533,71 @@ describe('Config', () => {
       // @ts-expect-error private field
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(ReactLynxWebpackPlugin?.options.profile).toBe(false)
+    })
+
+    test('with environments.lynx.performance.profile: true', async () => {
+      vi.stubEnv('DEBUG', 'rspeedy')
+
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          environments: {
+            lynx: {
+              performance: {
+                profile: true,
+              },
+            },
+          },
+          plugins: [
+            pluginReactLynx(),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      const ReactLynxWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(ReactLynxWebpackPlugin?.options?.profile).toBe(true)
+    })
+
+    test('with environments.lynx.performance.profile: false', async () => {
+      vi.stubEnv('DEBUG', 'rspeedy')
+
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          environments: {
+            lynx: {
+              performance: {
+                profile: false,
+              },
+            },
+          },
+          plugins: [
+            pluginReactLynx(),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      const ReactLynxWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(ReactLynxWebpackPlugin?.options?.profile).toBe(false)
     })
   })
 

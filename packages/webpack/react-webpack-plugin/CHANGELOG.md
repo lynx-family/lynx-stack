@@ -1,5 +1,17 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.9.1
+
+### Patch Changes
+
+- Support rstest for testing library using a dedicated testing loader. ([#2328](https://github.com/lynx-family/lynx-stack/pull/2328))
+
+- fix(rstest): normalize partial `compat` options in the testing loader ([#2464](https://github.com/lynx-family/lynx-stack/pull/2464))
+
+  The testing loader forwards `compat` directly to `transformReactLynxSync` without normalization. When `compat` is supplied as a partial object, the required `target` field is absent and the WASM transform throws `Error: Missing field 'target'`. Added the same normalization already present in `getCommonOptions` for the background/main-thread loaders: fills in `target: 'MIXED'` and all other required fields with sensible defaults.
+
+- Add `enableUiSourceMap` option to enable UI source map generation and debug-metadata asset emission. ([#2402](https://github.com/lynx-family/lynx-stack/pull/2402))
+
 ## 0.9.0
 
 ### Minor Changes

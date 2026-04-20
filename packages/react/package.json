@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react",
-  "version": "0.118.0",
+  "version": "0.119.0",
   "description": "ReactLynx is a framework for developing Lynx applications with familiar React.",
   "repository": {
     "type": "git",
@@ -54,6 +54,14 @@
     "./lepus/jsx-dev-runtime": {
       "types": "./runtime/jsx-runtime/index.d.ts",
       "default": "./runtime/lepus/jsx-runtime/index.js"
+    },
+    "./hooks": {
+      "types": "./runtime/lib/hooks/react.d.ts",
+      "default": "./runtime/lib/hooks/react.js"
+    },
+    "./lepus/hooks": {
+      "types": "./runtime/lib/hooks/react.d.ts",
+      "default": "./runtime/lib/hooks/mainThread.js"
     },
     "./lepus": {
       "types": "./runtime/lepus/index.d.ts",
@@ -123,6 +131,12 @@
       "experimental/lazy/import": [
         "./runtime/lazy/import.d.ts"
       ],
+      "hooks": [
+        "./runtime/lib/hooks/react.d.ts"
+      ],
+      "lepus/hooks": [
+        "./runtime/lib/hooks/react.d.ts"
+      ],
       "internal": [
         "./runtime/lib/internal.d.ts"
       ],
@@ -182,7 +196,7 @@
     "build": "rslib build"
   },
   "dependencies": {
-    "preact": "npm:@lynx-js/internal-preact@10.28.4-4842985"
+    "preact": "npm:@lynx-js/internal-preact@10.28.4-2d1d67a"
   },
   "devDependencies": {
     "@lynx-js/types": "3.7.0",

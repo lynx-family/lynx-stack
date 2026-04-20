@@ -25,6 +25,8 @@ export type WASMJSBindingInjectedHandler = {
 
 export class WASMJSBinding implements RustMainthreadContextBinding {
   wasmContext: InstanceType<MainThreadWasmContext> | undefined;
+  disposeWasmContext?: () => void;
+  #addedEventListeners: Set<string> = new Set();
   toBeEnabledElement: Set<HTMLElement> = new Set();
   toBeDisabledElement: Set<HTMLElement> = new Set();
 
@@ -55,7 +57,7 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     return {
       dataset: Object.assign(Object.create(null), dataset),
       id: element.id || null,
-      uniqueId,
+      uid: uniqueId,
     };
   }
 
@@ -185,14 +187,34 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   };
 
   addEventListener(eventName: string) {
+    const w3cEventName = LynxEventNameToW3cCommon[eventName] ?? eventName;
+    if (this.#addedEventListeners.has(w3cEventName)) return;
+    this.#addedEventListeners.add(w3cEventName);
     this.lynxViewInstance.rootDom.addEventListener(
-      LynxEventNameToW3cCommon[eventName] ?? eventName,
+      w3cEventName,
       this.#commonEventHandler,
       {
         passive: true,
         capture: true,
       },
     );
+  }
+
+  dispose() {
+    for (const eventName of this.#addedEventListeners) {
+      this.lynxViewInstance.rootDom.removeEventListener(
+        eventName,
+        this.#commonEventHandler,
+        true,
+      );
+    }
+    this.#addedEventListeners.clear();
+
+    this.toBeEnabledElement.clear();
+    this.toBeDisabledElement.clear();
+
+    this.disposeWasmContext?.();
+    this.wasmContext = undefined;
   }
 
   postTimingFlags(flags: string[], pipelineId?: string) {

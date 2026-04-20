@@ -401,31 +401,40 @@ export class LynxViewElement extends HTMLElement {
 
   public injectStyleRules?: string[];
 
+  #disposePromise?: Promise<void>;
+
   /**
    * @private
    */
   disconnectedCallback() {
-    /* TODO:
-     * Await async disposal before re-rendering to prevent concurrent instance mutations.
+    this.#connected = false;
+    this.#disposeInstance();
+  }
 
-        Currently disconnectedCallback() triggers asyncDispose() without awaiting, allowing #render() to immediately create a new instance while the old one is still cleaning up on the background thread. This causes both instances to render into the shadowRoot concurrently, producing multiple page elements.
-
-        The basic-reload-page-only-one test confirms this issue by checking that exactly one page element exists after reload. The disposal must complete before the new instance begins rendering.
-
-        Extract an async #disposeInstance() method that marks the old page as disposed, awaits the instance cleanup, clears the shadowRoot, and resets adoptedStyleSheets to prevent stylesheet accumulation. Then await this in the microtask before instantiating the new LynxViewInstance.
-
-        This also fixes a secondary bug where lynxGroupId is referenced before declaration.
-     */
-    this.shadowRoot?.querySelector('[part="page"]')
-      ?.setAttribute(
-        lynxDisposedAttribute,
-        '',
-      );
-    this.#instance?.[Symbol.asyncDispose]();
-    if (this.shadowRoot) {
-      this.shadowRoot.innerHTML = '';
+  async #disposeInstance() {
+    if (this.#disposePromise) {
+      return this.#disposePromise;
     }
-    this.#instance = undefined;
+    const dispose = async () => {
+      this.shadowRoot?.querySelector('[part="page"]')
+        ?.setAttribute(
+          lynxDisposedAttribute,
+          '',
+        );
+      const oldInstance = this.#instance;
+      this.#instance = undefined;
+      if (oldInstance) {
+        await oldInstance[Symbol.asyncDispose]();
+      }
+      if (this.shadowRoot) {
+        this.shadowRoot.innerHTML = '';
+        this.shadowRoot.adoptedStyleSheets = [];
+      }
+    };
+
+    this.#disposePromise = dispose();
+    await this.#disposePromise;
+    this.#disposePromise = undefined;
   }
 
   /**
@@ -436,14 +445,15 @@ export class LynxViewElement extends HTMLElement {
   /**
    * @private
    */
-  #render() {
+  async #render() {
     if (!this.#rendering && this.#connected) {
       this.#rendering = true;
       if (!this.shadowRoot) {
         this.attachShadow({ mode: 'open' });
       }
-      if (this.#instance) {
-        this.disconnectedCallback();
+
+      if (this.#instance || this.#disposePromise) {
+        await this.#disposeInstance();
       }
       const mtsRealmPromise = createIFrameRealm(this.shadowRoot!);
       queueMicrotask(async () => {

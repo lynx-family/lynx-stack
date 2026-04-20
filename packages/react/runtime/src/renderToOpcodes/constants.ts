@@ -35,3 +35,4 @@ export const HOOKS = '__H';
 export const LIST = '__';
 export const VALUE = '__';
 export const NEXT_VALUE = '__N';
+export const PENDING_EFFECTS = '__h';

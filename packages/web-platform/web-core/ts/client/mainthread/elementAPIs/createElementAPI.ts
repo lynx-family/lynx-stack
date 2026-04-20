@@ -68,14 +68,27 @@ export function createElementAPI(
   transform_vh: boolean,
   transform_rem: boolean,
 ): ElementPAPIs {
-  const wasmContext = new MainThreadWasmContext(
+  let wasmContext = new MainThreadWasmContext(
     rootDom,
     mtsBinding,
     config_enable_css_selector,
   );
-  mtsBinding.wasmContext = wasmContext;
   let page: DecoratedHTMLElement | undefined = undefined;
   const timingFlags: string[] = [];
+  let disposed = false;
+
+  mtsBinding.wasmContext = wasmContext;
+  mtsBinding.disposeWasmContext = () => {
+    if (disposed) return;
+    disposed = true;
+    if (wasmContext) {
+      wasmContext.free();
+      // @ts-expect-error It's better to throw an Error than triggering an use-after-free of rust struct
+      wasmContext = null;
+    }
+    page = undefined;
+    timingFlags.length = 0;
+  };
 
   const __SetCSSId: SetCSSIdPAPI = (elements, cssId, entryName) => {
     const uniqueIds = elements.map(
@@ -603,6 +616,7 @@ export function createElementAPI(
         wasmContext.take_timing_flags(),
       );
       requestIdleCallbackImpl(() => {
+        if (disposed) return;
         mtsBinding.postTimingFlags(
           timingFlagsAll,
           pipelineId,

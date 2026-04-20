@@ -20,6 +20,8 @@ import {
 import { backgroundSnapshotInstanceToJSON } from '../utils/debug.js';
 import { elementTree } from '../utils/nativeMethod';
 
+import { globalEnvManager } from '../utils/envManager';
+
 describe('useLynxGlobalEventListener', () => {
   /** @type {SnapshotInstance} */
   let scratch;
@@ -47,6 +49,7 @@ describe('useLynxGlobalEventListener', () => {
   });
 
   beforeEach(() => {
+    globalEnvManager.switchToBackground();
     scratch = document.createElement('root');
   });
 

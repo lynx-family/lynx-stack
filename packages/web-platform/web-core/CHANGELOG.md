@@ -1,5 +1,24 @@
 # @lynx-js/web-core
 
+## 0.20.2
+
+### Patch Changes
+
+- fix: map clientX and clientY to x and y in touch event detail ([#2458](https://github.com/lynx-family/lynx-stack/pull/2458))
+
+- fix(web-platform): completely detach event listeners and forcefully free `MainThreadWasmContext` pointer alongside strict FIFO async component disposal to ensure total memory reclamation without use-after-free risks ([#2457](https://github.com/lynx-family/lynx-stack/pull/2457))
+
+- refactor: with WeakRef in element APIs and WASM bindings to improve memory management. ([#2439](https://github.com/lynx-family/lynx-stack/pull/2439))
+
+- fix: preserve CSS variable fallback values when encoding web-core stylesheets so declarations like `var(--token, rgba(...))` are emitted with their fallback intact. ([#2460](https://github.com/lynx-family/lynx-stack/pull/2460))
+
+- fix: avoid to do use-after-free for rust instance ([#2461](https://github.com/lynx-family/lynx-stack/pull/2461))
+
+- fix: Change uniqueId to uid in LynxCrossThreadEventTarget ([#2467](https://github.com/lynx-family/lynx-stack/pull/2467))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.20.2
+
 ## 0.20.1
 
 ### Patch Changes

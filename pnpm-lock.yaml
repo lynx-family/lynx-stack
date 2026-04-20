@@ -613,8 +613,8 @@ importers:
   packages/react:
     dependencies:
       preact:
-        specifier: npm:@lynx-js/internal-preact@10.28.4-4842985
-        version: '@lynx-js/internal-preact@10.28.4-4842985'
+        specifier: npm:@lynx-js/internal-preact@10.28.4-2d1d67a
+        version: '@lynx-js/internal-preact@10.28.4-2d1d67a'
     devDependencies:
       '@lynx-js/types':
         specifier: 3.7.0
@@ -939,8 +939,8 @@ importers:
         specifier: workspace:*
         version: link:../../webpack/runtime-wrapper-webpack-plugin
       '@lynx-js/tasm':
-        specifier: 0.0.26
-        version: 0.0.26
+        specifier: 0.0.33
+        version: 0.0.33
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*
@@ -1826,8 +1826,8 @@ importers:
         specifier: workspace:*
         version: link:../../tools/css-serializer
       '@lynx-js/tasm':
-        specifier: 0.0.26
-        version: 0.0.26
+        specifier: 0.0.33
+        version: 0.0.33
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../../web-platform/web-core
@@ -3219,8 +3219,8 @@ packages:
   '@leichtgewicht/ip-codec@2.0.5':
     resolution: {integrity: sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw==}
 
-  '@lynx-js/internal-preact@10.28.4-4842985':
-    resolution: {integrity: sha512-D1ka7Kgv0lXFp1BtyBdc933VDoelOBiR47Td3QGp8ClaHtQJm1tcrTxhdwkmCDKNYe0oeiUUK6t82jiLiJoqiQ==}
+  '@lynx-js/internal-preact@10.28.4-2d1d67a':
+    resolution: {integrity: sha512-CA8rFURvLvksg155ONHZHEa0ZIxWnS4H/UP8vp5PF8aNOFd3D3Z+Lq+0IQP5GyE/9x+jMIvbBXaY3JVVknSphQ==}
 
   '@lynx-js/lynx-core@0.1.3':
     resolution: {integrity: sha512-uWzKKYJUK4Q09ZRZxWSAFINnmZb9piWPbvWF9SkLn+3snBl9u/BJa4ekPRcKWAhBmpbtxWH1x27fxe3Q3p5l3Q==}
@@ -3228,8 +3228,9 @@ packages:
   '@lynx-js/preact-devtools@5.0.1':
     resolution: {integrity: sha512-ayUU8PJ0TVWABbd5/d/04KI18W9RY4kkaRekBXXbRE/eBkGMZ3lVJ0zOB+B+85B9RUpvEVK2FleqJkS+qBKG6Q==}
 
-  '@lynx-js/tasm@0.0.26':
-    resolution: {integrity: sha512-WmcuTYh/KfdRqriT7+Qg8iwxsCDN4PKbCuXoN35npn23p33grpSNW306DJi9tX7LzP2vDZkOjxulSOknfiB/0Q==}
+  '@lynx-js/tasm@0.0.33':
+    resolution: {integrity: sha512-pquTgvCwrcP1VV8Fw/mRrvQDFyeA2Wu2KK3yI24wZYSua14g8AhRAeFpSs9NT6lDaktCnzc1mg+a2GzWoGrVWA==}
+    hasBin: true
 
   '@lynx-js/trace-processor@0.0.1':
     resolution: {integrity: sha512-Zyl74cKi+BDggeXroLQG4frbBuiQ0DB0yH0C3pMkUHWv17abWTdJ2mw/H9Cd1QiIr+aQHn1U2SRtsrbkmWMtJw==}
@@ -11513,7 +11514,7 @@ snapshots:
 
   '@leichtgewicht/ip-codec@2.0.5': {}
 
-  '@lynx-js/internal-preact@10.28.4-4842985': {}
+  '@lynx-js/internal-preact@10.28.4-2d1d67a': {}
 
   '@lynx-js/lynx-core@0.1.3': {}
 
@@ -11522,7 +11523,7 @@ snapshots:
       errorstacks: 2.4.1
       htm: 3.1.1
 
-  '@lynx-js/tasm@0.0.26': {}
+  '@lynx-js/tasm@0.0.33': {}
 
   '@lynx-js/trace-processor@0.0.1':
     dependencies:

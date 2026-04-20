@@ -300,4 +300,19 @@ export class ExposureServices {
     }
     this.#isExposureServiceOn = toEnable;
   }
+
+  dispose() {
+    this.#exposureEnabledElementsToIntersectionObserver.forEach((observer) => {
+      observer.disconnect();
+    });
+    this.#exposureEnabledElementsToIntersectionObserver.clear();
+    this.#exposureEnabledElementsToOldExposureIdAttributeValue.clear();
+    this.#exposedElements.clear();
+    if (this.#globalExposureEventBatchTimer) {
+      clearTimeout(this.#globalExposureEventBatchTimer);
+      this.#globalExposureEventBatchTimer = null;
+    }
+    this.#globalExposureEventCache = [];
+    this.#globalDisexposureEventCache = [];
+  }
 }
