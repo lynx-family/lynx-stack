@@ -13,9 +13,7 @@ vi.mock('../../../../src/element-template/runtime/render/render-opcodes.js', () 
   renderOpcodesIntoElementTemplate: vi.fn(),
 }));
 
-import {
-  render as mockRender,
-} from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
+import { render as mockRender } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
 import { renderOpcodesIntoElementTemplate as mockRenderOpcodesIntoElementTemplate } from '../../../../src/element-template/runtime/render/render-opcodes.js';
 
 describe('renderMainThread', () => {

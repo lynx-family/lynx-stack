@@ -1,9 +1,5 @@
 import type { CompiledFixtureArtifact } from './compiledFixtureCompiler.js';
-import {
-  clearTemplates,
-  registerBuiltinRawTextTemplate,
-  registerTemplates,
-} from './registry.js';
+import { clearTemplates, registerBuiltinRawTextTemplate, registerTemplates } from './registry.js';
 
 export function resetCompiledFixtureTemplates(): void {
   clearTemplates();

@@ -12,10 +12,7 @@ import { compileFixtureSource, type CompiledFixtureTarget } from './compiledFixt
 import { loadCompiledFixtureModule } from './compiledFixtureModule.js';
 import { ElementTemplateEnvManager } from './envManager.js';
 import { primeCompiledFixtureTemplates } from './compiledFixtureRegistry.js';
-import {
-  renderCompiledFixtureOnBackground,
-  renderCompiledFixtureOnMainThread,
-} from './compiledThreadRunner.js';
+import { renderCompiledFixtureOnBackground, renderCompiledFixtureOnMainThread } from './compiledThreadRunner.js';
 
 interface RunCompiledHydrationScenarioOptions {
   backgroundProps?: Record<string, unknown>;

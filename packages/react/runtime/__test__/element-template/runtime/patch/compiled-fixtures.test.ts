@@ -5,11 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { beforeEach, describe } from 'vitest';
 
 import { clearTemplates } from '../../test-utils/debug/registry.js';
-import {
-  assertOrUpdateTextFile,
-  formatFixtureOutput,
-  runFixtureTests,
-} from '../../test-utils/debug/fixtureRunner.js';
+import { assertOrUpdateTextFile, formatFixtureOutput, runFixtureTests } from '../../test-utils/debug/fixtureRunner.js';
 import { runCompiledPatchScenario } from '../../fixtures/patch/_shared.js';
 
 const __filename = fileURLToPath(import.meta.url);

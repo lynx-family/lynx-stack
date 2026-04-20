@@ -9,9 +9,7 @@ function Item({ id }: { id: string }) {
 export function App({ items = [] }: AppProps) {
   return (
     <view>
-      {items.map((id) => (
-        <Item id={id} />
-      ))}
+      {items.map((id) => <Item id={id} />)}
     </view>
   );
 }

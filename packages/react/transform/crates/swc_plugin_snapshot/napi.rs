@@ -151,6 +151,28 @@ impl<C> JSXTransformer<C>
 where
   C: Comments + Clone,
 {
+  pub fn new_with_element_templates(
+    cfg: JSXTransformerConfig,
+    comments: Option<C>,
+    mode: TransformMode,
+    source_map: Option<Lrc<SourceMap>>,
+    element_templates: Option<Rc<RefCell<Vec<CoreElementTemplateAsset>>>>,
+  ) -> Self {
+    let element_templates = element_templates.unwrap_or_else(|| Rc::new(RefCell::new(vec![])));
+    let inner = CoreJSXTransformer::new_with_element_templates(
+      cfg.into(),
+      comments,
+      mode.into(),
+      source_map,
+      Some(element_templates.clone()),
+    );
+    Self {
+      ui_source_map_records: inner.ui_source_map_records.clone(),
+      element_templates,
+      inner,
+    }
+  }
+
   pub fn with_content_hash(mut self, content_hash: String) -> Self {
     self.inner.content_hash = content_hash;
     self
@@ -171,21 +193,9 @@ where
     mode: TransformMode,
     source_map: Option<Lrc<SourceMap>>,
   ) -> Self {
-    let element_templates = Rc::new(RefCell::new(vec![]));
-    // The napi wrapper owns a side channel for collected element templates, so it
-    // must opt into the collector-aware constructor instead of the default one.
-    let inner = CoreJSXTransformer::new_with_element_templates(
-      cfg.into(),
-      comments,
-      mode.into(),
-      source_map,
-      Some(element_templates.clone()),
-    );
-    Self {
-      ui_source_map_records: inner.ui_source_map_records.clone(),
-      element_templates,
-      inner,
-    }
+    // The napi wrapper always keeps the collector side channel alive so callers can
+    // opt into ET asset export without needing a separate constructor shape.
+    Self::new_with_element_templates(cfg, comments, mode, source_map, None)
   }
 
   pub fn take_element_templates(&self) -> Vec<CoreElementTemplateAsset> {
