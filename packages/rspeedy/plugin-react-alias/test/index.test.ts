@@ -364,6 +364,84 @@ describe('React - alias', () => {
     )
   })
 
+  test('routes jsx runtime aliases to ET entry when enabled', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    const { pluginReactAlias } = await import('../src/index.js')
+
+    const rsbuild = await createRsbuild({
+      rsbuildConfig: {
+        plugins: [
+          pluginReactAlias({
+            LAYERS,
+            elementTemplate: true,
+          }),
+        ],
+      },
+      cwd: path.dirname(fileURLToPath(import.meta.url)),
+    })
+
+    const [config] = await rsbuild.initConfigs()
+    if (!config?.resolve?.alias || !config?.module?.rules) {
+      expect.fail('should have resolve aliases and layered rules')
+    }
+
+    expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/react/jsx-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/jsx-runtime/index.js'
+          .replaceAll(
+            '/',
+            path.sep,
+          ),
+      ),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/react/jsx-dev-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/jsx-dev-runtime/index.js'
+          .replaceAll(
+            '/',
+            path.sep,
+          ),
+      ),
+    )
+
+    const mainThreadRule = config.module.rules.find((rule) => {
+      if (!rule || typeof rule !== 'object') {
+        return false
+      }
+      return rule.issuerLayer === LAYERS.MAIN_THREAD && !!rule.resolve?.alias
+    }) as RuleSetRule
+
+    if (!mainThreadRule?.resolve?.alias) {
+      expect.fail('should have main-thread alias rule')
+    }
+
+    expect(mainThreadRule.resolve.alias).toHaveProperty(
+      '@lynx-js/react/jsx-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/jsx-runtime/index.js'
+          .replaceAll(
+            '/',
+            path.sep,
+          ),
+      ),
+    )
+    expect(mainThreadRule.resolve.alias).toHaveProperty(
+      '@lynx-js/react/jsx-dev-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/jsx-dev-runtime/index.js'
+          .replaceAll(
+            '/',
+            path.sep,
+          ),
+      ),
+    )
+  })
+
+  // This is a historical smoke check for duplicate plugin registration rather
+  // than active behavior we want to enforce on every run.
+  // eslint-disable-next-line vitest/no-disabled-tests
   test.skip('alias once', async () => {
     vi.stubEnv('NODE_ENV', 'production')
     const { pluginReactAlias } = await import('../src/index.js')

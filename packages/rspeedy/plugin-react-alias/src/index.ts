@@ -69,6 +69,8 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           jsxRuntimeMainThread,
           jsxDevRuntimeBackground,
           jsxDevRuntimeMainThread,
+          elementTemplateJsxRuntimeEntry,
+          elementTemplateJsxDevRuntimeEntry,
           preactHooks,
           hooksBackground,
           hooksMainThread,
@@ -82,6 +84,12 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           resolve('@lynx-js/react/lepus/jsx-runtime'),
           resolve('@lynx-js/react/jsx-dev-runtime'),
           resolve('@lynx-js/react/lepus/jsx-dev-runtime'),
+          elementTemplate
+            ? resolve('@lynx-js/react/element-template/jsx-runtime')
+            : Promise.resolve(null),
+          elementTemplate
+            ? resolve('@lynx-js/react/element-template/jsx-dev-runtime')
+            : Promise.resolve(null),
           resolvePreact('preact/hooks'),
           resolve('@lynx-js/react/hooks'),
           resolve('@lynx-js/react/lepus/hooks'),
@@ -100,11 +108,15 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
 
         const jsxRuntime = {
           background: jsxRuntimeBackground,
-          mainThread: jsxRuntimeMainThread,
+          mainThread: elementTemplate && elementTemplateJsxRuntimeEntry
+            ? elementTemplateJsxRuntimeEntry
+            : jsxRuntimeMainThread,
         }
         const jsxDevRuntime = {
           background: jsxDevRuntimeBackground,
-          mainThread: jsxDevRuntimeMainThread,
+          mainThread: elementTemplate && elementTemplateJsxDevRuntimeEntry
+            ? elementTemplateJsxDevRuntimeEntry
+            : jsxDevRuntimeMainThread,
         }
         const reactLepus = {
           background: reactLepusBackground,
@@ -211,8 +223,16 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
               ? elementTemplateEntry
               : reactLepus.background,
           )
-          .set('@lynx-js/react/jsx-runtime', jsxRuntime.background)
-          .set('@lynx-js/react/jsx-dev-runtime', jsxDevRuntime.background)
+          .set(
+            '@lynx-js/react/jsx-runtime',
+            elementTemplate ? jsxRuntime.mainThread : jsxRuntime.background,
+          )
+          .set(
+            '@lynx-js/react/jsx-dev-runtime',
+            elementTemplate
+              ? jsxDevRuntime.mainThread
+              : jsxDevRuntime.background,
+          )
 
         if (reactCompat) {
           chain

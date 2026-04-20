@@ -13,6 +13,8 @@ const runtimeSrc = fs.realpathSync(path.resolve(runtimeRoot, 'src'));
 const entryFiles = [
   path.resolve(runtimeSrc, 'element-template/index.ts'),
   path.resolve(runtimeSrc, 'element-template/internal.ts'),
+  path.resolve(runtimeSrc, 'element-template/jsx-runtime/index.ts'),
+  path.resolve(runtimeSrc, 'element-template/jsx-dev-runtime/index.ts'),
   path.resolve(runtimeSrc, 'element-template/native/index.ts'),
 ];
 

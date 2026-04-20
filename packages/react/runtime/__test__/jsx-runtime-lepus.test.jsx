@@ -4,33 +4,15 @@ import { jsx } from '../lepus/jsx-runtime';
 import { SnapshotInstance, snapshotCreatorMap } from '../src/snapshot';
 
 describe('lepus jsx-runtime createVNode', () => {
-  let originalUseElementTemplate;
-
   beforeEach(() => {
-    originalUseElementTemplate = globalThis.__USE_ELEMENT_TEMPLATE__;
     snapshotCreatorMap['view'] = () => {};
   });
 
   afterEach(() => {
-    globalThis.__USE_ELEMENT_TEMPLATE__ = originalUseElementTemplate;
     delete snapshotCreatorMap['view'];
   });
 
-  it('should create plain VNode for string type when element template is ON', () => {
-    globalThis.__USE_ELEMENT_TEMPLATE__ = true;
-    const vnode = jsx('view', { id: 'x' });
-    expect(vnode.type).toBe('view');
-    expect(vnode.constructor).toBeUndefined();
-  });
-
-  it('should default props to empty object when element template is ON', () => {
-    globalThis.__USE_ELEMENT_TEMPLATE__ = true;
-    const vnode = jsx('view');
-    expect(vnode.props).toEqual({});
-  });
-
-  it('should create SnapshotInstance for string type when element template is OFF', () => {
-    globalThis.__USE_ELEMENT_TEMPLATE__ = false;
+  it('should create SnapshotInstance for string type', () => {
     const vnode = jsx('view', { id: 'x' });
     expect(vnode).toBeInstanceOf(SnapshotInstance);
   });
