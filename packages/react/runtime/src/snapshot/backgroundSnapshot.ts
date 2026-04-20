@@ -455,7 +455,8 @@ export function hydrate(
       hydrationMap.set(after.__id, before.id);
       backgroundSnapshotInstanceManager.updateId(after.__id, before.id);
       after.__values?.forEach((value: unknown, index) => {
-        const old: unknown = before.values![index];
+        // render with different root would cause different values length
+        const old: unknown = before.values?.[index];
 
         if (value) {
           if (typeof value === 'object') {
