@@ -1147,12 +1147,12 @@ describe('Gesture in spread', () => {
     function Comp() {
       const props = keepGesture
         ? {
-            'clip-radius': 8,
-            'main-thread:gesture': _gesture,
-          }
+          'clip-radius': 8,
+          'main-thread:gesture': _gesture,
+        }
         : {
-            'clip-radius': 8,
-          };
+          'clip-radius': 8,
+        };
       return (
         <view>
           <text {...props}>1</text>
