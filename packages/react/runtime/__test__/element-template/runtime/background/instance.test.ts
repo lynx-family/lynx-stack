@@ -364,16 +364,15 @@ describe('BackgroundElementTemplateInstance', () => {
       null,
       [null],
       [],
-      { handleId: instance.instanceId },
     ]);
   });
 
-  it('emits create with normalized runtime options metadata', () => {
+  it('does not append create options metadata to update commands', () => {
     const instance = new BackgroundElementTemplateInstance('view');
     instance.setAttribute('options', {
       cssId: 100,
       entryName: 'lazy-entry',
-      ignored: undefined,
+      preserveMe: 'kept',
     });
     GlobalCommitContext.ops = [];
 
@@ -386,11 +385,6 @@ describe('BackgroundElementTemplateInstance', () => {
       null,
       [],
       [],
-      {
-        handleId: instance.instanceId,
-        cssId: 100,
-        entryName: 'lazy-entry',
-      },
     ]);
   });
 

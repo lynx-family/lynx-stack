@@ -122,15 +122,23 @@ describe('hydrate', () => {
     expect(placeholder?.attributeSlots).toEqual(['payload']);
   });
 
-  it('copies serialized runtime options onto hydrated roots and placeholders', () => {
+  it('drops legacy create metadata while hydrating runtime options', () => {
     const root = new BackgroundElementTemplateInstance('root');
 
     hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        runtimeOptions: { cssId: 100, entryName: 'lazy-entry' },
+        runtimeOptions: {
+          cssId: 100,
+          entryName: 'lazy-entry',
+          listMode: true,
+        },
         elementSlots: [[
           createHydrationChild(-2, 'child', {
-            runtimeOptions: { cssId: 200, entryName: 'nested-entry' },
+            runtimeOptions: {
+              cssId: 200,
+              entryName: 'nested-entry',
+              preserveMe: 'nested',
+            },
           }),
         ]],
       }),
@@ -140,13 +148,11 @@ describe('hydrate', () => {
     const placeholder = backgroundElementTemplateInstanceManager.get(-2);
     expect(root.options).toEqual({
       handleId: root.instanceId,
-      cssId: 100,
-      entryName: 'lazy-entry',
+      listMode: true,
     });
     expect(placeholder?.options).toEqual({
       handleId: -2,
-      cssId: 200,
-      entryName: 'nested-entry',
+      preserveMe: 'nested',
     });
   });
 
@@ -364,14 +370,12 @@ describe('hydrate', () => {
       null,
       [],
       [],
-      { handleId: grandchild.instanceId },
       1,
       child.instanceId,
       'child',
       null,
       [],
       [[grandchild.instanceId]],
-      { handleId: child.instanceId },
       3,
       root.instanceId,
       0,

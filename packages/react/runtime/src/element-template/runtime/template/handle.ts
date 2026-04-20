@@ -17,21 +17,14 @@ export function createElementTemplateWithHandle(
   bundleUrl: string | null | undefined,
   attributeSlots: SerializableValue[] | null | undefined,
   elementSlots: ElementRef[][] | null | undefined,
-  options?: RuntimeOptions,
 ): ElementRef {
   const handleId = nextId--;
-  const runtimeOptions = options
-    ? {
-      ...options,
-      handleId,
-    }
-    : handleId;
   const nativeRef = __CreateElementTemplate(
     templateKey,
     bundleUrl,
     attributeSlots,
     elementSlots,
-    runtimeOptions,
+    handleId,
   );
   setElementTemplateNativeRef(handleId, nativeRef);
   return nativeRef;

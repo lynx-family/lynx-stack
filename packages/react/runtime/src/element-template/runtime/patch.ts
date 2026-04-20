@@ -5,7 +5,7 @@
 import { ElementTemplateRegistry } from './template/registry.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import type { ElementTemplateUpdateOp } from '../protocol/opcodes.js';
-import type { ElementTemplateUpdateCommandStream, RuntimeOptions, SerializableValue } from '../protocol/types.js';
+import type { ElementTemplateUpdateCommandStream, SerializableValue } from '../protocol/types.js';
 
 export type { ElementTemplateUpdateCommandStream } from '../protocol/types.js';
 
@@ -23,19 +23,12 @@ export function applyElementTemplateUpdateCommands(
         const bundleUrl = stream[i++] as string | null | undefined;
         const attributeSlots = stream[i++] as SerializableValue[] | null | undefined;
         const elementSlots = stream[i++] as number[][] | null | undefined;
-        const rawCreateOptions = stream[i];
-        const hasCreateOptions = shouldConsumeCreateTemplateOptions(rawCreateOptions);
-        const createOptions = getCreateTemplateOptions(rawCreateOptions);
-        if (hasCreateOptions) {
-          i += 1;
-        }
 
         if (__DEV__) {
           const createError = validateCreateTemplatePayload(
             handleId,
             attributeSlots,
             elementSlots,
-            hasCreateOptions ? rawCreateOptions : undefined,
           );
           if (createError) {
             lynx.reportError(createError);
@@ -53,12 +46,7 @@ export function applyElementTemplateUpdateCommands(
           bundleUrl,
           normalizeAttributeSlots(attributeSlots),
           resolvedElementSlots.value,
-          createOptions
-            ? {
-              ...createOptions,
-              handleId,
-            }
-            : { handleId },
+          handleId,
         );
 
         if (nativeRef) {
@@ -164,45 +152,10 @@ function isValidHandleId(handleId: number): boolean {
   return Number.isInteger(handleId) && handleId !== 0;
 }
 
-function isElementTemplateUpdateOp(
-  value: ElementTemplateUpdateCommandStream[number] | undefined,
-): value is ElementTemplateUpdateOp {
-  return value === ElementTemplateUpdateOps.createTemplate
-    || value === ElementTemplateUpdateOps.setAttribute
-    || value === ElementTemplateUpdateOps.insertNode
-    || value === ElementTemplateUpdateOps.removeNode;
-}
-
-// `createTemplate` has an optional trailing options payload. When the next token
-// is neither an opcode nor `undefined`, we should still consume it so DEV
-// validation can surface the bad payload instead of mis-parsing it as a new op.
-function shouldConsumeCreateTemplateOptions(
-  value: ElementTemplateUpdateCommandStream[number] | undefined,
-): boolean {
-  if (value === undefined || isElementTemplateUpdateOp(value)) {
-    return false;
-  }
-
-  return true;
-}
-
-function getCreateTemplateOptions(
-  value: ElementTemplateUpdateCommandStream[number] | undefined,
-): RuntimeOptions | null | undefined {
-  if (value == null) {
-    return value;
-  }
-  if (typeof value === 'object' && !Array.isArray(value)) {
-    return value as RuntimeOptions;
-  }
-  return undefined;
-}
-
 function validateCreateTemplatePayload(
   handleId: number,
   attributeSlots: SerializableValue[] | null | undefined,
   elementSlots: number[][] | null | undefined,
-  options: ElementTemplateUpdateCommandStream[number] | undefined,
 ): Error | null {
   if (!isValidHandleId(handleId)) {
     return new Error(`ElementTemplate update has invalid handleId ${String(handleId)}.`);
@@ -215,9 +168,6 @@ function validateCreateTemplatePayload(
   }
   if (elementSlots != null && !Array.isArray(elementSlots)) {
     return new Error('ElementTemplate update create elementSlots must be an array, null, or undefined.');
-  }
-  if (options != null && (typeof options !== 'object' || Array.isArray(options))) {
-    return new Error('ElementTemplate update create options must be an object, null, or undefined.');
   }
   return null;
 }

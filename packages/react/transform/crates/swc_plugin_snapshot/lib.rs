@@ -2319,20 +2319,8 @@ where
       let compiled_template = self.element_template_to_json(&template_expr);
 
       let mut option_props: Vec<PropOrSpread> = vec![];
-      if self.has_explicit_css_id {
-        if let Some(css_id_expr) = &self.css_id_value {
-          option_props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-            key: PropName::Ident(IdentName::new("cssId".into(), DUMMY_SP)),
-            value: Box::new(css_id_expr.clone()),
-          }))));
-        }
-      }
-      if matches!(self.cfg.is_dynamic_component, Some(true)) {
-        option_props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-          key: PropName::Ident(IdentName::new("entryName".into(), DUMMY_SP)),
-          value: Box::new(quote!("globDynamicComponentEntry" as Expr)),
-        }))));
-      }
+      // TODO(element-template): reintroduce cssId/entryName metadata once the
+      // runtime/native contract grows a dedicated replacement channel.
       let list_can_use_et_runtime = list_can_use_et_runtime
         && !element_template_attributes_contain_spread(compiled_template.get("attributesArray"));
       if list_can_use_et_runtime {

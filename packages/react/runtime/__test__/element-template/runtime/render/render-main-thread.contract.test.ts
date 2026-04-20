@@ -78,9 +78,6 @@ describe('renderMainThread contract', () => {
       __OpAttr,
       'attributeSlots',
       ['main', 'lazy-entry'],
-      __OpAttr,
-      'options',
-      { cssId: 100, entryName: 'lazy-entry' },
       __OpSlot,
       0,
       __OpText,
@@ -105,7 +102,7 @@ describe('renderMainThread contract', () => {
       null,
       ['main', 'lazy-entry'],
       [[expect.any(Object)]],
-      { handleId: -2, cssId: 100, entryName: 'lazy-entry' },
+      -2,
     ]);
 
     const dispatched = dispatchEvent.mock.calls[0]?.[0] as { type: string; data: unknown[] } | undefined;
@@ -117,7 +114,7 @@ describe('renderMainThread contract', () => {
     expect(rootSerialized).toMatchObject({
       templateKey: '_et_contract_root',
       attributeSlots: ['main', 'lazy-entry'],
-      options: { handleId: -2, cssId: 100, entryName: 'lazy-entry' },
+      options: { handleId: -2 },
     });
 
     expect(ElementTemplateRegistry.get(-2)).toMatchObject({

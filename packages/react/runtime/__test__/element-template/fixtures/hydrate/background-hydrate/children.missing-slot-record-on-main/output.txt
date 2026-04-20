@@ -6,9 +6,6 @@ Object {
     null,
     Array [],
     Array [],
-    Object {
-      "handleId": 3,
-    },
     3,
     -1,
     0,

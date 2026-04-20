@@ -145,9 +145,9 @@ export function installMockNativePapi(
     bundleUrl: string | null | undefined,
     attributeSlots: unknown[] | null | undefined,
     elementSlots: unknown[][] | null | undefined,
-    options: unknown,
+    handleId: unknown,
   ) => {
-    nativeLog.push(['__CreateElementTemplate', templateKey, bundleUrl, attributeSlots, elementSlots, options]);
+    nativeLog.push(['__CreateElementTemplate', templateKey, bundleUrl, attributeSlots, elementSlots, handleId]);
 
     if (!templateRepo.has(templateKey)) {
       throw new Error(
@@ -169,22 +169,9 @@ export function installMockNativePapi(
       writable: true,
       configurable: true,
     });
-    if (isRecord(options)) {
-      Object.defineProperty(element, '__options', {
-        value: { ...options },
-        writable: true,
-        configurable: true,
-      });
-    }
-    if (typeof options === 'number') {
+    if (typeof handleId === 'number') {
       Object.defineProperty(element, '__handleId', {
-        value: options,
-        writable: true,
-        configurable: true,
-      });
-    } else if (isRecord(options) && typeof options['handleId'] === 'number') {
-      Object.defineProperty(element, '__handleId', {
-        value: options['handleId'],
+        value: handleId,
         writable: true,
         configurable: true,
       });

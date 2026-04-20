@@ -8,9 +8,6 @@ Object {
       2,
     ],
     Array [],
-    Object {
-      "handleId": 4,
-    },
     3,
     -2,
     0,

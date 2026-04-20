@@ -24,7 +24,7 @@ interface Frame {
   // Collected dynamic children keyed by elementSlotIndex.
   elementSlots: Array<Array<ElementRef | ReturnType<typeof createElementTemplateListCellRef>>> | undefined;
 
-  // Create-time metadata forwarded into __CreateElementTemplate options.
+  // Runtime-only options still used by list specialization and future internal flags.
   options: RuntimeOptions | undefined;
 
   // Cached array for current active slot to avoid repeated lookups.
@@ -132,7 +132,6 @@ function createListAwareElementRef(
       null,
       templateAttributeSlots,
       frame.elementSlots ?? null,
-      frame.options,
     );
 
   return {
@@ -207,7 +206,6 @@ export function renderOpcodesIntoElementTemplate(
             null,
             attributeSlots ?? null,
             elementSlots ?? null,
-            currentOptions,
           );
           appendChildToParent(parentTemplateKey, parentActiveElementSlot, rootRefs, elementRef);
           i += 1;
@@ -223,7 +221,6 @@ export function renderOpcodesIntoElementTemplate(
             null,
             attributeSlots ?? null,
             elementSlots ?? null,
-            currentOptions,
           );
           appendChildToParent(parentTemplateKey, parentActiveElementSlot, rootRefs, elementRef);
           i += 1;
@@ -283,7 +280,6 @@ export function renderOpcodesIntoElementTemplate(
           null,
           [String(text)],
           [],
-          undefined,
         );
         const parentTemplateKey = templateKeyStack[stackTop];
         if (parentTemplateKey === null) {

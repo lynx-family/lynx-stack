@@ -99,12 +99,6 @@ export class BackgroundElementTemplateInstance {
       null,
       normalizeAttributeSlots(this.attributeSlots),
       this.elementSlots.map((children) => children.map((child) => child.instanceId)),
-      this.options
-        ? {
-          ...this.options,
-          handleId: this.instanceId,
-        }
-        : { handleId: this.instanceId },
     );
   }
 

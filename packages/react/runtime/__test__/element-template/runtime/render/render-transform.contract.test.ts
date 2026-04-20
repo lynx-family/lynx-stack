@@ -136,7 +136,7 @@ describe('render transform contract', () => {
     resetTemplateId();
   });
 
-  it('passes css-id through create options instead of root attrs', async () => {
+  it('does not pass legacy css-id metadata through ET create', async () => {
     const { rootRef } = await compileAndRender(`
       /**
        * @jsxCSSId 100
@@ -166,11 +166,11 @@ describe('render transform contract', () => {
       null,
       null,
       null,
-      { handleId: -1, cssId: 100 },
+      -1,
     ]);
   });
 
-  it('passes entry-name through create options instead of root attrs for dynamic component output', async () => {
+  it('does not pass legacy entry-name metadata through ET create for dynamic component output', async () => {
     vi.stubGlobal('globDynamicComponentEntry', 'lazy-entry');
 
     const { rootRef } = await compileAndRender(
@@ -204,7 +204,7 @@ describe('render transform contract', () => {
       null,
       null,
       null,
-      { handleId: -1, entryName: 'lazy-entry' },
+      -1,
     ]);
   });
 

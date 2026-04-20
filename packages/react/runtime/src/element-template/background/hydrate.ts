@@ -422,9 +422,15 @@ function getSerializedRuntimeOptions(
   if (!value?.options) {
     return undefined;
   }
-  return {
-    ...value.options,
-  };
+  const {
+    cssId: _cssId,
+    entryName: _entryName,
+    ...options
+  } = value.options;
+
+  // TODO(element-template): restore cssId/entryName once ET has a dedicated
+  // metadata transport instead of silently forwarding them through options.
+  return options;
 }
 
 function isValidHandleId(handleId: number | undefined): handleId is number {

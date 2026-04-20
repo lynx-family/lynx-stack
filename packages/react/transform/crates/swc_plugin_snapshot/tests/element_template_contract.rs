@@ -96,6 +96,26 @@ fn first_user_template_json_with_cfg(input: &str, cfg: JSXTransformerConfig) -> 
 
 #[test]
 fn should_not_inject_root_css_scope_attrs_for_element_template() {
+  let code = transform_to_code(
+    r#"
+      /**
+       * @jsxCSSId 100
+       */
+      <view>
+        <text>Hello</text>
+      </view>
+    "#,
+    JSXTransformerConfig {
+      preserve_jsx: true,
+      experimental_enable_element_template: true,
+      ..Default::default()
+    },
+  );
+  assert!(
+    !code.contains("options={{") && !code.contains("cssId"),
+    "element template lowering should not emit legacy cssId create metadata, got: {code}"
+  );
+
   let template = first_user_template_json(
     r#"
       /**
@@ -131,6 +151,27 @@ fn should_not_inject_root_css_scope_attrs_for_element_template() {
 
 #[test]
 fn should_not_inject_root_entry_name_attr_for_dynamic_component_element_template() {
+  let code = transform_to_code(
+    r#"
+      /**
+       * @jsxCSSId 100
+       */
+      <view id={dynamicId}>
+        <text>Hello</text>
+      </view>
+    "#,
+    JSXTransformerConfig {
+      preserve_jsx: true,
+      experimental_enable_element_template: true,
+      is_dynamic_component: Some(true),
+      ..Default::default()
+    },
+  );
+  assert!(
+    !code.contains("entryName") && !code.contains("options={{"),
+    "dynamic component ET lowering should not emit legacy entry metadata, got: {code}"
+  );
+
   let template = first_user_template_json_with_cfg(
     r#"
       /**
