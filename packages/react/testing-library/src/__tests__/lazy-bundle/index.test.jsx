@@ -80,6 +80,80 @@ describe('lazy bundle', () => {
     `);
     }
   });
+
+  it('should render multi-slots lazy component', async () => {
+    const InternalComponent = lazy(() => import('./LazyComponent'));
+
+    const App = () => {
+      return (
+        <view>
+          <Suspense fallback={<text>loading 1...</text>}>
+            <InternalComponent />
+          </Suspense>
+          <text>---</text>
+          <Suspense fallback={<text>loading 2...</text>}>
+            <InternalComponent />
+          </Suspense>
+        </view>
+      );
+    };
+
+    const { container } = render(
+      <App url={require.resolve('./LazyComponent.jsx')} />,
+    );
+
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <view>
+          <wrapper>
+            <wrapper>
+              <text>
+                loading 1...
+              </text>
+            </wrapper>
+          </wrapper>
+          <text>
+            ---
+          </text>
+          <wrapper>
+            <wrapper>
+              <text>
+                loading 2...
+              </text>
+            </wrapper>
+          </wrapper>
+        </view>
+      </page>
+    `);
+
+    await waitForElementToBeRemoved(() => screen.getByText('loading 1...'), {
+      timeout: 50_000,
+    });
+
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <view>
+          <wrapper>
+            <wrapper>
+              <text>
+                Hello from LazyComponent
+              </text>
+            </wrapper>
+          </wrapper>
+          <text>
+            ---
+          </text>
+          <wrapper>
+            <wrapper>
+              <text>
+                Hello from LazyComponent
+              </text>
+            </wrapper>
+          </wrapper>
+        </view>
+      </page>
+    `);
+  });
 });
 
 describe('Suspense', () => {
@@ -139,34 +213,34 @@ describe('Suspense', () => {
 
       if (name === 'PreactSuspense') {
         expect(container).toMatchInlineSnapshot(`
-        <page>
-          <view
-            class="root"
-          >
-            <text
-              class="loading"
+          <page>
+            <view
+              class="root"
             >
-              loading...
-            </text>
-          </view>
-        </page>
-      `);
-      } else {
-        expect(container).toMatchInlineSnapshot(`
-        <page>
-          <view
-            class="root"
-          >
-            <wrapper>
               <text
                 class="loading"
               >
                 loading...
               </text>
-            </wrapper>
-          </view>
-        </page>
-      `);
+            </view>
+          </page>
+        `);
+      } else {
+        expect(container).toMatchInlineSnapshot(`
+          <page>
+            <view
+              class="root"
+            >
+              <wrapper>
+                <text
+                  class="loading"
+                >
+                  loading...
+                </text>
+              </wrapper>
+            </view>
+          </page>
+        `);
       }
 
       {
@@ -178,12 +252,12 @@ describe('Suspense', () => {
               {
                 "id": 2,
                 "op": "CreateElement",
-                "type": "__snapshot_50869_test_3",
+                "type": "__snapshot_50869_test_6",
               },
               {
                 "id": 5,
                 "op": "CreateElement",
-                "type": "__snapshot_50869_test_4",
+                "type": "__snapshot_50869_test_7",
               },
               {
                 "beforeId": null,
@@ -207,7 +281,7 @@ describe('Suspense', () => {
               {
                 "id": 2,
                 "op": "CreateElement",
-                "type": "__snapshot_50869_test_3",
+                "type": "__snapshot_50869_test_6",
               },
               {
                 "id": 6,
@@ -217,7 +291,7 @@ describe('Suspense', () => {
               {
                 "id": 7,
                 "op": "CreateElement",
-                "type": "__snapshot_50869_test_4",
+                "type": "__snapshot_50869_test_7",
               },
               {
                 "beforeId": null,
@@ -336,7 +410,7 @@ describe('Suspense', () => {
                 el4
               ];
             }",
-                "type": "__snapshot_50869_test_5",
+                "type": "__snapshot_50869_test_8",
               },
               {
                 "__id": 5,
@@ -351,7 +425,7 @@ describe('Suspense', () => {
                 el1
               ];
             }",
-                "type": "__snapshot_50869_test_4",
+                "type": "__snapshot_50869_test_7",
               },
             ]
           `);
