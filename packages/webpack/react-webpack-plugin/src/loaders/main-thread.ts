@@ -10,6 +10,30 @@ import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '@lynx-js/template-webpack-plug
 import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
+const ELEMENT_TEMPLATE_BUILD_INFO = 'lynx:element-templates';
+
+interface ModuleWithBuildInfo {
+  buildInfo?: Record<string, unknown>;
+}
+
+function syncElementTemplateBuildInfo(
+  mod: ModuleWithBuildInfo | undefined,
+  elementTemplates: unknown[] | undefined,
+) {
+  if (!mod) {
+    return;
+  }
+
+  mod.buildInfo ??= {};
+
+  if (elementTemplates && elementTemplates.length > 0) {
+    mod.buildInfo[ELEMENT_TEMPLATE_BUILD_INFO] = elementTemplates;
+    return;
+  }
+
+  delete mod.buildInfo[ELEMENT_TEMPLATE_BUILD_INFO];
+}
+
 const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
   this: LoaderContext<ReactLoaderOptions>,
   content,
@@ -34,17 +58,10 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     getMainThreadTransformOptions.call(this, swcInputSourceMap),
   );
 
-  if (result.elementTemplates && result.elementTemplates.length > 0) {
-    interface ModuleWithBuildInfo {
-      buildInfo?: Record<string, unknown>;
-    }
-    const mod = this._module as unknown as ModuleWithBuildInfo | undefined;
-
-    if (mod) {
-      mod.buildInfo ??= {};
-      mod.buildInfo['lynx:element-templates'] = result.elementTemplates;
-    }
-  }
+  syncElementTemplateBuildInfo(
+    this._module as unknown as ModuleWithBuildInfo | undefined,
+    result.elementTemplates,
+  );
 
   if (result.errors.length > 0) {
     for (const error of result.errors) {
