@@ -3,14 +3,14 @@
 // LICENSE file in the root directory of this source tree.
 
 // eslint-disable-next-line n/no-unsupported-features/node-builtins
-import { glob, mkdtemp, readFile } from 'node:fs/promises'
+import { glob, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 import { SourceMapConsumer } from 'source-map'
 import type { NullableMappedPosition, RawSourceMap } from 'source-map'
-import { describe, expect, test, vi } from 'vitest'
+import { afterAll, afterEach, describe, expect, test, vi } from 'vitest'
 
 import type { Output } from '@lynx-js/rspeedy'
 
@@ -21,11 +21,21 @@ const functionNames = [
   'innerFunction',
   'function renderComponent',
 ]
+const tempDirs: string[] = []
 
+afterAll(async () => {
+  await Promise.all(tempDirs.map(async (dir) => {
+    await rm(dir, { recursive: true, force: true })
+  }))
+})
+afterEach(() => {
+  vi.unstubAllEnvs()
+})
 async function buildSourcemapFixture(
   sourceMap: Output['sourceMap'] = undefined,
 ) {
   const tmp = await mkdtemp(path.join(tmpdir(), 'rspeedy-react-test'))
+  tempDirs.push(tmp)
 
   vi.stubEnv('DEBUG', 'rspeedy')
 
@@ -120,10 +130,27 @@ async function getSourceMapFiles(tmp: string) {
     sourceMapFiles.push(normalizeSlashes(path.relative(tmp, file)))
   }
 
-  return sourceMapFiles
+  return sourceMapFiles.sort()
 }
 
 describe('Sourcemap', () => {
+  test('getSourceMapFiles returns sorted map paths', async () => {
+    const tmp = await mkdtemp(path.join(tmpdir(), 'rspeedy-react-test'))
+    tempDirs.push(tmp)
+
+    await mkdir(path.join(tmp, '.rspeedy/main'), { recursive: true })
+    await mkdir(path.join(tmp, 'static/js/async'), { recursive: true })
+    await writeFile(path.join(tmp, 'static/js/async/z-last.map'), '')
+    await writeFile(path.join(tmp, '.rspeedy/main/a-first.map'), '')
+    await writeFile(path.join(tmp, 'static/js/async/m-middle.map'), '')
+
+    expect(await getSourceMapFiles(tmp)).toEqual([
+      '.rspeedy/main/a-first.map',
+      'static/js/async/m-middle.map',
+      'static/js/async/z-last.map',
+    ])
+  })
+
   test('js sourcemaps are emitted by default', async () => {
     const tmp = await buildSourcemapFixture(undefined)
     const sourceMapFiles = await getSourceMapFiles(tmp)
@@ -236,6 +263,9 @@ describe('Sourcemap', () => {
         },
       }
     `)
+      // clean
+      cssConsumer.destroy()
+      consumer.destroy()
     },
     25_000,
   )
