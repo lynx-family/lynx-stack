@@ -8,6 +8,7 @@ import { renderOpcodesIntoElementTemplate } from '../../../../src/element-templa
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
 import { ElementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import {
+  __OpAttr,
   __OpBegin,
   __OpEnd,
   __OpSlot,
@@ -72,6 +73,22 @@ describe('renderOpcodesIntoElementTemplate', () => {
         { type: '_et_child' },
         __OpSlot,
         0,
+        __OpEnd,
+        __OpEnd,
+      ])
+    ).toThrow('Template \'_et_parent\' received a child outside of any element slot.');
+  });
+
+  it('throws when a list child is emitted outside of an element slot', () => {
+    expect(() =>
+      renderOpcodesIntoElementTemplate([
+        __OpBegin,
+        { type: '_et_parent' },
+        __OpAttr,
+        'options',
+        { __elementTemplateList: true },
+        __OpBegin,
+        { type: '_et_child' },
         __OpEnd,
         __OpEnd,
       ])

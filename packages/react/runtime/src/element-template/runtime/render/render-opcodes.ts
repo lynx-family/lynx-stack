@@ -41,9 +41,11 @@ function appendChildToParent(
   rootRefs: ElementRef[],
   elementRef: ElementRef,
 ): void {
+  /* v8 ignore start -- stackTop is always rooted with `null`, never `undefined`. */
   if (parentTemplateKey === undefined) {
     return;
   }
+  /* v8 ignore end */
 
   if (parentTemplateKey === null) {
     rootRefs.push(elementRef);
@@ -67,9 +69,11 @@ function appendListAwareChildToParent(
   templateAttributeSlots: SerializableValue[] | null,
   platformInfo: Record<string, unknown> | null,
 ): void {
+  /* v8 ignore start -- stackTop is always rooted with `null`, never `undefined`. */
   if (parentTemplateKey === undefined) {
     return;
   }
+  /* v8 ignore end */
 
   if (parentTemplateKey === null) {
     rootRefs.push(elementRef);
@@ -118,6 +122,7 @@ function createListAwareElementRef(
   const elementRef = isElementTemplateList(frame.options)
     ? createElementTemplateListWithHandle(
       templateKey,
+      /* v8 ignore next -- nullish normalization is exercised through render/list tests. */
       frame.elementSlots ?? null,
       templateAttributeSlots,
       frame.options,
@@ -186,7 +191,9 @@ export function renderOpcodesIntoElementTemplate(
           // Wait, if opcodes list ends, loop finishes.
           // __OpEnd corresponds to a component.
           // So if we pop, we must get a valid component frame.
+          /* v8 ignore start -- the synthetic root frame cannot be popped by balanced opcodes. */
           throw new Error('Instruction mismatch: Popped root frame at __OpEnd');
+          /* v8 ignore end */
         }
         const concreteTemplateKey = templateKey!;
 

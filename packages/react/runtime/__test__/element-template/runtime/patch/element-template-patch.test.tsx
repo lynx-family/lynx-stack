@@ -322,6 +322,26 @@ describe('ElementTemplate patch stream (apply)', () => {
     resetReportedErrors();
   });
 
+  it('reports invalid non-object options on create', () => {
+    envManager.switchToMainThread();
+
+    applyElementTemplateUpdateCommands([
+      ElementTemplateUpdateOps.createTemplate,
+      9,
+      '__et_builtin_raw_text__',
+      null,
+      [],
+      [],
+      'bad-options' as unknown as ElementTemplateUpdateCommandStream[number],
+    ]);
+
+    const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
+    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+      'options must be an object, null, or undefined',
+    );
+    resetReportedErrors();
+  });
+
   it('passes css scope metadata through create options during patch apply', () => {
     envManager.switchToMainThread();
 

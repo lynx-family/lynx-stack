@@ -23,8 +23,10 @@ export function applyElementTemplateUpdateCommands(
         const bundleUrl = stream[i++] as string | null | undefined;
         const attributeSlots = stream[i++] as SerializableValue[] | null | undefined;
         const elementSlots = stream[i++] as number[][] | null | undefined;
-        const createOptions = getCreateTemplateOptions(stream[i]);
-        if (createOptions !== undefined || stream[i] === null) {
+        const rawCreateOptions = stream[i];
+        const hasCreateOptions = shouldConsumeCreateTemplateOptions(rawCreateOptions);
+        const createOptions = getCreateTemplateOptions(rawCreateOptions);
+        if (hasCreateOptions) {
           i += 1;
         }
 
@@ -33,7 +35,7 @@ export function applyElementTemplateUpdateCommands(
             handleId,
             attributeSlots,
             elementSlots,
-            createOptions,
+            hasCreateOptions ? rawCreateOptions : undefined,
           );
           if (createError) {
             lynx.reportError(createError);
@@ -162,6 +164,28 @@ function isValidHandleId(handleId: number): boolean {
   return Number.isInteger(handleId) && handleId !== 0;
 }
 
+function isElementTemplateUpdateOp(
+  value: ElementTemplateUpdateCommandStream[number] | undefined,
+): value is ElementTemplateUpdateOp {
+  return value === ElementTemplateUpdateOps.createTemplate
+    || value === ElementTemplateUpdateOps.setAttribute
+    || value === ElementTemplateUpdateOps.insertNode
+    || value === ElementTemplateUpdateOps.removeNode;
+}
+
+// `createTemplate` has an optional trailing options payload. When the next token
+// is neither an opcode nor `undefined`, we should still consume it so DEV
+// validation can surface the bad payload instead of mis-parsing it as a new op.
+function shouldConsumeCreateTemplateOptions(
+  value: ElementTemplateUpdateCommandStream[number] | undefined,
+): boolean {
+  if (value === undefined || isElementTemplateUpdateOp(value)) {
+    return false;
+  }
+
+  return true;
+}
+
 function getCreateTemplateOptions(
   value: ElementTemplateUpdateCommandStream[number] | undefined,
 ): RuntimeOptions | null | undefined {
@@ -178,7 +202,7 @@ function validateCreateTemplatePayload(
   handleId: number,
   attributeSlots: SerializableValue[] | null | undefined,
   elementSlots: number[][] | null | undefined,
-  options: RuntimeOptions | null | undefined,
+  options: ElementTemplateUpdateCommandStream[number] | undefined,
 ): Error | null {
   if (!isValidHandleId(handleId)) {
     return new Error(`ElementTemplate update has invalid handleId ${String(handleId)}.`);
