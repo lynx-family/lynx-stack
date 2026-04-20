@@ -1,5 +1,11 @@
 # create-rspeedy
 
+## 0.14.2
+
+### Patch Changes
+
+- Add Rstest ReactLynx Testing Library template. ([#2328](https://github.com/lynx-family/lynx-stack/pull/2328))
+
 ## 0.14.1
 
 ### Patch Changes

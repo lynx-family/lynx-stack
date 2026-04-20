@@ -1,5 +1,49 @@
 # @lynx-js/react
 
+## 0.119.0
+
+### Minor Changes
+
+- Simplify hooks for main-thread runtime, which only can run during the first screen. ([#2441](https://github.com/lynx-family/lynx-stack/pull/2441))
+
+### Patch Changes
+
+- Remove stale gestures when gestures are removed ([#2297](https://github.com/lynx-family/lynx-stack/pull/2297))
+
+- Trace refactor ([#2466](https://github.com/lynx-family/lynx-stack/pull/2466))
+
+  - Remove `ReactLynx::renderOpcodes` from the trace
+  - Use `ReactLynx::transferRoot` to measure the time spent transferring the root to the background thread
+
+- refactor: set state of suspense to render fallback ([#2450](https://github.com/lynx-family/lynx-stack/pull/2450))
+
+- Support rstest for testing library, you can use rstest with RLTL now: ([#2328](https://github.com/lynx-family/lynx-stack/pull/2328))
+
+  Create a config file `rstest.config.ts` with the following content:
+
+  ```ts
+  import { defineConfig } from '@rstest/core';
+  import { withLynxConfig } from '@lynx-js/react/testing-library/rstest-config';
+
+  export default defineConfig({
+    extends: withLynxConfig(),
+  });
+  ```
+
+  `@lynx-js/react/testing-library/rstest-config` will automatically load your `lynx.config.ts` and apply the same configuration to rstest, so you can keep your test environment consistent with your development environment.
+
+  And then use rstest as usual:
+
+  ```bash
+  $ rstest
+  ```
+
+  For more usage detail, see https://rstest.rs/
+
+- Update preact version ([#2456](https://github.com/lynx-family/lynx-stack/pull/2456))
+
+- Add `nodeIndex` to generated FiberElement creation calls and expose React transform debug metadata as `uiSourceMapRecords`. ([#2402](https://github.com/lynx-family/lynx-stack/pull/2402))
+
 ## 0.118.0
 
 ### Minor Changes

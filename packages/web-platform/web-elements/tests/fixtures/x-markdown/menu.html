@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<!-- Copyright 2024 The Lynx Authors. All rights reserved.
+Licensed under the Apache License Version 2.0 that can be found in the
+LICENSE file in the root directory of this source tree. -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>web playground</title>
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta content="default" name="apple-mobile-web-app-status-bar-style">
+    <meta content="telephone=no" name="format-detection">
+    <meta content="portrait" name="screen-orientation">
+    <meta
+      content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+      name="viewport"
+    >
+    <meta content="portrait" name="x5-orientation" />
+
+    <link
+      href="/main.css"
+      rel="stylesheet"
+    />
+    <style>
+    .page {
+      background: white;
+      min-height: 100vh;
+      padding: 24px;
+      position: relative;
+    }
+
+    #menu {
+      align-items: center;
+      background: rgb(80, 80, 80);
+      border-radius: 4px;
+      color: white;
+      display: flex;
+      gap: 8px;
+      padding: 4px 8px;
+      pointer-events: none;
+      position: absolute;
+      user-select: none;
+      visibility: hidden;
+    }
+
+    #menu-divider {
+      background: rgba(255, 255, 255, 0.4);
+      height: 16px;
+      width: 1px;
+    }
+    </style>
+  </head>
+
+  <body>
+    <script src="/main.js" defer></script>
+    <x-view class="page">
+      <x-markdown
+        id="markdown"
+        text-selection="true"
+      ></x-markdown>
+      <div id="menu">
+        <span>全选</span>
+        <div id="menu-divider"></div>
+        <span>复制</span>
+      </div>
+    </x-view>
+    <script>
+    const content =
+        `# Title\n\nthis is **bold** and *italic*.\n\nthis paragraph is used to verify menu positioning.`;
+      const markdown = document.getElementById('markdown');
+      const menu = document.getElementById('menu');
+      let isPointerSelecting = false;
+
+      const getSelection = () => (
+        markdown.shadowRoot?.getSelection?.() ?? document.getSelection()
+      );
+
+      const isSelectingMarkdown = (event) =>
+        event.composedPath?.().includes(markdown) ?? false;
+
+      const setRange = (selector, start, end) => {
+        const textNode = markdown.shadowRoot?.querySelector(selector)
+          ?.firstChild;
+        if (!textNode) {
+          throw new Error(`missing text node for ${selector}`);
+        }
+        const selection = getSelection();
+        if (!selection) {
+          throw new Error('missing selection');
+        }
+        const range = document.createRange();
+        range.setStart(textNode, start);
+        range.setEnd(textNode, end);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      };
+
+      const hideMenu = () => {
+        menu.style.visibility = 'hidden';
+      };
+
+      const updateMenu = (detail) => {
+        if (detail.start === -1 || detail.end === -1) {
+          hideMenu();
+          return;
+        }
+        const rect = markdown.getTextBoundingRect({
+          start: detail.start,
+          end: detail.end,
+        })?.boundingRect;
+        if (!rect) {
+          hideMenu();
+          return;
+        }
+        menu.style.left = `${rect.left + rect.width / 2 - 30}px`;
+        menu.style.top = `${rect.top + rect.height / 2 - 10}px`;
+        menu.style.visibility = 'visible';
+      };
+
+      const syncMenu = () => {
+        updateMenu(window._menu_detail ?? { start: -1, end: -1 });
+      };
+
+      window._menu_detail = null;
+
+      window._selectShadowText = (selector, start, end) => {
+        setRange(selector, start, end);
+        document.dispatchEvent(new Event('selectionchange'));
+      };
+
+      window._selectShadowTextByMouseup = (selector, start, end) => {
+        setRange(selector, start, end);
+        document.dispatchEvent(new Event('selectionchange'));
+        document.dispatchEvent(
+          new MouseEvent('mouseup', { bubbles: true }),
+        );
+      };
+
+      window._selectShadowTextToMenu = () => {
+        const textNode = markdown.shadowRoot?.querySelector('h1')
+          ?.firstChild;
+        const menuTextNode = menu.querySelector('span:last-child')
+          ?.firstChild;
+        if (!textNode || !menuTextNode) {
+          throw new Error('missing selection nodes');
+        }
+        const selection = getSelection();
+        if (!selection) {
+          throw new Error('missing selection');
+        }
+        const range = document.createRange();
+        range.setStart(textNode, 0);
+        range.setEnd(menuTextNode, menuTextNode.textContent?.length ?? 0);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        document.dispatchEvent(new Event('selectionchange'));
+      };
+
+      window._clearShadowText = () => {
+        const selection = getSelection();
+        selection?.removeAllRanges();
+        document.dispatchEvent(new Event('selectionchange'));
+      };
+
+      window._getMenuState = () => ({
+        visibility: getComputedStyle(menu).visibility,
+        left: getComputedStyle(menu).left,
+        top: getComputedStyle(menu).top,
+        labels: Array.from(menu.querySelectorAll('span')).map((node) =>
+          node.textContent?.trim() ?? ''
+        ),
+        detail: window._menu_detail,
+        selectedText: markdown.getSelectedText(),
+      });
+
+      document.addEventListener('mousedown', (event) => {
+        if (!isSelectingMarkdown(event)) {
+          return;
+        }
+        isPointerSelecting = true;
+        hideMenu();
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (!isPointerSelecting) {
+          return;
+        }
+        isPointerSelecting = false;
+        syncMenu();
+      });
+
+      markdown.addEventListener('bindselectionchange', (event) => {
+        window._menu_detail = event.detail;
+        if (isPointerSelecting) {
+          hideMenu();
+          return;
+        }
+        updateMenu(event.detail);
+      });
+
+      markdown.setAttribute('content', content);
+    </script>
+  </body>
+</html>

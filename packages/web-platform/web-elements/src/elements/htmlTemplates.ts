@@ -306,6 +306,92 @@ export const templateXSwiper = `<style>
 export const templateXText =
   `<div id="inner-box" part="inner-box"><slot part="slot"></slot><slot name="inline-truncation"></slot></div>`;
 
+export const templateXMarkdown = `<style>
+  :host {
+    display: block;
+  }
+  .markdown-body {
+    display: block;
+    line-height: 1.4;
+    color: inherit;
+    word-break: break-word;
+    position: relative;
+  }
+  .markdown-body p {
+    margin: 0 0 0.75em 0;
+  }
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3,
+  .markdown-body h4,
+  .markdown-body h5,
+  .markdown-body h6 {
+    margin: 0.8em 0 0.4em 0;
+  }
+  .markdown-body ul,
+  .markdown-body ol {
+    margin: 0 0 0.75em 1.5em;
+  }
+  .markdown-body pre {
+    margin: 0 0 0.75em 0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: #f6f8fa;
+    overflow: auto;
+  }
+  .markdown-body code {
+    font-family: ui-monospace, SFMono-Regular, SFMono, Menlo, Consolas,
+      "Liberation Mono", monospace;
+  }
+  .markdown-body pre code {
+    display: block;
+    padding: 0;
+  }
+  .markdown-body img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+  .markdown-body .md-inline-view {
+    display: inline-block;
+    vertical-align: baseline;
+  }
+  .markdown-body .md-truncation {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    background-color: inherit;
+  }
+  .markdown-body .md-image-figure {
+    margin: 0 0 0.75em 0;
+  }
+  .markdown-body .md-image-caption {
+    margin-top: 4px;
+    color: #666;
+    font-size: 0.875em;
+  }
+  .markdown-body .md-text-mask-effect {
+    position: relative;
+    display: inline-block;
+  }
+  .markdown-body .md-text-mask-effect-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    user-select: none;
+    white-space: pre;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  .markdown-body a {
+    color: #0366d6;
+    text-decoration: underline;
+  }
+</style>
+<style id="markdown-style"></style>
+<div id="markdown-root" part="root" class="markdown-body"></div>`;
+
 export const templateInlineImage = templateXImage;
 
 export const templateXTextarea = `<style>

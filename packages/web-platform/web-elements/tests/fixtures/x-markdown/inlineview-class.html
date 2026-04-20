@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>inlineview class</title>
+    <meta content="width=device-width,initial-scale=1.0" name="viewport">
+    <link href="/main.css" rel="stylesheet" />
+    <style>
+    .content {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      background-color: rgb(255, 0, 0);
+    }
+    </style>
+  </head>
+  <body>
+    <script src="/main.js" defer></script>
+    <x-view class="page">
+      <x-markdown id="markdown" style="width: 300px">
+        <x-view id="content-view" class="content"></x-view>
+      </x-markdown>
+    </x-view>
+    <script>
+    const content = '![](inlineview://content-view)';
+      const el = document.getElementById('markdown');
+      el.setAttribute('content', content);
+    </script>
+  </body>
+</html>

@@ -1,4 +1,5 @@
 import { wasmInstance } from '../../wasm.js';
+import { setElementPropertyOrAttribute } from '../utils/setElementPropertyOrAttribute.js';
 
 import {
   AnimationOperation,
@@ -460,11 +461,7 @@ export function createElementAPI(
           }
         });
       } else {
-        if (value == null) {
-          element.removeAttribute(name);
-        } else {
-          element.setAttribute(name, value.toString());
-        }
+        setElementPropertyOrAttribute(element, name, value);
         if (name === 'exposure-id') {
           if (value != null) {
             mtsBinding.markExposureRelatedElementByUniqueId(

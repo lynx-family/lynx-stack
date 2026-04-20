@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>typewriter reset content</title>
+    <meta content="width=device-width,initial-scale=1.0" name="viewport">
+    <link href="/main.css" rel="stylesheet" />
+  </head>
+  <body>
+    <script src="/main.js" defer></script>
+    <x-view class="page">
+      <x-markdown id="markdown"></x-markdown>
+    </x-view>
+    <script>
+    const el = document.getElementById('markdown');
+      const getRootText = () =>
+        el.shadowRoot?.querySelector('#markdown-root')?.textContent ?? '';
+
+      window._newAnimationSteps = [];
+      window._reassigned = false;
+      window._textAfterReassign = null;
+
+      let didResetContent = false;
+
+      el.addEventListener('bindanimationStep', (event) => {
+        if (window._reassigned) {
+          window._newAnimationSteps.push(event.detail.animationStep);
+        }
+
+        if (didResetContent || event.detail.animationStep < 3) {
+          return;
+        }
+
+        didResetContent = true;
+        el.setAttribute('content', '');
+
+        setTimeout(() => {
+          el.setAttribute('content', 'zebra');
+          window._reassigned = true;
+          queueMicrotask(() => {
+            window._textAfterReassign = getRootText();
+          });
+        }, 0);
+      });
+
+      el.setAttribute('content', 'initial typing content');
+      el.setAttribute(
+        'markdown-style',
+        JSON.stringify({
+          typewriterCursor: {
+            customCursor: 'none',
+          },
+        }),
+      );
+      el.setAttribute('animation-type', 'typewriter');
+      el.setAttribute('animation-velocity', '20');
+      el.setAttribute('content-complete', 'true');
+    </script>
+  </body>
+</html>

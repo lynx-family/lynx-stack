@@ -1,5 +1,21 @@
 # @lynx-js/testing-environment
 
+## 0.2.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: ([#2328](https://github.com/lynx-family/lynx-stack/pull/2328))
+
+  Align the public test-environment API around `LynxEnv`.
+
+  `LynxTestingEnv` now expects a `{ window }`-shaped environment instead of relying on a concrete `JSDOM` instance or `global.jsdom`. Callers that construct `LynxTestingEnv` manually or initialize the environment through globals should migrate to `new LynxTestingEnv({ window })` or set `global.lynxEnv`.
+
+  This release also adds the `@lynx-js/testing-environment/env/rstest` entry for running the shared testing-environment suite under rstest.
+
+### Patch Changes
+
+- Add `__RemoveGestureDetector` PAPI binding ([#2297](https://github.com/lynx-family/lynx-stack/pull/2297))
+
 ## 0.1.12
 
 ### Patch Changes
