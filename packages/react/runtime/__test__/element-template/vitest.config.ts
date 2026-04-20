@@ -76,8 +76,19 @@ const config: UserConfigExport = defineConfig({
       ),
       '@lynx-js/react/runtime-components': path.resolve(__dirname, '../../../components/src/index.ts'),
       '@lynx-js/react/internal': path.resolve(__dirname, '../../src/element-template/internal.ts'),
-      '@lynx-js/react/jsx-dev-runtime': path.resolve(__dirname, '../../src/element-template/jsx-dev-runtime/index.ts'),
-      '@lynx-js/react/jsx-runtime': path.resolve(__dirname, '../../src/element-template/jsx-runtime/index.ts'),
+      // The ET vitest harness evaluates both background and main-thread flows in
+      // a no-layer environment. Keep JSX creation on the shared runtime so the
+      // background tree still receives the standard vnode shape it expects.
+      '@lynx-js/react/jsx-dev-runtime': path.resolve(__dirname, '../../jsx-dev-runtime/index.js'),
+      '@lynx-js/react/jsx-runtime': path.resolve(__dirname, '../../jsx-runtime/index.js'),
+      '@lynx-js/react/element-template/jsx-dev-runtime': path.resolve(
+        __dirname,
+        '../../src/element-template/jsx-dev-runtime/index.ts',
+      ),
+      '@lynx-js/react/element-template/jsx-runtime': path.resolve(
+        __dirname,
+        '../../src/element-template/jsx-runtime/index.ts',
+      ),
       '@lynx-js/react/lepus': path.resolve(__dirname, '../../lepus/index.js'),
       '@lynx-js/react/legacy-react-runtime': path.resolve(__dirname, '../../src/legacy-react-runtime/index.ts'),
       '@lynx-js/react/element-template/internal': path.resolve(__dirname, '../../src/element-template/internal.ts'),
