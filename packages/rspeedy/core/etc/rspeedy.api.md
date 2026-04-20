@@ -18,7 +18,7 @@ import { RsbuildPlugin } from '@rsbuild/core';
 import { RsbuildPluginAPI } from '@rsbuild/core';
 import type { RsbuildPlugins } from '@rsbuild/core';
 import { version as rsbuildVersion } from '@rsbuild/core';
-import type { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin';
+import type { RsdoctorRspackPluginOptions as RsdoctorRspackPluginOptions_2 } from '@rsdoctor/core';
 import { Rspack } from '@rsbuild/core';
 import { rspack } from '@rsbuild/core';
 import type { ServerConfig } from '@rsbuild/core';
@@ -284,10 +284,15 @@ export { RsbuildPluginAPI }
 
 export { rsbuildVersion }
 
-// Warning: (ae-missing-release-tag) "RsdoctorRspackPluginOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export type RsdoctorRspackPluginOptions = ConstructorParameters<typeof RsdoctorRspackPlugin<[]>>[0];
+// @public
+export interface RsdoctorRspackPluginOptions extends Omit<RsdoctorRspackPluginOptions_2<[]>, 'linter'> {
+    // (undocumented)
+    linter?: {
+        rules?: Record<string, unknown>;
+        level?: 'Ignore' | 'Warn' | 'Error';
+        extends?: unknown[];
+    };
+}
 
 export { Rspack }
 
@@ -332,6 +337,7 @@ export interface Source {
 
 // @public
 export interface SourceMap {
+    css?: boolean | undefined;
     js?: Rspack.DevTool | undefined | `${Exclude<Rspack.DevTool, false | 'eval'>}-debugids`;
 }
 

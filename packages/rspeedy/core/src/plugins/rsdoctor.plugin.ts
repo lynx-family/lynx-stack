@@ -63,8 +63,14 @@ export function pluginRsdoctor(
           }
 
           config.plugins.push(
+            // Normalize the simplified config type at the plugin boundary.
             new RsdoctorRspackPlugin(
-              mergeRsbuildConfig(defaultOptions, options),
+              mergeRsbuildConfig(
+                defaultOptions,
+                options,
+              ) as unknown as ConstructorParameters<
+                typeof RsdoctorRspackPlugin<[]>
+              >[0],
             ),
           )
         }

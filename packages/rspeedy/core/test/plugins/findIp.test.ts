@@ -112,6 +112,92 @@ describe('findIp', () => {
     expect(ip).toBe('192.168.1.1') // should ignore internal ips
   })
 
+  test('multiple ips (should prefer physical interfaces over tunnels)', async () => {
+    const { default: os } = await import('node:os')
+
+    vi.mocked(os.networkInterfaces).mockReturnValue({
+      utun8: [
+        {
+          address: '172.31.252.23',
+          family: 'IPv4',
+          internal: false,
+          netmask: '255.255.192.0',
+          mac: '00:00:00:00:00:00',
+          cidr: '172.31.252.23/18',
+        },
+      ],
+      en0: [
+        {
+          address: '192.168.1.1',
+          family: 'IPv4',
+          internal: false,
+          netmask: '255.255.255.0',
+          mac: '00:00:00:00:00:00',
+          cidr: '192.168.1.1/24',
+        },
+      ],
+    })
+
+    const { findIp } = await import('../../src/plugins/dev.plugin.js')
+
+    const ip = await findIp('v4')
+    expect(ip).toBe('192.168.1.1')
+  })
+
+  test('multiple ips (should prefer routable addresses over link-local)', async () => {
+    const { default: os } = await import('node:os')
+
+    vi.mocked(os.networkInterfaces).mockReturnValue({
+      en19: [
+        {
+          address: '169.254.91.23',
+          family: 'IPv4',
+          internal: false,
+          netmask: '255.255.0.0',
+          mac: '00:00:00:00:00:00',
+          cidr: '169.254.91.23/16',
+        },
+      ],
+      en0: [
+        {
+          address: '192.168.1.1',
+          family: 'IPv4',
+          internal: false,
+          netmask: '255.255.255.0',
+          mac: '00:00:00:00:00:00',
+          cidr: '192.168.1.1/24',
+        },
+      ],
+    })
+
+    const { findIp } = await import('../../src/plugins/dev.plugin.js')
+
+    const ip = await findIp('v4')
+    expect(ip).toBe('192.168.1.1')
+  })
+
+  test('multiple ips (should fall back to tunnel interfaces when needed)', async () => {
+    const { default: os } = await import('node:os')
+
+    vi.mocked(os.networkInterfaces).mockReturnValue({
+      utun8: [
+        {
+          address: '172.31.252.23',
+          family: 'IPv4',
+          internal: false,
+          netmask: '255.255.192.0',
+          mac: '00:00:00:00:00:00',
+          cidr: '172.31.252.23/18',
+        },
+      ],
+    })
+
+    const { findIp } = await import('../../src/plugins/dev.plugin.js')
+
+    const ip = await findIp('v4')
+    expect(ip).toBe('172.31.252.23')
+  })
+
   test('no v4 ips', async () => {
     const { default: os } = await import('node:os')
 
