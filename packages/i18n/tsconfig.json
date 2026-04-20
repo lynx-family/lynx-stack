@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "composite": true,
+  },
+  "references": [
+    /** packages-start */
+    { "path": "./i18next-translation-dedupe/tsconfig.build.json" },
+    /** packages-end */
+  ],
+  "include": [],
+}

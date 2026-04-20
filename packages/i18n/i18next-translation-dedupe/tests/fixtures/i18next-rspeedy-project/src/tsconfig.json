@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "@lynx-js/react",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["es2019"],
+    "target": "es2019",
+    "noEmit": true,
+  },
+  "include": ["./**/*.ts", "./**/*.tsx"],
+}
