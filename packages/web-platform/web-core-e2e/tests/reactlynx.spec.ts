@@ -458,7 +458,7 @@ test.describe('reactlynx3 tests', () => {
         node.transformVW = true;
         node.transformVH = true;
         node.style.height = '500px';
-        node.style.weight = '500px';
+        node.style.width = '500px';
         node.style.minHeight = '500px';
         node.style.minWidth = '500px';
         node.style.setProperty('--vh-unit', '1cqh');
