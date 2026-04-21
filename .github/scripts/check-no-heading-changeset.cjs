@@ -6,6 +6,7 @@
 const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
 
+const FENCE_RE = /^\s{0,3}(?:```|~~~)/;
 const HEADING_RE = /^\s{0,3}#{1,3}\s+\S/;
 
 function parseChangesetIds(statusFile) {
@@ -24,10 +25,16 @@ function findHeadingViolationsFromStatusFile(statusFile, changesetDir) {
     const file = `${id}.md`;
     const fullPath = join(changesetDir, file);
     const lines = readFileSync(fullPath, 'utf8').split(/\r?\n/);
+    let inFence = false;
 
     for (let index = 0; index < lines.length; index += 1) {
       const line = lines[index];
-      if (!HEADING_RE.test(line)) {
+      if (FENCE_RE.test(line)) {
+        inFence = !inFence;
+        continue;
+      }
+
+      if (inFence || !HEADING_RE.test(line)) {
         continue;
       }
       violations.push({

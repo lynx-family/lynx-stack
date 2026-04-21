@@ -119,3 +119,18 @@ test('reports H3 heading in changeset file', () => {
     },
   );
 });
+
+test('ignores headings inside fenced code blocks', () => {
+  withChangesetStatus(
+    {
+      'valid.md':
+        '---\n\'pkg\': patch\n---\n\n```md\n# Allowed In Code\n```\n\n~~~js\n## Also Allowed In Code\n~~~\n',
+    },
+    ({ statusFile, changesetDir }) => {
+      assert.deepEqual(
+        findHeadingViolationsFromStatusFile(statusFile, changesetDir),
+        [],
+      );
+    },
+  );
+});
