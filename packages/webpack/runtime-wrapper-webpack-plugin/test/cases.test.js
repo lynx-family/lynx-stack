@@ -5,18 +5,19 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { expect, vi } from 'vitest';
+import { beforeEach, expect, rstest } from '@rstest/core';
 
 import { describeCases } from '@lynx-js/test-tools';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+beforeEach(() => {
+  rstest.stubGlobal('bundleSupportLoadScript', true);
+});
+
 describeCases({
   name: 'runtime-wrapper',
   casePath: path.join(__dirname, 'cases'),
-  beforeExecute() {
-    vi.stubGlobal('bundleSupportLoadScript', true);
-  },
   afterExecute(result) {
     expect(result.length).toBe(1);
     expect(result[0].context).toHaveProperty('__bundle__holder');
@@ -76,8 +77,8 @@ describeCases({
             undefined, // print
             undefined, // global
             // Lynx API
-            vi.fn(), // requestAnimationFrame
-            vi.fn(), // cancelAnimationFrame
+            rstest.fn(), // requestAnimationFrame
+            rstest.fn(), // cancelAnimationFrame
           );
         },
       },

@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import vm from 'node:vm';
 
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, rstest } from '@rstest/core';
 import webpack from 'webpack';
 
 import { createLynxCacheEventsSetupListRuntimeModule } from '../src/LynxCacheEventsSetupListRuntimeModule.js';
@@ -109,7 +109,7 @@ function getSetupItem(runtimeCache: RuntimeCache, name: string): SetupItem {
 
 describe('LynxCacheEventsSetupListRuntimeModule', () => {
   it('caches and replays tt method calls', () => {
-    const originalPublishEvent = vi.fn();
+    const originalPublishEvent = rstest.fn();
     const { runtimeCache, sandbox } = createRuntimeSandbox({
       tt: {
         publishEvent: originalPublishEvent,
@@ -155,19 +155,19 @@ describe('LynxCacheEventsSetupListRuntimeModule', () => {
 
   it('caches and replays performance events', () => {
     const listeners = new Map<string, (...args: unknown[]) => void>();
-    const addListener = vi.fn(
+    const addListener = rstest.fn(
       (eventName: string, listener: (...args: unknown[]) => void) => {
         listeners.set(eventName, listener);
       },
     );
-    const removeListener = vi.fn(
+    const removeListener = rstest.fn(
       (eventName: string, listener: (...args: unknown[]) => void) => {
         if (listeners.get(eventName) === listener) {
           listeners.delete(eventName);
         }
       },
     );
-    const emit = vi.fn((eventName: string, args: unknown[]) => {
+    const emit = rstest.fn((eventName: string, args: unknown[]) => {
       void eventName;
       void args;
     });
@@ -218,7 +218,7 @@ describe('LynxCacheEventsSetupListRuntimeModule', () => {
   });
 
   it('caches and replays globalThis.loadDynamicComponent calls', () => {
-    const originalLoadDynamicComponent = vi.fn();
+    const originalLoadDynamicComponent = rstest.fn();
     const { runtimeCache, sandbox } = createRuntimeSandbox({
       loadDynamicComponent: originalLoadDynamicComponent,
     });

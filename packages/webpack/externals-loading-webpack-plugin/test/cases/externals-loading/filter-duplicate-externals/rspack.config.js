@@ -2,7 +2,7 @@ import { createConfig } from '../../../helpers/create-config.js';
 
 /** @type {import('@rspack/core').Configuration} */
 export default {
-  context: __dirname,
+  context: new URL('.', import.meta.url).pathname,
   ...createConfig(
     {
       backgroundLayer: 'background',

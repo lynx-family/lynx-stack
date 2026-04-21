@@ -33,11 +33,13 @@
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
-    "test": "vitest"
+    "test": "rstest"
   },
   "devDependencies": {
     "@lynx-js/test-tools": "workspace:*",
     "@rspack/core": "catalog:rspack",
+    "@rspack/test-tools": "catalog:rspack",
+    "@rstest/core": "catalog:rstest",
     "bar": "./test/helpers/external-bundle-mock/bar",
     "baz": "./test/helpers/external-bundle-mock/baz",
     "foo": "./test/helpers/external-bundle-mock/foo"

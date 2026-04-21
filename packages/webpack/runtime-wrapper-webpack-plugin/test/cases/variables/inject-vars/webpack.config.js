@@ -1,4 +1,4 @@
-import { RuntimeWrapperWebpackPlugin } from '../../../../src';
+import { RuntimeWrapperWebpackPlugin } from '../../../../lib/index.js';
 
 /** @type {import('webpack').Configuration} */
 export default {
