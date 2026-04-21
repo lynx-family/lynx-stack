@@ -8,6 +8,7 @@ import { defineProject } from 'vitest/config';
 export default defineProject({
   test: {
     name: 'webpack/css-extract',
+    globals: true,
     globalSetup: ['test/helper/setup-loader.js', 'test/helper/setup-dist.js'],
     setupFiles: ['@lynx-js/vitest-setup/setup.ts'],
   },

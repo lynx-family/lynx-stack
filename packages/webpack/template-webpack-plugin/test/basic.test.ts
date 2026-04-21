@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import path from 'node:path';
+import { dirname } from 'node:path';
 
 import { describe, expect, test } from '@rstest/core';
 import webpack from 'webpack';
@@ -12,13 +12,13 @@ import { getRequireModuleAsyncCachePolyfill } from '../src/polyfill/requireModul
 describe('LynxTemplatePlugin', () => {
   test('build with custom lepus', async () => {
     const stats = await runWebpack({
-      context: path.resolve(process.cwd(), 'test'),
+      context: dirname(new URL(import.meta.url).pathname),
       mode: 'development',
       devtool: false,
       output: {
         iife: false,
       },
-      entry: path.resolve(process.cwd(), 'test/fixtures/basic.tsx'),
+      entry: './fixtures/basic.tsx',
       plugins: [
         function() {
           this.hooks.thisCompilation.tap('test', (compilation) => {
