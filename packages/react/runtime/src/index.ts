@@ -32,6 +32,7 @@ import {
   useRef,
   useState,
 } from './hooks/react.js';
+import { createPortal } from './lynx/portals.js';
 import { Suspense } from './lynx/suspense.js';
 
 export { Component, createContext } from 'preact';
@@ -67,6 +68,7 @@ export default {
   Suspense,
   lazy,
   createElement,
+  createPortal,
 };
 
 export {
@@ -81,6 +83,7 @@ export {
   createElement,
   cloneElement,
   useSyncExternalStore,
+  createPortal,
 };
 
 export * from './lynx-api.js';

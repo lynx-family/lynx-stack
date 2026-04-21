@@ -55,6 +55,28 @@ function runDelayedUiOps(): void {
 }
 
 /**
+ * Maps each externally-visible RefProxy (i.e. the Proxy returned from the
+ * constructor, not the raw target) back to its `refAttr` tuple
+ * (snapshotInstanceId + expIndex).
+ *
+ * Intentionally stores only the tuple rather than a pre-bound resolver
+ * closure, so this module stays independent of `backgroundSnapshot.ts` —
+ * importing the manager here would close a cycle via
+ * `backgroundSnapshot.ts → snapshot/ref.ts → delay.ts (RefProxy)`.
+ * Consumers that need the backing `BackgroundSnapshotInstance` go through
+ * `snapshot/refProxyBackgroundSnapshotInstance.ts`, which composes this
+ * WeakMap with the snapshot manager.
+ *
+ * Kept as a WeakMap (rather than a field on the class) for encapsulation:
+ * no Symbol or `Reflect.ownKeys` trick makes the association visible from
+ * the ref object itself; GC cleanup is automatic.
+ */
+export const refProxyRefAttr: WeakMap<
+  object,
+  [snapshotInstanceId: number, expIndex: number]
+> = new WeakMap();
+
+/**
  * A proxy class designed for managing and executing reference-based tasks.
  * It delays the execution of tasks until hydration is complete.
  */
@@ -66,7 +88,7 @@ class RefProxy {
     this.refAttr = refAttr;
     this.task = undefined;
 
-    return new Proxy(this, {
+    const proxy = new Proxy(this, {
       get: (target, prop, receiver) => {
         if (
           typeof prop === 'symbol'
@@ -86,6 +108,12 @@ class RefProxy {
         return forward(prop as ForwardableNodesRefMethod);
       },
     }) as RefProxy;
+
+    // Key by the Proxy — external code only ever sees the Proxy, so that's
+    // the handle users will present to the resolver.
+    refProxyRefAttr.set(proxy, refAttr);
+
+    return proxy;
   }
 
   private setTask<K extends ForwardableNodesRefMethod>(
