@@ -80,14 +80,14 @@
 
 - chore: migrate all @lynx-js/web-elements-\* packages into one ([#2057](https://github.com/lynx-family/lynx-stack/pull/2057))
 
-  ### Before
+  #### Before
 
   ```js
   import '@lynx-js/web-elements-template';
   import '@lynx-js/web-elements-compat/LinearContainer';
   ```
 
-  ### After
+  #### After
 
   ```js
   import '@lynx-js/web-elements/html-templates';
@@ -710,17 +710,17 @@
 - 3547621: feat(web): use `<lynx-wrapper/>` to replace `<div style="display:content"/>`
 - bed4f24: feat(web): implement <x-list> with list-type="single"
 
-  ## 1. RFC
+  #### 1. RFC
 
   https://github.com/lynx-wg/lynx-stack/issues/106
 
-  ## 2. Implementation differences with RFC
+  #### 2. Implementation differences with RFC
 
-  ### paging-enabled
+  ##### paging-enabled
 
   deprecated, no need to implement
 
-  ### layoutcomplete
+  ##### layoutcomplete
 
   Triggered only after the first screen because using contentvisibilityautostatechange.
 
@@ -729,28 +729,28 @@
   > This is because content is the parent container of list-item, and content is always visible before list-item.
   > We cannot obtain the timing of all the successfully visible list-items on the screen, so 100ms is used to delay this behavior.
 
-  ### event-scrolltoedge
+  ##### event-scrolltoedge
 
   split bindscrolltoupperedge and bindscrooltolowerdge.
 
-  ### event-scrolltoupper/lower
+  ##### event-scrolltoupper/lower
 
   Can be used with upper/lower-threshold-item-count.
 
   Attention, when the number of x-list children changes, scrolltoupper/lower will be re-triggered (if the new node is on the screen).
 
-  ### getVisibleCells, layoutcomplete
+  ##### getVisibleCells, layoutcomplete
 
   The returned cells may be an empty array, because there is a high probability that the contentvisibilityautostatechange event of list-item will not be captured when the first screen is displayed.
 
-  ## 3. Tests not implemented
+  #### 3. Tests not implemented
 
-  ### HTML Tests
+  ##### HTML Tests
 
   1. event-layoutcomplete skipped webkit, firefox due to contentvisibilityautostatechange not propagate
   2. get-visible-cells skipped webkit, firefox due to contentvisibilityautostatechange not propagate
 
-  ### React Tests
+  ##### React Tests
 
   1. lynx.createQuery not supported.
 
@@ -815,7 +815,7 @@
 - 8c6eeb9: fix(web): rename x-swiper-itrm to swiper-item
 - 1fe49a2: feat(web): add custom element x-audio-tt
 
-  ## The behavior is different from the native x-audio-tt:
+  #### The behavior is different from the native x-audio-tt:
 
   - When src changes, resources will not be loaded immediately. Resources will only be loaded when the play and prepare methods are triggered.
 
@@ -824,13 +824,13 @@
 
   - The code returned by the binderror event does not include -4
 
-  ## Unimplemented properties:
+  #### Unimplemented properties:
 
   - autoplay
   - playertype
   - experimental-ios-async-prepare
 
-  ## Unimplemented methods:
+  #### Unimplemented methods:
 
   - requestFocus
   - releaseFocus
