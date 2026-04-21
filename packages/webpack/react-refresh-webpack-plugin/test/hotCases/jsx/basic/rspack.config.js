@@ -1,7 +1,11 @@
 import {ReactWebpackPlugin} from '@lynx-js/react-webpack-plugin'
-import {ReactRefreshRspackPlugin} from '../../../../lib'
-import {TestEnvPlugin} from "../../../TestEnvPlugin"
+import {ReactRefreshRspackPlugin} from '../../../../lib/index.js'
+import {TestEnvPlugin} from '../../../TestEnvPlugin.ts'
+import { createRequire } from 'node:module'
 import path from 'path'
+
+const require = createRequire(import.meta.url);
+const __dirname = new URL('.', import.meta.url).pathname;
 
 /** @type {import('@rspack/core').Configuration} */
 export default {

@@ -1,20 +1,20 @@
-/// <reference types="vitest/globals" />
+/// <reference types="@rspack/test-tools/rstest" />
 
 import { root } from '@lynx-js/react'
 import { update } from '@lynx-js/test-tools/update.js'
 import { App } from './app.jsx'
 
-const renderContent = vi.fn()
-vi.stubGlobal('__RenderContent', value => {
+const renderContent = rstest.fn()
+rstest.stubGlobal('__RenderContent', value => {
   renderContent(value)
 })
 
-const callLepusMethod = vi.fn((_, __, callback) => {
+const callLepusMethod = rstest.fn((_, __, callback) => {
   callback()
 })
 
-console.profile = vi.fn()
-console.profileEnd = vi.fn()
+console.profile = rstest.fn()
+console.profileEnd = rstest.fn()
 
 lynx.getNativeApp = () => {
   return {

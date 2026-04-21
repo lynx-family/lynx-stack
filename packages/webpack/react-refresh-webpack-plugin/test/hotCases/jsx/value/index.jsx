@@ -3,8 +3,8 @@ import { update } from "@lynx-js/test-tools/update.js";
 
 import { App } from "./app.jsx";
 
-const createFn = vi.fn();
-vi.stubGlobal("__RenderContent", (vnode) => {
+const createFn = rstest.fn();
+rstest.stubGlobal("__RenderContent", vnode => {
   let { children } = vnode.props;
   for (let key in vnode.props) {
     if (typeof key === 'string' && key[0] === '$') {
@@ -19,7 +19,7 @@ vi.stubGlobal("__RenderContent", (vnode) => {
   return vnode;
 });
 
-const callLepusMethod = vi.fn((_, __, callback) => {
+const callLepusMethod = rstest.fn((_, __, callback) => {
   callback();
 });
 
@@ -37,8 +37,8 @@ root.render(
 
 callLepusMethod.mockClear();
 
-console.profile = vi.fn();
-console.profileEnd = vi.fn();
+console.profile = rstest.fn();
+console.profileEnd = rstest.fn();
 
 // Mocking Hydration
 lynxCoreInject.tt.OnLifecycleEvent([
