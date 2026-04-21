@@ -7,17 +7,17 @@ import type { FC } from 'react';
 
 import './lynx.js';
 
-import { factory as factory2 } from './compat/componentIs.js';
-import { useMemo } from './hooks/react.js';
-import { loadLazyBundle } from './lynx/lazy-bundle.js';
+import { factory as factory2 } from './snapshot/compat/componentIs.js';
+import { useMemo } from './snapshot/hooks/react.js';
+import { loadLazyBundle } from './snapshot/lynx/lazy-bundle.js';
 import { __root } from './root.js';
-import { BackgroundSnapshotInstance } from './snapshot/backgroundSnapshot.js';
-import { __page, __pageId, createSnapshot, snapshotManager } from './snapshot/definition.js';
-import { DynamicPartType } from './snapshot/dynamicPartType.js';
-import { snapshotCreateList } from './snapshot/list.js';
-import { SnapshotInstance, snapshotCreatorMap } from './snapshot/snapshot.js';
+import { BackgroundSnapshotInstance } from './snapshot/snapshot/backgroundSnapshot.js';
+import { __page, __pageId, createSnapshot, snapshotManager } from './snapshot/snapshot/definition.js';
+import { DynamicPartType } from './snapshot/snapshot/dynamicPartType.js';
+import { snapshotCreateList } from './snapshot/snapshot/list.js';
+import { SnapshotInstance, snapshotCreatorMap } from './snapshot/snapshot/snapshot.js';
 
-export { CHILDREN, COMPONENT, DIFF, DIRTY, DOM, FLAGS, INDEX, PARENT } from './renderToOpcodes/constants.js';
+export { CHILDREN, COMPONENT, DIFF, DIRTY, DOM, FLAGS, INDEX, PARENT } from './snapshot/renderToOpcodes/constants.js';
 
 export { __page, __pageId, __root };
 
@@ -34,20 +34,20 @@ export const __DynamicPartSlot: DynamicPartType = DynamicPartType.Slot;
 export const __DynamicPartMultiChildren: DynamicPartType = DynamicPartType.MultiChildren;
 export const __DynamicPartChildren: DynamicPartType = DynamicPartType.Children;
 export const __DynamicPartListChildren: DynamicPartType = DynamicPartType.ListChildren;
-export { __DynamicPartChildren_0 } from './snapshot/dynamicPartType.js';
+export { __DynamicPartChildren_0 } from './snapshot/snapshot/dynamicPartType.js';
 
 // v2 slot
 export const __DynamicPartSlotV2: DynamicPartType = DynamicPartType.SlotV2;
 export const __DynamicPartListSlotV2: DynamicPartType = DynamicPartType.ListSlotV2;
 export const __DynamicPartSlotV2_0: [DynamicPartType, number][] = [[DynamicPartType.SlotV2, 0]];
 
-export { updateSpread } from './snapshot/spread.js';
-export { updateEvent } from './snapshot/event.js';
-export { updateRef, transformRef } from './snapshot/ref.js';
-export { updateWorkletEvent } from './snapshot/workletEvent.js';
-export { updateWorkletRef } from './snapshot/workletRef.js';
-export { updateGesture } from './snapshot/gesture.js';
-export { updateListItemPlatformInfo } from './snapshot/platformInfo.js';
+export { updateSpread } from './snapshot/snapshot/spread.js';
+export { updateEvent } from './snapshot/snapshot/event.js';
+export { updateRef, transformRef } from './snapshot/snapshot/ref.js';
+export { updateWorkletEvent } from './snapshot/snapshot/workletEvent.js';
+export { updateWorkletRef } from './snapshot/snapshot/workletRef.js';
+export { updateGesture } from './snapshot/snapshot/gesture.js';
+export { updateListItemPlatformInfo } from './snapshot/snapshot/platformInfo.js';
 
 export {
   options,
@@ -57,11 +57,11 @@ export {
 } from 'preact';
 export type { Options } from 'preact';
 
-export { loadDynamicJS, __dynamicImport } from './lynx/dynamic-js.js';
+export { loadDynamicJS, __dynamicImport } from './snapshot/lynx/dynamic-js.js';
 
-export { withInitDataInState } from './compat/initData.js';
+export { withInitDataInState } from './snapshot/compat/initData.js';
 
-export { wrapWithLynxComponent } from './compat/lynxComponent.js';
+export { wrapWithLynxComponent } from './snapshot/compat/lynxComponent.js';
 
 /**
  * @internal a polyfill for <component is=? />
@@ -72,9 +72,9 @@ export const __ComponentIsPolyfill: FC<{ is: string }> = /* @__PURE__ */ factory
   loadLazyBundle,
 );
 
-export { loadLazyBundle } from './lynx/lazy-bundle.js';
+export { loadLazyBundle } from './snapshot/lynx/lazy-bundle.js';
 
-export { transformToWorklet } from './worklet/call/transformToWorklet.js';
-export { registerWorkletOnBackground } from './worklet/hmr.js';
+export { transformToWorklet } from './snapshot/worklet/call/transformToWorklet.js';
+export { registerWorkletOnBackground } from './snapshot/worklet/hmr.js';
 
 export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';

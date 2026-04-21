@@ -8,13 +8,13 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { createCompBG1, createCompBGList, createCompBGSpread } from './workletRefBG';
 import { createCompMT1, createCompMTList, createCompMTSpread } from './workletRefMT';
-import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
-import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
+import { replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
+import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
-import { globalEnvManager } from '../utils/envManager';
-import { elementTree } from '../utils/nativeMethod';
-import { injectUpdateMTRefInitValue } from '../../src/worklet/ref/updateInitValue';
+import { globalEnvManager } from './utils/envManager';
+import { elementTree } from './utils/nativeMethod';
+import { injectUpdateMTRefInitValue } from '../../src/snapshot/worklet/ref/updateInitValue';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));

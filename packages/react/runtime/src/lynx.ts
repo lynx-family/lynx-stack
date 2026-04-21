@@ -3,27 +3,27 @@
 // LICENSE file in the root directory of this source tree.
 import { options } from 'preact';
 // to make sure preact's hooks to register earlier than ours
-import './hooks/react.js';
+import './snapshot/hooks/react.js';
 
-import { initElementPAPICallAlog } from './alog/elementPAPICall.js';
-import { initAlog } from './alog/index.js';
-import { setupComponentStack } from './debug/component-stack.js';
-import { isProfiling } from './debug/profile.js';
-import { initProfileHook } from './debug/profileHooks.js';
-import { setupVNodeSourceHook } from './debug/vnodeSource.js';
+import { initElementPAPICallAlog } from './snapshot/alog/elementPAPICall.js';
+import { initAlog } from './snapshot/alog/index.js';
+import { setupComponentStack } from './snapshot/debug/component-stack.js';
+import { isProfiling } from './snapshot/debug/profile.js';
+import { initProfileHook } from './snapshot/debug/profileHooks.js';
+import { setupVNodeSourceHook } from './snapshot/debug/vnodeSource.js';
 import { document, setupBackgroundDocument } from './document.js';
-import { replaceCommitHook } from './lifecycle/patch/commit.js';
-import { addCtxNotFoundEventListener } from './lifecycle/patch/error.js';
-import { injectUpdateMainThread } from './lifecycle/patch/updateMainThread.js';
-import { injectCalledByNative } from './lynx/calledByNative.js';
-import { setupLynxEnv } from './lynx/env.js';
-import { injectLepusMethods } from './lynx/injectLepusMethods.js';
-import { initTimingAPI } from './lynx/performance.js';
-import { injectTt } from './lynx/tt.js';
+import { replaceCommitHook } from './snapshot/lifecycle/patch/commit.js';
+import { addCtxNotFoundEventListener } from './snapshot/lifecycle/patch/error.js';
+import { injectUpdateMainThread } from './snapshot/lifecycle/patch/updateMainThread.js';
+import { injectCalledByNative } from './snapshot/lynx/calledByNative.js';
+import { setupLynxEnv } from './snapshot/lynx/env.js';
+import { injectLepusMethods } from './snapshot/lynx/injectLepusMethods.js';
+import { initTimingAPI } from './snapshot/lynx/performance.js';
+import { injectTt } from './snapshot/lynx/tt.js';
 import { lynxQueueMicrotask } from './utils.js';
-import { injectUpdateMTRefInitValue } from './worklet/ref/updateInitValue.js';
+import { injectUpdateMTRefInitValue } from './snapshot/worklet/ref/updateInitValue.js';
 
-export { runWithForce } from './lynx/runWithForce.js';
+export { runWithForce } from './snapshot/lynx/runWithForce.js';
 
 // @ts-expect-error Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature
 if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__ && typeof globalThis.processEvalResult === 'undefined') {

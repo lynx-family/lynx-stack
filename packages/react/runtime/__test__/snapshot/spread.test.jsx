@@ -7,11 +7,11 @@ import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useState } from '../../src/index';
-import { initGlobalSnapshotPatch, takeGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch';
-import { snapshotPatchApply } from '../../src/lifecycle/patch/snapshotPatchApply';
+import { initGlobalSnapshotPatch, takeGlobalSnapshotPatch } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
+import { snapshotPatchApply } from '../../src/snapshot/lifecycle/patch/snapshotPatchApply';
 import { setupPage, snapshotInstanceManager, hydrate, backgroundSnapshotInstanceManager } from '../../src/snapshot';
-import { globalEnvManager } from '../utils/envManager';
-import { elementTree } from '../utils/nativeMethod';
+import { globalEnvManager } from './utils/envManager';
+import { elementTree } from './utils/nativeMethod';
 
 let scratch;
 let scratchBackground;
