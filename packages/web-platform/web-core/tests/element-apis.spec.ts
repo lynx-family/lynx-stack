@@ -99,6 +99,26 @@ describe('Element APIs', () => {
     expect(mtsGlobalThis.__GetAttributeByName(ret, 'name')).toBe('name');
   });
 
+  test('client component_css_id properly cascades to child element', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const comp = mtsGlobalThis.__CreateComponent(
+      0,
+      'comp1',
+      42,
+      'test_entry',
+      'test_name',
+      'path',
+      {},
+      {},
+    );
+    const compId = mtsGlobalThis.__GetElementUniqueID(comp);
+    const childView = mtsGlobalThis.__CreateElement('view', compId);
+    mtsGlobalThis.__AppendElement(comp, childView);
+    mtsGlobalThis.__AppendElement(root, comp);
+    mtsGlobalThis.__FlushElementTree();
+    expect(rootDom.querySelector(`[${cssIdAttribute}="42"]`)).not.toBeNull();
+  });
+
   test('__CreateView', () => {
     const ret = mtsGlobalThis.__CreateView(0);
     expect(mtsGlobalThis.__GetTag(ret)).toBe('view');

@@ -316,14 +316,14 @@ export function createElementAPI(
       __CreateComponent: ((
         parentComponentUniqueId: number,
         _componentID: string,
-        _cssID: number,
+        componentCSSID: number,
         entryName: string,
         name: string,
       ) => {
         const id = wasmContext.create_element(
           'x-view',
           parentComponentUniqueId,
-          _cssID,
+          componentCSSID,
           _componentID,
         ); // Component host
         const el = { [uniqueIdSymbol]: id } as ServerElement;
@@ -352,11 +352,11 @@ export function createElementAPI(
         );
         return { [uniqueIdSymbol]: id } as unknown as DecoratedHTMLElement;
       }) as CreateListPAPI,
-      __CreatePage: ((_componentID: string, _cssID: number) => {
+      __CreatePage: ((_componentID: string, componentCSSID: number) => {
         const id = wasmContext.create_element(
           'div',
           0,
-          _cssID,
+          componentCSSID,
           _componentID,
         );
         pageElementId = id;

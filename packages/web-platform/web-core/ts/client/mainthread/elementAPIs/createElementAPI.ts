@@ -212,7 +212,7 @@ export function createElementAPI(
     __CreateComponent(
       parentComponentUniqueId,
       componentID,
-      cssID,
+      componentCSSID,
       entryName,
       name,
     ) {
@@ -221,7 +221,7 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
-        cssID,
+        componentCSSID,
         componentID,
       );
       if (entryName) {
@@ -254,7 +254,7 @@ export function createElementAPI(
       );
       return dom;
     },
-    __CreatePage(componentID, cssID) {
+    __CreatePage(componentID, componentCSSID) {
       if (page) return page;
       const dom = document.createElement(
         'div',
@@ -263,7 +263,7 @@ export function createElementAPI(
         0,
         dom,
         new WeakRef(dom),
-        cssID,
+        componentCSSID,
         componentID,
       );
       if (config_default_overflow_visible) {

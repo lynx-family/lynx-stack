@@ -141,21 +141,27 @@ impl MainThreadServerContext {
     &mut self,
     tag_name: String,
     parent_component_unique_id: Option<usize>,
-    css_id_opt: Option<i32>,
+    component_css_id_opt: Option<i32>,
     component_id: Option<String>,
   ) -> usize {
     let id = self.elements.len();
     let parent_id = parent_component_unique_id.unwrap_or(0);
 
-    let css_id = if let Some(css_id) = css_id_opt {
-      css_id
-    } else if let Some(Some(parent_component_data)) = self.elements.get(parent_id) {
-      parent_component_data.css_id
+    let css_id = if let Some(Some(parent_component_data)) = self.elements.get(parent_id) {
+      parent_component_data.component_css_id
     } else {
       0
     };
 
-    let mut element = LynxElementData::new_with_tag_name(parent_id, css_id, component_id, tag_name);
+    let component_css_id = component_css_id_opt.unwrap_or(0);
+
+    let mut element = LynxElementData::new_with_tag_name(
+      parent_id,
+      css_id,
+      component_css_id,
+      component_id,
+      tag_name,
+    );
     if css_id != 0 {
       element.set_attribute(
         crate::constants::CSS_ID_ATTRIBUTE.to_string(),
@@ -570,5 +576,26 @@ mod tests {
     let html = ctx.generate_html(div_id);
     // Should not contain the style property since we ignored the empty value
     assert!(!html.contains("background-color:"));
+  }
+
+  #[test]
+  fn test_component_css_id() {
+    let mut ctx = MainThreadServerContext::new("".to_string(), true, false, false, false);
+    // Create a component with component_css_id = 42
+    let comp_id = ctx.create_element(
+      "x-view".to_string(),
+      None,
+      Some(42),
+      Some("comp1".to_string()),
+    );
+
+    // Create a child element inside this component
+    // It should inherit css id 42 from the component's component_css_id
+    let child_id = ctx.create_element("view".to_string(), Some(comp_id), None, None);
+    ctx.append_child(comp_id, child_id);
+
+    let html = ctx.generate_html(comp_id);
+    // The child should have `l-css-id="42"`
+    assert!(html.contains("l-css-id=\"42\""), "Generated HTML: {}", html);
   }
 }
