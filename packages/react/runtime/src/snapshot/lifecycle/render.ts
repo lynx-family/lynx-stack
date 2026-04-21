@@ -6,9 +6,9 @@
  * Implements the IFR (Instant First-Frame Rendering) on main thread.
  */
 
+import { __root } from '../../root.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { render as renderToString } from '../renderToOpcodes/index.js';
-import { __root } from '../../root.js';
 import { SnapshotInstance } from '../snapshot/snapshot.js';
 
 function renderMainThread(): void {

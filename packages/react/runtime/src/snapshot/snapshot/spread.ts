@@ -12,16 +12,16 @@
 import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
-import { ListUpdateInfoRecording } from '../list/listUpdateInfo.js';
-import { __pendingListUpdates } from '../list/pendingListUpdates.js';
-import { SnapshotInstance } from '../snapshot/snapshot.js';
-import { isDirectOrDeepEqual, isEmptyObject, pick } from '../../utils.js';
 import { updateEvent } from './event.js';
 import { updateGesture } from './gesture.js';
 import { platformInfoAttributes, updateListItemPlatformInfo } from './platformInfo.js';
 import { transformRef, updateRef } from './ref.js';
 import { updateWorkletEvent } from './workletEvent.js';
 import { updateWorkletRef } from './workletRef.js';
+import { isDirectOrDeepEqual, isEmptyObject, pick } from '../../utils.js';
+import { ListUpdateInfoRecording } from '../list/listUpdateInfo.js';
+import { __pendingListUpdates } from '../list/pendingListUpdates.js';
+import { SnapshotInstance } from '../snapshot/snapshot.js';
 
 // eslint-disable-next-line regexp/no-unused-capturing-group
 const eventRegExp = /^(([A-Za-z-]*):)?(bind|catch|capture-bind|capture-catch|global-bind)([A-Za-z]+)$/;

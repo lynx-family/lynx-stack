@@ -6,12 +6,12 @@ import { createContext, createElement } from 'preact/compat';
 import { useState } from 'preact/hooks';
 import type { Consumer, FC, ReactNode } from 'react';
 
+import { __root } from './root.js';
 import { factory, withInitDataInState } from './snapshot/compat/initData.js';
 import { profileEnd, profileStart } from './snapshot/debug/profile.js';
 import { useLynxGlobalEventListener } from './snapshot/hooks/useLynxGlobalEventListener.js';
 import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
 import { flushDelayedLifecycleEvents } from './snapshot/lynx/tt.js';
-import { __root } from './root.js';
 
 /**
  * The default root exported by `@lynx-js/react` for you to render a JSX

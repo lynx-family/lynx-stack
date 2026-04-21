@@ -29,13 +29,13 @@ import {
 } from './globalState.js';
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
+import { hook, isEmptyObject } from '../../../utils.js';
 import { profileEnd, profileStart } from '../../debug/profile.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../lynx/performance.js';
 import { COMMIT } from '../../renderToOpcodes/constants.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot/backgroundSnapshot.js';
 import { applyQueuedRefs } from '../../snapshot/ref.js';
-import { hook, isEmptyObject } from '../../../utils.js';
 import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,

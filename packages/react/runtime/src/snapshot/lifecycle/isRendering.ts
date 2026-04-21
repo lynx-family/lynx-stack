@@ -4,8 +4,8 @@
 
 import { options } from 'preact';
 
-import { RENDER_COMPONENT, ROOT } from '../renderToOpcodes/constants.js';
 import { hook, lynxQueueMicrotask } from '../../utils.js';
+import { RENDER_COMPONENT, ROOT } from '../renderToOpcodes/constants.js';
 
 export const isRendering = /* @__PURE__ */ { value: false };
 

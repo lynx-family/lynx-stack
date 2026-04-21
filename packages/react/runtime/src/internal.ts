@@ -7,10 +7,10 @@ import type { FC } from 'react';
 
 import './lynx.js';
 
+import { __root } from './root.js';
 import { factory as factory2 } from './snapshot/compat/componentIs.js';
 import { useMemo } from './snapshot/hooks/react.js';
 import { loadLazyBundle } from './snapshot/lynx/lazy-bundle.js';
-import { __root } from './root.js';
 import { BackgroundSnapshotInstance } from './snapshot/snapshot/backgroundSnapshot.js';
 import { __page, __pageId, createSnapshot, snapshotManager } from './snapshot/snapshot/definition.js';
 import { DynamicPartType } from './snapshot/snapshot/dynamicPartType.js';

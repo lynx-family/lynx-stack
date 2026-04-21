@@ -20,6 +20,7 @@ import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { transformSpread } from './spread.js';
 import type { SerializedSnapshotInstance } from './types.js';
 import { traverseSnapshotInstance } from './utils.js';
+import { isDirectOrDeepEqual } from '../../utils.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { clearSnapshotVNodeSource, getSnapshotVNodeSource, moveSnapshotVNodeSource } from '../debug/vnodeSource.js';
 import { processGestureBackground } from '../gesture/processGestureBagkround.js';
@@ -34,7 +35,6 @@ import {
 import type { SnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import { globalPipelineOptions } from '../lynx/performance.js';
 import { diffArrayAction, diffArrayLepus } from '../renderToOpcodes/hydrate.js';
-import { isDirectOrDeepEqual } from '../../utils.js';
 import { onPostWorkletCtx } from '../worklet/ctx.js';
 
 /**

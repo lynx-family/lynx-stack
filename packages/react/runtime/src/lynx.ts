@@ -5,13 +5,13 @@ import { options } from 'preact';
 // to make sure preact's hooks to register earlier than ours
 import './snapshot/hooks/react.js';
 
+import { document, setupBackgroundDocument } from './document.js';
 import { initElementPAPICallAlog } from './snapshot/alog/elementPAPICall.js';
 import { initAlog } from './snapshot/alog/index.js';
 import { setupComponentStack } from './snapshot/debug/component-stack.js';
 import { isProfiling } from './snapshot/debug/profile.js';
 import { initProfileHook } from './snapshot/debug/profileHooks.js';
 import { setupVNodeSourceHook } from './snapshot/debug/vnodeSource.js';
-import { document, setupBackgroundDocument } from './document.js';
 import { replaceCommitHook } from './snapshot/lifecycle/patch/commit.js';
 import { addCtxNotFoundEventListener } from './snapshot/lifecycle/patch/error.js';
 import { injectUpdateMainThread } from './snapshot/lifecycle/patch/updateMainThread.js';
@@ -20,8 +20,8 @@ import { setupLynxEnv } from './snapshot/lynx/env.js';
 import { injectLepusMethods } from './snapshot/lynx/injectLepusMethods.js';
 import { initTimingAPI } from './snapshot/lynx/performance.js';
 import { injectTt } from './snapshot/lynx/tt.js';
-import { lynxQueueMicrotask } from './utils.js';
 import { injectUpdateMTRefInitValue } from './snapshot/worklet/ref/updateInitValue.js';
+import { lynxQueueMicrotask } from './utils.js';
 
 export { runWithForce } from './snapshot/lynx/runWithForce.js';
 

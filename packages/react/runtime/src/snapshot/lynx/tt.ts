@@ -5,6 +5,7 @@ import { process, render } from 'preact';
 
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from './performance.js';
 import { runWithForce } from './runWithForce.js';
+import { __root } from '../../root.js';
 import { printSnapshotInstanceToString } from '../debug/printSnapshot.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { getSnapshotVNodeSource } from '../debug/vnodeSource.js';
@@ -19,7 +20,6 @@ import { removeCtxNotFoundEventListener } from '../lifecycle/patch/error.js';
 import { runDelayedUiOps } from '../lifecycle/ref/delay.js';
 import { reloadBackground } from '../lifecycle/reload.js';
 import { CHILDREN } from '../renderToOpcodes/constants.js';
-import { __root } from '../../root.js';
 import {
   BackgroundSnapshotInstance,
   backgroundSnapshotInstanceManager,

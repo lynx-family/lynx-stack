@@ -19,6 +19,7 @@ import type {
   useLayoutEffect as useLayoutEffectType,
 } from 'preact/hooks';
 
+import { noop } from '../../utils.js';
 import {
   CHILDREN,
   COMPONENT,
@@ -35,7 +36,6 @@ import {
   VALUE,
   VNODE,
 } from '../renderToOpcodes/constants.js';
-import { noop } from '../../utils.js';
 
 let currentIndex: number;
 let currentComponent: Component | null | undefined;

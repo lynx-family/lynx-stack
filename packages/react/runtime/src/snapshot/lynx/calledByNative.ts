@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { markTiming, setPipeline } from './performance.js';
+import { __root, setRoot } from '../../root.js';
+import { isEmptyObject } from '../../utils.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
 import { isJSReady, jsReady, jsReadyEventIdSwap, resetJSReady } from '../lifecycle/event/jsReady.js';
 import { reloadMainThread } from '../lifecycle/reload.js';
@@ -9,11 +11,9 @@ import { renderMainThread } from '../lifecycle/render.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import { hydrate } from '../renderToOpcodes/hydrate.js';
 import { ssrHydrateByOpcodes } from '../renderToOpcodes/opcodes.js';
-import { __root, setRoot } from '../../root.js';
 import { __page, setupPage } from '../snapshot/definition.js';
 import { SnapshotInstance } from '../snapshot/snapshot.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
-import { isEmptyObject } from '../../utils.js';
 
 function ssrEncode() {
   const { __opcodes } = __root;

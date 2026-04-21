@@ -19,11 +19,11 @@ import type { PlatformInfo } from './platformInfo.js';
 import { unref } from './ref.js';
 import type { SerializedSnapshotInstance } from './types.js';
 import { traverseSnapshotInstance } from './utils.js';
+import { isDirectOrDeepEqual } from '../../utils.js';
 import { clearSnapshotVNodeSource } from '../debug/vnodeSource.js';
 import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import { ListUpdateInfoRecording } from '../list/listUpdateInfo.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
-import { isDirectOrDeepEqual } from '../../utils.js';
 
 export const snapshotInstanceManager: {
   nextId: number;
