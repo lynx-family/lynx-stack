@@ -253,6 +253,18 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: pnpm -r run test:type
+  test-rstest:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    with:
+      runs-on: lynx-ubuntu-24.04-medium
+      run: >
+        pnpm rstest
+        -c rstest.config.ts
+        --reporter=github-actions
+        --reporter=junit
+        --testTimeout=50000
+        --hookTimeout=50000
   kitten-lynx-android-emulator:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -363,6 +375,7 @@ jobs:
       - test-react
       - test-rust
       - test-type
+      - test-rstest
       - test-typos
       - test-vitest
       - web-core-e2e

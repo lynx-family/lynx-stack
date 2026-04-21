@@ -277,7 +277,12 @@ export default tseslint.config(
         ecmaVersion: 'latest',
         sourceType: 'module',
         projectService: {
-          allowDefaultProject: ['*.js', 'rslib.config.ts', 'vitest.config.ts'],
+          allowDefaultProject: [
+            '*.js',
+            'rslib.config.ts',
+            'vitest.config.ts',
+            'rstest.config.ts',
+          ],
           defaultProject: './tsconfig.json',
         },
         tsconfigRootDir: import.meta.dirname,
