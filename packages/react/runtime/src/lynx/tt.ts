@@ -39,7 +39,7 @@ function injectTt(): void {
   const tt = lynxCoreInject.tt;
   tt.OnLifecycleEvent = onLifecycleEvent;
   tt.publishEvent = delayedPublishEvent;
-  tt.publicComponentEvent = delayedPublicComponentEvent;
+  tt.publicComponentEvent = (_componentId, handlerName, data) => tt.publishEvent(handlerName, data);
   tt.callDestroyLifetimeFun = () => {
     removeCtxNotFoundEventListener();
     destroyWorklet();
@@ -54,10 +54,9 @@ function injectTt(): void {
 }
 
 function onLifecycleEvent([type, data]: [LifecycleConstant, unknown]) {
-  const hasRootRendered = CHILDREN in __root;
   // never called `render(<App/>, __root)`
   // happens if user call `root.render()` async
-  if (!hasRootRendered) {
+  if (!(CHILDREN in __root)) {
     delayLifecycleEvent(type, data);
     return;
   }
@@ -133,23 +132,18 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
 
       // TODO: It seems `delayedEvents` and `delayedLifecycleEvents` should be merged into one array to ensure the proper order of events.
       flushDelayedLifecycleEvents();
-      if (delayedEvents) {
-        delayedEvents.forEach((args) => {
-          const [handlerName, data] = args;
+      const queuedDelayedEvents = delayedEvents;
+      if (queuedDelayedEvents) {
+        for (const [handlerName, data] of queuedDelayedEvents) {
           // eslint-disable-next-line prefer-const
           let [idStr, ...rest] = handlerName.split(':');
           while (jsReadyEventIdSwap[idStr!]) idStr = jsReadyEventIdSwap[idStr!]?.toString();
-          try {
-            publishEvent([idStr, ...rest].join(':'), data);
-          } catch (e) {
-            lynx.reportError(e as Error);
-          }
-        });
-        delayedEvents.length = 0;
+          publishEvent([idStr, ...rest].join(':'), data);
+        }
+        queuedDelayedEvents.length = 0;
       }
 
       lynxCoreInject.tt.publishEvent = publishEvent;
-      lynxCoreInject.tt.publicComponentEvent = publicComponentEvent;
 
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
@@ -196,12 +190,10 @@ function flushDelayedLifecycleEvents(): void {
   // avoid stackoverflow
   if (flushingDelayedLifecycleEvents) return;
   flushingDelayedLifecycleEvents = true;
-  if (delayedLifecycleEvents) {
-    delayedLifecycleEvents.forEach((e) => {
-      onLifecycleEvent(e);
-    });
-    delayedLifecycleEvents.length = 0;
+  for (const e of delayedLifecycleEvents) {
+    onLifecycleEvent(e);
   }
+  delayedLifecycleEvents.length = 0;
   flushingDelayedLifecycleEvents = false;
 }
 
@@ -255,14 +247,6 @@ function publishEvent(handlerName: string, data: EventDataType) {
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
-}
-
-function publicComponentEvent(_componentId: string, handlerName: string, data: EventDataType) {
-  publishEvent(handlerName, data);
-}
-
-function delayedPublicComponentEvent(_componentId: string, handlerName: string, data: EventDataType) {
-  delayedPublishEvent(handlerName, data);
 }
 
 function updateGlobalProps(newData: Record<string, any>): void {
