@@ -11,8 +11,6 @@ import { unref } from '../snapshot/ref.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 import { isEmptyObject } from '../utils.js';
 
-const UNREACHABLE_ITEM_KEY_NOT_FOUND = 'UNREACHABLE_ITEM_KEY_NOT_FOUND';
-
 export interface DiffResult<K> {
   $$diff: true;
   // insert No.j to new
@@ -25,7 +23,34 @@ export interface DiffResult<K> {
 
 export interface Typed {
   type: string;
+  // from snapshotInstance
   __listItemPlatformInfo?: PlatformInfo;
+  // from serializeSnapshotInstance
+  values?: any[] | undefined;
+  // from backgroundSnapshotInstance
+  __values?: any[] | undefined;
+}
+
+export function getItemKeyOf(
+  node: Pick<Typed, '__listItemPlatformInfo' | '__values' | 'values'>,
+  isBeforeNode: boolean,
+): string | undefined {
+  if (node?.__listItemPlatformInfo) {
+    // if diff list children in mts, the node has __listItemPlatformInfo, so we get item-key from it
+    return node?.__listItemPlatformInfo?.['item-key'] ?? undefined;
+  }
+  // if the node is the before node in diff, we get item-key from values which is passed from serializeSnapshotInstance
+  const valueArray = (isBeforeNode ? node?.values : node?.__values) as unknown[];
+  for (let index = 0; index < valueArray?.length; index++) {
+    const value = valueArray[index];
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const obj = value as Record<string, unknown>;
+      if ('item-key' in obj) {
+        return obj['item-key'] as string ?? undefined;
+      }
+    }
+  }
+  return undefined;
 }
 
 export function isEmptyDiffResult<K>(diffResult: DiffResult<K>): boolean {
@@ -39,7 +64,7 @@ export function diffArrayLepus<A extends Typed, B extends Typed>(
   after: B[],
   isSameType: (a: A, b: B) => boolean,
   onDiffChildren: (a: A, b: B, oldIndex: number, newIndex: number) => void,
-  isListHasItemKey: boolean,
+  isListItem: boolean,
 ): DiffResult<B> {
   let lastPlacedIndex = 0;
   const result: DiffResult<B> = {
@@ -52,17 +77,13 @@ export function diffArrayLepus<A extends Typed, B extends Typed>(
 
   for (let i = 0; i < before.length; i++) {
     const node = before[i]!;
-    const key = isListHasItemKey
-      ? node.__listItemPlatformInfo?.['item-key'] ?? UNREACHABLE_ITEM_KEY_NOT_FOUND
-      : node.type;
+    const key = isListItem ? (getItemKeyOf(node, true) ?? node.type) : node.type;
     (beforeMap[key] ??= new Set()).add([node, i]);
   }
 
   for (let i = 0; i < after.length; i++) {
     const afterNode = after[i]!;
-    const key = isListHasItemKey
-      ? afterNode.__listItemPlatformInfo?.['item-key'] ?? UNREACHABLE_ITEM_KEY_NOT_FOUND
-      : afterNode.type;
+    const key = isListItem ? (getItemKeyOf(afterNode, false) ?? afterNode.type) : afterNode.type;
     const beforeNodes = beforeMap[key];
     let beforeNode: [A, number];
 
