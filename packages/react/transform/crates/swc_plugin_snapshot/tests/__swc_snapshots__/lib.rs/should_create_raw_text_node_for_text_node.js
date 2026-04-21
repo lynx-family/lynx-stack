@@ -1,12 +1,4 @@
 import * as ReactLynx from "@lynx-js/react";
-const __snapshot_da39a_test_2 = "__snapshot_da39a_test_2";
-ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2)=>ReactLynx.createSnapshot(__snapshot_da39a_test_2, function() {
-        const pageId = ReactLynx.__pageId;
-        const el = __CreateText(pageId);
-        return [
-            el
-        ];
-    }, null, ReactLynx.__DynamicPartChildren_0, undefined, globDynamicComponentEntry, null, true);
 const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
 ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>ReactLynx.createSnapshot(__snapshot_da39a_test_1, function() {
         const pageId = ReactLynx.__pageId;
@@ -17,7 +9,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1
         __AppendElement(el1, el2);
         const el3 = __CreateRawText(", ReactLynx 1");
         __AppendElement(el1, el3);
-        const el4 = __CreateWrapperElement(pageId);
+        const el4 = __CreateText(pageId);
         __AppendElement(el, el4);
         const el5 = __CreateText(pageId);
         __AppendElement(el, el5);
@@ -44,12 +36,12 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1
         ];
     }, null, [
         [
-            ReactLynx.__DynamicPartSlot,
+            ReactLynx.__DynamicPartSlotV2,
             2
         ],
         [
-            ReactLynx.__DynamicPartSlot,
+            ReactLynx.__DynamicPartSlotV2,
             4
         ]
     ], undefined, globDynamicComponentEntry, null, true);
-<__snapshot_da39a_test_1><wrapper>{hello}</wrapper><__snapshot_da39a_test_2>{hello}</__snapshot_da39a_test_2></__snapshot_da39a_test_1>;
+<__snapshot_da39a_test_1 $0={hello} $1={hello}/>;

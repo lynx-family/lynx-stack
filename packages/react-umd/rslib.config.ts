@@ -15,4 +15,7 @@ export default defineExternalBundleRslibConfig({
     cleanDistPath: false,
     distPath: './dist',
   },
+  performance: {
+    buildCache: false,
+  },
 });

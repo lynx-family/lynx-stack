@@ -102,6 +102,8 @@ describe('insertBefore', () => {
 
     const b = new SnapshotInstance(snapshot2);
     const c = new SnapshotInstance(snapshot2);
+    b.__slotIndex = 0;
+    c.__slotIndex = 1;
 
     a.insertBefore(b);
     a.insertBefore(c);
@@ -114,23 +116,27 @@ describe('insertBefore', () => {
           />
         </text>
         <text>
-          <view>
-            <text>
-              <raw-text
-                text="Hello World"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
           <raw-text
             text="!!!"
           />
-          <view>
-            <text>
-              <raw-text
-                text="Hello World"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
         </text>
       </view>
     `);
@@ -154,14 +160,7 @@ describe('insertBefore', () => {
     const a = new SnapshotInstance(snapshot1);
     a.ensureElements();
 
-    // Insert two wrappers for stable slot index
-    const b = new SnapshotInstance('wrapper');
-    const c = new SnapshotInstance('wrapper');
     expect(a.__current_slot_index).toBe(0);
-    a.insertBefore(b);
-    expect(a.__current_slot_index).toBe(1);
-    a.insertBefore(c);
-    expect(a.__current_slot_index).toBe(2);
     expect(a.__element_root).toMatchInlineSnapshot(`
       <view>
         <text>
@@ -175,12 +174,14 @@ describe('insertBefore', () => {
     `);
 
     const d = new SnapshotInstance(snapshot2);
+    d.__slotIndex = 0;
     const e = new SnapshotInstance(snapshot2);
+    e.__slotIndex = 1;
 
-    b.insertBefore(d);
-    c.insertBefore(e);
+    a.insertBefore(d);
+    a.insertBefore(e);
 
-    expect(a.__current_slot_index).toBe(2);
+    expect(a.__current_slot_index).toBe(0);
     expect(a.__element_root).toMatchInlineSnapshot(`
       <view>
         <text>
@@ -209,9 +210,9 @@ describe('insertBefore', () => {
       </view>
     `);
 
-    b.removeChild(d);
+    a.removeChild(d);
 
-    expect(a.__current_slot_index).toBe(2);
+    expect(a.__current_slot_index).toBe(0);
     expect(a.__element_root).toMatchInlineSnapshot(`
       <view>
         <text>
@@ -252,6 +253,9 @@ describe('insertBefore', () => {
     const a = new SnapshotInstance(snapshot1);
     const b = new SnapshotInstance(snapshot2);
     const c = new SnapshotInstance(snapshot2);
+    b.__slotIndex = 0;
+    c.__slotIndex = 1;
+
     a.insertBefore(b);
     a.insertBefore(c);
 
@@ -265,23 +269,27 @@ describe('insertBefore', () => {
           />
         </text>
         <text>
-          <view>
-            <text>
-              <raw-text
-                text="Hello World"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
           <raw-text
             text="!!!"
           />
-          <view>
-            <text>
-              <raw-text
-                text="Hello World"
-              />
-            </text>
-          </view>
+          <wrapper>
+            <view>
+              <text>
+                <raw-text
+                  text="Hello World"
+                />
+              </text>
+            </view>
+          </wrapper>
         </text>
       </view>
     `);
@@ -467,42 +475,88 @@ describe('setAttribute', () => {
 
 describe('dynamic key in snapshot', () => {
   it('multiple slots 0', () => {
+    const snapshotFoo = __SNAPSHOT__(<text>foo</text>);
+    const snapshotBar = __SNAPSHOT__(<text>bar</text>);
+    const snapshotWithDynamicKey = __SNAPSHOT__(
+      <view className='foo' key={`foo`}>
+        <view>
+          {snapshotFoo}
+        </view>
+        <view>
+          {snapshotBar}
+        </view>
+      </view>,
+    );
+
     const snapshot = __SNAPSHOT__(
       <view>
-        <view className='foo' key={`foo`}>
-          <view>
-            {<text>foo</text>}
-          </view>
-          <view>
-            {<text>bar</text>}
-          </view>
-        </view>
+        {snapshotWithDynamicKey}
       </view>,
     );
 
     const a = new SnapshotInstance(snapshot);
     a.ensureElements();
 
+    expect(a.__element_root).toMatchInlineSnapshot(`<view />`);
+
+    const b = new SnapshotInstance(snapshotWithDynamicKey);
+    b.__slotIndex = 0;
+
+    a.insertBefore(b);
+
     expect(a.__element_root).toMatchInlineSnapshot(`
       <view>
         <view
           class="foo"
         >
-          <wrapper />
+          <view />
+          <view />
+        </view>
+      </view>
+    `);
+
+    const foo = new SnapshotInstance(snapshotFoo);
+    foo.__slotIndex = 0;
+    const bar = new SnapshotInstance(snapshotBar);
+    bar.__slotIndex = 1;
+    b.insertBefore(foo);
+    b.insertBefore(bar);
+
+    expect(a.__element_root).toMatchInlineSnapshot(`
+      <view>
+        <view
+          class="foo"
+        >
+          <view>
+            <text>
+              <raw-text
+                text="foo"
+              />
+            </text>
+          </view>
+          <view>
+            <text>
+              <raw-text
+                text="bar"
+              />
+            </text>
+          </view>
         </view>
       </view>
     `);
   });
 
   it('multiple slots 2', () => {
+    const snapshotFoo = __SNAPSHOT__(<text>foo</text>);
+    const snapshotBar = __SNAPSHOT__(<text>bar</text>);
     const snapshot = __SNAPSHOT__(
       <view className='foo' key={`foo`}>
         <view>
           <view>
-            {<text>foo</text>}
+            {snapshotFoo}
           </view>
           <view>
-            {<text>bar</text>}
+            {snapshotBar}
           </view>
         </view>
       </view>,
@@ -515,23 +569,61 @@ describe('dynamic key in snapshot', () => {
       <view
         class="foo"
       >
-        <wrapper />
+        <view>
+          <view />
+          <view />
+        </view>
+      </view>
+    `);
+
+    const foo = new SnapshotInstance(snapshotFoo);
+    foo.__slotIndex = 0;
+    const bar = new SnapshotInstance(snapshotBar);
+    bar.__slotIndex = 1;
+    a.insertBefore(foo);
+    a.insertBefore(bar);
+
+    expect(a.__element_root).toMatchInlineSnapshot(`
+      <view
+        class="foo"
+      >
+        <view>
+          <view>
+            <text>
+              <raw-text
+                text="foo"
+              />
+            </text>
+          </view>
+          <view>
+            <text>
+              <raw-text
+                text="bar"
+              />
+            </text>
+          </view>
+        </view>
       </view>
     `);
   });
 
   it('multiple slots 3', () => {
+    const snapshotFoo = __SNAPSHOT__(<text>foo</text>);
+    const snapshotBar = __SNAPSHOT__(<text>bar</text>);
+    const snapshotDynamic = __SNAPSHOT__(
+      <view className='foo' key={`foo`}>
+        <view>
+          {snapshotFoo}
+        </view>
+        <view>
+          {snapshotBar}
+        </view>
+      </view>,
+    );
     const snapshot = __SNAPSHOT__(
       <view>
         <text>Hello {HOLE}</text>
-        <view className='foo' key={`foo`}>
-          <view>
-            {<text>foo</text>}
-          </view>
-          <view>
-            {<text>bar</text>}
-          </view>
-        </view>
+        {snapshotDynamic}
       </view>,
     );
 
@@ -546,11 +638,68 @@ describe('dynamic key in snapshot', () => {
           />
           <wrapper />
         </text>
-        <view
-          class="foo"
-        >
+        <wrapper />
+      </view>
+    `);
+
+    const b = new SnapshotInstance(snapshotDynamic);
+    b.__slotIndex = 1;
+    a.insertBefore(b);
+
+    expect(a.__element_root).toMatchInlineSnapshot(`
+      <view>
+        <text>
+          <raw-text
+            text="Hello "
+          />
           <wrapper />
-        </view>
+        </text>
+        <wrapper>
+          <view
+            class="foo"
+          >
+            <view />
+            <view />
+          </view>
+        </wrapper>
+      </view>
+    `);
+
+    const foo = new SnapshotInstance(snapshotFoo);
+    foo.__slotIndex = 0;
+    const bar = new SnapshotInstance(snapshotBar);
+    bar.__slotIndex = 1;
+    b.insertBefore(foo);
+    b.insertBefore(bar);
+
+    expect(a.__element_root).toMatchInlineSnapshot(`
+      <view>
+        <text>
+          <raw-text
+            text="Hello "
+          />
+          <wrapper />
+        </text>
+        <wrapper>
+          <view
+            class="foo"
+          >
+            <view>
+              <text>
+                <raw-text
+                  text="foo"
+                />
+              </text>
+            </view>
+            <view>
+              <text>
+                <raw-text
+                  text="bar"
+                />
+              </text>
+            </view>
+          </view>
+        </wrapper>
       </view>
     `);
   });

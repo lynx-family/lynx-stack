@@ -13,6 +13,8 @@ export const DynamicPartType = {
   Children: 3, // Regular children updates
   ListChildren: 4, // List/array children updates
   MultiChildren: 5, // Multiple children updates (compat layer)
+  SlotV2: 6, // Slot for component children (Preact MultiSlots)
+  ListSlotV2: 7, // List/array children updates (Preact MultiSlots)
 } as const;
 
 export type DynamicPartType = (typeof DynamicPartType)[keyof typeof DynamicPartType];

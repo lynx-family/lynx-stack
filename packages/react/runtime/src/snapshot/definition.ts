@@ -33,6 +33,7 @@ export interface Snapshot {
   slot: [DynamicPartType, number][];
 
   isListHolder?: boolean;
+  isSlotV2?: boolean;
   cssId?: number | undefined;
   entryName?: string | undefined;
   refAndSpreadIndexes?: number[] | null;
@@ -140,8 +141,11 @@ export function createSnapshot(
 
   const s: Snapshot = { create, update, slot, cssId, entryName, refAndSpreadIndexes };
   snapshotManager.values.set(uniqID, s);
-  if (slot && slot[0] && slot[0][0] === DynamicPartType.ListChildren) {
-    s.isListHolder = true;
+  if (slot && slot[0]) {
+    const v = slot[0][0];
+    if (v === DynamicPartType.ListChildren || v === DynamicPartType.ListSlotV2) {
+      s.isListHolder = true;
+    }
   }
   return uniqID;
 }

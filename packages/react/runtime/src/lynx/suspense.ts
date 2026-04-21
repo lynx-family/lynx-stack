@@ -20,30 +20,38 @@ export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: 
 
   const newChildren = __createElement(
     'wrapper',
-    __MAIN_THREAD__ ? {} : {
-      ref: (bsi: BackgroundSnapshotInstance) => {
-        if (bsi) {
-          childrenRef.current = bsi;
-        }
+    __MAIN_THREAD__
+      ? {
+        $0: children,
+      }
+      : {
+        ref: (bsi: BackgroundSnapshotInstance) => {
+          if (bsi) {
+            childrenRef.current = bsi;
+          }
+        },
+        $0: children,
       },
-    },
-    children,
   );
 
   const newFallback = __createElement(
     'wrapper',
-    __MAIN_THREAD__ ? {} : {
-      ref: (bsi: BackgroundSnapshotInstance) => {
-        if (bsi && childrenRef.current) {
-          const i = globalBackgroundSnapshotInstancesToRemove.indexOf(childrenRef.current.__id);
-          if (i !== -1) {
-            globalBackgroundSnapshotInstancesToRemove.splice(i, 1);
+    __MAIN_THREAD__
+      ? {
+        $0: fallback,
+      }
+      : {
+        ref: (bsi: BackgroundSnapshotInstance) => {
+          if (bsi && childrenRef.current) {
+            const i = globalBackgroundSnapshotInstancesToRemove.indexOf(childrenRef.current.__id);
+            if (i !== -1) {
+              globalBackgroundSnapshotInstancesToRemove.splice(i, 1);
+            }
+            childrenRef.current = undefined;
           }
-          childrenRef.current = undefined;
-        }
+        },
+        $0: fallback,
       },
-    },
-    fallback,
   );
 
   return __createElement(PreactSuspense, { fallback: newFallback }, newChildren);

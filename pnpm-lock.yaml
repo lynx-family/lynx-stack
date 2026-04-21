@@ -638,8 +638,8 @@ importers:
   packages/react:
     dependencies:
       preact:
-        specifier: npm:@lynx-js/internal-preact@10.28.4-2d1d67a
-        version: '@lynx-js/internal-preact@10.28.4-2d1d67a'
+        specifier: npm:@lynx-js/internal-preact@10.28.4-dfff9aa
+        version: '@lynx-js/internal-preact@10.28.4-dfff9aa'
     devDependencies:
       '@lynx-js/types':
         specifier: 3.7.0
@@ -2375,8 +2375,8 @@ packages:
     peerDependencies:
       '@babel/core': ^7.0.0-0
 
-  '@babel/plugin-transform-react-jsx@7.28.6':
-    resolution: {integrity: sha512-61bxqhiRfAACulXSLd/GxqmAedUSrRZIu/cbaT18T1CetkTmtDN15it7i80ru4DVqRK1WMxQhXs+Lf9kajm5Ow==}
+  '@babel/plugin-transform-react-jsx@7.27.1':
+    resolution: {integrity: sha512-2KH4LWGSrJIkVf5tSiBFYuXDAoWRq2MMwgivCf+93dd0GQi8RXLjKA/0EvRnVV5G0hrHczsquXuD01L8s6dmBw==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -3272,8 +3272,8 @@ packages:
       '@lynx-js/react': '*'
       '@lynx-js/types': '*'
 
-  '@lynx-js/internal-preact@10.28.4-2d1d67a':
-    resolution: {integrity: sha512-CA8rFURvLvksg155ONHZHEa0ZIxWnS4H/UP8vp5PF8aNOFd3D3Z+Lq+0IQP5GyE/9x+jMIvbBXaY3JVVknSphQ==}
+  '@lynx-js/internal-preact@10.28.4-dfff9aa':
+    resolution: {integrity: sha512-i2xFwaWsmfODVfb9oYurZWCBDlnOdXdP/IsfW/R8i9vLtV6eo7I73U4smBINSNtQfSwpdQHooslEFD94RHVqSw==}
 
   '@lynx-js/lynx-core@0.1.3':
     resolution: {integrity: sha512-uWzKKYJUK4Q09ZRZxWSAFINnmZb9piWPbvWF9SkLn+3snBl9u/BJa4ekPRcKWAhBmpbtxWH1x27fxe3Q3p5l3Q==}
@@ -4457,8 +4457,8 @@ packages:
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
 
-  '@sinclair/typebox@0.34.38':
-    resolution: {integrity: sha512-HpkxMmc2XmZKhvaKIZZThlHmx1L0I/V1hWK1NubtlFnr6ZqdiOpV72TKudZUNQjZNsyDBay72qFEhEvb+bcwcA==}
+  '@sinclair/typebox@0.34.37':
+    resolution: {integrity: sha512-2TRuQVgQYfy+EzHRTIvkhv2ADEouJ2xNS/Vq+W5EuuewBdOrvATvljZTxHWZSTYr2sTjTHpGvucaGAt67S2akw==}
 
   '@sindresorhus/merge-streams@4.0.0':
     resolution: {integrity: sha512-tlqY9xq5ukxTUZBmoOp+m61cqwQD5pHJtFY3Mn8CA8ps6yghLH/Hw8UPdqg4OLmFW3IFlcXnQNmo/dh8HzXYIQ==}
@@ -5661,9 +5661,9 @@ packages:
   ccount@2.0.1:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
 
-  chai@5.2.1:
-    resolution: {integrity: sha512-5nFxhUrX0PqtyogoYOA8IPswy5sZFTOsBFl/9bNsmDLgsxYTzSZQJDPppDnZPTQbzSEm0hqGjWPzRemQCYbD6A==}
-    engines: {node: '>=18'}
+  chai@5.2.0:
+    resolution: {integrity: sha512-mCuXncKXk5iCLhfhwTc0izo0gtEmpz5CtG2y8GiOINBlMVS6v8TMRc5TaLWKS6692m9+dVVfzgeVxR5UxWHTYw==}
+    engines: {node: '>=12'}
 
   chalk@4.1.2:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
@@ -11004,11 +11004,11 @@ snapshots:
   '@babel/plugin-transform-react-jsx-development@7.27.1(@babel/core@7.29.0)':
     dependencies:
       '@babel/core': 7.29.0
-      '@babel/plugin-transform-react-jsx': 7.28.6(@babel/core@7.29.0)
+      '@babel/plugin-transform-react-jsx': 7.27.1(@babel/core@7.29.0)
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/plugin-transform-react-jsx@7.28.6(@babel/core@7.29.0)':
+  '@babel/plugin-transform-react-jsx@7.27.1(@babel/core@7.29.0)':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/helper-annotate-as-pure': 7.27.3
@@ -11042,7 +11042,7 @@ snapshots:
       '@babel/helper-plugin-utils': 7.28.6
       '@babel/helper-validator-option': 7.27.1
       '@babel/plugin-transform-react-display-name': 7.28.0(@babel/core@7.29.0)
-      '@babel/plugin-transform-react-jsx': 7.28.6(@babel/core@7.29.0)
+      '@babel/plugin-transform-react-jsx': 7.27.1(@babel/core@7.29.0)
       '@babel/plugin-transform-react-jsx-development': 7.27.1(@babel/core@7.29.0)
       '@babel/plugin-transform-react-pure-annotations': 7.27.1(@babel/core@7.29.0)
     transitivePeerDependencies:
@@ -11700,7 +11700,7 @@ snapshots:
 
   '@jest/schemas@30.0.5':
     dependencies:
-      '@sinclair/typebox': 0.34.38
+      '@sinclair/typebox': 0.34.37
 
   '@jest/transform@29.7.0':
     dependencies:
@@ -11887,7 +11887,7 @@ snapshots:
       '@lynx-js/react': link:packages/react
       '@lynx-js/types': 3.7.0
 
-  '@lynx-js/internal-preact@10.28.4-2d1d67a': {}
+  '@lynx-js/internal-preact@10.28.4-dfff9aa': {}
 
   '@lynx-js/lynx-core@0.1.3': {}
 
@@ -13460,7 +13460,7 @@ snapshots:
 
   '@sinclair/typebox@0.27.8': {}
 
-  '@sinclair/typebox@0.34.38': {}
+  '@sinclair/typebox@0.34.37': {}
 
   '@sindresorhus/merge-streams@4.0.0': {}
 
@@ -14164,7 +14164,7 @@ snapshots:
       '@types/chai': 5.2.3
       '@vitest/spy': 3.2.4
       '@vitest/utils': 3.2.4
-      chai: 5.2.1
+      chai: 5.2.0
       tinyrainbow: 2.0.0
 
   '@vitest/mocker@3.2.4(vite@5.4.2(@types/node@24.10.13)(lightningcss@1.31.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6))':
@@ -14738,7 +14738,7 @@ snapshots:
 
   ccount@2.0.1: {}
 
-  chai@5.2.1:
+  chai@5.2.0:
     dependencies:
       assertion-error: 2.0.1
       check-error: 2.1.1
@@ -20196,7 +20196,7 @@ snapshots:
       '@vitest/snapshot': 3.2.4
       '@vitest/spy': 3.2.4
       '@vitest/utils': 3.2.4
-      chai: 5.2.1
+      chai: 5.2.0
       debug: 4.4.3
       expect-type: 1.2.1
       magic-string: 0.30.21

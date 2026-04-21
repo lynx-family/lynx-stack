@@ -33,14 +33,14 @@ const document: SnapshotDocumentAdapter = {} as SnapshotDocumentAdapter;
  * Sets up the document interface for the background thread.
  * All DOM operations are intercepted to create {@link BackgroundSnapshotInstance}.
  */
-function setupBackgroundDocument(): void {
-  document.createElement = function(type: string) {
+function setupBackgroundDocument(_document: SnapshotDocumentAdapter = document): void {
+  _document.createElement = function(type: string) {
     return new BackgroundSnapshotInstance(type);
   };
-  document.createElementNS = function(_ns: string, type: string) {
+  _document.createElementNS = function(_ns: string, type: string, _is?: string) {
     return new BackgroundSnapshotInstance(type);
   };
-  document.createTextNode = function(text: string) {
+  _document.createTextNode = function(text: string) {
     const i = new BackgroundSnapshotInstance(null as unknown as string);
     i.setAttribute(0, text);
     Object.defineProperty(i, 'data', {
@@ -56,14 +56,16 @@ function setupBackgroundDocument(): void {
  * Sets up the document interface for the main thread.
  * All DOM operations are intercepted to create {@link SnapshotInstance}.
  */
-function setupDocument(): void {
-  document.createElement = function(type: string) {
-    return new SnapshotInstance(type);
+function setupDocument(_document: SnapshotDocumentAdapter = document): void {
+  _document.createElement = function(type: string) {
+    const si = new SnapshotInstance(type);
+    return si;
   };
-  document.createElementNS = function(_ns: string, type: string) {
-    return new SnapshotInstance(type);
+  _document.createElementNS = function(_ns: string, type: string, _is?: string) {
+    const si = new SnapshotInstance(type);
+    return si;
   };
-  document.createTextNode = function(text: string) {
+  _document.createTextNode = function(text: string) {
     const i = new SnapshotInstance(null as unknown as string);
     i.setAttribute(0, text);
     Object.defineProperty(i, 'data', {

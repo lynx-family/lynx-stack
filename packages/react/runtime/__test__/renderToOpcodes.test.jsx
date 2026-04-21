@@ -51,8 +51,10 @@ describe('renderToString', () => {
       [
         0,
         {
+          "__slotIndex": 0,
           "children": [
             {
+              "__slotIndex": 0,
               "children": undefined,
               "extraProps": undefined,
               "id": -4,
@@ -69,6 +71,7 @@ describe('renderToString', () => {
             "a",
           ],
         },
+        0,
         2,
         "values",
         [
@@ -77,6 +80,7 @@ describe('renderToString', () => {
         3,
         [
           {
+            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -4,
@@ -87,6 +91,7 @@ describe('renderToString', () => {
           },
           "hello world",
         ],
+        0,
         1,
       ]
     `);
@@ -112,10 +117,13 @@ describe('renderToString', () => {
       [
         0,
         {
+          "__slotIndex": 0,
           "children": [
             {
+              "__slotIndex": 0,
               "children": [
                 {
+                  "__slotIndex": 0,
                   "children": undefined,
                   "extraProps": undefined,
                   "id": -5,
@@ -137,9 +145,12 @@ describe('renderToString', () => {
           "values": undefined,
         },
         0,
+        0,
         {
+          "__slotIndex": 0,
           "children": [
             {
+              "__slotIndex": 0,
               "children": undefined,
               "extraProps": undefined,
               "id": -5,
@@ -154,9 +165,11 @@ describe('renderToString', () => {
           "type": "__snapshot_a94a8_test_2",
           "values": undefined,
         },
+        0,
         3,
         [
           {
+            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -5,
@@ -167,6 +180,7 @@ describe('renderToString', () => {
           },
           1000,
         ],
+        0,
         1,
         1,
       ]
@@ -195,10 +209,13 @@ describe('renderToString', () => {
       [
         0,
         {
+          "__slotIndex": 0,
           "children": [
             {
+              "__slotIndex": 0,
               "children": [
                 {
+                  "__slotIndex": 0,
                   "children": undefined,
                   "extraProps": undefined,
                   "id": -4,
@@ -220,9 +237,12 @@ describe('renderToString', () => {
           "values": undefined,
         },
         0,
+        0,
         {
+          "__slotIndex": 0,
           "children": [
             {
+              "__slotIndex": 0,
               "children": undefined,
               "extraProps": undefined,
               "id": -4,
@@ -237,9 +257,11 @@ describe('renderToString', () => {
           "type": "__snapshot_a94a8_test_4",
           "values": undefined,
         },
+        0,
         3,
         [
           {
+            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -4,
@@ -250,6 +272,7 @@ describe('renderToString', () => {
           },
           1,
         ],
+        0,
         1,
         1,
       ]
@@ -272,6 +295,7 @@ describe('renderToString', () => {
       [
         0,
         {
+          "__slotIndex": 0,
           "children": undefined,
           "extraProps": undefined,
           "id": -2,
@@ -281,6 +305,7 @@ describe('renderToString', () => {
             "hello world",
           ],
         },
+        0,
         2,
         "values",
         [
@@ -306,8 +331,10 @@ describe('renderToString', () => {
       [
         0,
         {
+          "__slotIndex": 0,
           "children": [
             {
+              "__slotIndex": 0,
               "children": undefined,
               "extraProps": undefined,
               "id": -3,
@@ -322,9 +349,11 @@ describe('renderToString', () => {
           "type": "__snapshot_a94a8_test_7",
           "values": undefined,
         },
+        0,
         3,
         [
           {
+            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -3,
@@ -335,6 +364,7 @@ describe('renderToString', () => {
           },
           "111",
         ],
+        0,
         1,
       ]
     `);
@@ -356,8 +386,10 @@ describe('renderToString', () => {
       [
         0,
         {
+          "__slotIndex": 0,
           "children": [
             {
+              "__slotIndex": 0,
               "children": undefined,
               "extraProps": undefined,
               "id": -3,
@@ -372,9 +404,11 @@ describe('renderToString', () => {
           "type": "__snapshot_a94a8_test_8",
           "values": undefined,
         },
+        0,
         3,
         [
           {
+            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -3,
@@ -385,6 +419,7 @@ describe('renderToString', () => {
           },
           "111",
         ],
+        0,
         1,
       ]
     `);
@@ -404,8 +439,10 @@ describe('renderToString', () => {
       [
         0,
         {
+          "__slotIndex": 0,
           "children": [
             {
+              "__slotIndex": 0,
               "children": undefined,
               "extraProps": undefined,
               "id": -3,
@@ -420,9 +457,11 @@ describe('renderToString', () => {
           "type": "__snapshot_a94a8_test_9",
           "values": undefined,
         },
+        0,
         3,
         [
           {
+            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -3,
@@ -433,6 +472,7 @@ describe('renderToString', () => {
           },
           "111",
         ],
+        0,
         1,
       ]
     `);
@@ -451,10 +491,13 @@ describe('renderToString', () => {
       [
         0,
         {
+          "__slotIndex": 0,
           "children": [
             {
+              "__slotIndex": 0,
               "children": [
                 {
+                  "__slotIndex": 0,
                   "children": undefined,
                   "extraProps": undefined,
                   "id": -4,
@@ -476,9 +519,12 @@ describe('renderToString', () => {
           "values": undefined,
         },
         0,
+        0,
         {
+          "__slotIndex": 0,
           "children": [
             {
+              "__slotIndex": 0,
               "children": undefined,
               "extraProps": undefined,
               "id": -4,
@@ -493,9 +539,11 @@ describe('renderToString', () => {
           "type": "__snapshot_a94a8_test_11",
           "values": undefined,
         },
+        0,
         3,
         [
           {
+            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -4,
@@ -506,6 +554,7 @@ describe('renderToString', () => {
           },
           11111,
         ],
+        0,
         1,
         1,
       ]
@@ -524,10 +573,13 @@ describe('renderToString', () => {
       [
         0,
         {
+          "__slotIndex": 0,
           "children": [
             {
+              "__slotIndex": 0,
               "children": [
                 {
+                  "__slotIndex": 0,
                   "children": undefined,
                   "extraProps": undefined,
                   "id": -7,
@@ -549,9 +601,12 @@ describe('renderToString', () => {
           "values": undefined,
         },
         0,
+        0,
         {
+          "__slotIndex": 0,
           "children": [
             {
+              "__slotIndex": 0,
               "children": undefined,
               "extraProps": undefined,
               "id": -7,
@@ -566,9 +621,11 @@ describe('renderToString', () => {
           "type": "__snapshot_a94a8_test_13",
           "values": undefined,
         },
+        0,
         3,
         [
           {
+            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -7,
@@ -579,6 +636,7 @@ describe('renderToString', () => {
           },
           12345,
         ],
+        0,
         1,
         1,
       ]
@@ -672,10 +730,12 @@ describe('renderToString', () => {
       </Suspense>,
     );
 
-    expect(rendered.length).toBe(3);
+    expect(rendered.length).toBe(4);
     expect(rendered[0]).toStrictEqual(0);
     expect(rendered[1].type).toStrictEqual(fallbackJsx.type);
-    expect(rendered[2]).toStrictEqual(1);
+    // slotIndex
+    expect(rendered[2]).toStrictEqual(0);
+    expect(rendered[3]).toStrictEqual(1);
   });
 
   it('should render fallback when suspended component is not a direct child', async () => {
@@ -693,10 +753,12 @@ describe('renderToString', () => {
       </Suspense>,
     );
 
-    expect(rendered.length).toBe(3);
+    expect(rendered.length).toBe(4);
     expect(rendered[0]).toStrictEqual(0);
     expect(rendered[1].type).toStrictEqual(fallbackJsx.type);
-    expect(rendered[2]).toStrictEqual(1);
+    // slotIndex
+    expect(rendered[2]).toStrictEqual(0);
+    expect(rendered[3]).toStrictEqual(1);
   });
 
   it('should render a fallback that is a Fragment', async () => {
@@ -723,7 +785,7 @@ describe('renderToString', () => {
     );
 
     expect(rendered[1].type).toStrictEqual(fallbackJsx1.type);
-    expect(rendered[6].type).toStrictEqual(fallbackJsx2.type);
+    expect(rendered[8].type).toStrictEqual(fallbackJsx2.type);
   });
 
   it('should render outer fallback when nested child suspends', async () => {
@@ -748,10 +810,12 @@ describe('renderToString', () => {
       </Suspense>,
     );
 
-    expect(rendered.length).toBe(3);
+    expect(rendered.length).toBe(4);
     expect(rendered[0]).toStrictEqual(0);
     expect(rendered[1].type).toStrictEqual(fallbackJsx1.type);
-    expect(rendered[2]).toStrictEqual(1);
+    // slotIndex
+    expect(rendered[2]).toStrictEqual(0);
+    expect(rendered[3]).toStrictEqual(1);
   });
 
   it('should render inner fallback and resolved content when outer suspense is resolved', async () => {
@@ -781,10 +845,10 @@ describe('renderToString', () => {
       </Suspense>,
     );
 
-    expect(rendered.length).toBe(9);
+    expect(rendered.length).toBe(12);
     expect(rendered[1].type).toStrictEqual(resolvedJsx1.type);
-    expect(rendered[4].type).toStrictEqual(fallbackJsx2.type);
-    expect(rendered[7].type).toStrictEqual(resolvedJsx2.type);
+    expect(rendered[5].type).toStrictEqual(fallbackJsx2.type);
+    expect(rendered[9].type).toStrictEqual(resolvedJsx2.type);
   });
 
   it('should render text with resolved suspense', async () => {
@@ -802,10 +866,12 @@ describe('renderToString', () => {
       </Suspense>,
     );
 
-    expect(rendered.length).toBe(3);
+    expect(rendered.length).toBe(4);
     expect(rendered[0]).toStrictEqual(0);
     expect(rendered[1].type).toStrictEqual(resolvedJsx.type);
-    expect(rendered[2]).toStrictEqual(1);
+    // slotIndex
+    expect(rendered[2]).toStrictEqual(0);
+    expect(rendered[3]).toStrictEqual(1);
   });
 
   it('should render text with nested suspense', async () => {
@@ -845,12 +911,83 @@ describe('renderToString', () => {
       </view>,
     );
 
-    expect(rendered.length).toBe(18);
-    expect(rendered[3].type).toStrictEqual(resolvedJsx1.type);
-    expect(rendered[6].type).toStrictEqual(resolvedJsx2.type);
-    expect(rendered[9].type).toStrictEqual(resolvedJsx3.type);
-    expect(rendered[12].type).toStrictEqual(resolvedJsx4.type);
-    expect(rendered[15].type).toStrictEqual(resolvedJsx5.type);
+    expect(rendered.length).toBe(24);
+    expect(rendered[4].type).toStrictEqual(resolvedJsx1.type);
+    expect(rendered[8].type).toStrictEqual(resolvedJsx2.type);
+    expect(rendered[12].type).toStrictEqual(resolvedJsx3.type);
+    expect(rendered[16].type).toStrictEqual(resolvedJsx4.type);
+    expect(rendered[20].type).toStrictEqual(resolvedJsx5.type);
+  });
+
+  it('should only render text when it is not empty', () => {
+    expect(renderToString(
+      <view>
+        <text></text>
+        <text>{''}</text>
+        <text>Static Text</text>
+      </view>,
+    )).toMatchInlineSnapshot(`
+      [
+        0,
+        {
+          "__slotIndex": 0,
+          "children": undefined,
+          "extraProps": undefined,
+          "id": -2,
+          "type": "__snapshot_a94a8_test_47",
+          "values": undefined,
+        },
+        0,
+        1,
+      ]
+    `);
+    expect(renderToString(
+      <view>
+        <text></text>
+        <text>{'Dynamic Text'}</text>
+        <text>Static Text</text>
+      </view>,
+    )).toMatchInlineSnapshot(`
+      [
+        0,
+        {
+          "__slotIndex": 0,
+          "children": [
+            {
+              "__slotIndex": 0,
+              "children": undefined,
+              "extraProps": undefined,
+              "id": -4,
+              "type": null,
+              "values": [
+                "Dynamic Text",
+              ],
+            },
+          ],
+          "extraProps": undefined,
+          "id": -3,
+          "type": "__snapshot_a94a8_test_48",
+          "values": undefined,
+        },
+        0,
+        3,
+        [
+          {
+            "__slotIndex": 0,
+            "children": undefined,
+            "extraProps": undefined,
+            "id": -4,
+            "type": null,
+            "values": [
+              "Dynamic Text",
+            ],
+          },
+          "Dynamic Text",
+        ],
+        0,
+        1,
+      ]
+    `);
   });
 });
 
@@ -1188,7 +1325,8 @@ describe('renderOpcodesInto', () => {
       </page>
     `);
 
-    const [vnodeA, vnodeB, vnodeC, vnodeC2, vnodeD] = scratch.__firstChild.props.children;
+    debugger;
+    const [vnodeA, vnodeB, vnodeC, vnodeC2, vnodeD] = scratch.__firstChild.props.$0;
 
     expect(vnodeA).not.toHaveProperty('__elements');
     expect(vnodeA).not.toHaveProperty('__element_root');
@@ -1200,7 +1338,7 @@ describe('renderOpcodesInto', () => {
     expect(vnodeD).not.toHaveProperty('__element_root');
 
     {
-      const componentVNodeC = vnodeC2.props.children;
+      const componentVNodeC = vnodeC2.props.$0;
       expect(componentVNodeC.type).toBe(Fragment);
       expect(componentVNodeC.props.children).toHaveLength(4);
       // FIXME(hzy): there is still a cycle reference
@@ -1211,8 +1349,8 @@ describe('renderOpcodesInto', () => {
       });
     }
 
-    expect(vnodeD.props.children).toHaveLength(4);
-    vnodeD.props.children.forEach((vnode) => {
+    expect(vnodeD.props.$0).toHaveLength(4);
+    vnodeD.props.$0.forEach((vnode) => {
       expect(vnode).not.toHaveProperty('__elements');
       expect(vnode).not.toHaveProperty('__element_root');
     });
@@ -1237,12 +1375,14 @@ describe('createElement', () => {
       [
         0,
         {
+          "__slotIndex": 0,
           "children": undefined,
           "extraProps": undefined,
           "id": -41,
-          "type": "__snapshot_a94a8_test_74",
+          "type": "__snapshot_a94a8_test_76",
           "values": undefined,
         },
+        0,
         1,
       ]
     `);
@@ -1251,12 +1391,14 @@ describe('createElement', () => {
       [
         0,
         {
+          "__slotIndex": 0,
           "children": undefined,
           "extraProps": undefined,
           "id": -42,
-          "type": "__snapshot_a94a8_test_74",
+          "type": "__snapshot_a94a8_test_76",
           "values": undefined,
         },
+        0,
         1,
       ]
     `);
@@ -1273,12 +1415,14 @@ describe('createElement', () => {
       [
         0,
         {
+          "__slotIndex": 0,
           "children": undefined,
           "extraProps": undefined,
           "id": -43,
-          "type": "__snapshot_a94a8_test_75",
+          "type": "__snapshot_a94a8_test_77",
           "values": undefined,
         },
+        0,
         1,
       ]
     `);
@@ -1287,12 +1431,14 @@ describe('createElement', () => {
       [
         0,
         {
+          "__slotIndex": 0,
           "children": undefined,
           "extraProps": undefined,
           "id": -44,
-          "type": "__snapshot_a94a8_test_75",
+          "type": "__snapshot_a94a8_test_77",
           "values": undefined,
         },
+        0,
         1,
       ]
     `);

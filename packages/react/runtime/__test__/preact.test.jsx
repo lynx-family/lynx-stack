@@ -165,12 +165,8 @@ describe('document', () => {
     expect(scratch).toMatchInlineSnapshot(`
       <root>
         <__snapshot_a94a8_test_2>
-          <__snapshot_a94a8_test_3>
-            "Hello"
-          </__snapshot_a94a8_test_3>
-          <__snapshot_a94a8_test_4>
-            "World"
-          </__snapshot_a94a8_test_4>
+          "Hello"
+          "World"
         </__snapshot_a94a8_test_2>
       </root>
     `);
@@ -180,8 +176,6 @@ describe('document', () => {
         -6,
         -7,
         -8,
-        -9,
-        -10,
       ]
     `);
   });
@@ -348,11 +342,11 @@ describe('document - background', () => {
     );
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__snapshot_a94a8_test_14
+        <__snapshot_a94a8_test_10
           0="world"
         >
           "Hello"
-        </__snapshot_a94a8_test_14>
+        </__snapshot_a94a8_test_10>
       </root>
     `);
 
@@ -374,14 +368,10 @@ describe('document - background', () => {
     );
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__snapshot_a94a8_test_15>
-          <__snapshot_a94a8_test_16>
-            "Hello"
-          </__snapshot_a94a8_test_16>
-          <__snapshot_a94a8_test_17>
-            "World"
-          </__snapshot_a94a8_test_17>
-        </__snapshot_a94a8_test_15>
+        <__snapshot_a94a8_test_11>
+          "Hello"
+          "World"
+        </__snapshot_a94a8_test_11>
       </root>
     `);
     expect([...backgroundSnapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
@@ -392,8 +382,6 @@ describe('document - background', () => {
           4,
           5,
           6,
-          7,
-          8,
         ]
       `);
     expect(globalBackgroundSnapshotInstancesToRemove).toMatchInlineSnapshot(`
@@ -409,17 +397,17 @@ describe('document - background', () => {
     render(jsx('Hello!'), scratch);
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__snapshot_a94a8_test_18>
+        <__snapshot_a94a8_test_12>
           "Hello!"
-        </__snapshot_a94a8_test_18>
+        </__snapshot_a94a8_test_12>
       </root>
     `);
     render(jsx('Hello!!'), scratch);
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__snapshot_a94a8_test_18>
+        <__snapshot_a94a8_test_12>
           "Hello!!"
-        </__snapshot_a94a8_test_18>
+        </__snapshot_a94a8_test_12>
       </root>
     `);
   });
@@ -476,7 +464,7 @@ describe('document - background', () => {
     render(jsx('Hello'), scratch);
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__snapshot_a94a8_test_25
+        <__snapshot_a94a8_test_17
           0="Hello"
         />
       </root>
@@ -484,7 +472,7 @@ describe('document - background', () => {
     render(jsx(null), scratch);
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__snapshot_a94a8_test_25
+        <__snapshot_a94a8_test_17
           0={null}
         />
       </root>
@@ -499,7 +487,7 @@ describe('document - background', () => {
     render(jsx(vi.fn()), scratch);
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__snapshot_a94a8_test_25
+        <__snapshot_a94a8_test_17
           0={[MockFunction spy]}
         />
       </root>
@@ -509,7 +497,7 @@ describe('document - background', () => {
     render(jsx(vi.fn()), scratch);
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__snapshot_a94a8_test_25
+        <__snapshot_a94a8_test_17
           0={[MockFunction spy]}
         />
       </root>
@@ -594,16 +582,16 @@ describe('document - background', () => {
     await Promise.resolve();
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__snapshot_a94a8_test_27>
+        <__snapshot_a94a8_test_19>
           "foo"
-        </__snapshot_a94a8_test_27>
+        </__snapshot_a94a8_test_19>
       </root>
     `);
 
     await Promise.resolve();
     expect(scratch).toMatchInlineSnapshot(`
       <root>
-        <__snapshot_a94a8_test_26
+        <__snapshot_a94a8_test_18
           0="bar"
         />
       </root>
@@ -642,26 +630,26 @@ describe('document - dual-runtime', () => {
     BackgroundSnapshotInstance.prototype.toJSON = backgroundSnapshotInstanceToJSON;
     expect(backgroundRoot).toMatchInlineSnapshot(`
       <root>
-        <__snapshot_a94a8_test_29>
-          <__snapshot_a94a8_test_30>
+        <__snapshot_a94a8_test_21>
+          <__snapshot_a94a8_test_22>
             "W"
-          </__snapshot_a94a8_test_30>
-          <__snapshot_a94a8_test_30>
+          </__snapshot_a94a8_test_22>
+          <__snapshot_a94a8_test_22>
             "0"
-          </__snapshot_a94a8_test_30>
-          <__snapshot_a94a8_test_30>
+          </__snapshot_a94a8_test_22>
+          <__snapshot_a94a8_test_22>
             "r"
-          </__snapshot_a94a8_test_30>
-          <__snapshot_a94a8_test_30>
+          </__snapshot_a94a8_test_22>
+          <__snapshot_a94a8_test_22>
             "l"
-          </__snapshot_a94a8_test_30>
-          <__snapshot_a94a8_test_30>
+          </__snapshot_a94a8_test_22>
+          <__snapshot_a94a8_test_22>
             "d"
-          </__snapshot_a94a8_test_30>
-          <__snapshot_a94a8_test_30>
+          </__snapshot_a94a8_test_22>
+          <__snapshot_a94a8_test_22>
             "_"
-          </__snapshot_a94a8_test_30>
-        </__snapshot_a94a8_test_29>
+          </__snapshot_a94a8_test_22>
+        </__snapshot_a94a8_test_21>
       </root>
     `);
     delete BackgroundSnapshotInstance.prototype.toJSON;
@@ -669,36 +657,38 @@ describe('document - dual-runtime', () => {
     expect(hydrate(JSON.parse(JSON.stringify(root)), backgroundRoot)).toMatchInlineSnapshot(`
         [
           3,
-          -88,
+          -64,
           "k",
           "0",
           3,
-          -89,
+          -65,
           0,
           "0",
           0,
-          "__snapshot_a94a8_test_30",
-          117,
+          "__snapshot_a94a8_test_22",
+          91,
           3,
-          117,
+          91,
           "k",
           "_",
           0,
           null,
-          118,
+          92,
           4,
-          118,
+          92,
           [
             "_",
           ],
           1,
-          117,
-          118,
+          91,
+          92,
           undefined,
+          0,
           1,
-          -85,
-          117,
+          -61,
+          91,
           undefined,
+          0,
         ]
       `);
 
@@ -708,33 +698,35 @@ describe('document - dual-runtime', () => {
     expect(takeGlobalSnapshotPatch()).toMatchInlineSnapshot(`
       [
         2,
-        -85,
-        -88,
+        -61,
+        -64,
         2,
-        -85,
-        117,
+        -61,
+        91,
         0,
-        "__snapshot_a94a8_test_30",
-        119,
+        "__snapshot_a94a8_test_22",
+        93,
         3,
-        119,
+        93,
         "k",
         "1",
         0,
         null,
-        120,
+        94,
         3,
-        120,
+        94,
         0,
         "1",
         1,
-        119,
-        120,
+        93,
+        94,
         undefined,
+        0,
         1,
-        -85,
-        119,
-        -90,
+        -61,
+        93,
+        -66,
+        0,
       ]
     `);
 
@@ -767,7 +759,7 @@ describe('document - dual-runtime', () => {
     BackgroundSnapshotInstance.prototype.toJSON = backgroundSnapshotInstanceToJSON;
     expect(backgroundRoot).toMatchInlineSnapshot(`
       <root>
-        <__snapshot_a94a8_test_31 />
+        <__snapshot_a94a8_test_23 />
       </root>
     `);
     delete BackgroundSnapshotInstance.prototype.toJSON;

@@ -31,10 +31,11 @@ export function ssrHydrateByOpcodes(
         const [type, __id, elements] = opcodes[i + 1] as SSRSnapshotInstance;
         top = new SnapshotInstance(type, __id);
         top.__pendingElements = elements;
+        top.__slotIndex = opcodes[i + 2];
         p.insertBefore(top);
         stack.push(top);
 
-        i += 2;
+        i += 3;
         break;
       }
       case OpcodeEnd: {
@@ -84,11 +85,12 @@ export function ssrHydrateByOpcodes(
       case OpcodeText: {
         const [[type, __id, elements], text] = opcodes[i + 1] as [SSRSnapshotInstance, string];
         const s = new SnapshotInstance(type, __id);
+        s.__slotIndex = opcodes[i + 2];
         s.setAttribute(0, text);
         top.insertBefore(s);
         s.__elements = elements.map(({ ssrID }) => refMap![ssrID]!);
         s.__element_root = s.__elements[0];
-        i += 2;
+        i += 3;
         break;
       }
     }

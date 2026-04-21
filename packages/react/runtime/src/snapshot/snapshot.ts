@@ -88,6 +88,7 @@ export class SnapshotInstance {
   __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
   __listItemPlatformInfo?: PlatformInfo;
   __extraProps?: Record<string, unknown> | undefined;
+  __slotIndex?: number | undefined;
 
   constructor(public type: string, id?: number) {
     // Suspense uses 'div'
@@ -161,7 +162,7 @@ export class SnapshotInstance {
       while (child) {
         child.ensureElements();
 
-        const [type, elementIndex] = slot[index]!;
+        const [type, elementIndex] = slot[typeof child.__slotIndex === 'number' ? child.__slotIndex : index]!;
         switch (type) {
           case DynamicPartType.Slot: {
             __ReplaceElement(child.__element_root!, elements[elementIndex]!);
@@ -181,10 +182,14 @@ export class SnapshotInstance {
           }
           /* v8 ignore end */
           case DynamicPartType.Children:
-          case DynamicPartType.ListChildren: {
+          case DynamicPartType.ListChildren:
+          case DynamicPartType.SlotV2:
+          case DynamicPartType.ListSlotV2: {
             __AppendElement(elements[elementIndex]!, child.__element_root!);
             break;
           }
+          default:
+            throw new Error('Unexpected slot type: ' + type);
         }
 
         child = child.__nextSibling;
@@ -357,18 +362,27 @@ export class SnapshotInstance {
     }
 
     const count = __snapshot_def.slot.length;
-    if (count === 1) {
-      const [, elementIndex] = __snapshot_def.slot[0]!;
+    if (
+      count === 1
+      || (__snapshot_def.isSlotV2 ??= __snapshot_def.slot.every(([type]) =>
+        type === DynamicPartType.SlotV2 || type === DynamicPartType.ListSlotV2
+      ))
+    ) {
+      const [, elementIndex] = __snapshot_def.slot[typeof newNode.__slotIndex === 'number' ? newNode.__slotIndex : 0]!;
       const parent = __elements[elementIndex]!;
       if (shouldRemove) {
         __RemoveElement(parent, newNode.__element_root!);
       }
       if (existingNode) {
-        __InsertElementBefore(
-          parent,
-          newNode.__element_root!,
-          existingNode.__element_root,
-        );
+        if (__snapshot_def.isSlotV2 && newNode.__slotIndex! < existingNode.__slotIndex!) {
+          __AppendElement(parent, newNode.__element_root!);
+        } else {
+          __InsertElementBefore(
+            parent,
+            newNode.__element_root!,
+            existingNode.__element_root,
+          );
+        }
       } else {
         __AppendElement(parent, newNode.__element_root!);
       }
@@ -412,7 +426,7 @@ export class SnapshotInstance {
 
     unref(child, true);
     if (this.__elements) {
-      const [, elementIndex] = __snapshot_def.slot[0]!;
+      const [, elementIndex] = __snapshot_def.slot[typeof child.__slotIndex === 'number' ? child.__slotIndex : 0]!;
       __RemoveElement(this.__elements[elementIndex]!, child.__element_root!);
     }
 
@@ -475,6 +489,7 @@ export class SnapshotInstance {
       values: this.__values,
       extraProps: this.__extraProps,
       children: this.__firstChild ? this.childNodes : undefined,
+      __slotIndex: this.__slotIndex,
     };
   }
 

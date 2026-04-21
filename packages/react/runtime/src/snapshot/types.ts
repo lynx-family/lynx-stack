@@ -22,4 +22,5 @@ export interface SerializedSnapshotInstance {
   values?: any[] | undefined;
   extraProps?: Record<string, unknown> | undefined;
   children?: SerializedSnapshotInstance[] | undefined;
+  __slotIndex?: number | undefined;
 }

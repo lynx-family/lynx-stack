@@ -69,7 +69,7 @@ export function renderToString(vnode: any, context: any, into: SnapshotInstance)
     _renderToString(
       vnode,
       context || EMPTY_OBJ,
-      false,
+      0,
       undefined,
       parent,
       opcodes,
@@ -145,7 +145,7 @@ function renderClassComponent(vnode, context) {
  * Recursively render VNodes to HTML.
  * @param {VNode|any} vnode
  * @param {any} context
- * @param {boolean} isSvgMode
+ * @param {number | true} slotIndex
  * @param {any} selectValue
  * @param {VNode} parent
  * @param {any[]} opcodes
@@ -155,7 +155,7 @@ function renderClassComponent(vnode, context) {
 function _renderToString(
   vnode,
   context,
-  isSvgMode,
+  slotIndex,
   selectValue,
   parent,
   opcodes,
@@ -171,7 +171,7 @@ function _renderToString(
   // Text VNodes: escape as HTML
   if (vnodeType !== 'object') {
     if (vnodeType === 'function') return;
-    renderToTextNode(into, vnode + '', opcodes);
+    renderToTextNode(into, vnode, opcodes, slotIndex);
     return;
   }
 
@@ -185,7 +185,7 @@ function _renderToString(
       _renderToString(
         child,
         context,
-        isSvgMode,
+        slotIndex === true ? i : slotIndex,
         selectValue,
         parent,
         opcodes,
@@ -275,7 +275,7 @@ function _renderToString(
       _renderToString(
         rendered,
         context,
-        isSvgMode,
+        slotIndex,
         selectValue,
         vnode,
         opcodes,
@@ -305,7 +305,7 @@ function _renderToString(
           _renderToString(
             rendered,
             context,
-            isSvgMode,
+            slotIndex,
             selectValue,
             vnode,
             opcodes,
@@ -329,6 +329,7 @@ function _renderToString(
   }
 
   let children;
+  let hasNamedChildren = false;
 
   // hack for runtime test
   if (process.env['NODE_ENV'] === 'test' && isValidElement(vnode) && typeof vnode.type === 'string') {
@@ -339,8 +340,9 @@ function _renderToString(
     vnode = new SnapshotInstance(type);
   }
   if (__ENABLE_SSR__) {
-    opcodes.push(__OpBegin, vnode);
+    opcodes.push(__OpBegin, vnode, slotIndex);
   }
+  vnode.__slotIndex = slotIndex;
   into.insertBefore(vnode);
 
   for (const name in props) {
@@ -359,7 +361,14 @@ function _renderToString(
       case '__source':
         continue;
 
-      default: {}
+      default: {
+        if (name.startsWith('$')) {
+          children ??= [];
+          children[+name.slice(1)] = v;
+          hasNamedChildren = true;
+          continue;
+        }
+      }
     }
 
     // write this attribute to the buffer
@@ -374,13 +383,23 @@ function _renderToString(
   let childrenType = typeof children;
   if (childrenType === 'string' || childrenType === 'number') {
     // single text child
-    renderToTextNode(vnode, children, opcodes);
+    renderToTextNode(vnode, children, opcodes, slotIndex);
   } else if (children != null && children !== false && children !== true) {
     // recurse into this element VNode's children
+    let _slotIndex = slotIndex;
+    if (hasNamedChildren) {
+      // @ts-expect-error children must be an array
+      if (children.length === 1) {
+        children = children[0];
+        _slotIndex = 0;
+      } else {
+        _slotIndex = true;
+      }
+    }
     _renderToString(
       children,
       context,
-      false,
+      _slotIndex,
       selectValue,
       vnode,
       opcodes,
@@ -408,14 +427,15 @@ function doRender(props, state, context) {
   return this.constructor(props, context);
 }
 
-function renderToTextNode(into: SnapshotInstance, text: string | number, opcodes: Opcode[]) {
+function renderToTextNode(into: SnapshotInstance, text: string | number, opcodes: Opcode[], slotIndex: number) {
   const textNode = new SnapshotInstance(null);
+  textNode.__slotIndex = slotIndex;
   textNode.setAttribute(0, text);
   into.insertBefore(textNode);
   if (__ENABLE_SSR__) {
     // We need store the just created SnapshotInstance, or it will be lost when we leave the function
     text = [textNode, text];
-    opcodes.push(__OpText, text);
+    opcodes.push(__OpText, text, slotIndex);
   }
 }
 

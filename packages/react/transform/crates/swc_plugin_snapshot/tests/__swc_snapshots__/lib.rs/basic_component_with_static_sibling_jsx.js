@@ -18,10 +18,10 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1
         ];
     }, null, [
         [
-            ReactLynx.__DynamicPartChildren,
+            ReactLynx.__DynamicPartSlotV2,
             3
         ]
     ], undefined, globDynamicComponentEntry, null, true);
 _jsx(__snapshot_da39a_test_1, {
-    children: _jsx(A, {})
+    $0: _jsx(A, {})
 });
