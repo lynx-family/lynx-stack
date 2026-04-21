@@ -39,7 +39,7 @@ catalogs:
       version: 0.8.1
 
 overrides:
-  '@rspack/core@^1.7.0': 1.7.9
+  '@rspack/core@^1': 1.7.9
   '@rsbuild/core@1>@rspack/core': 1.7.9
   '@rsdoctor/rspack-plugin>@rspack/core': 1.7.9
   '@rsdoctor/types>@rspack/core': 1.7.9

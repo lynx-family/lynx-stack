@@ -62,7 +62,7 @@ catalogs:
     "@rstest/core": "0.8.1"
 
 overrides:
-  "@rspack/core@^1.7.0": "1.7.9"
+  "@rspack/core@^1": "$@rspack/core"
   "@rsbuild/core@1>@rspack/core": "$@rspack/core"
   "@rsdoctor/rspack-plugin>@rspack/core": "$@rspack/core"
   "@rsdoctor/types>@rspack/core": "$@rspack/core"
