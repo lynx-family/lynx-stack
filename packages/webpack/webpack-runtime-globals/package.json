@@ -33,11 +33,12 @@
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
-    "test": "vitest"
+    "test": "rstest"
   },
   "devDependencies": {
     "@microsoft/api-extractor": "catalog:",
-    "@rspack/core": "catalog:rspack"
+    "@rspack/core": "catalog:rspack",
+    "@rstest/core": "catalog:"
   },
   "engines": {
     "node": ">=18"
