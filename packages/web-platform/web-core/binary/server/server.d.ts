@@ -7,7 +7,7 @@ export class MainThreadServerContext {
     add_class(element_id: number, class_name: string): void;
     add_inline_style_raw_string_key(element_id: number, key: string, value?: string | null): void;
     append_child(parent_id: number, child_id: number): void;
-    create_element(tag_name: string, parent_component_unique_id?: number | null, css_id_opt?: number | null, component_id?: string | null): number;
+    create_element(tag_name: string, parent_component_unique_id?: number | null, component_css_id_opt?: number | null, component_id?: string | null): number;
     generate_html(element_id: number): string;
     get_attribute(element_id: number, key: string): string | undefined;
     get_attributes(element_id: number): object;

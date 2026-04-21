@@ -367,11 +367,10 @@ export function createElementAPI(
         componentID,
       );
       if (cssID !== undefined) {
-        __SetCSSId(
-          [element],
-          cssID,
-          entry,
-        );
+        wasmContext.update_component_css_id(uniqueId, cssID);
+        if (entry) {
+          element.setAttribute(lynxEntryNameAttribute, entry);
+        }
       }
     },
     __UpdateComponentID: (element, componentID) => {
