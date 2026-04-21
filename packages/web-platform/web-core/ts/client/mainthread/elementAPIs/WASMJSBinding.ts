@@ -167,11 +167,13 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
         break;
       }
       const uniqueId = __GetElementUniqueID(currentTarget as HTMLElement);
-      bubblePath[bubblePathLength++] = uniqueId;
-      if (bubblePathLength >= bubblePath.length) {
-        const newBubblePath = new Uint32Array(bubblePath.length * 2);
-        newBubblePath.set(bubblePath);
-        bubblePath = newBubblePath;
+      if (uniqueId !== -1) {
+        bubblePath[bubblePathLength++] = uniqueId;
+        if (bubblePathLength >= bubblePath.length) {
+          const newBubblePath = new Uint32Array(bubblePath.length * 2);
+          newBubblePath.set(bubblePath);
+          bubblePath = newBubblePath;
+        }
       }
       currentTarget = currentTarget.parentElement as
         | DecoratedHTMLElement

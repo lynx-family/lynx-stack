@@ -50,6 +50,35 @@ describe('Element APIs', () => {
       true,
     );
   });
+  test('#commonEventHandler should filter out -1 uniqueId', () => {
+    mtsBinding.wasmContext = Object.assign(mtsBinding.wasmContext || {}, {
+      common_event_handler: vi.fn(),
+    }) as any;
+    mtsBinding.addEventListener('touchstart');
+
+    const node1 = mtsGlobalThis.__CreateView(0);
+    const node2 = document.createElement('div') as any;
+    node1.appendChild(node2);
+    rootDom.appendChild(node1);
+
+    const event = document.createEvent('Event') as any;
+    event.initEvent('touchstart', true, true);
+    event.touches = [];
+    event.targetTouches = [];
+    event.changedTouches = [];
+    node2.dispatchEvent(event);
+
+    expect(mtsBinding.wasmContext!.common_event_handler).toHaveBeenCalled();
+    const calls =
+      (mtsBinding.wasmContext!.common_event_handler as any).mock.calls;
+    const bubblePath = calls[0][1] as Uint32Array;
+
+    // Check that -1 (4294967295 in Uint32Array) is NOT in the bubblePath
+    for (let i = 0; i < bubblePath.length; i++) {
+      expect(bubblePath[i] !== 4294967295).toBe(true);
+    }
+  });
+
   test('createElementView', () => {
     const element = mtsGlobalThis.__CreateElement('view', 0);
     expect(mtsGlobalThis.__GetTag(element)).toBe('view');
