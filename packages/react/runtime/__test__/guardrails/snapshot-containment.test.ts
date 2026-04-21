@@ -48,6 +48,10 @@ const containedTestDirs = [
   'worklet',
 ];
 
+function toPosixPath(file: string): string {
+  return file.split(path.sep).join('/');
+}
+
 function walkFiles(dir: string, pattern = /\.(?:[cm]?[jt]sx?)$/): string[] {
   if (!fs.existsSync(dir)) {
     return [];
@@ -113,7 +117,7 @@ describe('snapshot containment guardrails', () => {
       String.raw`@lynx-js/react/src/(?:${legacySourceDirPattern})(?:/|['"])`,
     );
     const offenders = walkFiles(transformRoot, /\.(?:rs|[cm]?[jt]sx?)$/)
-      .map((file) => path.relative(reactRoot, file))
+      .map((file) => toPosixPath(path.relative(reactRoot, file)))
       .filter((file) => !knownTransformSourcePathExceptions.has(file))
       .filter((file) =>
         oldPackageSourcePattern.test(

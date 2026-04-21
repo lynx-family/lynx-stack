@@ -196,6 +196,7 @@
     "build": "rslib build"
   },
   "dependencies": {
+    "@lynx-js/testing-environment": "workspace:*",
     "preact": "npm:@lynx-js/internal-preact@10.28.4-dfff9aa"
   },
   "devDependencies": {
