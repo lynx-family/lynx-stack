@@ -142,7 +142,7 @@ describe('alog', () => {
           "[MainThread Component Render] name: App",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #28: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"{\\"id\\":-1,\\"type\\":\\"root\\",\\"children\\":[{\\"id\\":-2,\\"type\\":\\"__snapshot_d6fb6_test_1\\",\\"values\\":[\\"-2:0:\\",\\"-2:1:\\"],\\"children\\":[{\\"id\\":-3,\\"type\\":null,\\"values\\":[0],\\"__slotIndex\\":0},{\\"id\\":-4,\\"type\\":\\"__snapshot_d6fb6_test_2\\",\\"__slotIndex\\":1},{\\"id\\":-5,\\"type\\":\\"__snapshot_d6fb6_test_3\\",\\"__slotIndex\\":1}],\\"__slotIndex\\":0}]}","jsReadyEventIdSwap":{}}])",
+          "[ReactLynxDebug] FiberElement API call #28: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"{\\"id\\":-1,\\"type\\":\\"root\\",\\"children\\":[{\\"id\\":-2,\\"type\\":\\"__snapshot_d6fb6_test_1\\",\\"values\\":[\\"-2:0:\\",\\"-2:1:\\"],\\"children\\":[{\\"id\\":-3,\\"type\\":null,\\"values\\":[0]},{\\"id\\":-4,\\"type\\":\\"__snapshot_d6fb6_test_2\\",\\"slotIndex\\":1},{\\"id\\":-5,\\"type\\":\\"__snapshot_d6fb6_test_3\\",\\"slotIndex\\":1}]}]}","jsReadyEventIdSwap":{}}])",
         ],
         [
           "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: 4",
@@ -179,21 +179,19 @@ describe('alog', () => {
                   "type": null,
                   "values": [
                     0
-                  ],
-                  "__slotIndex": 0
+                  ]
                 },
                 {
                   "id": -4,
                   "type": "__snapshot_d6fb6_test_2",
-                  "__slotIndex": 1
+                  "slotIndex": 1
                 },
                 {
                   "id": -5,
                   "type": "__snapshot_d6fb6_test_3",
-                  "__slotIndex": 1
+                  "slotIndex": 1
                 }
-              ],
-              "__slotIndex": 0
+              ]
             }
           ]
         },
@@ -412,7 +410,7 @@ describe('alog', () => {
           "[MainThread Component Render] name: App",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #28: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"{\\"id\\":-1,\\"type\\":\\"root\\",\\"children\\":[{\\"id\\":-2,\\"type\\":\\"__snapshot_d6fb6_test_1\\",\\"values\\":[\\"-2:0:\\",\\"-2:1:\\"],\\"children\\":[{\\"id\\":-3,\\"type\\":null,\\"values\\":[0],\\"__slotIndex\\":0},{\\"id\\":-4,\\"type\\":\\"__snapshot_d6fb6_test_2\\",\\"__slotIndex\\":1},{\\"id\\":-5,\\"type\\":\\"__snapshot_d6fb6_test_3\\",\\"__slotIndex\\":1}],\\"__slotIndex\\":0}]}","jsReadyEventIdSwap":{}}])",
+          "[ReactLynxDebug] FiberElement API call #28: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"{\\"id\\":-1,\\"type\\":\\"root\\",\\"children\\":[{\\"id\\":-2,\\"type\\":\\"__snapshot_d6fb6_test_1\\",\\"values\\":[\\"-2:0:\\",\\"-2:1:\\"],\\"children\\":[{\\"id\\":-3,\\"type\\":null,\\"values\\":[0]},{\\"id\\":-4,\\"type\\":\\"__snapshot_d6fb6_test_2\\",\\"slotIndex\\":1},{\\"id\\":-5,\\"type\\":\\"__snapshot_d6fb6_test_3\\",\\"slotIndex\\":1}]}]}","jsReadyEventIdSwap":{}}])",
         ],
         [
           "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: 4",
@@ -449,21 +447,19 @@ describe('alog', () => {
                   "type": null,
                   "values": [
                     0
-                  ],
-                  "__slotIndex": 0
+                  ]
                 },
                 {
                   "id": -4,
                   "type": "__snapshot_d6fb6_test_2",
-                  "__slotIndex": 1
+                  "slotIndex": 1
                 },
                 {
                   "id": -5,
                   "type": "__snapshot_d6fb6_test_3",
-                  "__slotIndex": 1
+                  "slotIndex": 1
                 }
-              ],
-              "__slotIndex": 0
+              ]
             }
           ]
         },

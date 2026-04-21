@@ -174,7 +174,6 @@ test('fireEvent triggers useEffect calls', async () => {
   expect(snapshotInstanceManager.values).toMatchInlineSnapshot(`
     Map {
       -1 => {
-        "__slotIndex": undefined,
         "children": undefined,
         "extraProps": undefined,
         "id": -1,
@@ -222,13 +221,10 @@ test('fireEvent triggers useEffect calls', async () => {
   expect(snapshotInstanceManager.values).toMatchInlineSnapshot(`
     Map {
       -1 => {
-        "__slotIndex": undefined,
         "children": [
           {
-            "__slotIndex": 0,
             "children": [
               {
-                "__slotIndex": 0,
                 "children": undefined,
                 "extraProps": undefined,
                 "id": 3,
@@ -252,10 +248,8 @@ test('fireEvent triggers useEffect calls', async () => {
         "values": undefined,
       },
       2 => {
-        "__slotIndex": 0,
         "children": [
           {
-            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": 3,
@@ -273,7 +267,6 @@ test('fireEvent triggers useEffect calls', async () => {
         ],
       },
       3 => {
-        "__slotIndex": 0,
         "children": undefined,
         "extraProps": undefined,
         "id": 3,

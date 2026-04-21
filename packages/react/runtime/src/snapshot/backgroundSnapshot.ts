@@ -125,7 +125,7 @@ export class BackgroundSnapshotInstance {
   __values: any[] | undefined;
   __snapshot_def: Snapshot;
   __extraProps?: Record<string, unknown> | undefined;
-  __slotIndex?: number | undefined;
+  __slotIndex: number = 0;
 
   private __parent: BackgroundSnapshotInstance | null = null;
   private __firstChild: BackgroundSnapshotInstance | null = null;
@@ -597,7 +597,7 @@ export function hydrate(
             let filteredBeforeChildNodes = beforeChildNodes;
             let filteredAfterChildNodes = afterChildNodes;
             if (type === DynamicPartType.SlotV2 || type === DynamicPartType.ListSlotV2) {
-              filteredBeforeChildNodes = beforeChildNodes.filter(v => v.__slotIndex === index);
+              filteredBeforeChildNodes = beforeChildNodes.filter(v => (v.slotIndex ?? 0) === index);
               filteredAfterChildNodes = afterChildNodes.filter(v => v.__slotIndex === index);
             }
 
@@ -678,7 +678,7 @@ export function hydrate(
                       before.id,
                       node.id,
                       target?.id,
-                      node.__slotIndex,
+                      node.slotIndex ?? 0,
                     );
                   } finally {
                     profileEnd();
@@ -689,7 +689,7 @@ export function hydrate(
                     before.id,
                     node.id,
                     target?.id,
-                    node.__slotIndex,
+                    node.slotIndex ?? 0,
                   );
                 }
               },

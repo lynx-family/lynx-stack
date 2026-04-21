@@ -146,6 +146,7 @@ export function createSnapshot(
     if (v === DynamicPartType.ListChildren || v === DynamicPartType.ListSlotV2) {
       s.isListHolder = true;
     }
+    s.isSlotV2 = slot.every(([type]) => type === DynamicPartType.SlotV2 || type === DynamicPartType.ListSlotV2);
   }
   return uniqID;
 }

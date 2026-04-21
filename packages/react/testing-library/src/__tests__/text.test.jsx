@@ -31,8 +31,7 @@ describe('should only render text when it is not empty', () => {
         "children": [
           {
             "id": -2,
-            "type": "__snapshot_89850_test_1",
-            "__slotIndex": 0
+            "type": "__snapshot_89850_test_1"
           }
         ]
       }"
@@ -82,28 +81,26 @@ describe('should only render text when it is not empty', () => {
     );
 
     expect(JSON.stringify(JSON.parse(onLifecycleEventCalls[0][0][1]['root']), null, 2)).toMatchInlineSnapshot(`
-    "{
-      "id": -1,
-      "type": "root",
-      "children": [
-        {
-          "id": -2,
-          "type": "__snapshot_89850_test_2",
-          "children": [
-            {
-              "id": -3,
-              "type": null,
-              "values": [
-                "Dynamic Text"
-              ],
-              "__slotIndex": 0
-            }
-          ],
-          "__slotIndex": 0
-        }
-      ]
-    }"
-  `);
+      "{
+        "id": -1,
+        "type": "root",
+        "children": [
+          {
+            "id": -2,
+            "type": "__snapshot_89850_test_2",
+            "children": [
+              {
+                "id": -3,
+                "type": null,
+                "values": [
+                  "Dynamic Text"
+                ]
+              }
+            ]
+          }
+        ]
+      }"
+    `);
     expect(callLepusMethodCalls[0]).toMatchInlineSnapshot(`
     [
       "rLynxChange",

@@ -138,7 +138,7 @@ describe('legacy DynamicPartType should work', () => {
             "childId": 3,
             "op": "InsertBefore",
             "parentId": -10,
-            "slotIndex": undefined,
+            "slotIndex": 0,
           },
           {
             "childId": -13,
@@ -155,7 +155,7 @@ describe('legacy DynamicPartType should work', () => {
             "childId": 5,
             "op": "InsertBefore",
             "parentId": -12,
-            "slotIndex": undefined,
+            "slotIndex": 0,
           },
         ]
       `);
@@ -237,15 +237,19 @@ describe('legacy DynamicPartType should work', () => {
     b.insertBefore(c0);
     b.insertBefore(c1);
 
+    expect(listRef).toMatchInlineSnapshot(`<list />`);
+
     const c0_d0 = new SnapshotInstance(slot);
     const c0_d1 = new SnapshotInstance(slot);
     c0.insertBefore(c0_d0);
     c0.insertBefore(c0_d1);
+    expect(listRef).toMatchInlineSnapshot(`<list />`);
 
     const c1_d0 = new SnapshotInstance(slot);
     const c1_d1 = new SnapshotInstance(slot);
     c1.insertBefore(c1_d0);
     c1.insertBefore(c1_d1);
+    expect(listRef).toMatchInlineSnapshot(`<list />`);
 
     __pendingListUpdates.flush();
 
@@ -364,10 +368,8 @@ describe('legacy DynamicPartType should work', () => {
         [
           0,
           {
-            "__slotIndex": 0,
             "children": [
               {
-                "__slotIndex": 0,
                 "children": undefined,
                 "extraProps": undefined,
                 "id": -27,
@@ -386,7 +388,6 @@ describe('legacy DynamicPartType should work', () => {
           3,
           [
             {
-              "__slotIndex": 0,
               "children": undefined,
               "extraProps": undefined,
               "id": -27,
@@ -438,10 +439,8 @@ describe('legacy DynamicPartType should work', () => {
         [
           0,
           {
-            "__slotIndex": 0,
             "children": [
               {
-                "__slotIndex": 0,
                 "children": undefined,
                 "extraProps": undefined,
                 "id": -29,
@@ -457,7 +456,6 @@ describe('legacy DynamicPartType should work', () => {
           0,
           0,
           {
-            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -29,

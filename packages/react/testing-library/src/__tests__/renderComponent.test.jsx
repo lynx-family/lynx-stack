@@ -216,8 +216,7 @@ test('setState triggered renderComponent should have correct slotIndex', async (
               "type": null,
               "values": [
                 "parent"
-              ],
-              "__slotIndex": 0
+              ]
             },
             {
               "id": -4,
@@ -228,14 +227,12 @@ test('setState triggered renderComponent should have correct slotIndex', async (
                   "type": null,
                   "values": [
                     0
-                  ],
-                  "__slotIndex": 0
+                  ]
                 }
               ],
-              "__slotIndex": 1
+              "slotIndex": 1
             }
-          ],
-          "__slotIndex": 0
+          ]
         }
       ]
     }"

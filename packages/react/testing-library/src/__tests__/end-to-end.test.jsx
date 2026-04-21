@@ -42,7 +42,6 @@ test('state change will cause re-render', async () => {
   expect(snapshotInstanceManager.values).toMatchInlineSnapshot(`
     Map {
       -1 => {
-        "__slotIndex": undefined,
         "children": undefined,
         "extraProps": undefined,
         "id": -1,
@@ -63,10 +62,8 @@ test('state change will cause re-render', async () => {
   expect(snapshotInstanceManager.values).toMatchInlineSnapshot(`
     Map {
       -1 => {
-        "__slotIndex": undefined,
         "children": [
           {
-            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": 2,
@@ -80,7 +77,6 @@ test('state change will cause re-render', async () => {
         "values": undefined,
       },
       2 => {
-        "__slotIndex": 0,
         "children": undefined,
         "extraProps": undefined,
         "id": 2,
@@ -163,7 +159,6 @@ test('it waits for the data to be loaded', async () => {
   expect(snapshotInstanceManager.values).toMatchInlineSnapshot(`
     Map {
       -1 => {
-        "__slotIndex": undefined,
         "children": undefined,
         "extraProps": undefined,
         "id": -1,

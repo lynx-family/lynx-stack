@@ -88,7 +88,7 @@ export class SnapshotInstance {
   __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
   __listItemPlatformInfo?: PlatformInfo;
   __extraProps?: Record<string, unknown> | undefined;
-  __slotIndex?: number | undefined;
+  __slotIndex: number = 0;
 
   constructor(public type: string, id?: number) {
     // Suspense uses 'div'
@@ -162,7 +162,7 @@ export class SnapshotInstance {
       while (child) {
         child.ensureElements();
 
-        const [type, elementIndex] = slot[typeof child.__slotIndex === 'number' ? child.__slotIndex : index]!;
+        const [type, elementIndex] = slot[this.__snapshot_def.isSlotV2 ? child.__slotIndex : index]!;
         switch (type) {
           case DynamicPartType.Slot: {
             __ReplaceElement(child.__element_root!, elements[elementIndex]!);
@@ -219,6 +219,7 @@ export class SnapshotInstance {
     a.__id = this.__id;
     a.__snapshot_def = this.__snapshot_def;
     a.__values = this.__values;
+    a.__slotIndex = this.__slotIndex;
 
     // all clear
     a.__parent = null;
@@ -363,10 +364,7 @@ export class SnapshotInstance {
 
     const count = __snapshot_def.slot.length;
     if (
-      count === 1
-      || (__snapshot_def.isSlotV2 ??= __snapshot_def.slot.every(([type]) =>
-        type === DynamicPartType.SlotV2 || type === DynamicPartType.ListSlotV2
-      ))
+      count === 1 || __snapshot_def.isSlotV2
     ) {
       const [, elementIndex] = __snapshot_def.slot[typeof newNode.__slotIndex === 'number' ? newNode.__slotIndex : 0]!;
       const parent = __elements[elementIndex]!;
@@ -374,7 +372,7 @@ export class SnapshotInstance {
         __RemoveElement(parent, newNode.__element_root!);
       }
       if (existingNode) {
-        if (__snapshot_def.isSlotV2 && newNode.__slotIndex! < existingNode.__slotIndex!) {
+        if (__snapshot_def.isSlotV2 && newNode.__slotIndex < existingNode.__slotIndex) {
           __AppendElement(parent, newNode.__element_root!);
         } else {
           __InsertElementBefore(
@@ -483,14 +481,18 @@ export class SnapshotInstance {
   }
 
   toJSON(): Omit<SerializedSnapshotInstance, 'children'> & { children: SnapshotInstance[] | undefined } {
-    return {
+    const json: Omit<SerializedSnapshotInstance, 'children'> & { children: SnapshotInstance[] | undefined } = {
       id: this.__id,
       type: this.type,
       values: this.__values,
       extraProps: this.__extraProps,
       children: this.__firstChild ? this.childNodes : undefined,
-      __slotIndex: this.__slotIndex,
     };
+    // To save serialize time, we only serialize slotIndex if it is not 0
+    if (this.__slotIndex > 0) {
+      json.slotIndex = this.__slotIndex;
+    }
+    return json;
   }
 
   callUpdateIfNotDirectOrDeepEqual(index: number, oldValue: any, newValue: any): void {

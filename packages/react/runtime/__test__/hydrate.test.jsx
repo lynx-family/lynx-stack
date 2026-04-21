@@ -290,7 +290,7 @@ describe('dual-runtime hydrate', () => {
         -1,
         2,
         undefined,
-        undefined,
+        0,
         0,
         "__snapshot_a94a8_test_3",
         3,
@@ -298,7 +298,7 @@ describe('dual-runtime hydrate', () => {
         -1,
         3,
         undefined,
-        undefined,
+        0,
       ]
     `);
   });
