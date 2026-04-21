@@ -47,4 +47,45 @@ describe('pluginReactLynx with react-refresh', () => {
     ).toBe(true)
     expect(rspackConfig).toHaveLoader(ReactRefreshRspackPlugin.loader)
   })
+
+  test('does not inject refresh loader and plugin when hmr is disabled', async () => {
+    const { pluginReactLynx } = await import('../src/index.js')
+    const { ReactRefreshRspackPlugin } = await import(
+      '@lynx-js/react-refresh-webpack-plugin'
+    )
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        dev: {
+          hmr: false,
+        },
+        tools: {
+          rspack: {
+            output: {
+              chunkFormat: 'commonjs',
+            },
+            resolve: {
+              extensionAlias: {
+                '.js': ['.ts', '.js'],
+              },
+            },
+          },
+        },
+        plugins: [
+          pluginReactLynx(),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [rspackConfig] = await rsbuild.initConfigs()
+
+    expect(rspackConfig?.mode).toBe('development')
+    expect(
+      rspackConfig?.plugins?.some(plugin =>
+        plugin instanceof ReactRefreshRspackPlugin
+      ),
+    ).toBe(false)
+    expect(rspackConfig).not.toHaveLoader(ReactRefreshRspackPlugin.loader)
+  })
 })
