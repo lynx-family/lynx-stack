@@ -637,9 +637,6 @@ importers:
 
   packages/react:
     dependencies:
-      '@lynx-js/testing-environment':
-        specifier: workspace:*
-        version: link:../testing-library/testing-environment
       preact:
         specifier: npm:@lynx-js/internal-preact@10.28.4-dfff9aa
         version: '@lynx-js/internal-preact@10.28.4-dfff9aa'

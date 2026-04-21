@@ -27,7 +27,6 @@ export default defineConfig({
           /^vitest/,
           '@rstest/core',
           '@rsbuild/core',
-          '@lynx-js/testing-environment',
           '@lynx-js/rspeedy',
         ],
       },
@@ -52,7 +51,6 @@ export default defineConfig({
         externals: [
           /@lynx-js\/react/,
           /\.\.\/\.\.\/runtime\/lib/,
-          '@lynx-js/testing-environment',
         ],
       },
     },
