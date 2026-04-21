@@ -91,7 +91,7 @@ describe('snapshot containment guardrails', () => {
 
   test('does not import old implementation paths outside the snapshot backend', () => {
     const oldPathPattern = new RegExp(
-      String.raw`(?:from\s+|import\s*\(\s*)['"]\.{1,2}/(?:${legacySourceDirPattern})(?:/|['"])`,
+      String.raw`(?:from\s+|import\s*\(\s*)['"](?:\./|\../)+(?:${legacySourceDirPattern})(?:/|['"])`,
     );
     const offenders = walkFiles(srcRoot)
       .filter((file) => !file.includes(`${path.sep}src${path.sep}snapshot${path.sep}`))
@@ -104,7 +104,7 @@ describe('snapshot containment guardrails', () => {
   test('prevents element-template from depending on snapshot private paths', () => {
     const elementTemplateRoot = path.join(srcRoot, 'element-template');
     const forbiddenImportPattern =
-      /(?:from\s+|import\s*\(\s*)['"]\.{1,2}\/(?:snapshot|internal|root|lifecycle|renderToOpcodes)(?:\/|['"])/;
+      /(?:from\s+|import\s*\(\s*)['"](?:\.\/|\.\.\/)+(?:snapshot|internal|root|lifecycle|renderToOpcodes)(?:\/|['"])/;
     const offenders = walkFiles(elementTemplateRoot)
       .filter((file) => forbiddenImportPattern.test(fs.readFileSync(file, 'utf8')))
       .map((file) => path.relative(runtimeRoot, file));
