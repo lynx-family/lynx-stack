@@ -260,37 +260,6 @@ describe('should build external bundle', () => {
     expect(decodedResult['custom-sections']['index__main-thread']![0])
       .toBeTypeOf('number')
   })
-
-  it('should include LoadingConsumerModulesRuntimeModule in the main-thread bundle', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
-    const rslibConfig = defineExternalBundleRslibConfig({
-      source: {
-        entry: {
-          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
-        },
-      },
-      id: 'utils-runtime-module',
-      output: {
-        distPath: {
-          root: path.join(fixtureDir, 'dist'),
-        },
-        minify: false,
-      },
-      plugins: [pluginReactLynx()],
-    })
-
-    await build(rslibConfig)
-
-    const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-runtime-module.lynx.bundle'),
-    )
-
-    // Check if the runtime module code injected by LoadingConsumerModulesRuntimeModule is present
-    expect(decodedResult['custom-sections']['utils__main-thread']).toContain(
-      'var globalModules = globalThis[Symbol.for(\'__LYNX_WEBPACK_MODULES__\')];',
-    )
-    vi.unstubAllEnvs()
-  })
 })
 
 describe('NODE_ENV configuration', () => {
@@ -334,9 +303,13 @@ describe('NODE_ENV configuration', () => {
     // The produced artifacts should be different
     expect(devMainThread).not.toBe(prodMainThread)
 
+    const devBackground = devResult['custom-sections']['utils']!
+    const prodBackground = prodResult['custom-sections']['utils']!
+
+    expect(devBackground).not.toBe(prodBackground)
     // __DEV__ macro should be replaced differently
-    expect(devMainThread).toMatch(/isDev:\s*(!0|true)/)
-    expect(prodMainThread).toMatch(/isDev:\s*(!1|false)/)
+    expect(devBackground).toMatch(/isDev:\s*(!0|true)/)
+    expect(prodBackground).toMatch(/isDev:\s*(!1|false)/)
   })
 })
 
@@ -424,9 +397,12 @@ describe('mount externals library', () => {
     expect(decodedResult['custom-sections']['utils']).toContain(
       'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
     )
-    expect(decodedResult['custom-sections']['utils__main-thread']).toContain(
-      'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
-    )
+    // MTS should be bytecode
+    expect(
+      Array.isArray(decodedResult['custom-sections']['utils__main-thread']),
+    ).toBe(true)
+    expect(decodedResult['custom-sections']['utils__main-thread']![0])
+      .toBeTypeOf('number')
   })
 
   it('should apply reactlynx externals preset to the final bundle', async () => {
@@ -478,9 +454,13 @@ describe('mount externals library', () => {
     expect(decodedResult['custom-sections']['utils']).toContain(
       'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
     )
-    expect(decodedResult['custom-sections']['utils__main-thread']).toContain(
-      'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
-    )
+
+    // MTS should be bytecode
+    expect(
+      Array.isArray(decodedResult['custom-sections']['utils__main-thread']),
+    ).toBe(true)
+    expect(decodedResult['custom-sections']['utils__main-thread']![0])
+      .toBeTypeOf('number')
   })
 
   it('should let explicit externals override the reactlynx preset', async () => {
@@ -518,16 +498,15 @@ describe('mount externals library', () => {
     expect(decodedResult['custom-sections']['utils']).toContain(
       'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].CustomRuntime.React',
     )
-    expect(decodedResult['custom-sections']['utils__main-thread']).toContain(
-      'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].CustomRuntime.React',
-    )
     expect(decodedResult['custom-sections']['utils']).not.toContain(
       'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
     )
-    expect(decodedResult['custom-sections']['utils__main-thread']).not
-      .toContain(
-        'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
-      )
+    // MTS should be bytecode
+    expect(
+      Array.isArray(decodedResult['custom-sections']['utils__main-thread']),
+    ).toBe(true)
+    expect(decodedResult['custom-sections']['utils__main-thread']![0])
+      .toBeTypeOf('number')
   })
 
   it('should allow extending the built-in reactlynx preset', async () => {
@@ -650,9 +629,13 @@ describe('mount externals library', () => {
     expect(decodedResult['custom-sections']['utils']).toContain(
       'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
     )
-    expect(decodedResult['custom-sections']['utils__main-thread']).toContain(
-      'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
-    )
+
+    // MTS should be bytecode
+    expect(
+      Array.isArray(decodedResult['custom-sections']['utils__main-thread']),
+    ).toBe(true)
+    expect(decodedResult['custom-sections']['utils__main-thread']![0])
+      .toBeTypeOf('number')
   })
 })
 
@@ -746,22 +729,20 @@ describe('pluginReactLynx', () => {
     expect(decodedResult['custom-sections']['utils']).toContain(
       'log("defineDCE",{isMainThread:!1,isLepus:!1,isBackground:!0}',
     )
-    expect(decodedResult['custom-sections']['utils__main-thread']).toContain(
-      'log("defineDCE",{isMainThread:!0,isLepus:!0,isBackground:!1}',
-    )
 
     expect(decodedResult['custom-sections']['utils']).toContain(
-      'log("define",{isDev:!1,isProfile:!0}',
-    )
-    expect(decodedResult['custom-sections']['utils__main-thread']).toContain(
       'log("define",{isDev:!1,isProfile:!0}',
     )
 
     expect(decodedResult['custom-sections']['utils']).toContain(
       'log("process.env.NODE_ENV",{NODE_ENV:"test"}',
     )
-    expect(decodedResult['custom-sections']['utils__main-thread']).toContain(
-      'log("process.env.NODE_ENV",{NODE_ENV:"test"}',
-    )
+
+    // MTS should be bytecode
+    expect(
+      Array.isArray(decodedResult['custom-sections']['utils__main-thread']),
+    ).toBe(true)
+    expect(decodedResult['custom-sections']['utils__main-thread']![0])
+      .toBeTypeOf('number')
   })
 })
