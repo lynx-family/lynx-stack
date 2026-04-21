@@ -1,33 +1,33 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+// Rstest Snapshot v1
 
 exports[`template > templateCases/defaults/compile-options > templateCases/defaults/compile-options > templateCases/defaults/compile-options - rspack > templateCases/defaults/compile-options - rspack should run async 1`] = `
 {
-  "bundleModuleMode": "ReturnByFunction",
-  "debugInfoOutside": true,
-  "defaultDisplayLinear": true,
-  "defaultOverflowVisible": true,
-  "enableCSSInvalidation": false,
-  "enableCSSSelector": true,
-  "enableFiberArch": true,
-  "enableLepusDebug": true,
-  "enableRemoveCSSScope": false,
-  "enableReuseContext": true,
-  "targetSdkVersion": "3.2",
-  "templateDebugUrl": "https://example.com/.rspeedy/main/debug-info.json",
-  "useLepusNG": true,
+  bundleModuleMode: ReturnByFunction,
+  debugInfoOutside: true,
+  defaultDisplayLinear: true,
+  defaultOverflowVisible: true,
+  enableCSSInvalidation: false,
+  enableCSSSelector: true,
+  enableFiberArch: true,
+  enableLepusDebug: true,
+  enableRemoveCSSScope: false,
+  enableReuseContext: true,
+  targetSdkVersion: 3.2,
+  templateDebugUrl: https://example.com/.rspeedy/main/debug-info.json,
+  useLepusNG: true,
 }
 `;
 
 exports[`template > templateCases/defaults/config > templateCases/defaults/config > templateCases/defaults/config - rspack > templateCases/defaults/config - rspack should run async 1`] = `
 {
-  "enableA11y": true,
-  "enableAccessibilityElement": false,
-  "enableCSSInheritance": false,
-  "enableNativeList": true,
-  "enableNewGesture": false,
-  "enableNewIntersectionObserver": true,
-  "lepusStrict": true,
-  "removeDescendantSelectorScope": false,
-  "useNewSwiper": true,
+  enableA11y: true,
+  enableAccessibilityElement: false,
+  enableCSSInheritance: false,
+  enableNativeList: true,
+  enableNewGesture: false,
+  enableNewIntersectionObserver: true,
+  lepusStrict: true,
+  removeDescendantSelectorScope: false,
+  useNewSwiper: true,
 }
 `;

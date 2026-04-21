@@ -1,4 +1,4 @@
-import { LynxTemplatePlugin, WebEncodePlugin } from '../../../../src';
+import { LynxTemplatePlugin, WebEncodePlugin } from '../../../../lib/index.js';
 
 /** @type {import('@rspack/core').Configuration} */
 export default {
@@ -8,7 +8,7 @@ export default {
     'a:main-thread': { import: './a.js', filename: 'a/a.lepus.js' },
     'b:main-thread': { import: './b.js', filename: 'b/b.lepus.js' },
   },
-  context: __dirname,
+  context: new URL('.', import.meta.url).pathname,
   output: {
     filename: '[name]/[name].js',
   },
