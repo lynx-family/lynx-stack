@@ -118,7 +118,8 @@
       "@lynx-js/source-field": "./src/elements/htmlTemplates.ts",
       "types": "./dist/elements/htmlTemplates.d.ts",
       "default": "./dist/elements/htmlTemplates.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",

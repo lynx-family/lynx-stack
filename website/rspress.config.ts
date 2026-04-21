@@ -340,6 +340,14 @@ const CHANGELOG = {
       '@lynx-js/qrcode-rsbuild-plugin',
     ],
   ),
+  webPlatform: createChangelogs(
+    'Web Platform CHANGELOG',
+    [
+      '@lynx-js/web-core',
+      '@lynx-js/web-elements',
+      '@lynx-js/web-platform-rsbuild-plugin',
+    ],
+  ),
   webpack: createChangelogs(
     'Webpack Plugins CHANGELOG',
     [
@@ -366,6 +374,15 @@ const CHANGELOG_ZH = {
       '@lynx-js/rspeedy',
       '@lynx-js/react-rsbuild-plugin',
       '@lynx-js/qrcode-rsbuild-plugin',
+    ],
+    'zh',
+  ),
+  webPlatform: createChangelogs(
+    'Web Platform CHANGELOG',
+    [
+      '@lynx-js/web-core',
+      '@lynx-js/web-elements',
+      '@lynx-js/web-platform-rsbuild-plugin',
     ],
     'zh',
   ),
@@ -523,6 +540,7 @@ const config: UserConfig = defineConfig({
           SIDEBARS.Webpack,
           CHANGELOG.react.sidebar,
           CHANGELOG.rspeedy.sidebar,
+          CHANGELOG.webPlatform.sidebar,
           CHANGELOG.webpack.sidebar,
         ]
           .flatMap(sidebar =>
@@ -543,6 +561,7 @@ const config: UserConfig = defineConfig({
           SIDEBARS_ZH.Webpack,
           CHANGELOG_ZH.react.sidebar,
           CHANGELOG_ZH.rspeedy.sidebar,
+          CHANGELOG_ZH.webPlatform.sidebar,
           CHANGELOG_ZH.webpack.sidebar,
         ]
           .flatMap(sidebar =>
@@ -752,6 +771,10 @@ const config: UserConfig = defineConfig({
           {
             text: 'Rspeedy',
             link: '/changelog/lynx-js--rspeedy',
+          },
+          {
+            text: 'Web Platform',
+            link: '/changelog/lynx-js--web-core',
           },
           {
             text: 'Webpack',
