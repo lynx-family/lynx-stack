@@ -1971,6 +1971,15 @@ importers:
       '@lynx-js/template-webpack-plugin':
         specifier: workspace:*
         version: link:../packages/webpack/template-webpack-plugin
+      '@lynx-js/web-core':
+        specifier: workspace:*
+        version: link:../packages/web-platform/web-core
+      '@lynx-js/web-elements':
+        specifier: workspace:*
+        version: link:../packages/web-platform/web-elements
+      '@lynx-js/web-platform-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../packages/web-platform/web-rsbuild-plugin
       '@lynx-js/webpack-runtime-globals':
         specifier: workspace:*
         version: link:../packages/webpack/webpack-runtime-globals
