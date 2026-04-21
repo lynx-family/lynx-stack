@@ -318,4 +318,94 @@ describe('children api', () => {
       </page>
     `);
   });
+
+  it('Children.toArray', function() {
+    let arr;
+    function Comp(props) {
+      arr = Children.toArray(props.children);
+      return props.children;
+    }
+    __root.__jsx = (
+      <Comp>
+        <view />
+        {null}
+        <view />
+        {undefined}
+        {[<view key="a" />, <view key="b" />]}
+      </Comp>
+    );
+    renderPage();
+    expect(Array.isArray(arr)).toBe(true);
+    // null and undefined should be filtered out
+    expect(arr).toHaveLength(4);
+  });
+
+  it('Children.toArray result is frozen in dev mode', function() {
+    let arr;
+    function Comp(props) {
+      arr = Children.toArray(props.children);
+      return props.children;
+    }
+    __root.__jsx = (
+      <Comp>
+        <view />
+        <view />
+      </Comp>
+    );
+    renderPage();
+    expect(Object.isFrozen(arr)).toBe(true);
+    expect(() => arr.push(<view />)).toThrow();
+    // Non-mutating operations should still work
+    expect([...arr]).toHaveLength(2);
+    expect(arr.filter(() => true)).toHaveLength(2);
+  });
+
+  it('Children.map result is frozen in dev mode', function() {
+    let results;
+    const Comp = (props) => {
+      results = Children.map(props.children, (child) => child);
+      return results;
+    };
+    __root.__jsx = (
+      <Comp>
+        <view />
+        <view />
+      </Comp>
+    );
+    renderPage();
+    expect(Object.isFrozen(results)).toBe(true);
+    expect(() => results.push(<view />)).toThrow();
+    // Non-mutating operations should still work
+    expect([...results]).toHaveLength(2);
+    expect(results.filter(() => true)).toHaveLength(2);
+  });
+
+  it('Children.map returns null when children is null', function() {
+    const result = Children.map(null, (child) => child);
+    expect(result).toBeNull();
+  });
+
+  it('Children.map respects thisArg binding', function() {
+    const context = { multiplier: 2 };
+    let seenThis;
+    let results;
+    const Comp = (props) => {
+      results = Children.map(
+        props.children,
+        function(child, index) {
+          seenThis = this;
+          return child;
+        },
+        context,
+      );
+      return results;
+    };
+    __root.__jsx = (
+      <Comp>
+        <view />
+      </Comp>
+    );
+    renderPage();
+    expect(seenThis).toBe(context);
+  });
 });
