@@ -153,7 +153,7 @@ describe('insertBefore', () => {
         2,
         3,
         undefined,
-        undefined,
+        0,
       ]
     `);
 
@@ -204,12 +204,12 @@ describe('insertBefore', () => {
         2,
         4,
         undefined,
-        undefined,
+        0,
         1,
         2,
         3,
         4,
-        undefined,
+        0,
       ]
     `);
 
@@ -1044,7 +1044,7 @@ describe('DEV_ONLY_addSnapshot', () => {
           },
         ],
         /* v8 ignore stop */
-        [globalThis.DynamicPartType.Children, 0],
+        [[globalThis.DynamicPartType.Children, 0]],
         undefined,
         undefined,
         null,
@@ -1078,8 +1078,10 @@ describe('DEV_ONLY_addSnapshot', () => {
               ],
               /* v8 ignore stop */
               [
-                globalThis.DynamicPartType.Children,
-                0
+                [
+                  globalThis.DynamicPartType.Children,
+                  0
+                ]
               ],
               void 0,
               void 0,
@@ -1107,7 +1109,7 @@ describe('DEV_ONLY_addSnapshot', () => {
     expect(snapshot).toHaveProperty('create', expect.any(Function));
     expect(snapshot).toHaveProperty('update', expect.any(Array));
     expect(snapshot.update.every(i => typeof i === 'function')).toBeTruthy();
-    expect(snapshot).toHaveProperty('slot', [3, 0]);
+    expect(snapshot).toHaveProperty('slot', [[3, 0]]);
   });
 
   it('with list', () => {

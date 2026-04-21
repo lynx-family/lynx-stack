@@ -51,10 +51,8 @@ describe('renderToString', () => {
       [
         0,
         {
-          "__slotIndex": 0,
           "children": [
             {
-              "__slotIndex": 0,
               "children": undefined,
               "extraProps": undefined,
               "id": -4,
@@ -80,7 +78,6 @@ describe('renderToString', () => {
         3,
         [
           {
-            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -4,
@@ -117,13 +114,10 @@ describe('renderToString', () => {
       [
         0,
         {
-          "__slotIndex": 0,
           "children": [
             {
-              "__slotIndex": 0,
               "children": [
                 {
-                  "__slotIndex": 0,
                   "children": undefined,
                   "extraProps": undefined,
                   "id": -5,
@@ -147,10 +141,8 @@ describe('renderToString', () => {
         0,
         0,
         {
-          "__slotIndex": 0,
           "children": [
             {
-              "__slotIndex": 0,
               "children": undefined,
               "extraProps": undefined,
               "id": -5,
@@ -169,7 +161,6 @@ describe('renderToString', () => {
         3,
         [
           {
-            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -5,
@@ -209,13 +200,10 @@ describe('renderToString', () => {
       [
         0,
         {
-          "__slotIndex": 0,
           "children": [
             {
-              "__slotIndex": 0,
               "children": [
                 {
-                  "__slotIndex": 0,
                   "children": undefined,
                   "extraProps": undefined,
                   "id": -4,
@@ -239,10 +227,8 @@ describe('renderToString', () => {
         0,
         0,
         {
-          "__slotIndex": 0,
           "children": [
             {
-              "__slotIndex": 0,
               "children": undefined,
               "extraProps": undefined,
               "id": -4,
@@ -261,7 +247,6 @@ describe('renderToString', () => {
         3,
         [
           {
-            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -4,
@@ -280,6 +265,7 @@ describe('renderToString', () => {
   });
 
   it('should render with attr', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.5);
     const random = Math.random();
 
     function App() {
@@ -295,13 +281,12 @@ describe('renderToString', () => {
       [
         0,
         {
-          "__slotIndex": 0,
           "children": undefined,
           "extraProps": undefined,
           "id": -2,
           "type": "__snapshot_a94a8_test_6",
           "values": [
-            ${random},
+            0.5,
             "hello world",
           ],
         },
@@ -309,7 +294,7 @@ describe('renderToString', () => {
         2,
         "values",
         [
-          ${random},
+          0.5,
           "hello world",
         ],
         1,
@@ -331,10 +316,8 @@ describe('renderToString', () => {
       [
         0,
         {
-          "__slotIndex": 0,
           "children": [
             {
-              "__slotIndex": 0,
               "children": undefined,
               "extraProps": undefined,
               "id": -3,
@@ -353,7 +336,6 @@ describe('renderToString', () => {
         3,
         [
           {
-            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -3,
@@ -386,10 +368,8 @@ describe('renderToString', () => {
       [
         0,
         {
-          "__slotIndex": 0,
           "children": [
             {
-              "__slotIndex": 0,
               "children": undefined,
               "extraProps": undefined,
               "id": -3,
@@ -408,7 +388,6 @@ describe('renderToString', () => {
         3,
         [
           {
-            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -3,
@@ -439,10 +418,8 @@ describe('renderToString', () => {
       [
         0,
         {
-          "__slotIndex": 0,
           "children": [
             {
-              "__slotIndex": 0,
               "children": undefined,
               "extraProps": undefined,
               "id": -3,
@@ -461,7 +438,6 @@ describe('renderToString', () => {
         3,
         [
           {
-            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -3,
@@ -491,13 +467,10 @@ describe('renderToString', () => {
       [
         0,
         {
-          "__slotIndex": 0,
           "children": [
             {
-              "__slotIndex": 0,
               "children": [
                 {
-                  "__slotIndex": 0,
                   "children": undefined,
                   "extraProps": undefined,
                   "id": -4,
@@ -521,10 +494,8 @@ describe('renderToString', () => {
         0,
         0,
         {
-          "__slotIndex": 0,
           "children": [
             {
-              "__slotIndex": 0,
               "children": undefined,
               "extraProps": undefined,
               "id": -4,
@@ -543,7 +514,6 @@ describe('renderToString', () => {
         3,
         [
           {
-            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -4,
@@ -573,13 +543,10 @@ describe('renderToString', () => {
       [
         0,
         {
-          "__slotIndex": 0,
           "children": [
             {
-              "__slotIndex": 0,
               "children": [
                 {
-                  "__slotIndex": 0,
                   "children": undefined,
                   "extraProps": undefined,
                   "id": -7,
@@ -603,10 +570,8 @@ describe('renderToString', () => {
         0,
         0,
         {
-          "__slotIndex": 0,
           "children": [
             {
-              "__slotIndex": 0,
               "children": undefined,
               "extraProps": undefined,
               "id": -7,
@@ -625,7 +590,6 @@ describe('renderToString', () => {
         3,
         [
           {
-            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -7,
@@ -930,7 +894,6 @@ describe('renderToString', () => {
       [
         0,
         {
-          "__slotIndex": 0,
           "children": undefined,
           "extraProps": undefined,
           "id": -2,
@@ -951,10 +914,8 @@ describe('renderToString', () => {
       [
         0,
         {
-          "__slotIndex": 0,
           "children": [
             {
-              "__slotIndex": 0,
               "children": undefined,
               "extraProps": undefined,
               "id": -4,
@@ -973,7 +934,6 @@ describe('renderToString', () => {
         3,
         [
           {
-            "__slotIndex": 0,
             "children": undefined,
             "extraProps": undefined,
             "id": -4,
@@ -1325,7 +1285,6 @@ describe('renderOpcodesInto', () => {
       </page>
     `);
 
-    debugger;
     const [vnodeA, vnodeB, vnodeC, vnodeC2, vnodeD] = scratch.__firstChild.props.$0;
 
     expect(vnodeA).not.toHaveProperty('__elements');
@@ -1375,7 +1334,6 @@ describe('createElement', () => {
       [
         0,
         {
-          "__slotIndex": 0,
           "children": undefined,
           "extraProps": undefined,
           "id": -41,
@@ -1391,7 +1349,6 @@ describe('createElement', () => {
       [
         0,
         {
-          "__slotIndex": 0,
           "children": undefined,
           "extraProps": undefined,
           "id": -42,
@@ -1415,7 +1372,6 @@ describe('createElement', () => {
       [
         0,
         {
-          "__slotIndex": 0,
           "children": undefined,
           "extraProps": undefined,
           "id": -43,
@@ -1431,7 +1387,6 @@ describe('createElement', () => {
       [
         0,
         {
-          "__slotIndex": 0,
           "children": undefined,
           "extraProps": undefined,
           "id": -44,

@@ -177,7 +177,7 @@ test('setState changes jsx', async () => {
           "type": "__snapshot_c1928_test_2",
         },
         {
-          "beforeId": null,
+          "beforeId": 4,
           "childId": 8,
           "op": "InsertBefore",
           "parentId": 2,
