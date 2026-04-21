@@ -10,7 +10,16 @@ import { setupDocument } from '../../../src/document';
 import { setupPage, snapshotInstanceManager } from '../../../src/snapshot';
 import { initProfileHook } from '../../../src/snapshot/debug/profileHooks';
 import { useState } from '../../../src/index';
-import { COMPONENT, DIFF, DIFF2, DIFFED, HOOKS, LIST, RENDER, VNODE } from '../../../src/snapshot/renderToOpcodes/constants';
+import {
+  COMPONENT,
+  DIFF,
+  DIFF2,
+  DIFFED,
+  HOOKS,
+  LIST,
+  RENDER,
+  VNODE,
+} from '../../../src/snapshot/renderToOpcodes/constants';
 
 describe('profile', () => {
   let scratch;

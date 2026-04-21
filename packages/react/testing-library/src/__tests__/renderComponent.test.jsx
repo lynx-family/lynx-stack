@@ -2,7 +2,7 @@ import { expect } from 'vitest';
 import { Component, useState } from '@lynx-js/react';
 
 import { render, act } from '..';
-import { prettyFormatSnapshotPatch } from '../../../runtime/lib/debug/formatPatch';
+import { prettyFormatSnapshotPatch } from '../../../runtime/lib/snapshot/debug/formatPatch';
 
 test('setState generates insertBefore operation', async () => {
   vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');

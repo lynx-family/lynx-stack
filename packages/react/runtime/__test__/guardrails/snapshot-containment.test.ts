@@ -99,7 +99,8 @@ describe('snapshot containment guardrails', () => {
 
   test('prevents element-template from depending on snapshot private paths', () => {
     const elementTemplateRoot = path.join(srcRoot, 'element-template');
-    const forbiddenImportPattern = /(?:from\s+|import\s*\(\s*)['"]\.{1,2}\/(?:snapshot|internal|root|lifecycle|renderToOpcodes)(?:\/|['"])/;
+    const forbiddenImportPattern =
+      /(?:from\s+|import\s*\(\s*)['"]\.{1,2}\/(?:snapshot|internal|root|lifecycle|renderToOpcodes)(?:\/|['"])/;
     const offenders = walkFiles(elementTemplateRoot)
       .filter((file) => forbiddenImportPattern.test(fs.readFileSync(file, 'utf8')))
       .map((file) => path.relative(runtimeRoot, file));

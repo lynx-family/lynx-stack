@@ -4,7 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as ReactLynx from '../../src/internal';
 import { setupPage, SnapshotInstance, backgroundSnapshotInstanceManager } from '../../src/snapshot';
 import { hydrate } from '../../src/snapshot/renderToOpcodes/hydrate';
-import { BackgroundSnapshotInstance, hydrate as backgroundHydrate } from '../../src/snapshot/snapshot/backgroundSnapshot';
+import {
+  BackgroundSnapshotInstance,
+  hydrate as backgroundHydrate,
+} from '../../src/snapshot/snapshot/backgroundSnapshot';
 import { __pendingListUpdates } from '../../src/snapshot/list/pendingListUpdates';
 import { elementTree } from './utils/nativeMethod';
 import { prettyFormatSnapshotPatch } from '../../src/snapshot/debug/formatPatch';

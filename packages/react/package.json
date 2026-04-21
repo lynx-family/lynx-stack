@@ -55,11 +55,11 @@
       "types": "./runtime/jsx-runtime/index.d.ts",
       "default": "./runtime/lepus/jsx-runtime/index.js"
     },
-  "./hooks": {
+    "./hooks": {
       "types": "./runtime/lib/snapshot/hooks/react.d.ts",
       "default": "./runtime/lib/snapshot/hooks/react.js"
-  },
-  "./lepus/hooks": {
+    },
+    "./lepus/hooks": {
       "types": "./runtime/lib/snapshot/hooks/react.d.ts",
       "default": "./runtime/lib/snapshot/hooks/mainThread.js"
     },
@@ -95,11 +95,11 @@
       "types": "./runtime/lib/worklet-runtime/bindings/index.d.ts",
       "default": "./runtime/lib/worklet-runtime/bindings/index.js"
     },
-  "./legacy-react-runtime": {
+    "./legacy-react-runtime": {
       "types": "./runtime/lib/snapshot/legacy-react-runtime/index.d.ts",
       "lazy": "./runtime/lazy/legacy-react-runtime.js",
       "default": "./runtime/lib/snapshot/legacy-react-runtime/index.js"
-  },
+    },
     "./testing-library": {
       "types": "./testing-library/types/index.d.ts",
       "default": "./testing-library/dist/index.js"
