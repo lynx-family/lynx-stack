@@ -24,9 +24,7 @@ function destroyBackground(): void {
   // Clear delayed events which should not be executed after destroyed.
   // This is important when the page is performing a reload.
   delayedLifecycleEvents.length = 0;
-  if (delayedEvents) {
-    delayedEvents.length = 0;
-  }
+  delayedEvents.length = 0;
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
