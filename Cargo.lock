@@ -1748,6 +1748,7 @@ dependencies = [
  "swc_plugin_dynamic_import",
  "swc_plugin_inject",
  "swc_plugin_list",
+ "swc_plugin_portal_container",
  "swc_plugin_shake",
  "swc_plugin_snapshot",
  "swc_plugin_text",
@@ -3220,6 +3221,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "swc_plugin_portal_container"
+version = "0.1.0"
+dependencies = [
+ "swc_core",
+ "swc_plugin_snapshot",
+ "swc_plugins_shared",
+]
+
+[[package]]
 name = "swc_plugin_proxy"
 version = "20.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3249,6 +3259,7 @@ dependencies = [
  "swc_plugin_dynamic_import",
  "swc_plugin_inject",
  "swc_plugin_list",
+ "swc_plugin_portal_container",
  "swc_plugin_shake",
  "swc_plugin_snapshot",
  "swc_plugin_text",

@@ -1,0 +1,1 @@
+<view ref={hostRef}/>;

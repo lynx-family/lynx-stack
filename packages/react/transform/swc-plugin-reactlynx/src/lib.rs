@@ -26,6 +26,7 @@ use swc_plugin_directive_dce::{DirectiveDCEVisitor, DirectiveDCEVisitorConfig};
 use swc_plugin_dynamic_import::{DynamicImportVisitor, DynamicImportVisitorConfig};
 use swc_plugin_inject::{InjectVisitor, InjectVisitorConfig};
 use swc_plugin_list::ListVisitor;
+use swc_plugin_portal_container::PortalContainerVisitor;
 use swc_plugin_shake::{ShakeVisitor, ShakeVisitorConfig};
 use swc_plugin_snapshot::{JSXTransformer, JSXTransformerConfig};
 use swc_plugin_text::TextVisitor;
@@ -223,6 +224,8 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
   let is_ge_3_1: bool = is_engine_version_ge(&options.engine_version, "3.1");
   let text_plugin = Optional::new(visit_mut_pass(TextVisitor {}), enabled && is_ge_3_1);
 
+  let portal_container_plugin = Optional::new(visit_mut_pass(PortalContainerVisitor {}), enabled);
+
   let shake_plugin = match options.shake.clone() {
     Either::A(config) => Optional::new(visit_mut_pass(ShakeVisitor::default()), config),
     Either::B(config) => Optional::new(visit_mut_pass(ShakeVisitor::new(config)), true),
@@ -292,7 +295,12 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
     dynamic_import_plugin,
     worklet_plugin,
     css_scope_plugin,
-    (text_plugin, list_plugin, snapshot_plugin),
+    (
+      portal_container_plugin,
+      text_plugin,
+      list_plugin,
+      snapshot_plugin,
+    ),
     directive_dce_plugin,
     define_dce_plugin,
     simplify_pass_1, // do simplify after DCE above to make shake below works better

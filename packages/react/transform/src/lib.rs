@@ -483,6 +483,11 @@ fn transform_react_lynx_inner(
       enabled && is_ge_3_1,
     );
 
+    let portal_container_plugin = Optional::new(
+      visit_mut_pass(swc_plugin_portal_container::PortalContainerVisitor {}),
+      enabled,
+    );
+
     let shake_plugin = match options.shake.clone() {
       Either::A(config) => Optional::new(visit_mut_pass(ShakeVisitor::default()), config),
       Either::B(config) => Optional::new(visit_mut_pass(ShakeVisitor::new(config)), true),
@@ -607,7 +612,12 @@ fn transform_react_lynx_inner(
       compat_plugin,
       worklet_plugin,
       css_scope_plugin,
-      (text_plugin, list_plugin, snapshot_plugin),
+      (
+        portal_container_plugin,
+        text_plugin,
+        list_plugin,
+        snapshot_plugin,
+      ),
       directive_dce_plugin,
       define_dce_plugin,
       simplify_pass_1, // do simplify after DCE above to make shake below works better

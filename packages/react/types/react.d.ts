@@ -97,6 +97,18 @@ declare module '@lynx-js/types' {
     ref?: Ref<NodesRef>;
     key?: Key | null | undefined;
     'main-thread:ref'?: Ref<MainThread.Element>;
+
+    /**
+     * Marks this element as a `createPortal` target. Must have no children;
+     * only statically-truthy values (shorthand or `={true}`) are recognised
+     * at compile time.
+     *
+     * ```tsx
+     * <view portal-container ref={hostRef} />;
+     * {host && createPortal(<text>hi</text>, host)}
+     * ```
+     */
+    'portal-container'?: boolean | undefined;
   }
 
   interface Lynx extends LynxExtended {

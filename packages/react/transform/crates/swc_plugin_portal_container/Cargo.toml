@@ -1,0 +1,17 @@
+[package]
+name = "swc_plugin_portal_container"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "lib.rs"
+
+[features]
+napi = ["swc_plugins_shared/napi"]
+
+[dependencies]
+swc_core = { workspace = true, features = ["ecma_parser", "ecma_visit", "testing_transform", "ecma_quote"] }
+swc_plugins_shared = { path = "../swc_plugins_shared" }
+
+[dev-dependencies]
+swc_plugin_snapshot = { path = "../swc_plugin_snapshot" }

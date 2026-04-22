@@ -7,12 +7,17 @@ import { createPortal as preactCreatePortal } from 'preact/compat';
 
 import type { NodesRef } from '@lynx-js/types';
 
+import { __DynamicPartSlotV2 } from '../internal.js';
 import { refProxyToBackgroundSnapshotInstance } from '../snapshot/refProxyBackgroundSnapshotInstance.js';
 
 export const createPortal: (
   vnode: ComponentChildren,
-  containerNodesRef: NodesRef,
-) => VNode<any> = (vnode, containerNodesRef) => {
+  containerNodesRef: NodesRef | null | undefined,
+) => VNode<any> | null = (vnode, containerNodesRef) => {
+  if (containerNodesRef == null) {
+    return null;
+  }
+
   const getter = refProxyToBackgroundSnapshotInstance.get(containerNodesRef);
   if (!getter) {
     throw new Error(
@@ -20,10 +25,18 @@ export const createPortal: (
         + 'Refs from lynx.createSelectorQuery() or third-party sources are not supported.',
     );
   }
-  const backgroundSnapshotInstance = getter();
+  const bsi = getter();
+
+  const s = bsi.__snapshot_def.slot;
+  if (!s || s.length !== 1 || s[0]![0] !== __DynamicPartSlotV2 || s[0]![1] !== 0) {
+    throw new Error(
+      `createPortal container is not valid: snapshot type ${bsi.type} must have a single empty slot at element index 0. `
+        + `Mark the container element with the \`portal-container\` attribute, e.g. \`<view portal-container ref={hostRef} />\`.`,
+    );
+  }
 
   return preactCreatePortal(
     vnode,
-    backgroundSnapshotInstance as unknown as ContainerNode,
+    bsi as unknown as ContainerNode,
   );
 };

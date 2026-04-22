@@ -27,6 +27,7 @@ swc_plugin_directive_dce = { path = "./crates/swc_plugin_directive_dce", feature
 swc_plugin_dynamic_import = { path = './crates/swc_plugin_dynamic_import', features = ["napi"] }
 swc_plugin_inject = { path = "./crates/swc_plugin_inject", features = ["napi"] }
 swc_plugin_list = { path = "./crates/swc_plugin_list", features = ["napi"] }
+swc_plugin_portal_container = { path = "./crates/swc_plugin_portal_container", features = ["napi"] }
 swc_plugin_shake = { path = './crates/swc_plugin_shake', features = ["napi"] }
 swc_plugin_snapshot = { path = "./crates/swc_plugin_snapshot", features = ["napi"] }
 swc_plugin_text = { path = './crates/swc_plugin_text', features = ["napi"] }
