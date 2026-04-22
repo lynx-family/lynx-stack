@@ -989,6 +989,14 @@ test.describe('reactlynx3 tests', () => {
       });
       expect(computedStyle.backgroundColor).toBe('rgb(255, 192, 203)');
     });
+    test('basic-css-var-fallback-color', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      await expect(page.locator('#target')).toHaveCSS(
+        'color',
+        'rgba(22, 24, 35, 0.6)',
+      );
+    });
     test('basic-color-not-inherit', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
