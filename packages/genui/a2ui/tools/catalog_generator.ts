@@ -92,70 +92,106 @@ function generateSchema() {
 
     const accessedProps = new Map<string, any>();
 
-    function visitNode(node: ts.Node) {
-      if (
-        ts.isFunctionDeclaration(node) && node.name?.getText() === componentName
-      ) {
-        const propsParam = node.parameters[0];
-        if (propsParam && ts.isIdentifier(propsParam.name)) {
-          const propsName = propsParam.name.text;
+    function processFunctionLike(
+      funcNode:
+        | ts.FunctionDeclaration
+        | ts.ArrowFunction
+        | ts.FunctionExpression,
+      propsParam: ts.ParameterDeclaration,
+    ) {
+      if (!propsParam) return;
 
-          // Traverses function to find all runtime accesses of `props`
-          function visitBody(bodyNode: ts.Node) {
-            // props['propName']
-            if (
-              ts.isElementAccessExpression(bodyNode)
-              && ts.isIdentifier(bodyNode.expression)
-              && bodyNode.expression.text === propsName
-            ) {
-              if (ts.isStringLiteral(bodyNode.argumentExpression)) {
-                const prop = bodyNode.argumentExpression.text;
-                if (!GENERIC_PROPS.has(prop)) {
-                  accessedProps.set(
-                    prop,
-                    parseInferredTypes(bodyNode.parent, checker),
-                  );
-                }
-              }
-            } // props.propName
-            else if (
-              ts.isPropertyAccessExpression(bodyNode)
-              && ts.isIdentifier(bodyNode.expression)
-              && bodyNode.expression.text === propsName
-            ) {
-              const prop = bodyNode.name.text;
+      // Handle Component = ({ propA, propB }) => { ... }
+      if (ts.isObjectBindingPattern(propsParam.name)) {
+        propsParam.name.elements.forEach(el => {
+          let prop = '';
+          if (el.propertyName && ts.isIdentifier(el.propertyName)) {
+            prop = el.propertyName.text;
+          } else if (ts.isIdentifier(el.name)) {
+            prop = el.name.text;
+          }
+          if (prop && !GENERIC_PROPS.has(prop)) {
+            accessedProps.set(prop, { type: 'string' });
+          }
+        });
+      } // Handle Component = (props) => { ... }
+      else if (ts.isIdentifier(propsParam.name)) {
+        const propsName = propsParam.name.text;
+
+        function visitBody(bodyNode: ts.Node) {
+          if (
+            ts.isElementAccessExpression(bodyNode)
+            && ts.isIdentifier(bodyNode.expression)
+            && bodyNode.expression.text === propsName
+          ) {
+            if (ts.isStringLiteral(bodyNode.argumentExpression)) {
+              const prop = bodyNode.argumentExpression.text;
               if (!GENERIC_PROPS.has(prop)) {
                 accessedProps.set(
                   prop,
                   parseInferredTypes(bodyNode.parent, checker),
                 );
               }
-            } // const { propName } = props
-            else if (
-              ts.isVariableDeclaration(bodyNode) && bodyNode.initializer
-              && ts.isIdentifier(bodyNode.initializer)
-              && bodyNode.initializer.text === propsName
-            ) {
-              if (ts.isObjectBindingPattern(bodyNode.name)) {
-                bodyNode.name.elements.forEach(el => {
-                  let prop = '';
-                  if (el.propertyName && ts.isIdentifier(el.propertyName)) {
-                    prop = el.propertyName.text;
-                  } else if (ts.isIdentifier(el.name)) {
-                    prop = el.name.text;
-                  }
-                  if (prop && !GENERIC_PROPS.has(prop)) {
-                    accessedProps.set(prop, { type: 'string' });
-                  }
-                });
-              }
             }
-            ts.forEachChild(bodyNode, visitBody);
+          } else if (
+            ts.isPropertyAccessExpression(bodyNode)
+            && ts.isIdentifier(bodyNode.expression)
+            && bodyNode.expression.text === propsName
+          ) {
+            const prop = bodyNode.name.text;
+            if (!GENERIC_PROPS.has(prop)) {
+              accessedProps.set(
+                prop,
+                parseInferredTypes(bodyNode.parent, checker),
+              );
+            }
+          } else if (
+            ts.isVariableDeclaration(bodyNode) && bodyNode.initializer
+            && ts.isIdentifier(bodyNode.initializer)
+            && bodyNode.initializer.text === propsName
+          ) {
+            if (ts.isObjectBindingPattern(bodyNode.name)) {
+              bodyNode.name.elements.forEach(el => {
+                let prop = '';
+                if (el.propertyName && ts.isIdentifier(el.propertyName)) {
+                  prop = el.propertyName.text;
+                } else if (ts.isIdentifier(el.name)) {
+                  prop = el.name.text;
+                }
+                if (prop && !GENERIC_PROPS.has(prop)) {
+                  accessedProps.set(prop, { type: 'string' });
+                }
+              });
+            }
           }
-          if (node.body) {
-            visitBody(node.body);
-          }
+          ts.forEachChild(bodyNode, visitBody);
         }
+        if (funcNode.body) {
+          visitBody(funcNode.body);
+        }
+      }
+    }
+
+    function visitNode(node: ts.Node) {
+      if (
+        ts.isFunctionDeclaration(node) && node.name?.getText() === componentName
+      ) {
+        processFunctionLike(node, node.parameters[0]);
+      } else if (ts.isVariableStatement(node)) {
+        node.declarationList.declarations.forEach(decl => {
+          if (ts.isIdentifier(decl.name) && decl.name.text === componentName) {
+            if (
+              decl.initializer
+              && (ts.isArrowFunction(decl.initializer)
+                || ts.isFunctionExpression(decl.initializer))
+            ) {
+              processFunctionLike(
+                decl.initializer,
+                decl.initializer.parameters[0],
+              );
+            }
+          }
+        });
       }
       ts.forEachChild(node, visitNode);
     }
@@ -187,13 +223,14 @@ function generateSchema() {
     fs.mkdirSync(outDir, { recursive: true });
 
     const finalSchema = { [componentName]: baseSchema };
+    const finalSchemaStr = JSON.stringify(finalSchema, null, 2);
 
-    // We intentionally write it with 2-space indentation mirroring standard formatting.
     fs.writeFileSync(
       path.join(outDir, 'catalog.json'),
-      JSON.stringify(finalSchema, null, 2) + '\n',
+      finalSchemaStr + '\n',
     );
-    console.log(`Generated mapping for ${componentName} at dist/catalog`);
+
+    console.log(`Generated schemas for ${componentName}`);
   }
 }
 

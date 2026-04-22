@@ -6,15 +6,15 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.ts",
+      "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./core": {
-      "types": "./dist/core/index.ts",
+      "types": "./dist/core/index.d.ts",
       "default": "./dist/core/index.js"
     },
     "./chat": {
-      "types": "./dist/chat/index.ts",
+      "types": "./dist/chat/index.d.ts",
       "default": "./dist/chat/index.js"
     },
     "./catalog/all": {
@@ -91,9 +91,9 @@
     }
   },
   "main": "./dist/index.js",
-  "types": "./dist/index.ts",
+  "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "node --experimental-strip-types tools/catalog_generator.ts"
+    "build": "node --experimental-strip-types tools/catalog_generator.ts && tsc -b"
   },
   "dependencies": {
     "@a2ui/web_core": "0.9.1",
@@ -104,9 +104,7 @@
     "@lynx-js/lynx-ui-input": "^3.130.0",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "3.7.0",
-    "@types/react": "^18.3.28",
-    "zod": "^3.25.76",
-    "zod-to-json-schema": "^3.25.2"
+    "@types/react": "^18.3.28"
   },
   "peerDependencies": {
     "@lynx-js/lynx-ui": "^3.130.0",
