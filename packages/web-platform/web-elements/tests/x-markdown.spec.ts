@@ -104,9 +104,14 @@ test.describe('x-markdown', () => {
   test('should apply markdown-style updates', async ({ page }) => {
     await goto(page, 'x-markdown/style');
     const markdown = page.locator('x-markdown');
+    await page.waitForFunction(() => {
+      const element = document.querySelector('x-markdown');
+      return element?.shadowRoot?.querySelector('a')?.textContent === 'link';
+    });
 
     const link = markdown.locator('a');
     await expect(link).toHaveCSS('color', 'rgb(255, 0, 0)');
+    await expect(link).toHaveCSS('line-height', '24px');
 
     const inlineCode = markdown.locator('code').first();
     await expect(inlineCode).toHaveCSS('color', 'rgb(0, 0, 255)');
