@@ -148,6 +148,7 @@ export const templateXList = `<style>
     <div
       class="observer placeholder-dom"
       id="upper-threshold-observer"
+      part="upper-threshold-sentinel"
     ></div>
   </div>
   <slot part="slot"></slot>
@@ -158,6 +159,7 @@ export const templateXList = `<style>
     <div
       class="observer placeholder-dom"
       id="lower-threshold-observer"
+      part="lower-threshold-sentinel"
     ></div>
   </div>
 </div>`;
