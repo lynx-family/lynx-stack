@@ -63,8 +63,10 @@ catalogs:
     "@rstest/core": "0.8.1"
 
 overrides:
-  "@rspack/core": "$@rspack/core"
-  "@rsbuild/core>@rspack/core": "$@rspack/core"
+  "@rspack/core@^1": "$@rspack/core"
+  "@rsbuild/core@1>@rspack/core": "$@rspack/core"
+  "@rsdoctor/rspack-plugin>@rspack/core": "$@rspack/core"
+  "@rsdoctor/types>@rspack/core": "$@rspack/core"
 
 patchedDependencies:
   "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
