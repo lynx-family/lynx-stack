@@ -6,16 +6,16 @@
 import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { RefProxy, runDelayedUiOps, shouldDelayUiOps } from '../../src/lifecycle/ref/delay';
+import { RefProxy, runDelayedUiOps, shouldDelayUiOps } from '../../src/snapshot/lifecycle/ref/delay';
 
 import { Component, createRef, useState } from '../../src/index';
-import { clearCommitTaskId, replaceCommitHook } from '../../src/lifecycle/patch/commit';
-import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
-import { __pendingListUpdates } from '../../src/list/pendingListUpdates';
+import { clearCommitTaskId, replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
+import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
+import { __pendingListUpdates } from '../../src/snapshot/list/pendingListUpdates';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
-import { globalEnvManager } from '../utils/envManager';
-import { elementTree, waitSchedule } from '../utils/nativeMethod';
+import { globalEnvManager } from './utils/envManager';
+import { elementTree, waitSchedule } from './utils/nativeMethod';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));

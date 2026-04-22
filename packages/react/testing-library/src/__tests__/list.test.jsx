@@ -8,7 +8,7 @@ import { describe, expect, vi } from 'vitest';
 import { Component, useState } from '@lynx-js/react';
 
 import { render } from '..';
-import { __pendingListUpdates } from '../../../runtime/lib/list/pendingListUpdates.js';
+import { __pendingListUpdates } from '../../../runtime/lib/snapshot/list/pendingListUpdates.js';
 
 describe('list', () => {
   it('basic', async () => {

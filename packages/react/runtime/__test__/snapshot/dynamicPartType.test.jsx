@@ -3,15 +3,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as ReactLynx from '../../src/internal';
 import { setupPage, SnapshotInstance, backgroundSnapshotInstanceManager } from '../../src/snapshot';
-import { hydrate } from '../../src/renderToOpcodes/hydrate';
-import { BackgroundSnapshotInstance, hydrate as backgroundHydrate } from '../../src/snapshot/backgroundSnapshot';
-import { __pendingListUpdates } from '../../src/list/pendingListUpdates';
-import { elementTree } from '../utils/nativeMethod';
-import { prettyFormatSnapshotPatch } from '../../src/debug/formatPatch';
-import renderToString from '../../src/renderToOpcodes';
-import { clearListGlobal, gRecycleMap, gSignMap } from '../../src/list/list';
+import { hydrate } from '../../src/snapshot/renderToOpcodes/hydrate';
+import {
+  BackgroundSnapshotInstance,
+  hydrate as backgroundHydrate,
+} from '../../src/snapshot/snapshot/backgroundSnapshot';
+import { __pendingListUpdates } from '../../src/snapshot/list/pendingListUpdates';
+import { elementTree } from './utils/nativeMethod';
+import { prettyFormatSnapshotPatch } from '../../src/snapshot/debug/formatPatch';
+import renderToString from '../../src/snapshot/renderToOpcodes';
+import { clearListGlobal, gRecycleMap, gSignMap } from '../../src/snapshot/list/list';
 import { jsx } from '../../lepus/jsx-runtime';
-import { globalEnvManager } from '../utils/envManager';
+import { globalEnvManager } from './utils/envManager';
 
 const HOLE = null;
 
