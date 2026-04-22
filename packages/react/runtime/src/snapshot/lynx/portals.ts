@@ -10,6 +10,14 @@ import type { NodesRef } from '@lynx-js/types';
 import { __DynamicPartSlotV2 } from '../../internal.js';
 import { refProxyToBackgroundSnapshotInstance } from '../refProxyBackgroundSnapshotInstance.js';
 
+/**
+ * Renders `children` into a target Lynx element instead of into the parent
+ * in the JSX tree. The target must be a ref obtained from a ReactLynx
+ * element marked with the `portal-container` attribute. A `null` or
+ * `undefined` container renders nothing.
+ *
+ * @public
+ */
 export const createPortal: (
   vnode: ComponentChildren,
   containerNodesRef: NodesRef | null | undefined,
