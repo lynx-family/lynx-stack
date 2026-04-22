@@ -112,6 +112,17 @@ function removeGestureDetector(dom: FiberElement, id: number): void {
   }
 }
 
+function clearLegacyGestureState(dom: FiberElement): void {
+  __SetAttribute(dom, 'has-react-gesture', null);
+  // `flatten` may still be required by unrelated attrs from the same spread
+  // (e.g. `clip-radius`), so only clear the gesture-specific legacy state here.
+  // When `__RemoveGestureDetector` is available, let it own the detector cleanup
+  // so we do not clobber an unrelated user-provided `gesture` attr.
+  if (typeof __RemoveGestureDetector !== 'function') {
+    __SetAttribute(dom, 'gesture', null);
+  }
+}
+
 function getGestureInfo(
   gesture: BaseGesture,
   oldGesture: BaseGesture | undefined,
@@ -161,6 +172,20 @@ export function processGesture(
   },
 ): void {
   const domSet = gestureOptions?.domSet === true;
+  if (!gesture || !isSerializedGesture(gesture)) {
+    const { oldBaseGesturesById } = collectOldGestureInfo(oldGesture);
+    for (const oldBaseGesture of oldBaseGesturesById.values()) {
+      removeGestureDetector(dom, oldBaseGesture.id);
+    }
+
+    // Clearing the attrs keeps the legacy main-thread state in sync when
+    // gesture props disappear during spread/key-removal updates.
+    if (!domSet && oldBaseGesturesById.size > 0) {
+      clearLegacyGestureState(dom);
+    }
+    return;
+  }
+
   const { uniqOldBaseGestures, oldBaseGesturesById } = collectOldGestureInfo(oldGesture);
 
   // Fast path for the most common case: single base gesture update.
@@ -196,8 +221,8 @@ export function processGesture(
       removeGestureDetector(dom, oldBaseGesture.id);
     }
 
-    if (!domSet) {
-      __SetAttribute(dom, 'has-react-gesture', null);
+    if (!domSet && oldBaseGesturesById.size > 0) {
+      clearLegacyGestureState(dom);
     }
     return;
   }

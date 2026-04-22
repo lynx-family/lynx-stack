@@ -255,7 +255,7 @@ abstract class BaseGesture<
     return removeUndefined(result);
   };
 
-  toJSON = (): Record<string, unknown> => {
+  toJSON = function(this: BaseGesture): Record<string, unknown> {
     return this.serialize();
   };
 
