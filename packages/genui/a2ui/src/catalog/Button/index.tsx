@@ -6,8 +6,21 @@ import type { GenericComponentProps } from '../../core/types.js';
 
 import './style.css';
 
+export interface ButtonProps extends GenericComponentProps {
+  child: string;
+  variant?: 'primary' | 'borderless';
+  /** v0.9 actions should use the `event` wrapper for server-dispatched clicks. */
+  action: {
+    event: {
+      name: string;
+      /** Context is a JSON object map in v0.9. */
+      context?: Record<string, string | number | boolean | { path: string }>;
+    };
+  };
+}
+
 export function Button(
-  props: GenericComponentProps,
+  props: ButtonProps,
 ): import('@lynx-js/react').ReactNode {
   const { action, child, surface, sendAction } = props;
 
@@ -18,7 +31,7 @@ export function Button(
   };
 
   const childResource = child
-    ? surface.resources.get(child as string)
+    ? surface.resources.get(child)
     : undefined;
 
   return (
