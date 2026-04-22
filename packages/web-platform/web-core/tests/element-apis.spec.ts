@@ -79,6 +79,43 @@ describe('Element APIs', () => {
     }
   });
 
+  test('#commonEventHandler should not crash on invalid uniqueId', () => {
+    // We send an event with a bubblePath containing a non-existent uniqueId
+    const invalidUniqueId = 999999;
+    const event = document.createEvent('Event') as any;
+    event.initEvent('touchstart', true, true);
+
+    // Create cross thread event manually for the test
+    const eventObject = { type: 'touchstart', detail: {} } as any;
+
+    expect(() => {
+      mtsBinding.wasmContext!.common_event_handler(
+        eventObject,
+        new Uint32Array([invalidUniqueId]),
+        'touchstart',
+        true,
+      );
+    }).not.toThrow();
+  });
+
+  test('#commonEventHandler should not crash on empty path', () => {
+    // We send an event with a bubblePath containing a non-existent uniqueId
+    const event = document.createEvent('Event') as any;
+    event.initEvent('touchstart', true, true);
+
+    // Create cross thread event manually for the test
+    const eventObject = { type: 'touchstart', detail: {} } as any;
+
+    expect(() => {
+      mtsBinding.wasmContext!.common_event_handler(
+        eventObject,
+        new Uint32Array([]),
+        'touchstart',
+        true,
+      );
+    }).not.toThrow();
+  });
+
   test('createElementView', () => {
     const element = mtsGlobalThis.__CreateElement('view', 0);
     expect(mtsGlobalThis.__GetTag(element)).toBe('view');
