@@ -102,6 +102,7 @@ export default tseslint.config(
       // TODO: enable eslint for tools
       // tools
       'packages/tools/**',
+      'packages/genui/a2ui/tools/**',
 
       // TODO: enable eslint for web-platform
       // web-platform
