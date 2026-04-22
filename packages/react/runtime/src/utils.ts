@@ -4,7 +4,7 @@
 
 import type { ComponentClass } from 'preact';
 
-import { getCurrentVNode, getOwnerStack } from './debug/component-stack.js';
+import { getCurrentVNode, getOwnerStack } from './snapshot/debug/component-stack.js';
 
 /* v8 ignore start */
 export const noop: (...args: unknown[]) => unknown = () => {};

@@ -3,7 +3,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { useMainThreadRef } from '../../src/worklet/ref/workletRef';
+import { useMainThreadRef } from '../../src/snapshot/worklet/ref/workletRef';
 
 /* v8 ignore start */
 let ref1;

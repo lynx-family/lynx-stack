@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render } from '..';
+import { prettyFormatSnapshotPatch } from '../../../runtime/lib/snapshot/debug/formatPatch';
 import {
   __globalSnapshotPatch,
   initGlobalSnapshotPatch,
   SnapshotOperation,
-} from '../../../runtime/lib/lifecycle/patch/snapshotPatch';
-import { prettyFormatSnapshotPatch } from '../../../runtime/lib/debug/formatPatch';
+} from '../../../runtime/lib/snapshot/lifecycle/patch/snapshotPatch';
 
 describe('lynx global API', () => {
   it('getJSModule should work', () => {
@@ -41,6 +41,7 @@ describe('lynx global API', () => {
           1e10,
           1e10,
           null,
+          0,
         );
         args[1].data = JSON.stringify(data);
       }
@@ -69,12 +70,14 @@ describe('lynx global API', () => {
           "childId": 2,
           "op": "InsertBefore",
           "parentId": -1,
+          "slotIndex": 0,
         },
         {
           "beforeId": null,
           "childId": 10000000000,
           "op": "InsertBefore",
           "parentId": 10000000000,
+          "slotIndex": 0,
         },
       ]
     `);

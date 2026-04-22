@@ -100,52 +100,40 @@ describe('alog', () => {
           "[ReactLynxDebug] FiberElement API call #16: __AddEvent(TEXT#2, "catchEvent", "focus", "-2:1:")",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #17: __CreateWrapperElement(0) => WRAPPER#6",
+          "[ReactLynxDebug] FiberElement API call #17: __CreateRawText("") => #text#6",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #18: __ReplaceElement(WRAPPER#6, WRAPPER#4)",
+          "[ReactLynxDebug] FiberElement API call #18: __SetAttribute(#text#6, "text", 0)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #19: __CreateRawText("") => #text#7",
+          "[ReactLynxDebug] FiberElement API call #19: __AppendElement(WRAPPER#4, #text#6)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #20: __SetAttribute(#text#7, "text", 0)",
+          "[ReactLynxDebug] FiberElement API call #20: __CreateView(0) => VIEW#7",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #21: __AppendElement(WRAPPER#6, #text#7)",
+          "[ReactLynxDebug] FiberElement API call #21: __CreateRawText("Class Component") => #text#8",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #22: __CreateWrapperElement(0) => WRAPPER#8",
+          "[ReactLynxDebug] FiberElement API call #22: __AppendElement(VIEW#7, #text#8)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #23: __ReplaceElement(WRAPPER#8, WRAPPER#5)",
-        ],
-        [
-          "[ReactLynxDebug] FiberElement API call #24: __CreateView(0) => VIEW#9",
-        ],
-        [
-          "[ReactLynxDebug] FiberElement API call #25: __CreateRawText("Class Component") => #text#10",
-        ],
-        [
-          "[ReactLynxDebug] FiberElement API call #26: __AppendElement(VIEW#9, #text#10)",
-        ],
-        [
-          "[ReactLynxDebug] FiberElement API call #27: __AppendElement(WRAPPER#8, VIEW#9)",
+          "[ReactLynxDebug] FiberElement API call #23: __AppendElement(WRAPPER#5, VIEW#7)",
         ],
         [
           "[MainThread Component Render] name: ClassComponent",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #28: __CreateView(0) => VIEW#11",
+          "[ReactLynxDebug] FiberElement API call #24: __CreateView(0) => VIEW#9",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #29: __CreateRawText("Function Component") => #text#12",
+          "[ReactLynxDebug] FiberElement API call #25: __CreateRawText("Function Component") => #text#10",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #30: __AppendElement(VIEW#11, #text#12)",
+          "[ReactLynxDebug] FiberElement API call #26: __AppendElement(VIEW#9, #text#10)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #31: __AppendElement(WRAPPER#8, VIEW#11)",
+          "[ReactLynxDebug] FiberElement API call #27: __AppendElement(WRAPPER#5, VIEW#9)",
         ],
         [
           "[MainThread Component Render] name: FunctionComponent",
@@ -154,13 +142,16 @@ describe('alog', () => {
           "[MainThread Component Render] name: App",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #32: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"{\\"id\\":-1,\\"type\\":\\"root\\",\\"children\\":[{\\"id\\":-2,\\"type\\":\\"__snapshot_d6fb6_test_1\\",\\"values\\":[\\"-2:0:\\",\\"-2:1:\\"],\\"children\\":[{\\"id\\":-3,\\"type\\":\\"wrapper\\",\\"children\\":[{\\"id\\":-4,\\"type\\":null,\\"values\\":[0]}]},{\\"id\\":-5,\\"type\\":\\"wrapper\\",\\"children\\":[{\\"id\\":-6,\\"type\\":\\"__snapshot_d6fb6_test_2\\"},{\\"id\\":-7,\\"type\\":\\"__snapshot_d6fb6_test_3\\"}]}]}]}","jsReadyEventIdSwap":{}}])",
+          "[ReactLynxDebug] FiberElement API call #28: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"{\\"id\\":-1,\\"type\\":\\"root\\",\\"children\\":[{\\"id\\":-2,\\"type\\":\\"__snapshot_d6fb6_test_1\\",\\"values\\":[\\"-2:0:\\",\\"-2:1:\\"],\\"children\\":[{\\"id\\":-3,\\"type\\":null,\\"values\\":[0]},{\\"id\\":-4,\\"type\\":\\"__snapshot_d6fb6_test_2\\",\\"slotIndex\\":1},{\\"id\\":-5,\\"type\\":\\"__snapshot_d6fb6_test_3\\",\\"slotIndex\\":1}]}]}","jsReadyEventIdSwap":{}}])",
         ],
         [
-          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: 6",
+          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: 4",
         ],
         [
-          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: 7",
+          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: 5",
+        ],
+        [
+          "[BackgroundThread Component Render] name: Fragment, uniqID: __snapshot_d6fb6_test_2, __id: 4",
         ],
         [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_d6fb6_test_1, __id: 2",
@@ -185,30 +176,20 @@ describe('alog', () => {
               "children": [
                 {
                   "id": -3,
-                  "type": "wrapper",
-                  "children": [
-                    {
-                      "id": -4,
-                      "type": null,
-                      "values": [
-                        0
-                      ]
-                    }
+                  "type": null,
+                  "values": [
+                    0
                   ]
                 },
                 {
+                  "id": -4,
+                  "type": "__snapshot_d6fb6_test_2",
+                  "slotIndex": 1
+                },
+                {
                   "id": -5,
-                  "type": "wrapper",
-                  "children": [
-                    {
-                      "id": -6,
-                      "type": "__snapshot_d6fb6_test_2"
-                    },
-                    {
-                      "id": -7,
-                      "type": "__snapshot_d6fb6_test_3"
-                    }
-                  ]
+                  "type": "__snapshot_d6fb6_test_3",
+                  "slotIndex": 1
                 }
               ]
             }
@@ -221,31 +202,25 @@ describe('alog', () => {
           "[ReactLynxDebug] SnapshotInstance tree for first screen hydration:
       | -1(root): undefined
         | -2(__snapshot_d6fb6_test_1): ["-2:0:","-2:1:"]
-          | -3(wrapper): undefined
-            | -4(null): [0]
-          | -5(wrapper): undefined
-            | -6(__snapshot_d6fb6_test_2): undefined
-            | -7(__snapshot_d6fb6_test_3): undefined",
+          | -3(null): [0]
+          | -4(__snapshot_d6fb6_test_2): undefined
+          | -5(__snapshot_d6fb6_test_3): undefined",
         ],
         [
           "[ReactLynxDebug] BackgroundSnapshotInstance tree before hydration:
       | 1(root): undefined
         | 2(__snapshot_d6fb6_test_1): [null,null]
-          | 3(wrapper): undefined
-            | 4(null): [0]
-          | 5(wrapper): undefined
-            | 6(__snapshot_d6fb6_test_2): undefined
-            | 7(__snapshot_d6fb6_test_3): undefined",
+          | 3(null): [0]
+          | 4(__snapshot_d6fb6_test_2): undefined
+          | 5(__snapshot_d6fb6_test_3): undefined",
         ],
         [
           "[ReactLynxDebug] BackgroundSnapshotInstance after hydration:
       | -1(root): undefined
         | -2(__snapshot_d6fb6_test_1): [null,null]
-          | -3(wrapper): undefined
-            | -4(null): [0]
-          | -5(wrapper): undefined
-            | -6(__snapshot_d6fb6_test_2): undefined
-            | -7(__snapshot_d6fb6_test_3): undefined",
+          | -3(null): [0]
+          | -4(__snapshot_d6fb6_test_2): undefined
+          | -5(__snapshot_d6fb6_test_3): undefined",
         ],
         [
           "[ReactLynxDebug] BTS -> MTS updateMainThread:
@@ -272,7 +247,7 @@ describe('alog', () => {
       }",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #33: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #29: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
         ],
         [
           "[ReactLynxDebug] BTS received event:
@@ -293,10 +268,13 @@ describe('alog', () => {
       }",
         ],
         [
-          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: -6",
+          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: -4",
         ],
         [
-          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: -7",
+          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: -5",
+        ],
+        [
+          "[BackgroundThread Component Render] name: Fragment, uniqID: __snapshot_d6fb6_test_2, __id: -4",
         ],
         [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_d6fb6_test_1, __id: -2",
@@ -311,7 +289,7 @@ describe('alog', () => {
               "snapshotPatch": [
                 {
                   "op": "SetAttribute",
-                  "id": -4,
+                  "id": -3,
                   "dynamicPartIndex": 0,
                   "value": 1
                 }
@@ -332,10 +310,10 @@ describe('alog', () => {
       }",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #34: __SetAttribute(#text#7, "text", 1)",
+          "[ReactLynxDebug] FiberElement API call #30: __SetAttribute(#text#6, "text", 1)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #35: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #31: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
         ],
       ]
     `);
@@ -390,52 +368,40 @@ describe('alog', () => {
           "[ReactLynxDebug] FiberElement API call #16: __AddEvent(TEXT#2, "catchEvent", "focus", "-2:1:")",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #17: __CreateWrapperElement(0) => WRAPPER#6",
+          "[ReactLynxDebug] FiberElement API call #17: __CreateRawText("") => #text#6",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #18: __ReplaceElement(WRAPPER#6, WRAPPER#4)",
+          "[ReactLynxDebug] FiberElement API call #18: __SetAttribute(#text#6, "text", 0)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #19: __CreateRawText("") => #text#7",
+          "[ReactLynxDebug] FiberElement API call #19: __AppendElement(WRAPPER#4, #text#6)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #20: __SetAttribute(#text#7, "text", 0)",
+          "[ReactLynxDebug] FiberElement API call #20: __CreateView(0) => VIEW#7",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #21: __AppendElement(WRAPPER#6, #text#7)",
+          "[ReactLynxDebug] FiberElement API call #21: __CreateRawText("Class Component") => #text#8",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #22: __CreateWrapperElement(0) => WRAPPER#8",
+          "[ReactLynxDebug] FiberElement API call #22: __AppendElement(VIEW#7, #text#8)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #23: __ReplaceElement(WRAPPER#8, WRAPPER#5)",
-        ],
-        [
-          "[ReactLynxDebug] FiberElement API call #24: __CreateView(0) => VIEW#9",
-        ],
-        [
-          "[ReactLynxDebug] FiberElement API call #25: __CreateRawText("Class Component") => #text#10",
-        ],
-        [
-          "[ReactLynxDebug] FiberElement API call #26: __AppendElement(VIEW#9, #text#10)",
-        ],
-        [
-          "[ReactLynxDebug] FiberElement API call #27: __AppendElement(WRAPPER#8, VIEW#9)",
+          "[ReactLynxDebug] FiberElement API call #23: __AppendElement(WRAPPER#5, VIEW#7)",
         ],
         [
           "[MainThread Component Render] name: ClassComponent",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #28: __CreateView(0) => VIEW#11",
+          "[ReactLynxDebug] FiberElement API call #24: __CreateView(0) => VIEW#9",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #29: __CreateRawText("Function Component") => #text#12",
+          "[ReactLynxDebug] FiberElement API call #25: __CreateRawText("Function Component") => #text#10",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #30: __AppendElement(VIEW#11, #text#12)",
+          "[ReactLynxDebug] FiberElement API call #26: __AppendElement(VIEW#9, #text#10)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #31: __AppendElement(WRAPPER#8, VIEW#11)",
+          "[ReactLynxDebug] FiberElement API call #27: __AppendElement(WRAPPER#5, VIEW#9)",
         ],
         [
           "[MainThread Component Render] name: FunctionComponent",
@@ -444,13 +410,16 @@ describe('alog', () => {
           "[MainThread Component Render] name: App",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #32: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"{\\"id\\":-1,\\"type\\":\\"root\\",\\"children\\":[{\\"id\\":-2,\\"type\\":\\"__snapshot_d6fb6_test_1\\",\\"values\\":[\\"-2:0:\\",\\"-2:1:\\"],\\"children\\":[{\\"id\\":-3,\\"type\\":\\"wrapper\\",\\"children\\":[{\\"id\\":-4,\\"type\\":null,\\"values\\":[0]}]},{\\"id\\":-5,\\"type\\":\\"wrapper\\",\\"children\\":[{\\"id\\":-6,\\"type\\":\\"__snapshot_d6fb6_test_2\\"},{\\"id\\":-7,\\"type\\":\\"__snapshot_d6fb6_test_3\\"}]}]}]}","jsReadyEventIdSwap":{}}])",
+          "[ReactLynxDebug] FiberElement API call #28: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"{\\"id\\":-1,\\"type\\":\\"root\\",\\"children\\":[{\\"id\\":-2,\\"type\\":\\"__snapshot_d6fb6_test_1\\",\\"values\\":[\\"-2:0:\\",\\"-2:1:\\"],\\"children\\":[{\\"id\\":-3,\\"type\\":null,\\"values\\":[0]},{\\"id\\":-4,\\"type\\":\\"__snapshot_d6fb6_test_2\\",\\"slotIndex\\":1},{\\"id\\":-5,\\"type\\":\\"__snapshot_d6fb6_test_3\\",\\"slotIndex\\":1}]}]}","jsReadyEventIdSwap":{}}])",
         ],
         [
-          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: 6",
+          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: 4",
         ],
         [
-          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: 7",
+          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: 5",
+        ],
+        [
+          "[BackgroundThread Component Render] name: Fragment, uniqID: __snapshot_d6fb6_test_2, __id: 4",
         ],
         [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_d6fb6_test_1, __id: 2",
@@ -475,30 +444,20 @@ describe('alog', () => {
               "children": [
                 {
                   "id": -3,
-                  "type": "wrapper",
-                  "children": [
-                    {
-                      "id": -4,
-                      "type": null,
-                      "values": [
-                        0
-                      ]
-                    }
+                  "type": null,
+                  "values": [
+                    0
                   ]
                 },
                 {
+                  "id": -4,
+                  "type": "__snapshot_d6fb6_test_2",
+                  "slotIndex": 1
+                },
+                {
                   "id": -5,
-                  "type": "wrapper",
-                  "children": [
-                    {
-                      "id": -6,
-                      "type": "__snapshot_d6fb6_test_2"
-                    },
-                    {
-                      "id": -7,
-                      "type": "__snapshot_d6fb6_test_3"
-                    }
-                  ]
+                  "type": "__snapshot_d6fb6_test_3",
+                  "slotIndex": 1
                 }
               ]
             }
@@ -511,31 +470,25 @@ describe('alog', () => {
           "[ReactLynxDebug] SnapshotInstance tree for first screen hydration:
       | -1(root): undefined
         | -2(__snapshot_d6fb6_test_1): ["-2:0:","-2:1:"]
-          | -3(wrapper): undefined
-            | -4(null): [0]
-          | -5(wrapper): undefined
-            | -6(__snapshot_d6fb6_test_2): undefined
-            | -7(__snapshot_d6fb6_test_3): undefined",
+          | -3(null): [0]
+          | -4(__snapshot_d6fb6_test_2): undefined
+          | -5(__snapshot_d6fb6_test_3): undefined",
         ],
         [
           "[ReactLynxDebug] BackgroundSnapshotInstance tree before hydration:
       | 1(root): undefined
         | 2(__snapshot_d6fb6_test_1): [null,null]
-          | 3(wrapper): undefined
-            | 4(null): [0]
-          | 5(wrapper): undefined
-            | 6(__snapshot_d6fb6_test_2): undefined
-            | 7(__snapshot_d6fb6_test_3): undefined",
+          | 3(null): [0]
+          | 4(__snapshot_d6fb6_test_2): undefined
+          | 5(__snapshot_d6fb6_test_3): undefined",
         ],
         [
           "[ReactLynxDebug] BackgroundSnapshotInstance after hydration:
       | -1(root): undefined
         | -2(__snapshot_d6fb6_test_1): [null,null]
-          | -3(wrapper): undefined
-            | -4(null): [0]
-          | -5(wrapper): undefined
-            | -6(__snapshot_d6fb6_test_2): undefined
-            | -7(__snapshot_d6fb6_test_3): undefined",
+          | -3(null): [0]
+          | -4(__snapshot_d6fb6_test_2): undefined
+          | -5(__snapshot_d6fb6_test_3): undefined",
         ],
         [
           "[ReactLynxDebug] BTS -> MTS updateMainThread:
@@ -562,7 +515,7 @@ describe('alog', () => {
       }",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #33: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #29: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
         ],
         [
           "[ReactLynxDebug] BTS received event:
@@ -583,10 +536,13 @@ describe('alog', () => {
       }",
         ],
         [
-          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: -6",
+          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: -4",
         ],
         [
-          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: -7",
+          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: -5",
+        ],
+        [
+          "[BackgroundThread Component Render] name: Fragment, uniqID: __snapshot_d6fb6_test_2, __id: -4",
         ],
         [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_d6fb6_test_1, __id: -2",
@@ -601,7 +557,7 @@ describe('alog', () => {
               "snapshotPatch": [
                 {
                   "op": "SetAttribute",
-                  "id": -4,
+                  "id": -3,
                   "dynamicPartIndex": 0,
                   "value": 1
                 }
@@ -622,10 +578,10 @@ describe('alog', () => {
       }",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #34: __SetAttribute(#text#7, "text", 1)",
+          "[ReactLynxDebug] FiberElement API call #30: __SetAttribute(#text#6, "text", 1)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #35: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #31: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
         ],
       ]
     `);
@@ -640,10 +596,13 @@ describe('alog', () => {
     expect(lynxTestingEnv.mainThread.console.alog.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: -6",
+          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: -4",
         ],
         [
-          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: -7",
+          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: -5",
+        ],
+        [
+          "[BackgroundThread Component Render] name: Fragment, uniqID: __snapshot_d6fb6_test_2, __id: -4",
         ],
         [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_d6fb6_test_1, __id: -2",
@@ -658,7 +617,7 @@ describe('alog', () => {
               "snapshotPatch": [
                 {
                   "op": "SetAttribute",
-                  "id": -4,
+                  "id": -3,
                   "dynamicPartIndex": 0,
                   "value": 0
                 }
@@ -679,20 +638,23 @@ describe('alog', () => {
       }",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #36: __SetAttribute(#text#7, "text", 0)",
+          "[ReactLynxDebug] FiberElement API call #32: __SetAttribute(#text#6, "text", 0)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #37: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #33: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
         ],
       ]
     `);
     expect(lynxTestingEnv.backgroundThread.console.alog.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: -6",
+          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: -4",
         ],
         [
-          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: -7",
+          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: -5",
+        ],
+        [
+          "[BackgroundThread Component Render] name: Fragment, uniqID: __snapshot_d6fb6_test_2, __id: -4",
         ],
         [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_d6fb6_test_1, __id: -2",
@@ -707,7 +669,7 @@ describe('alog', () => {
               "snapshotPatch": [
                 {
                   "op": "SetAttribute",
-                  "id": -4,
+                  "id": -3,
                   "dynamicPartIndex": 0,
                   "value": 0
                 }
@@ -728,10 +690,10 @@ describe('alog', () => {
       }",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #36: __SetAttribute(#text#7, "text", 0)",
+          "[ReactLynxDebug] FiberElement API call #32: __SetAttribute(#text#6, "text", 0)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #37: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #33: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
         ],
       ]
     `);
@@ -746,10 +708,13 @@ describe('alog', () => {
     expect(lynxTestingEnv.mainThread.console.alog.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: -6",
+          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: -4",
         ],
         [
-          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: -7",
+          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: -5",
+        ],
+        [
+          "[BackgroundThread Component Render] name: Fragment, uniqID: __snapshot_d6fb6_test_2, __id: -4",
         ],
         [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_d6fb6_test_1, __id: -2",
@@ -764,7 +729,7 @@ describe('alog', () => {
               "snapshotPatch": [
                 {
                   "op": "SetAttribute",
-                  "id": -4,
+                  "id": -3,
                   "dynamicPartIndex": 0,
                   "value": 1
                 }
@@ -785,20 +750,23 @@ describe('alog', () => {
       }",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #38: __SetAttribute(#text#7, "text", 1)",
+          "[ReactLynxDebug] FiberElement API call #34: __SetAttribute(#text#6, "text", 1)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #39: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #35: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
         ],
       ]
     `);
     expect(lynxTestingEnv.backgroundThread.console.alog.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: -6",
+          "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: -4",
         ],
         [
-          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: -7",
+          "[BackgroundThread Component Render] name: FunctionComponent, uniqID: __snapshot_d6fb6_test_3, __id: -5",
+        ],
+        [
+          "[BackgroundThread Component Render] name: Fragment, uniqID: __snapshot_d6fb6_test_2, __id: -4",
         ],
         [
           "[BackgroundThread Component Render] name: App, uniqID: __snapshot_d6fb6_test_1, __id: -2",
@@ -813,7 +781,7 @@ describe('alog', () => {
               "snapshotPatch": [
                 {
                   "op": "SetAttribute",
-                  "id": -4,
+                  "id": -3,
                   "dynamicPartIndex": 0,
                   "value": 1
                 }
@@ -834,10 +802,10 @@ describe('alog', () => {
       }",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #38: __SetAttribute(#text#7, "text", 1)",
+          "[ReactLynxDebug] FiberElement API call #34: __SetAttribute(#text#6, "text", 1)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #39: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #35: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
         ],
       ]
     `);

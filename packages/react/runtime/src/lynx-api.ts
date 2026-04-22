@@ -6,12 +6,12 @@ import { createContext, createElement } from 'preact/compat';
 import { useState } from 'preact/hooks';
 import type { Consumer, FC, ReactNode } from 'react';
 
-import { factory, withInitDataInState } from './compat/initData.js';
-import { profileEnd, profileStart } from './debug/profile.js';
-import { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';
-import { LifecycleConstant } from './lifecycle/constant.js';
-import { flushDelayedLifecycleEvents } from './lynx/tt.js';
 import { __root } from './root.js';
+import { factory, withInitDataInState } from './snapshot/compat/initData.js';
+import { profileEnd, profileStart } from './snapshot/debug/profile.js';
+import { useLynxGlobalEventListener } from './snapshot/hooks/useLynxGlobalEventListener.js';
+import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
+import { flushDelayedLifecycleEvents } from './snapshot/lynx/tt.js';
 
 /**
  * The default root exported by `@lynx-js/react` for you to render a JSX
@@ -572,7 +572,7 @@ export interface Lynx {
   registerDataProcessors: (dataProcessorDefinition?: DataProcessorDefinition) => void;
 }
 
-export { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';
-export { runOnBackground } from './worklet/call/runOnBackground.js';
-export { runOnMainThread } from './worklet/call/runOnMainThread.js';
-export { MainThreadRef, useMainThreadRef } from './worklet/ref/workletRef.js';
+export { useLynxGlobalEventListener } from './snapshot/hooks/useLynxGlobalEventListener.js';
+export { runOnBackground } from './snapshot/worklet/call/runOnBackground.js';
+export { runOnMainThread } from './snapshot/worklet/call/runOnMainThread.js';
+export { MainThreadRef, useMainThreadRef } from './snapshot/worklet/ref/workletRef.js';

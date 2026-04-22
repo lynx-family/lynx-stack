@@ -18,13 +18,13 @@ import { LAYERS } from '@lynx-js/react-webpack-plugin'
 const PLUGIN_NAME_REACT_REFRESH = 'lynx:react:refresh'
 
 export function applyRefresh(api: RsbuildPluginAPI): void {
-  api.modifyWebpackChain?.(async (chain, { CHAIN_ID, isProd }) => {
-    if (!isProd) {
+  api.modifyWebpackChain?.(async (chain, { CHAIN_ID, environment, isProd }) => {
+    if (!isProd && environment.config.dev?.hmr !== false) {
       await applyRefreshRules(api, chain, CHAIN_ID, ReactRefreshWebpackPlugin)
     }
   })
-  api.modifyBundlerChain(async (chain, { isProd, CHAIN_ID }) => {
-    if (!isProd) {
+  api.modifyBundlerChain(async (chain, { isProd, CHAIN_ID, environment }) => {
+    if (!isProd && environment.config.dev?.hmr !== false) {
       // biome-ignore lint/correctness/useHookAtTopLevel: not react hooks
       const { resolve } = api.useExposed<
         { resolve: (request: string) => Promise<string> }

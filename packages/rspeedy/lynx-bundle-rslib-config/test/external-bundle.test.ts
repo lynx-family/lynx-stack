@@ -681,43 +681,56 @@ describe('pluginReactLynx', () => {
 
   it('should handle alias', async () => {
     const config = await rslib.inspectConfig()
-    expect(config.origin.bundlerConfigs[0]!.resolve!.alias)
-      .toMatchInlineSnapshot(`
-        {
-          "@lynx-js/preact-devtools$": false,
-          "@lynx-js/react$": "<ROOT>/packages/react/runtime/lib/index.js",
-          "@lynx-js/react/compat$": "<ROOT>/packages/react/runtime/compat/index.js",
-          "@lynx-js/react/debug$": false,
-          "@lynx-js/react/experimental/lazy/import$": "<ROOT>/packages/react/runtime/lazy/import.js",
-          "@lynx-js/react/internal$": "<ROOT>/packages/react/runtime/lib/internal.js",
-          "@lynx-js/react/jsx-dev-runtime": "<ROOT>/packages/react/runtime/jsx-dev-runtime/index.js",
-          "@lynx-js/react/jsx-runtime": "<ROOT>/packages/react/runtime/jsx-runtime/index.js",
-          "@lynx-js/react/legacy-react-runtime$": "<ROOT>/packages/react/runtime/lib/legacy-react-runtime/index.js",
-          "@lynx-js/react/runtime-components$": "<ROOT>/packages/react/components/lib/index.js",
-          "@lynx-js/react/worklet-runtime/bindings$": "<ROOT>/packages/react/runtime/lib/worklet-runtime/bindings/index.js",
-          "@swc/helpers": "<ROOT>/node_modules/<PNPM_INNER>/@swc/helpers",
-          "preact$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/dist/preact.mjs",
-          "preact/compat$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/dist/compat.mjs",
-          "preact/compat/client$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/client.mjs",
-          "preact/compat/jsx-dev-runtime$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/jsx-dev-runtime.mjs",
-          "preact/compat/jsx-runtime$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/jsx-runtime.mjs",
-          "preact/compat/scheduler$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/scheduler.mjs",
-          "preact/compat/server$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/compat/server.mjs",
-          "preact/debug$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/debug/dist/debug.mjs",
-          "preact/devtools$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/devtools/dist/devtools.mjs",
-          "preact/jsx-dev-runtime$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/jsx-runtime/dist/jsxRuntime.mjs",
-          "preact/jsx-runtime$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/jsx-runtime/dist/jsxRuntime.mjs",
-          "preact/test-utils$": "<ROOT>/node_modules/<PNPM_INNER>/@lynx-js/internal-preact/test-utils/dist/testUtils.mjs",
-          "react$": "<ROOT>/packages/react/runtime/lib/index.js",
-          "react-compiler-runtime": "<ROOT>/node_modules/<PNPM_INNER>/react-compiler-runtime",
-          "use-sync-external-store$": "<ROOT>/packages/use-sync-external-store/index.js",
-          "use-sync-external-store/shim$": "<ROOT>/packages/use-sync-external-store/index.js",
-          "use-sync-external-store/shim/with-selector$": "<ROOT>/packages/use-sync-external-store/with-selector.js",
-          "use-sync-external-store/shim/with-selector.js$": "<ROOT>/packages/use-sync-external-store/with-selector.js",
-          "use-sync-external-store/with-selector$": "<ROOT>/packages/use-sync-external-store/with-selector.js",
-          "use-sync-external-store/with-selector.js$": "<ROOT>/packages/use-sync-external-store/with-selector.js",
+    const alias = Object.fromEntries(
+      Object.entries(config.origin.bundlerConfigs[0]!.resolve!.alias!).map((
+        [key, value],
+      ) => {
+        if (typeof value === 'string' && key.startsWith('preact')) {
+          // Simplify the path to only keep the part starting from 'preact/'
+          return [
+            key,
+            value.replaceAll(path.sep, '/').replace(/.*(preact\/.*)/, '$1'),
+          ]
         }
-      `)
+        return [key, value]
+      }),
+    )
+    expect(alias).toMatchInlineSnapshot(`
+      {
+        "@lynx-js/preact-devtools$": false,
+        "@lynx-js/react$": "<ROOT>/packages/react/runtime/lib/index.js",
+        "@lynx-js/react/compat$": "<ROOT>/packages/react/runtime/compat/index.js",
+        "@lynx-js/react/debug$": false,
+        "@lynx-js/react/experimental/lazy/import$": "<ROOT>/packages/react/runtime/lazy/import.js",
+        "@lynx-js/react/internal$": "<ROOT>/packages/react/runtime/lib/internal.js",
+        "@lynx-js/react/jsx-dev-runtime": "<ROOT>/packages/react/runtime/jsx-dev-runtime/index.js",
+        "@lynx-js/react/jsx-runtime": "<ROOT>/packages/react/runtime/jsx-runtime/index.js",
+        "@lynx-js/react/legacy-react-runtime$": "<ROOT>/packages/react/runtime/lib/snapshot/legacy-react-runtime/index.js",
+        "@lynx-js/react/runtime-components$": "<ROOT>/packages/react/components/lib/index.js",
+        "@lynx-js/react/worklet-runtime/bindings$": "<ROOT>/packages/react/runtime/lib/worklet-runtime/bindings/index.js",
+        "@swc/helpers": "<ROOT>/node_modules/<PNPM_INNER>/@swc/helpers",
+        "preact$": "preact/dist/preact.mjs",
+        "preact/compat$": "preact/compat/dist/compat.mjs",
+        "preact/compat/client$": "preact/compat/client.mjs",
+        "preact/compat/jsx-dev-runtime$": "preact/compat/jsx-dev-runtime.mjs",
+        "preact/compat/jsx-runtime$": "preact/compat/jsx-runtime.mjs",
+        "preact/compat/scheduler$": "preact/compat/scheduler.mjs",
+        "preact/compat/server$": "preact/compat/server.mjs",
+        "preact/debug$": "preact/debug/dist/debug.mjs",
+        "preact/devtools$": "preact/devtools/dist/devtools.mjs",
+        "preact/jsx-dev-runtime$": "preact/jsx-runtime/dist/jsxRuntime.mjs",
+        "preact/jsx-runtime$": "preact/jsx-runtime/dist/jsxRuntime.mjs",
+        "preact/test-utils$": "preact/test-utils/dist/testUtils.mjs",
+        "react$": "<ROOT>/packages/react/runtime/lib/index.js",
+        "react-compiler-runtime": "<ROOT>/node_modules/<PNPM_INNER>/react-compiler-runtime",
+        "use-sync-external-store$": "<ROOT>/packages/use-sync-external-store/index.js",
+        "use-sync-external-store/shim$": "<ROOT>/packages/use-sync-external-store/index.js",
+        "use-sync-external-store/shim/with-selector$": "<ROOT>/packages/use-sync-external-store/with-selector.js",
+        "use-sync-external-store/shim/with-selector.js$": "<ROOT>/packages/use-sync-external-store/with-selector.js",
+        "use-sync-external-store/with-selector$": "<ROOT>/packages/use-sync-external-store/with-selector.js",
+        "use-sync-external-store/with-selector.js$": "<ROOT>/packages/use-sync-external-store/with-selector.js",
+      }
+    `)
   })
 
   it('should handle macros', () => {

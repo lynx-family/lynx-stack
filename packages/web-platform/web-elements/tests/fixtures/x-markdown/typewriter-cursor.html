@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>typewriter cursor</title>
+    <meta content="width=device-width,initial-scale=1.0" name="viewport">
+    <link href="/main.css" rel="stylesheet" />
+  </head>
+  <body>
+    <script src="/main.js" defer></script>
+    <x-view class="page">
+      <x-markdown id="markdown">
+        <view id="cursor" style="border: 1px solid red; padding: 4px"></view>
+      </x-markdown>
+    </x-view>
+    <script>
+    const el = document.getElementById('markdown');
+      el.addEventListener(
+        'binddrawStart',
+        () => (window._drawStart = true),
+      );
+      el.addEventListener('binddrawEnd', () => (window._drawEnd = true));
+      el.setAttribute(
+        'content',
+        `# Title\n\nthis is **bold** and *italic*.`,
+      );
+      el.setAttribute('animation-type', 'typewriter');
+      el.setAttribute('animation-velocity', '20');
+      el.setAttribute(
+        'markdown-style',
+        JSON.stringify({
+          typewriterCursor: {
+            customCursor: 'cursor',
+          },
+        }),
+      );
+    </script>
+  </body>
+</html>

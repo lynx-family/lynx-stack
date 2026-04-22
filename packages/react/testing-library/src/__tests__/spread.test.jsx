@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 import { act, render } from '..';
 import { expect } from 'vitest';
 import { useState } from 'preact/hooks';
-import { prettyFormatSnapshotPatch } from '../../../runtime/lib/debug/formatPatch';
+import { prettyFormatSnapshotPatch } from '../../../runtime/lib/snapshot/debug/formatPatch';
 import { BackgroundSnapshotInstance } from '@lynx-js/react/internal';
 
 test('re-render with same style should not generate patch without spread', () => {

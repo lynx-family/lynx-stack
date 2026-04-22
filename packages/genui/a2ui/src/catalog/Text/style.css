@@ -1,0 +1,97 @@
+@import "../luna-styles/index.css";
+
+.text-h1 {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--content);
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.text-h2 {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--content);
+  line-height: 1.3;
+  flex-shrink: 0;
+}
+
+.text-h3 {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--content);
+  line-height: 1.3;
+  flex-shrink: 0;
+}
+
+.text-h4 {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--content);
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.text-h5 {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--content);
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.text-caption {
+  font-size: 12px;
+  color: var(--content-muted);
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.text-body {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: normal;
+  color: var(--content);
+  line-height: 1.5;
+}
+
+/* New Usage Hints */
+
+.text-price {
+  flex-shrink: 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: #ff4d4f; /* Typical price color, or use variable if available */
+  line-height: 1.4;
+}
+
+.text-link {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: #1890ff; /* Link blue */
+  text-decoration: underline;
+  line-height: 1.5;
+}
+
+.text-label {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--content-muted-2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.4;
+}
+
+.button .text-body,
+.button .text-caption,
+.button .text-h1,
+.button .text-h2,
+.button .text-h3,
+.button .text-h4,
+.button .text-h5,
+.button .text-price,
+.button .text-link,
+.button .text-label {
+  color: var(--primary-content);
+}

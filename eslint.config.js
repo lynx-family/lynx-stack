@@ -90,10 +90,12 @@ export default tseslint.config(
       // Generated worklet bundles are published assets, not source files.
       'packages/react/runtime/worklet-runtime/**',
       'packages/react/runtime/src/renderToOpcodes/**',
+      'packages/react/runtime/src/snapshot/renderToOpcodes/**',
       'packages/react/runtime/types/**',
 
       // TODO: enable eslint for react-runtime
       'packages/react/runtime/src/compat/**',
+      'packages/react/runtime/src/snapshot/compat/**',
       'packages/react/runtime/src/opcodes.ts',
 
       // TODO: enable eslint for tools

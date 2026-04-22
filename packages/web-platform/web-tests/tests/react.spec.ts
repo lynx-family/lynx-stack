@@ -4606,6 +4606,25 @@ test.describe('reactlynx3 tests', () => {
         },
       );
     });
+    test.describe('x-markdown', () => {
+      test(
+        'basic-element-x-markdown-markdown-style',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(200);
+
+          const markdown = page.locator('x-markdown');
+          await expect(markdown).toHaveAttribute(
+            'markdown-style',
+            JSON.stringify({ link: { color: '00ff00' } }),
+          );
+          await expect(markdown.locator('a')).toHaveCSS(
+            'color',
+            'rgb(0, 255, 0)',
+          );
+        },
+      );
+    });
     test.describe('x-audio-tt', () => {
       test('basic-element-x-audio-tt-play', async ({ page }, { title }) => {
         // test.skip(true, 'lynx.createSelectorQuery is not supported'); // FIXME

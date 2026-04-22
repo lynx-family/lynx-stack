@@ -272,9 +272,14 @@ export async function findIp(
 
   let host: string | undefined
 
-  const networks = Object.values(os.networkInterfaces())
-    .flatMap((networks) => networks ?? [])
-    .filter((network) => {
+  const networks = Object.entries(os.networkInterfaces())
+    .flatMap(([name, networks]) => {
+      return (networks ?? []).map((network) => ({
+        name,
+        network,
+      }))
+    })
+    .filter(({ network }) => {
       if (!network || !network.address) {
         return false
       }
@@ -295,13 +300,15 @@ export async function findIp(
         }
       }
 
-      return network.address
+      return true
+    })
+    .sort((left, right) => {
+      return getNetworkPriority(left.name, left.network.address)
+        - getNetworkPriority(right.name, right.network.address)
     })
 
   if (networks.length > 0) {
-    // Take the first network found
-    // See: https://github.com/webpack/webpack-dev-server/pull/5411/
-    host = networks[0]!.address
+    host = networks[0]!.network.address
 
     if (host.includes(':')) {
       host = `[${host}]`
@@ -313,4 +320,41 @@ export async function findIp(
   }
 
   return host
+}
+
+function getNetworkPriority(name: string, address: string): number {
+  const normalizedName = name.toLowerCase()
+
+  if (isPreferredInterface(normalizedName) && !isLinkLocalIpv4(address)) {
+    return 0
+  }
+
+  if (!isVirtualInterface(normalizedName) && !isLinkLocalIpv4(address)) {
+    return 1
+  }
+
+  if (!isVirtualInterface(normalizedName)) {
+    return 2
+  }
+
+  return 3
+}
+
+function isPreferredInterface(name: string): boolean {
+  return /^(?:en\d+|eth\d+|eno\d+|enp\w+|wl\w+)$/.test(name)
+}
+
+function isVirtualInterface(name: string): boolean {
+  return [
+    'utun',
+    'tun',
+    'tap',
+    'awdl',
+    'llw',
+    'lo',
+  ].some((prefix) => name.startsWith(prefix))
+}
+
+function isLinkLocalIpv4(address: string): boolean {
+  return address.startsWith('169.254.')
 }

@@ -312,8 +312,9 @@ exports[`executeTemplate should run lepusCode.root from basic-element-x-input-va
             ><template shadowrootmode="open"
               ><div id="inner-box" part="inner-box">
                 <slot part="slot"></slot
-                ><slot name="inline-truncation"></slot></div></template
-            ><raw-text text=""></raw-text></x-text></x-view
+                ><slot
+                  name="inline-truncation"
+                ></slot></div></template></x-text></x-view
       ></x-view></div></template
 ></lynx-view>
 "

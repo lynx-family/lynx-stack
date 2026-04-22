@@ -6,7 +6,7 @@ import { BackgroundSnapshotInstance } from '@lynx-js/react/internal';
 import { Suspense as PreactSuspense } from 'preact/compat';
 import { createRequire } from 'node:module';
 import { describe } from 'node:test';
-import { prettyFormatSnapshotPatch } from '../../../../runtime/lib/debug/formatPatch';
+import { prettyFormatSnapshotPatch } from '../../../../runtime/lib/snapshot/debug/formatPatch';
 
 const SuspenseMap = {
   LynxSuspense: Suspense,
@@ -80,6 +80,80 @@ describe('lazy bundle', () => {
     `);
     }
   });
+
+  it('should render multi-slots lazy component', async () => {
+    const InternalComponent = lazy(() => import('./LazyComponent'));
+
+    const App = () => {
+      return (
+        <view>
+          <Suspense fallback={<text>loading 1...</text>}>
+            <InternalComponent />
+          </Suspense>
+          <text>---</text>
+          <Suspense fallback={<text>loading 2...</text>}>
+            <InternalComponent />
+          </Suspense>
+        </view>
+      );
+    };
+
+    const { container } = render(
+      <App url={require.resolve('./LazyComponent.jsx')} />,
+    );
+
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <view>
+          <wrapper>
+            <wrapper>
+              <text>
+                loading 1...
+              </text>
+            </wrapper>
+          </wrapper>
+          <text>
+            ---
+          </text>
+          <wrapper>
+            <wrapper>
+              <text>
+                loading 2...
+              </text>
+            </wrapper>
+          </wrapper>
+        </view>
+      </page>
+    `);
+
+    await waitForElementToBeRemoved(() => screen.getByText('loading 1...'), {
+      timeout: 50_000,
+    });
+
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <view>
+          <wrapper>
+            <wrapper>
+              <text>
+                Hello from LazyComponent
+              </text>
+            </wrapper>
+          </wrapper>
+          <text>
+            ---
+          </text>
+          <wrapper>
+            <wrapper>
+              <text>
+                Hello from LazyComponent
+              </text>
+            </wrapper>
+          </wrapper>
+        </view>
+      </page>
+    `);
+  });
 });
 
 describe('Suspense', () => {
@@ -139,34 +213,34 @@ describe('Suspense', () => {
 
       if (name === 'PreactSuspense') {
         expect(container).toMatchInlineSnapshot(`
-        <page>
-          <view
-            class="root"
-          >
-            <text
-              class="loading"
+          <page>
+            <view
+              class="root"
             >
-              loading...
-            </text>
-          </view>
-        </page>
-      `);
-      } else {
-        expect(container).toMatchInlineSnapshot(`
-        <page>
-          <view
-            class="root"
-          >
-            <wrapper>
               <text
                 class="loading"
               >
                 loading...
               </text>
-            </wrapper>
-          </view>
-        </page>
-      `);
+            </view>
+          </page>
+        `);
+      } else {
+        expect(container).toMatchInlineSnapshot(`
+          <page>
+            <view
+              class="root"
+            >
+              <wrapper>
+                <text
+                  class="loading"
+                >
+                  loading...
+                </text>
+              </wrapper>
+            </view>
+          </page>
+        `);
       }
 
       {
@@ -178,24 +252,26 @@ describe('Suspense', () => {
               {
                 "id": 2,
                 "op": "CreateElement",
-                "type": "__snapshot_50869_test_3",
+                "type": "__snapshot_50869_test_6",
               },
               {
-                "id": 7,
+                "id": 5,
                 "op": "CreateElement",
-                "type": "__snapshot_50869_test_4",
+                "type": "__snapshot_50869_test_7",
               },
               {
                 "beforeId": null,
-                "childId": 7,
+                "childId": 5,
                 "op": "InsertBefore",
                 "parentId": 2,
+                "slotIndex": 0,
               },
               {
                 "beforeId": null,
                 "childId": 2,
                 "op": "InsertBefore",
                 "parentId": -1,
+                "slotIndex": 0,
               },
             ]
           `);
@@ -205,35 +281,38 @@ describe('Suspense', () => {
               {
                 "id": 2,
                 "op": "CreateElement",
-                "type": "__snapshot_50869_test_3",
+                "type": "__snapshot_50869_test_6",
               },
               {
-                "id": 8,
+                "id": 6,
                 "op": "CreateElement",
                 "type": "wrapper",
               },
               {
-                "id": 9,
+                "id": 7,
                 "op": "CreateElement",
-                "type": "__snapshot_50869_test_4",
+                "type": "__snapshot_50869_test_7",
               },
               {
                 "beforeId": null,
-                "childId": 9,
+                "childId": 7,
                 "op": "InsertBefore",
-                "parentId": 8,
+                "parentId": 6,
+                "slotIndex": 0,
               },
               {
                 "beforeId": null,
-                "childId": 8,
+                "childId": 6,
                 "op": "InsertBefore",
                 "parentId": 2,
+                "slotIndex": 0,
               },
               {
                 "beforeId": null,
                 "childId": 2,
                 "op": "InsertBefore",
                 "parentId": -1,
+                "slotIndex": 0,
               },
             ]
           `);
@@ -331,10 +410,10 @@ describe('Suspense', () => {
                 el4
               ];
             }",
-                "type": "__snapshot_50869_test_5",
+                "type": "__snapshot_50869_test_8",
               },
               {
-                "__id": 7,
+                "__id": 5,
                 "create": "function() {
               const pageId = __vite_ssr_import_1__.__pageId;
               const el = __CreateText(pageId);
@@ -346,7 +425,7 @@ describe('Suspense', () => {
                 el1
               ];
             }",
-                "type": "__snapshot_50869_test_4",
+                "type": "__snapshot_50869_test_7",
               },
             ]
           `);
@@ -354,19 +433,19 @@ describe('Suspense', () => {
       } else {
         if (!process.env.RSTEST) {
           expect(tearDownInstances).toMatchInlineSnapshot(`
-          [
-            {
-              "__id": 8,
-              "create": "create () {
-                              /* v8 ignore start */ if (__JS__ && !__DEV__) return [];
-                              /* v8 ignore stop */ return [
-                                  __CreateWrapperElement(__pageId)
-                              ];
-                          }",
-              "type": "wrapper",
-            },
-          ]
-        `);
+            [
+              {
+                "__id": 6,
+                "create": "create () {
+                                /* v8 ignore start */ if (__JS__ && !__DEV__) return [];
+                                /* v8 ignore stop */ return [
+                                    __CreateWrapperElement(__pageId)
+                                ];
+                            }",
+                "type": "wrapper",
+              },
+            ]
+          `);
         }
       }
 

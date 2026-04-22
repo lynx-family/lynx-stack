@@ -31,7 +31,8 @@
     },
     "./client.prod.css": {
       "default": "./dist/client_prod/static/css/client.css"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "main": "./dist/client/index.js",
   "files": [

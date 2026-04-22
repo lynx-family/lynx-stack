@@ -56,12 +56,12 @@
       "default": "./runtime/lepus/jsx-runtime/index.js"
     },
     "./hooks": {
-      "types": "./runtime/lib/hooks/react.d.ts",
-      "default": "./runtime/lib/hooks/react.js"
+      "types": "./runtime/lib/snapshot/hooks/react.d.ts",
+      "default": "./runtime/lib/snapshot/hooks/react.js"
     },
     "./lepus/hooks": {
-      "types": "./runtime/lib/hooks/react.d.ts",
-      "default": "./runtime/lib/hooks/mainThread.js"
+      "types": "./runtime/lib/snapshot/hooks/react.d.ts",
+      "default": "./runtime/lib/snapshot/hooks/mainThread.js"
     },
     "./lepus": {
       "types": "./runtime/lepus/index.d.ts",
@@ -96,9 +96,9 @@
       "default": "./runtime/lib/worklet-runtime/bindings/index.js"
     },
     "./legacy-react-runtime": {
-      "types": "./runtime/lib/legacy-react-runtime/index.d.ts",
+      "types": "./runtime/lib/snapshot/legacy-react-runtime/index.d.ts",
       "lazy": "./runtime/lazy/legacy-react-runtime.js",
-      "default": "./runtime/lib/legacy-react-runtime/index.js"
+      "default": "./runtime/lib/snapshot/legacy-react-runtime/index.js"
     },
     "./testing-library": {
       "types": "./testing-library/types/index.d.ts",
@@ -132,10 +132,10 @@
         "./runtime/lazy/import.d.ts"
       ],
       "hooks": [
-        "./runtime/lib/hooks/react.d.ts"
+        "./runtime/lib/snapshot/hooks/react.d.ts"
       ],
       "lepus/hooks": [
-        "./runtime/lib/hooks/react.d.ts"
+        "./runtime/lib/snapshot/hooks/react.d.ts"
       ],
       "internal": [
         "./runtime/lib/internal.d.ts"
@@ -174,7 +174,7 @@
         "./runtime/lib/worklet-runtime/bindings/index.d.ts"
       ],
       "legacy-react-runtime": [
-        "./runtime/lib/legacy-react-runtime/index.d.ts"
+        "./runtime/lib/snapshot/legacy-react-runtime/index.d.ts"
       ]
     }
   },
@@ -196,7 +196,7 @@
     "build": "rslib build"
   },
   "dependencies": {
-    "preact": "npm:@lynx-js/internal-preact@10.28.4-2d1d67a"
+    "preact": "npm:@lynx-js/internal-preact@10.28.4-dfff9aa"
   },
   "devDependencies": {
     "@lynx-js/types": "3.7.0",

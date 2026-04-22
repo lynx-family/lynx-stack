@@ -1,0 +1,58 @@
+// Copyright 2025 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
+import type { FunctionComponent, VNode } from 'preact';
+import { Suspense as PreactSuspense, createElement as createElementBackground } from 'preact/compat';
+import { useRef } from 'preact/hooks';
+
+import { createElement as createElementMainThread } from '@lynx-js/react/lepus';
+
+import { globalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/commit.js';
+import type { BackgroundSnapshotInstance } from '../snapshot/backgroundSnapshot.js';
+
+export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: VNode }> = (
+  { children, fallback },
+) => {
+  const __createElement =
+    (__MAIN_THREAD__ ? createElementMainThread : createElementBackground) as typeof createElementBackground;
+  const childrenRef = useRef<BackgroundSnapshotInstance>();
+
+  const newChildren = __createElement(
+    'wrapper',
+    __MAIN_THREAD__
+      ? {
+        $0: children,
+      }
+      : {
+        ref: (bsi: BackgroundSnapshotInstance) => {
+          if (bsi) {
+            childrenRef.current = bsi;
+          }
+        },
+        $0: children,
+      },
+  );
+
+  const newFallback = __createElement(
+    'wrapper',
+    __MAIN_THREAD__
+      ? {
+        $0: fallback,
+      }
+      : {
+        ref: (bsi: BackgroundSnapshotInstance) => {
+          if (bsi && childrenRef.current) {
+            const i = globalBackgroundSnapshotInstancesToRemove.indexOf(childrenRef.current.__id);
+            if (i !== -1) {
+              globalBackgroundSnapshotInstancesToRemove.splice(i, 1);
+            }
+            childrenRef.current = undefined;
+          }
+        },
+        $0: fallback,
+      },
+  );
+
+  return __createElement(PreactSuspense, { fallback: newFallback }, newChildren);
+};

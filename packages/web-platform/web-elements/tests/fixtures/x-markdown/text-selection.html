@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<!-- Copyright 2024 The Lynx Authors. All rights reserved.
+Licensed under the Apache License Version 2.0 that can be found in the
+LICENSE file in the root directory of this source tree. -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>web playground</title>
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta content="default" name="apple-mobile-web-app-status-bar-style">
+    <meta content="telephone=no" name="format-detection">
+    <meta content="portrait" name="screen-orientation">
+    <meta
+      content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+      name="viewport"
+    >
+    <meta content="portrait" name="x5-orientation" />
+
+    <link
+      href="/main.css"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <script src="/main.js" defer></script>
+    <x-view class="page">
+      <x-markdown
+        id="markdown"
+        text-selection="true"
+      ></x-markdown>
+    </x-view>
+    <script>
+    const content =
+        `# Title\n\nthis is **bold** and *italic*.\n\n- item 1\n- item 2\n\ninline code: \`code\`.\n\n\`\`\`\nblock code\n\`\`\``;
+      const markdown = document.getElementById('markdown');
+
+      const getSelection = () => (
+        markdown.shadowRoot?.getSelection?.() ?? document.getSelection()
+      );
+
+      const getTextNode = (selector) => {
+        const textNode = markdown.shadowRoot?.querySelector(selector)
+          ?.firstChild;
+        if (!textNode) {
+          throw new Error(`missing text node for ${selector}`);
+        }
+        return textNode;
+      };
+
+      const setRange = (selector, start, end) => {
+        const textNode = getTextNode(selector);
+        const selection = getSelection();
+        if (!selection) throw new Error('missing selection');
+        const range = document.createRange();
+        range.setStart(textNode, start);
+        range.setEnd(textNode, end);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      };
+
+      window._selection_detail = null;
+      window._selection_count = 0;
+
+      window._resetSelectionState = () => {
+        window._selection_detail = null;
+        window._selection_count = 0;
+      };
+
+      window._selectShadowText = (selector, start, end) => {
+        setRange(selector, start, end);
+        document.dispatchEvent(new Event('selectionchange'));
+      };
+
+      window._selectShadowTextByMouseup = (selector, start, end) => {
+        setRange(selector, start, end);
+        document.dispatchEvent(
+          new MouseEvent('mouseup', { bubbles: true }),
+        );
+      };
+
+      window._setTextSelection = (selector, start, end) => {
+        const textNode = getTextNode(selector);
+        const descriptor = Object.getOwnPropertyDescriptor(
+          Document.prototype,
+          'caretRangeFromPoint',
+        );
+        Object.defineProperty(document, 'caretRangeFromPoint', {
+          configurable: true,
+          value: (x) => {
+            const range = document.createRange();
+            range.setStart(textNode, x <= start ? start : end);
+            range.collapse(true);
+            return range;
+          },
+        });
+        try {
+          markdown.setTextSelection({
+            startX: start,
+            startY: 0,
+            endX: end,
+            endY: 0,
+          });
+        } finally {
+          if (descriptor) {
+            Object.defineProperty(
+              document,
+              'caretRangeFromPoint',
+              descriptor,
+            );
+          } else {
+            delete document.caretRangeFromPoint;
+          }
+        }
+        document.dispatchEvent(new Event('selectionchange'));
+      };
+
+      window._getSelectionState = () => {
+        const rect = markdown.getTextBoundingRect();
+        return {
+          detail: window._selection_detail,
+          count: window._selection_count,
+          selectedText: markdown.getSelectedText(),
+          rect: rect?.boundingRect
+            ? {
+              width: rect.boundingRect.width,
+              height: rect.boundingRect.height,
+            }
+            : null,
+          styleText: markdown.shadowRoot?.querySelector('#markdown-style')
+            ?.textContent ?? '',
+        };
+      };
+
+      markdown.addEventListener('bindselectionchange', (event) => {
+        console.log('bindselectionchange', event);
+        window._selection_detail = event.detail;
+        window._selection_count += 1;
+      });
+
+      markdown.setAttribute('content', content);
+    </script>
+  </body>
+</html>

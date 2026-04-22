@@ -8,7 +8,7 @@ import { act } from 'preact/test-utils';
 
 import { __root } from '@lynx-js/react/internal';
 
-import { flushDelayedLifecycleEvents } from '../../runtime/lib/lynx/tt.js';
+import { flushDelayedLifecycleEvents } from '../../runtime/lib/snapshot/lynx/tt.js';
 import { clearPage } from '../../runtime/lib/snapshot/index.js';
 
 export function waitSchedule() {

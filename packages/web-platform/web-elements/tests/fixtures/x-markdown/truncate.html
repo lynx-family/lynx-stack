@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>truncate</title>
+    <meta content="width=device-width,initial-scale=1.0" name="viewport">
+    <link href="/main.css" rel="stylesheet" />
+  </head>
+  <body>
+    <script src="/main.js" defer></script>
+    <x-view class="page">
+      <x-markdown id="markdown" style="width: 180px"></x-markdown>
+    </x-view>
+    <script>
+    const text =
+        'This is a very very very very very long line that should wrap to multiple lines for testing.';
+      const content = `# Title\n\n${text}`;
+      const style = { truncation: { content: 'Read more' } };
+      const el = document.getElementById('markdown');
+      el.setAttribute('content', content);
+      el.setAttribute('markdown-style', JSON.stringify(style));
+      el.setAttribute('text-maxline', '1');
+    </script>
+  </body>
+</html>

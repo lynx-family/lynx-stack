@@ -6,16 +6,16 @@
 import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { RefProxy, runDelayedUiOps, shouldDelayUiOps } from '../../src/lifecycle/ref/delay';
+import { RefProxy, runDelayedUiOps, shouldDelayUiOps } from '../../src/snapshot/lifecycle/ref/delay';
 
 import { Component, createRef, useState } from '../../src/index';
-import { clearCommitTaskId, replaceCommitHook } from '../../src/lifecycle/patch/commit';
-import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
-import { __pendingListUpdates } from '../../src/list/pendingListUpdates';
+import { clearCommitTaskId, replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
+import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
+import { __pendingListUpdates } from '../../src/snapshot/list/pendingListUpdates';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
-import { globalEnvManager } from '../utils/envManager';
-import { elementTree, waitSchedule } from '../utils/nativeMethod';
+import { globalEnvManager } from './utils/envManager';
+import { elementTree, waitSchedule } from './utils/nativeMethod';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));
@@ -202,7 +202,7 @@ describe('element ref', () => {
       render(<Comp show={true} />, __root);
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"id":3,"snapshotPatch":[0,"__snapshot_a94a8_test_4",2,4,2,[1,1],1,-1,2,null]}]}"`,
+        `"{"patchList":[{"id":3,"snapshotPatch":[0,"__snapshot_a94a8_test_4",2,4,2,[1,1],1,-1,2,null,0]}]}"`,
       );
     }
 
@@ -938,7 +938,7 @@ describe('element ref', () => {
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"snapshotPatch":[0,"__snapshot_a94a8_test_18",3,4,3,[1],1,-2,3,null],"id":2}]}"`,
+        `"{"patchList":[{"snapshotPatch":[0,"__snapshot_a94a8_test_18",3,4,3,[1],1,-2,3,null,0],"id":2}]}"`,
       );
 
       // rLynxChange
@@ -1960,7 +1960,7 @@ describe('ui operations', () => {
       render(<Comp />, __root);
 
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
-        `"{"patchList":[{"id":3,"snapshotPatch":[0,"__snapshot_a94a8_test_30",3,4,3,[1],1,-2,3,null]}]}"`,
+        `"{"patchList":[{"id":3,"snapshotPatch":[0,"__snapshot_a94a8_test_30",3,4,3,[1],1,-2,3,null,0]}]}"`,
       );
       expect(lynx.createSelectorQuery().constructor.execLog.mock.calls).toMatchInlineSnapshot(`
         [

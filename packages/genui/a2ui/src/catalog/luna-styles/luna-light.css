@@ -1,0 +1,37 @@
+.luna-light {
+  --canvas: #ffffff;
+  --canvas-ambient: #f4f4f4;
+  --backdrop: rgba(0, 0, 0, 0.1);
+  --content: #010101;
+  --content-2: #333333;
+  --content-muted: #5d5d5d;
+  --content-muted-2: #707070;
+  --content-subtle: #9e9e9e;
+  --content-faint: #d0d0d0;
+  --paper: #f8f8f8;
+  --paper-clear: #ffffff;
+  --primary: #1a1a1a;
+  --primary-2: #545454;
+  --primary-muted: #9b9b9b;
+  --primary-content: #fafafa;
+  --primary-content-faded: rgba(255, 255, 255, 0.4);
+  --secondary: #c0c0c0;
+  --secondary-2: #d9d9d9;
+  --secondary-content: #3c3c3c;
+  --neutral: #010101;
+  --neutral-2: #333333;
+  --neutral-subtle: #b3b3b3;
+  --neutral-faint: #d9d9d9;
+  --neutral-ambient: #eeeeee;
+  --neutral-content: #f8f8f8;
+  --neutral-veil: rgba(0, 0, 0, 0.24);
+  --neutral-film: rgba(0, 0, 0, 0.05);
+  --line: rgba(0, 0, 0, 0.17);
+  --rule: #e5e5e5;
+  --gradient-a: #939393;
+  --gradient-b: #a0a0a0;
+  --gradient-c: #a1a1a1;
+  --gradient-d: #bfbfbf;
+  --gradient-content: #ffffff;
+  --gradient-content-faded: rgba(255, 255, 255, 0.68);
+}

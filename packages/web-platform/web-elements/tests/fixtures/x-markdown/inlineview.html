@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>inlineview</title>
+    <meta content="width=device-width,initial-scale=1.0" name="viewport">
+    <link href="/main.css" rel="stylesheet" />
+  </head>
+  <body>
+    <script src="/main.js" defer></script>
+    <x-view class="page">
+      <x-markdown id="markdown" style="width: 300px">
+        <x-view
+          id="badge"
+          vertical-align="middle"
+          style="display: inline-block; width: 10px; height: 10px; background: rgb(255, 0, 0)"
+        ></x-view>
+      </x-markdown>
+    </x-view>
+    <script>
+    const content = 'inline view here ![](inlineview://badge) next';
+      const el = document.getElementById('markdown');
+      el.setAttribute('content', content);
+    </script>
+  </body>
+</html>

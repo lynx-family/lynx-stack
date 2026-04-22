@@ -1,13 +1,13 @@
 import { options } from 'preact';
 
-import { clearCommitTaskId, replaceCommitHook } from '../../../../runtime/lib/lifecycle/patch/commit.js';
-import { deinitGlobalSnapshotPatch } from '../../../../runtime/lib/lifecycle/patch/snapshotPatch.js';
-import { injectUpdateMainThread } from '../../../../runtime/lib/lifecycle/patch/updateMainThread.js';
-import { injectUpdateMTRefInitValue } from '../../../../runtime/lib/worklet/ref/updateInitValue.js';
-import { injectCalledByNative } from '../../../../runtime/lib/lynx/calledByNative.js';
-import { flushDelayedLifecycleEvents, injectTt } from '../../../../runtime/lib/lynx/tt.js';
-import { initElementPAPICallAlog } from '../../../../runtime/lib/alog/elementPAPICall.js';
-import { addCtxNotFoundEventListener } from '../../../../runtime/lib/lifecycle/patch/error.js';
+import { clearCommitTaskId, replaceCommitHook } from '../../../../runtime/lib/snapshot/lifecycle/patch/commit.js';
+import { deinitGlobalSnapshotPatch } from '../../../../runtime/lib/snapshot/lifecycle/patch/snapshotPatch.js';
+import { injectUpdateMainThread } from '../../../../runtime/lib/snapshot/lifecycle/patch/updateMainThread.js';
+import { injectUpdateMTRefInitValue } from '../../../../runtime/lib/snapshot/worklet/ref/updateInitValue.js';
+import { injectCalledByNative } from '../../../../runtime/lib/snapshot/lynx/calledByNative.js';
+import { flushDelayedLifecycleEvents, injectTt } from '../../../../runtime/lib/snapshot/lynx/tt.js';
+import { initElementPAPICallAlog } from '../../../../runtime/lib/snapshot/alog/elementPAPICall.js';
+import { addCtxNotFoundEventListener } from '../../../../runtime/lib/snapshot/lifecycle/patch/error.js';
 import { setRoot } from '../../../../runtime/lib/root.js';
 import {
   SnapshotInstance,
@@ -15,10 +15,11 @@ import {
   backgroundSnapshotInstanceManager,
   snapshotInstanceManager,
 } from '../../../../runtime/lib/snapshot/index.js';
-import { destroyWorklet } from '../../../../runtime/lib/worklet/destroy.js';
+import { destroyWorklet } from '../../../../runtime/lib/snapshot/worklet/destroy.js';
 import { initApiEnv } from '../../../../runtime/lib/worklet-runtime/api/lynxApi.js';
 import { initEventListeners } from '../../../../runtime/lib/worklet-runtime/listeners.js';
 import { initWorklet } from '../../../../runtime/lib/worklet-runtime/workletRuntime.js';
+import { setupDocument, setupBackgroundDocument } from '../../../../runtime/lib/document.js';
 
 const {
   onInjectMainThreadGlobals,
@@ -60,27 +61,8 @@ globalThis.onInjectMainThreadGlobals = (target) => {
   snapshotInstanceManager.nextId = 0;
   target.__root = new SnapshotInstance('root');
 
-  function setupDocument(document) {
-    document.createElement = function(type) {
-      return new SnapshotInstance(type);
-    };
-    document.createElementNS = function(_ns, type) {
-      return new SnapshotInstance(type);
-    };
-    document.createTextNode = function(text) {
-      const i = new SnapshotInstance(null);
-      i.setAttribute(0, text);
-      Object.defineProperty(i, 'data', {
-        set(v) {
-          i.setAttribute(0, v);
-        },
-      });
-      return i;
-    };
-    return document;
-  }
-
-  target._document = setupDocument({});
+  target._document = {};
+  setupDocument(target._document);
 
   target.globalPipelineOptions = undefined;
 
@@ -101,27 +83,8 @@ globalThis.onInjectBackgroundThreadGlobals = (target) => {
   backgroundSnapshotInstanceManager.nextId = 0;
   target.__root = new BackgroundSnapshotInstance('root');
 
-  function setupBackgroundDocument(document) {
-    document.createElement = function(type) {
-      return new BackgroundSnapshotInstance(type);
-    };
-    document.createElementNS = function(_ns, type) {
-      return new BackgroundSnapshotInstance(type);
-    };
-    document.createTextNode = function(text) {
-      const i = new BackgroundSnapshotInstance(null);
-      i.setAttribute(0, text);
-      Object.defineProperty(i, 'data', {
-        set(v) {
-          i.setAttribute(0, v);
-        },
-      });
-      return i;
-    };
-    return document;
-  }
-
-  target._document = setupBackgroundDocument({});
+  target._document = {};
+  setupBackgroundDocument(target._document);
   target.globalPipelineOptions = undefined;
 
   // TODO: can we only inject to target(mainThread.globalThis) instead of globalThis?

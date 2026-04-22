@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>typewriter pause resume</title>
+    <meta content="width=device-width,initial-scale=1.0" name="viewport">
+    <link href="/main.css" rel="stylesheet" />
+  </head>
+  <body>
+    <script src="/main.js" defer></script>
+    <x-view class="page">
+      <x-markdown id="markdown"></x-markdown>
+    </x-view>
+    <script>
+    const el = document.getElementById('markdown');
+      window._animationSteps = [];
+      el.addEventListener('bindanimationStep', (event) => {
+        window._animationSteps.push(event.detail.animationStep);
+      });
+      el.setAttribute('content', 'pause resume animation');
+      el.setAttribute('animation-type', 'typewriter');
+      el.setAttribute('animation-velocity', '10');
+      el.setAttribute('content-complete', 'true');
+    </script>
+  </body>
+</html>

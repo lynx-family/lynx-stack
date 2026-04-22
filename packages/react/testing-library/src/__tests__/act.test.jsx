@@ -6,7 +6,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { createRef } from 'preact';
 import { Component } from 'preact';
 import { expect } from 'vitest';
-import { __globalSnapshotPatch } from '../../../runtime/lib/lifecycle/patch/snapshotPatch.js';
+import { __globalSnapshotPatch } from '../../../runtime/lib/snapshot/lifecycle/patch/snapshotPatch.js';
 import { snapshotInstanceManager } from '../../../runtime/lib/snapshot/index.js';
 
 test('render calls useEffect immediately', async () => {
@@ -201,7 +201,7 @@ test('fireEvent triggers useEffect calls', async () => {
       [
         "rLynxChange",
         {
-          "data": "{"patchList":[{"snapshotPatch":[0,"__snapshot_268b9_test_4",2,4,2,[1],0,null,3,4,3,[0],1,2,3,null,1,-1,2,null],"id":2}]}",
+          "data": "{"patchList":[{"snapshotPatch":[0,"__snapshot_268b9_test_4",2,4,2,[1],0,null,3,4,3,[0],1,2,3,null,0,1,-1,2,null,0],"id":2}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
@@ -285,7 +285,7 @@ test('fireEvent triggers useEffect calls', async () => {
       [
         "rLynxChange",
         {
-          "data": "{"patchList":[{"snapshotPatch":[0,"__snapshot_268b9_test_4",2,4,2,[1],0,null,3,4,3,[0],1,2,3,null,1,-1,2,null],"id":2}]}",
+          "data": "{"patchList":[{"snapshotPatch":[0,"__snapshot_268b9_test_4",2,4,2,[1],0,null,3,4,3,[0],1,2,3,null,0,1,-1,2,null,0],"id":2}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
