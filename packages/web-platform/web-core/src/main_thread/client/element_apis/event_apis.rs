@@ -212,9 +212,10 @@ impl MainThreadWasmContext {
     let event_name = event_name.to_ascii_lowercase();
     let target_unique_id = bubble_unique_id_path.first().cloned().unwrap_or_default();
 
-    let binding = self
-      .get_element_data_by_unique_id(target_unique_id)
-      .unwrap();
+    let binding = match self.get_element_data_by_unique_id(target_unique_id) {
+      Some(b) => b,
+      None => return false,
+    };
     let target_element_data = binding.borrow();
 
     let target_element_dataset = target_element_data.dataset.clone();
@@ -238,7 +239,10 @@ impl MainThreadWasmContext {
       } else {
         "catchevent"
       };
-      let binding = self.get_element_data_by_unique_id(*unique_id).unwrap();
+      let binding = match self.get_element_data_by_unique_id(*unique_id) {
+        Some(b) => b,
+        None => continue,
+      };
       let current_target_element_data = binding.borrow();
       {
         // cross thread handler
