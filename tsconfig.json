@@ -126,6 +126,9 @@
       "path": "./packages/lynx"
     },
     {
+      "path": "./packages/i18n"
+    },
+    {
       "path": "./packages/motion"
     },
     {

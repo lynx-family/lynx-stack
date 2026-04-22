@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import './lynx.js';
-import './lynx/component.js';
+import './snapshot/lynx/component.js';
 import {
   Children,
   Component,
@@ -31,13 +31,13 @@ import {
   useReducer,
   useRef,
   useState,
-} from './hooks/react.js';
-import { createPortal } from './lynx/portals.js';
-import { Suspense } from './lynx/suspense.js';
+} from './snapshot/hooks/react.js';
+import { createPortal } from './snapshot/lynx/portals.js';
+import { Suspense } from './snapshot/lynx/suspense.js';
 
 export { Component, createContext } from 'preact';
 export { PureComponent } from 'preact/compat';
-export * from './hooks/react.js';
+export * from './snapshot/hooks/react.js';
 
 /**
  * @internal

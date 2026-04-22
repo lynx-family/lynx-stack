@@ -6,17 +6,17 @@
 import { render } from 'preact';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { delayedLifecycleEvents } from '../../src/lifecycle/event/delayLifecycleEvents';
-import { takeGlobalSnapshotPatch } from '../../src/lifecycle/patch/snapshotPatch';
-import { snapshotPatchApply } from '../../src/lifecycle/patch/snapshotPatchApply';
-import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
-import { injectTt } from '../../src/lynx/tt';
+import { delayedLifecycleEvents } from '../../src/snapshot/lifecycle/event/delayLifecycleEvents';
+import { takeGlobalSnapshotPatch } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
+import { snapshotPatchApply } from '../../src/snapshot/lifecycle/patch/snapshotPatchApply';
+import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
+import { injectTt } from '../../src/snapshot/lynx/tt';
 import { root } from '../../src/lynx-api';
-import { CHILDREN } from '../../src/renderToOpcodes/constants';
+import { CHILDREN } from '../../src/snapshot/renderToOpcodes/constants';
 import { __root } from '../../src/root';
 import { setupPage, backgroundSnapshotInstanceManager } from '../../src/snapshot';
-import { globalEnvManager } from '../utils/envManager';
-import { elementTree } from '../utils/nativeMethod';
+import { globalEnvManager } from './utils/envManager';
+import { elementTree } from './utils/nativeMethod';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));

@@ -1,3 +1,3 @@
-import config from './webpack.config';
+import config from './webpack.config.js';
 
 export default config;

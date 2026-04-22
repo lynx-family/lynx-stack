@@ -107,7 +107,7 @@ class ComposedGesture implements GestureKind {
     };
   };
 
-  toJSON = (): Record<string, unknown> => {
+  toJSON = function(this: ComposedGesture): Record<string, unknown> {
     return this.serialize();
   };
 }

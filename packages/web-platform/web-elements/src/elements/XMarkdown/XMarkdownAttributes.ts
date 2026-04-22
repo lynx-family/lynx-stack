@@ -380,7 +380,6 @@ const preprocessInlineView = (html: string) =>
 
 const unitlessCssProperties = new Set([
   'font-weight',
-  'line-height',
   'opacity',
   'z-index',
   'flex',

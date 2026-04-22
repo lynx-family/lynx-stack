@@ -1,17 +1,17 @@
-/// <reference types="vitest/globals" />
+/// <reference types="@rspack/test-tools/rstest" />
 
 import { createRequire } from 'node:module';
 import path from 'node:path';
 
 const require = createRequire(__filename);
 
-vi.stubGlobal('lynx', {
-  loadLazyBundle: vi.fn(function loadLazyBundle(request) {
+globalThis.lynx = {
+  loadLazyBundle: rstest.fn(function loadLazyBundle(request) {
     return Promise.resolve().then(() => {
       return require(path.join(__dirname, `${request}.rspack.bundle.cjs`));
     });
   }),
-});
+};
 
 it('should work with chunk loading require', async function() {
   await import(

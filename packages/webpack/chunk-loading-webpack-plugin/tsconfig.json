@@ -5,7 +5,8 @@
     "noEmit": true,
     "moduleResolution": "NodeNext",
   },
-  "include": ["src", "test", "vitest.config.ts"],
+  "include": ["src", "test", "rstest.config.ts"],
+  "exclude": ["test/dist"],
   "references": [
     { "path": "../webpack-runtime-globals/tsconfig.build.json" },
   ],

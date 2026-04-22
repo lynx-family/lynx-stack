@@ -1,4 +1,4 @@
-import { ChunkLoadingWebpackPlugin } from '../../../../src/index';
+import { ChunkLoadingWebpackPlugin } from '../../../../lib/index.js';
 
 /** @type {import('@rspack/core').Configuration} */
 export default {

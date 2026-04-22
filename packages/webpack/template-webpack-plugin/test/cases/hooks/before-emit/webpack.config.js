@@ -1,4 +1,4 @@
-import { LynxTemplatePlugin, LynxEncodePlugin } from '../../../../src';
+import { LynxTemplatePlugin, LynxEncodePlugin } from '../../../../lib/index.js';
 
 /** @type {import('webpack').Configuration} */
 export default {

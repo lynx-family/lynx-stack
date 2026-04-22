@@ -59,7 +59,7 @@
     "webpack": "^5.105.2"
   },
   "peerDependencies": {
-    "@lynx-js/template-webpack-plugin": "^0.10.0"
+    "@lynx-js/template-webpack-plugin": "^0.11.0"
   },
   "engines": {
     "node": ">=18"

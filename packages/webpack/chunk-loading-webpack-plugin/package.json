@@ -34,16 +34,17 @@
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "docs:update": "api-extractor run --local",
-    "test": "vitest"
+    "test": "rstest"
   },
   "dependencies": {
     "@lynx-js/webpack-runtime-globals": "workspace:*"
   },
   "devDependencies": {
     "@lynx-js/test-tools": "workspace:*",
-    "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@rspack/core": "catalog:rspack",
+    "@rspack/test-tools": "catalog:rspack",
+    "@rstest/core": "catalog:rstest",
     "css-loader": "^7.1.4",
     "mini-css-extract-plugin": "^2.10.0",
     "webpack": "^5.105.2"

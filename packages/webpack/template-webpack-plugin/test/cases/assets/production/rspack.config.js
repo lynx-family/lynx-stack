@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 
-import { LynxEncodePlugin, LynxTemplatePlugin } from '../../../../src';
+import { LynxEncodePlugin, LynxTemplatePlugin } from '../../../../lib/index.js';
 
 /** @type {import('webpack').Configuration} */
 export default {

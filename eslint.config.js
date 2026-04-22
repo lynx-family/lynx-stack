@@ -59,6 +59,7 @@ export default tseslint.config(
       'packages/**/vitest.config.ts',
       'packages/react/runtime/compat/**',
       'packages/rspeedy/create-rspeedy/template-*/**',
+      'packages/i18n/**/tests/fixtures/**',
       'packages/{rspeedy,webpack}/*/test/**/cases/**',
       'packages/{rspeedy,webpack}/*/test/**/hotCases/**',
       'packages/{rspeedy,webpack}/*/test/**/diagnostic/**',
@@ -90,10 +91,12 @@ export default tseslint.config(
       // Generated worklet bundles are published assets, not source files.
       'packages/react/runtime/worklet-runtime/**',
       'packages/react/runtime/src/renderToOpcodes/**',
+      'packages/react/runtime/src/snapshot/renderToOpcodes/**',
       'packages/react/runtime/types/**',
 
       // TODO: enable eslint for react-runtime
       'packages/react/runtime/src/compat/**',
+      'packages/react/runtime/src/snapshot/compat/**',
       'packages/react/runtime/src/opcodes.ts',
 
       // TODO: enable eslint for tools
@@ -277,7 +280,12 @@ export default tseslint.config(
         ecmaVersion: 'latest',
         sourceType: 'module',
         projectService: {
-          allowDefaultProject: ['*.js', 'rslib.config.ts', 'vitest.config.ts'],
+          allowDefaultProject: [
+            '*.js',
+            'rslib.config.ts',
+            'vitest.config.ts',
+            'rstest.config.ts',
+          ],
           defaultProject: './tsconfig.json',
         },
         tsconfigRootDir: import.meta.dirname,

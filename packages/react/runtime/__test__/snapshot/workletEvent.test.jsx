@@ -7,13 +7,13 @@ import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Component, useState } from '../../src/index';
-import { replaceCommitHook } from '../../src/lifecycle/patch/commit';
-import { injectUpdateMainThread } from '../../src/lifecycle/patch/updateMainThread';
+import { replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
+import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
-import { updateWorkletEvent } from '../../src/snapshot/workletEvent';
-import { globalEnvManager } from '../utils/envManager';
-import { elementTree, waitSchedule } from '../utils/nativeMethod';
+import { updateWorkletEvent } from '../../src/snapshot/snapshot/workletEvent';
+import { globalEnvManager } from './utils/envManager';
+import { elementTree, waitSchedule } from './utils/nativeMethod';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));

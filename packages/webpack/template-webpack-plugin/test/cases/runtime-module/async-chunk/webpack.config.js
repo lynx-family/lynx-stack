@@ -1,6 +1,6 @@
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
-import { LynxEncodePlugin, LynxTemplatePlugin } from '../../../../src';
+import { LynxEncodePlugin, LynxTemplatePlugin } from '../../../../lib/index.js';
 
 /** @type {import('webpack').Configuration} */
 export default {

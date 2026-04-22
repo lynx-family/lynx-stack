@@ -6,6 +6,23 @@ import * as CSS from '@lynx-js/css-serializer';
 
 import type { CSSRule, OneInfo, StyleInfo } from './StyleInfo.js';
 
+function restoreCSSVarValue(declaration: CSS.Declaration): string {
+  return declaration.value.replaceAll(
+    /\{\{(--[^}]+)\}\}/g,
+    (_, varName: string) => {
+      const isCSSVarDecl = 'type' in declaration
+        && declaration.type === 'css_var';
+
+      if (!isCSSVarDecl) {
+        return `var(${varName})`;
+      }
+
+      const fallback = declaration.defaultValueMap?.[varName];
+      return fallback ? `var(${varName}, ${fallback})` : `var(${varName})`;
+    },
+  );
+}
+
 export function genStyleInfo(
   cssMap: Record<string, CSS.LynxStyleNode[]>,
 ): StyleInfo {
@@ -113,7 +130,7 @@ export function genStyleInfo(
             declaration,
           ) => [
             declaration.name,
-            declaration.value.replaceAll(/\{\{--([^}]+)\}\}/g, 'var(--$1)'),
+            restoreCSSVarValue(declaration),
           ]);
 
           decl.push(...(Object.entries(node.variables)));

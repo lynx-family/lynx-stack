@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 import { render, fireEvent } from '..';
 import { expect } from 'vitest';
 import { useState } from 'preact/hooks';
-import { prettyFormatSnapshotPatch } from '../../../runtime/lib/debug/formatPatch';
+import { prettyFormatSnapshotPatch } from '../../../runtime/lib/snapshot/debug/formatPatch';
 
 describe('should only render text when it is not empty', () => {
   it('empty text should not be rendered', () => {

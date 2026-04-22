@@ -1,0 +1,52 @@
+{
+  "name": "@lynx-js/i18next-translation-dedupe",
+  "version": "0.0.0",
+  "description": "Dedupe i18next translations in Lynx bundles.",
+  "keywords": [
+    "Lynx",
+    "i18next",
+    "rspeedy",
+    "rsbuild"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/i18n/i18next-translation-dedupe"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./lib/index.d.ts",
+  "files": [
+    "lib",
+    "!lib/**/*.js.map",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc --build ./tsconfig.build.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/template-webpack-plugin": "workspace:*",
+    "@lynx-js/types": "3.7.0",
+    "i18next": "26.0.6",
+    "i18next-cli": "1.54.2",
+    "rsbuild-plugin-i18next-extractor": "0.2.0"
+  },
+  "peerDependencies": {
+    "rsbuild-plugin-i18next-extractor": "*"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

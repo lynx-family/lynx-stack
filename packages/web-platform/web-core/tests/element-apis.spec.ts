@@ -50,6 +50,72 @@ describe('Element APIs', () => {
       true,
     );
   });
+  test('#commonEventHandler should filter out -1 uniqueId', () => {
+    mtsBinding.wasmContext = Object.assign(mtsBinding.wasmContext || {}, {
+      common_event_handler: vi.fn(),
+    }) as any;
+    mtsBinding.addEventListener('touchstart');
+
+    const node1 = mtsGlobalThis.__CreateView(0);
+    const node2 = document.createElement('div') as any;
+    node1.appendChild(node2);
+    rootDom.appendChild(node1);
+
+    const event = document.createEvent('Event') as any;
+    event.initEvent('touchstart', true, true);
+    event.touches = [];
+    event.targetTouches = [];
+    event.changedTouches = [];
+    node2.dispatchEvent(event);
+
+    expect(mtsBinding.wasmContext!.common_event_handler).toHaveBeenCalled();
+    const calls =
+      (mtsBinding.wasmContext!.common_event_handler as any).mock.calls;
+    const bubblePath = calls[0][1] as Uint32Array;
+
+    // Check that -1 (4294967295 in Uint32Array) is NOT in the bubblePath
+    for (let i = 0; i < bubblePath.length; i++) {
+      expect(bubblePath[i] !== 4294967295).toBe(true);
+    }
+  });
+
+  test('#commonEventHandler should not crash on invalid uniqueId', () => {
+    // We send an event with a bubblePath containing a non-existent uniqueId
+    const invalidUniqueId = 999999;
+    const event = document.createEvent('Event') as any;
+    event.initEvent('touchstart', true, true);
+
+    // Create cross thread event manually for the test
+    const eventObject = { type: 'touchstart', detail: {} } as any;
+
+    expect(() => {
+      mtsBinding.wasmContext!.common_event_handler(
+        eventObject,
+        new Uint32Array([invalidUniqueId]),
+        'touchstart',
+        true,
+      );
+    }).not.toThrow();
+  });
+
+  test('#commonEventHandler should not crash on empty path', () => {
+    // We send an event with a bubblePath containing a non-existent uniqueId
+    const event = document.createEvent('Event') as any;
+    event.initEvent('touchstart', true, true);
+
+    // Create cross thread event manually for the test
+    const eventObject = { type: 'touchstart', detail: {} } as any;
+
+    expect(() => {
+      mtsBinding.wasmContext!.common_event_handler(
+        eventObject,
+        new Uint32Array([]),
+        'touchstart',
+        true,
+      );
+    }).not.toThrow();
+  });
+
   test('createElementView', () => {
     const element = mtsGlobalThis.__CreateElement('view', 0);
     expect(mtsGlobalThis.__GetTag(element)).toBe('view');
@@ -97,6 +163,26 @@ describe('Element APIs', () => {
     mtsGlobalThis.__UpdateComponentID(ret, 'id');
     expect(mtsGlobalThis.__GetComponentID(ret)).toBe('id');
     expect(mtsGlobalThis.__GetAttributeByName(ret, 'name')).toBe('name');
+  });
+
+  test('client component_css_id properly cascades to child element', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const comp = mtsGlobalThis.__CreateComponent(
+      0,
+      'comp1',
+      42,
+      'test_entry',
+      'test_name',
+      'path',
+      {},
+      {},
+    );
+    const compId = mtsGlobalThis.__GetElementUniqueID(comp);
+    const childView = mtsGlobalThis.__CreateElement('view', compId);
+    mtsGlobalThis.__AppendElement(comp, childView);
+    mtsGlobalThis.__AppendElement(root, comp);
+    mtsGlobalThis.__FlushElementTree();
+    expect(rootDom.querySelector(`[${cssIdAttribute}="42"]`)).not.toBeNull();
   });
 
   test('__CreateView', () => {
@@ -1351,8 +1437,42 @@ describe('Element APIs', () => {
     const cssID = mtsGlobalThis.__GetAttributeByName(ele, cssIdAttribute);
     const name = mtsGlobalThis.__GetAttributeByName(ele, 'name');
     expect(id).toBe('id2');
-    expect(cssID).toBe('8');
+    expect(cssID).toBeNull();
     expect(name).toBe('name2');
+  });
+
+  test('__UpdateComponentInfo updates componentCSSID', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const comp = mtsGlobalThis.__CreateComponent(
+      0,
+      'comp1',
+      42,
+      'test_entry',
+      'test_name',
+      'path',
+      {},
+      {},
+    );
+
+    mtsGlobalThis.__UpdateComponentInfo(comp, {
+      componentID: 'comp1_new',
+      cssID: 43,
+      entry: 'new_entry',
+      name: 'new_name',
+    });
+
+    const compId = mtsGlobalThis.__GetElementUniqueID(comp);
+    const childView = mtsGlobalThis.__CreateElement('view', compId);
+    mtsGlobalThis.__AppendElement(comp, childView);
+    mtsGlobalThis.__AppendElement(root, comp);
+    mtsGlobalThis.__FlushElementTree();
+
+    expect(rootDom.querySelector(`[${cssIdAttribute}="43"]`)).not.toBeNull();
+
+    // the component itself also gets the attributes updated
+    expect(comp.getAttribute('name')).toBe('new_name');
+    expect(comp.getAttribute('l-e-name')).toBe('new_entry');
+    expect(mtsGlobalThis.__GetComponentID(comp)).toBe('comp1_new');
   });
 
   test('__MarkTemplate_and_Get_Parts', () => {

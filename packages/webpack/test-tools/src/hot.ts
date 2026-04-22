@@ -16,11 +16,17 @@ import type {
 } from '@rspack/test-tools';
 import fs from 'fs-extra';
 import { rimrafSync } from 'rimraf';
-import { describe, test } from 'vitest';
 
 import { TestHotUpdatePlugin } from './plugins/hot-update.js';
 import { createRunner, getOptions } from './suite.js';
 import type { ITestSuite, TImportedBundler } from './suite.js';
+
+const describe = (globalThis as unknown as {
+  describe: typeof import('@rstest/core').describe;
+}).describe;
+const test = (globalThis as unknown as {
+  test: typeof import('@rstest/core').test;
+}).test;
 
 export function createHotOptions<T extends ECompilerType>({
   compilerType,
@@ -121,6 +127,7 @@ function createCase(name: string, src: string, dist: string, cwd: string) {
       const compilerDist = path.join(dist, compilerType);
       const runner = createRunner(src, compilerDist, HotRunnerFactory);
 
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       describe(caseName, async () => {
         if (!fs.existsSync(caseConfigFile)) {
           test.skip(caseName);

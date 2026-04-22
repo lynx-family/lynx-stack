@@ -6,7 +6,7 @@
 
 /** @jsxImportSource ../../lepus */
 
-import { useMainThreadRef } from '../../src/worklet/ref/workletRef';
+import { useMainThreadRef } from '../../src/snapshot/worklet/ref/workletRef';
 
 /* v8 ignore start */
 let ref1;

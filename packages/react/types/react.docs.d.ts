@@ -48,13 +48,27 @@ export {
   useSyncExternalStore,
 } from 'react';
 
-export { useEffect, useLayoutEffect, useErrorBoundary } from '../runtime/lib/hooks/react.js';
+export { useEffect, useLayoutEffect, useErrorBoundary } from '../runtime/lib/snapshot/hooks/react.js';
 
 /**
  * Built-in React APIs
  * @see https://react.dev/reference/react/apis
  */
 export { createContext, forwardRef, lazy, memo } from 'react';
+
+/**
+ * Renders `children` into a target Lynx element instead of into the parent
+ * in the JSX tree. The target must be a ref obtained from a ReactLynx
+ * element marked with the `portal-container` attribute.
+ *
+ * ```tsx
+ * <view portal-container ref={hostRef} />;
+ * {host && createPortal(<text>hi</text>, host)}
+ * ```
+ *
+ * @see https://react.dev/reference/react-dom/createPortal
+ */
+export { createPortal } from '../runtime/lib/snapshot/lynx/portals.js';
 
 /**
  * Built-in React Components

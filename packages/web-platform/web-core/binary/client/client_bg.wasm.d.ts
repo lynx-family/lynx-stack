@@ -29,7 +29,6 @@ export const mainthreadwasmcontext_dispatch_global_bind_event: (a: number, b: nu
 export const mainthreadwasmcontext_gc: (a: number) => void;
 export const mainthreadwasmcontext_get_component_id: (a: number, b: number) => [number, number, number, number];
 export const mainthreadwasmcontext_get_config: (a: number, b: number) => [number, number, number];
-export const mainthreadwasmcontext_get_css_id_by_unique_id: (a: number, b: number) => number;
 export const mainthreadwasmcontext_get_data_by_key: (a: number, b: number, c: number, d: number) => [number, number, number];
 export const mainthreadwasmcontext_get_dataset: (a: number, b: number) => [number, number, number];
 export const mainthreadwasmcontext_get_dom_by_unique_id: (a: number, b: number) => any;
@@ -44,6 +43,7 @@ export const mainthreadwasmcontext_set_css_id: (a: number, b: number, c: number,
 export const mainthreadwasmcontext_set_dataset: (a: number, b: number, c: any, d: any) => [number, number];
 export const mainthreadwasmcontext_set_page_element_unique_id: (a: number, b: number) => void;
 export const mainthreadwasmcontext_take_timing_flags: (a: number) => [number, number];
+export const mainthreadwasmcontext_update_component_css_id: (a: number, b: number, c: number) => [number, number];
 export const mainthreadwasmcontext_update_component_id: (a: number, b: number, c: number, d: number) => [number, number];
 export const mainthreadwasmcontext_update_css_og_style: (a: number, b: number, c: number, d: number) => [number, number];
 export const rawstyleinfo_append_import: (a: number, b: number, c: number) => void;

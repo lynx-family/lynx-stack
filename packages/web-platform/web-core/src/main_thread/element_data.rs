@@ -24,6 +24,7 @@ pub struct EventHandler {
 pub struct LynxElementData {
   pub(crate) parent_component_unique_id: usize,
   pub(crate) css_id: i32,
+  pub(crate) component_css_id: i32,
   #[with(rkyv::with::Skip)]
   pub(crate) component_id: Option<String>,
   #[with(rkyv::with::Skip)]
@@ -54,11 +55,13 @@ impl LynxElementData {
   pub(crate) fn new(
     parent_component_unique_id: usize,
     css_id: i32,
+    component_css_id: i32,
     component_id: Option<String>,
   ) -> Self {
     LynxElementData {
       parent_component_unique_id,
       css_id,
+      component_css_id,
       component_id,
       dataset: None,
       component_config: None,
@@ -152,10 +155,16 @@ impl LynxElementData {
   pub(crate) fn new_with_tag_name(
     parent_component_unique_id: usize,
     css_id: i32,
+    component_css_id: i32,
     component_id: Option<String>,
     tag_name: String,
   ) -> Self {
-    let mut data = Self::new(parent_component_unique_id, css_id, component_id);
+    let mut data = Self::new(
+      parent_component_unique_id,
+      css_id,
+      component_css_id,
+      component_id,
+    );
     data.tag_name = tag_name;
     data
   }

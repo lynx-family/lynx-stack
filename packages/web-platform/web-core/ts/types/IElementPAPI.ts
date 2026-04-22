@@ -176,6 +176,9 @@ export type UpdateComponentInfoPAPI = (
     name?: string;
     path?: string;
     entry?: string;
+    /**
+     * This is component css id but it's named cssID
+     */
     cssID?: number;
   },
 ) => void;
@@ -229,7 +232,7 @@ export type CreateWrapperElementPAPI = CreateViewPAPI;
 export type CreateComponentPAPI = (
   componentParentUniqueID: number,
   componentID: string,
-  cssID: number,
+  componentCSSID: number,
   entryName: string,
   name: string,
   path: string,
@@ -245,7 +248,7 @@ export type CreateElementPAPI = (
 
 export type CreatePagePAPI = (
   componentID: string,
-  cssID: number,
+  componentCSSID: number,
   info?: Record<string, Cloneable> | null | undefined,
 ) => HTMLElement;
 

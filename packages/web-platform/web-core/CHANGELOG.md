@@ -27,7 +27,7 @@
 
   This mechanism enables seamless cross-element event communication without requiring a formal DOM tree relationship, allowing decoupled elements to observe and respond to standard events occurring anywhere within the component tree.
 
-  ### Usage
+  #### Usage
 
   Global bindings allow an observer element to react to events triggered on another target element.
 
@@ -89,18 +89,18 @@
 
 - **This is a breaking change** ([#2322](https://github.com/lynx-family/lynx-stack/pull/2322))
 
-  ## Architectural Upgrade: `web-core-wasm` replaces `web-core`
+  #### Architectural Upgrade: `web-core-wasm` replaces `web-core`
 
   This release marks a major architectural upgrade for the web platform. The experimental, WASM-powered engine formerly known as `web-core-wasm` has been fully stabilized and merged into the main branch, completely replacing the previous pure JS/TS based `web-core` implementation. This consolidation massively improves execution performance and aligns the API boundaries of the Web platform directly with other native Lynx implementations.
 
-  ### 🎉 Added Features
+  ##### 🎉 Added Features
 
   - **Core API Enhancements**: Successfully exposed and supported `__QuerySelector` and `__InvokeUIMethod` methods.
   - **Security & CSP Compliance**: Added a `nonce` attribute to the iframe's `srcdoc` script execution, strengthening Content Security Policy (CSP) compliance.
   - **`<lynx-view>` Parameter Enhancements**:
     - Added the `browser-config` attribute and property to `<lynx-view>`. Development environments can now supply a `BrowserConfig` object (e.g., configuring `pixelRatio`, `pixelWidth`, `pixelHeight`) allowing the `systemInfo` payload to be dynamically configured at the instance level.
 
-  ### 🔄 Changed Features
+  ##### 🔄 Changed Features
 
   - **Legacy JSON Backwards Compatibility**: Delivered comprehensive fixes and optimizations to deeply support legacy JSON output templates:
     - Added support for lazy loading execution mode (`lazy usage`).
@@ -139,7 +139,7 @@
   - **Dependency & Boot Sequence Improvements**: Re-architected module loading pathways. Promoted `wasm-feature-detect` directly to a core dependency, and hardened the web worker count initialization assertions.
   - **Initialization Optimizations**: Converted `SERVER_IN_SHADOW_CSS` initialization bounds to use compilation-time constant expressions for better optimization.
 
-  ### 🗑️ Deleted Features & Structural Deprecations
+  ##### 🗑️ Deleted Features & Structural Deprecations
 
   - **`<lynx-view>` Parameter Removals**:
     - Removed the `thread-strategy` property and attribute. Historically, this permitted consumers to toggle between `'multi-thread'` and `'all-on-ui'` modes depending on how they wanted the background logic to be executed. The WASM-driven architecture enforces a consolidated concurrency model, deprecating this `<lynx-view>` attribute entirely.
@@ -173,7 +173,7 @@
   - https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/container-type
   - https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Containment/Container_queries
 
-  ### how it works?
+  #### how it works?
 
   For the following code
 

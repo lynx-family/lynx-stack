@@ -9,10 +9,10 @@
 // → delay.ts (RefProxy)`. This module sits downstream of both and composes
 // them without being part of the cycle.
 
-import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
-import { backgroundSnapshotInstanceManager } from './backgroundSnapshot.js';
-import { hydrationMap } from './snapshotInstanceHydrationMap.js';
-import { refProxyRefAttr } from '../lifecycle/ref/delay.js';
+import { refProxyRefAttr } from './lifecycle/ref/delay.js';
+import type { BackgroundSnapshotInstance } from './snapshot/backgroundSnapshot.js';
+import { backgroundSnapshotInstanceManager } from './snapshot/backgroundSnapshot.js';
+import { hydrationMap } from './snapshot/snapshotInstanceHydrationMap.js';
 
 /**
  * Same shape as the old `refProxyToBackgroundSnapshotInstance` WeakMap so
