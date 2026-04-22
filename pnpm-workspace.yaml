@@ -76,6 +76,7 @@ packageExtensions:
 
 patchedDependencies:
   "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
+  "@rspack/test-tools@1.7.9": "patches/@rspack__test-tools@1.7.9.patch"
   "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch"
 
 strictDepBuilds: true
