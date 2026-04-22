@@ -224,7 +224,7 @@ export function createElementAPI(
         componentCSSID,
         componentID,
       );
-      if (entryName) {
+      if (entryName && entryName !== '__Card__') {
         dom.setAttribute(lynxEntryNameAttribute, entryName);
       }
       if (name) {

@@ -3,7 +3,7 @@ import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
 import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElementAPI.js';
 import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
 import { vi } from 'vitest';
-import { cssIdAttribute } from '../ts/constants.js';
+import { cssIdAttribute, lynxEntryNameAttribute } from '../ts/constants.js';
 import {
   createElementAPI as createServerElementAPI,
   SSRBinding,
@@ -126,6 +126,21 @@ describe('Element APIs', () => {
     mtsGlobalThis.__UpdateComponentID(ret, 'id');
     expect(mtsGlobalThis.__GetComponentID(ret)).toBe('id');
     expect(mtsGlobalThis.__GetAttributeByName(ret, 'name')).toBe('name');
+  });
+
+  test('__CreateComponent drops __Card__ entryName', () => {
+    const ret = mtsGlobalThis.__CreateComponent(
+      0,
+      'id',
+      0,
+      '__Card__',
+      'name',
+      'path',
+      {},
+      {},
+    );
+    expect(mtsGlobalThis.__GetAttributeByName(ret, lynxEntryNameAttribute))
+      .toBe(null);
   });
 
   test('client component_css_id properly cascades to child element', () => {
