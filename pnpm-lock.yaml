@@ -503,12 +503,6 @@ importers:
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
-      zod:
-        specifier: ^3.25.76
-        version: 3.25.76
-      zod-to-json-schema:
-        specifier: ^3.25.2
-        version: 3.25.2(zod@3.25.76)
 
   packages/i18n/i18next-translation-dedupe:
     devDependencies:
