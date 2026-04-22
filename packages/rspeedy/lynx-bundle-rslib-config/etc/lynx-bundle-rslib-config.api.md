@@ -45,6 +45,7 @@ export interface ExternalBundleWebpackPluginOptions {
         buffer: Buffer;
     }>;
     engineVersion?: string | undefined;
+    mainThreadChunks?: string[] | undefined;
 }
 
 // @public

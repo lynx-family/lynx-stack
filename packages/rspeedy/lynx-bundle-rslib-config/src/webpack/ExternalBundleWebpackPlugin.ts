@@ -42,6 +42,13 @@ export interface ExternalBundleWebpackPluginOptions {
    * @defaultValue '3.5'
    */
   engineVersion?: string | undefined
+
+  /**
+   * The main thread chunks of the external bundle.
+   *
+   * @defaultValue []
+   */
+  mainThreadChunks?: string[] | undefined
 }
 
 const isDebug = (): boolean => {
@@ -128,6 +135,11 @@ export class ExternalBundleWebpackPlugin {
               return ({
                 ...prev,
                 [cur.name.replace(/\.js$/, '')]: {
+                  ...(this.options.mainThreadChunks?.includes(cur.name)
+                    ? {
+                      'encoding': 'JsBytecode',
+                    }
+                    : {}),
                   content: cur.source.source().toString(),
                 },
               })
@@ -154,6 +166,7 @@ export class ExternalBundleWebpackPlugin {
 
     const compilerOptions: Record<string, unknown> = {
       enableFiberArch: true,
+      useLepusNG: true,
       // `lynx.fetchBundle` and `lynx.loadScript` require engineVersion >= 3.5
       targetSdkVersion: this.options.engineVersion ?? '3.5',
       enableCSSInvalidation: true,
