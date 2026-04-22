@@ -192,21 +192,6 @@ describe('createPortal (useRef + useEffect workaround)', () => {
     expect(getByTestId('a')).not.toContainElement(getByTestId('p'));
   });
 
-  it('renders nothing when container is null', () => {
-    function App() {
-      return (
-        <view>
-          <text>visible</text>
-          {createPortal(<text>should-not-appear</text>, null)}
-        </view>
-      );
-    }
-
-    const { queryByText } = render(<App />);
-    expect(queryByText('visible')).toBeInTheDocument();
-    expect(queryByText('should-not-appear')).not.toBeInTheDocument();
-  });
-
   it('forwards context across the portal boundary', () => {
     const ThemeCtx = createContext('light');
 

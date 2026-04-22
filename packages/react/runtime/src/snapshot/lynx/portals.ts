@@ -20,12 +20,8 @@ import { refProxyToBackgroundSnapshotInstance } from '../refProxyBackgroundSnaps
  */
 export const createPortal: (
   vnode: ComponentChildren,
-  containerNodesRef: NodesRef | null | undefined,
-) => VNode<any> | null = (vnode, containerNodesRef) => {
-  if (containerNodesRef == null) {
-    return null;
-  }
-
+  containerNodesRef: NodesRef,
+) => VNode<any> = (vnode, containerNodesRef) => {
   const getter = refProxyToBackgroundSnapshotInstance.get(containerNodesRef);
   if (!getter) {
     throw new Error(
