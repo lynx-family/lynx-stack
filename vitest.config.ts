@@ -74,6 +74,7 @@ export default defineConfig({
       'packages/testing-library/examples/*/vitest.config.ts',
       '!packages/testing-library/examples/react-compiler/vitest.config.ts',
       'packages/testing-library/examples/react-compiler/vitest.config.*.ts',
+      'packages/i18n/*/vitest.config.ts',
       'packages/tailwind-preset/vitest.config.ts',
       'packages/tools/*/vitest.config.ts',
       'packages/use-sync-external-store/vitest.config.ts',
