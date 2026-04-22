@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { dirname } from 'node:path';
 
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from '@rstest/core';
 import webpack from 'webpack';
 
 import { LynxEncodePlugin, LynxTemplatePlugin } from '../src/index.js';
@@ -18,7 +18,7 @@ describe('LynxTemplatePlugin', () => {
       output: {
         iife: false,
       },
-      entry: new URL('./fixtures/basic.tsx', import.meta.url).pathname,
+      entry: './fixtures/basic.tsx',
       plugins: [
         function() {
           this.hooks.thisCompilation.tap('test', (compilation) => {
@@ -139,10 +139,10 @@ describe('requireModuleAsyncCachePolyfill', () => {
     lynx.requireModuleAsync('module3', (error, _value) => errors.push(error));
     await new Promise(resolve => setTimeout(resolve, 0));
     expect(evalTimes['module3']).toBe(1);
-    expect(errors).toMatchInlineSnapshot(`
+    expect(errors.map(error => error?.message)).toMatchInlineSnapshot(`
       [
-        [Error: module3 cannot be loaded],
-        [Error: module3 cannot be loaded],
+        module3 cannot be loaded,
+        module3 cannot be loaded,
       ]
     `);
   });

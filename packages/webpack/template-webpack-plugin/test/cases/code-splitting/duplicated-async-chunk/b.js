@@ -1,4 +1,4 @@
-/// <reference types="vitest/globals" />
+/// <reference types="@rspack/test-tools/rstest" />
 
 import fs from 'node:fs';
 import path from 'node:path';

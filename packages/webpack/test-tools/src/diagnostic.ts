@@ -17,10 +17,19 @@ import type {
 import fs from 'fs-extra';
 import { createSnapshotSerializer } from 'path-serializer';
 import { rimrafSync } from 'rimraf';
-import { describe, expect, it } from 'vitest';
 
-import { createVitestEnv, getOptions } from './suite.js';
+import { createRstestEnv, getOptions } from './suite.js';
 import type { ITestSuite } from './suite.js';
+
+const describe = (globalThis as unknown as {
+  describe: typeof import('@rstest/core').describe;
+}).describe;
+const expect = (globalThis as unknown as {
+  expect: typeof import('@rstest/core').expect;
+}).expect;
+const it = (globalThis as unknown as {
+  it: typeof import('@rstest/core').it;
+}).it;
 
 class RspeedyDiagnosticProcessor<Compiler extends ECompilerType>
   extends DiagnosticProcessor<Compiler>
@@ -63,7 +72,7 @@ const serializer = createSnapshotSerializer({
 function createCase(name: string, src: string, dist: string, cwd: string) {
   describe(name, () => {
     const runner = getSimpleProcessorRunner(src, dist, {
-      env: createVitestEnv,
+      env: createRstestEnv,
     });
 
     async function createOptions<T extends ECompilerType>(
@@ -94,9 +103,10 @@ function createCase(name: string, src: string, dist: string, cwd: string) {
       const caseName = `${name} - ${compilerType}`;
       const caseConfigFile = path.join(src, `${compilerType}.config.js`);
 
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       describe.runIf(fs.existsSync(caseConfigFile))(caseName, async () => {
         const caseOptions = await createOptions<ECompilerType>(caseConfigFile);
-        it('should have error or warning', { timeout: 30000 }, async () => {
+        it('should have error or warning', async () => {
           await runner(
             caseName,
             new RspeedyDiagnosticProcessor<ECompilerType>({
@@ -126,7 +136,7 @@ function createCase(name: string, src: string, dist: string, cwd: string) {
               },
             }),
           );
-        });
+        }, 30000);
       });
     }
   });

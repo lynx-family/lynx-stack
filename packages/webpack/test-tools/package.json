@@ -21,6 +21,7 @@
   "devDependencies": {
     "@rspack/core": "catalog:rspack",
     "@rspack/test-tools": "catalog:rspack",
+    "@rstest/core": "catalog:rstest",
     "@types/fs-extra": "11.0.4",
     "fs-extra": "^11.3.3",
     "path-serializer": "^0.5.1",

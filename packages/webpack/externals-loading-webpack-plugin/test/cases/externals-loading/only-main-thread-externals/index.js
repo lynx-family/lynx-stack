@@ -1,6 +1,6 @@
 import { add } from 'foo';
 
-const consoleInfoMock = vi.spyOn(console, 'info').mockImplementation(() =>
+const consoleInfoMock = rstest.spyOn(console, 'info').mockImplementation(() =>
   undefined
 );
 

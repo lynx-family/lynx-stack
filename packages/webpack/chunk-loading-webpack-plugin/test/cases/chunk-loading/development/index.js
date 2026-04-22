@@ -1,4 +1,4 @@
-/// <reference types="vitest/globals" />
+/// <reference types="@rspack/test-tools/rstest" />
 
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
@@ -6,8 +6,8 @@ import path from 'node:path';
 
 const require = createRequire(__filename);
 
-vi.stubGlobal('lynx', {
-  requireModuleAsync: vi.fn(function requireModuleAsync(request, callback) {
+globalThis.lynx = {
+  requireModuleAsync: rstest.fn(function requireModuleAsync(request, callback) {
     return Promise.resolve().then(() => {
       try {
         callback(null, require(path.join(__dirname, request)));
@@ -16,7 +16,7 @@ vi.stubGlobal('lynx', {
       }
     });
   }),
-});
+};
 
 it('should have dynamic chunks', () => {
   expect(

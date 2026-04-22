@@ -33,7 +33,7 @@
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
-    "test": "pnpm vitest --project webpack/cache-events"
+    "test": "rstest"
   },
   "dependencies": {
     "@lynx-js/webpack-runtime-globals": "workspace:^"
@@ -41,7 +41,8 @@
   "devDependencies": {
     "@lynx-js/chunk-loading-webpack-plugin": "workspace:*",
     "@lynx-js/test-tools": "workspace:*",
-    "@lynx-js/vitest-setup": "workspace:*",
+    "@rspack/test-tools": "catalog:rspack",
+    "@rstest/core": "catalog:rstest",
     "webpack": "^5.105.2"
   },
   "engines": {

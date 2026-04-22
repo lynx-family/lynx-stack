@@ -1,4 +1,4 @@
-import { ChunkLoadingWebpackPlugin } from '../../../../src/index';
+import { ChunkLoadingWebpackPlugin } from '../../../../lib/index.js';
 
 /** @type {import('webpack').Configuration} */
 export default {

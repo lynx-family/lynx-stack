@@ -6,6 +6,7 @@ import typescript from '@rollup/plugin-typescript'
 const config: UserWorkspaceConfig = defineProject({
   test: {
     name: 'rspeedy/config',
+    globals: true,
     env: {
       DEBUG: 'rspeedy',
     },

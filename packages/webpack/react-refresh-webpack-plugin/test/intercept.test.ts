@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 import { ReactRefreshRspackPlugin } from '../src/ReactRefreshRspackPlugin.js';
 import { ReactRefreshWebpackPlugin } from '../src/ReactRefreshWebpackPlugin.js';
@@ -75,6 +75,7 @@ describe('ReactRefresh plugins', () => {
       },
     };
 
+    // @ts-expect-error test mock
     plugin.apply(mockCompiler);
     expect(generateResult).toContain('__webpack_modules__');
     expect(generateResult).toContain(

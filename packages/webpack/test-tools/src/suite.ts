@@ -25,7 +25,29 @@ import type {
   TTestConfig,
   TUpdateOptions,
 } from '@rspack/test-tools';
-import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+
+declare global {
+  var printLogger: boolean;
+}
+
+globalThis.printLogger ??= false;
+
+type RstestRuntime = typeof import('@rstest/core');
+
+const runtime = globalThis as unknown as {
+  afterEach: RstestRuntime['afterEach'];
+  beforeEach: RstestRuntime['beforeEach'];
+  expect: RstestRuntime['expect'];
+  it: RstestRuntime['it'];
+  rstest?: RstestRuntime['rstest'];
+  vi?: unknown;
+};
+
+const afterEach = runtime.afterEach;
+const beforeEach = runtime.beforeEach;
+const expect = runtime.expect;
+const it = runtime.it;
+const mockApi = runtime.rstest ?? runtime.vi;
 
 export type TBeforeExecuteFn = () => Promise<void> | void;
 export type TAfterExecuteFn = (modules: TRunnerOutput[]) => Promise<void>;
@@ -63,14 +85,16 @@ export interface ITestSuite {
   beforeExecute?: TBeforeExecuteFn | undefined;
 }
 
-export function createVitestEnv(): ITestEnv {
+export function createRstestEnv(): ITestEnv {
   return {
     it,
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     beforeEach,
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     afterEach,
     expect,
-    vi,
-  };
+    rstest: mockApi,
+  } as ITestEnv;
 }
 
 interface TRunnerOutput {
@@ -154,7 +178,7 @@ export function createRunner(
           expect(typeof fn === 'function');
           afterTasks.push(fn);
         },
-        vi,
+        rstest: mockApi,
       }, context);
       if (typeof options.afterExecute === 'function') {
         const modules = await Promise.all(
@@ -162,7 +186,7 @@ export function createRunner(
         );
         await options.afterExecute(modules);
       }
-      await processor.check?.(createVitestEnv(), context);
+      await processor.check?.(createRstestEnv(), context);
     });
     it(`${name} should run async`, async function() {
       for (const [description, fn] of tasks) {

@@ -11,7 +11,6 @@ import {
 import type { TCompilerOptions } from '@rspack/test-tools';
 import fs from 'fs-extra';
 import { rimrafSync } from 'rimraf';
-import { describe } from 'vitest';
 
 import {
   RspeedyNormalRunnerFactory,
@@ -19,6 +18,10 @@ import {
   getOptions,
 } from './suite.js';
 import type { ITestSuite, TAfterExecuteFn, TBeforeExecuteFn } from './suite.js';
+
+const describe = (globalThis as unknown as {
+  describe: typeof import('@rstest/core').describe;
+}).describe;
 
 function createCase(
   name: string,
@@ -72,6 +75,7 @@ function createCase(
         return;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       describe(caseName, async () => {
         const caseOptions = await createOptions<ECompilerType>(caseConfigFile);
         runner(

@@ -1,4 +1,4 @@
-/// <reference types="vitest/globals" />
+/// <reference types="@rspack/test-tools/rstest" />
 
 import fs from 'node:fs/promises';
 import { existsSync } from 'node:fs';

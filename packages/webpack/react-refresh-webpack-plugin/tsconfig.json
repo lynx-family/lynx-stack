@@ -4,6 +4,6 @@
     "rootDir": ".",
     "noEmit": true,
   },
-  "include": ["src", "test", "vitest.config.ts"],
+  "include": ["src", "test", "rstest.config.ts"],
   "exclude": ["src/**/*.cjs"],
 }

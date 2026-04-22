@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { ExternalsLoadingPlugin } from '../../src/index.ts';
+import { ExternalsLoadingPlugin } from '../../lib/index.js';
 
 /**
  * @param {string=} name - The name
@@ -22,7 +22,7 @@ export function createEntries(name = 'main', source = './index.js') {
 }
 
 /**
- * @param {import('../../src').ExternalsLoadingPluginOptions} externalsLoadingPluginOptions ExternalsLoadingPlugin options
+ * @param {import('../../lib/index.js').ExternalsLoadingPluginOptions} externalsLoadingPluginOptions ExternalsLoadingPlugin options
  * @param {import("@rspack/core").Configuration['externals']} externals rspack externals config
  *
  * @returns {import("@rspack/core").Configuration} The default Rspack configuration.

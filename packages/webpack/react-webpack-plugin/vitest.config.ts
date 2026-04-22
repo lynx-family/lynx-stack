@@ -4,6 +4,7 @@ import type { UserWorkspaceConfig } from 'vitest/config';
 const config: UserWorkspaceConfig = defineProject({
   test: {
     name: 'webpack/react',
+    globals: true,
     setupFiles: [
       '@lynx-js/vitest-setup/setup.ts',
       'test/setup-env.js',

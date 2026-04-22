@@ -1,4 +1,4 @@
-/// <reference types="vitest/globals" />
+/// <reference types="@rspack/test-tools/rstest" />
 
 import { existsSync } from 'node:fs';
 import path from 'node:path';

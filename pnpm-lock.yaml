@@ -44,6 +44,8 @@ overrides:
   '@rsdoctor/rspack-plugin>@rspack/core': 1.7.9
   '@rsdoctor/types>@rspack/core': 1.7.9
 
+packageExtensionsChecksum: sha256-BUwt5m2tRMyYg9pgFVHNTHCYEBuM0/o7IdJqk+vWTGs=
+
 patchedDependencies:
   '@napi-rs/cli@2.18.4':
     hash: ba947eb1c48b2a85834e99f92cbbae896722ce61fd5ae67507a3be9041959ebd
@@ -1699,9 +1701,12 @@ importers:
       '@lynx-js/test-tools':
         specifier: workspace:*
         version: link:../test-tools
-      '@lynx-js/vitest-setup':
-        specifier: workspace:*
-        version: link:../../tools/vitest-setup
+      '@rspack/test-tools':
+        specifier: catalog:rspack
+        version: 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.8.1(jsdom@27.4.0)
       webpack:
         specifier: ^5.105.2
         version: 5.105.2
@@ -1715,15 +1720,18 @@ importers:
       '@lynx-js/test-tools':
         specifier: workspace:*
         version: link:../test-tools
-      '@lynx-js/vitest-setup':
-        specifier: workspace:*
-        version: link:../../tools/vitest-setup
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.58.2(@types/node@24.10.13)
       '@rspack/core':
         specifier: catalog:rspack
         version: 1.7.9(@swc/helpers@0.5.21)
+      '@rspack/test-tools':
+        specifier: catalog:rspack
+        version: 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.8.1(jsdom@27.4.0)
       css-loader:
         specifier: ^7.1.4
         version: 7.1.4(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
@@ -1776,6 +1784,12 @@ importers:
       '@rspack/core':
         specifier: catalog:rspack
         version: 1.7.9(@swc/helpers@0.5.21)
+      '@rspack/test-tools':
+        specifier: catalog:rspack
+        version: 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.8.1(jsdom@27.4.0)
       bar:
         specifier: ./test/helpers/external-bundle-mock/bar
         version: link:test/helpers/external-bundle-mock/bar
@@ -1806,6 +1820,9 @@ importers:
       '@rspack/core':
         specifier: catalog:rspack
         version: 1.7.9(@swc/helpers@0.5.21)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.8.1(jsdom@27.4.0)
       swc-loader:
         specifier: ^0.2.7
         version: 0.2.7(@swc/core@1.15.24(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.24(@swc/helpers@0.5.21)))
@@ -1865,6 +1882,12 @@ importers:
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.58.2(@types/node@24.10.13)
+      '@rspack/test-tools':
+        specifier: catalog:rspack
+        version: 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.8.1(jsdom@27.4.0)
       webpack:
         specifier: ^5.105.2
         version: 5.105.2
@@ -1896,12 +1919,15 @@ importers:
       '@lynx-js/test-tools':
         specifier: workspace:*
         version: link:../test-tools
-      '@lynx-js/vitest-setup':
-        specifier: workspace:*
-        version: link:../../tools/vitest-setup
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.58.2(@types/node@24.10.13)
+      '@rspack/test-tools':
+        specifier: catalog:rspack
+        version: 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.8.1(jsdom@27.4.0)
       '@types/css-tree':
         specifier: ^2.3.11
         version: 2.3.11
@@ -1923,6 +1949,9 @@ importers:
       '@rspack/test-tools':
         specifier: catalog:rspack
         version: 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.8.1(jsdom@27.4.0)
       '@types/fs-extra':
         specifier: 11.0.4
         version: 11.0.4
@@ -1965,6 +1994,9 @@ importers:
       '@rspack/core':
         specifier: catalog:rspack
         version: 1.7.9(@swc/helpers@0.5.21)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.8.1(jsdom@27.4.0)
 
   website:
     dependencies:
@@ -10457,11 +10489,17 @@ packages:
     resolution: {integrity: sha512-o8qghlI8NZHU1lLPrpi2+Uq7abh4GGPpYANlalzWxyWteJOCsr/P+oPBA49TOLu5FTZO4d3F9MnWJfiMo4BkmA==}
     engines: {node: '>=18'}
 
+  wabt@1.0.0-nightly.20180421:
+    resolution: {integrity: sha512-bsu9zk672KACjoabONcAS94IS20prRm05IbiIUGfa8eBpRLjWZv8ugocdinV/ONh0mFMfXrVWkvF1/BNtwIfUw==}
+
   walker@1.0.8:
     resolution: {integrity: sha512-ts/8E8l5b7kY0vlWLewOkDXMmPdLcVV4GmOQLyxuSswIJsweeFZtAsMF7k1Nszz+TYBQrlYRmzOnr398y1JemQ==}
 
   wasm-feature-detect@1.8.0:
     resolution: {integrity: sha512-zksaLKM2fVlnB5jQQDqKXXwYHLQUVH9es+5TOOHwGOVJOCeRBCiPjwSg+3tN2AdTCzjgli4jijCH290kXb/zWQ==}
+
+  wast-loader@1.14.1:
+    resolution: {integrity: sha512-s35gffU7MzyA8nHZapVlYG6KlfSey4ZlZ1Xk//6wmXzogPAykqBMKWUWWBuzVSrrm8dWqNfzcPD0I3z167N72g==}
 
   watchpack@2.5.1:
     resolution: {integrity: sha512-Zn5uXdcFNIA1+1Ei5McRd+iRzfhENPCe7LeABkJtNulSxjma+l7ltNx55BWZkRlwRnpOgHqxnjyaDgJnNXnqzg==}
@@ -13405,6 +13443,7 @@ snapshots:
       rimraf: 5.0.10
       source-map: 0.7.6
       terser-webpack-plugin: 5.3.16(webpack@5.99.9)
+      wast-loader: 1.14.1
       webpack: 5.99.9
       webpack-merge: 6.0.1
       webpack-sources: 3.3.3
@@ -20370,11 +20409,17 @@ snapshots:
     dependencies:
       xml-name-validator: 5.0.0
 
+  wabt@1.0.0-nightly.20180421: {}
+
   walker@1.0.8:
     dependencies:
       makeerror: 1.0.12
 
   wasm-feature-detect@1.8.0: {}
+
+  wast-loader@1.14.1:
+    dependencies:
+      wabt: 1.0.0-nightly.20180421
 
   watchpack@2.5.1:
     dependencies:

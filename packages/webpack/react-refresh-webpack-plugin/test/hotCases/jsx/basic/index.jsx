@@ -2,8 +2,8 @@ import { root } from '@lynx-js/react'
 import { update } from '@lynx-js/test-tools/update.js'
 import { App } from './app.jsx'
 
-const renderContent = vi.fn()
-vi.stubGlobal('__RenderContent', value => {
+const renderContent = rstest.fn()
+rstest.stubGlobal('__RenderContent', value => {
   renderContent(value)
 })
 

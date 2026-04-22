@@ -1,6 +1,6 @@
 import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin';
 
-import { LynxCacheEventsPlugin } from '../../../../src';
+import { LynxCacheEventsPlugin } from '../../../../lib/index.js';
 
 /** @type {import('webpack').Configuration} */
 export default {

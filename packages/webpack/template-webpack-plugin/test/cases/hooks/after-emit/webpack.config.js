@@ -1,6 +1,6 @@
-import { expect } from 'vitest';
+import { expect } from '@rstest/core';
 
-import { LynxEncodePlugin, LynxTemplatePlugin } from '../../../../src';
+import { LynxEncodePlugin, LynxTemplatePlugin } from '../../../../lib/index.js';
 
 /** @type {import('webpack').Configuration} */
 export default {

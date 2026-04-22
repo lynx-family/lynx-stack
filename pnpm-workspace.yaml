@@ -68,6 +68,11 @@ overrides:
   "@rsdoctor/rspack-plugin>@rspack/core": "$@rspack/core"
   "@rsdoctor/types>@rspack/core": "$@rspack/core"
 
+packageExtensions:
+  "@rspack/test-tools@*":
+    dependencies:
+      wast-loader: ^1.14.1
+
 patchedDependencies:
   "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
   "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch"
