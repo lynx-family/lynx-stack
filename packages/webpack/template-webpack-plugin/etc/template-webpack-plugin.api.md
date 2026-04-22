@@ -83,7 +83,9 @@ export interface LynxEncodePluginOptions {
 export class LynxTemplatePlugin {
     constructor(options?: LynxTemplatePluginOptions | undefined);
     apply(compiler: Compiler): void;
-    static convertCSSChunksToMap(cssChunks: string[], plugins: CSS.Plugin[], enableCSSSelector: boolean): {
+    static convertCSSChunksToMap(cssChunks: Array<string | {
+        content: string;
+    }>, plugins: CSS.Plugin[], enableCSSSelector: boolean): {
         cssMap: Record<string, CSS.LynxStyleNode[]>;
         cssSource: Record<string, string>;
     };

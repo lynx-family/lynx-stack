@@ -30,6 +30,10 @@ export function applyDefaultRspeedyConfig(config: Config): Config {
       // from the `output.filename.bundle` field.
       filename: getFilename(config.output?.filename),
 
+      sourceMap: {
+        css: true,
+      },
+
       // inlineScripts defaults to false when chunk splitting is enabled, true otherwise
       inlineScripts: !enableChunkSplitting,
 

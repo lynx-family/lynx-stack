@@ -196,6 +196,34 @@ describe('Plugins - Output', () => {
     `)
   })
 
+  test('output.sourceMap.css: false', async () => {
+    const rsbuild = await createStubRspeedy({
+      output: {
+        sourceMap: {
+          css: false,
+        },
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    const options = getLoaderOptions(config, /css-loader/)
+
+    expect(options).toMatchInlineSnapshot(`
+      {
+        "importLoaders": 1,
+        "modules": {
+          "auto": true,
+          "exportGlobals": false,
+          "exportLocalsConvention": "camelCase",
+          "localIdentName": "[local]-[hash:base64:6]",
+          "namedExport": false,
+        },
+        "sourceMap": false,
+      }
+    `)
+  })
+
   describe('output.cssModules', () => {
     test('defaults', async () => {
       const rsbuild = await createStubRspeedy({})
@@ -214,7 +242,7 @@ describe('Plugins - Output', () => {
             "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
-          "sourceMap": false,
+          "sourceMap": true,
         }
       `)
     })
@@ -242,7 +270,7 @@ describe('Plugins - Output', () => {
             "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
-          "sourceMap": false,
+          "sourceMap": true,
         }
       `)
     })
@@ -270,7 +298,7 @@ describe('Plugins - Output', () => {
             "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
-          "sourceMap": false,
+          "sourceMap": true,
         }
       `)
     })
@@ -298,7 +326,7 @@ describe('Plugins - Output', () => {
             "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
-          "sourceMap": false,
+          "sourceMap": true,
         }
       `)
     })
@@ -328,7 +356,7 @@ describe('Plugins - Output', () => {
             "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
-          "sourceMap": false,
+          "sourceMap": true,
         }
       `)
     })
@@ -355,7 +383,7 @@ describe('Plugins - Output', () => {
             "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
-          "sourceMap": false,
+          "sourceMap": true,
         }
       `)
     })
@@ -383,7 +411,7 @@ describe('Plugins - Output', () => {
             "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
-          "sourceMap": false,
+          "sourceMap": true,
         }
       `)
     })
@@ -411,7 +439,7 @@ describe('Plugins - Output', () => {
             "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
-          "sourceMap": false,
+          "sourceMap": true,
         }
       `)
     })
@@ -439,7 +467,7 @@ describe('Plugins - Output', () => {
             "localIdentName": "[local]-[hash]",
             "namedExport": false,
           },
-          "sourceMap": false,
+          "sourceMap": true,
         }
       `)
     })
@@ -464,7 +492,7 @@ describe('Plugins - Output', () => {
             "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
-          "sourceMap": false,
+          "sourceMap": true,
         }
       `)
     })
@@ -489,7 +517,7 @@ describe('Plugins - Output', () => {
             "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
-          "sourceMap": false,
+          "sourceMap": true,
         }
       `)
     })
@@ -513,7 +541,7 @@ describe('Plugins - Output', () => {
             "localIdentName": "[local]-[hash:base64:6]",
             "namedExport": false,
           },
-          "sourceMap": false,
+          "sourceMap": true,
         }
       `)
     })
@@ -541,7 +569,7 @@ describe('Plugins - Output', () => {
             "localIdentName": "[path][name]__[local]-[hash:base64:8]",
             "namedExport": false,
           },
-          "sourceMap": false,
+          "sourceMap": true,
         }
       `)
     })
