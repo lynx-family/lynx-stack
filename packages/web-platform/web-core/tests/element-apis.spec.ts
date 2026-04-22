@@ -128,6 +128,26 @@ describe('Element APIs', () => {
     expect(mtsGlobalThis.__GetAttributeByName(ret, 'name')).toBe('name');
   });
 
+  test('client component_css_id properly cascades to child element', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const comp = mtsGlobalThis.__CreateComponent(
+      0,
+      'comp1',
+      42,
+      'test_entry',
+      'test_name',
+      'path',
+      {},
+      {},
+    );
+    const compId = mtsGlobalThis.__GetElementUniqueID(comp);
+    const childView = mtsGlobalThis.__CreateElement('view', compId);
+    mtsGlobalThis.__AppendElement(comp, childView);
+    mtsGlobalThis.__AppendElement(root, comp);
+    mtsGlobalThis.__FlushElementTree();
+    expect(rootDom.querySelector(`[${cssIdAttribute}="42"]`)).not.toBeNull();
+  });
+
   test('__CreateView', () => {
     const ret = mtsGlobalThis.__CreateView(0);
     expect(mtsGlobalThis.__GetTag(ret)).toBe('view');
@@ -1380,8 +1400,42 @@ describe('Element APIs', () => {
     const cssID = mtsGlobalThis.__GetAttributeByName(ele, cssIdAttribute);
     const name = mtsGlobalThis.__GetAttributeByName(ele, 'name');
     expect(id).toBe('id2');
-    expect(cssID).toBe('8');
+    expect(cssID).toBeNull();
     expect(name).toBe('name2');
+  });
+
+  test('__UpdateComponentInfo updates componentCSSID', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const comp = mtsGlobalThis.__CreateComponent(
+      0,
+      'comp1',
+      42,
+      'test_entry',
+      'test_name',
+      'path',
+      {},
+      {},
+    );
+
+    mtsGlobalThis.__UpdateComponentInfo(comp, {
+      componentID: 'comp1_new',
+      cssID: 43,
+      entry: 'new_entry',
+      name: 'new_name',
+    });
+
+    const compId = mtsGlobalThis.__GetElementUniqueID(comp);
+    const childView = mtsGlobalThis.__CreateElement('view', compId);
+    mtsGlobalThis.__AppendElement(comp, childView);
+    mtsGlobalThis.__AppendElement(root, comp);
+    mtsGlobalThis.__FlushElementTree();
+
+    expect(rootDom.querySelector(`[${cssIdAttribute}="43"]`)).not.toBeNull();
+
+    // the component itself also gets the attributes updated
+    expect(comp.getAttribute('name')).toBe('new_name');
+    expect(comp.getAttribute('l-e-name')).toBe('new_entry');
+    expect(mtsGlobalThis.__GetComponentID(comp)).toBe('comp1_new');
   });
 
   test('__MarkTemplate_and_Get_Parts', () => {

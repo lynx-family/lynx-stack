@@ -79,7 +79,7 @@ impl MainThreadWasmContext {
     parent_component_unique_id: usize,
     dom: web_sys::HtmlElement,
     dom_ref: js_sys::WeakRef,
-    css_id: Option<i32>,
+    component_css_id: Option<i32>,
     component_id: Option<String>,
   ) -> usize {
     // unique id
@@ -89,12 +89,10 @@ impl MainThreadWasmContext {
     let unique_id = self.unique_id_to_element_map.len();
 
     let css_id = {
-      if let Some(css_id) = css_id {
-        css_id
-      } else if let Some(parent_component_data) =
+      if let Some(parent_component_data) =
         self.get_element_data_by_unique_id(parent_component_unique_id)
       {
-        parent_component_data.borrow().css_id
+        parent_component_data.borrow().component_css_id
       } else {
         0
       }
@@ -106,7 +104,12 @@ impl MainThreadWasmContext {
     if css_id != 0 {
       let _ = dom.set_attribute(constants::CSS_ID_ATTRIBUTE, &css_id.to_string());
     }
-    let element_data = LynxElementData::new(parent_component_unique_id, css_id, component_id);
+    let element_data = LynxElementData::new(
+      parent_component_unique_id,
+      css_id,
+      component_css_id.unwrap_or(0),
+      component_id,
+    );
 
     let element_data = Box::new(element_data);
     self
@@ -136,14 +139,6 @@ impl MainThreadWasmContext {
       }
     }
     None
-  }
-
-  pub fn get_css_id_by_unique_id(&self, unique_id: usize) -> Option<i32> {
-    self
-      .unique_id_to_element_map
-      .get(unique_id)
-      .and_then(|opt| opt.as_ref())
-      .map(|element_data_cell| element_data_cell.borrow().css_id)
   }
 
   pub fn gc(&mut self) {

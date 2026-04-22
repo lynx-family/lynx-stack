@@ -70,4 +70,17 @@ impl MainThreadWasmContext {
       .component_id = component_id;
     Ok(())
   }
+
+  pub fn update_component_css_id(
+    &self,
+    unique_id: usize,
+    component_css_id: i32,
+  ) -> Result<(), JsError> {
+    self
+      .get_element_data_by_unique_id(unique_id)
+      .ok_or_else(|| JsError::new(&format!("Element {unique_id} not found")))?
+      .borrow_mut()
+      .component_css_id = component_css_id;
+    Ok(())
+  }
 }

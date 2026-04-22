@@ -22,13 +22,12 @@ export class MainThreadWasmContext {
     add_dataset(unique_id: number, key: any, value: any): void;
     add_run_worklet_event(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: any | null): void;
     common_event_handler(event: any, bubble_unique_id_path: Uint32Array, event_name: string, is_bubble: boolean): void;
-    create_element_common(parent_component_unique_id: number, dom: HTMLElement, dom_ref: WeakRef<object>, css_id?: number | null, component_id?: string | null): number;
+    create_element_common(parent_component_unique_id: number, dom: HTMLElement, dom_ref: WeakRef<object>, component_css_id?: number | null, component_id?: string | null): number;
     dispatch_event_by_path(bubble_unique_id_path: Uint32Array, event_name: string, is_capture: boolean, serialized_event: any): boolean;
     dispatch_global_bind_event(bubble_unique_id_path: Uint32Array, event_name: string, serialized_event: any): void;
     gc(): void;
     get_component_id(unique_id: number): string | undefined;
     get_config(unique_id: number): object;
-    get_css_id_by_unique_id(unique_id: number): number | undefined;
     get_data_by_key(unique_id: number, key: string): any;
     get_dataset(unique_id: number): object;
     get_dom_by_unique_id(unique_id: number): WeakRef<object> | undefined;
@@ -49,6 +48,7 @@ export class MainThreadWasmContext {
     set_dataset(unique_id: number, dom: HTMLElement, new_dataset: object): void;
     set_page_element_unique_id(unique_id: number): void;
     take_timing_flags(): string[];
+    update_component_css_id(unique_id: number, component_css_id: number): void;
     update_component_id(unique_id: number, component_id?: string | null): void;
     update_css_og_style(unique_id: number, entry_name?: string | null): void;
 }
@@ -208,7 +208,6 @@ export interface InitOutput {
     readonly mainthreadwasmcontext_gc: (a: number) => void;
     readonly mainthreadwasmcontext_get_component_id: (a: number, b: number) => [number, number, number, number];
     readonly mainthreadwasmcontext_get_config: (a: number, b: number) => [number, number, number];
-    readonly mainthreadwasmcontext_get_css_id_by_unique_id: (a: number, b: number) => number;
     readonly mainthreadwasmcontext_get_data_by_key: (a: number, b: number, c: number, d: number) => [number, number, number];
     readonly mainthreadwasmcontext_get_dataset: (a: number, b: number) => [number, number, number];
     readonly mainthreadwasmcontext_get_dom_by_unique_id: (a: number, b: number) => any;
@@ -223,6 +222,7 @@ export interface InitOutput {
     readonly mainthreadwasmcontext_set_dataset: (a: number, b: number, c: any, d: any) => [number, number];
     readonly mainthreadwasmcontext_set_page_element_unique_id: (a: number, b: number) => void;
     readonly mainthreadwasmcontext_take_timing_flags: (a: number) => [number, number];
+    readonly mainthreadwasmcontext_update_component_css_id: (a: number, b: number, c: number) => [number, number];
     readonly mainthreadwasmcontext_update_component_id: (a: number, b: number, c: number, d: number) => [number, number];
     readonly mainthreadwasmcontext_update_css_og_style: (a: number, b: number, c: number, d: number) => [number, number];
     readonly rawstyleinfo_append_import: (a: number, b: number, c: number) => void;
