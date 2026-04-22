@@ -4,6 +4,7 @@
 import { defineConfig } from '@rstest/core';
 
 const config: ReturnType<typeof defineConfig> = defineConfig({
+  name: 'webpack-runtime-globals',
   globals: true,
   include: ['test/**/*.test.ts'],
 });

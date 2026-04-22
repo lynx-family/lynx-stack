@@ -60,6 +60,7 @@ catalogs:
 
   # Rstest monorepo packages
   rstest:
+    "@rstest/coverage-istanbul": "0.2.0"
     "@rstest/core": "0.8.1"
 
 overrides:

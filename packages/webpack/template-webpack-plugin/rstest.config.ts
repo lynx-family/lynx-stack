@@ -8,6 +8,7 @@ import { defineConfig } from '@rstest/core';
 const require = createRequire(import.meta.url);
 
 const config: Parameters<typeof defineConfig>[0] = {
+  name: 'template-webpack-plugin',
   globals: true,
   include: ['test/**/*.{test,spec}.{js,ts}'],
   setupFiles: [
