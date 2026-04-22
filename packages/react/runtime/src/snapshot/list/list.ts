@@ -64,7 +64,7 @@ export function componentAtIndexFactory(
     const platformInfo = childCtx.__listItemPlatformInfo ?? {};
 
     // The lifecycle of this `__extraProps.isReady`:
-    //   0 -> Promise<number> -> 1
+    // 0 -> Promise<number> -> 1
     // 0: The initial state, the list-item is not ready yet, we will send a event to background
     //    when `componentAtIndex` is called on it
     // Promise<number>: A promise that will be resolved when the list-item is ready
@@ -82,11 +82,13 @@ export function componentAtIndexFactory(
         );
       }
 
+      // send a event to background to render the list-item
       __OnLifecycleEvent([LifecycleConstant.publishEvent, {
         handlerName: `${childCtx.__id}:__extraProps:onComponentAtIndex`,
         data: {},
       }]);
 
+      // use a promise to track the list-item's readiness
       let p: Promise<number>;
       return (p = new Promise<number>((resolve) => {
         Object.defineProperty(childCtx.__extraProps, 'isReady', {
@@ -153,6 +155,7 @@ export function componentAtIndexFactory(
       if (!oldCtx.__id) {
         oldCtx.tearDown();
       } else if (oldCtx.__extraProps?.['isReady'] === 1) {
+        // send a event to background to recycle the list-item
         __OnLifecycleEvent([LifecycleConstant.publishEvent, {
           handlerName: `${oldCtx.__id}:__extraProps:onRecycleComponent`,
           data: {},

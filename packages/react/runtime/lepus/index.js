@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { jsx as createVNode } from './jsx-runtime/index.js';
+import { eventRegExp } from '@lynx-js/react/internal';
 
 const slice = /* @__PURE__ */ [].slice;
 
@@ -22,6 +23,7 @@ export function createElement(type, props, children) {
   for (i in props) {
     if (i == 'key') key = props[i];
     else if (i == 'ref') ref = props[i];
+    else if (eventRegExp.test(i) && typeof props[i] === 'function') normalizedProps[i] = 1;
     else normalizedProps[i] = props[i];
   }
 

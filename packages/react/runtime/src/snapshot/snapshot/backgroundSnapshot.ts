@@ -10,7 +10,7 @@
 
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { snapshotManager } from './definition.js';
+import { createRuntimeSnapshot, snapshotManager } from './definition.js';
 import type { Snapshot } from './definition.js';
 import { DynamicPartType } from './dynamicPartType.js';
 import { applyRef, clearQueuedRefs, getRefFromValue, queueRefAttrUpdate } from './ref.js';
@@ -19,7 +19,7 @@ import { snapshotCreatorMap } from './snapshot.js';
 import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { transformSpread } from './spread.js';
 import type { SerializedSnapshotInstance } from './types.js';
-import { traverseSnapshotInstance } from './utils.js';
+import { isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { clearSnapshotVNodeSource, getSnapshotVNodeSource, moveSnapshotVNodeSource } from '../debug/vnodeSource.js';
@@ -88,6 +88,13 @@ export const backgroundSnapshotInstanceManager: {
     if (!ctx) {
       return null;
     }
+    /**
+     * 1. normal event
+     *  `${ctx.__id}:${expIndex}:${spreadKey}`
+     * 2. defer list event
+     *   ${ctx.__id}:__extraProps:onRecycleComponent`
+     *   ${ctx.__id}:__extraProps:onComponentAtIndex`
+     */
     const spreadKey = res[2];
     if (res[1] === '__extraProps') {
       if (spreadKey) {
@@ -145,8 +152,11 @@ export class BackgroundSnapshotInstance {
     if (!snapshotManager.values.has(type) && type !== 'div') {
       if (snapshotCreatorMap[type]) {
         snapshotCreatorMap[type](type);
-      } else {
+      } else if (isCompiledSnapshot(type)) {
         throw new Error('BackgroundSnapshot not found: ' + type);
+      } else {
+        // add runtime snapshot to backgroundSnapshotInstanceManager
+        createRuntimeSnapshot(type);
       }
     }
     this.__snapshot_def = snapshotManager.values.get(type)!;
@@ -157,7 +167,7 @@ export class BackgroundSnapshotInstance {
   }
 
   __id: number;
-  __values: any[] | undefined;
+  __values: unknown[] | undefined;
   __snapshot_def: Snapshot;
   __extraProps?: Record<string, unknown> | undefined;
   __slotIndex: number = 0;
@@ -285,7 +295,7 @@ export class BackgroundSnapshotInstance {
         traverseSnapshotInstance(node, v => {
           if (v.__values) {
             v.__snapshot_def.refAndSpreadIndexes?.forEach((i) => {
-              const value = v.__values![i] as unknown;
+              const value = v.__values![i];
               if (value && (typeof value === 'object' || typeof value === 'function')) {
                 if ('__spread' in value && 'ref' in value && value.ref) {
                   applyRef(value.ref as Ref, null);
@@ -377,7 +387,41 @@ export class BackgroundSnapshotInstance {
     }
 
     if (typeof key === 'string') {
-      (this.__extraProps ??= {})[key] = value;
+      const oldValue = (this.__extraProps ??= {})[key];
+      this.__extraProps[key] = value;
+      // dynamic snapshot should update by __spread and spreadIndex
+      const spreadIndex = this.__snapshot_def?.spreadIndex;
+      if (spreadIndex !== undefined) {
+        if (!isDirectOrDeepEqual(oldValue, value)) {
+          this.__values ??= [];
+          const oldSpread = this.__values[spreadIndex] as Record<string, unknown> | undefined;
+          const newSpread = {
+            ...oldSpread,
+            __spread: true,
+            [key]: value,
+          };
+          this.__values[spreadIndex] = newSpread;
+          if (__globalSnapshotPatch) {
+            const { needUpdate, valueToCommit } = this.setAttributeImpl(
+              newSpread,
+              oldSpread,
+              spreadIndex,
+            );
+            if (needUpdate) {
+              __globalSnapshotPatch.push(
+                SnapshotOperation.SetAttribute,
+                this.__id,
+                spreadIndex,
+                valueToCommit,
+              );
+            }
+          }
+        }
+        if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+          profileEnd();
+        }
+        return;
+      }
     } else {
       // old path (`this.setAttribute(0, xxx)`)
       // is reserved as slow path
@@ -489,6 +533,7 @@ export function hydrate(
     ) => {
       hydrationMap.set(after.__id, before.id);
       backgroundSnapshotInstanceManager.updateId(after.__id, before.id);
+      // handle value by index
       after.__values?.forEach((value: unknown, index) => {
         // render with different root would cause different values length
         const old: unknown = before.values?.[index];
@@ -559,38 +604,46 @@ export function hydrate(
         }
       });
 
+      // handle extraProps as attributes and set by key
       if (after.__extraProps) {
         for (const key in after.__extraProps) {
           const value = after.__extraProps[key];
           const old = before.extraProps?.[key];
-          if (!isDirectOrDeepEqual(value, old)) {
-            if (shouldProfile) {
-              profileStart('ReactLynx::hydrate::setAttribute', {
-                args: {
-                  id: String(after.__id),
-                  snapshotType: String(after.type),
-                  source: getSnapshotVNodeSource(after.__id) ?? '',
-                  dynamicPartIndex: key,
-                  valueType: value === null ? 'null' : typeof value,
-                },
-              });
-              try {
+          const isEqual = isDirectOrDeepEqual(value, old);
+          if (!isEqual) {
+            const spreadIndex = after.__snapshot_def.spreadIndex;
+            // eslint-disable-next-line unicorn/no-negated-condition
+            if (spreadIndex !== undefined) {
+              after.setAttribute(key, value);
+            } else {
+              if (shouldProfile) {
+                profileStart('ReactLynx::hydrate::setAttribute', {
+                  args: {
+                    id: String(after.__id),
+                    snapshotType: String(after.type),
+                    source: getSnapshotVNodeSource(after.__id) ?? '',
+                    dynamicPartIndex: key,
+                    valueType: value === null ? 'null' : typeof value,
+                  },
+                });
+                try {
+                  __globalSnapshotPatch!.push(
+                    SnapshotOperation.SetAttribute,
+                    after.__id,
+                    key,
+                    value,
+                  );
+                } finally {
+                  profileEnd();
+                }
+              } else {
                 __globalSnapshotPatch!.push(
                   SnapshotOperation.SetAttribute,
                   after.__id,
                   key,
                   value,
                 );
-              } finally {
-                profileEnd();
               }
-            } else {
-              __globalSnapshotPatch!.push(
-                SnapshotOperation.SetAttribute,
-                after.__id,
-                key,
-                value,
-              );
             }
           }
         }

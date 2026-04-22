@@ -29,6 +29,7 @@ export const {
   __pageId,
   __root,
   createSnapshot,
+  eventRegExp,
   loadDynamicJS,
   loadLazyBundle,
   loadWorkletRuntime,

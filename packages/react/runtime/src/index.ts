@@ -11,7 +11,6 @@ import {
   PureComponent,
   cloneElement,
   createContext,
-  createElement,
   createRef,
   forwardRef,
   isValidElement,
@@ -32,6 +31,7 @@ import {
   useRef,
   useState,
 } from './core/hooks/react.js';
+import { createElement } from './snapshot/lynx/element.js';
 import { Suspense } from './snapshot/lynx/suspense.js';
 
 export { Component, createContext } from 'preact';
