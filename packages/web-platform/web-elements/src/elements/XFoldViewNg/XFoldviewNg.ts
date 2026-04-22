@@ -8,6 +8,7 @@ import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { XFoldviewNgEvents } from './XFoldviewNgEvents.js';
 import { scrollContainerDom } from '../common/constants.js';
 import type { XFoldviewSlotNg } from './XFoldviewSlotNg.js';
+
 import { LinearContainer } from '../../compat/index.js';
 
 export const scrollableLength = Symbol('scrollableLength');
