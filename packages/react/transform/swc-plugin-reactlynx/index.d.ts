@@ -27,6 +27,24 @@ export interface JsxTransformerConfig {
   isDynamicComponent?: boolean;
 }
 
+/** @internal */
+export interface ElementTemplateConfig {
+  /** @internal */
+  preserveJsx: boolean;
+  /** @internal */
+  runtimePkg: string;
+  /** @internal */
+  jsxImportSource?: string;
+  /** @internal */
+  filename: string;
+  /** @internal */
+  target: 'LEPUS' | 'JS' | 'MIXED';
+  /** @internal */
+  enableUiSourceMap?: boolean;
+  /** @internal */
+  isDynamicComponent?: boolean;
+}
+
 /**
  * {@inheritdoc PluginReactLynxOptions.shake}
  * @public
@@ -238,6 +256,7 @@ export interface ReactLynxTransformOptions {
   filename?: string;
   cssScope: boolean | CssScopeVisitorConfig;
   snapshot?: boolean | JsxTransformerConfig;
+  elementTemplate?: boolean | ElementTemplateConfig;
   engineVersion?: string;
   shake: boolean | ShakeVisitorConfig;
   defineDCE: boolean | DefineDceVisitorConfig;

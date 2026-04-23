@@ -1,5 +1,5 @@
 [package]
-name = "swc_plugin_snapshot"
+name = "swc_plugin_element_template"
 version = "0.1.0"
 edition = "2021"
 
@@ -24,3 +24,6 @@ swc_plugins_shared = { path = "../swc_plugins_shared" }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(swc_ast_unknown)'] }
+
+[dev-dependencies]
+insta = { version = "1.34", features = ["json"] }

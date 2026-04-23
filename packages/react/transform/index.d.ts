@@ -21,7 +21,7 @@ export interface TransformNodiffBundleOutput {
 }
 /**
  * This is esbuild's PartialMessage definition.
- * https://github.com/evanw/esbuild/blob/043ab306c490f692c68e8d254bbf00b6468be87d/lib/shared/types.ts#L421
+ * https://github.com/evanw/esbuild/blob/043ab306c490f692c68e8d254bbf00b6468be87d7/lib/shared/types.ts#L421
  */
 export interface PartialMessage {
   id?: string
@@ -396,7 +396,7 @@ export interface DefineDceVisitorConfig {
    *       defineDCE: {
    *         define: {
    *           __FOO__: 'false',
-   *           'process.env.PLATFORM': '"lynx"',
+   *           'process.env.PLATFORM': '\"lynx\"',
    *         },
    *       },
    *     })
@@ -598,8 +598,23 @@ export interface JsxTransformerConfig {
   enableUiSourceMap?: boolean
   /** @internal */
   isDynamicComponent?: boolean
+}
+/** @internal */
+export interface ElementTemplateConfig {
   /** @internal */
-  enableElementTemplate?: boolean
+  preserveJsx: boolean
+  /** @internal */
+  runtimePkg: string
+  /** @internal */
+  jsxImportSource?: string
+  /** @internal */
+  filename: string
+  /** @internal */
+  target: 'LEPUS' | 'JS' | 'MIXED'
+  /** @internal */
+  enableUiSourceMap?: boolean
+  /** @internal */
+  isDynamicComponent?: boolean
 }
 export interface WorkletVisitorConfig {
   /**
@@ -637,6 +652,7 @@ export interface TransformNodiffOptions {
   isModule?: boolean | 'unknown'
   cssScope: boolean | CssScopeVisitorConfig
   snapshot?: boolean | JsxTransformerConfig
+  elementTemplate?: boolean | ElementTemplateConfig
   engineVersion?: string
   shake: boolean | ShakeVisitorConfig
   compat: boolean | CompatVisitorConfig

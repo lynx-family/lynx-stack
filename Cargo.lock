@@ -1778,6 +1778,7 @@ dependencies = [
  "swc_plugin_define_dce",
  "swc_plugin_directive_dce",
  "swc_plugin_dynamic_import",
+ "swc_plugin_element_template",
  "swc_plugin_inject",
  "swc_plugin_list",
  "swc_plugin_shake",
@@ -3227,6 +3228,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "swc_plugin_element_template"
+version = "0.1.0"
+dependencies = [
+ "convert_case 0.8.0",
+ "hex",
+ "insta",
+ "napi",
+ "napi-derive",
+ "once_cell",
+ "regex",
+ "serde",
+ "serde_json",
+ "sha-1",
+ "swc_core",
+ "swc_plugins_shared",
+]
+
+[[package]]
 name = "swc_plugin_inject"
 version = "0.1.0"
 dependencies = [
@@ -3286,6 +3305,7 @@ dependencies = [
  "swc_plugin_define_dce",
  "swc_plugin_directive_dce",
  "swc_plugin_dynamic_import",
+ "swc_plugin_element_template",
  "swc_plugin_inject",
  "swc_plugin_list",
  "swc_plugin_shake",
@@ -3322,7 +3342,6 @@ version = "0.1.0"
 dependencies = [
  "convert_case 0.8.0",
  "hex",
- "insta",
  "napi",
  "napi-derive",
  "once_cell",
