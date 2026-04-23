@@ -8,21 +8,117 @@ import { fileURLToPath } from 'node:url';
 
 import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping';
 import type { SourceMapInput } from '@jridgewell/trace-mapping';
+import type { Compilation } from 'webpack';
 
 import type * as CSS from '@lynx-js/css-serializer';
 
+/**
+ * A CSS diagnostic emitted by TASM during template encode.
+ *
+ * @public
+ */
 export interface TasmCSSDiagnostic {
+  /**
+   * The diagnostic category, such as `property`.
+   */
   type?: string | undefined;
+  /**
+   * The unsupported CSS syntax name, when TASM reports one.
+   */
   name?: string | undefined;
+  /**
+   * The generated CSS line reported by TASM.
+   */
   line: number;
+  /**
+   * The generated CSS column reported by TASM.
+   */
   column: number;
 }
 
+/**
+ * A TASM CSS diagnostic with a formatted message and optional source map
+ * location.
+ *
+ * @public
+ */
 export interface ResolvedTasmCSSDiagnostic extends TasmCSSDiagnostic {
+  /**
+   * The warning message suitable for webpack diagnostics.
+   */
   message: string;
+  /**
+   * The original source file resolved from the CSS source map.
+   */
   sourceFile?: string | undefined;
+  /**
+   * The original source line resolved from the CSS source map.
+   */
   sourceLine?: number | undefined;
+  /**
+   * The original source column resolved from the CSS source map.
+   */
   sourceColumn?: number | undefined;
+}
+
+/**
+ * Options for {@link processTasmCSSDiagnostics}.
+ *
+ * @public
+ */
+export interface ProcessTasmCSSDiagnosticsOptions {
+  /**
+   * The raw `css_diagnostics` value returned by TASM.
+   */
+  cssDiagnostics: unknown;
+  /**
+   * The webpack compilation containing the main CSS asset.
+   */
+  compilation: Compilation;
+  /**
+   * The webpack compiler context used to resolve relative source paths.
+   */
+  context: string;
+  /**
+   * A mutable set used to skip diagnostics that were already emitted.
+   */
+  emittedWarnings?: Set<string> | undefined;
+  /**
+   * A file existence check used before attaching a mapped source location.
+   */
+  fileExists?: ((path: string) => boolean) | undefined;
+}
+
+/**
+ * Parses, source-map-resolves, and deduplicates TASM CSS diagnostics.
+ *
+ * @public
+ */
+export function processTasmCSSDiagnostics({
+  cssDiagnostics,
+  compilation,
+  context,
+  emittedWarnings,
+  fileExists,
+}: ProcessTasmCSSDiagnosticsOptions): ResolvedTasmCSSDiagnostic[] {
+  const diagnostics = extractTasmCSSDiagnostics(cssDiagnostics);
+  if (diagnostics.length === 0) {
+    return [];
+  }
+
+  const resolveOptions: Parameters<typeof resolveTasmCSSDiagnostics>[0] = {
+    cssDiagnostics: diagnostics,
+    mainCSSSourceMap: getMainCSSSourceMap(compilation),
+    context,
+  };
+  if (fileExists !== undefined) {
+    resolveOptions.fileExists = fileExists;
+  }
+
+  return dedupeTasmCSSDiagnostics(
+    resolveTasmCSSDiagnostics(resolveOptions),
+    emittedWarnings,
+  );
 }
 
 export function extractTasmCSSDiagnostics(value: unknown): TasmCSSDiagnostic[] {
@@ -108,7 +204,7 @@ export function resolveTasmCSSDiagnostics({
 
 export function dedupeTasmCSSDiagnostics<T extends ResolvedTasmCSSDiagnostic>(
   diagnostics: T[],
-  seen: Set<string> = new Set(),
+  seen: Set<string> = new Set<string>(),
 ): T[] {
   return diagnostics.filter(diagnostic => {
     const line = diagnostic.sourceLine ?? diagnostic.line;
@@ -127,6 +223,35 @@ export function dedupeTasmCSSDiagnostics<T extends ResolvedTasmCSSDiagnostic>(
     seen.add(key);
     return true;
   });
+}
+
+type Asset = ReturnType<Compilation['getAssets']>[number];
+
+function normalizeCSSSourceMap(
+  sourceMap: ReturnType<Asset['source']['map']> | undefined,
+): CSS.CSSSourceMap | undefined {
+  if (!sourceMap || Array.isArray(sourceMap)) {
+    return undefined;
+  }
+
+  return sourceMap;
+}
+
+export function getMainCSSSourceMap(
+  compilation: Compilation,
+): CSS.CSSSourceMap | undefined {
+  for (const asset of compilation.getAssets()) {
+    if (!asset.name.endsWith('.css')) {
+      continue;
+    }
+
+    const sourceMap = normalizeCSSSourceMap(asset.source.map?.());
+    if (sourceMap) {
+      return sourceMap;
+    }
+  }
+
+  return undefined;
 }
 
 function normalizeTasmCSSDiagnostic(value: unknown): TasmCSSDiagnostic | null {

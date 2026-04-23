@@ -1,6 +1,6 @@
 import { CssExtractRspackPlugin } from '@rspack/core';
 
-import { LynxEncodePlugin, LynxTemplatePlugin } from '../../../../src';
+import { LynxEncodePlugin, LynxTemplatePlugin } from '../../../../lib/index.js';
 
 /** @type {import('@rspack/core').Configuration} */
 export default {

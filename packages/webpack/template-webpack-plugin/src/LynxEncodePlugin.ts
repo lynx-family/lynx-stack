@@ -2,15 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { Chunk, Compilation, Compiler } from 'webpack';
+import type { Chunk, Compiler } from 'webpack';
 
-import type * as CSS from '@lynx-js/css-serializer';
-
-import {
-  dedupeTasmCSSDiagnostics,
-  extractTasmCSSDiagnostics,
-  resolveTasmCSSDiagnostics,
-} from './cssDiagnostics.js';
+import { processTasmCSSDiagnostics } from './cssDiagnostics.js';
 import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
 import { getRequireModuleAsyncCachePolyfill } from './polyfill/requireModuleAsync.js';
 
@@ -240,17 +234,13 @@ export class LynxEncodePluginImpl {
           encode(encodeOptions),
         );
 
-        const diagnostics = extractTasmCSSDiagnostics(css_diagnostics);
-        if (diagnostics.length > 0) {
-          const resolvedDiagnostics = dedupeTasmCSSDiagnostics(
-            resolveTasmCSSDiagnostics({
-              cssDiagnostics: diagnostics,
-              mainCSSSourceMap: getMainCSSSourceMap(compilation),
-              context: compiler.context,
-            }),
-            emittedCSSDiagnosticWarnings,
-          );
-
+        const resolvedDiagnostics = processTasmCSSDiagnostics({
+          cssDiagnostics: css_diagnostics,
+          compilation,
+          context: compiler.context,
+          emittedWarnings: emittedCSSDiagnosticWarnings,
+        });
+        if (resolvedDiagnostics.length > 0) {
           resolvedDiagnostics.forEach((diagnostic) => {
             const webpackWarning = new compiler.webpack.WebpackError(
               diagnostic.message,
@@ -372,35 +362,6 @@ export class LynxEncodePluginImpl {
   }
 
   protected options: Required<LynxEncodePluginOptions>;
-}
-
-type Asset = ReturnType<Compilation['getAssets']>[number];
-
-function normalizeCSSSourceMap(
-  sourceMap: ReturnType<Asset['source']['map']> | undefined,
-): CSS.CSSSourceMap | undefined {
-  if (!sourceMap || Array.isArray(sourceMap)) {
-    return undefined;
-  }
-
-  return sourceMap;
-}
-
-function getMainCSSSourceMap(
-  compilation: Compilation,
-): CSS.CSSSourceMap | undefined {
-  for (const asset of compilation.getAssets()) {
-    if (!asset.name.endsWith('.css')) {
-      continue;
-    }
-
-    const sourceMap = normalizeCSSSourceMap(asset.source.map?.());
-    if (sourceMap) {
-      return sourceMap;
-    }
-  }
-
-  return undefined;
 }
 
 export function isDebug(): boolean {

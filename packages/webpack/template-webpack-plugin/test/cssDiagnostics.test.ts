@@ -2,12 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, test } from '@rstest/core';
+import type { Compilation } from 'webpack';
 
 import type { CSSSourceMap } from '@lynx-js/css-serializer';
 
 import {
   dedupeTasmCSSDiagnostics,
   extractTasmCSSDiagnostics,
+  processTasmCSSDiagnostics,
   resolveTasmCSSDiagnostics,
 } from '../src/cssDiagnostics.js';
 
@@ -169,5 +171,52 @@ describe('cssDiagnostics', () => {
       diagnostic,
     ]);
     expect(dedupeTasmCSSDiagnostics([diagnostic], seen)).toEqual([]);
+  });
+
+  test('process tasm css diagnostics from raw value to deduped diagnostics', () => {
+    const sourceMap: CSSSourceMap = {
+      version: 3,
+      file: '.rspeedy/main/main.css',
+      sources: ['webpack:/src/app.css'],
+      sourcesContent: [
+        '.foo {\n  unknown-prop: red;\n}\n',
+      ],
+      names: [],
+      mappings: 'AAAA;EACE,kBAAkB;AACpB',
+    };
+    const seen = new Set<string>();
+    const rawDiagnostics =
+      '[{"type":"property","name":"unknown-prop","line":2,"column":10},{"type":"property","name":"unknown-prop","line":2,"column":10}]';
+
+    expect(
+      processTasmCSSDiagnostics({
+        cssDiagnostics: rawDiagnostics,
+        compilation: {
+          getAssets: () => [
+            {
+              name: 'main.css',
+              source: {
+                map: () => sourceMap,
+              },
+            },
+          ],
+        } as Compilation,
+        context: '/workspace/app',
+        emittedWarnings: seen,
+        fileExists: () => true,
+      }),
+    ).toEqual([
+      {
+        type: 'property',
+        name: 'unknown-prop',
+        line: 2,
+        column: 10,
+        message:
+          'Unsupported property "unknown-prop" was removed during template encode.',
+        sourceFile: '/workspace/app/src/app.css',
+        sourceLine: 2,
+        sourceColumn: 3,
+      },
+    ]);
   });
 });
