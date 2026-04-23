@@ -120,6 +120,34 @@ export interface LynxTemplatePluginOptions {
 }
 
 // @public
+export function processTasmCSSDiagnostics(input: ProcessTasmCSSDiagnosticsOptions): ResolvedTasmCSSDiagnostic[];
+
+// @public
+export interface ProcessTasmCSSDiagnosticsOptions {
+    compilation: Compilation;
+    context: string;
+    cssDiagnostics: unknown;
+    emittedWarnings?: Set<string> | undefined;
+    fileExists?: ((path: string) => boolean) | undefined;
+}
+
+// @public
+export interface ResolvedTasmCSSDiagnostic extends TasmCSSDiagnostic {
+    message: string;
+    sourceColumn?: number | undefined;
+    sourceFile?: string | undefined;
+    sourceLine?: number | undefined;
+}
+
+// @public
+export interface TasmCSSDiagnostic {
+    column: number;
+    line: number;
+    name?: string | undefined;
+    type?: string | undefined;
+}
+
+// @public
 export interface TemplateHooks {
     // @alpha
     afterEmit: AsyncSeriesWaterfallHook<{
