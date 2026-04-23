@@ -170,17 +170,20 @@ test('setState changes jsx', async () => {
         | 7(__snapshot_c1db7_test_3): undefined"
   `);
   lynxTestingEnv.switchToMainThread();
-  expect(__root.constructor.name).toMatchInlineSnapshot(`"SnapshotInstance"`);
-  expect(printSnapshotInstanceToString(__root)).toMatchInlineSnapshot(`
-    "| -1(root): undefined
-      | 2(__snapshot_c1db7_test_4): ["2:0:"]
-        | 3(__snapshot_c1db7_test_1): undefined
-        | 4(__snapshot_c1db7_test_2): undefined
-        | 5(__snapshot_c1db7_test_2): undefined
-        | 6(__snapshot_c1db7_test_2): undefined
-        | 7(__snapshot_c1db7_test_3): undefined"
-  `);
-  lynxTestingEnv.switchToBackgroundThread();
+  try {
+    expect(__root.constructor.name).toMatchInlineSnapshot(`"SnapshotInstance"`);
+    expect(printSnapshotInstanceToString(__root)).toMatchInlineSnapshot(`
+      "| -1(root): undefined
+        | 2(__snapshot_c1db7_test_4): ["2:0:"]
+          | 3(__snapshot_c1db7_test_1): undefined
+          | 4(__snapshot_c1db7_test_2): undefined
+          | 5(__snapshot_c1db7_test_2): undefined
+          | 6(__snapshot_c1db7_test_2): undefined
+          | 7(__snapshot_c1db7_test_3): undefined"
+    `);
+  } finally {
+    lynxTestingEnv.switchToBackgroundThread();
+  }
 
   const view = await findByTestId('view');
   fireEvent.tap(view);
@@ -310,17 +313,20 @@ test('setState changes jsx', async () => {
         | 7(__snapshot_c1db7_test_3): undefined"
   `);
   lynxTestingEnv.switchToMainThread();
-  expect(__root.constructor.name).toMatchInlineSnapshot(`"SnapshotInstance"`);
-  expect(printSnapshotInstanceToString(__root)).toMatchInlineSnapshot(`
-    "| -1(root): undefined
-      | 2(__snapshot_c1db7_test_4): ["2:0:"]
-        | 8(__snapshot_c1db7_test_2): undefined
-        | 9(__snapshot_c1db7_test_1): undefined
-        | 10(__snapshot_c1db7_test_1): undefined
-        | 11(__snapshot_c1db7_test_1): undefined
-        | 7(__snapshot_c1db7_test_3): undefined"
-  `);
-  lynxTestingEnv.switchToBackgroundThread();
+  try {
+    expect(__root.constructor.name).toMatchInlineSnapshot(`"SnapshotInstance"`);
+    expect(printSnapshotInstanceToString(__root)).toMatchInlineSnapshot(`
+      "| -1(root): undefined
+        | 2(__snapshot_c1db7_test_4): ["2:0:"]
+          | 8(__snapshot_c1db7_test_2): undefined
+          | 9(__snapshot_c1db7_test_1): undefined
+          | 10(__snapshot_c1db7_test_1): undefined
+          | 11(__snapshot_c1db7_test_1): undefined
+          | 7(__snapshot_c1db7_test_3): undefined"
+    `);
+  } finally {
+    lynxTestingEnv.switchToBackgroundThread();
+  }
 });
 
 test('cross-slot keyed move: E is placed before A with correct beforeId in patch', async () => {
