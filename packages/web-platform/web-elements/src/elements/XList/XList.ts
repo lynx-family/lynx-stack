@@ -9,6 +9,7 @@ import { XListEvents } from './XListEvents.js';
 import { XListWaterfall } from './XListWaterfall.js';
 import { CommonEventsAndMethods } from '../common/CommonEventsAndMethods.js';
 import { commonComponentEventSetting } from '../common/commonEventInitConfiguration.js';
+import { scrollContainerDom } from '../common/constants.js';
 import { templateXList } from '../htmlTemplates.js';
 
 @Component<typeof XList>(
@@ -52,6 +53,10 @@ export class XList extends HTMLElement {
 
   override get scrollWidth() {
     return this.#getListContainer().scrollWidth;
+  }
+
+  get [scrollContainerDom]() {
+    return this.#getListContainer();
   }
 
   get __scrollTop() {
