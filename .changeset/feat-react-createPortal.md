@@ -18,4 +18,19 @@ function App() {
 }
 ```
 
-The `portal-container` element must have no children. Refs must come from a ReactLynx element — `lynx.createSelectorQuery()` / third-party refs are rejected. `null`/`undefined` container renders nothing.
+The `portal-container` element must have no children. Refs must come from a ReactLynx element — `lynx.createSelectorQuery()` / third-party refs are rejected.
+
+You can also pass the framework-internal `__root` directly to render at the page root:
+
+```tsx
+import { __root } from '@lynx-js/react/internal';
+
+function App() {
+  return (
+    <view>
+      <text>in-tree</text>
+      {createPortal(<text>under page root</text>, __root)}
+    </view>
+  );
+}
+```

@@ -29,11 +29,6 @@ afterEach(() => {
 });
 
 describe('createPortal', () => {
-  it('returns null when container is null or undefined', () => {
-    expect(createPortal(<text>x</text>, null)).toBeNull();
-    expect(createPortal(<text>x</text>, undefined)).toBeNull();
-  });
-
   it('throws when container is not a ReactLynx ref', () => {
     expect(() => createPortal(<text>x</text>, {}))
       .toThrowErrorMatchingInlineSnapshot(
@@ -64,6 +59,18 @@ describe('createPortal', () => {
     render(<App />, __root);
 
     const vnode = createPortal(<text>x</text>, ref.current);
+    expect(vnode).not.toBeNull();
+    expect(vnode.type).toBeTypeOf('function');
+  });
+
+  it('accepts `__root` as a container, bypassing the portal-container slot-shape check', () => {
+    const App = () => <view />;
+    __root.__jsx = <App />;
+    renderPage();
+    globalEnvManager.switchToBackground();
+    render(<App />, __root);
+
+    const vnode = createPortal(<text>x</text>, __root);
     expect(vnode).not.toBeNull();
     expect(vnode.type).toBeTypeOf('function');
   });

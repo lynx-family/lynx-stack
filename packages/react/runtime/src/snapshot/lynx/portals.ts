@@ -9,19 +9,33 @@ import type { NodesRef } from '@lynx-js/types';
 
 import { __DynamicPartSlotV2 } from '../../internal.js';
 import { refProxyToBackgroundSnapshotInstance } from '../refProxyBackgroundSnapshotInstance.js';
+import { BackgroundSnapshotInstance } from '../snapshot/backgroundSnapshot.js';
+import { SnapshotInstance } from '../snapshot/snapshot.js';
 
 /**
  * Renders `children` into a target Lynx element instead of into the parent
- * in the JSX tree. The target must be a ref obtained from a ReactLynx
- * element marked with the `portal-container` attribute. A `null` or
- * `undefined` container renders nothing.
+ * in the JSX tree. The target is either:
+ * - a ref obtained from a ReactLynx element marked with the `portal-container`
+ *   attribute, or
+ * - the framework-internal `__root`, imported from `@lynx-js/react/internal`.
  *
  * @public
  */
 export const createPortal: (
   vnode: ComponentChildren,
-  containerNodesRef: NodesRef,
+  containerNodesRef: NodesRef | BackgroundSnapshotInstance | SnapshotInstance,
 ) => VNode<any> = (vnode, containerNodesRef) => {
+  // Fast path: framework-internal snapshot instances (e.g. `__root`) are not
+  // minted as `RefProxy`s and do not have the `portal-container` slot shape.
+  // They are trusted containers, so skip both the RefProxy lookup and the
+  // slot-shape check.
+  if (
+    containerNodesRef instanceof BackgroundSnapshotInstance
+    || containerNodesRef instanceof SnapshotInstance
+  ) {
+    return preactCreatePortal(vnode, containerNodesRef as unknown as ContainerNode);
+  }
+
   const getter = refProxyToBackgroundSnapshotInstance.get(containerNodesRef);
   if (!getter) {
     throw new Error(
