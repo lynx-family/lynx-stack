@@ -13,7 +13,7 @@ import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 import { snapshotManager } from './definition.js';
 import type { Snapshot } from './definition.js';
 import { DynamicPartType } from './dynamicPartType.js';
-import { applyRef, clearQueuedRefs, queueRefAttrUpdate } from './ref.js';
+import { applyRef, clearQueuedRefs, getRefFromValue, queueRefAttrUpdate } from './ref.js';
 import type { Ref } from './ref.js';
 import { snapshotCreatorMap } from './snapshot.js';
 import { hydrationMap } from './snapshotInstanceHydrationMap.js';
@@ -362,14 +362,11 @@ export class BackgroundSnapshotInstance {
         }
       } else {
         this.__snapshot_def.refAndSpreadIndexes?.forEach((index) => {
+          // In first render, this.__values is undefined.
+          // In next rerenders before hydration, this.__values is not undefined.
+          const oldValue: unknown = this.__values?.[index];
           const v = (value as unknown[])[index];
-          if (v && (typeof v === 'object' || typeof v === 'function')) {
-            if ('__spread' in v && 'ref' in v) {
-              queueRefAttrUpdate(null, v.ref as Ref, this.__id, index);
-            } else if ('__ref' in v) {
-              queueRefAttrUpdate(null, v as Ref, this.__id, index);
-            }
-          }
+          queueRefAttrUpdate(getRefFromValue(oldValue), getRefFromValue(v), this.__id, index);
         });
       }
       this.__values = value as unknown[];

@@ -80,6 +80,19 @@ function updateRef(
   }
 }
 
+function getRefFromValue(val: unknown): Ref | null {
+  if (!val || (typeof val !== 'object' && typeof val !== 'function')) {
+    return null;
+  }
+  if ('__spread' in val && 'ref' in val) {
+    return ((val as { ref?: Ref | null }).ref) ?? null;
+  }
+  if ('__ref' in val) {
+    return val as Ref;
+  }
+  return null;
+}
+
 function transformRef(ref: unknown): Ref | null | undefined {
   if (ref === undefined || ref === null) {
     return ref;
@@ -136,4 +149,14 @@ function clearQueuedRefs(): void {
 /**
  * @internal
  */
-export { queueRefAttrUpdate, updateRef, unref, transformRef, applyRef, applyQueuedRefs, clearQueuedRefs, type Ref };
+export {
+  queueRefAttrUpdate,
+  updateRef,
+  unref,
+  transformRef,
+  applyRef,
+  applyQueuedRefs,
+  clearQueuedRefs,
+  getRefFromValue,
+  type Ref,
+};
