@@ -4,6 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import type { AttributeReactiveClass } from '../../element-reactive/index.js';
+import { scrollContainerDom } from '../common/constants.js';
 import { isHeaderShowing, type XFoldviewNg } from './XFoldviewNg.js';
 import type { XFoldviewSlotNg } from './XFoldviewSlotNg.js';
 export class XFoldviewSlotNgTouchEventsHandler
@@ -35,6 +36,24 @@ export class XFoldviewSlotNgTouchEventsHandler
     this.#dom.addEventListener('wheel', this.#handleWheel, {
       passive: false,
     });
+  }
+
+  #resolveScrollContainer(element: Element): Element {
+    const maybeScrollContainer = (
+      element as unknown as Record<PropertyKey, unknown>
+    )[scrollContainerDom];
+
+    return maybeScrollContainer instanceof Element
+      ? maybeScrollContainer
+      : element;
+  }
+
+  #collectCandidateElements(elements: Element[]): Element[] {
+    return [
+      ...new Set(
+        elements.map(element => this.#resolveScrollContainer(element)),
+      ),
+    ];
   }
 
   #isScrollContainer(element: Element): boolean {
@@ -101,6 +120,7 @@ export class XFoldviewSlotNgTouchEventsHandler
     }
     this.#handleScrollDelta(deltaY, parentElement);
     this.#previousPageY = pageY;
+    this.#previousPageX = pageX;
   };
 
   #handleWheel = (event: WheelEvent) => {
@@ -121,7 +141,10 @@ export class XFoldviewSlotNgTouchEventsHandler
     const pointElements = document.elementsFromPoint(clientX, clientY).filter(
       e => this.#dom.contains(e),
     );
-    this.#elements = [...new Set([...pathElements, ...pointElements])];
+    this.#elements = this.#collectCandidateElements([
+      ...pathElements,
+      ...pointElements,
+    ]);
     this.#parentScrollTop = parentElement.scrollTop;
     if (this.#elements) {
       for (const element of this.#elements) {
@@ -142,10 +165,24 @@ export class XFoldviewSlotNgTouchEventsHandler
   }
 
   #touchStart = (event: TouchEvent) => {
-    const { pageX, pageY } = event.touches.item(0)!;
-    this.#elements = document.elementsFromPoint(pageX, pageY).filter(e =>
-      this.#dom.contains(e) && e !== this.#dom
+    const touch = event.touches.item(0)!;
+    const { pageX, pageY, clientX, clientY } = touch;
+    // `elementsFromPoint()` doesn't reliably pierce into Shadow DOM; combine with
+    // the composed path so we can pick up internal scroll containers like
+    // `x-list`'s `#content` inside the shadow root.
+    const pathElements = event.composedPath().filter((
+      element,
+    ): element is Element =>
+      element instanceof Element && this.#dom.contains(element)
+      && element !== this.#dom
     );
+    const pointElements = document.elementsFromPoint(clientX, clientY).filter(
+      e => this.#dom.contains(e) && e !== this.#dom,
+    );
+    this.#elements = this.#collectCandidateElements([
+      ...pathElements,
+      ...pointElements,
+    ]);
     this.#previousPageY = pageY;
     this.#previousPageX = pageX;
     this.#parentScrollTop = this.#getParentElement()?.scrollTop ?? 0;

@@ -12,6 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 
 const config: Parameters<typeof defineConfig>[0] = {
+  name: 'cache-events-webpack-plugin',
   globals: true,
   include: ['test/**/*.test.ts'],
   setupFiles: [
