@@ -400,6 +400,44 @@ describe(`list "update-list-info"`, () => {
         ],
       }
     `);
+
+    __pendingListUpdates.clearAttachedLists();
+
+    const d4 = new SnapshotInstance(s3);
+    const d5 = new SnapshotInstance(s3);
+
+    b1.insertBefore(d4, d2);
+    b1.insertBefore(d5, d2);
+    d2.setAttribute(0, { 'item-key': 2 });
+
+    expect(__pendingListUpdates.values).toMatchInlineSnapshot(`
+      {
+        "-4": [
+          {
+            "insertAction": [
+              {
+                "position": 1,
+                "type": "__snapshot_a94a8_test_20",
+              },
+              {
+                "position": 2,
+                "type": "__snapshot_a94a8_test_20",
+              },
+            ],
+            "removeAction": [],
+            "updateAction": [
+              {
+                "flush": false,
+                "from": 3,
+                "item-key": 2,
+                "to": 3,
+                "type": "__snapshot_a94a8_test_20",
+              },
+            ],
+          },
+        ],
+      }
+    `);
   });
 });
 
