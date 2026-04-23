@@ -1,0 +1,88 @@
+---
+source: packages/react/transform/crates/swc_plugin_snapshot/tests/element_template.rs
+expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_snapshot_json(&templates),\n})"
+---
+{
+  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_da39a_test_1 = \"_et_da39a_test_1\";\n<_et_da39a_test_1 attributeSlots={[\n    {\n        color: dynamicColor\n    }\n]}/>;\n",
+  "templates": [
+    {
+      "template_id": "_et_da39a_test_1",
+      "template": {
+        "kind": "element",
+        "type": "view",
+        "attributesArray": [
+          {
+            "kind": "attribute",
+            "key": "style",
+            "binding": "static",
+            "value": "color: red; width: 100px;"
+          }
+        ],
+        "children": [
+          {
+            "kind": "element",
+            "type": "text",
+            "attributesArray": [
+              {
+                "kind": "attribute",
+                "key": "style",
+                "binding": "static",
+                "value": "font-size:16px;font-weight:bold"
+              },
+              {
+                "kind": "attribute",
+                "key": "text",
+                "binding": "static",
+                "value": "Static Style"
+              }
+            ],
+            "children": []
+          },
+          {
+            "kind": "element",
+            "type": "view",
+            "attributesArray": [
+              {
+                "kind": "attribute",
+                "key": "style",
+                "binding": "slot",
+                "attrSlotIndex": 0.0
+              }
+            ],
+            "children": [
+              {
+                "kind": "element",
+                "type": "raw-text",
+                "attributesArray": [
+                  {
+                    "kind": "attribute",
+                    "key": "text",
+                    "binding": "static",
+                    "value": "Dynamic Style"
+                  }
+                ],
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "template_id": "__et_builtin_raw_text__",
+      "template": {
+        "kind": "element",
+        "type": "raw-text",
+        "attributesArray": [
+          {
+            "kind": "attribute",
+            "key": "text",
+            "binding": "slot",
+            "attrSlotIndex": 0
+          }
+        ],
+        "children": []
+      }
+    }
+  ]
+}

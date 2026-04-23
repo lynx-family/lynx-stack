@@ -8,29 +8,33 @@ use swc_core::{
 use swc_plugins_shared::{target_napi::TransformTarget, transform_mode_napi::TransformMode};
 
 use crate::{
-  JSXTransformer as CoreJSXTransformer, JSXTransformerConfig as CoreJSXTransformerConfig,
-  UISourceMapRecord as CoreUISourceMapRecord,
+  ElementTemplateAsset as CoreElementTemplateAsset, JSXTransformer as CoreJSXTransformer,
+  JSXTransformerConfig as CoreJSXTransformerConfig, UISourceMapRecord as CoreUISourceMapRecord,
 };
 
 /// @internal
 #[napi(object)]
 #[derive(Clone, Debug)]
-pub struct JSXTransformerConfig {
+pub struct ElementTemplateAsset {
   /// @internal
-  pub preserve_jsx: bool,
+  #[napi(js_name = "templateId")]
+  pub template_id: String,
   /// @internal
-  pub runtime_pkg: String,
+  #[napi(js_name = "compiledTemplate")]
+  pub compiled_template: serde_json::Value,
   /// @internal
-  pub jsx_import_source: Option<String>,
-  /// @internal
-  pub filename: String,
-  /// @internal
-  #[napi(ts_type = "'LEPUS' | 'JS' | 'MIXED'")]
-  pub target: TransformTarget,
-  /// @internal
-  pub enable_ui_source_map: Option<bool>,
-  /// @internal
-  pub is_dynamic_component: Option<bool>,
+  #[napi(js_name = "sourceFile")]
+  pub source_file: String,
+}
+
+impl From<CoreElementTemplateAsset> for ElementTemplateAsset {
+  fn from(val: CoreElementTemplateAsset) -> Self {
+    Self {
+      template_id: val.template_id,
+      compiled_template: val.compiled_template,
+      source_file: val.source_file,
+    }
+  }
 }
 
 /// @internal
@@ -67,6 +71,29 @@ impl From<CoreUISourceMapRecord> for UISourceMapRecord {
   }
 }
 
+/// @internal
+#[napi(object)]
+#[derive(Clone, Debug)]
+pub struct JSXTransformerConfig {
+  /// @internal
+  pub preserve_jsx: bool,
+  /// @internal
+  pub runtime_pkg: String,
+  /// @internal
+  pub jsx_import_source: Option<String>,
+  /// @internal
+  pub filename: String,
+  /// @internal
+  #[napi(ts_type = "'LEPUS' | 'JS' | 'MIXED'")]
+  pub target: TransformTarget,
+  /// @internal
+  pub enable_ui_source_map: Option<bool>,
+  /// @internal
+  pub is_dynamic_component: Option<bool>,
+  /// @internal
+  pub enable_element_template: Option<bool>,
+}
+
 impl Default for JSXTransformerConfig {
   fn default() -> Self {
     Self {
@@ -77,6 +104,7 @@ impl Default for JSXTransformerConfig {
       target: TransformTarget::LEPUS,
       enable_ui_source_map: Some(false),
       is_dynamic_component: Some(false),
+      enable_element_template: None,
     }
   }
 }
@@ -91,6 +119,7 @@ impl From<JSXTransformerConfig> for CoreJSXTransformerConfig {
       target: val.target.into(),
       enable_ui_source_map: val.enable_ui_source_map.unwrap_or(false),
       is_dynamic_component: val.is_dynamic_component,
+      enable_element_template: val.enable_element_template.unwrap_or(false),
     }
   }
 }
@@ -105,6 +134,7 @@ impl From<CoreJSXTransformerConfig> for JSXTransformerConfig {
       target: val.target.into(),
       enable_ui_source_map: Some(val.enable_ui_source_map),
       is_dynamic_component: val.is_dynamic_component,
+      enable_element_template: Some(val.enable_element_template),
     }
   }
 }
@@ -115,12 +145,35 @@ where
 {
   inner: CoreJSXTransformer<C>,
   pub ui_source_map_records: Rc<RefCell<Vec<CoreUISourceMapRecord>>>,
+  pub element_templates: Rc<RefCell<Vec<CoreElementTemplateAsset>>>,
 }
 
 impl<C> JSXTransformer<C>
 where
   C: Comments + Clone,
 {
+  pub fn new_with_element_templates(
+    cfg: JSXTransformerConfig,
+    comments: Option<C>,
+    mode: TransformMode,
+    source_map: Option<Lrc<SourceMap>>,
+    element_templates: Option<Rc<RefCell<Vec<CoreElementTemplateAsset>>>>,
+  ) -> Self {
+    let element_templates = element_templates.unwrap_or_else(|| Rc::new(RefCell::new(vec![])));
+    let inner = CoreJSXTransformer::new_with_element_templates(
+      cfg.into(),
+      comments,
+      mode.into(),
+      source_map,
+      Some(element_templates.clone()),
+    );
+    Self {
+      ui_source_map_records: inner.ui_source_map_records.clone(),
+      element_templates,
+      inner,
+    }
+  }
+
   pub fn with_content_hash(mut self, content_hash: String) -> Self {
     self.inner.content_hash = content_hash;
     self
@@ -141,11 +194,13 @@ where
     mode: TransformMode,
     source_map: Option<Lrc<SourceMap>>,
   ) -> Self {
-    let inner = CoreJSXTransformer::new(cfg.into(), comments, mode.into(), source_map);
-    Self {
-      ui_source_map_records: inner.ui_source_map_records.clone(),
-      inner,
-    }
+    // The napi wrapper always keeps the collector side channel alive so callers can
+    // opt into ET asset export without needing a separate constructor shape.
+    Self::new_with_element_templates(cfg, comments, mode, source_map, None)
+  }
+
+  pub fn take_element_templates(&self) -> Vec<CoreElementTemplateAsset> {
+    self.element_templates.borrow_mut().drain(..).collect()
   }
 }
 

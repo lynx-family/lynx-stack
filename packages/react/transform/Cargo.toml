@@ -11,7 +11,7 @@ crate-type = ["cdylib"]
 convert_case = { workspace = true }
 hex = { workspace = true }
 indexmap = { workspace = true }
-napi = { workspace = true }
+napi = { workspace = true, features = ["serde-json"] }
 napi-derive = { workspace = true }
 once_cell = { workspace = true }
 regex = { workspace = true }
