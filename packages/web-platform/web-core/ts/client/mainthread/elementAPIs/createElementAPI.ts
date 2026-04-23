@@ -514,7 +514,14 @@ export function createElementAPI(
     __GetID,
     __SetID,
     __GetTag,
-    __AddClass,
+    __AddClass: config_enable_css_selector
+      ? __AddClass
+      : ((element, className) => {
+        __AddClass(element, className);
+        const uniqueId = __GetElementUniqueID(element);
+        const entryName = element.getAttribute(lynxEntryNameAttribute);
+        wasmContext.update_css_og_style(uniqueId, entryName);
+      }),
     __GetClasses,
     __MarkTemplateElement,
     __MarkPartElement,

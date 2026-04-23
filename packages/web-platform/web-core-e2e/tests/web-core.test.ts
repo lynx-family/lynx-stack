@@ -87,6 +87,55 @@ test.describe('web core tests', () => {
     await wait(1000);
     expect(isSuccess).toBeTruthy();
   });
+  test('__AddClass when enableCSSSelector is false calls update_css_og_style', async ({ page, browserName }) => {
+    // firefox not support
+    test.skip(browserName === 'firefox');
+
+    page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+    page.on('pageerror', err => console.log('PAGE ERROR:', err.message));
+
+    await goto(page, 'web-core.disable-css-selector.json');
+
+    const result = await page.evaluate(() => {
+      const root = globalThis.runtime.__CreatePage('0', '0', {});
+      const element = globalThis.runtime.__CreateElement('view', '0', {});
+      globalThis.runtime.__AppendElement(root, element);
+
+      const component = globalThis.runtime.__CreateComponent(
+        0,
+        '0-1234',
+        0,
+        '__Card__',
+        '',
+        '',
+        {},
+        {},
+      );
+      globalThis.runtime.__AppendElement(element, component);
+
+      const node = globalThis.runtime.__CreateView(
+        globalThis.runtime.__GetElementUniqueID(component),
+      );
+      globalThis.runtime.__AppendElement(component, node);
+
+      globalThis.runtime.__FlushElementTree();
+
+      globalThis.runtime.__AddClass(node, 'my-class');
+      globalThis.runtime.__FlushElementTree();
+
+      return {
+        color: window.getComputedStyle(node).color,
+        fontSize: window.getComputedStyle(node).fontSize,
+        classes: globalThis.runtime.__GetClasses(node),
+      };
+    });
+
+    console.log('RESULT::', result);
+    expect(result.classes).toContain('my-class');
+    expect(result.color).toBe('rgb(0, 0, 255)'); // 'blue'
+    expect(result.fontSize).toBe('16px');
+  });
+
   test('lynx.requireModuleAsync', async ({ page, browserName }) => {
     test.skip(
       browserName === 'firefox',
