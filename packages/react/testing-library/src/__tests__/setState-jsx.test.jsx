@@ -3,6 +3,8 @@ import { Component, useState } from '@lynx-js/react';
 
 import { fireEvent, render, act } from '..';
 import { prettyFormatSnapshotPatch } from '../../../runtime/lib/snapshot/debug/formatPatch';
+import { printSnapshotInstanceToString } from '../../../runtime/lib/snapshot/debug/printSnapshot';
+import { __root } from '../../../runtime/lib/root';
 
 test('setState changes jsx', async () => {
   vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
@@ -70,10 +72,8 @@ test('setState changes jsx', async () => {
     </page>
   `);
 
-  const view = await findByTestId('view');
-  fireEvent.tap(view);
-
   {
+    expect(callLepusMethodCalls.length).toBe(1);
     const snapshotPatch = JSON.parse(callLepusMethodCalls[0][1]['data']).patchList[0].snapshotPatch;
     const formattedSnapshotPatch = prettyFormatSnapshotPatch(snapshotPatch);
     expect(formattedSnapshotPatch).toMatchInlineSnapshot(`
@@ -161,7 +161,34 @@ test('setState changes jsx', async () => {
     `);
   }
 
+  expect(__root.constructor.name).toMatchInlineSnapshot(`"BackgroundSnapshotInstance"`);
+  expect(printSnapshotInstanceToString(__root)).toMatchInlineSnapshot(`
+    "| -1(root): undefined
+      | 2(__snapshot_c1928_test_4): [null]
+        | 3(__snapshot_c1928_test_1): undefined
+        | 4(__snapshot_c1928_test_2): undefined
+        | 5(__snapshot_c1928_test_2): undefined
+        | 6(__snapshot_c1928_test_2): undefined
+        | 7(__snapshot_c1928_test_3): undefined"
+  `);
+  lynxTestingEnv.switchToMainThread();
+  expect(__root.constructor.name).toMatchInlineSnapshot(`"SnapshotInstance"`);
+  expect(printSnapshotInstanceToString(__root)).toMatchInlineSnapshot(`
+    "| -1(root): undefined
+      | 2(__snapshot_c1928_test_4): ["2:0:"]
+        | 3(__snapshot_c1928_test_1): undefined
+        | 4(__snapshot_c1928_test_2): undefined
+        | 5(__snapshot_c1928_test_2): undefined
+        | 6(__snapshot_c1928_test_2): undefined
+        | 7(__snapshot_c1928_test_3): undefined"
+  `);
+  lynxTestingEnv.switchToBackgroundThread();
+
+  const view = await findByTestId('view');
+  fireEvent.tap(view);
+
   {
+    expect(callLepusMethodCalls.length).toBe(2);
     const snapshotPatch = JSON.parse(callLepusMethodCalls[1][1]['data']).patchList[0].snapshotPatch;
     const formattedSnapshotPatch = prettyFormatSnapshotPatch(snapshotPatch);
     expect(formattedSnapshotPatch).toMatchInlineSnapshot(`
@@ -204,7 +231,7 @@ test('setState changes jsx', async () => {
           "type": "__snapshot_c1928_test_1",
         },
         {
-          "beforeId": null,
+          "beforeId": 7,
           "childId": 9,
           "op": "InsertBefore",
           "parentId": 2,
@@ -216,7 +243,7 @@ test('setState changes jsx', async () => {
           "type": "__snapshot_c1928_test_1",
         },
         {
-          "beforeId": null,
+          "beforeId": 7,
           "childId": 10,
           "op": "InsertBefore",
           "parentId": 2,
@@ -228,7 +255,7 @@ test('setState changes jsx', async () => {
           "type": "__snapshot_c1928_test_1",
         },
         {
-          "beforeId": null,
+          "beforeId": 7,
           "childId": 11,
           "op": "InsertBefore",
           "parentId": 2,
@@ -273,4 +300,27 @@ test('setState changes jsx', async () => {
       </view>
     </page>
   `);
+
+  expect(__root.constructor.name).toMatchInlineSnapshot(`"BackgroundSnapshotInstance"`);
+  expect(printSnapshotInstanceToString(__root)).toMatchInlineSnapshot(`
+    "| -1(root): undefined
+      | 2(__snapshot_c1928_test_4): [null]
+        | 8(__snapshot_c1928_test_2): undefined
+        | 9(__snapshot_c1928_test_1): undefined
+        | 10(__snapshot_c1928_test_1): undefined
+        | 11(__snapshot_c1928_test_1): undefined
+        | 7(__snapshot_c1928_test_3): undefined"
+  `);
+  lynxTestingEnv.switchToMainThread();
+  expect(__root.constructor.name).toMatchInlineSnapshot(`"SnapshotInstance"`);
+  expect(printSnapshotInstanceToString(__root)).toMatchInlineSnapshot(`
+    "| -1(root): undefined
+      | 2(__snapshot_c1928_test_4): ["2:0:"]
+        | 8(__snapshot_c1928_test_2): undefined
+        | 9(__snapshot_c1928_test_1): undefined
+        | 10(__snapshot_c1928_test_1): undefined
+        | 11(__snapshot_c1928_test_1): undefined
+        | 7(__snapshot_c1928_test_3): undefined"
+  `);
+  lynxTestingEnv.switchToBackgroundThread();
 });
