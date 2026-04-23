@@ -7,8 +7,21 @@ import type { GenericComponentProps } from '../../core/types.js';
 
 import './style.css';
 
+export interface ImageProps extends GenericComponentProps {
+  /** Image URL or path binding. */
+  url: string | { path: string };
+  fit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
+  variant?:
+    | 'icon'
+    | 'avatar'
+    | 'smallFeature'
+    | 'mediumFeature'
+    | 'largeFeature'
+    | 'header';
+}
+
 export function Image(
-  props: GenericComponentProps,
+  props: ImageProps,
 ): import('@lynx-js/react').ReactNode {
   const { id, url } = props;
 

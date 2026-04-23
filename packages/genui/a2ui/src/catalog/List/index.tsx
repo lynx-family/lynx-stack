@@ -4,18 +4,20 @@
 import type * as v0_9 from '@a2ui/web_core/v0_9';
 
 import { NodeRenderer } from '../../core/A2UIRender.jsx';
-import type { ComponentProps } from '../../core/ComponentRegistry.js';
 import type { GenericComponentProps } from '../../core/types.js';
 import { useDataBinding } from '../../core/useDataBinding.js';
 
 import './style.css';
 
-export interface ListProps extends ComponentProps {
-  component: v0_9.AnyComponent & { dataContextPath?: string };
+export interface ListProps extends GenericComponentProps {
+  /** Static child IDs array or template object. */
+  children: string[] | { componentId: string; path: string };
+  direction?: 'vertical' | 'horizontal';
+  align?: 'start' | 'center' | 'end' | 'stretch';
 }
 
 export function List(
-  props: GenericComponentProps,
+  props: ListProps,
 ): import('@lynx-js/react').ReactNode {
   const { children, surface, dataContextPath, direction = 'vertical' } = props;
 

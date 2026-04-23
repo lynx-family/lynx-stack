@@ -42,6 +42,7 @@
       "packages/react/runtime/**",
 
       "packages/tools/**",
+      "packages/genui/a2ui/tools/**",
 
       "packages/use-sync-external-store/test/**",
 
