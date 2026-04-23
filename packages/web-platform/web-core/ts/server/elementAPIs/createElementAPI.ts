@@ -236,7 +236,16 @@ export function createElementAPI(
             getAttribute(el, lynxEntryNameAttribute),
           );
         }),
-      __AddClass,
+      __AddClass: config.enableCSSSelector
+        ? __AddClass
+        : ((element, className) => {
+          __AddClass(element, className);
+          const el = element as ServerElement;
+          wasmContext.update_css_og_style(
+            el[uniqueIdSymbol],
+            getAttribute(el, lynxEntryNameAttribute),
+          );
+        }),
 
       __AddConfig,
       __UpdateComponentInfo,
