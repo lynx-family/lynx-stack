@@ -37,6 +37,9 @@ catalogs:
     '@rstest/core':
       specifier: 0.8.1
       version: 0.8.1
+    '@rstest/coverage-istanbul':
+      specifier: 0.2.0
+      version: 0.2.0
 
 overrides:
   '@rspack/core@^1': 1.7.9
@@ -88,6 +91,9 @@ importers:
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.8.1(jsdom@27.4.0)
+      '@rstest/coverage-istanbul':
+        specifier: catalog:rstest
+        version: 0.2.0(@rstest/core@0.8.1(jsdom@27.4.0))
       '@svitejs/changesets-changelog-github-compact':
         specifier: ^1.2.0
         version: 1.2.0
@@ -4672,6 +4678,11 @@ packages:
       jsdom:
         optional: true
 
+  '@rstest/coverage-istanbul@0.2.0':
+    resolution: {integrity: sha512-ghFY2XkjL2PFarLaG+BxFTJYbVXtAtcqW5rjOqheiOYV6PqlOHFf/s+fLkKeOTc1oVoL3A/9vjMBc8fOgjAF/A==}
+    peerDependencies:
+      '@rstest/core': ~0.8.0
+
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
@@ -7880,8 +7891,8 @@ packages:
     resolution: {integrity: sha512-yg2d+Em4KizZC5niWhQaIomgf5WlL4vOOjZ5xGCmF8SnPE/mDWWXgvRExdcpCgh9lLRRa1/fSYp2ymmbJ1pI+A==}
     engines: {node: '>=10'}
 
-  istanbul-reports@3.1.7:
-    resolution: {integrity: sha512-BewmUXImeuRk2YY0PVbxgKAysvhRPUQE0h5QRM++nVWyubKGV0l8qQ5op8+B2DOmwSe63Jivj0BjkPQVf8fP5g==}
+  istanbul-reports@3.2.0:
+    resolution: {integrity: sha512-HGYWWS/ehqTV3xN10i23tkPkpH46MLCIMFNCaaKNavAXTF1RkqxawEPtnjnGZ6XKSInBKkiOA5BKS+aZiY3AvA==}
     engines: {node: '>=8'}
 
   jackspeak@3.4.3:
@@ -10251,6 +10262,9 @@ packages:
     peerDependencies:
       '@swc/core': ^1.2.147
       webpack: '>=2'
+
+  swc-plugin-coverage-instrument@0.0.32:
+    resolution: {integrity: sha512-KsO1xNQdcVb331Rm98Op6uYf36/CYdF1kILQxOddmtCNlRLISpCUqHcnogu+QgELZvG48oie+w0fzS8uktjcEA==}
 
   symbol-tree@3.2.4:
     resolution: {integrity: sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==}
@@ -13959,6 +13973,17 @@ snapshots:
     optionalDependencies:
       jsdom: 27.4.0
 
+  '@rstest/coverage-istanbul@0.2.0(@rstest/core@0.8.1(jsdom@27.4.0))':
+    dependencies:
+      '@rstest/core': 0.8.1(jsdom@27.4.0)
+      istanbul-lib-coverage: 3.2.2
+      istanbul-lib-report: 3.0.1
+      istanbul-lib-source-maps: 5.0.6
+      istanbul-reports: 3.2.0
+      swc-plugin-coverage-instrument: 0.0.32
+    transitivePeerDependencies:
+      - supports-color
+
   '@rtsao/scc@1.1.0': {}
 
   '@rushstack/node-core-library@5.22.0(@types/node@24.10.13)':
@@ -14731,7 +14756,7 @@ snapshots:
       istanbul-lib-coverage: 3.2.2
       istanbul-lib-report: 3.0.1
       istanbul-lib-source-maps: 5.0.6
-      istanbul-reports: 3.1.7
+      istanbul-reports: 3.2.0
       magic-string: 0.30.21
       magicast: 0.3.5
       std-env: 3.9.0
@@ -17559,7 +17584,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  istanbul-reports@3.1.7:
+  istanbul-reports@3.2.0:
     dependencies:
       html-escaper: 2.0.2
       istanbul-lib-report: 3.0.1
@@ -18658,7 +18683,7 @@ snapshots:
       istanbul-lib-processinfo: 2.0.3
       istanbul-lib-report: 3.0.1
       istanbul-lib-source-maps: 4.0.1
-      istanbul-reports: 3.1.7
+      istanbul-reports: 3.2.0
       make-dir: 3.1.0
       node-preload: 0.2.1
       p-map: 3.0.0
@@ -20370,6 +20395,8 @@ snapshots:
       '@swc/core': 1.15.30(@swc/helpers@0.5.21)
       '@swc/counter': 0.1.3
       webpack: 5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))
+
+  swc-plugin-coverage-instrument@0.0.32: {}
 
   symbol-tree@3.2.4: {}
 
