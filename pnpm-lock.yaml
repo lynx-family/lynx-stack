@@ -1850,15 +1850,15 @@ importers:
       '@lynx-js/react-webpack-plugin':
         specifier: workspace:*
         version: link:../react-webpack-plugin
-      '@lynx-js/test-tools':
-        specifier: workspace:*
-        version: link:../test-tools
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.58.2(@types/node@24.10.13)
       '@rspack/core':
         specifier: catalog:rspack
         version: 1.7.9(@swc/helpers@0.5.21)
+      '@rspack/test-tools':
+        specifier: 1.7.9
+        version: 1.7.9(@rspack/core@1.7.9(@swc/helpers@0.5.21))(@swc/core@1.15.30(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21)))
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.8.1(jsdom@27.4.0)
