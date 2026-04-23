@@ -18,7 +18,11 @@
     <script src="/main.js" defer></script>
     <x-view class="page">
       <x-markdown id="markdown" style="width: 300px">
-        <x-view id="content-view" class="content"></x-view>
+        <x-view
+          id="content-view"
+          slot="md-inline-view-content-view"
+          class="content"
+        ></x-view>
       </x-markdown>
     </x-view>
     <script>

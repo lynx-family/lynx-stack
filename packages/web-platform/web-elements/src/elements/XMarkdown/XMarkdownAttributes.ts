@@ -1285,23 +1285,12 @@ export class XMarkdownAttributes {
         const inlineId = img.getAttribute('data-inlineview');
         if (inlineId) {
           const id = inlineId;
-          const view = this.#dom.querySelector(`#${CSS.escape(id)}`);
-          if (view) {
-            const container = document.createElement('span');
-            container.className = 'md-inline-view';
-            const vAlign = (view as HTMLElement).getAttribute('vertical-align')
-              || (view as HTMLElement).style.verticalAlign
-              || '';
-            if (vAlign) {
-              (container.style as any).verticalAlign = vAlign;
-            }
-            const slot = document.createElement('slot');
-            const slotName = `md-inline-view-${id}`;
-            slot.name = slotName;
-            (view as HTMLElement).slot = slotName;
-            container.appendChild(slot);
-            img.replaceWith(container);
-          }
+          const container = document.createElement('span');
+          container.className = 'md-inline-view';
+          const slot = document.createElement('slot');
+          slot.name = `md-inline-view-${id}`;
+          container.appendChild(slot);
+          img.replaceWith(container);
         }
       }
     } catch {
