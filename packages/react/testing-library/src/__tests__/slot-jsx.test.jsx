@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { Component, useState } from '@lynx-js/react';
+import { useState } from '@lynx-js/react';
 
 import { fireEvent, render, act } from '..';
 import { prettyFormatSnapshotPatch } from '../../../runtime/lib/snapshot/debug/formatPatch';
@@ -7,8 +7,6 @@ import { printSnapshotInstanceToString } from '../../../runtime/lib/snapshot/deb
 import { __root } from '../../../runtime/lib/root';
 
 test('setState changes jsx', async () => {
-  vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
-  const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
   vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
   const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
@@ -325,7 +323,7 @@ test('setState changes jsx', async () => {
   lynxTestingEnv.switchToBackgroundThread();
 });
 
-test('cross-slot keyed move emits wrong beforeId in patch (slot-branch null fallback)', async () => {
+test('cross-slot keyed move: E is placed before A with correct beforeId in patch', async () => {
   const tX = <text key='X'>X</text>;
   const tA = <text key='A'>A</text>;
   const tE = <text key='E'>E</text>;
@@ -354,7 +352,6 @@ test('cross-slot keyed move emits wrong beforeId in patch (slot-branch null fall
   const view = await findByTestId('view');
   fireEvent.tap(view);
 
-  // SlotV2 uses slotIndex not beforeId, so the wrong anchor doesn't surface in the container.
   expect(container).toMatchInlineSnapshot(`
     <page>
       <view
@@ -393,7 +390,6 @@ test('cross-slot keyed move emits wrong beforeId in patch (slot-branch null fall
     </page>
   `);
 
-  // Bug: E moves to slot 0 but InsertBefore carries `beforeId: null` instead of A's id.
   expect(callLepusMethodCalls.length).toBe(2);
   const patch = JSON.parse(callLepusMethodCalls[1][1]['data']).patchList[0].snapshotPatch;
   expect(prettyFormatSnapshotPatch(patch)).toMatchInlineSnapshot(`
@@ -404,7 +400,7 @@ test('cross-slot keyed move emits wrong beforeId in patch (slot-branch null fall
         "parentId": 2,
       },
       {
-        "beforeId": null,
+        "beforeId": 4,
         "childId": 5,
         "op": "InsertBefore",
         "parentId": 2,
@@ -425,19 +421,19 @@ test('cross-slot keyed move emits wrong beforeId in patch (slot-branch null fall
     ]
   `);
 
-  // Background tree: wrong order (E appended past D); after fix will show [E, A, N, D].
+  // Background tree: [E, A, N, D] in slot order.
   expect(printSnapshotInstanceToString(__root)).toMatchInlineSnapshot(`
     "| -1(root): undefined
       | 2(__snapshot_c1db7_test_10): [null]
+        | 5(__snapshot_c1db7_test_7): undefined
         | 4(__snapshot_c1db7_test_6): undefined
         | 7(__snapshot_c1db7_test_9): undefined
-        | 6(__snapshot_c1db7_test_8): undefined
-        | 5(__snapshot_c1db7_test_7): undefined"
+        | 6(__snapshot_c1db7_test_8): undefined"
   `);
 });
 
-// Two keys move across slots simultaneously; buggy preact appends them past stable siblings.
-// Stays background-only: the buggy patches cause a linked-list cycle → OOM on main thread.
+// Two keys move across slots simultaneously: H moves $0→$1, G moves $2→$3.
+// Verifies background tree stays in slot order and main-thread container is correct.
 test('multi-key cross-slot moves keep background snapshot tree in slot order', async () => {
   const ITEMS = {
     A: <text key='A'>A</text>,
@@ -449,14 +445,6 @@ test('multi-key cross-slot moves keep background snapshot tree in slot order', a
     G: <text key='G'>G</text>,
     H: <text key='H'>H</text>,
   };
-
-  // Intercept before main thread to prevent OOM from the linked-list cycle the bug creates.
-  const patches = [];
-  vi.spyOn(lynx.getNativeApp(), 'callLepusMethod').mockImplementation(
-    (_name, data) => {
-      patches.push(data);
-    },
-  );
 
   const before = ['H', 'A', 'G', 'B'];
   const after = ['F', 'H', 'E', 'G'];
@@ -479,38 +467,66 @@ test('multi-key cross-slot moves keep background snapshot tree in slot order', a
     );
   };
 
-  render(<Comp />);
+  const { container } = render(<Comp />);
 
   const getViewChildCount = () => {
     const tree = printSnapshotInstanceToString(__root);
     return (tree.match(/^ {4}\| \d+\(/gm) ?? []).length;
   };
 
-  expect(getViewChildCount()).toBe(4); // H A G B
+  expect(getViewChildCount()).toBe(4);
 
   act(() => setMoved(true));
 
-  // Bug: some children are dropped/double-inserted, leaving fewer than 4 in the linked list.
   expect(getViewChildCount()).toBe(4);
-
-  // Every InsertBefore at slotIndex < max must carry a real beforeId (not null).
-  expect(patches.length).toBe(2);
-  const updateOps = JSON.parse(patches[1]['data']).patchList[0].snapshotPatch;
-  const insertOps = (updateOps ?? []).filter(
-    o => o && o.op === 'InsertBefore' && o.parentId !== -1,
-  );
-  const maxSlotInPatch = Math.max(-1, ...insertOps.map(o => o.slotIndex ?? 0));
-  const badOp = insertOps.find(
-    o => o.beforeId == null && (o.slotIndex ?? 0) < maxSlotInPatch,
-  );
-  expect(badOp, `null beforeId at slotIndex ${badOp?.slotIndex} < max ${maxSlotInPatch}`).toBeUndefined();
-
-  // After fix: [F, H, E, G] in slot order.
-  expect(printSnapshotInstanceToString(__root)).toMatchInlineSnapshot();
+  expect(printSnapshotInstanceToString(__root)).toMatchInlineSnapshot(`
+    "| -1(root): undefined
+      | 2(__snapshot_c1db7_test_19): undefined
+        | 7(__snapshot_c1db7_test_16): undefined
+        | 3(__snapshot_c1db7_test_18): undefined
+        | 8(__snapshot_c1db7_test_15): undefined
+        | 5(__snapshot_c1db7_test_17): undefined"
+  `);
+  expect(container).toMatchInlineSnapshot(`
+    <page>
+      <view
+        data-testid="view"
+      >
+        <wrapper>
+          <text>
+            F
+          </text>
+        </wrapper>
+        <text>
+          -
+        </text>
+        <wrapper>
+          <text>
+            H
+          </text>
+        </wrapper>
+        <text>
+          -
+        </text>
+        <wrapper>
+          <text>
+            E
+          </text>
+        </wrapper>
+        <text>
+          -
+        </text>
+        <wrapper>
+          <text>
+            G
+          </text>
+        </wrapper>
+      </view>
+    </page>
+  `);
 });
 
-// Fuzz background-only: verifies no spurious `beforeId: null` on InsertBefore ops that have
-// a later sibling in a higher-indexed slot. Never touches main thread (avoids linked-list OOM).
+// Fuzz: background thread only (200 setState steps × main-thread render would be slow).
 test('fuzz: update patches have no spurious null beforeId when later slot siblings exist', async () => {
   const ITEMS = {
     A: <text key='A'>A</text>,
@@ -523,8 +539,6 @@ test('fuzz: update patches have no spurious null beforeId when later slot siblin
     H: <text key='H'>H</text>,
   };
 
-  vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
-  // Intercept before main thread to prevent linked-list OOM from buggy patches.
   const patches = [];
   vi.spyOn(lynx.getNativeApp(), 'callLepusMethod').mockImplementation(
     (_name, data) => {
@@ -598,6 +612,12 @@ test('fuzz: update patches have no spurious null beforeId when later slot siblin
   }
   if (failure) throw new Error(failure);
 
-  // After fix: final layout in correct slot order.
-  expect(printSnapshotInstanceToString(__root)).toMatchInlineSnapshot();
+  expect(printSnapshotInstanceToString(__root)).toMatchInlineSnapshot(`
+    "| -1(root): undefined
+      | 2(__snapshot_c1db7_test_28): undefined
+        | 389(__snapshot_c1db7_test_21): undefined
+        | 395(__snapshot_c1db7_test_22): undefined
+        | 394(__snapshot_c1db7_test_23): undefined
+        | 396(__snapshot_c1db7_test_24): undefined"
+  `);
 });
