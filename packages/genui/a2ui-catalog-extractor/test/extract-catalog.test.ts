@@ -108,11 +108,57 @@ describe('extractCatalog', () => {
     });
   });
 
-  test('rejects invalid @a2uiSchema fragments', async () => {
-    await expect(extractCatalog({
-      sourceDir: fixturePath('tsx-invalid', 'catalog'),
-      tsconfigPath: fixturePath('tsx-invalid', 'tsconfig.json'),
-    })).rejects.toThrow('unsupported key "$schema"');
+  test('extracts nested TSX object graphs without custom schema tags', async () => {
+    const result = await extractCatalog({
+      sourceDir: fixturePath('tsx-complex', 'catalog'),
+      tsconfigPath: fixturePath('tsx-complex', 'tsconfig.json'),
+    });
+
+    expect(result.components).toHaveLength(1);
+    expect(result.components[0]?.schema).toEqual({
+      properties: {
+        action: {
+          additionalProperties: false,
+          description: 'Host action payload.',
+          properties: {
+            event: {
+              additionalProperties: false,
+              properties: {
+                context: {
+                  additionalProperties: {
+                    oneOf: [
+                      { type: 'string' },
+                      { type: 'number' },
+                      { type: 'boolean' },
+                      {
+                        additionalProperties: false,
+                        properties: {
+                          path: {
+                            type: 'string',
+                          },
+                        },
+                        required: ['path'],
+                        type: 'object',
+                      },
+                    ],
+                  },
+                  description: 'Context is a JSON object map in v0.9.',
+                  type: 'object',
+                },
+                name: {
+                  type: 'string',
+                },
+              },
+              required: ['name'],
+              type: 'object',
+            },
+          },
+          required: ['event'],
+          type: 'object',
+        },
+      },
+      required: ['action'],
+    });
   });
 
   test('rejects literal undefined defaults with a clear error', async () => {
@@ -129,15 +175,6 @@ describe('extractCatalog', () => {
       sourceDir: fixturePath('tsx-invalid-json', 'catalog'),
       tsconfigPath: fixturePath('tsx-invalid-json', 'tsconfig.json'),
     })).rejects.toThrow('Failed to parse @defaultValue value');
-  });
-
-  test('rejects invalid @a2uiSchema type overrides', async () => {
-    await expect(extractCatalog({
-      sourceDir: fixturePath('tsx-invalid-schema-type', 'catalog'),
-      tsconfigPath: fixturePath('tsx-invalid-schema-type', 'tsconfig.json'),
-    })).rejects.toThrow(
-      '@a2uiSchema root.type must be one of array|boolean|number|object|string.',
-    );
   });
 
   test('rejects named re-export component entry files', async () => {

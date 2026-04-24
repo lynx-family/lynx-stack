@@ -25,6 +25,7 @@ The extractor reads:
   - property `description`
   - `default`
   - `deprecated`
+- named local interfaces and type aliases for complex nested object graphs
 - `.jsx` best-effort typedef parsing through `@typedef`, `@property`, and parameter or property JSDoc type expressions
 
 The legacy compatibility output covers the schema fields currently emitted by A2UI:
@@ -108,42 +109,34 @@ Prefer standard tags first:
 | string literal union         | `enum`                    |
 | optional property            | omitted from `required`   |
 
-## `@a2uiSchema`
-
-The only custom tag in v1 is `@a2uiSchema`.
-
-Use it only when the inferred schema would lose important nested structure. Typical cases are deeply nested action payloads or map values with `oneOf` branches.
+For more complex schemas, keep the structure explicit in local types instead of relying on custom tags.
 
 ```ts
+export interface ActionContextBinding {
+  path: string;
+}
+
+export type ActionContextValue =
+  | string
+  | number
+  | boolean
+  | ActionContextBinding;
+
+export interface ActionEvent {
+  name: string;
+  /** Context is a JSON object map in v0.9. */
+  context?: Record<string, ActionContextValue>;
+}
+
+export interface ActionPayload {
+  event: ActionEvent;
+}
+
 export interface ButtonProps {
-  /**
-   * Host action payload.
-   * @a2uiSchema {
-   *   "type": "object",
-   *   "properties": {
-   *     "event": {
-   *       "type": "object",
-   *       "properties": {
-   *         "name": { "type": "string" }
-   *       },
-   *       "required": ["name"],
-   *       "additionalProperties": false
-   *     }
-   *   },
-   *   "required": ["event"],
-   *   "additionalProperties": false
-   * }
-   */
-  action: unknown;
+  /** Host action payload. */
+  action: ActionPayload;
 }
 ```
-
-Rules:
-
-- the tag must contain a strict JSON object fragment
-- only node-local schema keys are allowed
-- the fragment is merged into the inferred schema after extraction
-- unsafe keys such as `__proto__`, `constructor`, and `prototype` are rejected
 
 See [references/tsdoc-mapping.md](./references/tsdoc-mapping.md) for the full mapping contract.
 
@@ -219,7 +212,7 @@ export function Badge(props) {
 }
 ```
 
-Complex nested schemas in `.jsx` should still use `@a2uiSchema`.
+Complex nested schemas in `.jsx` should move to `.tsx` so the structure can stay explicit.
 
 ## A2UI Integration
 

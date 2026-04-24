@@ -11,20 +11,6 @@ export const GENERIC_PROPS: ReadonlySet<string> = new Set([
   'component',
 ]);
 
-export const ALLOWED_SCHEMA_OVERRIDE_KEYS: ReadonlySet<string> = new Set([
-  'additionalProperties',
-  'const',
-  'default',
-  'deprecated',
-  'description',
-  'enum',
-  'items',
-  'oneOf',
-  'properties',
-  'required',
-  'type',
-]);
-
 export type JsonPrimitive = boolean | number | string | null;
 export type JsonValue = JsonPrimitive | JsonValue[] | {
   [key: string]: JsonValue;
@@ -102,7 +88,6 @@ export interface PropertyDoc {
   defaultValue?: JsonValue;
   deprecated?: boolean;
   description?: string;
-  schemaOverride?: JsonSchema;
 }
 
 export interface TypeDocRecord {

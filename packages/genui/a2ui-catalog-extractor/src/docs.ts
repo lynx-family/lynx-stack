@@ -15,29 +15,13 @@ import {
   type TypeDocOptions,
 } from 'typedoc';
 
-import {
-  ALLOWED_SCHEMA_OVERRIDE_KEYS,
-  type JsDocTypedef,
-  type JsonSchema,
-  type JsonValue,
-  type PropertyDoc,
-  type TypeDocIndex,
-  type TypeDocRecord,
+import type {
+  JsDocTypedef,
+  JsonValue,
+  PropertyDoc,
+  TypeDocIndex,
+  TypeDocRecord,
 } from './types.ts';
-
-const PROTOTYPE_POLLUTION_KEYS = new Set([
-  '__proto__',
-  'constructor',
-  'prototype',
-]);
-
-const JSON_SCHEMA_TYPES = new Set<NonNullable<JsonSchema['type']>>([
-  'array',
-  'boolean',
-  'number',
-  'object',
-  'string',
-]);
 
 function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/gu, ' ').trim();
@@ -116,145 +100,9 @@ function parseScalarToken(
   return trimmed;
 }
 
-function validateSchemaValue(
-  value: unknown,
-  context: string,
-): asserts value is JsonSchema {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    throw new Error(`@a2uiSchema ${context} must be a JSON object.`);
-  }
-
-  for (const [key, nestedValue] of Object.entries(value)) {
-    if (PROTOTYPE_POLLUTION_KEYS.has(key)) {
-      throw new Error(`@a2uiSchema ${context} uses forbidden key "${key}".`);
-    }
-    if (!ALLOWED_SCHEMA_OVERRIDE_KEYS.has(key)) {
-      throw new Error(
-        `@a2uiSchema ${context} uses unsupported key "${key}".`,
-      );
-    }
-
-    switch (key) {
-      case 'additionalProperties': {
-        if (typeof nestedValue === 'boolean') continue;
-        validateSchemaValue(nestedValue, `${context}.additionalProperties`);
-        continue;
-      }
-
-      case 'items': {
-        validateSchemaValue(nestedValue, `${context}.items`);
-        continue;
-      }
-
-      case 'oneOf': {
-        if (!Array.isArray(nestedValue)) {
-          throw new Error(`@a2uiSchema ${context}.oneOf must be an array.`);
-        }
-        nestedValue.forEach((entry, index) => {
-          validateSchemaValue(entry, `${context}.oneOf[${index}]`);
-        });
-        continue;
-      }
-
-      case 'properties': {
-        if (
-          typeof nestedValue !== 'object'
-          || nestedValue === null
-          || Array.isArray(nestedValue)
-        ) {
-          throw new Error(
-            `@a2uiSchema ${context}.properties must be an object.`,
-          );
-        }
-        for (const [propName, propValue] of Object.entries(nestedValue)) {
-          if (PROTOTYPE_POLLUTION_KEYS.has(propName)) {
-            throw new Error(
-              `@a2uiSchema ${context}.properties uses forbidden key "${propName}".`,
-            );
-          }
-          validateSchemaValue(propValue, `${context}.properties.${propName}`);
-        }
-        continue;
-      }
-
-      case 'required': {
-        if (
-          !Array.isArray(nestedValue)
-          || nestedValue.some(entry => typeof entry !== 'string')
-        ) {
-          throw new Error(
-            `@a2uiSchema ${context}.required must be a string array.`,
-          );
-        }
-        continue;
-      }
-
-      case 'enum': {
-        if (
-          !Array.isArray(nestedValue)
-          || nestedValue.some(entry =>
-            entry !== null
-            && typeof entry !== 'boolean'
-            && typeof entry !== 'number'
-            && typeof entry !== 'string'
-          )
-        ) {
-          throw new Error(
-            `@a2uiSchema ${context}.enum must contain only JSON primitive values.`,
-          );
-        }
-        continue;
-      }
-
-      case 'const':
-      case 'default':
-      case 'deprecated':
-      case 'description':
-        continue;
-
-      case 'type': {
-        if (
-          typeof nestedValue !== 'string'
-          || !JSON_SCHEMA_TYPES.has(
-            nestedValue as NonNullable<JsonSchema['type']>,
-          )
-        ) {
-          throw new Error(
-            `@a2uiSchema ${context}.type must be one of array|boolean|number|object|string.`,
-          );
-        }
-        continue;
-      }
-
-      default:
-        throw new Error(`Unsupported schema override key: ${String(key)}`);
-    }
-  }
-}
-
-export function parseSchemaOverride(text: string): JsonSchema {
-  const trimmed = stripDocCodeFences(text);
-  if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) {
-    throw new Error('@a2uiSchema must be a strict JSON object fragment.');
-  }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(trimmed) as unknown;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new Error(
-      `Failed to parse @a2uiSchema JSON fragment ${trimmed}: ${message}`,
-    );
-  }
-  validateSchemaValue(parsed, 'root');
-  return parsed;
-}
-
 function buildPropertyDoc(reflection: DeclarationReflection): PropertyDoc {
   const defaultValueTag = reflection.comment?.getTag('@defaultValue');
   const defaultTag = defaultValueTag ?? reflection.comment?.getTag('@default');
-  const schemaTag = reflection.comment?.getTag('@a2uiSchema');
 
   const doc: PropertyDoc = {};
   const defaultValue = defaultTag
@@ -264,12 +112,6 @@ function buildPropertyDoc(reflection: DeclarationReflection): PropertyDoc {
     )
     : undefined;
   const description = combineCommentSections(reflection.comment);
-  const schemaOverrideText = schemaTag
-    ? stripDocCodeFences(Comment.combineDisplayParts(schemaTag.content))
-    : undefined;
-  const schemaOverride = schemaOverrideText
-    ? parseSchemaOverride(schemaOverrideText)
-    : undefined;
 
   if (defaultValue !== undefined) {
     doc.defaultValue = defaultValue;
@@ -279,9 +121,6 @@ function buildPropertyDoc(reflection: DeclarationReflection): PropertyDoc {
   }
   if (description) {
     doc.description = description;
-  }
-  if (schemaOverride) {
-    doc.schemaOverride = schemaOverride;
   }
 
   return doc;
@@ -331,12 +170,6 @@ export async function buildTypeDocIndex(
   tsconfigPath?: string,
 ): Promise<TypeDocIndex> {
   const bootstrapOptions: TypeDocOptions = {
-    blockTags: [
-      ...new Set([
-        ...OptionDefaults.blockTags,
-        '@a2uiSchema',
-      ]),
-    ] as `@${string}`[],
     commentStyle: 'all',
     emit: 'none',
     entryPoints: [...entryPoints],

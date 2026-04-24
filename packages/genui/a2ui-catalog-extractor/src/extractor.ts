@@ -10,7 +10,6 @@ import * as ts from 'typescript';
 import {
   buildTypeDocIndex,
   getTypeDocRecord,
-  parseSchemaOverride,
   parseJsDocTypedefs,
 } from './docs.ts';
 import {
@@ -277,88 +276,7 @@ function applyPropertyDoc(schema: JsonSchema, doc?: PropertyDoc): JsonSchema {
     next.deprecated = true;
   }
 
-  return doc.schemaOverride
-    ? mergeSchema(next, doc.schemaOverride)
-    : next;
-}
-
-function mergePropertyDoc(
-  base: PropertyDoc | undefined,
-  overlay: PropertyDoc | undefined,
-): PropertyDoc | undefined {
-  if (!base) return overlay;
-  if (!overlay) return base;
-  return {
-    ...base,
-    ...overlay,
-  };
-}
-
-function normalizeJsDocComment(
-  comment:
-    | string
-    | readonly (
-      | ts.JSDocText
-      | ts.JSDocLink
-      | ts.JSDocLinkCode
-      | ts.JSDocLinkPlain
-    )[]
-    | undefined,
-): string | undefined {
-  if (!comment) return undefined;
-  if (typeof comment === 'string') {
-    return comment.trim() || undefined;
-  }
-
-  const combined = comment.map(part => part.text).join('').trim();
-  return combined || undefined;
-}
-
-function getAstPropertyDoc(node: ts.Node): PropertyDoc | undefined {
-  let schemaOverride: JsonSchema | undefined;
-
-  for (const tag of ts.getJSDocTags(node)) {
-    if (tag.tagName.text !== 'a2uiSchema') continue;
-
-    const tagComment = normalizeJsDocComment(tag.comment);
-    if (!tagComment) {
-      throw new Error('@a2uiSchema must include a JSON object fragment.');
-    }
-    schemaOverride = parseSchemaOverride(tagComment);
-  }
-
-  if (!schemaOverride) {
-    return undefined;
-  }
-
-  return {
-    schemaOverride,
-  };
-}
-
-function mergeSchema(base: JsonSchema, override: JsonSchema): JsonSchema {
-  const merged: JsonSchema = { ...base };
-
-  for (const [key, value] of Object.entries(override)) {
-    const current = (merged as Record<string, unknown>)[key];
-    if (
-      current
-      && value
-      && typeof current === 'object'
-      && typeof value === 'object'
-      && !Array.isArray(current)
-      && !Array.isArray(value)
-    ) {
-      (merged as Record<string, unknown>)[key] = mergeSchema(
-        current as JsonSchema,
-        value as JsonSchema,
-      );
-      continue;
-    }
-    (merged as Record<string, unknown>)[key] = value;
-  }
-
-  return merged;
+  return next;
 }
 
 function buildObjectSchema(
@@ -773,7 +691,7 @@ function parseTypeNode(
   throw new Error(
     `Unsupported type "${
       typeNode.getText(context.sourceFile)
-    }" in ${context.filePath}. Add an @a2uiSchema override or simplify the local declaration syntax.`,
+    }" in ${context.filePath}. Use explicit local declarations that the extractor supports.`,
   );
 }
 
@@ -870,10 +788,7 @@ function collectTypeElementProperties(
       optional: isOptionalProperty(member, typeNode),
       typeNode,
     };
-    const doc = mergePropertyDoc(
-      typeDocRecord?.properties.get(name),
-      getAstPropertyDoc(member),
-    );
+    const doc = typeDocRecord?.properties.get(name);
     if (doc) {
       property.doc = doc;
     }

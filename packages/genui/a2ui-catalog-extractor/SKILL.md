@@ -15,7 +15,7 @@ Use this skill when you are:
 
 1. Keep `.tsx` as the primary authoring path.
 2. Prefer explicit declaration syntax and standard tags over custom annotations.
-3. Use `@a2uiSchema` only for node-local JSON Schema fragments that cannot be expressed safely with normal declarations.
+3. Model complex nested schemas with named local interfaces and type aliases.
 4. Preserve legacy shard compatibility for A2UI unless the task explicitly changes the contract.
 
 ## Key Rules
@@ -29,7 +29,7 @@ Use this skill when you are:
 
 ## Important Implementation Note
 
-TypeDoc is the primary source for the standard documentation surface, including `@a2uiSchema` when the reflection retains the tag body. The TypeScript AST path exists as a fallback for inline property declarations, so keep the TypeDoc-first and AST-fallback flow intact when changing extraction behavior.
+TypeDoc is the primary source for standard documentation metadata. The extractor should rely on explicit local TypeScript syntax for schema structure instead of custom schema tags.
 
 ## References
 

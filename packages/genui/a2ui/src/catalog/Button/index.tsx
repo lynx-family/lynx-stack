@@ -9,69 +9,33 @@ import './style.css';
 /**
  * Props for the Button catalog component.
  */
+export interface ButtonActionContextBinding {
+  path: string;
+}
+
+export type ButtonActionContextValue =
+  | string
+  | number
+  | boolean
+  | ButtonActionContextBinding;
+
+export interface ButtonActionEvent {
+  name: string;
+  /** Context is a JSON object map in v0.9. */
+  context?: Record<string, ButtonActionContextValue>;
+}
+
+export interface ButtonAction {
+  event: ButtonActionEvent;
+}
+
 export interface ButtonProps extends GenericComponentProps {
   child: string;
   variant?: 'primary' | 'borderless';
   /**
    * v0.9 actions should use the `event` wrapper for server-dispatched clicks.
-   * @a2uiSchema {
-   *   "type": "object",
-   *   "properties": {
-   *     "event": {
-   *       "type": "object",
-   *       "properties": {
-   *         "name": {
-   *           "type": "string"
-   *         },
-   *         "context": {
-   *           "type": "object",
-   *           "additionalProperties": {
-   *             "oneOf": [
-   *               {
-   *                 "type": "string"
-   *               },
-   *               {
-   *                 "type": "number"
-   *               },
-   *               {
-   *                 "type": "boolean"
-   *               },
-   *               {
-   *                 "type": "object",
-   *                 "properties": {
-   *                   "path": {
-   *                     "type": "string"
-   *                   }
-   *                 },
-   *                 "required": [
-   *                   "path"
-   *                 ],
-   *                 "additionalProperties": false
-   *               }
-   *             ]
-   *           },
-   *           "description": "Context is a JSON object map in v0.9."
-   *         }
-   *       },
-   *       "required": [
-   *         "name"
-   *       ],
-   *       "additionalProperties": false
-   *     }
-   *   },
-   *   "required": [
-   *     "event"
-   *   ],
-   *   "additionalProperties": false
-   * }
    */
-  action: {
-    event: {
-      name: string;
-      /** Context is a JSON object map in v0.9. */
-      context?: Record<string, string | number | boolean | { path: string }>;
-    };
-  };
+  action: ButtonAction;
 }
 
 /**
@@ -84,7 +48,7 @@ export function Button(
 
   const handleClick = () => {
     if (action) {
-      void sendAction?.(action as Record<string, unknown>);
+      void sendAction?.(action as unknown as Record<string, unknown>);
     }
   };
 
