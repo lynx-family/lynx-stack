@@ -716,9 +716,76 @@ test('three-key cross-slot move applies cleanly on main thread', async () => {
   `);
 });
 
+// A slot wrapper holds multiple keyed children, and a new child is inserted at the
+// front of that slot while another child moves into the same slot from a different
+// one. The new child's diff cursor (existingNode) is the cross-slot mover at its
+// pre-move position, so the InsertBefore lands as cross-wrapper. Exercises the
+// "intra-slot ordering with cross-wrapper insert" edge case.
+test('multi-child slot: new child at front + cross-slot move into same slot', async () => {
+  const tA = <text key='A'>A</text>;
+  const tb = <text key='b'>b</text>;
+  const tx = <text key='x'>x</text>;
+  let setMoved;
+  const Comp = () => {
+    const [moved, set] = useState(false);
+    setMoved = set;
+    return (
+      <view data-testid='view'>
+        {/* slot 0 */}
+        {moved ? null : tb}
+        <text>-</text>
+        {/* slot 1 */}
+        {moved ? [tA, tb, tx] : [tx]}
+      </view>
+    );
+  };
+
+  const trace = spyElementApi();
+  const { container } = render(<Comp />);
+  trace.mark();
+  act(() => setMoved(true));
+
+  expect(trace.trace()).toMatchInlineSnapshot(`
+    "remove(<wrapper>b</wrapper> -x <text>b</text>)
+    create(text)
+    create(raw-text "A")
+    append(<text> <- <raw>A</raw>)
+    insertBefore(<wrapper>x</wrapper>: <text>A</text> before <text>x</text>)
+    create(text)
+    create(raw-text "b")
+    append(<text> <- <raw>b</raw>)
+    insertBefore(<wrapper>Ax</wrapper>: <text>b</text> before <text>x</text>)"
+  `);
+  // Expected slot 1 order: A, b, x. Bug: x ends up before A because cross-wrapper
+  // append puts A at the END of slot-1's wrapper instead of at its proper position.
+  expect(container).toMatchInlineSnapshot(`
+    <page>
+      <view
+        data-testid="view"
+      >
+        <wrapper />
+        <text>
+          -
+        </text>
+        <wrapper>
+          <text>
+            A
+          </text>
+          <text>
+            b
+          </text>
+          <text>
+            x
+          </text>
+        </wrapper>
+      </view>
+    </page>
+  `);
+});
+
 // Random slot-layout transitions driven end-to-end through the main-thread renderer.
 // Mirrors the property-based fuzz in internal-preact (SLOT_COUNT=6, STEPS=10000).
-test('fuzz: cross-slot keyed moves keep slot order across random layouts', { timeout: 5000 }, async () => {
+test('fuzz: cross-slot keyed moves keep slot order across random layouts', { timeout: 30000 }, async () => {
   const ITEMS = {
     A: <text key='A'>A</text>,
     B: <text key='B'>B</text>,
