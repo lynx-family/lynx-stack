@@ -49,7 +49,8 @@ export interface UiSourceMapRecord {
   filename: string
   lineNumber: number
   columnNumber: number
-  snapshotId: string
+  snapshotId?: string
+  templateId?: string
 }
 export interface DarkModeConfig {
   /**
@@ -599,6 +600,23 @@ export interface JsxTransformerConfig {
   /** @internal */
   isDynamicComponent?: boolean
 }
+/** @internal */
+export interface ElementTemplateConfig {
+  /** @internal */
+  preserveJsx: boolean
+  /** @internal */
+  runtimePkg: string
+  /** @internal */
+  jsxImportSource?: string
+  /** @internal */
+  filename: string
+  /** @internal */
+  target: 'LEPUS' | 'JS' | 'MIXED'
+  /** @internal */
+  enableUiSourceMap?: boolean
+  /** @internal */
+  isDynamicComponent?: boolean
+}
 export interface WorkletVisitorConfig {
   /**
    * @public
@@ -635,6 +653,7 @@ export interface TransformNodiffOptions {
   isModule?: boolean | 'unknown'
   cssScope: boolean | CssScopeVisitorConfig
   snapshot?: boolean | JsxTransformerConfig
+  elementTemplate?: boolean | ElementTemplateConfig
   engineVersion?: string
   shake: boolean | ShakeVisitorConfig
   compat: boolean | CompatVisitorConfig
@@ -653,6 +672,17 @@ export interface TransformNodiffOutput {
   errors: Array<PartialMessage>
   warnings: Array<PartialMessage>
   uiSourceMapRecords: Array<UiSourceMapRecord>
+  /** @internal */
+  elementTemplates?: Array<ElementTemplateAsset>
+}
+/** @internal */
+export interface ElementTemplateAsset {
+  /** @internal */
+  templateId: string
+  /** @internal */
+  compiledTemplate: Record<string, unknown>
+  /** @internal */
+  sourceFile: string
 }
 export function transformReactLynxSync(code: string, options?: TransformNodiffOptions | undefined | null): TransformNodiffOutput
 export function transformReactLynx(code: string, options?: TransformNodiffOptions | undefined | null): Promise<TransformNodiffOutput>

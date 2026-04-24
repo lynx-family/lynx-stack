@@ -1,3 +1,5 @@
+use std::{cell::RefCell, rc::Rc};
+
 use rustc_hash::FxBuildHasher;
 use serde::Deserialize;
 use swc_core::{
@@ -24,10 +26,13 @@ use swc_plugin_css_scope::{CSSScopeVisitor, CSSScopeVisitorConfig};
 use swc_plugin_define_dce::DefineDCEVisitorConfig;
 use swc_plugin_directive_dce::{DirectiveDCEVisitor, DirectiveDCEVisitorConfig};
 use swc_plugin_dynamic_import::{DynamicImportVisitor, DynamicImportVisitorConfig};
+use swc_plugin_element_template::{ElementTemplateTransformer, ElementTemplateTransformerConfig};
 use swc_plugin_inject::{InjectVisitor, InjectVisitorConfig};
 use swc_plugin_list::ListVisitor;
 use swc_plugin_shake::{ShakeVisitor, ShakeVisitorConfig};
-use swc_plugin_snapshot::{JSXTransformer, JSXTransformerConfig};
+use swc_plugin_snapshot::{
+  JSXTransformer as SnapshotJSXTransformer, JSXTransformerConfig as SnapshotJSXTransformerConfig,
+};
 use swc_plugin_text::TextVisitor;
 use swc_plugin_worklet::{WorkletVisitor, WorkletVisitorConfig};
 use swc_plugins_shared::{
@@ -53,7 +58,8 @@ pub struct ReactLynxTransformOptions {
 
   pub css_scope: Either<bool, CSSScopeVisitorConfig>,
 
-  pub snapshot: Option<Either<bool, JSXTransformerConfig>>,
+  pub snapshot: Option<Either<bool, SnapshotJSXTransformerConfig>>,
+  pub element_template: Option<Either<bool, ElementTemplateTransformerConfig>>,
 
   pub engine_version: Option<String>,
 
@@ -80,6 +86,7 @@ impl Default for ReactLynxTransformOptions {
       mode: Some(TransformMode::Production),
       css_scope: Either::B(Default::default()),
       snapshot: Default::default(),
+      element_template: Default::default(),
       engine_version: None,
       shake: Either::A(false),
       define_dce: Either::A(false),
@@ -187,9 +194,9 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
     ),
   };
 
-  let (snapshot_plugin_config, enabled) = match &options.snapshot.unwrap_or(Either::A(true)) {
-    Either::A(config) => (
-      JSXTransformerConfig {
+  let (snapshot_plugin_config, snapshot_enabled) = match options.snapshot.as_ref() {
+    Some(Either::A(config)) => (
+      SnapshotJSXTransformerConfig {
         // TODO: Environment-specific filename handling
         // - Test environment: use `options.filename`
         // - Production environment: use filename from metadata
@@ -197,17 +204,45 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
         // 1. snapshot_plugin
         // 2. css_scope_plugin
         // 3. worklet_plugin
-        filename: options.filename.unwrap_or(filename),
+        filename: options.filename.clone().unwrap_or(filename.clone()),
         ..Default::default()
       },
       *config,
     ),
-    Either::B(config) => (config.clone(), true),
+    Some(Either::B(config)) => (config.clone(), true),
+    None => (
+      SnapshotJSXTransformerConfig {
+        filename: options.filename.clone().unwrap_or(filename.clone()),
+        ..Default::default()
+      },
+      true,
+    ),
   };
+  let (element_template_plugin_config, element_template_enabled) =
+    match options.element_template.as_ref() {
+      Some(Either::A(config)) => (
+        ElementTemplateTransformerConfig {
+          filename: options.filename.clone().unwrap_or(filename.clone()),
+          ..Default::default()
+        },
+        *config,
+      ),
+      Some(Either::B(config)) => (config.clone(), true),
+      None => (
+        ElementTemplateTransformerConfig {
+          filename: options.filename.clone().unwrap_or(filename.clone()),
+          ..Default::default()
+        },
+        false,
+      ),
+    };
+  let use_element_template_plugin = element_template_enabled;
+  let use_snapshot_plugin = snapshot_enabled && !use_element_template_plugin;
+  let jsx_backend_enabled = use_snapshot_plugin || use_element_template_plugin;
 
   let snapshot_plugin = Optional::new(
     visit_mut_pass(
-      JSXTransformer::new(
+      SnapshotJSXTransformer::new(
         snapshot_plugin_config,
         Some(&comments),
         options.mode.unwrap_or(TransformMode::Production),
@@ -215,13 +250,32 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
       )
       .with_content_hash(content_hash.clone()),
     ),
-    enabled,
+    use_snapshot_plugin,
+  );
+  let element_template_plugin = Optional::new(
+    visit_mut_pass(
+      ElementTemplateTransformer::new_with_element_templates(
+        element_template_plugin_config,
+        Some(&comments),
+        options.mode.unwrap_or(TransformMode::Production),
+        Some(cm.clone()),
+        Some(Rc::new(RefCell::new(vec![]))),
+      )
+      .with_content_hash(content_hash.clone()),
+    ),
+    use_element_template_plugin,
   );
 
-  let list_plugin = Optional::new(visit_mut_pass(ListVisitor::new(Some(&comments))), enabled);
+  let list_plugin = Optional::new(
+    visit_mut_pass(ListVisitor::new(Some(&comments))),
+    jsx_backend_enabled,
+  );
 
   let is_ge_3_1: bool = is_engine_version_ge(&options.engine_version, "3.1");
-  let text_plugin = Optional::new(visit_mut_pass(TextVisitor {}), enabled && is_ge_3_1);
+  let text_plugin = Optional::new(
+    visit_mut_pass(TextVisitor {}),
+    jsx_backend_enabled && is_ge_3_1,
+  );
 
   let shake_plugin = match options.shake.clone() {
     Either::A(config) => Optional::new(visit_mut_pass(ShakeVisitor::default()), config),
@@ -292,7 +346,12 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
     dynamic_import_plugin,
     worklet_plugin,
     css_scope_plugin,
-    (text_plugin, list_plugin, snapshot_plugin),
+    (
+      text_plugin,
+      list_plugin,
+      snapshot_plugin,
+      element_template_plugin,
+    ),
     directive_dce_plugin,
     define_dce_plugin,
     simplify_pass_1, // do simplify after DCE above to make shake below works better
@@ -335,6 +394,7 @@ mod tests {
     assert_eq!(options.mode, Some(TransformMode::Production));
     assert_eq!(options.css_scope, Either::A(true));
     assert_eq!(options.snapshot, None);
+    assert_eq!(options.element_template, None);
     assert_eq!(options.shake, Either::A(true));
     assert_eq!(options.define_dce, Either::A(true));
     assert_eq!(options.directive_dce, Either::A(true));
@@ -496,6 +556,37 @@ mod tests {
       assert_eq!(snapshot.is_dynamic_component, Some(false));
     } else {
       panic!("Expected snapshot config, got boolean or None");
+    }
+  }
+
+  #[test]
+  fn test_element_template() {
+    let json_data = r#"
+  {
+    "elementTemplate": {
+      "preserveJsx": true,
+      "runtimePkg": "@lynx-js/react",
+      "jsxImportSource": "@lynx-js/react",
+      "filename": "test.js",
+      "target": "LEPUS",
+      "isDynamicComponent": false
+    }
+  }"#;
+
+    let options: ReactLynxTransformOptions = serde_json::from_str(json_data).unwrap();
+
+    if let Some(Either::B(element_template)) = options.element_template {
+      assert!(element_template.preserve_jsx);
+      assert_eq!(element_template.runtime_pkg, "@lynx-js/react");
+      assert_eq!(
+        element_template.jsx_import_source,
+        Some("@lynx-js/react".to_string())
+      );
+      assert_eq!(element_template.filename, "test.js");
+      assert_eq!(element_template.target, TransformTarget::LEPUS);
+      assert_eq!(element_template.is_dynamic_component, Some(false));
+    } else {
+      panic!("Expected element template config, got boolean or None");
     }
   }
 

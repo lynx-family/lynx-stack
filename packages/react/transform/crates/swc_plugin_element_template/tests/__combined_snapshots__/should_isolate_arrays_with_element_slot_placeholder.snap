@@ -1,0 +1,58 @@
+---
+source: packages/react/transform/crates/swc_plugin_element_template/tests/element_template.rs
+expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_snapshot_json(&templates),\n})"
+---
+{
+  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_da39a_test_1 = \"_et_da39a_test_1\";\n<_et_da39a_test_1 children={[\n    [\n        \"a\",\n        \"b\"\n    ],\n    [\n        \"c\",\n        \"d\"\n    ]\n]}/>;\n",
+  "templates": [
+    {
+      "template_id": "_et_da39a_test_1",
+      "template": {
+        "kind": "element",
+        "type": "view",
+        "attributesArray": [],
+        "children": [
+          {
+            "kind": "elementSlot",
+            "type": "slot",
+            "elementSlotIndex": 0.0
+          },
+          {
+            "kind": "element",
+            "type": "text",
+            "attributesArray": [
+              {
+                "kind": "attribute",
+                "key": "text",
+                "binding": "static",
+                "value": "Static"
+              }
+            ],
+            "children": []
+          },
+          {
+            "kind": "elementSlot",
+            "type": "slot",
+            "elementSlotIndex": 1.0
+          }
+        ]
+      }
+    },
+    {
+      "template_id": "__et_builtin_raw_text__",
+      "template": {
+        "kind": "element",
+        "type": "raw-text",
+        "attributesArray": [
+          {
+            "kind": "attribute",
+            "key": "text",
+            "binding": "slot",
+            "attrSlotIndex": 0
+          }
+        ],
+        "children": []
+      }
+    }
+  ]
+}

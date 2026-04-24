@@ -16,6 +16,7 @@ swc_plugin_css_scope = { path = "../crates/swc_plugin_css_scope" }
 swc_plugin_define_dce = { path = "../crates/swc_plugin_define_dce" }
 swc_plugin_directive_dce = { path = "../crates/swc_plugin_directive_dce" }
 swc_plugin_dynamic_import = { path = "../crates/swc_plugin_dynamic_import" }
+swc_plugin_element_template = { path = "../crates/swc_plugin_element_template" }
 swc_plugin_inject = { path = "../crates/swc_plugin_inject" }
 swc_plugin_list = { path = "../crates/swc_plugin_list" }
 swc_plugin_shake = { path = "../crates/swc_plugin_shake" }
