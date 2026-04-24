@@ -29,7 +29,7 @@ Use this skill when you are:
 
 ## Important Implementation Note
 
-TypeDoc is used for the standard documentation surface, but custom block tag payloads are read from the TypeScript AST. Do not move `@a2uiSchema` parsing back to TypeDoc unless TypeDoc starts preserving custom block tag bodies reliably.
+TypeDoc is the primary source for the standard documentation surface, including `@a2uiSchema` when the reflection retains the tag body. The TypeScript AST path exists as a fallback for inline property declarations, so keep the TypeDoc-first and AST-fallback flow intact when changing extraction behavior.
 
 ## References
 

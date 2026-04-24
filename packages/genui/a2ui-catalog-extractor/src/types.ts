@@ -36,7 +36,7 @@ export interface JsonSchema {
   default?: JsonValue;
   deprecated?: boolean;
   description?: string;
-  enum?: string[];
+  enum?: JsonPrimitive[];
   items?: JsonSchema;
   oneOf?: JsonSchema[];
   properties?: Record<string, JsonSchema>;

@@ -27,6 +27,10 @@ function getCommand(): string | undefined {
   return process.argv[2];
 }
 
+function isCatalogFormat(value: string): value is CatalogFormat {
+  return value === 'legacy-shards' || value === 'a2ui-catalog';
+}
+
 function parseCatalogOptions(args: readonly string[]): {
   extractOptions: ExtractCatalogOptions;
   outDir: string;
@@ -51,8 +55,15 @@ function parseCatalogOptions(args: readonly string[]): {
     throw new Error('Both --source and --out are required.');
   }
 
+  const rawFormat = values['format'];
+  if (rawFormat && !isCatalogFormat(rawFormat)) {
+    throw new Error(
+      `Unsupported --format "${rawFormat}". Expected "legacy-shards" or "a2ui-catalog".`,
+    );
+  }
+
   const extractOptions: ExtractCatalogOptions = {
-    format: (values['format'] as CatalogFormat | undefined) ?? 'legacy-shards',
+    format: rawFormat ?? 'legacy-shards',
     sourceDir: values['source'],
   };
   if (values['catalog-id']) extractOptions.catalogId = values['catalog-id'];
@@ -68,12 +79,11 @@ function parseCatalogOptions(args: readonly string[]): {
   };
 }
 
-async function main(): Promise<void> {
+async function main(): Promise<number> {
   const command = getCommand();
   if (!command || (command !== 'generate' && command !== 'check')) {
     printUsage();
-    process.exitCode = 1;
-    return;
+    return 1;
   }
 
   const { extractOptions, outDir } = parseCatalogOptions(process.argv.slice(3));
@@ -84,7 +94,7 @@ async function main(): Promise<void> {
     for (const file of files) {
       console.info(`wrote ${file.path}`);
     }
-    return;
+    return 0;
   }
 
   const checkResult = await checkCatalogFiles(result, { outDir });
@@ -95,11 +105,16 @@ async function main(): Promise<void> {
     for (const file of checkResult.mismatched) {
       console.error(`mismatch ${file}`);
     }
-    process.exitCode = 1;
-    return;
+    return 1;
   }
 
   console.info('catalog output is up to date');
+  return 0;
 }
 
-await main();
+try {
+  process.exitCode = await main();
+} catch (error) {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
+}

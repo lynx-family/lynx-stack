@@ -28,90 +28,115 @@ function runCli(args: readonly string[]) {
   });
 }
 
+async function withTempDir<T>(
+  prefix: string,
+  callback: (directory: string) => Promise<T>,
+): Promise<T> {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), prefix));
+  try {
+    return await callback(directory);
+  } finally {
+    await fs.rm(directory, { force: true, recursive: true });
+  }
+}
+
 describe('cli', () => {
   test('generate writes catalog shards to disk', async () => {
-    const outputDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'a2ui-catalog-cli-generate-'),
-    );
+    await withTempDir('a2ui-catalog-cli-generate-', async (outputDir) => {
+      const { stdout } = await runCli([
+        'generate',
+        '--source',
+        fixturePath('tsx', 'catalog'),
+        '--out',
+        outputDir,
+        '--tsconfig',
+        fixturePath('tsx', 'tsconfig.json'),
+      ]);
 
-    const { stdout } = await runCli([
-      'generate',
-      '--source',
-      fixturePath('tsx', 'catalog'),
-      '--out',
-      outputDir,
-      '--tsconfig',
-      fixturePath('tsx', 'tsconfig.json'),
-    ]);
-
-    expect(stdout).toContain('wrote');
-    const generated = await fs.readFile(
-      path.join(outputDir, 'Chip', 'catalog.json'),
-      'utf8',
-    );
-    expect(JSON.parse(generated)).toHaveProperty('Chip');
+      expect(stdout).toContain('wrote');
+      const generated = await fs.readFile(
+        path.join(outputDir, 'Chip', 'catalog.json'),
+        'utf8',
+      );
+      expect(JSON.parse(generated)).toHaveProperty('Chip');
+    });
   });
 
   test('check exits cleanly when output is current', async () => {
-    const outputDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'a2ui-catalog-cli-check-'),
-    );
+    await withTempDir('a2ui-catalog-cli-check-', async (outputDir) => {
+      await runCli([
+        'generate',
+        '--source',
+        fixturePath('tsx', 'catalog'),
+        '--out',
+        outputDir,
+        '--tsconfig',
+        fixturePath('tsx', 'tsconfig.json'),
+      ]);
 
-    await runCli([
-      'generate',
-      '--source',
-      fixturePath('tsx', 'catalog'),
-      '--out',
-      outputDir,
-      '--tsconfig',
-      fixturePath('tsx', 'tsconfig.json'),
-    ]);
+      const { stdout } = await runCli([
+        'check',
+        '--source',
+        fixturePath('tsx', 'catalog'),
+        '--out',
+        outputDir,
+        '--tsconfig',
+        fixturePath('tsx', 'tsconfig.json'),
+      ]);
 
-    const { stdout } = await runCli([
-      'check',
-      '--source',
-      fixturePath('tsx', 'catalog'),
-      '--out',
-      outputDir,
-      '--tsconfig',
-      fixturePath('tsx', 'tsconfig.json'),
-    ]);
-
-    expect(stdout).toContain('catalog output is up to date');
+      expect(stdout).toContain('catalog output is up to date');
+    });
   });
 
   test('check fails when output has drifted', async () => {
-    const outputDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'a2ui-catalog-cli-drift-'),
-    );
+    await withTempDir('a2ui-catalog-cli-drift-', async (outputDir) => {
+      await runCli([
+        'generate',
+        '--source',
+        fixturePath('tsx', 'catalog'),
+        '--out',
+        outputDir,
+        '--tsconfig',
+        fixturePath('tsx', 'tsconfig.json'),
+      ]);
 
-    await runCli([
-      'generate',
-      '--source',
-      fixturePath('tsx', 'catalog'),
-      '--out',
-      outputDir,
-      '--tsconfig',
-      fixturePath('tsx', 'tsconfig.json'),
-    ]);
+      await fs.writeFile(
+        path.join(outputDir, 'Chip', 'catalog.json'),
+        '{}\n',
+        'utf8',
+      );
 
-    await fs.writeFile(
-      path.join(outputDir, 'Chip', 'catalog.json'),
-      '{}\n',
-      'utf8',
-    );
+      await expect(runCli([
+        'check',
+        '--source',
+        fixturePath('tsx', 'catalog'),
+        '--out',
+        outputDir,
+        '--tsconfig',
+        fixturePath('tsx', 'tsconfig.json'),
+      ])).rejects.toMatchObject({
+        code: 1,
+        stderr: expect.stringContaining('mismatch'),
+      });
+    });
+  });
 
-    await expect(runCli([
-      'check',
-      '--source',
-      fixturePath('tsx', 'catalog'),
-      '--out',
-      outputDir,
-      '--tsconfig',
-      fixturePath('tsx', 'tsconfig.json'),
-    ])).rejects.toMatchObject({
-      code: 1,
-      stderr: expect.stringContaining('mismatch'),
+  test('generate rejects unsupported formats', async () => {
+    await withTempDir('a2ui-catalog-cli-format-', async (outputDir) => {
+      await expect(runCli([
+        'generate',
+        '--source',
+        fixturePath('tsx', 'catalog'),
+        '--out',
+        outputDir,
+        '--tsconfig',
+        fixturePath('tsx', 'tsconfig.json'),
+        '--format',
+        'bogus',
+      ])).rejects.toMatchObject({
+        code: 1,
+        stderr: expect.stringContaining('Unsupported --format "bogus"'),
+      });
     });
   });
 });

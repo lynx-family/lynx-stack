@@ -31,6 +31,14 @@ const PROTOTYPE_POLLUTION_KEYS = new Set([
   'prototype',
 ]);
 
+const JSON_SCHEMA_TYPES = new Set<NonNullable<JsonSchema['type']>>([
+  'array',
+  'boolean',
+  'number',
+  'object',
+  'string',
+]);
+
 function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/gu, ' ').trim();
 }
@@ -66,14 +74,21 @@ function combineCommentSections(comment?: TypeDocComment): string | undefined {
   return summary || remarks || undefined;
 }
 
-function parseScalarToken(value: string): JsonValue | undefined {
+function parseScalarToken(
+  value: string,
+  context: string,
+): JsonValue | undefined {
   const trimmed = stripDocCodeFences(value);
   if (!trimmed) return undefined;
 
   if (trimmed === 'null') return null;
   if (trimmed === 'true') return true;
   if (trimmed === 'false') return false;
-  if (trimmed === 'undefined') return undefined;
+  if (trimmed === 'undefined') {
+    throw new Error(
+      `The literal "undefined" is not supported in ${context}. Omit the tag instead.`,
+    );
+  }
 
   if (/^-?\d+(\.\d+)?$/u.test(trimmed)) {
     return Number(trimmed);
@@ -84,7 +99,14 @@ function parseScalarToken(value: string): JsonValue | undefined {
     || (trimmed.startsWith('[') && trimmed.endsWith(']'))
     || (trimmed.startsWith('{') && trimmed.endsWith('}'))
   ) {
-    return JSON.parse(trimmed) as JsonValue;
+    try {
+      return JSON.parse(trimmed) as JsonValue;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `Failed to parse ${context} value ${trimmed}: ${message}`,
+      );
+    }
   }
 
   if (trimmed.startsWith('\'') && trimmed.endsWith('\'')) {
@@ -188,8 +210,21 @@ function validateSchemaValue(
       case 'default':
       case 'deprecated':
       case 'description':
-      case 'type':
         continue;
+
+      case 'type': {
+        if (
+          typeof nestedValue !== 'string'
+          || !JSON_SCHEMA_TYPES.has(
+            nestedValue as NonNullable<JsonSchema['type']>,
+          )
+        ) {
+          throw new Error(
+            `@a2uiSchema ${context}.type must be one of array|boolean|number|object|string.`,
+          );
+        }
+        continue;
+      }
 
       default:
         throw new Error(`Unsupported schema override key: ${String(key)}`);
@@ -203,19 +238,30 @@ export function parseSchemaOverride(text: string): JsonSchema {
     throw new Error('@a2uiSchema must be a strict JSON object fragment.');
   }
 
-  const parsed = JSON.parse(trimmed) as unknown;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(trimmed) as unknown;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Failed to parse @a2uiSchema JSON fragment ${trimmed}: ${message}`,
+    );
+  }
   validateSchemaValue(parsed, 'root');
   return parsed;
 }
 
 function buildPropertyDoc(reflection: DeclarationReflection): PropertyDoc {
-  const defaultTag = reflection.comment?.getTag('@defaultValue')
-    ?? reflection.comment?.getTag('@default');
+  const defaultValueTag = reflection.comment?.getTag('@defaultValue');
+  const defaultTag = defaultValueTag ?? reflection.comment?.getTag('@default');
   const schemaTag = reflection.comment?.getTag('@a2uiSchema');
 
   const doc: PropertyDoc = {};
   const defaultValue = defaultTag
-    ? parseScalarToken(Comment.combineDisplayParts(defaultTag.content))
+    ? parseScalarToken(
+      Comment.combineDisplayParts(defaultTag.content),
+      defaultValueTag ? '@defaultValue' : '@default',
+    )
     : undefined;
   const description = combineCommentSections(reflection.comment);
   const schemaOverrideText = schemaTag

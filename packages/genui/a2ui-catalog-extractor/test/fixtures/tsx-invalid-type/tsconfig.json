@@ -1,0 +1,13 @@
+{
+  "extends": "../../../../../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "@lynx-js/react",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+  },
+  "include": [
+    "./catalog/**/*",
+  ],
+}

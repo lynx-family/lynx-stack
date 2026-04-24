@@ -78,6 +78,14 @@ function inferScriptKind(filePath: string): ts.ScriptKind {
   return ts.ScriptKind.JS;
 }
 
+function isBestEffortScriptKind(scriptKind: ts.ScriptKind): boolean {
+  return scriptKind === ts.ScriptKind.JS || scriptKind === ts.ScriptKind.JSX;
+}
+
+function normalizeLineEndings(value: string): string {
+  return value.replace(/\r\n/gu, '\n');
+}
+
 function hasExportModifier(node: ts.Node): boolean {
   return Boolean(
     ts.canHaveModifiers(node)
@@ -97,6 +105,20 @@ function getComponentDeclarations(sourceFile: ts.SourceFile): {
   }[] = [];
 
   for (const statement of sourceFile.statements) {
+    if (ts.isExportAssignment(statement)) {
+      throw new Error(
+        `Unsupported component export in ${sourceFile.fileName}: default export assignments are not supported. Use a direct exported function or const declaration instead.`,
+      );
+    }
+
+    if (ts.isExportDeclaration(statement)) {
+      throw new Error(
+        `Unsupported component export in ${sourceFile.fileName}: re-exports like "${
+          statement.getText(sourceFile)
+        }" are not supported. Use a direct exported function or const declaration instead.`,
+      );
+    }
+
     if (
       ts.isFunctionDeclaration(statement)
       && hasExportModifier(statement)
@@ -743,7 +765,15 @@ function parseTypeNode(
     }
   }
 
-  return { type: 'string' };
+  if (isBestEffortScriptKind(context.sourceFile.scriptKind)) {
+    return { type: 'string' };
+  }
+
+  throw new Error(
+    `Unsupported type "${
+      typeNode.getText(context.sourceFile)
+    }" in ${context.filePath}. Add an @a2uiSchema override or simplify the local declaration syntax.`,
+  );
 }
 
 async function loadSourceContext(
@@ -1020,11 +1050,14 @@ export async function checkCatalogFiles(
 
   for (const file of files) {
     try {
-      const fileContent = await fs.readFile(file.path, 'utf8');
-      if (fileContent !== file.content) {
+      const fileContent = normalizeLineEndings(
+        await fs.readFile(file.path, 'utf8'),
+      );
+      const expectedContent = normalizeLineEndings(file.content);
+      if (fileContent !== expectedContent) {
         mismatched.push(file.path);
         actual ??= fileContent;
-        expected ??= file.content;
+        expected ??= expectedContent;
       }
     } catch {
       missing.push(file.path);

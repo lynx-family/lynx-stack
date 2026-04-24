@@ -24,7 +24,7 @@ Use these sources in order of preference:
 | string literal union                          | `type: "string"` plus `enum`                 |
 | `T[]` or `Array<T>`                           | `type: "array"` plus `items`                 |
 | `Record<string, T>` or string index signature | `type: "object"` plus `additionalProperties` |
-| `A                                            | B`                                           |
+| `A \| B` union of distinct shapes             | `oneOf` with one entry per union branch      |
 
 ## Supported Explicit Type Shapes
 
@@ -127,4 +127,4 @@ Use this sparingly. If explicit syntax plus standard tags can describe the shape
 - Framework-only props are filtered out by name.
 - Legacy shard mode emits `{ [ComponentName]: ComponentSchema }`.
 - Full catalog mode emits a catalog object with `components` and optional root metadata supplied through the extractor options.
-- Custom block tag payloads are parsed from the TypeScript AST because current TypeDoc output does not preserve custom block tag bodies for this use case.
+- Custom block tag payloads are read from TypeDoc when the reflection preserves them, with a TypeScript AST fallback for inline property declarations.

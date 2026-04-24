@@ -8,8 +8,8 @@
       ],
       "inputs": [
         "src/**",
-        "../a2ui-catalog-extractor/src/**",
-        "../a2ui-catalog-extractor/tsconfig*.json",
+        "$TURBO_ROOT$/packages/genui/a2ui-catalog-extractor/src/**",
+        "$TURBO_ROOT$/packages/genui/a2ui-catalog-extractor/tsconfig*.json",
         "tsconfig.json",
         "package.json"
       ],

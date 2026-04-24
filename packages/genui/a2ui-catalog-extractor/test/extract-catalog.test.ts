@@ -23,6 +23,18 @@ function fixturePath(...segments: string[]): string {
   return path.join(__dirname, 'fixtures', ...segments);
 }
 
+async function withTempDir<T>(
+  prefix: string,
+  callback: (directory: string) => Promise<T>,
+): Promise<T> {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), prefix));
+  try {
+    return await callback(directory);
+  } finally {
+    await fs.rm(directory, { force: true, recursive: true });
+  }
+}
+
 describe('extractCatalog', () => {
   test('extracts TSX declarations and standard tags', async () => {
     const result = await extractCatalog({
@@ -103,6 +115,70 @@ describe('extractCatalog', () => {
     })).rejects.toThrow('unsupported key "$schema"');
   });
 
+  test('rejects literal undefined defaults with a clear error', async () => {
+    await expect(extractCatalog({
+      sourceDir: fixturePath('tsx-invalid-default', 'catalog'),
+      tsconfigPath: fixturePath('tsx-invalid-default', 'tsconfig.json'),
+    })).rejects.toThrow(
+      'The literal "undefined" is not supported in @defaultValue.',
+    );
+  });
+
+  test('wraps malformed JSON errors with tag context', async () => {
+    await expect(extractCatalog({
+      sourceDir: fixturePath('tsx-invalid-json', 'catalog'),
+      tsconfigPath: fixturePath('tsx-invalid-json', 'tsconfig.json'),
+    })).rejects.toThrow('Failed to parse @defaultValue value');
+  });
+
+  test('rejects invalid @a2uiSchema type overrides', async () => {
+    await expect(extractCatalog({
+      sourceDir: fixturePath('tsx-invalid-schema-type', 'catalog'),
+      tsconfigPath: fixturePath('tsx-invalid-schema-type', 'tsconfig.json'),
+    })).rejects.toThrow(
+      '@a2uiSchema root.type must be one of array|boolean|number|object|string.',
+    );
+  });
+
+  test('rejects named re-export component entry files', async () => {
+    await expect(extractCatalog({
+      sourceDir: fixturePath('tsx-invalid-export-named', 'catalog'),
+      tsconfigPath: fixturePath('tsx-invalid-export-named', 'tsconfig.json'),
+    })).rejects.toThrow('Unsupported component export');
+  });
+
+  test('rejects default-export component entry files', async () => {
+    await expect(extractCatalog({
+      sourceDir: fixturePath('tsx-invalid-export-default', 'catalog'),
+      tsconfigPath: fixturePath('tsx-invalid-export-default', 'tsconfig.json'),
+    })).rejects.toThrow('Unsupported component export');
+  });
+
+  test('fails loudly on unsupported TSX type syntax', async () => {
+    await expect(extractCatalog({
+      sourceDir: fixturePath('tsx-invalid-type', 'catalog'),
+      tsconfigPath: fixturePath('tsx-invalid-type', 'tsconfig.json'),
+    })).rejects.toThrow('Unsupported type "Map<string, string>"');
+  });
+
+  test('keeps unsupported JSX types in best-effort string mode', async () => {
+    const result = await extractCatalog({
+      sourceDir: fixturePath('jsx-loose', 'catalog'),
+      tsconfigPath: fixturePath('jsx-loose', 'tsconfig.json'),
+    });
+
+    expect(result.components).toHaveLength(1);
+    expect(result.components[0]?.schema).toEqual({
+      properties: {
+        value: {
+          description: 'Unsupported types fall back to string in JSX mode.',
+          type: 'string',
+        },
+      },
+      required: ['value'],
+    });
+  });
+
   test('matches the legacy A2UI catalog fixtures exactly', async () => {
     const result = await extractCatalog({
       sourceDir: path.join(workspaceRoot, 'packages/genui/a2ui/src/catalog'),
@@ -171,28 +247,37 @@ describe('extractCatalog', () => {
 
 describe('catalog file helpers', () => {
   test('writeCatalogFiles and checkCatalogFiles round-trip generated shards', async () => {
-    const outputDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'a2ui-catalog-roundtrip-'),
-    );
-    const result = await extractCatalog({
-      sourceDir: fixturePath('tsx', 'catalog'),
-      tsconfigPath: fixturePath('tsx', 'tsconfig.json'),
+    await withTempDir('a2ui-catalog-roundtrip-', async (outputDir) => {
+      const result = await extractCatalog({
+        sourceDir: fixturePath('tsx', 'catalog'),
+        tsconfigPath: fixturePath('tsx', 'tsconfig.json'),
+      });
+
+      await writeCatalogFiles(result, { outDir: outputDir });
+      const generatedPath = path.join(outputDir, 'Chip', 'catalog.json');
+
+      const initialCheck = await checkCatalogFiles(result, {
+        outDir: outputDir,
+      });
+      expect(initialCheck.ok).toBe(true);
+
+      const lfContent = await fs.readFile(generatedPath, 'utf8');
+      await fs.writeFile(
+        generatedPath,
+        lfContent.replace(/\n/gu, '\r\n'),
+        'utf8',
+      );
+
+      const crlfCheck = await checkCatalogFiles(result, { outDir: outputDir });
+      expect(crlfCheck.ok).toBe(true);
+
+      await fs.writeFile(generatedPath, '{}\r\n', 'utf8');
+
+      const changedCheck = await checkCatalogFiles(result, {
+        outDir: outputDir,
+      });
+      expect(changedCheck.ok).toBe(false);
+      expect(changedCheck.mismatched).toContain(generatedPath);
     });
-
-    await writeCatalogFiles(result, { outDir: outputDir });
-    const initialCheck = await checkCatalogFiles(result, { outDir: outputDir });
-    expect(initialCheck.ok).toBe(true);
-
-    await fs.writeFile(
-      path.join(outputDir, 'Chip', 'catalog.json'),
-      '{}\n',
-      'utf8',
-    );
-
-    const changedCheck = await checkCatalogFiles(result, { outDir: outputDir });
-    expect(changedCheck.ok).toBe(false);
-    expect(changedCheck.mismatched).toContain(
-      path.join(outputDir, 'Chip', 'catalog.json'),
-    );
   });
 });
