@@ -716,12 +716,12 @@ test('three-key cross-slot move applies cleanly on main thread', async () => {
   `);
 });
 
-// A slot wrapper holds multiple keyed children, and a new child is inserted at the
-// front of that slot while another child moves into the same slot from a different
-// one. The new child's diff cursor (existingNode) is the cross-slot mover at its
-// pre-move position, so the InsertBefore lands as cross-wrapper. Exercises the
-// "intra-slot ordering with cross-wrapper insert" edge case.
-test('multi-child slot: new child at front + cross-slot move into same slot', async () => {
+// Mixing a single-VNode slot with an array slot: cross-slot keyed move from a
+// view-level VNode (slot 0) into an array slot (slot 1) does NOT happen because
+// arrays in JSX become Fragments with their own diff context. preact unmounts the
+// view-level `b` and creates a fresh one inside the Fragment — verified here so
+// the assumption is recorded.
+test('array slot isolates diff context: keyed VNode is recreated, not cross-slot reused', async () => {
   const tA = <text key='A'>A</text>;
   const tb = <text key='b'>b</text>;
   const tx = <text key='x'>x</text>;
@@ -731,10 +731,8 @@ test('multi-child slot: new child at front + cross-slot move into same slot', as
     setMoved = set;
     return (
       <view data-testid='view'>
-        {/* slot 0 */}
         {moved ? null : tb}
         <text>-</text>
-        {/* slot 1 */}
         {moved ? [tA, tb, tx] : [tx]}
       </view>
     );
@@ -745,6 +743,8 @@ test('multi-child slot: new child at front + cross-slot move into same slot', as
   trace.mark();
   act(() => setMoved(true));
 
+  // No cross-wrapper insertBefore: b is unmounted from slot 0 and a fresh b is
+  // created and inserted via same-slot insertBefore inside slot 1's Fragment.
   expect(trace.trace()).toMatchInlineSnapshot(`
     "remove(<wrapper>b</wrapper> -x <text>b</text>)
     create(text)
@@ -756,8 +756,6 @@ test('multi-child slot: new child at front + cross-slot move into same slot', as
     append(<text> <- <raw>b</raw>)
     insertBefore(<wrapper>Ax</wrapper>: <text>b</text> before <text>x</text>)"
   `);
-  // Expected slot 1 order: A, b, x. Bug: x ends up before A because cross-wrapper
-  // append puts A at the END of slot-1's wrapper instead of at its proper position.
   expect(container).toMatchInlineSnapshot(`
     <page>
       <view
@@ -776,6 +774,60 @@ test('multi-child slot: new child at front + cross-slot move into same slot', as
           </text>
           <text>
             x
+          </text>
+        </wrapper>
+      </view>
+    </page>
+  `);
+});
+
+// Two view-level single-VNode slots swap their content via cross-slot keyed reuse.
+// This is the *only* shape where a cross-slot keyed move can happen in SlotV2;
+// each slot still ends up with at most one child, so the cross-wrapper insertBefore
+// fallback (`__AppendElement`) is correct (no intra-slot ordering to violate).
+test('cross-slot keyed swap between two single-VNode slots', async () => {
+  const tA = <text key='A'>A</text>;
+  const tB = <text key='B'>B</text>;
+  let setSwap;
+  const Comp = () => {
+    const [swap, set] = useState(false);
+    setSwap = set;
+    return (
+      <view data-testid='view'>
+        {swap ? tB : tA}
+        <text>-</text>
+        {swap ? tA : tB}
+      </view>
+    );
+  };
+
+  const trace = spyElementApi();
+  const { container } = render(<Comp />);
+  trace.mark();
+  act(() => setSwap(true));
+
+  expect(trace.trace()).toMatchInlineSnapshot(`
+    "remove(<wrapper>A</wrapper> -x <text>B</text>)
+    insertBefore(<wrapper>A</wrapper>: <text>B</text> before <text>A</text>)
+    remove(<wrapper> -x <text>A</text>)
+    append(<wrapper> <- <text>A</text>)"
+  `);
+  expect(container).toMatchInlineSnapshot(`
+    <page>
+      <view
+        data-testid="view"
+      >
+        <wrapper>
+          <text>
+            B
+          </text>
+        </wrapper>
+        <text>
+          -
+        </text>
+        <wrapper>
+          <text>
+            A
           </text>
         </wrapper>
       </view>
