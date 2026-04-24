@@ -1,0 +1,71 @@
+{
+  "Button": {
+    "properties": {
+      "child": {
+        "type": "string"
+      },
+      "variant": {
+        "type": "string",
+        "enum": [
+          "primary",
+          "borderless"
+        ]
+      },
+      "action": {
+        "type": "object",
+        "properties": {
+          "event": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "context": {
+                "type": "object",
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "path": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "path"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "description": "Context is a JSON object map in v0.9."
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "event"
+        ],
+        "additionalProperties": false,
+        "description": "v0.9 actions should use the `event` wrapper for server-dispatched clicks."
+      }
+    },
+    "required": [
+      "child",
+      "action"
+    ]
+  }
+}

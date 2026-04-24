@@ -1,0 +1,50 @@
+{
+  "Image": {
+    "properties": {
+      "url": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "description": "Image URL or path binding."
+      },
+      "fit": {
+        "type": "string",
+        "enum": [
+          "contain",
+          "cover",
+          "fill",
+          "none",
+          "scale-down"
+        ]
+      },
+      "variant": {
+        "type": "string",
+        "enum": [
+          "icon",
+          "avatar",
+          "smallFeature",
+          "mediumFeature",
+          "largeFeature",
+          "header"
+        ]
+      }
+    },
+    "required": [
+      "url"
+    ]
+  }
+}

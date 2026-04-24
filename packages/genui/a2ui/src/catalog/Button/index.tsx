@@ -6,10 +6,65 @@ import type { GenericComponentProps } from '../../core/types.js';
 
 import './style.css';
 
+/**
+ * Props for the Button catalog component.
+ */
 export interface ButtonProps extends GenericComponentProps {
   child: string;
   variant?: 'primary' | 'borderless';
-  /** v0.9 actions should use the `event` wrapper for server-dispatched clicks. */
+  /**
+   * v0.9 actions should use the `event` wrapper for server-dispatched clicks.
+   * @a2uiSchema {
+   *   "type": "object",
+   *   "properties": {
+   *     "event": {
+   *       "type": "object",
+   *       "properties": {
+   *         "name": {
+   *           "type": "string"
+   *         },
+   *         "context": {
+   *           "type": "object",
+   *           "additionalProperties": {
+   *             "oneOf": [
+   *               {
+   *                 "type": "string"
+   *               },
+   *               {
+   *                 "type": "number"
+   *               },
+   *               {
+   *                 "type": "boolean"
+   *               },
+   *               {
+   *                 "type": "object",
+   *                 "properties": {
+   *                   "path": {
+   *                     "type": "string"
+   *                   }
+   *                 },
+   *                 "required": [
+   *                   "path"
+   *                 ],
+   *                 "additionalProperties": false
+   *               }
+   *             ]
+   *           },
+   *           "description": "Context is a JSON object map in v0.9."
+   *         }
+   *       },
+   *       "required": [
+   *         "name"
+   *       ],
+   *       "additionalProperties": false
+   *     }
+   *   },
+   *   "required": [
+   *     "event"
+   *   ],
+   *   "additionalProperties": false
+   * }
+   */
   action: {
     event: {
       name: string;
@@ -19,6 +74,9 @@ export interface ButtonProps extends GenericComponentProps {
   };
 }
 
+/**
+ * Render an interactive button.
+ */
 export function Button(
   props: ButtonProps,
 ): import('@lynx-js/react').ReactNode {

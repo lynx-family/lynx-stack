@@ -1,0 +1,198 @@
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { describe, expect, test } from '@rstest/core';
+
+import {
+  checkCatalogFiles,
+  extractCatalog,
+  renderCatalogFiles,
+  writeCatalogFiles,
+} from '../src/index.ts';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const workspaceRoot = path.resolve(__dirname, '..', '..', '..', '..');
+
+function fixturePath(...segments: string[]): string {
+  return path.join(__dirname, 'fixtures', ...segments);
+}
+
+describe('extractCatalog', () => {
+  test('extracts TSX declarations and standard tags', async () => {
+    const result = await extractCatalog({
+      sourceDir: fixturePath('tsx', 'catalog'),
+      tsconfigPath: fixturePath('tsx', 'tsconfig.json'),
+    });
+
+    expect(result.components).toHaveLength(1);
+    expect(result.components[0]?.name).toBe('Chip');
+    expect(result.components[0]?.schema).toEqual({
+      properties: {
+        label: {
+          description: 'Label text or a binding path.',
+          oneOf: [
+            { type: 'string' },
+            {
+              additionalProperties: false,
+              properties: {
+                path: {
+                  type: 'string',
+                },
+              },
+              required: ['path'],
+              type: 'object',
+            },
+          ],
+        },
+        tone: {
+          default: 'primary',
+          description: 'Visual tone.',
+          enum: ['primary', 'secondary'],
+          type: 'string',
+        },
+      },
+      required: ['label'],
+    });
+  });
+
+  test('extracts JSX typedef/property shapes in best-effort mode', async () => {
+    const result = await extractCatalog({
+      sourceDir: fixturePath('jsx', 'catalog'),
+      tsconfigPath: fixturePath('jsx', 'tsconfig.json'),
+    });
+
+    expect(result.components).toHaveLength(1);
+    expect(result.components[0]?.schema).toEqual({
+      properties: {
+        text: {
+          description: 'Literal badge text.',
+          oneOf: [
+            { type: 'string' },
+            {
+              additionalProperties: false,
+              properties: {
+                path: {
+                  type: 'string',
+                },
+              },
+              required: ['path'],
+              type: 'object',
+            },
+          ],
+        },
+        tone: {
+          description: 'Badge tone.',
+          enum: ['info', 'warning'],
+          type: 'string',
+        },
+      },
+      required: ['text'],
+    });
+  });
+
+  test('rejects invalid @a2uiSchema fragments', async () => {
+    await expect(extractCatalog({
+      sourceDir: fixturePath('tsx-invalid', 'catalog'),
+      tsconfigPath: fixturePath('tsx-invalid', 'tsconfig.json'),
+    })).rejects.toThrow('unsupported key "$schema"');
+  });
+
+  test('matches the legacy A2UI catalog fixtures exactly', async () => {
+    const result = await extractCatalog({
+      sourceDir: path.join(workspaceRoot, 'packages/genui/a2ui/src/catalog'),
+      tsconfigPath: path.join(
+        workspaceRoot,
+        'packages/genui/a2ui/tsconfig.json',
+      ),
+    });
+
+    const renderedFiles = renderCatalogFiles(result, {
+      outDir: path.join(workspaceRoot, 'packages/genui/a2ui/dist/catalog'),
+    });
+
+    expect(renderedFiles).toHaveLength(10);
+
+    for (const renderedFile of renderedFiles) {
+      const componentName = path.basename(path.dirname(renderedFile.path));
+      const fixtureFile = fixturePath(
+        'legacy-baseline',
+        componentName,
+        'catalog.json',
+      );
+      const expected = await fs.readFile(fixtureFile, 'utf8');
+      expect(renderedFile.content).toBe(expected);
+    }
+  });
+
+  test('renders full catalog output from the API', async () => {
+    const result = await extractCatalog({
+      catalogId: 'demo-catalog',
+      description: 'Demo catalog',
+      format: 'a2ui-catalog',
+      functions: {
+        open: {
+          type: 'string',
+        },
+      },
+      schema: 'https://example.com/catalog.schema.json',
+      sourceDir: fixturePath('tsx', 'catalog'),
+      theme: {
+        color: 'blue',
+      },
+      title: 'Demo',
+      tsconfigPath: fixturePath('tsx', 'tsconfig.json'),
+    });
+
+    expect(result.catalog).toEqual({
+      $schema: 'https://example.com/catalog.schema.json',
+      catalogId: 'demo-catalog',
+      components: {
+        Chip: result.components[0]?.schema,
+      },
+      description: 'Demo catalog',
+      functions: {
+        open: {
+          type: 'string',
+        },
+      },
+      theme: {
+        color: 'blue',
+      },
+      title: 'Demo',
+    });
+  });
+});
+
+describe('catalog file helpers', () => {
+  test('writeCatalogFiles and checkCatalogFiles round-trip generated shards', async () => {
+    const outputDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'a2ui-catalog-roundtrip-'),
+    );
+    const result = await extractCatalog({
+      sourceDir: fixturePath('tsx', 'catalog'),
+      tsconfigPath: fixturePath('tsx', 'tsconfig.json'),
+    });
+
+    await writeCatalogFiles(result, { outDir: outputDir });
+    const initialCheck = await checkCatalogFiles(result, { outDir: outputDir });
+    expect(initialCheck.ok).toBe(true);
+
+    await fs.writeFile(
+      path.join(outputDir, 'Chip', 'catalog.json'),
+      '{}\n',
+      'utf8',
+    );
+
+    const changedCheck = await checkCatalogFiles(result, { outDir: outputDir });
+    expect(changedCheck.ok).toBe(false);
+    expect(changedCheck.mismatched).toContain(
+      path.join(outputDir, 'Chip', 'catalog.json'),
+    );
+  });
+});

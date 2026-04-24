@@ -1,0 +1,38 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "src/**",
+        "test/**",
+        "README.md",
+        "SKILL.md",
+        "agents/**",
+        "references/**",
+        "package.json",
+        "tsconfig*.json",
+        "rslib.config.ts",
+        "rstest.config.ts"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
+    },
+    "test": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "src/**",
+        "test/**",
+        "package.json",
+        "tsconfig*.json",
+        "rstest.config.ts"
+      ]
+    }
+  }
+}

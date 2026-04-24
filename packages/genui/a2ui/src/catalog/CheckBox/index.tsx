@@ -5,11 +5,17 @@ import type { GenericComponentProps } from '../../core/types.js';
 
 import './style.css';
 
+/**
+ * Props for the CheckBox catalog component.
+ */
 export interface CheckBoxProps extends GenericComponentProps {
   label: string | { path: string };
   value: boolean | { path: string };
 }
 
+/**
+ * Render a checkbox row.
+ */
 export function CheckBox(
   props: CheckBoxProps,
 ): import('@lynx-js/react').ReactNode {

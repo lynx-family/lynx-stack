@@ -5,10 +5,16 @@ import type { GenericComponentProps } from '../../core/types.js';
 
 import './style.css';
 
+/**
+ * Props for the Divider catalog component.
+ */
 export interface DividerProps extends GenericComponentProps {
   axis?: 'horizontal' | 'vertical';
 }
 
+/**
+ * Render a divider line.
+ */
 export function Divider(
   props: DividerProps,
 ): import('@lynx-js/react').ReactNode {

@@ -1,0 +1,41 @@
+{
+  "Text": {
+    "properties": {
+      "text": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "description": "Literal text or path binding."
+      },
+      "variant": {
+        "type": "string",
+        "enum": [
+          "h1",
+          "h2",
+          "h3",
+          "h4",
+          "h5",
+          "caption",
+          "body"
+        ]
+      }
+    },
+    "required": [
+      "text"
+    ]
+  }
+}

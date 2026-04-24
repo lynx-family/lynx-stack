@@ -1,0 +1,14 @@
+{
+  "extends": "../../../../../../tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "jsx": "preserve",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+  },
+  "include": [
+    "./catalog/**/*",
+  ],
+}

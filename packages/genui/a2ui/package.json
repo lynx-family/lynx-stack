@@ -93,13 +93,14 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "node --experimental-strip-types tools/catalog_generator.ts && tsc -b"
+    "build": "node --experimental-strip-types ../a2ui-catalog-extractor/src/cli.ts generate --source ./src/catalog --out ./dist/catalog --tsconfig ./tsconfig.json --format legacy-shards && tsc -b"
   },
   "dependencies": {
     "@a2ui/web_core": "0.9.1",
     "@preact/signals": "^2.5.1"
   },
   "devDependencies": {
+    "@lynx-js/a2ui-catalog-extractor": "workspace:*",
     "@lynx-js/lynx-ui": "^3.130.0",
     "@lynx-js/lynx-ui-input": "^3.130.0",
     "@lynx-js/react": "workspace:*",

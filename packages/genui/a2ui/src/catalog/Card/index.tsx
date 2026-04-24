@@ -6,10 +6,16 @@ import type { GenericComponentProps } from '../../core/types.js';
 
 import './style.css';
 
+/**
+ * Props for the Card catalog component.
+ */
 export interface CardProps extends GenericComponentProps {
   child: string;
 }
 
+/**
+ * Render a card container.
+ */
 export function Card(props: CardProps): import('@lynx-js/react').ReactNode {
   const { child: childId, surface, dataContextPath } = props;
   const childComponent = surface.components.get(childId);

@@ -6,6 +6,9 @@ import type { GenericComponentProps } from '../../core/types.js';
 
 import './style.css';
 
+/**
+ * Props for the Row catalog component.
+ */
 export interface RowProps extends GenericComponentProps {
   /** Static child IDs array or template object. */
   children: string[] | { componentId: string; path: string };
@@ -13,13 +16,16 @@ export interface RowProps extends GenericComponentProps {
     | 'start'
     | 'center'
     | 'end'
+    | 'stretch'
     | 'spaceBetween'
     | 'spaceAround'
-    | 'spaceEvenly'
-    | 'stretch';
+    | 'spaceEvenly';
   align?: 'start' | 'center' | 'end' | 'stretch';
 }
 
+/**
+ * Render a horizontal layout container.
+ */
 export function Row(props: RowProps): import('@lynx-js/react').ReactNode {
   const children = props.children;
   const surface = props.surface;

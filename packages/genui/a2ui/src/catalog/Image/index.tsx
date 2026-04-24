@@ -7,6 +7,9 @@ import type { GenericComponentProps } from '../../core/types.js';
 
 import './style.css';
 
+/**
+ * Props for the Image catalog component.
+ */
 export interface ImageProps extends GenericComponentProps {
   /** Image URL or path binding. */
   url: string | { path: string };
@@ -20,6 +23,9 @@ export interface ImageProps extends GenericComponentProps {
     | 'header';
 }
 
+/**
+ * Render an image resource.
+ */
 export function Image(
   props: ImageProps,
 ): import('@lynx-js/react').ReactNode {
@@ -27,6 +33,8 @@ export function Image(
 
   const [hasError, setHasError] = useState(false);
 
+  // The local package types for this hook are resolved at build time.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   useEffect(() => {
     setHasError(false);
   }, [url]);

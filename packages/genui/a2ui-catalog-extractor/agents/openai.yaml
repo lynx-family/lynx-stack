@@ -1,0 +1,7 @@
+interface:
+  display_name: "A2UI Catalog Extractor"
+  short_description: "Update A2UI catalog extraction and docs."
+  default_prompt: "Use $a2ui-catalog-extractor to update the A2UI catalog extractor or catalog component annotations."
+
+policy:
+  allow_implicit_invocation: true

@@ -16,6 +16,9 @@ const HitSlop = {
   },
 };
 
+/**
+ * Props for the RadioGroup catalog component.
+ */
 export interface RadioGroupComponentProps extends GenericComponentProps {
   /** The list of string options to display. */
   items: string[] | { path: string };
@@ -25,6 +28,9 @@ export interface RadioGroupComponentProps extends GenericComponentProps {
   usageHint?: 'default' | 'card' | 'row';
 }
 
+/**
+ * Render a group of radio options.
+ */
 export function RadioGroup(
   props: RadioGroupComponentProps,
 ): import('@lynx-js/react').ReactNode {

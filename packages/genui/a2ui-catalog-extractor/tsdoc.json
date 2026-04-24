@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/tsdoc/v0/tsdoc.schema.json",
+  "tagDefinitions": [
+    {
+      "tagName": "@a2uiSchema",
+      "syntaxKind": "block"
+    }
+  ],
+  "supportForTags": {
+    "@a2uiSchema": true
+  }
+}

@@ -6,6 +6,9 @@ import type { GenericComponentProps } from '../../core/types.js';
 
 import './style.css';
 
+/**
+ * Props for the Column catalog component.
+ */
 export interface ColumnProps extends GenericComponentProps {
   /** Static child IDs array or template object. */
   children: string[] | { componentId: string; path: string };
@@ -14,12 +17,15 @@ export interface ColumnProps extends GenericComponentProps {
     | 'start'
     | 'center'
     | 'end'
+    | 'stretch'
     | 'spaceBetween'
     | 'spaceAround'
-    | 'spaceEvenly'
-    | 'stretch';
+    | 'spaceEvenly';
 }
 
+/**
+ * Render a vertical layout container.
+ */
 export function Column(
   props: ColumnProps,
 ): import('@lynx-js/react').ReactNode {

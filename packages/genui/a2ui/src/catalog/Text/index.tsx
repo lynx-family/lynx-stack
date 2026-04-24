@@ -4,12 +4,18 @@
 import type { GenericComponentProps } from '../../core/types.js';
 import './style.css';
 
+/**
+ * Props for the Text catalog component.
+ */
 export interface TextProps extends GenericComponentProps {
   /** Literal text or path binding. */
   text: string | { path: string };
   variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body';
 }
 
+/**
+ * Render text content.
+ */
 export function Text(
   props: TextProps,
 ): import('@lynx-js/react').ReactNode {

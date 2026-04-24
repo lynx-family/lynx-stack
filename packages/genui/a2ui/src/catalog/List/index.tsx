@@ -9,13 +9,19 @@ import { useDataBinding } from '../../core/useDataBinding.js';
 
 import './style.css';
 
+/**
+ * Props for the List catalog component.
+ */
 export interface ListProps extends GenericComponentProps {
   /** Static child IDs array or template object. */
   children: string[] | { componentId: string; path: string };
-  direction?: 'vertical' | 'horizontal';
+  direction?: 'horizontal' | 'vertical';
   align?: 'start' | 'center' | 'end' | 'stretch';
 }
 
+/**
+ * Render a scrollable list container.
+ */
 export function List(
   props: ListProps,
 ): import('@lynx-js/react').ReactNode {

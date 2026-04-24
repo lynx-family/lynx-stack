@@ -1,0 +1,45 @@
+{
+  "name": "@lynx-js/a2ui-catalog-extractor",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Extract A2UI catalog schemas from TypeDoc, TSDoc, and explicit declaration syntax.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "a2ui-catalog-extractor": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "SKILL.md",
+    "agents",
+    "references"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "test": "rstest"
+  },
+  "dependencies": {
+    "@microsoft/tsdoc": "^0.16.0",
+    "@microsoft/tsdoc-config": "^0.18.1",
+    "typedoc": "^0.28.9",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@rstest/core": "catalog:rstest",
+    "@types/node": "^24.10.13"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
