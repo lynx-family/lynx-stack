@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/i18next-translation-dedupe",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Dedupe i18next translations in Lynx bundles.",
   "keywords": [
     "Lynx",

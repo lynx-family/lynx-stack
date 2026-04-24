@@ -1,5 +1,11 @@
 # @lynx-js/web-explorer
 
+## 0.0.17
+
+### Patch Changes
+
+- bump rsdoctor to 1.5.6 ([#2410](https://github.com/lynx-family/lynx-stack/pull/2410))
+
 ## 0.0.16
 
 ### Patch Changes

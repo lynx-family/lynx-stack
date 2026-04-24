@@ -1,5 +1,34 @@
 # @lynx-js/rspeedy
 
+## 0.14.3
+
+### Patch Changes
+
+- add a `sourceMap.css` option to emit CSS sourcemaps. ([#2442](https://github.com/lynx-family/lynx-stack/pull/2442))
+
+  By default, `sourceMap.css` is false. You can set it to true to emit CSS sourcemaps.
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    output: {
+      sourceMap: {
+        css: true,
+      },
+    },
+  })
+  ```
+
+- bump rsdoctor to 1.5.6 ([#2410](https://github.com/lynx-family/lynx-stack/pull/2410))
+
+- Enable CSS source maps by default in Rspeedy output config. ([#2483](https://github.com/lynx-family/lynx-stack/pull/2483))
+
+- Prefer physical routable IPv4 addresses over tunnel and link-local interfaces when resolving the dev host IP for generated preview and bundle URLs. ([#2409](https://github.com/lynx-family/lynx-stack/pull/2409))
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.20.3
+
 ## 0.14.2
 
 ### Patch Changes

@@ -1,5 +1,23 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.16.1
+
+### Patch Changes
+
+- Respect `dev.hmr: false` when installing React Refresh integrations so disabled HMR no longer injects the refresh loader or plugin. ([#2487](https://github.com/lynx-family/lynx-stack/pull/2487))
+
+- Fix stale callback-local references when transforming JSX inside `children={array.map(...)}` prop expressions. ([#2524](https://github.com/lynx-family/lynx-stack/pull/2524))
+
+- Supports @lynx-js/react 0.120.0 ([#1764](https://github.com/lynx-family/lynx-stack/pull/1764))
+
+- Updated dependencies [[`e179680`](https://github.com/lynx-family/lynx-stack/commit/e1796803444ba70efa86609b620c3a753b6694de), [`13655ac`](https://github.com/lynx-family/lynx-stack/commit/13655ac8f156ab887de2f527b34c865574ebe6e6), [`f15494b`](https://github.com/lynx-family/lynx-stack/commit/f15494b3b1231c11facd61bf1e07a43b6df5e07c), [`e179680`](https://github.com/lynx-family/lynx-stack/commit/e1796803444ba70efa86609b620c3a753b6694de), [`e179680`](https://github.com/lynx-family/lynx-stack/commit/e1796803444ba70efa86609b620c3a753b6694de)]:
+  - @lynx-js/template-webpack-plugin@0.11.0
+  - @lynx-js/css-extract-webpack-plugin@0.7.1
+  - @lynx-js/react-webpack-plugin@0.9.2
+  - @lynx-js/react-alias-rsbuild-plugin@0.16.1
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.5
+
 ## 0.16.0
 
 ### Minor Changes
