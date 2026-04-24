@@ -836,23 +836,18 @@ test('cross-slot keyed swap between two single-VNode slots', async () => {
 });
 
 // Random slot-layout transitions driven end-to-end through the main-thread renderer.
-// Mirrors the property-based fuzz in internal-preact (SLOT_COUNT=6, STEPS=10000).
-test('fuzz: cross-slot keyed moves keep slot order across random layouts', { timeout: 30000 }, async () => {
-  const ITEMS = {
-    A: <text key='A'>A</text>,
-    B: <text key='B'>B</text>,
-    C: <text key='C'>C</text>,
-    D: <text key='D'>D</text>,
-    E: <text key='E'>E</text>,
-    F: <text key='F'>F</text>,
-    G: <text key='G'>G</text>,
-    H: <text key='H'>H</text>,
-  };
+// Runs both keyed (cross-slot reuse possible) and unkeyed (positional only) variants
+// to cover both diff paths. Mirrors the property-based fuzz in internal-preact
+// (SLOT_COUNT=6, STEPS=10000).
+function runSlotFuzz({ withKey, seed: initialSeed }) {
+  const ALL = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+  const ITEMS = withKey
+    ? Object.fromEntries(ALL.map(k => [k, <text key={k}>{k}</text>]))
+    : Object.fromEntries(ALL.map(k => [k, <text>{k}</text>]));
 
-  const KEYS = Object.keys(ITEMS);
   const SLOT_COUNT = 6;
   const STEPS = 10000;
-  let seed = 0xDEADBEEF >>> 0;
+  let seed = initialSeed >>> 0;
   const rand = () => {
     seed ^= seed << 13;
     seed >>>= 0;
@@ -862,7 +857,7 @@ test('fuzz: cross-slot keyed moves keep slot order across random layouts', { tim
     return seed / 0x100000000;
   };
   const pickLayout = () => {
-    const pool = KEYS.slice();
+    const pool = ALL.slice();
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(rand() * (i + 1));
       [pool[i], pool[j]] = [pool[j], pool[i]];
@@ -897,22 +892,25 @@ test('fuzz: cross-slot keyed moves keep slot order across random layouts', { tim
   };
 
   const { container } = render(<Comp />);
-
-  // Read the actual slot order from the rendered DOM (one wrapper per $N slot).
   const slotOrder = () =>
     Array.from(container.querySelectorAll('view > wrapper'))
       .map(w => w.textContent.trim());
 
-  // Initial render matches layouts[0].
   expect(slotOrder()).toEqual(layouts[0]);
-
   for (step = 1; step < STEPS; step++) {
-    // No spontaneous mutation between steps — still on the previous layout.
     expect(slotOrder()).toEqual(layouts[step - 1]);
     act(() => {
       setStep(step);
     });
-    // After setState, slot order matches the new layout.
     expect(slotOrder()).toEqual(layouts[step]);
   }
+}
+
+test('fuzz (keyed): cross-slot keyed moves keep slot order', { timeout: 30000 }, () => {
+  runSlotFuzz({ withKey: true, seed: 0xDEADBEEF });
+});
+
+test('fuzz (unkeyed): positional slot updates keep slot order', { timeout: 30000 }, () => {
+  // Different seed so we exercise a different sequence than the keyed variant.
+  runSlotFuzz({ withKey: false, seed: 0x1337C0DE });
 });
