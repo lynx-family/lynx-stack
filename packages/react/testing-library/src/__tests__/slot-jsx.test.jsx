@@ -836,10 +836,14 @@ test('cross-slot keyed swap between two single-VNode slots', async () => {
 });
 
 // Random slot-layout transitions driven end-to-end through the main-thread renderer.
-// Runs both keyed (cross-slot reuse possible) and unkeyed (positional only) variants
-// to cover both diff paths. Mirrors the property-based fuzz in internal-preact
-// (SLOT_COUNT=6, STEPS=10000).
-function runSlotFuzz({ withKey, seed: initialSeed }) {
+// Variants:
+//   - keyed permutation:   each slot always filled, keys reshuffled (cross-slot reuse)
+//   - unkeyed permutation: each slot always filled, no keys (positional diff path)
+//   - keyed sparse:        slots independently null/filled (add/remove + cross-slot)
+//   - unkeyed sparse:      slots independently null/filled, no keys (add/remove only)
+// Sparse layouts: per slot ~70% chance to fill, picking a not-yet-used key. Empty
+// slots produce empty `<wrapper/>`.
+function runSlotFuzz({ withKey, sparse, seed: initialSeed }) {
   const ALL = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
   const ITEMS = withKey
     ? Object.fromEntries(ALL.map(k => [k, <text key={k}>{k}</text>]))
@@ -856,13 +860,19 @@ function runSlotFuzz({ withKey, seed: initialSeed }) {
     seed >>>= 0;
     return seed / 0x100000000;
   };
-  const pickLayout = () => {
+  const shuffled = () => {
     const pool = ALL.slice();
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(rand() * (i + 1));
       [pool[i], pool[j]] = [pool[j], pool[i]];
     }
-    return pool.slice(0, SLOT_COUNT);
+    return pool;
+  };
+  const pickLayout = () => {
+    if (!sparse) return shuffled().slice(0, SLOT_COUNT);
+    const pool = shuffled();
+    let next = 0;
+    return Array.from({ length: SLOT_COUNT }, () => (rand() < 0.7 ? pool[next++] : null));
   };
 
   const layouts = [];
@@ -876,25 +886,26 @@ function runSlotFuzz({ withKey, seed: initialSeed }) {
     const layout = layouts[s];
     return (
       <view data-testid='view'>
-        {ITEMS[layout[0]]}
+        {layout[0] != null ? ITEMS[layout[0]] : null}
         <text>-</text>
-        {ITEMS[layout[1]]}
+        {layout[1] != null ? ITEMS[layout[1]] : null}
         <text>-</text>
-        {ITEMS[layout[2]]}
+        {layout[2] != null ? ITEMS[layout[2]] : null}
         <text>-</text>
-        {ITEMS[layout[3]]}
+        {layout[3] != null ? ITEMS[layout[3]] : null}
         <text>-</text>
-        {ITEMS[layout[4]]}
+        {layout[4] != null ? ITEMS[layout[4]] : null}
         <text>-</text>
-        {ITEMS[layout[5]]}
+        {layout[5] != null ? ITEMS[layout[5]] : null}
       </view>
     );
   };
 
   const { container } = render(<Comp />);
+  // Read each $N wrapper's textContent (empty string for empty slots).
   const slotOrder = () =>
     Array.from(container.querySelectorAll('view > wrapper'))
-      .map(w => w.textContent.trim());
+      .map(w => w.textContent.trim() || null);
 
   expect(slotOrder()).toEqual(layouts[0]);
   for (step = 1; step < STEPS; step++) {
@@ -907,10 +918,17 @@ function runSlotFuzz({ withKey, seed: initialSeed }) {
 }
 
 test('fuzz (keyed): cross-slot keyed moves keep slot order', { timeout: 30000 }, () => {
-  runSlotFuzz({ withKey: true, seed: 0xDEADBEEF });
+  runSlotFuzz({ withKey: true, sparse: false, seed: 0xDEADBEEF });
 });
 
 test('fuzz (unkeyed): positional slot updates keep slot order', { timeout: 30000 }, () => {
-  // Different seed so we exercise a different sequence than the keyed variant.
-  runSlotFuzz({ withKey: false, seed: 0x1337C0DE });
+  runSlotFuzz({ withKey: false, sparse: false, seed: 0x1337C0DE });
+});
+
+test('fuzz (keyed, sparse): random null/filled slots stay correct', { timeout: 30000 }, () => {
+  runSlotFuzz({ withKey: true, sparse: true, seed: 0xCAFEBABE });
+});
+
+test('fuzz (unkeyed, sparse): random null/filled slots stay correct', { timeout: 30000 }, () => {
+  runSlotFuzz({ withKey: false, sparse: true, seed: 0xFEEDFACE });
 });
