@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-export const GENERIC_PROPS = new Set([
+export const GENERIC_PROPS: ReadonlySet<string> = new Set([
   'id',
   'surface',
   'setValue',
@@ -11,7 +11,7 @@ export const GENERIC_PROPS = new Set([
   'component',
 ]);
 
-export const ALLOWED_SCHEMA_OVERRIDE_KEYS = new Set([
+export const ALLOWED_SCHEMA_OVERRIDE_KEYS: ReadonlySet<string> = new Set([
   'additionalProperties',
   'const',
   'default',

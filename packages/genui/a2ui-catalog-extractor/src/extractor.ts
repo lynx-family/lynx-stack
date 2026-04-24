@@ -35,6 +35,7 @@ interface SourceContext {
   filePath: string;
   jsDocTypedefs: Map<string, JsDocTypedef>;
   localDeclarations: Map<string, LocalDeclaration>;
+  scriptKind: ts.ScriptKind;
   sourceFile: ts.SourceFile;
   typeDocIndex: TypeDocIndex;
 }
@@ -765,7 +766,7 @@ function parseTypeNode(
     }
   }
 
-  if (isBestEffortScriptKind(context.sourceFile.scriptKind)) {
+  if (isBestEffortScriptKind(context.scriptKind)) {
     return { type: 'string' };
   }
 
@@ -781,12 +782,13 @@ async function loadSourceContext(
   typeDocIndex: TypeDocIndex,
 ): Promise<SourceContext> {
   const text = await fs.readFile(filePath, 'utf8');
+  const scriptKind = inferScriptKind(filePath);
   const sourceFile = ts.createSourceFile(
     filePath,
     text,
     ts.ScriptTarget.Latest,
     true,
-    inferScriptKind(filePath),
+    scriptKind,
   );
   const jsDocTypedefs = parseJsDocTypedefs(text);
 
@@ -794,6 +796,7 @@ async function loadSourceContext(
     filePath,
     jsDocTypedefs,
     localDeclarations: collectLocalDeclarations(sourceFile, jsDocTypedefs),
+    scriptKind,
     sourceFile,
     typeDocIndex,
   };

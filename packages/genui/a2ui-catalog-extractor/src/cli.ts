@@ -31,6 +31,20 @@ function isCatalogFormat(value: string): value is CatalogFormat {
   return value === 'legacy-shards' || value === 'a2ui-catalog';
 }
 
+function parseCatalogFormat(rawFormat: string | undefined): CatalogFormat {
+  if (!rawFormat) {
+    return 'legacy-shards';
+  }
+
+  if (isCatalogFormat(rawFormat)) {
+    return rawFormat;
+  }
+
+  throw new Error(
+    `Unsupported --format "${rawFormat}". Expected "legacy-shards" or "a2ui-catalog".`,
+  );
+}
+
 function parseCatalogOptions(args: readonly string[]): {
   extractOptions: ExtractCatalogOptions;
   outDir: string;
@@ -55,15 +69,8 @@ function parseCatalogOptions(args: readonly string[]): {
     throw new Error('Both --source and --out are required.');
   }
 
-  const rawFormat = values['format'];
-  if (rawFormat && !isCatalogFormat(rawFormat)) {
-    throw new Error(
-      `Unsupported --format "${rawFormat}". Expected "legacy-shards" or "a2ui-catalog".`,
-    );
-  }
-
   const extractOptions: ExtractCatalogOptions = {
-    format: rawFormat ?? 'legacy-shards',
+    format: parseCatalogFormat(values['format']),
     sourceDir: values['source'],
   };
   if (values['catalog-id']) extractOptions.catalogId = values['catalog-id'];
