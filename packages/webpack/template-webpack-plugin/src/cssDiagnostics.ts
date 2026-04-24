@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping';
 import type { SourceMapInput } from '@jridgewell/trace-mapping';
-import type { Compilation } from 'webpack';
+import type { Asset } from 'webpack';
 
 import type * as CSS from '@lynx-js/css-serializer';
 
@@ -72,9 +72,9 @@ export interface ProcessTasmCSSDiagnosticsOptions {
    */
   cssDiagnostics: unknown;
   /**
-   * The webpack compilation containing the main CSS asset.
+   * CSS source map contents from the CSS chunks for the current template.
    */
-  compilation: Compilation;
+  cssSourceMaps: string[];
   /**
    * The webpack compiler context used to resolve relative source paths.
    */
@@ -96,7 +96,7 @@ export interface ProcessTasmCSSDiagnosticsOptions {
  */
 export function processTasmCSSDiagnostics({
   cssDiagnostics,
-  compilation,
+  cssSourceMaps,
   context,
   emittedWarnings,
   fileExists,
@@ -108,7 +108,7 @@ export function processTasmCSSDiagnostics({
 
   const resolveOptions: Parameters<typeof resolveTasmCSSDiagnostics>[0] = {
     cssDiagnostics: diagnostics,
-    mainCSSSourceMap: getMainCSSSourceMap(compilation),
+    mainCSSSourceMaps: parseCSSSourceMaps(cssSourceMaps),
     context,
   };
   if (fileExists !== undefined) {
@@ -127,13 +127,13 @@ export function extractTasmCSSDiagnostics(value: unknown): TasmCSSDiagnostic[] {
   }
 
   try {
-    const parsed = JSON.parse(value) as unknown as TasmCSSDiagnostic[];
+    const parsed = JSON.parse(value) as unknown;
     if (!Array.isArray(parsed)) {
       return [];
     }
 
     return parsed
-      .map((element) => normalizeTasmCSSDiagnostic(element))
+      .map(element => normalizeTasmCSSDiagnostic(element))
       .filter((diagnostic): diagnostic is TasmCSSDiagnostic => (
         diagnostic !== null
       ));
@@ -144,60 +144,65 @@ export function extractTasmCSSDiagnostics(value: unknown): TasmCSSDiagnostic[] {
 
 export function resolveTasmCSSDiagnostics({
   cssDiagnostics,
-  mainCSSSourceMap,
+  mainCSSSourceMaps,
   context,
   fileExists = existsSync,
 }: {
   cssDiagnostics: TasmCSSDiagnostic[];
-  mainCSSSourceMap: CSS.CSSSourceMap | undefined;
+  mainCSSSourceMaps: CSS.CSSSourceMap[];
   context: string;
   fileExists?: (path: string) => boolean;
 }): ResolvedTasmCSSDiagnostic[] {
-  if (!mainCSSSourceMap) {
+  if (mainCSSSourceMaps.length === 0) {
     return cssDiagnostics.map(diagnostic => ({
       ...diagnostic,
       message: formatTasmCSSDiagnosticMessage(diagnostic),
     }));
   }
 
-  const traceMap = new TraceMap(mainCSSSourceMap as SourceMapInput);
+  const traceMaps = mainCSSSourceMaps.map(sourceMap => ({
+    sourceMap,
+    traceMap: new TraceMap(sourceMap as SourceMapInput),
+  }));
 
   return cssDiagnostics.map(diagnostic => {
-    const mapped = originalPositionFor(traceMap, {
-      line: diagnostic.line,
-      column: Math.max(diagnostic.column - 1, 0),
-    });
-
     const message = formatTasmCSSDiagnosticMessage(diagnostic);
-    if (
-      mapped.source === null
-      || mapped.line === null
-      || mapped.column === null
-    ) {
-      return {
-        ...diagnostic,
-        message,
-      };
-    }
 
-    const sourceFile = normalizeTasmSourcePath(
-      mapped.source,
-      mainCSSSourceMap,
-      context,
-    );
-    if (!sourceFile || !fileExists(sourceFile)) {
+    for (const { sourceMap, traceMap } of traceMaps) {
+      const mapped = originalPositionFor(traceMap, {
+        line: diagnostic.line,
+        column: Math.max(diagnostic.column - 1, 0),
+      });
+
+      if (
+        mapped.source === null
+        || mapped.line === null
+        || mapped.column === null
+      ) {
+        continue;
+      }
+
+      const sourceFile = normalizeTasmSourcePath(
+        mapped.source,
+        sourceMap,
+        context,
+      );
+      if (!sourceFile || !fileExists(sourceFile)) {
+        continue;
+      }
+
       return {
         ...diagnostic,
         message,
+        sourceFile,
+        sourceLine: mapped.line,
+        sourceColumn: mapped.column + 1,
       };
     }
 
     return {
       ...diagnostic,
       message,
-      sourceFile,
-      sourceLine: mapped.line,
-      sourceColumn: mapped.column + 1,
     };
   });
 }
@@ -225,7 +230,43 @@ export function dedupeTasmCSSDiagnostics<T extends ResolvedTasmCSSDiagnostic>(
   });
 }
 
-type Asset = ReturnType<Compilation['getAssets']>[number];
+export function collectCSSSourceMapContents(
+  cssChunks: Asset[] | undefined,
+): string[] {
+  const sourceMaps: string[] = [];
+
+  if (!cssChunks || cssChunks.length === 0) {
+    return sourceMaps;
+  }
+
+  cssChunks.forEach((cssChunk) => {
+    const sourceMap = normalizeCSSSourceMap(cssChunk.source.map?.());
+    if (sourceMap) {
+      sourceMaps.push(JSON.stringify(sourceMap));
+    }
+  });
+
+  return Array.from(new Set(sourceMaps));
+}
+
+function parseCSSSourceMaps(cssSourceMaps: string[]): CSS.CSSSourceMap[] {
+  return cssSourceMaps.reduce<CSS.CSSSourceMap[]>((parsed, cssSourceMap) => {
+    if (cssSourceMap.trim() === '') {
+      return parsed;
+    }
+
+    try {
+      const sourceMap = JSON.parse(cssSourceMap) as unknown;
+      if (isCSSSourceMap(sourceMap)) {
+        parsed.push(sourceMap);
+      }
+    } catch {
+      // Ignore invalid source map payloads.
+    }
+
+    return parsed;
+  }, []);
+}
 
 function normalizeCSSSourceMap(
   sourceMap: ReturnType<Asset['source']['map']> | undefined,
@@ -237,21 +278,16 @@ function normalizeCSSSourceMap(
   return sourceMap;
 }
 
-export function getMainCSSSourceMap(
-  compilation: Compilation,
-): CSS.CSSSourceMap | undefined {
-  for (const asset of compilation.getAssets()) {
-    if (!asset.name.endsWith('.css')) {
-      continue;
-    }
-
-    const sourceMap = normalizeCSSSourceMap(asset.source.map?.());
-    if (sourceMap) {
-      return sourceMap;
-    }
+function isCSSSourceMap(value: unknown): value is CSS.CSSSourceMap {
+  if (!isRecord(value)) {
+    return false;
   }
 
-  return undefined;
+  return (
+    typeof value['version'] === 'number'
+    && typeof value['mappings'] === 'string'
+    && Array.isArray(value['sources'])
+  );
 }
 
 function normalizeTasmCSSDiagnostic(value: unknown): TasmCSSDiagnostic | null {

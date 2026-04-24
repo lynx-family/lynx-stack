@@ -4,7 +4,10 @@
 
 import type { Chunk, Compiler } from 'webpack';
 
-import { processTasmCSSDiagnostics } from './cssDiagnostics.js';
+import {
+  collectCSSSourceMapContents,
+  processTasmCSSDiagnostics,
+} from './cssDiagnostics.js';
 import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
 import { getRequireModuleAsyncCachePolyfill } from './polyfill/requireModuleAsync.js';
 
@@ -234,9 +237,20 @@ export class LynxEncodePluginImpl {
           encode(encodeOptions),
         );
 
+        return {
+          buffer,
+          debugInfo: lepus_debug,
+          cssDiagnostics: css_diagnostics as string,
+        };
+      });
+
+      templateHooks.beforeEmit.tapPromise({
+        name: this.name,
+        stage: LynxEncodePlugin.BEFORE_EMIT_STAGE,
+      }, async (args) => {
         const resolvedDiagnostics = processTasmCSSDiagnostics({
-          cssDiagnostics: css_diagnostics,
-          compilation,
+          cssDiagnostics: args.cssDiagnostics,
+          cssSourceMaps: collectCSSSourceMapContents(args.cssChunks),
           context: compiler.context,
           emittedWarnings: emittedCSSDiagnosticWarnings,
         });
@@ -245,7 +259,7 @@ export class LynxEncodePluginImpl {
             const webpackWarning = new compiler.webpack.WebpackError(
               diagnostic.message,
             );
-            webpackWarning.stack = '';
+            webpackWarning.hideStack = true;
 
             if (
               diagnostic.sourceFile
@@ -272,7 +286,7 @@ export class LynxEncodePluginImpl {
           });
         }
 
-        return { buffer, debugInfo: lepus_debug };
+        return args;
       });
     });
   }
