@@ -1288,7 +1288,7 @@ export class XMarkdownAttributes {
           const container = document.createElement('span');
           container.className = 'md-inline-view';
           const slot = document.createElement('slot');
-          slot.name = `md-inline-view-${id}`;
+          slot.name = id;
           container.appendChild(slot);
           img.replaceWith(container);
         }
