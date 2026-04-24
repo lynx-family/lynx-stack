@@ -33,8 +33,6 @@ export function Image(
 
   const [hasError, setHasError] = useState(false);
 
-  // The local package types for this hook are resolved at build time.
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   useEffect(() => {
     setHasError(false);
   }, [url]);

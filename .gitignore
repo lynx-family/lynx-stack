@@ -2,6 +2,7 @@ node_modules
 dist
 lib
 www
+.github/*.instructions.md
 playwright-report
 test-results
 trace.zip

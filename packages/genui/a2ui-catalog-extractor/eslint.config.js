@@ -12,6 +12,8 @@ export default defineConfig(
     '.rslib/**',
     'dist/**',
     'node_modules/**',
+    'rslib.config.ts',
+    'rstest.config.ts',
     'test/fixtures/**',
   ]),
   eslint.configs.recommended,
