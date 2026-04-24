@@ -372,7 +372,13 @@ export class SnapshotInstance {
         __RemoveElement(parent, newNode.__element_root!);
       }
       if (existingNode) {
-        if (__snapshot_def.isSlotV2 && newNode.__slotIndex < existingNode.__slotIndex) {
+        // SlotV2: each slot has its own wrapper. `existingNode` may live in a
+        // different wrapper — `insertBefore(node, ref)` across wrappers throws,
+        // so fall back to `append` (DOM auto-detaches the node from old parent).
+        if (
+          __snapshot_def.isSlotV2
+          && newNode.__slotIndex !== existingNode.__slotIndex
+        ) {
           __AppendElement(parent, newNode.__element_root!);
         } else {
           __InsertElementBefore(

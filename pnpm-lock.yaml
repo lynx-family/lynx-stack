@@ -742,8 +742,8 @@ importers:
   packages/react:
     dependencies:
       preact:
-        specifier: npm:@lynx-js/internal-preact@10.28.4-dfff9aa
-        version: '@lynx-js/internal-preact@10.28.4-dfff9aa'
+        specifier: npm:@lynx-js/internal-preact@10.29.1-20260424024911-12b794f
+        version: '@lynx-js/internal-preact@10.29.1-20260424024911-12b794f'
     devDependencies:
       '@lynx-js/types':
         specifier: 3.7.0
@@ -3597,8 +3597,8 @@ packages:
       '@lynx-js/react': '*'
       '@lynx-js/types': '*'
 
-  '@lynx-js/internal-preact@10.28.4-dfff9aa':
-    resolution: {integrity: sha512-i2xFwaWsmfODVfb9oYurZWCBDlnOdXdP/IsfW/R8i9vLtV6eo7I73U4smBINSNtQfSwpdQHooslEFD94RHVqSw==}
+  '@lynx-js/internal-preact@10.29.1-20260424024911-12b794f':
+    resolution: {integrity: sha512-MQ+xjPL2f1P9/eCAdkT2h9cJRXl1qqhSJDX9GkPETt3UAepLo5N+HbGB8Qr3IUzqGDWMr3Mj76my1P0pLkKVDg==}
 
   '@lynx-js/lynx-core@0.1.3':
     resolution: {integrity: sha512-uWzKKYJUK4Q09ZRZxWSAFINnmZb9piWPbvWF9SkLn+3snBl9u/BJa4ekPRcKWAhBmpbtxWH1x27fxe3Q3p5l3Q==}
@@ -12665,7 +12665,7 @@ snapshots:
       '@lynx-js/react': link:packages/react
       '@lynx-js/types': 3.7.0
 
-  '@lynx-js/internal-preact@10.28.4-dfff9aa': {}
+  '@lynx-js/internal-preact@10.29.1-20260424024911-12b794f': {}
 
   '@lynx-js/lynx-core@0.1.3': {}
 
