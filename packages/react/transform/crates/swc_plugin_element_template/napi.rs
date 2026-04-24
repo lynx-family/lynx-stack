@@ -11,7 +11,6 @@ use crate::{
   ElementTemplateAsset as CoreElementTemplateAsset,
   ElementTemplateTransformer as CoreElementTemplateTransformer,
   ElementTemplateTransformerConfig as CoreElementTemplateTransformerConfig,
-  ElementTemplateUISourceMapRecord as CoreElementTemplateUISourceMapRecord,
 };
 
 /// @internal
@@ -23,6 +22,7 @@ pub struct ElementTemplateAsset {
   pub template_id: String,
   /// @internal
   #[napi(js_name = "compiledTemplate")]
+  #[napi(ts_type = "unknown")]
   pub compiled_template: serde_json::Value,
   /// @internal
   #[napi(js_name = "sourceFile")]
@@ -35,41 +35,6 @@ impl From<CoreElementTemplateAsset> for ElementTemplateAsset {
       template_id: val.template_id,
       compiled_template: val.compiled_template,
       source_file: val.source_file,
-    }
-  }
-}
-
-/// @internal
-#[napi(object)]
-#[derive(Clone, Debug)]
-pub struct UISourceMapRecord {
-  pub ui_source_map: i32,
-  pub filename: String,
-  pub line_number: u32,
-  pub column_number: u32,
-  #[napi(js_name = "templateId")]
-  pub template_id: String,
-}
-
-impl From<UISourceMapRecord> for CoreElementTemplateUISourceMapRecord {
-  fn from(val: UISourceMapRecord) -> Self {
-    Self {
-      ui_source_map: val.ui_source_map,
-      line_number: val.line_number,
-      column_number: val.column_number,
-      template_id: val.template_id,
-    }
-  }
-}
-
-impl From<CoreElementTemplateUISourceMapRecord> for UISourceMapRecord {
-  fn from(val: CoreElementTemplateUISourceMapRecord) -> Self {
-    Self {
-      ui_source_map: val.ui_source_map,
-      filename: String::new(),
-      line_number: val.line_number,
-      column_number: val.column_number,
-      template_id: val.template_id,
     }
   }
 }
@@ -90,8 +55,6 @@ pub struct JSXTransformerConfig {
   #[napi(ts_type = "'LEPUS' | 'JS' | 'MIXED'")]
   pub target: TransformTarget,
   /// @internal
-  pub enable_ui_source_map: Option<bool>,
-  /// @internal
   pub is_dynamic_component: Option<bool>,
 }
 
@@ -103,7 +66,6 @@ impl Default for JSXTransformerConfig {
       jsx_import_source: Some("@lynx-js/react".into()),
       filename: Default::default(),
       target: TransformTarget::LEPUS,
-      enable_ui_source_map: Some(false),
       is_dynamic_component: Some(false),
     }
   }
@@ -117,21 +79,6 @@ impl From<JSXTransformerConfig> for CoreElementTemplateTransformerConfig {
       jsx_import_source: val.jsx_import_source,
       filename: val.filename,
       target: val.target.into(),
-      enable_ui_source_map: val.enable_ui_source_map.unwrap_or(false),
-      is_dynamic_component: val.is_dynamic_component,
-    }
-  }
-}
-
-impl From<CoreElementTemplateTransformerConfig> for JSXTransformerConfig {
-  fn from(val: CoreElementTemplateTransformerConfig) -> Self {
-    Self {
-      preserve_jsx: val.preserve_jsx,
-      runtime_pkg: val.runtime_pkg,
-      jsx_import_source: val.jsx_import_source,
-      filename: val.filename,
-      target: val.target.into(),
-      enable_ui_source_map: Some(val.enable_ui_source_map),
       is_dynamic_component: val.is_dynamic_component,
     }
   }
@@ -142,8 +89,7 @@ where
   C: Comments + Clone,
 {
   inner: CoreElementTemplateTransformer<C>,
-  pub ui_source_map_records: Rc<RefCell<Vec<CoreElementTemplateUISourceMapRecord>>>,
-  pub element_templates: Rc<RefCell<Vec<CoreElementTemplateAsset>>>,
+  element_templates: Rc<RefCell<Vec<CoreElementTemplateAsset>>>,
 }
 
 impl<C> JSXTransformer<C>
@@ -166,7 +112,6 @@ where
       Some(element_templates.clone()),
     );
     Self {
-      ui_source_map_records: inner.ui_source_map_records.clone(),
       element_templates,
       inner,
     }
@@ -174,19 +119,6 @@ where
 
   pub fn with_content_hash(mut self, content_hash: String) -> Self {
     self.inner.content_hash = content_hash;
-    self
-  }
-
-  pub fn with_ui_source_map_records(
-    mut self,
-    ui_source_map_records: Rc<RefCell<Vec<CoreElementTemplateUISourceMapRecord>>>,
-  ) -> Self {
-    debug_assert!(
-      self.inner.ui_source_map_records.borrow().is_empty(),
-      "ElementTemplateTransformer::with_ui_source_map_records must be called before records are captured"
-    );
-    self.inner.ui_source_map_records = ui_source_map_records.clone();
-    self.ui_source_map_records = ui_source_map_records;
     self
   }
 
@@ -210,6 +142,10 @@ impl<C> VisitMut for JSXTransformer<C>
 where
   C: Comments + Clone,
 {
+  fn visit_mut_program(&mut self, node: &mut Program) {
+    self.inner.visit_mut_program(node)
+  }
+
   fn visit_mut_jsx_element(&mut self, node: &mut JSXElement) {
     self.inner.visit_mut_jsx_element(node)
   }

@@ -50,13 +50,10 @@ where
         for prop in &obj.props {
           if let PropOrSpread::Prop(prop) = prop {
             if let Prop::KeyValue(kv) = &**prop {
-              let key;
-              if let PropName::Ident(ident) = &kv.key {
-                key = ident.sym.as_str().to_string();
-              } else if let PropName::Str(s) = &kv.key {
-                key = s.value.as_str().unwrap_or("").to_string();
-              } else {
-                continue;
+              let key = match &kv.key {
+                PropName::Ident(ident) => ident.sym.as_str().to_string(),
+                PropName::Str(s) => s.value.as_str().unwrap_or("").to_string(),
+                _ => continue,
               };
               let value = self.element_template_to_json(&kv.value);
               map.insert(key, value);
@@ -197,20 +194,16 @@ where
         JSXElementChild::JSXExprContainer(JSXExprContainer {
           expr: JSXExpr::Expr(_),
           ..
-        }) => {
-          let idx = *element_slot_index;
-          *element_slot_index += 1;
-          out.push(self.element_template_element_slot(idx));
-        }
+        }) => unreachable!(
+          "dynamic child should have been lowered to a slot placeholder by ElementTemplateExtractor"
+        ),
         JSXElementChild::JSXExprContainer(JSXExprContainer {
           expr: JSXExpr::JSXEmptyExpr(_),
           ..
         }) => {}
-        JSXElementChild::JSXSpreadChild(_) => {
-          let idx = *element_slot_index;
-          *element_slot_index += 1;
-          out.push(self.element_template_element_slot(idx));
-        }
+        JSXElementChild::JSXSpreadChild(_) => unreachable!(
+          "dynamic child should have been lowered to a slot placeholder by ElementTemplateExtractor"
+        ),
       }
     }
 
@@ -240,11 +233,8 @@ where
     element_slot_index: &mut i32,
   ) -> Expr {
     if is_slot_placeholder(n) {
-      let idx = slot_placeholder_index(n).unwrap_or_else(|| {
-        let idx = *element_slot_index;
-        *element_slot_index += 1;
-        idx
-      });
+      let idx =
+        slot_placeholder_index(n).expect("ET slot placeholder should always carry a slot index");
       return self.element_template_element_slot(idx);
     }
 
@@ -280,7 +270,7 @@ where
               ..
             })) => match &**expr {
               Expr::Lit(Lit::Str(s)) => Some(Expr::Lit(Lit::Str(s.clone()))),
-              Expr::Lit(Lit::Num(n)) => Some(Expr::Lit(Lit::Num(n.clone()))),
+              Expr::Lit(Lit::Num(n)) if n.value.is_finite() => Some(Expr::Lit(Lit::Num(n.clone()))),
               Expr::Lit(Lit::Bool(b)) => Some(Expr::Lit(Lit::Bool(*b))),
               Expr::Lit(Lit::Null(n)) => Some(Expr::Lit(Lit::Null(*n))),
               // TODO: Support complex static values (Object, Array, Template Literal without expressions)
@@ -332,9 +322,20 @@ where
       || tag_value == "inline-text"
       || tag_value == "x-text"
       || tag_value == "x-inline-text";
+    let has_explicit_text_attr = n.opening.attrs.iter().any(|attr| {
+      matches!(
+        attr,
+        JSXAttrOrSpread::JSXAttr(attr) if template_attribute_descriptor_key(&attr.name) == "text"
+      )
+    });
+    let has_spread_attr = n
+      .opening
+      .attrs
+      .iter()
+      .any(|attr| matches!(attr, JSXAttrOrSpread::SpreadElement(_)));
     let mut text_child_optimized = false;
 
-    if is_text_tag {
+    if is_text_tag && !has_explicit_text_attr && !has_spread_attr {
       let valid_children: Vec<&JSXElementChild> = n
         .children
         .iter()

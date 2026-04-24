@@ -31,26 +31,15 @@ use self::extractor::{ElementTemplateExtractor, ExtractedTemplateParts};
 use self::lowering::LoweredRuntimeJsx;
 use self::template_slot::ET_SLOT_PLACEHOLDER_TAG;
 
-#[derive(Clone, Debug, Deserialize)]
-pub struct UISourceMapRecord {
-  pub ui_source_map: i32,
-  pub line_number: u32,
-  pub column_number: u32,
-  pub template_id: String,
-}
-
 pub type ElementTemplateTransformerConfig = JSXTransformerConfig;
 pub type ElementTemplateTransformer<C> = JSXTransformer<C>;
-pub type ElementTemplateUISourceMapRecord = UISourceMapRecord;
+type RuntimeIdInitializer = Box<dyn FnOnce() -> Expr>;
 
 #[cfg(feature = "napi")]
 pub mod napi;
 
 use swc_plugins_shared::{
-  jsx_helpers::jsx_name,
-  target::TransformTarget,
-  transform_mode::TransformMode,
-  utils::{calc_hash, calc_hash_number},
+  jsx_helpers::jsx_name, target::TransformTarget, transform_mode::TransformMode, utils::calc_hash,
 };
 
 pub fn i32_to_expr(i: &i32) -> Expr {
@@ -59,6 +48,10 @@ pub fn i32_to_expr(i: &i32) -> Expr {
     value: *i as f64,
     raw: None,
   }))
+}
+
+fn lazy_runtime_id(init: impl FnOnce() -> Expr + 'static) -> Lazy<Expr, RuntimeIdInitializer> {
+  Lazy::new(Box::new(init))
 }
 
 /// @internal
@@ -75,10 +68,6 @@ pub struct JSXTransformerConfig {
   pub filename: String,
   /// @internal
   pub target: TransformTarget,
-  /// @internal
-  #[serde(default)]
-  pub enable_ui_source_map: bool,
-  /// @internal
   pub is_dynamic_component: Option<bool>,
 }
 
@@ -90,7 +79,6 @@ impl Default for JSXTransformerConfig {
       jsx_import_source: Some("@lynx-js/react".into()),
       filename: Default::default(),
       target: TransformTarget::LEPUS,
-      enable_ui_source_map: false,
       is_dynamic_component: Some(false),
     }
   }
@@ -104,15 +92,13 @@ where
   cfg: JSXTransformerConfig,
   filename_hash: String,
   pub content_hash: String,
-  runtime_id: Lazy<Expr>,
+  runtime_id: Lazy<Expr, RuntimeIdInitializer>,
   pub element_templates: Option<Rc<RefCell<Vec<ElementTemplateAsset>>>>,
   template_counter: u32,
   current_template_defs: Vec<ModuleItem>,
   comments: Option<C>,
   slot_ident: Ident,
   used_slot: bool,
-  pub ui_source_map_records: Rc<RefCell<Vec<UISourceMapRecord>>>,
-  pub source_map: Option<Lrc<SourceMap>>,
 }
 
 impl<C> JSXTransformer<C>
@@ -137,7 +123,7 @@ where
     cfg: JSXTransformerConfig,
     comments: Option<C>,
     mode: TransformMode,
-    source_map: Option<Lrc<SourceMap>>,
+    _source_map: Option<Lrc<SourceMap>>,
     element_templates: Option<Rc<RefCell<Vec<ElementTemplateAsset>>>>,
   ) -> Self {
     JSXTransformer {
@@ -145,11 +131,28 @@ where
       content_hash: "test".into(),
       runtime_id: match mode {
         TransformMode::Development => {
-          // We should find a way to use `cfg.runtime_pkg`
-          Lazy::new(|| quote!("require('@lynx-js/react/internal')" as Expr))
+          let runtime_pkg = format!("{}/internal", cfg.runtime_pkg);
+          lazy_runtime_id(move || {
+            Expr::Call(CallExpr {
+              ctxt: SyntaxContext::default(),
+              span: DUMMY_SP,
+              callee: Callee::Expr(Box::new(Expr::Ident(
+                IdentName::new("require".into(), DUMMY_SP).into(),
+              ))),
+              args: vec![ExprOrSpread {
+                spread: None,
+                expr: Box::new(Expr::Lit(Lit::Str(Str {
+                  span: DUMMY_SP,
+                  value: runtime_pkg.into(),
+                  raw: None,
+                }))),
+              }],
+              type_args: None,
+            })
+          })
         }
         TransformMode::Production | TransformMode::Test => {
-          Lazy::new(|| Expr::Ident(private_ident!("ReactLynx")))
+          lazy_runtime_id(|| Expr::Ident(private_ident!("ReactLynx")))
         }
       },
       element_templates,
@@ -159,8 +162,6 @@ where
       comments,
       slot_ident: private_ident!("__etSlot"),
       used_slot: false,
-      ui_source_map_records: Rc::new(RefCell::new(vec![])),
-      source_map,
     }
   }
 
@@ -227,6 +228,7 @@ where
                 )
                 .emit()
             });
+            return;
           }
         }
       }
@@ -248,46 +250,13 @@ where
 
     let target = self.cfg.target;
     let runtime_id = self.runtime_id.clone();
-    let filename_hash = self.filename_hash.clone();
-    let content_hash = self.content_hash.clone();
-    let ui_source_map_records = self.ui_source_map_records.clone();
-    let template_uid_for_captured = template_uid.clone();
-    let source_map = self.source_map.clone();
-    let node_index_fn = move |span: Span| {
-      let ui_source_map =
-        calc_hash_number(&format!("{}:{}:{}", filename_hash, content_hash, span.lo.0));
-
-      let mut line_number = 0;
-      let mut column_number = 0;
-      if span.lo.0 > 0 {
-        if let Some(cm) = &source_map {
-          let loc = cm.lookup_char_pos(span.lo);
-          line_number = loc.line as u32;
-          column_number = loc.col.0 as u32 + 1;
-        }
-      }
-
-      ui_source_map_records.borrow_mut().push(UISourceMapRecord {
-        ui_source_map,
-        line_number,
-        column_number,
-        template_id: template_uid_for_captured.clone(),
-      });
-
-      Expr::Lit(Lit::Num(Number {
-        span: DUMMY_SP,
-        value: ui_source_map as f64,
-        raw: None,
-      }))
-    };
     let ExtractedTemplateParts {
       key,
       dynamic_attrs,
       dynamic_attr_slots,
       dynamic_children,
     } = {
-      let mut extractor =
-        ElementTemplateExtractor::new(self, self.cfg.enable_ui_source_map, node_index_fn);
+      let mut extractor = ElementTemplateExtractor::new(self);
 
       node.visit_mut_with(&mut extractor);
       extractor.into_extracted_template_parts()
@@ -388,7 +357,7 @@ where
 
     n.visit_mut_children_with(self);
     self.ensure_builtin_element_templates();
-    if let Some(Expr::Ident(runtime_id)) = Lazy::<Expr>::get(&self.runtime_id) {
+    if let Some(Expr::Ident(runtime_id)) = Lazy::get(&self.runtime_id) {
       prepend_stmt(
         &mut n.body,
         ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {

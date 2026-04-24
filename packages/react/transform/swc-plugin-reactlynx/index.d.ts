@@ -40,8 +40,6 @@ export interface ElementTemplateConfig {
   /** @internal */
   target: 'LEPUS' | 'JS' | 'MIXED';
   /** @internal */
-  enableUiSourceMap?: boolean;
-  /** @internal */
   isDynamicComponent?: boolean;
 }
 

@@ -50,7 +50,6 @@ export interface UiSourceMapRecord {
   lineNumber: number
   columnNumber: number
   snapshotId?: string
-  templateId?: string
 }
 export interface DarkModeConfig {
   /**
@@ -613,8 +612,6 @@ export interface ElementTemplateConfig {
   /** @internal */
   target: 'LEPUS' | 'JS' | 'MIXED'
   /** @internal */
-  enableUiSourceMap?: boolean
-  /** @internal */
   isDynamicComponent?: boolean
 }
 export interface WorkletVisitorConfig {
@@ -680,7 +677,7 @@ export interface ElementTemplateAsset {
   /** @internal */
   templateId: string
   /** @internal */
-  compiledTemplate: Record<string, unknown>
+  compiledTemplate: unknown
   /** @internal */
   sourceFile: string
 }

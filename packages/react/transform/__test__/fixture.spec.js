@@ -196,37 +196,6 @@ describe('element template', () => {
     expect(template?.sourceFile).toEqual(expect.any(String));
   });
 
-  it('should export template ids for element template uiSourceMapRecords', async () => {
-    const result = await transformReactLynx('const node = <view />;', {
-      mode: 'test',
-      pluginName: '',
-      filename: 'test.js',
-      sourcemap: false,
-      cssScope: false,
-      elementTemplate: {
-        preserveJsx: false,
-        runtimePkg: '@lynx-js/react',
-        filename: 'test.js',
-        target: 'LEPUS',
-        enableUiSourceMap: true,
-      },
-      jsx: true,
-      directiveDCE: false,
-      defineDCE: false,
-      shake: false,
-      compat: true,
-      worklet: false,
-      refresh: false,
-    });
-
-    expect(result.uiSourceMapRecords).toHaveLength(1);
-    expect(result.uiSourceMapRecords[0]).toMatchObject({
-      filename: 'test.js',
-      templateId: expect.stringMatching(/^_et_/),
-    });
-    expect(result.uiSourceMapRecords[0].snapshotId).toBeUndefined();
-  });
-
   it('should not bridge legacy snapshot ET flags into the new ET plugin path', async () => {
     const result = await transformReactLynx('const node = <view className="foo" />;', {
       mode: 'test',
@@ -251,6 +220,57 @@ describe('element template', () => {
     });
 
     expect(result.elementTemplates).toBeUndefined();
+  });
+
+  it('should return an empty template list when element template emits no assets', async () => {
+    const result = await transformReactLynx('const value = 1;', {
+      mode: 'test',
+      pluginName: '',
+      filename: 'test.js',
+      sourcemap: false,
+      cssScope: false,
+      elementTemplate: {
+        preserveJsx: false,
+        runtimePkg: '@lynx-js/react',
+        filename: 'test.js',
+        target: 'LEPUS',
+      },
+      jsx: true,
+      directiveDCE: false,
+      defineDCE: false,
+      shake: false,
+      compat: true,
+      worklet: false,
+      refresh: false,
+    });
+
+    expect(result.elementTemplates).toEqual([]);
+  });
+
+  it('should warn when snapshot and element template are both explicitly enabled', async () => {
+    const result = await transformReactLynx('const node = <view />;', {
+      mode: 'test',
+      pluginName: '',
+      filename: 'test.js',
+      sourcemap: false,
+      cssScope: false,
+      snapshot: true,
+      elementTemplate: true,
+      jsx: true,
+      directiveDCE: false,
+      defineDCE: false,
+      shake: false,
+      compat: true,
+      worklet: false,
+      refresh: false,
+    });
+
+    expect(result.elementTemplates).toEqual(expect.any(Array));
+    expect(result.warnings).toEqual([
+      expect.objectContaining({
+        text: expect.stringContaining('elementTemplate'),
+      }),
+    ]);
   });
 });
 

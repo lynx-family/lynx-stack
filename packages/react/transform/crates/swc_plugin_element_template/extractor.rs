@@ -2,7 +2,7 @@ use once_cell::sync::Lazy;
 use std::collections::HashSet;
 
 use swc_core::{
-  common::{util::take::Take, Span, DUMMY_SP},
+  common::{util::take::Take, DUMMY_SP},
   ecma::{
     ast::{JSXExpr, *},
     utils::is_literal,
@@ -70,10 +70,17 @@ fn bool_jsx_attr(value: bool) -> JSXAttrValue {
   })
 }
 
-pub(super) struct ElementTemplateExtractor<'a, V, F>
+fn is_static_attr_literal(expr: &Expr) -> bool {
+  match expr {
+    Expr::Lit(Lit::Str(_)) | Expr::Lit(Lit::Bool(_)) | Expr::Lit(Lit::Null(_)) => true,
+    Expr::Lit(Lit::Num(n)) => n.value.is_finite(),
+    _ => false,
+  }
+}
+
+pub(super) struct ElementTemplateExtractor<'a, V>
 where
   V: VisitMut,
-  F: Fn(Span) -> Expr,
 {
   parent_element: bool,
   dynamic_attrs: Vec<DynamicAttributePart>,
@@ -83,20 +90,13 @@ where
   pub(super) key: Option<JSXAttrValue>,
   attr_slot_counter: i32,
   element_slot_counter: i32,
-  enable_ui_source_map: bool,
-  node_index_fn: F,
 }
 
-impl<'a, V, F> ElementTemplateExtractor<'a, V, F>
+impl<'a, V> ElementTemplateExtractor<'a, V>
 where
   V: VisitMut,
-  F: Fn(Span) -> Expr,
 {
-  pub(super) fn new(
-    dynamic_part_visitor: &'a mut V,
-    enable_ui_source_map: bool,
-    node_index_fn: F,
-  ) -> Self {
+  pub(super) fn new(dynamic_part_visitor: &'a mut V) -> Self {
     Self {
       parent_element: false,
       dynamic_attrs: vec![],
@@ -106,14 +106,6 @@ where
       key: None,
       attr_slot_counter: 0,
       element_slot_counter: 0,
-      enable_ui_source_map,
-      node_index_fn,
-    }
-  }
-
-  fn record_node_index(&self, span: Span) {
-    if self.enable_ui_source_map {
-      let _ = (self.node_index_fn)(span);
     }
   }
 
@@ -191,7 +183,7 @@ where
           ..
         })) = value
         {
-          if !(preserve_literal_expr && matches!(&**expr, Expr::Lit(_))) {
+          if !(preserve_literal_expr && is_static_attr_literal(expr)) {
             self.push_dynamic_attr(*expr.clone(), attr_name, key);
           }
         }
@@ -300,10 +292,9 @@ where
   }
 }
 
-impl<V, F> VisitMut for ElementTemplateExtractor<'_, V, F>
+impl<V> VisitMut for ElementTemplateExtractor<'_, V>
 where
   V: VisitMut,
-  F: Fn(Span) -> Expr,
 {
   fn visit_mut_jsx_element_childs(&mut self, n: &mut Vec<JSXElementChild>) {
     if n.is_empty() {
@@ -346,9 +337,8 @@ where
             slot_index,
           ));
 
-          let mut child =
+          let child =
             JSXElementChild::JSXElement(Box::new(slot_placeholder_node(slot_index, false)));
-          child.visit_mut_with(self);
           merged_children.push(child);
         }
 
@@ -367,9 +357,7 @@ where
         slot_index,
       ));
 
-      let mut child =
-        JSXElementChild::JSXElement(Box::new(slot_placeholder_node(slot_index, false)));
-      child.visit_mut_with(self);
+      let child = JSXElementChild::JSXElement(Box::new(slot_placeholder_node(slot_index, false)));
       merged_children.push(child);
     }
 
@@ -395,25 +383,18 @@ where
     }
 
     if !jsx_is_custom(n) {
-      self.record_node_index(n.span);
-
       if jsx_has_dynamic_key(n) && self.parent_element {
-        let is_list = jsx_is_list(n);
         n.visit_mut_with(self.dynamic_part_visitor);
         let expr = Expr::JSXElement(Box::new(n.take()));
         let slot_index = self.next_children_slot_index();
 
-        if is_list {
-          self
-            .dynamic_children
-            .push(DynamicElementPart::ListSlot(expr, slot_index));
-        } else {
-          self
-            .dynamic_children
-            .push(DynamicElementPart::Slot(expr, slot_index));
-        }
+        self
+          .dynamic_children
+          .push(DynamicElementPart::Slot(expr, slot_index));
 
         *n = slot_placeholder_node(slot_index, false);
+        n.visit_mut_with(self);
+        return;
       }
 
       self.ensure_flatten_attr(n);
@@ -479,9 +460,5 @@ where
     }
   }
 
-  fn visit_mut_jsx_text(&mut self, n: &mut JSXText) {
-    if !jsx_text_to_str(&n.value).is_empty() {
-      self.record_node_index(n.span);
-    }
-  }
+  fn visit_mut_jsx_text(&mut self, _: &mut JSXText) {}
 }

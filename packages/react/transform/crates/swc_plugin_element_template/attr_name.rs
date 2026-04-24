@@ -1,6 +1,12 @@
+use once_cell::sync::Lazy;
 use regex::Regex;
 
 use swc_core::ecma::ast::*;
+
+static EVENT_KEY_RE: Lazy<Regex> = Lazy::new(|| {
+  Regex::new(r"^(global-bind|bind|catch|capture-bind|capture-catch)([A-Za-z]+)$")
+    .expect("event key regex must compile")
+});
 
 #[derive(Debug, Clone)]
 pub enum AttrName {
@@ -41,7 +47,7 @@ impl From<String> for AttrName {
 
 impl From<Str> for AttrName {
   fn from(name: Str) -> Self {
-    let name = name.value.to_string_lossy().into_owned();
+    let name = name.value.as_str().unwrap_or("").to_string();
     Self::from(name)
   }
 }
@@ -56,22 +62,22 @@ impl From<Ident> for AttrName {
 impl AttrName {
   pub fn from_ns(ns: Ident, name: Ident) -> Self {
     let ns_str = ns.sym.as_ref();
-    let name_str = name.sym.as_ref().to_string();
-    if ns_str == "main-thread" && name_str == "ref" {
-      AttrName::WorkletRef
-    } else if ns_str == "main-thread" && get_event_type_and_name(name_str.as_str()).is_some() {
-      AttrName::WorkletEvent
-    } else if ns_str == "main-thread" && name_str == "gesture" {
-      AttrName::Gesture
-    } else {
-      AttrName::Attr
+    let name_str = name.sym.as_ref();
+    if ns_str != "main-thread" {
+      return AttrName::Attr;
+    }
+
+    match name_str {
+      "ref" => AttrName::WorkletRef,
+      "gesture" => AttrName::Gesture,
+      _ if get_event_type_and_name(name_str).is_some() => AttrName::WorkletEvent,
+      _ => AttrName::Attr,
     }
   }
 }
 
 fn get_event_type_and_name(props_key: &str) -> Option<(String, String)> {
-  let re = Regex::new(r"^(global-bind|bind|catch|capture-bind|capture-catch)([A-Za-z]+)$").unwrap();
-  if let Some(captures) = re.captures(props_key) {
+  if let Some(captures) = EVENT_KEY_RE.captures(props_key) {
     let event_type = if captures.get(1).unwrap().as_str().contains("capture") {
       captures.get(1).unwrap().as_str().to_string()
     } else {

@@ -55,10 +55,10 @@ use swc_plugin_css_scope::napi::{CSSScopeVisitor, CSSScopeVisitorConfig};
 use swc_plugin_define_dce::napi::DefineDCEVisitorConfig;
 use swc_plugin_directive_dce::napi::{DirectiveDCEVisitor, DirectiveDCEVisitorConfig};
 use swc_plugin_dynamic_import::napi::{DynamicImportVisitor, DynamicImportVisitorConfig};
-use swc_plugin_element_template::{
-  napi::{ElementTemplateAsset, ElementTemplateTransformer, ElementTemplateTransformerConfig},
-  ElementTemplateUISourceMapRecord as ElementTemplateCoreUISourceMapRecord,
+use swc_plugin_element_template::napi::{
+  ElementTemplateAsset, ElementTemplateTransformer, ElementTemplateTransformerConfig,
 };
+use swc_plugin_element_template::ElementTemplateAsset as CoreElementTemplateAsset;
 use swc_plugin_inject::napi::{InjectVisitor, InjectVisitorConfig};
 use swc_plugin_refresh::{RefreshVisitor, RefreshVisitorConfig};
 use swc_plugin_shake::napi::{ShakeVisitor, ShakeVisitorConfig};
@@ -261,8 +261,6 @@ pub struct UiSourceMapRecord {
   pub column_number: u32,
   #[napi(js_name = "snapshotId")]
   pub snapshot_id: Option<String>,
-  #[napi(js_name = "templateId")]
-  pub template_id: Option<String>,
 }
 
 #[napi(object)]
@@ -278,6 +276,20 @@ pub struct TransformNodiffOutput {
   /// @internal
   #[napi(js_name = "elementTemplates")]
   pub element_templates: Option<Vec<ElementTemplateAsset>>,
+}
+
+type ElementTemplateCollector = Rc<RefCell<Vec<CoreElementTemplateAsset>>>;
+
+fn take_element_templates(
+  collector: Option<ElementTemplateCollector>,
+) -> Option<Vec<ElementTemplateAsset>> {
+  collector.map(|collector| {
+    collector
+      .borrow_mut()
+      .drain(..)
+      .map(|template| template.into())
+      .collect()
+  })
 }
 
 /// A multi emitter that forwards to multiple emitters.
@@ -313,26 +325,6 @@ fn clone_snapshot_ui_source_map_records(
       line_number: record.line_number,
       column_number: record.column_number,
       snapshot_id: Some(record.snapshot_id),
-      template_id: None,
-    })
-    .collect()
-}
-
-fn clone_element_template_ui_source_map_records(
-  ui_source_map_records: &Rc<RefCell<Vec<ElementTemplateCoreUISourceMapRecord>>>,
-  filename: &str,
-) -> Vec<UiSourceMapRecord> {
-  ui_source_map_records
-    .borrow()
-    .iter()
-    .cloned()
-    .map(|record| UiSourceMapRecord {
-      ui_source_map: record.ui_source_map,
-      filename: filename.to_string(),
-      line_number: record.line_number,
-      column_number: record.column_number,
-      snapshot_id: None,
-      template_id: Some(record.template_id),
     })
     .collect()
 }
@@ -364,9 +356,6 @@ fn transform_react_lynx_inner(
 
   let snapshot_ui_source_map_records: Rc<RefCell<Vec<SnapshotCoreUISourceMapRecord>>> =
     Rc::new(RefCell::new(vec![]));
-  let element_template_ui_source_map_records: Rc<
-    RefCell<Vec<ElementTemplateCoreUISourceMapRecord>>,
-  > = Rc::new(RefCell::new(vec![]));
 
   let result = GLOBALS.set(&Default::default(), || {
     let program = c.parse_js(
@@ -497,6 +486,22 @@ fn transform_react_lynx_inner(
       };
     // `elementTemplate` chooses the ET backend directly. Once it is enabled, the
     // public transform entrypoint no longer consults Snapshot-specific ET flags.
+    if options.snapshot.is_some()
+      && options.element_template.is_some()
+      && snapshot_enabled
+      && element_template_enabled
+    {
+      warnings.write().unwrap().push(esbuild::PartialMessage {
+        id: None,
+        plugin_name: Some(options.plugin_name.clone()),
+        text: Some(
+          "`elementTemplate` takes precedence when both `snapshot` and `elementTemplate` are enabled; `snapshot` will be ignored.".into(),
+        ),
+        location: None,
+        notes: None,
+        detail: None,
+      });
+    }
     let use_element_template_plugin = element_template_enabled;
     let use_snapshot_plugin = snapshot_enabled && !use_element_template_plugin;
     let jsx_backend_enabled = use_snapshot_plugin || use_element_template_plugin;
@@ -510,13 +515,8 @@ fn transform_react_lynx_inner(
     } else {
       snapshot_plugin_config.preserve_jsx
     };
-    let enable_ui_source_map = if use_element_template_plugin {
-      element_template_plugin_config
-        .enable_ui_source_map
-        .unwrap_or(false)
-    } else {
-      snapshot_plugin_config.enable_ui_source_map.unwrap_or(false)
-    };
+    let enable_ui_source_map =
+      !use_element_template_plugin && snapshot_plugin_config.enable_ui_source_map.unwrap_or(false);
 
     let react_transformer = Optional::new(
       react::react(
@@ -580,12 +580,6 @@ fn transform_react_lynx_inner(
         element_templates_collector.clone(),
       )
       .with_content_hash(content_hash.clone());
-
-      let transformer = if enable_ui_source_map {
-        transformer.with_ui_source_map_records(element_template_ui_source_map_records.clone())
-      } else {
-        transformer
-      };
 
       Optional::new(visit_mut_pass(transformer), true)
     } else {
@@ -801,18 +795,7 @@ fn transform_react_lynx_inner(
         // Drain after the whole SWC pass finishes: dynamic-component transforms
         // can discover multiple template assets while walking one module, and
         // the caller expects one stable array per transform invocation.
-        let element_templates = element_templates_collector.and_then(|collector| {
-          let templates: Vec<ElementTemplateAsset> = collector
-            .borrow_mut()
-            .drain(..)
-            .map(|template| template.into())
-            .collect();
-          if templates.is_empty() {
-            None
-          } else {
-            Some(templates)
-          }
-        });
+        let element_templates = take_element_templates(element_templates_collector);
 
         TransformNodiffOutput {
           code: result.code,
@@ -820,10 +803,7 @@ fn transform_react_lynx_inner(
           errors: vec![],
           warnings: vec![],
           ui_source_map_records: if use_element_template_plugin {
-            clone_element_template_ui_source_map_records(
-              &element_template_ui_source_map_records,
-              &options.filename,
-            )
+            vec![]
           } else {
             clone_snapshot_ui_source_map_records(&snapshot_ui_source_map_records, &options.filename)
           },
@@ -831,20 +811,18 @@ fn transform_react_lynx_inner(
         }
       }
       Err(_) => {
+        let element_templates = take_element_templates(element_templates_collector);
         return TransformNodiffOutput {
           code: "".into(),
           map: None,
           errors: errors.read().unwrap().clone(),
           warnings: warnings.read().unwrap().clone(),
           ui_source_map_records: if use_element_template_plugin {
-            clone_element_template_ui_source_map_records(
-              &element_template_ui_source_map_records,
-              &options.filename,
-            )
+            vec![]
           } else {
             clone_snapshot_ui_source_map_records(&snapshot_ui_source_map_records, &options.filename)
           },
-          element_templates: None,
+          element_templates,
         };
       }
     }
@@ -997,9 +975,10 @@ mod wasm {
 
 #[cfg(test)]
 mod tests {
+  use super::*;
+
   #[test]
   fn test_syntax_serialize_and_deserialize() {
-    use super::*;
     use serde_json::json;
 
     let json = json!({
@@ -1012,5 +991,34 @@ mod tests {
 
     assert!(s.typescript());
     assert!(!s.decorators()); // default to false
+  }
+
+  #[test]
+  fn should_preserve_active_empty_element_template_collector() {
+    let collector = Rc::new(RefCell::new(vec![]));
+
+    assert_eq!(
+      take_element_templates(Some(collector)).unwrap().len(),
+      0,
+      "an active ET transform must return Some([]), not None"
+    );
+  }
+
+  #[test]
+  fn should_drain_partial_element_templates() {
+    let collector = Rc::new(RefCell::new(vec![CoreElementTemplateAsset {
+      template_id: "_et_test".into(),
+      compiled_template: serde_json::json!({ "kind": "element", "type": "view" }),
+      source_file: "test.js".into(),
+    }]));
+
+    let templates = take_element_templates(Some(collector.clone())).unwrap();
+
+    assert_eq!(templates.len(), 1);
+    assert_eq!(templates[0].template_id, "_et_test");
+    assert!(
+      collector.borrow().is_empty(),
+      "collector should be drained exactly once"
+    );
   }
 }

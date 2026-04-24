@@ -474,6 +474,15 @@ fn transform_to_code_templates_and_diagnostics(
   input: &str,
   cfg: JSXTransformerConfig,
 ) -> (String, Vec<ElementTemplateAsset>, Vec<String>) {
+  transform_to_code_templates_and_diagnostics_with_mode(input, cfg, TransformMode::Test)
+}
+
+#[track_caller]
+fn transform_to_code_templates_and_diagnostics_with_mode(
+  input: &str,
+  cfg: JSXTransformerConfig,
+  mode: TransformMode,
+) -> (String, Vec<ElementTemplateAsset>, Vec<String>) {
   use std::cell::RefCell;
   use std::rc::Rc;
   use std::sync::{Arc, Mutex};
@@ -528,7 +537,7 @@ fn transform_to_code_templates_and_diagnostics(
     let mut transformer = JSXTransformer::new_with_element_templates(
       cfg,
       Some(comments),
-      TransformMode::Test,
+      mode,
       None,
       Some(element_templates.clone()),
     );
@@ -636,6 +645,22 @@ fn should_not_emit_element_template_map_in_element_template_mode() {
 }
 
 #[test]
+fn should_use_configured_runtime_package_in_development_mode() {
+  let (code, _, _) = transform_to_code_templates_and_diagnostics_with_mode(
+    r#"<view ref={viewRef} />"#,
+    JSXTransformerConfig {
+      runtime_pkg: "@custom/react".into(),
+      target: TransformTarget::JS,
+      ..element_template_config()
+    },
+    TransformMode::Development,
+  );
+
+  assert!(code.contains(r#"require("@custom/react/internal").transformRef(viewRef)"#));
+  assert!(!code.contains("@lynx-js/react/internal"));
+}
+
+#[test]
 fn should_collect_element_templates_for_dynamic_component_in_element_template_mode() {
   let (code, templates) = transform_to_code_and_templates(
     r#"
@@ -662,7 +687,7 @@ fn should_collect_element_templates_for_dynamic_component_in_element_template_mo
 
 #[test]
 fn should_report_page_element_as_unsupported() {
-  let (_, _, diagnostics) = transform_to_code_templates_and_diagnostics(
+  let (_, templates, diagnostics) = transform_to_code_templates_and_diagnostics(
     r#"
       <page>
         <view>Page Element Test</view>
@@ -676,6 +701,10 @@ fn should_report_page_element_as_unsupported() {
       .iter()
       .any(|message| message == "<page /> is not supported"),
     "expected <page /> unsupported diagnostic, got: {diagnostics:?}"
+  );
+  assert!(
+    templates.is_empty(),
+    "unsupported <page /> should not emit poisoned templates: {templates:?}"
   );
 }
 

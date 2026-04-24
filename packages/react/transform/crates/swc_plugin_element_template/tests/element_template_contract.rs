@@ -169,6 +169,77 @@ fn should_not_inject_root_css_scope_attrs_for_element_template() {
 }
 
 #[test]
+fn should_preserve_text_children_when_text_attr_is_explicit() {
+  let template = first_user_template_json(
+    r#"
+      <view>
+        <text text="Explicit Text Attribute">Child Text</text>
+      </view>
+    "#,
+  );
+
+  let text_node = &template["children"]
+    .as_array()
+    .expect("root children array")[0];
+  let attrs = text_node["attributesArray"]
+    .as_array()
+    .expect("text attributesArray");
+  let text_attrs: Vec<_> = attrs.iter().filter(|attr| attr["key"] == "text").collect();
+  assert_eq!(
+    text_attrs.len(),
+    1,
+    "explicit text attr should not be duplicated by child-text optimization"
+  );
+  assert_eq!(text_attrs[0]["value"], "Explicit Text Attribute");
+
+  let children = text_node["children"]
+    .as_array()
+    .expect("text children array");
+  assert_eq!(
+    children.len(),
+    1,
+    "child text should stay as a child when text attr is already explicit"
+  );
+  assert_eq!(children[0]["type"], "raw-text");
+}
+
+#[test]
+fn should_preserve_text_children_when_text_attr_may_come_from_spread() {
+  let template = first_user_template_json(
+    r#"
+      <view>
+        <text {...props}>Child Text</text>
+      </view>
+    "#,
+  );
+
+  let text_node = &template["children"]
+    .as_array()
+    .expect("root children array")[0];
+  let attrs = text_node["attributesArray"]
+    .as_array()
+    .expect("text attributesArray");
+  assert!(
+    attrs.iter().any(|attr| attr["kind"] == "spread"),
+    "text spread descriptor should be preserved"
+  );
+  assert!(
+    attrs.iter().all(|attr| attr["key"] != "text"),
+    "static child-text optimization must not add a text attr after a spread"
+  );
+
+  let children = text_node["children"]
+    .as_array()
+    .expect("text children array");
+  assert_eq!(
+    children.len(),
+    1,
+    "child text should stay as a child when spread could provide text"
+  );
+  assert_eq!(children[0]["type"], "raw-text");
+}
+
+#[test]
 fn should_not_inject_root_entry_name_attr_for_dynamic_component_element_template() {
   let (code, template) = first_user_template_json_with_code(
     r#"
@@ -223,14 +294,17 @@ fn should_keep_static_attribute_values_out_of_et_attribute_slots() {
   assert_eq!(attr_by_key("id")["value"].as_f64(), Some(1.0));
   assert_eq!(attr_by_key("data-count")["binding"], "static");
   assert_eq!(attr_by_key("data-count")["value"].as_f64(), Some(2.0));
-  assert_eq!(attr_by_key("data-overflow")["binding"], "static");
-  assert_eq!(attr_by_key("data-overflow")["value"], Value::Null);
+  assert_eq!(attr_by_key("data-overflow")["binding"], "slot");
+  assert_eq!(
+    attr_by_key("data-overflow")["attrSlotIndex"].as_f64(),
+    Some(0.0)
+  );
   assert_eq!(attr_by_key("class")["binding"], "slot");
-  assert_eq!(attr_by_key("class")["attrSlotIndex"].as_f64(), Some(0.0));
+  assert_eq!(attr_by_key("class")["attrSlotIndex"].as_f64(), Some(1.0));
   let code = without_whitespace(&code);
   assert!(
-    code.contains("attributeSlots={[cls]}"),
-    "only dynamic class should be transported as an ET attribute slot, got: {code}"
+    code.contains("attributeSlots={[1e400,cls]}"),
+    "overflowed numeric literals should stay observable via ET attribute slots, got: {code}"
   );
 }
 
@@ -392,6 +466,31 @@ fn should_keep_element_slot_indices_stable_for_mixed_dynamic_children() {
   assert_eq!(children[3]["kind"], "elementSlot");
   assert_eq!(children[3]["elementSlotIndex"].as_f64(), Some(1.0));
   assert_eq!(children[3]["type"], "slot");
+}
+
+#[test]
+fn should_extract_dynamic_key_child_as_element_slot() {
+  let templates = transform_to_templates(
+    r#"
+      <view>
+        <text key={item.id}>Child Text</text>
+      </view>
+    "#,
+    element_template_config(),
+  );
+  let template = templates
+    .into_iter()
+    .map(|template| {
+      serde_json::to_value(template.compiled_template).expect("compiled template to json")
+    })
+    .find(|template| template["type"] == "view")
+    .expect("root view template");
+
+  let children = template["children"].as_array().expect("children array");
+  assert_eq!(children.len(), 1);
+  assert_eq!(children[0]["kind"], "elementSlot");
+  assert_eq!(children[0]["elementSlotIndex"].as_f64(), Some(0.0));
+  assert_eq!(children[0]["type"], "slot");
 }
 
 #[test]
