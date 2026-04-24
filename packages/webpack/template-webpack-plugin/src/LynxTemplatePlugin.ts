@@ -112,7 +112,7 @@ export interface TemplateHooks {
       encodeOptions: EncodeOptions;
       intermediate?: string;
     },
-    { buffer: Buffer; debugInfo: string }
+    { buffer: Buffer; debugInfo: string; cssDiagnostics?: string }
   >;
 
   /**
@@ -123,6 +123,7 @@ export interface TemplateHooks {
   beforeEmit: AsyncSeriesWaterfallHook<{
     finalEncodeOptions: EncodeOptions;
     debugInfo: string;
+    cssDiagnostics?: string;
     template: Buffer;
     outputName: string;
     mainThreadAssets: Asset[];
@@ -912,7 +913,7 @@ class LynxTemplatePluginImpl {
     }
 
     try {
-      const { buffer, debugInfo } = await hooks.encode.promise({
+      const { buffer, debugInfo, cssDiagnostics } = await hooks.encode.promise({
         encodeOptions: resolvedEncodeOptions,
         intermediate,
       });
@@ -926,6 +927,7 @@ class LynxTemplatePluginImpl {
       const { template } = await hooks.beforeEmit.promise({
         finalEncodeOptions: resolvedEncodeOptions,
         debugInfo,
+        ...(cssDiagnostics === undefined ? {} : { cssDiagnostics }),
         template: buffer,
         outputName: filename,
         mainThreadAssets: [lepusCode.root, ...encodeData.lepusCode.chunks]

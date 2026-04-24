@@ -124,9 +124,9 @@ export function processTasmCSSDiagnostics(input: ProcessTasmCSSDiagnosticsOption
 
 // @public
 export interface ProcessTasmCSSDiagnosticsOptions {
-    compilation: Compilation;
     context: string;
     cssDiagnostics: unknown;
+    cssSourceMaps: string[];
     emittedWarnings?: Set<string> | undefined;
     fileExists?: ((path: string) => boolean) | undefined;
 }
@@ -159,6 +159,7 @@ export interface TemplateHooks {
     beforeEmit: AsyncSeriesWaterfallHook<{
         finalEncodeOptions: EncodeOptions;
         debugInfo: string;
+        cssDiagnostics?: string;
         template: Buffer;
         outputName: string;
         mainThreadAssets: Asset[];
@@ -180,6 +181,7 @@ export interface TemplateHooks {
     }, {
         buffer: Buffer;
         debugInfo: string;
+        cssDiagnostics?: string;
     }>;
 }
 
