@@ -6,6 +6,50 @@ import { prettyFormatSnapshotPatch } from '../../../runtime/lib/snapshot/debug/f
 import { printSnapshotInstanceToString } from '../../../runtime/lib/snapshot/debug/printSnapshot';
 import { __root } from '../../../runtime/lib/root';
 
+// Spy on the main-thread element-PAPI mutation calls and return a snapshot-friendly
+// trace of `op(parent, child[, ref])` lines. Each element is shown as `<tag>text</tag>`.
+// Used to lock in the exact DOM operations a render produces so accidental redundant
+// ops show up as a diff. (We spy directly on the PAPI globals rather than going
+// through the existing `console.alog` trace, which would require dual-thread render
+// + careful ordering against the runtime alog wrap.)
+function spyElementApi() {
+  const g = lynxTestingEnv.mainThread.globalThis;
+  const desc = el => {
+    if (el == null) return 'null';
+    const tag = (el.tagName || 'raw').toLowerCase();
+    const txt = (el.textContent || '').trim().replace(/\s+/g, ' ');
+    return txt && txt.length <= 12 ? `<${tag}>${txt}</${tag}>` : `<${tag}>`;
+  };
+  const ops = [];
+  const wrap = (name, formatter) => {
+    const original = g[name];
+    vi.spyOn(g, name).mockImplementation((...args) => {
+      ops.push(formatter(args));
+      return original.apply(g, args);
+    });
+  };
+  wrap('__AppendElement', ([parent, child]) => `append(${desc(parent)} <- ${desc(child)})`);
+  wrap(
+    '__InsertElementBefore',
+    ([parent, child, ref]) => `insertBefore(${desc(parent)}: ${desc(child)} before ${desc(ref)})`,
+  );
+  wrap('__RemoveElement', ([parent, child]) => `remove(${desc(parent)} -x ${desc(child)})`);
+  wrap('__CreateElement', ([type]) => `create(${type})`);
+  wrap('__CreateView', () => `create(view)`);
+  wrap('__CreateText', () => `create(text)`);
+  wrap('__CreateRawText', ([text]) => `create(raw-text "${text}")`);
+  wrap('__CreateWrapperElement', () => `create(wrapper)`);
+  let mark = 0;
+  return {
+    mark() {
+      mark = ops.length;
+    },
+    trace() {
+      return ops.slice(mark).join('\n');
+    },
+  };
+}
+
 test('setState changes jsx', async () => {
   vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
   const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
@@ -354,9 +398,22 @@ test('cross-slot keyed move: E is placed before A with correct beforeId in patch
     );
   };
 
+  const trace = spyElementApi();
   const { container, findByTestId } = render(<Comp />);
   const view = await findByTestId('view');
+  trace.mark();
   fireEvent.tap(view);
+
+  // Lock in the exact element-PAPI sequence so an extra DOM op shows up as a diff.
+  expect(trace.trace()).toMatchInlineSnapshot(`
+    "remove(<wrapper>X</wrapper> -x <text>X</text>)
+    remove(<wrapper> -x <text>E</text>)
+    append(<wrapper> <- <text>E</text>)
+    create(text)
+    create(raw-text "N")
+    append(<text> <- <raw>N</raw>)
+    append(<wrapper> <- <text>N</text>)"
+  `);
 
   expect(container).toMatchInlineSnapshot(`
     <page>
@@ -473,6 +530,7 @@ test('multi-key cross-slot moves keep background snapshot tree in slot order', a
     );
   };
 
+  const trace = spyElementApi();
   const { container } = render(<Comp />);
 
   const getViewChildCount = () => {
@@ -482,7 +540,25 @@ test('multi-key cross-slot moves keep background snapshot tree in slot order', a
 
   expect(getViewChildCount()).toBe(4);
 
+  trace.mark();
   act(() => setMoved(true));
+
+  expect(trace.trace()).toMatchInlineSnapshot(`
+    "remove(<wrapper>A</wrapper> -x <text>A</text>)
+    remove(<wrapper>B</wrapper> -x <text>B</text>)
+    create(text)
+    create(raw-text "F")
+    append(<text> <- <raw>F</raw>)
+    insertBefore(<wrapper>H</wrapper>: <text>F</text> before <text>H</text>)
+    remove(<wrapper> -x <text>H</text>)
+    append(<wrapper> <- <text>H</text>)
+    create(text)
+    create(raw-text "E")
+    append(<text> <- <raw>E</raw>)
+    insertBefore(<wrapper>G</wrapper>: <text>E</text> before <text>G</text>)
+    remove(<wrapper> -x <text>G</text>)
+    append(<wrapper> <- <text>G</text>)"
+  `);
 
   expect(getViewChildCount()).toBe(4);
   expect(printSnapshotInstanceToString(__root)).toMatchInlineSnapshot(`
@@ -532,8 +608,117 @@ test('multi-key cross-slot moves keep background snapshot tree in slot order', a
   `);
 });
 
-// Fuzz: background thread only (200 setState steps × main-thread render would be slow).
-test('fuzz: update patches have no spurious null beforeId when later slot siblings exist', async () => {
+// Three keys cross slots in one render: F $0→$3, H $1→$0, plus E/G removed and A/D created.
+// Each $N has its own wrapper element; an InsertBefore where `newNode` and the
+// `existingNode` reference live in different slot wrappers can't go through
+// `parent.insertBefore(node, ref)` (ref isn't a child of parent) and must fall
+// back to appending into the new slot's wrapper.
+test('three-key cross-slot move applies cleanly on main thread', async () => {
+  const ITEMS = {
+    A: <text key='A'>A</text>,
+    D: <text key='D'>D</text>,
+    E: <text key='E'>E</text>,
+    F: <text key='F'>F</text>,
+    G: <text key='G'>G</text>,
+    H: <text key='H'>H</text>,
+  };
+
+  const before = ['F', 'H', 'E', 'G'];
+  const after = ['H', 'A', 'D', 'F'];
+
+  let setMoved;
+  const Comp = () => {
+    const [moved, set] = useState(false);
+    setMoved = set;
+    const layout = moved ? after : before;
+    return (
+      <view data-testid='view'>
+        {ITEMS[layout[0]]}
+        <text>-</text>
+        {ITEMS[layout[1]]}
+        <text>-</text>
+        {ITEMS[layout[2]]}
+        <text>-</text>
+        {ITEMS[layout[3]]}
+      </view>
+    );
+  };
+
+  const trace = spyElementApi();
+  const { container } = render(<Comp />);
+
+  // Spy on element-API calls during the *update* (after initial render) so any
+  // regression that adds redundant DOM ops to a cross-slot move is caught.
+  trace.mark();
+  act(() => setMoved(true));
+  expect(trace.trace()).toMatchInlineSnapshot(`
+    "remove(<wrapper>E</wrapper> -x <text>E</text>)
+    remove(<wrapper>G</wrapper> -x <text>G</text>)
+    remove(<wrapper>F</wrapper> -x <text>H</text>)
+    insertBefore(<wrapper>F</wrapper>: <text>H</text> before <text>F</text>)
+    create(text)
+    create(raw-text "A")
+    append(<text> <- <raw>A</raw>)
+    append(<wrapper> <- <text>A</text>)
+    create(text)
+    create(raw-text "D")
+    append(<text> <- <raw>D</raw>)
+    append(<wrapper> <- <text>D</text>)
+    remove(<wrapper> -x <text>F</text>)
+    append(<wrapper> <- <text>F</text>)"
+  `);
+
+  // Container reflects the new layout end-to-end through the main-thread renderer.
+  expect(container).toMatchInlineSnapshot(`
+    <page>
+      <view
+        data-testid="view"
+      >
+        <wrapper>
+          <text>
+            H
+          </text>
+        </wrapper>
+        <text>
+          -
+        </text>
+        <wrapper>
+          <text>
+            A
+          </text>
+        </wrapper>
+        <text>
+          -
+        </text>
+        <wrapper>
+          <text>
+            D
+          </text>
+        </wrapper>
+        <text>
+          -
+        </text>
+        <wrapper>
+          <text>
+            F
+          </text>
+        </wrapper>
+      </view>
+    </page>
+  `);
+  expect(printSnapshotInstanceToString(__root)).toMatchInlineSnapshot(`
+    "| -1(root): undefined
+      | 2(__snapshot_c1db7_test_26): undefined
+        | 4(__snapshot_c1db7_test_25): undefined
+        | 7(__snapshot_c1db7_test_20): undefined
+        | 8(__snapshot_c1db7_test_21): undefined
+        | 3(__snapshot_c1db7_test_23): undefined"
+  `);
+});
+
+// Random slot-layout transitions driven end-to-end through the main-thread renderer.
+// Mirrors the property-based fuzz in internal-preact (SLOT_COUNT=6, STEPS=10000).
+test('fuzz: cross-slot keyed moves keep slot order across random layouts', { timeout: 5000 }, async () => {
   const ITEMS = {
     A: <text key='A'>A</text>,
     B: <text key='B'>B</text>,
@@ -545,16 +730,9 @@ test('fuzz: update patches have no spurious null beforeId when later slot siblin
     H: <text key='H'>H</text>,
   };
 
-  const patches = [];
-  vi.spyOn(lynx.getNativeApp(), 'callLepusMethod').mockImplementation(
-    (_name, data) => {
-      patches.push(data);
-    },
-  );
-
   const KEYS = Object.keys(ITEMS);
-  const SLOT_COUNT = 4;
-  const STEPS = 200;
+  const SLOT_COUNT = 6;
+  const STEPS = 10000;
   let seed = 0xDEADBEEF >>> 0;
   const rand = () => {
     seed ^= seed << 13;
@@ -591,39 +769,31 @@ test('fuzz: update patches have no spurious null beforeId when later slot siblin
         {ITEMS[layout[2]]}
         <text>-</text>
         {ITEMS[layout[3]]}
+        <text>-</text>
+        {ITEMS[layout[4]]}
+        <text>-</text>
+        {ITEMS[layout[5]]}
       </view>
     );
   };
 
-  render(<Comp />);
+  const { container } = render(<Comp />);
 
-  const childCount = () => {
-    const tree = printSnapshotInstanceToString(__root);
-    return (tree.match(/^ {4}\| \d+\(/gm) ?? []).length;
-  };
+  // Read the actual slot order from the rendered DOM (one wrapper per $N slot).
+  const slotOrder = () =>
+    Array.from(container.querySelectorAll('view > wrapper'))
+      .map(w => w.textContent.trim());
 
-  let failure = null;
-  for (step = 1; step < STEPS && !failure; step++) {
+  // Initial render matches layouts[0].
+  expect(slotOrder()).toEqual(layouts[0]);
+
+  for (step = 1; step < STEPS; step++) {
+    // No spontaneous mutation between steps — still on the previous layout.
+    expect(slotOrder()).toEqual(layouts[step - 1]);
     act(() => {
       setStep(step);
     });
-    const count = childCount();
-    if (count !== SLOT_COUNT) {
-      failure = `step=${step}`
-        + `\n  prev=${JSON.stringify(layouts[step - 1])}`
-        + `\n  next=${JSON.stringify(layouts[step])}`
-        + `\n  want child count=${SLOT_COUNT}, got=${count}`
-        + `\n  tree=${printSnapshotInstanceToString(__root)}`;
-    }
+    // After setState, slot order matches the new layout.
+    expect(slotOrder()).toEqual(layouts[step]);
   }
-  if (failure) throw new Error(failure);
-
-  expect(printSnapshotInstanceToString(__root)).toMatchInlineSnapshot(`
-    "| -1(root): undefined
-      | 2(__snapshot_c1db7_test_28): undefined
-        | 389(__snapshot_c1db7_test_21): undefined
-        | 395(__snapshot_c1db7_test_22): undefined
-        | 394(__snapshot_c1db7_test_23): undefined
-        | 396(__snapshot_c1db7_test_24): undefined"
-  `);
 });
