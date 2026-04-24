@@ -53,11 +53,11 @@ export function List(
         component: childWithContext,
       };
     });
-    const componentId = template?.componentId ?? '';
-
+  } else if (template) {
     const items = Array.isArray(listData) ? listData : [];
 
     content = items.map((item, index) => {
+      const componentId = template.componentId;
       const child = surface.components.get(componentId);
       if (!child) return null;
 

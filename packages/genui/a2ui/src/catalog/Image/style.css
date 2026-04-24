@@ -36,3 +36,9 @@
   flex-shrink: 0;
   padding: 8px;
 }
+
+.row-weighted-item .a2ui-image,
+.column-weighted-item .a2ui-image {
+  width: 100%;
+  box-sizing: border-box;
+}

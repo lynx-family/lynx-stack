@@ -1,0 +1,400 @@
+[
+  {
+    "createSurface": {
+      "surfaceId": "default",
+      "catalogId": "demo-fridge-search"
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "root",
+          "component": "Column",
+          "align": "stretch",
+          "justify": "start",
+          "children": ["header", "statusBar", "productList"]
+        },
+        {
+          "id": "header",
+          "component": "Text",
+          "variant": "h3",
+          "text": "< Refrigerators"
+        },
+        {
+          "id": "statusBar",
+          "component": "Card",
+          "child": "statusBarText"
+        },
+        {
+          "id": "statusBarText",
+          "component": "Text",
+          "variant": "body",
+          "text": "Searching..."
+        },
+        {
+          "id": "productList",
+          "component": "Column",
+          "align": "stretch",
+          "justify": "start",
+          "children": []
+        }
+      ]
+    }
+  },
+
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "statusBarText",
+          "component": "Text",
+          "variant": "body",
+          "text": "Completed search across 200+ articles & 80k+ products   v"
+        }
+      ]
+    }
+  },
+
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "productList",
+          "component": "Column",
+          "align": "stretch",
+          "children": ["product-1"]
+        },
+        { "id": "product-1", "component": "Card", "child": "product-1-body" },
+        {
+          "id": "product-1-body",
+          "component": "Column",
+          "align": "stretch",
+          "children": ["product-1-main", "product-1-tags"]
+        },
+        {
+          "id": "product-1-main",
+          "component": "Row",
+          "alignment": "start",
+          "distribution": "start",
+          "children": ["product-1-img", "product-1-info"]
+        },
+        {
+          "id": "product-1-img",
+          "component": "Image",
+          "weight": 2,
+          "url": "https://picsum.photos/seed/a2ui-fridge-1/240/240"
+        },
+        {
+          "id": "product-1-info",
+          "component": "Column",
+          "align": "start",
+          "justify": "start",
+          "weight": 5,
+          "children": [
+            "product-1-title",
+            "product-1-price",
+            "product-1-promo",
+            "product-1-store"
+          ]
+        },
+        { "id": "product-1-title", "component": "Text", "variant": "body", "text": "Loading..." },
+        { "id": "product-1-price", "component": "Text", "variant": "body", "text": "" },
+        { "id": "product-1-promo", "component": "Text", "variant": "caption", "text": "" },
+        { "id": "product-1-store", "component": "Text", "variant": "caption", "text": "" },
+        { "id": "product-1-tags", "component": "Text", "variant": "caption", "text": "" }
+      ]
+    }
+  },
+
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "product-1-title",
+          "component": "Text",
+          "variant": "h5",
+          "text": "Siemens 481L Frost-Free French-Door Fridge"
+        },
+        { "id": "product-1-price", "component": "Text", "variant": "h4", "text": "$399  20k+ sold" },
+        {
+          "id": "product-1-promo",
+          "component": "Text",
+          "variant": "caption",
+          "text": "$40 off over $570  ·  0% APR 3mo  ·  2-day delivery"
+        },
+        {
+          "id": "product-1-store",
+          "component": "Text",
+          "variant": "caption",
+          "text": "5-year store  ·  Siemens Flagship  ·  Visit ›"
+        },
+        {
+          "id": "product-1-tags",
+          "component": "Text",
+          "variant": "caption",
+          "text": "+ 90x80x184cm large capacity   + AI temp control   + 10-year warranty"
+        }
+      ]
+    }
+  },
+
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "productList",
+          "component": "Column",
+          "align": "stretch",
+          "children": ["product-1", "product-2"]
+        },
+        { "id": "product-2", "component": "Card", "child": "product-2-body" },
+        {
+          "id": "product-2-body",
+          "component": "Column",
+          "align": "stretch",
+          "children": ["product-2-main", "product-2-tags"]
+        },
+        {
+          "id": "product-2-main",
+          "component": "Row",
+          "alignment": "start",
+          "distribution": "start",
+          "children": ["product-2-img", "product-2-info"]
+        },
+        {
+          "id": "product-2-img",
+          "component": "Image",
+          "weight": 2,
+          "url": "https://picsum.photos/seed/a2ui-fridge-2/240/240"
+        },
+        {
+          "id": "product-2-info",
+          "component": "Column",
+          "align": "start",
+          "justify": "start",
+          "weight": 5,
+          "children": [
+            "product-2-title",
+            "product-2-price",
+            "product-2-promo",
+            "product-2-store"
+          ]
+        },
+        { "id": "product-2-title", "component": "Text", "variant": "body", "text": "Loading..." },
+        { "id": "product-2-price", "component": "Text", "variant": "body", "text": "" },
+        { "id": "product-2-promo", "component": "Text", "variant": "caption", "text": "" },
+        { "id": "product-2-store", "component": "Text", "variant": "caption", "text": "" },
+        { "id": "product-2-tags", "component": "Text", "variant": "caption", "text": "" }
+      ]
+    }
+  },
+
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "product-2-title",
+          "component": "Text",
+          "variant": "h5",
+          "text": "New! Hualing 574L Built-in Double-Door Fridge"
+        },
+        { "id": "product-2-price", "component": "Text", "variant": "h4", "text": "$769  20k+ sold" },
+        {
+          "id": "product-2-promo",
+          "component": "Text",
+          "variant": "caption",
+          "text": "Gov. subsidy  ·  Gov. subsidy  ·  Free installation"
+        },
+        {
+          "id": "product-2-store",
+          "component": "Text",
+          "variant": "caption",
+          "text": "Hualing Flagship Store  ·  Visit ›"
+        },
+        {
+          "id": "product-2-tags",
+          "component": "Text",
+          "variant": "caption",
+          "text": "+ Seamless cabinet fit   + Ultra-thin 60cm   + Dorm-friendly"
+        }
+      ]
+    }
+  },
+
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "productList",
+          "component": "Column",
+          "align": "stretch",
+          "children": ["product-1", "product-2", "product-3"]
+        },
+        { "id": "product-3", "component": "Card", "child": "product-3-body" },
+        {
+          "id": "product-3-body",
+          "component": "Column",
+          "align": "stretch",
+          "children": ["product-3-main", "product-3-tags"]
+        },
+        {
+          "id": "product-3-main",
+          "component": "Row",
+          "alignment": "start",
+          "distribution": "start",
+          "children": ["product-3-img", "product-3-info"]
+        },
+        {
+          "id": "product-3-img",
+          "component": "Image",
+          "weight": 2,
+          "url": "https://picsum.photos/seed/a2ui-fridge-3/240/240"
+        },
+        {
+          "id": "product-3-info",
+          "component": "Column",
+          "align": "start",
+          "justify": "start",
+          "weight": 5,
+          "children": [
+            "product-3-title",
+            "product-3-price",
+            "product-3-promo",
+            "product-3-store"
+          ]
+        },
+        { "id": "product-3-title", "component": "Text", "variant": "body", "text": "Loading..." },
+        { "id": "product-3-price", "component": "Text", "variant": "body", "text": "" },
+        { "id": "product-3-promo", "component": "Text", "variant": "caption", "text": "" },
+        { "id": "product-3-store", "component": "Text", "variant": "caption", "text": "" },
+        { "id": "product-3-tags", "component": "Text", "variant": "caption", "text": "" }
+      ]
+    }
+  },
+
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "product-3-title",
+          "component": "Text",
+          "variant": "h5",
+          "text": "Haier 485L Double-Door Household Fridge"
+        },
+        { "id": "product-3-price", "component": "Text", "variant": "h4", "text": "$659  20k+ sold" },
+        {
+          "id": "product-3-promo",
+          "component": "Text",
+          "variant": "caption",
+          "text": "$40 off over $570  ·  0% APR 3mo  ·  2-day delivery"
+        },
+        {
+          "id": "product-3-store",
+          "component": "Text",
+          "variant": "caption",
+          "text": "100k fans  ·  Haier Flagship  ·  Visit ›"
+        },
+        {
+          "id": "product-3-tags",
+          "component": "Text",
+          "variant": "caption",
+          "text": "+ Multi-zone temp   + Dry/wet storage   + Voice unlock"
+        }
+      ]
+    }
+  },
+
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "productList",
+          "component": "Column",
+          "align": "stretch",
+          "children": ["product-1", "product-2", "product-3", "product-4"]
+        },
+        { "id": "product-4", "component": "Card", "child": "product-4-body" },
+        {
+          "id": "product-4-body",
+          "component": "Column",
+          "align": "stretch",
+          "children": ["product-4-main", "product-4-tags"]
+        },
+        {
+          "id": "product-4-main",
+          "component": "Row",
+          "alignment": "start",
+          "distribution": "start",
+          "children": ["product-4-img", "product-4-info"]
+        },
+        {
+          "id": "product-4-img",
+          "component": "Image",
+          "weight": 2,
+          "url": "https://picsum.photos/seed/a2ui-fridge-4/240/240"
+        },
+        {
+          "id": "product-4-info",
+          "component": "Column",
+          "align": "start",
+          "justify": "start",
+          "weight": 5,
+          "children": [
+            "product-4-title",
+            "product-4-price",
+            "product-4-promo",
+            "product-4-store"
+          ]
+        },
+        { "id": "product-4-title", "component": "Text", "variant": "body", "text": "Loading..." },
+        { "id": "product-4-price", "component": "Text", "variant": "body", "text": "" },
+        { "id": "product-4-promo", "component": "Text", "variant": "caption", "text": "" },
+        { "id": "product-4-store", "component": "Text", "variant": "caption", "text": "" },
+        { "id": "product-4-tags", "component": "Text", "variant": "caption", "text": "" }
+      ]
+    }
+  },
+
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "product-4-title",
+          "component": "Text",
+          "variant": "h5",
+          "text": "Midea 550L Frost-Free French-Door Fridge"
+        },
+        { "id": "product-4-price", "component": "Text", "variant": "h4", "text": "$469  20k+ sold" },
+        {
+          "id": "product-4-promo",
+          "component": "Text",
+          "variant": "caption",
+          "text": "Gov. subsidy  ·  Gov. subsidy  ·  Free installation"
+        },
+        {
+          "id": "product-4-store",
+          "component": "Text",
+          "variant": "caption",
+          "text": "Midea Flagship Store  ·  Visit ›"
+        },
+        {
+          "id": "product-4-tags",
+          "component": "Text",
+          "variant": "caption",
+          "text": "+ Energy Class A   + Frost-free   + 10-min quick ice"
+        }
+      ]
+    }
+  }
+]

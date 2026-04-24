@@ -1,0 +1,38 @@
+{
+  "name": "a2ui-playground",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rsbuild build",
+    "build:lynx": "rspeedy build",
+    "dev": "rsbuild dev",
+    "dev:lynx": "rspeedy dev",
+    "preview": "rsbuild preview",
+    "preview:lynx": "rspeedy preview"
+  },
+  "dependencies": {
+    "@codemirror/lang-json": "^6.0.2",
+    "@lynx-js/a2ui-reactlynx": "workspace:*",
+    "@lynx-js/lynx-core": "0.1.3",
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/web-core": "workspace:*",
+    "@lynx-js/web-elements": "workspace:*",
+    "@uiw/react-codemirror": "^4.25.9",
+    "qrcode": "^1.5.4",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/types": "3.7.0",
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rsbuild/plugin-react": "^1.4.5",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "npm:@types/react@^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
+  }
+}
