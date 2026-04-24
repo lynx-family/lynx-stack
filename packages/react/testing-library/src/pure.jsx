@@ -71,8 +71,9 @@ export function render(
     globalThis.lynxTestingEnv.switchToBackgroundThread();
     act(() => {
       preactRender(compBackgroundThread, __root);
-      flushDelayedLifecycleEvents();
     });
+    // `OnLifecycleEvent::rLynxFirstScreen` should happen after `useEffect`
+    flushDelayedLifecycleEvents();
   }
 
   return {

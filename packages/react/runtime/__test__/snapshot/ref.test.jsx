@@ -1979,6 +1979,179 @@ describe('ui operations', () => {
   });
 });
 
+describe('applyRef before hydration', () => {
+  it('ref is changed across rerenders before hydration', async function() {
+    const oldCb = vi.fn();
+    const newCb = vi.fn();
+
+    function App({ cb }) {
+      return <view ref={cb} />;
+    }
+
+    globalEnvManager.switchToBackground();
+    render(<App cb={oldCb} />, __root);
+    render(<App cb={newCb} />, __root);
+
+    expect(oldCb).toHaveBeenCalledTimes(2);
+    expect(oldCb.mock.calls[0][0]).toBeInstanceOf(RefProxy);
+    expect(oldCb.mock.calls[1][0]).toBeNull();
+
+    expect(newCb).toHaveBeenCalledTimes(1);
+    expect(newCb.mock.calls[0][0]).toBeInstanceOf(RefProxy);
+  });
+
+  it('ref becomes null on rerender before hydration', async function() {
+    const cb = vi.fn();
+
+    function App({ useRef }) {
+      return <view ref={useRef ? cb : null} />;
+    }
+
+    globalEnvManager.switchToBackground();
+    render(<App useRef={true} />, __root);
+    render(<App useRef={false} />, __root);
+
+    expect(cb).toHaveBeenCalledTimes(2);
+    expect(cb.mock.calls[0][0]).toBeInstanceOf(RefProxy);
+    expect(cb.mock.calls[1][0]).toBeNull();
+  });
+
+  it('ref is added on rerender before hydration', async function() {
+    const cb = vi.fn();
+
+    function App({ useRef }) {
+      return <view ref={useRef ? cb : null} />;
+    }
+
+    globalEnvManager.switchToBackground();
+    render(<App useRef={false} />, __root);
+    render(<App useRef={true} />, __root);
+
+    expect(cb).toHaveBeenCalledTimes(1);
+    expect(cb.mock.calls[0][0]).toBeInstanceOf(RefProxy);
+  });
+
+  it('spread ref is removed on rerender before hydration', async function() {
+    const cb = vi.fn();
+
+    function App({ withRef }) {
+      return <view {...(withRef ? { ref: cb } : {})} />;
+    }
+
+    globalEnvManager.switchToBackground();
+    render(<App withRef={true} />, __root);
+    render(<App withRef={false} />, __root);
+
+    expect(cb).toHaveBeenCalledTimes(2);
+    expect(cb.mock.calls[0][0]).toBeInstanceOf(RefProxy);
+    expect(cb.mock.calls[1][0]).toBeNull();
+  });
+
+  it('spread ref is added on rerender before hydration', async function() {
+    const cb = vi.fn();
+
+    function App({ withRef }) {
+      return <view {...(withRef ? { ref: cb } : {})} />;
+    }
+
+    globalEnvManager.switchToBackground();
+    render(<App withRef={false} />, __root);
+    render(<App withRef={true} />, __root);
+
+    expect(cb).toHaveBeenCalledTimes(1);
+    expect(cb.mock.calls[0][0]).toBeInstanceOf(RefProxy);
+  });
+
+  it('object ref (createRef) is changed across rerenders before hydration', async function() {
+    const oldRef = createRef();
+    const newRef = createRef();
+
+    function App({ r }) {
+      return <view ref={r} />;
+    }
+
+    globalEnvManager.switchToBackground();
+    render(<App r={oldRef} />, __root);
+    expect(oldRef.current).toBeInstanceOf(RefProxy);
+    expect(newRef.current).toBeNull();
+
+    render(<App r={newRef} />, __root);
+    expect(oldRef.current).toBeNull();
+    expect(newRef.current).toBeInstanceOf(RefProxy);
+  });
+
+  it('object ref (createRef) becomes null on rerender before hydration', async function() {
+    const ref = createRef();
+
+    function App({ useRef }) {
+      return <view ref={useRef ? ref : null} />;
+    }
+
+    globalEnvManager.switchToBackground();
+    render(<App useRef={true} />, __root);
+    expect(ref.current).toBeInstanceOf(RefProxy);
+
+    render(<App useRef={false} />, __root);
+    expect(ref.current).toBeNull();
+  });
+
+  it('object ref (createRef) is added on rerender before hydration', async function() {
+    const ref = createRef();
+
+    function App({ useRef }) {
+      return <view ref={useRef ? ref : null} />;
+    }
+
+    globalEnvManager.switchToBackground();
+    render(<App useRef={false} />, __root);
+    expect(ref.current).toBeNull();
+
+    render(<App useRef={true} />, __root);
+    expect(ref.current).toBeInstanceOf(RefProxy);
+  });
+
+  it('same ref callback in spread form should not be re-invoked', async function() {
+    const cb = vi.fn();
+
+    function App() {
+      return <view {...{ ref: cb }} />;
+    }
+
+    globalEnvManager.switchToBackground();
+    render(<App />, __root);
+    render(<App />, __root);
+
+    expect(cb).toHaveBeenCalledTimes(1);
+    expect(cb.mock.calls[0][0]).toBeInstanceOf(RefProxy);
+  });
+
+  it('three consecutive rerenders before hydration clean up intermediate refs', async function() {
+    const cb1 = vi.fn();
+    const cb2 = vi.fn();
+    const cb3 = vi.fn();
+
+    function App({ cb }) {
+      return <view ref={cb} />;
+    }
+
+    globalEnvManager.switchToBackground();
+    render(<App cb={cb1} />, __root);
+    render(<App cb={cb2} />, __root);
+    render(<App cb={cb3} />, __root);
+
+    expect(cb1).toHaveBeenCalledTimes(2);
+    expect(cb1.mock.calls[0][0]).toBeInstanceOf(RefProxy);
+    expect(cb1.mock.calls[1][0]).toBeNull();
+
+    expect(cb2).toHaveBeenCalledTimes(2);
+    expect(cb2.mock.calls[0][0]).toBeInstanceOf(RefProxy);
+    expect(cb2.mock.calls[1][0]).toBeNull();
+
+    expect(cb3).toHaveBeenCalledTimes(1);
+    expect(cb3.mock.calls[0][0]).toBeInstanceOf(RefProxy);
+  });
+});
+
 describe('runDelayedUiOps helper', () => {
   it('should reset shouldDelayUiOps when no tasks queued', () => {
     // flush any queued tasks from previous tests
