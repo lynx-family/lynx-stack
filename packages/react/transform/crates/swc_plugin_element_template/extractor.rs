@@ -269,12 +269,11 @@ where
       JSXAttrName::JSXNamespacedName(JSXNamespacedName { ns, name, .. }) => {
         let key = template_namespaced_attribute_descriptor_key(ns, name);
         let attr_name = AttrName::from_ns(ns.clone().into(), name.clone().into());
-        match attr_name {
-          AttrName::WorkletEvent | AttrName::WorkletRef | AttrName::Gesture => {
-            self.push_dynamic_jsx_attr(attr_name, &key, value, false);
-          }
-          _ => todo!(),
-        }
+        let preserve_literal_expr = !matches!(
+          attr_name,
+          AttrName::WorkletEvent | AttrName::WorkletRef | AttrName::Gesture
+        );
+        self.push_dynamic_jsx_attr(attr_name, &key, value, preserve_literal_expr);
       }
     }
   }
@@ -425,6 +424,7 @@ where
           JSXAttrOrSpread::SpreadElement(_) => true,
           JSXAttrOrSpread::JSXAttr(JSXAttr { name, value, .. }) => match name {
             JSXAttrName::Ident(ident_name) => match ident_name.sym.as_ref() {
+              "__lynx_part_id" => false,
               "key" => {
                 if !self.parent_element {
                   self.key = value.take();

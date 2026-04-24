@@ -299,7 +299,7 @@ where
                 key: slot_key,
                 slot_index,
               } => {
-                debug_assert_eq!(
+                assert_eq!(
                   slot_key, &key,
                   "Template Definition attr slot key must match extractor output"
                 );

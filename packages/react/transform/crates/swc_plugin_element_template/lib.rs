@@ -189,7 +189,13 @@ where
             let val = words.next();
             if let Some("@jsxCSSId") = pragma {
               if let Some(css_id) = val {
-                css_id.parse::<f64>().expect("should have numeric cssId");
+                if css_id.parse::<f64>().is_err() {
+                  HANDLER.with(|handler| {
+                    handler
+                      .struct_span_err(span, &format!("@jsxCSSId must be numeric, got `{css_id}`"))
+                      .emit()
+                  });
+                }
               }
             }
           }

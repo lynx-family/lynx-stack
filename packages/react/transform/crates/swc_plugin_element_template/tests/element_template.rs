@@ -508,6 +508,7 @@ fn transform_to_code_templates_and_diagnostics(
       }),
     );
 
+    let comments = SingleThreadedComments::default();
     let lexer = Lexer::new(
       Syntax::Es(EsSyntax {
         jsx: true,
@@ -515,14 +516,13 @@ fn transform_to_code_templates_and_diagnostics(
       }),
       Default::default(),
       StringInput::from(&*fm),
-      None,
+      Some(&comments),
     );
 
     let mut parser = Parser::new_from(lexer);
     let module_result = parser.parse_module();
     let mut module = module_result.expect("Failed to parse module");
 
-    let comments = SingleThreadedComments::default();
     let element_templates = Rc::new(RefCell::new(vec![]));
 
     let mut transformer = JSXTransformer::new_with_element_templates(
@@ -591,10 +591,6 @@ fn verify_code_and_template_json_with_config(
   snapshot_name: &str,
   cfg: JSXTransformerConfig,
 ) -> (String, Vec<ElementTemplateAsset>) {
-  if std::env::var("UPDATE").as_deref() == Ok("1") {
-    std::env::set_var("INSTA_UPDATE", "always");
-  }
-
   let (code, templates) = transform_to_code_and_templates(input, cfg);
 
   assert!(!templates.is_empty(), "Should collect element templates");
@@ -680,5 +676,25 @@ fn should_report_page_element_as_unsupported() {
       .iter()
       .any(|message| message == "<page /> is not supported"),
     "expected <page /> unsupported diagnostic, got: {diagnostics:?}"
+  );
+}
+
+#[test]
+fn should_report_invalid_jsx_css_id_as_diagnostic() {
+  let (_, _, diagnostics) = transform_to_code_templates_and_diagnostics(
+    r#"
+      /**
+       * @jsxCSSId abc
+       */
+      <view>Invalid Css Id</view>
+    "#,
+    element_template_config(),
+  );
+
+  assert!(
+    diagnostics
+      .iter()
+      .any(|message| message == "@jsxCSSId must be numeric, got `abc`"),
+    "expected invalid @jsxCSSId diagnostic, got: {diagnostics:?}"
   );
 }

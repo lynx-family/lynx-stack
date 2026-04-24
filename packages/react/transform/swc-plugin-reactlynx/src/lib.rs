@@ -1,5 +1,3 @@
-use std::{cell::RefCell, rc::Rc};
-
 use rustc_hash::FxBuildHasher;
 use serde::Deserialize;
 use swc_core::{
@@ -259,7 +257,7 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
         Some(&comments),
         options.mode.unwrap_or(TransformMode::Production),
         Some(cm.clone()),
-        Some(Rc::new(RefCell::new(vec![]))),
+        None,
       )
       .with_content_hash(content_hash.clone()),
     ),

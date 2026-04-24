@@ -181,6 +181,10 @@ where
     mut self,
     ui_source_map_records: Rc<RefCell<Vec<CoreElementTemplateUISourceMapRecord>>>,
   ) -> Self {
+    debug_assert!(
+      self.inner.ui_source_map_records.borrow().is_empty(),
+      "ElementTemplateTransformer::with_ui_source_map_records must be called before records are captured"
+    );
     self.inner.ui_source_map_records = ui_source_map_records.clone();
     self.ui_source_map_records = ui_source_map_records;
     self

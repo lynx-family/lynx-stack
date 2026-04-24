@@ -2,7 +2,11 @@ use serde_json::Value;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
-use swc_core::common::{comments::SingleThreadedComments, FileName, Globals, SourceMap, GLOBALS};
+use swc_core::common::{
+  comments::SingleThreadedComments,
+  errors::{DiagnosticBuilder, Emitter as DiagnosticEmitter, Handler, HANDLER},
+  FileName, Globals, SourceMap, GLOBALS,
+};
 use swc_core::ecma::codegen::{text_writer::JsWriter, Emitter};
 use swc_core::ecma::parser::{lexer::Lexer, EsSyntax, Parser, StringInput, Syntax};
 use swc_core::ecma::visit::VisitMutWith;
@@ -20,10 +24,19 @@ fn transform_fixture(
   input: &str,
   cfg: JSXTransformerConfig,
 ) -> (Vec<ElementTemplateAsset>, String) {
+  struct DiagnosticCollector;
+
+  impl DiagnosticEmitter for DiagnosticCollector {
+    fn emit(&mut self, db: &mut DiagnosticBuilder<'_>) {
+      panic!("unexpected transform diagnostic: {}", db.message());
+    }
+  }
+
   GLOBALS.set(&Globals::new(), || {
     let cm: Arc<SourceMap> = Arc::new(SourceMap::default());
     let fm = cm.new_source_file(FileName::Anon.into(), input.to_string());
     let comments = SingleThreadedComments::default();
+    let handler = Handler::with_emitter(true, false, Box::new(DiagnosticCollector));
 
     let lexer = Lexer::new(
       Syntax::Es(EsSyntax {
@@ -47,7 +60,9 @@ fn transform_fixture(
       Some(element_templates.clone()),
     );
 
-    module.visit_mut_with(&mut transformer);
+    HANDLER.set(&handler, || {
+      module.visit_mut_with(&mut transformer);
+    });
 
     let mut sink = vec![];
     let mut emitter = Emitter {
@@ -308,6 +323,49 @@ fn should_keep_worklet_attr_descriptor_keys_for_namespaced_attrs() {
   assert_eq!(attrs[1]["key"], "main-thread:ref");
   assert_eq!(attrs[1]["binding"], "slot");
   assert_eq!(attrs[1]["attrSlotIndex"].as_f64(), Some(1.0));
+}
+
+#[test]
+fn should_treat_unknown_namespaced_attrs_as_regular_attrs() {
+  let template = first_user_template_json(
+    r#"
+      <view custom:flag={flag} custom:static={1} />
+    "#,
+  );
+
+  let attrs = template["attributesArray"]
+    .as_array()
+    .expect("attributesArray");
+  assert_eq!(attrs.len(), 2);
+
+  assert_eq!(attrs[0]["kind"], "attribute");
+  assert_eq!(attrs[0]["key"], "custom:flag");
+  assert_eq!(attrs[0]["binding"], "slot");
+  assert_eq!(attrs[0]["attrSlotIndex"].as_f64(), Some(0.0));
+
+  assert_eq!(attrs[1]["kind"], "attribute");
+  assert_eq!(attrs[1]["key"], "custom:static");
+  assert_eq!(attrs[1]["binding"], "static");
+  assert_eq!(attrs[1]["value"].as_f64(), Some(1.0));
+}
+
+#[test]
+fn should_skip_lynx_part_id_without_reserving_attr_slot() {
+  let template = first_user_template_json(
+    r#"
+      <view __lynx_part_id={partId} id={dynamicId} />
+    "#,
+  );
+
+  let attrs = template["attributesArray"]
+    .as_array()
+    .expect("attributesArray");
+  assert_eq!(attrs.len(), 1);
+
+  assert_eq!(attrs[0]["kind"], "attribute");
+  assert_eq!(attrs[0]["key"], "id");
+  assert_eq!(attrs[0]["binding"], "slot");
+  assert_eq!(attrs[0]["attrSlotIndex"].as_f64(), Some(0.0));
 }
 
 #[test]

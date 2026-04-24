@@ -14,6 +14,7 @@ pub struct ElementTemplateAsset {
 }
 
 const BUILTIN_RAW_TEXT_TEMPLATE_ID: &str = "__et_builtin_raw_text__";
+const BUILTIN_SOURCE_FILE: &str = "<builtin>";
 
 impl<C> JSXTransformer<C>
 where
@@ -35,7 +36,7 @@ where
         ],
         "children": [],
       }),
-      source_file: self.cfg.filename.clone(),
+      source_file: BUILTIN_SOURCE_FILE.to_string(),
     }
   }
 

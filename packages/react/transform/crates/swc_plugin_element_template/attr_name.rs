@@ -54,16 +54,17 @@ impl From<Ident> for AttrName {
 }
 
 impl AttrName {
-  pub fn from_ns(_ns: Ident, name: Ident) -> Self {
+  pub fn from_ns(ns: Ident, name: Ident) -> Self {
+    let ns_str = ns.sym.as_ref();
     let name_str = name.sym.as_ref().to_string();
-    if name_str == "ref" {
+    if ns_str == "main-thread" && name_str == "ref" {
       AttrName::WorkletRef
-    } else if get_event_type_and_name(name_str.as_str()).is_some() {
+    } else if ns_str == "main-thread" && get_event_type_and_name(name_str.as_str()).is_some() {
       AttrName::WorkletEvent
-    } else if name_str == "gesture" {
+    } else if ns_str == "main-thread" && name_str == "gesture" {
       AttrName::Gesture
     } else {
-      todo!()
+      AttrName::Attr
     }
   }
 }
