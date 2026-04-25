@@ -37,6 +37,7 @@ export function Image(
 
   useLynxEffect(() => {
     setHasError(false);
+    return undefined;
   }, [url]);
 
   const finalSrc = hasError

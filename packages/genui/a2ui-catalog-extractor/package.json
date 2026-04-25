@@ -14,9 +14,10 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "a2ui-catalog-extractor": "./dist/cli.js"
+    "a2ui-catalog-extractor": "./bin/a2ui-catalog-extractor.js"
   },
   "files": [
+    "bin",
     "dist",
     "skills",
     "README.md"
