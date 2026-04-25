@@ -6,6 +6,9 @@ import type { GenericComponentProps } from '../../core/types.js';
 
 import './style.css';
 
+/**
+ * @a2uiCatalog Column
+ */
 export interface ColumnProps extends GenericComponentProps {
   /** Static child IDs array or template object. */
   children: string[] | { componentId: string; path: string };
@@ -14,10 +17,10 @@ export interface ColumnProps extends GenericComponentProps {
     | 'start'
     | 'center'
     | 'end'
+    | 'stretch'
     | 'spaceBetween'
     | 'spaceAround'
-    | 'spaceEvenly'
-    | 'stretch';
+    | 'spaceEvenly';
 }
 
 export function Column(

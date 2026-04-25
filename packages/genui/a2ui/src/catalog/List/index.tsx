@@ -9,10 +9,13 @@ import { useDataBinding } from '../../core/useDataBinding.js';
 
 import './style.css';
 
+/**
+ * @a2uiCatalog List
+ */
 export interface ListProps extends GenericComponentProps {
   /** Static child IDs array or template object. */
   children: string[] | { componentId: string; path: string };
-  direction?: 'vertical' | 'horizontal';
+  direction?: 'horizontal' | 'vertical';
   align?: 'start' | 'center' | 'end' | 'stretch';
 }
 
