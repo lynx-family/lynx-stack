@@ -82,7 +82,7 @@ export function parseCliArgs(args: string[]): CliOptions {
 
 export async function runCli(
   args: string[],
-  cwd = process.cwd(),
+  cwd: string = process.cwd(),
 ): Promise<number> {
   const options = parseCliArgs(args);
 

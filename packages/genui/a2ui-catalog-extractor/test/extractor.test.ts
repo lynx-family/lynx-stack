@@ -240,7 +240,7 @@ export interface DemoCardProps {
     })).toEqual({
       catalogId: 'https://example.com/catalog.json',
       components: {
-        Text: textCatalog!.json.Text,
+        Text: textCatalog!.json['Text'],
       },
     });
   });

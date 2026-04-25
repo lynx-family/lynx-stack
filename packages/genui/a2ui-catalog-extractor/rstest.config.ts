@@ -3,8 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 import { defineConfig } from '@rstest/core';
 
-export default defineConfig({
+const config: ReturnType<typeof defineConfig> = defineConfig({
   name: 'genui/a2ui-catalog-extractor',
   globals: true,
   include: ['test/**/*.test.ts'],
 });
+
+export default config;
