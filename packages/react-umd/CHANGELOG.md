@@ -1,5 +1,11 @@
 # @lynx-js/react-umd
 
+## 0.120.0
+
+### Patch Changes
+
+- Support compile main-thread script to bytecode in external bundle ([#2459](https://github.com/lynx-family/lynx-stack/pull/2459))
+
 ## 0.119.0
 
 ## 0.118.0

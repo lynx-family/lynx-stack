@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/docs-mcp-server",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A MCP Server providing Lynx documentation resources for LLMs, with carefully designed prompting.",
   "repository": {
     "type": "git",

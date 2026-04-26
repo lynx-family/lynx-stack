@@ -1,5 +1,13 @@
 # @lynx-js/css-extract-webpack-plugin
 
+## 0.7.1
+
+### Patch Changes
+
+- Fix CSS source map line offsets when wrapping extracted CSS with cssId metadata. ([#2514](https://github.com/lynx-family/lynx-stack/pull/2514))
+
+- Support `@lynx-js/template-webpack-plugin` v0.11.0. ([#2483](https://github.com/lynx-family/lynx-stack/pull/2483))
+
 ## 0.7.0
 
 ### Minor Changes

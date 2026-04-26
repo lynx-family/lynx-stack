@@ -1,5 +1,14 @@
 # @lynx-js/lynx-bundle-rslib-config
 
+## 0.3.2
+
+### Patch Changes
+
+- Support compile main-thread script to bytecode in external bundle ([#2459](https://github.com/lynx-family/lynx-stack/pull/2459))
+
+- Updated dependencies [[`e179680`](https://github.com/lynx-family/lynx-stack/commit/e1796803444ba70efa86609b620c3a753b6694de)]:
+  - @lynx-js/css-serializer@0.1.6
+
 ## 0.3.1
 
 ### Patch Changes
