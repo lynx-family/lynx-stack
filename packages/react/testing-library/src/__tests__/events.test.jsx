@@ -307,6 +307,26 @@ describe('Event handler property semantics', () => {
     fireEvent.tap(childRef.current, { bubbles: false });
     expect(parent).toHaveBeenCalledTimes(1);
   });
+
+  // https://lynx.bytedance.net/next/zh/api/lynx-api/event/touch-event.html
+  // TouchEvent (touchstart/touchmove/touchend/touchcancel) bubbles in Lynx.
+  it.each(['touchstart', 'touchmove', 'touchend', 'touchcancel'])(
+    '%s: bubbles to ancestor handlers by default',
+    (eventName) => {
+      const parent = vi.fn();
+      const childRef = createRef();
+
+      const Comp = () => (
+        <view {...{ [`bind${eventName}`]: parent }}>
+          <view ref={childRef} />
+        </view>
+      );
+      render(<Comp />);
+
+      fireEvent[eventName](childRef.current);
+      expect(parent).toHaveBeenCalledTimes(1);
+    },
+  );
 });
 
 test('customEvent not in internal eventMap', () => {

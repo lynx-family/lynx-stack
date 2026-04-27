@@ -52,17 +52,19 @@ export const eventMap = {
   bgerror: {
     defaultInit: {},
   },
+  // TouchEvent: bubbles/captures per
+  // https://lynx.bytedance.net/next/zh/api/lynx-api/event/touch-event.html
   touchstart: {
-    defaultInit: {},
+    defaultInit: { bubbles: true },
   },
   touchmove: {
-    defaultInit: {},
+    defaultInit: { bubbles: true },
   },
   touchcancel: {
-    defaultInit: {},
+    defaultInit: { bubbles: true },
   },
   touchend: {
-    defaultInit: {},
+    defaultInit: { bubbles: true },
   },
   longpress: {
     defaultInit: {},
