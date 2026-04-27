@@ -10,6 +10,8 @@ import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '@lynx-js/template-webpack-plug
 import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
+export const ELEMENT_TEMPLATE_BUILD_INFO = 'lynx:element-templates';
+
 const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
   this: LoaderContext<ReactLoaderOptions>,
   content,
@@ -101,6 +103,11 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     | undefined;
   if (buildInfo) {
     buildInfo[UI_SOURCE_MAP_RECORDS_BUILD_INFO] = result.uiSourceMapRecords;
+    if (result.elementTemplates && result.elementTemplates.length > 0) {
+      buildInfo[ELEMENT_TEMPLATE_BUILD_INFO] = result.elementTemplates;
+    } else {
+      delete buildInfo[ELEMENT_TEMPLATE_BUILD_INFO];
+    }
   }
 
   this.callback(

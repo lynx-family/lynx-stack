@@ -1,0 +1,51 @@
+[
+  {
+    "templateId": "_et_7a8c6_test_1",
+    "compiledTemplate": {
+      "kind": "element",
+      "type": "view",
+      "attributesArray": [],
+      "children": [
+        {
+          "kind": "elementSlot",
+          "type": "slot",
+          "elementSlotIndex": 0
+        }
+      ]
+    },
+    "sourceFile": "index.tsx"
+  },
+  {
+    "templateId": "_et_7a8c6_test_2",
+    "compiledTemplate": {
+      "kind": "element",
+      "type": "view",
+      "attributesArray": [],
+      "children": [
+        {
+          "kind": "elementSlot",
+          "type": "slot",
+          "elementSlotIndex": 0
+        }
+      ]
+    },
+    "sourceFile": "index.tsx"
+  },
+  {
+    "templateId": "__et_builtin_raw_text__",
+    "compiledTemplate": {
+      "kind": "element",
+      "type": "raw-text",
+      "attributesArray": [
+        {
+          "kind": "attribute",
+          "key": "text",
+          "binding": "slot",
+          "attrSlotIndex": 0
+        }
+      ],
+      "children": []
+    },
+    "sourceFile": "<builtin>"
+  }
+]

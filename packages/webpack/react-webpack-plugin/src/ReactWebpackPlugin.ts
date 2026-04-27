@@ -13,9 +13,39 @@ import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { LAYERS } from './layer.js';
+import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 
 const require = createRequire(import.meta.url);
+
+interface ElementTemplateBuildInfo {
+  templateId: string;
+  compiledTemplate: Record<string, unknown>;
+}
+
+export interface ModuleWithElementTemplateBuildInfo {
+  buildInfo?: Record<string, unknown>;
+  modules?: Iterable<ModuleWithElementTemplateBuildInfo>;
+}
+
+export function collectElementTemplatesFromModule(
+  module: ModuleWithElementTemplateBuildInfo,
+): ElementTemplateBuildInfo[] {
+  const elementTemplates: ElementTemplateBuildInfo[] = [];
+  const templates = module.buildInfo?.[ELEMENT_TEMPLATE_BUILD_INFO];
+
+  if (Array.isArray(templates)) {
+    elementTemplates.push(...templates as ElementTemplateBuildInfo[]);
+  }
+
+  if (module.modules) {
+    for (const nestedModule of module.modules) {
+      elementTemplates.push(...collectElementTemplatesFromModule(nestedModule));
+    }
+  }
+
+  return elementTemplates;
+}
 
 /**
  * The options for ReactWebpackPlugin
@@ -74,6 +104,13 @@ interface ReactWebpackPluginOptions {
    * The file path of `@lynx-js/react/worklet-runtime`.
    */
   workletRuntimePath: string;
+
+  /**
+   * Whether to enable Element Template compilation.
+   *
+   * @experimental
+   */
+  experimental_useElementTemplate?: boolean;
 }
 
 /**
@@ -150,6 +187,7 @@ class ReactWebpackPlugin {
       experimental_isLazyBundle: false,
       profile: undefined,
       workletRuntimePath: '',
+      experimental_useElementTemplate: false,
     });
 
   /**
@@ -206,6 +244,9 @@ class ReactWebpackPlugin {
       __ENABLE_SSR__: JSON.stringify(options.enableSSR),
       __DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__: JSON.stringify(
         options.disableCreateSelectorQueryIncompatibleWarning,
+      ),
+      __USE_ELEMENT_TEMPLATE__: JSON.stringify(
+        options.experimental_useElementTemplate,
       ),
     }).apply(compiler);
 
@@ -373,6 +414,30 @@ class ReactWebpackPlugin {
             ?.replaceAll(`-react__background`, '')
             ?.replaceAll(`-react__main-thread`, ''),
       );
+
+      if (options.experimental_useElementTemplate) {
+        hooks.beforeEncode.tap(
+          `${this.constructor.name}.ElementTemplate`,
+          (args) => {
+            const elementTemplates: Record<string, Record<string, unknown>> =
+              {};
+
+            for (const module of compilation.modules) {
+              for (
+                const { templateId, compiledTemplate }
+                  of collectElementTemplatesFromModule(
+                    module as ModuleWithElementTemplateBuildInfo,
+                  )
+              ) {
+                elementTemplates[templateId] = compiledTemplate;
+              }
+            }
+
+            args.encodeData.elementTemplate = elementTemplates;
+            return args;
+          },
+        );
+      }
     });
   }
 

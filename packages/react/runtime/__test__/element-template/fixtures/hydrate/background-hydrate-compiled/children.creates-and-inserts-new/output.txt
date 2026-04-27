@@ -1,0 +1,15 @@
+Object {
+  "stream": Array [
+    1,
+    4,
+    "_et_77307_test_2",
+    null,
+    Array [],
+    Array [],
+    3,
+    -1,
+    0,
+    4,
+    0,
+  ],
+}

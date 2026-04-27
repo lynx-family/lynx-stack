@@ -1,0 +1,7 @@
+Object {
+  "isRootInstance": true,
+  "tree": "<root>
+  <_et_a94a8_test_1 />
+</root>
+",
+}

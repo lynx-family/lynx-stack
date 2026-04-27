@@ -1,0 +1,11 @@
+Object {
+  "slotChildrenCount": 2,
+  "slotChildrenTags": Array [
+    "view",
+    "view",
+  ],
+  "slotChildrenTemplateIds": Array [
+    "_et_child_a",
+    "_et_child_b",
+  ],
+}

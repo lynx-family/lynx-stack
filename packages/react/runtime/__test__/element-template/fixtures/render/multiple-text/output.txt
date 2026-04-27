@@ -1,0 +1,38 @@
+<view>
+  <view id="1">
+    <raw-text text="A" />
+    <raw-text text="B" />
+    <raw-text text="C" />
+  </view>
+  <view id="2">
+    <text>
+      <raw-text text="A" />
+    </text>
+    <text>
+      <raw-text text="B" />
+    </text>
+    <text>
+      <raw-text text="C" />
+    </text>
+  </view>
+  <view id="3">
+    <text>
+      <raw-text text="A" />
+      <raw-text text="B" />
+      <raw-text text="C" />
+    </text>
+  </view>
+  <view id="4">
+    <text>
+      <text>
+        <raw-text text="A" />
+      </text>
+      <text>
+        <raw-text text="B" />
+      </text>
+      <text>
+        <raw-text text="C" />
+      </text>
+    </text>
+  </view>
+</view>

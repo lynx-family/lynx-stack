@@ -1,0 +1,5 @@
+Object {
+  "pageJsx": "<page>
+  <view id=\"bg\" />
+</page>",
+}

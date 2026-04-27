@@ -386,11 +386,81 @@ describe('Config', () => {
         "defineDCE": undefined,
         "enableRemoveCSSScope": true,
         "engineVersion": "3.2",
+        "experimental_useElementTemplate": false,
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
       }
     `)
   })
+
+  test('experimental_useElementTemplate wires aliases and loader/plugin options', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx({
+            experimental_useElementTemplate: true,
+          }),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    expect(config?.resolve?.alias).toHaveProperty(
+      '@lynx-js/react$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/index.js'
+          .replaceAll('/', path.sep),
+      ),
+    )
+    expect(config?.resolve?.alias).toHaveProperty(
+      '@lynx-js/react/internal$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/internal.js'
+          .replaceAll('/', path.sep),
+      ),
+    )
+    expect(config?.resolve?.alias).toHaveProperty(
+      '@lynx-js/react/jsx-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/jsx-runtime/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+    expect(config?.resolve?.alias).toHaveProperty(
+      '@lynx-js/react/jsx-dev-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/jsx-dev-runtime/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+
+    expect(
+      await getBackgroundLayerOptions(rsbuild),
+    ).toHaveProperty('experimental_useElementTemplate', true)
+
+    const ReactWebpackPlugin = config?.plugins?.find((
+      p,
+    ): p is ReactWebpackPlugin => p?.constructor.name === 'ReactWebpackPlugin')
+
+    expect(ReactWebpackPlugin).toBeDefined()
+    expect(
+      (
+        ReactWebpackPlugin as unknown as {
+          options?: { experimental_useElementTemplate?: boolean }
+        }
+      ).options?.experimental_useElementTemplate,
+    )
+      .toBe(true)
+  })
+
   test('enableRemoveCSSScope can be set to undefined explicitly', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -413,6 +483,7 @@ describe('Config', () => {
         "defineDCE": undefined,
         "enableRemoveCSSScope": undefined,
         "engineVersion": "3.2",
+        "experimental_useElementTemplate": false,
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
       }

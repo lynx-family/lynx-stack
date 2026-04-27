@@ -92,6 +92,7 @@ export default tseslint.config(
       'packages/react/runtime/worklet-runtime/**',
       'packages/react/runtime/src/renderToOpcodes/**',
       'packages/react/runtime/src/snapshot/renderToOpcodes/**',
+      'packages/react/runtime/src/element-template/runtime/render/render-to-opcodes.ts',
       'packages/react/runtime/types/**',
 
       // TODO: enable eslint for react-runtime

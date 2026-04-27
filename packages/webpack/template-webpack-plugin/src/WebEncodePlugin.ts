@@ -101,7 +101,7 @@ export class WebEncodePlugin {
               root: encodeOptions.lepusCode.root!,
             },
             customSections: encodeOptions.customSections ?? {},
-            elementTemplates: encodeOptions['elementTemplates'] ?? {},
+            elementTemplate: encodeOptions['elementTemplate'] ?? {},
           };
           const isExperimentalWebBinary = process
             .env['EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE'];
