@@ -45,11 +45,8 @@ export { createContext }
 
 export { createElement }
 
-// Warning: (ae-forgotten-export) The symbol "BackgroundSnapshotInstance" needs to be exported by the entry point react.docs.d.ts
-// Warning: (ae-forgotten-export) The symbol "SnapshotInstance" needs to be exported by the entry point react.docs.d.ts
-//
 // @public
-export const createPortal: (vnode: ComponentChildren, containerNodesRef: NodesRef | BackgroundSnapshotInstance | SnapshotInstance) => VNode<any>;
+export const createPortal: (vnode: ComponentChildren, containerNodesRef: NodesRef | null | undefined) => VNode<any> | null;
 
 export { createRef }
 

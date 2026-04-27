@@ -2,7 +2,6 @@
 // (B) idiomatic ref={setState} — skipped until ref-apply dedup lands.
 import '@testing-library/jest-dom';
 import { createContext, createPortal, createRef, useContext, useEffect, useRef, useState } from '@lynx-js/react';
-import { __root } from '@lynx-js/react/internal';
 import { act } from 'preact/test-utils';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render } from '..';
@@ -309,76 +308,6 @@ describe('createPortal (useRef + useEffect workaround)', () => {
     expect(queryByText('injected')).toBeInTheDocument();
     expect(getByTestId('widget')).toContainElement(queryByText('injected'));
     expect(externalSlot).not.toBeNull();
-  });
-});
-
-describe('createPortal with `__root` as container', () => {
-  it('renders children as a child of the page root', () => {
-    function Child() {
-      return <text data-testid='portaled'>hello-root</text>;
-    }
-
-    function App() {
-      return (
-        <view data-testid='host'>
-          <text>sibling</text>
-          {createPortal(<Child />, __root)}
-        </view>
-      );
-    }
-
-    const { container, getByTestId } = render(<App />);
-
-    expect(getByTestId('portaled')).toBeInTheDocument();
-    expect(getByTestId('portaled')).toHaveTextContent('hello-root');
-    // Portal child ends up under <page> directly, not inside <view data-testid="host">.
-    expect(getByTestId('host')).not.toContainElement(getByTestId('portaled'));
-    expect(container).toContainElement(getByTestId('portaled'));
-    expect(getByTestId('portaled').parentElement).toBe(container);
-  });
-
-  it('mounts/unmounts when the portal call is toggled', () => {
-    let setShow;
-    function App() {
-      const [show, _setShow] = useState(true);
-      setShow = _setShow;
-      return (
-        <view>
-          {show && createPortal(<text>root-portal-shown</text>, __root)}
-        </view>
-      );
-    }
-
-    const { queryByText } = render(<App />);
-    expect(queryByText('root-portal-shown')).toBeInTheDocument();
-
-    act(() => setShow(false));
-    expect(queryByText('root-portal-shown')).not.toBeInTheDocument();
-
-    act(() => setShow(true));
-    expect(queryByText('root-portal-shown')).toBeInTheDocument();
-  });
-
-  it('re-renders when state inside the portalled subtree changes', () => {
-    let bump;
-    function Counter() {
-      const [n, setN] = useState(0);
-      bump = () => setN(v => v + 1);
-      return <text>{`root-count:${n}`}</text>;
-    }
-    function App() {
-      return (
-        <view>
-          {createPortal(<Counter />, __root)}
-        </view>
-      );
-    }
-
-    const { queryByText } = render(<App />);
-    expect(queryByText('root-count:0')).toBeInTheDocument();
-
-    act(() => bump());
-    expect(queryByText('root-count:1')).toBeInTheDocument();
   });
 });
 
