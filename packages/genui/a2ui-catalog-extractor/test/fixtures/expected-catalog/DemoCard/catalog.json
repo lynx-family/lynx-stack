@@ -1,0 +1,103 @@
+{
+  "DemoCard": {
+    "properties": {
+      "title": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "description": "Main title."
+      },
+      "tone": {
+        "type": "string",
+        "enum": [
+          "neutral",
+          "accent"
+        ],
+        "description": "Visual tone."
+      },
+      "columns": {
+        "oneOf": [
+          {
+            "type": "number",
+            "enum": [
+              1
+            ]
+          },
+          {
+            "type": "number",
+            "enum": [
+              2
+            ]
+          },
+          {
+            "type": "number",
+            "enum": [
+              3
+            ]
+          }
+        ],
+        "description": "Number of columns."
+      },
+      "context": {
+        "type": "object",
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "description": "Extra payload.",
+        "default": {}
+      },
+      "action": {
+        "type": "object",
+        "properties": {
+          "event": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Event name."
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "event"
+        ],
+        "additionalProperties": false,
+        "description": "Server-dispatched action payload."
+      }
+    },
+    "required": [
+      "title",
+      "action"
+    ],
+    "description": "Demo card fixture.\n\nGenerated from a TSX fixture."
+  }
+}

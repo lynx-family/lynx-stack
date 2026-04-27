@@ -6,297 +6,96 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { describe, expect, test } from '@rstest/core';
+import { afterAll, describe, expect, test } from '@rstest/core';
 
 import {
   createA2UICatalog,
   extractCatalogComponents,
-  extractCatalogComponentsFromTypeDocJson,
+  findCatalogSourceFiles,
   writeComponentCatalogs,
 } from '../src/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const packageDir = path.resolve(path.dirname(__filename), '..');
-const a2uiDir = path.resolve(packageDir, '../a2ui');
-const a2uiDistCatalogDir = path.join(a2uiDir, 'dist/catalog');
-const a2uiSourceCatalogDir = path.join(a2uiDir, 'src/catalog');
+const fixtureDir = path.join(packageDir, 'test/fixtures');
+const catalogFixtureDir = path.join(fixtureDir, 'catalog');
+const expectedCatalogDir = path.join(fixtureDir, 'expected-catalog');
+const fixtureTsconfig = 'tsconfig.json';
+const tempDirs: string[] = [];
+
+void afterAll(() => {
+  for (const dir of tempDirs) {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
 
 describe('extractCatalogComponents', () => {
-  test('extracts a component schema from a TypeDoc-marked interface', async () => {
-    const fixtureDir = fs.mkdtempSync(
-      path.join(os.tmpdir(), 'a2ui-catalog-fixture-'),
-    );
-    const fixture = path.join(fixtureDir, 'DemoCard.tsx');
-    const fixtureTsconfig = path.join(fixtureDir, 'tsconfig.json');
-    fs.writeFileSync(
-      fixture,
-      `
-/**
- * @a2uiCatalog DemoCard
- */
-export interface DemoCardProps {
-  /** Main title. */
-  title: string | { path: string };
-  /** Visual tone. */
-  tone?: 'neutral' | 'accent';
-  /** Extra payload.
-   * @defaultValue \`{}\`
-   */
-  context?: Record<string, string | number | boolean>;
-  action: {
-    event: {
-      name: string;
-    };
-  };
-}
-`,
-    );
-    fs.writeFileSync(
-      fixtureTsconfig,
-      JSON.stringify({
-        compilerOptions: {
-          jsx: 'preserve',
-          module: 'ESNext',
-          moduleResolution: 'Bundler',
-          target: 'ESNext',
-        },
-        include: ['DemoCard.tsx'],
-      }),
-    );
+  test('extracts component schemas from TSX catalog fixtures', async () => {
+    const sourceFiles = findCatalogSourceFiles(catalogFixtureDir);
+
+    expect(sourceFiles.map(file => path.basename(file))).toEqual([
+      'DemoCard.tsx',
+      'DemoText.tsx',
+    ]);
 
     const components = await extractCatalogComponents({
       cwd: fixtureDir,
-      sourceFiles: ['DemoCard.tsx'],
+      sourceFiles,
+      tsconfig: fixtureTsconfig,
     });
-
-    expect(components).toEqual([
-      {
-        filePath: fixture,
-        interfaceName: 'DemoCardProps',
-        name: 'DemoCard',
-        schema: {
-          properties: {
-            title: {
-              oneOf: [
-                { type: 'string' },
-                {
-                  type: 'object',
-                  properties: { path: { type: 'string' } },
-                  required: ['path'],
-                  additionalProperties: false,
-                },
-              ],
-              description: 'Main title.',
-            },
-            tone: {
-              type: 'string',
-              enum: ['neutral', 'accent'],
-              description: 'Visual tone.',
-            },
-            context: {
-              type: 'object',
-              additionalProperties: {
-                oneOf: [
-                  { type: 'string' },
-                  { type: 'number' },
-                  { type: 'boolean' },
-                ],
-              },
-              description: 'Extra payload.',
-              default: {},
-            },
-            action: {
-              type: 'object',
-              properties: {
-                event: {
-                  type: 'object',
-                  properties: {
-                    name: { type: 'string' },
-                  },
-                  required: ['name'],
-                  additionalProperties: false,
-                },
-              },
-              required: ['event'],
-              additionalProperties: false,
-            },
-          },
-          required: ['title', 'action'],
-        },
-      },
-    ]);
-  });
-
-  test('extracts a component schema from TypeDoc JSON', () => {
-    const components = extractCatalogComponentsFromTypeDocJson({
-      children: [
-        {
-          name: 'DemoTextProps',
-          kindString: 'Interface',
-          comment: {
-            blockTags: [
-              {
-                tag: '@a2uiCatalog',
-                content: [{ text: 'DemoText' }],
-              },
-            ],
-          },
-          children: [
-            {
-              name: 'text',
-              kindString: 'Property',
-              comment: {
-                summary: [{ text: 'Literal text or path binding.' }],
-              },
-              type: {
-                type: 'union',
-                types: [
-                  { type: 'intrinsic', name: 'string' },
-                  {
-                    type: 'reflection',
-                    declaration: {
-                      name: '__type',
-                      children: [
-                        {
-                          name: 'path',
-                          kindString: 'Property',
-                          type: { type: 'intrinsic', name: 'string' },
-                        },
-                      ],
-                    },
-                  },
-                ],
-              },
-            },
-          ],
-        },
-      ],
-    });
-
-    expect(components).toEqual([
-      {
-        filePath: '',
-        interfaceName: 'DemoTextProps',
-        name: 'DemoText',
-        schema: {
-          properties: {
-            text: {
-              description: 'Literal text or path binding.',
-              oneOf: [
-                { type: 'string' },
-                {
-                  type: 'object',
-                  properties: { path: { type: 'string' } },
-                  required: ['path'],
-                  additionalProperties: false,
-                },
-              ],
-            },
-          },
-          required: ['text'],
-        },
-      },
-    ]);
-  });
-
-  test('throws for ambiguous intrinsic catalog property types', () => {
-    expect(() =>
-      extractCatalogComponentsFromTypeDocJson({
-        children: [
-          {
-            name: 'DemoPayloadProps',
-            kindString: 'Interface',
-            comment: {
-              blockTags: [
-                {
-                  tag: '@a2uiCatalog',
-                  content: [{ text: 'DemoPayload' }],
-                },
-              ],
-            },
-            children: [
-              {
-                name: 'payload',
-                kindString: 'Property',
-                type: { type: 'intrinsic', name: 'unknown' },
-              },
-            ],
-          },
-        ],
-      })
-    ).toThrow(
-      'Unsupported ambiguous intrinsic TypeDoc type "unknown" for "payload".',
+    const componentsByName = Object.fromEntries(
+      components.map(component => [component.name, component]),
     );
+    const expectedCatalogs = readExpectedCatalogs();
+
+    expect(Object.keys(componentsByName).sort()).toEqual([
+      'DemoCard',
+      'DemoText',
+    ]);
+    expect(componentsByName['DemoCard']).toMatchObject({
+      filePath: path.join(catalogFixtureDir, 'DemoCard.tsx'),
+      interfaceName: 'DemoCardProps',
+      name: 'DemoCard',
+      schema: expectedCatalogs['DemoCard']!['DemoCard'],
+    });
+    expect(componentsByName['DemoText']).toMatchObject({
+      filePath: path.join(catalogFixtureDir, 'DemoText.tsx'),
+      interfaceName: 'DemoTextProps',
+      name: 'DemoText',
+      schema: expectedCatalogs['DemoText']!['DemoText'],
+    });
   });
 
-  test('throws for nullable unions instead of silently dropping null', () => {
-    expect(() =>
-      extractCatalogComponentsFromTypeDocJson({
-        children: [
-          {
-            name: 'DemoNullableProps',
-            kindString: 'Interface',
-            comment: {
-              blockTags: [
-                {
-                  tag: '@a2uiCatalog',
-                  content: [{ text: 'DemoNullable' }],
-                },
-              ],
-            },
-            children: [
-              {
-                name: 'label',
-                kindString: 'Property',
-                type: {
-                  type: 'union',
-                  types: [
-                    { type: 'intrinsic', name: 'string' },
-                    { type: 'literal', value: null },
-                  ],
-                },
-              },
-            ],
-          },
-        ],
-      })
-    ).toThrow('Unsupported nullable union for "label".');
-  });
+  test('writes catalog.json files from TSX catalog fixtures', async () => {
+    const outDir = createTempDir();
+    const expectedCatalogs = readExpectedCatalogs();
 
-  test('generates JSON deep-equal to packages/genui/a2ui/dist/catalog', async () => {
-    const expectedCatalogs = readDistCatalogs();
-    const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'a2ui-catalog-out-'));
-
-    await writeComponentCatalogs({
-      cwd: a2uiDir,
+    const components = await writeComponentCatalogs({
+      cwd: fixtureDir,
       outDir,
-      sourceFiles: expectedCatalogs.map(({ componentName }) =>
-        getSourceFileForComponent(componentName)
-      ),
+      sourceFiles: findCatalogSourceFiles(catalogFixtureDir),
+      tsconfig: fixtureTsconfig,
     });
 
-    for (const expectedCatalog of expectedCatalogs) {
-      const actualJsonPath = path.join(
-        outDir,
-        expectedCatalog.componentName,
-        'catalog.json',
-      );
-      expect(JSON.parse(fs.readFileSync(actualJsonPath, 'utf8'))).toEqual(
-        expectedCatalog.json,
+    expect(components.map(component => component.name).sort()).toEqual([
+      'DemoCard',
+      'DemoText',
+    ]);
+
+    for (const componentName of Object.keys(expectedCatalogs)) {
+      expect(readCatalogJson(outDir, componentName)).toEqual(
+        expectedCatalogs[componentName],
       );
     }
   });
 
-  test('can create a full catalog from extracted components', async () => {
-    const textCatalog = readDistCatalogs().find(({ componentName }) =>
-      componentName === 'Text'
-    );
-    expect(textCatalog).toBeDefined();
-
+  test('creates a full catalog from TSX-extracted components', async () => {
     const components = await extractCatalogComponents({
-      cwd: a2uiDir,
-      sourceFiles: [getSourceFileForComponent('Text')],
+      cwd: fixtureDir,
+      sourceFiles: findCatalogSourceFiles(catalogFixtureDir),
+      tsconfig: fixtureTsconfig,
     });
+    const expectedCatalogs = readExpectedCatalogs();
 
     expect(createA2UICatalog({
       catalogId: 'https://example.com/catalog.json',
@@ -304,39 +103,55 @@ export interface DemoCardProps {
     })).toEqual({
       catalogId: 'https://example.com/catalog.json',
       components: {
-        Text: textCatalog!.json['Text'],
+        DemoCard: expectedCatalogs['DemoCard']!['DemoCard'],
+        DemoText: expectedCatalogs['DemoText']!['DemoText'],
       },
     });
   });
+
+  test('throws for ambiguous intrinsic catalog property types in TSX fixtures', async () => {
+    await expect(extractCatalogComponents({
+      cwd: fixtureDir,
+      sourceFiles: ['invalid/AmbiguousPayload.tsx'],
+      tsconfig: fixtureTsconfig,
+    })).rejects.toThrow(
+      'Unsupported ambiguous intrinsic TypeDoc type "unknown" for "payload".',
+    );
+  });
+
+  test('throws for nullable unions in TSX fixtures', async () => {
+    await expect(extractCatalogComponents({
+      cwd: fixtureDir,
+      sourceFiles: ['invalid/NullableLabel.tsx'],
+      tsconfig: fixtureTsconfig,
+    })).rejects.toThrow('Unsupported nullable union for "label".');
+  });
 });
 
-function readDistCatalogs(): {
-  componentName: string;
-  json: Record<string, unknown>;
-}[] {
-  expect(fs.existsSync(a2uiDistCatalogDir)).toBe(true);
-
-  const catalogJsonPaths = fs.readdirSync(a2uiDistCatalogDir)
-    .map(componentName => path.join(a2uiDistCatalogDir, componentName))
-    .filter(componentPath => fs.statSync(componentPath).isDirectory())
-    .map(componentPath => path.join(componentPath, 'catalog.json'))
-    .filter(catalogJsonPath => fs.existsSync(catalogJsonPath))
-    .sort((left, right) => left.localeCompare(right));
-
-  expect(catalogJsonPaths.length).toBeGreaterThan(0);
-
-  return catalogJsonPaths.map(catalogJsonPath => {
-    const componentName = path.basename(path.dirname(catalogJsonPath));
-    return {
-      componentName,
-      json: JSON.parse(fs.readFileSync(catalogJsonPath, 'utf8')) as Record<
-        string,
-        unknown
-      >,
-    };
-  });
+function createTempDir(): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'a2ui-catalog-out-'));
+  tempDirs.push(dir);
+  return dir;
 }
 
-function getSourceFileForComponent(componentName: string): string {
-  return path.join(a2uiSourceCatalogDir, componentName, 'index.tsx');
+function readExpectedCatalogs(): Record<string, Record<string, unknown>> {
+  return Object.fromEntries(
+    fs.readdirSync(expectedCatalogDir)
+      .map(componentName => [
+        componentName,
+        readCatalogJson(expectedCatalogDir, componentName),
+      ]),
+  );
+}
+
+function readCatalogJson(
+  rootDir: string,
+  componentName: string,
+): Record<string, unknown> {
+  return JSON.parse(
+    fs.readFileSync(
+      path.join(rootDir, componentName, 'catalog.json'),
+      'utf8',
+    ),
+  ) as Record<string, unknown>;
 }
