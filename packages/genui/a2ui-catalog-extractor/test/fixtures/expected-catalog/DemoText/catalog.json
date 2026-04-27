@@ -1,0 +1,38 @@
+{
+  "DemoText": {
+    "properties": {
+      "text": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "description": "Literal text or data path binding."
+      },
+      "variant": {
+        "type": "string",
+        "enum": [
+          "body",
+          "caption"
+        ],
+        "description": "Text presentation variant."
+      }
+    },
+    "required": [
+      "text"
+    ],
+    "description": "Demo text fixture."
+  }
+}

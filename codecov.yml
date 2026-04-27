@@ -25,7 +25,11 @@ coverage:
         threshold: "1%"
 
 ignore:
+  - ".github/**"
+  - "codecov.yml"
   - "packages/genui/**"
+  - "pnpm-lock.yaml"
+  - "rstest.config.ts"
 
 fixes:
   - "/home/runner/_work/lynx-stack::"

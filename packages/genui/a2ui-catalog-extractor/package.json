@@ -1,0 +1,39 @@
+{
+  "name": "@lynx-js/a2ui-catalog-extractor",
+  "version": "0.0.0",
+  "private": true,
+  "description": "TypeDoc-driven A2UI catalog extractor for TypeScript interfaces.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./skill": "./skills/a2ui-catalog-extractor/SKILL.md",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "a2ui-catalog-extractor": "./bin/a2ui-catalog-extractor.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "skills",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "test": "rstest"
+  },
+  "dependencies": {
+    "typedoc": "^0.28.19"
+  },
+  "devDependencies": {
+    "@rstest/core": "catalog:rstest",
+    "@types/node": "^24.10.13"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

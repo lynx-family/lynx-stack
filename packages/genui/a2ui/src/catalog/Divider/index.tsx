@@ -5,6 +5,9 @@ import type { GenericComponentProps } from '../../core/types.js';
 
 import './style.css';
 
+/**
+ * @a2uiCatalog Divider
+ */
 export interface DividerProps extends GenericComponentProps {
   axis?: 'horizontal' | 'vertical';
 }

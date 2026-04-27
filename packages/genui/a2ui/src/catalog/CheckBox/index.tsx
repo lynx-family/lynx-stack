@@ -5,6 +5,9 @@ import type { GenericComponentProps } from '../../core/types.js';
 
 import './style.css';
 
+/**
+ * @a2uiCatalog CheckBox
+ */
 export interface CheckBoxProps extends GenericComponentProps {
   label: string | { path: string };
   value: boolean | { path: string };
