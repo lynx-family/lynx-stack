@@ -8,12 +8,14 @@ import { fileURLToPath } from 'node:url';
 
 import { afterAll, describe, expect, test } from '@rstest/core';
 
+import { runCli } from '../src/cli.js';
 import {
   createA2UICatalog,
   extractCatalogComponents,
   findCatalogSourceFiles,
   writeComponentCatalogs,
 } from '../src/index.js';
+import type { TypeDocProject } from '../src/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const packageDir = path.resolve(path.dirname(__filename), '..');
@@ -36,6 +38,7 @@ describe('extractCatalogComponents', () => {
     expect(sourceFiles.map(file => path.basename(file))).toEqual([
       'DemoCard.tsx',
       'DemoText.tsx',
+      'QuickStartCard.tsx',
     ]);
 
     const components = await extractCatalogComponents({
@@ -51,6 +54,7 @@ describe('extractCatalogComponents', () => {
     expect(Object.keys(componentsByName).sort()).toEqual([
       'DemoCard',
       'DemoText',
+      'QuickStartCard',
     ]);
     expect(componentsByName['DemoCard']).toMatchObject({
       filePath: path.join(catalogFixtureDir, 'DemoCard.tsx'),
@@ -63,6 +67,12 @@ describe('extractCatalogComponents', () => {
       interfaceName: 'DemoTextProps',
       name: 'DemoText',
       schema: expectedCatalogs['DemoText']!['DemoText'],
+    });
+    expect(componentsByName['QuickStartCard']).toMatchObject({
+      filePath: path.join(catalogFixtureDir, 'QuickStartCard.tsx'),
+      interfaceName: 'QuickStartCardProps',
+      name: 'QuickStartCard',
+      schema: expectedCatalogs['QuickStartCard']!['QuickStartCard'],
     });
   });
 
@@ -80,6 +90,7 @@ describe('extractCatalogComponents', () => {
     expect(components.map(component => component.name).sort()).toEqual([
       'DemoCard',
       'DemoText',
+      'QuickStartCard',
     ]);
 
     for (const componentName of Object.keys(expectedCatalogs)) {
@@ -100,11 +111,77 @@ describe('extractCatalogComponents', () => {
     expect(createA2UICatalog({
       catalogId: 'https://example.com/catalog.json',
       components,
+      functions: [
+        {
+          description: 'Format a raw value for display.',
+          name: 'formatDisplayValue',
+          parameters: {
+            type: 'object',
+            properties: {
+              value: { type: 'string' },
+            },
+            required: ['value'],
+            additionalProperties: false,
+          },
+          returnType: 'string',
+        },
+      ],
+      theme: {
+        accentColor: { type: 'string' },
+      },
     })).toEqual({
       catalogId: 'https://example.com/catalog.json',
       components: {
         DemoCard: expectedCatalogs['DemoCard']!['DemoCard'],
         DemoText: expectedCatalogs['DemoText']!['DemoText'],
+        QuickStartCard: expectedCatalogs['QuickStartCard']!['QuickStartCard'],
+      },
+      functions: [
+        {
+          description: 'Format a raw value for display.',
+          name: 'formatDisplayValue',
+          parameters: {
+            type: 'object',
+            properties: {
+              value: { type: 'string' },
+            },
+            required: ['value'],
+            additionalProperties: false,
+          },
+          returnType: 'string',
+        },
+      ],
+      theme: {
+        accentColor: { type: 'string' },
+      },
+    });
+  });
+
+  test('writes catalog files from an existing TypeDoc JSON project through the CLI', async () => {
+    const cwd = createTempDir();
+    const typedocJsonPath = path.join(cwd, 'typedoc.json');
+    fs.writeFileSync(
+      typedocJsonPath,
+      `${JSON.stringify(createCliTypeDocProjectFixture(), null, 2)}\n`,
+    );
+
+    await expect(runCli([
+      '--typedoc-json',
+      'typedoc.json',
+      '--out-dir',
+      'catalog-out',
+    ], cwd)).resolves.toBe(0);
+
+    expect(readCatalogJson(path.join(cwd, 'catalog-out'), 'CliBadge')).toEqual({
+      CliBadge: {
+        properties: {
+          label: {
+            type: 'string',
+            description: 'Badge label.',
+          },
+        },
+        required: ['label'],
+        description: 'CLI badge fixture.',
       },
     });
   });
@@ -154,4 +231,37 @@ function readCatalogJson(
       'utf8',
     ),
   ) as Record<string, unknown>;
+}
+
+function createCliTypeDocProjectFixture(): TypeDocProject {
+  return {
+    children: [
+      {
+        kindString: 'Interface',
+        name: 'CliBadgeProps',
+        comment: {
+          summary: [{ text: 'CLI badge fixture.' }],
+          blockTags: [
+            {
+              tag: '@a2uiCatalog',
+              content: [{ text: 'CliBadge' }],
+            },
+          ],
+        },
+        children: [
+          {
+            kindString: 'Property',
+            name: 'label',
+            comment: {
+              summary: [{ text: 'Badge label.' }],
+            },
+            type: {
+              type: 'intrinsic',
+              name: 'string',
+            },
+          },
+        ],
+      },
+    ],
+  };
 }
