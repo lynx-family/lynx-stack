@@ -8,7 +8,8 @@ import { createPortal as preactCreatePortal } from 'preact/compat';
 import type { NodesRef } from '@lynx-js/types';
 
 import { __DynamicPartSlotV2 } from '../../internal.js';
-import { refProxyToBackgroundSnapshotInstance } from '../refProxyBackgroundSnapshotInstance.js';
+import { refProxyRefAttr } from '../lifecycle/ref/delay.js';
+import { backgroundSnapshotInstanceManager } from '../snapshot/backgroundSnapshot.js';
 
 /**
  * Renders `children` into a target Lynx element instead of into the parent
@@ -21,14 +22,14 @@ export const createPortal: (
   vnode: ComponentChildren,
   containerNodesRef: NodesRef,
 ) => VNode<any> = (vnode, containerNodesRef) => {
-  const getter = refProxyToBackgroundSnapshotInstance.get(containerNodesRef);
-  if (!getter) {
+  const refAttr = refProxyRefAttr.get(containerNodesRef);
+  if (!refAttr) {
     throw new Error(
       'createPortal: container must be a ref obtained from a ReactLynx element. '
         + 'Refs from lynx.createSelectorQuery() or third-party sources are not supported.',
     );
   }
-  const bsi = getter();
+  const bsi = backgroundSnapshotInstanceManager.values.get(refAttr[0])!;
 
   const s = bsi.__snapshot_def.slot;
   if (!s || s.length !== 1 || s[0]![0] !== __DynamicPartSlotV2 || s[0]![1] !== 0) {

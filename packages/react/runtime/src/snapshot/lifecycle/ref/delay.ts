@@ -63,9 +63,9 @@ function runDelayedUiOps(): void {
  * closure, so this module stays independent of `backgroundSnapshot.ts` —
  * importing the manager here would close a cycle via
  * `backgroundSnapshot.ts → snapshot/ref.ts → delay.ts (RefProxy)`.
- * Consumers that need the backing `BackgroundSnapshotInstance` go through
- * `snapshot/refProxyBackgroundSnapshotInstance.ts`, which composes this
- * WeakMap with the snapshot manager.
+ * Consumers that need the backing `BackgroundSnapshotInstance` (e.g.
+ * `createPortal`) compose this WeakMap with `backgroundSnapshotInstanceManager`
+ * directly at the call site.
  *
  * Kept as a WeakMap (rather than a field on the class) for encapsulation:
  * no Symbol or `Reflect.ownKeys` trick makes the association visible from
