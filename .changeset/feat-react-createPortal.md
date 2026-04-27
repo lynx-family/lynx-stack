@@ -1,5 +1,5 @@
 ---
-"@lynx-js/react": minor
+"@lynx-js/react": patch
 ---
 
 Add `createPortal` support. Mark the host element with `portal-container` and pass its ref:
