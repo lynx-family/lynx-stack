@@ -1,0 +1,254 @@
+[
+  {
+    "createSurface": {
+      "surfaceId": "default",
+      "catalogId": "demo-streaming-list"
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "root",
+          "component": "Column",
+          "children": ["header", "answer", "divider", "spotsList"]
+        },
+        {
+          "id": "header",
+          "component": "Text",
+          "variant": "h2",
+          "text": "AI Answer: Weekend Citywalk Coffee Picks"
+        },
+        {
+          "id": "answer",
+          "component": "Text",
+          "variant": "body",
+          "text": "Generating..."
+        },
+        {
+          "id": "divider",
+          "component": "Divider",
+          "axis": "horizontal"
+        },
+        {
+          "id": "spotsList",
+          "component": "List",
+          "direction": "vertical",
+          "children": {
+            "path": "/spots",
+            "componentId": "spotCard"
+          }
+        },
+        {
+          "id": "spotCard",
+          "component": "Card",
+          "child": "spotCardBody"
+        },
+        {
+          "id": "spotCardBody",
+          "component": "Column",
+          "children": ["spotImage", "spotTitle", "spotMeta", "spotReason"]
+        },
+        {
+          "id": "spotImage",
+          "component": "Image",
+          "url": {
+            "path": "cover"
+          }
+        },
+        {
+          "id": "spotTitle",
+          "component": "Text",
+          "variant": "h4",
+          "text": {
+            "path": "name"
+          }
+        },
+        {
+          "id": "spotMeta",
+          "component": "Text",
+          "variant": "caption",
+          "text": {
+            "path": "meta"
+          }
+        },
+        {
+          "id": "spotReason",
+          "component": "Text",
+          "variant": "body",
+          "text": {
+            "path": "reason"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "updateDataModel": {
+      "surfaceId": "default",
+      "path": "/spots",
+      "value": []
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "answer",
+          "component": "Text",
+          "variant": "body",
+          "text": "I will build a 3-stop coffee route for a relaxed weekend citywalk, balancing walking distance, seating comfort, and visual variety."
+        }
+      ]
+    }
+  },
+  {
+    "updateDataModel": {
+      "surfaceId": "default",
+      "path": "/spots",
+      "value": [
+        {
+          "key": "rooftop-brew",
+          "cover": "https://picsum.photos/seed/a2ui-rooftop-brew/640/360",
+          "name": "Rooftop Brew Room",
+          "meta": "Checking distance and seating notes...",
+          "reason": "Drafting the first stop..."
+        }
+      ]
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "answer",
+          "component": "Text",
+          "variant": "body",
+          "text": "Stop 1 is ready. I started with a bright, easy entry point so the list feels strong from the first card."
+        }
+      ]
+    }
+  },
+  {
+    "updateDataModel": {
+      "surfaceId": "default",
+      "path": "/spots",
+      "value": [
+        {
+          "key": "rooftop-brew",
+          "cover": "https://picsum.photos/seed/a2ui-rooftop-brew/640/360",
+          "name": "Rooftop Brew Room",
+          "meta": "8 min walk from the start · hand brew · bright window seats",
+          "reason": "Best for the first stop of the route. The rooftop corner and slower hand-brew pace make it easy to settle into the day without feeling rushed."
+        },
+        {
+          "key": "corner-canvas",
+          "cover": "https://picsum.photos/seed/a2ui-corner-canvas/640/360",
+          "name": "Corner Canvas Lab",
+          "meta": "Checking mid-route fit...",
+          "reason": "Drafting the second stop..."
+        }
+      ]
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "answer",
+          "component": "Text",
+          "variant": "body",
+          "text": "Two cards are in place now: a calm opening stop and a larger cafe for the middle of the route."
+        }
+      ]
+    }
+  },
+  {
+    "updateDataModel": {
+      "surfaceId": "default",
+      "path": "/spots",
+      "value": [
+        {
+          "key": "rooftop-brew",
+          "cover": "https://picsum.photos/seed/a2ui-rooftop-brew/640/360",
+          "name": "Rooftop Brew Room",
+          "meta": "8 min walk from the start · hand brew · bright window seats",
+          "reason": "Best for the first stop of the route. The rooftop corner and slower hand-brew pace make it easy to settle into the day without feeling rushed."
+        },
+        {
+          "key": "corner-canvas",
+          "cover": "https://picsum.photos/seed/a2ui-corner-canvas/640/360",
+          "name": "Corner Canvas Lab",
+          "meta": "15 min from stop 1 · signature latte · sketch-friendly tables",
+          "reason": "A good mid-route refill. The larger shared tables and soft lighting support a longer pause when the case needs a stronger browse-and-rest moment."
+        },
+        {
+          "key": "late-sun",
+          "cover": "https://picsum.photos/seed/a2ui-late-sun/640/360",
+          "name": "Late Sun Roastery",
+          "meta": "Checking end-of-route timing...",
+          "reason": "Drafting the final stop..."
+        }
+      ]
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "answer",
+          "component": "Text",
+          "variant": "body",
+          "text": "The last card is loading in. I am keeping the route compact so the stream ends with a clear closeout option near transit."
+        }
+      ]
+    }
+  },
+  {
+    "updateDataModel": {
+      "surfaceId": "default",
+      "path": "/spots",
+      "value": [
+        {
+          "key": "rooftop-brew",
+          "cover": "https://picsum.photos/seed/a2ui-rooftop-brew/640/360",
+          "name": "Rooftop Brew Room",
+          "meta": "8 min walk from the start · hand brew · bright window seats",
+          "reason": "Best for the first stop of the route. The rooftop corner and slower hand-brew pace make it easy to settle into the day without feeling rushed."
+        },
+        {
+          "key": "corner-canvas",
+          "cover": "https://picsum.photos/seed/a2ui-corner-canvas/640/360",
+          "name": "Corner Canvas Lab",
+          "meta": "15 min from stop 1 · signature latte · sketch-friendly tables",
+          "reason": "A good mid-route refill. The larger shared tables and soft lighting support a longer pause when the case needs a stronger browse-and-rest moment."
+        },
+        {
+          "key": "late-sun",
+          "cover": "https://picsum.photos/seed/a2ui-late-sun/640/360",
+          "name": "Late Sun Roastery",
+          "meta": "6 min from the subway return point · espresso tonic · sunset-facing stools",
+          "reason": "Best as the final stop. It keeps the route easy to exit from and ends the list with a stronger visual moment for the stream."
+        }
+      ]
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "answer",
+          "component": "Text",
+          "variant": "body",
+          "text": "All 3 stops are ready: bright start, roomy middle break, and a compact sunset finish. This case now shows a text stream above a progressively growing List in the middle."
+        }
+      ]
+    }
+  }
+]

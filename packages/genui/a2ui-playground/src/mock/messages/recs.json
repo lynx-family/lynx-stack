@@ -1,0 +1,208 @@
+[
+  {
+    "createSurface": {
+      "surfaceId": "default",
+      "catalogId": "demo-streaming"
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "root",
+          "component": "Column",
+          "children": ["header", "answer", "divider", "recs"]
+        },
+        {
+          "id": "header",
+          "component": "Text",
+          "variant": "h2",
+          "text": "Recommendations: Date-Night Dining Ideas"
+        },
+        {
+          "id": "answer",
+          "component": "Text",
+          "variant": "body",
+          "text": "Generating..."
+        },
+        {
+          "id": "divider",
+          "component": "Divider",
+          "axis": "horizontal"
+        },
+        {
+          "id": "recs",
+          "component": "Column",
+          "children": []
+        }
+      ]
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "answer",
+          "component": "Text",
+          "variant": "body",
+          "text": "I'll suggest 3 options with different vibes based on atmosphere, food, and distance."
+        }
+      ]
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "answer",
+          "component": "Text",
+          "variant": "body",
+          "text": "I'll suggest 3 options with different vibes based on atmosphere, food, and distance.\nFirst pick (night-view vibe)..."
+        }
+      ]
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        { "id": "recs", "component": "Column", "children": ["recCard-1"] },
+        { "id": "recCard-1", "component": "Card", "child": "recCard-1-body" },
+        {
+          "id": "recCard-1-body",
+          "component": "Column",
+          "children": ["recCard-1-img", "recCard-1-text"]
+        },
+        {
+          "id": "recCard-1-img",
+          "component": "Image",
+          "url": "https://picsum.photos/seed/a2ui-moon/640/360"
+        },
+        {
+          "id": "recCard-1-text",
+          "component": "Text",
+          "variant": "body",
+          "text": "1. Moonlight Terrace\nFilling in details..."
+        }
+      ]
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "recCard-1-text",
+          "component": "Text",
+          "variant": "body",
+          "text": "1. Moonlight Terrace\nRating 4.9 · Avg 168 · 1.2 km\nHighlight: window-side night view, soft lighting, great for a slow chat.\nTip: ask for a window table; desserts are a standout."
+        },
+        {
+          "id": "answer",
+          "component": "Text",
+          "variant": "body",
+          "text": "I'll suggest 3 options with different vibes based on atmosphere, food, and distance.\n1/3 ready: night-view vibe.\nNext: a more private option..."
+        }
+      ]
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "recs",
+          "component": "Column",
+          "children": ["recCard-1", "recCard-2"]
+        },
+        { "id": "recCard-2", "component": "Card", "child": "recCard-2-body" },
+        {
+          "id": "recCard-2-body",
+          "component": "Column",
+          "children": ["recCard-2-img", "recCard-2-text"]
+        },
+        {
+          "id": "recCard-2-img",
+          "component": "Image",
+          "url": "https://picsum.photos/seed/a2ui-pine/640/360"
+        },
+        {
+          "id": "recCard-2-text",
+          "component": "Text",
+          "variant": "body",
+          "text": "2. Pinewood Bistro\nFilling in details..."
+        }
+      ]
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "recCard-2-text",
+          "component": "Text",
+          "variant": "body",
+          "text": "2. Pinewood Bistro\nRating 4.7 · Avg 128 · 2.0 km\nHighlight: spacious seating and private rooms for a more intimate talk.\nTip: a set menu is easiest; avoid the 7pm rush."
+        },
+        {
+          "id": "answer",
+          "component": "Text",
+          "variant": "body",
+          "text": "I'll suggest 3 options with different vibes based on atmosphere, food, and distance.\n2/3 ready: night-view + private.\nLast one: relaxed and easygoing..."
+        }
+      ]
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "recs",
+          "component": "Column",
+          "children": ["recCard-1", "recCard-2", "recCard-3"]
+        },
+        { "id": "recCard-3", "component": "Card", "child": "recCard-3-body" },
+        {
+          "id": "recCard-3-body",
+          "component": "Column",
+          "children": ["recCard-3-img", "recCard-3-text"]
+        },
+        {
+          "id": "recCard-3-img",
+          "component": "Image",
+          "url": "https://picsum.photos/seed/a2ui-breeze/640/360"
+        },
+        {
+          "id": "recCard-3-text",
+          "component": "Text",
+          "variant": "body",
+          "text": "3. Sea Breeze Kitchen\nFilling in details..."
+        }
+      ]
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "recCard-3-text",
+          "component": "Text",
+          "variant": "body",
+          "text": "3. Sea Breeze Kitchen\nRating 4.6 · Avg 98 · 0.8 km\nHighlight: casual vibe, great for a stroll before or after dinner.\nTip: sit near the outside; shareable small plates work well."
+        },
+        {
+          "id": "answer",
+          "component": "Text",
+          "variant": "body",
+          "text": "I'll suggest 3 options with different vibes based on atmosphere, food, and distance.\n3/3 ready: night view / private / casual.\nWhich vibe do you prefer? I can refine by budget and area."
+        }
+      ]
+    }
+  }
+]

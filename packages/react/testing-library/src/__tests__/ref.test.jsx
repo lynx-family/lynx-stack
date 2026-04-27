@@ -1,6 +1,6 @@
-import { createRef, Component, useState } from '@lynx-js/react';
+import { createRef, Component, useState, useEffect, useRef } from '@lynx-js/react';
 import { render } from '..';
-import { expect, vi } from 'vitest';
+import { expect, vi, describe, it } from 'vitest';
 import { act } from 'preact/test-utils';
 
 describe('component ref', () => {
@@ -481,5 +481,93 @@ describe('element ref', () => {
     act(() => {
       setShowChild(false);
     });
+  });
+});
+
+describe('applyRef before hydration', () => {
+  it('rerender with same ref callback should not invoke ref callback', () => {
+    const refCallback = vi.fn();
+    let bump;
+
+    function App() {
+      const [, setTick] = useState(0);
+      bump = () => setTick(t => t + 1);
+
+      useEffect(() => {
+        // This will trigger a rerender before hydration
+        bump();
+      }, []);
+
+      return <view ref={refCallback} />;
+    }
+
+    render(<App />);
+    expect(refCallback).toHaveBeenCalledTimes(1);
+    expect(refCallback.mock.calls[0][0]).toMatchObject({
+      refAttr: expect.any(Array),
+    });
+  });
+
+  const forms = [
+    'normal',
+    'spread',
+  ];
+  forms.forEach((key) => {
+    forms.forEach((key2) => {
+      it(`rerender when ref is changed from ${key} to ${key2}`, () => {
+        const oldCb = vi.fn();
+        const newCb = vi.fn();
+        let bump;
+
+        function App() {
+          const [tick, setTick] = useState(0);
+          bump = () => setTick(t => t + 1);
+
+          useEffect(() => {
+            // This will trigger a rerender before hydration
+            bump();
+          }, []);
+
+          const isFirst = tick === 0;
+          const ref = isFirst ? oldCb : newCb;
+          const form = isFirst ? key : key2;
+
+          if (form === 'spread') {
+            return <view {...{ ref }} />;
+          }
+          return <view ref={ref} />;
+        }
+
+        render(<App />);
+
+        expect(oldCb).toHaveBeenCalledTimes(2);
+        expect(oldCb.mock.calls[0][0]).toMatchObject({
+          refAttr: expect.any(Array),
+        });
+        expect(oldCb.mock.calls[1][0]).toBeNull();
+
+        expect(newCb).toHaveBeenCalledTimes(1);
+        expect(newCb.mock.calls[0][0]).toMatchObject({
+          refAttr: expect.any(Array),
+        });
+      });
+    });
+  });
+
+  it('useRef + useEffect + setState host capture is stable (portal-host pattern)', () => {
+    const seenHosts = vi.fn();
+
+    function App() {
+      const hostRef = useRef(null);
+      const [host, setHost] = useState(null);
+      useEffect(() => {
+        setHost(hostRef.current);
+      }, []);
+      if (host) seenHosts(host);
+      return <view ref={hostRef} />;
+    }
+
+    render(<App />);
+    expect(seenHosts).toHaveBeenCalledTimes(1);
   });
 });

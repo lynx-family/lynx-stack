@@ -258,13 +258,14 @@ jobs:
   test-rstest:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: >
-        pnpm rstest
+        pnpm exec rstest run
         -c rstest.config.ts
-        --reporter=github-actions
-        --reporter=junit
+        --coverage
         --testTimeout=50000
         --hookTimeout=50000
   kitten-lynx-android-emulator:

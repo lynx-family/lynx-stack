@@ -6,8 +6,10 @@ import { describe, expect, test } from '@rstest/core';
 import type { CSSSourceMap } from '@lynx-js/css-serializer';
 
 import {
+  collectCSSSourceMapContents,
   dedupeTasmCSSDiagnostics,
   extractTasmCSSDiagnostics,
+  processTasmCSSDiagnostics,
   resolveTasmCSSDiagnostics,
 } from '../src/cssDiagnostics.js';
 
@@ -50,7 +52,7 @@ describe('cssDiagnostics', () => {
           column: 10,
         },
       ],
-      mainCSSSourceMap: sourceMap,
+      mainCSSSourceMaps: [sourceMap],
       context: '/workspace/app',
       fileExists: () => true,
     });
@@ -64,6 +66,55 @@ describe('cssDiagnostics', () => {
         message:
           'Unsupported property "unknown-prop" was removed during template encode.',
         sourceFile: '/workspace/app/src/app.css',
+        sourceLine: 2,
+        sourceColumn: 3,
+      },
+    ]);
+  });
+
+  test('resolve tasm css diagnostics with first mappable source map', () => {
+    const firstSourceMap: CSSSourceMap = {
+      version: 3,
+      file: '.rspeedy/first/first.css',
+      sources: ['webpack:/src/first.css'],
+      sourcesContent: ['.foo {}\n'],
+      names: [],
+      mappings: 'AAAA',
+    };
+    const secondSourceMap: CSSSourceMap = {
+      version: 3,
+      file: '.rspeedy/second/second.css',
+      sources: ['webpack:/src/second.css'],
+      sourcesContent: [
+        '.foo {\n  unknown-prop: red;\n}\n',
+      ],
+      names: [],
+      mappings: 'AAAA;EACE,kBAAkB;AACpB',
+    };
+
+    const resolved = resolveTasmCSSDiagnostics({
+      cssDiagnostics: [
+        {
+          type: 'property',
+          name: 'unknown-prop',
+          line: 2,
+          column: 10,
+        },
+      ],
+      mainCSSSourceMaps: [firstSourceMap, secondSourceMap],
+      context: '/workspace/app',
+      fileExists: () => true,
+    });
+
+    expect(resolved).toEqual([
+      {
+        type: 'property',
+        name: 'unknown-prop',
+        line: 2,
+        column: 10,
+        message:
+          'Unsupported property "unknown-prop" was removed during template encode.',
+        sourceFile: '/workspace/app/src/second.css',
         sourceLine: 2,
         sourceColumn: 3,
       },
@@ -91,7 +142,7 @@ describe('cssDiagnostics', () => {
           column: 10,
         },
       ],
-      mainCSSSourceMap: sourceMap,
+      mainCSSSourceMaps: [sourceMap],
       context: '/workspace/app',
       fileExists: () => false,
     });
@@ -169,5 +220,85 @@ describe('cssDiagnostics', () => {
       diagnostic,
     ]);
     expect(dedupeTasmCSSDiagnostics([diagnostic], seen)).toEqual([]);
+  });
+
+  test('process tasm css diagnostics from raw value to deduped diagnostics', () => {
+    const sourceMap: CSSSourceMap = {
+      version: 3,
+      file: '.rspeedy/main/main.css',
+      sources: ['webpack:/src/app.css'],
+      sourcesContent: [
+        '.foo {\n  unknown-prop: red;\n}\n',
+      ],
+      names: [],
+      mappings: 'AAAA;EACE,kBAAkB;AACpB',
+    };
+    const seen = new Set<string>();
+    const rawDiagnostics =
+      '[{"type":"property","name":"unknown-prop","line":2,"column":10},{"type":"property","name":"unknown-prop","line":2,"column":10}]';
+
+    expect(
+      processTasmCSSDiagnostics({
+        cssDiagnostics: rawDiagnostics,
+        cssSourceMaps: [JSON.stringify(sourceMap)],
+        context: '/workspace/app',
+        emittedWarnings: seen,
+        fileExists: () => true,
+      }),
+    ).toEqual([
+      {
+        type: 'property',
+        name: 'unknown-prop',
+        line: 2,
+        column: 10,
+        message:
+          'Unsupported property "unknown-prop" was removed during template encode.',
+        sourceFile: '/workspace/app/src/app.css',
+        sourceLine: 2,
+        sourceColumn: 3,
+      },
+    ]);
+  });
+
+  test('process tasm css diagnostics ignores invalid css source maps', () => {
+    const rawDiagnostics =
+      '[{"type":"property","name":"unknown-prop","line":2,"column":10}]';
+
+    expect(
+      processTasmCSSDiagnostics({
+        cssDiagnostics: rawDiagnostics,
+        cssSourceMaps: ['', 'not json', '{}'],
+        context: '/workspace/app',
+      }),
+    ).toEqual([
+      {
+        type: 'property',
+        name: 'unknown-prop',
+        line: 2,
+        column: 10,
+        message:
+          'Unsupported property "unknown-prop" was removed during template encode.',
+      },
+    ]);
+  });
+
+  test('collect css source maps from chunk source.map()', () => {
+    const sourceMap = {
+      version: 3,
+      mappings: 'AAAA',
+      sources: ['webpack:/src/app.css'],
+    };
+
+    const result = collectCSSSourceMapContents(
+      [{
+        name: 'main.css',
+        info: {},
+        source: {
+          map: () => sourceMap,
+        },
+      } as never],
+    );
+
+    expect(result).toEqual([JSON.stringify(sourceMap)]);
   });
 });

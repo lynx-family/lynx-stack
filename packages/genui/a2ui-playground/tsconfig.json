@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "bundler",
+    "target": "ES2020",
+    "lib": ["ESNext", "DOM"],
+    "types": ["react", "react-dom"],
+    "noEmit": true,
+    "skipLibCheck": true,
+  },
+  "include": ["src", "rsbuild.config.ts", "lynx.config.ts"],
+  "references": [{ "path": "./lynx-src" }],
+}

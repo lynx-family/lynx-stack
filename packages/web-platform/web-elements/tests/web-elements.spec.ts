@@ -1051,6 +1051,59 @@ test.describe('web-elements test suite', () => {
       });
       expect(scrollLeft).toBeGreaterThan(100);
     });
+
+    test('x-foldview-ng/swipe-with-x-list', async ({
+      page,
+      browserName,
+      context,
+    }, { title }) => {
+      test.skip(browserName !== 'chromium', 'using chromium only cdp methods');
+      const cdpSession = await context.newCDPSession(page);
+      await gotoWebComponentPage(page, title);
+
+      const foldview = page.locator('#foldview');
+      const xlist = page.locator('#inner-list');
+
+      // Ensure the document is scrolled: legacy code used `pageX/pageY` with
+      // `elementsFromPoint()`, which expects `clientX/clientY`, causing misses.
+      await page.evaluate(() => window.scrollTo(0, 600));
+      await wait(50);
+
+      await xlist.evaluate((dom: HTMLElement) => {
+        dom.scrollTop = 0;
+      });
+
+      const listInitial = await xlist.evaluate((dom: HTMLElement) =>
+        dom.scrollTop
+      );
+
+      const box = await foldview.boundingBox();
+      expect(box, 'foldview should be visible').toBeTruthy();
+      const x = (box!.x + box!.width / 2) | 0;
+      const y = (box!.y + box!.height / 2) | 0;
+
+      // Scroll the foldview header fully away first, then the swipe should
+      // continue to inner scroll container (x-list). This is the part that
+      // regressed when `touchstart` picked elements via the wrong coordinates.
+      await foldview.evaluate((dom: HTMLElement) => {
+        dom.scrollTop = dom.scrollHeight;
+      });
+      await wait(150);
+
+      await swipe(cdpSession, {
+        x,
+        y,
+        xDistance: 0,
+        yDistance: -200,
+        speed: 300,
+      });
+      await wait(250);
+
+      expect(
+        await xlist.evaluate((dom: HTMLElement) => dom.scrollTop),
+        'swipe-continues-to-inner-list-scroll',
+      ).toBeGreaterThan(listInitial);
+    });
     test('x-foldview-ng/event-offset-granularity', async ({
       page,
       browserName,

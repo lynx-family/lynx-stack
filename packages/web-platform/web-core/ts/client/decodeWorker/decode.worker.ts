@@ -349,6 +349,7 @@ async function handleJSON(
       ?? (json.lepusCode.root.startsWith('(function (globDynamicComponentEntry')
         ? 'lazy'
         : 'card');
+    config.cardType = json.cardType ?? json.pageConfig?.cardType ?? 'react';
     config.appType = config.appType ?? appType;
     config.isLazy = (appType === 'card') ? 'false' : 'true';
   }

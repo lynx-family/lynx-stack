@@ -4,12 +4,18 @@
 import type { GenericComponentProps } from '../../core/types.js';
 import './style.css';
 
+export interface TextProps extends GenericComponentProps {
+  /** Literal text or path binding. */
+  text: string | { path: string };
+  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body';
+}
+
 export function Text(
-  props: GenericComponentProps,
+  props: TextProps,
 ): import('@lynx-js/react').ReactNode {
   const id = props.id;
-  const text = props['text'];
-  const variant = props['variant'] as string | undefined ?? 'body';
+  const text = props.text;
+  const variant = props.variant as string | undefined ?? 'body';
 
   return (
     <text key={id} className={`text-${variant}`}>

@@ -3,6 +3,17 @@
 // LICENSE file in the root directory of this source tree.
 import { defineConfig } from '@rstest/core';
 
+const reporters = process.env.GITHUB_ACTIONS || process.env.GITHUB_STEP_SUMMARY
+  ? [
+    ['github-actions', { annotations: false, summary: true }],
+    ['junit', { outputPath: './test-report.junit.xml' }],
+  ]
+  : ['default'];
+
 export default defineConfig({
+  coverage: {
+    reporters: ['json', 'text'],
+  },
+  reporters,
   projects: ['packages/webpack/*/rstest.config.ts'],
 });

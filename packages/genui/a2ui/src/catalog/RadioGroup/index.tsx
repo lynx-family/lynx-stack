@@ -3,11 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { Radio, RadioGroupRoot, RadioIndicator } from '@lynx-js/lynx-ui';
 
-import type { ComponentProps } from '../../core/ComponentRegistry.js';
-import type {
-  ComponentInstance,
-  GenericComponentProps,
-} from '../../core/types.js';
+import type { GenericComponentProps } from '../../core/types.js';
 
 import './style.css';
 
@@ -20,16 +16,21 @@ const HitSlop = {
   },
 };
 
-export interface RadioGroupProps extends ComponentProps {
-  component: ComponentInstance & { dataContextPath?: string };
+export interface RadioGroupComponentProps extends GenericComponentProps {
+  /** The list of string options to display. */
+  items: string[] | { path: string };
+  /** The currently selected value. */
+  value: string | { path: string };
+  /** A hint for the visual style of the radio group. */
+  usageHint?: 'default' | 'card' | 'row';
 }
 
 export function RadioGroup(
-  props: GenericComponentProps,
+  props: RadioGroupComponentProps,
 ): import('@lynx-js/react').ReactNode {
-  const value = props['value'];
-  const items = props['items'];
-  const usageHint = (props['usageHint'] as string | undefined) ?? 'default';
+  const value = props.value;
+  const items = props.items;
+  const usageHint = (props.usageHint as string | undefined) ?? 'default';
   const setValue = props.setValue as
     | ((key: string, value: unknown) => void)
     | undefined;

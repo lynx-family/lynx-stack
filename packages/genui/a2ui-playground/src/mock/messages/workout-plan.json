@@ -1,0 +1,431 @@
+[
+  {
+    "createSurface": {
+      "surfaceId": "default",
+      "catalogId": "demo-workout-plan"
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "root",
+          "component": "Column",
+          "align": "stretch",
+          "justify": "start",
+          "children": ["header", "subheader", "progressRow", "divider", "planList", "footer"]
+        },
+        {
+          "id": "header",
+          "component": "Text",
+          "variant": "h2",
+          "text": "Weekly Workout Plan"
+        },
+        {
+          "id": "subheader",
+          "component": "Text",
+          "variant": "body",
+          "text": "Generating your plan..."
+        },
+        {
+          "id": "progressRow",
+          "component": "Row",
+          "alignment": "center",
+          "distribution": "spaceBetween",
+          "children": ["progressLabel", "progressCount"]
+        },
+        {
+          "id": "progressLabel",
+          "component": "Text",
+          "variant": "caption",
+          "text": "Progress"
+        },
+        {
+          "id": "progressCount",
+          "component": "Text",
+          "variant": "caption",
+          "text": "0 / 5 days"
+        },
+        {
+          "id": "divider",
+          "component": "Divider",
+          "axis": "horizontal"
+        },
+        {
+          "id": "planList",
+          "component": "List",
+          "direction": "vertical",
+          "children": {
+            "path": "/days",
+            "componentId": "dayCard"
+          }
+        },
+        {
+          "id": "dayCard",
+          "component": "Card",
+          "child": "dayCardBody"
+        },
+        {
+          "id": "dayCardBody",
+          "component": "Column",
+          "align": "stretch",
+          "children": ["dayHeader", "dayFocus", "dayMoves", "dayNote"]
+        },
+        {
+          "id": "dayHeader",
+          "component": "Row",
+          "alignment": "center",
+          "distribution": "spaceBetween",
+          "children": ["dayTitle", "dayDuration"]
+        },
+        {
+          "id": "dayTitle",
+          "component": "Text",
+          "variant": "h4",
+          "text": { "path": "title" }
+        },
+        {
+          "id": "dayDuration",
+          "component": "Text",
+          "variant": "caption",
+          "text": { "path": "duration" }
+        },
+        {
+          "id": "dayFocus",
+          "component": "Text",
+          "variant": "label",
+          "text": { "path": "focus" }
+        },
+        {
+          "id": "dayMoves",
+          "component": "Text",
+          "variant": "body",
+          "text": { "path": "moves" }
+        },
+        {
+          "id": "dayNote",
+          "component": "Text",
+          "variant": "caption",
+          "text": { "path": "note" }
+        },
+        {
+          "id": "footer",
+          "component": "Text",
+          "variant": "caption",
+          "text": ""
+        }
+      ]
+    }
+  },
+  {
+    "updateDataModel": {
+      "surfaceId": "default",
+      "path": "/days",
+      "value": []
+    }
+  },
+
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "subheader",
+          "component": "Text",
+          "variant": "body",
+          "text": "Balancing strength, mobility, and recovery across five sessions. Starting with an easy ramp-up."
+        }
+      ]
+    }
+  },
+
+  {
+    "updateDataModel": {
+      "surfaceId": "default",
+      "path": "/days",
+      "value": [
+        {
+          "key": "mon",
+          "title": "Monday · Ramp-Up",
+          "duration": "35 min",
+          "focus": "Full-body activation",
+          "moves": "Drafting moves...",
+          "note": ""
+        }
+      ]
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        { "id": "progressCount", "component": "Text", "variant": "caption", "text": "1 / 5 days" }
+      ]
+    }
+  },
+  {
+    "updateDataModel": {
+      "surfaceId": "default",
+      "path": "/days",
+      "value": [
+        {
+          "key": "mon",
+          "title": "Monday · Ramp-Up",
+          "duration": "35 min",
+          "focus": "Full-body activation",
+          "moves": "Goblet squat · Push-up · Glute bridge · Dead bug · Farmer carry",
+          "note": "Keep effort easy. The goal is to wake up patterns, not peak intensity."
+        }
+      ]
+    }
+  },
+
+  {
+    "updateDataModel": {
+      "surfaceId": "default",
+      "path": "/days",
+      "value": [
+        {
+          "key": "mon",
+          "title": "Monday · Ramp-Up",
+          "duration": "35 min",
+          "focus": "Full-body activation",
+          "moves": "Goblet squat · Push-up · Glute bridge · Dead bug · Farmer carry",
+          "note": "Keep effort easy. The goal is to wake up patterns, not peak intensity."
+        },
+        {
+          "key": "tue",
+          "title": "Tuesday · Lower Strength",
+          "duration": "45 min",
+          "focus": "Drafting focus...",
+          "moves": "",
+          "note": ""
+        }
+      ]
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        { "id": "progressCount", "component": "Text", "variant": "caption", "text": "2 / 5 days" }
+      ]
+    }
+  },
+  {
+    "updateDataModel": {
+      "surfaceId": "default",
+      "path": "/days",
+      "value": [
+        {
+          "key": "mon",
+          "title": "Monday · Ramp-Up",
+          "duration": "35 min",
+          "focus": "Full-body activation",
+          "moves": "Goblet squat · Push-up · Glute bridge · Dead bug · Farmer carry",
+          "note": "Keep effort easy. The goal is to wake up patterns, not peak intensity."
+        },
+        {
+          "key": "tue",
+          "title": "Tuesday · Lower Strength",
+          "duration": "45 min",
+          "focus": "Legs and hips",
+          "moves": "Back squat 4×5 · Romanian deadlift 3×8 · Walking lunge 3×12 · Hanging knee raise 3×10",
+          "note": "Rest 2 min between heavy sets. Stop 1 rep shy of failure."
+        }
+      ]
+    }
+  },
+
+  {
+    "updateDataModel": {
+      "surfaceId": "default",
+      "path": "/days",
+      "value": [
+        {
+          "key": "mon",
+          "title": "Monday · Ramp-Up",
+          "duration": "35 min",
+          "focus": "Full-body activation",
+          "moves": "Goblet squat · Push-up · Glute bridge · Dead bug · Farmer carry",
+          "note": "Keep effort easy. The goal is to wake up patterns, not peak intensity."
+        },
+        {
+          "key": "tue",
+          "title": "Tuesday · Lower Strength",
+          "duration": "45 min",
+          "focus": "Legs and hips",
+          "moves": "Back squat 4×5 · Romanian deadlift 3×8 · Walking lunge 3×12 · Hanging knee raise 3×10",
+          "note": "Rest 2 min between heavy sets. Stop 1 rep shy of failure."
+        },
+        {
+          "key": "wed",
+          "title": "Wednesday · Mobility & Zone 2",
+          "duration": "40 min",
+          "focus": "Easy aerobic and range of motion",
+          "moves": "Picking easy movements...",
+          "note": ""
+        }
+      ]
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        { "id": "progressCount", "component": "Text", "variant": "caption", "text": "3 / 5 days" }
+      ]
+    }
+  },
+  {
+    "updateDataModel": {
+      "surfaceId": "default",
+      "path": "/days",
+      "value": [
+        {
+          "key": "mon",
+          "title": "Monday · Ramp-Up",
+          "duration": "35 min",
+          "focus": "Full-body activation",
+          "moves": "Goblet squat · Push-up · Glute bridge · Dead bug · Farmer carry",
+          "note": "Keep effort easy. The goal is to wake up patterns, not peak intensity."
+        },
+        {
+          "key": "tue",
+          "title": "Tuesday · Lower Strength",
+          "duration": "45 min",
+          "focus": "Legs and hips",
+          "moves": "Back squat 4×5 · Romanian deadlift 3×8 · Walking lunge 3×12 · Hanging knee raise 3×10",
+          "note": "Rest 2 min between heavy sets. Stop 1 rep shy of failure."
+        },
+        {
+          "key": "wed",
+          "title": "Wednesday · Mobility & Zone 2",
+          "duration": "40 min",
+          "focus": "Easy aerobic and range of motion",
+          "moves": "Brisk walk or bike · Hip 90/90 · Thoracic opener · Ankle rocks",
+          "note": "Keep heart rate conversational. Recovery is the training today."
+        }
+      ]
+    }
+  },
+
+  {
+    "updateDataModel": {
+      "surfaceId": "default",
+      "path": "/days",
+      "value": [
+        {
+          "key": "mon",
+          "title": "Monday · Ramp-Up",
+          "duration": "35 min",
+          "focus": "Full-body activation",
+          "moves": "Goblet squat · Push-up · Glute bridge · Dead bug · Farmer carry",
+          "note": "Keep effort easy. The goal is to wake up patterns, not peak intensity."
+        },
+        {
+          "key": "tue",
+          "title": "Tuesday · Lower Strength",
+          "duration": "45 min",
+          "focus": "Legs and hips",
+          "moves": "Back squat 4×5 · Romanian deadlift 3×8 · Walking lunge 3×12 · Hanging knee raise 3×10",
+          "note": "Rest 2 min between heavy sets. Stop 1 rep shy of failure."
+        },
+        {
+          "key": "wed",
+          "title": "Wednesday · Mobility & Zone 2",
+          "duration": "40 min",
+          "focus": "Easy aerobic and range of motion",
+          "moves": "Brisk walk or bike · Hip 90/90 · Thoracic opener · Ankle rocks",
+          "note": "Keep heart rate conversational. Recovery is the training today."
+        },
+        {
+          "key": "thu",
+          "title": "Thursday · Upper Push & Pull",
+          "duration": "50 min",
+          "focus": "Balanced upper body",
+          "moves": "Bench press 4×6 · Pull-up 4×AMRAP · DB shoulder press 3×8 · Seated row 3×10 · Face pull 3×15",
+          "note": "Alternate push and pull. Pause at the chest on bench for control."
+        }
+      ]
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        { "id": "progressCount", "component": "Text", "variant": "caption", "text": "4 / 5 days" }
+      ]
+    }
+  },
+
+  {
+    "updateDataModel": {
+      "surfaceId": "default",
+      "path": "/days",
+      "value": [
+        {
+          "key": "mon",
+          "title": "Monday · Ramp-Up",
+          "duration": "35 min",
+          "focus": "Full-body activation",
+          "moves": "Goblet squat · Push-up · Glute bridge · Dead bug · Farmer carry",
+          "note": "Keep effort easy. The goal is to wake up patterns, not peak intensity."
+        },
+        {
+          "key": "tue",
+          "title": "Tuesday · Lower Strength",
+          "duration": "45 min",
+          "focus": "Legs and hips",
+          "moves": "Back squat 4×5 · Romanian deadlift 3×8 · Walking lunge 3×12 · Hanging knee raise 3×10",
+          "note": "Rest 2 min between heavy sets. Stop 1 rep shy of failure."
+        },
+        {
+          "key": "wed",
+          "title": "Wednesday · Mobility & Zone 2",
+          "duration": "40 min",
+          "focus": "Easy aerobic and range of motion",
+          "moves": "Brisk walk or bike · Hip 90/90 · Thoracic opener · Ankle rocks",
+          "note": "Keep heart rate conversational. Recovery is the training today."
+        },
+        {
+          "key": "thu",
+          "title": "Thursday · Upper Push & Pull",
+          "duration": "50 min",
+          "focus": "Balanced upper body",
+          "moves": "Bench press 4×6 · Pull-up 4×AMRAP · DB shoulder press 3×8 · Seated row 3×10 · Face pull 3×15",
+          "note": "Alternate push and pull. Pause at the chest on bench for control."
+        },
+        {
+          "key": "fri",
+          "title": "Friday · Conditioning",
+          "duration": "30 min",
+          "focus": "Short intervals",
+          "moves": "5 rounds: 200 m row · 10 KB swings · 10 push-ups · 60 s rest",
+          "note": "Leave the last round feeling strong. Stop if form breaks down."
+        }
+      ]
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        { "id": "progressCount", "component": "Text", "variant": "caption", "text": "5 / 5 days" },
+        {
+          "id": "subheader",
+          "component": "Text",
+          "variant": "body",
+          "text": "Plan ready. Weekend stays open for walks, stretching, or a hike."
+        },
+        {
+          "id": "footer",
+          "component": "Text",
+          "variant": "caption",
+          "text": "Tip: log sets and add 2.5 kg next week when all reps feel clean."
+        }
+      ]
+    }
+  }
+]

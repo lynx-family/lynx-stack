@@ -1,5 +1,31 @@
 # @lynx-js/react
 
+## 0.120.0
+
+### Minor Changes
+
+- Bump `@lynx-js/internal-preact` from `10.28.4-dfff9aa` to `10.29.1-20260424024911-12b794f` ([diff](https://github.com/lynx-family/internal-preact/compare/10.28.4-dfff9aa...10.29.1-20260424024911-12b794f)). ([#2512](https://github.com/lynx-family/lynx-stack/pull/2512))
+
+  Fixes wrong DOM order when a keyed child moves to a different `$N` slot across a re-render. Cross-slot moves now land at the correct slot position instead of being appended past stable siblings.
+
+- Refactor preact to support multi-slots children and reduce the number and depth of snapshot. ([#1764](https://github.com/lynx-family/lynx-stack/pull/1764))
+
+### Patch Changes
+
+- Fix stale callback-local references when transforming JSX inside `children={array.map(...)}` prop expressions. ([#2524](https://github.com/lynx-family/lynx-stack/pull/2524))
+
+- Fix ref callbacks not being cleaned up or re-applied correctly when the ref at the same element slot changes across rerenders that happen before hydration (e.g. a `useEffect` triggering `setState` during the initial background render). ([#2500](https://github.com/lynx-family/lynx-stack/pull/2500))
+
+- fix: reduce redundant updates for main-thread handlers and gestures ([#2188](https://github.com/lynx-family/lynx-stack/pull/2188))
+
+  - Updates are faster when the main-thread event handler or gesture object is stable across rerenders (fewer unnecessary native updates).
+  - Spread props rerenders that don't semantically change the handler/gesture no longer trigger redundant updates.
+  - Removing a gesture from spread props reliably clears the gesture state on the target element.
+
+- Fix hydration edge cases by tolerating serialized snapshot nodes with missing `values` ([#2481](https://github.com/lynx-family/lynx-stack/pull/2481))
+
+- Keep ReactLynx Testing Library imports aligned with the contained snapshot runtime paths. ([#2498](https://github.com/lynx-family/lynx-stack/pull/2498))
+
 ## 0.119.0
 
 ### Minor Changes

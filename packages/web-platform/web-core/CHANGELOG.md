@@ -1,5 +1,50 @@
 # @lynx-js/web-core
 
+## 0.20.3
+
+### Patch Changes
+
+- fix: `__AddClass` triggers style updates when `enableCSSSelector` is `false` ([#2515](https://github.com/lynx-family/lynx-stack/pull/2515))
+
+  `__AddClass` was missing the expected call to `update_css_og_style` when CSS selectors are disabled (`enableCSSSelector: false`). With this fix, dynamically adding a class correctly delegates style population from the template AST into the DOM, mirroring the behavior of `__SetClasses`.
+
+  Added behavioral unit test and end-to-end playwright validations using dynamically generated JSON AST `styleInfo` mocks.
+
+- fix(web-core): skip setting lynxEntryNameAttribute for **Card** and use constants for server element APIs ([#2510](https://github.com/lynx-family/lynx-stack/pull/2510))
+
+- Fix componentCSSID behavior for SSR and main thread by calculating element css_id from parent component correctly. ([#2495](https://github.com/lynx-family/lynx-stack/pull/2495))
+
+- fix: avoid panic in dispatch_event_by_path when element data cannot be retrieved ([#2508](https://github.com/lynx-family/lynx-stack/pull/2508))
+
+- fix: filter out -1 uniqueId in commonEventHandler ([#2493](https://github.com/lynx-family/lynx-stack/pull/2493))
+
+- feat: add x-markdown support ([#2412](https://github.com/lynx-family/lynx-stack/pull/2412))
+
+  Add opt-in support for the `x-markdown` element on Lynx Web, including
+  Markdown rendering together with its related styling, interaction, animation,
+  truncation, range rendering, and effect capabilities exposed through the
+  component API.
+
+  Update the `web-core`, `web-core-wasm`, and `web-mainthread-apis` runtime
+  paths to use the shared property-or-attribute setter from `web-constants`, so
+  custom elements such as `x-markdown` can receive structured property values
+  correctly instead of being forced through string-only attribute updates.
+
+  ```javascript
+  import '@lynx-js/web-elements/XMarkdown';
+  ```
+
+- fix: transformVH not work with cqw unit as the base length ([#2469](https://github.com/lynx-family/lynx-stack/pull/2469))
+
+- fix: add cardType resolution for legacy json lynx bundle ([#2510](https://github.com/lynx-family/lynx-stack/pull/2510))
+
+- fix: the default value of rpx is supposed to be 1/750 cqw ([#2469](https://github.com/lynx-family/lynx-stack/pull/2469))
+
+- Updated dependencies [[`e179680`](https://github.com/lynx-family/lynx-stack/commit/e1796803444ba70efa86609b620c3a753b6694de), [`647334c`](https://github.com/lynx-family/lynx-stack/commit/647334cfec91cf7f13d118ed5a9933e0eacda831), [`fb7bc84`](https://github.com/lynx-family/lynx-stack/commit/fb7bc84534e6ada5aea82ef70202950855f61dff), [`9454dc4`](https://github.com/lynx-family/lynx-stack/commit/9454dc49a06d99a8787c1ee33acecdff6286603e), [`bdec498`](https://github.com/lynx-family/lynx-stack/commit/bdec4980651301372ac9badf652fb3fb31f48158), [`b0247f9`](https://github.com/lynx-family/lynx-stack/commit/b0247f98189a230c4423b1eaab51f578f21302dd), [`eec539a`](https://github.com/lynx-family/lynx-stack/commit/eec539abaa4c4f6485c7ba0442da50c6eeac53ee)]:
+  - @lynx-js/css-serializer@0.1.6
+  - @lynx-js/web-elements@0.12.1
+  - @lynx-js/web-worker-rpc@0.20.3
+
 ## 0.20.2
 
 ### Patch Changes

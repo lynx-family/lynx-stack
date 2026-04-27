@@ -1,5 +1,41 @@
 # @lynx-js/web-elements
 
+## 0.12.1
+
+### Patch Changes
+
+- fix: XMarkdown slot created should not have prefix ([#2520](https://github.com/lynx-family/lynx-stack/pull/2520))
+
+- feat: add x-markdown support ([#2412](https://github.com/lynx-family/lynx-stack/pull/2412))
+
+  Add opt-in support for the `x-markdown` element on Lynx Web, including
+  Markdown rendering together with its related styling, interaction, animation,
+  truncation, range rendering, and effect capabilities exposed through the
+  component API.
+
+  Update the `web-core`, `web-core-wasm`, and `web-mainthread-apis` runtime
+  paths to use the shared property-or-attribute setter from `web-constants`, so
+  custom elements such as `x-markdown` can receive structured property values
+  correctly instead of being forced through string-only attribute updates.
+
+  ```javascript
+  import '@lynx-js/web-elements/XMarkdown';
+  ```
+
+- fix: x-markdown inline view injection no longer queries light DOM children when the content attribute changes. Consumers must now pre-set `slot="{id}"` on the child element they want to project into `inlineview://{id}`. ([#2516](https://github.com/lynx-family/lynx-stack/pull/2516))
+
+- fix: list cannot drag-scroll inside x-foldview-slot-ng ([#2507](https://github.com/lynx-family/lynx-stack/pull/2507))
+
+  Cause: `touchstart` used `elementsFromPoint(pageX, pageY)` (expects `clientX/clientY`), so hit-testing can miss the real inner scroller (e.g. `x-list` shadow `#content`) when the document is scrolled.
+
+  Fix: use `elementsFromPoint(clientX, clientY)` + `event.composedPath()` for Shadow DOM, and keep `previousPageX` updated during `touchmove`.
+
+- fix: line-height of markdown-style should be added `px` ([#2509](https://github.com/lynx-family/lynx-stack/pull/2509))
+
+- fix: list `bindscrolltolower` may not trigger because the lower threshold ([#2484](https://github.com/lynx-family/lynx-stack/pull/2484))
+  sentinel had no effective size or offset, causing the bottom
+  `IntersectionObserver` to miss the list boundary
+
 ## 0.12.0
 
 ### Minor Changes

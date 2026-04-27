@@ -8,6 +8,7 @@ import { defineConfig } from '@rstest/core';
 const require = createRequire(import.meta.url);
 
 export default defineConfig({
+  name: 'chunk-loading-webpack-plugin',
   globals: true,
   include: ['test/**/*.test.ts'],
   setupFiles: [

@@ -617,22 +617,24 @@ test.describe('x-markdown', () => {
     ]);
   });
 
-  test('should inject inline view and keep vertical-align', async ({ page }) => {
+  test('should inject inline view via pre-set slot', async ({ page }) => {
     await goto(page, 'x-markdown/inlineview');
     await page.waitForFunction(() => {
       const el = document.querySelector('x-markdown');
       const root = el && (el as any).shadowRoot;
       return !!root && !!root.querySelector('.md-inline-view');
     });
-    const va = await page.evaluate(() => {
+    const projected = await page.evaluate(() => {
       const el = document.querySelector('x-markdown')!;
       const root = el.shadowRoot as ShadowRoot;
-      const inline = root.querySelector('.md-inline-view') as
-        | HTMLElement
-        | null;
-      return inline ? getComputedStyle(inline).verticalAlign : '';
+      const slot = root.querySelector(
+        '.md-inline-view slot',
+      ) as HTMLSlotElement | null;
+      return slot?.assignedElements().some((node) =>
+        (node as HTMLElement).id === 'badge'
+      ) ?? false;
     });
-    expect(va).toBe('middle');
+    expect(projected).toBe(true);
   });
 
   test('should apply class styles to inline view', async ({ page }) => {

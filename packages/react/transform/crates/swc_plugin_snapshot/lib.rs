@@ -990,10 +990,10 @@ where
 
         let pre_parent_element = self.parent_element.take();
         self.parent_element = Some(el.clone());
-        n.visit_mut_children_with(self);
+        n.children.visit_mut_with(self);
         self.parent_element = pre_parent_element;
       } else {
-        n.visit_mut_children_with(self.dynamic_part_visitor);
+        n.children.visit_mut_with(self.dynamic_part_visitor);
         let children_expr = jsx_children_to_expr(n.children.take());
         if jsx_is_list(n) {
           self
@@ -1655,13 +1655,91 @@ mod tests {
     common::{comments::SingleThreadedComments, Mark},
     ecma::{
       parser::{EsSyntax, Syntax},
-      transforms::{base::resolver, react, testing::test},
+      transforms::{
+        base::resolver,
+        react,
+        testing::{test, Tester},
+      },
       visit::visit_mut_pass,
     },
   };
 
   use crate::JSXTransformer;
   use swc_plugins_shared::{target::TransformTarget, transform_mode::TransformMode};
+
+  #[test]
+  fn should_keep_jsx_in_children_prop_map_callback_scope() {
+    Tester::run(|tester| {
+      let top_level_mark = Mark::new();
+      let unresolved_mark = Mark::new();
+
+      let program = tester.apply_transform(
+        (
+          resolver(unresolved_mark, top_level_mark, true),
+          visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+            super::JSXTransformerConfig {
+              preserve_jsx: false,
+              target: TransformTarget::MIXED,
+              ..Default::default()
+            },
+            None,
+            TransformMode::Test,
+            Some(tester.cm.clone()),
+          )),
+          react::react::<&SingleThreadedComments>(
+            tester.cm.clone(),
+            None,
+            react::Options {
+              next: Some(false),
+              runtime: Some(react::Runtime::Automatic),
+              import_source: Some("@lynx-js/react".into()),
+              pragma: None,
+              pragma_frag: None,
+              throw_if_namespace: None,
+              development: Some(false),
+              refresh: None,
+              ..Default::default()
+            },
+            top_level_mark,
+            unresolved_mark,
+          ),
+        ),
+        "input.js",
+        Syntax::Es(EsSyntax {
+          jsx: true,
+          ..Default::default()
+        }),
+        Some(true),
+        r#"
+        const render_data_array = ['1', '2', '3'];
+
+        export function App() {
+          return (
+            <view
+              children={render_data_array.map((item, index123, array123) => (
+                <text key={item}>{array123[index123]}</text>
+              ))}
+            />
+          );
+        }
+        "#,
+      )?;
+
+      let comments = tester.comments.clone();
+      let output = tester.print(&program, &comments);
+      assert!(
+        output.contains("render_data_array.map((item, index123, array123)=>")
+          && output.contains("_jsx(\"text\""),
+        "the JSX in children={{...}} should stay inside the map callback; output:\n{output}",
+      );
+      assert!(
+        !output.contains("$0: array123[index123]"),
+        "snapshot child slots must not capture map callback locals outside their scope; output:\n{output}",
+      );
+
+      Ok(())
+    });
+  }
 
   test!(
     module,

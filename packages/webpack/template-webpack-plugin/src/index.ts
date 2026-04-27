@@ -19,6 +19,12 @@ export type {
 } from './LynxTemplatePlugin.js';
 export { LynxEncodePlugin } from './LynxEncodePlugin.js';
 export type { LynxEncodePluginOptions } from './LynxEncodePlugin.js';
+export { processTasmCSSDiagnostics } from './cssDiagnostics.js';
+export type {
+  ProcessTasmCSSDiagnosticsOptions,
+  ResolvedTasmCSSDiagnostic,
+  TasmCSSDiagnostic,
+} from './cssDiagnostics.js';
 export { WebEncodePlugin } from './WebEncodePlugin.js';
 export {
   LynxDebugMetadataPlugin,

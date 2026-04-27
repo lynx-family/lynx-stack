@@ -8,21 +8,117 @@ import { fileURLToPath } from 'node:url';
 
 import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping';
 import type { SourceMapInput } from '@jridgewell/trace-mapping';
+import type { Asset } from 'webpack';
 
 import type * as CSS from '@lynx-js/css-serializer';
 
+/**
+ * A CSS diagnostic emitted by TASM during template encode.
+ *
+ * @public
+ */
 export interface TasmCSSDiagnostic {
+  /**
+   * The diagnostic category, such as `property`.
+   */
   type?: string | undefined;
+  /**
+   * The unsupported CSS syntax name, when TASM reports one.
+   */
   name?: string | undefined;
+  /**
+   * The generated CSS line reported by TASM.
+   */
   line: number;
+  /**
+   * The generated CSS column reported by TASM.
+   */
   column: number;
 }
 
+/**
+ * A TASM CSS diagnostic with a formatted message and optional source map
+ * location.
+ *
+ * @public
+ */
 export interface ResolvedTasmCSSDiagnostic extends TasmCSSDiagnostic {
+  /**
+   * The warning message suitable for webpack diagnostics.
+   */
   message: string;
+  /**
+   * The original source file resolved from the CSS source map.
+   */
   sourceFile?: string | undefined;
+  /**
+   * The original source line resolved from the CSS source map.
+   */
   sourceLine?: number | undefined;
+  /**
+   * The original source column resolved from the CSS source map.
+   */
   sourceColumn?: number | undefined;
+}
+
+/**
+ * Options for {@link processTasmCSSDiagnostics}.
+ *
+ * @public
+ */
+export interface ProcessTasmCSSDiagnosticsOptions {
+  /**
+   * The raw `css_diagnostics` value returned by TASM.
+   */
+  cssDiagnostics: unknown;
+  /**
+   * CSS source map contents from the CSS chunks for the current template.
+   */
+  cssSourceMaps: string[];
+  /**
+   * The webpack compiler context used to resolve relative source paths.
+   */
+  context: string;
+  /**
+   * A mutable set used to skip diagnostics that were already emitted.
+   */
+  emittedWarnings?: Set<string> | undefined;
+  /**
+   * A file existence check used before attaching a mapped source location.
+   */
+  fileExists?: ((path: string) => boolean) | undefined;
+}
+
+/**
+ * Parses, source-map-resolves, and deduplicates TASM CSS diagnostics.
+ *
+ * @public
+ */
+export function processTasmCSSDiagnostics({
+  cssDiagnostics,
+  cssSourceMaps,
+  context,
+  emittedWarnings,
+  fileExists,
+}: ProcessTasmCSSDiagnosticsOptions): ResolvedTasmCSSDiagnostic[] {
+  const diagnostics = extractTasmCSSDiagnostics(cssDiagnostics);
+  if (diagnostics.length === 0) {
+    return [];
+  }
+
+  const resolveOptions: Parameters<typeof resolveTasmCSSDiagnostics>[0] = {
+    cssDiagnostics: diagnostics,
+    mainCSSSourceMaps: parseCSSSourceMaps(cssSourceMaps),
+    context,
+  };
+  if (fileExists !== undefined) {
+    resolveOptions.fileExists = fileExists;
+  }
+
+  return dedupeTasmCSSDiagnostics(
+    resolveTasmCSSDiagnostics(resolveOptions),
+    emittedWarnings,
+  );
 }
 
 export function extractTasmCSSDiagnostics(value: unknown): TasmCSSDiagnostic[] {
@@ -31,13 +127,13 @@ export function extractTasmCSSDiagnostics(value: unknown): TasmCSSDiagnostic[] {
   }
 
   try {
-    const parsed = JSON.parse(value) as unknown as TasmCSSDiagnostic[];
+    const parsed = JSON.parse(value) as unknown;
     if (!Array.isArray(parsed)) {
       return [];
     }
 
     return parsed
-      .map((element) => normalizeTasmCSSDiagnostic(element))
+      .map(element => normalizeTasmCSSDiagnostic(element))
       .filter((diagnostic): diagnostic is TasmCSSDiagnostic => (
         diagnostic !== null
       ));
@@ -48,67 +144,72 @@ export function extractTasmCSSDiagnostics(value: unknown): TasmCSSDiagnostic[] {
 
 export function resolveTasmCSSDiagnostics({
   cssDiagnostics,
-  mainCSSSourceMap,
+  mainCSSSourceMaps,
   context,
   fileExists = existsSync,
 }: {
   cssDiagnostics: TasmCSSDiagnostic[];
-  mainCSSSourceMap: CSS.CSSSourceMap | undefined;
+  mainCSSSourceMaps: CSS.CSSSourceMap[];
   context: string;
   fileExists?: (path: string) => boolean;
 }): ResolvedTasmCSSDiagnostic[] {
-  if (!mainCSSSourceMap) {
+  if (mainCSSSourceMaps.length === 0) {
     return cssDiagnostics.map(diagnostic => ({
       ...diagnostic,
       message: formatTasmCSSDiagnosticMessage(diagnostic),
     }));
   }
 
-  const traceMap = new TraceMap(mainCSSSourceMap as SourceMapInput);
+  const traceMaps = mainCSSSourceMaps.map(sourceMap => ({
+    sourceMap,
+    traceMap: new TraceMap(sourceMap as SourceMapInput),
+  }));
 
   return cssDiagnostics.map(diagnostic => {
-    const mapped = originalPositionFor(traceMap, {
-      line: diagnostic.line,
-      column: Math.max(diagnostic.column - 1, 0),
-    });
-
     const message = formatTasmCSSDiagnosticMessage(diagnostic);
-    if (
-      mapped.source === null
-      || mapped.line === null
-      || mapped.column === null
-    ) {
-      return {
-        ...diagnostic,
-        message,
-      };
-    }
 
-    const sourceFile = normalizeTasmSourcePath(
-      mapped.source,
-      mainCSSSourceMap,
-      context,
-    );
-    if (!sourceFile || !fileExists(sourceFile)) {
+    for (const { sourceMap, traceMap } of traceMaps) {
+      const mapped = originalPositionFor(traceMap, {
+        line: diagnostic.line,
+        column: Math.max(diagnostic.column - 1, 0),
+      });
+
+      if (
+        mapped.source === null
+        || mapped.line === null
+        || mapped.column === null
+      ) {
+        continue;
+      }
+
+      const sourceFile = normalizeTasmSourcePath(
+        mapped.source,
+        sourceMap,
+        context,
+      );
+      if (!sourceFile || !fileExists(sourceFile)) {
+        continue;
+      }
+
       return {
         ...diagnostic,
         message,
+        sourceFile,
+        sourceLine: mapped.line,
+        sourceColumn: mapped.column + 1,
       };
     }
 
     return {
       ...diagnostic,
       message,
-      sourceFile,
-      sourceLine: mapped.line,
-      sourceColumn: mapped.column + 1,
     };
   });
 }
 
 export function dedupeTasmCSSDiagnostics<T extends ResolvedTasmCSSDiagnostic>(
   diagnostics: T[],
-  seen: Set<string> = new Set(),
+  seen: Set<string> = new Set<string>(),
 ): T[] {
   return diagnostics.filter(diagnostic => {
     const line = diagnostic.sourceLine ?? diagnostic.line;
@@ -127,6 +228,66 @@ export function dedupeTasmCSSDiagnostics<T extends ResolvedTasmCSSDiagnostic>(
     seen.add(key);
     return true;
   });
+}
+
+export function collectCSSSourceMapContents(
+  cssChunks: Asset[] | undefined,
+): string[] {
+  const sourceMaps: string[] = [];
+
+  if (!cssChunks || cssChunks.length === 0) {
+    return sourceMaps;
+  }
+
+  cssChunks.forEach((cssChunk) => {
+    const sourceMap = normalizeCSSSourceMap(cssChunk.source.map?.());
+    if (sourceMap) {
+      sourceMaps.push(JSON.stringify(sourceMap));
+    }
+  });
+
+  return Array.from(new Set(sourceMaps));
+}
+
+function parseCSSSourceMaps(cssSourceMaps: string[]): CSS.CSSSourceMap[] {
+  return cssSourceMaps.reduce<CSS.CSSSourceMap[]>((parsed, cssSourceMap) => {
+    if (cssSourceMap.trim() === '') {
+      return parsed;
+    }
+
+    try {
+      const sourceMap = JSON.parse(cssSourceMap) as unknown;
+      if (isCSSSourceMap(sourceMap)) {
+        parsed.push(sourceMap);
+      }
+    } catch {
+      // Ignore invalid source map payloads.
+    }
+
+    return parsed;
+  }, []);
+}
+
+function normalizeCSSSourceMap(
+  sourceMap: ReturnType<Asset['source']['map']> | undefined,
+): CSS.CSSSourceMap | undefined {
+  if (!sourceMap || Array.isArray(sourceMap)) {
+    return undefined;
+  }
+
+  return sourceMap;
+}
+
+function isCSSSourceMap(value: unknown): value is CSS.CSSSourceMap {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    typeof value['version'] === 'number'
+    && typeof value['mappings'] === 'string'
+    && Array.isArray(value['sources'])
+  );
 }
 
 function normalizeTasmCSSDiagnostic(value: unknown): TasmCSSDiagnostic | null {

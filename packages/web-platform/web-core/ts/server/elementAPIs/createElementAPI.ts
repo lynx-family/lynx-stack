@@ -10,7 +10,9 @@ import {
   LYNX_TAG_TO_HTML_TAG_MAP,
   uniqueIdSymbol,
   lynxDefaultDisplayLinearAttribute,
+  lynxDefaultOverflowVisibleAttribute,
   lynxEntryNameAttribute,
+  lynxUniqueIdAttribute,
 } from '../../constants.js';
 import type {
   AddClassPAPI,
@@ -234,7 +236,16 @@ export function createElementAPI(
             getAttribute(el, lynxEntryNameAttribute),
           );
         }),
-      __AddClass,
+      __AddClass: config.enableCSSSelector
+        ? __AddClass
+        : ((element, className) => {
+          __AddClass(element, className);
+          const el = element as ServerElement;
+          wasmContext.update_css_og_style(
+            el[uniqueIdSymbol],
+            getAttribute(el, lynxEntryNameAttribute),
+          );
+        }),
 
       __AddConfig,
       __UpdateComponentInfo,
@@ -309,7 +320,7 @@ export function createElementAPI(
         const id = wasmContext.create_element(htmlTag, parentComponentUniqueId);
         const el = { [uniqueIdSymbol]: id };
         if (!config.enableCSSSelector) {
-          wasmContext.set_attribute(id, 'l-uid', id.toString());
+          wasmContext.set_attribute(id, lynxUniqueIdAttribute, id.toString());
         }
         return el as unknown as DecoratedHTMLElement;
       }) as CreateElementPAPI,
@@ -328,10 +339,10 @@ export function createElementAPI(
         ); // Component host
         const el = { [uniqueIdSymbol]: id } as ServerElement;
         if (!config.enableCSSSelector) {
-          wasmContext.set_attribute(id, 'l-uid', id.toString());
+          wasmContext.set_attribute(id, lynxUniqueIdAttribute, id.toString());
         }
-        if (entryName) {
-          wasmContext.set_attribute(id, 'lynx-entry-name', entryName);
+        if (entryName && entryName !== '__Card__') {
+          wasmContext.set_attribute(id, lynxEntryNameAttribute, entryName);
         }
         if (name) {
           wasmContext.set_attribute(id, 'name', name);
@@ -362,7 +373,7 @@ export function createElementAPI(
         pageElementId = id;
         const el = { [uniqueIdSymbol]: id } as ServerElement;
         if (!config.enableCSSSelector) {
-          wasmContext.set_attribute(id, 'l-uid', id.toString());
+          wasmContext.set_attribute(id, lynxUniqueIdAttribute, id.toString());
         }
         wasmContext.set_attribute(id, 'part', 'page');
 
@@ -376,7 +387,7 @@ export function createElementAPI(
         if (config.defaultOverflowVisible === true) {
           wasmContext.set_attribute(
             id,
-            'lynx-default-overflow-visible',
+            lynxDefaultOverflowVisibleAttribute,
             'true',
           );
         }

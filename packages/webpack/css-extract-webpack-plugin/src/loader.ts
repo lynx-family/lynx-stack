@@ -57,10 +57,15 @@ type Dependency = [
   id: string,
   content: string,
   media: string,
-  sourceMap: string | Buffer | undefined,
+  sourceMap: DependencySourceMap | undefined,
   supports: string | undefined,
   layer: string | undefined,
 ];
+
+interface DependencySourceMap {
+  mappings?: string | undefined;
+  [key: string]: unknown;
+}
 
 /**
  * With css-loader options: `{esModule: true}`
@@ -178,6 +183,9 @@ export async function load(
           this.rootContext,
           extractPathFromIdentifier(identifier)!,
         );
+        const shouldWrapCSSId = Boolean(cssId)
+          && (params.get('common') === null
+            || params.get('common') === 'false');
 
         identifierCountMap.set(identifier, count + 1);
 
@@ -188,9 +196,7 @@ export async function load(
           ),
           context: this.rootContext,
           content: Buffer.from(
-            cssId
-              && (params.get('common') === null
-                || params.get('common') === 'false')
+            shouldWrapCSSId
               /**
                * Given the following source code:
                *
@@ -222,8 +228,7 @@ export async function load(
                * }
                * ```
                */
-              ? `\
-@cssId "${cssId}" "${filePath}" {
+              ? `@cssId "${cssId}" "${filePath}" {
 ${content}
 }
 `
@@ -234,7 +239,9 @@ ${content}
           layer,
           identifierIndex: count,
           sourceMap: sourceMap
-            ? Buffer.from(JSON.stringify(sourceMap))
+            ? Buffer.from(JSON.stringify(
+              shouldWrapCSSId ? offsetSourceMapLines(sourceMap, 1) : sourceMap,
+            ))
             : undefined,
         };
       },
@@ -297,6 +304,20 @@ ${content}
     : result;
 
   return resultSource;
+}
+
+export function offsetSourceMapLines<T extends DependencySourceMap>(
+  sourceMap: T,
+  lineOffset: number,
+): T {
+  if (lineOffset <= 0 || !sourceMap.mappings) {
+    return sourceMap;
+  }
+
+  return {
+    ...sourceMap,
+    mappings: `${';'.repeat(lineOffset)}${sourceMap.mappings}`,
+  };
 }
 
 export async function pitch(

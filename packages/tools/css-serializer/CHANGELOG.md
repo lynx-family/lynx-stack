@@ -1,5 +1,11 @@
 # @lynx-js/css-serializer
 
+## 0.1.6
+
+### Patch Changes
+
+- Add CSS source map support and source-mapped template encode diagnostics. ([#2483](https://github.com/lynx-family/lynx-stack/pull/2483))
+
 ## 0.1.5
 
 ### Patch Changes

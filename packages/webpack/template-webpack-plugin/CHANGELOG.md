@@ -1,5 +1,19 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.11.0
+
+### Minor Changes
+
+- Add CSS source map support and source-mapped template encode diagnostics. ([#2483](https://github.com/lynx-family/lynx-stack/pull/2483))
+
+### Patch Changes
+
+- fix: genStyleInfo should also preserve CSS variable fallback values when encoding web-core stylesheets so declarations like `var(--token, rgba(...))` are emitted with their fallback intact. ([#2502](https://github.com/lynx-family/lynx-stack/pull/2502))
+
+- Updated dependencies [[`e179680`](https://github.com/lynx-family/lynx-stack/commit/e1796803444ba70efa86609b620c3a753b6694de), [`8352530`](https://github.com/lynx-family/lynx-stack/commit/83525306ec566ba412d9ac5c5d72456d642509f7), [`30f0277`](https://github.com/lynx-family/lynx-stack/commit/30f02775f9b3e73035f16019f2396fb2160b9a65), [`887b8aa`](https://github.com/lynx-family/lynx-stack/commit/887b8aa98287a38ec40fab6d3d41a71abcc4328e), [`1d4abfc`](https://github.com/lynx-family/lynx-stack/commit/1d4abfc6c5ed6f8b7d9a2f3cf7d24650bc18fd26), [`25e196b`](https://github.com/lynx-family/lynx-stack/commit/25e196b3790295b1cbf0fe77a0fdcbe55a9e9a07), [`fb7bc84`](https://github.com/lynx-family/lynx-stack/commit/fb7bc84534e6ada5aea82ef70202950855f61dff), [`9e149c4`](https://github.com/lynx-family/lynx-stack/commit/9e149c47f8cde85f37253ab41fc286ec511af862), [`30f0277`](https://github.com/lynx-family/lynx-stack/commit/30f02775f9b3e73035f16019f2396fb2160b9a65), [`9e149c4`](https://github.com/lynx-family/lynx-stack/commit/9e149c47f8cde85f37253ab41fc286ec511af862)]:
+  - @lynx-js/css-serializer@0.1.6
+  - @lynx-js/web-core@0.20.3
+
 ## 0.10.9
 
 ### Patch Changes

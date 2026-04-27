@@ -1,0 +1,1045 @@
+/* ── Geist Design System Tokens ── */
+:root {
+  --geist-foreground: #000;
+  --geist-background: #fff;
+  --geist-secondary: #666;
+  --geist-border: #eaeaea;
+  --geist-border-hover: #999;
+  --geist-surface: #fafafa;
+  --geist-accent: #000;
+  --geist-accent-foreground: #fff;
+  --geist-error: #e00;
+  --geist-error-light: #fff0f0;
+  --geist-success: #0070f3;
+  --geist-code-bg: #111;
+  --geist-code-fg: #e8e8e8;
+  --geist-shadow-sm:
+    0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --geist-shadow-md: 0 4px 14px rgba(0, 0, 0, 0.08);
+  --geist-shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
+  --geist-radius-sm: 6px;
+  --geist-radius-md: 8px;
+  --geist-radius-lg: 12px;
+  --geist-radius-xl: 16px;
+  --geist-transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --geist-font:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+    Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  --geist-mono:
+    "Geist Mono", "SF Mono", SFMono-Regular, ui-monospace, Menlo, Consolas,
+    "Liberation Mono", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --geist-foreground: #ededed;
+    --geist-background: #0a0a0a;
+    --geist-secondary: #888;
+    --geist-border: #333;
+    --geist-border-hover: #555;
+    --geist-surface: #111;
+    --geist-accent: #fff;
+    --geist-accent-foreground: #000;
+    --geist-error-light: #2a0000;
+    --geist-code-bg: #0a0a0a;
+    --geist-code-fg: #e8e8e8;
+    --geist-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --geist-shadow-md: 0 4px 14px rgba(0, 0, 0, 0.3);
+    --geist-shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* ── Reset & Base ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+  font-family: var(--geist-font);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── App Shell ── */
+.appShell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.appBody {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── Top Bar ── */
+.topBar {
+  flex-shrink: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-background);
+}
+
+.brand {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--geist-foreground);
+  flex-shrink: 0;
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* ── Tab Navigation ── */
+.tabNav {
+  display: flex;
+  gap: 2px;
+  margin-left: 16px;
+}
+
+.tabNavItem {
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--geist-radius-sm);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--geist-secondary);
+  cursor: pointer;
+  transition: all var(--geist-transition);
+  white-space: nowrap;
+}
+
+.tabNavItem:hover {
+  color: var(--geist-foreground);
+  background: var(--geist-surface);
+}
+
+.tabNavItem.active {
+  color: var(--geist-foreground);
+  background: var(--geist-surface);
+  font-weight: 600;
+}
+
+/* ── Protocol Control ── */
+.protocolControl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.protocolLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--geist-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.protocolSwitch {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--geist-border);
+  border-radius: 6px;
+  background: var(--geist-surface);
+}
+
+.protocolButton {
+  padding: 4px 12px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--geist-secondary);
+  transition: all var(--geist-transition);
+}
+
+.protocolButton:hover {
+  color: var(--geist-foreground);
+}
+
+.protocolButton.active {
+  background: var(--geist-accent);
+  color: var(--geist-accent-foreground);
+  box-shadow: var(--geist-shadow-sm);
+}
+
+/* ── Chips ── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--geist-border);
+  background: var(--geist-surface);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--geist-secondary);
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ── QR Code ── */
+.qrLabel {
+  font-size: 12px;
+  color: var(--geist-secondary);
+}
+
+.qrPlaceholder {
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-surface);
+}
+
+.qrImage {
+  border-radius: var(--geist-radius-md);
+  border: 1px solid var(--geist-border);
+}
+
+/* ── Phone Frame ── */
+.phoneWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phoneFrame {
+  width: 300px;
+  height: 560px;
+  border-radius: 36px;
+  background: var(--geist-foreground);
+  padding: 10px;
+  box-shadow:
+    var(--geist-shadow-lg),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.phoneScreen {
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border-radius: 28px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.phoneStatusBar {
+  height: 44px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.phoneNotch {
+  width: 80px;
+  height: 24px;
+  background: var(--geist-foreground);
+  border-radius: 0 0 16px 16px;
+}
+
+.phoneIframe {
+  flex: 1;
+  width: 100%;
+  border: 0;
+}
+
+.phoneHomeIndicator {
+  height: 20px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.phoneHomeBar {
+  width: 120px;
+  height: 4px;
+  border-radius: 2px;
+  background: #d1d1d1;
+}
+
+/* ── Preview Panels (shared) ── */
+.previewPanel {
+  width: 420px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--geist-surface);
+  border-left: 1px solid var(--geist-border);
+}
+
+.previewPanelHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  flex-shrink: 0;
+}
+
+.previewPanelTitle {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.previewPanelMeta {
+  margin-left: auto;
+}
+
+.previewMetaTags {
+  display: flex;
+  gap: 4px;
+}
+
+.previewPanelBody {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow: auto;
+}
+
+/* ── QR Code Section (always visible in preview panel) ── */
+.previewQrSection {
+  flex-shrink: 0;
+  border-top: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  padding: 16px;
+}
+
+.previewQrContent {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.previewQrInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.previewQrTitle {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.previewQrDesc {
+  font-size: 12px;
+  color: var(--geist-secondary);
+  line-height: 1.5;
+}
+
+.previewQrPlaceholder {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--geist-radius-md);
+  border: 1px dashed var(--geist-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.previewQrPlaceholderText {
+  font-size: 10px;
+  color: var(--geist-secondary);
+}
+
+.previewEmpty {
+  text-align: center;
+  color: var(--geist-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.previewEmptyIcon {
+  font-size: 32px;
+  opacity: 0.4;
+}
+
+.previewEmptySub {
+  font-size: 12px;
+}
+
+/* ═══════════════════════════════════════════
+   Demos Page
+   ═══════════════════════════════════════════ */
+
+.demosPage {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarSection {
+  padding: 12px;
+}
+
+.sidebarSection + .sidebarSection {
+  border-top: 1px solid var(--geist-border);
+}
+
+.sidebarHeading {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--geist-secondary);
+  padding: 0 8px;
+  margin-bottom: 8px;
+}
+
+.scenarioList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.scenarioItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  min-height: 44px;
+  border: none;
+  border-radius: var(--geist-radius-sm);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background var(--geist-transition),
+    box-shadow var(--geist-transition),
+    color var(--geist-transition);
+  width: 100%;
+}
+
+.scenarioItem:hover {
+  background: var(--geist-surface);
+}
+
+.scenarioItem.active {
+  background: var(--geist-surface);
+  box-shadow: inset 3px 0 0 var(--geist-foreground);
+}
+
+.scenarioItem.active .scenarioName {
+  font-weight: 600;
+  color: var(--geist-foreground);
+}
+
+.scenarioName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--geist-foreground);
+}
+
+.scenarioDesc {
+  font-size: 11px;
+  color: var(--geist-secondary);
+  line-height: 1.4;
+}
+
+.sidebarChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 8px;
+}
+
+/* ── Code Panel ── */
+.codePanel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.codePanelToolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  flex-shrink: 0;
+}
+
+.codePanelTitle {
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.codePanelBadge {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--geist-surface);
+  border: 1px solid var(--geist-border);
+  color: var(--geist-secondary);
+}
+
+.toolbarActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbarBtn {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-sm);
+  background: var(--geist-background);
+  color: var(--geist-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--geist-transition);
+  white-space: nowrap;
+}
+
+.toolbarBtn:hover {
+  color: var(--geist-foreground);
+  border-color: var(--geist-border-hover);
+}
+
+.toolbarBtn:active {
+  transform: scale(0.97);
+}
+
+.toolbarBtn.primary {
+  background: var(--geist-accent);
+  border-color: var(--geist-accent);
+  color: var(--geist-accent-foreground);
+}
+
+.toolbarBtn.primary:hover {
+  opacity: 0.85;
+}
+
+.codeEditor {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.codeEditor .cm-editor {
+  height: 100%;
+  font-family: var(--geist-mono);
+  font-size: 13px;
+  background: var(--geist-code-bg);
+}
+
+.codeEditor .cm-scroller {
+  overflow: auto;
+}
+
+.codeEditor .cm-gutters {
+  background: var(--geist-code-bg);
+  border-right: 1px solid var(--geist-border);
+}
+
+.codeError {
+  padding: 8px 12px;
+  background: var(--geist-error-light);
+  border-top: 1px solid var(--geist-error);
+  color: var(--geist-error);
+  font-size: 12px;
+  font-family: var(--geist-mono);
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════
+   Components Page
+   ═══════════════════════════════════════════ */
+
+.compPage {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Sidebar ── */
+.compSidebar {
+  width: 200px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.compSidebarAll {
+  display: block;
+  padding: 6px 12px;
+  border-radius: var(--geist-radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--geist-secondary);
+  text-decoration: none;
+  transition: all var(--geist-transition);
+  margin-bottom: 4px;
+}
+
+.compSidebarAll:hover {
+  color: var(--geist-foreground);
+  background: var(--geist-surface);
+}
+
+.compSidebarAll.active {
+  color: var(--geist-foreground);
+  background: var(--geist-surface);
+}
+
+.compSidebarGroup {
+  margin-bottom: 4px;
+}
+
+.compSidebarGroupLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--geist-secondary);
+  padding: 10px 12px 4px;
+}
+
+.compSidebarItem {
+  display: block;
+  width: 100%;
+  padding: 5px 12px 5px 20px;
+  border: none;
+  border-radius: var(--geist-radius-sm);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--geist-secondary);
+  text-decoration: none;
+  transition: all var(--geist-transition);
+}
+
+.compSidebarItem:hover {
+  color: var(--geist-foreground);
+  background: var(--geist-surface);
+}
+
+.compSidebarItem.active {
+  color: var(--geist-foreground);
+  background: var(--geist-surface);
+  box-shadow: inset 2px 0 0 var(--geist-foreground);
+}
+
+/* ── Content ── */
+.compContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 40px;
+}
+
+.compName {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin: 0 0 8px;
+}
+
+.compDesc {
+  color: var(--geist-secondary);
+  font-size: 14px;
+  margin: 0 0 24px;
+  line-height: 1.6;
+}
+
+/* ── Breadcrumb ── */
+.compBreadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 20px;
+  font-size: 13px;
+}
+
+.compBreadcrumbLink {
+  color: var(--geist-secondary);
+  text-decoration: none;
+  transition: color var(--geist-transition);
+}
+
+.compBreadcrumbLink:hover {
+  color: var(--geist-foreground);
+}
+
+.compBreadcrumbSep {
+  color: var(--geist-secondary);
+  opacity: 0.5;
+}
+
+.compBreadcrumbCurrent {
+  color: var(--geist-foreground);
+  font-weight: 500;
+}
+
+/* ── Category Badge ── */
+.compCategoryBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--geist-border);
+  background: var(--geist-surface);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--geist-secondary);
+  margin-bottom: 24px;
+}
+
+/* ── Category Grid (All Components view) ── */
+.compCategorySection {
+  margin-bottom: 32px;
+}
+
+.compCategoryTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--geist-foreground);
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.compGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.compGridCard {
+  display: block;
+  padding: 16px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-lg);
+  background: var(--geist-background);
+  text-decoration: none;
+  transition: all var(--geist-transition);
+}
+
+.compGridCard:hover {
+  border-color: var(--geist-border-hover);
+  box-shadow: var(--geist-shadow-md);
+}
+
+.compGridCardName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--geist-foreground);
+  margin-bottom: 4px;
+  font-family: var(--geist-mono);
+}
+
+.compGridCardDesc {
+  font-size: 13px;
+  color: var(--geist-secondary);
+  line-height: 1.5;
+}
+
+/* ── Detail subheadings / code / table ── */
+.compSubheading {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--geist-foreground);
+}
+
+.compCodeBlock {
+  margin: 0 0 24px;
+  padding: 16px;
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-code-bg);
+  color: var(--geist-code-fg);
+  font-family: var(--geist-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.compTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+  font-size: 13px;
+}
+
+.compTableHeader {
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--geist-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--geist-border);
+}
+
+.compTableCell {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--geist-border);
+  vertical-align: top;
+}
+
+.compTableCell:first-child {
+  font-family: var(--geist-mono);
+  font-weight: 500;
+  color: var(--geist-foreground);
+}
+
+.compTableCell:nth-child(2) {
+  font-family: var(--geist-mono);
+  font-size: 12px;
+  color: var(--geist-secondary);
+}
+
+/* ═══════════════════════════════════════════
+   AI Chat Page
+   ═══════════════════════════════════════════ */
+
+.chatPage {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.chatPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.chatHeader {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  flex-shrink: 0;
+}
+
+.chatHeaderTitle {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 2px;
+}
+
+.chatHeaderSub {
+  font-size: 12px;
+  color: var(--geist-secondary);
+  margin: 0;
+}
+
+.chatMessages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chatMessage {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: var(--geist-radius-lg);
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.chatMessageUser {
+  align-self: flex-end;
+  background: var(--geist-accent);
+  color: var(--geist-accent-foreground);
+  border-bottom-right-radius: 4px;
+}
+
+.chatMessageAI {
+  align-self: flex-start;
+  background: var(--geist-surface);
+  border: 1px solid var(--geist-border);
+  border-bottom-left-radius: 4px;
+}
+
+.chatInputArea {
+  padding: 12px 20px;
+  border-top: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.chatInput {
+  flex: 1;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  font-size: 14px;
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+  outline: none;
+  transition: border-color var(--geist-transition);
+}
+
+.chatInput:focus {
+  border-color: var(--geist-foreground);
+}
+
+.chatInput::placeholder {
+  color: var(--geist-secondary);
+}
+
+.chatSendBtn {
+  height: 40px;
+  padding: 0 20px;
+  border: none;
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-accent);
+  color: var(--geist-accent-foreground);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity var(--geist-transition);
+  flex-shrink: 0;
+}
+
+.chatSendBtn:hover {
+  opacity: 0.85;
+}
+
+.chatSendBtn:active {
+  transform: scale(0.97);
+}
+
+/* ── Responsive ── */
+@media (max-width: 980px) {
+  .tabNav {
+    gap: 0;
+  }
+
+  .tabNavItem {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  .demosPage {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    max-height: 180px;
+    border-right: none;
+    border-bottom: 1px solid var(--geist-border);
+  }
+
+  .codePanel {
+    min-height: 280px;
+  }
+
+  .previewPanel {
+    width: 100%;
+    min-height: 480px;
+    border-left: none;
+    border-top: 1px solid var(--geist-border);
+  }
+
+  .compPage {
+    flex-direction: column;
+  }
+
+  .compSidebar {
+    width: 100%;
+    max-height: 160px;
+    border-right: none;
+    border-bottom: 1px solid var(--geist-border);
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .compContent {
+    padding: 20px;
+  }
+
+  .chatPage {
+    flex-direction: column;
+  }
+
+  .chatPanel {
+    min-height: 400px;
+  }
+}
