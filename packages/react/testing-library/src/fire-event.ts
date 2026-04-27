@@ -40,10 +40,10 @@ export const fireEvent: any = (elemOrNodesRef, ...args) => {
 export const eventMap = {
   // LynxBindCatchEvent Events
   tap: {
-    defaultInit: {},
+    defaultInit: { bubbles: true },
   },
   longtap: {
-    defaultInit: {},
+    defaultInit: { bubbles: true },
   },
   // LynxEvent Events
   bgload: {
@@ -171,7 +171,11 @@ Object.keys(eventMap).forEach((key) => {
       elem,
       init,
     );
-    Object.assign(event, init);
+    // `bubbles`, `cancelable`, `composed` are read-only accessors on Event.prototype.
+    // They're already applied via the EventInit dict above; assigning them again
+    // throws in strict mode.
+    const { bubbles, cancelable, composed, ...assignableInit } = init;
+    Object.assign(event, assignableInit);
     const ans = domFireEvent(
       elem,
       event,

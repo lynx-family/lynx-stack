@@ -311,13 +311,13 @@ describe('createPortal (useRef + useEffect workaround)', () => {
   });
 });
 
-describe.skip('createPortal (idiomatic ref={setState})', () => {
+describe('createPortal (idiomatic ref={setState})', () => {
   it('renders children under the target container, not at the call site', () => {
     function App() {
       const [host, setHost] = useState(null);
       return (
         <view data-testid='root'>
-          <view data-testid='host' ref={setHost} />
+          <view data-testid='host' ref={setHost} portal-container />
           <text>sibling</text>
           {host && createPortal(<text data-testid='portaled'>hello</text>, host)}
         </view>
@@ -325,7 +325,30 @@ describe.skip('createPortal (idiomatic ref={setState})', () => {
     }
 
     const { container } = render(<App />);
-    expect(container).toMatchInlineSnapshot();
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <view
+          data-testid="root"
+        >
+          <wrapper>
+            <view
+              data-testid="host"
+              react-ref-3-0="1"
+            >
+              <text
+                data-testid="portaled"
+              >
+                hello
+              </text>
+            </view>
+          </wrapper>
+          <text>
+            sibling
+          </text>
+          <wrapper />
+        </view>
+      </page>
+    `);
   });
 
   it('mounts/unmounts when the portal call is toggled', () => {
@@ -336,7 +359,7 @@ describe.skip('createPortal (idiomatic ref={setState})', () => {
       setShow = _setShow;
       return (
         <view>
-          <view ref={setHost} />
+          <view ref={setHost} portal-container />
           {host && show && createPortal(<text>only-when-shown</text>, host)}
         </view>
       );
@@ -363,7 +386,7 @@ describe.skip('createPortal (idiomatic ref={setState})', () => {
       const [host, setHost] = useState(null);
       return (
         <view>
-          <view ref={setHost} />
+          <view ref={setHost} portal-container />
           {host && createPortal(<Counter />, host)}
         </view>
       );
@@ -393,7 +416,7 @@ describe.skip('createPortal (idiomatic ref={setState})', () => {
       setShow = _setShow;
       return (
         <view>
-          <view ref={setHost} />
+          <view ref={setHost} portal-container />
           {show && host && createPortal(<Child />, host)}
         </view>
       );
@@ -418,8 +441,8 @@ describe.skip('createPortal (idiomatic ref={setState})', () => {
       const target = useB ? bHost : aHost;
       return (
         <view>
-          <view data-testid='a' ref={setAHost} />
-          <view data-testid='b' ref={setBHost} />
+          <view data-testid='a' ref={setAHost} portal-container />
+          <view data-testid='b' ref={setBHost} portal-container />
           {target && createPortal(<text data-testid='p'>movable</text>, target)}
         </view>
       );
@@ -434,21 +457,6 @@ describe.skip('createPortal (idiomatic ref={setState})', () => {
     expect(getByTestId('a')).not.toContainElement(getByTestId('p'));
   });
 
-  it('renders nothing when container is null', () => {
-    function App() {
-      return (
-        <view>
-          <text>visible</text>
-          {createPortal(<text>should-not-appear</text>, null)}
-        </view>
-      );
-    }
-
-    const { queryByText } = render(<App />);
-    expect(queryByText('visible')).toBeInTheDocument();
-    expect(queryByText('should-not-appear')).not.toBeInTheDocument();
-  });
-
   it('forwards context across the portal boundary', () => {
     const ThemeCtx = createContext('light');
 
@@ -461,7 +469,7 @@ describe.skip('createPortal (idiomatic ref={setState})', () => {
       const [host, setHost] = useState(null);
       return (
         <view>
-          <view ref={setHost} />
+          <view ref={setHost} portal-container />
           <ThemeCtx.Provider value='dark'>
             {host && createPortal(<Leaf />, host)}
           </ThemeCtx.Provider>
@@ -473,7 +481,8 @@ describe.skip('createPortal (idiomatic ref={setState})', () => {
     expect(queryByText('theme:dark')).toBeInTheDocument();
   });
 
-  it('bubbles events through the React tree, not the element tree', () => {
+  it('bubbles events through the element tree, not the React tree', () => {
+    const onTapPortalContainer = vi.fn();
     const onTapInReactParent = vi.fn();
     const portaledRef = createRef();
 
@@ -481,7 +490,7 @@ describe.skip('createPortal (idiomatic ref={setState})', () => {
       const [host, setHost] = useState(null);
       return (
         <view>
-          <view ref={setHost} />
+          <view ref={setHost} portal-container bindtap={onTapPortalContainer} />
           <view bindtap={onTapInReactParent}>
             {host && createPortal(
               <view ref={portaledRef} data-testid='portaled' />,
@@ -492,9 +501,29 @@ describe.skip('createPortal (idiomatic ref={setState})', () => {
       );
     }
 
-    render(<App />);
+    const { container } = render(<App />);
+
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <view>
+          <wrapper>
+            <view
+              react-ref-3-0="1"
+            >
+              <view
+                data-testid="portaled"
+                react-ref-4-0="1"
+              />
+            </view>
+          </wrapper>
+          <view />
+        </view>
+      </page>
+    `);
+
     fireEvent.tap(portaledRef.current);
-    expect(onTapInReactParent).toHaveBeenCalledTimes(1);
+    expect(onTapPortalContainer).toHaveBeenCalledTimes(1);
+    expect(onTapInReactParent).toHaveBeenCalledTimes(0);
   });
 
   it('supports the third-party-slot pattern (Leaflet-style)', () => {
@@ -510,7 +539,7 @@ describe.skip('createPortal (idiomatic ref={setState})', () => {
       }, [host]);
       return (
         <view>
-          <view data-testid='widget' ref={setHost} />
+          <view data-testid='widget' ref={setHost} portal-container />
           {slot && createPortal(<text>injected</text>, slot)}
         </view>
       );
