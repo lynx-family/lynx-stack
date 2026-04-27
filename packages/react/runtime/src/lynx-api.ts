@@ -8,8 +8,8 @@ import type { Consumer, FC, ReactNode } from 'react';
 
 import { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListener.js';
 import { __root } from './root.js';
+import { profileEnd, profileStart } from './shared/profile.js';
 import { factory, withInitDataInState } from './snapshot/compat/initData.js';
-import { profileEnd, profileStart } from './snapshot/debug/profile.js';
 import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
 import { flushDelayedLifecycleEvents } from './snapshot/lynx/tt.js';
 

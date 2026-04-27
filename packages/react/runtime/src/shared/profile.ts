@@ -27,7 +27,7 @@ export const profileEnd = /* @__PURE__ */ ((() => {
   return p.profileEnd.bind(p);
 })()) as typeof lynx.performance.profileEnd;
 
-export const profileFlowId = /* @__PURE__ */ (() => {
+export const profileFlowId: typeof lynx.performance.profileFlowId = /* @__PURE__ */ (() => {
   let p;
   if (!(p = lynx.performance) || typeof p.profileFlowId !== 'function') {
     return noopFlowId;

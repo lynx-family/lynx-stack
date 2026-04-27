@@ -11,7 +11,7 @@ type LynxLike = {
   performance?: PerformanceLike;
 };
 
-describe('debug/profile module', () => {
+describe('shared/profile module', () => {
   let originalLynx: LynxLike;
   let originalProfileFlag: unknown;
 
@@ -37,7 +37,7 @@ describe('debug/profile module', () => {
       performance: perf,
     };
 
-    const profile = await import('../../../src/snapshot/debug/profile');
+    const profile = await import('../../src/shared/profile');
 
     expect(profile.isProfiling).toBe(true);
   });
@@ -53,7 +53,7 @@ describe('debug/profile module', () => {
       performance: perf,
     };
 
-    const profile = await import('../../../src/snapshot/debug/profile');
+    const profile = await import('../../src/shared/profile');
 
     expect(profile.isProfiling).toBe(false);
     expect(() => profile.profileStart('trace')).not.toThrow();
@@ -75,7 +75,7 @@ describe('debug/profile module', () => {
       performance: perf,
     };
 
-    const profile = await import('../../../src/snapshot/debug/profile');
+    const profile = await import('../../src/shared/profile');
 
     profile.profileStart('trace-name', { args: { foo: 'bar' } });
     profile.profileEnd();

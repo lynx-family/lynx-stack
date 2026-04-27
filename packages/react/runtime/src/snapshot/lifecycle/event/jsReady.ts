@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { __root } from '../../../root.js';
-import { profileEnd, profileStart } from '../../debug/profile.js';
+import { profileEnd, profileStart } from '../../../shared/profile.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
 
 let isJSReady: boolean;

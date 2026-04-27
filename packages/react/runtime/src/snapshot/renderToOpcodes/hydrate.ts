@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { profileEnd, profileStart } from '../debug/profile.js';
+import { profileEnd, profileStart } from '../../shared/profile.js';
 import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from '../list/list.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import { DynamicPartType } from '../snapshot/dynamicPartType.js';

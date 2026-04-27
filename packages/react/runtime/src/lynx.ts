@@ -7,9 +7,9 @@ import './core/hooks/react.js';
 
 import { document, setupBackgroundDocument } from './document.js';
 import { setupComponentStack } from './shared/component-stack.js';
+import { isProfiling } from './shared/profile.js';
 import { initElementPAPICallAlog } from './snapshot/alog/elementPAPICall.js';
 import { initAlog } from './snapshot/alog/index.js';
-import { isProfiling } from './snapshot/debug/profile.js';
 import { initProfileHook } from './snapshot/debug/profileHooks.js';
 import { setupVNodeSourceHook } from './snapshot/debug/vnodeSource.js';
 import { replaceCommitHook } from './snapshot/lifecycle/patch/commit.js';

@@ -7,7 +7,7 @@
  */
 
 import { __root } from '../../root.js';
-import { profileEnd, profileStart } from '../debug/profile.js';
+import { profileEnd, profileStart } from '../../shared/profile.js';
 import { render as renderToString } from '../renderToOpcodes/index.js';
 import { SnapshotInstance } from '../snapshot/snapshot.js';
 

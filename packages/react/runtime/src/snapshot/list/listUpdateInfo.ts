@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { componentAtIndexFactory, enqueueComponentFactory } from './list.js';
-import { profileEnd, profileStart } from '../debug/profile.js';
+import { profileEnd, profileStart } from '../../shared/profile.js';
 import { hydrate } from '../renderToOpcodes/hydrate.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
