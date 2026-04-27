@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { json } from '@codemirror/lang-json';
 import CodeMirror from '@uiw/react-codemirror';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Chip } from '../components/Chip.js';
 import { MobilePreview } from '../components/MobilePreview.js';
@@ -22,6 +22,50 @@ interface Scenario {
 }
 
 const jsonExtensions = [json()];
+
+function formatUrlForDisplay(url: string): string {
+  // Keep it readable without changing the actual link we copy / QR.
+  if (url.length <= 80) return url;
+  const head = url.slice(0, 44);
+  const tail = url.slice(-24);
+  return `${head}…${tail}`;
+}
+
+async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    const clipboard = window.navigator?.clipboard;
+    if (!clipboard) return false;
+    await clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function useRspeedyDevUrl(): string {
+  const [url, setUrl] = useState('');
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await window.fetch('/__rspeedy_url', {
+          cache: 'no-store',
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as { url?: string };
+        if (!cancelled && typeof data.url === 'string') {
+          setUrl(data.url);
+        }
+      } catch {
+        return;
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return url;
+}
 
 const ALL_SCENARIOS: Scenario[] = [
   ...STATIC_DEMOS.map((d) => ({ ...d, actionMocks: undefined })),
@@ -43,8 +87,14 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   );
   const [error, setError] = useState('');
   const [renderUrl, setRenderUrl] = useState('');
+  const [lynxDevUrl, setLynxDevUrl] = useState('');
+  const [, setRenderQrError] = useState('');
+  const [lynxDevQrError, setLynxDevQrError] = useState('');
+  const [lynxDevCopied, setLynxDevCopied] = useState(false);
 
   const origin = window.location.origin;
+  const rspeedyDevUrl = useRspeedyDevUrl();
+  const lynxUrlSeqRef = useRef(0);
 
   const currentScenario = useMemo(
     () => ALL_SCENARIOS.find((s) => s.id === scenarioId) ?? ALL_SCENARIOS[0],
@@ -54,6 +104,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   const doRender = useCallback(
     (json: string, scenario: Scenario | undefined) => {
       setError('');
+      setRenderQrError('');
       let parsed: unknown;
       try {
         parsed = JSON.parse(json);
@@ -67,8 +118,78 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
         origin,
       );
       setRenderUrl(url);
+
+      // Native in-app preview: pass A2UI payload via global props, directly through URL query.
+      // In Lynx, query params are exposed in `lynx.__globalProps` / `useGlobalProps()`.
+      const seq = ++lynxUrlSeqRef.current;
+      if (rspeedyDevUrl) {
+        const uInline = new URL(rspeedyDevUrl);
+        uInline.searchParams.set('messages', JSON.stringify(parsed));
+        if (actionMocks) {
+          uInline.searchParams.set('actionMocks', JSON.stringify(actionMocks));
+        }
+        setLynxDevUrl(uInline.toString());
+      } else {
+        setLynxDevUrl('');
+      }
+
+      // Try to swap both URLs to short (reference-based) variants using the
+      // rspeedy dev server's payload store. When available, both QR codes
+      // become small enough to be scannable.
+      void (async () => {
+        if (!rspeedyDevUrl) return;
+        try {
+          const rspeedyOrigin = new URL(rspeedyDevUrl).origin;
+          const res = await window.fetch(`${rspeedyOrigin}/__a2ui_payload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: parsed, actionMocks }),
+          });
+          if (!res.ok) return;
+          const data = (await res.json()) as {
+            messagesUrl?: string;
+            actionMocksUrl?: string;
+          };
+
+          const messagesUrlAbs = typeof data.messagesUrl === 'string'
+            ? `${rspeedyOrigin}${data.messagesUrl}`
+            : undefined;
+          const actionMocksUrlAbs = typeof data.actionMocksUrl === 'string'
+            ? `${rspeedyOrigin}${data.actionMocksUrl}`
+            : undefined;
+
+          if (seq !== lynxUrlSeqRef.current) return;
+
+          // Lynx dev bundle URL: drop inline messages, use references.
+          const u = new URL(rspeedyDevUrl);
+          if (messagesUrlAbs) u.searchParams.set('messagesUrl', messagesUrlAbs);
+          if (actionMocksUrlAbs && actionMocks) {
+            u.searchParams.set('actionMocksUrl', actionMocksUrlAbs);
+          }
+          u.searchParams.delete('messages');
+          u.searchParams.delete('actionMocks');
+          setLynxDevUrl(u.toString());
+
+          // Web render URL: also swap to reference-based form so the
+          // "View on Device" QR is scannable. render.html already supports
+          // messagesUrl / actionMocksUrl query params.
+          if (messagesUrlAbs) {
+            const r = new URL('/render.html', origin);
+            r.searchParams.set('protocol', protocol);
+            r.searchParams.set('demoUrl', DEFAULT_DEMO_URL);
+            r.searchParams.set('messagesUrl', messagesUrlAbs);
+            if (actionMocksUrlAbs && actionMocks) {
+              r.searchParams.set('actionMocksUrl', actionMocksUrlAbs);
+            }
+            setRenderUrl(r.toString());
+          }
+        } catch {
+          // If the payload store is unavailable, fall back to the inline URLs
+          // already set above; QR may show "URL too long" in that case.
+        }
+      })();
     },
-    [origin, protocol],
+    [origin, protocol, rspeedyDevUrl],
   );
 
   useEffect(() => {
@@ -108,6 +229,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   const handleClear = useCallback(() => {
     setCustomJson('[]');
     setRenderUrl('');
+    setRenderQrError('');
     setError('');
   }, []);
 
@@ -218,19 +340,66 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
           <div className='previewQrContent'>
             <div className='previewQrInfo'>
               <div className='previewQrTitle'>View on Device</div>
-              <div className='previewQrDesc'>
-                Scan the QR code to preview this A2UI rendering natively on your
-                mobile device.
-              </div>
             </div>
             {renderUrl
-              ? <QrCode value={renderUrl} size={80} />
+              ? (
+                <QrCode
+                  value={renderUrl}
+                  size={80}
+                  onErrorChange={setRenderQrError}
+                />
+              )
               : (
                 <div className='previewQrPlaceholder'>
                   <span className='previewQrPlaceholderText'>No render</span>
                 </div>
               )}
           </div>
+          {lynxDevUrl
+            ? (
+              <div className='previewQrContent previewQrContentAlt'>
+                <div className='previewQrInfo'>
+                  <div className='previewQrTitle'>Lynx Dev Bundle</div>
+                  <div className='previewQrDesc'>
+                    {lynxDevQrError
+                      ? 'QR code unavailable. Open this link with LynxExplorer instead.'
+                      : 'Scan with LynxExplorer to load the rspeedy dev bundle.'}
+                  </div>
+                  <div className='previewQrUrlRow'>
+                    <div
+                      className='previewQrUrlText'
+                      title={lynxDevUrl}
+                    >
+                      {formatUrlForDisplay(lynxDevUrl)}
+                    </div>
+                    <button
+                      type='button'
+                      className='previewQrCopyBtn'
+                      aria-label='Copy Lynx dev bundle URL'
+                      title={lynxDevCopied ? 'Copied' : 'Copy URL'}
+                      onClick={() => {
+                        void copyToClipboard(lynxDevUrl).then((ok) => {
+                          if (!ok) return;
+                          setLynxDevCopied(true);
+                          window.setTimeout(
+                            () => setLynxDevCopied(false),
+                            1200,
+                          );
+                        });
+                      }}
+                    >
+                      {lynxDevCopied ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
+                </div>
+                <QrCode
+                  value={lynxDevUrl}
+                  size={80}
+                  onErrorChange={setLynxDevQrError}
+                />
+              </div>
+            )
+            : null}
         </div>
       </div>
     </div>

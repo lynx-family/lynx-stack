@@ -15,6 +15,7 @@ export function buildRenderUrl(init: RenderInit, baseOrigin: string): string {
   const params = new URLSearchParams();
   params.set('protocol', init.protocol);
   params.set('demoUrl', init.demoUrl);
+  // Use base64url to avoid URL-encoding overhead for JSON payloads.
   params.set('messages', encodeBase64Url(JSON.stringify(init.messages)));
 
   if (init.actionMocks !== undefined) {

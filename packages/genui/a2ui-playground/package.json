@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rsbuild build",
     "build:lynx": "rspeedy build",
-    "dev": "rsbuild dev",
+    "dev": "pnpm run build:lynx && rsbuild dev",
     "dev:lynx": "rspeedy dev",
     "preview": "rsbuild preview",
     "preview:lynx": "rspeedy preview"

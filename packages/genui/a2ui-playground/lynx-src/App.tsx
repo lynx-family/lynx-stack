@@ -6,6 +6,7 @@ import type { Resource } from '@lynx-js/a2ui-reactlynx/core';
 import '@lynx-js/a2ui-reactlynx/catalog/all';
 import {
   useEffect,
+  useGlobalProps,
   useInitData,
   useMemo,
   useRef,
@@ -30,6 +31,73 @@ const STREAM_MESSAGE_DELAY_MS = 800;
 function randomId(prefix: string) {
   return prefix + Date.now().toString(36)
     + Math.random().toString(36).slice(2, 10);
+}
+
+function parseJsonLikeString(input: string): unknown {
+  try {
+    return JSON.parse(input) as unknown;
+  } catch {
+    // ignore
+  }
+
+  // Query params may arrive URL-encoded one or more times in native globalProps.
+  let current = input;
+  for (let i = 0; i < 3; i++) {
+    try {
+      const decoded = decodeURIComponent(current);
+      if (decoded === current) break;
+      current = decoded;
+      try {
+        return JSON.parse(current) as unknown;
+      } catch {
+        // keep decoding
+      }
+    } catch {
+      break;
+    }
+  }
+
+  return input;
+}
+
+function normalizeInitDataLike(raw: unknown): InitData {
+  if (raw === null || raw === undefined) return {};
+
+  if (typeof raw !== 'object') return {};
+
+  const obj = raw as Record<string, unknown>;
+  const out: InitData = {};
+
+  const messagesUrl = obj.messagesUrl;
+  if (typeof messagesUrl === 'string') out.messagesUrl = messagesUrl;
+
+  const actionMocksUrl = obj.actionMocksUrl;
+  if (typeof actionMocksUrl === 'string') out.actionMocksUrl = actionMocksUrl;
+
+  const messages = obj.messages;
+  if (messages !== undefined) {
+    out.messages = typeof messages === 'string'
+      ? parseJsonLikeString(messages)
+      : messages;
+  }
+
+  const actionMocks = obj.actionMocks;
+  if (actionMocks !== undefined) {
+    out.actionMocks = typeof actionMocks === 'string'
+      ? parseJsonLikeString(actionMocks)
+      : actionMocks;
+  }
+
+  return out;
+}
+
+function mergeInitDataPreferLeft(a: InitData, b: InitData): InitData {
+  return {
+    messagesUrl: a.messagesUrl ?? b.messagesUrl,
+    messages: a.messages ?? b.messages,
+    actionMocksUrl: a.actionMocksUrl ?? b.actionMocksUrl,
+    actionMocks: a.actionMocks ?? b.actionMocks,
+  };
 }
 
 function normalizePayloadToMessages(payload: unknown): ResponseMessages {
@@ -105,6 +173,7 @@ async function loadActionMocks(initData: InitData): Promise<ActionMocks> {
 }
 
 export function App() {
+  const globalProps = useGlobalProps();
   const rawInitData = useInitData();
 
   const initData = useMemo(() => {
@@ -117,6 +186,18 @@ export function App() {
     }
     return (rawInitData ?? {}) as InitData;
   }, [rawInitData]);
+
+  const globalPropsData = useMemo(
+    () => normalizeInitDataLike(globalProps),
+    [globalProps],
+  );
+
+  // Native in-app preview passes A2UI payload via `globalProps` (often from URL query).
+  // Web preview may still provide `initData`, so keep fallback for compatibility.
+  const effectiveData = useMemo(
+    () => mergeInitDataPreferLeft(globalPropsData, initData),
+    [globalPropsData, initData],
+  );
 
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const clientRef = useRef<any>(null);
@@ -133,8 +214,8 @@ export function App() {
       setError('');
 
       const [rawMessages, actionMocks] = await Promise.all([
-        loadMessages(initData ?? {}),
-        loadActionMocks(initData ?? {}),
+        loadMessages(effectiveData ?? {}),
+        loadActionMocks(effectiveData ?? {}),
       ]);
 
       const messageId = randomId('demo_');
@@ -228,7 +309,7 @@ export function App() {
     return () => {
       cancelled = true;
     };
-  }, [initData]);
+  }, [effectiveData]);
 
   return (
     <view
