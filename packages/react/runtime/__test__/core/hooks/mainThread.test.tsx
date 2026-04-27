@@ -12,6 +12,7 @@ import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit'
 import { elementTree } from '../../snapshot/utils/nativeMethod';
 import { __root } from '../../../src/root';
 import {
+  installMainThreadHooks,
   useState,
   useMemo,
   useEffect,
@@ -25,7 +26,7 @@ import {
   useContext,
 } from '../../../src/core/hooks/mainThread';
 import { options, createContext } from 'preact';
-import { HOOK } from '../../../src/shared/render-constants.js';
+import { DIFF, HOOK } from '../../../src/shared/render-constants.js';
 
 beforeAll(() => {
   replaceCommitHook();
@@ -43,6 +44,14 @@ afterEach(() => {
 });
 
 describe('mainThread hooks', () => {
+  it('should skip duplicate installation', () => {
+    const diffHook = options[DIFF];
+
+    installMainThreadHooks();
+
+    expect(options[DIFF]).toBe(diffHook);
+  });
+
   it('should get initialValue', () => {
     let setCount;
     options[HOOK] = vi.fn();

@@ -108,7 +108,6 @@ export default defineConfig({
         '__test__/snapshot/utils/**',
         'lib/**',
         'worklet-runtime/**',
-        'src/core/hooks/**',
         'src/shared/component-stack.ts',
         'src/shared/profile.ts',
         'src/index.ts',
