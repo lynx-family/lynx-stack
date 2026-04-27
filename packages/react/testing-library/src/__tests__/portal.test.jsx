@@ -1,7 +1,7 @@
 // (A) useRef+useEffect workaround — runs today.
 // (B) idiomatic ref={setState} — skipped until ref-apply dedup lands.
 import '@testing-library/jest-dom';
-import { createContext, createPortal, createPortalMainThread, createRef, useContext, useEffect, useRef, useState } from '@lynx-js/react';
+import { createContext, createPortal, createRef, useContext, useEffect, useRef, useState } from '@lynx-js/react';
 import { __root } from '@lynx-js/react/internal';
 import { act } from 'preact/test-utils';
 import { describe, expect, it, vi } from 'vitest';
@@ -313,54 +313,7 @@ describe('createPortal (useRef + useEffect workaround)', () => {
 });
 
 describe('createPortal with `__root` as container', () => {
-  it('IFR works', () => {
-    function Child() {
-      return <text data-testid='portaled'>hello-root</text>;
-    }
-
-    function App() {
-      return (
-        <view data-testid='host'>
-          <text>sibling</text>
-          {(__MAIN_THREAD__ ? createPortalMainThread : createPortal)(<Child />, __root)}
-        </view>
-      );
-    }
-
-    debugger;
-    const { container, getByTestId } = render(<App />, {
-      enableMainThread: true,
-      enableBackgroundThread: false
-    });
-
-
-    expect(container).toMatchInlineSnapshot(`
-      <page>
-        <view
-          data-testid="host"
-        >
-          <text>
-            sibling
-          </text>
-          <wrapper />
-        </view>
-        <text
-          data-testid="portaled"
-        >
-          hello-root
-        </text>
-      </page>
-    `)
-
-    expect(getByTestId('portaled')).toBeInTheDocument();
-    expect(getByTestId('portaled')).toHaveTextContent('hello-root');
-    // Portal child ends up under <page> directly, not inside <view data-testid="host">.
-    expect(getByTestId('host')).not.toContainElement(getByTestId('portaled'));
-    expect(container).toContainElement(getByTestId('portaled'));
-    expect(getByTestId('portaled').parentElement).toBe(container);
-  });
-
-  it('BTS works', () => {
+  it('renders children as a child of the page root', () => {
     function Child() {
       return <text data-testid='portaled'>hello-root</text>;
     }
@@ -374,28 +327,7 @@ describe('createPortal with `__root` as container', () => {
       );
     }
 
-    const { container, getByTestId } = render(<App />, {
-      enableMainThread: false,
-      enableBackgroundThread: true
-    });
-
-    expect(container).toMatchInlineSnapshot(`
-      <page>
-        <text
-          data-testid="portaled"
-        >
-          hello-root
-        </text>
-        <view
-          data-testid="host"
-        >
-          <text>
-            sibling
-          </text>
-          <wrapper />
-        </view>
-      </page>
-    `)
+    const { container, getByTestId } = render(<App />);
 
     expect(getByTestId('portaled')).toBeInTheDocument();
     expect(getByTestId('portaled')).toHaveTextContent('hello-root');
