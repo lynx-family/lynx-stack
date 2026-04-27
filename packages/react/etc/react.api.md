@@ -46,7 +46,7 @@ export { createContext }
 export { createElement }
 
 // @public
-export const createPortal: (vnode: ComponentChildren, containerNodesRef: NodesRef | null | undefined) => VNode<any> | null;
+export const createPortal: (vnode: ComponentChildren, containerNodesRef: NodesRef) => VNode<any>;
 
 export { createRef }
 
