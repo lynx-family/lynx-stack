@@ -4,8 +4,8 @@
 import { options } from 'preact';
 import type { ComponentClass, VNode } from 'preact';
 
+import { DIFFED, DOM } from '../../shared/render-constants.js';
 import { getDisplayName } from '../../utils.js';
-import { DIFFED, DOM } from '../renderToOpcodes/constants.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
 export function initRenderAlog(): void {

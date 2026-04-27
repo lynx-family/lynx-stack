@@ -6,7 +6,7 @@
 import { EventEmitter } from 'node:events';
 
 import { render } from 'preact';
-import { useState } from 'preact/compat';
+import { useState } from 'preact/hooks';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setupBackgroundDocument } from '../../../src/document';
@@ -17,10 +17,10 @@ import {
   SnapshotInstance,
   setupPage,
 } from '../../../src/snapshot';
-import { backgroundSnapshotInstanceToJSON } from '../utils/debug.js';
-import { elementTree } from '../utils/nativeMethod';
+import { backgroundSnapshotInstanceToJSON } from '../../snapshot/utils/debug.js';
+import { elementTree } from '../../snapshot/utils/nativeMethod';
 
-import { globalEnvManager } from '../utils/envManager';
+import { globalEnvManager } from '../../snapshot/utils/envManager';
 
 describe('useLynxGlobalEventListener', () => {
   /** @type {SnapshotInstance} */

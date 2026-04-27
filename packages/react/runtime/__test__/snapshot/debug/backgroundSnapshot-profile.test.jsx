@@ -9,7 +9,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { setupDocument } from '../../../src/document';
 import { setupVNodeSourceHook } from '../../../src/snapshot/debug/vnodeSource';
 import { SnapshotOperation, SnapshotOperationParams } from '../../../src/snapshot/lifecycle/patch/snapshotPatch';
-import { DIFFED, DOM } from '../../../src/snapshot/renderToOpcodes/constants';
+import { DIFFED, DOM } from '../../../src/shared/render-constants';
 import { __root } from '../../../src/root';
 import {
   setupPage,

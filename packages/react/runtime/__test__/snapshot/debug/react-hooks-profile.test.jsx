@@ -3,7 +3,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setupDocument } from '../../../src/document';
@@ -11,12 +10,26 @@ import { setupPage, snapshotInstanceManager } from '../../../src/snapshot';
 import { elementTree } from '../utils/nativeMethod';
 import { globalEnvManager } from '../utils/envManager';
 
+let currentRender;
+let currentCreateElement;
+
 async function importHooksWithProfileRecording(isRecording) {
   const original = lynx.performance.isProfileRecording;
   lynx.performance.isProfileRecording = vi.fn(() => isRecording);
   vi.resetModules();
   try {
-    return await import('../../../src/snapshot/hooks/react');
+    const [hooks, preact, document, utils] = await Promise.all([
+      import('../../../src/core/hooks/react'),
+      import('preact'),
+      import('../../../src/document'),
+      import('../../../src/utils'),
+    ]);
+    document.setupBackgroundDocument();
+    preact.options.document = document.document;
+    preact.options.requestAnimationFrame = utils.lynxQueueMicrotask;
+    currentRender = preact.render;
+    currentCreateElement = preact.h;
+    return hooks;
   } finally {
     lynx.performance.isProfileRecording = original;
   }
@@ -37,7 +50,9 @@ describe('react hooks profile', () => {
   });
 
   afterEach(() => {
-    render(null, scratch);
+    currentRender?.(null, scratch);
+    currentRender = undefined;
+    currentCreateElement = undefined;
     elementTree.clear();
     vi.restoreAllMocks();
   });
@@ -52,16 +67,16 @@ describe('react hooks profile', () => {
       useLayoutEffect(() => {
         return () => {};
       }, []);
-      return <view />;
+      return currentCreateElement('div');
     }
 
     lynx.performance.profileStart.mockClear();
     lynx.performance.profileEnd.mockClear();
     lynx.performance.profileFlowId.mockClear();
 
-    render(<App />, scratch);
+    currentRender(currentCreateElement(App), scratch);
     await Promise.resolve();
-    render(null, scratch);
+    currentRender(null, scratch);
     await Promise.resolve();
 
     const starts = lynx.performance.profileStart.mock.calls;
@@ -103,10 +118,10 @@ describe('react hooks profile', () => {
     function App() {
       const [value, _setValue] = useState(0);
       setValue = _setValue;
-      return <view value={value} />;
+      return currentCreateElement('div', { value });
     }
 
-    render(<App />, scratch);
+    currentRender(currentCreateElement(App), scratch);
 
     const OriginalError = globalThis.Error;
     class ErrorWithoutStack extends OriginalError {
@@ -139,7 +154,7 @@ describe('react hooks profile', () => {
 
     function App() {
       useEffect(() => undefined, []);
-      return <view />;
+      return currentCreateElement('div');
     }
 
     const OriginalError = globalThis.Error;
@@ -155,7 +170,7 @@ describe('react hooks profile', () => {
 
     try {
       vi.stubGlobal('Error', ErrorWithoutStack);
-      render(<App />, scratch);
+      currentRender(currentCreateElement(App), scratch);
       await Promise.resolve();
     } finally {
       vi.stubGlobal('Error', OriginalError);
@@ -179,10 +194,10 @@ describe('react hooks profile', () => {
     function App() {
       const [value, _setValue] = useState();
       setValue = _setValue;
-      return <view value={value} />;
+      return currentCreateElement('div', { value });
     }
 
-    render(<App />, scratch);
+    currentRender(currentCreateElement(App), scratch);
 
     lynx.performance.profileStart.mockClear();
     lynx.performance.profileEnd.mockClear();
@@ -210,10 +225,10 @@ describe('react hooks profile', () => {
     function App() {
       const [value, _setValue] = useState(0);
       setValue = _setValue;
-      return <view value={value} />;
+      return currentCreateElement('div', { value });
     }
 
-    render(<App />, scratch);
+    currentRender(currentCreateElement(App), scratch);
 
     lynx.performance.profileStart.mockClear();
     lynx.performance.profileEnd.mockClear();
@@ -245,7 +260,7 @@ describe('react hooks profile', () => {
       setValue = _setValue;
       useEffect(() => undefined, [value]);
       useLayoutEffect(() => undefined, [value]);
-      return <view value={value} />;
+      return currentCreateElement('div', { value });
     }
 
     lynx.performance.profileStart.mockClear();
@@ -256,7 +271,7 @@ describe('react hooks profile', () => {
     expect(useEffect).toBe(preactHooks.useEffect);
     expect(useLayoutEffect).toBe(preactHooks.useEffect);
 
-    render(<App />, scratch);
+    currentRender(currentCreateElement(App), scratch);
     await Promise.resolve();
     setValue(v => v + 1);
     await Promise.resolve();

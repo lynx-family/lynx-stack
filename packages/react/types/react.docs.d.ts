@@ -48,7 +48,7 @@ export {
   useSyncExternalStore,
 } from 'react';
 
-export { useEffect, useLayoutEffect, useErrorBoundary } from '../runtime/lib/snapshot/hooks/react.js';
+export { useEffect, useLayoutEffect, useErrorBoundary } from '../runtime/lib/core/hooks/react.js';
 
 /**
  * Built-in React APIs

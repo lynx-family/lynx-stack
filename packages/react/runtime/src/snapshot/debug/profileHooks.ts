@@ -6,9 +6,6 @@ import type { ComponentClass, ComponentType, VNode } from 'preact';
 
 import type { TraceOption } from '@lynx-js/types';
 
-import { getDisplayName, hook } from '../../utils.js';
-import { globalPatchOptions } from '../lifecycle/patch/commit.js';
-import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import {
   COMMIT,
   COMPONENT,
@@ -23,7 +20,10 @@ import {
   RENDER,
   VALUE,
   VNODE,
-} from '../renderToOpcodes/constants.js';
+} from '../../shared/render-constants.js';
+import { getDisplayName, hook } from '../../utils.js';
+import { globalPatchOptions } from '../lifecycle/patch/commit.js';
+import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 
 const format = (val: unknown) => {
   if (typeof val === 'function') {

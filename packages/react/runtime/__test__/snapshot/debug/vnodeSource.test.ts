@@ -12,7 +12,7 @@ import {
   moveSnapshotVNodeSource,
   setupVNodeSourceHook,
 } from '../../../src/snapshot/debug/vnodeSource';
-import { DIFFED, DOM } from '../../../src/snapshot/renderToOpcodes/constants';
+import { DIFFED, DOM } from '../../../src/shared/render-constants';
 
 describe('vnodeSource', () => {
   let originalDiffed: typeof options[typeof DIFFED];

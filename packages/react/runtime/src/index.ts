@@ -31,12 +31,12 @@ import {
   useReducer,
   useRef,
   useState,
-} from './snapshot/hooks/react.js';
+} from './core/hooks/react.js';
 import { Suspense } from './snapshot/lynx/suspense.js';
 
 export { Component, createContext } from 'preact';
 export { PureComponent } from 'preact/compat';
-export * from './snapshot/hooks/react.js';
+export * from './core/hooks/react.js';
 
 /**
  * @internal

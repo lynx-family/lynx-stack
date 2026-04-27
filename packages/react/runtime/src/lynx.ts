@@ -3,12 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 import { options } from 'preact';
 // to make sure preact's hooks to register earlier than ours
-import './snapshot/hooks/react.js';
+import './core/hooks/react.js';
 
 import { document, setupBackgroundDocument } from './document.js';
+import { setupComponentStack } from './shared/component-stack.js';
 import { initElementPAPICallAlog } from './snapshot/alog/elementPAPICall.js';
 import { initAlog } from './snapshot/alog/index.js';
-import { setupComponentStack } from './snapshot/debug/component-stack.js';
 import { isProfiling } from './snapshot/debug/profile.js';
 import { initProfileHook } from './snapshot/debug/profileHooks.js';
 import { setupVNodeSourceHook } from './snapshot/debug/vnodeSource.js';

@@ -1,4 +1,3 @@
-import { render } from 'preact';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 describe('Destroy', () => {
@@ -21,6 +20,7 @@ describe('Destroy', () => {
     expect(addEventListener).toHaveBeenCalled();
     expect(removeEventListener).toHaveBeenCalledTimes(0);
 
+    const { h, render } = await import('preact');
     const { useEffect } = await import('../../../src/index');
     const { __root } = await import('../../../src/root');
 
@@ -33,7 +33,7 @@ describe('Destroy', () => {
       return null;
     }
 
-    render(<Comp />, __root);
+    render(h(Comp), __root);
     await Promise.resolve().then(() => {});
 
     expect(() => lynxCoreInject.tt.callDestroyLifetimeFun()).toThrow('???');

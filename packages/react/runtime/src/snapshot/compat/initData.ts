@@ -4,7 +4,7 @@
 import type { ComponentChildren, Consumer, Context, Provider } from 'preact';
 import type { ComponentClass } from 'react';
 
-import { useLynxGlobalEventListener } from '../hooks/useLynxGlobalEventListener.js';
+import { useLynxGlobalEventListener } from '../../core/hooks/useLynxGlobalEventListener.js';
 import { globalFlushOptions } from '../lifecycle/patch/commit.js';
 
 type Getter<T> = {
@@ -16,7 +16,7 @@ export function factory<Data>(
   { createContext, useState, createElement, useLynxGlobalEventListener: useListener }: {
     createContext: typeof import('preact').createContext;
     useState: typeof import('preact/hooks').useState;
-    createElement: typeof import('preact').createElement;
+    createElement: typeof import('preact/compat').createElement;
     useLynxGlobalEventListener: typeof useLynxGlobalEventListener;
   },
   prop: '__globalProps' | '__initData',

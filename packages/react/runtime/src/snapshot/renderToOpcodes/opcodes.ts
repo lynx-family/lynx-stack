@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { hydrate } from './hydrate.js';
 import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from '../list/list.js';
-import { CHILDREN } from './constants.js';
+import { CHILDREN } from '../../shared/render-constants.js';
 import { SnapshotInstance } from '../snapshot/snapshot.js';
 
 const OpcodeBegin = 0;

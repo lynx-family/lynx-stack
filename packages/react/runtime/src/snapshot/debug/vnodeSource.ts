@@ -4,7 +4,7 @@
 import { options } from 'preact';
 import type { VNode } from 'preact';
 
-import { DIFFED, DOM } from '../renderToOpcodes/constants.js';
+import { DIFFED, DOM } from '../../shared/render-constants.js';
 
 interface SourceInfo {
   fileName?: string;

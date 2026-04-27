@@ -28,7 +28,7 @@ import {
   VNODE,
   HOOK,
   CHILD_DID_SUSPEND,
-} from './constants.js';
+} from '../../shared/render-constants.js';
 
 /** @typedef {import('preact').VNode} VNode */
 

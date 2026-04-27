@@ -5,7 +5,7 @@ import { options } from 'preact';
 import type { VNode } from 'preact';
 
 import { __root } from '../../root.js';
-import { COMPONENT, DIFF2, FORCE, ORIGINAL } from '../renderToOpcodes/constants.js';
+import { COMPONENT, DIFF2, FORCE, ORIGINAL } from '../../shared/render-constants.js';
 
 export function runWithForce(cb: () => void): void {
   // In https://github.com/preactjs/preact/pull/4724, preact will

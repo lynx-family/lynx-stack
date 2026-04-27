@@ -6,6 +6,7 @@ import { defineConfig } from 'vitest/config';
 
 const require = createRequire(import.meta.url);
 const runtimePkg = require.resolve('./src/internal.ts');
+const internalPreactRoot = path.dirname(require.resolve('preact/package.json'));
 
 function transformReactLynxPlugin(): Plugin {
   return {
@@ -60,20 +61,42 @@ export default defineConfig({
     transformReactLynxPlugin(),
   ],
   resolve: {
-    alias: {
-      '@lynx-js/react/compat': path.resolve(__dirname, './compat/index.js'),
-      '@lynx-js/react/worklet-runtime/bindings': path.resolve(__dirname, './src/worklet-runtime/bindings/index.ts'),
-      '@lynx-js/react/runtime-components': path.resolve(__dirname, '../components/src/index.ts'),
-      '@lynx-js/react/internal': path.resolve(__dirname, './src/internal.ts'),
-      '@lynx-js/react/jsx-dev-runtime': path.resolve(__dirname, './jsx-dev-runtime/index.js'),
-      '@lynx-js/react/jsx-runtime': path.resolve(__dirname, './jsx-runtime/index.js'),
-      '@lynx-js/react/lepus': path.resolve(__dirname, './lepus/index.js'),
-      '@lynx-js/react/legacy-react-runtime': path.resolve(__dirname, './src/snapshot/legacy-react-runtime/index.ts'),
-      '@lynx-js/react': path.resolve(__dirname, './src/index.ts'),
-    },
+    dedupe: ['preact'],
+    alias: [
+      { find: /^preact$/, replacement: path.join(internalPreactRoot, 'dist/preact.mjs') },
+      { find: /^preact\/compat$/, replacement: path.join(internalPreactRoot, 'compat/dist/compat.mjs') },
+      { find: /^preact\/hooks$/, replacement: path.join(internalPreactRoot, 'hooks/dist/hooks.mjs') },
+      {
+        find: /^preact\/jsx-dev-runtime$/,
+        replacement: path.join(internalPreactRoot, 'jsx-runtime/dist/jsxRuntime.mjs'),
+      },
+      { find: /^preact\/jsx-runtime$/, replacement: path.join(internalPreactRoot, 'jsx-runtime/dist/jsxRuntime.mjs') },
+      { find: '@lynx-js/react/compat', replacement: path.resolve(__dirname, './compat/index.js') },
+      {
+        find: '@lynx-js/react/worklet-runtime/bindings',
+        replacement: path.resolve(__dirname, './src/worklet-runtime/bindings/index.ts'),
+      },
+      { find: '@lynx-js/react/runtime-components', replacement: path.resolve(__dirname, '../components/src/index.ts') },
+      { find: '@lynx-js/react/internal', replacement: path.resolve(__dirname, './src/internal.ts') },
+      { find: '@lynx-js/react/jsx-dev-runtime', replacement: path.resolve(__dirname, './jsx-dev-runtime/index.js') },
+      { find: '@lynx-js/react/jsx-runtime', replacement: path.resolve(__dirname, './jsx-runtime/index.js') },
+      { find: '@lynx-js/react/lepus', replacement: path.resolve(__dirname, './lepus/index.js') },
+      {
+        find: '@lynx-js/react/legacy-react-runtime',
+        replacement: path.resolve(__dirname, './src/snapshot/legacy-react-runtime/index.ts'),
+      },
+      { find: '@lynx-js/react', replacement: path.resolve(__dirname, './src/index.ts') },
+    ],
   },
   test: {
     name: 'react/runtime',
+    server: {
+      deps: {
+        inline: [
+          /@lynx-js\/internal-preact/,
+        ],
+      },
+    },
     coverage: {
       exclude: [
         'debug',
@@ -85,7 +108,11 @@ export default defineConfig({
         '__test__/snapshot/utils/**',
         'lib/**',
         'worklet-runtime/**',
+        'src/core/hooks/**',
+        'src/shared/component-stack.ts',
+        'src/shared/profile.ts',
         'src/index.ts',
+        'src/lynx-api.ts',
         'src/lynx.ts',
         'src/root.ts',
         'src/worklet-runtime/api/lepusQuerySelector.ts',
@@ -95,8 +122,8 @@ export default defineConfig({
         'src/worklet-runtime/index.ts',
         'src/worklet-runtime/listeners.ts',
         'src/worklet-runtime/types/**',
-        'src/snapshot/debug/component-stack.ts',
         'src/snapshot/debug/debug.ts',
+        'src/snapshot/debug/profileHooks.ts',
         'src/snapshot/debug/utils.ts',
         'src/snapshot/lynx/calledByNative.ts',
         'src/snapshot/lynx/component.ts',
@@ -104,6 +131,8 @@ export default defineConfig({
         'src/snapshot/lynx/env.ts',
         'src/snapshot/lynx/tt.ts',
         'src/snapshot/compat/componentIs.ts',
+        'src/snapshot/snapshot/types.ts',
+        'src/snapshot/worklet/hmr.ts',
 
         '__test__/snapshot/page.test.jsx',
         '**/*.d.ts',

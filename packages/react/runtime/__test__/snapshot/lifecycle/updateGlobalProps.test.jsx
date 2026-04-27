@@ -7,7 +7,6 @@ import { globalEnvManager } from '../utils/envManager';
 import { describe } from 'vitest';
 import { it } from 'vitest';
 import { expect } from 'vitest';
-import { render } from 'preact';
 import { waitSchedule } from '../utils/nativeMethod';
 import { beforeAll } from 'vitest';
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
@@ -24,10 +23,19 @@ beforeEach(() => {
 
 afterEach(() => {
   elementTree.clear();
-  vi.resetModules();
   vi.restoreAllMocks();
   globalThis.__GLOBAL_PROPS_MODE__ = 'reactive';
 });
+
+async function renderWithCurrentPreact(element, root) {
+  const [preact, { document, setupBackgroundDocument }] = await Promise.all([
+    import('preact'),
+    import('../../../src/document'),
+  ]);
+  setupBackgroundDocument();
+  preact.options.document = document;
+  preact.render(element, root);
+}
 
 describe('updateGlobalProps', () => {
   it('should update global props', async () => {
@@ -57,7 +65,7 @@ describe('updateGlobalProps', () => {
     {
       globalEnvManager.switchToBackground();
       __root.__jsx = <Comp />;
-      render(<Comp />, __root);
+      await renderWithCurrentPreact(<Comp />, __root);
     }
 
     // hydrate
@@ -141,7 +149,7 @@ describe('updateGlobalProps', () => {
     {
       globalEnvManager.switchToBackground();
       __root.__jsx = <Comp />;
-      render(<Comp />, __root);
+      await renderWithCurrentPreact(<Comp />, __root);
       expect(console.warn).toBeCalledWith(expect.stringContaining('No need to use this API'));
     }
 
@@ -240,7 +248,7 @@ describe('updateGlobalProps', () => {
     {
       globalEnvManager.switchToBackground();
       __root.__jsx = <Comp />;
-      render(<Comp />, __root);
+      await renderWithCurrentPreact(<Comp />, __root);
       expect(console.warn).toBeCalledWith(expect.stringContaining('No need to use this API'));
     }
 
@@ -329,7 +337,7 @@ describe('updateGlobalProps', () => {
     {
       globalEnvManager.switchToBackground();
       __root.__jsx = <Comp />;
-      render(<Comp />, __root);
+      await renderWithCurrentPreact(<Comp />, __root);
     }
 
     // hydrate
@@ -375,7 +383,7 @@ describe('updateGlobalProps', () => {
   it('should trigger re-render when useGlobalProps is called', async () => {
     globalThis.__GLOBAL_PROPS_MODE__ = 'event';
     const { useGlobalProps, useGlobalPropsChanged, GlobalPropsProvider, GlobalPropsConsumer } = await import(
-      '../../../src/lynx-api'
+      '../../../src/lynx-api?global-props-event'
     );
 
     lynx.__globalProps = { theme: 'dark' };
@@ -413,7 +421,7 @@ describe('updateGlobalProps', () => {
     {
       globalEnvManager.switchToBackground();
       __root.__jsx = <Comp />;
-      render(<Comp />, __root);
+      await renderWithCurrentPreact(<Comp />, __root);
     }
 
     // hydrate
@@ -465,7 +473,7 @@ describe('updateGlobalProps', () => {
   it('should trigger update when GlobalPropsProvider and useGlobalProps are used', async () => {
     globalThis.__GLOBAL_PROPS_MODE__ = 'event';
     const { useGlobalProps, useGlobalPropsChanged, GlobalPropsProvider, GlobalPropsConsumer } = await import(
-      '../../../src/lynx-api'
+      '../../../src/lynx-api?global-props-provider-event'
     );
 
     lynx.__globalProps = { theme: 'dark' };
@@ -502,7 +510,7 @@ describe('updateGlobalProps', () => {
     {
       globalEnvManager.switchToBackground();
       __root.__jsx = <Comp />;
-      render(<Comp />, __root);
+      await renderWithCurrentPreact(<Comp />, __root);
     }
 
     // hydrate

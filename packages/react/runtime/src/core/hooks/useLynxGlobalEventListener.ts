@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef } from 'preact/hooks';
 
 /**
- * `useLynxGlobalEventListener` help you `addListener` as early as possible.
+ * `useLynxGlobalEventListener` helps you `addListener` as early as possible.
  *
  * @example
  *
