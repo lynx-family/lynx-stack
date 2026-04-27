@@ -90,7 +90,6 @@ pnpm -C packages/genui/a2ui build
 
 Notes:
 
-- `build` runs `tools/catalog_generator.ts` first, then `tsc -b`.
 - Build outputs go to `dist/` (including `dist/catalog/...` schemas).
 
 ## Catalog Schema Generation
