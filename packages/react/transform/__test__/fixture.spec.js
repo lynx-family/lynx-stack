@@ -268,6 +268,90 @@ describe('jsx', () => {
   });
 });
 
+describe('portal-container', () => {
+  // eslint-disable-next-line unicorn/consistent-function-scoping
+  const __cfg = () => ({
+    pluginName: '',
+    filename: '',
+    sourcemap: false,
+    cssScope: false,
+    jsx: true,
+    directiveDCE: false,
+    defineDCE: false,
+    shake: false,
+    compat: false,
+    worklet: false,
+    refresh: false,
+  });
+
+  it('emits a snapshot with an empty slot at element index 0 for a standalone portal-container', async () => {
+    const result = await transformReactLynx(
+      `<view portal-container ref={hostRef} />;`,
+      __cfg(),
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.code).toMatchInlineSnapshot(`
+      "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+      import * as ReactLynx from "@lynx-js/react";
+      const __snapshot_da39a_5b4e6_1 = "__snapshot_da39a_5b4e6_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_5b4e6_1] = (__snapshot_da39a_5b4e6_1)=>ReactLynx.createSnapshot(__snapshot_da39a_5b4e6_1, function() {
+              const pageId = ReactLynx.__pageId;
+              const el = __CreateView(pageId);
+              return [
+                  el
+              ];
+          }, [
+              (snapshot, index, oldValue)=>ReactLynx.updateRef(snapshot, index, oldValue, 0)
+          ], ReactLynx.__DynamicPartSlotV2_0, undefined, globDynamicComponentEntry, [
+              0
+          ], true);
+      /*#__PURE__*/ _jsx(__snapshot_da39a_5b4e6_1, {
+          values: [
+              1
+          ],
+          $0: null
+      });
+      "
+    `);
+  });
+
+  it('extracts a separate snapshot when portal-container is nested inside another element', async () => {
+    const result = await transformReactLynx(
+      `<view>
+        <text>sibling</text>
+        <view portal-container ref={hostRef} />
+      </view>;`,
+      __cfg(),
+    );
+    expect(result.errors).toEqual([]);
+    // Two `createSnapshot` calls: an inner one for the portal-container
+    // (with a `__DynamicPartSlotV2_0` slot at index 0) and an outer one
+    // that embeds it.
+    expect(result.code.match(/ReactLynx\.createSnapshot/g)).toHaveLength(2);
+    expect(result.code).toContain('__DynamicPartSlotV2_0');
+  });
+
+  it('errors when portal-container element has children', async () => {
+    const result = await transformReactLynx(
+      `<view portal-container ref={hostRef}><text>nope</text></view>;`,
+      __cfg(),
+    );
+    expect(result.errors.length).toBeGreaterThan(0);
+    expect(result.errors[0].text).toContain(
+      'An element with the `portal-container` attribute must not have any children',
+    );
+  });
+
+  it('strips portal-container={false} without emitting a slot', async () => {
+    const result = await transformReactLynx(
+      `<view portal-container={false} ref={hostRef} />;`,
+      __cfg(),
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.code).not.toContain('__DynamicPartChildren_0');
+  });
+});
+
 describe('errors and warnings', () => {
   it('should handle error', async () => {
     const result = await transformReactLynx(`<view>;`);
