@@ -5,6 +5,7 @@
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import * as path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import {
   extractCatalogComponentsFromTypeDocJson,
@@ -115,11 +116,13 @@ export async function runCli(
     return 0;
   }
 
-  const inputs = options.sourceInputs.length > 0
-    ? options.sourceInputs
-    : (options.catalogDirs.length > 0
-      ? options.catalogDirs
-      : ['src/catalog']);
+  const configuredInputs = [
+    ...options.sourceInputs,
+    ...options.catalogDirs,
+  ];
+  const inputs = configuredInputs.length > 0
+    ? configuredInputs
+    : ['src/catalog'];
 
   const sourceFiles = inputs.flatMap(input =>
     findCatalogSourceFiles(path.resolve(cwd, input))
@@ -161,7 +164,10 @@ function readValue(args: string[], index: number, option: string): string {
 }
 
 try {
-  if (import.meta.url === `file://${process.argv[1]}`) {
+  if (
+    process.argv[1]
+    && import.meta.url === pathToFileURL(process.argv[1]).href
+  ) {
     process.exitCode = await runCli(process.argv.slice(2));
   }
 } catch (error) {
