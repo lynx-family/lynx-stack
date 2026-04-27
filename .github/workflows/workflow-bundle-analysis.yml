@@ -18,6 +18,8 @@ jobs:
         project:
           - path: ./examples/react
             name: example-react
+          - path: ./examples/react-element-template
+            name: example-react-element-template
           - path: ./examples/react-main-thread-function
             name: example-react-main-thread-function
           - path: ./examples/react-externals
