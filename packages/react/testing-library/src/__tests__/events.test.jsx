@@ -309,8 +309,9 @@ describe('Event handler property semantics', () => {
   });
 
   // https://lynx.bytedance.net/next/zh/api/lynx-api/event/touch-event.html
-  // TouchEvent (touchstart/touchmove/touchend/touchcancel) bubbles in Lynx.
-  it.each(['touchstart', 'touchmove', 'touchend', 'touchcancel'])(
+  // Every TouchEvent-family event (BaseTouchEvent in @lynx-js/types)
+  // bubbles in Lynx: touch{start,move,end,cancel}, longpress.
+  it.each(['touchstart', 'touchmove', 'touchend', 'touchcancel', 'longpress'])(
     '%s: bubbles to ancestor handlers by default',
     (eventName) => {
       const parent = vi.fn();

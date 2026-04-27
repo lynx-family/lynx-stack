@@ -38,7 +38,8 @@ export const fireEvent: any = (elemOrNodesRef, ...args) => {
 };
 
 export const eventMap = {
-  // LynxBindCatchEvent Events
+  // LynxBindCatchEvent — TouchEvent family, bubble/capture per
+  // https://lynx.bytedance.net/next/zh/api/lynx-api/event/touch-event.html
   tap: {
     defaultInit: { bubbles: true },
   },
@@ -52,8 +53,10 @@ export const eventMap = {
   bgerror: {
     defaultInit: {},
   },
-  // TouchEvent: bubbles/captures per
-  // https://lynx.bytedance.net/next/zh/api/lynx-api/event/touch-event.html
+  // TouchEvent family — every event whose handler signature is
+  // `EventHandler<BaseTouchEvent<T>>` in @lynx-js/types bubbles. Other
+  // LynxEvent entries (animation/transition/mouse/wheel/key/focus/blur/
+  // layout/image) are component-local and do not propagate.
   touchstart: {
     defaultInit: { bubbles: true },
   },
@@ -67,7 +70,7 @@ export const eventMap = {
     defaultInit: { bubbles: true },
   },
   longpress: {
-    defaultInit: {},
+    defaultInit: { bubbles: true },
   },
   transitionstart: {
     defaultInit: {},
