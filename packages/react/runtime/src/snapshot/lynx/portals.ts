@@ -13,8 +13,7 @@ import { refProxyToBackgroundSnapshotInstance } from '../refProxyBackgroundSnaps
 /**
  * Renders `children` into a target Lynx element instead of into the parent
  * in the JSX tree. The target must be a ref obtained from a ReactLynx
- * element marked with the `portal-container` attribute. A `null` or
- * `undefined` container renders nothing.
+ * element marked with the `portal-container` attribute.
  *
  * @public
  */

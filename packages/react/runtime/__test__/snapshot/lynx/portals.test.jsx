@@ -29,11 +29,6 @@ afterEach(() => {
 });
 
 describe('createPortal', () => {
-  it('returns null when container is null or undefined', () => {
-    expect(createPortal(<text>x</text>, null)).toBeNull();
-    expect(createPortal(<text>x</text>, undefined)).toBeNull();
-  });
-
   it('throws when container is not a ReactLynx ref', () => {
     expect(() => createPortal(<text>x</text>, {}))
       .toThrowErrorMatchingInlineSnapshot(
