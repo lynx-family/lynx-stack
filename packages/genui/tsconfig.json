@@ -10,6 +10,7 @@
   },
   "references": [
     /** packages-start */
+    { "path": "./a2ui-catalog-extractor/tsconfig.json" },
     { "path": "./a2ui/tsconfig.json" },
     /** packages-end */
   ],

@@ -7,6 +7,14 @@ import type { GenericComponentProps } from '../../core/types.js';
 
 import './style.css';
 
+const useLynxEffect = useEffect as (
+  effect: () => undefined | (() => void),
+  deps?: readonly unknown[],
+) => void;
+
+/**
+ * @a2uiCatalog Image
+ */
 export interface ImageProps extends GenericComponentProps {
   /** Image URL or path binding. */
   url: string | { path: string };
@@ -27,8 +35,9 @@ export function Image(
 
   const [hasError, setHasError] = useState(false);
 
-  useEffect(() => {
+  useLynxEffect(() => {
     setHasError(false);
+    return undefined;
   }, [url]);
 
   const finalSrc = hasError

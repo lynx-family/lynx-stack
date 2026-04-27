@@ -15,5 +15,8 @@ export default defineConfig({
     reporters: ['json', 'text'],
   },
   reporters,
-  projects: ['packages/webpack/*/rstest.config.ts'],
+  projects: [
+    'packages/genui/a2ui-catalog-extractor/rstest.config.ts',
+    'packages/webpack/*/rstest.config.ts',
+  ],
 });

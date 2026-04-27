@@ -6,6 +6,9 @@ import type { GenericComponentProps } from '../../core/types.js';
 
 import './style.css';
 
+/**
+ * @a2uiCatalog Row
+ */
 export interface RowProps extends GenericComponentProps {
   /** Static child IDs array or template object. */
   children: string[] | { componentId: string; path: string };
@@ -13,10 +16,10 @@ export interface RowProps extends GenericComponentProps {
     | 'start'
     | 'center'
     | 'end'
+    | 'stretch'
     | 'spaceBetween'
     | 'spaceAround'
-    | 'spaceEvenly'
-    | 'stretch';
+    | 'spaceEvenly';
   align?: 'start' | 'center' | 'end' | 'stretch';
 }
 

@@ -6,6 +6,9 @@ import type { GenericComponentProps } from '../../core/types.js';
 
 import './style.css';
 
+/**
+ * @a2uiCatalog Card
+ */
 export interface CardProps extends GenericComponentProps {
   child: string;
 }

@@ -16,6 +16,9 @@ const HitSlop = {
   },
 };
 
+/**
+ * @a2uiCatalog RadioGroup
+ */
 export interface RadioGroupComponentProps extends GenericComponentProps {
   /** The list of string options to display. */
   items: string[] | { path: string };

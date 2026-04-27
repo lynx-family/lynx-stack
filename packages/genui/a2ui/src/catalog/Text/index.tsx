@@ -4,6 +4,9 @@
 import type { GenericComponentProps } from '../../core/types.js';
 import './style.css';
 
+/**
+ * @a2uiCatalog Text
+ */
 export interface TextProps extends GenericComponentProps {
   /** Literal text or path binding. */
   text: string | { path: string };
