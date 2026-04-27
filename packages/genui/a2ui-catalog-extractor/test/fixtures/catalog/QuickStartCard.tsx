@@ -3,9 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * Quick start card fixture.
+ * Quick start card.
  *
- * @remarks This fixture mirrors the README quick start.
+ * @remarks Use this contract as a compact card example.
  * @a2uiCatalog QuickStartCard
  */
 export interface QuickStartCardProps {

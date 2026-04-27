@@ -8,11 +8,6 @@ component contract once as a TypeScript `interface`, describe it with
 normal TypeDoc comments, and let this package generate the JSON Schema
 that an A2UI agent can read.
 
-This package is currently `private` inside the Lynx Stack monorepo. The
-npm installation examples below describe how the package should be used
-after it is published. When working in this repository, use the workspace
-commands shown in [Using It In This Monorepo](#using-it-in-this-monorepo).
-
 ## What It Does
 
 A2UI catalogs describe what components a renderer supports. For each
@@ -56,9 +51,9 @@ the marked interface.
 
 ## Installation
 
-### Published npm package
+### Package manager
 
-After this package is published, install it as a development dependency:
+Install it as a development dependency:
 
 ```bash
 pnpm add -D @lynx-js/a2ui-catalog-extractor
@@ -80,36 +75,10 @@ Run it with:
 pnpm build:catalog
 ```
 
-### Using It In This Monorepo
-
-The package is already wired into `@lynx-js/a2ui-reactlynx`:
-
-```bash
-pnpm -C packages/genui/a2ui build
-```
-
-That command runs:
-
-```bash
-a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog
-```
-
-To work on the extractor itself:
-
-```bash
-pnpm -C packages/genui/a2ui-catalog-extractor test
-```
-
-If dependencies are missing, install them from the repository root first:
-
-```bash
-pnpm install --frozen-lockfile
-```
-
 ## Quick Start
 
-This example mirrors the tested fixture at
-`test/fixtures/catalog/QuickStartCard.tsx`.
+This example walks through a complete component contract from TypeScript
+interface to generated catalog JSON.
 
 ### 1. Create a catalog-facing interface
 
@@ -117,9 +86,9 @@ Create `src/catalog/QuickStartCard.tsx`:
 
 ```tsx
 /**
- * Quick start card fixture.
+ * Quick start card.
  *
- * @remarks This fixture mirrors the README quick start.
+ * @remarks Use this contract as a compact card example.
  * @a2uiCatalog QuickStartCard
  */
 export interface QuickStartCardProps {
@@ -255,7 +224,7 @@ dist/catalog/
       "title",
       "author"
     ],
-    "description": "Quick start card fixture.\n\nThis fixture mirrors the README quick start."
+    "description": "Quick start card.\n\nUse this contract as a compact card example."
   }
 }
 ```
@@ -618,19 +587,6 @@ repeatable build artifact.
 No. TypeDoc conversion is used to read reflection data, not to validate
 your full application. Continue running your normal TypeScript, lint, and
 test commands.
-
-## Development Notes
-
-This package's README quick-start example is covered by tests. When you
-change the example, update the fixture and expected catalog JSON at the
-same time.
-
-Useful local checks:
-
-```bash
-pnpm -C packages/genui/a2ui-catalog-extractor test
-pnpm dprint fmt -- packages/genui/a2ui-catalog-extractor/README.md packages/genui/a2ui-catalog-extractor/readme.zh_cn.md packages/genui/a2ui-catalog-extractor/AGENTS.md packages/genui/a2ui-catalog-extractor/test/extractor.test.ts
-```
 
 ## References
 

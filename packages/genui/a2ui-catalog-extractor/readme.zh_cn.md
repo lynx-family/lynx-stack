@@ -7,10 +7,6 @@
 契约，用普通 TypeDoc 注释描述字段，然后让这个包生成 A2UI agent 可以读取的
 JSON Schema。
 
-这个包目前在 Lynx Stack monorepo 中仍然是 `private`。下面的 npm 安装示例
-描述的是包发布后的用法。如果你正在本仓库里开发，请使用
-[在本 Monorepo 中使用](#在本-monorepo-中使用) 里的 workspace 命令。
-
 ## 它解决什么问题
 
 A2UI catalog 用来描述 renderer 支持哪些组件。对每个组件，catalog 会告诉
@@ -52,9 +48,9 @@ agent 哪些 props 合法、哪些 props 必填、哪些 enum 值可用，以及
 
 ## 安装
 
-### 已发布的 npm 包
+### 包管理器
 
-包发布后，把它安装为开发依赖：
+把它安装为开发依赖：
 
 ```bash
 pnpm add -D @lynx-js/a2ui-catalog-extractor
@@ -76,35 +72,9 @@ pnpm add -D @lynx-js/a2ui-catalog-extractor
 pnpm build:catalog
 ```
 
-### 在本 Monorepo 中使用
-
-`@lynx-js/a2ui-reactlynx` 已经接入了这个工具：
-
-```bash
-pnpm -C packages/genui/a2ui build
-```
-
-这个命令实际会运行：
-
-```bash
-a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog
-```
-
-如果要开发 extractor 本身：
-
-```bash
-pnpm -C packages/genui/a2ui-catalog-extractor test
-```
-
-如果依赖缺失，先在仓库根目录安装依赖：
-
-```bash
-pnpm install --frozen-lockfile
-```
-
 ## 快速开始
 
-这个示例对应测试夹具 `test/fixtures/catalog/QuickStartCard.tsx`。
+这个示例会完整演示如何从 TypeScript interface 生成 catalog JSON。
 
 ### 1. 创建面向 catalog 的 interface
 
@@ -112,9 +82,9 @@ pnpm install --frozen-lockfile
 
 ```tsx
 /**
- * Quick start card fixture.
+ * Quick start card.
  *
- * @remarks This fixture mirrors the README quick start.
+ * @remarks Use this contract as a compact card example.
  * @a2uiCatalog QuickStartCard
  */
 export interface QuickStartCardProps {
@@ -249,7 +219,7 @@ dist/catalog/
       "title",
       "author"
     ],
-    "description": "Quick start card fixture.\n\nThis fixture mirrors the README quick start."
+    "description": "Quick start card.\n\nUse this contract as a compact card example."
   }
 }
 ```
@@ -605,18 +575,6 @@ alias。
 
 不能。TypeDoc conversion 只是用来读取 reflection 数据，不是用来验证完整应用。
 请继续运行正常的 TypeScript、lint 和测试命令。
-
-## 开发备注
-
-这个包 README 中的 quick-start 示例有测试覆盖。修改示例时，请同时更新 fixture
-和 expected catalog JSON。
-
-常用本地检查：
-
-```bash
-pnpm -C packages/genui/a2ui-catalog-extractor test
-pnpm dprint fmt -- packages/genui/a2ui-catalog-extractor/README.md packages/genui/a2ui-catalog-extractor/readme.zh_cn.md packages/genui/a2ui-catalog-extractor/AGENTS.md packages/genui/a2ui-catalog-extractor/test/extractor.test.ts
-```
 
 ## 参考资料
 
