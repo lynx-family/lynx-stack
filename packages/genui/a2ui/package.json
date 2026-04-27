@@ -93,7 +93,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "pnpm --filter @lynx-js/a2ui-catalog-extractor build && node ../a2ui-catalog-extractor/dist/cli.js --catalog-dir src/catalog --out-dir dist/catalog"
+    "build": "a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog"
   },
   "dependencies": {
     "@a2ui/web_core": "0.9.1",

@@ -82,7 +82,7 @@ The extractor generates schema from the TypeDoc type model:
 - inline object type literals
 - `Record<string, T>`
 
-Unsupported references fail with an actionable error.
+Unsupported references and ambiguous catalog-facing types such as `any`, `unknown`, `never`, `void`, and nullable unions fail with an actionable error.
 Inline the catalog-facing shape in the marked interface instead of relying on imported type aliases.
 
 ## CLI

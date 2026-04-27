@@ -199,6 +199,70 @@ export interface DemoCardProps {
     ]);
   });
 
+  test('throws for ambiguous intrinsic catalog property types', () => {
+    expect(() =>
+      extractCatalogComponentsFromTypeDocJson({
+        children: [
+          {
+            name: 'DemoPayloadProps',
+            kindString: 'Interface',
+            comment: {
+              blockTags: [
+                {
+                  tag: '@a2uiCatalog',
+                  content: [{ text: 'DemoPayload' }],
+                },
+              ],
+            },
+            children: [
+              {
+                name: 'payload',
+                kindString: 'Property',
+                type: { type: 'intrinsic', name: 'unknown' },
+              },
+            ],
+          },
+        ],
+      })
+    ).toThrow(
+      'Unsupported ambiguous intrinsic TypeDoc type "unknown" for "payload".',
+    );
+  });
+
+  test('throws for nullable unions instead of silently dropping null', () => {
+    expect(() =>
+      extractCatalogComponentsFromTypeDocJson({
+        children: [
+          {
+            name: 'DemoNullableProps',
+            kindString: 'Interface',
+            comment: {
+              blockTags: [
+                {
+                  tag: '@a2uiCatalog',
+                  content: [{ text: 'DemoNullable' }],
+                },
+              ],
+            },
+            children: [
+              {
+                name: 'label',
+                kindString: 'Property',
+                type: {
+                  type: 'union',
+                  types: [
+                    { type: 'intrinsic', name: 'string' },
+                    { type: 'literal', value: null },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      })
+    ).toThrow('Unsupported nullable union for "label".');
+  });
+
   test('generates JSON deep-equal to packages/genui/a2ui/dist/catalog', async () => {
     const expectedCatalogs = readDistCatalogs();
     const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'a2ui-catalog-out-'));

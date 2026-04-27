@@ -13,7 +13,7 @@ export interface JsonSchema {
   default?: unknown;
   deprecated?: boolean;
   description?: string;
-  enum?: string[];
+  enum?: Array<boolean | number | string>;
   items?: JsonSchema;
   oneOf?: JsonSchema[];
   properties?: Record<string, JsonSchema>;
@@ -327,10 +327,17 @@ function createComponentSchema(
   reflection: TypeDocReflection,
   parsedDoc: ParsedDoc,
 ): JsonSchema {
+  if (reflection.children === undefined) {
+    throw createReflectionError(
+      reflection,
+      `Missing interface member declarations for "${reflection.name}".`,
+    );
+  }
+
   const schema: JsonSchema = { properties: {}, required: [] };
   applyDocToSchema(schema, parsedDoc);
 
-  for (const child of reflection.children ?? []) {
+  for (const child of reflection.children) {
     if (child.inheritedFrom) {
       continue;
     }
@@ -361,9 +368,15 @@ function parseTypeDocType(
     case 'intrinsic':
       return parseIntrinsicType(type.name ?? '', owner);
     case 'literal':
-      return parseLiteralType(type.value);
+      return parseLiteralType(type.value, owner);
     case 'union':
-      return parseUnionType(type.types ?? [], owner);
+      if (!type.types) {
+        throw createReflectionError(
+          owner,
+          `Missing union members for "${owner.name}".`,
+        );
+      }
+      return parseUnionType(type.types, owner);
     case 'array':
       if (!type.elementType) {
         throw createReflectionError(
@@ -419,7 +432,10 @@ function parseIntrinsicType(
     case 'null':
     case 'never':
     case 'void':
-      return {};
+      throw createReflectionError(
+        owner,
+        `Unsupported ambiguous intrinsic TypeDoc type "${name}" for "${owner.name}".`,
+      );
     default:
       throw createReflectionError(
         owner,
@@ -430,17 +446,25 @@ function parseIntrinsicType(
 
 function parseLiteralType(
   value: bigint | boolean | number | string | null | undefined,
+  owner: TypeDocReflection,
 ): JsonSchema {
   switch (typeof value) {
     case 'string':
       return { type: 'string', enum: [value] };
     case 'number':
+      return { type: 'number', enum: [value] };
     case 'bigint':
-      return { type: 'number' };
+      throw createReflectionError(
+        owner,
+        `Unsupported bigint literal for "${owner.name}".`,
+      );
     case 'boolean':
-      return { type: 'boolean' };
+      return { type: 'boolean', enum: [value] };
     default:
-      return {};
+      throw createReflectionError(
+        owner,
+        `Unsupported nullish literal for "${owner.name}".`,
+      );
   }
 }
 
@@ -448,10 +472,27 @@ function parseUnionType(
   types: TypeDocType[],
   owner: TypeDocReflection,
 ): JsonSchema {
-  const actualTypes = types.filter(type => !isNullishType(type));
+  if (types.length === 0) {
+    throw createReflectionError(
+      owner,
+      `Missing union members for "${owner.name}".`,
+    );
+  }
+
+  if (types.some(type => isNullType(type))) {
+    throw createReflectionError(
+      owner,
+      `Unsupported nullable union for "${owner.name}".`,
+    );
+  }
+
+  const actualTypes = types.filter(type => !isUndefinedType(type));
 
   if (actualTypes.length === 0) {
-    return {};
+    throw createReflectionError(
+      owner,
+      `Unsupported undefined-only union for "${owner.name}".`,
+    );
   }
   if (actualTypes.length === 1) {
     return parseTypeDocType(actualTypes[0]!, owner);
@@ -488,6 +529,13 @@ function parseObjectReflection(
   declaration: TypeDocReflection,
   owner: TypeDocReflection,
 ): JsonSchema {
+  if (declaration.children === undefined) {
+    throw createReflectionError(
+      owner,
+      `Missing object declaration for "${owner.name}".`,
+    );
+  }
+
   const schema: JsonSchema = {
     type: 'object',
     properties: {},
@@ -495,7 +543,7 @@ function parseObjectReflection(
     additionalProperties: false,
   };
 
-  for (const child of declaration.children ?? []) {
+  for (const child of declaration.children) {
     if (!isPropertyReflection(child)) {
       continue;
     }
@@ -510,13 +558,6 @@ function parseObjectReflection(
     if (!isOptionalProperty(child)) {
       schema.required!.push(child.name);
     }
-  }
-
-  if (declaration.children === undefined) {
-    throw createReflectionError(
-      owner,
-      `Missing object declaration for "${owner.name}".`,
-    );
   }
 
   return schema;
@@ -681,14 +722,15 @@ function typeIncludesUndefined(type: TypeDocType): boolean {
   if (type.type !== 'union') {
     return false;
   }
-  return (type.types ?? []).some(childType =>
-    childType.type === 'intrinsic' && childType.name === 'undefined'
-  );
+  return (type.types ?? []).some(childType => isUndefinedType(childType));
 }
 
-function isNullishType(type: TypeDocType): boolean {
-  return (type.type === 'intrinsic'
-    && (type.name === 'undefined' || type.name === 'null'))
+function isUndefinedType(type: TypeDocType): boolean {
+  return type.type === 'intrinsic' && type.name === 'undefined';
+}
+
+function isNullType(type: TypeDocType): boolean {
+  return (type.type === 'intrinsic' && type.name === 'null')
     || (type.type === 'literal' && type.value === null);
 }
 
