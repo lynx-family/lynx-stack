@@ -35,7 +35,7 @@ export function DynamicPage(
   const [error, setError] = useState<string>('');
   const [renderUrl, setRenderUrl] = useState<string>('');
 
-  const origin = window.location.origin;
+  const baseUrl = window.location.href.replace(/#.*$/, '');
   const homeHref = `#/${protocol}`;
 
   const currentPreset = useMemo(() => {
@@ -66,7 +66,7 @@ export function DynamicPage(
           messages: presetMessages,
           actionMocks: presetActions,
         },
-        origin,
+        baseUrl,
       );
       setRenderUrl(url);
       return;
@@ -94,7 +94,7 @@ export function DynamicPage(
     currentPreset,
     demoUrl,
     mode,
-    origin,
+    baseUrl,
     presetActions,
     presetMessages,
     protocol,
