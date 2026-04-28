@@ -18,7 +18,7 @@ import { camelCase } from 'change-case';
 import {
   createAPI,
   createChangelogs,
-  createGenUIReadmeDocs,
+  createGenUIGuideReadmeDocs,
 } from './sidebars/index.js';
 
 const isDev = process.env['NODE_ENV'] === 'development';
@@ -403,7 +403,7 @@ const CHANGELOG_ZH = {
   ),
 };
 
-const GENUI = createGenUIReadmeDocs({
+const GENUI = createGenUIGuideReadmeDocs({
   repositoryRoot: join(__dirname, '..'),
   websiteRoot: __dirname,
 });
@@ -541,10 +541,6 @@ const config: UserConfig = defineConfig({
       '/api/rspeedy': SIDEBARS.Config,
       '/zh/api/rspeedy': SIDEBARS_ZH.Config,
 
-      // GenUI
-      '/genui/': GENUI.en,
-      '/zh/genui/': GENUI.zh,
-
       // API
       ...(Object.fromEntries(
         [
@@ -664,6 +660,7 @@ const config: UserConfig = defineConfig({
             },
           ],
         },
+        GENUI.en,
       ],
       '/zh/guide/': [
         {
@@ -742,6 +739,7 @@ const config: UserConfig = defineConfig({
             },
           ],
         },
+        GENUI.zh,
       ],
     },
     nav: [
@@ -752,10 +750,6 @@ const config: UserConfig = defineConfig({
       {
         text: 'REPL',
         link: '/repl',
-      },
-      {
-        text: 'GenUI',
-        link: '/genui/a2ui-catalog-extractor',
       },
       {
         text: 'API',

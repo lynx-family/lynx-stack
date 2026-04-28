@@ -4,20 +4,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type {
-  SidebarDivider,
-  SidebarItem,
-  SidebarSectionHeader,
-} from '@rspress/core';
+import type { SidebarGroup } from '@rspress/core';
 
-type GenUISidebar = (SidebarItem | SidebarSectionHeader | SidebarDivider)[];
-
-export function createGenUIReadmeDocs(options: {
+export function createGenUIGuideReadmeDocs(options: {
   repositoryRoot: string;
   websiteRoot: string;
 }): {
-  en: GenUISidebar;
-  zh: GenUISidebar;
+  en: SidebarGroup;
+  zh: SidebarGroup;
 } {
   const packageRoot = path.join(
     options.repositoryRoot,
@@ -26,10 +20,10 @@ export function createGenUIReadmeDocs(options: {
 
   syncReadme({
     languageSwitch:
-      'English | <a href="/zh/genui/a2ui-catalog-extractor">简体中文</a>',
+      'English | <a href="/zh/guide/genui/a2ui-catalog-extractor">简体中文</a>',
     outFile: path.join(
       options.websiteRoot,
-      'docs/en/genui/a2ui-catalog-extractor.md',
+      'docs/en/guide/genui/a2ui-catalog-extractor.md',
     ),
     sourceFile: path.join(packageRoot, 'README.md'),
     switchPattern: /^English \| \[简体中文\]\(\.\/readme\.zh_cn\.md\)$/m,
@@ -37,40 +31,34 @@ export function createGenUIReadmeDocs(options: {
 
   syncReadme({
     languageSwitch:
-      '<a href="/genui/a2ui-catalog-extractor">English</a> | 简体中文',
+      '<a href="/guide/genui/a2ui-catalog-extractor">English</a> | 简体中文',
     outFile: path.join(
       options.websiteRoot,
-      'docs/zh/genui/a2ui-catalog-extractor.md',
+      'docs/zh/guide/genui/a2ui-catalog-extractor.md',
     ),
     sourceFile: path.join(packageRoot, 'readme.zh_cn.md'),
     switchPattern: /^\[English\]\(\.\/README\.md\) \| 简体中文$/m,
   });
 
   return {
-    en: [
-      {
-        sectionHeaderText: 'GenUI',
-      },
-      {
-        dividerType: 'solid',
-      },
-      {
-        text: 'A2UI Catalog Extractor',
-        link: '/genui/a2ui-catalog-extractor',
-      },
-    ],
-    zh: [
-      {
-        sectionHeaderText: 'GenUI',
-      },
-      {
-        dividerType: 'solid',
-      },
-      {
-        text: 'A2UI Catalog Extractor',
-        link: '/zh/genui/a2ui-catalog-extractor',
-      },
-    ],
+    en: {
+      text: 'GenUI',
+      items: [
+        {
+          text: 'A2UI Catalog Extractor',
+          link: '/guide/genui/a2ui-catalog-extractor',
+        },
+      ],
+    },
+    zh: {
+      text: 'GenUI',
+      items: [
+        {
+          text: 'A2UI Catalog Extractor',
+          link: '/zh/guide/genui/a2ui-catalog-extractor',
+        },
+      ],
+    },
   };
 }
 
