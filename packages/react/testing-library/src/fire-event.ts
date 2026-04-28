@@ -38,12 +38,13 @@ export const fireEvent: any = (elemOrNodesRef, ...args) => {
 };
 
 export const eventMap = {
-  // LynxBindCatchEvent Events
+  // LynxBindCatchEvent — TouchEvent family, bubble/capture per
+  // https://lynx.bytedance.net/next/zh/api/lynx-api/event/touch-event.html
   tap: {
-    defaultInit: {},
+    defaultInit: { bubbles: true },
   },
   longtap: {
-    defaultInit: {},
+    defaultInit: { bubbles: true },
   },
   // LynxEvent Events
   bgload: {
@@ -52,20 +53,24 @@ export const eventMap = {
   bgerror: {
     defaultInit: {},
   },
+  // TouchEvent family — every event whose handler signature is
+  // `EventHandler<BaseTouchEvent<T>>` in @lynx-js/types bubbles. Other
+  // LynxEvent entries (animation/transition/mouse/wheel/key/focus/blur/
+  // layout/image) are component-local and do not propagate.
   touchstart: {
-    defaultInit: {},
+    defaultInit: { bubbles: true },
   },
   touchmove: {
-    defaultInit: {},
+    defaultInit: { bubbles: true },
   },
   touchcancel: {
-    defaultInit: {},
+    defaultInit: { bubbles: true },
   },
   touchend: {
-    defaultInit: {},
+    defaultInit: { bubbles: true },
   },
   longpress: {
-    defaultInit: {},
+    defaultInit: { bubbles: true },
   },
   transitionstart: {
     defaultInit: {},
@@ -171,7 +176,11 @@ Object.keys(eventMap).forEach((key) => {
       elem,
       init,
     );
-    Object.assign(event, init);
+    // `bubbles`, `cancelable`, `composed` are read-only accessors on Event.prototype.
+    // They're already applied via the EventInit dict above; assigning them again
+    // throws in strict mode.
+    const { bubbles, cancelable, composed, ...assignableInit } = init;
+    Object.assign(event, assignableInit);
     const ans = domFireEvent(
       elem,
       event,

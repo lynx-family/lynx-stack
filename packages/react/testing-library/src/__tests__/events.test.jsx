@@ -181,6 +181,155 @@ test('calling `fireEvent` directly works too', () => {
 `);
 });
 
+// https://lynxjs.org/api/elements/built-in/event.html#event-handler-property
+//
+// | Type           | Phase   | Intercepts? |
+// | -------------- | ------- | ----------- |
+// | bind           | bubble  | no          |
+// | catch          | bubble  | yes         |
+// | capture-bind   | capture | no          |
+// | capture-catch  | capture | yes         |
+//
+// Each Lynx event type maps to a separate DOM event name in the testing library
+// (e.g. `bindEvent:tap`, `catchEvent:tap`, `capture-bind:tap`, `capture-catch:tap`),
+// so "intercept" semantics only apply within the same Lynx event type.
+describe('Event handler property semantics', () => {
+  it('bind: handler runs in bubble phase, does not intercept bubbling', () => {
+    const calls = [];
+    const childRef = createRef();
+
+    const Comp = () => (
+      <view bindtap={() => calls.push('parent')}>
+        <view ref={childRef} bindtap={() => calls.push('child')} />
+      </view>
+    );
+    render(<Comp />);
+
+    fireEvent.tap(childRef.current);
+
+    // bubble phase walks target → root, so child fires before parent
+    expect(calls).toEqual(['child', 'parent']);
+  });
+
+  it('catch: handler runs in bubble phase and stops further propagation', () => {
+    const parent = vi.fn();
+    const child = vi.fn();
+    const childRef = createRef();
+
+    const Comp = () => (
+      <view catchtap={parent}>
+        <view ref={childRef} catchtap={child} />
+      </view>
+    );
+    render(<Comp />);
+
+    fireEvent.tap(childRef.current, { eventType: 'catchEvent', bubbles: true });
+
+    expect(child).toHaveBeenCalledTimes(1);
+    expect(parent).toHaveBeenCalledTimes(0);
+  });
+
+  it('capture-bind: handler runs in capture phase, does not intercept', () => {
+    const calls = [];
+    const childRef = createRef();
+
+    const Comp = () => (
+      <view {...{ 'capture-bindtap': () => calls.push('parent') }}>
+        <view
+          ref={childRef}
+          {...{ 'capture-bindtap': () => calls.push('child') }}
+        />
+      </view>
+    );
+    render(<Comp />);
+
+    fireEvent.tap(childRef.current, { eventType: 'capture-bind' });
+
+    // capture phase walks root → target, so parent fires before child
+    expect(calls).toEqual(['parent', 'child']);
+  });
+
+  it('capture-catch: handler runs in capture phase and stops further propagation', () => {
+    const parent = vi.fn();
+    const child = vi.fn();
+    const childRef = createRef();
+
+    const Comp = () => (
+      <view {...{ 'capture-catchtap': parent }}>
+        <view ref={childRef} {...{ 'capture-catchtap': child }} />
+      </view>
+    );
+    render(<Comp />);
+
+    fireEvent.tap(childRef.current, { eventType: 'capture-catch' });
+
+    // parent fires first in capture phase, calls stopPropagation,
+    // so the event never reaches the child target
+    expect(parent).toHaveBeenCalledTimes(1);
+    expect(child).toHaveBeenCalledTimes(0);
+  });
+
+  it('capture phase fires regardless of bubbles=false', () => {
+    const parent = vi.fn();
+    const childRef = createRef();
+
+    const Comp = () => (
+      <view {...{ 'capture-bindtap': parent }}>
+        <view ref={childRef} />
+      </view>
+    );
+    render(<Comp />);
+
+    fireEvent.tap(childRef.current, {
+      eventType: 'capture-bind',
+      bubbles: false,
+    });
+
+    expect(parent).toHaveBeenCalledTimes(1);
+  });
+
+  it('bind on ancestor needs bubbles=true to be reached from a descendant', () => {
+    const parent = vi.fn();
+    const childRef = createRef();
+
+    const Comp = () => (
+      <view bindtap={parent}>
+        <view ref={childRef} />
+      </view>
+    );
+    render(<Comp />);
+
+    // fireEvent.tap defaults to bubbles: true (matches Lynx runtime)
+    fireEvent.tap(childRef.current);
+    expect(parent).toHaveBeenCalledTimes(1);
+
+    // explicit bubbles: false skips the bubble phase, so the ancestor handler does not fire
+    fireEvent.tap(childRef.current, { bubbles: false });
+    expect(parent).toHaveBeenCalledTimes(1);
+  });
+
+  // https://lynx.bytedance.net/next/zh/api/lynx-api/event/touch-event.html
+  // Every TouchEvent-family event (BaseTouchEvent in @lynx-js/types)
+  // bubbles in Lynx: touch{start,move,end,cancel}, longpress.
+  it.each(['touchstart', 'touchmove', 'touchend', 'touchcancel', 'longpress'])(
+    '%s: bubbles to ancestor handlers by default',
+    (eventName) => {
+      const parent = vi.fn();
+      const childRef = createRef();
+
+      const Comp = () => (
+        <view {...{ [`bind${eventName}`]: parent }}>
+          <view ref={childRef} />
+        </view>
+      );
+      render(<Comp />);
+
+      fireEvent[eventName](childRef.current);
+      expect(parent).toHaveBeenCalledTimes(1);
+    },
+  );
+});
+
 test('customEvent not in internal eventMap', () => {
   const handler = vi.fn();
 
