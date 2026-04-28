@@ -15,7 +15,11 @@ import {
 } from '@shikijs/transformers';
 import { camelCase } from 'change-case';
 
-import { createAPI, createChangelogs } from './sidebars/index.js';
+import {
+  createAPI,
+  createChangelogs,
+  createGenUIGuideReadmeDocs,
+} from './sidebars/index.js';
 
 const isDev = process.env['NODE_ENV'] === 'development';
 
@@ -399,6 +403,11 @@ const CHANGELOG_ZH = {
   ),
 };
 
+const GENUI = createGenUIGuideReadmeDocs({
+  repositoryRoot: join(__dirname, '..'),
+  websiteRoot: __dirname,
+});
+
 const config: UserConfig = defineConfig({
   root: 'docs',
   llms: true,
@@ -651,6 +660,7 @@ const config: UserConfig = defineConfig({
             },
           ],
         },
+        GENUI.en,
       ],
       '/zh/guide/': [
         {
@@ -729,6 +739,7 @@ const config: UserConfig = defineConfig({
             },
           ],
         },
+        GENUI.zh,
       ],
     },
     nav: [

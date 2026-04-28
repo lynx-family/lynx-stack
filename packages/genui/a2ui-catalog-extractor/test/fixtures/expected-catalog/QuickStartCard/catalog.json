@@ -1,0 +1,83 @@
+{
+  "QuickStartCard": {
+    "properties": {
+      "title": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "description": "Card title text or data binding."
+      },
+      "tone": {
+        "type": "string",
+        "enum": [
+          "neutral",
+          "accent"
+        ],
+        "description": "Visual tone used by the renderer."
+      },
+      "tags": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Tags shown below the title.",
+        "default": []
+      },
+      "author": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name."
+          },
+          "url": {
+            "type": "string",
+            "description": "Optional profile URL."
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false,
+        "description": "Author metadata rendered in the card footer."
+      },
+      "context": {
+        "type": "object",
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "description": "Extra analytics context sent with user actions.",
+        "default": {}
+      }
+    },
+    "required": [
+      "title",
+      "author"
+    ],
+    "description": "Quick start card.\n\nUse this contract as a compact card example."
+  }
+}

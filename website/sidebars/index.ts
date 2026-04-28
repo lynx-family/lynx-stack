@@ -4,3 +4,4 @@
 
 export * from './api.js';
 export * from './changelog.js';
+export * from './genui.js';
