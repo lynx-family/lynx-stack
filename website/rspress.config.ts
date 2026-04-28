@@ -15,7 +15,11 @@ import {
 } from '@shikijs/transformers';
 import { camelCase } from 'change-case';
 
-import { createAPI, createChangelogs } from './sidebars/index.js';
+import {
+  createAPI,
+  createChangelogs,
+  createGenUIReadmeDocs,
+} from './sidebars/index.js';
 
 const isDev = process.env['NODE_ENV'] === 'development';
 
@@ -399,6 +403,11 @@ const CHANGELOG_ZH = {
   ),
 };
 
+const GENUI = createGenUIReadmeDocs({
+  repositoryRoot: join(__dirname, '..'),
+  websiteRoot: __dirname,
+});
+
 const config: UserConfig = defineConfig({
   root: 'docs',
   llms: true,
@@ -531,6 +540,10 @@ const config: UserConfig = defineConfig({
       // Config
       '/api/rspeedy': SIDEBARS.Config,
       '/zh/api/rspeedy': SIDEBARS_ZH.Config,
+
+      // GenUI
+      '/genui/': GENUI.en,
+      '/zh/genui/': GENUI.zh,
 
       // API
       ...(Object.fromEntries(
@@ -739,6 +752,10 @@ const config: UserConfig = defineConfig({
       {
         text: 'REPL',
         link: '/repl',
+      },
+      {
+        text: 'GenUI',
+        link: '/genui/a2ui-catalog-extractor',
       },
       {
         text: 'API',
