@@ -25,7 +25,8 @@ export function createGenUIReadmeDocs(options: {
   );
 
   syncReadme({
-    languageSwitch: 'English | [简体中文](/zh/genui/a2ui-catalog-extractor)',
+    languageSwitch:
+      'English | <a href="/zh/genui/a2ui-catalog-extractor">简体中文</a>',
     outFile: path.join(
       options.websiteRoot,
       'docs/en/genui/a2ui-catalog-extractor.md',
@@ -35,7 +36,8 @@ export function createGenUIReadmeDocs(options: {
   });
 
   syncReadme({
-    languageSwitch: '[English](/genui/a2ui-catalog-extractor) | 简体中文',
+    languageSwitch:
+      '<a href="/genui/a2ui-catalog-extractor">English</a> | 简体中文',
     outFile: path.join(
       options.websiteRoot,
       'docs/zh/genui/a2ui-catalog-extractor.md',
