@@ -43,6 +43,9 @@ export default defineConfig({
       render: './src/render.tsx',
     },
   },
+  output: {
+    assetPrefix: process.env.ASSET_PREFIX,
+  },
   server: {
     port: PORT,
     host: '0.0.0.0',
@@ -52,7 +55,7 @@ export default defineConfig({
     publicDir: [
       {
         name: 'www',
-        copyOnBuild: false,
+        copyOnBuild: true,
         watch: true,
       },
     ],

@@ -11,19 +11,22 @@ export interface RenderInit {
   actionMocks?: unknown;
 }
 
-export function buildRenderUrl(init: RenderInit, baseOrigin: string): string {
-  const params = new URLSearchParams();
-  params.set('protocol', init.protocol);
-  params.set('demoUrl', init.demoUrl);
+export function buildRenderUrl(init: RenderInit, baseUrl: string): string {
+  const url = new URL('render.html', baseUrl);
+  url.searchParams.set('protocol', init.protocol);
+  url.searchParams.set('demoUrl', init.demoUrl);
   // Use base64url to avoid URL-encoding overhead for JSON payloads.
-  params.set('messages', encodeBase64Url(JSON.stringify(init.messages)));
+  url.searchParams.set(
+    'messages',
+    encodeBase64Url(JSON.stringify(init.messages)),
+  );
 
   if (init.actionMocks !== undefined) {
-    params.set(
+    url.searchParams.set(
       'actionMocks',
       encodeBase64Url(JSON.stringify(init.actionMocks)),
     );
   }
 
-  return `${baseOrigin}/render.html?${params.toString()}`;
+  return url.toString();
 }

@@ -46,6 +46,21 @@ jobs:
           rm -rf website/doc_build/repl
           mkdir -p website/doc_build
           cp -r packages/repl/dist website/doc_build/repl
+      - name: Build A2UI dependencies
+        run: |
+          pnpm turbo --filter a2ui-playground^... build
+      - name: Build A2UI Lynx bundle
+        run: |
+          pnpm --filter a2ui-playground build:lynx
+      - name: Build A2UI Playground
+        run: |
+          BASE_PATH='${{ steps.pages.outputs.base_path }}'
+          export ASSET_PREFIX="${BASE_PATH%/}/a2ui/"
+          pnpm --filter a2ui-playground build
+      - name: Copy A2UI Playground into website output
+        run: |
+          rm -rf website/doc_build/a2ui
+          cp -r packages/genui/a2ui-playground/dist website/doc_build/a2ui
       - name: Upload artifact
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
