@@ -134,6 +134,17 @@ export class SnapshotInstance {
       }
     }
 
+    if (
+      entryName !== DEFAULT_ENTRY_NAME && entryName !== undefined && this.parentNode
+      && entryName !== this.parentNode.__snapshot_def.entryName
+    ) {
+      __SetAttribute(
+        this.__element_root!,
+        'bundle-url',
+        this.__snapshot_def.entryName,
+      );
+    }
+
     __pendingListUpdates.runWithoutUpdates(() => {
       const values = this.__values;
       if (values) {
