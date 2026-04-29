@@ -8,5 +8,10 @@
     "moduleResolution": "Bundler",
     "noEmit": true,
   },
-  "include": ["./**/*.ts", "./**/*.tsx"],
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx",
+    "../examples/**/*.ts",
+    "../examples/**/*.tsx",
+  ],
 }

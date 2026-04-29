@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { Radio, RadioGroupRoot, RadioIndicator } from '@lynx-js/lynx-ui';
 
-import type { GenericComponentProps } from '../../core/types.js';
+import type { GenericComponentProps } from '../../store/types.js';
 
 import '../../../styles/catalog/RadioGroup.css';
 
