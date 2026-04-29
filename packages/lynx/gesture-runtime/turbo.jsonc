@@ -4,7 +4,6 @@
   "tasks": {
     "build": {
       "dependsOn": [
-        "//#build",
         "^build",
       ],
       "inputs": [

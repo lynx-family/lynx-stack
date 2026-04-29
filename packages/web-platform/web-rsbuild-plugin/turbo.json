@@ -9,7 +9,10 @@
         "^build"
       ],
       "inputs": [
-        "src/**"
+        "package.json",
+        "rslib.config.ts",
+        "src/**",
+        "tsconfig.json"
       ],
       "outputs": [
         "dist"

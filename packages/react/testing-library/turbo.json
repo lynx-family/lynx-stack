@@ -9,6 +9,8 @@
         "@lynx-js/rspeedy#build"
       ],
       "inputs": [
+        "loaders/**",
+        "rslib.config.ts",
         "src/**",
         "types/**"
       ],
