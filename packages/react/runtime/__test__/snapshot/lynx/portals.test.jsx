@@ -400,19 +400,13 @@ describe('snapshotPatchApply for nodesRef ops', () => {
   });
 
   /**
-   * When the selector doesn't match any element on the main thread, the
-   * apply silently no-ops (no event, no throw).
+   * When the selector doesn't match any element on the main thread that's
+   * a caller bug (stale `NodesRef`), so the apply throws via the non-null
+   * assertion — surface it instead of silently dropping the op.
    */
-  it('no-ops when host selector cannot be resolved', () => {
+  it('throws when host selector cannot be resolved', () => {
     globalEnvManager.switchToMainThread();
-    // Place a SI in the manager to make the childId lookup succeed, so we
-    // reach the host-resolution check.
     const childId = -9999;
-    const childSI = new (snapshotInstanceManager.values.constructor.prototype.constructor === Map
-      ? class {}
-      : class {})();
-    // We can't easily fabricate a SnapshotInstance here, so use snapshotPatch
-    // ops to register one.
     snapshotPatchApply([
       SnapshotOperation.CreateElement,
       '__snapshot_a94a8_test_1',
@@ -420,7 +414,6 @@ describe('snapshotPatchApply for nodesRef ops', () => {
     ]);
     expect(snapshotInstanceManager.values.has(childId)).toBe(true);
 
-    // Selector that won't match anything in the test page.
     expect(() =>
       snapshotPatchApply([
         SnapshotOperation.nodesRefInsertBefore,
@@ -428,14 +421,14 @@ describe('snapshotPatchApply for nodesRef ops', () => {
         childId,
         undefined,
       ])
-    ).not.toThrow();
+    ).toThrow();
     expect(() =>
       snapshotPatchApply([
         SnapshotOperation.nodesRefRemoveChild,
         '[no-such-attr]',
         childId,
       ])
-    ).not.toThrow();
+    ).toThrow();
   });
 });
 

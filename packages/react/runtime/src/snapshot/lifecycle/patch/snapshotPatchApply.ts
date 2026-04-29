@@ -88,8 +88,10 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
           sendCtxNotFoundEventToBackground(childId);
           break;
         }
-        const host = resolveNodesRefHost(identifier);
-        if (!host) break;
+        // Caller bug if the selector misses or the BSI subtree wasn't
+        // materialized — let the non-null assertions throw loudly so the
+        // root cause surfaces instead of silently dropping the op.
+        const host = resolveNodesRefHost(identifier)!;
         if (!child.__elements) {
           child.ensureElements();
         }
@@ -112,15 +114,12 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
           sendCtxNotFoundEventToBackground(childId);
           break;
         }
-        const childRoot = child.__element_root;
-        if (!childRoot) break;
-        const host = resolveNodesRefHost(identifier);
-        if (host) {
-          __RemoveElement(host, childRoot);
-          traverseSnapshotInstance(child, v => {
-            snapshotInstanceManager.values.delete(v.__id);
-          });
-        }
+        const host = resolveNodesRefHost(identifier)!;
+        const childRoot = child.__element_root!;
+        __RemoveElement(host, childRoot);
+        traverseSnapshotInstance(child, v => {
+          snapshotInstanceManager.values.delete(v.__id);
+        });
         break;
       }
       case SnapshotOperation.SetAttribute: {
