@@ -3,6 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
+      "dependsOn": ["//#build", "^build"],
       "inputs": ["*.{json, ts, html}", "icons/**", "preinstalled/**"],
       "outputs": ["dist"],
       "env": ["CI", "CODECOV_TOKEN"]
