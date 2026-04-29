@@ -114,6 +114,19 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
             serializeNodesRef(_this._container!),
             child.__id,
           );
+          return;
+        }
+
+        // Pre-hydrate cancellation: an unmount that fires before hydrate
+        // would otherwise be silently dropped (the global patch buffer is
+        // `undefined`), and the still-pending `nodesRefInsertBefore` from
+        // earlier `insertBefore` would resurrect this child during the
+        // queue replay. Drain the matching tuple from the queue.
+        for (let i = 0; i < pendingInsertBefore.length; i += 3) {
+          if (pendingInsertBefore[i + 1] === child) {
+            pendingInsertBefore.splice(i, 3);
+            break;
+          }
         }
       },
     };

@@ -203,6 +203,42 @@ describe('createPortal', () => {
   });
 
   /**
+   * Pre-hydrate cancellation: a portal child queued by `fakeRoot.insertBefore`
+   * (because `__globalSnapshotPatch` is `undefined`) and then immediately
+   * removed by `fakeRoot.removeChild` (still pre-hydrate) must be dropped
+   * from `pendingInsertBefore` so the queue replay during hydrate doesn't
+   * resurrect a node that was already torn down on background.
+   */
+  it('drops pre-hydrate inserts that were cancelled before hydrate', () => {
+    // Use a hard-coded NodesRef so the portal mounts synchronously on the
+    // first render — going through `useState`/callback-ref would defer the
+    // portal mount to a microtask and we'd need extra render flushes.
+    const fakeHost = { selector: '[react-ref-cancelled-test]' };
+
+    function App({ show }) {
+      return (
+        <view>
+          {show && createPortal(<text data-testid='cancelled'>cancelled</text>, fakeHost)}
+        </view>
+      );
+    }
+
+    // Pre-hydrate: render with portal mounted (queues into `pendingInsertBefore`).
+    globalEnvManager.switchToBackground();
+    render(<App show={true} />, __root);
+    // Re-render without the portal — Portal unmounts, `fakeRoot.removeChild`
+    // fires while `__globalSnapshotPatch` is still undefined and our
+    // cancellation path drains the matching tuple from the queue.
+    render(<App show={false} />, __root);
+
+    // Hydrate flushes the queue — the cancelled child must NOT appear.
+    globalEnvManager.switchToMainThread();
+    initGlobalSnapshotPatch();
+    clearPendingPortalInsertBefore();
+    expect(__globalSnapshotPatch).toEqual([]);
+  });
+
+  /**
    * Portal mounts AFTER hydrate (state flips from "no portal" to "portal").
    * Exercises the post-hydrate branch of `fakeRoot.insertBefore`, where
    * `__globalSnapshotPatch` is already initialized and the op is pushed
@@ -260,8 +296,18 @@ describe('createPortal', () => {
 
     mountAndHydrate(<App />);
 
+    // Initial mount: target is `aHost`, so `<text>movable</text>` is portaled
+    // under A.
+    globalEnvManager.switchToMainThread();
+    {
+      const a = findByTestId(__root.__element_root, 'a');
+      const b = findByTestId(__root.__element_root, 'b');
+      expect(containsRawText(a, /^movable$/)).toBe(true);
+      expect(containsRawText(b, /^movable$/)).toBe(false);
+    }
+
     // Swap the container — Portal should see `_container !== container` and
-    // tear down before re-mounting.
+    // tear down before re-mounting under B.
     const before = lynx.getNativeApp().callLepusMethod.mock.calls.length;
     globalEnvManager.switchToBackground();
     setUseB(true);
@@ -269,9 +315,12 @@ describe('createPortal', () => {
     flushBackgroundUpdate(before);
 
     globalEnvManager.switchToMainThread();
-    // Element still in document — the swap path doesn't actually drop the
-    // portaled subtree, just routes its updates to the new container.
-    expect(findRawText(__root.__element_root, /^movable$/)).not.toBeNull();
+    {
+      const a = findByTestId(__root.__element_root, 'a');
+      const b = findByTestId(__root.__element_root, 'b');
+      expect(containsRawText(a, /^movable$/)).toBe(false);
+      expect(containsRawText(b, /^movable$/)).toBe(true);
+    }
   });
 
   /**
@@ -353,12 +402,25 @@ describe('createPortal', () => {
 describe('serializeNodesRef', () => {
   /**
    * Real `NodesRef` (returned by `lynx.createSelectorQuery().select(...)`)
-   * exposes `_nodeSelectToken.identifier` rather than the `selector` getter
-   * that `RefProxy` synthesizes for ref={setX}. Cover that fallback branch.
+   * exposes `_nodeSelectToken` with `type: 0` and a CSS-selector identifier.
    */
   it('falls back to `_nodeSelectToken.identifier` for non-RefProxy refs', () => {
-    const fakeNodesRef = { _nodeSelectToken: { identifier: '#some-id' } };
+    const fakeNodesRef = { _nodeSelectToken: { type: 0, identifier: '#some-id' } };
     expect(serializeNodesRef(fakeNodesRef)).toBe('#some-id');
+  });
+
+  /**
+   * `selectUniqueID` / `selectReactRef` produce tokens whose `identifier`
+   * is NOT a CSS selector — we'd silently no-op on the main thread if we
+   * accepted them. Throw a clear error at the createPortal call site
+   * instead.
+   */
+  it('throws for non-selector NodesRef token types', () => {
+    const uniqueIdRef = { _nodeSelectToken: { type: 2, identifier: '42' } };
+    expect(() => serializeNodesRef(uniqueIdRef))
+      .toThrowErrorMatchingInlineSnapshot(
+        `[Error: [createPortal] unsupported NodesRef type 2 (identifier "42"). Pass a CSS-selector NodesRef from \`lynx.createSelectorQuery().select(...)\` or a React ref instead.]`,
+      );
   });
 });
 
@@ -368,27 +430,25 @@ describe('snapshotPatchApply for nodesRef ops', () => {
   });
 
   /**
-   * `nodesRefInsertBefore` for an unknown childId hits the `if (!child)`
-   * branch which dispatches a ctx-not-found event back to background. The
-   * apply must soft-fail (not throw) so subsequent ops in the same patch
-   * still get processed.
+   * Caller bug if the childId isn't registered with the manager (stale
+   * background reference, double-unmount, etc.) — surface it loudly via the
+   * non-null assertion instead of soft-failing with a ctx-not-found event.
    */
-  it('soft-fails for unknown childId in nodesRefInsertBefore', () => {
+  it('throws on unknown childId in nodesRefInsertBefore', () => {
     globalEnvManager.switchToMainThread();
     expect(() =>
       snapshotPatchApply([
         SnapshotOperation.nodesRefInsertBefore,
         '[react-ref-999-0]',
-        99999, // not in snapshotInstanceManager
+        99999,
         undefined,
       ])
-    ).not.toThrow();
+    ).toThrowErrorMatchingInlineSnapshot(
+      `[Error: [createPortal] cannot insert child #99999 under "[react-ref-999-0]": child SnapshotInstance is not registered on the main thread. This usually means the portal was given a stale background reference (e.g. mounted twice, or the patch buffer was cleared between background and main thread).]`,
+    );
   });
 
-  /**
-   * Same shape for `nodesRefRemoveChild` — unknown childId must soft-fail.
-   */
-  it('soft-fails for unknown childId in nodesRefRemoveChild', () => {
+  it('throws on unknown childId in nodesRefRemoveChild', () => {
     globalEnvManager.switchToMainThread();
     expect(() =>
       snapshotPatchApply([
@@ -396,15 +456,19 @@ describe('snapshotPatchApply for nodesRef ops', () => {
         '[react-ref-999-0]',
         99999,
       ])
-    ).not.toThrow();
+    ).toThrowErrorMatchingInlineSnapshot(
+      `[Error: [createPortal] cannot remove child #99999 under "[react-ref-999-0]": child SnapshotInstance is not registered on the main thread (likely a double-unmount).]`,
+    );
   });
 
   /**
-   * When the selector doesn't match any element on the main thread that's
-   * a caller bug (stale `NodesRef`), so the apply throws via the non-null
-   * assertion — surface it instead of silently dropping the op.
+   * Insert with a stale selector is a caller bug — throw via the non-null
+   * assertion on `resolveNodesRefHost`. Remove with a stale selector is
+   * tolerated because natural teardown ordering (host unmounted before
+   * portal children, e.g. container swap or recycled list-items) lands
+   * here legitimately.
    */
-  it('throws when host selector cannot be resolved', () => {
+  it('throws when host selector cannot be resolved on insert', () => {
     globalEnvManager.switchToMainThread();
     const childId = -9999;
     snapshotPatchApply([
@@ -421,14 +485,33 @@ describe('snapshotPatchApply for nodesRef ops', () => {
         childId,
         undefined,
       ])
-    ).toThrow();
+    ).toThrowErrorMatchingInlineSnapshot(
+      `[Error: [createPortal] cannot resolve host for selector "[no-such-attr]". The host element does not exist on the main thread — check that the \`NodesRef\` passed to \`createPortal\` points at a currently mounted element.]`,
+    );
+  });
+
+  it('soft-fails when host selector cannot be resolved on remove', () => {
+    globalEnvManager.switchToMainThread();
+    // Materialize a child with an `__element_root` (the realistic state at
+    // remove time — an earlier `nodesRefInsertBefore` op would have set it).
+    const childId = -9998;
+    snapshotPatchApply([
+      SnapshotOperation.CreateElement,
+      '__snapshot_a94a8_test_1',
+      childId,
+    ]);
+    snapshotInstanceManager.values.get(childId).ensureElements();
+
+    // Remove must not throw even when the host is gone — see the comment
+    // on `applyNodesRefRemoveChild`. The portal child SI is still cleaned up.
     expect(() =>
       snapshotPatchApply([
         SnapshotOperation.nodesRefRemoveChild,
         '[no-such-attr]',
         childId,
       ])
-    ).toThrow();
+    ).not.toThrow();
+    expect(snapshotInstanceManager.values.has(childId)).toBe(false);
   });
 });
 
@@ -442,4 +525,18 @@ function findRawText(node, pattern) {
     if (hit) return hit;
   }
   return null;
+}
+
+function findByTestId(node, testid) {
+  if (!node) return null;
+  if (node.props?.dataset?.testid === testid) return node;
+  for (const child of node.children ?? []) {
+    const hit = findByTestId(child, testid);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+function containsRawText(node, pattern) {
+  return findRawText(node, pattern) !== null;
 }
