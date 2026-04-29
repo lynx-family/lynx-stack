@@ -225,6 +225,19 @@ a {
 .qrPlaceholder {
   border-radius: var(--geist-radius-md);
   background: var(--geist-surface);
+  border: 1px dashed var(--geist-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+.qrPlaceholderText {
+  font-size: 10px;
+  color: var(--geist-secondary);
+  line-height: 1.2;
 }
 
 .qrImage {
@@ -347,12 +360,20 @@ a {
   border-top: 1px solid var(--geist-border);
   background: var(--geist-background);
   padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .previewQrContent {
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.previewQrContentAlt {
+  padding-top: 12px;
+  border-top: 1px dashed var(--geist-border);
 }
 
 .previewQrInfo {
@@ -370,6 +391,52 @@ a {
   font-size: 12px;
   color: var(--geist-secondary);
   line-height: 1.5;
+}
+
+.previewQrUrl {
+  margin-top: 6px;
+  font-size: 11px;
+  font-family: var(--geist-mono);
+  color: var(--geist-secondary);
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.previewQrUrlRow {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.previewQrUrlText {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  font-family: var(--geist-mono);
+  color: var(--geist-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.previewQrCopyBtn {
+  flex-shrink: 0;
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: var(--geist-surface);
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--geist-transition);
+}
+
+.previewQrCopyBtn:hover {
+  color: var(--geist-foreground);
+  border-color: var(--geist-border-hover);
 }
 
 .previewQrPlaceholder {

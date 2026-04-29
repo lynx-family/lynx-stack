@@ -28,7 +28,21 @@ interface InitLynxViewMessage {
 
 interface LynxViewElement extends HTMLElement {
   initData?: InitData;
+  globalProps?: unknown;
   reload?: () => void;
+}
+
+function parseJsonParam(raw: string): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    // Back-compat: accept base64url payloads to keep URLs/QR codes shorter.
+    try {
+      return JSON.parse(decodeBase64Url(raw)) as unknown;
+    } catch {
+      return undefined;
+    }
+  }
 }
 
 function parseInitDataFromQuery(): InitData | null {
@@ -56,24 +70,47 @@ function parseInitDataFromQuery(): InitData | null {
   };
 
   if (messages) {
-    try {
-      const decoded = decodeBase64Url(messages);
-      initData.messages = JSON.parse(decoded);
-    } catch {
-      // ignore
-    }
+    const parsed = parseJsonParam(messages);
+    if (parsed !== undefined) initData.messages = parsed;
   }
 
   if (actionMocks) {
-    try {
-      const decoded = decodeBase64Url(actionMocks);
-      initData.actionMocks = JSON.parse(decoded);
-    } catch {
-      // ignore
-    }
+    const parsed = parseJsonParam(actionMocks);
+    if (parsed !== undefined) initData.actionMocks = parsed;
   }
 
   return initData;
+}
+
+function parseGlobalPropsFromQuery(): Record<string, unknown> | null {
+  const params = new URLSearchParams(window.location.search);
+  const globalProps = params.get('globalProps');
+  if (!globalProps) return null;
+
+  try {
+    const parsed = JSON.parse(globalProps) as unknown;
+    if (parsed && typeof parsed === 'object') {
+      return parsed as Record<string, unknown>;
+    }
+  } catch {
+    // ignore
+  }
+
+  return null;
+}
+
+function buildGlobalPropsFromInitData(
+  initData: InitData | null,
+): Record<string, unknown> | null {
+  if (!initData) return null;
+  const out: Record<string, unknown> = {};
+  if (initData.messagesUrl) out.messagesUrl = initData.messagesUrl;
+  if (initData.messages !== undefined) out.messages = initData.messages;
+  if (initData.actionMocksUrl) out.actionMocksUrl = initData.actionMocksUrl;
+  if (initData.actionMocks !== undefined) {
+    out.actionMocks = initData.actionMocks;
+  }
+  return Object.keys(out).length > 0 ? out : null;
 }
 
 function isInitLynxViewMessage(data: unknown): data is InitLynxViewMessage {
@@ -87,8 +124,15 @@ function isInitLynxViewMessage(data: unknown): data is InitLynxViewMessage {
 }
 
 function Render() {
-  const initial = useMemo(() => parseInitDataFromQuery(), []);
-  const [initData, setInitData] = useState<InitData | null>(initial);
+  const initial = useMemo(() => {
+    const initData = parseInitDataFromQuery();
+    const globalProps = parseGlobalPropsFromQuery();
+    return { initData, globalProps };
+  }, []);
+  const [initData, setInitData] = useState<InitData | null>(initial.initData);
+  const [globalProps] = useState<Record<string, unknown> | null>(
+    initial.globalProps,
+  );
   const lynxViewRef = useRef<LynxViewElement | null>(null);
 
   useEffect(() => {
@@ -109,11 +153,14 @@ function Render() {
     if (!lynxView) return;
 
     lynxView.initData = initData ?? {};
+    // Align with native: prefer `globalProps` as the channel for A2UI payload.
+    lynxView.globalProps = globalProps ?? buildGlobalPropsFromInitData(initData)
+      ?? {};
 
     if (typeof lynxView.reload === 'function') {
       lynxView.reload();
     }
-  }, [initData]);
+  }, [globalProps, initData]);
 
   return createElement('lynx-view', {
     ref: lynxViewRef,
