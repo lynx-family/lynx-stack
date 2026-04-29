@@ -4,7 +4,7 @@
 import { NodeRenderer } from '../../core/A2UIRender.jsx';
 import type { GenericComponentProps } from '../../core/types.js';
 
-import './style.css';
+import '../../../styles/catalog/Row.css';
 
 /**
  * @a2uiCatalog Row

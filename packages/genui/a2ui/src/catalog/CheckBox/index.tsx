@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import type { GenericComponentProps } from '../../core/types.js';
 
-import './style.css';
+import '../../../styles/catalog/CheckBox.css';
 
 /**
  * @a2uiCatalog CheckBox

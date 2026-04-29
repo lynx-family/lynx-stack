@@ -7,7 +7,7 @@ import { NodeRenderer } from '../../core/A2UIRender.jsx';
 import type { GenericComponentProps } from '../../core/types.js';
 import { useDataBinding } from '../../core/useDataBinding.js';
 
-import './style.css';
+import '../../../styles/catalog/List.css';
 
 /**
  * @a2uiCatalog List

@@ -4,7 +4,7 @@
 import { A2UIRender } from '../../core/A2UIRender.jsx';
 import type { GenericComponentProps } from '../../core/types.js';
 
-import './style.css';
+import '../../../styles/catalog/Button.css';
 
 /**
  * @a2uiCatalog Button

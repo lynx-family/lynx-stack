@@ -5,7 +5,7 @@ import { useEffect, useState } from '@lynx-js/react';
 
 import type { GenericComponentProps } from '../../core/types.js';
 
-import './style.css';
+import '../../../styles/catalog/Image.css';
 
 const useLynxEffect = useEffect as (
   effect: () => undefined | (() => void),

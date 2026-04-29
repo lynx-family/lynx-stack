@@ -1,4 +1,4 @@
-@import "../luna-styles/index.css";
+@import "./luna.css";
 
 .column {
   display: flex;
