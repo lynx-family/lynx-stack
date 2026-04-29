@@ -204,10 +204,12 @@ class CssExtractRspackPluginImpl {
                   ...restCompilerOptions
                 },
               } = args.finalEncodeOptions;
+              const baseEncodeOptions = { ...args.finalEncodeOptions };
+              baseEncodeOptions.compilerOptions = restCompilerOptions;
+              delete baseEncodeOptions.elementTemplate;
               const { buffer } = await hooks.encode.promise({
                 encodeOptions: {
-                  ...args.finalEncodeOptions,
-                  compilerOptions: restCompilerOptions,
+                  ...baseEncodeOptions,
                   css,
                   lepusCode: {
                     root: undefined,

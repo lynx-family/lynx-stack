@@ -49,6 +49,7 @@ export interface EncodeOptions {
     type?: 'lazy';
     content: string | Record<string, unknown>;
   }>;
+  elementTemplate?: Record<string, unknown>;
   [k: string]: unknown;
 }
 
@@ -332,7 +333,7 @@ interface EncodeRawData {
     appType: string;
     config: Record<string, unknown>;
   };
-  elementTemplate: Record<string, unknown>;
+  elementTemplate?: Record<string, unknown>;
   [k: string]: unknown;
 }
 
@@ -853,7 +854,6 @@ class LynxTemplatePluginImpl {
         }),
       ),
       customSections: {},
-      elementTemplate: {},
     };
     const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
       compilation,

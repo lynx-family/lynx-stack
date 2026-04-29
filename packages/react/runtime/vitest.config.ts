@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 import * as path from 'node:path';
 
 import type { Plugin } from 'vitest/config';
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 const require = createRequire(import.meta.url);
 const runtimePkg = require.resolve('./src/internal.ts');
@@ -90,6 +90,10 @@ export default defineConfig({
   },
   test: {
     name: 'react/runtime',
+    exclude: [
+      ...configDefaults.exclude,
+      '**/__test__/element-template/**',
+    ],
     server: {
       deps: {
         inline: [
@@ -110,6 +114,8 @@ export default defineConfig({
         'lib/**',
         'worklet-runtime/**',
         'src/element-template/**',
+        'src/core/hooks/mainThread.ts',
+        'src/core/hooks/mainThreadImpl.ts',
         'src/shared/component-stack.ts',
         'src/shared/profile.ts',
         'src/index.ts',

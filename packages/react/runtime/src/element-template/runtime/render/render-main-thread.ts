@@ -41,7 +41,7 @@ function renderMainThread(): void {
   try {
     const instances: SerializedElementTemplate[] = [];
     for (const rootRef of rootRefs) {
-      instances.push(__SerializeElementTemplate(rootRef) as SerializedElementTemplate);
+      instances.push(__SerializeElementTemplate(rootRef));
     }
 
     lynx.getJSContext().dispatchEvent({
