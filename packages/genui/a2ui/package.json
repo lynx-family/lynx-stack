@@ -3,97 +3,83 @@
   "version": "0.0.0",
   "private": true,
   "license": "Apache-2.0",
+  "sideEffects": [
+    "**/*.css"
+  ],
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./core": {
-      "types": "./dist/core/index.d.ts",
-      "default": "./dist/core/index.js"
+    "./store": {
+      "types": "./dist/store/index.d.ts",
+      "default": "./dist/store/index.js"
     },
-    "./chat": {
-      "types": "./dist/chat/index.d.ts",
-      "default": "./dist/chat/index.js"
-    },
-    "./catalog/all": {
-      "types": "./dist/catalog/all.d.ts",
-      "default": "./dist/catalog/all.js"
+    "./catalog": {
+      "types": "./dist/catalog/index.d.ts",
+      "default": "./dist/catalog/index.js"
     },
     "./catalog/Text": {
-      "types": "./dist/catalog/Text.d.ts",
-      "default": "./dist/catalog/Text.js"
+      "types": "./dist/catalog/Text/index.d.ts",
+      "default": "./dist/catalog/Text/index.js"
     },
+    "./catalog/Text/catalog.json": "./dist/catalog/Text/catalog.json",
     "./catalog/Image": {
-      "types": "./dist/catalog/Image.d.ts",
-      "default": "./dist/catalog/Image.js"
+      "types": "./dist/catalog/Image/index.d.ts",
+      "default": "./dist/catalog/Image/index.js"
     },
+    "./catalog/Image/catalog.json": "./dist/catalog/Image/catalog.json",
     "./catalog/Button": {
-      "types": "./dist/catalog/Button.d.ts",
-      "default": "./dist/catalog/Button.js"
+      "types": "./dist/catalog/Button/index.d.ts",
+      "default": "./dist/catalog/Button/index.js"
     },
+    "./catalog/Button/catalog.json": "./dist/catalog/Button/catalog.json",
     "./catalog/Row": {
-      "types": "./dist/catalog/Row.d.ts",
-      "default": "./dist/catalog/Row.js"
+      "types": "./dist/catalog/Row/index.d.ts",
+      "default": "./dist/catalog/Row/index.js"
     },
+    "./catalog/Row/catalog.json": "./dist/catalog/Row/catalog.json",
     "./catalog/Column": {
-      "types": "./dist/catalog/Column.d.ts",
-      "default": "./dist/catalog/Column.js"
+      "types": "./dist/catalog/Column/index.d.ts",
+      "default": "./dist/catalog/Column/index.js"
     },
+    "./catalog/Column/catalog.json": "./dist/catalog/Column/catalog.json",
     "./catalog/List": {
-      "types": "./dist/catalog/List.d.ts",
-      "default": "./dist/catalog/List.js"
+      "types": "./dist/catalog/List/index.d.ts",
+      "default": "./dist/catalog/List/index.js"
     },
+    "./catalog/List/catalog.json": "./dist/catalog/List/catalog.json",
     "./catalog/Card": {
-      "types": "./dist/catalog/Card.d.ts",
-      "default": "./dist/catalog/Card.js"
+      "types": "./dist/catalog/Card/index.d.ts",
+      "default": "./dist/catalog/Card/index.js"
     },
+    "./catalog/Card/catalog.json": "./dist/catalog/Card/catalog.json",
     "./catalog/Divider": {
-      "types": "./dist/catalog/Divider.d.ts",
-      "default": "./dist/catalog/Divider.js"
+      "types": "./dist/catalog/Divider/index.d.ts",
+      "default": "./dist/catalog/Divider/index.js"
     },
-    "./catalog/TextField": {
-      "types": "./dist/catalog/TextField.d.ts",
-      "default": "./dist/catalog/TextField.js"
-    },
-    "./catalog/Icon": {
-      "types": "./dist/catalog/Icon.d.ts",
-      "default": "./dist/catalog/Icon.js"
-    },
-    "./catalog/Tabs": {
-      "types": "./dist/catalog/Tabs.d.ts",
-      "default": "./dist/catalog/Tabs.js"
-    },
-    "./catalog/Modal": {
-      "types": "./dist/catalog/Modal.d.ts",
-      "default": "./dist/catalog/Modal.js"
-    },
-    "./catalog/AudioPlayer": {
-      "types": "./dist/catalog/AudioPlayer.d.ts",
-      "default": "./dist/catalog/AudioPlayer.js"
-    },
-    "./catalog/Slider": {
-      "types": "./dist/catalog/Slider.d.ts",
-      "default": "./dist/catalog/Slider.js"
-    },
-    "./catalog/DateTimeInput": {
-      "types": "./dist/catalog/DateTimeInput.d.ts",
-      "default": "./dist/catalog/DateTimeInput.js"
-    },
-    "./catalog/ChoicePicker": {
-      "types": "./dist/catalog/ChoicePicker.d.ts",
-      "default": "./dist/catalog/ChoicePicker.js"
-    },
+    "./catalog/Divider/catalog.json": "./dist/catalog/Divider/catalog.json",
     "./catalog/CheckBox": {
-      "types": "./dist/catalog/CheckBox.d.ts",
-      "default": "./dist/catalog/CheckBox.js"
+      "types": "./dist/catalog/CheckBox/index.d.ts",
+      "default": "./dist/catalog/CheckBox/index.js"
+    },
+    "./catalog/CheckBox/catalog.json": "./dist/catalog/CheckBox/catalog.json",
+    "./catalog/RadioGroup": {
+      "types": "./dist/catalog/RadioGroup/index.d.ts",
+      "default": "./dist/catalog/RadioGroup/index.js"
+    },
+    "./catalog/RadioGroup/catalog.json": "./dist/catalog/RadioGroup/catalog.json",
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
     }
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog"
+    "build": "a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog",
+    "test": "rstest"
   },
   "dependencies": {
     "@a2ui/web_core": "0.9.1",
@@ -102,14 +88,18 @@
   "devDependencies": {
     "@lynx-js/a2ui-catalog-extractor": "workspace:*",
     "@lynx-js/lynx-ui": "^3.130.0",
-    "@lynx-js/lynx-ui-input": "^3.130.0",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "3.7.0",
+    "@rstest/core": "catalog:rstest",
     "@types/react": "^18.3.28"
   },
   "peerDependencies": {
     "@lynx-js/lynx-ui": "^3.130.0",
-    "@lynx-js/lynx-ui-input": "^3.130.0",
     "@lynx-js/react": "workspace:^"
+  },
+  "peerDependenciesMeta": {
+    "@lynx-js/lynx-ui": {
+      "optional": true
+    }
   }
 }
