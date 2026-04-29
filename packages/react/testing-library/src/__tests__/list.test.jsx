@@ -236,9 +236,9 @@ describe('list', () => {
       setListVal(initListVal.filter((x) => x !== 3));
     });
 
-    const __CreateElement = vi.spyOn(globalThis, '__CreateElement');
-    const __SetAttribute = vi.spyOn(globalThis, '__SetAttribute');
-    const __FlushElementTree = vi.spyOn(globalThis, '__FlushElementTree');
+    const __CreateElement = vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__CreateElement');
+    const __SetAttribute = vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__SetAttribute');
+    const __FlushElementTree = vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__FlushElementTree');
 
     // Remove action is generated
     expect(JSON.parse(list.getAttribute('update-list-info'))[1].removeAction)

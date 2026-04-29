@@ -17,6 +17,24 @@ import { sendCtxNotFoundEventToBackground } from './error.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { SnapshotOperation } from './snapshotPatch.js';
 import { SnapshotInstance, snapshotCreatorMap, snapshotInstanceManager } from '../../snapshot/snapshot.js';
+import { traverseSnapshotInstance } from '../../snapshot/utils.js';
+
+/**
+ * Resolve a serialized NodesRef (the `identifier` string produced by
+ * `serializeNodesRef`) to a single host FiberElement on the main thread.
+ *
+ * The identifier is treated as a CSS selector. This covers:
+ *   - `RefProxy.selector` → `[react-ref-X-Y]` (a CSS attribute selector)
+ *   - real `NodesRef` from `lynx.createSelectorQuery().select('#foo')`
+ *
+ * UNIQUE_ID / REF_ID-typed `NodesRef`s would need their respective Element
+ * PAPIs (`__GetElementByUniqueId`, etc.) — TODO when needed.
+ */
+function resolveNodesRefHost(identifier: string): FiberElement | undefined {
+  const pageElement = __GetPageElement();
+  if (!pageElement) return undefined;
+  return __QuerySelector(pageElement, identifier, {});
+}
 
 /**
  * Applies a patch of snapshot operations to the main thread.
@@ -58,6 +76,50 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
           sendCtxNotFoundEventToBackground(parent ? childId : parentId);
         } else {
           parent.removeChild(child);
+        }
+        break;
+      }
+      case SnapshotOperation.nodesRefInsertBefore: {
+        const identifier = snapshotPatch[++i] as string;
+        const childId = snapshotPatch[++i] as number;
+        const beforeId = snapshotPatch[++i] as number | undefined;
+        const child = snapshotInstanceManager.values.get(childId);
+        if (!child) {
+          sendCtxNotFoundEventToBackground(childId);
+          break;
+        }
+        const host = resolveNodesRefHost(identifier);
+        if (!host) break;
+        if (!child.__elements) {
+          child.ensureElements();
+        }
+        const childRoot = child.__element_root!;
+        if (beforeId !== undefined) {
+          const before = snapshotInstanceManager.values.get(beforeId);
+          if (before?.__element_root) {
+            __InsertElementBefore(host, childRoot, before.__element_root);
+            break;
+          }
+        }
+        __AppendElement(host, childRoot);
+        break;
+      }
+      case SnapshotOperation.nodesRefRemoveChild: {
+        const identifier = snapshotPatch[++i] as string;
+        const childId = snapshotPatch[++i] as number;
+        const child = snapshotInstanceManager.values.get(childId);
+        if (!child) {
+          sendCtxNotFoundEventToBackground(childId);
+          break;
+        }
+        const childRoot = child.__element_root;
+        if (!childRoot) break;
+        const host = resolveNodesRefHost(identifier);
+        if (host) {
+          __RemoveElement(host, childRoot);
+          traverseSnapshotInstance(child, v => {
+            snapshotInstanceManager.values.delete(v.__id);
+          });
         }
         break;
       }

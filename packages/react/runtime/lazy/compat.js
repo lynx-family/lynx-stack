@@ -18,6 +18,7 @@ export const {
   cloneElement,
   createContext,
   createElement,
+  createPortal,
   createRef,
   forwardRef,
   isValidElement,

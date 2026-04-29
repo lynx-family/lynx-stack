@@ -69,6 +69,14 @@ export { Fragment, Suspense } from 'react';
 export { Component, PureComponent, cloneElement, createElement, createRef, isValidElement } from 'react';
 
 /**
+ * Renders children into a different ReactLynx element identified by a
+ * `NodesRef` (e.g. from `ref={setX}` or `lynx.createSelectorQuery()`).
+ *
+ * @public
+ */
+export { createPortal } from '../runtime/lib/index.js';
+
+/**
  * RL-defined Lynx APIs
  */
 export * from '../runtime/lib/lynx-api.js';

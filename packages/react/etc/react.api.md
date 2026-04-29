@@ -6,6 +6,7 @@
 
 import { cloneElement } from 'react';
 import { Component } from 'react';
+import type { ComponentChild } from 'preact';
 import type { ComponentClass } from 'react';
 import type { Consumer } from 'react';
 import { createContext } from 'react';
@@ -19,6 +20,7 @@ import { Fragment } from 'react';
 import { isValidElement } from 'react';
 import { lazy } from 'react';
 import { memo } from 'react';
+import type { NodesRef } from '@lynx-js/types';
 import { PureComponent } from 'react';
 import type { ReactNode } from 'react';
 import type { RefObject } from 'react';
@@ -33,6 +35,7 @@ import { useReducer } from 'react';
 import { useRef } from 'react';
 import { useState } from 'react';
 import { useSyncExternalStore } from 'react';
+import type { VNode } from 'preact';
 
 export { cloneElement }
 
@@ -41,6 +44,11 @@ export { Component }
 export { createContext }
 
 export { createElement }
+
+// Warning: (ae-missing-release-tag) "createPortal" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function createPortal(vnode: ComponentChild, container: NodesRef): VNode<any>;
 
 export { createRef }
 
