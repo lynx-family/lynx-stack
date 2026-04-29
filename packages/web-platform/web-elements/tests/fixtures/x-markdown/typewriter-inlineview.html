@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>typewriter-inlineview</title>
+    <meta content="width=device-width,initial-scale=1.0" name="viewport">
+    <link href="/main.css" rel="stylesheet" />
+  </head>
+  <body>
+    <script src="/main.js" defer></script>
+    <x-view class="page">
+      <x-markdown id="markdown" style="width: 300px">
+        <x-view
+          id="badge"
+          slot="badge"
+          style="display: inline-block; width: 10px; height: 10px; background: rgb(255, 0, 0)"
+        ></x-view>
+      </x-markdown>
+    </x-view>
+    <script>
+    window._typewriterInlineViewState = null;
+
+      const collectState = () => {
+        const el = document.getElementById('markdown');
+        const root = el?.shadowRoot?.querySelector('#markdown-root');
+        return {
+          inlineViewCount:
+            root?.querySelectorAll('.md-inline-view').length ?? 0,
+          inlineImageCount:
+            root?.querySelectorAll('img[data-inlineview]').length ?? 0,
+        };
+      };
+
+      const waitForInlineViewRender = async () => {
+        const deadline = Date.now() + 5000;
+        while (Date.now() < deadline) {
+          const state = collectState();
+          if (state.inlineViewCount > 0 || state.inlineImageCount > 0) {
+            return state;
+          }
+          await new Promise((resolve) => requestAnimationFrame(resolve));
+        }
+        return collectState();
+      };
+
+      window.addEventListener('load', async () => {
+        await customElements.whenDefined('x-markdown');
+        const el = document.getElementById('markdown');
+        const content = 'inline view here ![](inlineview://badge) next';
+
+        el.setAttribute('content', content);
+        el.setAttribute('initial-animation-step', String(content.length));
+        el.setAttribute('animation-paused', 'true');
+        el.setAttribute('animation-type', 'typewriter');
+
+        window._typewriterInlineViewState =
+          await waitForInlineViewRender();
+      });
+    </script>
+  </body>
+</html>

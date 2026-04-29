@@ -637,6 +637,19 @@ test.describe('x-markdown', () => {
     expect(projected).toBe(true);
   });
 
+  test('should not create img for inline view in typewriter mode', async ({ page }) => {
+    await goto(page, 'x-markdown/typewriter-inlineview');
+    await page.waitForFunction(() =>
+      (window as any)._typewriterInlineViewState !== null
+    );
+    const state = await page.evaluate(() =>
+      (window as any)._typewriterInlineViewState
+    );
+
+    expect(state.inlineViewCount).toBe(1);
+    expect(state.inlineImageCount).toBe(0);
+  });
+
   test('should apply class styles to inline view', async ({ page }) => {
     await goto(page, 'x-markdown/inlineview-class');
     await page.waitForFunction(() => {

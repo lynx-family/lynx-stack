@@ -1065,6 +1065,7 @@ export class XMarkdownAttributes {
       root.innerHTML = sanitizeHtml(
         preprocessInlineView(renderMarkdown(parser, visible)),
       );
+      this.#injectInlineViews(root);
     }
 
     this.#appendTypewriterCursor(root);
