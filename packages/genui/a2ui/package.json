@@ -53,47 +53,19 @@
       "types": "./dist/catalog/Divider.d.ts",
       "default": "./dist/catalog/Divider.js"
     },
-    "./catalog/TextField": {
-      "types": "./dist/catalog/TextField.d.ts",
-      "default": "./dist/catalog/TextField.js"
-    },
-    "./catalog/Icon": {
-      "types": "./dist/catalog/Icon.d.ts",
-      "default": "./dist/catalog/Icon.js"
-    },
-    "./catalog/Tabs": {
-      "types": "./dist/catalog/Tabs.d.ts",
-      "default": "./dist/catalog/Tabs.js"
-    },
-    "./catalog/Modal": {
-      "types": "./dist/catalog/Modal.d.ts",
-      "default": "./dist/catalog/Modal.js"
-    },
-    "./catalog/AudioPlayer": {
-      "types": "./dist/catalog/AudioPlayer.d.ts",
-      "default": "./dist/catalog/AudioPlayer.js"
-    },
-    "./catalog/Slider": {
-      "types": "./dist/catalog/Slider.d.ts",
-      "default": "./dist/catalog/Slider.js"
-    },
-    "./catalog/DateTimeInput": {
-      "types": "./dist/catalog/DateTimeInput.d.ts",
-      "default": "./dist/catalog/DateTimeInput.js"
-    },
-    "./catalog/ChoicePicker": {
-      "types": "./dist/catalog/ChoicePicker.d.ts",
-      "default": "./dist/catalog/ChoicePicker.js"
-    },
     "./catalog/CheckBox": {
       "types": "./dist/catalog/CheckBox.d.ts",
       "default": "./dist/catalog/CheckBox.js"
+    },
+    "./catalog/RadioGroup": {
+      "types": "./dist/catalog/RadioGroup.d.ts",
+      "default": "./dist/catalog/RadioGroup.js"
     }
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog"
+    "build": "tsc --build && node ./scripts/copy-css.mjs && a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog"
   },
   "dependencies": {
     "@a2ui/web_core": "0.9.1",
