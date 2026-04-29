@@ -15,7 +15,7 @@ export function StaticPage(
 ) {
   const { protocol, demoUrl } = props;
 
-  const origin = window.location.origin;
+  const baseUrl = window.location.href.replace(/#.*$/, '');
   const homeHref = `#/${protocol}`;
 
   const entries = useMemo(() => {
@@ -26,7 +26,7 @@ export function StaticPage(
           demoUrl,
           messages: demo.messages,
         },
-        origin,
+        baseUrl,
       );
 
       return {
@@ -34,7 +34,7 @@ export function StaticPage(
         renderUrl,
       };
     });
-  }, [demoUrl, origin, protocol]);
+  }, [demoUrl, baseUrl, protocol]);
 
   return (
     <div className='page'>

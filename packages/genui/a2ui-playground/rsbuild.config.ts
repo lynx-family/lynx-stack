@@ -12,6 +12,9 @@ export default defineConfig({
       render: './src/render.tsx',
     },
   },
+  output: {
+    assetPrefix: process.env.ASSET_PREFIX,
+  },
   server: {
     host: '0.0.0.0',
     cors: {
@@ -20,7 +23,7 @@ export default defineConfig({
     publicDir: [
       {
         name: 'www',
-        copyOnBuild: false,
+        copyOnBuild: true,
         watch: true,
       },
     ],

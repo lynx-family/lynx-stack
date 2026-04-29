@@ -44,7 +44,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   const [error, setError] = useState('');
   const [renderUrl, setRenderUrl] = useState('');
 
-  const origin = window.location.origin;
+  const baseUrl = window.location.href.replace(/#.*$/, '');
 
   const currentScenario = useMemo(
     () => ALL_SCENARIOS.find((s) => s.id === scenarioId) ?? ALL_SCENARIOS[0],
@@ -64,11 +64,11 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
       const actionMocks = scenario?.actionMocks;
       const url = buildRenderUrl(
         { protocol, demoUrl: DEFAULT_DEMO_URL, messages: parsed, actionMocks },
-        origin,
+        baseUrl,
       );
       setRenderUrl(url);
     },
-    [origin, protocol],
+    [baseUrl, protocol],
   );
 
   useEffect(() => {
