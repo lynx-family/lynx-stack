@@ -1,5 +1,8 @@
 {
   "$schema": "https://turborepo.com/schema.json",
+  "globalDependencies": [
+    "./tsconfig.json"
+  ],
   "globalPassThroughEnv": [
     "CI",
     "COREPACK_INTEGRITY_KEYS",
@@ -17,7 +20,6 @@
     },
     "build": {
       "dependsOn": [
-        "//#build",
         "^build"
       ]
     },
@@ -28,12 +30,7 @@
     "//#build": {
       "cache": false,
       "dependsOn": [],
-      "inputs": [
-        "**/*.{ts,tsx}",
-        ".github/**",
-        "!node_modules/**",
-        "!**/*.d.ts"
-      ]
+      "inputs": []
     }
   }
 }
