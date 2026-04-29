@@ -21,6 +21,16 @@ import type {
   ServerToClientMessage,
   UserActionPayload,
 } from '@lynx-js/a2ui-reactlynx';
+import buttonManifest from '@lynx-js/a2ui-reactlynx/catalog/Button/catalog.json';
+import cardManifest from '@lynx-js/a2ui-reactlynx/catalog/Card/catalog.json';
+import checkBoxManifest from '@lynx-js/a2ui-reactlynx/catalog/CheckBox/catalog.json';
+import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json';
+import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json';
+import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
+import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
+import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
+import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
+import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json';
 import {
   useEffect,
   useGlobalProps,
@@ -41,16 +51,16 @@ import { createMockAgent } from '../examples/io-mock/mockAgent.js';
 // `catalog.json` manifest — see
 // `packages/genui/a2ui/src/catalog/README.md`.
 const ALL_BUILTINS: readonly CatalogInput[] = [
-  Text,
-  Image,
-  Row,
-  Column,
-  List,
-  Card,
-  Button,
-  Divider,
-  CheckBox,
-  RadioGroup,
+  [Text, textManifest],
+  [Image, imageManifest],
+  [Row, rowManifest],
+  [Column, columnManifest],
+  [List, listManifest],
+  [Card, cardManifest],
+  [Button, buttonManifest],
+  [Divider, dividerManifest],
+  [CheckBox, checkBoxManifest],
+  [RadioGroup, radioGroupManifest],
 ];
 
 interface InitData {
@@ -198,9 +208,8 @@ async function loadActionMocks(
 }
 
 export function App() {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
   const globalProps = useGlobalProps();
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
   const rawInitData = useInitData();
 
   const initData = useMemo(() => {
@@ -232,7 +241,6 @@ export function App() {
   const [store, setStore] = useState<MessageStore | null>(null);
   const [error, setError] = useState<string>('');
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   useEffect(() => {
     let cancelled = false;
 
