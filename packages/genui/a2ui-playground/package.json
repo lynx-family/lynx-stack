@@ -4,12 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "rsbuild build",
+    "build": "pnpm run build:lynx && rsbuild build",
     "build:lynx": "rspeedy build",
-    "dev": "rsbuild dev",
-    "dev:lynx": "rspeedy dev",
-    "preview": "rsbuild preview",
-    "preview:lynx": "rspeedy preview"
+    "dev": "pnpm run build:lynx && rsbuild dev"
   },
   "dependencies": {
     "@codemirror/lang-json": "^6.0.2",

@@ -4,6 +4,7 @@
     "isolatedDeclarations": false,
     "composite": true,
     "outDir": "./dist",
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "target": "esnext",
     "jsx": "preserve",
     "jsxImportSource": "@lynx-js/react",
