@@ -30,7 +30,7 @@ SOFTWARE.
 import { Fragment, options } from 'preact';
 import type { VNode } from 'preact';
 
-import { DIFF, DIFFED, RENDER, ROOT } from '../renderToOpcodes/constants.js';
+import { DIFF, DIFFED, RENDER, ROOT } from './render-constants.js';
 
 interface PatchedVNode extends VNode {
   _owner?: PatchedVNode | null;

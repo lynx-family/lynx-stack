@@ -7,7 +7,7 @@ import { waitSchedule } from './utils/nativeMethod';
 import { globalCommitTaskMap, replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
 import { deinitGlobalSnapshotPatch, initGlobalSnapshotPatch } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
 import { LifecycleConstant } from '../../src/snapshot/lifecycle/constant';
-import { CATCH_ERROR } from '../../src/snapshot/renderToOpcodes/constants';
+import { CATCH_ERROR } from '../../src/shared/render-constants';
 import { __root } from '../../src/root';
 import { setupPage, backgroundSnapshotInstanceManager } from '../../src/snapshot';
 

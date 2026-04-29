@@ -12,7 +12,7 @@ import { snapshotPatchApply } from '../../src/snapshot/lifecycle/patch/snapshotP
 import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
 import { injectTt } from '../../src/snapshot/lynx/tt';
 import { root } from '../../src/lynx-api';
-import { CHILDREN } from '../../src/snapshot/renderToOpcodes/constants';
+import { CHILDREN } from '../../src/shared/render-constants';
 import { __root } from '../../src/root';
 import { setupPage, backgroundSnapshotInstanceManager } from '../../src/snapshot';
 import { globalEnvManager } from './utils/envManager';

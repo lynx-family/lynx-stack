@@ -7,9 +7,9 @@ import type { FC } from 'react';
 
 import './lynx.js';
 
+import { useMemo } from './core/hooks/react.js';
 import { __root } from './root.js';
 import { factory as factory2 } from './snapshot/compat/componentIs.js';
-import { useMemo } from './snapshot/hooks/react.js';
 import { loadLazyBundle } from './snapshot/lynx/lazy-bundle.js';
 import { BackgroundSnapshotInstance } from './snapshot/snapshot/backgroundSnapshot.js';
 import { __page, __pageId, createSnapshot, snapshotManager } from './snapshot/snapshot/definition.js';
@@ -17,7 +17,7 @@ import { DynamicPartType } from './snapshot/snapshot/dynamicPartType.js';
 import { snapshotCreateList } from './snapshot/snapshot/list.js';
 import { SnapshotInstance, snapshotCreatorMap } from './snapshot/snapshot/snapshot.js';
 
-export { CHILDREN, COMPONENT, DIFF, DIRTY, DOM, FLAGS, INDEX, PARENT } from './snapshot/renderToOpcodes/constants.js';
+export { CHILDREN, COMPONENT, DIFF, DIRTY, DOM, FLAGS, INDEX, PARENT } from './shared/render-constants.js';
 
 export { __page, __pageId, __root };
 

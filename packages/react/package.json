@@ -56,12 +56,12 @@
       "default": "./runtime/lepus/jsx-runtime/index.js"
     },
     "./hooks": {
-      "types": "./runtime/lib/snapshot/hooks/react.d.ts",
-      "default": "./runtime/lib/snapshot/hooks/react.js"
+      "types": "./runtime/lib/core/hooks/react.d.ts",
+      "default": "./runtime/lib/core/hooks/react.js"
     },
     "./lepus/hooks": {
-      "types": "./runtime/lib/snapshot/hooks/react.d.ts",
-      "default": "./runtime/lib/snapshot/hooks/mainThread.js"
+      "types": "./runtime/lib/core/hooks/react.d.ts",
+      "default": "./runtime/lib/core/hooks/mainThread.js"
     },
     "./lepus": {
       "types": "./runtime/lepus/index.d.ts",
@@ -132,10 +132,10 @@
         "./runtime/lazy/import.d.ts"
       ],
       "hooks": [
-        "./runtime/lib/snapshot/hooks/react.d.ts"
+        "./runtime/lib/core/hooks/react.d.ts"
       ],
       "lepus/hooks": [
-        "./runtime/lib/snapshot/hooks/react.d.ts"
+        "./runtime/lib/core/hooks/react.d.ts"
       ],
       "internal": [
         "./runtime/lib/internal.d.ts"

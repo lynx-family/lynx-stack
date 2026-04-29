@@ -2,13 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { noop } from '../../utils.js';
+/* v8 ignore start */
+const noop: (...args: unknown[]) => unknown = () => {};
+const noopFlowId = () => 0;
+/* v8 ignore end */
 
 export const isProfiling: boolean = /* @__PURE__ */ Boolean(
   lynx.performance?.isProfileRecording?.(),
 );
-
-const noopFlowId = () => 0;
 
 export const profileStart = /* @__PURE__ */ ((() => {
   let p;
@@ -26,10 +27,10 @@ export const profileEnd = /* @__PURE__ */ ((() => {
   return p.profileEnd.bind(p);
 })()) as typeof lynx.performance.profileEnd;
 
-export const profileFlowId = /* @__PURE__ */ ((() => {
+export const profileFlowId: typeof lynx.performance.profileFlowId = /* @__PURE__ */ (() => {
   let p;
   if (!(p = lynx.performance) || typeof p.profileFlowId !== 'function') {
     return noopFlowId;
   }
   return p.profileFlowId.bind(p);
-})()) as typeof lynx.performance.profileFlowId;
+})();

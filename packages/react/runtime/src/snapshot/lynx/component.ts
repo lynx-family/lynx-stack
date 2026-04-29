@@ -8,7 +8,7 @@ import { Component } from 'preact';
 
 import { PerfSpecificKey, markTimingLegacy } from './performance.js';
 import { globalFlushOptions } from '../lifecycle/patch/commit.js';
-import { NEXT_STATE } from '../renderToOpcodes/constants.js';
+import { NEXT_STATE } from '../../shared/render-constants.js';
 
 if (__JS__) {
   function reportRefDeprecationError(fnName: string, newFnName: string) {

@@ -14,13 +14,14 @@ const reactRoot = path.resolve(runtimeRoot, '..');
 const srcRoot = path.join(runtimeRoot, 'src');
 const testRoot = path.join(runtimeRoot, '__test__');
 const transformRoot = path.join(reactRoot, 'transform');
+const coreRoot = path.join(srcRoot, 'core');
+const sharedRoot = path.join(srcRoot, 'shared');
 
 const legacySourceDirs = [
   'alog',
   'compat',
   'debug',
   'gesture',
-  'hooks',
   'legacy-react-runtime',
   'lifecycle',
   'list',
@@ -41,7 +42,6 @@ const containedTestDirs = [
   'css',
   'debug',
   'gesture',
-  'hooks',
   'lifecycle',
   'lynx',
   'utils',
@@ -95,6 +95,7 @@ describe('snapshot containment guardrails', () => {
     );
     const offenders = walkFiles(srcRoot)
       .filter((file) => !file.includes(`${path.sep}src${path.sep}snapshot${path.sep}`))
+      .filter((file) => !file.includes(`${path.sep}src${path.sep}element-template${path.sep}`))
       .filter((file) => oldPathPattern.test(fs.readFileSync(file, 'utf8')))
       .map((file) => path.relative(runtimeRoot, file));
 
@@ -110,6 +111,24 @@ describe('snapshot containment guardrails', () => {
       .map((file) => path.relative(runtimeRoot, file));
 
     expect(offenders).toEqual([]);
+  });
+
+  test('prevents core and shared modules from depending on runtime backends', () => {
+    const backendImportPattern =
+      /(?:from\s+|import\s*\(\s*)['"](?:\.\/|\.\.\/)+(?:snapshot|element-template)(?:\/|['"])/;
+    const offenders = [
+      ...walkFiles(coreRoot),
+      ...walkFiles(sharedRoot),
+    ]
+      .filter((file) => backendImportPattern.test(fs.readFileSync(file, 'utf8')))
+      .map((file) => path.relative(runtimeRoot, file));
+
+    expect(offenders).toEqual([]);
+  });
+
+  test('allows ReactLynx hooks to live under core instead of snapshot', () => {
+    expect(fs.existsSync(path.join(srcRoot, 'snapshot', 'hooks'))).toBe(false);
+    expect(fs.existsSync(path.join(srcRoot, 'core', 'hooks'))).toBe(true);
   });
 
   test('prevents transform output from referencing untracked old runtime source paths', () => {
@@ -136,7 +155,7 @@ describe('snapshot containment guardrails', () => {
 
     expect(typesVersions).not.toContain('./runtime/lib/hooks/');
     expect(typesVersions).not.toContain('./runtime/lib/legacy-react-runtime/');
-    expect(typesVersions).toContain('./runtime/lib/snapshot/hooks/react.d.ts');
+    expect(typesVersions).toContain('./runtime/lib/core/hooks/react.d.ts');
     expect(typesVersions).toContain(
       './runtime/lib/snapshot/legacy-react-runtime/index.d.ts',
     );

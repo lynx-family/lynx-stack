@@ -19,7 +19,7 @@ import type { DependencyList, EffectCallback } from 'react';
 
 import type { TraceOption } from '@lynx-js/types';
 
-import { isProfiling, profileEnd, profileFlowId, profileStart } from '../debug/profile.js';
+import { isProfiling, profileEnd, profileFlowId, profileStart } from '../../shared/profile.js';
 
 type GenericSetState = Dispatch<StateUpdater<unknown>>;
 

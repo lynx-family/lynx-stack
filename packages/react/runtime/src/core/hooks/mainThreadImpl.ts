@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * Implements hooks in main thread.
+ * Implements hooks in the main thread.
  * This module is modified from preact/hooks
  *
  * internal-preact/hooks/dist/hooks.mjs
@@ -19,7 +19,6 @@ import type {
   useLayoutEffect as useLayoutEffectType,
 } from 'preact/hooks';
 
-import { noop } from '../../utils.js';
 import {
   CHILDREN,
   COMPONENT,
@@ -35,43 +34,55 @@ import {
   ROOT,
   VALUE,
   VNODE,
-} from '../renderToOpcodes/constants.js';
+} from '../../shared/render-constants.js';
+import { noop } from '../../utils.js';
 
 let currentIndex: number;
 let currentComponent: Component | null | undefined;
 let currentHook: number;
+let hooksInstalled = false;
+let oldBeforeDiff: ((vnode: any) => void) | undefined;
+let oldBeforeRender: ((vnode: any) => void) | undefined;
+let oldAfterDiff: ((vnode: any) => void) | undefined;
+let oldRoot: ((vnode: any, parentDom: any) => void) | undefined;
 
-const oldBeforeDiff = options[DIFF];
-const oldBeforeRender = options[RENDER];
-const oldAfterDiff = options[DIFFED];
-const oldRoot = options[ROOT];
-
-options[DIFF] = function(vnode) {
-  currentComponent = null;
-  if (oldBeforeDiff) oldBeforeDiff(vnode);
-};
-
-/* v8 ignore start */
-options[ROOT] = function(vnode, parentDom) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  if (vnode && parentDom[CHILDREN] && parentDom[CHILDREN][MASK]) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    vnode[MASK] = parentDom[CHILDREN][MASK] as [number, number];
+function installMainThreadHooks(): void {
+  if (hooksInstalled) {
+    return;
   }
-  if (oldRoot) oldRoot(vnode, parentDom);
-};
-/* v8 ignore stop */
+  hooksInstalled = true;
+  oldBeforeDiff = options[DIFF];
+  oldBeforeRender = options[RENDER];
+  oldAfterDiff = options[DIFFED];
+  oldRoot = options[ROOT];
 
-options[RENDER] = function(vnode) {
-  if (oldBeforeRender) oldBeforeRender(vnode);
-  currentComponent = vnode[COMPONENT];
-  currentIndex = 0;
-};
+  options[DIFF] = function(vnode) {
+    currentComponent = null;
+    if (oldBeforeDiff) oldBeforeDiff(vnode);
+  };
 
-options[DIFFED] = function(vnode) {
-  if (oldAfterDiff) oldAfterDiff(vnode);
-  currentComponent = null;
-};
+  /* v8 ignore start */
+  options[ROOT] = function(vnode, parentDom) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (vnode && parentDom[CHILDREN] && parentDom[CHILDREN][MASK]) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      vnode[MASK] = parentDom[CHILDREN][MASK] as [number, number];
+    }
+    if (oldRoot) oldRoot(vnode, parentDom);
+  };
+  /* v8 ignore stop */
+
+  options[RENDER] = function(vnode) {
+    if (oldBeforeRender) oldBeforeRender(vnode);
+    currentComponent = vnode[COMPONENT];
+    currentIndex = 0;
+  };
+
+  options[DIFFED] = function(vnode) {
+    if (oldAfterDiff) oldAfterDiff(vnode);
+    currentComponent = null;
+  };
+}
 
 function getHookState(index: number, type: number) {
   if (options[HOOK]) {
@@ -197,6 +208,7 @@ const useLayoutEffect = noop as typeof useLayoutEffectType;
 const useImperativeHandle = noop as typeof useImperativeHandleType;
 
 export {
+  installMainThreadHooks,
   useCallback,
   useContext,
   useDebugValue,

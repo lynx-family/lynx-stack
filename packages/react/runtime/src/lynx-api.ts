@@ -6,10 +6,10 @@ import { createContext, createElement } from 'preact/compat';
 import { useState } from 'preact/hooks';
 import type { Consumer, FC, ReactNode } from 'react';
 
+import { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListener.js';
 import { __root } from './root.js';
+import { profileEnd, profileStart } from './shared/profile.js';
 import { factory, withInitDataInState } from './snapshot/compat/initData.js';
-import { profileEnd, profileStart } from './snapshot/debug/profile.js';
-import { useLynxGlobalEventListener } from './snapshot/hooks/useLynxGlobalEventListener.js';
 import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
 import { flushDelayedLifecycleEvents } from './snapshot/lynx/tt.js';
 
@@ -572,7 +572,7 @@ export interface Lynx {
   registerDataProcessors: (dataProcessorDefinition?: DataProcessorDefinition) => void;
 }
 
-export { useLynxGlobalEventListener } from './snapshot/hooks/useLynxGlobalEventListener.js';
+export { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListener.js';
 export { runOnBackground } from './snapshot/worklet/call/runOnBackground.js';
 export { runOnMainThread } from './snapshot/worklet/call/runOnMainThread.js';
 export { MainThreadRef, useMainThreadRef } from './snapshot/worklet/ref/workletRef.js';

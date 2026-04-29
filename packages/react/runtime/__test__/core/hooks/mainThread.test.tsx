@@ -3,15 +3,16 @@
 // LICENSE file in the root directory of this source tree.
 
 import { beforeEach, afterEach, vi } from 'vitest';
-import { globalEnvManager } from '../utils/envManager';
+import { globalEnvManager } from '../../snapshot/utils/envManager';
 import { describe } from 'vitest';
 import { it } from 'vitest';
 import { expect } from 'vitest';
 import { beforeAll } from 'vitest';
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
-import { elementTree } from '../utils/nativeMethod';
+import { elementTree } from '../../snapshot/utils/nativeMethod';
 import { __root } from '../../../src/root';
 import {
+  installMainThreadHooks,
   useState,
   useMemo,
   useEffect,
@@ -23,9 +24,9 @@ import {
   useId,
   useErrorBoundary,
   useContext,
-} from '../../../src/snapshot/hooks/mainThread';
+} from '../../../src/core/hooks/mainThread';
 import { options, createContext } from 'preact';
-import { HOOK } from '../../../src/snapshot/renderToOpcodes/constants.js';
+import { DIFF, HOOK } from '../../../src/shared/render-constants.js';
 
 beforeAll(() => {
   replaceCommitHook();
@@ -43,6 +44,14 @@ afterEach(() => {
 });
 
 describe('mainThread hooks', () => {
+  it('should skip duplicate installation', () => {
+    const diffHook = options[DIFF];
+
+    installMainThreadHooks();
+
+    expect(options[DIFF]).toBe(diffHook);
+  });
+
   it('should get initialValue', () => {
     let setCount;
     options[HOOK] = vi.fn();

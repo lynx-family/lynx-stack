@@ -3,9 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 import { options } from 'preact';
 
+import { RENDER_COMPONENT, ROOT } from '../../shared/render-constants.js';
 import { hook, isSdkVersionGt } from '../../utils.js';
 import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
-import { RENDER_COMPONENT, ROOT } from '../renderToOpcodes/constants.js';
 
 const PerformanceTimingKeys = [
   'updateSetStateTrigger',

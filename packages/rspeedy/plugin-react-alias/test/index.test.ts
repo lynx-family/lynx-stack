@@ -212,7 +212,7 @@ describe('React - alias', () => {
     expect(mainThreadRule.resolve.alias).toHaveProperty(
       'preact/hooks',
       expect.stringContaining(
-        '/packages/react/runtime/lib/snapshot/hooks/mainThread.js'.replaceAll(
+        '/packages/react/runtime/lib/core/hooks/mainThread.js'.replaceAll(
           '/',
           path.sep,
         ),
@@ -221,7 +221,7 @@ describe('React - alias', () => {
     expect(mainThreadRule.resolve.alias).toHaveProperty(
       '@lynx-js/react/hooks',
       expect.stringContaining(
-        '/packages/react/runtime/lib/snapshot/hooks/mainThread.js'.replaceAll(
+        '/packages/react/runtime/lib/core/hooks/mainThread.js'.replaceAll(
           '/',
           path.sep,
         ),
@@ -230,7 +230,7 @@ describe('React - alias', () => {
     expect(mainThreadRule.resolve.alias).toHaveProperty(
       '@lynx-js/react/lepus/hooks',
       expect.stringContaining(
-        '/packages/react/runtime/lib/snapshot/hooks/mainThread.js'.replaceAll(
+        '/packages/react/runtime/lib/core/hooks/mainThread.js'.replaceAll(
           '/',
           path.sep,
         ),
@@ -272,7 +272,7 @@ describe('React - alias', () => {
     expect(backgroundRule.resolve.alias).toHaveProperty(
       '@lynx-js/react/hooks',
       expect.stringContaining(
-        '/packages/react/runtime/lib/snapshot/hooks/react.js'.replaceAll(
+        '/packages/react/runtime/lib/core/hooks/react.js'.replaceAll(
           '/',
           path.sep,
         ),
