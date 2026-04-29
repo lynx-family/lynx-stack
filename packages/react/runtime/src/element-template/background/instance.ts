@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { GlobalCommitContext } from './commit-context.js';
+import { isElementTemplateHydrated } from './commit-hook.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
@@ -59,6 +60,21 @@ export class BackgroundElementTemplateInstance {
   public attributeSlots: SerializableValue[] = [];
   public elementSlots: BackgroundElementTemplateInstance[][] = [];
   public options: RuntimeOptions | undefined;
+  private hasEmittedCreate = false;
+
+  get parentNode(): BackgroundElementTemplateInstance | null {
+    return this.parent;
+  }
+
+  get childNodes(): BackgroundElementTemplateInstance[] {
+    const nodes: BackgroundElementTemplateInstance[] = [];
+    let child = this.firstChild;
+    while (child) {
+      nodes.push(child);
+      child = child.nextSibling;
+    }
+    return nodes;
+  }
 
   // 2. Slot State: aggregate children by slotId
   get slotChildren(): Map<number, BackgroundElementTemplateInstance[]> {
@@ -87,6 +103,9 @@ export class BackgroundElementTemplateInstance {
   }
 
   emitCreate(): void {
+    if (this.hasEmittedCreate) {
+      return;
+    }
     if (this.instanceId === 0 && __DEV__) {
       lynx.reportError(new Error('ElementTemplate patch has illegal handleId 0.'));
       return;
@@ -100,6 +119,13 @@ export class BackgroundElementTemplateInstance {
       normalizeAttributeSlots(this.attributeSlots),
       this.elementSlots.map((children) => children.map((child) => child.instanceId)),
     );
+    this.hasEmittedCreate = true;
+  }
+
+  private isPendingCreate(): boolean {
+    return isElementTemplateHydrated()
+      && this.instanceId > 0
+      && !this.hasEmittedCreate;
   }
 
   // DOM API for Preact
@@ -160,7 +186,11 @@ export class BackgroundElementTemplateInstance {
         return;
       }
       if (slotId !== -1 && parent) {
+        if (parent.isPendingCreate()) {
+          return;
+        }
         const beforeId = beforeChild ? beforeChild.instanceId : 0;
+        emitCreateRecursive(child);
         pushOp(
           ElementTemplateUpdateOps.insertNode,
           parent.instanceId,
@@ -267,6 +297,9 @@ export class BackgroundElementTemplateInstance {
         if (isDirectOrDeepEqual(previousValue, nextValue)) {
           continue;
         }
+        if (this.isPendingCreate()) {
+          continue;
+        }
         pushOp(
           ElementTemplateUpdateOps.setAttribute,
           this.instanceId,
@@ -302,6 +335,9 @@ export class BackgroundElementTemplateInstance {
       return;
     }
     this.attributeSlots = [text];
+    if (this.isPendingCreate()) {
+      return;
+    }
     pushOp(ElementTemplateUpdateOps.setAttribute, this.instanceId, 0, text);
   }
 
@@ -319,6 +355,26 @@ export class BackgroundElementTemplateSlot extends BackgroundElementTemplateInst
   constructor() {
     super('slot');
   }
+}
+
+function emitCreateRecursive(instance: BackgroundElementTemplateInstance): void {
+  if (
+    !isElementTemplateHydrated()
+    || instance.instanceId < 0
+    || instance instanceof BackgroundElementTemplateSlot
+  ) {
+    return;
+  }
+
+  for (const slotChildren of instance.elementSlots) {
+    if (!slotChildren) {
+      continue;
+    }
+    for (const child of slotChildren) {
+      emitCreateRecursive(child);
+    }
+  }
+  instance.emitCreate();
 }
 
 function collectChildren(slot: BackgroundElementTemplateSlot): BackgroundElementTemplateInstance[] {

@@ -6,6 +6,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GlobalCommitContext } from '../../../../src/element-template/background/commit-context.js';
 import {
+  markElementTemplateHydrated,
+  resetElementTemplateCommitState,
+} from '../../../../src/element-template/background/commit-hook.js';
+import {
   BackgroundElementTemplateInstance,
   BackgroundElementTemplateSlot,
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
@@ -20,6 +24,7 @@ describe('BackgroundElementTemplateInstance', () => {
   beforeEach(() => {
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
+    resetElementTemplateCommitState();
   });
 
   it('should create an instance with correct type and id', () => {
@@ -33,6 +38,48 @@ describe('BackgroundElementTemplateInstance', () => {
     const instance2 = new BackgroundElementTemplateInstance('text');
     expect(instance1.instanceId).toBe(1);
     expect(instance2.instanceId).toBe(2);
+  });
+
+  it('does not emit create before hydration', () => {
+    GlobalCommitContext.ops = [];
+
+    new BackgroundElementTemplateInstance('image', ['logo.png']);
+
+    expect(GlobalCommitContext.ops).toEqual([]);
+  });
+
+  it('does not emit create for synthetic slot containers after hydration', () => {
+    markElementTemplateHydrated();
+    GlobalCommitContext.ops = [];
+
+    new BackgroundElementTemplateSlot();
+
+    expect(GlobalCommitContext.ops).toEqual([]);
+  });
+
+  it('exposes DOM-compatible tree accessors for Preact removal paths', () => {
+    const parent = new BackgroundElementTemplateInstance('view');
+    const slot = new BackgroundElementTemplateSlot();
+    slot.setAttribute('id', 0);
+    parent.appendChild(slot);
+    const child = new BackgroundElementTemplateInstance('image');
+    slot.appendChild(child);
+
+    expect(parent.childNodes).toEqual([slot]);
+    expect(slot.childNodes).toEqual([child]);
+
+    GlobalCommitContext.ops = [];
+    child.parentNode?.removeChild(child);
+
+    expect(slot.childNodes).toEqual([]);
+    expect(child.parentNode).toBeNull();
+    expect(parent.elementSlots[0]).toEqual([]);
+    expect(GlobalCommitContext.ops).toEqual([
+      4,
+      parent.instanceId,
+      0,
+      child.instanceId,
+    ]);
   });
 
   describe('appendChild', () => {
@@ -109,6 +156,108 @@ describe('BackgroundElementTemplateInstance', () => {
 
       expect(parent.firstChild).toBe(child);
       expect(GlobalCommitContext.ops).toEqual([]);
+    });
+
+    it('emits create with initialized attrs before inserting a post-hydration template', () => {
+      const parent = new BackgroundElementTemplateInstance('view');
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      parent.appendChild(slot);
+      parent.emitCreate();
+
+      markElementTemplateHydrated();
+      GlobalCommitContext.ops = [];
+
+      const child = new BackgroundElementTemplateInstance('image');
+      child.setAttribute('attributeSlots', ['logo.png']);
+
+      expect(GlobalCommitContext.ops).toEqual([]);
+
+      slot.appendChild(child);
+
+      expect(GlobalCommitContext.ops).toEqual([
+        1,
+        child.instanceId,
+        'image',
+        null,
+        ['logo.png'],
+        [],
+        3,
+        parent.instanceId,
+        0,
+        child.instanceId,
+        0,
+      ]);
+    });
+
+    it('defers nested slot inserts until the owner template is created', () => {
+      const parent = new BackgroundElementTemplateInstance('view');
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      parent.appendChild(slot);
+      parent.emitCreate();
+
+      markElementTemplateHydrated();
+      GlobalCommitContext.ops = [];
+
+      const owner = new BackgroundElementTemplateInstance('view');
+      const ownerSlot = new BackgroundElementTemplateSlot();
+      ownerSlot.setAttribute('id', 0);
+      owner.appendChild(ownerSlot);
+      const nested = createTextNode('nested');
+      ownerSlot.appendChild(nested);
+
+      expect(GlobalCommitContext.ops).toEqual([]);
+
+      slot.appendChild(owner);
+
+      expect(GlobalCommitContext.ops).toEqual([
+        1,
+        nested.instanceId,
+        BUILTIN_RAW_TEXT_TEMPLATE_KEY,
+        null,
+        ['nested'],
+        [],
+        1,
+        owner.instanceId,
+        'view',
+        null,
+        [],
+        [[nested.instanceId]],
+        3,
+        parent.instanceId,
+        0,
+        owner.instanceId,
+        0,
+      ]);
+    });
+
+    it('skips sparse child slots when creating a post-hydration template recursively', () => {
+      const parent = new BackgroundElementTemplateInstance('view');
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      parent.appendChild(slot);
+      parent.emitCreate();
+
+      markElementTemplateHydrated();
+      GlobalCommitContext.ops = [];
+
+      const child = new BackgroundElementTemplateInstance('view');
+      child.elementSlots.length = 1;
+      slot.appendChild(child);
+
+      const serializedSlots = GlobalCommitContext.ops[5] as unknown[];
+      expect(GlobalCommitContext.ops[0]).toBe(1);
+      expect(GlobalCommitContext.ops[1]).toBe(child.instanceId);
+      expect(serializedSlots).toHaveLength(1);
+      expect(0 in serializedSlots).toBe(false);
+      expect(GlobalCommitContext.ops.slice(6)).toEqual([
+        3,
+        parent.instanceId,
+        0,
+        child.instanceId,
+        0,
+      ]);
     });
 
     it('should move existing child if re-inserted', () => {
@@ -388,6 +537,23 @@ describe('BackgroundElementTemplateInstance', () => {
     ]);
   });
 
+  it('does not emit duplicate create ops for the same instance', () => {
+    const instance = new BackgroundElementTemplateInstance('view');
+    GlobalCommitContext.ops = [];
+
+    instance.emitCreate();
+    instance.emitCreate();
+
+    expect(GlobalCommitContext.ops).toEqual([
+      1,
+      instance.instanceId,
+      'view',
+      null,
+      [],
+      [],
+    ]);
+  });
+
   it('ignores text writes for non-raw-text instances', () => {
     const instance = new BackgroundElementTemplateInstance('view');
     GlobalCommitContext.ops = [];
@@ -396,6 +562,38 @@ describe('BackgroundElementTemplateInstance', () => {
 
     expect(instance.attributeSlots).toEqual([]);
     expect(GlobalCommitContext.ops).toEqual([]);
+  });
+
+  it('defers raw-text patches until inserting a post-hydration text node', () => {
+    const parent = new BackgroundElementTemplateInstance('view');
+    const slot = new BackgroundElementTemplateSlot();
+    slot.setAttribute('id', 0);
+    parent.appendChild(slot);
+    parent.emitCreate();
+
+    markElementTemplateHydrated();
+    GlobalCommitContext.ops = [];
+
+    const textNode = createTextNode('');
+    textNode.text = 'deferred';
+
+    expect(GlobalCommitContext.ops).toEqual([]);
+
+    slot.appendChild(textNode);
+
+    expect(GlobalCommitContext.ops).toEqual([
+      1,
+      textNode.instanceId,
+      BUILTIN_RAW_TEXT_TEMPLATE_KEY,
+      null,
+      ['deferred'],
+      [],
+      3,
+      parent.instanceId,
+      0,
+      textNode.instanceId,
+      0,
+    ]);
   });
 
   it('ignores spread-like shadow keys', () => {

@@ -223,7 +223,7 @@ export async function runCompiledPatchScenario(sourcePath: string): Promise<{
     'ops.txt': ElementTemplateUpdateCommandStream;
   };
 }> {
-  const context = setupPatchContext();
+  const context = setupUpdateFixtureContext();
   try {
     const mainArtifact = await compileFixtureSource(sourcePath, { target: 'LEPUS' });
     primeCompiledFixtureTemplates(mainArtifact);
@@ -247,8 +247,7 @@ export async function runCompiledPatchScenario(sourcePath: string): Promise<{
     const beforeJSX = serializeToJSX(__page);
 
     context.envManager.switchToBackground();
-    const beforeData = context.hydrationData[0];
-    if (!beforeData) {
+    if (!context.hydrationData[0]) {
       throw new Error('Missing compiled patch hydration data.');
     }
 
@@ -258,9 +257,8 @@ export async function runCompiledPatchScenario(sourcePath: string): Promise<{
       throw new Error('Missing compiled patch background root child.');
     }
 
-    const ops = hydrateBackground(beforeData, afterData);
-
     context.envManager.switchToMainThread();
+    const ops = context.updateEvents[0]?.ops ?? [];
     const afterJSX = serializeToJSX(__page);
 
     return {
@@ -271,6 +269,6 @@ export async function runCompiledPatchScenario(sourcePath: string): Promise<{
       },
     };
   } finally {
-    teardownPatchContext(context);
+    teardownUpdateFixtureContext(context);
   }
 }

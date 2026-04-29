@@ -12,6 +12,7 @@ export function App() {
 
   useEffect(() => {
     console.info('Hello, ReactLynx');
+    setAlterLogo(prevAlterLogo => !prevAlterLogo);
   }, []);
 
   const onTap = useCallback(() => {

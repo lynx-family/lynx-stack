@@ -18,6 +18,10 @@ export function markElementTemplateHydrated(): void {
   hasHydrated = true;
 }
 
+export function isElementTemplateHydrated(): boolean {
+  return hasHydrated;
+}
+
 export function resetElementTemplateCommitState(): void {
   hasHydrated = false;
   resetGlobalCommitContext();
