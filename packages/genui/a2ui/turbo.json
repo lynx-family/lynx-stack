@@ -8,6 +8,7 @@
       ],
       "inputs": [
         "src/**",
+        "styles/**",
         "tsconfig.json",
         "package.json"
       ],

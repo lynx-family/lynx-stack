@@ -5,7 +5,7 @@ import { Radio, RadioGroupRoot, RadioIndicator } from '@lynx-js/lynx-ui';
 
 import type { GenericComponentProps } from '../../core/types.js';
 
-import './style.css';
+import '../../../styles/catalog/RadioGroup.css';
 
 const HitSlop = {
   'hit-slop': {
