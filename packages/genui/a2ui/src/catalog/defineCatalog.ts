@@ -81,9 +81,11 @@ function deriveBareName(component: CatalogComponent): string {
   if (!name) {
     throw new Error(
       '[a2ui] Cannot add a component to the catalog: no displayName or '
-        + 'function name. Either name the function (`function Foo() {...}`), '
-        + 'set `Foo.displayName = "Foo"`, or pair it with its '
-        + '`catalog.json` manifest as `[Foo, fooManifest]`.',
+        + 'function name. This typically happens when the bundler '
+        + 'minifies function names. Set `Foo.displayName = "Foo"` after '
+        + 'the component declaration (the string literal survives '
+        + 'minification), or pair it with its `catalog.json` manifest as '
+        + '`[Foo, fooManifest]`.',
     );
   }
   return name;

@@ -6,6 +6,7 @@
     "jsxImportSource": "@lynx-js/react",
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
     "noEmit": true,
   },
   "include": [
