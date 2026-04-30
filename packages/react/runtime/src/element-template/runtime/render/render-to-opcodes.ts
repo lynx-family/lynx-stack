@@ -265,50 +265,13 @@ function renderCompiledEtHostVNode(vnode, props, context, opcodes) {
 }
 
 function renderStringHostVNode(type, vnode, props, context, opcodes) {
-  // TODO(element-template): remove this split once the remaining runtime-only
-  // fixtures stop sending plain string hosts through the ET render path.
-  if (isCompiledEtHostType(type)) {
-    renderCompiledEtHostVNode(vnode, props, context, opcodes);
-  } else {
-    renderGenericHostVNode(vnode, props, context, opcodes);
-  }
-}
-
-function renderGenericHostVNode(vnode, props, context, opcodes) {
-  opcodes.push(__OpBegin, vnode);
-
-  let children;
-  for (const name in props) {
-    const value = props[name];
-
-    switch (name) {
-      case 'children':
-        children = value;
-        continue;
-
-      /* c8 ignore next 5 */
-      case 'key':
-      case 'ref':
-      case '__self':
-      case '__source':
-        continue;
-
-      default: {}
-    }
-
-    if (value != null && value !== false && typeof value !== 'function') {
-      opcodes.push(__OpAttr, name, value);
-    }
+  if (__DEV__ && !isCompiledEtHostType(type)) {
+    throw new Error(
+      `Element Template main-thread renderer received an uncompiled host vnode: ${type}`,
+    );
   }
 
-  if (typeof children === 'string' || typeof children === 'number') {
-    opcodes.push(__OpText, children);
-  } else if (children != null && children !== false && children !== true) {
-    _renderToString(children, context, vnode, opcodes);
-  }
-
-  cleanupVNode(vnode);
-  opcodes.push(__OpEnd);
+  renderCompiledEtHostVNode(vnode, props, context, opcodes);
 }
 
 /**
@@ -370,8 +333,9 @@ function _renderToString(
     return;
   }
 
-  renderGenericHostVNode(vnode, props, context, opcodes);
-  return;
+  if (__DEV__) {
+    throw new Error('Element Template main-thread renderer received an invalid vnode.');
+  }
 }
 
 /** The `.render()` method for a PFC backing instance. */
