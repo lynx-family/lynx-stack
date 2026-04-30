@@ -48,7 +48,7 @@ export { createElement }
 // Warning: (ae-missing-release-tag) "createPortal" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function createPortal(vnode: ComponentChild, container: NodesRef): VNode<any>;
+export function createPortal(vnode: ComponentChild, container: NodesRef): VNode<any> | null;
 
 export { createRef }
 

@@ -93,8 +93,17 @@ function flushBackgroundUpdate(beforeCount) {
 }
 
 describe('createPortal', () => {
-  it('returns a VNode whose containerInfo points at the host ref', () => {
+  it('returns a VNode whose containerInfo points at the host ref (background only)', () => {
     const fakeNodesRef = { selector: '[react-ref-99-0]' };
+
+    // Main thread short-circuits to `null` so the Portal component +
+    // `preact` imports tree-shake out of the main-thread chunk.
+    globalEnvManager.switchToMainThread();
+    expect(createPortal(<text>x</text>, fakeNodesRef)).toBeNull();
+
+    // Background thread is the only place the portal vnode actually
+    // materializes.
+    globalEnvManager.switchToBackground();
     const vnode = createPortal(<text>x</text>, fakeNodesRef);
     expect(vnode).toBeTruthy();
     expect(vnode.containerInfo).toBe(fakeNodesRef);

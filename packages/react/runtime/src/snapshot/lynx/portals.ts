@@ -151,7 +151,13 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
 export function createPortal(
   vnode: ComponentChild,
   container: NodesRef,
-): VNode<any> {
+): VNode<any> | null {
+  // Main-thread bundle never renders Portal — the JSX is run only on the
+  // background thread. Bail early so the rest of the module (preact's
+  // `render` / `createElement`, the BSI cast, etc.) tree-shakes out of
+  // the main-thread chunk.
+  if (__MAIN_THREAD__) return null;
+
   const el = createElement(Portal, {
     [VNODE]: vnode,
     _container: container,
