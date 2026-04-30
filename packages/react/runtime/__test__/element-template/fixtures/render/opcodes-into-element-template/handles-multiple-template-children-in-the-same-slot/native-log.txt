@@ -1,0 +1,46 @@
+Array [
+  Array [
+    "__CreateElementTemplate",
+    "_et_child_a",
+    null,
+    null,
+    null,
+    -1,
+  ],
+  Array [
+    "__CreateElementTemplate",
+    "_et_child_b",
+    null,
+    null,
+    null,
+    -2,
+  ],
+  Array [
+    "__CreateElementTemplate",
+    "_et_parent",
+    null,
+    null,
+    Array [
+      Array [
+        Object {
+          "attributes": Object {},
+          "children": Array [],
+          "tag": "view",
+          "templateId": "_et_child_a",
+        },
+        Object {
+          "attributes": Object {},
+          "children": Array [],
+          "tag": "view",
+          "templateId": "_et_child_b",
+        },
+      ],
+    ],
+    -3,
+  ],
+  Array [
+    "__AppendElement",
+    "root",
+    "<_et_parent />",
+  ],
+]

@@ -1,0 +1,10 @@
+Object {
+  "stream": Array [
+    2,
+    -1,
+    0,
+    Object {
+      "id": 123,
+    },
+  ],
+}

@@ -1,0 +1,20 @@
+Array [
+  Array [
+    "__CreatePage",
+    "0",
+    0,
+  ],
+  Array [
+    "__CreateElementTemplate",
+    "_et_a94a8_test_1",
+    null,
+    null,
+    null,
+    -1,
+  ],
+  Array [
+    "__AppendElement",
+    "0",
+    "<_et_a94a8_test_1 />",
+  ],
+]

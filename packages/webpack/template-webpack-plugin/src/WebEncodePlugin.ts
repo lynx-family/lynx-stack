@@ -101,8 +101,10 @@ export class WebEncodePlugin {
               root: encodeOptions.lepusCode.root!,
             },
             customSections: encodeOptions.customSections ?? {},
-            elementTemplates: encodeOptions['elementTemplates'] ?? {},
           };
+          if (encodeOptions.elementTemplate !== undefined) {
+            tasmJSONInfo['elementTemplate'] = encodeOptions.elementTemplate;
+          }
           const isExperimentalWebBinary = process
             .env['EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE'];
           if (isExperimentalWebBinary === 'true') {

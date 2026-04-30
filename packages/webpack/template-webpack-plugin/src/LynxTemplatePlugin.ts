@@ -49,6 +49,10 @@ export interface EncodeOptions {
     type?: 'lazy';
     content: string | Record<string, unknown>;
   }>;
+  /**
+   * Element template data used by encoders that support element template output.
+   */
+  elementTemplate?: Record<string, unknown>;
   [k: string]: unknown;
 }
 
@@ -332,6 +336,7 @@ interface EncodeRawData {
     appType: string;
     config: Record<string, unknown>;
   };
+  elementTemplate?: Record<string, unknown>;
   [k: string]: unknown;
 }
 

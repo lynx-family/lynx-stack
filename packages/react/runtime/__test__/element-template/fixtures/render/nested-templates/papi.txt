@@ -1,0 +1,70 @@
+[
+  [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    [
+      "X"
+    ],
+    [],
+    -1
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_1",
+    null,
+    null,
+    [
+      [
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "X"
+          },
+          "children": [],
+          "templateId": "__et_builtin_raw_text__"
+        }
+      ]
+    ],
+    -2
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_2",
+    null,
+    null,
+    [
+      [
+        {
+          "tag": "view",
+          "attributes": {},
+          "children": [
+            {
+              "tag": "slot",
+              "attributes": {
+                "slot-id": 0
+              },
+              "children": [
+                {
+                  "tag": "raw-text",
+                  "attributes": {
+                    "text": "X"
+                  },
+                  "children": [],
+                  "templateId": "__et_builtin_raw_text__"
+                }
+              ]
+            }
+          ],
+          "templateId": "_et_7a8c6_test_1"
+        }
+      ]
+    ],
+    -3
+  ],
+  [
+    "__AppendElement",
+    "0",
+    "<_et_7a8c6_test_2 />"
+  ]
+]

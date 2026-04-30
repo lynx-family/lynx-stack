@@ -1,0 +1,74 @@
+Array [
+  Array [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    Array [
+      "X",
+    ],
+    Array [],
+    -1,
+  ],
+  Array [
+    "__CreateElementTemplate",
+    "_et_inner",
+    null,
+    Array [
+      "inner",
+    ],
+    Array [
+      Array [
+        Object {
+          "attributes": Object {
+            "text": "X",
+          },
+          "children": Array [],
+          "tag": "raw-text",
+          "templateId": "__et_builtin_raw_text__",
+        },
+      ],
+    ],
+    -2,
+  ],
+  Array [
+    "__CreateElementTemplate",
+    "_et_outer",
+    null,
+    null,
+    Array [
+      Array [
+        Object {
+          "attributes": Object {
+            "title": "inner",
+          },
+          "children": Array [
+            Object {
+              "attributes": Object {
+                "slot-id": 0,
+              },
+              "children": Array [
+                Object {
+                  "attributes": Object {
+                    "text": "X",
+                  },
+                  "children": Array [],
+                  "tag": "raw-text",
+                  "templateId": "__et_builtin_raw_text__",
+                },
+              ],
+              "tag": "slot",
+            },
+          ],
+          "tag": "view",
+          "templateId": "_et_inner",
+        },
+      ],
+    ],
+    -3,
+  ],
+  Array [
+    "__AppendElement",
+    "root",
+    "<_et_outer />",
+  ],
+]

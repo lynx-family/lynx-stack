@@ -10,6 +10,9 @@
     "strict": true,
     "composite": true,
     "outDir": "./lib",
+    // Keep incremental metadata with the generated lib output so stale
+    // build info cannot outlive the files consumed by the dev CLI.
+    "tsBuildInfoFile": "./lib/tsconfig.tsbuildinfo",
     "rootDir": "./src",
     "module": "nodenext",
 

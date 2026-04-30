@@ -184,6 +184,20 @@ describe('Validation', () => {
       `)
   })
 
+  test('experimental_useElementTemplate', () => {
+    expect(validateConfig({ experimental_useElementTemplate: true }))
+      .toStrictEqual({
+        experimental_useElementTemplate: true,
+      })
+    expect(() => validateConfig({ experimental_useElementTemplate: null }))
+      .toThrowErrorMatchingInlineSnapshot(`
+        [Error: Invalid config on pluginReactLynx: \`$input.experimental_useElementTemplate\`.
+          - Expect to be (boolean | undefined)
+          - Got: null
+        ]
+      `)
+  })
+
   test('enableCSSSelector', () => {
     expect(validateConfig({ enableCSSSelector: true })).toStrictEqual({
       enableCSSSelector: true,

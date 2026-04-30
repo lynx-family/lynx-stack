@@ -37,6 +37,22 @@
       "types": "./runtime/lib/document.d.ts",
       "default": "./runtime/lib/document.js"
     },
+    "./element-template": {
+      "types": "./runtime/lib/element-template/index.d.ts",
+      "default": "./runtime/lib/element-template/index.js"
+    },
+    "./element-template/internal": {
+      "types": "./runtime/lib/element-template/internal.d.ts",
+      "default": "./runtime/lib/element-template/internal.js"
+    },
+    "./element-template/jsx-runtime": {
+      "types": "./runtime/lib/element-template/jsx-runtime/index.d.ts",
+      "default": "./runtime/lib/element-template/jsx-runtime/index.js"
+    },
+    "./element-template/jsx-dev-runtime": {
+      "types": "./runtime/lib/element-template/jsx-dev-runtime/index.d.ts",
+      "default": "./runtime/lib/element-template/jsx-dev-runtime/index.js"
+    },
     "./jsx-runtime": {
       "types": "./runtime/jsx-runtime/index.d.ts",
       "lazy": "./runtime/lazy/jsx-runtime.js",
@@ -142,6 +158,18 @@
       ],
       "internal/document": [
         "./runtime/lib/document.d.ts"
+      ],
+      "element-template": [
+        "./runtime/lib/element-template/index.d.ts"
+      ],
+      "element-template/internal": [
+        "./runtime/lib/element-template/internal.d.ts"
+      ],
+      "element-template/jsx-runtime": [
+        "./runtime/lib/element-template/jsx-runtime/index.d.ts"
+      ],
+      "element-template/jsx-dev-runtime": [
+        "./runtime/lib/element-template/jsx-dev-runtime/index.d.ts"
       ],
       "jsx-runtime": [
         "./runtime/jsx-runtime/index.d.ts"

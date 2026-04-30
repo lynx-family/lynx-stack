@@ -1,0 +1,7 @@
+<view>
+  <raw-text text="A" />
+  <view>
+    <raw-text text="B" />
+  </view>
+  <raw-text text="C" />
+</view>

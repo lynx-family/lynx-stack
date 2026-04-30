@@ -52,6 +52,45 @@ describe('ReactLynx rsbuild', () => {
     expect(1).toBe(1)
   })
 
+  test('basic usage with Element Template enabled', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    const { pluginReactLynx } = await import('../src/index.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        source: {
+          entry: {
+            main: new URL(
+              './fixtures/element-template-basic.tsx',
+              import.meta.url,
+            ).pathname,
+          },
+        },
+        tools: {
+          rspack: {
+            context: dirname(fileURLToPath(import.meta.url)),
+            resolve: {
+              extensionAlias: {
+                '.js': ['.ts', '.js'],
+                '.jsx': ['.tsx', '.jsx'],
+              },
+            },
+          },
+        },
+        plugins: [
+          pluginReactLynx({
+            experimental_useElementTemplate: true,
+          }),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    await rsbuild.build()
+
+    expect(1).toBe(1)
+  })
+
   test('special var name', async () => {
     const { pluginReactLynx } = await import('../src/index.js')
     vi.stubEnv('NODE_ENV', 'production')

@@ -1,0 +1,34 @@
+Object {
+  "rootChild": Object {
+    "attributes": Object {
+      "id": "test",
+    },
+    "children": Array [
+      Object {
+        "attributes": Object {
+          "slot-id": 0,
+        },
+        "children": Array [],
+        "tag": "slot",
+      },
+      Object {
+        "attributes": Object {
+          "slot-id": 1,
+        },
+        "children": Array [
+          Object {
+            "attributes": Object {
+              "text": "Hello",
+            },
+            "children": Array [],
+            "tag": "raw-text",
+            "templateId": "__et_builtin_raw_text__",
+          },
+        ],
+        "tag": "slot",
+      },
+    ],
+    "tag": "view",
+    "templateId": "_et_foo",
+  },
+}

@@ -1,0 +1,8 @@
+<view>
+  <view>
+    <text text="Slot Content 1" />
+  </view>
+  <view>
+    <text text="Slot Content 2" />
+  </view>
+</view>

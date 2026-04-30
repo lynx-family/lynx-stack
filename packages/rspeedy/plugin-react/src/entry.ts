@@ -278,6 +278,8 @@ export function applyEntry(
         mainThreadChunks,
         extractStr,
         experimental_isLazyBundle,
+        experimental_useElementTemplate:
+          options.experimental_useElementTemplate,
         profile: getDefaultProfile(),
         workletRuntimePath: await resolve(
           `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,
