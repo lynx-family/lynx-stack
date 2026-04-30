@@ -7,7 +7,11 @@ import { fileURLToPath } from 'node:url'
 
 import { isCancel } from '@clack/prompts'
 import { createRsbuild, logger } from '@rsbuild/core'
-import type { RsbuildInstance, RsbuildPlugin } from '@rsbuild/core'
+import type {
+  RsbuildEntry,
+  RsbuildInstance,
+  RsbuildPlugin,
+} from '@rsbuild/core'
 import { beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest'
 
 import type { Config, ExposedAPI } from '@lynx-js/rspeedy'
@@ -27,6 +31,13 @@ const pluginStubRspeedyAPI = (config: Config = {}): RsbuildPlugin => ({
       logger,
       version: '1.0.0',
     })
+  },
+})
+
+const pluginStubEnvEntries = (entries: RsbuildEntry): RsbuildPlugin => ({
+  name: 'lynx:rsbuild:env-entries',
+  setup(api) {
+    api.expose(Symbol.for('rspeedy.env.entries'), { entries })
   },
 })
 
@@ -327,6 +338,55 @@ describe('Plugins - Terminal', () => {
             },
             plugins: [
               pluginStubRspeedyAPI(),
+              pluginQRCode(),
+            ],
+          },
+        },
+      )
+
+      await using server = await usingDevServer(rsbuild)
+
+      await server.waitDevCompileDone()
+
+      expect(renderUnicodeCompact).toBeCalledTimes(1)
+    })
+
+    test('print qrcode with exposed custom environment entries', async () => {
+      vi.stubEnv('NODE_ENV', 'development')
+      const { selectKey, isCancel } = await import('@clack/prompts')
+      vi.mocked(selectKey).mockResolvedValue('foo')
+      vi.mocked(isCancel).mockReturnValueOnce(false)
+      const { renderUnicodeCompact } = await import('uqr')
+      vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
+
+      const entry = join(
+        dirname(fileURLToPath(import.meta.url)),
+        'fixtures',
+        'hello-world',
+      )
+
+      const rsbuild = await createRsbuild(
+        {
+          rsbuildConfig: {
+            dev: {
+              assetPrefix: 'http://example.com/foo/',
+            },
+            environments: {
+              custom: {},
+            },
+            server: {
+              port: getRandomNumberInRange(3000, 60000),
+            },
+            source: {
+              entry: {
+                main: entry,
+              },
+            },
+            plugins: [
+              pluginStubRspeedyAPI(),
+              pluginStubEnvEntries({
+                main: entry,
+              }),
               pluginQRCode(),
             ],
           },
