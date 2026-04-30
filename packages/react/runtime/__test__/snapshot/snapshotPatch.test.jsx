@@ -1623,10 +1623,14 @@ describe('missing snapshot', () => {
   });
 
   it('should throw error when missing snapshot', () => {
-    expect(() => new BackgroundSnapshotInstance('missing-snapshot')).toThrowError(
-      'BackgroundSnapshot not found: missing-snapshot',
+    expect(() => new BackgroundSnapshotInstance('__snapshot_missing-snapshot')).toThrowError(
+      new Error('BackgroundSnapshot not found: __snapshot_missing-snapshot'),
     );
-    expect(() => new SnapshotInstance('missing-snapshot')).toThrowError('Snapshot not found: missing-snapshot');
+    expect(() => new SnapshotInstance('__snapshot_missing-snapshot')).toThrowError(
+      new Error(
+        'Snapshot not found: __snapshot_missing-snapshot. You can set environment variable `REACT_ALOG=true` and restart your dev server for troubleshooting.',
+      ),
+    );
   });
 });
 
