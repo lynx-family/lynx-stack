@@ -1,0 +1,23 @@
+:root {
+  background-color: #000;
+  --color-text: #fff;
+}
+
+text {
+  color: var(--color-text);
+}
+
+.page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.content {
+  color: #ffffff;
+  font-size: 42px;
+  font-weight: 700;
+}

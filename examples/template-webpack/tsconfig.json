@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": true,
+    "isolatedDeclarations": false,
+  },
+  "include": ["src", "../../packages/react/runtime/types/types.d.ts"],
+  "references": [
+    { "path": "../../packages/react/tsconfig.json" },
+    { "path": "../../packages/rspeedy/core/tsconfig.build.json" },
+    { "path": "../../packages/rspeedy/plugin-qrcode/tsconfig.build.json" },
+    { "path": "../../packages/webpack/runtime-wrapper-webpack-plugin/tsconfig.build.json" },
+    { "path": "../../packages/webpack/template-webpack-plugin/tsconfig.build.json" },
+  ],
+}
