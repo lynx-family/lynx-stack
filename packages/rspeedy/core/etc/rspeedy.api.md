@@ -13,6 +13,7 @@ import { logger } from '@rsbuild/core';
 import type { PerformanceConfig } from '@rsbuild/core';
 import type { ProxyConfig } from '@rsbuild/core';
 import type { RsbuildConfig } from '@rsbuild/core';
+import type { RsbuildEntry } from '@rsbuild/core';
 import type { RsbuildInstance } from '@rsbuild/core';
 import { RsbuildPlugin } from '@rsbuild/core';
 import { RsbuildPluginAPI } from '@rsbuild/core';
@@ -195,6 +196,7 @@ export interface EntryDescription {
 export interface ExposedAPI {
     config: Config;
     debug: (message: string | (() => string)) => void;
+    entries?: RsbuildEntry;
     exit: (code?: number) => Promise<void> | void;
     logger: typeof logger;
     version: string;
