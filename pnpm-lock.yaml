@@ -614,8 +614,8 @@ importers:
         specifier: 1.54.2
         version: 1.54.2(@swc/helpers@0.5.21)(@types/node@24.10.13)(i18next@26.0.6(typescript@5.9.3))(typescript@5.9.3)
       rsbuild-plugin-i18next-extractor:
-        specifier: 0.2.0
-        version: 0.2.0(@rsbuild/core@1.7.5)(i18next-cli@1.54.2(@swc/helpers@0.5.21)(@types/node@24.10.13)(i18next@26.0.6(typescript@5.9.3))(typescript@5.9.3))(rollup@4.34.9)
+        specifier: 0.2.1
+        version: 0.2.1(@rsbuild/core@1.7.5)(i18next-cli@1.54.2(@swc/helpers@0.5.21)(@types/node@24.10.13)(i18next@26.0.6(typescript@5.9.3))(typescript@5.9.3))(rollup@4.34.9)
 
   packages/lynx/benchx_cli:
     dependencies:
@@ -9818,11 +9818,11 @@ packages:
       typescript:
         optional: true
 
-  rsbuild-plugin-i18next-extractor@0.2.0:
-    resolution: {integrity: sha512-GtHV/x2EKUCckWX11N5PBOjTyD3zCfPIxLxBWJ/5opcYprawFMw4k44ezyyArKFiYygsrxJymur7wYmtt7Y1OA==}
+  rsbuild-plugin-i18next-extractor@0.2.1:
+    resolution: {integrity: sha512-3mlQ+SWyMS09PEXB/GeNjKV4bQ4d3505MoO+raPmP0VYiw+qOGc4mjVJyrF05MmKRQskK66qjTSt5netgk0rSg==}
     engines: {node: '>=22'}
     peerDependencies:
-      '@rsbuild/core': ^1.0.0
+      '@rsbuild/core': ^1.0.0 || ^2.0.0-0
       i18next-cli: ^1.33.5
 
   rsbuild-plugin-publint@0.3.4:
@@ -20046,7 +20046,7 @@ snapshots:
       '@typescript/native-preview': 7.0.0-dev.20260212.1
       typescript: 5.9.3
 
-  rsbuild-plugin-i18next-extractor@0.2.0(@rsbuild/core@1.7.5)(i18next-cli@1.54.2(@swc/helpers@0.5.21)(@types/node@24.10.13)(i18next@26.0.6(typescript@5.9.3))(typescript@5.9.3))(rollup@4.34.9):
+  rsbuild-plugin-i18next-extractor@0.2.1(@rsbuild/core@1.7.5)(i18next-cli@1.54.2(@swc/helpers@0.5.21)(@types/node@24.10.13)(i18next@26.0.6(typescript@5.9.3))(typescript@5.9.3))(rollup@4.34.9):
     dependencies:
       '@rollup/pluginutils': 5.3.0(rollup@4.34.9)
       '@rsbuild/core': 1.7.5
