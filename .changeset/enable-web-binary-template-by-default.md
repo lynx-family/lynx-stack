@@ -17,4 +17,4 @@ If you encounter any issues with the new binary template format, you can revert 
 
 **Upgrade to `@lynx-js/web-core@0.20.2` could support the new output format**
 
-See [`@lynx-js/web-core`Changelog](https://lynx-stack.dev/changelog/lynx-js--web-core)
+See [`@lynx-js/web-core` Changelog](https://lynx-stack.dev/changelog/lynx-js--web-core)
