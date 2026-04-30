@@ -146,7 +146,9 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
 }
 
 /**
- * Create a `Portal` to continue rendering the vnode tree at a different DOM node
+ * Create a `Portal` to continue rendering the vnode tree at a different DOM node.
+ *
+ * @public
  */
 export function createPortal(
   vnode: ComponentChild,
