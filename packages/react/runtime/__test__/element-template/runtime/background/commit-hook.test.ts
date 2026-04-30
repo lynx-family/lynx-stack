@@ -1,7 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { options } from 'preact';
 
+import * as elementTemplateAlog from '../../../../src/element-template/debug/alog.js';
 import {
   installElementTemplateCommitHook,
   markElementTemplateHydrated,
@@ -48,6 +49,7 @@ describe('ElementTemplate commit hook', () => {
   });
 
   afterEach(() => {
+    globalThis.__ALOG__ = true;
     envManager.switchToMainThread();
     lynx.getJSContext().removeEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
     envManager.switchToBackground();
@@ -115,6 +117,40 @@ describe('ElementTemplate commit hook', () => {
       },
     });
     envManager.switchToBackground();
+  });
+
+  it('logs post-hydration update commits when alog is enabled', () => {
+    const alog = console.alog as unknown as { mock: { calls: unknown[][] }; mockClear(): void };
+    alog.mockClear();
+
+    markElementTemplateHydrated();
+    GlobalCommitContext.ops = createRawTextOps(1, 'hello');
+    GlobalCommitContext.flushOptions = { nativeUpdateDataOrder: 7 };
+    GlobalCommitContext.flowIds = [101, 202];
+
+    options.__c?.({} as unknown as object, []);
+
+    const output = alog.mock.calls.map(args => String(args[0])).join('\n');
+    expect(output).toContain('[ReactLynxDebug] ElementTemplate BTS -> MTS update');
+    expect(output).toContain('createTemplate');
+    expect(output).toContain('nativeUpdateDataOrder');
+    expect(output).toContain('101');
+  });
+
+  it('does not format update commit alog when alog is disabled', () => {
+    globalThis.__ALOG__ = false;
+    const alog = console.alog as unknown as { mock: { calls: unknown[][] }; mockClear(): void };
+    alog.mockClear();
+    const formatSpy = vi.spyOn(elementTemplateAlog, 'formatElementTemplateUpdateCommands');
+
+    markElementTemplateHydrated();
+    GlobalCommitContext.ops = createRawTextOps(1, 'hello');
+    GlobalCommitContext.flushOptions = { nativeUpdateDataOrder: 7 };
+
+    options.__c?.({} as unknown as object, []);
+
+    expect(formatSpy).not.toHaveBeenCalled();
+    expect(alog.mock.calls).toHaveLength(0);
   });
 
   it('is idempotent', () => {

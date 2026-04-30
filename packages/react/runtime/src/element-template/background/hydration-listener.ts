@@ -5,6 +5,7 @@ import { GlobalCommitContext, resetGlobalCommitContext } from './commit-context.
 import { markElementTemplateHydrated, resetElementTemplateCommitState } from './commit-hook.js';
 import { hydrateIntoContext } from './hydrate.js';
 import { BackgroundElementTemplateInstance } from './instance.js';
+import { formatElementTemplateUpdateCommands, printElementTemplateTreeToString } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../lynx/performance.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
@@ -32,6 +33,17 @@ export function installElementTemplateHydrationListener(): void {
     const root = __root as BackgroundElementTemplateInstance;
 
     resetGlobalCommitContext();
+    if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+      console.alog?.(
+        '[ReactLynxDebug] ElementTemplate MTS -> BTS hydrate:\n'
+          + JSON.stringify({ data: instances }, null, 2),
+      );
+      console.alog?.(
+        '[ReactLynxDebug] BackgroundElementTemplate tree before hydration:\n'
+          + printElementTemplateTreeToString(root),
+      );
+    }
+
     let after = root.firstChild;
     for (const before of instances) {
       if (!after) {
@@ -39,6 +51,12 @@ export function installElementTemplateHydrationListener(): void {
       }
       hydrateIntoContext(before, after);
       after = after.nextSibling;
+    }
+    if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+      console.alog?.(
+        '[ReactLynxDebug] BackgroundElementTemplate tree after hydration:\n'
+          + printElementTemplateTreeToString(root),
+      );
     }
 
     if (__PROFILE__) {
@@ -49,6 +67,20 @@ export function installElementTemplateHydrationListener(): void {
     markElementTemplateHydrated();
 
     if (GlobalCommitContext.ops.length > 0) {
+      if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+        console.alog?.(
+          '[ReactLynxDebug] ElementTemplate hydrate update commands:\n'
+            + JSON.stringify(
+              {
+                ops: formatElementTemplateUpdateCommands(GlobalCommitContext.ops),
+                flushOptions: GlobalCommitContext.flushOptions,
+                flowIds: GlobalCommitContext.flowIds,
+              },
+              null,
+              2,
+            ),
+        );
+      }
       lynx.getCoreContext().dispatchEvent({
         type: ElementTemplateLifecycleConstant.update,
         data: {

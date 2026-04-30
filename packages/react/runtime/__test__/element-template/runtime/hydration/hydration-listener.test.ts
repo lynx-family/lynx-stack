@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import * as elementTemplateAlog from '../../../../src/element-template/debug/alog.js';
 import {
   installElementTemplateHydrationListener,
   resetElementTemplateHydrationListener,
@@ -43,6 +44,7 @@ describe('ElementTemplate hydration listener', () => {
   });
 
   afterEach(() => {
+    globalThis.__ALOG__ = true;
     resetElementTemplateHydrationListener();
   });
 
@@ -167,6 +169,73 @@ describe('ElementTemplate hydration listener', () => {
       ['pipelineID', 'diffVdomStart'],
       ['pipelineID', 'diffVdomEnd'],
     ]);
+  });
+
+  it('logs hydrate payload and background tree states when alog is enabled', () => {
+    envManager.switchToBackground();
+    installElementTemplateHydrationListener();
+
+    const alog = console.alog as unknown as { mock: { calls: unknown[][] }; mockClear(): void };
+    alog.mockClear();
+
+    const backgroundRoot = __root as BackgroundElementTemplateInstance;
+    const after = new BackgroundElementTemplateInstance('_et_test', ['before']);
+    backgroundRoot.appendChild(after);
+
+    envManager.switchToMainThread();
+    lynx.getJSContext().dispatchEvent({
+      type: ElementTemplateLifecycleConstant.hydrate,
+      data: [
+        {
+          templateKey: '_et_test',
+          attributeSlots: ['after'],
+          elementSlots: [],
+          uid: -1,
+        } satisfies SerializedElementTemplate,
+      ],
+    });
+
+    envManager.switchToBackground();
+
+    const output = alog.mock.calls.map(args => String(args[0])).join('\n');
+    expect(output).toContain('[ReactLynxDebug] ElementTemplate MTS -> BTS hydrate');
+    expect(output).toContain('BackgroundElementTemplate tree before hydration');
+    expect(output).toContain('BackgroundElementTemplate tree after hydration');
+    expect(output).toContain('setAttribute');
+  });
+
+  it('does not format hydrate alog when alog is disabled', () => {
+    globalThis.__ALOG__ = false;
+    envManager.switchToBackground();
+    installElementTemplateHydrationListener();
+
+    const alog = console.alog as unknown as { mock: { calls: unknown[][] }; mockClear(): void };
+    alog.mockClear();
+    const formatSpy = vi.spyOn(elementTemplateAlog, 'formatElementTemplateUpdateCommands');
+    const printSpy = vi.spyOn(elementTemplateAlog, 'printElementTemplateTreeToString');
+
+    const backgroundRoot = __root as BackgroundElementTemplateInstance;
+    const after = new BackgroundElementTemplateInstance('_et_test', ['before']);
+    backgroundRoot.appendChild(after);
+
+    envManager.switchToMainThread();
+    lynx.getJSContext().dispatchEvent({
+      type: ElementTemplateLifecycleConstant.hydrate,
+      data: [
+        {
+          templateKey: '_et_test',
+          attributeSlots: ['after'],
+          elementSlots: [],
+          uid: -1,
+        } satisfies SerializedElementTemplate,
+      ],
+    });
+
+    envManager.switchToBackground();
+
+    expect(formatSpy).not.toHaveBeenCalled();
+    expect(printSpy).not.toHaveBeenCalled();
+    expect(alog.mock.calls).toHaveLength(0);
   });
 
   it('reports illegal handleId 0 during hydrate', () => {
