@@ -7,6 +7,7 @@ import { options } from 'preact';
 import { GlobalCommitContext, resetGlobalCommitContext } from './commit-context.js';
 import { COMMIT } from '../../shared/render-constants.js';
 import { hook } from '../../utils.js';
+import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../lynx/performance.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
@@ -51,6 +52,21 @@ export function installElementTemplateCommitHook(): void {
       }
       if (__PROFILE__) {
         profileEnd();
+      }
+
+      if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+        console.alog?.(
+          '[ReactLynxDebug] ElementTemplate BTS -> MTS update:\n'
+            + JSON.stringify(
+              {
+                ops: formatElementTemplateUpdateCommands(GlobalCommitContext.ops),
+                flushOptions: GlobalCommitContext.flushOptions,
+                flowIds: GlobalCommitContext.flowIds,
+              },
+              null,
+              2,
+            ),
+        );
       }
 
       lynx.getCoreContext().dispatchEvent({

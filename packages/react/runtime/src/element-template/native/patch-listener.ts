@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
 import { markTiming, setPipeline } from '../lynx/performance.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
 import type { ElementTemplateUpdateCommitContext } from '../protocol/types.js';
@@ -38,6 +39,20 @@ export function installElementTemplatePatchListener(): void {
     }
 
     if (hasOps) {
+      if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+        console.alog?.(
+          '[ReactLynxDebug] ElementTemplate main-thread patch:\n'
+            + JSON.stringify(
+              {
+                ops: formatElementTemplateUpdateCommands(payload.ops),
+                flushOptions,
+                flowIds,
+              },
+              null,
+              2,
+            ),
+        );
+      }
       markTiming('mtsRenderStart');
       markTiming('parseChangesStart');
       markTiming('parseChangesEnd');
