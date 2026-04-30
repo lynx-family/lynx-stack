@@ -375,18 +375,21 @@ class NodesRef {
   setNativeProps(props: Record<string, any>) {
     return {
       exec: () => {
-        const element = elementTree.uniqueId2Element.get(
-          Number(this._nodeSelectToken.identifier),
-        );
+        const element =
+          this._nodeSelectToken.type === IdentifierType.ID_SELECTOR
+            ? lynxTestingEnv.env.window.document.querySelector(
+              this._nodeSelectToken.identifier,
+            )
+            : elementTree.uniqueId2Element.get(
+              Number(this._nodeSelectToken.identifier),
+            );
         if (!element) {
           throw new Error(
             `[NodesRef.setNativeProps] Element not found for identifier=${this._nodeSelectToken.identifier}`,
           );
         }
-        if (element) {
-          for (const key in props) {
-            element.setAttributeNS(null, key, props[key]);
-          }
+        for (const key in props) {
+          element.setAttributeNS(null, key, props[key]);
         }
       },
     };
@@ -442,6 +445,10 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
           });
         },
         select: function(selector: string) {
+          // Validate eagerly so callers see a useful error at `select(...)`
+          // time rather than at the consumer (`setNativeProps`, `createPortal`,
+          // etc.). Store the CSS selector itself — that's what real Lynx
+          // does, and what apply-side `__QuerySelector` lookups expect.
           const el = lynxTestingEnv.env.window.document.querySelector(
             selector,
           ) as LynxElement;
@@ -452,7 +459,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
           }
           return new NodesRef({}, {
             type: IdentifierType.ID_SELECTOR,
-            identifier: el.$$uiSign.toString(),
+            identifier: selector,
           });
         },
       };

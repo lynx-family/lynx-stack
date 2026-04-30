@@ -1079,3 +1079,88 @@ describe('createPortal with list-item reuse', () => {
     expect(__FlushElementTree).toHaveBeenCalledTimes(1);
   });
 });
+
+/**
+ * Real `lynx.createSelectorQuery().select('#id')` (NOT a React ref) gives a
+ * `NodesRef` whose `_nodeSelectToken.identifier` is the CSS selector. The
+ * portal patch carries that selector across the bridge and main-thread
+ * apply resolves it via `__QuerySelector`.
+ *
+ * Crucially, the host is owned by a different component than the one
+ * calling `createPortal` — the producer doesn't need to thread a ref
+ * down, the consumer just queries by id.
+ *
+ * The lookup runs after the first commit (main-thread elements only land
+ * once `firstScreen` flushes the hydrate patch), so we trigger the
+ * `setHost(select(...))` from outside via an exposed setter rather than
+ * a synchronous `useEffect` — same pattern app code would use after
+ * `firstScreen`.
+ */
+describe('createPortal with real lynx.createSelectorQuery', () => {
+  it('portals across components via a CSS-selector NodesRef', () => {
+    let setHostFromOutside;
+
+    // Producer: renders the host element somewhere in the tree, addressable
+    // purely by id. It doesn't thread any ref downward.
+    function HostProvider() {
+      return <view id='global-host' data-testid='host' />;
+    }
+
+    // Consumer: portals into whatever host the parent injects via state.
+    function PortalConsumer({ host }) {
+      return host
+        ? createPortal(<text data-testid='portaled'>cross-component</text>, host)
+        : null;
+    }
+
+    function App() {
+      const [host, setHost] = useState(null);
+      setHostFromOutside = setHost;
+      return (
+        <view>
+          <HostProvider />
+          <PortalConsumer host={host} />
+        </view>
+      );
+    }
+
+    const { getByTestId, queryByText } = render(<App />);
+
+    // After the first commit, the host is in the main-thread DOM. Now look
+    // it up by id and feed the resulting `NodesRef` to the portal.
+    act(() => {
+      setHostFromOutside(lynx.createSelectorQuery().select('#global-host'));
+    });
+
+    // The portaled `<text>` lives under the host element — confirming the
+    // selector resolved correctly on the main thread.
+    expect(queryByText('cross-component')).toBeInTheDocument();
+    expect(getByTestId('host')).toContainElement(queryByText('cross-component'));
+  });
+
+  it('cleanly unmounts a selector-query portal', () => {
+    let setShow, setHostFromOutside;
+    function App() {
+      const [show, _setShow] = useState(true);
+      setShow = _setShow;
+      const [host, _setHost] = useState(null);
+      setHostFromOutside = _setHost;
+      return (
+        <view>
+          <view id='unmount-host' data-testid='host' />
+          {show && host && createPortal(<text>toggle-me</text>, host)}
+        </view>
+      );
+    }
+
+    const { queryByText } = render(<App />);
+
+    act(() => {
+      setHostFromOutside(lynx.createSelectorQuery().select('#unmount-host'));
+    });
+    expect(queryByText('toggle-me')).toBeInTheDocument();
+
+    act(() => setShow(false));
+    expect(queryByText('toggle-me')).not.toBeInTheDocument();
+  });
+});
