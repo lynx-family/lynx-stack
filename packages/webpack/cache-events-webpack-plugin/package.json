@@ -43,7 +43,7 @@
     "@lynx-js/test-tools": "workspace:*",
     "@rspack/test-tools": "catalog:rspack",
     "@rstest/core": "catalog:rstest",
-    "webpack": "^5.105.2"
+    "webpack": "^5.106.2"
   },
   "engines": {
     "node": ">=18"
