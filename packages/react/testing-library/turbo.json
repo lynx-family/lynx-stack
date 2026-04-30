@@ -4,6 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": [
+        "//#build",
         "@lynx-js/react-transform#build:wasm",
         "@lynx-js/testing-environment#build",
         "@lynx-js/rspeedy#build"
