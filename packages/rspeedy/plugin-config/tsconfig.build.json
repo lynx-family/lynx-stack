@@ -13,4 +13,7 @@
     "declarationMap": true,
   },
   "include": ["src"],
+  "references": [
+    { "path": "../../webpack/template-webpack-plugin/tsconfig.build.json" },
+  ],
 }

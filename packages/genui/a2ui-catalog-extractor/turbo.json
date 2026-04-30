@@ -3,15 +3,13 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "dependsOn": [
-        "^build",
-        "@lynx-js/a2ui-catalog-extractor#build"
-      ],
+      "dependsOn": [],
       "inputs": [
         "src/**",
-        "styles/**",
+        "package.json",
+        "rslib.config.ts",
         "tsconfig.json",
-        "package.json"
+        "tsconfig.build.json"
       ],
       "outputs": [
         "dist/**"

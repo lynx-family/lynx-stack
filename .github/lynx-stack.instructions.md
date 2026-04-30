@@ -13,3 +13,9 @@ applyTo: "packages/webpack/template-webpack-plugin/**/*"
 
 When changing initial CSS handling in template-webpack-plugin, add or update a code-splitting case that asserts the exact selector order in `tasm.json`, not just that CSS assets exist.
 Prefer a shared-plus-split initial chunk fixture when validating CSS merge order so the expected rule sequence follows the source import order clearly.
+
+---
+applyTo: "packages/rspeedy/plugin-config/**/*"
+---
+
+When plugin-config source imports or type-imports workspace packages that are built via TypeScript project references, add the corresponding entries to `tsconfig.build.json` `references`. Do not rely on workspace linking alone for declaration generation, because `rslib build` can fail to resolve sibling package types if the referenced project is not part of the build graph.
