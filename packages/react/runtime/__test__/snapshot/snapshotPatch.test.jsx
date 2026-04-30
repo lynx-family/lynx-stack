@@ -182,6 +182,64 @@ describe('insertBefore', () => {
     `);
   });
 
+  it('sets bundle-url when ensuring a child from a different entry', async function() {
+    const lazyEntryName = 'https://example.com/lazy/template.js';
+    const lazySnapshot = createSnapshot(
+      'cross-entry-child-for-bundle-url',
+      () => [__CreateView(0)],
+      null,
+      [],
+      undefined,
+      lazyEntryName,
+      null,
+      true,
+    );
+    const parent = new SnapshotInstance(snapshot1);
+    const child = new SnapshotInstance(lazySnapshot);
+
+    parent.insertBefore(child);
+    parent.ensureElements();
+
+    expect(parent.__element_root.props['bundle-url']).toBeUndefined();
+    expect(child.__element_root.props['bundle-url']).toBe(lazyEntryName);
+  });
+
+  it('does not set bundle-url when ensuring a child from the same entry', async function() {
+    const lazyEntryName = 'https://example.com/lazy/template.js';
+    const parentSnapshot = createSnapshot(
+      'same-entry-parent-for-bundle-url',
+      () => {
+        const el = __CreateView(0);
+        const slot = __CreateWrapperElement(0);
+        __AppendElement(el, slot);
+        return [el, slot];
+      },
+      null,
+      [[DynamicPartType.Slot, 1]],
+      undefined,
+      lazyEntryName,
+      null,
+      true,
+    );
+    const childSnapshot = createSnapshot(
+      'same-entry-child-for-bundle-url',
+      () => [__CreateView(0)],
+      null,
+      [],
+      undefined,
+      lazyEntryName,
+      null,
+      true,
+    );
+    const parent = new SnapshotInstance(parentSnapshot);
+    const child = new SnapshotInstance(childSnapshot);
+
+    parent.insertBefore(child);
+    parent.ensureElements();
+
+    expect(child.__element_root.props['bundle-url']).toBeUndefined();
+  });
+
   it('insert in the middle', async function() {
     const bsi1 = new BackgroundSnapshotInstance(snapshot1);
     const bsi2 = new BackgroundSnapshotInstance(snapshot2);
