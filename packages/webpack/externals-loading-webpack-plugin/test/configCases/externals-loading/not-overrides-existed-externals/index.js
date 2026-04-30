@@ -1,3 +1,5 @@
+/// <reference types="@rspack/test-tools/rstest" />
+
 import lodash from 'lodash';
 import x from 'foo';
 
