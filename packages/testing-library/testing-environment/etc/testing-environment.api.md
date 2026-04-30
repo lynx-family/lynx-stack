@@ -70,6 +70,8 @@ export const initElementTree: () => {
     leaveListItem(e: LynxElement, uiSign: number): void;
     toJSON(): LynxElement | undefined;
     __GetElementByUniqueId(uniqueId: number): LynxElement | undefined;
+    __GetPageElement(): LynxElement | undefined;
+    __QuerySelector(e: LynxElement, cssSelector: string, _params: object): LynxElement | undefined;
 };
 
 // @public

@@ -14,6 +14,7 @@
  */
 
 import { sendCtxNotFoundEventToBackground } from './error.js';
+import { applyNodesRefInsertBefore, applyNodesRefRemoveChild } from './nodesRefApply.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { SnapshotOperation } from './snapshotPatch.js';
 import { SnapshotInstance, snapshotCreatorMap, snapshotInstanceManager } from '../../snapshot/snapshot.js';
@@ -59,6 +60,19 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         } else {
           parent.removeChild(child);
         }
+        break;
+      }
+      case SnapshotOperation.nodesRefInsertBefore: {
+        const identifier = snapshotPatch[++i] as string;
+        const childId = snapshotPatch[++i] as number;
+        const beforeId = snapshotPatch[++i] as number | undefined;
+        applyNodesRefInsertBefore(identifier, childId, beforeId);
+        break;
+      }
+      case SnapshotOperation.nodesRefRemoveChild: {
+        const identifier = snapshotPatch[++i] as string;
+        const childId = snapshotPatch[++i] as number;
+        applyNodesRefRemoveChild(identifier, childId);
         break;
       }
       case SnapshotOperation.SetAttribute: {

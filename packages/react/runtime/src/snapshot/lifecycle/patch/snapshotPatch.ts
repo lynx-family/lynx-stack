@@ -14,6 +14,8 @@ export const SnapshotOperation = {
   RemoveChild: 2,
   SetAttribute: 3,
   SetAttributes: 4,
+  nodesRefInsertBefore: 5,
+  nodesRefRemoveChild: 6,
 
   DEV_ONLY_AddSnapshot: 100,
   DEV_ONLY_RegisterWorklet: 101,
@@ -40,6 +42,21 @@ export const SnapshotOperationParams: Record<number, { name: string; params: str
     params: ['id', /* number */ 'dynamicPartIndex', /* number */ 'value' /* any */],
   },
   [SnapshotOperation.SetAttributes]: { name: 'SetAttributes', params: ['id', /* number */ 'values' /* any */] },
+  [SnapshotOperation.nodesRefInsertBefore]: {
+    name: 'nodesRefInsertBefore',
+    params: [
+      'identifier', /* string — CSS selector */
+      'childId', /* number */
+      'beforeId', /* number | undefined */
+    ],
+  },
+  [SnapshotOperation.nodesRefRemoveChild]: {
+    name: 'nodesRefRemoveChild',
+    params: [
+      'identifier', /* string — CSS selector */
+      'childId', /* number */
+    ],
+  },
   [SnapshotOperation.DEV_ONLY_AddSnapshot]: {
     name: 'DEV_ONLY_AddSnapshot',
     params: [
