@@ -1,7 +1,7 @@
 /// <reference types="@rspack/test-tools/rstest" />
 
 import { root } from '@lynx-js/react'
-import { update } from '@lynx-js/test-tools/update.js'
+import { update } from '../../../../../test-tools/update.js'
 import { App } from './app.jsx'
 
 const renderContent = rstest.fn()
