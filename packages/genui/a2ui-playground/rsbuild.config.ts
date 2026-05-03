@@ -45,6 +45,12 @@ export default defineConfig({
   },
   output: {
     assetPrefix: process.env.ASSET_PREFIX,
+    copy: [
+      {
+        from: 'src/mock/messages/*.json',
+        to: 'demos/[name][ext]',
+      },
+    ],
   },
   server: {
     port: PORT,

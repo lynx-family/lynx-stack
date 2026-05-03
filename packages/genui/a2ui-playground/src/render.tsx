@@ -19,6 +19,7 @@ interface InitData {
   actionMocksUrl?: string;
   actionMocks?: unknown;
   demoUrl?: string;
+  speed?: number;
 }
 
 interface InitLynxViewMessage {
@@ -54,12 +55,16 @@ function parseInitDataFromQuery(): InitData | null {
   const messages = params.get('messages');
   const actionMocks = params.get('actionMocks');
   const actionMocksUrl = params.get('actionMocksUrl');
+  const demo = params.get('demo');
 
-  if (!protocol && !messagesUrl && !messages && !demoUrl) {
+  if (!protocol && !messagesUrl && !messages && !demoUrl && !demo) {
     return null;
   }
 
   const protocolValue = protocol === '0.9' ? '0.9' : undefined;
+
+  const speedRaw = params.get('speed');
+  const speedVal = speedRaw === null ? undefined : Number(speedRaw);
 
   const initData: InitData = {
     protocol: protocolValue,
@@ -67,6 +72,9 @@ function parseInitDataFromQuery(): InitData | null {
     actionMocksUrl: actionMocksUrl ?? undefined,
     demoUrl: demoUrl ?? undefined,
     messages: [], // Default to an empty array
+    speed: speedVal && Number.isFinite(speedVal) && speedVal > 0
+      ? speedVal
+      : undefined,
   };
 
   if (messages) {
@@ -110,6 +118,7 @@ function buildGlobalPropsFromInitData(
   if (initData.actionMocks !== undefined) {
     out.actionMocks = initData.actionMocks;
   }
+  if (initData.speed !== undefined) out.speed = initData.speed;
   return Object.keys(out).length > 0 ? out : null;
 }
 
@@ -134,6 +143,29 @@ function Render() {
     initial.globalProps,
   );
   const lynxViewRef = useRef<LynxViewElement | null>(null);
+
+  // Known demo: fetch the static JSON in the browser context (where fetch works)
+  // and pass the resolved messages as initData, avoiding fetch in Lynx's worker thread.
+  useEffect(() => {
+    const demo = new URLSearchParams(window.location.search).get('demo');
+    if (!demo) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await window.fetch(`./demos/${demo}.json`);
+        if (!res.ok || cancelled) return;
+        const messages = (await res.json()) as unknown;
+        if (!cancelled) {
+          setInitData((prev) => (prev ? { ...prev, messages } : prev));
+        }
+      } catch {
+        // ignore — will show empty
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent<unknown>) => {
