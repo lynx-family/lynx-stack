@@ -309,6 +309,11 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
                 onClick={() => handleSelectScenario(s.id)}
               >
                 <span className='scenarioName'>{s.title}</span>
+                <div className='scenarioTags'>
+                  {s.tags.map((t) => (
+                    <span key={t} className='scenarioTag'>{t}</span>
+                  ))}
+                </div>
               </button>
             ))}
           </div>

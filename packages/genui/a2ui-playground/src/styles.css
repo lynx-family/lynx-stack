@@ -696,6 +696,23 @@ a {
   color: var(--geist-foreground);
 }
 
+.scenarioTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.scenarioTag {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--geist-secondary);
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--geist-surface);
+  border: 1px solid var(--geist-border);
+}
+
 .scenarioDesc {
   font-size: 11px;
   color: var(--geist-secondary);
