@@ -15,6 +15,7 @@ import {
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
 } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
+import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 
 function createTextNode(text: string): BackgroundElementTemplateInstance {
   return new BackgroundElementTemplateInstance(BUILTIN_RAW_TEXT_TEMPLATE_KEY, [text]);
@@ -641,6 +642,23 @@ describe('Background raw-text instance', () => {
     expect(textNode.data).toBe('world');
   });
 
+  it('emits setAttribute when existing raw-text data changes after hydration', () => {
+    const textNode = createTextNode('old');
+    textNode.emitCreate();
+    markElementTemplateHydrated();
+    GlobalCommitContext.ops = [];
+
+    textNode.data = 'new';
+
+    expect(textNode.attributeSlots).toEqual(['new']);
+    expect(GlobalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      textNode.instanceId,
+      0,
+      'new',
+    ]);
+  });
+
   it('stringifies numeric raw-text slot values', () => {
     const textNode = new BackgroundElementTemplateInstance(
       BUILTIN_RAW_TEXT_TEMPLATE_KEY,
@@ -682,6 +700,23 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     instance.setAttribute('attributeSlots', [...slots]);
 
     expect(instance.attributeSlots).toEqual(slots);
+  });
+
+  it('emits null when an existing attribute slot is removed after hydration', () => {
+    const instance = new BackgroundElementTemplateInstance('view', ['old']);
+    instance.emitCreate();
+    markElementTemplateHydrated();
+    GlobalCommitContext.ops = [];
+
+    instance.setAttribute('attributeSlots', []);
+
+    expect(instance.attributeSlots).toEqual([]);
+    expect(GlobalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      instance.instanceId,
+      0,
+      null,
+    ]);
   });
 });
 
