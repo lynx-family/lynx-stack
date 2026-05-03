@@ -4,6 +4,7 @@
 import { json } from '@codemirror/lang-json';
 import CodeMirror from '@uiw/react-codemirror';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
 import { MobilePreview } from '../components/MobilePreview.js';
 import { QrCode } from '../components/QrCode.js';
 import { DYNAMIC_PRESETS, STATIC_DEMOS } from '../demos.js';
@@ -92,7 +93,9 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   const [speed, setSpeed] = useState(1);
   const [showSimTooltip, setShowSimTooltip] = useState(false);
   const [jsonEdited, setJsonEdited] = useState(false);
-  const [previewMode, setPreviewMode] = useState<'phone' | 'full'>('phone');
+  const [previewMode, setPreviewMode] = useState<'phone' | 'full'>(
+    () => window.innerWidth <= 980 ? 'full' : 'phone',
+  );
   const [fullscreen, setFullscreen] = useState(false);
 
   const baseUrl = window.location.href.replace(/#.*$/, '');
