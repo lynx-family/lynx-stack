@@ -4,8 +4,6 @@
 import { json } from '@codemirror/lang-json';
 import CodeMirror from '@uiw/react-codemirror';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-
-import { Chip } from '../components/Chip.js';
 import { MobilePreview } from '../components/MobilePreview.js';
 import { QrCode } from '../components/QrCode.js';
 import { DYNAMIC_PRESETS, STATIC_DEMOS } from '../demos.js';
@@ -95,6 +93,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   const [showSimTooltip, setShowSimTooltip] = useState(false);
   const [jsonEdited, setJsonEdited] = useState(false);
   const [previewMode, setPreviewMode] = useState<'phone' | 'full'>('phone');
+  const [fullscreen, setFullscreen] = useState(false);
 
   const baseUrl = window.location.href.replace(/#.*$/, '');
   const rspeedyDevUrl = useRspeedyDevUrl();
@@ -150,6 +149,11 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
         networkBaseUrl,
       );
       setRenderUrl(url);
+
+      // On mobile, auto-expand preview to fullscreen when rendering.
+      if (window.innerWidth <= 980) {
+        setFullscreen(true);
+      }
 
       // Native in-app preview: pass A2UI payload via global props, directly through URL query.
       // In Lynx, query params are exposed in `lynx.__globalProps` / `useGlobalProps()`.
@@ -363,18 +367,14 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
       </div>
 
       {/* Preview Panel */}
-      <div className='previewPanel'>
+      <div
+        className={fullscreen
+          ? 'previewPanel previewPanelFullscreen'
+          : 'previewPanel'}
+      >
         <div className='previewPanelHeader'>
           <span className='previewPanelTitle'>Lynx Preview</span>
-          {currentScenario
-            ? (
-              <div className='previewPanelMeta'>
-                <div className='previewMetaTags'>
-                  {currentScenario.tags.map((t) => <Chip key={t}>{t}</Chip>)}
-                </div>
-              </div>
-            )
-            : null}
+          <div className='spacer' />
           <div className='previewModeSwitch'>
             <button
               type='button'
@@ -397,6 +397,14 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
               Full
             </button>
           </div>
+          <button
+            type='button'
+            className='previewExpandBtn'
+            onClick={() => setFullscreen((v) => !v)}
+            title={fullscreen ? 'Exit fullscreen' : 'Expand preview'}
+          >
+            {fullscreen ? '\u2715' : '\u2922'}
+          </button>
         </div>
         {isSimulated
           ? (
