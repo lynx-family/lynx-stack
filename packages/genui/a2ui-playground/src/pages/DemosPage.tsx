@@ -92,7 +92,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   const [lynxDevQrError, setLynxDevQrError] = useState('');
   const [lynxDevCopied, setLynxDevCopied] = useState(false);
 
-  const origin = window.location.origin;
+  const baseUrl = window.location.href.replace(/#.*$/, '');
   const rspeedyDevUrl = useRspeedyDevUrl();
   const lynxUrlSeqRef = useRef(0);
 
@@ -115,7 +115,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
       const actionMocks = scenario?.actionMocks;
       const url = buildRenderUrl(
         { protocol, demoUrl: DEFAULT_DEMO_URL, messages: parsed, actionMocks },
-        origin,
+        baseUrl,
       );
       setRenderUrl(url);
 
@@ -174,7 +174,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
           // "View on Device" QR is scannable. render.html already supports
           // messagesUrl / actionMocksUrl query params.
           if (messagesUrlAbs) {
-            const r = new URL('/render.html', origin);
+            const r = new URL('render.html', baseUrl);
             r.searchParams.set('protocol', protocol);
             r.searchParams.set('demoUrl', DEFAULT_DEMO_URL);
             r.searchParams.set('messagesUrl', messagesUrlAbs);
@@ -189,7 +189,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
         }
       })();
     },
-    [origin, protocol, rspeedyDevUrl],
+    [baseUrl, protocol, rspeedyDevUrl],
   );
 
   useEffect(() => {

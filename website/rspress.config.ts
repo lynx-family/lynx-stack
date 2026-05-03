@@ -752,6 +752,10 @@ const config: UserConfig = defineConfig({
         link: '/repl',
       },
       {
+        text: 'A2UI',
+        link: '/a2ui',
+      },
+      {
         text: 'API',
         items: [
           {
