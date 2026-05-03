@@ -354,6 +354,104 @@ a {
   overflow: auto;
 }
 
+/* ── Simulation Controls Bar ── */
+.simulationBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-surface);
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.simInfo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--geist-secondary);
+  position: relative;
+}
+
+.simInfoIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--geist-border-hover);
+  font-size: 10px;
+  font-weight: 600;
+  font-style: italic;
+  font-family: Georgia, serif;
+  color: var(--geist-secondary);
+  cursor: help;
+  flex-shrink: 0;
+}
+
+.simInfoToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.simInfoLabel {
+  font-weight: 500;
+  color: var(--geist-secondary);
+}
+
+.simTooltip {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 16px;
+  z-index: 10;
+  width: max-content;
+  max-width: min(360px, calc(100vw - 48px));
+  padding: 8px 12px;
+  border-radius: var(--geist-radius-md);
+  border: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  box-shadow: var(--geist-shadow-md);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--geist-secondary);
+}
+
+.simSpeed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.simSpeedLabel {
+  font-weight: 500;
+  color: var(--geist-secondary);
+}
+
+.simSpeedSlider {
+  width: 80px;
+  height: 4px;
+  accent-color: var(--geist-foreground);
+  cursor: pointer;
+}
+
+.simSpeedValue {
+  min-width: 28px;
+  text-align: right;
+  font-family: var(--geist-mono);
+  font-weight: 500;
+  color: var(--geist-foreground);
+}
+
 /* ── QR Code Section (always visible in preview panel) ── */
 .previewQrSection {
   flex-shrink: 0;
@@ -522,16 +620,16 @@ a {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 12px 14px;
-  min-height: 44px;
-  border: none;
+  padding: 10px 12px;
+  min-height: 40px;
+  border: 1px solid transparent;
   border-radius: var(--geist-radius-sm);
   background: transparent;
   cursor: pointer;
   text-align: left;
   transition:
     background var(--geist-transition),
-    box-shadow var(--geist-transition),
+    border-color var(--geist-transition),
     color var(--geist-transition);
   width: 100%;
 }
@@ -541,12 +639,11 @@ a {
 }
 
 .scenarioItem.active {
+  border-color: var(--geist-border-hover);
   background: var(--geist-surface);
-  box-shadow: inset 3px 0 0 var(--geist-foreground);
 }
 
 .scenarioItem.active .scenarioName {
-  font-weight: 600;
   color: var(--geist-foreground);
 }
 
@@ -739,7 +836,7 @@ a {
   display: block;
   width: 100%;
   padding: 5px 12px 5px 20px;
-  border: none;
+  border: 1px solid transparent;
   border-radius: var(--geist-radius-sm);
   background: transparent;
   cursor: pointer;
@@ -759,7 +856,7 @@ a {
 .compSidebarItem.active {
   color: var(--geist-foreground);
   background: var(--geist-surface);
-  box-shadow: inset 2px 0 0 var(--geist-foreground);
+  border-color: var(--geist-border-hover);
 }
 
 /* ── Content ── */

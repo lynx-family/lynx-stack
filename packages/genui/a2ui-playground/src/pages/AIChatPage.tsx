@@ -7,7 +7,7 @@ import type { ProtocolVersion } from '../utils/protocol.js';
 
 interface ChatMessage {
   role: 'user' | 'ai';
-  content: string;
+  content: string | React.ReactNode;
 }
 
 const WELCOME_MESSAGE: ChatMessage = {
@@ -18,8 +18,14 @@ const WELCOME_MESSAGE: ChatMessage = {
 
 const MOCK_AI_RESPONSE: ChatMessage = {
   role: 'ai',
-  content:
-    'AI generation is not yet connected. This is a preview of the AI Chat interface. In the future, this will generate A2UI components based on your description.',
+  content: (
+    <>
+      AI generation is not yet connected. In the meantime, check out the{' '}
+      <a href='#/demos' style={{ textDecoration: 'underline' }}>Demos</a>{' '}
+      tab to see pre-recorded A2UI scenarios with simulated streaming — you can
+      even adjust the playback speed.
+    </>
+  ),
 };
 
 export function AIChatPage(
