@@ -390,6 +390,57 @@ a {
   padding: 0;
 }
 
+/* ── Live Component Stack ── */
+.liveComponentStack {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-top: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  font-size: 12px;
+  overflow-x: auto;
+}
+
+.liveComponentLabel {
+  font-weight: 600;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.liveComponentTags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
+.liveComponentTag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--geist-surface);
+  border: 1px solid var(--geist-border);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--geist-foreground);
+  white-space: nowrap;
+  animation: tagAppear 300ms ease-out;
+}
+
+@keyframes tagAppear {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .previewFullIframe {
   width: 100%;
   height: 100%;
