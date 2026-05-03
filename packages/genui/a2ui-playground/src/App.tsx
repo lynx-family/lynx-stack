@@ -33,11 +33,24 @@ function parseHash(hash: string): Route {
   return { tab: 'chat' };
 }
 
+type Theme = 'light' | 'dark';
+
+function getSystemTheme(): Theme {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
+}
+
 export function App() {
   const [route, setRoute] = useState<Route>(() =>
     parseHash(window.location.hash)
   );
   const [protocol, setProtocol] = useState<ProtocolVersion>(DEFAULT_PROTOCOL);
+  const [theme, setTheme] = useState<Theme>(getSystemTheme);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     const onHashChange = () => {
@@ -71,7 +84,7 @@ export function App() {
   return (
     <div className='appShell'>
       <div className='topBar'>
-        <span className='brand'>A2UI Playground</span>
+        <span className='brand'>Lynx A2UI Playground</span>
 
         <nav className='tabNav'>
           {TABS.map((t) => (
@@ -94,6 +107,16 @@ export function App() {
           <div className='protocolLabel'>Protocol</div>
           <ProtocolSwitch value={protocol} onChange={setProtocol} />
         </div>
+
+        <button
+          type='button'
+          className='themeToggle'
+          onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        >
+          {theme === 'dark' ? '\u2600' : '\u263E'}
+        </button>
       </div>
 
       <div className='appBody'>

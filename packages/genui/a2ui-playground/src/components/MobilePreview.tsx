@@ -5,15 +5,7 @@ export function MobilePreview(props: { src: string }) {
   return (
     <div className='phoneWrap'>
       <div className='phoneFrame'>
-        <div className='phoneScreen'>
-          <div className='phoneStatusBar'>
-            <div className='phoneNotch' />
-          </div>
-          <iframe className='phoneIframe' title='preview' src={props.src} />
-          <div className='phoneHomeIndicator'>
-            <div className='phoneHomeBar' />
-          </div>
-        </div>
+        <iframe className='phoneIframe' title='preview' src={props.src} />
       </div>
     </div>
   );
