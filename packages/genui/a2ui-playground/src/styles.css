@@ -315,11 +315,6 @@ a {
   font-weight: 600;
 }
 
-.previewPanelMeta {
-  flex: 1;
-  min-width: 0;
-}
-
 .previewModeSwitch {
   display: inline-flex;
   padding: 2px;
@@ -349,11 +344,6 @@ a {
 .previewModeBtn.active {
   background: var(--geist-accent);
   color: var(--geist-accent-foreground);
-}
-
-.previewMetaTags {
-  display: flex;
-  gap: 4px;
 }
 
 .previewPanelBody {

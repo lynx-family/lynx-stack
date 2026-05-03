@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 
 import { ProtocolSwitch } from './components/ProtocolSwitch.js';
 import { AIChatPage } from './pages/AIChatPage.js';
@@ -36,9 +36,13 @@ function parseHash(hash: string): Route {
 type Theme = 'light' | 'dark';
 
 function getSystemTheme(): Theme {
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light';
+  try {
+    return window.matchMedia?.('(prefers-color-scheme: dark)')?.matches
+      ? 'dark'
+      : 'light';
+  } catch {
+    return 'light';
+  }
 }
 
 export function App() {
@@ -48,7 +52,7 @@ export function App() {
   const [protocol, setProtocol] = useState<ProtocolVersion>(DEFAULT_PROTOCOL);
   const [theme, setTheme] = useState<Theme>(getSystemTheme);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
