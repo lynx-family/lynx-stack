@@ -93,6 +93,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   const [lynxDevCopied, setLynxDevCopied] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [showSimTooltip, setShowSimTooltip] = useState(false);
+  const [jsonEdited, setJsonEdited] = useState(false);
 
   const baseUrl = window.location.href.replace(/#.*$/, '');
   const rspeedyDevUrl = useRspeedyDevUrl();
@@ -132,8 +133,9 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
         return;
       }
       const actionMocks = scenario?.actionMocks;
-      // Use short demo ID for known scenarios; inline payload for custom JSON.
-      const isKnownDemo = ALL_SCENARIOS.some((s) => s.id === scenario?.id);
+      // Use short demo ID only when the user hasn't edited the JSON.
+      const isKnownDemo = !jsonEdited
+        && ALL_SCENARIOS.some((s) => s.id === scenario?.id);
       setIsSimulated(isKnownDemo);
       const url = buildRenderUrl(
         {
@@ -153,6 +155,9 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
       const seq = ++lynxUrlSeqRef.current;
       if (rspeedyDevUrl) {
         const uInline = new URL(rspeedyDevUrl);
+        if (speed !== 1) {
+          uInline.searchParams.set('speed', String(speed));
+        }
         if (isKnownDemo) {
           // Known demo: point to the static JSON served by the rsbuild dev server.
           // Native Lynx supports fetch, so App.tsx will load it via messagesUrl.
@@ -231,7 +236,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
         }
       })();
     },
-    [networkBaseUrl, protocol, rspeedyDevUrl, speed],
+    [jsonEdited, networkBaseUrl, protocol, rspeedyDevUrl, speed],
   );
 
   useEffect(() => {
@@ -245,6 +250,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
     (id: string) => {
       setScenarioId(id);
       setError('');
+      setJsonEdited(false);
       const scenario = ALL_SCENARIOS.find((s) => s.id === id);
       if (scenario) {
         const json = formatJson(scenario.messages);
@@ -261,6 +267,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
 
   const handleFillExample = useCallback(() => {
     setError('');
+    setJsonEdited(false);
     if (currentScenario) {
       const json = formatJson(currentScenario.messages);
       setCustomJson(json);
@@ -271,8 +278,10 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   const handleClear = useCallback(() => {
     setCustomJson('[]');
     setRenderUrl('');
+    setLynxDevUrl('');
     setRenderQrError('');
     setError('');
+    setJsonEdited(false);
   }, []);
 
   return (
@@ -336,7 +345,10 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
           className='codeEditor'
           value={customJson}
           extensions={jsonExtensions}
-          onChange={setCustomJson}
+          onChange={(v) => {
+            setCustomJson(v);
+            setJsonEdited(true);
+          }}
           theme='dark'
           basicSetup={{
             lineNumbers: true,
