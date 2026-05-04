@@ -5,10 +5,13 @@ import { json } from '@codemirror/lang-json';
 import CodeMirror from '@uiw/react-codemirror';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Chip } from '../components/Chip.js';
 import { MobilePreview } from '../components/MobilePreview.js';
 import { QrCode } from '../components/QrCode.js';
-import { DYNAMIC_PRESETS, STATIC_DEMOS } from '../demos.js';
+import {
+  DYNAMIC_PRESETS,
+  STATIC_DEMOS,
+  componentsByMessage,
+} from '../demos.js';
 import { DEFAULT_DEMO_URL } from '../utils/demoUrl.js';
 import type { ProtocolVersion } from '../utils/protocol.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
@@ -94,7 +97,12 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   const [speed, setSpeed] = useState(1);
   const [showSimTooltip, setShowSimTooltip] = useState(false);
   const [jsonEdited, setJsonEdited] = useState(false);
-  const [previewMode, setPreviewMode] = useState<'phone' | 'full'>('phone');
+  const [previewMode, setPreviewMode] = useState<'phone' | 'full'>(
+    () => window.innerWidth <= 980 ? 'full' : 'phone',
+  );
+  const [fullscreen, setFullscreen] = useState(false);
+  const [liveComponents, setLiveComponents] = useState<string[]>([]);
+  const liveTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const baseUrl = window.location.href.replace(/#.*$/, '');
   const rspeedyDevUrl = useRspeedyDevUrl();
@@ -150,6 +158,28 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
         networkBaseUrl,
       );
       setRenderUrl(url);
+
+      // Live component stack: reveal component names as they would appear
+      // during streaming, synced with the replay speed.
+      for (const t of liveTimersRef.current) clearTimeout(t);
+      liveTimersRef.current = [];
+      setLiveComponents([]);
+      const perMsg = componentsByMessage(parsed);
+      const delayMs = 800 / (speed || 1);
+      let accumulated: string[] = [];
+      perMsg.forEach((newNames, i) => {
+        if (newNames.length === 0) return;
+        const timer = setTimeout(() => {
+          accumulated = [...accumulated, ...newNames];
+          setLiveComponents([...accumulated]);
+        }, delayMs * (i + 1));
+        liveTimersRef.current.push(timer);
+      });
+
+      // On mobile, auto-expand preview to fullscreen when rendering.
+      if (window.innerWidth <= 980) {
+        setFullscreen(true);
+      }
 
       // Native in-app preview: pass A2UI payload via global props, directly through URL query.
       // In Lynx, query params are exposed in `lynx.__globalProps` / `useGlobalProps()`.
@@ -363,18 +393,14 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
       </div>
 
       {/* Preview Panel */}
-      <div className='previewPanel'>
+      <div
+        className={fullscreen
+          ? 'previewPanel previewPanelFullscreen'
+          : 'previewPanel'}
+      >
         <div className='previewPanelHeader'>
           <span className='previewPanelTitle'>Lynx Preview</span>
-          {currentScenario
-            ? (
-              <div className='previewPanelMeta'>
-                <div className='previewMetaTags'>
-                  {currentScenario.tags.map((t) => <Chip key={t}>{t}</Chip>)}
-                </div>
-              </div>
-            )
-            : null}
+          <div className='spacer' />
           <div className='previewModeSwitch'>
             <button
               type='button'
@@ -397,6 +423,14 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
               Full
             </button>
           </div>
+          <button
+            type='button'
+            className='previewExpandBtn'
+            onClick={() => setFullscreen((v) => !v)}
+            title={fullscreen ? 'Exit fullscreen' : 'Expand preview'}
+          >
+            {fullscreen ? '\u2715' : '\u2922'}
+          </button>
         </div>
         {isSimulated
           ? (
@@ -466,6 +500,20 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
               </div>
             )}
         </div>
+
+        {/* Live Component Stack */}
+        {liveComponents.length > 0
+          ? (
+            <div className='liveComponentStack'>
+              <span className='liveComponentLabel'>Components</span>
+              <div className='liveComponentTags'>
+                {liveComponents.map((name) => (
+                  <span key={name} className='liveComponentTag'>{name}</span>
+                ))}
+              </div>
+            </div>
+          )
+          : null}
 
         {/* QR Code Section — only shown when there's a render URL */}
         {renderUrl || lynxDevUrl

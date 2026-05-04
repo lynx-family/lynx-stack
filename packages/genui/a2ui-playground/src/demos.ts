@@ -53,6 +53,28 @@ function tagsFromMessages(messages: unknown): string[] {
   return Array.from(out).sort((a, b) => a.localeCompare(b));
 }
 
+/**
+ * Extract new component names introduced by each message (in order).
+ * Returns an array parallel to the messages array: each entry is
+ * the list of component names that appear for the first time in that message.
+ */
+export function componentsByMessage(messages: unknown): string[][] {
+  if (!Array.isArray(messages)) return [];
+  const seen = new Set<string>();
+  return messages.map((msg) => {
+    const msgComponents = new Set<string>();
+    collectComponentNamesFromMessages(msg, msgComponents);
+    const newOnes: string[] = [];
+    for (const name of msgComponents) {
+      if (!seen.has(name)) {
+        seen.add(name);
+        newOnes.push(name);
+      }
+    }
+    return newOnes;
+  });
+}
+
 export interface StaticDemo {
   id: string;
   title: string;
