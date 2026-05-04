@@ -30,23 +30,21 @@
     "Liberation Mono", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --geist-foreground: #ededed;
-    --geist-background: #0a0a0a;
-    --geist-secondary: #888;
-    --geist-border: #333;
-    --geist-border-hover: #555;
-    --geist-surface: #111;
-    --geist-accent: #fff;
-    --geist-accent-foreground: #000;
-    --geist-error-light: #2a0000;
-    --geist-code-bg: #0a0a0a;
-    --geist-code-fg: #e8e8e8;
-    --geist-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
-    --geist-shadow-md: 0 4px 14px rgba(0, 0, 0, 0.3);
-    --geist-shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
-  }
+[data-theme="dark"] {
+  --geist-foreground: #ededed;
+  --geist-background: #0a0a0a;
+  --geist-secondary: #888;
+  --geist-border: #333;
+  --geist-border-hover: #555;
+  --geist-surface: #111;
+  --geist-accent: #fff;
+  --geist-accent-foreground: #000;
+  --geist-error-light: #2a0000;
+  --geist-code-bg: #0a0a0a;
+  --geist-code-fg: #e8e8e8;
+  --geist-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --geist-shadow-md: 0 4px 14px rgba(0, 0, 0, 0.3);
+  --geist-shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
 }
 
 /* ── Reset & Base ── */
@@ -118,6 +116,28 @@ a {
 
 .spacer {
   flex: 1;
+}
+
+.themeToggle {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--geist-radius-sm);
+  background: transparent;
+  color: var(--geist-secondary);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--geist-transition);
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.themeToggle:hover {
+  color: var(--geist-foreground);
+  background: var(--geist-surface);
 }
 
 /* ── Tab Navigation ── */
@@ -255,60 +275,18 @@ a {
 .phoneFrame {
   width: 300px;
   height: 560px;
-  border-radius: 36px;
-  background: var(--geist-foreground);
-  padding: 10px;
-  box-shadow:
-    var(--geist-shadow-lg),
-    inset 0 0 0 2px rgba(255, 255, 255, 0.1);
-}
-
-.phoneScreen {
-  width: 100%;
-  height: 100%;
+  border-radius: 24px;
+  border: 6px solid var(--geist-border);
   background: #fff;
-  border-radius: 28px;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.phoneStatusBar {
-  height: 44px;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.phoneNotch {
-  width: 80px;
-  height: 24px;
-  background: var(--geist-foreground);
-  border-radius: 0 0 16px 16px;
+  box-shadow: var(--geist-shadow-md);
 }
 
 .phoneIframe {
-  flex: 1;
   width: 100%;
+  height: 100%;
   border: 0;
-}
-
-.phoneHomeIndicator {
-  height: 20px;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.phoneHomeBar {
-  width: 120px;
-  height: 4px;
-  border-radius: 2px;
-  background: #d1d1d1;
+  display: block;
 }
 
 /* ── Preview Panels (shared) ── */
@@ -324,11 +302,12 @@ a {
 .previewPanelHeader {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   padding: 8px 16px;
   border-bottom: 1px solid var(--geist-border);
   background: var(--geist-background);
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .previewPanelTitle {
@@ -336,13 +315,35 @@ a {
   font-weight: 600;
 }
 
-.previewPanelMeta {
+.previewModeSwitch {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--geist-border);
+  border-radius: 6px;
+  background: var(--geist-surface);
+  flex-shrink: 0;
   margin-left: auto;
 }
 
-.previewMetaTags {
-  display: flex;
-  gap: 4px;
+.previewModeBtn {
+  padding: 2px 10px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--geist-secondary);
+  transition: all var(--geist-transition);
+}
+
+.previewModeBtn:hover {
+  color: var(--geist-foreground);
+}
+
+.previewModeBtn.active {
+  background: var(--geist-accent);
+  color: var(--geist-accent-foreground);
 }
 
 .previewPanelBody {
@@ -352,6 +353,17 @@ a {
   justify-content: center;
   padding: 24px;
   overflow: auto;
+}
+
+.previewPanelBodyFull {
+  padding: 0;
+}
+
+.previewFullIframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
 }
 
 /* ── Simulation Controls Bar ── */

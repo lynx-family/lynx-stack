@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 
 import { ProtocolSwitch } from './components/ProtocolSwitch.js';
 import { AIChatPage } from './pages/AIChatPage.js';
@@ -33,11 +33,28 @@ function parseHash(hash: string): Route {
   return { tab: 'chat' };
 }
 
+type Theme = 'light' | 'dark';
+
+function getSystemTheme(): Theme {
+  try {
+    return window.matchMedia?.('(prefers-color-scheme: dark)')?.matches
+      ? 'dark'
+      : 'light';
+  } catch {
+    return 'light';
+  }
+}
+
 export function App() {
   const [route, setRoute] = useState<Route>(() =>
     parseHash(window.location.hash)
   );
   const [protocol, setProtocol] = useState<ProtocolVersion>(DEFAULT_PROTOCOL);
+  const [theme, setTheme] = useState<Theme>(getSystemTheme);
+
+  useLayoutEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     const onHashChange = () => {
@@ -71,7 +88,7 @@ export function App() {
   return (
     <div className='appShell'>
       <div className='topBar'>
-        <span className='brand'>A2UI Playground</span>
+        <span className='brand'>Lynx A2UI Playground</span>
 
         <nav className='tabNav'>
           {TABS.map((t) => (
@@ -94,6 +111,16 @@ export function App() {
           <div className='protocolLabel'>Protocol</div>
           <ProtocolSwitch value={protocol} onChange={setProtocol} />
         </div>
+
+        <button
+          type='button'
+          className='themeToggle'
+          onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        >
+          {theme === 'dark' ? '\u2600' : '\u263E'}
+        </button>
       </div>
 
       <div className='appBody'>

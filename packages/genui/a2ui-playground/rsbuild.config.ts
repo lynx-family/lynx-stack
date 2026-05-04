@@ -43,6 +43,9 @@ export default defineConfig({
       render: './src/render.tsx',
     },
   },
+  html: {
+    title: 'Lynx A2UI Playground',
+  },
   output: {
     assetPrefix: process.env.ASSET_PREFIX,
     copy: [

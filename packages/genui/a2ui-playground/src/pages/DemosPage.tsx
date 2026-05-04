@@ -94,6 +94,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   const [speed, setSpeed] = useState(1);
   const [showSimTooltip, setShowSimTooltip] = useState(false);
   const [jsonEdited, setJsonEdited] = useState(false);
+  const [previewMode, setPreviewMode] = useState<'phone' | 'full'>('phone');
 
   const baseUrl = window.location.href.replace(/#.*$/, '');
   const rspeedyDevUrl = useRspeedyDevUrl();
@@ -374,6 +375,28 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
               </div>
             )
             : null}
+          <div className='previewModeSwitch'>
+            <button
+              type='button'
+              className={previewMode === 'phone'
+                ? 'previewModeBtn active'
+                : 'previewModeBtn'}
+              onClick={() => setPreviewMode('phone')}
+              title='Phone frame'
+            >
+              Phone
+            </button>
+            <button
+              type='button'
+              className={previewMode === 'full'
+                ? 'previewModeBtn active'
+                : 'previewModeBtn'}
+              onClick={() => setPreviewMode('full')}
+              title='Full panel'
+            >
+              Full
+            </button>
+          </div>
         </div>
         {isSimulated
           ? (
@@ -416,9 +439,23 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
             </div>
           )
           : null}
-        <div className='previewPanelBody'>
+        <div
+          className={previewMode === 'full'
+            ? 'previewPanelBody previewPanelBodyFull'
+            : 'previewPanelBody'}
+        >
           {renderUrl
-            ? <MobilePreview src={renderUrl} />
+            ? (
+              previewMode === 'phone'
+                ? <MobilePreview src={renderUrl} />
+                : (
+                  <iframe
+                    className='previewFullIframe'
+                    title='preview'
+                    src={renderUrl}
+                  />
+                )
+            )
             : (
               <div className='previewEmpty'>
                 <div className='previewEmptyIcon'>▶</div>
