@@ -6,10 +6,21 @@
  * Snapshot manager that manages all snapshot definitions.
  */
 import { DEFAULT_ENTRY_NAME } from './constants.js';
-import { DynamicPartType, __DynamicPartChildren_0 } from './dynamicPartType.js';
+import {
+  DynamicPartType,
+  __DynamicPartChildren_0,
+  __DynamicPartListSlotV2_0,
+  __DynamicPartSlotV2_0,
+} from './dynamicPartType.js';
+import { snapshotCreateList } from './list.js';
 import type { SnapshotInstance } from './snapshot.js';
+import { updateSpread } from './spread.js';
 import { entryUniqID } from './utils.js';
 import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
+
+// Declared globally at runtime; kept here for TS/ESLint project resolution.
+declare function __CreateScrollView(parentComponentUniqueId: number): FiberElement;
+declare function __CreateFrame(parentComponentUniqueId: number): FiberElement;
 
 export let __page: FiberElement;
 export let __pageId = 0;
@@ -149,4 +160,51 @@ export function createSnapshot(
     s.isSlotV2 = slot.every(([type]) => type === DynamicPartType.SlotV2 || type === DynamicPartType.ListSlotV2);
   }
   return uniqID;
+}
+
+export function createRuntimeSnapshot(type: string): void {
+  const isListHolder = type === 'list';
+  snapshotManager.values.set(type, {
+    create(snapshotInstance) {
+      /* v8 ignore start */
+      if (__JS__ && !__DEV__) {
+        return [];
+      }
+      // Keep runtime-created element creation consistent with the compiled snapshot path
+      // (see swc_plugin_snapshot tag dispatch).
+      switch (type) {
+        case 'view':
+          return [__CreateView(__pageId)];
+        case 'scroll-view':
+        case 'x-scroll-view':
+          return [__CreateScrollView(__pageId)];
+        case 'image':
+          return [__CreateImage(__pageId)];
+        case 'text':
+          return [__CreateText(__pageId)];
+        case 'wrapper':
+          return [__CreateWrapperElement(__pageId)];
+        case 'list':
+          return [snapshotCreateList(__pageId, snapshotInstance, 0)];
+        case 'frame':
+          return [__CreateFrame(__pageId)];
+        default:
+          return [__CreateElement(type, __pageId)];
+      }
+      /* v8 ignore stop */
+    },
+    update: [
+      (ctx, index, oldValue) => {
+        /* v8 ignore start */
+        if (__JS__ && !__DEV__) {
+          return;
+        }
+        /* v8 ignore stop */
+        updateSpread(ctx, index, oldValue as Record<string, unknown>, 0);
+      },
+    ],
+    slot: isListHolder ? __DynamicPartListSlotV2_0 : __DynamicPartSlotV2_0,
+    isListHolder,
+    refAndSpreadIndexes: [0],
+  });
 }

@@ -10,7 +10,7 @@
 
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { snapshotManager } from './definition.js';
+import { createRuntimeSnapshot, snapshotManager } from './definition.js';
 import type { Snapshot } from './definition.js';
 import { DynamicPartType } from './dynamicPartType.js';
 import { applyRef, clearQueuedRefs, getRefFromValue, queueRefAttrUpdate } from './ref.js';
@@ -19,7 +19,7 @@ import { snapshotCreatorMap } from './snapshot.js';
 import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { transformSpread } from './spread.js';
 import type { SerializedSnapshotInstance } from './types.js';
-import { traverseSnapshotInstance } from './utils.js';
+import { isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { clearSnapshotVNodeSource, getSnapshotVNodeSource, moveSnapshotVNodeSource } from '../debug/vnodeSource.js';
@@ -88,6 +88,13 @@ export const backgroundSnapshotInstanceManager: {
     if (!ctx) {
       return null;
     }
+    /**
+     * 1. normal event
+     *  `${ctx.__id}:${expIndex}:${spreadKey}`
+     * 2. defer list event
+     *   ${ctx.__id}:__extraProps:onRecycleComponent`
+     *   ${ctx.__id}:__extraProps:onComponentAtIndex`
+     */
     const spreadKey = res[2];
     if (res[1] === '__extraProps') {
       if (spreadKey) {
@@ -145,8 +152,11 @@ export class BackgroundSnapshotInstance {
     if (!snapshotManager.values.has(type) && type !== 'div') {
       if (snapshotCreatorMap[type]) {
         snapshotCreatorMap[type](type);
-      } else {
+      } else if (isCompiledSnapshot(type)) {
         throw new Error('BackgroundSnapshot not found: ' + type);
+      } else {
+        // add runtime snapshot to backgroundSnapshotInstanceManager
+        createRuntimeSnapshot(type);
       }
     }
     this.__snapshot_def = snapshotManager.values.get(type)!;
@@ -157,7 +167,7 @@ export class BackgroundSnapshotInstance {
   }
 
   __id: number;
-  __values: any[] | undefined;
+  __values: unknown[] | undefined;
   __snapshot_def: Snapshot;
   __extraProps?: Record<string, unknown> | undefined;
   __slotIndex: number = 0;
@@ -285,7 +295,7 @@ export class BackgroundSnapshotInstance {
         traverseSnapshotInstance(node, v => {
           if (v.__values) {
             v.__snapshot_def.refAndSpreadIndexes?.forEach((i) => {
-              const value = v.__values![i] as unknown;
+              const value = v.__values![i];
               if (value && (typeof value === 'object' || typeof value === 'function')) {
                 if ('__spread' in value && 'ref' in value && value.ref) {
                   applyRef(value.ref as Ref, null);
@@ -489,6 +499,7 @@ export function hydrate(
     ) => {
       hydrationMap.set(after.__id, before.id);
       backgroundSnapshotInstanceManager.updateId(after.__id, before.id);
+      // handle value by index
       after.__values?.forEach((value: unknown, index) => {
         // render with different root would cause different values length
         const old: unknown = before.values?.[index];
@@ -559,6 +570,7 @@ export function hydrate(
         }
       });
 
+      // handle extraProps as attributes and set by key
       if (after.__extraProps) {
         for (const key in after.__extraProps) {
           const value = after.__extraProps[key];
