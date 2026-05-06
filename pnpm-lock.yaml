@@ -1133,8 +1133,11 @@ importers:
         specifier: workspace:*
         version: link:../../webpack/runtime-wrapper-webpack-plugin
       '@lynx-js/tasm':
-        specifier: 0.0.35
-        version: 0.0.35
+        specifier: 0.0.38
+        version: 0.0.38
+      '@lynx-js/template-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/template-webpack-plugin
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*
@@ -2060,8 +2063,8 @@ importers:
         specifier: workspace:*
         version: link:../../tools/css-serializer
       '@lynx-js/tasm':
-        specifier: 0.0.35
-        version: 0.0.35
+        specifier: 0.0.38
+        version: 0.0.38
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../../web-platform/web-core
@@ -3832,8 +3835,8 @@ packages:
     peerDependencies:
       '@lynx-js/react': '>=0.114.4'
 
-  '@lynx-js/tasm@0.0.35':
-    resolution: {integrity: sha512-8c2Nh6JbAdOzIvAwOgbUZGV7mNJ917y40xzGKHOjyv8Rxhjw0FTv+f+FJGpW3VXl9DUzUGM9GNoDOrL678Kt8A==}
+  '@lynx-js/tasm@0.0.38':
+    resolution: {integrity: sha512-3z6IkyJhFzKrGdGiibmBoPMZGwcl/zK4MvwdSbl2q00Qp+4kP0mig1kGkw/BleBi/zBKWGwjvYsT9/5hAryQig==}
     hasBin: true
 
   '@lynx-js/trace-processor@0.0.1':
@@ -5548,6 +5551,7 @@ packages:
 
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@unhead/react@2.1.4':
     resolution: {integrity: sha512-3DzMi5nJkUyLVfQF/q78smCvcSy84TTYgTwXVz5s3AjUcLyHro5Z7bLWriwk1dn5+YRfEsec8aPkLCMi5VjMZg==}
@@ -13057,7 +13061,7 @@ snapshots:
       - react
       - react-dom
 
-  '@lynx-js/tasm@0.0.35': {}
+  '@lynx-js/tasm@0.0.38': {}
 
   '@lynx-js/trace-processor@0.0.1':
     dependencies:

@@ -25,6 +25,8 @@ export interface EncodeOptions {
 }
 
 const DEFAULT_EXTERNAL_BUNDLE_MINIFY_CONFIG = {
+  // FIXME: CSS minification makes the CSS sourcemap `sources` incorrect.
+  css: false,
   jsOptions: {
     minimizerOptions: {
       compress: {
@@ -67,6 +69,9 @@ export const DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG: LibConfig = {
     dataUriLimit: Number.POSITIVE_INFINITY,
     distPath: {
       root: 'dist-external-bundle',
+    },
+    sourceMap: {
+      css: true,
     },
   },
   source: {
