@@ -15,7 +15,7 @@ import {
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_DEMO_URL } from '../utils/demoUrl.js';
-import type { ProtocolVersion } from '../utils/protocol.js';
+import type { Protocol } from '../utils/protocol.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
 
 interface Scenario {
@@ -76,7 +76,7 @@ function formatJson(value: unknown): string {
   return JSON.stringify(value ?? [], null, 2);
 }
 
-export function DemosPage(props: { protocol: ProtocolVersion }) {
+export function DemosPage(props: { protocol: Protocol }) {
   const { protocol } = props;
 
   const [scenarioId, setScenarioId] = useState<string>(
@@ -288,7 +288,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
           if (messagesUrlAbs) {
             const buildStoredPayloadRenderUrl = (targetBaseUrl: string) => {
               const r = new URL('render.html', targetBaseUrl);
-              r.searchParams.set('protocol', protocol);
+              r.searchParams.set('protocol', protocol.name);
               r.searchParams.set('demoUrl', DEFAULT_DEMO_URL);
               r.searchParams.set('messagesUrl', messagesUrlAbs);
               if (actionMocksUrlAbs && actionMocks) {

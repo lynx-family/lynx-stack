@@ -1,24 +1,42 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 
-import { ProtocolSwitch } from './components/ProtocolSwitch.js';
 import { AIChatPage } from './pages/AIChatPage.js';
 import { ComponentsPage } from './pages/ComponentsPage.js';
 import { DemosPage } from './pages/DemosPage.js';
-import type { ProtocolVersion } from './utils/protocol.js';
-import { DEFAULT_PROTOCOL } from './utils/protocol.js';
+import { OpenUIComponentsPage } from './pages/OpenUIComponentsPage.js';
+import { OpenUIDemosPage } from './pages/OpenUIDemosPage.js';
+import type { Protocol, ProtocolName } from './utils/protocol.js';
+import { DEFAULT_PROTOCOL, getProtocol } from './utils/protocol.js';
 
-type Tab = 'create' | 'examples' | 'components';
+type Tab = 'chat' | 'demos' | 'components';
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'create', label: 'Create' },
-  { id: 'examples', label: 'Examples' },
+interface TabDef {
+  id: Tab;
+  label: string;
+}
+
+const A2UI_TABS: TabDef[] = [
+  { id: 'chat', label: 'AI Chat' },
+  { id: 'demos', label: 'Demos' },
+  { id: 'components', label: 'Components' },
+];
+
+const OPENUI_TABS: TabDef[] = [
+  { id: 'demos', label: 'Demos' },
   { id: 'components', label: 'Components' },
 ];
 
 interface Route {
+  protocol: Protocol;
   tab: Tab;
   componentName?: string;
 }
@@ -26,16 +44,27 @@ interface Route {
 function parseHash(hash: string): Route {
   const cleaned = hash.replace(/^#\/?/u, '');
   const parts = cleaned.split('/');
-  if (parts[0] === 'examples' || parts[0] === 'demos') {
-    return { tab: 'examples' };
+
+  let protocol: Protocol = DEFAULT_PROTOCOL;
+  let rest = parts;
+
+  if (parts[0] === 'a2ui' || parts[0] === 'openui') {
+    protocol = getProtocol(parts[0]);
+    rest = parts.slice(1);
   }
-  if (parts[0] === 'create' || parts[0] === 'chat') {
-    return { tab: 'create' };
+
+  if (rest[0] === 'demos' || rest[0] === 'examples') {
+    return { protocol, tab: 'demos' };
   }
-  if (parts[0] === 'components') {
-    return { tab: 'components', componentName: parts[1] };
+  if (rest[0] === 'components') {
+    return { protocol, tab: 'components', componentName: rest[1] };
   }
-  return { tab: 'create' };
+  if (rest[0] === 'chat' || rest[0] === 'create') {
+    return { protocol, tab: 'chat' };
+  }
+  // OpenUI has no chat tab, default to demos
+  if (protocol.name === 'openui') return { protocol, tab: 'demos' };
+  return { protocol, tab: 'chat' };
 }
 
 type Theme = 'light' | 'dark';
@@ -54,8 +83,10 @@ export function App() {
   const [route, setRoute] = useState<Route>(() =>
     parseHash(window.location.hash)
   );
-  const [protocol, setProtocol] = useState<ProtocolVersion>(DEFAULT_PROTOCOL);
   const [theme, setTheme] = useState<Theme>(getSystemTheme);
+
+  const protocol = route.protocol;
+  const tabs = protocol.name === 'openui' ? OPENUI_TABS : A2UI_TABS;
 
   useLayoutEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -70,13 +101,34 @@ export function App() {
   }, []);
 
   const handleTabClick = useCallback((id: Tab) => {
-    window.location.hash = `#/${id}`;
-  }, []);
+    window.location.hash = `#/${protocol.name}/${id}`;
+  }, [protocol.name]);
 
-  const page = (() => {
+  const handleProtocolSelect = useCallback((name: ProtocolName) => {
+    // When switching to openui and current tab is chat, fallback to demos
+    const tab = name === 'openui' && route.tab === 'chat' ? 'demos' : route.tab;
+    window.location.hash = `#/${name}/${tab}`;
+  }, [route.tab]);
+
+  const page = useMemo(() => {
+    if (protocol.name === 'openui') {
+      switch (route.tab) {
+        case 'components':
+          return (
+            <OpenUIComponentsPage
+              key='openui-components'
+              protocol={protocol}
+              componentName={route.componentName}
+            />
+          );
+        default:
+          return <OpenUIDemosPage key='openui-demos' protocol={protocol} />;
+      }
+    }
+
     switch (route.tab) {
-      case 'examples':
-        return <DemosPage key='examples' protocol={protocol} />;
+      case 'demos':
+        return <DemosPage key='demos' protocol={protocol} />;
       case 'components':
         return (
           <ComponentsPage
@@ -86,17 +138,31 @@ export function App() {
           />
         );
       default:
-        return <AIChatPage key='create' protocol={protocol} />;
+        return <AIChatPage key='chat' protocol={protocol} />;
     }
-  })();
+  }, [protocol, route.tab, route.componentName]);
+
+  const protocolVersionControl = (
+    <div className='protocolControl'>
+      <div className='protocolLabel'>Protocol</div>
+      <select
+        className='protocolSelect'
+        value={protocol.name}
+        onChange={(e) => handleProtocolSelect(e.target.value as ProtocolName)}
+      >
+        <option value='a2ui'>A2UI v0.9</option>
+        <option value='openui'>OpenUI v0.1</option>
+      </select>
+    </div>
+  );
 
   return (
     <div className='appShell'>
       <div className='topBar'>
-        <span className='brand'>Lynx A2UI Playground</span>
+        <span className='brand'>Lynx GenUI Playground</span>
 
         <nav className='tabNav'>
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <button
               key={t.id}
               type='button'
@@ -112,10 +178,7 @@ export function App() {
 
         <div className='spacer' />
 
-        <div className='protocolControl'>
-          <div className='protocolLabel'>Protocol</div>
-          <ProtocolSwitch value={protocol} onChange={setProtocol} />
-        </div>
+        {protocolVersionControl}
 
         <button
           type='button'
