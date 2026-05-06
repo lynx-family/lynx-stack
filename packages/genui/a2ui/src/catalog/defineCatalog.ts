@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import type { ComponentType } from '@lynx-js/react';
 
-import type { GenericComponentProps } from '../core/types.js';
+import type { GenericComponentProps } from '../store/types.js';
 
 /**
  * JSON Schema fragment describing a component's props. Produced at build time
