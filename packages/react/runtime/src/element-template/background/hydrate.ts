@@ -480,6 +480,10 @@ function syncAttributeSlots(
     if (isDirectOrDeepEqual(beforeValue, afterValue)) {
       continue;
     }
+    if (afterValue === undefined && beforeValue === null) {
+      // JSON serialization turns undefined array slots into null on the main-thread payload.
+      continue;
+    }
     GlobalCommitContext.ops.push(
       ElementTemplateUpdateOps.setAttribute,
       handleId,
