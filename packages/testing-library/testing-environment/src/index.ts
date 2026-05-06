@@ -12,6 +12,7 @@ import { GlobalEventEmitter } from './lynx/GlobalEventEmitter.js';
 export { initElementTree } from './lynx/ElementPAPI.js';
 export type { LynxElement } from './lynx/ElementPAPI.js';
 export type { LynxGlobalThis } from './lynx/GlobalThis.js';
+export { GlobalEventEmitter } from './lynx/GlobalEventEmitter.js';
 
 /**
  * The host environment used to initialize `LynxTestingEnv`.
@@ -56,11 +57,37 @@ declare global {
     var tt: any;
   }
 
+  /**
+   * Called after background thread globals are injected. Use to add framework-specific
+   * globals (e.g. Vue runtime, custom modules) to the background thread.
+   * @public
+   */
   function onInjectBackgroundThreadGlobals(globals: any): void;
+  /**
+   * Called after main thread globals are injected. Use to add framework-specific
+   * globals to the main thread.
+   * @public
+   */
   function onInjectMainThreadGlobals(globals: any): void;
+  /**
+   * Called each time the active thread switches to the background thread.
+   * @public
+   */
   function onSwitchedToBackgroundThread(): void;
+  /**
+   * Called each time the active thread switches to the main thread.
+   * @public
+   */
   function onSwitchedToMainThread(): void;
+  /**
+   * Called when `LynxTestingEnv.reset()` completes. Use to re-apply framework state.
+   * @public
+   */
   function onResetLynxTestingEnv(): void;
+  /**
+   * Called when the worklet runtime chunk is loaded. Return the worklet runtime module.
+   * @public
+   */
   function onInitWorkletRuntime(): void;
 }
 

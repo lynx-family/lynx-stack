@@ -15,6 +15,26 @@ export type FilterUnderscoreKeys<T> = {
     [K in keyof T]: K extends `__${string}` ? K : never;
 }[keyof T];
 
+// @public
+export class GlobalEventEmitter {
+    // (undocumented)
+    addListener(eventName: string, listener: Function): void;
+    // (undocumented)
+    clear(): void;
+    // (undocumented)
+    emit(eventName: string, args: any[]): void;
+    // (undocumented)
+    listeners: Record<string, Function[]>;
+    // (undocumented)
+    removeAllListeners(eventName?: string): void;
+    // (undocumented)
+    removeListener(eventName: string, listener: Function): void;
+    // (undocumented)
+    toggle(eventName: string, ...data: unknown[]): void;
+    // (undocumented)
+    trigger(eventName: string, params: string | Record<any, any>): void;
+}
+
 // @public (undocumented)
 export const initElementTree: () => {
     uniqueId2Element: Map<number, LynxElement>;
