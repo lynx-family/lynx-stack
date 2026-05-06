@@ -163,11 +163,19 @@ function readValue(args: string[], index: number, option: string): string {
   return value;
 }
 
+function isEntryScript(): boolean {
+  if (!process.argv[1]) return false;
+  const entryUrl = pathToFileURL(process.argv[1]).href;
+  if (import.meta.url === entryUrl) return true;
+  // The published bin shim does `import '../dist/cli.js'`. In that case the
+  // entry script is the bin shim, not this module — but we should still run.
+  return /[/\\]bin[/\\]a2ui-catalog-extractor\.[mc]?js$/.test(
+    process.argv[1],
+  );
+}
+
 try {
-  if (
-    process.argv[1]
-    && import.meta.url === pathToFileURL(process.argv[1]).href
-  ) {
+  if (isEntryScript()) {
     process.exitCode = await runCli(process.argv.slice(2));
   }
 } catch (error) {
