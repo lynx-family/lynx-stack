@@ -14,6 +14,7 @@ import {
   __OpText,
   renderToString,
 } from '../../../../src/element-template/runtime/render/render-to-opcodes';
+import { DIFFED, PARENT } from '../../../../src/shared/render-constants';
 
 describe('Element Template renderToOpcodes', () => {
   it('should export correct opcodes', () => {
@@ -27,7 +28,7 @@ describe('Element Template renderToOpcodes', () => {
   it('should emit slot opcodes for ET host slot arrays', () => {
     const Template = '_et_test_root';
     const opcodes = renderToString(
-      <Template children={[null, null, null, <text>marker</text>]} />,
+      <Template children={[null, null, null, 'marker']} />,
     );
 
     expect(opcodes[0]).toBe(__OpBegin);
@@ -58,36 +59,45 @@ describe('Element Template renderToOpcodes', () => {
     ]);
   });
 
-  it('renders generic host nodes while skipping non-renderable children', () => {
-    const opcodes = renderToString(
-      h(
-        'view',
-        { id: 'root', onTap: () => {} },
-        ['', 0, false, null, h('text', { key: 'marker' }, 'marker'), () => {}],
-      ),
-    );
+  it('ignores function values in render output', () => {
+    expect(renderToString(() => {})).toEqual([]);
+  });
 
-    const normalized = opcodes.map((item) => {
-      if (typeof item === 'object') {
-        return item.type;
-      }
-      return item;
-    });
-    expect(normalized).toEqual([
-      __OpBegin,
-      'view',
-      __OpAttr,
-      'id',
-      'root',
-      __OpText,
-      '0',
-      __OpBegin,
-      'text',
-      __OpText,
-      'marker',
-      __OpEnd,
-      __OpEnd,
-    ]);
+  it('throws in development when a plain host vnode reaches the ET render path', () => {
+    expect(() => renderToString(h('view', null))).toThrow(
+      'Element Template main-thread renderer received an uncompiled host vnode: view',
+    );
+  });
+
+  it('throws in development when an invalid vnode reaches the ET render path', () => {
+    expect(() => renderToString({ type: null, props: {} })).toThrow(
+      'Element Template main-thread renderer received an invalid vnode.',
+    );
+  });
+
+  it('cleans vnodes before throwing development renderer invariant errors', () => {
+    const previousDiffed = options[DIFFED];
+    const cleaned = [];
+    const plainHostVNode = h('view', null);
+    const invalidVNode = { type: null, props: {} };
+    options[DIFFED] = vnode => {
+      cleaned.push(vnode);
+    };
+
+    try {
+      expect(() => renderToString(plainHostVNode)).toThrow(
+        'Element Template main-thread renderer received an uncompiled host vnode: view',
+      );
+      expect(() => renderToString(invalidVNode)).toThrow(
+        'Element Template main-thread renderer received an invalid vnode.',
+      );
+    } finally {
+      options[DIFFED] = previousDiffed;
+    }
+
+    expect(cleaned).toEqual([plainHostVNode, invalidVNode]);
+    expect(plainHostVNode[PARENT]).toBeUndefined();
+    expect(invalidVNode[PARENT]).toBeUndefined();
   });
 
   it('calls the unmount option while cleaning rendered vnodes', () => {
@@ -98,7 +108,7 @@ describe('Element Template renderToOpcodes', () => {
     };
 
     try {
-      renderToString(h('view', null, h('text', null, 'cleanup')));
+      renderToString(h('__et_builtin_raw_text__', { attributeSlots: ['cleanup'] }));
     } finally {
       options.unmount = previousUnmount;
     }
@@ -108,13 +118,13 @@ describe('Element Template renderToOpcodes', () => {
 
   it('renders direct fragments', () => {
     expect(renderToString(
-      h(Fragment, null, h('text', null, 'direct-fragment')),
+      h(Fragment, null, 'direct-fragment'),
     )).toContain('direct-fragment');
   });
 
   it('unwraps unkeyed top-level fragments returned from components', () => {
     function UnkeyedFragment() {
-      return h(Fragment, null, h('text', null, 'unkeyed-fragment'));
+      return h(Fragment, null, 'unkeyed-fragment');
     }
 
     expect(renderToString(h(UnkeyedFragment, null))).toContain('unkeyed-fragment');
@@ -133,7 +143,7 @@ describe('Element Template renderToOpcodes', () => {
       }
 
       render() {
-        return h('text', null, this.state.value);
+        return this.state.value;
       }
     }
 
@@ -163,17 +173,17 @@ describe('Element Template renderToOpcodes', () => {
       static contextType = ThemeContext;
 
       render() {
-        return h('text', null, this.context);
+        return this.context;
       }
     }
 
     function LegacyReader(_props, context) {
-      return h('text', null, context.legacyTheme);
+      return context.legacyTheme;
     }
 
     function FragmentWrapper() {
       return h(
-        h.Fragment,
+        Fragment,
         null,
         h(ModernReader, null),
         h(LegacyReader, null),
@@ -204,7 +214,7 @@ describe('Element Template renderToOpcodes', () => {
     const opcodes = renderToString(
       h(
         Suspense,
-        { fallback: h('text', null, 'loading') },
+        { fallback: 'loading' },
         h(AsyncText, null),
       ),
     );
@@ -218,7 +228,7 @@ describe('Element Template renderToOpcodes', () => {
       if (count === 0) {
         setCount(1);
       }
-      return h('text', null, String(count));
+      return String(count);
     }
 
     expect(renderToString(h(DirtyHookComponent, null))).toContain('0');
@@ -231,7 +241,7 @@ describe('Element Template renderToOpcodes', () => {
       static contextType = ThemeContext;
 
       render() {
-        return h('text', null, this.context);
+        return this.context;
       }
     }
 
