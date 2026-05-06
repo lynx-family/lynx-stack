@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
-import type { ProtocolVersion } from '../utils/protocol.js';
+import type { Protocol } from '../utils/protocol.js';
 
 interface ChatMessage {
   role: 'user' | 'ai';
@@ -22,7 +22,7 @@ const MOCK_AI_RESPONSE: ChatMessage = {
   content: (
     <>
       AI generation is not yet connected. In the meantime, check out the{' '}
-      <a href='#/examples' style={{ textDecoration: 'underline' }}>Examples</a>
+      <a href='#/a2ui/demos' style={{ textDecoration: 'underline' }}>Demos</a>
       {' '}
       tab to see pre-recorded A2UI scenarios with simulated streaming — you can
       even adjust the playback speed.
@@ -37,7 +37,7 @@ const COMPACT_PREVIEW_MIN_HEIGHT = 320;
 const RESIZE_BREAKPOINT = 980;
 
 export function AIChatPage(
-  _props: { protocol: ProtocolVersion },
+  _props: { protocol: Protocol },
 ) {
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [inputValue, setInputValue] = useState<string>('');
@@ -97,7 +97,7 @@ export function AIChatPage(
       <div className='chatPanel' style={chatPanelStyle}>
         <div className='chatHeader'>
           <div className='chatHeaderTitleRow'>
-            <h2 className='chatHeaderTitle'>Create</h2>
+            <h2 className='chatHeaderTitle'>AI Chat</h2>
             <span className='constructionBadge'>Under construction</span>
           </div>
           <p className='chatHeaderSub'>Describe the UI you want to build</p>
@@ -142,7 +142,7 @@ export function AIChatPage(
           : 'panelResizeHandle'}
         role='separator'
         aria-orientation={isCompactLayout ? 'horizontal' : 'vertical'}
-        aria-label='Resize Create and preview panels'
+        aria-label='Resize AI Chat and preview panels'
         title='Drag to resize'
         onPointerDown={handlePanelResizeStart}
       />

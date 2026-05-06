@@ -3,16 +3,18 @@
 // LICENSE file in the root directory of this source tree.
 import { Chip } from '../components/Chip.js';
 import { SUPPORTED_COMPONENTS } from '../demos.js';
-import type { ProtocolVersion } from '../utils/protocol.js';
+import type { Protocol } from '../utils/protocol.js';
 
-export function HomePage(props: { protocol: ProtocolVersion }) {
+export function HomePage(props: { protocol: Protocol }) {
   const { protocol } = props;
-  const base = `#/${protocol}`;
+  const base = `#/${protocol.name}`;
 
   return (
     <div className='page'>
       <header className='hero'>
-        <div className='heroBadge'>A2UI protocol {protocol}</div>
+        <div className='heroBadge'>
+          {protocol.name.toUpperCase()} v{protocol.version}
+        </div>
         <h1 className='heroTitle'>A2UI Renderer</h1>
         <p className='heroSubtitle'>
           Render declarative A2UI JSON into interactive UI, with both static and

@@ -130,6 +130,38 @@ a {
   flex-shrink: 0;
 }
 
+.brandGroup {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.protocolSelect {
+  height: 30px;
+  padding: 0 28px 0 10px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-sm);
+  background: var(--geist-surface);
+  color: var(--geist-foreground);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: border-color var(--geist-transition);
+}
+
+.protocolSelect:hover {
+  border-color: var(--geist-border-hover);
+}
+
+.protocolSelect:focus {
+  outline: none;
+  border-color: var(--geist-foreground);
+}
+
 .spacer {
   flex: 1;
 }
