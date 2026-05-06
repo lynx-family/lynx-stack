@@ -108,7 +108,8 @@ export class WebEncodePlugin {
           const isExperimentalWebBinary = process
             .env['EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE'];
           if (
-            isExperimentalWebBinary === 'false' || isExperimentalWebBinary === '0'
+            isExperimentalWebBinary === 'false'
+            || isExperimentalWebBinary === '0'
           ) {
             return {
               buffer: Buffer.from(
