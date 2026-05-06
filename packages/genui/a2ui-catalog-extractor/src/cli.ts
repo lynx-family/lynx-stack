@@ -145,6 +145,20 @@ export async function runCli(
 
   printGeneratedComponents(components);
 
+  // Fail loudly if we matched source files but emitted no components —
+  // this used to silently succeed on Windows when TypeDoc rejected
+  // backslash entry-point paths, and downstream packages then failed
+  // to import the missing `catalog.json` files.
+  if (components.length === 0) {
+    console.error(
+      `[a2ui-catalog-extractor] Found ${uniqueSourceFiles.length} `
+        + `source file(s) but emitted 0 component catalogs. Make sure `
+        + `each catalog props interface is annotated with `
+        + `\`@a2uiCatalog <Name>\`.`,
+    );
+    return 1;
+  }
+
   return 0;
 }
 
