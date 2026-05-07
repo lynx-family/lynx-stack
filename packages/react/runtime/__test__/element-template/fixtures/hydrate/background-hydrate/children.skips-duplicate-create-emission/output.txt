@@ -1,4 +1,0 @@
-Object {
-  "firstIncludes": true,
-  "secondIncludes": false,
-}
