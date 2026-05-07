@@ -98,9 +98,20 @@ export function applyNodesRefRemoveChild(
     if (v.__snapshot_def.isListHolder) {
       snapshotDestroyList(v);
     }
-    v.__parent = null;
-    v.__previousSibling = null;
-    v.__nextSibling = null;
+    // `__parent` / `__previousSibling` / `__nextSibling` are `private` on
+    // `SnapshotInstance`; the cast mirrors the existing pattern in
+    // `portals.ts`. Inner portal-subtree nodes (children of the portal
+    // root) ARE linked into the SI tree on main thread via regular
+    // `InsertBefore` ops, so the regular `removeChild` teardown nulls
+    // these — mirror that here for parity.
+    const link = v as unknown as {
+      __parent: unknown;
+      __previousSibling: unknown;
+      __nextSibling: unknown;
+    };
+    link.__parent = null;
+    link.__previousSibling = null;
+    link.__nextSibling = null;
     delete v.__elements;
     delete v.__element_root;
     snapshotInstanceManager.values.delete(v.__id);
