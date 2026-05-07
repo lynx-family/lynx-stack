@@ -189,6 +189,9 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: |
+        # Generated smoke-test projects do not carry a packageManager pin, so
+        # keep this stage on pnpm 10 even when Corepack's registry default moves.
+        corepack prepare pnpm@10.29.3 --activate
         pnpm dlx @pnpm/registry-mock@4 prepare
         pnpm dlx @pnpm/registry-mock@4 &
         printf '\n//localhost:4873/:_authToken="this-is-a-fake-token"\n' >> ~/.npmrc
