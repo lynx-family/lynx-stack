@@ -1,9 +1,36 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { A2UIRender, BaseClient } from '@lynx-js/a2ui-reactlynx/core';
-import type { Resource } from '@lynx-js/a2ui-reactlynx/core';
-import '@lynx-js/a2ui-reactlynx/catalog/all';
+import {
+  A2UI,
+  Button,
+  Card,
+  CheckBox,
+  Column,
+  Divider,
+  Image,
+  List,
+  RadioGroup,
+  Row,
+  Text,
+  createMessageStore,
+} from '@lynx-js/a2ui-reactlynx';
+import type {
+  CatalogInput,
+  MessageStore,
+  ServerToClientMessage,
+  UserActionPayload,
+} from '@lynx-js/a2ui-reactlynx';
+import buttonManifest from '@lynx-js/a2ui-reactlynx/catalog/Button/catalog.json';
+import cardManifest from '@lynx-js/a2ui-reactlynx/catalog/Card/catalog.json';
+import checkBoxManifest from '@lynx-js/a2ui-reactlynx/catalog/CheckBox/catalog.json';
+import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json';
+import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json';
+import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
+import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
+import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
+import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
+import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json';
 import {
   useEffect,
   useGlobalProps,
@@ -13,6 +40,29 @@ import {
   useState,
 } from '@lynx-js/react';
 
+import { createMockAgent } from '../examples/io-mock/mockAgent.js';
+
+// Compose every built-in. There is intentionally no all-in-one aggregate
+// shipped from the package — this list makes the cost of "everything"
+// visible and lets the bundler tree-shake when you only need a few.
+//
+// Schemas are not attached because the playground doesn't perform an
+// agent handshake. To include schemas, pair each component with its
+// `catalog.json` manifest — see
+// `packages/genui/a2ui/src/catalog/README.md`.
+const ALL_BUILTINS: readonly CatalogInput[] = [
+  [Text, textManifest],
+  [Image, imageManifest],
+  [Row, rowManifest],
+  [Column, columnManifest],
+  [List, listManifest],
+  [Card, cardManifest],
+  [Button, buttonManifest],
+  [Divider, dividerManifest],
+  [CheckBox, checkBoxManifest],
+  [RadioGroup, radioGroupManifest],
+];
+
 interface InitData {
   messagesUrl?: string;
   messages?: unknown;
@@ -21,17 +71,12 @@ interface InitData {
 }
 
 type A2uiMessage = Record<string, unknown> & { messageId?: string };
-
-type ActionMocks = Record<string, unknown>;
-
 type ResponseMessages = A2uiMessage[];
-
-const DEFAULT_STREAM_DELAY_MS = 800;
-
-function randomId(prefix: string) {
-  return prefix + Date.now().toString(36)
-    + Math.random().toString(36).slice(2, 10);
-}
+type ActionMocks = Record<
+  string,
+  | ServerToClientMessage[]
+  | ((ctx: UserActionPayload) => ServerToClientMessage[])
+>;
 
 function parseJsonLikeString(input: string): unknown {
   try {
@@ -40,7 +85,8 @@ function parseJsonLikeString(input: string): unknown {
     // ignore
   }
 
-  // Query params may arrive URL-encoded one or more times in native globalProps.
+  // Query params may arrive URL-encoded one or more times in native
+  // globalProps.
   let current = input;
   for (let i = 0; i < 3; i++) {
     try {
@@ -62,7 +108,6 @@ function parseJsonLikeString(input: string): unknown {
 
 function normalizeInitDataLike(raw: unknown): InitData {
   if (raw === null || raw === undefined) return {};
-
   if (typeof raw !== 'object') return {};
 
   const obj = raw as Record<string, unknown>;
@@ -101,14 +146,8 @@ function mergeInitDataPreferLeft(a: InitData, b: InitData): InitData {
 }
 
 function normalizePayloadToMessages(payload: unknown): ResponseMessages {
-  if (payload === null || payload === undefined) {
-    return [];
-  }
-
-  if (Array.isArray(payload)) {
-    return payload as ResponseMessages;
-  }
-
+  if (payload === null || payload === undefined) return [];
+  if (Array.isArray(payload)) return payload as ResponseMessages;
   if (typeof payload === 'string') {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -118,14 +157,12 @@ function normalizePayloadToMessages(payload: unknown): ResponseMessages {
       return [];
     }
   }
-
   if (
     typeof payload === 'object'
     && Array.isArray((payload as Record<string, unknown>).messages)
   ) {
     return (payload as Record<string, unknown>).messages as ResponseMessages;
   }
-
   return [];
 }
 
@@ -140,15 +177,15 @@ async function loadMessages(initData: InitData): Promise<ResponseMessages> {
       return normalizePayloadToMessages(text);
     }
   }
-
   if (initData.messages !== undefined) {
     return normalizePayloadToMessages(initData.messages);
   }
-
   return [];
 }
 
-async function loadActionMocks(initData: InitData): Promise<ActionMocks> {
+async function loadActionMocks(
+  initData: InitData,
+): Promise<Record<string, unknown>> {
   if (initData.actionMocksUrl) {
     // eslint-disable-next-line n/no-unsupported-features/node-builtins
     const res = await fetch(initData.actionMocksUrl, { cache: 'no-store' });
@@ -157,23 +194,22 @@ async function loadActionMocks(initData: InitData): Promise<ActionMocks> {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const parsed = JSON.parse(text);
       if (parsed && typeof parsed === 'object') {
-        return parsed as ActionMocks;
+        return parsed as Record<string, unknown>;
       }
       return {};
     } catch {
       return {};
     }
   }
-
   if (initData.actionMocks && typeof initData.actionMocks === 'object') {
-    return initData.actionMocks as ActionMocks;
+    return initData.actionMocks as Record<string, unknown>;
   }
-
   return {};
 }
 
 export function App() {
   const globalProps = useGlobalProps();
+
   const rawInitData = useInitData();
 
   const initData = useMemo(() => {
@@ -192,132 +228,69 @@ export function App() {
     [globalProps],
   );
 
-  // Native in-app preview passes A2UI payload via `globalProps` (often from URL query).
-  // Web preview may still provide `initData`, so keep fallback for compatibility.
+  // Native in-app preview passes A2UI payload via `globalProps` (often
+  // from URL query). Web preview may still provide `initData`, so keep the
+  // fallback for compatibility.
   const effectiveData = useMemo(
     () => mergeInitDataPreferLeft(globalPropsData, initData),
     [globalPropsData, initData],
   );
 
-  // Speed multiplier from URL query (e.g. ?speed=2 → 2x faster).
-  const streamDelay = useMemo(() => {
-    const raw = (globalProps as Record<string, unknown> | null)?.speed
-      ?? (rawInitData as Record<string, unknown> | null)?.speed;
-    const speed = typeof raw === 'string'
-      ? Number(raw)
-      : (typeof raw === 'number' ? raw : 1);
-    if (!speed || speed <= 0) return DEFAULT_STREAM_DELAY_MS;
-    return DEFAULT_STREAM_DELAY_MS / speed;
-  }, [globalProps, rawInitData]);
-
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  const clientRef = useRef<any>(null);
-
-  const [resource, setResource] = useState<Resource | null>(null);
+  const storeRef = useRef<MessageStore | null>(null);
+  const agentRef = useRef<ReturnType<typeof createMockAgent> | null>(null);
+  const [store, setStore] = useState<MessageStore | null>(null);
   const [error, setError] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   useEffect(() => {
     let cancelled = false;
 
     const run = async () => {
-      setLoading(true);
       setError('');
 
-      const [rawMessages, actionMocks] = await Promise.all([
+      const [rawMessages, rawActionMocks] = await Promise.all([
         loadMessages(effectiveData ?? {}),
         loadActionMocks(effectiveData ?? {}),
       ]);
 
-      const messageId = randomId('demo_');
-      const messages = rawMessages.map((msg) => ({
-        ...msg,
-        messageId: messageId,
-      }));
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const client = clientRef.current ?? new BaseClient('');
-
-      clientRef.current ??= client;
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      client.processUserAction = async (
-        userAction: Record<string, unknown>,
-      ) => {
-        const name = userAction?.name as string | undefined;
-        if (!name || !actionMocks[name]) {
-          return [];
-        }
-
-        const rawResponseMessages = normalizePayloadToMessages(
-          actionMocks[name],
-        );
-        const actionMessageId = randomId('action_');
-        const responseMessages = rawResponseMessages.map((msg) => ({
-          ...msg,
-          messageId: actionMessageId,
-        }));
-
-        void (async () => {
-          for (const msg of responseMessages) {
-            if (cancelled) break;
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-            client.processor?.processMessages?.([msg]);
-            await new Promise((resolve) => setTimeout(resolve, streamDelay));
-          }
-        })();
-
-        return responseMessages;
-      };
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      client.processor?.clearSurfaces?.();
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      client.resources?.clear?.();
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const { resource: newResource } = await client.send(
-        '' as unknown,
-        messageId,
-      );
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      client.resources?.set?.(messageId, newResource);
-
-      if (!cancelled) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        setResource(newResource);
+      const initialMessages = rawMessages as ServerToClientMessage[];
+      const actionMocks: ActionMocks = {};
+      for (const [name, value] of Object.entries(rawActionMocks)) {
+        actionMocks[name] = normalizePayloadToMessages(
+          value,
+        ) as ServerToClientMessage[];
       }
 
-      const simulateStream = async () => {
-        for (const msg of messages) {
-          if (cancelled) break;
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-          client.processor?.processMessages?.([msg]);
-          await new Promise((resolve) => setTimeout(resolve, streamDelay));
-        }
-      };
+      const next = createMessageStore();
+      const agent = createMockAgent(next, {
+        initialMessages,
+        actionMocks,
+        delayMs: 800,
+      });
 
-      void simulateStream();
+      // Begin streaming the demo's initial messages into the buffer.
+      void agent.start();
+
+      if (cancelled) {
+        agent.stop();
+        return;
+      }
+      agentRef.current?.stop();
+      storeRef.current = next;
+      agentRef.current = agent;
+      setStore(next);
     };
 
-    run()
-      .catch((e) => {
-        if (!cancelled) {
-          setError(String(e));
-          setResource(null);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
+    run().catch((e) => {
+      if (!cancelled) setError(String(e));
+    });
 
     return () => {
       cancelled = true;
+      agentRef.current?.stop();
+      storeRef.current = null;
+      agentRef.current = null;
     };
-  }, [effectiveData, streamDelay]);
+  }, [effectiveData]);
 
   return (
     <view
@@ -331,22 +304,36 @@ export function App() {
           </view>
         )
         : null}
-
-      {loading
+      {store
         ? (
+          <scroll-view scroll-y style={{ height: '100%' }}>
+            <A2UI
+              messageStore={store}
+              catalogs={ALL_BUILTINS}
+              onAction={(action) => {
+                // Forward user actions to the mock agent — it pushes the
+                // canned response messages back into the same store.
+                void agentRef.current?.onAction(action);
+              }}
+              wrapSurface={(c) => <view className='luna-light'>{c}</view>}
+              renderEmpty={() => (
+                <view style={{ padding: '12px' }}>
+                  <text>Loading...</text>
+                </view>
+              )}
+              renderFallback={() => (
+                <view style={{ padding: '12px' }}>
+                  <text>Streaming...</text>
+                </view>
+              )}
+            />
+          </scroll-view>
+        )
+        : (
           <view style={{ padding: '12px' }}>
             <text>Loading...</text>
           </view>
-        )
-        : null}
-
-      {resource
-        ? (
-          <scroll-view scroll-y style={{ height: '100%' }}>
-            <A2UIRender resource={resource} />
-          </scroll-view>
-        )
-        : null}
+        )}
     </view>
   );
 }
