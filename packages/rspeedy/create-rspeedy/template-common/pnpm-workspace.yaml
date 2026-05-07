@@ -4,4 +4,10 @@ packages:
 strictDepBuilds: true
 
 allowBuilds:
+  "@biomejs/biome": false
+  "@parcel/watcher": false
+  "@swc/core": false
   core-js: false
+  dprint: true
+  esbuild: true
+  unrs-resolver: false
