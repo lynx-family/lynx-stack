@@ -33,7 +33,8 @@ jobs:
         with:
           node-version: "24"
           package-manager-cache: false
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
       - run: |
+          npm install -g corepack@latest
+          corepack enable
           pnpm dedupe --check
           pnpm dlx sherif@latest -i tailwindcss
