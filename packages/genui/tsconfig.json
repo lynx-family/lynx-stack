@@ -11,7 +11,7 @@
   "references": [
     /** packages-start */
     { "path": "./a2ui-catalog-extractor/tsconfig.json" },
-    { "path": "./a2ui/tsconfig.json" },
+    { "path": "./a2ui/tsconfig.build.json" },
     /** packages-end */
   ],
   "include": [],
