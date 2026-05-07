@@ -17,7 +17,7 @@ import { OpenUIDemosPage } from './pages/OpenUIDemosPage.js';
 import type { Protocol, ProtocolName } from './utils/protocol.js';
 import { DEFAULT_PROTOCOL, getProtocol } from './utils/protocol.js';
 
-type Tab = 'chat' | 'demos' | 'components';
+type Tab = 'create' | 'examples' | 'components';
 
 interface TabDef {
   id: Tab;
@@ -25,13 +25,13 @@ interface TabDef {
 }
 
 const A2UI_TABS: TabDef[] = [
-  { id: 'chat', label: 'AI Chat' },
-  { id: 'demos', label: 'Demos' },
+  { id: 'create', label: 'Create' },
+  { id: 'examples', label: 'Examples' },
   { id: 'components', label: 'Components' },
 ];
 
 const OPENUI_TABS: TabDef[] = [
-  { id: 'demos', label: 'Demos' },
+  { id: 'examples', label: 'Examples' },
   { id: 'components', label: 'Components' },
 ];
 
@@ -54,17 +54,17 @@ function parseHash(hash: string): Route {
   }
 
   if (rest[0] === 'demos' || rest[0] === 'examples') {
-    return { protocol, tab: 'demos' };
+    return { protocol, tab: 'examples' };
   }
   if (rest[0] === 'components') {
     return { protocol, tab: 'components', componentName: rest[1] };
   }
   if (rest[0] === 'chat' || rest[0] === 'create') {
-    return { protocol, tab: 'chat' };
+    return { protocol, tab: 'create' };
   }
-  // OpenUI has no chat tab, default to demos
-  if (protocol.name === 'openui') return { protocol, tab: 'demos' };
-  return { protocol, tab: 'chat' };
+  // OpenUI has no create tab, default to examples.
+  if (protocol.name === 'openui') return { protocol, tab: 'examples' };
+  return { protocol, tab: 'create' };
 }
 
 type Theme = 'light' | 'dark';
@@ -105,8 +105,10 @@ export function App() {
   }, [protocol.name]);
 
   const handleProtocolSelect = useCallback((name: ProtocolName) => {
-    // When switching to openui and current tab is chat, fallback to demos
-    const tab = name === 'openui' && route.tab === 'chat' ? 'demos' : route.tab;
+    // When switching to openui and current tab is create, fallback to examples.
+    const tab = name === 'openui' && route.tab === 'create'
+      ? 'examples'
+      : route.tab;
     window.location.hash = `#/${name}/${tab}`;
   }, [route.tab]);
 
@@ -122,13 +124,13 @@ export function App() {
             />
           );
         default:
-          return <OpenUIDemosPage key='openui-demos' protocol={protocol} />;
+          return <OpenUIDemosPage key='openui-examples' protocol={protocol} />;
       }
     }
 
     switch (route.tab) {
-      case 'demos':
-        return <DemosPage key='demos' protocol={protocol} />;
+      case 'examples':
+        return <DemosPage key='examples' protocol={protocol} />;
       case 'components':
         return (
           <ComponentsPage
@@ -138,7 +140,7 @@ export function App() {
           />
         );
       default:
-        return <AIChatPage key='chat' protocol={protocol} />;
+        return <AIChatPage key='create' protocol={protocol} />;
     }
   }, [protocol, route.tab, route.componentName]);
 

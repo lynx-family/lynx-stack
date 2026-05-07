@@ -17,18 +17,24 @@ const WELCOME_MESSAGE: ChatMessage = {
     'I\'m A2UI Assistant. Describe the UI you want to build and I\'ll generate A2UI JSON for you.',
 };
 
-const MOCK_AI_RESPONSE: ChatMessage = {
-  role: 'ai',
-  content: (
-    <>
-      AI generation is not yet connected. In the meantime, check out the{' '}
-      <a href='#/a2ui/demos' style={{ textDecoration: 'underline' }}>Demos</a>
-      {' '}
-      tab to see pre-recorded A2UI scenarios with simulated streaming — you can
-      even adjust the playback speed.
-    </>
-  ),
-};
+function createMockAiResponse(protocol: Protocol): ChatMessage {
+  return {
+    role: 'ai',
+    content: (
+      <>
+        AI generation is not yet connected. In the meantime, check out the{' '}
+        <a
+          href={`#/${protocol.name}/examples`}
+          style={{ textDecoration: 'underline' }}
+        >
+          Examples
+        </a>{' '}
+        tab to see pre-recorded A2UI scenarios with simulated streaming — you
+        can even adjust the playback speed.
+      </>
+    ),
+  };
+}
 
 const DESKTOP_PREVIEW_MIN_WIDTH = 320;
 const DESKTOP_CHAT_MIN_WIDTH = 360;
@@ -36,9 +42,8 @@ const COMPACT_CHAT_MIN_HEIGHT = 280;
 const COMPACT_PREVIEW_MIN_HEIGHT = 320;
 const RESIZE_BREAKPOINT = 980;
 
-export function AIChatPage(
-  _props: { protocol: Protocol },
-) {
+export function AIChatPage(props: { protocol: Protocol }) {
+  const { protocol } = props;
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [inputValue, setInputValue] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -76,9 +81,9 @@ export function AIChatPage(
     setInputValue('');
 
     setTimeout(() => {
-      setMessages((prev) => [...prev, MOCK_AI_RESPONSE]);
+      setMessages((prev) => [...prev, createMockAiResponse(protocol)]);
     }, 600);
-  }, [inputValue]);
+  }, [inputValue, protocol]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -97,7 +102,7 @@ export function AIChatPage(
       <div className='chatPanel' style={chatPanelStyle}>
         <div className='chatHeader'>
           <div className='chatHeaderTitleRow'>
-            <h2 className='chatHeaderTitle'>AI Chat</h2>
+            <h2 className='chatHeaderTitle'>Create</h2>
             <span className='constructionBadge'>Under construction</span>
           </div>
           <p className='chatHeaderSub'>Describe the UI you want to build</p>
@@ -142,7 +147,7 @@ export function AIChatPage(
           : 'panelResizeHandle'}
         role='separator'
         aria-orientation={isCompactLayout ? 'horizontal' : 'vertical'}
-        aria-label='Resize AI Chat and preview panels'
+        aria-label='Resize Create and preview panels'
         title='Drag to resize'
         onPointerDown={handlePanelResizeStart}
       />
