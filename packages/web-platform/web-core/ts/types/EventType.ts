@@ -72,4 +72,12 @@ export type MinimalRawEventObject = {
   touches?: unknown[]; // For touch events
   targetTouches?: unknown[]; // For touch events
   changedTouches?: unknown[]; // For touch events
+  key?: string; // For keyboard events
+  code?: string; // For keyboard events
+  keyCode?: number; // For keyboard events
+  which?: number; // For keyboard events
+  shiftKey?: boolean; // For keyboard events
+  ctrlKey?: boolean; // For keyboard events
+  altKey?: boolean; // For keyboard events
+  metaKey?: boolean; // For keyboard events
 };

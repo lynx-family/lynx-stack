@@ -79,6 +79,17 @@ export function createCrossThreadEvent(
       clientX: mouseEvent.clientX,
       clientY: mouseEvent.clientY,
     });
+  } else if (type.startsWith('key')) {
+    Object.assign(otherProperties, {
+      key: domEvent.key,
+      code: domEvent.code,
+      keyCode: domEvent.keyCode,
+      which: domEvent.which,
+      shiftKey: domEvent.shiftKey,
+      ctrlKey: domEvent.ctrlKey,
+      altKey: domEvent.altKey,
+      metaKey: domEvent.metaKey,
+    });
   } else if (type === 'click') {
     detail = {
       x: (domEvent as MouseEvent).x,
