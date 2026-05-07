@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 import { json } from '@codemirror/lang-json';
 import CodeMirror from '@uiw/react-codemirror';
-import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { MobilePreview } from '../components/MobilePreview.js';
@@ -13,6 +12,7 @@ import {
   STATIC_DEMOS,
   componentsByMessage,
 } from '../demos.js';
+import { useResizablePanels } from '../hooks/useResizablePanels.js';
 import { DEFAULT_DEMO_URL } from '../utils/demoUrl.js';
 import type { ProtocolVersion } from '../utils/protocol.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
@@ -86,10 +86,6 @@ function formatJson(value: unknown): string {
   return JSON.stringify(value ?? [], null, 2);
 }
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), Math.max(min, max));
-}
-
 export function DemosPage(props: { protocol: ProtocolVersion }) {
   const { protocol } = props;
 
@@ -113,34 +109,30 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   );
   const [fullscreen, setFullscreen] = useState(false);
   const [liveComponents, setLiveComponents] = useState<string[]>([]);
-  const [previewPanelWidth, setPreviewPanelWidth] = useState(420);
-  const [codePanelHeight, setCodePanelHeight] = useState(320);
-  const [isPanelResizing, setIsPanelResizing] = useState(false);
-  const [isCompactLayout, setIsCompactLayout] = useState(
-    () => window.innerWidth <= RESIZE_BREAKPOINT,
-  );
-  const pageRef = useRef<HTMLDivElement>(null);
-  const resizeStopRef = useRef<((updateState?: boolean) => void) | null>(null);
   const liveTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const {
+    containerRef: pageRef,
+    handleResizeStart: handlePanelResizeStart,
+    isCompactLayout,
+    isResizing: isPanelResizing,
+    primaryPanelStyle: codePanelStyle,
+    secondaryPanelStyle: previewPanelStyle,
+  } = useResizablePanels({
+    breakpoint: RESIZE_BREAKPOINT,
+    compactOffsetSelector: '.sidebar',
+    compactPrimaryMinSize: COMPACT_CODE_MIN_HEIGHT,
+    compactSecondaryMinSize: COMPACT_PREVIEW_MIN_HEIGHT,
+    desktopOffsetSelector: '.sidebar',
+    desktopPrimaryMinSize: DESKTOP_CODE_MIN_WIDTH,
+    desktopSecondaryMinSize: DESKTOP_PREVIEW_MIN_WIDTH,
+    disabled: fullscreen,
+    initialPrimarySize: 320,
+    initialSecondarySize: 420,
+  });
 
   const baseUrl = window.location.href.replace(/#.*$/, '');
   const rspeedyDevUrl = useRspeedyDevUrl();
   const lynxUrlSeqRef = useRef(0);
-
-  useEffect(() => {
-    const updateLayoutMode = () => {
-      setIsCompactLayout(window.innerWidth <= RESIZE_BREAKPOINT);
-    };
-    updateLayoutMode();
-    window.addEventListener('resize', updateLayoutMode);
-    return () => window.removeEventListener('resize', updateLayoutMode);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      resizeStopRef.current?.(false);
-    };
-  }, []);
 
   // For QR codes, replace localhost/127.0.0.1 with the LAN IP so phones can reach it.
   const networkBaseUrl = useMemo(() => {
@@ -348,83 +340,6 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
     setError('');
     setJsonEdited(false);
   }, []);
-
-  const handlePanelResizeStart = useCallback((
-    event: ReactPointerEvent<HTMLDivElement>,
-  ) => {
-    if (fullscreen || !pageRef.current) {
-      return;
-    }
-
-    event.preventDefault();
-
-    const pageEl = pageRef.current;
-    const compact = window.innerWidth <= RESIZE_BREAKPOINT;
-    const startX = event.clientX;
-    const startY = event.clientY;
-    const startPreviewWidth = previewPanelWidth;
-    const startCodeHeight = codePanelHeight;
-
-    setIsPanelResizing(true);
-    document.body.dataset.panelResize = compact ? 'vertical' : 'horizontal';
-
-    const handlePointerMove = (moveEvent: PointerEvent) => {
-      const pageRect = pageEl.getBoundingClientRect();
-
-      if (compact) {
-        const sidebarHeight = pageEl.querySelector('.sidebar')
-          ?.getBoundingClientRect().height ?? 0;
-        const maxCodeHeight = pageRect.height
-          - sidebarHeight
-          - COMPACT_PREVIEW_MIN_HEIGHT;
-        setCodePanelHeight(
-          clamp(
-            startCodeHeight + moveEvent.clientY - startY,
-            COMPACT_CODE_MIN_HEIGHT,
-            maxCodeHeight,
-          ),
-        );
-        return;
-      }
-
-      const sidebarWidth = pageEl.querySelector('.sidebar')
-        ?.getBoundingClientRect().width ?? 0;
-      const maxPreviewWidth = pageRect.width
-        - sidebarWidth
-        - DESKTOP_CODE_MIN_WIDTH;
-      setPreviewPanelWidth(
-        clamp(
-          startPreviewWidth + startX - moveEvent.clientX,
-          DESKTOP_PREVIEW_MIN_WIDTH,
-          maxPreviewWidth,
-        ),
-      );
-    };
-
-    const stopResize = (updateState = true) => {
-      if (updateState) {
-        setIsPanelResizing(false);
-      }
-      delete document.body.dataset.panelResize;
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerStop);
-      window.removeEventListener('pointercancel', handlePointerStop);
-      resizeStopRef.current = null;
-    };
-    const handlePointerStop = () => stopResize();
-
-    resizeStopRef.current = stopResize;
-    window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup', handlePointerStop);
-    window.addEventListener('pointercancel', handlePointerStop);
-  }, [codePanelHeight, fullscreen, previewPanelWidth]);
-
-  const codePanelStyle = isCompactLayout && !fullscreen
-    ? { height: `${codePanelHeight}px` }
-    : undefined;
-  const previewPanelStyle = !isCompactLayout && !fullscreen
-    ? { width: `${previewPanelWidth}px` }
-    : undefined;
 
   return (
     <div

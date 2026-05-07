@@ -1202,13 +1202,17 @@ a {
 }
 
 /* ═══════════════════════════════════════════
-   AI Chat Page
+   Create Page
    ═══════════════════════════════════════════ */
 
 .chatPage {
   display: flex;
   flex: 1;
   overflow: hidden;
+}
+
+.chatPage.resizing {
+  user-select: none;
 }
 
 .chatPanel {
@@ -1225,16 +1229,38 @@ a {
   flex-shrink: 0;
 }
 
+.chatHeaderTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .chatHeaderTitle {
   font-size: 15px;
   font-weight: 600;
-  margin: 0 0 2px;
+  margin: 0;
+}
+
+.constructionBadge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: var(--geist-surface);
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .chatHeaderSub {
   font-size: 12px;
   color: var(--geist-secondary);
-  margin: 0;
+  margin: 2px 0 0;
 }
 
 .chatMessages {
@@ -1399,5 +1425,6 @@ a {
 
   .chatPanel {
     min-height: 400px;
+    flex: 0 0 auto;
   }
 }

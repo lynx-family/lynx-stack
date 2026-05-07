@@ -10,10 +10,10 @@ import { DemosPage } from './pages/DemosPage.js';
 import type { ProtocolVersion } from './utils/protocol.js';
 import { DEFAULT_PROTOCOL } from './utils/protocol.js';
 
-type Tab = 'chat' | 'examples' | 'components';
+type Tab = 'create' | 'examples' | 'components';
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'chat', label: 'AI Chat' },
+  { id: 'create', label: 'Create' },
   { id: 'examples', label: 'Examples' },
   { id: 'components', label: 'Components' },
 ];
@@ -29,10 +29,13 @@ function parseHash(hash: string): Route {
   if (parts[0] === 'examples' || parts[0] === 'demos') {
     return { tab: 'examples' };
   }
+  if (parts[0] === 'create' || parts[0] === 'chat') {
+    return { tab: 'create' };
+  }
   if (parts[0] === 'components') {
     return { tab: 'components', componentName: parts[1] };
   }
-  return { tab: 'chat' };
+  return { tab: 'create' };
 }
 
 type Theme = 'light' | 'dark';
@@ -83,7 +86,7 @@ export function App() {
           />
         );
       default:
-        return <AIChatPage key='chat' protocol={protocol} />;
+        return <AIChatPage key='create' protocol={protocol} />;
     }
   })();
 

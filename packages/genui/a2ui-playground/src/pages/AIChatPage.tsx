@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useResizablePanels } from '../hooks/useResizablePanels.js';
 import type { ProtocolVersion } from '../utils/protocol.js';
 
 interface ChatMessage {
@@ -29,12 +30,34 @@ const MOCK_AI_RESPONSE: ChatMessage = {
   ),
 };
 
+const DESKTOP_PREVIEW_MIN_WIDTH = 320;
+const DESKTOP_CHAT_MIN_WIDTH = 360;
+const COMPACT_CHAT_MIN_HEIGHT = 280;
+const COMPACT_PREVIEW_MIN_HEIGHT = 320;
+const RESIZE_BREAKPOINT = 980;
+
 export function AIChatPage(
   _props: { protocol: ProtocolVersion },
 ) {
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [inputValue, setInputValue] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const {
+    containerRef: pageRef,
+    handleResizeStart: handlePanelResizeStart,
+    isCompactLayout,
+    isResizing: isPanelResizing,
+    primaryPanelStyle: chatPanelStyle,
+    secondaryPanelStyle: previewPanelStyle,
+  } = useResizablePanels({
+    breakpoint: RESIZE_BREAKPOINT,
+    compactPrimaryMinSize: COMPACT_CHAT_MIN_HEIGHT,
+    compactSecondaryMinSize: COMPACT_PREVIEW_MIN_HEIGHT,
+    desktopPrimaryMinSize: DESKTOP_CHAT_MIN_WIDTH,
+    desktopSecondaryMinSize: DESKTOP_PREVIEW_MIN_WIDTH,
+    initialPrimarySize: 400,
+    initialSecondarySize: 420,
+  });
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -67,10 +90,16 @@ export function AIChatPage(
   );
 
   return (
-    <div className='chatPage'>
-      <div className='chatPanel'>
+    <div
+      ref={pageRef}
+      className={isPanelResizing ? 'chatPage resizing' : 'chatPage'}
+    >
+      <div className='chatPanel' style={chatPanelStyle}>
         <div className='chatHeader'>
-          <h2 className='chatHeaderTitle'>AI Chat</h2>
+          <div className='chatHeaderTitleRow'>
+            <h2 className='chatHeaderTitle'>Create</h2>
+            <span className='constructionBadge'>Under construction</span>
+          </div>
           <p className='chatHeaderSub'>Describe the UI you want to build</p>
         </div>
 
@@ -107,7 +136,18 @@ export function AIChatPage(
         </div>
       </div>
 
-      <div className='previewPanel'>
+      <div
+        className={isPanelResizing
+          ? 'panelResizeHandle active'
+          : 'panelResizeHandle'}
+        role='separator'
+        aria-orientation={isCompactLayout ? 'horizontal' : 'vertical'}
+        aria-label='Resize Create and preview panels'
+        title='Drag to resize'
+        onPointerDown={handlePanelResizeStart}
+      />
+
+      <div className='previewPanel' style={previewPanelStyle}>
         <div className='previewPanelHeader'>
           <span className='previewPanelTitle'>Lynx Preview</span>
         </div>
