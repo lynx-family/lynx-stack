@@ -5,7 +5,7 @@ export function MobilePreview(props: { src: string }) {
   return (
     <div className='phoneWrap'>
       <div className='phoneFrame'>
-        <iframe className='phoneIframe' title='preview' src={props.src} />
+        <iframe className='phoneIframe' title='preview' src={props.src} sandbox='allow-scripts' />
       </div>
     </div>
   );
