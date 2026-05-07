@@ -30,7 +30,7 @@
     "@eslint/markdown": "^7.5.1",
     "@microsoft/api-extractor": "catalog:",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rslib/core": "^0.19.6",
+    "@rslib/core": "^0.21.4",
     "@rspack/core": "catalog:rspack",
     "@rstest/core": "catalog:rstest",
     "@rstest/coverage-istanbul": "catalog:rstest",

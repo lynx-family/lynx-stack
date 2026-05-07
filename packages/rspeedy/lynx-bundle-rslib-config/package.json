@@ -45,7 +45,7 @@
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "@rslib/core": "^0.19.6",
+    "@rslib/core": "^0.21.4",
     "vitest": "^3.2.4",
     "webpack": "^5.105.2"
   },
