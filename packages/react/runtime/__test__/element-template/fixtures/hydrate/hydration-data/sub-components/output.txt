@@ -1,0 +1,28 @@
+Array [
+  Object {
+    "attributeSlots": Array [],
+    "elementSlots": Array [
+      Array [
+        Object {
+          "attributeSlots": Array [],
+          "elementSlots": Array [
+            Array [
+              Object {
+                "attributeSlots": Array [
+                  "inner",
+                ],
+                "elementSlots": Array [],
+                "templateKey": "__et_builtin_raw_text__",
+                "uid": -1,
+              },
+            ],
+          ],
+          "templateKey": "_et_d549e_test_1",
+          "uid": -2,
+        },
+      ],
+    ],
+    "templateKey": "_et_d549e_test_2",
+    "uid": -3,
+  },
+]

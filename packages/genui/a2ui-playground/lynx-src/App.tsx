@@ -26,7 +26,7 @@ type ActionMocks = Record<string, unknown>;
 
 type ResponseMessages = A2uiMessage[];
 
-const STREAM_MESSAGE_DELAY_MS = 800;
+const DEFAULT_STREAM_DELAY_MS = 800;
 
 function randomId(prefix: string) {
   return prefix + Date.now().toString(36)
@@ -199,6 +199,17 @@ export function App() {
     [globalPropsData, initData],
   );
 
+  // Speed multiplier from URL query (e.g. ?speed=2 → 2x faster).
+  const streamDelay = useMemo(() => {
+    const raw = (globalProps as Record<string, unknown> | null)?.speed
+      ?? (rawInitData as Record<string, unknown> | null)?.speed;
+    const speed = typeof raw === 'string'
+      ? Number(raw)
+      : (typeof raw === 'number' ? raw : 1);
+    if (!speed || speed <= 0) return DEFAULT_STREAM_DELAY_MS;
+    return DEFAULT_STREAM_DELAY_MS / speed;
+  }, [globalProps, rawInitData]);
+
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const clientRef = useRef<any>(null);
 
@@ -252,9 +263,7 @@ export function App() {
             if (cancelled) break;
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
             client.processor?.processMessages?.([msg]);
-            await new Promise((resolve) =>
-              setTimeout(resolve, STREAM_MESSAGE_DELAY_MS)
-            );
+            await new Promise((resolve) => setTimeout(resolve, streamDelay));
           }
         })();
 
@@ -284,9 +293,7 @@ export function App() {
           if (cancelled) break;
           // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
           client.processor?.processMessages?.([msg]);
-          await new Promise((resolve) =>
-            setTimeout(resolve, STREAM_MESSAGE_DELAY_MS)
-          );
+          await new Promise((resolve) => setTimeout(resolve, streamDelay));
         }
       };
 
@@ -309,7 +316,7 @@ export function App() {
     return () => {
       cancelled = true;
     };
-  }, [effectiveData]);
+  }, [effectiveData, streamDelay]);
 
   return (
     <view

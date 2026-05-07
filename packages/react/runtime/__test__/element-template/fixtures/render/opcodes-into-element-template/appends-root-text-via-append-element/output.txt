@@ -1,0 +1,12 @@
+Object {
+  "rootChildren": Array [
+    Object {
+      "attributes": Object {
+        "text": "root",
+      },
+      "children": Array [],
+      "tag": "raw-text",
+      "templateId": "__et_builtin_raw_text__",
+    },
+  ],
+}

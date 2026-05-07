@@ -1,0 +1,8 @@
+Array [
+  Object {
+    "attrSlotIndex": 0,
+    "id": -1,
+    "type": "setAttribute",
+    "value": "after",
+  },
+]

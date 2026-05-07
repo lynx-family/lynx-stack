@@ -6,7 +6,7 @@ import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { describeInvalidValue } from '../debug/describeInvalidValue.js';
 import { isMainThreadHydrating } from '../lifecycle/patch/isMainThreadHydrating.js';
-import { SnapshotInstance } from '../snapshot/snapshot.js';
+import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
 function formatEventAttribute(workletType: string, eventType: string, eventName: string): string {
   const suffix = eventType.endsWith('Event') ? eventType.slice(0, -'Event'.length) : eventType;

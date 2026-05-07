@@ -1,0 +1,60 @@
+[
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_3",
+    null,
+    [
+      "./assets/lynx-logo.png"
+    ],
+    null,
+    -1
+  ],
+  [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    [
+      " src/App.tsx "
+    ],
+    [],
+    -2
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_1",
+    null,
+    [
+      1,
+      "./assets/arrow.png"
+    ],
+    [
+      [
+        {
+          "tag": "image",
+          "attributes": {
+            "src": "./assets/lynx-logo.png",
+            "class": "Logo--lynx"
+          },
+          "children": [],
+          "templateId": "_et_7a8c6_test_3"
+        }
+      ],
+      [
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": " src/App.tsx "
+          },
+          "children": [],
+          "templateId": "__et_builtin_raw_text__"
+        }
+      ]
+    ],
+    -3
+  ],
+  [
+    "__AppendElement",
+    "0",
+    "<_et_7a8c6_test_1 />"
+  ]
+]

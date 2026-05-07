@@ -315,6 +315,14 @@ export interface PluginReactLynxOptions {
   experimental_isLazyBundle?: boolean
 
   /**
+   * Enable Element Template compile and runtime entries.
+   *
+   * @defaultValue `false`
+   * @experimental
+   */
+  experimental_useElementTemplate?: boolean
+
+  /**
    * Optimize bundle size by removing unused code by Minify.mainThreadOptions and Minify.backgroundOptions.
    *
    * When optimizeBundleSize or optimizeBundleSize.mainThread is true, main-thread code will be optimized.
@@ -378,6 +386,7 @@ export function pluginReactLynx(
     globalPropsMode: 'reactive',
 
     experimental_isLazyBundle: false,
+    experimental_useElementTemplate: false,
     optimizeBundleSize: false,
     enableUiSourceMap: false,
   }
@@ -390,6 +399,7 @@ export function pluginReactLynx(
   return [
     pluginReactAlias({
       lazy: resolvedOptions.experimental_isLazyBundle,
+      elementTemplate: resolvedOptions.experimental_useElementTemplate,
       LAYERS,
     }),
     {

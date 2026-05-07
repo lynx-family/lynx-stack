@@ -1,0 +1,19 @@
+Object {
+  "tree": "<root>
+  <_et_a94a8_test_3>
+    <slot id=0>
+      <_et_a94a8_test_2>
+        <slot id=0>
+          <_et_a94a8_test_4 />
+        </slot>
+      </_et_a94a8_test_2>
+      <_et_a94a8_test_2>
+        <slot id=0>
+          <_et_a94a8_test_5 />
+        </slot>
+      </_et_a94a8_test_2>
+    </slot>
+  </_et_a94a8_test_3>
+</root>
+",
+}

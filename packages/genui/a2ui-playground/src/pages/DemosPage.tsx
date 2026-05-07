@@ -5,10 +5,15 @@ import { json } from '@codemirror/lang-json';
 import CodeMirror from '@uiw/react-codemirror';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Chip } from '../components/Chip.js';
 import { MobilePreview } from '../components/MobilePreview.js';
 import { QrCode } from '../components/QrCode.js';
-import { DYNAMIC_PRESETS, STATIC_DEMOS } from '../demos.js';
+import {
+  DYNAMIC_PRESETS,
+  STATIC_DEMOS,
+  componentsByMessage,
+} from '../demos.js';
+import { useResizablePanels } from '../hooks/useResizablePanels.js';
+import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_DEMO_URL } from '../utils/demoUrl.js';
 import type { ProtocolVersion } from '../utils/protocol.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
@@ -29,17 +34,6 @@ function formatUrlForDisplay(url: string): string {
   const head = url.slice(0, 44);
   const tail = url.slice(-24);
   return `${head}…${tail}`;
-}
-
-async function copyToClipboard(text: string): Promise<boolean> {
-  try {
-    const clipboard = window.navigator?.clipboard;
-    if (!clipboard) return false;
-    await clipboard.writeText(text);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function useRspeedyDevUrl(): string {
@@ -72,6 +66,12 @@ const ALL_SCENARIOS: Scenario[] = [
   ...DYNAMIC_PRESETS,
 ];
 
+const DESKTOP_PREVIEW_MIN_WIDTH = 320;
+const DESKTOP_CODE_MIN_WIDTH = 360;
+const COMPACT_CODE_MIN_HEIGHT = 220;
+const COMPACT_PREVIEW_MIN_HEIGHT = 320;
+const RESIZE_BREAKPOINT = 980;
+
 function formatJson(value: unknown): string {
   return JSON.stringify(value ?? [], null, 2);
 }
@@ -91,15 +91,60 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   const [, setRenderQrError] = useState('');
   const [lynxDevQrError, setLynxDevQrError] = useState('');
   const [lynxDevCopied, setLynxDevCopied] = useState(false);
+  const [speed, setSpeed] = useState(1);
+  const [showSimTooltip, setShowSimTooltip] = useState(false);
+  const [jsonEdited, setJsonEdited] = useState(false);
+  const [previewMode, setPreviewMode] = useState<'phone' | 'full'>(
+    () => window.innerWidth <= 980 ? 'full' : 'phone',
+  );
+  const [fullscreen, setFullscreen] = useState(false);
+  const [liveComponents, setLiveComponents] = useState<string[]>([]);
+  const liveTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const {
+    containerRef: pageRef,
+    handleResizeStart: handlePanelResizeStart,
+    isCompactLayout,
+    isResizing: isPanelResizing,
+    primaryPanelStyle: codePanelStyle,
+    secondaryPanelStyle: previewPanelStyle,
+  } = useResizablePanels({
+    breakpoint: RESIZE_BREAKPOINT,
+    compactOffsetSelector: '.sidebar',
+    compactPrimaryMinSize: COMPACT_CODE_MIN_HEIGHT,
+    compactSecondaryMinSize: COMPACT_PREVIEW_MIN_HEIGHT,
+    desktopOffsetSelector: '.sidebar',
+    desktopPrimaryMinSize: DESKTOP_CODE_MIN_WIDTH,
+    desktopSecondaryMinSize: DESKTOP_PREVIEW_MIN_WIDTH,
+    disabled: fullscreen,
+    initialPrimarySize: 320,
+    initialSecondarySize: 420,
+  });
 
-  const origin = window.location.origin;
+  const baseUrl = window.location.href.replace(/#.*$/, '');
   const rspeedyDevUrl = useRspeedyDevUrl();
   const lynxUrlSeqRef = useRef(0);
+
+  // For QR codes, replace localhost/127.0.0.1 with the LAN IP so phones can reach it.
+  const networkBaseUrl = useMemo(() => {
+    const u = new URL(baseUrl);
+    if (
+      (u.hostname === 'localhost' || u.hostname === '127.0.0.1')
+      && rspeedyDevUrl
+    ) {
+      try {
+        u.hostname = new URL(rspeedyDevUrl).hostname;
+      } catch { /* ignore */ }
+    }
+    return u.toString();
+  }, [baseUrl, rspeedyDevUrl]);
 
   const currentScenario = useMemo(
     () => ALL_SCENARIOS.find((s) => s.id === scenarioId) ?? ALL_SCENARIOS[0],
     [scenarioId],
   );
+
+  // Whether the current render is a known demo (simulated) vs. custom JSON.
+  const [isSimulated, setIsSimulated] = useState(true);
 
   const doRender = useCallback(
     (json: string, scenario: Scenario | undefined) => {
@@ -113,20 +158,69 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
         return;
       }
       const actionMocks = scenario?.actionMocks;
+      // Use short demo ID only when the user hasn't edited the JSON.
+      const isKnownDemo = !jsonEdited
+        && ALL_SCENARIOS.some((s) => s.id === scenario?.id);
+      setIsSimulated(isKnownDemo);
       const url = buildRenderUrl(
-        { protocol, demoUrl: DEFAULT_DEMO_URL, messages: parsed, actionMocks },
-        origin,
+        {
+          protocol,
+          demoUrl: DEFAULT_DEMO_URL,
+          messages: parsed,
+          actionMocks,
+          demoId: isKnownDemo ? scenario!.id : undefined,
+          speed,
+        },
+        networkBaseUrl,
       );
       setRenderUrl(url);
+
+      // Live component stack: reveal component names as they would appear
+      // during streaming, synced with the replay speed.
+      for (const t of liveTimersRef.current) clearTimeout(t);
+      liveTimersRef.current = [];
+      setLiveComponents([]);
+      const perMsg = componentsByMessage(parsed);
+      const delayMs = 800 / (speed || 1);
+      let accumulated: string[] = [];
+      perMsg.forEach((newNames, i) => {
+        if (newNames.length === 0) return;
+        const timer = setTimeout(() => {
+          accumulated = [...accumulated, ...newNames];
+          setLiveComponents([...accumulated]);
+        }, delayMs * (i + 1));
+        liveTimersRef.current.push(timer);
+      });
+
+      // On mobile, auto-expand preview to fullscreen when rendering.
+      if (window.innerWidth <= 980) {
+        setFullscreen(true);
+      }
 
       // Native in-app preview: pass A2UI payload via global props, directly through URL query.
       // In Lynx, query params are exposed in `lynx.__globalProps` / `useGlobalProps()`.
       const seq = ++lynxUrlSeqRef.current;
       if (rspeedyDevUrl) {
         const uInline = new URL(rspeedyDevUrl);
-        uInline.searchParams.set('messages', JSON.stringify(parsed));
-        if (actionMocks) {
-          uInline.searchParams.set('actionMocks', JSON.stringify(actionMocks));
+        if (speed !== 1) {
+          uInline.searchParams.set('speed', String(speed));
+        }
+        if (isKnownDemo) {
+          // Known demo: point to the static JSON served by the rsbuild dev server.
+          // Native Lynx supports fetch, so App.tsx will load it via messagesUrl.
+          const demosOrigin = new URL(networkBaseUrl).origin;
+          uInline.searchParams.set(
+            'messagesUrl',
+            `${demosOrigin}/demos/${scenario!.id}.json`,
+          );
+        } else {
+          uInline.searchParams.set('messages', JSON.stringify(parsed));
+          if (actionMocks) {
+            uInline.searchParams.set(
+              'actionMocks',
+              JSON.stringify(actionMocks),
+            );
+          }
         }
         setLynxDevUrl(uInline.toString());
       } else {
@@ -174,7 +268,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
           // "View on Device" QR is scannable. render.html already supports
           // messagesUrl / actionMocksUrl query params.
           if (messagesUrlAbs) {
-            const r = new URL('/render.html', origin);
+            const r = new URL('render.html', networkBaseUrl);
             r.searchParams.set('protocol', protocol);
             r.searchParams.set('demoUrl', DEFAULT_DEMO_URL);
             r.searchParams.set('messagesUrl', messagesUrlAbs);
@@ -189,7 +283,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
         }
       })();
     },
-    [origin, protocol, rspeedyDevUrl],
+    [jsonEdited, networkBaseUrl, protocol, rspeedyDevUrl, speed],
   );
 
   useEffect(() => {
@@ -203,6 +297,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
     (id: string) => {
       setScenarioId(id);
       setError('');
+      setJsonEdited(false);
       const scenario = ALL_SCENARIOS.find((s) => s.id === id);
       if (scenario) {
         const json = formatJson(scenario.messages);
@@ -219,6 +314,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
 
   const handleFillExample = useCallback(() => {
     setError('');
+    setJsonEdited(false);
     if (currentScenario) {
       const json = formatJson(currentScenario.messages);
       setCustomJson(json);
@@ -229,12 +325,17 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   const handleClear = useCallback(() => {
     setCustomJson('[]');
     setRenderUrl('');
+    setLynxDevUrl('');
     setRenderQrError('');
     setError('');
+    setJsonEdited(false);
   }, []);
 
   return (
-    <div className='demosPage'>
+    <div
+      ref={pageRef}
+      className={isPanelResizing ? 'demosPage resizing' : 'demosPage'}
+    >
       {/* Sidebar */}
       <aside className='sidebar'>
         <div className='sidebarSection'>
@@ -257,7 +358,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
       </aside>
 
       {/* Code Panel */}
-      <div className='codePanel'>
+      <div className='codePanel' style={codePanelStyle}>
         <div className='codePanelToolbar'>
           <div className='codePanelTitle'>
             A2UI Messages
@@ -294,7 +395,10 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
           className='codeEditor'
           value={customJson}
           extensions={jsonExtensions}
-          onChange={setCustomJson}
+          onChange={(v) => {
+            setCustomJson(v);
+            setJsonEdited(true);
+          }}
           theme='dark'
           basicSetup={{
             lineNumbers: true,
@@ -307,23 +411,120 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
         {error ? <div className='codeError'>{error}</div> : null}
       </div>
 
+      {fullscreen
+        ? null
+        : (
+          <div
+            className={isPanelResizing
+              ? 'panelResizeHandle active'
+              : 'panelResizeHandle'}
+            role='separator'
+            aria-orientation={isCompactLayout ? 'horizontal' : 'vertical'}
+            aria-label='Resize JSON and preview panels'
+            title='Drag to resize'
+            onPointerDown={handlePanelResizeStart}
+          />
+        )}
+
       {/* Preview Panel */}
-      <div className='previewPanel'>
+      <div
+        className={fullscreen
+          ? 'previewPanel previewPanelFullscreen'
+          : 'previewPanel'}
+        style={previewPanelStyle}
+      >
         <div className='previewPanelHeader'>
           <span className='previewPanelTitle'>Lynx Preview</span>
-          {currentScenario
-            ? (
-              <div className='previewPanelMeta'>
-                <div className='previewMetaTags'>
-                  {currentScenario.tags.map((t) => <Chip key={t}>{t}</Chip>)}
-                </div>
-              </div>
-            )
-            : null}
+          <div className='spacer' />
+          <div className='previewModeSwitch'>
+            <button
+              type='button'
+              className={previewMode === 'phone'
+                ? 'previewModeBtn active'
+                : 'previewModeBtn'}
+              onClick={() => setPreviewMode('phone')}
+              title='Phone frame'
+            >
+              Phone
+            </button>
+            <button
+              type='button'
+              className={previewMode === 'full'
+                ? 'previewModeBtn active'
+                : 'previewModeBtn'}
+              onClick={() => setPreviewMode('full')}
+              title='Full panel'
+            >
+              Full
+            </button>
+          </div>
+          <button
+            type='button'
+            className='previewExpandBtn'
+            onClick={() => setFullscreen((v) => !v)}
+            title={fullscreen ? 'Exit fullscreen' : 'Expand preview'}
+          >
+            {fullscreen ? '\u2715' : '\u2922'}
+          </button>
         </div>
-        <div className='previewPanelBody'>
+        {isSimulated
+          ? (
+            <div className='simulationBar'>
+              <div className='simInfo'>
+                <button
+                  type='button'
+                  className='simInfoToggle'
+                  onClick={() => setShowSimTooltip((v) => !v)}
+                  aria-label='Simulation info'
+                >
+                  <span className='simInfoIcon'>i</span>
+                  <span className='simInfoLabel'>Simulated</span>
+                </button>
+                {showSimTooltip
+                  ? (
+                    <div className='simTooltip'>
+                      Pre-recorded messages replayed at simulated speed. No AI
+                      model is running.
+                    </div>
+                  )
+                  : null}
+              </div>
+              <div className='simSpeed'>
+                <label className='simSpeedLabel' htmlFor='speedSlider'>
+                  Speed
+                </label>
+                <input
+                  id='speedSlider'
+                  className='simSpeedSlider'
+                  type='range'
+                  min='0.25'
+                  max='4'
+                  step='0.25'
+                  value={speed}
+                  onChange={(e) => setSpeed(Number(e.target.value))}
+                />
+                <span className='simSpeedValue'>{speed}x</span>
+              </div>
+            </div>
+          )
+          : null}
+        <div
+          className={previewMode === 'full'
+            ? 'previewPanelBody previewPanelBodyFull'
+            : 'previewPanelBody'}
+        >
           {renderUrl
-            ? <MobilePreview src={renderUrl} />
+            ? (
+              previewMode === 'phone'
+                ? <MobilePreview src={renderUrl} />
+                : (
+                  <iframe
+                    className='previewFullIframe'
+                    title='preview'
+                    src={renderUrl}
+                  />
+                )
+            )
             : (
               <div className='previewEmpty'>
                 <div className='previewEmptyIcon'>▶</div>
@@ -335,72 +536,108 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
             )}
         </div>
 
-        {/* QR Code Section */}
-        <div className='previewQrSection'>
-          <div className='previewQrContent'>
-            <div className='previewQrInfo'>
-              <div className='previewQrTitle'>View on Device</div>
-            </div>
-            {renderUrl
-              ? (
-                <QrCode
-                  value={renderUrl}
-                  size={80}
-                  onErrorChange={setRenderQrError}
-                />
-              )
-              : (
-                <div className='previewQrPlaceholder'>
-                  <span className='previewQrPlaceholderText'>No render</span>
-                </div>
-              )}
-          </div>
-          {lynxDevUrl
-            ? (
-              <div className='previewQrContent previewQrContentAlt'>
-                <div className='previewQrInfo'>
-                  <div className='previewQrTitle'>Lynx Dev Bundle</div>
-                  <div className='previewQrDesc'>
-                    {lynxDevQrError
-                      ? 'QR code unavailable. Open this link with LynxExplorer instead.'
-                      : 'Scan with LynxExplorer to load the rspeedy dev bundle.'}
-                  </div>
-                  <div className='previewQrUrlRow'>
-                    <div
-                      className='previewQrUrlText'
-                      title={lynxDevUrl}
-                    >
-                      {formatUrlForDisplay(lynxDevUrl)}
-                    </div>
-                    <button
-                      type='button'
-                      className='previewQrCopyBtn'
-                      aria-label='Copy Lynx dev bundle URL'
-                      title={lynxDevCopied ? 'Copied' : 'Copy URL'}
-                      onClick={() => {
-                        void copyToClipboard(lynxDevUrl).then((ok) => {
-                          if (!ok) return;
-                          setLynxDevCopied(true);
-                          window.setTimeout(
-                            () => setLynxDevCopied(false),
-                            1200,
-                          );
-                        });
-                      }}
-                    >
-                      {lynxDevCopied ? 'Copied' : 'Copy'}
-                    </button>
-                  </div>
-                </div>
-                <QrCode
-                  value={lynxDevUrl}
-                  size={80}
-                  onErrorChange={setLynxDevQrError}
-                />
+        {/* Live Component Stack */}
+        {liveComponents.length > 0
+          ? (
+            <div className='liveComponentStack'>
+              <span className='liveComponentLabel'>Components</span>
+              <div className='liveComponentTags'>
+                {liveComponents.map((name) => (
+                  <span key={name} className='liveComponentTag'>{name}</span>
+                ))}
               </div>
-            )
-            : null}
-        </div>
+            </div>
+          )
+          : null}
+
+        {/* QR Code Section — only shown when there's a render URL */}
+        {renderUrl || lynxDevUrl
+          ? (
+            <div className='previewQrSection'>
+              {renderUrl
+                ? (
+                  <div className='previewQrContent'>
+                    <div className='previewQrInfo'>
+                      <div className='previewQrTitle'>Web Preview</div>
+                      <div className='previewQrDesc'>
+                        Opens in any mobile browser via Lynx for Web.
+                      </div>
+                      <div className='previewQrUrlRow'>
+                        <div
+                          className='previewQrUrlText'
+                          title={renderUrl}
+                        >
+                          {formatUrlForDisplay(renderUrl)}
+                        </div>
+                        <button
+                          type='button'
+                          className='previewQrCopyBtn'
+                          aria-label='Copy render URL'
+                          title='Copy URL'
+                          onClick={() => {
+                            void copyToClipboard(renderUrl);
+                          }}
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    </div>
+                    <QrCode
+                      value={renderUrl}
+                      size={80}
+                      onErrorChange={setRenderQrError}
+                    />
+                  </div>
+                )
+                : null}
+              {lynxDevUrl
+                ? (
+                  <div className='previewQrContent previewQrContentAlt'>
+                    <div className='previewQrInfo'>
+                      <div className='previewQrTitle'>Native Preview</div>
+                      <div className='previewQrDesc'>
+                        {lynxDevQrError
+                          ? 'URL too long for QR. Copy the link and open it in LynxExplorer.'
+                          : 'Opens in LynxExplorer for native rendering.'}
+                      </div>
+                      <div className='previewQrUrlRow'>
+                        <div
+                          className='previewQrUrlText'
+                          title={lynxDevUrl}
+                        >
+                          {formatUrlForDisplay(lynxDevUrl)}
+                        </div>
+                        <button
+                          type='button'
+                          className='previewQrCopyBtn'
+                          aria-label='Copy Lynx dev bundle URL'
+                          title={lynxDevCopied ? 'Copied' : 'Copy URL'}
+                          onClick={() => {
+                            void copyToClipboard(lynxDevUrl).then((ok) => {
+                              if (!ok) return;
+                              setLynxDevCopied(true);
+                              window.setTimeout(
+                                () => setLynxDevCopied(false),
+                                1200,
+                              );
+                            });
+                          }}
+                        >
+                          {lynxDevCopied ? 'Copied' : 'Copy'}
+                        </button>
+                      </div>
+                    </div>
+                    <QrCode
+                      value={lynxDevUrl}
+                      size={80}
+                      onErrorChange={setLynxDevQrError}
+                    />
+                  </div>
+                )
+                : null}
+            </div>
+          )
+          : null}
       </div>
     </div>
   );

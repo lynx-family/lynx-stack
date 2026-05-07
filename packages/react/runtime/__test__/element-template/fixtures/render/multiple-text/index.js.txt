@@ -1,0 +1,30 @@
+import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+import { Component } from '@lynx-js/react';
+const _et_7a8c6_test_2 = "_et_7a8c6_test_2";
+const _et_7a8c6_test_3 = "_et_7a8c6_test_3";
+const _et_7a8c6_test_1 = "_et_7a8c6_test_1";
+export class App extends Component {
+    render() {
+        const items = [
+            'A',
+            'B',
+            'C'
+        ];
+        return /*#__PURE__*/ _jsx(_et_7a8c6_test_1, {
+            children: [
+                items,
+                items.map((item)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_2, {
+                        children: [
+                            item
+                        ]
+                    })),
+                items,
+                items.map((item)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_3, {
+                        children: [
+                            item
+                        ]
+                    }))
+            ]
+        });
+    }
+}

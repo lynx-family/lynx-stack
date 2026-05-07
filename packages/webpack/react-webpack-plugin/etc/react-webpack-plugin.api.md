@@ -28,6 +28,7 @@ export interface ReactLoaderOptions {
     enableRemoveCSSScope?: boolean | undefined;
     enableUiSourceMap?: boolean | undefined;
     engineVersion?: string | undefined;
+    experimental_useElementTemplate?: boolean | undefined;
     inlineSourcesContent?: boolean | undefined;
     jsx?: JsxTransformerConfig | undefined;
     refresh?: boolean | undefined;
@@ -48,6 +49,7 @@ export interface ReactWebpackPluginOptions {
     enableSSR?: boolean;
     // @alpha
     experimental_isLazyBundle?: boolean;
+    experimental_useElementTemplate?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady';
     globalPropsMode?: 'reactive' | 'event';

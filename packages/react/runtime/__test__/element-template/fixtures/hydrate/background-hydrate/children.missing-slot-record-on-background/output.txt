@@ -1,0 +1,8 @@
+Object {
+  "stream": Array [
+    4,
+    -1,
+    0,
+    -2,
+  ],
+}

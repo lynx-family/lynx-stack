@@ -1,0 +1,64 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build:lynx": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "lynx-src/**",
+        "examples/**",
+        "lynx.config.ts",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "outputs": [
+        "www/**"
+      ]
+    },
+    "build": {
+      "dependsOn": [
+        "^build",
+        "build:lynx"
+      ],
+      "inputs": [
+        "src/**",
+        "rsbuild.config.ts",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "dev:lynx": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "preview": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": [
+        "build"
+      ]
+    },
+    "preview:lynx": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": [
+        "build:lynx"
+      ]
+    }
+  }
+}

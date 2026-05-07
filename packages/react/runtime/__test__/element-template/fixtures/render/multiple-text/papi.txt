@@ -1,0 +1,444 @@
+[
+  [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    [
+      "A"
+    ],
+    [],
+    -1
+  ],
+  [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    [
+      "B"
+    ],
+    [],
+    -2
+  ],
+  [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    [
+      "C"
+    ],
+    [],
+    -3
+  ],
+  [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    [
+      "A"
+    ],
+    [],
+    -4
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_2",
+    null,
+    null,
+    [
+      [
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "A"
+          },
+          "children": [],
+          "templateId": "__et_builtin_raw_text__"
+        }
+      ]
+    ],
+    -5
+  ],
+  [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    [
+      "B"
+    ],
+    [],
+    -6
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_2",
+    null,
+    null,
+    [
+      [
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "B"
+          },
+          "children": [],
+          "templateId": "__et_builtin_raw_text__"
+        }
+      ]
+    ],
+    -7
+  ],
+  [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    [
+      "C"
+    ],
+    [],
+    -8
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_2",
+    null,
+    null,
+    [
+      [
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "C"
+          },
+          "children": [],
+          "templateId": "__et_builtin_raw_text__"
+        }
+      ]
+    ],
+    -9
+  ],
+  [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    [
+      "A"
+    ],
+    [],
+    -10
+  ],
+  [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    [
+      "B"
+    ],
+    [],
+    -11
+  ],
+  [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    [
+      "C"
+    ],
+    [],
+    -12
+  ],
+  [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    [
+      "A"
+    ],
+    [],
+    -13
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_3",
+    null,
+    null,
+    [
+      [
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "A"
+          },
+          "children": [],
+          "templateId": "__et_builtin_raw_text__"
+        }
+      ]
+    ],
+    -14
+  ],
+  [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    [
+      "B"
+    ],
+    [],
+    -15
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_3",
+    null,
+    null,
+    [
+      [
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "B"
+          },
+          "children": [],
+          "templateId": "__et_builtin_raw_text__"
+        }
+      ]
+    ],
+    -16
+  ],
+  [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    [
+      "C"
+    ],
+    [],
+    -17
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_3",
+    null,
+    null,
+    [
+      [
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "C"
+          },
+          "children": [],
+          "templateId": "__et_builtin_raw_text__"
+        }
+      ]
+    ],
+    -18
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_1",
+    null,
+    null,
+    [
+      [
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "A"
+          },
+          "children": [],
+          "templateId": "__et_builtin_raw_text__"
+        },
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "B"
+          },
+          "children": [],
+          "templateId": "__et_builtin_raw_text__"
+        },
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "C"
+          },
+          "children": [],
+          "templateId": "__et_builtin_raw_text__"
+        }
+      ],
+      [
+        {
+          "tag": "text",
+          "attributes": {},
+          "children": [
+            {
+              "tag": "slot",
+              "attributes": {
+                "slot-id": 0
+              },
+              "children": [
+                {
+                  "tag": "raw-text",
+                  "attributes": {
+                    "text": "A"
+                  },
+                  "children": [],
+                  "templateId": "__et_builtin_raw_text__"
+                }
+              ]
+            }
+          ],
+          "templateId": "_et_7a8c6_test_2"
+        },
+        {
+          "tag": "text",
+          "attributes": {},
+          "children": [
+            {
+              "tag": "slot",
+              "attributes": {
+                "slot-id": 0
+              },
+              "children": [
+                {
+                  "tag": "raw-text",
+                  "attributes": {
+                    "text": "B"
+                  },
+                  "children": [],
+                  "templateId": "__et_builtin_raw_text__"
+                }
+              ]
+            }
+          ],
+          "templateId": "_et_7a8c6_test_2"
+        },
+        {
+          "tag": "text",
+          "attributes": {},
+          "children": [
+            {
+              "tag": "slot",
+              "attributes": {
+                "slot-id": 0
+              },
+              "children": [
+                {
+                  "tag": "raw-text",
+                  "attributes": {
+                    "text": "C"
+                  },
+                  "children": [],
+                  "templateId": "__et_builtin_raw_text__"
+                }
+              ]
+            }
+          ],
+          "templateId": "_et_7a8c6_test_2"
+        }
+      ],
+      [
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "A"
+          },
+          "children": [],
+          "templateId": "__et_builtin_raw_text__"
+        },
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "B"
+          },
+          "children": [],
+          "templateId": "__et_builtin_raw_text__"
+        },
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "C"
+          },
+          "children": [],
+          "templateId": "__et_builtin_raw_text__"
+        }
+      ],
+      [
+        {
+          "tag": "text",
+          "attributes": {},
+          "children": [
+            {
+              "tag": "slot",
+              "attributes": {
+                "slot-id": 0
+              },
+              "children": [
+                {
+                  "tag": "raw-text",
+                  "attributes": {
+                    "text": "A"
+                  },
+                  "children": [],
+                  "templateId": "__et_builtin_raw_text__"
+                }
+              ]
+            }
+          ],
+          "templateId": "_et_7a8c6_test_3"
+        },
+        {
+          "tag": "text",
+          "attributes": {},
+          "children": [
+            {
+              "tag": "slot",
+              "attributes": {
+                "slot-id": 0
+              },
+              "children": [
+                {
+                  "tag": "raw-text",
+                  "attributes": {
+                    "text": "B"
+                  },
+                  "children": [],
+                  "templateId": "__et_builtin_raw_text__"
+                }
+              ]
+            }
+          ],
+          "templateId": "_et_7a8c6_test_3"
+        },
+        {
+          "tag": "text",
+          "attributes": {},
+          "children": [
+            {
+              "tag": "slot",
+              "attributes": {
+                "slot-id": 0
+              },
+              "children": [
+                {
+                  "tag": "raw-text",
+                  "attributes": {
+                    "text": "C"
+                  },
+                  "children": [],
+                  "templateId": "__et_builtin_raw_text__"
+                }
+              ]
+            }
+          ],
+          "templateId": "_et_7a8c6_test_3"
+        }
+      ]
+    ],
+    -19
+  ],
+  [
+    "__AppendElement",
+    "0",
+    "<_et_7a8c6_test_1 />"
+  ]
+]

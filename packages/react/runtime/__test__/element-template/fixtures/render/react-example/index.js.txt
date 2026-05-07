@@ -1,0 +1,36 @@
+import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+import { useCallback, useEffect, useState } from '@lynx-js/react';
+const arrow = './assets/arrow.png';
+const lynxLogo = './assets/lynx-logo.png';
+const reactLynxLogo = './assets/react-logo.png';
+const _et_7a8c6_test_2 = "_et_7a8c6_test_2";
+const _et_7a8c6_test_3 = "_et_7a8c6_test_3";
+const _et_7a8c6_test_1 = "_et_7a8c6_test_1";
+export function App() {
+    const [alterLogo, setAlterLogo] = useState(false);
+    useEffect(()=>{
+        console.info('Hello, ReactLynx');
+    }, []);
+    useCallback(()=>{
+        'background-only';
+        setAlterLogo((prevAlterLogo)=>!prevAlterLogo);
+    }, []);
+    return /*#__PURE__*/ _jsx(_et_7a8c6_test_1, {
+        attributeSlots: [
+            1,
+            arrow
+        ],
+        children: [
+            alterLogo ? /*#__PURE__*/ _jsx(_et_7a8c6_test_2, {
+                attributeSlots: [
+                    reactLynxLogo
+                ]
+            }) : /*#__PURE__*/ _jsx(_et_7a8c6_test_3, {
+                attributeSlots: [
+                    lynxLogo
+                ]
+            }),
+            ' src/App.tsx '
+        ]
+    });
+}

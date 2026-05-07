@@ -1,0 +1,56 @@
+Array [
+  Array [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    Array [
+      "A",
+    ],
+    Array [],
+    -1,
+  ],
+  Array [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    Array [
+      "B",
+    ],
+    Array [],
+    -2,
+  ],
+  Array [
+    "__CreateElementTemplate",
+    "_et_foo",
+    null,
+    null,
+    Array [
+      Array [
+        Object {
+          "attributes": Object {
+            "text": "A",
+          },
+          "children": Array [],
+          "tag": "raw-text",
+          "templateId": "__et_builtin_raw_text__",
+        },
+      ],
+      Array [
+        Object {
+          "attributes": Object {
+            "text": "B",
+          },
+          "children": Array [],
+          "tag": "raw-text",
+          "templateId": "__et_builtin_raw_text__",
+        },
+      ],
+    ],
+    -3,
+  ],
+  Array [
+    "__AppendElement",
+    "root",
+    "<_et_foo />",
+  ],
+]

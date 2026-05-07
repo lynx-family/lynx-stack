@@ -34,6 +34,7 @@ export interface EncodeOptions {
         type?: 'lazy';
         content: string | Record<string, unknown>;
     }>;
+    elementTemplate?: Record<string, unknown>;
     // (undocumented)
     lepusCode: {
         root: string | undefined;
@@ -209,6 +210,6 @@ export class WebEncodePlugin {
 
 // Warnings were encountered during analysis:
 //
-// lib/LynxTemplatePlugin.d.ts:68:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
+// lib/LynxTemplatePlugin.d.ts:72:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
 
 ```

@@ -11,14 +11,14 @@
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { DEFAULT_CSS_ID, DEFAULT_ENTRY_NAME } from './constants.js';
-import { snapshotManager } from './definition.js';
+import { createRuntimeSnapshot, snapshotManager } from './definition.js';
 import type { Snapshot } from './definition.js';
 import { DynamicPartType, __DynamicPartChildren_0 } from './dynamicPartType.js';
 import { snapshotDestroyList } from './list.js';
 import type { PlatformInfo } from './platformInfo.js';
 import { unref } from './ref.js';
 import type { SerializedSnapshotInstance } from './types.js';
-import { traverseSnapshotInstance } from './utils.js';
+import { isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { clearSnapshotVNodeSource } from '../debug/vnodeSource.js';
 import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
@@ -95,13 +95,15 @@ export class SnapshotInstance {
     if (!snapshotManager.values.has(type) && type !== 'div') {
       if (snapshotCreatorMap[type]) {
         snapshotCreatorMap[type](type);
-      } else {
+      } else if (isCompiledSnapshot(type)) {
         let message = 'Snapshot not found: ' + type;
         if (__DEV__) {
           message +=
             '. You can set environment variable `REACT_ALOG=true` and restart your dev server for troubleshooting.';
         }
         throw new Error(message);
+      } else {
+        createRuntimeSnapshot(type);
       }
     }
     this.__snapshot_def = snapshotManager.values.get(type)!;
@@ -132,6 +134,17 @@ export class SnapshotInstance {
       } else {
         __SetCSSId(this.__elements, cssId);
       }
+    }
+
+    if (
+      entryName !== DEFAULT_ENTRY_NAME && entryName !== undefined && this.parentNode
+      && entryName !== this.parentNode.__snapshot_def.entryName
+    ) {
+      __SetAttribute(
+        this.__element_root!,
+        'bundle-url',
+        this.__snapshot_def.entryName,
+      );
     }
 
     __pendingListUpdates.runWithoutUpdates(() => {

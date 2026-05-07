@@ -1,0 +1,42 @@
+Object {
+  "rootChild": Object {
+    "attributes": Object {},
+    "children": Array [
+      Object {
+        "attributes": Object {
+          "slot-id": 0,
+        },
+        "children": Array [
+          Object {
+            "attributes": Object {
+              "title": "inner",
+            },
+            "children": Array [
+              Object {
+                "attributes": Object {
+                  "slot-id": 0,
+                },
+                "children": Array [
+                  Object {
+                    "attributes": Object {
+                      "text": "X",
+                    },
+                    "children": Array [],
+                    "tag": "raw-text",
+                    "templateId": "__et_builtin_raw_text__",
+                  },
+                ],
+                "tag": "slot",
+              },
+            ],
+            "tag": "view",
+            "templateId": "_et_inner",
+          },
+        ],
+        "tag": "slot",
+      },
+    ],
+    "tag": "view",
+    "templateId": "_et_outer",
+  },
+}

@@ -33,6 +33,9 @@ export default tseslint.config(
       '**/test/js',
       '**/dist/**',
       '**/lib/**',
+      // rspeedy/rsbuild build output for the a2ui-playground (lynx bundle
+      // + the rsbuild static site that serves it).
+      'packages/genui/a2ui-playground/www/**',
       'website/doc_build/**',
       '.changeset/*',
       '**/CHANGELOG.md',
@@ -92,6 +95,7 @@ export default tseslint.config(
       'packages/react/runtime/worklet-runtime/**',
       'packages/react/runtime/src/renderToOpcodes/**',
       'packages/react/runtime/src/snapshot/renderToOpcodes/**',
+      'packages/react/runtime/src/element-template/runtime/render/render-to-opcodes.ts',
       'packages/react/runtime/types/**',
 
       // TODO: enable eslint for react-runtime

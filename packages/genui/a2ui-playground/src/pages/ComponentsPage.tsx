@@ -1,16 +1,75 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { useMemo } from 'react';
+import { json } from '@codemirror/lang-json';
+import CodeMirror from '@uiw/react-codemirror';
+import { useEffect, useMemo, useState } from 'react';
 
 import { CATEGORIES, COMPONENT_CATALOG } from '../componentCatalog.js';
 import type { ComponentDoc } from '../componentCatalog.js';
+import { copyToClipboard } from '../utils/clipboard.js';
+import { DEFAULT_DEMO_URL } from '../utils/demoUrl.js';
 import type { ProtocolVersion } from '../utils/protocol.js';
+import { buildRenderUrl } from '../utils/renderUrl.js';
+
+const jsonExtensions = [json()];
+
+function formatJson(value: unknown): string {
+  return JSON.stringify(value ?? {}, null, 2);
+}
+
+function createComponentPreviewMessages(
+  comp: ComponentDoc,
+  usage: unknown,
+): unknown[] {
+  return [
+    {
+      createSurface: {
+        surfaceId: 'default',
+        catalogId: `component-${comp.name.toLowerCase()}`,
+      },
+      updateComponents: {
+        surfaceId: 'default',
+        components: [usage],
+      },
+    },
+  ];
+}
 
 function ComponentDetail(
   props: { comp: ComponentDoc; protocol: ProtocolVersion },
 ) {
   const { comp, protocol } = props;
+  const [usageJson, setUsageJson] = useState(() =>
+    formatJson(comp.usage[protocol])
+  );
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setUsageJson(formatJson(comp.usage[protocol]));
+  }, [comp, protocol]);
+
+  const parsedUsage = useMemo(() => {
+    try {
+      return { error: '', value: JSON.parse(usageJson) as unknown };
+    } catch (e) {
+      return { error: `Invalid JSON: ${String(e)}`, value: null };
+    }
+  }, [usageJson]);
+
+  const previewUrl = useMemo(() => {
+    if (parsedUsage.error) return '';
+    const baseUrl = window.location.href.replace(/#.*$/u, '');
+    return buildRenderUrl(
+      {
+        protocol,
+        demoUrl: DEFAULT_DEMO_URL,
+        messages: createComponentPreviewMessages(comp, parsedUsage.value),
+      },
+      baseUrl,
+    );
+  }, [comp, parsedUsage, protocol]);
+
   return (
     <div className='compContent'>
       <div className='compBreadcrumb'>
@@ -23,11 +82,6 @@ function ComponentDetail(
       <p className='compDesc'>{comp.description}</p>
 
       <div className='compCategoryBadge'>{comp.category}</div>
-
-      <h3 className='compSubheading'>Usage</h3>
-      <pre className='compCodeBlock'>
-        {JSON.stringify(comp.usage[protocol], null, 2)}
-      </pre>
 
       <h3 className='compSubheading'>Props</h3>
       <table className='compTable'>
@@ -50,6 +104,58 @@ function ComponentDetail(
           ))}
         </tbody>
       </table>
+
+      <div className='compSectionHeader'>
+        <h3 className='compSubheading'>Usage</h3>
+        <button
+          className='compCopyBtn'
+          type='button'
+          title={copied ? 'Copied' : 'Copy JSON'}
+          onClick={() => {
+            void copyToClipboard(usageJson).then((ok) => {
+              if (!ok) return;
+              setCopied(true);
+              window.setTimeout(() => setCopied(false), 1200);
+            });
+          }}
+        >
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+      <CodeMirror
+        className='compUsageEditor'
+        value={usageJson}
+        extensions={jsonExtensions}
+        onChange={setUsageJson}
+        theme='dark'
+        basicSetup={{
+          lineNumbers: true,
+          foldGutter: true,
+          bracketMatching: true,
+          closeBrackets: true,
+          autocompletion: true,
+        }}
+      />
+      {parsedUsage.error
+        ? <div className='compUsageError'>{parsedUsage.error}</div>
+        : null}
+
+      <h3 className='compSubheading'>Preview</h3>
+      <div className='compPreview'>
+        {previewUrl
+          ? (
+            <iframe
+              className='compPreviewIframe'
+              title={`${comp.name} preview`}
+              src={previewUrl}
+            />
+          )
+          : (
+            <div className='compPreviewInvalid'>
+              Fix the Usage JSON to update the preview.
+            </div>
+          )}
+      </div>
     </div>
   );
 }

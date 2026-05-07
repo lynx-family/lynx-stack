@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 
 import { ProtocolSwitch } from './components/ProtocolSwitch.js';
 import { AIChatPage } from './pages/AIChatPage.js';
@@ -10,11 +10,11 @@ import { DemosPage } from './pages/DemosPage.js';
 import type { ProtocolVersion } from './utils/protocol.js';
 import { DEFAULT_PROTOCOL } from './utils/protocol.js';
 
-type Tab = 'chat' | 'demos' | 'components';
+type Tab = 'create' | 'examples' | 'components';
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'chat', label: 'AI Chat' },
-  { id: 'demos', label: 'Demos' },
+  { id: 'create', label: 'Create' },
+  { id: 'examples', label: 'Examples' },
   { id: 'components', label: 'Components' },
 ];
 
@@ -26,11 +26,28 @@ interface Route {
 function parseHash(hash: string): Route {
   const cleaned = hash.replace(/^#\/?/u, '');
   const parts = cleaned.split('/');
-  if (parts[0] === 'demos') return { tab: 'demos' };
+  if (parts[0] === 'examples' || parts[0] === 'demos') {
+    return { tab: 'examples' };
+  }
+  if (parts[0] === 'create' || parts[0] === 'chat') {
+    return { tab: 'create' };
+  }
   if (parts[0] === 'components') {
     return { tab: 'components', componentName: parts[1] };
   }
-  return { tab: 'chat' };
+  return { tab: 'create' };
+}
+
+type Theme = 'light' | 'dark';
+
+function getSystemTheme(): Theme {
+  try {
+    return window.matchMedia?.('(prefers-color-scheme: dark)')?.matches
+      ? 'dark'
+      : 'light';
+  } catch {
+    return 'light';
+  }
 }
 
 export function App() {
@@ -38,6 +55,11 @@ export function App() {
     parseHash(window.location.hash)
   );
   const [protocol, setProtocol] = useState<ProtocolVersion>(DEFAULT_PROTOCOL);
+  const [theme, setTheme] = useState<Theme>(getSystemTheme);
+
+  useLayoutEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     const onHashChange = () => {
@@ -53,8 +75,8 @@ export function App() {
 
   const page = (() => {
     switch (route.tab) {
-      case 'demos':
-        return <DemosPage key='demos' protocol={protocol} />;
+      case 'examples':
+        return <DemosPage key='examples' protocol={protocol} />;
       case 'components':
         return (
           <ComponentsPage
@@ -64,14 +86,14 @@ export function App() {
           />
         );
       default:
-        return <AIChatPage key='chat' protocol={protocol} />;
+        return <AIChatPage key='create' protocol={protocol} />;
     }
   })();
 
   return (
     <div className='appShell'>
       <div className='topBar'>
-        <span className='brand'>A2UI Playground</span>
+        <span className='brand'>Lynx A2UI Playground</span>
 
         <nav className='tabNav'>
           {TABS.map((t) => (
@@ -94,6 +116,16 @@ export function App() {
           <div className='protocolLabel'>Protocol</div>
           <ProtocolSwitch value={protocol} onChange={setProtocol} />
         </div>
+
+        <button
+          type='button'
+          className='themeToggle'
+          onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        >
+          {theme === 'dark' ? '\u2600' : '\u263E'}
+        </button>
       </div>
 
       <div className='appBody'>

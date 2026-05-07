@@ -145,6 +145,20 @@ export async function runCli(
 
   printGeneratedComponents(components);
 
+  // Fail loudly if we matched source files but emitted no components —
+  // this used to silently succeed on Windows when TypeDoc rejected
+  // backslash entry-point paths, and downstream packages then failed
+  // to import the missing `catalog.json` files.
+  if (components.length === 0) {
+    console.error(
+      `[a2ui-catalog-extractor] Found ${uniqueSourceFiles.length} `
+        + `source file(s) but emitted 0 component catalogs. Make sure `
+        + `each catalog props interface is annotated with `
+        + `\`@a2uiCatalog <Name>\`.`,
+    );
+    return 1;
+  }
+
   return 0;
 }
 
@@ -163,11 +177,19 @@ function readValue(args: string[], index: number, option: string): string {
   return value;
 }
 
+function isEntryScript(): boolean {
+  if (!process.argv[1]) return false;
+  const entryUrl = pathToFileURL(process.argv[1]).href;
+  if (import.meta.url === entryUrl) return true;
+  // The published bin shim does `import '../dist/cli.js'`. In that case the
+  // entry script is the bin shim, not this module — but we should still run.
+  return /[/\\]bin[/\\]a2ui-catalog-extractor\.[mc]?js$/.test(
+    process.argv[1],
+  );
+}
+
 try {
-  if (
-    process.argv[1]
-    && import.meta.url === pathToFileURL(process.argv[1]).href
-  ) {
+  if (isEntryScript()) {
     process.exitCode = await runCli(process.argv.slice(2));
   }
 } catch (error) {

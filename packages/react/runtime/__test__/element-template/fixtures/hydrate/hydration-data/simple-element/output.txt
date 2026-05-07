@@ -1,0 +1,10 @@
+Array [
+  Object {
+    "attributeSlots": Array [
+      "logo.png",
+    ],
+    "elementSlots": Array [],
+    "templateKey": "_et_a94a8_test_1",
+    "uid": -1,
+  },
+]

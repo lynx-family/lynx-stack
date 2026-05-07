@@ -1,0 +1,57 @@
+[
+  [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    [
+      "2"
+    ],
+    [],
+    -1
+  ],
+  [
+    "__CreateElementTemplate",
+    "__et_builtin_raw_text__",
+    null,
+    [
+      "3"
+    ],
+    [],
+    -2
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_1",
+    null,
+    null,
+    [
+      null,
+      [
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "2"
+          },
+          "children": [],
+          "templateId": "__et_builtin_raw_text__"
+        }
+      ],
+      [
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "3"
+          },
+          "children": [],
+          "templateId": "__et_builtin_raw_text__"
+        }
+      ]
+    ],
+    -3
+  ],
+  [
+    "__AppendElement",
+    "0",
+    "<_et_7a8c6_test_1 />"
+  ]
+]
