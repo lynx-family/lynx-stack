@@ -12,6 +12,8 @@ import {
   STATIC_DEMOS,
   componentsByMessage,
 } from '../demos.js';
+import { useResizablePanels } from '../hooks/useResizablePanels.js';
+import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_DEMO_URL } from '../utils/demoUrl.js';
 import type { ProtocolVersion } from '../utils/protocol.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
@@ -32,17 +34,6 @@ function formatUrlForDisplay(url: string): string {
   const head = url.slice(0, 44);
   const tail = url.slice(-24);
   return `${head}…${tail}`;
-}
-
-async function copyToClipboard(text: string): Promise<boolean> {
-  try {
-    const clipboard = window.navigator?.clipboard;
-    if (!clipboard) return false;
-    await clipboard.writeText(text);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function useRspeedyDevUrl(): string {
@@ -75,6 +66,12 @@ const ALL_SCENARIOS: Scenario[] = [
   ...DYNAMIC_PRESETS,
 ];
 
+const DESKTOP_PREVIEW_MIN_WIDTH = 320;
+const DESKTOP_CODE_MIN_WIDTH = 360;
+const COMPACT_CODE_MIN_HEIGHT = 220;
+const COMPACT_PREVIEW_MIN_HEIGHT = 320;
+const RESIZE_BREAKPOINT = 980;
+
 function formatJson(value: unknown): string {
   return JSON.stringify(value ?? [], null, 2);
 }
@@ -103,6 +100,25 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   const [fullscreen, setFullscreen] = useState(false);
   const [liveComponents, setLiveComponents] = useState<string[]>([]);
   const liveTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const {
+    containerRef: pageRef,
+    handleResizeStart: handlePanelResizeStart,
+    isCompactLayout,
+    isResizing: isPanelResizing,
+    primaryPanelStyle: codePanelStyle,
+    secondaryPanelStyle: previewPanelStyle,
+  } = useResizablePanels({
+    breakpoint: RESIZE_BREAKPOINT,
+    compactOffsetSelector: '.sidebar',
+    compactPrimaryMinSize: COMPACT_CODE_MIN_HEIGHT,
+    compactSecondaryMinSize: COMPACT_PREVIEW_MIN_HEIGHT,
+    desktopOffsetSelector: '.sidebar',
+    desktopPrimaryMinSize: DESKTOP_CODE_MIN_WIDTH,
+    desktopSecondaryMinSize: DESKTOP_PREVIEW_MIN_WIDTH,
+    disabled: fullscreen,
+    initialPrimarySize: 320,
+    initialSecondarySize: 420,
+  });
 
   const baseUrl = window.location.href.replace(/#.*$/, '');
   const rspeedyDevUrl = useRspeedyDevUrl();
@@ -316,7 +332,10 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   }, []);
 
   return (
-    <div className='demosPage'>
+    <div
+      ref={pageRef}
+      className={isPanelResizing ? 'demosPage resizing' : 'demosPage'}
+    >
       {/* Sidebar */}
       <aside className='sidebar'>
         <div className='sidebarSection'>
@@ -339,7 +358,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
       </aside>
 
       {/* Code Panel */}
-      <div className='codePanel'>
+      <div className='codePanel' style={codePanelStyle}>
         <div className='codePanelToolbar'>
           <div className='codePanelTitle'>
             A2UI Messages
@@ -392,11 +411,27 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
         {error ? <div className='codeError'>{error}</div> : null}
       </div>
 
+      {fullscreen
+        ? null
+        : (
+          <div
+            className={isPanelResizing
+              ? 'panelResizeHandle active'
+              : 'panelResizeHandle'}
+            role='separator'
+            aria-orientation={isCompactLayout ? 'horizontal' : 'vertical'}
+            aria-label='Resize JSON and preview panels'
+            title='Drag to resize'
+            onPointerDown={handlePanelResizeStart}
+          />
+        )}
+
       {/* Preview Panel */}
       <div
         className={fullscreen
           ? 'previewPanel previewPanelFullscreen'
           : 'previewPanel'}
+        style={previewPanelStyle}
       >
         <div className='previewPanelHeader'>
           <span className='previewPanelTitle'>Lynx Preview</span>
