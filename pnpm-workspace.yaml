@@ -81,13 +81,11 @@ patchedDependencies:
 
 strictDepBuilds: true
 
-onlyBuiltDependencies:
-  - dprint
-  - esbuild
-
-ignoredBuiltDependencies:
-  - "@biomejs/biome"
-  - "@parcel/watcher"
-  - "@swc/core"
-  - core-js
-  - unrs-resolver
+allowBuilds:
+  "@biomejs/biome": false
+  "@parcel/watcher": false
+  "@swc/core": false
+  core-js: false
+  dprint: true
+  esbuild: true
+  unrs-resolver: false
