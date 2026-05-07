@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { CATEGORIES, COMPONENT_CATALOG } from '../componentCatalog.js';
 import type { ComponentDoc } from '../componentCatalog.js';
 import { copyToClipboard } from '../utils/clipboard.js';
-import { DEFAULT_DEMO_URL } from '../utils/demoUrl.js';
+import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
 
@@ -63,7 +63,7 @@ function ComponentDetail(
     return buildRenderUrl(
       {
         protocol,
-        demoUrl: DEFAULT_DEMO_URL,
+        demoUrl: DEFAULT_A2UI_DEMO_URL,
         messages: createComponentPreviewMessages(comp, parsedUsage.value),
       },
       baseUrl,

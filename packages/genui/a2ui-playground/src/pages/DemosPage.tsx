@@ -14,7 +14,7 @@ import {
 } from '../demos.js';
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
 import { copyToClipboard } from '../utils/clipboard.js';
-import { DEFAULT_DEMO_URL } from '../utils/demoUrl.js';
+import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
 
@@ -168,7 +168,7 @@ export function DemosPage(props: { protocol: Protocol }) {
       const url = buildRenderUrl(
         {
           protocol,
-          demoUrl: DEFAULT_DEMO_URL,
+          demoUrl: DEFAULT_A2UI_DEMO_URL,
           messages: parsed,
           actionMocks,
           demoId: isKnownDemo ? scenario!.id : undefined,
@@ -289,7 +289,7 @@ export function DemosPage(props: { protocol: Protocol }) {
             const buildStoredPayloadRenderUrl = (targetBaseUrl: string) => {
               const r = new URL('render.html', targetBaseUrl);
               r.searchParams.set('protocol', protocol.name);
-              r.searchParams.set('demoUrl', DEFAULT_DEMO_URL);
+              r.searchParams.set('demoUrl', DEFAULT_A2UI_DEMO_URL);
               r.searchParams.set('messagesUrl', messagesUrlAbs);
               if (actionMocksUrlAbs && actionMocks) {
                 r.searchParams.set('actionMocksUrl', actionMocksUrlAbs);
