@@ -65,8 +65,6 @@ catalogs:
     "@rstest/core": "0.8.1"
 
 overrides:
-  react: 19.2.4
-  react-dom: 19.2.4
   "@rspack/core@^1": "$@rspack/core"
   "@rsbuild/core@1>@rspack/core": "$@rspack/core"
   "@rsdoctor/rspack-plugin>@rspack/core": "$@rspack/core"
