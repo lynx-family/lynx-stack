@@ -204,7 +204,7 @@ export default defineConfig({
     setupMiddlewares: [
       (middlewares) => {
         middlewares.unshift((req, res, next) => {
-          void agentRunner.handleRequest(req, res, () => {
+          agentRunner.handleRequest(req, res, () => {
             if (req.url?.startsWith('/__rspeedy_url')) {
               const url = buildRspeedyBundleUrl(req.socket.localPort ?? PORT);
               res.setHeader('Content-Type', 'application/json');
@@ -213,6 +213,25 @@ export default defineConfig({
               return;
             }
             next();
+          }).catch((err: unknown) => {
+            console.error(
+              '[a2ui-playground] agentRunner.handleRequest failed:',
+              err,
+            );
+            if (!res.headersSent) {
+              res.statusCode = 500;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(
+                JSON.stringify({
+                  error: 'agent_middleware_error',
+                  message: err instanceof Error ? err.message : String(err),
+                }),
+              );
+              return;
+            }
+            if (!res.writableEnded) {
+              res.end();
+            }
           });
         });
       },

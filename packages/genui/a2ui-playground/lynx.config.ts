@@ -28,6 +28,9 @@ export default defineConfig({
     web: {},
     lynx: {},
   },
+  dev: {
+    writeToDisk: true,
+  },
   output: {
     distPath: {
       root: 'www',

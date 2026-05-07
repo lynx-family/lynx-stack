@@ -7,7 +7,7 @@ export interface NormalizedA2UIResult {
   actionMocks?: unknown;
 }
 
-function tryParseJson(text: string): unknown | null {
+function tryParseJson(text: string): unknown {
   try {
     return JSON.parse(text);
   } catch {
@@ -25,10 +25,10 @@ function toNormalized(value: unknown): NormalizedA2UIResult | null {
   }
 
   const record = value as Record<string, unknown>;
-  if (Array.isArray(record['messages'])) {
+  if (Array.isArray(record.messages)) {
     return {
-      messages: record['messages'],
-      actionMocks: record['actionMocks'],
+      messages: record.messages,
+      actionMocks: record.actionMocks,
     };
   }
 
@@ -42,18 +42,45 @@ function extractJsonCandidates(text: string): string[] {
     candidates.add(trimmed);
   }
 
-  const fencedBlocks = text.matchAll(/```(?:json)?\s*([\s\S]*?)```/gi);
-  for (const match of fencedBlocks) {
-    const block = match[1]?.trim();
-    if (block) {
-      candidates.add(block);
+  let searchStart = 0;
+  while (searchStart < text.length) {
+    const fenceStart = text.indexOf('```', searchStart);
+    if (fenceStart === -1) {
+      break;
     }
+
+    const contentStart = fenceStart + 3;
+    const fenceEnd = text.indexOf('```', contentStart);
+    if (fenceEnd === -1) {
+      break;
+    }
+
+    let block = text.slice(contentStart, fenceEnd);
+    if (block.slice(0, 4).toLowerCase() === 'json') {
+      const nextChar = block[4];
+      if (nextChar === undefined || /\s/.test(nextChar)) {
+        let bodyStart = 4;
+        while (bodyStart < block.length && /\s/.test(block[bodyStart])) {
+          bodyStart += 1;
+        }
+        block = block.slice(bodyStart);
+      }
+    }
+
+    const trimmedBlock = block.trim();
+    if (trimmedBlock) {
+      candidates.add(trimmedBlock);
+    }
+
+    searchStart = fenceEnd + 3;
   }
 
   return [...candidates];
 }
 
-export function normalizeA2UIResult(value: unknown): NormalizedA2UIResult | null {
+export function normalizeA2UIResult(
+  value: unknown,
+): NormalizedA2UIResult | null {
   const normalized = toNormalized(value);
   if (normalized) {
     return normalized;
@@ -74,4 +101,3 @@ export function normalizeA2UIResult(value: unknown): NormalizedA2UIResult | null
 
   return null;
 }
-

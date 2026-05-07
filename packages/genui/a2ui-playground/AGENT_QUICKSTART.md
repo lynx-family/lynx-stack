@@ -12,7 +12,7 @@ Goal: start `a2ui-playground` locally and use a real Claude Code-backed Agent in
 ## 1. Enter the Repository
 
 ```bash
-cd /Users/bytedance/Desktop/lynx/lynx-stack
+cd lynx-stack
 ```
 
 ## 2. Verify Claude Code Availability
@@ -55,8 +55,14 @@ pnpm -C packages/genui/a2ui-playground dev:agent
 This command does three things:
 
 1. Checks Claude Code auth and CLI availability
-2. Builds the Lynx preview bundle
+2. Builds the Lynx preview bundle into `www/` (required for `<lynx-view url="/main.web.js" />` to resolve)
 3. Starts the web dev server with built-in `__agent/*` routes
+
+If you are actively editing `lynx-src/*` and want HMR instead of a one-shot pre-built snapshot, open a second terminal and run `dev:lynx` concurrently (it writes to the same `www/` directory):
+
+```bash
+pnpm -C packages/genui/a2ui-playground dev:lynx
+```
 
 ## 4. Open the App
 
@@ -116,6 +122,12 @@ If the QR code does not appear, the render URL is probably too long. That does n
 
 ```bash
 pnpm -C packages/genui/a2ui-playground dev:agent
+```
+
+Optional — open a second terminal for Lynx HMR (edits `lynx-src/*` without restarting the web server):
+
+```bash
+pnpm -C packages/genui/a2ui-playground dev:lynx
 ```
 
 ### Check Agent

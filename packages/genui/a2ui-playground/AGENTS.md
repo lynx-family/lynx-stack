@@ -104,6 +104,7 @@ Implementation notes:
 
 - The browser only talks to same-origin `__agent/*` routes exposed by the web dev server.
 - The dev server acts as a local bridge and spawns Claude Code as a child process.
+- Before invoking Claude Code, the local Agent runtime now builds an A2UI-focused prompt that adds role instructions, output constraints, preferred component hints, and a small few-shot demo section.
 - Claude Code output is translated into SSE events such as `status`, `delta`, `a2ui`,
   `done`, and `error`.
 - Parsed A2UI payloads update the right-side Lynx preview and are also rendered as a

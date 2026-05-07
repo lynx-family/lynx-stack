@@ -69,3 +69,7 @@ export interface ClaudeCodeTextRunOptions {
   onDone: (payload: { resultText: string | null }) => void;
   onError: (error: unknown) => void;
 }
+
+export interface BuildA2UIPromptOptions {
+  userText: string;
+}

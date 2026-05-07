@@ -2,8 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 
 import { resolveProvider } from './providerResolver.js';
 import type { AgentActiveRun, ClaudeCodeTextRunOptions } from './types.js';
@@ -50,16 +50,16 @@ function extractErrorMessage(payload: unknown): string | null {
   }
 
   const record = payload as Record<string, unknown>;
-  if (typeof record['result'] === 'string' && record['result']) {
-    return record['result'];
+  if (typeof record.result === 'string' && record.result) {
+    return record.result;
   }
 
-  if (typeof record['error'] === 'string' && record['error']) {
-    return record['error'];
+  if (typeof record.error === 'string' && record.error) {
+    return record.error;
   }
 
   const assistantText = extractAssistantText(payload);
-  return assistantText || null;
+  return assistantText ?? null;
 }
 
 export function createClaudeCodeAdapter() {
@@ -117,7 +117,7 @@ export function createClaudeCodeAdapter() {
         }
 
         const record = payload as Record<string, unknown>;
-        const type = record['type'];
+        const type = record.type;
 
         if (type === 'system') {
           options.onStatus?.(payload);
@@ -126,7 +126,7 @@ export function createClaudeCodeAdapter() {
 
         if (type === 'assistant') {
           const assistantText = extractAssistantText(payload);
-          if (record['error']) {
+          if (record.error) {
             pendingAssistantError = extractErrorMessage(payload);
             return;
           }
@@ -138,7 +138,7 @@ export function createClaudeCodeAdapter() {
         }
 
         if (type === 'result') {
-          const isError = record['is_error'] === true;
+          const isError = record.is_error === true;
           if (isError) {
             const message = extractErrorMessage(payload)
               ?? pendingAssistantError
@@ -147,9 +147,9 @@ export function createClaudeCodeAdapter() {
             return;
           }
 
-          const resultText = typeof record['result'] === 'string'
-            ? record['result']
-            : lastAssistantText || null;
+          const resultText = typeof record.result === 'string'
+            ? record.result
+            : (lastAssistantText === '' ? null : lastAssistantText);
           finalize(() => options.onDone({ resultText }));
         }
       };
@@ -202,9 +202,9 @@ export function createClaudeCodeAdapter() {
             'stream-json',
             '--include-partial-messages',
             '--permission-mode',
-            'bypassPermissions',
-            '--allowedTools',
-            '',
+            'dontAsk',
+            '--disallowedTools',
+            'Bash,Write,Edit,MultiEdit,NotebookEdit,WebFetch,WebSearch',
             '--no-session-persistence',
           ];
 
@@ -261,13 +261,31 @@ export function createClaudeCodeAdapter() {
               return;
             }
 
-            const fallbackMessage = stderrBuffer.trim()
-              || pendingAssistantError
-              || 'Claude Code process exited unexpectedly.';
+            const trimmedStderr = stderrBuffer.trim();
+            const fallbackMessage = trimmedStderr.length > 0
+              ? trimmedStderr
+              : (pendingAssistantError
+                ?? 'Claude Code process exited unexpectedly.');
             finalize(() => options.onError(new Error(fallbackMessage)));
           });
 
-          childProcess.stdin.end(`${options.prompt}\n`);
+          childProcess.stdin.on('error', (error: Error) => {
+            const err = error as NodeJS.ErrnoException;
+            if (err.code === 'EPIPE' || err.code === 'ERR_STREAM_DESTROYED') {
+              return;
+            }
+            finalize(() => options.onError(error));
+          });
+
+          try {
+            childProcess.stdin.end(`${options.prompt}\n`);
+          } catch (error) {
+            finalize(() =>
+              options.onError(
+                error instanceof Error ? error : new Error(String(error)),
+              )
+            );
+          }
         },
       };
     },

@@ -27,7 +27,7 @@ function parseSseChunk(
   chunk: string,
   onEvent: (eventName: string, data: unknown) => void,
 ): string {
-  let buffer = chunk;
+  let buffer = chunk.replace(/\r\n?/g, '\n');
   let separatorIndex = buffer.indexOf('\n\n');
 
   while (separatorIndex !== -1) {
@@ -112,15 +112,18 @@ export function streamChat(options: StreamChatOptions): AbortController {
   void (async () => {
     try {
       const url = new URL('/__agent/chat', window.location.origin);
-      url.searchParams.set('sessionId', options.sessionId);
-      url.searchParams.set('text', options.text);
 
       const response = await window.fetch(url, {
-        method: 'GET',
+        method: 'POST',
         signal: controller.signal,
         headers: {
           Accept: 'text/event-stream',
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          sessionId: options.sessionId,
+          text: options.text,
+        }),
       });
 
       if (!response.ok || !response.body) {

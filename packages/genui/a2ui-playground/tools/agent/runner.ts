@@ -6,6 +6,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import { normalizeA2UIResult } from './a2uiNormalizer.js';
 import { createClaudeCodeAdapter } from './claudeCodeAdapter.js';
+import { buildA2UIPrompt } from './promptBuilder.js';
 import { resolveProvider } from './providerResolver.js';
 import { createSessionManager } from './sessionManager.js';
 import { closeSse, initSse, writeSseEvent } from './sse.js';
@@ -47,28 +48,6 @@ function readJsonBody(req: IncomingMessage): Promise<unknown> {
   });
 }
 
-function getSessionIdFromRequest(req: IncomingMessage): string | null {
-  const url = req.url;
-  if (!url) {
-    return null;
-  }
-
-  const parsed = new URL(url, 'http://localhost');
-  const sessionId = parsed.searchParams.get('sessionId');
-  return sessionId?.trim() ?? null;
-}
-
-function getTextFromRequest(req: IncomingMessage): string | null {
-  const url = req.url;
-  if (!url) {
-    return null;
-  }
-
-  const parsed = new URL(url, 'http://localhost');
-  const text = parsed.searchParams.get('text');
-  return text?.trim() ?? null;
-}
-
 function handleHealth(res: ServerResponse): void {
   const resolved = resolveProvider();
   const response: AgentHealthResponse = {
@@ -101,93 +80,136 @@ function handleChat(
   sessionManager: ReturnType<typeof createSessionManager>,
   req: IncomingMessage,
   res: ServerResponse,
-): void {
-  const sessionId = getSessionIdFromRequest(req);
-  if (!sessionId) {
-    sendJson(res, 400, { error: 'sessionId is required' });
-    return;
-  }
-
-  const session = sessionManager.getSession(sessionId);
-  if (!session) {
-    sendJson(res, 404, { error: 'session not found' });
-    return;
-  }
-
-  const text = getTextFromRequest(req);
-  if (!text) {
-    sendJson(res, 400, { error: 'text is required' });
-    return;
-  }
-
-  const run = claudeCodeAdapter.prepareTextRun({
-    prompt: text,
-    cwd: process.cwd(),
-    onStatus(payload) {
-      if (!completed) {
-        writeSseEvent(res, 'status', payload);
-      }
-    },
-    onDelta(delta) {
-      if (!completed && delta) {
-        writeSseEvent(res, 'delta', {
-          text: delta,
-          sessionId,
-          runId: runIdRef,
-        });
-      }
-    },
-    onDone(payload) {
-      const normalizedA2UI = normalizeA2UIResult(payload.resultText);
-      if (normalizedA2UI) {
-        writeSseEvent(res, 'a2ui', normalizedA2UI);
-      }
-      finish('done', {
-        sessionId,
-        runId: runIdRef,
-        resultText: payload.resultText,
+): Promise<void> {
+  return (async () => {
+    let body: { sessionId?: unknown; text?: unknown };
+    try {
+      body = (await readJsonBody(req)) as {
+        sessionId?: unknown;
+        text?: unknown;
+      };
+    } catch (error) {
+      sendJson(res, 400, {
+        error: 'invalid json body',
+        message: error instanceof Error ? error.message : String(error),
       });
-    },
-    onError(error) {
-      if (error instanceof Error) {
-        finish('error', { message: error.message, sessionId, runId: runIdRef });
-      } else {
-        finish('error', { message: String(error), sessionId, runId: runIdRef });
-      }
-    },
-  });
-  const runIdRef = run.activeRun.runId;
-  let completed = false;
-
-  const finish = (event: 'done' | 'error', data: unknown) => {
-    if (completed) {
-      return false;
+      return;
     }
 
-    completed = true;
-    sessionManager.clearActiveRun(sessionId, runIdRef);
-    writeSseEvent(res, event, data);
-    closeSse(res);
-    return true;
-  };
+    const sessionId = typeof body.sessionId === 'string'
+      ? body.sessionId.trim()
+      : '';
+    if (!sessionId) {
+      sendJson(res, 400, { error: 'sessionId is required' });
+      return;
+    }
 
-  const attached = sessionManager.attachActiveRun(sessionId, run.activeRun);
-  if (!attached) {
-    run.activeRun.stop();
-    sendJson(res, 409, { error: 'session already has an active run' });
-    return;
-  }
+    const session = sessionManager.getSession(sessionId);
+    if (!session) {
+      sendJson(res, 404, { error: 'session not found' });
+      return;
+    }
 
-  initSse(res);
+    const text = typeof body.text === 'string' ? body.text.trim() : '';
+    if (!text) {
+      sendJson(res, 400, { error: 'text is required' });
+      return;
+    }
 
-  writeSseEvent(res, 'status', {
-    phase: 'started',
-    provider: 'claude_code',
-    sessionId,
-    runId: runIdRef,
-  });
+    const prompt = buildA2UIPrompt({ userText: text });
 
-  run.start();
+    const run = claudeCodeAdapter.prepareTextRun({
+      prompt,
+      cwd: process.cwd(),
+      onStatus(payload) {
+        if (!completed) {
+          writeSseEvent(res, 'status', payload);
+        }
+      },
+      onDelta(delta) {
+        if (!completed && delta) {
+          writeSseEvent(res, 'delta', {
+            text: delta,
+            sessionId,
+            runId: runIdRef,
+          });
+        }
+      },
+      onDone(payload) {
+        const normalizedA2UI = normalizeA2UIResult(payload.resultText);
+        if (normalizedA2UI) {
+          writeSseEvent(res, 'a2ui', normalizedA2UI);
+        }
+        finish('done', {
+          sessionId,
+          runId: runIdRef,
+          resultText: payload.resultText,
+        });
+      },
+      onError(error) {
+        if (error instanceof Error) {
+          finish('error', {
+            message: error.message,
+            sessionId,
+            runId: runIdRef,
+          });
+        } else {
+          finish('error', {
+            message: String(error),
+            sessionId,
+            runId: runIdRef,
+          });
+        }
+      },
+    });
+    const runIdRef = run.activeRun.runId;
+    let completed = false;
+
+    const finish = (event: 'done' | 'error', data: unknown) => {
+      if (completed) {
+        return false;
+      }
+
+      completed = true;
+      sessionManager.clearActiveRun(sessionId, runIdRef);
+      writeSseEvent(res, event, data);
+      closeSse(res);
+      return true;
+    };
+
+    const attached = sessionManager.attachActiveRun(sessionId, run.activeRun);
+    if (!attached) {
+      run.activeRun.stop();
+      sendJson(res, 409, { error: 'session already has an active run' });
+      return;
+    }
+
+    initSse(res);
+
+    const handleClientDisconnect = () => {
+      if (completed) {
+        return;
+      }
+      completed = true;
+      sessionManager.clearActiveRun(sessionId, runIdRef);
+      try {
+        run.activeRun.stop();
+      } catch {
+        // ignore stop errors triggered by races with normal completion
+      }
+    };
+    req.on('close', handleClientDisconnect);
+    req.on('aborted', handleClientDisconnect);
+
+    writeSseEvent(res, 'status', {
+      phase: 'started',
+      provider: 'claude_code',
+      sessionId,
+      runId: runIdRef,
+    });
+
+    run.start();
+  })();
 }
 
 async function handleInterrupt(
@@ -252,8 +274,8 @@ export function createAgentRunner() {
         return;
       }
 
-      if (req.method === 'GET' && url.startsWith('/__agent/chat')) {
-        handleChat(claudeCodeAdapter, sessionManager, req, res);
+      if (req.method === 'POST' && url.startsWith('/__agent/chat')) {
+        await handleChat(claudeCodeAdapter, sessionManager, req, res);
         return;
       }
 
