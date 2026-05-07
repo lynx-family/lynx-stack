@@ -8,4 +8,6 @@ Only `@a2uiCatalog` is a custom tag. Use standard TypeDoc-supported comments and
 
 Keep built-in catalog CSS assets in `packages/genui/a2ui/styles/catalog/*.css`, not under `src/catalog`. Catalog component TSX files should import those assets through paths that stay valid after TypeScript emits `dist/catalog/<Component>/index.jsx`, for example `../../../styles/catalog/Button.css`.
 
+When evolving `packages/genui/a2ui-playground`, treat protocol-prefixed hashes such as `#/a2ui/...` and `#/openui/...` as the canonical routes, but preserve compatibility for older unprefixed or renamed tabs like `#/create` and `#/examples`. Rebase conflicts often happen when navigation is refactored; keep old aliases parsing to the new route model so saved links and in-app cross-links continue to work.
+
 When a GenUI package builds a CLI or other generated artifact that another workspace package executes during its own build, declare that package's `dist/**` (or equivalent generated directory) as Turbo `build.outputs`. Without explicit outputs, cache hits can skip restoring the built CLI and leave downstream workspace bins pointing at missing files.
