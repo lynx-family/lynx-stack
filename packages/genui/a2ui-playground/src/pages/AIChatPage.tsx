@@ -30,7 +30,7 @@ const MOCK_AI_RESPONSE: ChatMessage = {
   ),
 };
 
-const DESKTOP_PREVIEW_MIN_WIDTH = 320;
+const DESKTOP_PREVIEW_MIN_WIDTH = 360;
 const DESKTOP_CHAT_MIN_WIDTH = 360;
 const COMPACT_CHAT_MIN_HEIGHT = 280;
 const COMPACT_PREVIEW_MIN_HEIGHT = 320;
@@ -56,7 +56,7 @@ export function AIChatPage(
     desktopPrimaryMinSize: DESKTOP_CHAT_MIN_WIDTH,
     desktopSecondaryMinSize: DESKTOP_PREVIEW_MIN_WIDTH,
     initialPrimarySize: 400,
-    initialSecondarySize: 420,
+    initialSecondarySize: 480,
   });
 
   useEffect(() => {

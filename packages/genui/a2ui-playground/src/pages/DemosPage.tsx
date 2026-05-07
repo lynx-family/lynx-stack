@@ -66,7 +66,7 @@ const ALL_SCENARIOS: Scenario[] = [
   ...DYNAMIC_PRESETS,
 ];
 
-const DESKTOP_PREVIEW_MIN_WIDTH = 320;
+const DESKTOP_PREVIEW_MIN_WIDTH = 360;
 const DESKTOP_CODE_MIN_WIDTH = 360;
 const COMPACT_CODE_MIN_HEIGHT = 220;
 const COMPACT_PREVIEW_MIN_HEIGHT = 320;
@@ -87,9 +87,12 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   );
   const [error, setError] = useState('');
   const [renderUrl, setRenderUrl] = useState('');
+  const [renderShareUrl, setRenderShareUrl] = useState('');
   const [lynxDevUrl, setLynxDevUrl] = useState('');
   const [, setRenderQrError] = useState('');
   const [lynxDevQrError, setLynxDevQrError] = useState('');
+  const [renderCopied, setRenderCopied] = useState(false);
+  const [renderCopyFailed, setRenderCopyFailed] = useState(false);
   const [lynxDevCopied, setLynxDevCopied] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [showSimTooltip, setShowSimTooltip] = useState(false);
@@ -117,7 +120,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
     desktopSecondaryMinSize: DESKTOP_PREVIEW_MIN_WIDTH,
     disabled: fullscreen,
     initialPrimarySize: 320,
-    initialSecondarySize: 420,
+    initialSecondarySize: 480,
   });
 
   const baseUrl = window.location.href.replace(/#.*$/, '');
@@ -125,7 +128,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   const lynxUrlSeqRef = useRef(0);
 
   // For QR codes, replace localhost/127.0.0.1 with the LAN IP so phones can reach it.
-  const networkBaseUrl = useMemo(() => {
+  const shareBaseUrl = useMemo(() => {
     const u = new URL(baseUrl);
     if (
       (u.hostname === 'localhost' || u.hostname === '127.0.0.1')
@@ -171,9 +174,24 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
           demoId: isKnownDemo ? scenario!.id : undefined,
           speed,
         },
-        networkBaseUrl,
+        baseUrl,
       );
       setRenderUrl(url);
+      setRenderShareUrl(
+        buildRenderUrl(
+          {
+            protocol,
+            demoUrl: DEFAULT_DEMO_URL,
+            messages: parsed,
+            actionMocks,
+            demoId: isKnownDemo ? scenario!.id : undefined,
+            speed,
+          },
+          shareBaseUrl,
+        ),
+      );
+      setRenderCopied(false);
+      setRenderCopyFailed(false);
 
       // Live component stack: reveal component names as they would appear
       // during streaming, synced with the replay speed.
@@ -208,7 +226,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
         if (isKnownDemo) {
           // Known demo: point to the static JSON served by the rsbuild dev server.
           // Native Lynx supports fetch, so App.tsx will load it via messagesUrl.
-          const demosOrigin = new URL(networkBaseUrl).origin;
+          const demosOrigin = new URL(shareBaseUrl).origin;
           uInline.searchParams.set(
             'messagesUrl',
             `${demosOrigin}/demos/${scenario!.id}.json`,
@@ -268,14 +286,18 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
           // "View on Device" QR is scannable. render.html already supports
           // messagesUrl / actionMocksUrl query params.
           if (messagesUrlAbs) {
-            const r = new URL('render.html', networkBaseUrl);
-            r.searchParams.set('protocol', protocol);
-            r.searchParams.set('demoUrl', DEFAULT_DEMO_URL);
-            r.searchParams.set('messagesUrl', messagesUrlAbs);
-            if (actionMocksUrlAbs && actionMocks) {
-              r.searchParams.set('actionMocksUrl', actionMocksUrlAbs);
-            }
-            setRenderUrl(r.toString());
+            const buildStoredPayloadRenderUrl = (targetBaseUrl: string) => {
+              const r = new URL('render.html', targetBaseUrl);
+              r.searchParams.set('protocol', protocol);
+              r.searchParams.set('demoUrl', DEFAULT_DEMO_URL);
+              r.searchParams.set('messagesUrl', messagesUrlAbs);
+              if (actionMocksUrlAbs && actionMocks) {
+                r.searchParams.set('actionMocksUrl', actionMocksUrlAbs);
+              }
+              return r.toString();
+            };
+            setRenderUrl(buildStoredPayloadRenderUrl(baseUrl));
+            setRenderShareUrl(buildStoredPayloadRenderUrl(shareBaseUrl));
           }
         } catch {
           // If the payload store is unavailable, fall back to the inline URLs
@@ -283,7 +305,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
         }
       })();
     },
-    [jsonEdited, networkBaseUrl, protocol, rspeedyDevUrl, speed],
+    [baseUrl, jsonEdited, protocol, rspeedyDevUrl, shareBaseUrl, speed],
   );
 
   useEffect(() => {
@@ -325,8 +347,13 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   const handleClear = useCallback(() => {
     setCustomJson('[]');
     setRenderUrl('');
+    setRenderShareUrl('');
     setLynxDevUrl('');
     setRenderQrError('');
+    setLynxDevQrError('');
+    setRenderCopied(false);
+    setRenderCopyFailed(false);
+    setLynxDevCopied(false);
     setError('');
     setJsonEdited(false);
   }, []);
@@ -551,10 +578,10 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
           : null}
 
         {/* QR Code Section — only shown when there's a render URL */}
-        {renderUrl || lynxDevUrl
+        {renderShareUrl || lynxDevUrl
           ? (
             <div className='previewQrSection'>
-              {renderUrl
+              {renderShareUrl
                 ? (
                   <div className='previewQrContent'>
                     <div className='previewQrInfo'>
@@ -565,25 +592,49 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
                       <div className='previewQrUrlRow'>
                         <div
                           className='previewQrUrlText'
-                          title={renderUrl}
+                          title={renderShareUrl}
                         >
-                          {formatUrlForDisplay(renderUrl)}
+                          {formatUrlForDisplay(renderShareUrl)}
                         </div>
                         <button
                           type='button'
                           className='previewQrCopyBtn'
                           aria-label='Copy render URL'
-                          title='Copy URL'
+                          title={renderCopied
+                            ? 'Copied'
+                            : (
+                              renderCopyFailed ? 'Copy failed' : 'Copy URL'
+                            )}
                           onClick={() => {
-                            void copyToClipboard(renderUrl);
+                            void copyToClipboard(renderShareUrl).then((ok) => {
+                              setRenderCopyFailed(false);
+                              if (!ok) {
+                                setRenderCopied(false);
+                                setRenderCopyFailed(true);
+                                window.setTimeout(
+                                  () => setRenderCopyFailed(false),
+                                  1200,
+                                );
+                                return;
+                              }
+                              setRenderCopied(true);
+                              window.setTimeout(
+                                () => setRenderCopied(false),
+                                1200,
+                              );
+                            });
                           }}
                         >
-                          Copy
+                          {renderCopied
+                            ? 'Copied'
+                            : (
+                              renderCopyFailed ? 'Failed' : 'Copy'
+                            )}
                         </button>
                       </div>
                     </div>
                     <QrCode
-                      value={renderUrl}
+                      value={renderShareUrl}
                       size={80}
                       onErrorChange={setRenderQrError}
                     />
