@@ -217,7 +217,6 @@ export function App() {
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   useEffect(() => {
     let cancelled = false;
 

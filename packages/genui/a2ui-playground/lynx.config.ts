@@ -150,7 +150,7 @@ export default defineConfig({
   ],
   source: {
     entry: {
-      main: './lynx-src/index.tsx',
+      a2ui: './lynx-src/a2ui/index.tsx',
     },
   },
   environments: {
