@@ -26,7 +26,7 @@
   },
   "files": [
     "dist",
-    "template-*",
+    "template-*/**",
     "CHANGELOG.md",
     "README.md"
   ],
