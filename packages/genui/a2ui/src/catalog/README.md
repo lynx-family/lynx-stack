@@ -1,17 +1,38 @@
 # Catalog composition
 
-`defineCatalog` builds the runtime catalog the renderer uses. Composition
-is per-component so bundlers can tree-shake what you don't reference.
+The package intentionally **does not** ship an "all-in-one" catalog
+constant. A top-level array referencing every built-in defeats
+tree-shaking — every consumer of such an aggregate would bundle every
+component, even the nine you don't use. Composition is per-component, and
+the cost is visible at the import site.
 
 ## The minimum a renderer needs
 
-If you only need to render, names alone are enough. Pass bare components —
+If your app only renders, names alone are enough. Pass bare components —
 the protocol name comes from `displayName ?? component.name`:
 
 ```tsx
-import { defineCatalog, Text, Button } from '@lynx-js/a2ui-reactlynx';
+import {
+  A2UI,
+  Text,
+  Button,
+  createMessageStore,
+} from '@lynx-js/a2ui-reactlynx';
 
-const catalog = defineCatalog([Text, Button]);
+const store = createMessageStore();
+
+// Push raw protocol messages from your IO module (fetch, SSE, ...).
+// async function streamFromAgent(input) {
+//   for await (const msg of myAgent.stream(input)) store.push(msg);
+// }
+
+<A2UI
+  messageStore={store}
+  catalogs={[Text, Button]}
+  onAction={(action) => {
+    /* forward to your agent and push response messages back */
+  }}
+/>;
 ```
 
 Bundlers tree-shake unused components — pulling `Text` does not drag in
@@ -20,8 +41,8 @@ Bundlers tree-shake unused components — pulling `Text` does not drag in
 ## Adding schemas for the agent handshake
 
 If you want `serializeCatalog(...)` to emit JSON Schema for each component
-(so the agent knows what props to send), pair each component with the JSON
-the extractor emitted at `dist/catalog/<Name>/catalog.json`:
+(for the agent to know what props to send), pair each component with the
+JSON the extractor emitted at `dist/catalog/<Name>/catalog.json`:
 
 ```tsx
 import { Text } from '@lynx-js/a2ui-reactlynx/catalog/Text';
@@ -108,7 +129,7 @@ agent will use:
 ```tsx
 function MyChart(props: { data: number[] }) { ... }
 
-const catalog = defineCatalog([Text, Button, MyChart]);
+<A2UI catalogs={[Text, Button, MyChart]} ... />
 // Agent sends `{ component: 'MyChart', data: [...] }` → renders MyChart.
 ```
 
