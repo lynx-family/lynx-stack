@@ -3,16 +3,41 @@
 // LICENSE file in the root directory of this source tree.
 import { useCallback, useState } from 'react';
 
+import { useResizablePanels } from '../hooks/useResizablePanels.js';
 import { OPENUI_SCENARIOS } from '../mock/openui-scenarios.js';
 import type { Protocol } from '../utils/protocol.js';
 
 type CodeView = 'raw' | 'parsed';
+
+const DESKTOP_PREVIEW_MIN_WIDTH = 320;
+const DESKTOP_CODE_MIN_WIDTH = 360;
+const COMPACT_CODE_MIN_HEIGHT = 220;
+const COMPACT_PREVIEW_MIN_HEIGHT = 320;
+const RESIZE_BREAKPOINT = 980;
 
 export function OpenUIDemosPage(_props: { protocol: Protocol }) {
   const [codeView, setCodeView] = useState<CodeView>('raw');
   const [scenarioId, setScenarioId] = useState<string>(
     OPENUI_SCENARIOS[0]?.id ?? '',
   );
+  const {
+    containerRef: pageRef,
+    handleResizeStart: handlePanelResizeStart,
+    isCompactLayout,
+    isResizing: isPanelResizing,
+    primaryPanelStyle: codePanelStyle,
+    secondaryPanelStyle: previewPanelStyle,
+  } = useResizablePanels({
+    breakpoint: RESIZE_BREAKPOINT,
+    compactOffsetSelector: '.sidebar',
+    compactPrimaryMinSize: COMPACT_CODE_MIN_HEIGHT,
+    compactSecondaryMinSize: COMPACT_PREVIEW_MIN_HEIGHT,
+    desktopOffsetSelector: '.sidebar',
+    desktopPrimaryMinSize: DESKTOP_CODE_MIN_WIDTH,
+    desktopSecondaryMinSize: DESKTOP_PREVIEW_MIN_WIDTH,
+    initialPrimarySize: 320,
+    initialSecondarySize: 420,
+  });
 
   const currentScenario = OPENUI_SCENARIOS.find((s) => s.id === scenarioId)
     ?? OPENUI_SCENARIOS[0];
@@ -22,7 +47,10 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
   }, []);
 
   return (
-    <div className='demosPage'>
+    <div
+      ref={pageRef}
+      className={isPanelResizing ? 'demosPage resizing' : 'demosPage'}
+    >
       {/* Sidebar: Scenarios */}
       <aside className='sidebar'>
         <div className='sidebarSection'>
@@ -45,7 +73,7 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
       </aside>
 
       {/* Code Panel: RAW OUTPUT / PARSED JSON */}
-      <div className='codePanel'>
+      <div className='codePanel' style={codePanelStyle}>
         <div className='codePanelToolbar'>
           <div className='codePanelTitle'>
             OpenUI Output
@@ -111,8 +139,19 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
         </div>
       </div>
 
+      <div
+        className={isPanelResizing
+          ? 'panelResizeHandle active'
+          : 'panelResizeHandle'}
+        role='separator'
+        aria-orientation={isCompactLayout ? 'horizontal' : 'vertical'}
+        aria-label='Resize examples and preview panels'
+        title='Drag to resize'
+        onPointerDown={handlePanelResizeStart}
+      />
+
       {/* Preview Panel: Lynx Preview */}
-      <div className='previewPanel'>
+      <div className='previewPanel' style={previewPanelStyle}>
         <div className='previewPanelHeader'>
           <span className='previewPanelTitle'>Lynx Preview</span>
         </div>
