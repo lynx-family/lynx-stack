@@ -19,6 +19,7 @@ import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant
 
 let installed = false;
 let hasHydrated = false;
+const scheduledRemovedSubtreeCleanupTimers = new Set<ReturnType<typeof setTimeout>>();
 
 export function markElementTemplateHydrated(): void {
   hasHydrated = true;
@@ -39,11 +40,20 @@ export function scheduleElementTemplateRemovedSubtreeCleanup(
   if (removedSubtrees.length === 0) {
     return;
   }
-  setTimeout(() => {
+  const timer = setTimeout(() => {
+    scheduledRemovedSubtreeCleanupTimers.delete(timer);
     for (const root of removedSubtrees) {
       root.tearDown();
     }
   }, 10000);
+  scheduledRemovedSubtreeCleanupTimers.add(timer);
+}
+
+export function cancelElementTemplateRemovedSubtreeCleanup(): void {
+  for (const timer of scheduledRemovedSubtreeCleanupTimers) {
+    clearTimeout(timer);
+  }
+  scheduledRemovedSubtreeCleanupTimers.clear();
 }
 
 export function installElementTemplateCommitHook(): void {

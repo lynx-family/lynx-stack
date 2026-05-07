@@ -7,7 +7,9 @@ import {
   installElementTemplateCommitHook,
   markElementTemplateHydrated,
   resetElementTemplateCommitState,
+  scheduleElementTemplateRemovedSubtreeCleanup,
 } from '../../../../src/element-template/background/commit-hook.js';
+import { destroyElementTemplateBackgroundRuntime } from '../../../../src/element-template/background/destroy.js';
 import {
   installElementTemplateHydrationListener,
   resetElementTemplateHydrationListener,
@@ -175,6 +177,32 @@ describe('ElementTemplate commit hook', () => {
 
       vi.advanceTimersByTime(1);
 
+      expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps pending removed subtrees when only the hydration listener is reset', () => {
+    const root = new BackgroundElementTemplateInstance('root');
+    markRemovedSubtreeForCurrentCommit(root);
+
+    resetElementTemplateHydrationListener();
+
+    expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([root]);
+  });
+
+  it('cancels scheduled removed subtree cleanup on background destroy', () => {
+    vi.useFakeTimers();
+    try {
+      const root = new BackgroundElementTemplateInstance('root');
+      const tearDown = vi.spyOn(root, 'tearDown');
+      scheduleElementTemplateRemovedSubtreeCleanup([root]);
+
+      destroyElementTemplateBackgroundRuntime();
+      vi.advanceTimersByTime(10000);
+
+      expect(tearDown).not.toHaveBeenCalled();
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
     } finally {
       vi.useRealTimers();
