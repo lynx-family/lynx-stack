@@ -1,0 +1,50 @@
+[
+  {
+    "createSurface": {
+      "surfaceId": "default",
+      "catalogId": "demo-streaming"
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "root",
+          "component": "Column",
+          "align": "stretch",
+          "children": ["product-card"]
+        },
+        {
+          "id": "product-card",
+          "component": "Card",
+          "child": "product-card-body"
+        },
+        {
+          "id": "product-card-body",
+          "component": "Column",
+          "align": "stretch",
+          "children": ["product-title", "product-desc", "product-price"]
+        },
+        {
+          "id": "product-title",
+          "component": "Text",
+          "variant": "h3",
+          "text": "iPhone 16 Pro Max"
+        },
+        {
+          "id": "product-desc",
+          "component": "Text",
+          "variant": "body",
+          "text": "Powered by the A18 Pro chip with a titanium design, Apple Intelligence support, an advanced triple-camera system, and improved all-day battery life."
+        },
+        {
+          "id": "product-price",
+          "component": "Text",
+          "variant": "h4",
+          "text": "¥9,999 起"
+        }
+      ]
+    }
+  }
+]

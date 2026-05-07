@@ -4,12 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "rsbuild build",
-    "build:lynx": "rspeedy build",
     "dev": "pnpm run build:lynx && rsbuild dev",
+    "dev:agent": "pnpm run check:agent && pnpm run build:lynx && rsbuild dev",
+    "build": "pnpm run build:lynx && rsbuild build",
+    "check:agent": "claude auth status && claude --version",
     "dev:lynx": "rspeedy dev",
-    "preview": "rsbuild preview",
-    "preview:lynx": "rspeedy preview"
+    "build:lynx": "rspeedy build"
   },
   "dependencies": {
     "@codemirror/lang-json": "^6.0.2",

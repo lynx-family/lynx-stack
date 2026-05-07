@@ -9,7 +9,10 @@ import { defineConfig } from '@rsbuild/core';
 import type { RsbuildPlugin } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 
+import { createAgentRunner } from './tools/agent/runner.js';
+
 const PORT = Number(process.env.PORT ?? 3000);
+const agentRunner = createAgentRunner();
 
 // In-memory A2UI payload store. Keeps the dev-bundle / render URLs short
 // enough to fit inside a scannable QR code.
@@ -201,14 +204,16 @@ export default defineConfig({
     setupMiddlewares: [
       (middlewares) => {
         middlewares.unshift((req, res, next) => {
-          if (req.url?.startsWith('/__rspeedy_url')) {
-            const url = buildRspeedyBundleUrl(req.socket.localPort ?? PORT);
-            res.setHeader('Content-Type', 'application/json');
-            res.setHeader('Cache-Control', 'no-store');
-            res.end(JSON.stringify({ url }));
-            return;
-          }
-          next();
+          void agentRunner.handleRequest(req, res, () => {
+            if (req.url?.startsWith('/__rspeedy_url')) {
+              const url = buildRspeedyBundleUrl(req.socket.localPort ?? PORT);
+              res.setHeader('Content-Type', 'application/json');
+              res.setHeader('Cache-Control', 'no-store');
+              res.end(JSON.stringify({ url }));
+              return;
+            }
+            next();
+          });
         });
       },
     ],
