@@ -4,10 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "rspeedy build",
-    "dev": "node scripts/dev.mjs",
+    "build": "pnpm run --parallel \"/^build:(producer|consumer)$/\"",
+    "build:consumer": "rspeedy build --config lynx.config.consumer.js",
+    "build:producer": "rspeedy build --config lynx.config.producer.js",
+    "dev": "node scripts/serve.mjs dev",
     "dev:consumer": "rspeedy dev --config lynx.config.consumer.js",
-    "dev:producer": "rspeedy dev --config lynx.config.producer.js"
+    "dev:producer": "rspeedy dev --config lynx.config.producer.js",
+    "preview": "node scripts/serve.mjs preview",
+    "preview:consumer": "rspeedy preview --config lynx.config.consumer.js",
+    "preview:producer": "rspeedy preview --config lynx.config.producer.js"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*"

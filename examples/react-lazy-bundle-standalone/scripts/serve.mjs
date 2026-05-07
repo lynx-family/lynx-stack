@@ -1,11 +1,18 @@
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 
+const subcommand = process.argv[2];
+if (subcommand !== 'dev' && subcommand !== 'preview') {
+  process.stderr.write(`Usage: node scripts/serve.mjs <dev|preview>\n`);
+  process.exitCode = 1;
+  throw new Error(`unknown subcommand: ${subcommand ?? '(none)'}`);
+}
+
 const rspeedy = process.platform === 'win32' ? 'rspeedy.cmd' : 'rspeedy';
 
 const producer = spawn(
   rspeedy,
-  ['dev', '--config', 'lynx.config.producer.js'],
+  [subcommand, '--config', 'lynx.config.producer.js'],
   { stdio: ['ignore', 'pipe', 'pipe'] },
 );
 
@@ -20,7 +27,7 @@ prefix(producer.stderr, 'producer');
 
 const consumer = spawn(
   rspeedy,
-  ['dev', '--config', 'lynx.config.consumer.js'],
+  [subcommand, '--config', 'lynx.config.consumer.js'],
   { stdio: 'inherit' },
 );
 
