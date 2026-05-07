@@ -21,7 +21,8 @@ const MOCK_AI_RESPONSE: ChatMessage = {
   content: (
     <>
       AI generation is not yet connected. In the meantime, check out the{' '}
-      <a href='#/demos' style={{ textDecoration: 'underline' }}>Demos</a>{' '}
+      <a href='#/examples' style={{ textDecoration: 'underline' }}>Examples</a>
+      {' '}
       tab to see pre-recorded A2UI scenarios with simulated streaming — you can
       even adjust the playback speed.
     </>

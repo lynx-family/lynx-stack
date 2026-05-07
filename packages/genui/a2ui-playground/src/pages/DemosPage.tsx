@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { json } from '@codemirror/lang-json';
 import CodeMirror from '@uiw/react-codemirror';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { MobilePreview } from '../components/MobilePreview.js';
@@ -75,8 +76,18 @@ const ALL_SCENARIOS: Scenario[] = [
   ...DYNAMIC_PRESETS,
 ];
 
+const DESKTOP_PREVIEW_MIN_WIDTH = 320;
+const DESKTOP_CODE_MIN_WIDTH = 360;
+const COMPACT_CODE_MIN_HEIGHT = 220;
+const COMPACT_PREVIEW_MIN_HEIGHT = 320;
+const RESIZE_BREAKPOINT = 980;
+
 function formatJson(value: unknown): string {
   return JSON.stringify(value ?? [], null, 2);
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), Math.max(min, max));
 }
 
 export function DemosPage(props: { protocol: ProtocolVersion }) {
@@ -102,11 +113,27 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
   );
   const [fullscreen, setFullscreen] = useState(false);
   const [liveComponents, setLiveComponents] = useState<string[]>([]);
+  const [previewPanelWidth, setPreviewPanelWidth] = useState(420);
+  const [codePanelHeight, setCodePanelHeight] = useState(320);
+  const [isPanelResizing, setIsPanelResizing] = useState(false);
+  const [isCompactLayout, setIsCompactLayout] = useState(
+    () => window.innerWidth <= RESIZE_BREAKPOINT,
+  );
+  const pageRef = useRef<HTMLDivElement>(null);
   const liveTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const baseUrl = window.location.href.replace(/#.*$/, '');
   const rspeedyDevUrl = useRspeedyDevUrl();
   const lynxUrlSeqRef = useRef(0);
+
+  useEffect(() => {
+    const updateLayoutMode = () => {
+      setIsCompactLayout(window.innerWidth <= RESIZE_BREAKPOINT);
+    };
+    updateLayoutMode();
+    window.addEventListener('resize', updateLayoutMode);
+    return () => window.removeEventListener('resize', updateLayoutMode);
+  }, []);
 
   // For QR codes, replace localhost/127.0.0.1 with the LAN IP so phones can reach it.
   const networkBaseUrl = useMemo(() => {
@@ -315,8 +342,83 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
     setJsonEdited(false);
   }, []);
 
+  const handlePanelResizeStart = useCallback((
+    event: ReactPointerEvent<HTMLDivElement>,
+  ) => {
+    if (fullscreen || !pageRef.current) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const pageEl = pageRef.current;
+    const compact = window.innerWidth <= RESIZE_BREAKPOINT;
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const startPreviewWidth = previewPanelWidth;
+    const startCodeHeight = codePanelHeight;
+
+    setIsPanelResizing(true);
+    document.body.dataset.panelResize = compact ? 'vertical' : 'horizontal';
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      const pageRect = pageEl.getBoundingClientRect();
+
+      if (compact) {
+        const sidebarHeight = pageEl.querySelector('.sidebar')
+          ?.getBoundingClientRect().height ?? 0;
+        const maxCodeHeight = pageRect.height
+          - sidebarHeight
+          - COMPACT_PREVIEW_MIN_HEIGHT;
+        setCodePanelHeight(
+          clamp(
+            startCodeHeight + moveEvent.clientY - startY,
+            COMPACT_CODE_MIN_HEIGHT,
+            maxCodeHeight,
+          ),
+        );
+        return;
+      }
+
+      const sidebarWidth = pageEl.querySelector('.sidebar')
+        ?.getBoundingClientRect().width ?? 0;
+      const maxPreviewWidth = pageRect.width
+        - sidebarWidth
+        - DESKTOP_CODE_MIN_WIDTH;
+      setPreviewPanelWidth(
+        clamp(
+          startPreviewWidth + startX - moveEvent.clientX,
+          DESKTOP_PREVIEW_MIN_WIDTH,
+          maxPreviewWidth,
+        ),
+      );
+    };
+
+    const stopResize = () => {
+      setIsPanelResizing(false);
+      delete document.body.dataset.panelResize;
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', stopResize);
+      window.removeEventListener('pointercancel', stopResize);
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', stopResize);
+    window.addEventListener('pointercancel', stopResize);
+  }, [codePanelHeight, fullscreen, previewPanelWidth]);
+
+  const codePanelStyle = isCompactLayout && !fullscreen
+    ? { height: `${codePanelHeight}px` }
+    : undefined;
+  const previewPanelStyle = !isCompactLayout && !fullscreen
+    ? { width: `${previewPanelWidth}px` }
+    : undefined;
+
   return (
-    <div className='demosPage'>
+    <div
+      ref={pageRef}
+      className={isPanelResizing ? 'demosPage resizing' : 'demosPage'}
+    >
       {/* Sidebar */}
       <aside className='sidebar'>
         <div className='sidebarSection'>
@@ -339,7 +441,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
       </aside>
 
       {/* Code Panel */}
-      <div className='codePanel'>
+      <div className='codePanel' style={codePanelStyle}>
         <div className='codePanelToolbar'>
           <div className='codePanelTitle'>
             A2UI Messages
@@ -392,11 +494,27 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
         {error ? <div className='codeError'>{error}</div> : null}
       </div>
 
+      {fullscreen
+        ? null
+        : (
+          <div
+            className={isPanelResizing
+              ? 'panelResizeHandle active'
+              : 'panelResizeHandle'}
+            role='separator'
+            aria-orientation={isCompactLayout ? 'horizontal' : 'vertical'}
+            aria-label='Resize JSON and preview panels'
+            title='Drag to resize'
+            onPointerDown={handlePanelResizeStart}
+          />
+        )}
+
       {/* Preview Panel */}
       <div
         className={fullscreen
           ? 'previewPanel previewPanelFullscreen'
           : 'previewPanel'}
+        style={previewPanelStyle}
       >
         <div className='previewPanelHeader'>
           <span className='previewPanelTitle'>Lynx Preview</span>

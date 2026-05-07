@@ -10,11 +10,11 @@ import { DemosPage } from './pages/DemosPage.js';
 import type { ProtocolVersion } from './utils/protocol.js';
 import { DEFAULT_PROTOCOL } from './utils/protocol.js';
 
-type Tab = 'chat' | 'demos' | 'components';
+type Tab = 'chat' | 'examples' | 'components';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'chat', label: 'AI Chat' },
-  { id: 'demos', label: 'Demos' },
+  { id: 'examples', label: 'Examples' },
   { id: 'components', label: 'Components' },
 ];
 
@@ -26,7 +26,9 @@ interface Route {
 function parseHash(hash: string): Route {
   const cleaned = hash.replace(/^#\/?/u, '');
   const parts = cleaned.split('/');
-  if (parts[0] === 'demos') return { tab: 'demos' };
+  if (parts[0] === 'examples' || parts[0] === 'demos') {
+    return { tab: 'examples' };
+  }
   if (parts[0] === 'components') {
     return { tab: 'components', componentName: parts[1] };
   }
@@ -70,8 +72,8 @@ export function App() {
 
   const page = (() => {
     switch (route.tab) {
-      case 'demos':
-        return <DemosPage key='demos' protocol={protocol} />;
+      case 'examples':
+        return <DemosPage key='examples' protocol={protocol} />;
       case 'components':
         return (
           <ComponentsPage

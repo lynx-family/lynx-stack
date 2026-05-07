@@ -70,6 +70,22 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+body[data-panel-resize="horizontal"],
+body[data-panel-resize="horizontal"] * {
+  cursor: col-resize !important;
+  user-select: none;
+}
+
+body[data-panel-resize="vertical"],
+body[data-panel-resize="vertical"] * {
+  cursor: row-resize !important;
+  user-select: none;
+}
+
+body[data-panel-resize] iframe {
+  pointer-events: none;
+}
+
 #root {
   height: 100%;
 }
@@ -666,13 +682,17 @@ a {
 }
 
 /* ═══════════════════════════════════════════
-   Demos Page
+   Examples Page
    ═══════════════════════════════════════════ */
 
 .demosPage {
   display: flex;
   flex: 1;
   overflow: hidden;
+}
+
+.demosPage.resizing {
+  user-select: none;
 }
 
 /* ── Sidebar ── */
@@ -783,6 +803,47 @@ a {
   min-width: 0;
   display: flex;
   flex-direction: column;
+}
+
+.panelResizeHandle {
+  position: relative;
+  width: 8px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background: var(--geist-background);
+  border-left: 1px solid var(--geist-border);
+  border-right: 1px solid var(--geist-border);
+  touch-action: none;
+  transition: background var(--geist-transition);
+}
+
+.panelResizeHandle::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--geist-border-hover);
+  opacity: 0.35;
+  transform: translate(-50%, -50%);
+  transition:
+    opacity var(--geist-transition),
+    height var(--geist-transition),
+    background var(--geist-transition);
+}
+
+.panelResizeHandle:hover,
+.panelResizeHandle.active {
+  background: var(--geist-surface);
+}
+
+.panelResizeHandle:hover::before,
+.panelResizeHandle.active::before {
+  height: 56px;
+  opacity: 0.9;
+  background: var(--geist-foreground);
 }
 
 .codePanelToolbar {
@@ -1284,6 +1345,28 @@ a {
 
   .codePanel {
     min-height: 280px;
+    flex: 0 0 auto;
+  }
+
+  .panelResizeHandle {
+    width: 100%;
+    height: 8px;
+    cursor: row-resize;
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid var(--geist-border);
+    border-bottom: 1px solid var(--geist-border);
+  }
+
+  .panelResizeHandle::before {
+    width: 48px;
+    height: 2px;
+  }
+
+  .panelResizeHandle:hover::before,
+  .panelResizeHandle.active::before {
+    width: 64px;
+    height: 2px;
   }
 
   .previewPanel {
