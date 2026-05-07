@@ -12,6 +12,7 @@
  * snapshot-tree ops (`CreateElement`/`InsertBefore`/`SetAttribute`/etc.).
  */
 
+import { snapshotDestroyList } from '../../snapshot/list.js';
 import { unref } from '../../snapshot/ref.js';
 import { snapshotInstanceManager } from '../../snapshot/snapshot.js';
 import type { SnapshotInstance } from '../../snapshot/snapshot.js';
@@ -88,9 +89,20 @@ export function applyNodesRefRemoveChild(
     __RemoveElement(host, childRoot);
   }
   // Portal children aren't linked into a `SnapshotInstance` parent tree, so
-  // the regular `RemoveChild` traversal never reaches them. Tear them down
-  // here so repeated portal mount/unmount cycles don't leak SI entries.
+  // the regular `RemoveChild` traversal never reaches them. Mirror the
+  // teardown that `SnapshotInstance.removeChild` runs (see snapshot.ts):
+  // destroy any `<list>` holders (otherwise native list callbacks +
+  // `gSignMap`/`gRecycleMap` leak), unlink sibling/parent pointers, drop
+  // element refs, and remove from the manager.
   traverseSnapshotInstance(child, v => {
+    if (v.__snapshot_def.isListHolder) {
+      snapshotDestroyList(v);
+    }
+    v.__parent = null;
+    v.__previousSibling = null;
+    v.__nextSibling = null;
+    delete v.__elements;
+    delete v.__element_root;
     snapshotInstanceManager.values.delete(v.__id);
   });
 }
