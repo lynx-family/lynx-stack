@@ -180,6 +180,7 @@ describe('Compiled background Preact updates', () => {
             host.instanceId,
             SLOT_ID,
             removed.instanceId,
+            [removed.instanceId],
           ]);
           envManager.switchToBackground();
           expect(backgroundElementTemplateInstanceManager.get(removed.instanceId)).toBe(removed);
@@ -217,6 +218,7 @@ describe('Compiled background Preact updates', () => {
             host.instanceId,
             SLOT_ID,
             removed.instanceId,
+            [removed.instanceId],
           ]);
           envManager.switchToBackground();
 

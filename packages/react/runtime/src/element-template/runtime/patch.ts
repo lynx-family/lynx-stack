@@ -89,12 +89,18 @@ export function applyElementTemplateUpdateCommands(
         const targetId = stream[i++] as number;
         const elementSlotIndex = stream[i++] as number;
         const childId = stream[i++] as number;
+        const removedSubtreeHandleIds = stream[i++] as number[];
         const nativeRef = resolveHandle(targetId, 'target');
         const childRef = resolveHandle(childId, 'child');
         if (!nativeRef || !childRef) {
           continue;
         }
         __RemoveNodeFromElementTemplate(nativeRef, elementSlotIndex, childRef);
+        // The native API only detaches from the slot. Releasing ET runtime's
+        // strong refs after a successful detach lets JS GC reclaim the subtree.
+        for (const handleId of removedSubtreeHandleIds) {
+          ElementTemplateRegistry.delete(handleId);
+        }
         break;
       }
 

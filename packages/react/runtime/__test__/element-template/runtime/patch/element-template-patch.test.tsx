@@ -353,26 +353,48 @@ describe('ElementTemplate patch stream (apply)', () => {
   it('reports missing child handle on removeNode', () => {
     envManager.switchToMainThread();
     const targetRef = { __isNativeRef: true, id: 'target' } as unknown as ElementRef;
+    const descendantRef = { __isNativeRef: true, id: 'descendant' } as unknown as ElementRef;
     ElementTemplateRegistry.set(1, targetRef);
+    ElementTemplateRegistry.set(12, descendantRef);
 
-    applyElementTemplateUpdateCommands([ElementTemplateUpdateOps.removeNode, 1, 0, 999]);
+    applyElementTemplateUpdateCommands([ElementTemplateUpdateOps.removeNode, 1, 0, 999, [12]]);
 
     expect(mockRemoveNodeFromElementTemplate.mock.calls).toHaveLength(0);
+    expect(ElementTemplateRegistry.has(12)).toBe(true);
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
     expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('child handle 999 not found');
     resetReportedErrors();
   });
 
-  it('resolves insert/remove references from registry', () => {
+  it('reports missing target handle on removeNode without deleting subtree registry entries', () => {
+    envManager.switchToMainThread();
+    const childRef = { __isNativeRef: true, id: 'child' } as unknown as ElementRef;
+    const descendantRef = { __isNativeRef: true, id: 'descendant' } as unknown as ElementRef;
+    ElementTemplateRegistry.set(11, childRef);
+    ElementTemplateRegistry.set(12, descendantRef);
+
+    applyElementTemplateUpdateCommands([ElementTemplateUpdateOps.removeNode, 999, 0, 11, [11, 12]]);
+
+    expect(mockRemoveNodeFromElementTemplate.mock.calls).toHaveLength(0);
+    expect(ElementTemplateRegistry.has(11)).toBe(true);
+    expect(ElementTemplateRegistry.has(12)).toBe(true);
+    const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
+    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('target handle 999 not found');
+    resetReportedErrors();
+  });
+
+  it('removes registry entries for the detached subtree after native remove succeeds', () => {
     envManager.switchToMainThread();
     ElementTemplateRegistry.clear();
 
     const targetRef = { __isNativeRef: true, id: 'target' } as unknown as ElementRef;
     const beforeRef = { __isNativeRef: true, id: 'before' } as unknown as ElementRef;
     const childRef = { __isNativeRef: true, id: 'child' } as unknown as ElementRef;
+    const descendantRef = { __isNativeRef: true, id: 'descendant' } as unknown as ElementRef;
     ElementTemplateRegistry.set(1, targetRef);
     ElementTemplateRegistry.set(10, beforeRef);
     ElementTemplateRegistry.set(11, childRef);
+    ElementTemplateRegistry.set(12, descendantRef);
 
     const stream: ElementTemplateUpdateCommandStream = [
       ElementTemplateUpdateOps.insertNode,
@@ -384,6 +406,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       1,
       0,
       11,
+      [11, 12],
     ];
 
     applyElementTemplateUpdateCommands(stream);
@@ -393,6 +416,10 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(mockInsertNodeToElementTemplate.mock.calls[0]?.[3]).toBe(beforeRef);
     expect(mockRemoveNodeFromElementTemplate.mock.calls[0]?.[0]).toBe(targetRef);
     expect(mockRemoveNodeFromElementTemplate.mock.calls[0]?.[2]).toBe(childRef);
+    expect(ElementTemplateRegistry.has(1)).toBe(true);
+    expect(ElementTemplateRegistry.has(10)).toBe(true);
+    expect(ElementTemplateRegistry.has(11)).toBe(false);
+    expect(ElementTemplateRegistry.has(12)).toBe(false);
   });
 
   it('creates builtin raw-text template from attributeSlots', () => {

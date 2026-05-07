@@ -35,6 +35,7 @@ describe('ElementTemplate alog helpers', () => {
       11,
       1,
       12,
+      [12],
     ])).toEqual([
       {
         op: 'createTemplate',
@@ -62,6 +63,7 @@ describe('ElementTemplate alog helpers', () => {
         targetId: 11,
         elementSlotIndex: 1,
         childId: 12,
+        removedSubtreeHandleIds: [12],
       },
     ]);
   });
