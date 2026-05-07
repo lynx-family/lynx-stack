@@ -10,6 +10,7 @@ import type { NodesRef } from '@lynx-js/types';
 import { serializeNodesRef } from './nodesRef.js';
 import { pendingInsertBefore } from './portalsPending.js';
 import { CHILDREN, MASK, PARENT, VNODE } from '../../shared/render-constants.js';
+import { globalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/globalState.js';
 import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import type { BackgroundSnapshotInstance } from '../snapshot/backgroundSnapshot.js';
 
@@ -106,7 +107,16 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
       removeChild(child) {
         const idx = this.childNodes.indexOf(child);
         if (idx >= 0) this.childNodes.splice(idx, 1);
-        (child as unknown as { __parent: unknown }).__parent = null;
+        (child as unknown as { __parent: unknown; __removed_from_tree: boolean }).__parent = null;
+        // Mirror `BackgroundSnapshotInstance.removeChild`'s bookkeeping:
+        // mark the subtree as removed and queue its root id for commit-time
+        // `tearDown` (which traverses + deletes from
+        // `backgroundSnapshotInstanceManager`). Without this, the portaled
+        // BSI subtree leaks across mount/unmount cycles. Same in pre- and
+        // post-hydrate paths because the BSI was registered in the manager
+        // at construction time regardless of hydration state.
+        (child as unknown as { __removed_from_tree: boolean }).__removed_from_tree = true;
+        globalBackgroundSnapshotInstancesToRemove.push(child.__id);
 
         if (__globalSnapshotPatch) {
           __globalSnapshotPatch.push(

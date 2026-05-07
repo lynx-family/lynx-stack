@@ -23,7 +23,8 @@ import { serializeNodesRef } from '../../../src/snapshot/lynx/nodesRef';
 import { clearPendingPortalInsertBefore } from '../../../src/snapshot/lynx/portalsPending';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree } from '../utils/nativeMethod';
-import { backgroundSnapshotInstanceManager } from '../../../lib/snapshot';
+import { backgroundSnapshotInstanceManager } from '../../../src/snapshot';
+import { globalBackgroundSnapshotInstancesToRemove } from '../../../src/snapshot/lifecycle/patch/globalState';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));
@@ -132,9 +133,9 @@ describe('createPortal', () => {
    *      element from host on the main thread.
    */
   it('mounts/hydrates/unmounts a portal end to end', async () => {
-    // only root element
+    // baseline: each side has its own root SI (main + bg).
     expect(snapshotInstanceManager.values.size).toBe(1);
-    expect(backgroundSnapshotInstanceManager.values.size).toBe(0);
+    expect(backgroundSnapshotInstanceManager.values.size).toBe(1);
 
     function App() {
       const [host, setHost] = useState(null);
@@ -197,6 +198,7 @@ describe('createPortal', () => {
     // `child.parentNode.removeChild(child)` → our `fakeRoot.removeChild` →
     // `nodesRefRemoveChild` patch op. Apply that patch back on main thread
     // to exercise the `nodesRefRemoveChild` apply branch + `__RemoveElement`.
+    vi.useFakeTimers();
     const before = lynx.getNativeApp().callLepusMethod.mock.calls.length;
     globalEnvManager.switchToBackground();
     render(null, __root);
@@ -208,9 +210,16 @@ describe('createPortal', () => {
     // After unmount, the host element no longer has the portaled child.
     expect(findRawText(__root.__element_root, /^hi$/)).toBeNull();
 
-    // only root element
+    // BSI cleanup is debounced 10s by commit's `setTimeout`; advance to
+    // drain. This catches both the regular tree teardown AND the portal
+    // subtree (via `fakeRoot.removeChild` enqueueing into
+    // `globalBackgroundSnapshotInstancesToRemove`).
+    vi.advanceTimersByTime(10000);
+    vi.useRealTimers();
+
+    // back to baseline (only the root SI on each side).
     expect(snapshotInstanceManager.values.size).toBe(1);
-    expect(backgroundSnapshotInstanceManager.values.size).toBe(0);
+    expect(backgroundSnapshotInstanceManager.values.size).toBe(1);
   });
 
   /**
@@ -281,6 +290,56 @@ describe('createPortal', () => {
 
     globalEnvManager.switchToMainThread();
     expect(findRawText(__root.__element_root, /^late$/)).not.toBeNull();
+  });
+
+  /**
+   * Post-hydrate show/hide of a portal must NOT leak
+   * `BackgroundSnapshotInstance` entries into
+   * `backgroundSnapshotInstanceManager`. The bg-side `fakeRoot.removeChild`
+   * mirrors `BackgroundSnapshotInstance.removeChild` and enqueues the
+   * removed subtree id into `globalBackgroundSnapshotInstancesToRemove`
+   * so commit-time `tearDown` (debounced 10s) drops the BSIs.
+   */
+  it('does not leak BSI entries when a portal is toggled off post-hydrate', async () => {
+    let setShow;
+    function App() {
+      const [host, setHost] = useState(null);
+      const [show, _setShow] = useState(false);
+      setShow = _setShow;
+      return (
+        <view>
+          <view data-testid='host' ref={setHost} />
+          {show && host && createPortal(<text data-testid='late'>late</text>, host)}
+        </view>
+      );
+    }
+    mountAndHydrate(<App />);
+
+    // Mount the portal via state change.
+    let before = lynx.getNativeApp().callLepusMethod.mock.calls.length;
+    globalEnvManager.switchToBackground();
+    const sizeBeforeMount = backgroundSnapshotInstanceManager.values.size;
+    setShow(true);
+    await Promise.resolve().then(() => {});
+    flushBackgroundUpdate(before);
+    expect(backgroundSnapshotInstanceManager.values.size).toBeGreaterThan(sizeBeforeMount);
+
+    // Now unmount the portal via state change. `fakeRoot.removeChild` should
+    // queue the portal child's BSI id into the cleanup list, which commit
+    // captures and drains via a debounced 10s `tearDown`.
+    vi.useFakeTimers();
+    before = lynx.getNativeApp().callLepusMethod.mock.calls.length;
+    globalEnvManager.switchToBackground();
+    setShow(false);
+    await Promise.resolve().then(() => {});
+    flushBackgroundUpdate(before);
+    // Drive the debounced commit cleanup. Without the bg-side enqueue in
+    // `fakeRoot.removeChild`, this advance is a no-op and the portal
+    // child BSI stays in the manager.
+    vi.advanceTimersByTime(10000);
+    vi.useRealTimers();
+
+    expect(backgroundSnapshotInstanceManager.values.size).toBe(sizeBeforeMount);
   });
 
   /**
