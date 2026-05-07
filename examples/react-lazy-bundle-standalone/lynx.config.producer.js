@@ -4,10 +4,11 @@ import { fileURLToPath } from 'node:url';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 import { defineConfig } from '@lynx-js/rspeedy';
 
-import { producerDevPort } from './demo-ports.js';
+import { detectLanHost, producerDevPort } from './demo-ports.js';
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const enableBundleAnalysis = !!process.env['RSPEEDY_BUNDLE_ANALYSIS'];
+const producerPublicPath = `http://${detectLanHost()}:${producerDevPort}/`;
 
 export default defineConfig({
   source: {
@@ -19,9 +20,13 @@ export default defineConfig({
     },
   },
   output: {
+    assetPrefix: producerPublicPath,
     distPath: {
       root: path.join(projectRoot, 'dist-producer'),
     },
+  },
+  dev: {
+    assetPrefix: producerPublicPath,
   },
   server: {
     port: producerDevPort,
