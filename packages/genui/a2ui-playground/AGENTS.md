@@ -22,7 +22,7 @@ the Lynx app and passes that `initData` to it.
 
 Web build has two entrypoints (see `rsbuild.config.ts`):
 
-- `src/entry.tsx`: the main control panel (tabs: Demos / Components / Chat)
+- `src/entry.tsx`: the main control panel (tabs: Create / Examples / Components)
 - `src/render.tsx`: a dedicated page (`/render.html`) that hosts a `<lynx-view>`
 
 `/render.html` is the important glue:
