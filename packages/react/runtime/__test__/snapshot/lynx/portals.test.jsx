@@ -7,7 +7,9 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { createContext, createPortal, useContext, useState } from '../../../src/index';
 import { __root } from '../../../src/root';
-import { setupPage, snapshotInstanceManager } from '../../../src/snapshot';
+import { setupPage, SnapshotInstance, snapshotInstanceManager } from '../../../src/snapshot';
+
+const HOLE = null;
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import {
   __globalSnapshotPatch,
@@ -554,6 +556,36 @@ describe('snapshotPatchApply for nodesRef ops', () => {
         childId,
       ])
     ).not.toThrow();
+    expect(snapshotInstanceManager.values.has(childId)).toBe(false);
+  });
+
+  /**
+   * `applyNodesRefRemoveChild` mirrors `SnapshotInstance.removeChild`'s
+   * traversal cleanup. The list-holder branch must call `snapshotDestroyList`
+   * so portaled `<list>` subtrees don't leak `gSignMap` / `gRecycleMap` /
+   * native callbacks. Visible side effects mirror `list.test.jsx`'s
+   * destroy assertions: `__DestroyLifetime` listener is removed, and
+   * the list element's callbacks are replaced with the cleanup trio.
+   */
+  it('runs snapshotDestroyList for portaled list-holder on remove', () => {
+    const listHolder = __SNAPSHOT__(<list>{HOLE}</list>);
+    const childId = -9997;
+    // Register a SI for the list-holder snapshot type, then materialize.
+    new SnapshotInstance(listHolder, childId);
+    snapshotInstanceManager.values.get(childId).ensureElements();
+    const listElement = snapshotInstanceManager.values.get(childId).__elements[0];
+    expect(listElement.componentAtIndex).not.toBeNull();
+
+    globalEnvManager.switchToMainThread();
+    snapshotPatchApply([
+      SnapshotOperation.nodesRefRemoveChild,
+      '[no-such-attr]',
+      childId,
+    ]);
+    // After `snapshotDestroyList`, the cleanup trio replaces the real
+    // callbacks: `componentAtIndex` returns `-1`, the others are no-ops.
+    expect(listElement.componentAtIndex()).toBe(-1);
+    expect(listElement.enqueueComponent()).toBeUndefined();
     expect(snapshotInstanceManager.values.has(childId)).toBe(false);
   });
 });
