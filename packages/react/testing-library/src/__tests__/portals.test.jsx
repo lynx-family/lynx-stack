@@ -1164,3 +1164,84 @@ describe('createPortal with real lynx.createSelectorQuery', () => {
     expect(queryByText('toggle-me')).not.toBeInTheDocument();
   });
 });
+
+describe('portal unmount', () => {
+  it('unmounts a portal', () => {
+    let setShow;
+    const PortalConsumer = ({ host }) => {
+      const [show, _setShow] = useState(true);
+      setShow = _setShow;
+      return show && host && createPortal(<text>toggle-me</text>, host);
+    };
+    const App = () => {
+      const [host, setHost] = useState(null);
+      return (
+        <view>
+          <view data-testid='host' ref={setHost} />
+          <PortalConsumer host={host} />
+        </view>
+      );
+    };
+    const { queryByText } = render(<App />);
+    expect(queryByText('toggle-me')).toBeInTheDocument();
+
+    act(() => setShow(false));
+    expect(queryByText('toggle-me')).not.toBeInTheDocument();
+  });
+
+  /**
+   * Reproducer for the missing `unref` step in `applyNodesRefRemoveChild`:
+   * a `main-thread:ref` callback worklet returns a cleanup function which is
+   * stored on `worklet._unmount` at mount. Normal `SnapshotInstance.removeChild`
+   * runs `unref(child, true)` and that fires the cleanup, but the portal-only
+   * `nodesRefRemoveChild` apply path skips `unref` today, so portaled subtrees
+   * leak the ref and never invoke the cleanup. This test asserts the cleanup
+   * IS invoked on portal unmount; today it fails.
+   */
+  it('runs main-thread:ref cleanup when a portaled subtree is unmounted', () => {
+    globalThis._portalRefMountCount = 0;
+    globalThis._portalRefCleanupCount = 0;
+
+    let setShow;
+    const PortalConsumer = ({ host }) => {
+      const [show, _setShow] = useState(true);
+      setShow = _setShow;
+      return show && host && createPortal(
+        <view
+          main-thread:ref={(el) => {
+            'main thread';
+            if (el) globalThis._portalRefMountCount += 1;
+            return () => {
+              'main thread';
+              globalThis._portalRefCleanupCount += 1;
+            };
+          }}
+        >
+          <text>portaled-with-ref</text>
+        </view>,
+        host,
+      );
+    };
+    const App = () => {
+      const [host, setHost] = useState(null);
+      return (
+        <view>
+          <view data-testid='host' ref={setHost} />
+          <PortalConsumer host={host} />
+        </view>
+      );
+    };
+
+    const { queryByText } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    expect(queryByText('portaled-with-ref')).toBeInTheDocument();
+    expect(globalThis._portalRefMountCount).toBe(1);
+    expect(globalThis._portalRefCleanupCount).toBe(0);
+
+    act(() => setShow(false));
+    expect(queryByText('portaled-with-ref')).not.toBeInTheDocument();
+    expect(globalThis._portalRefCleanupCount).toBe(1);
+  });
+});

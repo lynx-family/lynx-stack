@@ -12,6 +12,7 @@
  * snapshot-tree ops (`CreateElement`/`InsertBefore`/`SetAttribute`/etc.).
  */
 
+import { unref } from '../../snapshot/ref.js';
 import { snapshotInstanceManager } from '../../snapshot/snapshot.js';
 import { traverseSnapshotInstance } from '../../snapshot/utils.js';
 
@@ -89,6 +90,11 @@ export function applyNodesRefRemoveChild(
   // The child was inserted by an earlier `nodesRefInsertBefore` op which
   // calls `ensureElements`, so `__element_root` is always set here.
   const childRoot = child.__element_root!;
+  // Mirror the worklet-ref teardown that `SnapshotInstance.removeChild`
+  // runs. Without this, `main-thread:ref` callbacks on portaled subtrees
+  // leak — `worklet._unmount` is never invoked, and any `WorkletRefImpl`
+  // keeps pointing at the removed element.
+  unref(child, true);
   const host = resolveNodesRefHost(identifier);
   // If the host is gone, its entire DOM subtree (including this portaled
   // child) was already removed by whoever unmounted the host — the
