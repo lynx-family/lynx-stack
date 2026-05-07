@@ -1,11 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as elementTemplateAlog from '../../../../src/element-template/debug/alog.js';
+import { GlobalCommitContext } from '../../../../src/element-template/background/commit-context.js';
 import {
   installElementTemplateHydrationListener,
   resetElementTemplateHydrationListener,
 } from '../../../../src/element-template/background/hydration-listener.js';
-import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
+import {
+  BackgroundElementTemplateInstance,
+  BackgroundElementTemplateSlot,
+} from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { PerformanceTimingFlags, PipelineOrigins } from '../../../../src/element-template/lynx/performance.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
@@ -78,6 +82,85 @@ describe('ElementTemplate hydration listener', () => {
     expect(backgroundElementTemplateInstanceManager.get(oldId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(-1)).toBe(after);
     expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
+  });
+
+  it('schedules delayed cleanup for removed subtrees produced during hydration', () => {
+    vi.useFakeTimers();
+    try {
+      envManager.switchToBackground();
+      installElementTemplateHydrationListener();
+
+      const backgroundRoot = __root as BackgroundElementTemplateInstance;
+      const host = new BackgroundElementTemplateInstance('_et_test');
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      host.appendChild(slot);
+      backgroundRoot.appendChild(host);
+      const stale = new BackgroundElementTemplateInstance('_et_stale');
+
+      envManager.switchToMainThread();
+      lynx.getJSContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.hydrate,
+        data: [
+          {
+            ...createSerializedTemplate(host.instanceId, '_et_test'),
+            elementSlots: [[createSerializedTemplate(stale.instanceId, '_et_stale')]],
+          },
+        ],
+      });
+
+      envManager.switchToBackground();
+      vi.advanceTimersByTime(9999);
+      expect(backgroundElementTemplateInstanceManager.get(stale.instanceId)).toBe(stale);
+
+      vi.advanceTimersByTime(1);
+      expect(backgroundElementTemplateInstanceManager.get(stale.instanceId)).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('resets commit state when hydrate update dispatch throws', () => {
+    vi.useFakeTimers();
+    const dispatchError = new Error('hydrate update dispatch failed');
+    let dispatchSpy: ReturnType<typeof vi.spyOn> | undefined;
+
+    try {
+      envManager.switchToBackground();
+      installElementTemplateHydrationListener();
+      dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
+        throw dispatchError;
+      });
+
+      const backgroundRoot = __root as BackgroundElementTemplateInstance;
+      const host = new BackgroundElementTemplateInstance('_et_test');
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      host.appendChild(slot);
+      backgroundRoot.appendChild(host);
+      const stale = new BackgroundElementTemplateInstance('_et_stale');
+
+      envManager.switchToMainThread();
+      lynx.getJSContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.hydrate,
+        data: [
+          {
+            ...createSerializedTemplate(host.instanceId, '_et_test'),
+            elementSlots: [[createSerializedTemplate(stale.instanceId, '_et_stale')]],
+          },
+        ],
+      });
+
+      expect(() => envManager.switchToBackground()).toThrow(dispatchError);
+      expect(GlobalCommitContext.ops).toEqual([]);
+      expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+
+      vi.advanceTimersByTime(10000);
+      expect(backgroundElementTemplateInstanceManager.get(stale.instanceId)).toBeUndefined();
+    } finally {
+      dispatchSpy?.mockRestore();
+      vi.useRealTimers();
+    }
   });
 
   it('does nothing when events are flushed on main thread', () => {

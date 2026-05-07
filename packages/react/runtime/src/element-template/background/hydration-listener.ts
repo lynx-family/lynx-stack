@@ -1,8 +1,16 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { GlobalCommitContext, resetGlobalCommitContext } from './commit-context.js';
-import { markElementTemplateHydrated, resetElementTemplateCommitState } from './commit-hook.js';
+import {
+  GlobalCommitContext,
+  resetGlobalCommitContext,
+  takeRemovedSubtreesForCurrentCommit,
+} from './commit-context.js';
+import {
+  markElementTemplateHydrated,
+  resetElementTemplateCommitState,
+  scheduleElementTemplateRemovedSubtreeCleanup,
+} from './commit-hook.js';
 import { hydrateIntoContext } from './hydrate.js';
 import { BackgroundElementTemplateInstance } from './instance.js';
 import { formatElementTemplateUpdateCommands, printElementTemplateTreeToString } from '../debug/alog.js';
@@ -81,15 +89,20 @@ export function installElementTemplateHydrationListener(): void {
             ),
         );
       }
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: {
-          ops: GlobalCommitContext.ops,
-          flushOptions: GlobalCommitContext.flushOptions,
-          flowIds: GlobalCommitContext.flowIds,
-        },
-      });
-      resetGlobalCommitContext();
+      const removedSubtrees = takeRemovedSubtreesForCurrentCommit();
+      try {
+        lynx.getCoreContext().dispatchEvent({
+          type: ElementTemplateLifecycleConstant.update,
+          data: {
+            ops: GlobalCommitContext.ops,
+            flushOptions: GlobalCommitContext.flushOptions,
+            flowIds: GlobalCommitContext.flowIds,
+          },
+        });
+      } finally {
+        resetGlobalCommitContext();
+        scheduleElementTemplateRemovedSubtreeCleanup(removedSubtrees);
+      }
     }
   };
 

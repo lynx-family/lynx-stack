@@ -456,6 +456,7 @@ function bindHydrationHandleId(
 ): boolean {
   try {
     backgroundElementTemplateInstanceManager.updateId(instance.instanceId, handleId);
+    instance.markCreateEmittedForHydration();
     return true;
   } catch (error) {
     if (__DEV__) {

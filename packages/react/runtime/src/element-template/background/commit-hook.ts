@@ -4,7 +4,12 @@
 
 import { options } from 'preact';
 
-import { GlobalCommitContext, resetGlobalCommitContext } from './commit-context.js';
+import {
+  GlobalCommitContext,
+  resetGlobalCommitContext,
+  takeRemovedSubtreesForCurrentCommit,
+} from './commit-context.js';
+import type { BackgroundElementTemplateInstance } from './instance.js';
 import { COMMIT } from '../../shared/render-constants.js';
 import { hook } from '../../utils.js';
 import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
@@ -26,6 +31,19 @@ export function isElementTemplateHydrated(): boolean {
 export function resetElementTemplateCommitState(): void {
   hasHydrated = false;
   resetGlobalCommitContext();
+}
+
+export function scheduleElementTemplateRemovedSubtreeCleanup(
+  removedSubtrees: BackgroundElementTemplateInstance[],
+): void {
+  if (removedSubtrees.length === 0) {
+    return;
+  }
+  setTimeout(() => {
+    for (const root of removedSubtrees) {
+      root.tearDown();
+    }
+  }, 10000);
 }
 
 export function installElementTemplateCommitHook(): void {
@@ -69,15 +87,23 @@ export function installElementTemplateCommitHook(): void {
         );
       }
 
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: {
-          ops: GlobalCommitContext.ops,
-          flushOptions: GlobalCommitContext.flushOptions,
-          flowIds: GlobalCommitContext.flowIds,
-        },
-      });
-      resetGlobalCommitContext();
+      const removedSubtrees = takeRemovedSubtreesForCurrentCommit();
+      try {
+        lynx.getCoreContext().dispatchEvent({
+          type: ElementTemplateLifecycleConstant.update,
+          data: {
+            ops: GlobalCommitContext.ops,
+            flushOptions: GlobalCommitContext.flushOptions,
+            flowIds: GlobalCommitContext.flowIds,
+          },
+        });
+      } finally {
+        resetGlobalCommitContext();
+        // Match Snapshot's cleanup boundary: start the delayed teardown only
+        // after the bridge dispatch attempt, so background JS objects are not
+        // torn down before main-thread detach observes the same commit.
+        scheduleElementTemplateRemovedSubtreeCleanup(removedSubtrees);
+      }
     }
 
     originalCommit?.(vnode, commitQueue);

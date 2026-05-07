@@ -12,7 +12,12 @@ import {
   installElementTemplateHydrationListener,
   resetElementTemplateHydrationListener,
 } from '../../../../src/element-template/background/hydration-listener.js';
-import { GlobalCommitContext } from '../../../../src/element-template/background/commit-context.js';
+import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
+import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
+import {
+  GlobalCommitContext,
+  markRemovedSubtreeForCurrentCommit,
+} from '../../../../src/element-template/background/commit-context.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import { PipelineOrigins } from '../../../../src/element-template/lynx/performance.js';
@@ -39,6 +44,8 @@ describe('ElementTemplate commit hook', () => {
 
   beforeEach(() => {
     resetElementTemplateCommitState();
+    backgroundElementTemplateInstanceManager.clear();
+    backgroundElementTemplateInstanceManager.nextId = 0;
     updateEvents = [];
     envManager.resetEnv('background');
     installElementTemplateCommitHook();
@@ -151,6 +158,52 @@ describe('ElementTemplate commit hook', () => {
 
     expect(formatSpy).not.toHaveBeenCalled();
     expect(alog.mock.calls).toHaveLength(0);
+  });
+
+  it('schedules delayed cleanup from the current commit non-payload state', () => {
+    vi.useFakeTimers();
+    try {
+      markElementTemplateHydrated();
+      const root = new BackgroundElementTemplateInstance('root');
+      markRemovedSubtreeForCurrentCommit(root);
+      GlobalCommitContext.ops = createRawTextOps(1, 'flush');
+
+      options.__c?.({} as unknown as object, []);
+      expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+      vi.advanceTimersByTime(9999);
+      expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBe(root);
+
+      vi.advanceTimersByTime(1);
+
+      expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('resets commit state when update dispatch throws', () => {
+    vi.useFakeTimers();
+    const dispatchError = new Error('update dispatch failed');
+    const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
+      throw dispatchError;
+    });
+
+    try {
+      markElementTemplateHydrated();
+      const root = new BackgroundElementTemplateInstance('root');
+      markRemovedSubtreeForCurrentCommit(root);
+      GlobalCommitContext.ops = createRawTextOps(1, 'flush');
+
+      expect(() => options.__c?.({} as unknown as object, [])).toThrow(dispatchError);
+      expect(GlobalCommitContext.ops).toEqual([]);
+      expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+
+      vi.advanceTimersByTime(10000);
+      expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
+    } finally {
+      dispatchSpy.mockRestore();
+      vi.useRealTimers();
+    }
   });
 
   it('is idempotent', () => {

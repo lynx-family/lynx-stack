@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { GlobalCommitContext } from './commit-context.js';
+import { GlobalCommitContext, markRemovedSubtreeForCurrentCommit } from './commit-context.js';
 import { isElementTemplateHydrated } from './commit-hook.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
@@ -248,6 +248,9 @@ export class BackgroundElementTemplateInstance {
           slotId,
           child.instanceId,
         );
+        // The removed JS object graph may outlive the detach until GC, so keep
+        // it pending and tear it down on the Snapshot-aligned delayed boundary.
+        markRemovedSubtreeForCurrentCommit(child);
       }
       return;
     }
@@ -281,6 +284,12 @@ export class BackgroundElementTemplateInstance {
     if (this.instanceId) {
       backgroundElementTemplateInstanceManager.values.delete(this.instanceId);
     }
+  }
+
+  markCreateEmittedForHydration(): void {
+    // Hydration binds this object to a template that already exists on the main
+    // thread; future updates must treat it as created without emitting create.
+    this.hasEmittedCreate = true;
   }
 
   setAttribute(key: string, value: unknown): void {
@@ -354,6 +363,28 @@ export class BackgroundElementTemplateSlot extends BackgroundElementTemplateInst
 
   constructor() {
     super('slot');
+  }
+}
+
+export function collectElementTemplateSubtreeHandleIds(
+  root: BackgroundElementTemplateInstance,
+): number[] {
+  const handles: number[] = [];
+  collectElementTemplateSubtreeHandleIdsImpl(root, handles);
+  return handles;
+}
+
+function collectElementTemplateSubtreeHandleIdsImpl(
+  instance: BackgroundElementTemplateInstance,
+  handles: number[],
+): void {
+  if (!(instance instanceof BackgroundElementTemplateSlot) && instance.instanceId !== 0) {
+    handles.push(instance.instanceId);
+  }
+  let child = instance.firstChild;
+  while (child) {
+    collectElementTemplateSubtreeHandleIdsImpl(child, handles);
+    child = child.nextSibling;
   }
 }
 

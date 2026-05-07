@@ -427,6 +427,7 @@ describe('BackgroundElementTemplateInstance', () => {
         0,
         child.instanceId,
       ]);
+      expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([child]);
     });
 
     it('supports silent removal from a slot container', () => {
@@ -442,6 +443,7 @@ describe('BackgroundElementTemplateInstance', () => {
 
       expect(parent.elementSlots[0]).toEqual([]);
       expect(GlobalCommitContext.ops).toEqual([]);
+      expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([]);
     });
 
     it('clears cached elementSlots when removing a slot child', () => {
