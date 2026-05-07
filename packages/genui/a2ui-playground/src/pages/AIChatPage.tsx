@@ -22,6 +22,14 @@ import { DEFAULT_DEMO_URL } from '../utils/demoUrl.js';
 import type { ProtocolVersion } from '../utils/protocol.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
 
+interface StreamDebugState {
+  phase: string;
+  lastEvent: string;
+  deltaChunks: number;
+  deltaChars: number;
+  hasA2UI: boolean;
+}
+
 interface ChatMessage {
   id: string;
   role: 'user' | 'ai';
@@ -50,6 +58,41 @@ function formatA2UIJson(payload: AgentA2UIEvent): string {
   );
 }
 
+function getInitialStreamDebugState(): StreamDebugState {
+  return {
+    phase: 'idle',
+    lastEvent: 'idle',
+    deltaChunks: 0,
+    deltaChars: 0,
+    hasA2UI: false,
+  };
+}
+
+function formatStatusPhase(payload: Record<string, unknown>): string {
+  const phase = typeof payload.phase === 'string' ? payload.phase : '';
+  const subtype = typeof payload.subtype === 'string' ? payload.subtype : '';
+  const status = typeof payload.status === 'string' ? payload.status : '';
+  const type = typeof payload.type === 'string' ? payload.type : '';
+
+  if (phase) {
+    return phase;
+  }
+  if (type === 'system' && subtype && status) {
+    return `${subtype}:${status}`;
+  }
+  if (type === 'system' && subtype) {
+    return subtype;
+  }
+  if (status) {
+    return status;
+  }
+  return 'streaming';
+}
+
+function debugLog(event: string, payload: unknown): void {
+  console.debug(`[AIChat debug] ${event}`, payload);
+}
+
 export function AIChatPage(
   props: { protocol: ProtocolVersion },
 ) {
@@ -64,6 +107,9 @@ export function AIChatPage(
   const [transportError, setTransportError] = useState<string>('');
   const [renderUrl, setRenderUrl] = useState<string>('');
   const [previewQrError, setPreviewQrError] = useState<string>('');
+  const [streamDebug, setStreamDebug] = useState<StreamDebugState>(
+    getInitialStreamDebugState(),
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const streamControllerRef = useRef<AbortController | null>(null);
   const streamingMessageIdRef = useRef<string | null>(null);
@@ -222,24 +268,53 @@ export function AIChatPage(
     setInputValue('');
     setTransportError('');
     setAgentStatus('streaming');
+    setStreamDebug({
+      phase: 'requesting',
+      lastEvent: 'send',
+      deltaChunks: 0,
+      deltaChars: 0,
+      hasA2UI: false,
+    });
     streamingMessageIdRef.current = assistantMessageId;
+    debugLog('send', { text });
 
     try {
       const activeSessionId = await ensureSession();
       const controller = streamChat({
         sessionId: activeSessionId,
         text,
+        onStatus: (payload) => {
+          const phase = formatStatusPhase(payload);
+          setStreamDebug((prev) => ({
+            ...prev,
+            phase,
+            lastEvent: 'status',
+          }));
+          debugLog('status', payload);
+        },
         onDelta: (payload) => {
-          if (!payload.text) {
+          const deltaText = payload.text;
+          if (!deltaText) {
             return;
           }
 
+          setStreamDebug((prev) => ({
+            ...prev,
+            phase: 'streaming-text',
+            lastEvent: 'delta',
+            deltaChunks: prev.deltaChunks + 1,
+            deltaChars: prev.deltaChars + deltaText.length,
+          }));
+          debugLog('delta', {
+            text: deltaText,
+            chunkLength: deltaText.length,
+          });
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === assistantMessageId
                 ? {
                   ...msg,
-                  content: msg.content + payload.text,
+                  content: msg.content + deltaText,
                   status: 'streaming',
                 }
                 : msg
@@ -248,6 +323,12 @@ export function AIChatPage(
         },
         onDone: (payload) => {
           streamControllerRef.current = null;
+          setStreamDebug((prev) => ({
+            ...prev,
+            phase: 'done',
+            lastEvent: 'done',
+          }));
+          debugLog('done', payload);
           finalizeAssistantMessage(payload);
           setAgentStatus(
             agentHealth?.status === 'ready' ? 'ready' : 'unavailable',
@@ -257,6 +338,12 @@ export function AIChatPage(
           streamControllerRef.current = null;
           const message = payload.message ?? payload.reason
             ?? 'Agent request failed.';
+          setStreamDebug((prev) => ({
+            ...prev,
+            phase: 'error',
+            lastEvent: 'error',
+          }));
+          debugLog('error', payload);
           appendAssistantError(message);
           setTransportError(message);
           setAgentStatus(
@@ -264,6 +351,13 @@ export function AIChatPage(
           );
         },
         onA2UI: (payload) => {
+          setStreamDebug((prev) => ({
+            ...prev,
+            phase: 'a2ui-ready',
+            lastEvent: 'a2ui',
+            hasA2UI: true,
+          }));
+          debugLog('a2ui', payload);
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === assistantMessageId
@@ -283,6 +377,12 @@ export function AIChatPage(
       const message = error instanceof Error
         ? error.message
         : 'Failed to start agent request.';
+      setStreamDebug((prev) => ({
+        ...prev,
+        phase: 'error',
+        lastEvent: 'error',
+      }));
+      debugLog('request-error', error);
       appendAssistantError(message);
       setTransportError(message);
       setAgentStatus(agentHealth?.status === 'ready' ? 'ready' : 'unavailable');
@@ -331,6 +431,21 @@ export function AIChatPage(
           {transportError
             ? <p className='chatHeaderSub'>{transportError}</p>
             : null}
+          <div className='chatDebugPanel'>
+            <span className='chatDebugChip'>Phase: {streamDebug.phase}</span>
+            <span className='chatDebugChip'>
+              Last event: {streamDebug.lastEvent}
+            </span>
+            <span className='chatDebugChip'>
+              Delta chunks: {String(streamDebug.deltaChunks)}
+            </span>
+            <span className='chatDebugChip'>
+              Delta chars: {String(streamDebug.deltaChars)}
+            </span>
+            <span className='chatDebugChip'>
+              A2UI: {streamDebug.hasA2UI ? 'yes' : 'no'}
+            </span>
+          </div>
         </div>
 
         <div className='chatMessages'>

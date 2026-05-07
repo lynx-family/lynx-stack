@@ -6,6 +6,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import { normalizeA2UIResult } from './a2uiNormalizer.js';
 import { createClaudeCodeAdapter } from './claudeCodeAdapter.js';
+import { buildA2UIPrompt } from './promptBuilder.js';
 import { resolveProvider } from './providerResolver.js';
 import { createSessionManager } from './sessionManager.js';
 import { closeSse, initSse, writeSseEvent } from './sse.js';
@@ -120,8 +121,10 @@ function handleChat(
     return;
   }
 
+  const prompt = buildA2UIPrompt({ userText: text });
+
   const run = claudeCodeAdapter.prepareTextRun({
-    prompt: text,
+    prompt,
     cwd: process.cwd(),
     onStatus(payload) {
       if (!completed) {

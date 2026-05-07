@@ -974,6 +974,25 @@ a {
   margin: 0;
 }
 
+.chatDebugPanel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.chatDebugChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: var(--geist-surface);
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-family: var(--geist-mono);
+}
+
 .chatMessages {
   flex: 1;
   overflow-y: auto;
