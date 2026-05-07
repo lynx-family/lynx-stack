@@ -41,19 +41,6 @@ export default {
             expect(args.encodeData.elementTemplate)
               .toMatchInlineSnapshot(`
                 {
-                  "__et_builtin_raw_text__": {
-                    "attributesArray": [
-                      {
-                        "attrSlotIndex": 0,
-                        "binding": "slot",
-                        "key": "text",
-                        "kind": "attribute",
-                      },
-                    ],
-                    "children": [],
-                    "kind": "element",
-                    "type": "raw-text",
-                  },
                   "_et_a99d6_8660e_1": {
                     "attributesArray": [],
                     "children": [
@@ -78,6 +65,19 @@ export default {
                     ],
                     "kind": "element",
                     "type": "view",
+                  },
+                  "_et_builtin_raw_text": {
+                    "attributesArray": [
+                      {
+                        "attrSlotIndex": 0,
+                        "binding": "slot",
+                        "key": "text",
+                        "kind": "attribute",
+                      },
+                    ],
+                    "children": [],
+                    "kind": "element",
+                    "type": "raw-text",
                   },
                 }
               `);

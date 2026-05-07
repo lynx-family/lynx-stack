@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderOpcodesIntoElementTemplate } from '../../../../src/element-template/runtime/render/render-opcodes.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
-import { ElementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
+import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import {
   __OpAttr,
   __OpBegin,
@@ -21,7 +21,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
   beforeEach(() => {
     createElementTemplate.mockReset();
     vi.stubGlobal('__CreateElementTemplate', createElementTemplate);
-    ElementTemplateRegistry.clear();
+    elementTemplateRegistry.clear();
     resetTemplateId();
   });
 
@@ -43,13 +43,13 @@ describe('renderOpcodesIntoElementTemplate', () => {
 
     expect(result.rootRefs).toEqual([rootTextRef]);
     expect(createElementTemplate).toHaveBeenCalledWith(
-      '__et_builtin_raw_text__',
+      '_et_builtin_raw_text',
       null,
       ['hello'],
       [],
       -1,
     );
-    expect(ElementTemplateRegistry.get(-1)).toBe(rootTextRef);
+    expect(elementTemplateRegistry.get(-1)).toBe(rootTextRef);
   });
 
   it('throws when text is emitted outside of an element slot', () => {

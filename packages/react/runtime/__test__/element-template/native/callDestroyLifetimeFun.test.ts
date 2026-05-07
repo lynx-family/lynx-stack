@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  GlobalCommitContext,
+  globalCommitContext,
   markRemovedSubtreeForCurrentCommit,
 } from '../../../src/element-template/background/commit-context.js';
 import { resetElementTemplateCommitState } from '../../../src/element-template/background/commit-hook.js';
@@ -38,7 +38,7 @@ describe('callDestroyLifetimeFun', () => {
     const child = new BackgroundElementTemplateInstance('_et_child');
     root.appendChild(child);
     markRemovedSubtreeForCurrentCommit(root);
-    GlobalCommitContext.ops = [
+    globalCommitContext.ops = [
       ElementTemplateUpdateOps.createTemplate,
       child.instanceId,
       '_et_child',
@@ -49,8 +49,8 @@ describe('callDestroyLifetimeFun', () => {
 
     callDestroyLifetimeFun();
 
-    expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([]);
-    expect(GlobalCommitContext.ops).toEqual([]);
+    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(globalCommitContext.ops).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.values.size).toBe(0);
   });
 

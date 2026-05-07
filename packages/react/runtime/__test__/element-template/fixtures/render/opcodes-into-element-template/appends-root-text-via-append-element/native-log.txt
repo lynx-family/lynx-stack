@@ -1,7 +1,7 @@
 Array [
   Array [
     "__CreateElementTemplate",
-    "__et_builtin_raw_text__",
+    "_et_builtin_raw_text",
     null,
     Array [
       "root",
@@ -12,6 +12,6 @@ Array [
   Array [
     "__AppendElement",
     "root",
-    "<__et_builtin_raw_text__ />",
+    "<_et_builtin_raw_text />",
   ],
 ]

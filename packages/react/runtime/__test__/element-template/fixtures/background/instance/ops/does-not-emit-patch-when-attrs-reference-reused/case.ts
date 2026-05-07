@@ -1,6 +1,6 @@
 import {
   BackgroundElementTemplateInstance,
-  GlobalCommitContext,
+  globalCommitContext,
   resetGlobalCommitContext,
   runCase,
 } from '../../_shared.js';
@@ -13,7 +13,7 @@ export function run() {
     resetGlobalCommitContext();
 
     instance.setAttribute('attributeSlots', [props]);
-    const stream = GlobalCommitContext.ops;
+    const stream = globalCommitContext.ops;
     resetGlobalCommitContext();
 
     return stream;

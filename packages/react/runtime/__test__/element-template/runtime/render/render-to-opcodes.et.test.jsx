@@ -108,7 +108,7 @@ describe('Element Template renderToOpcodes', () => {
     };
 
     try {
-      renderToString(h('__et_builtin_raw_text__', { attributeSlots: ['cleanup'] }));
+      renderToString(h('_et_builtin_raw_text', { attributeSlots: ['cleanup'] }));
     } finally {
       options.unmount = previousUnmount;
     }

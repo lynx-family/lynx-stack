@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { GlobalCommitContext, markRemovedSubtreeForCurrentCommit, resetGlobalCommitContext } from './commit-context.js';
+import { globalCommitContext, markRemovedSubtreeForCurrentCommit, resetGlobalCommitContext } from './commit-context.js';
 import { BUILTIN_RAW_TEXT_TEMPLATE_KEY } from './instance.js';
 import type { BackgroundElementTemplateInstance } from './instance.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
@@ -20,7 +20,7 @@ export function hydrate(
 ): ElementTemplateUpdateCommandStream {
   resetGlobalCommitContext();
   hydrateIntoContext(serialized, instance);
-  return GlobalCommitContext.ops;
+  return globalCommitContext.ops;
 }
 
 export function hydrateIntoContext(
@@ -181,7 +181,7 @@ function hydrateElementSlot(
       const movedChild = pendingMoves.get(newIndex);
       if (movedChild) {
         keepCurrentSerializedChild = true;
-        GlobalCommitContext.ops.push(
+        globalCommitContext.ops.push(
           ElementTemplateUpdateOps.insertNode,
           parent.instanceId,
           slotId,
@@ -193,7 +193,7 @@ function hydrateElementSlot(
         const insertedChild = insertions[newIndex]!;
         keepCurrentSerializedChild = true;
         emitCreateSubtree(insertedChild);
-        GlobalCommitContext.ops.push(
+        globalCommitContext.ops.push(
           ElementTemplateUpdateOps.insertNode,
           parent.instanceId,
           slotId,
@@ -223,7 +223,7 @@ function emitSerializedSubtreeRemove(
   // slot, so serialized data is the source of truth for registry cleanup.
   const removedSubtreeHandleIds: number[] = [];
   collectSerializedSubtreeHandleIdsInto(serialized, removedSubtreeHandleIds);
-  GlobalCommitContext.ops.push(
+  globalCommitContext.ops.push(
     ElementTemplateUpdateOps.removeNode,
     parent.instanceId,
     slotId,
@@ -300,7 +300,7 @@ function hydrateAttributeSlots(
       // JSON serialization turns undefined array slots into null on the main-thread payload.
       continue;
     }
-    GlobalCommitContext.ops.push(
+    globalCommitContext.ops.push(
       ElementTemplateUpdateOps.setAttribute,
       handleId,
       slotIndex,

@@ -2,7 +2,7 @@ import { vi } from 'vitest';
 
 import { renderOpcodesIntoElementTemplate } from '../../../../../src/element-template/runtime/render/render-opcodes.js';
 import { resetTemplateId } from '../../../../../src/element-template/runtime/template/handle.js';
-import { ElementTemplateRegistry } from '../../../../../src/element-template/runtime/template/registry.js';
+import { elementTemplateRegistry } from '../../../../../src/element-template/runtime/template/registry.js';
 import {
   __OpAttr,
   __OpBegin,
@@ -25,7 +25,7 @@ export interface CaseContext {
 
 const templates = [
   {
-    templateId: '__et_builtin_raw_text__',
+    templateId: '_et_builtin_raw_text',
     compiledTemplate: {
       kind: 'element',
       type: 'raw-text',
@@ -109,7 +109,7 @@ const templates = [
 
 function setup(): CaseContext {
   vi.resetAllMocks();
-  ElementTemplateRegistry.clear();
+  elementTemplateRegistry.clear();
   resetTemplateId();
 
   const installed = installMockNativePapi({ clearTemplatesOnCleanup: false });
@@ -131,4 +131,4 @@ export function runCase<T>(runner: (context: CaseContext) => T): T {
   }
 }
 
-export { ElementTemplateRegistry, renderOpcodesIntoElementTemplate, __OpAttr, __OpBegin, __OpEnd, __OpSlot, __OpText };
+export { elementTemplateRegistry, renderOpcodesIntoElementTemplate, __OpAttr, __OpBegin, __OpEnd, __OpSlot, __OpText };

@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { GlobalCommitContext, markRemovedSubtreeForCurrentCommit } from './commit-context.js';
+import { globalCommitContext, markRemovedSubtreeForCurrentCommit } from './commit-context.js';
 import { isElementTemplateHydrated } from './commit-hook.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
@@ -10,10 +10,10 @@ import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import type { ElementTemplateUpdateCommandStream, RuntimeOptions, SerializableValue } from '../protocol/types.js';
 
 function pushOp(...items: ElementTemplateUpdateCommandStream): void {
-  GlobalCommitContext.ops.push(...items);
+  globalCommitContext.ops.push(...items);
 }
 
-export const BUILTIN_RAW_TEXT_TEMPLATE_KEY = '__et_builtin_raw_text__';
+export const BUILTIN_RAW_TEXT_TEMPLATE_KEY = '_et_builtin_raw_text';
 
 function isBuiltinRawTextTemplateKey(type: string): boolean {
   return type === BUILTIN_RAW_TEXT_TEMPLATE_KEY;

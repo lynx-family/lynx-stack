@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { installOnMtsDestruction, onMtsDestruction } from '../../../src/element-template/native/mts-destroy.js';
-import { ElementTemplateRegistry } from '../../../src/element-template/runtime/template/registry.js';
+import { elementTemplateRegistry } from '../../../src/element-template/runtime/template/registry.js';
 
 type LynxWithNative = typeof globalThis & {
   lynx: {
@@ -14,7 +14,7 @@ type LynxWithNative = typeof globalThis & {
 
 describe('mts-destroy', () => {
   afterEach(() => {
-    ElementTemplateRegistry.clear();
+    elementTemplateRegistry.clear();
     vi.doUnmock('../../../src/element-template/native/patch-listener.js');
     vi.doUnmock('../../../src/element-template/runtime/template/registry.js');
   });
@@ -73,12 +73,12 @@ describe('mts-destroy', () => {
 
   it('clears the element template registry on destruction', () => {
     const registryRef = {} as ElementRef;
-    ElementTemplateRegistry.set(-1, registryRef);
-    expect(ElementTemplateRegistry.get(-1)).toBe(registryRef);
+    elementTemplateRegistry.set(-1, registryRef);
+    expect(elementTemplateRegistry.get(-1)).toBe(registryRef);
 
     onMtsDestruction();
 
-    expect(ElementTemplateRegistry.get(-1)).toBeUndefined();
+    expect(elementTemplateRegistry.get(-1)).toBeUndefined();
   });
 
   it('clears registry and removes native listener even when patch listener reset throws', async () => {
@@ -95,7 +95,7 @@ describe('mts-destroy', () => {
       }),
     }));
     vi.doMock('../../../src/element-template/runtime/template/registry.js', () => ({
-      ElementTemplateRegistry: {
+      elementTemplateRegistry: {
         clear,
       },
     }));

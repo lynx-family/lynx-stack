@@ -5,7 +5,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
-  GlobalCommitContext,
+  globalCommitContext,
   markRemovedSubtreeForCurrentCommit,
   resetGlobalCommitContext,
   takeRemovedSubtreesForCurrentCommit,
@@ -31,11 +31,11 @@ describe('ElementTemplate commit context', () => {
     markRemovedSubtreeForCurrentCommit(root);
     markRemovedSubtreeForCurrentCommit(root);
 
-    expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([root]);
+    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([root]);
     expect({
-      ops: GlobalCommitContext.ops,
-      flushOptions: GlobalCommitContext.flushOptions,
-      flowIds: GlobalCommitContext.flowIds,
+      ops: globalCommitContext.ops,
+      flushOptions: globalCommitContext.flushOptions,
+      flowIds: globalCommitContext.flowIds,
     }).not.toHaveProperty('removedSubtrees');
   });
 
@@ -53,7 +53,7 @@ describe('ElementTemplate commit context', () => {
 
     resetGlobalCommitContext();
 
-    expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
   });
 
   it('collects only handles that are registered in the main-thread registry', () => {

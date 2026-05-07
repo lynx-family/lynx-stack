@@ -1,5 +1,5 @@
 import {
-  GlobalCommitContext,
+  globalCommitContext,
   resetGlobalCommitContext,
 } from '../../../../../src/element-template/background/commit-context.js';
 import {
@@ -24,6 +24,6 @@ export function runCase<T>(runner: () => T): T {
 export {
   BackgroundElementTemplateInstance,
   BackgroundElementTemplateSlot,
-  GlobalCommitContext,
+  globalCommitContext,
   resetGlobalCommitContext,
 };

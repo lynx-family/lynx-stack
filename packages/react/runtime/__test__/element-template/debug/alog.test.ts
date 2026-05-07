@@ -86,7 +86,7 @@ describe('ElementTemplate alog helpers', () => {
   it('prints a compact background tree summary', () => {
     const root = new BackgroundElementTemplateInstance('root');
     const card = new BackgroundElementTemplateInstance('_et_card', ['title']);
-    const text = new BackgroundElementTemplateInstance('__et_builtin_raw_text__', ['hello']);
+    const text = new BackgroundElementTemplateInstance('_et_builtin_raw_text', ['hello']);
 
     root.appendChild(card);
     card.appendChild(text);
@@ -100,7 +100,7 @@ describe('ElementTemplate alog helpers', () => {
     expect(output).toContain('attributeSlots: ["title"]');
     expect(output).toContain('elementSlots[0]: [3]');
     expect(output).not.toContain('elementSlots[1]');
-    expect(output).toContain('__et_builtin_raw_text__#3');
+    expect(output).toContain('_et_builtin_raw_text#3');
     expect(output).toContain('attributeSlots: ["hello"]');
   });
 

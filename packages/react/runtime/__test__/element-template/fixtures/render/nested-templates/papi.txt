@@ -1,7 +1,7 @@
 [
   [
     "__CreateElementTemplate",
-    "__et_builtin_raw_text__",
+    "_et_builtin_raw_text",
     null,
     [
       "X"
@@ -22,7 +22,7 @@
             "text": "X"
           },
           "children": [],
-          "templateId": "__et_builtin_raw_text__"
+          "templateId": "_et_builtin_raw_text"
         }
       ]
     ],
@@ -51,7 +51,7 @@
                     "text": "X"
                   },
                   "children": [],
-                  "templateId": "__et_builtin_raw_text__"
+                  "templateId": "_et_builtin_raw_text"
                 }
               ]
             }
