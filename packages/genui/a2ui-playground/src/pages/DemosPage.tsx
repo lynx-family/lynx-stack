@@ -120,6 +120,7 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
     () => window.innerWidth <= RESIZE_BREAKPOINT,
   );
   const pageRef = useRef<HTMLDivElement>(null);
+  const resizeStopRef = useRef<((updateState?: boolean) => void) | null>(null);
   const liveTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const baseUrl = window.location.href.replace(/#.*$/, '');
@@ -133,6 +134,12 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
     updateLayoutMode();
     window.addEventListener('resize', updateLayoutMode);
     return () => window.removeEventListener('resize', updateLayoutMode);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      resizeStopRef.current?.(false);
+    };
   }, []);
 
   // For QR codes, replace localhost/127.0.0.1 with the LAN IP so phones can reach it.
@@ -394,17 +401,22 @@ export function DemosPage(props: { protocol: ProtocolVersion }) {
       );
     };
 
-    const stopResize = () => {
-      setIsPanelResizing(false);
+    const stopResize = (updateState = true) => {
+      if (updateState) {
+        setIsPanelResizing(false);
+      }
       delete document.body.dataset.panelResize;
       window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', stopResize);
-      window.removeEventListener('pointercancel', stopResize);
+      window.removeEventListener('pointerup', handlePointerStop);
+      window.removeEventListener('pointercancel', handlePointerStop);
+      resizeStopRef.current = null;
     };
+    const handlePointerStop = () => stopResize();
 
+    resizeStopRef.current = stopResize;
     window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup', stopResize);
-    window.addEventListener('pointercancel', stopResize);
+    window.addEventListener('pointerup', handlePointerStop);
+    window.addEventListener('pointercancel', handlePointerStop);
   }, [codePanelHeight, fullscreen, previewPanelWidth]);
 
   const codePanelStyle = isCompactLayout && !fullscreen
