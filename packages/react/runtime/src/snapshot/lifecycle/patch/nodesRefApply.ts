@@ -14,6 +14,7 @@
 
 import { unref } from '../../snapshot/ref.js';
 import { snapshotInstanceManager } from '../../snapshot/snapshot.js';
+import type { SnapshotInstance } from '../../snapshot/snapshot.js';
 import { traverseSnapshotInstance } from '../../snapshot/utils.js';
 
 /**
@@ -35,18 +36,9 @@ export function resolveNodesRefHost(identifier: string): FiberElement | undefine
 
 export function applyNodesRefInsertBefore(
   identifier: string,
-  childId: number,
+  child: SnapshotInstance,
   beforeId: number | undefined,
 ): void {
-  const child = snapshotInstanceManager.values.get(childId);
-  if (!child) {
-    throw new Error(
-      `[createPortal] cannot insert child #${childId} under "${identifier}": `
-        + `child SnapshotInstance is not registered on the main thread. This usually `
-        + `means the portal was given a stale background reference (e.g. mounted twice, `
-        + `or the patch buffer was cleared between background and main thread).`,
-    );
-  }
   const host = resolveNodesRefHost(identifier);
   if (!host) {
     throw new Error(
@@ -77,16 +69,8 @@ export function applyNodesRefInsertBefore(
 
 export function applyNodesRefRemoveChild(
   identifier: string,
-  childId: number,
+  child: SnapshotInstance,
 ): void {
-  const child = snapshotInstanceManager.values.get(childId);
-  if (!child) {
-    throw new Error(
-      `[createPortal] cannot remove child #${childId} under "${identifier}": `
-        + `child SnapshotInstance is not registered on the main thread (likely a `
-        + `double-unmount).`,
-    );
-  }
   // The child was inserted by an earlier `nodesRefInsertBefore` op which
   // calls `ensureElements`, so `__element_root` is always set here.
   const childRoot = child.__element_root!;

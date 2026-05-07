@@ -450,12 +450,14 @@ describe('snapshotPatchApply for nodesRef ops', () => {
   });
 
   /**
-   * Caller bug if the childId isn't registered with the manager (stale
-   * background reference, double-unmount, etc.) — surface it loudly via the
-   * non-null assertion instead of soft-failing with a ctx-not-found event.
+   * Unknown `childId` is a bg/main desync (stale background reference,
+   * double-unmount, etc.) — soft-fail with a `ctx-not-found` event so
+   * background can re-sync, mirroring the regular `InsertBefore` /
+   * `RemoveChild` ops in this dispatcher.
    */
-  it('throws on unknown childId in nodesRefInsertBefore', () => {
+  it('soft-fails on unknown childId in nodesRefInsertBefore', () => {
     globalEnvManager.switchToMainThread();
+    lynx.getJSContext().dispatchEvent.mockClear();
     expect(() =>
       snapshotPatchApply([
         SnapshotOperation.nodesRefInsertBefore,
@@ -463,22 +465,43 @@ describe('snapshotPatchApply for nodesRef ops', () => {
         99999,
         undefined,
       ])
-    ).toThrowErrorMatchingInlineSnapshot(
-      `[Error: [createPortal] cannot insert child #99999 under "[react-ref-999-0]": child SnapshotInstance is not registered on the main thread. This usually means the portal was given a stale background reference (e.g. mounted twice, or the patch buffer was cleared between background and main thread).]`,
-    );
+    ).not.toThrow();
+    expect(lynx.getJSContext().dispatchEvent.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          {
+            "data": {
+              "id": 99999,
+            },
+            "type": "Lynx.Error.CtxNotFound",
+          },
+        ],
+      ]
+    `);
   });
 
-  it('throws on unknown childId in nodesRefRemoveChild', () => {
+  it('soft-fails on unknown childId in nodesRefRemoveChild', () => {
     globalEnvManager.switchToMainThread();
+    lynx.getJSContext().dispatchEvent.mockClear();
     expect(() =>
       snapshotPatchApply([
         SnapshotOperation.nodesRefRemoveChild,
         '[react-ref-999-0]',
         99999,
       ])
-    ).toThrowErrorMatchingInlineSnapshot(
-      `[Error: [createPortal] cannot remove child #99999 under "[react-ref-999-0]": child SnapshotInstance is not registered on the main thread (likely a double-unmount).]`,
-    );
+    ).not.toThrow();
+    expect(lynx.getJSContext().dispatchEvent.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          {
+            "data": {
+              "id": 99999,
+            },
+            "type": "Lynx.Error.CtxNotFound",
+          },
+        ],
+      ]
+    `);
   });
 
   /**

@@ -66,13 +66,23 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         const identifier = snapshotPatch[++i] as string;
         const childId = snapshotPatch[++i] as number;
         const beforeId = snapshotPatch[++i] as number | undefined;
-        applyNodesRefInsertBefore(identifier, childId, beforeId);
+        const child = snapshotInstanceManager.values.get(childId);
+        if (child) {
+          applyNodesRefInsertBefore(identifier, child, beforeId);
+        } else {
+          sendCtxNotFoundEventToBackground(childId);
+        }
         break;
       }
       case SnapshotOperation.nodesRefRemoveChild: {
         const identifier = snapshotPatch[++i] as string;
         const childId = snapshotPatch[++i] as number;
-        applyNodesRefRemoveChild(identifier, childId);
+        const child = snapshotInstanceManager.values.get(childId);
+        if (child) {
+          applyNodesRefRemoveChild(identifier, child);
+        } else {
+          sendCtxNotFoundEventToBackground(childId);
+        }
         break;
       }
       case SnapshotOperation.SetAttribute: {
