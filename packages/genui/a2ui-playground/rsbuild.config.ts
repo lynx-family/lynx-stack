@@ -6,7 +6,10 @@ import { networkInterfaces } from 'node:os';
 import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 
+import { createAgentRunner } from './tools/agent/runner.js';
+
 const PORT = Number(process.env.PORT ?? 3000);
+const agentRunner = createAgentRunner();
 
 function findLocalIp(): string {
   const ifaces = networkInterfaces();
@@ -61,14 +64,16 @@ export default defineConfig({
     setupMiddlewares: [
       (middlewares) => {
         middlewares.unshift((req, res, next) => {
-          if (req.url?.startsWith('/__rspeedy_url')) {
-            const url = buildRspeedyBundleUrl(req.socket.localPort ?? PORT);
-            res.setHeader('Content-Type', 'application/json');
-            res.setHeader('Cache-Control', 'no-store');
-            res.end(JSON.stringify({ url }));
-            return;
-          }
-          next();
+          void agentRunner.handleRequest(req, res, () => {
+            if (req.url?.startsWith('/__rspeedy_url')) {
+              const url = buildRspeedyBundleUrl(req.socket.localPort ?? PORT);
+              res.setHeader('Content-Type', 'application/json');
+              res.setHeader('Cache-Control', 'no-store');
+              res.end(JSON.stringify({ url }));
+              return;
+            }
+            next();
+          });
         });
       },
     ],

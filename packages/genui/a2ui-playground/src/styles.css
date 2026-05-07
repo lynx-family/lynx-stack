@@ -956,6 +956,12 @@ a {
   flex-shrink: 0;
 }
 
+.chatHeaderContent {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 .chatHeaderTitle {
   font-size: 15px;
   font-weight: 600;
@@ -998,6 +1004,36 @@ a {
   background: var(--geist-surface);
   border: 1px solid var(--geist-border);
   border-bottom-left-radius: 4px;
+}
+
+.chatCodeBlock {
+  margin-top: 12px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  overflow: hidden;
+  background: var(--geist-background);
+}
+
+.chatCodeBlockHeader {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-surface);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--geist-secondary);
+}
+
+.chatCodeBlockPre {
+  margin: 0;
+  padding: 12px;
+  overflow-x: auto;
+  background: var(--geist-code-bg);
+  color: var(--geist-code-fg);
+  font-family: var(--geist-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .chatInputArea {

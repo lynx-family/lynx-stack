@@ -83,6 +83,34 @@ pnpm -C packages/genui/a2ui-playground build:lynx
 pnpm -C packages/genui/a2ui-playground preview:lynx
 ```
 
+## Recent Agent Integration
+
+The `AI Chat` page now supports a real Claude Code-backed local Agent flow instead of
+the original mock-only response path.
+
+- Default local entrypoint for the integrated experience:
+
+```bash
+pnpm -C packages/genui/a2ui-playground dev:agent
+```
+
+- Preflight check for Claude Code auth and CLI availability:
+
+```bash
+pnpm -C packages/genui/a2ui-playground check:agent
+```
+
+Implementation notes:
+
+- The browser only talks to same-origin `__agent/*` routes exposed by the web dev server.
+- The dev server acts as a local bridge and spawns Claude Code as a child process.
+- Claude Code output is translated into SSE events such as `status`, `delta`, `a2ui`,
+  `done`, and `error`.
+- Parsed A2UI payloads update the right-side Lynx preview and are also rendered as a
+  formatted JSON code block inside the assistant message.
+- The current implementation is Claude Code-first and keeps token-provider support only
+  as a reserved extension point.
+
 ## Output
 
 - The generated assets are configured to land in `www/` (see `lynx.config.ts` `output.distPath.root`).

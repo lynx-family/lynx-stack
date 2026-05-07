@@ -4,6 +4,7 @@
 import castGrid from './mock/messages/cast-grid.json';
 import citywalkList from './mock/messages/citywalk-list.json';
 import fridgeSearch from './mock/messages/fridge-search.json';
+import productCard from './mock/messages/product-card.json';
 import recs from './mock/messages/recs.json';
 import tripPlanner from './mock/messages/trip-planner.json';
 import workoutPlan from './mock/messages/workout-plan.json';
@@ -70,6 +71,14 @@ export interface DynamicPreset {
 }
 
 export const STATIC_DEMOS: StaticDemo[] = [
+  {
+    id: 'product-card',
+    title: 'Product Card',
+    description:
+      'A single-product card that presents the title, product summary, and price from top to bottom.',
+    tags: tagsFromMessages(productCard),
+    messages: productCard,
+  },
   {
     id: 'recs',
     title: 'Date-Night Restaurant Picks',
