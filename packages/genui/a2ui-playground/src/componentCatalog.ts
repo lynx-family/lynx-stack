@@ -35,13 +35,13 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     props: [
       {
         name: 'text',
-        type: 'TextValue',
-        description: 'Content to display',
+        type: 'string | { path: string }',
+        description: 'Literal text or path binding',
       },
       {
-        name: 'usageHint',
+        name: 'variant',
         type: 'string',
-        description: 'Text style variant: h1, h2, h3, body, caption',
+        description: 'Text style variant: h1, h2, h3, h4, h5, caption, body',
         default: 'body',
       },
     ],
@@ -67,7 +67,12 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       {
         name: 'action',
         type: 'object',
-        description: 'Action to trigger on press',
+        description: 'v0.9 event action to trigger on press',
+      },
+      {
+        name: 'variant',
+        type: 'string',
+        description: 'Button style variant: primary, borderless',
       },
     ],
     usage: {
@@ -82,33 +87,33 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
   {
     name: 'Image',
     category: 'Display',
-    description: 'Displays an image from a URL with optional dimensions.',
+    description: 'Displays an image from a URL or data binding.',
     props: [
-      { name: 'src', type: 'string', description: 'Image URL' },
       {
-        name: 'alt',
+        name: 'url',
+        type: 'string | { path: string }',
+        description: 'Image URL or path binding',
+      },
+      {
+        name: 'fit',
         type: 'string',
-        description: 'Alternative text for accessibility',
+        description: 'Object fit: contain, cover, fill, none, scale-down',
       },
       {
-        name: 'width',
-        type: 'number',
-        description: 'Image width in logical pixels',
-      },
-      {
-        name: 'height',
-        type: 'number',
-        description: 'Image height in logical pixels',
+        name: 'variant',
+        type: 'string',
+        description:
+          'Image style variant: icon, avatar, smallFeature, mediumFeature, largeFeature, header',
+        default: 'mediumFeature',
       },
     ],
     usage: {
       '0.9': {
-        id: 'hero-image',
+        id: 'lynx-image',
         component: 'Image',
-        src: 'https://example.com/hero.png',
-        alt: 'Hero banner',
-        width: 320,
-        height: 180,
+        url: 'https://picsum.photos/seed/a2ui-image-preview/320/180',
+        fit: 'cover',
+        variant: 'mediumFeature',
       },
     },
   },
@@ -118,48 +123,35 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     description: 'A visual separator line used to divide content sections.',
     props: [
       {
-        name: 'direction',
+        name: 'axis',
         type: 'string',
         description: 'Divider orientation: horizontal, vertical',
         default: 'horizontal',
-      },
-      {
-        name: 'color',
-        type: 'string',
-        description: 'Divider line color as a CSS color value',
       },
     ],
     usage: {
       '0.9': {
         id: 'section-divider',
         component: 'Divider',
-        direction: 'horizontal',
-        color: '#E0E0E0',
+        axis: 'horizontal',
       },
     },
   },
   {
     name: 'Card',
     category: 'Layout',
-    description: 'A container with visual elevation or outline styling.',
+    description: 'A container that renders one child component inside a card.',
     props: [
       {
         name: 'child',
         type: 'string',
         description: 'ID of the child component rendered inside the card',
       },
-      {
-        name: 'usageHint',
-        type: 'string',
-        description: 'Card style: elevated, outlined, filled',
-        default: 'elevated',
-      },
     ],
     usage: {
       '0.9': {
         id: 'info-card',
         component: 'Card',
-        usageHint: 'elevated',
         child: 'info-card-content',
       },
     },
@@ -176,13 +168,13 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
         description: 'Child components arranged horizontally',
       },
       {
-        name: 'alignment',
+        name: 'align',
         type: 'string',
         description: 'Vertical alignment: start, center, end, stretch',
-        default: 'center',
+        default: 'stretch',
       },
       {
-        name: 'distribution',
+        name: 'justify',
         type: 'string',
         description:
           'Horizontal distribution: start, center, end, spaceBetween, spaceAround, spaceEvenly',
@@ -193,8 +185,8 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       '0.9': {
         id: 'action-row',
         component: 'Row',
-        alignment: 'center',
-        distribution: 'spaceBetween',
+        align: 'center',
+        justify: 'spaceBetween',
         children: ['left-item', 'right-item'],
       },
     },
@@ -211,17 +203,25 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
         description: 'Child components arranged vertically',
       },
       {
-        name: 'usageHint',
+        name: 'align',
         type: 'string',
-        description: 'Column role: root-column, group',
-        default: 'group',
+        description: 'Horizontal alignment: start, center, end, stretch',
+        default: 'stretch',
+      },
+      {
+        name: 'justify',
+        type: 'string',
+        description:
+          'Vertical distribution: start, center, end, spaceBetween, spaceAround, spaceEvenly',
+        default: 'start',
       },
     ],
     usage: {
       '0.9': {
         id: 'main-column',
         component: 'Column',
-        usageHint: 'root-column',
+        align: 'start',
+        justify: 'start',
         children: ['header', 'body', 'footer'],
       },
     },
@@ -238,22 +238,24 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
         description: 'Child components or template for list items',
       },
       {
-        name: 'template',
-        type: 'object',
-        description: 'Template for dynamic item rendering with data binding',
+        name: 'direction',
+        type: 'string',
+        description: 'Scroll direction: horizontal, vertical',
+        default: 'vertical',
+      },
+      {
+        name: 'align',
+        type: 'string',
+        description: 'Item alignment: start, center, end, stretch',
       },
     ],
     usage: {
       '0.9': {
         id: 'item-list',
         component: 'List',
+        direction: 'vertical',
+        align: 'stretch',
         children: ['item-1', 'item-2', 'item-3'],
-        template: {
-          dataSource: '/items',
-          component: 'Text',
-          variant: 'body',
-          text: { path: '/items/$/name' },
-        },
       },
     },
   },
@@ -264,19 +266,15 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     props: [
       {
         name: 'label',
-        type: 'string',
-        description: 'Label text displayed next to the checkbox',
+        type: 'string | { path: string }',
+        description:
+          'Label text or path binding displayed next to the checkbox',
       },
       {
-        name: 'checked',
-        type: 'boolean',
-        description: 'Whether the checkbox is checked',
+        name: 'value',
+        type: 'boolean | { path: string }',
+        description: 'Whether the checkbox is checked, or a path binding',
         default: 'false',
-      },
-      {
-        name: 'action',
-        type: 'object',
-        description: 'Action triggered when the checkbox is toggled',
       },
     ],
     usage: {
@@ -284,8 +282,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
         id: 'agree-checkbox',
         component: 'CheckBox',
         label: 'I agree to the terms',
-        checked: false,
-        action: { event: { name: 'toggle_agree' } },
+        value: false,
       },
     },
   },
@@ -296,32 +293,29 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       'A group of mutually exclusive radio options with selection support.',
     props: [
       {
-        name: 'options',
-        type: 'array',
-        description: 'List of radio options with label and value',
+        name: 'items',
+        type: 'string[] | { path: string }',
+        description: 'List of radio option labels, or a path binding',
       },
       {
-        name: 'selected',
-        type: 'string',
+        name: 'value',
+        type: 'string | { path: string }',
         description: 'Value of the currently selected option',
       },
       {
-        name: 'action',
-        type: 'object',
-        description: 'Action triggered when the selection changes',
+        name: 'usageHint',
+        type: 'string',
+        description: 'Visual style hint: default, card, row',
+        default: 'default',
       },
     ],
     usage: {
       '0.9': {
         id: 'size-picker',
         component: 'RadioGroup',
-        options: [
-          { label: 'Small', value: 'sm' },
-          { label: 'Medium', value: 'md' },
-          { label: 'Large', value: 'lg' },
-        ],
-        selected: 'md',
-        action: { event: { name: 'select_size' } },
+        items: ['Small', 'Medium', 'Large'],
+        value: 'Medium',
+        usageHint: 'card',
       },
     },
   },

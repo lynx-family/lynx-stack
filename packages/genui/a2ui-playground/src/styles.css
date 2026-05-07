@@ -1095,6 +1095,95 @@ a {
   margin-bottom: 24px;
 }
 
+.compSectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.compSectionHeader .compSubheading {
+  margin: 0;
+}
+
+.compCopyBtn {
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-sm);
+  background: var(--geist-background);
+  color: var(--geist-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--geist-transition);
+}
+
+.compCopyBtn:hover {
+  color: var(--geist-foreground);
+  border-color: var(--geist-border-hover);
+}
+
+.compUsageEditor {
+  margin-bottom: 24px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  overflow: hidden;
+}
+
+.compUsageEditor .cm-editor {
+  height: auto;
+  max-height: 520px;
+  font-family: var(--geist-mono);
+  font-size: 13px;
+  background: var(--geist-code-bg);
+}
+
+.compUsageEditor .cm-scroller {
+  max-height: 520px;
+  overflow: auto;
+}
+
+.compUsageError {
+  margin: -16px 0 24px;
+  padding: 8px 12px;
+  border: 1px solid var(--geist-error);
+  border-radius: var(--geist-radius-sm);
+  background: var(--geist-error-light);
+  color: var(--geist-error);
+  font-family: var(--geist-mono);
+  font-size: 12px;
+}
+
+.compPreview {
+  width: 100%;
+  height: 360px;
+  margin-bottom: 24px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-surface);
+  overflow: hidden;
+}
+
+.compPreviewIframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--geist-background);
+}
+
+.compPreviewInvalid {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: var(--geist-secondary);
+  font-size: 13px;
+  text-align: center;
+}
+
 /* ── Category Grid (All Components view) ── */
 .compCategorySection {
   margin-bottom: 32px;

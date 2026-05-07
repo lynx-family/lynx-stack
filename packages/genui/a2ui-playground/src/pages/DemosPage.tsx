@@ -13,6 +13,7 @@ import {
   componentsByMessage,
 } from '../demos.js';
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
+import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_DEMO_URL } from '../utils/demoUrl.js';
 import type { ProtocolVersion } from '../utils/protocol.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
@@ -33,17 +34,6 @@ function formatUrlForDisplay(url: string): string {
   const head = url.slice(0, 44);
   const tail = url.slice(-24);
   return `${head}…${tail}`;
-}
-
-async function copyToClipboard(text: string): Promise<boolean> {
-  try {
-    const clipboard = window.navigator?.clipboard;
-    if (!clipboard) return false;
-    await clipboard.writeText(text);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function useRspeedyDevUrl(): string {
