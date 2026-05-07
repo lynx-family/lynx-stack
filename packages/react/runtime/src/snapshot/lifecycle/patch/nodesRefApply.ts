@@ -60,12 +60,16 @@ export function applyNodesRefInsertBefore(
   // `ensureElements` always sets `__element_root` for any registered
   // snapshot type, so the `!` is just there for the type checker.
   const childRoot = child.__element_root!;
-  if (beforeId !== undefined) {
-    const before = snapshotInstanceManager.values.get(beforeId);
-    if (before?.__element_root) {
-      __InsertElementBefore(host, childRoot, before.__element_root);
-      return;
-    }
+  // `beforeId` is `null` for append-style inserts: preact passes `before =
+  // null`, our `before?.__id` evaluates to `undefined`, and the patch's JSON
+  // round-trip turns that `undefined` slot into `null`. A numeric `beforeId`
+  // is always the `__id` of a sibling that the background already inserted
+  // into the same `fakeRoot` (its `nodesRefInsertBefore` ran earlier in this
+  // same patch and both sides share `snapshotInstanceManager`) — so the
+  // non-null assertions hold by framework invariant.
+  if (beforeId != null) {
+    __InsertElementBefore(host, childRoot, snapshotInstanceManager.values.get(beforeId)!.__element_root);
+    return;
   }
   __AppendElement(host, childRoot);
 }

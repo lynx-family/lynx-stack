@@ -336,7 +336,9 @@ describe('createPortal', () => {
    * Prepending a keyed sibling to a multi-child portal forces preact to
    * call `fakeRoot.insertBefore(newChild, existingChild)` — covers the
    * `before?.__id` truthy branch + apply-side `__InsertElementBefore`
-   * (vs the trailing `__AppendElement`) path.
+   * (vs the trailing `__AppendElement`) path. Asserts children order
+   * under the host so a regression that lands 'c' at the tail
+   * (i.e. silently falling back to `__AppendElement`) fails the test.
    */
   it('prepends to a keyed multi-child portal', async () => {
     let prependC;
@@ -346,7 +348,7 @@ describe('createPortal', () => {
       prependC = () => setItems(['c', 'a', 'b']);
       return (
         <view>
-          <view ref={setHost} />
+          <view data-testid='host' ref={setHost} />
           {host && createPortal(
             <>
               {items.map((label) => (
@@ -363,16 +365,25 @@ describe('createPortal', () => {
 
     mountAndHydrate(<App />);
 
+    // Pre-prepend baseline: portal renders [a, b] under host in that order.
+    {
+      globalEnvManager.switchToMainThread();
+      const host = findByTestId(__root.__element_root, 'host');
+      const labels = host.children.map((child) => findRawText(child, /.+/)?.props?.text);
+      expect(labels).toEqual(['a', 'b']);
+    }
+
     const before = lynx.getNativeApp().callLepusMethod.mock.calls.length;
     globalEnvManager.switchToBackground();
     prependC();
     await Promise.resolve().then(() => {});
     flushBackgroundUpdate(before);
 
+    // After prepend: 'c' must land at the head, NOT the tail.
     globalEnvManager.switchToMainThread();
-    expect(findRawText(__root.__element_root, /^a$/)).not.toBeNull();
-    expect(findRawText(__root.__element_root, /^b$/)).not.toBeNull();
-    expect(findRawText(__root.__element_root, /^c$/)).not.toBeNull();
+    const host = findByTestId(__root.__element_root, 'host');
+    const labels = host.children.map((child) => findRawText(child, /.+/)?.props?.text);
+    expect(labels).toEqual(['c', 'a', 'b']);
   });
 
   /**
