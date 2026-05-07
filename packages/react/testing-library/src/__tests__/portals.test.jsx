@@ -1244,4 +1244,60 @@ describe('portal unmount', () => {
     expect(queryByText('portaled-with-ref')).not.toBeInTheDocument();
     expect(globalThis._portalRefCleanupCount).toBe(1);
   });
+
+  /**
+   * Reproducer for the missing `snapshotDestroyList` step in
+   * `applyNodesRefRemoveChild`: a portaled `<list>` registers itself in
+   * `gSignMap` / `gRecycleMap` and installs native list callbacks on mount.
+   * The regular `SnapshotInstance.removeChild` traversal calls
+   * `snapshotDestroyList(v)` for list-holder nodes; the portal-only path
+   * skipped that, so unmounting the portal would leak the native list
+   * callbacks (`__UpdateListCallbacks` is the observable side-effect we
+   * spy on here).
+   */
+  it('destroys portaled <list> native callbacks when the portal is unmounted', () => {
+    const updateCallbacks = vi.spyOn(
+      lynxTestingEnv.mainThread.globalThis,
+      '__UpdateListCallbacks',
+    );
+
+    let setShow;
+    const PortalConsumer = ({ host }) => {
+      const [show, _setShow] = useState(true);
+      setShow = _setShow;
+      return show && host && createPortal(
+        <list data-testid='portaled-list'>
+          <list-item item-key='0' full-span>
+            <text>item</text>
+          </list-item>
+        </list>,
+        host,
+      );
+    };
+    const App = () => {
+      const [host, setHost] = useState(null);
+      return (
+        <view>
+          <view data-testid='host' ref={setHost} />
+          <PortalConsumer host={host} />
+        </view>
+      );
+    };
+
+    const { queryByTestId } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    expect(queryByTestId('portaled-list')).toBeInTheDocument();
+    const callsAfterMount = updateCallbacks.mock.calls.length;
+    expect(callsAfterMount).toBeGreaterThan(0);
+
+    act(() => setShow(false));
+    expect(queryByTestId('portaled-list')).not.toBeInTheDocument();
+
+    // After unmount, `snapshotDestroyList` must have run an additional
+    // `__UpdateListCallbacks(list, () => -1, () => {}, () => {})` to detach
+    // the native callbacks. Without the fix, this stays at `callsAfterMount`.
+    expect(updateCallbacks.mock.calls.length).toBeGreaterThan(callsAfterMount);
+  });
 });
