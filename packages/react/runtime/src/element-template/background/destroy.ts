@@ -5,6 +5,7 @@
 import { cancelElementTemplateRemovedSubtreeCleanup, resetElementTemplateCommitState } from './commit-hook.js';
 import { resetElementTemplateHydrationListener } from './hydration-listener.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
+import { clearEventHandlers } from '../prop-adapters/event.js';
 
 export function destroyElementTemplateBackgroundRuntime(): void {
   resetElementTemplateHydrationListener();
@@ -12,5 +13,6 @@ export function destroyElementTemplateBackgroundRuntime(): void {
   // Destroy is the only place that may discard delayed removed subtrees instead
   // of letting the Snapshot-aligned timer tear them down later.
   cancelElementTemplateRemovedSubtreeCleanup();
+  clearEventHandlers();
   backgroundElementTemplateInstanceManager.clear();
 }

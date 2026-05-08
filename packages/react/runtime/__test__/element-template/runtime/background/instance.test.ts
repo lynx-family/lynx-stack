@@ -9,13 +9,23 @@ import {
   markElementTemplateHydrated,
   resetElementTemplateCommitState,
 } from '../../../../src/element-template/background/commit-hook.js';
+import { destroyElementTemplateBackgroundRuntime } from '../../../../src/element-template/background/destroy.js';
 import {
   BackgroundElementTemplateInstance,
   BackgroundElementTemplateSlot,
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
 } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
+import {
+  clearEventHandlers,
+  getEventHandlerForEventValue,
+} from '../../../../src/element-template/prop-adapters/event.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
+import {
+  __etAttrPlanMap,
+  adaptEventAttrSlot,
+  clearEtAttrPlanMap,
+} from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 
 function createTextNode(text: string): BackgroundElementTemplateInstance {
   return new BackgroundElementTemplateInstance(BUILTIN_RAW_TEXT_TEMPLATE_KEY, [text]);
@@ -25,6 +35,8 @@ describe('BackgroundElementTemplateInstance', () => {
   beforeEach(() => {
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
+    clearEtAttrPlanMap();
+    clearEventHandlers();
     resetElementTemplateCommitState();
   });
 
@@ -720,6 +732,14 @@ describe('Background raw-text instance', () => {
 });
 
 describe('BackgroundElementTemplateInstance Shadow State', () => {
+  beforeEach(() => {
+    backgroundElementTemplateInstanceManager.clear();
+    backgroundElementTemplateInstanceManager.nextId = 0;
+    clearEtAttrPlanMap();
+    clearEventHandlers();
+    resetElementTemplateCommitState();
+  });
+
   it('should cache attributeSlots without decoding compiled template attrs', () => {
     const instance = new BackgroundElementTemplateInstance('view');
     const slots = ['logo.png', { id: 'ignored' }] as const;
@@ -737,6 +757,16 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     expect(instance.attributeSlots).toEqual(slots);
   });
 
+  it('keeps raw initial planned attribute slots for later native prepare', () => {
+    __etAttrPlanMap.view = [0, adaptEventAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view', [true]);
+    instance.instanceId = -10;
+
+    instance.prepareAttributeSlotsForNative();
+
+    expect(instance.attributeSlots).toEqual(['-10:0:']);
+  });
+
   it('emits null when an existing attribute slot is removed after hydration', () => {
     const instance = new BackgroundElementTemplateInstance('view', ['old']);
     instance.emitCreate();
@@ -752,6 +782,147 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
       0,
       null,
     ]);
+  });
+
+  it('does not patch equivalent null and undefined attribute slots after hydration', () => {
+    const instance = new BackgroundElementTemplateInstance('view', [null]);
+    instance.emitCreate();
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+
+    instance.setAttribute('attributeSlots', [undefined]);
+
+    expect(instance.attributeSlots).toEqual([null]);
+    expect(globalCommitContext.ops).toEqual([]);
+  });
+
+  it('prepares event attribute slots after hydration and registers the handler by event value', () => {
+    __etAttrPlanMap.view = [0, adaptEventAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    instance.emitCreate();
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+
+    const handler = vi.fn();
+    instance.setAttribute('attributeSlots', [handler]);
+
+    const eventValue = `${instance.instanceId}:0:`;
+    expect(instance.attributeSlots).toEqual([eventValue]);
+    expect(getEventHandlerForEventValue(eventValue)).toBe(handler);
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      instance.instanceId,
+      0,
+      eventValue,
+    ]);
+  });
+
+  it('updates the event handler registry without patching native when the event value is unchanged', () => {
+    __etAttrPlanMap.view = [0, adaptEventAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    instance.emitCreate();
+    markElementTemplateHydrated();
+
+    const firstHandler = vi.fn();
+    const secondHandler = vi.fn();
+    instance.setAttribute('attributeSlots', [firstHandler]);
+    globalCommitContext.ops = [];
+
+    instance.setAttribute('attributeSlots', [secondHandler]);
+
+    const eventValue = `${instance.instanceId}:0:`;
+    expect(instance.attributeSlots).toEqual([eventValue]);
+    expect(getEventHandlerForEventValue(eventValue)).toBe(secondHandler);
+    expect(globalCommitContext.ops).toEqual([]);
+  });
+
+  it('drops a stale handler when an event slot becomes a non-function marker', () => {
+    __etAttrPlanMap.view = [0, adaptEventAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    instance.emitCreate();
+    markElementTemplateHydrated();
+
+    const handler = vi.fn();
+    instance.setAttribute('attributeSlots', [handler]);
+    const eventValue = `${instance.instanceId}:0:`;
+    globalCommitContext.ops = [];
+
+    instance.setAttribute('attributeSlots', [true]);
+
+    expect(instance.attributeSlots).toEqual([eventValue]);
+    expect(getEventHandlerForEventValue(eventValue)).toBeUndefined();
+    expect(globalCommitContext.ops).toEqual([]);
+  });
+
+  it('removes the registered event handler and patches null when the event slot is cleared', () => {
+    __etAttrPlanMap.view = [0, adaptEventAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    instance.emitCreate();
+    markElementTemplateHydrated();
+
+    const handler = vi.fn();
+    instance.setAttribute('attributeSlots', [handler]);
+    const eventValue = `${instance.instanceId}:0:`;
+    globalCommitContext.ops = [];
+
+    instance.setAttribute('attributeSlots', [false]);
+
+    expect(instance.attributeSlots).toEqual([null]);
+    expect(getEventHandlerForEventValue(eventValue)).toBeUndefined();
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      instance.instanceId,
+      0,
+      null,
+    ]);
+  });
+
+  it('emits prepared event values instead of handler functions in create payloads', () => {
+    __etAttrPlanMap.view = [0, adaptEventAttrSlot];
+    markElementTemplateHydrated();
+    const instance = new BackgroundElementTemplateInstance('view');
+    const handler = vi.fn();
+    instance.setAttribute('attributeSlots', [handler]);
+    globalCommitContext.ops = [];
+
+    instance.emitCreate();
+
+    const eventValue = `${instance.instanceId}:0:`;
+    expect(getEventHandlerForEventValue(eventValue)).toBe(handler);
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.createTemplate,
+      instance.instanceId,
+      'view',
+      null,
+      [eventValue],
+      [],
+    ]);
+  });
+
+  it('clears event handlers owned by an instance when it is torn down', () => {
+    __etAttrPlanMap.view = [0, adaptEventAttrSlot];
+    markElementTemplateHydrated();
+    const instance = new BackgroundElementTemplateInstance('view');
+    const handler = vi.fn();
+    instance.setAttribute('attributeSlots', [handler]);
+    const eventValue = `${instance.instanceId}:0:`;
+
+    instance.tearDown();
+
+    expect(getEventHandlerForEventValue(eventValue)).toBeUndefined();
+  });
+
+  it('clears event handlers when the background runtime is destroyed', () => {
+    __etAttrPlanMap.view = [0, adaptEventAttrSlot];
+    markElementTemplateHydrated();
+    const instance = new BackgroundElementTemplateInstance('view');
+    const handler = vi.fn();
+    instance.setAttribute('attributeSlots', [handler]);
+    const eventValue = `${instance.instanceId}:0:`;
+
+    destroyElementTemplateBackgroundRuntime();
+
+    expect(getEventHandlerForEventValue(eventValue)).toBeUndefined();
   });
 });
 

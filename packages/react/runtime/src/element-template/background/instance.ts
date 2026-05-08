@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { clearAttributeSlotEventHandlers, prepareAttributeSlots as prepareRawAttributeSlots } from './attr-slots.js';
 import { globalCommitContext, markRemovedSubtreeForCurrentCommit } from './commit-context.js';
 import { isElementTemplateHydrated } from './commit-hook.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
@@ -29,12 +30,6 @@ function stringifyRawTextValue(value: SerializableValue | undefined): string {
   return '';
 }
 
-function normalizeAttributeSlots(
-  slots: readonly (SerializableValue | undefined)[],
-): SerializableValue[] {
-  return slots.map((slot) => normalizeAttributeSlotValue(slot));
-}
-
 function syncElementSlotChildren(
   parent: BackgroundElementTemplateInstance | null,
   slotId: number,
@@ -57,8 +52,9 @@ export class BackgroundElementTemplateInstance {
   public previousSibling: BackgroundElementTemplateInstance | null = null;
 
   // Shadow State for Hydration
-  public attributeSlots: SerializableValue[] = [];
+  public attributeSlots: SerializableValue[];
   public elementSlots: BackgroundElementTemplateInstance[][] = [];
+  private rawAttributeSlots: readonly unknown[] | undefined;
   private hasEmittedCreate = false;
 
   get parentNode(): BackgroundElementTemplateInstance | null {
@@ -83,8 +79,21 @@ export class BackgroundElementTemplateInstance {
   ) {
     this.type = type;
     this.nodeType = isBuiltinRawTextTemplateKey(type) ? 3 : 1;
-    this.attributeSlots = initialAttributeSlots ? normalizeAttributeSlots(initialAttributeSlots) : [];
     backgroundElementTemplateInstanceManager.register(this);
+    if (initialAttributeSlots) {
+      const preparedSlots = prepareRawAttributeSlots(
+        this.type,
+        this.instanceId,
+        initialAttributeSlots,
+        isElementTemplateHydrated(),
+      );
+      this.attributeSlots = preparedSlots;
+      if (preparedSlots !== initialAttributeSlots) {
+        this.rawAttributeSlots = initialAttributeSlots;
+      }
+    } else {
+      this.attributeSlots = [];
+    }
   }
 
   emitCreate(): void {
@@ -101,7 +110,7 @@ export class BackgroundElementTemplateInstance {
       this.instanceId,
       this.type,
       null,
-      normalizeAttributeSlots(this.attributeSlots),
+      this.attributeSlots,
       this.elementSlots.map((children) => children.map((child) => child.instanceId)),
     );
     this.hasEmittedCreate = true;
@@ -275,10 +284,12 @@ export class BackgroundElementTemplateInstance {
     this.nextSibling = null;
 
     this.attributeSlots = [];
+    this.rawAttributeSlots = undefined;
     this.elementSlots = [];
 
     // Remove from manager
     if (this.instanceId) {
+      clearAttributeSlotEventHandlers(this.type, this.instanceId);
       backgroundElementTemplateInstanceManager.values.delete(this.instanceId);
     }
   }
@@ -289,12 +300,32 @@ export class BackgroundElementTemplateInstance {
     this.hasEmittedCreate = true;
   }
 
+  prepareAttributeSlotsForNative(): void {
+    if (!this.rawAttributeSlots) {
+      return;
+    }
+    this.attributeSlots = prepareRawAttributeSlots(
+      this.type,
+      this.instanceId,
+      this.rawAttributeSlots,
+      true,
+    );
+  }
+
   setAttribute(key: string, value: unknown): void {
     if (isBuiltinRawTextTemplateKey(this.type) && (key === '0' || key === 'data')) {
       this.text = String(value);
     } else if (key === 'attributeSlots' && Array.isArray(value)) {
       const previousSlots = this.attributeSlots;
-      const nextSlots = normalizeAttributeSlots(value as Array<SerializableValue | undefined>);
+      const isHydrated = isElementTemplateHydrated();
+      const canEmitPatch = isHydrated && !this.isPendingCreate();
+      const nextSlots = prepareRawAttributeSlots(
+        this.type,
+        this.instanceId,
+        value,
+        isHydrated,
+      );
+      this.rawAttributeSlots = nextSlots === value ? undefined : value;
       const maxLength = Math.max(previousSlots.length, nextSlots.length);
       this.attributeSlots = nextSlots;
       for (let slotIndex = 0; slotIndex < maxLength; slotIndex += 1) {
@@ -303,14 +334,14 @@ export class BackgroundElementTemplateInstance {
         if (isDirectOrDeepEqual(previousValue, nextValue)) {
           continue;
         }
-        if (!this.canEmitPatch()) {
+        if (!canEmitPatch) {
           continue;
         }
         pushOp(
           ElementTemplateUpdateOps.setAttribute,
           this.instanceId,
           slotIndex,
-          normalizeAttributeSlotValue(nextValue),
+          nextValue ?? null,
         );
       }
     } else if (key === 'id' && this instanceof BackgroundElementTemplateSlot) {
@@ -336,6 +367,7 @@ export class BackgroundElementTemplateInstance {
     if (this.attributeSlots[0] === text) {
       return;
     }
+    this.rawAttributeSlots = undefined;
     this.attributeSlots = [text];
     if (!this.canEmitPatch()) {
       return;
@@ -409,8 +441,4 @@ function collectChildren(slot: BackgroundElementTemplateSlot): BackgroundElement
     child = child.nextSibling;
   }
   return res;
-}
-
-function normalizeAttributeSlotValue(value: SerializableValue | undefined): SerializableValue | null {
-  return value === undefined ? null : value;
 }

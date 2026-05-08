@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { afterEach, beforeEach, describe, expect, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createElement } from 'preact';
 
 import {
@@ -18,12 +18,17 @@ import {
 } from '../../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../../src/element-template/background/manager.js';
 import { root } from '../../../../../src/element-template/index.js';
+import {
+  clearEventHandlers,
+  getEventHandlerForEventValue,
+} from '../../../../../src/element-template/prop-adapters/event.js';
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../../src/element-template/protocol/opcodes.js';
 import type {
   ElementTemplateUpdateCommandStream,
   ElementTemplateUpdateCommitContext,
 } from '../../../../../src/element-template/protocol/types.js';
+import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
 import { compileFixtureSource } from '../../../test-utils/debug/compiledFixtureCompiler.js';
 import {
@@ -40,10 +45,15 @@ declare const renderPage: () => void;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const FIXTURES_DIR = path.resolve(__dirname, '../../../fixtures/background/update');
+const DIRECT_EVENT_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/event/direct-event/index.tsx');
 const SLOT_ID = 0;
 
 interface CompiledKeyedListModule extends CompiledFixtureModuleExports {
   App: (props: { items: string[] }) => JSX.Element;
+}
+
+interface CompiledDirectEventModule extends CompiledFixtureModuleExports {
+  App: (props: { onTap?: () => void }) => JSX.Element;
 }
 
 function getRenderedHost(): BackgroundElementTemplateInstance {
@@ -110,6 +120,20 @@ describe('Compiled background Preact updates', () => {
     return { backgroundModule, mainModule };
   }
 
+  async function loadCompiledDirectEventFixture(): Promise<{
+    backgroundModule: CompiledDirectEventModule;
+    mainModule: CompiledDirectEventModule;
+  }> {
+    const mainArtifact = await compileFixtureSource(DIRECT_EVENT_FIXTURE, { target: 'LEPUS' });
+    primeCompiledFixtureTemplates(mainArtifact);
+    const mainModule = await loadCompiledFixtureModule<CompiledDirectEventModule>(mainArtifact);
+
+    const backgroundArtifact = await compileFixtureSource(DIRECT_EVENT_FIXTURE, { target: 'JS' });
+    const backgroundModule = await loadCompiledFixtureModule<CompiledDirectEventModule>(backgroundArtifact);
+
+    return { backgroundModule, mainModule };
+  }
+
   function renderCompiledOnBackground(
     moduleExports: CompiledKeyedListModule,
     items: readonly string[],
@@ -133,9 +157,34 @@ describe('Compiled background Preact updates', () => {
     return host;
   }
 
+  function renderDirectEventOnBackground(
+    moduleExports: CompiledDirectEventModule,
+    onTap?: () => void,
+  ): BackgroundElementTemplateInstance {
+    envManager.switchToBackground();
+    root.render(createElement(moduleExports.App, { onTap }));
+    return getRenderedHost();
+  }
+
+  function hydrateDirectEventFromMainThread(
+    moduleExports: CompiledDirectEventModule,
+    onTap?: () => void,
+  ): BackgroundElementTemplateInstance {
+    const host = getRenderedHost();
+
+    envManager.switchToMainThread();
+    root.render(createElement(moduleExports.App, { onTap }));
+    renderPage();
+    envManager.switchToBackground();
+
+    return host;
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
     resetElementTemplateCommitState();
+    clearEtAttrPlanMap();
+    clearEventHandlers();
     updateEvents = [];
     envManager.resetEnv('background');
     envManager.setUseElementTemplate(true);
@@ -274,6 +323,64 @@ describe('Compiled background Preact updates', () => {
           vi.useRealTimers();
         }
       },
+    });
+  });
+
+  describe('direct events', () => {
+    it('updates the background event registry without dispatching a native patch when only handler identity changes', async () => {
+      const { backgroundModule, mainModule } = await loadCompiledDirectEventFixture();
+      const firstHandler = vi.fn();
+      const secondHandler = vi.fn();
+
+      const host = renderDirectEventOnBackground(backgroundModule, firstHandler);
+      hydrateDirectEventFromMainThread(mainModule, firstHandler);
+      updateEvents = [];
+
+      renderDirectEventOnBackground(backgroundModule, secondHandler);
+
+      const eventValue = `${host.instanceId}:0:`;
+      envManager.switchToMainThread();
+      expect(updateEvents).toEqual([]);
+      envManager.switchToBackground();
+      expect(host.attributeSlots).toEqual([eventValue]);
+      expect(getEventHandlerForEventValue(eventValue)).toBe(secondHandler);
+    });
+
+    it('uses ordinary setAttribute patches when direct event handlers are added or removed', async () => {
+      const { backgroundModule, mainModule } = await loadCompiledDirectEventFixture();
+      const handler = vi.fn();
+
+      const host = renderDirectEventOnBackground(backgroundModule);
+      hydrateDirectEventFromMainThread(mainModule);
+      updateEvents = [];
+
+      renderDirectEventOnBackground(backgroundModule, handler);
+
+      const eventValue = `${host.instanceId}:0:`;
+      envManager.switchToMainThread();
+      expect(updateEvents.at(-1)?.ops).toEqual([
+        ElementTemplateUpdateOps.setAttribute,
+        host.instanceId,
+        0,
+        eventValue,
+      ]);
+      envManager.switchToBackground();
+      expect(host.attributeSlots).toEqual([eventValue]);
+      expect(getEventHandlerForEventValue(eventValue)).toBe(handler);
+
+      updateEvents = [];
+      renderDirectEventOnBackground(backgroundModule);
+
+      envManager.switchToMainThread();
+      expect(updateEvents.at(-1)?.ops).toEqual([
+        ElementTemplateUpdateOps.setAttribute,
+        host.instanceId,
+        0,
+        null,
+      ]);
+      envManager.switchToBackground();
+      expect(host.attributeSlots).toEqual([null]);
+      expect(getEventHandlerForEventValue(eventValue)).toBeUndefined();
     });
   });
 });

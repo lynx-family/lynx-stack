@@ -12,8 +12,17 @@ import {
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
 } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
+import {
+  clearEventHandlers,
+  getEventHandlerForEventValue,
+} from '../../../../src/element-template/prop-adapters/event.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import type { SerializedElementTemplate } from '../../../../src/element-template/protocol/types.js';
+import {
+  __etAttrPlanMap,
+  adaptEventAttrSlot,
+  clearEtAttrPlanMap,
+} from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 
 function createHydrationTemplate(
   handleId: number,
@@ -51,6 +60,8 @@ describe('hydrate', () => {
   beforeEach(() => {
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
+    clearEtAttrPlanMap();
+    clearEventHandlers();
     resetElementTemplateCommitState();
     vi.clearAllMocks();
     (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
@@ -526,6 +537,41 @@ describe('hydrate', () => {
     expect(child.elementSlots[0]).toEqual([rawText]);
   });
 
+  it('registers event handlers for background-only insertion subtrees during hydrate', () => {
+    __etAttrPlanMap.child = [0, adaptEventAttrSlot];
+    const root = new BackgroundElementTemplateInstance('root');
+    const slot = new BackgroundElementTemplateSlot();
+    slot.setAttribute('id', 0);
+    root.appendChild(slot);
+    const child = new BackgroundElementTemplateInstance('child');
+    const handler = vi.fn();
+    child.setAttribute('attributeSlots', [handler]);
+    slot.appendChild(child);
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        elementSlots: [[]],
+      }),
+      root,
+    );
+
+    const eventValue = `${child.instanceId}:0:`;
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.createTemplate,
+      child.instanceId,
+      'child',
+      null,
+      [eventValue],
+      [],
+      ElementTemplateUpdateOps.insertNode,
+      root.instanceId,
+      0,
+      child.instanceId,
+      0,
+    ]);
+    expect(getEventHandlerForEventValue(eventValue)).toBe(handler);
+  });
+
   it('diffs multiple dynamic children slots independently during hydrate', () => {
     const root = new BackgroundElementTemplateInstance('root');
     const slot0 = new BackgroundElementTemplateSlot();
@@ -820,6 +866,69 @@ describe('hydrate', () => {
 
     expect(stream).toEqual([]);
     expect(root.attributeSlots).toEqual([]);
+  });
+
+  it('prepares background event handlers with the serialized uid before diffing hydrate slots', () => {
+    __etAttrPlanMap.root = [0, adaptEventAttrSlot];
+    const root = new BackgroundElementTemplateInstance('root');
+    const handler = vi.fn();
+    root.setAttribute('attributeSlots', [handler]);
+
+    const stream = hydrate(
+      createHydrationTemplate(-7, 'root', {
+        attributeSlots: ['-7:0:'],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([]);
+    expect(root.attributeSlots).toEqual(['-7:0:']);
+    expect(getEventHandlerForEventValue('-7:0:')).toBe(handler);
+  });
+
+  it('patches a hydrated event value when main thread serialized null but background has a handler', () => {
+    __etAttrPlanMap.root = [0, adaptEventAttrSlot];
+    const root = new BackgroundElementTemplateInstance('root');
+    const handler = vi.fn();
+    root.setAttribute('attributeSlots', [handler]);
+
+    const stream = hydrate(
+      createHydrationTemplate(-8, 'root', {
+        attributeSlots: [null],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      -8,
+      0,
+      '-8:0:',
+    ]);
+    expect(root.attributeSlots).toEqual(['-8:0:']);
+    expect(getEventHandlerForEventValue('-8:0:')).toBe(handler);
+  });
+
+  it('patches null when main thread serialized an event value but background clears the handler', () => {
+    __etAttrPlanMap.root = [0, adaptEventAttrSlot];
+    const root = new BackgroundElementTemplateInstance('root');
+    root.setAttribute('attributeSlots', [false]);
+
+    const stream = hydrate(
+      createHydrationTemplate(-9, 'root', {
+        attributeSlots: ['-9:0:'],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      -9,
+      0,
+      null,
+    ]);
+    expect(root.attributeSlots).toEqual([null]);
+    expect(getEventHandlerForEventValue('-9:0:')).toBeUndefined();
   });
 
   it('skips sparse background slot indexes when checking trailing slots', () => {
