@@ -270,8 +270,8 @@ type SerializableValueForMock =
 interface SerializedElementTemplateForMock {
   templateKey: string;
   bundleUrl?: string;
-  attributeSlots: SerializableValueForMock[];
-  elementSlots: SerializedElementTemplateForMock[][];
+  attributeSlots?: SerializableValueForMock[] | null;
+  elementSlots?: SerializedElementTemplateForMock[][] | null;
   uid: number | string;
 }
 

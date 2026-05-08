@@ -12,12 +12,18 @@ import {
   installElementTemplateHydrationListener,
   resetElementTemplateHydrationListener,
 } from '../../../../../src/element-template/background/hydration-listener.js';
-import { BackgroundElementTemplateInstance } from '../../../../../src/element-template/background/instance.js';
+import {
+  collectElementTemplateSubtreeHandleIds,
+  BackgroundElementTemplateInstance,
+} from '../../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../../src/element-template/background/manager.js';
 import { root } from '../../../../../src/element-template/index.js';
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../../src/element-template/protocol/opcodes.js';
-import type { ElementTemplateUpdateCommitContext } from '../../../../../src/element-template/protocol/types.js';
+import type {
+  ElementTemplateUpdateCommandStream,
+  ElementTemplateUpdateCommitContext,
+} from '../../../../../src/element-template/protocol/types.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
 import { compileFixtureSource } from '../../../test-utils/debug/compiledFixtureCompiler.js';
 import {
@@ -61,6 +67,26 @@ function getSlotChildAt(
     throw new Error(`Missing slot child at ${index}.\n${serializeBackgroundTree(host)}`);
   }
   return child;
+}
+
+function collectRecursiveCreateCommandStream(
+  instance: BackgroundElementTemplateInstance,
+): ElementTemplateUpdateCommandStream {
+  const commands: ElementTemplateUpdateCommandStream = [];
+  for (const slotChildren of instance.elementSlots) {
+    for (const child of slotChildren ?? []) {
+      commands.push(...collectRecursiveCreateCommandStream(child));
+    }
+  }
+  commands.push(
+    ElementTemplateUpdateOps.createTemplate,
+    instance.instanceId,
+    instance.type,
+    null,
+    instance.attributeSlots,
+    instance.elementSlots.map(children => (children ?? []).map(child => child.instanceId)),
+  );
+  return commands;
 }
 
 describe('Compiled background Preact updates', () => {
@@ -168,6 +194,7 @@ describe('Compiled background Preact updates', () => {
         const host = renderCompiledOnBackground(backgroundModule, ['keep', 'remove']);
         hydrateFromMainThread(mainModule, ['keep', 'remove']);
         const removed = getSlotChildAt(1, host);
+        const removedSubtreeHandleIds = collectElementTemplateSubtreeHandleIds(removed);
         updateEvents = [];
 
         vi.useFakeTimers();
@@ -180,7 +207,7 @@ describe('Compiled background Preact updates', () => {
             host.instanceId,
             SLOT_ID,
             removed.instanceId,
-            [removed.instanceId],
+            removedSubtreeHandleIds,
           ]);
           envManager.switchToBackground();
           expect(backgroundElementTemplateInstanceManager.get(removed.instanceId)).toBe(removed);
@@ -207,6 +234,7 @@ describe('Compiled background Preact updates', () => {
         hydrateFromMainThread(mainModule, ['keep', 'again']);
         const keep = getSlotChildAt(0, host);
         const removed = getSlotChildAt(1, host);
+        const removedSubtreeHandleIds = collectElementTemplateSubtreeHandleIds(removed);
         updateEvents = [];
 
         vi.useFakeTimers();
@@ -218,7 +246,7 @@ describe('Compiled background Preact updates', () => {
             host.instanceId,
             SLOT_ID,
             removed.instanceId,
-            [removed.instanceId],
+            removedSubtreeHandleIds,
           ]);
           envManager.switchToBackground();
 
@@ -228,12 +256,7 @@ describe('Compiled background Preact updates', () => {
           expect(current).not.toBe(removed);
           envManager.switchToMainThread();
           expect(updateEvents.at(-1)?.ops).toEqual([
-            ElementTemplateUpdateOps.createTemplate,
-            current.instanceId,
-            current.type,
-            null,
-            current.attributeSlots,
-            current.elementSlots.map(children => children.map(child => child.instanceId)),
+            ...collectRecursiveCreateCommandStream(current),
             ElementTemplateUpdateOps.insertNode,
             host.instanceId,
             SLOT_ID,
