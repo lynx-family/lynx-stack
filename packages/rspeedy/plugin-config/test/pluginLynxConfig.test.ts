@@ -11,7 +11,7 @@ import { compilerOptionsKeys, configKeys } from '@lynx-js/type-config'
 
 vi.mock('../src/LynxConfigWebpackPlugin.js')
 describe('pluginLynxConfig', () => {
-  test('should throw error when no LynxTemplatePlugin exposed', async () => {
+  test('should throw error when no LynxBundlePlugin exposed', async () => {
     const { pluginLynxConfig } = await import('../src/pluginLynxConfig.js')
 
     const rspeedy = await createRspeedy({
@@ -24,7 +24,7 @@ describe('pluginLynxConfig', () => {
 
     await expect(() => rspeedy.initConfigs()).rejects
       .toThrowErrorMatchingInlineSnapshot(`
-      [Error: [pluginLynxConfig] No \`LynxTemplatePlugin\` exposed to the plugin API (​https://rsbuild.rs/plugins/dev/core#apiexpose​).
+      [Error: [pluginLynxConfig] No \`LynxBundlePlugin\` exposed to the plugin API (​https://rsbuild.rs/plugins/dev/core#apiexpose​).
 
       Please upgrade Rspeedy and plugins to latest version.
 
@@ -50,7 +50,7 @@ describe('pluginLynxConfig', () => {
 
     await expect(() => rspeedy.initConfigs()).rejects
       .toThrowErrorMatchingInlineSnapshot(`
-      [Error: [pluginLynxConfig] No \`LynxTemplatePlugin\` exposed to the plugin API (​https://rsbuild.rs/plugins/dev/core#apiexpose​).
+      [Error: [pluginLynxConfig] No \`LynxBundlePlugin\` exposed to the plugin API (​https://rsbuild.rs/plugins/dev/core#apiexpose​).
 
       Please upgrade @lynx-js/react-rsbuild-plugin to latest version.
 
@@ -80,7 +80,7 @@ describe('pluginLynxConfig', () => {
 
     await expect(() => rspeedy.initConfigs()).rejects
       .toThrowErrorMatchingInlineSnapshot(`
-      [Error: [pluginLynxConfig] No \`LynxTemplatePlugin\` exposed to the plugin API (​https://rsbuild.rs/plugins/dev/core#apiexpose​).
+      [Error: [pluginLynxConfig] No \`LynxBundlePlugin\` exposed to the plugin API (​https://rsbuild.rs/plugins/dev/core#apiexpose​).
 
       Please upgrade @lynx-js/vue-rsbuild-plugin to latest version.
 
@@ -95,7 +95,7 @@ describe('pluginLynxConfig', () => {
     )
     const { pluginLynxConfig } = await import('../src/pluginLynxConfig.js')
 
-    const LynxTemplatePlugin = vi.fn()
+    const getLynxTemplatePluginHooks = vi.fn()
 
     const rspeedy = await createRspeedy({
       rspeedyConfig: {
@@ -104,8 +104,8 @@ describe('pluginLynxConfig', () => {
           {
             name: 'test',
             setup(api: RsbuildPluginAPI) {
-              api.expose(Symbol.for('LynxTemplatePlugin'), {
-                LynxTemplatePlugin,
+              api.expose(Symbol.for('LynxBundlePlugin'), {
+                LynxBundlePlugin: { getLynxTemplatePluginHooks },
               })
             },
           },
@@ -117,7 +117,7 @@ describe('pluginLynxConfig', () => {
 
     expect(LynxConfigWebpackPlugin).toHaveBeenCalledWith(
       {
-        LynxTemplatePlugin,
+        LynxTemplatePlugin: { getLynxTemplatePluginHooks },
         config: {
           enableAccessibilityElement: true,
         },
