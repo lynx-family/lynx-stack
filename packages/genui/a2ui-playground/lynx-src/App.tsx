@@ -60,6 +60,20 @@ function parseJsonLikeString(input: string): unknown {
   return input;
 }
 
+function decodeUrlLikeString(input: string): string {
+  let current = input;
+  for (let i = 0; i < 3; i++) {
+    try {
+      const decoded = decodeURIComponent(current);
+      if (decoded === current) break;
+      current = decoded;
+    } catch {
+      break;
+    }
+  }
+  return current;
+}
+
 function normalizeInitDataLike(raw: unknown): InitData {
   if (raw === null || raw === undefined) return {};
 
@@ -69,10 +83,14 @@ function normalizeInitDataLike(raw: unknown): InitData {
   const out: InitData = {};
 
   const messagesUrl = obj.messagesUrl;
-  if (typeof messagesUrl === 'string') out.messagesUrl = messagesUrl;
+  if (typeof messagesUrl === 'string') {
+    out.messagesUrl = decodeUrlLikeString(messagesUrl);
+  }
 
   const actionMocksUrl = obj.actionMocksUrl;
-  if (typeof actionMocksUrl === 'string') out.actionMocksUrl = actionMocksUrl;
+  if (typeof actionMocksUrl === 'string') {
+    out.actionMocksUrl = decodeUrlLikeString(actionMocksUrl);
+  }
 
   const messages = obj.messages;
   if (messages !== undefined) {
@@ -275,22 +293,25 @@ export function App() {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       client.resources?.clear?.();
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const { resource: newResource } = await client.send(
-        '' as unknown,
-        messageId,
+      const sendResult = await (
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        client.send(
+          '' as unknown,
+          messageId,
+        ) as Promise<{ resource: Resource }>
       );
+      const newResource = sendResult.resource;
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       client.resources?.set?.(messageId, newResource);
 
       if (!cancelled) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         setResource(newResource);
       }
 
       const simulateStream = async () => {
         for (const msg of messages) {
           if (cancelled) break;
+          if (!msg) continue;
           // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
           client.processor?.processMessages?.([msg]);
           await new Promise((resolve) => setTimeout(resolve, streamDelay));
