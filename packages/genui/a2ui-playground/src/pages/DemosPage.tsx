@@ -181,7 +181,7 @@ export function DemosPage(props: { protocol: Protocol }) {
         buildRenderUrl(
           {
             protocol,
-            demoUrl: DEFAULT_DEMO_URL,
+            demoUrl: DEFAULT_A2UI_DEMO_URL,
             messages: parsed,
             actionMocks,
             demoId: isKnownDemo ? scenario!.id : undefined,
