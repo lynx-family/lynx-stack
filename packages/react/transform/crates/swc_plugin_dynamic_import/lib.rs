@@ -115,7 +115,7 @@ fn is_import_call_with_attrs(
         let (is_lit, _) = calc_literal_cost(object, false);
         if is_lit {
           let with = jsonify(Expr::Object(object.clone()));
-          for (i, attr) in attrs.iter().enumerate() {
+          for attr in attrs.iter() {
             if let Some(value) = with.pointer(&format!("/with/{attr}")) {
               with_keys.insert(attr.to_string());
               with_values.insert(attr.to_string(), value.clone());
