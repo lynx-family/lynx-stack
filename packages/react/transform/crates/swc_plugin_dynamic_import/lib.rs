@@ -1,6 +1,11 @@
+use once_cell::sync::Lazy;
 use serde::Deserialize;
 use serde_json::Value;
-use std::{borrow::Cow, collections::HashSet, fmt::Debug};
+use std::{
+  borrow::Cow,
+  collections::{HashMap, HashSet},
+  fmt::Debug,
+};
 use swc_core::{
   common::{
     comments::{Comment, CommentKind, Comments},
@@ -10,7 +15,8 @@ use swc_core::{
   },
   ecma::{
     ast::*,
-    utils::{calc_literal_cost, prepend_stmt},
+    atoms::once_cell,
+    utils::{calc_literal_cost, prepend_stmt, private_ident},
     visit::{VisitMut, VisitMutWith},
   },
 };
@@ -49,6 +55,7 @@ where
   has_inner_lazy_bundle: bool,
   named_imports: HashSet<Ident>,
   comments: Option<C>,
+  with_mode: Lazy<Expr>,
 }
 
 impl<C> Default for DynamicImportVisitor<C>
@@ -70,6 +77,7 @@ where
       comments,
       has_inner_lazy_bundle: false,
       named_imports: HashSet::new(),
+      with_mode: Lazy::new(|| Expr::Ident(private_ident!("withLazyBundleMode"))),
     }
   }
 }
@@ -97,9 +105,9 @@ fn is_import_call_tpl(call_expr: &CallExpr) -> bool {
 fn is_import_call_with_attrs(
   call_expr: &CallExpr,
   attrs: &[&str],
-) -> (bool, Vec<bool>, Vec<Value>) {
-  let mut with_keys = vec![false; attrs.len()];
-  let mut with_values = vec![Value::Null; attrs.len()];
+) -> (bool, HashSet<String>, HashMap<String, Value>) {
+  let mut with_keys = HashSet::new();
+  let mut with_values = HashMap::new();
 
   match &call_expr.callee {
     Callee::Import(_) if call_expr.args.len() >= 2 => match &*call_expr.args[1].expr {
@@ -109,8 +117,8 @@ fn is_import_call_with_attrs(
           let with = jsonify(Expr::Object(object.clone()));
           for (i, attr) in attrs.iter().enumerate() {
             if let Some(value) = with.pointer(&format!("/with/{attr}")) {
-              with_keys[i] = true;
-              with_values[i] = value.clone();
+              with_keys.insert(attr.to_string());
+              with_values.insert(attr.to_string(), value.clone());
             }
           }
         }
@@ -174,9 +182,9 @@ where
     }
 
     let (is_import_call_lit, is_import_call_str_lit, str_lit) = is_import_call_str_lit(call_expr);
-    let (has_option, with_keys, _with_values) =
-      is_import_call_with_attrs(call_expr, &["type", "mode"]);
-    let is_import_call_with_allow_attrs = with_keys.iter().any(|&b| b);
+    let attrs = &["type", "mode"];
+    let (has_option, with_keys, with_values) = is_import_call_with_attrs(call_expr, attrs);
+    let is_import_call_with_allow_attrs = with_keys.iter().any(|k| attrs.contains(&k.as_str()));
 
     // TODO: reject dynamic import without `{ with: { type: "component" } }`
 
@@ -227,6 +235,57 @@ where
         },
       );
       self.has_inner_lazy_bundle = true;
+
+      if with_values.contains_key("mode") {
+        let mode = with_values.get("mode").unwrap();
+        if let Value::String(mode) = mode {
+          let inner = call_expr.take();
+          let arrow = ArrowExpr {
+            span: DUMMY_SP,
+            ctxt: Default::default(),
+            params: vec![],
+            body: Box::new(BlockStmtOrExpr::Expr(Box::new(Expr::Call(inner.clone())))),
+            is_async: false,
+            is_generator: false,
+            type_params: None,
+            return_type: None,
+          };
+          *call_expr = CallExpr {
+            span: inner.span,
+            ctxt: inner.ctxt,
+            callee: Callee::Expr(Box::new(self.with_mode.clone())),
+            args: vec![
+              ExprOrSpread {
+                spread: None,
+                expr: Box::new(Expr::Lit(Lit::Str(Str {
+                  span: DUMMY_SP,
+                  value: mode.to_string().into(),
+                  raw: None,
+                }))),
+              },
+              ExprOrSpread {
+                spread: None,
+                expr: Box::new(Expr::Arrow(arrow)),
+              },
+            ],
+            type_args: None,
+          };
+          return;
+        } else {
+          HANDLER.with(|handler| {
+            handler
+              .struct_span_err(
+                call_expr.span,
+                "`import(..., { mode: ... })` mode must be a string"
+                  .to_string()
+                  .as_str(),
+              )
+              .emit()
+          });
+          call_expr.visit_mut_children_with(self);
+          return;
+        }
+      }
     } else {
       let ident: Ident = "__dynamicImport".into();
       *call_expr = CallExpr {
@@ -291,6 +350,30 @@ where
         create_import_decl("data:text/javascript;charset=utf-8,import { loadLazyBundle } from \"@lynx-js/react/internal\";lynx.loadLazyBundle = loadLazyBundle;"),
       );
     }
+
+    if let Some(Expr::Ident(with_mode)) = Lazy::<Expr>::get(&self.with_mode) {
+      prepend_stmt(
+        &mut n.body,
+        ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+          span: DUMMY_SP,
+          specifiers: vec![ImportSpecifier::Named(ImportNamedSpecifier {
+            span: DUMMY_SP,
+            local: with_mode.clone(),
+            imported: None,
+            is_type_only: false,
+          })],
+          src: Box::new(Str {
+            span: DUMMY_SP,
+            raw: None,
+            value: "@lynx-js/react/internal".into(),
+          }),
+          type_only: Default::default(),
+          // asserts: Default::default(),
+          with: Default::default(),
+          phase: ImportPhase::Evaluation,
+        })),
+      )
+    }
   }
 }
 
@@ -335,8 +418,14 @@ mod tests {
       await import("./index.js", { with: { type: "component", mode: "async" } });
       await import("ftp://www/a.js", { with: { type: "component" } });
       await import("https://www/a.js", { with: { type: "component" } });
+      await import("https://www/a.js", { with: { type: "component", mode: "sync" } });
+      await import("https://www/a.js", { with: { type: "component", mode: "async" } });
       await import(url, { with: { type: "component" } });
+      await import(url, { with: { type: "component", mode: "sync" } });
+      await import(url, { with: { type: "component", mode: "async" } });
       await import(url+"?v=1.0", { with: { type: "component" } });
+      await import(url+"?v=1.0", { with: { type: "component", mode: "sync" } });
+      await import(url+"?v=1.0", { with: { type: "component", mode: "async" } });
     })();
     "#
   );
