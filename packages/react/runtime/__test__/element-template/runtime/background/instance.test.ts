@@ -69,6 +69,9 @@ describe('BackgroundElementTemplateInstance', () => {
     expect(parent.childNodes).toEqual([slot]);
     expect(slot.childNodes).toEqual([child]);
 
+    markElementTemplateHydrated();
+    parent.markCreateEmittedForHydration();
+    child.markCreateEmittedForHydration();
     globalCommitContext.ops = [];
     child.parentNode?.removeChild(child);
 
@@ -423,6 +426,10 @@ describe('BackgroundElementTemplateInstance', () => {
       childSlot.appendChild(grandchild);
       slot.appendChild(child);
 
+      markElementTemplateHydrated();
+      parent.markCreateEmittedForHydration();
+      child.markCreateEmittedForHydration();
+      grandchild.markCreateEmittedForHydration();
       globalCommitContext.ops = [];
       slot.removeChild(child);
 
@@ -435,6 +442,25 @@ describe('BackgroundElementTemplateInstance', () => {
         [child.instanceId, grandchild.instanceId],
       ]);
       expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([child]);
+    });
+
+    it('does not emit patches for pre-hydration slot mutations', () => {
+      const parent = new BackgroundElementTemplateInstance('view');
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      parent.appendChild(slot);
+      const child = new BackgroundElementTemplateInstance('text');
+      const childId = child.instanceId;
+
+      globalCommitContext.ops = [];
+      child.setAttribute('attributeSlots', ['pending']);
+      slot.appendChild(child);
+      slot.removeChild(child);
+
+      expect(parent.elementSlots[0]).toEqual([]);
+      expect(globalCommitContext.ops).toEqual([]);
+      expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+      expect(backgroundElementTemplateInstanceManager.get(childId)).toBeUndefined();
     });
 
     it('supports silent removal from a slot container', () => {
@@ -526,7 +552,7 @@ describe('BackgroundElementTemplateInstance', () => {
     ]);
   });
 
-  it('does not append create options metadata to update commands', () => {
+  it('ignores legacy create options metadata props', () => {
     const instance = new BackgroundElementTemplateInstance('view');
     instance.setAttribute('options', {
       cssId: 100,
@@ -750,33 +776,6 @@ describe('BackgroundElementTemplateSlot Children', () => {
     expect(root.elementSlots[1]).toEqual([text]);
   });
 
-  it('should aggregate slotChildren correctly', () => {
-    const root = new BackgroundElementTemplateInstance('element-template-view');
-
-    const slot1 = new BackgroundElementTemplateSlot();
-    slot1.setAttribute('id', 0);
-    const text1 = createTextNode('Hello');
-    slot1.appendChild(text1);
-
-    const slot2 = new BackgroundElementTemplateSlot();
-    slot2.setAttribute('id', 1);
-    const text2 = createTextNode('World');
-    const view2 = new BackgroundElementTemplateInstance('view');
-    slot2.appendChild(text2);
-    slot2.appendChild(view2);
-
-    root.appendChild(slot1);
-    root.appendChild(slot2);
-
-    const slotChildren = root.slotChildren;
-    expect(slotChildren.size).toBe(2);
-
-    expect(slotChildren.get(0)).toEqual([text1]);
-    expect(slotChildren.get(1)).toEqual([text2, view2]);
-    expect(root.elementSlots[0]).toEqual([text1]);
-    expect(root.elementSlots[1]).toEqual([text2, view2]);
-  });
-
   it('should keep elementSlots in sync when slot is attached after children exist', () => {
     const root = new BackgroundElementTemplateInstance('element-template-view');
     const slot = new BackgroundElementTemplateSlot();
@@ -844,23 +843,20 @@ describe('BackgroundElementTemplateSlot Children', () => {
     expect(slotB.firstChild).toBe(text);
   });
 
-  it('should ignore non-slot direct children (though technically invalid)', () => {
+  it('does not create an element slot entry for non-slot direct children', () => {
     const root = new BackgroundElementTemplateInstance('element-template-view');
     const view = new BackgroundElementTemplateInstance('view');
     root.appendChild(view);
 
-    // Should assume it is a slot but fail to get partId or valid id
-    const slotChildren = root.slotChildren;
-    expect(slotChildren.size).toBe(0);
+    expect(root.elementSlots).toEqual([]);
   });
 
-  it('should ignore slot with default partId (-1)', () => {
+  it('does not create an element slot entry for slot with default partId', () => {
     const root = new BackgroundElementTemplateInstance('element-template-view');
     const slot = new BackgroundElementTemplateSlot();
     slot.appendChild(createTextNode('Hello'));
     root.appendChild(slot);
 
-    const slotChildren = root.slotChildren;
-    expect(slotChildren.size).toBe(0);
+    expect(root.elementSlots).toEqual([]);
   });
 });

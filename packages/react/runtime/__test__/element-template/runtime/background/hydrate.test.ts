@@ -477,7 +477,7 @@ describe('hydrate', () => {
     ]);
     expect(root.elementSlots[0]).toEqual([]);
     expect(root.elementSlots[1]).toEqual([first, second]);
-    expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(-3)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(firstLocalId)).toBe(first);
@@ -703,7 +703,7 @@ describe('hydrate', () => {
     ]);
   });
 
-  it('does not hydrate runtime options from the serialized identity field', () => {
+  it('does not retain legacy runtime options on background instances', () => {
     const root = new BackgroundElementTemplateInstance('root');
 
     const stream = hydrate(
@@ -715,7 +715,7 @@ describe('hydrate', () => {
       root,
     );
 
-    expect(root.options).toBeUndefined();
+    expect(Object.hasOwn(root, 'options')).toBe(false);
     expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
     expect(stream).toEqual([
       ElementTemplateUpdateOps.removeNode,

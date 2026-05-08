@@ -8,7 +8,7 @@ import { setPipeline } from '../../../../src/element-template/lynx/performance.j
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
-import { registerBuiltinRawTextTemplate } from '../../test-utils/debug/registry.js';
+import { BUILTIN_RAW_TEXT_TEMPLATE_ID, registerBuiltinRawTextTemplate } from '../../test-utils/debug/registry.js';
 
 const pipelineOptions = {
   pipelineID: 'pipelineID',
@@ -19,7 +19,7 @@ function createRawTextOps(id: number, text: string) {
   return [
     ElementTemplateUpdateOps.createTemplate,
     id,
-    '_et_builtin_raw_text',
+    BUILTIN_RAW_TEXT_TEMPLATE_ID,
     null,
     [text],
     [],
