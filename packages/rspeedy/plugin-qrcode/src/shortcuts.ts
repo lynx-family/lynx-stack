@@ -5,7 +5,10 @@ import type { RsbuildPluginAPI } from '@rsbuild/core'
 
 import type { ExposedAPI } from '@lynx-js/rspeedy'
 
-import generateDevUrls from './generateDevUrls.js'
+import {
+  generateExplorerDevUrls,
+  generateWebDevUrls,
+} from './generateDevUrls.js'
 
 import type { CustomizedSchemaFn } from './index.js'
 
@@ -14,13 +17,16 @@ const gExistingShortcuts = new WeakSet<Options>()
 interface Options {
   api: RsbuildPluginAPI
   entries: string[]
+  webEntries: string[]
   schema: CustomizedSchemaFn
   port: number
   customShortcuts?: Record<
     string,
     { value: string, label: string, hint?: string, action?(): Promise<void> }
   >
-  onPrint?: ((url: string) => Promise<void>) | undefined
+  onPrint?:
+    | ((lynx?: string, web?: Record<string, string>) => Promise<void>)
+    | undefined
 }
 
 export async function registerConsoleShortcuts(
@@ -38,22 +44,35 @@ export async function registerConsoleShortcuts(
     import('./showQRCode.js'),
   ])
 
-  const currentEntry = options.entries[0]!
-  const devUrls = generateDevUrls(
+  // keep the default entry to be lynx explorer entry if exists
+  const currentEntry = options.entries[0]
+  const devUrls = currentEntry
+    ? generateExplorerDevUrls(
+      options.api,
+      currentEntry,
+      options.schema,
+      options.port,
+    )
+    : undefined
+
+  const value: string | symbol | undefined = devUrls
+    ? Object.values(devUrls)[0]
+    : undefined
+  const webUrls = generateWebDevUrls(
     options.api,
-    currentEntry,
-    options.schema,
+    options.webEntries,
     options.port,
   )
-
-  const value: string | symbol = Object.values(devUrls)[0]!
-  await options.onPrint?.(value)
-  showQRCode(value)
+  await options.onPrint?.(
+    value,
+    webUrls,
+  )
+  showQRCode(value, webUrls)
 
   gExistingShortcuts.add(options)
 
   // We should not `await` on this since it would block the NodeJS main thread.
-  void loop(options, value, devUrls)
+  void loop(options, value, devUrls, webUrls)
 
   function off() {
     gExistingShortcuts.delete(options)
@@ -89,8 +108,9 @@ async function printNonTTY(options: Options): Promise<void> {
 
 async function loop(
   options: Options,
-  value: string | symbol,
-  devUrls: Record<string, string>,
+  value: string | symbol | undefined,
+  devUrls: Record<string, string> | undefined,
+  webUrls: Record<string, string>,
 ) {
   const [
     { autocomplete, select, selectKey, isCancel, cancel },
@@ -102,8 +122,8 @@ async function loop(
 
   const selectFn = (length: number) => length > 5 ? autocomplete : select
 
-  let currentEntry = options.entries[0]!
-  let currentSchema = Object.keys(devUrls)[0]!
+  let currentEntry = options.entries[0]
+  let currentSchema = devUrls ? Object.keys(devUrls)[0]! : undefined
 
   while (!isCancel(value)) {
     const name = await selectKey({
@@ -126,18 +146,18 @@ async function loop(
     ) {
       break
     }
-    if (name === 'r') {
+    if (name === 'r' && currentSchema) {
       const selection = await selectFn(options.entries.length)({
         message: 'Select entry',
         options: options.entries.map(entry => ({
           value: entry,
           label: entry,
-          hint: generateDevUrls(
+          hint: generateExplorerDevUrls(
             options.api,
             entry,
             options.schema,
             options.port,
-          )[currentSchema]!,
+          )[currentSchema!]!,
         })),
         initialValue: currentEntry,
       })
@@ -146,8 +166,8 @@ async function loop(
       }
       currentEntry = selection
       value = getCurrentUrl()
-    } else if (name === 'a') {
-      const devUrls = generateDevUrls(
+    } else if (name === 'a' && currentEntry) {
+      const devUrls = generateExplorerDevUrls(
         options.api,
         currentEntry,
         options.schema,
@@ -170,8 +190,8 @@ async function loop(
     } else if (options.customShortcuts?.[name]) {
       await options.customShortcuts[name].action?.()
     }
-    await options.onPrint?.(value)
-    showQRCode(value)
+    await options.onPrint?.(value, webUrls)
+    showQRCode(value, webUrls)
   }
 
   // If the `options` is not deleted from `gExistingShortcuts`, means that this is an explicitly
@@ -184,12 +204,14 @@ async function loop(
   return
 
   function getCurrentUrl(): string {
-    return generateDevUrls(
-      options.api,
-      currentEntry,
-      options.schema,
-      options.port,
-    )[currentSchema]!
+    return (currentEntry && currentSchema)
+      ? generateExplorerDevUrls(
+        options.api,
+        currentEntry,
+        options.schema,
+        options.port,
+      )[currentSchema]!
+      : ''
   }
 
   function exit(code?: number) {
