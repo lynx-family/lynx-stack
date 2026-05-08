@@ -189,39 +189,14 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: |
-        # Keep create-rspeedy templates package-manager-neutral; apply pnpm 11
-        # dependency build decisions only inside these temporary smoke-test apps.
+        # Keep create-rspeedy templates package-manager-neutral; apply the pnpm
+        # 11 dependency build decisions only inside these temporary smoke-test apps.
         install_generated_app() {
-          set +e
-          pnpm install --registry=http://localhost:4873 2>&1 | tee pnpm-install.log
-          install_status=${PIPESTATUS[0]}
-          set -e
-
-          if [ "$install_status" -eq 0 ]; then
+          if pnpm install --registry=http://localhost:4873; then
             return 0
           fi
 
-          if ! grep -q "ERR_PNPM_IGNORED_BUILDS" pnpm-install.log; then
-            return "$install_status"
-          fi
-
-          approve_args=()
-          while IFS= read -r package_name; do
-            case "$package_name" in
-              dprint|esbuild)
-                approve_args+=("$package_name")
-                ;;
-              *)
-                approve_args+=("!$package_name")
-                ;;
-            esac
-          done < <(pnpm ignored-builds | sed -n 's/^  //p')
-
-          if [ "${#approve_args[@]}" -eq 0 ]; then
-            return "$install_status"
-          fi
-
-          pnpm approve-builds "${approve_args[@]}"
+          pnpm approve-builds esbuild '!core-js'
           pnpm install --registry=http://localhost:4873
         }
 
