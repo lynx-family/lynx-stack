@@ -3,13 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 import type * as v0_9 from '@a2ui/web_core/v0_9';
 
+import { createResource } from './Resource.js';
+import { SignalStore } from './SignalStore.js';
 import type {
   ComponentInstance,
   ServerToClientMessage,
   Surface,
 } from './types.js';
-import { createResource } from '../utils/createResource.js';
-import { SignalStore } from '../utils/SignalStore.js';
 
 export interface A2UIEvent {
   message: Record<string, unknown>;
@@ -22,33 +22,39 @@ function isObject(value: unknown): value is Record<string, unknown> {
 
 export class MessageProcessor {
   surfaces: Map<string, Surface>;
-  private listener: ((event: A2UIEvent) => void) | null = null;
-  private updateListener: ((data: Record<string, unknown>) => void) | null =
-    null;
+  private eventListeners: Set<(event: A2UIEvent) => void> = new Set();
+  private updateListeners: Set<(data: Record<string, unknown>) => void> =
+    new Set();
 
   constructor() {
     this.surfaces = new Map();
   }
 
-  onUpdate(callback: (data: Record<string, unknown>) => void): void {
-    this.updateListener = callback;
+  onUpdate(callback: (data: Record<string, unknown>) => void): () => void {
+    this.updateListeners.add(callback);
+    return () => {
+      this.updateListeners.delete(callback);
+    };
+  }
+
+  private emitUpdate(data: Record<string, unknown>): void {
+    for (const cb of this.updateListeners) cb(data);
   }
 
   dispatch(message: Record<string, unknown>): Promise<unknown> {
     return new Promise((resolve) => {
-      if (this.listener) {
-        this.listener({ message, resolve });
-      } else {
-        console.warn('No host listener attached!');
+      if (this.eventListeners.size === 0) {
         resolve([]);
+        return;
       }
+      for (const cb of this.eventListeners) cb({ message, resolve });
     });
   }
 
   onEvent(callback: (event: A2UIEvent) => void): () => void {
-    this.listener = callback;
+    this.eventListeners.add(callback);
     return () => {
-      this.listener = null;
+      this.eventListeners.delete(callback);
     };
   }
 
@@ -127,7 +133,6 @@ export class MessageProcessor {
       surface.resources.set(newId, createResource(newId));
     }
 
-    // Recursively clone the subtree below this component.
     const childIds: string[] = [];
     const anyCloned = cloned as unknown as Record<string, unknown>;
 
@@ -228,7 +233,6 @@ export class MessageProcessor {
       return;
     }
 
-    // Primitive at the base path.
     updates.push({ path: normalizedBase, value: String(value) });
   }
 
@@ -292,8 +296,6 @@ export class MessageProcessor {
             };
           }
 
-          // this.resolveComponentPaths(instance, dataContextPath);
-
           surface.components.set(instance.id!, instance);
           updatesMap.set(instance.id!, instance);
 
@@ -302,12 +304,10 @@ export class MessageProcessor {
           }
         }
 
-        // Determine the root component if not already set.
         if (!surface.rootComponentId) {
           if (surface.components.has('root')) {
             surface.rootComponentId = 'root';
           } else if (updatesMap.size > 0) {
-            // Fallback: use the first updated component as root if not specified
             surface.rootComponentId = updatesMap.keys().next().value ?? null;
           }
 
@@ -318,20 +318,23 @@ export class MessageProcessor {
                 createResource(surface.rootComponentId),
               );
             }
-            // Signal that rendering can begin for this surface.
-            if (this.updateListener) {
-              this.updateListener({
-                type: 'beginRendering',
-                surfaceId,
-                messageId: (message as { messageId?: string }).messageId,
-              });
-            }
+            // Fall back to a surface-derived id so consumers that key
+            // resources by `messageId` still get a non-empty key when the
+            // protocol message lacks one (the v0.9 stream does not require
+            // `messageId` on every message).
+            const messageId = (message as { messageId?: string }).messageId
+              ?? `surface:${surfaceId}`;
+            this.emitUpdate({
+              type: 'beginRendering',
+              surfaceId,
+              messageId,
+            });
           }
         }
 
         const updates = Array.from(updatesMap.values());
-        if (updates.length > 0 && this.updateListener) {
-          this.updateListener({
+        if (updates.length > 0) {
+          this.emitUpdate({
             type: 'surfaceUpdate',
             updates,
             surfaceId,
@@ -353,7 +356,6 @@ export class MessageProcessor {
           const basePath = path && path !== '' ? path : '/';
           this.flattenValue(value, basePath, updates);
         } else if (path) {
-          // Deletion semantics: we simply clear the value at the path.
           updates.push({ path, value: '' });
         }
 
@@ -361,7 +363,6 @@ export class MessageProcessor {
           surface.store.updateBatch(updates);
         }
 
-        // Re-expand any templated containers based on the updated data model.
         const componentUpdates: ComponentInstance[] = [];
 
         for (const component of surface.components.values()) {
@@ -424,8 +425,8 @@ export class MessageProcessor {
           }
         }
 
-        if (componentUpdates.length > 0 && this.updateListener) {
-          this.updateListener({
+        if (componentUpdates.length > 0) {
+          this.emitUpdate({
             type: 'surfaceUpdate',
             updates: componentUpdates,
             surfaceId,
@@ -437,20 +438,15 @@ export class MessageProcessor {
         const { surfaceId } = message.deleteSurface;
         const surface = this.surfaces.get(surfaceId);
 
-        if (this.updateListener) {
-          this.updateListener({
-            type: 'deleteSurface',
-            surfaceId,
-            targetId: surface?.rootComponentId ?? surfaceId,
-            messageId: (message as { messageId?: string }).messageId,
-          });
-        }
+        this.emitUpdate({
+          type: 'deleteSurface',
+          surfaceId,
+          targetId: surface?.rootComponentId ?? surfaceId,
+          messageId: (message as { messageId?: string }).messageId,
+        });
 
-        // Optionally clear local state for this surface.
         this.surfaces.delete(surfaceId);
       }
     }
   }
 }
-
-export const processor: MessageProcessor = new MessageProcessor();

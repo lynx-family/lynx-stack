@@ -6,7 +6,13 @@
     "jsxImportSource": "@lynx-js/react",
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
     "noEmit": true,
   },
-  "include": ["./**/*.ts", "./**/*.tsx"],
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx",
+    "../examples/**/*.ts",
+    "../examples/**/*.tsx",
+  ],
 }
