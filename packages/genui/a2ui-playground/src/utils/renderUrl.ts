@@ -2,10 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { encodeBase64Url } from './base64url.js';
-import type { ProtocolVersion } from './protocol.js';
+import type { Protocol } from './protocol.js';
 
 export interface RenderInit {
-  protocol: ProtocolVersion;
+  protocol: Protocol;
   demoUrl: string;
   messages: unknown;
   actionMocks?: unknown;
@@ -17,7 +17,7 @@ export interface RenderInit {
 
 export function buildRenderUrl(init: RenderInit, baseUrl: string): string {
   const url = new URL('render.html', baseUrl);
-  url.searchParams.set('protocol', init.protocol);
+  url.searchParams.set('protocol', init.protocol.name);
   url.searchParams.set('demoUrl', init.demoUrl);
 
   if (init.demoId) {

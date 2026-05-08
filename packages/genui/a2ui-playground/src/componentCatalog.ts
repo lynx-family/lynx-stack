@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { ProtocolVersion } from './utils/protocol.js';
+import type { ProtocolName } from './utils/protocol.js';
 
 export interface ComponentProp {
   name: string;
@@ -17,7 +17,7 @@ export interface ComponentDoc {
   category: ComponentCategory;
   description: string;
   props: ComponentProp[];
-  usage: Record<ProtocolVersion, object>;
+  usage: Record<ProtocolName, object>;
 }
 
 export const CATEGORIES: { id: ComponentCategory; label: string }[] = [
@@ -46,12 +46,13 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       },
     ],
     usage: {
-      '0.9': {
+      a2ui: {
         id: 'greeting',
         component: 'Text',
         variant: 'h2',
         text: 'Hello, world!',
       },
+      openui: {},
     },
   },
   {
@@ -76,12 +77,13 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       },
     ],
     usage: {
-      '0.9': {
+      a2ui: {
         id: 'submit-btn',
         component: 'Button',
         action: { event: { name: 'submit' } },
         child: 'submit-btn-text',
       },
+      openui: {},
     },
   },
   {
@@ -108,13 +110,14 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       },
     ],
     usage: {
-      '0.9': {
-        id: 'lynx-image',
+      a2ui: {
+        id: 'hero-image',
         component: 'Image',
         url: 'https://picsum.photos/seed/a2ui-image-preview/320/180',
         fit: 'cover',
         variant: 'mediumFeature',
       },
+      openui: {},
     },
   },
   {
@@ -130,11 +133,12 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       },
     ],
     usage: {
-      '0.9': {
+      a2ui: {
         id: 'section-divider',
         component: 'Divider',
         axis: 'horizontal',
       },
+      openui: {},
     },
   },
   {
@@ -149,11 +153,12 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       },
     ],
     usage: {
-      '0.9': {
+      a2ui: {
         id: 'info-card',
         component: 'Card',
         child: 'info-card-content',
       },
+      openui: {},
     },
   },
   {
@@ -182,13 +187,14 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       },
     ],
     usage: {
-      '0.9': {
+      a2ui: {
         id: 'action-row',
         component: 'Row',
         align: 'center',
         justify: 'spaceBetween',
         children: ['left-item', 'right-item'],
       },
+      openui: {},
     },
   },
   {
@@ -217,13 +223,14 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       },
     ],
     usage: {
-      '0.9': {
+      a2ui: {
         id: 'main-column',
         component: 'Column',
         align: 'start',
         justify: 'start',
         children: ['header', 'body', 'footer'],
       },
+      openui: {},
     },
   },
   {
@@ -250,13 +257,14 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       },
     ],
     usage: {
-      '0.9': {
+      a2ui: {
         id: 'item-list',
         component: 'List',
         direction: 'vertical',
         align: 'stretch',
         children: ['item-1', 'item-2', 'item-3'],
       },
+      openui: {},
     },
   },
   {
@@ -278,12 +286,13 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       },
     ],
     usage: {
-      '0.9': {
+      a2ui: {
         id: 'agree-checkbox',
         component: 'CheckBox',
         label: 'I agree to the terms',
         value: false,
       },
+      openui: {},
     },
   },
   {
@@ -310,13 +319,14 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       },
     ],
     usage: {
-      '0.9': {
+      a2ui: {
         id: 'size-picker',
         component: 'RadioGroup',
         items: ['Small', 'Medium', 'Large'],
         value: 'Medium',
         usageHint: 'card',
       },
+      openui: {},
     },
   },
 ];

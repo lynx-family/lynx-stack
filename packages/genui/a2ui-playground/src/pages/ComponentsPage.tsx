@@ -8,8 +8,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { CATEGORIES, COMPONENT_CATALOG } from '../componentCatalog.js';
 import type { ComponentDoc } from '../componentCatalog.js';
 import { copyToClipboard } from '../utils/clipboard.js';
-import { DEFAULT_DEMO_URL } from '../utils/demoUrl.js';
-import type { ProtocolVersion } from '../utils/protocol.js';
+import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
+import type { Protocol } from '../utils/protocol.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
 
 const jsonExtensions = [json()];
@@ -37,16 +37,16 @@ function createComponentPreviewMessages(
 }
 
 function ComponentDetail(
-  props: { comp: ComponentDoc; protocol: ProtocolVersion },
+  props: { comp: ComponentDoc; protocol: Protocol },
 ) {
   const { comp, protocol } = props;
   const [usageJson, setUsageJson] = useState(() =>
-    formatJson(comp.usage[protocol])
+    formatJson(comp.usage[protocol.name])
   );
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    setUsageJson(formatJson(comp.usage[protocol]));
+    setUsageJson(formatJson(comp.usage[protocol.name]));
   }, [comp, protocol]);
 
   const parsedUsage = useMemo(() => {
@@ -63,7 +63,7 @@ function ComponentDetail(
     return buildRenderUrl(
       {
         protocol,
-        demoUrl: DEFAULT_DEMO_URL,
+        demoUrl: DEFAULT_A2UI_DEMO_URL,
         messages: createComponentPreviewMessages(comp, parsedUsage.value),
       },
       baseUrl,
@@ -73,7 +73,12 @@ function ComponentDetail(
   return (
     <div className='compContent'>
       <div className='compBreadcrumb'>
-        <a className='compBreadcrumbLink' href='#/components'>Components</a>
+        <a
+          className='compBreadcrumbLink'
+          href={`#/${protocol.name}/components`}
+        >
+          Components
+        </a>
         <span className='compBreadcrumbSep'>/</span>
         <span className='compBreadcrumbCurrent'>{comp.name}</span>
       </div>
@@ -82,7 +87,6 @@ function ComponentDetail(
       <p className='compDesc'>{comp.description}</p>
 
       <div className='compCategoryBadge'>{comp.category}</div>
-
       <h3 className='compSubheading'>Props</h3>
       <table className='compTable'>
         <thead>
@@ -160,7 +164,9 @@ function ComponentDetail(
   );
 }
 
-function ComponentGrid() {
+function ComponentGrid(props: { protocol: Protocol }) {
+  const { protocol } = props;
+
   return (
     <div className='compContent'>
       <h2 className='compName'>Components</h2>
@@ -179,7 +185,7 @@ function ComponentGrid() {
                 <a
                   key={comp.name}
                   className='compGridCard'
-                  href={`#/components/${comp.name}`}
+                  href={`#/${protocol.name}/components/${comp.name}`}
                 >
                   <div className='compGridCardName'>{comp.name}</div>
                   <div className='compGridCardDesc'>{comp.description}</div>
@@ -194,7 +200,7 @@ function ComponentGrid() {
 }
 
 export function ComponentsPage(
-  props: { protocol: ProtocolVersion; componentName?: string },
+  props: { protocol: Protocol; componentName?: string },
 ) {
   const { protocol, componentName } = props;
 
@@ -219,7 +225,7 @@ export function ComponentsPage(
       <div className='compSidebar'>
         <a
           className={'compSidebarAll' + (componentName ? '' : ' active')}
-          href='#/components'
+          href={`#/${protocol.name}/components`}
         >
           All Components
         </a>
@@ -235,7 +241,7 @@ export function ComponentsPage(
                   key={comp.name}
                   className={'compSidebarItem'
                     + (componentName === comp.name ? ' active' : '')}
-                  href={`#/components/${comp.name}`}
+                  href={`#/${protocol.name}/components/${comp.name}`}
                 >
                   {comp.name}
                 </a>
@@ -247,7 +253,7 @@ export function ComponentsPage(
 
       {selectedComp
         ? <ComponentDetail comp={selectedComp} protocol={protocol} />
-        : <ComponentGrid />}
+        : <ComponentGrid protocol={protocol} />}
     </div>
   );
 }

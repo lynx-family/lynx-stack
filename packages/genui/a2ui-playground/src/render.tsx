@@ -10,7 +10,7 @@ import '@lynx-js/web-elements/all';
 import '@lynx-js/web-elements/index.css';
 
 import { decodeBase64Url } from './utils/base64url.js';
-import { DEFAULT_DEMO_URL } from './utils/demoUrl.js';
+import { DEFAULT_A2UI_DEMO_URL } from './utils/demoUrl.js';
 
 interface InitData {
   protocol?: '0.9';
@@ -199,7 +199,7 @@ function Render() {
     className: 'renderLynx',
     style: { height: '100%' },
     'thread-strategy': 'multi-thread',
-    url: initData?.demoUrl ?? DEFAULT_DEMO_URL,
+    url: initData?.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
   });
 }
 
