@@ -37,7 +37,6 @@ import {
   __GetElementUniqueID,
   __GetTemplateParts,
   __UpdateListCallbacks,
-  __InvokeUIMethod,
   __QuerySelector,
   __QuerySelectorAll,
 } from './pureElementPAPIs.js';
@@ -617,7 +616,7 @@ export function createElementAPI(
         }
       };
     })(),
-    __InvokeUIMethod,
+    __InvokeUIMethod: mtsBinding.lynxViewInstance.invokeUIMethod,
     __QuerySelector,
     __QuerySelectorAll,
     __FlushElementTree: (_, options) => {

@@ -1,5 +1,6 @@
 import { createCrossThreadEvent } from './createCrossThreadEvent.js';
 import type {
+  InvokeUIMethodPAPI,
   LynxCrossThreadEvent,
   LynxCrossThreadEventTarget,
   DecoratedHTMLElement,
@@ -21,6 +22,9 @@ export type WASMJSBindingInjectedHandler = {
   backgroundThread: BackgroundThread;
   exposureServices: ExposureServices;
   mainThreadGlobalThis: MainThreadGlobalThis;
+  readonly invokeUIMethod: InvokeUIMethodPAPI;
+  readonly lynxViewClientLeft: number;
+  readonly lynxViewClientTop: number;
 };
 
 export class WASMJSBinding implements RustMainthreadContextBinding {
@@ -179,7 +183,11 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
         | DecoratedHTMLElement
         | null;
     }
-    const eventObject = createCrossThreadEvent(event);
+    const eventObject = createCrossThreadEvent(
+      event,
+      this.lynxViewInstance.lynxViewClientLeft,
+      this.lynxViewInstance.lynxViewClientTop,
+    );
     this.wasmContext?.common_event_handler(
       eventObject,
       bubblePath.slice(0, bubblePathLength),
