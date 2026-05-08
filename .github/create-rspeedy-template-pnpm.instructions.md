@@ -1,5 +1,5 @@
 ---
-applyTo: "packages/rspeedy/create-rspeedy/template-common/pnpm-workspace.yaml"
+applyTo: "{packages/rspeedy/create-rspeedy/template-*/**,.github/workflows/test.yml}"
 ---
 
-Keep generated Rspeedy apps on pnpm 11's explicit dependency build policy. The template workspace file should mirror the root `allowBuilds` decisions for common toolchain dependencies, including intentionally ignored packages such as `core-js` and intentionally allowed packages such as `esbuild`, so `pnpm install` in CI does not fail with `ERR_PNPM_IGNORED_BUILDS`.
+Do not add pnpm workspace policy files to `create-rspeedy` templates just to satisfy pnpm 11 smoke tests. Generated projects must stay package-manager-neutral where possible; handle pnpm 11 dependency build approvals inside the temporary CI smoke-test project instead.
