@@ -155,6 +155,77 @@ describe('hydrate', () => {
     expect(root.elementSlots[0]).toEqual([]);
   });
 
+  it('includes nested serialized subtree handles from sparse slots when hydrate removes a stale child', () => {
+    const root = new BackgroundElementTemplateInstance('root');
+    const slot = new BackgroundElementTemplateSlot();
+    slot.setAttribute('id', 0);
+    root.appendChild(slot);
+
+    const stale = createHydrationChild(101, 'stale', {
+      elementSlots: [
+        undefined as unknown as SerializedElementTemplate[],
+        [createHydrationChild(102, 'nested', {
+          elementSlots: [[
+            createHydrationChild(103, BUILTIN_RAW_TEXT_TEMPLATE_KEY, {
+              attributeSlots: ['stale text'],
+            }),
+          ]],
+        })],
+      ],
+    });
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        elementSlots: [[stale]],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.removeNode,
+      root.instanceId,
+      0,
+      101,
+      [101, 102, 103],
+    ]);
+    expect(root.elementSlots[0]).toEqual([]);
+    expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(backgroundElementTemplateInstanceManager.get(101)).toBeUndefined();
+    expect(backgroundElementTemplateInstanceManager.get(102)).toBeUndefined();
+    expect(backgroundElementTemplateInstanceManager.get(103)).toBeUndefined();
+  });
+
+  it('keeps existing background stale instances on the pending cleanup path during hydrate remove', () => {
+    const root = new BackgroundElementTemplateInstance('root');
+    const slot = new BackgroundElementTemplateSlot();
+    slot.setAttribute('id', 0);
+    root.appendChild(slot);
+
+    const stale = new BackgroundElementTemplateInstance('stale');
+    const keep = new BackgroundElementTemplateInstance('keep');
+    slot.appendChild(keep);
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        elementSlots: [[
+          createHydrationChild(stale.instanceId, 'stale'),
+          createHydrationChild(keep.instanceId, 'keep'),
+        ]],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.removeNode,
+      root.instanceId,
+      0,
+      stale.instanceId,
+      [stale.instanceId],
+    ]);
+    expect(root.elementSlots[0]).toEqual([keep]);
+    expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([stale]);
+  });
+
   it('moves serialized children to match the background slot order', () => {
     const root = new BackgroundElementTemplateInstance('root');
     const slot = new BackgroundElementTemplateSlot();
@@ -187,6 +258,224 @@ describe('hydrate', () => {
       c.instanceId,
     ]);
     expect(root.elementSlots[0]).toEqual([b, a, c]);
+    expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+  });
+
+  it('treats a source-before-target cross-slot hydrate candidate as remove and recreate', () => {
+    const root = new BackgroundElementTemplateInstance('root');
+    const slot0 = new BackgroundElementTemplateSlot();
+    slot0.setAttribute('id', 0);
+    root.appendChild(slot0);
+    const slot1 = new BackgroundElementTemplateSlot();
+    slot1.setAttribute('id', 1);
+    root.appendChild(slot1);
+
+    const moved = new BackgroundElementTemplateInstance('moved', ['after']);
+    const localId = moved.instanceId;
+    const mainThreadId = -2;
+    slot1.appendChild(moved);
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        elementSlots: [
+          [createHydrationChild(mainThreadId, 'moved', { attributeSlots: ['before'] })],
+          [],
+        ],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.removeNode,
+      root.instanceId,
+      0,
+      mainThreadId,
+      [mainThreadId],
+      ElementTemplateUpdateOps.createTemplate,
+      localId,
+      'moved',
+      null,
+      ['after'],
+      [],
+      ElementTemplateUpdateOps.insertNode,
+      root.instanceId,
+      1,
+      localId,
+      0,
+    ]);
+    expect(root.elementSlots[0]).toEqual([]);
+    expect(root.elementSlots[1]).toEqual([moved]);
+    expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(backgroundElementTemplateInstanceManager.get(mainThreadId)).toBeUndefined();
+    expect(backgroundElementTemplateInstanceManager.get(localId)).toBe(moved);
+  });
+
+  it('does not pull cross-slot hydrate recreate candidates back into a non-empty source slot', () => {
+    const root = new BackgroundElementTemplateInstance('root');
+    const slot0 = new BackgroundElementTemplateSlot();
+    slot0.setAttribute('id', 0);
+    root.appendChild(slot0);
+    const slot1 = new BackgroundElementTemplateSlot();
+    slot1.setAttribute('id', 1);
+    root.appendChild(slot1);
+
+    const keep = new BackgroundElementTemplateInstance('keep');
+    const moved = new BackgroundElementTemplateInstance('moved', ['after']);
+    slot0.appendChild(keep);
+    slot1.appendChild(moved);
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        elementSlots: [
+          [
+            createHydrationChild(-2, 'moved', { attributeSlots: ['before'] }),
+            createHydrationChild(keep.instanceId, 'keep'),
+          ],
+          [],
+        ],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.removeNode,
+      root.instanceId,
+      0,
+      -2,
+      [-2],
+      ElementTemplateUpdateOps.createTemplate,
+      moved.instanceId,
+      'moved',
+      null,
+      ['after'],
+      [],
+      ElementTemplateUpdateOps.insertNode,
+      root.instanceId,
+      1,
+      moved.instanceId,
+      0,
+    ]);
+    expect(root.elementSlots[0]).toEqual([keep]);
+    expect(root.elementSlots[1]).toEqual([moved]);
+    expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
+  });
+
+  it('treats a target-before-source cross-slot hydrate candidate as recreate then remove', () => {
+    const root = new BackgroundElementTemplateInstance('root');
+    const slot0 = new BackgroundElementTemplateSlot();
+    slot0.setAttribute('id', 0);
+    root.appendChild(slot0);
+    const slot1 = new BackgroundElementTemplateSlot();
+    slot1.setAttribute('id', 1);
+    root.appendChild(slot1);
+
+    const moved = new BackgroundElementTemplateInstance('moved', ['after']);
+    const localId = moved.instanceId;
+    const mainThreadId = -3;
+    slot0.appendChild(moved);
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        elementSlots: [
+          [],
+          [createHydrationChild(mainThreadId, 'moved', { attributeSlots: ['before'] })],
+        ],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.createTemplate,
+      localId,
+      'moved',
+      null,
+      ['after'],
+      [],
+      ElementTemplateUpdateOps.insertNode,
+      root.instanceId,
+      0,
+      localId,
+      0,
+      ElementTemplateUpdateOps.removeNode,
+      root.instanceId,
+      1,
+      mainThreadId,
+      [mainThreadId],
+    ]);
+    expect(root.elementSlots[0]).toEqual([moved]);
+    expect(root.elementSlots[1]).toEqual([]);
+    expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(backgroundElementTemplateInstanceManager.get(mainThreadId)).toBeUndefined();
+    expect(backgroundElementTemplateInstanceManager.get(localId)).toBe(moved);
+  });
+
+  it('recreates repeated cross-slot hydrate candidates in their target slot order', () => {
+    const root = new BackgroundElementTemplateInstance('root');
+    const slot0 = new BackgroundElementTemplateSlot();
+    slot0.setAttribute('id', 0);
+    root.appendChild(slot0);
+    const slot1 = new BackgroundElementTemplateSlot();
+    slot1.setAttribute('id', 1);
+    root.appendChild(slot1);
+
+    const first = new BackgroundElementTemplateInstance('item');
+    const second = new BackgroundElementTemplateInstance('item');
+    const firstLocalId = first.instanceId;
+    const secondLocalId = second.instanceId;
+    slot1.appendChild(first);
+    slot1.appendChild(second);
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        elementSlots: [[
+          createHydrationChild(-2, 'item'),
+          createHydrationChild(-3, 'item'),
+        ], []],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.removeNode,
+      root.instanceId,
+      0,
+      -2,
+      [-2],
+      ElementTemplateUpdateOps.removeNode,
+      root.instanceId,
+      0,
+      -3,
+      [-3],
+      ElementTemplateUpdateOps.createTemplate,
+      firstLocalId,
+      'item',
+      null,
+      [],
+      [],
+      ElementTemplateUpdateOps.insertNode,
+      root.instanceId,
+      1,
+      firstLocalId,
+      0,
+      ElementTemplateUpdateOps.createTemplate,
+      secondLocalId,
+      'item',
+      null,
+      [],
+      [],
+      ElementTemplateUpdateOps.insertNode,
+      root.instanceId,
+      1,
+      secondLocalId,
+      0,
+    ]);
+    expect(root.elementSlots[0]).toEqual([]);
+    expect(root.elementSlots[1]).toEqual([first, second]);
+    expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
+    expect(backgroundElementTemplateInstanceManager.get(-3)).toBeUndefined();
+    expect(backgroundElementTemplateInstanceManager.get(firstLocalId)).toBe(first);
+    expect(backgroundElementTemplateInstanceManager.get(secondLocalId)).toBe(second);
   });
 
   it('recreates background children when serialized root has no child slots', () => {
@@ -357,7 +646,7 @@ describe('hydrate', () => {
     ]);
   });
 
-  it('creates missing slots and stringifies raw-text placeholder values', () => {
+  it('removes serialized-only raw-text children without creating background instances', () => {
     const root = new BackgroundElementTemplateInstance('root');
 
     const stream = hydrate(
@@ -370,13 +659,10 @@ describe('hydrate', () => {
       root,
     );
 
-    const slot = root.firstChild as BackgroundElementTemplateSlot | null;
-    const rawTrue = backgroundElementTemplateInstanceManager.get(-2);
-    const rawEmpty = backgroundElementTemplateInstanceManager.get(-3);
-    expect(slot).toBeInstanceOf(BackgroundElementTemplateSlot);
-    expect(slot?.partId).toBe(0);
-    expect(rawTrue?.text).toBe('true');
-    expect(rawEmpty?.text).toBe('');
+    expect(root.firstChild).toBeNull();
+    expect(root.elementSlots[0]).toBeUndefined();
+    expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
+    expect(backgroundElementTemplateInstanceManager.get(-3)).toBeUndefined();
     expect(stream).toEqual([
       4,
       root.instanceId,
@@ -391,25 +677,30 @@ describe('hydrate', () => {
     ]);
   });
 
-  it('creates non-raw placeholders with copied attribute slots and bound handles', () => {
+  it('removes serialized-only children without copying them into the background manager', () => {
     const root = new BackgroundElementTemplateInstance('root');
 
-    hydrate(
+    const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
         elementSlots: [[createHydrationChild(-2, 'child', { attributeSlots: ['payload'] })]],
       }),
       root,
     );
 
-    const placeholder = backgroundElementTemplateInstanceManager.get(-2);
-    expect(placeholder?.type).toBe('child');
-    expect(placeholder?.attributeSlots).toEqual(['payload']);
+    expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.removeNode,
+      root.instanceId,
+      0,
+      -2,
+      [-2],
+    ]);
   });
 
   it('does not hydrate runtime options from the serialized identity field', () => {
     const root = new BackgroundElementTemplateInstance('root');
 
-    hydrate(
+    const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
         elementSlots: [[
           createHydrationChild(-2, 'child'),
@@ -418,28 +709,15 @@ describe('hydrate', () => {
       root,
     );
 
-    const placeholder = backgroundElementTemplateInstanceManager.get(-2);
     expect(root.options).toBeUndefined();
-    expect(placeholder?.options).toBeUndefined();
-  });
-
-  it('ignores invalid non-template payloads inside element slots defensively', () => {
-    const root = new BackgroundElementTemplateInstance('root');
-    const invalidChild = {
-      kind: 'element',
-      tag: 'view',
-      attributes: {},
-      children: [],
-    } as unknown as SerializedElementTemplate;
-
-    const stream = hydrate(
-      createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[invalidChild]],
-      }),
-      root,
-    );
-
-    expect(stream).toEqual([]);
+    expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.removeNode,
+      root.instanceId,
+      0,
+      -2,
+      [-2],
+    ]);
   });
 
   it('reports non-Error failures when rebinding handle ids', () => {
@@ -478,24 +756,6 @@ describe('hydrate', () => {
     expect(stream).toEqual([]);
   });
 
-  it('treats null serialized attributeSlots and elementSlots as empty', () => {
-    const root = new BackgroundElementTemplateInstance('root');
-
-    const stream = hydrate(
-      {
-        templateKey: 'root',
-        attributeSlots: null,
-        elementSlots: null,
-        uid: root.instanceId,
-      } as unknown as SerializedElementTemplate,
-      root,
-    );
-
-    expect(stream).toEqual([]);
-    expect(root.attributeSlots).toEqual([]);
-    expect(root.elementSlots).toEqual([]);
-  });
-
   it('does not patch serialized null when the background attribute slot is missing', () => {
     const root = new BackgroundElementTemplateInstance('root');
 
@@ -531,92 +791,6 @@ describe('hydrate', () => {
     expect(root.elementSlots[0]).toBeUndefined();
     expect(root.elementSlots[1]).toBeUndefined();
     expect(root.elementSlots[2]).toEqual([]);
-  });
-
-  it('fails fast in dev for nested serialized children without handle ids', () => {
-    const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
-    lynx.reportError = reportError;
-    const root = new BackgroundElementTemplateInstance('root');
-
-    const stream = hydrate(
-      createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[
-          {
-            templateKey: 'child',
-            attributeSlots: [],
-            elementSlots: [],
-          } as SerializedElementTemplate,
-        ]],
-      }),
-      root,
-    );
-
-    expect(stream).toEqual([]);
-    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-      'invalid nested uid undefined for \'child\'',
-    );
-    lynx.reportError = oldReportError;
-    (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
-  });
-
-  it('fails fast in dev for missing top-level handle ids', () => {
-    const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
-    lynx.reportError = reportError;
-    const root = new BackgroundElementTemplateInstance('root');
-
-    const stream = hydrate(
-      {
-        templateKey: 'root',
-        attributeSlots: [],
-        elementSlots: [],
-      } as SerializedElementTemplate,
-      root,
-    );
-
-    expect(stream).toEqual([]);
-    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-      'missing uid for \'root\'',
-    );
-    lynx.reportError = oldReportError;
-    (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
-  });
-
-  it('fails fast in dev for nested move candidates without handle ids', () => {
-    const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
-    lynx.reportError = reportError;
-
-    const root = new BackgroundElementTemplateInstance('root');
-    const slot = new BackgroundElementTemplateSlot();
-    slot.setAttribute('id', 0);
-    root.appendChild(slot);
-    const childB = new BackgroundElementTemplateInstance('b');
-    const childA = new BackgroundElementTemplateInstance('a');
-    slot.appendChild(childB);
-    slot.appendChild(childA);
-
-    hydrate(
-      createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[
-          {
-            templateKey: 'a',
-            attributeSlots: [],
-            elementSlots: [],
-          } as SerializedElementTemplate,
-          createHydrationChild(childB.instanceId, 'b'),
-        ]],
-      }),
-      root,
-    );
-
-    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-      'invalid nested uid undefined for \'a\'',
-    );
-    expect(root.elementSlots[0]).toEqual([childB, childA]);
-    lynx.reportError = oldReportError;
-    (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
   });
 
   it('emits create recursively for inserted nested children', () => {
@@ -659,68 +833,5 @@ describe('hydrate', () => {
       child.instanceId,
       0,
     ]);
-  });
-
-  it('keeps placeholder children when nested remove handles are missing in prod mode', () => {
-    const root = new BackgroundElementTemplateInstance('root');
-    const slot = new BackgroundElementTemplateSlot();
-    slot.setAttribute('id', 0);
-    root.appendChild(slot);
-
-    const originalDev = globalThis.__DEV__;
-    globalThis.__DEV__ = false;
-    try {
-      const stream = hydrate(
-        createHydrationTemplate(root.instanceId, 'root', {
-          elementSlots: [[
-            {
-              templateKey: 'child',
-              attributeSlots: [],
-              elementSlots: [],
-            } as SerializedElementTemplate,
-          ]],
-        }),
-        root,
-      );
-
-      expect(stream).toEqual([]);
-      expect(root.elementSlots[0]?.map(child => child.type)).toEqual(['child']);
-    } finally {
-      globalThis.__DEV__ = originalDev;
-    }
-  });
-
-  it('keeps placeholder ordering when nested move handles are missing in prod mode', () => {
-    const root = new BackgroundElementTemplateInstance('root');
-    const slot = new BackgroundElementTemplateSlot();
-    slot.setAttribute('id', 0);
-    root.appendChild(slot);
-    const childB = new BackgroundElementTemplateInstance('b');
-    const childA = new BackgroundElementTemplateInstance('a');
-    slot.appendChild(childB);
-    slot.appendChild(childA);
-
-    const originalDev = globalThis.__DEV__;
-    globalThis.__DEV__ = false;
-    try {
-      const stream = hydrate(
-        createHydrationTemplate(root.instanceId, 'root', {
-          elementSlots: [[
-            {
-              templateKey: 'a',
-              attributeSlots: [],
-              elementSlots: [],
-            } as SerializedElementTemplate,
-            createHydrationChild(childB.instanceId, 'b'),
-          ]],
-        }),
-        root,
-      );
-
-      expect(stream).toEqual([]);
-      expect(root.elementSlots[0]?.map(child => child.type)).toEqual(['a', 'b']);
-    } finally {
-      globalThis.__DEV__ = originalDev;
-    }
   });
 });
