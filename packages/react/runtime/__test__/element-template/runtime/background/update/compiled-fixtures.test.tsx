@@ -47,6 +47,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const FIXTURES_DIR = path.resolve(__dirname, '../../../fixtures/background/update');
 const DIRECT_EVENT_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/event/direct-event/index.tsx');
+const CONDITIONAL_DIRECT_EVENT_FIXTURE = path.resolve(
+  __dirname,
+  '../../../fixtures/background/event/conditional-direct-event/index.tsx',
+);
 const SLOT_ID = 0;
 
 interface CompiledKeyedListModule extends CompiledFixtureModuleExports {
@@ -55,6 +59,10 @@ interface CompiledKeyedListModule extends CompiledFixtureModuleExports {
 
 interface CompiledDirectEventModule extends CompiledFixtureModuleExports {
   App: (props: { onTap?: () => void }) => JSX.Element;
+}
+
+interface CompiledConditionalDirectEventModule extends CompiledFixtureModuleExports {
+  App: (props: { show?: boolean; onTap?: () => void }) => JSX.Element;
 }
 
 function getRenderedHost(): BackgroundElementTemplateInstance {
@@ -135,6 +143,22 @@ describe('Compiled background Preact updates', () => {
     return { backgroundModule, mainModule };
   }
 
+  async function loadCompiledConditionalDirectEventFixture(): Promise<{
+    backgroundModule: CompiledConditionalDirectEventModule;
+    mainModule: CompiledConditionalDirectEventModule;
+  }> {
+    const mainArtifact = await compileFixtureSource(CONDITIONAL_DIRECT_EVENT_FIXTURE, { target: 'LEPUS' });
+    primeCompiledFixtureTemplates(mainArtifact);
+    const mainModule = await loadCompiledFixtureModule<CompiledConditionalDirectEventModule>(mainArtifact);
+
+    const backgroundArtifact = await compileFixtureSource(CONDITIONAL_DIRECT_EVENT_FIXTURE, { target: 'JS' });
+    const backgroundModule = await loadCompiledFixtureModule<CompiledConditionalDirectEventModule>(
+      backgroundArtifact,
+    );
+
+    return { backgroundModule, mainModule };
+  }
+
   function renderCompiledOnBackground(
     moduleExports: CompiledKeyedListModule,
     items: readonly string[],
@@ -175,6 +199,31 @@ describe('Compiled background Preact updates', () => {
 
     envManager.switchToMainThread();
     root.render(createElement(moduleExports.App, { onTap }));
+    renderPage();
+    envManager.switchToBackground();
+
+    return host;
+  }
+
+  function renderConditionalDirectEventOnBackground(
+    moduleExports: CompiledConditionalDirectEventModule,
+    show: boolean,
+    onTap?: () => void,
+  ): BackgroundElementTemplateInstance {
+    envManager.switchToBackground();
+    root.render(createElement(moduleExports.App, { show, onTap }));
+    return getRenderedHost();
+  }
+
+  function hydrateConditionalDirectEventFromMainThread(
+    moduleExports: CompiledConditionalDirectEventModule,
+    show: boolean,
+    onTap?: () => void,
+  ): BackgroundElementTemplateInstance {
+    const host = getRenderedHost();
+
+    envManager.switchToMainThread();
+    root.render(createElement(moduleExports.App, { show, onTap }));
     renderPage();
     envManager.switchToBackground();
 
@@ -401,6 +450,74 @@ describe('Compiled background Preact updates', () => {
       expect(firstHandler).toHaveBeenCalledWith({ type: 'tap', phase: 'first' });
       expect(firstHandler).toHaveBeenCalledTimes(1);
       expect(secondHandler).toHaveBeenCalledWith({ type: 'tap', phase: 'second' });
+    });
+
+    it('registers and dispatches direct events on inserted compiled subtrees', async () => {
+      const { backgroundModule, mainModule } = await loadCompiledConditionalDirectEventFixture();
+      const handler = vi.fn();
+
+      const host = renderConditionalDirectEventOnBackground(backgroundModule, false);
+      hydrateConditionalDirectEventFromMainThread(mainModule, false);
+      updateEvents = [];
+
+      renderConditionalDirectEventOnBackground(backgroundModule, true, handler);
+      const inserted = getSlotChildAt(0, host);
+      const eventValue = `${inserted.instanceId}:0:`;
+
+      envManager.switchToMainThread();
+      expect(updateEvents.at(-1)?.ops).toEqual([
+        ...collectRecursiveCreateCommandStream(inserted),
+        ElementTemplateUpdateOps.insertNode,
+        host.instanceId,
+        SLOT_ID,
+        inserted.instanceId,
+        0,
+      ]);
+      envManager.switchToBackground();
+      expect(inserted.attributeSlots).toEqual([eventValue]);
+      expect(getEventHandlerForEventValue(eventValue)).toBe(handler);
+
+      publishEvent(eventValue, { type: 'tap', phase: 'inserted' });
+
+      expect(handler).toHaveBeenCalledWith({ type: 'tap', phase: 'inserted' });
+    });
+
+    it('cleans direct event handlers when compiled subtrees are removed', async () => {
+      const { backgroundModule, mainModule } = await loadCompiledConditionalDirectEventFixture();
+      const handler = vi.fn();
+
+      const host = renderConditionalDirectEventOnBackground(backgroundModule, true, handler);
+      hydrateConditionalDirectEventFromMainThread(mainModule, true, handler);
+      const removed = getSlotChildAt(0, host);
+      const removedSubtreeHandleIds = collectElementTemplateSubtreeHandleIds(removed);
+      const eventValue = `${removed.instanceId}:0:`;
+      expect(getEventHandlerForEventValue(eventValue)).toBe(handler);
+      updateEvents = [];
+
+      vi.useFakeTimers();
+      try {
+        renderConditionalDirectEventOnBackground(backgroundModule, false);
+
+        envManager.switchToMainThread();
+        expect(updateEvents.at(-1)?.ops).toEqual([
+          ElementTemplateUpdateOps.removeNode,
+          host.instanceId,
+          SLOT_ID,
+          removed.instanceId,
+          removedSubtreeHandleIds,
+        ]);
+        envManager.switchToBackground();
+        expect(getEventHandlerForEventValue(eventValue)).toBe(handler);
+
+        vi.advanceTimersByTime(10000);
+
+        expect(backgroundElementTemplateInstanceManager.get(removed.instanceId)).toBeUndefined();
+        expect(getEventHandlerForEventValue(eventValue)).toBeUndefined();
+        publishEvent(eventValue, { type: 'tap', phase: 'removed' });
+        expect(handler).not.toHaveBeenCalledWith({ type: 'tap', phase: 'removed' });
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 });
