@@ -41,6 +41,6 @@
     "@lynx-js/trace-processor": "^0.0.1",
     "@lynx-js/type-element-api": "0.0.3",
     "@lynx-js/types": "3.7.0",
-    "@types/react": "^18.3.28"
+    "@types/react": "^19.2.14"
   }
 }
