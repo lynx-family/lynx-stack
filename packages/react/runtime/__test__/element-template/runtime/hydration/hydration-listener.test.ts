@@ -12,12 +12,21 @@ import {
 } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { PerformanceTimingFlags, PipelineOrigins } from '../../../../src/element-template/lynx/performance.js';
+import {
+  clearEventHandlers,
+  publishEvent,
+  resetEventHandlersForRuntime,
+} from '../../../../src/element-template/prop-adapters/event.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import type { SerializedElementTemplate } from '../../../../src/element-template/protocol/types.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';
+import {
+  __etAttrPlanMap,
+  adaptEventAttrSlot,
+  clearEtAttrPlanMap,
+} from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
 import { flushCoreContextEvents } from '../../test-utils/mock/mockNativePapi/context.js';
-// removed installMockNativePapi import
 
 import '../../../../src/element-template/native/index.js';
 
@@ -43,6 +52,8 @@ describe('ElementTemplate hydration listener', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    clearEtAttrPlanMap();
+    clearEventHandlers();
     resetElementTemplateHydrationListener();
     envManager.resetEnv('background');
   });
@@ -208,6 +219,39 @@ describe('ElementTemplate hydration listener', () => {
     envManager.switchToBackground();
     expect(backgroundElementTemplateInstanceManager.get(oldId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(-1)).toBeUndefined();
+  });
+
+  it('flushes queued direct events after hydrate registers serialized handlers', () => {
+    __etAttrPlanMap._et_event = [0, adaptEventAttrSlot];
+    resetEventHandlersForRuntime();
+    envManager.switchToBackground();
+    installElementTemplateHydrationListener();
+
+    const eventData = { type: 'tap' };
+    const handler = vi.fn();
+    const backgroundRoot = __root as BackgroundElementTemplateInstance;
+    const after = new BackgroundElementTemplateInstance('_et_event');
+    after.setAttribute('attributeSlots', [handler]);
+    backgroundRoot.appendChild(after);
+
+    publishEvent('-1:0:', eventData);
+
+    envManager.switchToMainThread();
+    lynx.getJSContext().dispatchEvent({
+      type: ElementTemplateLifecycleConstant.hydrate,
+      data: [
+        {
+          templateKey: '_et_event',
+          attributeSlots: ['-1:0:'],
+          elementSlots: [],
+          uid: -1,
+        } satisfies SerializedElementTemplate,
+      ],
+    });
+
+    envManager.switchToBackground();
+
+    expect(handler).toHaveBeenCalledWith(eventData);
   });
 
   it('marks hydrate performance timings on background thread', () => {

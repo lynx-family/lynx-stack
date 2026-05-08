@@ -19,6 +19,7 @@ describe('element-template native index wiring', () => {
     vi.doUnmock('../../../src/element-template/native/patch-listener.js');
     vi.doUnmock('../../../src/element-template/native/mts-destroy.js');
     vi.doUnmock('../../../src/element-template/native/callDestroyLifetimeFun.js');
+    vi.doUnmock('../../../src/element-template/prop-adapters/event.js');
     vi.doUnmock('../../../src/element-template/background/document.js');
     vi.doUnmock('../../../src/element-template/background/hydration-listener.js');
     vi.doUnmock('../../../src/element-template/background/commit-hook.js');
@@ -108,6 +109,9 @@ describe('element-template native index wiring', () => {
     const initTimingAPI = vi.fn();
     const setRoot = vi.fn();
     const callDestroyLifetimeFun = vi.fn();
+    const publishEvent = vi.fn();
+    const publicComponentEvent = vi.fn();
+    const resetEventHandlersForRuntime = vi.fn();
 
     vi.doMock('../../../src/element-template/native/main-thread-api.js', () => ({
       injectCalledByNative,
@@ -142,6 +146,11 @@ describe('element-template native index wiring', () => {
     vi.doMock('../../../src/element-template/native/callDestroyLifetimeFun.js', () => ({
       callDestroyLifetimeFun,
     }));
+    vi.doMock('../../../src/element-template/prop-adapters/event.js', () => ({
+      publishEvent,
+      publicComponentEvent,
+      resetEventHandlersForRuntime,
+    }));
     vi.doMock('../../../src/element-template/background/instance.js', () => ({
       BackgroundElementTemplateInstance: class BackgroundElementTemplateInstance {
         constructor(public type: string) {}
@@ -157,7 +166,10 @@ describe('element-template native index wiring', () => {
     expect(initTimingAPI).toHaveBeenCalledTimes(1);
     expect(initProfileHook).toHaveBeenCalledTimes(1);
     expect(setupLynxEnv).toHaveBeenCalledTimes(1);
+    expect(resetEventHandlersForRuntime).toHaveBeenCalledTimes(1);
     expect(globalThis.lynxCoreInject.tt.callDestroyLifetimeFun).toBe(callDestroyLifetimeFun);
+    expect(globalThis.lynxCoreInject.tt.publishEvent).toBe(publishEvent);
+    expect(globalThis.lynxCoreInject.tt.publicComponentEvent).toBe(publicComponentEvent);
 
     expect(injectCalledByNative).not.toHaveBeenCalled();
     expect(installElementTemplatePatchListener).not.toHaveBeenCalled();

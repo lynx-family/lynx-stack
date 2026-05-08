@@ -21,6 +21,7 @@ import { root } from '../../../../../src/element-template/index.js';
 import {
   clearEventHandlers,
   getEventHandlerForEventValue,
+  publishEvent,
 } from '../../../../../src/element-template/prop-adapters/event.js';
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../../src/element-template/protocol/opcodes.js';
@@ -381,6 +382,25 @@ describe('Compiled background Preact updates', () => {
       envManager.switchToBackground();
       expect(host.attributeSlots).toEqual([null]);
       expect(getEventHandlerForEventValue(eventValue)).toBeUndefined();
+    });
+
+    it('dispatches native event values to the latest hydrated direct event handler', async () => {
+      const { backgroundModule, mainModule } = await loadCompiledDirectEventFixture();
+      const firstHandler = vi.fn();
+      const secondHandler = vi.fn();
+
+      const host = renderDirectEventOnBackground(backgroundModule, firstHandler);
+      hydrateDirectEventFromMainThread(mainModule, firstHandler);
+      const eventValue = `${host.instanceId}:0:`;
+
+      publishEvent(eventValue, { type: 'tap', phase: 'first' });
+
+      renderDirectEventOnBackground(backgroundModule, secondHandler);
+      publishEvent(eventValue, { type: 'tap', phase: 'second' });
+
+      expect(firstHandler).toHaveBeenCalledWith({ type: 'tap', phase: 'first' });
+      expect(firstHandler).toHaveBeenCalledTimes(1);
+      expect(secondHandler).toHaveBeenCalledWith({ type: 'tap', phase: 'second' });
     });
   });
 });
