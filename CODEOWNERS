@@ -4,6 +4,7 @@ packages/webpack/** @colinaaa @upupming @luhc228
 packages/rspeedy/** @colinaaa @upupming @luhc228
 packages/i18n/** @luhc228
 packages/lynx/autolink-codegen/** @jianliang00
+packages/lynx/create-lynx-extension/** @jianliang00
 packages/rspeedy/plugin-react/** @upupming
 packages/react/** @hzy @HuJean @Yradex
 packages/react/transform/** @gaoachao

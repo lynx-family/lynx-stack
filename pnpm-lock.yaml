@@ -742,6 +742,8 @@ importers:
         specifier: ^8.8.5
         version: 8.8.5
 
+  packages/lynx/create-lynx-extension: {}
+
   packages/lynx/gesture-runtime:
     devDependencies:
       '@lynx-js/react':
