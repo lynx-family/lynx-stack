@@ -106,6 +106,12 @@ declare global {
     element: FiberElement,
     options: FlushOptions,
   ): void;
+  declare function __LoadStyleSheet(
+    sectionName: string,
+    bundleUrl: string,
+  ): StyleSheet | null;
+  declare function __AdoptStyleSheet(styleSheet: StyleSheet): void;
+  declare interface StyleSheet {}
   declare function __UpdateListCallbacks(
     list: FiberElement,
     componentAtIndex: ComponentAtIndexCallback | null,

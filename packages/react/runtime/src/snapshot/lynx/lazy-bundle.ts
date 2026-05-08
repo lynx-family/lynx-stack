@@ -61,6 +61,7 @@ const LYNX_LAZY_SYNC_TIMEOUT_SECONDS = 5;
 
 const SECTION_MAIN_THREAD = 'main-thread';
 const SECTION_BACKGROUND = 'background';
+const SECTION_CSS = 'CSS';
 
 /**
  * Load dynamic component from source. Designed to be used with `lazy`.
@@ -171,6 +172,10 @@ export const loadLazyBundle: <
         });
       } catch {
         return new Promise(() => {});
+      }
+      const styleSheet = __LoadStyleSheet(SECTION_CSS, response.url);
+      if (styleSheet !== null) {
+        __AdoptStyleSheet(styleSheet);
       }
       const r: Promise<T> = Promise.resolve(result);
       r.then = makeSyncThen(result);
