@@ -83,7 +83,7 @@
     "typia": "10.1.0",
     "typia-rspack-plugin": "2.2.2",
     "vitest": "^3.2.4",
-    "webpack": "^5.105.2"
+    "webpack": "^5.106.2"
   },
   "peerDependencies": {
     "typescript": "5.1.6 - 5.9.x"
