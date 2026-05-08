@@ -3,7 +3,7 @@
     "test": "rstest run"
   },
   "devDependencies": {
-    "@rstest/core": "^0.8.1",
+    "@rstest/core": "^0.9.10",
     "@testing-library/jest-dom": "^6.9.1",
     "jsdom": "^27.4.0"
   }
