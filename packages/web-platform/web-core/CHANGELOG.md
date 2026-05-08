@@ -1,5 +1,17 @@
 # @lynx-js/web-core
 
+## 0.20.4
+
+### Patch Changes
+
+- Stop redeclaring `fetch` as a chunk-scope binding. Reusing the host ([#2562](https://github.com/lynx-family/lynx-stack/pull/2562))
+  `window.fetch` from BTS chunks (instead of capturing the no-op stub the
+  chunk wrapper used to install) lets the renderer issue real network
+  requests.
+- Updated dependencies [[`c1db603`](https://github.com/lynx-family/lynx-stack/commit/c1db6034641954680c529e3a01a04077196cd94d)]:
+  - @lynx-js/web-elements@0.12.2
+  - @lynx-js/web-worker-rpc@0.20.4
+
 ## 0.20.3
 
 ### Patch Changes

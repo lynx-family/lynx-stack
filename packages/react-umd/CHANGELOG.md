@@ -1,5 +1,7 @@
 # @lynx-js/react-umd
 
+## 0.121.0
+
 ## 0.120.0
 
 ### Patch Changes

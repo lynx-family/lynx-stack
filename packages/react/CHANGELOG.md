@@ -1,5 +1,45 @@
 # @lynx-js/react
 
+## 0.121.0
+
+### Minor Changes
+
+- Support `React.createElement(type, props, children)` API. ([#2360](https://github.com/lynx-family/lynx-stack/pull/2360))
+
+  ```jsx
+  React.createElement('view', { style }, <text>hello</text>);
+  // equivalent to
+  <view style={style}>
+    <text>hello</text>
+  </view>;
+
+  React.createElement(MyComponent, { style }, <view />);
+  // equivalent to
+  <MyComponent style={style}>
+    <view />
+  </MyComponent>;
+  ```
+
+### Patch Changes
+
+- Add `createPortal` for rendering a subtree into a different ReactLynx element identified by a `NodesRef`. ([#2543](https://github.com/lynx-family/lynx-stack/pull/2543))
+
+  ```tsx
+  function App() {
+    const [host, setHost] = useState(null);
+    return (
+      <view>
+        <view ref={setHost} />
+        {host && createPortal(<text>hi</text>, host)}
+      </view>
+    );
+  }
+  ```
+
+- Default `fireEvent` to `bubbles: true` for the TouchEvent family in testing-library to match Lynx runtime semantics, and stop reassigning the read-only `Event.prototype` accessors which threw `TypeError` in strict mode. ([#2532](https://github.com/lynx-family/lynx-stack/pull/2532))
+
+- Set `bundle-url` on lazy bundle border elements. ([#2537](https://github.com/lynx-family/lynx-stack/pull/2537))
+
 ## 0.120.0
 
 ### Minor Changes
