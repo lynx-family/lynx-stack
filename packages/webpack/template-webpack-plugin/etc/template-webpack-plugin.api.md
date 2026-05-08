@@ -32,7 +32,8 @@ export interface EncodeOptions {
     // (undocumented)
     customSections: Record<string, {
         type?: 'lazy';
-        content: string | Record<string, unknown>;
+        encoding?: 'JsBytecode' | 'CSS';
+        content: string | Record<string, unknown> | undefined;
     }>;
     elementTemplate?: Record<string, unknown>;
     // (undocumented)
@@ -40,9 +41,9 @@ export interface EncodeOptions {
         root: string | undefined;
         lepusChunk: Record<string, string>;
         filename: string | undefined;
-    };
+    } | undefined;
     // (undocumented)
-    manifest: Record<string, string | undefined>;
+    manifest?: Record<string, string | undefined> | undefined;
 }
 
 // @public
@@ -210,6 +211,6 @@ export class WebEncodePlugin {
 
 // Warnings were encountered during analysis:
 //
-// lib/LynxTemplatePlugin.d.ts:72:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
+// lib/LynxTemplatePlugin.d.ts:73:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
 
 ```
