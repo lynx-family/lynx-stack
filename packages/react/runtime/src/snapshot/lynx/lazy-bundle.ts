@@ -55,6 +55,13 @@ export const makeSyncThen = function<T>(result: T): Promise<T>['then'] {
   };
 };
 
+let lazyBundleMode: 'sync' | 'async' | undefined;
+
+const LYNX_LAZY_SYNC_TIMEOUT_SECONDS = 5;
+
+const SECTION_MAIN_THREAD = 'main-thread';
+const SECTION_BACKGROUND = 'background';
+
 /**
  * Load dynamic component from source. Designed to be used with `lazy`.
  * @param source - where dynamic component template.js locates
@@ -64,9 +71,16 @@ export const makeSyncThen = function<T>(result: T): Promise<T>['then'] {
 export const loadLazyBundle: <
   T extends { default: React.ComponentType<any> },
 >(source: string) => Promise<T> = /*#__PURE__*/ (() => {
-  lynx.loadLazyBundle = loadLazyBundle;
+  const useQueryComponent = typeof __LAZY_BUNDLE_FETCHER__ !== 'undefined'
+    && __LAZY_BUNDLE_FETCHER__ === 'QueryComponent';
 
-  function loadLazyBundle<
+  const impl = useQueryComponent
+    ? loadLazyBundleWithQueryComponent
+    : loadLazyBundleWithFetchBundle;
+
+  lynx.loadLazyBundle = impl;
+
+  function loadLazyBundleWithQueryComponent<
     T extends { default: React.ComponentType<any> },
   >(source: string): Promise<T> {
     if (__LEPUS__) {
@@ -132,7 +146,99 @@ export const loadLazyBundle: <
     throw new Error('unreachable');
   }
 
-  return loadLazyBundle;
+  function loadLazyBundleWithFetchBundle<
+    T extends { default: React.ComponentType<any> },
+  >(source: string): Promise<T> {
+    if (__MAIN_THREAD__) {
+      if (lazyBundleMode !== 'sync') {
+        return new Promise(() => {});
+      }
+      let response;
+      try {
+        response = lynx.fetchBundle(source, {}).wait(
+          LYNX_LAZY_SYNC_TIMEOUT_SECONDS,
+        );
+      } catch {
+        return new Promise(() => {});
+      }
+      if (!response || response.code !== 0) {
+        return new Promise(() => {});
+      }
+      let result: T;
+      try {
+        result = lynx.loadScript<T>(SECTION_MAIN_THREAD, {
+          bundleName: response.url,
+        });
+      } catch {
+        return new Promise(() => {});
+      }
+      const r: Promise<T> = Promise.resolve(result);
+      r.then = makeSyncThen(result);
+      return r;
+    } else if (__JS__) {
+      if (lazyBundleMode === 'sync') {
+        let response;
+        try {
+          response = lynx.fetchBundle(source, {}).wait(
+            LYNX_LAZY_SYNC_TIMEOUT_SECONDS,
+          );
+        } catch (e) {
+          return Promise.reject(e instanceof Error ? e : new Error(String(e)));
+        }
+        if (!response || response.code !== 0) {
+          const e = new Error('Lazy bundle load failed, schema: ' + source);
+          // ES5 does not support new Error('message', { cause: 'detail' })
+          // So we set cause using `.cause` assignment
+          e.cause = JSON.stringify(response);
+          return Promise.reject(e);
+        }
+        let result: T;
+        try {
+          result = lynx.loadScript<T>(SECTION_BACKGROUND, {
+            bundleName: response.url,
+          });
+        } catch (e) {
+          return Promise.reject(e instanceof Error ? e : new Error(String(e)));
+        }
+        const r: Promise<T> = Promise.resolve(result);
+        r.then = makeSyncThen(result);
+        return r;
+      }
+
+      // async (default)
+      return new Promise<T>((resolve, reject) => {
+        let handler;
+        try {
+          handler = lynx.fetchBundle(source, {});
+        } catch (e) {
+          reject(e instanceof Error ? e : new Error(String(e)));
+          return;
+        }
+        handler.then((response) => {
+          if (!response || response.code !== 0) {
+            const e = new Error('Lazy bundle load failed, schema: ' + source);
+            // ES5 does not support new Error('message', { cause: 'detail' })
+            // So we set cause using `.cause` assignment
+            e.cause = JSON.stringify(response);
+            reject(e);
+            return;
+          }
+          try {
+            const result = lynx.loadScript<T>(SECTION_BACKGROUND, {
+              bundleName: response.url,
+            });
+            resolve(result);
+          } catch (e) {
+            reject(e instanceof Error ? e : new Error(String(e)));
+          }
+        });
+      });
+    }
+
+    throw new Error('unreachable');
+  }
+
+  return impl;
 })();
 
 function withSyncResolvers<T>() {
@@ -157,8 +263,6 @@ function withSyncResolvers<T>() {
   return resolver;
 }
 
-const __LYNX_LAZY_BUNDLE_MODE__ = Symbol.for('__LYNX_LAZY_BUNDLE_MODE__');
-
 /**
  * Temporarily set import mode for lazy bundle.
  * @param mode Import mode.
@@ -166,12 +270,11 @@ const __LYNX_LAZY_BUNDLE_MODE__ = Symbol.for('__LYNX_LAZY_BUNDLE_MODE__');
  * @returns Result of factory function.
  */
 export function withLazyBundleMode<T>(mode: 'sync' | 'async', factory: () => T): T {
-  const g = lynx as unknown as Record<symbol, unknown>;
-  const prev = g[__LYNX_LAZY_BUNDLE_MODE__];
-  g[__LYNX_LAZY_BUNDLE_MODE__] = mode;
+  const prev = lazyBundleMode;
+  lazyBundleMode = mode;
   try {
     return factory();
   } finally {
-    g[__LYNX_LAZY_BUNDLE_MODE__] = prev;
+    lazyBundleMode = prev;
   }
 }

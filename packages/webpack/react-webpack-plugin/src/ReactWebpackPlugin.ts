@@ -248,6 +248,9 @@ class ReactWebpackPlugin {
       __USE_ELEMENT_TEMPLATE__: JSON.stringify(
         options.experimental_useElementTemplate,
       ),
+      __LAZY_BUNDLE_FETCHER__: JSON.stringify(
+        process.env['REACT_LAZY_BUNDLE_FETCHER'] ?? 'FetchBundle',
+      ),
     }).apply(compiler);
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {

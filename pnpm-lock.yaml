@@ -42,10 +42,7 @@ catalogs:
       version: 0.2.0
 
 overrides:
-  '@rspack/core@^1': 1.7.9
-  '@rsbuild/core@1>@rspack/core': 1.7.9
-  '@rsdoctor/rspack-plugin>@rspack/core': 1.7.9
-  '@rsdoctor/types>@rspack/core': 1.7.9
+  '@lynx-js/types': file:./vendor/lynx-js-types-3.10.0.tgz
 
 packageExtensionsChecksum: sha256-BUwt5m2tRMyYg9pgFVHNTHCYEBuM0/o7IdJqk+vWTGs=
 
@@ -213,8 +210,8 @@ importers:
         specifier: 0.0.3
         version: 0.0.3
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -241,8 +238,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -269,8 +266,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -294,8 +291,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -319,11 +316,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@rsbuild/plugin-babel':
         specifier: 1.1.0
-        version: 1.1.0(@rsbuild/core@1.7.5)
+        version: 1.1.0(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -350,8 +347,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -375,8 +372,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -406,8 +403,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -434,8 +431,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -459,8 +456,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -484,8 +481,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -512,8 +509,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/webpack/template-webpack-plugin
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -546,8 +543,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tailwind-preset
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -595,16 +592,16 @@ importers:
         version: link:../a2ui-catalog-extractor
       '@lynx-js/lynx-ui':
         specifier: ^3.130.0
-        version: 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+        version: 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/lynx-ui-input':
         specifier: ^3.130.0
-        version: 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+        version: 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.8.1(jsdom@27.4.0)
@@ -668,8 +665,8 @@ importers:
         specifier: workspace:*
         version: link:../../rspeedy/core
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 1.7.5
@@ -704,8 +701,8 @@ importers:
         specifier: workspace:*
         version: link:../../webpack/template-webpack-plugin
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       i18next:
         specifier: 26.0.6
         version: 26.0.6(typescript@5.9.3)
@@ -714,7 +711,7 @@ importers:
         version: 1.54.2(@swc/helpers@0.5.21)(@types/node@24.10.13)(i18next@26.0.6(typescript@5.9.3))(typescript@5.9.3)
       rsbuild-plugin-i18next-extractor:
         specifier: 0.2.1
-        version: 0.2.1(@rsbuild/core@1.7.5)(i18next-cli@1.54.2(@swc/helpers@0.5.21)(@types/node@24.10.13)(i18next@26.0.6(typescript@5.9.3))(typescript@5.9.3))(rollup@4.34.9)
+        version: 0.2.1(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))(i18next-cli@1.54.2(@swc/helpers@0.5.21)(@types/node@24.10.13)(i18next@26.0.6(typescript@5.9.3))(typescript@5.9.3))(rollup@4.34.9)
 
   packages/lynx/benchx_cli:
     dependencies:
@@ -723,13 +720,14 @@ importers:
         version: 8.8.5
 
   packages/lynx/gesture-runtime:
+    dependencies:
+      '@lynx-js/types':
+        specifier: file:../../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react
-      '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -834,6 +832,9 @@ importers:
 
   packages/motion:
     dependencies:
+      '@lynx-js/types':
+        specifier: file:../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       framer-motion:
         specifier: 12.34.1
         version: 12.34.1(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
@@ -847,22 +848,19 @@ importers:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../react
-      '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
       rsbuild-plugin-publint:
         specifier: 0.3.4
         version: 0.3.4(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))
 
   packages/react:
     dependencies:
+      '@lynx-js/types':
+        specifier: file:../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       preact:
         specifier: npm:@lynx-js/internal-preact@10.29.1-20260424024911-12b794f
         version: '@lynx-js/internal-preact@10.29.1-20260424024911-12b794f'
     devDependencies:
-      '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.58.2(@types/node@24.10.13)
@@ -909,8 +907,8 @@ importers:
         specifier: workspace:*
         version: link:../transform
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -1013,8 +1011,8 @@ importers:
         specifier: 0.0.3
         version: 0.0.3
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../web-platform/web-core
@@ -1086,7 +1084,7 @@ importers:
         version: 1.1.1(@rsbuild/core@1.7.5)(lightningcss@1.31.1)(webpack@5.105.2)
       '@rsdoctor/rspack-plugin':
         specifier: ~1.5.6
-        version: 1.5.6(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@rsbuild/core@1.7.5)(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
+        version: 1.5.6(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@rsbuild/core@1.7.5)(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
       typescript:
         specifier: 5.1.6 - 5.9.x
         version: 5.9.3
@@ -1102,7 +1100,7 @@ importers:
         version: 12.3.0(patch_hash=926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d)(rollup@4.34.9)(tslib@2.8.1)(typescript@5.9.3)
       '@rsdoctor/core':
         specifier: ~1.5.6
-        version: 1.5.6(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@rsbuild/core@1.7.5)(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
+        version: 1.5.6(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@rsbuild/core@1.7.5)(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
       chokidar:
         specifier: ^4.0.3
         version: 4.0.3
@@ -1172,7 +1170,7 @@ importers:
         version: link:../core
       '@rsbuild/plugin-type-check':
         specifier: 1.3.4
-        version: 1.3.4(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))(@rspack/core@1.7.9(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)
+        version: 1.3.4(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))(@rspack/core@2.0.0-beta.0(@module-federation/runtime-tools@0.22.0)(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.8.1(jsdom@27.4.0)
@@ -1415,8 +1413,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../../web-platform/web-core
@@ -1425,10 +1423,10 @@ importers:
         version: link:../../web-platform/web-elements
       '@rsbuild/plugin-less':
         specifier: 1.6.0
-        version: 1.6.0(@rsbuild/core@1.7.5)
+        version: 1.6.0(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))
       '@rsbuild/plugin-sass':
         specifier: 1.5.0
-        version: 1.5.0(@rsbuild/core@1.7.5)
+        version: 1.5.0(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -1443,7 +1441,7 @@ importers:
         version: 1.1.1
       rsbuild-plugin-tailwindcss:
         specifier: 0.2.4
-        version: 0.2.4(@rsbuild/core@1.7.5)(tailwindcss@4.2.1)
+        version: 0.2.4(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))(tailwindcss@4.2.1)
       rslog:
         specifier: ^1.3.2
         version: 1.3.2
@@ -1533,11 +1531,11 @@ importers:
         specifier: workspace:*
         version: link:../../../rspeedy/core
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@rsbuild/plugin-babel':
         specifier: 1.1.0
-        version: 1.1.0(@rsbuild/core@1.7.5)
+        version: 1.1.0(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -1576,8 +1574,8 @@ importers:
         specifier: workspace:*
         version: link:../../rspeedy/core
       '@lynx-js/types':
-        specifier: 3.7.0
-        version: 3.7.0
+        specifier: file:../../../vendor/lynx-js-types-3.10.0.tgz
+        version: file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -1794,7 +1792,7 @@ importers:
         version: 1.7.5
       '@rsdoctor/rspack-plugin':
         specifier: ~1.5.6
-        version: 1.5.6(@emnapi/core@1.7.1)(@emnapi/runtime@1.7.1)(@rsbuild/core@1.7.5)(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
+        version: 1.5.6(@emnapi/core@1.7.1)(@emnapi/runtime@1.7.1)(@rsbuild/core@1.7.5)(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -1915,7 +1913,7 @@ importers:
         version: link:../test-tools
       '@rspack/test-tools':
         specifier: catalog:rspack
-        version: 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))
+        version: 1.5.6(@rspack/core@2.0.0-beta.0(@module-federation/runtime-tools@0.22.0)(@swc/helpers@0.5.21))
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.8.1(jsdom@27.4.0)
@@ -2096,7 +2094,7 @@ importers:
         version: 7.58.2(@types/node@24.10.13)
       '@rspack/test-tools':
         specifier: catalog:rspack
-        version: 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))
+        version: 1.5.6(@rspack/core@2.0.0-beta.0(@module-federation/runtime-tools@0.22.0)(@swc/helpers@0.5.21))
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.8.1(jsdom@27.4.0)
@@ -2139,7 +2137,7 @@ importers:
         version: 7.58.2(@types/node@24.10.13)
       '@rspack/test-tools':
         specifier: catalog:rspack
-        version: 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))
+        version: 1.5.6(@rspack/core@2.0.0-beta.0(@module-federation/runtime-tools@0.22.0)(@swc/helpers@0.5.21))
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.8.1(jsdom@27.4.0)
@@ -2151,7 +2149,7 @@ importers:
         version: 1.0.4
       css-loader:
         specifier: ^7.1.4
-        version: 7.1.4(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
+        version: 7.1.4(@rspack/core@2.0.0-beta.0(@module-federation/runtime-tools@0.22.0)(@swc/helpers@0.5.21))(webpack@5.105.2)
       webpack:
         specifier: ^5.105.2
         version: 5.105.2
@@ -2287,13 +2285,13 @@ importers:
         version: 7.33.6(@types/node@24.10.13)
       '@rsbuild/plugin-sass':
         specifier: 1.5.0
-        version: 1.5.0(@rsbuild/core@1.7.5)
+        version: 1.5.0(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))
       '@rsbuild/plugin-type-check':
         specifier: 1.3.4
-        version: 1.3.4(@rsbuild/core@1.7.5)(@rspack/core@1.7.9(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)
+        version: 1.3.4(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))(@rspack/core@2.0.0-beta.0(@module-federation/runtime-tools@0.22.0)(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)
       '@rsbuild/plugin-typed-css-modules':
         specifier: 1.2.2
-        version: 1.2.2(@rsbuild/core@1.7.5)
+        version: 1.2.2(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))
       '@rspress/core':
         specifier: 2.0.3
         version: 2.0.3(@module-federation/runtime-tools@0.22.0)(@types/react@19.2.14)(core-js@3.48.0)
@@ -3711,6 +3709,7 @@ packages:
 
   '@lynx-js/gesture-runtime@2.1.1':
     resolution: {integrity: sha512-zBDOHakuePjw5wPCButExNgcllyFPGqYzqP2CWCWcQaX4gqJmCmYeRKguihyxH6ma6ExxlH/J2x5CHD91ed3bQ==}
+    version: 2.1.1
     peerDependencies:
       '@lynx-js/react': '*'
       '@lynx-js/types': '*'
@@ -3723,6 +3722,7 @@ packages:
 
   '@lynx-js/lynx-ui-button@3.130.0':
     resolution: {integrity: sha512-0f13aZROKhTxMEY69rtWlkfvd6NM3A7JwloFQsh2nxcOiABp6dddvzzQJSayt2xAUxRjFl4uh5Rj/ZrQjjCrNw==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3730,6 +3730,7 @@ packages:
 
   '@lynx-js/lynx-ui-checkbox@3.130.0':
     resolution: {integrity: sha512-2xgq7oyGjq7CKYiHd/9nO+gzT2T3KSi4gb3EPxqrENDiiDv5im3ePTwzazUuHaWWK+7cHuJgxZIhwQU0Rk6l8w==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3737,6 +3738,7 @@ packages:
 
   '@lynx-js/lynx-ui-common@3.130.0':
     resolution: {integrity: sha512-6odzHU1z1PomtmskJUxIpj+TkHq9daOhUb7N0a3LquKxz9wp41qM1r2oDLRHdeUlylfId1F87Bto6F7Ql9+37w==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3744,6 +3746,7 @@ packages:
 
   '@lynx-js/lynx-ui-dialog@3.130.0':
     resolution: {integrity: sha512-AFkA7V+xI5EdaA2JShIcK3UAMG1RuaZcWl16f66KNRD1/ZgIQNp7sYOW/bnQmH+BXts7p4ut7NWBNNe5WcSVvQ==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3751,6 +3754,7 @@ packages:
 
   '@lynx-js/lynx-ui-draggable@3.130.0':
     resolution: {integrity: sha512-c9Sw0xahJqttWq/M9SmCIc3X0HIS/d47OBk5oNQRHjhJEaGKP23u/22SfCANXboxLhCxCXXv1OVmW/x8O9Wm2A==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3758,6 +3762,7 @@ packages:
 
   '@lynx-js/lynx-ui-feed-list@3.130.0':
     resolution: {integrity: sha512-5nUNYzRjSiR94N0LAyZ+b8aj5s6WYJGShohL2piKxw5lDI7PafaYt/i30aj0Q52b7ViB8ZZuD/ZtmbD4pKeRLA==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3765,6 +3770,7 @@ packages:
 
   '@lynx-js/lynx-ui-form@3.130.0':
     resolution: {integrity: sha512-hiDetKqgAGSGcuxIaRG/ljNfZrQjh31BtWZDw0aXJZL/ifHqwv2NQHErAPp9mgO8i/5NYYNYQ5Sgs/ophKhUMA==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3772,6 +3778,7 @@ packages:
 
   '@lynx-js/lynx-ui-input@3.130.0':
     resolution: {integrity: sha512-CPBbnDARhs5wfX//78+ATXYhGhU/R4SjFTL/Yzvur3Wh+lLFQz1mEvv0BOfUFnd/lEilc9Y9q00h6g7w7WHd3A==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3779,6 +3786,7 @@ packages:
 
   '@lynx-js/lynx-ui-lazy-component@3.130.0':
     resolution: {integrity: sha512-Xr4jQBM8mB3VtSxKnxxy0VdAT1M0dE5YWx5mEkpTezGVIX5rU+Ub23VFTtSZeGYWX1EFaleTOR17fsD4+C3CfA==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3786,6 +3794,7 @@ packages:
 
   '@lynx-js/lynx-ui-list@3.130.0':
     resolution: {integrity: sha512-MBj7S19iJ3Tnu4qTVFFXMjceQ6pS+Yj84xRqoXdgVO/kvcjTzxJxQJkUt4RvCuvmQ+fOLz3Lt0ePGxVxkOYY+g==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3793,6 +3802,7 @@ packages:
 
   '@lynx-js/lynx-ui-overlay@3.130.0':
     resolution: {integrity: sha512-rc11LA4svUdfX7ZG7pjS+7JzoXllmvv6Ng91QwkYbPIuRlcHu/d0VHtd8cPTgkoBevSWCACBIDoIEgONTfyuTA==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3800,6 +3810,7 @@ packages:
 
   '@lynx-js/lynx-ui-popover@3.130.0':
     resolution: {integrity: sha512-oP37HtY/KPiDruepLnpaJQQD3WOFINIz3g432xo+wZ+ScAKtZxfQm2pDpeb9eyPejKv9KjNIFexYtoFVMvSFSg==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3807,6 +3818,7 @@ packages:
 
   '@lynx-js/lynx-ui-presence@3.130.0':
     resolution: {integrity: sha512-h5a1SNFZdmEcsEJ6NrFcWC/LqEmINDh+LE9+givCvA4IwkYBWvgBQHoe/0LESJV75TC1TlB3L0sULsBVxMvqXg==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3814,6 +3826,7 @@ packages:
 
   '@lynx-js/lynx-ui-radio-group@3.130.0':
     resolution: {integrity: sha512-vRylYRYH41BVFCEt2lsOhnZuTcLu5ACcJvOXpCgTItCDsQ/+g1GSzDl37IAwwI4MBUDPG30uwD0+s7JjYjgn0g==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3821,6 +3834,7 @@ packages:
 
   '@lynx-js/lynx-ui-scroll-view@3.130.0':
     resolution: {integrity: sha512-Q5iwceQKFZ4TTLI/h5ZGWhBLP880g4Kn1h4jOeSGWUaKFyEUdbEd1DQKZA673q6pftyLoU6OQ66ZUzyX7tlaqA==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3828,6 +3842,7 @@ packages:
 
   '@lynx-js/lynx-ui-sheet@3.130.0':
     resolution: {integrity: sha512-OSTgaX5xEJX0cjo9uwwrKcJS8wFZjFr7+yDew7gHK3bv7/FbJUVkJjhyb/bTGMsU+oyUZMUcqTgs1kgiokbPiQ==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3835,6 +3850,7 @@ packages:
 
   '@lynx-js/lynx-ui-sortable@3.130.0':
     resolution: {integrity: sha512-gdFKT6WJOaXSyaej28jGHaLqMu3E/FGNOcqgTXdEJmFbOgpvCABRdZ1flfQMd5tmCV64HXcN6KYJ7X3BBG6uTw==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3842,6 +3858,7 @@ packages:
 
   '@lynx-js/lynx-ui-swipe-action@3.130.0':
     resolution: {integrity: sha512-usfmTKBxVRsHAQQ3XvJOqqR0XRKc9+Gu+QjQdq7sa85m1xeFUocin0E8rBPuUNh82RAKC8NVgSw/olKWN/hi1Q==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3849,6 +3866,7 @@ packages:
 
   '@lynx-js/lynx-ui-swiper@3.130.0':
     resolution: {integrity: sha512-g/kKFEO4hj+pshuJPpugiTqAjiLEr1kaVjTh8GbD40NFo8X+V9tZw92BO1pfVhoRqffqC6gI4mqk7qXqDcqvbA==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3856,6 +3874,7 @@ packages:
 
   '@lynx-js/lynx-ui-switch@3.130.0':
     resolution: {integrity: sha512-AjbqyYAmFI902GrBhsaOsWQdUZjL5RdN8kA3zQfj6c5HzmYqfjWf6Q0HLJP5EoVKl97Inyl8hGlZjECGNEAqVw==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3863,6 +3882,7 @@ packages:
 
   '@lynx-js/lynx-ui@3.130.0':
     resolution: {integrity: sha512-SgzadpXCECf0dYKmrFytU7C+ihxO//z7pOirNMZppe0MOhWrv4Ld0jBt/yWfSv2rBjBRFIyo2xCxn/PM7yq0dw==}
+    version: 3.130.0
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
       '@lynx-js/types': '*'
@@ -3870,6 +3890,7 @@ packages:
 
   '@lynx-js/motion@0.0.2':
     resolution: {integrity: sha512-/oA8yBnWlGsIRxI3FGfdjxFOuKr5j3oLLmn5viW9JeuLRfIg2u+FM+UGiaAl1mZ9xfns1jamK+uax+cPwvW2dA==}
+    version: 0.0.2
     peerDependencies:
       '@lynx-js/react': '*'
       '@lynx-js/types': '*'
@@ -3899,8 +3920,9 @@ packages:
   '@lynx-js/type-element-api@0.0.3':
     resolution: {integrity: sha512-e8+V1aU9VD6fmVJhS1VoE5ZxUD2udhEtTTsGBj2jlxYNscND2V6fyYFGF/dUPN+s9EwRiB80vUY/Im8tYSsMWA==}
 
-  '@lynx-js/types@3.7.0':
-    resolution: {integrity: sha512-VEcz5HBJ8m938In1VJj2phR06cWyT0Tx+HnwBJrPINiuWPjN9YfrPl1lX87XWr3eMDhKZY+6F+5eFpJ7JFgjXw==}
+  '@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz':
+    resolution: {integrity: sha512-ubhYJ9XKoV5zq1vxowGumhkWjcsWAK2CWxirmbQdqlBGbdkLqm0iqIit7dJVqcvM0JEHp7/cDcnpFRTP5A7zRA==, tarball: file:vendor/lynx-js-types-3.10.0.tgz}
+    version: 3.10.0
 
   '@manypkg/find-root@1.1.0':
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
@@ -4612,7 +4634,7 @@ packages:
   '@rsdoctor/rspack-plugin@1.5.6':
     resolution: {integrity: sha512-IPi4byXW8WhEuB6Tu+yByc1yGQYZlvOpygkRFZzkxtDJZ1GrKjzUzeooX3NzlnXfBXg9Mu3t4Yiym8QWbLa8XA==}
     peerDependencies:
-      '@rspack/core': 1.7.9
+      '@rspack/core': '*'
     peerDependenciesMeta:
       '@rspack/core':
         optional: true
@@ -4623,7 +4645,7 @@ packages:
   '@rsdoctor/types@1.5.6':
     resolution: {integrity: sha512-ozLXrRSlUgIICjCs0xL2Nyp7S3JA6zXjrepKqQkcgFdeK70r76a4qYdQQp+bf09P/87uO8O1GOHYk6/R+qbmWw==}
     peerDependencies:
-      '@rspack/core': 1.7.9
+      '@rspack/core': '*'
       webpack: 5.x
     peerDependenciesMeta:
       '@rspack/core':
@@ -4647,6 +4669,11 @@ packages:
       typescript:
         optional: true
 
+  '@rspack/binding-darwin-arm64@1.7.11':
+    resolution: {integrity: sha512-oduECiZVqbO5zlVw+q7Vy65sJFth99fWPTyucwvLJJtJkPL5n17Uiql2cYP6Ijn0pkqtf1SXgK8WjiKLG5bIig==}
+    cpu: [arm64]
+    os: [darwin]
+
   '@rspack/binding-darwin-arm64@1.7.9':
     resolution: {integrity: sha512-64dgstte0If5czi9bA/cpOe0ryY6wC9AIQRtyJ3DlOF6Tt+y9cKkmUoGu3V+WYaYIZRT7HNk8V7kL8amVjFTYw==}
     cpu: [arm64]
@@ -4655,6 +4682,11 @@ packages:
   '@rspack/binding-darwin-arm64@2.0.0-beta.0':
     resolution: {integrity: sha512-PPx1+SPEROSvDKmBuCbsE7W9tk07ajPosyvyuafv2wbBI6PW2rNcz62uzpIFS+FTgwwZ5u/06WXRtlD2xW9bKg==}
     cpu: [arm64]
+    os: [darwin]
+
+  '@rspack/binding-darwin-x64@1.7.11':
+    resolution: {integrity: sha512-a1+TtTE9ap6RalgFi7FGIgkJP6O4Vy6ctv+9WGJy53E4kuqHR0RygzaiVxCI/GMc/vBT9vY23hyrpWb3d1vtXA==}
+    cpu: [x64]
     os: [darwin]
 
   '@rspack/binding-darwin-x64@1.7.9':
@@ -4666,6 +4698,12 @@ packages:
     resolution: {integrity: sha512-GucsfjrSKBZ9cuOTXmHWxeY2wPmaNyvGNxTyzttjRcfwqOWz8r+ku6PCsMSXUqxZRYWW1L9mvtTdlDrzTYJZ0w==}
     cpu: [x64]
     os: [darwin]
+
+  '@rspack/binding-linux-arm64-gnu@1.7.11':
+    resolution: {integrity: sha512-P0QrGRPbTWu6RKWfN0bDtbnEps3rXH0MWIMreZABoUrVmNQKtXR6e73J3ub6a+di5s2+K0M2LJ9Bh2/H4UsDUA==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
 
   '@rspack/binding-linux-arm64-gnu@1.7.9':
     resolution: {integrity: sha512-qhUGI/uVfvLmKWts4QkVHGL8yfUyJkblZs+OFD5Upa2y676EOsbQgWsCwX4xGB6Tv+TOzFP0SLh/UfO8ZfdE+w==}
@@ -4679,6 +4717,12 @@ packages:
     os: [linux]
     libc: [glibc]
 
+  '@rspack/binding-linux-arm64-musl@1.7.11':
+    resolution: {integrity: sha512-6ky7R43VMjWwmx3Yx7Jl7faLBBMAgMDt+/bN35RgwjiPgsIByz65EwytUVuW9rikB43BGHvA/eqlnjLrUzNBqw==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [musl]
+
   '@rspack/binding-linux-arm64-musl@1.7.9':
     resolution: {integrity: sha512-VjfmR1hgO9n3L6MaE5KG+DXSrrLVqHHOkVcOtS2LMq3bjMTwbBywY7ycymcLnX5KJsol8d3ZGYep6IfSOt3lFA==}
     cpu: [arm64]
@@ -4690,6 +4734,12 @@ packages:
     cpu: [arm64]
     os: [linux]
     libc: [musl]
+
+  '@rspack/binding-linux-x64-gnu@1.7.11':
+    resolution: {integrity: sha512-cuOJMfCOvb2Wgsry5enXJ3iT1FGUjdPqtGUBVupQlEG4ntSYsQ2PtF4wIDVasR3wdxC5nQbipOrDiN/u6fYsdQ==}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
 
   '@rspack/binding-linux-x64-gnu@1.7.9':
     resolution: {integrity: sha512-0kldV+3WTs/VYDWzxJ7K40hCW26IHtnk8xPK3whKoo1649rgeXXa0EdsU5P7hG8Ef5SWQjHHHZ/fuHYSO3Y6HA==}
@@ -4703,6 +4753,12 @@ packages:
     os: [linux]
     libc: [glibc]
 
+  '@rspack/binding-linux-x64-musl@1.7.11':
+    resolution: {integrity: sha512-CoK37hva4AmHGh3VCsQXmGr40L36m1/AdnN5LEjUX6kx5rEH7/1nEBN6Ii72pejqDVvk9anEROmPDiPw10tpFg==}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
   '@rspack/binding-linux-x64-musl@1.7.9':
     resolution: {integrity: sha512-Gi4872cFtc2d83FKATR6Qcf2VBa/tFCqffI/IwRRl6Hx5FulEBqx+tH7gAuRVF693vrbXNxK+FQ+k4iEsEJxrw==}
     cpu: [x64]
@@ -4715,6 +4771,10 @@ packages:
     os: [linux]
     libc: [musl]
 
+  '@rspack/binding-wasm32-wasi@1.7.11':
+    resolution: {integrity: sha512-OtrmnPUVJMxjNa3eDMfHyPdtlLRmmp/aIm0fQHlAOATbZvlGm12q7rhPW5BXTu1yh+1rQ1/uqvz+SzKEZXuJaQ==}
+    cpu: [wasm32]
+
   '@rspack/binding-wasm32-wasi@1.7.9':
     resolution: {integrity: sha512-5QEzqo6EaolpuZmK6w/mgSueorgGnnzp7dJaAvBj6ECFIg/aLXhXXmWCWbxt7Ws2gKvG5/PgaxDqbUxYL51juA==}
     cpu: [wasm32]
@@ -4722,6 +4782,11 @@ packages:
   '@rspack/binding-wasm32-wasi@2.0.0-beta.0':
     resolution: {integrity: sha512-o6OatnNvb4kCzXbCaomhENGaCsO3naIyAqqErew90HeAwa1lfY3NhRfDLeIyuANQ+xqFl34/R7n8q3ZDx3nd4Q==}
     cpu: [wasm32]
+
+  '@rspack/binding-win32-arm64-msvc@1.7.11':
+    resolution: {integrity: sha512-lObFW6e5lCWNgTBNwT//yiEDbsxm9QG4BYUojqeXxothuzJ/L6ibXz6+gLMvbOvLGV3nKgkXmx8GvT9WDKR0mA==}
+    cpu: [arm64]
+    os: [win32]
 
   '@rspack/binding-win32-arm64-msvc@1.7.9':
     resolution: {integrity: sha512-MMqvcrIc8aOqTuHjWkjdzilvoZ3Hv07Od0Foogiyq3JMudsS3Wcmh7T1dFerGg19MOJcRUeEkrg2NQOMOQ6xDA==}
@@ -4731,6 +4796,11 @@ packages:
   '@rspack/binding-win32-arm64-msvc@2.0.0-beta.0':
     resolution: {integrity: sha512-neCzVllXzIqM8p8qKb89qV7wyk233gC/V9VrHIKbGeQjAEzpBsk5GOWlFbq5DDL6tivQ+uzYaTrZWm9tb2qxXg==}
     cpu: [arm64]
+    os: [win32]
+
+  '@rspack/binding-win32-ia32-msvc@1.7.11':
+    resolution: {integrity: sha512-0pYGnZd8PPqNR68zQ8skamqNAXEA1sUfXuAdYcknIIRq2wsbiwFzIc0Pov1cIfHYab37G7sSIPBiOUdOWF5Ivw==}
+    cpu: [ia32]
     os: [win32]
 
   '@rspack/binding-win32-ia32-msvc@1.7.9':
@@ -4743,6 +4813,11 @@ packages:
     cpu: [ia32]
     os: [win32]
 
+  '@rspack/binding-win32-x64-msvc@1.7.11':
+    resolution: {integrity: sha512-EeQXayoQk/uBkI3pdoXfQBXNIUrADq56L3s/DFyM2pJeUDrWmhfIw2UFIGkYPTMSCo8F2JcdcGM32FGJrSnU0Q==}
+    cpu: [x64]
+    os: [win32]
+
   '@rspack/binding-win32-x64-msvc@1.7.9':
     resolution: {integrity: sha512-1g+QyXXvs+838Un/4GaUvJfARDGHMCs15eXDYWBl5m/Skubyng8djWAgr6ag1+cVoJZXCPOvybTItcblWF3gbQ==}
     cpu: [x64]
@@ -4752,6 +4827,9 @@ packages:
     resolution: {integrity: sha512-dx4zgiAT88EQE7kEUpr7Z9EZAwLnO5FhzWzvd/cDK4bkqYsx+rTklgf/c0EYPBeroXCxlGiMsuC9wHAFNK7sFw==}
     cpu: [x64]
     os: [win32]
+
+  '@rspack/binding@1.7.11':
+    resolution: {integrity: sha512-2MGdy2s2HimsDT444Bp5XnALzNRxuBNc7y0JzyuqKbHBywd4x2NeXyhWXXoxufaCFu5PBc9Qq9jyfjW2Aeh06Q==}
 
   '@rspack/binding@1.7.9':
     resolution: {integrity: sha512-A56e0NdfNwbOSJoilMkxzaPuVYaKCNn1shuiwWnCIBmhV9ix1n9S1XvquDjkGyv+gCdR1+zfJBOa5DMB7htLHw==}
@@ -4763,7 +4841,16 @@ packages:
     resolution: {integrity: sha512-VwJIO8ZUGnU5v38O2Fp3KczoYVaDy/kA0rBWhoUNhfdlwyVx3ZiA1VnIYF3XtXNlur6YqT2g7Y+KA1cX8qK5zw==}
     hasBin: true
     peerDependencies:
-      '@rspack/core': 1.7.9
+      '@rspack/core': ^1.0.0-alpha || ^1.x
+
+  '@rspack/core@1.7.11':
+    resolution: {integrity: sha512-rsD9b+Khmot5DwCMiB3cqTQo53ioPG3M/A7BySu8+0+RS7GCxKm+Z+mtsjtG/vsu4Tn2tcqCdZtA3pgLoJB+ew==}
+    engines: {node: '>=18.12.0'}
+    peerDependencies:
+      '@swc/helpers': '>=0.5.1'
+    peerDependenciesMeta:
+      '@swc/helpers':
+        optional: true
 
   '@rspack/core@1.7.9':
     resolution: {integrity: sha512-VHuSKvRkuv42Ya+TxEGO0LE0r9+8P4tKGokmomj4R1f/Nu2vtS3yoaIMfC4fR6VuHGd3MZ+KTI0cNNwHfFcskw==}
@@ -4790,7 +4877,7 @@ packages:
     resolution: {integrity: sha512-cwz0qc6iqqoJhyWqxP7ZqE2wyYNHkBMQUXxoQ0tNoZ4YNRkDyQ4HVJ/3oPSmMKbvJk/iJ16u7xZmwG6sK47q/A==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
-      '@rspack/core': 1.7.9
+      '@rspack/core': '*'
 
   '@rspack/lite-tapable@1.1.0':
     resolution: {integrity: sha512-E2B0JhYFmVAwdDiG14+DW0Di4Ze4Jg10Pc4/lILUrd5DRCaklduz2OvJ5HYQ6G+hd+WTzqQb3QnDNfK4yvAFYw==}
@@ -4864,7 +4951,7 @@ packages:
   '@rspack/test-tools@1.5.6':
     resolution: {integrity: sha512-CZGsCClGB3gElLryuk42dRKFz//X6b1nAA4UczojskBOfdsvjlQkfc/QFpM/tk4zRKtFw5QZoPTX3ZDn3uTYyQ==}
     peerDependencies:
-      '@rspack/core': 1.7.9
+      '@rspack/core': '>=1.0.0'
 
   '@rspress/core@2.0.3':
     resolution: {integrity: sha512-a+JJFiALqMxGJBqR38/lkN6tas42UF4jRIhu6RilC/3DdqpfqR8j6jjQFOmqoNKo6ZGXW2W+i1Pscn6drvoG3w==}
@@ -6504,7 +6591,7 @@ packages:
     resolution: {integrity: sha512-vv3J9tlOl04WjiMvHQI/9tmIrCxVrj6PFbHemBB1iihpeRbi/I4h033eoFIhwxBBqLhI0KYFS7yvynBFhIZfTw==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
-      '@rspack/core': 1.7.9
+      '@rspack/core': 0.x || ^1.0.0 || ^2.0.0-0
       webpack: ^5.27.0
     peerDependenciesMeta:
       '@rspack/core':
@@ -10112,7 +10199,7 @@ packages:
     resolution: {integrity: sha512-w6q+fRHourZ+e+xA1kcsF27iGM6jdB8teexYCfdUw0sYgcDNeZESnDNT9sUmmPm3ooziwUJXGwZJSTF3kOdBfA==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
-      '@rspack/core': 1.7.9
+      '@rspack/core': 0.x || ^1.0.0 || ^2.0.0-0
       node-sass: ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0
       sass: ^1.3.0
       sass-embedded: '*'
@@ -10762,7 +10849,7 @@ packages:
   ts-checker-rspack-plugin@1.3.0:
     resolution: {integrity: sha512-89oK/BtApjdid1j9CGjPGiYry+EZBhsnTAM481/8ipgr/y2IOgCbW1HPnan+fs5FnzlpUgf9dWGNZ4Ayw3Bd8A==}
     peerDependencies:
-      '@rspack/core': 1.7.9
+      '@rspack/core': ^1.0.0 || ^2.0.0-0
       typescript: '>=3.8.0'
     peerDependenciesMeta:
       '@rspack/core':
@@ -12814,201 +12901,201 @@ snapshots:
     dependencies:
       '@lezer/common': 1.5.2
 
-  '@lynx-js/gesture-runtime@2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)':
+  '@lynx-js/gesture-runtime@2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)':
     dependencies:
       '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
 
   '@lynx-js/internal-preact@10.29.1-20260424024911-12b794f': {}
 
   '@lynx-js/lynx-core@0.1.3': {}
 
-  '@lynx-js/lynx-ui-button@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui-button@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
       clsx: 2.1.1
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@lynx-js/lynx-ui-checkbox@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui-checkbox@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/lynx-ui-button': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-button': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
       clsx: 2.1.1
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@lynx-js/lynx-ui-common@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui-common@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/gesture-runtime': 2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)
+      '@lynx-js/gesture-runtime': 2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)
       '@lynx-js/react': link:packages/react
       '@lynx-js/react-use': 0.0.7(@lynx-js/react@packages+react)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@lynx-js/lynx-ui-dialog@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui-dialog@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/lynx-ui-button': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-overlay': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-presence': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-button': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-overlay': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-presence': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
       clsx: 2.1.1
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@lynx-js/lynx-ui-draggable@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui-draggable@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/react': link:packages/react
       '@lynx-js/react-use': 0.0.7(@lynx-js/react@packages+react)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@lynx-js/lynx-ui-feed-list@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui-feed-list@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/gesture-runtime': 2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-list': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/gesture-runtime': 2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-list': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@lynx-js/lynx-ui-form@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui-form@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/lynx-ui-button': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-checkbox': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-input': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-radio-group': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-switch': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)
+      '@lynx-js/lynx-ui-button': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-checkbox': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-input': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-radio-group': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-switch': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)
       '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@lynx-js/lynx-ui-input@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui-input@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-scroll-view': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-scroll-view': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@lynx-js/lynx-ui-lazy-component@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui-lazy-component@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@lynx-js/lynx-ui-list@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui-list@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/gesture-runtime': 2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/gesture-runtime': 2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@lynx-js/lynx-ui-overlay@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui-overlay@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@lynx-js/lynx-ui-popover@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui-popover@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/lynx-ui-button': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-overlay': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-presence': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-button': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-overlay': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-presence': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
-      '@types/react': 18.3.28
-      clsx: 2.1.1
-    transitivePeerDependencies:
-      - react
-      - react-dom
-
-  '@lynx-js/lynx-ui-presence@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
-    dependencies:
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
       clsx: 2.1.1
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@lynx-js/lynx-ui-radio-group@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui-presence@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/lynx-ui-button': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
       clsx: 2.1.1
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@lynx-js/lynx-ui-scroll-view@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui-radio-group@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/gesture-runtime': 2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-lazy-component': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-button': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
+      '@types/react': 18.3.28
+      clsx: 2.1.1
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@lynx-js/lynx-ui-scroll-view@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+    dependencies:
+      '@lynx-js/gesture-runtime': 2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-lazy-component': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/react': link:packages/react
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@lynx-js/lynx-ui-sheet@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui-sheet@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-dialog': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-overlay': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-presence': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/motion': 0.0.2(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-dialog': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-overlay': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-presence': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/motion': 0.0.2(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
       clsx: 2.1.1
     transitivePeerDependencies:
@@ -13016,83 +13103,83 @@ snapshots:
       - react
       - react-dom
 
-  '@lynx-js/lynx-ui-sortable@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui-sortable@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-draggable': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-draggable': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@lynx-js/lynx-ui-swipe-action@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui-swipe-action@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/gesture-runtime': 2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/gesture-runtime': 2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@lynx-js/lynx-ui-swiper@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui-swiper@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/react': link:packages/react
       '@lynx-js/react-use': 0.0.7(@lynx-js/react@packages+react)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@lynx-js/lynx-ui-switch@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)':
+  '@lynx-js/lynx-ui-switch@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)':
     dependencies:
       '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
       clsx: 2.1.1
 
-  '@lynx-js/lynx-ui@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/lynx-ui@3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@lynx-js/lynx-ui-button': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-checkbox': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-dialog': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-draggable': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-feed-list': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-form': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-input': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-lazy-component': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-list': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-popover': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-presence': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-radio-group': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-scroll-view': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-sheet': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-sortable': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-swipe-action': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-swiper': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/lynx-ui-switch': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)
+      '@lynx-js/lynx-ui-button': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-checkbox': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-common': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-dialog': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-draggable': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-feed-list': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-form': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-input': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-lazy-component': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-list': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-popover': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-presence': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-radio-group': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-scroll-view': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-sheet': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-sortable': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-swipe-action': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-swiper': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-switch': 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(@types/react@18.3.28)
       '@lynx-js/react': link:packages/react
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
       '@types/react': 18.3.28
     transitivePeerDependencies:
       - '@emotion/is-prop-valid'
       - react
       - react-dom
 
-  '@lynx-js/motion@0.0.2(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
+  '@lynx-js/motion@0.0.2(@lynx-js/react@packages+react)(@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)':
     dependencies:
       '@lynx-js/react': link:packages/react
       framer-motion: 12.23.12(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       motion-dom: 12.23.12
       motion-utils: 12.23.6
     optionalDependencies:
-      '@lynx-js/types': 3.7.0
+      '@lynx-js/types': file:vendor/lynx-js-types-3.10.0.tgz
     transitivePeerDependencies:
       - '@emotion/is-prop-valid'
       - react
@@ -13121,7 +13208,7 @@ snapshots:
 
   '@lynx-js/type-element-api@0.0.3': {}
 
-  '@lynx-js/types@3.7.0':
+  '@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz':
     dependencies:
       csstype: 3.1.3
 
@@ -13722,7 +13809,7 @@ snapshots:
 
   '@rsbuild/core@1.7.5':
     dependencies:
-      '@rspack/core': 1.7.9(@swc/helpers@0.5.21)
+      '@rspack/core': 1.7.11(@swc/helpers@0.5.21)
       '@rspack/lite-tapable': 1.1.0
       '@swc/helpers': 0.5.21
       core-js: 3.47.0
@@ -13738,13 +13825,13 @@ snapshots:
     transitivePeerDependencies:
       - '@module-federation/runtime-tools'
 
-  '@rsbuild/plugin-babel@1.1.0(@rsbuild/core@1.7.5)':
+  '@rsbuild/plugin-babel@1.1.0(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-proposal-decorators': 7.29.0(@babel/core@7.29.0)
       '@babel/plugin-transform-class-properties': 7.28.6(@babel/core@7.29.0)
       '@babel/preset-typescript': 7.28.5(@babel/core@7.29.0)
-      '@rsbuild/core': 1.7.5
+      '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
       '@types/babel__core': 7.20.5
       deepmerge: 4.3.1
       reduce-configs: 1.1.1
@@ -13784,9 +13871,9 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 1.7.5
 
-  '@rsbuild/plugin-less@1.6.0(@rsbuild/core@1.7.5)':
+  '@rsbuild/plugin-less@1.6.0(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))':
     dependencies:
-      '@rsbuild/core': 1.7.5
+      '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
       deepmerge: 4.3.1
       reduce-configs: 1.1.1
 
@@ -13815,6 +13902,15 @@ snapshots:
       reduce-configs: 1.1.1
       sass-embedded: 1.97.3
 
+  '@rsbuild/plugin-sass@1.5.0(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))':
+    dependencies:
+      '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
+      deepmerge: 4.3.1
+      loader-utils: 2.0.4
+      postcss: 8.5.6
+      reduce-configs: 1.1.1
+      sass-embedded: 1.97.3
+
   '@rsbuild/plugin-source-build@1.0.4(@rsbuild/core@1.7.5)':
     dependencies:
       fast-glob: 3.3.3
@@ -13823,25 +13919,12 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 1.7.5
 
-  '@rsbuild/plugin-type-check@1.3.4(@rsbuild/core@1.7.5)(@rspack/core@1.7.9(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)':
+  '@rsbuild/plugin-type-check@1.3.4(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))(@rspack/core@2.0.0-beta.0(@module-federation/runtime-tools@0.22.0)(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)':
     dependencies:
       deepmerge: 4.3.1
       json5: 2.2.3
       reduce-configs: 1.1.1
-      ts-checker-rspack-plugin: 1.3.0(@rspack/core@1.7.9(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)
-    optionalDependencies:
-      '@rsbuild/core': 1.7.5
-    transitivePeerDependencies:
-      - '@rspack/core'
-      - tslib
-      - typescript
-
-  '@rsbuild/plugin-type-check@1.3.4(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))(@rspack/core@1.7.9(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)':
-    dependencies:
-      deepmerge: 4.3.1
-      json5: 2.2.3
-      reduce-configs: 1.1.1
-      ts-checker-rspack-plugin: 1.3.0(@rspack/core@1.7.9(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)
+      ts-checker-rspack-plugin: 1.3.0(@rspack/core@2.0.0-beta.0(@module-federation/runtime-tools@0.22.0)(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)
     optionalDependencies:
       '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
     transitivePeerDependencies:
@@ -13853,15 +13936,19 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 1.7.5
 
+  '@rsbuild/plugin-typed-css-modules@1.2.2(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))':
+    optionalDependencies:
+      '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
+
   '@rsdoctor/client@1.5.6': {}
 
-  '@rsdoctor/core@1.5.6(@emnapi/core@1.7.1)(@emnapi/runtime@1.7.1)(@rsbuild/core@1.7.5)(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)':
+  '@rsdoctor/core@1.5.6(@emnapi/core@1.7.1)(@emnapi/runtime@1.7.1)(@rsbuild/core@1.7.5)(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)':
     dependencies:
       '@rsbuild/plugin-check-syntax': 1.6.1(@rsbuild/core@1.7.5)
-      '@rsdoctor/graph': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
-      '@rsdoctor/sdk': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
-      '@rsdoctor/types': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
-      '@rsdoctor/utils': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/graph': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/sdk': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/types': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/utils': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
       '@rspack/resolver': 0.2.8(@emnapi/core@1.7.1)(@emnapi/runtime@1.7.1)
       browserslist-load-config: 1.0.1
       es-toolkit: 1.45.1
@@ -13879,13 +13966,13 @@ snapshots:
       - utf-8-validate
       - webpack
 
-  '@rsdoctor/core@1.5.6(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@rsbuild/core@1.7.5)(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)':
+  '@rsdoctor/core@1.5.6(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@rsbuild/core@1.7.5)(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)':
     dependencies:
       '@rsbuild/plugin-check-syntax': 1.6.1(@rsbuild/core@1.7.5)
-      '@rsdoctor/graph': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
-      '@rsdoctor/sdk': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
-      '@rsdoctor/types': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
-      '@rsdoctor/utils': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/graph': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/sdk': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/types': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/utils': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
       '@rspack/resolver': 0.2.8(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)
       browserslist-load-config: 1.0.1
       es-toolkit: 1.45.1
@@ -13903,10 +13990,10 @@ snapshots:
       - utf-8-validate
       - webpack
 
-  '@rsdoctor/graph@1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)':
+  '@rsdoctor/graph@1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)':
     dependencies:
-      '@rsdoctor/types': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
-      '@rsdoctor/utils': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/types': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/utils': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
       es-toolkit: 1.45.1
       path-browserify: 1.0.1
       source-map: 0.7.6
@@ -13914,15 +14001,15 @@ snapshots:
       - '@rspack/core'
       - webpack
 
-  '@rsdoctor/rspack-plugin@1.5.6(@emnapi/core@1.7.1)(@emnapi/runtime@1.7.1)(@rsbuild/core@1.7.5)(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)':
+  '@rsdoctor/rspack-plugin@1.5.6(@emnapi/core@1.7.1)(@emnapi/runtime@1.7.1)(@rsbuild/core@1.7.5)(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)':
     dependencies:
-      '@rsdoctor/core': 1.5.6(@emnapi/core@1.7.1)(@emnapi/runtime@1.7.1)(@rsbuild/core@1.7.5)(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
-      '@rsdoctor/graph': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
-      '@rsdoctor/sdk': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
-      '@rsdoctor/types': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
-      '@rsdoctor/utils': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/core': 1.5.6(@emnapi/core@1.7.1)(@emnapi/runtime@1.7.1)(@rsbuild/core@1.7.5)(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/graph': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/sdk': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/types': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/utils': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
     optionalDependencies:
-      '@rspack/core': 1.7.9(@swc/helpers@0.5.21)
+      '@rspack/core': 1.7.11(@swc/helpers@0.5.21)
     transitivePeerDependencies:
       - '@emnapi/core'
       - '@emnapi/runtime'
@@ -13932,15 +14019,15 @@ snapshots:
       - utf-8-validate
       - webpack
 
-  '@rsdoctor/rspack-plugin@1.5.6(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@rsbuild/core@1.7.5)(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)':
+  '@rsdoctor/rspack-plugin@1.5.6(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@rsbuild/core@1.7.5)(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)':
     dependencies:
-      '@rsdoctor/core': 1.5.6(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@rsbuild/core@1.7.5)(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
-      '@rsdoctor/graph': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
-      '@rsdoctor/sdk': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
-      '@rsdoctor/types': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
-      '@rsdoctor/utils': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/core': 1.5.6(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@rsbuild/core@1.7.5)(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/graph': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/sdk': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/types': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/utils': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
     optionalDependencies:
-      '@rspack/core': 1.7.9(@swc/helpers@0.5.21)
+      '@rspack/core': 1.7.11(@swc/helpers@0.5.21)
     transitivePeerDependencies:
       - '@emnapi/core'
       - '@emnapi/runtime'
@@ -13950,12 +14037,12 @@ snapshots:
       - utf-8-validate
       - webpack
 
-  '@rsdoctor/sdk@1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)':
+  '@rsdoctor/sdk@1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)':
     dependencies:
       '@rsdoctor/client': 1.5.6
-      '@rsdoctor/graph': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
-      '@rsdoctor/types': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
-      '@rsdoctor/utils': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/graph': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/types': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/utils': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
       launch-editor: 2.13.2
       safer-buffer: 2.1.2
       socket.io: 4.8.1
@@ -13967,20 +14054,20 @@ snapshots:
       - utf-8-validate
       - webpack
 
-  '@rsdoctor/types@1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)':
+  '@rsdoctor/types@1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)':
     dependencies:
       '@types/connect': 3.4.38
       '@types/estree': 1.0.5
       '@types/tapable': 2.3.0
       source-map: 0.7.6
     optionalDependencies:
-      '@rspack/core': 1.7.9(@swc/helpers@0.5.21)
+      '@rspack/core': 1.7.11(@swc/helpers@0.5.21)
       webpack: 5.105.2
 
-  '@rsdoctor/utils@1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)':
+  '@rsdoctor/utils@1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)':
     dependencies:
       '@babel/code-frame': 7.26.2
-      '@rsdoctor/types': 1.5.6(@rspack/core@1.7.9(@swc/helpers@0.5.21))(webpack@5.105.2)
+      '@rsdoctor/types': 1.5.6(@rspack/core@1.7.11(@swc/helpers@0.5.21))(webpack@5.105.2)
       '@types/estree': 1.0.5
       acorn: 8.15.0
       acorn-import-attributes: 1.9.5(acorn@8.15.0)
@@ -14008,10 +14095,16 @@ snapshots:
     transitivePeerDependencies:
       - '@typescript/native-preview'
 
+  '@rspack/binding-darwin-arm64@1.7.11':
+    optional: true
+
   '@rspack/binding-darwin-arm64@1.7.9':
     optional: true
 
   '@rspack/binding-darwin-arm64@2.0.0-beta.0':
+    optional: true
+
+  '@rspack/binding-darwin-x64@1.7.11':
     optional: true
 
   '@rspack/binding-darwin-x64@1.7.9':
@@ -14020,10 +14113,16 @@ snapshots:
   '@rspack/binding-darwin-x64@2.0.0-beta.0':
     optional: true
 
+  '@rspack/binding-linux-arm64-gnu@1.7.11':
+    optional: true
+
   '@rspack/binding-linux-arm64-gnu@1.7.9':
     optional: true
 
   '@rspack/binding-linux-arm64-gnu@2.0.0-beta.0':
+    optional: true
+
+  '@rspack/binding-linux-arm64-musl@1.7.11':
     optional: true
 
   '@rspack/binding-linux-arm64-musl@1.7.9':
@@ -14032,16 +14131,27 @@ snapshots:
   '@rspack/binding-linux-arm64-musl@2.0.0-beta.0':
     optional: true
 
+  '@rspack/binding-linux-x64-gnu@1.7.11':
+    optional: true
+
   '@rspack/binding-linux-x64-gnu@1.7.9':
     optional: true
 
   '@rspack/binding-linux-x64-gnu@2.0.0-beta.0':
     optional: true
 
+  '@rspack/binding-linux-x64-musl@1.7.11':
+    optional: true
+
   '@rspack/binding-linux-x64-musl@1.7.9':
     optional: true
 
   '@rspack/binding-linux-x64-musl@2.0.0-beta.0':
+    optional: true
+
+  '@rspack/binding-wasm32-wasi@1.7.11':
+    dependencies:
+      '@napi-rs/wasm-runtime': 1.0.7
     optional: true
 
   '@rspack/binding-wasm32-wasi@1.7.9':
@@ -14054,10 +14164,16 @@ snapshots:
       '@napi-rs/wasm-runtime': 1.0.7
     optional: true
 
+  '@rspack/binding-win32-arm64-msvc@1.7.11':
+    optional: true
+
   '@rspack/binding-win32-arm64-msvc@1.7.9':
     optional: true
 
   '@rspack/binding-win32-arm64-msvc@2.0.0-beta.0':
+    optional: true
+
+  '@rspack/binding-win32-ia32-msvc@1.7.11':
     optional: true
 
   '@rspack/binding-win32-ia32-msvc@1.7.9':
@@ -14066,11 +14182,27 @@ snapshots:
   '@rspack/binding-win32-ia32-msvc@2.0.0-beta.0':
     optional: true
 
+  '@rspack/binding-win32-x64-msvc@1.7.11':
+    optional: true
+
   '@rspack/binding-win32-x64-msvc@1.7.9':
     optional: true
 
   '@rspack/binding-win32-x64-msvc@2.0.0-beta.0':
     optional: true
+
+  '@rspack/binding@1.7.11':
+    optionalDependencies:
+      '@rspack/binding-darwin-arm64': 1.7.11
+      '@rspack/binding-darwin-x64': 1.7.11
+      '@rspack/binding-linux-arm64-gnu': 1.7.11
+      '@rspack/binding-linux-arm64-musl': 1.7.11
+      '@rspack/binding-linux-x64-gnu': 1.7.11
+      '@rspack/binding-linux-x64-musl': 1.7.11
+      '@rspack/binding-wasm32-wasi': 1.7.11
+      '@rspack/binding-win32-arm64-msvc': 1.7.11
+      '@rspack/binding-win32-ia32-msvc': 1.7.11
+      '@rspack/binding-win32-x64-msvc': 1.7.11
 
   '@rspack/binding@1.7.9':
     optionalDependencies:
@@ -14114,6 +14246,14 @@ snapshots:
       - utf-8-validate
       - webpack
       - webpack-cli
+
+  '@rspack/core@1.7.11(@swc/helpers@0.5.21)':
+    dependencies:
+      '@module-federation/runtime-tools': 0.22.0
+      '@rspack/binding': 1.7.11
+      '@rspack/lite-tapable': 1.1.0
+    optionalDependencies:
+      '@swc/helpers': 0.5.21
 
   '@rspack/core@1.7.9(@swc/helpers@0.5.21)':
     dependencies:
@@ -14239,6 +14379,45 @@ snapshots:
       '@babel/traverse': 7.28.4
       '@babel/types': 7.28.4
       '@rspack/core': 1.7.9(@swc/helpers@0.5.21)
+      cross-env: 10.1.0
+      csv-to-markdown-table: 1.6.3
+      deepmerge: 4.3.1
+      filenamify: 4.3.0
+      fs-extra: 11.3.3
+      glob: 11.1.0
+      graceful-fs: 4.2.11
+      iconv-lite: 0.6.3
+      jest-diff: 29.7.0
+      jest-snapshot: 29.7.0
+      jsdom: 26.1.0
+      loader-utils: 2.0.4
+      memfs: 4.38.2
+      path-serializer: 0.5.1
+      pretty-format: 29.7.0
+      rimraf: 5.0.10
+      source-map: 0.7.6
+      terser-webpack-plugin: 5.3.16(webpack@5.99.9)
+      wast-loader: 1.14.1
+      webpack: 5.99.9
+      webpack-merge: 6.0.1
+      webpack-sources: 3.3.3
+    transitivePeerDependencies:
+      - '@swc/core'
+      - bufferutil
+      - canvas
+      - esbuild
+      - supports-color
+      - uglify-js
+      - utf-8-validate
+      - webpack-cli
+
+  '@rspack/test-tools@1.5.6(@rspack/core@2.0.0-beta.0(@module-federation/runtime-tools@0.22.0)(@swc/helpers@0.5.21))':
+    dependencies:
+      '@babel/generator': 7.28.3
+      '@babel/parser': 7.28.4
+      '@babel/traverse': 7.28.4
+      '@babel/types': 7.28.4
+      '@rspack/core': 2.0.0-beta.0(@module-federation/runtime-tools@0.22.0)(@swc/helpers@0.5.21)
       cross-env: 10.1.0
       csv-to-markdown-table: 1.6.3
       deepmerge: 4.3.1
@@ -16064,6 +16243,20 @@ snapshots:
       semver: 7.7.4
     optionalDependencies:
       '@rspack/core': 1.7.9(@swc/helpers@0.5.21)
+      webpack: 5.105.2
+
+  css-loader@7.1.4(@rspack/core@2.0.0-beta.0(@module-federation/runtime-tools@0.22.0)(@swc/helpers@0.5.21))(webpack@5.105.2):
+    dependencies:
+      icss-utils: 5.1.0(postcss@8.5.6)
+      postcss: 8.5.6
+      postcss-modules-extract-imports: 3.1.0(postcss@8.5.6)
+      postcss-modules-local-by-default: 4.0.5(postcss@8.5.6)
+      postcss-modules-scope: 3.2.0(postcss@8.5.6)
+      postcss-modules-values: 4.0.0(postcss@8.5.6)
+      postcss-value-parser: 4.2.0
+      semver: 7.7.4
+    optionalDependencies:
+      '@rspack/core': 2.0.0-beta.0(@module-federation/runtime-tools@0.22.0)(@swc/helpers@0.5.21)
       webpack: 5.105.2
 
   css-minimizer-webpack-plugin@7.0.2(lightningcss@1.31.1)(webpack@5.105.2):
@@ -20147,10 +20340,10 @@ snapshots:
       '@typescript/native-preview': 7.0.0-dev.20260212.1
       typescript: 5.9.3
 
-  rsbuild-plugin-i18next-extractor@0.2.1(@rsbuild/core@1.7.5)(i18next-cli@1.54.2(@swc/helpers@0.5.21)(@types/node@24.10.13)(i18next@26.0.6(typescript@5.9.3))(typescript@5.9.3))(rollup@4.34.9):
+  rsbuild-plugin-i18next-extractor@0.2.1(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))(i18next-cli@1.54.2(@swc/helpers@0.5.21)(@types/node@24.10.13)(i18next@26.0.6(typescript@5.9.3))(typescript@5.9.3))(rollup@4.34.9):
     dependencies:
       '@rollup/pluginutils': 5.3.0(rollup@4.34.9)
-      '@rsbuild/core': 1.7.5
+      '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
       '@rspack/lite-tapable': 1.1.0
       i18next-cli: 1.54.2(@swc/helpers@0.5.21)(@types/node@24.10.13)(i18next@26.0.6(typescript@5.9.3))(typescript@5.9.3)
     transitivePeerDependencies:
@@ -20170,15 +20363,15 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
 
-  rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@1.7.5)(tailwindcss@4.2.1):
-    dependencies:
-      tailwindcss: 4.2.1
-    optionalDependencies:
-      '@rsbuild/core': 1.7.5
-
   rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))(tailwindcss@3.4.19):
     dependencies:
       tailwindcss: 3.4.19
+    optionalDependencies:
+      '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
+
+  rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))(tailwindcss@4.2.1):
+    dependencies:
+      tailwindcss: 4.2.1
     optionalDependencies:
       '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
 
@@ -21073,7 +21266,7 @@ snapshots:
     dependencies:
       typescript: 5.9.3
 
-  ts-checker-rspack-plugin@1.3.0(@rspack/core@1.7.9(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3):
+  ts-checker-rspack-plugin@1.3.0(@rspack/core@2.0.0-beta.0(@module-federation/runtime-tools@0.22.0)(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3):
     dependencies:
       '@rspack/lite-tapable': 1.1.0
       chokidar: 3.6.0
@@ -21081,7 +21274,7 @@ snapshots:
       picocolors: 1.1.1
       typescript: 5.9.3
     optionalDependencies:
-      '@rspack/core': 1.7.9(@swc/helpers@0.5.21)
+      '@rspack/core': 2.0.0-beta.0(@module-federation/runtime-tools@0.22.0)(@swc/helpers@0.5.21)
     transitivePeerDependencies:
       - tslib
 
