@@ -129,6 +129,78 @@ fn without_whitespace(value: &str) -> String {
 }
 
 #[test]
+fn should_emit_direct_event_attr_plan_for_js_target() {
+  let (code, _) = first_user_template_json_with_code(
+    r#"
+      <view bindtap={handleTap} catchtouchstart={handleTouch} />
+    "#,
+    JSXTransformerConfig {
+      target: swc_plugins_shared::target::TransformTarget::JS,
+      ..element_template_config()
+    },
+  );
+  let code = without_whitespace(&code);
+
+  assert!(
+    code.contains(
+      "ReactLynxInternal.__etAttrPlanMap[_et_da39a_test_1]=[0,ReactLynxInternal.adaptEventAttrSlot,1,ReactLynxInternal.adaptEventAttrSlot];"
+    ),
+    "direct event slots should register a sparse ET attr plan, got: {code}"
+  );
+  assert!(
+    code.contains("attributeSlots={[handleTap,handleTouch]}"),
+    "JS target should keep raw handlers in attributeSlots before runtime preparation, got: {code}"
+  );
+  assert!(
+    !code.contains("__etEventSlots"),
+    "event slot metadata must not be passed through Preact props, got: {code}"
+  );
+}
+
+#[test]
+fn should_emit_direct_event_attr_plan_for_lepus_target() {
+  let (code, _) = first_user_template_json_with_code(
+    r#"
+      <view bindtap={handleTap} catchtouchstart={handleTouch} />
+    "#,
+    JSXTransformerConfig {
+      target: swc_plugins_shared::target::TransformTarget::LEPUS,
+      ..element_template_config()
+    },
+  );
+  let code = without_whitespace(&code);
+
+  assert!(
+    code.contains(
+      "ReactLynxInternal.__etAttrPlanMap[_et_da39a_test_1]=[0,ReactLynxInternal.adaptEventAttrSlot,1,ReactLynxInternal.adaptEventAttrSlot];"
+    ),
+    "direct event slots should register a sparse ET attr plan, got: {code}"
+  );
+  assert!(
+    code.contains("attributeSlots={[1,1]}"),
+    "LEPUS target should keep event markers in attributeSlots before runtime preparation, got: {code}"
+  );
+}
+
+#[test]
+fn should_not_emit_attr_plan_for_non_event_attrs() {
+  let (code, _) = first_user_template_json_with_code(
+    r#"
+      <view id={dynamicId} ref={viewRef} {...props} />
+    "#,
+    JSXTransformerConfig {
+      target: swc_plugins_shared::target::TransformTarget::JS,
+      ..element_template_config()
+    },
+  );
+
+  assert!(
+    !code.contains("__etAttrPlanMap") && !code.contains("adaptEventAttrSlot"),
+    "only direct event slots should enter the Phase 2 attr plan, got: {code}"
+  );
+}
+
+#[test]
 fn should_not_inject_root_css_scope_attrs_for_element_template() {
   let (code, template) = first_user_template_json_with_code(
     r#"

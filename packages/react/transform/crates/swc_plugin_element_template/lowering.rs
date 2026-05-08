@@ -24,7 +24,7 @@ where
   pub(super) fn lower_runtime_jsx(
     &mut self,
     target: TransformTarget,
-    runtime_id: Expr,
+    _runtime_id: Expr,
     key: Option<JSXAttrValue>,
     dynamic_attrs: Vec<DynamicAttributePart>,
     dynamic_children: Vec<DynamicElementPart>,
@@ -55,15 +55,7 @@ where
               value
             }
           } else if let AttrName::Ref = attr_name {
-            if target == TransformTarget::LEPUS {
-              quote!("1" as Expr)
-            } else {
-              quote!(
-                "$runtime_id.transformRef($value)" as Expr,
-                runtime_id: Expr = runtime_id.clone(),
-                value: Expr = value,
-              )
-            }
+            value
           } else {
             value
           };

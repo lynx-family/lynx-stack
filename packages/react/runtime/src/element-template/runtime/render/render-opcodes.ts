@@ -4,7 +4,13 @@
 
 import { __OpAttr, __OpBegin, __OpEnd, __OpSlot, __OpText } from './render-to-opcodes.js';
 import type { SerializableValue } from '../../protocol/types.js';
-import { createElementTemplateWithHandle } from '../template/handle.js';
+import { __etAttrPlanMap } from '../template/attr-slot-plan.js';
+import type { EtAttrAdapter } from '../template/attr-slot-plan.js';
+import {
+  createElementTemplateWithHandle,
+  createElementTemplateWithReservedHandle,
+  reserveElementTemplateId,
+} from '../template/handle.js';
 
 const BUILTIN_RAW_TEXT_TEMPLATE_KEY = '_et_builtin_raw_text';
 
@@ -89,12 +95,35 @@ export function renderOpcodesIntoElementTemplate(
         const parentTemplateKey = templateKeyStack[stackTop];
         const parentActiveElementSlot = activeElementSlotStack[stackTop];
 
-        const elementRef = createElementTemplateWithHandle(
-          concreteTemplateKey,
-          null,
-          attributeSlots ?? null,
-          elementSlots ?? null,
-        );
+        const attrPlan = __etAttrPlanMap[concreteTemplateKey];
+        let elementRef: ElementRef;
+        if (attrPlan === undefined) {
+          elementRef = createElementTemplateWithHandle(
+            concreteTemplateKey,
+            null,
+            attributeSlots ?? null,
+            elementSlots ?? null,
+          );
+        } else {
+          const handleId = reserveElementTemplateId();
+          const preparedAttributeSlots = attributeSlots?.slice() ?? [];
+          for (let planIndex = 0; planIndex < attrPlan.length; planIndex += 2) {
+            const attrSlotIndex = attrPlan[planIndex] as number;
+            const adapter = attrPlan[planIndex + 1] as EtAttrAdapter;
+            preparedAttributeSlots[attrSlotIndex] = adapter(
+              handleId,
+              attrSlotIndex,
+              preparedAttributeSlots[attrSlotIndex],
+            );
+          }
+          elementRef = createElementTemplateWithReservedHandle(
+            handleId,
+            concreteTemplateKey,
+            null,
+            preparedAttributeSlots,
+            elementSlots ?? null,
+          );
+        }
         appendChildToParent(parentTemplateKey, parentActiveElementSlot, rootRefs, elementRef);
 
         i += 1;

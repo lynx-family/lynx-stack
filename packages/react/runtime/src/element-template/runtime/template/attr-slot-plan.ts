@@ -10,7 +10,7 @@ export type EtAttrAdapter = (
   value: unknown,
 ) => SerializableValue | null;
 
-export type EtAttrPlan = Array<number | EtAttrAdapter>;
+export type EtAttrPlan = (number | EtAttrAdapter)[];
 
 export type EtAttrPlanMap = Record<
   string,
@@ -18,6 +18,17 @@ export type EtAttrPlanMap = Record<
 >;
 
 export const __etAttrPlanMap = Object.create(null) as EtAttrPlanMap;
+
+export function adaptEventAttrSlot(
+  handleId: number,
+  attrSlotIndex: number,
+  value: unknown,
+): SerializableValue | null {
+  if (value === null || value === undefined || value === false) {
+    return null;
+  }
+  return `${handleId}:${attrSlotIndex}:`;
+}
 
 export function clearEtAttrPlanMap(): void {
   // The compiled output assigns into the exported side table directly, so the
