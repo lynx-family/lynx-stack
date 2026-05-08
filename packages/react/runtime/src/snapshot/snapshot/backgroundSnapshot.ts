@@ -13,6 +13,7 @@ import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 import { createRuntimeSnapshot, snapshotManager } from './definition.js';
 import type { Snapshot } from './definition.js';
 import { DynamicPartType } from './dynamicPartType.js';
+import { reconstructInstanceTree } from './reconstructInstanceTree.js';
 import { applyRef, clearQueuedRefs, getRefFromValue, queueRefAttrUpdate } from './ref.js';
 import type { Ref } from './ref.js';
 import { snapshotCreatorMap } from './snapshot.js';
@@ -34,6 +35,7 @@ import {
 } from '../lifecycle/patch/snapshotPatch.js';
 import type { SnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import { globalPipelineOptions } from '../lynx/performance.js';
+import { clearPendingPortalInsertBefore } from '../lynx/portalsPending.js';
 import { diffArrayAction, diffArrayLepus } from '../renderToOpcodes/hydrate.js';
 import { onPostWorkletCtx } from '../worklet/ctx.js';
 
@@ -742,28 +744,11 @@ export function hydrate(
     helper(before, after);
     // Hydration should not trigger ref updates. They were incorrectly triggered when using `setAttribute` to add values to the patch list.
     clearQueuedRefs();
+    clearPendingPortalInsertBefore();
     return takeGlobalSnapshotPatch()!;
   } finally {
     if (shouldProfile) {
       profileEnd();
     }
-  }
-}
-
-function reconstructInstanceTree(afters: BackgroundSnapshotInstance[], parentId: number, targetId?: number): void {
-  for (const child of afters) {
-    const id = child.__id;
-    __globalSnapshotPatch?.push(SnapshotOperation.CreateElement, child.type, id);
-    const values = child.__values;
-    if (values) {
-      child.__values = undefined;
-      child.setAttribute('values', values);
-    }
-    const extraProps = child.__extraProps;
-    for (const key in extraProps) {
-      child.setAttribute(key, extraProps[key]);
-    }
-    reconstructInstanceTree(child.childNodes, id);
-    __globalSnapshotPatch?.push(SnapshotOperation.InsertBefore, parentId, id, targetId, child.__slotIndex);
   }
 }

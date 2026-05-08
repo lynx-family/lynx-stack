@@ -16,6 +16,7 @@ export const {
   PureComponent,
   Suspense,
   cloneElement,
+  createPortal,
   createContext,
   createElement,
   createRef,
