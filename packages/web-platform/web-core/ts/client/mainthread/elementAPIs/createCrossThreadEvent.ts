@@ -25,6 +25,8 @@ function toCloneableObject(obj: any): CloneableObject {
 
 export function createCrossThreadEvent(
   domEvent: MinimalRawEventObject,
+  lynxViewClientLeft: number,
+  lynxViewClientTop: number,
 ): LynxCrossThreadEvent {
   const type = domEvent.type;
   const params: Cloneable = {};
@@ -48,23 +50,26 @@ export function createCrossThreadEvent(
     const touch = [...touchEvent.touches as unknown as Touch[]];
     const targetTouches = [...touchEvent.targetTouches as unknown as Touch[]];
     const changedTouches = [...touchEvent.changedTouches as unknown as Touch[]];
+    const shiftTouch = (t: CloneableObject): CloneableObject => ({
+      ...t,
+      clientX: (t['clientX'] as number) - lynxViewClientLeft,
+      clientY: (t['clientY'] as number) - lynxViewClientTop,
+      pageX: (t['pageX'] as number) - lynxViewClientLeft,
+      pageY: (t['pageY'] as number) - lynxViewClientTop,
+    });
     Object.assign(otherProperties, {
-      touches: isTrusted ? touch.map(toCloneableObject) : touch,
+      touches: isTrusted ? touch.map(toCloneableObject).map(shiftTouch) : touch,
       targetTouches: isTrusted
-        ? targetTouches.map(
-          toCloneableObject,
-        )
+        ? targetTouches.map(toCloneableObject).map(shiftTouch)
         : targetTouches,
       changedTouches: isTrusted
-        ? changedTouches.map(
-          toCloneableObject,
-        )
+        ? changedTouches.map(toCloneableObject).map(shiftTouch)
         : changedTouches,
     });
     if (touch[0]) {
       detail = {
-        x: touch[0].clientX,
-        y: touch[0].clientY,
+        x: touch[0].clientX - lynxViewClientLeft,
+        y: touch[0].clientY - lynxViewClientTop,
       };
     }
   } else if (type.startsWith('mouse')) {
@@ -72,17 +77,35 @@ export function createCrossThreadEvent(
     Object.assign(otherProperties, {
       button: mouseEvent.button,
       buttons: mouseEvent.buttons,
-      x: mouseEvent.x,
-      y: mouseEvent.y,
-      pageX: mouseEvent.pageX,
-      pageY: mouseEvent.pageY,
-      clientX: mouseEvent.clientX,
-      clientY: mouseEvent.clientY,
+      x: mouseEvent.x - lynxViewClientLeft,
+      y: mouseEvent.y - lynxViewClientTop,
+      clientX: mouseEvent.clientX - lynxViewClientLeft,
+      clientY: mouseEvent.clientY - lynxViewClientTop,
+      pageX: mouseEvent.pageX - lynxViewClientLeft,
+      pageY: mouseEvent.pageY - lynxViewClientTop,
     });
   } else if (type === 'click') {
+    const mouseEvent = domEvent as MouseEvent;
     detail = {
-      x: (domEvent as MouseEvent).x,
-      y: (domEvent as MouseEvent).y,
+      x: mouseEvent.clientX - lynxViewClientLeft,
+      y: mouseEvent.clientY - lynxViewClientTop,
+    };
+  } else if (type === 'layoutchange') {
+    const d = detail as {
+      left: number;
+      right: number;
+      top: number;
+      bottom: number;
+      width: number;
+      height: number;
+      id: string | null;
+    };
+    detail = {
+      ...d,
+      left: d.left - lynxViewClientLeft,
+      right: d.right - lynxViewClientLeft,
+      top: d.top - lynxViewClientTop,
+      bottom: d.bottom - lynxViewClientTop,
     };
   }
 
