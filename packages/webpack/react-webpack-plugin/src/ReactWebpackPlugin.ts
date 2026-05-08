@@ -15,6 +15,7 @@ import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 import { LAYERS } from './layer.js';
 import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
+import { resolveLazyBundleFetcher } from './resolveLazyBundleFetcher.js';
 
 const require = createRequire(import.meta.url);
 
@@ -111,6 +112,8 @@ interface ReactWebpackPluginOptions {
    * @experimental
    */
   experimental_useElementTemplate?: boolean;
+
+  engineVersion?: string;
 }
 
 /**
@@ -188,6 +191,7 @@ class ReactWebpackPlugin {
       profile: undefined,
       workletRuntimePath: '',
       experimental_useElementTemplate: false,
+      engineVersion: '',
     });
 
   /**
@@ -249,7 +253,7 @@ class ReactWebpackPlugin {
         options.experimental_useElementTemplate,
       ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(
-        process.env['REACT_LAZY_BUNDLE_FETCHER'] ?? 'FetchBundle',
+        resolveLazyBundleFetcher(options.engineVersion),
       ),
     }).apply(compiler);
 
