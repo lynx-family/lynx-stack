@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { loadLazyBundle } from './lazy-bundle.js';
+import { loadLazyBundle, withLazyBundleMode } from './lazy-bundle.js';
 
 export function loadDynamicJS<T>(url: string): Promise<T> {
   if (__LEPUS__) {
@@ -25,10 +25,14 @@ export function loadDynamicJS<T>(url: string): Promise<T> {
 
 export function __dynamicImport<T>(
   url: string,
-  options?: { with?: { type?: 'component' | 'tsx' | 'jsx' } },
+  options?: { with?: { type?: 'component' | 'tsx' | 'jsx'; mode?: 'sync' | 'async' } },
 ): Promise<T> {
-  const t = options?.with?.type;
+  const w = options?.with;
+  const t = w?.type;
   if (t === 'component' || t === 'tsx' || t === 'jsx') {
+    if (w?.mode) {
+      return withLazyBundleMode(w.mode, () => loadLazyBundle<any>(url));
+    }
     return loadLazyBundle<any>(url);
   } else {
     return loadDynamicJS(url);

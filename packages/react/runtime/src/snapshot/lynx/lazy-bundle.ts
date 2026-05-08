@@ -156,3 +156,22 @@ function withSyncResolvers<T>() {
 
   return resolver;
 }
+
+const __LYNX_LAZY_BUNDLE_MODE__ = Symbol.for('__LYNX_LAZY_BUNDLE_MODE__');
+
+/**
+ * Temporarily set import mode for lazy bundle.
+ * @param mode Import mode.
+ * @param factory Factory function.
+ * @returns Result of factory function.
+ */
+export function withLazyBundleMode<T>(mode: 'sync' | 'async', factory: () => T): T {
+  const g = lynx as unknown as Record<symbol, unknown>;
+  const prev = g[__LYNX_LAZY_BUNDLE_MODE__];
+  g[__LYNX_LAZY_BUNDLE_MODE__] = mode;
+  try {
+    return factory();
+  } finally {
+    g[__LYNX_LAZY_BUNDLE_MODE__] = prev;
+  }
+}
