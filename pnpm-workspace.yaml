@@ -69,6 +69,10 @@ overrides:
   "@rsbuild/core@1>@rspack/core": "$@rspack/core"
   "@rsdoctor/rspack-plugin>@rspack/core": "$@rspack/core"
   "@rsdoctor/types>@rspack/core": "$@rspack/core"
+  # Local link to the in-tree @lynx-js/types source (template-assembler)
+  # so type-only fixes can be tested without publishing. Remove once a
+  # released version of @lynx-js/types contains the fix.
+  "@lynx-js/types": "file:./vendor/lynx-js-types-3.10.0.tgz"
 
 packageExtensions:
   "@rspack/test-tools@*":

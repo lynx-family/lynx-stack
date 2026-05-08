@@ -71,9 +71,6 @@
       "allowedVersions": {
         "rsbuild-plugin-tailwindcss>tailwindcss": "^3 || ^4"
       }
-    },
-    "overrides": {
-      "@lynx-js/types": "file:./vendor/lynx-js-types-3.10.0.tgz"
     }
   }
 }
