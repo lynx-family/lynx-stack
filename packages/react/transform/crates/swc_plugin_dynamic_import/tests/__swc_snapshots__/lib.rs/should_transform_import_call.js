@@ -2,6 +2,16 @@ import "@lynx-js/react/experimental/lazy/import";
 import { __dynamicImport } from "@lynx-js/react/internal";
 (async function() {
     await import(/*webpackChunkName: "./index.js-test"*/ "./index.js");
+    await import(/*webpackChunkName: "./index.js-test"*/ "./index.js", {
+        with: {
+            mode: "sync"
+        }
+    });
+    await import(/*webpackChunkName: "./index.js-test"*/ "./index.js", {
+        with: {
+            mode: "async"
+        }
+    });
     await import(`./locales/${name}`);
     await import(/*webpackChunkName: "ftp://www/a.js-test"*/ "ftp://www/a.js");
     await __dynamicImport("https://www/a.js");
@@ -10,6 +20,18 @@ import { __dynamicImport } from "@lynx-js/react/internal";
     await import(/*webpackChunkName: "./index.js-test"*/ "./index.js", {
         with: {
             type: "component"
+        }
+    });
+    await import(/*webpackChunkName: "./index.js-test"*/ "./index.js", {
+        with: {
+            type: "component",
+            mode: "sync"
+        }
+    });
+    await import(/*webpackChunkName: "./index.js-test"*/ "./index.js", {
+        with: {
+            type: "component",
+            mode: "async"
         }
     });
     await import(/*webpackChunkName: "ftp://www/a.js-test"*/ "ftp://www/a.js", {

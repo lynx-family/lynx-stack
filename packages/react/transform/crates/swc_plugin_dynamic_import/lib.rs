@@ -94,24 +94,31 @@ fn is_import_call_tpl(call_expr: &CallExpr) -> bool {
   }
 }
 
-fn is_import_call_with_type(call_expr: &CallExpr) -> (bool, bool, Value) {
+fn is_import_call_with_attrs(
+  call_expr: &CallExpr,
+  attrs: &[&str],
+) -> (bool, Vec<bool>, Vec<Value>) {
+  let mut with_keys = vec![false; attrs.len()];
+  let mut with_values = vec![Value::Null; attrs.len()];
+
   match &call_expr.callee {
     Callee::Import(_) if call_expr.args.len() >= 2 => match &*call_expr.args[1].expr {
       Expr::Object(object) => {
         let (is_lit, _) = calc_literal_cost(object, false);
         if is_lit {
           let with = jsonify(Expr::Object(object.clone()));
-          match with.pointer("/with/type") {
-            Some(value) => (true, true, value.clone()),
-            _ => (true, false, Value::Null),
+          for (i, attr) in attrs.iter().enumerate() {
+            if let Some(value) = with.pointer(&format!("/with/{attr}")) {
+              with_keys[i] = true;
+              with_values[i] = value.clone();
+            }
           }
-        } else {
-          (true, false, Value::Null)
         }
+        (true, with_keys, with_values)
       }
-      _ => (true, false, Value::Null),
+      _ => (true, with_keys, with_values),
     },
-    _ => (false, false, Value::Null),
+    _ => (false, with_keys, with_values),
   }
 }
 
@@ -167,7 +174,9 @@ where
     }
 
     let (is_import_call_lit, is_import_call_str_lit, str_lit) = is_import_call_str_lit(call_expr);
-    let (has_option, is_import_call_with_type, _with_type) = is_import_call_with_type(call_expr);
+    let (has_option, with_keys, _with_values) =
+      is_import_call_with_attrs(call_expr, &["type", "mode"]);
+    let is_import_call_with_allow_attrs = with_keys.iter().any(|&b| b);
 
     // TODO: reject dynamic import without `{ with: { type: "component" } }`
 
@@ -194,7 +203,7 @@ where
       || str_lit.starts_with("//");
 
     if is_import_call_str_lit && !is_explicitly_external {
-      if has_option && !is_import_call_with_type {
+      if has_option && !is_import_call_with_allow_attrs {
         HANDLER.with(|handler| {
           handler
             .struct_span_err(
@@ -313,6 +322,8 @@ mod tests {
     r#"
     (async function () {
       await import("./index.js");
+      await import("./index.js", { with: { mode: "sync" } });
+      await import("./index.js", { with: { mode: "async" } });
       await import(`./locales/${name}`);
       await import("ftp://www/a.js");
       await import("https://www/a.js");
@@ -320,6 +331,8 @@ mod tests {
       await import(url+"?v=1.0");
 
       await import("./index.js", { with: { type: "component" } });
+      await import("./index.js", { with: { type: "component", mode: "sync" } });
+      await import("./index.js", { with: { type: "component", mode: "async" } });
       await import("ftp://www/a.js", { with: { type: "component" } });
       await import("https://www/a.js", { with: { type: "component" } });
       await import(url, { with: { type: "component" } });
