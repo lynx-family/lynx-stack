@@ -9,11 +9,16 @@ import { fileURLToPath } from 'node:url'
 import { createRslib } from '@rslib/core'
 import type { RslibConfig } from '@rslib/core'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import webpack from 'webpack'
+import type { Asset, Compilation, WebpackError } from 'webpack'
 
 import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
 
 import { decodeTemplate } from './utils.js'
-import { defineExternalBundleRslibConfig } from '../src/index.js'
+import {
+  ExternalBundleWebpackPlugin,
+  defineExternalBundleRslibConfig,
+} from '../src/index.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -51,6 +56,63 @@ function resolveExternal(
       resolve(result)
     })
   })
+}
+
+async function runExternalBundlePlugin(
+  options: ConstructorParameters<typeof ExternalBundleWebpackPlugin>[0],
+  assets: Asset[],
+) {
+  let processAssets: (() => Promise<void>) | undefined
+  const emittedAssets = new Map(assets.map((asset) => [asset.name, asset]))
+  const compilation = {
+    warnings: [],
+    getAssets: () => Array.from(emittedAssets.values()),
+    emitAsset: (
+      name: string,
+      source: Asset['source'],
+      info: Asset['info'] = {},
+    ) => {
+      emittedAssets.set(name, { name, source, info })
+    },
+    deleteAsset: (name: string) => {
+      emittedAssets.delete(name)
+    },
+    hooks: {
+      processAssets: {
+        tapPromise: (
+          _options: unknown,
+          callback: () => Promise<void>,
+        ) => {
+          processAssets = callback
+        },
+      },
+    },
+  } as unknown as Compilation
+  const compiler = {
+    context: __dirname,
+    webpack,
+    hooks: {
+      thisCompilation: {
+        tap: (
+          _name: string,
+          callback: (compilation: Compilation) => void,
+        ) => {
+          callback(compilation)
+        },
+      },
+    },
+  }
+
+  new ExternalBundleWebpackPlugin(options)
+    .apply(compiler as unknown as webpack.Compiler)
+
+  if (!processAssets) {
+    throw new Error('Expected processAssets hook to be registered')
+  }
+
+  await processAssets()
+
+  return compilation
 }
 
 describe('define config', () => {
@@ -91,6 +153,62 @@ describe('define config', () => {
             side_effects: false,
           },
         },
+      },
+    })
+    expect(rslibConfig.lib[0]?.output?.minify).toMatchObject({
+      css: false,
+    })
+  })
+})
+
+describe('ExternalBundleWebpackPlugin', () => {
+  it('emits css diagnostics returned by tasm encode', async () => {
+    const cssContent = '.foo {\n  unknown-prop: red;\n}\n'
+    const cssSourceMap = {
+      version: 3,
+      file: 'index.css',
+      sources: ['webpack:/external-bundle.test.ts'],
+      sourcesContent: [
+        cssContent,
+      ],
+      names: [],
+      mappings: 'AAAA;EACE,kBAAkB;AACpB',
+    }
+    const compilation = await runExternalBundlePlugin(
+      {
+        bundleFileName: 'lib.lynx.bundle',
+        encode: vi.fn(async () => ({
+          buffer: Buffer.from('bundle'),
+          css_diagnostics:
+            '[{"type":"property","name":"unknown-prop","line":2,"column":10}]',
+        })),
+      },
+      [
+        {
+          name: 'index.css',
+          info: {
+            assetType: 'extract-css',
+          },
+          source: new webpack.sources.SourceMapSource(
+            cssContent,
+            'index.css',
+            cssSourceMap,
+          ),
+        },
+      ],
+    )
+
+    expect(compilation.warnings).toHaveLength(1)
+    expect(compilation.warnings[0]?.message).toBe(
+      'Unsupported property "unknown-prop" was removed during template encode.',
+    )
+    expect((compilation.warnings[0] as WebpackError).file).toBe(
+      path.join(__dirname, 'external-bundle.test.ts'),
+    )
+    expect((compilation.warnings[0] as WebpackError).loc).toEqual({
+      start: {
+        line: 2,
+        column: 3,
       },
     })
   })
