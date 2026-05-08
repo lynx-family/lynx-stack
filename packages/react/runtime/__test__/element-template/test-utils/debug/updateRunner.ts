@@ -50,6 +50,7 @@ type FormattedUpdateEntry =
     id: number;
     elementSlotIndex: number;
     child: unknown;
+    removedSubtreeHandleIds: unknown;
   };
 
 export interface UpdateRunOptions {
@@ -110,6 +111,7 @@ export function formatUpdateStream(stream: ElementTemplateUpdateCommandStream): 
       id: stream[index++] as number,
       elementSlotIndex: stream[index++] as number,
       child: stream[index++] as unknown,
+      removedSubtreeHandleIds: stream[index++] as unknown,
     });
   }
   return formatted;

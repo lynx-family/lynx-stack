@@ -150,6 +150,7 @@ describe('hydrate', () => {
       root.instanceId,
       0,
       stale.instanceId,
+      [stale.instanceId],
     ]);
     expect(root.elementSlots[0]).toEqual([]);
   });
@@ -266,6 +267,7 @@ describe('hydrate', () => {
       root.instanceId,
       0,
       oldAId,
+      [oldAId],
       ElementTemplateUpdateOps.createTemplate,
       newA.instanceId,
       'new-a',
@@ -380,10 +382,12 @@ describe('hydrate', () => {
       root.instanceId,
       0,
       -2,
+      [-2],
       4,
       root.instanceId,
       0,
       -3,
+      [-3],
     ]);
   });
 

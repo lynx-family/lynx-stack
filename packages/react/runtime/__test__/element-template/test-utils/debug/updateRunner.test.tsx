@@ -18,6 +18,11 @@ describe('element-template update runner', () => {
       2,
       3,
       'next',
+      ElementTemplateUpdateOps.removeNode,
+      4,
+      5,
+      6,
+      [6, 7],
     ];
 
     expect(formatUpdateStream(stream)).toEqual([
@@ -33,6 +38,13 @@ describe('element-template update runner', () => {
         id: 2,
         attrSlotIndex: 3,
         value: 'next',
+      },
+      {
+        type: 'removeNode',
+        id: 4,
+        elementSlotIndex: 5,
+        child: 6,
+        removedSubtreeHandleIds: [6, 7],
       },
     ]);
   });

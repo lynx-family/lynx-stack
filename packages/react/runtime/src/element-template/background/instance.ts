@@ -247,6 +247,7 @@ export class BackgroundElementTemplateInstance {
           parent.instanceId,
           slotId,
           child.instanceId,
+          collectElementTemplateSubtreeHandleIds(child),
         );
         // The removed JS object graph may outlive the detach until GC, so keep
         // it pending and tear it down on the Snapshot-aligned delayed boundary.

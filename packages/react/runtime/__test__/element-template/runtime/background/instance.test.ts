@@ -80,6 +80,7 @@ describe('BackgroundElementTemplateInstance', () => {
       parent.instanceId,
       0,
       child.instanceId,
+      [child.instanceId],
     ]);
   });
 
@@ -415,6 +416,11 @@ describe('BackgroundElementTemplateInstance', () => {
       slot.setAttribute('id', 0);
       parent.appendChild(slot);
       const child = new BackgroundElementTemplateInstance('text');
+      const childSlot = new BackgroundElementTemplateSlot();
+      childSlot.setAttribute('id', 0);
+      const grandchild = new BackgroundElementTemplateInstance('text');
+      child.appendChild(childSlot);
+      childSlot.appendChild(grandchild);
       slot.appendChild(child);
 
       GlobalCommitContext.ops = [];
@@ -426,6 +432,7 @@ describe('BackgroundElementTemplateInstance', () => {
         parent.instanceId,
         0,
         child.instanceId,
+        [child.instanceId, grandchild.instanceId],
       ]);
       expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([child]);
     });
