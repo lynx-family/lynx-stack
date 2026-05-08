@@ -64,6 +64,7 @@ export default tseslint.config(
       'packages/rspeedy/create-rspeedy/template-*/**',
       'packages/i18n/**/tests/fixtures/**',
       'packages/{rspeedy,webpack}/*/test/**/cases/**',
+      'packages/{rspeedy,webpack}/*/test/**/configCases/**',
       'packages/{rspeedy,webpack}/*/test/**/hotCases/**',
       'packages/{rspeedy,webpack}/*/test/**/diagnostic/**',
       'packages/{rspeedy,webpack}/*/test/**/fixtures/**',

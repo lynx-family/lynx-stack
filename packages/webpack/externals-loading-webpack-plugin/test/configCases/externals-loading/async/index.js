@@ -1,3 +1,5 @@
+/// <reference types="@rspack/test-tools/rstest" />
+
 import { add } from 'foo';
 
 const consoleInfoMock = rstest.spyOn(console, 'info').mockImplementation(() =>

@@ -2,8 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { createRequire } from 'node:module';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { defineConfig } from '@rstest/core';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const require = createRequire(import.meta.url);
 
@@ -16,6 +20,10 @@ const config: Parameters<typeof defineConfig>[0] = {
     require.resolve('@rspack/test-tools/setup-expect'),
     require.resolve('./test/helpers/setup-env.js'),
   ],
+  env: {
+    __TEST_PATH__: path.resolve(__dirname),
+    __TEST_DIST_PATH__: path.resolve(__dirname, 'test', 'js'),
+  },
 };
 
 const rstestConfig: ReturnType<typeof defineConfig> = defineConfig(config);

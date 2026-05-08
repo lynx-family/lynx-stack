@@ -1,8 +1,12 @@
+/// <reference types="@rspack/test-tools/rstest" />
+
 import x from 'foo';
+import x2 from 'foo2';
 
 console.info(x);
+console.info(x2);
 
-it('should mount to externals library to globalThis', async () => {
+it('should filter duplicate externals', async () => {
   const fs = await import('node:fs');
   const path = await import('node:path');
 
@@ -16,13 +20,13 @@ it('should mount to externals library to globalThis', async () => {
   );
   expect(
     background.split(
-      `globalThis[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]["Foo"]`
+      `lynx[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]["Foo"]`
         + ' = ',
     ).length - 1,
   ).toBe(1);
   expect(
     mainThread.split(
-      `globalThis[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]["Foo"] `
+      `lynx[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]["Foo"] `
         + '= ',
     ).length - 1,
   ).toBe(1);
