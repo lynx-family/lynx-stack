@@ -189,13 +189,10 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: |
-        # Keep create-rspeedy templates package-manager-neutral; apply the pnpm
-        # 11 dependency build decisions only inside these temporary smoke-test apps.
+        # Generated smoke-test projects do not carry pnpm build policy, so keep
+        # that policy CI-local instead of adding it to create-rspeedy templates.
         install_generated_app() {
-          # pnpm 11 records pending build approvals while returning
-          # ERR_PNPM_IGNORED_BUILDS on this first install.
-          pnpm install --registry=http://localhost:4873 || true
-          pnpm approve-builds esbuild '!core-js'
+          printf 'allowBuilds:\n  core-js: false\n  esbuild: true\n' > pnpm-workspace.yaml
           pnpm install --registry=http://localhost:4873
         }
 
