@@ -27,6 +27,7 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   wasmContext: InstanceType<MainThreadWasmContext> | undefined;
   disposeWasmContext?: () => void;
   #addedEventListeners: Set<string> = new Set();
+  #keyboardEventListeners: Set<string> = new Set();
   toBeEnabledElement: Set<HTMLElement> = new Set();
   toBeDisabledElement: Set<HTMLElement> = new Set();
 
@@ -153,6 +154,40 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     }
   }
 
+  #keyboardEventHandler = (event: Event) => {
+    const rootDom = this.lynxViewInstance.rootDom;
+    const focusedInShadow = rootDom.activeElement as HTMLElement | null;
+    const effectiveTarget = (
+      focusedInShadow ?? rootDom.firstElementChild
+    ) as HTMLElement | null;
+    if (!effectiveTarget) return;
+
+    let bubblePath: Uint32Array = new Uint32Array(32);
+    let bubblePathLength = 0;
+    let current = effectiveTarget as DecoratedHTMLElement | null;
+    while (current) {
+      if ((current as unknown) === rootDom) break;
+      const uniqueId = __GetElementUniqueID(current as HTMLElement);
+      if (uniqueId !== -1) {
+        bubblePath[bubblePathLength++] = uniqueId;
+        if (bubblePathLength >= bubblePath.length) {
+          const newBubblePath = new Uint32Array(bubblePath.length * 2);
+          newBubblePath.set(bubblePath);
+          bubblePath = newBubblePath;
+        }
+      }
+      current = current.parentElement as DecoratedHTMLElement | null;
+    }
+
+    const eventObject = createCrossThreadEvent(event);
+    this.wasmContext?.common_event_handler(
+      eventObject,
+      bubblePath.slice(0, bubblePathLength),
+      eventObject.type,
+      true,
+    );
+  };
+
   #commonEventHandler = (event: Event) => {
     const target = event.target as HTMLElement;
     let bubblePath: Uint32Array = new Uint32Array(32);
@@ -192,25 +227,40 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     const w3cEventName = LynxEventNameToW3cCommon[eventName] ?? eventName;
     if (this.#addedEventListeners.has(w3cEventName)) return;
     this.#addedEventListeners.add(w3cEventName);
-    this.lynxViewInstance.rootDom.addEventListener(
-      w3cEventName,
-      this.#commonEventHandler,
-      {
-        passive: true,
-        capture: true,
-      },
-    );
+    if (w3cEventName.startsWith('key')) {
+      this.#keyboardEventListeners.add(w3cEventName);
+      this.lynxViewInstance.rootDom.ownerDocument.addEventListener(
+        w3cEventName,
+        this.#keyboardEventHandler,
+        { passive: true, capture: true },
+      );
+    } else {
+      this.lynxViewInstance.rootDom.addEventListener(
+        w3cEventName,
+        this.#commonEventHandler,
+        { passive: true, capture: true },
+      );
+    }
   }
 
   dispose() {
     for (const eventName of this.#addedEventListeners) {
-      this.lynxViewInstance.rootDom.removeEventListener(
-        eventName,
-        this.#commonEventHandler,
-        true,
-      );
+      if (this.#keyboardEventListeners.has(eventName)) {
+        this.lynxViewInstance.rootDom.ownerDocument.removeEventListener(
+          eventName,
+          this.#keyboardEventHandler,
+          true,
+        );
+      } else {
+        this.lynxViewInstance.rootDom.removeEventListener(
+          eventName,
+          this.#commonEventHandler,
+          true,
+        );
+      }
     }
     this.#addedEventListeners.clear();
+    this.#keyboardEventListeners.clear();
 
     this.toBeEnabledElement.clear();
     this.toBeDisabledElement.clear();
