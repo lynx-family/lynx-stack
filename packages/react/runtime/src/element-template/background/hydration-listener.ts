@@ -26,6 +26,7 @@ let listener:
 
 export function installElementTemplateHydrationListener(): void {
   resetElementTemplateHydrationListener();
+  resetElementTemplateCommitState();
 
   listener = (event: { data: unknown }) => {
     const { data } = event;
@@ -114,5 +115,4 @@ export function resetElementTemplateHydrationListener(): void {
     lynx.getCoreContext().removeEventListener(ElementTemplateLifecycleConstant.hydrate, listener);
   }
   listener = undefined;
-  resetElementTemplateCommitState();
 }

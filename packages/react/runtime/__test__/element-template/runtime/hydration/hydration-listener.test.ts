@@ -206,7 +206,7 @@ describe('ElementTemplate hydration listener', () => {
     });
 
     envManager.switchToBackground();
-    expect(backgroundElementTemplateInstanceManager.get(oldId)).toBe(after);
+    expect(backgroundElementTemplateInstanceManager.get(oldId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(-1)).toBeUndefined();
   });
 
