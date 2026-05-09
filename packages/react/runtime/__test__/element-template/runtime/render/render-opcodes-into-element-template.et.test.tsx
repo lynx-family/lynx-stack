@@ -10,6 +10,7 @@ import { elementTemplateRegistry } from '../../../../src/element-template/runtim
 import {
   __etAttrPlanMap,
   adaptEventAttrSlot,
+  adaptSpreadAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import {
@@ -120,6 +121,38 @@ describe('renderOpcodesIntoElementTemplate', () => {
       '_et_event',
       null,
       [null, null, null, '-1:3:'],
+      null,
+      -1,
+    );
+    expect(addEvent).not.toHaveBeenCalled();
+  });
+
+  it('prepares spread event values before native create', () => {
+    const rootRef = { kind: 'root-ref' };
+    const handleTap = vi.fn();
+    createElementTemplate.mockReturnValue(rootRef);
+    __etAttrPlanMap._et_spread = [0, adaptSpreadAttrSlot];
+
+    renderOpcodesIntoElementTemplate([
+      __OpBegin,
+      { type: '_et_spread' },
+      __OpAttr,
+      'attributeSlots',
+      [{
+        id: 'cta',
+        className: 'primary',
+        __self: 'debug-self',
+        __source: { fileName: 'app.tsx' },
+        bindtap: handleTap,
+        catchtouchstart: false,
+      }],
+      __OpEnd,
+    ]);
+
+    expect(createElementTemplate).toHaveBeenCalledWith(
+      '_et_spread',
+      null,
+      [{ id: 'cta', class: 'primary', bindtap: '-1:0:bindtap', catchtouchstart: null }],
       null,
       -1,
     );

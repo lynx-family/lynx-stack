@@ -183,7 +183,7 @@ fn should_emit_direct_event_attr_plan_for_lepus_target() {
 }
 
 #[test]
-fn should_not_emit_attr_plan_for_non_event_attrs() {
+fn should_emit_spread_attr_plan_without_ref_adapter() {
   let (code, _) = first_user_template_json_with_code(
     r#"
       <view id={dynamicId} ref={viewRef} {...props} />
@@ -193,10 +193,17 @@ fn should_not_emit_attr_plan_for_non_event_attrs() {
       ..element_template_config()
     },
   );
+  let code = without_whitespace(&code);
 
   assert!(
-    !code.contains("__etAttrPlanMap") && !code.contains("adaptEventAttrSlot"),
-    "only direct event slots should enter the Phase 2 attr plan, got: {code}"
+    code.contains(
+      "ReactLynxInternal.__etAttrPlanMap[_et_da39a_test_1]=[2,ReactLynxInternal.adaptSpreadAttrSlot];"
+    ),
+    "spread slots should register the ET spread attr adapter, got: {code}"
+  );
+  assert!(
+    !code.contains("adaptEventAttrSlot"),
+    "ref and ordinary attrs must not enter the event adapter plan, got: {code}"
   );
 }
 
@@ -416,10 +423,18 @@ fn should_not_consume_hidden_et_slots_for_list_item_platform_attrs() {
 
 #[test]
 fn should_keep_slot_descriptor_order_for_dynamic_attr_spread_event_and_ref() {
-  let template = first_user_template_json(
+  let (code, template) = first_user_template_json_with_code(
     r#"
       <view id={dynamicId} {...props} bindtap={handleTap} ref={viewRef} />
     "#,
+    element_template_config(),
+  );
+  let code = without_whitespace(&code);
+  assert!(
+    code.contains(
+      "ReactLynxInternal.__etAttrPlanMap[_et_da39a_test_1]=[1,ReactLynxInternal.adaptSpreadAttrSlot,2,ReactLynxInternal.adaptEventAttrSlot];"
+    ),
+    "spread and direct event adapters should keep their descriptor slot order, got: {code}"
   );
 
   let attrs = template["attributesArray"]

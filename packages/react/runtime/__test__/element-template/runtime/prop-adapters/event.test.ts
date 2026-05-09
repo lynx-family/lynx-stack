@@ -13,15 +13,20 @@ import {
 import {
   __etAttrPlanMap,
   adaptEventAttrSlot,
+  adaptSpreadAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 
 describe('ElementTemplate event bridge', () => {
-  function createEventInstance(handleId: number, handler: () => void): BackgroundElementTemplateInstance {
-    __etAttrPlanMap.view = [0, adaptEventAttrSlot];
+  function createEventInstance(
+    handleId: number,
+    attrPlan: typeof __etAttrPlanMap[string],
+    rawSlots: unknown[],
+  ): BackgroundElementTemplateInstance {
+    __etAttrPlanMap.view = attrPlan;
     const instance = new BackgroundElementTemplateInstance('view');
     backgroundElementTemplateInstanceManager.updateId(instance.instanceId, handleId);
-    instance.setAttribute('attributeSlots', [handler]);
+    instance.setAttribute('attributeSlots', rawSlots);
     return instance;
   }
 
@@ -41,7 +46,7 @@ describe('ElementTemplate event bridge', () => {
   it('dispatches publishEvent to the current handler', () => {
     const handler = vi.fn();
     const eventData = { type: 'tap', detail: { x: 1 } };
-    createEventInstance(-1, handler);
+    createEventInstance(-1, [0, adaptEventAttrSlot], [handler]);
 
     publishEvent('-1:0:', eventData);
 
@@ -84,11 +89,37 @@ describe('ElementTemplate event bridge', () => {
   it('dispatches publicComponentEvent through the same handler lookup', () => {
     const handler = vi.fn();
     const eventData = { type: 'tap' };
-    createEventInstance(-2, handler);
+    createEventInstance(-2, [0, adaptEventAttrSlot], [handler]);
 
     publicComponentEvent('component-id', '-2:0:', eventData);
 
     expect(handler).toHaveBeenCalledWith(eventData);
+  });
+
+  it('dispatches spread event values through the same handler lookup', () => {
+    const handler = vi.fn();
+    const eventData = { type: 'tap', spread: true };
+    createEventInstance(-8, [0, adaptSpreadAttrSlot], [{ bindtap: handler }]);
+
+    publishEvent('-8:0:bindtap', eventData);
+
+    expect(handler).toHaveBeenCalledWith(eventData);
+  });
+
+  it('dispatches direct and spread event values from their owning raw slots', () => {
+    const directHandler = vi.fn();
+    const spreadHandler = vi.fn();
+    createEventInstance(
+      -9,
+      [0, adaptEventAttrSlot, 1, adaptSpreadAttrSlot],
+      [directHandler, { bindtap: spreadHandler }],
+    );
+
+    publishEvent('-9:0:', { type: 'tap', direct: true });
+    publishEvent('-9:1:bindtap', { type: 'tap', spread: true });
+
+    expect(directHandler).toHaveBeenCalledWith({ type: 'tap', direct: true });
+    expect(spreadHandler).toHaveBeenCalledWith({ type: 'tap', spread: true });
   });
 
   it('reports handler errors without throwing through native', () => {
@@ -97,9 +128,9 @@ describe('ElementTemplate event bridge', () => {
     const reportError = vi.fn();
     lynx.reportError = reportError;
     try {
-      createEventInstance(-3, () => {
+      createEventInstance(-3, [0, adaptEventAttrSlot], [() => {
         throw error;
-      });
+      }]);
 
       expect(() => publishEvent('-3:0:', { type: 'tap' })).not.toThrow();
       expect(reportError).toHaveBeenCalledWith(error);
@@ -116,11 +147,11 @@ describe('ElementTemplate event bridge', () => {
 
     resetEventStateForRuntime();
     publishEvent('-4:0:', queuedEvent);
-    createEventInstance(-4, queuedHandler);
+    createEventInstance(-4, [0, adaptEventAttrSlot], [queuedHandler]);
     flushPendingEvents();
 
     publishEvent('-5:0:', droppedEvent);
-    createEventInstance(-5, droppedHandler);
+    createEventInstance(-5, [0, adaptEventAttrSlot], [droppedHandler]);
 
     expect(queuedHandler).toHaveBeenCalledWith(queuedEvent);
     expect(droppedHandler).not.toHaveBeenCalled();
@@ -132,7 +163,7 @@ describe('ElementTemplate event bridge', () => {
     publishEvent('-6:0:', { type: 'tap' });
 
     destroyElementTemplateBackgroundRuntime();
-    createEventInstance(-6, handler);
+    createEventInstance(-6, [0, adaptEventAttrSlot], [handler]);
     flushPendingEvents();
 
     expect(handler).not.toHaveBeenCalled();
@@ -144,7 +175,7 @@ describe('ElementTemplate event bridge', () => {
     destroyElementTemplateBackgroundRuntime();
 
     publishEvent('-7:0:', { type: 'tap' });
-    createEventInstance(-7, handler);
+    createEventInstance(-7, [0, adaptEventAttrSlot], [handler]);
     flushPendingEvents();
 
     expect(handler).not.toHaveBeenCalled();
