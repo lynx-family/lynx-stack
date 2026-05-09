@@ -94,6 +94,59 @@ describe('renderToString', () => {
     `);
   });
 
+  it('should clear transient named child props when the child is removed', () => {
+    const child = createElement('text', null, 'Hello');
+    const vnode = createElement('view', { $0: child });
+
+    renderToString(vnode, new SnapshotInstance('root'));
+
+    expect(vnode.props.$0).toBe(child);
+    vnode.removeChild(child);
+
+    expect(vnode.props.$0).toBeUndefined();
+    expect('$0' in vnode.props).toBe(false);
+    expect(vnode.childNodes).toEqual([]);
+  });
+
+  it('should clear removed children from nested transient prop arrays', () => {
+    const child = createElement('text', null, 'Hello');
+    const vnode = createElement('view', { $0: [[child]] });
+
+    renderToString(vnode, new SnapshotInstance('root'));
+
+    expect(vnode.props.$0[0][0]).toBe(child);
+    vnode.removeChild(child);
+
+    expect(vnode.props.$0).toEqual([[undefined]]);
+    expect(vnode.childNodes).toEqual([]);
+  });
+
+  it('should only clear compiler transient child props', () => {
+    const child = createElement('text', null, 'Hello');
+    const vnode = createElement('view', { $0: child, $foo: child });
+
+    renderToString(vnode, new SnapshotInstance('root'));
+    vnode.removeChild(child);
+
+    expect(vnode.props.$0).toBeUndefined();
+    expect(vnode.props.$foo).toBe(child);
+  });
+
+  it('should tolerate cycles in transient prop arrays when clearing removed children', () => {
+    const child = createElement('text', null, 'Hello');
+    const vnode = createElement('view', { $0: child });
+
+    renderToString(vnode, new SnapshotInstance('root'));
+    const children = [child];
+    children.push(children);
+    vnode.props.$0 = children;
+    vnode.removeChild(child);
+
+    expect(vnode.props.$0[0]).toBeUndefined();
+    expect(vnode.props.$0[1]).toBe(children);
+    expect(vnode.childNodes).toEqual([]);
+  });
+
   it('should render Component depth 1', () => {
     function App() {
       const [a, setA] = useState(111);
@@ -1287,32 +1340,13 @@ describe('renderOpcodesInto', () => {
 
     const [vnodeA, vnodeB, vnodeC, vnodeC2, vnodeD] = scratch.__firstChild.props.$0;
 
-    expect(vnodeA).not.toHaveProperty('__elements');
-    expect(vnodeA).not.toHaveProperty('__element_root');
+    expect(vnodeA).toBeUndefined();
     expect(vnodeB).toHaveProperty('__elements');
     expect(vnodeB).toHaveProperty('__element_root');
     expect(vnodeC).toHaveProperty('__elements');
     expect(vnodeC).toHaveProperty('__element_root');
-    expect(vnodeD).not.toHaveProperty('__elements');
-    expect(vnodeD).not.toHaveProperty('__element_root');
-
-    {
-      const componentVNodeC = vnodeC2.props.$0;
-      expect(componentVNodeC.type).toBe(Fragment);
-      expect(componentVNodeC.props.children).toHaveLength(4);
-      // FIXME(hzy): there is still a cycle reference
-      expect(componentVNodeC.__c.__v).toBe(componentVNodeC);
-      componentVNodeC.props.children.forEach((vnode) => {
-        expect(vnode).not.toHaveProperty('__elements');
-        expect(vnode).not.toHaveProperty('__element_root');
-      });
-    }
-
-    expect(vnodeD.props.$0).toHaveLength(4);
-    vnodeD.props.$0.forEach((vnode) => {
-      expect(vnode).not.toHaveProperty('__elements');
-      expect(vnode).not.toHaveProperty('__element_root');
-    });
+    expect(vnodeC2).toBeUndefined();
+    expect(vnodeD).toBeUndefined();
   });
 });
 

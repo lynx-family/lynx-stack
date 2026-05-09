@@ -41,6 +41,62 @@ export const snapshotInstanceManager: {
   },
 };
 
+function isRemovedSnapshot(
+  value: unknown,
+  removedSnapshots: WeakSet<object>,
+): boolean {
+  return (typeof value === 'object' || typeof value === 'function') && value !== null
+    && removedSnapshots.has(value);
+}
+
+function clearRemovedSnapshotsFromArray(
+  values: unknown[],
+  removedSnapshots: WeakSet<object>,
+  seen = new WeakSet<object>(),
+): boolean {
+  if (seen.has(values)) {
+    return false;
+  }
+  seen.add(values);
+
+  let changed = false;
+  values.forEach((value, index) => {
+    if (isRemovedSnapshot(value, removedSnapshots)) {
+      values[index] = undefined;
+      changed = true;
+    } else if (Array.isArray(value) && clearRemovedSnapshotsFromArray(value, removedSnapshots, seen)) {
+      changed = true;
+    }
+  });
+  return changed;
+}
+
+function clearTransientChildPropRefs(owner: SnapshotInstance, removedChild: SnapshotInstance): void {
+  const props = (owner as unknown as { props?: Record<string, unknown> }).props;
+  if (!props) {
+    return;
+  }
+
+  const removedSnapshots = new WeakSet<object>();
+  traverseSnapshotInstance(removedChild, snapshot => {
+    removedSnapshots.add(snapshot);
+  });
+
+  for (const key of Object.keys(props)) {
+    // The compiler stores named children in transient `$N` props. Once a child
+    // subtree is removed, those staging refs must not keep the old snapshots alive.
+    if (!/^\$\d+$/.test(key)) {
+      continue;
+    }
+    const value = props[key];
+    if (isRemovedSnapshot(value, removedSnapshots)) {
+      delete props[key];
+    } else if (Array.isArray(value)) {
+      clearRemovedSnapshotsFromArray(value, removedSnapshots);
+    }
+  }
+}
+
 export let snapshotCreatorMap: Record<string, (uniqId: string) => string> = {};
 
 if (__DEV__ && __JS__) {
@@ -425,6 +481,7 @@ export class SnapshotInstance {
 
   removeChild(child: SnapshotInstance): void {
     const __snapshot_def = this.__snapshot_def;
+    clearTransientChildPropRefs(this, child);
     if (__snapshot_def.isListHolder) {
       if (__pendingListUpdates.values) {
         (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
@@ -434,6 +491,7 @@ export class SnapshotInstance {
 
       this.__removeChild(child);
       traverseSnapshotInstance(child, v => {
+        clearTransientChildPropRefs(v, v);
         snapshotInstanceManager.values.delete(v.__id);
       });
       // mark this child as deleted
@@ -453,6 +511,7 @@ export class SnapshotInstance {
         snapshotDestroyList(v);
       }
 
+      clearTransientChildPropRefs(v, v);
       v.__parent = null;
       v.__previousSibling = null;
       v.__nextSibling = null;
