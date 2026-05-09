@@ -9,6 +9,7 @@
  * optimized attribute updates at compile time, avoiding runtime object spreads.
  */
 
+import { retainWorkletCtx } from '@lynx-js/react/worklet-runtime/bindings';
 import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
@@ -19,6 +20,8 @@ import { transformRef, updateRef } from './ref.js';
 import { updateWorkletEvent } from './workletEvent.js';
 import { updateWorkletRef } from './workletRef.js';
 import { isDirectOrDeepEqual, isEmptyObject, pick } from '../../utils.js';
+import { retainGestureWorkletCtx } from '../gesture/processGesture.js';
+import type { GestureKind } from '../gesture/types.js';
 import { ListUpdateInfoRecording } from '../list/listUpdateInfo.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
@@ -39,6 +42,31 @@ const noFlattenAttributes = /* @__PURE__ */ new Set<string>([
   'exposure-scene',
   'exposure-id',
 ]);
+
+function retainSpreadWorkletCtx(newValue: Record<string, unknown>, oldValue: Record<string, unknown>): void {
+  let match: RegExpMatchArray | null = null;
+  for (const key in newValue) {
+    const value = newValue[key];
+    if (value === oldValue[key]) {
+      continue;
+    }
+
+    if (key.endsWith(':ref')) {
+      if (key.slice(0, -4) === 'main-thread' && value && (value as Worklet)._wkltId) {
+        retainWorkletCtx(value as Worklet);
+      }
+    } else if (key.endsWith(':gesture')) {
+      if (key.slice(0, -8) === 'main-thread') {
+        retainGestureWorkletCtx(value as GestureKind);
+      }
+    } else if (
+      (match = eventRegExp.exec(key)) && match[2] === 'main-thread' && value !== null && value !== undefined
+      && typeof value === 'object'
+    ) {
+      retainWorkletCtx(value as Worklet);
+    }
+  }
+}
 
 function updateSpread(
   snapshot: SnapshotInstance,
@@ -84,6 +112,7 @@ function updateSpread(
   }
 
   if (!snapshot.__elements) {
+    retainSpreadWorkletCtx(newValue, oldValue);
     return;
   }
 

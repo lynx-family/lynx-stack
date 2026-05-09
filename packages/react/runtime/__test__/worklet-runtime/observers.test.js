@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { onWorkletCtxUpdate } from '../../src/worklet-runtime/bindings/observers';
+import { onWorkletCtxUpdate, retainWorkletCtx } from '../../src/worklet-runtime/bindings/observers';
 import { initWorklet } from '../../src/worklet-runtime/workletRuntime';
 
 beforeEach(() => {
@@ -24,13 +24,10 @@ describe('MTFObservers', () => {
       addRef,
     };
 
-    onWorkletCtxUpdate(
+    retainWorkletCtx(
       {
         _wkltId: 'ctx1',
       },
-      undefined,
-      false,
-      'element',
     );
 
     expect(addRef).not.toHaveBeenCalled();
@@ -46,8 +43,27 @@ describe('MTFObservers', () => {
       _execId: 8,
     };
 
-    onWorkletCtxUpdate(mtf, undefined, false, 'element');
+    retainWorkletCtx(mtf);
 
     expect(addRef).toHaveBeenCalledWith(8, mtf);
+  });
+
+  it('should not add lifecycle refs during element updates', () => {
+    const addRef = vi.fn();
+    globalThis.lynxWorkletImpl._jsFunctionLifecycleManager = {
+      addRef,
+    };
+
+    onWorkletCtxUpdate(
+      {
+        _wkltId: 'ctx1',
+        _execId: 8,
+      },
+      undefined,
+      false,
+      'element',
+    );
+
+    expect(addRef).not.toHaveBeenCalled();
   });
 });

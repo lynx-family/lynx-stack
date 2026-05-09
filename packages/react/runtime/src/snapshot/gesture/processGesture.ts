@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { onWorkletCtxUpdate } from '@lynx-js/react/worklet-runtime/bindings';
+import { onWorkletCtxUpdate, retainWorkletCtx } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { GestureTypeInner } from './types.js';
 import type { BaseGesture, ComposedGesture, GestureConfig, GestureKind } from './types.js';
@@ -105,6 +105,20 @@ function consumeOldBaseGesture(
   return fallbackOldBaseGesture;
 }
 
+export function retainGestureWorkletCtx(gesture: GestureKind | undefined): void {
+  const retainedBaseGestures: BaseGesture[] = [];
+  appendUniqueSerializedBaseGestures(gesture, retainedBaseGestures, new Set());
+
+  for (const baseGesture of retainedBaseGestures) {
+    for (const key of Object.keys(baseGesture.callbacks)) {
+      const callback = baseGesture.callbacks[key];
+      if (callback) {
+        retainWorkletCtx(callback);
+      }
+    }
+  }
+}
+
 function removeGestureDetector(dom: FiberElement, id: number): void {
   // Keep compatibility with old runtimes where remove API is not exposed.
   if (typeof __RemoveGestureDetector === 'function') {
@@ -169,9 +183,13 @@ export function processGesture(
   isFirstScreen: boolean,
   gestureOptions?: {
     domSet: boolean;
+    retainCallbacks?: boolean;
   },
 ): void {
   const domSet = gestureOptions?.domSet === true;
+  if (gestureOptions?.retainCallbacks !== false) {
+    retainGestureWorkletCtx(gesture);
+  }
   if (!gesture || !isSerializedGesture(gesture)) {
     const { oldBaseGesturesById } = collectOldGestureInfo(oldGesture);
     for (const oldBaseGesture of oldBaseGesturesById.values()) {
