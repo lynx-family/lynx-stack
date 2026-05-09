@@ -6,7 +6,7 @@ import type { VNode } from 'preact';
 
 import { RENDER_COMPONENT, ROOT } from '../../shared/render-constants.js';
 import { hook } from '../../utils.js';
-import { GlobalCommitContext } from '../background/commit-context.js';
+import { globalCommitContext } from '../background/commit-context.js';
 
 const PerformanceTimingKeys = [
   'updateSetStateTrigger',
@@ -110,7 +110,7 @@ function markTiming(timestampKey: typeof PerformanceTimingKeys[number], force?: 
 }
 
 function shouldStartUpdatePipeline(): boolean {
-  return GlobalCommitContext.ops.length > 0;
+  return globalCommitContext.ops.length > 0;
 }
 
 function initTimingAPI(): void {

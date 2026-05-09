@@ -48,7 +48,7 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
       }
     },
     {
-      "template_id": "__et_builtin_raw_text__",
+      "template_id": "_et_builtin_raw_text",
       "template": {
         "kind": "element",
         "type": "raw-text",

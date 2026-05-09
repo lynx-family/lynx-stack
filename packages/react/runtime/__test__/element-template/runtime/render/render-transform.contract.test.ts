@@ -10,7 +10,7 @@ import { transformReactLynx } from '@lynx-js/react-transform';
 
 import { renderOpcodesIntoElementTemplate } from '../../../../src/element-template/runtime/render/render-opcodes.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
-import { ElementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
+import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import { renderToString } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
 import { clearTemplates, registerBuiltinRawTextTemplate, registerTemplates } from '../../test-utils/debug/registry.js';
 import { installMockNativePapi, lastMock } from '../../test-utils/mock/mockNativePapi.js';
@@ -27,7 +27,7 @@ function findUserTemplateCreateLog(): unknown[] | undefined {
   return lastMock!.nativeLog.find((entry) =>
     Array.isArray(entry)
     && entry[0] === '__CreateElementTemplate'
-    && entry[1] !== '__et_builtin_raw_text__'
+    && entry[1] !== '_et_builtin_raw_text'
   ) as unknown[];
 }
 
@@ -47,7 +47,7 @@ function registerCompiledTemplates(
 
   registerTemplates(
     templates
-      .filter(template => template.templateId !== '__et_builtin_raw_text__')
+      .filter(template => template.templateId !== '_et_builtin_raw_text')
       .map(template => ({
         ...template,
         templateId: `${entryName}:${template.templateId}`,
@@ -123,7 +123,7 @@ describe('render transform contract', () => {
   beforeEach(() => {
     installMockNativePapi({ clearTemplatesOnCleanup: true });
     clearTemplates();
-    ElementTemplateRegistry.clear();
+    elementTemplateRegistry.clear();
     resetTemplateId();
   });
 
@@ -131,7 +131,7 @@ describe('render transform contract', () => {
     vi.clearAllMocks();
     vi.unstubAllGlobals();
     clearTemplates();
-    ElementTemplateRegistry.clear();
+    elementTemplateRegistry.clear();
     resetTemplateId();
   });
 
@@ -156,7 +156,7 @@ describe('render transform contract', () => {
       },
       __handleId: -1,
     });
-    expect(ElementTemplateRegistry.get(-1)).toMatchObject({
+    expect(elementTemplateRegistry.get(-1)).toMatchObject({
       attributes: { id: 'main' },
     });
     expect(findUserTemplateCreateLog()).toEqual([
@@ -194,7 +194,7 @@ describe('render transform contract', () => {
       },
       __handleId: -1,
     });
-    expect(ElementTemplateRegistry.get(-1)).toMatchObject({
+    expect(elementTemplateRegistry.get(-1)).toMatchObject({
       attributes: { id: 'lazy' },
     });
     expect(findUserTemplateCreateLog()).toEqual([

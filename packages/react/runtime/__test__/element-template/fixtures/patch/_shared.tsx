@@ -27,7 +27,7 @@ import { root } from '../../../../src/element-template/client/root.js';
 import { __page } from '../../../../src/element-template/runtime/page/page.js';
 import { __root as internalRoot } from '../../../../src/element-template/runtime/page/root-instance.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
-import { ElementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
+import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import { registerBuiltinRawTextTemplate } from '../../test-utils/debug/registry.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
 import { compileFixtureSource } from '../../test-utils/debug/compiledFixtureCompiler.js';
@@ -66,7 +66,7 @@ export interface UpdateFixtureContext {
 
 export function setupPatchContext(): PatchContext {
   vi.clearAllMocks();
-  ElementTemplateRegistry.clear();
+  elementTemplateRegistry.clear();
   resetTemplateId();
   registerBuiltinRawTextTemplate();
 
@@ -108,7 +108,7 @@ export function setupPatchContext(): PatchContext {
 
 export function setupUpdateFixtureContext(): UpdateFixtureContext {
   vi.clearAllMocks();
-  ElementTemplateRegistry.clear();
+  elementTemplateRegistry.clear();
   resetTemplateId();
   registerBuiltinRawTextTemplate();
 

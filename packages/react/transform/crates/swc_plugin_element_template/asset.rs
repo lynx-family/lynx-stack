@@ -13,7 +13,7 @@ pub struct ElementTemplateAsset {
   pub source_file: String,
 }
 
-const BUILTIN_RAW_TEXT_TEMPLATE_ID: &str = "__et_builtin_raw_text__";
+const BUILTIN_RAW_TEXT_TEMPLATE_ID: &str = "_et_builtin_raw_text";
 const BUILTIN_SOURCE_FILE: &str = "<builtin>";
 
 impl<C> JSXTransformer<C>

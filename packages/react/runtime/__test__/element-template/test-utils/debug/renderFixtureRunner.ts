@@ -7,7 +7,7 @@ import { vi } from 'vitest';
 import { resetElementTemplateHydrationListener } from '../../../../src/element-template/background/hydration-listener.js';
 import { renderOpcodesIntoElementTemplate } from '../../../../src/element-template/runtime/render/render-opcodes.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
-import { ElementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
+import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import { renderToString } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
 import {
   assertMissingFile,
@@ -135,7 +135,7 @@ async function runCompiledRenderFixture(options: {
   }
 
   vi.resetAllMocks();
-  ElementTemplateRegistry.clear();
+  elementTemplateRegistry.clear();
   resetTemplateId();
   globalThis.__USE_ELEMENT_TEMPLATE__ = true;
 

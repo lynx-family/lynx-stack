@@ -13,7 +13,7 @@ use swc_core::ecma::visit::VisitMutWith;
 use swc_plugin_element_template::{ElementTemplateAsset, JSXTransformer, JSXTransformerConfig};
 use swc_plugins_shared::transform_mode::TransformMode;
 
-const BUILTIN_RAW_TEXT_TEMPLATE_ID: &str = "__et_builtin_raw_text__";
+const BUILTIN_RAW_TEXT_TEMPLATE_ID: &str = "_et_builtin_raw_text";
 
 fn transform_to_templates(input: &str, cfg: JSXTransformerConfig) -> Vec<ElementTemplateAsset> {
   let (templates, _) = transform_fixture(input, cfg);

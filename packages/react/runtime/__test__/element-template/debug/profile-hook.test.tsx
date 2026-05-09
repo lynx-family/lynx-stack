@@ -3,7 +3,7 @@ import { options } from 'preact';
 
 import { root } from '../../../src/element-template/index.js';
 import { initProfileHook } from '../../../src/element-template/debug/profile.js';
-import { GlobalCommitContext } from '../../../src/element-template/background/commit-context.js';
+import { globalCommitContext } from '../../../src/element-template/background/commit-context.js';
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';
 import { COMMIT } from '../../../src/shared/render-constants.js';
 
@@ -54,7 +54,7 @@ describe('element-template initProfileHook', () => {
 
   it('profiles commit with flowIds from commit context', () => {
     const flowIds = [101, 202];
-    GlobalCommitContext.flowIds = flowIds;
+    globalCommitContext.flowIds = flowIds;
     options[COMMIT]?.({} as unknown, []);
 
     expect(lynx.performance.profileStart).toHaveBeenCalledWith('ReactLynx::commit', {
@@ -62,6 +62,6 @@ describe('element-template initProfileHook', () => {
       flowIds,
     });
     expect(lynx.performance.profileEnd).toHaveBeenCalled();
-    expect(GlobalCommitContext.flowIds).toBeUndefined();
+    expect(globalCommitContext.flowIds).toBeUndefined();
   });
 });

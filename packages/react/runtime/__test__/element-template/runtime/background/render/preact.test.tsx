@@ -22,7 +22,7 @@ function collectRawText(instance: BackgroundElementTemplateInstance): string[] {
   const texts: string[] = [];
   let child = instance.firstChild;
   while (child) {
-    if (child.type === '__et_builtin_raw_text__') {
+    if (child.type === '_et_builtin_raw_text') {
       texts.push(child.text);
     }
     texts.push(...collectRawText(child));

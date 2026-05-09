@@ -1,7 +1,11 @@
 import {
-  GlobalCommitContext,
+  globalCommitContext,
   resetGlobalCommitContext,
 } from '../../../../../src/element-template/background/commit-context.js';
+import {
+  markElementTemplateHydrated,
+  resetElementTemplateCommitState,
+} from '../../../../../src/element-template/background/commit-hook.js';
 import {
   BackgroundElementTemplateInstance,
   BackgroundElementTemplateSlot,
@@ -11,19 +15,20 @@ import { backgroundElementTemplateInstanceManager } from '../../../../../src/ele
 export function runCase<T>(runner: () => T): T {
   backgroundElementTemplateInstanceManager.clear();
   backgroundElementTemplateInstanceManager.nextId = 0;
-  resetGlobalCommitContext();
+  resetElementTemplateCommitState();
   (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
 
   try {
     return runner();
   } finally {
-    resetGlobalCommitContext();
+    resetElementTemplateCommitState();
   }
 }
 
 export {
   BackgroundElementTemplateInstance,
   BackgroundElementTemplateSlot,
-  GlobalCommitContext,
+  globalCommitContext,
+  markElementTemplateHydrated,
   resetGlobalCommitContext,
 };

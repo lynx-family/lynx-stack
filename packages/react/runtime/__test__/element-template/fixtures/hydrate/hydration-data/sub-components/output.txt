@@ -12,7 +12,7 @@ Array [
                   "inner",
                 ],
                 "elementSlots": Array [],
-                "templateKey": "__et_builtin_raw_text__",
+                "templateKey": "_et_builtin_raw_text",
                 "uid": -1,
               },
             ],

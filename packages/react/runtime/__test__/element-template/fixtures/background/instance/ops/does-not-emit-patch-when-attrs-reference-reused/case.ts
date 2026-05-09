@@ -1,6 +1,7 @@
 import {
   BackgroundElementTemplateInstance,
-  GlobalCommitContext,
+  globalCommitContext,
+  markElementTemplateHydrated,
   resetGlobalCommitContext,
   runCase,
 } from '../../_shared.js';
@@ -10,10 +11,12 @@ export function run() {
     const instance = new BackgroundElementTemplateInstance('view');
     const props = { a: 1 };
     instance.setAttribute('attributeSlots', [props]);
+    markElementTemplateHydrated();
+    instance.markCreateEmittedForHydration();
     resetGlobalCommitContext();
 
     instance.setAttribute('attributeSlots', [props]);
-    const stream = GlobalCommitContext.ops;
+    const stream = globalCommitContext.ops;
     resetGlobalCommitContext();
 
     return stream;

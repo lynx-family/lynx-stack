@@ -54,7 +54,7 @@ export interface ElementTemplateRegistryFacade {
   clear: () => void;
 }
 
-export const ElementTemplateRegistry: ElementTemplateRegistryFacade = {
+export const elementTemplateRegistry: ElementTemplateRegistryFacade = {
   set: setElementTemplateNativeRef,
   get: getElementTemplateNativeRef,
   has: hasElementTemplateNativeRef,

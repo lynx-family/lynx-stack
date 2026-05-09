@@ -401,8 +401,8 @@ function serializeTemplateNode(
   }
 
   return {
-    templateKey: templateId === '__et_builtin_raw_text__' ? '__et_builtin_raw_text__' : templateId,
-    attributeSlots: templateId === '__et_builtin_raw_text__'
+    templateKey: templateId === '_et_builtin_raw_text' ? '_et_builtin_raw_text' : templateId,
+    attributeSlots: templateId === '_et_builtin_raw_text'
       ? [String((isRecord(root['attributes']) ? root['attributes']?.['text'] : '') ?? '')]
       : normalizeAttributeSlots(root['__attributeSlots']),
     elementSlots: serializedSlots,

@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 
 import {
-  GlobalCommitContext,
+  globalCommitContext,
   resetGlobalCommitContext,
 } from '../../../../../src/element-template/background/commit-context.js';
 import {
@@ -567,7 +567,7 @@ export function runCaseByName(name: string): unknown {
 
     const rawText = createTextNode('raw');
     rawText.emitCreate();
-    const ops = [...GlobalCommitContext.ops];
+    const ops = [...globalCommitContext.ops];
     resetGlobalCommitContext();
 
     return { ops };
@@ -582,7 +582,7 @@ export function runCaseByName(name: string): unknown {
 
     const rawText = new BackgroundElementTemplateInstance(BUILTIN_RAW_TEXT_TEMPLATE_KEY);
     rawText.emitCreate();
-    const ops = [...GlobalCommitContext.ops];
+    const ops = [...globalCommitContext.ops];
     resetGlobalCommitContext();
 
     return { ops };
