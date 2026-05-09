@@ -7,8 +7,14 @@ interface SpreadProps {
 interface AppProps {
   spread?: SpreadProps;
   onCatch?: () => void;
+  showChild?: boolean;
+  childSpread?: SpreadProps;
 }
 
-export function App({ spread = {}, onCatch }: AppProps) {
-  return <view catchtap={onCatch} {...spread} />;
+export function App({ spread = {}, onCatch, showChild = false, childSpread = {} }: AppProps) {
+  return (
+    <view catchtap={onCatch} {...spread}>
+      {showChild ? <text {...childSpread}>tap</text> : null}
+    </view>
+  );
 }

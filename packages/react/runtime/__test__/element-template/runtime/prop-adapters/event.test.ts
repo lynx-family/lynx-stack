@@ -60,7 +60,7 @@ describe('ElementTemplate event bridge', () => {
     function onTap(data: unknown) {
       received.push(data);
     }
-    createEventInstance(-8, onTap);
+    createEventInstance(-8, [0, adaptEventAttrSlot], [onTap]);
 
     publishEvent('-8:0:', { type: 'tap', detail: { x: 1 } });
 
@@ -78,7 +78,7 @@ describe('ElementTemplate event bridge', () => {
     const alog = console.alog as unknown as { mock: { calls: unknown[][] }; mockClear(): void };
     alog.mockClear();
     const handler = vi.fn();
-    createEventInstance(-9, handler);
+    createEventInstance(-9, [0, adaptEventAttrSlot], [handler]);
 
     publishEvent('-9:0:', { type: 'tap' });
 
