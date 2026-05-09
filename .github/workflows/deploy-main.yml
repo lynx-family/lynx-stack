@@ -103,6 +103,7 @@ jobs:
       runs-on: lynx-custom-container
       is-web: true
       run: |
+        ulimit -Sn 655350
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
         pnpm --filter @lynx-js/web-elements run test --reporter='github,dot,junit,html'
@@ -117,6 +118,7 @@ jobs:
       runs-on: lynx-custom-container
       is-web: true
       run: |
+        ulimit -Sn 655350
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
         pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
