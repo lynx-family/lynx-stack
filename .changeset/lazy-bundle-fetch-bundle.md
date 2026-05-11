@@ -1,12 +1,15 @@
 ---
-
+"@lynx-js/react": patch
+"@lynx-js/react-rsbuild-plugin": patch
+"@lynx-js/react-webpack-plugin": patch
+"@lynx-js/react-transform": patch
+"@lynx-js/template-webpack-plugin": patch
 ---
 
-No package release is required yet. This PR wires the FetchBundle-based
-lazy bundle loader path (customSections-based output, JsBytecode encoded
-MTS, single CSS section, version-gated default fetcher) behind an
-opt-in env var fallback. The feature is incomplete pending downstream
-work (engineVersion ≥ 3.8 host availability, @lynx-js/types release with
-fetchBundle / loadScript declarations) and will continue to evolve. A
-release changeset should be added once the FetchBundle path ships as a
-coherent user-visible change.
+feat(lazy-bundle): add `lynx.fetchBundle`-based loader
+
+Opt in by setting `engineVersion: '3.8'` (or higher) in `pluginReactLynx`.
+Use `import('./X', { with: { mode: 'sync' | 'async' } })` to control whether
+the first screen blocks on a sync fetch. The lazy bundle's main-thread
+section is bytecoded by default (skipped in dev or when `DEBUG` includes
+`rspeedy`).
