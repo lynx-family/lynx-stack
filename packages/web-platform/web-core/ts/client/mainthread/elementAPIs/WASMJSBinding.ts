@@ -23,10 +23,13 @@ export type WASMJSBindingInjectedHandler = {
   mainThreadGlobalThis: MainThreadGlobalThis;
 };
 
+const DOCUMENT_LEVEL_EVENTS = new Set(['keydown', 'keyup']);
+
 export class WASMJSBinding implements RustMainthreadContextBinding {
   wasmContext: InstanceType<MainThreadWasmContext> | undefined;
   disposeWasmContext?: () => void;
   #addedEventListeners: Set<string> = new Set();
+  #documentEventListeners: Set<string> = new Set();
   toBeEnabledElement: Set<HTMLElement> = new Set();
   toBeDisabledElement: Set<HTMLElement> = new Set();
 
@@ -128,12 +131,20 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     currentTargetDataset: CloneableObject,
   ) {
     const target = this.getElementByUniqueId(targetUniqueId);
-    const currentTarget = this.getElementByUniqueId(
-      currentTargetUniqueId,
-    );
+    const currentTarget = this.getElementByUniqueId(currentTargetUniqueId);
+    // For global events (e.g. global-bindkeydown), the DOM event originates
+    // outside the Lynx element tree so target_unique_id is 0 (no element).
+    // Fall back to currentTarget so generateTargetObject doesn't crash.
+    const resolvedTarget = (target ?? currentTarget) as
+      | DecoratedHTMLElement
+      | undefined;
+    const resolvedTargetDataset = target ? targetDataset : currentTargetDataset;
+    if (!resolvedTarget) {
+      return;
+    }
     eventObject.target = this.generateTargetObject(
-      target as DecoratedHTMLElement,
-      targetDataset,
+      resolvedTarget,
+      resolvedTargetDataset,
     );
     eventObject.currentTarget = this.generateTargetObject(
       currentTarget as DecoratedHTMLElement,
@@ -192,25 +203,39 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     const w3cEventName = LynxEventNameToW3cCommon[eventName] ?? eventName;
     if (this.#addedEventListeners.has(w3cEventName)) return;
     this.#addedEventListeners.add(w3cEventName);
-    this.lynxViewInstance.rootDom.addEventListener(
-      w3cEventName,
-      this.#commonEventHandler,
-      {
+    const isDocumentLevel = DOCUMENT_LEVEL_EVENTS.has(w3cEventName);
+    if (isDocumentLevel) {
+      this.#documentEventListeners.add(w3cEventName);
+      document.addEventListener(w3cEventName, this.#commonEventHandler, {
         passive: true,
         capture: true,
-      },
-    );
+      });
+    } else {
+      this.lynxViewInstance.rootDom.addEventListener(
+        w3cEventName,
+        this.#commonEventHandler,
+        {
+          passive: true,
+          capture: true,
+        },
+      );
+    }
   }
 
   dispose() {
     for (const eventName of this.#addedEventListeners) {
-      this.lynxViewInstance.rootDom.removeEventListener(
-        eventName,
-        this.#commonEventHandler,
-        true,
-      );
+      if (this.#documentEventListeners.has(eventName)) {
+        document.removeEventListener(eventName, this.#commonEventHandler, true);
+      } else {
+        this.lynxViewInstance.rootDom.removeEventListener(
+          eventName,
+          this.#commonEventHandler,
+          true,
+        );
+      }
     }
     this.#addedEventListeners.clear();
+    this.#documentEventListeners.clear();
 
     this.toBeEnabledElement.clear();
     this.toBeDisabledElement.clear();
