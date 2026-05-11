@@ -1,0 +1,532 @@
+packages/genui/openui/src/core/renderer.tsx
+  3069a055d8030ecc 16-106,204-247 gitai:{"mixed_line_ranges":[{"Single":106},{"Single":204}],"operations":[{"operation_id":"6a01a018e4606d3926d8091f","tool_type":"agent","tool_id":"Edit","line_ranges":[{"Range":[16,106]},{"Range":[204,247]}]}]}
+  5d5256f402ad5071 146-147
+packages/genui/a2ui-playground/lynx-src/openui/App.tsx
+  3069a055d8030ecc 1-85 gitai:{"mixed_line_ranges":[{"Single":8},{"Single":20},{"Single":51},{"Single":75}],"operations":[{"operation_id":"6a01a018e4606d3926d8091f","tool_type":"agent","tool_id":"Edit","line_ranges":[{"Range":[1,85]}]}]}
+packages/genui/openui/src/catalog/index.ts
+  4430bb318e235681 3
+  a5722e3da63e1f00 4
+  bce597acad7415f1 2
+  1d2e906879f25763 1
+  3069a055d8030ecc 5,7 gitai:{"mixed_line_ranges":[],"operations":[{"operation_id":"6a01a018e4606d3926d8091f","tool_type":"agent","tool_id":"Edit","line_ranges":[{"Single":5},{"Single":7}]}]}
+  c074d412307d2fe0 6
+packages/genui/a2ui-playground/lynx.config.ts
+  87febc6367f98f59 25
+packages/genui/openui/src/catalog/Stack/index.tsx
+  3069a055d8030ecc 40 gitai:{"mixed_line_ranges":[],"operations":[{"operation_id":"6a01a018e4606d3926d8091f","tool_type":"agent","tool_id":"Edit","line_ranges":[{"Single":40}]}]}
+packages/genui/a2ui-playground/lynx-src/openui/mockData.ts
+  3069a055d8030ecc 1-62 gitai:{"mixed_line_ranges":[],"operations":[{"operation_id":"6a01a018e4606d3926d8091f","tool_type":"agent","tool_id":"Edit","line_ranges":[{"Range":[1,62]}]}]}
+packages/genui/openui/src/core/renderer.css
+  3069a055d8030ecc 2-270 gitai:{"mixed_line_ranges":[],"operations":[{"operation_id":"6a01a018e4606d3926d8091f","tool_type":"agent","tool_id":"Edit","line_ranges":[{"Range":[2,270]}]}]}
+packages/genui/openui/src/core/index.ts
+  4c40b81803cc5878 11 gitai:{"mixed_line_ranges":[{"Single":11}],"operations":[]}
+  be5057e298f1656c 10
+packages/genui/openui/src/core/createLibrary.tsx
+  6453e2c68ac2b4e7 1 gitai:{"mixed_line_ranges":[{"Single":1}],"operations":[]}
+  3069a055d8030ecc 18-21 gitai:{"mixed_line_ranges":[],"operations":[{"operation_id":"6a01a018e4606d3926d8091f","tool_type":"agent","tool_id":"Edit","line_ranges":[{"Range":[18,21]}]}]}
+packages/genui/openui/src/catalog/Button/index.tsx
+  4907332dac36f10d 7 gitai:{"mixed_line_ranges":[{"Single":7}],"operations":[]}
+packages/genui/openui/src/core/hooks/useOpenUIState.ts
+  0d2e04a37afc008d 28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "bd34486e3971b6972978892661c2e9e59f534221",
+  "prompts": {
+    "0d2e04a37afc008d": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-63d3d745-e432-4410-aab7-85643d641676",
+        "model": "default"
+      },
+      "human_author": "BitterGourd <91231822+gaoachao@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "1d2e906879f25763": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-7d88573d-08a4-4a46-b9f8-6d803726fdd2",
+        "model": "default"
+      },
+      "human_author": "BitterGourd <91231822+gaoachao@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "3069a055d8030ecc": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a01531b3262e8729a64d842",
+        "model": "c_o_new_thinking__dev"
+      },
+      "human_author": "BitterGourd <91231822+gaoachao@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 263,
+      "total_deletions": 3102,
+      "accepted_lines": 249,
+      "overriden_lines": 6
+    },
+    "4331f9f647cba4ba": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-d5850093-ec31-49b3-923b-8927a82a4df3",
+        "model": "default"
+      },
+      "human_author": "BitterGourd <91231822+gaoachao@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "4430bb318e235681": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-ee4f3fc3-3515-45a6-b34f-f4b3d8ec085f",
+        "model": "default"
+      },
+      "human_author": "BitterGourd <91231822+gaoachao@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "4907332dac36f10d": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-5cdc0a85-b310-4eab-9ea4-fc45cddb95ba",
+        "model": "default"
+      },
+      "human_author": "BitterGourd <91231822+gaoachao@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 1
+    },
+    "4c40b81803cc5878": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-6636933d-1f2b-4f4b-a5a7-1ee769dfcdaa",
+        "model": "default"
+      },
+      "human_author": "BitterGourd <91231822+gaoachao@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 1
+    },
+    "5d5256f402ad5071": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-10625a2e-a336-43d5-998e-7c22ef61d2d1",
+        "model": "default"
+      },
+      "human_author": "BitterGourd <91231822+gaoachao@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    },
+    "6453e2c68ac2b4e7": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-b4f19b35-4aa5-418b-995f-17a941122f51",
+        "model": "default"
+      },
+      "human_author": "BitterGourd <91231822+gaoachao@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 1
+    },
+    "87febc6367f98f59": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-166c6b70-5085-472e-8f12-38b7d5823fd9",
+        "model": "default"
+      },
+      "human_author": "BitterGourd <91231822+gaoachao@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "a5722e3da63e1f00": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-5f3deabb-6db9-4511-859e-bd260e0a291c",
+        "model": "default"
+      },
+      "human_author": "BitterGourd <91231822+gaoachao@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "b61b1ac178973d89": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-0f0fa01f-02fd-4037-b223-a9984d5c5cd8",
+        "model": "default"
+      },
+      "human_author": "BitterGourd <91231822+gaoachao@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "bce597acad7415f1": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-0dc5bfa8-dd3e-44ef-be29-7953802e9dd3",
+        "model": "default"
+      },
+      "human_author": "BitterGourd <91231822+gaoachao@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "be5057e298f1656c": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-71f58a75-23e7-47f6-83e5-ae0d5007fc18",
+        "model": "default"
+      },
+      "human_author": "BitterGourd <91231822+gaoachao@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "c074d412307d2fe0": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-f8fc5909-d322-496b-8065-4b316c071fd6",
+        "model": "default"
+      },
+      "human_author": "BitterGourd <91231822+gaoachao@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "e71af6efaa8fda0b": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-1ad69c03-7615-4e5f-b4ed-953501a22314",
+        "model": "default"
+      },
+      "human_author": "BitterGourd <91231822+gaoachao@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  },
+  "attestation_metadata": {
+    "packages/genui/a2ui-playground/lynx-src/openui/App.tsx": [
+      {
+        "hash": "3069a055d8030ecc",
+        "line_ranges": [
+          {
+            "Range": [
+              1,
+              85
+            ]
+          }
+        ],
+        "mixed_line_ranges": [
+          {
+            "Single": 8
+          },
+          {
+            "Single": 20
+          },
+          {
+            "Single": 51
+          },
+          {
+            "Single": 75
+          }
+        ],
+        "operations": [
+          {
+            "operation_id": "6a01a018e4606d3926d8091f",
+            "tool_type": "agent",
+            "tool_id": "Edit",
+            "line_ranges": [
+              {
+                "Range": [
+                  1,
+                  85
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "packages/genui/a2ui-playground/lynx-src/openui/mockData.ts": [
+      {
+        "hash": "3069a055d8030ecc",
+        "line_ranges": [
+          {
+            "Range": [
+              1,
+              62
+            ]
+          }
+        ],
+        "mixed_line_ranges": [],
+        "operations": [
+          {
+            "operation_id": "6a01a018e4606d3926d8091f",
+            "tool_type": "agent",
+            "tool_id": "Edit",
+            "line_ranges": [
+              {
+                "Range": [
+                  1,
+                  62
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "packages/genui/openui/src/catalog/Button/index.tsx": [
+      {
+        "hash": "4907332dac36f10d",
+        "line_ranges": [
+          {
+            "Single": 7
+          }
+        ],
+        "mixed_line_ranges": [
+          {
+            "Single": 7
+          }
+        ],
+        "operations": []
+      }
+    ],
+    "packages/genui/openui/src/catalog/Stack/index.tsx": [
+      {
+        "hash": "3069a055d8030ecc",
+        "line_ranges": [
+          {
+            "Single": 40
+          }
+        ],
+        "mixed_line_ranges": [],
+        "operations": [
+          {
+            "operation_id": "6a01a018e4606d3926d8091f",
+            "tool_type": "agent",
+            "tool_id": "Edit",
+            "line_ranges": [
+              {
+                "Single": 40
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "packages/genui/openui/src/catalog/index.ts": [
+      {
+        "hash": "3069a055d8030ecc",
+        "line_ranges": [
+          {
+            "Single": 5
+          },
+          {
+            "Single": 7
+          }
+        ],
+        "mixed_line_ranges": [],
+        "operations": [
+          {
+            "operation_id": "6a01a018e4606d3926d8091f",
+            "tool_type": "agent",
+            "tool_id": "Edit",
+            "line_ranges": [
+              {
+                "Single": 5
+              },
+              {
+                "Single": 7
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "packages/genui/openui/src/core/createLibrary.tsx": [
+      {
+        "hash": "6453e2c68ac2b4e7",
+        "line_ranges": [
+          {
+            "Single": 1
+          }
+        ],
+        "mixed_line_ranges": [
+          {
+            "Single": 1
+          }
+        ],
+        "operations": []
+      },
+      {
+        "hash": "3069a055d8030ecc",
+        "line_ranges": [
+          {
+            "Range": [
+              18,
+              21
+            ]
+          }
+        ],
+        "mixed_line_ranges": [],
+        "operations": [
+          {
+            "operation_id": "6a01a018e4606d3926d8091f",
+            "tool_type": "agent",
+            "tool_id": "Edit",
+            "line_ranges": [
+              {
+                "Range": [
+                  18,
+                  21
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "packages/genui/openui/src/core/index.ts": [
+      {
+        "hash": "4c40b81803cc5878",
+        "line_ranges": [
+          {
+            "Single": 11
+          }
+        ],
+        "mixed_line_ranges": [
+          {
+            "Single": 11
+          }
+        ],
+        "operations": []
+      }
+    ],
+    "packages/genui/openui/src/core/renderer.css": [
+      {
+        "hash": "3069a055d8030ecc",
+        "line_ranges": [
+          {
+            "Range": [
+              2,
+              270
+            ]
+          }
+        ],
+        "mixed_line_ranges": [],
+        "operations": [
+          {
+            "operation_id": "6a01a018e4606d3926d8091f",
+            "tool_type": "agent",
+            "tool_id": "Edit",
+            "line_ranges": [
+              {
+                "Range": [
+                  2,
+                  270
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "packages/genui/openui/src/core/renderer.tsx": [
+      {
+        "hash": "3069a055d8030ecc",
+        "line_ranges": [
+          {
+            "Range": [
+              16,
+              106
+            ]
+          },
+          {
+            "Range": [
+              204,
+              247
+            ]
+          }
+        ],
+        "mixed_line_ranges": [
+          {
+            "Single": 106
+          },
+          {
+            "Single": 204
+          }
+        ],
+        "operations": [
+          {
+            "operation_id": "6a01a018e4606d3926d8091f",
+            "tool_type": "agent",
+            "tool_id": "Edit",
+            "line_ranges": [
+              {
+                "Range": [
+                  16,
+                  106
+                ]
+              },
+              {
+                "Range": [
+                  204,
+                  247
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "remote_transcripts": {
+    "3069a055d8030ecc": {
+      "tool": "trae",
+      "conversation_id": "6a01531b3262e8729a64d842",
+      "session_id": "6a01531b3262e8729a64d842",
+      "status": "remote_only",
+      "message": "Remote transcript resolution is not implemented yet for TRAE prompts."
+    }
+  }
+}
