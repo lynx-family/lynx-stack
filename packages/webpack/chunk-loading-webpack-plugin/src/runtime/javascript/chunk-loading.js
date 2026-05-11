@@ -60,6 +60,15 @@ export default function() {
         }
       }
     };
+
+    $RuntimeGlobals_ensureChunk$ = function(chunkId) {
+      var promises = [];
+      Object.keys($RuntimeGlobals_ensureChunkHandlers$).forEach(function(key) {
+        $RuntimeGlobals_ensureChunkHandlers$[key](chunkId, promises);
+      });
+      if (promises.length === 1) return promises[0];
+      return Promise.all(promises);
+    };
   }
   if (typeof installChunk !== 'undefined') {
     $RuntimeGlobals_externalInstallChunk$ = installChunk;
