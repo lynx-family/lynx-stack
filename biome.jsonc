@@ -43,6 +43,7 @@
 
       "packages/tools/**",
       "packages/genui/a2ui/tools/**",
+      "packages/genui/openui/**",
 
       "packages/use-sync-external-store/test/**",
 
