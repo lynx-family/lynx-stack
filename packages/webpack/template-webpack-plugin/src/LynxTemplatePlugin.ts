@@ -902,11 +902,16 @@ class LynxTemplatePluginImpl {
 
     const isFetchBundleLazy = isAsync
       && this.#options.lazyBundleFetcher === 'FetchBundle';
+    // Default to bytecode for FetchBundle lazy main-thread sections. Skip
+    // in dev or when DEBUG matches rspeedy so the source stays debuggable.
+    const enableLazyBundleBytecode = isFetchBundleLazy && !isDev
+      && !isDebug();
     const fetchBundleSplit = isFetchBundleLazy
       ? this.#buildLazyBundleFetchBundleSections(
         lepusCode.root,
         encodeData.manifest,
         encodeData.css.chunks,
+        enableLazyBundleBytecode,
       )
       : null;
 
@@ -1008,6 +1013,7 @@ class LynxTemplatePluginImpl {
     mainThreadAsset: Asset | undefined,
     manifest: Record<string, string>,
     cssAssets: Asset[],
+    enableBytecode: boolean,
   ): {
     sections: Record<string, CustomSectionEntry>;
     remainingManifest: Record<string, string>;
@@ -1017,7 +1023,7 @@ class LynxTemplatePluginImpl {
 
     if (mainThreadAsset) {
       sections[SECTION_MAIN_THREAD] = {
-        // encoding: 'JsBytecode',
+        ...(enableBytecode ? { encoding: 'JsBytecode' as const } : {}),
         content: mainThreadAsset.source.source().toString(),
       };
     }
