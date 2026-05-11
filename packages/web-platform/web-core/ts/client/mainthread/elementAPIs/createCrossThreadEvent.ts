@@ -75,6 +75,16 @@ export function createCrossThreadEvent(
       x: (domEvent as MouseEvent).x,
       y: (domEvent as MouseEvent).y,
     };
+  } else if (type === 'keydown' || type === 'keyup') {
+    Object.assign(otherProperties, {
+      key: domEvent.key,
+      code: domEvent.code,
+      keyCode: domEvent.keyCode,
+      shiftKey: domEvent.shiftKey,
+      altKey: domEvent.altKey,
+      ctrlKey: domEvent.ctrlKey,
+      metaKey: domEvent.metaKey,
+    });
   }
 
   const lynxEventName = W3cEventNameToLynx[type] ?? type;

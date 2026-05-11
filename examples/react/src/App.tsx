@@ -4,6 +4,7 @@ import './App.css';
 import arrow from './assets/arrow.png';
 import lynxLogo from './assets/lynx-logo.png';
 import reactLynxLogo from './assets/react-logo.png';
+import { KeyboardDemo } from './KeyboardDemo.js';
 import { useFlappy } from './useFlappy.js';
 
 export function App() {
@@ -53,6 +54,7 @@ export function App() {
         </view>
         <view style={{ flex: 1 }}></view>
       </view>
+      <KeyboardDemo />
     </view>
   );
 }
