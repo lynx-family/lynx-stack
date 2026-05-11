@@ -32,7 +32,7 @@
   "devDependencies": {
     "@microsoft/api-extractor": "^7.58.2",
     "@modelcontextprotocol/sdk": "^1.25.2",
-    "@types/debug": "^4.1.12",
+    "@types/debug": "^4.1.13",
     "core-js": "^3.48.0",
     "debug": "^4.4.3",
     "rsbuild-plugin-publint": "0.3.4",

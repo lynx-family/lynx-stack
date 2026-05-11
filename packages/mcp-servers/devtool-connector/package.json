@@ -30,8 +30,8 @@
     "test": "node --test"
   },
   "devDependencies": {
-    "@types/debug": "^4.1.12",
-    "@types/node": "^24.10.13",
+    "@types/debug": "^4.1.13",
+    "@types/node": "^24.12.3",
     "@yume-chan/adb": "catalog:adb",
     "@yume-chan/adb-server-node-tcp": "catalog:adb",
     "@yume-chan/stream-extra": "catalog:adb",
