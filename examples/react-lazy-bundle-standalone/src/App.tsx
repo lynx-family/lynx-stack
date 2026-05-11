@@ -4,11 +4,19 @@ import { createProducerBundleUrl } from './entry-url.js';
 
 import './App.css';
 
-const LazyComponent = lazy(() =>
-  import(createProducerBundleUrl('LazyComponent.lynx.bundle'), {
+const LazyComponentSync = lazy(() =>
+  import(createProducerBundleUrl('LazyComponentSync.lynx.bundle'), {
     with: {
       type: 'component',
       mode: 'sync',
+    },
+  })
+);
+const LazyComponentAsync = lazy(() =>
+  import(createProducerBundleUrl('LazyComponentAsync.lynx.bundle'), {
+    with: {
+      type: 'component',
+      mode: 'async',
     },
   })
 );
@@ -44,8 +52,11 @@ export function App() {
           <text className='Subtitle'>on Lynx</text>
         </view>
         <view className='Suspense'>
-          <Suspense fallback={<text>Loading...</text>}>
-            <LazyComponent />
+          <Suspense fallback={<text>Loading sync...</text>}>
+            <LazyComponentSync />
+          </Suspense>
+          <Suspense fallback={<text>Loading async...</text>}>
+            <LazyComponentAsync />
           </Suspense>
         </view>
       </view>
