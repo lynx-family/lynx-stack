@@ -110,6 +110,12 @@ export const loadLazyBundle: <
       r.then = makeSyncThen(result);
       return r;
     } else if (__JS__) {
+      if (__DEV__ && lazyBundleMode !== undefined) {
+        throw new Error(
+          `Lazy bundle import \`mode: '${lazyBundleMode}'\` requires FetchBundle, but the current build uses QueryComponent. `
+            + `Set \`engineVersion: '3.8'\` (or higher) in \`pluginReactLynx\` to enable FetchBundle.`,
+        );
+      }
       const resolver = withSyncResolvers<T>();
 
       const callback: (result: { code: number; detail: { schema: string } }) => void = result => {
