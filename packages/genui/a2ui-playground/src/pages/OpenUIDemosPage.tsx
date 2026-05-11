@@ -18,8 +18,18 @@ const COMPACT_CODE_MIN_HEIGHT = 220;
 const COMPACT_PREVIEW_MIN_HEIGHT = 320;
 const RESIZE_BREAKPOINT = 980;
 
+function getDeployedLynxBundleUrl(): string {
+  try {
+    return new URL('a2ui.lynx.js', window.location.href).toString();
+  } catch {
+    return '';
+  }
+}
+
 function useRspeedyDevUrl(): string {
-  const [url, setUrl] = useState('');
+  // Default to the deployed bundle next to the current page so that the
+  // "Native Preview" QR is available in production (no rspeedy dev server).
+  const [url, setUrl] = useState<string>(() => getDeployedLynxBundleUrl());
   useEffect(() => {
     let cancelled = false;
     void (async () => {
@@ -29,7 +39,7 @@ function useRspeedyDevUrl(): string {
         });
         if (!res.ok) return;
         const data = (await res.json()) as { url?: string };
-        if (!cancelled && typeof data.url === 'string') {
+        if (!cancelled && typeof data.url === 'string' && data.url) {
           setUrl(data.url);
         }
       } catch {
@@ -73,6 +83,8 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
   const [renderUrl, setRenderUrl] = useState('');
   const [lynxDevUrl, setLynxDevUrl] = useState('');
   const [lynxDevCopied, setLynxDevCopied] = useState(false);
+  const [renderCopied, setRenderCopied] = useState(false);
+  const [renderCopyFailed, setRenderCopyFailed] = useState(false);
   const [, setRenderQrError] = useState('');
   const [lynxDevQrError, setLynxDevQrError] = useState('');
   const [speed, setSpeed] = useState(1);
@@ -125,6 +137,8 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
     (rawText: string) => {
       const url = buildOpenUIRenderUrl(rawText, networkBaseUrl, speed);
       setRenderUrl(url);
+      setRenderCopied(false);
+      setRenderCopyFailed(false);
 
       // Native Lynx dev URL
       const seq = ++lynxUrlSeqRef.current;
@@ -146,7 +160,48 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
         setFullscreen(true);
       }
 
-      void seq; // suppress unused warning
+      // Try to shorten URLs via payload store for scannable QR codes
+      void (async () => {
+        if (!rspeedyDevUrl) return;
+        try {
+          const rspeedyOrigin = new URL(rspeedyDevUrl).origin;
+          const res = await window.fetch(`${rspeedyOrigin}/__openui_payload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rawText }),
+          });
+          if (!res.ok) return;
+          const data = (await res.json()) as { rawTextUrl?: string };
+
+          if (seq !== lynxUrlSeqRef.current) return;
+
+          if (typeof data.rawTextUrl === 'string') {
+            const rawTextUrlAbs = `${rspeedyOrigin}${data.rawTextUrl}`;
+
+            // Shorten native dev URL
+            const u = new URL(rspeedyDevUrl);
+            u.pathname = u.pathname.replace('a2ui.lynx', 'openui.lynx');
+            u.searchParams.set('rawTextUrl', rawTextUrlAbs);
+            u.searchParams.delete('rawText');
+            if (speed !== 1) {
+              u.searchParams.set('speed', String(speed));
+            }
+            setLynxDevUrl(u.toString());
+
+            // Shorten web render URL
+            const r = new URL('render.html', networkBaseUrl);
+            r.searchParams.set('protocol', 'openui');
+            r.searchParams.set('demoUrl', './openui.web.js');
+            r.searchParams.set('rawTextUrl', rawTextUrlAbs);
+            if (speed !== 1) {
+              r.searchParams.set('speed', String(speed));
+            }
+            setRenderUrl(r.toString());
+          }
+        } catch {
+          // Fall back to inline URLs — QR may show "URL too long"
+        }
+      })();
     },
     [networkBaseUrl, rspeedyDevUrl, speed],
   );
@@ -402,12 +457,36 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
                           type='button'
                           className='previewQrCopyBtn'
                           aria-label='Copy render URL'
-                          title='Copy URL'
+                          title={renderCopied
+                            ? 'Copied'
+                            : (
+                              renderCopyFailed ? 'Copy failed' : 'Copy URL'
+                            )}
                           onClick={() => {
-                            void copyToClipboard(renderUrl);
+                            void copyToClipboard(renderUrl).then((ok) => {
+                              setRenderCopyFailed(false);
+                              if (!ok) {
+                                setRenderCopied(false);
+                                setRenderCopyFailed(true);
+                                window.setTimeout(
+                                  () => setRenderCopyFailed(false),
+                                  1200,
+                                );
+                                return;
+                              }
+                              setRenderCopied(true);
+                              window.setTimeout(
+                                () => setRenderCopied(false),
+                                1200,
+                              );
+                            });
                           }}
                         >
-                          Copy
+                          {renderCopied
+                            ? 'Copied'
+                            : (
+                              renderCopyFailed ? 'Failed' : 'Copy'
+                            )}
                         </button>
                       </div>
                     </div>

@@ -22,6 +22,7 @@ export default defineConfig({
   source: {
     entry: {
       a2ui: './lynx-src/a2ui/index.tsx',
+      openui: './lynx-src/openui/index.tsx',
     },
   },
   environments: {
