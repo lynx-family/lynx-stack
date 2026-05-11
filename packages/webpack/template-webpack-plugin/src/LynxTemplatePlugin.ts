@@ -301,6 +301,15 @@ export interface LynxTemplatePluginOptions {
   experimental_isLazyBundle?: boolean;
 
   /**
+   * Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.
+   * `pluginReactLynx`) from the host engine version and any
+   * `REACT_LAZY_BUNDLE_FETCHER` env override.
+   *
+   * @public
+   */
+  lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
+
+  /**
    * plugins passed to parser
    */
   cssPlugins: CSS.Plugin[];
@@ -411,6 +420,7 @@ export class LynxTemplatePlugin {
       dsl: 'react_nodiff',
 
       experimental_isLazyBundle: false,
+      lazyBundleFetcher: 'QueryComponent',
       cssPlugins: [],
     });
 
@@ -487,9 +497,6 @@ interface Hash {
 const SECTION_MAIN_THREAD = 'main-thread';
 const SECTION_BACKGROUND = 'background';
 const SECTION_CSS = 'CSS';
-
-const __LAZY_BUNDLE_FETCHER__ = process.env['REACT_LAZY_BUNDLE_FETCHER']
-  ?? 'FetchBundle';
 
 interface CustomSectionEntry {
   type?: 'lazy';
@@ -894,7 +901,7 @@ class LynxTemplatePluginImpl {
     );
 
     const isFetchBundleLazy = isAsync
-      && __LAZY_BUNDLE_FETCHER__ === 'FetchBundle';
+      && this.#options.lazyBundleFetcher === 'FetchBundle';
     const fetchBundleSplit = isFetchBundleLazy
       ? this.#buildLazyBundleFetchBundleSections(
         lepusCode.root,
@@ -1010,7 +1017,7 @@ class LynxTemplatePluginImpl {
 
     if (mainThreadAsset) {
       sections[SECTION_MAIN_THREAD] = {
-        encoding: 'JsBytecode',
+        // encoding: 'JsBytecode',
         content: mainThreadAsset.source.source().toString(),
       };
     }
@@ -1018,9 +1025,6 @@ class LynxTemplatePluginImpl {
     const remainingManifest: Record<string, string> = {};
     let entryChunk: [string, string] | undefined;
     for (const [name, content] of Object.entries(manifest)) {
-      // Drop the legacy `app-service.js` loader stub — see method doc.
-      // The asset key is always exactly `/app-service.js` in this codepath,
-      // so a literal compare is enough.
       if (name === '/app-service.js') {
         continue;
       }
@@ -1035,8 +1039,6 @@ class LynxTemplatePluginImpl {
       sections[SECTION_BACKGROUND] = { content: entryChunk[1] };
     }
 
-    // Single CSS section under the fixed key `'CSS'`. Lazy bundles are
-    // expected to have at most one CSS chunk; only the first is embedded.
     const firstCss = cssAssets[0];
     if (firstCss) {
       const ruleList = cssChunksToMap(

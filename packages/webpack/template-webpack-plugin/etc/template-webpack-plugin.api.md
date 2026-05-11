@@ -116,6 +116,7 @@ export interface LynxTemplatePluginOptions {
     experimental_isLazyBundle?: boolean;
     filename?: string | ((entryName: string) => string);
     intermediate?: string;
+    lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
     lazyBundleFilename?: string;
     removeDescendantSelectorScope: boolean;
     targetSdkVersion: string;

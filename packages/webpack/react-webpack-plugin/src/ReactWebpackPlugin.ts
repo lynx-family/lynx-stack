@@ -15,7 +15,6 @@ import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 import { LAYERS } from './layer.js';
 import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
-import { resolveLazyBundleFetcher } from './resolveLazyBundleFetcher.js';
 
 const require = createRequire(import.meta.url);
 
@@ -113,7 +112,14 @@ interface ReactWebpackPluginOptions {
    */
   experimental_useElementTemplate?: boolean;
 
-  engineVersion?: string;
+  /**
+   * Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.
+   * `pluginReactLynx`) from the host engine version and any
+   * `REACT_LAZY_BUNDLE_FETCHER` env override.
+   *
+   * @public
+   */
+  lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
 }
 
 /**
@@ -191,7 +197,7 @@ class ReactWebpackPlugin {
       profile: undefined,
       workletRuntimePath: '',
       experimental_useElementTemplate: false,
-      engineVersion: '',
+      lazyBundleFetcher: 'QueryComponent',
     });
 
   /**
@@ -252,9 +258,7 @@ class ReactWebpackPlugin {
       __USE_ELEMENT_TEMPLATE__: JSON.stringify(
         options.experimental_useElementTemplate,
       ),
-      __LAZY_BUNDLE_FETCHER__: JSON.stringify(
-        resolveLazyBundleFetcher(options.engineVersion),
-      ),
+      __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
     }).apply(compiler);
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {

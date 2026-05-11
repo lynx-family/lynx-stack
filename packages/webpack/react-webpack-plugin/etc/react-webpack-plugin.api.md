@@ -47,14 +47,13 @@ export class ReactWebpackPlugin {
 export interface ReactWebpackPluginOptions {
     disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
     enableSSR?: boolean;
-    // (undocumented)
-    engineVersion?: string;
     // @alpha
     experimental_isLazyBundle?: boolean;
     experimental_useElementTemplate?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady';
     globalPropsMode?: 'reactive' | 'event';
+    lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
     mainThreadChunks?: string[] | undefined;
     profile?: boolean | undefined;
     workletRuntimePath: string;
