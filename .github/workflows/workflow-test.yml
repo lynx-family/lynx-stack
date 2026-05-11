@@ -47,10 +47,6 @@ jobs:
       env:
         CI: 1
         TURBO_TELEMETRY_DISABLED: 1
-        # Firefox refuses to launch unless $HOME is owned by the current user;
-        # the runner mounts /github/home which is owned by the host runner user.
-        # See: https://playwright.dev/docs/ci#running-as-root
-        HOME: /root
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
@@ -95,6 +91,12 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          # Firefox refuses to launch when $HOME isn't owned by the current
+          # user. GitHub Actions hard-codes HOME=/github/home for container
+          # jobs (mounted from the host runner user's tmp dir), so override
+          # it at step scope only when we're inside the Playwright container.
+          # See https://playwright.dev/docs/ci#running-as-root
+          HOME: ${{ inputs.is-web && '/root' || '/home/runner' }}
         run: ${{ inputs.run }}
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
