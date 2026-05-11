@@ -8,7 +8,7 @@
       "outputs": ["binary/**"]
     },
     "build": {
-      "dependsOn": ["build:wasm"],
+      "dependsOn": ["^build", "build:wasm"],
       "inputs": ["src/**", "ts/**", "css/**", "*.ts"],
       "outputs": ["dist/**"]
     }
