@@ -69,6 +69,11 @@ export default function() {
         },
         [],
       );
+      // Skip the Promise.all wrap for the common one-chunk case so a
+      // sync-resolved loader (e.g. cached lazy bundle) keeps its sync `.then`
+      // and preact's `lazy()` can resolve at first render. webpack callers
+      // (`__webpack_require__.bind(__webpack_require__, moduleId)`) ignore the
+      // resolved value, so returning a single value instead of `[value]` is safe.
       if (promises.length === 1) return promises[0];
       return Promise.all(promises);
     };
