@@ -9,7 +9,6 @@ import type { CSSLoaderOptions, RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 
 import type {
   CssExtractRspackPluginOptions,
-  CssExtractWebpackPluginOptions,
 } from '@lynx-js/css-extract-webpack-plugin'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
@@ -39,158 +38,169 @@ export function applyCSS(
 
   const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-  api.modifyBundlerChain(
-    async function handler(chain, { CHAIN_ID }) {
-      const { CssExtractRspackPlugin, CssExtractWebpackPlugin } = await import(
-        '@lynx-js/css-extract-webpack-plugin'
-      )
-      const CssExtractPlugin = api.context.bundlerType === 'rspack'
-        ? CssExtractRspackPlugin
-        : CssExtractWebpackPlugin
-      const cssRules = [
-        CHAIN_ID.RULE.CSS,
-        CHAIN_ID.RULE.SASS,
-        CHAIN_ID.RULE.LESS,
-        CHAIN_ID.RULE.STYLUS,
-      ] as const
+  api.modifyBundlerChain(async (chain, { CHAIN_ID }) => {
+    const { CssExtractRspackPlugin } = await import(
+      '@lynx-js/css-extract-webpack-plugin'
+    )
+    const cssRules = [
+      CHAIN_ID.RULE.CSS,
+      CHAIN_ID.RULE.SASS,
+      CHAIN_ID.RULE.LESS,
+      CHAIN_ID.RULE.STYLUS,
+    ] as const
 
-      cssRules
-        // Rsbuild 0.7.0 removed sass and less from builtin plugins
-        .filter(rule => chain.module.rules.has(rule))
-        .forEach(ruleName => {
-          const rule = chain.module.rule(ruleName)
+    cssRules
+      // Rsbuild 0.7.0 removed sass and less from builtin plugins
+      .filter(rule => chain.module.rules.has(rule))
+      .forEach(ruleName => {
+        const rule = chain.module.rule(ruleName)
+        const mainRuleName = ruleName === CHAIN_ID.RULE.CSS
+          ? CHAIN_ID.ONE_OF.CSS_MAIN
+          : ruleName
+        const mainRule = rule.oneOf(mainRuleName)
+        const parentRuleEntries = rule.entries() as Rspack.RuleSetRule
 
-          removeLightningCSS(rule)
+        removeLightningCSS(mainRule)
 
-          // Replace the CssExtractRspackPlugin.loader with ours.
-          // This is for scoped CSS.
-          rule
-            .issuerLayer(LAYERS.BACKGROUND)
-            .use(CHAIN_ID.USE.MINI_CSS_EXTRACT)
-            .loader(CssExtractPlugin.loader)
-            .end()
+        // Replace the CssExtractRspackPlugin.loader with ours.
+        // This is for scoped CSS.
+        mainRule
+          .issuerLayer(LAYERS.BACKGROUND)
+          .use(CHAIN_ID.USE.MINI_CSS_EXTRACT)
+          .loader(CssExtractRspackPlugin.loader)
+          .end()
 
-          // The Rsbuild default loaders
-          //   - CssExtractRspackPlugin.loader
-          //   - css-loader
-          //   - resolve-url-loader(for sass/less)
-          //   - sass-loader/less-loader(for sass/less)
-          const uses = rule.uses.entries()
-          const ruleEntries = rule.entries() as Rspack.RuleSetRule
+        // The Rsbuild default loaders
+        //   - CssExtractRspackPlugin.loader
+        //   - css-loader
+        //   - resolve-url-loader(for sass/less)
+        //   - sass-loader/less-loader(for sass/less)
+        const uses = mainRule.uses.entries() ?? {}
+        const ruleEntries = mainRule.entries() as Rspack.RuleSetRule
 
-          const cssLoaderRule = uses[CHAIN_ID.USE.CSS]!
-            .entries() as Rspack.RuleSetRule
+        const cssLoader = uses[CHAIN_ID.USE.CSS]
+        if (!cssLoader) {
+          return
+        }
+        const cssLoaderRule = cssLoader.entries() as Rspack.RuleSetRule
 
-          // We add an additional rule for background layer.
-          // With only the following loaders:
-          //   - ignore-css-loader
-          //   - css-loader
-          //   - resolve-url-loader(for sass/less)
-          //   - sass-loader/less-loader(for sass/less)
-          // dprint-ignore
-          chain
+        // We add an additional rule for background layer.
+        // With only the following loaders:
+        //   - ignore-css-loader
+        //   - css-loader
+        //   - resolve-url-loader(for sass/less)
+        //   - sass-loader/less-loader(for sass/less)
+        // dprint-ignore
+        const mainThreadLayerRule = chain
             .module
               .rule(`${ruleName}:${LAYERS.MAIN_THREAD}`)
+              .test(parentRuleEntries.test!)
               .merge(ruleEntries)
               .issuerLayer(LAYERS.MAIN_THREAD)
-              .use(CHAIN_ID.USE.IGNORE_CSS)
-                .loader(path.resolve(__dirname, './loaders/ignore-css-loader'))
-              .end()
-              .uses
-                .merge(uses)
-                .delete(CHAIN_ID.USE.MINI_CSS_EXTRACT)
-                .delete(CHAIN_ID.USE.LIGHTNINGCSS)
-                .delete(CHAIN_ID.USE.CSS)
-              .end()
-              // We replace the css-loader rules with the normalized one
-              // to force setting `exportOnlyLocals: true`.
-              .use(CHAIN_ID.USE.CSS)
-                .after(CHAIN_ID.USE.IGNORE_CSS)
-                .merge(cssLoaderRule)
-                .options(
-                  normalizeCssLoaderOptions(
-                    cssLoaderRule.options as CSSLoaderOptions,
-                    true
-                  )
-                )
-              .end()
-        })
 
-      const inlineCSSRules = [
-        CHAIN_ID.RULE.CSS_INLINE,
-        CHAIN_ID.RULE.SASS_INLINE,
-        CHAIN_ID.RULE.LESS_INLINE,
-        CHAIN_ID.RULE.STYLUS_INLINE,
-      ] as const
-
-      inlineCSSRules
-        // Rsbuild 0.7.0 removed sass and less from builtin plugins
-        // Rsbuild 1.3.0 add *_INLINE rules
-        .filter(rule => rule && chain.module.rules.has(rule))
-        .forEach(ruleName => {
-          const rule = chain.module.rule(ruleName)
-          removeLightningCSS(rule)
-        })
-
-      function removeLightningCSS(rule: ReturnType<typeof chain.module.rule>) {
-        if (
-          // Webpack does not have lightningcss-loader
-          rule.uses.has(CHAIN_ID.USE.LIGHTNINGCSS)
-        ) {
-          rule.uses.delete(CHAIN_ID.USE.LIGHTNINGCSS)
+        if (parentRuleEntries.dependency !== undefined) {
+          mainThreadLayerRule.merge({
+            dependency: parentRuleEntries.dependency,
+          })
         }
+        // dprint-ignore
+        mainThreadLayerRule
+            .use(CHAIN_ID.USE.IGNORE_CSS)
+              .loader(path.resolve(__dirname, './loaders/ignore-css-loader'))
+              .end()
+            .uses
+              .merge(uses)
+              .delete(CHAIN_ID.USE.MINI_CSS_EXTRACT)
+              .delete(CHAIN_ID.USE.LIGHTNINGCSS)
+              .delete(CHAIN_ID.USE.CSS)
+              .end()
+            // We replace the css-loader rules with the normalized one
+            // to force setting `exportOnlyLocals: true`.
+            .use(CHAIN_ID.USE.CSS)
+              .after(CHAIN_ID.USE.IGNORE_CSS)
+              .merge(cssLoaderRule)
+              .options(
+                normalizeCssLoaderOptions(
+                  cssLoaderRule.options as CSSLoaderOptions,
+                  true,
+                ),
+              )
+              .end()
+      })
+
+    cssRules
+      // Rsbuild 0.7.0 removed sass and less from builtin plugins
+      .filter(rule => rule && chain.module.rules.has(rule))
+      .forEach(ruleName => {
+        const inlineRuleName = ruleName === CHAIN_ID.RULE.CSS
+          ? CHAIN_ID.ONE_OF.CSS_INLINE
+          : `${ruleName}-inline`
+        const inlineRule = chain.module
+          .rule(ruleName)
+          .oneOf(inlineRuleName)
+        removeLightningCSS(inlineRule)
+      })
+
+    function removeLightningCSS(rule: {
+      uses: {
+        has: (id: string) => boolean
+        delete: (id: string) => unknown
       }
+    }) {
+      if (
+        // Webpack does not have lightningcss-loader
+        rule.uses.has(CHAIN_ID.USE.LIGHTNINGCSS)
+      ) {
+        rule.uses.delete(CHAIN_ID.USE.LIGHTNINGCSS)
+      }
+    }
 
-      chain
-        .plugin(CHAIN_ID.PLUGIN.MINI_CSS_EXTRACT)
-        .tap(([options]) => {
-          return [
-            {
-              ...options,
-              enableRemoveCSSScope: enableRemoveCSSScope ?? true,
-              enableCSSSelector,
-              enableCSSInvalidation,
-              targetSdkVersion,
-              cssPlugins: [],
-            } as CssExtractWebpackPluginOptions | CssExtractRspackPluginOptions,
-          ]
-        })
-        .init((_, args: unknown[]) => {
-          return new CssExtractPlugin(
-            ...args as [
-              options: (
-                & CssExtractWebpackPluginOptions
-                & CssExtractRspackPluginOptions
-              ),
-            ],
-          )
-        })
-        .end()
-        .end()
-
-      // We add `sideEffects: false` to all Scoped CSS Modules.
-      // Since there is no need to emit scoped CSS when the CSS Modules is not used.
-      chain
-        .module
-        .when(
-          // - enableRemoveCSSScope === undefined: we will add `?cssId=<hash>` to all CSS Modules
-          //   E.g.: `import styles from './foo.modules.css'`
-          enableRemoveCSSScope === undefined,
-          module =>
-            module
-              .rule('lynx.css.scoped')
-              .test(/\.css$/)
-              .resourceQuery({
-                and: [
-                  /cssId/,
-                  // TODO: support ?common
-                  // { not: /common/ },
-                ],
-              })
-              .sideEffects(false),
+    chain
+      .plugin(CHAIN_ID.PLUGIN.MINI_CSS_EXTRACT)
+      .tap(([options]) => {
+        return [
+          {
+            ...options,
+            enableRemoveCSSScope: enableRemoveCSSScope ?? true,
+            enableCSSSelector,
+            enableCSSInvalidation,
+            targetSdkVersion,
+            cssPlugins: [],
+          } as CssExtractRspackPluginOptions,
+        ]
+      })
+      .init((_, args: unknown[]) => {
+        return new CssExtractRspackPlugin(
+          ...args as [
+            options: CssExtractRspackPluginOptions,
+          ],
         )
-    },
-  )
+      })
+      .end()
+      .end()
+
+    // We add `sideEffects: false` to all Scoped CSS Modules.
+    // Since there is no need to emit scoped CSS when the CSS Modules is not used.
+    chain
+      .module
+      .when(
+        // - enableRemoveCSSScope === undefined: we will add `?cssId=<hash>` to all CSS Modules
+        //   E.g.: `import styles from './foo.modules.css'`
+        enableRemoveCSSScope === undefined,
+        module =>
+          module
+            .rule('lynx.css.scoped')
+            .test(/\.css$/)
+            .resourceQuery({
+              and: [
+                /cssId/,
+                // TODO: support ?common
+                // { not: /common/ },
+              ],
+            })
+            .sideEffects(false),
+      )
+  })
 }
 
 // This is copied from https://github.com/web-infra-dev/rsbuild/blob/9f8be2d71ffeb7da969cda36fd9755db2cadaff5/packages/core/src/plugins/css.ts#L42

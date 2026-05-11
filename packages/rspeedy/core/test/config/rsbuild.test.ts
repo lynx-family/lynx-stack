@@ -7,6 +7,7 @@ import type { RsbuildPlugin } from '@rsbuild/core'
 import { describe, expect, test } from 'vitest'
 
 import { toRsbuildConfig } from '../../src/config/rsbuild/index.js'
+import type { Config } from '../../src/index.js'
 
 describe('Config - toRsBuildConfig', () => {
   describe('Dev', () => {
@@ -59,7 +60,7 @@ describe('Config - toRsBuildConfig', () => {
   describe('Define', () => {
     test('transform empty define', () => {
       const rsbuildConfig = toRsbuildConfig({
-        source: { define: void 0 },
+        source: { define: void 0 } as unknown as Config['source'],
       })
       expect(rsbuildConfig.source?.define).toStrictEqual(undefined)
     })
@@ -437,11 +438,11 @@ describe('Config - toRsBuildConfig', () => {
   })
 
   describe('Performance', () => {
-    test('transform performance.profile', () => {
+    test('omit removed rsbuild performance.profile', () => {
       const rsbuildConfig = toRsbuildConfig({
         performance: { profile: true },
       })
-      expect(rsbuildConfig.performance?.profile).toBe(true)
+      expect('profile' in (rsbuildConfig.performance ?? {})).toBe(false)
     })
 
     test('transform performance.removeConsole true', () => {
@@ -541,7 +542,7 @@ describe('Config - toRsBuildConfig', () => {
       const rsbuildConfig = toRsbuildConfig({
         source: {},
       })
-      expect(rsbuildConfig.source?.alias).toStrictEqual(
+      expect(rsbuildConfig.resolve?.alias).toStrictEqual(
         undefined,
       )
       expect(rsbuildConfig.source?.tsconfigPath).toMatchInlineSnapshot(
@@ -625,6 +626,18 @@ describe('Config - toRsBuildConfig', () => {
   })
 
   describe('Server', () => {
+    test('transform default server.host', () => {
+      const rsbuildConfig = toRsbuildConfig({})
+      expect(rsbuildConfig.server?.host).toBe('0.0.0.0')
+    })
+
+    test('transform server.host', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        server: { host: '127.0.0.1' },
+      })
+      expect(rsbuildConfig.server?.host).toBe('127.0.0.1')
+    })
+
     test('transform server.compress: undefined (no server)', () => {
       const rsbuildConfig = toRsbuildConfig({})
       expect(rsbuildConfig.server?.compress).toBeUndefined()
@@ -689,7 +702,7 @@ describe('Config - toRsBuildConfig', () => {
           alias: {},
         },
       })
-      expect(rsbuildConfig.source?.alias).toStrictEqual(
+      expect(rsbuildConfig.resolve?.alias).toStrictEqual(
         {},
       )
     })
@@ -702,10 +715,10 @@ describe('Config - toRsBuildConfig', () => {
           },
         },
       })
-      expect(rsbuildConfig.source?.alias).toStrictEqual(
+      expect(rsbuildConfig.resolve?.alias).toStrictEqual(
         { foo: 'bar' },
       )
-      expect(rsbuildConfig.source?.alias).not.toStrictEqual({
+      expect(rsbuildConfig.resolve?.alias).not.toStrictEqual({
         foo: 'baz',
       })
     })

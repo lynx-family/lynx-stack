@@ -214,12 +214,6 @@ export function pluginDev(
                 })
               )
               .set(
-                'webpack/hot/emitter.js',
-                require.resolve('@rspack/core/hot/emitter', {
-                  paths: [rsbuildPath],
-                }),
-              )
-              .set(
                 '@lynx-js/webpack-dev-transport/client',
                 `${require.resolve('@lynx-js/webpack-dev-transport/client')}?${searchParams.toString()}`
               )

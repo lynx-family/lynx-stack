@@ -38,10 +38,9 @@ export default defineConfig({
     }),
   ],
   environments: {
-    lynx: {
-      performance: {
-        profile: enableBundleAnalysis,
-      },
-    },
+    lynx: {},
+  },
+  performance: {
+    profile: enableBundleAnalysis,
   },
 });

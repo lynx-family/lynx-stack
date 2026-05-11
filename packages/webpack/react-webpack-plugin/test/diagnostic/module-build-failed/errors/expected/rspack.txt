@@ -9,7 +9,7 @@ at node:internal/util:<LINE:COLUMN>
 at isomorphoicRun (<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
 at runLoaders (<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
 
-ERROR in ./module-build-failed/errors/invalid.js <LINE:COLUMN>-7
+ERROR in ./module-build-failed/errors/invalid.js <LINE:COLUMN>-8
 × ModuleError: Expected ';', '}' or <eof>
 ╭─[<LINE:COLUMN>]
 1  /* eslint-disable */

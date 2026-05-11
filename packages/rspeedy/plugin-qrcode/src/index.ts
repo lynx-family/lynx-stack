@@ -107,7 +107,7 @@ export function pluginQRCode(
     name: 'lynx:rsbuild:qrcode',
     pre: ['lynx:rsbuild:api'],
     setup(api) {
-      api.onAfterStartProdServer(async ({ environments, port }) => {
+      api.onAfterStartPreviewServer(async ({ environments, port }) => {
         await main(getEntries(environments), port)
       })
 

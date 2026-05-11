@@ -23,16 +23,16 @@ export default defineConfig({
     hmr: false,
     liveReload: false,
     writeToDisk: true,
-    setupMiddlewares: [
-      (middlewares: any) => {
-        middlewares.unshift(ssrMiddleware);
-        middlewares.push(main);
-        return middlewares;
-      },
-    ],
   },
   server: {
     port: Number(port),
+    setup: ({ server, action }) => {
+      if (action !== 'dev') {
+        return;
+      }
+      server.middlewares.use(ssrMiddleware);
+      server.middlewares.use(main);
+    },
     publicDir: [
       {
         name: '.',

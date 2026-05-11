@@ -338,7 +338,7 @@ export interface Source {
     alias?: Record<string, string | false | string[]> | undefined;
     assetsInclude?: Rspack.RuleSetCondition | undefined;
     decorators?: Decorators | undefined;
-    define?: Record<string, string | number | boolean | undefined | Record<string, unknown>> | undefined;
+    define?: Rspack.DefinePluginOptions;
     entry?: Entry | undefined;
     exclude?: Rspack.RuleSetCondition[] | undefined;
     include?: Rspack.RuleSetCondition[] | undefined;

@@ -1,7 +1,27 @@
 import { defineConfig } from '@rsbuild/core';
 import { pluginWebPlatform } from '@lynx-js/web-platform-rsbuild-plugin';
 import { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin';
+import { writeFileSync } from 'node:fs';
 import path from 'path';
+
+const statsJsonPlugin = {
+  name: 'web-explorer:stats-json',
+  setup(api) {
+    if (!process.env.RSPEEDY_BUNDLE_ANALYSIS) {
+      return;
+    }
+
+    api.onAfterBuild(({ stats }) => {
+      if (!stats) {
+        return;
+      }
+      writeFileSync(
+        path.join(api.context.distPath, 'stats.json'),
+        JSON.stringify(stats.toJson({ all: true }), null, 2),
+      );
+    });
+  },
+};
 
 export default defineConfig({
   source: {
@@ -45,13 +65,9 @@ export default defineConfig({
       ],
     },
   },
-  performance: {
-    chunkSplit: {
-      strategy: 'all-in-one',
-    },
-    profile: true,
-  },
+  splitChunks: false,
   plugins: [
+    statsJsonPlugin,
     pluginWebPlatform({
       polyfill: false,
       nativeModulesPath: path.resolve(__dirname, './index.native-modules.ts'),

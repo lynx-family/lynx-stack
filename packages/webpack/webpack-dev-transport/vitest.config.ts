@@ -3,9 +3,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { defineProject } from 'vitest/config';
+import { defineProject, type UserWorkspaceConfig } from 'vitest/config';
 
-export default defineProject({
+const config: UserWorkspaceConfig = defineProject({
   resolve: {
     mainFields: ['module', 'main'],
   },
@@ -13,3 +13,4 @@ export default defineProject({
     name: 'webpack/dev-transport',
   },
 });
+export default config;

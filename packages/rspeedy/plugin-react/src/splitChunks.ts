@@ -33,13 +33,13 @@ export const applySplitChunksRule: (
   // Defaults to `all-in-one`.
   api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
     const userConfig = api.getRsbuildConfig('original')
-    if (!userConfig.performance?.chunkSplit?.strategy) {
+    const chunkSplitStrategy = userConfig.performance?.chunkSplit?.strategy
+    if (
+      chunkSplitStrategy === 'all-in-one'
+      || (!chunkSplitStrategy && userConfig.splitChunks === undefined)
+    ) {
       return mergeRsbuildConfig(config, {
-        performance: {
-          chunkSplit: {
-            strategy: 'all-in-one',
-          },
-        },
+        splitChunks: false,
       })
     }
     return config
@@ -47,7 +47,13 @@ export const applySplitChunksRule: (
 
   api.modifyBundlerChain((chain, { environment }) => {
     const { config } = environment
-    if (config.performance.chunkSplit.strategy !== 'split-by-experience') {
+    const userConfig = api.getRsbuildConfig('original')
+    const isSplitByExperience =
+      userConfig.performance?.chunkSplit?.strategy === 'split-by-experience'
+      || (isPlainObject(config.splitChunks)
+        && config.splitChunks.preset === 'default')
+
+    if (!isSplitByExperience) {
       return
     }
 

@@ -209,6 +209,9 @@ describe('Lazy', () => {
             root: tmp,
           },
         },
+        performance: {
+          profile: true,
+        },
         plugins: [
           pluginReactLynx(),
           {
@@ -293,8 +296,8 @@ describe('Lazy', () => {
             "main",
           ],
           [
-            "./LazyComponent.js-react__main-thread",
             "./LazyComponent.js-react__background",
+            "./LazyComponent.js-react__main-thread",
           ],
         ]
       `)

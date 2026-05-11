@@ -94,7 +94,7 @@ async function buildSourcemapFixture(
                   jsc: {
                     parser: {
                       syntax: 'typescript',
-                      tsx: true,
+                      tsx: false,
                     },
                     transform: {
                       react: {

@@ -58,7 +58,7 @@ export function toRsbuildConfig(
       sourceMap: config.output?.sourceMap as SourceMap,
     },
     resolve: {
-      alias: config.resolve?.alias,
+      alias: toRsbuildAlias(config),
 
       aliasStrategy: config.resolve?.aliasStrategy,
 
@@ -67,8 +67,6 @@ export function toRsbuildConfig(
       extensions: config.resolve?.extensions,
     },
     source: {
-      alias: config.source?.alias,
-
       assetsInclude: config.source?.assetsInclude,
 
       decorators: config.source?.decorators,
@@ -95,8 +93,8 @@ export function toRsbuildConfig(
       cors: config.server?.cors,
 
       headers: config.server?.headers,
-
-      host: config.server?.host,
+      // rsbuild default value is `localhost`.
+      host: config.server?.host ?? '0.0.0.0',
 
       port: config.server?.port,
 
@@ -109,8 +107,6 @@ export function toRsbuildConfig(
       buildCache: config.performance?.buildCache,
 
       chunkSplit: config.performance?.chunkSplit,
-
-      profile: config.performance?.profile,
 
       removeConsole: toRsbuildRemoveConsole(config) as
         | ConsoleType[]
@@ -143,4 +139,21 @@ function toRsbuildRemoveConsole(config: Config): string[] | false | undefined {
   }
 
   return config.performance?.removeConsole
+}
+
+function toRsbuildAlias(
+  config: Config,
+): RsbuildConfig['resolve'] extends { alias?: infer T } ? T : never {
+  const sourceAlias = config.source?.alias
+  const resolveAlias = config.resolve?.alias
+
+  if (sourceAlias === undefined && resolveAlias === undefined) {
+    return undefined as RsbuildConfig['resolve'] extends { alias?: infer T } ? T
+      : never
+  }
+
+  return {
+    ...resolveAlias,
+    ...sourceAlias,
+  } as RsbuildConfig['resolve'] extends { alias?: infer T } ? T : never
 }

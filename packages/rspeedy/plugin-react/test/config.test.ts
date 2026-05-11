@@ -2842,15 +2842,6 @@ describe('Config', () => {
         ),
       ).toMatchInlineSnapshot(`
         [
-          [
-            "<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/cssExtractLoader.js",
-            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
-            "builtin:lightningcss-loader",
-          ],
-          [
-            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
-            "builtin:lightningcss-loader",
-          ],
           [],
         ]
       `)
@@ -2868,11 +2859,6 @@ describe('Config', () => {
         ),
       ).toMatchInlineSnapshot(`
         [
-          [
-            "builtin:swc-loader",
-            "<ROOT>/packages/webpack/react-webpack-plugin/lib/loaders/testing.js",
-          ],
-          [],
           [],
         ]
       `)
