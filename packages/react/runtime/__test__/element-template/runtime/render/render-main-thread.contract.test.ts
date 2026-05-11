@@ -20,7 +20,7 @@ import { renderMainThread } from '../../../../src/element-template/runtime/rende
 import { setupPage } from '../../../../src/element-template/runtime/page/page.js';
 import { setRoot } from '../../../../src/element-template/runtime/page/root-instance.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
-import { ElementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
+import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import {
   BUILTIN_RAW_TEXT_TEMPLATE_ID,
   clearTemplates,
@@ -51,7 +51,7 @@ describe('renderMainThread contract', () => {
     ]);
 
     resetTemplateId();
-    ElementTemplateRegistry.clear();
+    elementTemplateRegistry.clear();
     setRoot({ __jsx: { type: 'test-root' } });
     setupPage({ type: 'page', children: [] } as unknown as FiberElement);
     globalThis.__MAIN_THREAD__ = true;
@@ -62,7 +62,7 @@ describe('renderMainThread contract', () => {
     vi.clearAllMocks();
     vi.unstubAllGlobals();
     clearTemplates();
-    ElementTemplateRegistry.clear();
+    elementTemplateRegistry.clear();
     resetTemplateId();
   });
 
@@ -117,7 +117,7 @@ describe('renderMainThread contract', () => {
       uid: -2,
     });
 
-    expect(ElementTemplateRegistry.get(-2)).toMatchObject({
+    expect(elementTemplateRegistry.get(-2)).toMatchObject({
       attributes: {
         id: 'main',
       },
@@ -129,7 +129,7 @@ describe('renderMainThread contract', () => {
       attributeSlots: ['hello'],
       uid: -1,
     });
-    expect(ElementTemplateRegistry.get(-1)).toBeDefined();
-    expect(ElementTemplateRegistry.get(-2)).toBeDefined();
+    expect(elementTemplateRegistry.get(-1)).toBeDefined();
+    expect(elementTemplateRegistry.get(-2)).toBeDefined();
   });
 });

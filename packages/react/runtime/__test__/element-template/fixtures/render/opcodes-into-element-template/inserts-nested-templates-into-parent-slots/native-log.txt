@@ -1,7 +1,7 @@
 Array [
   Array [
     "__CreateElementTemplate",
-    "__et_builtin_raw_text__",
+    "_et_builtin_raw_text",
     null,
     Array [
       "X",
@@ -24,7 +24,7 @@ Array [
           },
           "children": Array [],
           "tag": "raw-text",
-          "templateId": "__et_builtin_raw_text__",
+          "templateId": "_et_builtin_raw_text",
         },
       ],
     ],
@@ -53,7 +53,7 @@ Array [
                   },
                   "children": Array [],
                   "tag": "raw-text",
-                  "templateId": "__et_builtin_raw_text__",
+                  "templateId": "_et_builtin_raw_text",
                 },
               ],
               "tag": "slot",

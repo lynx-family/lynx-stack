@@ -4,7 +4,7 @@
 
 export const templateRepo = new Map<string, any>();
 
-export const BUILTIN_RAW_TEXT_TEMPLATE_ID = '__et_builtin_raw_text__';
+export const BUILTIN_RAW_TEXT_TEMPLATE_ID = '_et_builtin_raw_text';
 
 const builtinRawTextTemplate = {
   templateId: BUILTIN_RAW_TEXT_TEMPLATE_ID,

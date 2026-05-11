@@ -17,8 +17,8 @@ export type RuntimeOptions = Record<string, SerializableValue>;
 export interface SerializedElementTemplate {
   templateKey: string;
   bundleUrl?: string;
-  attributeSlots: SerializableValue[];
-  elementSlots: SerializedElementTemplate[][];
+  attributeSlots?: SerializableValue[] | null;
+  elementSlots?: SerializedElementTemplate[][] | null;
   uid: number | string;
 }
 

@@ -148,8 +148,7 @@ function shouldRenderEtChild(child) {
 }
 
 function isCompiledEtHostType(type) {
-  return type === '__et_builtin_raw_text__'
-    || type.startsWith('_et_')
+  return type.startsWith('_et_')
     || type.includes(':_et_');
 }
 

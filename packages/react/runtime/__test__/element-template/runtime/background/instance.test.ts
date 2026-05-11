@@ -4,7 +4,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { GlobalCommitContext } from '../../../../src/element-template/background/commit-context.js';
+import { globalCommitContext } from '../../../../src/element-template/background/commit-context.js';
 import {
   markElementTemplateHydrated,
   resetElementTemplateCommitState,
@@ -42,20 +42,20 @@ describe('BackgroundElementTemplateInstance', () => {
   });
 
   it('does not emit create before hydration', () => {
-    GlobalCommitContext.ops = [];
+    globalCommitContext.ops = [];
 
     new BackgroundElementTemplateInstance('image', ['logo.png']);
 
-    expect(GlobalCommitContext.ops).toEqual([]);
+    expect(globalCommitContext.ops).toEqual([]);
   });
 
   it('does not emit create for synthetic slot containers after hydration', () => {
     markElementTemplateHydrated();
-    GlobalCommitContext.ops = [];
+    globalCommitContext.ops = [];
 
     new BackgroundElementTemplateSlot();
 
-    expect(GlobalCommitContext.ops).toEqual([]);
+    expect(globalCommitContext.ops).toEqual([]);
   });
 
   it('exposes DOM-compatible tree accessors for Preact removal paths', () => {
@@ -69,13 +69,16 @@ describe('BackgroundElementTemplateInstance', () => {
     expect(parent.childNodes).toEqual([slot]);
     expect(slot.childNodes).toEqual([child]);
 
-    GlobalCommitContext.ops = [];
+    markElementTemplateHydrated();
+    parent.markCreateEmittedForHydration();
+    child.markCreateEmittedForHydration();
+    globalCommitContext.ops = [];
     child.parentNode?.removeChild(child);
 
     expect(slot.childNodes).toEqual([]);
     expect(child.parentNode).toBeNull();
     expect(parent.elementSlots[0]).toEqual([]);
-    expect(GlobalCommitContext.ops).toEqual([
+    expect(globalCommitContext.ops).toEqual([
       4,
       parent.instanceId,
       0,
@@ -152,12 +155,12 @@ describe('BackgroundElementTemplateInstance', () => {
     it('supports silent append on regular parents', () => {
       const parent = new BackgroundElementTemplateInstance('view');
       const child = new BackgroundElementTemplateInstance('text');
-      GlobalCommitContext.ops = [];
+      globalCommitContext.ops = [];
 
       parent.insertBefore(child, null, true);
 
       expect(parent.firstChild).toBe(child);
-      expect(GlobalCommitContext.ops).toEqual([]);
+      expect(globalCommitContext.ops).toEqual([]);
     });
 
     it('emits create with initialized attrs before inserting a post-hydration template', () => {
@@ -168,16 +171,16 @@ describe('BackgroundElementTemplateInstance', () => {
       parent.emitCreate();
 
       markElementTemplateHydrated();
-      GlobalCommitContext.ops = [];
+      globalCommitContext.ops = [];
 
       const child = new BackgroundElementTemplateInstance('image');
       child.setAttribute('attributeSlots', ['logo.png']);
 
-      expect(GlobalCommitContext.ops).toEqual([]);
+      expect(globalCommitContext.ops).toEqual([]);
 
       slot.appendChild(child);
 
-      expect(GlobalCommitContext.ops).toEqual([
+      expect(globalCommitContext.ops).toEqual([
         1,
         child.instanceId,
         'image',
@@ -200,7 +203,7 @@ describe('BackgroundElementTemplateInstance', () => {
       parent.emitCreate();
 
       markElementTemplateHydrated();
-      GlobalCommitContext.ops = [];
+      globalCommitContext.ops = [];
 
       const owner = new BackgroundElementTemplateInstance('view');
       const ownerSlot = new BackgroundElementTemplateSlot();
@@ -209,11 +212,11 @@ describe('BackgroundElementTemplateInstance', () => {
       const nested = createTextNode('nested');
       ownerSlot.appendChild(nested);
 
-      expect(GlobalCommitContext.ops).toEqual([]);
+      expect(globalCommitContext.ops).toEqual([]);
 
       slot.appendChild(owner);
 
-      expect(GlobalCommitContext.ops).toEqual([
+      expect(globalCommitContext.ops).toEqual([
         1,
         nested.instanceId,
         BUILTIN_RAW_TEXT_TEMPLATE_KEY,
@@ -242,18 +245,18 @@ describe('BackgroundElementTemplateInstance', () => {
       parent.emitCreate();
 
       markElementTemplateHydrated();
-      GlobalCommitContext.ops = [];
+      globalCommitContext.ops = [];
 
       const child = new BackgroundElementTemplateInstance('view');
       child.elementSlots.length = 1;
       slot.appendChild(child);
 
-      const serializedSlots = GlobalCommitContext.ops[5] as unknown[];
-      expect(GlobalCommitContext.ops[0]).toBe(1);
-      expect(GlobalCommitContext.ops[1]).toBe(child.instanceId);
+      const serializedSlots = globalCommitContext.ops[5] as unknown[];
+      expect(globalCommitContext.ops[0]).toBe(1);
+      expect(globalCommitContext.ops[1]).toBe(child.instanceId);
       expect(serializedSlots).toHaveLength(1);
       expect(0 in serializedSlots).toBe(false);
-      expect(GlobalCommitContext.ops.slice(6)).toEqual([
+      expect(globalCommitContext.ops.slice(6)).toEqual([
         3,
         parent.instanceId,
         0,
@@ -423,18 +426,41 @@ describe('BackgroundElementTemplateInstance', () => {
       childSlot.appendChild(grandchild);
       slot.appendChild(child);
 
-      GlobalCommitContext.ops = [];
+      markElementTemplateHydrated();
+      parent.markCreateEmittedForHydration();
+      child.markCreateEmittedForHydration();
+      grandchild.markCreateEmittedForHydration();
+      globalCommitContext.ops = [];
       slot.removeChild(child);
 
       expect(parent.elementSlots[0]).toEqual([]);
-      expect(GlobalCommitContext.ops).toEqual([
+      expect(globalCommitContext.ops).toEqual([
         4,
         parent.instanceId,
         0,
         child.instanceId,
         [child.instanceId, grandchild.instanceId],
       ]);
-      expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([child]);
+      expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([child]);
+    });
+
+    it('does not emit patches for pre-hydration slot mutations', () => {
+      const parent = new BackgroundElementTemplateInstance('view');
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      parent.appendChild(slot);
+      const child = new BackgroundElementTemplateInstance('text');
+      const childId = child.instanceId;
+
+      globalCommitContext.ops = [];
+      child.setAttribute('attributeSlots', ['pending']);
+      slot.appendChild(child);
+      slot.removeChild(child);
+
+      expect(parent.elementSlots[0]).toEqual([]);
+      expect(globalCommitContext.ops).toEqual([]);
+      expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+      expect(backgroundElementTemplateInstanceManager.get(childId)).toBeUndefined();
     });
 
     it('supports silent removal from a slot container', () => {
@@ -445,12 +471,12 @@ describe('BackgroundElementTemplateInstance', () => {
       const child = new BackgroundElementTemplateInstance('text');
       slot.appendChild(child);
 
-      GlobalCommitContext.ops = [];
+      globalCommitContext.ops = [];
       slot.removeChild(child, true);
 
       expect(parent.elementSlots[0]).toEqual([]);
-      expect(GlobalCommitContext.ops).toEqual([]);
-      expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+      expect(globalCommitContext.ops).toEqual([]);
+      expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
     });
 
     it('clears cached elementSlots when removing a slot child', () => {
@@ -512,11 +538,11 @@ describe('BackgroundElementTemplateInstance', () => {
   it('normalizes undefined attributeSlots before emitting create', () => {
     const instance = new BackgroundElementTemplateInstance('view');
     instance.setAttribute('attributeSlots', [undefined]);
-    GlobalCommitContext.ops = [];
+    globalCommitContext.ops = [];
 
     instance.emitCreate();
 
-    expect(GlobalCommitContext.ops).toEqual([
+    expect(globalCommitContext.ops).toEqual([
       1,
       instance.instanceId,
       'view',
@@ -526,18 +552,18 @@ describe('BackgroundElementTemplateInstance', () => {
     ]);
   });
 
-  it('does not append create options metadata to update commands', () => {
+  it('ignores legacy create options metadata props', () => {
     const instance = new BackgroundElementTemplateInstance('view');
     instance.setAttribute('options', {
       cssId: 100,
       entryName: 'lazy-entry',
       preserveMe: 'kept',
     });
-    GlobalCommitContext.ops = [];
+    globalCommitContext.ops = [];
 
     instance.emitCreate();
 
-    expect(GlobalCommitContext.ops).toEqual([
+    expect(globalCommitContext.ops).toEqual([
       1,
       instance.instanceId,
       'view',
@@ -549,12 +575,12 @@ describe('BackgroundElementTemplateInstance', () => {
 
   it('does not emit duplicate create ops for the same instance', () => {
     const instance = new BackgroundElementTemplateInstance('view');
-    GlobalCommitContext.ops = [];
+    globalCommitContext.ops = [];
 
     instance.emitCreate();
     instance.emitCreate();
 
-    expect(GlobalCommitContext.ops).toEqual([
+    expect(globalCommitContext.ops).toEqual([
       1,
       instance.instanceId,
       'view',
@@ -566,12 +592,12 @@ describe('BackgroundElementTemplateInstance', () => {
 
   it('ignores text writes for non-raw-text instances', () => {
     const instance = new BackgroundElementTemplateInstance('view');
-    GlobalCommitContext.ops = [];
+    globalCommitContext.ops = [];
 
     instance.text = 'ignored';
 
     expect(instance.attributeSlots).toEqual([]);
-    expect(GlobalCommitContext.ops).toEqual([]);
+    expect(globalCommitContext.ops).toEqual([]);
   });
 
   it('defers raw-text patches until inserting a post-hydration text node', () => {
@@ -582,16 +608,16 @@ describe('BackgroundElementTemplateInstance', () => {
     parent.emitCreate();
 
     markElementTemplateHydrated();
-    GlobalCommitContext.ops = [];
+    globalCommitContext.ops = [];
 
     const textNode = createTextNode('');
     textNode.text = 'deferred';
 
-    expect(GlobalCommitContext.ops).toEqual([]);
+    expect(globalCommitContext.ops).toEqual([]);
 
     slot.appendChild(textNode);
 
-    expect(GlobalCommitContext.ops).toEqual([
+    expect(globalCommitContext.ops).toEqual([
       1,
       textNode.instanceId,
       BUILTIN_RAW_TEXT_TEMPLATE_KEY,
@@ -655,12 +681,12 @@ describe('Background raw-text instance', () => {
     const textNode = createTextNode('old');
     textNode.emitCreate();
     markElementTemplateHydrated();
-    GlobalCommitContext.ops = [];
+    globalCommitContext.ops = [];
 
     textNode.data = 'new';
 
     expect(textNode.attributeSlots).toEqual(['new']);
-    expect(GlobalCommitContext.ops).toEqual([
+    expect(globalCommitContext.ops).toEqual([
       ElementTemplateUpdateOps.setAttribute,
       textNode.instanceId,
       0,
@@ -678,12 +704,12 @@ describe('Background raw-text instance', () => {
 
   it('does not emit a patch when setting the same text value', () => {
     const textNode = createTextNode('same');
-    GlobalCommitContext.ops = [];
+    globalCommitContext.ops = [];
 
     textNode.text = 'same';
 
     expect(textNode.attributeSlots).toEqual(['same']);
-    expect(GlobalCommitContext.ops).toEqual([]);
+    expect(globalCommitContext.ops).toEqual([]);
   });
 
   it('should ignore non-slot attribute writes on raw-text nodes', () => {
@@ -715,12 +741,12 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     const instance = new BackgroundElementTemplateInstance('view', ['old']);
     instance.emitCreate();
     markElementTemplateHydrated();
-    GlobalCommitContext.ops = [];
+    globalCommitContext.ops = [];
 
     instance.setAttribute('attributeSlots', []);
 
     expect(instance.attributeSlots).toEqual([]);
-    expect(GlobalCommitContext.ops).toEqual([
+    expect(globalCommitContext.ops).toEqual([
       ElementTemplateUpdateOps.setAttribute,
       instance.instanceId,
       0,
@@ -748,33 +774,6 @@ describe('BackgroundElementTemplateSlot Children', () => {
 
     expect(root.elementSlots[0]).toEqual([]);
     expect(root.elementSlots[1]).toEqual([text]);
-  });
-
-  it('should aggregate slotChildren correctly', () => {
-    const root = new BackgroundElementTemplateInstance('element-template-view');
-
-    const slot1 = new BackgroundElementTemplateSlot();
-    slot1.setAttribute('id', 0);
-    const text1 = createTextNode('Hello');
-    slot1.appendChild(text1);
-
-    const slot2 = new BackgroundElementTemplateSlot();
-    slot2.setAttribute('id', 1);
-    const text2 = createTextNode('World');
-    const view2 = new BackgroundElementTemplateInstance('view');
-    slot2.appendChild(text2);
-    slot2.appendChild(view2);
-
-    root.appendChild(slot1);
-    root.appendChild(slot2);
-
-    const slotChildren = root.slotChildren;
-    expect(slotChildren.size).toBe(2);
-
-    expect(slotChildren.get(0)).toEqual([text1]);
-    expect(slotChildren.get(1)).toEqual([text2, view2]);
-    expect(root.elementSlots[0]).toEqual([text1]);
-    expect(root.elementSlots[1]).toEqual([text2, view2]);
   });
 
   it('should keep elementSlots in sync when slot is attached after children exist', () => {
@@ -844,23 +843,20 @@ describe('BackgroundElementTemplateSlot Children', () => {
     expect(slotB.firstChild).toBe(text);
   });
 
-  it('should ignore non-slot direct children (though technically invalid)', () => {
+  it('does not create an element slot entry for non-slot direct children', () => {
     const root = new BackgroundElementTemplateInstance('element-template-view');
     const view = new BackgroundElementTemplateInstance('view');
     root.appendChild(view);
 
-    // Should assume it is a slot but fail to get partId or valid id
-    const slotChildren = root.slotChildren;
-    expect(slotChildren.size).toBe(0);
+    expect(root.elementSlots).toEqual([]);
   });
 
-  it('should ignore slot with default partId (-1)', () => {
+  it('does not create an element slot entry for slot with default partId', () => {
     const root = new BackgroundElementTemplateInstance('element-template-view');
     const slot = new BackgroundElementTemplateSlot();
     slot.appendChild(createTextNode('Hello'));
     root.appendChild(slot);
 
-    const slotChildren = root.slotChildren;
-    expect(slotChildren.size).toBe(0);
+    expect(root.elementSlots).toEqual([]);
   });
 });

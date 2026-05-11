@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import {
-  GlobalCommitContext,
+  globalCommitContext,
   resetGlobalCommitContext,
   takeRemovedSubtreesForCurrentCommit,
 } from './commit-context.js';
@@ -26,6 +26,7 @@ let listener:
 
 export function installElementTemplateHydrationListener(): void {
   resetElementTemplateHydrationListener();
+  resetElementTemplateCommitState();
 
   listener = (event: { data: unknown }) => {
     const { data } = event;
@@ -74,15 +75,15 @@ export function installElementTemplateHydrationListener(): void {
 
     markElementTemplateHydrated();
 
-    if (GlobalCommitContext.ops.length > 0) {
+    if (globalCommitContext.ops.length > 0) {
       if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
         console.alog?.(
           '[ReactLynxDebug] ElementTemplate hydrate update commands:\n'
             + JSON.stringify(
               {
-                ops: formatElementTemplateUpdateCommands(GlobalCommitContext.ops),
-                flushOptions: GlobalCommitContext.flushOptions,
-                flowIds: GlobalCommitContext.flowIds,
+                ops: formatElementTemplateUpdateCommands(globalCommitContext.ops),
+                flushOptions: globalCommitContext.flushOptions,
+                flowIds: globalCommitContext.flowIds,
               },
               null,
               2,
@@ -94,9 +95,9 @@ export function installElementTemplateHydrationListener(): void {
         lynx.getCoreContext().dispatchEvent({
           type: ElementTemplateLifecycleConstant.update,
           data: {
-            ops: GlobalCommitContext.ops,
-            flushOptions: GlobalCommitContext.flushOptions,
-            flowIds: GlobalCommitContext.flowIds,
+            ops: globalCommitContext.ops,
+            flushOptions: globalCommitContext.flushOptions,
+            flowIds: globalCommitContext.flowIds,
           },
         });
       } finally {
@@ -114,5 +115,4 @@ export function resetElementTemplateHydrationListener(): void {
     lynx.getCoreContext().removeEventListener(ElementTemplateLifecycleConstant.hydrate, listener);
   }
   listener = undefined;
-  resetElementTemplateCommitState();
 }

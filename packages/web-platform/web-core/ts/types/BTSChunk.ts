@@ -33,7 +33,7 @@ export type BTSChunkEntry = (
   confirm: unknown,
   prompt: unknown,
   // fetch: unknown,
-  XMLHttpRequest: unknown,
+  // XMLHttpRequest: unknown,
   webkit: unknown,
   Reporter: unknown,
   print: unknown,

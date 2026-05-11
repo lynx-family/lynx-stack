@@ -1,7 +1,7 @@
 Array [
   Array [
     "__CreateElementTemplate",
-    "__et_builtin_raw_text__",
+    "_et_builtin_raw_text",
     null,
     Array [
       "Hello",
@@ -25,7 +25,7 @@ Array [
           },
           "children": Array [],
           "tag": "raw-text",
-          "templateId": "__et_builtin_raw_text__",
+          "templateId": "_et_builtin_raw_text",
         },
       ],
     ],

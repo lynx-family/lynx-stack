@@ -14,7 +14,7 @@ type ElementTemplateGlobalCommitContext = ElementTemplateUpdateCommitContext & {
   nonPayload: ElementTemplateCommitNonPayloadState;
 };
 
-export const GlobalCommitContext: ElementTemplateGlobalCommitContext = {
+export const globalCommitContext: ElementTemplateGlobalCommitContext = {
   ops: [],
   flushOptions: {},
   nonPayload: {
@@ -23,23 +23,23 @@ export const GlobalCommitContext: ElementTemplateGlobalCommitContext = {
 };
 
 export function resetGlobalCommitContext(): void {
-  GlobalCommitContext.ops = [];
-  GlobalCommitContext.flushOptions = {};
-  delete GlobalCommitContext.flowIds;
-  GlobalCommitContext.nonPayload.removedSubtrees = [];
+  globalCommitContext.ops = [];
+  globalCommitContext.flushOptions = {};
+  delete globalCommitContext.flowIds;
+  globalCommitContext.nonPayload.removedSubtrees = [];
 }
 
 export function markRemovedSubtreeForCurrentCommit(
   root: BackgroundElementTemplateInstance,
 ): void {
-  const { removedSubtrees } = GlobalCommitContext.nonPayload;
+  const { removedSubtrees } = globalCommitContext.nonPayload;
   if (!removedSubtrees.includes(root)) {
     removedSubtrees.push(root);
   }
 }
 
 export function takeRemovedSubtreesForCurrentCommit(): BackgroundElementTemplateInstance[] {
-  const removedSubtrees = GlobalCommitContext.nonPayload.removedSubtrees;
-  GlobalCommitContext.nonPayload.removedSubtrees = [];
+  const removedSubtrees = globalCommitContext.nonPayload.removedSubtrees;
+  globalCommitContext.nonPayload.removedSubtrees = [];
   return removedSubtrees;
 }

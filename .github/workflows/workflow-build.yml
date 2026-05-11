@@ -95,14 +95,14 @@ jobs:
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
           path: .turbo
-          key: turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
+          key: turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ github.sha }}
           # We can restore caches from:
           #   1. Previous commit from base branch (merge base or base SHA)
           #   2. Any cache
           restore-keys: |
-            turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
-            turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
-            turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
+            turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
+            turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
+            turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-
             turbo-v4-${{ runner.os }}-
       - name: Install
         run: |

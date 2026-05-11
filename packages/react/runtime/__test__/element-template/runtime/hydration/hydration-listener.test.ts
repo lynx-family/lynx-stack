@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as elementTemplateAlog from '../../../../src/element-template/debug/alog.js';
-import { GlobalCommitContext } from '../../../../src/element-template/background/commit-context.js';
+import { globalCommitContext } from '../../../../src/element-template/background/commit-context.js';
 import {
   installElementTemplateHydrationListener,
   resetElementTemplateHydrationListener,
@@ -152,8 +152,8 @@ describe('ElementTemplate hydration listener', () => {
       });
 
       expect(() => envManager.switchToBackground()).toThrow(dispatchError);
-      expect(GlobalCommitContext.ops).toEqual([]);
-      expect(GlobalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+      expect(globalCommitContext.ops).toEqual([]);
+      expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
 
       vi.advanceTimersByTime(10000);
       expect(backgroundElementTemplateInstanceManager.get(stale.instanceId)).toBeUndefined();
@@ -206,7 +206,7 @@ describe('ElementTemplate hydration listener', () => {
     });
 
     envManager.switchToBackground();
-    expect(backgroundElementTemplateInstanceManager.get(oldId)).toBe(after);
+    expect(backgroundElementTemplateInstanceManager.get(oldId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(-1)).toBeUndefined();
   });
 

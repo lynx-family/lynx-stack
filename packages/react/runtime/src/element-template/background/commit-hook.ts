@@ -5,7 +5,7 @@
 import { options } from 'preact';
 
 import {
-  GlobalCommitContext,
+  globalCommitContext,
   resetGlobalCommitContext,
   takeRemovedSubtreesForCurrentCommit,
 } from './commit-context.js';
@@ -19,6 +19,7 @@ import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant
 
 let installed = false;
 let hasHydrated = false;
+const scheduledRemovedSubtreeCleanupTimers = new Set<ReturnType<typeof setTimeout>>();
 
 export function markElementTemplateHydrated(): void {
   hasHydrated = true;
@@ -39,11 +40,20 @@ export function scheduleElementTemplateRemovedSubtreeCleanup(
   if (removedSubtrees.length === 0) {
     return;
   }
-  setTimeout(() => {
+  const timer = setTimeout(() => {
+    scheduledRemovedSubtreeCleanupTimers.delete(timer);
     for (const root of removedSubtrees) {
       root.tearDown();
     }
   }, 10000);
+  scheduledRemovedSubtreeCleanupTimers.add(timer);
+}
+
+export function cancelElementTemplateRemovedSubtreeCleanup(): void {
+  for (const timer of scheduledRemovedSubtreeCleanupTimers) {
+    clearTimeout(timer);
+  }
+  scheduledRemovedSubtreeCleanupTimers.clear();
 }
 
 export function installElementTemplateCommitHook(): void {
@@ -53,7 +63,7 @@ export function installElementTemplateCommitHook(): void {
   installed = true;
 
   hook(options, COMMIT, (originalCommit, vnode, commitQueue) => {
-    if (__BACKGROUND__ && hasHydrated && GlobalCommitContext.ops.length > 0) {
+    if (__BACKGROUND__ && hasHydrated && globalCommitContext.ops.length > 0) {
       markTimingLegacy('updateDiffVdomEnd');
       markTiming('diffVdomEnd');
 
@@ -62,7 +72,7 @@ export function installElementTemplateCommitHook(): void {
       }
       markTiming('packChangesStart');
       if (globalPipelineOptions) {
-        GlobalCommitContext.flushOptions.pipelineOptions = globalPipelineOptions;
+        globalCommitContext.flushOptions.pipelineOptions = globalPipelineOptions;
       }
       markTiming('packChangesEnd');
       if (globalPipelineOptions) {
@@ -77,9 +87,9 @@ export function installElementTemplateCommitHook(): void {
           '[ReactLynxDebug] ElementTemplate BTS -> MTS update:\n'
             + JSON.stringify(
               {
-                ops: formatElementTemplateUpdateCommands(GlobalCommitContext.ops),
-                flushOptions: GlobalCommitContext.flushOptions,
-                flowIds: GlobalCommitContext.flowIds,
+                ops: formatElementTemplateUpdateCommands(globalCommitContext.ops),
+                flushOptions: globalCommitContext.flushOptions,
+                flowIds: globalCommitContext.flowIds,
               },
               null,
               2,
@@ -92,9 +102,9 @@ export function installElementTemplateCommitHook(): void {
         lynx.getCoreContext().dispatchEvent({
           type: ElementTemplateLifecycleConstant.update,
           data: {
-            ops: GlobalCommitContext.ops,
-            flushOptions: GlobalCommitContext.flushOptions,
-            flowIds: GlobalCommitContext.flowIds,
+            ops: globalCommitContext.ops,
+            flushOptions: globalCommitContext.flushOptions,
+            flowIds: globalCommitContext.flowIds,
           },
         });
       } finally {

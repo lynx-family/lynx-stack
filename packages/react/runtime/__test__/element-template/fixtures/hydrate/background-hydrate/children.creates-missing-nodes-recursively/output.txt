@@ -2,7 +2,7 @@ Object {
   "stream": Array [
     1,
     6,
-    "__et_builtin_raw_text__",
+    "_et_builtin_raw_text",
     null,
     Array [
       "NEW",

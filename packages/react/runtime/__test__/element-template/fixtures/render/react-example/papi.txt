@@ -11,7 +11,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "__et_builtin_raw_text__",
+    "_et_builtin_raw_text",
     null,
     [
       " src/App.tsx "
@@ -46,7 +46,7 @@
             "text": " src/App.tsx "
           },
           "children": [],
-          "templateId": "__et_builtin_raw_text__"
+          "templateId": "_et_builtin_raw_text"
         }
       ]
     ],

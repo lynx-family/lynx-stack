@@ -80,6 +80,7 @@ jobs:
       runs-on: lynx-custom-container
       is-web: true
       run: |
+        ulimit -Sn 655350
         export NODE_OPTIONS="--max-old-space-size=32768"
         pnpm --filter @lynx-js/web-core-e2e run lh || echo "Lighthouse failed"
   playwright-web-elements:
@@ -98,6 +99,7 @@ jobs:
       codecov-flags: "e2e"
       web-report-path: "packages/web-platform/web-elements/playwright-report"
       run: |
+        ulimit -Sn 655350
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
         pnpm --filter @lynx-js/web-elements run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/2
@@ -154,6 +156,7 @@ jobs:
         if [ "${{ matrix.render }}" = "SSR" ]; then
           export ENABLE_SSR=true
         fi
+        ulimit -Sn 655350
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
         pnpm --filter @lynx-js/web-core-e2e run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/2
