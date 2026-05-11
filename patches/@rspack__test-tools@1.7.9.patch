@@ -1,0 +1,14 @@
+diff --git a/dist/helper/read-config-file.js b/dist/helper/read-config-file.js
+index df905b1c4cb7eaaf8e607c8fb4ff14198708caa1..b8ce38c8658b96a0f68eba3f68dbd684c298161c 100644
+--- a/dist/helper/read-config-file.js
++++ b/dist/helper/read-config-file.js
+@@ -9,6 +9,9 @@ const debug_1 = require("../test/debug");
+ function readConfigFile(files, context, prevOption, functionApply) {
+     const existsFile = files.find((i) => fs_extra_1.default.existsSync(i));
+     let fileConfig = existsFile ? require(existsFile) : {};
++    if (fileConfig && fileConfig.__esModule && "default" in fileConfig) {
++        fileConfig = fileConfig.default;
++    }
+     if (typeof fileConfig === 'function') {
+         fileConfig = fileConfig({ config: prevOption }, { testPath: context.getDist(), tempPath: context.getTemp() });
+     }

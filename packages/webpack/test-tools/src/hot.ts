@@ -1,6 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { existsSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 
 import {
@@ -27,6 +29,27 @@ const describe = (globalThis as unknown as {
 const test = (globalThis as unknown as {
   test: typeof import('@rstest/core').test;
 }).test;
+const require = createRequire(import.meta.url);
+
+function resolveHotUpdateLoader() {
+  const testToolsEntry = require.resolve('@rspack/test-tools');
+  const loaderCandidates = [
+    // 1.5.6
+    path.resolve(testToolsEntry, '../helper/loaders/hot-update.js'),
+    // 1.7.9
+    path.resolve(testToolsEntry, '../helper/hot-update/loader.js'),
+  ];
+
+  const loader = loaderCandidates.find(candidate => existsSync(candidate));
+
+  if (!loader) {
+    throw new Error(
+      `Unable to locate @rspack/test-tools hot-update loader from ${testToolsEntry}`,
+    );
+  }
+
+  return loader;
+}
 
 export function createHotOptions<T extends ECompilerType>({
   compilerType,
@@ -64,10 +87,7 @@ export function createHotOptions<T extends ECompilerType>({
       options.module ??= {};
       options.module.rules ??= [];
       options.module.rules.push({
-        loader: path.resolve(
-          require.resolve('@rspack/test-tools'),
-          '../helper/loaders/hot-update.js',
-        ),
+        loader: resolveHotUpdateLoader(),
         options: this.updateOptions,
         enforce: 'pre',
       });

@@ -4,7 +4,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { hotCases } from '@lynx-js/test-tools';
+import { hotCases } from '../../test-tools/lib/hot.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

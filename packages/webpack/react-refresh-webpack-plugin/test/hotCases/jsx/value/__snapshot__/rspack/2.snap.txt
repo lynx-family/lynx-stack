@@ -6,7 +6,7 @@
 ## Asset Files
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 3690
+- Update: main.LAST_HASH.hot-update.js, size: 3644
 
 ## Manifest
 
@@ -68,7 +68,7 @@ function App() {
     return __RenderContent(/*#__PURE__*/ (0,_lynx_js_react_jsx_dev_runtime__rspack_import_0.jsxDEV)(__snapshot_4953c_00662_1, {
         $0: value
     }, void 0, false, {
-        fileName: "<ROOT>/packages/webpack/react-refresh-webpack-plugin/test/hotCases/jsx/value/app.jsx",
+        fileName: "<ROOT>/test/hotCases/jsx/value/app.jsx",
         lineNumber: 3,
         columnNumber: 26
     }, this));

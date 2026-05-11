@@ -368,6 +368,15 @@ export default tseslint.config(
       },
     },
   },
+  {
+    files: ['packages/webpack/**/test/configCases/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...vitest.environments.env.globals,
+        __webpack_require__: 'readonly',
+      },
+    },
+  },
   // CommonJS-related
   {
     files: ['**/*.cjs'],
