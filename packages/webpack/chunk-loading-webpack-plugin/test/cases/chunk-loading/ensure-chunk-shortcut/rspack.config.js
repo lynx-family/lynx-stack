@@ -2,7 +2,7 @@ import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { ChunkLoadingWebpackPlugin } from '../../../../lib/index.js';
 
-/** @type {import('webpack').Configuration} */
+/** @type {import('@rspack/core').Configuration} */
 export default {
   mode: 'development',
   output: {
@@ -13,7 +13,7 @@ export default {
   plugins: [
     new ChunkLoadingWebpackPlugin(),
     /**
-     * @param {import('webpack').Compiler} compiler
+     * @param {import('@rspack/core').Compiler} compiler
      */
     compiler => {
       const { RuntimeModule } = compiler.webpack;
