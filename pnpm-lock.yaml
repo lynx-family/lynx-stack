@@ -3925,7 +3925,7 @@ packages:
     resolution: {integrity: sha512-e8+V1aU9VD6fmVJhS1VoE5ZxUD2udhEtTTsGBj2jlxYNscND2V6fyYFGF/dUPN+s9EwRiB80vUY/Im8tYSsMWA==}
 
   '@lynx-js/types@file:vendor/lynx-js-types-3.10.0.tgz':
-    resolution: {integrity: sha512-ubhYJ9XKoV5zq1vxowGumhkWjcsWAK2CWxirmbQdqlBGbdkLqm0iqIit7dJVqcvM0JEHp7/cDcnpFRTP5A7zRA==, tarball: file:vendor/lynx-js-types-3.10.0.tgz}
+    resolution: {integrity: sha512-YB4eHwD83aABIWzkS+ddyM5nxAdHKP/K4IFaqjjKXOix+sN36+mgUvxsRJ3kfh0Z0WjpLmQCd6Xx8l9U5bWPYg==, tarball: file:vendor/lynx-js-types-3.10.0.tgz}
     version: 3.10.0
 
   '@manypkg/find-root@1.1.0':
