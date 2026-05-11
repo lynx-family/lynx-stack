@@ -33,6 +33,6 @@
     "@types/qrcode": "^1.5.5",
     "@types/react": "npm:@types/react@^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.3"
   }
 }

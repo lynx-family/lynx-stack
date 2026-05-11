@@ -40,7 +40,7 @@
     "@types/node": "^24.10.13",
     "@typescript/native-preview": "7.0.0-dev.20260212.1",
     "@vitest/coverage-v8": "^3.2.4",
-    "@vitest/eslint-plugin": "^1.6.9",
+    "@vitest/eslint-plugin": "^1.6.17",
     "@vitest/ui": "^3.2.4",
     "dprint": "^0.51.1",
     "eslint": "^9.39.3",
@@ -56,10 +56,10 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "sort-package-json": "^3.6.1",
-    "ts-patch": "^3.3.0",
+    "ts-patch": "^4.0.1",
     "turbo": "^2.9.3",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.56.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.2",
     "vitest": "^3.2.4"
   },
   "packageManager": "pnpm@10.29.3+sha512.498e1fb4cca5aa06c1dcf2611e6fafc50972ffe7189998c409e90de74566444298ffe43e6cd2acdc775ba1aa7cc5e092a8b7054c811ba8c5770f84693d33d2dc",
@@ -69,8 +69,15 @@
   "pnpm": {
     "peerDependencyRules": {
       "allowedVersions": {
+        "@rslib/core>typescript": "^5 || ^6",
+        "rsbuild-plugin-dts>typescript": "^5 || ^6",
         "rsbuild-plugin-tailwindcss>tailwindcss": "^3 || ^4"
       }
+    },
+    "patchedDependencies": {
+      "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch",
+      "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch",
+      "typia-rspack-plugin@2.2.2": "patches/typia-rspack-plugin@2.2.2.patch"
     }
   }
 }

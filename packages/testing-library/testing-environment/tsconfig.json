@@ -4,6 +4,7 @@
     "verbatimModuleSyntax": false,
     "noImplicitAny": false,
     "isolatedDeclarations": false,
+    "lib": ["es2021", "dom"],
     "rootDir": "src",
     "outDir": "dist",
     "declarationDir": "dist",
