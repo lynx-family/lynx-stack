@@ -140,6 +140,12 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
       | undefined;
     const resolvedTargetDataset = target ? targetDataset : currentTargetDataset;
     if (!resolvedTarget) {
+      if (process.env['NODE_ENV'] !== 'production') {
+        console.warn(
+          '[WASMJSBinding] publishEvent: no target or currentTarget',
+          { handlerName, eventObject },
+        );
+      }
       return;
     }
     eventObject.target = this.generateTargetObject(
