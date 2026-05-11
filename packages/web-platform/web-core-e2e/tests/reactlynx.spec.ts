@@ -1039,6 +1039,24 @@ test.describe('reactlynx3 tests', () => {
         ); // green
       },
     );
+    test(
+      'basic-bindwheel-view',
+      async ({ page, browserName }, { title }) => {
+        test.skip(
+          browserName === 'webkit',
+          'mouse wheel unsupported on webkit',
+        );
+        await goto(page, title);
+        await wait(300);
+        await page.locator('#target').hover();
+        await page.mouse.wheel(0, 100);
+        await expect(page.locator('#result')).toHaveText('wheel');
+        await expect(page.locator('#indicator')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        );
+      },
+    );
 
     test('basic-page-event', async ({ page }, { title }) => {
       await goto(page, title);
@@ -4746,6 +4764,24 @@ test.describe('reactlynx3 tests', () => {
           await wait(1000);
           expect(scrolled).toBeTruthy();
           expect(scrollend).toBeTruthy();
+        },
+      );
+      test(
+        'basic-element-list-bindwheel',
+        async ({ page, browserName }, { title }) => {
+          test.skip(
+            browserName === 'webkit',
+            'mouse wheel unsupported on webkit',
+          );
+          await goto(page, title);
+          await wait(300);
+          await page.locator('#target').hover();
+          await page.mouse.wheel(0, 100);
+          await expect(page.locator('#result')).toHaveText('wheel');
+          await expect(page.locator('#indicator')).toHaveCSS(
+            'background-color',
+            'rgb(0, 128, 0)',
+          );
         },
       );
       test(
