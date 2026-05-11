@@ -185,9 +185,13 @@ export const loadLazyBundle: <
       } catch {
         return new Promise(() => {});
       }
-      const styleSheet = __LoadStyleSheet(SECTION_CSS, response.url);
-      if (styleSheet !== null) {
-        __AdoptStyleSheet(styleSheet);
+      try {
+        const styleSheet = __LoadStyleSheet(SECTION_CSS, response.url);
+        if (styleSheet !== null) {
+          __AdoptStyleSheet(styleSheet);
+        }
+      } catch {
+        return new Promise(() => {});
       }
       const r: Promise<T> = Promise.resolve(result);
       r.then = makeSyncThen(result);

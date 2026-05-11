@@ -15,10 +15,10 @@ export function resolveLazyBundleFetcher(
   if (envOverride === 'FetchBundle' && !meets) {
     throw new Error(
       `[pluginReactLynx] REACT_LAZY_BUNDLE_FETCHER=FetchBundle `
-        + `requires targetSdkVersion >= ${FETCH_BUNDLE_MIN_ENGINE_VERSION}, `
+        + `requires engineVersion >= ${FETCH_BUNDLE_MIN_ENGINE_VERSION}, `
         + `but got ${engineVersion ? `'${engineVersion}'` : '<unset>'}. `
         + `Older hosts do not expose 'lynx.fetchBundle' / 'lynx.loadScript'. `
-        + `Either bump 'targetSdkVersion' to `
+        + `Either bump 'engineVersion' to `
         + `'${FETCH_BUNDLE_MIN_ENGINE_VERSION}' or higher, or unset `
         + `REACT_LAZY_BUNDLE_FETCHER (the default falls back to `
         + `'QueryComponent' on older hosts).`,

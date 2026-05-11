@@ -64,14 +64,18 @@ async function build(
   ];
 
   const compiler = rspack(config);
-  const stats: Stats = await new Promise((resolve, reject) => {
-    compiler.run((err, s) => {
-      if (err) return reject(err);
-      if (!s) return reject(new Error('rspack returned empty stats'));
-      resolve(s);
-      compiler.close(() => void 0);
+  let stats: Stats;
+  try {
+    stats = await new Promise((resolve, reject) => {
+      compiler.run((err, s) => {
+        if (err) return reject(err);
+        if (!s) return reject(new Error('rspack returned empty stats'));
+        resolve(s);
+      });
     });
-  });
+  } finally {
+    await new Promise<void>((r) => compiler.close(() => r()));
+  }
   if (stats.hasErrors()) {
     throw new Error(stats.toString({ all: false, errors: true }));
   }

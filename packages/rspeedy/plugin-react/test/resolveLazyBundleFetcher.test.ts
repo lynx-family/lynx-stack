@@ -61,7 +61,7 @@ describe('resolveLazyBundleFetcher', () => {
     test('=FetchBundle with insufficient version → throws', () => {
       process.env['REACT_LAZY_BUNDLE_FETCHER'] = 'FetchBundle'
       expect(() => resolveLazyBundleFetcher('3.7')).toThrow(
-        /requires targetSdkVersion >= 3\.8/,
+        /requires engineVersion >= 3\.8/,
       )
     })
 
