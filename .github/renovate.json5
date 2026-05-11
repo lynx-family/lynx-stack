@@ -227,9 +227,6 @@
     // Rspress not compatible
     "@microsoft/api-documenter",
 
-    // Not following SemVer
-    "stormslowly/rust-cache",
-
     // Too many breaking change in 1.5.7. Manually upgrade later.
     "@rspack/test-tools",
 

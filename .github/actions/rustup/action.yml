@@ -51,7 +51,7 @@ runs:
     - name: Restore rustup cache
       id: restore
       if: ${{ inputs.save-if == 'true' }}
-      uses: lynx-infra/cache/restore@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+      uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
       with:
         path: ~/.rustup/toolchains
         key: rustup-cache-v3-${{ runner.os }}-${{ steps.get-toolchain.outputs.toolchain }}
@@ -69,16 +69,15 @@ runs:
           -c clippy \
           -c rustfmt
     - name: Save rustup cache
-      uses: lynx-infra/cache/save@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+      uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
       if: ${{ inputs.save-if == 'true' && steps.restore.outputs.cache-hit != 'true' }}
       with:
         path: ~/.rustup/toolchains
         key: rustup-cache-v3-${{ runner.os }}-${{ steps.get-toolchain.outputs.toolchain }}
 
     - name: Cargo cache
-      uses: stormslowly/rust-cache@8269079380bc35105b3ed8b0f1f7c9557c6dec93 # v0.0.2
+      uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
       with:
         prefix-key: "RCache-L-5"
         shared-key: ${{ inputs.key }}
         save-if: ${{ inputs.save-if }}
-        fullmatch-only: "true"

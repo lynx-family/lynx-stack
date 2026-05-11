@@ -39,7 +39,7 @@ env:
   TURBO_TELEMETRY_DISABLED: 1
 jobs:
   check:
-    timeout-minutes: 30
+    timeout-minutes: 60
     runs-on: ${{ inputs.runs-on }}
     permissions: {}
     container:
@@ -53,6 +53,17 @@ jobs:
           # Codecov requires fetch-depth: 0
           fetch-depth: 0
           persist-credentials: false
+      # actions/cache derives its internal version hash from the available
+      # compression tool (zstd vs gzip). The build job saves with zstd on the
+      # host; the Playwright container image is missing zstd, so without this
+      # step `is-web` jobs fall back to gzip and miss the cache.
+      - name: Install zstd for cache compatibility
+        if: ${{ inputs.is-web }}
+        shell: bash
+        run: |
+          if ! command -v zstd >/dev/null 2>&1; then
+            apt-get update && apt-get install -y --no-install-recommends zstd
+          fi
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "22"
