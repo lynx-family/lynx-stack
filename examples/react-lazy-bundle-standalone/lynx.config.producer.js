@@ -14,6 +14,7 @@ const producerPublicPath = `http://${detectLanHost()}:${producerDevPort}/`;
 export default defineConfig({
   source: {
     entry: {
+      LazyComponent: './src/LazyComponent.tsx',
       LazyComponentSync: './src/LazyComponentSync.tsx',
       LazyComponentAsync: './src/LazyComponentAsync.tsx',
       add: './src/utils/add.ts',

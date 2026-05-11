@@ -4,22 +4,40 @@ import { createProducerBundleUrl } from './entry-url.js';
 
 import './App.css';
 
-const LazyComponentSync = lazy(() =>
-  import(createProducerBundleUrl('LazyComponentSync.lynx.bundle'), {
-    with: {
-      type: 'component',
-      mode: 'sync',
-    },
-  })
-);
-const LazyComponentAsync = lazy(() =>
-  import(createProducerBundleUrl('LazyComponentAsync.lynx.bundle'), {
-    with: {
-      type: 'component',
-      mode: 'async',
-    },
-  })
-);
+let LazyComponentDemo: () => JSX.Element;
+if (__LAZY_BUNDLE_FETCHER__ === 'FetchBundle') {
+  const LazyComponentSync = lazy(() =>
+    import(createProducerBundleUrl('LazyComponentSync.lynx.bundle'), {
+      with: { type: 'component', mode: 'sync' },
+    })
+  );
+  const LazyComponentAsync = lazy(() =>
+    import(createProducerBundleUrl('LazyComponentAsync.lynx.bundle'), {
+      with: { type: 'component', mode: 'async' },
+    })
+  );
+  LazyComponentDemo = () => (
+    <>
+      <Suspense fallback={<text>Loading sync...</text>}>
+        <LazyComponentSync />
+      </Suspense>
+      <Suspense fallback={<text>Loading async...</text>}>
+        <LazyComponentAsync />
+      </Suspense>
+    </>
+  );
+} else {
+  const LazyComponent = lazy(() =>
+    import(createProducerBundleUrl('LazyComponent.lynx.bundle'), {
+      with: { type: 'component' },
+    })
+  );
+  LazyComponentDemo = () => (
+    <Suspense fallback={<text>Loading...</text>}>
+      <LazyComponent />
+    </Suspense>
+  );
+}
 
 export function App() {
   useEffect(() => {
@@ -52,12 +70,7 @@ export function App() {
           <text className='Subtitle'>on Lynx</text>
         </view>
         <view className='Suspense'>
-          <Suspense fallback={<text>Loading sync...</text>}>
-            <LazyComponentSync />
-          </Suspense>
-          <Suspense fallback={<text>Loading async...</text>}>
-            <LazyComponentAsync />
-          </Suspense>
+          <LazyComponentDemo />
         </view>
       </view>
     </view>
