@@ -47,6 +47,10 @@ jobs:
       env:
         CI: 1
         TURBO_TELEMETRY_DISABLED: 1
+        # Firefox refuses to launch unless $HOME is owned by the current user;
+        # the runner mounts /github/home which is owned by the host runner user.
+        # See: https://playwright.dev/docs/ci#running-as-root
+        HOME: /root
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
