@@ -36,8 +36,18 @@ function formatUrlForDisplay(url: string): string {
   return `${head}…${tail}`;
 }
 
+function getDeployedLynxBundleUrl(): string {
+  try {
+    return new URL('a2ui.lynx.js', window.location.href).toString();
+  } catch {
+    return '';
+  }
+}
+
 function useRspeedyDevUrl(): string {
-  const [url, setUrl] = useState('');
+  // Default to the deployed bundle next to the current page so that the
+  // "Native Preview" QR is available in production (no rspeedy dev server).
+  const [url, setUrl] = useState<string>(() => getDeployedLynxBundleUrl());
   useEffect(() => {
     let cancelled = false;
     void (async () => {
@@ -47,7 +57,7 @@ function useRspeedyDevUrl(): string {
         });
         if (!res.ok) return;
         const data = (await res.json()) as { url?: string };
-        if (!cancelled && typeof data.url === 'string') {
+        if (!cancelled && typeof data.url === 'string' && data.url) {
           setUrl(data.url);
         }
       } catch {
@@ -76,14 +86,20 @@ function formatJson(value: unknown): string {
   return JSON.stringify(value ?? [], null, 2);
 }
 
-export function DemosPage(props: { protocol: Protocol }) {
-  const { protocol } = props;
+function findScenarioById(id?: string): Scenario | undefined {
+  if (!id) return undefined;
+  return ALL_SCENARIOS.find((s) => s.id === id);
+}
+
+export function DemosPage(props: { protocol: Protocol; demoId?: string }) {
+  const { protocol, demoId } = props;
+  const initialScenario = findScenarioById(demoId) ?? ALL_SCENARIOS[0];
 
   const [scenarioId, setScenarioId] = useState<string>(
-    ALL_SCENARIOS[0]?.id ?? '',
+    initialScenario?.id ?? '',
   );
   const [customJson, setCustomJson] = useState<string>(() =>
-    formatJson(ALL_SCENARIOS[0]?.messages)
+    formatJson(initialScenario?.messages)
   );
   const [error, setError] = useState('');
   const [renderUrl, setRenderUrl] = useState('');
@@ -142,9 +158,17 @@ export function DemosPage(props: { protocol: Protocol }) {
   }, [baseUrl, rspeedyDevUrl]);
 
   const currentScenario = useMemo(
-    () => ALL_SCENARIOS.find((s) => s.id === scenarioId) ?? ALL_SCENARIOS[0],
+    () => findScenarioById(scenarioId) ?? ALL_SCENARIOS[0],
     [scenarioId],
   );
+  useEffect(() => {
+    const nextScenario = findScenarioById(demoId) ?? ALL_SCENARIOS[0];
+    if (!nextScenario) return;
+    setScenarioId(nextScenario.id);
+    setCustomJson(formatJson(nextScenario.messages));
+    setError('');
+    setJsonEdited(false);
+  }, [demoId]);
 
   // Whether the current render is a known demo (simulated) vs. custom JSON.
   const [isSimulated, setIsSimulated] = useState(true);
@@ -309,25 +333,24 @@ export function DemosPage(props: { protocol: Protocol }) {
   );
 
   useEffect(() => {
-    if (ALL_SCENARIOS[0]) {
-      const json = formatJson(ALL_SCENARIOS[0].messages);
-      doRender(json, ALL_SCENARIOS[0]);
+    if (currentScenario) {
+      const json = formatJson(currentScenario.messages);
+      doRender(json, currentScenario);
     }
-  }, [doRender]);
+  }, [currentScenario, doRender]);
 
   const handleSelectScenario = useCallback(
     (id: string) => {
+      window.location.hash = `#/${protocol.name}/examples/${id}`;
       setScenarioId(id);
       setError('');
       setJsonEdited(false);
-      const scenario = ALL_SCENARIOS.find((s) => s.id === id);
+      const scenario = findScenarioById(id);
       if (scenario) {
-        const json = formatJson(scenario.messages);
-        setCustomJson(json);
-        doRender(json, scenario);
+        setCustomJson(formatJson(scenario.messages));
       }
     },
-    [doRender],
+    [protocol.name],
   );
 
   const handleRender = useCallback(() => {
@@ -358,6 +381,10 @@ export function DemosPage(props: { protocol: Protocol }) {
     setJsonEdited(false);
   }, []);
 
+  const handleBackToExamples = useCallback(() => {
+    window.location.hash = `#/${protocol.name}/examples`;
+  }, [protocol.name]);
+
   return (
     <div
       ref={pageRef}
@@ -365,6 +392,17 @@ export function DemosPage(props: { protocol: Protocol }) {
     >
       {/* Sidebar */}
       <aside className='sidebar'>
+        <div className='sidebarTopNav'>
+          <button
+            type='button'
+            className='detailBackButton'
+            onClick={handleBackToExamples}
+            aria-label='Back to Examples'
+          >
+            <span className='detailBackIcon'>←</span>
+            <span className='detailBackLabel'>Back to Examples</span>
+          </button>
+        </div>
         <div className='sidebarSection'>
           <div className='sidebarHeading'>Scenarios</div>
           <div className='scenarioList'>

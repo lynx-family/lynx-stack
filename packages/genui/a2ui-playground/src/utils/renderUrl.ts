@@ -13,6 +13,8 @@ export interface RenderInit {
   demoId?: string;
   /** Simulation speed multiplier (e.g. 0.5, 1, 2, 4). */
   speed?: number;
+  /** When true, render the final UI immediately without streaming playback. */
+  instant?: boolean;
 }
 
 export function buildRenderUrl(init: RenderInit, baseUrl: string): string {
@@ -40,6 +42,10 @@ export function buildRenderUrl(init: RenderInit, baseUrl: string): string {
 
   if (init.speed !== undefined && init.speed !== 1) {
     url.searchParams.set('speed', String(init.speed));
+  }
+
+  if (init.instant) {
+    url.searchParams.set('instant', '1');
   }
 
   return url.toString();

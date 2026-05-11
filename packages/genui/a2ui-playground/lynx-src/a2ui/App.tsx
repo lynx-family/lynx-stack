@@ -18,6 +18,7 @@ interface InitData {
   messages?: unknown;
   actionMocksUrl?: string;
   actionMocks?: unknown;
+  instant?: boolean;
 }
 
 type A2uiMessage = Record<string, unknown> & { messageId?: string };
@@ -106,6 +107,11 @@ function normalizeInitDataLike(raw: unknown): InitData {
       : actionMocks;
   }
 
+  const instant = obj.instant;
+  if (instant !== undefined) {
+    out.instant = instant === true || instant === '1' || instant === 1;
+  }
+
   return out;
 }
 
@@ -115,6 +121,7 @@ function mergeInitDataPreferLeft(a: InitData, b: InitData): InitData {
     messages: a.messages ?? b.messages,
     actionMocksUrl: a.actionMocksUrl ?? b.actionMocksUrl,
     actionMocks: a.actionMocks ?? b.actionMocks,
+    instant: a.instant ?? b.instant,
   };
 }
 
@@ -234,6 +241,10 @@ export function App() {
   const [resource, setResource] = useState<Resource | null>(null);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const isInstantPreview = useMemo(
+    () => effectiveData.instant === true,
+    [effectiveData.instant],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -308,17 +319,24 @@ export function App() {
         setResource(newResource);
       }
 
-      const simulateStream = async () => {
-        for (const msg of messages) {
-          if (cancelled) break;
-          if (!msg) continue;
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-          client.processor?.processMessages?.([msg]);
-          await new Promise((resolve) => setTimeout(resolve, streamDelay));
-        }
-      };
+      if (isInstantPreview) {
+        // Static preview mode: paint the final state immediately.
+        // This is used by the examples list thumbnails.
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        client.processor?.processMessages?.(messages);
+      } else {
+        const simulateStream = async () => {
+          for (const msg of messages) {
+            if (cancelled) break;
+            if (!msg) continue;
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+            client.processor?.processMessages?.([msg]);
+            await new Promise((resolve) => setTimeout(resolve, streamDelay));
+          }
+        };
 
-      void simulateStream();
+        void simulateStream();
+      }
     };
 
     run()
@@ -337,7 +355,7 @@ export function App() {
     return () => {
       cancelled = true;
     };
-  }, [effectiveData, streamDelay]);
+  }, [effectiveData, isInstantPreview, streamDelay]);
 
   return (
     <view

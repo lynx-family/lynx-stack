@@ -1,12 +1,13 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import castGrid from './mock/messages/cast-grid.json';
-import citywalkList from './mock/messages/citywalk-list.json';
-import fridgeSearch from './mock/messages/fridge-search.json';
-import recs from './mock/messages/recs.json';
-import tripPlanner from './mock/messages/trip-planner.json';
-import workoutPlan from './mock/messages/workout-plan.json';
+import { A2UI_GALLERY_DEMOS } from './mock/a2ui-gallery/index.js';
+import castGrid from './mock/basic/cast-grid.json';
+import citywalkList from './mock/basic/citywalk-list.json';
+import fridgeSearch from './mock/basic/fridge-search.json';
+import recs from './mock/basic/recs.json';
+import tripPlanner from './mock/basic/trip-planner.json';
+import workoutPlan from './mock/basic/workout-plan.json';
 
 function collectComponentNamesFromMessages(
   value: unknown,
@@ -91,7 +92,17 @@ export interface DynamicPreset {
   actionMocks?: Record<string, unknown>;
 }
 
-export const STATIC_DEMOS: StaticDemo[] = [
+export const OFFICIAL_STATIC_DEMOS: StaticDemo[] = A2UI_GALLERY_DEMOS.map(
+  (demo) => ({
+    id: demo.id,
+    title: demo.title,
+    description: demo.description,
+    tags: tagsFromMessages(demo.messages),
+    messages: demo.messages,
+  }),
+);
+
+export const EXTENDED_STATIC_DEMOS: StaticDemo[] = [
   {
     id: 'recs',
     title: 'Date-Night Restaurant Picks',
@@ -134,6 +145,11 @@ export const STATIC_DEMOS: StaticDemo[] = [
     tags: tagsFromMessages(workoutPlan),
     messages: workoutPlan,
   },
+];
+
+export const STATIC_DEMOS: StaticDemo[] = [
+  ...OFFICIAL_STATIC_DEMOS,
+  ...EXTENDED_STATIC_DEMOS,
 ];
 
 export const DYNAMIC_PRESETS: DynamicPreset[] = [];

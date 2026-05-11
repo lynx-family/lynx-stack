@@ -20,6 +20,7 @@ interface InitData {
   actionMocks?: unknown;
   demoUrl?: string;
   speed?: number;
+  instant?: boolean;
 }
 
 interface InitLynxViewMessage {
@@ -56,6 +57,7 @@ function parseInitDataFromQuery(): InitData | null {
   const actionMocks = params.get('actionMocks');
   const actionMocksUrl = params.get('actionMocksUrl');
   const demo = params.get('demo');
+  const instant = params.get('instant');
 
   if (!protocol && !messagesUrl && !messages && !demoUrl && !demo) {
     return null;
@@ -75,6 +77,7 @@ function parseInitDataFromQuery(): InitData | null {
     speed: speedVal && Number.isFinite(speedVal) && speedVal > 0
       ? speedVal
       : undefined,
+    instant: instant === '1' ? true : undefined,
   };
 
   if (messages) {
@@ -119,6 +122,7 @@ function buildGlobalPropsFromInitData(
     out.actionMocks = initData.actionMocks;
   }
   if (initData.speed !== undefined) out.speed = initData.speed;
+  if (initData.instant !== undefined) out.instant = initData.instant;
   return Object.keys(out).length > 0 ? out : null;
 }
 
