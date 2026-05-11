@@ -50,8 +50,12 @@ overrides:
 packageExtensionsChecksum: sha256-BUwt5m2tRMyYg9pgFVHNTHCYEBuM0/o7IdJqk+vWTGs=
 
 patchedDependencies:
-  '@napi-rs/cli@2.18.4': ba947eb1c48b2a85834e99f92cbbae896722ce61fd5ae67507a3be9041959ebd
-  '@rollup/plugin-typescript': 926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d
+  '@napi-rs/cli@2.18.4':
+    hash: ba947eb1c48b2a85834e99f92cbbae896722ce61fd5ae67507a3be9041959ebd
+    path: patches/@napi-rs__cli@2.18.4.patch
+  '@rollup/plugin-typescript':
+    hash: 926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d
+    path: patches/@rollup__plugin-typescript.patch
 
 importers:
 
