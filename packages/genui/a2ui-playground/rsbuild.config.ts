@@ -178,7 +178,11 @@ export default defineConfig({
     assetPrefix: process.env.ASSET_PREFIX,
     copy: [
       {
-        from: 'src/mock/messages/*.json',
+        from: 'src/mock/basic/*.json',
+        to: 'demos/[name][ext]',
+      },
+      {
+        from: 'src/mock/a2ui-gallery/*.json',
         to: 'demos/[name][ext]',
       },
     ],

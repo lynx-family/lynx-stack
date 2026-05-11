@@ -11,6 +11,7 @@ import {
 
 import { AIChatPage } from './pages/AIChatPage.js';
 import { ComponentsPage } from './pages/ComponentsPage.js';
+import { DemosListPage } from './pages/DemosListPage.js';
 import { DemosPage } from './pages/DemosPage.js';
 import { OpenUIComponentsPage } from './pages/OpenUIComponentsPage.js';
 import { OpenUIDemosPage } from './pages/OpenUIDemosPage.js';
@@ -39,6 +40,7 @@ interface Route {
   protocol: Protocol;
   tab: Tab;
   componentName?: string;
+  demoId?: string;
 }
 
 function parseHash(hash: string): Route {
@@ -54,7 +56,11 @@ function parseHash(hash: string): Route {
   }
 
   if (rest[0] === 'demos' || rest[0] === 'examples') {
-    return { protocol, tab: 'examples' };
+    return {
+      protocol,
+      tab: 'examples',
+      demoId: rest[1],
+    };
   }
   if (rest[0] === 'components') {
     return { protocol, tab: 'components', componentName: rest[1] };
@@ -130,7 +136,15 @@ export function App() {
 
     switch (route.tab) {
       case 'examples':
-        return <DemosPage key='examples' protocol={protocol} />;
+        return route.demoId
+          ? (
+            <DemosPage
+              key='examples-detail'
+              protocol={protocol}
+              demoId={route.demoId}
+            />
+          )
+          : <DemosListPage key='examples-index' protocol={protocol} />;
       case 'components':
         return (
           <ComponentsPage
@@ -142,7 +156,7 @@ export function App() {
       default:
         return <AIChatPage key='create' protocol={protocol} />;
     }
-  }, [protocol, route.tab, route.componentName]);
+  }, [protocol, route.tab, route.componentName, route.demoId]);
 
   const protocolVersionControl = (
     <div className='protocolControl'>
