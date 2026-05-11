@@ -30,7 +30,7 @@ jobs:
     needs: build
     uses: ./.github/workflows/workflow-bundle-analysis.yml
   code-style-check:
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
@@ -65,7 +65,7 @@ jobs:
     uses: ./.github/workflows/workflow-test.yml
     permissions: {}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: ubuntu-24.04
       run: pnpm eslint . --flag v10_config_lookup_from_file
 
   lighthouse:
@@ -77,7 +77,7 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
     with:
-      runs-on: lynx-custom-container
+      runs-on: ubuntu-24.04
       is-web: true
       run: |
         ulimit -Sn 655350
@@ -94,7 +94,7 @@ jobs:
         shard: [1, 2]
     name: Playwright Web Elements Test (${{ matrix.shard }}/2)
     with:
-      runs-on: lynx-custom-container
+      runs-on: ubuntu-24.04
       is-web: true
       codecov-flags: "e2e"
       web-report-path: "packages/web-platform/web-elements/playwright-report"
@@ -120,7 +120,7 @@ jobs:
   #       #   - thread: MULTI_THREAD
   #       #     render: SSR
   #   with:
-  #     runs-on: lynx-custom-container
+  #     runs-on: ubuntu-24.04
   #     is-web: true
   #     web-report-name: "playwright-${{ matrix.thread }}-${{ matrix.render }}-shard${{ matrix.shard }}"
   #     codecov-flags: "e2e"
@@ -147,7 +147,7 @@ jobs:
         render: [CSR]
         shard: [1, 2]
     with:
-      runs-on: lynx-custom-container
+      runs-on: ubuntu-24.04
       is-web: true
       web-report-name: "playwright-${{ matrix.render }}-shard${{ matrix.shard }}"
       web-report-path: "packages/web-platform/web-core-e2e/playwright-report"
@@ -166,7 +166,7 @@ jobs:
     uses: ./.github/workflows/workflow-test.yml
 
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: ubuntu-24.04
       run: |
         pnpm turbo api-extractor -- --local
         if test "$(git diff -- './packages/**/*.api.md' --name-only | wc -l)" -gt 0 ; then
@@ -190,7 +190,7 @@ jobs:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: ubuntu-24.04
       run: |
         # Generated smoke-test projects do not carry a packageManager pin, so
         # keep this stage on pnpm 10 even when Corepack's registry default moves.
@@ -233,7 +233,7 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: ubuntu-24.04
       run: >
         pnpm
         --filter @lynx-js/react-runtime
@@ -259,7 +259,7 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: ubuntu-24.04
       run: pnpm -r run test:type
   test-rstest:
     needs: build
@@ -267,7 +267,7 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: ubuntu-24.04
       run: >
         pnpm exec rstest run
         -c rstest.config.ts
@@ -281,7 +281,7 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     name: Kitten Lynx Android Emulator Test
     with:
-      runs-on: lynx-ubuntu-22.04-physical-medium
+      runs-on: ubuntu-22.04
       run: |
         # 4. Start Emulator
         echo "Starting emulator..."
@@ -332,7 +332,7 @@ jobs:
         pnpm --filter @lynx-js/kitten-lynx-test-infra run test --coverage --reporter=github-actions --reporter=dot --reporter=junit --outputFile=test-report.junit.xml --coverage.reporter='json' --coverage.reporter='text' --testTimeout=50000 --no-cache --logHeapUsage --silent
 
   test-typos:
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: ubuntu-24.04
     steps:
       - uses: taiki-e/checkout-action@3ab630d442e198ebb0ca30872832406ca01c46eb # v1.4.0
       - uses: crate-ci/typos@57b11c6b7e54c402ccd9cda953f1072ec4f78e33 # v1.43.5
@@ -346,9 +346,9 @@ jobs:
       matrix:
         runs-on:
           - name: Ubuntu
-            label: lynx-ubuntu-24.04-medium
+            label: ubuntu-24.04
           - name: Windows
-            label: lynx-windows-2022-large
+            label: windows-2022
     name: Vitest (${{ matrix.runs-on.name }})
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

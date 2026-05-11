@@ -81,7 +81,7 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: ubuntu-24.04
       run: >
         pnpm run test
         --testTimeout=50000
@@ -100,7 +100,7 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-custom-container
+      runs-on: ubuntu-24.04
       is-web: true
       run: |
         ulimit -Sn 655350
@@ -115,7 +115,7 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-custom-container
+      runs-on: ubuntu-24.04
       is-web: true
       run: |
         ulimit -Sn 655350

@@ -10,7 +10,7 @@ env:
   TURBO_TELEMETRY_DISABLED: 1
 jobs:
   build:
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     strategy:
       fail-fast: false
@@ -39,7 +39,7 @@ jobs:
           node-version: "24"
           package-manager-cache: false
       - name: TurboCache
-        uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: .turbo
           # We have to be strict here to make sure getting the cache of build-all

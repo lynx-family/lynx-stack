@@ -25,9 +25,9 @@ jobs:
     strategy:
       matrix:
         runs-on:
-          - label: lynx-ubuntu-24.04-xlarge
+          - label: ubuntu-24.04
             name: Ubuntu
-          # - label: lynx-windows-2022-large
+          # - label: windows-2022
           #   name: Windows
     timeout-minutes: 30
     permissions:
@@ -61,7 +61,7 @@ jobs:
           files: target/nextest/ci/test-report.junit.xml
 
   rustfmt:
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -77,7 +77,7 @@ jobs:
         run: cargo fmt --check
 
   clippy:
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
