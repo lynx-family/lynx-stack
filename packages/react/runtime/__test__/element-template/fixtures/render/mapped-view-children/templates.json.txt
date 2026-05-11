@@ -46,7 +46,7 @@
     "sourceFile": "index.tsx"
   },
   {
-    "templateId": "__et_builtin_raw_text__",
+    "templateId": "_et_builtin_raw_text",
     "compiledTemplate": {
       "kind": "element",
       "type": "raw-text",

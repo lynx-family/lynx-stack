@@ -34,6 +34,7 @@ export type FormattedElementTemplateUpdateCommand =
     targetId: number;
     elementSlotIndex: number;
     childId: number;
+    removedSubtreeHandleIds: number[];
   }
   | {
     op: 'unknown';
@@ -91,6 +92,7 @@ export function formatElementTemplateUpdateCommands(
           targetId: stream[index++] as number,
           elementSlotIndex: stream[index++] as number,
           childId: stream[index++] as number,
+          removedSubtreeHandleIds: stream[index++] as number[],
         });
         break;
 

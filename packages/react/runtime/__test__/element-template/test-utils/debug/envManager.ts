@@ -9,7 +9,7 @@ import { BackgroundElementTemplateInstance } from '../../../../src/element-templ
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { __root, setRoot } from '../../../../src/element-template/runtime/page/root-instance.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
-import { ElementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
+import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 
 type RootRef = typeof __root;
 
@@ -80,7 +80,7 @@ export class ElementTemplateEnvManager {
 
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
-    ElementTemplateRegistry.clear();
+    elementTemplateRegistry.clear();
     resetTemplateId();
 
     if (initial === 'background') {

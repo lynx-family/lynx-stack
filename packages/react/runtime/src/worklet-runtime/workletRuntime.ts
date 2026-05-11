@@ -55,7 +55,6 @@ function registerWorklet(_type: string, id: string, worklet: (...args: unknown[]
  */
 function runWorklet(ctx: Worklet, params: ClosureValueType[], options?: RunWorkletOptions): unknown {
   if (!validateWorklet(ctx)) {
-    console.warn('MainThreadFunction: Invalid function object: ' + JSON.stringify(ctx));
     return;
   }
 

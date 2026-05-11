@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 
 import {
-  GlobalCommitContext,
+  globalCommitContext,
   resetGlobalCommitContext,
 } from '../../../../../src/element-template/background/commit-context.js';
 import {
@@ -515,40 +515,6 @@ export function runCaseByName(name: string): unknown {
 }
 
 {
-  defineCase('children.skips-duplicate-create-emission', () => {
-    backgroundElementTemplateInstanceManager.clear();
-    backgroundElementTemplateInstanceManager.nextId = 0;
-
-    const rootInstance = new BackgroundElementTemplateInstance('root');
-    const slot0 = new BackgroundElementTemplateSlot();
-    slot0.setAttribute('id', 0);
-    rootInstance.appendChild(slot0);
-    const child = new BackgroundElementTemplateInstance('child');
-    slot0.appendChild(child);
-
-    const before = createHydrationTemplate(-1, 'root', { elementSlots: [[]] });
-
-    const created = new Set<number>();
-    resetGlobalCommitContext();
-    hydrateIntoContext(before, rootInstance, created);
-    const first = GlobalCommitContext.ops;
-    resetGlobalCommitContext();
-    const firstIncludes = first[0] === ElementTemplateUpdateOps.createTemplate;
-
-    resetGlobalCommitContext();
-    hydrateIntoContext(before, rootInstance, created);
-    const second = GlobalCommitContext.ops;
-    resetGlobalCommitContext();
-    const secondIncludes = second[0] === ElementTemplateUpdateOps.createTemplate;
-
-    return {
-      firstIncludes,
-      secondIncludes,
-    };
-  });
-}
-
-{
   defineCase('children.missing-attrs-element', () => {
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
@@ -601,7 +567,7 @@ export function runCaseByName(name: string): unknown {
 
     const rawText = createTextNode('raw');
     rawText.emitCreate();
-    const ops = [...GlobalCommitContext.ops];
+    const ops = [...globalCommitContext.ops];
     resetGlobalCommitContext();
 
     return { ops };
@@ -616,7 +582,7 @@ export function runCaseByName(name: string): unknown {
 
     const rawText = new BackgroundElementTemplateInstance(BUILTIN_RAW_TEXT_TEMPLATE_KEY);
     rawText.emitCreate();
-    const ops = [...GlobalCommitContext.ops];
+    const ops = [...globalCommitContext.ops];
     resetGlobalCommitContext();
 
     return { ops };

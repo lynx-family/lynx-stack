@@ -20,7 +20,7 @@ import type {
 import { __page } from '../../../../src/element-template/runtime/page/page.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';
 import { applyElementTemplateUpdateCommands } from '../../../../src/element-template/runtime/patch.js';
-import { ElementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
+import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
 import { registerBuiltinRawTextTemplate, registerTemplates } from '../../test-utils/debug/registry.js';
 import { lastMock } from '../../test-utils/mock/mockNativePapi.js';
@@ -46,7 +46,7 @@ function createRawTextOps(id: number, text: string) {
   return [
     ElementTemplateUpdateOps.createTemplate,
     id,
-    '__et_builtin_raw_text__',
+    '_et_builtin_raw_text',
     null,
     [text],
     [],
@@ -254,7 +254,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.createTemplate,
       1.5,
-      '__et_builtin_raw_text__',
+      '_et_builtin_raw_text',
       null,
       ['x'],
       [],
@@ -268,12 +268,12 @@ describe('ElementTemplate patch stream (apply)', () => {
   it('reports duplicate handleId on create', () => {
     envManager.switchToMainThread();
     const existingRef = { __isNativeRef: true, id: 'existing' } as unknown as ElementRef;
-    ElementTemplateRegistry.set(7, existingRef);
+    elementTemplateRegistry.set(7, existingRef);
 
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.createTemplate,
       7,
-      '__et_builtin_raw_text__',
+      '_et_builtin_raw_text',
       null,
       ['x'],
       [],
@@ -290,7 +290,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.createTemplate,
       7,
-      '__et_builtin_raw_text__',
+      '_et_builtin_raw_text',
       null,
       'bad-attrs' as unknown as ElementTemplateUpdateCommandStream[number],
       [],
@@ -309,7 +309,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.createTemplate,
       8,
-      '__et_builtin_raw_text__',
+      '_et_builtin_raw_text',
       null,
       [],
       'bad-slots' as unknown as ElementTemplateUpdateCommandStream[number],
@@ -353,26 +353,48 @@ describe('ElementTemplate patch stream (apply)', () => {
   it('reports missing child handle on removeNode', () => {
     envManager.switchToMainThread();
     const targetRef = { __isNativeRef: true, id: 'target' } as unknown as ElementRef;
-    ElementTemplateRegistry.set(1, targetRef);
+    const descendantRef = { __isNativeRef: true, id: 'descendant' } as unknown as ElementRef;
+    elementTemplateRegistry.set(1, targetRef);
+    elementTemplateRegistry.set(12, descendantRef);
 
-    applyElementTemplateUpdateCommands([ElementTemplateUpdateOps.removeNode, 1, 0, 999]);
+    applyElementTemplateUpdateCommands([ElementTemplateUpdateOps.removeNode, 1, 0, 999, [12]]);
 
     expect(mockRemoveNodeFromElementTemplate.mock.calls).toHaveLength(0);
+    expect(elementTemplateRegistry.has(12)).toBe(true);
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
     expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('child handle 999 not found');
     resetReportedErrors();
   });
 
-  it('resolves insert/remove references from registry', () => {
+  it('reports missing target handle on removeNode without deleting subtree registry entries', () => {
     envManager.switchToMainThread();
-    ElementTemplateRegistry.clear();
+    const childRef = { __isNativeRef: true, id: 'child' } as unknown as ElementRef;
+    const descendantRef = { __isNativeRef: true, id: 'descendant' } as unknown as ElementRef;
+    elementTemplateRegistry.set(11, childRef);
+    elementTemplateRegistry.set(12, descendantRef);
+
+    applyElementTemplateUpdateCommands([ElementTemplateUpdateOps.removeNode, 999, 0, 11, [11, 12]]);
+
+    expect(mockRemoveNodeFromElementTemplate.mock.calls).toHaveLength(0);
+    expect(elementTemplateRegistry.has(11)).toBe(true);
+    expect(elementTemplateRegistry.has(12)).toBe(true);
+    const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
+    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('target handle 999 not found');
+    resetReportedErrors();
+  });
+
+  it('removes registry entries for the detached subtree after native remove succeeds', () => {
+    envManager.switchToMainThread();
+    elementTemplateRegistry.clear();
 
     const targetRef = { __isNativeRef: true, id: 'target' } as unknown as ElementRef;
     const beforeRef = { __isNativeRef: true, id: 'before' } as unknown as ElementRef;
     const childRef = { __isNativeRef: true, id: 'child' } as unknown as ElementRef;
-    ElementTemplateRegistry.set(1, targetRef);
-    ElementTemplateRegistry.set(10, beforeRef);
-    ElementTemplateRegistry.set(11, childRef);
+    const descendantRef = { __isNativeRef: true, id: 'descendant' } as unknown as ElementRef;
+    elementTemplateRegistry.set(1, targetRef);
+    elementTemplateRegistry.set(10, beforeRef);
+    elementTemplateRegistry.set(11, childRef);
+    elementTemplateRegistry.set(12, descendantRef);
 
     const stream: ElementTemplateUpdateCommandStream = [
       ElementTemplateUpdateOps.insertNode,
@@ -384,6 +406,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       1,
       0,
       11,
+      [11, 12],
     ];
 
     applyElementTemplateUpdateCommands(stream);
@@ -393,6 +416,10 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(mockInsertNodeToElementTemplate.mock.calls[0]?.[3]).toBe(beforeRef);
     expect(mockRemoveNodeFromElementTemplate.mock.calls[0]?.[0]).toBe(targetRef);
     expect(mockRemoveNodeFromElementTemplate.mock.calls[0]?.[2]).toBe(childRef);
+    expect(elementTemplateRegistry.has(1)).toBe(true);
+    expect(elementTemplateRegistry.has(10)).toBe(true);
+    expect(elementTemplateRegistry.has(11)).toBe(false);
+    expect(elementTemplateRegistry.has(12)).toBe(false);
   });
 
   it('creates builtin raw-text template from attributeSlots', () => {
@@ -449,7 +476,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.createTemplate,
       8,
-      '__et_builtin_raw_text__',
+      '_et_builtin_raw_text',
       null,
       [undefined, 'x'] as unknown as ElementTemplateUpdateCommandStream[number],
       [],
@@ -472,7 +499,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       applyElementTemplateUpdateCommands([
         ElementTemplateUpdateOps.createTemplate,
         9,
-        '__et_builtin_raw_text__',
+        '_et_builtin_raw_text',
         null,
         ['x'],
         [[404]],
@@ -508,7 +535,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     ]);
 
     const childRef = { __isNativeRef: true, id: 'child' } as unknown as ElementRef;
-    ElementTemplateRegistry.set(11, childRef);
+    elementTemplateRegistry.set(11, childRef);
     const createTemplateMock = globalThis.__CreateElementTemplate as unknown as {
       mockClear: () => void;
       mock: { calls: unknown[][] };

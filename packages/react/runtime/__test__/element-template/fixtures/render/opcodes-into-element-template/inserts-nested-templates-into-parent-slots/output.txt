@@ -23,7 +23,7 @@ Object {
                     },
                     "children": Array [],
                     "tag": "raw-text",
-                    "templateId": "__et_builtin_raw_text__",
+                    "templateId": "_et_builtin_raw_text",
                   },
                 ],
                 "tag": "slot",

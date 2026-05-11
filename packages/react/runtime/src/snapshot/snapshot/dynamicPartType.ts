@@ -23,3 +23,18 @@ export type DynamicPartType = (typeof DynamicPartType)[keyof typeof DynamicPartT
  * Default dynamic part for children
  */
 export const __DynamicPartChildren_0: [DynamicPartType, number][] = [[DynamicPartType.Children, 0]];
+
+/**
+ * Default dynamic part for list children
+ */
+export const __DynamicPartListChildren_0: [DynamicPartType, number][] = [[DynamicPartType.ListChildren, 0]];
+
+/**
+ * Dynamic part for slot v2
+ */
+export const __DynamicPartSlotV2_0: [DynamicPartType, number][] = [[DynamicPartType.SlotV2, 0]];
+
+/**
+ * Dynamic part for list slot v2
+ */
+export const __DynamicPartListSlotV2_0: [DynamicPartType, number][] = [[DynamicPartType.ListSlotV2, 0]];

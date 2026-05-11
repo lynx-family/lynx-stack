@@ -1,0 +1,28 @@
+{
+  "name": "@lynx-js/example-react-lazy-bundle-standalone",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm run --parallel \"/^build:(producer|consumer)$/\"",
+    "build:consumer": "rspeedy build --config lynx.config.consumer.js",
+    "build:producer": "rspeedy build --config lynx.config.producer.js",
+    "dev": "node scripts/serve.mjs dev",
+    "dev:consumer": "rspeedy dev --config lynx.config.consumer.js",
+    "dev:producer": "rspeedy dev --config lynx.config.producer.js",
+    "preview": "node scripts/serve.mjs preview",
+    "preview:consumer": "rspeedy preview --config lynx.config.consumer.js",
+    "preview:producer": "rspeedy preview --config lynx.config.producer.js"
+  },
+  "dependencies": {
+    "@lynx-js/react": "workspace:*"
+  },
+  "devDependencies": {
+    "@lynx-js/preact-devtools": "^5.0.1",
+    "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/types": "3.7.0",
+    "@types/react": "^18.3.28"
+  }
+}

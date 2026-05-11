@@ -7,12 +7,19 @@ import {
   installElementTemplateCommitHook,
   markElementTemplateHydrated,
   resetElementTemplateCommitState,
+  scheduleElementTemplateRemovedSubtreeCleanup,
 } from '../../../../src/element-template/background/commit-hook.js';
+import { destroyElementTemplateBackgroundRuntime } from '../../../../src/element-template/background/destroy.js';
 import {
   installElementTemplateHydrationListener,
   resetElementTemplateHydrationListener,
 } from '../../../../src/element-template/background/hydration-listener.js';
-import { GlobalCommitContext } from '../../../../src/element-template/background/commit-context.js';
+import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
+import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
+import {
+  globalCommitContext,
+  markRemovedSubtreeForCurrentCommit,
+} from '../../../../src/element-template/background/commit-context.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import { PipelineOrigins } from '../../../../src/element-template/lynx/performance.js';
@@ -22,7 +29,7 @@ function createRawTextOps(id: number, text: string) {
   return [
     ElementTemplateUpdateOps.createTemplate,
     id,
-    '__et_builtin_raw_text__',
+    '_et_builtin_raw_text',
     null,
     [text],
     [],
@@ -39,6 +46,8 @@ describe('ElementTemplate commit hook', () => {
 
   beforeEach(() => {
     resetElementTemplateCommitState();
+    backgroundElementTemplateInstanceManager.clear();
+    backgroundElementTemplateInstanceManager.nextId = 0;
     updateEvents = [];
     envManager.resetEnv('background');
     installElementTemplateCommitHook();
@@ -59,8 +68,8 @@ describe('ElementTemplate commit hook', () => {
 
   it('dispatches update after commit when hydrated', () => {
     markElementTemplateHydrated();
-    GlobalCommitContext.ops = createRawTextOps(1, 'hello');
-    GlobalCommitContext.flushOptions = { nativeUpdateDataOrder: 7 };
+    globalCommitContext.ops = createRawTextOps(1, 'hello');
+    globalCommitContext.flushOptions = { nativeUpdateDataOrder: 7 };
 
     options.__c?.({} as unknown as object, []);
 
@@ -71,11 +80,11 @@ describe('ElementTemplate commit hook', () => {
       flushOptions: { nativeUpdateDataOrder: 7 },
     });
     envManager.switchToBackground();
-    expect(GlobalCommitContext.ops).toEqual([]);
+    expect(globalCommitContext.ops).toEqual([]);
   });
 
   it('skips dispatch before hydration', () => {
-    GlobalCommitContext.ops = createRawTextOps(1, 'hello');
+    globalCommitContext.ops = createRawTextOps(1, 'hello');
 
     options.__c?.({} as unknown as object, []);
 
@@ -86,8 +95,8 @@ describe('ElementTemplate commit hook', () => {
   it('does not leak pre-hydration patches into later commits', () => {
     installElementTemplateHydrationListener();
 
-    GlobalCommitContext.ops = createRawTextOps(1, 'before');
-    GlobalCommitContext.flushOptions = { nativeUpdateDataOrder: 1 };
+    globalCommitContext.ops = createRawTextOps(1, 'before');
+    globalCommitContext.flushOptions = { nativeUpdateDataOrder: 1 };
 
     envManager.switchToMainThread();
     lynx.getJSContext().dispatchEvent({
@@ -96,8 +105,8 @@ describe('ElementTemplate commit hook', () => {
     });
     envManager.switchToBackground();
 
-    GlobalCommitContext.ops.push(...createRawTextOps(1, 'after'));
-    GlobalCommitContext.flushOptions = { nativeUpdateDataOrder: 2 };
+    globalCommitContext.ops.push(...createRawTextOps(1, 'after'));
+    globalCommitContext.flushOptions = { nativeUpdateDataOrder: 2 };
 
     options.__c?.({} as unknown as object, []);
 
@@ -124,9 +133,9 @@ describe('ElementTemplate commit hook', () => {
     alog.mockClear();
 
     markElementTemplateHydrated();
-    GlobalCommitContext.ops = createRawTextOps(1, 'hello');
-    GlobalCommitContext.flushOptions = { nativeUpdateDataOrder: 7 };
-    GlobalCommitContext.flowIds = [101, 202];
+    globalCommitContext.ops = createRawTextOps(1, 'hello');
+    globalCommitContext.flushOptions = { nativeUpdateDataOrder: 7 };
+    globalCommitContext.flowIds = [101, 202];
 
     options.__c?.({} as unknown as object, []);
 
@@ -144,13 +153,85 @@ describe('ElementTemplate commit hook', () => {
     const formatSpy = vi.spyOn(elementTemplateAlog, 'formatElementTemplateUpdateCommands');
 
     markElementTemplateHydrated();
-    GlobalCommitContext.ops = createRawTextOps(1, 'hello');
-    GlobalCommitContext.flushOptions = { nativeUpdateDataOrder: 7 };
+    globalCommitContext.ops = createRawTextOps(1, 'hello');
+    globalCommitContext.flushOptions = { nativeUpdateDataOrder: 7 };
 
     options.__c?.({} as unknown as object, []);
 
     expect(formatSpy).not.toHaveBeenCalled();
     expect(alog.mock.calls).toHaveLength(0);
+  });
+
+  it('schedules delayed cleanup from the current commit non-payload state', () => {
+    vi.useFakeTimers();
+    try {
+      markElementTemplateHydrated();
+      const root = new BackgroundElementTemplateInstance('root');
+      markRemovedSubtreeForCurrentCommit(root);
+      globalCommitContext.ops = createRawTextOps(1, 'flush');
+
+      options.__c?.({} as unknown as object, []);
+      expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+      vi.advanceTimersByTime(9999);
+      expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBe(root);
+
+      vi.advanceTimersByTime(1);
+
+      expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps pending removed subtrees when only the hydration listener is reset', () => {
+    const root = new BackgroundElementTemplateInstance('root');
+    markRemovedSubtreeForCurrentCommit(root);
+
+    resetElementTemplateHydrationListener();
+
+    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([root]);
+  });
+
+  it('cancels scheduled removed subtree cleanup on background destroy', () => {
+    vi.useFakeTimers();
+    try {
+      const root = new BackgroundElementTemplateInstance('root');
+      const tearDown = vi.spyOn(root, 'tearDown');
+      scheduleElementTemplateRemovedSubtreeCleanup([root]);
+
+      destroyElementTemplateBackgroundRuntime();
+      vi.advanceTimersByTime(10000);
+
+      expect(tearDown).not.toHaveBeenCalled();
+      expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('resets commit state when update dispatch throws', () => {
+    vi.useFakeTimers();
+    const dispatchError = new Error('update dispatch failed');
+    const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
+      throw dispatchError;
+    });
+
+    try {
+      markElementTemplateHydrated();
+      const root = new BackgroundElementTemplateInstance('root');
+      markRemovedSubtreeForCurrentCommit(root);
+      globalCommitContext.ops = createRawTextOps(1, 'flush');
+
+      expect(() => options.__c?.({} as unknown as object, [])).toThrow(dispatchError);
+      expect(globalCommitContext.ops).toEqual([]);
+      expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+
+      vi.advanceTimersByTime(10000);
+      expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
+    } finally {
+      dispatchSpy.mockRestore();
+      vi.useRealTimers();
+    }
   });
 
   it('is idempotent', () => {

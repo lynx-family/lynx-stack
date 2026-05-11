@@ -2,7 +2,7 @@ import { ElementTemplateUpdateOps } from '../../../../../src/element-template/pr
 import { root } from '../../../../../src/element-template/index.js';
 import { __page } from '../../../../../src/element-template/runtime/page/page.js';
 import { applyElementTemplateUpdateCommands } from '../../../../../src/element-template/runtime/patch.js';
-import { ElementTemplateRegistry } from '../../../../../src/element-template/runtime/template/registry.js';
+import { elementTemplateRegistry } from '../../../../../src/element-template/runtime/template/registry.js';
 import { registerTemplates } from '../../../test-utils/debug/registry.js';
 import { serializeToJSX } from '../../../test-utils/debug/serializer.js';
 import { setupPatchContext, teardownPatchContext } from '../_shared.js';
@@ -13,7 +13,7 @@ function createRawTextOps(id: number, text: string) {
   return [
     ElementTemplateUpdateOps.createTemplate,
     id,
-    '__et_builtin_raw_text__',
+    '_et_builtin_raw_text',
     null,
     [text],
     [],
@@ -53,7 +53,7 @@ export function run() {
     ]);
     const page = __page as unknown as { children?: unknown[] };
     page.children ??= [];
-    page.children.push(ElementTemplateRegistry.get(20)!);
+    page.children.push(elementTemplateRegistry.get(20)!);
 
     applyElementTemplateUpdateCommands([
       ...createRawTextOps(10, 'A'),

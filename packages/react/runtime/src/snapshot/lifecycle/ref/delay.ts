@@ -99,11 +99,14 @@ class RefProxy {
     return this;
   }
 
+  get selector(): string {
+    const realRefId = hydrationMap.get(this.refAttr[0]) ?? this.refAttr[0];
+    return `[react-ref-${realRefId}-${this.refAttr[1]}]`;
+  }
+
   exec(): void {
     runOrDelay(() => {
-      const realRefId = hydrationMap.get(this.refAttr[0]) ?? this.refAttr[0];
-      const refSelector = `[react-ref-${realRefId}-${this.refAttr[1]}]`;
-      this.task!(lynx.createSelectorQuery().select(refSelector)).exec();
+      this.task!(lynx.createSelectorQuery().select(this.selector)).exec();
     });
   }
 }

@@ -10,7 +10,7 @@ describe('element-template update runner', () => {
     const stream: ElementTemplateUpdateCommandStream = [
       ElementTemplateUpdateOps.createTemplate,
       1,
-      '__et_builtin_raw_text__',
+      '_et_builtin_raw_text',
       null,
       ['hello'],
       [],
@@ -18,13 +18,18 @@ describe('element-template update runner', () => {
       2,
       3,
       'next',
+      ElementTemplateUpdateOps.removeNode,
+      4,
+      5,
+      6,
+      [6, 7],
     ];
 
     expect(formatUpdateStream(stream)).toEqual([
       {
         type: 'create',
         id: 1,
-        template: '__et_builtin_raw_text__',
+        template: '_et_builtin_raw_text',
         attributeSlots: ['hello'],
         elementSlots: [],
       },
@@ -33,6 +38,13 @@ describe('element-template update runner', () => {
         id: 2,
         attrSlotIndex: 3,
         value: 'next',
+      },
+      {
+        type: 'removeNode',
+        id: 4,
+        elementSlotIndex: 5,
+        child: 6,
+        removedSubtreeHandleIds: [6, 7],
       },
     ]);
   });

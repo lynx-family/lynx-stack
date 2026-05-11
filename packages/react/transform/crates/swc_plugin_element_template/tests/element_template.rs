@@ -3,7 +3,7 @@ use swc_plugin_element_template::{ElementTemplateAsset, JSXTransformer, JSXTrans
 use swc_plugins_shared::target::TransformTarget;
 use swc_plugins_shared::transform_mode::TransformMode;
 
-const BUILTIN_RAW_TEXT_TEMPLATE_ID: &str = "__et_builtin_raw_text__";
+const BUILTIN_RAW_TEXT_TEMPLATE_ID: &str = "_et_builtin_raw_text";
 
 fn assert_has_single_builtin_raw_text_template(templates: &[ElementTemplateAsset]) {
   let builtin_count = templates
@@ -636,11 +636,10 @@ fn should_not_emit_element_template_map_in_element_template_mode() {
   assert!(!code.contains("const __snapshot_"));
 
   for template in templates {
-    if template.template_id == BUILTIN_RAW_TEXT_TEMPLATE_ID {
-      continue;
-    }
     assert!(template.template_id.starts_with("_et_"));
-    assert!(code.contains(&format!("\"{}\"", template.template_id)));
+    if template.template_id != BUILTIN_RAW_TEXT_TEMPLATE_ID {
+      assert!(code.contains(&format!("\"{}\"", template.template_id)));
+    }
   }
 }
 
@@ -677,10 +676,7 @@ fn should_collect_element_templates_for_dynamic_component_in_element_template_mo
   assert!(code.contains("globDynamicComponentEntry"));
 
   for template in templates {
-    assert!(
-      template.template_id == BUILTIN_RAW_TEXT_TEMPLATE_ID
-        || template.template_id.starts_with("_et_")
-    );
+    assert!(template.template_id.starts_with("_et_"));
     assert!(!template.template_id.contains(':'));
   }
 }

@@ -14,7 +14,7 @@ function createRawTextOps(id: number, text: string) {
   return [
     ElementTemplateUpdateOps.createTemplate,
     id,
-    '__et_builtin_raw_text__',
+    '_et_builtin_raw_text',
     null,
     [text],
     [],

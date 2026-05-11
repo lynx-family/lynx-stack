@@ -1,20 +1,84 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { useMemo } from 'react';
+import { json } from '@codemirror/lang-json';
+import CodeMirror from '@uiw/react-codemirror';
+import { useEffect, useMemo, useState } from 'react';
 
 import { CATEGORIES, COMPONENT_CATALOG } from '../componentCatalog.js';
 import type { ComponentDoc } from '../componentCatalog.js';
-import type { ProtocolVersion } from '../utils/protocol.js';
+import { copyToClipboard } from '../utils/clipboard.js';
+import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
+import type { Protocol } from '../utils/protocol.js';
+import { buildRenderUrl } from '../utils/renderUrl.js';
+
+const jsonExtensions = [json()];
+
+function formatJson(value: unknown): string {
+  return JSON.stringify(value ?? {}, null, 2);
+}
+
+function createComponentPreviewMessages(
+  comp: ComponentDoc,
+  usage: unknown,
+): unknown[] {
+  return [
+    {
+      createSurface: {
+        surfaceId: 'default',
+        catalogId: `component-${comp.name.toLowerCase()}`,
+      },
+      updateComponents: {
+        surfaceId: 'default',
+        components: [usage],
+      },
+    },
+  ];
+}
 
 function ComponentDetail(
-  props: { comp: ComponentDoc; protocol: ProtocolVersion },
+  props: { comp: ComponentDoc; protocol: Protocol },
 ) {
   const { comp, protocol } = props;
+  const [usageJson, setUsageJson] = useState(() =>
+    formatJson(comp.usage[protocol.name])
+  );
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setUsageJson(formatJson(comp.usage[protocol.name]));
+  }, [comp, protocol]);
+
+  const parsedUsage = useMemo(() => {
+    try {
+      return { error: '', value: JSON.parse(usageJson) as unknown };
+    } catch (e) {
+      return { error: `Invalid JSON: ${String(e)}`, value: null };
+    }
+  }, [usageJson]);
+
+  const previewUrl = useMemo(() => {
+    if (parsedUsage.error) return '';
+    const baseUrl = window.location.href.replace(/#.*$/u, '');
+    return buildRenderUrl(
+      {
+        protocol,
+        demoUrl: DEFAULT_A2UI_DEMO_URL,
+        messages: createComponentPreviewMessages(comp, parsedUsage.value),
+      },
+      baseUrl,
+    );
+  }, [comp, parsedUsage, protocol]);
+
   return (
     <div className='compContent'>
       <div className='compBreadcrumb'>
-        <a className='compBreadcrumbLink' href='#/components'>Components</a>
+        <a
+          className='compBreadcrumbLink'
+          href={`#/${protocol.name}/components`}
+        >
+          Components
+        </a>
         <span className='compBreadcrumbSep'>/</span>
         <span className='compBreadcrumbCurrent'>{comp.name}</span>
       </div>
@@ -23,12 +87,6 @@ function ComponentDetail(
       <p className='compDesc'>{comp.description}</p>
 
       <div className='compCategoryBadge'>{comp.category}</div>
-
-      <h3 className='compSubheading'>Usage</h3>
-      <pre className='compCodeBlock'>
-        {JSON.stringify(comp.usage[protocol], null, 2)}
-      </pre>
-
       <h3 className='compSubheading'>Props</h3>
       <table className='compTable'>
         <thead>
@@ -50,11 +108,65 @@ function ComponentDetail(
           ))}
         </tbody>
       </table>
+
+      <div className='compSectionHeader'>
+        <h3 className='compSubheading'>Usage</h3>
+        <button
+          className='compCopyBtn'
+          type='button'
+          title={copied ? 'Copied' : 'Copy JSON'}
+          onClick={() => {
+            void copyToClipboard(usageJson).then((ok) => {
+              if (!ok) return;
+              setCopied(true);
+              window.setTimeout(() => setCopied(false), 1200);
+            });
+          }}
+        >
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+      <CodeMirror
+        className='compUsageEditor'
+        value={usageJson}
+        extensions={jsonExtensions}
+        onChange={setUsageJson}
+        theme='dark'
+        basicSetup={{
+          lineNumbers: true,
+          foldGutter: true,
+          bracketMatching: true,
+          closeBrackets: true,
+          autocompletion: true,
+        }}
+      />
+      {parsedUsage.error
+        ? <div className='compUsageError'>{parsedUsage.error}</div>
+        : null}
+
+      <h3 className='compSubheading'>Preview</h3>
+      <div className='compPreview'>
+        {previewUrl
+          ? (
+            <iframe
+              className='compPreviewIframe'
+              title={`${comp.name} preview`}
+              src={previewUrl}
+            />
+          )
+          : (
+            <div className='compPreviewInvalid'>
+              Fix the Usage JSON to update the preview.
+            </div>
+          )}
+      </div>
     </div>
   );
 }
 
-function ComponentGrid() {
+function ComponentGrid(props: { protocol: Protocol }) {
+  const { protocol } = props;
+
   return (
     <div className='compContent'>
       <h2 className='compName'>Components</h2>
@@ -73,7 +185,7 @@ function ComponentGrid() {
                 <a
                   key={comp.name}
                   className='compGridCard'
-                  href={`#/components/${comp.name}`}
+                  href={`#/${protocol.name}/components/${comp.name}`}
                 >
                   <div className='compGridCardName'>{comp.name}</div>
                   <div className='compGridCardDesc'>{comp.description}</div>
@@ -88,7 +200,7 @@ function ComponentGrid() {
 }
 
 export function ComponentsPage(
-  props: { protocol: ProtocolVersion; componentName?: string },
+  props: { protocol: Protocol; componentName?: string },
 ) {
   const { protocol, componentName } = props;
 
@@ -113,7 +225,7 @@ export function ComponentsPage(
       <div className='compSidebar'>
         <a
           className={'compSidebarAll' + (componentName ? '' : ' active')}
-          href='#/components'
+          href={`#/${protocol.name}/components`}
         >
           All Components
         </a>
@@ -129,7 +241,7 @@ export function ComponentsPage(
                   key={comp.name}
                   className={'compSidebarItem'
                     + (componentName === comp.name ? ' active' : '')}
-                  href={`#/components/${comp.name}`}
+                  href={`#/${protocol.name}/components/${comp.name}`}
                 >
                   {comp.name}
                 </a>
@@ -141,7 +253,7 @@ export function ComponentsPage(
 
       {selectedComp
         ? <ComponentDetail comp={selectedComp} protocol={protocol} />
-        : <ComponentGrid />}
+        : <ComponentGrid protocol={protocol} />}
     </div>
   );
 }

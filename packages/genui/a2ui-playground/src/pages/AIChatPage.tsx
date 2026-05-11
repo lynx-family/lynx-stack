@@ -3,7 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { ProtocolVersion } from '../utils/protocol.js';
+import { useResizablePanels } from '../hooks/useResizablePanels.js';
+import type { Protocol } from '../utils/protocol.js';
 
 interface ChatMessage {
   role: 'user' | 'ai';
@@ -16,24 +17,52 @@ const WELCOME_MESSAGE: ChatMessage = {
     'I\'m A2UI Assistant. Describe the UI you want to build and I\'ll generate A2UI JSON for you.',
 };
 
-const MOCK_AI_RESPONSE: ChatMessage = {
-  role: 'ai',
-  content: (
-    <>
-      AI generation is not yet connected. In the meantime, check out the{' '}
-      <a href='#/demos' style={{ textDecoration: 'underline' }}>Demos</a>{' '}
-      tab to see pre-recorded A2UI scenarios with simulated streaming — you can
-      even adjust the playback speed.
-    </>
-  ),
-};
+function createMockAiResponse(protocol: Protocol): ChatMessage {
+  return {
+    role: 'ai',
+    content: (
+      <>
+        AI generation is not yet connected. In the meantime, check out the{' '}
+        <a
+          href={`#/${protocol.name}/examples`}
+          style={{ textDecoration: 'underline' }}
+        >
+          Examples
+        </a>{' '}
+        tab to see pre-recorded A2UI scenarios with simulated streaming — you
+        can even adjust the playback speed.
+      </>
+    ),
+  };
+}
 
-export function AIChatPage(
-  _props: { protocol: ProtocolVersion },
-) {
+const DESKTOP_PREVIEW_MIN_WIDTH = 360;
+const DESKTOP_CHAT_MIN_WIDTH = 360;
+const COMPACT_CHAT_MIN_HEIGHT = 280;
+const COMPACT_PREVIEW_MIN_HEIGHT = 320;
+const RESIZE_BREAKPOINT = 980;
+
+export function AIChatPage(props: { protocol: Protocol }) {
+  const { protocol } = props;
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [inputValue, setInputValue] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const {
+    containerRef: pageRef,
+    handleResizeStart: handlePanelResizeStart,
+    isCompactLayout,
+    isResizing: isPanelResizing,
+    primaryPanelStyle: chatPanelStyle,
+    secondaryPanelStyle: previewPanelStyle,
+  } = useResizablePanels({
+    breakpoint: RESIZE_BREAKPOINT,
+    compactPrimaryMinSize: COMPACT_CHAT_MIN_HEIGHT,
+    compactSecondaryMinSize: COMPACT_PREVIEW_MIN_HEIGHT,
+    desktopPrimaryMinSize: DESKTOP_CHAT_MIN_WIDTH,
+    desktopSecondaryMinSize: DESKTOP_PREVIEW_MIN_WIDTH,
+    initialPrimarySize: 400,
+    initialSecondarySize: 480,
+  });
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -52,9 +81,9 @@ export function AIChatPage(
     setInputValue('');
 
     setTimeout(() => {
-      setMessages((prev) => [...prev, MOCK_AI_RESPONSE]);
+      setMessages((prev) => [...prev, createMockAiResponse(protocol)]);
     }, 600);
-  }, [inputValue]);
+  }, [inputValue, protocol]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -66,10 +95,16 @@ export function AIChatPage(
   );
 
   return (
-    <div className='chatPage'>
-      <div className='chatPanel'>
+    <div
+      ref={pageRef}
+      className={isPanelResizing ? 'chatPage resizing' : 'chatPage'}
+    >
+      <div className='chatPanel' style={chatPanelStyle}>
         <div className='chatHeader'>
-          <h2 className='chatHeaderTitle'>AI Chat</h2>
+          <div className='chatHeaderTitleRow'>
+            <h2 className='chatHeaderTitle'>Create</h2>
+            <span className='constructionBadge'>Under construction</span>
+          </div>
           <p className='chatHeaderSub'>Describe the UI you want to build</p>
         </div>
 
@@ -106,7 +141,18 @@ export function AIChatPage(
         </div>
       </div>
 
-      <div className='previewPanel'>
+      <div
+        className={isPanelResizing
+          ? 'panelResizeHandle active'
+          : 'panelResizeHandle'}
+        role='separator'
+        aria-orientation={isCompactLayout ? 'horizontal' : 'vertical'}
+        aria-label='Resize Create and preview panels'
+        title='Drag to resize'
+        onPointerDown={handlePanelResizeStart}
+      />
+
+      <div className='previewPanel' style={previewPanelStyle}>
         <div className='previewPanelHeader'>
           <span className='previewPanelTitle'>Lynx Preview</span>
         </div>

@@ -27,7 +27,6 @@ if (command.length) {
           shell: true,
           env: {
             ...process.env,
-            'EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE': 'true',
           },
         });
 

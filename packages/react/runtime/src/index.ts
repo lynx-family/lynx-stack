@@ -11,7 +11,6 @@ import {
   PureComponent,
   cloneElement,
   createContext,
-  createElement,
   createRef,
   forwardRef,
   isValidElement,
@@ -32,6 +31,8 @@ import {
   useRef,
   useState,
 } from './core/hooks/react.js';
+import { createElement } from './snapshot/lynx/element.js';
+import { createPortal } from './snapshot/lynx/portals.js';
 import { Suspense } from './snapshot/lynx/suspense.js';
 
 export { Component, createContext } from 'preact';
@@ -67,6 +68,7 @@ export default {
   Suspense,
   lazy,
   createElement,
+  createPortal,
 };
 
 export {
@@ -81,6 +83,7 @@ export {
   createElement,
   cloneElement,
   useSyncExternalStore,
+  createPortal,
 };
 
 export * from './lynx-api.js';

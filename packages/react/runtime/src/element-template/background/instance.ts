@@ -2,18 +2,18 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { GlobalCommitContext } from './commit-context.js';
+import { globalCommitContext, markRemovedSubtreeForCurrentCommit } from './commit-context.js';
 import { isElementTemplateHydrated } from './commit-hook.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
-import type { ElementTemplateUpdateCommandStream, RuntimeOptions, SerializableValue } from '../protocol/types.js';
+import type { ElementTemplateUpdateCommandStream, SerializableValue } from '../protocol/types.js';
 
 function pushOp(...items: ElementTemplateUpdateCommandStream): void {
-  GlobalCommitContext.ops.push(...items);
+  globalCommitContext.ops.push(...items);
 }
 
-export const BUILTIN_RAW_TEXT_TEMPLATE_KEY = '__et_builtin_raw_text__';
+export const BUILTIN_RAW_TEXT_TEMPLATE_KEY = '_et_builtin_raw_text';
 
 function isBuiltinRawTextTemplateKey(type: string): boolean {
   return type === BUILTIN_RAW_TEXT_TEMPLATE_KEY;
@@ -59,7 +59,6 @@ export class BackgroundElementTemplateInstance {
   // Shadow State for Hydration
   public attributeSlots: SerializableValue[] = [];
   public elementSlots: BackgroundElementTemplateInstance[][] = [];
-  public options: RuntimeOptions | undefined;
   private hasEmittedCreate = false;
 
   get parentNode(): BackgroundElementTemplateInstance | null {
@@ -76,29 +75,15 @@ export class BackgroundElementTemplateInstance {
     return nodes;
   }
 
-  // 2. Slot State: aggregate children by slotId
-  get slotChildren(): Map<number, BackgroundElementTemplateInstance[]> {
-    const map = new Map<number, BackgroundElementTemplateInstance[]>();
-    for (let slotId = 0; slotId < this.elementSlots.length; slotId += 1) {
-      const children = this.elementSlots[slotId];
-      if (children) {
-        map.set(slotId, [...children]);
-      }
-    }
-    return map;
-  }
-
   public nodeType: number;
 
   constructor(
     type: string,
     initialAttributeSlots?: SerializableValue[],
-    initialOptions?: RuntimeOptions,
   ) {
     this.type = type;
     this.nodeType = isBuiltinRawTextTemplateKey(type) ? 3 : 1;
     this.attributeSlots = initialAttributeSlots ? normalizeAttributeSlots(initialAttributeSlots) : [];
-    this.options = initialOptions;
     backgroundElementTemplateInstanceManager.register(this);
   }
 
@@ -123,9 +108,13 @@ export class BackgroundElementTemplateInstance {
   }
 
   private isPendingCreate(): boolean {
-    return isElementTemplateHydrated()
-      && this.instanceId > 0
-      && !this.hasEmittedCreate;
+    return this.instanceId > 0 && !this.hasEmittedCreate;
+  }
+
+  private canEmitPatch(): boolean {
+    // Background tree construction is local until hydrate binds it to main-thread
+    // instances. Only hydrated and already-created owners can emit update ops.
+    return isElementTemplateHydrated() && !this.isPendingCreate();
   }
 
   // DOM API for Preact
@@ -186,7 +175,7 @@ export class BackgroundElementTemplateInstance {
         return;
       }
       if (slotId !== -1 && parent) {
-        if (parent.isPendingCreate()) {
+        if (!parent.canEmitPatch()) {
           return;
         }
         const beforeId = beforeChild ? beforeChild.instanceId : 0;
@@ -242,12 +231,24 @@ export class BackgroundElementTemplateInstance {
         return;
       }
       if (slotId !== -1 && parent) {
+        if (!parent.canEmitPatch()) {
+          if (child.isPendingCreate()) {
+            // A never-created subtree has no main-thread registry entry, so it
+            // can be released from the background manager without delayed cleanup.
+            child.tearDown();
+          }
+          return;
+        }
         pushOp(
           ElementTemplateUpdateOps.removeNode,
           parent.instanceId,
           slotId,
           child.instanceId,
+          collectElementTemplateSubtreeHandleIds(child),
         );
+        // The removed JS object graph may outlive the detach until GC, so keep
+        // it pending and tear it down on the Snapshot-aligned delayed boundary.
+        markRemovedSubtreeForCurrentCommit(child);
       }
       return;
     }
@@ -275,12 +276,17 @@ export class BackgroundElementTemplateInstance {
 
     this.attributeSlots = [];
     this.elementSlots = [];
-    this.options = undefined;
 
     // Remove from manager
     if (this.instanceId) {
       backgroundElementTemplateInstanceManager.values.delete(this.instanceId);
     }
+  }
+
+  markCreateEmittedForHydration(): void {
+    // Hydration binds this object to a template that already exists on the main
+    // thread; future updates must treat it as created without emitting create.
+    this.hasEmittedCreate = true;
   }
 
   setAttribute(key: string, value: unknown): void {
@@ -297,7 +303,7 @@ export class BackgroundElementTemplateInstance {
         if (isDirectOrDeepEqual(previousValue, nextValue)) {
           continue;
         }
-        if (this.isPendingCreate()) {
+        if (!this.canEmitPatch()) {
           continue;
         }
         pushOp(
@@ -314,10 +320,6 @@ export class BackgroundElementTemplateInstance {
         this.parent.elementSlots[previousPartId] = [];
       }
       syncElementSlotChildren(this.parent, this.partId, collectChildren(this));
-    } else if (key === 'options' && isRuntimeOptions(value)) {
-      this.options = value;
-    } else if (key === '__spread' || key === 'elementSlots' || key === 'children') {
-      return;
     } else {
       return;
     }
@@ -335,7 +337,7 @@ export class BackgroundElementTemplateInstance {
       return;
     }
     this.attributeSlots = [text];
-    if (this.isPendingCreate()) {
+    if (!this.canEmitPatch()) {
       return;
     }
     pushOp(ElementTemplateUpdateOps.setAttribute, this.instanceId, 0, text);
@@ -354,6 +356,28 @@ export class BackgroundElementTemplateSlot extends BackgroundElementTemplateInst
 
   constructor() {
     super('slot');
+  }
+}
+
+export function collectElementTemplateSubtreeHandleIds(
+  root: BackgroundElementTemplateInstance,
+): number[] {
+  const handles: number[] = [];
+  collectElementTemplateSubtreeHandleIdsImpl(root, handles);
+  return handles;
+}
+
+function collectElementTemplateSubtreeHandleIdsImpl(
+  instance: BackgroundElementTemplateInstance,
+  handles: number[],
+): void {
+  if (!(instance instanceof BackgroundElementTemplateSlot) && instance.instanceId !== 0) {
+    handles.push(instance.instanceId);
+  }
+  let child = instance.firstChild;
+  while (child) {
+    collectElementTemplateSubtreeHandleIdsImpl(child, handles);
+    child = child.nextSibling;
   }
 }
 
@@ -389,8 +413,4 @@ function collectChildren(slot: BackgroundElementTemplateSlot): BackgroundElement
 
 function normalizeAttributeSlotValue(value: SerializableValue | undefined): SerializableValue | null {
   return value === undefined ? null : value;
-}
-
-function isRuntimeOptions(value: unknown): value is RuntimeOptions {
-  return value != null && typeof value === 'object' && !Array.isArray(value);
 }

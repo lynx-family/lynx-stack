@@ -1,7 +1,7 @@
 [
   [
     "__CreateElementTemplate",
-    "__et_builtin_raw_text__",
+    "_et_builtin_raw_text",
     null,
     [
       "2"
@@ -11,7 +11,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "__et_builtin_raw_text__",
+    "_et_builtin_raw_text",
     null,
     [
       "3"
@@ -33,7 +33,7 @@
             "text": "2"
           },
           "children": [],
-          "templateId": "__et_builtin_raw_text__"
+          "templateId": "_et_builtin_raw_text"
         }
       ],
       [
@@ -43,7 +43,7 @@
             "text": "3"
           },
           "children": [],
-          "templateId": "__et_builtin_raw_text__"
+          "templateId": "_et_builtin_raw_text"
         }
       ]
     ],

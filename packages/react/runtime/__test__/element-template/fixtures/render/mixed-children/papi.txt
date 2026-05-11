@@ -1,7 +1,7 @@
 [
   [
     "__CreateElementTemplate",
-    "__et_builtin_raw_text__",
+    "_et_builtin_raw_text",
     null,
     [
       "A"
@@ -11,7 +11,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "__et_builtin_raw_text__",
+    "_et_builtin_raw_text",
     null,
     [
       "B"
@@ -21,7 +21,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "__et_builtin_raw_text__",
+    "_et_builtin_raw_text",
     null,
     [
       "C"
@@ -42,7 +42,7 @@
             "text": "A"
           },
           "children": [],
-          "templateId": "__et_builtin_raw_text__"
+          "templateId": "_et_builtin_raw_text"
         }
       ],
       [
@@ -52,7 +52,7 @@
             "text": "B"
           },
           "children": [],
-          "templateId": "__et_builtin_raw_text__"
+          "templateId": "_et_builtin_raw_text"
         }
       ],
       [
@@ -62,7 +62,7 @@
             "text": "C"
           },
           "children": [],
-          "templateId": "__et_builtin_raw_text__"
+          "templateId": "_et_builtin_raw_text"
         }
       ]
     ],

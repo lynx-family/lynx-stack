@@ -6,7 +6,7 @@ import {
   markElementTemplateHydrated,
   resetElementTemplateCommitState,
 } from '../../../../src/element-template/background/commit-hook.js';
-import { GlobalCommitContext } from '../../../../src/element-template/background/commit-context.js';
+import { globalCommitContext } from '../../../../src/element-template/background/commit-context.js';
 import {
   beginPipeline,
   markTimingLegacy,
@@ -25,7 +25,7 @@ function createRawTextOps(id: number, text: string) {
   return [
     ElementTemplateUpdateOps.createTemplate,
     id,
-    '__et_builtin_raw_text__',
+    '_et_builtin_raw_text',
     null,
     [text],
     [],
@@ -77,8 +77,8 @@ describe('ElementTemplate update timing (background commit)', () => {
     beginPipeline(true, PipelineOrigins.updateTriggeredByBts);
     markTimingLegacy('updateSetStateTrigger', 'flag');
 
-    GlobalCommitContext.ops = createRawTextOps(1, 'payload');
-    GlobalCommitContext.flushOptions = { nativeUpdateDataOrder: 9 };
+    globalCommitContext.ops = createRawTextOps(1, 'payload');
+    globalCommitContext.flushOptions = { nativeUpdateDataOrder: 9 };
 
     options.__c?.({} as unknown as object, []);
 

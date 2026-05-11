@@ -6,7 +6,7 @@ import { __OpAttr, __OpBegin, __OpEnd, __OpSlot, __OpText } from './render-to-op
 import type { SerializableValue } from '../../protocol/types.js';
 import { createElementTemplateWithHandle } from '../template/handle.js';
 
-const BUILTIN_RAW_TEXT_TEMPLATE_KEY = '__et_builtin_raw_text__';
+const BUILTIN_RAW_TEXT_TEMPLATE_KEY = '_et_builtin_raw_text';
 
 export interface MainThreadCreateResult {
   rootRefs: ElementRef[];

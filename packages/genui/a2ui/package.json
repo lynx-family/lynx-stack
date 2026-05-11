@@ -93,7 +93,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog"
+    "build": "a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog",
+    "test": "rstest"
   },
   "dependencies": {
     "@a2ui/web_core": "0.9.1",
@@ -105,6 +106,7 @@
     "@lynx-js/lynx-ui-input": "^3.130.0",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "3.7.0",
+    "@rstest/core": "catalog:rstest",
     "@types/react": "^18.3.28"
   },
   "peerDependencies": {

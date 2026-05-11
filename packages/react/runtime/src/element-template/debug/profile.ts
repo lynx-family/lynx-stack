@@ -9,7 +9,7 @@ import type { TraceOption } from '@lynx-js/types';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { COMMIT, COMPONENT, DIFF, DIFF2, DIFFED, DIRTY, NEXT_STATE, RENDER } from '../../shared/render-constants.js';
 import { getDisplayName, hook } from '../../utils.js';
-import { GlobalCommitContext } from '../background/commit-context.js';
+import { globalCommitContext } from '../background/commit-context.js';
 
 let installed = false;
 
@@ -98,8 +98,8 @@ export function initProfileHook(): void {
             const flowId = c[sFlowID];
             delete c[sFlowID];
             if (flowId) {
-              const flowIds = GlobalCommitContext.flowIds
-                ?? (GlobalCommitContext.flowIds = []);
+              const flowIds = globalCommitContext.flowIds
+                ?? (globalCommitContext.flowIds = []);
               flowIds.push(flowId);
               profileOptions.flowId = flowId;
             }
@@ -124,7 +124,7 @@ export function initProfileHook(): void {
 
     if (__BACKGROUND__) {
       hook(options, COMMIT, (old, vnode, commitQueue) => {
-        const globalFlowIds = GlobalCommitContext.flowIds;
+        const globalFlowIds = globalCommitContext.flowIds;
         const commitProfileOptions = globalFlowIds && globalFlowIds.length > 0
           ? { flowId: globalFlowIds[0], flowIds: [...globalFlowIds] }
           : {};
@@ -133,7 +133,7 @@ export function initProfileHook(): void {
         /* v8 ignore next */
         old?.(vnode, commitQueue);
         profileEnd();
-        delete GlobalCommitContext.flowIds;
+        delete globalCommitContext.flowIds;
       });
     }
   }
@@ -161,14 +161,14 @@ export function initProfileHook(): void {
 
     hook(options, DIFF, (old, vnode: PatchedVNode) => {
       if (typeof vnode.type === 'function') {
-        vnode[sPatchLength] = GlobalCommitContext.ops.length;
+        vnode[sPatchLength] = globalCommitContext.ops.length;
       }
       old?.(vnode);
     });
 
     hook(options, DIFFED, (old, vnode: PatchedVNode) => {
       if (typeof vnode.type === 'function') {
-        if (vnode[sPatchLength] === GlobalCommitContext.ops.length) {
+        if (vnode[sPatchLength] === globalCommitContext.ops.length) {
           // "NoPatch" is a conventional name in Lynx
           profileMark('ReactLynx::diffFinishNoPatch', {
             args: {

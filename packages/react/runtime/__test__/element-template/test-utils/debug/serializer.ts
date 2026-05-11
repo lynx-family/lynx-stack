@@ -48,7 +48,7 @@ export function serializeToJSX(element: any, indent: string = ''): string {
 }
 
 export function serializeBackgroundTree(node: any, indent = ''): string {
-  const type = node.type === '__et_builtin_raw_text__' ? 'raw-text' : node.type;
+  const type = node.type === '_et_builtin_raw_text' ? 'raw-text' : node.type;
   // Normalize template keys for stability if needed, but here they seem deterministic
   // if (type.startsWith('_et_')) type = '_et_ANY';
 

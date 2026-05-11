@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { options } from 'preact';
 
-import { GlobalCommitContext } from '../../../src/element-template/background/commit-context.js';
+import { globalCommitContext } from '../../../src/element-template/background/commit-context.js';
 import {
   beginPipeline,
   initTimingAPI,
@@ -24,7 +24,7 @@ function createRawTextOps(id: number, text: string) {
   return [
     ElementTemplateUpdateOps.createTemplate,
     id,
-    '__et_builtin_raw_text__',
+    '_et_builtin_raw_text',
     null,
     [text],
     [],
@@ -49,7 +49,7 @@ beforeEach(() => {
 
 afterEach(() => {
   setPipeline(undefined);
-  GlobalCommitContext.ops = [];
+  globalCommitContext.ops = [];
   globalThis.lynx = originalLynx as typeof lynx;
 });
 
@@ -94,7 +94,7 @@ describe('ElementTemplate performance timing (current api)', () => {
   it('initTimingAPI hooks diff timing when updates are detected', () => {
     initTimingAPI();
 
-    GlobalCommitContext.ops = createRawTextOps(1, 'payload');
+    globalCommitContext.ops = createRawTextOps(1, 'payload');
     options[RENDER_COMPONENT]?.({} as unknown as object, null);
 
     expect(globalThis.lynx.performance._markTiming).toHaveBeenCalledWith(
@@ -107,7 +107,7 @@ describe('ElementTemplate performance timing (current api)', () => {
     initTimingAPI();
 
     markTimingLegacy('updateSetStateTrigger', 'flag');
-    GlobalCommitContext.ops = createRawTextOps(1, 'payload');
+    globalCommitContext.ops = createRawTextOps(1, 'payload');
 
     options.__?.({} as unknown as object, null);
 

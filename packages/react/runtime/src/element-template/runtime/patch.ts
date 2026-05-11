@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { ElementTemplateRegistry } from './template/registry.js';
+import { elementTemplateRegistry } from './template/registry.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import type { ElementTemplateUpdateOp } from '../protocol/opcodes.js';
 import type { ElementTemplateUpdateCommandStream, SerializableValue } from '../protocol/types.js';
@@ -50,7 +50,7 @@ export function applyElementTemplateUpdateCommands(
         );
 
         if (nativeRef) {
-          ElementTemplateRegistry.set(handleId, nativeRef);
+          elementTemplateRegistry.set(handleId, nativeRef);
         }
         break;
       }
@@ -89,12 +89,18 @@ export function applyElementTemplateUpdateCommands(
         const targetId = stream[i++] as number;
         const elementSlotIndex = stream[i++] as number;
         const childId = stream[i++] as number;
+        const removedSubtreeHandleIds = stream[i++] as number[];
         const nativeRef = resolveHandle(targetId, 'target');
         const childRef = resolveHandle(childId, 'child');
         if (!nativeRef || !childRef) {
           continue;
         }
         __RemoveNodeFromElementTemplate(nativeRef, elementSlotIndex, childRef);
+        // The native API only detaches from the slot. Releasing ET runtime's
+        // strong refs after a successful detach lets JS GC reclaim the subtree.
+        for (const handleId of removedSubtreeHandleIds) {
+          elementTemplateRegistry.delete(handleId);
+        }
         break;
       }
 
@@ -128,7 +134,7 @@ function resolveElementSlots(
       .map((childId) => {
         const childRef = __DEV__
           ? resolveHandle(childId, 'child')
-          : (ElementTemplateRegistry.get(childId) ?? null);
+          : (elementTemplateRegistry.get(childId) ?? null);
         if (__DEV__ && childRef === null) {
           hasError = true;
         }
@@ -140,7 +146,7 @@ function resolveElementSlots(
 }
 
 function resolveHandle(id: number, role: string): ElementRef | null {
-  const nativeRef = ElementTemplateRegistry.get(id);
+  const nativeRef = elementTemplateRegistry.get(id);
   if (!nativeRef) {
     lynx.reportError(new Error(`ElementTemplate update ${role} handle ${id} not found.`));
     return null;
@@ -160,7 +166,7 @@ function validateCreateTemplatePayload(
   if (!isValidHandleId(handleId)) {
     return new Error(`ElementTemplate update has invalid handleId ${String(handleId)}.`);
   }
-  if (ElementTemplateRegistry.get(handleId)) {
+  if (elementTemplateRegistry.get(handleId)) {
     return new Error(`ElementTemplate update received duplicate handleId ${handleId}.`);
   }
   if (attributeSlots != null && !Array.isArray(attributeSlots)) {

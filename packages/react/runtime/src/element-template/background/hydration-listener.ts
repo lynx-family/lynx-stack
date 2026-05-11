@@ -1,8 +1,16 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { GlobalCommitContext, resetGlobalCommitContext } from './commit-context.js';
-import { markElementTemplateHydrated, resetElementTemplateCommitState } from './commit-hook.js';
+import {
+  globalCommitContext,
+  resetGlobalCommitContext,
+  takeRemovedSubtreesForCurrentCommit,
+} from './commit-context.js';
+import {
+  markElementTemplateHydrated,
+  resetElementTemplateCommitState,
+  scheduleElementTemplateRemovedSubtreeCleanup,
+} from './commit-hook.js';
 import { hydrateIntoContext } from './hydrate.js';
 import { BackgroundElementTemplateInstance } from './instance.js';
 import { formatElementTemplateUpdateCommands, printElementTemplateTreeToString } from '../debug/alog.js';
@@ -18,6 +26,7 @@ let listener:
 
 export function installElementTemplateHydrationListener(): void {
   resetElementTemplateHydrationListener();
+  resetElementTemplateCommitState();
 
   listener = (event: { data: unknown }) => {
     const { data } = event;
@@ -66,30 +75,35 @@ export function installElementTemplateHydrationListener(): void {
 
     markElementTemplateHydrated();
 
-    if (GlobalCommitContext.ops.length > 0) {
+    if (globalCommitContext.ops.length > 0) {
       if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
         console.alog?.(
           '[ReactLynxDebug] ElementTemplate hydrate update commands:\n'
             + JSON.stringify(
               {
-                ops: formatElementTemplateUpdateCommands(GlobalCommitContext.ops),
-                flushOptions: GlobalCommitContext.flushOptions,
-                flowIds: GlobalCommitContext.flowIds,
+                ops: formatElementTemplateUpdateCommands(globalCommitContext.ops),
+                flushOptions: globalCommitContext.flushOptions,
+                flowIds: globalCommitContext.flowIds,
               },
               null,
               2,
             ),
         );
       }
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: {
-          ops: GlobalCommitContext.ops,
-          flushOptions: GlobalCommitContext.flushOptions,
-          flowIds: GlobalCommitContext.flowIds,
-        },
-      });
-      resetGlobalCommitContext();
+      const removedSubtrees = takeRemovedSubtreesForCurrentCommit();
+      try {
+        lynx.getCoreContext().dispatchEvent({
+          type: ElementTemplateLifecycleConstant.update,
+          data: {
+            ops: globalCommitContext.ops,
+            flushOptions: globalCommitContext.flushOptions,
+            flowIds: globalCommitContext.flowIds,
+          },
+        });
+      } finally {
+        resetGlobalCommitContext();
+        scheduleElementTemplateRemovedSubtreeCleanup(removedSubtrees);
+      }
     }
   };
 
@@ -101,5 +115,4 @@ export function resetElementTemplateHydrationListener(): void {
     lynx.getCoreContext().removeEventListener(ElementTemplateLifecycleConstant.hydrate, listener);
   }
   listener = undefined;
-  resetElementTemplateCommitState();
 }

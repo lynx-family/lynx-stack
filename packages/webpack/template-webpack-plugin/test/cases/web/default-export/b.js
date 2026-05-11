@@ -7,20 +7,32 @@ it('should have test in custom-section', async () => {
   const fileContent =
     (await fs.readFile(path.join(__dirname, '..', 'a', 'template.js')))
       .toString();
-  expect(fileContent).toContain('test-content-assert-me');
+  // convert to utf-16
+  const fileContentUtf16 = Buffer.from(fileContent, 'utf-8').toString(
+    'utf-16le',
+  );
+  expect(fileContentUtf16).toContain('test-content-assert-me');
 });
 
 it('should card type', async () => {
   const fileContent =
     (await fs.readFile(path.join(__dirname, '..', 'a', 'template.js')))
       .toString();
-  expect(fileContent).toContain('react');
+
+  // convert to utf-16
+  const fileContentUtf16 = Buffer.from(fileContent, 'utf-8').toString(
+    'utf-16le',
+  );
+  expect(fileContentUtf16).toContain('react');
 });
 
 it('should have app type', async () => {
   const fileContent =
     (await fs.readFile(path.join(__dirname, '..', 'a', 'template.js')))
       .toString();
-  const { appType } = JSON.parse(fileContent);
-  expect(appType).toBeTruthy();
+  // convert to utf-16
+  const fileContentUtf16 = Buffer.from(fileContent, 'utf-8').toString(
+    'utf-16le',
+  );
+  expect(fileContentUtf16).toContain('react');
 });

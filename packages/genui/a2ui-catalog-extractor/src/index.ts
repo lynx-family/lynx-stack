@@ -246,8 +246,11 @@ async function createTypeDocProject(
   options: ExtractCatalogOptions,
 ): Promise<ProjectReflection> {
   const cwd = options.cwd ? path.resolve(options.cwd) : process.cwd();
+  // TypeDoc treats `entryPoints` as glob patterns and rejects Windows
+  // backslashes ("escapes a non-special character"). Force POSIX
+  // separators so the same paths work on Windows and *nix.
   const sourceFiles = options.sourceFiles.map(sourceFile =>
-    path.resolve(cwd, sourceFile)
+    path.resolve(cwd, sourceFile).replace(/\\/g, '/')
   );
 
   if (sourceFiles.length === 0) {

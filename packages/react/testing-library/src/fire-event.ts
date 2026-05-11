@@ -4,9 +4,12 @@ import { createEvent, fireEvent as domFireEvent } from '@testing-library/dom';
 const NodesRef = lynx.createSelectorQuery().selectUniqueID(-1).constructor;
 function getElement(elemOrNodesRef) {
   if (elemOrNodesRef instanceof NodesRef) {
-    return __GetElementByUniqueId(
-      Number(elemOrNodesRef._nodeSelectToken.identifier),
-    );
+    const { type, identifier } = elemOrNodesRef._nodeSelectToken;
+    // type 0 = `select(cssSelector)` — identifier is a CSS selector string;
+    // type 2 = `selectUniqueID(num)` — identifier is the unique id.
+    return type === 0
+      ? document.querySelector(identifier)
+      : __GetElementByUniqueId(Number(identifier));
   } else if ('refAttr' in elemOrNodesRef) {
     return document.querySelector(`[react-ref-${elemOrNodesRef.refAttr[0]}-${elemOrNodesRef.refAttr[1]}]`);
   } else if (elemOrNodesRef?.constructor?.name === 'HTMLUnknownElement') {
