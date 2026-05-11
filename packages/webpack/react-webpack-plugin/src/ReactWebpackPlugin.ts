@@ -398,15 +398,21 @@ class ReactWebpackPlugin {
                     continue;
                   }
 
+                  const isFetchBundle =
+                    options.lazyBundleFetcher === 'FetchBundle';
                   compilation.updateAsset(
                     file,
                     old =>
                       new ConcatSource(
-                        `(function (globDynamicComponentEntry) {\n`,
+                        isFetchBundle
+                          ? `(function () {\n  var globDynamicComponentEntry = '__Card__';\n`
+                          : `(function (globDynamicComponentEntry) {\n`,
                         `  const module = { exports: {} }\n`,
                         `  const exports = module.exports;\n`,
                         old,
-                        `\n  ;return module.exports\n})`,
+                        isFetchBundle
+                          ? `\n  ;return module.exports\n})()`
+                          : `\n  ;return module.exports\n})`,
                       ),
                   );
                 }
