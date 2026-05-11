@@ -88,7 +88,7 @@ declare global {
    * Called when the worklet runtime chunk is loaded. Return the worklet runtime module.
    * @public
    */
-  function onInitWorkletRuntime(): void;
+  function onInitWorkletRuntime(): unknown;
 }
 
 /**
