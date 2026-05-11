@@ -6,7 +6,6 @@
     "module": "ESNext",
     "lib": ["DOM", "ESNext"],
     "moduleResolution": "Bundler",
-    "esModuleInterop": false,
   },
   "references": [
     /** packages-start */

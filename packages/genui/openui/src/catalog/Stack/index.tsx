@@ -55,7 +55,7 @@ export const Stack = defineComponent({
       'OpenUIStack',
       direction === 'row' ? 'OpenUIStackRow' : 'OpenUIStackColumn',
       props.wrap ? 'OpenUIStackWrap' : '',
-      GAP_CLASS[gap] ?? GAP_CLASS.m,
+      GAP_CLASS[gap] ?? GAP_CLASS['m'],
       getAlignClass(align),
       getJustifyClass(justify),
     ]

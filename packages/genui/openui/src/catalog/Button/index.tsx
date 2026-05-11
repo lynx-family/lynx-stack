@@ -5,6 +5,8 @@
 import { BuiltinActionType } from '@openuidev/lang-core';
 import { z } from 'zod/v4';
 
+import type { ReactNode } from '@lynx-js/react';
+
 import {
   useFormName,
   useIsStreaming,
@@ -13,16 +15,22 @@ import {
 import { useFormValidation } from '../../core/hooks/index.js';
 import { defineComponent } from '../../core/library.js';
 import { actionPropSchema } from '../Action/index.jsx';
-import type { LegacyActionConfig } from '../Action/index.jsx';
 import { asArray } from '../utils.js';
 
-interface ButtonProps {
-  label: string;
-  action?: z.infer<typeof actionPropSchema>;
-  variant?: 'primary' | 'secondary' | 'tertiary';
-  type?: 'normal' | 'destructive';
-  size?: 'extra-small' | 'small' | 'medium' | 'large';
-}
+const CONTINUE_CONVERSATION_ACTION = String(
+  BuiltinActionType.ContinueConversation,
+);
+const OPEN_URL_ACTION = String(BuiltinActionType.OpenUrl);
+
+const buttonPropsSchema = z.object({
+  label: z.string(),
+  action: actionPropSchema,
+  variant: z.enum(['primary', 'secondary', 'tertiary']).optional(),
+  type: z.enum(['normal', 'destructive']).optional(),
+  size: z.enum(['extra-small', 'small', 'medium', 'large']).optional(),
+});
+
+type ButtonProps = z.infer<typeof buttonPropsSchema>;
 
 function ButtonRenderer({ props }: { props: ButtonProps }) {
   const triggerAction = useTriggerAction();
@@ -42,22 +50,18 @@ function ButtonRenderer({ props }: { props: ButtonProps }) {
   }
 
   const onTap = () => {
-    const legacyAction: LegacyActionConfig | undefined =
-      action && !('steps' in action)
-        ? action
-        : undefined;
-    const actionType = legacyAction?.type
-      ?? BuiltinActionType.ContinueConversation;
+    const legacyAction = action && !('steps' in action) ? action : undefined;
+    const actionType = legacyAction?.type ?? CONTINUE_CONVERSATION_ACTION;
 
     if (
       formValidation && variant === 'primary'
-      && actionType === BuiltinActionType.ContinueConversation
+      && actionType === CONTINUE_CONVERSATION_ACTION
     ) {
       const valid = formValidation.validateForm();
       if (!valid) return;
     }
 
-    const actionParams = actionType === BuiltinActionType.OpenUrl
+    const actionParams = actionType === OPEN_URL_ACTION
       ? { url: legacyAction?.url }
       : {
         ...(legacyAction?.params ?? {}),
@@ -82,13 +86,7 @@ function ButtonRenderer({ props }: { props: ButtonProps }) {
 
 export const Button = defineComponent({
   name: 'Button',
-  props: z.object({
-    label: z.string(),
-    action: actionPropSchema,
-    variant: z.enum(['primary', 'secondary', 'tertiary']).optional(),
-    type: z.enum(['normal', 'destructive']).optional(),
-    size: z.enum(['extra-small', 'small', 'medium', 'large']).optional(),
-  }),
+  props: buttonPropsSchema,
   description: 'Clickable button',
   component: ButtonRenderer,
 });
@@ -96,7 +94,7 @@ export const Button = defineComponent({
 function ButtonsRenderer(
   { props, renderNode }: {
     props: { buttons: unknown[] };
-    renderNode: (v: unknown) => JSX.Element | JSX.Element[] | null;
+    renderNode: (v: unknown) => ReactNode;
   },
 ) {
   return (

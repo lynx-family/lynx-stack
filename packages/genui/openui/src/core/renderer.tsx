@@ -1,7 +1,6 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-
 import type {
   ActionEvent,
   ActionPlan,
@@ -44,8 +43,15 @@ function isElementNode(value: unknown): value is ElementNode {
     && value !== null
     && 'type' in value
     && 'typeName' in value
-    && (value as Record<string, unknown>).type === 'element'
+    && (value as Record<string, unknown>)['type'] === 'element'
   );
+}
+
+function createFieldEntry(
+  value: unknown,
+  componentType: string | undefined,
+): FieldEntry {
+  return componentType === undefined ? { value } : { value, componentType };
 }
 
 function isFieldEntry(value: unknown): value is FieldEntry {
@@ -111,7 +117,7 @@ function renderValue(
         stableKey={stableKey}
         node={value}
         library={library}
-        onAction={onAction}
+        {...(onAction ? { onAction } : {})}
       />
     );
   }
@@ -140,7 +146,7 @@ function RenderNode(
       key={stableKey}
       props={node.props}
       renderNode={renderNode}
-      onAction={onAction}
+      {...(onAction ? { onAction } : {})}
     />
   );
 }
@@ -186,10 +192,10 @@ export function OpenUiRenderer(props: {
         const currentFormValue = currentState[formName];
         newState[formName] = {
           ...(isFieldMap(currentFormValue) ? currentFormValue : {}),
-          [name]: { value, componentType },
+          [name]: createFieldEntry(value, componentType),
         };
       } else {
-        newState[name] = { value, componentType };
+        newState[name] = createFieldEntry(value, componentType);
       }
 
       setFormState(newState);
@@ -227,8 +233,8 @@ export function OpenUiRenderer(props: {
         type: actionType,
         params: actionParams,
         humanFriendlyMessage: userMessage,
-        formState: relevantState,
-        formName,
+        ...(relevantState ? { formState: relevantState } : {}),
+        ...(formName ? { formName } : {}),
       });
     },
     [formStateRef, onActionRef],
@@ -263,7 +269,11 @@ export function OpenUiRenderer(props: {
 
   return (
     <OpenUIContext.Provider value={contextValue}>
-      <RenderNode node={result.root} library={library} onAction={onAction} />
+      <RenderNode
+        node={result.root}
+        library={library}
+        {...(onAction ? { onAction } : {})}
+      />
     </OpenUIContext.Provider>
   );
 }

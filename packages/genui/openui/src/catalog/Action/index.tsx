@@ -15,7 +15,23 @@ export interface LegacyActionConfig {
 
 export type ActionLike = ActionPlan | LegacyActionConfig;
 
-export const actionPropSchema = z.custom<ActionLike>(
-  (value) => typeof value === 'object' && value !== null,
-);
+const actionStepSchema = z.looseObject({
+  type: z.string(),
+});
+
+const actionPlanSchema = z.object({
+  steps: z.array(actionStepSchema),
+});
+
+const legacyActionSchema = z.object({
+  type: z.string().optional(),
+  params: z.record(z.string(), z.any()).optional(),
+  url: z.string().optional(),
+  context: z.string().optional(),
+});
+
+export const actionPropSchema = z.union([
+  actionPlanSchema,
+  legacyActionSchema,
+]);
 tagSchemaId(actionPropSchema, 'ActionExpression');

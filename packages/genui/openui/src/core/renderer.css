@@ -85,17 +85,17 @@
 }
 
 .OpenUICardVariantCard {
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: #ffffff;
   border-width: 1rpx;
   border-style: solid;
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(0, 0, 0, 0.08);
 }
 
 .OpenUICardVariantSunk {
-  background-color: rgba(255, 255, 255, 0.03);
+  background-color: rgba(0, 0, 0, 0.02);
   border-width: 1rpx;
   border-style: solid;
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(0, 0, 0, 0.06);
 }
 
 .OpenUICardVariantClear {
@@ -110,19 +110,19 @@
 }
 
 .OpenUICardHeaderTitle {
-  color: rgba(255, 255, 255, 0.92);
+  color: rgba(0, 0, 0, 0.88);
   font-size: 30rpx;
   font-weight: 700;
 }
 
 .OpenUICardHeaderSubtitle {
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(0, 0, 0, 0.55);
   font-size: 24rpx;
 }
 
 /* ===== TextContent ===== */
 .OpenUITextContent {
-  color: rgba(255, 255, 255, 0.88);
+  color: rgba(0, 0, 0, 0.78);
   font-size: 26rpx;
   line-height: 36rpx;
 }
@@ -158,18 +158,18 @@
 .OpenUISeparator {
   width: 100%;
   height: 1rpx;
-  background-color: rgba(255, 255, 255, 0.12);
+  background-color: rgba(0, 0, 0, 0.08);
 }
 
 /* ===== Tag ===== */
 .OpenUITag {
   padding: 6rpx 10rpx;
   border-radius: 999rpx;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .OpenUITagText {
-  color: rgba(255, 255, 255, 0.86);
+  color: rgba(0, 0, 0, 0.72);
   font-size: 22rpx;
 }
 
@@ -192,80 +192,80 @@
 }
 
 .OpenUIButtonPrimary {
-  background-color: rgba(59, 130, 246, 0.18);
-  border-color: rgba(59, 130, 246, 0.22);
-}
-
-.OpenUIButtonSecondary {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.12);
-}
-
-.OpenUIButtonGhost {
-  background-color: transparent;
-  border-color: rgba(255, 255, 255, 0.12);
-}
-
-.OpenUIButtonText {
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 22rpx;
-  font-weight: 600;
-}
-
-/* ===== Light theme overrides ===== */
-.light .OpenUICard {
-  background-color: #ffffff;
-  border-color: rgba(0, 0, 0, 0.08);
-}
-
-.light .OpenUICardVariantCard {
-  background-color: #ffffff;
-  border-color: rgba(0, 0, 0, 0.08);
-}
-
-.light .OpenUICardVariantSunk {
-  background-color: rgba(0, 0, 0, 0.02);
-  border-color: rgba(0, 0, 0, 0.06);
-}
-
-.light .OpenUICardHeaderTitle {
-  color: rgba(0, 0, 0, 0.88);
-}
-
-.light .OpenUICardHeaderSubtitle {
-  color: rgba(0, 0, 0, 0.55);
-}
-
-.light .OpenUITextContent {
-  color: rgba(0, 0, 0, 0.78);
-}
-
-.light .OpenUISeparator {
-  background-color: rgba(0, 0, 0, 0.08);
-}
-
-.light .OpenUITag {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.light .OpenUITagText {
-  color: rgba(0, 0, 0, 0.72);
-}
-
-.light .OpenUIButtonPrimary {
   background-color: rgba(59, 130, 246, 0.1);
   border-color: rgba(59, 130, 246, 0.2);
 }
 
-.light .OpenUIButtonSecondary {
+.OpenUIButtonSecondary {
   background-color: rgba(0, 0, 0, 0.04);
   border-color: rgba(0, 0, 0, 0.1);
 }
 
-.light .OpenUIButtonGhost {
+.OpenUIButtonGhost {
+  background-color: transparent;
   border-color: rgba(0, 0, 0, 0.1);
 }
 
-.light .OpenUIButtonText {
+.OpenUIButtonText {
   color: rgba(0, 0, 0, 0.88);
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+/* ===== Dark theme overrides ===== */
+.dark .OpenUICard {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark .OpenUICardVariantCard {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark .OpenUICardVariantSunk {
+  background-color: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .OpenUICardHeaderTitle {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.dark .OpenUICardHeaderSubtitle {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.dark .OpenUITextContent {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.dark .OpenUISeparator {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark .OpenUITag {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .OpenUITagText {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.dark .OpenUIButtonPrimary {
+  background-color: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.22);
+}
+
+.dark .OpenUIButtonSecondary {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark .OpenUIButtonGhost {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark .OpenUIButtonText {
+  color: rgba(255, 255, 255, 0.92);
 }

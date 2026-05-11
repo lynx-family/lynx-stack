@@ -64,7 +64,7 @@ export const Card = defineComponent({
     const layoutClassName = [
       direction === 'row' ? 'OpenUIStackRow' : 'OpenUIStackColumn',
       props.wrap ? 'OpenUIStackWrap' : '',
-      GAP_CLASS[gap] ?? GAP_CLASS.m,
+      GAP_CLASS[gap] ?? GAP_CLASS['m'],
       getAlignClass(align),
       getJustifyClass(justify),
     ]
