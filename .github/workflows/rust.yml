@@ -25,7 +25,7 @@ jobs:
     strategy:
       matrix:
         runs-on:
-          - label: ubuntu-24.04
+          - label: ubuntu-24.04-32core
             name: Ubuntu
           # - label: windows-2022
           #   name: Windows
