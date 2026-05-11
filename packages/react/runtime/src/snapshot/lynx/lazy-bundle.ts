@@ -182,10 +182,6 @@ export const loadLazyBundle: <
         result = lynx.loadScript<T>(SECTION_MAIN_THREAD, {
           bundleName: response.url,
         });
-      } catch {
-        return new Promise(() => {});
-      }
-      try {
         const styleSheet = __LoadStyleSheet(SECTION_CSS, response.url);
         if (styleSheet !== null) {
           __AdoptStyleSheet(styleSheet);
