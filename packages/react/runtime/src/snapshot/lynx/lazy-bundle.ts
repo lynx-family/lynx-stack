@@ -2,6 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import {
+  LYNX_LAZY_SYNC_TIMEOUT_SECONDS,
+  SECTION_BACKGROUND,
+  SECTION_CSS,
+  SECTION_MAIN_THREAD,
+} from './lazyBundleConstants.js';
+import { LifecycleConstant } from '../lifecycle/constant.js';
+
 /**
  * To make code below works
  * const App1 = lazy(() => import("./x").then(({App1}) => ({default: App1})))
@@ -57,12 +65,6 @@ export const makeSyncThen = function<T>(result: T): Promise<T>['then'] {
 
 let lazyBundleMode: 'sync' | 'async' | undefined;
 
-const LYNX_LAZY_SYNC_TIMEOUT_SECONDS = 5;
-
-const SECTION_MAIN_THREAD = 'main-thread';
-const SECTION_BACKGROUND = 'background';
-const SECTION_CSS = 'CSS';
-
 /**
  * Load dynamic component from source. Designed to be used with `lazy`.
  * @param source - where dynamic component template.js locates
@@ -72,12 +74,16 @@ const SECTION_CSS = 'CSS';
 export const loadLazyBundle: <
   T extends { default: React.ComponentType<any> },
 >(source: string) => Promise<T> = /*#__PURE__*/ (() => {
-  const useQueryComponent = typeof __LAZY_BUNDLE_FETCHER__ !== 'undefined'
-    && __LAZY_BUNDLE_FETCHER__ === 'QueryComponent';
+  // Default to QueryComponent when `__LAZY_BUNDLE_FETCHER__` is missing —
+  // older react-webpack-plugin builds don't stamp it and they predate
+  // FetchBundle support, so falling through to QueryComponent is the only
+  // safe behavior.
+  const useFetchBundle = typeof __LAZY_BUNDLE_FETCHER__ !== 'undefined'
+    && __LAZY_BUNDLE_FETCHER__ === 'FetchBundle';
 
-  const impl = useQueryComponent
-    ? loadLazyBundleWithQueryComponent
-    : loadLazyBundleWithFetchBundle;
+  const impl = useFetchBundle
+    ? loadLazyBundleWithFetchBundle
+    : loadLazyBundleWithQueryComponent;
 
   lynx.loadLazyBundle = impl;
 
@@ -226,11 +232,26 @@ export const loadLazyBundle: <
             reject(e);
             return;
           }
+          let btsResult: T;
           try {
-            const result = lynx.loadScript<T>(SECTION_BACKGROUND, {
+            btsResult = lynx.loadScript<T>(SECTION_BACKGROUND, {
               bundleName: response.url,
             });
-            resolve(result);
+          } catch (e) {
+            reject(e instanceof Error ? e : new Error(String(e)));
+            return;
+          }
+          // Bundle is now in native cache, so MT's `.then` fires sync and
+          // the whole prepare runs synchronously inside `Call`, meaning the
+          // cb fires only after MT snapshots are registered.
+          try {
+            lynx.getNativeApp().callLepusMethod(
+              LifecycleConstant.prepareLazyBundleMTS,
+              { url: source },
+              () => {
+                resolve(btsResult);
+              },
+            );
           } catch (e) {
             reject(e instanceof Error ? e : new Error(String(e)));
           }
