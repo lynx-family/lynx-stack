@@ -1,9 +1,9 @@
 ---
-"@lynx-js/react": patch
-"@lynx-js/react-rsbuild-plugin": patch
-"@lynx-js/react-webpack-plugin": patch
-"@lynx-js/react-transform": patch
-"@lynx-js/template-webpack-plugin": patch
+"@lynx-js/react": minor
+"@lynx-js/react-rsbuild-plugin": minor
+"@lynx-js/react-webpack-plugin": minor
+"@lynx-js/react-transform": minor
+"@lynx-js/template-webpack-plugin": minor
 ---
 
 feat(lazy-bundle): add `lynx.fetchBundle`-based loader
