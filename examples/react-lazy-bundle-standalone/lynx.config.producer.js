@@ -8,6 +8,7 @@ import { detectLanHost, producerDevPort } from './demo-ports.js';
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const enableBundleAnalysis = !!process.env['RSPEEDY_BUNDLE_ANALYSIS'];
+const enableFetchBundle = !!process.env['LAZY_BUNDLE_FETCHBUNDLE'];
 const producerPublicPath = `http://${detectLanHost()}:${producerDevPort}/`;
 
 export default defineConfig({
@@ -35,6 +36,7 @@ export default defineConfig({
   plugins: [
     pluginReactLynx({
       experimental_isLazyBundle: true,
+      ...(enableFetchBundle ? { engineVersion: '3.8' } : {}),
     }),
   ],
   environments: {

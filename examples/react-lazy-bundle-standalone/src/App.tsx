@@ -8,6 +8,7 @@ const LazyComponent = lazy(() =>
   import(createProducerBundleUrl('LazyComponent.lynx.bundle'), {
     with: {
       type: 'component',
+      mode: 'sync',
     },
   })
 );

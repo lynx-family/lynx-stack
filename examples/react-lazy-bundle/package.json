@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "build": "rspeedy build",
-    "dev": "rspeedy dev"
+    "build:fetchbundle": "cross-env LAZY_BUNDLE_FETCHBUNDLE=1 rspeedy build",
+    "dev": "rspeedy dev",
+    "dev:fetchbundle": "cross-env LAZY_BUNDLE_FETCHBUNDLE=1 rspeedy dev",
+    "preview": "rspeedy preview",
+    "preview:fetchbundle": "cross-env LAZY_BUNDLE_FETCHBUNDLE=1 rspeedy preview"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*"
@@ -16,6 +20,7 @@
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/types": "3.7.0",
-    "@types/react": "^18.3.28"
+    "@types/react": "^18.3.28",
+    "cross-env": "^7.0.3"
   }
 }

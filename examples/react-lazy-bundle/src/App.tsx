@@ -2,7 +2,9 @@ import { Suspense, lazy, useEffect } from '@lynx-js/react';
 
 import './App.css';
 
-const LazyComponent = lazy(() => import('./LazyComponent.js'));
+const LazyComponent = lazy(() =>
+  import('./LazyComponent.js', { with: { mode: 'sync' } })
+);
 
 export function App() {
   useEffect(() => {

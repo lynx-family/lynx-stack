@@ -191,9 +191,8 @@ export const loadLazyBundle: <
           return Promise.reject(e instanceof Error ? e : new Error(String(e)));
         }
         if (!response || response.code !== 0) {
+          console.error('Lazy bundle load failed', response);
           const e = new Error('Lazy bundle load failed, schema: ' + source);
-          // ES5 does not support new Error('message', { cause: 'detail' })
-          // So we set cause using `.cause` assignment
           e.cause = JSON.stringify(response);
           return Promise.reject(e);
         }
@@ -221,9 +220,8 @@ export const loadLazyBundle: <
         }
         handler.then((response) => {
           if (!response || response.code !== 0) {
+            console.error('Lazy bundle load failed', response);
             const e = new Error('Lazy bundle load failed, schema: ' + source);
-            // ES5 does not support new Error('message', { cause: 'detail' })
-            // So we set cause using `.cause` assignment
             e.cause = JSON.stringify(response);
             reject(e);
             return;
