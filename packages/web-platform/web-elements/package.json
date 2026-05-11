@@ -150,7 +150,7 @@
     "@playwright/test": "^1.58.2",
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-source-build": "1.0.4",
-    "@types/markdown-it": "^14.1.1",
+    "@types/markdown-it": "^14.1.2",
     "nyc": "^17.1.0",
     "tslib": "^2.8.1"
   },
