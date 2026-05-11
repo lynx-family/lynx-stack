@@ -157,10 +157,16 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   #keyboardEventHandler = (event: Event) => {
     const rootDom = this.lynxViewInstance.rootDom;
     const focusedInShadow = rootDom.activeElement as HTMLElement | null;
-    const effectiveTarget = (
+    let effectiveTarget = (
       focusedInShadow ?? rootDom.firstElementChild
     ) as HTMLElement | null;
     if (!effectiveTarget) return;
+
+    // Descend to deepest first-child so the upward bubble path includes all
+    // ancestors (e.g. the root <view> with @keydown registered).
+    while (effectiveTarget.firstElementChild) {
+      effectiveTarget = effectiveTarget.firstElementChild as HTMLElement;
+    }
 
     let bubblePath: Uint32Array = new Uint32Array(32);
     let bubblePathLength = 0;
