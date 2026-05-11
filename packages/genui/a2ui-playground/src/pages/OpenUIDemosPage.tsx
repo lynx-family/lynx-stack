@@ -18,8 +18,18 @@ const COMPACT_CODE_MIN_HEIGHT = 220;
 const COMPACT_PREVIEW_MIN_HEIGHT = 320;
 const RESIZE_BREAKPOINT = 980;
 
+function getDeployedLynxBundleUrl(): string {
+  try {
+    return new URL('a2ui.lynx.js', window.location.href).toString();
+  } catch {
+    return '';
+  }
+}
+
 function useRspeedyDevUrl(): string {
-  const [url, setUrl] = useState('');
+  // Default to the deployed bundle next to the current page so that the
+  // "Native Preview" QR is available in production (no rspeedy dev server).
+  const [url, setUrl] = useState<string>(() => getDeployedLynxBundleUrl());
   useEffect(() => {
     let cancelled = false;
     void (async () => {
@@ -29,7 +39,7 @@ function useRspeedyDevUrl(): string {
         });
         if (!res.ok) return;
         const data = (await res.json()) as { url?: string };
-        if (!cancelled && typeof data.url === 'string') {
+        if (!cancelled && typeof data.url === 'string' && data.url) {
           setUrl(data.url);
         }
       } catch {

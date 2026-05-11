@@ -160,7 +160,7 @@ function findLocalIp(): string {
 
 function buildRspeedyBundleUrl(port: number): string {
   const ip = findLocalIp();
-  return `http://${ip}:${port}/main.lynx.js`;
+  return `http://${ip}:${port}/a2ui.lynx.js`;
 }
 
 export default defineConfig({
