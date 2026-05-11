@@ -38,13 +38,15 @@ export default {
          * @override
          */
         generate() {
-          const chunk = this.chunk;
+          const chunk =
+            /** @type {import('@rspack/core').Chunk} */ (this.chunk);
 
           return `// lynx async chunks
     ${RuntimeGlobals.lynxAsyncChunkIds} = ${
             JSON.stringify(
               Object.fromEntries(
                 Array.from(chunk.getAllAsyncChunks()).map(
+                  /** @param {import('@rspack/core').Chunk} c */
                   c => [c.id, c.name],
                 ),
               ),
