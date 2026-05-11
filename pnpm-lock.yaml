@@ -731,6 +731,8 @@ importers:
         specifier: 0.2.1
         version: 0.2.1(@rsbuild/core@1.7.5)(i18next-cli@1.54.2(@swc/helpers@0.5.21)(@types/node@24.10.13)(i18next@26.0.6(typescript@5.9.3))(typescript@5.9.3))(rollup@4.34.9)
 
+  packages/lynx/autolink-codegen: {}
+
   packages/lynx/benchx_cli:
     dependencies:
       zx:
