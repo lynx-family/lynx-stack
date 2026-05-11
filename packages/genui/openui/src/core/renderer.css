@@ -1,0 +1,271 @@
+/* ===== Stack ===== */
+.OpenUIStack {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.OpenUIStackRow {
+  flex-direction: row;
+}
+
+.OpenUIStackColumn {
+  flex-direction: column;
+}
+
+.OpenUIStackWrap {
+  flex-wrap: wrap;
+}
+
+.OpenUIGapNone {
+  gap: 0;
+}
+
+.OpenUIGapXs {
+  gap: 6rpx;
+}
+
+.OpenUIGapS {
+  gap: 10rpx;
+}
+
+.OpenUIGapM {
+  gap: 12rpx;
+}
+
+.OpenUIGapL {
+  gap: 16rpx;
+}
+
+.OpenUIGapXl {
+  gap: 24rpx;
+}
+
+.OpenUIAlignStart {
+  align-items: flex-start;
+}
+
+.OpenUIAlignCenter {
+  align-items: center;
+}
+
+.OpenUIAlignEnd {
+  align-items: flex-end;
+}
+
+.OpenUIAlignStretch {
+  align-items: stretch;
+}
+
+.OpenUIJustifyStart {
+  justify-content: flex-start;
+}
+
+.OpenUIJustifyCenter {
+  justify-content: center;
+}
+
+.OpenUIJustifyEnd {
+  justify-content: flex-end;
+}
+
+.OpenUIJustifyBetween {
+  justify-content: space-between;
+}
+
+/* ===== Card ===== */
+.OpenUICard {
+  width: 100%;
+  padding: 14rpx;
+  border-radius: 14rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.OpenUICardVariantCard {
+  background-color: #ffffff;
+  border-width: 1rpx;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.OpenUICardVariantSunk {
+  background-color: rgba(0, 0, 0, 0.02);
+  border-width: 1rpx;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+.OpenUICardVariantClear {
+  background-color: transparent;
+}
+
+/* ===== CardHeader ===== */
+.OpenUICardHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.OpenUICardHeaderTitle {
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.OpenUICardHeaderSubtitle {
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 24rpx;
+}
+
+/* ===== TextContent ===== */
+.OpenUITextContent {
+  color: rgba(0, 0, 0, 0.78);
+  font-size: 26rpx;
+  line-height: 36rpx;
+}
+
+.OpenUITextContentSmall {
+  font-size: 24rpx;
+  line-height: 34rpx;
+}
+
+.OpenUITextContentDefault {
+  font-size: 26rpx;
+  line-height: 36rpx;
+}
+
+.OpenUITextContentLarge {
+  font-size: 28rpx;
+  line-height: 38rpx;
+}
+
+.OpenUITextContentSmallHeavy {
+  font-size: 24rpx;
+  line-height: 34rpx;
+  font-weight: 700;
+}
+
+.OpenUITextContentLargeHeavy {
+  font-size: 28rpx;
+  line-height: 38rpx;
+  font-weight: 700;
+}
+
+/* ===== Separator ===== */
+.OpenUISeparator {
+  width: 100%;
+  height: 1rpx;
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+/* ===== Tag ===== */
+.OpenUITag {
+  padding: 6rpx 10rpx;
+  border-radius: 999rpx;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.OpenUITagText {
+  color: rgba(0, 0, 0, 0.72);
+  font-size: 22rpx;
+}
+
+/* ===== Button ===== */
+.OpenUIButtonGroup {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.OpenUIButton {
+  padding: 10rpx 14rpx;
+  border-radius: 12rpx;
+  border-width: 1rpx;
+  border-style: solid;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.OpenUIButtonPrimary {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.OpenUIButtonSecondary {
+  background-color: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.OpenUIButtonGhost {
+  background-color: transparent;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.OpenUIButtonText {
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+/* ===== Dark theme overrides ===== */
+.dark .OpenUICard {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark .OpenUICardVariantCard {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark .OpenUICardVariantSunk {
+  background-color: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .OpenUICardHeaderTitle {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.dark .OpenUICardHeaderSubtitle {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.dark .OpenUITextContent {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.dark .OpenUISeparator {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark .OpenUITag {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .OpenUITagText {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.dark .OpenUIButtonPrimary {
+  background-color: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.22);
+}
+
+.dark .OpenUIButtonSecondary {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark .OpenUIButtonGhost {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark .OpenUIButtonText {
+  color: rgba(255, 255, 255, 0.92);
+}

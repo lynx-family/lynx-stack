@@ -62,24 +62,561 @@ entBtn = Buttons([Button("Contact Sales", Action([@ToAssistant("Contact sales fo
     parsed: JSON.stringify(
       {
         root: {
-          type: 'Stack',
-          direction: 'column',
-          spacing: 'l',
-          align: 'center',
-          children: ['header', 'cards'],
+          type: 'element',
+          typeName: 'Stack',
+          props: {
+            children: [
+              {
+                type: 'element',
+                typeName: 'TextContent',
+                props: {
+                  text: 'Choose Your Plan',
+                  size: 'large-heavy',
+                },
+                partial: false,
+                hasDynamicProps: false,
+                statementId: 'header',
+              },
+              {
+                type: 'element',
+                typeName: 'Stack',
+                props: {
+                  children: [
+                    {
+                      type: 'element',
+                      typeName: 'Card',
+                      props: {
+                        children: [
+                          {
+                            type: 'element',
+                            typeName: 'CardHeader',
+                            props: {
+                              title: 'Starter',
+                              subtitle:
+                                'Perfect for individuals and small projects',
+                            },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'starterHeader',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'Stack',
+                            props: {
+                              children: [
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: {
+                                    text: '$9',
+                                    size: 'large-heavy',
+                                  },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'starterAmount',
+                                },
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: {
+                                    text: '/ month',
+                                    size: 'small',
+                                  },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'starterPeriod',
+                                },
+                              ],
+                              direction: 'row',
+                              gap: 'baseline',
+                              align: 'start',
+                            },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'starterPrice',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'Separator',
+                            props: {
+                              orientation: 'horizontal',
+                              decorative: true,
+                            },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'starterSep',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'Stack',
+                            props: {
+                              children: [
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '✓  5 Projects' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'sf1',
+                                },
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '✓  10 GB Storage' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'sf2',
+                                },
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '✓  Email Support' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'sf3',
+                                },
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '✗  Custom Domain' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'sf4',
+                                },
+                              ],
+                              direction: 'column',
+                              gap: 's',
+                            },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'starterFeatures',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'Buttons',
+                            props: {
+                              buttons: [
+                                {
+                                  type: 'element',
+                                  typeName: 'Button',
+                                  props: {
+                                    label: 'Get Started',
+                                    action: {
+                                      k: 'Comp',
+                                      name: 'Action',
+                                      args: [
+                                        {
+                                          k: 'Arr',
+                                          els: [
+                                            {
+                                              k: 'Comp',
+                                              name: 'ToAssistant',
+                                              args: [
+                                                {
+                                                  k: 'Str',
+                                                  v: 'I\'d like the Starter plan',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                    },
+                                    variant: 'secondary',
+                                  },
+                                  partial: false,
+                                  hasDynamicProps: true,
+                                },
+                              ],
+                            },
+                            partial: false,
+                            hasDynamicProps: true,
+                            statementId: 'starterBtn',
+                          },
+                        ],
+                        variant: 'card',
+                        direction: 'column',
+                        gap: 'stretch',
+                        align: 'between',
+                      },
+                      partial: false,
+                      hasDynamicProps: true,
+                      statementId: 'starterCard',
+                    },
+                    {
+                      type: 'element',
+                      typeName: 'Card',
+                      props: {
+                        children: [
+                          {
+                            type: 'element',
+                            typeName: 'Tag',
+                            props: {
+                              text: 'Most Popular',
+                              icon: null,
+                              size: 'sm',
+                              variant: 'info',
+                            },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'proTag',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'CardHeader',
+                            props: {
+                              title: 'Pro',
+                              subtitle:
+                                'Great for growing teams and businesses',
+                            },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'proHeader',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'Stack',
+                            props: {
+                              children: [
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '$29', size: 'large-heavy' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'proAmount',
+                                },
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '/ month', size: 'small' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'proPeriod',
+                                },
+                              ],
+                              direction: 'row',
+                              gap: 'baseline',
+                              align: 'start',
+                            },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'proPrice',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'Separator',
+                            props: {
+                              orientation: 'horizontal',
+                              decorative: true,
+                            },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'proSep',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'Stack',
+                            props: {
+                              children: [
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '✓  Unlimited Projects' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'pf1',
+                                },
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '✓  100 GB Storage' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'pf2',
+                                },
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '✓  Priority Support' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'pf3',
+                                },
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '✓  Custom Domain' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'pf4',
+                                },
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '✓  Analytics Dashboard' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'pf5',
+                                },
+                              ],
+                              direction: 'column',
+                              gap: 's',
+                            },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'proFeatures',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'Buttons',
+                            props: {
+                              buttons: [
+                                {
+                                  type: 'element',
+                                  typeName: 'Button',
+                                  props: {
+                                    label: 'Get Started',
+                                    action: {
+                                      k: 'Comp',
+                                      name: 'Action',
+                                      args: [
+                                        {
+                                          k: 'Arr',
+                                          els: [
+                                            {
+                                              k: 'Comp',
+                                              name: 'ToAssistant',
+                                              args: [
+                                                {
+                                                  k: 'Str',
+                                                  v: 'I\'d like the Pro plan',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                    },
+                                    variant: 'primary',
+                                  },
+                                  partial: false,
+                                  hasDynamicProps: true,
+                                },
+                              ],
+                            },
+                            partial: false,
+                            hasDynamicProps: true,
+                            statementId: 'proBtn',
+                          },
+                        ],
+                        variant: 'card',
+                        direction: 'column',
+                        gap: 'stretch',
+                        align: 'between',
+                      },
+                      partial: false,
+                      hasDynamicProps: true,
+                      statementId: 'proCard',
+                    },
+                    {
+                      type: 'element',
+                      typeName: 'Card',
+                      props: {
+                        children: [
+                          {
+                            type: 'element',
+                            typeName: 'CardHeader',
+                            props: {
+                              title: 'Enterprise',
+                              subtitle: 'For large-scale operations and teams',
+                            },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'enterpriseHeader',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'Stack',
+                            props: {
+                              children: [
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '$99', size: 'large-heavy' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'enterpriseAmount',
+                                },
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '/ month', size: 'small' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'enterprisePeriod',
+                                },
+                              ],
+                              direction: 'row',
+                              gap: 'baseline',
+                              align: 'start',
+                            },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'enterprisePrice',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'Separator',
+                            props: {
+                              orientation: 'horizontal',
+                              decorative: true,
+                            },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'enterpriseSep',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'Stack',
+                            props: {
+                              children: [
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '✓  Unlimited Projects' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'ef1',
+                                },
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '✓  1 TB Storage' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'ef2',
+                                },
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '✓  24/7 Dedicated Support' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'ef3',
+                                },
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '✓  Custom Domain' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'ef4',
+                                },
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '✓  Advanced Analytics' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'ef5',
+                                },
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: { text: '✓  SSO & Security Audit' },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'ef6',
+                                },
+                              ],
+                              direction: 'column',
+                              gap: 's',
+                            },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'enterpriseFeatures',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'Buttons',
+                            props: {
+                              buttons: [
+                                {
+                                  type: 'element',
+                                  typeName: 'Button',
+                                  props: {
+                                    label: 'Contact Sales',
+                                    action: {
+                                      k: 'Comp',
+                                      name: 'Action',
+                                      args: [
+                                        {
+                                          k: 'Arr',
+                                          els: [
+                                            {
+                                              k: 'Comp',
+                                              name: 'ToAssistant',
+                                              args: [
+                                                {
+                                                  k: 'Str',
+                                                  v: 'I\'d like to learn about the Enterprise plan',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                    },
+                                    variant: 'secondary',
+                                  },
+                                  partial: false,
+                                  hasDynamicProps: true,
+                                },
+                              ],
+                            },
+                            partial: false,
+                            hasDynamicProps: true,
+                            statementId: 'enterpriseBtn',
+                          },
+                        ],
+                        variant: 'card',
+                        direction: 'column',
+                        gap: 'stretch',
+                        align: 'between',
+                      },
+                      partial: false,
+                      hasDynamicProps: true,
+                      statementId: 'enterpriseCard',
+                    },
+                  ],
+                  direction: 'row',
+                  gap: 'l',
+                  align: 'center',
+                },
+                partial: false,
+                hasDynamicProps: true,
+                statementId: 'cards',
+              },
+            ],
+            direction: 'column',
+            gap: 'l',
+            align: 'center',
+          },
+          partial: false,
+          hasDynamicProps: true,
+          statementId: 'root',
         },
-        header: {
-          type: 'TextContent',
-          text: 'Choose Your Plan',
-          variant: 'large-heavy',
+        meta: {
+          incomplete: false,
+          unresolved: [],
+          orphaned: [],
+          statementCount: 43,
+          errors: [],
         },
-        cards: {
-          type: 'Stack',
-          direction: 'row',
-          spacing: 'l',
-          align: 'stretch',
-          children: ['freeCard', 'proCard', 'enterpriseCard'],
-        },
+        stateDeclarations: {},
+        queryStatements: [],
+        mutationStatements: [],
       },
       null,
       2,

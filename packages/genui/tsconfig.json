@@ -6,12 +6,12 @@
     "module": "ESNext",
     "lib": ["DOM", "ESNext"],
     "moduleResolution": "Bundler",
-    "esModuleInterop": false,
   },
   "references": [
     /** packages-start */
     { "path": "./a2ui-catalog-extractor/tsconfig.json" },
     { "path": "./a2ui/tsconfig.build.json" },
+    { "path": "./openui/tsconfig.json" },
     /** packages-end */
   ],
   "include": [],
