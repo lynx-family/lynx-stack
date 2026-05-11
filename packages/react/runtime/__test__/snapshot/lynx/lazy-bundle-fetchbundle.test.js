@@ -230,6 +230,59 @@ describe('loadLazyBundle (FetchBundle) — background sync', () => {
     const promise = withLazyBundleMode('sync', () => loadLazyBundle('foo'));
     await expect(promise).rejects.toThrow('boom');
   });
+
+  test('undefined response → reject (covers !response branch)', async () => {
+    waitMock.mockReturnValueOnce(undefined);
+    const { withLazyBundleMode, loadLazyBundle } = await import(
+      '../../../src/snapshot/lynx/lazy-bundle'
+    );
+    await expect(
+      withLazyBundleMode('sync', () => loadLazyBundle('foo')),
+    ).rejects.toThrow('Lazy bundle load failed, schema: foo');
+  });
+
+  test('.wait throws non-Error → wrapped reject', async () => {
+    waitMock.mockImplementationOnce(() => {
+      // eslint-disable-next-line no-throw-literal
+      throw 'string err';
+    });
+    const { withLazyBundleMode, loadLazyBundle } = await import(
+      '../../../src/snapshot/lynx/lazy-bundle'
+    );
+    await expect(
+      withLazyBundleMode('sync', () => loadLazyBundle('foo')),
+    ).rejects.toThrow('string err');
+  });
+
+  test('loadScript throws non-Error → wrapped reject', async () => {
+    waitMock.mockReturnValueOnce({ code: 0, url: 'u' });
+    loadScript.mockImplementationOnce(() => {
+      // eslint-disable-next-line no-throw-literal
+      throw 'load boom';
+    });
+    const { withLazyBundleMode, loadLazyBundle } = await import(
+      '../../../src/snapshot/lynx/lazy-bundle'
+    );
+    await expect(
+      withLazyBundleMode('sync', () => loadLazyBundle('foo')),
+    ).rejects.toThrow('load boom');
+  });
+});
+
+describe('loadLazyBundle (FetchBundle) — unreachable', () => {
+  test('throws when neither MT nor JS', async () => {
+    vi.resetModules();
+    vi.unstubAllGlobals()
+      .stubGlobal('__LAZY_BUNDLE_FETCHER__', 'FetchBundle')
+      .stubGlobal('__MAIN_THREAD__', false)
+      .stubGlobal('__LEPUS__', false)
+      .stubGlobal('__JS__', false)
+      .stubGlobal('__BACKGROUND__', false);
+    const { loadLazyBundle } = await import(
+      '../../../src/snapshot/lynx/lazy-bundle'
+    );
+    expect(() => loadLazyBundle('foo')).toThrow('unreachable');
+  });
 });
 
 describe('loadLazyBundle (FetchBundle) — background async (cb-as-readiness)', () => {
@@ -325,6 +378,52 @@ describe('loadLazyBundle (FetchBundle) — background async (cb-as-readiness)', 
     });
     expect(loadScript).not.toHaveBeenCalled();
     expect(callLepusMethod).not.toHaveBeenCalled();
+  });
+
+  test('undefined response → reject (covers !response branch)', async () => {
+    thenMock.mockImplementationOnce((cb) => cb(undefined));
+    const { loadLazyBundle } = await import(
+      '../../../src/snapshot/lynx/lazy-bundle'
+    );
+    await expect(loadLazyBundle('foo')).rejects.toThrow(
+      'Lazy bundle load failed, schema: foo',
+    );
+  });
+
+  test('fetchBundle throws non-Error sync → wrapped reject', async () => {
+    fetchBundle.mockImplementationOnce(() => {
+      // eslint-disable-next-line no-throw-literal
+      throw 'string err';
+    });
+    const { loadLazyBundle } = await import(
+      '../../../src/snapshot/lynx/lazy-bundle'
+    );
+    await expect(loadLazyBundle('foo')).rejects.toThrow('string err');
+  });
+
+  test('callLepusMethod throws non-Error → wrapped reject', async () => {
+    thenMock.mockImplementationOnce((cb) => cb({ code: 0, url: 'u' }));
+    loadScript.mockReturnValueOnce({ default: 'BG' });
+    callLepusMethod.mockImplementationOnce(() => {
+      // eslint-disable-next-line no-throw-literal
+      throw 'lepus boom';
+    });
+    const { loadLazyBundle } = await import(
+      '../../../src/snapshot/lynx/lazy-bundle'
+    );
+    await expect(loadLazyBundle('foo')).rejects.toThrow('lepus boom');
+  });
+
+  test('loadScript throws non-Error → wrapped reject', async () => {
+    thenMock.mockImplementationOnce((cb) => cb({ code: 0, url: 'u' }));
+    loadScript.mockImplementationOnce(() => {
+      // eslint-disable-next-line no-throw-literal
+      throw 'load boom';
+    });
+    const { loadLazyBundle } = await import(
+      '../../../src/snapshot/lynx/lazy-bundle'
+    );
+    await expect(loadLazyBundle('foo')).rejects.toThrow('load boom');
   });
 
   test('loadScript throws → reject, no callLepusMethod', async () => {
