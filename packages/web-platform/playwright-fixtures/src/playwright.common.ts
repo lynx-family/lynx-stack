@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 
 import { type defineConfig, devices } from '@playwright/test';
-import os from 'node:os';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,20 +14,6 @@ process.env['LIBGL_ALWAYS_SOFTWARE'] = 'true'; // https://github.com/microsoft/p
 process.env['GALLIUM_HUD_SCALE'] = '1';
 const isCI = !!process.env['CI'];
 const port = process.env['PORT'] ?? 3080;
-const workerLimit = Math.floor(((cpuCount, envCPULimit) => {
-  if (isCI) {
-    if (envCPULimit) {
-      return envCPULimit / 2;
-    } else {
-      if (cpuCount <= 32) {
-        return 8;
-      } else {
-        return 8 + (cpuCount - 32) / 6;
-      }
-    }
-  }
-  return cpuCount / 2;
-})(os.cpus().length, parseFloat(process.env['cpu_limit'] ?? '0')));
 
 /**
  * Read environment variables from file.
@@ -45,7 +30,7 @@ export const playwrightConfigCommon: Parameters<typeof defineConfig>[0] = {
   testMatch: '**/tests/*',
   /* Run tests in files in parallel */
   fullyParallel: true,
-  workers: isCI ? workerLimit : undefined,
+  workers: isCI ? 1 : undefined,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!isCI,
   /* Retry on CI only */
