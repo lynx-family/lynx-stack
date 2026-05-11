@@ -62,10 +62,13 @@ export default function() {
     };
 
     $RuntimeGlobals_ensureChunk$ = function(chunkId) {
-      var promises = [];
-      Object.keys($RuntimeGlobals_ensureChunkHandlers$).forEach(function(key) {
-        $RuntimeGlobals_ensureChunkHandlers$[key](chunkId, promises);
-      });
+      var promises = Object.keys($RuntimeGlobals_ensureChunkHandlers$).reduce(
+        function(promises, key) {
+          $RuntimeGlobals_ensureChunkHandlers$[key](chunkId, promises);
+          return promises;
+        },
+        [],
+      );
       if (promises.length === 1) return promises[0];
       return Promise.all(promises);
     };
