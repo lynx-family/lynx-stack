@@ -2,7 +2,6 @@
 "@lynx-js/react": minor
 "@lynx-js/react-rsbuild-plugin": minor
 "@lynx-js/react-webpack-plugin": minor
-"@lynx-js/react-transform": minor
 "@lynx-js/template-webpack-plugin": minor
 ---
 
