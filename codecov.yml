@@ -27,6 +27,7 @@ coverage:
 ignore:
   - ".github/**"
   - "codecov.yml"
+  - "examples/**"
   - "packages/genui/**"
   - "pnpm-lock.yaml"
   - "rstest.config.ts"
