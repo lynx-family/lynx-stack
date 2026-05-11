@@ -19,7 +19,6 @@ import type {
   OpenUIError,
   ParseResult,
   QueryManager,
-  QuerySnapshot,
   Store,
   ToolProvider,
 } from '@openuidev/lang-core';
@@ -45,7 +44,7 @@ function unwrapFieldValue(v: unknown): unknown {
     && !Array.isArray(v)
     && 'value' in (v as Record<string, unknown>)
   ) {
-    return (v as Record<string, unknown>).value;
+    return (v as Record<string, unknown>)['value'];
   }
   return v;
 }
@@ -224,7 +223,15 @@ export function useOpenUIState(
           relevantDeps[ref] = storeSnapshot[ref];
         }
       }
-      return {
+      const node: {
+        statementId: string;
+        toolName: string;
+        args: unknown;
+        defaults: unknown;
+        deps: unknown;
+        complete: boolean;
+        refreshInterval?: number;
+      } = {
         statementId: qn.statementId,
         toolName: qn.toolAST
           ? evaluateString(qn.toolAST, evaluationContext)
@@ -233,12 +240,16 @@ export function useOpenUIState(
         defaults: qn.defaultsAST
           ? evaluate(qn.defaultsAST, evaluationContext)
           : null,
-        refreshInterval: qn.refreshAST
-          ? evaluateNumber(qn.refreshAST, evaluationContext)
-          : undefined,
         deps: Object.keys(relevantDeps).length > 0 ? relevantDeps : undefined,
         complete: qn.complete,
       };
+      if (qn.refreshAST) {
+        const interval = evaluateNumber(qn.refreshAST, evaluationContext);
+        if (interval !== undefined) {
+          node.refreshInterval = interval;
+        }
+      }
+      return node;
     });
 
     // Always call — empty array clears removed queries and their errors
@@ -352,21 +363,26 @@ export function useOpenUIState(
       const formPayload = getFormPayload(formName);
       const { onAction: handler } = propsRef.current;
 
+      function buildEvent(
+        type: ActionEvent['type'],
+        params: Record<string, unknown>,
+        humanFriendlyMessage: string,
+      ): ActionEvent {
+        const event: ActionEvent = { type, params, humanFriendlyMessage };
+        if (formPayload !== undefined) event.formState = formPayload;
+        if (formName !== undefined) event.formName = formName;
+        return event;
+      }
+
       // Legacy action config path (v0.1 compat) — { type?, params? }
       if (action && !('steps' in action)) {
         const actionType = action.type
           ?? BuiltinActionType.ContinueConversation;
         const params = { ...(action.params ?? {}) };
         // v0.1 compat — url and context were top-level, not in params
-        if (action.url) params.url = action.url;
-        if (action.context) params.context = action.context;
-        handler?.({
-          type: actionType,
-          params,
-          humanFriendlyMessage: userMessage,
-          formState: formPayload,
-          formName,
-        });
+        if (action.url) params['url'] = action.url;
+        if (action.context) params['context'] = action.context;
+        handler?.(buildEvent(actionType, params, userMessage));
         return;
       }
 
@@ -394,22 +410,18 @@ export function useOpenUIState(
               break;
             }
             case ACTION_STEPS.ToAssistant:
-              handler?.({
-                type: BuiltinActionType.ContinueConversation,
-                params: step.context ? { context: step.context } : {},
-                humanFriendlyMessage: step.message,
-                formState: formPayload,
-                formName,
-              });
+              handler?.(buildEvent(
+                BuiltinActionType.ContinueConversation,
+                step.context ? { context: step.context } : {},
+                step.message,
+              ));
               break;
             case ACTION_STEPS.OpenUrl:
-              handler?.({
-                type: BuiltinActionType.OpenUrl,
-                params: { url: step.url },
-                humanFriendlyMessage: '',
-                formState: formPayload,
-                formName,
-              });
+              handler?.(buildEvent(
+                BuiltinActionType.OpenUrl,
+                { url: step.url },
+                '',
+              ));
               break;
             case ACTION_STEPS.Set: {
               const value = evaluate(step.valueAST, evaluationContext);
@@ -429,13 +441,11 @@ export function useOpenUIState(
       }
 
       // Default — ContinueConversation with label
-      handler?.({
-        type: BuiltinActionType.ContinueConversation,
-        params: {},
-        humanFriendlyMessage: userMessage,
-        formState: formPayload,
-        formName,
-      });
+      handler?.(buildEvent(
+        BuiltinActionType.ContinueConversation,
+        {},
+        userMessage,
+      ));
     },
     [queryManager, evaluationContext, getFormPayload, store],
   );

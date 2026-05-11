@@ -57,13 +57,14 @@ export function keyFrom(value: unknown, fallbackIndex?: number): string {
 
   if (t === 'object') {
     const obj = value as Record<string, unknown>;
-    if (obj.type === 'element') {
-      const typeName = typeof obj.typeName === 'string'
-        ? obj.typeName
+    if (obj['type'] === 'element') {
+      const typeName = typeof obj['typeName'] === 'string'
+        ? obj['typeName']
         : 'element';
-      const props = (obj.props as Record<string, unknown> | undefined) ?? {};
-      const label = props.label ?? props.title ?? props.text ?? props.value
-        ?? props.name;
+      const props = (obj['props'] as Record<string, unknown> | undefined) ?? {};
+      const label = props['label'] ?? props['title'] ?? props['text']
+        ?? props['value']
+        ?? props['name'];
       const labelStr = getScalarLabel(label);
       if (labelStr) {
         return `${typeName}:${labelStr}-${getFallback()}`;
