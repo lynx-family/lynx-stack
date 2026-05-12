@@ -1,0 +1,27 @@
+{
+  "name": "@lynx-js/example-web-core",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rsbuild build",
+    "dev": "rsbuild --open",
+    "preview": "rsbuild preview"
+  },
+  "dependencies": {
+    "@dugyu/luna-stage": "^0.1.1",
+    "@lynx-js/web-core": "0.20.2",
+    "motion": "^12.38.0",
+    "react": "19.2.5",
+    "react-dom": "19.2.5"
+  },
+  "devDependencies": {
+    "@lynx-example/design-guide": "^0.4.4",
+    "@lynx-example/lynx-ui-popover": "^0.0.6",
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rsbuild/plugin-react": "^1.4.5",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
+  }
+}

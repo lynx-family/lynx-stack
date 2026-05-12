@@ -287,6 +287,7 @@ export default tseslint.config(
         projectService: {
           allowDefaultProject: [
             '*.js',
+            'rsbuild.config.ts',
             'rslib.config.ts',
             'vitest.config.ts',
             'rstest.config.ts',
