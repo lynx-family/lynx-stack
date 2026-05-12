@@ -78,14 +78,13 @@ jobs:
       LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
     with:
       runs-on: lynx-custom-container
-      is-web: true
+      use-playwright-container: true
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
         pnpm --filter @lynx-js/web-core-e2e run lh || echo "Lighthouse failed"
   playwright:
-    permissions: {}
-    runs-on: macos-26
-    timeout-minutes: 60
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
     strategy:
       fail-fast: false
       matrix:
@@ -99,66 +98,15 @@ jobs:
             report-name: playwright-web-core-e2e
             report-path: packages/web-platform/web-core-e2e/playwright-report
     name: Playwright ${{ matrix.name }}
-    steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        with:
-          node-version: "24"
-          package-manager-cache: false
-      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
-      - uses: actions-rust-lang/setup-rust-toolchain@1780873c7b576612439a134613cc4cc74ce5538c # v1
-        with:
-          components: clippy, rustfmt
-          cache: false
-      - name: Install
-        run: |
-          npm install -g corepack@latest
-          corepack enable
-          pnpm install --frozen-lockfile
-      - name: Install Playwright
-        run: pnpm --filter @lynx-js/web-elements exec playwright install --with-deps chromium firefox webkit
-      - name: Build
-        run: pnpm turbo build --summarize
-        env:
-          NODE_OPTIONS: --max-old-space-size=32768
-      - name: Test
-        id: test
-        env:
-          NODE_OPTIONS: --max-old-space-size=16384
-          GITHUB_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-report.junit.xml
-        run: |
-          export NODE_OPTIONS="--max-old-space-size=32768"
-          pnpm --filter "${{ matrix.package }}" run test --reporter='github,dot,junit,html'
-          pnpm --filter "${{ matrix.package }}" run coverage:ci
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          flags: e2e
-      - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}
-        continue-on-error: true
-        uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          flags: e2e
-          override_branch: ${{ github.event_name == 'merge_group' && 'main' || '' }}
-      - name: Upload Test Result
-        if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: ${{ matrix.report-name }}
-          path: ${{ matrix.report-path }}
-          if-no-files-found: error
-          retention-days: 1
-          overwrite: true
-          include-hidden-files: true
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      kind: playwright
+      runs-on: macos-26
+      playwright-package: ${{ matrix.package }}
+      playwright-report-name: ${{ matrix.report-name }}
+      playwright-report-path: ${{ matrix.report-path }}
+      codecov-flags: e2e
   test-api:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
