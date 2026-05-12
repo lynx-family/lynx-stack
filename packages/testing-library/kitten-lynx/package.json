@@ -45,7 +45,7 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
-    "@lynx-js/types": "3.7.0",
+    "@lynx-js/types": "3.10.2-alpha.0",
     "@types/react": "^18.3.28",
     "execa": "^9.6.1",
     "jpeg-js": "^0.4.4",

@@ -46,7 +46,6 @@ overrides:
   '@rsbuild/core@1>@rspack/core': 1.7.9
   '@rsdoctor/rspack-plugin>@rspack/core': 1.7.9
   '@rsdoctor/types>@rspack/core': 1.7.9
-  '@lynx-js/types': 3.10.2-alpha.0
 
 packageExtensionsChecksum: sha256-BUwt5m2tRMyYg9pgFVHNTHCYEBuM0/o7IdJqk+vWTGs=
 
@@ -320,7 +319,7 @@ importers:
         version: 3.10.2-alpha.0
       '@rsbuild/plugin-babel':
         specifier: 1.1.0
-        version: 1.1.0(@rsbuild/core@1.7.5)
+        version: 1.1.0(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -736,7 +735,7 @@ importers:
         version: 1.54.2(@swc/helpers@0.5.21)(@types/node@24.10.13)(i18next@26.0.6(typescript@5.9.3))(typescript@5.9.3)
       rsbuild-plugin-i18next-extractor:
         specifier: 0.2.1
-        version: 0.2.1(@rsbuild/core@1.7.5)(i18next-cli@1.54.2(@swc/helpers@0.5.21)(@types/node@24.10.13)(i18next@26.0.6(typescript@5.9.3))(typescript@5.9.3))(rollup@4.34.9)
+        version: 0.2.1(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))(i18next-cli@1.54.2(@swc/helpers@0.5.21)(@types/node@24.10.13)(i18next@26.0.6(typescript@5.9.3))(typescript@5.9.3))(rollup@4.34.9)
 
   packages/lynx/benchx_cli:
     dependencies:
@@ -1447,10 +1446,10 @@ importers:
         version: link:../../web-platform/web-elements
       '@rsbuild/plugin-less':
         specifier: 1.6.0
-        version: 1.6.0(@rsbuild/core@1.7.5)
+        version: 1.6.0(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))
       '@rsbuild/plugin-sass':
         specifier: 1.5.0
-        version: 1.5.0(@rsbuild/core@1.7.5)
+        version: 1.5.0(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -1465,7 +1464,7 @@ importers:
         version: 1.1.1
       rsbuild-plugin-tailwindcss:
         specifier: 0.2.4
-        version: 0.2.4(@rsbuild/core@1.7.5)(tailwindcss@4.2.1)
+        version: 0.2.4(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))(tailwindcss@4.2.1)
       rslog:
         specifier: ^1.3.2
         version: 1.3.2
@@ -1559,7 +1558,7 @@ importers:
         version: 3.10.2-alpha.0
       '@rsbuild/plugin-babel':
         specifier: 1.1.0
-        version: 1.1.0(@rsbuild/core@1.7.5)
+        version: 1.1.0(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -2309,13 +2308,13 @@ importers:
         version: 7.33.6(@types/node@24.10.13)
       '@rsbuild/plugin-sass':
         specifier: 1.5.0
-        version: 1.5.0(@rsbuild/core@1.7.5)
+        version: 1.5.0(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))
       '@rsbuild/plugin-type-check':
         specifier: 1.3.4
-        version: 1.3.4(@rsbuild/core@1.7.5)(@rspack/core@1.7.9(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)
+        version: 1.3.4(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))(@rspack/core@1.7.9(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)
       '@rsbuild/plugin-typed-css-modules':
         specifier: 1.2.2
-        version: 1.2.2(@rsbuild/core@1.7.5)
+        version: 1.2.2(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))
       '@rspress/core':
         specifier: 2.0.3
         version: 2.0.3(@module-federation/runtime-tools@0.22.0)(@types/react@19.2.14)(core-js@3.48.0)
@@ -3726,7 +3725,7 @@ packages:
     resolution: {integrity: sha512-zBDOHakuePjw5wPCButExNgcllyFPGqYzqP2CWCWcQaX4gqJmCmYeRKguihyxH6ma6ExxlH/J2x5CHD91ed3bQ==}
     peerDependencies:
       '@lynx-js/react': '*'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
 
   '@lynx-js/internal-preact@10.29.1-20260424024911-12b794f':
     resolution: {integrity: sha512-MQ+xjPL2f1P9/eCAdkT2h9cJRXl1qqhSJDX9GkPETt3UAepLo5N+HbGB8Qr3IUzqGDWMr3Mj76my1P0pLkKVDg==}
@@ -3738,154 +3737,154 @@ packages:
     resolution: {integrity: sha512-0f13aZROKhTxMEY69rtWlkfvd6NM3A7JwloFQsh2nxcOiABp6dddvzzQJSayt2xAUxRjFl4uh5Rj/ZrQjjCrNw==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-checkbox@3.130.0':
     resolution: {integrity: sha512-2xgq7oyGjq7CKYiHd/9nO+gzT2T3KSi4gb3EPxqrENDiiDv5im3ePTwzazUuHaWWK+7cHuJgxZIhwQU0Rk6l8w==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-common@3.130.0':
     resolution: {integrity: sha512-6odzHU1z1PomtmskJUxIpj+TkHq9daOhUb7N0a3LquKxz9wp41qM1r2oDLRHdeUlylfId1F87Bto6F7Ql9+37w==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-dialog@3.130.0':
     resolution: {integrity: sha512-AFkA7V+xI5EdaA2JShIcK3UAMG1RuaZcWl16f66KNRD1/ZgIQNp7sYOW/bnQmH+BXts7p4ut7NWBNNe5WcSVvQ==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-draggable@3.130.0':
     resolution: {integrity: sha512-c9Sw0xahJqttWq/M9SmCIc3X0HIS/d47OBk5oNQRHjhJEaGKP23u/22SfCANXboxLhCxCXXv1OVmW/x8O9Wm2A==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-feed-list@3.130.0':
     resolution: {integrity: sha512-5nUNYzRjSiR94N0LAyZ+b8aj5s6WYJGShohL2piKxw5lDI7PafaYt/i30aj0Q52b7ViB8ZZuD/ZtmbD4pKeRLA==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-form@3.130.0':
     resolution: {integrity: sha512-hiDetKqgAGSGcuxIaRG/ljNfZrQjh31BtWZDw0aXJZL/ifHqwv2NQHErAPp9mgO8i/5NYYNYQ5Sgs/ophKhUMA==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-input@3.130.0':
     resolution: {integrity: sha512-CPBbnDARhs5wfX//78+ATXYhGhU/R4SjFTL/Yzvur3Wh+lLFQz1mEvv0BOfUFnd/lEilc9Y9q00h6g7w7WHd3A==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-lazy-component@3.130.0':
     resolution: {integrity: sha512-Xr4jQBM8mB3VtSxKnxxy0VdAT1M0dE5YWx5mEkpTezGVIX5rU+Ub23VFTtSZeGYWX1EFaleTOR17fsD4+C3CfA==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-list@3.130.0':
     resolution: {integrity: sha512-MBj7S19iJ3Tnu4qTVFFXMjceQ6pS+Yj84xRqoXdgVO/kvcjTzxJxQJkUt4RvCuvmQ+fOLz3Lt0ePGxVxkOYY+g==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-overlay@3.130.0':
     resolution: {integrity: sha512-rc11LA4svUdfX7ZG7pjS+7JzoXllmvv6Ng91QwkYbPIuRlcHu/d0VHtd8cPTgkoBevSWCACBIDoIEgONTfyuTA==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-popover@3.130.0':
     resolution: {integrity: sha512-oP37HtY/KPiDruepLnpaJQQD3WOFINIz3g432xo+wZ+ScAKtZxfQm2pDpeb9eyPejKv9KjNIFexYtoFVMvSFSg==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-presence@3.130.0':
     resolution: {integrity: sha512-h5a1SNFZdmEcsEJ6NrFcWC/LqEmINDh+LE9+givCvA4IwkYBWvgBQHoe/0LESJV75TC1TlB3L0sULsBVxMvqXg==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-radio-group@3.130.0':
     resolution: {integrity: sha512-vRylYRYH41BVFCEt2lsOhnZuTcLu5ACcJvOXpCgTItCDsQ/+g1GSzDl37IAwwI4MBUDPG30uwD0+s7JjYjgn0g==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-scroll-view@3.130.0':
     resolution: {integrity: sha512-Q5iwceQKFZ4TTLI/h5ZGWhBLP880g4Kn1h4jOeSGWUaKFyEUdbEd1DQKZA673q6pftyLoU6OQ66ZUzyX7tlaqA==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-sheet@3.130.0':
     resolution: {integrity: sha512-OSTgaX5xEJX0cjo9uwwrKcJS8wFZjFr7+yDew7gHK3bv7/FbJUVkJjhyb/bTGMsU+oyUZMUcqTgs1kgiokbPiQ==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-sortable@3.130.0':
     resolution: {integrity: sha512-gdFKT6WJOaXSyaej28jGHaLqMu3E/FGNOcqgTXdEJmFbOgpvCABRdZ1flfQMd5tmCV64HXcN6KYJ7X3BBG6uTw==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-swipe-action@3.130.0':
     resolution: {integrity: sha512-usfmTKBxVRsHAQQ3XvJOqqR0XRKc9+Gu+QjQdq7sa85m1xeFUocin0E8rBPuUNh82RAKC8NVgSw/olKWN/hi1Q==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-swiper@3.130.0':
     resolution: {integrity: sha512-g/kKFEO4hj+pshuJPpugiTqAjiLEr1kaVjTh8GbD40NFo8X+V9tZw92BO1pfVhoRqffqC6gI4mqk7qXqDcqvbA==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui-switch@3.130.0':
     resolution: {integrity: sha512-AjbqyYAmFI902GrBhsaOsWQdUZjL5RdN8kA3zQfj6c5HzmYqfjWf6Q0HLJP5EoVKl97Inyl8hGlZjECGNEAqVw==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/lynx-ui@3.130.0':
     resolution: {integrity: sha512-SgzadpXCECf0dYKmrFytU7C+ihxO//z7pOirNMZppe0MOhWrv4Ld0jBt/yWfSv2rBjBRFIyo2xCxn/PM7yq0dw==}
     peerDependencies:
       '@lynx-js/react': '>=0.100.0'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
       '@types/react': ^18
 
   '@lynx-js/motion@0.0.2':
     resolution: {integrity: sha512-/oA8yBnWlGsIRxI3FGfdjxFOuKr5j3oLLmn5viW9JeuLRfIg2u+FM+UGiaAl1mZ9xfns1jamK+uax+cPwvW2dA==}
     peerDependencies:
       '@lynx-js/react': '*'
-      '@lynx-js/types': 3.10.2-alpha.0
+      '@lynx-js/types': '*'
     peerDependenciesMeta:
       '@lynx-js/types':
         optional: true
@@ -13739,13 +13738,13 @@ snapshots:
     transitivePeerDependencies:
       - '@module-federation/runtime-tools'
 
-  '@rsbuild/plugin-babel@1.1.0(@rsbuild/core@1.7.5)':
+  '@rsbuild/plugin-babel@1.1.0(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-proposal-decorators': 7.29.0(@babel/core@7.29.0)
       '@babel/plugin-transform-class-properties': 7.28.6(@babel/core@7.29.0)
       '@babel/preset-typescript': 7.28.5(@babel/core@7.29.0)
-      '@rsbuild/core': 1.7.5
+      '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
       '@types/babel__core': 7.20.5
       deepmerge: 4.3.1
       reduce-configs: 1.1.1
@@ -13785,9 +13784,9 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 1.7.5
 
-  '@rsbuild/plugin-less@1.6.0(@rsbuild/core@1.7.5)':
+  '@rsbuild/plugin-less@1.6.0(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))':
     dependencies:
-      '@rsbuild/core': 1.7.5
+      '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
       deepmerge: 4.3.1
       reduce-configs: 1.1.1
 
@@ -13816,6 +13815,15 @@ snapshots:
       reduce-configs: 1.1.1
       sass-embedded: 1.97.3
 
+  '@rsbuild/plugin-sass@1.5.0(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))':
+    dependencies:
+      '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
+      deepmerge: 4.3.1
+      loader-utils: 2.0.4
+      postcss: 8.5.6
+      reduce-configs: 1.1.1
+      sass-embedded: 1.97.3
+
   '@rsbuild/plugin-source-build@1.0.4(@rsbuild/core@1.7.5)':
     dependencies:
       fast-glob: 3.3.3
@@ -13823,19 +13831,6 @@ snapshots:
       yaml: 2.8.3
     optionalDependencies:
       '@rsbuild/core': 1.7.5
-
-  '@rsbuild/plugin-type-check@1.3.4(@rsbuild/core@1.7.5)(@rspack/core@1.7.9(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)':
-    dependencies:
-      deepmerge: 4.3.1
-      json5: 2.2.3
-      reduce-configs: 1.1.1
-      ts-checker-rspack-plugin: 1.3.0(@rspack/core@1.7.9(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)
-    optionalDependencies:
-      '@rsbuild/core': 1.7.5
-    transitivePeerDependencies:
-      - '@rspack/core'
-      - tslib
-      - typescript
 
   '@rsbuild/plugin-type-check@1.3.4(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))(@rspack/core@1.7.9(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)':
     dependencies:
@@ -13853,6 +13848,10 @@ snapshots:
   '@rsbuild/plugin-typed-css-modules@1.2.2(@rsbuild/core@1.7.5)':
     optionalDependencies:
       '@rsbuild/core': 1.7.5
+
+  '@rsbuild/plugin-typed-css-modules@1.2.2(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))':
+    optionalDependencies:
+      '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
 
   '@rsdoctor/client@1.5.6': {}
 
@@ -20073,10 +20072,10 @@ snapshots:
       '@typescript/native-preview': 7.0.0-dev.20260212.1
       typescript: 5.9.3
 
-  rsbuild-plugin-i18next-extractor@0.2.1(@rsbuild/core@1.7.5)(i18next-cli@1.54.2(@swc/helpers@0.5.21)(@types/node@24.10.13)(i18next@26.0.6(typescript@5.9.3))(typescript@5.9.3))(rollup@4.34.9):
+  rsbuild-plugin-i18next-extractor@0.2.1(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))(i18next-cli@1.54.2(@swc/helpers@0.5.21)(@types/node@24.10.13)(i18next@26.0.6(typescript@5.9.3))(typescript@5.9.3))(rollup@4.34.9):
     dependencies:
       '@rollup/pluginutils': 5.3.0(rollup@4.34.9)
-      '@rsbuild/core': 1.7.5
+      '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
       '@rspack/lite-tapable': 1.1.0
       i18next-cli: 1.54.2(@swc/helpers@0.5.21)(@types/node@24.10.13)(i18next@26.0.6(typescript@5.9.3))(typescript@5.9.3)
     transitivePeerDependencies:
@@ -20096,15 +20095,15 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
 
-  rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@1.7.5)(tailwindcss@4.2.1):
-    dependencies:
-      tailwindcss: 4.2.1
-    optionalDependencies:
-      '@rsbuild/core': 1.7.5
-
   rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))(tailwindcss@3.4.19):
     dependencies:
       tailwindcss: 3.4.19
+    optionalDependencies:
+      '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
+
+  rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))(tailwindcss@4.2.1):
+    dependencies:
+      tailwindcss: 4.2.1
     optionalDependencies:
       '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
 

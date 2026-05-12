@@ -69,9 +69,6 @@ overrides:
   "@rsbuild/core@1>@rspack/core": "$@rspack/core"
   "@rsdoctor/rspack-plugin>@rspack/core": "$@rspack/core"
   "@rsdoctor/types>@rspack/core": "$@rspack/core"
-  # Pin to the alpha that ships the FetchBundle / loadScript types.
-  # Drop this override once 3.10.2 (or later) is the natural resolution.
-  "@lynx-js/types": "3.10.2-alpha.0"
 
 packageExtensions:
   "@rspack/test-tools@*":
