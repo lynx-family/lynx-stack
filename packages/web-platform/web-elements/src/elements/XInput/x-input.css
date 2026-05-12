@@ -15,6 +15,7 @@ x-input::part(input), x-input::part(form) {
   width: inherit;
   height: inherit;
   border: inherit;
+  box-sizing: inherit;
   align-self: inherit;
   justify-self: inherit;
   text-align: inherit;
