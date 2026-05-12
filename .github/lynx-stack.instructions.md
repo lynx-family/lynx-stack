@@ -18,7 +18,7 @@ Prefer a shared-plus-split initial chunk fixture when validating CSS merge order
 applyTo: ".github/workflows/**/*"
 ---
 
-For Playwright-related CI jobs, add ulimit -Sn 655350 directly in each job's run block before invoking Playwright commands.
+Do not add file descriptor limit shell adjustments in GitHub Actions; hosted runners may reject them.
 
 ---
 applyTo: "packages/web-platform/web-core-e2e/**/*"

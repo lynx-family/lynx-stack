@@ -80,7 +80,6 @@ jobs:
       runs-on: lynx-custom-container
       is-web: true
       run: |
-        ulimit -Sn 655350
         export NODE_OPTIONS="--max-old-space-size=32768"
         pnpm --filter @lynx-js/web-core-e2e run lh || echo "Lighthouse failed"
   playwright:
@@ -151,7 +150,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-report.junit.xml
         run: |
-          ulimit -Sn 655350 || ulimit -Sn 10240 || true
           export NODE_OPTIONS="--max-old-space-size=32768"
           pnpm --filter "${{ matrix.package }}" run test --reporter='github,dot,junit,html'
           pnpm --filter "${{ matrix.package }}" run coverage:ci
