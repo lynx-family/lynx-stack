@@ -248,6 +248,10 @@ These instructions were generated through comprehensive analysis and testing of 
 
 Remember: This is a complex, multi-language monorepo. Always allow extra time for builds and tests, and follow the exact command sequences provided.
 
+## Commit conventions
+
+- Do **not** add `Co-Authored-By:` (or other AI-attribution) footers to commit messages. Authorship is tracked via the git author field; trailers like these add noise to the history.
+
 ## Submit knowledge updates
 
 When you learn new patterns or best practices while working on the `lynx-stack` project, you should update or create one or more ".github/*.instructions.md" files, adding natural language instructions to the file(s).

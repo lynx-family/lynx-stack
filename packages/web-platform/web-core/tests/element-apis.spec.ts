@@ -130,7 +130,7 @@ describe('Element APIs', () => {
     touchEvent.targetTouches = [];
     touchEvent.changedTouches = [];
 
-    const lynxEvent = createCrossThreadEvent(touchEvent);
+    const lynxEvent = createCrossThreadEvent(touchEvent, 0, 0);
     expect(lynxEvent.type).toBe('touchstart');
     expect(lynxEvent.detail).toEqual({ x: 100, y: 200 });
   });
@@ -144,7 +144,7 @@ describe('Element APIs', () => {
     touchEvent.targetTouches = [];
     touchEvent.changedTouches = [];
 
-    const lynxEvent = createCrossThreadEvent(touchEvent);
+    const lynxEvent = createCrossThreadEvent(touchEvent, 0, 0);
     expect(lynxEvent.type).toBe('touchstart');
     expect(lynxEvent.detail).toEqual({});
   });
