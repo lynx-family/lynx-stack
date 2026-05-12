@@ -250,10 +250,17 @@ export function DemosPage(props: { protocol: Protocol; demoId?: string }) {
         if (isKnownDemo) {
           // Known demo: point to the static JSON served by the rsbuild dev server.
           // Native Lynx supports fetch, so App.tsx will load it via messagesUrl.
-          const demosOrigin = new URL(shareBaseUrl).origin;
+          // NOTE: must resolve against the full shareBaseUrl (preserving any
+          // sub-path like `/a2ui/` when deployed under a sub-path), not just
+          // its origin — otherwise the demo JSON 404s in production.
+          // Ensure trailing slash so `new URL(...)` treats the current path
+          // as a directory rather than dropping its last segment.
+          const demosBase = shareBaseUrl.endsWith('/')
+            ? shareBaseUrl
+            : `${shareBaseUrl}/`;
           uInline.searchParams.set(
             'messagesUrl',
-            `${demosOrigin}/demos/${scenario!.id}.json`,
+            new URL(`demos/${scenario!.id}.json`, demosBase).toString(),
           );
         } else {
           uInline.searchParams.set('messages', JSON.stringify(parsed));
