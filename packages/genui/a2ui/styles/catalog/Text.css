@@ -1,86 +1,110 @@
-@import "./luna.css";
+@import "../theme.css";
+
+.text-body,
+.text-caption,
+.text-h1,
+.text-h2,
+.text-h3,
+.text-h4,
+.text-h5,
+.text-price,
+.text-link,
+.text-label {
+  flex-shrink: 0;
+}
 
 .text-h1 {
-  font-size: 24px;
+  font-size: var(--a2ui-font-size-2xl);
   font-weight: bold;
-  color: var(--content);
-  line-height: 1.2;
+  color: var(--a2ui-color-on-surface);
+  line-height: var(--a2ui-line-height-headings);
   flex-shrink: 0;
 }
 
 .text-h2 {
-  font-size: 20px;
+  font-size: var(--a2ui-font-size-xl);
   font-weight: bold;
-  color: var(--content);
-  line-height: 1.3;
+  color: var(--a2ui-color-on-surface);
+  line-height: var(--a2ui-line-height-headings);
   flex-shrink: 0;
 }
 
 .text-h3 {
-  font-size: 18px;
+  font-size: var(--a2ui-font-size-l);
   font-weight: bold;
-  color: var(--content);
-  line-height: 1.3;
+  color: var(--a2ui-color-on-surface);
+  line-height: var(--a2ui-line-height-headings);
   flex-shrink: 0;
 }
 
 .text-h4 {
-  font-size: 16px;
+  font-size: var(--a2ui-font-size-m);
   font-weight: bold;
-  color: var(--content);
-  line-height: 1.4;
+  color: var(--a2ui-color-on-surface);
+  line-height: var(--a2ui-line-height-headings);
   flex-shrink: 0;
 }
 
 .text-h5 {
-  font-size: 14px;
+  font-size: var(--a2ui-font-size-s);
   font-weight: bold;
-  color: var(--content);
-  line-height: 1.4;
+  color: var(--a2ui-color-on-surface);
+  line-height: var(--a2ui-line-height-headings);
   flex-shrink: 0;
 }
 
 .text-caption {
-  font-size: 12px;
-  color: var(--content-muted);
-  line-height: 1.4;
+  font-size: var(--a2ui-font-size-xs);
+  color: var(--a2ui-color-text-muted);
+  line-height: var(--a2ui-line-height-body);
   flex-shrink: 0;
 }
 
 .text-body {
-  flex-shrink: 0;
-  font-size: 14px;
+  font-size: var(--a2ui-font-size-m);
   font-weight: normal;
-  color: var(--content);
-  line-height: 1.5;
+  color: var(--a2ui-color-on-surface);
+  line-height: var(--a2ui-line-height-body);
+}
+
+.text-weight-1 {
+  font-weight: 500;
+}
+
+.text-weight-1-5 {
+  font-weight: 600;
+}
+
+.text-weight-2 {
+  font-weight: 700;
 }
 
 /* New Usage Hints */
 
 .text-price {
   flex-shrink: 0;
-  font-size: 16px;
+  font-size: var(--a2ui-font-size-m);
   font-weight: bold;
-  color: #ff4d4f; /* Typical price color, or use variable if available */
-  line-height: 1.4;
+  color: var(--a2ui-color-primary);
+  line-height: var(--a2ui-line-height-body);
 }
 
 .text-link {
   flex-shrink: 0;
-  font-size: 14px;
-  color: #1890ff; /* Link blue */
+  font-size: var(--a2ui-font-size-m);
+  color: var(--a2ui-color-primary-hover);
   text-decoration: underline;
-  line-height: 1.5;
+  line-height: var(--a2ui-line-height-body);
 }
 
 .text-label {
   flex-shrink: 0;
-  font-size: 10px;
+  font-size: var(--a2ui-font-size-xs);
   font-weight: bold;
-  color: var(--content-muted-2);
+  color: var(--a2ui-color-text-subtle);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  line-height: 1.4;
+  line-height: var(--a2ui-line-height-body);
 }
 
 .button .text-body,
@@ -93,5 +117,5 @@
 .button .text-price,
 .button .text-link,
 .button .text-label {
-  color: var(--primary-content);
+  color: var(--a2ui-color-on-primary);
 }

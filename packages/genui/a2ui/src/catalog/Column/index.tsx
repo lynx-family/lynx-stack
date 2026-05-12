@@ -34,7 +34,9 @@ export function Column(
   const explicitChildren = Array.isArray(children) ? children : [];
 
   return (
-    <view className={`column alignment-${align} distribution-${justify}`}>
+    <view
+      className={`column alignment-${align} distribution-${justify}`}
+    >
       {explicitChildren.map((childId: string) => {
         const child = surface.components.get(childId);
         if (!child) return null;
@@ -46,7 +48,7 @@ export function Column(
           return (
             <view
               key={childId}
-              className='column-weighted-item'
+              className={`column-weighted-item column-weighted-item-${weight}`}
               style={{ flex: `${weight} ${weight} 0`, minHeight: 0 }}
             >
               <NodeRenderer

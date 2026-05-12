@@ -1,40 +1,45 @@
-@import "./luna.css";
+@import "../theme.css";
 
 .card {
   display: flex;
   flex-direction: column;
-  min-height: 0;
   width: 100%;
   box-sizing: border-box;
   flex-shrink: 0;
-  height: fit-content;
+  min-width: 0;
+  min-height: 0;
+  gap: var(--a2ui-spacing-l);
 }
 
 /* Elevated (Default) */
 .card-elevated {
-  background-color: var(--paper);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px var(--backdrop);
-  padding: 16px;
+  background-color: var(--a2ui-color-surface);
+  border-radius: var(--a2ui-border-radius);
+  box-shadow: 0 8px 24px var(--a2ui-color-overlay);
+  padding: var(--a2ui-spacing-l);
 }
 
 /* Outlined */
 .card-outlined {
-  background-color: var(--canvas);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 16px;
+  background-color: var(--a2ui-color-background);
+  border: var(--a2ui-border);
+  border-radius: var(--a2ui-border-radius);
+  padding: var(--a2ui-spacing-l);
 }
 
 /* Filled */
 .card-filled {
-  background-color: var(--neutral-film);
-  border-radius: 12px;
-  padding: 16px;
+  background-color: var(--a2ui-color-surface);
+  border-radius: var(--a2ui-border-radius);
+  padding: var(--a2ui-spacing-l);
 }
 
 /* Ghost */
 .card-ghost {
   background-color: transparent;
   padding: 0;
+}
+
+.card-weighted {
+  width: auto;
 }

@@ -1,4 +1,81 @@
+@import "@lynx-js/luna-styles/index.css";
+
+:root {
+  background-color: var(--canvas);
+}
+
+.page {
+  width: 100%;
+  height: 100%;
+  background-color: var(--canvas);
+}
+
+/* Override A2UI tokens with Luna tokens for the playground preview. */
+.luna-light,
+.luna-dark {
+  --a2ui-color-background: var(--canvas);
+  --a2ui-color-on-background: var(--content);
+
+  --a2ui-color-surface: var(--paper);
+  --a2ui-color-on-surface: var(--content);
+
+  --a2ui-color-primary: var(--primary);
+  --a2ui-color-primary-light: var(--primary-2);
+  --a2ui-color-primary-dark: var(--primary-2);
+  --a2ui-color-primary-hover: var(--primary-2);
+  --a2ui-color-on-primary: var(--primary-content);
+
+  --a2ui-color-secondary: var(--secondary);
+  --a2ui-color-secondary-light: var(--secondary-2);
+  --a2ui-color-secondary-dark: var(--secondary-2);
+  --a2ui-color-secondary-hover: var(--secondary-2);
+  --a2ui-color-on-secondary: var(--secondary-content);
+
+  --a2ui-border-radius: 0.25rem;
+  --a2ui-color-border: var(--line);
+  --a2ui-border-width: 1px;
+  --a2ui-border: var(--a2ui-border-width) solid var(--a2ui-color-border);
+
+  --a2ui-font-family-title: inherit;
+  --a2ui-font-family-monospace: monospace;
+  --a2ui-color-input: var(--paper-clear);
+  --a2ui-color-on-input: var(--content);
+
+  --a2ui-grid-base: 0.5rem;
+  --a2ui-spacing-xs: calc(var(--a2ui-spacing-s) / 2);
+  --a2ui-spacing-s: calc(var(--a2ui-spacing-m) / 2);
+  --a2ui-spacing-m: var(--a2ui-grid-base);
+  --a2ui-spacing-l: calc(var(--a2ui-spacing-m) * 2);
+  --a2ui-spacing-xl: calc(var(--a2ui-spacing-l) * 2);
+
+  --a2ui-font-size: 1rem;
+  --a2ui-font-scale: 1.2;
+  --a2ui-font-size-xs: calc(var(--a2ui-font-size-s) / var(--a2ui-font-scale));
+  --a2ui-font-size-s: calc(var(--a2ui-font-size-m) / var(--a2ui-font-scale));
+  --a2ui-font-size-m: var(--a2ui-font-size);
+  --a2ui-font-size-l: calc(var(--a2ui-font-size-m) * var(--a2ui-font-scale));
+  --a2ui-font-size-xl: calc(var(--a2ui-font-size-l) * var(--a2ui-font-scale));
+  --a2ui-font-size-2xl: calc(var(--a2ui-font-size-xl) * var(--a2ui-font-scale));
+
+  --a2ui-line-height-headings: 1.2;
+  --a2ui-line-height-body: 1.5;
+
+  --a2ui-color-background-ambient: var(--canvas-ambient);
+  --a2ui-color-surface-muted: var(--neutral-film);
+  --a2ui-color-surface-strong: var(--paper-clear);
+  --a2ui-color-border-strong: var(--rule);
+  --a2ui-color-text: var(--content);
+  --a2ui-color-text-muted: var(--content-muted);
+  --a2ui-color-text-subtle: var(--content-muted-2);
+  --a2ui-color-primary-content-muted: var(--primary-content-faded);
+  --a2ui-color-overlay: var(--neutral-film);
+}
+
 page {
+  display: flex;
+  flex-direction: column;
   padding: 10px;
   box-sizing: border-box;
+  background-color: var(--a2ui-color-background);
+  color: var(--a2ui-color-on-background);
 }

@@ -9,6 +9,8 @@ export interface RenderInit {
   demoUrl: string;
   messages: unknown;
   actionMocks?: unknown;
+  /** Theme forwarded to the preview runtime. */
+  theme?: 'light' | 'dark';
   /** When set, use a short `?demo=<id>` param instead of inlining the payload. */
   demoId?: string;
   /** Simulation speed multiplier (e.g. 0.5, 1, 2, 4). */
@@ -21,6 +23,9 @@ export function buildRenderUrl(init: RenderInit, baseUrl: string): string {
   const url = new URL('render.html', baseUrl);
   url.searchParams.set('protocol', init.protocol.name);
   url.searchParams.set('demoUrl', init.demoUrl);
+  if (init.theme) {
+    url.searchParams.set('theme', init.theme);
+  }
 
   if (init.demoId) {
     // Known demo: reference static JSON file by ID instead of inlining payload.

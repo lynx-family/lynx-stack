@@ -37,9 +37,13 @@ function createComponentPreviewMessages(
 }
 
 function ComponentDetail(
-  props: { comp: ComponentDoc; protocol: Protocol },
+  props: {
+    comp: ComponentDoc;
+    protocol: Protocol;
+    theme: 'light' | 'dark';
+  },
 ) {
-  const { comp, protocol } = props;
+  const { comp, protocol, theme } = props;
   const [usageJson, setUsageJson] = useState(() =>
     formatJson(comp.usage[protocol.name])
   );
@@ -65,10 +69,11 @@ function ComponentDetail(
         protocol,
         demoUrl: DEFAULT_A2UI_DEMO_URL,
         messages: createComponentPreviewMessages(comp, parsedUsage.value),
+        theme,
       },
       baseUrl,
     );
-  }, [comp, parsedUsage, protocol]);
+  }, [comp, parsedUsage, protocol, theme]);
 
   return (
     <div className='compContent'>
@@ -200,9 +205,13 @@ function ComponentGrid(props: { protocol: Protocol }) {
 }
 
 export function ComponentsPage(
-  props: { protocol: Protocol; componentName?: string },
+  props: {
+    protocol: Protocol;
+    componentName?: string;
+    theme: 'light' | 'dark';
+  },
 ) {
-  const { protocol, componentName } = props;
+  const { protocol, componentName, theme } = props;
 
   const selectedComp = useMemo(
     () => (componentName
@@ -252,7 +261,13 @@ export function ComponentsPage(
       </div>
 
       {selectedComp
-        ? <ComponentDetail comp={selectedComp} protocol={protocol} />
+        ? (
+          <ComponentDetail
+            comp={selectedComp}
+            protocol={protocol}
+            theme={theme}
+          />
+        )
         : <ComponentGrid protocol={protocol} />}
     </div>
   );

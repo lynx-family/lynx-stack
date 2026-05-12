@@ -91,8 +91,12 @@ function findScenarioById(id?: string): Scenario | undefined {
   return ALL_SCENARIOS.find((s) => s.id === id);
 }
 
-export function DemosPage(props: { protocol: Protocol; demoId?: string }) {
-  const { protocol, demoId } = props;
+export function DemosPage(props: {
+  protocol: Protocol;
+  demoId?: string;
+  theme: 'light' | 'dark';
+}) {
+  const { protocol, demoId, theme } = props;
   const initialScenario = findScenarioById(demoId) ?? ALL_SCENARIOS[0];
 
   const [scenarioId, setScenarioId] = useState<string>(
@@ -195,6 +199,7 @@ export function DemosPage(props: { protocol: Protocol; demoId?: string }) {
           demoUrl: DEFAULT_A2UI_DEMO_URL,
           messages: parsed,
           actionMocks,
+          theme,
           demoId: isKnownDemo ? scenario!.id : undefined,
           speed,
         },
@@ -208,6 +213,7 @@ export function DemosPage(props: { protocol: Protocol; demoId?: string }) {
             demoUrl: DEFAULT_A2UI_DEMO_URL,
             messages: parsed,
             actionMocks,
+            theme,
             demoId: isKnownDemo ? scenario!.id : undefined,
             speed,
           },
@@ -247,6 +253,7 @@ export function DemosPage(props: { protocol: Protocol; demoId?: string }) {
         if (speed !== 1) {
           uInline.searchParams.set('speed', String(speed));
         }
+        uInline.searchParams.set('theme', theme);
         if (isKnownDemo) {
           // Known demo: point to the static JSON served by the rsbuild dev server.
           // Native Lynx supports fetch, so App.tsx will load it via messagesUrl.
@@ -321,6 +328,7 @@ export function DemosPage(props: { protocol: Protocol; demoId?: string }) {
               const r = new URL('render.html', targetBaseUrl);
               r.searchParams.set('protocol', protocol.name);
               r.searchParams.set('demoUrl', DEFAULT_A2UI_DEMO_URL);
+              r.searchParams.set('theme', theme);
               r.searchParams.set('messagesUrl', messagesUrlAbs);
               if (actionMocksUrlAbs && actionMocks) {
                 r.searchParams.set('actionMocksUrl', actionMocksUrlAbs);
@@ -336,7 +344,7 @@ export function DemosPage(props: { protocol: Protocol; demoId?: string }) {
         }
       })();
     },
-    [baseUrl, jsonEdited, protocol, rspeedyDevUrl, shareBaseUrl, speed],
+    [baseUrl, jsonEdited, protocol, rspeedyDevUrl, shareBaseUrl, speed, theme],
   );
 
   useEffect(() => {

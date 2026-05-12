@@ -1,10 +1,10 @@
-@import "./luna.css";
+@import "../theme.css";
 
 .divider {
   display: block;
   min-height: 0;
-  overflow: auto;
-  background-color: var(--rule);
+  overflow: hidden;
+  background-color: var(--a2ui-color-border-strong);
   border: none;
 }
 

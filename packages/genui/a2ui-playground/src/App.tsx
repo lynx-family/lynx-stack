@@ -96,6 +96,7 @@ export function App() {
 
   useLayoutEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.style.colorScheme = theme;
   }, [theme]);
 
   useEffect(() => {
@@ -142,21 +143,29 @@ export function App() {
               key='examples-detail'
               protocol={protocol}
               demoId={route.demoId}
+              theme={theme}
             />
           )
-          : <DemosListPage key='examples-index' protocol={protocol} />;
+          : (
+            <DemosListPage
+              key='examples-index'
+              protocol={protocol}
+              theme={theme}
+            />
+          );
       case 'components':
         return (
           <ComponentsPage
             key='components'
             protocol={protocol}
             componentName={route.componentName}
+            theme={theme}
           />
         );
       default:
         return <AIChatPage key='create' protocol={protocol} />;
     }
-  }, [protocol, route.tab, route.componentName, route.demoId]);
+  }, [protocol, route.tab, route.componentName, route.demoId, theme]);
 
   const protocolVersionControl = (
     <div className='protocolControl'>

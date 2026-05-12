@@ -33,8 +33,10 @@ const STATIC_DEMO_IDS = new Set(
   [...OFFICIAL_STATIC_DEMOS, ...EXTENDED_STATIC_DEMOS].map((d) => d.id),
 );
 
-export function DemosListPage(props: { protocol: Protocol }) {
-  const { protocol } = props;
+export function DemosListPage(
+  props: { protocol: Protocol; theme: 'light' | 'dark' },
+) {
+  const { protocol, theme } = props;
   const baseUrl = window.location.href.replace(/#.*$/, '');
 
   const previewUrls = useMemo(
@@ -47,6 +49,7 @@ export function DemosListPage(props: { protocol: Protocol }) {
               protocol,
               demoUrl: DEFAULT_A2UI_DEMO_URL,
               messages: scenario.messages,
+              theme,
               demoId: STATIC_DEMO_IDS.has(scenario.id)
                 ? scenario.id
                 : undefined,
@@ -56,7 +59,7 @@ export function DemosListPage(props: { protocol: Protocol }) {
           ),
         ]),
       ),
-    [baseUrl, protocol],
+    [baseUrl, protocol, theme],
   );
 
   const handleOpenExample = useCallback(
