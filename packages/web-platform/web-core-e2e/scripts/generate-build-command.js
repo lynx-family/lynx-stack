@@ -27,6 +27,11 @@ for (const cmd of command) {
       },
     });
 
+    child.on('error', (error) => {
+      console.error(`Failed to start process: ${error.message}`);
+      reject(error);
+    });
+
     child.on('exit', (code) => {
       if (code !== 0) {
         console.error(`Command failed with exit code ${code}`);
