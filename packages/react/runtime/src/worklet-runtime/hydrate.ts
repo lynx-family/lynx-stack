@@ -52,7 +52,7 @@ function hydrateCtxImpl(
       );
     } else {
       const firstScreenValue = typeof firstScreenCtxObj[key] === 'function'
-        ? (firstScreenCtxObj[key] as { ctx: ClosureValueType }).ctx
+        ? (firstScreenCtxObj[key] as { ctxRef?: WeakRef<object> }).ctxRef?.deref() as ClosureValueType
         : firstScreenCtxObj[key];
       hydrateCtxImpl(ctxObj[key], firstScreenValue, execId);
     }
