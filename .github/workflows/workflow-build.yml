@@ -75,6 +75,8 @@ jobs:
             name: Ubuntu
           - label: lynx-windows-2022-large
             name: Windows
+          - label: lynx-darwin-14-medium
+            name: OSX
     timeout-minutes: 30
     needs: get-merge-base
     steps:
