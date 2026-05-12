@@ -15,7 +15,6 @@ use swc_core::{
   },
   ecma::{
     ast::*,
-    atoms::once_cell,
     utils::{calc_literal_cost, prepend_stmt, private_ident},
     visit::{VisitMut, VisitMutWith},
   },
