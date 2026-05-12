@@ -94,7 +94,6 @@ jobs:
         --logHeapUsage
         --silent
   coverage-playwright:
-    needs: build-all
     if: github.repository == 'lynx-family/lynx-stack'
     uses: ./.github/workflows/workflow-test.yml
     strategy:

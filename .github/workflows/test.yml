@@ -83,7 +83,6 @@ jobs:
         export NODE_OPTIONS="--max-old-space-size=32768"
         pnpm --filter @lynx-js/web-core-e2e run lh || echo "Lighthouse failed"
   playwright:
-    needs: build
     uses: ./.github/workflows/workflow-test.yml
     strategy:
       fail-fast: false
