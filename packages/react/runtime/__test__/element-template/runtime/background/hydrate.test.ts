@@ -12,10 +12,7 @@ import {
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
 } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
-import {
-  clearEventHandlers,
-  getEventHandlerForEventValue,
-} from '../../../../src/element-template/prop-adapters/event.js';
+import { clearEventState, getEventHandlerForEventValue } from '../../../../src/element-template/prop-adapters/event.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import type { SerializedElementTemplate } from '../../../../src/element-template/protocol/types.js';
 import {
@@ -61,7 +58,7 @@ describe('hydrate', () => {
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
     clearEtAttrPlanMap();
-    clearEventHandlers();
+    clearEventState();
     resetElementTemplateCommitState();
     vi.clearAllMocks();
     (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];

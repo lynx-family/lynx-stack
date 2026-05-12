@@ -13,22 +13,6 @@ export function reserveElementTemplateId(): number {
   return id;
 }
 
-export function createElementTemplateWithHandle(
-  templateKey: string,
-  bundleUrl: string | null | undefined,
-  attributeSlots: SerializableValue[] | null | undefined,
-  elementSlots: ElementRef[][] | null | undefined,
-): ElementRef {
-  const handleId = reserveElementTemplateId();
-  return createElementTemplateWithReservedHandle(
-    handleId,
-    templateKey,
-    bundleUrl,
-    attributeSlots,
-    elementSlots,
-  );
-}
-
 export function createElementTemplateWithReservedHandle(
   handleId: number,
   templateKey: string,

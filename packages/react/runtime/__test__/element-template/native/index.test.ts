@@ -111,7 +111,7 @@ describe('element-template native index wiring', () => {
     const callDestroyLifetimeFun = vi.fn();
     const publishEvent = vi.fn();
     const publicComponentEvent = vi.fn();
-    const resetEventHandlersForRuntime = vi.fn();
+    const resetEventStateForRuntime = vi.fn();
 
     vi.doMock('../../../src/element-template/native/main-thread-api.js', () => ({
       injectCalledByNative,
@@ -149,7 +149,7 @@ describe('element-template native index wiring', () => {
     vi.doMock('../../../src/element-template/prop-adapters/event.js', () => ({
       publishEvent,
       publicComponentEvent,
-      resetEventHandlersForRuntime,
+      resetEventStateForRuntime,
     }));
     vi.doMock('../../../src/element-template/background/instance.js', () => ({
       BackgroundElementTemplateInstance: class BackgroundElementTemplateInstance {
@@ -166,7 +166,7 @@ describe('element-template native index wiring', () => {
     expect(initTimingAPI).toHaveBeenCalledTimes(1);
     expect(initProfileHook).toHaveBeenCalledTimes(1);
     expect(setupLynxEnv).toHaveBeenCalledTimes(1);
-    expect(resetEventHandlersForRuntime).toHaveBeenCalledTimes(1);
+    expect(resetEventStateForRuntime).toHaveBeenCalledTimes(1);
     expect(globalThis.lynxCoreInject.tt.callDestroyLifetimeFun).toBe(callDestroyLifetimeFun);
     expect(globalThis.lynxCoreInject.tt.publishEvent).toBe(publishEvent);
     expect(globalThis.lynxCoreInject.tt.publicComponentEvent).toBe(publicComponentEvent);

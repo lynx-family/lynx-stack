@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { clearAttributeSlotEventHandlers, prepareAttributeSlots as prepareRawAttributeSlots } from './attr-slots.js';
+import { prepareAttributeSlots as prepareRawAttributeSlots } from './attr-slots.js';
 import { globalCommitContext, markRemovedSubtreeForCurrentCommit } from './commit-context.js';
 import { isElementTemplateHydrated } from './commit-hook.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
@@ -81,12 +81,7 @@ export class BackgroundElementTemplateInstance {
     this.nodeType = isBuiltinRawTextTemplateKey(type) ? 3 : 1;
     backgroundElementTemplateInstanceManager.register(this);
     if (initialAttributeSlots) {
-      const preparedSlots = prepareRawAttributeSlots(
-        this.type,
-        this.instanceId,
-        initialAttributeSlots,
-        isElementTemplateHydrated(),
-      );
+      const preparedSlots = prepareRawAttributeSlots(this.type, this.instanceId, initialAttributeSlots);
       this.attributeSlots = preparedSlots;
       if (preparedSlots !== initialAttributeSlots) {
         this.rawAttributeSlots = initialAttributeSlots;
@@ -289,9 +284,12 @@ export class BackgroundElementTemplateInstance {
 
     // Remove from manager
     if (this.instanceId) {
-      clearAttributeSlotEventHandlers(this.type, this.instanceId);
       backgroundElementTemplateInstanceManager.values.delete(this.instanceId);
     }
+  }
+
+  getRawAttributeSlot(attrSlotIndex: number): unknown {
+    return this.rawAttributeSlots?.[attrSlotIndex] ?? this.attributeSlots[attrSlotIndex];
   }
 
   markCreateEmittedForHydration(): void {
@@ -308,7 +306,6 @@ export class BackgroundElementTemplateInstance {
       this.type,
       this.instanceId,
       this.rawAttributeSlots,
-      true,
     );
   }
 
@@ -323,7 +320,6 @@ export class BackgroundElementTemplateInstance {
         this.type,
         this.instanceId,
         value,
-        isHydrated,
       );
       this.rawAttributeSlots = nextSlots === value ? undefined : value;
       const maxLength = Math.max(previousSlots.length, nextSlots.length);

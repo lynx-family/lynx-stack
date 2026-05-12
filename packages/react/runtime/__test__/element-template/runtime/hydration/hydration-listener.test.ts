@@ -13,9 +13,9 @@ import {
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { PerformanceTimingFlags, PipelineOrigins } from '../../../../src/element-template/lynx/performance.js';
 import {
-  clearEventHandlers,
+  clearEventState,
   publishEvent,
-  resetEventHandlersForRuntime,
+  resetEventStateForRuntime,
 } from '../../../../src/element-template/prop-adapters/event.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import type { SerializedElementTemplate } from '../../../../src/element-template/protocol/types.js';
@@ -53,7 +53,7 @@ describe('ElementTemplate hydration listener', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     clearEtAttrPlanMap();
-    clearEventHandlers();
+    clearEventState();
     resetElementTemplateHydrationListener();
     envManager.resetEnv('background');
   });
@@ -223,7 +223,7 @@ describe('ElementTemplate hydration listener', () => {
 
   it('flushes queued direct events after hydrate registers serialized handlers', () => {
     __etAttrPlanMap._et_event = [0, adaptEventAttrSlot];
-    resetEventHandlersForRuntime();
+    resetEventStateForRuntime();
     envManager.switchToBackground();
     installElementTemplateHydrationListener();
 

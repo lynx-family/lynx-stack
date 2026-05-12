@@ -1,25 +1,42 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { destroyElementTemplateBackgroundRuntime } from '../../../../src/element-template/background/destroy.js';
+import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
+import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import {
-  clearEventHandlers,
+  clearEventState,
   flushPendingEvents,
   publicComponentEvent,
   publishEvent,
-  resetEventHandlersForRuntime,
-  setEventHandler,
+  resetEventStateForRuntime,
 } from '../../../../src/element-template/prop-adapters/event.js';
+import {
+  __etAttrPlanMap,
+  adaptEventAttrSlot,
+  clearEtAttrPlanMap,
+} from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 
 describe('ElementTemplate event bridge', () => {
+  function createEventInstance(handleId: number, handler: () => void): BackgroundElementTemplateInstance {
+    __etAttrPlanMap.view = [0, adaptEventAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    backgroundElementTemplateInstanceManager.updateId(instance.instanceId, handleId);
+    instance.setAttribute('attributeSlots', [handler]);
+    return instance;
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
-    clearEventHandlers();
+    backgroundElementTemplateInstanceManager.clear();
+    backgroundElementTemplateInstanceManager.nextId = 0;
+    clearEtAttrPlanMap();
+    clearEventState();
   });
 
   it('dispatches publishEvent to the current handler', () => {
     const handler = vi.fn();
     const eventData = { type: 'tap', detail: { x: 1 } };
-    setEventHandler(-1, 0, handler);
+    createEventInstance(-1, handler);
 
     publishEvent('-1:0:', eventData);
 
@@ -29,7 +46,7 @@ describe('ElementTemplate event bridge', () => {
   it('dispatches publicComponentEvent through the same handler lookup', () => {
     const handler = vi.fn();
     const eventData = { type: 'tap' };
-    setEventHandler(-2, 0, handler);
+    createEventInstance(-2, handler);
 
     publicComponentEvent('component-id', '-2:0:', eventData);
 
@@ -42,7 +59,7 @@ describe('ElementTemplate event bridge', () => {
     const reportError = vi.fn();
     lynx.reportError = reportError;
     try {
-      setEventHandler(-3, 0, () => {
+      createEventInstance(-3, () => {
         throw error;
       });
 
@@ -59,13 +76,13 @@ describe('ElementTemplate event bridge', () => {
     const queuedEvent = { type: 'tap', phase: 'before-hydrate' };
     const droppedEvent = { type: 'tap', phase: 'after-hydrate' };
 
-    resetEventHandlersForRuntime();
+    resetEventStateForRuntime();
     publishEvent('-4:0:', queuedEvent);
-    setEventHandler(-4, 0, queuedHandler);
+    createEventInstance(-4, queuedHandler);
     flushPendingEvents();
 
     publishEvent('-5:0:', droppedEvent);
-    setEventHandler(-5, 0, droppedHandler);
+    createEventInstance(-5, droppedHandler);
 
     expect(queuedHandler).toHaveBeenCalledWith(queuedEvent);
     expect(droppedHandler).not.toHaveBeenCalled();
@@ -73,11 +90,11 @@ describe('ElementTemplate event bridge', () => {
 
   it('clears queued events when the background runtime is destroyed', () => {
     const handler = vi.fn();
-    resetEventHandlersForRuntime();
+    resetEventStateForRuntime();
     publishEvent('-6:0:', { type: 'tap' });
 
     destroyElementTemplateBackgroundRuntime();
-    setEventHandler(-6, 0, handler);
+    createEventInstance(-6, handler);
     flushPendingEvents();
 
     expect(handler).not.toHaveBeenCalled();
@@ -85,11 +102,11 @@ describe('ElementTemplate event bridge', () => {
 
   it('does not queue stale native events after the background runtime is destroyed', () => {
     const handler = vi.fn();
-    resetEventHandlersForRuntime();
+    resetEventStateForRuntime();
     destroyElementTemplateBackgroundRuntime();
 
     publishEvent('-7:0:', { type: 'tap' });
-    setEventHandler(-7, 0, handler);
+    createEventInstance(-7, handler);
     flushPendingEvents();
 
     expect(handler).not.toHaveBeenCalled();

@@ -10,6 +10,7 @@ export const backgroundElementTemplateInstanceManager: {
   register(instance: BackgroundElementTemplateInstance): void;
   updateId(oldId: number, newId: number): void;
   get(id: number): BackgroundElementTemplateInstance | undefined;
+  getRawAttributeValueByEventValue(eventValue: string): unknown;
   clear(): void;
 } = {
   nextId: 0,
@@ -49,6 +50,28 @@ export const backgroundElementTemplateInstanceManager: {
 
   get(id: number): BackgroundElementTemplateInstance | undefined {
     return this.values.get(id);
+  },
+
+  getRawAttributeValueByEventValue(eventValue: string): unknown {
+    const parts = eventValue?.split(':');
+    if (!parts || (parts.length !== 2 && parts.length !== 3)) {
+      throw new Error('Invalid ElementTemplate event value: ' + eventValue);
+    }
+
+    const instance = this.values.get(Number(parts[0]));
+    if (!instance) {
+      return null;
+    }
+
+    const value = instance.getRawAttributeSlot(Number(parts[1]));
+    const spreadKey = parts[2];
+    if (!spreadKey) {
+      return value;
+    }
+    if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+      return undefined;
+    }
+    return (value as Record<string, unknown>)[spreadKey];
   },
 
   clear(): void {

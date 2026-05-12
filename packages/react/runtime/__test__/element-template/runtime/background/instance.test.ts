@@ -16,10 +16,7 @@ import {
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
 } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
-import {
-  clearEventHandlers,
-  getEventHandlerForEventValue,
-} from '../../../../src/element-template/prop-adapters/event.js';
+import { clearEventState, getEventHandlerForEventValue } from '../../../../src/element-template/prop-adapters/event.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import {
   __etAttrPlanMap,
@@ -36,7 +33,7 @@ describe('BackgroundElementTemplateInstance', () => {
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
     clearEtAttrPlanMap();
-    clearEventHandlers();
+    clearEventState();
     resetElementTemplateCommitState();
   });
 
@@ -736,7 +733,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
     clearEtAttrPlanMap();
-    clearEventHandlers();
+    clearEventState();
     resetElementTemplateCommitState();
   });
 
@@ -796,7 +793,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     expect(globalCommitContext.ops).toEqual([]);
   });
 
-  it('prepares event attribute slots after hydration and registers the handler by event value', () => {
+  it('prepares event attribute slots after hydration and resolves the handler by event value', () => {
     __etAttrPlanMap.view = [0, adaptEventAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view');
     instance.emitCreate();
@@ -817,7 +814,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     ]);
   });
 
-  it('updates the event handler registry without patching native when the event value is unchanged', () => {
+  it('uses the latest raw event handler without patching native when the event value is unchanged', () => {
     __etAttrPlanMap.view = [0, adaptEventAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view');
     instance.emitCreate();
@@ -854,7 +851,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     expect(globalCommitContext.ops).toEqual([]);
   });
 
-  it('removes the registered event handler and patches null when the event slot is cleared', () => {
+  it('removes the raw event handler and patches null when the event slot is cleared', () => {
     __etAttrPlanMap.view = [0, adaptEventAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view');
     instance.emitCreate();

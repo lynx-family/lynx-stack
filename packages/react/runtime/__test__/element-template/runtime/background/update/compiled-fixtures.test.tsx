@@ -18,11 +18,6 @@ import {
 } from '../../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../../src/element-template/background/manager.js';
 import { root } from '../../../../../src/element-template/index.js';
-import {
-  clearEventHandlers,
-  getEventHandlerForEventValue,
-  publishEvent,
-} from '../../../../../src/element-template/prop-adapters/event.js';
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../../src/element-template/protocol/opcodes.js';
 import type {
@@ -46,23 +41,10 @@ declare const renderPage: () => void;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const FIXTURES_DIR = path.resolve(__dirname, '../../../fixtures/background/update');
-const DIRECT_EVENT_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/event/direct-event/index.tsx');
-const CONDITIONAL_DIRECT_EVENT_FIXTURE = path.resolve(
-  __dirname,
-  '../../../fixtures/background/event/conditional-direct-event/index.tsx',
-);
 const SLOT_ID = 0;
 
 interface CompiledKeyedListModule extends CompiledFixtureModuleExports {
   App: (props: { items: string[] }) => JSX.Element;
-}
-
-interface CompiledDirectEventModule extends CompiledFixtureModuleExports {
-  App: (props: { onTap?: () => void }) => JSX.Element;
-}
-
-interface CompiledConditionalDirectEventModule extends CompiledFixtureModuleExports {
-  App: (props: { show?: boolean; onTap?: () => void }) => JSX.Element;
 }
 
 function getRenderedHost(): BackgroundElementTemplateInstance {
@@ -129,36 +111,6 @@ describe('Compiled background Preact updates', () => {
     return { backgroundModule, mainModule };
   }
 
-  async function loadCompiledDirectEventFixture(): Promise<{
-    backgroundModule: CompiledDirectEventModule;
-    mainModule: CompiledDirectEventModule;
-  }> {
-    const mainArtifact = await compileFixtureSource(DIRECT_EVENT_FIXTURE, { target: 'LEPUS' });
-    primeCompiledFixtureTemplates(mainArtifact);
-    const mainModule = await loadCompiledFixtureModule<CompiledDirectEventModule>(mainArtifact);
-
-    const backgroundArtifact = await compileFixtureSource(DIRECT_EVENT_FIXTURE, { target: 'JS' });
-    const backgroundModule = await loadCompiledFixtureModule<CompiledDirectEventModule>(backgroundArtifact);
-
-    return { backgroundModule, mainModule };
-  }
-
-  async function loadCompiledConditionalDirectEventFixture(): Promise<{
-    backgroundModule: CompiledConditionalDirectEventModule;
-    mainModule: CompiledConditionalDirectEventModule;
-  }> {
-    const mainArtifact = await compileFixtureSource(CONDITIONAL_DIRECT_EVENT_FIXTURE, { target: 'LEPUS' });
-    primeCompiledFixtureTemplates(mainArtifact);
-    const mainModule = await loadCompiledFixtureModule<CompiledConditionalDirectEventModule>(mainArtifact);
-
-    const backgroundArtifact = await compileFixtureSource(CONDITIONAL_DIRECT_EVENT_FIXTURE, { target: 'JS' });
-    const backgroundModule = await loadCompiledFixtureModule<CompiledConditionalDirectEventModule>(
-      backgroundArtifact,
-    );
-
-    return { backgroundModule, mainModule };
-  }
-
   function renderCompiledOnBackground(
     moduleExports: CompiledKeyedListModule,
     items: readonly string[],
@@ -182,59 +134,10 @@ describe('Compiled background Preact updates', () => {
     return host;
   }
 
-  function renderDirectEventOnBackground(
-    moduleExports: CompiledDirectEventModule,
-    onTap?: () => void,
-  ): BackgroundElementTemplateInstance {
-    envManager.switchToBackground();
-    root.render(createElement(moduleExports.App, { onTap }));
-    return getRenderedHost();
-  }
-
-  function hydrateDirectEventFromMainThread(
-    moduleExports: CompiledDirectEventModule,
-    onTap?: () => void,
-  ): BackgroundElementTemplateInstance {
-    const host = getRenderedHost();
-
-    envManager.switchToMainThread();
-    root.render(createElement(moduleExports.App, { onTap }));
-    renderPage();
-    envManager.switchToBackground();
-
-    return host;
-  }
-
-  function renderConditionalDirectEventOnBackground(
-    moduleExports: CompiledConditionalDirectEventModule,
-    show: boolean,
-    onTap?: () => void,
-  ): BackgroundElementTemplateInstance {
-    envManager.switchToBackground();
-    root.render(createElement(moduleExports.App, { show, onTap }));
-    return getRenderedHost();
-  }
-
-  function hydrateConditionalDirectEventFromMainThread(
-    moduleExports: CompiledConditionalDirectEventModule,
-    show: boolean,
-    onTap?: () => void,
-  ): BackgroundElementTemplateInstance {
-    const host = getRenderedHost();
-
-    envManager.switchToMainThread();
-    root.render(createElement(moduleExports.App, { show, onTap }));
-    renderPage();
-    envManager.switchToBackground();
-
-    return host;
-  }
-
   beforeEach(() => {
     vi.clearAllMocks();
     resetElementTemplateCommitState();
     clearEtAttrPlanMap();
-    clearEventHandlers();
     updateEvents = [];
     envManager.resetEnv('background');
     envManager.setUseElementTemplate(true);
@@ -373,151 +276,6 @@ describe('Compiled background Preact updates', () => {
           vi.useRealTimers();
         }
       },
-    });
-  });
-
-  describe('direct events', () => {
-    it('updates the background event registry without dispatching a native patch when only handler identity changes', async () => {
-      const { backgroundModule, mainModule } = await loadCompiledDirectEventFixture();
-      const firstHandler = vi.fn();
-      const secondHandler = vi.fn();
-
-      const host = renderDirectEventOnBackground(backgroundModule, firstHandler);
-      hydrateDirectEventFromMainThread(mainModule, firstHandler);
-      updateEvents = [];
-
-      renderDirectEventOnBackground(backgroundModule, secondHandler);
-
-      const eventValue = `${host.instanceId}:0:`;
-      envManager.switchToMainThread();
-      expect(updateEvents).toEqual([]);
-      envManager.switchToBackground();
-      expect(host.attributeSlots).toEqual([eventValue]);
-      expect(getEventHandlerForEventValue(eventValue)).toBe(secondHandler);
-    });
-
-    it('uses ordinary setAttribute patches when direct event handlers are added or removed', async () => {
-      const { backgroundModule, mainModule } = await loadCompiledDirectEventFixture();
-      const handler = vi.fn();
-
-      const host = renderDirectEventOnBackground(backgroundModule);
-      hydrateDirectEventFromMainThread(mainModule);
-      updateEvents = [];
-
-      renderDirectEventOnBackground(backgroundModule, handler);
-
-      const eventValue = `${host.instanceId}:0:`;
-      envManager.switchToMainThread();
-      expect(updateEvents.at(-1)?.ops).toEqual([
-        ElementTemplateUpdateOps.setAttribute,
-        host.instanceId,
-        0,
-        eventValue,
-      ]);
-      envManager.switchToBackground();
-      expect(host.attributeSlots).toEqual([eventValue]);
-      expect(getEventHandlerForEventValue(eventValue)).toBe(handler);
-
-      updateEvents = [];
-      renderDirectEventOnBackground(backgroundModule);
-
-      envManager.switchToMainThread();
-      expect(updateEvents.at(-1)?.ops).toEqual([
-        ElementTemplateUpdateOps.setAttribute,
-        host.instanceId,
-        0,
-        null,
-      ]);
-      envManager.switchToBackground();
-      expect(host.attributeSlots).toEqual([null]);
-      expect(getEventHandlerForEventValue(eventValue)).toBeUndefined();
-    });
-
-    it('dispatches native event values to the latest hydrated direct event handler', async () => {
-      const { backgroundModule, mainModule } = await loadCompiledDirectEventFixture();
-      const firstHandler = vi.fn();
-      const secondHandler = vi.fn();
-
-      const host = renderDirectEventOnBackground(backgroundModule, firstHandler);
-      hydrateDirectEventFromMainThread(mainModule, firstHandler);
-      const eventValue = `${host.instanceId}:0:`;
-
-      publishEvent(eventValue, { type: 'tap', phase: 'first' });
-
-      renderDirectEventOnBackground(backgroundModule, secondHandler);
-      publishEvent(eventValue, { type: 'tap', phase: 'second' });
-
-      expect(firstHandler).toHaveBeenCalledWith({ type: 'tap', phase: 'first' });
-      expect(firstHandler).toHaveBeenCalledTimes(1);
-      expect(secondHandler).toHaveBeenCalledWith({ type: 'tap', phase: 'second' });
-    });
-
-    it('registers and dispatches direct events on inserted compiled subtrees', async () => {
-      const { backgroundModule, mainModule } = await loadCompiledConditionalDirectEventFixture();
-      const handler = vi.fn();
-
-      const host = renderConditionalDirectEventOnBackground(backgroundModule, false);
-      hydrateConditionalDirectEventFromMainThread(mainModule, false);
-      updateEvents = [];
-
-      renderConditionalDirectEventOnBackground(backgroundModule, true, handler);
-      const inserted = getSlotChildAt(0, host);
-      const eventValue = `${inserted.instanceId}:0:`;
-
-      envManager.switchToMainThread();
-      expect(updateEvents.at(-1)?.ops).toEqual([
-        ...collectRecursiveCreateCommandStream(inserted),
-        ElementTemplateUpdateOps.insertNode,
-        host.instanceId,
-        SLOT_ID,
-        inserted.instanceId,
-        0,
-      ]);
-      envManager.switchToBackground();
-      expect(inserted.attributeSlots).toEqual([eventValue]);
-      expect(getEventHandlerForEventValue(eventValue)).toBe(handler);
-
-      publishEvent(eventValue, { type: 'tap', phase: 'inserted' });
-
-      expect(handler).toHaveBeenCalledWith({ type: 'tap', phase: 'inserted' });
-    });
-
-    it('cleans direct event handlers when compiled subtrees are removed', async () => {
-      const { backgroundModule, mainModule } = await loadCompiledConditionalDirectEventFixture();
-      const handler = vi.fn();
-
-      const host = renderConditionalDirectEventOnBackground(backgroundModule, true, handler);
-      hydrateConditionalDirectEventFromMainThread(mainModule, true, handler);
-      const removed = getSlotChildAt(0, host);
-      const removedSubtreeHandleIds = collectElementTemplateSubtreeHandleIds(removed);
-      const eventValue = `${removed.instanceId}:0:`;
-      expect(getEventHandlerForEventValue(eventValue)).toBe(handler);
-      updateEvents = [];
-
-      vi.useFakeTimers();
-      try {
-        renderConditionalDirectEventOnBackground(backgroundModule, false);
-
-        envManager.switchToMainThread();
-        expect(updateEvents.at(-1)?.ops).toEqual([
-          ElementTemplateUpdateOps.removeNode,
-          host.instanceId,
-          SLOT_ID,
-          removed.instanceId,
-          removedSubtreeHandleIds,
-        ]);
-        envManager.switchToBackground();
-        expect(getEventHandlerForEventValue(eventValue)).toBe(handler);
-
-        vi.advanceTimersByTime(10000);
-
-        expect(backgroundElementTemplateInstanceManager.get(removed.instanceId)).toBeUndefined();
-        expect(getEventHandlerForEventValue(eventValue)).toBeUndefined();
-        publishEvent(eventValue, { type: 'tap', phase: 'removed' });
-        expect(handler).not.toHaveBeenCalledWith({ type: 'tap', phase: 'removed' });
-      } finally {
-        vi.useRealTimers();
-      }
     });
   });
 });

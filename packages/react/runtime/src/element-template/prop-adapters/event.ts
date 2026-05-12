@@ -2,51 +2,40 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { backgroundElementTemplateInstanceManager } from '../background/manager.js';
+
 export type EtEventHandler = (...args: unknown[]) => unknown;
 
-const eventHandlerByEventValue = new Map<string, EtEventHandler>();
 const pendingEvents: Array<[eventValue: string, data: unknown]> = [];
 let queuePendingEvents = false;
 
 function dispatchEvent(eventValue: string, data: unknown): boolean {
-  const handler = eventHandlerByEventValue.get(eventValue);
-  if (!handler) {
+  const handler = backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue(eventValue);
+  if (typeof handler !== 'function') {
     return false;
   }
 
   try {
-    handler(data);
+    (handler as EtEventHandler)(data);
   } catch (error) {
     lynx.reportError(error as Error);
   }
   return true;
 }
 
-export function setEventHandler(
-  handleId: number,
-  attrSlotIndex: number,
-  handler: EtEventHandler,
-): void {
-  eventHandlerByEventValue.set(`${handleId}:${attrSlotIndex}:`, handler);
-}
-
-export function deleteEventHandler(handleId: number, attrSlotIndex: number): void {
-  eventHandlerByEventValue.delete(`${handleId}:${attrSlotIndex}:`);
-}
-
-export function clearEventHandlers(): void {
-  eventHandlerByEventValue.clear();
+export function clearEventState(): void {
   pendingEvents.length = 0;
   queuePendingEvents = false;
 }
 
-export function resetEventHandlersForRuntime(): void {
-  clearEventHandlers();
+export function resetEventStateForRuntime(): void {
+  clearEventState();
   queuePendingEvents = true;
 }
 
 export function getEventHandlerForEventValue(eventValue: string): EtEventHandler | undefined {
-  return eventHandlerByEventValue.get(eventValue);
+  const handler = backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue(eventValue);
+  return typeof handler === 'function' ? (handler as EtEventHandler) : undefined;
 }
 
 export function publishEvent(eventValue: string, data: unknown): void {
