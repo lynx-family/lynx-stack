@@ -81,8 +81,8 @@ describe('WebEncodePlugin: lepusCode-undefined safety (FetchBundle)', () => {
       string,
       unknown
     >;
-    expect(json.lepusCode).toEqual({});
-    expect(json.customSections).toBeDefined();
+    expect(json['lepusCode']).toEqual({});
+    expect(json['customSections']).toBeDefined();
   });
 
   test('legacy lepusCode-set path keeps the flattened shape', async () => {
@@ -113,7 +113,7 @@ describe('WebEncodePlugin: lepusCode-undefined safety (FetchBundle)', () => {
       string,
       unknown
     >;
-    expect(json.lepusCode).toEqual({
+    expect(json['lepusCode']).toEqual({
       worklet: 'worklet src',
       root: 'main lepus source',
     });

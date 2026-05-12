@@ -1,7 +1,16 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { dirname } from 'node:path';
+
+// Output-shape tests live in `test/cases/lazy-bundle-fetcher/{fetchbundle,
+// querycomponent}/`. This file is a separate runner because the bytecode
+// gating is driven by env vars (`process.env.DEBUG`) that need to be
+// flipped per test — `cases.test.ts` runs all cases in the same process,
+// so env mutations would leak.
+
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, test } from '@rstest/core';
 import webpack from 'webpack';
@@ -14,9 +23,6 @@ const CONTEXT = dirname(new URL(import.meta.url).pathname);
 interface CapturedEncode {
   outputName: string;
   customSections: Record<string, { content: unknown; encoding?: string }>;
-  manifest: Record<string, string | undefined> | undefined;
-  lepusCodeRoot: string | undefined;
-  cssMap: Record<string, unknown> | undefined;
 }
 
 function captureBeforeEmit() {
@@ -31,12 +37,6 @@ function captureBeforeEmit() {
             string,
             { content: unknown; encoding?: string }
           >,
-          manifest: args.finalEncodeOptions.manifest,
-          lepusCodeRoot: args.finalEncodeOptions.lepusCode?.root,
-          cssMap: (args.finalEncodeOptions['css'] as
-            | { cssMap?: Record<string, unknown> }
-            | undefined)
-            ?.cssMap,
         });
         return Promise.resolve(args);
       });
@@ -46,28 +46,26 @@ function captureBeforeEmit() {
 }
 
 function buildConfig(
-  fetcherOptions: Partial<
-    NonNullable<ConstructorParameters<typeof LynxTemplatePlugin>[0]>
-  >,
   capturePlugin: (compiler: webpack.Compiler) => void,
-  mode: 'development' | 'production' = 'production',
+  mode: 'development' | 'production',
 ): webpack.Configuration {
+  // Each build gets its own temp output dir so parallel/serial test runs
+  // don't clobber each other (or the package's `dist/`).
+  const dist = mkdtempSync(join(tmpdir(), 'tmpl-fetchbundle-'));
   return {
     context: CONTEXT,
     mode,
     devtool: false,
     entry: FIXTURE_ENTRY,
-    output: { iife: false },
+    output: { iife: false, path: dist },
     plugins: [
       capturePlugin,
       new LynxTemplatePlugin({
-        ...fetcherOptions,
+        ...LynxTemplatePlugin.defaultOptions,
+        lazyBundleFetcher: 'FetchBundle',
         intermediate: '.rspeedy/main',
       }),
       new LynxEncodePlugin(),
-      // Strip the React-style layer suffixes so MT/BG chunks share a
-      // template, mirroring the production setup that LynxTemplatePlugin
-      // is built for.
       (compiler) => {
         compiler.hooks.thisCompilation.tap('strip', (compilation) => {
           const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
@@ -80,16 +78,12 @@ function buildConfig(
           );
         });
       },
-      // Mark assets whose name contains `:main-thread` as
-      // `lynx:main-thread` so LynxTemplatePlugin routes them into the
-      // mainThread bucket (mirroring `react-webpack-plugin`'s loader).
       (compiler) => {
         compiler.hooks.thisCompilation.tap('mark-mt', (compilation) => {
           compilation.hooks.processAssets.tap(
             {
               name: 'mark-mt',
-              stage: compiler.webpack.Compilation
-                .PROCESS_ASSETS_STAGE_DERIVED,
+              stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_DERIVED,
             },
             (assets) => {
               for (const name of Object.keys(assets)) {
@@ -121,7 +115,16 @@ function runWebpack(config: webpack.Configuration): Promise<webpack.Stats> {
   });
 }
 
-describe('LynxTemplatePlugin: lazyBundleFetcher', () => {
+async function runAndGetMtEncoding(
+  mode: 'development' | 'production',
+): Promise<string | undefined> {
+  const { captured, plugin } = captureBeforeEmit();
+  await runWebpack(buildConfig(plugin, mode));
+  const lazy = captured.find((c) => c.outputName.startsWith('async/'));
+  return lazy?.customSections['main-thread']?.encoding;
+}
+
+describe('LynxTemplatePlugin: FetchBundle main-thread bytecode encoding', () => {
   const originalDebug = process.env['DEBUG'];
   void beforeEach(() => {
     // The vitest/rstest harness sets DEBUG=rspeedy by default, which
@@ -134,86 +137,21 @@ describe('LynxTemplatePlugin: lazyBundleFetcher', () => {
     else process.env['DEBUG'] = originalDebug;
   });
 
-  test('FetchBundle async chunk emits customSections shape', async () => {
-    const { captured, plugin } = captureBeforeEmit();
-    const stats = await runWebpack(
-      buildConfig({ lazyBundleFetcher: 'FetchBundle' }, plugin),
-    );
-    expect(stats.compilation.errors).toEqual([]);
-
-    const lazy = captured.find((c) => c.outputName.startsWith('async/'));
-    expect(lazy).toBeDefined();
-
-    expect(lazy!.customSections['main-thread']).toBeDefined();
-    expect(lazy!.customSections['main-thread']!.encoding).toBe('JsBytecode');
-    expect(typeof lazy!.customSections['main-thread']!.content).toBe('string');
-
-    expect(lazy!.customSections['background']).toBeDefined();
-    expect(lazy!.customSections['background']!.encoding).toBeUndefined();
-    expect(typeof lazy!.customSections['background']!.content).toBe('string');
-
-    // For FetchBundle, lepusCode.root is moved into customSections; the
-    // legacy slot is empty.
-    expect(lazy!.lepusCodeRoot).toBeUndefined();
-    expect(lazy!.cssMap).toEqual({});
+  test('production → encoding: JsBytecode', async () => {
+    expect(await runAndGetMtEncoding('production')).toBe('JsBytecode');
   });
 
-  test('QueryComponent (default) keeps legacy lepusCode + manifest shape', async () => {
-    const { captured, plugin } = captureBeforeEmit();
-    const stats = await runWebpack(buildConfig({}, plugin));
-    expect(stats.compilation.errors).toEqual([]);
-
-    const lazy = captured.find((c) => c.outputName.startsWith('async/'));
-    expect(lazy).toBeDefined();
-
-    // Customsections shouldn't carry main-thread/background/CSS for
-    // QueryComponent — the legacy lepusCode + manifest path owns them.
-    expect(lazy!.customSections['main-thread']).toBeUndefined();
-    expect(lazy!.customSections['background']).toBeUndefined();
-    expect(lazy!.lepusCodeRoot).toBeDefined();
+  test('development → no JsBytecode encoding', async () => {
+    expect(await runAndGetMtEncoding('development')).toBeUndefined();
   });
 
-  describe('FetchBundle main-thread bytecode encoding', () => {
-    test('production → encoding: JsBytecode', async () => {
-      const { captured, plugin } = captureBeforeEmit();
-      await runWebpack(
-        buildConfig({ lazyBundleFetcher: 'FetchBundle' }, plugin, 'production'),
-      );
-      const lazy = captured.find((c) => c.outputName.startsWith('async/'));
-      expect(lazy!.customSections['main-thread']!.encoding).toBe('JsBytecode');
-    });
+  test('DEBUG=rspeedy → no JsBytecode encoding even in production', async () => {
+    process.env['DEBUG'] = 'rspeedy';
+    expect(await runAndGetMtEncoding('production')).toBeUndefined();
+  });
 
-    test('development → no JsBytecode encoding', async () => {
-      const { captured, plugin } = captureBeforeEmit();
-      await runWebpack(
-        buildConfig(
-          { lazyBundleFetcher: 'FetchBundle' },
-          plugin,
-          'development',
-        ),
-      );
-      const lazy = captured.find((c) => c.outputName.startsWith('async/'));
-      expect(lazy!.customSections['main-thread']!.encoding).toBeUndefined();
-    });
-
-    test('DEBUG=rspeedy → no JsBytecode encoding even in production', async () => {
-      process.env['DEBUG'] = 'rspeedy';
-      const { captured, plugin } = captureBeforeEmit();
-      await runWebpack(
-        buildConfig({ lazyBundleFetcher: 'FetchBundle' }, plugin, 'production'),
-      );
-      const lazy = captured.find((c) => c.outputName.startsWith('async/'));
-      expect(lazy!.customSections['main-thread']!.encoding).toBeUndefined();
-    });
-
-    test('DEBUG=other → JsBytecode encoding still on', async () => {
-      process.env['DEBUG'] = 'unrelated';
-      const { captured, plugin } = captureBeforeEmit();
-      await runWebpack(
-        buildConfig({ lazyBundleFetcher: 'FetchBundle' }, plugin, 'production'),
-      );
-      const lazy = captured.find((c) => c.outputName.startsWith('async/'));
-      expect(lazy!.customSections['main-thread']!.encoding).toBe('JsBytecode');
-    });
+  test('DEBUG=other → JsBytecode encoding still on', async () => {
+    process.env['DEBUG'] = 'unrelated';
+    expect(await runAndGetMtEncoding('production')).toBe('JsBytecode');
   });
 });
