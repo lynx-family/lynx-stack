@@ -109,27 +109,10 @@ jobs:
           node-version: "24"
           package-manager-cache: false
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
-      - name: Install Rust
-        run: |
-          if ! command -v rustup &> /dev/null ; then
-            curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --default-toolchain none -y
-            cargo_bin="${CARGO_HOME:-$HOME/.cargo}/bin"
-            printf '%s\n' "$cargo_bin" >> "$GITHUB_PATH"
-            export PATH="$cargo_bin:$PATH"
-          fi
-          if [[ -f rust-toolchain.toml ]]; then
-            toolchain="$(grep -E '^\s*channel\s*=' rust-toolchain.toml | head -n1 | sed -E 's/.*=\s*"([^"]+)".*/\1/')"
-          elif [[ -f rust-toolchain ]]; then
-            toolchain="$(cat rust-toolchain)"
-          else
-            toolchain="stable"
-          fi
-          rustup toolchain install "$toolchain" \
-            -c rustc \
-            -c cargo \
-            -c rust-std \
-            -c clippy \
-            -c rustfmt
+      - uses: actions-rust-lang/setup-rust-toolchain@1780873c7b576612439a134613cc4cc74ce5538c # v1
+        with:
+          components: clippy, rustfmt
+          cache: false
       - name: Install
         run: |
           npm install -g corepack@latest
