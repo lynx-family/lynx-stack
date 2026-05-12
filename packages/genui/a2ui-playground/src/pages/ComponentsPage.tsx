@@ -12,6 +12,8 @@ import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
 
+import './ComponentsPage.css';
+
 const jsonExtensions = [json()];
 
 function formatJson(value: unknown): string {

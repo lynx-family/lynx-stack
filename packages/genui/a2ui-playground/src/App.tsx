@@ -15,10 +15,11 @@ import { DemosListPage } from './pages/DemosListPage.js';
 import { DemosPage } from './pages/DemosPage.js';
 import { OpenUIComponentsPage } from './pages/OpenUIComponentsPage.js';
 import { OpenUIDemosPage } from './pages/OpenUIDemosPage.js';
+import { PlaybackPage } from './pages/PlaybackPage.js';
 import type { Protocol, ProtocolName } from './utils/protocol.js';
 import { DEFAULT_PROTOCOL, getProtocol } from './utils/protocol.js';
 
-type Tab = 'create' | 'examples' | 'components';
+type Tab = 'create' | 'examples' | 'components' | 'playback';
 
 interface TabDef {
   id: Tab;
@@ -29,6 +30,7 @@ const A2UI_TABS: TabDef[] = [
   { id: 'create', label: 'Create' },
   { id: 'examples', label: 'Examples' },
   { id: 'components', label: 'Components' },
+  { id: 'playback', label: 'Playback' },
 ];
 
 const OPENUI_TABS: TabDef[] = [
@@ -67,6 +69,9 @@ function parseHash(hash: string): Route {
   }
   if (rest[0] === 'chat' || rest[0] === 'create') {
     return { protocol, tab: 'create' };
+  }
+  if (rest[0] === 'playback') {
+    return { protocol, tab: 'playback' };
   }
   // OpenUI has no create tab, default to examples.
   if (protocol.name === 'openui') return { protocol, tab: 'examples' };
@@ -162,6 +167,8 @@ export function App() {
             theme={theme}
           />
         );
+      case 'playback':
+        return <PlaybackPage key='playback' protocol={protocol} />;
       default:
         return <AIChatPage key='create' protocol={protocol} />;
     }

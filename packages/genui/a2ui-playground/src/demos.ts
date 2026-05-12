@@ -158,3 +158,5 @@ export const SUPPORTED_COMPONENTS = tagsFromMessages([
   ...STATIC_DEMOS.flatMap((d) => d.messages as unknown[]),
   ...DYNAMIC_PRESETS.flatMap((d) => d.messages as unknown[]),
 ]);
+
+export const PLAYBACK_SCENARIOS = [...EXTENDED_STATIC_DEMOS];
