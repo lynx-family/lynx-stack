@@ -4,6 +4,7 @@
 import { test, expect, swipe, dragAndHold } from '@lynx-js/playwright-fixtures';
 import type { Page } from '@playwright/test';
 import path from 'node:path';
+
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -24,6 +25,35 @@ const diffScreenShot = async (
     animations: 'allow',
     ...screenshotOptions,
   });
+};
+
+const elementClip = async (
+  page: Page,
+  selector: string,
+  options: {
+    yOffset: number;
+    height: number;
+  },
+) => {
+  const box = await page.locator(selector).boundingBox();
+  const viewport = page.viewportSize();
+
+  if (!box || !viewport) {
+    throw new Error(`Cannot get screenshot clip for ${selector}`);
+  }
+
+  const clip = {
+    x: Math.max(0, Math.floor(box.x)),
+    y: Math.floor(box.y + options.yOffset),
+    width: Math.floor(Math.min(box.width, viewport.width - box.x)),
+    height: options.height,
+  };
+
+  expect(clip.y).toBeGreaterThanOrEqual(0);
+  expect(clip.y + clip.height).toBeLessThanOrEqual(viewport.height);
+  expect(clip.width).toBeGreaterThan(0);
+
+  return clip;
 };
 
 const gotoWebComponentPage = async (page: Page, testname: string) => {
@@ -852,7 +882,6 @@ test.describe('web-elements test suite', () => {
     });
     test('x-foldview-ng/basic-toolbar-in-lynx-wrapper', async ({
       page,
-      browserName,
     }, { title }) => {
       await gotoWebComponentPage(page, title);
       await wait(500);
@@ -3225,7 +3254,13 @@ test.describe('web-elements test suite', () => {
         xDistance: 0,
         yDistance: 100,
       });
-      await diffScreenShot(page, title, 'cannot-pull-down');
+      await wait(100);
+      await diffScreenShot(page, title, 'cannot-pull-down', {
+        clip: await elementClip(page, 'x-refresh-view > x-view#content', {
+          yOffset: 50,
+          height: 300,
+        }),
+      });
       await touchRelease();
       await wait(100);
       touchRelease = await dragAndHold(cdpSession, {
@@ -3234,7 +3269,13 @@ test.describe('web-elements test suite', () => {
         xDistance: 0,
         yDistance: -100,
       });
-      await diffScreenShot(page, title, 'pull-up-footer-can-show');
+      await wait(100);
+      await diffScreenShot(page, title, 'pull-up-footer-can-show', {
+        clip: await elementClip(page, 'x-refresh-footer', {
+          yOffset: 12,
+          height: 24,
+        }),
+      });
       await touchRelease();
       await wait(100);
     });

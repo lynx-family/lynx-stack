@@ -15,20 +15,13 @@ process.env['LIBGL_ALWAYS_SOFTWARE'] = 'true'; // https://github.com/microsoft/p
 process.env['GALLIUM_HUD_SCALE'] = '1';
 const isCI = !!process.env['CI'];
 const port = process.env['PORT'] ?? 3080;
-const workerLimit = Math.floor(((cpuCount, envCPULimit) => {
-  if (isCI) {
-    if (envCPULimit) {
-      return envCPULimit / 2;
-    } else {
-      if (cpuCount <= 32) {
-        return 8;
-      } else {
-        return 8 + (cpuCount - 32) / 6;
-      }
-    }
-  }
-  return cpuCount / 2;
-})(os.cpus().length, parseFloat(process.env['cpu_limit'] ?? '0')));
+const configuredCoreCount = parseFloat(process.env['cpu_limit'] ?? '0');
+const workerLimit = Math.max(
+  1,
+  Math.round(
+    (configuredCoreCount > 0 ? configuredCoreCount : os.cpus().length) / 2,
+  ),
+);
 
 /**
  * Read environment variables from file.

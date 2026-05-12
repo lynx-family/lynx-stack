@@ -93,36 +93,102 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
-  coverage-web-elements:
+  coverage-playwright:
     needs: build-all
-    uses: ./.github/workflows/workflow-test.yml
     if: github.repository == 'lynx-family/lynx-stack'
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-custom-container
-      is-web: true
-      run: |
-        ulimit -Sn 655350
-        export NODE_OPTIONS="--max-old-space-size=32768"
-        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-        pnpm --filter @lynx-js/web-elements run test --reporter='github,dot,junit,html'
-        pnpm --filter @lynx-js/web-elements run coverage:ci
-  coverage-web-core:
-    needs: build-all
-    uses: ./.github/workflows/workflow-test.yml
-    if: github.repository == 'lynx-family/lynx-stack'
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-custom-container
-      is-web: true
-      run: |
-        ulimit -Sn 655350
-        export NODE_OPTIONS="--max-old-space-size=32768"
-        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
-        pnpm --filter @lynx-js/web-tests run coverage:ci
+    runs-on: macos-26
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Web Elements
+            package: "@lynx-js/web-elements"
+            report-name: deploy-playwright-web-elements
+            report-path: packages/web-platform/web-elements/playwright-report
+          - name: Web Core E2E
+            package: "@lynx-js/web-core-e2e"
+            report-name: deploy-playwright-web-core-e2e
+            report-path: packages/web-platform/web-core-e2e/playwright-report
+    name: Coverage Playwright ${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+      - name: Install Rust
+        run: |
+          if ! command -v rustup &> /dev/null ; then
+            curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --default-toolchain none -y
+            cargo_bin="${CARGO_HOME:-$HOME/.cargo}/bin"
+            printf '%s\n' "$cargo_bin" >> "$GITHUB_PATH"
+            export PATH="$cargo_bin:$PATH"
+          fi
+          if [[ -f rust-toolchain.toml ]]; then
+            toolchain="$(grep -E '^\s*channel\s*=' rust-toolchain.toml | head -n1 | sed -E 's/.*=\s*"([^"]+)".*/\1/')"
+          elif [[ -f rust-toolchain ]]; then
+            toolchain="$(cat rust-toolchain)"
+          else
+            toolchain="stable"
+          fi
+          rustup toolchain install "$toolchain" \
+            -c rustc \
+            -c cargo \
+            -c rust-std \
+            -c clippy \
+            -c rustfmt
+      - name: Install
+        run: |
+          npm install -g corepack@latest
+          corepack enable
+          pnpm install --frozen-lockfile
+      - name: Install Playwright
+        run: pnpm --filter @lynx-js/web-elements exec playwright install --with-deps chromium firefox webkit
+      - name: Build
+        run: pnpm turbo build --summarize
+        env:
+          NODE_OPTIONS: --max-old-space-size=32768
+      - name: Test
+        env:
+          NODE_OPTIONS: --max-old-space-size=16384
+          GITHUB_SHA: ${{ github.sha }}
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-report.junit.xml
+        run: |
+          ulimit -Sn 655350 || ulimit -Sn 10240 || true
+          export NODE_OPTIONS="--max-old-space-size=32768"
+          pnpm --filter "${{ matrix.package }}" run test --reporter='github,dot,junit,html'
+          pnpm --filter "${{ matrix.package }}" run coverage:ci
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: e2e
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: e2e
+      - name: Upload Test Result
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ matrix.report-name }}
+          path: ${{ matrix.report-path }}
+          if-no-files-found: error
+          retention-days: 1
+          overwrite: true
+          include-hidden-files: true
   publish:
     timeout-minutes: 30
     needs: build

@@ -4,6 +4,7 @@
 import { test, expect, swipe, dragAndHold } from '@lynx-js/playwright-fixtures';
 import type { Page } from '@playwright/test';
 import type { LynxViewElement } from '@lynx-js/web-core/client';
+const isDarwin = process.platform === 'darwin';
 const isSSR = !!process.env['ENABLE_SSR'];
 
 const wait = async (ms: number) => {
@@ -4289,6 +4290,10 @@ test.describe('reactlynx3 tests', () => {
         'basic-element-x-swiper-bindchange',
         async ({ page, browserName, context }, { title }) => {
           test.skip(browserName === 'firefox');
+          test.skip(
+            isDarwin && browserName === 'chromium',
+            'manual swiper change events are not stable in macOS chromium',
+          );
           await goto(page, title);
           const autoplay = [null, false, false, false];
           let manual = false;
