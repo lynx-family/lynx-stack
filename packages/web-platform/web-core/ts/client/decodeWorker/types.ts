@@ -35,13 +35,18 @@ export interface DoneMessage extends DecodeWorkerMessage {
   type: 'done';
 }
 
+export interface HeartbreakMessage {
+  type: 'heartbreak';
+}
+
 export interface ReadyMessage {
   type: 'ready';
 }
 
-export type WorkerMessage = LoadTemplateMessage;
+export type WorkerMessage = LoadTemplateMessage | HeartbreakMessage;
 export type MainMessage =
   | SectionMessage
   | ErrorMessage
   | DoneMessage
+  | HeartbreakMessage
   | ReadyMessage;

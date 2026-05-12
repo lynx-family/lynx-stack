@@ -70,8 +70,10 @@ export class LynxViewElement extends HTMLElement {
   static tag = 'lynx-view' as const;
   static observedAttributeAsProperties = [
     'url',
+    'src',
     'global-props',
     'init-data',
+    'data',
     'browser-config',
     'transform-vw',
     'transform-vh',
@@ -203,9 +205,19 @@ export class LynxViewElement extends HTMLElement {
   get url(): string | undefined {
     return this.#url;
   }
-  set url(val: string) {
+  set url(val: string | undefined) {
+    if (this.#url === val) {
+      return;
+    }
     this.#url = val;
     this.#render();
+  }
+
+  get src(): string | undefined {
+    return this.url;
+  }
+  set src(val: string | undefined) {
+    this.url = val;
   }
 
   #globalProps: Cloneable = {};
@@ -218,11 +230,16 @@ export class LynxViewElement extends HTMLElement {
     return this.#globalProps;
   }
   set globalProps(val: string | Cloneable) {
-    if (typeof val === 'string') {
-      this.#globalProps = JSON.parse(val);
-    } else {
-      this.#globalProps = val;
-    }
+    const nextGlobalProps = typeof val === 'string' ? JSON.parse(val) : val;
+    this.#globalProps = nextGlobalProps;
+    this.#instance?.updateGlobalProps(nextGlobalProps);
+  }
+
+  get ['global-props'](): Cloneable {
+    return this.globalProps;
+  }
+  set ['global-props'](val: string | Cloneable) {
+    this.globalProps = val;
   }
 
   #initData: Cloneable = {};
@@ -235,11 +252,22 @@ export class LynxViewElement extends HTMLElement {
     return this.#initData;
   }
   set initData(val: string | Cloneable) {
-    if (typeof val === 'string') {
-      this.#initData = JSON.parse(val);
-    } else {
-      this.#initData = val;
-    }
+    const nextInitData = typeof val === 'string' ? JSON.parse(val) : val;
+    this.updateData(nextInitData);
+  }
+
+  get ['init-data'](): Cloneable {
+    return this.initData;
+  }
+  set ['init-data'](val: string | Cloneable) {
+    this.initData = val;
+  }
+
+  get data(): Cloneable {
+    return this.initData;
+  }
+  set data(val: string | Cloneable) {
+    this.initData = val;
   }
 
   #initI18nResources: InitI18nResources = [];
@@ -320,6 +348,7 @@ export class LynxViewElement extends HTMLElement {
     processorName?: string,
     callback?: () => void,
   ) {
+    this.#initData = data;
     this.#instance?.updateData(data, processorName).then(() => {
       callback?.();
     });
@@ -331,7 +360,6 @@ export class LynxViewElement extends HTMLElement {
    * update the `__globalProps`
    */
   updateGlobalProps(data: Cloneable) {
-    this.#instance?.updateGlobalProps(data);
     this.globalProps = data;
   }
 
@@ -371,20 +399,26 @@ export class LynxViewElement extends HTMLElement {
   /**
    * @private
    */
-  attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+  attributeChangedCallback(
+    name: string,
+    oldValue: string | null,
+    newValue: string | null,
+  ) {
     if (oldValue !== newValue) {
       switch (name) {
         case 'url':
-          this.#url = newValue;
+        case 'src':
+          this.url = newValue ?? undefined;
           break;
         case 'global-props':
-          this.#globalProps = JSON.parse(newValue);
+          this.globalProps = newValue ? JSON.parse(newValue) : {};
           break;
         case 'browser-config':
-          this.browserConfig = JSON.parse(newValue);
+          this.browserConfig = newValue ? JSON.parse(newValue) : undefined;
           break;
         case 'init-data':
-          this.#initData = JSON.parse(newValue);
+        case 'data':
+          this.initData = newValue ? JSON.parse(newValue) : {};
           break;
         case 'transform-vw':
           this.transformVW = newValue !== 'false' && newValue !== null;
@@ -446,7 +480,7 @@ export class LynxViewElement extends HTMLElement {
    * @private
    */
   async #render() {
-    if (!this.#rendering && this.#connected) {
+    if (!this.#rendering && this.#connected && this.#url) {
       this.#rendering = true;
       if (!this.shadowRoot) {
         this.attachShadow({ mode: 'open' });
@@ -524,6 +558,13 @@ export class LynxViewElement extends HTMLElement {
    * @private
    */
   connectedCallback() {
+    this.#upgradeProperty('url');
+    this.#upgradeProperty('src');
+    this.#upgradeProperty('globalProps');
+    this.#upgradeProperty('global-props');
+    this.#upgradeProperty('initData');
+    this.#upgradeProperty('init-data');
+    this.#upgradeProperty('data');
     this.#upgradeProperty('browserConfig');
     this.#upgradeProperty('transformVW');
     this.#upgradeProperty('transformVH');

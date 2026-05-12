@@ -225,6 +225,8 @@ export type CreateRawTextPAPI = (text: string) => HTMLElement;
 
 export type CreateImagePAPI = CreateViewPAPI;
 
+export type CreateFramePAPI = CreateViewPAPI;
+
 export type CreateScrollViewPAPI = CreateViewPAPI;
 
 export type CreateWrapperElementPAPI = CreateViewPAPI;
@@ -393,6 +395,7 @@ export interface ElementPAPIs {
   __CreateText: CreateTextPAPI;
   __CreateRawText: CreateRawTextPAPI;
   __CreateImage: CreateImagePAPI;
+  __CreateFrame: CreateFramePAPI;
   __CreateScrollView: CreateScrollViewPAPI;
   __CreateWrapperElement: CreateWrapperElementPAPI;
   __CreateComponent: CreateComponentPAPI;

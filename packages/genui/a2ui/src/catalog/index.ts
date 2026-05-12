@@ -17,7 +17,16 @@ export type {
   SerializedCatalog,
 } from './defineCatalog.js';
 
-// Existing global-registry exports — kept for back-compat with the
-// current `core/A2UIRender` path. The new `defineCatalog` API above is
-// the pluggable, side-effect-free alternative.
-export * from './all.js';
+// Per-component re-exports so consumers can pick exactly what they need.
+// Each is an independently tree-shakeable ESM re-export — pulling `Text`
+// does not drag `Button` into the bundle.
+export { Button } from './Button/index.jsx';
+export { Card } from './Card/index.jsx';
+export { CheckBox } from './CheckBox/index.jsx';
+export { Column } from './Column/index.jsx';
+export { Divider } from './Divider/index.jsx';
+export { Image } from './Image/index.jsx';
+export { List } from './List/index.jsx';
+export { RadioGroup } from './RadioGroup/index.jsx';
+export { Row } from './Row/index.jsx';
+export { Text } from './Text/index.jsx';

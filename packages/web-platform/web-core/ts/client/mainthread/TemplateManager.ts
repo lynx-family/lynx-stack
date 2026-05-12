@@ -181,6 +181,10 @@ export class TemplateManager {
       }
       return;
     }
+    if (msg.type === 'heartbreak') {
+      this.#worker?.postMessage({ type: 'heartbreak' });
+      return;
+    }
     const { url } = msg;
     const lynxViewInstancePromise = this.#lynxViewInstancesMap.get(url);
     if (!lynxViewInstancePromise) return;
