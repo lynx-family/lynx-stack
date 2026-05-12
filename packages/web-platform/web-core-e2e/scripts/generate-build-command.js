@@ -16,30 +16,24 @@ const command = configFiles
     (lynxConfigFilePath) => `npx rspeedy build --config=${lynxConfigFilePath}`,
   );
 
-if (command.length) {
-  const promises = [];
-  for (let i = 0; i < command.length; i++) {
-    promises.push(
-      new Promise((resolve, reject) => {
-        const child = spawn(command[i], [], {
-          stdio: 'inherit',
-          cwd: path.join(import.meta.dirname, '..'),
-          shell: true,
-          env: {
-            ...process.env,
-          },
-        });
+for (const cmd of command) {
+  await new Promise((resolve, reject) => {
+    const child = spawn(cmd, [], {
+      stdio: 'inherit',
+      cwd: path.join(import.meta.dirname, '..'),
+      shell: true,
+      env: {
+        ...process.env,
+      },
+    });
 
-        child.on('exit', (code) => {
-          if (code !== 0) {
-            console.error(`Command failed with exit code ${code}`);
-            reject(code);
-          } else {
-            resolve();
-          }
-        });
-      }),
-    );
-  }
-  await Promise.all(promises);
+    child.on('exit', (code) => {
+      if (code !== 0) {
+        console.error(`Command failed with exit code ${code}`);
+        reject(code);
+      } else {
+        resolve();
+      }
+    });
+  });
 }
