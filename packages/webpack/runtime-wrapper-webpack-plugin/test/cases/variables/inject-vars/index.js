@@ -1,4 +1,4 @@
-/// <reference types="@rspack/test-tools/rstest" />
+/// <reference types="@rstest/core/globals" />
 
 expect(typeof Component).toBe('undefined');
 try {

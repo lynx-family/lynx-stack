@@ -1,3 +1,3 @@
-/// <reference types="@rspack/test-tools/rstest" />
+/// <reference types="@rstest/core/globals" />
 
 expect(Component).toBe(undefined);
