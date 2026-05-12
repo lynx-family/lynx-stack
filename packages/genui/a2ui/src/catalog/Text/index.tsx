@@ -11,6 +11,7 @@ export interface TextProps extends GenericComponentProps {
   /** Literal text or path binding. */
   text: string | { path: string };
   variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body';
+  weight?: number;
 }
 
 export function Text(
@@ -18,10 +19,21 @@ export function Text(
 ): import('@lynx-js/react').ReactNode {
   const id = props.id;
   const text = props.text;
-  const variant = props.variant as string | undefined ?? 'body';
+  const variant = props.variant ?? 'body';
+  const weight = props.weight;
+  let weightClass = '';
+  if (typeof weight === 'number') {
+    if (weight >= 2) {
+      weightClass = 'text-weight-2';
+    } else if (weight >= 1.5) {
+      weightClass = 'text-weight-1-5';
+    } else {
+      weightClass = 'text-weight-1';
+    }
+  }
 
   return (
-    <text key={id} className={`text-${variant}`}>
+    <text key={id} className={`text-${variant} ${weightClass}`}>
       {text as string}
     </text>
   );

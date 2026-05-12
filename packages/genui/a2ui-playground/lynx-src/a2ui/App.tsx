@@ -71,7 +71,10 @@ interface InitData {
   actionMocksUrl?: string;
   actionMocks?: unknown;
   instant?: boolean;
+  theme?: 'light' | 'dark';
 }
+
+type Theme = 'light' | 'dark';
 
 type A2uiMessage = Record<string, unknown> & { messageId?: string };
 type ResponseMessages = A2uiMessage[];
@@ -141,6 +144,11 @@ function normalizeInitDataLike(raw: unknown): InitData {
     out.instant = instant === true || instant === '1' || instant === 1;
   }
 
+  const theme = obj.theme;
+  if (theme === 'light' || theme === 'dark') {
+    out.theme = theme;
+  }
+
   return out;
 }
 
@@ -151,6 +159,7 @@ function mergeInitDataPreferLeft(a: InitData, b: InitData): InitData {
     actionMocksUrl: a.actionMocksUrl ?? b.actionMocksUrl,
     actionMocks: a.actionMocks ?? b.actionMocks,
     instant: a.instant ?? b.instant,
+    theme: a.theme ?? b.theme,
   };
 }
 
@@ -269,6 +278,11 @@ export function App() {
     () => effectiveData.instant === true,
     [effectiveData.instant],
   );
+  const theme = useMemo<Theme>(
+    () => effectiveData.theme ?? 'light',
+    [effectiveData.theme],
+  );
+  const themeClassName = theme === 'dark' ? 'luna-dark' : 'luna-light';
 
   useEffect(() => {
     let cancelled = false;
@@ -334,8 +348,7 @@ export function App() {
 
   return (
     <view
-      className='luna-light'
-      style={{ width: '100%', height: '100%', backgroundColor: '#fff' }}
+      className={`page ${themeClassName}`}
     >
       {error
         ? (
@@ -353,7 +366,7 @@ export function App() {
         : null}
       {store
         ? (
-          <scroll-view scroll-y style={{ height: '100%' }}>
+          <scroll-view scroll-y style={{ flex: 1, minHeight: 0 }}>
             <A2UI
               messageStore={store}
               catalogs={ALL_BUILTINS}
@@ -362,7 +375,7 @@ export function App() {
                 // canned response messages back into the same store.
                 void agentRef.current?.onAction(action);
               }}
-              wrapSurface={(c) => <view className='luna-light'>{c}</view>}
+              wrapSurface={(c) => <view className={themeClassName}>{c}</view>}
               renderEmpty={() => (
                 <view style={{ padding: '12px' }}>
                   <text>Loading...</text>

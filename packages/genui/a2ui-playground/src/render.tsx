@@ -21,6 +21,7 @@ interface InitData {
   demoUrl?: string;
   speed?: number;
   instant?: boolean;
+  theme?: 'light' | 'dark';
   rawText?: string;
   rawTextUrl?: string;
 }
@@ -60,6 +61,8 @@ function parseInitDataFromQuery(): InitData | null {
   const actionMocksUrl = params.get('actionMocksUrl');
   const demo = params.get('demo');
   const instant = params.get('instant');
+  const theme = params.get('theme');
+
   const rawText = params.get('rawText');
   const rawTextUrl = params.get('rawTextUrl');
 
@@ -85,6 +88,9 @@ function parseInitDataFromQuery(): InitData | null {
       ? speedVal
       : undefined,
     instant: instant === '1' ? true : undefined,
+    theme: theme === 'dark'
+      ? 'dark'
+      : (theme === 'light' ? 'light' : undefined),
     rawText: rawText ?? undefined,
     rawTextUrl: rawTextUrl ?? undefined,
   };
@@ -132,6 +138,7 @@ function buildGlobalPropsFromInitData(
   }
   if (initData.speed !== undefined) out.speed = initData.speed;
   if (initData.instant !== undefined) out.instant = initData.instant;
+  if (initData.theme !== undefined) out.theme = initData.theme;
   if (initData.rawText !== undefined) out.rawText = initData.rawText;
   if (initData.rawTextUrl !== undefined) out.rawTextUrl = initData.rawTextUrl;
   return Object.keys(out).length > 0 ? out : null;

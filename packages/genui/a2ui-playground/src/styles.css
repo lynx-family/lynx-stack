@@ -1,5 +1,6 @@
 /* ── Geist Design System Tokens ── */
 :root {
+  color-scheme: light;
   --geist-foreground: #000;
   --geist-background: #fff;
   --geist-secondary: #666;
@@ -30,7 +31,8 @@
     "Liberation Mono", monospace;
 }
 
-[data-theme="dark"] {
+html[data-theme="dark"] {
+  color-scheme: dark;
   --geist-foreground: #ededed;
   --geist-background: #0a0a0a;
   --geist-secondary: #888;
@@ -45,6 +47,10 @@
   --geist-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   --geist-shadow-md: 0 4px 14px rgba(0, 0, 0, 0.3);
   --geist-shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
 }
 
 /* ── Reset & Base ── */
@@ -325,7 +331,7 @@ a {
   height: 560px;
   border-radius: 24px;
   border: 6px solid var(--geist-border);
-  background: #fff;
+  background: var(--geist-background);
   overflow: hidden;
   box-shadow: var(--geist-shadow-md);
 }
@@ -830,7 +836,11 @@ a {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.25), transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--geist-background) 82%, white),
+    transparent
+  );
   pointer-events: none;
 }
 
@@ -895,7 +905,7 @@ a {
   padding: 2px 6px;
   border-radius: 999px;
   border: 1px solid var(--geist-border);
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--geist-surface);
   color: var(--geist-secondary);
   font-size: 10px;
   line-height: 1.2;
@@ -920,15 +930,9 @@ a {
   gap: 8px;
   min-height: 34px;
   padding: 8px 14px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--geist-border);
   border-radius: 999px;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.82),
-      rgba(255, 255, 255, 0.64)
-    ),
-    var(--geist-surface);
+  background: var(--geist-surface);
   color: var(--geist-foreground);
   font-size: 13px;
   font-weight: 600;
@@ -945,13 +949,7 @@ a {
 
 .detailBackButton:hover {
   border-color: var(--geist-border-hover);
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.96),
-      rgba(255, 255, 255, 0.78)
-    ),
-    var(--geist-background);
+  background: var(--geist-background);
   transform: translateY(-1px);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
 }
@@ -973,7 +971,11 @@ a {
   flex-direction: column;
   overflow: hidden;
   background:
-    radial-gradient(circle at top right, rgba(0, 0, 0, 0.04), transparent 18%),
+    radial-gradient(
+      circle at top right,
+      var(--a2ui-color-overlay),
+      transparent 18%
+    ),
     var(--geist-background);
 }
 

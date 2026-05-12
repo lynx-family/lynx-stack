@@ -25,7 +25,7 @@ export interface ButtonProps extends GenericComponentProps {
 export function Button(
   props: ButtonProps,
 ): import('@lynx-js/react').ReactNode {
-  const { action, child, surface, sendAction } = props;
+  const { action, child, surface, sendAction, variant = 'primary' } = props;
 
   const handleClick = () => {
     if (action) {
@@ -38,7 +38,10 @@ export function Button(
     : undefined;
 
   return (
-    <view className='button' bindtap={handleClick}>
+    <view
+      className={`button button-${variant}`}
+      bindtap={handleClick}
+    >
       {childResource
         ? <A2UIRenderer resource={childResource} />
         : <text>Button</text>}

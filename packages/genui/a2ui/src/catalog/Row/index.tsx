@@ -32,7 +32,9 @@ export function Row(props: RowProps): import('@lynx-js/react').ReactNode {
   const explicitChildren = Array.isArray(children) ? children : [];
 
   return (
-    <view className={`row alignment-${align} distribution-${justify}`}>
+    <view
+      className={`row alignment-${align} distribution-${justify}`}
+    >
       {explicitChildren.map((childId: string) => {
         const child = surface.components.get(childId);
         if (!child) return null;
@@ -44,7 +46,7 @@ export function Row(props: RowProps): import('@lynx-js/react').ReactNode {
           return (
             <view
               key={childId}
-              className='row-weighted-item'
+              className={`row-weighted-item row-weighted-item-${weight}`}
               style={{ flex: `${weight} ${weight} 0`, minWidth: 0 }}
             >
               <NodeRenderer

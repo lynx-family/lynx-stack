@@ -11,22 +11,25 @@ import '../../../styles/catalog/Card.css';
  */
 export interface CardProps extends GenericComponentProps {
   child: string;
+  variant?: 'elevated' | 'outlined' | 'filled' | 'ghost';
+  weight?: number;
 }
 
 export function Card(props: CardProps): import('@lynx-js/react').ReactNode {
   const { child: childId, surface, dataContextPath } = props;
   const childComponent = surface.components.get(childId);
   const childWithContext = childComponent && dataContextPath
-    ? { ...childComponent, dataContextPath: dataContextPath }
+    ? { ...childComponent, dataContextPath }
     : childComponent;
+  const variant = props.variant ?? 'elevated';
+  const weightClass = typeof props.weight === 'number'
+    ? 'card-weighted'
+    : '';
 
   return (
-    <view className='card card-elevated'>
+    <view className={`card card-${variant} ${weightClass}`.trim()}>
       {childWithContext && (
-        <NodeRenderer
-          component={childWithContext}
-          surface={surface}
-        />
+        <NodeRenderer component={childWithContext} surface={surface} />
       )}
     </view>
   );

@@ -1,40 +1,51 @@
-.icon {
+@import "../theme.css";
+
+.image-variant-icon {
   width: 24px;
   height: 24px;
+  border-radius: 0;
 }
 
-.avatar {
+.image-variant-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
 }
 
-.smallFeature {
+.image-variant-smallFeature {
   width: 120px;
   height: 80px;
+  max-width: var(--a2ui-image-small-feature-size, 120px);
   border-radius: 8px;
 }
 
-.mediumFeature {
+.image-variant-mediumFeature {
   width: 240px;
   height: 160px;
   border-radius: 8px;
 }
 
-.largeFeature {
+.image-variant-largeFeature {
   width: 100%;
   height: 180px;
   border-radius: 12px;
+  max-height: var(--a2ui-image-large-feature-size, 400px);
 }
 
-.header {
+.image-variant-header {
   width: 100%;
   height: 200px;
+  border-radius: 12px;
 }
 
 .a2ui-image {
   flex-shrink: 0;
   padding: 8px;
+  overflow: hidden;
+}
+
+.image-weighted {
+  flex: 1 1 0;
 }
 
 .row-weighted-item .a2ui-image,

@@ -24,7 +24,10 @@ export function CheckBox(
 
   return (
     <view key={id} className='checkbox-row' bindtap={handleChange}>
-      <view className='checkbox-input'>
+      <view
+        className={`checkbox-input ${value ? 'checkbox-input-checked' : ''}`
+          .trim()}
+      >
         {!!value && <text>✓</text>}
       </view>
       <text className='checkbox-label'>{label as string}</text>

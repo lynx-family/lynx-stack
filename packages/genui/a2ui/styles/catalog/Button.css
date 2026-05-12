@@ -1,24 +1,46 @@
-@import "./luna.css";
+@import "../theme.css";
 
 .button {
-  display: flex;
+  display: inline-flex;
   justify-content: center;
   align-items: center;
   min-width: 0;
-  padding-left: 12px;
-  padding-right: 12px;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  margin: 4px;
-  border-radius: 9999px;
-  background-color: var(--primary);
+  gap: var(--a2ui-spacing-m);
+  padding: var(--a2ui-spacing-m) calc(var(--a2ui-spacing-m) * 1.75);
+  margin: calc(var(--a2ui-spacing-xs) * 2) 0;
+  border-radius: var(--a2ui-border-radius);
+  background-color: var(--a2ui-color-primary);
+  color: var(--a2ui-color-on-primary);
+  transition:
+    transform 0.12s ease,
+    opacity 0.12s ease,
+    background-color 0.12s ease;
 }
 
 .button.ui-active {
-  background-color: var(--primary-2);
+  background-color: var(--a2ui-color-primary-hover);
 }
 
-.button-text {
-  font-size: 12px;
-  color: var(--primary-content);
+.button-primary {
+  background-color: var(--a2ui-color-primary);
+}
+
+.button-borderless {
+  background-color: transparent;
+  padding-left: 0;
+  padding-right: 0;
+  color: var(--a2ui-color-primary);
+}
+
+.button .text-body,
+.button .text-caption,
+.button .text-h1,
+.button .text-h2,
+.button .text-h3,
+.button .text-h4,
+.button .text-h5,
+.button .text-price,
+.button .text-link,
+.button .text-label {
+  color: inherit;
 }
