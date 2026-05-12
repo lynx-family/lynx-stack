@@ -1,6 +1,8 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { useChecks } from '../../react/useChecks.js';
+import type { CheckLike } from '../../react/useChecks.js';
 import type { GenericComponentProps } from '../../store/types.js';
 
 import '../../../styles/catalog/CheckBox.css';
@@ -16,14 +18,37 @@ export interface CheckBoxProps extends GenericComponentProps {
 export function CheckBox(
   props: CheckBoxProps,
 ): import('@lynx-js/react').ReactNode {
-  const { id, label = 'CheckBox', value, setValue } = props;
+  const {
+    id,
+    label = 'CheckBox',
+    value,
+    setValue,
+    surface,
+    dataContextPath,
+  } = props;
+  // `checks` (v0.9 `Checkable` mixin) is forwarded through the loose prop
+  // bag — keeping it out of the typed interface so the extractor can emit
+  // the component's JSON Schema without resolving the cross-package
+  // `CheckRule` type.
+  const checks = props['checks'] as CheckLike[] | undefined;
+
+  const { ok, firstFailureMessage } = useChecks({
+    checks,
+    componentId: id ?? '',
+    surface,
+    dataContextPath,
+  });
 
   const handleChange = () => {
     setValue?.('value', !value);
   };
 
   return (
-    <view key={id} className='checkbox-row' bindtap={handleChange}>
+    <view
+      key={id}
+      className={`checkbox-row${ok ? '' : ' checkbox-row-invalid'}`}
+      bindtap={handleChange}
+    >
       <view
         className={`checkbox-input ${value ? 'checkbox-input-checked' : ''}`
           .trim()}
@@ -31,6 +56,9 @@ export function CheckBox(
         {!!value && <text>✓</text>}
       </view>
       <text className='checkbox-label'>{label as string}</text>
+      {!ok && firstFailureMessage
+        ? <text className='checkbox-error'>{firstFailureMessage}</text>
+        : null}
     </view>
   );
 }

@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { Radio, RadioGroupRoot, RadioIndicator } from '@lynx-js/lynx-ui';
 
+import { useChecks } from '../../react/useChecks.js';
+import type { CheckLike } from '../../react/useChecks.js';
 import type { GenericComponentProps } from '../../store/types.js';
 
 import '../../../styles/catalog/RadioGroup.css';
@@ -38,13 +40,27 @@ export function RadioGroup(
     | ((key: string, value: unknown) => void)
     | undefined;
   const explicitItems = Array.isArray(items) ? items : [];
+  // `checks` (v0.9 `Checkable` mixin) is forwarded through the loose prop
+  // bag — see CheckBox/index.tsx for the rationale.
+  const checks = props['checks'] as CheckLike[] | undefined;
+
+  const { ok, firstFailureMessage } = useChecks({
+    checks,
+    componentId: props.id ?? '',
+    surface: props.surface,
+    dataContextPath: props.dataContextPath,
+  });
 
   const handleValueChange = (newValue: string) => {
     setValue?.('value', newValue);
   };
 
   return (
-    <view className={`radio-group radio-group-${usageHint}`}>
+    <view
+      className={`radio-group radio-group-${usageHint}${
+        ok ? '' : ' radio-group-invalid'
+      }`}
+    >
       <RadioGroupRoot value={value as string} onValueChange={handleValueChange}>
         <view className='radio-group-container'>
           {explicitItems.map((itemValue: string) => (
@@ -63,6 +79,9 @@ export function RadioGroup(
           ))}
         </view>
       </RadioGroupRoot>
+      {!ok && firstFailureMessage
+        ? <text className='radio-group-error'>{firstFailureMessage}</text>
+        : null}
     </view>
   );
 }
