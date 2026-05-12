@@ -100,7 +100,7 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: macos-26
+      runs-on: lynx-darwin-14-medium
       playwright-package: ${{ matrix.package }}
       playwright-report-name: ${{ matrix.report-name }}
       playwright-report-path: ${{ matrix.report-path }}
