@@ -95,7 +95,7 @@ jobs:
         --silent
   coverage-playwright:
     if: github.repository == 'lynx-family/lynx-stack'
-    uses: ./.github/workflows/workflow-test.yml
+    uses: ./.github/workflows/workflow-playwright.yml
     strategy:
       fail-fast: false
       matrix:
@@ -112,7 +112,6 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      kind: playwright
       runs-on: macos-26
       playwright-package: ${{ matrix.package }}
       playwright-report-name: ${{ matrix.report-name }}

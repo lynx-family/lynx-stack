@@ -78,12 +78,12 @@ jobs:
       LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
     with:
       runs-on: lynx-custom-container
-      use-playwright-container: true
+      is-web: true
       run: |
         export NODE_OPTIONS="--max-old-space-size=32768"
         pnpm --filter @lynx-js/web-core-e2e run lh || echo "Lighthouse failed"
   playwright:
-    uses: ./.github/workflows/workflow-test.yml
+    uses: ./.github/workflows/workflow-playwright.yml
     strategy:
       fail-fast: false
       matrix:
@@ -100,7 +100,6 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      kind: playwright
       runs-on: macos-26
       playwright-package: ${{ matrix.package }}
       playwright-report-name: ${{ matrix.report-name }}

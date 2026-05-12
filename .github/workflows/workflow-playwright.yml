@@ -1,52 +1,35 @@
-name: Reusable Test
+name: Reusable Playwright
 on:
   workflow_call:
     secrets:
       CODECOV_TOKEN:
         required: false
-      LHCI_GITHUB_APP_TOKEN:
-        required: false
     inputs:
       runs-on:
         required: true
         type: string
-      run:
+      playwright-package:
         required: true
         type: string
-        description: "Command run parameters, limited to predefined test commands"
-      is-web:
-        required: false
-        type: boolean
-        default: false
-      web-report-name:
+      playwright-report-name:
         required: false
         type: string
         default: "playwright-report"
-      web-report-path:
+      playwright-report-path:
         required: false
         type: string
-        default: "packages/web-platform/web-tests/playwright-report"
+        default: "playwright-report"
       codecov-flags:
         required: false
         type: string
-        default: "unittest"
-
-# Set minimum permissions to prevent unnecessary access
-permissions: {}
+        default: "e2e"
 
 env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
 jobs:
-  check:
-    timeout-minutes: 30
+  playwright:
     runs-on: ${{ inputs.runs-on }}
-    permissions: {}
-    container:
-      image: ${{ inputs.is-web && 'mcr.microsoft.com/playwright:v1.58.2-noble' || null }}
-      env:
-        CI: 1
-        TURBO_TELEMETRY_DISABLED: 1
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
@@ -55,32 +38,34 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
-          node-version: "22"
+          node-version: "24"
           package-manager-cache: false
-      - name: TurboCache
-        uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+      - uses: actions-rust-lang/setup-rust-toolchain@1780873c7b576612439a134613cc4cc74ce5538c # v1
         with:
-          path: .turbo
-          # We have to be strict here to make sure getting the cache of build-all
-          key: turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
-          fail-on-cache-miss: true
+          components: clippy, rustfmt
+          cache: false
       - name: Install
         run: |
           npm install -g corepack@latest
           corepack enable
           pnpm install --frozen-lockfile
+      - name: Install Playwright
+        run: pnpm --filter @lynx-js/web-elements exec playwright install --with-deps chromium firefox webkit
       - name: Build
-        run: |
-          pnpm turbo build --summarize
-      - name: Test # zizmor: ignore[template-injection] The inputs.run is provided by us.
+        env:
+          NODE_OPTIONS: --max-old-space-size=32768
+        run: pnpm turbo build --summarize
+      - name: Test
         id: test
         env:
-          NODE_OPTIONS: --max-old-space-size=16384
-          GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
+          NODE_OPTIONS: --max-old-space-size=32768
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
-        run: ${{ inputs.run }}
+          PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-report.junit.xml
+        run: |
+          pnpm --filter "${{ inputs.playwright-package }}" run test --reporter='github,dot,junit,html'
+          pnpm --filter "${{ inputs.playwright-package }}" run coverage:ci
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
         with:
@@ -89,17 +74,17 @@ jobs:
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
         continue-on-error: true
-        uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1
+        uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3de # v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: ${{ inputs.codecov-flags }}
           override_branch: ${{ github.event_name == 'merge_group' && 'main' || '' }}
       - name: Upload Test Result
-        if: ${{ inputs.is-web && failure() }}
+        if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: ${{ inputs.web-report-name }}
-          path: ${{ inputs.web-report-path }}
+          name: ${{ inputs.playwright-report-name }}
+          path: ${{ inputs.playwright-report-path }}
           if-no-files-found: error
           retention-days: 1
           overwrite: true
