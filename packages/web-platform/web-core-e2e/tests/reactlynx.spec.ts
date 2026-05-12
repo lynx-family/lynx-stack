@@ -261,6 +261,71 @@ test.describe('reactlynx3 tests', () => {
       await expect(height).toHaveText('5678');
     });
 
+    test('api-frame-element-map', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#target')).toHaveJSProperty(
+        'tagName',
+        'LYNX-VIEW',
+      );
+    });
+
+    test('api-frame-src', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#frame-ready')).toHaveText('frame:ready');
+    });
+
+    test('api-frame-data', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#frame-data')).toHaveText('data:from-data');
+    });
+
+    test('api-frame-data-update', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#frame-data')).toHaveText('data:before');
+      await page.locator('#update-frame-data').click();
+      await expect(page.locator('#frame-data')).toHaveText('data:after');
+    });
+
+    test('api-frame-global-props', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#frame-global-props')).toHaveText(
+        'global:from-global-props',
+      );
+    });
+
+    test('api-frame-bindload', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#frame-load-status')).toHaveText('0');
+      await expect(page.locator('#frame-load-message')).toHaveText('success');
+      await expect(page.locator('#frame-load-url')).toContainText(
+        '/dist/api-frame-inner.web.bundle',
+      );
+    });
+
+    test('api-frame-auto-height', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#target')).toHaveAttribute(
+        'auto-height',
+        'true',
+      );
+      await expect(page.locator('#target')).not.toHaveAttribute(
+        'height',
+        'auto',
+      );
+    });
+
+    test('api-frame-auto-width', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#target')).toHaveAttribute(
+        'auto-width',
+        'true',
+      );
+      await expect(page.locator('#target')).not.toHaveAttribute(
+        'width',
+        'auto',
+      );
+    });
+
     test('basic-bindtap-simultaneous', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
