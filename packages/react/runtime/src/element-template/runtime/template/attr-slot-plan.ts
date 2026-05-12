@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { getEventValue } from '../../prop-adapters/event-value.js';
+import { prepareRefAttrSlot } from '../../prop-adapters/ref.js';
 import { prepareSpreadAttrSlot } from '../../prop-adapters/spread.js';
 import type { SpreadAttrAdapterContext } from '../../prop-adapters/spread.js';
 import type { SerializableValue } from '../../protocol/types.js';
@@ -35,6 +36,15 @@ export function adaptEventAttrSlot(
     return null;
   }
   return getEventValue(handleId, attrSlotIndex);
+}
+
+export function adaptRefAttrSlot(
+  handleId: number,
+  attrSlotIndex: number,
+  value: unknown,
+  _context?: EtAttrAdapterContext,
+): SerializableValue | null {
+  return prepareRefAttrSlot(handleId, attrSlotIndex, value);
 }
 
 export function adaptSpreadAttrSlot(

@@ -54,4 +54,9 @@ export type { Options } from 'preact';
 // export { registerWorkletOnBackground } from '../worklet/hmr.js';
 // export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';
 export { __etSlot } from './runtime/components/slot.js';
-export { __etAttrPlanMap, adaptEventAttrSlot, adaptSpreadAttrSlot } from './runtime/template/attr-slot-plan.js';
+export {
+  __etAttrPlanMap,
+  adaptEventAttrSlot,
+  adaptRefAttrSlot,
+  adaptSpreadAttrSlot,
+} from './runtime/template/attr-slot-plan.js';

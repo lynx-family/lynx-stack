@@ -55,7 +55,11 @@ where
               value
             }
           } else if let AttrName::Ref = attr_name {
-            value
+            if target == TransformTarget::LEPUS {
+              quote!("1" as Expr)
+            } else {
+              value
+            }
           } else {
             value
           };
