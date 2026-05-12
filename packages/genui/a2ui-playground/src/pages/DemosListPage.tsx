@@ -4,6 +4,8 @@
 import { useCallback, useMemo } from 'react';
 import type { KeyboardEvent } from 'react';
 
+import './DemosPage.css';
+
 import {
   DYNAMIC_PRESETS,
   EXTENDED_STATIC_DEMOS,

@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import './AIChatPage.css';
+
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
 import type { Protocol } from '../utils/protocol.js';
 

@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import './DemosPage.css';
+
 import { MobilePreview } from '../components/MobilePreview.js';
 import { QrCode } from '../components/QrCode.js';
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
