@@ -3,6 +3,7 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { encode, type TasmJSONInfo } from '../ts/encode/index.js';
 import { MagicHeader0, MagicHeader1 } from '../ts/constants.js';
 import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
+import type { HeartbreakMessage } from '../ts/client/decodeWorker/types.js';
 
 // Import the worker script to execute it and register the handler
 await import('../ts/client/decodeWorker/decode.worker.js');
@@ -49,10 +50,41 @@ const mockLynxViewInstance = {
   }),
 } as unknown as LynxViewInstance;
 
+function isHeartbreakMessage(message: unknown): message is HeartbreakMessage {
+  return typeof message === 'object'
+    && message !== null
+    && (message as Partial<HeartbreakMessage>).type === 'heartbreak';
+}
+
 describe('Template Manager', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     globalThis.fetch = vi.fn();
+  });
+
+  test('should exchange worker-level heartbreak ack messages', async () => {
+    const postMessageSpy = vi.spyOn(globalThis, 'postMessage');
+
+    try {
+      const startedAt = performance.now();
+      let heartbreakMessages = postMessageSpy.mock.calls.filter(
+        ([message]) => isHeartbreakMessage(message),
+      );
+
+      while (
+        heartbreakMessages.length < 2
+        && performance.now() - startedAt < 5000
+      ) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+        heartbreakMessages = postMessageSpy.mock.calls.filter(
+          ([message]) => isHeartbreakMessage(message),
+        );
+      }
+
+      expect(heartbreakMessages.length).toBeGreaterThanOrEqual(2);
+    } finally {
+      postMessageSpy.mockRestore();
+    }
   });
 
   test('should encode and decode correctly with version 1', async () => {
