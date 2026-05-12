@@ -1055,7 +1055,6 @@ html[data-theme="dark"] .phoneHomeIndicator {
 .previewEmptySub {
   font-size: 12px;
 }
-
 /* ── Responsive ── */
 @media (max-width: 980px) {
   .tabNav {

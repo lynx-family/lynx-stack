@@ -26,7 +26,9 @@ export default tseslint.config(
 
       // Outputs
       '**/.rslib/**',
+      '**/.next/**',
       '**/.turbo/**',
+      '**/.vercel/**',
       '**/coverage/**',
       'output/**',
       'target/**',
@@ -74,6 +76,7 @@ export default tseslint.config(
       'packages/react/transform/index.d.ts',
       'packages/react/transform/index.cjs',
       'packages/react/transform/**/index.d.ts',
+      'packages/genui/server/next-env.d.ts',
 
       // REPL examples use Lynx platform globals and are not subject to lint rules
       'packages/repl/src/examples/**',
@@ -451,6 +454,15 @@ export default tseslint.config(
     rules: {
       // TODO: enable header for examples
       'headers/header-format': 'off',
+    },
+  },
+  {
+    files: [
+      'packages/genui/server/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'n/file-extension-in-import': 'off',
+      'n/no-unsupported-features/node-builtins': 'off',
     },
   },
 );
