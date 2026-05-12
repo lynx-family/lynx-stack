@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { MobilePreview } from '../components/MobilePreview.js';
 import { QrCode } from '../components/QrCode.js';
@@ -117,25 +117,12 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
   const rspeedyDevUrl = useRspeedyDevUrl();
   const lynxUrlSeqRef = useRef(0);
 
-  const networkBaseUrl = useMemo(() => {
-    const u = new URL(baseUrl);
-    if (
-      (u.hostname === 'localhost' || u.hostname === '127.0.0.1')
-      && rspeedyDevUrl
-    ) {
-      try {
-        u.hostname = new URL(rspeedyDevUrl).hostname;
-      } catch { /* ignore */ }
-    }
-    return u.toString();
-  }, [baseUrl, rspeedyDevUrl]);
-
   const currentScenario = OPENUI_SCENARIOS.find((s) => s.id === scenarioId)
     ?? OPENUI_SCENARIOS[0];
 
   const doRender = useCallback(
     (rawText: string) => {
-      const url = buildOpenUIRenderUrl(rawText, networkBaseUrl, speed);
+      const url = buildOpenUIRenderUrl(rawText, baseUrl, speed);
       setRenderUrl(url);
       setRenderCopied(false);
       setRenderCopyFailed(false);
@@ -189,7 +176,7 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
             setLynxDevUrl(u.toString());
 
             // Shorten web render URL
-            const r = new URL('render.html', networkBaseUrl);
+            const r = new URL('render.html', baseUrl);
             r.searchParams.set('protocol', 'openui');
             r.searchParams.set('demoUrl', './openui.web.js');
             r.searchParams.set('rawTextUrl', rawTextUrlAbs);
@@ -203,7 +190,7 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
         }
       })();
     },
-    [networkBaseUrl, rspeedyDevUrl, speed],
+    [baseUrl, rspeedyDevUrl, speed],
   );
 
   // Auto-render the first scenario on mount

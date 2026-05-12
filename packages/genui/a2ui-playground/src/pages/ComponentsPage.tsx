@@ -5,8 +5,8 @@ import { json } from '@codemirror/lang-json';
 import CodeMirror from '@uiw/react-codemirror';
 import { useEffect, useMemo, useState } from 'react';
 
-import { CATEGORIES, COMPONENT_CATALOG } from '../componentCatalog.js';
-import type { ComponentDoc } from '../componentCatalog.js';
+import { CATEGORIES, COMPONENT_CATALOG } from '../catalog/a2ui.js';
+import type { ComponentDoc } from '../catalog/a2ui.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';

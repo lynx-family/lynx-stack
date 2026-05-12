@@ -21,6 +21,8 @@ interface InitData {
   demoUrl?: string;
   speed?: number;
   instant?: boolean;
+  rawText?: string;
+  rawTextUrl?: string;
 }
 
 interface InitLynxViewMessage {
@@ -58,8 +60,13 @@ function parseInitDataFromQuery(): InitData | null {
   const actionMocksUrl = params.get('actionMocksUrl');
   const demo = params.get('demo');
   const instant = params.get('instant');
+  const rawText = params.get('rawText');
+  const rawTextUrl = params.get('rawTextUrl');
 
-  if (!protocol && !messagesUrl && !messages && !demoUrl && !demo) {
+  if (
+    !protocol && !messagesUrl && !messages && !demoUrl && !demo && !rawText
+    && !rawTextUrl
+  ) {
     return null;
   }
 
@@ -78,6 +85,8 @@ function parseInitDataFromQuery(): InitData | null {
       ? speedVal
       : undefined,
     instant: instant === '1' ? true : undefined,
+    rawText: rawText ?? undefined,
+    rawTextUrl: rawTextUrl ?? undefined,
   };
 
   if (messages) {
@@ -123,6 +132,8 @@ function buildGlobalPropsFromInitData(
   }
   if (initData.speed !== undefined) out.speed = initData.speed;
   if (initData.instant !== undefined) out.instant = initData.instant;
+  if (initData.rawText !== undefined) out.rawText = initData.rawText;
+  if (initData.rawTextUrl !== undefined) out.rawTextUrl = initData.rawTextUrl;
   return Object.keys(out).length > 0 ? out : null;
 }
 
