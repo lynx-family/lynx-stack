@@ -1,4 +1,4 @@
-/// <reference types="@rspack/test-tools/rstest" />
+/// <reference types="@rstest/core/globals" />
 
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
