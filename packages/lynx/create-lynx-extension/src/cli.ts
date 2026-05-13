@@ -2,6 +2,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import fs from 'node:fs';
 import path from 'node:path';
 import { stdin as input, stdout as output } from 'node:process';
 import readline from 'node:readline';
@@ -277,9 +278,23 @@ export function reportCliError(
   process.exitCode = 1;
 }
 
-function isCliEntrypoint(): boolean {
-  return process.argv[1] !== undefined
-    && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+export function isCliEntrypoint(
+  entrypoint: string | undefined = process.argv[1],
+  moduleUrl: string = import.meta.url,
+): boolean {
+  return entrypoint !== undefined
+    && normalizeEntrypointPath(entrypoint)
+      === normalizeEntrypointPath(fileURLToPath(moduleUrl));
+}
+
+function normalizeEntrypointPath(filePath: string): string {
+  const resolvedPath = path.resolve(filePath);
+
+  try {
+    return fs.realpathSync(resolvedPath);
+  } catch {
+    return resolvedPath;
+  }
 }
 
 /* v8 ignore next 5 */
