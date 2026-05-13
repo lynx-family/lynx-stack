@@ -1,0 +1,12 @@
+{
+  "platforms": {
+    "android": {
+      "packageName": "__ANDROID_PACKAGE__",
+      "sourceDir": "android"
+    },
+    "ios": {
+      "sourceDir": "ios",
+      "podspecPath": "ios/build.podspec"
+    }
+  }
+}
