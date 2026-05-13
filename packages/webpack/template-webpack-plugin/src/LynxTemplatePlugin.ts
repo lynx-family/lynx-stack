@@ -56,7 +56,15 @@ export interface EncodeOptions {
   [k: string]: unknown;
 }
 
-const LynxTemplatePluginHooksMap = new WeakMap<Compilation, TemplateHooks>();
+// Stash hooks on the Compilation itself, keyed by a `Symbol.for` so that multiple
+// module instances of this package (e.g. when a non-pnpm install nests two copies
+// in node_modules and ESM treats them as distinct modules) all read/write the same
+// hooks for a given compilation. A module-scoped WeakMap would have one copy per
+// module instance, causing taps registered through one copy to be invisible to
+// `encode.promise()` invoked through another.
+const LYNX_TEMPLATE_HOOKS_KEY: unique symbol = Symbol.for(
+  '@lynx-js/template-webpack-plugin/hooks',
+) as never;
 
 /**
  * To allow other plugins to alter the Template, this plugin executes
@@ -352,13 +360,14 @@ export class LynxTemplatePlugin {
    * Returns all public hooks of the Lynx template webpack plugin for the given compilation
    */
   static getLynxTemplatePluginHooks(compilation: Compilation): TemplateHooks {
-    let hooks = LynxTemplatePluginHooksMap.get(compilation);
+    const stash = compilation as unknown as {
+      [LYNX_TEMPLATE_HOOKS_KEY]?: TemplateHooks;
+    };
+    let hooks = stash[LYNX_TEMPLATE_HOOKS_KEY];
     // Setup the hooks only once
     if (hooks === undefined) {
-      LynxTemplatePluginHooksMap.set(
-        compilation,
-        hooks = createLynxTemplatePluginHooks(),
-      );
+      hooks = createLynxTemplatePluginHooks();
+      stash[LYNX_TEMPLATE_HOOKS_KEY] = hooks;
     }
     return hooks;
   }
