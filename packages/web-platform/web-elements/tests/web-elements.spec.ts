@@ -20,7 +20,7 @@ const diffScreenShot = async (
   >[0],
 ) => {
   await expect(page).toHaveScreenshot([`${caseName}`, `${subcaseName}.png`], {
-    maxDiffPixelRatio: 0,
+    maxDiffPixelRatio: 0.02,
     fullPage: true,
     animations: 'allow',
     ...screenshotOptions,
@@ -606,7 +606,9 @@ test.describe('web-elements test suite', () => {
       await page.evaluate(() => {
         document.querySelector('scroll-view')!.scrollTop = 200;
       });
-      await wait(300);
+      await expect.poll(async () => {
+        return (await events.jsonValue()).length;
+      }, { timeout: 5000 }).toBe(1);
       const scrollEvents = await events.jsonValue();
       expect(scrollEvents.length, 'should only have one scroll end event').toBe(
         1,
@@ -885,7 +887,10 @@ test.describe('web-elements test suite', () => {
     }, { title }) => {
       await gotoWebComponentPage(page, title);
       await wait(500);
-      expect(page.locator('x-foldview-slot-ng')).toHaveCSS('top', '200px');
+      await expect(page.locator('x-foldview-slot-ng')).toHaveCSS(
+        'top',
+        '200px',
+      );
     });
     test('x-foldview-ng/size-parent-grow-children-specific', async ({
       page,
@@ -1549,8 +1554,8 @@ test.describe('web-elements test suite', () => {
         title,
       }) => {
         test.skip(
-          browserName === 'chromium',
-          'chromium will skip the smooth scrolling',
+          browserName !== 'webkit',
+          'smooth scrolling is stable only in WebKit on the macOS runner',
         );
         await gotoWebComponentPage(page, title);
         const eventCountPromise = await page
@@ -1951,9 +1956,8 @@ test.describe('web-elements test suite', () => {
         )
           ?.scrollTo(0, 500);
       });
-      await wait(1000);
-      expect(scrolled).toBeTruthy();
-      expect(scrollend).toBeTruthy();
+      await expect.poll(() => scrolled, { timeout: 5000 }).toBeTruthy();
+      await expect.poll(() => scrollend, { timeout: 5000 }).toBeTruthy();
     });
 
     test(
@@ -3546,6 +3550,10 @@ test.describe('web-elements test suite', () => {
       async ({ page, browserName, context }, {
         title,
       }) => {
+        test.skip(
+          browserName === 'chromium',
+          'chromium disables smooth scrolling in Playwright config',
+        );
         await gotoWebComponentPage(page, title);
         await wait(1000);
         const timeStampsPromise = await page

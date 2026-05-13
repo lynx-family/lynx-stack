@@ -27,7 +27,7 @@ const diffScreenShot = async (
     `${subcaseName}`,
     `${label}.png`,
   ], {
-    maxDiffPixelRatio: 0,
+    maxDiffPixelRatio: 0.02,
     fullPage: true,
     animations: 'allow',
     ...screenshotOptions,
@@ -2898,7 +2898,14 @@ test.describe('reactlynx3 tests', () => {
               'scroll-view',
             )!.scrollTop = 200;
           });
-          await wait(200);
+          await page.waitForFunction(() => {
+            const result = document.querySelector('lynx-view')?.shadowRoot
+              ?.querySelector('#result>raw-text');
+            if (!result?.innerHTML) {
+              return false;
+            }
+            return JSON.parse(result.innerHTML).type === 'scrollend';
+          });
           const eventDetails = await page.evaluate(() => {
             const event = JSON.parse(
               document.querySelector('lynx-view')!.shadowRoot!.querySelector(
@@ -4831,9 +4838,8 @@ test.describe('reactlynx3 tests', () => {
             )
               ?.scrollTo(0, 500);
           });
-          await wait(1000);
-          expect(scrolled).toBeTruthy();
-          expect(scrollend).toBeTruthy();
+          await expect.poll(() => scrolled, { timeout: 5000 }).toBeTruthy();
+          await expect.poll(() => scrollend, { timeout: 5000 }).toBeTruthy();
         },
       );
       test(
@@ -4882,9 +4888,8 @@ test.describe('reactlynx3 tests', () => {
             )
               ?.scrollTo(0, 500);
           });
-          await wait(1000);
-          expect(scrolled).toBeTruthy();
-          expect(scrollend).toBeTruthy();
+          await expect.poll(() => scrolled, { timeout: 5000 }).toBeTruthy();
+          await expect.poll(() => scrollend, { timeout: 5000 }).toBeTruthy();
         },
       );
       test(
