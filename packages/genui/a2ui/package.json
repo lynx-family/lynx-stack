@@ -8,6 +8,7 @@
   ],
   "type": "module",
   "exports": {
+    "./styles/theme.css": "./styles/theme.css",
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
@@ -60,6 +61,11 @@
       "default": "./dist/catalog/Divider/index.js"
     },
     "./catalog/Divider/catalog.json": "./dist/catalog/Divider/catalog.json",
+    "./catalog/Icon": {
+      "types": "./dist/catalog/Icon/index.d.ts",
+      "default": "./dist/catalog/Icon/index.js"
+    },
+    "./catalog/Icon/catalog.json": "./dist/catalog/Icon/catalog.json",
     "./catalog/CheckBox": {
       "types": "./dist/catalog/CheckBox/index.d.ts",
       "default": "./dist/catalog/CheckBox/index.js"

@@ -1,7 +1,19 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { ProtocolName } from '../utils/protocol.js';
+import buttonManifest from '@lynx-js/a2ui-reactlynx/catalog/Button/catalog.json';
+import cardManifest from '@lynx-js/a2ui-reactlynx/catalog/Card/catalog.json';
+import checkBoxManifest from '@lynx-js/a2ui-reactlynx/catalog/CheckBox/catalog.json';
+import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json';
+import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json';
+import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json';
+import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
+import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
+import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
+import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
+import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json';
+
+import type { ProtocolName } from './utils/protocol.js';
 
 export interface ComponentProp {
   name: string;
@@ -27,24 +39,57 @@ export const CATEGORIES: { id: ComponentCategory; label: string }[] = [
   { id: 'Data', label: 'Data' },
 ];
 
+type PropSchema = Record<string, unknown>;
+
+function inferType(prop: PropSchema): string {
+  if (Array.isArray(prop.oneOf)) {
+    return (prop.oneOf as PropSchema[]).map((v) => inferType(v)).join(' | ');
+  }
+  if (prop.type === 'string') {
+    if (Array.isArray(prop.enum)) {
+      return (prop.enum as string[]).map((v) => `"${v}"`).join(' | ');
+    }
+    return 'string';
+  }
+  if (prop.type === 'boolean') return 'boolean';
+  if (prop.type === 'number') return 'number';
+  if (prop.type === 'array') return 'string[]';
+  if (prop.type === 'object') {
+    const props = prop.properties as Record<string, unknown> | undefined;
+    if (!props) return 'object';
+    const keys = Object.keys(props);
+    if (keys.length === 1 && keys[0] === 'path') return '{ path: string }';
+    if (keys.includes('componentId') && keys.includes('path')) {
+      return '{ componentId: string; path: string }';
+    }
+    return 'object';
+  }
+  return 'unknown';
+}
+
+function schemaToProps(manifest: Record<string, unknown>): ComponentProp[] {
+  const key = Object.keys(manifest)[0];
+  if (!key) return [];
+  const schema = manifest[key] as PropSchema;
+  const properties = (schema.properties as Record<string, PropSchema>) ?? {};
+  const required = (schema.required as string[]) ?? [];
+  return Object.entries(properties).map(([name, propSchema]) => {
+    const prop: ComponentProp = {
+      name,
+      type: inferType(propSchema),
+      description: (propSchema.description as string | undefined) ?? '',
+    };
+    if (!required.includes(name)) prop.default = 'optional';
+    return prop;
+  });
+}
+
 export const COMPONENT_CATALOG: ComponentDoc[] = [
   {
     name: 'Text',
     category: 'Display',
     description: 'Displays a text string with optional style variant.',
-    props: [
-      {
-        name: 'text',
-        type: 'string | { path: string }',
-        description: 'Literal text or path binding',
-      },
-      {
-        name: 'variant',
-        type: 'string',
-        description: 'Text style variant: h1, h2, h3, h4, h5, caption, body',
-        default: 'body',
-      },
-    ],
+    props: schemaToProps(textManifest),
     usage: {
       a2ui: {
         id: 'greeting',
@@ -56,32 +101,16 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     },
   },
   {
-    name: 'Button',
-    category: 'Input',
-    description: 'An interactive button that triggers an action when pressed.',
-    props: [
-      {
-        name: 'child',
-        type: 'string',
-        description: 'ID of the child component rendered inside the button',
-      },
-      {
-        name: 'action',
-        type: 'object',
-        description: 'v0.9 event action to trigger on press',
-      },
-      {
-        name: 'variant',
-        type: 'string',
-        description: 'Button style variant: primary, borderless',
-      },
-    ],
+    name: 'Icon',
+    category: 'Display',
+    description:
+      'Renders a Material icon by name. Supports camelCase or snake_case icon names.',
+    props: schemaToProps(iconManifest),
     usage: {
       a2ui: {
-        id: 'submit-btn',
-        component: 'Button',
-        action: { event: { name: 'submit' } },
-        child: 'submit-btn-text',
+        id: 'status-icon',
+        component: 'Icon',
+        name: 'info',
       },
       openui: {},
     },
@@ -90,25 +119,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     name: 'Image',
     category: 'Display',
     description: 'Displays an image from a URL or data binding.',
-    props: [
-      {
-        name: 'url',
-        type: 'string | { path: string }',
-        description: 'Image URL or path binding',
-      },
-      {
-        name: 'fit',
-        type: 'string',
-        description: 'Object fit: contain, cover, fill, none, scale-down',
-      },
-      {
-        name: 'variant',
-        type: 'string',
-        description:
-          'Image style variant: icon, avatar, smallFeature, mediumFeature, largeFeature, header',
-        default: 'mediumFeature',
-      },
-    ],
+    props: schemaToProps(imageManifest),
     usage: {
       a2ui: {
         id: 'hero-image',
@@ -124,14 +135,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     name: 'Divider',
     category: 'Display',
     description: 'A visual separator line used to divide content sections.',
-    props: [
-      {
-        name: 'axis',
-        type: 'string',
-        description: 'Divider orientation: horizontal, vertical',
-        default: 'horizontal',
-      },
-    ],
+    props: schemaToProps(dividerManifest),
     usage: {
       a2ui: {
         id: 'section-divider',
@@ -145,13 +149,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     name: 'Card',
     category: 'Layout',
     description: 'A container that renders one child component inside a card.',
-    props: [
-      {
-        name: 'child',
-        type: 'string',
-        description: 'ID of the child component rendered inside the card',
-      },
-    ],
+    props: schemaToProps(cardManifest),
     usage: {
       a2ui: {
         id: 'info-card',
@@ -166,26 +164,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     category: 'Layout',
     description:
       'A horizontal layout container that arranges children in a row.',
-    props: [
-      {
-        name: 'children',
-        type: 'ComponentArrayReference',
-        description: 'Child components arranged horizontally',
-      },
-      {
-        name: 'align',
-        type: 'string',
-        description: 'Vertical alignment: start, center, end, stretch',
-        default: 'stretch',
-      },
-      {
-        name: 'justify',
-        type: 'string',
-        description:
-          'Horizontal distribution: start, center, end, spaceBetween, spaceAround, spaceEvenly',
-        default: 'start',
-      },
-    ],
+    props: schemaToProps(rowManifest),
     usage: {
       a2ui: {
         id: 'action-row',
@@ -202,26 +181,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     category: 'Layout',
     description:
       'A vertical layout container that arranges children in a column.',
-    props: [
-      {
-        name: 'children',
-        type: 'ComponentArrayReference',
-        description: 'Child components arranged vertically',
-      },
-      {
-        name: 'align',
-        type: 'string',
-        description: 'Horizontal alignment: start, center, end, stretch',
-        default: 'stretch',
-      },
-      {
-        name: 'justify',
-        type: 'string',
-        description:
-          'Vertical distribution: start, center, end, spaceBetween, spaceAround, spaceEvenly',
-        default: 'start',
-      },
-    ],
+    props: schemaToProps(columnManifest),
     usage: {
       a2ui: {
         id: 'main-column',
@@ -238,24 +198,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     category: 'Data',
     description:
       'A scrollable list that renders children or uses a template for dynamic items.',
-    props: [
-      {
-        name: 'children',
-        type: 'ComponentArrayReference',
-        description: 'Child components or template for list items',
-      },
-      {
-        name: 'direction',
-        type: 'string',
-        description: 'Scroll direction: horizontal, vertical',
-        default: 'vertical',
-      },
-      {
-        name: 'align',
-        type: 'string',
-        description: 'Item alignment: start, center, end, stretch',
-      },
-    ],
+    props: schemaToProps(listManifest),
     usage: {
       a2ui: {
         id: 'item-list',
@@ -268,23 +211,25 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     },
   },
   {
+    name: 'Button',
+    category: 'Input',
+    description: 'An interactive button that triggers an action when pressed.',
+    props: schemaToProps(buttonManifest),
+    usage: {
+      a2ui: {
+        id: 'submit-btn',
+        component: 'Button',
+        action: { event: { name: 'submit' } },
+        child: 'submit-btn-text',
+      },
+      openui: {},
+    },
+  },
+  {
     name: 'CheckBox',
     category: 'Input',
     description: 'A toggleable checkbox with label and action support.',
-    props: [
-      {
-        name: 'label',
-        type: 'string | { path: string }',
-        description:
-          'Label text or path binding displayed next to the checkbox',
-      },
-      {
-        name: 'value',
-        type: 'boolean | { path: string }',
-        description: 'Whether the checkbox is checked, or a path binding',
-        default: 'false',
-      },
-    ],
+    props: schemaToProps(checkBoxManifest),
     usage: {
       a2ui: {
         id: 'agree-checkbox',
@@ -300,24 +245,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     category: 'Input',
     description:
       'A group of mutually exclusive radio options with selection support.',
-    props: [
-      {
-        name: 'items',
-        type: 'string[] | { path: string }',
-        description: 'List of radio option labels, or a path binding',
-      },
-      {
-        name: 'value',
-        type: 'string | { path: string }',
-        description: 'Value of the currently selected option',
-      },
-      {
-        name: 'usageHint',
-        type: 'string',
-        description: 'Visual style hint: default, card, row',
-        default: 'default',
-      },
-    ],
+    props: schemaToProps(radioGroupManifest),
     usage: {
       a2ui: {
         id: 'size-picker',

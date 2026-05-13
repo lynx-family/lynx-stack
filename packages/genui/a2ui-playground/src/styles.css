@@ -1,3 +1,5 @@
+@import "@lynx-js/a2ui-reactlynx/styles/theme.css";
+
 /* ── Geist Design System Tokens ── */
 :root {
   color-scheme: light;
