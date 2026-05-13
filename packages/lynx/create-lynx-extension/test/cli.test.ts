@@ -5,11 +5,17 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { PassThrough } from 'node:stream';
+import { pathToFileURL } from 'node:url';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { CliRuntime } from '../src/cli.js';
-import { main, parseArgs, reportCliError } from '../src/cli.js';
+import {
+  isCliEntrypoint,
+  main,
+  parseArgs,
+  reportCliError,
+} from '../src/cli.js';
 
 const tempDirs: string[] = [];
 
@@ -135,6 +141,32 @@ describe('create-lynx-extension CLI', () => {
     reportCliError('string failure', runtime);
     expect(runtime.error).toHaveBeenCalledWith('string failure');
     expect(process.exitCode).toBe(1);
+  });
+
+  it('recognizes npm bin symlinks as executable entrypoints', () => {
+    const binPath = path.join('node_modules', '.bin', 'create-lynx-extension');
+    const cliPath = path.join(
+      'node_modules',
+      'create-lynx-extension',
+      'dist',
+      'cli.js',
+    );
+    const resolvedCliPath = path.resolve(cliPath);
+
+    vi.spyOn(fs, 'realpathSync').mockImplementation(
+      ((filePath) => {
+        const resolvedPath = path.resolve(String(filePath));
+
+        if (resolvedPath === path.resolve(binPath)) {
+          return resolvedCliPath;
+        }
+
+        return resolvedPath;
+      }) as typeof fs.realpathSync,
+    );
+
+    expect(isCliEntrypoint(binPath, pathToFileURL(resolvedCliPath).href))
+      .toBe(true);
   });
 });
 
