@@ -32,6 +32,12 @@ const getWebCoreMappedFiles = () => {
   }
 };
 
+const isCoverageLifecycleError = (error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('Test ended')
+    || message.includes('Target page, context or browser has been closed');
+};
+
 export const test: typeof base = base.extend({
   context: async ({ browserName, context }, use, testInfo) => {
     const dir = path.join(__dirname, '..', '..', '..', '.nyc_output');
@@ -42,23 +48,47 @@ export const test: typeof base = base.extend({
     }
 
     const pages = new Set<Page>();
+    const coverageStartTasks = new Set<Promise<void>>();
 
-    context.on('page', async (page) => {
+    context.on('page', (page) => {
       if (testInfo.titlePath.join(' ').includes('SSR No JS')) {
         return;
       }
-      await page.coverage.startJSCoverage({
+      const task = page.coverage.startJSCoverage({
         reportAnonymousScripts: true,
         resetOnNavigation: true,
+      }).then(() => {
+        pages.add(page);
+      }).catch((error) => {
+        if (!isCoverageLifecycleError(error)) {
+          throw error;
+        }
+      }).finally(() => {
+        coverageStartTasks.delete(task);
       });
-      pages.add(page);
+      coverageStartTasks.add(task);
     });
 
     await use(context);
 
+    const startResults = await Promise.allSettled(coverageStartTasks);
+    for (const result of startResults) {
+      if (result.status === 'rejected') {
+        throw result.reason;
+      }
+    }
+
     await Promise.all(
       Array.from(pages.values()).flatMap(async (page, index) => {
-        const coverage = await page.coverage.stopJSCoverage();
+        let coverage;
+        try {
+          coverage = await page.coverage.stopJSCoverage();
+        } catch (error) {
+          if (isCoverageLifecycleError(error)) {
+            return;
+          }
+          throw error;
+        }
         const sourceFilePaths = [
           path.join(path.dirname(testInfo.file), '..', 'www', 'main.js'),
           path.join(

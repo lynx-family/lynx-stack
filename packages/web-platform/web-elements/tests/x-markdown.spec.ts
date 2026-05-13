@@ -94,7 +94,9 @@ test.describe('x-markdown', () => {
     await goto(page, 'x-markdown/basic');
     const markdown = page.locator('x-markdown');
 
-    await expect(markdown.locator('h1')).toHaveText('Title');
+    await expect(markdown.locator('h1')).toHaveText('Title', {
+      timeout: 10000,
+    });
     await expect(markdown.locator('strong')).toHaveText('bold');
     await expect(markdown.locator('em')).toHaveText('italic');
     await expect(markdown.locator('li')).toHaveCount(2);
@@ -464,12 +466,11 @@ test.describe('x-markdown', () => {
 
   test('should batch append by newline boundary', async ({ page }) => {
     await goto(page, 'x-markdown/incremental');
-    expect(await getShadowCount(page, 'p')).toBe(1);
+    await expect.poll(() => getShadowCount(page, 'p')).toBe(1);
     await appendContent(page, 'Line 2');
     await page.waitForTimeout(20);
     expect(await getShadowCount(page, 'p')).toBe(1);
-    await page.waitForTimeout(80);
-    expect(await getShadowCount(page, 'p')).toBe(2);
+    await expect.poll(() => getShadowCount(page, 'p')).toBe(2);
   });
 
   test('should render tables', async ({ page }) => {

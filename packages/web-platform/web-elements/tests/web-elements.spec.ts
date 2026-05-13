@@ -574,6 +574,11 @@ test.describe('web-elements test suite', () => {
         xDistance: 0,
         yDistance: -200,
       });
+      await expect.poll(async () => {
+        return await page.locator('scroll-view').evaluate((element) =>
+          element.scrollTop
+        );
+      }).toBeGreaterThan(0);
       await diffScreenShot(page, title, 'scrolled-both-side-fading-top', {
         clip: {
           x: 0,
@@ -3415,9 +3420,8 @@ test.describe('web-elements test suite', () => {
         yDistance: -20,
       });
       await touchRelease();
-      await wait(100);
-      expect(
-        await page.locator('x-view#content').getAttribute('style'),
+      await expect.poll(
+        async () => await page.locator('x-view#content').getAttribute('style'),
         'enable-auto-loadmore-true-swipe-slightly-will-trigger-the-event',
       ).toContain('chartreuse');
     });

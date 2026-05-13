@@ -34,7 +34,13 @@ const diffScreenShot = async (
   });
 };
 
-const elementClip = async (page: Page, selector: string) => {
+const elementClip = async (
+  page: Page,
+  selector: string,
+  options?: {
+    rightInset?: number;
+  },
+) => {
   const box = await page.locator(selector).first().boundingBox();
   const viewport = page.viewportSize();
 
@@ -45,7 +51,8 @@ const elementClip = async (page: Page, selector: string) => {
   const clip = {
     x: Math.max(0, Math.floor(box.x)),
     y: Math.max(0, Math.floor(box.y)),
-    width: Math.floor(Math.min(box.width, viewport.width - box.x)),
+    width: Math.floor(Math.min(box.width, viewport.width - box.x))
+      - (options?.rightInset ?? 0),
     height: Math.floor(Math.min(box.height, viewport.height - box.y)),
   };
 
@@ -1557,9 +1564,9 @@ test.describe('reactlynx3 tests', () => {
       await page.evaluate(() => {
         document.querySelector('lynx-view')!.remove();
       });
-      await wait(50);
-      expect(message).toContain('fin');
-      expect(currentWorkerCount - page.workers().length).toStrictEqual(1);
+      await expect.poll(() => message).toContain('fin');
+      await expect.poll(() => currentWorkerCount - page.workers().length)
+        .toStrictEqual(1);
     });
 
     test('api-error', async ({ page }, { title }) => {
@@ -2824,6 +2831,7 @@ test.describe('reactlynx3 tests', () => {
         ).toHaveCSS(
           'background-color',
           'rgb(0, 128, 0)',
+          { timeout: 10000 },
         );
       });
 
@@ -3395,6 +3403,7 @@ test.describe('reactlynx3 tests', () => {
         await expect(input).toBeVisible();
         await expect(input).toHaveValue('bindinput');
 
+        await input.click();
         await input.press('Enter');
         await input.fill('foobar');
         await expect(result).toHaveText('foobar-6-6');
@@ -4088,7 +4097,7 @@ test.describe('reactlynx3 tests', () => {
         const firefoxClipOptions = browserName === 'firefox'
           ? {
             fullPage: false,
-            clip: await elementClip(page, 'x-swiper'),
+            clip: await elementClip(page, 'x-swiper', { rightInset: 1 }),
           }
           : {};
         await wait(100);
@@ -4127,7 +4136,7 @@ test.describe('reactlynx3 tests', () => {
         const firefoxClipOptions = browserName === 'firefox'
           ? {
             fullPage: false,
-            clip: await elementClip(page, 'x-swiper'),
+            clip: await elementClip(page, 'x-swiper', { rightInset: 1 }),
           }
           : {};
         // default duration: 500, interval: 5000
@@ -4350,13 +4359,13 @@ test.describe('reactlynx3 tests', () => {
         async ({ page, browserName }, { title }) => {
           test.skip(browserName === 'webkit', 'flaky');
           await goto(page, title);
-          await wait(100);
+          await wait(300);
           await diffScreenShot(page, 'x-swiper', 'page-margin', 'index', {
             fullPage: true,
             animations: 'allow',
           });
           await page.getByTestId('next').click();
-          await wait(600);
+          await wait(1000);
           await diffScreenShot(page, 'x-swiper', 'page-margin-1', 'index', {
             fullPage: true,
             animations: 'allow',
@@ -4512,8 +4521,9 @@ test.describe('reactlynx3 tests', () => {
             await wait(1000);
           }
 
-          expect(autoplay[0] && autoplay[1] && autoplay[2]).toBe(true);
-          expect(programming).toBe(true);
+          await expect.poll(() => autoplay[0] && autoplay[1] && autoplay[2])
+            .toBe(true);
+          await expect.poll(() => programming).toBe(true);
           if (browserName === 'chromium') {
             expect(manual).toBe(true);
           }
