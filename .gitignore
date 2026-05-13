@@ -50,5 +50,8 @@ target/
 # lighthouse-ci
 .lighthouseci
 
+# Claude
+.claude/
+
 # rslib
 .rslib
