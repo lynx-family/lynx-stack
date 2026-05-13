@@ -8,6 +8,7 @@ import {
   CheckBox,
   Column,
   Divider,
+  Icon,
   Image,
   List,
   RadioGroup,
@@ -26,6 +27,7 @@ import cardManifest from '@lynx-js/a2ui-reactlynx/catalog/Card/catalog.json';
 import checkBoxManifest from '@lynx-js/a2ui-reactlynx/catalog/CheckBox/catalog.json';
 import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json';
 import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json';
+import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json';
 import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
 import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
 import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
@@ -61,6 +63,7 @@ const ALL_BUILTINS: readonly CatalogInput[] = [
   [Card, cardManifest],
   [Button, buttonManifest],
   [Divider, dividerManifest],
+  [Icon, iconManifest],
   [CheckBox, checkBoxManifest],
   [RadioGroup, radioGroupManifest],
 ];

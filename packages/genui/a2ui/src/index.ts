@@ -76,4 +76,5 @@ export {
   RadioGroup,
   Row,
   Text,
+  Icon,
 } from './catalog/index.js';
