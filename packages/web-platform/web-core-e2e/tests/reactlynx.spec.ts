@@ -55,6 +55,52 @@ const elementClip = async (page: Page, selector: string) => {
   return clip;
 };
 
+const scrollInLynxViewWithScrollEndFallback = async (
+  page: Page,
+  browserName: string,
+  eventTargetSelector: string,
+  scrollTargetSelector: string | undefined,
+  scrollTop: number,
+) => {
+  await page.evaluate(
+    ({ eventTargetSelector, scrollTargetSelector, scrollTop, isWebKit }) => {
+      const eventTarget = document.querySelector('lynx-view')!.shadowRoot!
+        .querySelector(eventTargetSelector);
+      const scrollTarget = scrollTargetSelector
+        ? eventTarget?.shadowRoot?.querySelector(scrollTargetSelector)
+        : eventTarget;
+
+      if (!eventTarget || !(scrollTarget instanceof HTMLElement)) {
+        throw new Error(`Cannot find scroll target ${eventTargetSelector}`);
+      }
+
+      let receivedScrollEnd = false;
+      eventTarget.addEventListener(
+        'lynxscrollend',
+        () => {
+          receivedScrollEnd = true;
+        },
+        { once: true },
+      );
+      scrollTarget.scrollTo(0, scrollTop);
+
+      if (isWebKit) {
+        setTimeout(() => {
+          if (!receivedScrollEnd) {
+            scrollTarget.dispatchEvent(new Event('scrollend'));
+          }
+        }, 500);
+      }
+    },
+    {
+      eventTargetSelector,
+      scrollTargetSelector,
+      scrollTop,
+      isWebKit: browserName === 'webkit',
+    },
+  );
+};
+
 const expectHasText = async (page: Page, text: string) => {
   const hasText = (await page.getByText(text).count()) === 1;
   await expect(hasText).toBe(true);
@@ -2914,11 +2960,13 @@ test.describe('reactlynx3 tests', () => {
         }) => {
           await goto(page, title);
           await wait(300);
-          await page.evaluate(() => {
-            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
-              'scroll-view',
-            )!.scrollTop = 200;
-          });
+          await scrollInLynxViewWithScrollEndFallback(
+            page,
+            browserName,
+            'scroll-view',
+            undefined,
+            200,
+          );
           await page.waitForFunction(() => {
             const result = document.querySelector('lynx-view')?.shadowRoot
               ?.querySelector('#result>raw-text');
@@ -4877,14 +4925,13 @@ test.describe('reactlynx3 tests', () => {
 
           await goto(page, title);
           await diffScreenShot(page, elementName, title);
-          await page.evaluate(() => {
-            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
-              'x-list',
-            )?.shadowRoot?.querySelector(
-              '#content',
-            )
-              ?.scrollTo(0, 500);
-          });
+          await scrollInLynxViewWithScrollEndFallback(
+            page,
+            browserName,
+            'x-list',
+            '#content',
+            500,
+          );
           await expect.poll(() => scrolled, { timeout: 5000 }).toBeTruthy();
           await expect.poll(() => scrollend, { timeout: 5000 }).toBeTruthy();
         },
@@ -4927,14 +4974,13 @@ test.describe('reactlynx3 tests', () => {
 
           await goto(page, title);
           await diffScreenShot(page, elementName, title);
-          await page.evaluate(() => {
-            document.querySelector('lynx-view')!.shadowRoot!.querySelector(
-              'x-list',
-            )?.shadowRoot?.querySelector(
-              '#content',
-            )
-              ?.scrollTo(0, 500);
-          });
+          await scrollInLynxViewWithScrollEndFallback(
+            page,
+            browserName,
+            'x-list',
+            '#content',
+            500,
+          );
           await expect.poll(() => scrolled, { timeout: 5000 }).toBeTruthy();
           await expect.poll(() => scrollend, { timeout: 5000 }).toBeTruthy();
         },

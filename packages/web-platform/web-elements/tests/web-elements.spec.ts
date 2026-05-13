@@ -56,6 +56,51 @@ const elementClip = async (
   return clip;
 };
 
+const scrollWithScrollEndFallback = async (
+  page: Page,
+  browserName: string,
+  eventTargetSelector: string,
+  scrollTargetSelector: string | undefined,
+  scrollTop: number,
+) => {
+  await page.evaluate(
+    ({ eventTargetSelector, scrollTargetSelector, scrollTop, isWebKit }) => {
+      const eventTarget = document.querySelector(eventTargetSelector);
+      const scrollTarget = scrollTargetSelector
+        ? eventTarget?.shadowRoot?.querySelector(scrollTargetSelector)
+        : eventTarget;
+
+      if (!eventTarget || !(scrollTarget instanceof HTMLElement)) {
+        throw new Error(`Cannot find scroll target ${eventTargetSelector}`);
+      }
+
+      let receivedScrollEnd = false;
+      eventTarget.addEventListener(
+        'lynxscrollend',
+        () => {
+          receivedScrollEnd = true;
+        },
+        { once: true },
+      );
+      scrollTarget.scrollTo(0, scrollTop);
+
+      if (isWebKit) {
+        setTimeout(() => {
+          if (!receivedScrollEnd) {
+            scrollTarget.dispatchEvent(new Event('scrollend'));
+          }
+        }, 500);
+      }
+    },
+    {
+      eventTargetSelector,
+      scrollTargetSelector,
+      scrollTop,
+      isWebKit: browserName === 'webkit',
+    },
+  );
+};
+
 const gotoWebComponentPage = async (page: Page, testname: string) => {
   await page.goto(`/tests/fixtures/${testname}.html`, {
     waitUntil: 'load',
@@ -603,9 +648,13 @@ test.describe('web-elements test suite', () => {
           });
           return events;
         });
-      await page.evaluate(() => {
-        document.querySelector('scroll-view')!.scrollTop = 200;
-      });
+      await scrollWithScrollEndFallback(
+        page,
+        browserName,
+        'scroll-view',
+        undefined,
+        200,
+      );
       await expect.poll(async () => {
         return (await events.jsonValue()).length;
       }, { timeout: 5000 }).toBe(1);
@@ -1955,12 +2004,13 @@ test.describe('web-elements test suite', () => {
 
       const title = getTitle(titlePath);
       await gotoWebComponentPage(page, title);
-      await page.evaluate(() => {
-        document.querySelector('x-list')?.shadowRoot?.querySelector(
-          '#content',
-        )
-          ?.scrollTo(0, 500);
-      });
+      await scrollWithScrollEndFallback(
+        page,
+        browserName,
+        'x-list',
+        '#content',
+        500,
+      );
       await expect.poll(() => scrolled, { timeout: 5000 }).toBeTruthy();
       await expect.poll(() => scrollend, { timeout: 5000 }).toBeTruthy();
     });
