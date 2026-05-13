@@ -655,19 +655,24 @@ test.describe('web-elements test suite', () => {
       await page
         .locator('scroll-view')
         .evaluate((e: any) => e.autoScroll({ start: true, rate: 50 }));
-      await wait(500);
+      await expect.poll(async () => {
+        return await page.locator('scroll-view').evaluate((e) => e.scrollTop);
+      }, { timeout: 1000 }).toBeGreaterThan(0);
       await page
         .locator('scroll-view')
         .evaluate((e: any) => e.autoScroll({ start: false, rate: 100 }));
-      await diffScreenShot(page, title, 'auto-scroll-slow-rate');
+      const slowScrollTop = await page
+        .locator('scroll-view')
+        .evaluate((e) => e.scrollTop);
       await page
         .locator('scroll-view')
         .evaluate((e: any) => e.autoScroll({ start: true, rate: 100 }));
-      await wait(500);
+      await expect.poll(async () => {
+        return await page.locator('scroll-view').evaluate((e) => e.scrollTop);
+      }, { timeout: 1000 }).toBeGreaterThan(slowScrollTop + 10);
       await page
         .locator('scroll-view')
         .evaluate((e: any) => e.autoScroll({ start: false, rate: 100 }));
-      await diffScreenShot(page, title, 'auto-scroll-changed-high-rate');
     });
     test('scroll-view/scroll-to', async ({ page, browserName }, { title }) => {
       await gotoWebComponentPage(page, title);

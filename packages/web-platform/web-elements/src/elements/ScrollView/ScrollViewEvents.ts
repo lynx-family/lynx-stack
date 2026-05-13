@@ -170,19 +170,19 @@ export class ScrollViewEvents
   };
 
   #handleScrollEventsSwitches() {
+    const scrollContainer = this.#getScrollContainer();
     if (this.#scrollEventEnabled || this.#scrollEndEventEnabled) {
-      this.#getScrollContainer().addEventListener('scroll', this.#handleScroll);
-      this.#getScrollContainer().addEventListener(
-        'scrollend',
-        this.#handleScrollEnd,
-      );
-      this.#dom.addEventListener('scroll', this.#handleScroll);
-      this.#dom.addEventListener('scrollend', this.#handleScrollEnd);
+      scrollContainer.addEventListener('scroll', this.#handleScroll);
+      if (useScrollEnd) {
+        scrollContainer.addEventListener('scrollend', this.#handleScrollEnd);
+      } else {
+        scrollContainer.removeEventListener('scrollend', this.#handleScrollEnd);
+      }
       this.#prevX = 0;
       this.#prevY = 0;
     } else {
-      this.#dom.removeEventListener('scroll', this.#handleScroll);
-      this.#dom.removeEventListener('scrollend', this.#handleScrollEnd);
+      scrollContainer.removeEventListener('scroll', this.#handleScroll);
+      scrollContainer.removeEventListener('scrollend', this.#handleScrollEnd);
     }
   }
 

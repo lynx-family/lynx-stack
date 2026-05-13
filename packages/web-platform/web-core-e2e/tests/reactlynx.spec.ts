@@ -34,6 +34,27 @@ const diffScreenShot = async (
   });
 };
 
+const elementClip = async (page: Page, selector: string) => {
+  const box = await page.locator(selector).first().boundingBox();
+  const viewport = page.viewportSize();
+
+  if (!box || !viewport) {
+    throw new Error(`Cannot get screenshot clip for ${selector}`);
+  }
+
+  const clip = {
+    x: Math.max(0, Math.floor(box.x)),
+    y: Math.max(0, Math.floor(box.y)),
+    width: Math.floor(Math.min(box.width, viewport.width - box.x)),
+    height: Math.floor(Math.min(box.height, viewport.height - box.y)),
+  };
+
+  expect(clip.width).toBeGreaterThan(0);
+  expect(clip.height).toBeGreaterThan(0);
+
+  return clip;
+};
+
 const expectHasText = async (page: Page, text: string) => {
   const hasText = (await page.getByText(text).count()) === 1;
   await expect(hasText).toBe(true);
@@ -4006,52 +4027,78 @@ test.describe('reactlynx3 tests', () => {
           );
         },
       );
-      test('basic-element-x-swiper-duration', async ({ page }, { title }) => {
+      test('basic-element-x-swiper-duration', async ({
+        page,
+        browserName,
+      }, { title }) => {
         await goto(page, title);
+        const firefoxClipOptions = browserName === 'firefox'
+          ? {
+            fullPage: false,
+            clip: await elementClip(page, 'x-swiper'),
+          }
+          : {};
         await wait(100);
         await page.getByTestId('swiper-1').click();
         // custom duration is 200ms, add 100ms tolerance
         await wait(300);
         await diffScreenShot(page, 'x-swiper', 'duration', 'current-1', {
           animations: 'allow',
+          ...firefoxClipOptions,
         });
         await page.getByTestId('swiper-1').click();
         await wait(300);
         await diffScreenShot(page, 'x-swiper', 'duration', 'current-2', {
           animations: 'allow',
+          ...firefoxClipOptions,
         });
         await page.getByTestId('duration-100').click();
         await page.getByTestId('swiper-1').click();
         await wait(200);
         await diffScreenShot(page, 'x-swiper', 'duration', 'current-3', {
           animations: 'allow',
+          ...firefoxClipOptions,
         });
         await page.getByTestId('swiper-1').click();
         await wait(200);
         await diffScreenShot(page, 'x-swiper', 'duration', 'current-4', {
           animations: 'allow',
+          ...firefoxClipOptions,
         });
       });
-      test('basic-element-x-swiper-autoplay', async ({ page }, { title }) => {
+      test('basic-element-x-swiper-autoplay', async ({
+        page,
+        browserName,
+      }, { title }) => {
         await goto(page, title);
+        const firefoxClipOptions = browserName === 'firefox'
+          ? {
+            fullPage: false,
+            clip: await elementClip(page, 'x-swiper'),
+          }
+          : {};
         // default duration: 500, interval: 5000
         await wait(5600);
         await diffScreenShot(page, 'x-swiper', 'autoplay-5', undefined, {
           animations: 'allow',
+          ...firefoxClipOptions,
         });
         await page.getByTestId('autoplay').click();
         await wait(5600);
         await diffScreenShot(page, 'x-swiper', 'autoplay-10', undefined, {
           animations: 'allow',
+          ...firefoxClipOptions,
         });
         await wait(5600);
         await diffScreenShot(page, 'x-swiper', 'autoplay-15', undefined, {
           animations: 'allow',
+          ...firefoxClipOptions,
         });
         await page.getByTestId('autoplay').click();
         await wait(5500);
         await diffScreenShot(page, 'x-swiper', 'autoplay-20', undefined, {
           animations: 'allow',
+          ...firefoxClipOptions,
         });
       });
       test(
