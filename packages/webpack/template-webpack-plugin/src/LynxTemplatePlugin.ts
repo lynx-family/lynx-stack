@@ -56,12 +56,8 @@ export interface EncodeOptions {
   [k: string]: unknown;
 }
 
-// Stash hooks on the Compilation itself, keyed by a `Symbol.for` so that multiple
-// module instances of this package (e.g. when a non-pnpm install nests two copies
-// in node_modules and ESM treats them as distinct modules) all read/write the same
-// hooks for a given compilation. A module-scoped WeakMap would have one copy per
-// module instance, causing taps registered through one copy to be invisible to
-// `encode.promise()` invoked through another.
+// Use `Symbol.for` so duplicate copies of this module (e.g. from an npm hoist
+// conflict that nests two copies under node_modules) share the same hooks slot.
 const LYNX_TEMPLATE_HOOKS_KEY: unique symbol = Symbol.for(
   '@lynx-js/template-webpack-plugin/hooks',
 ) as never;
