@@ -259,6 +259,23 @@ export class SnapshotInstance {
     });
   }
 
+  disposeDetached(): void {
+    traverseSnapshotInstance(this, v => {
+      if (v.__snapshot_def.isListHolder) {
+        snapshotDestroyList(v);
+      }
+
+      v.__parent = null;
+      v.__previousSibling = null;
+      v.__nextSibling = null;
+      v.__firstChild = null;
+      v.__lastChild = null;
+      delete v.__elements;
+      delete v.__element_root;
+      snapshotInstanceManager.values.delete(v.__id);
+    });
+  }
+
   // onCreate?: () => void;
   // onAttach?: () => void;
   // onDetach?: () => void;

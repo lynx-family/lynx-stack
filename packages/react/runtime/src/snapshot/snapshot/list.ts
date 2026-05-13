@@ -2,11 +2,22 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from '../list/list.js';
+import { componentAtIndexFactory, enqueueComponentFactory, gListAllItems, gRecycleMap, gSignMap } from '../list/list.js';
 import { hydrate } from '../renderToOpcodes/hydrate.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
 const destroyLifetimeHandlerMap = new Map<number, () => void>();
+
+function disposeSnapshotSetValues(set: Set<SnapshotInstance> | undefined): void {
+  const seen = new Set<SnapshotInstance>();
+  set?.forEach((value) => {
+    if (seen.has(value)) {
+      return;
+    }
+    seen.add(value);
+    value.disposeDetached();
+  });
+}
 
 export function snapshotCreateList(
   pageId: number,
@@ -15,6 +26,7 @@ export function snapshotCreateList(
 ): FiberElement {
   const signMap = new Map<number, SnapshotInstance>();
   const recycleMap = new Map<string, Map<number, SnapshotInstance>>();
+  const listAllItems = new Set<SnapshotInstance>();
   const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory([], hydrate);
   const list = __CreateList(
     pageId,
@@ -36,6 +48,7 @@ export function snapshotCreateList(
 
   gSignMap[listID] = signMap;
   gRecycleMap[listID] = recycleMap;
+  gListAllItems[listID] = listAllItems;
   return list;
 }
 
@@ -45,6 +58,7 @@ export function snapshotDestroyList(si: SnapshotInstance): void {
   const listID = __GetElementUniqueID(list);
 
   __UpdateListCallbacks(list, () => -1, () => {}, () => {});
+  disposeSnapshotSetValues(gListAllItems[listID]);
 
   if (typeof lynx !== 'undefined' && typeof lynx.getNative === 'function') {
     const cb = destroyLifetimeHandlerMap.get(listID);
@@ -54,6 +68,7 @@ export function snapshotDestroyList(si: SnapshotInstance): void {
     }
   }
 
+  delete gListAllItems[listID];
   delete gSignMap[listID];
   delete gRecycleMap[listID];
 }

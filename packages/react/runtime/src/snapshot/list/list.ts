@@ -8,6 +8,7 @@ import { applyRefQueue } from '../snapshot/workletRef.js';
 
 export const gSignMap: Record<number, Map<number, SnapshotInstance>> = {};
 export const gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstance>>> = {};
+export const gListAllItems: Record<number, Set<SnapshotInstance>> = {};
 const gParentWeakMap: WeakMap<SnapshotInstance, unknown> = new WeakMap();
 const resolvedPromise = /* @__PURE__ */ Promise.resolve();
 
@@ -18,6 +19,13 @@ export function clearListGlobal(): void {
   for (const key in gRecycleMap) {
     delete gRecycleMap[key];
   }
+  for (const key in gListAllItems) {
+    delete gListAllItems[key];
+  }
+}
+
+export function trackListItem(listID: number, childCtx: SnapshotInstance): void {
+  (gListAllItems[listID] ??= new Set()).add(childCtx);
 }
 
 export function componentAtIndexFactory(
@@ -62,6 +70,7 @@ export function componentAtIndexFactory(
     /* v8 ignore end */
 
     const platformInfo = childCtx.__listItemPlatformInfo ?? {};
+    trackListItem(listID, childCtx);
 
     // The lifecycle of this `__extraProps.isReady`:
     // 0 -> Promise<number> -> 1
@@ -142,6 +151,7 @@ export function componentAtIndexFactory(
         return sign;
       } else {
         const newCtx = childCtx.takeElements();
+        trackListItem(listID, newCtx);
         signMap.set(sign, newCtx);
       }
     }
@@ -149,6 +159,7 @@ export function componentAtIndexFactory(
     if (recycleSignMap && recycleSignMap.size > 0) {
       const [first] = recycleSignMap;
       const [sign, oldCtx] = first!;
+      trackListItem(listID, oldCtx);
       recycleSignMap.delete(sign);
       hydrateFunction(oldCtx, childCtx);
       oldCtx.unRenderElements();
