@@ -26,6 +26,7 @@
   border-bottom: 1px solid var(--geist-border);
   background: var(--geist-background);
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .playbackPanelTitle {
@@ -43,6 +44,22 @@
   color: var(--geist-secondary);
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.playbackScenarioSelect {
+  font-size: 12px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+  cursor: pointer;
+  max-width: 200px;
+}
+
+.playbackScenarioSelect:focus {
+  outline: none;
+  border-color: var(--geist-foreground);
 }
 
 .playbackControls {
@@ -198,4 +215,37 @@
   color: var(--geist-secondary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+/* ── Responsive ── */
+@media (max-width: 980px) {
+  .playbackPage {
+    flex-direction: column;
+  }
+
+  .playbackStreamPanel {
+    flex: 0 0 auto;
+    min-height: 260px;
+    max-height: 340px;
+    border-right: none;
+    border-bottom: 1px solid var(--geist-border);
+  }
+
+  .playbackScenarioSelect {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .playbackPreviewPanel {
+    width: 100%;
+    flex: 1;
+    border-left: none;
+    border-top: 1px solid var(--geist-border);
+    min-height: 480px;
+  }
+
+  .playbackControls {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
 }
