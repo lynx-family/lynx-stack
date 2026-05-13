@@ -20,7 +20,7 @@ const diffScreenShot = async (
   >[0],
 ) => {
   await expect(page).toHaveScreenshot([`${caseName}`, `${subcaseName}.png`], {
-    maxDiffPixelRatio: 0.02,
+    maxDiffPixelRatio: 0,
     fullPage: true,
     animations: 'allow',
     ...screenshotOptions,

@@ -27,7 +27,7 @@ const diffScreenShot = async (
     `${subcaseName}`,
     `${label}.png`,
   ], {
-    maxDiffPixelRatio: 0.02,
+    maxDiffPixelRatio: 0,
     fullPage: true,
     animations: 'allow',
     ...screenshotOptions,
