@@ -5,6 +5,8 @@ import { test, expect, swipe, dragAndHold } from '@lynx-js/playwright-fixtures';
 import type { Page } from '@playwright/test';
 import path from 'node:path';
 
+const isDarwin = process.platform === 'darwin';
+
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -64,7 +66,12 @@ const scrollWithScrollEndFallback = async (
   scrollTop: number,
 ) => {
   await page.evaluate(
-    ({ eventTargetSelector, scrollTargetSelector, scrollTop, isWebKit }) => {
+    ({
+      eventTargetSelector,
+      scrollTargetSelector,
+      scrollTop,
+      needsScrollEndFallback,
+    }) => {
       const eventTarget = document.querySelector(eventTargetSelector);
       const scrollTarget = scrollTargetSelector
         ? eventTarget?.shadowRoot?.querySelector(scrollTargetSelector)
@@ -84,7 +91,7 @@ const scrollWithScrollEndFallback = async (
       );
       scrollTarget.scrollTo(0, scrollTop);
 
-      if (isWebKit) {
+      if (needsScrollEndFallback) {
         setTimeout(() => {
           if (!receivedScrollEnd) {
             scrollTarget.dispatchEvent(new Event('scrollend'));
@@ -96,7 +103,7 @@ const scrollWithScrollEndFallback = async (
       eventTargetSelector,
       scrollTargetSelector,
       scrollTop,
-      isWebKit: browserName === 'webkit',
+      needsScrollEndFallback: isDarwin && browserName === 'webkit',
     },
   );
 };

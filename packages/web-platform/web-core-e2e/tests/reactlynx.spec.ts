@@ -63,7 +63,12 @@ const scrollInLynxViewWithScrollEndFallback = async (
   scrollTop: number,
 ) => {
   await page.evaluate(
-    ({ eventTargetSelector, scrollTargetSelector, scrollTop, isWebKit }) => {
+    ({
+      eventTargetSelector,
+      scrollTargetSelector,
+      scrollTop,
+      needsScrollEndFallback,
+    }) => {
       const eventTarget = document.querySelector('lynx-view')!.shadowRoot!
         .querySelector(eventTargetSelector);
       const scrollTarget = scrollTargetSelector
@@ -84,7 +89,7 @@ const scrollInLynxViewWithScrollEndFallback = async (
       );
       scrollTarget.scrollTo(0, scrollTop);
 
-      if (isWebKit) {
+      if (needsScrollEndFallback) {
         setTimeout(() => {
           if (!receivedScrollEnd) {
             scrollTarget.dispatchEvent(new Event('scrollend'));
@@ -96,7 +101,7 @@ const scrollInLynxViewWithScrollEndFallback = async (
       eventTargetSelector,
       scrollTargetSelector,
       scrollTop,
-      isWebKit: browserName === 'webkit',
+      needsScrollEndFallback: isDarwin && browserName === 'webkit',
     },
   );
 };
