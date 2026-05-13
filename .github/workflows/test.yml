@@ -92,10 +92,12 @@ jobs:
             package: "@lynx-js/web-elements"
             report-name: playwright-web-elements
             report-path: packages/web-platform/web-elements/playwright-report
+            test-args: --project=chromium --project=firefox
           - name: Web Core E2E
             package: "@lynx-js/web-core-e2e"
             report-name: playwright-web-core-e2e
             report-path: packages/web-platform/web-core-e2e/playwright-report
+            test-args: --project=chromium --project=firefox
     name: Playwright ${{ matrix.name }}
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -104,6 +106,7 @@ jobs:
       playwright-package: ${{ matrix.package }}
       playwright-report-name: ${{ matrix.report-name }}
       playwright-report-path: ${{ matrix.report-path }}
+      playwright-test-args: ${{ matrix.test-args }}
       codecov-flags: e2e
   test-api:
     needs: build

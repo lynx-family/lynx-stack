@@ -19,6 +19,10 @@ on:
         required: false
         type: string
         default: "playwright-report"
+      playwright-test-args:
+        required: false
+        type: string
+        default: ""
       codecov-flags:
         required: false
         type: string
@@ -50,7 +54,7 @@ jobs:
           corepack enable
           pnpm install --frozen-lockfile
       - name: Install Playwright
-        run: pnpm --filter @lynx-js/web-elements exec playwright install --with-deps chromium firefox webkit
+        run: pnpm --filter @lynx-js/web-elements exec playwright install --with-deps chromium firefox
       - name: Build
         env:
           NODE_OPTIONS: --max-old-space-size=32768
@@ -64,7 +68,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-report.junit.xml
         run: |
-          pnpm --filter "${{ inputs.playwright-package }}" run test --reporter='github,dot,junit,html'
+          pnpm --filter "${{ inputs.playwright-package }}" run test --reporter='github,dot,junit,html' ${{ inputs.playwright-test-args }}
           pnpm --filter "${{ inputs.playwright-package }}" run coverage:ci
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
