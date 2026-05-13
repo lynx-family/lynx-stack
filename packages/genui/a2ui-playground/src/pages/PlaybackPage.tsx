@@ -5,13 +5,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import './PlaybackPage.css';
 
-import { PLAYBACK_SCENARIOS } from '../demos.js';
+import { DYNAMIC_PRESETS, STATIC_DEMOS } from '../demos.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
 
 type PlayState = 'idle' | 'playing' | 'paused' | 'done';
 
 const STREAM_DELAY_MS = 800;
+
+const ALL_SCENARIOS = [
+  ...STATIC_DEMOS,
+  ...DYNAMIC_PRESETS,
+];
 
 function formatChunk(msg: unknown): string {
   return JSON.stringify(msg, null, 2);
@@ -21,7 +26,7 @@ export function PlaybackPage(props: { protocol: Protocol }) {
   const { protocol } = props;
 
   const [scenarioId, setScenarioId] = useState<string>(
-    PLAYBACK_SCENARIOS[0]?.id ?? '',
+    ALL_SCENARIOS[0]?.id ?? '',
   );
   const [playState, setPlayState] = useState<PlayState>('idle');
   const [currentIndex, setCurrentIndex] = useState(-1);
@@ -36,8 +41,8 @@ export function PlaybackPage(props: { protocol: Protocol }) {
     null,
   );
 
-  const currentScenario = PLAYBACK_SCENARIOS.find((s) => s.id === scenarioId)
-    ?? PLAYBACK_SCENARIOS[0];
+  const currentScenario = ALL_SCENARIOS.find((s) => s.id === scenarioId)
+    ?? ALL_SCENARIOS[0];
   const messages = Array.isArray(currentScenario?.messages)
     ? currentScenario.messages
     : [];
@@ -150,30 +155,19 @@ export function PlaybackPage(props: { protocol: Protocol }) {
 
   return (
     <div className='playbackPage'>
-      <aside className='sidebar'>
-        <div className='sidebarSection'>
-          <div className='sidebarHeading'>Scenarios</div>
-          <div className='scenarioList'>
-            {PLAYBACK_SCENARIOS.map((s) => (
-              <button
-                key={s.id}
-                type='button'
-                className={s.id === scenarioId
-                  ? 'scenarioItem active'
-                  : 'scenarioItem'}
-                onClick={() => handleSelectScenario(s.id)}
-              >
-                <span className='scenarioName'>{s.title}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </aside>
-
       <div className='playbackStreamPanel'>
         <div className='playbackPanelHeader'>
-          <span className='playbackPanelTitle'>JSONL Stream</span>
+          <span className='playbackPanelTitle'>Message Stream</span>
           <span className='playbackPanelBadge'>JSONL</span>
+          <select
+            className='playbackScenarioSelect'
+            value={scenarioId}
+            onChange={(e) => handleSelectScenario(e.target.value)}
+          >
+            {ALL_SCENARIOS.map((s) => (
+              <option key={s.id} value={s.id}>{s.title}</option>
+            ))}
+          </select>
           <div className='spacer' />
           <div className='playbackControls'>
             <label className='simSpeedLabel' htmlFor='pbSpeedSlider'>
