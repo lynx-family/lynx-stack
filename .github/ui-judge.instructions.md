@@ -2,7 +2,7 @@
 applyTo: "packages/genui/ui-judge/**/*"
 ---
 
-When extending `@lynx-js/ui-judge`, keep `judgeUrl` as the only public runtime API until a caller needs more surface area. Additional dimensions should remain internal unless they are intentionally added to the package exports.
+When extending `@lynx-js/ui-judge`, keep `judgePage` as the only public runtime API until a caller needs more surface area. Callers own Playwright page setup, navigation, viewport, cookies, route mocks, and authentication. Additional dimensions should remain internal unless they are intentionally added to the package exports.
 
 Midscene scoring in this package should use `aiNumber()` and return a JSON-serializable integer score from 0 to 5. Do not reintroduce letter grades or `GRADE:` output in prompts.
 

@@ -1,18 +1,26 @@
 # @lynx-js/ui-judge
 
-`@lynx-js/ui-judge` opens an arbitrary URL with Playwright and asks Midscene to
-judge the rendered UI.
+`@lynx-js/ui-judge` judges an existing Playwright page with Midscene.
 
-The first public API is `judgeUrl`. It returns a JSON-serializable object with a
-single `visual-correctness` score from `0` to `5`.
+The first public API is `judgePage`. Callers own the Playwright page lifecycle,
+including navigation, viewport, cookies, route mocks, and authentication. The
+judge reads `page.url()` for the returned JSON object and produces a single
+`visual-correctness` score from `0` to `5`.
 
 ```ts
-import { judgeUrl } from '@lynx-js/ui-judge';
+import { test } from '@playwright/test';
 
-const result = await judgeUrl({
-  url: 'http://localhost:3000/render.html',
-  task: 'The page should render a login form with email, password, and submit.',
-  steps: ['Click the submit button.'],
+import { judgePage } from '@lynx-js/ui-judge';
+
+test('judges generated UI', async ({ page }) => {
+  await page.goto('http://localhost:3000/render.html');
+
+  const result = await judgePage({
+    page,
+    task:
+      'The page should render a login form with email, password, and submit.',
+    steps: ['Click the submit button.'],
+  });
 });
 ```
 

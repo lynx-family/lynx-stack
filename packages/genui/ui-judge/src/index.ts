@@ -2,25 +2,21 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { PlaywrightAgent } from '@midscene/web/playwright';
-import { chromium } from '@playwright/test';
-import type { Browser, Page, ViewportSize } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 const VISUAL_CORRECTNESS_DIMENSION = 'visual-correctness';
 const DEFAULT_TIMEOUT_MS = 60_000;
-const DEFAULT_VIEWPORT: ViewportSize = { width: 390, height: 844 };
 const MIN_SCORE = 0;
 const MAX_SCORE = 5;
 
 export type UiJudgeScore = 0 | 1 | 2 | 3 | 4 | 5;
 
-export interface JudgeUrlOptions {
-  headed?: boolean;
+export interface JudgePageOptions {
+  page: Page;
   reference?: string;
   steps?: string[];
   task: string;
   timeoutMs?: number;
-  url: string;
-  viewport?: ViewportSize;
 }
 
 export interface UiJudgeError {
@@ -35,117 +31,92 @@ export interface UiJudgeResult {
   url: string;
 }
 
-interface NormalizedJudgeUrlOptions {
-  headed: boolean;
+interface NormalizedJudgePageOptions {
+  page: Page;
   reference?: string;
   steps: string[];
   task: string;
   timeoutMs: number;
-  url: string;
-  viewport: ViewportSize;
 }
 
-export async function judgeUrl(
-  options: JudgeUrlOptions,
+export async function judgePage(
+  options: JudgePageOptions,
 ): Promise<UiJudgeResult> {
   try {
     const normalized = normalizeOptions(options);
-    const score = await judgeUrlUnsafe(normalized);
+    const score = await judgePageUnsafe(normalized);
     return {
       dimension: VISUAL_CORRECTNESS_DIMENSION,
       score,
       steps: normalized.steps,
-      url: normalized.url,
+      url: normalized.page.url(),
     };
   } catch (error) {
     return {
       dimension: VISUAL_CORRECTNESS_DIMENSION,
       error: { message: toErrorMessage(error) },
       score: 0,
-      steps: normalizeSteps(options.steps),
-      url: String(options.url ?? '').trim(),
+      steps: normalizeSteps(options?.steps),
+      url: getPageUrl(options?.page),
     };
   }
 }
 
-async function judgeUrlUnsafe(
-  options: NormalizedJudgeUrlOptions,
+async function judgePageUnsafe(
+  options: NormalizedJudgePageOptions,
 ): Promise<UiJudgeScore> {
-  let browser: Browser | undefined;
+  await waitForNetworkIdleBestEffort(options.page, options.timeoutMs);
+
+  const agent = new PlaywrightAgent(options.page, {
+    autoPrintReportMsg: false,
+    generateReport: false,
+  });
 
   try {
-    browser = await chromium.launch({
-      headless: !options.headed,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-
-    const page = await browser.newPage({ viewport: options.viewport });
-    page.setDefaultTimeout(options.timeoutMs);
-    page.setDefaultNavigationTimeout(options.timeoutMs);
-
-    await page.goto(options.url, {
-      waitUntil: 'domcontentloaded',
-      timeout: options.timeoutMs,
-    });
-
-    await waitForNetworkIdleBestEffort(page, options.timeoutMs);
-
-    const agent = new PlaywrightAgent(page, {
-      autoPrintReportMsg: false,
-      generateReport: false,
-    });
-
-    try {
-      for (const step of options.steps) {
-        const abortController = new AbortController();
-        await withAbortableTimeout(
-          agent.aiAct(step, { abortSignal: abortController.signal }),
-          options.timeoutMs,
-          abortController,
-          `Timed out while running Midscene step: ${step}`,
-        );
-      }
-
-      const rawScore = await withTimeout(
-        agent.aiNumber(buildVisualCorrectnessPrompt(options), {
-          domIncluded: 'visible-only',
-          screenshotIncluded: true,
-        }),
+    for (const step of options.steps) {
+      const abortController = new AbortController();
+      await withAbortableTimeout(
+        agent.aiAct(step, { abortSignal: abortController.signal }),
         options.timeoutMs,
-        'Timed out while asking Midscene for a numeric score.',
+        abortController,
+        `Timed out while running Midscene step: ${step}`,
       );
-
-      return normalizeScore(rawScore);
-    } finally {
-      await agent.destroy().catch(() => {
-        // Keep the original navigation, action, or scoring error visible.
-      });
     }
+
+    const rawScore = await withTimeout(
+      agent.aiNumber(buildVisualCorrectnessPrompt(options), {
+        domIncluded: 'visible-only',
+        screenshotIncluded: true,
+      }),
+      options.timeoutMs,
+      'Timed out while asking Midscene for a numeric score.',
+    );
+
+    return normalizeScore(rawScore);
   } finally {
-    await browser?.close();
+    await agent.destroy().catch(() => {
+      // Keep the original action or scoring error visible.
+    });
   }
 }
 
 function normalizeOptions(
-  options: JudgeUrlOptions,
-): NormalizedJudgeUrlOptions {
-  const url = options.url.trim();
-  if (!url) {
-    throw new Error('judgeUrl requires a non-empty url.');
+  options: JudgePageOptions,
+): NormalizedJudgePageOptions {
+  if (!options?.page) {
+    throw new Error('judgePage requires a Playwright page.');
   }
 
-  const task = options.task.trim();
+  const task = typeof options.task === 'string' ? options.task.trim() : '';
   if (!task) {
-    throw new Error('judgeUrl requires a non-empty task.');
+    throw new Error('judgePage requires a non-empty task.');
   }
 
-  const normalized: NormalizedJudgeUrlOptions = {
-    headed: options.headed ?? false,
+  const normalized: NormalizedJudgePageOptions = {
+    page: options.page,
     steps: normalizeSteps(options.steps),
     task,
     timeoutMs: normalizeTimeout(options.timeoutMs),
-    url,
-    viewport: normalizeViewport(options.viewport),
   };
 
   const reference = options.reference?.trim();
@@ -166,31 +137,13 @@ function normalizeSteps(steps: string[] | undefined): string[] {
 function normalizeTimeout(timeoutMs: number | undefined): number {
   if (timeoutMs === undefined) return DEFAULT_TIMEOUT_MS;
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
-    throw new Error('judgeUrl timeoutMs must be a positive finite number.');
+    throw new Error('judgePage timeoutMs must be a positive finite number.');
   }
   return timeoutMs;
 }
 
-function normalizeViewport(viewport: ViewportSize | undefined): ViewportSize {
-  if (!viewport) return DEFAULT_VIEWPORT;
-  if (
-    !Number.isFinite(viewport.width)
-    || !Number.isFinite(viewport.height)
-    || viewport.width <= 0
-    || viewport.height <= 0
-  ) {
-    throw new Error(
-      'judgeUrl viewport must contain positive width and height.',
-    );
-  }
-  return {
-    height: Math.round(viewport.height),
-    width: Math.round(viewport.width),
-  };
-}
-
 function buildVisualCorrectnessPrompt(
-  options: NormalizedJudgeUrlOptions,
+  options: NormalizedJudgePageOptions,
 ): string {
   const reference = options.reference
     ? `\nReference answer or target:\n${options.reference}\n`
@@ -287,4 +240,12 @@ async function withTimeout<T>(
 
 function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function getPageUrl(page: Page | undefined): string {
+  try {
+    return page?.url() ?? '';
+  } catch {
+    return '';
+  }
 }

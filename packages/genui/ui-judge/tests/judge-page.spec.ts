@@ -8,7 +8,7 @@ import type { AddressInfo } from 'node:net';
 
 import { expect, test } from '@playwright/test';
 
-import { judgeUrl } from '../src/index.js';
+import { judgePage } from '../src/index.js';
 
 let server: Server;
 let baseUrl: string;
@@ -55,19 +55,21 @@ test.afterAll(async () => {
   });
 });
 
-test('scores a local fixture after Midscene interactions', async () => {
+test('scores a caller-provided page after Midscene interactions', async ({ page }) => {
   test.skip(
     !hasMidsceneModelConfig(),
     'MIDSCENE_MODEL_NAME is required for the real Midscene model test.',
   );
 
   const steps = ['Click the Reveal details button.'];
-  const result = await judgeUrl({
-    url: `${baseUrl}/interactive`,
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${baseUrl}/interactive`);
+
+  const result = await judgePage({
+    page,
     task:
       'The page should show an order confirmation card with a revealed status, shipping date, and 390x844 viewport label.',
     steps,
-    viewport: { width: 390, height: 844 },
     timeoutMs: 120_000,
   });
 
@@ -81,10 +83,12 @@ test('scores a local fixture after Midscene interactions', async () => {
   expect(result.score).toBeLessThanOrEqual(5);
 });
 
-test('returns a JSON error when the page cannot be opened', async () => {
-  const result = await judgeUrl({
-    url: 'http://127.0.0.1:9/not-running',
-    task: 'The page should be reachable.',
+test('returns a JSON error when input validation fails', async ({ page }) => {
+  await page.goto(`${baseUrl}/interactive`);
+
+  const result = await judgePage({
+    page,
+    task: '',
     timeoutMs: 3_000,
   });
 
@@ -92,7 +96,7 @@ test('returns a JSON error when the page cannot be opened', async () => {
     dimension: 'visual-correctness',
     score: 0,
     steps: [],
-    url: 'http://127.0.0.1:9/not-running',
+    url: `${baseUrl}/interactive`,
   });
   expect(result.error?.message).toBeTruthy();
 });
