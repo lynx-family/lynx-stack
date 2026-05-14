@@ -100,11 +100,6 @@ interface ReactWebpackPluginOptions {
   profile?: boolean | undefined;
 
   /**
-   * The file path of `@lynx-js/react/worklet-runtime`.
-   */
-  workletRuntimePath: string;
-
-  /**
    * Whether to enable Element Template compilation.
    *
    * @experimental
@@ -185,7 +180,6 @@ class ReactWebpackPlugin {
       extractStr: false,
       experimental_isLazyBundle: false,
       profile: undefined,
-      workletRuntimePath: '',
       experimental_useElementTemplate: false,
     });
 
