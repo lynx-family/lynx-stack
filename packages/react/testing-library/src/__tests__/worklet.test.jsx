@@ -310,6 +310,25 @@ describe('worklet', () => {
     await waitSchedule();
   });
 
+  it('restores main-thread query APIs after reset', () => {
+    const wasBackground = !__MAIN_THREAD__;
+    lynxTestingEnv.reset();
+    lynxTestingEnv.switchToMainThread();
+    try {
+      const page = __CreatePage('0', 0);
+      const view = __CreateView(0);
+      __SetClasses(view, 'target');
+      __AppendElement(page, view);
+
+      expect(typeof lynx.querySelectorAll).toBe('function');
+      expect(lynx.querySelectorAll('.target')).toHaveLength(1);
+    } finally {
+      if (wasBackground) {
+        lynxTestingEnv.switchToBackgroundThread();
+      }
+    }
+  });
+
   it('runOnBackground works', async () => {
     vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
     const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;

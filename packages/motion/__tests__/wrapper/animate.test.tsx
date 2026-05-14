@@ -113,7 +113,7 @@ describe('Wrapper Animation', () => {
             }
           })();
         }, []);
-        return <view />;
+        return <view id='test-id' />;
       };
       render(<App />, { enableMainThread: true, enableBackgroundThread: true });
 
@@ -125,7 +125,6 @@ describe('Wrapper Animation', () => {
       const animateArgs = (globalThis as any).__ANIMATE_ARGS;
       const debugRes = (globalThis as any).__DEBUG_RES;
       const debugErr = (globalThis as any).__DEBUG_ERROR;
-      const mockQueryArgs = (globalThis as any).__MOCK_QUERY_ARGS;
 
       if (debugErr) {
         throw new Error('RunOnMainThread Error: ' + debugErr);
@@ -137,19 +136,13 @@ describe('Wrapper Animation', () => {
 
       if (debugRes) {
         expect(debugRes).toHaveLength(1);
-        // Expect wrapped element
-        expect(debugRes[0]).toEqual(
-          expect.objectContaining({ element: 'mockElement' }),
-        );
+        expect((debugRes[0] as any).element.id).toBe('test-id');
       }
 
       expect(animateArgs).toBeDefined();
 
       const comptArg = (globalThis as any).__ELEMENT_COMPT_ARGS;
-      // Expect wrapped element here too
-      expect(comptArg).toEqual(
-        expect.objectContaining({ element: 'mockElement' }),
-      );
+      expect((comptArg as any).element.id).toBe('test-id');
     });
 
     test('should delegate to framer-motion animate with Element', async () => {

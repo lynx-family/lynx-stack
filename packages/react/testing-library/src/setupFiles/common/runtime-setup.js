@@ -35,11 +35,7 @@ injectUpdateMainThread();
 injectUpdateMTRefInitValue();
 replaceCommitHook();
 
-globalThis.onInitWorkletRuntime = () => {
-  if (onInitWorkletRuntime) {
-    onInitWorkletRuntime();
-  }
-
+function initMainThreadWorkletRuntime() {
   lynx.setTimeout = setTimeout;
   lynx.setInterval = setInterval;
   lynx.clearTimeout = clearTimeout;
@@ -48,6 +44,14 @@ globalThis.onInitWorkletRuntime = () => {
   initWorklet();
   initApiEnv();
   initEventListeners();
+}
+
+globalThis.onInitWorkletRuntime = () => {
+  if (onInitWorkletRuntime) {
+    onInitWorkletRuntime();
+  }
+
+  initMainThreadWorkletRuntime();
 
   return true;
 };
@@ -111,7 +115,7 @@ globalThis.onResetLynxTestingEnv = () => {
   destroyWorklet();
 
   lynxTestingEnv.switchToMainThread();
-  initEventListeners();
+  initMainThreadWorkletRuntime();
   lynxTestingEnv.switchToBackgroundThread();
   injectTt();
   addCtxNotFoundEventListener();
@@ -140,3 +144,10 @@ globalThis.onInjectMainThreadGlobals(
 globalThis.onInjectBackgroundThreadGlobals(
   globalThis.lynxTestingEnv.backgroundThread.globalThis,
 );
+
+const wasMainThread = typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__;
+globalThis.lynxTestingEnv.switchToMainThread();
+initMainThreadWorkletRuntime();
+if (!wasMainThread) {
+  globalThis.lynxTestingEnv.switchToBackgroundThread();
+}
