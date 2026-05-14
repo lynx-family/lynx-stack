@@ -119,4 +119,27 @@ describe('ElementTemplate PAPI alog wrapper', () => {
       console.alog = originalAlog;
     }
   });
+
+  it('ends the profile when a wrapped ET PAPI throws', () => {
+    const error = new Error('native failed');
+    const target = {
+      __CreateElementTemplate: vi.fn(() => {
+        throw error;
+      }),
+    } satisfies Record<string, unknown>;
+
+    initElementTemplatePAPICallAlog(target);
+
+    expect(() =>
+      (target.__CreateElementTemplate as (...args: unknown[]) => unknown)(
+        '_et_error',
+        null,
+        [],
+        [],
+        5,
+      )
+    ).toThrow(error);
+    expect(globalThis.lynx.performance.profileStart).toHaveBeenCalledTimes(1);
+    expect(globalThis.lynx.performance.profileEnd).toHaveBeenCalledTimes(1);
+  });
 });

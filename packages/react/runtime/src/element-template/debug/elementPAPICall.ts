@@ -24,7 +24,8 @@ export function initElementTemplatePAPICallAlog(globalWithIndex: Record<string, 
     const callElementTemplatePAPI = oldElementTemplatePAPI as (...args: unknown[]) => unknown;
 
     globalWithIndex[elementTemplatePAPIName] = (...args: unknown[]): unknown => {
-      if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+      const shouldProfile = typeof __PROFILE__ !== 'undefined' && __PROFILE__;
+      if (shouldProfile) {
         profileStart(`ElementTemplatePAPI: ${elementTemplatePAPIName}`, {
           args: {
             args: formatValue(args, elementTemplateMap),
@@ -32,10 +33,13 @@ export function initElementTemplatePAPICallAlog(globalWithIndex: Record<string, 
         });
       }
 
-      const result = callElementTemplatePAPI(...args);
-
-      if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-        profileEnd();
+      let result: unknown;
+      try {
+        result = callElementTemplatePAPI(...args);
+      } finally {
+        if (shouldProfile) {
+          profileEnd();
+        }
       }
 
       if (elementTemplatePAPIName === '__CreateElementTemplate' && result != null) {

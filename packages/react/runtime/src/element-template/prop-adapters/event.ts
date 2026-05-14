@@ -4,12 +4,12 @@
 
 import { backgroundElementTemplateInstanceManager } from '../background/manager.js';
 
-export type EtEventHandler = (...args: unknown[]) => unknown;
+export type EtEventHandler = (data: EventDataType) => unknown;
 
-const pendingEvents: Array<[eventValue: string, data: unknown]> = [];
+const pendingEvents: Array<[eventValue: string, data: EventDataType]> = [];
 let queuePendingEvents = false;
 
-function dispatchEvent(eventValue: string, data: unknown): boolean {
+function dispatchEvent(eventValue: string, data: EventDataType): boolean {
   const handler = backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue(eventValue);
   if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
     console.alog?.(
@@ -17,7 +17,7 @@ function dispatchEvent(eventValue: string, data: unknown): boolean {
         JSON.stringify(
           {
             eventValue,
-            type: (data as { type?: unknown } | null)?.type,
+            type: data.type,
             jsFunctionName: typeof handler === 'function' ? handler.name : '',
             hasHandler: typeof handler === 'function',
           },
@@ -54,7 +54,7 @@ export function getEventHandlerForEventValue(eventValue: string): EtEventHandler
   return typeof handler === 'function' ? (handler as EtEventHandler) : undefined;
 }
 
-export function publishEvent(eventValue: string, data: unknown): void {
+export function publishEvent(eventValue: string, data: EventDataType): void {
   if (dispatchEvent(eventValue, data)) {
     return;
   }
@@ -66,7 +66,7 @@ export function publishEvent(eventValue: string, data: unknown): void {
 export function publicComponentEvent(
   _componentId: string,
   eventValue: string,
-  data: unknown,
+  data: EventDataType,
 ): void {
   publishEvent(eventValue, data);
 }
