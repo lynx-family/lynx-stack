@@ -9,7 +9,7 @@ import { pathToFileURL } from 'node:url';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { CliRuntime } from '../src/cli.js';
+import type { CliPrompts, CliRuntime } from '../src/cli.js';
 import {
   isCliEntrypoint,
   main,
@@ -34,7 +34,9 @@ describe('create-lynx-extension CLI', () => {
       parseArgs([
         'demo-extension',
         '--types',
-        'native-module,element,service',
+        'native-module,element',
+        '--type',
+        'service',
         '--package-name',
         '@example/demo-extension',
         '--android-package',
@@ -101,7 +103,15 @@ describe('create-lynx-extension CLI', () => {
     ], runtime);
 
     expect(runtime.info).toHaveBeenCalledWith(
-      `Created 19 files in ${path.resolve(dir)}`,
+      expect.stringContaining(`Created 19 files in ${path.resolve(dir)}`),
+    );
+    expect(runtime.info).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Extension types:\n  - Native Module\n  - Element',
+      ),
+    );
+    expect(runtime.info).toHaveBeenCalledWith(
+      expect.stringContaining('Next steps:'),
     );
     expect(read(dir, 'package.json')).toContain(
       '"name": "@example/cli-extension"',
@@ -113,17 +123,116 @@ describe('create-lynx-extension CLI', () => {
     );
   });
 
+  it('creates an all-in-one scaffold from the shorthand type flag', async () => {
+    const dir = createTempPath('all-extension');
+    const runtime = createRuntime();
+
+    await main([
+      '--dir',
+      dir,
+      '--types',
+      'all',
+      '--package-name',
+      '@example/all-extension',
+      '--android-package',
+      'com.example.all',
+    ], runtime);
+
+    expect(runtime.info).toHaveBeenCalledWith(
+      expect.stringContaining('  - Native Module\n  - Element\n  - Service'),
+    );
+    expect(
+      read(
+        dir,
+        'android/src/main/java/com/example/all/AllExtensionModule.java',
+      ),
+    )
+      .toContain('@LynxAutolinkNativeModule(name = "AllExtensionModule")');
+    expect(
+      read(
+        dir,
+        'android/src/main/java/com/example/all/AllExtensionElement.java',
+      ),
+    )
+      .toContain('@LynxAutolinkElement(name = "x-all-extension")');
+    expect(
+      read(
+        dir,
+        'android/src/main/java/com/example/all/AllExtensionService.java',
+      ),
+    )
+      .toContain('@LynxAutolinkService');
+  });
+
   it('fails in non-interactive mode when required options are missing', async () => {
     await expect(main([], createRuntime())).rejects.toThrow(
       /Missing required options in non-interactive mode: --dir, --types/,
     );
   });
 
+  it('prompts with project text and extension type multiselect controls', async () => {
+    const dir = createTempPath('interactive-extension');
+    const textPrompt = vi.fn().mockResolvedValue(dir);
+    const multiselectPrompt = vi.fn().mockResolvedValue([
+      'native-module',
+      'element',
+      'service',
+    ]);
+    const runtime = createRuntime({
+      isTTY: true,
+      prompts: {
+        text: textPrompt as CliPrompts['text'],
+        multiselect: multiselectPrompt as CliPrompts['multiselect'],
+      },
+    });
+
+    await main([], runtime);
+
+    expect(textPrompt).toHaveBeenCalledWith(
+      expect.objectContaining({
+        defaultValue: 'lynx-extension',
+        message: 'Project name or path',
+        placeholder: 'lynx-extension',
+      }),
+    );
+    expect(multiselectPrompt).toHaveBeenCalledWith(
+      expect.objectContaining({
+        initialValues: ['native-module', 'element', 'service'],
+        required: true,
+      }),
+    );
+    const multiselectOptions = multiselectPrompt.mock.calls[0]?.[0] as
+      | { message?: string }
+      | undefined;
+    expect(multiselectOptions?.message).toContain('Select extension types');
+    expect(multiselectPrompt).toHaveBeenCalledWith(
+      expect.objectContaining({
+        options: [
+          expect.objectContaining({
+            label: 'Native Module',
+            value: 'native-module',
+          }),
+          expect.objectContaining({ label: 'Element', value: 'element' }),
+          expect.objectContaining({ label: 'Service', value: 'service' }),
+        ],
+      }),
+    );
+    expect(read(dir, 'ios/src/InteractiveExtensionService.h')).toContain(
+      '@protocol InteractiveExtensionServiceProtocol',
+    );
+  });
+
   it('rejects empty interactive type answers', async () => {
     const dir = createTempPath('interactive-extension');
-    const runtime = createRuntime({ isTTY: true });
-    const input = runtime.input as PassThrough;
-    input.end('\n');
+    const runtime = createRuntime({
+      isTTY: true,
+      prompts: {
+        text: vi.fn().mockResolvedValue(dir) as CliPrompts['text'],
+        multiselect: vi.fn().mockResolvedValue([]) as CliPrompts[
+          'multiselect'
+        ],
+      },
+    });
 
     await expect(main(['--dir', dir], runtime)).rejects.toThrow(
       /At least one extension type is required/,
@@ -170,7 +279,9 @@ describe('create-lynx-extension CLI', () => {
   });
 });
 
-function createRuntime(options: { isTTY?: boolean } = {}): CliRuntime {
+function createRuntime(
+  options: { isTTY?: boolean; prompts?: CliPrompts } = {},
+): CliRuntime {
   const input = new PassThrough() as PassThrough & { isTTY?: boolean };
   const output = new PassThrough() as PassThrough & { isTTY?: boolean };
   input.isTTY = options.isTTY ?? false;
@@ -181,6 +292,7 @@ function createRuntime(options: { isTTY?: boolean } = {}): CliRuntime {
     output,
     info: vi.fn(),
     error: vi.fn(),
+    ...(options.prompts === undefined ? {} : { prompts: options.prompts }),
   };
 }
 

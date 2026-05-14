@@ -24,6 +24,11 @@ describe('create-lynx-extension', () => {
       'element',
       'service',
     ]);
+    expect(parseExtensionTypes('ALL')).toEqual([
+      'native-module',
+      'element',
+      'service',
+    ]);
     expect(() => parseExtensionTypes('web')).toThrow(
       /Unsupported extension type/,
     );
@@ -39,6 +44,9 @@ describe('create-lynx-extension', () => {
       moduleName: 'ButtonModule',
       elementName: 'x-button',
       serviceName: 'ButtonService',
+      dependencyVersions: {
+        '@lynx-js/autolink-codegen': '^0.123.0',
+      },
     });
 
     expect(files.map((file) => file.path)).toEqual(
@@ -63,8 +71,12 @@ describe('create-lynx-extension', () => {
       '"codegen": "lynx-autolink-codegen"',
     );
     expect(read(dir, 'package.json')).toContain(
+      '"@lynx-js/autolink-codegen": "^0.123.0"',
+    );
+    expect(read(dir, 'package.json')).not.toContain(
       '"@lynx-js/autolink-codegen": "^0.0.0"',
     );
+    expect(read(dir, 'package.json')).not.toContain('workspace:');
     expect(read(dir, 'lynx.ext.json')).toContain(
       '"packageName": "com.example.button"',
     );
@@ -173,6 +185,37 @@ describe('create-lynx-extension', () => {
       '@LynxAutolinkService(ViewService, ViewServiceProtocol)',
     );
     expect(read(dir, 'example/src/App.tsx')).not.toContain('import {');
+  });
+
+  it('fails when package templates contain unmapped workspace dependencies', () => {
+    const dir = createTempDir('missing-version');
+
+    expect(() =>
+      createLynxExtension({
+        dir,
+        types: ['native-module'],
+        dependencyVersions: {},
+      })
+    ).toThrow(
+      /workspace dependencies without version mappings: @lynx-js\/autolink-codegen/,
+    );
+  });
+
+  it('adds package template context when rendered package JSON is invalid', () => {
+    const dir = createTempDir('invalid-json');
+
+    expect(() =>
+      createLynxExtension({
+        dir,
+        types: ['native-module'],
+        packageName: 'bad"name',
+        dependencyVersions: {
+          '@lynx-js/autolink-codegen': '^0.123.0',
+        },
+      })
+    ).toThrow(
+      /Invalid package\.json template after rendering: .*package\.json/,
+    );
   });
 
   it('rejects generated paths that escape the target directory', () => {

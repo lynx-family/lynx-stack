@@ -35,6 +35,12 @@
     "dev": "rslib build --watch",
     "test": "vitest run"
   },
+  "dependencies": {
+    "@clack/prompts": "1.0.1"
+  },
+  "devDependencies": {
+    "@lynx-js/autolink-codegen": "workspace:^"
+  },
   "engines": {
     "node": "^20 || ^22 || ^24"
   }
