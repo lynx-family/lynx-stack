@@ -5,9 +5,14 @@ import { initApiEnv } from './api/lynxApi.js';
 import { initEventListeners } from './listeners.js';
 import { initWorklet } from './workletRuntime.js';
 
+const mainThreadLynx = lynx as typeof lynx & {
+  querySelector?: unknown;
+  querySelectorAll?: unknown;
+};
+
 if (
-  typeof lynx.querySelector !== 'function'
-  || typeof lynx.querySelectorAll !== 'function'
+  typeof mainThreadLynx.querySelector !== 'function'
+  || typeof mainThreadLynx.querySelectorAll !== 'function'
 ) {
   initApiEnv();
 }
