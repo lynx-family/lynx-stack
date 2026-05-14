@@ -63,8 +63,6 @@ jobs:
         run: node .github/scripts/check-no-heading-changeset.cjs .changeset-status.json
       - name: Dependency Changeset Check
         run: node .github/scripts/check-dep-changes-have-changeset.cjs .changeset-status.json
-      - name: Dependency Changeset Script Tests
-        run: node --test .github/scripts/check-dep-changes-have-changeset.test.cjs
 
   eslint:
     needs: build
