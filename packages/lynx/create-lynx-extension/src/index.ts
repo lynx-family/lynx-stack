@@ -15,6 +15,7 @@ export interface CreateLynxExtensionOptions {
   moduleName?: string;
   elementName?: string;
   serviceName?: string;
+  dependencyVersions?: Record<string, string>;
 }
 
 export interface CreatedFile {
@@ -31,7 +32,15 @@ interface TemplateContext {
   elementClassName: string;
   serviceName: string;
   serviceProtocolName: string;
+  dependencyVersions: Record<string, string>;
   types: Set<ExtensionType>;
+}
+
+interface PackageJson {
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
 }
 
 export const EXTENSION_TYPES: readonly ExtensionType[] = [
@@ -45,6 +54,12 @@ const PACKAGE_ROOT = path.resolve(
   '..',
 );
 const TEMPLATE_FILE_SUFFIX = '.tmpl';
+const PACKAGE_JSON_DEPENDENCY_FIELDS = [
+  'dependencies',
+  'devDependencies',
+  'optionalDependencies',
+  'peerDependencies',
+] as const satisfies ReadonlyArray<keyof PackageJson>;
 
 /**
  * Creates a Native Autolink extension scaffold on disk.
@@ -94,7 +109,15 @@ export function createLynxExtension(
  * Parses a comma-separated extension type list from CLI input.
  */
 export function parseExtensionTypes(source: string): ExtensionType[] {
-  const types = source.split(',').map((type) => type.trim()).filter(Boolean);
+  const normalizedSource = source.trim().toLowerCase();
+
+  if (normalizedSource === 'all') {
+    return [...EXTENSION_TYPES];
+  }
+
+  const types = normalizedSource.split(',').map((type) => type.trim()).filter(
+    Boolean,
+  );
 
   if (types.length === 0) {
     return [];
@@ -143,6 +166,8 @@ function createContext(
     elementClassName: `${elementPrefix}Element`,
     serviceName,
     serviceProtocolName: `${serviceName}Protocol`,
+    dependencyVersions: options.dependencyVersions
+      ?? readDefaultDependencyVersions(),
     types,
   };
 }
@@ -183,15 +208,90 @@ function createFilesFromTemplateGroup(
   return listTemplateFiles(root).map((absolutePath) => {
     const relativePath = toPosixPath(path.relative(root, absolutePath));
     const renderedPath = renderTemplate(relativePath, replacements);
+    const filePath = stripTemplateFileSuffix(renderedPath);
+    const content = renderTemplate(
+      fs.readFileSync(absolutePath, 'utf8'),
+      replacements,
+    );
 
     return {
-      path: stripTemplateFileSuffix(renderedPath),
-      content: renderTemplate(
-        fs.readFileSync(absolutePath, 'utf8'),
-        replacements,
-      ),
+      path: filePath,
+      content: filePath.endsWith('package.json')
+        ? replacePackageDependencyVersions(
+          content,
+          context.dependencyVersions,
+          filePath,
+        )
+        : content,
     };
   });
+}
+
+/**
+ * Reads dependency versions carried by the published scaffold package metadata.
+ *
+ * This intentionally uses the target dependency's published version rewritten
+ * from workspace protocol during packing, not create-lynx-extension's own
+ * package version.
+ */
+function readDefaultDependencyVersions(): Record<string, string> {
+  const packageJson = JSON.parse(
+    fs.readFileSync(path.join(PACKAGE_ROOT, 'package.json'), 'utf8'),
+  ) as PackageJson;
+
+  return packageJson.devDependencies ?? {};
+}
+
+/**
+ * Replaces workspace template dependency versions with the scaffold package's current version table.
+ */
+function replacePackageDependencyVersions(
+  source: string,
+  dependencyVersions: Record<string, string>,
+  filePath: string,
+): string {
+  let packageJson: PackageJson;
+
+  try {
+    packageJson = JSON.parse(source) as PackageJson;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Invalid package.json template after rendering: ${filePath}: ${message}`,
+    );
+  }
+
+  const missingVersionPackages = new Set<string>();
+
+  for (const field of PACKAGE_JSON_DEPENDENCY_FIELDS) {
+    const dependencies = packageJson[field];
+
+    if (dependencies === undefined) {
+      continue;
+    }
+
+    for (const [name, version] of Object.entries(dependencies)) {
+      if (version.startsWith('workspace:')) {
+        const replacement = dependencyVersions[name];
+
+        if (replacement === undefined) {
+          missingVersionPackages.add(name);
+        } else {
+          dependencies[name] = replacement;
+        }
+      }
+    }
+  }
+
+  if (missingVersionPackages.size > 0) {
+    throw new Error(
+      `Template package.json "${filePath}" contains workspace dependencies without version mappings: ${
+        Array.from(missingVersionPackages).join(', ')
+      }. Add these packages to create-lynx-extension's devDependencies.`,
+    );
+  }
+
+  return `${JSON.stringify(packageJson, null, 2)}\n`;
 }
 
 /**

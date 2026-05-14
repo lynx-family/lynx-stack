@@ -742,7 +742,15 @@ importers:
         specifier: ^8.8.5
         version: 8.8.5
 
-  packages/lynx/create-lynx-extension: {}
+  packages/lynx/create-lynx-extension:
+    dependencies:
+      '@clack/prompts':
+        specifier: 1.0.1
+        version: 1.0.1
+    devDependencies:
+      '@lynx-js/autolink-codegen':
+        specifier: workspace:^
+        version: link:../autolink-codegen
 
   packages/lynx/gesture-runtime:
     devDependencies:

@@ -19,6 +19,6 @@
     "codegen": "lynx-autolink-codegen"
   },
   "devDependencies": {
-    "@lynx-js/autolink-codegen": "^0.0.0"
+    "@lynx-js/autolink-codegen": "workspace:*"
   }
 }
