@@ -31,3 +31,4 @@ export { List } from './List/index.jsx';
 export { RadioGroup } from './RadioGroup/index.jsx';
 export { Row } from './Row/index.jsx';
 export { Text } from './Text/index.jsx';
+export { TextField } from './TextField/index.jsx';

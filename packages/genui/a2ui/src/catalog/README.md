@@ -3,7 +3,7 @@
 The package intentionally **does not** ship an "all-in-one" catalog
 constant. A top-level array referencing every built-in defeats
 tree-shaking — every consumer of such an aggregate would bundle every
-component, even the nine you don't use. Composition is per-component, and
+component, even the ten you don't use. Composition is per-component, and
 the cost is visible at the import site.
 
 ## The minimum a renderer needs
@@ -77,6 +77,7 @@ import {
   RadioGroup,
   Row,
   Text,
+  TextField,
 } from '@lynx-js/a2ui-reactlynx';
 import buttonManifest from '@lynx-js/a2ui-reactlynx/catalog/Button/catalog.json' with {
   type: 'json',
@@ -108,6 +109,9 @@ import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json' with 
 import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json' with {
   type: 'json',
 };
+import textFieldManifest from '@lynx-js/a2ui-reactlynx/catalog/TextField/catalog.json' with {
+  type: 'json',
+};
 
 export const allBuiltins = defineCatalog([
   [Text, textManifest],
@@ -118,6 +122,7 @@ export const allBuiltins = defineCatalog([
   [Card, cardManifest],
   [Button, buttonManifest],
   [Divider, dividerManifest],
+  [TextField, textFieldManifest],
   [CheckBox, checkBoxManifest],
   [RadioGroup, radioGroupManifest],
 ]);
