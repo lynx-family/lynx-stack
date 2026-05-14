@@ -5,9 +5,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { stdin as input, stdout as output } from 'node:process';
-import readline from 'node:readline';
 import type { Readable, Writable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
+
+import { cancel, isCancel, multiselect, text } from '@clack/prompts';
 
 import type { CreateLynxExtensionOptions, ExtensionType } from './index.js';
 import {
@@ -27,11 +28,17 @@ export interface CliOptions {
   help: boolean;
 }
 
+export interface CliPrompts {
+  text: typeof text;
+  multiselect: typeof multiselect;
+}
+
 export interface CliRuntime {
   input: Readable & { isTTY?: boolean };
   output: Writable & { isTTY?: boolean };
   info: (message: string) => void;
   error: (message: string) => void;
+  prompts?: CliPrompts;
 }
 
 const DEFAULT_RUNTIME: CliRuntime = {
@@ -43,6 +50,24 @@ const DEFAULT_RUNTIME: CliRuntime = {
   error(message) {
     console.error(message);
   },
+};
+class CliCancelError extends Error {
+  override name = 'CliCancelError';
+}
+const DEFAULT_PROMPTS: CliPrompts = {
+  text,
+  multiselect,
+};
+const DEFAULT_PROJECT_NAME = 'lynx-extension';
+const EXTENSION_TYPE_LABELS: Record<ExtensionType, string> = {
+  'native-module': 'Native Module',
+  element: 'Element',
+  service: 'Service',
+};
+const EXTENSION_TYPE_HINTS: Record<ExtensionType, string> = {
+  'native-module': 'JS bridge APIs implemented by native code',
+  element: 'native UI element registered through Autolink',
+  service: 'native service implementation registered globally',
 };
 
 /**
@@ -69,8 +94,11 @@ export function parseArgs(argv: string[]): CliOptions {
       continue;
     }
 
-    if (arg === '--types') {
-      options.types = parseExtensionTypes(readValue(argv, index, arg));
+    if (arg === '--types' || arg === '--type') {
+      options.types = [
+        ...(options.types ?? []),
+        ...parseExtensionTypes(readValue(argv, index, arg)),
+      ];
       index += 1;
       continue;
     }
@@ -140,13 +168,23 @@ function printHelp(runtime: CliRuntime): void {
 
 Options:
   --dir, -d <dir>              Target directory.
-  --types <list>               Comma-separated list: native-module,element,service.
+  --type, --types <list>       Comma-separated list or "all".
   --package-name <name>        npm package name.
   --android-package <name>     Android package name for lynx.ext.json.
   --module-name <name>         Native module class name.
   --element-name <name>        Element tag name.
   --service-name <name>        Service class name.
   --help, -h                   Show this help message.
+
+Extension types:
+  native-module                JS bridge APIs implemented by native code.
+  element                      Native UI element registered through Autolink.
+  service                      Native service implementation registered globally.
+
+Examples:
+  create-lynx-extension
+  create-lynx-extension lynx-button --types native-module,element,service
+  create-lynx-extension lynx-kit --types all
 `);
 }
 
@@ -183,38 +221,45 @@ async function fillInteractiveOptions(
     );
   }
 
-  const rl = readline.createInterface({
-    input: runtime.input,
-    output: runtime.output,
-  });
+  const prompts = getPrompts(runtime);
 
-  try {
-    if (next.dir === undefined) {
-      const answer = await ask(rl, 'Target directory: ');
-      next.dir = answer.trim();
-    }
+  next.dir ??= checkCancel<string>(
+    await prompts.text({
+      input: runtime.input,
+      output: runtime.output,
+      message: 'Project name or path',
+      placeholder: DEFAULT_PROJECT_NAME,
+      defaultValue: DEFAULT_PROJECT_NAME,
+      validate(value) {
+        if (value?.trim().length === 0) {
+          return 'Project name is required';
+        }
+        return undefined;
+      },
+    }),
+    runtime,
+  ).trim();
 
-    if (next.types === undefined || next.types.length === 0) {
-      const answer = await ask(
-        rl,
-        `Extension types (${EXTENSION_TYPES.join(', ')}): `,
-      );
-      next.types = parseExtensionTypes(answer.trim());
-    }
-
-    return next;
-  } finally {
-    rl.close();
+  if (next.types === undefined || next.types.length === 0) {
+    next.types = checkCancel<ExtensionType[]>(
+      await prompts.multiselect<ExtensionType>({
+        input: runtime.input,
+        output: runtime.output,
+        message:
+          'Select extension types (Use <space> to select, <enter> to continue)',
+        options: EXTENSION_TYPES.map((type) => ({
+          value: type,
+          label: EXTENSION_TYPE_LABELS[type],
+          hint: EXTENSION_TYPE_HINTS[type],
+        })),
+        initialValues: [...EXTENSION_TYPES],
+        required: true,
+      }),
+      runtime,
+    );
   }
-}
 
-/**
- * Wraps readline questions in a promise for async CLI flow.
- */
-function ask(rl: readline.Interface, question: string): Promise<string> {
-  return new Promise((resolve) => {
-    rl.question(question, resolve);
-  });
+  return next;
 }
 
 /**
@@ -264,7 +309,12 @@ export async function main(
 
   const files = createLynxExtension(createOptions);
 
-  runtime.info(`Created ${files.length} files in ${createOptions.dir}`);
+  runtime.info(formatSuccessMessage({
+    dir: createOptions.dir,
+    filesCount: files.length,
+    packageManager: detectPackageManager(),
+    types: options.types,
+  }));
 }
 
 /**
@@ -274,6 +324,10 @@ export function reportCliError(
   error: unknown,
   runtime: CliRuntime = DEFAULT_RUNTIME,
 ): void {
+  if (error instanceof CliCancelError) {
+    return;
+  }
+
   runtime.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
 }
@@ -295,6 +349,84 @@ function normalizeEntrypointPath(filePath: string): string {
   } catch {
     return resolvedPath;
   }
+}
+
+function getPrompts(runtime: CliRuntime): CliPrompts {
+  return runtime.prompts ?? DEFAULT_PROMPTS;
+}
+
+function checkCancel<T>(value: T | symbol, runtime: CliRuntime): T {
+  if (isCancel(value)) {
+    cancel('Operation cancelled.', {
+      input: runtime.input,
+      output: runtime.output,
+    });
+    throw new CliCancelError();
+  }
+
+  return value;
+}
+
+function formatSuccessMessage({
+  dir,
+  filesCount,
+  packageManager,
+  types,
+}: {
+  dir: string;
+  filesCount: number;
+  packageManager: PackageManager;
+  types: ExtensionType[];
+}): string {
+  // Display extension types in the canonical order from EXTENSION_TYPES.
+  const selectedTypes = EXTENSION_TYPES.filter((type) => types.includes(type));
+  const typeSummary = selectedTypes
+    .map((type) => `  - ${EXTENSION_TYPE_LABELS[type]}`)
+    .join('\n');
+  const nextSteps = [
+    `1. cd ${formatTargetDir(dir)}`,
+    `2. ${packageManager} install`,
+  ];
+
+  if (selectedTypes.includes('native-module')) {
+    nextSteps.push(`3. ${packageManager} run codegen`);
+  }
+
+  return `Created ${filesCount} files in ${dir}
+
+Extension types:
+${typeSummary}
+
+Next steps:
+${nextSteps.map((step) => `  ${step}`).join('\n')}`;
+}
+
+type PackageManager = 'bun' | 'npm' | 'pnpm' | 'yarn';
+
+function detectPackageManager(
+  userAgent: string | undefined = process.env['npm_config_user_agent'],
+): PackageManager {
+  const name = userAgent?.split(' ')[0]?.split('/')[0];
+
+  if (name === 'bun' || name === 'pnpm' || name === 'yarn') {
+    return name;
+  }
+
+  return 'npm';
+}
+
+function formatTargetDir(targetDir: string): string {
+  const relativePath = path.relative(process.cwd(), targetDir);
+
+  if (relativePath.length === 0) {
+    return '.';
+  }
+
+  if (!relativePath.startsWith('..') && !path.isAbsolute(relativePath)) {
+    return relativePath;
+  }
+
+  return targetDir;
 }
 
 /* v8 ignore next 5 */
