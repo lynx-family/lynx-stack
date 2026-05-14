@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { CATEGORIES, COMPONENT_CATALOG } from '../catalog/a2ui.js';
 import type { ComponentDoc } from '../catalog/a2ui.js';
+import { PreviewViewport } from '../components/PreviewViewport.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
@@ -46,14 +47,19 @@ function ComponentDetail(
   },
 ) {
   const { comp, protocol, theme } = props;
+  const usageExamples = comp.usageExamples[protocol.name];
+  const [selectedUsageExample, setSelectedUsageExample] = useState(0);
   const [usageJson, setUsageJson] = useState(() =>
-    formatJson(comp.usage[protocol.name])
+    formatJson(usageExamples[0]?.value ?? comp.usage[protocol.name])
   );
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    setUsageJson(formatJson(comp.usage[protocol.name]));
-  }, [comp, protocol]);
+    setSelectedUsageExample(0);
+    setUsageJson(
+      formatJson(usageExamples[0]?.value ?? comp.usage[protocol.name]),
+    );
+  }, [comp, protocol, usageExamples]);
 
   const parsedUsage = useMemo(() => {
     try {
@@ -72,6 +78,7 @@ function ComponentDetail(
         demoUrl: DEFAULT_A2UI_DEMO_URL,
         messages: createComponentPreviewMessages(comp, parsedUsage.value),
         theme,
+        instant: true,
       },
       baseUrl,
     );
@@ -93,80 +100,129 @@ function ComponentDetail(
       <h2 className='compName'>{comp.name}</h2>
       <p className='compDesc'>{comp.description}</p>
 
-      <div className='compCategoryBadge'>{comp.category}</div>
-      <h3 className='compSubheading'>Props</h3>
-      <table className='compTable'>
-        <thead>
-          <tr>
-            <th className='compTableHeader'>Name</th>
-            <th className='compTableHeader'>Type</th>
-            <th className='compTableHeader'>Description</th>
-            <th className='compTableHeader'>Default</th>
-          </tr>
-        </thead>
-        <tbody>
-          {comp.props.map((prop) => (
-            <tr key={prop.name}>
-              <td className='compTableCell'>{prop.name}</td>
-              <td className='compTableCell'>{prop.type}</td>
-              <td className='compTableCell'>{prop.description}</td>
-              <td className='compTableCell'>{prop.default ?? '—'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <section className='compPropsSection compUsageSection'>
+        <div className='compSectionHeader'>
+          <h3 className='compSubheading'>Props</h3>
+          <div className='compPlaygroundSideHint'>
+            {comp.props.length} fields
+          </div>
+        </div>
+        <p className='compUsageHint'>
+          Reference the available props before editing the usage JSON below.
+        </p>
+        <div className='compPropsTableWrap'>
+          <table className='compTable compPropsTable'>
+            <thead>
+              <tr>
+                <th className='compTableHeader'>Name</th>
+                <th className='compTableHeader'>Type</th>
+                <th className='compTableHeader'>Description</th>
+                <th className='compTableHeader'>Default</th>
+              </tr>
+            </thead>
+            <tbody>
+              {comp.props.map((prop) => (
+                <tr key={prop.name}>
+                  <td className='compTableCell'>{prop.name}</td>
+                  <td className='compTableCell'>{prop.type}</td>
+                  <td className='compTableCell'>{prop.description}</td>
+                  <td className='compTableCell'>{prop.default ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-      <div className='compSectionHeader'>
-        <h3 className='compSubheading'>Usage</h3>
-        <button
-          className='compCopyBtn'
-          type='button'
-          title={copied ? 'Copied' : 'Copy JSON'}
-          onClick={() => {
-            void copyToClipboard(usageJson).then((ok) => {
-              if (!ok) return;
-              setCopied(true);
-              window.setTimeout(() => setCopied(false), 1200);
-            });
-          }}
-        >
-          {copied ? 'Copied' : 'Copy'}
-        </button>
-      </div>
-      <CodeMirror
-        className='compUsageEditor'
-        value={usageJson}
-        extensions={jsonExtensions}
-        onChange={setUsageJson}
-        theme='dark'
-        basicSetup={{
-          lineNumbers: true,
-          foldGutter: true,
-          bracketMatching: true,
-          closeBrackets: true,
-          autocompletion: true,
-        }}
-      />
-      {parsedUsage.error
-        ? <div className='compUsageError'>{parsedUsage.error}</div>
-        : null}
-
-      <h3 className='compSubheading'>Preview</h3>
-      <div className='compPreview'>
-        {previewUrl
-          ? (
-            <iframe
-              className='compPreviewIframe'
-              title={`${comp.name} preview`}
-              src={previewUrl}
-            />
-          )
-          : (
-            <div className='compPreviewInvalid'>
-              Fix the Usage JSON to update the preview.
+      <section className='compUsageSection'>
+        <div className='compSectionHeader compUsageSectionHeader'>
+          <h3 className='compSubheading'>Usage</h3>
+          <div className='compPlaygroundSideHint'>
+            JSON editor and live phone preview
+          </div>
+        </div>
+        <p className='compUsageHint'>
+          Edit the JSON below to change the component preview instantly.
+        </p>
+        <div className='compEditorPreviewRow'>
+          <section className='compUsagePane'>
+            {usageExamples.length > 1
+              ? (
+                <div className='compUsageExamples'>
+                  {usageExamples.map((example, index) => (
+                    <button
+                      key={example.label}
+                      className={'compUsageExample'
+                        + (selectedUsageExample === index ? ' active' : '')}
+                      type='button'
+                      onClick={() => {
+                        setSelectedUsageExample(index);
+                        setUsageJson(formatJson(example.value));
+                      }}
+                    >
+                      {example.label}
+                    </button>
+                  ))}
+                </div>
+              )
+              : null}
+            <div className='compUsageEditorToolbar'>
+              <div className='compUsageEditorLabel'>JSON</div>
+              <button
+                className='compCopyBtn'
+                type='button'
+                title={copied ? 'Copied' : 'Copy JSON'}
+                onClick={() => {
+                  void copyToClipboard(usageJson).then((ok) => {
+                    if (!ok) return;
+                    setCopied(true);
+                    window.setTimeout(() => setCopied(false), 1200);
+                  });
+                }}
+              >
+                {copied ? 'Copied' : 'Copy'}
+              </button>
             </div>
-          )}
-      </div>
+            <CodeMirror
+              className={theme === 'dark'
+                ? 'compUsageEditor compUsageEditorDark'
+                : 'compUsageEditor compUsageEditorLight'}
+              value={usageJson}
+              extensions={jsonExtensions}
+              onChange={setUsageJson}
+              theme={theme}
+              basicSetup={{
+                lineNumbers: true,
+                foldGutter: true,
+                bracketMatching: true,
+                closeBrackets: true,
+                autocompletion: true,
+              }}
+            />
+            {parsedUsage.error
+              ? <div className='compUsageError'>{parsedUsage.error}</div>
+              : null}
+          </section>
+
+          <section className='compPreviewPane'>
+            <div className='compPreviewStage'>
+              {previewUrl
+                ? (
+                  <PreviewViewport
+                    src={previewUrl}
+                    iframeTitle={`${comp.name} preview`}
+                    emptyTitle='Fix the Usage JSON to update the preview.'
+                  />
+                )
+                : (
+                  <div className='compPreviewInvalid'>
+                    Fix the Usage JSON to update the preview.
+                  </div>
+                )}
+            </div>
+          </section>
+        </div>
+      </section>
     </div>
   );
 }

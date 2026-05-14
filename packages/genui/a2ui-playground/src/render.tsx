@@ -21,9 +21,11 @@ interface InitData {
   demoUrl?: string;
   speed?: number;
   instant?: boolean;
+  playbackMode?: boolean;
   theme?: 'light' | 'dark';
   rawText?: string;
   rawTextUrl?: string;
+  playbackPaused?: boolean;
 }
 
 interface InitLynxViewMessage {
@@ -31,10 +33,30 @@ interface InitLynxViewMessage {
   data: InitData;
 }
 
+interface PlaybackControlMessage {
+  type: 'A2UI_PLAYBACK_CONTROL';
+  action: 'pause' | 'resume';
+}
+
+interface PlaybackProgressMessage {
+  type: 'A2UI_PLAYBACK_PROGRESS';
+  data: {
+    deliveredCount: number;
+    totalCount: number;
+    status: 'idle' | 'streaming' | 'paused' | 'done';
+  };
+}
+
+interface PlaybackSyncMessage {
+  type: 'A2UI_PLAYBACK_SYNC';
+  data: unknown;
+}
+
 interface LynxViewElement extends HTMLElement {
   initData?: InitData;
   globalProps?: unknown;
   reload?: () => void;
+  sendGlobalEvent?: (eventName: string, params: unknown[]) => void;
 }
 
 function parseJsonParam(raw: string): unknown {
@@ -61,6 +83,7 @@ function parseInitDataFromQuery(): InitData | null {
   const actionMocksUrl = params.get('actionMocksUrl');
   const demo = params.get('demo');
   const instant = params.get('instant');
+  const playbackMode = params.get('playbackMode');
   const theme = params.get('theme');
 
   const rawText = params.get('rawText');
@@ -88,6 +111,7 @@ function parseInitDataFromQuery(): InitData | null {
       ? speedVal
       : undefined,
     instant: instant === '1' ? true : undefined,
+    playbackMode: playbackMode === '1' ? true : undefined,
     theme: theme === 'dark'
       ? 'dark'
       : (theme === 'light' ? 'light' : undefined),
@@ -138,9 +162,15 @@ function buildGlobalPropsFromInitData(
   }
   if (initData.speed !== undefined) out.speed = initData.speed;
   if (initData.instant !== undefined) out.instant = initData.instant;
+  if (initData.playbackMode !== undefined) {
+    out.playbackMode = initData.playbackMode;
+  }
   if (initData.theme !== undefined) out.theme = initData.theme;
   if (initData.rawText !== undefined) out.rawText = initData.rawText;
   if (initData.rawTextUrl !== undefined) out.rawTextUrl = initData.rawTextUrl;
+  if (initData.playbackPaused !== undefined) {
+    out.playbackPaused = initData.playbackPaused;
+  }
   return Object.keys(out).length > 0 ? out : null;
 }
 
@@ -154,6 +184,21 @@ function isInitLynxViewMessage(data: unknown): data is InitLynxViewMessage {
     && payload.data !== null;
 }
 
+function isPlaybackControlMessage(
+  data: unknown,
+): data is PlaybackControlMessage {
+  if (!data || typeof data !== 'object') return false;
+  const payload = data as Partial<PlaybackControlMessage>;
+  return payload.type === 'A2UI_PLAYBACK_CONTROL'
+    && (payload.action === 'pause' || payload.action === 'resume');
+}
+
+function isPlaybackSyncMessage(data: unknown): data is PlaybackSyncMessage {
+  if (!data || typeof data !== 'object') return false;
+  const payload = data as Partial<PlaybackSyncMessage>;
+  return payload.type === 'A2UI_PLAYBACK_SYNC' && 'data' in payload;
+}
+
 function Render() {
   const initial = useMemo(() => {
     const initData = parseInitDataFromQuery();
@@ -164,7 +209,10 @@ function Render() {
   const [globalProps] = useState<Record<string, unknown> | null>(
     initial.globalProps,
   );
+  const [playbackPaused, setPlaybackPaused] = useState(false);
+  const [playbackMode, setPlaybackMode] = useState(false);
   const lynxViewRef = useRef<LynxViewElement | null>(null);
+  const lastPlaybackPausedRef = useRef<boolean | null>(null);
 
   // Known demo: fetch the static JSON in the browser context (where fetch works)
   // and pass the resolved messages as initData, avoiding fetch in Lynx's worker thread.
@@ -191,11 +239,31 @@ function Render() {
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent<unknown>) => {
+      if (isPlaybackSyncMessage(e.data)) {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(e.data, '*');
+        }
+        return;
+      }
+      if (
+        e.data
+        && typeof e.data === 'object'
+        && (e.data as PlaybackProgressMessage).type === 'A2UI_PLAYBACK_PROGRESS'
+      ) {
+        const lynxView = lynxViewRef.current;
+        lynxView?.sendGlobalEvent?.('A2UI_PLAYBACK_PROGRESS', [
+          (e.data as PlaybackProgressMessage).data,
+        ]);
+        return;
+      }
       if (!isInitLynxViewMessage(e.data)) {
+        if (!isPlaybackControlMessage(e.data)) return;
+        setPlaybackPaused(e.data.action === 'pause');
         return;
       }
 
       setInitData(e.data.data);
+      setPlaybackMode(e.data.data.playbackMode === true);
     };
 
     window.addEventListener('message', handleMessage);
@@ -206,15 +274,46 @@ function Render() {
     const lynxView = lynxViewRef.current;
     if (!lynxView) return;
 
-    lynxView.initData = initData ?? {};
+    lynxView.initData = {
+      ...(initData ?? {}),
+    };
     // Align with native: prefer `globalProps` as the channel for A2UI payload.
-    lynxView.globalProps = globalProps ?? buildGlobalPropsFromInitData(initData)
-      ?? {};
+    const nextGlobalProps = globalProps
+      ? { ...globalProps }
+      : buildGlobalPropsFromInitData(initData) ?? {};
+    lynxView.globalProps = nextGlobalProps;
 
     if (typeof lynxView.reload === 'function') {
       lynxView.reload();
     }
   }, [globalProps, initData]);
+
+  useEffect(() => {
+    const lynxView = lynxViewRef.current;
+    if (!lynxView) return;
+
+    const nextGlobalProps = globalProps
+      ? { ...globalProps, playbackPaused, playbackMode }
+      : buildGlobalPropsFromInitData({
+        ...(initData ?? {}),
+        playbackPaused,
+        playbackMode,
+      }) ?? {};
+
+    lynxView.initData = {
+      ...(initData ?? {}),
+      playbackPaused,
+      playbackMode,
+    };
+    lynxView.globalProps = nextGlobalProps;
+
+    if (lastPlaybackPausedRef.current !== playbackPaused) {
+      lastPlaybackPausedRef.current = playbackPaused;
+      lynxView.sendGlobalEvent?.('A2UI_PLAYBACK_CONTROL', [
+        playbackPaused ? 'pause' : 'resume',
+      ]);
+    }
+  }, [globalProps, initData, playbackMode, playbackPaused]);
 
   return createElement('lynx-view', {
     ref: lynxViewRef,

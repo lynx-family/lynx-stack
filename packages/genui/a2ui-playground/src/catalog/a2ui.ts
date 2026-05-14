@@ -22,6 +22,11 @@ export interface ComponentProp {
   default?: string;
 }
 
+export interface ComponentUsageExample {
+  label: string;
+  value: object;
+}
+
 export type ComponentCategory = 'Display' | 'Layout' | 'Input' | 'Data';
 
 export interface ComponentDoc {
@@ -30,6 +35,7 @@ export interface ComponentDoc {
   description: string;
   props: ComponentProp[];
   usage: Record<ProtocolName, object>;
+  usageExamples: Record<ProtocolName, ComponentUsageExample[]>;
 }
 
 export const CATEGORIES: { id: ComponentCategory; label: string }[] = [
@@ -99,6 +105,41 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       },
       openui: {},
     },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Headline',
+          value: {
+            id: 'hero-title',
+            component: 'Text',
+            variant: 'h1',
+            text: 'Build faster with Lynx',
+            weight: 700,
+          },
+        },
+        {
+          label: 'Body',
+          value: {
+            id: 'body-copy',
+            component: 'Text',
+            variant: 'body',
+            text:
+              'Reusable UI blocks should stay readable even when the surrounding layout changes.',
+          },
+        },
+        {
+          label: 'Caption',
+          value: {
+            id: 'caption-copy',
+            component: 'Text',
+            variant: 'caption',
+            text: 'Last updated 2 minutes ago',
+            weight: 500,
+          },
+        },
+      ],
+      openui: [],
+    },
   },
   {
     name: 'Icon',
@@ -113,6 +154,41 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
         name: 'info',
       },
       openui: {},
+    },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Primary',
+          value: {
+            id: 'info-icon',
+            component: 'Icon',
+            name: 'info',
+            size: 'md',
+            color: 'primary',
+          },
+        },
+        {
+          label: 'Muted',
+          value: {
+            id: 'play-icon',
+            component: 'Icon',
+            name: 'play_arrow',
+            size: 'lg',
+            color: 'muted',
+          },
+        },
+        {
+          label: 'Inherited',
+          value: {
+            id: 'check-icon',
+            component: 'Icon',
+            name: 'check_circle',
+            size: 'sm',
+            color: 'inherit',
+          },
+        },
+      ],
+      openui: [],
     },
   },
   {
@@ -130,6 +206,41 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       },
       openui: {},
     },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Feature',
+          value: {
+            id: 'feature-image',
+            component: 'Image',
+            url: 'https://picsum.photos/seed/a2ui-image-feature/480/280',
+            fit: 'cover',
+            variant: 'largeFeature',
+          },
+        },
+        {
+          label: 'Avatar',
+          value: {
+            id: 'avatar-image',
+            component: 'Image',
+            url: 'https://picsum.photos/seed/a2ui-image-avatar/160/160',
+            fit: 'cover',
+            variant: 'avatar',
+          },
+        },
+        {
+          label: 'Contain',
+          value: {
+            id: 'icon-image',
+            component: 'Image',
+            url: 'https://picsum.photos/seed/a2ui-image-icon/120/120',
+            fit: 'contain',
+            variant: 'icon',
+          },
+        },
+      ],
+      openui: [],
+    },
   },
   {
     name: 'Divider',
@@ -144,6 +255,27 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       },
       openui: {},
     },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Horizontal',
+          value: {
+            id: 'section-divider',
+            component: 'Divider',
+            axis: 'horizontal',
+          },
+        },
+        {
+          label: 'Vertical',
+          value: {
+            id: 'column-divider',
+            component: 'Divider',
+            axis: 'vertical',
+          },
+        },
+      ],
+      openui: [],
+    },
   },
   {
     name: 'Card',
@@ -157,6 +289,38 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
         child: 'info-card-content',
       },
       openui: {},
+    },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Elevated',
+          value: {
+            id: 'elevated-card',
+            component: 'Card',
+            child: 'elevated-card-content',
+            variant: 'elevated',
+          },
+        },
+        {
+          label: 'Outlined',
+          value: {
+            id: 'outlined-card',
+            component: 'Card',
+            child: 'outlined-card-content',
+            variant: 'outlined',
+          },
+        },
+        {
+          label: 'Filled',
+          value: {
+            id: 'filled-card',
+            component: 'Card',
+            child: 'filled-card-content',
+            variant: 'filled',
+          },
+        },
+      ],
+      openui: [],
     },
   },
   {
@@ -175,6 +339,41 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       },
       openui: {},
     },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Balanced',
+          value: {
+            id: 'balanced-row',
+            component: 'Row',
+            align: 'center',
+            justify: 'spaceBetween',
+            children: ['left-item', 'right-item'],
+          },
+        },
+        {
+          label: 'Compact',
+          value: {
+            id: 'compact-row',
+            component: 'Row',
+            align: 'start',
+            justify: 'center',
+            children: ['chip-1', 'chip-2', 'chip-3'],
+          },
+        },
+        {
+          label: 'Spread',
+          value: {
+            id: 'spread-row',
+            component: 'Row',
+            align: 'stretch',
+            justify: 'spaceAround',
+            children: ['item-a', 'item-b', 'item-c'],
+          },
+        },
+      ],
+      openui: [],
+    },
   },
   {
     name: 'Column',
@@ -191,6 +390,41 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
         children: ['header', 'body', 'footer'],
       },
       openui: {},
+    },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Standard',
+          value: {
+            id: 'main-column',
+            component: 'Column',
+            align: 'start',
+            justify: 'start',
+            children: ['header', 'body', 'footer'],
+          },
+        },
+        {
+          label: 'Center',
+          value: {
+            id: 'center-column',
+            component: 'Column',
+            align: 'center',
+            justify: 'center',
+            children: ['title', 'subtitle'],
+          },
+        },
+        {
+          label: 'Space Between',
+          value: {
+            id: 'space-between-column',
+            component: 'Column',
+            align: 'stretch',
+            justify: 'spaceBetween',
+            children: ['top', 'middle', 'bottom'],
+          },
+        },
+      ],
+      openui: [],
     },
   },
   {
@@ -209,6 +443,31 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       },
       openui: {},
     },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Vertical',
+          value: {
+            id: 'item-list',
+            component: 'List',
+            direction: 'vertical',
+            align: 'stretch',
+            children: ['item-1', 'item-2', 'item-3'],
+          },
+        },
+        {
+          label: 'Horizontal',
+          value: {
+            id: 'h-list',
+            component: 'List',
+            direction: 'horizontal',
+            align: 'center',
+            children: ['tile-1', 'tile-2', 'tile-3'],
+          },
+        },
+      ],
+      openui: [],
+    },
   },
   {
     name: 'Button',
@@ -224,6 +483,31 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
       },
       openui: {},
     },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Primary',
+          value: {
+            id: 'submit-btn',
+            component: 'Button',
+            variant: 'primary',
+            action: { event: { name: 'submit' } },
+            child: 'submit-btn-text',
+          },
+        },
+        {
+          label: 'Borderless',
+          value: {
+            id: 'secondary-btn',
+            component: 'Button',
+            variant: 'borderless',
+            action: { event: { name: 'secondary_action' } },
+            child: 'secondary-btn-text',
+          },
+        },
+      ],
+      openui: [],
+    },
   },
   {
     name: 'CheckBox',
@@ -238,6 +522,29 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
         value: false,
       },
       openui: {},
+    },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Unchecked',
+          value: {
+            id: 'agree-checkbox',
+            component: 'CheckBox',
+            label: 'I agree to the terms',
+            value: false,
+          },
+        },
+        {
+          label: 'Checked',
+          value: {
+            id: 'subscribe-checkbox',
+            component: 'CheckBox',
+            label: 'Subscribe to updates',
+            value: true,
+          },
+        },
+      ],
+      openui: [],
     },
   },
   {
@@ -255,6 +562,41 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
         usageHint: 'card',
       },
       openui: {},
+    },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Card',
+          value: {
+            id: 'size-picker',
+            component: 'RadioGroup',
+            items: ['Small', 'Medium', 'Large'],
+            value: 'Medium',
+            usageHint: 'card',
+          },
+        },
+        {
+          label: 'Row',
+          value: {
+            id: 'delivery-option-picker',
+            component: 'RadioGroup',
+            items: ['Standard', 'Express', 'Pickup'],
+            value: 'Express',
+            usageHint: 'row',
+          },
+        },
+        {
+          label: 'Default',
+          value: {
+            id: 'tone-picker',
+            component: 'RadioGroup',
+            items: ['Calm', 'Neutral', 'Bold'],
+            value: 'Neutral',
+            usageHint: 'default',
+          },
+        },
+      ],
+      openui: [],
     },
   },
 ];

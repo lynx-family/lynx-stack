@@ -133,18 +133,45 @@
   font-weight: 500;
 }
 
-/* ── Category Badge ── */
-.compCategoryBadge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--geist-border);
-  background: var(--geist-surface);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--geist-secondary);
+.compPropsSection {
   margin-bottom: 24px;
+}
+
+.compUsageSection {
+  margin-bottom: 24px;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--geist-border) 72%, transparent);
+  border-radius: 24px;
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 88%,
+    var(--geist-surface)
+  );
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset;
+}
+
+.compUsageSectionHeader {
+  margin-bottom: 6px;
+}
+
+.compUsageSectionHeader .compPlaygroundSideHint {
+  margin-left: auto;
+}
+
+.compPropsSection .compPropsTableWrap {
+  margin-top: 6px;
+}
+
+.compEditorPreviewRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.92fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.compUsagePane,
+.compPreviewPane {
+  min-width: 0;
 }
 
 .compSectionHeader {
@@ -156,6 +183,29 @@
 
 .compSectionHeader .compSubheading {
   margin: 0;
+}
+
+.compUsageHint {
+  margin: 0 0 10px;
+  color: var(--geist-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.compUsageEditorToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.compUsageEditorLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--geist-secondary);
 }
 
 .compCopyBtn {
@@ -177,10 +227,50 @@
 }
 
 .compUsageEditor {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   border: 1px solid var(--geist-border);
   border-radius: var(--geist-radius-md);
   overflow: hidden;
+}
+
+.compUsageExamples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.compUsageExample {
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: var(--geist-background);
+  color: var(--geist-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--geist-transition);
+}
+
+.compUsageExample:hover {
+  color: var(--geist-foreground);
+  border-color: var(--geist-border-hover);
+}
+
+.compUsageExample.active {
+  color: var(--geist-foreground);
+  border-color: color-mix(
+    in srgb,
+    var(--geist-foreground) 22%,
+    var(--geist-border)
+  );
+  background: color-mix(
+    in srgb,
+    var(--geist-surface) 78%,
+    var(--geist-background)
+  );
+  box-shadow: var(--geist-shadow-sm);
 }
 
 .compUsageEditor .cm-editor {
@@ -188,12 +278,53 @@
   max-height: 520px;
   font-family: var(--geist-mono);
   font-size: 13px;
-  background: var(--geist-code-bg);
 }
 
 .compUsageEditor .cm-scroller {
   max-height: 520px;
   overflow: auto;
+}
+
+.compUsageEditorDark .cm-editor {
+  background: var(--geist-code-bg);
+  color: var(--geist-code-fg);
+}
+
+.compUsageEditorDark .cm-gutters {
+  background: color-mix(in srgb, var(--geist-code-bg) 88%, black);
+  color: color-mix(in srgb, var(--geist-code-fg) 58%, white);
+  border-right: 1px solid
+    color-mix(in srgb, var(--geist-border) 82%, transparent);
+}
+
+.compUsageEditorDark .cm-activeLine,
+.compUsageEditorDark .cm-activeLineGutter {
+  background: color-mix(in srgb, var(--geist-background) 12%, transparent);
+}
+
+.compUsageEditorLight .cm-editor {
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 82%,
+    var(--geist-surface)
+  );
+  color: var(--geist-foreground);
+}
+
+.compUsageEditorLight .cm-gutters {
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 78%,
+    var(--geist-surface)
+  );
+  color: var(--geist-secondary);
+  border-right: 1px solid
+    color-mix(in srgb, var(--geist-border) 85%, transparent);
+}
+
+.compUsageEditorLight .cm-activeLine,
+.compUsageEditorLight .cm-activeLineGutter {
+  background: color-mix(in srgb, var(--geist-surface) 82%, transparent);
 }
 
 .compUsageError {
@@ -207,33 +338,103 @@
   font-size: 12px;
 }
 
-.compPreview {
-  width: 100%;
-  height: 360px;
-  margin-bottom: 24px;
-  border: 1px solid var(--geist-border);
-  border-radius: var(--geist-radius-md);
-  background: var(--geist-surface);
-  overflow: hidden;
+.compPreviewStage {
+  min-height: 620px;
+  padding: 0;
 }
 
-.compPreviewIframe {
-  display: block;
-  width: 100%;
-  height: 100%;
+.compPreviewPane {
+  display: flex;
+  align-items: stretch;
+}
+
+.compPropsTableWrap {
+  max-height: 680px;
+  overflow: auto;
+  border: 1px solid color-mix(in srgb, var(--geist-border) 72%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--geist-background) 82%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.compPropsTable {
+  margin: 0;
   border: 0;
-  background: var(--geist-background);
+  border-radius: 0;
+  table-layout: fixed;
+}
+
+.compPropsTable .compTableHeader:first-child {
+  width: 42%;
+}
+
+.compPropName {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--geist-foreground);
+  margin-bottom: 4px;
+}
+
+.compPropDefault {
+  font-size: 11px;
+  color: var(--geist-secondary);
+  line-height: 1.45;
+}
+
+.compPropType {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--geist-foreground);
+  margin-bottom: 4px;
+}
+
+.compPropDesc {
+  font-size: 11px;
+  color: var(--geist-secondary);
+  line-height: 1.5;
+}
+
+.compPreviewPane .phoneWrap {
+  width: 100%;
+}
+
+.compPreviewPane .phoneFrame {
+  transform: none;
 }
 
 .compPreviewInvalid {
-  height: 100%;
+  min-height: 560px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
   padding: 24px;
   color: var(--geist-secondary);
   font-size: 13px;
-  text-align: center;
+  border-radius: 18px;
+  border: 1px dashed color-mix(in srgb, var(--geist-border) 70%, transparent);
+  background: color-mix(in srgb, var(--geist-background) 70%, transparent);
+}
+
+@media (max-width: 1100px) {
+  .compUsageSection {
+    padding: 14px;
+  }
+
+  .compEditorPreviewRow {
+    grid-template-columns: 1fr;
+  }
+
+  .compUsagePane {
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--geist-border) 72%, transparent);
+  }
+
+  .compPreviewPane .compPreviewStage {
+    min-height: 520px;
+    padding-inline: 0;
+  }
 }
 
 /* ── Category Grid (All Components view) ── */
