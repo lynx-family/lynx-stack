@@ -28,7 +28,6 @@ export function createCrossThreadEvent(
 ): LynxCrossThreadEvent {
   const type = domEvent.type;
   const params: Cloneable = {};
-  const isTrusted = domEvent.isTrusted;
   const otherProperties: CloneableObject = {};
   let detail = domEvent.detail ?? {};
   if (type.match(/^transition/)) {
@@ -49,17 +48,9 @@ export function createCrossThreadEvent(
     const targetTouches = [...touchEvent.targetTouches as unknown as Touch[]];
     const changedTouches = [...touchEvent.changedTouches as unknown as Touch[]];
     Object.assign(otherProperties, {
-      touches: isTrusted ? touch.map(toCloneableObject) : touch,
-      targetTouches: isTrusted
-        ? targetTouches.map(
-          toCloneableObject,
-        )
-        : targetTouches,
-      changedTouches: isTrusted
-        ? changedTouches.map(
-          toCloneableObject,
-        )
-        : changedTouches,
+      touches: touch.map(toCloneableObject),
+      targetTouches: targetTouches.map(toCloneableObject),
+      changedTouches: changedTouches.map(toCloneableObject),
     });
     if (touch[0]) {
       detail = {
