@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { createRequire } from 'node:module';
-import { cpus } from 'node:os';
+import { availableParallelism } from 'node:os';
 import { pathToFileURL } from 'node:url';
 
 import Tinypool from 'tinypool';
@@ -64,11 +64,12 @@ export class LynxEncodePlugin {
    * Shared TASM encode worker pool: multiple entries (and multiple
    * `LynxEncodePlugin` instances in the same process) share its worker
    * slots for parallel encode; watch-mode rebuilds keep the same workers
-   * warm. One core is reserved for the main thread / OS.
+   * warm. `availableParallelism()` honors cgroup CPU limits (containers,
+   * CI runners), so we don't need to subtract a core ourselves.
    */
   static encodePool: Tinypool = new Tinypool({
     filename: pathToFileURL(ENCODE_WORKER_PATH).href,
-    maxThreads: Math.max(1, cpus().length - 1),
+    maxThreads: availableParallelism(),
   });
   constructor(protected options?: LynxEncodePluginOptions | undefined) {}
 
