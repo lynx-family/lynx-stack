@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { destroyElementTemplateBackgroundRuntime } from '../../../../src/element-template/background/destroy.js';
 import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
@@ -31,6 +31,11 @@ describe('ElementTemplate event bridge', () => {
     backgroundElementTemplateInstanceManager.nextId = 0;
     clearEtAttrPlanMap();
     clearEventState();
+    globalThis.__ALOG__ = true;
+  });
+
+  afterEach(() => {
+    globalThis.__ALOG__ = true;
   });
 
   it('dispatches publishEvent to the current handler', () => {
@@ -41,6 +46,39 @@ describe('ElementTemplate event bridge', () => {
     publishEvent('-1:0:', eventData);
 
     expect(handler).toHaveBeenCalledWith(eventData);
+  });
+
+  it('logs dispatch metadata when alog is enabled', () => {
+    const alog = console.alog as unknown as { mock: { calls: unknown[][] }; mockClear(): void };
+    alog.mockClear();
+    const received: unknown[] = [];
+    function onTap(data: unknown) {
+      received.push(data);
+    }
+    createEventInstance(-8, onTap);
+
+    publishEvent('-8:0:', { type: 'tap', detail: { x: 1 } });
+
+    const output = alog.mock.calls.map(args => String(args[0])).join('\n');
+    expect(received).toEqual([{ type: 'tap', detail: { x: 1 } }]);
+    expect(output).toContain('[ReactLynxDebug] ElementTemplate BTS received event');
+    expect(output).toContain('"eventValue": "-8:0:"');
+    expect(output).toContain('"type": "tap"');
+    expect(output).toContain('"jsFunctionName": "onTap"');
+    expect(output).toContain('"hasHandler": true');
+  });
+
+  it('skips dispatch alog when alog is disabled', () => {
+    globalThis.__ALOG__ = false;
+    const alog = console.alog as unknown as { mock: { calls: unknown[][] }; mockClear(): void };
+    alog.mockClear();
+    const handler = vi.fn();
+    createEventInstance(-9, handler);
+
+    publishEvent('-9:0:', { type: 'tap' });
+
+    expect(handler).toHaveBeenCalledWith({ type: 'tap' });
+    expect(alog.mock.calls).toHaveLength(0);
   });
 
   it('dispatches publicComponentEvent through the same handler lookup', () => {
