@@ -71,21 +71,24 @@ function clearRemovedSnapshotsFromArray(
   return changed;
 }
 
-function clearTransientChildPropRefs(owner: SnapshotInstance, removedChild: SnapshotInstance): void {
+function collectRemovedSnapshots(removedChild: SnapshotInstance): WeakSet<object> {
+  const removedSnapshots = new WeakSet<object>();
+  traverseSnapshotInstance(removedChild, snapshot => {
+    removedSnapshots.add(snapshot);
+  });
+  return removedSnapshots;
+}
+
+function clearTransientChildPropRefs(owner: SnapshotInstance, removedSnapshots: WeakSet<object>): void {
   const props = (owner as unknown as { props?: Record<string, unknown> }).props;
   if (!props) {
     return;
   }
 
-  const removedSnapshots = new WeakSet<object>();
-  traverseSnapshotInstance(removedChild, snapshot => {
-    removedSnapshots.add(snapshot);
-  });
-
   for (const key of Object.keys(props)) {
-    // The compiler stores named children in transient `$N` props. Once a child
-    // subtree is removed, those staging refs must not keep the old snapshots alive.
-    if (!/^\$\d+$/.test(key)) {
+    // Named child props are transient staging refs. Once a child subtree is
+    // removed, they must not keep the old snapshots alive.
+    if (!key.startsWith('$')) {
       continue;
     }
     const value = props[key];
@@ -481,7 +484,8 @@ export class SnapshotInstance {
 
   removeChild(child: SnapshotInstance): void {
     const __snapshot_def = this.__snapshot_def;
-    clearTransientChildPropRefs(this, child);
+    const removedSnapshots = collectRemovedSnapshots(child);
+    clearTransientChildPropRefs(this, removedSnapshots);
     if (__snapshot_def.isListHolder) {
       if (__pendingListUpdates.values) {
         (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
@@ -491,7 +495,7 @@ export class SnapshotInstance {
 
       this.__removeChild(child);
       traverseSnapshotInstance(child, v => {
-        clearTransientChildPropRefs(v, v);
+        clearTransientChildPropRefs(v, removedSnapshots);
         snapshotInstanceManager.values.delete(v.__id);
       });
       // mark this child as deleted
@@ -511,7 +515,7 @@ export class SnapshotInstance {
         snapshotDestroyList(v);
       }
 
-      clearTransientChildPropRefs(v, v);
+      clearTransientChildPropRefs(v, removedSnapshots);
       v.__parent = null;
       v.__previousSibling = null;
       v.__nextSibling = null;

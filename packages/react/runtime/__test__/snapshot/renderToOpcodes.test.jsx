@@ -121,7 +121,7 @@ describe('renderToString', () => {
     expect(vnode.childNodes).toEqual([]);
   });
 
-  it('should only clear compiler transient child props', () => {
+  it('should clear all named child props', () => {
     const child = createElement('text', null, 'Hello');
     const vnode = createElement('view', { $0: child, $foo: child });
 
@@ -129,7 +129,7 @@ describe('renderToString', () => {
     vnode.removeChild(child);
 
     expect(vnode.props.$0).toBeUndefined();
-    expect(vnode.props.$foo).toBe(child);
+    expect(vnode.props.$foo).toBeUndefined();
   });
 
   it('should tolerate cycles in transient prop arrays when clearing removed children', () => {
