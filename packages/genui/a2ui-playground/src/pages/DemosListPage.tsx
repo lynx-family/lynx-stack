@@ -6,6 +6,7 @@ import type { KeyboardEvent } from 'react';
 
 import './DemosPage.css';
 
+import { PreviewViewport } from '../components/PreviewViewport.js';
 import {
   DYNAMIC_PRESETS,
   EXTENDED_STATIC_DEMOS,
@@ -103,12 +104,11 @@ export function DemosListPage(
               >
                 <div className='exampleCardPreview'>
                   <div className='exampleCardPreviewWindow'>
-                    <iframe
-                      className='exampleCardPreviewFrame'
-                      title={`${scenario.title} preview`}
+                    <PreviewViewport
                       src={previewUrls.get(scenario.id)}
-                      loading='lazy'
-                      aria-hidden='true'
+                      iframeTitle={`${scenario.title} preview`}
+                      emptyTitle={scenario.title}
+                      displayMode='full'
                     />
                   </div>
                 </div>
@@ -145,12 +145,11 @@ export function DemosListPage(
               >
                 <div className='exampleCardPreview'>
                   <div className='exampleCardPreviewWindow'>
-                    <iframe
-                      className='exampleCardPreviewFrame'
-                      title={`${scenario.title} preview`}
+                    <PreviewViewport
                       src={previewUrls.get(scenario.id)}
-                      loading='lazy'
-                      aria-hidden='true'
+                      iframeTitle={`${scenario.title} preview`}
+                      emptyTitle={scenario.title}
+                      displayMode='full'
                     />
                   </div>
                 </div>

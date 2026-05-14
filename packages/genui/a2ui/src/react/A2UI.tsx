@@ -59,8 +59,14 @@ export interface A2UIProps {
    */
   onAction?: (action: UserActionPayload) => void;
   /**
-   * Wrap each top-level surface so consumers can apply theme/wrapper
-   * className/styles. The renderer ships no className of its own.
+   * Optional class name applied to the top-level `surface-${surfaceId}`
+   * view for the active surface. Use this when theme switching is
+   * expressed as surface-level classes.
+   */
+  className?: string;
+  /**
+   * Wrap each top-level surface so consumers can apply an outer theme
+   * shell, wrapper className, or additional styles.
    */
   wrapSurface?: (
     children: ReactNode,
@@ -111,6 +117,7 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
     renderEmpty,
     renderFallback,
     renderError,
+    className,
   } = props;
 
   // Keep the latest onAction in a ref so the once-mounted processor.onEvent
@@ -250,6 +257,7 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
   const rendererProps: import('./A2UIRenderer.jsx').A2UIRendererProps = {
     resource: activeResource,
   };
+  if (className !== undefined) rendererProps.className = className;
   if (wrapSurface) rendererProps.wrapSurface = wrapSurface;
   if (renderFallback) rendererProps.renderFallback = renderFallback;
   if (renderError) rendererProps.renderError = renderError;

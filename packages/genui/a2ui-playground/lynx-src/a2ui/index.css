@@ -15,6 +15,37 @@
   background-color: var(--canvas);
 }
 
+.a2ui-container {
+  width: 100%;
+}
+
+.a2ui-scrollPaused .a2ui-container {
+  opacity: 0.92;
+}
+
+.a2ui-loadingOverlay {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
+
+.a2ui-loadingText {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 /* Override A2UI tokens with Luna tokens for the playground preview. */
 .luna-light,
 .luna-dark {
@@ -81,6 +112,6 @@ page {
   flex-direction: column;
   padding: 10px;
   box-sizing: border-box;
-  background-color: var(--a2ui-color-background);
-  color: var(--a2ui-color-on-background);
+  background-color: var(--canvas);
+  color: var(--content);
 }
