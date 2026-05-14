@@ -4,7 +4,7 @@
 import {
   globalCommitContext,
   resetGlobalCommitContext,
-  takeRemovedSubtreesForCurrentCommit,
+  takeRemovedSubtreesForPostDispatchTeardown,
 } from './commit-context.js';
 import {
   markElementTemplateHydrated,
@@ -17,6 +17,7 @@ import { formatElementTemplateUpdateCommands, printElementTemplateTreeToString }
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../lynx/performance.js';
 import { flushPendingEvents } from '../prop-adapters/event.js';
+import { clearDelayedRefUiOps, clearPendingRefs, flushDelayedRefUiOps } from '../prop-adapters/ref.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
 import type { SerializedElementTemplate } from '../protocol/types.js';
 import { __root } from '../runtime/page/root-instance.js';
@@ -55,11 +56,15 @@ export function installElementTemplateHydrationListener(): void {
     }
 
     let after = root.firstChild;
+    let didHydrateMatchedInstances = true;
     for (const before of instances) {
       if (!after) {
         break;
       }
-      hydrateIntoContext(before, after);
+      if (!hydrateIntoContext(before, after)) {
+        didHydrateMatchedInstances = false;
+        break;
+      }
       after = after.nextSibling;
     }
     if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
@@ -74,9 +79,18 @@ export function installElementTemplateHydrationListener(): void {
     }
     markTiming('diffVdomEnd');
 
-    markElementTemplateHydrated();
+    if (didHydrateMatchedInstances) {
+      markElementTemplateHydrated();
+    } else {
+      // Hydrate is not transactional; a later failure can happen after earlier
+      // nodes were rebound. Treat the pass as failed for externally observable
+      // work, so delayed refs/events are not released from an incomplete tree.
+      clearPendingRefs();
+      clearDelayedRefUiOps();
+      resetGlobalCommitContext();
+    }
 
-    const hasHydrateUpdate = globalCommitContext.ops.length > 0;
+    const hasHydrateUpdate = didHydrateMatchedInstances && globalCommitContext.ops.length > 0;
     let didDispatchHydrateUpdate = false;
     if (hasHydrateUpdate) {
       if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
@@ -93,7 +107,7 @@ export function installElementTemplateHydrationListener(): void {
             ),
         );
       }
-      const removedSubtrees = takeRemovedSubtreesForCurrentCommit();
+      const removedSubtreesAwaitingTeardown = takeRemovedSubtreesForPostDispatchTeardown();
       try {
         lynx.getCoreContext().dispatchEvent({
           type: ElementTemplateLifecycleConstant.update,
@@ -105,12 +119,22 @@ export function installElementTemplateHydrationListener(): void {
         });
         didDispatchHydrateUpdate = true;
       } finally {
+        if (!didDispatchHydrateUpdate) {
+          // Do not expose refs or replay delayed selector ops if the hydrate
+          // patch failed to reach the main thread; selectors may still point at
+          // stale pre-hydration ids in that case.
+          clearPendingRefs();
+          clearDelayedRefUiOps();
+        }
         resetGlobalCommitContext();
-        scheduleElementTemplateRemovedSubtreeCleanup(removedSubtrees);
+        scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
       }
     }
-    if (!hasHydrateUpdate || didDispatchHydrateUpdate) {
+    if (didHydrateMatchedInstances && (!hasHydrateUpdate || didDispatchHydrateUpdate)) {
       flushPendingEvents();
+      // Ordinary refs attach on Preact commit boundaries; hydration only releases
+      // delayed selector ops after ids have been rebound to stable native handles.
+      flushDelayedRefUiOps();
     }
   };
 

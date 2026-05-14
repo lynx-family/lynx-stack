@@ -205,7 +205,7 @@ describe('hydrate', () => {
       [101, 102, 103],
     ]);
     expect(root.elementSlots[0]).toEqual([]);
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(101)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(102)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(103)).toBeUndefined();
@@ -239,7 +239,7 @@ describe('hydrate', () => {
       [stale.instanceId],
     ]);
     expect(root.elementSlots[0]).toEqual([keep]);
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([stale]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([stale]);
   });
 
   it('moves serialized children to match the background slot order', () => {
@@ -274,7 +274,7 @@ describe('hydrate', () => {
       c.instanceId,
     ]);
     expect(root.elementSlots[0]).toEqual([b, a, c]);
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
   });
 
   it('treats a source-before-target cross-slot hydrate candidate as remove and recreate', () => {
@@ -321,7 +321,7 @@ describe('hydrate', () => {
     ]);
     expect(root.elementSlots[0]).toEqual([]);
     expect(root.elementSlots[1]).toEqual([moved]);
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(mainThreadId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(localId)).toBe(moved);
   });
@@ -373,7 +373,7 @@ describe('hydrate', () => {
     ]);
     expect(root.elementSlots[0]).toEqual([keep]);
     expect(root.elementSlots[1]).toEqual([moved]);
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
   });
 
@@ -421,7 +421,7 @@ describe('hydrate', () => {
     ]);
     expect(root.elementSlots[0]).toEqual([moved]);
     expect(root.elementSlots[1]).toEqual([]);
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(mainThreadId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(localId)).toBe(moved);
   });
@@ -488,7 +488,7 @@ describe('hydrate', () => {
     ]);
     expect(root.elementSlots[0]).toEqual([]);
     expect(root.elementSlots[1]).toEqual([first, second]);
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(-3)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(firstLocalId)).toBe(first);
@@ -793,6 +793,45 @@ describe('hydrate', () => {
     updateIdSpy.mockRestore();
     lynx.reportError = oldReportError;
     (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+  });
+
+  it('drops the hydrate stream when a matched child fails to hydrate', () => {
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      const root = new BackgroundElementTemplateInstance('root', ['after-root']);
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      root.appendChild(slot);
+      const child = new BackgroundElementTemplateInstance('child');
+      slot.appendChild(child);
+      const oldRootId = root.instanceId;
+      const oldChildId = child.instanceId;
+
+      const stream = hydrate(
+        createHydrationTemplate(-1, 'root', {
+          attributeSlots: ['before-root'],
+          elementSlots: [[
+            createHydrationChild(-1, 'child'),
+          ]],
+        }),
+        root,
+      );
+
+      expect(stream).toEqual([]);
+      expect(reportError).toHaveBeenCalledTimes(1);
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+        'invalid uid -1 for \'child\'',
+      );
+      expect(backgroundElementTemplateInstanceManager.get(oldRootId)).toBeUndefined();
+      expect(backgroundElementTemplateInstanceManager.get(-1)).toBe(root);
+      expect(backgroundElementTemplateInstanceManager.get(oldChildId)).toBe(child);
+    } finally {
+      lynx.reportError = oldReportError;
+      (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+    }
   });
 
   it('treats missing serialized slot arrays as empty', () => {

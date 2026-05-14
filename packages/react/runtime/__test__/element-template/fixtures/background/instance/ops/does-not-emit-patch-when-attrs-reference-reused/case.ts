@@ -12,7 +12,7 @@ export function run() {
     const props = { a: 1 };
     instance.setAttribute('attributeSlots', [props]);
     markElementTemplateHydrated();
-    instance.markCreateEmittedForHydration();
+    instance.markMaterializedByHydration();
     resetGlobalCommitContext();
 
     instance.setAttribute('attributeSlots', [props]);

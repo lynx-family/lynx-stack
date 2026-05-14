@@ -10,6 +10,7 @@ import { elementTemplateRegistry } from '../../../../src/element-template/runtim
 import {
   __etAttrPlanMap,
   adaptEventAttrSlot,
+  adaptRefAttrSlot,
   adaptSpreadAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
@@ -125,6 +126,31 @@ describe('renderOpcodesIntoElementTemplate', () => {
       -1,
     );
     expect(addEvent).not.toHaveBeenCalled();
+  });
+
+  it('prepares direct ref values before native create', () => {
+    const rootRef = { kind: 'root-ref' };
+    const ref = vi.fn();
+    createElementTemplate.mockReturnValue(rootRef);
+    __etAttrPlanMap._et_ref = [0, adaptRefAttrSlot];
+
+    renderOpcodesIntoElementTemplate([
+      __OpBegin,
+      { type: '_et_ref' },
+      __OpAttr,
+      'attributeSlots',
+      [ref],
+      __OpEnd,
+    ]);
+
+    expect(createElementTemplate).toHaveBeenCalledWith(
+      '_et_ref',
+      null,
+      ['-1-0'],
+      null,
+      -1,
+    );
+    expect(ref).not.toHaveBeenCalled();
   });
 
   it('prepares spread event values before native create', () => {

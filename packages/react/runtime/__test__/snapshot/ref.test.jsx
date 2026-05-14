@@ -2125,6 +2125,23 @@ describe('applyRef before hydration', () => {
     expect(cb.mock.calls[0][0]).toBeInstanceOf(RefProxy);
   });
 
+  it('reports ref callback errors without breaking render', async function() {
+    const error = new Error('ref failed');
+    const cb = vi.fn(() => {
+      throw error;
+    });
+    const reportError = vi.spyOn(lynx, 'reportError');
+
+    function App() {
+      return <view ref={cb} />;
+    }
+
+    globalEnvManager.switchToBackground();
+    expect(() => render(<App />, __root)).not.toThrow();
+
+    expect(reportError).toHaveBeenCalledWith(error);
+  });
+
   it('three consecutive rerenders before hydration clean up intermediate refs', async function() {
     const cb1 = vi.fn();
     const cb2 = vi.fn();

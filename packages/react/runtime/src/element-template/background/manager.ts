@@ -14,7 +14,7 @@ export const backgroundElementTemplateInstanceManager: {
   clear(): void;
 } = {
   nextId: 0,
-  values: new Map<number, BackgroundElementTemplateInstance>(),
+  values: /*#__PURE__*/ new Map<number, BackgroundElementTemplateInstance>(),
 
   register(instance: BackgroundElementTemplateInstance): void {
     instance.instanceId = this.nextId += 1;

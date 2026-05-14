@@ -1,16 +1,21 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { prepareAttributeSlots } from '../../../../src/element-template/background/attr-slots.js';
+import {
+  prepareAttributeSlots,
+  queueRefAttributeSlotUpdates,
+} from '../../../../src/element-template/background/attr-slots.js';
 import {
   __etAttrPlanMap,
   adaptRefAttrSlot,
   clearEtAttrPlanMap,
   type EtAttrAdapter,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
+import { clearRefState, flushPendingRefs } from '../../../../src/element-template/prop-adapters/ref.js';
 
 describe('ElementTemplate attr slot plan registry', () => {
   afterEach(() => {
     clearEtAttrPlanMap();
+    clearRefState();
   });
 
   it('uses undefined as the unregistered template fast path', () => {
@@ -50,9 +55,29 @@ describe('ElementTemplate attr slot plan registry', () => {
   it('prepares registered ref attr slots through the attr plan consumer', () => {
     __etAttrPlanMap._et_ref = [0, adaptRefAttrSlot];
 
-    expect(prepareAttributeSlots('_et_ref', -2, [() => {}], false)).toEqual(['-2-0']);
-    expect(() => prepareAttributeSlots('_et_ref', -2, [1], false)).toThrowError(
+    expect(prepareAttributeSlots('_et_ref', -2, [() => {}])).toEqual(['-2-0']);
+    expect(() => prepareAttributeSlots('_et_ref', -2, [1])).toThrowError(
       'Elements\' "ref" property should be a function, or an object created by createRef()',
     );
+  });
+
+  it('skips queued ref effects for templates without attr plans', () => {
+    expect(() => {
+      queueRefAttributeSlotUpdates('_et_without_backend_attrs', -2, [() => {}]);
+    }).not.toThrow();
+  });
+
+  it('queues registered ref slot updates from previous and next raw slots', () => {
+    const oldRef = vi.fn();
+    const newRef = vi.fn();
+    __etAttrPlanMap._et_ref = [0, adaptRefAttrSlot];
+
+    queueRefAttributeSlotUpdates('_et_ref', -2, [oldRef], [newRef]);
+    flushPendingRefs();
+
+    expect(oldRef).toHaveBeenCalledWith(null);
+    expect(newRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
   });
 });
