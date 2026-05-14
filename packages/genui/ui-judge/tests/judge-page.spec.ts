@@ -14,7 +14,7 @@ let server: Server;
 let baseUrl: string;
 
 function hasMidsceneModelConfig(): boolean {
-  return Boolean(process.env.MIDSCENE_MODEL_NAME);
+  return Boolean(process.env['MIDSCENE_MODEL_NAME']);
 }
 
 test.beforeAll(async () => {
