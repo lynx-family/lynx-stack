@@ -615,6 +615,59 @@ describe('BackgroundElementTemplateInstance', () => {
       expect(directRef).not.toHaveBeenCalled();
     });
 
+    it('queues nested direct and spread ref cleanup when removing a hydrated subtree', () => {
+      const childCleanup = vi.fn();
+      const childRef = vi.fn(() => childCleanup);
+      const ignoredDirectGrandchildRef = vi.fn();
+      const grandchildCleanup = vi.fn();
+      const grandchildSpreadRef = vi.fn(() => grandchildCleanup);
+      __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
+      const parent = new BackgroundElementTemplateInstance('view');
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      parent.appendChild(slot);
+      const child = new BackgroundElementTemplateInstance('view');
+      const childSlot = new BackgroundElementTemplateSlot();
+      childSlot.setAttribute('id', 0);
+      const grandchild = new BackgroundElementTemplateInstance('view');
+      child.appendChild(childSlot);
+      childSlot.appendChild(grandchild);
+      slot.appendChild(child);
+
+      markElementTemplateHydrated();
+      parent.markMaterializedByHydration();
+      child.markMaterializedByHydration();
+      grandchild.markMaterializedByHydration();
+      child.setAttribute('attributeSlots', [childRef]);
+      grandchild.setAttribute('attributeSlots', [
+        ignoredDirectGrandchildRef,
+        { ref: grandchildSpreadRef },
+      ]);
+      flushPendingRefs();
+      expect(childRef).toHaveBeenCalledTimes(1);
+      expect(grandchildSpreadRef).toHaveBeenCalledTimes(1);
+      expect(ignoredDirectGrandchildRef).not.toHaveBeenCalled();
+      childRef.mockClear();
+      grandchildSpreadRef.mockClear();
+      globalCommitContext.ops = [];
+
+      slot.removeChild(child);
+      flushPendingRefs();
+
+      expect(globalCommitContext.ops).toEqual([
+        4,
+        parent.instanceId,
+        0,
+        child.instanceId,
+        [child.instanceId, grandchild.instanceId],
+      ]);
+      expect(childCleanup).toHaveBeenCalledTimes(1);
+      expect(grandchildCleanup).toHaveBeenCalledTimes(1);
+      expect(childRef).not.toHaveBeenCalled();
+      expect(grandchildSpreadRef).not.toHaveBeenCalled();
+      expect(ignoredDirectGrandchildRef).not.toHaveBeenCalled();
+    });
+
     it('does not repeat direct function ref cleanup for detached subtrees on destroy', () => {
       const cleanup = vi.fn();
       const ref = vi.fn(() => cleanup);
