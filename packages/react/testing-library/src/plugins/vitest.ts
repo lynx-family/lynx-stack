@@ -240,6 +240,19 @@ export function testingLibraryPlugin(
         const regex = /\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)(\?.*)?$/;
         if (!regex.test(id)) return null;
 
+        const normalizedSourcePath = normalizeSlashes(sourcePath);
+        if (
+          normalizedSourcePath.includes(
+            '/runtime/src/worklet-runtime/',
+          )
+        ) {
+          // The inline MTF runtime is intentionally resolved to source in the
+          // workspace build graph. Let Vite handle those TS files directly in
+          // tests instead of running the ReactLynx transform over runtime
+          // implementation sources that were never meant to be test entry code.
+          return null;
+        }
+
         const { transformReactLynxSync } = require(
           '@lynx-js/react/transform',
         ) as typeof import('@lynx-js/react/transform');

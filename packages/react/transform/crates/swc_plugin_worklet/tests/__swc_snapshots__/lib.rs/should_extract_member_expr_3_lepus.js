@@ -1,5 +1,4 @@
-import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-var loadWorkletRuntime = __loadWorkletRuntime;
+import "@lynx-js/react/worklet-runtime/init";
 let enableScroll = {
     _c: {
         containerID,
@@ -12,8 +11,7 @@ let enableScroll = {
 let makeVelocityIfRequired = {
     _wkltId: "a123:test:2"
 };
-const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a123:test:1", function(enable: boolean) {
+registerWorkletInternal("main-thread", "a123:test:1", function(enable: boolean) {
     const enableScroll = lynxWorkletImpl._workletMap["a123:test:1"].bind(this);
     let { containerID, a, b, f } = this["_c"];
     'main thread';
@@ -23,7 +21,7 @@ __workletRuntimeLoaded && registerWorkletInternal("main-thread", "a123:test:1", 
         e: f
     }).e;
 });
-__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a123:test:2", function(nodeRef: MainThreadRef<Velocity>, velocity: boolean) {
+registerWorkletInternal("main-thread", "a123:test:2", function(nodeRef: MainThreadRef<Velocity>, velocity: boolean) {
     const makeVelocityIfRequired = lynxWorkletImpl._workletMap["a123:test:2"].bind(this);
     'main thread';
     class Velocity implements Velocity {

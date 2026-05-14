@@ -1,5 +1,4 @@
-import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-var loadWorkletRuntime = __loadWorkletRuntime;
+import "@lynx-js/react/worklet-runtime/init";
 import { sharedRuntime } from './utils.js' with {
     runtime: "shared"
 };
@@ -12,8 +11,7 @@ let worklet = {
         y1: this.y1
     }
 };
-const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a77b:test:1", function(event: Event) {
+registerWorkletInternal("main-thread", "a77b:test:1", function(event: Event) {
     const worklet = lynxWorkletImpl._workletMap["a77b:test:1"].bind(this);
     let { y1 } = this["_c"];
     "main thread";
