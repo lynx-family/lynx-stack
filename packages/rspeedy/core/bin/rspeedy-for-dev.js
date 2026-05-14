@@ -5,6 +5,9 @@
 // LICENSE file in the root directory of this source tree.
 /* eslint-disable n/no-unpublished-bin */
 // @ts-check
+// The dev bin performs process-wide CLI dispatch; CI exercises it as a command,
+// while unit coverage should stay focused on the CLI implementation it loads.
+/* c8 ignore start */
 
 import { existsSync } from 'node:fs'
 
