@@ -1,6 +1,9 @@
 import { test, expect } from '@lynx-js/playwright-fixtures';
 import type { Page } from '@playwright/test';
 
+const markdownInitialRenderTimeout = 5_000;
+const markdownRenderTimeout = 15_000;
+
 const goto = async (page: Page, fixtureName: string) => {
   await page.goto(`tests/fixtures/${fixtureName}.html`, { waitUntil: 'load' });
   await page.evaluate(() => document.fonts.ready);
@@ -17,6 +20,64 @@ const getShadowCount = async (page: Page, selector: string) =>
     const element = document.querySelector('x-markdown');
     return element?.shadowRoot?.querySelectorAll(value).length ?? 0;
   }, selector);
+
+const hasEmptyMarkdownRoot = async (page: Page) =>
+  page.locator('x-markdown').evaluate((element) => {
+    const root = element.shadowRoot?.querySelector('#markdown-root');
+    return Boolean(
+      element.getAttribute('content') && root
+        && root.childElementCount === 0
+        && root.textContent === '',
+    );
+  }).catch(() => false);
+
+const reloadWhenMarkdownRootIsEmpty = async (
+  page: Page,
+  error: unknown,
+) => {
+  // The dev server can serve xmarkdown-deps while lazy compilation is still
+  // warming; reload once only when the markdown root never rendered content.
+  if (!(await hasEmptyMarkdownRoot(page))) {
+    throw error;
+  }
+  await page.reload({ waitUntil: 'load' });
+  await page.evaluate(() => document.fonts.ready);
+};
+
+const expectMarkdownText = async (
+  page: Page,
+  selector: string,
+  text: string,
+) => {
+  const locator = page.locator('x-markdown').locator(selector);
+  try {
+    await expect(locator).toHaveText(text, {
+      timeout: markdownInitialRenderTimeout,
+    });
+  } catch (error) {
+    await reloadWhenMarkdownRootIsEmpty(page, error);
+    await expect(locator).toHaveText(text, { timeout: markdownRenderTimeout });
+  }
+};
+
+const expectMarkdownAttribute = async (
+  page: Page,
+  selector: string,
+  name: string,
+  value: string,
+) => {
+  const locator = page.locator('x-markdown').locator(selector);
+  try {
+    await expect(locator).toHaveAttribute(name, value, {
+      timeout: markdownInitialRenderTimeout,
+    });
+  } catch (error) {
+    await reloadWhenMarkdownRootIsEmpty(page, error);
+    await expect(locator).toHaveAttribute(name, value, {
+      timeout: markdownRenderTimeout,
+    });
+  }
+};
 
 const appendContent = async (page: Page, suffix: string) => {
   await page.evaluate((value) => {
@@ -94,7 +155,7 @@ test.describe('x-markdown', () => {
     await goto(page, 'x-markdown/basic');
     const markdown = page.locator('x-markdown');
 
-    await expect(markdown.locator('h1')).toHaveText('Title');
+    await expectMarkdownText(page, 'h1', 'Title');
     await expect(markdown.locator('strong')).toHaveText('bold');
     await expect(markdown.locator('em')).toHaveText('italic');
     await expect(markdown.locator('li')).toHaveCount(2);
@@ -104,12 +165,9 @@ test.describe('x-markdown', () => {
   test('should apply markdown-style updates', async ({ page }) => {
     await goto(page, 'x-markdown/style');
     const markdown = page.locator('x-markdown');
-    await page.waitForFunction(() => {
-      const element = document.querySelector('x-markdown');
-      return element?.shadowRoot?.querySelector('a')?.textContent === 'link';
-    });
 
     const link = markdown.locator('a');
+    await expectMarkdownText(page, 'a', 'link');
     await expect(link).toHaveCSS('color', 'rgb(255, 0, 0)');
     await expect(link).toHaveCSS('line-height', '24px');
 
@@ -134,6 +192,7 @@ test.describe('x-markdown', () => {
     const markdown = page.locator('x-markdown');
 
     const link = markdown.locator('a');
+    await expectMarkdownText(page, 'a', 'link');
     const propertyValue = await markdown.evaluate((el: any) => {
       el['markdown-style'] = { link: { color: '00ff00' } };
       return el.markdownStyle;
@@ -149,10 +208,9 @@ test.describe('x-markdown', () => {
 
   test('should render image', async ({ page }) => {
     await goto(page, 'x-markdown/image');
-    const markdown = page.locator('x-markdown');
-
-    const image = markdown.locator('img');
-    await expect(image).toHaveAttribute(
+    await expectMarkdownAttribute(
+      page,
+      'img',
       'src',
       '/tests/fixtures/resources/firefox-logo.png',
     );
@@ -608,6 +666,12 @@ test.describe('x-markdown', () => {
 
   test('should getImages return image sources', async ({ page }) => {
     await goto(page, 'x-markdown/image');
+    await expectMarkdownAttribute(
+      page,
+      'img',
+      'src',
+      '/tests/fixtures/resources/firefox-logo.png',
+    );
     const images = await page.evaluate(() => {
       const el = document.querySelector('x-markdown') as any;
       return el.getImages();

@@ -34,13 +34,11 @@ const diffScreenShot = async (
 };
 
 const expectHasText = async (page: Page, text: string) => {
-  const hasText = (await page.getByText(text).count()) === 1;
-  await expect(hasText).toBe(true);
+  await expect(page.getByText(text)).toHaveCount(1);
 };
 
 const expectNoText = async (page: Page, text: string) => {
-  const hasText = (await page.getByText(text).count()) === 1;
-  await expect(hasText).toBe(false);
+  await expect(page.getByText(text)).toHaveCount(0);
 };
 
 const goto = async (
@@ -3191,9 +3189,9 @@ test.describe('reactlynx3 tests', () => {
           await goto(page, title);
           await wait(100);
           await page.locator('.focus').click({ force: true });
-          await wait(100);
-          const result = await page.locator('.result').first().innerText();
-          expect(result).toBe('bindfocus');
+          await expect(page.locator('.result').first()).toHaveText(
+            'bindfocus',
+          );
         },
       );
       // input/focus test-case end
