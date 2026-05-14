@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@dugyu/luna-stage": "^0.1.1",
-    "@lynx-js/web-core": "0.20.2",
+    "@lynx-js/web-core": "workspace:*",
     "motion": "^12.38.0",
     "react": "19.2.5",
     "react-dom": "19.2.5"
