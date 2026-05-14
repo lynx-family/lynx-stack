@@ -102,6 +102,8 @@ jobs:
     with:
       runs-on: lynx-custom-container
       is-web: true
+      web-report-name: "playwright-web-elements-report"
+      web-report-path: "packages/web-platform/web-elements/playwright-report"
       run: |
         ulimit -Sn 655350
         export NODE_OPTIONS="--max-old-space-size=32768"
@@ -117,6 +119,8 @@ jobs:
     with:
       runs-on: lynx-custom-container
       is-web: true
+      web-report-name: "playwright-web-core-report"
+      web-report-path: "packages/web-platform/web-tests/playwright-report"
       run: |
         ulimit -Sn 655350
         export NODE_OPTIONS="--max-old-space-size=32768"
