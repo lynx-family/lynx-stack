@@ -120,6 +120,20 @@ function parseJsonLikeString(input: string): unknown {
   return input;
 }
 
+function decodeUrlString(input: string): string {
+  let current = input;
+  for (let i = 0; i < 3; i++) {
+    try {
+      const decoded = decodeURIComponent(current);
+      if (decoded === current) break;
+      current = decoded;
+    } catch {
+      break;
+    }
+  }
+  return current;
+}
+
 function normalizeInitDataLike(raw: unknown): InitData {
   if (raw === null || raw === undefined) return {};
   if (typeof raw !== 'object') return {};
@@ -128,10 +142,14 @@ function normalizeInitDataLike(raw: unknown): InitData {
   const out: InitData = {};
 
   const messagesUrl = obj.messagesUrl;
-  if (typeof messagesUrl === 'string') out.messagesUrl = messagesUrl;
+  if (typeof messagesUrl === 'string') {
+    out.messagesUrl = decodeUrlString(messagesUrl);
+  }
 
   const actionMocksUrl = obj.actionMocksUrl;
-  if (typeof actionMocksUrl === 'string') out.actionMocksUrl = actionMocksUrl;
+  if (typeof actionMocksUrl === 'string') {
+    out.actionMocksUrl = decodeUrlString(actionMocksUrl);
+  }
 
   const messages = obj.messages;
   if (messages !== undefined) {
