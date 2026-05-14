@@ -25,6 +25,7 @@ export { Card } from './Card/index.jsx';
 export { CheckBox } from './CheckBox/index.jsx';
 export { Column } from './Column/index.jsx';
 export { Divider } from './Divider/index.jsx';
+export { Icon } from './Icon/index.jsx';
 export { Image } from './Image/index.jsx';
 export { List } from './List/index.jsx';
 export { RadioGroup } from './RadioGroup/index.jsx';

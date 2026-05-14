@@ -1,6 +1,11 @@
 {
   "name": "@lynx-js/openui-reactlynx",
   "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/genui/openui"
+  },
   "license": "Apache-2.0",
   "type": "module",
   "exports": {

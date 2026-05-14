@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { createRsbuild, logger } from '@rsbuild/core'
+import type { RsbuildEntry } from '@rsbuild/core'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import type { Config, ExposedAPI, RsbuildPlugin } from '@lynx-js/rspeedy'
@@ -24,6 +25,13 @@ const pluginStubRspeedyAPI = (config: Config = {}): RsbuildPlugin => ({
       logger,
       version: '1.0.0',
     })
+  },
+})
+
+const pluginStubEnvEntries = (entries: RsbuildEntry): RsbuildPlugin => ({
+  name: 'lynx:rsbuild:env-entries',
+  setup(api) {
+    api.expose(Symbol.for('rspeedy.env.entries'), { entries })
   },
 })
 
@@ -231,7 +239,56 @@ describe('Preview', () => {
     expect(exit).not.toBeCalled()
   })
 
-  test('preview without entry', async () => {
+  test('preview with exposed custom environment entries', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    const { renderUnicodeCompact } = await import('uqr')
+
+    const { selectKey, isCancel } = await import('@clack/prompts')
+    vi.mocked(selectKey).mockResolvedValue('foo')
+    vi.mocked(isCancel).mockReturnValue(true)
+
+    vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
+
+    const rsbuild = await createRsbuild({
+      rsbuildConfig: {
+        source: {
+          entry: {
+            main: './fixtures/hello-world/index.js',
+          },
+        },
+        plugins: [
+          pluginStubRspeedyAPI(),
+          pluginStubEnvEntries({
+            main: './fixtures/hello-world/index.js',
+          }),
+          pluginQRCode(),
+        ],
+        environments: {
+          custom: {},
+        },
+        dev: {
+          assetPrefix: 'http://example.com/',
+        },
+        server: {
+          port: getRandomNumberInRange(3000, 60000),
+        },
+      },
+    })
+
+    const { server } = await rsbuild.preview({ checkDistDir: false })
+
+    expect(renderUnicodeCompact).toBeCalled()
+    expect(renderUnicodeCompact).toBeCalledWith(
+      'http://example.com/main.lynx.bundle',
+    )
+
+    await server.close()
+    await vi.waitFor(() => {
+      expect(exit).toBeCalledTimes(1)
+    })
+  })
+
+  test('preview with empty exposed entries', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const { renderUnicodeCompact } = await import('uqr')
 
@@ -245,10 +302,14 @@ describe('Preview', () => {
       rsbuildConfig: {
         plugins: [
           pluginStubRspeedyAPI(),
+          pluginStubEnvEntries({}),
           pluginQRCode(),
         ],
-        source: {
-          entry: {},
+        environments: {
+          custom: {},
+        },
+        dev: {
+          assetPrefix: 'http://example.com/',
         },
         server: {
           port: getRandomNumberInRange(3000, 50000),
