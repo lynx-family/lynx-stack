@@ -4,10 +4,9 @@
 import { describe, expect, test } from '@rstest/core';
 
 import { LynxTemplatePlugin } from '../src/index.js';
+import { getHooksFromSecondInstance } from './fixtures/template-plugin-second-instance.js';
 
 describe('LynxTemplatePlugin.getLynxTemplatePluginHooks - cross-module singleton', () => {
-  const SHARED_KEY = Symbol.for('@lynx-js/template-webpack-plugin/hooks');
-
   test('returns the same hooks for the same compilation across calls', () => {
     const compilation = {} as never;
     const a = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
@@ -23,19 +22,25 @@ describe('LynxTemplatePlugin.getLynxTemplatePluginHooks - cross-module singleton
     expect(a).not.toBe(b);
   });
 
-  // A second physical copy of this module would have its own module-level
-  // storage; the shared `Symbol.for` slot on the compilation is what makes
-  // them converge on the same hooks.
-  test('hooks are reachable through the shared Symbol.for slot', () => {
+  test('real instance writes first, second physical copy reads the same hooks', () => {
     const compilation = {} as Record<symbol, unknown>;
-    const hooksFromRealInstance = LynxTemplatePlugin
+    const hooksReal = LynxTemplatePlugin
       .getLynxTemplatePluginHooks(compilation as never);
-    expect(compilation[SHARED_KEY]).toBe(hooksFromRealInstance);
+    const hooksSecond = getHooksFromSecondInstance(compilation);
+    expect(hooksSecond).toBe(hooksReal);
   });
 
-  test('a tap registered through one instance fires when encode.promise is awaited through another', async () => {
+  test('second physical copy writes first, real instance reads the same hooks', () => {
     const compilation = {} as Record<symbol, unknown>;
-    const hooksA = LynxTemplatePlugin
+    const hooksSecond = getHooksFromSecondInstance(compilation);
+    const hooksReal = LynxTemplatePlugin
+      .getLynxTemplatePluginHooks(compilation as never);
+    expect(hooksReal).toBe(hooksSecond);
+  });
+
+  test('a tap registered through one copy fires when encode.promise is awaited through the other', async () => {
+    const compilation = {} as Record<symbol, unknown>;
+    const hooksReal = LynxTemplatePlugin
       .getLynxTemplatePluginHooks(compilation as never);
 
     const sentinel = {
@@ -43,16 +48,16 @@ describe('LynxTemplatePlugin.getLynxTemplatePluginHooks - cross-module singleton
       debugInfo: '',
       cssDiagnostics: '',
     };
-    hooksA.encode.tapPromise(
-      { name: 'tap-from-instance-A', stage: 0 },
+    hooksReal.encode.tapPromise(
+      { name: 'tap-from-real-instance', stage: 0 },
       async () => sentinel,
     );
 
-    const hooksB = compilation[SHARED_KEY] as typeof hooksA;
-    expect(hooksB).toBe(hooksA);
-
-    const result = await hooksB.encode.promise({
-      encodeOptions: {} as never,
+    const hooksSecond = getHooksFromSecondInstance(compilation);
+    const result = await (hooksSecond.encode as unknown as {
+      promise: (args: unknown) => Promise<unknown>;
+    }).promise({
+      encodeOptions: {},
       intermediate: '.rspeedy',
     });
     expect(result).toBe(sentinel);
