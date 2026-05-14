@@ -11,6 +11,22 @@ let queuePendingEvents = false;
 
 function dispatchEvent(eventValue: string, data: unknown): boolean {
   const handler = backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue(eventValue);
+  if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+    console.alog?.(
+      `[ReactLynxDebug] ElementTemplate BTS received event:\n${
+        JSON.stringify(
+          {
+            eventValue,
+            type: (data as { type?: unknown } | null)?.type,
+            jsFunctionName: typeof handler === 'function' ? handler.name : '',
+            hasHandler: typeof handler === 'function',
+          },
+          null,
+          2,
+        )
+      }`,
+    );
+  }
   if (typeof handler !== 'function') {
     return false;
   }
