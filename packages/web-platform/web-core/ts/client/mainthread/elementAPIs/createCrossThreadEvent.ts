@@ -76,6 +76,8 @@ export function createCrossThreadEvent(
       y: (domEvent as MouseEvent).y,
     };
   } else if (type === 'keydown' || type === 'keyup') {
+    // `keyCode` is deprecated by the DOM spec but forwarded here for parity
+    // with iOS/Android, which surface a numeric `keyCode` to JS.
     Object.assign(otherProperties, {
       key: domEvent.key,
       code: domEvent.code,

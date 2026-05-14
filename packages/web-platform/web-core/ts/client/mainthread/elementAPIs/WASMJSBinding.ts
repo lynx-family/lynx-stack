@@ -104,16 +104,21 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     const currentTarget = this.getElementByUniqueId(
       currentTargetUniqueId,
     );
+    const resolvedTarget = (target ?? currentTarget) as
+      | DecoratedHTMLElement
+      | undefined;
+    if (!resolvedTarget) return;
+    const resolvedTargetDataset = target ? targetDataset : currentTargetDataset;
     eventObject.target = this.generateTargetObject(
-      target as DecoratedHTMLElement,
-      targetDataset,
+      resolvedTarget,
+      resolvedTargetDataset,
     );
     eventObject.currentTarget = this.generateTargetObject(
       currentTarget as DecoratedHTMLElement,
       currentTargetDataset,
     );
     // @ts-expect-error
-    eventObject.target.elementRefptr = target;
+    eventObject.target.elementRefptr = resolvedTarget;
     // @ts-expect-error
     eventObject.currentTarget.elementRefptr = currentTarget;
     this.lynxViewInstance.mainThreadGlobalThis.runWorklet?.(handler.value, [
@@ -132,22 +137,16 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   ) {
     const target = this.getElementByUniqueId(targetUniqueId);
     const currentTarget = this.getElementByUniqueId(currentTargetUniqueId);
-    // For global events (e.g. global-bindkeydown), the DOM event originates
-    // outside the Lynx element tree so target_unique_id is 0 (no element).
-    // Fall back to currentTarget so generateTargetObject doesn't crash.
+    // The Rust dispatcher only reaches this code with target_unique_id == 0
+    // on the global-bindevent path (regular bind/catch handlers early-return
+    // when the bubble path has no element). For that case the DOM event
+    // originated outside the Lynx element tree, so fall back to currentTarget
+    // (the element that registered the global handler).
     const resolvedTarget = (target ?? currentTarget) as
       | DecoratedHTMLElement
       | undefined;
+    if (!resolvedTarget) return;
     const resolvedTargetDataset = target ? targetDataset : currentTargetDataset;
-    if (!resolvedTarget) {
-      if (process.env['NODE_ENV'] !== 'production') {
-        console.warn(
-          '[WASMJSBinding] publishEvent: no target or currentTarget',
-          { handlerName, eventObject },
-        );
-      }
-      return;
-    }
     eventObject.target = this.generateTargetObject(
       resolvedTarget,
       resolvedTargetDataset,
@@ -228,7 +227,11 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     }
   }
 
-  dispose() {
+  // Synchronously detach all DOM listeners. Safe to call multiple times.
+  // Document-level listeners must be removed before this binding is GC'd or
+  // before another LynxView instance mounts, otherwise stale handlers stay
+  // attached to `document` and fire against a torn-down wasmContext.
+  disposeEventListeners() {
     for (const eventName of this.#addedEventListeners) {
       if (this.#documentEventListeners.has(eventName)) {
         document.removeEventListener(eventName, this.#commonEventHandler, true);
@@ -242,6 +245,10 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     }
     this.#addedEventListeners.clear();
     this.#documentEventListeners.clear();
+  }
+
+  dispose() {
+    this.disposeEventListeners();
 
     this.toBeEnabledElement.clear();
     this.toBeDisabledElement.clear();
