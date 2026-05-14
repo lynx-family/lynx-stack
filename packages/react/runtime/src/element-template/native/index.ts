@@ -14,6 +14,7 @@ import { BackgroundElementTemplateInstance } from '../background/instance.js';
 import { initProfileHook } from '../debug/profile.js';
 import { setupLynxEnv } from '../lynx/env.js';
 import { initTimingAPI } from '../lynx/performance.js';
+import { publicComponentEvent, publishEvent, resetEventStateForRuntime } from '../prop-adapters/event.js';
 import { setRoot } from '../runtime/page/root-instance.js';
 
 function init(): void {
@@ -32,7 +33,10 @@ function init(): void {
     setRoot(new BackgroundElementTemplateInstance('root'));
     setupBackgroundElementTemplateDocument();
     installElementTemplateHydrationListener();
+    resetEventStateForRuntime();
     lynxCoreInject.tt.callDestroyLifetimeFun = callDestroyLifetimeFun;
+    lynxCoreInject.tt.publishEvent = publishEvent;
+    lynxCoreInject.tt.publicComponentEvent = publicComponentEvent;
     installElementTemplateCommitHook();
     if (process.env['NODE_ENV'] !== 'test') {
       initTimingAPI();

@@ -8,7 +8,7 @@ import {
   setElementTemplateNativeRef,
 } from '../../../../src/element-template/runtime/template/registry.js';
 import {
-  createElementTemplateWithHandle,
+  createElementTemplateWithReservedHandle,
   destroyElementTemplateId,
   reserveElementTemplateId,
 } from '../../../../src/element-template/runtime/template/handle.js';
@@ -44,8 +44,10 @@ describe('ElementTemplateHandle', () => {
     expect(elementTemplateRegistry.get(id)).toBe(mockNativeRef);
   });
 
-  it('should create an element template with handle id and register the native ref', () => {
-    const nativeRef = createElementTemplateWithHandle(
+  it('should create an element template with a reserved handle id and register the native ref', () => {
+    const id = reserveElementTemplateId();
+    const nativeRef = createElementTemplateWithReservedHandle(
+      id,
       '_et_test',
       null,
       ['text'],
@@ -64,8 +66,8 @@ describe('ElementTemplateHandle', () => {
   });
 
   it('should allocate monotonically decreasing handle ids for template creation', () => {
-    createElementTemplateWithHandle('_et_first', null, null, null);
-    createElementTemplateWithHandle('_et_second', null, null, null);
+    createElementTemplateWithReservedHandle(reserveElementTemplateId(), '_et_first', null, null, null);
+    createElementTemplateWithReservedHandle(reserveElementTemplateId(), '_et_second', null, null, null);
 
     expect(mockCreateElementTemplate.mock.calls[0]?.[4]).toEqual(-1);
     expect(mockCreateElementTemplate.mock.calls[1]?.[4]).toEqual(-2);

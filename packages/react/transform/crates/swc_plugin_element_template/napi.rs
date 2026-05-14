@@ -62,6 +62,8 @@ impl Default for JSXTransformerConfig {
   fn default() -> Self {
     Self {
       preserve_jsx: false,
+      // Keep the authored runtime package stable. rspeedy aliases
+      // `@lynx-js/react` to the ET entry when Element Template is enabled.
       runtime_pkg: "@lynx-js/react".into(),
       jsx_import_source: Some("@lynx-js/react".into()),
       filename: Default::default(),

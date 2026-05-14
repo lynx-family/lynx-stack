@@ -115,6 +115,7 @@ function hydrateInstance(
   if (!bindHydrationHandleId(instance, handleId, serialized.templateKey)) {
     return;
   }
+  instance.prepareAttributeSlotsForNative();
   hydrateAttributeSlots(handleId, serialized.attributeSlots ?? [], instance.attributeSlots);
 
   if (serialized.templateKey === BUILTIN_RAW_TEXT_TEMPLATE_KEY) {
@@ -261,6 +262,7 @@ function emitCreateSubtree(node: BackgroundElementTemplateInstance): void {
       emitCreateSubtree(child);
     }
   }
+  node.prepareAttributeSlotsForNative();
   node.emitCreate();
 }
 

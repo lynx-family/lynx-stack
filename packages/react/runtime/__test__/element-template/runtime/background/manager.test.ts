@@ -57,6 +57,36 @@ describe('BackgroundElementTemplateInstanceManager', () => {
       .toThrow('ElementTemplate instance 99999 is not registered.');
   });
 
+  it('rejects invalid event values', () => {
+    expect(() => backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('1:2:3:4'))
+      .toThrow('Invalid ElementTemplate event value: 1:2:3:4');
+  });
+
+  it('resolves event values for spread attributes', () => {
+    const handler = () => {};
+    const instance = new BackgroundElementTemplateInstance('view', [{
+      bindtap: handler,
+    }]);
+
+    expect(
+      backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue(`${instance.instanceId}:0:bindtap`),
+    )
+      .toBe(handler);
+    expect(
+      backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue(`${instance.instanceId}:0:missing`),
+    )
+      .toBeUndefined();
+  });
+
+  it('ignores spread event values for non-object attributes', () => {
+    const instance = new BackgroundElementTemplateInstance('view', ['plain']);
+
+    expect(
+      backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue(`${instance.instanceId}:0:bindtap`),
+    )
+      .toBeUndefined();
+  });
+
   it('should clear all instances', () => {
     const instance = new BackgroundElementTemplateInstance('view');
     expect(backgroundElementTemplateInstanceManager.get(instance.instanceId)).toBe(instance);

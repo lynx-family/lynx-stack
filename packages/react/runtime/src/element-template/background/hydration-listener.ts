@@ -16,6 +16,7 @@ import { BackgroundElementTemplateInstance } from './instance.js';
 import { formatElementTemplateUpdateCommands, printElementTemplateTreeToString } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../lynx/performance.js';
+import { flushPendingEvents } from '../prop-adapters/event.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
 import type { SerializedElementTemplate } from '../protocol/types.js';
 import { __root } from '../runtime/page/root-instance.js';
@@ -75,7 +76,9 @@ export function installElementTemplateHydrationListener(): void {
 
     markElementTemplateHydrated();
 
-    if (globalCommitContext.ops.length > 0) {
+    const hasHydrateUpdate = globalCommitContext.ops.length > 0;
+    let didDispatchHydrateUpdate = false;
+    if (hasHydrateUpdate) {
       if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
         console.alog?.(
           '[ReactLynxDebug] ElementTemplate hydrate update commands:\n'
@@ -100,10 +103,14 @@ export function installElementTemplateHydrationListener(): void {
             flowIds: globalCommitContext.flowIds,
           },
         });
+        didDispatchHydrateUpdate = true;
       } finally {
         resetGlobalCommitContext();
         scheduleElementTemplateRemovedSubtreeCleanup(removedSubtrees);
       }
+    }
+    if (!hasHydrateUpdate || didDispatchHydrateUpdate) {
+      flushPendingEvents();
     }
   };
 

@@ -2,7 +2,7 @@
   <view class="Background" />
   <view class="App">
     <view class="Banner">
-      <view bindtap="1" class="Logo">
+      <view bindtap="-3:0:" class="Logo">
         <image class="Logo--lynx" src="./assets/lynx-logo.png" />
       </view>
       <text class="Title" text="React" />
