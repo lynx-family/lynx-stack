@@ -4,9 +4,18 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  ReactWebpackPlugin,
   collectElementTemplatesFromModule,
 } from '../src/ReactWebpackPlugin.js';
 import type { ModuleWithElementTemplateBuildInfo } from '../src/ReactWebpackPlugin.js';
+
+describe('ReactWebpackPlugin', () => {
+  it('does not expose the removed workletRuntimePath default option', () => {
+    expect(ReactWebpackPlugin.defaultOptions).not.toHaveProperty(
+      'workletRuntimePath',
+    );
+  });
+});
 
 describe('collectElementTemplatesFromModule', () => {
   it('collects templates from nested modules', () => {
