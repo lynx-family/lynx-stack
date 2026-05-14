@@ -43,7 +43,8 @@
     "@lynx-js/webpack-runtime-globals": "workspace:^",
     "@rspack/lite-tapable": "1.1.0",
     "css-tree": "^3.1.0",
-    "object.groupby": "^1.0.3"
+    "object.groupby": "^1.0.3",
+    "tinypool": "^2.1.0"
   },
   "devDependencies": {
     "@lynx-js/test-tools": "workspace:*",

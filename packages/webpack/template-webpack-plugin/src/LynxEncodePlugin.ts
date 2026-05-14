@@ -2,7 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { cpus } from 'node:os';
+import { dirname, join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import Tinypool from 'tinypool';
 import type { Chunk, Compiler } from 'webpack';
+
+import type { EncodeResult } from '@lynx-js/tasm';
 
 import {
   collectCSSSourceMapContents,
@@ -10,6 +17,15 @@ import {
 } from './cssDiagnostics.js';
 import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
 import { getRequireModuleAsyncCachePolyfill } from './polyfill/requireModuleAsync.js';
+import type { EncodeWorkerOptions } from './worker/encode.js';
+
+// `worker/encode.ts` is compiled by tsc to `lib/worker/encode.js`. Node's
+// `worker_threads` can't load `.ts`, so always resolve through `lib/`
+// regardless of whether this module is being loaded from `src/` (in-tree
+// tests) or `lib/` (installed consumers).
+const here = dirname(fileURLToPath(import.meta.url));
+const libDir = here.endsWith('lib') ? here : join(here, '..', 'lib');
+const ENCODE_WORKER_PATH = join(libDir, 'worker', 'encode.js');
 
 // https://github.com/web-infra-dev/rsbuild/blob/main/packages/core/src/types/config.ts#L1029
 type InlineChunkTestFunction = (params: {
@@ -49,6 +65,16 @@ export class LynxEncodePlugin {
    * The stage of the beforeEmit hook.
    */
   static BEFORE_EMIT_STAGE = 256;
+  /**
+   * Shared TASM encode worker pool: multiple entries (and multiple
+   * `LynxEncodePlugin` instances in the same process) share its worker
+   * slots for parallel encode; watch-mode rebuilds keep the same workers
+   * warm. One core is reserved for the main thread / OS.
+   */
+  static encodePool: Tinypool = new Tinypool({
+    filename: pathToFileURL(ENCODE_WORKER_PATH).href,
+    maxThreads: Math.max(1, cpus().length - 1),
+  });
   constructor(protected options?: LynxEncodePluginOptions | undefined) {}
 
   /**
@@ -228,17 +254,18 @@ export class LynxEncodePluginImpl {
       }, async (args) => {
         const { encodeOptions } = args;
 
-        const { getEncodeMode } = await import('@lynx-js/tasm');
-
-        const encode = getEncodeMode();
         // TODO: lynx-js/tasm should add css_diagnostics type
         // @ts-expect-error ignore css_diagnostics type
-        const { buffer, lepus_debug, css_diagnostics } = await Promise.resolve(
-          encode(encodeOptions),
+        const { buffer, lepus_debug, css_diagnostics } = await (
+          LynxEncodePlugin.encodePool.run(
+            { encodeOptions } as EncodeWorkerOptions,
+          ) as Promise<EncodeResult>
         );
 
         return {
-          buffer,
+          // worker will serialize the buffer to a Uint8Array
+          // convert it back to a Buffer
+          buffer: Buffer.from(buffer),
           debugInfo: lepus_debug,
           cssDiagnostics: css_diagnostics as string,
         };
