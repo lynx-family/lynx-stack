@@ -1,10 +1,9 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-
+import { createRequire } from 'node:module';
 import { cpus } from 'node:os';
-import { dirname, join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
 
 import Tinypool from 'tinypool';
 import type { Chunk, Compiler } from 'webpack';
@@ -19,13 +18,9 @@ import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
 import { getRequireModuleAsyncCachePolyfill } from './polyfill/requireModuleAsync.js';
 import type { EncodeWorkerOptions } from './worker/encode.js';
 
-// `worker/encode.ts` is compiled by tsc to `lib/worker/encode.js`. Node's
-// `worker_threads` can't load `.ts`, so always resolve through `lib/`
-// regardless of whether this module is being loaded from `src/` (in-tree
-// tests) or `lib/` (installed consumers).
-const here = dirname(fileURLToPath(import.meta.url));
-const libDir = here.endsWith('lib') ? here : join(here, '..', 'lib');
-const ENCODE_WORKER_PATH = join(libDir, 'worker', 'encode.js');
+const require = createRequire(import.meta.url);
+
+const ENCODE_WORKER_PATH = require.resolve('../lib/worker/encode.js');
 
 // https://github.com/web-infra-dev/rsbuild/blob/main/packages/core/src/types/config.ts#L1029
 type InlineChunkTestFunction = (params: {
