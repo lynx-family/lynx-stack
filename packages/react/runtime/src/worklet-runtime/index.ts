@@ -5,8 +5,14 @@ import { initApiEnv } from './api/lynxApi.js';
 import { initEventListeners } from './listeners.js';
 import { initWorklet } from './workletRuntime.js';
 
+if (
+  typeof lynx.querySelector !== 'function'
+  || typeof lynx.querySelectorAll !== 'function'
+) {
+  initApiEnv();
+}
+
 if (globalThis.lynxWorkletImpl === undefined) {
   initWorklet();
-  initApiEnv();
   initEventListeners();
 }

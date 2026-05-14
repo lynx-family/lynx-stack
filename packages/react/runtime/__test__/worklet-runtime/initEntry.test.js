@@ -42,6 +42,9 @@ describe('worklet-runtime init entry', () => {
     globalThis.clearInterval = originalClearInterval;
     globalThis.requestAnimationFrame = originalRequestAnimationFrame;
     globalThis.cancelAnimationFrame = originalCancelAnimationFrame;
+    delete globalThis.__GetPageElement;
+    delete globalThis.__QuerySelector;
+    delete globalThis.__QuerySelectorAll;
   });
 
   it('should initialize main-thread worklet globals through the public init entry', async () => {
@@ -67,6 +70,23 @@ describe('worklet-runtime init entry', () => {
     expect(globalThis.registerWorklet).toBe(registerWorklet);
     expect(globalThis.registerWorkletInternal).toBe(registerWorkletInternal);
     expect(globalThis.runWorklet).toBe(runWorklet);
+  });
+
+  it('should initialize lynx selector APIs when a worklet impl already exists', async () => {
+    const existingWorkletImpl = { marker: 'host-runtime' };
+    globalThis.lynxWorkletImpl = existingWorkletImpl;
+    delete globalThis.lynx.querySelector;
+    delete globalThis.lynx.querySelectorAll;
+    globalThis.__GetPageElement = vi.fn(() => 'page-element');
+    globalThis.__QuerySelectorAll = vi.fn(() => ['mock-element']);
+
+    await import('@lynx-js/react/worklet-runtime/init');
+
+    expect(globalThis.lynxWorkletImpl).toBe(existingWorkletImpl);
+    expect(globalThis.lynx.querySelectorAll('#test-id')).toEqual([
+      expect.objectContaining({ element: 'mock-element' }),
+    ]);
+    expect(globalThis.__QuerySelectorAll).toHaveBeenCalledWith('page-element', '#test-id', {});
   });
 
   it('should preserve host timers when the lynx timer APIs are unavailable', async () => {
