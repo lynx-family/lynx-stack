@@ -182,35 +182,43 @@ function NodeRendererImpl(
   const component =
     (latest.value as { component?: ComponentInstance } | undefined)?.component
       ?? initialComponent;
+  const effectiveComponent = initialComponent.dataContextPath !== undefined
+      && component.dataContextPath !== initialComponent.dataContextPath
+    ? { ...component, dataContextPath: initialComponent.dataContextPath }
+    : component;
 
   useEffect(() => {
-    const tag = component.component;
+    const tag = effectiveComponent.component;
     if (!catalog.has(tag) && !warnedTags.has(tag)) {
       warnedTags.add(tag);
       console.warn(`[a2ui] Component "${tag}" is not in the active catalog.`);
     }
-  }, [component.component, catalog]);
+  }, [effectiveComponent.component, catalog]);
 
   const [resolvedProps, setValue] = useResolvedProps(
-    component,
+    effectiveComponent,
     surface,
-    component.dataContextPath,
+    effectiveComponent.dataContextPath,
   );
 
   const actionProps = useMemo(
     () => ({
-      id: component.id!,
+      id: effectiveComponent.id!,
       surfaceId: surface.surfaceId,
-      dataContext: component.dataContextPath,
+      dataContext: effectiveComponent.dataContextPath,
     }),
-    [component.id, surface.surfaceId, component.dataContextPath],
+    [
+      effectiveComponent.id,
+      surface.surfaceId,
+      effectiveComponent.dataContextPath,
+    ],
   );
   const { sendAction } = useAction(actionProps);
 
   return (
     <>
       {buildNodeRecursive(
-        component,
+        effectiveComponent,
         surface,
         catalog as ReadonlyMap<
           string,

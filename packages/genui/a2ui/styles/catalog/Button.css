@@ -8,28 +8,42 @@
   gap: var(--a2ui-spacing-m);
   padding: var(--a2ui-spacing-m) calc(var(--a2ui-spacing-m) * 1.75);
   margin: calc(var(--a2ui-spacing-xs) * 2) 0;
-  border-radius: var(--a2ui-border-radius);
-  background-color: var(--a2ui-color-primary);
-  color: var(--a2ui-color-on-primary);
+  border: var(--a2ui-border-width) solid var(--a2ui-color-border);
+  border-radius: var(--a2ui-button-border-radius, var(--a2ui-border-radius));
+  background: var(--a2ui-color-surface);
+  box-shadow: none;
+  color: var(--a2ui-color-on-secondary);
+  font-weight: normal;
   transition:
+    background-color 0.2s ease,
     transform 0.12s ease,
-    opacity 0.12s ease,
-    background-color 0.12s ease;
+    opacity 0.12s ease;
 }
 
 .button.ui-active {
-  background-color: var(--a2ui-color-primary-hover);
+  background-color: var(--a2ui-color-secondary-hover);
 }
 
 .button-primary {
   background-color: var(--a2ui-color-primary);
+  border: none;
+  color: var(--a2ui-color-on-primary);
 }
 
 .button-borderless {
-  background-color: transparent;
+  background: none;
+  border: none;
   padding-left: 0;
   padding-right: 0;
   color: var(--a2ui-color-primary);
+}
+
+.button-disabled {
+  opacity: 0.55;
+}
+
+.button-disabled.ui-active {
+  background-color: inherit;
 }
 
 .button .text-body,
