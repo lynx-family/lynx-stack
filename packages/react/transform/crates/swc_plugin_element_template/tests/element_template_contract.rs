@@ -471,6 +471,10 @@ fn should_keep_worklet_attr_descriptor_keys_for_namespaced_attrs() {
     !code.contains("adaptRefAttrSlot"),
     "main-thread:ref must not be lowered as an ordinary ET ref adapter, got: {code}"
   );
+  assert!(
+    !code.contains("viewRef"),
+    "unsupported namespaced ref must not leak the raw ref value, got: {code}"
+  );
 
   let attrs = template["attributesArray"]
     .as_array()

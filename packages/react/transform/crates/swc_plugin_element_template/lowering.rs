@@ -60,6 +60,8 @@ where
             } else {
               value
             }
+          } else if let AttrName::WorkletRef = attr_name {
+            quote!("null" as Expr)
           } else {
             value
           };

@@ -586,6 +586,35 @@ describe('BackgroundElementTemplateInstance', () => {
       expect(ref.current).toBeNull();
     });
 
+    it('queues the final effective spread ref cleanup when removing a hydrated subtree', () => {
+      const directRef = vi.fn();
+      const cleanup = vi.fn();
+      const spreadRef = vi.fn(() => cleanup);
+      __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
+      const parent = new BackgroundElementTemplateInstance('view');
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      parent.appendChild(slot);
+      const child = new BackgroundElementTemplateInstance('view');
+      slot.appendChild(child);
+
+      markElementTemplateHydrated();
+      parent.markMaterializedByHydration();
+      child.markMaterializedByHydration();
+      child.setAttribute('attributeSlots', [directRef, { ref: spreadRef }]);
+      flushPendingRefs();
+      expect(directRef).not.toHaveBeenCalled();
+      expect(spreadRef).toHaveBeenCalledTimes(1);
+      spreadRef.mockClear();
+
+      slot.removeChild(child);
+      flushPendingRefs();
+
+      expect(cleanup).toHaveBeenCalledTimes(1);
+      expect(spreadRef).not.toHaveBeenCalled();
+      expect(directRef).not.toHaveBeenCalled();
+    });
+
     it('does not repeat direct function ref cleanup for detached subtrees on destroy', () => {
       const cleanup = vi.fn();
       const ref = vi.fn(() => cleanup);
@@ -802,6 +831,143 @@ describe('BackgroundElementTemplateInstance', () => {
     expect(oldRef).toHaveBeenCalledWith(null);
     expect(newRef).toHaveBeenCalledWith(expect.objectContaining({
       selector: '[ref=-2-0]',
+    }));
+  });
+
+  it('queues spread ref attach/update/detach from raw ref identity', () => {
+    const oldRef = vi.fn();
+    const newRef = vi.fn();
+    __etAttrPlanMap.view = [0, adaptSpreadAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
+    instance.markMaterializedByHydration();
+    markElementTemplateHydrated();
+
+    instance.setAttribute('attributeSlots', [{ id: 'cta', ref: oldRef }]);
+    flushPendingRefs();
+    expect(instance.attributeSlots).toEqual([{ id: 'cta', ref: '-2-0' }]);
+    expect(oldRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
+    oldRef.mockClear();
+    globalCommitContext.ops = [];
+
+    instance.setAttribute('attributeSlots', [{ id: 'cta-next', ref: oldRef }]);
+    flushPendingRefs();
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      -2,
+      0,
+      { id: 'cta-next', ref: '-2-0' },
+    ]);
+    expect(oldRef).not.toHaveBeenCalled();
+    globalCommitContext.ops = [];
+
+    instance.setAttribute('attributeSlots', [{ id: 'cta-next', ref: newRef }]);
+    flushPendingRefs();
+
+    expect(globalCommitContext.ops).toEqual([]);
+    expect(oldRef).toHaveBeenCalledWith(null);
+    expect(newRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
+    newRef.mockClear();
+
+    instance.setAttribute('attributeSlots', [{ id: 'cta-next' }]);
+    flushPendingRefs();
+
+    expect(newRef).toHaveBeenCalledWith(null);
+  });
+
+  it('uses the final direct/spread ref value in descriptor order', () => {
+    const directRef = vi.fn();
+    const spreadRef = vi.fn();
+    __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
+    instance.markMaterializedByHydration();
+    markElementTemplateHydrated();
+
+    instance.setAttribute('attributeSlots', [directRef, { ref: spreadRef }]);
+    flushPendingRefs();
+
+    expect(instance.attributeSlots).toEqual(['-2-0', { ref: '-2-1' }]);
+    expect(directRef).not.toHaveBeenCalled();
+    expect(spreadRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-1]',
+    }));
+
+    spreadRef.mockClear();
+    instance.setAttribute('attributeSlots', [directRef, {}]);
+    flushPendingRefs();
+
+    expect(spreadRef).toHaveBeenCalledWith(null);
+    expect(directRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
+  });
+
+  it('treats explicit undefined spread ref as overriding an earlier direct ref', () => {
+    const directRef = vi.fn();
+    __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
+    instance.markMaterializedByHydration();
+    markElementTemplateHydrated();
+
+    instance.setAttribute('attributeSlots', [directRef, { ref: undefined }]);
+    flushPendingRefs();
+
+    expect(instance.attributeSlots).toEqual(['-2-0', { ref: null }]);
+    expect(directRef).not.toHaveBeenCalled();
+  });
+
+  it('reattaches a stable direct ref after explicit undefined spread ref is removed', () => {
+    const ref = vi.fn();
+    __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
+    instance.markMaterializedByHydration();
+    markElementTemplateHydrated();
+
+    instance.setAttribute('attributeSlots', [ref, {}]);
+    flushPendingRefs();
+    expect(ref).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
+    ref.mockClear();
+
+    instance.setAttribute('attributeSlots', [ref, { ref: undefined }]);
+    flushPendingRefs();
+    expect(ref).toHaveBeenCalledWith(null);
+    ref.mockClear();
+
+    instance.setAttribute('attributeSlots', [ref, {}]);
+    flushPendingRefs();
+
+    expect(instance.attributeSlots).toEqual(['-2-0', {}]);
+    expect(ref).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
+  });
+
+  it('lets a later direct ref override an earlier spread ref', () => {
+    const spreadRef = vi.fn();
+    const directRef = vi.fn();
+    __etAttrPlanMap.view = [0, adaptSpreadAttrSlot, 1, adaptRefAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
+    instance.markMaterializedByHydration();
+    markElementTemplateHydrated();
+
+    instance.setAttribute('attributeSlots', [{ ref: spreadRef }, directRef]);
+    flushPendingRefs();
+
+    expect(instance.attributeSlots).toEqual([{ ref: '-2-0' }, '-2-1']);
+    expect(spreadRef).not.toHaveBeenCalled();
+    expect(directRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-1]',
     }));
   });
 

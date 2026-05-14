@@ -36,6 +36,7 @@ describe('ElementTemplate attr slot plan registry', () => {
   it('prepares direct ref slots as native ref markers', () => {
     expect(adaptRefAttrSlot(-2, 0, () => {})).toBe('-2-0');
     expect(adaptRefAttrSlot(17, 3, { current: null })).toBe('17-3');
+    expect(adaptRefAttrSlot(-2, 0, 1)).toBe('-2-0');
   });
 
   it('normalizes empty direct ref slots to null', () => {
@@ -43,11 +44,10 @@ describe('ElementTemplate attr slot plan registry', () => {
     expect(adaptRefAttrSlot(-2, 0, undefined)).toBeNull();
   });
 
-  it('rejects invalid direct ref values like the Snapshot runtime', () => {
+  it('rejects non-marker invalid direct ref values like the Snapshot runtime', () => {
     const error = 'Elements\' "ref" property should be a function, or an object created by createRef()';
 
     expect(() => adaptRefAttrSlot(-2, 0, false)).toThrowError(error);
-    expect(() => adaptRefAttrSlot(-2, 0, 1)).toThrowError(error);
     expect(() => adaptRefAttrSlot(-2, 0, 'ref')).toThrowError(error);
     expect(() => adaptRefAttrSlot(-2, 0, {})).toThrowError(error);
   });
@@ -56,9 +56,7 @@ describe('ElementTemplate attr slot plan registry', () => {
     __etAttrPlanMap._et_ref = [0, adaptRefAttrSlot];
 
     expect(prepareAttributeSlots('_et_ref', -2, [() => {}])).toEqual(['-2-0']);
-    expect(() => prepareAttributeSlots('_et_ref', -2, [1])).toThrowError(
-      'Elements\' "ref" property should be a function, or an object created by createRef()',
-    );
+    expect(prepareAttributeSlots('_et_ref', -2, [1])).toEqual(['-2-0']);
   });
 
   it('skips queued ref effects for templates without attr plans', () => {

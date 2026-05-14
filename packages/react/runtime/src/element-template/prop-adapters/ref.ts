@@ -74,15 +74,47 @@ export function getRefFromValue(value: unknown): EtRef | null {
   return normalizeRefValue<ElementTemplateRefProxy>(value) ?? null;
 }
 
+function hasOwnRef(value: unknown): value is { ref?: unknown } {
+  return value !== null
+    && typeof value === 'object'
+    && !Array.isArray(value)
+    && Object.prototype.hasOwnProperty.call(value, 'ref');
+}
+
+export function getSpreadRefFromValue(value: unknown): EtRef | null | undefined {
+  if (!hasOwnRef(value)) {
+    return undefined;
+  }
+  return getRefFromValue(value.ref);
+}
+
 export function prepareRefAttrSlot(
   handleId: number,
   attrSlotIndex: number,
   value: unknown,
 ): SerializableValue | null {
+  if (__LEPUS__ && value === 1) {
+    // The LEPUS transform cannot carry the background ref callback/object into
+    // first-screen create, so direct refs arrive here as an internal presence
+    // marker. Background JS still validates the real user ref before attaching.
+    return getRefValue(handleId, attrSlotIndex);
+  }
   if (getRefFromValue(value) === null) {
     return null;
   }
   return getRefValue(handleId, attrSlotIndex);
+}
+
+export function prepareSpreadRefAttrValue(
+  handleId: number,
+  attrSlotIndex: number,
+  value: unknown,
+): SerializableValue | null | undefined {
+  const ref = getSpreadRefFromValue(value);
+  if (ref === undefined) {
+    return undefined;
+  }
+  return ref === null ? null : getRefValue(handleId, attrSlotIndex);
 }
 
 export function queueRefAttrUpdate(

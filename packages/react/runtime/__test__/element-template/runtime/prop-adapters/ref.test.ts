@@ -19,15 +19,15 @@ describe('ElementTemplate ref prop adapter', () => {
     expect(getRefValue(-2, 0)).toBe('-2-0');
     expect(prepareRefAttrSlot(-2, 0, () => {})).toBe('-2-0');
     expect(prepareRefAttrSlot(7, 3, { current: null })).toBe('7-3');
+    expect(prepareRefAttrSlot(-2, 0, 1)).toBe('-2-0');
     expect(prepareRefAttrSlot(7, 3, null)).toBeNull();
     expect(prepareRefAttrSlot(7, 3, undefined)).toBeNull();
   });
 
-  it('rejects invalid ref values like the Snapshot runtime', () => {
+  it('rejects non-marker invalid ref values like the Snapshot runtime', () => {
     const error = 'Elements\' "ref" property should be a function, or an object created by createRef()';
 
     expect(() => prepareRefAttrSlot(-2, 0, false)).toThrowError(error);
-    expect(() => prepareRefAttrSlot(-2, 0, 1)).toThrowError(error);
     expect(() => prepareRefAttrSlot(-2, 0, 'ref')).toThrowError(error);
     expect(() => prepareRefAttrSlot(-2, 0, {})).toThrowError(error);
   });

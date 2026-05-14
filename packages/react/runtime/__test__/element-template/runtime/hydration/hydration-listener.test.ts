@@ -29,6 +29,7 @@ import {
   __etAttrPlanMap,
   adaptEventAttrSlot,
   adaptRefAttrSlot,
+  adaptSpreadAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
@@ -383,6 +384,93 @@ describe('ElementTemplate hydration listener', () => {
     } finally {
       lynx.createSelectorQuery = oldCreateSelectorQuery;
     }
+  });
+
+  it('does not re-attach pre-hydration spread refs and replays delayed ref ops after hydrate', () => {
+    const exec = vi.fn();
+    const setNativeProps = vi.fn(() => ({ exec }));
+    const select = vi.fn(() => ({ setNativeProps }));
+    const createSelectorQuery = vi.fn(() => ({ select }));
+    const oldCreateSelectorQuery = lynx.createSelectorQuery;
+    lynx.createSelectorQuery = createSelectorQuery as typeof lynx.createSelectorQuery;
+
+    try {
+      const ref = vi.fn();
+      __etAttrPlanMap._et_spread = [0, adaptSpreadAttrSlot];
+      envManager.switchToBackground();
+      installElementTemplateHydrationListener();
+
+      const backgroundRoot = __root as BackgroundElementTemplateInstance;
+      const after = new BackgroundElementTemplateInstance('_et_spread');
+      after.setAttribute('attributeSlots', [{ ref }]);
+      backgroundRoot.appendChild(after);
+      flushPendingRefs();
+      const proxy = ref.mock.calls[0]![0];
+      proxy.setNativeProps({ opacity: 1 }).exec();
+      expect(select).not.toHaveBeenCalled();
+      ref.mockClear();
+
+      envManager.switchToMainThread();
+      lynx.getJSContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.hydrate,
+        data: [
+          {
+            templateKey: '_et_spread',
+            attributeSlots: [{ ref: '-1-0' }],
+            elementSlots: [],
+            uid: -1,
+          } satisfies SerializedElementTemplate,
+        ],
+      });
+
+      envManager.switchToBackground();
+
+      expect(ref).not.toHaveBeenCalled();
+      expect(select).toHaveBeenCalledWith('[ref=-1-0]');
+      expect(setNativeProps).toHaveBeenCalledWith({ opacity: 1 });
+      expect(exec).toHaveBeenCalledTimes(1);
+    } finally {
+      lynx.createSelectorQuery = oldCreateSelectorQuery;
+    }
+  });
+
+  it('detaches and attaches spread refs on real updates after hydrate', () => {
+    const oldRef = vi.fn();
+    const newRef = vi.fn();
+    __etAttrPlanMap._et_spread = [0, adaptSpreadAttrSlot];
+    envManager.switchToBackground();
+    installElementTemplateHydrationListener();
+
+    const backgroundRoot = __root as BackgroundElementTemplateInstance;
+    const after = new BackgroundElementTemplateInstance('_et_spread');
+    after.setAttribute('attributeSlots', [{ ref: oldRef }]);
+    backgroundRoot.appendChild(after);
+    flushPendingRefs();
+    oldRef.mockClear();
+
+    envManager.switchToMainThread();
+    lynx.getJSContext().dispatchEvent({
+      type: ElementTemplateLifecycleConstant.hydrate,
+      data: [
+        {
+          templateKey: '_et_spread',
+          attributeSlots: [{ ref: '-1-0' }],
+          elementSlots: [],
+          uid: -1,
+        } satisfies SerializedElementTemplate,
+      ],
+    });
+
+    envManager.switchToBackground();
+    expect(oldRef).not.toHaveBeenCalled();
+
+    after.setAttribute('attributeSlots', [{ ref: newRef }]);
+    flushPendingRefs();
+
+    expect(oldRef).toHaveBeenCalledWith(null);
+    expect(newRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-1-0]',
+    }));
   });
 
   it('drops delayed ref ops when hydrate fails before stable handle binding', () => {

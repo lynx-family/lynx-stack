@@ -13,6 +13,7 @@ import {
 } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { clearEventState, getEventHandlerForEventValue } from '../../../../src/element-template/prop-adapters/event.js';
+import { clearRefState, flushPendingRefs } from '../../../../src/element-template/prop-adapters/ref.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import type { SerializedElementTemplate } from '../../../../src/element-template/protocol/types.js';
 import {
@@ -62,6 +63,7 @@ describe('hydrate', () => {
     backgroundElementTemplateInstanceManager.nextId = 0;
     clearEtAttrPlanMap();
     clearEventState();
+    clearRefState();
     resetElementTemplateCommitState();
     vi.clearAllMocks();
     (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
@@ -1045,6 +1047,28 @@ describe('hydrate', () => {
     ]);
     expect(root.attributeSlots).toEqual([null]);
     expect(getEventHandlerForEventValue('-12:0:bindtap')).toBeUndefined();
+  });
+
+  it('prepares spread ref markers with the serialized uid without queueing hydrate ref callbacks', () => {
+    __etAttrPlanMap.root = [0, adaptSpreadAttrSlot];
+    const root = new BackgroundElementTemplateInstance('root');
+    const ref = vi.fn();
+    root.setAttribute('attributeSlots', [{ ref }]);
+    flushPendingRefs();
+    expect(ref).toHaveBeenCalledTimes(1);
+    ref.mockClear();
+
+    const stream = hydrate(
+      createHydrationTemplate(-13, 'root', {
+        attributeSlots: [{ ref: '-13-0' }],
+      }),
+      root,
+    );
+    flushPendingRefs();
+
+    expect(stream).toEqual([]);
+    expect(root.attributeSlots).toEqual([{ ref: '-13-0' }]);
+    expect(ref).not.toHaveBeenCalled();
   });
 
   it('skips sparse background slot indexes when checking trailing slots', () => {
