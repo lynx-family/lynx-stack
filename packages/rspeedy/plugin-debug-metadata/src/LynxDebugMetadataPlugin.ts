@@ -15,18 +15,15 @@ import type {
 import type { LynxTemplatePlugin as LynxTemplatePluginClass } from '@lynx-js/template-webpack-plugin'
 
 import { parseLepusNGDebugInfo } from './bytecode-debug-info.js'
+import { DEBUG_METADATA_ASSET_NAME } from './constants.js'
 import { collectGitMetadata } from './git.js'
 import { collectEntryPathMap, dedupe } from './rspeedy-meta.js'
+import { applySourceMappingURLRewriter } from './source-mapping-url-rewriter.js'
 import { collectArtifacts } from './source-maps.js'
 import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from './UiSourceMapBuildInfo.js'
 import type { UiSourceMapRecord } from './UiSourceMapBuildInfo.js'
 
-/**
- * Default name of the debug metadata asset emitted alongside each template.
- *
- * @public
- */
-export const DEBUG_METADATA_ASSET_NAME = 'debug-metadata.json'
+export { DEBUG_METADATA_ASSET_NAME } from './constants.js'
 
 /**
  * The options of the {@link LynxDebugMetadataPlugin}.
@@ -142,6 +139,8 @@ export class LynxDebugMetadataPluginImpl {
         .getLynxTemplatePluginHooks(
           compilation,
         )
+
+      applySourceMappingURLRewriter(compiler, compilation)
 
       templateHooks.beforeEncode.tap(
         this.constructor.name,
