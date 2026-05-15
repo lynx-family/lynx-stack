@@ -11,6 +11,9 @@ import type { RsbuildEntry } from '@rsbuild/core'
  * `name → source files` map with every path relative to `repoRoot`
  * (git toplevel; falls back to `cwd` when there is no git root) so the
  * metadata is portable across machines / CI envs.
+ *
+ * Separators are always normalized to forward slashes so the JSON
+ * payload is identical whether the build ran on Windows or POSIX.
  */
 export function collectEntryPathMap(
   entry: RsbuildEntry,
@@ -19,7 +22,7 @@ export function collectEntryPathMap(
 ): Record<string, string[]> {
   const baseDir = repoRoot ?? cwd
   const toRel = (p: string): string =>
-    path.relative(baseDir, path.resolve(cwd, p))
+    path.relative(baseDir, path.resolve(cwd, p)).split(path.sep).join('/')
 
   const out: Record<string, string[]> = {}
   for (const [name, value] of Object.entries(entry)) {

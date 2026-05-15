@@ -2,8 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import path from 'node:path'
-
 import { describe, expect, test } from 'vitest'
 
 import { collectEntryPathMap, dedupe } from '../src/collectors/entries.js'
@@ -64,7 +62,7 @@ describe('collectEntryPathMap', () => {
 
   test('falls back to cwd when repoRoot is null', () => {
     const map = collectEntryPathMap({ main: 'src/index.ts' }, cwd, null)
-    expect(map.main).toEqual([path.normalize('src/index.ts')])
+    expect(map.main).toEqual(['src/index.ts'])
   })
 
   test('handles multiple entries independently', () => {

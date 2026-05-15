@@ -412,17 +412,21 @@ export class LynxEncodePluginImpl {
     if (encodeData.lepusCode.root) {
       mark(encodeData.lepusCode.root.name, ['lepusCode', 'root']);
     }
-    encodeData.lepusCode.chunks.forEach((chunk, i) => {
-      mark(chunk.name, ['lepusCode', 'chunks', String(i)]);
-    });
+    if (Array.isArray(encodeData.lepusCode.chunks)) {
+      encodeData.lepusCode.chunks.forEach((chunk, i) => {
+        mark(chunk.name, ['lepusCode', 'chunks', String(i)]);
+      });
+    }
     for (const key of Object.keys(encodeData.manifest)) {
       if (key === this.#APP_SERVICE_NAME) continue;
       const assetName = key.startsWith('/') ? key.slice(1) : key;
       mark(assetName, ['manifest', key]);
     }
-    encodeData.css.chunks.forEach(chunk => {
-      mark(chunk.name, ['css']);
-    });
+    if (Array.isArray(encodeData.css.chunks)) {
+      encodeData.css.chunks.forEach(chunk => {
+        mark(chunk.name, ['css']);
+      });
+    }
   }
 
   #shouldInlineScript(name: string, size: number): boolean {
