@@ -183,9 +183,6 @@ export class LynxDebugMetadataPluginImpl {
       templateHooks.beforeEmit.tap(
         this.constructor.name,
         (args) => {
-          const lepusNG = parseLepusNGDebugInfo(args.debugInfo)
-          if (!lepusNG) return args
-
           const firstMainThread = args.mainThreadAssets[0]
           if (!firstMainThread) return args
           const intermediate = path.posix.dirname(
@@ -208,14 +205,22 @@ export class LynxDebugMetadataPluginImpl {
             return args
           }
 
-          const target = metadata.artifacts.find(a =>
-            a.kind === 'main-thread' && a.filename === 'main-thread.js'
-          )
-          if (target) {
-            target.debugSources.unshift({
-              kind: 'bytecode-debug-info',
-              debugInfo: lepusNG,
-            })
+          for (const artifact of metadata.artifacts) {
+            const section = readTasmSection(compilation, artifact.path)
+            if (section) artifact.tasmSection = section
+          }
+
+          const lepusNG = parseLepusNGDebugInfo(args.debugInfo)
+          if (lepusNG) {
+            const target = metadata.artifacts.find(a =>
+              a.kind === 'main-thread' && a.filename === 'main-thread.js'
+            )
+            if (target) {
+              target.debugSources.unshift({
+                kind: 'bytecode-debug-info',
+                debugInfo: lepusNG,
+              })
+            }
           }
 
           compilation.updateAsset(
@@ -228,6 +233,23 @@ export class LynxDebugMetadataPluginImpl {
       )
     })
   }
+}
+
+/**
+ * Read the `'lynx:tasm-section'` info `LynxEncodePlugin` stamps on every
+ * routed asset. Returns `undefined` when the encoder did not (yet) mark
+ * this asset — leaving `Artifact.tasmSection` unset is preferable to
+ * guessing the wrong path.
+ */
+function readTasmSection(
+  compilation: Compilation,
+  assetName: string,
+): string[] | undefined {
+  const value: unknown = compilation.getAsset(assetName)?.info
+    ?.['lynx:tasm-section']
+  return Array.isArray(value)
+    ? value.filter((s): s is string => typeof s === 'string')
+    : undefined
 }
 
 export interface ModuleWithUiSourceMapBuildInfo {

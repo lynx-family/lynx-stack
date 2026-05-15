@@ -241,6 +241,8 @@ export class LynxEncodePluginImpl {
           ),
         };
 
+        this.#markTasmSections(compilation, encodeData);
+
         return args;
       });
 
@@ -374,6 +376,53 @@ export class LynxEncodePluginImpl {
     const prefixed = base.endsWith('/') ? base : `${base}/`;
     const trimmed = name.startsWith('/') ? name.slice(1) : name;
     return `${prefixed}${trimmed}`;
+  }
+
+  /**
+   * Stamp `info['lynx:tasm-section']` on every routed asset, capturing
+   * the path-array location the asset will occupy inside the final
+   * `tasm.json`. Downstream consumers (debug-metadata emission,
+   * symbolication / inspector tools) read this asset-info channel
+   * instead of reverse-engineering `encodeData`'s internal shape, so
+   * future routing changes here propagate transparently.
+   *
+   * The wire-protocol key matches the asset-info convention already in
+   * use for `'lynx:main-thread'`.
+   */
+  #markTasmSections(
+    compilation: import('webpack').Compilation,
+    encodeData: {
+      lepusCode: {
+        root: { name: string } | undefined;
+        chunks: { name: string }[];
+      };
+      manifest: Record<string, unknown>;
+      css: { chunks: { name: string }[] };
+    },
+  ): void {
+    const mark = (assetName: string, section: string[]): void => {
+      const asset = compilation.getAsset(assetName);
+      if (!asset) return;
+      compilation.updateAsset(asset.name, asset.source, {
+        ...asset.info,
+        'lynx:tasm-section': section,
+      });
+    };
+
+    if (encodeData.lepusCode.root) {
+      mark(encodeData.lepusCode.root.name, ['lepusCode', 'root']);
+    }
+    encodeData.lepusCode.chunks.forEach((chunk, i) => {
+      mark(chunk.name, ['lepusCode', 'chunks', String(i)]);
+    });
+    for (const key of Object.keys(encodeData.manifest)) {
+      if (key === this.#APP_SERVICE_NAME) continue;
+      const assetName = key.startsWith('/') ? key.slice(1) : key;
+      mark(assetName, ['manifest', key]);
+    }
+    encodeData.css.chunks.forEach(chunk => {
+      mark(chunk.name, ['css']);
+    });
   }
 
   #shouldInlineScript(name: string, size: number): boolean {
