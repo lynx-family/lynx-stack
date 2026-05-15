@@ -10,20 +10,19 @@ import type {
   DebugMetadataAsset,
   GitMetadata,
   RspeedyMeta,
-  UiSourceMapData,
 } from '@lynx-js/debug-metadata'
 import type { LynxTemplatePlugin as LynxTemplatePluginClass } from '@lynx-js/template-webpack-plugin'
 
-import { parseLepusNGDebugInfo } from './bytecode-debug-info.js'
+import { collectArtifacts } from './collectors/artifacts.js'
+import { parseLepusNGDebugInfo } from './collectors/bytecode-debug-info.js'
+import { collectEntryPathMap, dedupe } from './collectors/entries.js'
+import { collectGitMetadata } from './collectors/git.js'
+import {
+  collectUiSourceMapRecords,
+  createUiSourceMap,
+} from './collectors/ui-source-map.js'
 import { DEBUG_METADATA_ASSET_NAME } from './constants.js'
-import { collectGitMetadata } from './git.js'
-import { collectEntryPathMap, dedupe } from './rspeedy-meta.js'
 import { applySourceMappingURLRewriter } from './source-mapping-url-rewriter.js'
-import { collectArtifacts } from './source-maps.js'
-import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from './UiSourceMapBuildInfo.js'
-import type { UiSourceMapRecord } from './UiSourceMapBuildInfo.js'
-
-export { DEBUG_METADATA_ASSET_NAME } from './constants.js'
 
 /**
  * The options of the {@link LynxDebugMetadataPlugin}.
@@ -249,116 +248,4 @@ function readTasmSection(
   return Array.isArray(value)
     ? value.filter((s): s is string => typeof s === 'string')
     : undefined
-}
-
-export interface ModuleWithUiSourceMapBuildInfo {
-  identifier?: () => string
-  buildInfo?: Record<string, unknown>
-  modules?: Iterable<ModuleWithUiSourceMapBuildInfo>
-}
-
-export function collectUiSourceMapRecordsFromModule(
-  module: ModuleWithUiSourceMapBuildInfo,
-): UiSourceMapRecord[] {
-  const uiSourceMapRecords: UiSourceMapRecord[] = []
-  if (Array.isArray(module.buildInfo?.[UI_SOURCE_MAP_RECORDS_BUILD_INFO])) {
-    uiSourceMapRecords.push(
-      ...module.buildInfo
-        ?.[UI_SOURCE_MAP_RECORDS_BUILD_INFO] as UiSourceMapRecord[],
-    )
-  }
-
-  if (module.modules) {
-    Array.from(module.modules)
-      .forEach(nestedModule => {
-        uiSourceMapRecords.push(
-          ...collectUiSourceMapRecordsFromModule(nestedModule),
-        )
-      })
-  }
-
-  return uiSourceMapRecords
-}
-
-export function compareUiSourceMapRecord(
-  a: UiSourceMapRecord,
-  b: UiSourceMapRecord,
-): number {
-  return a.filename.localeCompare(b.filename)
-    || a.lineNumber - b.lineNumber
-    || a.columnNumber - b.columnNumber
-    || a.uiSourceMap - b.uiSourceMap
-}
-
-export function createUiSourceMap(
-  uiSourceMapRecords: UiSourceMapRecord[],
-): UiSourceMapData {
-  const sources: string[] = []
-  const sourceIndexes = new Map<string, number>()
-  const mappings: [number, number, number][] = []
-  const uiMaps: number[] = []
-
-  for (const record of uiSourceMapRecords) {
-    if (!record.filename) {
-      continue
-    }
-    const sourceIndex = sourceIndexes.get(record.filename) ?? sources.length
-
-    if (!sourceIndexes.has(record.filename)) {
-      sourceIndexes.set(record.filename, sourceIndex)
-      sources.push(record.filename)
-    }
-
-    mappings.push([
-      sourceIndex,
-      record.lineNumber,
-      record.columnNumber,
-    ])
-    uiMaps.push(record.uiSourceMap)
-  }
-
-  return {
-    version: 1,
-    sources,
-    mappings,
-    uiMaps,
-  }
-}
-
-export function collectUiSourceMapRecords(
-  compilation: Compilation,
-  entryNames: string[],
-): UiSourceMapRecord[] {
-  const moduleSet = new Set<ModuleWithUiSourceMapBuildInfo>()
-
-  for (const entryName of entryNames) {
-    const chunkGroup = compilation.namedChunkGroups.get(entryName)
-      ?? compilation.entrypoints.get(entryName)
-    if (!chunkGroup) {
-      continue
-    }
-
-    for (const chunk of chunkGroup.chunks) {
-      for (
-        const module of compilation.chunkGraph.getChunkModulesIterable(chunk)
-      ) {
-        moduleSet.add(module as ModuleWithUiSourceMapBuildInfo)
-      }
-    }
-  }
-
-  const deduped = new Map<string, UiSourceMapRecord>()
-  for (const module of moduleSet) {
-    for (const record of collectUiSourceMapRecordsFromModule(module)) {
-      const key = [
-        record.uiSourceMap,
-        record.filename,
-        record.lineNumber,
-        record.columnNumber,
-      ].join(':')
-      deduped.set(key, record)
-    }
-  }
-
-  return Array.from(deduped.values()).sort(compareUiSourceMapRecord)
 }

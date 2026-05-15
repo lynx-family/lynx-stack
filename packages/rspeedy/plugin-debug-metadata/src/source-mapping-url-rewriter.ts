@@ -73,6 +73,8 @@ export function applySourceMappingURLRewriter(
  * to rewrite, the trailer is a `data:` URL, or it already points at
  * `debug-metadata.json` (idempotent).
  *
+ * @internal Exported for unit testing only.
+ *
  * URL surgery is delegated to `new URL` so query strings, fragments,
  * percent-encoding, and absolute vs. relative forms are all handled
  * by the WHATWG URL parser instead of by us:
@@ -85,7 +87,7 @@ export function applySourceMappingURLRewriter(
  *  4. Re-serialize, peeling the placeholder back off so relative input
  *     stays relative.
  */
-function rewriteTrailer(source: string): string | undefined {
+export function rewriteTrailer(source: string): string | undefined {
   const match = SOURCE_MAPPING_URL_TRAILER.exec(source)
   if (!match) return undefined
   const originalUrl = match[1]

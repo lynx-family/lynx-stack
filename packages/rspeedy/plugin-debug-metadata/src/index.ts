@@ -13,13 +13,13 @@
  * plugin — consumers do not need to apply it explicitly.
  */
 
-export {
-  DEBUG_METADATA_ASSET_NAME,
-  LynxDebugMetadataPlugin,
-} from './LynxDebugMetadataPlugin.js'
+export { LynxDebugMetadataPlugin } from './LynxDebugMetadataPlugin.js'
 export type { LynxDebugMetadataPluginOptions } from './LynxDebugMetadataPlugin.js'
 
 export { pluginLynxDebugMetadata } from './pluginLynxDebugMetadata.js'
 
-export { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from './UiSourceMapBuildInfo.js'
-export type { UiSourceMapRecord } from './UiSourceMapBuildInfo.js'
+export {
+  DEBUG_METADATA_ASSET_NAME,
+  UI_SOURCE_MAP_RECORDS_BUILD_INFO,
+} from './constants.js'
+export type { UiSourceMapRecord } from './constants.js'

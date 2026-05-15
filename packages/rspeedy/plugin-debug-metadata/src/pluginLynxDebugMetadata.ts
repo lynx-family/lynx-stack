@@ -8,10 +8,8 @@ import link from 'terminal-link'
 
 import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
-import {
-  DEBUG_METADATA_ASSET_NAME,
-  LynxDebugMetadataPlugin,
-} from './LynxDebugMetadataPlugin.js'
+import { DEBUG_METADATA_ASSET_NAME } from './constants.js'
+import { LynxDebugMetadataPlugin } from './LynxDebugMetadataPlugin.js'
 import { createDebugMetadataMiddleware } from './middleware.js'
 import type { CompilerHandle } from './middleware.js'
 
