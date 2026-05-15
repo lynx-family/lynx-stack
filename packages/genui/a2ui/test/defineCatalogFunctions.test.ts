@@ -21,6 +21,10 @@ function namedImpl(args: Record<string, unknown>): unknown {
 }
 Object.defineProperty(namedImpl, 'name', { value: 'pickValue' });
 
+function laterImpl(args: Record<string, unknown>): unknown {
+  return args['value'];
+}
+
 const requiredManifest = {
   required: {
     name: 'required',
@@ -60,30 +64,24 @@ describe('defineCatalog with function entries', () => {
     expect(serialized.version).toBe('0.9');
     expect(serialized.components).toEqual([{ name: 'MockComponent' }]);
     expect(serialized.functions).toEqual([
-      { name: 'required', schema: requiredManifest.required },
+      requiredManifest.required,
     ]);
   });
 
-  test('serializeCatalog omits functions array when none registered', () => {
-    const catalog = defineCatalog([MockComponent]);
+  test('serializeCatalog omits functions array when definitions are absent', () => {
+    const catalog = defineCatalog([MockComponent, defineFunction(namedImpl)]);
     const serialized = serializeCatalog(catalog);
     expect(serialized.functions).toBeUndefined();
   });
 
   test('mergeCatalogs preserves functions and re-registers impls', () => {
-    function laterImpl(args: Record<string, unknown>): unknown {
-      return args['value'];
-    }
     const a = defineCatalog([defineFunction(namedImpl, requiredManifest)]);
     const b = defineCatalog([
       {
         kind: 'function' as const,
         name: 'required',
         impl: laterImpl,
-        schema: requiredManifest.required as unknown as Record<
-          string,
-          unknown
-        >,
+        definition: requiredManifest.required,
       },
     ]);
 
@@ -96,6 +94,6 @@ describe('defineCatalog with function entries', () => {
   test('defineFunction without a manifest reads the impl name', () => {
     const entry = defineFunction(namedImpl);
     expect(entry.name).toBe('pickValue');
-    expect(entry.schema).toBeUndefined();
+    expect(entry.definition).toBeUndefined();
   });
 });

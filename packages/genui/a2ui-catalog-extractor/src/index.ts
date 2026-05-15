@@ -968,9 +968,16 @@ function parseReferenceType(
         'A2UI catalog Record keys must be string-compatible.',
       );
     }
+    const valueType = typeArguments[1]!;
+    if (isAmbiguousIntrinsicType(valueType)) {
+      return {
+        type: 'object',
+        additionalProperties: true,
+      };
+    }
     return {
       type: 'object',
-      additionalProperties: parseTypeDocType(typeArguments[1]!, owner),
+      additionalProperties: parseTypeDocType(valueType, owner),
     };
   }
 
@@ -1115,6 +1122,11 @@ function isUndefinedType(type: TypeDocType): boolean {
 function isNullType(type: TypeDocType): boolean {
   return (type.type === 'intrinsic' && type.name === 'null')
     || (type.type === 'literal' && type.value === null);
+}
+
+function isAmbiguousIntrinsicType(type: TypeDocType): boolean {
+  return type.type === 'intrinsic'
+    && (type.name === 'unknown' || type.name === 'any');
 }
 
 function getStringLiteralValue(type: TypeDocType): string | undefined {

@@ -49,7 +49,12 @@ export {
   FunctionRegistry,
   resolveDynamicValue,
 } from './store/index.js';
-export type { FunctionEntry, FunctionImpl } from './store/index.js';
+export type {
+  FunctionCallContext,
+  FunctionEntry,
+  FunctionImpl,
+  ResolveFunctionOptions,
+} from './store/index.js';
 
 // Catalog — declarative composition.
 export {
@@ -62,6 +67,7 @@ export {
 export type {
   Catalog,
   CatalogComponent,
+  CatalogFunctionDefinition,
   CatalogFunctionEntry,
   CatalogInput,
   CatalogManifest,

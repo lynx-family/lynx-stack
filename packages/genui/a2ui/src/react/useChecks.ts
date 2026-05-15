@@ -7,6 +7,7 @@ import { useContext, useEffect, useState } from '@lynx-js/react';
 
 import { FormContext } from './FormContext.js';
 import { useA2UIContext } from './useA2UIContext.js';
+import type { CatalogFunctionEntry } from '../catalog/defineCatalog.js';
 import type { CheckFailure, CheckOutcome } from '../store/FormController.js';
 import type { MessageProcessor } from '../store/MessageProcessor.js';
 import {
@@ -33,6 +34,7 @@ function evaluateCondition(
   condition: unknown,
   surfaceId: string,
   dataContextPath?: string,
+  functions?: readonly CatalogFunctionEntry[],
 ): boolean {
   if (typeof condition === 'boolean') return condition;
   if (isFunctionCall(condition)) {
@@ -41,6 +43,7 @@ function evaluateCondition(
       condition,
       surfaceId,
       dataContextPath,
+      { functions },
     );
     return Boolean(result);
   }
@@ -58,6 +61,7 @@ function evaluateChecks(
   checks: CheckLike[] | undefined,
   surface: Surface | undefined,
   dataContextPath?: string,
+  functions?: readonly CatalogFunctionEntry[],
 ): CheckOutcome {
   if (!surface || !Array.isArray(checks) || checks.length === 0) {
     return { ok: true, failures: [] };
@@ -69,6 +73,7 @@ function evaluateChecks(
       rule.condition,
       surface.surfaceId,
       dataContextPath,
+      functions,
     );
     if (!ok) {
       failures.push({
@@ -98,27 +103,37 @@ export function useChecks(
   },
 ): CheckOutcome & { firstFailureMessage: string | undefined } {
   const { checks, componentId, surface, dataContextPath } = options;
-  const { processor } = useA2UIContext();
+  const { catalog, processor } = useA2UIContext();
   const form = useContext(FormContext);
 
   const [outcome, setOutcome] = useState<CheckOutcome>(() =>
-    evaluateChecks(processor, checks, surface, dataContextPath)
+    evaluateChecks(
+      processor,
+      checks,
+      surface,
+      dataContextPath,
+      catalog.functions,
+    )
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- `useEffect` is correctly typed; ESLint's project graph can't resolve it through the workspace `@lynx-js/react` symlink (same pattern as `useDataBinding.ts`).
   useEffect(() => {
     if (!surface) {
       setOutcome({ ok: true, failures: [] });
       return;
     }
     const dispose = effect(() => {
-      const next = evaluateChecks(processor, checks, surface, dataContextPath);
+      const next = evaluateChecks(
+        processor,
+        checks,
+        surface,
+        dataContextPath,
+        catalog.functions,
+      );
       setOutcome(next);
     });
     return dispose;
-  }, [processor, checks, surface, dataContextPath]);
+  }, [processor, checks, surface, dataContextPath, catalog.functions]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- see comment above on the preceding `useEffect` call.
   useEffect(() => {
     // Skip registration when no componentId is available — otherwise every
     // unnamed input collides under the same '' key in the form controller.

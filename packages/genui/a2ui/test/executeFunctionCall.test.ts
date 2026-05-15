@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { beforeEach, describe, expect, test } from '@rstest/core';
 
+import { basicFunctions } from '../src/functions/index.js';
 import { functionRegistry } from '../src/store/FunctionRegistry.js';
 import { MessageProcessor } from '../src/store/MessageProcessor.js';
 import {
@@ -86,5 +87,92 @@ describe('executeFunctionCall', () => {
       },
       surfaceId,
     )).toBe(3);
+  });
+
+  test('resolves array args without turning them into objects', () => {
+    const surface = processor.getOrCreateSurface(surfaceId);
+    surface.store.update('/email', '');
+    surface.store.update('/password', 'long-password');
+
+    expect(executeFunctionCall(
+      processor,
+      {
+        call: 'and',
+        args: {
+          values: [
+            {
+              call: 'required',
+              args: { value: { path: '/email' } },
+              returnType: 'boolean',
+            },
+            {
+              call: 'length',
+              args: { value: { path: '/password' }, min: 8 },
+              returnType: 'boolean',
+            },
+          ],
+        },
+        returnType: 'boolean',
+      },
+      surfaceId,
+      undefined,
+      { functions: basicFunctions },
+    )).toBe(false);
+
+    surface.store.update('/email', 'ada@example.com');
+
+    expect(executeFunctionCall(
+      processor,
+      {
+        call: 'and',
+        args: {
+          values: [
+            {
+              call: 'required',
+              args: { value: { path: '/email' } },
+              returnType: 'boolean',
+            },
+            {
+              call: 'length',
+              args: { value: { path: '/password' }, min: 8 },
+              returnType: 'boolean',
+            },
+          ],
+        },
+        returnType: 'boolean',
+      },
+      surfaceId,
+      undefined,
+      { functions: basicFunctions },
+    )).toBe(true);
+  });
+
+  test('basic functions use upstream zod parsing and data context', () => {
+    const surface = processor.getOrCreateSurface(surfaceId);
+    surface.store.update('/name', 'Ada');
+
+    expect(executeFunctionCall(
+      processor,
+      {
+        call: 'add',
+        args: { a: '7', b: '8' },
+        returnType: 'number',
+      },
+      surfaceId,
+      undefined,
+      { functions: basicFunctions },
+    )).toBe(15);
+
+    expect(executeFunctionCall(
+      processor,
+      {
+        call: 'formatString',
+        args: { value: 'Hello ${/name}' },
+        returnType: 'string',
+      },
+      surfaceId,
+      undefined,
+      { functions: basicFunctions },
+    )).toBe('Hello Ada');
   });
 });

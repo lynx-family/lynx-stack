@@ -21,6 +21,8 @@ export interface DemoCardProps {
    * @defaultValue `{}`
    */
   context?: Record<string, string | number | boolean>;
+  /** Free-form function argument bag. */
+  functionArgs?: Record<string, unknown>;
   /** Server-dispatched action payload. */
   action: {
     event: {

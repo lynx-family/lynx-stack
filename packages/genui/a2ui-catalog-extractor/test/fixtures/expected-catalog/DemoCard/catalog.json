@@ -70,6 +70,11 @@
         "description": "Extra payload.",
         "default": {}
       },
+      "functionArgs": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Free-form function argument bag."
+      },
       "action": {
         "type": "object",
         "properties": {

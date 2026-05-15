@@ -11,8 +11,45 @@ import '../../../styles/catalog/CheckBox.css';
  * @a2uiCatalog CheckBox
  */
 export interface CheckBoxProps extends GenericComponentProps {
-  label: string | { path: string };
-  value: boolean | { path: string };
+  label: string | { path: string } | {
+    call: string;
+    args: Record<string, unknown>;
+    returnType?:
+      | 'string'
+      | 'number'
+      | 'boolean'
+      | 'array'
+      | 'object'
+      | 'any'
+      | 'void';
+  };
+  value: boolean | { path: string } | {
+    call: string;
+    args: Record<string, unknown>;
+    returnType?:
+      | 'string'
+      | 'number'
+      | 'boolean'
+      | 'array'
+      | 'object'
+      | 'any'
+      | 'void';
+  };
+  checks?: Array<{
+    condition: boolean | { path: string } | {
+      call: string;
+      args: Record<string, unknown>;
+      returnType?:
+        | 'string'
+        | 'number'
+        | 'boolean'
+        | 'array'
+        | 'object'
+        | 'any'
+        | 'void';
+    };
+    message: string;
+  }>;
 }
 
 export function CheckBox(
@@ -26,11 +63,7 @@ export function CheckBox(
     surface,
     dataContextPath,
   } = props;
-  // `checks` (v0.9 `Checkable` mixin) is forwarded through the loose prop
-  // bag — keeping it out of the typed interface so the extractor can emit
-  // the component's JSON Schema without resolving the cross-package
-  // `CheckRule` type.
-  const checks = props['checks'] as CheckLike[] | undefined;
+  const checks = props.checks as CheckLike[] | undefined;
 
   const { ok, firstFailureMessage } = useChecks({
     checks,

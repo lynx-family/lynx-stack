@@ -40,12 +40,14 @@ describe('FunctionRegistry', () => {
     expect(registry.resolve('pick')!({})).toBe('second');
   });
 
-  test('schema is preserved when provided', () => {
+  test('definition is preserved when provided', () => {
     registry.register({
       name: 'schemed',
       impl: () => 0,
-      schema: { type: 'object' },
+      definition: { parameters: { type: 'object' } },
     });
-    expect(registry.list()[0]!.schema).toEqual({ type: 'object' });
+    expect(registry.list()[0]!.definition).toEqual({
+      parameters: { type: 'object' },
+    });
   });
 });

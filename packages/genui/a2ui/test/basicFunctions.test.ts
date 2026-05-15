@@ -52,6 +52,23 @@ describe('basicFunctions adapter', () => {
     }
   });
 
+  test('carries upstream function definitions for handshakes', () => {
+    const add = basicFunctions.find(fn => fn.name === 'add');
+    expect(add?.definition).toMatchObject({
+      name: 'add',
+      returnType: 'number',
+      parameters: {
+        type: 'object',
+      },
+    });
+
+    const parameters = add?.definition?.parameters as
+      | { properties?: Record<string, unknown> }
+      | undefined;
+    expect(parameters?.properties?.['a']).toMatchObject({ type: 'number' });
+    expect(parameters?.properties?.['b']).toMatchObject({ type: 'number' });
+  });
+
   describe('registerBasicFunctions', () => {
     const snapshot = new FunctionRegistry();
     void beforeAll(() => {

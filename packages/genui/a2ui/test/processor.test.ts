@@ -116,6 +116,147 @@ describe('MessageProcessor', () => {
     expect(surface.store.getSignal('/title').value).toBe('hello');
   });
 
+  test('expands dynamic children templates on layout components', () => {
+    const proc = new MessageProcessor();
+    const events: Array<{ type: string; updates?: Array<{ id?: string }> }> =
+      [];
+    proc.onUpdate((event) => {
+      events.push(event as { type: string; updates?: Array<{ id?: string }> });
+    });
+
+    proc.processMessages([
+      { createSurface: { surfaceId: 's1' } },
+      {
+        updateComponents: {
+          surfaceId: 's1',
+          components: [
+            { id: 'root', component: 'Column', children: ['events'] },
+            {
+              id: 'events',
+              component: 'Column',
+              children: { componentId: 'event-template', path: '/events' },
+            },
+            {
+              id: 'event-template',
+              component: 'Column',
+              children: ['event-title', 'event-time'],
+            },
+            { id: 'event-title', component: 'Text', text: { path: 'title' } },
+            { id: 'event-time', component: 'Text', text: { path: 'time' } },
+          ],
+        },
+      },
+      {
+        updateDataModel: {
+          surfaceId: 's1',
+          value: {
+            events: [
+              { title: 'Lunch', time: '12:00 - 12:45 PM' },
+              { title: 'Team standup', time: '3:30 - 4:00 PM' },
+            ],
+          },
+        },
+      },
+    ] as ServerToClientMessage[]);
+
+    const surface = proc.getOrCreateSurface('s1');
+    expect(surface.components.get('events')).toMatchObject({
+      children: ['event-template:0', 'event-template:1'],
+    });
+    expect(surface.components.get('event-template:0')).toMatchObject({
+      dataContextPath: '/events/0',
+      children: ['event-title:0', 'event-time:0'],
+    });
+    expect(surface.components.get('event-title:1')).toMatchObject({
+      dataContextPath: '/events/1',
+    });
+    expect(
+      events.some(event =>
+        event.type === 'surfaceUpdate'
+        && event.updates?.some(update => update.id === 'event-title:0')
+      ),
+    ).toBe(true);
+  });
+
+  test('rewrites non-children child references when cloning templates', () => {
+    const proc = new MessageProcessor();
+    proc.processMessages([
+      { createSurface: { surfaceId: 's1' } },
+      {
+        updateComponents: {
+          surfaceId: 's1',
+          components: [
+            {
+              id: 'root',
+              component: 'Column',
+              children: { componentId: 'item-card', path: '/items' },
+            },
+            { id: 'item-card', component: 'Card', child: 'item-body' },
+            { id: 'item-body', component: 'Text', text: { path: 'name' } },
+          ],
+        },
+      },
+      {
+        updateDataModel: {
+          surfaceId: 's1',
+          value: {
+            items: [{ name: 'Apple' }],
+          },
+        },
+      },
+    ] as ServerToClientMessage[]);
+
+    const surface = proc.getOrCreateSurface('s1');
+    expect(surface.components.get('root')).toMatchObject({
+      children: ['item-card:0'],
+    });
+    expect(surface.components.get('item-card:0')).toMatchObject({
+      child: 'item-body:0',
+      dataContextPath: '/items/0',
+    });
+    expect(surface.components.get('item-body:0')).toMatchObject({
+      dataContextPath: '/items/0',
+    });
+  });
+
+  test('clears dynamic children when template data becomes empty', () => {
+    const proc = new MessageProcessor();
+    proc.processMessages([
+      { createSurface: { surfaceId: 's1' } },
+      {
+        updateComponents: {
+          surfaceId: 's1',
+          components: [
+            {
+              id: 'root',
+              component: 'Column',
+              children: { componentId: 'item', path: '/items' },
+            },
+            { id: 'item', component: 'Text', text: { path: 'name' } },
+          ],
+        },
+      },
+      {
+        updateDataModel: {
+          surfaceId: 's1',
+          value: { items: [{ name: 'Apple' }, { name: 'Banana' }] },
+        },
+      },
+      {
+        updateDataModel: {
+          surfaceId: 's1',
+          path: '/items',
+          value: [],
+        },
+      },
+    ] as ServerToClientMessage[]);
+
+    const surface = proc.getOrCreateSurface('s1');
+    expect(surface.components.get('root')).toMatchObject({
+      children: [],
+    });
+  });
+
   test('dispatch with no listeners resolves with empty array', async () => {
     const proc = new MessageProcessor();
     const result = await proc.dispatch({ userAction: { name: 'x' } });

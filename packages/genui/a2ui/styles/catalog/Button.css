@@ -46,6 +46,17 @@
   background-color: inherit;
 }
 
+.button-invalid {
+  opacity: 0.45;
+}
+
+.button-error {
+  margin-top: calc(var(--a2ui-spacing-xs) * -1);
+  color: var(--a2ui-color-error, #d92d20);
+  font-size: var(--a2ui-font-size-xs);
+  line-height: var(--a2ui-line-height-body);
+}
+
 .button .text-body,
 .button .text-caption,
 .button .text-h1,

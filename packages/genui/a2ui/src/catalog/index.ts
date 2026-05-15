@@ -11,6 +11,7 @@ export {
 export type {
   Catalog,
   CatalogComponent,
+  CatalogFunctionDefinition,
   CatalogFunctionEntry,
   CatalogInput,
   CatalogManifest,
