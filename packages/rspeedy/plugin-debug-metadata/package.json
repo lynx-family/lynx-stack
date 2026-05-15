@@ -33,6 +33,9 @@
     "build": "rslib build",
     "test": "vitest run"
   },
+  "dependencies": {
+    "@lynx-js/debug-metadata": "workspace:^"
+  },
   "devDependencies": {
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@microsoft/api-extractor": "catalog:",

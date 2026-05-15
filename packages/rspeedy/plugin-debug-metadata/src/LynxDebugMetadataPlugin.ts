@@ -5,6 +5,10 @@ import path from 'node:path'
 
 import type { Compilation, Compiler } from 'webpack'
 
+import type {
+  DebugMetadataAsset,
+  UiSourceMapData,
+} from '@lynx-js/debug-metadata'
 import type { LynxTemplatePlugin as LynxTemplatePluginClass } from '@lynx-js/template-webpack-plugin'
 
 import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from './UiSourceMapBuildInfo.js'
@@ -129,18 +133,6 @@ export class LynxDebugMetadataPluginImpl {
       )
     })
   }
-}
-
-interface UiSourceMapData {
-  version: 1
-  sources: string[]
-  mappings: [number, number, number][]
-  uiMaps: number[]
-}
-
-interface DebugMetadataAsset {
-  uiSourceMap: UiSourceMapData
-  meta: Record<string, unknown>
 }
 
 export interface ModuleWithUiSourceMapBuildInfo {

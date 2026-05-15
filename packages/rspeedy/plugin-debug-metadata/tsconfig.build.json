@@ -7,6 +7,7 @@
   },
   "references": [
     { "path": "../../webpack/template-webpack-plugin/tsconfig.build.json" },
+    { "path": "../../tools/debug-metadata/tsconfig.json" },
   ],
   "include": ["src"],
 }
