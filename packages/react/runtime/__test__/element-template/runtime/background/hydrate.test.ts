@@ -18,6 +18,7 @@ import type { SerializedElementTemplate } from '../../../../src/element-template
 import {
   __etAttrPlanMap,
   adaptEventAttrSlot,
+  adaptSpreadAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 
@@ -55,6 +56,8 @@ function createHydrationChild(
 
 describe('hydrate', () => {
   beforeEach(() => {
+    globalThis.__MAIN_THREAD__ = false;
+    globalThis.__BACKGROUND__ = true;
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
     clearEtAttrPlanMap();
@@ -926,6 +929,83 @@ describe('hydrate', () => {
     ]);
     expect(root.attributeSlots).toEqual([null]);
     expect(getEventHandlerForEventValue('-9:0:')).toBeUndefined();
+  });
+
+  it('prepares background spread event handlers with the serialized uid before diffing hydrate slots', () => {
+    __etAttrPlanMap.root = [0, adaptSpreadAttrSlot];
+    const root = new BackgroundElementTemplateInstance('root');
+    const handleTap = vi.fn();
+    root.setAttribute('attributeSlots', [{
+      id: 'cta',
+      bindtap: handleTap,
+    }]);
+    const temporaryEventValue = `${root.instanceId}:0:bindtap`;
+    const preparedSpread = { id: 'cta', bindtap: '-10:0:bindtap' };
+    expect(getEventHandlerForEventValue(temporaryEventValue)).toBe(handleTap);
+
+    const stream = hydrate(
+      createHydrationTemplate(-10, 'root', {
+        attributeSlots: [preparedSpread],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([]);
+    expect(root.attributeSlots).toEqual([preparedSpread]);
+    expect(getEventHandlerForEventValue(temporaryEventValue)).toBeUndefined();
+    expect(getEventHandlerForEventValue('-10:0:bindtap')).toBe(handleTap);
+  });
+
+  it('patches a hydrated spread value when main thread serialized null but background has a spread event', () => {
+    __etAttrPlanMap.root = [0, adaptSpreadAttrSlot];
+    const root = new BackgroundElementTemplateInstance('root');
+    const handleTap = vi.fn();
+    root.setAttribute('attributeSlots', [{
+      id: 'cta',
+      bindtap: handleTap,
+    }]);
+    const temporaryEventValue = `${root.instanceId}:0:bindtap`;
+    const preparedSpread = { id: 'cta', bindtap: '-11:0:bindtap' };
+    expect(getEventHandlerForEventValue(temporaryEventValue)).toBe(handleTap);
+
+    const stream = hydrate(
+      createHydrationTemplate(-11, 'root', {
+        attributeSlots: [null],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      -11,
+      0,
+      preparedSpread,
+    ]);
+    expect(root.attributeSlots).toEqual([preparedSpread]);
+    expect(getEventHandlerForEventValue(temporaryEventValue)).toBeUndefined();
+    expect(getEventHandlerForEventValue('-11:0:bindtap')).toBe(handleTap);
+  });
+
+  it('patches null when main thread serialized a spread event value but background clears the spread slot', () => {
+    __etAttrPlanMap.root = [0, adaptSpreadAttrSlot];
+    const root = new BackgroundElementTemplateInstance('root');
+    root.setAttribute('attributeSlots', [false]);
+
+    const stream = hydrate(
+      createHydrationTemplate(-12, 'root', {
+        attributeSlots: [{ bindtap: '-12:0:bindtap' }],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      -12,
+      0,
+      null,
+    ]);
+    expect(root.attributeSlots).toEqual([null]);
+    expect(getEventHandlerForEventValue('-12:0:bindtap')).toBeUndefined();
   });
 
   it('skips sparse background slot indexes when checking trailing slots', () => {
