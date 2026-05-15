@@ -11,7 +11,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--a2ui-color-text);
+  color: var(--a2ui-icon-color);
 }
 
 .a2ui-icon-sm {
@@ -27,11 +27,11 @@
 }
 
 .a2ui-icon-color-primary {
-  color: var(--a2ui-color-primary);
+  color: var(--a2ui-icon-color-primary);
 }
 
 .a2ui-icon-color-muted {
-  color: var(--a2ui-color-text-muted);
+  color: var(--a2ui-icon-color-muted);
 }
 
 .a2ui-icon-color-inherit {

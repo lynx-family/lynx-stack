@@ -76,6 +76,11 @@
       "default": "./dist/catalog/RadioGroup/index.js"
     },
     "./catalog/RadioGroup/catalog.json": "./dist/catalog/RadioGroup/catalog.json",
+    "./catalog/Tabs": {
+      "types": "./dist/catalog/Tabs/index.d.ts",
+      "default": "./dist/catalog/Tabs/index.js"
+    },
+    "./catalog/Tabs/catalog.json": "./dist/catalog/Tabs/catalog.json",
     "./react": {
       "types": "./dist/react/index.d.ts",
       "default": "./dist/react/index.js"

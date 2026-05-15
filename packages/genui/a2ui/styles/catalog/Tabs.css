@@ -1,0 +1,48 @@
+@import "../theme.css";
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+.tabs-headers {
+  display: flex;
+  gap: var(--a2ui-spacing-xs, 0.25rem);
+  border-bottom: var(
+    --a2ui-tabs-border,
+    var(--a2ui-border-width, 1px) solid var(--a2ui-color-border, #ccc)
+  );
+  margin-bottom: var(--a2ui-spacing-m, 0.5rem);
+  overflow-x: auto;
+}
+
+.tabs-header {
+  padding: var(--a2ui-spacing-m, 0.5rem) var(--a2ui-spacing-l, 1rem);
+  background: var(--a2ui-tabs-header-background, transparent);
+  color: var(--a2ui-tabs-header-color, var(--a2ui-color-on-surface));
+  border: none;
+  border-radius: var(--a2ui-border-radius, 0.25rem)
+    var(--a2ui-border-radius, 0.25rem) 0 0;
+  font-family: inherit;
+  flex: 0 0 auto;
+}
+
+.tabs-header-active {
+  color: var(
+    --a2ui-tabs-header-color-active,
+    var(--a2ui-color-on-secondary, #333)
+  );
+  box-shadow: inset 0 -2px 0
+    var(--a2ui-tabs-header-indicator-color, var(--a2ui-color-on-surface, #111));
+}
+
+.tabs-header-text {
+  color: inherit;
+}
+
+.tabs-content {
+  padding: var(--a2ui-tabs-content-padding, 0 var(--a2ui-spacing-m, 0.5rem));
+  min-width: 0;
+}
