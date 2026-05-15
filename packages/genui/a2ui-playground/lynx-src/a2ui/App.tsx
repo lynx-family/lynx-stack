@@ -13,6 +13,7 @@ import {
   List,
   RadioGroup,
   Row,
+  Tabs,
   Text,
   createMessageStore,
   normalizePayloadToMessages as normalizeProtocolMessages,
@@ -35,6 +36,7 @@ import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
 import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
 import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
 import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
+import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json';
 import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json';
 import {
   useCallback,
@@ -79,6 +81,7 @@ const ALL_BUILTINS: readonly CatalogInput[] = [
   manifestEntry(Icon, iconManifest),
   manifestEntry(CheckBox, checkBoxManifest),
   manifestEntry(RadioGroup, radioGroupManifest),
+  manifestEntry(Tabs, tabsManifest),
 ];
 
 interface InitData {
@@ -336,7 +339,9 @@ export function App() {
     () => streamConfig.theme ?? 'light',
     [streamConfig.theme],
   );
-  const themeClassName = theme === 'dark' ? 'luna-dark' : 'luna-light';
+  const themeClassName = theme === 'dark'
+    ? 'luna-dark a2ui-dark'
+    : 'luna-light a2ui-light';
   const isPlaybackPaused = useMemo(
     () => effectiveData.playbackPaused === true,
     [effectiveData.playbackPaused],

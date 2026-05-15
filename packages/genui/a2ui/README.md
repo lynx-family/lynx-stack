@@ -16,7 +16,7 @@ This package includes:
   components they want available.
 - `catalog/<Name>`: built-in component renderers (`Text`, `Button`,
   `Card`, `Column`, `Row`, `List`, `CheckBox`, `RadioGroup`, `Image`,
-  `Divider`).
+  `Divider`, `Icon`, `Tabs`).
 - `catalog/<Name>/catalog.json`: per-component JSON-Schema manifests
   for the agent handshake.
 

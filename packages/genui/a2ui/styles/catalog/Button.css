@@ -8,11 +8,11 @@
   gap: var(--a2ui-spacing-m);
   padding: var(--a2ui-spacing-m) calc(var(--a2ui-spacing-m) * 1.75);
   margin: calc(var(--a2ui-spacing-xs) * 2) 0;
-  border: var(--a2ui-border-width) solid var(--a2ui-color-border);
+  border: var(--a2ui-button-border);
   border-radius: var(--a2ui-button-border-radius, var(--a2ui-border-radius));
-  background: var(--a2ui-color-surface);
+  background: var(--a2ui-button-background);
   box-shadow: none;
-  color: var(--a2ui-color-on-secondary);
+  color: var(--a2ui-button-foreground);
   font-weight: normal;
   transition:
     background-color 0.2s ease,
@@ -25,9 +25,9 @@
 }
 
 .button-primary {
-  background-color: var(--a2ui-color-primary);
+  background-color: var(--a2ui-button-primary-background);
   border: none;
-  color: var(--a2ui-color-on-primary);
+  color: var(--a2ui-button-primary-foreground);
 }
 
 .button-borderless {
