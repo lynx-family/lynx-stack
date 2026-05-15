@@ -102,12 +102,18 @@ export function rewriteTrailer(source: string): string | undefined {
   }
 
   const segments = parsed.pathname.split('/')
-  const mapBasename = segments.pop()
-  if (!mapBasename) return undefined
+  const encodedBasename = segments.pop()
+  if (!encodedBasename) return undefined
+  let decodedBasename: string
+  try {
+    decodedBasename = decodeURIComponent(encodedBasename)
+  } catch {
+    decodedBasename = encodedBasename
+  }
   segments.push(DEBUG_METADATA_ASSET_NAME)
   parsed.pathname = segments.join('/')
   parsed.search = `?field=source-map&filename=${
-    encodeURIComponent(mapBasename)
+    encodeURIComponent(decodedBasename)
   }`
   parsed.hash = ''
 

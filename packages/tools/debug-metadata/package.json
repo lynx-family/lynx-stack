@@ -31,6 +31,12 @@
     "CHANGELOG.md",
     "README.md"
   ],
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^12.3.0"
+  },
   "engines": {
     "node": ">=18"
   }
