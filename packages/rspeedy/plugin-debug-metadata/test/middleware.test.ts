@@ -74,7 +74,7 @@ function runRequest(
   return new Promise((resolve) => {
     const headers: Record<string, string> = {}
     let status = 200
-    let nexted = false
+    let passedToNext = false
     let ended = false
     const req = { url } as IncomingMessage
     const res = {
@@ -100,12 +100,12 @@ function runRequest(
       },
     } as unknown as ServerResponse
     middleware(req, res, () => {
-      nexted = true
+      passedToNext = true
       resolve(null)
     })
     // Safety: if neither next() nor end() ever fires, queue a microtask.
     queueMicrotask(() => {
-      if (!ended && !nexted) {
+      if (!ended && !passedToNext) {
         /* still pending — caller awaits */
       }
     })
