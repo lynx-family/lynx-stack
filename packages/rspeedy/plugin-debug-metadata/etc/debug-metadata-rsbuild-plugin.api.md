@@ -6,6 +6,7 @@
 
 import type { Compiler } from 'webpack';
 import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+import type { RsbuildEntry } from '@rsbuild/core';
 import type { RsbuildPlugin } from '@rsbuild/core';
 
 // @public
@@ -15,7 +16,7 @@ export const DEBUG_METADATA_ASSET_NAME = "debug-metadata.json";
 export class LynxDebugMetadataPlugin {
     constructor(options?: LynxDebugMetadataPluginOptions | undefined);
     apply(compiler: Compiler): void;
-    static defaultOptions: Readonly<Omit<Required<LynxDebugMetadataPluginOptions>, 'LynxTemplatePlugin'>>;
+    static defaultOptions: Readonly<Omit<Required<LynxDebugMetadataPluginOptions>, 'LynxTemplatePlugin' | 'rsbuildEntry'>>;
     // (undocumented)
     protected options?: LynxDebugMetadataPluginOptions | undefined;
 }
@@ -24,6 +25,7 @@ export class LynxDebugMetadataPlugin {
 export interface LynxDebugMetadataPluginOptions {
     debugMetadataAssetName?: string;
     LynxTemplatePlugin: typeof LynxTemplatePlugin;
+    rsbuildEntry?: RsbuildEntry;
 }
 
 // @public
