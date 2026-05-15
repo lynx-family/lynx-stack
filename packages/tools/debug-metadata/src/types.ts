@@ -30,7 +30,9 @@ export type DebugSource = SourceMapDebugSource | BytecodeDebugInfoSource;
  */
 export interface SourceMapDebugSource {
   kind: 'source-map';
-  /** Bundler-relative asset path, e.g. `.rspeedy/main/main-thread.js.map`. */
+  /** Basename of the `.map` file, e.g. `main-thread.js.map`. */
+  filename: string;
+  /** Bundler-relative path of the `.map` file, e.g. `.rspeedy/main/main-thread.js.map`. */
   path: string;
   /**
    * Identifier that platform-side reverse symbolication uses to match

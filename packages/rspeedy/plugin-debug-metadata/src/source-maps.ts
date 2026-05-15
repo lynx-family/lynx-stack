@@ -36,12 +36,14 @@ export function collectArtifacts(
         if (seen.has(file)) continue
         seen.add(file)
 
-        const map = readSourceMap(compilation, `${file}.map`)
+        const mapPath = `${file}.map`
+        const map = readSourceMap(compilation, mapPath)
         if (!map) continue
 
         const debugSource: SourceMapDebugSource = {
           kind: 'source-map',
-          path: `${file}.map`,
+          filename: path.posix.basename(mapPath),
+          path: mapPath,
           key: extractKey(chunk, file),
           map,
         }

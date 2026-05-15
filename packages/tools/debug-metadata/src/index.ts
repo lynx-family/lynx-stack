@@ -10,8 +10,9 @@
  * Zero runtime dependencies. Safe to consume from any Node.js context —
  * rsbuild plugins, dev-server middleware, reverse-symbolication services,
  * CLI tools, etc. Read the JSON with `JSON.parse` and cast to
- * {@link DebugMetadataAsset}; no runtime helpers are provided yet because
- * the schema has nothing to validate beyond what the type already states.
+ * {@link DebugMetadataAsset}; for field-by-field lookups (`?field=…`
+ * style queries), use the `FIELDS` registry and `resolveField`
+ * dispatcher.
  */
 
 export type {
@@ -28,3 +29,13 @@ export type {
   SourceMapSection,
   UiSourceMapData,
 } from './types.js';
+
+export {
+  FIELDS,
+  findArtifact,
+  findBytecodeDebugInfo,
+  findSourceMap,
+  knownFields,
+  resolveField,
+} from './resolve.js';
+export type { FieldResolver, QueryParams, ResolveResult } from './resolve.js';

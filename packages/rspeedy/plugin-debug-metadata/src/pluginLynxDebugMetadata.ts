@@ -8,7 +8,12 @@ import link from 'terminal-link'
 
 import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
-import { LynxDebugMetadataPlugin } from './LynxDebugMetadataPlugin.js'
+import {
+  DEBUG_METADATA_ASSET_NAME,
+  LynxDebugMetadataPlugin,
+} from './LynxDebugMetadataPlugin.js'
+import { createDebugMetadataMiddleware } from './middleware.js'
+import type { CompilerHandle } from './middleware.js'
 
 const PLUGIN_NAME = 'lynx:debug-metadata'
 
@@ -24,7 +29,8 @@ interface LynxTemplatePluginExposure {
 }
 
 /**
- * Register `debug-metadata.json` emission for every Lynx template build.
+ * Register `debug-metadata.json` emission for every Lynx template build
+ * and serve sub-field queries via a connect-style dev-server middleware.
  *
  * Auto-registered by Rspeedy core. Behaviour when no `LynxTemplatePlugin`
  * exposure is found:
@@ -36,12 +42,40 @@ interface LynxTemplatePluginExposure {
  *   build or a test harness running `rspeedy build` without any DSL, and
  *   debug metadata has nothing meaningful to emit.
  *
+ * The dev-server middleware exposes these endpoints (relative to each
+ * entry's intermediate dir):
+ *
+ * ```text
+ * GET .../debug-metadata.json
+ * GET .../debug-metadata.json?field=source-map&path=…
+ * GET .../debug-metadata.json?field=source-map&filename=…
+ * GET .../debug-metadata.json?field=source-map&key=…
+ * GET .../debug-metadata.json?field=bytecode-debug-info&filename=…
+ * GET .../debug-metadata.json?field=artifact&filename=…
+ * GET .../debug-metadata.json?field=artifacts
+ * GET .../debug-metadata.json?field=ui-source-map
+ * GET .../debug-metadata.json?field=meta
+ * GET .../debug-metadata.json?field=git
+ * GET .../debug-metadata.json?field=rspeedy
+ *
+ * GET .../*.js.map    → transparently forwarded to ?field=source-map
+ * GET .../*.css.map   → transparently forwarded to ?field=source-map
+ * ```
+ *
  * @public
  */
 export function pluginLynxDebugMetadata(): RsbuildPlugin {
   return {
     name: PLUGIN_NAME,
     setup(api) {
+      const compilerHandle: CompilerHandle = { compiler: null }
+
+      api.onAfterCreateCompiler(({ compiler }) => {
+        compilerHandle.compiler = compiler as unknown as CompilerHandle[
+          'compiler'
+        ]
+      })
+
       api.modifyBundlerChain((chain, { environment }) => {
         const exposed = api.useExposed<LynxTemplatePluginExposure>(
           Symbol.for('LynxTemplatePlugin'),
@@ -50,7 +84,6 @@ export function pluginLynxDebugMetadata(): RsbuildPlugin {
         if (!exposed) {
           const activeDslPluginPkgName = findActiveDslPluginPkgName(api)
           if (activeDslPluginPkgName === undefined) {
-            // No DSL plugin loaded → not a Lynx project, skip silently.
             return
           }
 
@@ -79,6 +112,16 @@ See ${
           LynxTemplatePlugin: exposed.LynxTemplatePlugin,
           rsbuildEntry: environment.entry,
         }])
+      })
+
+      api.onBeforeStartDevServer(({ server }) => {
+        const mw = createDebugMetadataMiddleware({
+          debugMetadataAssetName: DEBUG_METADATA_ASSET_NAME,
+          compilerHandle,
+        })
+        ;(server as {
+          middlewares: { use: (fn: typeof mw) => void }
+        }).middlewares.use(mw)
       })
     },
   }
