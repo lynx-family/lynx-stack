@@ -60,6 +60,11 @@ export default defineConfig({
         bundle: true,
         tsgo: true,
       },
+      output: {
+        filename: {
+          js: 'type-entry/[name].js',
+        },
+      },
       source: {
         entry: {
           'index': './src/entry.ts',
