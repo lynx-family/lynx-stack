@@ -101,14 +101,25 @@ export interface BytecodeDebugInfoSource {
 }
 
 /**
- * lepusNG-encoded bytecode's debug section, lifted verbatim from the
- * encoder's `debug-info.json` output (minus the `lepusNG_debug_info`
- * wrapper, which the surrounding `BytecodeDebugInfoSource.kind`
- * already encodes).
+ * lepusNG-encoded bytecode's debug payload, identical to the JSON the
+ * encoder writes to `debug-info.json`. The top-level `lepusNG_debug_info`
+ * key is preserved so consumers (Lynx runtime, reverse-symbolication
+ * services) can treat a `?field=bytecode-debug-info` response and the
+ * legacy `debug-info.json` file as the same shape.
  *
  * @public
  */
 export interface LepusNGDebugInfo {
+  lepusNG_debug_info: LepusNGDebugInfoBody;
+}
+
+/**
+ * Inner body of {@link LepusNGDebugInfo}. Carries the function-level
+ * debug data the lepusNG encoder produces for one compilation unit.
+ *
+ * @public
+ */
+export interface LepusNGDebugInfoBody {
   /** Full JS source that was fed to the bytecode compiler. */
   function_source: string;
   /** Number of compiled functions; equals `function_info.length`. */

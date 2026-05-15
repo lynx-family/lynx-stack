@@ -22,6 +22,7 @@ export type {
   DebugSource,
   GitMetadata,
   LepusNGDebugInfo,
+  LepusNGDebugInfoBody,
   LepusNGFunctionInfo,
   RspeedyMeta,
   SourceMap,

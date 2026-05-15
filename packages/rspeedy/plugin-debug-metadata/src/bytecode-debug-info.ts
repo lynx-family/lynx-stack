@@ -6,21 +6,22 @@ import type { LepusNGDebugInfo } from '@lynx-js/debug-metadata'
 
 /**
  * Parse the JSON string `LynxTemplatePlugin.beforeEmit` hands us as
- * `args.debugInfo` and return the `lepusNG_debug_info` payload, or
- * `undefined` when the build did not produce bytecode (e.g. lepusNG
- * encoding disabled, no main-thread chunks).
+ * `args.debugInfo` into a {@link LepusNGDebugInfo}. The encoder writes
+ * the exact same `{ lepusNG_debug_info: … }` envelope shape that the
+ * type declares, so the parse is a JSON-parse + cast. Returns
+ * `undefined` when the build did not produce bytecode (empty string,
+ * lepusNG encoding disabled, no main-thread chunks).
  */
 export function parseLepusNGDebugInfo(
   debugInfoJson: string,
 ): LepusNGDebugInfo | undefined {
   if (!debugInfoJson) return undefined
-  let parsed: { lepusNG_debug_info?: LepusNGDebugInfo }
+  let parsed: LepusNGDebugInfo
   try {
-    parsed = JSON.parse(debugInfoJson) as {
-      lepusNG_debug_info?: LepusNGDebugInfo
-    }
+    parsed = JSON.parse(debugInfoJson) as LepusNGDebugInfo
   } catch {
     return undefined
   }
-  return parsed.lepusNG_debug_info
+  if (!parsed.lepusNG_debug_info) return undefined
+  return parsed
 }

@@ -787,10 +787,12 @@ class LynxTemplatePluginImpl {
 
     let templateDebugUrl = '';
     const intermediatePosix = intermediate.replace(/\\/g, '/');
-    const debugInfoPath = path.posix.format({
+    const debugMetadataPath = path.posix.format({
       dir: intermediatePosix,
-      base: 'debug-info.json',
+      base: 'debug-metadata.json',
     });
+    const debugMetadataDebugInfoQuery =
+      '?field=bytecode-debug-info&filename=main-thread.js';
     // TODO: Support publicPath function
     if (
       typeof compiler.options.output.publicPath === 'string'
@@ -798,7 +800,7 @@ class LynxTemplatePluginImpl {
       && compiler.options.output.publicPath !== '/'
     ) {
       templateDebugUrl = new URL(
-        debugInfoPath,
+        debugMetadataPath + debugMetadataDebugInfoQuery,
         compiler.options.output.publicPath,
       ).toString();
     }
@@ -943,10 +945,6 @@ class LynxTemplatePluginImpl {
       });
 
       compilation.emitAsset(filename, new RawSource(template, false));
-
-      if (isDebug() || isDev) {
-        compilation.emitAsset(debugInfoPath, new RawSource(debugInfo));
-      }
 
       await hooks.afterEmit.promise({ outputName: filename });
     } catch (error) {
