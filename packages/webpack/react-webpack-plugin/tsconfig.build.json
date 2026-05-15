@@ -11,6 +11,9 @@
     // See: https://github.com/vitest-dev/vitest/issues/5329
     "useDefineForClassFields": false,
   },
+  "references": [
+    { "path": "../../rspeedy/plugin-debug-metadata/tsconfig.build.json" },
+  ],
   "include": ["src"],
   "exclude": ["src/loader.js"],
 }

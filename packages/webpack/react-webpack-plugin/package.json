@@ -42,6 +42,7 @@
   },
   "devDependencies": {
     "@lynx-js/css-extract-webpack-plugin": "workspace:*",
+    "@lynx-js/debug-metadata-rsbuild-plugin": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/test-tools": "workspace:*",
