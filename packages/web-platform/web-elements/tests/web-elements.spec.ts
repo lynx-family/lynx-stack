@@ -856,7 +856,11 @@ test.describe('web-elements test suite', () => {
     }, { title }) => {
       await gotoWebComponentPage(page, title);
       await wait(500);
-      expect(page.locator('x-foldview-slot-ng')).toHaveCSS('top', '200px');
+      await expect.poll(() =>
+        page.locator('x-foldview-slot-ng').evaluate((slot) =>
+          (slot as HTMLElement).style.top
+        )
+      ).toBe('200px');
     });
     test('x-foldview-ng/size-parent-grow-children-specific', async ({
       page,
