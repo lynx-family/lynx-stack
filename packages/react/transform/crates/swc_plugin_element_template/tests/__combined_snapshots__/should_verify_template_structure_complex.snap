@@ -12,15 +12,13 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
         "type": "view",
         "attributesArray": [
           {
-            "kind": "attribute",
+            "kind": "static",
             "key": "class",
-            "binding": "static",
             "value": "container"
           },
           {
-            "kind": "attribute",
+            "kind": "slot",
             "key": "id",
-            "binding": "slot",
             "attrSlotIndex": 0.0
           }
         ],
@@ -30,9 +28,8 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
             "type": "text",
             "attributesArray": [
               {
-                "kind": "attribute",
+                "kind": "static",
                 "key": "text",
-                "binding": "static",
                 "value": "Static"
               }
             ],
@@ -43,9 +40,8 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
             "type": "image",
             "attributesArray": [
               {
-                "kind": "attribute",
+                "kind": "slot",
                 "key": "src",
-                "binding": "slot",
                 "attrSlotIndex": 1.0
               }
             ],
@@ -61,9 +57,8 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
         "type": "raw-text",
         "attributesArray": [
           {
-            "kind": "attribute",
+            "kind": "slot",
             "key": "text",
-            "binding": "slot",
             "attrSlotIndex": 0
           }
         ],
