@@ -68,7 +68,8 @@ const DESKTOP_CHAT_MIN_WIDTH = 360;
 const COMPACT_CHAT_MIN_HEIGHT = 280;
 const COMPACT_PREVIEW_MIN_HEIGHT = 320;
 const RESIZE_BREAKPOINT = 980;
-const ONLINE_A2UI_CHAT_URL = '/a2ui/stream';
+const ONLINE_A2UI_SERVER_ORIGIN = 'https://genui-server.vercel.app';
+const ONLINE_A2UI_CHAT_URL = `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/stream`;
 const LOCAL_A2UI_SERVER_PORT = '3060';
 
 function isDevHost(hostname: string): boolean {
@@ -82,10 +83,17 @@ function isDevHost(hostname: string): boolean {
   );
 }
 
+function isTrustedOnlineEndpoint(endpoint: URL): boolean {
+  return endpoint.origin === ONLINE_A2UI_SERVER_ORIGIN;
+}
+
 function resolveTrustedA2UIEndpoint(raw: string): string | null {
   try {
     const endpoint = new URL(raw, window.location.origin);
     if (endpoint.origin === window.location.origin) {
+      return endpoint.toString();
+    }
+    if (isTrustedOnlineEndpoint(endpoint)) {
       return endpoint.toString();
     }
 
@@ -109,7 +117,7 @@ function getA2UIChatEndpoint(): string {
   if (
     window.location.protocol === 'http:' && isDevHost(window.location.hostname)
   ) {
-    return `http://${window.location.hostname}:${LOCAL_A2UI_SERVER_PORT}/a2ui/chat`;
+    return `http://${window.location.hostname}:${LOCAL_A2UI_SERVER_PORT}/a2ui/stream`;
   }
   return ONLINE_A2UI_CHAT_URL;
 }
