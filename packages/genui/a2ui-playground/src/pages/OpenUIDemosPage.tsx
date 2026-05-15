@@ -31,6 +31,7 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
   );
   const [customRawText, setCustomRawText] = useState('');
   const [error, setError] = useState('');
+  const [previewRenderKey, setPreviewRenderKey] = useState(0);
   const [previewInput, setPreviewInput] = useState<PreviewInput | null>(() => {
     const initialScenario = OPENUI_SCENARIOS[0];
     return initialScenario ? { rawText: initialScenario.raw } : null;
@@ -88,6 +89,7 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
     }
     setError('');
     setPreviewInput({ rawText: customRawText });
+    setPreviewRenderKey((value) => value + 1);
   }, [customRawText]);
 
   return (
@@ -206,6 +208,7 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
         previewSource={previewSource}
       >
         <PreviewViewport
+          key={previewRenderKey}
           emptyTitle='Select a scenario to preview'
           emptySubTitle='Lynx rendering will appear here'
         />

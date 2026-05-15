@@ -17,6 +17,7 @@ const noop = () => {
   /* no-op subscribe disposer */
 };
 const noopSubscribe = (): () => void => noop;
+const UNSUPPORTED_PROP = Symbol('a2ui.unsupported');
 
 function subscribeToSignal<T>(
   signal: Signal<T> | undefined,
@@ -109,7 +110,45 @@ function isDataBinding(prop: unknown): boolean {
   );
 }
 
-function resolveProperties(
+function isCallExpression(prop: unknown): boolean {
+  return Boolean(
+    prop
+      && typeof prop === 'object'
+      && 'call' in prop
+      && 'args' in prop
+      && 'returnType' in prop,
+  );
+}
+
+export function splitUnsupportedProps(
+  properties: Record<string, unknown> | undefined,
+): {
+  unsupportedFields: string[];
+  displayProps: Record<string, unknown> | undefined;
+} {
+  const unsupportedFields: string[] = [];
+  if (!properties) {
+    return { unsupportedFields, displayProps: properties };
+  }
+
+  const nextProps: Record<string, unknown> = {};
+  let changed = false;
+  for (const [key, value] of Object.entries(properties)) {
+    if (value === UNSUPPORTED_PROP) {
+      unsupportedFields.push(key);
+      changed = true;
+      continue;
+    }
+    nextProps[key] = value;
+  }
+
+  return {
+    unsupportedFields,
+    displayProps: changed ? nextProps : properties,
+  };
+}
+
+export function resolveProperties(
   properties: Record<string, unknown>,
   surface: Surface | undefined,
   dataContextPath?: string,
@@ -132,6 +171,8 @@ function resolveProperties(
       } else {
         result[key] = undefined;
       }
+    } else if (isCallExpression(prop)) {
+      result[key] = UNSUPPORTED_PROP;
     } else if (
       typeof prop === 'string'
       || typeof prop === 'number'

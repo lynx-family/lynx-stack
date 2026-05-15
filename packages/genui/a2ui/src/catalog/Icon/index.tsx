@@ -23,7 +23,7 @@ export function Icon(
   props: IconProps,
 ): import('@lynx-js/react').ReactNode {
   const { id, name, size = 'md', color = 'inherit' } = props;
-  const iconName = toMaterialName(name as string);
+  const iconName = typeof name === 'string' ? toMaterialName(name) : '';
 
   return (
     <text
