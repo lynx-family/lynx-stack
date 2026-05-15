@@ -42,7 +42,7 @@ export function pluginLynxDebugMetadata(): RsbuildPlugin {
   return {
     name: PLUGIN_NAME,
     setup(api) {
-      api.modifyBundlerChain(chain => {
+      api.modifyBundlerChain((chain, { environment }) => {
         const exposed = api.useExposed<LynxTemplatePluginExposure>(
           Symbol.for('LynxTemplatePlugin'),
         )
@@ -77,6 +77,7 @@ See ${
 
         chain.plugin(PLUGIN_NAME).use(LynxDebugMetadataPlugin, [{
           LynxTemplatePlugin: exposed.LynxTemplatePlugin,
+          rsbuildEntry: environment.entry,
         }])
       })
     },

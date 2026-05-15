@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path'
 
+import type { RsbuildEntry } from '@rsbuild/core'
 import type { Compilation, Compiler } from 'webpack'
 
 import type {
@@ -41,6 +42,12 @@ export interface LynxDebugMetadataPluginOptions {
    * The LynxTemplatePlugin class.
    */
   LynxTemplatePlugin: typeof LynxTemplatePluginClass
+  /**
+   * The rsbuild environment's `entry`. Used to populate
+   * `meta.rspeedy.entryFiles`. Falls back to `compiler.options.entry`
+   * when omitted.
+   */
+  rsbuildEntry?: RsbuildEntry
 }
 
 /**
@@ -72,10 +79,16 @@ export class LynxDebugMetadataPlugin {
    * @public
    */
   static defaultOptions: Readonly<
-    Omit<Required<LynxDebugMetadataPluginOptions>, 'LynxTemplatePlugin'>
+    Omit<
+      Required<LynxDebugMetadataPluginOptions>,
+      'LynxTemplatePlugin' | 'rsbuildEntry'
+    >
   > = Object
     .freeze<
-      Omit<Required<LynxDebugMetadataPluginOptions>, 'LynxTemplatePlugin'>
+      Omit<
+        Required<LynxDebugMetadataPluginOptions>,
+        'LynxTemplatePlugin' | 'rsbuildEntry'
+      >
     >({
       debugMetadataAssetName: DEBUG_METADATA_ASSET_NAME,
     })
@@ -101,10 +114,6 @@ export class LynxDebugMetadataPluginImpl {
 
     const { RawSource } = compiler.webpack.sources
 
-    // Cache git + entry-path-map across the multiple `beforeEncode`
-    // invocations a multi-entry build produces. They are derived from
-    // `compiler.options.entry` / git CLI output, both of which are
-    // stable per compilation.
     let gitCache: GitMetadata | null | undefined
     const getGit = (): GitMetadata | null => {
       if (gitCache === undefined) {
@@ -116,7 +125,7 @@ export class LynxDebugMetadataPluginImpl {
     let entryPathMapCache: Record<string, string[]> | undefined
     const getEntryPathMap = (): Record<string, string[]> => {
       entryPathMapCache ??= collectEntryPathMap(
-        compiler.options.entry,
+        this.options.rsbuildEntry ?? compiler.options.entry,
         compiler.context,
         getGit()?.rootDir ?? null,
       )
