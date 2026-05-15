@@ -88,4 +88,5 @@ allowBuilds:
   core-js: false
   dprint: true
   esbuild: true
+  sharp: true
   unrs-resolver: false

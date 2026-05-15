@@ -1,0 +1,25 @@
+{
+  "name": "a2ui-server",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev -p 3060",
+    "lint": "eslint --ignore-pattern .next --ignore-pattern .vercel .",
+    "start": "next start -p 3060"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^3.0.63",
+    "@mastra/core": "1.13.2",
+    "next": "16.2.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.13",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
+  }
+}

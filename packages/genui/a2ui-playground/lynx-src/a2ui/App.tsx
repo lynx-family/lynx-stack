@@ -15,9 +15,12 @@ import {
   Row,
   Text,
   createMessageStore,
+  normalizePayloadToMessages as normalizeProtocolMessages,
 } from '@lynx-js/a2ui-reactlynx';
 import type {
+  CatalogComponent,
   CatalogInput,
+  CatalogManifest,
   MessageStore,
   ServerToClientMessage,
   UserActionPayload,
@@ -57,18 +60,25 @@ const DEFAULT_STREAM_DELAY_MS = 800;
 // agent handshake. To include schemas, pair each component with its
 // `catalog.json` manifest — see
 // `packages/genui/a2ui/src/catalog/README.md`.
+function manifestEntry(
+  component: unknown,
+  manifest: CatalogManifest,
+): readonly [CatalogComponent, CatalogManifest] {
+  return [component as CatalogComponent, manifest];
+}
+
 const ALL_BUILTINS: readonly CatalogInput[] = [
-  [Text, textManifest],
-  [Image, imageManifest],
-  [Row, rowManifest],
-  [Column, columnManifest],
-  [List, listManifest],
-  [Card, cardManifest],
-  [Button, buttonManifest],
-  [Divider, dividerManifest],
-  [Icon, iconManifest],
-  [CheckBox, checkBoxManifest],
-  [RadioGroup, radioGroupManifest],
+  manifestEntry(Text, textManifest),
+  manifestEntry(Image, imageManifest),
+  manifestEntry(Row, rowManifest),
+  manifestEntry(Column, columnManifest),
+  manifestEntry(List, listManifest),
+  manifestEntry(Card, cardManifest),
+  manifestEntry(Button, buttonManifest),
+  manifestEntry(Divider, dividerManifest),
+  manifestEntry(Icon, iconManifest),
+  manifestEntry(CheckBox, checkBoxManifest),
+  manifestEntry(RadioGroup, radioGroupManifest),
 ];
 
 interface InitData {
@@ -83,9 +93,6 @@ interface InitData {
 }
 
 type Theme = 'light' | 'dark';
-
-type A2uiMessage = Record<string, unknown> & { messageId?: string };
-type ResponseMessages = A2uiMessage[];
 type ActionMocks = Record<
   string,
   | ServerToClientMessage[]
@@ -202,40 +209,21 @@ function mergeInitDataPreferLeft(a: InitData, b: InitData): InitData {
   };
 }
 
-function normalizePayloadToMessages(payload: unknown): ResponseMessages {
-  if (payload === null || payload === undefined) return [];
-  if (Array.isArray(payload)) return payload as ResponseMessages;
-  if (typeof payload === 'string') {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const parsed = JSON.parse(payload);
-      return normalizePayloadToMessages(parsed);
-    } catch {
-      return [];
-    }
-  }
-  if (
-    typeof payload === 'object'
-    && Array.isArray((payload as Record<string, unknown>).messages)
-  ) {
-    return (payload as Record<string, unknown>).messages as ResponseMessages;
-  }
-  return [];
-}
-
-async function loadMessages(initData: InitData): Promise<ResponseMessages> {
+async function loadMessages(
+  initData: InitData,
+): Promise<ServerToClientMessage[]> {
   if (initData.messagesUrl) {
     // eslint-disable-next-line n/no-unsupported-features/node-builtins
     const res = await fetch(initData.messagesUrl, { cache: 'no-store' });
     const text = await res.text();
     try {
-      return normalizePayloadToMessages(JSON.parse(text));
+      return normalizeProtocolMessages(JSON.parse(text));
     } catch {
-      return normalizePayloadToMessages(text);
+      return normalizeProtocolMessages(text);
     }
   }
   if (initData.messages !== undefined) {
-    return normalizePayloadToMessages(initData.messages);
+    return normalizeProtocolMessages(initData.messages);
   }
   return [];
 }
@@ -432,12 +420,10 @@ export function App() {
         loadActionMocks(streamConfig as InitData),
       ]);
 
-      const initialMessages = rawMessages as ServerToClientMessage[];
+      const initialMessages = rawMessages;
       const actionMocks: ActionMocks = {};
       for (const [name, value] of Object.entries(rawActionMocks)) {
-        actionMocks[name] = normalizePayloadToMessages(
-          value,
-        ) as ServerToClientMessage[];
+        actionMocks[name] = normalizeProtocolMessages(value);
       }
 
       const next = createMessageStore();
