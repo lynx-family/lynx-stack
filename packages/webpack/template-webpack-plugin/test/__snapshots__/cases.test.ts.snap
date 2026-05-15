@@ -13,7 +13,7 @@ exports[`template > templateCases/defaults/compile-options > templateCases/defau
   enableRemoveCSSScope: false,
   enableReuseContext: true,
   targetSdkVersion: 3.2,
-  templateDebugUrl: https://example.com/.rspeedy/main/debug-info.json,
+  templateDebugUrl: https://example.com/.rspeedy/main/debug-metadata.json?field=bytecode-debug-info&filename=main-thread.js,
   useLepusNG: true,
 }
 `;
