@@ -6,9 +6,8 @@
       "type": "text",
       "attributesArray": [
         {
-          "kind": "attribute",
+          "kind": "static",
           "key": "text",
-          "binding": "static",
           "value": "Slot Content 1"
         }
       ],
@@ -23,9 +22,8 @@
       "type": "text",
       "attributesArray": [
         {
-          "kind": "attribute",
+          "kind": "static",
           "key": "text",
-          "binding": "static",
           "value": "Slot Content 2"
         }
       ],
@@ -72,9 +70,8 @@
       "type": "raw-text",
       "attributesArray": [
         {
-          "kind": "attribute",
+          "kind": "slot",
           "key": "text",
-          "binding": "slot",
           "attrSlotIndex": 0
         }
       ],

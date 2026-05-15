@@ -20,13 +20,10 @@ export interface CompiledTemplateNode {
   __options?: Record<string, unknown>;
 }
 
-interface CompiledAttributeDescriptor {
-  kind: 'attribute' | 'spread';
-  binding: 'static' | 'slot';
-  key?: string;
-  value?: unknown;
-  attrSlotIndex?: number;
-}
+type CompiledAttributeDescriptor =
+  | { kind: 'static'; key: string; value: unknown }
+  | { kind: 'slot'; key: string; attrSlotIndex: number }
+  | { kind: 'spread'; attrSlotIndex: number };
 
 interface CompiledElementNode {
   kind: 'element';
@@ -62,24 +59,20 @@ function applyCompiledAttributes(
   const attributes: Record<string, unknown> = {};
 
   for (const descriptor of node.attributesArray ?? []) {
-    if (descriptor.kind === 'attribute') {
-      if (descriptor.binding === 'static') {
-        if (descriptor.key) {
-          attributes[descriptor.key] = descriptor.value;
-        }
-        continue;
-      }
+    if (descriptor.kind === 'static') {
+      attributes[descriptor.key] = descriptor.value;
+      continue;
+    }
 
-      if (descriptor.key) {
-        const slotValue = attributeSlots?.[descriptor.attrSlotIndex ?? -1];
-        if (slotValue !== null && slotValue !== undefined) {
-          attributes[descriptor.key] = slotValue;
-        }
+    if (descriptor.kind === 'slot') {
+      const slotValue = attributeSlots?.[descriptor.attrSlotIndex];
+      if (slotValue !== null && slotValue !== undefined) {
+        attributes[descriptor.key] = slotValue;
       }
       continue;
     }
 
-    const spreadValue = attributeSlots?.[descriptor.attrSlotIndex ?? -1];
+    const spreadValue = attributeSlots?.[descriptor.attrSlotIndex];
     if (isRecord(spreadValue)) {
       Object.assign(attributes, spreadValue);
     }
@@ -296,18 +289,19 @@ function decodeDynamicAttrsForNode(
   const attrs: Record<string, unknown> = {};
 
   for (const descriptor of compiledTemplate.attributesArray ?? []) {
-    if (descriptor.binding !== 'slot') {
-      continue;
-    }
-
-    const slotValue = attributeSlots[descriptor.attrSlotIndex ?? -1];
-    if (descriptor.kind === 'attribute') {
-      if (descriptor.key && slotValue !== null && slotValue !== undefined) {
+    if (descriptor.kind === 'slot') {
+      const slotValue = attributeSlots[descriptor.attrSlotIndex];
+      if (slotValue !== null && slotValue !== undefined) {
         attrs[descriptor.key] = slotValue;
       }
       continue;
     }
 
+    if (descriptor.kind !== 'spread') {
+      continue;
+    }
+
+    const slotValue = attributeSlots[descriptor.attrSlotIndex];
     if (!isRecord(slotValue)) {
       continue;
     }

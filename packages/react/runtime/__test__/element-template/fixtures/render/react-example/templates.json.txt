@@ -6,15 +6,13 @@
       "type": "image",
       "attributesArray": [
         {
-          "kind": "attribute",
+          "kind": "slot",
           "key": "src",
-          "binding": "slot",
           "attrSlotIndex": 0
         },
         {
-          "kind": "attribute",
+          "kind": "static",
           "key": "class",
-          "binding": "static",
           "value": "Logo--react"
         }
       ],
@@ -29,15 +27,13 @@
       "type": "image",
       "attributesArray": [
         {
-          "kind": "attribute",
+          "kind": "slot",
           "key": "src",
-          "binding": "slot",
           "attrSlotIndex": 0
         },
         {
-          "kind": "attribute",
+          "kind": "static",
           "key": "class",
-          "binding": "static",
           "value": "Logo--lynx"
         }
       ],
@@ -57,9 +53,8 @@
           "type": "view",
           "attributesArray": [
             {
-              "kind": "attribute",
+              "kind": "static",
               "key": "class",
-              "binding": "static",
               "value": "Background"
             }
           ],
@@ -70,9 +65,8 @@
           "type": "view",
           "attributesArray": [
             {
-              "kind": "attribute",
+              "kind": "static",
               "key": "class",
-              "binding": "static",
               "value": "App"
             }
           ],
@@ -82,9 +76,8 @@
               "type": "view",
               "attributesArray": [
                 {
-                  "kind": "attribute",
+                  "kind": "static",
                   "key": "class",
-                  "binding": "static",
                   "value": "Banner"
                 }
               ],
@@ -94,15 +87,13 @@
                   "type": "view",
                   "attributesArray": [
                     {
-                      "kind": "attribute",
+                      "kind": "static",
                       "key": "class",
-                      "binding": "static",
                       "value": "Logo"
                     },
                     {
-                      "kind": "attribute",
+                      "kind": "slot",
                       "key": "bindtap",
-                      "binding": "slot",
                       "attrSlotIndex": 0
                     }
                   ],
@@ -119,15 +110,13 @@
                   "type": "text",
                   "attributesArray": [
                     {
-                      "kind": "attribute",
+                      "kind": "static",
                       "key": "class",
-                      "binding": "static",
                       "value": "Title"
                     },
                     {
-                      "kind": "attribute",
+                      "kind": "static",
                       "key": "text",
-                      "binding": "static",
                       "value": "React"
                     }
                   ],
@@ -138,15 +127,13 @@
                   "type": "text",
                   "attributesArray": [
                     {
-                      "kind": "attribute",
+                      "kind": "static",
                       "key": "class",
-                      "binding": "static",
                       "value": "Subtitle"
                     },
                     {
-                      "kind": "attribute",
+                      "kind": "static",
                       "key": "text",
-                      "binding": "static",
                       "value": "on Lynx"
                     }
                   ],
@@ -159,9 +146,8 @@
               "type": "view",
               "attributesArray": [
                 {
-                  "kind": "attribute",
+                  "kind": "static",
                   "key": "class",
-                  "binding": "static",
                   "value": "Content"
                 }
               ],
@@ -171,15 +157,13 @@
                   "type": "image",
                   "attributesArray": [
                     {
-                      "kind": "attribute",
+                      "kind": "slot",
                       "key": "src",
-                      "binding": "slot",
                       "attrSlotIndex": 1
                     },
                     {
-                      "kind": "attribute",
+                      "kind": "static",
                       "key": "class",
-                      "binding": "static",
                       "value": "Arrow"
                     }
                   ],
@@ -190,15 +174,13 @@
                   "type": "text",
                   "attributesArray": [
                     {
-                      "kind": "attribute",
+                      "kind": "static",
                       "key": "class",
-                      "binding": "static",
                       "value": "Description"
                     },
                     {
-                      "kind": "attribute",
+                      "kind": "static",
                       "key": "text",
-                      "binding": "static",
                       "value": "Tap the logo and have fun!"
                     }
                   ],
@@ -209,9 +191,8 @@
                   "type": "text",
                   "attributesArray": [
                     {
-                      "kind": "attribute",
+                      "kind": "static",
                       "key": "class",
-                      "binding": "static",
                       "value": "Hint"
                     }
                   ],
@@ -221,9 +202,8 @@
                       "type": "raw-text",
                       "attributesArray": [
                         {
-                          "kind": "attribute",
+                          "kind": "static",
                           "key": "text",
-                          "binding": "static",
                           "value": "Edit"
                         }
                       ],
@@ -234,9 +214,8 @@
                       "type": "text",
                       "attributesArray": [
                         {
-                          "kind": "attribute",
+                          "kind": "static",
                           "key": "style",
-                          "binding": "static",
                           "value": "font-style:italic;color:rgba(255, 255, 255, 0.85)"
                         }
                       ],
@@ -253,9 +232,8 @@
                       "type": "raw-text",
                       "attributesArray": [
                         {
-                          "kind": "attribute",
+                          "kind": "static",
                           "key": "text",
-                          "binding": "static",
                           "value": "to see updates!"
                         }
                       ],
@@ -270,9 +248,8 @@
               "type": "view",
               "attributesArray": [
                 {
-                  "kind": "attribute",
+                  "kind": "static",
                   "key": "style",
-                  "binding": "static",
                   "value": "flex:1"
                 }
               ],
@@ -291,9 +268,8 @@
       "type": "raw-text",
       "attributesArray": [
         {
-          "kind": "attribute",
+          "kind": "slot",
           "key": "text",
-          "binding": "slot",
           "attrSlotIndex": 0
         }
       ],
