@@ -5,4 +5,7 @@
     "noEmit": true,
   },
   "include": ["src", "test", "vitest.config.ts"],
+  "references": [
+    { "path": "../../webpack/template-webpack-plugin/tsconfig.build.json" },
+  ],
 }

@@ -5,6 +5,7 @@ import type { Asset, Compilation, Compiler } from 'webpack'
 
 import { cssChunksToMap } from '@lynx-js/css-serializer'
 import type { LynxStyleNode } from '@lynx-js/css-serializer'
+import { processTasmCSSDiagnostics } from '@lynx-js/template-webpack-plugin'
 
 /**
  * The options for {@link ExternalBundleWebpackPlugin}.
@@ -35,7 +36,10 @@ export interface ExternalBundleWebpackPluginOptions {
    * })
    * ```
    */
-  encode: (opts: unknown) => Promise<{ buffer: Buffer }>
+  encode: (opts: unknown) => Promise<{
+    buffer: Buffer
+    css_diagnostics?: unknown
+  }>
   /**
    * The engine version of the external bundle.
    *
@@ -72,6 +76,8 @@ export class ExternalBundleWebpackPlugin {
     compiler.hooks.thisCompilation.tap(
       ExternalBundleWebpackPlugin.name,
       (compilation) => {
+        const emittedCSSDiagnosticWarnings = new Set<string>()
+
         compilation.hooks.processAssets.tapPromise(
           {
             name: ExternalBundleWebpackPlugin.name,
@@ -87,6 +93,7 @@ export class ExternalBundleWebpackPlugin {
             return this.#generateExternalBundle(
               compiler,
               compilation,
+              emittedCSSDiagnosticWarnings,
             )
           },
         )
@@ -97,9 +104,46 @@ export class ExternalBundleWebpackPlugin {
   async #generateExternalBundle(
     compiler: Compiler,
     compilation: Compilation,
+    emittedCSSDiagnosticWarnings: Set<string>,
   ): Promise<void> {
     const assets = compilation.getAssets()
-    const { buffer, encodeOptions } = await this.#encode(assets)
+    const { buffer, encodeOptions, cssDiagnostics } = await this.#encode(assets)
+
+    const resolvedDiagnostics = processTasmCSSDiagnostics({
+      cssDiagnostics,
+      cssSourceMaps: collectCSSSourceMapContents(assets),
+      context: compiler.context,
+      emittedWarnings: emittedCSSDiagnosticWarnings,
+    })
+    resolvedDiagnostics.forEach((diagnostic) => {
+      const webpackWarning = new compiler.webpack.WebpackError(
+        diagnostic.message,
+      )
+      webpackWarning.hideStack = true
+
+      if (
+        diagnostic.sourceFile
+        && diagnostic.sourceLine !== undefined
+        && diagnostic.sourceColumn !== undefined
+      ) {
+        webpackWarning.file = diagnostic.sourceFile
+        webpackWarning.loc = {
+          start: {
+            line: diagnostic.sourceLine,
+            column: diagnostic.sourceColumn,
+          },
+        }
+      } else {
+        webpackWarning.loc = {
+          start: {
+            line: diagnostic.line,
+            column: diagnostic.column,
+          },
+        }
+      }
+
+      compilation.warnings.push(webpackWarning)
+    })
 
     const { RawSource } = compiler.webpack.sources
     compilation.emitAsset(
@@ -181,8 +225,28 @@ export class ExternalBundleWebpackPlugin {
       customSections,
     }
 
-    const { buffer } = await this.options.encode(encodeOptions)
+    const { buffer, css_diagnostics } = await this.options.encode(encodeOptions)
 
-    return { buffer, encodeOptions }
+    return { buffer, encodeOptions, cssDiagnostics: css_diagnostics }
   }
+}
+
+function collectCSSSourceMapContents(
+  assets: Readonly<Asset>[],
+): string[] {
+  const sourceMaps = assets.reduce<string[]>((result, asset) => {
+    if (asset.info['assetType'] !== 'extract-css') {
+      return result
+    }
+
+    const sourceMap = asset.source.map?.()
+    if (!sourceMap || Array.isArray(sourceMap)) {
+      return result
+    }
+
+    result.push(JSON.stringify(sourceMap))
+    return result
+  }, [])
+
+  return Array.from(new Set(sourceMaps))
 }

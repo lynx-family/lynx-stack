@@ -33,12 +33,13 @@
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
-    "test": "vitest"
+    "test": "pnpm -w run test --project rspeedy/lynx-bundle-rslib-config"
   },
   "dependencies": {
     "@lynx-js/css-serializer": "workspace:*",
     "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
-    "@lynx-js/tasm": "0.0.35"
+    "@lynx-js/tasm": "0.0.38",
+    "@lynx-js/template-webpack-plugin": "workspace:*"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",

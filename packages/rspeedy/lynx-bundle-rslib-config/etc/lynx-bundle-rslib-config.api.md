@@ -43,6 +43,7 @@ export interface ExternalBundleWebpackPluginOptions {
     bundleFileName: string;
     encode: (opts: unknown) => Promise<{
         buffer: Buffer;
+        css_diagnostics?: unknown;
     }>;
     engineVersion?: string | undefined;
     mainThreadChunks?: string[] | undefined;
