@@ -195,6 +195,17 @@ export interface Artifact {
    */
   path: string;
   tasmSection?: string[];
+  /**
+   * Debug sources for this artifact, ordered to match the
+   * reverse-symbolication decode chain. A consumer that starts with a
+   * runtime location and wants to recover the original source iterates
+   * this list left-to-right:
+   *
+   * 1. `bytecode-debug-info` (if present) maps the bytecode PC offset
+   *    back to the encoded JS source's `(line, column)`.
+   * 2. `source-map` then maps that `(line, column)` back to the
+   *    original authored file.
+   */
   debugSources: DebugSource[];
 }
 

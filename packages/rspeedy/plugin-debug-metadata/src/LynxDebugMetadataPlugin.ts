@@ -212,7 +212,7 @@ export class LynxDebugMetadataPluginImpl {
             a.kind === 'main-thread' && a.filename === 'main-thread.js'
           )
           if (target) {
-            target.debugSources.push({
+            target.debugSources.unshift({
               kind: 'bytecode-debug-info',
               debugInfo: lepusNG,
             })
