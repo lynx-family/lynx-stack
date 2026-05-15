@@ -176,8 +176,24 @@ export interface LepusNGFunctionInfo {
  * @public
  */
 export interface Artifact {
-  runtime: 'main-thread' | 'background';
+  /**
+   * Which encoder bucket this asset belongs to in `tasm.json`:
+   *
+   * - `main-thread` — JS that runs on the lepusNG main thread (compiled
+   *   into the `lepusCode` section).
+   * - `background` — JS that runs on the background JS engine (lives in
+   *   the `manifest` section).
+   * - `css` — extracted CSS chunk (lives in the `css` section).
+   */
+  kind: 'main-thread' | 'background' | 'css';
   filename: string;
+  /**
+   * Bundler-relative path of the emitted asset itself (e.g.
+   * `.rspeedy/main/main-thread.js`). Distinct from
+   * {@link SourceMapDebugSource.path}, which points at the
+   * sibling `.map` file.
+   */
+  path: string;
   tasmSection?: string[];
   debugSources: DebugSource[];
 }

@@ -16,6 +16,7 @@ import type { LynxTemplatePlugin as LynxTemplatePluginClass } from '@lynx-js/tem
 
 import { collectGitMetadata } from './git.js'
 import { collectEntryPathMap, dedupe } from './rspeedy-meta.js'
+import { collectArtifacts } from './source-maps.js'
 import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from './UiSourceMapBuildInfo.js'
 import type { UiSourceMapRecord } from './UiSourceMapBuildInfo.js'
 
@@ -44,8 +45,9 @@ export interface LynxDebugMetadataPluginOptions {
   LynxTemplatePlugin: typeof LynxTemplatePluginClass
   /**
    * The rsbuild environment's `entry`. Used to populate
-   * `meta.rspeedy.entryFiles`. Falls back to `compiler.options.entry`
-   * when omitted.
+   * `meta.rspeedy.entryFiles`. When omitted (e.g. when the webpack
+   * plugin is applied outside of an rsbuild pipeline),
+   * `meta.rspeedy.entryFiles` is empty.
    */
   rsbuildEntry?: RsbuildEntry
 }
@@ -124,11 +126,13 @@ export class LynxDebugMetadataPluginImpl {
 
     let entryPathMapCache: Record<string, string[]> | undefined
     const getEntryPathMap = (): Record<string, string[]> => {
-      entryPathMapCache ??= collectEntryPathMap(
-        this.options.rsbuildEntry ?? compiler.options.entry,
-        compiler.context,
-        getGit()?.rootDir ?? null,
-      )
+      entryPathMapCache ??= this.options.rsbuildEntry
+        ? collectEntryPathMap(
+          this.options.rsbuildEntry,
+          compiler.context,
+          getGit()?.rootDir ?? null,
+        )
+        : {}
       return entryPathMapCache
     }
 
@@ -154,7 +158,7 @@ export class LynxDebugMetadataPluginImpl {
             bundlePath: args.filenameTemplate,
           }
           const asset: DebugMetadataAsset = {
-            artifacts: [],
+            artifacts: collectArtifacts(compilation, args.entryNames),
             uiSourceMap: createUiSourceMap(uiSourceMapRecords),
             meta: {
               ...(git ? { git } : {}),

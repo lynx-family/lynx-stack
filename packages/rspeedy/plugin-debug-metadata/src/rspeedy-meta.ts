@@ -4,54 +4,37 @@
 
 import path from 'node:path'
 
+import type { RsbuildEntry } from '@rsbuild/core'
+
 /**
- * Walk webpack's (already-normalized) `compiler.options.entry` and
- * produce a `name → source files` map, with every path expressed
- * relative to `repoRoot` (git toplevel) so the metadata is portable
- * across machines / CI envs. Falls back to `cwd` (compiler context)
- * when there is no git root.
+ * Walk an rsbuild `source.entry` map and produce a
+ * `name → source files` map with every path relative to `repoRoot`
+ * (git toplevel; falls back to `cwd` when there is no git root) so the
+ * metadata is portable across machines / CI envs.
  */
 export function collectEntryPathMap(
-  entryConfig: unknown,
+  entry: RsbuildEntry,
   cwd: string,
   repoRoot: string | null,
 ): Record<string, string[]> {
   const baseDir = repoRoot ?? cwd
-  const out: Record<string, string[]> = {}
-
   const toRel = (p: string): string =>
     path.relative(baseDir, path.resolve(cwd, p))
 
-  const normalizeSourceList = (v: unknown): string[] => {
-    if (typeof v === 'string') return [toRel(v)]
-    if (Array.isArray(v)) {
-      return v.filter((x): x is string => typeof x === 'string').map(p =>
-        toRel(p)
-      )
-    }
-    if (v && typeof v === 'object') {
-      const importValue = (v as { import?: unknown }).import
-      if (typeof importValue === 'string') return [toRel(importValue)]
-      if (Array.isArray(importValue)) {
-        return importValue
-          .filter((x): x is string => typeof x === 'string')
-          .map(p => toRel(p))
-      }
-    }
-    return []
-  }
-
-  if (typeof entryConfig === 'string' || Array.isArray(entryConfig)) {
-    out['main'] = normalizeSourceList(entryConfig)
-    return out
-  }
-  if (entryConfig && typeof entryConfig === 'object') {
-    for (const [name, value] of Object.entries(entryConfig)) {
-      if (name === '__placeholder__') continue
-      out[name] = normalizeSourceList(value)
-    }
+  const out: Record<string, string[]> = {}
+  for (const [name, value] of Object.entries(entry)) {
+    out[name] = normalizeImports(value).map(p => toRel(p))
   }
   return out
+}
+
+function normalizeImports(value: RsbuildEntry[string]): string[] {
+  if (typeof value === 'string') return [value]
+  if (Array.isArray(value)) return value
+  const imp = value.import
+  if (typeof imp === 'string') return [imp]
+  if (Array.isArray(imp)) return imp
+  return []
 }
 
 /** Stable de-dup preserving first-seen order. */
