@@ -265,6 +265,24 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: pnpm -r run test:type
+  test-ui-judge:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      MIDSCENE_MODEL_API_KEY: ${{ secrets.MIDSCENE_MODEL_API_KEY }}
+      MIDSCENE_MODEL_BASE_URL: ${{ secrets.MIDSCENE_MODEL_BASE_URL }}
+      MIDSCENE_MODEL_FAMILY: ${{ secrets.MIDSCENE_MODEL_FAMILY }}
+      MIDSCENE_MODEL_NAME: ${{ secrets.MIDSCENE_MODEL_NAME }}
+    with:
+      runs-on: lynx-custom-container
+      is-web: true
+      codecov-flags: "ui-judge"
+      web-report-name: "ui-judge-playwright-report"
+      web-report-path: "packages/genui/ui-judge/playwright-report"
+      run: |
+        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+        pnpm --filter @lynx-js/ui-judge run test --reporter='github,dot,junit,html'
   test-rstest:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -388,6 +406,7 @@ jobs:
       - test-react
       - test-rust
       - test-type
+      - test-ui-judge
       - test-rstest
       - test-typos
       - test-vitest

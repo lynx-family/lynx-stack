@@ -1,0 +1,43 @@
+name: UI Judge PR Comment
+on:
+  workflow_run:
+    workflows:
+      - UI Judge PR
+    types:
+      - completed
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  comment:
+    if: ${{ github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.pull_requests[0].number }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        id: download-result
+        continue-on-error: true
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: ui-judge-result
+          path: ui-judge-result
+          run-id: ${{ github.event.workflow_run.id }}
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - name: Comment UI Judge result
+        uses: ./.github/actions/comment-ui-judge-result
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          head-sha: ${{ github.event.workflow_run.head_sha }}
+          pr-number: ${{ github.event.workflow_run.pull_requests[0].number }}
+          result-path: ui-judge-result/ui-judge-result.json
+          workflow-conclusion: ${{ github.event.workflow_run.conclusion }}
+          workflow-run-url: ${{ github.event.workflow_run.html_url }}
