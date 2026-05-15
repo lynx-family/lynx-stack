@@ -1,46 +1,9 @@
 @import "../theme.css";
 
-.image-variant-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 0;
-}
-
-.image-variant-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-}
-
-.image-variant-smallFeature {
-  width: 120px;
-  height: 80px;
-  max-width: var(--a2ui-image-small-feature-size, 120px);
-  border-radius: 8px;
-}
-
-.image-variant-mediumFeature {
-  width: 240px;
-  height: 160px;
-  border-radius: 8px;
-}
-
-.image-variant-largeFeature {
-  width: 100%;
-  height: 180px;
-  border-radius: 12px;
-  max-height: var(--a2ui-image-large-feature-size, 400px);
-}
-
-.image-variant-header {
-  width: 100%;
-  height: 200px;
-  border-radius: 12px;
-}
-
 .a2ui-image {
   flex-shrink: 0;
   overflow: hidden;
+  border-radius: var(--a2ui-image-radius, 12px);
 }
 
 .image-weighted {
@@ -51,4 +14,34 @@
 .column-weighted-item .a2ui-image {
   width: 100%;
   box-sizing: border-box;
+}
+
+.image-variant-icon {
+  width: var(--a2ui-image-avatar-size, 24px);
+  height: var(--a2ui-image-avatar-size, 24px);
+  border-radius: 0;
+}
+
+.image-variant-avatar {
+  width: var(--a2ui-image-avatar-size, 40px);
+  height: var(--a2ui-image-avatar-size, 40px);
+  border-radius: 50%;
+}
+
+.image-variant-header {
+  width: 100%;
+  height: var(--a2ui-image-header-size, 200px);
+  border-radius: 12px;
+}
+
+.image-variant-smallFeature {
+  max-width: var(--a2ui-image-small-feature-size, 120px);
+}
+
+.image-variant-mediumFeature {
+  max-width: var(--a2ui-image-medium-feature-size, 240px);
+}
+
+.image-variant-largeFeature {
+  max-height: var(--a2ui-image-large-feature-size, 400px);
 }

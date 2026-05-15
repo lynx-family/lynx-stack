@@ -105,6 +105,8 @@
   --a2ui-color-text-subtle: var(--content-muted-2);
   --a2ui-color-primary-content-muted: var(--primary-content-faded);
   --a2ui-color-overlay: var(--neutral-film);
+
+  --a2ui-button-border-radius: 2rem;
 }
 
 page {

@@ -15,6 +15,7 @@ import type { ReactNode } from '@lynx-js/react';
 
 import { A2UIProvider } from './A2UIProvider.jsx';
 import { A2UIRenderer } from './A2UIRenderer.jsx';
+import type { UnsupportedInfo } from './A2UIRenderer.jsx';
 import type { Catalog, CatalogInput } from '../catalog/defineCatalog.js';
 import { defineCatalog } from '../catalog/defineCatalog.js';
 import { MessageProcessor } from '../store/MessageProcessor.js';
@@ -78,6 +79,8 @@ export interface A2UIProps {
   renderFallback?: () => ReactNode;
   /** Render when the active resource fails. */
   renderError?: (err: unknown) => ReactNode;
+  /** Render when unsupported data syntax or an unsupported component is encountered. */
+  renderUnsupported?: (info: UnsupportedInfo) => ReactNode;
 }
 
 interface InternalSession {
@@ -117,6 +120,7 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
     renderEmpty,
     renderFallback,
     renderError,
+    renderUnsupported,
     className,
   } = props;
 
@@ -261,6 +265,7 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
   if (wrapSurface) rendererProps.wrapSurface = wrapSurface;
   if (renderFallback) rendererProps.renderFallback = renderFallback;
   if (renderError) rendererProps.renderError = renderError;
+  if (renderUnsupported) rendererProps.renderUnsupported = renderUnsupported;
 
   return (
     <A2UIProvider processor={session.processor} catalog={catalog}>

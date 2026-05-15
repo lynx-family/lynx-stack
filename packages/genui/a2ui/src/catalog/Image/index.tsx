@@ -59,6 +59,7 @@ export function Image(
       className={`a2ui-image image-variant-${
         props.variant ?? 'mediumFeature'
       } ${typeof props.weight === 'number' ? 'image-weighted' : ''}`}
+      auto-size={true}
       src={hasError ? fallbackImage : src as string}
       mode={mode}
       binderror={() => setHasError(true)}
