@@ -26,9 +26,15 @@ interface LynxTemplatePluginExposure {
 /**
  * Register `debug-metadata.json` emission for every Lynx template build.
  *
- * Auto-registered by Rspeedy core. Requires a Lynx DSL plugin (e.g.
- * `pluginReactLynx`) to be present so that `LynxTemplatePlugin` is
- * exposed — otherwise the setup fails fast with a pointer to upgrade.
+ * Auto-registered by Rspeedy core. Behaviour when no `LynxTemplatePlugin`
+ * exposure is found:
+ *
+ * - If a known Lynx DSL plugin (e.g. `pluginReactLynx`) is loaded, throw
+ *   fast — the DSL plugin is expected to publish the exposure and the
+ *   most likely cause is an outdated DSL plugin version.
+ * - Otherwise stay silent — the project is either a non-Lynx Rspeedy
+ *   build or a test harness running `rspeedy build` without any DSL, and
+ *   debug metadata has nothing meaningful to emit.
  *
  * @public
  */
@@ -42,15 +48,11 @@ export function pluginLynxDebugMetadata(): RsbuildPlugin {
         )
 
         if (!exposed) {
-          let pkgName = 'Rspeedy and plugins'
-
-          Object.entries(DEFAULT_DSL_PLUGIN_NAME_TO_PKG_NAME).forEach(
-            ([dslPluginName, pluginPkgName]) => {
-              if (api.isPluginExists(dslPluginName)) {
-                pkgName = pluginPkgName
-              }
-            },
-          )
+          const activeDslPluginPkgName = findActiveDslPluginPkgName(api)
+          if (activeDslPluginPkgName === undefined) {
+            // No DSL plugin loaded → not a Lynx project, skip silently.
+            return
+          }
 
           throw new Error(
             `\
@@ -61,7 +63,7 @@ export function pluginLynxDebugMetadata(): RsbuildPlugin {
               )
             }.
 
-Please upgrade ${pkgName} to latest version.
+Please upgrade ${activeDslPluginPkgName} to latest version.
 
 See ${
               link(
@@ -79,4 +81,19 @@ See ${
       })
     },
   }
+}
+
+function findActiveDslPluginPkgName(api: {
+  isPluginExists(name: string): boolean
+}): string | undefined {
+  for (
+    const [dslPluginName, pluginPkgName] of Object.entries(
+      DEFAULT_DSL_PLUGIN_NAME_TO_PKG_NAME,
+    )
+  ) {
+    if (api.isPluginExists(dslPluginName)) {
+      return pluginPkgName
+    }
+  }
+  return undefined
 }
