@@ -1483,15 +1483,15 @@ exports[`executeTemplate should run lepusCode.root from config-css-remove-scope-
       }
       .basic:where([l-css-id="1865610"]):not([l-e-name]),
       .basic:where([l-css-id="3"]):not([l-e-name]) {
-        background-color: green;
         height: 100px;
         width: 100px;
+        background-color: green;
       }
       .basic:where([l-css-id="2"]):not([l-e-name]),
       .basic:where([l-css-id="1853379"]):not([l-e-name]) {
-        background-color: red;
         height: 100px;
         width: 100px;
+        background-color: red;
       }
     </style>
     <div part="page" lynx-default-overflow-visible="true">
