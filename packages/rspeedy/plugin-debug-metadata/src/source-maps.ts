@@ -45,10 +45,12 @@ export function collectArtifacts(
           key: extractKey(chunk, file),
           map,
         }
+        const kind = inferKind(compilation, file)
         artifacts.push({
-          kind: inferKind(compilation, file),
+          kind,
           filename: path.posix.basename(file),
           path: file,
+          tasmSection: inferTasmSection(kind, file),
           debugSources: [debugSource],
         })
       }
@@ -87,6 +89,24 @@ function readSourceMap(
  *   and CSS has no equivalent baked-in release identifier that forces
  *   the same value as the JS one.
  */
+/**
+ * Place the artifact inside `tasm.json`:
+ *
+ * - `css`         → `['css']`
+ * - `main-thread` → `['lepusCode', 'root']`
+ * - `background`  → `['manifest', '/' + assetName]` — the real `tasm.json`
+ *   keys under `manifest` carry a leading `/` (e.g.
+ *   `/.rspeedy/main/background.fd311de1.js`).
+ */
+function inferTasmSection(
+  kind: Artifact['kind'],
+  assetName: string,
+): string[] {
+  if (kind === 'css') return ['css']
+  if (kind === 'main-thread') return ['lepusCode', 'root']
+  return ['manifest', `/${assetName}`]
+}
+
 function extractKey(chunk: Chunk, file: string): string {
   if (file.endsWith('.css')) {
     return chunk.contentHash?.['css/mini-extract']
