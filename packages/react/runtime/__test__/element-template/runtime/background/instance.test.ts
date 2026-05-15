@@ -21,6 +21,7 @@ import { ElementTemplateUpdateOps } from '../../../../src/element-template/proto
 import {
   __etAttrPlanMap,
   adaptEventAttrSlot,
+  adaptSpreadAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 
@@ -30,6 +31,8 @@ function createTextNode(text: string): BackgroundElementTemplateInstance {
 
 describe('BackgroundElementTemplateInstance', () => {
   beforeEach(() => {
+    globalThis.__MAIN_THREAD__ = false;
+    globalThis.__BACKGROUND__ = true;
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
     clearEtAttrPlanMap();
@@ -730,6 +733,8 @@ describe('Background raw-text instance', () => {
 
 describe('BackgroundElementTemplateInstance Shadow State', () => {
   beforeEach(() => {
+    globalThis.__MAIN_THREAD__ = false;
+    globalThis.__BACKGROUND__ = true;
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
     clearEtAttrPlanMap();
@@ -916,6 +921,134 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     const handler = vi.fn();
     instance.setAttribute('attributeSlots', [handler]);
     const eventValue = `${instance.instanceId}:0:`;
+
+    destroyElementTemplateBackgroundRuntime();
+
+    expect(getEventHandlerForEventValue(eventValue)).toBeUndefined();
+  });
+
+  it('prepares spread event keys after hydration and registers handlers by event value', () => {
+    __etAttrPlanMap.view = [0, adaptSpreadAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    instance.emitCreate();
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+
+    const handleTap = vi.fn();
+    const handleTouch = vi.fn();
+    instance.setAttribute('attributeSlots', [{
+      id: 'cta',
+      bindtap: handleTap,
+      catchtouchstart: handleTouch,
+    }]);
+
+    const bindtapValue = `${instance.instanceId}:0:bindtap`;
+    const catchTouchValue = `${instance.instanceId}:0:catchtouchstart`;
+    const preparedSpread = {
+      id: 'cta',
+      bindtap: bindtapValue,
+      catchtouchstart: catchTouchValue,
+    };
+    expect(instance.attributeSlots).toEqual([preparedSpread]);
+    expect(getEventHandlerForEventValue(bindtapValue)).toBe(handleTap);
+    expect(getEventHandlerForEventValue(catchTouchValue)).toBe(handleTouch);
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      instance.instanceId,
+      0,
+      preparedSpread,
+    ]);
+  });
+
+  it('updates spread event handlers without patching native when the prepared spread value is unchanged', () => {
+    __etAttrPlanMap.view = [0, adaptSpreadAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    instance.emitCreate();
+    markElementTemplateHydrated();
+
+    const firstHandler = vi.fn();
+    const secondHandler = vi.fn();
+    instance.setAttribute('attributeSlots', [{ id: 'cta', bindtap: firstHandler }]);
+    globalCommitContext.ops = [];
+
+    instance.setAttribute('attributeSlots', [{ id: 'cta', bindtap: secondHandler }]);
+
+    const eventValue = `${instance.instanceId}:0:bindtap`;
+    expect(instance.attributeSlots).toEqual([{ id: 'cta', bindtap: eventValue }]);
+    expect(getEventHandlerForEventValue(eventValue)).toBe(secondHandler);
+    expect(globalCommitContext.ops).toEqual([]);
+  });
+
+  it('patches the whole spread slot when event keys change and cleans removed handlers', () => {
+    __etAttrPlanMap.view = [0, adaptSpreadAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    instance.emitCreate();
+    markElementTemplateHydrated();
+
+    const handleTap = vi.fn();
+    const handleTouch = vi.fn();
+    instance.setAttribute('attributeSlots', [{ id: 'cta', bindtap: handleTap }]);
+    const removedEventValue = `${instance.instanceId}:0:bindtap`;
+    globalCommitContext.ops = [];
+
+    instance.setAttribute('attributeSlots', [{ id: 'cta', catchtouchstart: handleTouch }]);
+
+    const nextEventValue = `${instance.instanceId}:0:catchtouchstart`;
+    const preparedSpread = { id: 'cta', catchtouchstart: nextEventValue };
+    expect(instance.attributeSlots).toEqual([preparedSpread]);
+    expect(getEventHandlerForEventValue(removedEventValue)).toBeUndefined();
+    expect(getEventHandlerForEventValue(nextEventValue)).toBe(handleTouch);
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      instance.instanceId,
+      0,
+      preparedSpread,
+    ]);
+  });
+
+  it('emits prepared spread values instead of handler functions in create payloads', () => {
+    __etAttrPlanMap.view = [0, adaptSpreadAttrSlot];
+    markElementTemplateHydrated();
+    const instance = new BackgroundElementTemplateInstance('view');
+    const handleTap = vi.fn();
+    instance.setAttribute('attributeSlots', [{ id: 'cta', bindtap: handleTap }]);
+    globalCommitContext.ops = [];
+
+    instance.emitCreate();
+
+    const eventValue = `${instance.instanceId}:0:bindtap`;
+    const preparedSpread = { id: 'cta', bindtap: eventValue };
+    expect(getEventHandlerForEventValue(eventValue)).toBe(handleTap);
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.createTemplate,
+      instance.instanceId,
+      'view',
+      null,
+      [preparedSpread],
+      [],
+    ]);
+  });
+
+  it('clears spread event handlers owned by an instance when it is torn down', () => {
+    __etAttrPlanMap.view = [0, adaptSpreadAttrSlot];
+    markElementTemplateHydrated();
+    const instance = new BackgroundElementTemplateInstance('view');
+    const handleTap = vi.fn();
+    instance.setAttribute('attributeSlots', [{ bindtap: handleTap }]);
+    const eventValue = `${instance.instanceId}:0:bindtap`;
+
+    instance.tearDown();
+
+    expect(getEventHandlerForEventValue(eventValue)).toBeUndefined();
+  });
+
+  it('clears spread event handlers when the background runtime is destroyed', () => {
+    __etAttrPlanMap.view = [0, adaptSpreadAttrSlot];
+    markElementTemplateHydrated();
+    const instance = new BackgroundElementTemplateInstance('view');
+    const handleTap = vi.fn();
+    instance.setAttribute('attributeSlots', [{ bindtap: handleTap }]);
+    const eventValue = `${instance.instanceId}:0:bindtap`;
 
     destroyElementTemplateBackgroundRuntime();
 

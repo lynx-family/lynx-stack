@@ -49,6 +49,7 @@ const CONDITIONAL_DIRECT_EVENT_FIXTURE = path.resolve(
   __dirname,
   '../../../fixtures/background/event/conditional-direct-event/index.tsx',
 );
+const SPREAD_EVENT_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/event/spread-event/index.tsx');
 const SLOT_ID = 0;
 
 interface CompiledDirectEventModule extends CompiledFixtureModuleExports {
@@ -57,6 +58,21 @@ interface CompiledDirectEventModule extends CompiledFixtureModuleExports {
 
 interface CompiledConditionalDirectEventModule extends CompiledFixtureModuleExports {
   App: (props: { show?: boolean; onTap?: () => void }) => JSX.Element;
+}
+
+interface SpreadFixtureProps {
+  id?: string;
+  className?: string;
+  bindtap?: () => void;
+}
+
+interface CompiledSpreadEventModule extends CompiledFixtureModuleExports {
+  App: (props: {
+    spread?: SpreadFixtureProps;
+    onCatch?: () => void;
+    showChild?: boolean;
+    childSpread?: SpreadFixtureProps;
+  }) => JSX.Element;
 }
 
 function getRenderedHost(): BackgroundElementTemplateInstance {
@@ -135,6 +151,20 @@ describe('Compiled direct event background updates', () => {
     return { backgroundModule, mainModule };
   }
 
+  async function loadCompiledSpreadEventFixture(): Promise<{
+    backgroundModule: CompiledSpreadEventModule;
+    mainModule: CompiledSpreadEventModule;
+  }> {
+    const mainArtifact = await compileFixtureSource(SPREAD_EVENT_FIXTURE, { target: 'LEPUS' });
+    primeCompiledFixtureTemplates(mainArtifact);
+    const mainModule = await loadCompiledFixtureModule<CompiledSpreadEventModule>(mainArtifact);
+
+    const backgroundArtifact = await compileFixtureSource(SPREAD_EVENT_FIXTURE, { target: 'JS' });
+    const backgroundModule = await loadCompiledFixtureModule<CompiledSpreadEventModule>(backgroundArtifact);
+
+    return { backgroundModule, mainModule };
+  }
+
   function renderDirectEventOnBackground(
     moduleExports: CompiledDirectEventModule,
     onTap?: () => void,
@@ -152,6 +182,39 @@ describe('Compiled direct event background updates', () => {
 
     envManager.switchToMainThread();
     root.render(createElement(moduleExports.App, { onTap }));
+    renderPage();
+    envManager.switchToBackground();
+
+    return host;
+  }
+
+  function renderSpreadEventOnBackground(
+    moduleExports: CompiledSpreadEventModule,
+    spread: SpreadFixtureProps | undefined,
+    onCatch?: () => void,
+    childOptions?: {
+      showChild?: boolean;
+      childSpread?: SpreadFixtureProps;
+    },
+  ): BackgroundElementTemplateInstance {
+    envManager.switchToBackground();
+    root.render(createElement(moduleExports.App, { spread, onCatch, ...childOptions }));
+    return getRenderedHost();
+  }
+
+  function hydrateSpreadEventFromMainThread(
+    moduleExports: CompiledSpreadEventModule,
+    spread: SpreadFixtureProps | undefined,
+    onCatch?: () => void,
+    childOptions?: {
+      showChild?: boolean;
+      childSpread?: SpreadFixtureProps;
+    },
+  ): BackgroundElementTemplateInstance {
+    const host = getRenderedHost();
+
+    envManager.switchToMainThread();
+    root.render(createElement(moduleExports.App, { spread, onCatch, ...childOptions }));
     renderPage();
     envManager.switchToBackground();
 
@@ -280,6 +343,109 @@ describe('Compiled direct event background updates', () => {
     expect(firstHandler).toHaveBeenCalledWith({ type: 'tap', phase: 'first' });
     expect(firstHandler).toHaveBeenCalledTimes(1);
     expect(secondHandler).toHaveBeenCalledWith({ type: 'tap', phase: 'second' });
+  });
+
+  it('hydrates compiled spread attrs and dispatches direct plus spread event values independently', async () => {
+    const { backgroundModule, mainModule } = await loadCompiledSpreadEventFixture();
+    const handleSpreadTap = vi.fn();
+    const handleDirectCatch = vi.fn();
+
+    const host = renderSpreadEventOnBackground(
+      backgroundModule,
+      { id: 'cta', className: 'primary', bindtap: handleSpreadTap },
+      handleDirectCatch,
+    );
+    hydrateSpreadEventFromMainThread(
+      mainModule,
+      { id: 'cta', className: 'primary', bindtap: handleSpreadTap },
+      handleDirectCatch,
+    );
+
+    const directEventValue = `${host.instanceId}:0:`;
+    const spreadEventValue = `${host.instanceId}:1:bindtap`;
+    const preparedSpread = { id: 'cta', class: 'primary', bindtap: spreadEventValue };
+    expect(host.attributeSlots).toEqual([directEventValue, preparedSpread]);
+    expect(getEventHandlerForEventValue(directEventValue)).toBe(handleDirectCatch);
+    expect(getEventHandlerForEventValue(spreadEventValue)).toBe(handleSpreadTap);
+
+    publishEvent(directEventValue, { type: 'tap', source: 'direct' });
+    publishEvent(spreadEventValue, { type: 'tap', source: 'spread' });
+
+    expect(handleDirectCatch).toHaveBeenCalledWith({ type: 'tap', source: 'direct' });
+    expect(handleSpreadTap).toHaveBeenCalledWith({ type: 'tap', source: 'spread' });
+  });
+
+  it('updates compiled spread plain attrs through a whole-slot setAttribute patch', async () => {
+    const { backgroundModule, mainModule } = await loadCompiledSpreadEventFixture();
+    const handleSpreadTap = vi.fn();
+    const handleDirectCatch = vi.fn();
+
+    const host = renderSpreadEventOnBackground(
+      backgroundModule,
+      { id: 'cta', className: 'primary', bindtap: handleSpreadTap },
+      handleDirectCatch,
+    );
+    hydrateSpreadEventFromMainThread(
+      mainModule,
+      { id: 'cta', className: 'primary', bindtap: handleSpreadTap },
+      handleDirectCatch,
+    );
+    updateEvents = [];
+
+    renderSpreadEventOnBackground(
+      backgroundModule,
+      { id: 'cta-next', className: 'secondary', bindtap: handleSpreadTap },
+      handleDirectCatch,
+    );
+
+    const spreadEventValue = `${host.instanceId}:1:bindtap`;
+    const preparedSpread = { id: 'cta-next', class: 'secondary', bindtap: spreadEventValue };
+    envManager.switchToMainThread();
+    expect(updateEvents.at(-1)?.ops).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      host.instanceId,
+      1,
+      preparedSpread,
+    ]);
+    envManager.switchToBackground();
+    expect(host.attributeSlots).toEqual([`${host.instanceId}:0:`, preparedSpread]);
+    expect(getEventHandlerForEventValue(spreadEventValue)).toBe(handleSpreadTap);
+  });
+
+  it('registers and dispatches spread events on inserted compiled subtrees', async () => {
+    const { backgroundModule, mainModule } = await loadCompiledSpreadEventFixture();
+    const handleSpreadTap = vi.fn();
+
+    const host = renderSpreadEventOnBackground(backgroundModule, undefined, undefined, {
+      showChild: false,
+    });
+    hydrateSpreadEventFromMainThread(mainModule, undefined, undefined, { showChild: false });
+    updateEvents = [];
+
+    renderSpreadEventOnBackground(backgroundModule, undefined, undefined, {
+      showChild: true,
+      childSpread: { id: 'inserted', bindtap: handleSpreadTap },
+    });
+    const inserted = getSlotChildAt(0, host);
+    const spreadEventValue = `${inserted.instanceId}:0:bindtap`;
+    const preparedSpread = { id: 'inserted', bindtap: spreadEventValue };
+
+    envManager.switchToMainThread();
+    expect(updateEvents.at(-1)?.ops).toEqual([
+      ...collectRecursiveCreateCommandStream(inserted),
+      ElementTemplateUpdateOps.insertNode,
+      host.instanceId,
+      SLOT_ID,
+      inserted.instanceId,
+      0,
+    ]);
+    envManager.switchToBackground();
+    expect(inserted.attributeSlots).toEqual([preparedSpread]);
+    expect(getEventHandlerForEventValue(spreadEventValue)).toBe(handleSpreadTap);
+
+    publishEvent(spreadEventValue, { type: 'tap', source: 'inserted-spread' });
+
+    expect(handleSpreadTap).toHaveBeenCalledWith({ type: 'tap', source: 'inserted-spread' });
   });
 
   it('registers and dispatches direct events on inserted compiled subtrees', async () => {
