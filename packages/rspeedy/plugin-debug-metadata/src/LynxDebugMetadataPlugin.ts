@@ -14,6 +14,7 @@ import type {
 } from '@lynx-js/debug-metadata'
 import type { LynxTemplatePlugin as LynxTemplatePluginClass } from '@lynx-js/template-webpack-plugin'
 
+import { parseLepusNGDebugInfo } from './bytecode-debug-info.js'
 import { collectGitMetadata } from './git.js'
 import { collectEntryPathMap, dedupe } from './rspeedy-meta.js'
 import { collectArtifacts } from './source-maps.js'
@@ -174,6 +175,53 @@ export class LynxDebugMetadataPluginImpl {
             new RawSource(JSON.stringify(asset, null, 2)),
           )
           args.intermediateAssets.push(debugMetadataAssetName)
+
+          return args
+        },
+      )
+
+      templateHooks.beforeEmit.tap(
+        this.constructor.name,
+        (args) => {
+          const lepusNG = parseLepusNGDebugInfo(args.debugInfo)
+          if (!lepusNG) return args
+
+          const firstMainThread = args.mainThreadAssets[0]
+          if (!firstMainThread) return args
+          const intermediate = path.posix.dirname(
+            firstMainThread.name.replace(/\\/g, '/'),
+          )
+          const debugMetadataAssetName = path.posix.format({
+            dir: intermediate,
+            base: this.options.debugMetadataAssetName,
+          })
+
+          const existing = compilation.getAsset(debugMetadataAssetName)
+          if (!existing) return args
+
+          let metadata: DebugMetadataAsset
+          try {
+            metadata = JSON.parse(
+              existing.source.source().toString(),
+            ) as DebugMetadataAsset
+          } catch {
+            return args
+          }
+
+          const target = metadata.artifacts.find(a =>
+            a.kind === 'main-thread' && a.filename === 'main-thread.js'
+          )
+          if (target) {
+            target.debugSources.push({
+              kind: 'bytecode-debug-info',
+              debugInfo: lepusNG,
+            })
+          }
+
+          compilation.updateAsset(
+            debugMetadataAssetName,
+            new RawSource(JSON.stringify(metadata, null, 2)),
+          )
 
           return args
         },
