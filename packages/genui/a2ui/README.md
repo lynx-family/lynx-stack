@@ -67,6 +67,7 @@ export function A2UIScreen(): import('@lynx-js/react').ReactNode {
     <A2UI
       messageStore={store}
       catalogs={[Text, Button]}
+      className='surface-container'
       onAction={(action) => {
         // Forward to your agent — push the response messages back into
         // the same store. Fire-and-forget; the renderer never awaits.
@@ -86,8 +87,10 @@ The `<A2UI>` component is intentionally minimal:
 - `onAction` is fire-and-forget. The renderer doesn't wait for a
   response — your agent pushes follow-up messages back into the same
   `messageStore`.
-- `wrapSurface` is the only way the renderer surfaces theming. The
-  default doesn't wrap.
+- `className` applies to the surface root view (`surface-${surfaceId}`).
+- `wrapSurface` applies an outer wrapper around the rendered surface.
+- Both can be used for multi-theme switching; choose the layer that
+  matches your styling strategy.
 
 ## Catalogs
 

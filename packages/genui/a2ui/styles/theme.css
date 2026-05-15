@@ -51,6 +51,15 @@
   --a2ui-color-border: light-dark(#ccc, #444);
   --a2ui-border-width: 1px;
   --a2ui-border: 1px solid var(--a2ui-color-border, #ccc);
+  --a2ui-button-padding: var(--a2ui-spacing-m) calc(
+    var(--a2ui-spacing-m) * 1.75
+  );
+  --a2ui-button-margin: calc(var(--a2ui-spacing-xs) * 2) 0;
+  --a2ui-button-background: var(--a2ui-color-surface);
+  --a2ui-button-box-shadow: none;
+  --a2ui-button-font-weight: normal;
+  --a2ui-button-border: var(--a2ui-border-width) solid var(--a2ui-color-border);
+  --a2ui-button-border-radius: var(--a2ui-border-radius);
 
   --a2ui-font-family-title: inherit;
   --a2ui-font-family-monospace: monospace;
@@ -99,4 +108,6 @@
   --a2ui-icon-size-sm: var(--a2ui-font-size-m);
   --a2ui-icon-size-md: 24px;
   --a2ui-icon-size-lg: 32px;
+  --a2ui-image-small-feature-size: 120px;
+  --a2ui-image-large-feature-size: 400px;
 }

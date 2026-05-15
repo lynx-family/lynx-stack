@@ -10,10 +10,12 @@ describe('element-template native index wiring', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    globalThis.__ALOG_ELEMENT_API__ = undefined;
   });
 
   afterEach(() => {
     process.env['NODE_ENV'] = originalNodeEnv;
+    globalThis.__ALOG_ELEMENT_API__ = undefined;
     vi.resetModules();
     vi.doUnmock('../../../src/element-template/native/main-thread-api.js');
     vi.doUnmock('../../../src/element-template/native/patch-listener.js');
@@ -24,6 +26,7 @@ describe('element-template native index wiring', () => {
     vi.doUnmock('../../../src/element-template/background/hydration-listener.js');
     vi.doUnmock('../../../src/element-template/background/commit-hook.js');
     vi.doUnmock('../../../src/element-template/background/instance.js');
+    vi.doUnmock('../../../src/element-template/debug/elementPAPICall.js');
     vi.doUnmock('../../../src/element-template/debug/profile.js');
     vi.doUnmock('../../../src/element-template/lynx/env.js');
     vi.doUnmock('../../../src/element-template/lynx/performance.js');
@@ -32,10 +35,12 @@ describe('element-template native index wiring', () => {
 
   it('installs main-thread wiring only on main thread', async () => {
     envManager.resetEnv('main');
+    globalThis.__ALOG_ELEMENT_API__ = true;
 
     const injectCalledByNative = vi.fn();
     const installElementTemplatePatchListener = vi.fn();
     const installOnMtsDestruction = vi.fn();
+    const initElementTemplatePAPICallAlog = vi.fn();
     const initProfileHook = vi.fn();
     const setupLynxEnv = vi.fn();
     const installElementTemplateCommitHook = vi.fn();
@@ -52,6 +57,9 @@ describe('element-template native index wiring', () => {
     }));
     vi.doMock('../../../src/element-template/native/mts-destroy.js', () => ({
       installOnMtsDestruction,
+    }));
+    vi.doMock('../../../src/element-template/debug/elementPAPICall.js', () => ({
+      initElementTemplatePAPICallAlog,
     }));
     vi.doMock('../../../src/element-template/debug/profile.js', () => ({
       initProfileHook,
@@ -80,6 +88,7 @@ describe('element-template native index wiring', () => {
 
     await import('../../../src/element-template/native/index.js');
 
+    expect(initElementTemplatePAPICallAlog).toHaveBeenCalledTimes(1);
     expect(injectCalledByNative).toHaveBeenCalledTimes(1);
     expect(installElementTemplatePatchListener).toHaveBeenCalledTimes(1);
     expect(installOnMtsDestruction).toHaveBeenCalledTimes(1);

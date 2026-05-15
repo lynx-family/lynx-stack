@@ -73,13 +73,15 @@ function buildNodeRecursive(
 
 export interface A2UIRendererProps {
   resource: Resource;
+  /** Optional class name applied to the top-level surface view. */
+  className?: string;
   renderFallback?: () => ReactNode;
   renderError?: (e: unknown) => ReactNode;
   /**
-   * Wrap each top-level surface so consumers can apply theme/wrapper
-   * className/styles. The default does not wrap — that is intentional, the
-   * renderer is headless. Lynx-themed shells should pass
-   * `wrapSurface={(c, ctx) => <view className='luna-light'>{c}</view>}`.
+   * Wrap each top-level surface so consumers can apply an outer theme
+   * shell, wrapper className, or additional styles. The default does not
+   * wrap — that is intentional, the renderer is headless. Lynx-themed
+   * shells can use this together with `className` on the surface root.
    */
   wrapSurface?: (
     children: ReactNode,
@@ -90,7 +92,13 @@ export interface A2UIRendererProps {
 function A2UIRendererImpl(
   props: A2UIRendererProps,
 ): import('@lynx-js/react').ReactNode {
-  const { resource, wrapSurface, renderFallback, renderError } = props;
+  const {
+    resource,
+    wrapSurface,
+    renderFallback,
+    renderError,
+    className: surfaceClassName = 'surface-root',
+  } = props;
   // Eagerly read context so the renderer fails clearly outside <A2UIProvider>.
   useCatalog();
 
@@ -134,7 +142,7 @@ function A2UIRendererImpl(
     if (renderFallback) childProps.renderFallback = renderFallback;
     if (renderError) childProps.renderError = renderError;
     const inner = (
-      <view id={`surface-${surfaceId}`}>
+      <view id={`surface-${surfaceId}`} className={surfaceClassName}>
         <A2UIRenderer {...childProps} />
       </view>
     );
@@ -174,35 +182,43 @@ function NodeRendererImpl(
   const component =
     (latest.value as { component?: ComponentInstance } | undefined)?.component
       ?? initialComponent;
+  const effectiveComponent = initialComponent.dataContextPath !== undefined
+      && component.dataContextPath !== initialComponent.dataContextPath
+    ? { ...component, dataContextPath: initialComponent.dataContextPath }
+    : component;
 
   useEffect(() => {
-    const tag = component.component;
+    const tag = effectiveComponent.component;
     if (!catalog.has(tag) && !warnedTags.has(tag)) {
       warnedTags.add(tag);
       console.warn(`[a2ui] Component "${tag}" is not in the active catalog.`);
     }
-  }, [component.component, catalog]);
+  }, [effectiveComponent.component, catalog]);
 
   const [resolvedProps, setValue] = useResolvedProps(
-    component,
+    effectiveComponent,
     surface,
-    component.dataContextPath,
+    effectiveComponent.dataContextPath,
   );
 
   const actionProps = useMemo(
     () => ({
-      id: component.id!,
+      id: effectiveComponent.id!,
       surfaceId: surface.surfaceId,
-      dataContext: component.dataContextPath,
+      dataContext: effectiveComponent.dataContextPath,
     }),
-    [component.id, surface.surfaceId, component.dataContextPath],
+    [
+      effectiveComponent.id,
+      surface.surfaceId,
+      effectiveComponent.dataContextPath,
+    ],
   );
   const { sendAction } = useAction(actionProps);
 
   return (
     <>
       {buildNodeRecursive(
-        component,
+        effectiveComponent,
         surface,
         catalog as ReadonlyMap<
           string,

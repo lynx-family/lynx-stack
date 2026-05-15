@@ -324,18 +324,219 @@ a {
 /* ── Phone Frame ── */
 .phoneWrap {
   display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
   align-items: center;
   justify-content: center;
+  padding: 20px;
 }
 
 .phoneFrame {
   width: 300px;
   height: 560px;
-  border-radius: 24px;
-  border: 6px solid var(--geist-border);
-  background: var(--geist-background);
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  padding: 10px 10px 12px;
+  border-radius: 34px;
+  border: 1px solid color-mix(in srgb, var(--geist-border) 72%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--geist-background) 92%, var(--geist-surface)) 0%,
+    color-mix(in srgb, var(--geist-surface) 92%, var(--geist-background)) 100%
+  );
   overflow: hidden;
-  box-shadow: var(--geist-shadow-md);
+  box-shadow:
+    0 34px 80px rgba(0, 0, 0, 0.20),
+    0 2px 0 rgba(255, 255, 255, 0.35) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transform: translateZ(0);
+}
+
+.phoneStatusBar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 6px 1px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--geist-foreground);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Helvetica Neue", sans-serif;
+}
+
+.phoneStatusTime {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.phoneStatusIcons {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: inherit;
+}
+
+.phoneSignal {
+  width: 11px;
+  height: 9px;
+  opacity: 0.8;
+  background: linear-gradient(
+    to top,
+    currentcolor 0 18%,
+    transparent 18% 34%,
+    currentcolor 34% 52%,
+    transparent 52% 68%,
+    currentcolor 68% 100%
+  );
+  clip-path: polygon(
+    0 100%,
+    0 66%,
+    20% 50%,
+    20% 100%,
+    40% 100%,
+    40% 34%,
+    58% 18%,
+    58% 100%,
+    76% 100%,
+    76% 10%,
+    92% 0,
+    92% 100%,
+    100% 100%
+  );
+}
+
+.phoneWifi {
+  position: relative;
+  width: 10px;
+  height: 8px;
+}
+
+.phoneWifi::before,
+.phoneWifi::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  border: 1.4px solid currentcolor;
+  border-top: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+  border-radius: 999px;
+  transform: translateX(-50%);
+}
+
+.phoneWifi::before {
+  top: 0;
+  width: 10px;
+  height: 8px;
+}
+
+.phoneWifi::after {
+  top: 3px;
+  width: 6px;
+  height: 4px;
+}
+
+.phoneBattery {
+  position: relative;
+  width: 22px;
+  height: 11px;
+  border: 1.3px solid currentcolor;
+  border-radius: 3.5px;
+  padding: 1px;
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.phoneBattery::after {
+  content: "";
+  position: absolute;
+  right: -3px;
+  top: 2.5px;
+  width: 2px;
+  height: 4.5px;
+  border-radius: 1px;
+  background: currentcolor;
+}
+
+.phoneBatteryFill {
+  display: block;
+  width: 64%;
+  border-radius: 1.5px;
+  background: currentcolor;
+}
+
+.phoneChrome {
+  position: relative;
+  flex: 0 0 auto;
+  height: 12px;
+  margin-bottom: 1px;
+}
+
+.phoneNotch {
+  position: absolute;
+  top: 1px;
+  left: 50%;
+  width: 118px;
+  height: 12px;
+  margin-left: -59px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.78);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+}
+
+html[data-theme="dark"] .phoneNotch {
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.08) inset,
+    0 0 0 1px rgba(0, 0, 0, 0.03) inset;
+}
+
+.phoneScreen {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: 24px;
+  overflow: hidden;
+  background: var(--geist-background);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--geist-border) 64%, transparent),
+    inset 0 12px 28px rgba(255, 255, 255, 0.04),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+html[data-theme="dark"] .phoneScreen {
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.14),
+    inset 0 12px 28px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.phoneHomeIndicator {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 110px;
+  height: 4px;
+  margin-top: 0;
+  margin-bottom: 0;
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--geist-foreground) 14%,
+    var(--geist-border)
+  );
+}
+
+html[data-theme="dark"] .phoneHomeIndicator {
+  background: rgba(0, 0, 0, 0.22);
 }
 
 .phoneIframe {
@@ -343,6 +544,124 @@ a {
   height: 100%;
   border: 0;
   display: block;
+}
+
+.panelResizeHandle {
+  position: relative;
+  width: 8px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background: var(--geist-background);
+  border-left: 1px solid var(--geist-border);
+  border-right: 1px solid var(--geist-border);
+  touch-action: none;
+  transition: background var(--geist-transition);
+}
+
+.panelResizeHandle::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--geist-border-hover);
+  opacity: 0.35;
+  transform: translate(-50%, -50%);
+  transition:
+    opacity var(--geist-transition),
+    height var(--geist-transition),
+    background var(--geist-transition);
+}
+
+.panelResizeHandle:hover,
+.panelResizeHandle.active {
+  background: var(--geist-surface);
+}
+
+.panelResizeHandle:hover::before,
+.panelResizeHandle.active::before {
+  height: 56px;
+  opacity: 0.9;
+  background: var(--geist-foreground);
+}
+
+@media (max-width: 980px) {
+  .panelResizeHandle {
+    width: 100%;
+    height: 8px;
+    cursor: row-resize;
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid var(--geist-border);
+    border-bottom: 1px solid var(--geist-border);
+  }
+
+  .panelResizeHandle::before {
+    width: 48px;
+    height: 2px;
+  }
+
+  .panelResizeHandle:hover::before,
+  .panelResizeHandle.active::before {
+    width: 64px;
+    height: 2px;
+  }
+}
+
+.phoneEmptyState {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  box-sizing: border-box;
+  text-align: center;
+  color: var(--geist-secondary);
+}
+
+.phoneEmptyIcon {
+  font-size: 30px;
+  line-height: 1;
+  opacity: 0.28;
+}
+
+.phoneEmptyTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--geist-foreground);
+}
+
+.phoneEmptySub {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--geist-secondary);
+  max-width: 210px;
+}
+
+.previewFrameStack {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.previewFrameLayer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.previewFramePending {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* ── Preview Panels (shared) ── */
@@ -444,6 +763,8 @@ a {
 
 .previewPanelBodyFull {
   padding: 0;
+  align-items: stretch;
+  justify-content: stretch;
 }
 
 /* ── Live Component Stack ── */
@@ -456,6 +777,7 @@ a {
   border-top: 1px solid var(--geist-border);
   background: var(--geist-background);
   font-size: 12px;
+  min-height: 42px;
   overflow-x: auto;
 }
 
@@ -472,6 +794,7 @@ a {
   display: flex;
   gap: 4px;
   flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .liveComponentTag {
@@ -484,6 +807,12 @@ a {
   color: var(--geist-foreground);
   white-space: nowrap;
   animation: tagAppear 300ms ease-out;
+}
+
+.liveComponentEmpty {
+  color: var(--geist-secondary);
+  font-size: 11px;
+  white-space: nowrap;
 }
 
 @keyframes tagAppear {
@@ -502,6 +831,12 @@ a {
   height: 100%;
   border: 0;
   display: block;
+}
+
+.previewFullFrame {
+  width: 100%;
+  height: 100%;
+  position: relative;
 }
 
 /* ── Simulation Controls Bar ── */

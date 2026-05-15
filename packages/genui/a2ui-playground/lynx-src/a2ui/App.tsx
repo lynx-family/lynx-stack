@@ -34,15 +34,18 @@ import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catal
 import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
 import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json';
 import {
+  useCallback,
   useEffect,
   useGlobalProps,
   useInitData,
+  useLynxGlobalEventListener,
   useMemo,
   useRef,
   useState,
 } from '@lynx-js/react';
 
 import { createMockAgent } from '../../examples/io-mock/mockAgent.js';
+import type { MockAgentProgress } from '../../examples/io-mock/mockAgent.js';
 
 const DEFAULT_STREAM_DELAY_MS = 800;
 
@@ -74,7 +77,9 @@ interface InitData {
   actionMocksUrl?: string;
   actionMocks?: unknown;
   instant?: boolean;
+  playbackMode?: boolean;
   theme?: 'light' | 'dark';
+  playbackPaused?: boolean;
 }
 
 type Theme = 'light' | 'dark';
@@ -115,6 +120,20 @@ function parseJsonLikeString(input: string): unknown {
   return input;
 }
 
+function decodeUrlString(input: string): string {
+  let current = input;
+  for (let i = 0; i < 3; i++) {
+    try {
+      const decoded = decodeURIComponent(current);
+      if (decoded === current) break;
+      current = decoded;
+    } catch {
+      break;
+    }
+  }
+  return current;
+}
+
 function normalizeInitDataLike(raw: unknown): InitData {
   if (raw === null || raw === undefined) return {};
   if (typeof raw !== 'object') return {};
@@ -123,10 +142,14 @@ function normalizeInitDataLike(raw: unknown): InitData {
   const out: InitData = {};
 
   const messagesUrl = obj.messagesUrl;
-  if (typeof messagesUrl === 'string') out.messagesUrl = messagesUrl;
+  if (typeof messagesUrl === 'string') {
+    out.messagesUrl = decodeUrlString(messagesUrl);
+  }
 
   const actionMocksUrl = obj.actionMocksUrl;
-  if (typeof actionMocksUrl === 'string') out.actionMocksUrl = actionMocksUrl;
+  if (typeof actionMocksUrl === 'string') {
+    out.actionMocksUrl = decodeUrlString(actionMocksUrl);
+  }
 
   const messages = obj.messages;
   if (messages !== undefined) {
@@ -147,6 +170,17 @@ function normalizeInitDataLike(raw: unknown): InitData {
     out.instant = instant === true || instant === '1' || instant === 1;
   }
 
+  const playbackMode = obj.playbackMode;
+  if (playbackMode !== undefined) {
+    out.playbackMode = playbackMode === true || playbackMode === '1'
+      || playbackMode === 1;
+  }
+
+  const playbackPaused = obj.playbackPaused;
+  if (typeof playbackPaused === 'boolean') {
+    out.playbackPaused = playbackPaused;
+  }
+
   const theme = obj.theme;
   if (theme === 'light' || theme === 'dark') {
     out.theme = theme;
@@ -162,6 +196,8 @@ function mergeInitDataPreferLeft(a: InitData, b: InitData): InitData {
     actionMocksUrl: a.actionMocksUrl ?? b.actionMocksUrl,
     actionMocks: a.actionMocks ?? b.actionMocks,
     instant: a.instant ?? b.instant,
+    playbackMode: a.playbackMode ?? b.playbackMode,
+    playbackPaused: a.playbackPaused ?? b.playbackPaused,
     theme: a.theme ?? b.theme,
   };
 }
@@ -257,11 +293,38 @@ export function App() {
     [globalPropsData, initData],
   );
 
+  const streamConfig = useMemo(
+    () => ({
+      messagesUrl: effectiveData.messagesUrl,
+      messages: effectiveData.messages,
+      actionMocksUrl: effectiveData.actionMocksUrl,
+      actionMocks: effectiveData.actionMocks,
+      instant: effectiveData.instant,
+      playbackMode: effectiveData.playbackMode,
+      theme: effectiveData.theme,
+    }),
+    [
+      effectiveData.actionMocks,
+      effectiveData.actionMocksUrl,
+      effectiveData.instant,
+      effectiveData.messages,
+      effectiveData.messagesUrl,
+      effectiveData.playbackMode,
+      effectiveData.theme,
+    ],
+  );
+
   const storeRef = useRef<MessageStore | null>(null);
   const agentRef = useRef<ReturnType<typeof createMockAgent> | null>(null);
   const [store, setStore] = useState<MessageStore | null>(null);
   const [error, setError] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
+  const playbackMode = useMemo(
+    () => streamConfig.playbackMode === true,
+    [streamConfig.playbackMode],
+  );
+  const [playbackTargetCount, setPlaybackTargetCount] = useState(0);
+  const playbackPausedRef = useRef(false);
+  const playbackTargetCountRef = useRef(0);
 
   // Per-batch delay (ms) the mock agent waits between successive
   // protocol messages. Configurable via `?speed=2` (faster) etc.
@@ -282,21 +345,91 @@ export function App() {
     [effectiveData.instant],
   );
   const theme = useMemo<Theme>(
-    () => effectiveData.theme ?? 'light',
-    [effectiveData.theme],
+    () => streamConfig.theme ?? 'light',
+    [streamConfig.theme],
   );
   const themeClassName = theme === 'dark' ? 'luna-dark' : 'luna-light';
+  const isPlaybackPaused = useMemo(
+    () => effectiveData.playbackPaused === true,
+    [effectiveData.playbackPaused],
+  );
+  const postPlaybackSync = useCallback((state: MockAgentProgress) => {
+    try {
+      window.parent?.postMessage(
+        {
+          type: 'A2UI_PLAYBACK_SYNC',
+          data: state,
+        },
+        '*',
+      );
+    } catch {
+      // Playback sync is best-effort; never block rendering on it.
+    }
+  }, []);
+
+  const syncPlaybackAgent = useCallback(() => {
+    const agent = agentRef.current;
+    if (!agent) return;
+    if (!playbackMode) return;
+    const currentCount = storeRef.current?.getSnapshot().length ?? 0;
+    const targetCount = playbackTargetCountRef.current;
+    if (playbackPausedRef.current || currentCount >= targetCount) {
+      agent.pause();
+      return;
+    }
+    agent.resume();
+  }, []);
+
+  useLynxGlobalEventListener(
+    'A2UI_PLAYBACK_CONTROL',
+    (action: unknown) => {
+      const agent = agentRef.current;
+      if (!agent) return;
+      if (action === 'pause') {
+        agent.pause();
+        return;
+      }
+      if (action === 'resume') {
+        agent.resume();
+      }
+    },
+  );
+
+  useLynxGlobalEventListener(
+    'A2UI_PLAYBACK_PROGRESS',
+    (payload: unknown) => {
+      if (!playbackMode) return;
+      if (!payload || typeof payload !== 'object') return;
+      const next = (payload as { deliveredCount?: unknown }).deliveredCount;
+      const nextCount = typeof next === 'number'
+        ? next
+        : (typeof next === 'string' ? Number(next) : Number.NaN);
+      if (!Number.isFinite(nextCount) || nextCount < 0) return;
+      setPlaybackTargetCount(Math.floor(nextCount));
+    },
+  );
+
+  useEffect(() => {
+    playbackPausedRef.current = isPlaybackPaused;
+  }, [isPlaybackPaused]);
+
+  useEffect(() => {
+    playbackTargetCountRef.current = playbackTargetCount;
+  }, [playbackTargetCount]);
+
+  useEffect(() => {
+    syncPlaybackAgent();
+  }, [isPlaybackPaused, playbackTargetCount, syncPlaybackAgent]);
 
   useEffect(() => {
     let cancelled = false;
 
     const run = async () => {
-      setLoading(true);
       setError('');
 
       const [rawMessages, rawActionMocks] = await Promise.all([
-        loadMessages(effectiveData ?? {}),
-        loadActionMocks(effectiveData ?? {}),
+        loadMessages(streamConfig as InitData),
+        loadActionMocks(streamConfig as InitData),
       ]);
 
       const initialMessages = rawMessages as ServerToClientMessage[];
@@ -314,11 +447,12 @@ export function App() {
         // `delayMs: 0` makes `agent.start()` push every message into the
         // buffer in a tight loop, effectively a static "final state"
         // paint that matches upstream's `isInstantPreview` mode.
-        delayMs: isInstantPreview ? 0 : streamDelay,
+        delayMs: streamConfig.instant ? 0 : streamDelay,
+        onProgress: (state) => {
+          postPlaybackSync(state);
+          syncPlaybackAgent();
+        },
       });
-
-      // Begin streaming the demo's initial messages into the buffer.
-      void agent.start();
 
       if (cancelled) {
         agent.stop();
@@ -328,6 +462,9 @@ export function App() {
       storeRef.current = next;
       agentRef.current = agent;
       setStore(next);
+      syncPlaybackAgent();
+      // Begin streaming the demo's initial messages into the buffer.
+      void agent.start();
     };
 
     run()
@@ -336,9 +473,6 @@ export function App() {
           setError(String(e));
           setStore(null);
         }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
       });
 
     return () => {
@@ -347,7 +481,7 @@ export function App() {
       storeRef.current = null;
       agentRef.current = null;
     };
-  }, [effectiveData, isInstantPreview, streamDelay]);
+  }, [isInstantPreview, postPlaybackSync, streamConfig, streamDelay]);
 
   return (
     <view
@@ -359,42 +493,52 @@ export function App() {
             <text style={{ color: '#c40000' }}>{error}</text>
           </view>
         )
-        : null}
-      {loading && !store
-        ? (
-          <view style={{ padding: '12px' }}>
-            <text>Loading...</text>
-          </view>
-        )
-        : null}
-      {store
-        ? (
-          <scroll-view scroll-y style={{ flex: 1, minHeight: 0 }}>
-            <A2UI
-              messageStore={store}
-              catalogs={ALL_BUILTINS}
-              onAction={(action) => {
-                // Forward user actions to the mock agent — it pushes the
-                // canned response messages back into the same store.
-                void agentRef.current?.onAction(action);
-              }}
-              wrapSurface={(c) => <view className={themeClassName}>{c}</view>}
-              renderEmpty={() => (
-                <view style={{ padding: '12px' }}>
-                  <text>Loading...</text>
-                </view>
-              )}
-              renderFallback={() => (
-                <view style={{ padding: '12px' }}>
-                  <text>Streaming...</text>
-                </view>
-              )}
-            />
-          </scroll-view>
-        )
         : (
-          <view style={{ padding: '12px' }}>
-            <text>Loading...</text>
+          <view
+            style={{
+              flex: 1,
+              minHeight: 0,
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+            }}
+          >
+            {!isInstantPreview && store === null && error === ''
+              ? (
+                <view className='a2ui-loadingOverlay'>
+                  <text className='a2ui-loadingText'>loading ...</text>
+                </view>
+              )
+              : null}
+            {store
+              ? (
+                <scroll-view
+                  scroll-y
+                  style={{ flex: 1, minHeight: 0 }}
+                  className={isPlaybackPaused ? 'a2ui-scrollPaused' : ''}
+                >
+                  <A2UI
+                    messageStore={store}
+                    catalogs={ALL_BUILTINS}
+                    onAction={(action) => {
+                      // Forward user actions to the mock agent — it pushes
+                      // the canned response messages back into the same store.
+                      void agentRef.current?.onAction(action);
+                    }}
+                    wrapSurface={(c) => (
+                      <view className={themeClassName}>{c}</view>
+                    )}
+                    renderFallback={() => (
+                      <view style={{ padding: '12px' }}>
+                        <text>Streaming...</text>
+                      </view>
+                    )}
+                    className='a2ui-container'
+                  />
+                </scroll-view>
+              )
+              : null}
           </view>
         )}
     </view>

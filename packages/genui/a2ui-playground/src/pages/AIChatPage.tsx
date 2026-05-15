@@ -5,6 +5,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import './AIChatPage.css';
 
+import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
+import { PreviewPanel } from '../components/PreviewPanel.js';
+import { PreviewViewport } from '../components/PreviewViewport.js';
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
 import type { Protocol } from '../utils/protocol.js';
 
@@ -143,45 +146,32 @@ export function AIChatPage(props: { protocol: Protocol }) {
         </div>
       </div>
 
-      <div
-        className={isPanelResizing
-          ? 'panelResizeHandle active'
-          : 'panelResizeHandle'}
-        role='separator'
-        aria-orientation={isCompactLayout ? 'horizontal' : 'vertical'}
-        aria-label='Resize Create and preview panels'
-        title='Drag to resize'
+      <PanelResizeHandle
+        isActive={isPanelResizing}
+        isCompactLayout={isCompactLayout}
+        ariaLabel='Resize Create and preview panels'
         onPointerDown={handlePanelResizeStart}
       />
 
-      <div className='previewPanel' style={previewPanelStyle}>
-        <div className='previewPanelHeader'>
-          <span className='previewPanelTitle'>Lynx Preview</span>
-        </div>
-        <div className='previewPanelBody'>
-          <div className='previewEmpty'>
-            <div className='previewEmptyIcon'>💬</div>
-            <div>Send a message to generate UI</div>
-            <div className='previewEmptySub'>
-              Generated components will be previewed here
-            </div>
-          </div>
-        </div>
-
-        <div className='previewQrSection'>
-          <div className='previewQrContent'>
-            <div className='previewQrInfo'>
-              <div className='previewQrTitle'>View on Device</div>
-              <div className='previewQrDesc'>
-                Scan the QR code to preview on your mobile device.
-              </div>
-            </div>
-            <div className='previewQrPlaceholder'>
-              <span className='previewQrPlaceholderText'>No render</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <PreviewPanel
+        className='previewPanel'
+        style={previewPanelStyle}
+        title='Lynx Preview'
+        previewSource={{
+          kind: 'placeholder',
+          item: {
+            title: 'View on Device',
+            description: 'Scan the QR code to preview on your mobile device.',
+            placeholder: 'No render',
+          },
+        }}
+      >
+        <PreviewViewport
+          emptyIcon='💬'
+          emptyTitle='Send a message to generate UI'
+          emptySubTitle='Generated components will be previewed here'
+        />
+      </PreviewPanel>
     </div>
   );
 }
