@@ -6,12 +6,15 @@
   "scripts": {
     "build": "pnpm run --parallel \"/^build:(producer|consumer)$/\"",
     "build:consumer": "rspeedy build --config lynx.config.consumer.js",
+    "build:fetchbundle": "cross-env LAZY_BUNDLE_FETCHBUNDLE=1 pnpm run build",
     "build:producer": "rspeedy build --config lynx.config.producer.js",
     "dev": "node scripts/serve.mjs dev",
     "dev:consumer": "rspeedy dev --config lynx.config.consumer.js",
+    "dev:fetchbundle": "cross-env LAZY_BUNDLE_FETCHBUNDLE=1 node scripts/serve.mjs dev",
     "dev:producer": "rspeedy dev --config lynx.config.producer.js",
     "preview": "node scripts/serve.mjs preview",
     "preview:consumer": "rspeedy preview --config lynx.config.consumer.js",
+    "preview:fetchbundle": "cross-env LAZY_BUNDLE_FETCHBUNDLE=1 node scripts/serve.mjs preview",
     "preview:producer": "rspeedy preview --config lynx.config.producer.js"
   },
   "dependencies": {
@@ -22,7 +25,8 @@
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
-    "@lynx-js/types": "3.7.0",
-    "@types/react": "^18.3.28"
+    "@lynx-js/types": "3.10.2-alpha.0",
+    "@types/react": "^18.3.28",
+    "cross-env": "^7.0.3"
   }
 }

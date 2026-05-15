@@ -9,6 +9,7 @@ import { detectLanHost, producerDevPort } from './demo-ports.js';
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const enableBundleAnalysis = !!process.env['RSPEEDY_BUNDLE_ANALYSIS'];
+const enableFetchBundle = !!process.env['LAZY_BUNDLE_FETCHBUNDLE'];
 const producerHost = detectLanHost();
 
 export default defineConfig({
@@ -35,7 +36,9 @@ export default defineConfig({
     },
   },
   plugins: [
-    pluginReactLynx(),
+    pluginReactLynx({
+      ...(enableFetchBundle ? { engineVersion: '3.8' } : {}),
+    }),
     pluginQRCode({
       schema(url) {
         return `${url}?fullscreen=true`;

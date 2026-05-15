@@ -227,7 +227,7 @@
     "preact": "npm:@lynx-js/internal-preact@10.29.1-20260424024911-12b794f"
   },
   "devDependencies": {
-    "@lynx-js/types": "3.7.0",
+    "@lynx-js/types": "3.10.2-alpha.0",
     "@microsoft/api-extractor": "catalog:",
     "@types/react": "^18.3.28"
   },

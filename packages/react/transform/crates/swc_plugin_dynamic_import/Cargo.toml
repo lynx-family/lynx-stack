@@ -9,6 +9,7 @@ path = "lib.rs"
 [dependencies]
 napi = { workspace = true, optional = true }
 napi-derive = { workspace = true, optional = true }
+once_cell = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["preserve_order"] }
 swc_core = { workspace = true, features = ["ecma_parser", "ecma_utils", "ecma_visit", "testing_transform"] }

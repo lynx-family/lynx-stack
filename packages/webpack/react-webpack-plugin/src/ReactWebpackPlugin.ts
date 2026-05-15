@@ -111,6 +111,15 @@ interface ReactWebpackPluginOptions {
    * @experimental
    */
   experimental_useElementTemplate?: boolean;
+
+  /**
+   * Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.
+   * `pluginReactLynx`) from the host engine version and any
+   * `REACT_LAZY_BUNDLE_FETCHER` env override.
+   *
+   * @public
+   */
+  lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
 }
 
 /**
@@ -188,6 +197,7 @@ class ReactWebpackPlugin {
       profile: undefined,
       workletRuntimePath: '',
       experimental_useElementTemplate: false,
+      lazyBundleFetcher: 'QueryComponent',
     });
 
   /**
@@ -248,6 +258,7 @@ class ReactWebpackPlugin {
       __USE_ELEMENT_TEMPLATE__: JSON.stringify(
         options.experimental_useElementTemplate,
       ),
+      __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
     }).apply(compiler);
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
@@ -387,15 +398,21 @@ class ReactWebpackPlugin {
                     continue;
                   }
 
+                  const isFetchBundle =
+                    options.lazyBundleFetcher === 'FetchBundle';
                   compilation.updateAsset(
                     file,
                     old =>
                       new ConcatSource(
-                        `(function (globDynamicComponentEntry) {\n`,
+                        isFetchBundle
+                          ? `(function () {\n  var globDynamicComponentEntry = '__Card__';\n`
+                          : `(function (globDynamicComponentEntry) {\n`,
                         `  const module = { exports: {} }\n`,
                         `  const exports = module.exports;\n`,
                         old,
-                        `\n  ;return module.exports\n})`,
+                        isFetchBundle
+                          ? `\n  ;return module.exports\n})()`
+                          : `\n  ;return module.exports\n})`,
                       ),
                   );
                 }

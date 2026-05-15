@@ -49,6 +49,7 @@ export const {
   updateListItemPlatformInfo,
   updateWorkletRef,
   withInitDataInState,
+  withLazyBundleMode,
   wrapWithLynxComponent,
 } = target[sExportsReactInternal];
 

@@ -17,6 +17,7 @@ const config: Parameters<typeof defineConfig>[0] = {
   ],
   env: {
     DEBUG: 'rspeedy',
+    REACT_LAZY_BUNDLE_FETCHER: 'QueryComponent',
   },
 };
 

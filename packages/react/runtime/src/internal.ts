@@ -71,7 +71,7 @@ export const __ComponentIsPolyfill: FC<{ is: string }> = /* @__PURE__ */ factory
   loadLazyBundle,
 );
 
-export { loadLazyBundle } from './snapshot/lynx/lazy-bundle.js';
+export { loadLazyBundle, withLazyBundleMode } from './snapshot/lynx/lazy-bundle.js';
 
 export { transformToWorklet } from './snapshot/worklet/call/transformToWorklet.js';
 export { registerWorkletOnBackground } from './snapshot/worklet/hmr.js';

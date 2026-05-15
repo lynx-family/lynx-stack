@@ -95,7 +95,7 @@
     "@lynx-js/a2ui-catalog-extractor": "workspace:*",
     "@lynx-js/lynx-ui": "^3.130.0",
     "@lynx-js/react": "workspace:*",
-    "@lynx-js/types": "3.7.0",
+    "@lynx-js/types": "3.10.2-alpha.0",
     "@rstest/core": "catalog:rstest",
     "@types/react": "^18.3.28"
   },

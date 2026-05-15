@@ -37,17 +37,18 @@ export type OriginManifest = Record<string, {
  * @public
  */
 export interface EncodeOptions {
-  manifest: Record<string, string | undefined>;
+  manifest?: Record<string, string | undefined> | undefined;
   compilerOptions: Record<string, string | boolean>;
   lepusCode: {
     root: string | undefined;
     lepusChunk: Record<string, string>;
     filename: string | undefined;
-  };
+  } | undefined;
   // `customSections` option only takes effect on Lynx >= 2.16.
   customSections: Record<string, {
     type?: 'lazy';
-    content: string | Record<string, unknown>;
+    encoding?: 'JsBytecode' | 'CSS';
+    content: string | Record<string, unknown> | undefined;
   }>;
   /**
    * Element template data used by encoders that support element template output.
@@ -304,6 +305,15 @@ export interface LynxTemplatePluginOptions {
   experimental_isLazyBundle?: boolean;
 
   /**
+   * Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.
+   * `pluginReactLynx`) from the host engine version and any
+   * `REACT_LAZY_BUNDLE_FETCHER` env override.
+   *
+   * @public
+   */
+  lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
+
+  /**
    * plugins passed to parser
    */
   cssPlugins: CSS.Plugin[];
@@ -333,6 +343,7 @@ interface EncodeRawData {
   // `customSections` option only takes effect on Lynx >= 2.16.
   customSections: Record<string, {
     type?: 'lazy';
+    encoding?: 'JsBytecode' | 'CSS';
     content: string | Record<string, unknown>;
   }>;
   sourceContent: {
@@ -414,6 +425,7 @@ export class LynxTemplatePlugin {
       dsl: 'react_nodiff',
 
       experimental_isLazyBundle: false,
+      lazyBundleFetcher: 'QueryComponent',
       cssPlugins: [],
     });
 
@@ -485,6 +497,16 @@ interface Hash {
    * Calculates the digest {@link https://nodejs.org/api/crypto.html#crypto_hash_digest_encoding}
    */
   digest(encoding?: string): string | Buffer;
+}
+
+const SECTION_MAIN_THREAD = 'main-thread';
+const SECTION_BACKGROUND = 'background';
+const SECTION_CSS = 'CSS';
+
+interface CustomSectionEntry {
+  type?: 'lazy';
+  encoding?: 'JsBytecode' | 'CSS';
+  content: string | Record<string, unknown>;
 }
 
 class LynxTemplatePluginImpl {
@@ -877,22 +899,48 @@ class LynxTemplatePluginImpl {
 
     const { lepusCode, css } = encodeData;
 
+    const lepusChunk = Object.fromEntries(
+      lepusCode.chunks.map(asset => {
+        return [asset.name, asset.source.source().toString()];
+      }),
+    );
+
+    const isFetchBundleLazy = isAsync
+      && this.#options.lazyBundleFetcher === 'FetchBundle';
+    // Default to bytecode for FetchBundle lazy main-thread sections. Skip
+    // in dev or when DEBUG matches rspeedy so the source stays debuggable.
+    const enableLazyBundleBytecode = isFetchBundleLazy && !isDev
+      && !isDebug();
+    const fetchBundleSplit = isFetchBundleLazy
+      ? this.#buildLazyBundleFetchBundleSections(
+        lepusCode.root,
+        encodeData.manifest,
+        encodeData.css.chunks,
+        enableLazyBundleBytecode,
+      )
+      : null;
+
     const resolvedEncodeOptions: EncodeOptions = {
       ...encodeData,
       css: {
         ...css,
+        cssMap: fetchBundleSplit ? {} : css.cssMap,
+        cssSource: fetchBundleSplit ? {} : css.cssSource,
         chunks: undefined,
         contentMap: undefined,
       },
-      lepusCode: {
+      lepusCode: fetchBundleSplit ? undefined : {
         // TODO: support multiple lepus chunks
         root: lepusCode.root?.source.source().toString(),
-        lepusChunk: Object.fromEntries(
-          lepusCode.chunks.map(asset => {
-            return [asset.name, asset.source.source().toString()];
-          }),
-        ),
+        lepusChunk,
         filename: lepusCode.filename,
+      },
+      manifest: fetchBundleSplit
+        ? fetchBundleSplit.remainingManifest
+        : encodeData.manifest,
+      customSections: {
+        ...encodeData.customSections,
+        ...(fetchBundleSplit ? fetchBundleSplit.sections : {}),
       },
     };
 
@@ -908,7 +956,7 @@ class LynxTemplatePluginImpl {
           JSON.stringify(resolvedEncodeOptions, null, 2),
         ),
       );
-      Object.entries(resolvedEncodeOptions.lepusCode.lepusChunk).forEach(
+      Object.entries(lepusChunk).forEach(
         ([name, content]) => {
           compilation.emitAsset(
             path.posix.format({
@@ -964,6 +1012,58 @@ class LynxTemplatePluginImpl {
         compilation.errors.push(error as WebpackError);
       }
     }
+  }
+
+  #buildLazyBundleFetchBundleSections(
+    mainThreadAsset: Asset | undefined,
+    manifest: Record<string, string>,
+    cssAssets: Asset[],
+    enableBytecode: boolean,
+  ): {
+    sections: Record<string, CustomSectionEntry>;
+    remainingManifest: Record<string, string>;
+  } {
+    const { cssPlugins, enableCSSSelector } = this.#options;
+    const sections: Record<string, CustomSectionEntry> = {};
+
+    if (mainThreadAsset) {
+      sections[SECTION_MAIN_THREAD] = {
+        ...(enableBytecode ? { encoding: 'JsBytecode' as const } : {}),
+        content: mainThreadAsset.source.source().toString(),
+      };
+    }
+
+    const remainingManifest: Record<string, string> = {};
+    let entryChunk: [string, string] | undefined;
+    for (const [name, content] of Object.entries(manifest)) {
+      if (name === '/app-service.js') {
+        continue;
+      }
+      if (!entryChunk) {
+        entryChunk = [name, content];
+        continue;
+      }
+      remainingManifest[name] = content;
+    }
+
+    if (entryChunk) {
+      sections[SECTION_BACKGROUND] = { content: entryChunk[1] };
+    }
+
+    const firstCss = cssAssets[0];
+    if (firstCss) {
+      const ruleList = cssChunksToMap(
+        [firstCss.source.source().toString()],
+        cssPlugins,
+        enableCSSSelector,
+      ).cssMap[0] ?? [];
+      sections[SECTION_CSS] = {
+        encoding: 'CSS',
+        content: { ruleList },
+      };
+    }
+
+    return { sections, remainingManifest };
   }
 
   /**

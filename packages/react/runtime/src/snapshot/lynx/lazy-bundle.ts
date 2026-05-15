@@ -2,6 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import {
+  LYNX_LAZY_SYNC_TIMEOUT_SECONDS,
+  SECTION_BACKGROUND,
+  SECTION_CSS,
+  SECTION_MAIN_THREAD,
+} from './lazyBundleConstants.js';
+import { LifecycleConstant } from '../lifecycle/constant.js';
+
 /**
  * To make code below works
  * const App1 = lazy(() => import("./x").then(({App1}) => ({default: App1})))
@@ -55,6 +63,8 @@ export const makeSyncThen = function<T>(result: T): Promise<T>['then'] {
   };
 };
 
+let lazyBundleMode: 'sync' | 'async' | undefined;
+
 /**
  * Load dynamic component from source. Designed to be used with `lazy`.
  * @param source - where dynamic component template.js locates
@@ -64,9 +74,20 @@ export const makeSyncThen = function<T>(result: T): Promise<T>['then'] {
 export const loadLazyBundle: <
   T extends { default: React.ComponentType<any> },
 >(source: string) => Promise<T> = /*#__PURE__*/ (() => {
-  lynx.loadLazyBundle = loadLazyBundle;
+  // Default to QueryComponent when `__LAZY_BUNDLE_FETCHER__` is missing —
+  // older react-webpack-plugin builds don't stamp it and they predate
+  // FetchBundle support, so falling through to QueryComponent is the only
+  // safe behavior.
+  const useFetchBundle = typeof __LAZY_BUNDLE_FETCHER__ !== 'undefined'
+    && __LAZY_BUNDLE_FETCHER__ === 'FetchBundle';
 
-  function loadLazyBundle<
+  const impl = useFetchBundle
+    ? loadLazyBundleWithFetchBundle
+    : loadLazyBundleWithQueryComponent;
+
+  lynx.loadLazyBundle = impl;
+
+  function loadLazyBundleWithQueryComponent<
     T extends { default: React.ComponentType<any> },
   >(source: string): Promise<T> {
     if (__LEPUS__) {
@@ -89,6 +110,12 @@ export const loadLazyBundle: <
       r.then = makeSyncThen(result);
       return r;
     } else if (__JS__) {
+      if (__DEV__ && lazyBundleMode !== undefined) {
+        throw new Error(
+          `Lazy bundle import \`mode: '${lazyBundleMode}'\` requires FetchBundle, but the current build uses QueryComponent. `
+            + `Set \`engineVersion: '3.8'\` (or higher) in \`pluginReactLynx\` to enable FetchBundle.`,
+        );
+      }
       const resolver = withSyncResolvers<T>();
 
       const callback: (result: { code: number; detail: { schema: string } }) => void = result => {
@@ -132,7 +159,116 @@ export const loadLazyBundle: <
     throw new Error('unreachable');
   }
 
-  return loadLazyBundle;
+  function loadLazyBundleWithFetchBundle<
+    T extends { default: React.ComponentType<any> },
+  >(source: string): Promise<T> {
+    if (__MAIN_THREAD__) {
+      if (lazyBundleMode !== 'sync') {
+        return new Promise(() => {});
+      }
+      let response;
+      try {
+        response = lynx.fetchBundle(source, {}).wait(
+          LYNX_LAZY_SYNC_TIMEOUT_SECONDS,
+        );
+      } catch {
+        return new Promise(() => {});
+      }
+      if (!response || response.code !== 0) {
+        return new Promise(() => {});
+      }
+      let result: T;
+      try {
+        result = lynx.loadScript<T>(SECTION_MAIN_THREAD, {
+          bundleName: response.url,
+        });
+        const styleSheet = __LoadStyleSheet(SECTION_CSS, response.url);
+        if (styleSheet !== null) {
+          __AdoptStyleSheet(styleSheet);
+        }
+      } catch {
+        return new Promise(() => {});
+      }
+      const r: Promise<T> = Promise.resolve(result);
+      r.then = makeSyncThen(result);
+      return r;
+    } else if (__JS__) {
+      if (lazyBundleMode === 'sync') {
+        let response;
+        try {
+          response = lynx.fetchBundle(source, {}).wait(
+            LYNX_LAZY_SYNC_TIMEOUT_SECONDS,
+          );
+        } catch (e) {
+          return Promise.reject(e instanceof Error ? e : new Error(String(e)));
+        }
+        if (!response || response.code !== 0) {
+          console.error('Lazy bundle load failed', response);
+          const e = new Error('Lazy bundle load failed, schema: ' + source);
+          e.cause = JSON.stringify(response);
+          return Promise.reject(e);
+        }
+        let result: T;
+        try {
+          result = lynx.loadScript<T>(SECTION_BACKGROUND, {
+            bundleName: response.url,
+          });
+        } catch (e) {
+          return Promise.reject(e instanceof Error ? e : new Error(String(e)));
+        }
+        const r: Promise<T> = Promise.resolve(result);
+        r.then = makeSyncThen(result);
+        return r;
+      }
+
+      // async (default)
+      return new Promise<T>((resolve, reject) => {
+        let handler;
+        try {
+          handler = lynx.fetchBundle(source, {});
+        } catch (e) {
+          reject(e instanceof Error ? e : new Error(String(e)));
+          return;
+        }
+        handler.then((response) => {
+          if (!response || response.code !== 0) {
+            console.error('Lazy bundle load failed', response);
+            const e = new Error('Lazy bundle load failed, schema: ' + source);
+            e.cause = JSON.stringify(response);
+            reject(e);
+            return;
+          }
+          let btsResult: T;
+          try {
+            btsResult = lynx.loadScript<T>(SECTION_BACKGROUND, {
+              bundleName: response.url,
+            });
+          } catch (e) {
+            reject(e instanceof Error ? e : new Error(String(e)));
+            return;
+          }
+          // Bundle is now in native cache, so MT's `.then` fires sync and
+          // the whole prepare runs synchronously inside `Call`, meaning the
+          // cb fires only after MT snapshots are registered.
+          try {
+            lynx.getNativeApp().callLepusMethod(
+              LifecycleConstant.prepareLazyBundleMTS,
+              { url: source },
+              () => {
+                resolve(btsResult);
+              },
+            );
+          } catch (e) {
+            reject(e instanceof Error ? e : new Error(String(e)));
+          }
+        });
+      });
+    }
+
+    throw new Error('unreachable');
+  }
+
+  return impl;
 })();
 
 function withSyncResolvers<T>() {
@@ -155,4 +291,20 @@ function withSyncResolvers<T>() {
   };
 
   return resolver;
+}
+
+/**
+ * Temporarily set import mode for lazy bundle.
+ * @param mode Import mode.
+ * @param factory Factory function.
+ * @returns Result of factory function.
+ */
+export function withLazyBundleMode<T>(mode: 'sync' | 'async', factory: () => T): T {
+  const prev = lazyBundleMode;
+  lazyBundleMode = mode;
+  try {
+    return factory();
+  } finally {
+    lazyBundleMode = prev;
+  }
 }

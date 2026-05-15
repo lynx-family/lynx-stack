@@ -30,6 +30,12 @@ declare global {
    * Determines if running in profile mode
    */
   let __PROFILE__: boolean;
+  /**
+   * Which lazy bundle fetcher the build is wired up to. `'FetchBundle'`
+   * enables the `lynx.fetchBundle`-based path (and `import(..., { with: { mode } })`
+   * mode hints); `'QueryComponent'` is the legacy `lynx.QueryComponent` path.
+   */
+  let __LAZY_BUNDLE_FETCHER__: 'FetchBundle' | 'QueryComponent';
 }
 
 /**
