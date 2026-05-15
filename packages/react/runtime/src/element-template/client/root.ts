@@ -3,14 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 // import { createContext, createElement } from 'preact/compat';
 // import { useState } from 'preact/hooks';
-// import type { Consumer, FC, ReactNode } from 'react';
 import type { ComponentChild, ContainerNode } from 'preact';
 import { render } from 'preact';
 import type { ReactNode } from 'react';
 
-// import { factory, withInitDataInState } from '../../compat/initData.js';
+import type { DataProcessorDefinition } from '../../lynx-api.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
-// import { useLynxGlobalEventListener } from '../../core/hooks/useLynxGlobalEventListener.js';
 import { __root } from '../runtime/page/root-instance.js';
 
 /**
@@ -37,12 +35,12 @@ export interface Root {
    * @public
    */
   render: (jsx: ReactNode) => void;
-  // /**
-  //  * {@inheritDoc Lynx.registerDataProcessors}
-  //  * @deprecated use {@link Lynx.registerDataProcessors | lynx.registerDataProcessors} instead
-  //  * @public
-  //  */
-  // registerDataProcessors: (dataProcessorDefinition: DataProcessorDefinition) => void;
+  /**
+   * {@inheritDoc Lynx.registerDataProcessors}
+   * @deprecated use {@link Lynx.registerDataProcessors | lynx.registerDataProcessors} instead
+   * @public
+   */
+  registerDataProcessors: (dataProcessorDefinition?: DataProcessorDefinition) => void;
 }
 
 /**
@@ -67,8 +65,7 @@ export const root: Root = {
       }
     }
   },
-  /* v8 ignore next 3 */
-  // registerDataProcessors: (dataProcessorDefinition: DataProcessorDefinition): void => {
-  //   lynx.registerDataProcessors(dataProcessorDefinition);
-  // },
+  registerDataProcessors: (dataProcessorDefinition?: DataProcessorDefinition): void => {
+    lynx.registerDataProcessors(dataProcessorDefinition);
+  },
 };
