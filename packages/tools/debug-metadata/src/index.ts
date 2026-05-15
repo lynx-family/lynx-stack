@@ -14,4 +14,17 @@
  * the schema has nothing to validate beyond what the type already states.
  */
 
-export type { DebugMetadataAsset, UiSourceMapData } from './types.js';
+export type {
+  Artifact,
+  BytecodeDebugInfoSource,
+  DebugMetadataAsset,
+  DebugSource,
+  GitMetadata,
+  LepusNGDebugInfo,
+  LepusNGFunctionInfo,
+  RspeedyMeta,
+  SourceMap,
+  SourceMapDebugSource,
+  SourceMapSection,
+  UiSourceMapData,
+} from './types.js';

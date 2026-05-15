@@ -7,10 +7,14 @@ import type { Compilation, Compiler } from 'webpack'
 
 import type {
   DebugMetadataAsset,
+  GitMetadata,
+  RspeedyMeta,
   UiSourceMapData,
 } from '@lynx-js/debug-metadata'
 import type { LynxTemplatePlugin as LynxTemplatePluginClass } from '@lynx-js/template-webpack-plugin'
 
+import { collectGitMetadata } from './git.js'
+import { collectEntryPathMap, dedupe } from './rspeedy-meta.js'
 import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from './UiSourceMapBuildInfo.js'
 import type { UiSourceMapRecord } from './UiSourceMapBuildInfo.js'
 
@@ -97,6 +101,28 @@ export class LynxDebugMetadataPluginImpl {
 
     const { RawSource } = compiler.webpack.sources
 
+    // Cache git + entry-path-map across the multiple `beforeEncode`
+    // invocations a multi-entry build produces. They are derived from
+    // `compiler.options.entry` / git CLI output, both of which are
+    // stable per compilation.
+    let gitCache: GitMetadata | null | undefined
+    const getGit = (): GitMetadata | null => {
+      if (gitCache === undefined) {
+        gitCache = collectGitMetadata(compiler.context)
+      }
+      return gitCache
+    }
+
+    let entryPathMapCache: Record<string, string[]> | undefined
+    const getEntryPathMap = (): Record<string, string[]> => {
+      entryPathMapCache ??= collectEntryPathMap(
+        compiler.options.entry,
+        compiler.context,
+        getGit()?.rootDir ?? null,
+      )
+      return entryPathMapCache
+    }
+
     compiler.hooks.thisCompilation.tap(this.name, compilation => {
       const templateHooks = this.options.LynxTemplatePlugin
         .getLynxTemplatePluginHooks(
@@ -110,21 +136,29 @@ export class LynxDebugMetadataPluginImpl {
             compilation,
             args.entryNames,
           )
+          const git = getGit()
+          const entryPathMap = getEntryPathMap()
+          const rspeedy: RspeedyMeta = {
+            entryFiles: dedupe(
+              args.entryNames.flatMap(name => entryPathMap[name] ?? []),
+            ),
+            bundlePath: args.filenameTemplate,
+          }
+          const asset: DebugMetadataAsset = {
+            artifacts: [],
+            uiSourceMap: createUiSourceMap(uiSourceMapRecords),
+            meta: {
+              ...(git ? { git } : {}),
+              rspeedy,
+            },
+          }
           const debugMetadataAssetName = path.posix.format({
             dir: args.intermediate,
             base: this.options.debugMetadataAssetName,
           })
           compilation.emitAsset(
             debugMetadataAssetName,
-            new RawSource(
-              JSON.stringify(
-                createDebugMetadataAsset(
-                  uiSourceMapRecords,
-                ),
-                null,
-                2,
-              ),
-            ),
+            new RawSource(JSON.stringify(asset, null, 2)),
           )
           args.intermediateAssets.push(debugMetadataAssetName)
 
@@ -206,15 +240,6 @@ export function createUiSourceMap(
     sources,
     mappings,
     uiMaps,
-  }
-}
-
-export function createDebugMetadataAsset(
-  uiSourceMapRecords: UiSourceMapRecord[],
-): DebugMetadataAsset {
-  return {
-    uiSourceMap: createUiSourceMap(uiSourceMapRecords),
-    meta: {},
   }
 }
 
