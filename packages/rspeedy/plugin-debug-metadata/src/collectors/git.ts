@@ -29,8 +29,10 @@ function tryRunGit(cwd: string, args: string[]): string | null {
  * - https-style: drop the trailing `.git`
  *
  * Returns `null` when input is `null` / empty.
+ *
+ * @internal Exported for unit testing only.
  */
-function normalizeRemoteUrl(remoteUrl: string | null): string | null {
+export function normalizeRemoteUrl(remoteUrl: string | null): string | null {
   if (!remoteUrl) return null
   const sshMatch = /^git@([^:]+):(.+?)(?:\.git)?$/.exec(remoteUrl)
   if (sshMatch) {
