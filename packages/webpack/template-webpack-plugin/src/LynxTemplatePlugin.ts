@@ -785,6 +785,7 @@ class LynxTemplatePluginImpl {
       enableCSSSelector,
     );
 
+    let debugMetadataUrl = '';
     let templateDebugUrl = '';
     const intermediatePosix = intermediate.replace(/\\/g, '/');
     const debugMetadataPath = path.posix.format({
@@ -799,6 +800,10 @@ class LynxTemplatePluginImpl {
       && compiler.options.output.publicPath !== 'auto'
       && compiler.options.output.publicPath !== '/'
     ) {
+      debugMetadataUrl = new URL(
+        debugMetadataPath,
+        compiler.options.output.publicPath,
+      ).toString();
       templateDebugUrl = new URL(
         debugMetadataPath + debugMetadataDebugInfoQuery,
         compiler.options.output.publicPath,
@@ -836,6 +841,7 @@ class LynxTemplatePluginImpl {
           enableCSSInheritance,
           enableNewGesture,
           removeDescendantSelectorScope,
+          debugMetadataUrl,
         },
       },
       css: {

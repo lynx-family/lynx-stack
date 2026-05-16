@@ -43,10 +43,11 @@ Status codes:
 
 ## Build-time URL rewrites
 
-To get every consumer pointed at the unified endpoint, the plugin rewrites two things during build:
+To get every consumer pointed at the unified endpoint, the plugin rewrites three things during build:
 
 - **JS `//# sourceMappingURL=…` trailers.** Whatever `SourceMapDevToolPlugin` (or `output.publicPath`, or a user-supplied `filename` / `append`) wrote stays as the source-of-truth dir; only the basename is swapped for `debug-metadata.json?field=source-map&filename=<original basename>`. URL surgery is delegated to `new URL` so query strings / fragments / encoding / relative-vs-absolute all behave correctly. Runs at `PROCESS_ASSETS_STAGE_DEV_TOOLING + 1` so the rewrite is in the JS source the template encoder consumes.
-- **tasm `templateDebugUrl`.** Points at `<publicPath>/<intermediate>/debug-metadata.json?field=bytecode-debug-info&filename=main-thread.js` instead of the legacy `debug-info.json`. Left empty when `publicPath` is `auto` / `/` (unchanged from previous behavior).
+- **tasm `compilerOptions.templateDebugUrl`.** Points at `<publicPath>/<intermediate>/debug-metadata.json?field=bytecode-debug-info&filename=main-thread.js` instead of the legacy `debug-info.json`. Left empty when `publicPath` is `auto` / `/` (unchanged from previous behavior).
+- **tasm `sourceContent.config.debugMetadataUrl`.** The base endpoint without any query — `<publicPath>/<intermediate>/debug-metadata.json`. Consumers append their own `?field=…` to it. Left empty when `publicPath` is `auto` / `/`.
 
 The legacy `debug-info.json` is **no longer written to disk** — its contents are accessible via the bytecode-debug-info endpoint above.
 
