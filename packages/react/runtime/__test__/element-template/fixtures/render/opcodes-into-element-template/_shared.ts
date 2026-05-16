@@ -31,9 +31,8 @@ const templates = [
       type: 'raw-text',
       attributesArray: [
         {
-          kind: 'attribute',
+          kind: 'slot',
           key: 'text',
-          binding: 'slot',
           attrSlotIndex: 0,
         },
       ],
@@ -47,9 +46,8 @@ const templates = [
       type: 'view',
       attributesArray: [
         {
-          kind: 'attribute',
+          kind: 'slot',
           key: 'id',
-          binding: 'slot',
           attrSlotIndex: 0,
         },
       ],
@@ -88,9 +86,8 @@ const templates = [
       type: 'view',
       attributesArray: [
         {
-          kind: 'attribute',
+          kind: 'slot',
           key: 'title',
-          binding: 'slot',
           attrSlotIndex: 0,
         },
       ],

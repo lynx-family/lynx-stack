@@ -644,7 +644,7 @@ fn should_not_emit_element_template_map_in_element_template_mode() {
 }
 
 #[test]
-fn should_use_configured_runtime_package_in_development_mode() {
+fn should_not_use_snapshot_ref_transform_in_element_template_mode() {
   let (code, _, _) = transform_to_code_templates_and_diagnostics_with_mode(
     r#"<view ref={viewRef} />"#,
     JSXTransformerConfig {
@@ -655,7 +655,8 @@ fn should_use_configured_runtime_package_in_development_mode() {
     TransformMode::Development,
   );
 
-  assert!(code.contains(r#"require("@custom/react/internal").transformRef(viewRef)"#));
+  assert!(code.contains("viewRef"));
+  assert!(!code.contains("transformRef"));
   assert!(!code.contains("@lynx-js/react/internal"));
 }
 

@@ -1,4 +1,4 @@
-@import "./luna.css";
+@import "../theme.css";
 
 /* =========================
  * Radio Group
@@ -8,12 +8,13 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  min-width: 0;
 }
 
 .radio-group-container {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 /* Usage Hints */
@@ -35,13 +36,13 @@
 /* Card: Options look like cards */
 .radio-group-card .radio-option {
   padding: 16px;
-  border: 1px solid var(--line);
+  border: var(--a2ui-border);
   border-radius: 8px;
-  background-color: var(--paper);
+  background-color: var(--a2ui-color-surface);
 }
 
 .radio-group-card .radio-option:active {
-  background-color: var(--neutral-film);
+  background-color: var(--a2ui-color-surface-muted);
 }
 
 /* =========================
@@ -54,11 +55,12 @@
   align-items: center;
   gap: 12px;
   cursor: pointer;
+  min-width: 0;
 }
 
 .label {
-  font-size: 16px;
-  color: var(--content);
+  font-size: 14px;
+  color: var(--a2ui-color-on-surface);
   line-height: 1.5;
 }
 
@@ -70,9 +72,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border-width: 1.5px;
-  border-style: solid;
-  border-color: var(--line);
+  border: 1.5px solid var(--a2ui-color-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -85,12 +85,12 @@
 }
 
 .radio-item.ui-checked {
-  border-color: var(--primary);
-  background-color: var(--primary);
+  border-color: var(--a2ui-color-primary);
+  background-color: var(--a2ui-color-primary);
 }
 
 .radio-item.ui-active {
-  border-color: var(--primary-2);
+  border-color: var(--a2ui-color-primary-hover);
 }
 
 /* Indicator Dot */
@@ -106,5 +106,5 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: var(--primary-content);
+  background-color: var(--a2ui-color-on-primary);
 }

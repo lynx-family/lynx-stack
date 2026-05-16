@@ -135,6 +135,25 @@ describe('Element APIs', () => {
     expect(lynxEvent.detail).toEqual({ x: 100, y: 200 });
   });
 
+  test('createCrossThreadEvent clone touches for untrusted events', async () => {
+    const { createCrossThreadEvent } = await import(
+      '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'
+    );
+    const touchEvent = new Event('touchstart') as any;
+    touchEvent.touches = [{
+      clientX: 100,
+      clientY: 200,
+      nested: { ignored: true },
+    }];
+    touchEvent.targetTouches = [{ identifier: 1, target: {} }];
+    touchEvent.changedTouches = [{ pageX: 10, preventDefault: () => {} }];
+
+    const lynxEvent = createCrossThreadEvent(touchEvent);
+    expect(lynxEvent.touches).toEqual([{ clientX: 100, clientY: 200 }]);
+    expect(lynxEvent.targetTouches).toEqual([{ identifier: 1 }]);
+    expect(lynxEvent.changedTouches).toEqual([{ pageX: 10 }]);
+  });
+
   test('createCrossThreadEvent sets empty detail if no touches', async () => {
     const { createCrossThreadEvent } = await import(
       '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'

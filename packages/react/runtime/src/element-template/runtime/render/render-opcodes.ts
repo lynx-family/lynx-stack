@@ -4,7 +4,9 @@
 
 import { __OpAttr, __OpBegin, __OpEnd, __OpSlot, __OpText } from './render-to-opcodes.js';
 import type { SerializableValue } from '../../protocol/types.js';
-import { createElementTemplateWithHandle } from '../template/handle.js';
+import { __etAttrPlanMap } from '../template/attr-slot-plan.js';
+import type { EtAttrAdapter } from '../template/attr-slot-plan.js';
+import { createElementTemplateWithReservedHandle, reserveElementTemplateId } from '../template/handle.js';
 
 const BUILTIN_RAW_TEXT_TEMPLATE_KEY = '_et_builtin_raw_text';
 
@@ -89,12 +91,36 @@ export function renderOpcodesIntoElementTemplate(
         const parentTemplateKey = templateKeyStack[stackTop];
         const parentActiveElementSlot = activeElementSlotStack[stackTop];
 
-        const elementRef = createElementTemplateWithHandle(
-          concreteTemplateKey,
-          null,
-          attributeSlots ?? null,
-          elementSlots ?? null,
-        );
+        const attrPlan = __etAttrPlanMap[concreteTemplateKey];
+        const handleId = reserveElementTemplateId();
+        let elementRef: ElementRef;
+        if (attrPlan === undefined) {
+          elementRef = createElementTemplateWithReservedHandle(
+            handleId,
+            concreteTemplateKey,
+            null,
+            attributeSlots ?? null,
+            elementSlots ?? null,
+          );
+        } else {
+          const preparedAttributeSlots = attributeSlots?.slice() ?? [];
+          for (let planIndex = 0; planIndex < attrPlan.length; planIndex += 2) {
+            const attrSlotIndex = attrPlan[planIndex] as number;
+            const adapter = attrPlan[planIndex + 1] as EtAttrAdapter;
+            preparedAttributeSlots[attrSlotIndex] = adapter(
+              handleId,
+              attrSlotIndex,
+              preparedAttributeSlots[attrSlotIndex],
+            );
+          }
+          elementRef = createElementTemplateWithReservedHandle(
+            handleId,
+            concreteTemplateKey,
+            null,
+            preparedAttributeSlots,
+            elementSlots ?? null,
+          );
+        }
         appendChildToParent(parentTemplateKey, parentActiveElementSlot, rootRefs, elementRef);
 
         i += 1;
@@ -119,7 +145,9 @@ export function renderOpcodesIntoElementTemplate(
       }
       case __OpText: {
         const text = opcodes[i + 1] as string;
-        const textRef = createElementTemplateWithHandle(
+        const handleId = reserveElementTemplateId();
+        const textRef = createElementTemplateWithReservedHandle(
+          handleId,
           BUILTIN_RAW_TEXT_TEMPLATE_KEY,
           null,
           [String(text)],

@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { afterEach, beforeEach, describe, expect, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createElement } from 'preact';
 
 import {
@@ -24,6 +24,7 @@ import type {
   ElementTemplateUpdateCommandStream,
   ElementTemplateUpdateCommitContext,
 } from '../../../../../src/element-template/protocol/types.js';
+import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
 import { compileFixtureSource } from '../../../test-utils/debug/compiledFixtureCompiler.js';
 import {
@@ -136,6 +137,7 @@ describe('Compiled background Preact updates', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetElementTemplateCommitState();
+    clearEtAttrPlanMap();
     updateEvents = [];
     envManager.resetEnv('background');
     envManager.setUseElementTemplate(true);

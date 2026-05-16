@@ -75,7 +75,9 @@ describe('background loader', () => {
     expect(result.code).not.toContain(
       '"@lynx-js/react/element-template/jsx-runtime"',
     );
-    expect(result.code).toContain('"@lynx-js/react/element-template"');
+    expect(result.code).toMatch(
+      /"@lynx-js\/react\/element-template(?:\/internal)?"/,
+    );
     expect(result.code).not.toContain('"@lynx-js/react/internal"');
   });
 });

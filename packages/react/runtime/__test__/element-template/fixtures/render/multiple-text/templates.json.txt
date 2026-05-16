@@ -43,9 +43,8 @@
           "type": "view",
           "attributesArray": [
             {
-              "kind": "attribute",
+              "kind": "static",
               "key": "id",
-              "binding": "static",
               "value": "1"
             }
           ],
@@ -62,9 +61,8 @@
           "type": "view",
           "attributesArray": [
             {
-              "kind": "attribute",
+              "kind": "static",
               "key": "id",
-              "binding": "static",
               "value": "2"
             }
           ],
@@ -81,9 +79,8 @@
           "type": "view",
           "attributesArray": [
             {
-              "kind": "attribute",
+              "kind": "static",
               "key": "id",
-              "binding": "static",
               "value": "3"
             }
           ],
@@ -107,9 +104,8 @@
           "type": "view",
           "attributesArray": [
             {
-              "kind": "attribute",
+              "kind": "static",
               "key": "id",
-              "binding": "static",
               "value": "4"
             }
           ],
@@ -139,9 +135,8 @@
       "type": "raw-text",
       "attributesArray": [
         {
-          "kind": "attribute",
+          "kind": "slot",
           "key": "text",
-          "binding": "slot",
           "attrSlotIndex": 0
         }
       ],

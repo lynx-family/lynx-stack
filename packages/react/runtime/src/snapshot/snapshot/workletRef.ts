@@ -2,7 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { onWorkletCtxUpdate, runWorkletCtx, updateWorkletRef as update } from '@lynx-js/react/worklet-runtime/bindings';
+import {
+  onWorkletCtxUpdate,
+  retainWorkletCtx,
+  runWorkletCtx,
+  updateWorkletRef as update,
+} from '@lynx-js/react/worklet-runtime/bindings';
 import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { isMainThreadHydrating } from '../lifecycle/patch/isMainThreadHydrating.js';
@@ -45,8 +50,13 @@ export function updateWorkletRef(
   expIndex: number,
   oldValue: WorkletRefImpl<Element> | Worklet | null | undefined,
   elementIndex: number,
-  _workletType: string,
+  workletType: string,
 ): void {
+  const value = snapshot.__values![expIndex] as (WorkletRefImpl<Element> | Worklet | undefined);
+  if (workletType === 'main-thread' && value && (value as Worklet)._wkltId) {
+    retainWorkletCtx(value as Worklet);
+  }
+
   if (!snapshot.__elements) {
     return;
   }
@@ -56,7 +66,6 @@ export function updateWorkletRef(
     snapshot.__worklet_ref_set?.delete(oldValue);
   }
 
-  const value = snapshot.__values![expIndex] as (WorkletRefImpl<Element> | Worklet | undefined);
   if (value === null || value === undefined) {
     // do nothing
   } else if (value._wvid) {

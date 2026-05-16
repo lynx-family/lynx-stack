@@ -1,0 +1,39 @@
+@import "../theme.css";
+
+.a2ui-icon {
+  font-family: var(--a2ui-icon-font-family);
+  font-style: normal;
+  font-weight: normal;
+  font-size: var(--a2ui-icon-size-md);
+  line-height: 1;
+  letter-spacing: normal;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--a2ui-icon-color);
+}
+
+.a2ui-icon-sm {
+  font-size: var(--a2ui-icon-size-sm);
+}
+
+.a2ui-icon-md {
+  font-size: var(--a2ui-icon-size-md);
+}
+
+.a2ui-icon-lg {
+  font-size: var(--a2ui-icon-size-lg);
+}
+
+.a2ui-icon-color-primary {
+  color: var(--a2ui-icon-color-primary);
+}
+
+.a2ui-icon-color-muted {
+  color: var(--a2ui-icon-color-muted);
+}
+
+.a2ui-icon-color-inherit {
+  color: inherit;
+}

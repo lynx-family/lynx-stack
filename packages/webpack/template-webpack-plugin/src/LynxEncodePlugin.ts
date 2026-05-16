@@ -1,8 +1,14 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { createRequire } from 'node:module';
+import { availableParallelism } from 'node:os';
+import { pathToFileURL } from 'node:url';
 
+import Tinypool from 'tinypool';
 import type { Chunk, Compiler } from 'webpack';
+
+import type { EncodeResult } from '@lynx-js/tasm';
 
 import {
   collectCSSSourceMapContents,
@@ -10,6 +16,11 @@ import {
 } from './cssDiagnostics.js';
 import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
 import { getRequireModuleAsyncCachePolyfill } from './polyfill/requireModuleAsync.js';
+import type { EncodeWorkerOptions } from './worker/encode.js';
+
+const require = createRequire(import.meta.url);
+
+const ENCODE_WORKER_PATH = require.resolve('../lib/worker/encode.js');
 
 // https://github.com/web-infra-dev/rsbuild/blob/main/packages/core/src/types/config.ts#L1029
 type InlineChunkTestFunction = (params: {
@@ -49,6 +60,17 @@ export class LynxEncodePlugin {
    * The stage of the beforeEmit hook.
    */
   static BEFORE_EMIT_STAGE = 256;
+  /**
+   * Shared TASM encode worker pool: multiple entries (and multiple
+   * `LynxEncodePlugin` instances in the same process) share its worker
+   * slots for parallel encode; watch-mode rebuilds keep the same workers
+   * warm. `availableParallelism()` honors cgroup CPU limits (containers,
+   * CI runners), so we don't need to subtract a core ourselves.
+   */
+  static encodePool: Tinypool = new Tinypool({
+    filename: pathToFileURL(ENCODE_WORKER_PATH).href,
+    maxThreads: availableParallelism(),
+  });
   constructor(protected options?: LynxEncodePluginOptions | undefined) {}
 
   /**
@@ -228,17 +250,18 @@ export class LynxEncodePluginImpl {
       }, async (args) => {
         const { encodeOptions } = args;
 
-        const { getEncodeMode } = await import('@lynx-js/tasm');
-
-        const encode = getEncodeMode();
         // TODO: lynx-js/tasm should add css_diagnostics type
         // @ts-expect-error ignore css_diagnostics type
-        const { buffer, lepus_debug, css_diagnostics } = await Promise.resolve(
-          encode(encodeOptions),
+        const { buffer, lepus_debug, css_diagnostics } = await (
+          LynxEncodePlugin.encodePool.run(
+            { encodeOptions } as EncodeWorkerOptions,
+          ) as Promise<EncodeResult>
         );
 
         return {
-          buffer,
+          // worker will serialize the buffer to a Uint8Array
+          // convert it back to a Buffer
+          buffer: Buffer.from(buffer),
           debugInfo: lepus_debug,
           cssDiagnostics: css_diagnostics as string,
         };

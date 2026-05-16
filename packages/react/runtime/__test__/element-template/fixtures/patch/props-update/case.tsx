@@ -11,7 +11,7 @@ export function run() {
         kind: 'element',
         type: 'view',
         attributesArray: [
-          { kind: 'attribute', binding: 'slot', key: 'id', attrSlotIndex: 0 },
+          { kind: 'slot', key: 'id', attrSlotIndex: 0 },
         ],
         children: [],
       },

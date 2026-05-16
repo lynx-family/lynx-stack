@@ -12,9 +12,8 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
         "type": "view",
         "attributesArray": [
           {
-            "kind": "attribute",
+            "kind": "static",
             "key": "style",
-            "binding": "static",
             "value": "color: red; width: 100px;"
           }
         ],
@@ -24,15 +23,13 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
             "type": "text",
             "attributesArray": [
               {
-                "kind": "attribute",
+                "kind": "static",
                 "key": "style",
-                "binding": "static",
                 "value": "font-size:16px;font-weight:bold"
               },
               {
-                "kind": "attribute",
+                "kind": "static",
                 "key": "text",
-                "binding": "static",
                 "value": "Static Style"
               }
             ],
@@ -43,9 +40,8 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
             "type": "view",
             "attributesArray": [
               {
-                "kind": "attribute",
+                "kind": "slot",
                 "key": "style",
-                "binding": "slot",
                 "attrSlotIndex": 0.0
               }
             ],
@@ -55,9 +51,8 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
                 "type": "raw-text",
                 "attributesArray": [
                   {
-                    "kind": "attribute",
+                    "kind": "static",
                     "key": "text",
-                    "binding": "static",
                     "value": "Dynamic Style"
                   }
                 ],
@@ -75,9 +70,8 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
         "type": "raw-text",
         "attributesArray": [
           {
-            "kind": "attribute",
+            "kind": "slot",
             "key": "text",
-            "binding": "slot",
             "attrSlotIndex": 0
           }
         ],

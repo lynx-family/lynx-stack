@@ -1,0 +1,24 @@
+{
+  "name": "__PACKAGE_NAME__",
+  "version": "0.0.1",
+  "description": "A Native Autolink Lynx extension",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./types/index.d.ts",
+  "files": [
+    "android",
+    "generated",
+    "ios",
+    "src",
+    "types",
+    "lynx.ext.json",
+    "README.md"
+  ],
+  "scripts": {
+    "codegen": "lynx-autolink-codegen"
+  },
+  "devDependencies": {
+    "@lynx-js/autolink-codegen": "workspace:*"
+  }
+}

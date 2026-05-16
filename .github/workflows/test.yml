@@ -51,6 +51,8 @@ jobs:
         run: |
           pnpm dprint check
           pnpm biome check
+      - name: Package Metadata Check
+        run: pnpm --package=@pnpm/meta-updater@2.0.6 dlx meta-updater --test
       - name: API Check
         run: pnpm turbo api-extractor
       - name: Changeset Check
@@ -59,6 +61,8 @@ jobs:
         run: node .github/scripts/check-no-major-changeset.cjs .changeset-status.json
       - name: Changeset Heading Check
         run: node .github/scripts/check-no-heading-changeset.cjs .changeset-status.json
+      - name: Dependency Changeset Check
+        run: node .github/scripts/check-dep-changes-have-changeset.cjs .changeset-status.json
 
   eslint:
     needs: build

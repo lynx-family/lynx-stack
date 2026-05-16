@@ -7,11 +7,6 @@ import type { GenericComponentProps } from '../../store/types.js';
 
 import '../../../styles/catalog/Image.css';
 
-const useLynxEffect = useEffect as (
-  effect: () => undefined | (() => void),
-  deps?: readonly unknown[],
-) => void;
-
 /**
  * @a2uiCatalog Image
  */
@@ -19,6 +14,7 @@ export interface ImageProps extends GenericComponentProps {
   /** Image URL or path binding. */
   url: string | { path: string };
   fit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
+  mode?: 'scaleToFill' | 'aspectFit' | 'aspectFill' | 'center';
   variant?:
     | 'icon'
     | 'avatar'
@@ -26,29 +22,46 @@ export interface ImageProps extends GenericComponentProps {
     | 'mediumFeature'
     | 'largeFeature'
     | 'header';
+  weight?: number;
 }
+
+const fallbackImage =
+  'https://lf3-static.bytednsdoc.com/obj/eden-cn/zalzzh-ukj-lapzild-shpjpmmv-eufs/ljhwZthlaukjlkulzlp/built-in-images/logo.png';
 
 export function Image(
   props: ImageProps,
 ): import('@lynx-js/react').ReactNode {
-  const { id, url } = props;
+  const src = props.url;
+  const fit = props.fit ?? 'fit';
+  const mode = props.mode ?? (() => {
+    switch (fit) {
+      case 'contain':
+      case 'scale-down':
+        return 'aspectFit';
+      case 'fill':
+        return 'scaleToFill';
+      case 'none':
+        return 'center';
+      default:
+        return 'aspectFill';
+    }
+  })();
 
   const [hasError, setHasError] = useState(false);
 
-  useLynxEffect(() => {
+  useEffect(() => {
     setHasError(false);
-    return undefined;
-  }, [url]);
-
-  const finalSrc = hasError
-    ? 'https://lf3-static.bytednsdoc.com/obj/eden-cn/zalzzh-ukj-lapzild-shpjpmmv-eufs/ljhwZthlaukjlkulzlp/built-in-images/logo.png'
-    : url;
+  }, [src]);
 
   return (
     <image
-      key={id}
-      src={finalSrc as string}
-      className='a2ui-image mediumFeature'
+      key={props.id}
+      className={`a2ui-image image-variant-${
+        props.variant ?? 'mediumFeature'
+      } ${typeof props.weight === 'number' ? 'image-weighted' : ''}`}
+      auto-size={true}
+      src={hasError ? fallbackImage : src as string}
+      mode={mode}
       binderror={() => setHasError(true)}
     />
   );

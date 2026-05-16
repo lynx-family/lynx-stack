@@ -12,6 +12,7 @@ import '../../../styles/catalog/Button.css';
 export interface ButtonProps extends GenericComponentProps {
   child: string;
   variant?: 'primary' | 'borderless';
+  isValid?: boolean;
   /** v0.9 actions should use the `event` wrapper for server-dispatched clicks. */
   action: {
     event: {
@@ -25,10 +26,17 @@ export interface ButtonProps extends GenericComponentProps {
 export function Button(
   props: ButtonProps,
 ): import('@lynx-js/react').ReactNode {
-  const { action, child, surface, sendAction } = props;
+  const {
+    action,
+    child,
+    isValid = true,
+    surface,
+    sendAction,
+    variant = 'primary',
+  } = props;
 
   const handleClick = () => {
-    if (action) {
+    if (isValid && action) {
       void sendAction?.(action as Record<string, unknown>);
     }
   };
@@ -38,7 +46,10 @@ export function Button(
     : undefined;
 
   return (
-    <view className='button' bindtap={handleClick}>
+    <view
+      className={`button button-${variant}${isValid ? '' : ' button-disabled'}`}
+      bindtap={isValid ? handleClick : undefined}
+    >
       {childResource
         ? <A2UIRenderer resource={childResource} />
         : <text>Button</text>}

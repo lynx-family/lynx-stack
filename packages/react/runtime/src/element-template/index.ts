@@ -84,4 +84,3 @@ export {
 };
 
 export * from './client/root.js';
-export { __etSlot } from './runtime/components/slot.js';

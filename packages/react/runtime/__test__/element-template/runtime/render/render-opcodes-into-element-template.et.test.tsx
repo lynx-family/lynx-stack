@@ -8,6 +8,12 @@ import { renderOpcodesIntoElementTemplate } from '../../../../src/element-templa
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import {
+  __etAttrPlanMap,
+  adaptEventAttrSlot,
+  adaptSpreadAttrSlot,
+  clearEtAttrPlanMap,
+} from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
+import {
   __OpAttr,
   __OpBegin,
   __OpEnd,
@@ -17,16 +23,21 @@ import {
 
 describe('renderOpcodesIntoElementTemplate', () => {
   const createElementTemplate = vi.fn();
+  const addEvent = vi.fn();
 
   beforeEach(() => {
     createElementTemplate.mockReset();
+    addEvent.mockReset();
     vi.stubGlobal('__CreateElementTemplate', createElementTemplate);
+    vi.stubGlobal('__AddEvent', addEvent);
     elementTemplateRegistry.clear();
+    clearEtAttrPlanMap();
     resetTemplateId();
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    clearEtAttrPlanMap();
   });
 
   it('throws when popping the root frame', () => {
@@ -50,6 +61,102 @@ describe('renderOpcodesIntoElementTemplate', () => {
       -1,
     );
     expect(elementTemplateRegistry.get(-1)).toBe(rootTextRef);
+  });
+
+  it('prepares direct event slots before native create', () => {
+    const rootRef = { kind: 'root-ref' };
+    const handleTap = vi.fn();
+    createElementTemplate.mockReturnValue(rootRef);
+    __etAttrPlanMap._et_event = [
+      0,
+      adaptEventAttrSlot,
+      2,
+      adaptEventAttrSlot,
+    ];
+
+    const result = renderOpcodesIntoElementTemplate([
+      __OpBegin,
+      { type: '_et_event' },
+      __OpAttr,
+      'attributeSlots',
+      [handleTap, 'title', 1],
+      __OpEnd,
+    ]);
+
+    expect(result.rootRefs).toEqual([rootRef]);
+    expect(createElementTemplate).toHaveBeenCalledWith(
+      '_et_event',
+      null,
+      ['-1:0:', 'title', '-1:2:'],
+      null,
+      -1,
+    );
+    expect(addEvent).not.toHaveBeenCalled();
+  });
+
+  it('prepares empty direct event values as null before native create', () => {
+    const rootRef = { kind: 'root-ref' };
+    createElementTemplate.mockReturnValue(rootRef);
+    __etAttrPlanMap._et_event = [
+      0,
+      adaptEventAttrSlot,
+      1,
+      adaptEventAttrSlot,
+      2,
+      adaptEventAttrSlot,
+      3,
+      adaptEventAttrSlot,
+    ];
+
+    renderOpcodesIntoElementTemplate([
+      __OpBegin,
+      { type: '_et_event' },
+      __OpAttr,
+      'attributeSlots',
+      [null, undefined, false, true],
+      __OpEnd,
+    ]);
+
+    expect(createElementTemplate).toHaveBeenCalledWith(
+      '_et_event',
+      null,
+      [null, null, null, '-1:3:'],
+      null,
+      -1,
+    );
+    expect(addEvent).not.toHaveBeenCalled();
+  });
+
+  it('prepares spread event values before native create', () => {
+    const rootRef = { kind: 'root-ref' };
+    const handleTap = vi.fn();
+    createElementTemplate.mockReturnValue(rootRef);
+    __etAttrPlanMap._et_spread = [0, adaptSpreadAttrSlot];
+
+    renderOpcodesIntoElementTemplate([
+      __OpBegin,
+      { type: '_et_spread' },
+      __OpAttr,
+      'attributeSlots',
+      [{
+        id: 'cta',
+        className: 'primary',
+        __self: 'debug-self',
+        __source: { fileName: 'app.tsx' },
+        bindtap: handleTap,
+        catchtouchstart: false,
+      }],
+      __OpEnd,
+    ]);
+
+    expect(createElementTemplate).toHaveBeenCalledWith(
+      '_et_spread',
+      null,
+      [{ id: 'cta', class: 'primary', bindtap: '-1:0:bindtap', catchtouchstart: null }],
+      null,
+      -1,
+    );
+    expect(addEvent).not.toHaveBeenCalled();
   });
 
   it('throws when text is emitted outside of an element slot', () => {

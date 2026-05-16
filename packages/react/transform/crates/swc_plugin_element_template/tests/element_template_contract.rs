@@ -129,6 +129,85 @@ fn without_whitespace(value: &str) -> String {
 }
 
 #[test]
+fn should_emit_direct_event_attr_plan_for_js_target() {
+  let (code, _) = first_user_template_json_with_code(
+    r#"
+      <view bindtap={handleTap} catchtouchstart={handleTouch} />
+    "#,
+    JSXTransformerConfig {
+      target: swc_plugins_shared::target::TransformTarget::JS,
+      ..element_template_config()
+    },
+  );
+  let code = without_whitespace(&code);
+
+  assert!(
+    code.contains(
+      "ReactLynxInternal.__etAttrPlanMap[_et_da39a_test_1]=[0,ReactLynxInternal.adaptEventAttrSlot,1,ReactLynxInternal.adaptEventAttrSlot];"
+    ),
+    "direct event slots should register a sparse ET attr plan, got: {code}"
+  );
+  assert!(
+    code.contains("attributeSlots={[handleTap,handleTouch]}"),
+    "JS target should keep raw handlers in attributeSlots before runtime preparation, got: {code}"
+  );
+  assert!(
+    !code.contains("__etEventSlots"),
+    "event slot metadata must not be passed through Preact props, got: {code}"
+  );
+}
+
+#[test]
+fn should_emit_direct_event_attr_plan_for_lepus_target() {
+  let (code, _) = first_user_template_json_with_code(
+    r#"
+      <view bindtap={handleTap} catchtouchstart={handleTouch} />
+    "#,
+    JSXTransformerConfig {
+      target: swc_plugins_shared::target::TransformTarget::LEPUS,
+      ..element_template_config()
+    },
+  );
+  let code = without_whitespace(&code);
+
+  assert!(
+    code.contains(
+      "ReactLynxInternal.__etAttrPlanMap[_et_da39a_test_1]=[0,ReactLynxInternal.adaptEventAttrSlot,1,ReactLynxInternal.adaptEventAttrSlot];"
+    ),
+    "direct event slots should register a sparse ET attr plan, got: {code}"
+  );
+  assert!(
+    code.contains("attributeSlots={[1,1]}"),
+    "LEPUS target should keep event markers in attributeSlots before runtime preparation, got: {code}"
+  );
+}
+
+#[test]
+fn should_emit_spread_attr_plan_without_ref_adapter() {
+  let (code, _) = first_user_template_json_with_code(
+    r#"
+      <view id={dynamicId} ref={viewRef} {...props} />
+    "#,
+    JSXTransformerConfig {
+      target: swc_plugins_shared::target::TransformTarget::JS,
+      ..element_template_config()
+    },
+  );
+  let code = without_whitespace(&code);
+
+  assert!(
+    code.contains(
+      "ReactLynxInternal.__etAttrPlanMap[_et_da39a_test_1]=[2,ReactLynxInternal.adaptSpreadAttrSlot];"
+    ),
+    "spread slots should register the ET spread attr adapter, got: {code}"
+  );
+  assert!(
+    !code.contains("adaptEventAttrSlot"),
+    "ref and ordinary attrs must not enter the event adapter plan, got: {code}"
+  );
+}
+
+#[test]
 fn should_not_inject_root_css_scope_attrs_for_element_template() {
   let (code, template) = first_user_template_json_with_code(
     r#"
@@ -288,18 +367,18 @@ fn should_keep_static_attribute_values_out_of_et_attribute_slots() {
       .unwrap_or_else(|| panic!("missing attribute descriptor for {key}: {attrs:?}"))
   };
 
-  assert_eq!(attr_by_key("disabled")["binding"], "static");
+  assert_eq!(attr_by_key("disabled")["kind"], "static");
   assert_eq!(attr_by_key("disabled")["value"].as_bool(), Some(true));
-  assert_eq!(attr_by_key("id")["binding"], "static");
+  assert_eq!(attr_by_key("id")["kind"], "static");
   assert_eq!(attr_by_key("id")["value"].as_f64(), Some(1.0));
-  assert_eq!(attr_by_key("data-count")["binding"], "static");
+  assert_eq!(attr_by_key("data-count")["kind"], "static");
   assert_eq!(attr_by_key("data-count")["value"].as_f64(), Some(2.0));
-  assert_eq!(attr_by_key("data-overflow")["binding"], "slot");
+  assert_eq!(attr_by_key("data-overflow")["kind"], "slot");
   assert_eq!(
     attr_by_key("data-overflow")["attrSlotIndex"].as_f64(),
     Some(0.0)
   );
-  assert_eq!(attr_by_key("class")["binding"], "slot");
+  assert_eq!(attr_by_key("class")["kind"], "slot");
   assert_eq!(attr_by_key("class")["attrSlotIndex"].as_f64(), Some(1.0));
   let code = without_whitespace(&code);
   assert!(
@@ -331,9 +410,9 @@ fn should_not_consume_hidden_et_slots_for_list_item_platform_attrs() {
     .find(|attr| attr["key"] == "recyclable")
     .expect("recyclable descriptor");
 
-  assert_eq!(item_key["binding"], "slot");
+  assert_eq!(item_key["kind"], "slot");
   assert_eq!(item_key["attrSlotIndex"].as_f64(), Some(0.0));
-  assert_eq!(recyclable["binding"], "static");
+  assert_eq!(recyclable["kind"], "static");
   assert_eq!(recyclable["value"].as_bool(), Some(true));
   let code = without_whitespace(&code);
   assert!(
@@ -344,10 +423,18 @@ fn should_not_consume_hidden_et_slots_for_list_item_platform_attrs() {
 
 #[test]
 fn should_keep_slot_descriptor_order_for_dynamic_attr_spread_event_and_ref() {
-  let template = first_user_template_json(
+  let (code, template) = first_user_template_json_with_code(
     r#"
       <view id={dynamicId} {...props} bindtap={handleTap} ref={viewRef} />
     "#,
+    element_template_config(),
+  );
+  let code = without_whitespace(&code);
+  assert!(
+    code.contains(
+      "ReactLynxInternal.__etAttrPlanMap[_et_da39a_test_1]=[1,ReactLynxInternal.adaptSpreadAttrSlot,2,ReactLynxInternal.adaptEventAttrSlot];"
+    ),
+    "spread and direct event adapters should keep their descriptor slot order, got: {code}"
   );
 
   let attrs = template["attributesArray"]
@@ -355,23 +442,19 @@ fn should_keep_slot_descriptor_order_for_dynamic_attr_spread_event_and_ref() {
     .expect("attributesArray");
   assert_eq!(attrs.len(), 4);
 
-  assert_eq!(attrs[0]["kind"], "attribute");
+  assert_eq!(attrs[0]["kind"], "slot");
   assert_eq!(attrs[0]["key"], "id");
-  assert_eq!(attrs[0]["binding"], "slot");
   assert_eq!(attrs[0]["attrSlotIndex"].as_f64(), Some(0.0));
 
   assert_eq!(attrs[1]["kind"], "spread");
-  assert_eq!(attrs[1]["binding"], "slot");
   assert_eq!(attrs[1]["attrSlotIndex"].as_f64(), Some(1.0));
 
-  assert_eq!(attrs[2]["kind"], "attribute");
+  assert_eq!(attrs[2]["kind"], "slot");
   assert_eq!(attrs[2]["key"], "bindtap");
-  assert_eq!(attrs[2]["binding"], "slot");
   assert_eq!(attrs[2]["attrSlotIndex"].as_f64(), Some(2.0));
 
-  assert_eq!(attrs[3]["kind"], "attribute");
+  assert_eq!(attrs[3]["kind"], "slot");
   assert_eq!(attrs[3]["key"], "ref");
-  assert_eq!(attrs[3]["binding"], "slot");
   assert_eq!(attrs[3]["attrSlotIndex"].as_f64(), Some(3.0));
 }
 
@@ -388,14 +471,12 @@ fn should_keep_worklet_attr_descriptor_keys_for_namespaced_attrs() {
     .expect("attributesArray");
   assert_eq!(attrs.len(), 2);
 
-  assert_eq!(attrs[0]["kind"], "attribute");
+  assert_eq!(attrs[0]["kind"], "slot");
   assert_eq!(attrs[0]["key"], "main-thread:bindtap");
-  assert_eq!(attrs[0]["binding"], "slot");
   assert_eq!(attrs[0]["attrSlotIndex"].as_f64(), Some(0.0));
 
-  assert_eq!(attrs[1]["kind"], "attribute");
+  assert_eq!(attrs[1]["kind"], "slot");
   assert_eq!(attrs[1]["key"], "main-thread:ref");
-  assert_eq!(attrs[1]["binding"], "slot");
   assert_eq!(attrs[1]["attrSlotIndex"].as_f64(), Some(1.0));
 }
 
@@ -412,14 +493,12 @@ fn should_treat_unknown_namespaced_attrs_as_regular_attrs() {
     .expect("attributesArray");
   assert_eq!(attrs.len(), 2);
 
-  assert_eq!(attrs[0]["kind"], "attribute");
+  assert_eq!(attrs[0]["kind"], "slot");
   assert_eq!(attrs[0]["key"], "custom:flag");
-  assert_eq!(attrs[0]["binding"], "slot");
   assert_eq!(attrs[0]["attrSlotIndex"].as_f64(), Some(0.0));
 
-  assert_eq!(attrs[1]["kind"], "attribute");
+  assert_eq!(attrs[1]["kind"], "static");
   assert_eq!(attrs[1]["key"], "custom:static");
-  assert_eq!(attrs[1]["binding"], "static");
   assert_eq!(attrs[1]["value"].as_f64(), Some(1.0));
 }
 
@@ -436,9 +515,8 @@ fn should_skip_lynx_part_id_without_reserving_attr_slot() {
     .expect("attributesArray");
   assert_eq!(attrs.len(), 1);
 
-  assert_eq!(attrs[0]["kind"], "attribute");
+  assert_eq!(attrs[0]["kind"], "slot");
   assert_eq!(attrs[0]["key"], "id");
-  assert_eq!(attrs[0]["binding"], "slot");
   assert_eq!(attrs[0]["attrSlotIndex"].as_f64(), Some(0.0));
 }
 
@@ -514,7 +592,7 @@ fn should_preserve_user_wrapper_elements_as_template_nodes() {
     .as_array()
     .expect("wrapper attributesArray");
   assert_eq!(wrapper_attrs[0]["key"], "id");
-  assert_eq!(wrapper_attrs[0]["binding"], "static");
+  assert_eq!(wrapper_attrs[0]["kind"], "static");
   assert_eq!(wrapper_attrs[0]["value"], "user-wrapper");
 
   assert_eq!(children[1]["kind"], "elementSlot");

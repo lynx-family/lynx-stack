@@ -34,13 +34,11 @@ const diffScreenShot = async (
 };
 
 const expectHasText = async (page: Page, text: string) => {
-  const hasText = (await page.getByText(text).count()) === 1;
-  await expect(hasText).toBe(true);
+  await expect(page.getByText(text)).toHaveCount(1);
 };
 
 const expectNoText = async (page: Page, text: string) => {
-  const hasText = (await page.getByText(text).count()) === 1;
-  await expect(hasText).toBe(false);
+  await expect(page.getByText(text)).toHaveCount(0);
 };
 
 const goto = async (
@@ -259,6 +257,71 @@ test.describe('reactlynx3 tests', () => {
       const height = page.locator('#height');
       await expect(width).toHaveText('1234');
       await expect(height).toHaveText('5678');
+    });
+
+    test('api-frame-element-map', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#target')).toHaveJSProperty(
+        'tagName',
+        'LYNX-VIEW',
+      );
+    });
+
+    test('api-frame-src', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#frame-ready')).toHaveText('frame:ready');
+    });
+
+    test('api-frame-data', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#frame-data')).toHaveText('data:from-data');
+    });
+
+    test('api-frame-data-update', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#frame-data')).toHaveText('data:before');
+      await page.locator('#update-frame-data').click();
+      await expect(page.locator('#frame-data')).toHaveText('data:after');
+    });
+
+    test('api-frame-global-props', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#frame-global-props')).toHaveText(
+        'global:from-global-props',
+      );
+    });
+
+    test('api-frame-bindload', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#frame-load-status')).toHaveText('0');
+      await expect(page.locator('#frame-load-message')).toHaveText('success');
+      await expect(page.locator('#frame-load-url')).toContainText(
+        '/dist/api-frame-inner.web.bundle',
+      );
+    });
+
+    test('api-frame-auto-height', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#target')).toHaveAttribute(
+        'auto-height',
+        'true',
+      );
+      await expect(page.locator('#target')).not.toHaveAttribute(
+        'height',
+        'auto',
+      );
+    });
+
+    test('api-frame-auto-width', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#target')).toHaveAttribute(
+        'auto-width',
+        'true',
+      );
+      await expect(page.locator('#target')).not.toHaveAttribute(
+        'width',
+        'auto',
+      );
     });
 
     test('basic-bindtap-simultaneous', async ({ page }, { title }) => {
@@ -1037,6 +1100,24 @@ test.describe('reactlynx3 tests', () => {
           'background-color',
           'rgb(0, 128, 0)',
         ); // green
+      },
+    );
+    test(
+      'basic-bindwheel-view',
+      async ({ page, browserName }, { title }) => {
+        test.skip(
+          browserName === 'webkit',
+          'mouse wheel unsupported on webkit',
+        );
+        await goto(page, title);
+        await wait(300);
+        await page.locator('#target').hover();
+        await page.mouse.wheel(0, 100);
+        await expect(page.locator('#result')).toHaveText('wheel');
+        await expect(page.locator('#indicator')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        );
       },
     );
 
@@ -3191,9 +3272,9 @@ test.describe('reactlynx3 tests', () => {
           await goto(page, title);
           await wait(100);
           await page.locator('.focus').click({ force: true });
-          await wait(100);
-          const result = await page.locator('.result').first().innerText();
-          expect(result).toBe('bindfocus');
+          await expect(page.locator('.result').first()).toHaveText(
+            'bindfocus',
+          );
         },
       );
       // input/focus test-case end
@@ -4746,6 +4827,24 @@ test.describe('reactlynx3 tests', () => {
           await wait(1000);
           expect(scrolled).toBeTruthy();
           expect(scrollend).toBeTruthy();
+        },
+      );
+      test(
+        'basic-element-list-bindwheel',
+        async ({ page, browserName }, { title }) => {
+          test.skip(
+            browserName === 'webkit',
+            'mouse wheel unsupported on webkit',
+          );
+          await goto(page, title);
+          await wait(300);
+          await page.locator('#target').hover();
+          await page.mouse.wheel(0, 100);
+          await expect(page.locator('#result')).toHaveText('wheel');
+          await expect(page.locator('#indicator')).toHaveCSS(
+            'background-color',
+            'rgb(0, 128, 0)',
+          );
         },
       );
       test(

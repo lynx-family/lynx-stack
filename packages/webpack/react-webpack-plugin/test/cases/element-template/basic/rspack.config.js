@@ -47,9 +47,8 @@ export default {
                       {
                         "attributesArray": [
                           {
-                            "binding": "static",
                             "key": "text",
-                            "kind": "attribute",
+                            "kind": "static",
                             "value": "Hello, ",
                           },
                         ],
@@ -70,9 +69,8 @@ export default {
                     "attributesArray": [
                       {
                         "attrSlotIndex": 0,
-                        "binding": "slot",
                         "key": "text",
-                        "kind": "attribute",
+                        "kind": "slot",
                       },
                     ],
                     "children": [],

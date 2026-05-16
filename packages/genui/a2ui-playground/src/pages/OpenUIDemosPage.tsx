@@ -1,13 +1,15 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { MobilePreview } from '../components/MobilePreview.js';
-import { QrCode } from '../components/QrCode.js';
+import './DemosPage.css';
+
+import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
+import { PreviewPanel } from '../components/PreviewPanel.js';
+import { PreviewViewport } from '../components/PreviewViewport.js';
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
 import { OPENUI_SCENARIOS } from '../mock/openui-scenarios.js';
-import { copyToClipboard } from '../utils/clipboard.js';
 import type { Protocol } from '../utils/protocol.js';
 
 type CodeView = 'raw' | 'parsed';
@@ -18,61 +20,8 @@ const COMPACT_CODE_MIN_HEIGHT = 220;
 const COMPACT_PREVIEW_MIN_HEIGHT = 320;
 const RESIZE_BREAKPOINT = 980;
 
-function getDeployedLynxBundleUrl(): string {
-  try {
-    return new URL('a2ui.lynx.js', window.location.href).toString();
-  } catch {
-    return '';
-  }
-}
-
-function useRspeedyDevUrl(): string {
-  // Default to the deployed bundle next to the current page so that the
-  // "Native Preview" QR is available in production (no rspeedy dev server).
-  const [url, setUrl] = useState<string>(() => getDeployedLynxBundleUrl());
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const res = await window.fetch('/__rspeedy_url', {
-          cache: 'no-store',
-        });
-        if (!res.ok) return;
-        const data = (await res.json()) as { url?: string };
-        if (!cancelled && typeof data.url === 'string' && data.url) {
-          setUrl(data.url);
-        }
-      } catch {
-        return;
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-  return url;
-}
-
-function formatUrlForDisplay(url: string): string {
-  if (url.length <= 80) return url;
-  const head = url.slice(0, 44);
-  const tail = url.slice(-24);
-  return `${head}…${tail}`;
-}
-
-function buildOpenUIRenderUrl(
-  rawText: string,
-  baseUrl: string,
-  speed: number,
-): string {
-  const url = new URL('render.html', baseUrl);
-  url.searchParams.set('protocol', 'openui');
-  url.searchParams.set('demoUrl', './openui.web.js');
-  url.searchParams.set('rawText', rawText);
-  if (speed !== 1) {
-    url.searchParams.set('speed', String(speed));
-  }
-  return url.toString();
+interface PreviewInput {
+  rawText: string;
 }
 
 export function OpenUIDemosPage(_props: { protocol: Protocol }) {
@@ -80,18 +29,13 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
   const [scenarioId, setScenarioId] = useState<string>(
     OPENUI_SCENARIOS[0]?.id ?? '',
   );
-  const [renderUrl, setRenderUrl] = useState('');
-  const [lynxDevUrl, setLynxDevUrl] = useState('');
-  const [lynxDevCopied, setLynxDevCopied] = useState(false);
-  const [renderCopied, setRenderCopied] = useState(false);
-  const [renderCopyFailed, setRenderCopyFailed] = useState(false);
-  const [, setRenderQrError] = useState('');
-  const [lynxDevQrError, setLynxDevQrError] = useState('');
-  const [speed, setSpeed] = useState(1);
-  const [previewMode, setPreviewMode] = useState<'phone' | 'full'>(
-    () => window.innerWidth <= 980 ? 'full' : 'phone',
-  );
-  const [fullscreen, setFullscreen] = useState(false);
+  const [customRawText, setCustomRawText] = useState('');
+  const [error, setError] = useState('');
+  const [previewRenderKey, setPreviewRenderKey] = useState(0);
+  const [previewInput, setPreviewInput] = useState<PreviewInput | null>(() => {
+    const initialScenario = OPENUI_SCENARIOS[0];
+    return initialScenario ? { rawText: initialScenario.raw } : null;
+  });
 
   const {
     containerRef: pageRef,
@@ -108,127 +52,51 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
     desktopOffsetSelector: '.sidebar',
     desktopPrimaryMinSize: DESKTOP_CODE_MIN_WIDTH,
     desktopSecondaryMinSize: DESKTOP_PREVIEW_MIN_WIDTH,
-    disabled: fullscreen,
     initialPrimarySize: 320,
     initialSecondarySize: 420,
   });
 
-  const baseUrl = window.location.href.replace(/#.*$/, '');
-  const rspeedyDevUrl = useRspeedyDevUrl();
-  const lynxUrlSeqRef = useRef(0);
-
-  const networkBaseUrl = useMemo(() => {
-    const u = new URL(baseUrl);
-    if (
-      (u.hostname === 'localhost' || u.hostname === '127.0.0.1')
-      && rspeedyDevUrl
-    ) {
-      try {
-        u.hostname = new URL(rspeedyDevUrl).hostname;
-      } catch { /* ignore */ }
-    }
-    return u.toString();
-  }, [baseUrl, rspeedyDevUrl]);
-
-  const currentScenario = OPENUI_SCENARIOS.find((s) => s.id === scenarioId)
-    ?? OPENUI_SCENARIOS[0];
-
-  const doRender = useCallback(
-    (rawText: string) => {
-      const url = buildOpenUIRenderUrl(rawText, networkBaseUrl, speed);
-      setRenderUrl(url);
-      setRenderCopied(false);
-      setRenderCopyFailed(false);
-
-      // Native Lynx dev URL
-      const seq = ++lynxUrlSeqRef.current;
-      if (rspeedyDevUrl) {
-        const u = new URL(rspeedyDevUrl);
-        // rspeedyDevUrl points to the default entry (a2ui.lynx), swap to openui entry
-        u.pathname = u.pathname.replace('a2ui.lynx', 'openui.lynx');
-        u.searchParams.set('rawText', rawText);
-        if (speed !== 1) {
-          u.searchParams.set('speed', String(speed));
-        }
-        setLynxDevUrl(u.toString());
-      } else {
-        setLynxDevUrl('');
-      }
-
-      // On mobile, auto-expand preview
-      if (window.innerWidth <= 980) {
-        setFullscreen(true);
-      }
-
-      // Try to shorten URLs via payload store for scannable QR codes
-      void (async () => {
-        if (!rspeedyDevUrl) return;
-        try {
-          const rspeedyOrigin = new URL(rspeedyDevUrl).origin;
-          const res = await window.fetch(`${rspeedyOrigin}/__openui_payload`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rawText }),
-          });
-          if (!res.ok) return;
-          const data = (await res.json()) as { rawTextUrl?: string };
-
-          if (seq !== lynxUrlSeqRef.current) return;
-
-          if (typeof data.rawTextUrl === 'string') {
-            const rawTextUrlAbs = `${rspeedyOrigin}${data.rawTextUrl}`;
-
-            // Shorten native dev URL
-            const u = new URL(rspeedyDevUrl);
-            u.pathname = u.pathname.replace('a2ui.lynx', 'openui.lynx');
-            u.searchParams.set('rawTextUrl', rawTextUrlAbs);
-            u.searchParams.delete('rawText');
-            if (speed !== 1) {
-              u.searchParams.set('speed', String(speed));
-            }
-            setLynxDevUrl(u.toString());
-
-            // Shorten web render URL
-            const r = new URL('render.html', networkBaseUrl);
-            r.searchParams.set('protocol', 'openui');
-            r.searchParams.set('demoUrl', './openui.web.js');
-            r.searchParams.set('rawTextUrl', rawTextUrlAbs);
-            if (speed !== 1) {
-              r.searchParams.set('speed', String(speed));
-            }
-            setRenderUrl(r.toString());
-          }
-        } catch {
-          // Fall back to inline URLs — QR may show "URL too long"
-        }
-      })();
-    },
-    [networkBaseUrl, rspeedyDevUrl, speed],
+  const currentScenario = useMemo(
+    () =>
+      OPENUI_SCENARIOS.find((s) => s.id === scenarioId)
+        ?? OPENUI_SCENARIOS[0],
+    [scenarioId],
   );
 
-  // Auto-render the first scenario on mount
   useEffect(() => {
     if (currentScenario) {
-      doRender(currentScenario.raw);
+      setCustomRawText(currentScenario.raw);
+      setPreviewInput({ rawText: currentScenario.raw });
     }
-  }, [doRender, currentScenario]);
+  }, [currentScenario]);
+
+  const previewSource = useMemo(() => {
+    if (!previewInput) return undefined;
+    return {
+      kind: 'openui' as const,
+      rawText: previewInput.rawText,
+    };
+  }, [previewInput]);
 
   const handleSelectScenario = useCallback((id: string) => {
     setScenarioId(id);
   }, []);
 
   const handleRender = useCallback(() => {
-    if (currentScenario) {
-      doRender(currentScenario.raw);
+    if (!customRawText.trim()) {
+      setError('Raw output is empty.');
+      return;
     }
-  }, [currentScenario, doRender]);
+    setError('');
+    setPreviewInput({ rawText: customRawText });
+    setPreviewRenderKey((value) => value + 1);
+  }, [customRawText]);
 
   return (
     <div
       ref={pageRef}
       className={isPanelResizing ? 'demosPage resizing' : 'demosPage'}
     >
-      {/* Sidebar: Scenarios */}
       <aside className='sidebar'>
         <div className='sidebarSection'>
           <div className='sidebarHeading'>Scenarios</div>
@@ -249,7 +117,6 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
         </div>
       </aside>
 
-      {/* Code Panel: RAW OUTPUT / PARSED JSON */}
       <div className='codePanel' style={codePanelStyle}>
         <div className='codePanelToolbar'>
           <div className='codePanelTitle'>
@@ -323,230 +190,29 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
               </div>
             )}
         </div>
+        {error ? <div className='codeError'>{error}</div> : null}
       </div>
 
-      {fullscreen
-        ? null
-        : (
-          <div
-            className={isPanelResizing
-              ? 'panelResizeHandle active'
-              : 'panelResizeHandle'}
-            role='separator'
-            aria-orientation={isCompactLayout ? 'horizontal' : 'vertical'}
-            aria-label='Resize examples and preview panels'
-            title='Drag to resize'
-            onPointerDown={handlePanelResizeStart}
-          />
-        )}
+      <PanelResizeHandle
+        isActive={isPanelResizing}
+        isCompactLayout={isCompactLayout}
+        ariaLabel='Resize examples and preview panels'
+        onPointerDown={handlePanelResizeStart}
+      />
 
-      {/* Preview Panel: Lynx Preview */}
-      <div
-        className={fullscreen
-          ? 'previewPanel previewPanelFullscreen'
-          : 'previewPanel'}
+      <PreviewPanel
+        className='previewPanel'
         style={previewPanelStyle}
+        title='Lynx Preview'
+        showPreviewModeSwitch
+        previewSource={previewSource}
       >
-        <div className='previewPanelHeader'>
-          <span className='previewPanelTitle'>Lynx Preview</span>
-          <div className='spacer' />
-          <div className='previewModeSwitch'>
-            <button
-              type='button'
-              className={previewMode === 'phone'
-                ? 'previewModeBtn active'
-                : 'previewModeBtn'}
-              onClick={() => setPreviewMode('phone')}
-              title='Phone frame'
-            >
-              Phone
-            </button>
-            <button
-              type='button'
-              className={previewMode === 'full'
-                ? 'previewModeBtn active'
-                : 'previewModeBtn'}
-              onClick={() => setPreviewMode('full')}
-              title='Full panel'
-            >
-              Full
-            </button>
-          </div>
-          <button
-            type='button'
-            className='previewExpandBtn'
-            onClick={() => setFullscreen((v) => !v)}
-            title={fullscreen ? 'Exit fullscreen' : 'Expand preview'}
-          >
-            {fullscreen ? '\u2715' : '\u2922'}
-          </button>
-        </div>
-
-        {/* Simulation Speed */}
-        <div className='simulationBar'>
-          <div className='simInfo'>
-            <span className='simInfoIcon'>i</span>
-            <span className='simInfoLabel'>Simulated</span>
-          </div>
-          <div className='simSpeed'>
-            <label className='simSpeedLabel' htmlFor='openui-speedSlider'>
-              Speed
-            </label>
-            <input
-              id='openui-speedSlider'
-              className='simSpeedSlider'
-              type='range'
-              min='0.25'
-              max='4'
-              step='0.25'
-              value={speed}
-              onChange={(e) => setSpeed(Number(e.target.value))}
-            />
-            <span className='simSpeedValue'>{speed}x</span>
-          </div>
-        </div>
-
-        <div
-          className={previewMode === 'full'
-            ? 'previewPanelBody previewPanelBodyFull'
-            : 'previewPanelBody'}
-        >
-          {renderUrl
-            ? (
-              previewMode === 'phone'
-                ? <MobilePreview src={renderUrl} />
-                : (
-                  <iframe
-                    className='previewFullIframe'
-                    title='preview'
-                    src={renderUrl}
-                  />
-                )
-            )
-            : (
-              <div className='previewEmpty'>
-                <div className='previewEmptyIcon'>▶</div>
-                <div>Select a scenario to preview</div>
-                <div className='previewEmptySub'>
-                  Lynx rendering will appear here
-                </div>
-              </div>
-            )}
-        </div>
-
-        {/* QR Code Section */}
-        {renderUrl || lynxDevUrl
-          ? (
-            <div className='previewQrSection'>
-              {renderUrl
-                ? (
-                  <div className='previewQrContent'>
-                    <div className='previewQrInfo'>
-                      <div className='previewQrTitle'>Web Preview</div>
-                      <div className='previewQrDesc'>
-                        Opens in any mobile browser via Lynx for Web.
-                      </div>
-                      <div className='previewQrUrlRow'>
-                        <div
-                          className='previewQrUrlText'
-                          title={renderUrl}
-                        >
-                          {formatUrlForDisplay(renderUrl)}
-                        </div>
-                        <button
-                          type='button'
-                          className='previewQrCopyBtn'
-                          aria-label='Copy render URL'
-                          title={renderCopied
-                            ? 'Copied'
-                            : (
-                              renderCopyFailed ? 'Copy failed' : 'Copy URL'
-                            )}
-                          onClick={() => {
-                            void copyToClipboard(renderUrl).then((ok) => {
-                              setRenderCopyFailed(false);
-                              if (!ok) {
-                                setRenderCopied(false);
-                                setRenderCopyFailed(true);
-                                window.setTimeout(
-                                  () => setRenderCopyFailed(false),
-                                  1200,
-                                );
-                                return;
-                              }
-                              setRenderCopied(true);
-                              window.setTimeout(
-                                () => setRenderCopied(false),
-                                1200,
-                              );
-                            });
-                          }}
-                        >
-                          {renderCopied
-                            ? 'Copied'
-                            : (
-                              renderCopyFailed ? 'Failed' : 'Copy'
-                            )}
-                        </button>
-                      </div>
-                    </div>
-                    <QrCode
-                      value={renderUrl}
-                      size={80}
-                      onErrorChange={setRenderQrError}
-                    />
-                  </div>
-                )
-                : null}
-              {lynxDevUrl
-                ? (
-                  <div className='previewQrContent previewQrContentAlt'>
-                    <div className='previewQrInfo'>
-                      <div className='previewQrTitle'>Native Preview</div>
-                      <div className='previewQrDesc'>
-                        {lynxDevQrError
-                          ? 'URL too long for QR. Copy the link and open it in LynxExplorer.'
-                          : 'Opens in LynxExplorer for native rendering.'}
-                      </div>
-                      <div className='previewQrUrlRow'>
-                        <div
-                          className='previewQrUrlText'
-                          title={lynxDevUrl}
-                        >
-                          {formatUrlForDisplay(lynxDevUrl)}
-                        </div>
-                        <button
-                          type='button'
-                          className='previewQrCopyBtn'
-                          aria-label='Copy Lynx dev bundle URL'
-                          title={lynxDevCopied ? 'Copied' : 'Copy URL'}
-                          onClick={() => {
-                            void copyToClipboard(lynxDevUrl).then((ok) => {
-                              if (!ok) return;
-                              setLynxDevCopied(true);
-                              window.setTimeout(
-                                () => setLynxDevCopied(false),
-                                1200,
-                              );
-                            });
-                          }}
-                        >
-                          {lynxDevCopied ? 'Copied' : 'Copy'}
-                        </button>
-                      </div>
-                    </div>
-                    <QrCode
-                      value={lynxDevUrl}
-                      size={80}
-                      onErrorChange={setLynxDevQrError}
-                    />
-                  </div>
-                )
-                : null}
-            </div>
-          )
-          : null}
-      </div>
+        <PreviewViewport
+          key={previewRenderKey}
+          emptyTitle='Select a scenario to preview'
+          emptySubTitle='Lynx rendering will appear here'
+        />
+      </PreviewPanel>
     </div>
   );
 }

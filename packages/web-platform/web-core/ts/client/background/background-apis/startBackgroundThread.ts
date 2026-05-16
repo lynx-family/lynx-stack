@@ -33,6 +33,7 @@ export function startBackgroundThread(
     timingSystem,
     nativeModulesMap,
     entryTemplateUrl,
+    cardType,
   );
   const lynxCore = import(
     /* webpackChunkName: "lynx-core-chunk" */

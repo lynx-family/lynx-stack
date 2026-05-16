@@ -17,6 +17,57 @@ afterEach(() => {
 });
 
 describe('runOnBackground', () => {
+  it('should not keep transformed worklet ctx through a strong ctx property', () => {
+    const childCtx = {
+      _wkltId: 'child',
+    };
+    const parentCtx = {
+      _wkltId: 'parent',
+      child: childCtx,
+    };
+
+    globalThis.registerWorklet('main-thread', 'parent', function() {
+      return this.child;
+    });
+    globalThis.registerWorklet('main-thread', 'child', function() {});
+
+    const childWorklet = globalThis.runWorklet(parentCtx, []);
+    expect(childWorklet).toHaveProperty('ctxRef');
+    expect(childWorklet).not.toHaveProperty('ctx');
+    expect(childWorklet.ctxRef.deref()).toBe(childCtx);
+  });
+
+  it('should hydrate nested worklet ctx from a weak ctx ref', () => {
+    const firstScreenChildCtx = {
+      _wkltId: 'child',
+      _jsFn: {
+        '_jsFn1': { '_isFirstScreen': true },
+      },
+    };
+    const firstScreenWorklet = {
+      _wkltId: 'parent',
+      child: Object.assign(function() {}, {
+        ctxRef: new WeakRef(firstScreenChildCtx),
+      }),
+    };
+    const worklet = {
+      _wkltId: 'parent',
+      child: {
+        _wkltId: 'child',
+        _jsFn: {
+          '_jsFn1': { '_jsFnId': 1 },
+        },
+      },
+      _execId: 8,
+    };
+
+    globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+
+    expect(firstScreenChildCtx._jsFn._jsFn1._isFirstScreen).toBe(false);
+    expect(firstScreenChildCtx._jsFn._jsFn1._jsFnId).toBe(1);
+    expect(firstScreenChildCtx._jsFn._jsFn1._execId).toBe(8);
+  });
+
   it('should delay and run task', () => {
     const firstScreenWorklet = {
       _wkltId: 'ctx1',

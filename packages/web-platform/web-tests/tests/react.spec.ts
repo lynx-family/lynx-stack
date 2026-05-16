@@ -34,13 +34,11 @@ const diffScreenShot = async (
 };
 
 const expectHasText = async (page: Page, text: string) => {
-  const hasText = (await page.getByText(text).count()) === 1;
-  await expect(hasText).toBe(true);
+  await expect(page.getByText(text)).toHaveCount(1);
 };
 
 const expectNoText = async (page: Page, text: string) => {
-  const hasText = (await page.getByText(text).count()) === 1;
-  await expect(hasText).toBe(false);
+  await expect(page.getByText(text)).toHaveCount(0);
 };
 
 const goto = async (

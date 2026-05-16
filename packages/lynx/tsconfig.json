@@ -4,7 +4,9 @@
   },
   "references": [
     /** packages-start */
+    { "path": "./autolink-codegen/tsconfig.build.json" },
     { "path": "./gesture-runtime/tsconfig.build.json" },
+    { "path": "./create-lynx-extension/tsconfig.build.json" },
     /** packages-end */
   ],
   "include": [],

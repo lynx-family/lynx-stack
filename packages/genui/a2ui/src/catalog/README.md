@@ -1,17 +1,44 @@
 # Catalog composition
 
-`defineCatalog` builds the runtime catalog the renderer uses. Composition
-is per-component so bundlers can tree-shake what you don't reference.
+The package intentionally **does not** ship an "all-in-one" catalog
+constant. A top-level array referencing every built-in defeats
+tree-shaking — every consumer of such an aggregate would bundle every
+component, even the components you don't use. Composition is per-component,
+and the cost is visible at the import site.
 
 ## The minimum a renderer needs
 
-If you only need to render, names alone are enough. Pass bare components —
-the protocol name comes from `displayName ?? component.name`:
+If your app only renders, names alone are enough. Pass bare components —
+the protocol name comes from `displayName ?? component.name`.
+
+> ⚠️ **Production minifiers will rename function declarations**, which breaks
+> the `component.name` fallback. For production safety, set an explicit
+> `displayName` on every custom component (the string literal survives
+> minification), or pair the component with its `catalog.json` manifest
+> using the tuple form below — the manifest key is authoritative.
 
 ```tsx
-import { defineCatalog, Text, Button } from '@lynx-js/a2ui-reactlynx';
+import {
+  A2UI,
+  Text,
+  Button,
+  createMessageStore,
+} from '@lynx-js/a2ui-reactlynx';
 
-const catalog = defineCatalog([Text, Button]);
+const store = createMessageStore();
+
+// Push raw protocol messages from your IO module (fetch, SSE, ...).
+// async function streamFromAgent(input) {
+//   for await (const msg of myAgent.stream(input)) store.push(msg);
+// }
+
+<A2UI
+  messageStore={store}
+  catalogs={[Text, Button]}
+  onAction={(action) => {
+    /* forward to your agent and push response messages back */
+  }}
+/>;
 ```
 
 Bundlers tree-shake unused components — pulling `Text` does not drag in
@@ -20,8 +47,8 @@ Bundlers tree-shake unused components — pulling `Text` does not drag in
 ## Adding schemas for the agent handshake
 
 If you want `serializeCatalog(...)` to emit JSON Schema for each component
-(so the agent knows what props to send), pair each component with the JSON
-the extractor emitted at `dist/catalog/<Name>/catalog.json`:
+(for the agent to know what props to send), pair each component with the
+JSON the extractor emitted at `dist/catalog/<Name>/catalog.json`:
 
 ```tsx
 import { Text } from '@lynx-js/a2ui-reactlynx/catalog/Text';
@@ -45,10 +72,12 @@ import {
   CheckBox,
   Column,
   Divider,
+  Icon,
   Image,
   List,
   RadioGroup,
   Row,
+  Tabs,
   Text,
 } from '@lynx-js/a2ui-reactlynx';
 import buttonManifest from '@lynx-js/a2ui-reactlynx/catalog/Button/catalog.json' with {
@@ -66,6 +95,9 @@ import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json'
 import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json' with {
   type: 'json',
 };
+import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json' with {
+  type: 'json',
+};
 import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json' with {
   type: 'json',
 };
@@ -76,6 +108,9 @@ import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catal
   type: 'json',
 };
 import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json' with {
+  type: 'json',
+};
+import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json' with {
   type: 'json',
 };
 import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json' with {
@@ -92,7 +127,9 @@ export const allBuiltins = defineCatalog([
   [Button, buttonManifest],
   [Divider, dividerManifest],
   [CheckBox, checkBoxManifest],
+  [Icon, iconManifest],
   [RadioGroup, radioGroupManifest],
+  [Tabs, tabsManifest],
 ]);
 ```
 
@@ -107,8 +144,11 @@ agent will use:
 
 ```tsx
 function MyChart(props: { data: number[] }) { ... }
+// Required for production-safe naming — minifiers rewrite `function`
+// names, but the `displayName` string literal survives.
+MyChart.displayName = 'MyChart';
 
-const catalog = defineCatalog([Text, Button, MyChart]);
+<A2UI catalogs={[Text, Button, MyChart]} ... />
 // Agent sends `{ component: 'MyChart', data: [...] }` → renders MyChart.
 ```
 
