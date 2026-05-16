@@ -16,9 +16,8 @@
           "type": "text",
           "attributesArray": [
             {
-              "kind": "attribute",
+              "kind": "static",
               "key": "text",
-              "binding": "static",
               "value": "Hello"
             }
           ],
@@ -34,9 +33,8 @@
           "type": "text",
           "attributesArray": [
             {
-              "kind": "attribute",
+              "kind": "static",
               "key": "text",
-              "binding": "static",
               "value": "World"
             }
           ],
@@ -58,9 +56,8 @@
       "type": "raw-text",
       "attributesArray": [
         {
-          "kind": "attribute",
+          "kind": "slot",
           "key": "text",
-          "binding": "slot",
           "attrSlotIndex": 0
         }
       ],

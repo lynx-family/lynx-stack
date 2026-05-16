@@ -11,6 +11,7 @@ import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
 import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
 import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
 import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
+import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json';
 import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json';
 import textFieldManifest from '@lynx-js/a2ui-reactlynx/catalog/TextField/catalog.json';
 
@@ -52,6 +53,17 @@ function inferType(prop: PropSchema): string {
   if (Array.isArray(prop.oneOf)) {
     return (prop.oneOf as PropSchema[]).map((v) => inferType(v)).join(' | ');
   }
+  if (prop.type === 'array') {
+    const items = prop.items as PropSchema | undefined;
+    if (items && items.type === 'object' && items.properties) {
+      const fields = Object.entries(
+        items.properties as Record<string, PropSchema>,
+      ).map(([name, schema]) => `${name}: ${inferType(schema)}`);
+      return `Array<{ ${fields.join('; ')} }>`;
+    }
+    if (items) return `${inferType(items)}[]`;
+    return 'unknown[]';
+  }
   if (prop.type === 'string') {
     if (Array.isArray(prop.enum)) {
       return (prop.enum as string[]).map((v) => `"${v}"`).join(' | ');
@@ -60,7 +72,6 @@ function inferType(prop: PropSchema): string {
   }
   if (prop.type === 'boolean') return 'boolean';
   if (prop.type === 'number') return 'number';
-  if (prop.type === 'array') return 'string[]';
   if (prop.type === 'object') {
     const props = prop.properties as Record<string, unknown> | undefined;
     if (!props) return 'object';
@@ -559,6 +570,51 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
             component: 'CheckBox',
             label: 'Subscribe to updates',
             value: true,
+          },
+        },
+      ],
+      openui: [],
+    },
+  },
+  {
+    name: 'Tabs',
+    category: 'Layout',
+    description: 'A tab bar that switches between multiple child components.',
+    props: schemaToProps(tabsManifest),
+    usage: {
+      a2ui: {
+        id: 'details-tabs',
+        component: 'Tabs',
+        tabs: [
+          { title: 'Overview', child: 'tabs-overview' },
+          { title: 'Specs', child: 'tabs-specs' },
+        ],
+      },
+      openui: {},
+    },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Simple',
+          value: {
+            id: 'details-tabs',
+            component: 'Tabs',
+            tabs: [
+              { title: 'Overview', child: 'tabs-overview' },
+              { title: 'Specs', child: 'tabs-specs' },
+            ],
+          },
+        },
+        {
+          label: 'Three tabs',
+          value: {
+            id: 'details-tabs-3',
+            component: 'Tabs',
+            tabs: [
+              { title: 'Overview', child: 'tabs-overview' },
+              { title: 'Specs', child: 'tabs-specs' },
+              { title: 'Reviews', child: 'tabs-reviews' },
+            ],
           },
         },
       ],

@@ -6,8 +6,6 @@
   align-items: center;
   justify-content: flex-start;
   gap: 12px;
-  width: 100%;
-  min-width: 0;
 }
 
 .checkbox-input {
@@ -18,13 +16,12 @@
   height: 20px;
   border-radius: 4px;
   border: 1.5px solid var(--a2ui-color-border);
-  background-color: var(--a2ui-color-background);
-  color: var(--a2ui-color-on-primary);
+  background-color: var(--a2ui-color-surface);
+  color: var(--a2ui-color-on-surface);
   flex-shrink: 0;
 }
 
 .checkbox-input-checked {
-  background-color: var(--a2ui-color-primary);
   border-color: var(--a2ui-color-primary);
 }
 

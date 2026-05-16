@@ -67,6 +67,7 @@ export function DemosPage(props: {
   );
   const [error, setError] = useState('');
   const [jsonEdited, setJsonEdited] = useState(false);
+  const [previewRenderKey, setPreviewRenderKey] = useState(0);
   const [previewInput, setPreviewInput] = useState<PreviewInput | null>(() =>
     initialScenario
       ? {
@@ -174,6 +175,7 @@ export function DemosPage(props: {
       actionMocks: currentScenario?.actionMocks,
       demoId: isKnownDemo ? currentScenario?.id : undefined,
     });
+    setPreviewRenderKey((value) => value + 1);
   }, [currentScenario, customJson, jsonEdited]);
 
   const handleFillExample = useCallback(() => {
@@ -305,6 +307,7 @@ export function DemosPage(props: {
         previewSource={previewSource}
       >
         <PreviewViewport
+          key={previewRenderKey}
           emptyTitle='Select a demo to preview'
           emptySubTitle='Lynx rendering will appear here'
         />

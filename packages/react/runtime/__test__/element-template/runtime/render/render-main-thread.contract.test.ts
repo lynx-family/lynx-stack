@@ -41,7 +41,7 @@ describe('renderMainThread contract', () => {
           kind: 'element',
           type: 'view',
           attributesArray: [
-            { kind: 'attribute', key: 'id', binding: 'slot', attrSlotIndex: 0 },
+            { kind: 'slot', key: 'id', attrSlotIndex: 0 },
           ],
           children: [
             { kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 },

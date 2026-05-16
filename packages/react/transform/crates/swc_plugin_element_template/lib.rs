@@ -297,14 +297,23 @@ where
       extractor.into_extracted_template_parts()
     };
 
-    let event_attr_plan_slots = dynamic_attrs
+    #[derive(Clone, Copy)]
+    enum AttrPlanAdapter {
+      Event,
+      Spread,
+    }
+
+    let attr_plan_slots = dynamic_attrs
       .iter()
       .filter_map(|dynamic_attr| match dynamic_attr {
         DynamicAttributePart::Attr {
           attr_name: AttrName::Event,
           slot_index,
           ..
-        } => Some(*slot_index),
+        } => Some((*slot_index, AttrPlanAdapter::Event)),
+        DynamicAttributePart::Spread { slot_index, .. } => {
+          Some((*slot_index, AttrPlanAdapter::Spread))
+        }
         _ => None,
       })
       .collect::<Vec<_>>();
@@ -332,20 +341,27 @@ where
         entry_template_uid: Expr = entry_template_uid.clone(),
     ));
     self.current_template_defs.push(entry_template_uid_def);
-    if !event_attr_plan_slots.is_empty() {
+    if !attr_plan_slots.is_empty() {
       let internal_runtime_id = self.internal_runtime_id.clone();
-      let mut attr_plan_elements = Vec::with_capacity(event_attr_plan_slots.len() * 2);
-      for slot_index in event_attr_plan_slots {
+      let mut attr_plan_elements = Vec::with_capacity(attr_plan_slots.len() * 2);
+      for (slot_index, adapter) in attr_plan_slots {
         attr_plan_elements.push(Some(ExprOrSpread {
           spread: None,
           expr: Box::new(i32_to_expr(&slot_index)),
         }));
-        attr_plan_elements.push(Some(ExprOrSpread {
-          spread: None,
-          expr: Box::new(quote!(
+        let adapter_expr = match adapter {
+          AttrPlanAdapter::Event => quote!(
             "$internal_runtime_id.adaptEventAttrSlot" as Expr,
             internal_runtime_id: Expr = internal_runtime_id.clone(),
-          )),
+          ),
+          AttrPlanAdapter::Spread => quote!(
+            "$internal_runtime_id.adaptSpreadAttrSlot" as Expr,
+            internal_runtime_id: Expr = internal_runtime_id.clone(),
+          ),
+        };
+        attr_plan_elements.push(Some(ExprOrSpread {
+          spread: None,
+          expr: Box::new(adapter_expr),
         }));
       }
 

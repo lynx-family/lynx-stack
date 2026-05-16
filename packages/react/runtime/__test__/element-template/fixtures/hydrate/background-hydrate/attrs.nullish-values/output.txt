@@ -5,7 +5,6 @@ Object {
     0,
     Object {
       "id": null,
-      "title": undefined,
     },
   ],
 }

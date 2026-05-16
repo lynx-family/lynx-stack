@@ -91,7 +91,7 @@ where
 
   fn element_template_static_attribute_descriptor(&self, key: &str, value: Expr) -> Expr {
     quote!(
-      r#"{ kind: "attribute", key: $key, binding: "static", value: $value }"# as Expr,
+      r#"{ kind: "static", key: $key, value: $value }"# as Expr,
       key: Expr = self.element_template_string_expr(key),
       value: Expr = value,
     )
@@ -99,7 +99,7 @@ where
 
   fn element_template_attribute_slot_descriptor(&self, key: &str, attr_slot_index: i32) -> Expr {
     quote!(
-      r#"{ kind: "attribute", key: $key, binding: "slot", attrSlotIndex: $attr_slot_index }"# as Expr,
+      r#"{ kind: "slot", key: $key, attrSlotIndex: $attr_slot_index }"# as Expr,
       key: Expr = self.element_template_string_expr(key),
       attr_slot_index: Expr = i32_to_expr(&attr_slot_index),
     )
@@ -107,7 +107,7 @@ where
 
   fn element_template_spread_slot_descriptor(&self, attr_slot_index: i32) -> Expr {
     quote!(
-      r#"{ kind: "spread", binding: "slot", attrSlotIndex: $attr_slot_index }"# as Expr,
+      r#"{ kind: "spread", attrSlotIndex: $attr_slot_index }"# as Expr,
       attr_slot_index: Expr = i32_to_expr(&attr_slot_index),
     )
   }

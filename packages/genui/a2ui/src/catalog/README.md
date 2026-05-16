@@ -3,8 +3,8 @@
 The package intentionally **does not** ship an "all-in-one" catalog
 constant. A top-level array referencing every built-in defeats
 tree-shaking — every consumer of such an aggregate would bundle every
-component, even the ten you don't use. Composition is per-component, and
-the cost is visible at the import site.
+component, even the components you don't use. Composition is per-component,
+and the cost is visible at the import site.
 
 ## The minimum a renderer needs
 
@@ -72,10 +72,12 @@ import {
   CheckBox,
   Column,
   Divider,
+  Icon,
   Image,
   List,
   RadioGroup,
   Row,
+  Tabs,
   Text,
   TextField,
 } from '@lynx-js/a2ui-reactlynx';
@@ -94,6 +96,9 @@ import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json'
 import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json' with {
   type: 'json',
 };
+import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json' with {
+  type: 'json',
+};
 import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json' with {
   type: 'json',
 };
@@ -104,6 +109,9 @@ import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catal
   type: 'json',
 };
 import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json' with {
+  type: 'json',
+};
+import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json' with {
   type: 'json',
 };
 import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json' with {
@@ -124,7 +132,9 @@ export const allBuiltins = defineCatalog([
   [Divider, dividerManifest],
   [TextField, textFieldManifest],
   [CheckBox, checkBoxManifest],
+  [Icon, iconManifest],
   [RadioGroup, radioGroupManifest],
+  [Tabs, tabsManifest],
 ]);
 ```
 

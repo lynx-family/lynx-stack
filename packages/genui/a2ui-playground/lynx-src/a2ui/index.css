@@ -6,7 +6,12 @@
 }
 
 :root {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  box-sizing: border-box;
   background-color: var(--canvas);
+  color: var(--content);
 }
 
 .page {
@@ -47,8 +52,8 @@
 }
 
 /* Override A2UI tokens with Luna tokens for the playground preview. */
-.luna-light,
-.luna-dark {
+.a2ui-light,
+.a2ui-dark {
   --a2ui-color-background: var(--canvas);
   --a2ui-color-on-background: var(--content);
 
@@ -78,20 +83,20 @@
   --a2ui-color-on-input: var(--content);
 
   --a2ui-grid-base: 0.5rem;
-  --a2ui-spacing-xs: calc(var(--a2ui-spacing-s) / 2);
-  --a2ui-spacing-s: calc(var(--a2ui-spacing-m) / 2);
+  --a2ui-spacing-xs: 0.125rem;
+  --a2ui-spacing-s: 0.25rem;
   --a2ui-spacing-m: var(--a2ui-grid-base);
-  --a2ui-spacing-l: calc(var(--a2ui-spacing-m) * 2);
-  --a2ui-spacing-xl: calc(var(--a2ui-spacing-l) * 2);
+  --a2ui-spacing-l: 1rem;
+  --a2ui-spacing-xl: 2rem;
 
   --a2ui-font-size: 1rem;
   --a2ui-font-scale: 1.2;
-  --a2ui-font-size-xs: calc(var(--a2ui-font-size-s) / var(--a2ui-font-scale));
-  --a2ui-font-size-s: calc(var(--a2ui-font-size-m) / var(--a2ui-font-scale));
+  --a2ui-font-size-xs: 0.6944444444rem;
+  --a2ui-font-size-s: 0.8333333333rem;
   --a2ui-font-size-m: var(--a2ui-font-size);
-  --a2ui-font-size-l: calc(var(--a2ui-font-size-m) * var(--a2ui-font-scale));
-  --a2ui-font-size-xl: calc(var(--a2ui-font-size-l) * var(--a2ui-font-scale));
-  --a2ui-font-size-2xl: calc(var(--a2ui-font-size-xl) * var(--a2ui-font-scale));
+  --a2ui-font-size-l: 1.2rem;
+  --a2ui-font-size-xl: 1.44rem;
+  --a2ui-font-size-2xl: 1.728rem;
 
   --a2ui-line-height-headings: 1.2;
   --a2ui-line-height-body: 1.5;
@@ -105,13 +110,6 @@
   --a2ui-color-text-subtle: var(--content-muted-2);
   --a2ui-color-primary-content-muted: var(--primary-content-faded);
   --a2ui-color-overlay: var(--neutral-film);
-}
 
-page {
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-  box-sizing: border-box;
-  background-color: var(--canvas);
-  color: var(--content);
+  --a2ui-button-border-radius: 2rem;
 }

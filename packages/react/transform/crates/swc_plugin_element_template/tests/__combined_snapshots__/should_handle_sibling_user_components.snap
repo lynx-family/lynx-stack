@@ -12,9 +12,8 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
         "type": "text",
         "attributesArray": [
           {
-            "kind": "attribute",
+            "kind": "static",
             "key": "text",
-            "binding": "static",
             "value": "Slot Content 1"
           }
         ],
@@ -28,9 +27,8 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
         "type": "text",
         "attributesArray": [
           {
-            "kind": "attribute",
+            "kind": "static",
             "key": "text",
-            "binding": "static",
             "value": "Slot Content 2"
           }
         ],
@@ -59,9 +57,8 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
         "type": "raw-text",
         "attributesArray": [
           {
-            "kind": "attribute",
+            "kind": "slot",
             "key": "text",
-            "binding": "slot",
             "attrSlotIndex": 0
           }
         ],

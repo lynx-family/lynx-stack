@@ -6,7 +6,7 @@ import type { ReactNode } from '@lynx-js/react';
 
 import { useAction } from './useAction.js';
 import { useCatalog } from './useCatalog.js';
-import { useResolvedProps } from './useDataBinding.js';
+import { splitUnsupportedProps, useResolvedProps } from './useDataBinding.js';
 import type { ComponentInstance, Resource, Surface } from '../store/types.js';
 
 const noop = () => {
@@ -21,6 +21,13 @@ const emptySnapshot = {
 const returnEmptySnapshot = () => emptySnapshot;
 const warnedTags = new Set<string>();
 
+export interface UnsupportedInfo {
+  id: string;
+  tag: string;
+  kind: 'component' | 'syntax';
+  fields?: string[];
+}
+
 function DefaultLoading(props: { id: string }) {
   const content = `loading ${props.id}...`;
   return (
@@ -29,7 +36,7 @@ function DefaultLoading(props: { id: string }) {
         width: '100%',
         minHeight: '20px',
         padding: '10px',
-        backgroundColor: '#f5f5f5',
+        backgroundColor: 'var(--a2ui-color-surface-muted)',
         borderRadius: '6px',
       }}
     >
@@ -38,36 +45,84 @@ function DefaultLoading(props: { id: string }) {
   );
 }
 
+function DefaultUnsupportedNotice(props: UnsupportedInfo) {
+  return (
+    <view
+      style={{
+        width: '100%',
+        minHeight: '20px',
+        marginBottom: '8px',
+        padding: '6px',
+        borderRadius: '6px',
+        border: '1px dashed var(--a2ui-color-border)',
+        backgroundColor: 'var(--a2ui-color-surface-muted)',
+        color: 'var(--a2ui-color-text-muted)',
+      }}
+    >
+      <text style={{ color: 'inherit', fontSize: '10px', lineHeight: '12px' }}>
+        Unsupported {props.kind} in {props.id}
+      </text>
+    </view>
+  );
+}
+
 function buildNodeRecursive(
   component: ComponentInstance,
   surface: Surface,
   catalog: ReadonlyMap<string, (props: Record<string, unknown>) => ReactNode>,
-  resolvedProps?: Record<string, unknown>,
+  renderUnsupported:
+    | ((info: UnsupportedInfo) => ReactNode)
+    | undefined,
+  props?: Record<string, unknown>,
   setValue?: (key: string, value: unknown) => void,
   sendAction?: (action: Record<string, unknown>) => void,
 ): ReactNode {
   const tag = component.component;
   const Component = catalog.get(tag);
-  if (!Component) return null;
-
+  const renderUnsupportedNotice = (info: UnsupportedInfo) => {
+    if (typeof renderUnsupported === 'function') {
+      return renderUnsupported(info);
+    }
+    return <DefaultUnsupportedNotice {...info} />;
+  };
+  if (!Component) {
+    return renderUnsupportedNotice({
+      id: component.id ?? '',
+      tag,
+      kind: 'component',
+    });
+  }
+  const { unsupportedFields, displayProps } = splitUnsupportedProps(props);
   return (
-    <Component
-      key={component.id}
-      {
-        // Spread first so any data-binding key that collides with internal
-        // plumbing (`surface`, `setValue`, `sendAction`, `id`,
-        // `dataContextPath`) is overwritten by the explicit props below
-        // rather than silently shadowing them.
-        ...resolvedProps
-      }
-      id={component.id ?? ''}
-      surface={surface}
-      setValue={setValue}
-      sendAction={(a: Record<string, unknown>) => {
-        void sendAction?.(a);
-      }}
-      dataContextPath={component.dataContextPath}
-    />
+    <>
+      {unsupportedFields.length > 0
+        ? (
+          renderUnsupportedNotice({
+            id: component.id ?? '',
+            tag,
+            kind: 'syntax',
+            fields: unsupportedFields,
+          })
+        )
+        : null}
+      <Component
+        key={component.id}
+        {
+          // Spread first so any data-binding key that collides with internal
+          // plumbing (`surface`, `setValue`, `sendAction`, `id`,
+          // `dataContextPath`) is overwritten by the explicit props below
+          // rather than silently shadowing them.
+          ...displayProps
+        }
+        id={component.id ?? ''}
+        surface={surface}
+        setValue={setValue}
+        sendAction={(a: Record<string, unknown>) => {
+          void sendAction?.(a);
+        }}
+        dataContextPath={component.dataContextPath}
+      />
+    </>
   );
 }
 
@@ -77,6 +132,7 @@ export interface A2UIRendererProps {
   className?: string;
   renderFallback?: () => ReactNode;
   renderError?: (e: unknown) => ReactNode;
+  renderUnsupported?: (info: UnsupportedInfo) => ReactNode;
   /**
    * Wrap each top-level surface so consumers can apply an outer theme
    * shell, wrapper className, or additional styles. The default does not
@@ -94,6 +150,7 @@ function A2UIRendererImpl(
 ): import('@lynx-js/react').ReactNode {
   const {
     resource,
+    renderUnsupported,
     wrapSurface,
     renderFallback,
     renderError,
@@ -141,6 +198,8 @@ function A2UIRendererImpl(
     if (wrapSurface) childProps.wrapSurface = wrapSurface;
     if (renderFallback) childProps.renderFallback = renderFallback;
     if (renderError) childProps.renderError = renderError;
+    if (renderUnsupported) childProps.renderUnsupported = renderUnsupported;
+
     const inner = (
       <view id={`surface-${surfaceId}`} className={surfaceClassName}>
         <A2UIRenderer {...childProps} />
@@ -150,7 +209,13 @@ function A2UIRendererImpl(
   }
 
   if (type === 'surfaceUpdate' && component) {
-    return <NodeRenderer component={component} surface={surface} />;
+    return (
+      <NodeRenderer
+        component={component}
+        surface={surface}
+        renderUnsupported={renderUnsupported}
+      />
+    );
   }
 
   if (type === 'deleteSurface') {
@@ -166,9 +231,16 @@ function NodeRendererImpl(
   props: {
     component: ComponentInstance;
     surface: Surface;
+    renderUnsupported?:
+      | ((info: UnsupportedInfo) => ReactNode)
+      | undefined;
   },
 ): import('@lynx-js/react').ReactNode {
-  const { component: initialComponent, surface } = props;
+  const {
+    component: initialComponent,
+    surface,
+    renderUnsupported,
+  } = props;
   const catalog = useCatalog();
 
   const resource = surface.resources.get(initialComponent.id!);
@@ -216,21 +288,20 @@ function NodeRendererImpl(
   const { sendAction } = useAction(actionProps);
 
   return (
-    <>
-      {buildNodeRecursive(
-        effectiveComponent,
-        surface,
-        catalog as ReadonlyMap<
-          string,
-          (props: Record<string, unknown>) => ReactNode
-        >,
-        resolvedProps,
-        setValue,
-        (a: Record<string, unknown>) => {
-          void sendAction(a as unknown as Parameters<typeof sendAction>[0]);
-        },
-      )}
-    </>
+    buildNodeRecursive(
+      effectiveComponent,
+      surface,
+      catalog as ReadonlyMap<
+        string,
+        (props: Record<string, unknown>) => ReactNode
+      >,
+      renderUnsupported,
+      resolvedProps,
+      setValue,
+      (a: Record<string, unknown>) => {
+        void sendAction(a as unknown as Parameters<typeof sendAction>[0]);
+      },
+    )
   );
 }
 

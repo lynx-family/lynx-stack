@@ -24,12 +24,34 @@ function namedStub(name: string): CatalogComponent {
 
 const Text = namedStub('Text');
 const Button = namedStub('Button');
+const Icon = namedStub('Icon');
+const Tabs = namedStub('Tabs');
 
 const TEXT_MANIFEST: CatalogManifest = {
   Text: { type: 'object', properties: { text: { type: 'string' } } },
 };
 const BUTTON_MANIFEST: CatalogManifest = {
   Button: { type: 'object', properties: { child: { type: 'string' } } },
+};
+const ICON_MANIFEST: CatalogManifest = {
+  Icon: { type: 'object', properties: { name: { type: 'string' } } },
+};
+const TABS_MANIFEST: CatalogManifest = {
+  Tabs: {
+    type: 'object',
+    properties: {
+      tabs: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            title: { type: 'string' },
+            child: { type: 'string' },
+          },
+        },
+      },
+    },
+  },
 };
 
 describe('defineCatalog', () => {
@@ -129,9 +151,16 @@ describe('user composes their own all-builtins catalog', () => {
     const all = defineCatalog([
       [Text, TEXT_MANIFEST],
       [Button, BUTTON_MANIFEST],
+      [Icon, ICON_MANIFEST],
+      [Tabs, TABS_MANIFEST],
     ]);
     const manifest = serializeCatalog(all);
-    expect(manifest.components.map((c) => c.name)).toEqual(['Text', 'Button']);
+    expect(manifest.components.map((c) => c.name)).toEqual([
+      'Text',
+      'Button',
+      'Icon',
+      'Tabs',
+    ]);
     expect(manifest.components.every((c) => c.schema)).toBe(true);
   });
 });
