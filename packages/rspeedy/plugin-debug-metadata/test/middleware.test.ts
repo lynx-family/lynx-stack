@@ -263,6 +263,26 @@ describe('createDebugMetadataMiddleware', () => {
     expect(res?.body).toEqual(VALID_METADATA.meta)
   })
 
+  test('does NOT strip a prefix that only matches a partial segment (e.g. /assets vs /assets2)', async () => {
+    const mw = createDebugMetadataMiddleware({
+      compilerHandle: fakeCompiler(
+        {
+          '/out/assets2/.rspeedy/main/debug-metadata.json': JSON.stringify(
+            VALID_METADATA,
+          ),
+        },
+        '/assets/',
+      ),
+    })
+    // publicPathPrefix = '/assets' — must NOT strip from '/assets2/...'
+    const res = await runRequest(
+      mw,
+      '/assets2/.rspeedy/main/debug-metadata.json?field=meta',
+    )
+    expect(res?.status).toBe(200)
+    expect(res?.body).toEqual(VALID_METADATA.meta)
+  })
+
   test('strips a function publicPath that returns a static prefix', async () => {
     const mw = createDebugMetadataMiddleware({
       compilerHandle: fakeCompiler(

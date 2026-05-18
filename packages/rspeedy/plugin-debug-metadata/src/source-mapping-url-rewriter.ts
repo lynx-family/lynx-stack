@@ -47,14 +47,27 @@ export function applySourceMappingURLRewriter(
       stage: Compilation.PROCESS_ASSETS_STAGE_DEV_TOOLING + 1,
     },
     () => {
-      for (const name of Object.keys(compilation.assets)) {
-        if (!name.endsWith('.js')) continue
-        const asset = compilation.getAsset(name)
-        if (!asset) continue
-        const before = asset.source.source().toString()
-        const after = rewriteTrailer(before, `${name}.map`)
-        if (after === undefined) continue
-        compilation.updateAsset(name, new RawSource(after), asset.info)
+      // Only rewrite JS that belongs to an entry's initial chunks.
+      // Async / dynamic-import chunks live alongside a different
+      // `debug-metadata.json` (emitted by `LynxTemplatePlugin` under
+      // `<intermediateRoot>/async/<filename>/`), so the dir-adjacent
+      // endpoint URL we'd compute here would 404 for them. Leaving
+      // their original `.map` trailer intact is the safe default.
+      const seen = new Set<string>()
+      for (const entrypoint of compilation.entrypoints.values()) {
+        for (const chunk of entrypoint.chunks) {
+          for (const file of chunk.files) {
+            if (!file.endsWith('.js')) continue
+            if (seen.has(file)) continue
+            seen.add(file)
+            const asset = compilation.getAsset(file)
+            if (!asset) continue
+            const before = asset.source.source().toString()
+            const after = rewriteTrailer(before, `${file}.map`)
+            if (after === undefined) continue
+            compilation.updateAsset(file, new RawSource(after), asset.info)
+          }
+        }
       }
     },
   )

@@ -235,7 +235,11 @@ function readFromCompiler(
       compiler.options?.output?.publicPath,
     )
     let stripped = pathname
-    if (publicPathPrefix && stripped.startsWith(publicPathPrefix)) {
+    if (
+      publicPathPrefix
+      && (stripped === publicPathPrefix
+        || stripped.startsWith(`${publicPathPrefix}/`))
+    ) {
       stripped = stripped.slice(publicPathPrefix.length)
     }
     const relPath = stripped.replace(/^\/+/, '')
