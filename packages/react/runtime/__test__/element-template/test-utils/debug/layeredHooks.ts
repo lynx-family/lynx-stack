@@ -5,6 +5,9 @@ import * as mainThreadHooks from '../../../../src/core/hooks/mainThreadImpl.js';
 type HookState = {
   value?: unknown;
   deps?: ReadonlyArray<unknown>;
+  effect?: () => void | (() => void);
+  cleanup?: void | (() => void);
+  pendingEffect?: boolean;
 };
 
 type HookedComponent = {
@@ -44,10 +47,17 @@ function installBackgroundHooks(): void {
   options.__r = onRender;
 
   const onDiffed = (vnode: HookedVNode) => {
+    flushBackgroundEffects(vnode._component ?? vnode.__c);
     currentVNode = undefined;
     currentComponent = undefined;
   };
   options.diffed = onDiffed;
+
+  const oldBeforeUnmount = options.unmount;
+  options.unmount = (vnode) => {
+    cleanupBackgroundEffects((vnode as HookedVNode)._component ?? (vnode as HookedVNode).__c);
+    oldBeforeUnmount?.(vnode);
+  };
 }
 
 installBackgroundHooks();
@@ -148,7 +158,43 @@ function useBackgroundId(): string {
   return hook.value as string;
 }
 
-function useBackgroundEffect(): void {}
+function invokeCleanup(hook: HookState): void {
+  if (typeof hook.cleanup === 'function') {
+    const cleanup = hook.cleanup;
+    hook.cleanup = undefined;
+    cleanup();
+  }
+}
+
+function flushBackgroundEffects(component: HookedComponent | undefined): void {
+  for (const hook of component?.__etHooks ?? []) {
+    if (hook.pendingEffect && hook.effect) {
+      invokeCleanup(hook);
+      hook.cleanup = hook.effect();
+      hook.pendingEffect = false;
+    }
+  }
+}
+
+function cleanupBackgroundEffects(component: HookedComponent | undefined): void {
+  for (const hook of component?.__etHooks ?? []) {
+    invokeCleanup(hook);
+  }
+  if (component?.__etHooks) {
+    component.__etHooks = undefined;
+  }
+}
+
+function useBackgroundEffect(effect: () => void | (() => void), deps?: ReadonlyArray<unknown>): void {
+  const hook = useBackgroundHook();
+  if (depsChanged(hook.deps, deps)) {
+    hook.effect = effect;
+    hook.deps = deps;
+    hook.pendingEffect = true;
+  }
+}
+
+function useBackgroundNoop(): void {}
 
 function currentHooks(): typeof mainThreadHooks {
   if (__MAIN_THREAD__) {
@@ -159,13 +205,13 @@ function currentHooks(): typeof mainThreadHooks {
     useState: useBackgroundState,
     useReducer: useBackgroundReducer,
     useRef: useBackgroundRef,
-    useImperativeHandle: useBackgroundEffect,
+    useImperativeHandle: useBackgroundNoop,
     useLayoutEffect: useBackgroundEffect,
     useEffect: useBackgroundEffect,
     useCallback: (callback: unknown, deps?: ReadonlyArray<unknown>) => useBackgroundMemo(() => callback, deps),
     useMemo: useBackgroundMemo,
     useContext: useBackgroundContext,
-    useDebugValue: useBackgroundEffect,
+    useDebugValue: useBackgroundNoop,
     useErrorBoundary: () => [undefined, () => {}],
     useId: useBackgroundId,
     installMainThreadHooks: mainThreadHooks.installMainThreadHooks,

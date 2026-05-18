@@ -102,7 +102,7 @@ describe('ElementTemplate InitData read API', () => {
     expect(globalCommitContext.flushOptions.triggerDataUpdated).toBe(true);
   });
 
-  it('updates useInitData on background data changes and marks data-updated', async () => {
+  it('updates useInitData on background data changes and removes the listener on unmount', async () => {
     envManager.resetEnv('background');
     installInitData({ msg: 'init' });
     let observed: unknown;
@@ -122,6 +122,9 @@ describe('ElementTemplate InitData read API', () => {
 
     expect(observed).toEqual({ msg: 'update' });
     expect(globalCommitContext.flushOptions.triggerDataUpdated).toBe(true);
+
+    root.render(null);
+    expect(emitter.listenerCount('onDataChanged')).toBe(0);
   });
 
   it('keeps useInitDataChanged listener-only', () => {
