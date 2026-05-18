@@ -33,6 +33,18 @@ describe('normalizeRemoteUrl', () => {
     expect(normalizeRemoteUrl('https://github.com/owner/repo'))
       .toBe('https://github.com/owner/repo')
   })
+
+  test('ssh:// scheme is converted to https so commitUrl is browsable', () => {
+    expect(normalizeRemoteUrl('ssh://git@github.com:22/owner/repo.git'))
+      .toBe('https://github.com/owner/repo')
+    expect(normalizeRemoteUrl('ssh://git@code.byted.org/lynx/revilo'))
+      .toBe('https://code.byted.org/lynx/revilo')
+  })
+
+  test('git+ssh:// scheme is converted to https', () => {
+    expect(normalizeRemoteUrl('git+ssh://git@github.com/owner/repo.git'))
+      .toBe('https://github.com/owner/repo')
+  })
 })
 
 describe('collectGitMetadata', () => {

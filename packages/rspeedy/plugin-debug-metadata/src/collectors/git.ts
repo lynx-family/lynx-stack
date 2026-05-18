@@ -42,15 +42,20 @@ export function normalizeRemoteUrl(remoteUrl: string | null): string | null {
   if (sshMatch) {
     return `https://${sshMatch[1]}/${sshMatch[2]}`
   }
+  // WHATWG URL forbids reassigning `protocol` across the "special scheme"
+  // boundary (ssh: → https:), so rewrite the scheme on the raw string
+  // before parsing.
+  const normalized = remoteUrl.replace(/^(?:git\+)?ssh:\/\//, 'https://')
   try {
-    const url = new URL(remoteUrl)
+    const url = new URL(normalized)
     url.username = ''
     url.password = ''
+    url.port = ''
     url.search = ''
     url.hash = ''
     return url.toString().replace(/\.git$/, '').replace(/\/$/, '')
   } catch {
-    return remoteUrl.replace(/\.git$/, '')
+    return normalized.replace(/\.git$/, '')
   }
 }
 

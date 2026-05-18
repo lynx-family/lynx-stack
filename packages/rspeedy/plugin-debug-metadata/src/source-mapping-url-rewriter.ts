@@ -12,15 +12,8 @@ import { DEBUG_METADATA_ASSET_NAME } from './constants.js'
  * only the final trailer is matched — bundlers commonly inline inner
  * module bodies that themselves contain `sourceMappingURL` comments,
  * and we must not touch those.
- *
- * The URL itself is parsed by {@link rewriteTrailer} using `new URL`,
- * not by this regex, so query strings / fragments / encoded chars do
- * not require special handling here.
  */
 const SOURCE_MAPPING_URL_TRAILER = /\/\/[#@]\s*sourceMappingURL=(\S+)\s*$/
-
-const PLACEHOLDER_BASE = 'http://__lynx-debug-metadata-placeholder__/'
-const PLACEHOLDER_ORIGIN = new URL(PLACEHOLDER_BASE).origin
 
 /**
  * Tap `processAssets` to rewrite each JS asset's `//# sourceMappingURL=`
@@ -72,19 +65,19 @@ export function applySourceMappingURLRewriter(
  * to rewrite, the trailer is a `data:` URL, or it already points at
  * `debug-metadata.json` (idempotent).
  *
+ * URL surgery is intentionally done with **string manipulation rather
+ * than `new URL`**: WHATWG URL normalization collapses `..` segments
+ * (`new URL('../maps/x.map', base).pathname` → `/maps/x.map`), but
+ * `SourceMapDevToolPlugin` users can write relative trailers like
+ * `../maps/<name>.js.map` and we must preserve the dir verbatim so the
+ * dev server / metadata endpoint can resolve back to the same asset.
+ *
+ *  1. Strip `?…` query and `#…` fragment off the original URL.
+ *  2. Split on the last `/` to get `dir` + `encodedBasename`.
+ *  3. Build the new URL as
+ *     `<dir>debug-metadata.json?field=source-map&filename=<decoded basename>`.
+ *
  * @internal Exported for unit testing only.
- *
- * URL surgery is delegated to `new URL` so query strings, fragments,
- * percent-encoding, and absolute vs. relative forms are all handled
- * by the WHATWG URL parser instead of by us:
- *
- *  1. Parse `originalUrl` against a placeholder base so relative URLs
- *     get a well-defined `pathname`.
- *  2. Replace the last path segment with `debug-metadata.json`.
- *  3. Set `search` to `?field=source-map&filename=<original basename>`,
- *     overwriting any pre-existing query and stripping any fragment.
- *  4. Re-serialize, peeling the placeholder back off so relative input
- *     stays relative.
  */
 export function rewriteTrailer(source: string): string | undefined {
   const match = SOURCE_MAPPING_URL_TRAILER.exec(source)
@@ -93,15 +86,10 @@ export function rewriteTrailer(source: string): string | undefined {
   if (!originalUrl || originalUrl.startsWith('data:')) return undefined
   if (originalUrl.includes(DEBUG_METADATA_ASSET_NAME)) return undefined
 
-  let parsed: URL
-  try {
-    parsed = new URL(originalUrl, PLACEHOLDER_BASE)
-  } catch {
-    return undefined
-  }
-
-  const segments = parsed.pathname.split('/')
-  const encodedBasename = segments.pop()
+  const noHash = originalUrl.split('#', 1)[0]!
+  const encodedPath = noHash.split('?', 1)[0]!
+  const lastSlash = encodedPath.lastIndexOf('/')
+  const encodedBasename = encodedPath.slice(lastSlash + 1)
   if (!encodedBasename) return undefined
   let decodedBasename: string
   try {
@@ -109,20 +97,11 @@ export function rewriteTrailer(source: string): string | undefined {
   } catch {
     decodedBasename = encodedBasename
   }
-  segments.push(DEBUG_METADATA_ASSET_NAME)
-  parsed.pathname = segments.join('/')
-  parsed.search = `?field=source-map&filename=${
-    encodeURIComponent(decodedBasename)
-  }`
-  parsed.hash = ''
-
-  let newUrl: string
-  if (parsed.origin === PLACEHOLDER_ORIGIN) {
-    newUrl = parsed.pathname + parsed.search
-    if (!originalUrl.startsWith('/')) newUrl = newUrl.replace(/^\//, '')
-  } else {
-    newUrl = parsed.toString()
-  }
+  const dir = lastSlash >= 0 ? encodedPath.slice(0, lastSlash + 1) : ''
+  const newUrl =
+    `${dir}${DEBUG_METADATA_ASSET_NAME}?field=source-map&filename=${
+      encodeURIComponent(decodedBasename)
+    }`
 
   return source.slice(0, match.index) + `//# sourceMappingURL=${newUrl}`
 }

@@ -111,6 +111,22 @@ describe('rewriteTrailer', () => {
     )
   })
 
+  test('preserves dot-segments (..) in the dir — does NOT collapse them', () => {
+    const before = wrap('//# sourceMappingURL=../maps/main-thread.js.map')
+    const after = rewriteTrailer(before)
+    expect(after).toBe(
+      `${SAMPLE_BODY}//# sourceMappingURL=../maps/debug-metadata.json?field=source-map&filename=main-thread.js.map`,
+    )
+  })
+
+  test('preserves single-dot ./ prefix on the dir', () => {
+    const before = wrap('//# sourceMappingURL=./relative/x.js.map')
+    const after = rewriteTrailer(before)
+    expect(after).toBe(
+      `${SAMPLE_BODY}//# sourceMappingURL=./relative/debug-metadata.json?field=source-map&filename=x.js.map`,
+    )
+  })
+
   test('tolerates trailing whitespace after the URL', () => {
     const before = `${SAMPLE_BODY}//# sourceMappingURL=main-thread.js.map  \n`
     const after = rewriteTrailer(before)!
