@@ -170,4 +170,36 @@ describe('core lynx data API shell', () => {
     render(null, scratch);
     expect(emitter.listenerCount('onDataChanged')).toBe(0);
   });
+
+  it('returns non-class components as-is without registering a listener', () => {
+    const emitter = new EventEmitter();
+    let currentData = { msg: 'init' };
+    vi.stubGlobal('lynx', {
+      ...globalThis.lynx,
+      getJSModule(moduleName: string) {
+        expect(moduleName).toBe('GlobalEventEmitter');
+        return emitter;
+      },
+    });
+
+    function App() {
+      return null;
+    }
+
+    const withDataInState = createWithDataInState({
+      eventName: 'onDataChanged',
+      readData: () => currentData,
+    });
+    const Wrapped = withDataInState(
+      App as unknown as ComponentClass<unknown, { msg?: string }>,
+    );
+
+    expect(Wrapped).toBe(App);
+    render(createElement(Wrapped), scratch);
+    expect(emitter.listenerCount('onDataChanged')).toBe(0);
+
+    currentData = { msg: 'update' };
+    emitter.emit('onDataChanged', { msg: 'update' });
+    expect(emitter.listenerCount('onDataChanged')).toBe(0);
+  });
 });

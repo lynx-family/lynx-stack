@@ -102,6 +102,28 @@ describe('ElementTemplate InitData read API', () => {
     expect(globalCommitContext.flushOptions.triggerDataUpdated).toBe(true);
   });
 
+  it('updates useInitData on background data changes and marks data-updated', async () => {
+    envManager.resetEnv('background');
+    installInitData({ msg: 'init' });
+    let observed: unknown;
+
+    function App() {
+      observed = useInitData();
+      return <view />;
+    }
+
+    root.render(<App />);
+    expect(observed).toEqual({ msg: 'init' });
+    expect(emitter.listenerCount('onDataChanged')).toBe(1);
+
+    lynx.__initData = { msg: 'update' };
+    emitter.emit('onDataChanged', { msg: 'update' });
+    await waitForRender();
+
+    expect(observed).toEqual({ msg: 'update' });
+    expect(globalCommitContext.flushOptions.triggerDataUpdated).toBe(true);
+  });
+
   it('keeps useInitDataChanged listener-only', () => {
     envManager.resetEnv('background');
     installInitData({ msg: 'init' });
