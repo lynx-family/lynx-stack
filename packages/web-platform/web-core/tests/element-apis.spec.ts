@@ -130,7 +130,7 @@ describe('Element APIs', () => {
     touchEvent.targetTouches = [];
     touchEvent.changedTouches = [];
 
-    const lynxEvent = createCrossThreadEvent(touchEvent);
+    const lynxEvent = createCrossThreadEvent(touchEvent, 0, 0);
     expect(lynxEvent.type).toBe('touchstart');
     expect(lynxEvent.detail).toEqual({ x: 100, y: 200 });
   });
@@ -148,8 +148,15 @@ describe('Element APIs', () => {
     touchEvent.targetTouches = [{ identifier: 1, target: {} }];
     touchEvent.changedTouches = [{ pageX: 10, preventDefault: () => {} }];
 
-    const lynxEvent = createCrossThreadEvent(touchEvent);
-    expect(lynxEvent.touches).toEqual([{ clientX: 100, clientY: 200 }]);
+    const lynxEvent = createCrossThreadEvent(touchEvent, 0, 0);
+    // Touches with numeric clientX/Y gain lynx-view-relative `x/y`; touches
+    // without them are passed through unchanged.
+    expect(lynxEvent.touches).toEqual([{
+      clientX: 100,
+      clientY: 200,
+      x: 100,
+      y: 200,
+    }]);
     expect(lynxEvent.targetTouches).toEqual([{ identifier: 1 }]);
     expect(lynxEvent.changedTouches).toEqual([{ pageX: 10 }]);
   });
@@ -163,9 +170,185 @@ describe('Element APIs', () => {
     touchEvent.targetTouches = [];
     touchEvent.changedTouches = [];
 
-    const lynxEvent = createCrossThreadEvent(touchEvent);
+    const lynxEvent = createCrossThreadEvent(touchEvent, 0, 0);
     expect(lynxEvent.type).toBe('touchstart');
     expect(lynxEvent.detail).toEqual({});
+  });
+
+  test('createCrossThreadEvent shifts layoutchange detail by lynx-view offset', async () => {
+    const { createCrossThreadEvent } = await import(
+      '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'
+    );
+    const layoutchange = new CustomEvent('layoutchange', {
+      detail: {
+        left: 250,
+        top: 250,
+        right: 350,
+        bottom: 350,
+        width: 100,
+        height: 100,
+        id: 'inner',
+      },
+    });
+    const lynxEvent = createCrossThreadEvent(layoutchange as any, 200, 200);
+    expect(lynxEvent.detail).toEqual({
+      left: 50,
+      top: 50,
+      right: 150,
+      bottom: 150,
+      width: 100,
+      height: 100,
+      id: 'inner',
+    });
+  });
+
+  // `MouseEvent` and `DOMRect` aren't exposed on globalThis in this jsdom
+  // setup (see tests/jsdom.ts). Build event/rect-shaped plain objects
+  // instead — the code under test only reads named properties.
+  const makeMouseLikeEvent = (
+    type: string,
+    init: Record<string, number>,
+  ): any => {
+    const event = new Event(type) as any;
+    for (const [k, v] of Object.entries(init)) event[k] = v;
+    return event;
+  };
+  const makeRect = (left: number, top: number, w: number, h: number): any => ({
+    left,
+    top,
+    right: left + w,
+    bottom: top + h,
+    width: w,
+    height: h,
+    x: left,
+    y: top,
+    toJSON: () => ({}),
+  });
+
+  test('createCrossThreadEvent shifts click detail while keeping top-level viewport coords', async () => {
+    const { createCrossThreadEvent } = await import(
+      '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'
+    );
+    const click = makeMouseLikeEvent('click', {
+      clientX: 300,
+      clientY: 300,
+      pageX: 300,
+      pageY: 300,
+    });
+    const lynxEvent = createCrossThreadEvent(click, 200, 200);
+    expect(lynxEvent.detail).toEqual({ x: 100, y: 100 });
+    expect((lynxEvent as any).clientX).toBe(300);
+    expect((lynxEvent as any).clientY).toBe(300);
+    expect((lynxEvent as any).pageX).toBe(300);
+    expect((lynxEvent as any).pageY).toBe(300);
+  });
+
+  test('createCrossThreadEvent emits lynx-view-relative x/y for mouse events with preserved viewport coords', async () => {
+    const { createCrossThreadEvent } = await import(
+      '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'
+    );
+    const mousedown = makeMouseLikeEvent('mousedown', {
+      clientX: 280,
+      clientY: 260,
+      pageX: 280,
+      pageY: 260,
+      button: 0,
+      buttons: 1,
+    });
+    const lynxEvent = createCrossThreadEvent(mousedown, 200, 200);
+    expect((lynxEvent as any).x).toBe(80);
+    expect((lynxEvent as any).y).toBe(60);
+    expect((lynxEvent as any).clientX).toBe(280);
+    expect((lynxEvent as any).clientY).toBe(260);
+    expect((lynxEvent as any).pageX).toBe(280);
+    expect((lynxEvent as any).pageY).toBe(260);
+  });
+
+  test('BoundingClientRectService caches the parent rect and invalidates on lynx-view transitionend', async () => {
+    const { BoundingClientRectService } = await import(
+      '../ts/client/mainthread/BoundingClientRectService.js'
+    );
+    const parent = document.createElement('div');
+    document.body.appendChild(parent);
+    let currentRect = makeRect(100, 100, 500, 500);
+    parent.getBoundingClientRect = () => currentRect;
+
+    const service = new BoundingClientRectService(parent);
+    expect(service.getLynxViewRect().left).toBe(100);
+    // Second read within the same idle window reuses the cache even if
+    // the underlying rect would have moved.
+    currentRect = makeRect(999, 999, 500, 500);
+    expect(service.getLynxViewRect().left).toBe(100);
+    // `transitionend` dispatched directly on the host re-measures.
+    parent.dispatchEvent(new Event('transitionend'));
+    expect(service.getLynxViewRect().left).toBe(999);
+    // Bubbled `transitionend` from a descendant must not invalidate.
+    const child = document.createElement('div');
+    parent.appendChild(child);
+    currentRect = makeRect(7, 7, 500, 500);
+    child.dispatchEvent(new Event('transitionend', { bubbles: true }));
+    expect(service.getLynxViewRect().left).toBe(999);
+    service.dispose();
+    document.body.removeChild(parent);
+  });
+
+  test('createInvokeUIMethod returns lynx-view-relative boundingClientRect', async () => {
+    const { createInvokeUIMethod } = await import(
+      '../ts/client/mainthread/elementAPIs/createInvokeUIMethod.js'
+    );
+    const fakeService = {
+      getLynxViewRect: () => makeRect(200, 200, 500, 500),
+    };
+    const invoke = createInvokeUIMethod(fakeService as any);
+    const element = document.createElement('div');
+    element.id = 'target';
+    element.getBoundingClientRect = () => makeRect(250, 250, 100, 100);
+    let received: { code: number; data: any } | undefined;
+    invoke(element, 'boundingClientRect', {}, (res) => {
+      received = res;
+    });
+    expect(received).toEqual({
+      code: 0,
+      data: {
+        id: 'target',
+        left: 50,
+        top: 50,
+        right: 150,
+        bottom: 150,
+        width: 100,
+        height: 100,
+      },
+    });
+  });
+
+  test('createInvokeUIMethod dispatches DOM methods and reports unknown methods', async () => {
+    const { createInvokeUIMethod } = await import(
+      '../ts/client/mainthread/elementAPIs/createInvokeUIMethod.js'
+    );
+    const invoke = createInvokeUIMethod({
+      getLynxViewRect: () => new DOMRect(0, 0, 0, 0),
+    } as any);
+    const element = document.createElement('div') as any;
+    let scrollIntoViewArg: unknown;
+    element.scrollIntoView = (arg: unknown) => {
+      scrollIntoViewArg = arg;
+      return 'ok';
+    };
+    let received: { code: number; data: any } | undefined;
+    invoke(element, 'scrollIntoView', { block: 'start' }, (res) => {
+      received = res;
+    });
+    expect(scrollIntoViewArg).toEqual({ block: 'start' });
+    expect(received?.code).toBe(0);
+    expect(received?.data).toBe('ok');
+
+    let missing: { code: number; data: any } | undefined;
+    invoke(element, 'thereIsNoSuchMethod', {}, (res) => {
+      missing = res;
+    });
+    // ErrorCode.METHOD_NOT_FOUND - exact code value not asserted, but it
+    // must not be ErrorCode.SUCCESS (0).
+    expect(missing?.code).not.toBe(0);
   });
 
   test('createCrossThreadEvent forwards keyboard properties for keydown', async () => {
@@ -182,7 +365,7 @@ describe('Element APIs', () => {
       metaKey: false,
     }) as any;
 
-    const lynxEvent = createCrossThreadEvent(keyEvent);
+    const lynxEvent = createCrossThreadEvent(keyEvent, 0, 0);
     expect(lynxEvent.type).toBe('keydown');
     expect(lynxEvent.key).toBe('Enter');
     expect(lynxEvent.code).toBe('Enter');
@@ -201,7 +384,7 @@ describe('Element APIs', () => {
       shiftKey: true,
     }) as any;
 
-    const lynxEvent = createCrossThreadEvent(keyEvent);
+    const lynxEvent = createCrossThreadEvent(keyEvent, 0, 0);
     expect(lynxEvent.type).toBe('keyup');
     expect(lynxEvent.key).toBe('a');
     expect(lynxEvent.code).toBe('KeyA');

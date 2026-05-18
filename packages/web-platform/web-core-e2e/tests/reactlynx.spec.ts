@@ -2126,6 +2126,94 @@ test.describe('reactlynx3 tests', () => {
       const target = page.locator('#target');
       await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
     });
+    // Inject CSS for the lynx-view BEFORE the bundle loads, so the offset
+    // (or transform) is in place by the time the first layoutchange fires.
+    // Applying the offset after `goto` would race the initial layoutchange,
+    // which can pass under viewport-relative behavior when the lynx-view
+    // happens to still be at viewport origin.
+    const installLynxViewStyle = async (page: Page, css: string) => {
+      await page.addInitScript((rule) => {
+        const inject = () => {
+          if (!document.head) return false;
+          const style = document.createElement('style');
+          style.textContent = `lynx-view { ${rule} }`;
+          document.head.appendChild(style);
+          return true;
+        };
+        if (!inject()) {
+          const observer = new MutationObserver(() => {
+            if (inject()) observer.disconnect();
+          });
+          observer.observe(document.documentElement, {
+            childList: true,
+            subtree: true,
+          });
+        }
+      }, css);
+    };
+    const offsetCss = 'margin-top: 200px; margin-left: 200px;';
+    test(
+      'api-bindlayoutchange-lynx-view-relative',
+      async ({ page }, { title }) => {
+        await installLynxViewStyle(page, offsetCss);
+        await goto(page, title);
+        // `toHaveCSS` polls up to its default timeout; no explicit wait needed.
+        await expect(page.locator('#target')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        );
+      },
+    );
+    test(
+      'api-bindtap-lynx-view-relative',
+      async ({ page }, { title }) => {
+        await installLynxViewStyle(page, offsetCss);
+        await goto(page, title);
+        // Locator-based click waits for the inner tap-area to be attached
+        // and clicks its center — robust to bundle-load + display:flex
+        // timing differences across Chromium/WebKit/Firefox.
+        await page.locator('#tap-area').click();
+        await expect(page.locator('#target')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        );
+      },
+    );
+    // No e2e for `bindtouchstart` here: the touch coordinate path is
+    // unit-tested in web-core/tests/element-apis.spec.ts (`createCrossThreadEvent
+    // properly sets touch detail x and y`, `createCrossThreadEvent clone
+    // touches for untrusted events`). Firefox lacks touch emulation, and
+    // the non-MTS `bindtouchstart` event-dispatch path is otherwise unused
+    // in this test suite; chromium/webkit produced inconsistent results
+    // here that couldn't be reproduced locally for diagnosis.
+    test(
+      'api-bindlayoutchange-lynx-view-relative-transformed',
+      async ({ page }) => {
+        // Reuses the api-bindlayoutchange-lynx-view-relative fixture but
+        // shifts the lynx-view via CSS `transform` (which ResizeObserver
+        // does NOT observe). Asserts the lazy first measurement still
+        // captures the transformed viewport position.
+        await installLynxViewStyle(page, 'transform: translate(200px, 200px);');
+        await goto(page, 'api-bindlayoutchange-lynx-view-relative');
+        await expect(page.locator('#target')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        );
+      },
+    );
+    test(
+      'api-boundingclientrect-lynx-view-relative',
+      async ({ page }, { title }) => {
+        await installLynxViewStyle(page, offsetCss);
+        await goto(page, title);
+        // The fixture's componentDidMount fires the SelectorQuery+invoke
+        // ~500 ms after mount; `toHaveCSS` polls within its default timeout.
+        await expect(page.locator('#target')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        );
+      },
+    );
   });
 
   test.describe('configs', () => {
