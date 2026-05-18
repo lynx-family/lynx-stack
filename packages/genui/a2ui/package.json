@@ -56,6 +56,11 @@
       "default": "./dist/catalog/Card/index.js"
     },
     "./catalog/Card/catalog.json": "./dist/catalog/Card/catalog.json",
+    "./catalog/Modal": {
+      "types": "./dist/catalog/Modal/index.d.ts",
+      "default": "./dist/catalog/Modal/index.js"
+    },
+    "./catalog/Modal/catalog.json": "./dist/catalog/Modal/catalog.json",
     "./catalog/Divider": {
       "types": "./dist/catalog/Divider/index.d.ts",
       "default": "./dist/catalog/Divider/index.js"

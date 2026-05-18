@@ -182,11 +182,10 @@ export class MessageProcessor {
     }
 
     const anyCloned = cloned as unknown as Record<string, unknown>;
-    const clonedChildIds = new Map<string, string>();
+    const clonedRefs = new Map<string, string | null>();
 
-    const cloneChild = (childId: string): string | null => {
-      const existing = clonedChildIds.get(childId);
-      if (existing) return existing;
+    const cloneReference = (childId: string): string | null => {
+      if (clonedRefs.has(childId)) return clonedRefs.get(childId) ?? null;
       const newChildId = this.cloneComponentTree(
         childId,
         newIdSuffix,
@@ -194,55 +193,47 @@ export class MessageProcessor {
         surface,
         updates,
       );
-      if (newChildId) {
-        clonedChildIds.set(childId, newChildId);
-      }
+      clonedRefs.set(childId, newChildId);
       return newChildId;
+    };
+
+    const cloneStringField = (field: string) => {
+      const childId = anyCloned[field];
+      if (typeof childId !== 'string') return;
+      const newChildId = cloneReference(childId);
+      if (newChildId) {
+        anyCloned[field] = newChildId;
+      }
     };
 
     if (Array.isArray(anyCloned['children'])) {
       const newChildren: string[] = [];
       for (const childId of anyCloned['children']) {
         if (typeof childId !== 'string') continue;
-        const newChildId = cloneChild(childId);
+        const newChildId = cloneReference(childId);
         if (newChildId) newChildren.push(newChildId);
       }
       anyCloned['children'] = newChildren;
     }
 
-    if (typeof anyCloned['child'] === 'string') {
-      const newChildId = cloneChild(anyCloned['child']);
-      if (newChildId) anyCloned['child'] = newChildId;
-    }
+    cloneStringField('child');
 
     if (Array.isArray(anyCloned['tabs'])) {
       anyCloned['tabs'] = (anyCloned['tabs'] as unknown[]).map((tab) => {
-        if (
-          !tab || typeof tab !== 'object' || !('child' in tab)
-          || typeof (tab as Record<string, unknown>)['child'] !== 'string'
-        ) {
-          return tab;
-        }
-
-        const tabRecord = tab as Record<string, unknown>;
-        const newChildId = cloneChild(tabRecord['child'] as string);
+        if (!tab || typeof tab !== 'object') return tab;
+        const tabObject = tab as Record<string, unknown>;
+        const childId = tabObject['child'];
+        if (typeof childId !== 'string') return tab;
+        const newChildId = cloneReference(childId);
         if (!newChildId) return tab;
-        return {
-          ...tabRecord,
-          child: newChildId,
-        };
+        return { ...tabObject, child: newChildId };
       });
     }
 
-    if (typeof anyCloned['trigger'] === 'string') {
-      const newChildId = cloneChild(anyCloned['trigger']);
-      if (newChildId) anyCloned['trigger'] = newChildId;
-    }
-
-    if (typeof anyCloned['content'] === 'string') {
-      const newChildId = cloneChild(anyCloned['content']);
-      if (newChildId) anyCloned['content'] = newChildId;
-    }
+    cloneStringField('trigger');
+    cloneStringField('content');
+    cloneStringField('entryPointChild');
+    cloneStringField('contentChild');
 
     return newId;
   }

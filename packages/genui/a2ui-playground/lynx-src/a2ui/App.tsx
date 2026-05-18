@@ -11,6 +11,7 @@ import {
   Icon,
   Image,
   List,
+  Modal,
   RadioGroup,
   Row,
   Tabs,
@@ -36,6 +37,7 @@ import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.jso
 import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json';
 import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
 import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
+import modalManifest from '@lynx-js/a2ui-reactlynx/catalog/Modal/catalog.json';
 import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
 import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
 import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json';
@@ -81,6 +83,7 @@ const ALL_BUILTINS: readonly CatalogInput[] = [
   manifestEntry(Column, columnManifest),
   manifestEntry(List, listManifest),
   manifestEntry(Card, cardManifest),
+  manifestEntry(Modal, modalManifest),
   manifestEntry(Button, buttonManifest),
   manifestEntry(Divider, dividerManifest),
   manifestEntry(Icon, iconManifest),
