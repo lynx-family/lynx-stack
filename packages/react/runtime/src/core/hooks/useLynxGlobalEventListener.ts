@@ -1,7 +1,15 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { useEffect, useMemo, useRef } from 'preact/hooks';
+import { createLynxGlobalEventListenerHook } from './createLynxGlobalEventListenerHook.js';
+import type { LynxGlobalEventListenerHook } from './createLynxGlobalEventListenerHook.js';
+import { useEffect, useMemo, useRef } from './react.js';
+
+const useLynxGlobalEventListenerImpl: LynxGlobalEventListenerHook = /* @__PURE__ */ createLynxGlobalEventListenerHook({
+  useEffect,
+  useMemo,
+  useRef,
+});
 
 /**
  * `useLynxGlobalEventListener` helps you `addListener` as early as possible.
@@ -35,25 +43,5 @@ export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(
   eventName: string,
   listener: T,
 ): void {
-  'background only';
-
-  const previousArgsRef = useRef<[string, T]>();
-
-  useMemo(() => {
-    if (previousArgsRef.current) {
-      const [eventName, listener] = previousArgsRef.current;
-      lynx.getJSModule('GlobalEventEmitter').removeListener(eventName, listener);
-    }
-    lynx.getJSModule('GlobalEventEmitter').addListener(eventName, listener);
-    previousArgsRef.current = [eventName, listener];
-  }, [eventName, listener]);
-
-  useEffect(() => {
-    return () => {
-      if (previousArgsRef.current) {
-        const [eventName, listener] = previousArgsRef.current;
-        lynx.getJSModule('GlobalEventEmitter').removeListener(eventName, listener);
-      }
-    };
-  }, []);
+  return useLynxGlobalEventListenerImpl(eventName, listener);
 }

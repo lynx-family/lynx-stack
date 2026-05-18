@@ -30,6 +30,10 @@ export function resetGlobalCommitContext(): void {
   globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown = [];
 }
 
+export function markInitDataUpdatedForCurrentCommit(): void {
+  globalCommitContext.flushOptions.triggerDataUpdated = true;
+}
+
 export function markRemovedSubtreeForPostDispatchTeardown(
   root: BackgroundElementTemplateInstance,
 ): void {

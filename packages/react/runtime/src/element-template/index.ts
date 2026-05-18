@@ -84,5 +84,12 @@ export {
 };
 
 export * from './client/root.js';
+export {
+  InitDataConsumer,
+  InitDataProvider,
+  useInitData,
+  useInitDataChanged,
+  withInitDataInState,
+} from './client/init-data.js';
 
 export type { DataProcessorDefinition, DataProcessors, InitData, InitDataRaw } from '../lynx-api.js';

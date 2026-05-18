@@ -34,7 +34,7 @@ export type { Options } from 'preact';
 
 // export { loadDynamicJS, __dynamicImport } from '../lynx/dynamic-js.js';
 
-// export { withInitDataInState } from '../compat/initData.js';
+export { withInitDataInState } from './client/init-data.js';
 
 // export { wrapWithLynxComponent } from '../compat/lynxComponent.js';
 

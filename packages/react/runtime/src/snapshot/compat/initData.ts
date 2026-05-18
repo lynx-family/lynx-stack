@@ -1,9 +1,10 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { ComponentChildren, Consumer, Context, Provider } from 'preact';
+import type { Consumer, Context, Provider } from 'preact';
 import type { ComponentClass } from 'react';
 
+import { createDataApiShell, createWithDataInState } from '../../core/lynx-data.js';
 import { useLynxGlobalEventListener } from '../../core/hooks/useLynxGlobalEventListener.js';
 import { globalFlushOptions } from '../lifecycle/patch/commit.js';
 
@@ -11,9 +12,13 @@ type Getter<T> = {
   [key in keyof T]: () => T[key];
 };
 
+function markInitDataUpdated(): void {
+  globalFlushOptions.triggerDataUpdated = true;
+}
+
 // for better reuse if runtime is changed
 export function factory<Data>(
-  { createContext, useState, createElement, useLynxGlobalEventListener: useListener }: {
+  deps: {
     createContext: typeof import('preact').createContext;
     useState: typeof import('preact/hooks').useState;
     createElement: typeof import('preact/compat').createElement;
@@ -28,57 +33,16 @@ export function factory<Data>(
   use: () => Data;
   useChanged: (callback: (data: Data) => void) => void;
 }> {
-  const Context = createContext({} as Data);
-
-  const Provider = ({ children }: { children?: ComponentChildren }) => {
-    const [__, set] = useState<Data>(lynx[prop] as Data);
-
-    const handleChange = () => {
-      if (prop === '__initData') {
-        globalFlushOptions.triggerDataUpdated = true;
-      }
-      set(lynx[prop] as Data);
-    };
-
-    useChanged(handleChange);
-
-    return createElement(
-      Context.Provider,
-      {
-        value: __,
-      },
-      children,
-    );
-  };
-
-  const Consumer: Consumer<Data> = Context.Consumer;
-
-  const use = (): Data => {
-    const [__, set] = useState(lynx[prop]);
-    useChanged(() => {
-      if (prop === '__initData') {
-        globalFlushOptions.triggerDataUpdated = true;
-      }
-      set(lynx[prop]);
-    });
-
-    return __ as Data;
-  };
-
-  const useChanged = (callback: (__: Data) => void) => {
-    if (!__LEPUS__) {
-      useListener(eventName, callback);
-    }
-  };
-
-  return {
-    /* v8 ignore next */
-    Context: () => Context,
-    Provider: () => Provider,
-    Consumer: () => Consumer,
-    use: () => use,
-    useChanged: () => useChanged,
-  };
+  return createDataApiShell<Data>({
+    createContext: deps.createContext,
+    useState: deps.useState,
+    createElement: deps.createElement,
+    useDataChanged: deps.useLynxGlobalEventListener,
+  }, {
+    eventName,
+    readData: () => lynx[prop] as Data,
+    markDataUpdated: prop === '__initData' ? markInitDataUpdated : undefined,
+  });
 }
 
 /**
@@ -107,45 +71,9 @@ export function factory<Data>(
  * @public
  */
 export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentClass<P, S> {
-  const isClassComponent = 'prototype' in App && 'render' in App.prototype;
-  /* v8 ignore next 4 */
-  if (!isClassComponent) {
-    // return as-is when not class component
-    return App;
-  }
-
-  class C extends App {
-    h?: () => void;
-
-    constructor(props: P) {
-      super(props);
-      this.state = {
-        ...this.state,
-        ...lynx.__initData,
-      };
-
-      if (!__LEPUS__) {
-        lynx.getJSModule('GlobalEventEmitter').addListener(
-          'onDataChanged',
-          this.h = (...args: unknown[]) => {
-            const [newData] = args as [S];
-            globalFlushOptions.triggerDataUpdated = true;
-            this.setState(newData);
-          },
-        );
-      }
-    }
-
-    override componentWillUnmount(): void {
-      super.componentWillUnmount?.();
-      if (!__LEPUS__) {
-        lynx.getJSModule('GlobalEventEmitter').removeListener(
-          'onDataChanged',
-          this.h!,
-        );
-      }
-    }
-  }
-
-  return C;
+  return createWithDataInState({
+    eventName: 'onDataChanged',
+    readData: () => lynx.__initData as S,
+    markDataUpdated: markInitDataUpdated,
+  })(App);
 }
