@@ -1,8 +1,8 @@
 ---
-"@lynx-js/debug-metadata-rsbuild-plugin": patch
-"@lynx-js/debug-metadata": patch
-"@lynx-js/rspeedy": patch
-"@lynx-js/template-webpack-plugin": patch
+"@lynx-js/debug-metadata-rsbuild-plugin": minor
+"@lynx-js/debug-metadata": minor
+"@lynx-js/rspeedy": minor
+"@lynx-js/template-webpack-plugin": minor
 "@lynx-js/react-webpack-plugin": patch
 ---
 
