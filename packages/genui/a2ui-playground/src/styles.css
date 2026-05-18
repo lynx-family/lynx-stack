@@ -504,7 +504,6 @@ html[data-theme="dark"] .phoneNotch {
   position: relative;
   flex: 1;
   min-height: 0;
-  border-radius: 24px;
   overflow: hidden;
   background: var(--geist-background);
   box-shadow:

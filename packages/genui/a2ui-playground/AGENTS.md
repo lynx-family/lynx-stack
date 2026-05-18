@@ -34,7 +34,7 @@ Web build has two entrypoints (see `rsbuild.config.ts`):
   reload when the init data changes.
 
 The control panel builds a `/render.html?...` URL with base64-encoded payload
-(`src/utils/renderUrl.ts`) and embeds it in an `<iframe>` (see `MobilePreview`).
+(`src/utils/renderUrl.ts`) and embeds it in an `<iframe>`(see `PreviewViewport.tsx`).
 
 ## Lynx App Architecture (What Runs Inside <lynx-view>)
 
