@@ -45,12 +45,16 @@ export function normalizeRemoteUrl(remoteUrl: string | null): string | null {
   // WHATWG URL forbids reassigning `protocol` across the "special scheme"
   // boundary (ssh: → https:), so rewrite the scheme on the raw string
   // before parsing.
+  const isSshLike = /^(?:git\+)?ssh:\/\//.test(remoteUrl)
   const normalized = remoteUrl.replace(/^(?:git\+)?ssh:\/\//, 'https://')
   try {
     const url = new URL(normalized)
     url.username = ''
     url.password = ''
-    url.port = ''
+    // Only strip the port for converted SSH remotes (where the original
+    // `:22` is meaningless under HTTPS). Legitimate non-default HTTPS
+    // ports like `git.example.com:8443` must survive intact.
+    if (isSshLike) url.port = ''
     url.search = ''
     url.hash = ''
     return url.toString().replace(/\.git$/, '').replace(/\/$/, '')

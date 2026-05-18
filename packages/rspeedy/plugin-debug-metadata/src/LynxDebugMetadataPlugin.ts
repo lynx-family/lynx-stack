@@ -172,6 +172,13 @@ export class LynxDebugMetadataPluginImpl {
             debugMetadataAssetName,
             new RawSource(JSON.stringify(asset, null, 2)),
           )
+          // Pushing to `args.intermediateAssets` opts the file into
+          // `LynxEncodePlugin`'s production-only cleanup
+          // (`PROCESS_ASSETS_STAGE_REPORT + 1`) — intentional: prod
+          // bundles should not ship debug metadata to end users.
+          // The file is uploaded by a separate reverse-symbolication
+          // service (Slardar) before cleanup runs; dev / debug / rsdoctor
+          // builds keep it on disk for local consumption.
           args.intermediateAssets.push(debugMetadataAssetName)
 
           return args

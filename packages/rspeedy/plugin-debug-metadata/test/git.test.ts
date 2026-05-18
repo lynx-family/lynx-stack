@@ -45,6 +45,16 @@ describe('normalizeRemoteUrl', () => {
     expect(normalizeRemoteUrl('git+ssh://git@github.com/owner/repo.git'))
       .toBe('https://github.com/owner/repo')
   })
+
+  test('preserves explicit non-default HTTPS ports', () => {
+    expect(normalizeRemoteUrl('https://git.example.com:8443/org/repo.git'))
+      .toBe('https://git.example.com:8443/org/repo')
+  })
+
+  test('still strips :22 from converted SSH remotes (meaningless under HTTPS)', () => {
+    expect(normalizeRemoteUrl('ssh://git@github.com:22/owner/repo.git'))
+      .toBe('https://github.com/owner/repo')
+  })
 })
 
 describe('collectGitMetadata', () => {
