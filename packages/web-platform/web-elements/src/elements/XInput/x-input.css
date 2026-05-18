@@ -12,9 +12,11 @@ x-input::part(form) {
   display: contents;
 }
 x-input::part(input), x-input::part(form) {
+  box-sizing: inherit;
   width: inherit;
   height: inherit;
   border: inherit;
+  border-radius: inherit;
   align-self: inherit;
   justify-self: inherit;
   text-align: inherit;
