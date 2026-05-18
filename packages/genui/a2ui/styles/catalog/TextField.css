@@ -25,7 +25,7 @@
   border-width: var(--a2ui-border-width);
   border-style: solid;
   border-color: var(--a2ui-color-border);
-  border-radius: var(--a2ui-border-radius);
+  border-radius: var(--a2ui-input-border-radius);
   background-color: var(--a2ui-color-input);
   color: var(--a2ui-color-on-input);
   font-size: var(--a2ui-font-size-m);
@@ -37,11 +37,11 @@
 }
 
 .textfield-invalid .textfield-control {
-  border-color: #d92d20;
+  border-color: var(--a2ui-color-input-error);
 }
 
 .textfield-error {
   font-size: var(--a2ui-font-size-xs);
-  color: #d92d20;
+  color: var(--a2ui-color-input-error);
   line-height: var(--a2ui-line-height-body);
 }

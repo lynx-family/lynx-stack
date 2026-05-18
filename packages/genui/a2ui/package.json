@@ -116,7 +116,6 @@
   },
   "peerDependencies": {
     "@lynx-js/lynx-ui": "^3.130.0",
-    "@lynx-js/lynx-ui-input": "^3.130.0",
     "@lynx-js/react": "workspace:^"
   },
   "peerDependenciesMeta": {
