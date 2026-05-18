@@ -6,8 +6,6 @@ import { defineConfig } from 'vitest/config';
 
 const require = createRequire(import.meta.url);
 const elementTemplateRuntimePkg = require.resolve('../../src/element-template/internal.ts');
-const elementTemplateHooksPkg = require.resolve('../../src/element-template/hooks/react.ts');
-const layeredHooksPkg = path.resolve(__dirname, './test-utils/debug/layeredHooks.ts');
 
 function transformReactLynxPlugin(): Plugin {
   return {
@@ -60,19 +58,6 @@ function transformReactLynxPlugin(): Plugin {
         map: result.map ?? null,
       };
     },
-    resolveId(source, importer) {
-      if (
-        !importer
-        || !source.startsWith('.')
-        || !importer.includes(`${path.sep}src${path.sep}element-template${path.sep}`)
-      ) {
-        return null;
-      }
-      const resolved = path.resolve(path.dirname(importer), source);
-      const normalized = resolved.replace(/\.(?:js|ts|jsx|tsx)$/, '');
-      const hooksModule = elementTemplateHooksPkg.replace(/\.(?:js|ts|jsx|tsx)$/, '');
-      return normalized === hooksModule ? layeredHooksPkg : null;
-    },
   };
 }
 
@@ -90,9 +75,6 @@ const config: UserConfigExport = defineConfig({
       ),
       '@lynx-js/react/runtime-components': path.resolve(__dirname, '../../../components/src/index.ts'),
       '@lynx-js/react/internal': path.resolve(__dirname, '../../src/element-template/internal.ts'),
-      // The ET vitest harness evaluates both background and main-thread flows in
-      // a no-layer environment. Keep JSX creation on the shared runtime so the
-      // background tree still receives the standard vnode shape it expects.
       '@lynx-js/react/jsx-dev-runtime': path.resolve(__dirname, '../../jsx-dev-runtime/index.js'),
       '@lynx-js/react/jsx-runtime': path.resolve(__dirname, '../../jsx-runtime/index.js'),
       '@lynx-js/react/element-template/jsx-dev-runtime': path.resolve(
@@ -105,7 +87,7 @@ const config: UserConfigExport = defineConfig({
       ),
       '@lynx-js/react/hooks': path.resolve(
         __dirname,
-        './test-utils/debug/layeredHooks.ts',
+        '../../src/element-template/hooks/react.ts',
       ),
       '@lynx-js/react/lepus/hooks': path.resolve(
         __dirname,
@@ -117,7 +99,7 @@ const config: UserConfigExport = defineConfig({
       '@lynx-js/react/element-template': path.resolve(__dirname, '../../src/element-template/index.ts'),
       '@lynx-js/react': path.resolve(
         __dirname,
-        './test-utils/debug/layeredReact.ts',
+        '../../src/element-template/index.ts',
       ),
     },
   },
@@ -128,8 +110,8 @@ const config: UserConfigExport = defineConfig({
       include: ['src/element-template/**'],
       exclude: [
         'src/element-template/**/*.d.ts',
-        // ET source tests redirect this facade to a layer-aware test shim so
-        // the no-layer Vitest graph can model main-thread/background hooks.
+        // Thin runtime dispatch facade; ET tests cover it through production
+        // imports while hook behavior is owned by core hooks tests.
         'src/element-template/hooks/react.ts',
         'src/element-template/protocol/types.ts',
       ],

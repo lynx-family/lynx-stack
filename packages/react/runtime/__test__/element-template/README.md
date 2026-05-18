@@ -35,6 +35,7 @@ This directory contains the dedicated test suite for `src/element-template/**`.
   - serializer / template registry helpers
   - debug-only thread or update runners
 - When runtime internals are refactored, prefer updating `test-utils/debug/` adapters instead of rewriting many suites independently.
+- Thread switching in tests should be modeled by the ET env managers and runners while hooks continue to resolve through the production ET hooks facade.
 
 ## Placement Rules
 
