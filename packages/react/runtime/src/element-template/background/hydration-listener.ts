@@ -16,7 +16,7 @@ import { BackgroundElementTemplateInstance } from './instance.js';
 import { formatElementTemplateUpdateCommands, printElementTemplateTreeToString } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../lynx/performance.js';
-import { flushPendingEvents } from '../prop-adapters/event.js';
+import { clearPendingEvents, flushPendingEvents } from '../prop-adapters/event.js';
 import { clearDelayedRefUiOps, clearPendingRefs, flushDelayedRefUiOps } from '../prop-adapters/ref.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
 import type { SerializedElementTemplate } from '../protocol/types.js';
@@ -85,6 +85,7 @@ export function installElementTemplateHydrationListener(): void {
       // Hydrate is not transactional; a later failure can happen after earlier
       // nodes were rebound. Treat the pass as failed for externally observable
       // work, so delayed refs/events are not released from an incomplete tree.
+      clearPendingEvents();
       clearPendingRefs();
       clearDelayedRefUiOps();
       resetGlobalCommitContext();
@@ -123,6 +124,7 @@ export function installElementTemplateHydrationListener(): void {
           // Do not expose refs or replay delayed selector ops if the hydrate
           // patch failed to reach the main thread; selectors may still point at
           // stale pre-hydration ids in that case.
+          clearPendingEvents();
           clearPendingRefs();
           clearDelayedRefUiOps();
         }

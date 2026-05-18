@@ -309,6 +309,130 @@ describe('ElementTemplate hydration listener', () => {
     expect(handler).toHaveBeenCalledWith(eventData);
   });
 
+  it('drops queued direct events when hydrate matching fails', () => {
+    __etAttrPlanMap._et_event = [0, adaptEventAttrSlot];
+    resetEventStateForRuntime();
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      envManager.switchToBackground();
+      installElementTemplateHydrationListener();
+
+      const eventData = { type: 'tap' };
+      const handler = vi.fn();
+      const backgroundRoot = __root as BackgroundElementTemplateInstance;
+      const after = new BackgroundElementTemplateInstance('_et_event');
+      after.setAttribute('attributeSlots', [handler]);
+      backgroundRoot.appendChild(after);
+
+      publishEvent('-1:0:', eventData);
+
+      envManager.switchToMainThread();
+      lynx.getJSContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.hydrate,
+        data: [
+          {
+            templateKey: '_et_mismatch',
+            attributeSlots: ['-1:0:'],
+            elementSlots: [],
+            uid: -1,
+          } satisfies SerializedElementTemplate,
+        ],
+      });
+
+      envManager.switchToBackground();
+
+      envManager.switchToMainThread();
+      lynx.getJSContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.hydrate,
+        data: [
+          {
+            templateKey: '_et_event',
+            attributeSlots: ['-1:0:'],
+            elementSlots: [],
+            uid: -1,
+          } satisfies SerializedElementTemplate,
+        ],
+      });
+
+      envManager.switchToBackground();
+
+      expect(reportError).toHaveBeenCalledTimes(1);
+      expect(handler).not.toHaveBeenCalled();
+    } finally {
+      lynx.reportError = oldReportError;
+    }
+  });
+
+  it('drops queued direct events when hydrate update dispatch throws', () => {
+    const dispatchError = new Error('hydrate update dispatch failed');
+    const eventData = { type: 'tap' };
+    const handler = vi.fn();
+    let dispatchSpy: ReturnType<typeof vi.spyOn> | undefined;
+
+    try {
+      __etAttrPlanMap._et_event_parent = [0, adaptEventAttrSlot];
+      resetEventStateForRuntime();
+      envManager.switchToBackground();
+      installElementTemplateHydrationListener();
+      dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
+        throw dispatchError;
+      });
+
+      const backgroundRoot = __root as BackgroundElementTemplateInstance;
+      const parent = new BackgroundElementTemplateInstance('_et_event_parent');
+      parent.setAttribute('attributeSlots', [handler]);
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      parent.appendChild(slot);
+      const stale = new BackgroundElementTemplateInstance('_et_stale');
+      slot.appendChild(stale);
+      backgroundRoot.appendChild(parent);
+
+      publishEvent('-1:0:', eventData);
+
+      envManager.switchToMainThread();
+      lynx.getJSContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.hydrate,
+        data: [
+          {
+            templateKey: '_et_event_parent',
+            attributeSlots: ['-1:0:'],
+            elementSlots: [[]],
+            uid: -1,
+          } satisfies SerializedElementTemplate,
+        ],
+      });
+
+      expect(() => envManager.switchToBackground()).toThrow(dispatchError);
+      expect(handler).not.toHaveBeenCalled();
+
+      dispatchSpy.mockRestore();
+      dispatchSpy = undefined;
+
+      envManager.switchToMainThread();
+      lynx.getJSContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.hydrate,
+        data: [
+          {
+            templateKey: '_et_event_parent',
+            attributeSlots: ['-1:0:'],
+            elementSlots: [[]],
+            uid: -1,
+          } satisfies SerializedElementTemplate,
+        ],
+      });
+
+      envManager.switchToBackground();
+
+      expect(handler).not.toHaveBeenCalled();
+    } finally {
+      dispatchSpy?.mockRestore();
+    }
+  });
+
   it('does not attach pending direct refs during hydrate', () => {
     const ref = vi.fn();
     __etAttrPlanMap._et_ref = [0, adaptRefAttrSlot];

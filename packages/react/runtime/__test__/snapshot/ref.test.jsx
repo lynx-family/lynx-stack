@@ -2139,6 +2139,7 @@ describe('applyRef before hydration', () => {
     globalEnvManager.switchToBackground();
     expect(() => render(<App />, __root)).not.toThrow();
 
+    expect(reportError).toHaveBeenCalledTimes(1);
     expect(reportError).toHaveBeenCalledWith(error);
   });
 
