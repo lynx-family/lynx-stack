@@ -1,5 +1,11 @@
 # @lynx-js/qrcode-rsbuild-plugin
 
+## 0.4.7
+
+### Patch Changes
+
+- feat(qrcode): support get entry from api exposed from rspeedy.env.entries ([#2551](https://github.com/lynx-family/lynx-stack/pull/2551))
+
 ## 0.4.6
 
 ### Patch Changes

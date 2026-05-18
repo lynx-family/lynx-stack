@@ -12,6 +12,7 @@ import { useResizablePanels } from '../hooks/useResizablePanels.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
 
+type Theme = 'light' | 'dark';
 type PlayState = 'idle' | 'playing' | 'paused' | 'done';
 type PlaybackControlAction = 'pause' | 'resume';
 type PlaybackProgressStatus = 'idle' | 'streaming' | 'paused' | 'done';
@@ -31,8 +32,8 @@ function formatChunk(msg: unknown): string {
   return JSON.stringify(msg, null, 2);
 }
 
-export function PlaybackPage(props: { protocol: Protocol }) {
-  const { protocol } = props;
+export function PlaybackPage(props: { protocol: Protocol; theme: Theme }) {
+  const { protocol, theme } = props;
 
   const [scenarioId, setScenarioId] = useState<string>(
     ALL_SCENARIOS[0]?.id ?? '',
@@ -41,9 +42,7 @@ export function PlaybackPage(props: { protocol: Protocol }) {
   const [speed, setSpeed] = useState(1);
   const [iframeKey, setIframeKey] = useState(0);
   const [deliveredCount, setDeliveredCount] = useState(0);
-  const streamTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(
-    null,
-  );
+  const streamTimerRef = useRef<number | null>(null);
 
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const pendingSendRef = useRef<{ msgs: unknown[]; speed: number } | null>(
@@ -78,8 +77,9 @@ export function PlaybackPage(props: { protocol: Protocol }) {
     const url = new URL('render.html', base);
     url.searchParams.set('protocol', protocol.name);
     url.searchParams.set('demoUrl', DEFAULT_A2UI_DEMO_URL);
+    url.searchParams.set('theme', theme);
     return url.toString();
-  }, [protocol.name]);
+  }, [protocol.name, theme]);
 
   const sendToIframe = useCallback((
     msgs: unknown[],
@@ -94,11 +94,12 @@ export function PlaybackPage(props: { protocol: Protocol }) {
           messages: msgs,
           speed: spd,
           playbackMode: true,
+          theme,
         },
       },
       '*',
     );
-  }, []);
+  }, [theme]);
 
   const sendPlaybackControlToIframe = useCallback(
     (action: PlaybackControlAction) => {

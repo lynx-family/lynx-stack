@@ -1,5 +1,7 @@
 # @lynx-js/web-rsbuild-server-middleware
 
+## 0.20.4
+
 ## 0.20.3
 
 ## 0.20.2

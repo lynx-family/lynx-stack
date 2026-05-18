@@ -660,6 +660,9 @@ importers:
         specifier: 19.2.4
         version: 19.2.4(react@19.2.4)
     devDependencies:
+      '@lynx-js/config-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../rspeedy/plugin-config
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../rspeedy/plugin-qrcode
