@@ -274,14 +274,15 @@ describe('should not reuse cross slot index', () => {
         <view
           data-testid="view"
         >
-          <wrapper />
-          <text>
-            ---
-          </text>
           <wrapper>
             <text>
               A
             </text>
+          </wrapper>
+          <text>
+            ---
+          </text>
+          <wrapper>
             <text>
               A
             </text>
@@ -305,11 +306,11 @@ describe('should not reuse cross slot index', () => {
             "type": "__snapshot_42dc9_test_4",
           },
           {
-            "beforeId": null,
+            "beforeId": 4,
             "childId": 5,
             "op": "InsertBefore",
             "parentId": 2,
-            "slotIndex": 1,
+            "slotIndex": 0,
           },
         ]
       `);
@@ -426,14 +427,15 @@ describe('should not reuse cross slot index', () => {
         <view
           data-testid="view"
         >
-          <wrapper />
-          <text>
-            ---
-          </text>
           <wrapper>
             <text>
               A
             </text>
+          </wrapper>
+          <text>
+            ---
+          </text>
+          <wrapper>
             <text>
               A
             </text>
@@ -457,11 +459,11 @@ describe('should not reuse cross slot index', () => {
             "type": "__snapshot_42dc9_test_7",
           },
           {
-            "beforeId": null,
+            "beforeId": 4,
             "childId": 5,
             "op": "InsertBefore",
             "parentId": 2,
-            "slotIndex": 1,
+            "slotIndex": 0,
           },
         ]
       `);
@@ -579,14 +581,15 @@ describe('should not reuse cross slot index', () => {
         <view
           data-testid="view"
         >
-          <wrapper />
-          <text>
-            ---
-          </text>
           <wrapper>
             <text>
               CompB
             </text>
+          </wrapper>
+          <text>
+            ---
+          </text>
+          <wrapper>
             <text>
               CompB
             </text>
@@ -610,11 +613,11 @@ describe('should not reuse cross slot index', () => {
             "type": "__snapshot_42dc9_test_10",
           },
           {
-            "beforeId": null,
+            "beforeId": 4,
             "childId": 5,
             "op": "InsertBefore",
             "parentId": 2,
-            "slotIndex": 1,
+            "slotIndex": 0,
           },
         ]
       `);
@@ -732,14 +735,15 @@ describe('should not reuse cross slot index', () => {
         <view
           data-testid="view"
         >
-          <wrapper />
-          <text>
-            ---
-          </text>
           <wrapper>
             <text>
               CompB
             </text>
+          </wrapper>
+          <text>
+            ---
+          </text>
+          <wrapper>
             <text>
               CompB
             </text>
@@ -763,11 +767,11 @@ describe('should not reuse cross slot index', () => {
             "type": "__snapshot_42dc9_test_13",
           },
           {
-            "beforeId": null,
+            "beforeId": 4,
             "childId": 5,
             "op": "InsertBefore",
             "parentId": 2,
-            "slotIndex": 1,
+            "slotIndex": 0,
           },
         ]
       `);
