@@ -592,6 +592,9 @@ importers:
       '@lynx-js/lynx-ui':
         specifier: ^3.130.0
         version: 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/lynx-ui-input':
+        specifier: ^3.130.0
+        version: 3.130.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react
@@ -657,6 +660,9 @@ importers:
         specifier: 19.2.4
         version: 19.2.4(react@19.2.4)
     devDependencies:
+      '@lynx-js/config-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../rspeedy/plugin-config
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../rspeedy/plugin-qrcode

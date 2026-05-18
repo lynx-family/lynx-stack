@@ -36,11 +36,13 @@ function DefaultLoading(props: { id: string }) {
         width: '100%',
         minHeight: '20px',
         padding: '10px',
+        border: '1px solid var(--a2ui-color-border)',
+        borderRadius: 'var(--a2ui-border-radius)',
         backgroundColor: 'var(--a2ui-color-surface-muted)',
-        borderRadius: '6px',
+        color: 'var(--a2ui-color-text-muted)',
       }}
     >
-      <text style={{ color: '#666' }}>{content}</text>
+      <text style={{ color: 'inherit' }}>{content}</text>
     </view>
   );
 }

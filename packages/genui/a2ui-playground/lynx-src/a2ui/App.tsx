@@ -197,6 +197,8 @@ function normalizeInitDataLike(raw: unknown): InitData {
   const theme = obj.theme;
   if (theme === 'light' || theme === 'dark') {
     out.theme = theme;
+  } else if (theme === 'Dark' || theme === 'Light') {
+    out.theme = theme.toLowerCase() as Theme;
   }
 
   return out;
@@ -343,8 +345,9 @@ export function App() {
     [streamConfig.theme],
   );
   const themeClassName = theme === 'dark'
-    ? 'luna-dark a2ui-dark'
-    : 'luna-light a2ui-light';
+    ? 'luna-dark'
+    : 'luna-light';
+  const surfaceThemeClassName = theme === 'dark' ? ' a2ui-dark' : ' a2ui-light';
   const isPlaybackPaused = useMemo(
     () => effectiveData.playbackPaused === true,
     [effectiveData.playbackPaused],
@@ -488,16 +491,7 @@ export function App() {
           </view>
         )
         : (
-          <view
-            style={{
-              flex: 1,
-              minHeight: 0,
-              position: 'relative',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-            }}
-          >
+          <view className='a2ui-root-container'>
             {!isInstantPreview && store === null && error === ''
               ? (
                 <view className='a2ui-loadingOverlay'>
@@ -521,7 +515,7 @@ export function App() {
                       void agentRef.current?.onAction(action);
                     }}
                     wrapSurface={(c) => (
-                      <view className={themeClassName}>{c}</view>
+                      <view className={surfaceThemeClassName}>{c}</view>
                     )}
                     renderFallback={() => (
                       <view style={{ padding: '12px' }}>

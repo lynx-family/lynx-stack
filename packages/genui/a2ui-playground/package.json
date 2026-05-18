@@ -26,6 +26,7 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@lynx-js/config-rsbuild-plugin": "workspace:*",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",

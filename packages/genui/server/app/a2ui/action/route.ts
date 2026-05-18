@@ -4,7 +4,12 @@
 import type { A2UICatalog } from '../../../agent/a2ui-catalog';
 import { getA2UIAgentService } from '../../../service/a2ui-agent';
 import type { ChatMessage } from '../../../service/a2ui-agent';
-import { errorMessage, pickChatOptions } from '../_shared';
+import {
+  MAX_MESSAGE_CHARS,
+  errorMessage,
+  pickChatOptions,
+  readJsonBodyWithLimit,
+} from '../_shared';
 import { corsPreflight, jsonWithCors } from '../cors';
 import { checkRateLimit, rateLimitJsonResponse } from '../rate-limit';
 
@@ -37,16 +42,15 @@ export async function POST(req: Request) {
     return rateLimitJsonResponse(req, decision);
   }
 
-  let body: A2UIActionBody;
-  try {
-    body = (await req.json()) as A2UIActionBody;
-  } catch {
+  const parsed = await readJsonBodyWithLimit<A2UIActionBody>(req);
+  if (!parsed.ok) {
     return jsonWithCors(
       req,
-      { ok: false, error: 'invalid JSON body' },
-      { status: 400 },
+      { ok: false, error: parsed.error },
+      { status: parsed.status },
     );
   }
+  const body = parsed.body;
 
   if (!body || !body.threadId) {
     return jsonWithCors(req, { ok: false, error: 'threadId is required' });
@@ -76,9 +80,21 @@ export async function POST(req: Request) {
     surfaceId: body.surfaceId,
     action: body.action,
   };
+  const userContent = `A2UI_USER_ACTION: ${JSON.stringify(payload)}`;
+  if (userContent.length > MAX_MESSAGE_CHARS) {
+    return jsonWithCors(
+      req,
+      {
+        ok: false,
+        error:
+          `synthesized user action exceeds ${MAX_MESSAGE_CHARS} characters`,
+      },
+      { status: 413 },
+    );
+  }
   const userMessage: ChatMessage = {
     role: 'user',
-    content: `A2UI_USER_ACTION: ${JSON.stringify(payload)}`,
+    content: userContent,
   };
 
   const opts = pickChatOptions(body);
