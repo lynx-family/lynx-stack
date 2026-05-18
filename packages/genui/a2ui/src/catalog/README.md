@@ -75,6 +75,7 @@ import {
   Icon,
   Image,
   List,
+  Modal,
   RadioGroup,
   Row,
   Tabs,
@@ -104,6 +105,9 @@ import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json' w
 import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json' with {
   type: 'json',
 };
+import modalManifest from '@lynx-js/a2ui-reactlynx/catalog/Modal/catalog.json' with {
+  type: 'json',
+};
 import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json' with {
   type: 'json',
 };
@@ -124,6 +128,7 @@ export const allBuiltins = defineCatalog([
   [Column, columnManifest],
   [List, listManifest],
   [Card, cardManifest],
+  [Modal, modalManifest],
   [Button, buttonManifest],
   [Divider, dividerManifest],
   [CheckBox, checkBoxManifest],

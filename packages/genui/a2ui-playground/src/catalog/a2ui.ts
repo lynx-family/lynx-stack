@@ -9,6 +9,7 @@ import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.jso
 import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json';
 import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
 import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
+import modalManifest from '@lynx-js/a2ui-reactlynx/catalog/Modal/catalog.json';
 import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
 import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
 import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json';
@@ -25,7 +26,7 @@ export interface ComponentProp {
 
 export interface ComponentUsageExample {
   label: string;
-  value: object;
+  value: object | object[];
 }
 
 export type ComponentCategory = 'Display' | 'Layout' | 'Input' | 'Data';
@@ -35,7 +36,7 @@ export interface ComponentDoc {
   category: ComponentCategory;
   description: string;
   props: ComponentProp[];
-  usage: Record<ProtocolName, object>;
+  usage: Record<ProtocolName, object | object[]>;
   usageExamples: Record<ProtocolName, ComponentUsageExample[]>;
 }
 
@@ -331,6 +332,57 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
           },
         },
       ],
+      openui: [],
+    },
+  },
+  {
+    name: 'Modal',
+    category: 'Layout',
+    description:
+      'A modal dialog that opens from a trigger component and displays one content component.',
+    props: schemaToProps(modalManifest),
+    usage: {
+      a2ui: [
+        {
+          id: 'details-modal',
+          component: 'Modal',
+          trigger: 'details-trigger',
+          content: 'details-content',
+        },
+        {
+          id: 'details-trigger',
+          component: 'Button',
+          action: { event: { name: 'open_details' } },
+          child: 'details-trigger-text',
+        },
+        {
+          id: 'details-trigger-text',
+          component: 'Text',
+          text: 'Open details',
+        },
+        {
+          id: 'details-content',
+          component: 'Column',
+          align: 'stretch',
+          children: ['details-title', 'details-copy'],
+        },
+        {
+          id: 'details-title',
+          component: 'Text',
+          text: 'Details',
+          variant: 'h3',
+        },
+        {
+          id: 'details-copy',
+          component: 'Text',
+          text: 'This content is rendered inside a Lynx UI dialog.',
+          variant: 'body',
+        },
+      ],
+      openui: {},
+    },
+    usageExamples: {
+      a2ui: [],
       openui: [],
     },
   },

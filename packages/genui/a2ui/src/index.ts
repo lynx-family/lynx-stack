@@ -73,6 +73,7 @@ export {
   Divider,
   Image,
   List,
+  Modal,
   RadioGroup,
   Row,
   Tabs,
