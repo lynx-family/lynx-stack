@@ -1,4 +1,4 @@
-@import "./luna.css";
+@import "../theme.css";
 
 .modal-trigger {
   display: flex;
@@ -17,7 +17,8 @@
 }
 
 .modal-backdrop {
-  background-color: var(--backdrop);
+  background-color: var(--a2ui-color-overlay);
+  transition: opacity 0.18s ease;
 }
 
 .modal-backdrop.ui-entering,
@@ -39,8 +40,10 @@
   padding: 20px;
   border-radius: 16px;
   box-sizing: border-box;
-  background-color: var(--paper);
-  box-shadow: 0 12px 32px var(--backdrop);
+  overflow-y: auto;
+  background-color: var(--a2ui-color-surface-strong);
+  box-shadow: 0 12px 32px var(--a2ui-color-overlay);
+  transition: opacity 0.18s ease, transform 0.18s ease;
 }
 
 .modal-content.ui-entering,
