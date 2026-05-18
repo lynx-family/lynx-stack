@@ -21,7 +21,7 @@ export interface TextProps extends GenericComponentProps {
       | 'any'
       | 'void';
   };
-  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body';
+  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body' | 'markdown';
   weight?: number;
 }
 
@@ -29,7 +29,7 @@ export function Text(
   props: TextProps,
 ): import('@lynx-js/react').ReactNode {
   const id = props.id;
-  const text = props.text;
+  const text = props.text as string;
   const variant = props.variant ?? 'body';
   const weight = props.weight;
   let weightClass = '';
@@ -43,9 +43,15 @@ export function Text(
     }
   }
 
+  if (variant === 'markdown') {
+    return (
+      // @ts-expect-error support markdown future
+      <x-markdown content={text} />
+    );
+  }
   return (
     <text key={id} className={`text-${variant} ${weightClass}`}>
-      {text as string}
+      {text}
     </text>
   );
 }
