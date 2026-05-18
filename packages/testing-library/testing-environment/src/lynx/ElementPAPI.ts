@@ -326,14 +326,13 @@ export const initElementTree = () => {
     }
 
     __RemoveElement(parent: LynxElement, child: LynxElement) {
-      let ch = parent.firstChild;
-      while (ch) {
-        if (ch === child) {
-          parent.removeChild(ch);
-          break;
-        }
-        ch = ch.nextSibling;
+      if (child.parentNode !== parent) {
+        throw new Error(
+          `child ${child.$$uiSign} is not in parent ${parent.$$uiSign}, cannot remove it!`,
+        );
       }
+
+      child.parentNode.removeChild(child);
     }
 
     __InsertElementBefore(
