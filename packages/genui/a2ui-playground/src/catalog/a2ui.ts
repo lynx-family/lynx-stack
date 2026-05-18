@@ -12,6 +12,7 @@ import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
 import modalManifest from '@lynx-js/a2ui-reactlynx/catalog/Modal/catalog.json';
 import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
 import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
+import sliderManifest from '@lynx-js/a2ui-reactlynx/catalog/Slider/catalog.json';
 import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json';
 import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json';
 import textFieldManifest from '@lynx-js/a2ui-reactlynx/catalog/TextField/catalog.json';
@@ -1227,6 +1228,50 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
             component: 'CheckBox',
             label: 'Subscribe to updates',
             value: true,
+          },
+        },
+      ],
+      openui: [],
+    },
+  },
+  {
+    name: 'Slider',
+    category: 'Input',
+    description: 'A numeric range input backed by lynx-ui slider primitives.',
+    props: schemaToProps(sliderManifest),
+    usage: {
+      a2ui: {
+        id: 'volume-slider',
+        component: 'Slider',
+        label: 'Volume',
+        value: 40,
+        min: 0,
+        max: 100,
+      },
+      openui: {},
+    },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Percent',
+          value: {
+            id: 'volume-slider',
+            component: 'Slider',
+            label: 'Volume',
+            value: 40,
+            min: 0,
+            max: 100,
+          },
+        },
+        {
+          label: 'Progress',
+          value: {
+            id: 'progress-slider',
+            component: 'Slider',
+            label: 'Progress',
+            value: 0.35,
+            min: 0,
+            max: 1,
           },
         },
       ],

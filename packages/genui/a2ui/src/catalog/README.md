@@ -78,6 +78,7 @@ import {
   Modal,
   RadioGroup,
   Row,
+  Slider,
   Tabs,
   Text,
   TextField,
@@ -115,6 +116,9 @@ import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catal
 import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json' with {
   type: 'json',
 };
+import sliderManifest from '@lynx-js/a2ui-reactlynx/catalog/Slider/catalog.json' with {
+  type: 'json',
+};
 import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json' with {
   type: 'json',
 };
@@ -139,6 +143,7 @@ export const allBuiltins = defineCatalog([
   [CheckBox, checkBoxManifest],
   [Icon, iconManifest],
   [RadioGroup, radioGroupManifest],
+  [Slider, sliderManifest],
   [Tabs, tabsManifest],
 ]);
 ```

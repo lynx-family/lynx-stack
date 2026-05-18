@@ -14,6 +14,7 @@ import {
   Modal,
   RadioGroup,
   Row,
+  Slider,
   Tabs,
   Text,
   TextField,
@@ -40,6 +41,7 @@ import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
 import modalManifest from '@lynx-js/a2ui-reactlynx/catalog/Modal/catalog.json';
 import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
 import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
+import sliderManifest from '@lynx-js/a2ui-reactlynx/catalog/Slider/catalog.json';
 import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json';
 import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json';
 import textFieldManifest from '@lynx-js/a2ui-reactlynx/catalog/TextField/catalog.json';
@@ -89,6 +91,7 @@ const ALL_BUILTINS: readonly CatalogInput[] = [
   manifestEntry(Icon, iconManifest),
   manifestEntry(CheckBox, checkBoxManifest),
   manifestEntry(RadioGroup, radioGroupManifest),
+  manifestEntry(Slider, sliderManifest),
   manifestEntry(TextField, textFieldManifest),
   manifestEntry(Tabs, tabsManifest),
   ...basicFunctions,
