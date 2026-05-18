@@ -10,6 +10,8 @@ import type { URLSearchParams } from 'node:url'
 import { knownFields, resolveField } from '@lynx-js/debug-metadata'
 import type { DebugMetadataAsset, QueryParams } from '@lynx-js/debug-metadata'
 
+import { DEBUG_METADATA_ASSET_NAME } from './constants.js'
+
 /**
  * Connect-style middleware. Loosely typed so it can plug into rsbuild,
  * vite, or a bare node HTTP server without taking a hard dependency on
@@ -57,7 +59,6 @@ export interface CompilerHandle {
 
 /** @internal */
 export interface MiddlewareOptions {
-  debugMetadataAssetName: string
   compilerHandle: CompilerHandle
 }
 
@@ -81,8 +82,6 @@ export interface MiddlewareOptions {
 export function createDebugMetadataMiddleware(
   options: MiddlewareOptions,
 ): Middleware {
-  const { debugMetadataAssetName } = options
-
   return (req, res, next) => {
     if (!req.url) return next()
 
@@ -93,7 +92,7 @@ export function createDebugMetadataMiddleware(
       return next()
     }
 
-    if (!url.pathname.endsWith(`/${debugMetadataAssetName}`)) return next()
+    if (!url.pathname.endsWith(`/${DEBUG_METADATA_ASSET_NAME}`)) return next()
     if (url.search === '') return next()
 
     const field = url.searchParams.get('field')
@@ -133,14 +132,13 @@ async function handleQuery(args: {
   res: ServerResponse
 }): Promise<void> {
   const { metadataDir, field, params, url, options, res } = args
-  const { debugMetadataAssetName } = options
-  const metadataPath = `${metadataDir}/${debugMetadataAssetName}`
+  const metadataPath = `${metadataDir}/${DEBUG_METADATA_ASSET_NAME}`
 
   const metadataJson = await readMetadataAsset(metadataPath, options)
   if (metadataJson === undefined) {
     respondJSON(res, 404, {
       error: 'metadata_not_found',
-      message: `No \`${debugMetadataAssetName}\` adjacent to `
+      message: `No \`${DEBUG_METADATA_ASSET_NAME}\` adjacent to `
         + `\`${url.pathname}\`. Ensure pluginLynxDebugMetadata is active.`,
     })
     return

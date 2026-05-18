@@ -121,7 +121,6 @@ function runRequest(
 describe('createDebugMetadataMiddleware', () => {
   test('skips (next) when the URL is not a debug-metadata.json request', async () => {
     const mw = createDebugMetadataMiddleware({
-      debugMetadataAssetName: 'debug-metadata.json',
       compilerHandle: fakeCompiler({}),
     })
     expect(await runRequest(mw, '/something/else.js')).toBeNull()
@@ -129,7 +128,6 @@ describe('createDebugMetadataMiddleware', () => {
 
   test('skips when the path matches but no query is present', async () => {
     const mw = createDebugMetadataMiddleware({
-      debugMetadataAssetName: 'debug-metadata.json',
       compilerHandle: fakeCompiler({}),
     })
     expect(await runRequest(mw, '/.rspeedy/main/debug-metadata.json'))
@@ -138,7 +136,6 @@ describe('createDebugMetadataMiddleware', () => {
 
   test('skips when ?field= is missing', async () => {
     const mw = createDebugMetadataMiddleware({
-      debugMetadataAssetName: 'debug-metadata.json',
       compilerHandle: fakeCompiler({}),
     })
     expect(
@@ -148,7 +145,6 @@ describe('createDebugMetadataMiddleware', () => {
 
   test('returns 400 invalid_field for an unknown field name', async () => {
     const mw = createDebugMetadataMiddleware({
-      debugMetadataAssetName: 'debug-metadata.json',
       compilerHandle: fakeCompiler({
         '/out/.rspeedy/main/debug-metadata.json': JSON.stringify(
           VALID_METADATA,
@@ -169,7 +165,6 @@ describe('createDebugMetadataMiddleware', () => {
 
   test('returns 404 metadata_not_found when the dir has no debug-metadata.json', async () => {
     const mw = createDebugMetadataMiddleware({
-      debugMetadataAssetName: 'debug-metadata.json',
       compilerHandle: fakeCompiler({}),
     })
     const res = await runRequest(
@@ -182,7 +177,6 @@ describe('createDebugMetadataMiddleware', () => {
 
   test('returns 500 metadata_parse_error on corrupt JSON', async () => {
     const mw = createDebugMetadataMiddleware({
-      debugMetadataAssetName: 'debug-metadata.json',
       compilerHandle: fakeCompiler({
         '/out/.rspeedy/main/debug-metadata.json': '{ not json',
       }),
@@ -197,7 +191,6 @@ describe('createDebugMetadataMiddleware', () => {
 
   test('returns 404 not_found when the field is valid but no match', async () => {
     const mw = createDebugMetadataMiddleware({
-      debugMetadataAssetName: 'debug-metadata.json',
       compilerHandle: fakeCompiler({
         '/out/.rspeedy/main/debug-metadata.json': JSON.stringify(
           VALID_METADATA,
@@ -214,7 +207,6 @@ describe('createDebugMetadataMiddleware', () => {
 
   test('200 source-map payload is the unwrapped map (not the wrapper)', async () => {
     const mw = createDebugMetadataMiddleware({
-      debugMetadataAssetName: 'debug-metadata.json',
       compilerHandle: fakeCompiler({
         '/out/.rspeedy/main/debug-metadata.json': JSON.stringify(
           VALID_METADATA,
@@ -238,7 +230,6 @@ describe('createDebugMetadataMiddleware', () => {
 
   test('200 returns the whole `meta` block for ?field=meta', async () => {
     const mw = createDebugMetadataMiddleware({
-      debugMetadataAssetName: 'debug-metadata.json',
       compilerHandle: fakeCompiler({
         '/out/.rspeedy/main/debug-metadata.json': JSON.stringify(
           VALID_METADATA,
@@ -255,7 +246,6 @@ describe('createDebugMetadataMiddleware', () => {
 
   test('strips a path-prefix publicPath before reading outputFileSystem', async () => {
     const mw = createDebugMetadataMiddleware({
-      debugMetadataAssetName: 'debug-metadata.json',
       compilerHandle: fakeCompiler(
         {
           '/out/.rspeedy/main/debug-metadata.json': JSON.stringify(
@@ -275,7 +265,6 @@ describe('createDebugMetadataMiddleware', () => {
 
   test('strips a function publicPath that returns a static prefix', async () => {
     const mw = createDebugMetadataMiddleware({
-      debugMetadataAssetName: 'debug-metadata.json',
       compilerHandle: fakeCompiler(
         {
           '/out/.rspeedy/main/debug-metadata.json': JSON.stringify(
@@ -295,7 +284,6 @@ describe('createDebugMetadataMiddleware', () => {
 
   test('does not crash on a function publicPath that throws — best-effort, treat as no prefix', async () => {
     const mw = createDebugMetadataMiddleware({
-      debugMetadataAssetName: 'debug-metadata.json',
       compilerHandle: fakeCompiler(
         {
           '/out/.rspeedy/main/debug-metadata.json': JSON.stringify(
@@ -317,7 +305,6 @@ describe('createDebugMetadataMiddleware', () => {
 
   test('strips the path part of a full-URL publicPath', async () => {
     const mw = createDebugMetadataMiddleware({
-      debugMetadataAssetName: 'debug-metadata.json',
       compilerHandle: fakeCompiler(
         {
           '/out/.rspeedy/main/debug-metadata.json': JSON.stringify(
@@ -337,7 +324,6 @@ describe('createDebugMetadataMiddleware', () => {
 
   test('returns 404 metadata_not_found when no compiler is attached yet', async () => {
     const mw = createDebugMetadataMiddleware({
-      debugMetadataAssetName: 'debug-metadata.json',
       compilerHandle: { compiler: null },
     })
     const res = await runRequest(
@@ -384,7 +370,6 @@ describe('createDebugMetadataMiddleware', () => {
       },
     }
     const mw = createDebugMetadataMiddleware({
-      debugMetadataAssetName: 'debug-metadata.json',
       compilerHandle: handle,
     })
     const res = await runRequest(

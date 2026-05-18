@@ -52,7 +52,7 @@ export function applySourceMappingURLRewriter(
         const asset = compilation.getAsset(name)
         if (!asset) continue
         const before = asset.source.source().toString()
-        const after = rewriteTrailer(before)
+        const after = rewriteTrailer(before, `${name}.map`)
         if (after === undefined) continue
         compilation.updateAsset(name, new RawSource(after), asset.info)
       }
@@ -62,8 +62,15 @@ export function applySourceMappingURLRewriter(
 
 /**
  * Return the rewritten source, or `undefined` when there's no trailer
- * to rewrite, the trailer is a `data:` URL, or it already points at
+ * to rewrite or the trailer is a `data:` URL / already points at
  * `debug-metadata.json` (idempotent).
+ *
+ * `mapAssetPath` is the bundler-relative path of the `.map` asset
+ * that owns the JS being rewritten (i.e. `${jsAssetName}.map`). It
+ * becomes the `path=…` selector in the rewritten URL, so the
+ * resolver disambiguates correctly when two entries emit JS chunks
+ * with the same basename (e.g. `app/index.js.map` and
+ * `vendor/index.js.map` would both collapse to `filename=index.js.map`).
  *
  * URL surgery is intentionally done with **string manipulation rather
  * than `new URL`**: WHATWG URL normalization collapses `..` segments
@@ -75,11 +82,14 @@ export function applySourceMappingURLRewriter(
  *  1. Strip `?…` query and `#…` fragment off the original URL.
  *  2. Split on the last `/` to get `dir` + `encodedBasename`.
  *  3. Build the new URL as
- *     `<dir>debug-metadata.json?field=source-map&filename=<decoded basename>`.
+ *     `<dir>debug-metadata.json?field=source-map&path=<encoded mapAssetPath>`.
  *
  * @internal Exported for unit testing only.
  */
-export function rewriteTrailer(source: string): string | undefined {
+export function rewriteTrailer(
+  source: string,
+  mapAssetPath: string,
+): string | undefined {
   const match = SOURCE_MAPPING_URL_TRAILER.exec(source)
   if (!match) return undefined
   const originalUrl = match[1]
@@ -91,17 +101,10 @@ export function rewriteTrailer(source: string): string | undefined {
   const lastSlash = encodedPath.lastIndexOf('/')
   const encodedBasename = encodedPath.slice(lastSlash + 1)
   if (!encodedBasename) return undefined
-  let decodedBasename: string
-  try {
-    decodedBasename = decodeURIComponent(encodedBasename)
-  } catch {
-    decodedBasename = encodedBasename
-  }
   const dir = lastSlash >= 0 ? encodedPath.slice(0, lastSlash + 1) : ''
-  const newUrl =
-    `${dir}${DEBUG_METADATA_ASSET_NAME}?field=source-map&filename=${
-      encodeURIComponent(decodedBasename)
-    }`
+  const newUrl = `${dir}${DEBUG_METADATA_ASSET_NAME}?field=source-map&path=${
+    encodeURIComponent(mapAssetPath)
+  }`
 
   return source.slice(0, match.index) + `//# sourceMappingURL=${newUrl}`
 }

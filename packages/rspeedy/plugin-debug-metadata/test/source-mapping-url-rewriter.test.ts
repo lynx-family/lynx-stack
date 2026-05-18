@@ -10,22 +10,28 @@ const SAMPLE_BODY = 'var __webpack_modules__ = {};\nconsole.log(42);\n'
 
 const wrap = (trailer: string): string => SAMPLE_BODY + trailer
 
+const MAP = '.rspeedy/main/main-thread.js.map'
+const MAP_ENC = encodeURIComponent(MAP)
+
 describe('rewriteTrailer', () => {
   test('rewrites a bare-filename trailer to a relative endpoint URL', () => {
     const before = wrap('//# sourceMappingURL=main-thread.js.map')
-    const after = rewriteTrailer(before)
+    const after = rewriteTrailer(before, MAP)
     expect(after).toBe(
-      `${SAMPLE_BODY}//# sourceMappingURL=debug-metadata.json?field=source-map&filename=main-thread.js.map`,
+      `${SAMPLE_BODY}//# sourceMappingURL=debug-metadata.json?field=source-map&path=${MAP_ENC}`,
     )
   })
 
   test('preserves the absolute-path dir from a prod-style trailer', () => {
+    const bg = '.rspeedy/main/background.abc123.js.map'
     const before = wrap(
       '//# sourceMappingURL=/.rspeedy/main/background.abc123.js.map',
     )
-    const after = rewriteTrailer(before)
+    const after = rewriteTrailer(before, bg)
     expect(after).toBe(
-      `${SAMPLE_BODY}//# sourceMappingURL=/.rspeedy/main/debug-metadata.json?field=source-map&filename=background.abc123.js.map`,
+      `${SAMPLE_BODY}//# sourceMappingURL=/.rspeedy/main/debug-metadata.json?field=source-map&path=${
+        encodeURIComponent(bg)
+      }`,
     )
   })
 
@@ -33,9 +39,9 @@ describe('rewriteTrailer', () => {
     const before = wrap(
       '//# sourceMappingURL=http://192.168.1.128:3010/.rspeedy/main/main-thread.js.map',
     )
-    const after = rewriteTrailer(before)
+    const after = rewriteTrailer(before, MAP)
     expect(after).toBe(
-      `${SAMPLE_BODY}//# sourceMappingURL=http://192.168.1.128:3010/.rspeedy/main/debug-metadata.json?field=source-map&filename=main-thread.js.map`,
+      `${SAMPLE_BODY}//# sourceMappingURL=http://192.168.1.128:3010/.rspeedy/main/debug-metadata.json?field=source-map&path=${MAP_ENC}`,
     )
   })
 
@@ -43,25 +49,28 @@ describe('rewriteTrailer', () => {
     const before = wrap(
       '//# sourceMappingURL=/.rspeedy/main/main-thread.js.map?token=abc',
     )
-    const after = rewriteTrailer(before)
+    const after = rewriteTrailer(before, MAP)
     expect(after).toBe(
-      `${SAMPLE_BODY}//# sourceMappingURL=/.rspeedy/main/debug-metadata.json?field=source-map&filename=main-thread.js.map`,
+      `${SAMPLE_BODY}//# sourceMappingURL=/.rspeedy/main/debug-metadata.json?field=source-map&path=${MAP_ENC}`,
     )
   })
 
   test('strips any fragment from the original URL', () => {
+    const map = 'a/b.js.map'
     const before = wrap('//# sourceMappingURL=/a/b.js.map#frag')
-    const after = rewriteTrailer(before)
+    const after = rewriteTrailer(before, map)
     expect(after).toBe(
-      `${SAMPLE_BODY}//# sourceMappingURL=/a/debug-metadata.json?field=source-map&filename=b.js.map`,
+      `${SAMPLE_BODY}//# sourceMappingURL=/a/debug-metadata.json?field=source-map&path=${
+        encodeURIComponent(map)
+      }`,
     )
   })
 
   test('accepts the legacy `//@ sourceMappingURL=` form', () => {
     const before = wrap('//@ sourceMappingURL=main-thread.js.map')
-    const after = rewriteTrailer(before)
+    const after = rewriteTrailer(before, MAP)
     expect(after).toBe(
-      `${SAMPLE_BODY}//# sourceMappingURL=debug-metadata.json?field=source-map&filename=main-thread.js.map`,
+      `${SAMPLE_BODY}//# sourceMappingURL=debug-metadata.json?field=source-map&path=${MAP_ENC}`,
     )
   })
 
@@ -69,22 +78,22 @@ describe('rewriteTrailer', () => {
     const before = wrap(
       '//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozfQ==',
     )
-    expect(rewriteTrailer(before)).toBeUndefined()
+    expect(rewriteTrailer(before, MAP)).toBeUndefined()
   })
 
   test('returns undefined when the trailer already points at debug-metadata.json (idempotent)', () => {
     const before = wrap(
-      '//# sourceMappingURL=/.rspeedy/main/debug-metadata.json?field=source-map&filename=main-thread.js.map',
+      `//# sourceMappingURL=/.rspeedy/main/debug-metadata.json?field=source-map&path=${MAP_ENC}`,
     )
-    expect(rewriteTrailer(before)).toBeUndefined()
+    expect(rewriteTrailer(before, MAP)).toBeUndefined()
   })
 
   test('returns undefined when there is no trailer', () => {
-    expect(rewriteTrailer(SAMPLE_BODY)).toBeUndefined()
+    expect(rewriteTrailer(SAMPLE_BODY, MAP)).toBeUndefined()
   })
 
   test('returns undefined when the trailer is the only thing in the file but the URL is empty', () => {
-    expect(rewriteTrailer('//# sourceMappingURL=')).toBeUndefined()
+    expect(rewriteTrailer('//# sourceMappingURL=', MAP)).toBeUndefined()
   })
 
   test('matches only the FINAL trailer, not inner module-body lookalikes', () => {
@@ -94,44 +103,49 @@ describe('rewriteTrailer', () => {
       '// more code',
       '//# sourceMappingURL=main-thread.js.map',
     ].join('\n')
-    const after = rewriteTrailer(source)!
+    const after = rewriteTrailer(source, MAP)!
     expect(after.endsWith(
-      '//# sourceMappingURL=debug-metadata.json?field=source-map&filename=main-thread.js.map',
+      `//# sourceMappingURL=debug-metadata.json?field=source-map&path=${MAP_ENC}`,
     )).toBe(true)
     expect(after).toContain('//# sourceMappingURL=should-not-touch.js.map')
   })
 
-  test('encodes special characters in the filename query value', () => {
-    const before = wrap('//# sourceMappingURL=/a/b%20c.js.map')
-    const after = rewriteTrailer(before)
-    expect(after).toBe(
-      `${SAMPLE_BODY}//# sourceMappingURL=/a/debug-metadata.json?field=source-map&filename=${
-        encodeURIComponent('b c.js.map')
-      }`,
-    )
-  })
-
   test('preserves dot-segments (..) in the dir — does NOT collapse them', () => {
     const before = wrap('//# sourceMappingURL=../maps/main-thread.js.map')
-    const after = rewriteTrailer(before)
+    const after = rewriteTrailer(before, MAP)
     expect(after).toBe(
-      `${SAMPLE_BODY}//# sourceMappingURL=../maps/debug-metadata.json?field=source-map&filename=main-thread.js.map`,
+      `${SAMPLE_BODY}//# sourceMappingURL=../maps/debug-metadata.json?field=source-map&path=${MAP_ENC}`,
     )
   })
 
   test('preserves single-dot ./ prefix on the dir', () => {
+    const map = 'relative/x.js.map'
     const before = wrap('//# sourceMappingURL=./relative/x.js.map')
-    const after = rewriteTrailer(before)
+    const after = rewriteTrailer(before, map)
     expect(after).toBe(
-      `${SAMPLE_BODY}//# sourceMappingURL=./relative/debug-metadata.json?field=source-map&filename=x.js.map`,
+      `${SAMPLE_BODY}//# sourceMappingURL=./relative/debug-metadata.json?field=source-map&path=${
+        encodeURIComponent(map)
+      }`,
     )
   })
 
   test('tolerates trailing whitespace after the URL', () => {
     const before = `${SAMPLE_BODY}//# sourceMappingURL=main-thread.js.map  \n`
-    const after = rewriteTrailer(before)!
+    const after = rewriteTrailer(before, MAP)!
     expect(after).toContain(
-      '//# sourceMappingURL=debug-metadata.json?field=source-map&filename=main-thread.js.map',
+      `//# sourceMappingURL=debug-metadata.json?field=source-map&path=${MAP_ENC}`,
+    )
+  })
+
+  test('uses full bundler-relative `mapAssetPath` so same-basename across entries disambiguates', () => {
+    const appMap = 'app/index.js.map'
+    const vendorMap = 'vendor/index.js.map'
+    const before = wrap('//# sourceMappingURL=index.js.map')
+    expect(rewriteTrailer(before, appMap)).toContain(
+      `path=${encodeURIComponent(appMap)}`,
+    )
+    expect(rewriteTrailer(before, vendorMap)).toContain(
+      `path=${encodeURIComponent(vendorMap)}`,
     )
   })
 })

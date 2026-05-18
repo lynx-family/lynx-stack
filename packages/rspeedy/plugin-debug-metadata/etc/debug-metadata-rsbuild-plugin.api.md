@@ -16,14 +16,12 @@ export const DEBUG_METADATA_ASSET_NAME = "debug-metadata.json";
 export class LynxDebugMetadataPlugin {
     constructor(options?: LynxDebugMetadataPluginOptions | undefined);
     apply(compiler: Compiler): void;
-    static defaultOptions: Readonly<Omit<Required<LynxDebugMetadataPluginOptions>, 'LynxTemplatePlugin' | 'rsbuildEntry'>>;
     // (undocumented)
     protected options?: LynxDebugMetadataPluginOptions | undefined;
 }
 
 // @public
 export interface LynxDebugMetadataPluginOptions {
-    debugMetadataAssetName?: string;
     LynxTemplatePlugin: typeof LynxTemplatePlugin;
     rsbuildEntry?: RsbuildEntry;
 }

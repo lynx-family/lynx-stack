@@ -8,7 +8,6 @@ import link from 'terminal-link'
 
 import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
-import { DEBUG_METADATA_ASSET_NAME } from './constants.js'
 import { LynxDebugMetadataPlugin } from './LynxDebugMetadataPlugin.js'
 import { createDebugMetadataMiddleware } from './middleware.js'
 import type { CompilerHandle } from './middleware.js'
@@ -113,10 +112,7 @@ See ${
       })
 
       api.onBeforeStartDevServer(({ server }) => {
-        const mw = createDebugMetadataMiddleware({
-          debugMetadataAssetName: DEBUG_METADATA_ASSET_NAME,
-          compilerHandle,
-        })
+        const mw = createDebugMetadataMiddleware({ compilerHandle })
         ;(server as {
           middlewares: { use: (fn: typeof mw) => void }
         }).middlewares.use(mw)

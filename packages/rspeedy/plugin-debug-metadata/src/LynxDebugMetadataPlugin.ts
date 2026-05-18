@@ -31,12 +31,6 @@ import { applySourceMappingURLRewriter } from './source-mapping-url-rewriter.js'
  */
 export interface LynxDebugMetadataPluginOptions {
   /**
-   * The name of the debug metadata asset.
-   *
-   * @defaultValue 'debug-metadata.json'
-   */
-  debugMetadataAssetName?: string
-  /**
    * The LynxTemplatePlugin class.
    */
   LynxTemplatePlugin: typeof LynxTemplatePluginClass
@@ -52,54 +46,25 @@ export interface LynxDebugMetadataPluginOptions {
 /**
  * The LynxDebugMetadataPlugin is a webpack plugin that adds debug metadata to the output.
  *
+ * The emitted asset is always named `debug-metadata.json` —
+ * the name is hard-coded throughout the pipeline (the JS
+ * `sourceMappingURL` rewriter, the tasm `templateDebugUrl`, and the
+ * dev-server middleware all literal-match this name), so allowing a
+ * custom name here would silently break the downstream URLs.
+ *
  * @public
  */
 export class LynxDebugMetadataPlugin {
   constructor(protected options?: LynxDebugMetadataPluginOptions | undefined) {}
   /**
-   * `defaultOptions` is the default options that the {@link LynxDebugMetadataPlugin} uses.
-   *
-   * @example
-   * `defaultOptions` can be used to change part of the option and keep others as the default value.
-   *
-   * ```js
-   * // webpack.config.js
-   * import { LynxDebugMetadataPlugin } from '@lynx-js/debug-metadata-rsbuild-plugin'
-   * export default {
-   *   plugins: [
-   *     new LynxDebugMetadataPlugin({
-   *       ...LynxDebugMetadataPlugin.defaultOptions,
-   *       debugMetadataAssetName: DEBUG_METADATA_ASSET_NAME,
-   *     }),
-   *   ],
-   * }
-   * ```
-   *
-   * @public
-   */
-  static defaultOptions: Readonly<
-    Omit<
-      Required<LynxDebugMetadataPluginOptions>,
-      'LynxTemplatePlugin' | 'rsbuildEntry'
-    >
-  > = Object
-    .freeze<
-      Omit<
-        Required<LynxDebugMetadataPluginOptions>,
-        'LynxTemplatePlugin' | 'rsbuildEntry'
-      >
-    >({
-      debugMetadataAssetName: DEBUG_METADATA_ASSET_NAME,
-    })
-  /**
    * The entry point of a webpack plugin.
    * @param compiler - the webpack compiler
    */
   apply(compiler: Compiler): void {
-    new LynxDebugMetadataPluginImpl(
-      compiler,
-      Object.assign({}, LynxDebugMetadataPlugin.defaultOptions, this.options),
-    )
+    if (!this.options) {
+      throw new Error('LynxDebugMetadataPlugin requires options')
+    }
+    new LynxDebugMetadataPluginImpl(compiler, this.options)
   }
 }
 
@@ -166,7 +131,7 @@ export class LynxDebugMetadataPluginImpl {
           }
           const debugMetadataAssetName = path.posix.format({
             dir: args.intermediate,
-            base: this.options.debugMetadataAssetName,
+            base: DEBUG_METADATA_ASSET_NAME,
           })
           compilation.emitAsset(
             debugMetadataAssetName,
@@ -195,7 +160,7 @@ export class LynxDebugMetadataPluginImpl {
           )
           const debugMetadataAssetName = path.posix.format({
             dir: intermediate,
-            base: this.options.debugMetadataAssetName,
+            base: DEBUG_METADATA_ASSET_NAME,
           })
 
           const existing = compilation.getAsset(debugMetadataAssetName)
