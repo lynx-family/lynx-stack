@@ -36,22 +36,33 @@ export function collectArtifacts(
         if (seen.has(file)) continue
         seen.add(file)
 
+        const kind = inferKind(compilation, file)
+        const debugSources: SourceMapDebugSource[] = []
         const mapPath = `${file}.map`
         const map = readSourceMap(compilation, mapPath)
-        if (!map) continue
-
-        const debugSource: SourceMapDebugSource = {
-          kind: 'source-map',
-          filename: path.posix.basename(mapPath),
-          path: mapPath,
-          key: extractKey(chunk, file),
-          map,
+        if (map) {
+          debugSources.push({
+            kind: 'source-map',
+            filename: path.posix.basename(mapPath),
+            path: mapPath,
+            key: extractKey(chunk, file),
+            map,
+          })
+        } else if (kind === 'css') {
+          // CSS assets with no sibling `.map` carry no useful debug
+          // info — skip rather than emit an empty entry. JS assets
+          // still need to be emitted: `LynxEncodePlugin`'s lepusNG
+          // bytecode-debug-info is attached to the main-thread artifact
+          // in `beforeEmit`, so we have to keep a JS artifact around
+          // even when sibling source maps are disabled
+          // (`output.sourceMap: false`).
+          continue
         }
         artifacts.push({
-          kind: inferKind(compilation, file),
+          kind,
           filename: path.posix.basename(file),
           path: file,
-          debugSources: [debugSource],
+          debugSources,
         })
       }
     }
