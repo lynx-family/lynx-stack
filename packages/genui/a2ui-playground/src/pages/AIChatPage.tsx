@@ -1,6 +1,8 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { json } from '@codemirror/lang-json';
+import CodeMirror from '@uiw/react-codemirror';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import './AIChatPage.css';
@@ -8,7 +10,6 @@ import './AIChatPage.css';
 import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
 import { PreviewPanel } from '../components/PreviewPanel.js';
 import { PreviewViewport } from '../components/PreviewViewport.js';
-import { QrCode } from '../components/QrCode.js';
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
@@ -71,6 +72,7 @@ const RESIZE_BREAKPOINT = 980;
 const ONLINE_A2UI_SERVER_ORIGIN = 'https://genui-server.vercel.app';
 const ONLINE_A2UI_CHAT_URL = `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/stream`;
 const LOCAL_A2UI_SERVER_PORT = '3060';
+const jsonExtensions = [json()];
 
 function isDevHost(hostname: string): boolean {
   return (
@@ -338,6 +340,9 @@ export function AIChatPage(props: { protocol: Protocol }) {
   const [inputValue, setInputValue] = useState<string>('');
   const [renderUrl, setRenderUrl] = useState<string>('');
   const [generatedJson, setGeneratedJson] = useState<string>('');
+  const [previewMessages, setPreviewMessages] = useState<unknown[] | null>(
+    null,
+  );
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previewFrameRef = useRef<HTMLIFrameElement | null>(null);
@@ -366,11 +371,22 @@ export function AIChatPage(props: { protocol: Protocol }) {
   });
 
   const baseUrl = useMemo(() => window.location.href.replace(/#.*$/, ''), []);
+  const previewSource = useMemo(() => {
+    if (!previewMessages) return undefined;
+    return {
+      kind: 'a2ui' as const,
+      protocol,
+      demoUrl: DEFAULT_A2UI_DEMO_URL,
+      theme: 'light' as const,
+      messages: previewMessages,
+    };
+  }, [previewMessages, protocol]);
 
   const publishPreviewMessages = useCallback(
     (nextMessages: unknown[]) => {
       if (nextMessages.length === 0) return;
       latestPreviewMessagesRef.current = nextMessages;
+      setPreviewMessages(nextMessages);
 
       const initData = {
         protocol,
@@ -425,6 +441,8 @@ export function AIChatPage(props: { protocol: Protocol }) {
     ]);
     setInputValue('');
     setGeneratedJson('');
+    setPreviewMessages(null);
+    latestPreviewMessagesRef.current = [];
     setIsGenerating(true);
 
     void (async () => {
@@ -533,6 +551,30 @@ export function AIChatPage(props: { protocol: Protocol }) {
               {msg.content}
             </div>
           ))}
+          {generatedJson
+            ? (
+              <div className='chatGeneratedJson'>
+                <div className='chatGeneratedJsonTitle'>
+                  Generated Output
+                  <span className='chatGeneratedJsonBadge'>JSON</span>
+                </div>
+                <CodeMirror
+                  className='chatGeneratedJsonEditor'
+                  value={generatedJson}
+                  extensions={jsonExtensions}
+                  theme='dark'
+                  editable={false}
+                  basicSetup={{
+                    lineNumbers: true,
+                    foldGutter: true,
+                    bracketMatching: true,
+                    closeBrackets: false,
+                    autocompletion: false,
+                  }}
+                />
+              </div>
+            )
+            : null}
           <div ref={messagesEndRef} />
         </div>
 
@@ -569,38 +611,7 @@ export function AIChatPage(props: { protocol: Protocol }) {
         style={previewPanelStyle}
         title='Lynx Preview'
         showPreviewModeSwitch
-        afterBody={
-          <>
-            {generatedJson
-              ? (
-                <div className='chatGeneratedJson'>
-                  <div className='chatGeneratedJsonTitle'>Generated JSON</div>
-                  <pre>{generatedJson}</pre>
-                </div>
-              )
-              : null}
-
-            <div className='previewQrSection'>
-              <div className='previewQrContent'>
-                <div className='previewQrInfo'>
-                  <div className='previewQrTitle'>View on Device</div>
-                  <div className='previewQrDesc'>
-                    Scan the QR code to preview on your mobile device.
-                  </div>
-                </div>
-                {renderUrl
-                  ? <QrCode value={renderUrl} size={80} />
-                  : (
-                    <div className='previewQrPlaceholder'>
-                      <span className='previewQrPlaceholderText'>
-                        No render
-                      </span>
-                    </div>
-                  )}
-              </div>
-            </div>
-          </>
-        }
+        previewSource={previewSource}
       >
         <PreviewViewport
           src={renderUrl}

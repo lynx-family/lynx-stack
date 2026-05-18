@@ -92,6 +92,69 @@
   border-bottom-left-radius: 4px;
 }
 
+.chatGeneratedJson {
+  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  overflow: hidden;
+  background: var(--geist-code-bg);
+  flex-shrink: 0;
+}
+
+.chatGeneratedJsonTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.chatGeneratedJsonBadge {
+  padding: 1px 6px;
+  border: 1px solid var(--geist-border);
+  border-radius: 4px;
+  background: var(--geist-surface);
+  color: var(--geist-secondary);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.chatGeneratedJsonEditor .cm-editor {
+  height: auto;
+  max-height: 400px;
+  font-family: var(--geist-mono);
+  font-size: 13px;
+  background: var(--geist-code-bg);
+  color: var(--geist-code-fg);
+}
+
+.chatGeneratedJsonEditor .cm-scroller {
+  max-height: 400px;
+  overflow: auto;
+}
+
+.chatGeneratedJsonEditor .cm-gutters {
+  background: color-mix(in srgb, var(--geist-code-bg) 88%, black);
+  color: color-mix(in srgb, var(--geist-code-fg) 58%, white);
+  border-right: 1px solid
+    color-mix(in srgb, var(--geist-border) 82%, transparent);
+}
+
+.chatGeneratedJsonEditor .cm-activeLine,
+.chatGeneratedJsonEditor .cm-activeLineGutter {
+  background: color-mix(in srgb, var(--geist-background) 12%, transparent);
+}
+
 .chatInputArea {
   padding: 12px 20px;
   border-top: 1px solid var(--geist-border);
