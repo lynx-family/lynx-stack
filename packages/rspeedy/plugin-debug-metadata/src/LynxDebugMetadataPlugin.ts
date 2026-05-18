@@ -22,7 +22,7 @@ import {
   createUiSourceMap,
 } from './collectors/ui-source-map.js'
 import { DEBUG_METADATA_ASSET_NAME } from './constants.js'
-import { applySourceMappingURLRewriter } from './source-mapping-url-rewriter.js'
+import { rewriteTrailerToAbsoluteUrl } from './source-mapping-url-rewriter.js'
 
 /**
  * The options of the {@link LynxDebugMetadataPlugin}.
@@ -104,8 +104,6 @@ export class LynxDebugMetadataPluginImpl {
           compilation,
         )
 
-      applySourceMappingURLRewriter(compiler, compilation)
-
       templateHooks.beforeEncode.tap(
         this.constructor.name,
         (args) => {
@@ -145,6 +143,8 @@ export class LynxDebugMetadataPluginImpl {
           // service (Slardar) before cleanup runs; dev / debug / rsdoctor
           // builds keep it on disk for local consumption.
           args.intermediateAssets.push(debugMetadataAssetName)
+
+          rewriteSourceMappingURLTrailers(compilation, args)
 
           return args
         },
@@ -222,4 +222,70 @@ function readTasmSection(
   return Array.isArray(value)
     ? value.filter((s): s is string => typeof s === 'string')
     : undefined
+}
+
+interface BeforeEncodeAssetLike {
+  name: string
+}
+interface BeforeEncodeArgsLike {
+  encodeData: {
+    sourceContent: { config: Record<string, unknown> }
+    lepusCode: {
+      root: BeforeEncodeAssetLike | undefined
+      chunks: BeforeEncodeAssetLike[]
+    }
+    manifest: Record<string, string>
+  }
+}
+
+/**
+ * Per-template `//# sourceMappingURL=` trailer rewrite for the JS this
+ * template owns (main entry's main-thread + background JS, or each
+ * lazy bundle's main-thread + background JS). Runs inside
+ * `templateHooks.beforeEncode` — which only fires when
+ * `LynxTemplatePlugin` is active — so multi-env builds (web + lynx)
+ * leave the non-lynx env's JS trailers untouched. The non-lynx env has
+ * no `debug-metadata.json` and the original `.map` sibling URL is the
+ * correct one for browsers to follow.
+ *
+ * Reads `args.encodeData.sourceContent.config.debugMetadataUrl`, which
+ * `LynxTemplatePlugin` populates with `joinPublicPath(publicPath,
+ * <intermediate>/debug-metadata.json)`. Empty string (publicPath is
+ * `/`, `'auto'`, or a function that can't be statically resolved) means
+ * we cannot form an absolute URL — skip rather than emit a broken one.
+ */
+function rewriteSourceMappingURLTrailers(
+  compilation: Compilation,
+  args: BeforeEncodeArgsLike,
+): void {
+  const debugMetadataUrl = args.encodeData.sourceContent.config[
+    'debugMetadataUrl'
+  ]
+  if (typeof debugMetadataUrl !== 'string' || debugMetadataUrl === '') return
+  const { RawSource } = compilation.compiler.webpack.sources
+  const jsAssetNames: string[] = []
+  if (args.encodeData.lepusCode.root) {
+    jsAssetNames.push(args.encodeData.lepusCode.root.name)
+  }
+  for (const chunk of args.encodeData.lepusCode.chunks) {
+    jsAssetNames.push(chunk.name)
+  }
+  for (const name of Object.keys(args.encodeData.manifest)) {
+    if (name.endsWith('.js')) jsAssetNames.push(name)
+  }
+  const seen = new Set<string>()
+  for (const assetName of jsAssetNames) {
+    if (seen.has(assetName)) continue
+    seen.add(assetName)
+    const asset = compilation.getAsset(assetName)
+    if (!asset) continue
+    const before = asset.source.source().toString()
+    const after = rewriteTrailerToAbsoluteUrl(
+      before,
+      debugMetadataUrl,
+      `${assetName}.map`,
+    )
+    if (after === undefined) continue
+    compilation.updateAsset(assetName, new RawSource(after), asset.info)
+  }
 }

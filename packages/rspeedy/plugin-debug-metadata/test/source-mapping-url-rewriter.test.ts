@@ -4,96 +4,102 @@
 
 import { describe, expect, test } from 'vitest'
 
-import { rewriteTrailer } from '../src/source-mapping-url-rewriter.js'
+import { rewriteTrailerToAbsoluteUrl } from '../src/source-mapping-url-rewriter.js'
 
 const SAMPLE_BODY = 'var __webpack_modules__ = {};\nconsole.log(42);\n'
-
 const wrap = (trailer: string): string => SAMPLE_BODY + trailer
 
-const MAP = '.rspeedy/main/main-thread.js.map'
-const MAP_ENC = encodeURIComponent(MAP)
+describe('rewriteTrailerToAbsoluteUrl', () => {
+  const ASYNC_MAP = 'static/js/async/Lazy-react__main-thread.js.map'
+  const ASYNC_MAP_ENC = encodeURIComponent(ASYNC_MAP)
+  const BUNDLE_URL =
+    'http://host:3020/.rspeedy/async/Lazy.js/debug-metadata.json'
 
-describe('rewriteTrailer', () => {
-  test('rewrites a bare-filename trailer to a relative endpoint URL', () => {
-    const before = wrap('//# sourceMappingURL=main-thread.js.map')
-    const after = rewriteTrailer(before, MAP)
-    expect(after).toBe(
-      `${SAMPLE_BODY}//# sourceMappingURL=debug-metadata.json?field=source-map&path=${MAP_ENC}`,
-    )
-  })
-
-  test('preserves the absolute-path dir from a prod-style trailer', () => {
-    const bg = '.rspeedy/main/background.abc123.js.map'
+  test('replaces the trailer with the caller-supplied metadata URL plus path query', () => {
     const before = wrap(
-      '//# sourceMappingURL=/.rspeedy/main/background.abc123.js.map',
+      '//# sourceMappingURL=http://host:3020/static/js/async/Lazy-react__main-thread.js.map',
     )
-    const after = rewriteTrailer(before, bg)
+    const after = rewriteTrailerToAbsoluteUrl(before, BUNDLE_URL, ASYNC_MAP)
     expect(after).toBe(
-      `${SAMPLE_BODY}//# sourceMappingURL=/.rspeedy/main/debug-metadata.json?field=source-map&path=${
-        encodeURIComponent(bg)
-      }`,
+      `${SAMPLE_BODY}//# sourceMappingURL=${BUNDLE_URL}?field=source-map&path=${ASYNC_MAP_ENC}`,
     )
   })
 
-  test('preserves the full origin from a dev-server URL', () => {
+  test('discards the original trailer\'s dir entirely (cross-dir case)', () => {
     const before = wrap(
-      '//# sourceMappingURL=http://192.168.1.128:3010/.rspeedy/main/main-thread.js.map',
+      '//# sourceMappingURL=/static/js/async/Lazy-react__main-thread.js.map',
     )
-    const after = rewriteTrailer(before, MAP)
-    expect(after).toBe(
-      `${SAMPLE_BODY}//# sourceMappingURL=http://192.168.1.128:3010/.rspeedy/main/debug-metadata.json?field=source-map&path=${MAP_ENC}`,
+    const after = rewriteTrailerToAbsoluteUrl(before, BUNDLE_URL, ASYNC_MAP)
+    expect(after).not.toContain(
+      '/static/js/async/Lazy-react__main-thread.js.map',
     )
+    expect(after).toContain(BUNDLE_URL)
   })
 
-  test('overwrites any existing query string', () => {
+  test('overwrites any existing query string on the original trailer', () => {
     const before = wrap(
-      '//# sourceMappingURL=/.rspeedy/main/main-thread.js.map?token=abc',
+      '//# sourceMappingURL=/static/js/async/Lazy-react__main-thread.js.map?token=abc',
     )
-    const after = rewriteTrailer(before, MAP)
-    expect(after).toBe(
-      `${SAMPLE_BODY}//# sourceMappingURL=/.rspeedy/main/debug-metadata.json?field=source-map&path=${MAP_ENC}`,
-    )
-  })
-
-  test('strips any fragment from the original URL', () => {
-    const map = 'a/b.js.map'
-    const before = wrap('//# sourceMappingURL=/a/b.js.map#frag')
-    const after = rewriteTrailer(before, map)
-    expect(after).toBe(
-      `${SAMPLE_BODY}//# sourceMappingURL=/a/debug-metadata.json?field=source-map&path=${
-        encodeURIComponent(map)
-      }`,
-    )
+    const after = rewriteTrailerToAbsoluteUrl(before, BUNDLE_URL, ASYNC_MAP)
+    expect(after).not.toContain('token=abc')
+    expect(after).toContain(`${BUNDLE_URL}?field=source-map&path=`)
   })
 
   test('accepts the legacy `//@ sourceMappingURL=` form', () => {
-    const before = wrap('//@ sourceMappingURL=main-thread.js.map')
-    const after = rewriteTrailer(before, MAP)
+    const before = wrap('//@ sourceMappingURL=Lazy.js.map')
+    const after = rewriteTrailerToAbsoluteUrl(before, BUNDLE_URL, ASYNC_MAP)
     expect(after).toBe(
-      `${SAMPLE_BODY}//# sourceMappingURL=debug-metadata.json?field=source-map&path=${MAP_ENC}`,
+      `${SAMPLE_BODY}//# sourceMappingURL=${BUNDLE_URL}?field=source-map&path=${ASYNC_MAP_ENC}`,
     )
   })
 
-  test('returns undefined for data: URLs', () => {
+  test('returns undefined for data: URL trailers', () => {
     const before = wrap(
       '//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozfQ==',
     )
-    expect(rewriteTrailer(before, MAP)).toBeUndefined()
-  })
-
-  test('returns undefined when the trailer already points at debug-metadata.json (idempotent)', () => {
-    const before = wrap(
-      `//# sourceMappingURL=/.rspeedy/main/debug-metadata.json?field=source-map&path=${MAP_ENC}`,
-    )
-    expect(rewriteTrailer(before, MAP)).toBeUndefined()
+    expect(rewriteTrailerToAbsoluteUrl(before, BUNDLE_URL, ASYNC_MAP))
+      .toBeUndefined()
   })
 
   test('returns undefined when there is no trailer', () => {
-    expect(rewriteTrailer(SAMPLE_BODY, MAP)).toBeUndefined()
+    expect(rewriteTrailerToAbsoluteUrl(SAMPLE_BODY, BUNDLE_URL, ASYNC_MAP))
+      .toBeUndefined()
   })
 
-  test('returns undefined when the trailer is the only thing in the file but the URL is empty', () => {
-    expect(rewriteTrailer('//# sourceMappingURL=', MAP)).toBeUndefined()
+  test('returns undefined for an empty-URL trailer', () => {
+    expect(
+      rewriteTrailerToAbsoluteUrl(
+        '//# sourceMappingURL=',
+        BUNDLE_URL,
+        ASYNC_MAP,
+      ),
+    )
+      .toBeUndefined()
+  })
+
+  test('is idempotent — skips a trailer that already points at debug-metadata.json', () => {
+    const before = wrap(
+      `//# sourceMappingURL=${BUNDLE_URL}?field=source-map&path=${ASYNC_MAP_ENC}`,
+    )
+    expect(rewriteTrailerToAbsoluteUrl(before, BUNDLE_URL, ASYNC_MAP))
+      .toBeUndefined()
+  })
+
+  test('tolerates trailing whitespace after the URL', () => {
+    const before = `${SAMPLE_BODY}//# sourceMappingURL=Lazy.js.map  \n`
+    const after = rewriteTrailerToAbsoluteUrl(before, BUNDLE_URL, ASYNC_MAP)!
+    expect(after).toContain(
+      `//# sourceMappingURL=${BUNDLE_URL}?field=source-map&path=${ASYNC_MAP_ENC}`,
+    )
+  })
+
+  test('encodes mapAssetPath segments (./ artifact from webpack chunk naming)', () => {
+    const mapWithDot = 'static/js/async/./Lazy-react__main-thread.js.map'
+    const before = wrap('//# sourceMappingURL=Lazy.js.map')
+    const after = rewriteTrailerToAbsoluteUrl(before, BUNDLE_URL, mapWithDot)
+    expect(after).toContain(
+      `path=${encodeURIComponent(mapWithDot)}`,
+    )
   })
 
   test('matches only the FINAL trailer, not inner module-body lookalikes', () => {
@@ -101,51 +107,25 @@ describe('rewriteTrailer', () => {
       '// inner module body:',
       '//# sourceMappingURL=should-not-touch.js.map',
       '// more code',
-      '//# sourceMappingURL=main-thread.js.map',
+      '//# sourceMappingURL=Lazy.js.map',
     ].join('\n')
-    const after = rewriteTrailer(source, MAP)!
-    expect(after.endsWith(
-      `//# sourceMappingURL=debug-metadata.json?field=source-map&path=${MAP_ENC}`,
-    )).toBe(true)
+    const after = rewriteTrailerToAbsoluteUrl(source, BUNDLE_URL, ASYNC_MAP)!
+    expect(after).toContain(
+      `//# sourceMappingURL=${BUNDLE_URL}?field=source-map&path=${ASYNC_MAP_ENC}`,
+    )
     expect(after).toContain('//# sourceMappingURL=should-not-touch.js.map')
   })
 
-  test('preserves dot-segments (..) in the dir — does NOT collapse them', () => {
-    const before = wrap('//# sourceMappingURL=../maps/main-thread.js.map')
-    const after = rewriteTrailer(before, MAP)
-    expect(after).toBe(
-      `${SAMPLE_BODY}//# sourceMappingURL=../maps/debug-metadata.json?field=source-map&path=${MAP_ENC}`,
-    )
-  })
-
-  test('preserves single-dot ./ prefix on the dir', () => {
-    const map = 'relative/x.js.map'
-    const before = wrap('//# sourceMappingURL=./relative/x.js.map')
-    const after = rewriteTrailer(before, map)
-    expect(after).toBe(
-      `${SAMPLE_BODY}//# sourceMappingURL=./relative/debug-metadata.json?field=source-map&path=${
-        encodeURIComponent(map)
-      }`,
-    )
-  })
-
-  test('tolerates trailing whitespace after the URL', () => {
-    const before = `${SAMPLE_BODY}//# sourceMappingURL=main-thread.js.map  \n`
-    const after = rewriteTrailer(before, MAP)!
-    expect(after).toContain(
-      `//# sourceMappingURL=debug-metadata.json?field=source-map&path=${MAP_ENC}`,
-    )
-  })
-
-  test('uses full bundler-relative `mapAssetPath` so same-basename across entries disambiguates', () => {
+  test('uses full bundler-relative mapAssetPath so same-basename across entries disambiguates', () => {
     const appMap = 'app/index.js.map'
     const vendorMap = 'vendor/index.js.map'
     const before = wrap('//# sourceMappingURL=index.js.map')
-    expect(rewriteTrailer(before, appMap)).toContain(
+    expect(rewriteTrailerToAbsoluteUrl(before, BUNDLE_URL, appMap)).toContain(
       `path=${encodeURIComponent(appMap)}`,
     )
-    expect(rewriteTrailer(before, vendorMap)).toContain(
-      `path=${encodeURIComponent(vendorMap)}`,
-    )
+    expect(rewriteTrailerToAbsoluteUrl(before, BUNDLE_URL, vendorMap))
+      .toContain(
+        `path=${encodeURIComponent(vendorMap)}`,
+      )
   })
 })
