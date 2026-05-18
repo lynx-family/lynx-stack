@@ -104,6 +104,15 @@ export class LynxDebugMetadataPluginImpl {
           compilation,
         )
 
+      // Carry per-template `intermediate` from `beforeEncode` to
+      // `beforeEmit`. `beforeEmit` args don't include `intermediate`,
+      // and lazy bundles emit their main-thread JS to `static/js/async/`
+      // while the bundle's `debug-metadata.json` lives at
+      // `<intermediateRoot>/async/<name>/` — deriving the metadata path
+      // from the JS asset's dir would 404 for lazy bundles. Keyed by
+      // sorted `entryNames` since each template covers a unique set.
+      const intermediateByEntryKey = new Map<string, string>()
+
       templateHooks.beforeEncode.tap(
         this.constructor.name,
         (args) => {
@@ -131,6 +140,10 @@ export class LynxDebugMetadataPluginImpl {
             dir: args.intermediate,
             base: DEBUG_METADATA_ASSET_NAME,
           })
+          intermediateByEntryKey.set(
+            entryKey(args.entryNames),
+            args.intermediate,
+          )
           compilation.emitAsset(
             debugMetadataAssetName,
             new RawSource(JSON.stringify(asset, null, 2)),
@@ -153,11 +166,10 @@ export class LynxDebugMetadataPluginImpl {
       templateHooks.beforeEmit.tap(
         this.constructor.name,
         (args) => {
-          const firstMainThread = args.mainThreadAssets[0]
-          if (!firstMainThread) return args
-          const intermediate = path.posix.dirname(
-            firstMainThread.name.replace(/\\/g, '/'),
+          const intermediate = intermediateByEntryKey.get(
+            entryKey(args.entryNames),
           )
+          if (intermediate === undefined) return args
           const debugMetadataAssetName = path.posix.format({
             dir: intermediate,
             base: DEBUG_METADATA_ASSET_NAME,
@@ -205,6 +217,15 @@ export class LynxDebugMetadataPluginImpl {
       )
     })
   }
+}
+
+/**
+ * Stable join of an `entryNames` list for use as a Map key. Sorted so a
+ * caller passing `['a','b']` and `['b','a']` lands on the same bucket;
+ * the separator is `\0` to avoid collision with any entry-name char.
+ */
+function entryKey(entryNames: string[]): string {
+  return [...entryNames].sort().join('\0')
 }
 
 /**
