@@ -47,16 +47,16 @@ interface PlaybackProgressMessage {
   };
 }
 
-interface PlaybackSyncMessage {
-  type: 'A2UI_PLAYBACK_SYNC';
-  data: unknown;
-}
-
 interface LynxViewElement extends HTMLElement {
   initData?: InitData;
   globalProps?: unknown;
   reload?: () => void;
   sendGlobalEvent?: (eventName: string, params: unknown[]) => void;
+  onNativeModulesCall?: (
+    name: string,
+    data: unknown,
+    moduleName: string,
+  ) => unknown;
 }
 
 function parseJsonParam(raw: string): unknown {
@@ -193,12 +193,6 @@ function isPlaybackControlMessage(
     && (payload.action === 'pause' || payload.action === 'resume');
 }
 
-function isPlaybackSyncMessage(data: unknown): data is PlaybackSyncMessage {
-  if (!data || typeof data !== 'object') return false;
-  const payload = data as Partial<PlaybackSyncMessage>;
-  return payload.type === 'A2UI_PLAYBACK_SYNC' && 'data' in payload;
-}
-
 function Render() {
   const initial = useMemo(() => {
     const initData = parseInitDataFromQuery();
@@ -238,13 +232,33 @@ function Render() {
   }, []);
 
   useEffect(() => {
-    const handleMessage = (e: MessageEvent<unknown>) => {
-      if (isPlaybackSyncMessage(e.data)) {
-        if (window.parent && window.parent !== window) {
-          window.parent.postMessage(e.data, '*');
-        }
+    const lynxView = lynxViewRef.current;
+    if (!lynxView) return;
+
+    lynxView.onNativeModulesCall = (name, data, moduleName) => {
+      if (name !== 'A2UI_PLAYBACK_SYNC' || moduleName !== 'bridge') {
         return;
       }
+
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage(
+          {
+            type: 'A2UI_PLAYBACK_SYNC',
+            data,
+          },
+          '*',
+        );
+      }
+    };
+
+    return () => {
+      if (lynxView.onNativeModulesCall === undefined) return;
+      lynxView.onNativeModulesCall = undefined;
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent<unknown>) => {
       if (
         e.data
         && typeof e.data === 'object'

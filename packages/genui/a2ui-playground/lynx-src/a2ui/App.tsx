@@ -360,17 +360,13 @@ export function App() {
     [effectiveData.playbackPaused],
   );
   const postPlaybackSync = useCallback((state: MockAgentProgress) => {
-    try {
-      window.parent?.postMessage(
-        {
-          type: 'A2UI_PLAYBACK_SYNC',
-          data: state,
-        },
-        '*',
-      );
-    } catch {
-      // Playback sync is best-effort; never block rendering on it.
-    }
+    NativeModules.bridge?.call?.(
+      'A2UI_PLAYBACK_SYNC',
+      state as unknown as Record<string, unknown>,
+      () => {
+        // jsb callback
+      },
+    );
   }, []);
 
   const syncPlaybackAgent = useCallback(() => {
