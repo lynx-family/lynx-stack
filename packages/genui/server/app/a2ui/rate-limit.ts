@@ -38,11 +38,11 @@ interface RateLimitConfig {
 
 function getConfig(): RateLimitConfig {
   const limit = parsePositiveInt(
-    process.env['A2UI_RATE_LIMIT_PER_MIN'],
+    process.env.A2UI_RATE_LIMIT_PER_MIN,
     20,
   );
   const windowMs = parsePositiveInt(
-    process.env['A2UI_RATE_LIMIT_WINDOW_MS'],
+    process.env.A2UI_RATE_LIMIT_WINDOW_MS,
     60_000,
   );
   return { limit, windowMs };

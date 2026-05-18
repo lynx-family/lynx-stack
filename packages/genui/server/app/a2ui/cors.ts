@@ -38,11 +38,12 @@ function isLocalDevOrigin(origin: string): boolean {
 
 function resolveAllowedOrigin(req: Request): string | null {
   const origin = req.headers.get('origin');
-  // Server-to-server traffic (no Origin header) is allowed to receive a
-  // wildcard ACAO. Browsers always send Origin on cross-origin requests, so
-  // this only applies to non-browser callers and does not weaken CORS for
-  // browser clients.
-  if (!origin) return '*';
+  // Defense-in-depth: never echo a wildcard `Access-Control-Allow-Origin`.
+  // Browsers always send an Origin header on cross-origin requests, so
+  // missing-Origin traffic is either same-origin (no CORS needed) or a
+  // non-browser caller (CORS is not enforced anyway). Returning null avoids
+  // handing out a permissive header that a browser could otherwise honor.
+  if (!origin) return null;
   if (getConfiguredOrigins().has(origin) || isLocalDevOrigin(origin)) {
     return origin;
   }

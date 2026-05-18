@@ -110,12 +110,12 @@ export default class A2UIAgentService {
   private conversations = new Map<string, ConversationMemory>();
 
   private readonly maxThreads: number = parsePositiveInt(
-    process.env['A2UI_MAX_THREADS'],
+    process.env.A2UI_MAX_THREADS,
     500,
   );
 
   private readonly threadTtlMs: number = parsePositiveInt(
-    process.env['A2UI_THREAD_TTL_MS'],
+    process.env.A2UI_THREAD_TTL_MS,
     30 * 60_000,
   );
 
