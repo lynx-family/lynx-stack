@@ -4,10 +4,11 @@
 
 import type { Compilation } from 'webpack'
 
-import type { UiSourceMapData } from '@lynx-js/debug-metadata'
-
-import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '../constants.js'
-import type { UiSourceMapRecord } from '../constants.js'
+import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '@lynx-js/debug-metadata'
+import type {
+  UiSourceMapData,
+  UiSourceMapRecord,
+} from '@lynx-js/debug-metadata'
 
 /**
  * Minimal structural shape this collector needs from a module — enough to

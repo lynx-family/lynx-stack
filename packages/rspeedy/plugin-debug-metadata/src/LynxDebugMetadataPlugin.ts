@@ -211,8 +211,10 @@ export class LynxDebugMetadataPluginImpl {
           const lepusNG = parseLepusNGDebugInfo(args.debugInfo)
           if (lepusNG) {
             const target = metadata.artifacts.find(a =>
-              a.kind === 'main-thread' && a.filename === 'main-thread.js'
-            )
+              a.kind === 'main-thread'
+              && a.tasmSection?.[0] === 'lepusCode'
+              && a.tasmSection?.[1] === 'root'
+            ) ?? metadata.artifacts.find(a => a.kind === 'main-thread')
             if (target) {
               target.debugSources.unshift({
                 kind: 'bytecode-debug-info',

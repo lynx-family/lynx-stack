@@ -28,6 +28,10 @@ function tryRunGit(cwd: string, args: string[]): string | null {
  * - ssh-style `git@host:owner/repo(.git)` → `https://host/owner/repo`
  * - https-style: drop the trailing `.git`
  *
+ * Userinfo (username / password / PAT) embedded in HTTPS remotes is
+ * always stripped before returning so it does not leak into the
+ * metadata file or the derived `commitUrl`.
+ *
  * Returns `null` when input is `null` / empty.
  *
  * @internal Exported for unit testing only.
@@ -38,7 +42,16 @@ export function normalizeRemoteUrl(remoteUrl: string | null): string | null {
   if (sshMatch) {
     return `https://${sshMatch[1]}/${sshMatch[2]}`
   }
-  return remoteUrl.replace(/\.git$/, '')
+  try {
+    const url = new URL(remoteUrl)
+    url.username = ''
+    url.password = ''
+    url.search = ''
+    url.hash = ''
+    return url.toString().replace(/\.git$/, '').replace(/\/$/, '')
+  } catch {
+    return remoteUrl.replace(/\.git$/, '')
+  }
 }
 
 /**

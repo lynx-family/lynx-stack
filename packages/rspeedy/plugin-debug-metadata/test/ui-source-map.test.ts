@@ -4,13 +4,14 @@
 
 import { describe, expect, test } from 'vitest'
 
+import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '@lynx-js/debug-metadata'
+import type { UiSourceMapRecord } from '@lynx-js/debug-metadata'
+
 import {
   collectUiSourceMapRecordsFromModule,
   compareUiSourceMapRecord,
   createUiSourceMap,
 } from '../src/collectors/ui-source-map.js'
-import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '../src/constants.js'
-import type { UiSourceMapRecord } from '../src/constants.js'
 
 const record = (over: Partial<UiSourceMapRecord> = {}): UiSourceMapRecord => ({
   uiSourceMap: 0,

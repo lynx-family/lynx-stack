@@ -792,22 +792,27 @@ class LynxTemplatePluginImpl {
       dir: intermediatePosix,
       base: 'debug-metadata.json',
     });
-    const debugMetadataDebugInfoQuery =
-      '?field=bytecode-debug-info&filename=main-thread.js';
-    // TODO: Support publicPath function
-    if (
-      typeof compiler.options.output.publicPath === 'string'
-      && compiler.options.output.publicPath !== 'auto'
-      && compiler.options.output.publicPath !== '/'
-    ) {
-      debugMetadataUrl = new URL(
-        debugMetadataPath,
-        compiler.options.output.publicPath,
-      ).toString();
-      templateDebugUrl = new URL(
-        debugMetadataPath + debugMetadataDebugInfoQuery,
-        compiler.options.output.publicPath,
-      ).toString();
+    const mainThreadAssetName = assetsInfoByGroups.mainThread[0]?.name;
+    const mainThreadBasename = mainThreadAssetName
+      ? path.posix.basename(mainThreadAssetName.replace(/\\/g, '/'))
+      : 'main-thread.js';
+    const debugMetadataDebugInfoQuery = `?field=bytecode-debug-info&filename=${
+      encodeURIComponent(mainThreadBasename)
+    }`;
+    const mainThreadChunk = mainThreadAssetName
+      ? findChunkForAsset(compilation, mainThreadAssetName)
+      : undefined;
+    const resolvedPublicPath = resolvePublicPath(
+      compiler.options.output.publicPath,
+      {
+        chunk: mainThreadChunk,
+        hash: compilation.hash,
+        contentHash: mainThreadChunk?.contentHash ?? {},
+      },
+    );
+    if (resolvedPublicPath && resolvedPublicPath !== '/') {
+      debugMetadataUrl = joinPublicPath(resolvedPublicPath, debugMetadataPath);
+      templateDebugUrl = `${debugMetadataUrl}${debugMetadataDebugInfoQuery}`;
     }
 
     const encodeRawData: EncodeRawData = {
@@ -1100,4 +1105,79 @@ export function predicateNonHotModuleReplacementAsset(
     assetMetaInformation.hotModuleReplacement
       ?? assetMetaInformation.development
   );
+}
+
+/**
+ * Reduce `output.publicPath` to a static string we can prefix asset
+ * URLs with.
+ *
+ * - `string` (other than `'auto'`) — returned as-is.
+ * - `'auto'` / `undefined` / non-string non-function — returns
+ *   `undefined`. `'auto'` is resolved at runtime by webpack
+ *   (`__webpack_require__.p` set from `import.meta.url` /
+ *   `document.currentScript`), so we cannot statically produce
+ *   a URL build-time.
+ * - `function` — invoked with the supplied `pathData`. If the
+ *   function throws (e.g. accesses a chunk field we did not
+ *   populate) we swallow and return `undefined` so the build
+ *   does not crash — better to omit the URL than to leak a
+ *   confusing partial value.
+ *
+ * @internal Exported for unit testing only.
+ */
+export function resolvePublicPath(
+  publicPath: unknown,
+  pathData: unknown,
+): string | undefined {
+  if (publicPath === undefined || publicPath === 'auto') return undefined;
+  if (typeof publicPath === 'string') return publicPath;
+  if (typeof publicPath === 'function') {
+    try {
+      const result = (publicPath as (data: unknown) => unknown)(pathData);
+      return typeof result === 'string' ? result : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Locate the {@link Chunk} that emits `assetName`. Returns `undefined`
+ * when the asset does not belong to any chunk (e.g. emitted by a
+ * separate plugin). Used to feed `output.publicPath` functions a
+ * sensible `pathData.chunk`.
+ */
+function findChunkForAsset(
+  compilation: Compilation,
+  assetName: string,
+): Chunk | undefined {
+  for (const chunk of compilation.chunks) {
+    if (chunk.files.has(assetName)) return chunk;
+  }
+  return undefined;
+}
+
+/**
+ * Concatenate a `publicPath` with a bundler-relative asset path,
+ * producing the URL that the dev server (or static host) would serve
+ * that asset from.
+ *
+ * `new URL(rel, base)` requires `base` to be an absolute URL with a
+ * scheme — webpack also accepts path-style `publicPath` like
+ * `'/assets/'` which would make `new URL` throw. So: take the URL
+ * code path only when `publicPath` looks like an absolute URL,
+ * otherwise concatenate strings with single-slash normalization.
+ *
+ * @internal Exported for unit testing only.
+ */
+export function joinPublicPath(publicPath: string, relPath: string): string {
+  const rel = relPath.replace(/^\/+/, '');
+  if (/^[a-z][a-z0-9+\-.]*:\/\//i.test(publicPath)) {
+    return new URL(rel, publicPath).toString();
+  }
+  const trimmed = publicPath.endsWith('/')
+    ? publicPath.slice(0, -1)
+    : publicPath;
+  return `${trimmed}/${rel}`;
 }

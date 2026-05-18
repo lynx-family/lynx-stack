@@ -37,10 +37,16 @@ const VALID_METADATA: DebugMetadataAsset = {
  * paths against an in-memory map. Missing paths yield `ENOENT`. Used
  * to drive the middleware end-to-end without spinning up webpack.
  */
-function fakeCompiler(files: Record<string, string>): CompilerHandle {
+function fakeCompiler(
+  files: Record<string, string>,
+  publicPath?: string | ((...args: unknown[]) => string),
+): CompilerHandle {
   return {
     compiler: {
       outputPath: '/out',
+      ...(publicPath === undefined
+        ? {}
+        : { options: { output: { path: '/out', publicPath } } }),
       outputFileSystem: {
         readFile(file, cb) {
           const data = files[file]
@@ -242,6 +248,88 @@ describe('createDebugMetadataMiddleware', () => {
     const res = await runRequest(
       mw,
       '/.rspeedy/main/debug-metadata.json?field=meta',
+    )
+    expect(res?.status).toBe(200)
+    expect(res?.body).toEqual(VALID_METADATA.meta)
+  })
+
+  test('strips a path-prefix publicPath before reading outputFileSystem', async () => {
+    const mw = createDebugMetadataMiddleware({
+      debugMetadataAssetName: 'debug-metadata.json',
+      compilerHandle: fakeCompiler(
+        {
+          '/out/.rspeedy/main/debug-metadata.json': JSON.stringify(
+            VALID_METADATA,
+          ),
+        },
+        '/assets/',
+      ),
+    })
+    const res = await runRequest(
+      mw,
+      '/assets/.rspeedy/main/debug-metadata.json?field=meta',
+    )
+    expect(res?.status).toBe(200)
+    expect(res?.body).toEqual(VALID_METADATA.meta)
+  })
+
+  test('strips a function publicPath that returns a static prefix', async () => {
+    const mw = createDebugMetadataMiddleware({
+      debugMetadataAssetName: 'debug-metadata.json',
+      compilerHandle: fakeCompiler(
+        {
+          '/out/.rspeedy/main/debug-metadata.json': JSON.stringify(
+            VALID_METADATA,
+          ),
+        },
+        () => '/build/',
+      ),
+    })
+    const res = await runRequest(
+      mw,
+      '/build/.rspeedy/main/debug-metadata.json?field=meta',
+    )
+    expect(res?.status).toBe(200)
+    expect(res?.body).toEqual(VALID_METADATA.meta)
+  })
+
+  test('does not crash on a function publicPath that throws — best-effort, treat as no prefix', async () => {
+    const mw = createDebugMetadataMiddleware({
+      debugMetadataAssetName: 'debug-metadata.json',
+      compilerHandle: fakeCompiler(
+        {
+          '/out/.rspeedy/main/debug-metadata.json': JSON.stringify(
+            VALID_METADATA,
+          ),
+        },
+        () => {
+          throw new Error('depends on per-chunk runtime data')
+        },
+      ),
+    })
+    const res = await runRequest(
+      mw,
+      '/.rspeedy/main/debug-metadata.json?field=meta',
+    )
+    expect(res?.status).toBe(200)
+    expect(res?.body).toEqual(VALID_METADATA.meta)
+  })
+
+  test('strips the path part of a full-URL publicPath', async () => {
+    const mw = createDebugMetadataMiddleware({
+      debugMetadataAssetName: 'debug-metadata.json',
+      compilerHandle: fakeCompiler(
+        {
+          '/out/.rspeedy/main/debug-metadata.json': JSON.stringify(
+            VALID_METADATA,
+          ),
+        },
+        'https://cdn.example.com/static/',
+      ),
+    })
+    const res = await runRequest(
+      mw,
+      '/static/.rspeedy/main/debug-metadata.json?field=meta',
     )
     expect(res?.status).toBe(200)
     expect(res?.body).toEqual(VALID_METADATA.meta)

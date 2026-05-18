@@ -18,8 +18,4 @@ export type { LynxDebugMetadataPluginOptions } from './LynxDebugMetadataPlugin.j
 
 export { pluginLynxDebugMetadata } from './pluginLynxDebugMetadata.js'
 
-export {
-  DEBUG_METADATA_ASSET_NAME,
-  UI_SOURCE_MAP_RECORDS_BUILD_INFO,
-} from './constants.js'
-export type { UiSourceMapRecord } from './constants.js'
+export { DEBUG_METADATA_ASSET_NAME } from './constants.js'

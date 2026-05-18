@@ -16,12 +16,14 @@ export function parseLepusNGDebugInfo(
   debugInfoJson: string,
 ): LepusNGDebugInfo | undefined {
   if (!debugInfoJson) return undefined
-  let parsed: LepusNGDebugInfo
+  let parsed: unknown
   try {
-    parsed = JSON.parse(debugInfoJson) as LepusNGDebugInfo
+    parsed = JSON.parse(debugInfoJson)
   } catch {
     return undefined
   }
-  if (!parsed.lepusNG_debug_info) return undefined
-  return parsed
+  if (!parsed || typeof parsed !== 'object') return undefined
+  const maybe = parsed as Partial<LepusNGDebugInfo>
+  if (!maybe.lepusNG_debug_info) return undefined
+  return maybe as LepusNGDebugInfo
 }

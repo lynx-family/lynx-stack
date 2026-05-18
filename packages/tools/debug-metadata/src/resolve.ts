@@ -34,12 +34,21 @@ export function findSourceMap(
   metadata: DebugMetadataAsset,
   query: { path?: string; filename?: string; key?: string },
 ): SourceMapDebugSource | undefined {
+  if (
+    query.path === undefined
+    && query.filename === undefined
+    && query.key === undefined
+  ) {
+    return undefined;
+  }
   for (const artifact of metadata.artifacts) {
     for (const ds of artifact.debugSources) {
       if (ds.kind !== 'source-map') continue;
-      if (query.path && ds.path !== query.path) continue;
-      if (query.filename && ds.filename !== query.filename) continue;
-      if (query.key && ds.key !== query.key) continue;
+      if (query.path !== undefined && ds.path !== query.path) continue;
+      if (query.filename !== undefined && ds.filename !== query.filename) {
+        continue;
+      }
+      if (query.key !== undefined && ds.key !== query.key) continue;
       return ds;
     }
   }

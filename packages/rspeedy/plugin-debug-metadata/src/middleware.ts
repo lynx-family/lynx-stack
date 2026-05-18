@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import path from 'node:path'
 import { URL } from 'node:url'
 import type { URLSearchParams } from 'node:url'
 
@@ -26,7 +27,12 @@ type Middleware = (
 interface SingleCompiler {
   name?: string
   outputPath?: string
-  options?: { output?: { path?: string } }
+  options?: {
+    output?: {
+      path?: string
+      publicPath?: string | ((...args: unknown[]) => string)
+    }
+  }
   outputFileSystem?: {
     readFile: (
       file: string,
@@ -227,8 +233,19 @@ function readFromCompiler(
     const outputPath = compiler.outputPath
       ?? compiler.options?.output?.path
       ?? ''
-    const relPath = pathname.replace(/^\/+/, '')
+    const publicPathPrefix = extractPublicPathPrefix(
+      compiler.options?.output?.publicPath,
+    )
+    let stripped = pathname
+    if (publicPathPrefix && stripped.startsWith(publicPathPrefix)) {
+      stripped = stripped.slice(publicPathPrefix.length)
+    }
+    const relPath = stripped.replace(/^\/+/, '')
     const absPath = joinOutputPath(outputPath, relPath)
+    if (absPath === undefined) {
+      resolve(undefined)
+      return
+    }
 
     compiler.outputFileSystem.readFile(absPath, (err, data) => {
       if (err) {
@@ -248,10 +265,78 @@ function readFromCompiler(
   })
 }
 
-function joinOutputPath(outputPath: string, rel: string): string {
-  if (outputPath === '') return rel
-  const trimmed = outputPath.replace(/[/\\]+$/, '')
-  return `${trimmed}/${rel}`
+/**
+ * Join `rel` onto `outputPath`, rejecting any path that escapes
+ * `outputPath` via `..` traversal. Returns `undefined` for unsafe
+ * inputs so the caller can respond with 404 instead of leaking
+ * arbitrary filesystem reads.
+ */
+function joinOutputPath(
+  outputPath: string,
+  rel: string,
+): string | undefined {
+  const normalizedRel = rel.replace(/\\/g, '/')
+  if (normalizedRel === '' || normalizedRel === '.' || normalizedRel === '..') {
+    return undefined
+  }
+  if (outputPath === '') {
+    const safeRel = path.posix.normalize(normalizedRel)
+    if (safeRel === '..' || safeRel.startsWith('../')) return undefined
+    return safeRel
+  }
+  const root = path.resolve(outputPath)
+  const abs = path.resolve(root, normalizedRel)
+  const relToRoot = path.relative(root, abs)
+  if (relToRoot.startsWith('..') || path.isAbsolute(relToRoot)) {
+    return undefined
+  }
+  return abs
+}
+
+/**
+ * Reduce `output.publicPath` to the path-only prefix that lives at the
+ * front of incoming request URLs, so the middleware can strip it before
+ * mapping the URL to `outputFileSystem`. Returns `''` when there is no
+ * prefix to strip (root publicPath, `'auto'`, missing, or a function
+ * that throws / returns a non-string when invoked with empty pathData).
+ *
+ * - `'http://host:port/assets/'`               → `'/assets'`
+ * - `'/assets/'`                               → `'/assets'`
+ * - `() => '/build/'`                          → `'/build'`
+ * - `'/'` / `'auto'` / `undefined`             → `''`
+ * - `({ chunk }) => '/build/' + chunk.hash`    → `''` (function
+ *   threw because we passed an empty pathData; a publicPath that
+ *   depends on per-chunk data cannot be statically resolved for the
+ *   middleware's request-time strip).
+ */
+function extractPublicPathPrefix(
+  publicPath:
+    | string
+    | ((...args: unknown[]) => string)
+    | undefined,
+): string {
+  let resolved: string | undefined
+  if (typeof publicPath === 'string') {
+    resolved = publicPath
+  } else if (typeof publicPath === 'function') {
+    try {
+      const out = publicPath({})
+      resolved = typeof out === 'string' ? out : undefined
+    } catch {
+      resolved = undefined
+    }
+  }
+  if (resolved === undefined) return ''
+  if (resolved === 'auto' || resolved === '/' || resolved === '') return ''
+  let pathPart = resolved
+  if (/^https?:\/\//.test(resolved)) {
+    try {
+      pathPart = new URL(resolved).pathname
+    } catch {
+      return ''
+    }
+  }
+  return pathPart.replace(/\/+$/, '')
 }
 
 function respondJSON(

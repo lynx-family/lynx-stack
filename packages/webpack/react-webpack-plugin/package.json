@@ -37,12 +37,12 @@
     "test": "pnpm -w run test --project webpack/react"
   },
   "dependencies": {
+    "@lynx-js/debug-metadata": "workspace:^",
     "@lynx-js/webpack-runtime-globals": "workspace:*",
     "tiny-invariant": "^1.3.3"
   },
   "devDependencies": {
     "@lynx-js/css-extract-webpack-plugin": "workspace:*",
-    "@lynx-js/debug-metadata-rsbuild-plugin": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/test-tools": "workspace:*",

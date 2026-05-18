@@ -56,7 +56,6 @@ export function applySourceMappingURLRewriter(
     () => {
       for (const name of Object.keys(compilation.assets)) {
         if (!name.endsWith('.js')) continue
-        if (!compilation.getAsset(`${name}.map`)) continue
         const asset = compilation.getAsset(name)
         if (!asset) continue
         const before = asset.source.source().toString()

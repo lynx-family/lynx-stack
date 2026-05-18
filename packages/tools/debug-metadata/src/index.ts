@@ -40,3 +40,6 @@ export {
   resolveField,
 } from './resolve.js';
 export type { FieldResolver, QueryParams, ResolveResult } from './resolve.js';
+
+export { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from './wire-protocol.js';
+export type { UiSourceMapRecord } from './wire-protocol.js';

@@ -8,7 +8,7 @@ Emits `debug-metadata.json` alongside each Lynx template build, serves it via de
 
 Per Lynx entry (`<intermediate>` defaults to `.rspeedy/<entry>`):
 
-```
+```text
 dist/<intermediate>/debug-metadata.json    one unified file per entry
 ```
 
@@ -18,7 +18,7 @@ The shape is `DebugMetadataAsset` from [`@lynx-js/debug-metadata`](../../tools/d
 
 The plugin installs a connect-style middleware that serves `?field=…` queries off `debug-metadata.json`:
 
-```
+```http
 GET <publicPath>/<intermediate>/debug-metadata.json
 GET <publicPath>/<intermediate>/debug-metadata.json?field=source-map&filename=<basename>.js.map
 GET <publicPath>/<intermediate>/debug-metadata.json?field=source-map&key=<chunk hash>

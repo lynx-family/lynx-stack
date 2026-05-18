@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 
 import type { LoaderContext, LoaderDefinitionFunction } from '@rspack/core';
 
-import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '@lynx-js/debug-metadata-rsbuild-plugin';
+import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '@lynx-js/debug-metadata';
 
 import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';

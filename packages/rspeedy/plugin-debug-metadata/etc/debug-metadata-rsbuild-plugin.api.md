@@ -31,21 +31,4 @@ export interface LynxDebugMetadataPluginOptions {
 // @public
 export function pluginLynxDebugMetadata(): RsbuildPlugin;
 
-// @public
-export const UI_SOURCE_MAP_RECORDS_BUILD_INFO = "lynxUiSourceMapRecords";
-
-// @public
-export interface UiSourceMapRecord {
-    // (undocumented)
-    [key: string]: unknown;
-    // (undocumented)
-    columnNumber: number;
-    // (undocumented)
-    filename: string;
-    // (undocumented)
-    lineNumber: number;
-    // (undocumented)
-    uiSourceMap: number;
-}
-
 ```
