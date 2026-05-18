@@ -188,6 +188,10 @@
   text-transform: uppercase;
 }
 
+[data-theme="dark"] .exampleCardBadge {
+  background: transparent;
+}
+
 .detailSidebar {
   width: 280px;
 }
@@ -205,22 +209,20 @@
   gap: 8px;
   min-height: 34px;
   padding: 8px 14px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--geist-border);
   border-radius: 999px;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.82),
-      rgba(255, 255, 255, 0.64)
-    ),
-    var(--geist-surface);
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 82%,
+    var(--geist-surface)
+  );
   color: var(--geist-foreground);
   font-size: 13px;
   font-weight: 600;
   line-height: 1;
   letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--geist-shadow-sm);
   transition:
     background var(--geist-transition),
     border-color var(--geist-transition),
@@ -230,15 +232,25 @@
 
 .detailBackButton:hover {
   border-color: var(--geist-border-hover);
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.96),
-      rgba(255, 255, 255, 0.78)
-    ),
-    var(--geist-background);
+  background: var(--geist-background);
   transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--geist-shadow-md);
+}
+
+html[data-theme="dark"] .detailBackButton {
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 72%,
+    var(--geist-surface)
+  );
+}
+
+html[data-theme="dark"] .detailBackButton:hover {
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 60%,
+    var(--geist-surface)
+  );
 }
 
 .detailBackIcon {

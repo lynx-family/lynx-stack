@@ -101,8 +101,7 @@
   flex-shrink: 0;
   font-size: var(--a2ui-font-size-xs);
   font-weight: bold;
-  color: var(--a2ui-color-text-subtle);
-  text-transform: uppercase;
+  color: var(--a2ui-color-text-muted);
   letter-spacing: 0.5px;
   line-height: var(--a2ui-line-height-body);
 }
