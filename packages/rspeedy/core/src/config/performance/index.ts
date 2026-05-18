@@ -76,6 +76,8 @@ export interface Performance {
    * {@link Performance.chunkSplit} is used to configure the chunk splitting strategy.
    *
    * @defaultValue For web builds, Rsbuild currently uses `{ strategy: 'split-by-experience' }` when this option is unset.
+   *
+   * @deprecated Use the top-level {@link Config.splitChunks} option instead.
    */
   chunkSplit?: ChunkSplit | ChunkSplitBySize | ChunkSplitCustom | undefined
 

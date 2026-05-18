@@ -35,8 +35,8 @@ export const applySplitChunksRule: (
     const userConfig = api.getRsbuildConfig('original')
     const chunkSplitStrategy = userConfig.performance?.chunkSplit?.strategy
     if (
-      chunkSplitStrategy === 'all-in-one'
-      || (!chunkSplitStrategy && userConfig.splitChunks === undefined)
+      userConfig.splitChunks === undefined
+      && (chunkSplitStrategy === 'all-in-one' || !chunkSplitStrategy)
     ) {
       return mergeRsbuildConfig(config, {
         splitChunks: false,
@@ -48,9 +48,9 @@ export const applySplitChunksRule: (
   api.modifyBundlerChain((chain, { environment }) => {
     const { config } = environment
     const userConfig = api.getRsbuildConfig('original')
-    const isSplitByExperience =
-      userConfig.performance?.chunkSplit?.strategy === 'split-by-experience'
-      || (isPlainObject(config.splitChunks)
+    const isSplitByExperience = userConfig.splitChunks === undefined
+      ? userConfig.performance?.chunkSplit?.strategy === 'split-by-experience'
+      : (isPlainObject(config.splitChunks)
         && config.splitChunks.preset === 'default')
 
     if (!isSplitByExperience) {

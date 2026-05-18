@@ -1807,6 +1807,61 @@ describe('Config', () => {
         `)
     })
 
+    test('splitChunks.preset: "default"', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+          splitChunks: {
+            preset: 'default',
+          },
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      if (config?.optimization?.splitChunks === undefined) {
+        expect.fail('should have config.optimization.splitChunks')
+      }
+
+      expect(config.optimization.splitChunks).not.toBe(false)
+
+      if (config.optimization.splitChunks === false) {
+        expect.unreachable('splitChunks is not false')
+      }
+
+      expect(config.optimization.splitChunks.cacheGroups).toHaveProperty(
+        'preact',
+      )
+    })
+
+    test('splitChunks overrides performance.chunkSplit', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+          splitChunks: false,
+          performance: {
+            chunkSplit: {
+              strategy: 'split-by-experience',
+            },
+          },
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      expect(config?.optimization?.splitChunks).toBe(false)
+    })
+
     test('performance.chunkSplit.strategy: "split-by-experience" along with extractStr: true', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 

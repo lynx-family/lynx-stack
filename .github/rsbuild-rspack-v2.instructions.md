@@ -2,7 +2,7 @@
 applyTo: "packages/**/*{package.json,rsbuild.config.ts,rsbuild.config.js,rspack.config.ts,rspack.config.js}"
 ---
 
-When migrating Rsbuild configs to v2, do not use `source.alias` or `performance.chunkSplit.strategy`; merge deprecated `source.alias` values into `resolve.alias`, and replace the old `all-in-one` chunk split strategy with `splitChunks: false`.
+When migrating Rsbuild configs to v2, do not use `source.alias` or `performance.chunkSplit.strategy`; merge deprecated `source.alias` values into `resolve.alias`, and replace chunk splitting with the top-level `splitChunks` option. Map `all-in-one` to `splitChunks: false`, `single-vendor` to `splitChunks: { preset: 'single-vendor' }`, `split-by-module` to `splitChunks: { preset: 'per-package' }`, and `split-by-experience` to `splitChunks: { preset: 'default' }`.
 Do not rely on the removed Rsbuild `performance.profile` option to generate `stats.json`; emit `stats.json` explicitly from a plugin or build hook when bundle analysis output is required.
 In `lynx.config.*` files, keep Rspeedy's top-level `performance.profile` for Lynx runtime profiling only; do not nest it under `environments.*.performance`, because Rsbuild v2 environment config validation rejects the nested form during CLI config loading.
 In Rspeedy's own config conversion, do not pass `performance.profile` to Rsbuild v2. Keep it as a Rspeedy-level runtime profiling option consumed by integrations such as ReactLynx.

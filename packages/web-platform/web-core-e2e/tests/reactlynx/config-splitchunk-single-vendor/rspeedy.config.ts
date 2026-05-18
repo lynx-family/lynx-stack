@@ -20,13 +20,9 @@ export default defineConfig({
       [caseName]: path.join(__dirname, 'index.jsx'),
     },
   },
-  performance: {
-    chunkSplit: {
-      strategy: 'single-vendor',
-      override: {
-        // See: https://github.com/web-infra-dev/rspack/issues/9812
-        filename: '[name].[contenthash:8].js',
-      },
-    },
+  splitChunks: {
+    preset: 'single-vendor',
+    // See: https://github.com/web-infra-dev/rspack/issues/9812
+    filename: '[name].[contenthash:8].js',
   },
 });

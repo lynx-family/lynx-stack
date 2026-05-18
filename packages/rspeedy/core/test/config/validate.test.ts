@@ -49,6 +49,24 @@ describe('Config Validation', () => {
       const cases = [
         {},
         new Promise(p => p({})),
+        {
+          splitChunks: false,
+        },
+        {
+          splitChunks: {
+            preset: 'single-vendor',
+          },
+        },
+        {
+          splitChunks: {
+            chunks: 'initial',
+            cacheGroups: {
+              foo: {
+                minChunks: 3,
+              },
+            },
+          },
+        },
       ]
       cases.forEach(config => {
         expect(validate(config)).toStrictEqual(config)

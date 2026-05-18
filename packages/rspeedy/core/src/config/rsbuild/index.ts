@@ -85,6 +85,7 @@ export function toRsbuildConfig(
 
       tsconfigPath: config.source?.tsconfigPath,
     },
+    splitChunks: config.splitChunks,
     server: {
       base: config.server?.base,
 

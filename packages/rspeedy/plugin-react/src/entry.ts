@@ -62,8 +62,10 @@ export function applyEntry(
     const rsbuildConfig = api.getRsbuildConfig()
     const userConfig = api.getRsbuildConfig('original')
     const chunkSplitStrategy = userConfig.performance?.chunkSplit?.strategy
-    const enableChunkSplitting = chunkSplitStrategy
-      ? chunkSplitStrategy !== 'all-in-one'
+    const enableChunkSplitting = userConfig.splitChunks === undefined
+      ? (chunkSplitStrategy
+        ? chunkSplitStrategy !== 'all-in-one'
+        : rsbuildConfig.splitChunks !== false)
       : rsbuildConfig.splitChunks !== false
     const rspeedyConfig = api.context.callerName === 'rspeedy'
       // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
@@ -287,7 +289,7 @@ export function applyEntry(
     let extractStr = originalExtractStr
     if (enableChunkSplitting && originalExtractStr) {
       ;(api.logger ?? console).warn(
-        '`extractStr` is changed to `false` because it is only supported in `all-in-one` chunkSplit strategy, please set `performance.chunkSplit.strategy` to `all-in-one` to use `extractStr.`',
+        '`extractStr` is changed to `false` because it is only supported when chunk splitting is disabled, please set `splitChunks` to `false` to use `extractStr.`',
       )
       extractStr = false
     }

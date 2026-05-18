@@ -10,6 +10,20 @@ import { toRsbuildConfig } from '../../src/config/rsbuild/index.js'
 import type { Config } from '../../src/index.js'
 
 describe('Config - toRsBuildConfig', () => {
+  describe('splitChunks', () => {
+    test('passes top-level splitChunks to Rsbuild', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        splitChunks: {
+          preset: 'single-vendor',
+        },
+      })
+
+      expect(rsbuildConfig.splitChunks).toStrictEqual({
+        preset: 'single-vendor',
+      })
+    })
+  })
+
   describe('Dev', () => {
     test('transform empty dev', () => {
       const rsbuildConfig = toRsbuildConfig({

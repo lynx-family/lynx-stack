@@ -10,9 +10,7 @@ import type { Filename } from './output/filename.js'
 import type { Config } from './index.js'
 
 export function applyDefaultRspeedyConfig(config: Config): Config {
-  // config.performance?.chunkSplit?.strategy has been explicitly set to a value other than 'all-in-one'
-  const enableChunkSplitting = config.performance?.chunkSplit?.strategy
-    && config.performance?.chunkSplit?.strategy !== 'all-in-one'
+  const enableChunkSplitting = getEnableChunkSplitting(config)
 
   return mergeRsbuildConfig({
     mode: ((): RsbuildMode => {
@@ -54,6 +52,22 @@ export function applyDefaultRspeedyConfig(config: Config): Config {
       },
     },
   }, config)
+}
+
+function getEnableChunkSplitting(config: Config): boolean {
+  if (config.splitChunks !== undefined) {
+    if (
+      config.splitChunks
+      && Object.keys(config.splitChunks).length === 0
+    ) {
+      return false
+    }
+
+    return config.splitChunks !== false
+  }
+
+  const strategy = config.performance?.chunkSplit?.strategy
+  return Boolean(strategy && strategy !== 'all-in-one')
 }
 
 const DEFAULT_FILENAME = '[name].[platform].bundle'

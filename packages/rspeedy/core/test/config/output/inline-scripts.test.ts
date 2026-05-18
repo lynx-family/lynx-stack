@@ -31,10 +31,8 @@ describe('output.inlineScripts', () => {
 
   test('defaults with enableChunkSplitting', async () => {
     const rspeedy = await createStubRspeedy({
-      performance: {
-        chunkSplit: {
-          strategy: 'split-by-size',
-        },
+      splitChunks: {
+        maxSize: 50_000,
       },
 
       plugins: [
