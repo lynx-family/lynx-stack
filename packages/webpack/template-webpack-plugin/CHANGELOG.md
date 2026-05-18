@@ -1,5 +1,35 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.11.1
+
+### Patch Changes
+
+- feat(web): enable web binary template by default ([#2545](https://github.com/lynx-family/lynx-stack/pull/2545))
+
+  The default encoding format for the web platform template has been changed from JSON to Binary.
+
+  **Benefits for developers:**
+
+  - **Smaller output size:** Binary templates are more compact than JSON strings, reducing the final bundle size.
+  - **Faster load performance:** Binary templates parse faster than JSON in the runtime, improving the time-to-interactive for web applications.
+
+  **How to turn off this feature:**
+  If you encounter any issues with the new binary template format, you can revert to the previous JSON format by setting the environment variable `EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE` to `'false'` or `'0'` before running your build commands. For example:
+  `EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE=false rspeedy build`
+
+  **Upgrade to `@lynx-js/web-core@0.20.2` could support the new output format**
+
+  See [`@lynx-js/web-core` Changelog](https://lynx-stack.dev/changelog/lynx-js--web-core)
+
+- Run TASM template encoding in a shared `tinypool` worker pool so multi-entry builds encode in parallel and watch-mode rebuilds reuse warm workers. ([#2634](https://github.com/lynx-family/lynx-stack/pull/2634))
+
+- Make `LynxTemplatePlugin.getLynxTemplatePluginHooks` a cross-module singleton so duplicate copies of this package (e.g. from npm hoist conflicts) share the same hooks per compilation. ([#2624](https://github.com/lynx-family/lynx-stack/pull/2624))
+
+- Update the @lynx-js/tasm dependency to 0.0.39 and align React template attribute descriptors with it. ([#2643](https://github.com/lynx-family/lynx-stack/pull/2643))
+
+- Updated dependencies [[`ee79eff`](https://github.com/lynx-family/lynx-stack/commit/ee79effbd6e291e1eb9d03a1b89ec5c00304a389), [`ded4de9`](https://github.com/lynx-family/lynx-stack/commit/ded4de90573f095ddae129f6d3e2c483e8da37ed), [`cf01e94`](https://github.com/lynx-family/lynx-stack/commit/cf01e940b1c03c801ea7c5ba0e4d1788c3ca15c1), [`b989c1c`](https://github.com/lynx-family/lynx-stack/commit/b989c1c0658177b054744fd92d76b5505cda2a23), [`8417e68`](https://github.com/lynx-family/lynx-stack/commit/8417e686cba5ae8a0f8e8bda96d2f1e21dff15c3)]:
+  - @lynx-js/web-core@0.20.4
+
 ## 0.11.0
 
 ### Minor Changes

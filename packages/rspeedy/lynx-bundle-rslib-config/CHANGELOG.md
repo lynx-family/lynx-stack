@@ -1,5 +1,11 @@
 # @lynx-js/lynx-bundle-rslib-config
 
+## 0.3.3
+
+### Patch Changes
+
+- Update the @lynx-js/tasm dependency to 0.0.39 and align React template attribute descriptors with it. ([#2643](https://github.com/lynx-family/lynx-stack/pull/2643))
+
 ## 0.3.2
 
 ### Patch Changes

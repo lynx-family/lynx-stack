@@ -1,6 +1,6 @@
 {
   "name": "create-lynx-extension",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Create Native Autolink Lynx extensions",
   "keywords": [
     "Lynx",
