@@ -13,6 +13,7 @@ import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catal
 import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
 import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json';
 import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json';
+import textFieldManifest from '@lynx-js/a2ui-reactlynx/catalog/TextField/catalog.json';
 
 import type { ProtocolName } from './utils/protocol.js';
 
@@ -518,6 +519,23 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
         },
       ],
       openui: [],
+    },
+  },
+  {
+    name: 'TextField',
+    category: 'Input',
+    description:
+      'A labeled text input with short text, long text, numeric, and obscured variants.',
+    props: schemaToProps(textFieldManifest),
+    usage: {
+      a2ui: {
+        id: 'name-input',
+        component: 'TextField',
+        label: 'Name',
+        value: { path: '/form/name' },
+        variant: 'shortText',
+      },
+      openui: {},
     },
   },
   {

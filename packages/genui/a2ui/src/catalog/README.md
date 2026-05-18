@@ -79,6 +79,7 @@ import {
   Row,
   Tabs,
   Text,
+  TextField,
 } from '@lynx-js/a2ui-reactlynx';
 import buttonManifest from '@lynx-js/a2ui-reactlynx/catalog/Button/catalog.json' with {
   type: 'json',
@@ -116,6 +117,9 @@ import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json' wit
 import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json' with {
   type: 'json',
 };
+import textFieldManifest from '@lynx-js/a2ui-reactlynx/catalog/TextField/catalog.json' with {
+  type: 'json',
+};
 
 export const allBuiltins = defineCatalog([
   [Text, textManifest],
@@ -126,6 +130,7 @@ export const allBuiltins = defineCatalog([
   [Card, cardManifest],
   [Button, buttonManifest],
   [Divider, dividerManifest],
+  [TextField, textFieldManifest],
   [CheckBox, checkBoxManifest],
   [Icon, iconManifest],
   [RadioGroup, radioGroupManifest],

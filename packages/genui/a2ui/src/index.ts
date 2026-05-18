@@ -77,5 +77,6 @@ export {
   Row,
   Tabs,
   Text,
+  TextField,
   Icon,
 } from './catalog/index.js';
