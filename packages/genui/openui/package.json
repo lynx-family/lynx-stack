@@ -20,6 +20,10 @@
   },
   "main": "./dist/core/index.js",
   "types": "./dist/core/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json"
   },
