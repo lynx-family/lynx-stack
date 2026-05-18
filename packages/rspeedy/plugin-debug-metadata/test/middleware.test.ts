@@ -33,6 +33,16 @@ const VALID_METADATA: DebugMetadataAsset = {
 }
 
 /**
+ * Strip Windows drive-letter + reverse separator so a posix-style
+ * `/out/...` lookup key matches the path that `path.resolve` produces
+ * on the current platform — `C:\out\foo` on Windows, `/out/foo` on
+ * posix. Keeps the test keys (and assertion fixtures) platform-neutral.
+ */
+function toPosixKey(p: string): string {
+  return p.replace(/\\/g, '/').replace(/^[A-Z]:/i, '')
+}
+
+/**
  * Build a fake compiler whose `outputFileSystem.readFile` resolves
  * paths against an in-memory map. Missing paths yield `ENOENT`. Used
  * to drive the middleware end-to-end without spinning up webpack.
@@ -49,7 +59,7 @@ function fakeCompiler(
         : { options: { output: { path: '/out', publicPath } } }),
       outputFileSystem: {
         readFile(file, cb) {
-          const data = files[file]
+          const data = files[toPosixKey(file)]
           if (data === undefined) {
             const err = Object.assign(new Error('ENOENT'), { code: 'ENOENT' })
             cb(err as NodeJS.ErrnoException)
@@ -374,7 +384,10 @@ describe('createDebugMetadataMiddleware', () => {
             outputPath: '/lynx-out',
             outputFileSystem: {
               readFile(file, cb) {
-                if (file === '/lynx-out/.rspeedy/main/debug-metadata.json') {
+                if (
+                  toPosixKey(file)
+                    === '/lynx-out/.rspeedy/main/debug-metadata.json'
+                ) {
                   cb(null, JSON.stringify(VALID_METADATA))
                   return
                 }
