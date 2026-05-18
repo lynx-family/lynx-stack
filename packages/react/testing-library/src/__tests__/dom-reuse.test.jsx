@@ -274,15 +274,14 @@ describe('should not reuse cross slot index', () => {
         <view
           data-testid="view"
         >
-          <wrapper>
-            <text>
-              A
-            </text>
-          </wrapper>
+          <wrapper />
           <text>
             ---
           </text>
           <wrapper>
+            <text>
+              A
+            </text>
             <text>
               A
             </text>
@@ -306,11 +305,11 @@ describe('should not reuse cross slot index', () => {
             "type": "__snapshot_42dc9_test_4",
           },
           {
-            "beforeId": 4,
+            "beforeId": null,
             "childId": 5,
             "op": "InsertBefore",
             "parentId": 2,
-            "slotIndex": 0,
+            "slotIndex": 1,
           },
         ]
       `);
@@ -580,15 +579,14 @@ describe('should not reuse cross slot index', () => {
         <view
           data-testid="view"
         >
-          <wrapper>
-            <text>
-              CompB
-            </text>
-          </wrapper>
+          <wrapper />
           <text>
             ---
           </text>
           <wrapper>
+            <text>
+              CompB
+            </text>
             <text>
               CompB
             </text>
@@ -612,11 +610,11 @@ describe('should not reuse cross slot index', () => {
             "type": "__snapshot_42dc9_test_10",
           },
           {
-            "beforeId": 4,
+            "beforeId": null,
             "childId": 5,
             "op": "InsertBefore",
             "parentId": 2,
-            "slotIndex": 0,
+            "slotIndex": 1,
           },
         ]
       `);
@@ -774,5 +772,141 @@ describe('should not reuse cross slot index', () => {
         ]
       `);
     }
+  });
+});
+
+describe('should reuse dom', () => {
+  it('keyed list reorder inside Fragment should still work', () => {
+    vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
+
+    let setState;
+    const App = () => {
+      const [state, _setState] = useState(1);
+      setState = _setState;
+      const items = state === 1 ? ['a', 'b', 'c'] : ['c', 'a', 'b'];
+
+      return (
+        <view
+          data-testid='view'
+          bindtap={() => setState(state === 1 ? 2 : 1)}
+        >
+          {items.map(i => <text key={i}>{i}</text>)}
+        </view>
+      );
+    };
+
+    const { container, getByTestId } = render(<App />);
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <view
+          data-testid="view"
+        >
+          <text>
+            a
+          </text>
+          <text>
+            b
+          </text>
+          <text>
+            c
+          </text>
+        </view>
+      </page>
+    `);
+
+    fireEvent.tap(getByTestId('view'));
+    expect(container).toMatchInlineSnapshot(`
+      <page>
+        <view
+          data-testid="view"
+        >
+          <text>
+            c
+          </text>
+          <text>
+            a
+          </text>
+          <text>
+            b
+          </text>
+        </view>
+      </page>
+    `);
+    {
+      const snapshotPatch = JSON.parse(callLepusMethodCalls[1][1]['data']).patchList[0].snapshotPatch;
+      const formattedSnapshotPatch = prettyFormatSnapshotPatch(snapshotPatch);
+      const createOps = formattedSnapshotPatch.filter(p => p.op === 'CreateElement');
+      // No new elements should be created on reorder
+      expect(createOps).toEqual([]);
+      expect(formattedSnapshotPatch).toMatchInlineSnapshot(`
+        [
+          {
+            "beforeId": 3,
+            "childId": 7,
+            "op": "InsertBefore",
+            "parentId": 2,
+            "slotIndex": 0,
+          },
+        ]
+      `);
+    }
+  });
+
+  it('slot 1 component hooks state must be preserved when slot 0 type changes', () => {
+    vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+
+    const Comp = () => <text>Comp</text>;
+
+    const Counter = ({ name }) => {
+      const [count, setCount] = useState(0);
+      return (
+        <text
+          data-testid={`counter-${name}`}
+          bindtap={() => setCount(c => c + 1)}
+        >
+          {name}-{count}
+        </text>
+      );
+    };
+
+    let toggle;
+    const App = () => {
+      const [state, _setState] = useState(1);
+      toggle = () => _setState(s => s === 1 ? 2 : 1);
+      return (
+        <view>
+          <view
+            data-testid='toggle'
+            bindtap={toggle}
+          />
+          <view>
+            {state === 1 ? <Comp /> : <Counter name='slot0' />}
+            <text>---</text>
+            <Counter name='slot1' />
+          </view>
+        </view>
+      );
+    };
+
+    const { container, getByTestId } = render(<App />);
+    // initial: slot 1 Counter at count=0
+    expect(getByTestId('counter-slot1').textContent).toBe('slot1-0');
+
+    // bump slot 1's Counter 3 times
+    fireEvent.tap(getByTestId('counter-slot1'));
+    fireEvent.tap(getByTestId('counter-slot1'));
+    fireEvent.tap(getByTestId('counter-slot1'));
+    expect(getByTestId('counter-slot1').textContent).toBe('slot1-3');
+
+    // toggle: slot 0 becomes a fresh Counter, slot 1 must keep its state
+    fireEvent.tap(getByTestId('toggle'));
+
+    // If the bug returns: slot 0 would steal slot 1's instance and show
+    // "slot0-3", while slot 1 would be a fresh "slot1-0".
+    expect(getByTestId('counter-slot0').textContent).toBe('slot0-0');
+    expect(getByTestId('counter-slot1').textContent).toBe('slot1-3');
   });
 });
