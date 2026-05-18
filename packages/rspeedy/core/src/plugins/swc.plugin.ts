@@ -19,8 +19,7 @@ export function pluginSwc(): RsbuildPlugin {
 
               config.jsc ??= {}
 
-              // TODO(target): use configuration
-              config.jsc.target = getESVersionTarget(isProd)
+              config.jsc.target ??= getESVersionTarget(isProd)
             },
           },
         })
