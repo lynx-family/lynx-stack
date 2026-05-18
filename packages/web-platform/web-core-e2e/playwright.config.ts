@@ -5,6 +5,11 @@
 import { defineConfig } from '@playwright/test';
 import { playwrightConfigCommon } from '@lynx-js/playwright-fixtures';
 
+if (process.env['CI']) {
+  process.env['CHOKIDAR_USEPOLLING'] ??= '1';
+  process.env['CHOKIDAR_INTERVAL'] ??= '1000';
+}
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
