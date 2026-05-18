@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 export {
   defineCatalog,
+  defineFunction,
   mergeCatalogs,
   resolveCatalog,
   serializeCatalog,
@@ -10,9 +11,12 @@ export {
 export type {
   Catalog,
   CatalogComponent,
+  CatalogFunctionDefinition,
+  CatalogFunctionEntry,
   CatalogInput,
   CatalogManifest,
   CatalogSchema,
+  FunctionManifest,
   ResolvedCatalogEntry,
   SerializedCatalog,
 } from './defineCatalog.js';

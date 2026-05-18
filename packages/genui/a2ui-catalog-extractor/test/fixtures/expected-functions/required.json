@@ -1,0 +1,20 @@
+{
+  "required": {
+    "name": "required",
+    "description": "Returns true when the value is not empty.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "The value to check."
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "returnType": "boolean"
+  }
+}

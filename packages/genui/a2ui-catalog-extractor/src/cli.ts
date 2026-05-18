@@ -9,9 +9,11 @@ import { pathToFileURL } from 'node:url';
 
 import {
   extractCatalogComponentsFromTypeDocJson,
+  extractCatalogFunctionsFromTypeDocJson,
   findCatalogSourceFiles,
+  writeCatalogArtifacts,
   writeCatalogComponents,
-  writeComponentCatalogs,
+  writeCatalogFunctions,
 } from './index.js';
 import type { TypeDocProject } from './index.js';
 
@@ -107,12 +109,20 @@ export async function runCli(
     const components = extractCatalogComponentsFromTypeDocJson(project, {
       cwd,
     });
+    const functions = extractCatalogFunctionsFromTypeDocJson(project, {
+      cwd,
+    });
 
     writeCatalogComponents(components, {
       cwd,
       outDir: options.outDir,
     });
+    writeCatalogFunctions(functions, {
+      cwd,
+      outDir: options.outDir,
+    });
     printGeneratedComponents(components);
+    printGeneratedFunctions(functions);
     return 0;
   }
 
@@ -137,24 +147,26 @@ export async function runCli(
     );
   }
 
-  const components = await writeComponentCatalogs({
+  const { components, functions } = await writeCatalogArtifacts({
     cwd,
     outDir: options.outDir,
     sourceFiles: uniqueSourceFiles,
   });
 
   printGeneratedComponents(components);
+  printGeneratedFunctions(functions);
 
-  // Fail loudly if we matched source files but emitted no components —
+  // Fail loudly if we matched source files but emitted no artifacts —
   // this used to silently succeed on Windows when TypeDoc rejected
   // backslash entry-point paths, and downstream packages then failed
   // to import the missing `catalog.json` files.
-  if (components.length === 0) {
+  if (components.length === 0 && functions.length === 0) {
     console.error(
       `[a2ui-catalog-extractor] Found ${uniqueSourceFiles.length} `
-        + `source file(s) but emitted 0 component catalogs. Make sure `
-        + `each catalog props interface is annotated with `
-        + `\`@a2uiCatalog <Name>\`.`,
+        + `source file(s) but emitted 0 component catalogs and 0 `
+        + `function definitions. Make sure each catalog props interface `
+        + `is annotated with \`@a2uiCatalog <Name>\` and each function `
+        + `is annotated with \`@a2uiFunction <name>\`.`,
     );
     return 1;
   }
@@ -166,6 +178,14 @@ function printGeneratedComponents(components: { name: string }[]): void {
   console.info(`Generated ${components.length} A2UI component catalog files.`);
   for (const component of components) {
     console.info(`Generated strict schema for ${component.name}`);
+  }
+}
+
+function printGeneratedFunctions(functions: { name: string }[]): void {
+  if (functions.length === 0) return;
+  console.info(`Generated ${functions.length} A2UI function definition files.`);
+  for (const fn of functions) {
+    console.info(`Generated function definition for ${fn.name}`);
   }
 }
 

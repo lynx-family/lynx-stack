@@ -4,6 +4,7 @@
 import { memo, useEffect, useMemo, useSyncExternalStore } from '@lynx-js/react';
 import type { ReactNode } from '@lynx-js/react';
 
+import { useA2UIContext } from './useA2UIContext.js';
 import { useAction } from './useAction.js';
 import { useCatalog } from './useCatalog.js';
 import { splitUnsupportedProps, useResolvedProps } from './useDataBinding.js';
@@ -243,6 +244,7 @@ function NodeRendererImpl(
     surface,
     renderUnsupported,
   } = props;
+  const { catalog: activeCatalog, processor } = useA2UIContext();
   const catalog = useCatalog();
 
   const resource = surface.resources.get(initialComponent.id!);
@@ -273,6 +275,8 @@ function NodeRendererImpl(
     effectiveComponent,
     surface,
     effectiveComponent.dataContextPath,
+    processor,
+    activeCatalog.functions,
   );
 
   const actionProps = useMemo(

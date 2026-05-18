@@ -63,8 +63,14 @@ export interface FunctionDefinition {
     | 'void';
 }
 
+/** A function discovered in source via `@a2uiFunction`, with its origin path. */
+export interface CatalogFunction extends FunctionDefinition {
+  filePath: string;
+}
+
 interface ParsedDoc {
   a2uiCatalogName?: string;
+  a2uiFunctionName?: string;
   defaultValue?: unknown;
   deprecated?: boolean;
   description?: string;
@@ -84,7 +90,18 @@ export interface TypeDocReflection {
   kind?: number;
   kindString?: string;
   name: string;
+  parameters?: TypeDocReflection[];
+  signatures?: TypeDocSignature[];
   sources?: TypeDocSource[];
+  type?: TypeDocType;
+}
+
+export interface TypeDocSignature {
+  comment?: TypeDocComment;
+  kind?: number;
+  kindString?: string;
+  name?: string;
+  parameters?: TypeDocReflection[];
   type?: TypeDocType;
 }
 
@@ -197,6 +214,62 @@ export function extractCatalogComponentsFromTypeDocJson(
   return extractCatalogComponentsFromTypeDocProject(project, options);
 }
 
+export async function extractCatalogFunctions(
+  options: ExtractCatalogOptions,
+): Promise<CatalogFunction[]> {
+  const project = await createTypeDocProject(options);
+  return extractCatalogFunctionsFromTypeDocProject(
+    project,
+    options.cwd ? { cwd: options.cwd } : {},
+  );
+}
+
+export function extractCatalogFunctionsFromTypeDocProject(
+  project: ProjectReflection | TypeDocProject,
+  options: ExtractCatalogFromTypeDocOptions = {},
+): CatalogFunction[] {
+  const cwd = options.cwd ? path.resolve(options.cwd) : process.cwd();
+  const functions: CatalogFunction[] = [];
+
+  for (const reflection of walkReflections(project as TypeDocProject)) {
+    const parsedDoc = parseComment(reflection.comment);
+    let docWithSignature = parsedDoc;
+    let signature = pickFunctionSignature(reflection);
+    if (signature && !docWithSignature.a2uiFunctionName) {
+      docWithSignature = parseComment(signature.comment);
+    }
+    if (docWithSignature.a2uiFunctionName === undefined) {
+      continue;
+    }
+    signature ??= pickFunctionSignature(reflection);
+    if (!signature) {
+      throw createReflectionError(
+        reflection,
+        `\`@a2uiFunction\` requires a function signature on "${reflection.name}".`,
+      );
+    }
+
+    functions.push({
+      filePath: getReflectionFilePath(reflection, cwd),
+      name: docWithSignature.a2uiFunctionName || reflection.name,
+      ...(docWithSignature.description
+        ? { description: docWithSignature.description }
+        : {}),
+      parameters: createFunctionParametersSchema(signature, reflection),
+      returnType: resolveReturnType(signature, reflection),
+    });
+  }
+
+  return functions;
+}
+
+export function extractCatalogFunctionsFromTypeDocJson(
+  project: TypeDocProject,
+  options: ExtractCatalogFromTypeDocOptions = {},
+): CatalogFunction[] {
+  return extractCatalogFunctionsFromTypeDocProject(project, options);
+}
+
 export async function writeComponentCatalogs(
   options: WriteComponentCatalogOptions,
 ): Promise<CatalogComponent[]> {
@@ -218,6 +291,75 @@ export function writeCatalogComponents(
     fs.writeFileSync(
       path.join(componentOutDir, 'catalog.json'),
       `${JSON.stringify({ [component.name]: component.schema }, null, 2)}\n`,
+    );
+  }
+}
+
+export async function writeCatalogFunctionDefinitions(
+  options: WriteComponentCatalogOptions,
+): Promise<CatalogFunction[]> {
+  const functions = await extractCatalogFunctions(options);
+  writeCatalogFunctions(functions, options);
+  return functions;
+}
+
+export interface CatalogArtifacts {
+  components: CatalogComponent[];
+  functions: CatalogFunction[];
+}
+
+/**
+ * Bootstrap TypeDoc once and emit both component and function catalog files.
+ * Preferred entry point for the CLI — running the conversion twice doubles
+ * cold-start latency on large catalogs.
+ */
+export async function writeCatalogArtifacts(
+  options: WriteComponentCatalogOptions,
+): Promise<CatalogArtifacts> {
+  const project = await createTypeDocProject(options);
+  const cwdOptions = options.cwd ? { cwd: options.cwd } : {};
+  const components = extractCatalogComponentsFromTypeDocProject(
+    project,
+    cwdOptions,
+  );
+  const functions = extractCatalogFunctionsFromTypeDocProject(
+    project,
+    cwdOptions,
+  );
+  writeCatalogComponents(components, options);
+  writeCatalogFunctions(functions, options);
+  return { components, functions };
+}
+
+// Function names must be valid JavaScript identifiers so they're safe to
+// (a) use as filesystem paths without escaping `..` or path separators and
+// (b) survive A2UI 0.9's wire format (`FunctionCall.call` is a bare name).
+const FUNCTION_NAME_RE = /^[a-z_$][\w$]*$/i;
+
+export function writeCatalogFunctions(
+  functions: CatalogFunction[],
+  options: { cwd?: string; outDir: string },
+): void {
+  if (functions.length === 0) return;
+  const cwd = options.cwd ? path.resolve(options.cwd) : process.cwd();
+  const functionsDir = path.join(
+    path.resolve(cwd, options.outDir),
+    'functions',
+  );
+
+  fs.mkdirSync(functionsDir, { recursive: true });
+  for (const fn of functions) {
+    if (!FUNCTION_NAME_RE.test(fn.name)) {
+      throw new Error(
+        `[a2ui-catalog-extractor] Invalid function name "${fn.name}". `
+          + 'Names must match /^[A-Za-z_$][A-Za-z0-9_$]*$/ so they can be '
+          + 'used as filenames and as FunctionCall.call identifiers.',
+      );
+    }
+    const { filePath: _filePath, ...definition } = fn;
+    fs.writeFileSync(
+      path.join(functionsDir, `${fn.name}.json`),
+      `${JSON.stringify({ [fn.name]: definition }, null, 2)}\n`,
     );
   }
 }
@@ -259,7 +401,11 @@ async function createTypeDocProject(
 
   const tsconfigPath = getTsconfigPath(cwd, options.tsconfig);
   const bootstrapOptions: TypeDocOptions = {
-    blockTags: [...OptionDefaults.blockTags, '@a2uiCatalog'],
+    blockTags: [
+      ...OptionDefaults.blockTags,
+      '@a2uiCatalog',
+      '@a2uiFunction',
+    ],
     entryPoints: sourceFiles,
     excludePrivate: false,
     excludeProtected: false,
@@ -319,6 +465,237 @@ function* walkReflections(
 function isInterfaceReflection(reflection: TypeDocReflection): boolean {
   return reflection.kind === ReflectionKind.Interface
     || reflection.kindString === 'Interface';
+}
+
+function pickFunctionSignature(
+  reflection: TypeDocReflection,
+): TypeDocSignature | undefined {
+  if (reflection.signatures && reflection.signatures.length > 0) {
+    return reflection.signatures[0];
+  }
+  // Type alias / function-typed variable: `type x = (a: string) => boolean`.
+  const declarationSignatures = reflection.type?.declaration?.signatures;
+  if (declarationSignatures && declarationSignatures.length > 0) {
+    return declarationSignatures[0];
+  }
+  return undefined;
+}
+
+function createFunctionParametersSchema(
+  signature: TypeDocSignature,
+  owner: TypeDocReflection,
+): JsonSchema {
+  const parameters = signature.parameters ?? [];
+
+  // A2UI 0.9 function calls carry `args: Record<string, any>`. The natural
+  // TypeScript convention is `function fn(args: { name: T1, ... }): R`. When
+  // we see exactly one inline-object parameter, unwrap it so the emitted
+  // schema describes the args record directly rather than nesting it under
+  // a synthetic `args` property.
+  if (parameters.length === 1) {
+    const only = parameters[0]!;
+    if (only.type?.type === 'reflection' && only.type.declaration) {
+      return parseFunctionObjectReflection(only.type.declaration, owner);
+    }
+  }
+
+  const schema: JsonSchema = {
+    type: 'object',
+    properties: {},
+    required: [],
+    additionalProperties: false,
+  };
+
+  for (const parameter of parameters) {
+    if (!parameter.type) {
+      throw createReflectionError(
+        owner,
+        `Missing type for function parameter "${parameter.name}".`,
+      );
+    }
+    const propertySchema = parseFunctionParamType(parameter.type, parameter);
+    applyDocToSchema(propertySchema, parseComment(parameter.comment));
+    schema.properties![parameter.name] = propertySchema;
+    if (!isOptionalProperty(parameter)) {
+      schema.required!.push(parameter.name);
+    }
+  }
+
+  return schema;
+}
+
+/**
+ * A relaxed sibling of `parseObjectReflection` used for function-arg shapes.
+ * Permits `any`/`unknown` so validators like `required(value)` and
+ * formatters like `formatString({ options })` can accept arbitrary inputs
+ * — the agent receives `{}` (no `type`) which is JSON-Schema-equivalent to
+ * "any value".
+ */
+function parseFunctionObjectReflection(
+  declaration: TypeDocReflection,
+  owner: TypeDocReflection,
+): JsonSchema {
+  if (declaration.children === undefined) {
+    throw createReflectionError(
+      owner,
+      `Missing object declaration for "${owner.name}".`,
+    );
+  }
+
+  const schema: JsonSchema = {
+    type: 'object',
+    properties: {},
+    required: [],
+    additionalProperties: false,
+  };
+
+  for (const child of declaration.children) {
+    if (!isPropertyReflection(child)) {
+      continue;
+    }
+    if (!child.type) {
+      throw createReflectionError(child, `Missing type for "${child.name}".`);
+    }
+    const propertySchema = parseFunctionParamType(child.type, child);
+    applyDocToSchema(propertySchema, parseComment(child.comment));
+    schema.properties![child.name] = propertySchema;
+    if (!isOptionalProperty(child)) {
+      schema.required!.push(child.name);
+    }
+  }
+
+  return schema;
+}
+
+function parseFunctionParamType(
+  type: TypeDocType,
+  owner: TypeDocReflection,
+): JsonSchema {
+  if (type.type === 'intrinsic') {
+    const name = type.name ?? '';
+    if (name === 'unknown' || name === 'any') {
+      // JSON Schema for "any value" — drop the type constraint.
+      return {};
+    }
+  }
+  if (type.type === 'reflection' && type.declaration) {
+    return parseFunctionObjectReflection(type.declaration, owner);
+  }
+  if (type.type === 'array' && type.elementType) {
+    return {
+      type: 'array',
+      items: parseFunctionParamType(type.elementType, owner),
+    };
+  }
+  if (type.type === 'union' && type.types) {
+    const actualTypes = type.types.filter(t => !isUndefinedType(t));
+    if (actualTypes.length === 1) {
+      return parseFunctionParamType(actualTypes[0]!, owner);
+    }
+    if (
+      actualTypes.some(t =>
+        t.type === 'intrinsic'
+        && (t.name === 'unknown' || t.name === 'any')
+      )
+    ) {
+      return {};
+    }
+  }
+  if (type.type === 'reference') {
+    const referenceName = String(type.name ?? type.qualifiedName ?? '');
+    if (referenceName === 'Record' && type.typeArguments?.length === 2) {
+      return {
+        type: 'object',
+        additionalProperties: parseFunctionParamType(
+          type.typeArguments[1]!,
+          owner,
+        ),
+      };
+    }
+  }
+  return parseTypeDocType(type, owner);
+}
+
+function resolveReturnType(
+  signature: TypeDocSignature,
+  owner: TypeDocReflection,
+): FunctionDefinition['returnType'] {
+  const type = signature.type;
+  if (!type) {
+    return 'void';
+  }
+  return mapTypeToReturnType(type, owner);
+}
+
+function mapTypeToReturnType(
+  type: TypeDocType,
+  owner: TypeDocReflection,
+): FunctionDefinition['returnType'] {
+  switch (type.type) {
+    case 'intrinsic': {
+      const name = type.name ?? '';
+      if (
+        name === 'string' || name === 'number' || name === 'boolean'
+        || name === 'void' || name === 'any'
+      ) {
+        return name;
+      }
+      throw createReflectionError(
+        owner,
+        `Unsupported function return type "${name}" for "${owner.name}". `
+          + `Expected string, number, boolean, array, object, any, or void.`,
+      );
+    }
+    case 'array':
+      return 'array';
+    case 'reflection':
+    case 'reference': {
+      const referenceName = String(type.name ?? type.qualifiedName ?? '');
+      if (referenceName === 'Promise') {
+        throw createReflectionError(
+          owner,
+          `Async functions are not supported by A2UI 0.9; "${owner.name}" `
+            + `must return a synchronous value.`,
+        );
+      }
+      if (referenceName === 'Array' || referenceName === 'ReadonlyArray') {
+        return 'array';
+      }
+      if (referenceName === 'Record' || type.type === 'reflection') {
+        return 'object';
+      }
+      return 'object';
+    }
+    case 'union': {
+      const actualTypes = (type.types ?? []).filter(
+        candidate => !isUndefinedType(candidate),
+      );
+      if (actualTypes.length === 1) {
+        return mapTypeToReturnType(actualTypes[0]!, owner);
+      }
+      const mapped = actualTypes.map(candidate =>
+        mapTypeToReturnType(candidate, owner)
+      );
+      if (mapped.every(value => value === mapped[0])) {
+        return mapped[0]!;
+      }
+      return 'any';
+    }
+    case 'literal': {
+      switch (typeof type.value) {
+        case 'string':
+          return 'string';
+        case 'number':
+          return 'number';
+        case 'boolean':
+          return 'boolean';
+        default:
+          return 'any';
+      }
+    }
+    default:
+      return 'any';
+  }
 }
 
 function isPropertyReflection(reflection: TypeDocReflection): boolean {
@@ -591,9 +968,16 @@ function parseReferenceType(
         'A2UI catalog Record keys must be string-compatible.',
       );
     }
+    const valueType = typeArguments[1]!;
+    if (isAmbiguousIntrinsicType(valueType)) {
+      return {
+        type: 'object',
+        additionalProperties: true,
+      };
+    }
     return {
       type: 'object',
-      additionalProperties: parseTypeDocType(typeArguments[1]!, owner),
+      additionalProperties: parseTypeDocType(valueType, owner),
     };
   }
 
@@ -623,6 +1007,9 @@ function parseComment(comment: TypeDocComment | undefined): ParsedDoc {
     switch (block.tag) {
       case '@a2uiCatalog':
         parsedDoc.a2uiCatalogName = content;
+        break;
+      case '@a2uiFunction':
+        parsedDoc.a2uiFunctionName = content;
         break;
       case '@remarks':
         if (content) {
@@ -735,6 +1122,11 @@ function isUndefinedType(type: TypeDocType): boolean {
 function isNullType(type: TypeDocType): boolean {
   return (type.type === 'intrinsic' && type.name === 'null')
     || (type.type === 'literal' && type.value === null);
+}
+
+function isAmbiguousIntrinsicType(type: TypeDocType): boolean {
+  return type.type === 'intrinsic'
+    && (type.name === 'unknown' || type.name === 'any');
 }
 
 function getStringLiteralValue(type: TypeDocType): string | undefined {

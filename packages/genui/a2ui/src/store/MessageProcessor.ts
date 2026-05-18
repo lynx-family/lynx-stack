@@ -181,42 +181,12 @@ export class MessageProcessor {
       surface.resources.set(newId, createResource(newId));
     }
 
-    const childIds: string[] = [];
     const anyCloned = cloned as unknown as Record<string, unknown>;
+    const clonedChildIds = new Map<string, string>();
 
-    if (Array.isArray(anyCloned['children'])) {
-      for (const childId of anyCloned['children']) {
-        if (typeof childId === 'string') {
-          childIds.push(childId);
-        }
-      }
-    }
-
-    if (typeof anyCloned['child'] === 'string') {
-      childIds.push(anyCloned['child']);
-    }
-
-    if (Array.isArray(anyCloned['tabs'])) {
-      for (const tab of anyCloned['tabs'] as unknown[]) {
-        if (
-          tab && typeof tab === 'object' && 'child' in tab
-          && typeof (tab as Record<string, unknown>)['child'] === 'string'
-        ) {
-          childIds.push((tab as Record<string, unknown>)['child'] as string);
-        }
-      }
-    }
-
-    if (typeof anyCloned['trigger'] === 'string') {
-      childIds.push(anyCloned['trigger']);
-    }
-
-    if (typeof anyCloned['content'] === 'string') {
-      childIds.push(anyCloned['content']);
-    }
-
-    const newChildren: string[] = [];
-    for (const childId of childIds) {
+    const cloneChild = (childId: string): string | null => {
+      const existing = clonedChildIds.get(childId);
+      if (existing) return existing;
       const newChildId = this.cloneComponentTree(
         childId,
         newIdSuffix,
@@ -225,14 +195,53 @@ export class MessageProcessor {
         updates,
       );
       if (newChildId) {
-        newChildren.push(newChildId);
+        clonedChildIds.set(childId, newChildId);
       }
-    }
+      return newChildId;
+    };
 
     if (Array.isArray(anyCloned['children'])) {
+      const newChildren: string[] = [];
+      for (const childId of anyCloned['children']) {
+        if (typeof childId !== 'string') continue;
+        const newChildId = cloneChild(childId);
+        if (newChildId) newChildren.push(newChildId);
+      }
       anyCloned['children'] = newChildren;
-    } else if (newChildren.length > 0) {
-      anyCloned['children'] = newChildren;
+    }
+
+    if (typeof anyCloned['child'] === 'string') {
+      const newChildId = cloneChild(anyCloned['child']);
+      if (newChildId) anyCloned['child'] = newChildId;
+    }
+
+    if (Array.isArray(anyCloned['tabs'])) {
+      anyCloned['tabs'] = (anyCloned['tabs'] as unknown[]).map((tab) => {
+        if (
+          !tab || typeof tab !== 'object' || !('child' in tab)
+          || typeof (tab as Record<string, unknown>)['child'] !== 'string'
+        ) {
+          return tab;
+        }
+
+        const tabRecord = tab as Record<string, unknown>;
+        const newChildId = cloneChild(tabRecord['child'] as string);
+        if (!newChildId) return tab;
+        return {
+          ...tabRecord,
+          child: newChildId,
+        };
+      });
+    }
+
+    if (typeof anyCloned['trigger'] === 'string') {
+      const newChildId = cloneChild(anyCloned['trigger']);
+      if (newChildId) anyCloned['trigger'] = newChildId;
+    }
+
+    if (typeof anyCloned['content'] === 'string') {
+      const newChildId = cloneChild(anyCloned['content']);
+      if (newChildId) anyCloned['content'] = newChildId;
     }
 
     return newId;
@@ -422,13 +431,16 @@ export class MessageProcessor {
           if (!templateInfo) continue;
 
           const dataSignal = surface.store.getSignal(templateInfo.path);
+          const rawData = dataSignal.value;
           let data: unknown;
-          try {
-            data = dataSignal.value
-              ? JSON.parse(dataSignal.value as string)
-              : undefined;
-          } catch {
-            data = undefined;
+          if (typeof rawData === 'string') {
+            try {
+              data = rawData ? JSON.parse(rawData) : undefined;
+            } catch {
+              data = undefined;
+            }
+          } else {
+            data = rawData;
           }
 
           const explicitChildren: string[] = [];
@@ -466,11 +478,9 @@ export class MessageProcessor {
             }
           }
 
-          if (explicitChildren.length > 0) {
-            anyComponent['children'] = explicitChildren;
-            componentUpdates.push(component);
-            componentUpdates.push(...generatedUpdates);
-          }
+          anyComponent['children'] = explicitChildren;
+          componentUpdates.push(component);
+          componentUpdates.push(...generatedUpdates);
         }
 
         if (componentUpdates.length > 0) {

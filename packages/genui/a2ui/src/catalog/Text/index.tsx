@@ -8,8 +8,19 @@ import '../../../styles/catalog/Text.css';
  * @a2uiCatalog Text
  */
 export interface TextProps extends GenericComponentProps {
-  /** Literal text or path binding. */
-  text: string | { path: string };
+  /** Literal text, path binding, or function call. */
+  text: string | { path: string } | {
+    call: string;
+    args: Record<string, unknown>;
+    returnType?:
+      | 'string'
+      | 'number'
+      | 'boolean'
+      | 'array'
+      | 'object'
+      | 'any'
+      | 'void';
+  };
   variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body';
   weight?: number;
 }
