@@ -15,8 +15,8 @@ This package includes:
   catalog API. No global registry — every consumer composes the set of
   components they want available.
 - `catalog/<Name>`: built-in component renderers (`Text`, `Button`,
-  `Card`, `Column`, `Row`, `List`, `CheckBox`, `RadioGroup`, `Image`,
-  `Divider`, `Icon`, `Modal`, `Tabs`).
+  `Card`, `Column`, `Row`, `List`, `CheckBox`, `RadioGroup`, `Slider`,
+  `Image`, `Divider`, `Icon`, `Modal`, `Tabs`).
 - `catalog/<Name>/catalog.json`: per-component JSON-Schema manifests
   for the agent handshake.
 

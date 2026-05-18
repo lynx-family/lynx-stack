@@ -96,6 +96,7 @@ export {
   Modal,
   RadioGroup,
   Row,
+  Slider,
   Tabs,
   Text,
   TextField,

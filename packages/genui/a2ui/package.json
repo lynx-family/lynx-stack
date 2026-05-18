@@ -86,6 +86,11 @@
       "default": "./dist/catalog/RadioGroup/index.js"
     },
     "./catalog/RadioGroup/catalog.json": "./dist/catalog/RadioGroup/catalog.json",
+    "./catalog/Slider": {
+      "types": "./dist/catalog/Slider/index.d.ts",
+      "default": "./dist/catalog/Slider/index.js"
+    },
+    "./catalog/Slider/catalog.json": "./dist/catalog/Slider/catalog.json",
     "./catalog/Tabs": {
       "types": "./dist/catalog/Tabs/index.d.ts",
       "default": "./dist/catalog/Tabs/index.js"
@@ -112,15 +117,14 @@
   },
   "devDependencies": {
     "@lynx-js/a2ui-catalog-extractor": "workspace:*",
-    "@lynx-js/lynx-ui": "^3.130.0",
-    "@lynx-js/lynx-ui-input": "^3.130.0",
+    "@lynx-js/lynx-ui": "^3.133.0",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "3.7.0",
     "@rstest/core": "catalog:rstest",
     "@types/react": "^18.3.28"
   },
   "peerDependencies": {
-    "@lynx-js/lynx-ui": "^3.130.0",
+    "@lynx-js/lynx-ui": "^3.133.0",
     "@lynx-js/react": "workspace:^"
   },
   "peerDependenciesMeta": {
