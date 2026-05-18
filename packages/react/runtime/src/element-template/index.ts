@@ -84,3 +84,5 @@ export {
 };
 
 export * from './client/root.js';
+
+export type { DataProcessorDefinition, DataProcessors, InitData, InitDataRaw } from '../lynx-api.js';
