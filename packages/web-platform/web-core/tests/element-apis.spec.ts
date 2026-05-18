@@ -168,6 +168,46 @@ describe('Element APIs', () => {
     expect(lynxEvent.detail).toEqual({});
   });
 
+  test('createCrossThreadEvent forwards keyboard properties for keydown', async () => {
+    const { createCrossThreadEvent } = await import(
+      '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'
+    );
+    const keyEvent = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      code: 'Enter',
+      keyCode: 13,
+      shiftKey: false,
+      altKey: false,
+      ctrlKey: true,
+      metaKey: false,
+    }) as any;
+
+    const lynxEvent = createCrossThreadEvent(keyEvent);
+    expect(lynxEvent.type).toBe('keydown');
+    expect(lynxEvent.key).toBe('Enter');
+    expect(lynxEvent.code).toBe('Enter');
+    expect(lynxEvent.keyCode).toBe(13);
+    expect(lynxEvent.ctrlKey).toBe(true);
+    expect(lynxEvent.shiftKey).toBe(false);
+  });
+
+  test('createCrossThreadEvent forwards keyboard properties for keyup', async () => {
+    const { createCrossThreadEvent } = await import(
+      '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'
+    );
+    const keyEvent = new KeyboardEvent('keyup', {
+      key: 'a',
+      code: 'KeyA',
+      shiftKey: true,
+    }) as any;
+
+    const lynxEvent = createCrossThreadEvent(keyEvent);
+    expect(lynxEvent.type).toBe('keyup');
+    expect(lynxEvent.key).toBe('a');
+    expect(lynxEvent.code).toBe('KeyA');
+    expect(lynxEvent.shiftKey).toBe(true);
+  });
+
   test('__CreateComponent', () => {
     const ret = mtsGlobalThis.__CreateComponent(
       0,

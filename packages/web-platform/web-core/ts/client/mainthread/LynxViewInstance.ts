@@ -300,6 +300,10 @@ export class LynxViewInstance implements AsyncDisposable {
   async [Symbol.asyncDispose]() {
     await this.backgroundThread[Symbol.asyncDispose]();
     this.exposureServices.dispose();
+    // Detach DOM event listeners synchronously. Some (keydown/keyup) are
+    // bound on `document`, so deferring removal to the idle callback below
+    // would leave stale handlers firing against a torn-down wasmContext.
+    this.mtsWasmBinding.disposeEventListeners();
     requestIdleCallbackImpl(() => {
       this.mtsWasmBinding.dispose();
     });

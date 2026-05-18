@@ -102,7 +102,9 @@ lazy_static::lazy_static! {
     "offset",
     "snap",
     "scrolltoupperedge",
-    "scrolltoloweredge"
+    "scrolltoloweredge",
+    "keydown",
+    "keyup"
   ]);
 
   pub static ref EVENT_TYPES: Vec<&'static str> = vec![

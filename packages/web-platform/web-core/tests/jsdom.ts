@@ -101,6 +101,7 @@ Object.assign(globalThis, {
   window,
   Window: window.Window,
   CustomEvent: window.CustomEvent,
+  KeyboardEvent: window.KeyboardEvent,
   HTMLElement: window.HTMLElement,
   customElements: window.customElements,
   requestAnimationFrame: (cb: any) => setTimeout(cb, 0),
