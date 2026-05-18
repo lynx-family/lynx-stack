@@ -94,6 +94,10 @@
     "./react": {
       "types": "./dist/react/index.d.ts",
       "default": "./dist/react/index.js"
+    },
+    "./functions": {
+      "types": "./dist/functions/index.d.ts",
+      "default": "./dist/functions/index.js"
     }
   },
   "main": "./dist/index.js",
@@ -117,7 +121,6 @@
   },
   "peerDependencies": {
     "@lynx-js/lynx-ui": "^3.130.0",
-    "@lynx-js/lynx-ui-input": "^3.130.0",
     "@lynx-js/react": "workspace:^"
   },
   "peerDependenciesMeta": {

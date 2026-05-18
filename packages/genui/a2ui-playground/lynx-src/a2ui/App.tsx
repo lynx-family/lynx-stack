@@ -16,6 +16,8 @@ import {
   Row,
   Tabs,
   Text,
+  TextField,
+  basicFunctions,
   createMessageStore,
   normalizePayloadToMessages as normalizeProtocolMessages,
 } from '@lynx-js/a2ui-reactlynx';
@@ -40,6 +42,7 @@ import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catal
 import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
 import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json';
 import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json';
+import textFieldManifest from '@lynx-js/a2ui-reactlynx/catalog/TextField/catalog.json';
 import {
   useCallback,
   useEffect,
@@ -60,9 +63,11 @@ const DEFAULT_STREAM_DELAY_MS = 800;
 // shipped from the package — this list makes the cost of "everything"
 // visible and lets the bundler tree-shake when you only need a few.
 //
-// Schemas are not attached because the playground doesn't perform an
-// agent handshake. To include schemas, pair each component with its
-// `catalog.json` manifest — see
+// Function entries are included because the gallery payloads use A2UI
+// basic-catalog calls such as `formatDate` in dynamic props and checks.
+//
+// To include component schemas, pair each component with its `catalog.json`
+// manifest — see
 // `packages/genui/a2ui/src/catalog/README.md`.
 function manifestEntry(
   component: unknown,
@@ -84,7 +89,9 @@ const ALL_BUILTINS: readonly CatalogInput[] = [
   manifestEntry(Icon, iconManifest),
   manifestEntry(CheckBox, checkBoxManifest),
   manifestEntry(RadioGroup, radioGroupManifest),
+  manifestEntry(TextField, textFieldManifest),
   manifestEntry(Tabs, tabsManifest),
+  ...basicFunctions,
 ];
 
 interface InitData {

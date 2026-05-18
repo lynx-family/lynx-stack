@@ -1,0 +1,20 @@
+{
+  "formatString": {
+    "name": "formatString",
+    "description": "Interpolates `${path}` placeholders against the data model.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "Template literal with `${path}` placeholders."
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "returnType": "string"
+  }
+}

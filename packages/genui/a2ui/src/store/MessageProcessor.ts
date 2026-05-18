@@ -422,16 +422,16 @@ export class MessageProcessor {
           if (!templateInfo) continue;
 
           const dataSignal = surface.store.getSignal(templateInfo.path);
-          let data: unknown;
           const rawData = dataSignal.value;
-          if (Array.isArray(rawData) || isObject(rawData)) {
-            data = rawData;
-          } else if (typeof rawData === 'string' && rawData) {
+          let data: unknown;
+          if (typeof rawData === 'string') {
             try {
-              data = JSON.parse(rawData);
+              data = rawData ? JSON.parse(rawData) : undefined;
             } catch {
               data = undefined;
             }
+          } else {
+            data = rawData;
           }
 
           const explicitChildren: string[] = [];
@@ -469,11 +469,9 @@ export class MessageProcessor {
             }
           }
 
-          if (explicitChildren.length > 0) {
-            anyComponent['children'] = explicitChildren;
-            componentUpdates.push(component);
-            componentUpdates.push(...generatedUpdates);
-          }
+          anyComponent['children'] = explicitChildren;
+          componentUpdates.push(component);
+          componentUpdates.push(...generatedUpdates);
         }
 
         if (componentUpdates.length > 0) {

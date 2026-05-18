@@ -125,6 +125,59 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       await expect(await observer.getAttribute('style')).toContain('pink');
     });
+    test('basic-global-bindkeydown', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const observer = page.locator('#observer');
+      await page.keyboard.press('a');
+      await wait(100);
+      await expect(await observer.getAttribute('style')).toContain('green');
+    });
+    test('basic-global-bindkeyup', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const observer = page.locator('#observer');
+      await page.keyboard.down('a');
+      await wait(100);
+      // keyup hasn't fired yet — observer should still be pink.
+      await expect(await observer.getAttribute('style')).toContain('pink');
+      await page.keyboard.up('a');
+      await wait(100);
+      await expect(await observer.getAttribute('style')).toContain('green');
+    });
+    test('basic-global-bindkeydown-key', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const observer = page.locator('#observer');
+      await page.keyboard.press('Enter');
+      await wait(100);
+      await expect(await observer.getAttribute('data-key')).toBe('Enter');
+    });
+    test('basic-global-bindkeydown-code', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const observer = page.locator('#observer');
+      await page.keyboard.press('a');
+      await wait(100);
+      await expect(await observer.getAttribute('data-code')).toBe('KeyA');
+    });
+    test('basic-global-bindkeydown-shift', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const observer = page.locator('#observer');
+      await page.keyboard.press('Shift+a');
+      await wait(100);
+      await expect(await observer.getAttribute('style')).toContain('green');
+    });
+    test('basic-bindkeydown-out-of-view-noop', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const observer = page.locator('#observer');
+      await page.keyboard.press('a');
+      await wait(100);
+      // Non-global `bindKeydown` must NOT fire for an out-of-view keypress.
+      await expect(await observer.getAttribute('style')).toContain('pink');
+    });
     test('basic-bindtap-detail', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
