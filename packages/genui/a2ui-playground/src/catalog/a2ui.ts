@@ -149,6 +149,19 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
             weight: 300,
           },
         },
+        {
+          label: 'Markdown',
+          value: {
+            id: 'markdown-copy',
+            component: 'Text',
+            variant: 'markdown',
+            text: '# Markdown title\n\n'
+              + 'This **Text** example renders markdown content.\n\n'
+              + '- Supports headings\n'
+              + '- Supports lists\n'
+              + '- Supports inline `code`',
+          },
+        },
       ],
       openui: [],
     },
