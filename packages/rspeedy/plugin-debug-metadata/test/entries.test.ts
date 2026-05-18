@@ -3,8 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 
 import { describe, expect, test } from 'vitest'
+import type { Compilation } from 'webpack'
 
-import { collectEntryPathMap, dedupe } from '../src/collectors/entries.js'
+import {
+  collectEntryPathMap,
+  collectLazyBundleEntryResources,
+  dedupe,
+} from '../src/collectors/entries.js'
 
 describe('collectEntryPathMap', () => {
   const cwd = '/repo/packages/example'
@@ -72,6 +77,155 @@ describe('collectEntryPathMap', () => {
       repoRoot,
     )
     expect(Object.keys(map).sort()).toEqual(['main', 'other'])
+  })
+})
+
+/**
+ * Build a fake compilation where chunkGroup `name` has `origins`
+ * matching pre-built importer/block/dep wiring. `resolveTo` is a
+ * dependency-instance → resource map.
+ */
+function fakeCompilation(args: {
+  name: string
+  origins: Array<{ blocks: Array<{ deps: unknown[] }> }>
+  resolveTo: Map<unknown, string>
+}): { compilation: Compilation, cg: unknown } {
+  const builtOrigins = args.origins.map(o => ({
+    blocks: o.blocks.map(b => ({ dependencies: b.deps })),
+  }))
+  const allBlocks = builtOrigins.flatMap(o => o.blocks)
+  const cg = {
+    origins: builtOrigins.map(o => ({
+      module: { blocks: o.blocks },
+      request: './x.js',
+    })),
+  }
+  const blockToCg = new Map<unknown, unknown>(
+    allBlocks.map(b => [b, cg]),
+  )
+  const compilation = {
+    namedChunkGroups: new Map([[args.name, cg]]),
+    chunkGraph: {
+      getBlockChunkGroup: (b: unknown) => blockToCg.get(b) ?? null,
+    },
+    moduleGraph: {
+      getResolvedModule: (d: unknown) => {
+        const resource = args.resolveTo.get(d)
+        return resource ? { resource } : null
+      },
+    },
+  } as unknown as Compilation
+  return { compilation, cg }
+}
+
+describe('collectLazyBundleEntryResources', () => {
+  test('resolves a single dynamic import to its target resource', () => {
+    const dep = { id: 'import-LazyComponent' }
+    const { compilation } = fakeCompilation({
+      name: 'LazyComponent.js-react__main-thread',
+      origins: [{ blocks: [{ deps: [dep] }] }],
+      resolveTo: new Map([[dep, '/abs/src/LazyComponent.tsx']]),
+    })
+    expect(
+      collectLazyBundleEntryResources(
+        compilation,
+        'LazyComponent.js-react__main-thread',
+      ),
+    ).toEqual(['/abs/src/LazyComponent.tsx'])
+  })
+
+  test('skips blocks whose getBlockChunkGroup does not match the target', () => {
+    const targetDep = { id: 'target' }
+    const otherDep = { id: 'other' }
+    const targetBlock = { dependencies: [targetDep] }
+    const otherBlock = { dependencies: [otherDep] }
+    const cg = { origins: [] as unknown[] }
+    const otherCg = { origins: [] as unknown[] }
+    const importer = { blocks: [otherBlock, targetBlock] }
+    ;(cg as { origins: unknown[] }).origins = [{ module: importer }]
+    const compilation = {
+      namedChunkGroups: new Map([['name', cg]]),
+      chunkGraph: {
+        getBlockChunkGroup: (b: unknown) => b === targetBlock ? cg : otherCg,
+      },
+      moduleGraph: {
+        getResolvedModule: (d: unknown) =>
+          d === targetDep
+            ? { resource: '/abs/target.tsx' }
+            : { resource: '/abs/other.tsx' },
+      },
+    } as unknown as Compilation
+    expect(collectLazyBundleEntryResources(compilation, 'name')).toEqual([
+      '/abs/target.tsx',
+    ])
+  })
+
+  test('dedupes when multiple origins resolve to the same module', () => {
+    const dep = { id: 'shared' }
+    const importer1 = { blocks: [{ dependencies: [dep] }] }
+    const importer2 = { blocks: [{ dependencies: [dep] }] }
+    const cg = {
+      origins: [{ module: importer1 }, { module: importer2 }],
+    }
+    const allBlocks = [
+      ...importer1.blocks,
+      ...importer2.blocks,
+    ] as unknown[]
+    const compilation = {
+      namedChunkGroups: new Map([['name', cg]]),
+      chunkGraph: {
+        getBlockChunkGroup: (b: unknown) => allBlocks.includes(b) ? cg : null,
+      },
+      moduleGraph: {
+        getResolvedModule: () => ({ resource: '/abs/shared.tsx' }),
+      },
+    } as unknown as Compilation
+    expect(collectLazyBundleEntryResources(compilation, 'name')).toEqual([
+      '/abs/shared.tsx',
+    ])
+  })
+
+  test('returns [] when the named chunkGroup does not exist', () => {
+    const compilation = {
+      namedChunkGroups: new Map(),
+      chunkGraph: { getBlockChunkGroup: () => null },
+      moduleGraph: { getResolvedModule: () => null },
+    } as unknown as Compilation
+    expect(collectLazyBundleEntryResources(compilation, 'missing')).toEqual([])
+  })
+
+  test('returns [] when getResolvedModule yields no resource', () => {
+    const dep = { id: 'd' }
+    const block = { dependencies: [dep] }
+    const cg = { origins: [{ module: { blocks: [block] } }] }
+    const compilation = {
+      namedChunkGroups: new Map([['name', cg]]),
+      chunkGraph: { getBlockChunkGroup: () => cg },
+      moduleGraph: { getResolvedModule: () => null },
+    } as unknown as Compilation
+    expect(collectLazyBundleEntryResources(compilation, 'name')).toEqual([])
+  })
+
+  test('drops non-absolute resources (defensive guard against virtual modules)', () => {
+    const dep = { id: 'd' }
+    const block = { dependencies: [dep] }
+    const cg = { origins: [{ module: { blocks: [block] } }] }
+    const compilation = {
+      namedChunkGroups: new Map([['name', cg]]),
+      chunkGraph: { getBlockChunkGroup: () => cg },
+      moduleGraph: {
+        getResolvedModule: () => ({ resource: 'relative/x.tsx' }),
+      },
+    } as unknown as Compilation
+    expect(collectLazyBundleEntryResources(compilation, 'name')).toEqual([])
+  })
+
+  test('returns [] when chunkGraph or moduleGraph is unavailable', () => {
+    const cg = { origins: [{ module: { blocks: [] } }] }
+    const compilation = {
+      namedChunkGroups: new Map([['name', cg]]),
+    } as unknown as Compilation
+    expect(collectLazyBundleEntryResources(compilation, 'name')).toEqual([])
   })
 })
 

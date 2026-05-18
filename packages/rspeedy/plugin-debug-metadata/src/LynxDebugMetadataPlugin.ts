@@ -15,7 +15,11 @@ import type { LynxTemplatePlugin as LynxTemplatePluginClass } from '@lynx-js/tem
 
 import { collectArtifacts } from './collectors/artifacts.js'
 import { parseLepusNGDebugInfo } from './collectors/bytecode-debug-info.js'
-import { collectEntryPathMap, dedupe } from './collectors/entries.js'
+import {
+  collectEntryPathMap,
+  collectLazyBundleEntryResources,
+  dedupe,
+} from './collectors/entries.js'
 import { collectGitMetadata } from './collectors/git.js'
 import {
   collectUiSourceMapRecords,
@@ -122,10 +126,29 @@ export class LynxDebugMetadataPluginImpl {
           )
           const git = getGit()
           const entryPathMap = getEntryPathMap()
+          const baseDir = git?.rootDir ?? compiler.context
+          const toRel = (abs: string): string =>
+            path.relative(baseDir, abs).split(path.sep).join('/')
+          // Lazy-bundle entry names (e.g. `LazyComponent.js-react__main-thread`)
+          // are internal chunk-group names that never appear in rsbuild
+          // `source.entry`. When the map has nothing for any of this
+          // template's entry names, walk the importer's blocks via
+          // `chunkGroup.origins` + `moduleGraph.getResolvedModule` to
+          // recover the dynamic-import target's resource path.
+          const fromMap = args.entryNames.flatMap(name =>
+            entryPathMap[name] ?? []
+          )
+          const entryFiles = fromMap.length > 0
+            ? dedupe(fromMap)
+            : dedupe(
+              args.entryNames.flatMap(name =>
+                collectLazyBundleEntryResources(compilation, name).map(abs =>
+                  toRel(abs)
+                )
+              ),
+            )
           const rspeedy: RspeedyMeta = {
-            entryFiles: dedupe(
-              args.entryNames.flatMap(name => entryPathMap[name] ?? []),
-            ),
+            entryFiles,
             bundlePath: args.filenameTemplate,
           }
           const asset: DebugMetadataAsset = {
