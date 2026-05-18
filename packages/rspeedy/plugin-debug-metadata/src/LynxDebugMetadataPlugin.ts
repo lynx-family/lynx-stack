@@ -270,6 +270,8 @@ function readTasmSection(
 
 interface BeforeEncodeAssetLike {
   name: string
+  source: { source(): string | Buffer }
+  info?: Record<string, unknown>
 }
 interface BeforeEncodeArgsLike {
   encodeData: {
@@ -330,6 +332,28 @@ function rewriteSourceMappingURLTrailers(
       `${assetName}.map`,
     )
     if (after === undefined) continue
-    compilation.updateAsset(assetName, new RawSource(after), asset.info)
+    const newSource = new RawSource(after)
+    compilation.updateAsset(assetName, newSource, asset.info)
+    // Mirror back into `encodeData` so the template encoder sees the
+    // rewritten source too. `LynxTemplatePlugin` snapshots background
+    // JS as strings (`manifest`) and main-thread/chunks as `Asset`
+    // refs *before* this hook fires — without these writes the encoded
+    // template binary would embed the original `.map`-sibling trailer
+    // even though the on-disk JS now points at the metadata endpoint.
+    if (assetName in args.encodeData.manifest) {
+      args.encodeData.manifest[assetName] = after
+    }
+    if (args.encodeData.lepusCode.root?.name === assetName) {
+      args.encodeData.lepusCode.root = {
+        ...args.encodeData.lepusCode.root,
+        source: newSource,
+      }
+    }
+    for (let i = 0; i < args.encodeData.lepusCode.chunks.length; i++) {
+      const chunk = args.encodeData.lepusCode.chunks[i]
+      if (chunk?.name === assetName) {
+        args.encodeData.lepusCode.chunks[i] = { ...chunk, source: newSource }
+      }
+    }
   }
 }
