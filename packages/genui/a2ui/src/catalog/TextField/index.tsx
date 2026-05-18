@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { Input, TextArea } from '@lynx-js/lynx-ui-input';
+import { Input, TextArea } from '@lynx-js/lynx-ui';
 import { useEffect, useState } from '@lynx-js/react';
 
 import {
@@ -13,11 +13,6 @@ import {
 import type { GenericComponentProps } from '../../store/types.js';
 
 import '../../../styles/catalog/TextField.css';
-
-const useLynxEffect = useEffect as (
-  effect: () => undefined | (() => void),
-  deps?: readonly unknown[],
-) => void;
 
 /**
  * @a2uiCatalog TextField
@@ -58,7 +53,7 @@ export function TextField(
   const [draftValue, setDraftValue] = useState(resolvedValue);
   const [touched, setTouched] = useState(false);
 
-  useLynxEffect(() => {
+  useEffect(() => {
     setDraftValue(resolvedValue);
     return undefined;
   }, [resolvedValue]);

@@ -25,6 +25,7 @@ function createComponentPreviewMessages(
   comp: ComponentDoc,
   usage: unknown,
 ): unknown[] {
+  const components = Array.isArray(usage) ? usage : [usage];
   return [
     {
       createSurface: {
@@ -33,7 +34,7 @@ function createComponentPreviewMessages(
       },
       updateComponents: {
         surfaceId: 'default',
-        components: [usage],
+        components,
       },
     },
   ];

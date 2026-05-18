@@ -15,6 +15,7 @@ import {
   Row,
   Tabs,
   Text,
+  TextField,
   basicFunctions,
   createMessageStore,
   normalizePayloadToMessages as normalizeProtocolMessages,
@@ -39,6 +40,7 @@ import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catal
 import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
 import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json';
 import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json';
+import textFieldManifest from '@lynx-js/a2ui-reactlynx/catalog/TextField/catalog.json';
 import {
   useCallback,
   useEffect,
@@ -84,6 +86,7 @@ const ALL_BUILTINS: readonly CatalogInput[] = [
   manifestEntry(Icon, iconManifest),
   manifestEntry(CheckBox, checkBoxManifest),
   manifestEntry(RadioGroup, radioGroupManifest),
+  manifestEntry(TextField, textFieldManifest),
   manifestEntry(Tabs, tabsManifest),
   ...basicFunctions,
 ];

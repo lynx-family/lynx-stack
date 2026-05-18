@@ -141,4 +141,6 @@
   --a2ui-image-small-feature-size: 120px;
   --a2ui-image-medium-feature-size: 240px;
   --a2ui-image-large-feature-size: 400px;
+
+  --a2ui-input-border-radius: 2rem;
 }
