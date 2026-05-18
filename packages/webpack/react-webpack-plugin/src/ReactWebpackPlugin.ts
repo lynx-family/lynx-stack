@@ -442,9 +442,18 @@ class ReactWebpackPlugin {
   }
 
   #updateMainThreadInfo(compilation: Compilation, name: string) {
-    const asset = compilation.getAsset(name);
+    const asset = compilation.getAsset(name)
+      ?? compilation.getAssets().find(
+        asset =>
+          asset.name.replaceAll('\\', '/') === name.replaceAll('\\', '/'),
+      );
 
-    invariant(asset, `Should have main thread asset ${name}`);
+    invariant(
+      asset,
+      `Should have main thread asset ${name}. Current assets: ${
+        compilation.getAssets().map(asset => asset.name).join(', ')
+      }`,
+    );
 
     compilation.updateAsset(
       asset.name,

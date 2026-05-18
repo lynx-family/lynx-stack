@@ -6,6 +6,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import type { RsbuildInstance, Rspack } from '@rsbuild/core'
 import { afterAll, describe, expect, test, vi } from 'vitest'
@@ -2083,8 +2084,9 @@ describe('Config', () => {
         rspeedyConfig: {
           source: {
             entry: {
-              main: new URL('./fixtures/defineDCE/basic.js', import.meta.url)
-                .pathname,
+              main: fileURLToPath(
+                new URL('./fixtures/defineDCE/basic.js', import.meta.url),
+              ),
             },
           },
           environments: {
@@ -2116,9 +2118,9 @@ describe('Config', () => {
         rspeedyConfig: {
           source: {
             entry: {
-              [entryName]:
-                new URL('./fixtures/defineDCE/macros.js', import.meta.url)
-                  .pathname,
+              [entryName]: fileURLToPath(
+                new URL('./fixtures/defineDCE/macros.js', import.meta.url),
+              ),
             },
           },
           output: {
@@ -2181,9 +2183,9 @@ describe('Config', () => {
         rspeedyConfig: {
           source: {
             entry: {
-              [entryName]:
-                new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
-                  .pathname,
+              [entryName]: fileURLToPath(
+                new URL('./fixtures/pure-funcs/basic.js', import.meta.url),
+              ),
             },
           },
           output: {

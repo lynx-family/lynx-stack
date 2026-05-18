@@ -4,6 +4,7 @@
 import { mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { describe, expect, test, vi } from 'vitest'
 
@@ -166,7 +167,9 @@ describe('Web', () => {
       rspeedyConfig: {
         source: {
           entry: {
-            main: new URL('./fixtures/basic.tsx', import.meta.url).pathname,
+            main: fileURLToPath(
+              new URL('./fixtures/basic.tsx', import.meta.url),
+            ),
           },
         },
         output: {
@@ -211,7 +214,9 @@ describe('Web', () => {
       rspeedyConfig: {
         source: {
           entry: {
-            main: new URL('./fixtures/basic.tsx', import.meta.url).pathname,
+            main: fileURLToPath(
+              new URL('./fixtures/basic.tsx', import.meta.url),
+            ),
           },
         },
         tools: {

@@ -5,6 +5,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { afterAll, describe, expect, test, vi } from 'vitest'
 
@@ -13,6 +14,10 @@ import type { RspeedyInstance } from '@lynx-js/rspeedy'
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 
 const tempDirs: string[] = []
+
+const pureFuncsBasicEntry = fileURLToPath(
+  new URL('./fixtures/pure-funcs/basic.js', import.meta.url),
+)
 
 afterAll(async () => {
   await Promise.all(tempDirs.map(async (dir) => {
@@ -81,9 +86,7 @@ describe('optimizeBundleSize', () => {
       rspeedyConfig: {
         source: {
           entry: {
-            [entryName]:
-              new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
-                .pathname,
+            [entryName]: pureFuncsBasicEntry,
           },
         },
         output: {
@@ -126,9 +129,7 @@ describe('optimizeBundleSize', () => {
       rspeedyConfig: {
         source: {
           entry: {
-            [entryName]:
-              new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
-                .pathname,
+            [entryName]: pureFuncsBasicEntry,
           },
         },
         output: {
@@ -179,9 +180,7 @@ describe('optimizeBundleSize', () => {
       rspeedyConfig: {
         source: {
           entry: {
-            [entryName]:
-              new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
-                .pathname,
+            [entryName]: pureFuncsBasicEntry,
           },
         },
         output: {
@@ -231,9 +230,7 @@ describe('optimizeBundleSize', () => {
       rspeedyConfig: {
         source: {
           entry: {
-            [entryName]:
-              new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
-                .pathname,
+            [entryName]: pureFuncsBasicEntry,
           },
         },
         output: {
