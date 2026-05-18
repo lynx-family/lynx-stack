@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { RsbuildPluginAPI } from '@rsbuild/core'
+import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 import { describe, expect, test } from 'vitest'
 
 import { createStubRspeedy } from '../createStubRspeedy.js'
@@ -84,6 +84,26 @@ describe('Plugins - SWC', () => {
           },
         }
       `)
+  })
+
+  test('custom target', async () => {
+    const rsbuild = await createStubRspeedy({
+      tools: {
+        swc: {
+          jsc: {
+            target: 'es5',
+          },
+        },
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+    const loaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>(
+      config,
+      'builtin:swc-loader',
+    )
+
+    expect(loaderOptions?.jsc?.target).toBe('es5')
   })
 
   test('modify swc config from plugin', async () => {
