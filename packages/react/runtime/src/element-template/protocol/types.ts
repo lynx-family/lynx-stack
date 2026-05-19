@@ -20,6 +20,17 @@ export type RuntimeOptionValue =
 
 export type RuntimeOptions = Record<string, RuntimeOptionValue>;
 
+export interface ElementTemplateHandleRefCommandValue {
+  __etHandleRef: number;
+  [key: string]: SerializableValue;
+}
+
+// Phase 1 keeps handle refs list-specific: only `listChildren` is resolved to
+// ElementRef[] by MTS before native create. Generic nested refs are deferred.
+export interface RuntimeOptionsCommand extends Record<string, SerializableValue> {
+  listChildren?: ElementTemplateHandleRefCommandValue[];
+}
+
 export type SerializedRuntimeOptionValue =
   | SerializableValue
   | SerializedEtNode
@@ -90,11 +101,28 @@ export type RemoveNodeCommand = [
   removedSubtreeHandleIds: number[],
 ];
 
+export type CreateTypedElementCommand = [
+  typeof ElementTemplateUpdateOps.createTypedElement,
+  handleId: number,
+  type: string,
+  elementSlots: number[][] | null | undefined,
+  options: RuntimeOptionsCommand | null | undefined,
+];
+
+export type SetKeyedAttributeCommand = [
+  typeof ElementTemplateUpdateOps.setKeyedAttribute,
+  targetHandleId: number,
+  key: string,
+  value: SerializableValue | null,
+];
+
 export type ElementTemplateUpdateCommand =
   | CreateTemplateCommand
   | SetAttributeCommand
   | InsertNodeCommand
-  | RemoveNodeCommand;
+  | RemoveNodeCommand
+  | CreateTypedElementCommand
+  | SetKeyedAttributeCommand;
 
 // Commands are transported as a flat stream to match the native update payload.
 // Tuple aliases above define each opcode's shape; this item union preserves the

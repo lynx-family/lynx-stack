@@ -17,9 +17,22 @@ export type FormattedElementTemplateUpdateCommand =
     elementSlots: unknown;
   }
   | {
+    op: 'createTypedElement';
+    handleId: number;
+    type: string;
+    elementSlots: unknown;
+    options: unknown;
+  }
+  | {
     op: 'setAttribute';
     targetId: number;
     attrSlotIndex: number;
+    value: unknown;
+  }
+  | {
+    op: 'setKeyedAttribute';
+    targetId: number;
+    key: string;
     value: unknown;
   }
   | {
@@ -72,6 +85,25 @@ export function formatElementTemplateUpdateCommands(
           op: 'setAttribute',
           targetId: stream[index++] as number,
           attrSlotIndex: stream[index++] as number,
+          value: stream[index++],
+        });
+        break;
+
+      case ElementTemplateUpdateOps.createTypedElement:
+        result.push({
+          op: 'createTypedElement',
+          handleId: stream[index++] as number,
+          type: stream[index++] as string,
+          elementSlots: stream[index++],
+          options: stream[index++],
+        });
+        break;
+
+      case ElementTemplateUpdateOps.setKeyedAttribute:
+        result.push({
+          op: 'setKeyedAttribute',
+          targetId: stream[index++] as number,
+          key: stream[index++] as string,
           value: stream[index++],
         });
         break;

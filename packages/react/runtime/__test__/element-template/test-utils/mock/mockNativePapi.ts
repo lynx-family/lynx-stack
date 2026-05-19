@@ -24,6 +24,7 @@ const isUnknownArray = isUnknownArrayForMock;
 export interface MockNativePapi {
   nativeLog: any[];
   mockCreateElementTemplate: any;
+  mockCreateTypedElementTemplate: any;
   mockSetClasses: any;
   mockSetInlineStyles: any;
   mockSetID: any;
@@ -112,6 +113,35 @@ export function installMockNativePapi(
         configurable: true,
       });
     }
+    return element;
+  });
+
+  const mockCreateTypedElementTemplate = vi.fn().mockImplementation((
+    type: string,
+    elementSlots: unknown[][] | null | undefined,
+    handleId: unknown,
+    options: unknown,
+  ) => {
+    nativeLog.push(['__CreateTypedElementTemplate', type, elementSlots, handleId, options]);
+    const element: CompiledTemplateNode = {
+      tag: type,
+      type,
+      attributes: {},
+      children: [...(elementSlots?.[0] ?? [])],
+    };
+    attachMockNativeId(element);
+    if (typeof handleId === 'number') {
+      Object.defineProperty(element, '__handleId', {
+        value: handleId,
+        writable: true,
+        configurable: true,
+      });
+    }
+    Object.defineProperty(element, '__options', {
+      value: options ?? null,
+      writable: true,
+      configurable: true,
+    });
     return element;
   });
 
@@ -311,6 +341,7 @@ export function installMockNativePapi(
   });
 
   vi.stubGlobal('__CreateElementTemplate', mockCreateElementTemplate);
+  vi.stubGlobal('__CreateTypedElementTemplate', mockCreateTypedElementTemplate);
   vi.stubGlobal('__CreatePage', mockCreatePage);
   vi.stubGlobal('__AppendElement', mockAppendElement);
   vi.stubGlobal('__AddDataset', mockAddDataset);
@@ -335,6 +366,7 @@ export function installMockNativePapi(
   const result: MockNativePapi = {
     nativeLog: nativeLog,
     mockCreateElementTemplate: mockCreateElementTemplate,
+    mockCreateTypedElementTemplate: mockCreateTypedElementTemplate,
     mockSetClasses: mockSetClasses,
     mockSetInlineStyles: mockSetInlineStyles,
     mockSetID: mockSetID,

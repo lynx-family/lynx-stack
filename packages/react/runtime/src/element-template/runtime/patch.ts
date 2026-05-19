@@ -5,7 +5,12 @@
 import { elementTemplateRegistry } from './template/registry.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import type { ElementTemplateUpdateOp } from '../protocol/opcodes.js';
-import type { ElementTemplateUpdateCommandStream, SerializableValue } from '../protocol/types.js';
+import type {
+  ElementTemplateUpdateCommandStream,
+  RuntimeOptions,
+  RuntimeOptionsCommand,
+  SerializableValue,
+} from '../protocol/types.js';
 
 export type { ElementTemplateUpdateCommandStream } from '../protocol/types.js';
 
@@ -64,6 +69,43 @@ export function applyElementTemplateUpdateCommands(
           continue;
         }
         __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, value, null);
+        break;
+      }
+
+      case ElementTemplateUpdateOps.createTypedElement: {
+        const handleId = stream[i++] as number;
+        const type = stream[i++] as string;
+        const elementSlots = stream[i++] as number[][] | null | undefined;
+        const options = stream[i++] as RuntimeOptionsCommand | null | undefined;
+
+        const resolvedElementSlots = resolveElementSlots(elementSlots);
+        const resolvedOptions = resolveRuntimeOptions(options);
+        if ((__DEV__ && resolvedElementSlots.hasError) || resolvedOptions.hasError) {
+          continue;
+        }
+
+        const nativeRef = __CreateTypedElementTemplate(
+          type,
+          resolvedElementSlots.value,
+          handleId,
+          resolvedOptions.value,
+        );
+
+        if (nativeRef) {
+          elementTemplateRegistry.set(handleId, nativeRef);
+        }
+        break;
+      }
+
+      case ElementTemplateUpdateOps.setKeyedAttribute: {
+        const targetId = stream[i++] as number;
+        const key = stream[i++] as string;
+        const value = stream[i++] as SerializableValue | null;
+        const nativeRef = resolveHandle(targetId, 'target');
+        if (!nativeRef) {
+          continue;
+        }
+        __SetAttribute(nativeRef, key, value);
         break;
       }
 
@@ -143,6 +185,42 @@ function resolveElementSlots(
       .filter((childRef): childRef is ElementRef => childRef !== null);
   });
   return { hasError, value };
+}
+
+function resolveRuntimeOptions(
+  options: RuntimeOptionsCommand | null | undefined,
+): { hasError: boolean; value: RuntimeOptions | null | undefined } {
+  if (options == null) {
+    return { hasError: false, value: options };
+  }
+
+  const listChildren = options.listChildren;
+  if (!Array.isArray(listChildren)) {
+    return { hasError: false, value: options as RuntimeOptions };
+  }
+
+  const resolvedListChildren: ElementRef[] = [];
+  for (let index = 0; index < listChildren.length; index++) {
+    const ref = resolveHandle(
+      (listChildren[index]!).__etHandleRef,
+      `options.listChildren[${index}]`,
+    );
+    if (ref === null) {
+      return {
+        hasError: true,
+        value: null,
+      };
+    }
+    resolvedListChildren.push(ref);
+  }
+
+  return {
+    hasError: false,
+    value: ({
+      ...options,
+      listChildren: resolvedListChildren,
+    }) as RuntimeOptions,
+  };
 }
 
 function resolveHandle(id: number, role: string): ElementRef | null {

@@ -7,6 +7,8 @@ export const ElementTemplateUpdateOps = {
   setAttribute: 2,
   insertNode: 3,
   removeNode: 4,
+  createTypedElement: 5,
+  setKeyedAttribute: 6,
 } as const;
 
 export type ElementTemplateUpdateOp = typeof ElementTemplateUpdateOps[keyof typeof ElementTemplateUpdateOps];

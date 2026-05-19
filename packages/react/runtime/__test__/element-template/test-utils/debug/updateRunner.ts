@@ -5,6 +5,7 @@
 import { hydrate as hydrateBackground } from '../../../../src/element-template/background/hydrate.js';
 import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
 import { root } from '../../../../src/element-template/index.js';
+import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import type {
   ElementTemplateUpdateCommandStream,
@@ -19,7 +20,6 @@ import { __page } from '../../../../src/element-template/runtime/page/page.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';
 import { ElementTemplateEnvManager } from './envManager.js';
 import { lastMock } from '../mock/mockNativePapi.js';
-import { formatUpdateCommands } from '../mock/mockNativePapi/templateTree.js';
 import { serializeBackgroundTree, serializeToJSX } from './serializer.js';
 
 declare const renderPage: () => void;
@@ -33,9 +33,22 @@ type FormattedUpdateEntry =
     elementSlots: unknown;
   }
   | {
+    type: 'createTypedElement';
+    id: number;
+    elementType: string;
+    elementSlots: unknown;
+    options: unknown;
+  }
+  | {
     type: 'setAttribute';
     id: number;
     attrSlotIndex: number;
+    value: unknown;
+  }
+  | {
+    type: 'setKeyedAttribute';
+    id: number;
+    key: string;
     value: unknown;
   }
   | {
@@ -73,7 +86,7 @@ export function formatUpdateStream(stream: ElementTemplateUpdateCommandStream): 
   let index = 0;
   while (index < stream.length) {
     const opcode = stream[index++] as number;
-    if (opcode === 1) {
+    if (opcode === ElementTemplateUpdateOps.createTemplate) {
       formatted.push({
         type: 'create',
         id: stream[index++] as number,
@@ -85,7 +98,7 @@ export function formatUpdateStream(stream: ElementTemplateUpdateCommandStream): 
       continue;
     }
 
-    if (opcode === 2) {
+    if (opcode === ElementTemplateUpdateOps.setAttribute) {
       formatted.push({
         type: 'setAttribute',
         id: stream[index++] as number,
@@ -95,7 +108,28 @@ export function formatUpdateStream(stream: ElementTemplateUpdateCommandStream): 
       continue;
     }
 
-    if (opcode === 3) {
+    if (opcode === ElementTemplateUpdateOps.createTypedElement) {
+      formatted.push({
+        type: 'createTypedElement',
+        id: stream[index++] as number,
+        elementType: stream[index++] as string,
+        elementSlots: stream[index++] as unknown,
+        options: stream[index++] as unknown,
+      });
+      continue;
+    }
+
+    if (opcode === ElementTemplateUpdateOps.setKeyedAttribute) {
+      formatted.push({
+        type: 'setKeyedAttribute',
+        id: stream[index++] as number,
+        key: stream[index++] as string,
+        value: stream[index++] as unknown,
+      });
+      continue;
+    }
+
+    if (opcode === ElementTemplateUpdateOps.insertNode) {
       formatted.push({
         type: 'insertNode',
         id: stream[index++] as number,

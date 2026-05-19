@@ -64,6 +64,8 @@ describe('ElementTemplate patch stream (apply)', () => {
   let hydrationData: SerializedElementTemplate[] = [];
 
   let onHydrate: (event: { data: unknown }) => void;
+  let mockCreateTypedElementTemplate: ReportErrorMock;
+  let mockSetAttribute: ReportErrorMock;
   let mockSetAttributeOfElementTemplate: ReportErrorMock;
   let mockInsertNodeToElementTemplate: ReportErrorMock;
   let mockRemoveNodeFromElementTemplate: ReportErrorMock;
@@ -72,6 +74,8 @@ describe('ElementTemplate patch stream (apply)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // mocks are already installed by setup.js beforeEach
+    mockCreateTypedElementTemplate = lastMock!.mockCreateTypedElementTemplate as unknown as ReportErrorMock;
+    mockSetAttribute = lastMock!.mockSetAttribute as unknown as ReportErrorMock;
     mockSetAttributeOfElementTemplate = lastMock!.mockSetAttributeOfElementTemplate as unknown as ReportErrorMock;
     mockInsertNodeToElementTemplate = lastMock!.mockInsertNodeToElementTemplate as unknown as ReportErrorMock;
     mockRemoveNodeFromElementTemplate = lastMock!.mockRemoveNodeFromElementTemplate as unknown as ReportErrorMock;
@@ -355,6 +359,183 @@ describe('ElementTemplate patch stream (apply)', () => {
 
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
     expect(reportError.mock.calls).toHaveLength(1);
+    resetReportedErrors();
+  });
+
+  it('creates typed elements with resolved slots and command options', () => {
+    envManager.switchToMainThread();
+    elementTemplateRegistry.clear();
+
+    const slotChildRef = { __isNativeRef: true, id: 'slot-child' } as unknown as ElementRef;
+    const optionChildRef = { __isNativeRef: true, id: 'option-child' } as unknown as ElementRef;
+    elementTemplateRegistry.set(11, slotChildRef);
+    elementTemplateRegistry.set(12, optionChildRef);
+    mockCreateTypedElementTemplate.mockClear();
+
+    applyElementTemplateUpdateCommands([
+      ElementTemplateUpdateOps.createTypedElement,
+      21,
+      'list',
+      [[11]],
+      {
+        listChildren: [{ __etHandleRef: 12 }],
+        estimatedHeight: 80,
+      },
+    ]);
+
+    expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(1);
+    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[0]).toBe('list');
+    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[1]).toEqual([[slotChildRef]]);
+    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[2]).toBe(21);
+    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[3]).toEqual({
+      listChildren: [optionChildRef],
+      estimatedHeight: 80,
+    });
+    expect(elementTemplateRegistry.has(21)).toBe(true);
+  });
+
+  it('creates typed elements with no command options', () => {
+    envManager.switchToMainThread();
+    elementTemplateRegistry.clear();
+    mockCreateTypedElementTemplate.mockClear();
+
+    applyElementTemplateUpdateCommands([
+      ElementTemplateUpdateOps.createTypedElement,
+      23,
+      'list',
+      [],
+      null,
+    ]);
+
+    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[3]).toBe(null);
+    expect(elementTemplateRegistry.has(23)).toBe(true);
+  });
+
+  it('passes serializable typed options unchanged when listChildren is absent', () => {
+    envManager.switchToMainThread();
+    elementTemplateRegistry.clear();
+    mockCreateTypedElementTemplate.mockClear();
+
+    const options = {
+      metadata: { itemCount: 1 },
+      estimatedHeight: 80,
+    };
+    applyElementTemplateUpdateCommands([
+      ElementTemplateUpdateOps.createTypedElement,
+      24,
+      'list',
+      [],
+      options,
+    ]);
+
+    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[3]).toEqual(options);
+    expect(elementTemplateRegistry.has(24)).toBe(true);
+  });
+
+  it('skips typed create when element slot handles are unresolved', () => {
+    envManager.switchToMainThread();
+    elementTemplateRegistry.clear();
+    mockCreateTypedElementTemplate.mockClear();
+
+    applyElementTemplateUpdateCommands([
+      ElementTemplateUpdateOps.createTypedElement,
+      25,
+      'list',
+      [[404]],
+      null,
+    ]);
+
+    expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(0);
+    expect(elementTemplateRegistry.has(25)).toBe(false);
+    const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
+    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('child handle 404 not found');
+    resetReportedErrors();
+  });
+
+  it('skips typed create when command option handles are unresolved', () => {
+    envManager.switchToMainThread();
+    elementTemplateRegistry.clear();
+    mockCreateTypedElementTemplate.mockClear();
+
+    applyElementTemplateUpdateCommands([
+      ElementTemplateUpdateOps.createTypedElement,
+      22,
+      'list',
+      [],
+      { listChildren: [{ __etHandleRef: 404 }] },
+    ]);
+
+    expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(0);
+    expect(elementTemplateRegistry.has(22)).toBe(false);
+    const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
+    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+      'options.listChildren[0] handle 404 not found',
+    );
+    resetReportedErrors();
+  });
+
+  it('sets keyed attributes through the Snapshot-compatible keyed PAPI', () => {
+    envManager.switchToMainThread();
+    const targetRef = { __isNativeRef: true, id: 'typed-target' } as unknown as ElementRef;
+    elementTemplateRegistry.set(31, targetRef);
+    mockSetAttribute.mockClear();
+
+    const updateListInfo = {
+      insertAction: [],
+      removeAction: [],
+      updateAction: [],
+    };
+    applyElementTemplateUpdateCommands([
+      ElementTemplateUpdateOps.setKeyedAttribute,
+      31,
+      'update-list-info',
+      updateListInfo,
+    ]);
+
+    expect(mockSetAttribute.mock.calls).toEqual([[
+      targetRef,
+      'update-list-info',
+      updateListInfo,
+    ]]);
+    expect(mockSetAttributeOfElementTemplate.mock.calls).toHaveLength(0);
+  });
+
+  it('clears keyed attributes through the Snapshot-compatible keyed PAPI', () => {
+    envManager.switchToMainThread();
+    const targetRef = { __isNativeRef: true, id: 'typed-target' } as unknown as ElementRef;
+    elementTemplateRegistry.set(32, targetRef);
+    mockSetAttribute.mockClear();
+
+    applyElementTemplateUpdateCommands([
+      ElementTemplateUpdateOps.setKeyedAttribute,
+      32,
+      'update-list-info',
+      null,
+    ]);
+
+    expect(mockSetAttribute.mock.calls).toEqual([[
+      targetRef,
+      'update-list-info',
+      null,
+    ]]);
+    expect(mockSetAttributeOfElementTemplate.mock.calls).toHaveLength(0);
+  });
+
+  it('skips keyed attributes when the target handle is unresolved', () => {
+    envManager.switchToMainThread();
+    elementTemplateRegistry.clear();
+    mockSetAttribute.mockClear();
+
+    applyElementTemplateUpdateCommands([
+      ElementTemplateUpdateOps.setKeyedAttribute,
+      404,
+      'update-list-info',
+      null,
+    ]);
+
+    expect(mockSetAttribute.mock.calls).toHaveLength(0);
+    const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
+    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('target handle 404 not found');
     resetReportedErrors();
   });
 
