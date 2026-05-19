@@ -338,6 +338,12 @@ describe('removeChild', () => {
       `[Error: child 4 is not in parent 3, cannot remove it!]`,
     );
 
+    // suppress the error of `__RemoveElement` called with mismatched parent and child element
+    vi.spyOn(globalThis, '__RemoveElement').mockImplementation(() => {});
+    expect(() => a.removeChild(b)).toThrowErrorMatchingInlineSnapshot(
+      `[Error: The node to be removed is not a child of this node.]`,
+    );
+
     expect(a.__element_root).toMatchInlineSnapshot(`
       <view>
         <text>
