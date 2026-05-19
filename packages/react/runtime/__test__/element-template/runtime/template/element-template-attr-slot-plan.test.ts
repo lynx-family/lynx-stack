@@ -7,6 +7,7 @@ import {
 import {
   __etAttrPlanMap,
   adaptRefAttrSlot,
+  adaptSpreadAttrSlot,
   clearEtAttrPlanMap,
   type EtAttrAdapter,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
@@ -77,5 +78,61 @@ describe('ElementTemplate attr slot plan registry', () => {
     expect(newRef).toHaveBeenCalledWith(expect.objectContaining({
       selector: '[ref=-2-0]',
     }));
+  });
+
+  it('queues every ref-bearing attr slot independently', () => {
+    const directRef = vi.fn();
+    const objectRef = { current: null };
+    const spreadRef = vi.fn();
+    __etAttrPlanMap._et_multi_ref = [
+      0,
+      adaptRefAttrSlot,
+      1,
+      adaptRefAttrSlot,
+      2,
+      adaptSpreadAttrSlot,
+    ];
+
+    expect(
+      prepareAttributeSlots(
+        '_et_multi_ref',
+        -7,
+        [directRef, objectRef, { ref: spreadRef }],
+        { queueRefEffects: true },
+      ),
+    ).toEqual(['-7-0', '-7-1', { ref: '-7-2' }]);
+    flushPendingRefs();
+
+    expect(directRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-7-0]',
+    }));
+    expect(objectRef.current).toMatchObject({
+      selector: '[ref=-7-1]',
+    });
+    expect(spreadRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-7-2]',
+    }));
+  });
+
+  it('queues spread ref cleanup without detaching sibling direct refs', () => {
+    const directRef = vi.fn();
+    const spreadRef = vi.fn();
+    __etAttrPlanMap._et_multi_ref = [
+      0,
+      adaptRefAttrSlot,
+      1,
+      adaptSpreadAttrSlot,
+    ];
+
+    queueRefAttributeSlotUpdates(
+      '_et_multi_ref',
+      -7,
+      [directRef, { ref: spreadRef }],
+      [directRef, { ref: undefined }],
+    );
+    flushPendingRefs();
+
+    expect(directRef).not.toHaveBeenCalled();
+    expect(spreadRef).toHaveBeenCalledWith(null);
   });
 });

@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { getRefFromValue, getSpreadRefFromValue, queueRefAttrUpdate } from '../prop-adapters/ref.js';
+import { getSpreadRefFromValue, queueRefAttrUpdate } from '../prop-adapters/ref.js';
 import type { SerializableValue } from '../protocol/types.js';
 import { __etAttrPlanMap, adaptRefAttrSlot, adaptSpreadAttrSlot } from '../runtime/template/attr-slot-plan.js';
 import type { EtAttrAdapter } from '../runtime/template/attr-slot-plan.js';
@@ -25,60 +25,40 @@ function normalizeAttributeSlots(rawSlots: readonly unknown[]): SerializableValu
   return normalizedSlots ?? rawSlots as SerializableValue[];
 }
 
-interface EffectiveRefValue {
-  attrSlotIndex: number;
-  value: unknown;
-}
-
-function resolveEffectiveRefValue(
+function queuePlannedRefAttributeSlotUpdates(
+  handleId: number,
   attrPlan: readonly (number | EtAttrAdapter)[],
-  rawSlots?: readonly unknown[],
-): EffectiveRefValue | undefined {
-  if (!rawSlots) {
-    return undefined;
-  }
-
-  let effectiveRef: EffectiveRefValue | undefined;
+  previousRawSlots?: readonly unknown[],
+  nextRawSlots?: readonly unknown[],
+): void {
   for (let planIndex = 0; planIndex < attrPlan.length; planIndex += 2) {
     const attrSlotIndex = attrPlan[planIndex] as number;
     const adapter = attrPlan[planIndex + 1] as EtAttrAdapter;
 
     if (adapter === adaptRefAttrSlot) {
-      effectiveRef = {
+      queueRefAttrUpdate(
+        previousRawSlots?.[attrSlotIndex],
+        nextRawSlots?.[attrSlotIndex],
+        handleId,
         attrSlotIndex,
-        value: getRefFromValue(rawSlots?.[attrSlotIndex]),
-      };
+      );
       continue;
     }
 
     if (adapter === adaptSpreadAttrSlot) {
-      const spreadRef = getSpreadRefFromValue(rawSlots?.[attrSlotIndex]);
-      if (spreadRef !== undefined) {
-        effectiveRef = {
-          attrSlotIndex,
-          value: spreadRef,
-        };
+      const previousSpreadRef = getSpreadRefFromValue(previousRawSlots?.[attrSlotIndex]);
+      const nextSpreadRef = getSpreadRefFromValue(nextRawSlots?.[attrSlotIndex]);
+      if (previousSpreadRef === undefined && nextSpreadRef === undefined) {
+        continue;
       }
+      queueRefAttrUpdate(
+        previousSpreadRef,
+        nextSpreadRef ?? null,
+        handleId,
+        attrSlotIndex,
+      );
     }
   }
-  return effectiveRef;
-}
-
-function queueEffectiveRefAttributeSlotUpdate(
-  handleId: number,
-  previousRef: EffectiveRefValue | undefined,
-  nextRef: EffectiveRefValue | undefined,
-): void {
-  if (!previousRef && !nextRef) {
-    return;
-  }
-
-  queueRefAttrUpdate(
-    previousRef?.value,
-    nextRef?.value,
-    handleId,
-    nextRef ? nextRef.attrSlotIndex : previousRef!.attrSlotIndex,
-  );
 }
 
 export function prepareAttributeSlots(
@@ -98,48 +78,16 @@ export function prepareAttributeSlots(
     : normalizedSlots;
   const shouldQueueRefEffects = options?.queueRefEffects === true;
   const previousRawSlots = options?.previousRawSlots;
-  let previousRef: EffectiveRefValue | undefined;
-  let nextRef: EffectiveRefValue | undefined;
   for (let planIndex = 0; planIndex < attrPlan.length; planIndex += 2) {
     const attrSlotIndex = attrPlan[planIndex] as number;
     const adapter = attrPlan[planIndex + 1] as EtAttrAdapter;
     const rawValue = rawSlots[attrSlotIndex];
     preparedSlots[attrSlotIndex] = adapter(handleId, attrSlotIndex, rawValue);
-    if (!shouldQueueRefEffects) {
-      continue;
-    }
-    if (adapter === adaptRefAttrSlot) {
-      previousRef = {
-        attrSlotIndex,
-        value: getRefFromValue(previousRawSlots?.[attrSlotIndex]),
-      };
-      nextRef = {
-        attrSlotIndex,
-        value: getRefFromValue(rawValue),
-      };
-      continue;
-    }
-    if (adapter === adaptSpreadAttrSlot) {
-      const previousSpreadRef = getSpreadRefFromValue(previousRawSlots?.[attrSlotIndex]);
-      const nextSpreadRef = getSpreadRefFromValue(rawValue);
-      if (previousSpreadRef !== undefined) {
-        previousRef = {
-          attrSlotIndex,
-          value: previousSpreadRef,
-        };
-      }
-      if (nextSpreadRef !== undefined) {
-        nextRef = {
-          attrSlotIndex,
-          value: nextSpreadRef,
-        };
-      }
-    }
   }
   if (shouldQueueRefEffects) {
-    // Ref effects compare raw user refs selected by JSX descriptor order, not
-    // prepared marker strings or the spread wrapper object.
-    queueEffectiveRefAttributeSlotUpdate(handleId, previousRef, nextRef);
+    // Ref effects compare raw user refs, not prepared marker strings or the
+    // spread wrapper object.
+    queuePlannedRefAttributeSlotUpdates(handleId, attrPlan, previousRawSlots, rawSlots);
   }
 
   return preparedSlots;
@@ -156,9 +104,5 @@ export function queueRefAttributeSlotUpdates(
     return;
   }
 
-  queueEffectiveRefAttributeSlotUpdate(
-    handleId,
-    resolveEffectiveRefValue(attrPlan, previousRawSlots),
-    resolveEffectiveRefValue(attrPlan, nextRawSlots),
-  );
+  queuePlannedRefAttributeSlotUpdates(handleId, attrPlan, previousRawSlots, nextRawSlots);
 }

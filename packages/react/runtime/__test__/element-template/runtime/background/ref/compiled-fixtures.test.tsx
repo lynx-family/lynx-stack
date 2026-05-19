@@ -34,6 +34,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DIRECT_REF_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/ref/direct-ref/index.tsx');
 const SPREAD_REF_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/ref/spread-ref/index.tsx');
+const MULTI_REF_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/ref/multi-ref/index.tsx');
 const UNSUPPORTED_REF_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/ref/unsupported-ref/index.tsx');
 
 interface DirectFixtureProps {
@@ -48,6 +49,12 @@ interface SpreadFixtureProps {
 }
 
 interface SpreadAppProps {
+  spread?: SpreadFixtureProps;
+}
+
+interface MultiRefAppProps {
+  directRef?: unknown;
+  objectRef?: unknown;
   spread?: SpreadFixtureProps;
 }
 
@@ -229,6 +236,76 @@ describe('Compiled ordinary ref background updates', () => {
     }));
     expect(unsupportedMainThreadRef).not.toHaveBeenCalled();
     expect(unsupportedWorkletRef).not.toHaveBeenCalled();
+  });
+
+  it('hydrates compiled templates with multiple ref slots independently', async () => {
+    const { backgroundModule, mainModule } = await loadCompiledFixture<CompiledAppModule<MultiRefAppProps>>(
+      MULTI_REF_FIXTURE,
+    );
+    const directRef = vi.fn();
+    const objectRef: { current: unknown } = { current: null };
+    const spreadRef = vi.fn();
+    const props = {
+      directRef,
+      objectRef,
+      spread: {
+        id: 'cta',
+        ref: spreadRef,
+      },
+    };
+
+    const host = renderOnBackground(backgroundModule, props);
+    const initialDirectSelector = `[ref=${host.instanceId}-0]`;
+    const initialObjectSelector = `[ref=${host.instanceId}-1]`;
+    const initialSpreadSelector = `[ref=${host.instanceId}-2]`;
+    expect(host.attributeSlots).toEqual([
+      `${host.instanceId}-0`,
+      `${host.instanceId}-1`,
+      { id: 'cta', ref: `${host.instanceId}-2` },
+    ]);
+    expect(directRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: initialDirectSelector,
+    }));
+    expect(objectRef.current).toMatchObject({
+      selector: initialObjectSelector,
+    });
+    expect(spreadRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: initialSpreadSelector,
+    }));
+
+    hydrateFromMainThread(mainModule, props);
+    expect(directRef).toHaveBeenCalledTimes(1);
+    expect(spreadRef).toHaveBeenCalledTimes(1);
+    const stableDirectSelector = `[ref=${host.instanceId}-0]`;
+    const stableSpreadSelector = `[ref=${host.instanceId}-2]`;
+    const stableObjectProxy = objectRef.current;
+    directRef.mockClear();
+    spreadRef.mockClear();
+    updateEvents = [];
+
+    const nextDirectRef = vi.fn();
+    const nextSpreadRef = vi.fn();
+    renderOnBackground(backgroundModule, {
+      directRef: nextDirectRef,
+      objectRef,
+      spread: {
+        id: 'cta',
+        ref: nextSpreadRef,
+      },
+    });
+
+    envManager.switchToMainThread();
+    expect(updateEvents).toEqual([]);
+    envManager.switchToBackground();
+    expect(directRef).toHaveBeenCalledWith(null);
+    expect(nextDirectRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: stableDirectSelector,
+    }));
+    expect(objectRef.current).toBe(stableObjectProxy);
+    expect(spreadRef).toHaveBeenCalledWith(null);
+    expect(nextSpreadRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: stableSpreadSelector,
+    }));
   });
 
   it('drops compiled unsupported namespaced refs before native payloads', async () => {

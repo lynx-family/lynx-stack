@@ -586,7 +586,7 @@ describe('BackgroundElementTemplateInstance', () => {
       expect(ref.current).toBeNull();
     });
 
-    it('queues the final effective spread ref cleanup when removing a hydrated subtree', () => {
+    it('queues all direct and spread ref cleanups when removing a hydrated subtree', () => {
       const directRef = vi.fn();
       const cleanup = vi.fn();
       const spreadRef = vi.fn(() => cleanup);
@@ -603,8 +603,9 @@ describe('BackgroundElementTemplateInstance', () => {
       child.markMaterializedByHydration();
       child.setAttribute('attributeSlots', [directRef, { ref: spreadRef }]);
       flushPendingRefs();
-      expect(directRef).not.toHaveBeenCalled();
+      expect(directRef).toHaveBeenCalledTimes(1);
       expect(spreadRef).toHaveBeenCalledTimes(1);
+      directRef.mockClear();
       spreadRef.mockClear();
 
       slot.removeChild(child);
@@ -612,13 +613,13 @@ describe('BackgroundElementTemplateInstance', () => {
 
       expect(cleanup).toHaveBeenCalledTimes(1);
       expect(spreadRef).not.toHaveBeenCalled();
-      expect(directRef).not.toHaveBeenCalled();
+      expect(directRef).toHaveBeenCalledWith(null);
     });
 
     it('queues nested direct and spread ref cleanup when removing a hydrated subtree', () => {
       const childCleanup = vi.fn();
       const childRef = vi.fn(() => childCleanup);
-      const ignoredDirectGrandchildRef = vi.fn();
+      const directGrandchildRef = vi.fn();
       const grandchildCleanup = vi.fn();
       const grandchildSpreadRef = vi.fn(() => grandchildCleanup);
       __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
@@ -640,14 +641,15 @@ describe('BackgroundElementTemplateInstance', () => {
       grandchild.markMaterializedByHydration();
       child.setAttribute('attributeSlots', [childRef]);
       grandchild.setAttribute('attributeSlots', [
-        ignoredDirectGrandchildRef,
+        directGrandchildRef,
         { ref: grandchildSpreadRef },
       ]);
       flushPendingRefs();
       expect(childRef).toHaveBeenCalledTimes(1);
+      expect(directGrandchildRef).toHaveBeenCalledTimes(1);
       expect(grandchildSpreadRef).toHaveBeenCalledTimes(1);
-      expect(ignoredDirectGrandchildRef).not.toHaveBeenCalled();
       childRef.mockClear();
+      directGrandchildRef.mockClear();
       grandchildSpreadRef.mockClear();
       globalCommitContext.ops = [];
 
@@ -665,7 +667,7 @@ describe('BackgroundElementTemplateInstance', () => {
       expect(grandchildCleanup).toHaveBeenCalledTimes(1);
       expect(childRef).not.toHaveBeenCalled();
       expect(grandchildSpreadRef).not.toHaveBeenCalled();
-      expect(ignoredDirectGrandchildRef).not.toHaveBeenCalled();
+      expect(directGrandchildRef).toHaveBeenCalledWith(null);
     });
 
     it('does not repeat direct function ref cleanup for detached subtrees on destroy', () => {
@@ -933,7 +935,7 @@ describe('BackgroundElementTemplateInstance', () => {
     expect(newRef).toHaveBeenCalledWith(null);
   });
 
-  it('uses the final direct/spread ref value in descriptor order', () => {
+  it('queues direct and spread refs independently in descriptor order', () => {
     const directRef = vi.fn();
     const spreadRef = vi.fn();
     __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
@@ -946,22 +948,23 @@ describe('BackgroundElementTemplateInstance', () => {
     flushPendingRefs();
 
     expect(instance.attributeSlots).toEqual(['-2-0', { ref: '-2-1' }]);
-    expect(directRef).not.toHaveBeenCalled();
+    expect(directRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
     expect(spreadRef).toHaveBeenCalledWith(expect.objectContaining({
       selector: '[ref=-2-1]',
     }));
 
+    directRef.mockClear();
     spreadRef.mockClear();
     instance.setAttribute('attributeSlots', [directRef, {}]);
     flushPendingRefs();
 
     expect(spreadRef).toHaveBeenCalledWith(null);
-    expect(directRef).toHaveBeenCalledWith(expect.objectContaining({
-      selector: '[ref=-2-0]',
-    }));
+    expect(directRef).not.toHaveBeenCalled();
   });
 
-  it('treats explicit undefined spread ref as overriding an earlier direct ref', () => {
+  it('does not let explicit undefined spread refs detach sibling direct refs', () => {
     const directRef = vi.fn();
     __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view');
@@ -973,10 +976,12 @@ describe('BackgroundElementTemplateInstance', () => {
     flushPendingRefs();
 
     expect(instance.attributeSlots).toEqual(['-2-0', { ref: null }]);
-    expect(directRef).not.toHaveBeenCalled();
+    expect(directRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
   });
 
-  it('reattaches a stable direct ref after explicit undefined spread ref is removed', () => {
+  it('keeps a stable direct ref attached while spread ref presence changes', () => {
     const ref = vi.fn();
     __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view');
@@ -993,19 +998,17 @@ describe('BackgroundElementTemplateInstance', () => {
 
     instance.setAttribute('attributeSlots', [ref, { ref: undefined }]);
     flushPendingRefs();
-    expect(ref).toHaveBeenCalledWith(null);
+    expect(ref).not.toHaveBeenCalled();
     ref.mockClear();
 
     instance.setAttribute('attributeSlots', [ref, {}]);
     flushPendingRefs();
 
     expect(instance.attributeSlots).toEqual(['-2-0', {}]);
-    expect(ref).toHaveBeenCalledWith(expect.objectContaining({
-      selector: '[ref=-2-0]',
-    }));
+    expect(ref).not.toHaveBeenCalled();
   });
 
-  it('lets a later direct ref override an earlier spread ref', () => {
+  it('queues spread and later direct refs independently', () => {
     const spreadRef = vi.fn();
     const directRef = vi.fn();
     __etAttrPlanMap.view = [0, adaptSpreadAttrSlot, 1, adaptRefAttrSlot];
@@ -1018,7 +1021,9 @@ describe('BackgroundElementTemplateInstance', () => {
     flushPendingRefs();
 
     expect(instance.attributeSlots).toEqual([{ ref: '-2-0' }, '-2-1']);
-    expect(spreadRef).not.toHaveBeenCalled();
+    expect(spreadRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
     expect(directRef).toHaveBeenCalledWith(expect.objectContaining({
       selector: '[ref=-2-1]',
     }));
