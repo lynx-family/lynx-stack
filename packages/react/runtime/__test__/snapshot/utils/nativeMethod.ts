@@ -240,6 +240,7 @@ export const elementTree = new (class {
       parentMap.delete(child);
     } else {
       throw new Error(
+        // @ts-ignore
         `child ${child.$$uiSign} is not in parent ${parent.$$uiSign}, cannot remove it!`,
       );
     }
