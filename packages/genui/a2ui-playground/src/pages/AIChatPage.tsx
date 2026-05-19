@@ -44,6 +44,50 @@ interface A2UIDonePayload {
   };
   error?: unknown;
   message?: unknown;
+  usage?: unknown;
+}
+
+interface TokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
+function parseUsage(value: unknown): TokenUsage | null {
+  if (!value || typeof value !== 'object') return null;
+  const record = value as Record<string, unknown>;
+  const pickNumber = (...keys: string[]): number => {
+    for (const key of keys) {
+      const v = record[key];
+      if (typeof v === 'number' && Number.isFinite(v)) return v;
+    }
+    return 0;
+  };
+  // Support both legacy (promptTokens/completionTokens) and new
+  // (inputTokens/outputTokens) AI SDK usage shapes.
+  const promptTokens = pickNumber(
+    'promptTokens',
+    'inputTokens',
+    'prompt_tokens',
+  );
+  const completionTokens = pickNumber(
+    'completionTokens',
+    'outputTokens',
+    'completion_tokens',
+  );
+  const totalTokens = pickNumber('totalTokens', 'total_tokens')
+    || promptTokens + completionTokens;
+  if (promptTokens === 0 && completionTokens === 0 && totalTokens === 0) {
+    return null;
+  }
+  return { promptTokens, completionTokens, totalTokens };
+}
+
+function formatTokenCount(value: number): string {
+  if (value < 1000) return String(value);
+  if (value < 10_000) return `${(value / 1000).toFixed(2)}k`;
+  if (value < 1_000_000) return `${(value / 1000).toFixed(1)}k`;
+  return `${(value / 1_000_000).toFixed(2)}M`;
 }
 
 interface BrowserResponse {
@@ -294,6 +338,7 @@ async function readA2UIResponse(
   onText: (text: string) => void,
   onMessages: (messages: unknown[]) => void,
   onStart?: (threadId: string) => void,
+  onUsage?: (usage: TokenUsage) => void,
 ): Promise<unknown[]> {
   const contentType = response.headers.get('content-type') ?? '';
   if (!contentType.includes('text/event-stream')) {
@@ -301,6 +346,10 @@ async function readA2UIResponse(
     const messages = normalizeA2UIMessages(payload);
     if (messages.length === 0) {
       throw new Error(normalizeErrorPayload(payload));
+    }
+    if (payload && typeof payload === 'object') {
+      const usage = parseUsage((payload as A2UIDonePayload).usage);
+      if (usage) onUsage?.(usage);
     }
     onMessages(messages);
     return messages;
@@ -348,6 +397,10 @@ async function readA2UIResponse(
 
       if (parsed.event === 'done') {
         const doneMessages = normalizeA2UIMessages(parsed.data);
+        if (parsed.data && typeof parsed.data === 'object') {
+          const usage = parseUsage((parsed.data as A2UIDonePayload).usage);
+          if (usage) onUsage?.(usage);
+        }
         if (doneMessages.length > 0) {
           latestMessages = doneMessages;
           onMessages(latestMessages);
@@ -372,14 +425,14 @@ async function readA2UIResponse(
 
 const SUGGESTED_PROMPTS: Array<{ label: string; text: string }> = [
   {
-    label: '⚡ Quiz card with actions',
-    text:
-      'Create a trivia quiz card. Show a question "What is the capital of Japan?" with 4 answer buttons: Tokyo, Beijing, Seoul, Bangkok. When the user taps an answer, show whether it is correct with a brief explanation.',
-  },
-  {
     label: '🛍️ Product card with Buy',
     text:
       'Create a product card for a limited-edition sneaker. Include name, price ($189), a short description, and a "Buy Now" button. When tapped, show an order confirmation with a fake order number and estimated delivery.',
+  },
+  {
+    label: '⚡ Quiz card with actions',
+    text:
+      'Create a trivia quiz card. Show a question "Which shape has three sides?" with 4 answer buttons: Triangle, Square, Circle, Hexagon. When the user taps an answer, show whether it is correct with a brief explanation.',
   },
   {
     label: '🌤️ Weather with Refresh',
@@ -398,6 +451,11 @@ export function AIChatPage(props: { protocol: Protocol }) {
     null,
   );
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [tokenUsage, setTokenUsage] = useState<TokenUsage>({
+    promptTokens: 0,
+    completionTokens: 0,
+    totalTokens: 0,
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
   const followBottomRef = useRef<boolean>(true);
@@ -564,6 +622,11 @@ export function AIChatPage(props: { protocol: Protocol }) {
     setPreviewMessages(null);
     latestPreviewMessagesRef.current = [];
     threadIdRef.current = null;
+    setTokenUsage({
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+    });
     setIsGenerating(true);
 
     void (async () => {
@@ -597,6 +660,14 @@ export function AIChatPage(props: { protocol: Protocol }) {
           publishPreviewMessages,
           (threadId) => {
             threadIdRef.current = threadId;
+          },
+          (usage) => {
+            if (controller.signal.aborted) return;
+            setTokenUsage((prev) => ({
+              promptTokens: prev.promptTokens + usage.promptTokens,
+              completionTokens: prev.completionTokens + usage.completionTokens,
+              totalTokens: prev.totalTokens + usage.totalTokens,
+            }));
           },
         );
 
@@ -773,6 +844,16 @@ export function AIChatPage(props: { protocol: Protocol }) {
               if (signal.aborted) return;
               responseMessages = msgs;
             },
+            undefined,
+            (usage) => {
+              if (signal.aborted) return;
+              setTokenUsage((prev) => ({
+                promptTokens: prev.promptTokens + usage.promptTokens,
+                completionTokens: prev.completionTokens
+                  + usage.completionTokens,
+                totalTokens: prev.totalTokens + usage.totalTokens,
+              }));
+            },
           );
 
           if (signal.aborted) return;
@@ -896,6 +977,24 @@ export function AIChatPage(props: { protocol: Protocol }) {
           <div className='chatHeaderTitleRow'>
             <h2 className='chatHeaderTitle'>Create</h2>
             <span className='constructionBadge'>Online Agent</span>
+            {tokenUsage.totalTokens > 0
+              ? (
+                <span
+                  className='chatTokenUsageBadge'
+                  title={`Prompt: ${tokenUsage.promptTokens} · Completion: ${tokenUsage.completionTokens} · Total: ${tokenUsage.totalTokens}`}
+                >
+                  <span className='chatTokenUsageItem'>
+                    Prompt {formatTokenCount(tokenUsage.promptTokens)}
+                  </span>
+                  <span className='chatTokenUsageItem'>
+                    Output {formatTokenCount(tokenUsage.completionTokens)}
+                  </span>
+                  <span className='chatTokenUsageItem chatTokenUsageTotal'>
+                    Total {formatTokenCount(tokenUsage.totalTokens)}
+                  </span>
+                </span>
+              )
+              : null}
           </div>
           <p className='chatHeaderSub'>Describe the UI you want to build</p>
         </div>

@@ -55,6 +55,39 @@
   white-space: nowrap;
 }
 
+.chatTokenUsageBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 26px;
+  margin-left: auto;
+  padding: 0 10px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: var(--geist-surface);
+  color: var(--geist-secondary);
+  font-family: var(--geist-mono);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.chatTokenUsageItem {
+  display: inline-flex;
+  align-items: center;
+}
+
+.chatTokenUsageTotal {
+  padding: 3px 7px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .chatHeaderSub {
   font-size: 12px;
   color: var(--geist-secondary);
