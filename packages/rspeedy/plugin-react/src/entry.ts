@@ -319,6 +319,7 @@ export function applyEntry(
       }])
 
     function getDefaultProfile(): boolean | undefined {
+      // rsbuild v1
       const environmentProfile = (
         rspeedyConfig?.environments as
           | Record<string, { performance?: { profile?: boolean } }>

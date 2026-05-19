@@ -56,13 +56,6 @@ export function applyDefaultRspeedyConfig(config: Config): Config {
 
 function getEnableChunkSplitting(config: Config): boolean {
   if (config.splitChunks !== undefined) {
-    if (
-      config.splitChunks
-      && Object.keys(config.splitChunks).length === 0
-    ) {
-      return false
-    }
-
     return config.splitChunks !== false
   }
 

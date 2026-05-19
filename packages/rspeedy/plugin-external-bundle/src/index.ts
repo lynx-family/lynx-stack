@@ -819,7 +819,14 @@ export function pluginExternalBundle(
                     'application/octet-stream',
                   )
                   res.setHeader('Access-Control-Allow-Origin', '*')
-                  createReadStream(bundlePath).pipe(res)
+                  const stream = createReadStream(bundlePath)
+                  stream.on('error', () => {
+                    if (!res.headersSent) {
+                      res.statusCode = 404
+                    }
+                    res.end()
+                  })
+                  stream.pipe(res)
                   return
                 }
                 next()

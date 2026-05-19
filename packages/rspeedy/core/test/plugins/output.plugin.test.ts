@@ -209,7 +209,19 @@ describe('Plugins - Output', () => {
 
     const options = getLoaderOptions(config, /css-loader/)
 
-    expect(options).toMatchInlineSnapshot(`null`)
+    expect(options).toMatchInlineSnapshot(`
+      {
+        "importLoaders": 1,
+        "modules": {
+          "auto": true,
+          "exportGlobals": false,
+          "exportLocalsConvention": "camelCase",
+          "localIdentName": "[local]-[hash:base64:6]",
+          "namedExport": false,
+        },
+        "sourceMap": false,
+      }
+    `)
   })
 
   describe('output.cssModules', () => {
@@ -220,7 +232,19 @@ describe('Plugins - Output', () => {
 
       const options = getLoaderOptions(config, /css-loader/)
 
-      expect(options).toMatchInlineSnapshot(`null`)
+      expect(options).toMatchInlineSnapshot(`
+        {
+          "importLoaders": 1,
+          "modules": {
+            "auto": true,
+            "exportGlobals": false,
+            "exportLocalsConvention": "camelCase",
+            "localIdentName": "[local]-[hash:base64:6]",
+            "namedExport": false,
+          },
+          "sourceMap": true,
+        }
+      `)
     })
 
     test('output.cssModules.auto: true', async () => {
@@ -236,7 +260,19 @@ describe('Plugins - Output', () => {
 
       const options = getLoaderOptions(config, /css-loader/)
 
-      expect(options).toMatchInlineSnapshot(`null`)
+      expect(options).toMatchInlineSnapshot(`
+        {
+          "importLoaders": 1,
+          "modules": {
+            "auto": true,
+            "exportGlobals": false,
+            "exportLocalsConvention": "camelCase",
+            "localIdentName": "[local]-[hash:base64:6]",
+            "namedExport": false,
+          },
+          "sourceMap": true,
+        }
+      `)
     })
 
     test('output.cssModules.auto: false', async () => {
@@ -252,7 +288,19 @@ describe('Plugins - Output', () => {
 
       const options = getLoaderOptions(config, /css-loader/)
 
-      expect(options).toMatchInlineSnapshot(`null`)
+      expect(options).toMatchInlineSnapshot(`
+        {
+          "importLoaders": 1,
+          "modules": {
+            "auto": false,
+            "exportGlobals": false,
+            "exportLocalsConvention": "camelCase",
+            "localIdentName": "[local]-[hash:base64:6]",
+            "namedExport": false,
+          },
+          "sourceMap": true,
+        }
+      `)
     })
 
     test('output.cssModules.auto: RegExp', async () => {
@@ -268,7 +316,19 @@ describe('Plugins - Output', () => {
 
       const options = getLoaderOptions(config, /css-loader/)
 
-      expect(options).toMatchInlineSnapshot(`null`)
+      expect(options).toMatchInlineSnapshot(`
+        {
+          "importLoaders": 1,
+          "modules": {
+            "auto": /module/,
+            "exportGlobals": false,
+            "exportLocalsConvention": "camelCase",
+            "localIdentName": "[local]-[hash:base64:6]",
+            "namedExport": false,
+          },
+          "sourceMap": true,
+        }
+      `)
     })
 
     test('output.cssModules.auto: function', async () => {
@@ -286,7 +346,19 @@ describe('Plugins - Output', () => {
 
       const options = getLoaderOptions(config, /css-loader/)
 
-      expect(options).toMatchInlineSnapshot(`null`)
+      expect(options).toMatchInlineSnapshot(`
+        {
+          "importLoaders": 1,
+          "modules": {
+            "auto": [Function],
+            "exportGlobals": false,
+            "exportLocalsConvention": "camelCase",
+            "localIdentName": "[local]-[hash:base64:6]",
+            "namedExport": false,
+          },
+          "sourceMap": true,
+        }
+      `)
     })
 
     test('output.cssModules.exportGlobals', async () => {
@@ -301,7 +373,19 @@ describe('Plugins - Output', () => {
       const config = await rsbuild.unwrapConfig()
 
       const options = getLoaderOptions(config, /css-loader/)
-      expect(options).toMatchInlineSnapshot(`null`)
+      expect(options).toMatchInlineSnapshot(`
+        {
+          "importLoaders": 1,
+          "modules": {
+            "auto": true,
+            "exportGlobals": true,
+            "exportLocalsConvention": "camelCase",
+            "localIdentName": "[local]-[hash:base64:6]",
+            "namedExport": false,
+          },
+          "sourceMap": true,
+        }
+      `)
     })
 
     test('output.cssModules.exportLocalsConvention', async () => {
@@ -317,7 +401,19 @@ describe('Plugins - Output', () => {
 
       const options = getLoaderOptions(config, /css-loader/)
 
-      expect(options).toMatchInlineSnapshot(`null`)
+      expect(options).toMatchInlineSnapshot(`
+        {
+          "importLoaders": 1,
+          "modules": {
+            "auto": true,
+            "exportGlobals": false,
+            "exportLocalsConvention": "asIs",
+            "localIdentName": "[local]-[hash:base64:6]",
+            "namedExport": false,
+          },
+          "sourceMap": true,
+        }
+      `)
     })
 
     test('output.cssModules.exportLocalsConvention: \'dashed-only\'', async () => {
@@ -333,7 +429,19 @@ describe('Plugins - Output', () => {
 
       const options = getLoaderOptions(config, /css-loader/)
 
-      expect(options).toMatchInlineSnapshot(`null`)
+      expect(options).toMatchInlineSnapshot(`
+        {
+          "importLoaders": 1,
+          "modules": {
+            "auto": true,
+            "exportGlobals": false,
+            "exportLocalsConvention": "dashesOnly",
+            "localIdentName": "[local]-[hash:base64:6]",
+            "namedExport": false,
+          },
+          "sourceMap": true,
+        }
+      `)
     })
 
     test('output.cssModules.localIdentName', async () => {
@@ -349,7 +457,19 @@ describe('Plugins - Output', () => {
 
       const options = getLoaderOptions(config, /css-loader/)
 
-      expect(options).toMatchInlineSnapshot(`null`)
+      expect(options).toMatchInlineSnapshot(`
+        {
+          "importLoaders": 1,
+          "modules": {
+            "auto": true,
+            "exportGlobals": false,
+            "exportLocalsConvention": "camelCase",
+            "localIdentName": "[local]-[hash]",
+            "namedExport": false,
+          },
+          "sourceMap": true,
+        }
+      `)
     })
 
     test('output.cssModules.localIdentName in development', async () => {
@@ -362,7 +482,19 @@ describe('Plugins - Output', () => {
 
       const options = getLoaderOptions(config, /css-loader/)
 
-      expect(options).toMatchInlineSnapshot(`null`)
+      expect(options).toMatchInlineSnapshot(`
+        {
+          "importLoaders": 1,
+          "modules": {
+            "auto": true,
+            "exportGlobals": false,
+            "exportLocalsConvention": "camelCase",
+            "localIdentName": "[local]-[hash:base64:6]",
+            "namedExport": false,
+          },
+          "sourceMap": true,
+        }
+      `)
     })
 
     test('output.cssModules.localIdentName in production', async () => {
@@ -375,7 +507,19 @@ describe('Plugins - Output', () => {
 
       const options = getLoaderOptions(config, /css-loader/)
 
-      expect(options).toMatchInlineSnapshot(`null`)
+      expect(options).toMatchInlineSnapshot(`
+        {
+          "importLoaders": 1,
+          "modules": {
+            "auto": true,
+            "exportGlobals": false,
+            "exportLocalsConvention": "camelCase",
+            "localIdentName": "[local]-[hash:base64:6]",
+            "namedExport": false,
+          },
+          "sourceMap": true,
+        }
+      `)
     })
 
     test('output.cssModules.localIdentName default value', async () => {
@@ -387,7 +531,19 @@ describe('Plugins - Output', () => {
 
       const options = getLoaderOptions(config, /css-loader/)
 
-      expect(options).toMatchInlineSnapshot(`null`)
+      expect(options).toMatchInlineSnapshot(`
+        {
+          "importLoaders": 1,
+          "modules": {
+            "auto": true,
+            "exportGlobals": false,
+            "exportLocalsConvention": "camelCase",
+            "localIdentName": "[local]-[hash:base64:6]",
+            "namedExport": false,
+          },
+          "sourceMap": true,
+        }
+      `)
     })
 
     test('output.cssModules.localIdentName manual override', async () => {
@@ -403,7 +559,19 @@ describe('Plugins - Output', () => {
 
       const options = getLoaderOptions(config, /css-loader/)
 
-      expect(options).toMatchInlineSnapshot(`null`)
+      expect(options).toMatchInlineSnapshot(`
+        {
+          "importLoaders": 1,
+          "modules": {
+            "auto": true,
+            "exportGlobals": false,
+            "exportLocalsConvention": "camelCase",
+            "localIdentName": "[path][name]__[local]-[hash:base64:8]",
+            "namedExport": false,
+          },
+          "sourceMap": true,
+        }
+      `)
     })
   })
 

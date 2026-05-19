@@ -55,6 +55,30 @@ describe('output.inlineScripts', () => {
     expect.assertions(2)
   })
 
+  test('defaults with empty splitChunks object', async () => {
+    const rspeedy = await createStubRspeedy({
+      splitChunks: {},
+
+      plugins: [
+        {
+          name: 'test',
+          setup(api: RsbuildPluginAPI) {
+            api.modifyRsbuildConfig((config) => {
+              expect(config.output?.inlineScripts).toBe(false)
+            })
+            api.modifyBundlerChain((_, { environment }) => {
+              expect(environment.config.output.inlineScripts).toBe(false)
+            })
+          },
+        },
+      ],
+    })
+
+    await rspeedy.initConfigs()
+
+    expect.assertions(2)
+  })
+
   test('output.inlineScripts: false', async () => {
     const rspeedy = await createStubRspeedy({
       output: {
