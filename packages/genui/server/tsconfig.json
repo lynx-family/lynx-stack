@@ -1,10 +1,14 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext",
+    ],
     "module": "esnext",
     "moduleResolution": "bundler",
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -23,7 +27,9 @@
       },
     ],
     "paths": {
-      "@/*": ["./*"],
+      "@/*": [
+        "./*",
+      ],
     },
   },
   "include": [
@@ -34,5 +40,7 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts",
   ],
-  "exclude": ["node_modules"],
+  "exclude": [
+    "node_modules",
+  ],
 }
