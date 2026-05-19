@@ -330,6 +330,8 @@ describe('removeChild', () => {
     const __elements = b.__elements;
     const __element_root = b.__element_root;
     a.removeChild(b);
+    // Restore b.__element_root and b.__elements
+    // to make `__RemoveElement` receive real parent and child element
     b.__element_root = __element_root;
     b.__elements = __elements;
     expect(() => a.removeChild(b)).toThrowErrorMatchingInlineSnapshot(

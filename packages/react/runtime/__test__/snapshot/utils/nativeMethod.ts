@@ -268,6 +268,8 @@ export const elementTree = new (class {
     parent.children.forEach((ch, index) => {
       if (ch === oldElement) {
         parent.children[index] = newElement;
+        parentMap.set(newElement, parent);
+        parentMap.delete(oldElement);
         return;
       }
     });
