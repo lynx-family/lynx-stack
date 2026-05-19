@@ -4,14 +4,16 @@
 import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { workletUnRef } from './workletRef.js';
+import { OrdinaryRefEffectQueue, applyOrdinaryRef, normalizeRefValue } from '../../core/ref.js';
+import type { OrdinaryRef } from '../../core/ref.js';
 import { RefProxy } from '../lifecycle/ref/delay.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
-const refsToClear: Ref[] = [];
-const refsToApply: (Ref | [snapshotInstanceId: number, expIndex: number])[] = [];
+type RefToken = [snapshotInstanceId: number, expIndex: number];
 
-type Ref = (((ref: RefProxy) => (() => void) | void) | { current: RefProxy | null }) & {
-  _unmount?: (() => void) | void;
+const refEffectQueue = /*#__PURE__*/ new OrdinaryRefEffectQueue<RefProxy, RefToken>();
+
+type Ref = OrdinaryRef<RefProxy> & {
   __ref?: { value: number };
 };
 
@@ -30,29 +32,8 @@ function unref(snapshot: SnapshotInstance, recursive: boolean): void {
   }
 }
 
-// This function is modified from preact source code.
-function applyRef(ref: Ref, value: null | [snapshotInstanceId: number, expIndex: number]): void {
-  const newRef = value && new RefProxy(value);
-
-  try {
-    if (typeof ref == 'function') {
-      const hasRefUnmount = typeof ref._unmount == 'function';
-      if (hasRefUnmount) {
-        ref._unmount!();
-      }
-
-      if (!hasRefUnmount || newRef != null) {
-        // Store the cleanup function on the function
-        // instance object itself to avoid shape
-        // transitioning vnode
-        ref._unmount = ref(newRef!);
-      }
-    } else ref.current = newRef;
-    /* v8 ignore start */
-  } catch (e) {
-    lynx.reportError(e as Error);
-  }
-  /* v8 ignore stop */
+function clearRef(ref: Ref): void {
+  applyOrdinaryRef(ref, null);
 }
 
 function updateRef(
@@ -94,34 +75,21 @@ function getRefFromValue(val: unknown): Ref | null {
 }
 
 function transformRef(ref: unknown): Ref | null | undefined {
-  if (ref === undefined || ref === null) {
-    return ref;
+  const validRef = normalizeRefValue<RefProxy>(ref);
+  if (validRef === undefined || validRef === null) {
+    return validRef;
   }
-  if (typeof ref === 'function' || (typeof ref === 'object' && 'current' in ref)) {
-    if ('__ref' in ref) {
-      return ref as Ref;
-    }
-    return Object.defineProperty(ref, '__ref', { value: 1 }) as Ref;
+  if ('__ref' in validRef) {
+    return validRef as Ref;
   }
-  throw new Error(
-    `Elements' "ref" property should be a function, or an object created `
-      + `by createRef(), but got [${typeof ref}] instead`,
-  );
+  return Object.defineProperty(validRef, '__ref', { value: 1 }) as Ref;
 }
 
 function applyQueuedRefs(): void {
-  try {
-    for (const ref of refsToClear) {
-      applyRef(ref, null);
-    }
-    for (let i = 0; i < refsToApply.length; i += 2) {
-      const ref = refsToApply[i] as Ref;
-      const value = refsToApply[i + 1] as [snapshotInstanceId: number, expIndex: number] | null;
-      applyRef(ref, value);
-    }
-  } finally {
-    clearQueuedRefs();
+  if (!refEffectQueue.hasPending()) {
+    return;
   }
+  refEffectQueue.flush(value => new RefProxy(value));
 }
 
 function queueRefAttrUpdate(
@@ -130,20 +98,11 @@ function queueRefAttrUpdate(
   snapshotInstanceId: number,
   expIndex: number,
 ): void {
-  if (oldRef === newRef) {
-    return;
-  }
-  if (oldRef) {
-    refsToClear.push(oldRef);
-  }
-  if (newRef) {
-    refsToApply.push(newRef, [snapshotInstanceId, expIndex]);
-  }
+  refEffectQueue.queue(oldRef, newRef, [snapshotInstanceId, expIndex]);
 }
 
 function clearQueuedRefs(): void {
-  refsToClear.length = 0;
-  refsToApply.length = 0;
+  refEffectQueue.clear();
 }
 
 /**
@@ -154,7 +113,7 @@ export {
   updateRef,
   unref,
   transformRef,
-  applyRef,
+  clearRef,
   applyQueuedRefs,
   clearQueuedRefs,
   getRefFromValue,

@@ -655,6 +655,7 @@ fn should_not_use_snapshot_ref_transform_in_element_template_mode() {
     TransformMode::Development,
   );
 
+  assert!(code.contains(r#"require("@custom/react/internal").adaptRefAttrSlot"#));
   assert!(code.contains("viewRef"));
   assert!(!code.contains("transformRef"));
   assert!(!code.contains("@lynx-js/react/internal"));

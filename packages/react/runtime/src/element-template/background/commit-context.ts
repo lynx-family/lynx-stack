@@ -6,8 +6,9 @@ import type { ElementTemplateUpdateCommitContext } from '../protocol/types.js';
 
 interface ElementTemplateCommitNonPayloadState {
   // Background-only JS objects must not be included in the cross-thread update
-  // payload. They ride alongside the payload until dispatch schedules cleanup.
-  removedSubtrees: BackgroundElementTemplateInstance[];
+  // payload. They ride alongside the payload until the dispatch boundary
+  // schedules delayed teardown.
+  removedSubtreesAwaitingTeardown: BackgroundElementTemplateInstance[];
 }
 
 type ElementTemplateGlobalCommitContext = ElementTemplateUpdateCommitContext & {
@@ -18,7 +19,7 @@ export const globalCommitContext: ElementTemplateGlobalCommitContext = {
   ops: [],
   flushOptions: {},
   nonPayload: {
-    removedSubtrees: [],
+    removedSubtreesAwaitingTeardown: [],
   },
 };
 
@@ -26,20 +27,20 @@ export function resetGlobalCommitContext(): void {
   globalCommitContext.ops = [];
   globalCommitContext.flushOptions = {};
   delete globalCommitContext.flowIds;
-  globalCommitContext.nonPayload.removedSubtrees = [];
+  globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown = [];
 }
 
-export function markRemovedSubtreeForCurrentCommit(
+export function markRemovedSubtreeForPostDispatchTeardown(
   root: BackgroundElementTemplateInstance,
 ): void {
-  const { removedSubtrees } = globalCommitContext.nonPayload;
-  if (!removedSubtrees.includes(root)) {
-    removedSubtrees.push(root);
+  const { removedSubtreesAwaitingTeardown } = globalCommitContext.nonPayload;
+  if (!removedSubtreesAwaitingTeardown.includes(root)) {
+    removedSubtreesAwaitingTeardown.push(root);
   }
 }
 
-export function takeRemovedSubtreesForCurrentCommit(): BackgroundElementTemplateInstance[] {
-  const removedSubtrees = globalCommitContext.nonPayload.removedSubtrees;
-  globalCommitContext.nonPayload.removedSubtrees = [];
-  return removedSubtrees;
+export function takeRemovedSubtreesForPostDispatchTeardown(): BackgroundElementTemplateInstance[] {
+  const removedSubtreesAwaitingTeardown = globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown;
+  globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown = [];
+  return removedSubtreesAwaitingTeardown;
 }

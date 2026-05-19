@@ -7,7 +7,7 @@ import { options } from 'preact';
 import {
   globalCommitContext,
   resetGlobalCommitContext,
-  takeRemovedSubtreesForCurrentCommit,
+  takeRemovedSubtreesForPostDispatchTeardown,
 } from './commit-context.js';
 import type { BackgroundElementTemplateInstance } from './instance.js';
 import { COMMIT } from '../../shared/render-constants.js';
@@ -15,11 +15,12 @@ import { hook } from '../../utils.js';
 import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../lynx/performance.js';
+import { clearPendingRefs, flushPendingRefs, hasPendingRefs } from '../prop-adapters/ref.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
 
 let installed = false;
 let hasHydrated = false;
-const scheduledRemovedSubtreeCleanupTimers = new Set<ReturnType<typeof setTimeout>>();
+const scheduledRemovedSubtreeCleanupTimers = /*#__PURE__*/ new Set<ReturnType<typeof setTimeout>>();
 
 export function markElementTemplateHydrated(): void {
   hasHydrated = true;
@@ -35,14 +36,14 @@ export function resetElementTemplateCommitState(): void {
 }
 
 export function scheduleElementTemplateRemovedSubtreeCleanup(
-  removedSubtrees: BackgroundElementTemplateInstance[],
+  removedSubtreesAwaitingTeardown: BackgroundElementTemplateInstance[],
 ): void {
-  if (removedSubtrees.length === 0) {
+  if (removedSubtreesAwaitingTeardown.length === 0) {
     return;
   }
   const timer = setTimeout(() => {
     scheduledRemovedSubtreeCleanupTimers.delete(timer);
-    for (const root of removedSubtrees) {
+    for (const root of removedSubtreesAwaitingTeardown) {
       root.tearDown();
     }
   }, 10000);
@@ -63,56 +64,71 @@ export function installElementTemplateCommitHook(): void {
   installed = true;
 
   hook(options, COMMIT, (originalCommit, vnode, commitQueue) => {
-    if (__BACKGROUND__ && hasHydrated && globalCommitContext.ops.length > 0) {
-      markTimingLegacy('updateDiffVdomEnd');
-      markTiming('diffVdomEnd');
-
-      if (__PROFILE__) {
-        profileStart('ReactLynx::commitChanges');
-      }
-      markTiming('packChangesStart');
-      if (globalPipelineOptions) {
-        globalCommitContext.flushOptions.pipelineOptions = globalPipelineOptions;
-      }
-      markTiming('packChangesEnd');
-      if (globalPipelineOptions) {
-        setPipeline(undefined);
-      }
-      if (__PROFILE__) {
-        profileEnd();
-      }
-
-      if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
-        console.alog?.(
-          '[ReactLynxDebug] ElementTemplate BTS -> MTS update:\n'
-            + JSON.stringify(
-              {
-                ops: formatElementTemplateUpdateCommands(globalCommitContext.ops),
-                flushOptions: globalCommitContext.flushOptions,
-                flowIds: globalCommitContext.flowIds,
-              },
-              null,
-              2,
-            ),
-        );
-      }
-
-      const removedSubtrees = takeRemovedSubtreesForCurrentCommit();
+    if (__BACKGROUND__ && !hasHydrated && hasPendingRefs()) {
+      // User effects can run before ET hydrate arrives, so ordinary refs must be
+      // attached on the background commit even though native UI ops are delayed.
+      flushPendingRefs();
+    } else if (__BACKGROUND__ && hasHydrated && (globalCommitContext.ops.length > 0 || hasPendingRefs())) {
+      const hasNativeOps = globalCommitContext.ops.length > 0;
+      const removedSubtreesAwaitingTeardown = hasNativeOps ? takeRemovedSubtreesForPostDispatchTeardown() : [];
+      let didFlushRefs = false;
       try {
-        lynx.getCoreContext().dispatchEvent({
-          type: ElementTemplateLifecycleConstant.update,
-          data: {
-            ops: globalCommitContext.ops,
-            flushOptions: globalCommitContext.flushOptions,
-            flowIds: globalCommitContext.flowIds,
-          },
-        });
+        if (hasNativeOps) {
+          markTimingLegacy('updateDiffVdomEnd');
+          markTiming('diffVdomEnd');
+
+          if (__PROFILE__) {
+            profileStart('ReactLynx::commitChanges');
+          }
+          markTiming('packChangesStart');
+          if (globalPipelineOptions) {
+            globalCommitContext.flushOptions.pipelineOptions = globalPipelineOptions;
+          }
+          markTiming('packChangesEnd');
+          if (globalPipelineOptions) {
+            setPipeline(undefined);
+          }
+          if (__PROFILE__) {
+            profileEnd();
+          }
+
+          if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+            console.alog?.(
+              '[ReactLynxDebug] ElementTemplate BTS -> MTS update:\n'
+                + JSON.stringify(
+                  {
+                    ops: formatElementTemplateUpdateCommands(globalCommitContext.ops),
+                    flushOptions: globalCommitContext.flushOptions,
+                    flowIds: globalCommitContext.flowIds,
+                  },
+                  null,
+                  2,
+                ),
+            );
+          }
+
+          lynx.getCoreContext().dispatchEvent({
+            type: ElementTemplateLifecycleConstant.update,
+            data: {
+              ops: globalCommitContext.ops,
+              flushOptions: globalCommitContext.flushOptions,
+              flowIds: globalCommitContext.flowIds,
+            },
+          });
+        }
+        // When native ops exist, patch first so a newly attached ref observes the
+        // committed native state. Ref-only commits still flush through this path.
+        flushPendingRefs();
+        didFlushRefs = true;
       } finally {
+        if (!didFlushRefs) {
+          clearPendingRefs();
+        }
         resetGlobalCommitContext();
         // Match Snapshot's cleanup boundary: start the delayed teardown only
         // after the bridge dispatch attempt, so background JS objects are not
         // torn down before main-thread detach observes the same commit.
-        scheduleElementTemplateRemovedSubtreeCleanup(removedSubtrees);
+        scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
       }
     }
 

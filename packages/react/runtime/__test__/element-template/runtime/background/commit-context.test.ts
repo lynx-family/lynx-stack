@@ -6,9 +6,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
   globalCommitContext,
-  markRemovedSubtreeForCurrentCommit,
+  markRemovedSubtreeForPostDispatchTeardown,
   resetGlobalCommitContext,
-  takeRemovedSubtreesForCurrentCommit,
+  takeRemovedSubtreesForPostDispatchTeardown,
 } from '../../../../src/element-template/background/commit-context.js';
 import {
   BackgroundElementTemplateInstance,
@@ -28,32 +28,32 @@ describe('ElementTemplate commit context', () => {
   it('keeps removed subtree roots outside the update payload', () => {
     const root = new BackgroundElementTemplateInstance('view');
 
-    markRemovedSubtreeForCurrentCommit(root);
-    markRemovedSubtreeForCurrentCommit(root);
+    markRemovedSubtreeForPostDispatchTeardown(root);
+    markRemovedSubtreeForPostDispatchTeardown(root);
 
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([root]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([root]);
     expect({
       ops: globalCommitContext.ops,
       flushOptions: globalCommitContext.flushOptions,
       flowIds: globalCommitContext.flowIds,
-    }).not.toHaveProperty('removedSubtrees');
+    }).not.toHaveProperty('removedSubtreesAwaitingTeardown');
   });
 
   it('takes removed subtree roots from the current commit once', () => {
     const root = new BackgroundElementTemplateInstance('view');
-    markRemovedSubtreeForCurrentCommit(root);
+    markRemovedSubtreeForPostDispatchTeardown(root);
 
-    expect(takeRemovedSubtreesForCurrentCommit()).toEqual([root]);
-    expect(takeRemovedSubtreesForCurrentCommit()).toEqual([]);
+    expect(takeRemovedSubtreesForPostDispatchTeardown()).toEqual([root]);
+    expect(takeRemovedSubtreesForPostDispatchTeardown()).toEqual([]);
   });
 
   it('clears non-payload state when the global commit context resets', () => {
     const root = new BackgroundElementTemplateInstance('view');
-    markRemovedSubtreeForCurrentCommit(root);
+    markRemovedSubtreeForPostDispatchTeardown(root);
 
     resetGlobalCommitContext();
 
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
   });
 
   it('collects only handles that are registered in the main-thread registry', () => {

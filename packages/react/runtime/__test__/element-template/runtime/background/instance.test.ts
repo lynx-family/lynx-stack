@@ -21,9 +21,11 @@ import { ElementTemplateUpdateOps } from '../../../../src/element-template/proto
 import {
   __etAttrPlanMap,
   adaptEventAttrSlot,
+  adaptRefAttrSlot,
   adaptSpreadAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
+import { clearRefState, flushPendingRefs } from '../../../../src/element-template/prop-adapters/ref.js';
 
 function createTextNode(text: string): BackgroundElementTemplateInstance {
   return new BackgroundElementTemplateInstance(BUILTIN_RAW_TEXT_TEMPLATE_KEY, [text]);
@@ -37,6 +39,7 @@ describe('BackgroundElementTemplateInstance', () => {
     backgroundElementTemplateInstanceManager.nextId = 0;
     clearEtAttrPlanMap();
     clearEventState();
+    clearRefState();
     resetElementTemplateCommitState();
   });
 
@@ -82,8 +85,8 @@ describe('BackgroundElementTemplateInstance', () => {
     expect(slot.childNodes).toEqual([child]);
 
     markElementTemplateHydrated();
-    parent.markCreateEmittedForHydration();
-    child.markCreateEmittedForHydration();
+    parent.markMaterializedByHydration();
+    child.markMaterializedByHydration();
     globalCommitContext.ops = [];
     child.parentNode?.removeChild(child);
 
@@ -205,6 +208,76 @@ describe('BackgroundElementTemplateInstance', () => {
         child.instanceId,
         0,
       ]);
+    });
+
+    it('queues direct ref attach when inserting a post-hydration template', () => {
+      const ref = vi.fn();
+      __etAttrPlanMap.view = [0, adaptRefAttrSlot];
+      const parent = new BackgroundElementTemplateInstance('view');
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      parent.appendChild(slot);
+      parent.emitCreate();
+
+      markElementTemplateHydrated();
+      globalCommitContext.ops = [];
+
+      const child = new BackgroundElementTemplateInstance('view');
+      child.setAttribute('attributeSlots', [ref]);
+      slot.appendChild(child);
+      flushPendingRefs();
+
+      expect(globalCommitContext.ops).toEqual([
+        1,
+        child.instanceId,
+        'view',
+        null,
+        [`${child.instanceId}-0`],
+        [],
+        3,
+        parent.instanceId,
+        0,
+        child.instanceId,
+        0,
+      ]);
+      expect(ref).toHaveBeenCalledWith(expect.objectContaining({
+        selector: `[ref=${child.instanceId}-0]`,
+      }));
+    });
+
+    it('does not re-attach stable direct refs when moving an existing hydrated child', () => {
+      const ref = vi.fn();
+      __etAttrPlanMap.view = [0, adaptRefAttrSlot];
+      const parent = new BackgroundElementTemplateInstance('view');
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      parent.appendChild(slot);
+      const before = new BackgroundElementTemplateInstance('view');
+      const child = new BackgroundElementTemplateInstance('view');
+      child.setAttribute('attributeSlots', [ref]);
+      slot.appendChild(before);
+      slot.appendChild(child);
+
+      markElementTemplateHydrated();
+      parent.markMaterializedByHydration();
+      before.markMaterializedByHydration();
+      child.markMaterializedByHydration();
+      child.prepareAttributeSlotsForNative();
+      flushPendingRefs();
+      ref.mockClear();
+      globalCommitContext.ops = [];
+
+      slot.insertBefore(child, before);
+      flushPendingRefs();
+
+      expect(globalCommitContext.ops).toEqual([
+        3,
+        parent.instanceId,
+        0,
+        child.instanceId,
+        before.instanceId,
+      ]);
+      expect(ref).not.toHaveBeenCalled();
     });
 
     it('defers nested slot inserts until the owner template is created', () => {
@@ -439,9 +512,9 @@ describe('BackgroundElementTemplateInstance', () => {
       slot.appendChild(child);
 
       markElementTemplateHydrated();
-      parent.markCreateEmittedForHydration();
-      child.markCreateEmittedForHydration();
-      grandchild.markCreateEmittedForHydration();
+      parent.markMaterializedByHydration();
+      child.markMaterializedByHydration();
+      grandchild.markMaterializedByHydration();
       globalCommitContext.ops = [];
       slot.removeChild(child);
 
@@ -453,7 +526,176 @@ describe('BackgroundElementTemplateInstance', () => {
         child.instanceId,
         [child.instanceId, grandchild.instanceId],
       ]);
-      expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([child]);
+      expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([child]);
+    });
+
+    it('queues direct ref cleanup when removing a hydrated subtree', () => {
+      const cleanup = vi.fn();
+      const ref = vi.fn(() => cleanup);
+      __etAttrPlanMap.view = [0, adaptRefAttrSlot];
+      const parent = new BackgroundElementTemplateInstance('view');
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      parent.appendChild(slot);
+      const child = new BackgroundElementTemplateInstance('view');
+      slot.appendChild(child);
+
+      markElementTemplateHydrated();
+      parent.markMaterializedByHydration();
+      child.markMaterializedByHydration();
+      child.setAttribute('attributeSlots', [ref]);
+      flushPendingRefs();
+      ref.mockClear();
+      globalCommitContext.ops = [];
+
+      slot.removeChild(child);
+      flushPendingRefs();
+
+      expect(globalCommitContext.ops).toEqual([
+        4,
+        parent.instanceId,
+        0,
+        child.instanceId,
+        [child.instanceId],
+      ]);
+      expect(cleanup).toHaveBeenCalledTimes(1);
+      expect(ref).not.toHaveBeenCalled();
+    });
+
+    it('queues direct object ref cleanup when removing a hydrated subtree', () => {
+      const ref = { current: null };
+      __etAttrPlanMap.view = [0, adaptRefAttrSlot];
+      const parent = new BackgroundElementTemplateInstance('view');
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      parent.appendChild(slot);
+      const child = new BackgroundElementTemplateInstance('view');
+      slot.appendChild(child);
+
+      markElementTemplateHydrated();
+      parent.markMaterializedByHydration();
+      child.markMaterializedByHydration();
+      child.setAttribute('attributeSlots', [ref]);
+      flushPendingRefs();
+      expect(ref.current).toMatchObject({ selector: `[ref=${child.instanceId}-0]` });
+      globalCommitContext.ops = [];
+
+      slot.removeChild(child);
+      flushPendingRefs();
+
+      expect(ref.current).toBeNull();
+    });
+
+    it('queues all direct and spread ref cleanups when removing a hydrated subtree', () => {
+      const directRef = vi.fn();
+      const cleanup = vi.fn();
+      const spreadRef = vi.fn(() => cleanup);
+      __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
+      const parent = new BackgroundElementTemplateInstance('view');
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      parent.appendChild(slot);
+      const child = new BackgroundElementTemplateInstance('view');
+      slot.appendChild(child);
+
+      markElementTemplateHydrated();
+      parent.markMaterializedByHydration();
+      child.markMaterializedByHydration();
+      child.setAttribute('attributeSlots', [directRef, { ref: spreadRef }]);
+      flushPendingRefs();
+      expect(directRef).toHaveBeenCalledTimes(1);
+      expect(spreadRef).toHaveBeenCalledTimes(1);
+      directRef.mockClear();
+      spreadRef.mockClear();
+
+      slot.removeChild(child);
+      flushPendingRefs();
+
+      expect(cleanup).toHaveBeenCalledTimes(1);
+      expect(spreadRef).not.toHaveBeenCalled();
+      expect(directRef).toHaveBeenCalledWith(null);
+    });
+
+    it('queues nested direct and spread ref cleanup when removing a hydrated subtree', () => {
+      const childCleanup = vi.fn();
+      const childRef = vi.fn(() => childCleanup);
+      const directGrandchildRef = vi.fn();
+      const grandchildCleanup = vi.fn();
+      const grandchildSpreadRef = vi.fn(() => grandchildCleanup);
+      __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
+      const parent = new BackgroundElementTemplateInstance('view');
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      parent.appendChild(slot);
+      const child = new BackgroundElementTemplateInstance('view');
+      const childSlot = new BackgroundElementTemplateSlot();
+      childSlot.setAttribute('id', 0);
+      const grandchild = new BackgroundElementTemplateInstance('view');
+      child.appendChild(childSlot);
+      childSlot.appendChild(grandchild);
+      slot.appendChild(child);
+
+      markElementTemplateHydrated();
+      parent.markMaterializedByHydration();
+      child.markMaterializedByHydration();
+      grandchild.markMaterializedByHydration();
+      child.setAttribute('attributeSlots', [childRef]);
+      grandchild.setAttribute('attributeSlots', [
+        directGrandchildRef,
+        { ref: grandchildSpreadRef },
+      ]);
+      flushPendingRefs();
+      expect(childRef).toHaveBeenCalledTimes(1);
+      expect(directGrandchildRef).toHaveBeenCalledTimes(1);
+      expect(grandchildSpreadRef).toHaveBeenCalledTimes(1);
+      childRef.mockClear();
+      directGrandchildRef.mockClear();
+      grandchildSpreadRef.mockClear();
+      globalCommitContext.ops = [];
+
+      slot.removeChild(child);
+      flushPendingRefs();
+
+      expect(globalCommitContext.ops).toEqual([
+        4,
+        parent.instanceId,
+        0,
+        child.instanceId,
+        [child.instanceId, grandchild.instanceId],
+      ]);
+      expect(childCleanup).toHaveBeenCalledTimes(1);
+      expect(grandchildCleanup).toHaveBeenCalledTimes(1);
+      expect(childRef).not.toHaveBeenCalled();
+      expect(grandchildSpreadRef).not.toHaveBeenCalled();
+      expect(directGrandchildRef).toHaveBeenCalledWith(null);
+    });
+
+    it('does not repeat direct function ref cleanup for detached subtrees on destroy', () => {
+      const cleanup = vi.fn();
+      const ref = vi.fn(() => cleanup);
+      __etAttrPlanMap.view = [0, adaptRefAttrSlot];
+      const parent = new BackgroundElementTemplateInstance('view');
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      parent.appendChild(slot);
+      const child = new BackgroundElementTemplateInstance('view');
+      slot.appendChild(child);
+
+      markElementTemplateHydrated();
+      parent.markMaterializedByHydration();
+      child.markMaterializedByHydration();
+      child.setAttribute('attributeSlots', [ref]);
+      flushPendingRefs();
+      expect(ref).toHaveBeenCalledTimes(1);
+
+      slot.removeChild(child);
+      flushPendingRefs();
+      expect(cleanup).toHaveBeenCalledTimes(1);
+
+      destroyElementTemplateBackgroundRuntime();
+
+      expect(cleanup).toHaveBeenCalledTimes(1);
+      expect(ref).toHaveBeenCalledTimes(1);
     });
 
     it('does not emit patches for pre-hydration slot mutations', () => {
@@ -471,7 +713,32 @@ describe('BackgroundElementTemplateInstance', () => {
 
       expect(parent.elementSlots[0]).toEqual([]);
       expect(globalCommitContext.ops).toEqual([]);
-      expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+      expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+      expect(backgroundElementTemplateInstanceManager.get(childId)).toBeUndefined();
+    });
+
+    it('cleans pre-hydration direct refs when removing a slot child before hydrate', () => {
+      const ref = { current: null };
+      __etAttrPlanMap.view = [0, adaptRefAttrSlot];
+      const parent = new BackgroundElementTemplateInstance('view');
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      parent.appendChild(slot);
+      const child = new BackgroundElementTemplateInstance('view');
+      const childId = child.instanceId;
+
+      slot.appendChild(child);
+      child.setAttribute('attributeSlots', [ref]);
+      flushPendingRefs();
+      expect(ref.current).toMatchObject({ selector: `[ref=${child.instanceId}-0]` });
+
+      globalCommitContext.ops = [];
+      slot.removeChild(child);
+      flushPendingRefs();
+
+      expect(ref.current).toBeNull();
+      expect(parent.elementSlots[0]).toEqual([]);
+      expect(globalCommitContext.ops).toEqual([]);
       expect(backgroundElementTemplateInstanceManager.get(childId)).toBeUndefined();
     });
 
@@ -488,7 +755,7 @@ describe('BackgroundElementTemplateInstance', () => {
 
       expect(parent.elementSlots[0]).toEqual([]);
       expect(globalCommitContext.ops).toEqual([]);
-      expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+      expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
     });
 
     it('clears cached elementSlots when removing a slot child', () => {
@@ -532,6 +799,25 @@ describe('BackgroundElementTemplateInstance', () => {
     expect(child.parent).toBeNull();
   });
 
+  it('clears direct object refs when removing from the root container', () => {
+    const ref = { current: null };
+    __etAttrPlanMap.view = [0, adaptRefAttrSlot];
+    const root = new BackgroundElementTemplateInstance('root');
+    const instance = new BackgroundElementTemplateInstance('view');
+    backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
+    root.appendChild(instance);
+    instance.markMaterializedByHydration();
+    markElementTemplateHydrated();
+    instance.setAttribute('attributeSlots', [ref]);
+    flushPendingRefs();
+    expect(ref.current).toMatchObject({ selector: '[ref=-2-0]' });
+
+    root.removeChild(instance);
+    flushPendingRefs();
+
+    expect(ref.current).toBeNull();
+  });
+
   it('reports error for emitCreate with illegal handleId 0 in dev', () => {
     const lynxObj = globalThis.lynx as typeof lynx & { reportError?: (error: Error) => void };
     const oldReportError = lynxObj.reportError;
@@ -562,6 +848,185 @@ describe('BackgroundElementTemplateInstance', () => {
       [null],
       [],
     ]);
+  });
+
+  it('queues direct ref attach when preparing hydrated attribute slots', () => {
+    const ref = vi.fn();
+    __etAttrPlanMap.view = [0, adaptRefAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view', [ref]);
+    backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
+
+    instance.prepareAttributeSlotsForNative();
+    flushPendingRefs();
+
+    expect(instance.attributeSlots).toEqual(['-2-0']);
+    expect(ref).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
+  });
+
+  it('queues direct ref changes without emitting native ops when marker is unchanged', () => {
+    const oldRef = vi.fn();
+    const newRef = vi.fn();
+    __etAttrPlanMap.view = [0, adaptRefAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
+    instance.markMaterializedByHydration();
+    markElementTemplateHydrated();
+
+    instance.setAttribute('attributeSlots', [oldRef]);
+    flushPendingRefs();
+    oldRef.mockClear();
+    globalCommitContext.ops = [];
+
+    instance.setAttribute('attributeSlots', [newRef]);
+    flushPendingRefs();
+
+    expect(globalCommitContext.ops).toEqual([]);
+    expect(oldRef).toHaveBeenCalledWith(null);
+    expect(newRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
+  });
+
+  it('queues spread ref attach/update/detach from raw ref identity', () => {
+    const oldRef = vi.fn();
+    const newRef = vi.fn();
+    __etAttrPlanMap.view = [0, adaptSpreadAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
+    instance.markMaterializedByHydration();
+    markElementTemplateHydrated();
+
+    instance.setAttribute('attributeSlots', [{ id: 'cta', ref: oldRef }]);
+    flushPendingRefs();
+    expect(instance.attributeSlots).toEqual([{ id: 'cta', ref: '-2-0' }]);
+    expect(oldRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
+    oldRef.mockClear();
+    globalCommitContext.ops = [];
+
+    instance.setAttribute('attributeSlots', [{ id: 'cta-next', ref: oldRef }]);
+    flushPendingRefs();
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      -2,
+      0,
+      { id: 'cta-next', ref: '-2-0' },
+    ]);
+    expect(oldRef).not.toHaveBeenCalled();
+    globalCommitContext.ops = [];
+
+    instance.setAttribute('attributeSlots', [{ id: 'cta-next', ref: newRef }]);
+    flushPendingRefs();
+
+    expect(globalCommitContext.ops).toEqual([]);
+    expect(oldRef).toHaveBeenCalledWith(null);
+    expect(newRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
+    newRef.mockClear();
+
+    instance.setAttribute('attributeSlots', [{ id: 'cta-next' }]);
+    flushPendingRefs();
+
+    expect(newRef).toHaveBeenCalledWith(null);
+  });
+
+  it('queues direct and spread refs independently in descriptor order', () => {
+    const directRef = vi.fn();
+    const spreadRef = vi.fn();
+    __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
+    instance.markMaterializedByHydration();
+    markElementTemplateHydrated();
+
+    instance.setAttribute('attributeSlots', [directRef, { ref: spreadRef }]);
+    flushPendingRefs();
+
+    expect(instance.attributeSlots).toEqual(['-2-0', { ref: '-2-1' }]);
+    expect(directRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
+    expect(spreadRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-1]',
+    }));
+
+    directRef.mockClear();
+    spreadRef.mockClear();
+    instance.setAttribute('attributeSlots', [directRef, {}]);
+    flushPendingRefs();
+
+    expect(spreadRef).toHaveBeenCalledWith(null);
+    expect(directRef).not.toHaveBeenCalled();
+  });
+
+  it('does not let explicit undefined spread refs detach sibling direct refs', () => {
+    const directRef = vi.fn();
+    __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
+    instance.markMaterializedByHydration();
+    markElementTemplateHydrated();
+
+    instance.setAttribute('attributeSlots', [directRef, { ref: undefined }]);
+    flushPendingRefs();
+
+    expect(instance.attributeSlots).toEqual(['-2-0', { ref: null }]);
+    expect(directRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
+  });
+
+  it('keeps a stable direct ref attached while spread ref presence changes', () => {
+    const ref = vi.fn();
+    __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
+    instance.markMaterializedByHydration();
+    markElementTemplateHydrated();
+
+    instance.setAttribute('attributeSlots', [ref, {}]);
+    flushPendingRefs();
+    expect(ref).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
+    ref.mockClear();
+
+    instance.setAttribute('attributeSlots', [ref, { ref: undefined }]);
+    flushPendingRefs();
+    expect(ref).not.toHaveBeenCalled();
+    ref.mockClear();
+
+    instance.setAttribute('attributeSlots', [ref, {}]);
+    flushPendingRefs();
+
+    expect(instance.attributeSlots).toEqual(['-2-0', {}]);
+    expect(ref).not.toHaveBeenCalled();
+  });
+
+  it('queues spread and later direct refs independently', () => {
+    const spreadRef = vi.fn();
+    const directRef = vi.fn();
+    __etAttrPlanMap.view = [0, adaptSpreadAttrSlot, 1, adaptRefAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
+    instance.markMaterializedByHydration();
+    markElementTemplateHydrated();
+
+    instance.setAttribute('attributeSlots', [{ ref: spreadRef }, directRef]);
+    flushPendingRefs();
+
+    expect(instance.attributeSlots).toEqual([{ ref: '-2-0' }, '-2-1']);
+    expect(spreadRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
+    expect(directRef).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-1]',
+    }));
   });
 
   it('ignores legacy create options metadata props', () => {
