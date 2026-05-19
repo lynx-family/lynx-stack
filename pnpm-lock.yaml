@@ -949,8 +949,8 @@ importers:
   packages/react:
     dependencies:
       preact:
-        specifier: https://pkg.pr.new/lynx-family/internal-preact/preact@88ccd78
-        version: https://pkg.pr.new/lynx-family/internal-preact/preact@88ccd78
+        specifier: https://pkg.pr.new/lynx-family/internal-preact/preact@c2b97a8
+        version: https://pkg.pr.new/lynx-family/internal-preact/preact@c2b97a8
     devDependencies:
       '@lynx-js/types':
         specifier: 3.7.0
@@ -10015,8 +10015,8 @@ packages:
   preact@10.29.1:
     resolution: {integrity: sha512-gQCLc/vWroE8lIpleXtdJhTFDogTdZG9AjMUpVkDf2iTCNwYNWA+u16dL41TqUDJO4gm2IgrcMv3uTpjd4Pwmg==}
 
-  preact@https://pkg.pr.new/lynx-family/internal-preact/preact@88ccd78:
-    resolution: {tarball: https://pkg.pr.new/lynx-family/internal-preact/preact@88ccd78}
+  preact@https://pkg.pr.new/lynx-family/internal-preact/preact@c2b97a8:
+    resolution: {tarball: https://pkg.pr.new/lynx-family/internal-preact/preact@c2b97a8}
     version: 10.29.1
 
   prelude-ls@1.2.1:
@@ -20518,7 +20518,7 @@ snapshots:
 
   preact@10.29.1: {}
 
-  preact@https://pkg.pr.new/lynx-family/internal-preact/preact@88ccd78: {}
+  preact@https://pkg.pr.new/lynx-family/internal-preact/preact@c2b97a8: {}
 
   prelude-ls@1.2.1: {}
 
