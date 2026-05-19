@@ -2,5 +2,5 @@
   "all": true,
   "check-coverage": true,
   "extension": [".js", ".cjs", ".mjs", ".ts", ".tsx", ".jsx"],
-  "temp-dir": "./web-tests/.nyc_output"
+  "temp-dir": "./web-core-e2e/.nyc_output"
 }
