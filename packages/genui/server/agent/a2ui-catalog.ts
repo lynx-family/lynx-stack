@@ -241,15 +241,22 @@ export const BASIC_CATALOG: A2UICatalog = {
     },
     {
       name: 'Button',
-      summary: 'Clickable button. MUST always include an action.',
+      summary:
+        'Clickable button. MUST always include an action. Has no "label" prop – use a child Text component for the visible label.',
       requiresAction: true,
+      containerShape: 'child',
       props: [
-        prop('label', DYN, true, 'Button label.'),
+        prop(
+          'child',
+          'string (component id)',
+          true,
+          'Id of the Text child component that renders the button label.',
+        ),
         prop(
           'action',
-          '{ name: string, context?: Record<string, any> }',
+          '{ event: { name: string, context?: Record<string, DynamicValue> } }',
           true,
-          'Action dispatched when clicked.',
+          'Action dispatched when clicked. The event name is nested under "event".',
         ),
         prop(
           'variant',

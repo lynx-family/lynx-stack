@@ -79,8 +79,10 @@ and exactly ONE of the following keys:
 
 ## Client-to-server events
 - Interactive components carry an "action":
-    { "name": "submit_booking",
-      "context": { "restaurantId": { "path": "/selected/id" } } }
+    { "event": { "name": "submit_booking",
+                 "context": { "restaurantId": { "path": "/selected/id" } } } }
+- Button has NO "label" prop. Its visible label is a child Text component
+  (use "child": "<text-id>" and add a separate Text component with that id).
 - The renderer will POST that action back to /a2ui/action with the same
   surfaceId + threadId. Your next turn may receive an assistant message whose
   content starts with "A2UI_USER_ACTION:" followed by JSON describing the
@@ -102,7 +104,8 @@ function buildHardRules(catalogId: string): string {
 6. Children are referenced by id only. NEVER inline a child component.
 7. Container references MUST point to components present in the same response.
 8. Card.child is exactly one id; wrap multiple elements in Row/Column/List.
-9. Buttons MUST include a non-empty "action.name".
+9. Buttons MUST include a non-empty "action.event.name". Button has NO "label"
+   prop – provide the label via a child Text component ("child": "<text-id>").
 10. Any "{path:...}" reference MUST be populated by some updateDataModel in the
    same response.
 11. Ids are kebab-case, unique per surface ("root", "title-text", "submit-btn").
@@ -139,16 +142,19 @@ Assistant (response body, raw JSON, no fences):
         { "id": "password", "component": "TextField", "label": "Password",
           "value": { "path": "/form/password" } },
         { "id": "submit",   "component": "Button",
-          "label": "Sign in",
           "variant": "primary",
           "action": {
-            "name": "submit_login",
-            "context": {
-              "email":    { "path": "/form/email" },
-              "password": { "path": "/form/password" }
+            "event": {
+              "name": "submit_login",
+              "context": {
+                "email":    { "path": "/form/email" },
+                "password": { "path": "/form/password" }
+              }
             }
-          }
-        }
+          },
+          "child": "submit-label"
+        },
+        { "id": "submit-label", "component": "Text", "text": "Sign in" }
       ]
     }
   },

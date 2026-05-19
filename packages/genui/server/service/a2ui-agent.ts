@@ -199,6 +199,16 @@ export default class A2UIAgentService {
     this.conversations.delete(threadId);
   }
 
+  public recordStreamedConversation(
+    threadId: string,
+    messages: ChatMessage[],
+    assistantText: string,
+    a2uiMessages: A2UIMessage[],
+  ): void {
+    const conv = this.getConversation(threadId);
+    mergeIntoConversation(conv, messages, assistantText, a2uiMessages);
+  }
+
   public async stream(
     messages: ChatMessage[],
     opts: ChatOptions = {},

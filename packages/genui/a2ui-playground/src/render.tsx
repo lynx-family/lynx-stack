@@ -26,6 +26,7 @@ interface InitData {
   rawText?: string;
   rawTextUrl?: string;
   playbackPaused?: boolean;
+  liveAction?: boolean;
 }
 
 interface InitLynxViewMessage {
@@ -45,6 +46,16 @@ interface PlaybackProgressMessage {
     totalCount: number;
     status: 'idle' | 'streaming' | 'paused' | 'done';
   };
+}
+
+interface UserActionMessage {
+  type: 'A2UI_USER_ACTION';
+  action: unknown;
+}
+
+interface ActionResponseMessage {
+  type: 'A2UI_ACTION_RESPONSE';
+  messages: unknown[];
 }
 
 interface LynxViewElement extends HTMLElement {
@@ -117,6 +128,7 @@ function parseInitDataFromQuery(): InitData | null {
       : (theme === 'light' ? 'light' : undefined),
     rawText: rawText ?? undefined,
     rawTextUrl: rawTextUrl ?? undefined,
+    liveAction: params.get('liveAction') === '1' ? true : undefined,
   };
 
   if (messages) {
@@ -171,6 +183,7 @@ function buildGlobalPropsFromInitData(
   if (initData.playbackPaused !== undefined) {
     out.playbackPaused = initData.playbackPaused;
   }
+  if (initData.liveAction !== undefined) out.liveAction = initData.liveAction;
   return Object.keys(out).length > 0 ? out : null;
 }
 
@@ -236,18 +249,27 @@ function Render() {
     if (!lynxView) return;
 
     lynxView.onNativeModulesCall = (name, data, moduleName) => {
-      if (name !== 'A2UI_PLAYBACK_SYNC' || moduleName !== 'bridge') {
+      if (moduleName !== 'bridge') return;
+      if (name === 'A2UI_PLAYBACK_SYNC') {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(
+            {
+              type: 'A2UI_PLAYBACK_SYNC',
+              data,
+            },
+            '*',
+          );
+        }
         return;
       }
-
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage(
-          {
-            type: 'A2UI_PLAYBACK_SYNC',
-            data,
-          },
-          '*',
-        );
+      if (name === 'A2UI_USER_ACTION') {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(
+            { type: 'A2UI_USER_ACTION', action: data },
+            '*',
+          );
+        }
+        return;
       }
     };
 
@@ -267,6 +289,27 @@ function Render() {
         const lynxView = lynxViewRef.current;
         lynxView?.sendGlobalEvent?.('A2UI_PLAYBACK_PROGRESS', [
           (e.data as PlaybackProgressMessage).data,
+        ]);
+        return;
+      }
+      if (
+        e.data
+        && typeof e.data === 'object'
+        && (e.data as UserActionMessage).type === 'A2UI_USER_ACTION'
+      ) {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(e.data, '*');
+        }
+        return;
+      }
+      if (
+        e.data
+        && typeof e.data === 'object'
+        && (e.data as ActionResponseMessage).type === 'A2UI_ACTION_RESPONSE'
+      ) {
+        const lynxView = lynxViewRef.current;
+        lynxView?.sendGlobalEvent?.('A2UI_ACTION_RESPONSE', [
+          (e.data as ActionResponseMessage).messages,
         ]);
         return;
       }

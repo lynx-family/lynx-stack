@@ -106,6 +106,7 @@ interface InitData {
   playbackMode?: boolean;
   theme?: 'light' | 'dark';
   playbackPaused?: boolean;
+  liveAction?: boolean;
 }
 
 type Theme = 'light' | 'dark';
@@ -211,6 +212,12 @@ function normalizeInitDataLike(raw: unknown): InitData {
     out.theme = theme.toLowerCase() as Theme;
   }
 
+  const liveAction = obj.liveAction;
+  if (liveAction !== undefined) {
+    out.liveAction = liveAction === true || liveAction === '1'
+      || liveAction === 1;
+  }
+
   return out;
 }
 
@@ -224,6 +231,7 @@ function mergeInitDataPreferLeft(a: InitData, b: InitData): InitData {
     playbackMode: a.playbackMode ?? b.playbackMode,
     playbackPaused: a.playbackPaused ?? b.playbackPaused,
     theme: a.theme ?? b.theme,
+    liveAction: a.liveAction ?? b.liveAction,
   };
 }
 
@@ -414,6 +422,18 @@ export function App() {
     },
   );
 
+  useLynxGlobalEventListener(
+    'A2UI_ACTION_RESPONSE',
+    (messages: unknown) => {
+      const currentStore = storeRef.current;
+      if (!currentStore) return;
+      const normalized = normalizeProtocolMessages(messages);
+      for (const msg of normalized) {
+        currentStore.push(msg);
+      }
+    },
+  );
+
   useEffect(() => {
     playbackPausedRef.current = isPlaybackPaused;
   }, [isPlaybackPaused]);
@@ -516,6 +536,14 @@ export function App() {
                     messageStore={store}
                     catalogs={ALL_BUILTINS}
                     onAction={(action) => {
+                      if (effectiveData.liveAction) {
+                        NativeModules.bridge.call(
+                          'A2UI_USER_ACTION',
+                          action as unknown as Record<string, unknown>,
+                          () => undefined,
+                        );
+                        return;
+                      }
                       // Forward user actions to the mock agent — it pushes
                       // the canned response messages back into the same store.
                       void agentRef.current?.onAction(action);
