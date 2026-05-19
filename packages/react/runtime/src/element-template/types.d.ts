@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RuntimeOptions, SerializableValue, SerializedElementTemplate } from './protocol/types.js';
+import type { RuntimeOptions, SerializableValue, SerializedEtNode } from './protocol/types.js';
 
 export {};
 
@@ -17,13 +17,21 @@ declare global {
     attributeSlots: SerializableValue[] | null | undefined,
     elementSlots: ElementRef[][] | null | undefined,
     uid: number | string,
+    options?: RuntimeOptions | null,
+  ): ElementRef;
+
+  function __CreateTypedElementTemplate(
+    type: string,
+    elementSlots: ElementRef[][] | null | undefined,
+    uid: number | string,
+    options?: RuntimeOptions | null,
   ): ElementRef;
 
   function __SetAttributeOfElementTemplate(
     element: ElementRef,
     attrSlotIndex: number,
     value: SerializableValue | null,
-    oldValue?: SerializableValue | null,
+    options?: RuntimeOptions | null,
   ): void;
 
   function __InsertNodeToElementTemplate(
@@ -42,5 +50,5 @@ declare global {
   function __SerializeElementTemplate(
     templateInstance: ElementRef,
     options?: RuntimeOptions | null,
-  ): SerializedElementTemplate;
+  ): SerializedEtNode;
 }

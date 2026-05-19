@@ -23,7 +23,10 @@ import {
   flushPendingRefs,
 } from '../../../../src/element-template/prop-adapters/ref.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
-import type { SerializedElementTemplate } from '../../../../src/element-template/protocol/types.js';
+import type {
+  SerializedElementTemplate,
+  SerializedTypedNode,
+} from '../../../../src/element-template/protocol/types.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';
 import {
   __etAttrPlanMap,
@@ -102,6 +105,45 @@ describe('ElementTemplate hydration listener', () => {
     expect(backgroundElementTemplateInstanceManager.get(oldId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(-1)).toBe(after);
     expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
+  });
+
+  it('drops typed roots before typed hydrate support lands', () => {
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      envManager.switchToBackground();
+      installElementTemplateHydrationListener();
+
+      const backgroundRoot = __root as BackgroundElementTemplateInstance;
+      const after = new BackgroundElementTemplateInstance('_et_test');
+      backgroundRoot.appendChild(after);
+      const oldId = after.instanceId;
+
+      envManager.switchToMainThread();
+      lynx.getJSContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.hydrate,
+        data: [
+          {
+            type: 'view',
+            elementSlots: [],
+            uid: -1,
+          } satisfies SerializedTypedNode,
+        ],
+      });
+
+      envManager.switchToBackground();
+
+      expect(reportError).toHaveBeenCalledTimes(1);
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+        'does not support serialized typed root',
+      );
+      expect(backgroundElementTemplateInstanceManager.get(oldId)).toBe(after);
+      expect(backgroundElementTemplateInstanceManager.get(-1)).toBeUndefined();
+    } finally {
+      lynx.reportError = oldReportError;
+    }
   });
 
   it('schedules delayed cleanup for removed subtrees produced during hydration', () => {

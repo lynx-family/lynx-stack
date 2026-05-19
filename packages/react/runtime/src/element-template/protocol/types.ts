@@ -12,14 +12,50 @@ export type SerializableValue =
   | SerializableValue[]
   | { [key: string]: SerializableValue };
 
-export type RuntimeOptions = Record<string, SerializableValue>;
+export type RuntimeOptionValue =
+  | SerializableValue
+  | ElementRef
+  | RuntimeOptionValue[]
+  | { [key: string]: RuntimeOptionValue };
 
+export type RuntimeOptions = Record<string, RuntimeOptionValue>;
+
+export type SerializedRuntimeOptionValue =
+  | SerializableValue
+  | SerializedEtNode
+  | SerializedRuntimeOptionValue[]
+  | { [key: string]: SerializedRuntimeOptionValue };
+
+export type SerializedRuntimeOptions = Record<string, SerializedRuntimeOptionValue>;
+
+export interface SerializedCompiledNode {
+  templateKey: string;
+  bundleUrl?: string;
+  attributeSlots?: SerializableValue[] | null;
+  elementSlots?: SerializedEtNode[][] | null;
+  uid: number | string;
+  options?: SerializedRuntimeOptions | null;
+}
+
+export interface SerializedTypedNode {
+  type: string;
+  attributes?: Record<string, SerializableValue> | null;
+  elementSlots?: SerializedEtNode[][] | null;
+  uid: number | string;
+  options?: SerializedRuntimeOptions | null;
+}
+
+export type SerializedEtNode = SerializedCompiledNode | SerializedTypedNode;
+
+// Current hydrate/update code is still compiled-node only. Keep this recursive
+// shape narrow while the RFC-level SerializedEtNode already models typed nodes.
 export interface SerializedElementTemplate {
   templateKey: string;
   bundleUrl?: string;
   attributeSlots?: SerializableValue[] | null;
   elementSlots?: SerializedElementTemplate[][] | null;
   uid: number | string;
+  options?: SerializedRuntimeOptions | null;
 }
 
 export type CreateTemplateCommand = [
