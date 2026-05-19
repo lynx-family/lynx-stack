@@ -235,13 +235,14 @@ export const elementTree = new (class {
   }
 
   __RemoveElement(parent: Element, child: Element) {
-    parent.children.forEach((ch, index) => {
-      if (ch === child) {
-        parent.children.splice(index, 1);
-        return;
-      }
-    });
-    parentMap.delete(child);
+    if (parentMap.get(child) === parent) {
+      parent.children.splice(parent.children.indexOf(child), 1);
+      parentMap.delete(child);
+    } else {
+      throw new Error(
+        `child ${child.$$uiSign} is not in parent ${parent.$$uiSign}, cannot remove it!`,
+      );
+    }
   }
 
   __InsertElementBefore(

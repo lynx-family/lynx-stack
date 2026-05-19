@@ -327,9 +327,13 @@ describe('removeChild', () => {
 
     expect(snapshotInstanceManager.values.size).toMatchInlineSnapshot(`2`);
 
+    const __elements = b.__elements;
+    const __element_root = b.__element_root;
     a.removeChild(b);
+    b.__element_root = __element_root;
+    b.__elements = __elements;
     expect(() => a.removeChild(b)).toThrowErrorMatchingInlineSnapshot(
-      `[Error: The node to be removed is not a child of this node.]`,
+      `[Error: child 4 is not in parent 3, cannot remove it!]`,
     );
 
     expect(a.__element_root).toMatchInlineSnapshot(`
