@@ -2,23 +2,38 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { randomUUID } from 'node:crypto';
-
-import { BASIC_CATALOG } from '../../../agent/a2ui-catalog';
-import { validateA2UIOutput } from '../../../agent/a2ui-validator';
-import { getA2UIAgentService } from '../../../service/a2ui-agent';
+import type { A2UICatalog } from '../../../../agent/a2ui-catalog';
+import { BASIC_CATALOG } from '../../../../agent/a2ui-catalog';
+import { validateA2UIOutput } from '../../../../agent/a2ui-validator';
+import { getA2UIAgentService } from '../../../../service/a2ui-agent';
+import type { ChatMessage } from '../../../../service/a2ui-agent';
 import {
+  MAX_MESSAGE_CHARS,
   errorMessage,
   pickChatOptions,
   readJsonBodyWithLimit,
-  validateMessages,
-} from '../_shared';
-import type { A2UIChatBody } from '../_shared';
-import { corsHeaders, corsPreflight, jsonWithCors } from '../cors';
-import { checkRateLimit, rateLimitSseResponse } from '../rate-limit';
+} from '../../_shared';
+import { corsHeaders, corsPreflight, jsonWithCors } from '../../cors';
+import { checkRateLimit, rateLimitSseResponse } from '../../rate-limit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+interface A2UIActionStreamBody {
+  threadId: string;
+  surfaceId?: string;
+  action: {
+    name: string;
+    context?: Record<string, unknown>;
+  };
+  resourceId?: string;
+  model?: string;
+  apiKey?: string;
+  baseURL?: string;
+  catalog?: A2UICatalog;
+  maxRepairAttempts?: number;
+  reset?: boolean;
+}
 
 function encodeSSE(event: string, data: unknown): Uint8Array {
   const payload = typeof data === 'string' ? data : JSON.stringify(data);
@@ -44,7 +59,7 @@ export async function POST(req: Request) {
     return rateLimitSseResponse(req, decision);
   }
 
-  const parsed = await readJsonBodyWithLimit<A2UIChatBody>(req);
+  const parsed = await readJsonBodyWithLimit<A2UIActionStreamBody>(req);
   if (!parsed.ok) {
     return jsonWithCors(
       req,
@@ -54,17 +69,58 @@ export async function POST(req: Request) {
   }
   const body = parsed.body;
 
-  const validated = validateMessages(body.messages);
-  if (!validated.ok) {
+  if (!body || !body.threadId) {
     return jsonWithCors(
       req,
-      { ok: false, error: validated.error },
-      { status: validated.status },
+      { ok: false, error: 'threadId is required' },
+      { status: 400 },
     );
   }
-  const messages = validated.messages;
-  const opts = pickChatOptions(body);
+  if (!body.action || !body.action.name) {
+    return jsonWithCors(
+      req,
+      { ok: false, error: 'action.name is required' },
+      { status: 400 },
+    );
+  }
+
   const service = getA2UIAgentService();
+
+  if (body.reset) {
+    service.resetConversation(body.threadId);
+  }
+
+  const conv = service.peekConversation(body.threadId);
+  if (!conv && !body.reset) {
+    return jsonWithCors(req, {
+      ok: false,
+      error: `unknown threadId "${body.threadId}" - call /a2ui/chat first`,
+    });
+  }
+
+  const payload = {
+    surfaceId: body.surfaceId,
+    action: body.action,
+  };
+  const userContent = `A2UI_USER_ACTION: ${JSON.stringify(payload)}`;
+  if (userContent.length > MAX_MESSAGE_CHARS) {
+    return jsonWithCors(
+      req,
+      {
+        ok: false,
+        error:
+          `synthesized user action exceeds ${MAX_MESSAGE_CHARS} characters`,
+      },
+      { status: 413 },
+    );
+  }
+  const userMessage: ChatMessage = {
+    role: 'user',
+    content: userContent,
+  };
+
+  const opts = pickChatOptions(body);
+  const optsWithThread = { ...opts, threadId: body.threadId };
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -73,16 +129,14 @@ export async function POST(req: Request) {
       };
 
       try {
-        const threadId = opts.threadId ?? randomUUID();
-        const optsWithThread = { ...opts, threadId };
         const { textStream, finalize } = await service.streamAsAsyncIterable(
-          messages,
+          [userMessage],
           optsWithThread,
         );
 
         enqueue('start', {
-          threadId,
-          resourceId: opts.resourceId,
+          threadId: body.threadId,
+          actionName: body.action.name,
         });
 
         for await (const chunk of textStream) {
@@ -109,8 +163,8 @@ export async function POST(req: Request) {
           };
           if (v.ok && v.messages.length > 0) {
             service.recordStreamedConversation(
-              threadId,
-              messages,
+              body.threadId,
+              [userMessage],
               finalText,
               v.messages,
             );

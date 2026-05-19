@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { json } from '@codemirror/lang-json';
-import CodeMirror from '@uiw/react-codemirror';
+import CodeMirror, { EditorView } from '@uiw/react-codemirror';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import './AIChatPage.css';
@@ -16,8 +16,11 @@ import type { Protocol } from '../utils/protocol.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
 
 interface ChatMessage {
-  role: 'user' | 'ai';
+  role: 'user' | 'ai' | 'action' | 'json' | 'status';
   content: string | React.ReactNode;
+  payload?: unknown;
+  payloadLabel?: string;
+  tone?: 'info' | 'pending' | 'success' | 'error';
 }
 
 interface ModelChatMessage {
@@ -72,7 +75,7 @@ const RESIZE_BREAKPOINT = 980;
 const ONLINE_A2UI_SERVER_ORIGIN = 'https://genui-server.vercel.app';
 const ONLINE_A2UI_CHAT_URL = `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/stream`;
 const LOCAL_A2UI_SERVER_PORT = '3060';
-const jsonExtensions = [json()];
+const jsonExtensions = [json(), EditorView.lineWrapping];
 
 function isDevHost(hostname: string): boolean {
   return (
@@ -124,6 +127,13 @@ function getA2UIChatEndpoint(): string {
   return ONLINE_A2UI_CHAT_URL;
 }
 
+function getA2UIActionStreamEndpoint(): string {
+  return getA2UIChatEndpoint().replace(
+    /\/a2ui\/stream$/,
+    '/a2ui/action/stream',
+  );
+}
+
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return String(error);
@@ -158,6 +168,23 @@ function parseSseData(raw: string): unknown {
     return JSON.parse(raw) as unknown;
   } catch {
     return raw;
+  }
+}
+
+function safeStringifyPayload(value: unknown): string {
+  if (typeof value === 'string') {
+    // Streaming JSON often arrives minified (no spaces/newlines) — try to
+    // re-pretty-print it so CodeMirror can show it across multiple lines.
+    try {
+      return JSON.stringify(JSON.parse(value), null, 2);
+    } catch {
+      return value;
+    }
+  }
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
   }
 }
 
@@ -266,6 +293,7 @@ async function readA2UIResponse(
   response: BrowserResponse,
   onText: (text: string) => void,
   onMessages: (messages: unknown[]) => void,
+  onStart?: (threadId: string) => void,
 ): Promise<unknown[]> {
   const contentType = response.headers.get('content-type') ?? '';
   if (!contentType.includes('text/event-stream')) {
@@ -296,10 +324,18 @@ async function readA2UIResponse(
       const parsed = parseSseFrame(frame);
       if (!parsed) continue;
 
+      if (parsed.event === 'start') {
+        const data = parsed.data as { threadId?: unknown };
+        if (typeof data.threadId === 'string') {
+          onStart?.(data.threadId);
+        }
+        continue;
+      }
+
       if (parsed.event === 'delta') {
-        const data = parsed.data as { text?: unknown };
-        if (typeof data.text === 'string') {
-          generatedText += data.text;
+        const deltaData = parsed.data as { text?: unknown };
+        if (typeof deltaData.text === 'string') {
+          generatedText += deltaData.text;
           onText(generatedText);
           const completed = parseCompletedArrayItems(generatedText);
           if (completed.length > latestMessages.length) {
@@ -334,6 +370,24 @@ async function readA2UIResponse(
     : normalizeA2UIMessages(generatedText);
 }
 
+const SUGGESTED_PROMPTS: Array<{ label: string; text: string }> = [
+  {
+    label: '⚡ Quiz card with actions',
+    text:
+      'Create a trivia quiz card. Show a question "What is the capital of Japan?" with 4 answer buttons: Tokyo, Beijing, Seoul, Bangkok. When the user taps an answer, show whether it is correct with a brief explanation.',
+  },
+  {
+    label: '🛍️ Product card with Buy',
+    text:
+      'Create a product card for a limited-edition sneaker. Include name, price ($189), a short description, and a "Buy Now" button. When tapped, show an order confirmation with a fake order number and estimated delivery.',
+  },
+  {
+    label: '🌤️ Weather with Refresh',
+    text:
+      'Create a weather card for San Francisco showing sunny, 22°C, humidity 60%, and a "Refresh" button. When the user taps Refresh, update the card with slightly different weather data to simulate a live fetch.',
+  },
+];
+
 export function AIChatPage(props: { protocol: Protocol }) {
   const { protocol } = props;
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
@@ -345,10 +399,14 @@ export function AIChatPage(props: { protocol: Protocol }) {
   );
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatMessagesRef = useRef<HTMLDivElement>(null);
+  const followBottomRef = useRef<boolean>(true);
   const previewFrameRef = useRef<HTMLIFrameElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const actionAbortRef = useRef<AbortController | null>(null);
   const conversationRef = useRef<ModelChatMessage[]>([]);
   const latestPreviewMessagesRef = useRef<unknown[]>([]);
+  const threadIdRef = useRef<string | null>(null);
   const {
     containerRef: pageRef,
     handleResizeStart: handlePanelResizeStart,
@@ -367,8 +425,69 @@ export function AIChatPage(props: { protocol: Protocol }) {
   });
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  });
+    // Re-run on every render so streaming text growth & async editor mounts
+    // both keep the chat pinned to the latest message.
+    void messages;
+    void generatedJson;
+    void isGenerating;
+    if (!followBottomRef.current) return;
+    const container = chatMessagesRef.current;
+    if (!container) return;
+    container.scrollTop = container.scrollHeight;
+  }, [messages, generatedJson, isGenerating]);
+
+  useEffect(() => {
+    const container = chatMessagesRef.current;
+    if (!container) return;
+    if (typeof ResizeObserver === 'undefined') return;
+    // Async-mounted CodeMirror editors and streaming JSON expand the container
+    // height after React commits. ResizeObserver fires for those layout shifts
+    // and lets us keep the chat pinned to the bottom while the user is in
+    // "follow" mode.
+    const sizeObserver = new ResizeObserver(() => {
+      if (!followBottomRef.current) return;
+      container.scrollTop = container.scrollHeight;
+    });
+    sizeObserver.observe(container);
+    Array.from(container.children).forEach((child: Element) => {
+      sizeObserver.observe(child);
+    });
+    // Newly inserted message rows must also be observed so their delayed
+    // CodeMirror layout still triggers the bottom-pin behavior. We use a
+    // MutationObserver instead of re-running this effect on every messages
+    // change so it stays a one-time setup.
+    const childObserver = new MutationObserver((entries) => {
+      let inserted = false;
+      for (const entry of entries) {
+        entry.addedNodes.forEach((node) => {
+          if (node instanceof Element) {
+            sizeObserver.observe(node);
+            inserted = true;
+          }
+        });
+      }
+      if (inserted && followBottomRef.current) {
+        container.scrollTop = container.scrollHeight;
+      }
+    });
+    childObserver.observe(container, { childList: true });
+    return () => {
+      sizeObserver.disconnect();
+      childObserver.disconnect();
+    };
+  }, []);
+
+  const handleChatScroll = useCallback(() => {
+    const container = chatMessagesRef.current;
+    if (!container) return;
+    const distanceFromBottom = container.scrollHeight
+      - container.scrollTop
+      - container.clientHeight;
+    // 32px hysteresis: small upward scrolls inside CodeMirror still count as
+    // "at bottom"; once the user is clearly above we stop auto-following so
+    // their reading position is respected.
+    followBottomRef.current = distanceFromBottom <= 32;
+  }, []);
 
   const baseUrl = useMemo(() => window.location.href.replace(/#.*$/, ''), []);
   const previewSource = useMemo(() => {
@@ -393,6 +512,7 @@ export function AIChatPage(props: { protocol: Protocol }) {
         demoUrl: DEFAULT_A2UI_DEMO_URL,
         messages: nextMessages,
         instant: true,
+        liveAction: !!threadIdRef.current,
       };
 
       setRenderUrl((current) => {
@@ -443,6 +563,7 @@ export function AIChatPage(props: { protocol: Protocol }) {
     setGeneratedJson('');
     setPreviewMessages(null);
     latestPreviewMessagesRef.current = [];
+    threadIdRef.current = null;
     setIsGenerating(true);
 
     void (async () => {
@@ -474,6 +595,9 @@ export function AIChatPage(props: { protocol: Protocol }) {
             });
           },
           publishPreviewMessages,
+          (threadId) => {
+            threadIdRef.current = threadId;
+          },
         );
 
         if (finalMessages.length === 0) {
@@ -495,6 +619,12 @@ export function AIChatPage(props: { protocol: Protocol }) {
               finalMessages.length === 1 ? '' : 's'
             }.`,
           };
+          next.push({
+            role: 'json',
+            content: 'Generated Output',
+            payload: assistantContent,
+            payloadLabel: 'JSON',
+          });
           return next;
         });
       } catch (e) {
@@ -516,6 +646,236 @@ export function AIChatPage(props: { protocol: Protocol }) {
       }
     })();
   }, [inputValue, isGenerating, publishPreviewMessages]);
+
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent<unknown>) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      const msg = e.data as Record<string, unknown>;
+      if (msg.type !== 'A2UI_USER_ACTION') return;
+
+      const threadId = threadIdRef.current;
+      if (!threadId) return;
+
+      const action = msg.action as {
+        name?: string;
+        context?: Record<string, unknown>;
+      };
+      const actionName = typeof action?.name === 'string'
+        ? action.name
+        : 'unknown';
+
+      // Abort any in-flight action stream so a stale request can no longer
+      // mutate state or post into the preview iframe after a new action
+      // arrives.
+      actionAbortRef.current?.abort();
+      const controller = new AbortController();
+      actionAbortRef.current = controller;
+      const signal = controller.signal;
+
+      let pendingIndex = -1;
+      let streamingIndex = -1;
+      setMessages((prev) => {
+        const next: ChatMessage[] = [
+          ...prev,
+          {
+            role: 'status' as const,
+            tone: 'info',
+            content: (
+              <>
+                <span className='chatMessageStatusIcon' aria-hidden='true'>
+                  📤
+                </span>
+                <span>
+                  Lynx Preview triggered{' '}
+                  <code className='chatMessageStatusInline'>{actionName}</code>
+                  , forwarding request to agent...
+                </span>
+              </>
+            ),
+          },
+          {
+            role: 'action' as const,
+            content: `⚡ Action: ${actionName}`,
+            payload: action,
+            payloadLabel: 'REQUEST',
+          },
+          {
+            role: 'status' as const,
+            tone: 'pending',
+            content: (
+              <>
+                <span
+                  className='chatMessageActionSpinner'
+                  aria-hidden='true'
+                />
+                <span>Streaming response from agent...</span>
+              </>
+            ),
+          },
+        ];
+        pendingIndex = next.length - 1;
+        return next;
+      });
+
+      void (async () => {
+        try {
+          const response = await window.fetch(getA2UIActionStreamEndpoint(), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'text/event-stream',
+            },
+            body: JSON.stringify({ threadId, action }),
+            signal,
+          });
+
+          if (!response.ok) {
+            const errPayload: unknown = await response.json().catch(
+              () => ({}),
+            );
+            throw new Error(normalizeErrorPayload(errPayload));
+          }
+
+          let responseMessages: unknown[] = [];
+
+          await readA2UIResponse(
+            response,
+            (text) => {
+              if (!text) return;
+              if (signal.aborted) return;
+              setMessages((prev) => {
+                const next = prev.slice();
+                if (streamingIndex < 0 || streamingIndex >= next.length) {
+                  // First non-empty delta — insert the streaming card right
+                  // after the pending status row so the card appears only
+                  // when there is actual data to show.
+                  const insertAt = pendingIndex >= 0
+                      && pendingIndex < next.length
+                    ? pendingIndex + 1
+                    : next.length;
+                  next.splice(insertAt, 0, {
+                    role: 'action' as const,
+                    content: '✨ Streaming RESPONSE...',
+                    payload: text,
+                    payloadLabel: 'RESPONSE (streaming)',
+                  });
+                  streamingIndex = insertAt;
+                  return next;
+                }
+                next[streamingIndex] = {
+                  ...next[streamingIndex],
+                  payload: text,
+                };
+                return next;
+              });
+            },
+            (msgs) => {
+              if (signal.aborted) return;
+              responseMessages = msgs;
+            },
+          );
+
+          if (signal.aborted) return;
+
+          if (responseMessages.length === 0) {
+            throw new Error('Agent returned no A2UI messages');
+          }
+
+          previewFrameRef.current?.contentWindow?.postMessage(
+            { type: 'A2UI_ACTION_RESPONSE', messages: responseMessages },
+            window.location.origin,
+          );
+
+          const count = responseMessages.length;
+          setMessages((prev) => {
+            const next = prev.slice();
+            if (pendingIndex >= 0 && pendingIndex < next.length) {
+              next[pendingIndex] = {
+                role: 'status' as const,
+                tone: 'success',
+                content: (
+                  <>
+                    <span className='chatMessageStatusIcon' aria-hidden='true'>
+                      📥
+                    </span>
+                    <span>
+                      Agent responded with {count} A2UI{' '}
+                      {count === 1 ? 'message' : 'messages'}.
+                    </span>
+                  </>
+                ),
+              };
+            }
+            const finalCard: ChatMessage = {
+              role: 'action' as const,
+              content: `✅ Applied ${count} ${
+                count === 1 ? 'message' : 'messages'
+              } to Lynx Preview`,
+              payload: responseMessages,
+              payloadLabel: 'RESPONSE',
+            };
+            if (streamingIndex >= 0 && streamingIndex < next.length) {
+              next[streamingIndex] = finalCard;
+            } else {
+              next.push(finalCard);
+            }
+            next.push({
+              role: 'status' as const,
+              tone: 'info',
+              content: (
+                <>
+                  <span className='chatMessageStatusIcon' aria-hidden='true'>
+                    ✨
+                  </span>
+                  <span>UI updated. Ready for the next action.</span>
+                </>
+              ),
+            });
+            return next;
+          });
+        } catch (e) {
+          if (signal.aborted) return;
+          setMessages((prev) => {
+            const next = prev.slice();
+            if (pendingIndex >= 0 && pendingIndex < next.length) {
+              next[pendingIndex] = {
+                role: 'status' as const,
+                tone: 'error',
+                content: (
+                  <>
+                    <span className='chatMessageStatusIcon' aria-hidden='true'>
+                      ❌
+                    </span>
+                    <span>
+                      Action failed: {getErrorMessage(e)}
+                    </span>
+                  </>
+                ),
+              };
+            }
+            // Drop the streaming placeholder card on failure.
+            if (streamingIndex >= 0 && streamingIndex < next.length) {
+              next.splice(streamingIndex, 1);
+            }
+            return next;
+          });
+        } finally {
+          if (actionAbortRef.current === controller) {
+            actionAbortRef.current = null;
+          }
+        }
+      })();
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      // Cancel any in-flight action stream when this effect tears down
+      // (component unmount / hot reload) so its callbacks can't fire.
+      actionAbortRef.current?.abort();
+      actionAbortRef.current = null;
+    };
+  }, []);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -540,18 +900,65 @@ export function AIChatPage(props: { protocol: Protocol }) {
           <p className='chatHeaderSub'>Describe the UI you want to build</p>
         </div>
 
-        <div className='chatMessages'>
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`chatMessage ${
-                msg.role === 'user' ? 'chatMessageUser' : 'chatMessageAI'
-              }`}
-            >
-              {msg.content}
-            </div>
-          ))}
-          {generatedJson
+        <div
+          className='chatMessages'
+          ref={chatMessagesRef}
+          onScroll={handleChatScroll}
+        >
+          {messages.map((msg, i) => {
+            const baseClassName = (() => {
+              if (msg.role === 'user') return 'chatMessageUser';
+              if (msg.role === 'action') return 'chatMessageAction';
+              if (msg.role === 'json') return 'chatMessageJson';
+              if (msg.role === 'status') {
+                return `chatMessageStatus chatMessageStatus-${
+                  msg.tone ?? 'info'
+                }`;
+              }
+              return 'chatMessageAI';
+            })();
+
+            const payloadStr = msg.payload === undefined
+              ? null
+              : safeStringifyPayload(msg.payload);
+
+            const className = msg.role === 'action' && payloadStr !== null
+              ? `${baseClassName} chatMessageActionExpanded`
+              : baseClassName;
+
+            return (
+              <div key={i} className={`chatMessage ${className}`}>
+                <div className='chatMessageBody'>{msg.content}</div>
+                {payloadStr === null
+                  ? null
+                  : (
+                    <div className='chatMessagePayload'>
+                      {msg.payloadLabel
+                        ? (
+                          <div className='chatMessagePayloadLabel'>
+                            {msg.payloadLabel}
+                          </div>
+                        )
+                        : null}
+                      <CodeMirror
+                        className='chatMessagePayloadEditor'
+                        value={payloadStr}
+                        extensions={jsonExtensions}
+                        editable={false}
+                        basicSetup={{
+                          lineNumbers: true,
+                          foldGutter: true,
+                          bracketMatching: true,
+                          closeBrackets: false,
+                          autocompletion: false,
+                        }}
+                      />
+                    </div>
+                  )}
+              </div>
+            );
+          })}
+          {isGenerating && generatedJson
             ? (
               <div className='chatGeneratedJson'>
                 <div className='chatGeneratedJsonTitle'>
@@ -562,7 +969,6 @@ export function AIChatPage(props: { protocol: Protocol }) {
                   className='chatGeneratedJsonEditor'
                   value={generatedJson}
                   extensions={jsonExtensions}
-                  theme='dark'
                   editable={false}
                   basicSetup={{
                     lineNumbers: true,
@@ -579,23 +985,42 @@ export function AIChatPage(props: { protocol: Protocol }) {
         </div>
 
         <div className='chatInputArea'>
-          <input
-            className='chatInput'
-            type='text'
-            placeholder='Describe the UI you want to generate...'
-            value={inputValue}
-            disabled={isGenerating}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-          <button
-            className='chatSendBtn'
-            type='button'
-            disabled={isGenerating}
-            onClick={handleSend}
-          >
-            {isGenerating ? 'Sending' : 'Send'}
-          </button>
+          {messages.length === 1
+            ? (
+              <div className='chatSuggestionsRow'>
+                {SUGGESTED_PROMPTS.map((p) => (
+                  <button
+                    key={p.label}
+                    type='button'
+                    className='chatSuggestionChip'
+                    disabled={isGenerating}
+                    onClick={() => setInputValue(p.text)}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            )
+            : null}
+          <div className='chatInputRow'>
+            <input
+              className='chatInput'
+              type='text'
+              placeholder='Describe the UI you want to generate...'
+              value={inputValue}
+              disabled={isGenerating}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            <button
+              className='chatSendBtn'
+              type='button'
+              disabled={isGenerating}
+              onClick={handleSend}
+            >
+              {isGenerating ? 'Sending' : 'Send'}
+            </button>
+          </div>
         </div>
       </div>
 
