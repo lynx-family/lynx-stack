@@ -315,6 +315,27 @@ export function testingLibraryPlugin(
             require.resolve('../setupFiles/vitest'),
           ],
           alias: [...runtimeOSSAlias, ...runtimeAlias, ...preactAlias, ...reactAlias],
+          // Force any module that touches `preact` (or its forks like
+          // `@lynx-js/internal-preact`, `@preact/signals`, `@prefresh/core`)
+          // through Vite's transform pipeline so the aliases above can
+          // redirect every `import 'preact'` / `import 'preact/hooks'` to a
+          // SINGLE physical module.
+          //
+          // Without this, vitest externalizes those deps and Node's resolver
+          // pulls each one's own copy of preact straight from
+          // `node_modules/.pnpm`, producing two `options` singletons. Hooks
+          // register `_render` on one, but the diff path uses the other —
+          // `currentComponent` stays undefined → `Cannot read properties of
+          // undefined (reading '__H')` the moment `useState` runs.
+          server: {
+            deps: {
+              inline: [
+                /preact/,
+                runtimeOSSPkgName,
+                ...(runtimePkgName !== runtimeOSSPkgName ? [runtimePkgName] : []),
+              ],
+            },
+          },
         },
       }),
       configResolved(_config) {
