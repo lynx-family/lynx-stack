@@ -316,10 +316,10 @@ export function testingLibraryPlugin(
           ],
           alias: [...runtimeOSSAlias, ...runtimeAlias, ...preactAlias, ...reactAlias],
           // Force any module that touches `preact` (or its forks like
-          // `@lynx-js/internal-preact`, `@preact/signals`, `@prefresh/core`)
-          // through Vite's transform pipeline so the aliases above can
-          // redirect every `import 'preact'` / `import 'preact/hooks'` to a
-          // SINGLE physical module.
+          // `@lynx-js/internal-preact`, `@preact/signals`) through Vite's
+          // transform pipeline so the aliases above can redirect every
+          // `import 'preact'` / `import 'preact/hooks'` to a SINGLE physical
+          // module.
           //
           // Without this, vitest externalizes those deps and Node's resolver
           // pulls each one's own copy of preact straight from
