@@ -2,18 +2,40 @@
 "@lynx-js/rspeedy": minor
 ---
 
-Support Rsbuild 2 and Rspack 2 in Rspeedy, deprecate removed Rsbuild config aliases, and document how to migrate the affected options.
+**BREAKING CHANGE**
 
-Move aliases from `source.alias` to `resolve.alias`:
+[Rsbuild v2](https://rsbuild.rs/guide/upgrade/v1-to-v2) deprecated `performance.chunkSplit`, so configure chunk splitting with Rspeedy's top-level `splitChunks` option instead. Rspeedy still accepts the old `performance.chunkSplit` shape as a deprecated compatibility path, but new configs should migrate:
 
-```js
+```diff
 import { defineConfig } from '@lynx-js/rspeedy';
 
 export default defineConfig({
-  resolve: {
-    alias: {
-      '@': './src',
-    },
-  },
+-  performance: {
+-    chunkSplit: {
+-      strategy: 'single-vendor',
+-    },
+-  },
++  splitChunks: {
++    preset: 'single-vendor',
++  },
+});
+```
+
+Move aliases from `source.alias` to `resolve.alias`:
+
+```diff
+import { defineConfig } from '@lynx-js/rspeedy';
+
+export default defineConfig({
+-  source: {
+-    alias: {
+-      '@': './src',
+-    },
+-  },
++  resolve: {
++    alias: {
++      '@': './src',
++    },
++  },
 });
 ```

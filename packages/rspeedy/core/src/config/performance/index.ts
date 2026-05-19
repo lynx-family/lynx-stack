@@ -81,6 +81,7 @@ export interface Performance {
    */
   chunkSplit?: ChunkSplit | ChunkSplitBySize | ChunkSplitCustom | undefined
 
+  // TODO: Remove this option in Rspeedy v1 to align with Rsbuild v2.
   /**
    * Whether capture timing information in Lynx runtime integrations such as ReactLynx.
    *

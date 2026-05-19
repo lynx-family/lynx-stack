@@ -1,4 +1,4 @@
-import { defineConfig } from '@rsbuild/core';
+import { defineConfig, type RsbuildPluginAPI } from '@rsbuild/core';
 import { pluginWebPlatform } from '@lynx-js/web-platform-rsbuild-plugin';
 import { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin';
 import { writeFileSync } from 'node:fs';
@@ -6,7 +6,7 @@ import path from 'path';
 
 const statsJsonPlugin = {
   name: 'web-explorer:stats-json',
-  setup(api) {
+  setup(api: RsbuildPluginAPI) {
     if (!process.env.RSPEEDY_BUNDLE_ANALYSIS) {
       return;
     }
@@ -17,7 +17,7 @@ const statsJsonPlugin = {
       }
       writeFileSync(
         path.join(api.context.distPath, 'stats.json'),
-        JSON.stringify(stats.toJson({ all: true }), null, 2),
+        JSON.stringify(stats.toJson({}), null, 2),
       );
     });
   },

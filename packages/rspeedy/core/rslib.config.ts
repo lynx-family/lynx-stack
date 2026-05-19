@@ -122,7 +122,7 @@ function pluginStatsJson(): rsbuild.RsbuildPlugin {
         mkdirSync(api.context.distPath, { recursive: true })
         writeFileSync(
           path.join(api.context.distPath, 'stats.json'),
-          JSON.stringify(stats.toJson({ all: true }), null, 2),
+          JSON.stringify(stats.toJson({}), null, 2),
         )
       })
     },
