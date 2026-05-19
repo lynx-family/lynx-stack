@@ -99,7 +99,7 @@ export function Button(
       >
         {childResource
           ? <A2UIRenderer resource={childResource} />
-          : <text>Button</text>}
+          : <text className='button-fallback'>Button</text>}
       </view>
       {!ok && firstFailureMessage
         ? <text className='button-error'>{firstFailureMessage}</text>

@@ -57,6 +57,11 @@
   line-height: var(--a2ui-line-height-body);
 }
 
+.button-fallback {
+  color: inherit;
+  font-size: inherit;
+}
+
 .button .text-body,
 .button .text-caption,
 .button .text-h1,
