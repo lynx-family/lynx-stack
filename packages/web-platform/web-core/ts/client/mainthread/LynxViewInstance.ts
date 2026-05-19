@@ -6,6 +6,7 @@
 import type {
   Cloneable,
   InitI18nResources,
+  InvokeUIMethodPAPI,
   JSRealm,
   MainThreadGlobalThis,
   NapiModulesMap,
@@ -17,8 +18,10 @@ import {
   systemInfoBase,
 } from '../../constants.js';
 import { BackgroundThread } from './Background.js';
+import { BoundingClientRectService } from './BoundingClientRectService.js';
 import { I18nManager } from './I18n.js';
 import { WASMJSBinding } from './elementAPIs/WASMJSBinding.js';
+import { createInvokeUIMethod } from './elementAPIs/createInvokeUIMethod.js';
 import { ExposureServices } from './ExposureServices.js';
 import { createElementAPI } from './elementAPIs/createElementAPI.js';
 import { createMainThreadGlobalAPIs } from './createMainThreadGlobalAPIs.js';
@@ -70,6 +73,17 @@ export class LynxViewInstance implements AsyncDisposable {
   #nativeModulesMap: NativeModulesMap;
   #napiModulesMap: NapiModulesMap;
 
+  readonly boundingClientRectService: BoundingClientRectService;
+  readonly invokeUIMethod: InvokeUIMethodPAPI;
+
+  get lynxViewClientLeft(): number {
+    return this.boundingClientRectService.getLynxViewRect().left;
+  }
+
+  get lynxViewClientTop(): number {
+    return this.boundingClientRectService.getLynxViewRect().top;
+  }
+
   lepusCodeUrls = new Map<string, Record<string, string>>();
   systemInfo: Record<string, any>;
 
@@ -100,6 +114,8 @@ export class LynxViewInstance implements AsyncDisposable {
       & typeof globalThis
       & MainThreadGlobalThis;
 
+    this.boundingClientRectService = new BoundingClientRectService(parentDom);
+    this.invokeUIMethod = createInvokeUIMethod(this.boundingClientRectService);
     this.backgroundThread = new BackgroundThread(lynxGroupId, this);
     this.i18nManager = new I18nManager(
       this.backgroundThread,
@@ -298,8 +314,13 @@ export class LynxViewInstance implements AsyncDisposable {
   }
 
   async [Symbol.asyncDispose]() {
+    this.boundingClientRectService.dispose();
     await this.backgroundThread[Symbol.asyncDispose]();
     this.exposureServices.dispose();
+    // Detach DOM event listeners synchronously. Some (keydown/keyup) are
+    // bound on `document`, so deferring removal to the idle callback below
+    // would leave stale handlers firing against a torn-down wasmContext.
+    this.mtsWasmBinding.disposeEventListeners();
     requestIdleCallbackImpl(() => {
       this.mtsWasmBinding.dispose();
     });

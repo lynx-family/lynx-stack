@@ -19,6 +19,11 @@ import { PlaybackPage } from './pages/PlaybackPage.js';
 import type { Protocol, ProtocolName } from './utils/protocol.js';
 import { DEFAULT_PROTOCOL, getProtocol } from './utils/protocol.js';
 
+const LYNX_LIGHT_LOGO =
+  'https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/lynx-dark-logo.svg';
+const LYNX_DARK_LOGO =
+  'https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/lynx-light-logo.svg';
+
 type Tab = 'create' | 'examples' | 'components' | 'playback';
 
 interface TabDef {
@@ -191,7 +196,14 @@ export function App() {
   return (
     <div className='appShell'>
       <div className='topBar'>
-        <span className='brand'>Lynx GenUI Playground</span>
+        <div className='brandGroup'>
+          <img
+            className='brandLogo'
+            src={theme === 'dark' ? LYNX_DARK_LOGO : LYNX_LIGHT_LOGO}
+            alt='Lynx'
+          />
+          <span className='brand'>Lynx GenUI Playground</span>
+        </div>
 
         <nav className='tabNav'>
           {tabs.map((t) => (

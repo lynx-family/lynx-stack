@@ -22,6 +22,7 @@
   --a2ui-color-border: #ccc;
   --a2ui-border-width: 1px;
   --a2ui-border: 1px solid var(--a2ui-color-border, #ccc);
+  --a2ui-input-border-radius: var(--a2ui-border-radius);
   --a2ui-button-padding: 0.5rem 0.875rem;
   --a2ui-button-margin: 0.25rem 0;
   --a2ui-button-background: var(--a2ui-color-surface);
@@ -39,6 +40,10 @@
   --a2ui-font-family-monospace: monospace;
   --a2ui-color-input: #fff;
   --a2ui-color-on-input: #333;
+  --a2ui-color-input-placeholder: #8a8a8a;
+  --a2ui-color-input-focus: var(--a2ui-color-primary);
+  --a2ui-color-input-error: #d92d20;
+  --a2ui-color-input-error-bg: rgba(217, 45, 32, 0.08);
   --a2ui-grid-base: 0.5rem;
   --a2ui-spacing-xs: 0.125rem;
   --a2ui-spacing-s: 0.25rem;
@@ -92,6 +97,10 @@
   --a2ui-button-border-color: var(--a2ui-color-border-strong);
   --a2ui-color-input: #2a2a2a;
   --a2ui-color-on-input: #eee;
+  --a2ui-color-input-placeholder: #7d7d7d;
+  --a2ui-color-input-focus: var(--a2ui-color-primary-light);
+  --a2ui-color-input-error: #ff6b6b;
+  --a2ui-color-input-error-bg: rgba(255, 107, 107, 0.12);
   --a2ui-color-background-ambient: #000;
   --a2ui-color-surface-muted: #222;
   --a2ui-color-surface-strong: #232323;

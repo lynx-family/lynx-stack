@@ -278,7 +278,7 @@ describe('SWC configuration', () => {
         rules: [backgroundRule],
       },
     }, 'builtin:swc-loader')
-    expect(backgroundLoaderOptions.jsc.target).toBe('es2019')
+    expect(backgroundLoaderOptions.jsc.target).toBe('es2022')
 
     const mainThreadRule = swcRule.oneOf.find(rule =>
       rule.issuerLayer === LAYERS.MAIN_THREAD

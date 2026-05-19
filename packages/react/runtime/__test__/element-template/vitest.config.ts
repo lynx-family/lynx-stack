@@ -114,6 +114,7 @@ const config: UserConfigExport = defineConfig({
       '@lynx-js/react/lepus': path.resolve(__dirname, '../../lepus/index.js'),
       '@lynx-js/react/legacy-react-runtime': path.resolve(__dirname, '../../src/legacy-react-runtime/index.ts'),
       '@lynx-js/react/element-template/internal': path.resolve(__dirname, '../../src/element-template/internal.ts'),
+      '@lynx-js/react/element-template': path.resolve(__dirname, '../../src/element-template/index.ts'),
       '@lynx-js/react': path.resolve(
         __dirname,
         './test-utils/debug/layeredReact.ts',

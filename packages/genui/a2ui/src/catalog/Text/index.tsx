@@ -8,9 +8,20 @@ import '../../../styles/catalog/Text.css';
  * @a2uiCatalog Text
  */
 export interface TextProps extends GenericComponentProps {
-  /** Literal text or path binding. */
-  text: string | { path: string };
-  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body';
+  /** Literal text, path binding, or function call. */
+  text: string | { path: string } | {
+    call: string;
+    args: Record<string, unknown>;
+    returnType?:
+      | 'string'
+      | 'number'
+      | 'boolean'
+      | 'array'
+      | 'object'
+      | 'any'
+      | 'void';
+  };
+  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body' | 'markdown';
   weight?: number;
 }
 
@@ -18,7 +29,7 @@ export function Text(
   props: TextProps,
 ): import('@lynx-js/react').ReactNode {
   const id = props.id;
-  const text = props.text;
+  const text = props.text as string;
   const variant = props.variant ?? 'body';
   const weight = props.weight;
   let weightClass = '';
@@ -32,9 +43,15 @@ export function Text(
     }
   }
 
+  if (variant === 'markdown') {
+    return (
+      // @ts-expect-error support markdown future
+      <x-markdown content={text} />
+    );
+  }
   return (
     <text key={id} className={`text-${variant} ${weightClass}`}>
-      {text as string}
+      {text}
     </text>
   );
 }

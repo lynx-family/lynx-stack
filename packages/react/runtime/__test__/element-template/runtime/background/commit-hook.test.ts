@@ -18,12 +18,13 @@ import { BackgroundElementTemplateInstance } from '../../../../src/element-templ
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import {
   globalCommitContext,
-  markRemovedSubtreeForCurrentCommit,
+  markRemovedSubtreeForPostDispatchTeardown,
 } from '../../../../src/element-template/background/commit-context.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import { PipelineOrigins } from '../../../../src/element-template/lynx/performance.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
+import { clearRefState, queueRefAttrUpdate } from '../../../../src/element-template/prop-adapters/ref.js';
 
 function createRawTextOps(id: number, text: string) {
   return [
@@ -48,6 +49,7 @@ describe('ElementTemplate commit hook', () => {
     resetElementTemplateCommitState();
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
+    clearRefState();
     updateEvents = [];
     envManager.resetEnv('background');
     installElementTemplateCommitHook();
@@ -64,6 +66,7 @@ describe('ElementTemplate commit hook', () => {
     envManager.switchToBackground();
     resetElementTemplateHydrationListener();
     resetElementTemplateCommitState();
+    clearRefState();
   });
 
   it('dispatches update after commit when hydrated', () => {
@@ -167,11 +170,11 @@ describe('ElementTemplate commit hook', () => {
     try {
       markElementTemplateHydrated();
       const root = new BackgroundElementTemplateInstance('root');
-      markRemovedSubtreeForCurrentCommit(root);
+      markRemovedSubtreeForPostDispatchTeardown(root);
       globalCommitContext.ops = createRawTextOps(1, 'flush');
 
       options.__c?.({} as unknown as object, []);
-      expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+      expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
       vi.advanceTimersByTime(9999);
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBe(root);
 
@@ -183,13 +186,42 @@ describe('ElementTemplate commit hook', () => {
     }
   });
 
+  it('flushes ref-only updates without dispatching native ops', () => {
+    const ref = vi.fn();
+    markElementTemplateHydrated();
+    queueRefAttrUpdate(null, ref, -2, 0);
+
+    options.__c?.({} as unknown as object, []);
+
+    envManager.switchToMainThread();
+    expect(updateEvents).toHaveLength(0);
+    envManager.switchToBackground();
+    expect(ref).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
+  });
+
+  it('flushes pre-hydration ref effects on commit without dispatching native ops', () => {
+    const ref = vi.fn();
+    queueRefAttrUpdate(null, ref, 1, 0);
+
+    options.__c?.({} as unknown as object, []);
+
+    envManager.switchToMainThread();
+    expect(updateEvents).toHaveLength(0);
+    envManager.switchToBackground();
+    expect(ref).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=1-0]',
+    }));
+  });
+
   it('keeps pending removed subtrees when only the hydration listener is reset', () => {
     const root = new BackgroundElementTemplateInstance('root');
-    markRemovedSubtreeForCurrentCommit(root);
+    markRemovedSubtreeForPostDispatchTeardown(root);
 
     resetElementTemplateHydrationListener();
 
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([root]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([root]);
   });
 
   it('cancels scheduled removed subtree cleanup on background destroy', () => {
@@ -219,18 +251,41 @@ describe('ElementTemplate commit hook', () => {
     try {
       markElementTemplateHydrated();
       const root = new BackgroundElementTemplateInstance('root');
-      markRemovedSubtreeForCurrentCommit(root);
+      markRemovedSubtreeForPostDispatchTeardown(root);
       globalCommitContext.ops = createRawTextOps(1, 'flush');
 
       expect(() => options.__c?.({} as unknown as object, [])).toThrow(dispatchError);
       expect(globalCommitContext.ops).toEqual([]);
-      expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+      expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
 
       vi.advanceTimersByTime(10000);
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
     } finally {
       dispatchSpy.mockRestore();
       vi.useRealTimers();
+    }
+  });
+
+  it('clears pending refs when update dispatch throws', () => {
+    const ref = vi.fn();
+    const dispatchError = new Error('update dispatch failed');
+    const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
+      throw dispatchError;
+    });
+
+    try {
+      markElementTemplateHydrated();
+      queueRefAttrUpdate(null, ref, -2, 0);
+      globalCommitContext.ops = createRawTextOps(1, 'flush');
+
+      expect(() => options.__c?.({} as unknown as object, [])).toThrow(dispatchError);
+      expect(ref).not.toHaveBeenCalled();
+
+      globalCommitContext.ops = [];
+      options.__c?.({} as unknown as object, []);
+      expect(ref).not.toHaveBeenCalled();
+    } finally {
+      dispatchSpy.mockRestore();
     }
   });
 

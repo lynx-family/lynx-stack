@@ -11,7 +11,7 @@ export function run() {
     const instance = new BackgroundElementTemplateInstance('view');
     instance.setAttribute('attributeSlots', [{ a: 1 }]);
     markElementTemplateHydrated();
-    instance.markCreateEmittedForHydration();
+    instance.markMaterializedByHydration();
     resetGlobalCommitContext();
 
     instance.setAttribute('attributeSlots', []);

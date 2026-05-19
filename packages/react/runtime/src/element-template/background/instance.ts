@@ -2,8 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { prepareAttributeSlots as prepareRawAttributeSlots } from './attr-slots.js';
-import { globalCommitContext, markRemovedSubtreeForCurrentCommit } from './commit-context.js';
+import { prepareAttributeSlots as prepareRawAttributeSlots, queueRefAttributeSlotUpdates } from './attr-slots.js';
+import { globalCommitContext, markRemovedSubtreeForPostDispatchTeardown } from './commit-context.js';
 import { isElementTemplateHydrated } from './commit-hook.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
@@ -38,7 +38,7 @@ function syncElementSlotChildren(
   if (!parent || slotId < 0) {
     return;
   }
-  parent.elementSlots[slotId] = [...children];
+  parent.elementSlots[slotId] = children;
 }
 
 export class BackgroundElementTemplateInstance {
@@ -55,7 +55,7 @@ export class BackgroundElementTemplateInstance {
   public attributeSlots: SerializableValue[];
   public elementSlots: BackgroundElementTemplateInstance[][] = [];
   private rawAttributeSlots: readonly unknown[] | undefined;
-  private hasEmittedCreate = false;
+  private isMaterializedOnMainThread = false;
 
   get parentNode(): BackgroundElementTemplateInstance | null {
     return this.parent;
@@ -92,7 +92,7 @@ export class BackgroundElementTemplateInstance {
   }
 
   emitCreate(): void {
-    if (this.hasEmittedCreate) {
+    if (this.isMaterializedOnMainThread) {
       return;
     }
     if (this.instanceId === 0 && __DEV__) {
@@ -108,17 +108,27 @@ export class BackgroundElementTemplateInstance {
       this.attributeSlots,
       this.elementSlots.map((children) => children.map((child) => child.instanceId)),
     );
-    this.hasEmittedCreate = true;
+    this.isMaterializedOnMainThread = true;
   }
 
-  private isPendingCreate(): boolean {
-    return this.instanceId > 0 && !this.hasEmittedCreate;
+  private needsMainThreadCreate(): boolean {
+    return this.instanceId > 0 && !this.isMaterializedOnMainThread;
   }
 
-  private canEmitPatch(): boolean {
+  emitMainThreadCreateIfNeeded(): void {
+    if (!this.needsMainThreadCreate()) {
+      return;
+    }
+    // An unmaterialized subtree may receive attr updates before it is inserted;
+    // prepare here so ref attach happens once, at the create boundary.
+    this.prepareAttributeSlotsForNative();
+    this.emitCreate();
+  }
+
+  private canEmitUpdatePatch(): boolean {
     // Background tree construction is local until hydrate binds it to main-thread
-    // instances. Only hydrated and already-created owners can emit update ops.
-    return isElementTemplateHydrated() && !this.isPendingCreate();
+    // instances. Only hydrated and materialized owners can emit update ops.
+    return isElementTemplateHydrated() && !this.needsMainThreadCreate();
   }
 
   // DOM API for Preact
@@ -179,11 +189,11 @@ export class BackgroundElementTemplateInstance {
         return;
       }
       if (slotId !== -1 && parent) {
-        if (!parent.canEmitPatch()) {
+        if (!parent.canEmitUpdatePatch()) {
           return;
         }
         const beforeId = beforeChild ? beforeChild.instanceId : 0;
-        emitCreateRecursive(child);
+        emitMainThreadCreateRecursive(child);
         pushOp(
           ElementTemplateUpdateOps.insertNode,
           parent.instanceId,
@@ -235,9 +245,14 @@ export class BackgroundElementTemplateInstance {
         return;
       }
       if (slotId !== -1 && parent) {
-        if (!parent.canEmitPatch()) {
-          if (child.isPendingCreate()) {
-            // A never-created subtree has no main-thread registry entry, so it
+        if (!parent.canEmitUpdatePatch()) {
+          if (!isElementTemplateHydrated()) {
+            // Pre-hydration commits have already exposed refs to user effects, so
+            // a local slot removal must detach them even though no native patch exists.
+            child.queueRefCleanupForSubtree();
+          }
+          if (child.needsMainThreadCreate()) {
+            // An unmaterialized subtree has no main-thread registry entry, so it
             // can be released from the background manager without delayed cleanup.
             child.tearDown();
           }
@@ -250,9 +265,10 @@ export class BackgroundElementTemplateInstance {
           child.instanceId,
           collectElementTemplateSubtreeHandleIds(child),
         );
+        child.queueRefCleanupForSubtree();
         // The removed JS object graph may outlive the detach until GC, so keep
         // it pending and tear it down on the Snapshot-aligned delayed boundary.
-        markRemovedSubtreeForCurrentCommit(child);
+        markRemovedSubtreeForPostDispatchTeardown(child);
       }
       return;
     }
@@ -260,6 +276,7 @@ export class BackgroundElementTemplateInstance {
     if (silent) {
       return;
     }
+    child.queueRefCleanupForSubtree();
   }
 
   tearDown(): void {
@@ -288,17 +305,29 @@ export class BackgroundElementTemplateInstance {
     }
   }
 
+  queueRefCleanupForSubtree(): void {
+    if (this.rawAttributeSlots) {
+      queueRefAttributeSlotUpdates(this.type, this.instanceId, this.rawAttributeSlots);
+    }
+
+    let child = this.firstChild;
+    while (child) {
+      child.queueRefCleanupForSubtree();
+      child = child.nextSibling;
+    }
+  }
+
   getRawAttributeSlot(attrSlotIndex: number): unknown {
     return this.rawAttributeSlots?.[attrSlotIndex] ?? this.attributeSlots[attrSlotIndex];
   }
 
-  markCreateEmittedForHydration(): void {
+  markMaterializedByHydration(): void {
     // Hydration binds this object to a template that already exists on the main
-    // thread; future updates must treat it as created without emitting create.
-    this.hasEmittedCreate = true;
+    // thread; future updates must treat it as materialized without emitting create.
+    this.isMaterializedOnMainThread = true;
   }
 
-  prepareAttributeSlotsForNative(): void {
+  prepareAttributeSlotsForNative(options?: { queueRefEffects?: boolean }): void {
     if (!this.rawAttributeSlots) {
       return;
     }
@@ -306,7 +335,18 @@ export class BackgroundElementTemplateInstance {
       this.type,
       this.instanceId,
       this.rawAttributeSlots,
+      {
+        queueRefEffects: options?.queueRefEffects ?? true,
+      },
     );
+  }
+
+  prepareAttributeSlotsForHydration(): void {
+    // Hydrate only rebinds the selector marker to the stable handle. The ref was
+    // already made visible to user effects on the pre-hydration commit path.
+    this.prepareAttributeSlotsForNative({
+      queueRefEffects: false,
+    });
   }
 
   setAttribute(key: string, value: unknown): void {
@@ -314,12 +354,20 @@ export class BackgroundElementTemplateInstance {
       this.text = String(value);
     } else if (key === 'attributeSlots' && Array.isArray(value)) {
       const previousSlots = this.attributeSlots;
+      const previousRawSlots = this.rawAttributeSlots ?? previousSlots;
       const isHydrated = isElementTemplateHydrated();
-      const canEmitPatch = isHydrated && !this.isPendingCreate();
+      const canEmitUpdatePatch = isHydrated && !this.needsMainThreadCreate();
+      // Pre-hydration commits must expose refs to effects, while post-hydration
+      // unmaterialized nodes defer ref attach to create emission to avoid dupes.
+      const shouldQueueRefEffects = !isHydrated || canEmitUpdatePatch;
       const nextSlots = prepareRawAttributeSlots(
         this.type,
         this.instanceId,
         value,
+        {
+          previousRawSlots,
+          queueRefEffects: shouldQueueRefEffects,
+        },
       );
       this.rawAttributeSlots = nextSlots === value ? undefined : value;
       const maxLength = Math.max(previousSlots.length, nextSlots.length);
@@ -330,7 +378,7 @@ export class BackgroundElementTemplateInstance {
         if (isDirectOrDeepEqual(previousValue, nextValue)) {
           continue;
         }
-        if (!canEmitPatch) {
+        if (!canEmitUpdatePatch) {
           continue;
         }
         pushOp(
@@ -365,7 +413,7 @@ export class BackgroundElementTemplateInstance {
     }
     this.rawAttributeSlots = undefined;
     this.attributeSlots = [text];
-    if (!this.canEmitPatch()) {
+    if (!this.canEmitUpdatePatch()) {
       return;
     }
     pushOp(ElementTemplateUpdateOps.setAttribute, this.instanceId, 0, text);
@@ -409,7 +457,7 @@ function collectElementTemplateSubtreeHandleIdsImpl(
   }
 }
 
-function emitCreateRecursive(instance: BackgroundElementTemplateInstance): void {
+function emitMainThreadCreateRecursive(instance: BackgroundElementTemplateInstance): void {
   if (
     !isElementTemplateHydrated()
     || instance.instanceId < 0
@@ -423,10 +471,10 @@ function emitCreateRecursive(instance: BackgroundElementTemplateInstance): void 
       continue;
     }
     for (const child of slotChildren) {
-      emitCreateRecursive(child);
+      emitMainThreadCreateRecursive(child);
     }
   }
-  instance.emitCreate();
+  instance.emitMainThreadCreateIfNeeded();
 }
 
 function collectChildren(slot: BackgroundElementTemplateSlot): BackgroundElementTemplateInstance[] {

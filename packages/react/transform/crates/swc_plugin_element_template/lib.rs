@@ -300,6 +300,7 @@ where
     #[derive(Clone, Copy)]
     enum AttrPlanAdapter {
       Event,
+      Ref,
       Spread,
     }
 
@@ -311,6 +312,11 @@ where
           slot_index,
           ..
         } => Some((*slot_index, AttrPlanAdapter::Event)),
+        DynamicAttributePart::Attr {
+          attr_name: AttrName::Ref,
+          slot_index,
+          ..
+        } => Some((*slot_index, AttrPlanAdapter::Ref)),
         DynamicAttributePart::Spread { slot_index, .. } => {
           Some((*slot_index, AttrPlanAdapter::Spread))
         }
@@ -352,6 +358,10 @@ where
         let adapter_expr = match adapter {
           AttrPlanAdapter::Event => quote!(
             "$internal_runtime_id.adaptEventAttrSlot" as Expr,
+            internal_runtime_id: Expr = internal_runtime_id.clone(),
+          ),
+          AttrPlanAdapter::Ref => quote!(
+            "$internal_runtime_id.adaptRefAttrSlot" as Expr,
             internal_runtime_id: Expr = internal_runtime_id.clone(),
           ),
           AttrPlanAdapter::Spread => quote!(

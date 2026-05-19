@@ -47,6 +47,7 @@ export interface PreviewQrItem {
   variant?: 'default' | 'alt';
   placeholder?: ReactNode;
   errorDescription?: ReactNode;
+  showQrCode?: boolean;
 }
 
 interface A2UIPreviewSource {
@@ -445,6 +446,8 @@ export function PreviewPanel(props: PreviewPanelProps) {
       return [];
     }
 
+    const showQrCode = previewSource.kind !== 'a2ui' || !!previewSource.demoId;
+
     const cards: Array<{ key: string; item: PreviewQrItem }> = [];
     if (renderShareUrl) {
       cards.push({
@@ -455,6 +458,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
           url: renderShareUrl,
           urlTitle: formatUrlForDisplay(renderShareUrl),
           copyButtonTitle: 'Copy render URL',
+          showQrCode,
         },
       });
     }
@@ -468,6 +472,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
           urlTitle: formatUrlForDisplay(lynxDevUrl),
           copyButtonTitle: 'Copy Lynx dev bundle URL',
           variant: 'alt',
+          showQrCode,
         },
       });
     }
@@ -655,7 +660,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
                               </button>
                             </div>
                           </div>
-                          {item.url
+                          {item.url && item.showQrCode !== false
                             ? (
                               <QrCode
                                 value={item.url}

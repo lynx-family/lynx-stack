@@ -1,0 +1,47 @@
+@import "../theme.css";
+
+.textfield {
+  display: flex;
+  flex-direction: column;
+  gap: var(--a2ui-spacing-s);
+  width: 100%;
+  min-width: 0;
+}
+
+.textfield-label {
+  font-size: var(--a2ui-font-size-s);
+  font-weight: 600;
+  color: var(--a2ui-color-text-muted);
+  line-height: var(--a2ui-line-height-body);
+}
+
+.textfield-control {
+  width: 100%;
+  min-height: 40px;
+  padding-left: var(--a2ui-spacing-m);
+  padding-right: var(--a2ui-spacing-m);
+  padding-top: var(--a2ui-spacing-s);
+  padding-bottom: var(--a2ui-spacing-s);
+  border-width: var(--a2ui-border-width);
+  border-style: solid;
+  border-color: var(--a2ui-color-border);
+  border-radius: var(--a2ui-input-border-radius);
+  background-color: var(--a2ui-color-input);
+  color: var(--a2ui-color-on-input);
+  font-size: var(--a2ui-font-size-m);
+  line-height: var(--a2ui-line-height-body);
+}
+
+.textfield-textarea {
+  min-height: 96px;
+}
+
+.textfield-invalid .textfield-control {
+  border-color: var(--a2ui-color-input-error);
+}
+
+.textfield-error {
+  font-size: var(--a2ui-font-size-xs);
+  color: var(--a2ui-color-input-error);
+  line-height: var(--a2ui-line-height-body);
+}

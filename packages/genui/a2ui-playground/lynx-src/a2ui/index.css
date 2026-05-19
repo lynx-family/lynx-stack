@@ -8,7 +8,6 @@
 :root {
   display: flex;
   flex-direction: column;
-  padding: 10px;
   box-sizing: border-box;
   background-color: var(--canvas);
   color: var(--content);
@@ -17,6 +16,17 @@
 .page {
   width: 100%;
   height: 100%;
+  padding: 10px;
+  background-color: var(--canvas);
+}
+
+.a2ui-root-container {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   background-color: var(--canvas);
 }
 
@@ -43,49 +53,46 @@
   min-width: 120px;
   min-height: 44px;
   padding: 0 18px;
+  border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.55);
-  color: white;
+  background: var(--neutral-film);
+  color: var(--content-muted);
   font-size: 14px;
   font-weight: 600;
   line-height: 1.4;
 }
 
 /* Override A2UI tokens with Luna tokens for the playground preview. */
-.a2ui-light,
-.a2ui-dark {
-  --a2ui-color-background: var(--canvas);
-  --a2ui-color-on-background: var(--content);
-
-  --a2ui-color-surface: var(--paper);
-  --a2ui-color-on-surface: var(--content);
-
-  --a2ui-color-primary: var(--primary);
-  --a2ui-color-primary-light: var(--primary-2);
-  --a2ui-color-primary-dark: var(--primary-2);
-  --a2ui-color-primary-hover: var(--primary-2);
-  --a2ui-color-on-primary: var(--primary-content);
-
-  --a2ui-color-secondary: var(--secondary);
-  --a2ui-color-secondary-light: var(--secondary-2);
-  --a2ui-color-secondary-dark: var(--secondary-2);
-  --a2ui-color-secondary-hover: var(--secondary-2);
-  --a2ui-color-on-secondary: var(--secondary-content);
-
+:root, .a2ui-light, .a2ui-dark {
   --a2ui-border-radius: 0.25rem;
-  --a2ui-color-border: var(--line);
   --a2ui-border-width: 1px;
-  --a2ui-border: var(--a2ui-border-width) solid var(--a2ui-color-border);
+  --a2ui-border: 1px solid var(--line);
+
+  --a2ui-button-padding: 0.5rem 0.875rem;
+  --a2ui-button-margin: 0.25rem 0;
+  --a2ui-button-box-shadow: none;
+  --a2ui-button-font-weight: normal;
+  --a2ui-button-border: 1px solid var(--line);
+  --a2ui-button-border-radius: 2rem;
+  --a2ui-button-background: var(--paper);
+  --a2ui-button-foreground: var(--secondary-content);
+  --a2ui-button-primary-background: var(--primary);
+  --a2ui-button-primary-foreground: var(--primary-content);
 
   --a2ui-font-family-title: inherit;
   --a2ui-font-family-monospace: monospace;
-  --a2ui-color-input: var(--paper-clear);
-  --a2ui-color-on-input: var(--content);
+  --a2ui-icon-font-family: "Material Icons Round";
+  --a2ui-icon-size-sm: 1rem;
+  --a2ui-icon-size-md: 24px;
+  --a2ui-icon-size-lg: 32px;
+  --a2ui-icon-color: var(--content);
+  --a2ui-icon-color-primary: var(--primary);
+  --a2ui-icon-color-muted: var(--content-muted);
 
   --a2ui-grid-base: 0.5rem;
   --a2ui-spacing-xs: 0.125rem;
   --a2ui-spacing-s: 0.25rem;
-  --a2ui-spacing-m: var(--a2ui-grid-base);
+  --a2ui-spacing-m: 0.5rem;
   --a2ui-spacing-l: 1rem;
   --a2ui-spacing-xl: 2rem;
 
@@ -93,7 +100,7 @@
   --a2ui-font-scale: 1.2;
   --a2ui-font-size-xs: 0.6944444444rem;
   --a2ui-font-size-s: 0.8333333333rem;
-  --a2ui-font-size-m: var(--a2ui-font-size);
+  --a2ui-font-size-m: 1rem;
   --a2ui-font-size-l: 1.2rem;
   --a2ui-font-size-xl: 1.44rem;
   --a2ui-font-size-2xl: 1.728rem;
@@ -101,6 +108,23 @@
   --a2ui-line-height-headings: 1.2;
   --a2ui-line-height-body: 1.5;
 
+  --a2ui-color-background: var(--canvas);
+  --a2ui-color-on-background: var(--content);
+  --a2ui-color-surface: var(--paper);
+  --a2ui-color-on-surface: var(--content);
+  --a2ui-color-primary: var(--primary);
+  --a2ui-color-primary-light: var(--primary-2);
+  --a2ui-color-primary-dark: var(--primary-2);
+  --a2ui-color-primary-hover: var(--primary-2);
+  --a2ui-color-on-primary: var(--primary-content);
+  --a2ui-color-secondary: var(--secondary);
+  --a2ui-color-secondary-light: var(--secondary-2);
+  --a2ui-color-secondary-dark: var(--secondary-2);
+  --a2ui-color-secondary-hover: var(--secondary-2);
+  --a2ui-color-on-secondary: var(--secondary-content);
+  --a2ui-color-border: var(--line);
+  --a2ui-color-input: var(--paper-clear);
+  --a2ui-color-on-input: var(--content);
   --a2ui-color-background-ambient: var(--canvas-ambient);
   --a2ui-color-surface-muted: var(--neutral-film);
   --a2ui-color-surface-strong: var(--paper-clear);
@@ -111,5 +135,12 @@
   --a2ui-color-primary-content-muted: var(--primary-content-faded);
   --a2ui-color-overlay: var(--neutral-film);
 
-  --a2ui-button-border-radius: 2rem;
+  --a2ui-image-radius: 12px;
+  --a2ui-image-avatar-size: 24px;
+  --a2ui-image-header-size: 200px;
+  --a2ui-image-small-feature-size: 120px;
+  --a2ui-image-medium-feature-size: 240px;
+  --a2ui-image-large-feature-size: 400px;
+
+  --a2ui-input-border-radius: 2rem;
 }

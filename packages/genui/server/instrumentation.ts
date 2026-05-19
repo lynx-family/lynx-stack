@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 export function register(): void {
-  if (process.env['NEXT_RUNTIME'] !== 'nodejs') return;
+  if (process.env.NEXT_RUNTIME !== 'nodejs') return;
   const { OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL } = process.env;
   const missing: string[] = [];
   if (!OPENAI_API_KEY) missing.push('OPENAI_API_KEY');

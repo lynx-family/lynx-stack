@@ -40,8 +40,12 @@ function dispatchEvent(eventValue: string, data: EventDataType): boolean {
 }
 
 export function clearEventState(): void {
-  pendingEvents.length = 0;
+  clearPendingEvents();
   queuePendingEvents = false;
+}
+
+export function clearPendingEvents(): void {
+  pendingEvents.length = 0;
 }
 
 export function resetEventStateForRuntime(): void {

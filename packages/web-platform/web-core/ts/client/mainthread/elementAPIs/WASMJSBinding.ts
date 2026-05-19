@@ -1,5 +1,6 @@
 import { createCrossThreadEvent } from './createCrossThreadEvent.js';
 import type {
+  InvokeUIMethodPAPI,
   LynxCrossThreadEvent,
   LynxCrossThreadEventTarget,
   DecoratedHTMLElement,
@@ -21,12 +22,18 @@ export type WASMJSBindingInjectedHandler = {
   backgroundThread: BackgroundThread;
   exposureServices: ExposureServices;
   mainThreadGlobalThis: MainThreadGlobalThis;
+  readonly invokeUIMethod: InvokeUIMethodPAPI;
+  readonly lynxViewClientLeft: number;
+  readonly lynxViewClientTop: number;
 };
+
+const DOCUMENT_LEVEL_EVENTS = new Set(['keydown', 'keyup']);
 
 export class WASMJSBinding implements RustMainthreadContextBinding {
   wasmContext: InstanceType<MainThreadWasmContext> | undefined;
   disposeWasmContext?: () => void;
   #addedEventListeners: Set<string> = new Set();
+  #documentEventListeners: Set<string> = new Set();
   toBeEnabledElement: Set<HTMLElement> = new Set();
   toBeDisabledElement: Set<HTMLElement> = new Set();
 
@@ -101,16 +108,21 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     const currentTarget = this.getElementByUniqueId(
       currentTargetUniqueId,
     );
+    const resolvedTarget = (target ?? currentTarget) as
+      | DecoratedHTMLElement
+      | undefined;
+    if (!resolvedTarget) return;
+    const resolvedTargetDataset = target ? targetDataset : currentTargetDataset;
     eventObject.target = this.generateTargetObject(
-      target as DecoratedHTMLElement,
-      targetDataset,
+      resolvedTarget,
+      resolvedTargetDataset,
     );
     eventObject.currentTarget = this.generateTargetObject(
       currentTarget as DecoratedHTMLElement,
       currentTargetDataset,
     );
     // @ts-expect-error
-    eventObject.target.elementRefptr = target;
+    eventObject.target.elementRefptr = resolvedTarget;
     // @ts-expect-error
     eventObject.currentTarget.elementRefptr = currentTarget;
     this.lynxViewInstance.mainThreadGlobalThis.runWorklet?.(handler.value, [
@@ -128,12 +140,20 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     currentTargetDataset: CloneableObject,
   ) {
     const target = this.getElementByUniqueId(targetUniqueId);
-    const currentTarget = this.getElementByUniqueId(
-      currentTargetUniqueId,
-    );
+    const currentTarget = this.getElementByUniqueId(currentTargetUniqueId);
+    // The Rust dispatcher only reaches this code with target_unique_id == 0
+    // on the global-bindevent path (regular bind/catch handlers early-return
+    // when the bubble path has no element). For that case the DOM event
+    // originated outside the Lynx element tree, so fall back to currentTarget
+    // (the element that registered the global handler).
+    const resolvedTarget = (target ?? currentTarget) as
+      | DecoratedHTMLElement
+      | undefined;
+    if (!resolvedTarget) return;
+    const resolvedTargetDataset = target ? targetDataset : currentTargetDataset;
     eventObject.target = this.generateTargetObject(
-      target as DecoratedHTMLElement,
-      targetDataset,
+      resolvedTarget,
+      resolvedTargetDataset,
     );
     eventObject.currentTarget = this.generateTargetObject(
       currentTarget as DecoratedHTMLElement,
@@ -179,7 +199,11 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
         | DecoratedHTMLElement
         | null;
     }
-    const eventObject = createCrossThreadEvent(event);
+    const eventObject = createCrossThreadEvent(
+      event,
+      this.lynxViewInstance.lynxViewClientLeft,
+      this.lynxViewInstance.lynxViewClientTop,
+    );
     this.wasmContext?.common_event_handler(
       eventObject,
       bubblePath.slice(0, bubblePathLength),
@@ -192,25 +216,47 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     const w3cEventName = LynxEventNameToW3cCommon[eventName] ?? eventName;
     if (this.#addedEventListeners.has(w3cEventName)) return;
     this.#addedEventListeners.add(w3cEventName);
-    this.lynxViewInstance.rootDom.addEventListener(
-      w3cEventName,
-      this.#commonEventHandler,
-      {
+    const isDocumentLevel = DOCUMENT_LEVEL_EVENTS.has(w3cEventName);
+    if (isDocumentLevel) {
+      this.#documentEventListeners.add(w3cEventName);
+      document.addEventListener(w3cEventName, this.#commonEventHandler, {
         passive: true,
         capture: true,
-      },
-    );
+      });
+    } else {
+      this.lynxViewInstance.rootDom.addEventListener(
+        w3cEventName,
+        this.#commonEventHandler,
+        {
+          passive: true,
+          capture: true,
+        },
+      );
+    }
+  }
+
+  // Synchronously detach all DOM listeners. Safe to call multiple times.
+  // Document-level listeners must be removed before this binding is GC'd or
+  // before another LynxView instance mounts, otherwise stale handlers stay
+  // attached to `document` and fire against a torn-down wasmContext.
+  disposeEventListeners() {
+    for (const eventName of this.#addedEventListeners) {
+      if (this.#documentEventListeners.has(eventName)) {
+        document.removeEventListener(eventName, this.#commonEventHandler, true);
+      } else {
+        this.lynxViewInstance.rootDom.removeEventListener(
+          eventName,
+          this.#commonEventHandler,
+          true,
+        );
+      }
+    }
+    this.#addedEventListeners.clear();
+    this.#documentEventListeners.clear();
   }
 
   dispose() {
-    for (const eventName of this.#addedEventListeners) {
-      this.lynxViewInstance.rootDom.removeEventListener(
-        eventName,
-        this.#commonEventHandler,
-        true,
-      );
-    }
-    this.#addedEventListeners.clear();
+    this.disposeEventListeners();
 
     this.toBeEnabledElement.clear();
     this.toBeDisabledElement.clear();

@@ -13,6 +13,7 @@ import {
 } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { clearEventState, getEventHandlerForEventValue } from '../../../../src/element-template/prop-adapters/event.js';
+import { clearRefState, flushPendingRefs } from '../../../../src/element-template/prop-adapters/ref.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import type { SerializedElementTemplate } from '../../../../src/element-template/protocol/types.js';
 import {
@@ -62,6 +63,7 @@ describe('hydrate', () => {
     backgroundElementTemplateInstanceManager.nextId = 0;
     clearEtAttrPlanMap();
     clearEventState();
+    clearRefState();
     resetElementTemplateCommitState();
     vi.clearAllMocks();
     (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
@@ -205,7 +207,7 @@ describe('hydrate', () => {
       [101, 102, 103],
     ]);
     expect(root.elementSlots[0]).toEqual([]);
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(101)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(102)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(103)).toBeUndefined();
@@ -239,7 +241,7 @@ describe('hydrate', () => {
       [stale.instanceId],
     ]);
     expect(root.elementSlots[0]).toEqual([keep]);
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([stale]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([stale]);
   });
 
   it('moves serialized children to match the background slot order', () => {
@@ -274,7 +276,7 @@ describe('hydrate', () => {
       c.instanceId,
     ]);
     expect(root.elementSlots[0]).toEqual([b, a, c]);
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
   });
 
   it('treats a source-before-target cross-slot hydrate candidate as remove and recreate', () => {
@@ -321,7 +323,7 @@ describe('hydrate', () => {
     ]);
     expect(root.elementSlots[0]).toEqual([]);
     expect(root.elementSlots[1]).toEqual([moved]);
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(mainThreadId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(localId)).toBe(moved);
   });
@@ -373,7 +375,7 @@ describe('hydrate', () => {
     ]);
     expect(root.elementSlots[0]).toEqual([keep]);
     expect(root.elementSlots[1]).toEqual([moved]);
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
   });
 
@@ -421,7 +423,7 @@ describe('hydrate', () => {
     ]);
     expect(root.elementSlots[0]).toEqual([moved]);
     expect(root.elementSlots[1]).toEqual([]);
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(mainThreadId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(localId)).toBe(moved);
   });
@@ -488,7 +490,7 @@ describe('hydrate', () => {
     ]);
     expect(root.elementSlots[0]).toEqual([]);
     expect(root.elementSlots[1]).toEqual([first, second]);
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(-3)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(firstLocalId)).toBe(first);
@@ -795,6 +797,45 @@ describe('hydrate', () => {
     (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
   });
 
+  it('drops the hydrate stream when a matched child fails to hydrate', () => {
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      const root = new BackgroundElementTemplateInstance('root', ['after-root']);
+      const slot = new BackgroundElementTemplateSlot();
+      slot.setAttribute('id', 0);
+      root.appendChild(slot);
+      const child = new BackgroundElementTemplateInstance('child');
+      slot.appendChild(child);
+      const oldRootId = root.instanceId;
+      const oldChildId = child.instanceId;
+
+      const stream = hydrate(
+        createHydrationTemplate(-1, 'root', {
+          attributeSlots: ['before-root'],
+          elementSlots: [[
+            createHydrationChild(-1, 'child'),
+          ]],
+        }),
+        root,
+      );
+
+      expect(stream).toEqual([]);
+      expect(reportError).toHaveBeenCalledTimes(1);
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+        'invalid uid -1 for \'child\'',
+      );
+      expect(backgroundElementTemplateInstanceManager.get(oldRootId)).toBeUndefined();
+      expect(backgroundElementTemplateInstanceManager.get(-1)).toBe(root);
+      expect(backgroundElementTemplateInstanceManager.get(oldChildId)).toBe(child);
+    } finally {
+      lynx.reportError = oldReportError;
+      (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+    }
+  });
+
   it('treats missing serialized slot arrays as empty', () => {
     const root = new BackgroundElementTemplateInstance('root');
 
@@ -1006,6 +1047,28 @@ describe('hydrate', () => {
     ]);
     expect(root.attributeSlots).toEqual([null]);
     expect(getEventHandlerForEventValue('-12:0:bindtap')).toBeUndefined();
+  });
+
+  it('prepares spread ref markers with the serialized uid without queueing hydrate ref callbacks', () => {
+    __etAttrPlanMap.root = [0, adaptSpreadAttrSlot];
+    const root = new BackgroundElementTemplateInstance('root');
+    const ref = vi.fn();
+    root.setAttribute('attributeSlots', [{ ref }]);
+    flushPendingRefs();
+    expect(ref).toHaveBeenCalledTimes(1);
+    ref.mockClear();
+
+    const stream = hydrate(
+      createHydrationTemplate(-13, 'root', {
+        attributeSlots: [{ ref: '-13-0' }],
+      }),
+      root,
+    );
+    flushPendingRefs();
+
+    expect(stream).toEqual([]);
+    expect(root.attributeSlots).toEqual([{ ref: '-13-0' }]);
+    expect(ref).not.toHaveBeenCalled();
   });
 
   it('skips sparse background slot indexes when checking trailing slots', () => {

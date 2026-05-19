@@ -1,0 +1,59 @@
+@import "../theme.css";
+
+.modal-trigger {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.modal-view {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.modal-backdrop {
+  background-color: var(--a2ui-color-overlay);
+  transition: opacity 0.18s ease;
+}
+
+.modal-backdrop.ui-entering,
+.modal-backdrop.ui-open {
+  opacity: 1;
+}
+
+.modal-backdrop.ui-leaving,
+.modal-backdrop.ui-closed {
+  opacity: 0;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 560px;
+  max-height: 86%;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  border-radius: 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  background-color: var(--a2ui-color-surface-strong);
+  box-shadow: 0 12px 32px var(--a2ui-color-overlay);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.modal-content.ui-entering,
+.modal-content.ui-open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.modal-content.ui-leaving,
+.modal-content.ui-closed {
+  opacity: 0;
+  transform: translateY(8px);
+}

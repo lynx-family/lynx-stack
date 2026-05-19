@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 export {
   defineCatalog,
+  defineFunction,
   mergeCatalogs,
   resolveCatalog,
   serializeCatalog,
@@ -10,9 +11,12 @@ export {
 export type {
   Catalog,
   CatalogComponent,
+  CatalogFunctionDefinition,
+  CatalogFunctionEntry,
   CatalogInput,
   CatalogManifest,
   CatalogSchema,
+  FunctionManifest,
   ResolvedCatalogEntry,
   SerializedCatalog,
 } from './defineCatalog.js';
@@ -28,7 +32,10 @@ export { Divider } from './Divider/index.jsx';
 export { Icon } from './Icon/index.jsx';
 export { Image } from './Image/index.jsx';
 export { List } from './List/index.jsx';
+export { Modal } from './Modal/index.jsx';
 export { RadioGroup } from './RadioGroup/index.jsx';
 export { Row } from './Row/index.jsx';
+export { Slider } from './Slider/index.jsx';
 export { Tabs } from './Tabs/index.jsx';
 export { Text } from './Text/index.jsx';
+export { TextField } from './TextField/index.jsx';

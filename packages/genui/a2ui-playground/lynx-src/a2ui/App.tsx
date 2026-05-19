@@ -11,10 +11,14 @@ import {
   Icon,
   Image,
   List,
+  Modal,
   RadioGroup,
   Row,
+  Slider,
   Tabs,
   Text,
+  TextField,
+  basicFunctions,
   createMessageStore,
   normalizePayloadToMessages as normalizeProtocolMessages,
 } from '@lynx-js/a2ui-reactlynx';
@@ -34,10 +38,13 @@ import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.jso
 import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json';
 import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
 import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
+import modalManifest from '@lynx-js/a2ui-reactlynx/catalog/Modal/catalog.json';
 import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
 import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
+import sliderManifest from '@lynx-js/a2ui-reactlynx/catalog/Slider/catalog.json';
 import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json';
 import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json';
+import textFieldManifest from '@lynx-js/a2ui-reactlynx/catalog/TextField/catalog.json';
 import {
   useCallback,
   useEffect,
@@ -58,9 +65,11 @@ const DEFAULT_STREAM_DELAY_MS = 800;
 // shipped from the package — this list makes the cost of "everything"
 // visible and lets the bundler tree-shake when you only need a few.
 //
-// Schemas are not attached because the playground doesn't perform an
-// agent handshake. To include schemas, pair each component with its
-// `catalog.json` manifest — see
+// Function entries are included because the gallery payloads use A2UI
+// basic-catalog calls such as `formatDate` in dynamic props and checks.
+//
+// To include component schemas, pair each component with its `catalog.json`
+// manifest — see
 // `packages/genui/a2ui/src/catalog/README.md`.
 function manifestEntry(
   component: unknown,
@@ -76,12 +85,16 @@ const ALL_BUILTINS: readonly CatalogInput[] = [
   manifestEntry(Column, columnManifest),
   manifestEntry(List, listManifest),
   manifestEntry(Card, cardManifest),
+  manifestEntry(Modal, modalManifest),
   manifestEntry(Button, buttonManifest),
   manifestEntry(Divider, dividerManifest),
   manifestEntry(Icon, iconManifest),
   manifestEntry(CheckBox, checkBoxManifest),
   manifestEntry(RadioGroup, radioGroupManifest),
+  manifestEntry(Slider, sliderManifest),
+  manifestEntry(TextField, textFieldManifest),
   manifestEntry(Tabs, tabsManifest),
+  ...basicFunctions,
 ];
 
 interface InitData {
@@ -93,6 +106,7 @@ interface InitData {
   playbackMode?: boolean;
   theme?: 'light' | 'dark';
   playbackPaused?: boolean;
+  liveAction?: boolean;
 }
 
 type Theme = 'light' | 'dark';
@@ -194,6 +208,14 @@ function normalizeInitDataLike(raw: unknown): InitData {
   const theme = obj.theme;
   if (theme === 'light' || theme === 'dark') {
     out.theme = theme;
+  } else if (theme === 'Dark' || theme === 'Light') {
+    out.theme = theme.toLowerCase() as Theme;
+  }
+
+  const liveAction = obj.liveAction;
+  if (liveAction !== undefined) {
+    out.liveAction = liveAction === true || liveAction === '1'
+      || liveAction === 1;
   }
 
   return out;
@@ -209,6 +231,7 @@ function mergeInitDataPreferLeft(a: InitData, b: InitData): InitData {
     playbackMode: a.playbackMode ?? b.playbackMode,
     playbackPaused: a.playbackPaused ?? b.playbackPaused,
     theme: a.theme ?? b.theme,
+    liveAction: a.liveAction ?? b.liveAction,
   };
 }
 
@@ -340,24 +363,21 @@ export function App() {
     [streamConfig.theme],
   );
   const themeClassName = theme === 'dark'
-    ? 'luna-dark a2ui-dark'
-    : 'luna-light a2ui-light';
+    ? 'luna-dark'
+    : 'luna-light';
+  const surfaceThemeClassName = theme === 'dark' ? ' a2ui-dark' : ' a2ui-light';
   const isPlaybackPaused = useMemo(
     () => effectiveData.playbackPaused === true,
     [effectiveData.playbackPaused],
   );
   const postPlaybackSync = useCallback((state: MockAgentProgress) => {
-    try {
-      window.parent?.postMessage(
-        {
-          type: 'A2UI_PLAYBACK_SYNC',
-          data: state,
-        },
-        '*',
-      );
-    } catch {
-      // Playback sync is best-effort; never block rendering on it.
-    }
+    NativeModules.bridge?.call?.(
+      'A2UI_PLAYBACK_SYNC',
+      state as unknown as Record<string, unknown>,
+      () => {
+        // jsb callback
+      },
+    );
   }, []);
 
   const syncPlaybackAgent = useCallback(() => {
@@ -399,6 +419,18 @@ export function App() {
         : (typeof next === 'string' ? Number(next) : Number.NaN);
       if (!Number.isFinite(nextCount) || nextCount < 0) return;
       setPlaybackTargetCount(Math.floor(nextCount));
+    },
+  );
+
+  useLynxGlobalEventListener(
+    'A2UI_ACTION_RESPONSE',
+    (messages: unknown) => {
+      const currentStore = storeRef.current;
+      if (!currentStore) return;
+      const normalized = normalizeProtocolMessages(messages);
+      for (const msg of normalized) {
+        currentStore.push(msg);
+      }
     },
   );
 
@@ -485,16 +517,7 @@ export function App() {
           </view>
         )
         : (
-          <view
-            style={{
-              flex: 1,
-              minHeight: 0,
-              position: 'relative',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-            }}
-          >
+          <view className='a2ui-root-container'>
             {!isInstantPreview && store === null && error === ''
               ? (
                 <view className='a2ui-loadingOverlay'>
@@ -513,12 +536,20 @@ export function App() {
                     messageStore={store}
                     catalogs={ALL_BUILTINS}
                     onAction={(action) => {
+                      if (effectiveData.liveAction) {
+                        NativeModules.bridge.call(
+                          'A2UI_USER_ACTION',
+                          action as unknown as Record<string, unknown>,
+                          () => undefined,
+                        );
+                        return;
+                      }
                       // Forward user actions to the mock agent — it pushes
                       // the canned response messages back into the same store.
                       void agentRef.current?.onAction(action);
                     }}
                     wrapSurface={(c) => (
-                      <view className={themeClassName}>{c}</view>
+                      <view className={surfaceThemeClassName}>{c}</view>
                     )}
                     renderFallback={() => (
                       <view style={{ padding: '12px' }}>

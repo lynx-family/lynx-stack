@@ -1,8 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { DataProcessorDefinition, InitData, InitDataRaw } from '../../lynx-api.js';
-import { profileEnd, profileStart } from '../debug/profile.js';
+import { createProcessData } from '../../core/lynx-data-processors.js';
+import type { DataProcessorDefinition } from '../../lynx-api.js';
 
 export function setupLynxEnv(): void {
   if (!__LEPUS__) {
@@ -52,57 +52,7 @@ export function setupLynxEnv(): void {
     lynx.registerDataProcessors = function(
       dataProcessorDefinition?: DataProcessorDefinition,
     ) {
-      let hasDefaultDataProcessorExecuted = false;
-      globalThis.processData = (data, processorName) => {
-        if (__PROFILE__) {
-          profileStart('processData');
-        }
-
-        let r: InitData | InitDataRaw;
-        try {
-          if (processorName) {
-            r = dataProcessorDefinition?.dataProcessors?.[processorName]?.(data) as InitData ?? data;
-          } else {
-            r = dataProcessorDefinition?.defaultDataProcessor?.(data) ?? data;
-          }
-        } catch (e: any) {
-          lynx.reportError(e as Error);
-          r = {};
-        }
-
-        if (__PROFILE__) {
-          profileEnd();
-        }
-
-        if (hasDefaultDataProcessorExecuted === false) {
-          // @ts-expect-error todo: add types to i18n logic
-          if (globalThis.__I18N_RESOURCE_TRANSLATION__) {
-            r = {
-              ...r,
-              // @ts-expect-error todo: add types to i18n logic
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-              __I18N_RESOURCE_TRANSLATION__: globalThis.__I18N_RESOURCE_TRANSLATION__,
-            };
-          }
-
-          // @ts-expect-error todo: add types to __EXTRACT_STR__
-          if (__EXTRACT_STR__) {
-            r = {
-              ...r,
-              // @ts-expect-error todo: add types to __EXTRACT_STR__
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-              _EXTRACT_STR: __EXTRACT_STR_IDENT_FLAG__,
-            };
-          }
-        }
-
-        if (processorName) {}
-        else {
-          hasDefaultDataProcessorExecuted = true;
-        }
-
-        return r;
-      };
+      globalThis.processData = createProcessData(dataProcessorDefinition);
     };
 
     lynx.registerDataProcessors();

@@ -56,11 +56,21 @@
       "default": "./dist/catalog/Card/index.js"
     },
     "./catalog/Card/catalog.json": "./dist/catalog/Card/catalog.json",
+    "./catalog/Modal": {
+      "types": "./dist/catalog/Modal/index.d.ts",
+      "default": "./dist/catalog/Modal/index.js"
+    },
+    "./catalog/Modal/catalog.json": "./dist/catalog/Modal/catalog.json",
     "./catalog/Divider": {
       "types": "./dist/catalog/Divider/index.d.ts",
       "default": "./dist/catalog/Divider/index.js"
     },
     "./catalog/Divider/catalog.json": "./dist/catalog/Divider/catalog.json",
+    "./catalog/TextField": {
+      "types": "./dist/catalog/TextField/index.d.ts",
+      "default": "./dist/catalog/TextField/index.js"
+    },
+    "./catalog/TextField/catalog.json": "./dist/catalog/TextField/catalog.json",
     "./catalog/Icon": {
       "types": "./dist/catalog/Icon/index.d.ts",
       "default": "./dist/catalog/Icon/index.js"
@@ -76,6 +86,11 @@
       "default": "./dist/catalog/RadioGroup/index.js"
     },
     "./catalog/RadioGroup/catalog.json": "./dist/catalog/RadioGroup/catalog.json",
+    "./catalog/Slider": {
+      "types": "./dist/catalog/Slider/index.d.ts",
+      "default": "./dist/catalog/Slider/index.js"
+    },
+    "./catalog/Slider/catalog.json": "./dist/catalog/Slider/catalog.json",
     "./catalog/Tabs": {
       "types": "./dist/catalog/Tabs/index.d.ts",
       "default": "./dist/catalog/Tabs/index.js"
@@ -84,6 +99,10 @@
     "./react": {
       "types": "./dist/react/index.d.ts",
       "default": "./dist/react/index.js"
+    },
+    "./functions": {
+      "types": "./dist/functions/index.d.ts",
+      "default": "./dist/functions/index.js"
     }
   },
   "main": "./dist/index.js",
@@ -98,18 +117,21 @@
   },
   "devDependencies": {
     "@lynx-js/a2ui-catalog-extractor": "workspace:*",
-    "@lynx-js/lynx-ui": "^3.130.0",
+    "@lynx-js/lynx-ui": "^3.133.0",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "3.7.0",
     "@rstest/core": "catalog:rstest",
     "@types/react": "^18.3.28"
   },
   "peerDependencies": {
-    "@lynx-js/lynx-ui": "^3.130.0",
+    "@lynx-js/lynx-ui": "^3.133.0",
     "@lynx-js/react": "workspace:^"
   },
   "peerDependenciesMeta": {
     "@lynx-js/lynx-ui": {
+      "optional": true
+    },
+    "@lynx-js/lynx-ui-input": {
       "optional": true
     }
   }

@@ -1,7 +1,7 @@
 {
   "name": "@lynx-js/web-core",
-  "version": "0.20.3",
-  "description": "This is an internal experimental package, do not use",
+  "version": "0.20.4",
+  "description": "The Web Platform of Lynx / Lynx for Web",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",

@@ -25,7 +25,7 @@ on:
       web-report-path:
         required: false
         type: string
-        default: "packages/web-platform/web-tests/playwright-report"
+        default: "packages/web-platform/web-core-e2e/playwright-report"
       codecov-flags:
         required: false
         type: string

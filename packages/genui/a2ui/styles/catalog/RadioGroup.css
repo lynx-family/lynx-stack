@@ -45,6 +45,17 @@
   background-color: var(--a2ui-color-surface-muted);
 }
 
+.radio-group-invalid .radio-item {
+  border-color: var(--a2ui-color-error, #d92d20);
+}
+
+.radio-group-error {
+  margin-top: var(--a2ui-spacing-xs);
+  color: var(--a2ui-color-error, #d92d20);
+  font-size: var(--a2ui-font-size-xs);
+  line-height: var(--a2ui-line-height-body);
+}
+
 /* =========================
  * Radio Option
  * ========================= */

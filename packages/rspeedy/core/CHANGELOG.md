@@ -1,5 +1,16 @@
 # @lynx-js/rspeedy
 
+## 0.14.4
+
+### Patch Changes
+
+- feat(qrcode): support get entry from api exposed from rspeedy.env.entries ([#2551](https://github.com/lynx-family/lynx-stack/pull/2551))
+
+- Updated dependencies [[`ad1f90f`](https://github.com/lynx-family/lynx-stack/commit/ad1f90fc05bc634b22a27b17528f8736c1aba425)]:
+  - @lynx-js/chunk-loading-webpack-plugin@0.3.4
+  - @lynx-js/web-rsbuild-server-middleware@0.20.4
+  - @lynx-js/cache-events-webpack-plugin@0.0.3
+
 ## 0.14.3
 
 ### Patch Changes

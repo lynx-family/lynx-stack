@@ -8,10 +8,11 @@ export {
   A2UI,
   NodeRenderer,
   useAction,
+  useChecks,
   useDataBinding,
   useResolvedProps,
 } from './react/index.js';
-export type { A2UIProps, ActionProps } from './react/index.js';
+export type { A2UIProps, ActionProps, CheckLike } from './react/index.js';
 
 // Store — a pure raw-message buffer. The developer's IO module pushes
 // protocol messages into it; `<A2UI>` subscribes and processes them.
@@ -39,10 +40,26 @@ export {
   normalizePayloadToMessages,
   prepareMessagesForProcessing,
 } from './store/index.js';
+// Function registry primitives. Consumers building a custom renderer reach
+// the impls through these; `<A2UI>` consumers usually just spread
+// `basicFunctions` into `catalogs`.
+export {
+  executeFunctionCall,
+  functionRegistry,
+  FunctionRegistry,
+  resolveDynamicValue,
+} from './store/index.js';
+export type {
+  FunctionCallContext,
+  FunctionEntry,
+  FunctionImpl,
+  ResolveFunctionOptions,
+} from './store/index.js';
 
 // Catalog — declarative composition.
 export {
   defineCatalog,
+  defineFunction,
   mergeCatalogs,
   resolveCatalog,
   serializeCatalog,
@@ -50,9 +67,12 @@ export {
 export type {
   Catalog,
   CatalogComponent,
+  CatalogFunctionDefinition,
+  CatalogFunctionEntry,
   CatalogInput,
   CatalogManifest,
   CatalogSchema,
+  FunctionManifest,
   ResolvedCatalogEntry,
   SerializedCatalog,
 } from './catalog/index.js';
@@ -73,9 +93,18 @@ export {
   Divider,
   Image,
   List,
+  Modal,
   RadioGroup,
   Row,
+  Slider,
   Tabs,
   Text,
+  TextField,
   Icon,
 } from './catalog/index.js';
+
+// A2UI 0.9 basic-catalog functions — registered + announced when spread
+// into `<A2UI catalogs={[..., ...basicFunctions]}>`. Impls come from
+// `@a2ui/web_core` (the upstream basic-catalog package), so the wire
+// contract stays aligned with the spec for free.
+export { basicFunctions, registerBasicFunctions } from './functions/index.js';

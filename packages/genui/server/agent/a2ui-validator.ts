@@ -90,10 +90,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object';
 }
 
-function hasActionName(value: unknown): value is { name: string } {
+function hasActionName(value: unknown): value is { event: { name: string } } {
   if (!isRecord(value)) return false;
-  const candidate = value as { name?: unknown };
-  return typeof candidate.name === 'string' && candidate.name.length > 0;
+  const candidate = value as { event?: unknown };
+  if (!isRecord(candidate.event)) return false;
+  const event = candidate.event as { name?: unknown };
+  return typeof event.name === 'string' && event.name.length > 0;
 }
 
 export interface ValidationResult {
@@ -281,7 +283,7 @@ export function validateA2UIOutput(
           const action = comp.action;
           if (!hasActionName(action)) {
             errors.push(
-              `${comp.component} (id=${comp.id}) MUST carry action.name.`,
+              `${comp.component} (id=${comp.id}) MUST carry action.event.name.`,
             );
           }
         }

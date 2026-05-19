@@ -6,7 +6,6 @@ import { queryNodes } from './queryNodes.js';
 import { ErrorCode } from '../../../constants.js';
 import { invokeUIMethodEndpoint } from '../../endpoints.js';
 import type { LynxViewInstance } from '../LynxViewInstance.js';
-import { __InvokeUIMethod } from '../elementAPIs/pureElementPAPIs.js';
 export function registerInvokeUIMethodHandler(
   rpc: Rpc,
   lynxViewInstance: LynxViewInstance,
@@ -31,7 +30,7 @@ export function registerInvokeUIMethodHandler(
         true,
         root_unique_id,
         (element) => {
-          __InvokeUIMethod(
+          lynxViewInstance.invokeUIMethod(
             element as HTMLElement,
             method,
             params as object,
