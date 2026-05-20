@@ -2,6 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { BackgroundElementTemplateInstance } from './instance.js';
+import {
+  globalCommitContext as coreGlobalCommitContext,
+  resetGlobalCommitContext as resetCoreGlobalCommitContext,
+} from '../../core/commit-context.js';
 import type { ElementTemplateUpdateCommitContext } from '../protocol/types.js';
 
 interface ElementTemplateCommitNonPayloadState {
@@ -15,19 +19,17 @@ type ElementTemplateGlobalCommitContext = ElementTemplateUpdateCommitContext & {
   nonPayload: ElementTemplateCommitNonPayloadState;
 };
 
-export const globalCommitContext: ElementTemplateGlobalCommitContext = {
-  ops: [],
-  flushOptions: {},
-  nonPayload: {
-    removedSubtreesAwaitingTeardown: [],
-  },
+const nonPayload: ElementTemplateCommitNonPayloadState = {
+  removedSubtreesAwaitingTeardown: [],
 };
 
+export const globalCommitContext = coreGlobalCommitContext as unknown as ElementTemplateGlobalCommitContext;
+
+globalCommitContext.nonPayload = nonPayload;
+
 export function resetGlobalCommitContext(): void {
-  globalCommitContext.ops = [];
-  globalCommitContext.flushOptions = {};
-  delete globalCommitContext.flowIds;
-  globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown = [];
+  resetCoreGlobalCommitContext();
+  nonPayload.removedSubtreesAwaitingTeardown = [];
 }
 
 export function markRemovedSubtreeForPostDispatchTeardown(

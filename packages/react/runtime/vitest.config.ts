@@ -80,6 +80,11 @@ export default defineConfig({
       { find: '@lynx-js/react/internal', replacement: path.resolve(__dirname, './src/internal.ts') },
       { find: '@lynx-js/react/jsx-dev-runtime', replacement: path.resolve(__dirname, './jsx-dev-runtime/index.js') },
       { find: '@lynx-js/react/jsx-runtime', replacement: path.resolve(__dirname, './jsx-runtime/index.js') },
+      { find: /^@lynx-js\/react\/hooks$/, replacement: path.resolve(__dirname, './src/core/hooks/react.ts') },
+      {
+        find: /^@lynx-js\/react\/lepus\/hooks$/,
+        replacement: path.resolve(__dirname, './src/core/hooks/mainThread.ts'),
+      },
       { find: '@lynx-js/react/lepus', replacement: path.resolve(__dirname, './lepus/index.js') },
       {
         find: '@lynx-js/react/legacy-react-runtime',

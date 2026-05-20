@@ -11,7 +11,7 @@ import {
 } from './commit-context.js';
 import type { BackgroundElementTemplateInstance } from './instance.js';
 import { COMMIT } from '../../shared/render-constants.js';
-import { hook } from '../../utils.js';
+import { hook, isEmptyObject } from '../../utils.js';
 import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../lynx/performance.js';
@@ -68,12 +68,20 @@ export function installElementTemplateCommitHook(): void {
       // User effects can run before ET hydrate arrives, so ordinary refs must be
       // attached on the background commit even though native UI ops are delayed.
       flushPendingRefs();
-    } else if (__BACKGROUND__ && hasHydrated && (globalCommitContext.ops.length > 0 || hasPendingRefs())) {
+    } else if (
+      __BACKGROUND__ && hasHydrated
+      && (
+        globalCommitContext.ops.length > 0
+        || !isEmptyObject(globalCommitContext.flushOptions)
+        || hasPendingRefs()
+      )
+    ) {
       const hasNativeOps = globalCommitContext.ops.length > 0;
+      const shouldDispatchUpdate = hasNativeOps || !isEmptyObject(globalCommitContext.flushOptions);
       const removedSubtreesAwaitingTeardown = hasNativeOps ? takeRemovedSubtreesForPostDispatchTeardown() : [];
       let didFlushRefs = false;
       try {
-        if (hasNativeOps) {
+        if (shouldDispatchUpdate) {
           markTimingLegacy('updateDiffVdomEnd');
           markTiming('diffVdomEnd');
 
