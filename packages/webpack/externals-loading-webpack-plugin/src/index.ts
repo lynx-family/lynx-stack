@@ -98,6 +98,11 @@ export interface ExternalsLoadingPluginOptions {
    */
   timeout?: number | undefined;
 
+  /**
+   * The number of additional attempts when fetching the external bundle times out (`response.code === -2`).
+   *
+   * @defaultValue 0
+   */
   retries?: number | undefined;
 }
 
@@ -231,6 +236,11 @@ export interface ExternalValue {
    */
   timeout?: number;
 
+  /**
+   * The number of additional attempts when fetching the external bundle times out (`response.code === -2`).
+   *
+   * @defaultValue `0`
+   */
   retries?: number;
 }
 
