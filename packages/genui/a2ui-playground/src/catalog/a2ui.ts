@@ -1298,7 +1298,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     usageExamples: {
       a2ui: [
         {
-          label: 'Detailed',
+          label: 'Default',
           value: [
             {
               id: 'details-tabs',
@@ -1362,98 +1362,6 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
               component: 'Text',
               text: 'Feels fresh and filling.',
               variant: 'caption',
-            },
-          ],
-        },
-        {
-          label: 'Three tabs',
-          value: [
-            {
-              id: 'details-tabs-3',
-              component: 'Tabs',
-              tabs: [
-                { title: 'Summary', child: 'summary-panel' },
-                { title: 'Ingredients', child: 'ingredients-panel' },
-                { title: 'Instructions', child: 'instructions-panel' },
-              ],
-            },
-            {
-              id: 'summary-panel',
-              component: 'Column',
-              children: ['summary-title', 'summary-note'],
-              align: 'stretch',
-            },
-            {
-              id: 'summary-title',
-              component: 'Text',
-              text: 'Quick summary',
-              variant: 'h3',
-            },
-            {
-              id: 'summary-note',
-              component: 'Text',
-              text: 'Ingredients scale well for a larger table.',
-              variant: 'caption',
-            },
-            {
-              id: 'ingredients-panel',
-              component: 'List',
-              direction: 'vertical',
-              align: 'stretch',
-              children: [
-                'ingredient-1',
-                'ingredient-2',
-                'ingredient-3',
-                'ingredient-4',
-              ],
-            },
-            {
-              id: 'ingredient-1',
-              component: 'Text',
-              text: '1 cup quinoa',
-              variant: 'body',
-            },
-            {
-              id: 'ingredient-2',
-              component: 'Text',
-              text: '2 cups water',
-              variant: 'body',
-            },
-            {
-              id: 'ingredient-3',
-              component: 'Text',
-              text: '1 cucumber, diced',
-              variant: 'body',
-            },
-            {
-              id: 'ingredient-4',
-              component: 'Text',
-              text: '1 cup cherry tomatoes, halved',
-              variant: 'body',
-            },
-            {
-              id: 'instructions-panel',
-              component: 'Column',
-              children: ['instruction-1', 'instruction-2', 'instruction-3'],
-              align: 'stretch',
-            },
-            {
-              id: 'instruction-1',
-              component: 'Text',
-              text: '1. Rinse quinoa and bring to a boil in water.',
-              variant: 'body',
-            },
-            {
-              id: 'instruction-2',
-              component: 'Text',
-              text: '2. Reduce heat and simmer for 15 minutes.',
-              variant: 'body',
-            },
-            {
-              id: 'instruction-3',
-              component: 'Text',
-              text: '3. Mix with diced vegetables and serve warm.',
-              variant: 'body',
             },
           ],
         },

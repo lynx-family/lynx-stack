@@ -8,9 +8,172 @@
   overflow: hidden;
 }
 
+.compCatalogPage {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.compCatalogContent {
+  width: 100%;
+  margin: 0;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-background);
+}
+
+.compCatalogHero {
+  margin-bottom: 0;
+}
+
+.compCatalogHeroTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.compCatalogHeaderTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.4;
+}
+
+.compCatalogHeaderDesc {
+  margin: 2px 0 0;
+  color: var(--geist-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.compEyebrow {
+  margin-bottom: 8px;
+  color: var(--geist-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.compCategoryNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0 26px;
+}
+
+.compCategoryChip {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: var(--geist-background);
+  color: var(--geist-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color var(--geist-transition),
+    border-color var(--geist-transition),
+    box-shadow var(--geist-transition),
+    transform var(--geist-transition);
+}
+
+.compCategoryChip:hover {
+  color: var(--geist-foreground);
+  border-color: var(--geist-border-hover);
+  box-shadow: var(--geist-shadow-sm);
+  transform: translateY(-1px);
+}
+
+.compCatalogSectionTitle {
+  margin: 0 0 8px;
+  color: var(--geist-foreground);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.compCatalogSplit {
+  width: 100%;
+  margin: 0;
+  padding: 0 20px 32px;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.compCatalogSidebar {
+  position: sticky;
+  top: 0;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.compCatalogDetail {
+  min-width: 0;
+}
+
+/* ── All Components Grid ── */
+.compCategorySection {
+  margin-bottom: 32px;
+}
+
+.compCategoryTitle {
+  margin: 0 0 12px;
+  color: var(--geist-foreground);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.compGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.compGridCard {
+  display: block;
+  padding: 16px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-lg);
+  background: var(--geist-background);
+  text-decoration: none;
+  transition: all var(--geist-transition);
+}
+
+.compGridCard:hover {
+  border-color: var(--geist-border-hover);
+  box-shadow: var(--geist-shadow-md);
+}
+
+.compGridCardName {
+  margin-bottom: 4px;
+  color: var(--geist-foreground);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--geist-mono);
+}
+
+.compGridCardDesc {
+  color: var(--geist-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 /* ── Sidebar ── */
 .compSidebar {
-  width: 200px;
+  width: 100%;
   flex-shrink: 0;
   border-right: 1px solid var(--geist-border);
   background: var(--geist-background);
@@ -21,30 +184,33 @@
   gap: 0;
 }
 
-.compSidebarAll {
-  display: block;
-  padding: 6px 12px;
-  border-radius: var(--geist-radius-sm);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--geist-secondary);
-  text-decoration: none;
-  transition: all var(--geist-transition);
+.compSidebarGroup {
   margin-bottom: 4px;
 }
 
-.compSidebarAll:hover {
+.compSidebarAll {
+  display: block;
+  width: 100%;
+  padding: 8px 12px 8px 20px;
+  border: 1px solid transparent;
+  border-radius: var(--geist-radius-sm);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--geist-foreground);
+  text-decoration: none;
+  transition: all var(--geist-transition);
+}
+
+.compSidebarAll:hover {
   background: var(--geist-surface);
 }
 
 .compSidebarAll.active {
-  color: var(--geist-foreground);
   background: var(--geist-surface);
-}
-
-.compSidebarGroup {
-  margin-bottom: 4px;
+  border-color: var(--geist-border-hover);
 }
 
 .compSidebarGroupLabel {
@@ -102,35 +268,6 @@
   font-size: 14px;
   margin: 0 0 24px;
   line-height: 1.6;
-}
-
-/* ── Breadcrumb ── */
-.compBreadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 20px;
-  font-size: 13px;
-}
-
-.compBreadcrumbLink {
-  color: var(--geist-secondary);
-  text-decoration: none;
-  transition: color var(--geist-transition);
-}
-
-.compBreadcrumbLink:hover {
-  color: var(--geist-foreground);
-}
-
-.compBreadcrumbSep {
-  color: var(--geist-secondary);
-  opacity: 0.5;
-}
-
-.compBreadcrumbCurrent {
-  color: var(--geist-foreground);
-  font-weight: 500;
 }
 
 .compPropsSection {
@@ -437,53 +574,24 @@
   }
 }
 
-/* ── Category Grid (All Components view) ── */
-.compCategorySection {
-  margin-bottom: 32px;
-}
+@media (max-width: 1100px) {
+  .compCatalogPage {
+    overflow: visible;
+  }
 
-.compCategoryTitle {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--geist-foreground);
-  margin: 0 0 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
+  .compCatalogContent,
+  .compCatalogSplit {
+    padding-inline: 20px;
+  }
 
-.compGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 12px;
-}
+  .compCatalogSplit {
+    grid-template-columns: 1fr;
+  }
 
-.compGridCard {
-  display: block;
-  padding: 16px;
-  border: 1px solid var(--geist-border);
-  border-radius: var(--geist-radius-lg);
-  background: var(--geist-background);
-  text-decoration: none;
-  transition: all var(--geist-transition);
-}
-
-.compGridCard:hover {
-  border-color: var(--geist-border-hover);
-  box-shadow: var(--geist-shadow-md);
-}
-
-.compGridCardName {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--geist-foreground);
-  margin-bottom: 4px;
-  font-family: var(--geist-mono);
-}
-
-.compGridCardDesc {
-  font-size: 13px;
-  color: var(--geist-secondary);
-  line-height: 1.5;
+  .compCatalogSidebar {
+    position: static;
+    max-height: none;
+  }
 }
 
 /* ── Detail subheadings / code / table ── */

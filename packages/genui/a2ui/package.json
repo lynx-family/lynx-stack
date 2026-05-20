@@ -108,7 +108,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog",
+    "build": "tsc --project tsconfig.build.json && npm run build:catalog",
+    "build:catalog": "a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog",
     "test": "rstest"
   },
   "dependencies": {

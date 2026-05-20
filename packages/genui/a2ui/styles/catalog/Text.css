@@ -14,57 +14,57 @@
 }
 
 .text-h1 {
-  font-size: var(--a2ui-font-size-2xl);
+  font-size: 28px;
   font-weight: bold;
   color: var(--a2ui-color-on-surface);
-  line-height: var(--a2ui-line-height-headings);
+  line-height: 1.15;
   flex-shrink: 0;
 }
 
 .text-h2 {
-  font-size: var(--a2ui-font-size-xl);
+  font-size: 22px;
   font-weight: bold;
   color: var(--a2ui-color-on-surface);
-  line-height: var(--a2ui-line-height-headings);
+  line-height: 1.2;
   flex-shrink: 0;
 }
 
 .text-h3 {
-  font-size: var(--a2ui-font-size-l);
+  font-size: 18px;
   font-weight: bold;
   color: var(--a2ui-color-on-surface);
-  line-height: var(--a2ui-line-height-headings);
+  line-height: 1.2;
   flex-shrink: 0;
 }
 
 .text-h4 {
-  font-size: var(--a2ui-font-size-m);
+  font-size: 15px;
   font-weight: bold;
   color: var(--a2ui-color-on-surface);
-  line-height: var(--a2ui-line-height-headings);
+  line-height: 1.2;
   flex-shrink: 0;
 }
 
 .text-h5 {
-  font-size: var(--a2ui-font-size-s);
+  font-size: 13px;
   font-weight: bold;
   color: var(--a2ui-color-on-surface);
-  line-height: var(--a2ui-line-height-headings);
+  line-height: 1.2;
   flex-shrink: 0;
 }
 
 .text-caption {
-  font-size: var(--a2ui-font-size-xs);
+  font-size: 11px;
   color: var(--a2ui-color-text-muted);
-  line-height: var(--a2ui-line-height-body);
+  line-height: 1.5;
   flex-shrink: 0;
 }
 
 .text-body {
-  font-size: var(--a2ui-font-size-m);
+  font-size: 15px;
   font-weight: normal;
   color: var(--a2ui-color-on-surface);
-  line-height: var(--a2ui-line-height-body);
+  line-height: 1.5;
 }
 
 .text-weight-1 {
@@ -83,27 +83,28 @@
 
 .text-price {
   flex-shrink: 0;
-  font-size: var(--a2ui-font-size-m);
+  font-size: 16px;
   font-weight: bold;
   color: var(--a2ui-color-primary);
-  line-height: var(--a2ui-line-height-body);
+  line-height: 1.5;
 }
 
 .text-link {
   flex-shrink: 0;
-  font-size: var(--a2ui-font-size-m);
+  font-size: 15px;
+  font-weight: 600;
   color: var(--a2ui-color-primary-hover);
   text-decoration: underline;
-  line-height: var(--a2ui-line-height-body);
+  line-height: 1.5;
 }
 
 .text-label {
   flex-shrink: 0;
-  font-size: var(--a2ui-font-size-xs);
+  font-size: 11px;
   font-weight: bold;
   color: var(--a2ui-color-text-muted);
-  letter-spacing: 0.5px;
-  line-height: var(--a2ui-line-height-body);
+  letter-spacing: 0.8px;
+  line-height: 1.5;
 }
 
 .button .text-body,
@@ -116,5 +117,5 @@
 .button .text-price,
 .button .text-link,
 .button .text-label {
-  color: var(--a2ui-color-on-primary);
+  color: inherit;
 }

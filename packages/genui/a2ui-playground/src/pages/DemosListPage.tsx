@@ -83,8 +83,15 @@ export function DemosListPage(
 
   return (
     <div className='examplePage'>
-      <div className='exampleMetaRow'>
-        <span className='chip'>{ALL_EXAMPLES.length} examples</span>
+      <div className='examplePageHeader'>
+        <div className='examplePageHeaderTop'>
+          <h2 className='examplePageHeaderTitle'>Showcase</h2>
+          <span className='chip'>{ALL_EXAMPLES.length} examples</span>
+        </div>
+        <p className='examplePageHeaderDesc'>
+          Browse playground examples and the curated A2UI gallery in one place.
+          Click any card to jump into the full detail workspace.
+        </p>
       </div>
       <div className='exampleColumns'>
         <section className='exampleSection'>
