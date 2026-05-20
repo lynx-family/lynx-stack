@@ -92,6 +92,7 @@ export {
   Column,
   Divider,
   Image,
+  LineChart,
   List,
   Modal,
   RadioGroup,

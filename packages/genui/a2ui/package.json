@@ -56,6 +56,11 @@
       "default": "./dist/catalog/Card/index.js"
     },
     "./catalog/Card/catalog.json": "./dist/catalog/Card/catalog.json",
+    "./catalog/LineChart": {
+      "types": "./dist/catalog/LineChart/index.d.ts",
+      "default": "./dist/catalog/LineChart/index.js"
+    },
+    "./catalog/LineChart/catalog.json": "./dist/catalog/LineChart/catalog.json",
     "./catalog/Modal": {
       "types": "./dist/catalog/Modal/index.d.ts",
       "default": "./dist/catalog/Modal/index.js"

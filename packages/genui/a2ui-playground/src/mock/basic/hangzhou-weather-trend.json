@@ -1,0 +1,54 @@
+[
+  {
+    "createSurface": {
+      "surfaceId": "default",
+      "catalogId": "demo-hangzhou-weather-trend"
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "root",
+          "component": "Column",
+          "align": "start",
+          "justify": "start",
+          "children": ["title", "subtitle", "chart"]
+        },
+        {
+          "id": "title",
+          "component": "Text",
+          "variant": "h2",
+          "text": "Hangzhou Weather Trend for the Next 7 Days"
+        },
+        {
+          "id": "subtitle",
+          "component": "Text",
+          "variant": "body",
+          "text": "Temperatures trend upward through the week, with a slight dip on the weekend."
+        },
+        {
+          "id": "chart",
+          "component": "LineChart",
+          "labels": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+          "series": [
+            {
+              "name": "High (°C)",
+              "values": [12, 14, 16, 18, 20, 22, 19],
+              "color": "#0057d9"
+            },
+            {
+              "name": "Low (°C)",
+              "values": [6, 7, 8, 10, 11, 13, 12],
+              "color": "#0a8f8f"
+            }
+          ],
+          "variant": "natural",
+          "xLabel": "Day",
+          "yLabel": "Temperature"
+        }
+      ]
+    }
+  }
+]

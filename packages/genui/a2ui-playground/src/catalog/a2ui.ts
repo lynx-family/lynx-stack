@@ -8,6 +8,7 @@ import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json'
 import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json';
 import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json';
 import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
+import lineChartManifest from '@lynx-js/a2ui-reactlynx/catalog/LineChart/catalog.json';
 import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
 import modalManifest from '@lynx-js/a2ui-reactlynx/catalog/Modal/catalog.json';
 import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
@@ -31,7 +32,12 @@ export interface ComponentUsageExample {
   value: object | object[];
 }
 
-export type ComponentCategory = 'Display' | 'Layout' | 'Input' | 'Data';
+export type ComponentCategory =
+  | 'Display'
+  | 'Layout'
+  | 'Input'
+  | 'Data'
+  | 'Chart';
 
 export interface ComponentDoc {
   name: string;
@@ -47,6 +53,7 @@ export const CATEGORIES: { id: ComponentCategory; label: string }[] = [
   { id: 'Layout', label: 'Layout' },
   { id: 'Input', label: 'Input' },
   { id: 'Data', label: 'Data' },
+  { id: 'Chart', label: 'Chart' },
 ];
 
 type PropSchema = Record<string, unknown>;
@@ -531,6 +538,82 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
               variant: 'body',
             },
           ],
+        },
+      ],
+      openui: [],
+    },
+  },
+  {
+    name: 'LineChart',
+    category: 'Chart',
+    description:
+      'Plots one or more numeric series over category labels with native SVG rendering.',
+    props: schemaToProps(lineChartManifest),
+    usage: {
+      a2ui: {
+        id: 'sales-chart',
+        component: 'LineChart',
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        series: [
+          {
+            name: 'Revenue',
+            values: [120, 180, 160, 220, 260, 240],
+            color: '#0057d9',
+          },
+          {
+            name: 'Orders',
+            values: [80, 92, 104, 118, 126, 140],
+            color: '#0a8f8f',
+          },
+        ],
+        variant: 'natural',
+        xLabel: 'Month',
+        yLabel: 'Performance',
+      },
+      openui: {},
+    },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Multi-series',
+          value: {
+            id: 'multi-series-chart',
+            component: 'LineChart',
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            series: [
+              {
+                name: 'Revenue',
+                values: [120, 180, 160, 220, 260, 240],
+                color: '#0057d9',
+              },
+              {
+                name: 'Orders',
+                values: [80, 92, 104, 118, 126, 140],
+                color: '#0a8f8f',
+              },
+            ],
+            variant: 'natural',
+            xLabel: 'Month',
+            yLabel: 'Performance',
+          },
+        },
+        {
+          label: 'Stepped',
+          value: {
+            id: 'step-chart',
+            component: 'LineChart',
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+            series: [
+              {
+                name: 'Traffic',
+                values: [32, 42, 39, 51, 58],
+                color: '#8a5cf6',
+              },
+            ],
+            variant: 'step',
+            xLabel: 'Day',
+            yLabel: 'Traffic',
+          },
         },
       ],
       openui: [],

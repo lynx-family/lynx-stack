@@ -10,6 +10,7 @@ import {
   Divider,
   Icon,
   Image,
+  LineChart,
   List,
   Modal,
   RadioGroup,
@@ -37,6 +38,7 @@ import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json'
 import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json';
 import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json';
 import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
+import lineChartManifest from '@lynx-js/a2ui-reactlynx/catalog/LineChart/catalog.json';
 import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
 import modalManifest from '@lynx-js/a2ui-reactlynx/catalog/Modal/catalog.json';
 import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
@@ -90,6 +92,7 @@ const ALL_BUILTINS: readonly CatalogInput[] = [
   manifestEntry(Divider, dividerManifest),
   manifestEntry(Icon, iconManifest),
   manifestEntry(CheckBox, checkBoxManifest),
+  manifestEntry(LineChart, lineChartManifest),
   manifestEntry(RadioGroup, radioGroupManifest),
   manifestEntry(Slider, sliderManifest),
   manifestEntry(TextField, textFieldManifest),

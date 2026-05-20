@@ -5,6 +5,7 @@ import { A2UI_GALLERY_DEMOS } from './mock/a2ui-gallery/index.js';
 import castGrid from './mock/basic/cast-grid.json';
 import citywalkList from './mock/basic/citywalk-list.json';
 import fridgeSearch from './mock/basic/fridge-search.json';
+import hangzhouWeatherTrend from './mock/basic/hangzhou-weather-trend.json';
 import recs from './mock/basic/recs.json';
 import tripPlanner from './mock/basic/trip-planner.json';
 import workoutPlan from './mock/basic/workout-plan.json';
@@ -122,6 +123,14 @@ export const EXTENDED_STATIC_DEMOS: StaticDemo[] = [
     title: 'Weekend Citywalk Coffee Picks',
     tags: tagsFromMessages(citywalkList),
     messages: citywalkList,
+  },
+  {
+    id: 'hangzhou-weather-trend',
+    title: 'Hangzhou Weather Trend',
+    description:
+      'Use LineChart to show a week-long temperature trend in Hangzhou.',
+    tags: tagsFromMessages(hangzhouWeatherTrend),
+    messages: hangzhouWeatherTrend,
   },
   {
     id: 'fridge-search',
