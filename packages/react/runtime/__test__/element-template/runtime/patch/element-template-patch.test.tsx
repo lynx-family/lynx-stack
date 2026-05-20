@@ -225,13 +225,35 @@ describe('ElementTemplate patch stream (apply)', () => {
     envManager.switchToBackground();
     lynx.getCoreContext().dispatchEvent({
       type: ElementTemplateLifecycleConstant.update,
-      data: { flushOptions: {}, flowIds: [101, 202] },
+      data: { ops: [], flushOptions: { triggerDataUpdated: true }, flowIds: [101, 202] },
     });
     envManager.switchToMainThread();
 
     expect(performance.profileStart).not.toHaveBeenCalled();
     expect(performance.profileEnd).not.toHaveBeenCalled();
     expect(mockFlushElementTree.mock.calls).toHaveLength(1);
+    expect(mockFlushElementTree.mock.calls[0]?.[1]).toEqual({ triggerDataUpdated: true });
+  });
+
+  it('flushes option-only update payloads without ops', () => {
+    envManager.switchToMainThread();
+    installElementTemplatePatchListener();
+    const performance = lynx.performance;
+    performance.profileStart.mockClear();
+    performance.profileEnd.mockClear();
+    mockFlushElementTree.mockClear();
+
+    envManager.switchToBackground();
+    lynx.getCoreContext().dispatchEvent({
+      type: ElementTemplateLifecycleConstant.update,
+      data: { flushOptions: { triggerDataUpdated: true }, flowIds: [101, 202] },
+    });
+    envManager.switchToMainThread();
+
+    expect(performance.profileStart).not.toHaveBeenCalled();
+    expect(performance.profileEnd).not.toHaveBeenCalled();
+    expect(mockFlushElementTree.mock.calls).toHaveLength(1);
+    expect(mockFlushElementTree.mock.calls[0]?.[1]).toEqual({ triggerDataUpdated: true });
   });
 
   it('reports illegal handleId 0 on create', () => {

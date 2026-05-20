@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { options } from 'preact';
+import { Component, createElement } from 'preact/compat';
 
 import * as elementTemplateAlog from '../../../../src/element-template/debug/alog.js';
 import {
@@ -23,6 +24,14 @@ import {
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import { PipelineOrigins } from '../../../../src/element-template/lynx/performance.js';
+import {
+  InitDataConsumer,
+  InitDataProvider,
+  root,
+  useInitData,
+  useInitDataChanged,
+  withInitDataInState,
+} from '../../../../src/element-template/index.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
 import { clearRefState, queueRefAttrUpdate } from '../../../../src/element-template/prop-adapters/ref.js';
 
@@ -35,6 +44,55 @@ function createRawTextOps(id: number, text: string) {
     [text],
     [],
   ];
+}
+
+type DataChangeListener = (...args: unknown[]) => void;
+
+function installDataChangeHarness() {
+  const scheduledRenders: Array<() => void> = [];
+  const previousDebounce = options.debounceRendering;
+  options.debounceRendering = (cb) => {
+    scheduledRenders.push(cb);
+  };
+
+  const listeners = new Set<DataChangeListener>();
+  const emitter = {
+    addListener: vi.fn((eventName: string, listener: DataChangeListener) => {
+      if (eventName === 'onDataChanged') {
+        listeners.add(listener);
+      }
+    }),
+    removeListener: vi.fn((eventName: string, listener: DataChangeListener) => {
+      if (eventName === 'onDataChanged') {
+        listeners.delete(listener);
+      }
+    }),
+  };
+  const originalGetJSModule = lynx.getJSModule;
+  lynx.getJSModule = ((moduleName: string) => {
+    if (moduleName === 'GlobalEventEmitter') {
+      return emitter;
+    }
+    return originalGetJSModule?.(moduleName);
+  }) as typeof lynx.getJSModule;
+
+  return {
+    listeners,
+    emitDataChanged(...args: unknown[]) {
+      for (const listener of [...listeners]) {
+        listener(...args);
+      }
+    },
+    flushScheduledRenders() {
+      while (scheduledRenders.length > 0) {
+        scheduledRenders.shift()?.();
+      }
+    },
+    restore() {
+      options.debounceRendering = previousDebounce;
+      lynx.getJSModule = originalGetJSModule;
+    },
+  };
 }
 
 describe('ElementTemplate commit hook', () => {
@@ -84,6 +142,141 @@ describe('ElementTemplate commit hook', () => {
     });
     envManager.switchToBackground();
     expect(globalCommitContext.ops).toEqual([]);
+  });
+
+  it('dispatches flush-only update after commit when hydrated', () => {
+    markElementTemplateHydrated();
+    globalCommitContext.flushOptions = { triggerDataUpdated: true };
+
+    options.__c?.({} as unknown as object, []);
+
+    envManager.switchToMainThread();
+    expect(updateEvents).toHaveLength(1);
+    expect(updateEvents[0]).toEqual({
+      ops: [],
+      flushOptions: { triggerDataUpdated: true },
+    });
+    envManager.switchToBackground();
+    expect(globalCommitContext.flushOptions).toEqual({});
+  });
+
+  it('dispatches triggerDataUpdated when useInitData observes a data change', () => {
+    const dataChange = installDataChangeHarness();
+
+    try {
+      function App() {
+        useInitData();
+        return createElement('view');
+      }
+
+      lynx.__initData = { msg: 'before' };
+      root.render(createElement(App, null));
+      expect(dataChange.listeners.size).toBe(1);
+
+      markElementTemplateHydrated();
+      lynx.__initData = { msg: 'after' };
+      dataChange.emitDataChanged();
+      dataChange.flushScheduledRenders();
+
+      envManager.switchToMainThread();
+      expect(updateEvents).toHaveLength(1);
+      expect(updateEvents[0]).toMatchObject({
+        ops: [],
+        flushOptions: { triggerDataUpdated: true },
+      });
+    } finally {
+      dataChange.restore();
+    }
+  });
+
+  it('dispatches triggerDataUpdated when InitDataProvider observes a data change', () => {
+    const dataChange = installDataChangeHarness();
+    const renderedMessages: unknown[] = [];
+
+    try {
+      function App() {
+        return createElement(
+          InitDataProvider,
+          null,
+          createElement(InitDataConsumer, null, (initData: { msg?: string }) => {
+            renderedMessages.push(initData.msg);
+            return createElement('view');
+          }),
+        );
+      }
+
+      lynx.__initData = { msg: 'before' };
+      root.render(createElement(App, null));
+      expect(dataChange.listeners.size).toBe(1);
+      expect(renderedMessages).toEqual(['before']);
+
+      markElementTemplateHydrated();
+      lynx.__initData = { msg: 'after' };
+      dataChange.emitDataChanged();
+      dataChange.flushScheduledRenders();
+
+      expect(renderedMessages).toContain('after');
+      envManager.switchToMainThread();
+      expect(updateEvents).toHaveLength(1);
+      expect(updateEvents[0]).toMatchObject({
+        ops: [],
+        flushOptions: { triggerDataUpdated: true },
+      });
+    } finally {
+      dataChange.restore();
+    }
+  });
+
+  it('notifies useInitDataChanged listeners through the ET hook facade', () => {
+    const dataChange = installDataChangeHarness();
+    const onChanged = vi.fn();
+
+    try {
+      function App() {
+        useInitDataChanged(onChanged);
+        return createElement('view');
+      }
+
+      root.render(createElement(App, null));
+      expect(dataChange.listeners.size).toBe(1);
+
+      dataChange.emitDataChanged({ msg: 'after' });
+
+      expect(onChanged).toHaveBeenCalledTimes(1);
+      expect(onChanged).toHaveBeenCalledWith({ msg: 'after' });
+    } finally {
+      dataChange.restore();
+    }
+  });
+
+  it('dispatches triggerDataUpdated when withInitDataInState observes a data change', () => {
+    const dataChange = installDataChangeHarness();
+
+    try {
+      class App extends Component<Record<string, never>, { msg?: string }> {
+        override render() {
+          return createElement('view');
+        }
+      }
+      const WrappedApp = withInitDataInState(App);
+
+      lynx.__initData = { msg: 'before' };
+      root.render(createElement(WrappedApp, null));
+      expect(dataChange.listeners.size).toBe(1);
+
+      markElementTemplateHydrated();
+      dataChange.emitDataChanged({ msg: 'after' });
+      dataChange.flushScheduledRenders();
+
+      envManager.switchToMainThread();
+      expect(updateEvents).toHaveLength(1);
+      expect(updateEvents[0]).toMatchObject({
+        ops: [],
+        flushOptions: { triggerDataUpdated: true },
+      });
+    } finally {
+      dataChange.restore();
+    }
   });
 
   it('skips dispatch before hydration', () => {

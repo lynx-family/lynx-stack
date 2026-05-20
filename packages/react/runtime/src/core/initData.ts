@@ -4,8 +4,8 @@
 import type { ComponentChildren, Consumer, Context, Provider } from 'preact';
 import type { ComponentClass } from 'react';
 
-import { useLynxGlobalEventListener } from '../../core/hooks/useLynxGlobalEventListener.js';
-import { globalFlushOptions } from '../lifecycle/patch/commit.js';
+import { globalCommitContext } from './commit-context.js';
+import type { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';
 
 type Getter<T> = {
   [key in keyof T]: () => T[key];
@@ -35,7 +35,7 @@ export function factory<Data>(
 
     const handleChange = () => {
       if (prop === '__initData') {
-        globalFlushOptions.triggerDataUpdated = true;
+        globalCommitContext.flushOptions.triggerDataUpdated = true;
       }
       set(lynx[prop] as Data);
     };
@@ -57,7 +57,7 @@ export function factory<Data>(
     const [__, set] = useState(lynx[prop]);
     useChanged(() => {
       if (prop === '__initData') {
-        globalFlushOptions.triggerDataUpdated = true;
+        globalCommitContext.flushOptions.triggerDataUpdated = true;
       }
       set(lynx[prop]);
     });
@@ -129,7 +129,7 @@ export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentC
           'onDataChanged',
           this.h = (...args: unknown[]) => {
             const [newData] = args as [S];
-            globalFlushOptions.triggerDataUpdated = true;
+            globalCommitContext.flushOptions.triggerDataUpdated = true;
             this.setState(newData);
           },
         );

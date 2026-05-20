@@ -80,7 +80,7 @@ export interface ElementTemplateFlushOptions {
   // elementIDs?: number[];
   // operationIDs?: any[];
   // asyncFlush?: boolean;
-  // triggerDataUpdated?: boolean;
+  triggerDataUpdated?: boolean;
 }
 
 export interface ElementTemplateUpdateCommitContext {

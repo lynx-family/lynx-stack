@@ -52,6 +52,33 @@ const useId =
   ((...args: unknown[]) =>
     (currentHooks().useId as (...args: unknown[]) => unknown)(...args)) as typeof backgroundHooks.useId;
 
+function useLynxGlobalEventListener<T extends (...args: any[]) => void>(
+  eventName: string,
+  listener: T,
+): void {
+  'background only';
+
+  const previousArgsRef = useRef<[string, T]>();
+
+  useMemo(() => {
+    if (previousArgsRef.current) {
+      const [eventName, listener] = previousArgsRef.current;
+      lynx.getJSModule('GlobalEventEmitter').removeListener(eventName, listener);
+    }
+    lynx.getJSModule('GlobalEventEmitter').addListener(eventName, listener);
+    previousArgsRef.current = [eventName, listener];
+  }, [eventName, listener]);
+
+  useEffect(() => {
+    return () => {
+      if (previousArgsRef.current) {
+        const [eventName, listener] = previousArgsRef.current;
+        lynx.getJSModule('GlobalEventEmitter').removeListener(eventName, listener);
+      }
+    };
+  }, []);
+}
+
 export {
   useCallback,
   useContext,
@@ -61,6 +88,7 @@ export {
   useId,
   useImperativeHandle,
   useLayoutEffect,
+  useLynxGlobalEventListener,
   useMemo,
   useReducer,
   useRef,

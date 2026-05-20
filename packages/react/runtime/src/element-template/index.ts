@@ -17,7 +17,10 @@ import {
   memo,
   useSyncExternalStore,
 } from 'preact/compat';
+import type { Consumer, FC, ReactNode } from 'react';
 
+import { factory, withInitDataInState } from '../core/initData.js';
+import type { InitData } from '../lynx-api.js';
 import {
   useCallback,
   useContext,
@@ -25,6 +28,7 @@ import {
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
+  useLynxGlobalEventListener,
   useMemo,
   useReducer,
   useRef,
@@ -82,6 +86,26 @@ export {
   cloneElement,
   useSyncExternalStore,
 };
+
+const _InitData = /* @__PURE__ */ factory<InitData>(
+  {
+    createContext,
+    useState,
+    createElement,
+    useLynxGlobalEventListener,
+  },
+  '__initData',
+  'onDataChanged',
+);
+
+// @ts-expect-error make preact and react types work
+export const InitDataProvider: FC<{ children?: ReactNode | undefined }> = /* @__PURE__ */ _InitData.Provider();
+// @ts-expect-error make preact and react types work
+export const InitDataConsumer: Consumer<InitData> = /* @__PURE__ */ _InitData.Consumer();
+export const useInitData: () => InitData = /* @__PURE__ */ _InitData.use();
+export const useInitDataChanged: (callback: (data: InitData) => void) => void = /* @__PURE__ */ _InitData.useChanged();
+
+export { withInitDataInState };
 
 export * from './client/root.js';
 
