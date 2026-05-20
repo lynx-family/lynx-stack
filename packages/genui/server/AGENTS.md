@@ -4,18 +4,18 @@ This package contains the Next.js server for A2UI agent APIs.
 
 ## Deployment Model
 
-This server is designed for a **long-lived, single Node.js process**
-(VM, container, or persistent host). It is **not suitable for serverless
-or multi-replica deployments** without an external session store, because:
+This server is safe to run on serverless and multi-replica deployments for
+A2UI conversation state because the client sends the current conversation
+context with each request.
 
-- Conversation memory (`conversations`) and the agent cache
-  (`agentCache`) live in process memory.
+- The agent cache (`agentCache`) lives in process memory and may be rebuilt
+  per instance.
 - The rate limiter is process-local.
 - The OpenAI agent service is a `globalThis` singleton.
 
-If you must run behind serverless (e.g. Vercel Functions) or with
-horizontal scale, plan to externalize state (Redis, Postgres) and front
-the deployment with a shared rate limiter (e.g. an API gateway).
+For multi-instance deployments, place a shared rate limiter (e.g. an API
+gateway or Redis-backed limiter) in front of this server when global rate
+limits are required.
 
 ## Required Environment Variables
 
@@ -79,24 +79,23 @@ is not shared across replicas. For multi-instance deployments, place a
 shared rate limiter (e.g. an API gateway or Redis-backed limiter) in
 front of this server.
 
-## Conversation Memory
+## Conversation Context
 
-Per-thread conversation history is held in memory and pruned with two
-mechanisms:
+The server does not keep per-thread conversation memory. `/a2ui/chat`,
+`/a2ui/stream`, `/a2ui/action`, and `/a2ui/action/stream` accept an optional
+`conversation` request field:
 
-- **TTL eviction**: threads idle longer than `A2UI_THREAD_TTL_MS`
-  (default `1800000`, i.e. 30 minutes) are dropped on the next sweep.
-- **LRU cap**: at most `A2UI_MAX_THREADS` (default `500`) threads are
-  retained; the oldest are evicted when the cap is exceeded.
-
-Sweeps are amortized: each call into `getConversation` triggers a sweep
-at most once per minute, so the steady-state cost stays close to O(1).
-Restarting the server clears all conversation memory.
-
-```bash
-export A2UI_THREAD_TTL_MS="1800000"
-export A2UI_MAX_THREADS="500"
+```json
+{
+  "conversation": {
+    "history": [{ "role": "user", "content": "..." }],
+    "dataModel": {}
+  }
+}
 ```
+
+The client owns truncation and lifetime. The playground keeps this context in
+memory only, so refreshing the page starts a fresh conversation.
 
 ## Development
 

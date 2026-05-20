@@ -6,6 +6,7 @@ import {
   errorMessage,
   pickChatOptions,
   readJsonBodyWithLimit,
+  validateConversation,
   validateMessages,
 } from '../_shared';
 import type { A2UIChatBody } from '../_shared';
@@ -44,6 +45,14 @@ export async function POST(req: Request) {
     );
   }
   const messages = validated.messages;
+  const validatedConversation = validateConversation(body.conversation);
+  if (!validatedConversation.ok) {
+    return jsonWithCors(
+      req,
+      { ok: false, error: validatedConversation.error },
+      { status: validatedConversation.status },
+    );
+  }
 
   const service = getA2UIAgentService();
   const opts = pickChatOptions(body);
@@ -53,11 +62,16 @@ export async function POST(req: Request) {
       const { text, usage, finishReason } = await service.generateRaw(
         messages,
         opts,
+        validatedConversation.conversation,
       );
       return jsonWithCors(req, { ok: true, text, usage, finishReason });
     }
 
-    const validatedResult = await service.generateValidated(messages, opts);
+    const validatedResult = await service.generateValidated(
+      messages,
+      opts,
+      validatedConversation.conversation,
+    );
     return jsonWithCors(req, validatedResult);
   } catch (err: unknown) {
     const { message, name } = errorMessage(err);

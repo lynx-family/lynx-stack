@@ -2,8 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { randomUUID } from 'node:crypto';
-
 import { BASIC_CATALOG } from '../../../agent/a2ui-catalog';
 import { validateA2UIOutput } from '../../../agent/a2ui-validator';
 import { getA2UIAgentService } from '../../../service/a2ui-agent';
@@ -11,6 +9,7 @@ import {
   errorMessage,
   pickChatOptions,
   readJsonBodyWithLimit,
+  validateConversation,
   validateMessages,
 } from '../_shared';
 import type { A2UIChatBody } from '../_shared';
@@ -63,6 +62,14 @@ export async function POST(req: Request) {
     );
   }
   const messages = validated.messages;
+  const validatedConversation = validateConversation(body.conversation);
+  if (!validatedConversation.ok) {
+    return jsonWithCors(
+      req,
+      { ok: false, error: validatedConversation.error },
+      { status: validatedConversation.status },
+    );
+  }
   const opts = pickChatOptions(body);
   const service = getA2UIAgentService();
 
@@ -73,17 +80,11 @@ export async function POST(req: Request) {
       };
 
       try {
-        const threadId = opts.threadId ?? randomUUID();
-        const optsWithThread = { ...opts, threadId };
         const { textStream, finalize } = await service.streamAsAsyncIterable(
           messages,
-          optsWithThread,
+          opts,
+          validatedConversation.conversation,
         );
-
-        enqueue('start', {
-          threadId,
-          resourceId: opts.resourceId,
-        });
 
         for await (const chunk of textStream) {
           enqueue('delta', { text: chunk });
@@ -100,21 +101,13 @@ export async function POST(req: Request) {
         if (finalText) {
           const v = validateA2UIOutput(
             finalText,
-            optsWithThread.catalog ?? BASIC_CATALOG,
+            opts.catalog ?? BASIC_CATALOG,
           );
           validation = {
             ok: v.ok,
             errors: v.errors,
             messages: v.ok ? v.messages : [],
           };
-          if (v.ok && v.messages.length > 0) {
-            service.recordStreamedConversation(
-              threadId,
-              messages,
-              finalText,
-              v.messages,
-            );
-          }
         }
 
         enqueue('done', {
