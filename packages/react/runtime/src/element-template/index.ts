@@ -19,8 +19,6 @@ import {
 } from 'preact/compat';
 import type { Consumer, FC, ReactNode } from 'react';
 
-import { factory, withInitDataInState } from '../core/initData.js';
-import type { InitData } from '../lynx-api.js';
 import {
   useCallback,
   useContext,
@@ -28,19 +26,22 @@ import {
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
-  useLynxGlobalEventListener,
   useMemo,
   useReducer,
   useRef,
   useState,
-} from './hooks/react.js';
+} from '@lynx-js/react/hooks';
+
+import { useLynxGlobalEventListener } from '../core/hooks/useLynxGlobalEventListener.js';
+import { factory, withInitDataInState } from '../core/initData.js';
+import type { InitData } from '../lynx-api.js';
 import './native/index.js';
 // import './lynx/component.js';
 // import { Suspense } from './lynx/suspense.js';
 
 export { Component, createContext } from 'preact';
 export { PureComponent } from 'preact/compat';
-export * from './hooks/react.js';
+export * from '@lynx-js/react/hooks';
 
 /**
  * @internal

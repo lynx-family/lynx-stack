@@ -8,9 +8,11 @@
     "tsBuildInfoFile": "./lib/tsconfig.tsbuildinfo",
     "baseUrl": "./",
     "paths": {
-      // Resolve the public bindings specifier back to source while building
+      // Resolve public self-references back to source while building
       // runtime itself, so the emitted lib output never becomes its own input.
       "@lynx-js/react/worklet-runtime/bindings": ["./src/worklet-runtime/bindings/index.ts"],
+      "@lynx-js/react/hooks": ["./src/core/hooks/react.ts"],
+      "@lynx-js/react/lepus/hooks": ["./src/core/hooks/mainThread.ts"],
     },
     "rootDir": "./src",
     "jsx": "react-jsx",

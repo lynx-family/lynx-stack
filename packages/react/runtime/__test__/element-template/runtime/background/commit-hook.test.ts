@@ -227,7 +227,7 @@ describe('ElementTemplate commit hook', () => {
     }
   });
 
-  it('notifies useInitDataChanged listeners through the ET hook facade', () => {
+  it('notifies useInitDataChanged listeners through aliased ET hooks', () => {
     const dataChange = installDataChangeHarness();
     const onChanged = vi.fn();
 

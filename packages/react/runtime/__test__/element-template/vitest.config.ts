@@ -88,7 +88,7 @@ const config: UserConfigExport = defineConfig({
         __dirname,
         '../../src/element-template/jsx-runtime/index.ts',
       ),
-      '@lynx-js/react/hooks': path.resolve(__dirname, '../../src/element-template/hooks/react.ts'),
+      '@lynx-js/react/hooks': path.resolve(__dirname, '../../src/core/hooks/react.ts'),
       '@lynx-js/react/lepus/hooks': path.resolve(
         __dirname,
         '../../src/core/hooks/mainThread.ts',
@@ -107,9 +107,6 @@ const config: UserConfigExport = defineConfig({
       include: ['src/element-template/**'],
       exclude: [
         'src/element-template/**/*.d.ts',
-        // This facade delegates to thread-specific hook implementations; test
-        // coverage is asserted through the behaviors that consume those hooks.
-        'src/element-template/hooks/react.ts',
         'src/element-template/protocol/types.ts',
       ],
       thresholds: {
