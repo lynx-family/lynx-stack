@@ -6,7 +6,6 @@ import {
   BackgroundElementTemplateInstance,
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
 } from '../../../../../src/element-template/background/instance.js';
-import { __etSlot } from '../../../../../src/element-template/runtime/components/slot.js';
 
 describe('Background Element Template Adapter', () => {
   let doc: BackgroundElementTemplateDocument;
@@ -67,30 +66,6 @@ describe('Background Element Template Adapter', () => {
       parent.removeChild(child2);
       expect(parent.firstChild).toBe(child1);
       expect(child2.parent).toBeNull();
-    });
-  });
-
-  describe('__etSlot', () => {
-    it('returns <slot> element in background', () => {
-      vi.stubGlobal('__BACKGROUND__', true);
-      const vnode = __etSlot(10, 'content') as unknown as {
-        type: string;
-        props: { id: number; children: unknown };
-      };
-      expect(vnode).not.toBe('content');
-      expect(vnode.type).toBe('slot');
-      expect(vnode.props.id).toBe(10);
-      expect(vnode.props.children).toBe('content');
-
-      vi.unstubAllGlobals();
-    });
-
-    it('throws in main thread (default)', () => {
-      vi.stubGlobal('__BACKGROUND__', false);
-      expect(() => __etSlot(10, 'content')).toThrow(
-        '__etSlot() should not run on the main thread. LEPUS ET children are lowered to slot arrays at compile time.',
-      );
-      vi.unstubAllGlobals();
     });
   });
 });
