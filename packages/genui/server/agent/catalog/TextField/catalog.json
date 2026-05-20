@@ -1,0 +1,147 @@
+{
+  "TextField": {
+    "properties": {
+      "label": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "description": "The text label for the input field."
+      },
+      "value": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "description": "The value of the text field."
+      },
+      "variant": {
+        "type": "string",
+        "enum": [
+          "number",
+          "longText",
+          "shortText",
+          "obscured"
+        ],
+        "description": "The type of input field to display."
+      },
+      "validationRegexp": {
+        "type": "string",
+        "description": "A regular expression used for client-side validation of the input."
+      },
+      "checks": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "condition": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "call": {
+                      "type": "string"
+                    },
+                    "args": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "returnType": {
+                      "type": "string",
+                      "enum": [
+                        "boolean"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "call"
+                  ],
+                  "additionalProperties": false
+                }
+              ],
+              "description": "The condition that indicates whether the check passes."
+            },
+            "message": {
+              "type": "string",
+              "description": "The error message to display if the check fails."
+            }
+          },
+          "required": [
+            "condition",
+            "message"
+          ],
+          "additionalProperties": false
+        },
+        "description": "A list of checks to perform."
+      }
+    },
+    "required": [
+      "label"
+    ]
+  }
+}

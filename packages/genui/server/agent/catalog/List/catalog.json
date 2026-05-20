@@ -1,0 +1,52 @@
+{
+  "List": {
+    "properties": {
+      "children": {
+        "oneOf": [
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "componentId": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "componentId",
+              "path"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "description": "Static child IDs array or template object."
+      },
+      "direction": {
+        "type": "string",
+        "enum": [
+          "horizontal",
+          "vertical"
+        ]
+      },
+      "align": {
+        "type": "string",
+        "enum": [
+          "start",
+          "center",
+          "end",
+          "stretch"
+        ]
+      }
+    },
+    "required": [
+      "children"
+    ]
+  }
+}
