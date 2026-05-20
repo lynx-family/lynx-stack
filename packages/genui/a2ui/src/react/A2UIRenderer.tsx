@@ -38,7 +38,7 @@ function DefaultLoading(props: { id: string }) {
         minHeight: '20px',
         padding: '10px',
         border: '1px solid var(--a2ui-color-border)',
-        borderRadius: 'var(--a2ui-border-radius)',
+        borderRadius: '4px',
         backgroundColor: 'var(--a2ui-color-surface-muted)',
         color: 'var(--a2ui-color-text-muted)',
       }}

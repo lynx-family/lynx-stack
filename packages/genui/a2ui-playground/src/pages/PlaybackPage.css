@@ -24,25 +24,34 @@
 
 .playbackPanelHeader {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 12px 20px;
   border-bottom: 1px solid var(--geist-border);
   background: var(--geist-background);
   flex-shrink: 0;
   flex-wrap: wrap;
 }
 
+.playbackPanelHeaderTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .playbackPanelTitle {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .playbackPanelBadge {
   font-size: 10px;
   font-weight: 500;
-  padding: 1px 6px;
-  border-radius: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
   background: var(--geist-surface);
   border: 1px solid var(--geist-border);
   color: var(--geist-secondary);
@@ -52,7 +61,7 @@
 
 .playbackScenarioSelect {
   font-size: 12px;
-  padding: 3px 6px;
+  padding: 4px 8px;
   border-radius: 6px;
   border: 1px solid var(--geist-border);
   background: var(--geist-background);
@@ -70,6 +79,17 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.playbackPanelHeader .spacer {
+  min-width: 8px;
+}
+
+.playbackPanelSubtitle {
+  margin: 0;
+  color: var(--geist-secondary);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .playbackProgress {

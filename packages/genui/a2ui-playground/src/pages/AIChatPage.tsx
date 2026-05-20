@@ -441,8 +441,10 @@ const SUGGESTED_PROMPTS: Array<{ label: string; text: string }> = [
   },
 ];
 
-export function AIChatPage(props: { protocol: Protocol }) {
-  const { protocol } = props;
+export function AIChatPage(
+  props: { protocol: Protocol; theme: 'light' | 'dark' },
+) {
+  const { protocol, theme } = props;
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [inputValue, setInputValue] = useState<string>('');
   const [renderUrl, setRenderUrl] = useState<string>('');
@@ -554,10 +556,10 @@ export function AIChatPage(props: { protocol: Protocol }) {
       kind: 'a2ui' as const,
       protocol,
       demoUrl: DEFAULT_A2UI_DEMO_URL,
-      theme: 'light' as const,
+      theme,
       messages: previewMessages,
     };
-  }, [previewMessages, protocol]);
+  }, [previewMessages, protocol, theme]);
 
   const publishPreviewMessages = useCallback(
     (nextMessages: unknown[]) => {
@@ -569,6 +571,7 @@ export function AIChatPage(props: { protocol: Protocol }) {
         protocol,
         demoUrl: DEFAULT_A2UI_DEMO_URL,
         messages: nextMessages,
+        theme,
         instant: true,
         liveAction: !!threadIdRef.current,
       };
@@ -585,7 +588,7 @@ export function AIChatPage(props: { protocol: Protocol }) {
         return buildRenderUrl(initData, baseUrl);
       });
     },
-    [baseUrl, protocol],
+    [baseUrl, protocol, theme],
   );
 
   const handlePreviewLoad = useCallback(() => {

@@ -3,37 +3,38 @@
 .textfield {
   display: flex;
   flex-direction: column;
-  gap: var(--a2ui-spacing-s);
+  gap: 6px;
   width: 100%;
   min-width: 0;
 }
 
 .textfield-label {
-  font-size: var(--a2ui-font-size-s);
+  font-size: 13px;
   font-weight: 600;
   color: var(--a2ui-color-text-muted);
-  line-height: var(--a2ui-line-height-body);
+  line-height: 1.5;
 }
 
 .textfield-control {
   width: 100%;
-  min-height: 40px;
-  padding-left: var(--a2ui-spacing-m);
-  padding-right: var(--a2ui-spacing-m);
-  padding-top: var(--a2ui-spacing-s);
-  padding-bottom: var(--a2ui-spacing-s);
-  border-width: var(--a2ui-border-width);
+  min-height: 44px;
+  padding-left: 12px;
+  padding-right: 12px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border-width: 1px;
   border-style: solid;
-  border-color: var(--a2ui-color-border);
-  border-radius: var(--a2ui-input-border-radius);
-  background-color: var(--a2ui-color-input);
+  border-color: var(--a2ui-color-border-strong);
+  border-radius: 12px;
+  background-color: var(--a2ui-color-surface-strong);
   color: var(--a2ui-color-on-input);
-  font-size: var(--a2ui-font-size-m);
-  line-height: var(--a2ui-line-height-body);
+  font-size: 15px;
+  line-height: 1.5;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.45) inset;
 }
 
 .textfield-textarea {
-  min-height: 96px;
+  min-height: 112px;
 }
 
 .textfield-invalid .textfield-control {
@@ -41,7 +42,7 @@
 }
 
 .textfield-error {
-  font-size: var(--a2ui-font-size-xs);
+  font-size: 11px;
   color: var(--a2ui-color-input-error);
-  line-height: var(--a2ui-line-height-body);
+  line-height: 1.5;
 }
