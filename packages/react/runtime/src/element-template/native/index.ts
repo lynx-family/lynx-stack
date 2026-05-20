@@ -15,6 +15,7 @@ import { initElementTemplatePAPICallAlog } from '../debug/elementPAPICall.js';
 import { initProfileHook } from '../debug/profile.js';
 import { setupLynxEnv } from '../lynx/env.js';
 import { initTimingAPI } from '../lynx/performance.js';
+import { updateCardData } from '../lynx/update-data.js';
 import { publicComponentEvent, publishEvent, resetEventStateForRuntime } from '../prop-adapters/event.js';
 import { setRoot } from '../runtime/page/root-instance.js';
 
@@ -42,6 +43,7 @@ function init(): void {
     lynxCoreInject.tt.callDestroyLifetimeFun = callDestroyLifetimeFun;
     lynxCoreInject.tt.publishEvent = publishEvent;
     lynxCoreInject.tt.publicComponentEvent = publicComponentEvent;
+    lynxCoreInject.tt.updateCardData = updateCardData;
     installElementTemplateCommitHook();
     if (process.env['NODE_ENV'] !== 'test') {
       initTimingAPI();

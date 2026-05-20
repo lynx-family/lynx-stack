@@ -30,6 +30,7 @@ describe('element-template native index wiring', () => {
     vi.doUnmock('../../../src/element-template/debug/profile.js');
     vi.doUnmock('../../../src/element-template/lynx/env.js');
     vi.doUnmock('../../../src/element-template/lynx/performance.js');
+    vi.doUnmock('../../../src/element-template/lynx/update-data.js');
     vi.doUnmock('../../../src/element-template/runtime/page/root-instance.js');
   });
 
@@ -121,6 +122,7 @@ describe('element-template native index wiring', () => {
     const publishEvent = vi.fn();
     const publicComponentEvent = vi.fn();
     const resetEventStateForRuntime = vi.fn();
+    const updateCardData = vi.fn();
 
     vi.doMock('../../../src/element-template/native/main-thread-api.js', () => ({
       injectCalledByNative,
@@ -148,6 +150,9 @@ describe('element-template native index wiring', () => {
     }));
     vi.doMock('../../../src/element-template/lynx/performance.js', () => ({
       initTimingAPI,
+    }));
+    vi.doMock('../../../src/element-template/lynx/update-data.js', () => ({
+      updateCardData,
     }));
     vi.doMock('../../../src/element-template/runtime/page/root-instance.js', () => ({
       setRoot,
@@ -179,6 +184,7 @@ describe('element-template native index wiring', () => {
     expect(globalThis.lynxCoreInject.tt.callDestroyLifetimeFun).toBe(callDestroyLifetimeFun);
     expect(globalThis.lynxCoreInject.tt.publishEvent).toBe(publishEvent);
     expect(globalThis.lynxCoreInject.tt.publicComponentEvent).toBe(publicComponentEvent);
+    expect(globalThis.lynxCoreInject.tt.updateCardData).toBe(updateCardData);
 
     expect(injectCalledByNative).not.toHaveBeenCalled();
     expect(installElementTemplatePatchListener).not.toHaveBeenCalled();

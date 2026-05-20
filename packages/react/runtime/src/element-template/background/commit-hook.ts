@@ -77,11 +77,11 @@ export function installElementTemplateCommitHook(): void {
       )
     ) {
       const hasNativeOps = globalCommitContext.ops.length > 0;
-      const shouldDispatchUpdate = hasNativeOps || !isEmptyObject(globalCommitContext.flushOptions);
+      const hasUpdatePayload = hasNativeOps || !isEmptyObject(globalCommitContext.flushOptions);
       const removedSubtreesAwaitingTeardown = hasNativeOps ? takeRemovedSubtreesForPostDispatchTeardown() : [];
       let didFlushRefs = false;
       try {
-        if (shouldDispatchUpdate) {
+        if (hasUpdatePayload) {
           markTimingLegacy('updateDiffVdomEnd');
           markTiming('diffVdomEnd');
 
@@ -114,7 +114,8 @@ export function installElementTemplateCommitHook(): void {
                 ),
             );
           }
-
+        }
+        if (hasUpdatePayload) {
           lynx.getCoreContext().dispatchEvent({
             type: ElementTemplateLifecycleConstant.update,
             data: {
