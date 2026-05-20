@@ -25,6 +25,7 @@ function namedStub(name: string): CatalogComponent {
 const Text = namedStub('Text');
 const Button = namedStub('Button');
 const Icon = namedStub('Icon');
+const LineChart = namedStub('LineChart');
 const Tabs = namedStub('Tabs');
 
 const TEXT_MANIFEST: CatalogManifest = {
@@ -35,6 +36,24 @@ const BUTTON_MANIFEST: CatalogManifest = {
 };
 const ICON_MANIFEST: CatalogManifest = {
   Icon: { type: 'object', properties: { name: { type: 'string' } } },
+};
+const LINE_CHART_MANIFEST: CatalogManifest = {
+  LineChart: {
+    type: 'object',
+    properties: {
+      labels: { type: 'array', items: { type: 'string' } },
+      series: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            values: { type: 'array', items: { type: 'number' } },
+          },
+        },
+      },
+    },
+  },
 };
 const TABS_MANIFEST: CatalogManifest = {
   Tabs: {
@@ -152,6 +171,7 @@ describe('user composes their own all-builtins catalog', () => {
       [Text, TEXT_MANIFEST],
       [Button, BUTTON_MANIFEST],
       [Icon, ICON_MANIFEST],
+      [LineChart, LINE_CHART_MANIFEST],
       [Tabs, TABS_MANIFEST],
     ]);
     const manifest = serializeCatalog(all);
@@ -159,6 +179,7 @@ describe('user composes their own all-builtins catalog', () => {
       'Text',
       'Button',
       'Icon',
+      'LineChart',
       'Tabs',
     ]);
     expect(manifest.components.every((c) => c.schema)).toBe(true);
