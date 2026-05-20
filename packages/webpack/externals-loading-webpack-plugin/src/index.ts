@@ -97,6 +97,8 @@ export interface ExternalsLoadingPluginOptions {
    * @defaultValue 2000
    */
   timeout?: number | undefined;
+
+  retries?: number | undefined;
 }
 
 /**
@@ -228,6 +230,8 @@ export interface ExternalValue {
    * @defaultValue `2000`
    */
   timeout?: number;
+
+  retries?: number;
 }
 
 /**
@@ -361,9 +365,9 @@ export class ExternalsLoadingPlugin {
         const runtimeGlobalsInit =
           `${lynxExternalGlobal} = ${lynxExternalGlobal} === undefined ? {} : ${lynxExternalGlobal};`;
         const loadExternalFunc = `
-function createLoadExternalAsync(handler, sectionPath) {
+function createLoadExternalAsync(handler, fetchBundle, sectionPath, retries) {
   return new Promise((resolve, reject) => {
-    handler.then((response) => {
+    const handleResponse = (response, attemptsRemaining) => {
       if (response.code === 0) {
         try {
           const result = lynx.loadScript(sectionPath, { bundleName: response.url });
@@ -388,15 +392,23 @@ function createLoadExternalAsync(handler, sectionPath) {
           console.error(error)
           reject(new Error('Failed to load script ' + sectionPath + ' in ' + response.url, { cause: error }))
         }
+      } else if (response.code === -2 && attemptsRemaining > 0) {
+        fetchBundle().then((next) => handleResponse(next, attemptsRemaining - 1))
       } else {
         reject(new Error('Failed to fetch external source ' + response.url + ' . The response is ' + JSON.stringify(response), { cause: response }));
       }
-    })
+    }
+    handler.then((response) => handleResponse(response, retries))
   })
 }
 
-function createLoadExternalSync(handler, sectionPath, timeout) {
-  const response = handler.wait(timeout)
+function createLoadExternalSync(handler, fetchBundle, sectionPath, timeout, retries) {
+  let response = handler.wait(timeout)
+  let attemptsRemaining = retries
+  while (response.code === -2 && attemptsRemaining > 0) {
+    attemptsRemaining--
+    response = fetchBundle().wait(timeout)
+  }
   if (response.code === 0) {
     try  {
       const result = lynx.loadScript(sectionPath, { bundleName: response.url });
@@ -441,6 +453,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             async = true,
             timeout: timeoutInMs = externalsLoadingPluginOptions.timeout
               ?? 2000,
+            retries = externalsLoadingPluginOptions.retries ?? 0,
           } = external;
           const layerOptions = external[layer];
           // Lynx fetchBundle timeout is in seconds
@@ -475,7 +488,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             }`;
           url2fetchCode.set(
             urlKey,
-            `lynx.fetchBundle(${fetchExpr}, {});`,
+            `() => lynx.fetchBundle(${fetchExpr}, {})`,
           );
 
           const mountVar = `${
@@ -501,30 +514,31 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           }
           sectionLoadTracker.set(sectionKey, mountVar);
 
+          const handlerIndex = [...url2fetchCode.keys()].indexOf(urlKey);
+
           if (async) {
             loadCode.add(
-              `${mountVar} = ${mountVar} === undefined ? createLoadExternalAsync(handler${
-                [...url2fetchCode.keys()].indexOf(urlKey)
-              }, ${JSON.stringify(layerOptions.sectionPath)}) : ${mountVar};`,
+              `${mountVar} = ${mountVar} === undefined ? createLoadExternalAsync(handler${handlerIndex}, fetchBundle${handlerIndex}, ${
+                JSON.stringify(layerOptions.sectionPath)
+              }, ${retries}) : ${mountVar};`,
             );
             continue;
           }
 
           loadCode.add(
-            `${mountVar} = ${mountVar} === undefined ? createLoadExternalSync(handler${
-              [...url2fetchCode.keys()].indexOf(urlKey)
-            }, ${
+            `${mountVar} = ${mountVar} === undefined ? createLoadExternalSync(handler${handlerIndex}, fetchBundle${handlerIndex}, ${
               JSON.stringify(layerOptions.sectionPath)
-            }, ${timeout}) : ${mountVar};`,
+            }, ${timeout}, ${retries}) : ${mountVar};`,
           );
         }
 
         return [
           runtimeGlobalsInit,
           loadExternalFunc,
-          ...[...url2fetchCode.values()].map((fetchCode, index) =>
-            `const handler${index} = ${fetchCode};`
-          ),
+          ...[...url2fetchCode.values()].flatMap((fetchCode, index) => [
+            `const fetchBundle${index} = ${fetchCode};`,
+            `const handler${index} = fetchBundle${index}();`,
+          ]),
           ...loadCode,
         ].join('\n');
       }
