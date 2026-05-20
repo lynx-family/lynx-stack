@@ -12,14 +12,66 @@ export type SerializableValue =
   | SerializableValue[]
   | { [key: string]: SerializableValue };
 
-export type RuntimeOptions = Record<string, SerializableValue>;
+export type RuntimeOptionValue =
+  | SerializableValue
+  | ElementRef
+  | RuntimeOptionValue[]
+  | { [key: string]: RuntimeOptionValue };
 
+export type RuntimeOptions = Record<string, RuntimeOptionValue>;
+
+export type RuntimeAttributeSlotValue =
+  | SerializableValue
+  | ((...args: unknown[]) => unknown)
+  | RuntimeAttributeSlotValue[]
+  | { [key: string]: RuntimeAttributeSlotValue };
+
+export interface ElementTemplateHandleRefCommandValue {
+  __etHandleRef: number;
+  [key: string]: SerializableValue;
+}
+
+// Phase 1 keeps handle refs list-specific: only `listChildren` is resolved to
+// ElementRef[] by MTS before native create. Generic nested refs are deferred.
+export interface RuntimeOptionsCommand extends Record<string, SerializableValue> {
+  listChildren?: ElementTemplateHandleRefCommandValue[];
+}
+
+export type SerializedRuntimeOptionValue =
+  | SerializableValue
+  | SerializedEtNode
+  | SerializedRuntimeOptionValue[]
+  | { [key: string]: SerializedRuntimeOptionValue };
+
+export type SerializedRuntimeOptions = Record<string, SerializedRuntimeOptionValue>;
+
+export interface SerializedEtNodeBase {
+  attributeSlots?: SerializableValue[] | null;
+  elementSlots?: SerializedEtNode[][] | null;
+  uid: number | string;
+  options?: SerializedRuntimeOptions | null;
+}
+
+export interface SerializedCompiledNode extends SerializedEtNodeBase {
+  templateKey: string;
+  bundleUrl?: string;
+}
+
+export interface SerializedTypedNode extends SerializedEtNodeBase {
+  type: string;
+}
+
+export type SerializedEtNode = SerializedCompiledNode | SerializedTypedNode;
+
+// Current hydrate/update code is still compiled-node only. Keep this recursive
+// shape narrow while the RFC-level SerializedEtNode already models typed nodes.
 export interface SerializedElementTemplate {
   templateKey: string;
   bundleUrl?: string;
   attributeSlots?: SerializableValue[] | null;
   elementSlots?: SerializedElementTemplate[][] | null;
   uid: number | string;
+  options?: SerializedRuntimeOptions | null;
 }
 
 export type CreateTemplateCommand = [
@@ -54,11 +106,20 @@ export type RemoveNodeCommand = [
   removedSubtreeHandleIds: number[],
 ];
 
+export type CreateTypedElementCommand = [
+  typeof ElementTemplateUpdateOps.createTypedElement,
+  handleId: number,
+  type: string,
+  elementSlots: number[][] | null | undefined,
+  options: RuntimeOptionsCommand | null | undefined,
+];
+
 export type ElementTemplateUpdateCommand =
   | CreateTemplateCommand
   | SetAttributeCommand
   | InsertNodeCommand
-  | RemoveNodeCommand;
+  | RemoveNodeCommand
+  | CreateTypedElementCommand;
 
 // Commands are transported as a flat stream to match the native update payload.
 // Tuple aliases above define each opcode's shape; this item union preserves the

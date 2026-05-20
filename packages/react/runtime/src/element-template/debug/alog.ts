@@ -17,6 +17,13 @@ export type FormattedElementTemplateUpdateCommand =
     elementSlots: unknown;
   }
   | {
+    op: 'createTypedElement';
+    handleId: number;
+    type: string;
+    elementSlots: unknown;
+    options: unknown;
+  }
+  | {
     op: 'setAttribute';
     targetId: number;
     attrSlotIndex: number;
@@ -73,6 +80,16 @@ export function formatElementTemplateUpdateCommands(
           targetId: stream[index++] as number,
           attrSlotIndex: stream[index++] as number,
           value: stream[index++],
+        });
+        break;
+
+      case ElementTemplateUpdateOps.createTypedElement:
+        result.push({
+          op: 'createTypedElement',
+          handleId: stream[index++] as number,
+          type: stream[index++] as string,
+          elementSlots: stream[index++],
+          options: stream[index++],
         });
         break;
 

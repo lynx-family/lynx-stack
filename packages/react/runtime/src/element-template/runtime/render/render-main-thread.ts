@@ -10,7 +10,7 @@ import { renderOpcodesIntoElementTemplate } from './render-opcodes.js';
 import { render as renderToString } from './render-to-opcodes.js';
 import { profileEnd, profileStart } from '../../debug/profile.js';
 import { ElementTemplateLifecycleConstant } from '../../protocol/lifecycle-constant.js';
-import type { SerializedElementTemplate } from '../../protocol/types.js';
+import type { SerializedEtNode } from '../../protocol/types.js';
 import { __page } from '../page/page.js';
 import { __root } from '../page/root-instance.js';
 
@@ -39,7 +39,7 @@ function renderMainThread(): void {
 
   profileStart('ReactLynx::packSerializedETInstance');
   try {
-    const instances: SerializedElementTemplate[] = [];
+    const instances: SerializedEtNode[] = [];
     for (const rootRef of rootRefs) {
       instances.push(__SerializeElementTemplate(rootRef));
     }

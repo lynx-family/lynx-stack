@@ -19,7 +19,7 @@ import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } fr
 import { clearPendingEvents, flushPendingEvents } from '../prop-adapters/event.js';
 import { clearDelayedRefUiOps, clearPendingRefs, flushDelayedRefUiOps } from '../prop-adapters/ref.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
-import type { SerializedElementTemplate } from '../protocol/types.js';
+import type { SerializedElementTemplate, SerializedEtNode } from '../protocol/types.js';
 import { __root } from '../runtime/page/root-instance.js';
 
 let listener:
@@ -37,7 +37,7 @@ export function installElementTemplateHydrationListener(): void {
     }
     beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
     markTiming('hydrateParsePayloadStart');
-    const instances = data as SerializedElementTemplate[];
+    const instances = data as SerializedEtNode[];
     markTiming('hydrateParsePayloadEnd');
     markTiming('diffVdomStart');
 
@@ -61,7 +61,16 @@ export function installElementTemplateHydrationListener(): void {
       if (!after) {
         break;
       }
-      if (!hydrateIntoContext(before, after)) {
+      if (!('templateKey' in before)) {
+        if (__DEV__) {
+          lynx.reportError(
+            new Error(`ElementTemplate hydrate does not support serialized typed root '${before.type}'.`),
+          );
+        }
+        didHydrateMatchedInstances = false;
+        break;
+      }
+      if (!hydrateIntoContext(before as SerializedElementTemplate, after)) {
         didHydrateMatchedInstances = false;
         break;
       }
