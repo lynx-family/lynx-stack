@@ -15,10 +15,10 @@ export interface NativeUpdateDataOptions {
 
 type InitDataPatch = Record<string, any>;
 
-export function applyInitDataUpdateFromNative(
+export function updateCardData(
   newData: InitDataPatch,
   options?: NativeUpdateDataOptions,
-): InitDataPatch {
+): void {
   const { ['__lynx_timing_flag']: performanceTimingFlag, ...restNewData } = newData;
   if (performanceTimingFlag) {
     lynx.reportError(
@@ -36,5 +36,5 @@ export function applyInitDataUpdateFromNative(
   // COW keeps provider/consumer readers aligned with Snapshot updateData behavior.
   lynx.__initData = Object.assign({}, lynx.__initData, restNewData);
 
-  return restNewData;
+  lynx.getJSModule('GlobalEventEmitter').emit('onDataChanged', [restNewData]);
 }

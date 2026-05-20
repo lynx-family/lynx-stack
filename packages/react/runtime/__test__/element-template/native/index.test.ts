@@ -30,7 +30,7 @@ describe('element-template native index wiring', () => {
     vi.doUnmock('../../../src/element-template/debug/profile.js');
     vi.doUnmock('../../../src/element-template/lynx/env.js');
     vi.doUnmock('../../../src/element-template/lynx/performance.js');
-    vi.doUnmock('../../../src/element-template/lynx/update-data.js');
+    vi.doUnmock('../../../src/core/lynx-update-data.js');
     vi.doUnmock('../../../src/element-template/runtime/page/root-instance.js');
   });
 
@@ -151,7 +151,7 @@ describe('element-template native index wiring', () => {
     vi.doMock('../../../src/element-template/lynx/performance.js', () => ({
       initTimingAPI,
     }));
-    vi.doMock('../../../src/element-template/lynx/update-data.js', () => ({
+    vi.doMock('../../../src/core/lynx-update-data.js', () => ({
       updateCardData,
     }));
     vi.doMock('../../../src/element-template/runtime/page/root-instance.js', () => ({

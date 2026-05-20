@@ -7,6 +7,7 @@ import { injectCalledByNative } from './main-thread-api.js';
 import { installOnMtsDestruction } from './mts-destroy.js';
 import { installElementTemplatePatchListener } from './patch-listener.js';
 import { installMainThreadHooks } from '../../core/hooks/mainThreadImpl.js';
+import { updateCardData } from '../../core/lynx-update-data.js';
 import { installElementTemplateCommitHook } from '../background/commit-hook.js';
 import { setupBackgroundElementTemplateDocument } from '../background/document.js';
 import { installElementTemplateHydrationListener } from '../background/hydration-listener.js';
@@ -15,7 +16,6 @@ import { initElementTemplatePAPICallAlog } from '../debug/elementPAPICall.js';
 import { initProfileHook } from '../debug/profile.js';
 import { setupLynxEnv } from '../lynx/env.js';
 import { initTimingAPI } from '../lynx/performance.js';
-import { updateCardData } from '../lynx/update-data.js';
 import { publicComponentEvent, publishEvent, resetEventStateForRuntime } from '../prop-adapters/event.js';
 import { setRoot } from '../runtime/page/root-instance.js';
 

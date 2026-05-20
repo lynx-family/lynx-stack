@@ -5,7 +5,7 @@ import { process, render } from 'preact';
 
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from './performance.js';
 import { runWithForce } from './runWithForce.js';
-import { applyInitDataUpdateFromNative } from '../../core/lynx-update-data.js';
+import { updateCardData } from '../../core/lynx-update-data.js';
 import { __root } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { CHILDREN } from '../../shared/render-constants.js';
@@ -283,11 +283,6 @@ function updateGlobalProps(newData: Record<string, any>): void {
     });
   }
   lynxCoreInject.tt.GlobalEventEmitter.emit('onGlobalPropsChanged', [lynx.__globalProps]);
-}
-
-function updateCardData(newData: Record<string, any>, options?: Record<string, any>): void {
-  const restNewData = applyInitDataUpdateFromNative(newData, options);
-  lynxCoreInject.tt.GlobalEventEmitter.emit('onDataChanged', [restNewData]);
 }
 
 export { injectTt, flushDelayedLifecycleEvents };

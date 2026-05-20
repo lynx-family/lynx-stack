@@ -13,7 +13,7 @@ import {
   resetElementTemplateHydrationListener,
 } from '../../../../src/element-template/background/hydration-listener.js';
 import { root } from '../../../../src/element-template/index.js';
-import { updateCardData } from '../../../../src/element-template/lynx/update-data.js';
+import { updateCardData } from '../../../../src/core/lynx-update-data.js';
 import {
   installElementTemplatePatchListener,
   resetElementTemplatePatchListener,
@@ -22,6 +22,7 @@ import { ElementTemplateLifecycleConstant } from '../../../../src/element-templa
 import type { ElementTemplateUpdateCommitContext } from '../../../../src/element-template/protocol/types.js';
 import { __page } from '../../../../src/element-template/runtime/page/page.js';
 import { clearEtAttrPlanMap } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
+import { LynxTestEventEmitter } from '../../../test-utils/lynx-event-emitter.js';
 import { compileFixtureSource } from '../../test-utils/debug/compiledFixtureCompiler.js';
 import { loadCompiledFixtureModule } from '../../test-utils/debug/compiledFixtureModule.js';
 import type { CompiledFixtureModuleExports } from '../../test-utils/debug/compiledFixtureModule.js';
@@ -34,31 +35,6 @@ declare const renderPage: (data?: Record<string, unknown>) => void;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const FIXTURE = path.resolve(__dirname, '../../fixtures/background/init-data-update/index.tsx');
-
-type Listener = (...args: unknown[]) => void;
-
-class LynxTestEventEmitter {
-  private listeners = new Map<string, Set<Listener>>();
-
-  addListener(eventName: string, listener: Listener): void {
-    const listeners = this.listeners.get(eventName);
-    if (listeners) {
-      listeners.add(listener);
-      return;
-    }
-    this.listeners.set(eventName, new Set([listener]));
-  }
-
-  removeListener(eventName: string, listener: Listener): void {
-    this.listeners.get(eventName)?.delete(listener);
-  }
-
-  emit(eventName: string, args?: unknown[]): void {
-    for (const listener of this.listeners.get(eventName) ?? []) {
-      listener(...(args ?? []));
-    }
-  }
-}
 
 function waitForRender(): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, 0));
