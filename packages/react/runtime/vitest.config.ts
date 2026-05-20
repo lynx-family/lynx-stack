@@ -116,6 +116,7 @@ export default defineConfig({
         'vitest.config.ts',
         '__test__/element-template/**',
         '__test__/snapshot/utils/**',
+        '__test__/test-utils/**',
         'lib/**',
         'worklet-runtime/**',
         'src/element-template/**',

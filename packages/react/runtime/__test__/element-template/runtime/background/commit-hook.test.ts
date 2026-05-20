@@ -158,6 +158,11 @@ describe('ElementTemplate commit hook', () => {
     });
     envManager.switchToBackground();
     expect(globalCommitContext.flushOptions).toEqual({});
+
+    options.__c?.({} as unknown as object, []);
+    envManager.switchToMainThread();
+    expect(updateEvents).toHaveLength(1);
+    envManager.switchToBackground();
   });
 
   it('dispatches triggerDataUpdated when useInitData observes a data change', () => {
@@ -279,6 +284,51 @@ describe('ElementTemplate commit hook', () => {
     }
   });
 
+  it('dispatches one data-updated payload for multiple initData readers', () => {
+    const dataChange = installDataChangeHarness();
+    let first: unknown;
+    let second: unknown;
+    let consumed: unknown;
+
+    try {
+      function App() {
+        first = useInitData();
+        second = useInitData();
+        return createElement(
+          InitDataProvider,
+          null,
+          createElement(InitDataConsumer, null, (initData: { msg?: string }) => {
+            consumed = initData;
+            return createElement('view');
+          }),
+        );
+      }
+
+      lynx.__initData = { msg: 'before' };
+      root.render(createElement(App, null));
+      expect(first).toEqual({ msg: 'before' });
+      expect(second).toEqual({ msg: 'before' });
+      expect(consumed).toEqual({ msg: 'before' });
+
+      markElementTemplateHydrated();
+      lynx.__initData = { msg: 'after' };
+      dataChange.emitDataChanged();
+      dataChange.flushScheduledRenders();
+
+      expect(first).toEqual({ msg: 'after' });
+      expect(second).toEqual({ msg: 'after' });
+      expect(consumed).toEqual({ msg: 'after' });
+      envManager.switchToMainThread();
+      expect(updateEvents).toHaveLength(1);
+      expect(updateEvents[0]).toMatchObject({
+        ops: [],
+        flushOptions: { triggerDataUpdated: true },
+      });
+    } finally {
+      dataChange.restore();
+    }
+  });
+
   it('skips dispatch before hydration', () => {
     globalCommitContext.ops = createRawTextOps(1, 'hello');
 
@@ -388,6 +438,27 @@ describe('ElementTemplate commit hook', () => {
 
     envManager.switchToMainThread();
     expect(updateEvents).toHaveLength(0);
+    envManager.switchToBackground();
+    expect(ref).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
+  });
+
+  it('dispatches data-updated payload while flushing ref-only effects', () => {
+    const ref = vi.fn();
+    markElementTemplateHydrated();
+    globalCommitContext.flushOptions = { triggerDataUpdated: true };
+    queueRefAttrUpdate(null, ref, -2, 0);
+
+    options.__c?.({} as unknown as object, []);
+
+    envManager.switchToMainThread();
+    expect(updateEvents).toEqual([
+      {
+        ops: [],
+        flushOptions: { triggerDataUpdated: true },
+      },
+    ]);
     envManager.switchToBackground();
     expect(ref).toHaveBeenCalledWith(expect.objectContaining({
       selector: '[ref=-2-0]',

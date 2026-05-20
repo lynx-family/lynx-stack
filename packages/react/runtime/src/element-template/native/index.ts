@@ -7,6 +7,7 @@ import { injectCalledByNative } from './main-thread-api.js';
 import { installOnMtsDestruction } from './mts-destroy.js';
 import { installElementTemplatePatchListener } from './patch-listener.js';
 import { installMainThreadHooks } from '../../core/hooks/mainThreadImpl.js';
+import { updateCardData } from '../../core/lynx-update-data.js';
 import { installElementTemplateCommitHook } from '../background/commit-hook.js';
 import { setupBackgroundElementTemplateDocument } from '../background/document.js';
 import { installElementTemplateHydrationListener } from '../background/hydration-listener.js';
@@ -42,6 +43,7 @@ function init(): void {
     lynxCoreInject.tt.callDestroyLifetimeFun = callDestroyLifetimeFun;
     lynxCoreInject.tt.publishEvent = publishEvent;
     lynxCoreInject.tt.publicComponentEvent = publicComponentEvent;
+    lynxCoreInject.tt.updateCardData = updateCardData;
     installElementTemplateCommitHook();
     if (process.env['NODE_ENV'] !== 'test') {
       initTimingAPI();
