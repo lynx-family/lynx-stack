@@ -5,12 +5,13 @@ import { process, render } from 'preact';
 
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from './performance.js';
 import { runWithForce } from './runWithForce.js';
+import { updateCardData } from '../../core/lynx-update-data.js';
 import { __root } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { CHILDREN } from '../../shared/render-constants.js';
 import { printSnapshotInstanceToString } from '../debug/printSnapshot.js';
 import { getSnapshotVNodeSource } from '../debug/vnodeSource.js';
-import { LifecycleConstant, NativeUpdateDataType } from '../lifecycle/constant.js';
+import { LifecycleConstant } from '../lifecycle/constant.js';
 import type { FirstScreenData } from '../lifecycle/constant.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
 import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEvents.js';
@@ -282,25 +283,6 @@ function updateGlobalProps(newData: Record<string, any>): void {
     });
   }
   lynxCoreInject.tt.GlobalEventEmitter.emit('onGlobalPropsChanged', [lynx.__globalProps]);
-}
-
-function updateCardData(newData: Record<string, any>, options?: Record<string, any>): void {
-  const { ['__lynx_timing_flag']: performanceTimingFlag, ...restNewData } = newData;
-  if (performanceTimingFlag) {
-    lynx.reportError(
-      new Error(
-        `Received unsupported updateData with \`__lynx_timing_flag\` (value "${performanceTimingFlag}"), the timing flag is ignored`,
-      ),
-    );
-  }
-  const { type = NativeUpdateDataType.UPDATE } = options ?? {};
-  if (type == NativeUpdateDataType.RESET) {
-    lynx.__initData = {};
-  }
-
-  // COW when modify `lynx.__initData` to make sure Provider & Consumer works
-  lynx.__initData = Object.assign({}, lynx.__initData, restNewData);
-  lynxCoreInject.tt.GlobalEventEmitter.emit('onDataChanged', [restNewData]);
 }
 
 export { injectTt, flushDelayedLifecycleEvents };

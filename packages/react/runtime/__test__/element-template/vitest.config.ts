@@ -6,8 +6,6 @@ import { defineConfig } from 'vitest/config';
 
 const require = createRequire(import.meta.url);
 const elementTemplateRuntimePkg = require.resolve('../../src/element-template/internal.ts');
-const elementTemplateHooksPkg = require.resolve('../../src/element-template/hooks/react.ts');
-const layeredHooksPkg = path.resolve(__dirname, './test-utils/debug/layeredHooks.ts');
 
 function transformReactLynxPlugin(): Plugin {
   return {
@@ -60,19 +58,6 @@ function transformReactLynxPlugin(): Plugin {
         map: result.map ?? null,
       };
     },
-    resolveId(source, importer) {
-      if (
-        !importer
-        || !source.startsWith('.')
-        || !importer.includes(`${path.sep}src${path.sep}element-template${path.sep}`)
-      ) {
-        return null;
-      }
-      const resolved = path.resolve(path.dirname(importer), source);
-      const normalized = resolved.replace(/\.(?:js|ts|jsx|tsx)$/, '');
-      const hooksModule = elementTemplateHooksPkg.replace(/\.(?:js|ts|jsx|tsx)$/, '');
-      return normalized === hooksModule ? layeredHooksPkg : null;
-    },
   };
 }
 
@@ -103,10 +88,7 @@ const config: UserConfigExport = defineConfig({
         __dirname,
         '../../src/element-template/jsx-runtime/index.ts',
       ),
-      '@lynx-js/react/hooks': path.resolve(
-        __dirname,
-        './test-utils/debug/layeredHooks.ts',
-      ),
+      '@lynx-js/react/hooks': path.resolve(__dirname, '../../src/core/hooks/react.ts'),
       '@lynx-js/react/lepus/hooks': path.resolve(
         __dirname,
         '../../src/core/hooks/mainThread.ts',
@@ -115,10 +97,7 @@ const config: UserConfigExport = defineConfig({
       '@lynx-js/react/legacy-react-runtime': path.resolve(__dirname, '../../src/legacy-react-runtime/index.ts'),
       '@lynx-js/react/element-template/internal': path.resolve(__dirname, '../../src/element-template/internal.ts'),
       '@lynx-js/react/element-template': path.resolve(__dirname, '../../src/element-template/index.ts'),
-      '@lynx-js/react': path.resolve(
-        __dirname,
-        './test-utils/debug/layeredReact.ts',
-      ),
+      '@lynx-js/react': path.resolve(__dirname, '../../src/element-template/index.ts'),
     },
   },
   test: {
@@ -128,9 +107,6 @@ const config: UserConfigExport = defineConfig({
       include: ['src/element-template/**'],
       exclude: [
         'src/element-template/**/*.d.ts',
-        // ET source tests redirect this facade to a layer-aware test shim so
-        // the no-layer Vitest graph can model main-thread/background hooks.
-        'src/element-template/hooks/react.ts',
         'src/element-template/protocol/types.ts',
       ],
       thresholds: {

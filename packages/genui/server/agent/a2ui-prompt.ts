@@ -84,7 +84,7 @@ and exactly ONE of the following keys:
 - Button has NO "label" prop. Its visible label is a child Text component
   (use "child": "<text-id>" and add a separate Text component with that id).
 - The renderer will POST that action back to /a2ui/action with the same
-  surfaceId + threadId. Your next turn may receive an assistant message whose
+  surfaceId and current client-held conversation. Your next turn may receive an assistant message whose
   content starts with "A2UI_USER_ACTION:" followed by JSON describing the
   action; handle it by emitting additional updateComponents / updateDataModel
   messages to update the same surface.

@@ -7,7 +7,7 @@
 import { Component } from 'preact';
 
 import { PerfSpecificKey, markTimingLegacy } from './performance.js';
-import { globalFlushOptions } from '../lifecycle/patch/commit.js';
+import { globalCommitContext } from '../../core/commit-context.js';
 import { NEXT_STATE } from '../../shared/render-constants.js';
 
 if (__JS__) {
@@ -105,7 +105,7 @@ if (__JS__) {
     // @ts-ignore
     const timingFlag = this[NEXT_STATE][PerfSpecificKey];
     if (timingFlag) {
-      globalFlushOptions.__lynx_timing_flag = timingFlag;
+      globalCommitContext.flushOptions.__lynx_timing_flag = timingFlag;
       markTimingLegacy('updateSetStateTrigger', timingFlag);
       this[NEXT_STATE][PerfSpecificKey] = '';
     }

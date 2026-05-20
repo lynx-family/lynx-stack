@@ -27,6 +27,7 @@ export type {
 export { Button } from './Button/index.jsx';
 export { Card } from './Card/index.jsx';
 export { CheckBox } from './CheckBox/index.jsx';
+export { LineChart } from './LineChart/index.jsx';
 export { Column } from './Column/index.jsx';
 export { Divider } from './Divider/index.jsx';
 export { Icon } from './Icon/index.jsx';

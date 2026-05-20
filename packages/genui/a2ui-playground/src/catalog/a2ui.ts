@@ -8,6 +8,7 @@ import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json'
 import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json';
 import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json';
 import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
+import lineChartManifest from '@lynx-js/a2ui-reactlynx/catalog/LineChart/catalog.json';
 import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
 import modalManifest from '@lynx-js/a2ui-reactlynx/catalog/Modal/catalog.json';
 import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
@@ -31,7 +32,12 @@ export interface ComponentUsageExample {
   value: object | object[];
 }
 
-export type ComponentCategory = 'Display' | 'Layout' | 'Input' | 'Data';
+export type ComponentCategory =
+  | 'Display'
+  | 'Layout'
+  | 'Input'
+  | 'Data'
+  | 'Chart';
 
 export interface ComponentDoc {
   name: string;
@@ -47,6 +53,7 @@ export const CATEGORIES: { id: ComponentCategory; label: string }[] = [
   { id: 'Layout', label: 'Layout' },
   { id: 'Input', label: 'Input' },
   { id: 'Data', label: 'Data' },
+  { id: 'Chart', label: 'Chart' },
 ];
 
 type PropSchema = Record<string, unknown>;
@@ -531,6 +538,82 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
               variant: 'body',
             },
           ],
+        },
+      ],
+      openui: [],
+    },
+  },
+  {
+    name: 'LineChart',
+    category: 'Chart',
+    description:
+      'Plots one or more numeric series over category labels with native SVG rendering.',
+    props: schemaToProps(lineChartManifest),
+    usage: {
+      a2ui: {
+        id: 'sales-chart',
+        component: 'LineChart',
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        series: [
+          {
+            name: 'Revenue',
+            values: [120, 180, 160, 220, 260, 240],
+            color: '#0057d9',
+          },
+          {
+            name: 'Orders',
+            values: [80, 92, 104, 118, 126, 140],
+            color: '#0a8f8f',
+          },
+        ],
+        variant: 'natural',
+        xLabel: 'Month',
+        yLabel: 'Performance',
+      },
+      openui: {},
+    },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Multi-series',
+          value: {
+            id: 'multi-series-chart',
+            component: 'LineChart',
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            series: [
+              {
+                name: 'Revenue',
+                values: [120, 180, 160, 220, 260, 240],
+                color: '#0057d9',
+              },
+              {
+                name: 'Orders',
+                values: [80, 92, 104, 118, 126, 140],
+                color: '#0a8f8f',
+              },
+            ],
+            variant: 'natural',
+            xLabel: 'Month',
+            yLabel: 'Performance',
+          },
+        },
+        {
+          label: 'Stepped',
+          value: {
+            id: 'step-chart',
+            component: 'LineChart',
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+            series: [
+              {
+                name: 'Traffic',
+                values: [32, 42, 39, 51, 58],
+                color: '#8a5cf6',
+              },
+            ],
+            variant: 'step',
+            xLabel: 'Day',
+            yLabel: 'Traffic',
+          },
         },
       ],
       openui: [],
@@ -1298,7 +1381,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     usageExamples: {
       a2ui: [
         {
-          label: 'Detailed',
+          label: 'Default',
           value: [
             {
               id: 'details-tabs',
@@ -1362,98 +1445,6 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
               component: 'Text',
               text: 'Feels fresh and filling.',
               variant: 'caption',
-            },
-          ],
-        },
-        {
-          label: 'Three tabs',
-          value: [
-            {
-              id: 'details-tabs-3',
-              component: 'Tabs',
-              tabs: [
-                { title: 'Summary', child: 'summary-panel' },
-                { title: 'Ingredients', child: 'ingredients-panel' },
-                { title: 'Instructions', child: 'instructions-panel' },
-              ],
-            },
-            {
-              id: 'summary-panel',
-              component: 'Column',
-              children: ['summary-title', 'summary-note'],
-              align: 'stretch',
-            },
-            {
-              id: 'summary-title',
-              component: 'Text',
-              text: 'Quick summary',
-              variant: 'h3',
-            },
-            {
-              id: 'summary-note',
-              component: 'Text',
-              text: 'Ingredients scale well for a larger table.',
-              variant: 'caption',
-            },
-            {
-              id: 'ingredients-panel',
-              component: 'List',
-              direction: 'vertical',
-              align: 'stretch',
-              children: [
-                'ingredient-1',
-                'ingredient-2',
-                'ingredient-3',
-                'ingredient-4',
-              ],
-            },
-            {
-              id: 'ingredient-1',
-              component: 'Text',
-              text: '1 cup quinoa',
-              variant: 'body',
-            },
-            {
-              id: 'ingredient-2',
-              component: 'Text',
-              text: '2 cups water',
-              variant: 'body',
-            },
-            {
-              id: 'ingredient-3',
-              component: 'Text',
-              text: '1 cucumber, diced',
-              variant: 'body',
-            },
-            {
-              id: 'ingredient-4',
-              component: 'Text',
-              text: '1 cup cherry tomatoes, halved',
-              variant: 'body',
-            },
-            {
-              id: 'instructions-panel',
-              component: 'Column',
-              children: ['instruction-1', 'instruction-2', 'instruction-3'],
-              align: 'stretch',
-            },
-            {
-              id: 'instruction-1',
-              component: 'Text',
-              text: '1. Rinse quinoa and bring to a boil in water.',
-              variant: 'body',
-            },
-            {
-              id: 'instruction-2',
-              component: 'Text',
-              text: '2. Reduce heat and simmer for 15 minutes.',
-              variant: 'body',
-            },
-            {
-              id: 'instruction-3',
-              component: 'Text',
-              text: '3. Mix with diced vegetables and serve warm.',
-              variant: 'body',
             },
           ],
         },

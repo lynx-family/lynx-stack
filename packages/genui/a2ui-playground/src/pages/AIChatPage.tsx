@@ -28,6 +28,11 @@ interface ModelChatMessage {
   content: string;
 }
 
+interface ConversationContext {
+  history: ModelChatMessage[];
+  dataModel: Record<string, unknown>;
+}
+
 interface SseEvent {
   event: string;
   data: unknown;
@@ -119,6 +124,8 @@ const RESIZE_BREAKPOINT = 980;
 const ONLINE_A2UI_SERVER_ORIGIN = 'https://genui-server.vercel.app';
 const ONLINE_A2UI_CHAT_URL = `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/stream`;
 const LOCAL_A2UI_SERVER_PORT = '3060';
+const MAX_CONVERSATION_TURNS = 20;
+const MAX_CONVERSATION_CHARS = 16_000;
 const jsonExtensions = [json(), EditorView.lineWrapping];
 
 function isDevHost(hostname: string): boolean {
@@ -279,6 +286,87 @@ function normalizeA2UIMessages(payload: unknown): unknown[] {
   return [];
 }
 
+function cloneDataModel(
+  value: Record<string, unknown>,
+): Record<string, unknown> {
+  try {
+    return JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
+function truncateConversationHistory(
+  history: ModelChatMessage[],
+): ModelChatMessage[] {
+  const byTurns = history.slice(-MAX_CONVERSATION_TURNS);
+  let totalChars = 0;
+  const kept: ModelChatMessage[] = [];
+
+  for (let i = byTurns.length - 1; i >= 0; i--) {
+    const message = byTurns[i];
+    if (!message) continue;
+    totalChars += message.content.length;
+    if (totalChars > MAX_CONVERSATION_CHARS) break;
+    kept.unshift(message);
+  }
+
+  return kept;
+}
+
+function applyDataModel(
+  model: Record<string, unknown>,
+  path: string,
+  value: unknown,
+): void {
+  if (!path || path === '/' || path === '') {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      Object.assign(model, value as Record<string, unknown>);
+    }
+    return;
+  }
+
+  const parts = path.replace(/^\//u, '').split('/').filter(Boolean);
+  let cursor = model;
+  for (let i = 0; i < parts.length - 1; i++) {
+    const key = parts[i];
+    if (!key) continue;
+    if (typeof cursor[key] !== 'object' || cursor[key] === null) {
+      cursor[key] = {};
+    }
+    cursor = cursor[key] as Record<string, unknown>;
+  }
+
+  const last = parts[parts.length - 1];
+  if (!last) return;
+  if (value === undefined) {
+    delete cursor[last];
+  } else {
+    cursor[last] = value;
+  }
+}
+
+function applyA2UIDataModelMessages(
+  model: Record<string, unknown>,
+  messages: unknown[],
+): void {
+  for (const message of messages) {
+    if (!message || typeof message !== 'object') continue;
+    const updateDataModel = (message as {
+      updateDataModel?: {
+        path?: unknown;
+        value?: unknown;
+      };
+    }).updateDataModel;
+    if (!updateDataModel) continue;
+    applyDataModel(
+      model,
+      typeof updateDataModel.path === 'string' ? updateDataModel.path : '/',
+      updateDataModel.value,
+    );
+  }
+}
+
 function parseCompletedArrayItems(raw: string): unknown[] {
   const trimmed = raw.trimStart();
   if (!trimmed.startsWith('[')) return [];
@@ -337,7 +425,6 @@ async function readA2UIResponse(
   response: BrowserResponse,
   onText: (text: string) => void,
   onMessages: (messages: unknown[]) => void,
-  onStart?: (threadId: string) => void,
   onUsage?: (usage: TokenUsage) => void,
 ): Promise<unknown[]> {
   const contentType = response.headers.get('content-type') ?? '';
@@ -372,14 +459,6 @@ async function readA2UIResponse(
     for (const frame of frames) {
       const parsed = parseSseFrame(frame);
       if (!parsed) continue;
-
-      if (parsed.event === 'start') {
-        const data = parsed.data as { threadId?: unknown };
-        if (typeof data.threadId === 'string') {
-          onStart?.(data.threadId);
-        }
-        continue;
-      }
 
       if (parsed.event === 'delta') {
         const deltaData = parsed.data as { text?: unknown };
@@ -441,8 +520,10 @@ const SUGGESTED_PROMPTS: Array<{ label: string; text: string }> = [
   },
 ];
 
-export function AIChatPage(props: { protocol: Protocol }) {
-  const { protocol } = props;
+export function AIChatPage(
+  props: { protocol: Protocol; theme: 'light' | 'dark' },
+) {
+  const { protocol, theme } = props;
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [inputValue, setInputValue] = useState<string>('');
   const [renderUrl, setRenderUrl] = useState<string>('');
@@ -463,8 +544,8 @@ export function AIChatPage(props: { protocol: Protocol }) {
   const abortRef = useRef<AbortController | null>(null);
   const actionAbortRef = useRef<AbortController | null>(null);
   const conversationRef = useRef<ModelChatMessage[]>([]);
+  const dataModelRef = useRef<Record<string, unknown>>({});
   const latestPreviewMessagesRef = useRef<unknown[]>([]);
-  const threadIdRef = useRef<string | null>(null);
   const {
     containerRef: pageRef,
     handleResizeStart: handlePanelResizeStart,
@@ -554,10 +635,10 @@ export function AIChatPage(props: { protocol: Protocol }) {
       kind: 'a2ui' as const,
       protocol,
       demoUrl: DEFAULT_A2UI_DEMO_URL,
-      theme: 'light' as const,
+      theme,
       messages: previewMessages,
     };
-  }, [previewMessages, protocol]);
+  }, [previewMessages, protocol, theme]);
 
   const publishPreviewMessages = useCallback(
     (nextMessages: unknown[]) => {
@@ -569,8 +650,9 @@ export function AIChatPage(props: { protocol: Protocol }) {
         protocol,
         demoUrl: DEFAULT_A2UI_DEMO_URL,
         messages: nextMessages,
+        theme,
         instant: true,
-        liveAction: !!threadIdRef.current,
+        liveAction: nextMessages.length > 0,
       };
 
       setRenderUrl((current) => {
@@ -585,7 +667,15 @@ export function AIChatPage(props: { protocol: Protocol }) {
         return buildRenderUrl(initData, baseUrl);
       });
     },
-    [baseUrl, protocol],
+    [baseUrl, protocol, theme],
+  );
+
+  const buildConversationContext = useCallback(
+    (): ConversationContext => ({
+      history: truncateConversationHistory(conversationRef.current),
+      dataModel: cloneDataModel(dataModelRef.current),
+    }),
+    [],
   );
 
   const handlePreviewLoad = useCallback(() => {
@@ -609,7 +699,9 @@ export function AIChatPage(props: { protocol: Protocol }) {
     abortRef.current = controller;
 
     const userMessage: ModelChatMessage = { role: 'user', content: text };
-    const nextConversation = [...conversationRef.current, userMessage];
+    const requestConversation = buildConversationContext();
+    const previousConversation = conversationRef.current;
+    const nextConversation = [...previousConversation, userMessage];
     conversationRef.current = nextConversation;
 
     setMessages((prev) => [
@@ -621,7 +713,6 @@ export function AIChatPage(props: { protocol: Protocol }) {
     setGeneratedJson('');
     setPreviewMessages(null);
     latestPreviewMessagesRef.current = [];
-    threadIdRef.current = null;
     setTokenUsage({
       promptTokens: 0,
       completionTokens: 0,
@@ -634,7 +725,10 @@ export function AIChatPage(props: { protocol: Protocol }) {
         const response = await window.fetch(getA2UIChatEndpoint(), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: nextConversation }),
+          body: JSON.stringify({
+            messages: [userMessage],
+            conversation: requestConversation,
+          }),
           signal: controller.signal,
         });
 
@@ -658,9 +752,6 @@ export function AIChatPage(props: { protocol: Protocol }) {
             });
           },
           publishPreviewMessages,
-          (threadId) => {
-            threadIdRef.current = threadId;
-          },
           (usage) => {
             if (controller.signal.aborted) return;
             setTokenUsage((prev) => ({
@@ -678,6 +769,7 @@ export function AIChatPage(props: { protocol: Protocol }) {
         const assistantContent = latestText.length > 0
           ? latestText
           : JSON.stringify(finalMessages);
+        applyA2UIDataModelMessages(dataModelRef.current, finalMessages);
         conversationRef.current = [
           ...nextConversation,
           { role: 'assistant', content: assistantContent },
@@ -700,7 +792,7 @@ export function AIChatPage(props: { protocol: Protocol }) {
         });
       } catch (e) {
         if (controller.signal.aborted) return;
-        conversationRef.current = nextConversation.slice(0, -1);
+        conversationRef.current = previousConversation;
         setMessages((prev) => {
           const next = prev.slice();
           next[next.length - 1] = {
@@ -716,16 +808,18 @@ export function AIChatPage(props: { protocol: Protocol }) {
         setIsGenerating(false);
       }
     })();
-  }, [inputValue, isGenerating, publishPreviewMessages]);
+  }, [
+    buildConversationContext,
+    inputValue,
+    isGenerating,
+    publishPreviewMessages,
+  ]);
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent<unknown>) => {
       if (!e.data || typeof e.data !== 'object') return;
       const msg = e.data as Record<string, unknown>;
       if (msg.type !== 'A2UI_USER_ACTION') return;
-
-      const threadId = threadIdRef.current;
-      if (!threadId) return;
 
       const action = msg.action as {
         name?: string;
@@ -734,6 +828,17 @@ export function AIChatPage(props: { protocol: Protocol }) {
       const actionName = typeof action?.name === 'string'
         ? action.name
         : 'unknown';
+      const payload = {
+        surfaceId: typeof msg.surfaceId === 'string'
+          ? msg.surfaceId
+          : undefined,
+        action,
+      };
+      const userActionMessage: ModelChatMessage = {
+        role: 'user',
+        content: `A2UI_USER_ACTION: ${JSON.stringify(payload)}`,
+      };
+      const requestConversation = buildConversationContext();
 
       // Abort any in-flight action stream so a stale request can no longer
       // mutate state or post into the preview iframe after a new action
@@ -796,7 +901,11 @@ export function AIChatPage(props: { protocol: Protocol }) {
               'Content-Type': 'application/json',
               Accept: 'text/event-stream',
             },
-            body: JSON.stringify({ threadId, action }),
+            body: JSON.stringify({
+              surfaceId: payload.surfaceId,
+              action,
+              conversation: requestConversation,
+            }),
             signal,
           });
 
@@ -808,12 +917,14 @@ export function AIChatPage(props: { protocol: Protocol }) {
           }
 
           let responseMessages: unknown[] = [];
+          let latestActionText = '';
 
           await readA2UIResponse(
             response,
             (text) => {
               if (!text) return;
               if (signal.aborted) return;
+              latestActionText = text;
               setMessages((prev) => {
                 const next = prev.slice();
                 if (streamingIndex < 0 || streamingIndex >= next.length) {
@@ -844,7 +955,6 @@ export function AIChatPage(props: { protocol: Protocol }) {
               if (signal.aborted) return;
               responseMessages = msgs;
             },
-            undefined,
             (usage) => {
               if (signal.aborted) return;
               setTokenUsage((prev) => ({
@@ -868,6 +978,15 @@ export function AIChatPage(props: { protocol: Protocol }) {
           );
 
           const count = responseMessages.length;
+          const assistantContent = latestActionText.length > 0
+            ? latestActionText
+            : JSON.stringify(responseMessages);
+          applyA2UIDataModelMessages(dataModelRef.current, responseMessages);
+          conversationRef.current = [
+            ...conversationRef.current,
+            userActionMessage,
+            { role: 'assistant', content: assistantContent },
+          ];
           setMessages((prev) => {
             const next = prev.slice();
             if (pendingIndex >= 0 && pendingIndex < next.length) {
@@ -956,7 +1075,7 @@ export function AIChatPage(props: { protocol: Protocol }) {
       actionAbortRef.current?.abort();
       actionAbortRef.current = null;
     };
-  }, []);
+  }, [buildConversationContext]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {

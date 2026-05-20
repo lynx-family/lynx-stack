@@ -9,6 +9,7 @@ import {
   errorMessage,
   pickChatOptions,
   readJsonBodyWithLimit,
+  validateConversation,
 } from '../_shared';
 import { corsPreflight, jsonWithCors } from '../cors';
 import { checkRateLimit, rateLimitJsonResponse } from '../rate-limit';
@@ -17,7 +18,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 interface A2UIActionBody {
-  threadId: string;
+  conversation?: unknown;
   surfaceId?: string;
   action: {
     name: string;
@@ -29,7 +30,6 @@ interface A2UIActionBody {
   baseURL?: string;
   catalog?: A2UICatalog;
   maxRepairAttempts?: number;
-  reset?: boolean;
 }
 
 export function OPTIONS(req: Request) {
@@ -52,9 +52,6 @@ export async function POST(req: Request) {
   }
   const body = parsed.body;
 
-  if (!body || !body.threadId) {
-    return jsonWithCors(req, { ok: false, error: 'threadId is required' });
-  }
   if (!body.action || !body.action.name) {
     return jsonWithCors(req, {
       ok: false,
@@ -62,20 +59,16 @@ export async function POST(req: Request) {
     });
   }
 
+  const validatedConversation = validateConversation(body.conversation);
+  if (!validatedConversation.ok) {
+    return jsonWithCors(
+      req,
+      { ok: false, error: validatedConversation.error },
+      { status: validatedConversation.status },
+    );
+  }
+
   const service = getA2UIAgentService();
-
-  if (body.reset) {
-    service.resetConversation(body.threadId);
-  }
-
-  const conv = service.peekConversation(body.threadId);
-  if (!conv && !body.reset) {
-    return jsonWithCors(req, {
-      ok: false,
-      error: `unknown threadId "${body.threadId}" - call /a2ui/chat first`,
-    });
-  }
-
   const payload = {
     surfaceId: body.surfaceId,
     action: body.action,
@@ -99,7 +92,11 @@ export async function POST(req: Request) {
 
   const opts = pickChatOptions(body);
   try {
-    const validated = await service.generateValidated([userMessage], opts);
+    const validated = await service.generateValidated(
+      [userMessage],
+      opts,
+      validatedConversation.conversation,
+    );
     return jsonWithCors(req, validated);
   } catch (err: unknown) {
     const { message, name } = errorMessage(err);

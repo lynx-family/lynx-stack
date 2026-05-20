@@ -1,0 +1,116 @@
+@import "../theme.css";
+
+.line-chart {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 10px;
+  box-sizing: border-box;
+  padding: 16px;
+  border: 1px solid var(--a2ui-color-border);
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 28%),
+    var(--a2ui-color-surface);
+}
+
+.line-chart-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.line-chart-header-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.line-chart-title {
+  color: var(--a2ui-color-on-surface);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.line-chart-caption,
+.line-chart-axis-label,
+.line-chart-scale-value,
+.line-chart-legend-label,
+.line-chart-axis-tick-label {
+  color: var(--a2ui-color-text-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.line-chart-axis-label {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.line-chart-scale-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.line-chart-scale-value-right {
+  text-align: right;
+}
+
+.line-chart-svg {
+  display: block;
+  width: 100%;
+  min-height: 220px;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.line-chart-axis-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.line-chart-axis-tick {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.line-chart-axis-tick-label {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.line-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+}
+
+.line-chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.line-chart-legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.line-chart-legend-label {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
