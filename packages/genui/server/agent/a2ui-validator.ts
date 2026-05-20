@@ -121,6 +121,12 @@ function unescapeInvalidBackticks(text: string): string {
   return text.replaceAll('\\`', '`');
 }
 
+function unescapeInvalidJsonEscapes(text: string): string {
+  // LLMs occasionally add a stray backslash before punctuation or whitespace
+  // inside JSON strings. Remove only escapes that JSON itself does not allow.
+  return text.replace(/\\(?!["\\/bfnrtu])/g, '');
+}
+
 function extractFirstBalancedJsonArray(text: string): string | null {
   const start = text.indexOf('[');
   if (start === -1) return null;
@@ -178,6 +184,15 @@ export function extractJsonArray(text: string): unknown {
   for (const candidate of candidates) {
     try {
       return JSON.parse(candidate);
+    } catch {
+      // Retry only after the original parse fails, so valid JSON strings with
+      // literal backslashes are not changed before parsing.
+    }
+
+    const repairedCandidate = unescapeInvalidJsonEscapes(candidate);
+    if (repairedCandidate === candidate) continue;
+    try {
+      return JSON.parse(repairedCandidate);
     } catch {
       // try the next candidate
     }
