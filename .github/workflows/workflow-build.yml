@@ -64,11 +64,7 @@ jobs:
         run: |
           echo "merge-base=$(git merge-base "$CLEAN_BASE_REF" "$CLEAN_HEAD_REF" || git rev-parse "$CLEAN_BASE_REF")" >> $GITHUB_OUTPUT
   build-all:
-    permissions:
-      # required for the pkg.pr.new publish step further down. Only the publish
-      # step actually uses this; the rest of the job runs with the default
-      # github-token permissions.
-      id-token: write
+    permissions: {}
     name: Build (${{ matrix.runs-on.name }})
     runs-on: ${{ matrix.runs-on.label }}
     strategy:
