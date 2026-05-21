@@ -54,16 +54,26 @@ jobs:
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
           path: .turbo
-          # Must match the key written by build-all in workflow-build.yml so
-          # the build step below is a cache hit instead of a fresh build.
+          # workflow-build.yml writes its primary key with the pull_request
+          # merge-commit SHA (`github.sha` in a PR context), which is not
+          # exposed inside a workflow_run event. Use a value we *do* have here
+          # as the primary key for hit reporting and rely on the prefix
+          # restore-keys to actually find the producer's cache — turbo's cache
+          # entries are content-addressed, so any matching prefix is enough.
           key: turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.event.workflow_run.head_sha }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
+            turbo-v4-${{ runner.os }}-
       - name: Install
         run: |
           corepack enable
           pnpm install --frozen-lockfile
-      - name: Build (cache hit)
-        run: pnpm turbo build --summarize
+      - name: Build
+        # Cache-hit path is a no-op; the OOM mitigations below only matter when
+        # we fall back to a fresh build (e.g. completely cold cache).
+        run: pnpm turbo build --summarize --concurrency=4
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
       - name: Collect packages with changesets
         id: changeset
         run: |
