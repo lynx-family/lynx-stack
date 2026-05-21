@@ -5,6 +5,7 @@
 import type {
   RuntimeAttributeSlotValue,
   RuntimeOptions,
+  RuntimeTypedElementAttributes,
   SerializableValue,
   SerializedEtNode,
 } from './protocol/types.js';
@@ -27,6 +28,7 @@ declare global {
 
   function __CreateTypedElementTemplate(
     type: string,
+    attributes: RuntimeTypedElementAttributes | null | undefined,
     elementSlots: ElementRef[][] | null | undefined,
     uid: number | string,
     options?: RuntimeOptions | null,

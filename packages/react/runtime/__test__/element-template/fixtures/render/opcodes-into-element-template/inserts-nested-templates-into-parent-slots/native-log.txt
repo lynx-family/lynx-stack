@@ -1,5 +1,13 @@
 Array [
   Array [
+    "__CreateTypedElementTemplate",
+    "page",
+    null,
+    null,
+    "0",
+    null,
+  ],
+  Array [
     "__CreateElementTemplate",
     "_et_builtin_raw_text",
     null,
@@ -67,8 +75,10 @@ Array [
     -3,
   ],
   Array [
-    "__AppendElement",
-    "root",
+    "__InsertNodeToElementTemplate",
+    "<page />",
+    0,
     "<_et_outer />",
+    null,
   ],
 ]

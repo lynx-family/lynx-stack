@@ -12,7 +12,7 @@ import { getReloadVersion } from '../../../core/reload-version.js';
 import { profileEnd, profileStart } from '../../debug/profile.js';
 import { ElementTemplateLifecycleConstant } from '../../protocol/lifecycle-constant.js';
 import type { ElementTemplateHydrateCommitContext, SerializedEtNode } from '../../protocol/types.js';
-import { __page } from '../page/page.js';
+import { insertRootIntoPage, removeRootFromPage } from '../page/page.js';
 import { __root } from '../page/root-instance.js';
 
 // ET reload reuses the native page, so the main-thread render path owns the
@@ -27,7 +27,7 @@ function removeMainThreadRootRefs(): void {
   const rootRefs = mainThreadRootRefs;
   mainThreadRootRefs = [];
   for (const rootRef of rootRefs) {
-    __RemoveElement(__page, rootRef);
+    removeRootFromPage(rootRef);
   }
 }
 
@@ -47,7 +47,7 @@ function renderMainThread(): void {
   try {
     const { rootRefs } = renderOpcodesIntoElementTemplate(opcodes);
     for (const rootRef of rootRefs) {
-      __AppendElement(__page, rootRef);
+      insertRootIntoPage(rootRef);
     }
     mainThreadRootRefs = rootRefs;
   } finally {

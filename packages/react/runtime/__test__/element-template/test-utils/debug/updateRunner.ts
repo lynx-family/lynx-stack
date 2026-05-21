@@ -37,6 +37,7 @@ type FormattedUpdateEntry =
     type: 'createTypedElement';
     id: number;
     elementType: string;
+    attributes: unknown;
     elementSlots: unknown;
     options: unknown;
   }
@@ -108,6 +109,7 @@ export function formatUpdateStream(stream: ElementTemplateUpdateCommandStream): 
         type: 'createTypedElement',
         id: stream[index++] as number,
         elementType: stream[index++] as string,
+        attributes: stream[index++] as unknown,
         elementSlots: stream[index++] as unknown,
         options: stream[index++] as unknown,
       });

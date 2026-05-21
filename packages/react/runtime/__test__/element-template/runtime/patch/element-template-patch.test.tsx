@@ -372,6 +372,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       ElementTemplateUpdateOps.createTypedElement,
       21,
       'list',
+      { id: 'typed-list' },
       [[11]],
       {
         listChildren: [{ __etHandleRef: 12 }],
@@ -381,9 +382,10 @@ describe('ElementTemplate patch stream (apply)', () => {
 
     expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(1);
     expect(mockCreateTypedElementTemplate.mock.calls[0]?.[0]).toBe('list');
-    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[1]).toEqual([[slotChildRef]]);
-    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[2]).toBe(21);
-    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[3]).toEqual({
+    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[1]).toEqual({ id: 'typed-list' });
+    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[2]).toEqual([[slotChildRef]]);
+    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[3]).toBe(21);
+    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[4]).toEqual({
       listChildren: [optionChildRef],
       estimatedHeight: 80,
     });
@@ -399,11 +401,13 @@ describe('ElementTemplate patch stream (apply)', () => {
       ElementTemplateUpdateOps.createTypedElement,
       23,
       'list',
+      null,
       [],
       null,
     ]);
 
-    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[3]).toBe(null);
+    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[1]).toBe(null);
+    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[4]).toBe(null);
     expect(elementTemplateRegistry.has(23)).toBe(true);
   });
 
@@ -420,11 +424,12 @@ describe('ElementTemplate patch stream (apply)', () => {
       ElementTemplateUpdateOps.createTypedElement,
       24,
       'list',
+      null,
       [],
       options,
     ]);
 
-    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[3]).toEqual(options);
+    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[4]).toEqual(options);
     expect(elementTemplateRegistry.has(24)).toBe(true);
   });
 
@@ -437,6 +442,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       ElementTemplateUpdateOps.createTypedElement,
       25,
       'list',
+      null,
       [[404]],
       null,
     ]);
@@ -457,6 +463,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       ElementTemplateUpdateOps.createTypedElement,
       22,
       'list',
+      null,
       [],
       { listChildren: [{ __etHandleRef: 404 }] },
     ]);

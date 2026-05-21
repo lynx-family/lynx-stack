@@ -637,10 +637,11 @@ export function formatUpdateCommands(ops: unknown): unknown {
         type: 'createTypedElement',
         id: ops[i + 1],
         elementType: ops[i + 2],
-        elementSlots: ops[i + 3],
-        options: ops[i + 4],
+        attributes: ops[i + 3],
+        elementSlots: ops[i + 4],
+        options: ops[i + 5],
       });
-      i += 5;
+      i += 6;
     } else {
       res.push(opcode);
       i += 1;

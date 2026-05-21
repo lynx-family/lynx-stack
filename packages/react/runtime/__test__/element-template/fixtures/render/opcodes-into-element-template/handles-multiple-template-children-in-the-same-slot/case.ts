@@ -17,7 +17,7 @@ export function run() {
     ];
 
     const { rootRefs } = renderOpcodesIntoElementTemplate(opcodes);
-    rootRefs.forEach(rootRef => __AppendElement(root as FiberElement, rootRef));
+    rootRefs.forEach(rootRef => __InsertNodeToElementTemplate(root as FiberElement, 0, rootRef, null));
 
     const slotChildren = root.children?.[0]?.children?.[0]?.children ?? [];
     return {

@@ -20,6 +20,7 @@ export type FormattedElementTemplateUpdateCommand =
     op: 'createTypedElement';
     handleId: number;
     type: string;
+    attributes: unknown;
     elementSlots: unknown;
     options: unknown;
   }
@@ -88,6 +89,7 @@ export function formatElementTemplateUpdateCommands(
           op: 'createTypedElement',
           handleId: stream[index++] as number,
           type: stream[index++] as string,
+          attributes: stream[index++],
           elementSlots: stream[index++],
           options: stream[index++],
         });

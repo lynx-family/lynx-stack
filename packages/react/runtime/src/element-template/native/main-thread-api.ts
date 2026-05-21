@@ -4,7 +4,7 @@
 
 import { reloadMainThread } from './reload.js';
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
-import { __page, setupPage } from '../runtime/page/page.js';
+import { __page, createElementTemplatePage, setupPage } from '../runtime/page/page.js';
 import { renderMainThread, resetMainThreadRootRefs } from '../runtime/render/render-main-thread.js';
 
 function injectCalledByNative(): void {
@@ -23,7 +23,7 @@ function injectCalledByNative(): void {
 
 function renderPage(data: Record<string, unknown> | undefined): void {
   lynx.__initData = data ?? {};
-  setupPage(__CreatePage('0', 0));
+  setupPage(createElementTemplatePage());
   resetMainThreadRootRefs();
   renderMainThread();
 }

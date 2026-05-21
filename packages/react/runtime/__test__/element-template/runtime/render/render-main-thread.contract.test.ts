@@ -53,7 +53,7 @@ describe('renderMainThread contract', () => {
     resetTemplateId();
     elementTemplateRegistry.clear();
     setRoot({ __jsx: { type: 'test-root' } });
-    setupPage({ type: 'page', children: [] } as unknown as FiberElement);
+    setupPage({ type: 'page', children: [] } as unknown as ElementRef);
     globalThis.__MAIN_THREAD__ = true;
     globalThis.__BACKGROUND__ = false;
   });

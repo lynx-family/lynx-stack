@@ -37,6 +37,12 @@ vi.mock('../../../src/element-template/runtime/page/page.js', () => ({
   setupPage: vi.fn((page: unknown) => {
     mockedState.page = page;
   }),
+  insertRootIntoPage: vi.fn((rootRef: ElementRef) => {
+    __InsertNodeToElementTemplate(mockedState.page as ElementRef, 0, rootRef, null);
+  }),
+  removeRootFromPage: vi.fn((rootRef: ElementRef) => {
+    __RemoveNodeFromElementTemplate(mockedState.page as ElementRef, 0, rootRef);
+  }),
 }));
 
 vi.mock('../../../src/element-template/runtime/page/root-instance.js', () => ({
@@ -105,10 +111,9 @@ describe('ElementTemplate reloadMainThread', () => {
     mockedState.page = undefined;
     mockedState.root = {};
     vi.stubGlobal('__PROFILE__', false);
-    vi.stubGlobal('__CreatePage', vi.fn(() => ({ type: 'page', id: '0', children: [] })));
     vi.stubGlobal('__FlushElementTree', vi.fn());
-    vi.stubGlobal('__AppendElement', vi.fn());
-    vi.stubGlobal('__RemoveElement', vi.fn());
+    vi.stubGlobal('__InsertNodeToElementTemplate', vi.fn());
+    vi.stubGlobal('__RemoveNodeFromElementTemplate', vi.fn());
     vi.stubGlobal('__SerializeElementTemplate', vi.fn());
     globalThis.lynx = {
       ...(globalThis.lynx ?? {}),
@@ -162,7 +167,7 @@ describe('ElementTemplate reloadMainThread', () => {
       }));
     renderMainThread();
 
-    vi.mocked(__AppendElement).mockClear();
+    vi.mocked(__InsertNodeToElementTemplate).mockClear();
     vi.mocked(__SerializeElementTemplate).mockClear();
     vi.mocked(mockRender).mockClear();
     vi.mocked(mockRenderOpcodesIntoElementTemplate).mockClear();
@@ -180,16 +185,15 @@ describe('ElementTemplate reloadMainThread', () => {
     expect(lynx.__initData).toEqual({ msg: 'reload', stable: true });
     expect(elementTemplateRegistry.clear).toHaveBeenCalledTimes(1);
     expect(resetTemplateId).toHaveBeenCalledTimes(1);
-    expect(__CreatePage).not.toHaveBeenCalled();
     expect(vi.mocked(setupPage)).not.toHaveBeenCalled();
-    expect(__RemoveElement).toHaveBeenCalledWith(page, oldRootRef);
+    expect(__RemoveNodeFromElementTemplate).toHaveBeenCalledWith(page, 0, oldRootRef);
     expect(vi.mocked(setRoot)).toHaveBeenCalledTimes(1);
     expect(__root).not.toBe(oldRoot);
     expect(__root.__jsx).toBe(jsx);
     expect(__root).not.toHaveProperty('stale');
     expect(mockRender).toHaveBeenCalledWith(jsx, undefined);
     expect(mockRenderOpcodesIntoElementTemplate).toHaveBeenCalledWith(opcodes);
-    expect(__AppendElement).toHaveBeenCalledWith(page, rootRef);
+    expect(__InsertNodeToElementTemplate).toHaveBeenCalledWith(page, 0, rootRef, null);
     expect(__SerializeElementTemplate).toHaveBeenCalledWith(rootRef);
     expect(dispatchEvent).toHaveBeenCalledWith({
       type: 'rLynxElementTemplateHydrate',
@@ -204,7 +208,6 @@ describe('ElementTemplate reloadMainThread', () => {
   it('profiles main-thread reload when profiling is enabled', () => {
     vi.stubGlobal('__PROFILE__', true);
     mockedState.root = { __jsx: null };
-    vi.mocked(__CreatePage).mockReturnValue({ type: 'page', id: '0', children: [] });
     vi.mocked(mockRender).mockReturnValue([]);
     vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({ rootRefs: [] });
 

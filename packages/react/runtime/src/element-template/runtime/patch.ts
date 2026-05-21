@@ -10,6 +10,7 @@ import type {
   RuntimeOptions,
   RuntimeOptionsCommand,
   SerializableValue,
+  TypedElementAttributesCommand,
 } from '../protocol/types.js';
 
 export type { ElementTemplateUpdateCommandStream } from '../protocol/types.js';
@@ -75,6 +76,7 @@ export function applyElementTemplateUpdateCommands(
       case ElementTemplateUpdateOps.createTypedElement: {
         const handleId = stream[i++] as number;
         const type = stream[i++] as string;
+        const attributes = stream[i++] as TypedElementAttributesCommand | null | undefined;
         const elementSlots = stream[i++] as number[][] | null | undefined;
         const options = stream[i++] as RuntimeOptionsCommand | null | undefined;
 
@@ -86,6 +88,7 @@ export function applyElementTemplateUpdateCommands(
 
         const nativeRef = __CreateTypedElementTemplate(
           type,
+          attributes,
           resolvedElementSlots.value,
           handleId,
           resolvedOptions.value,

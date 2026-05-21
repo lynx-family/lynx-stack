@@ -1,5 +1,13 @@
 [
   [
+    "__CreateTypedElementTemplate",
+    "page",
+    null,
+    null,
+    "0",
+    null
+  ],
+  [
     "__CreateElementTemplate",
     "_et_builtin_raw_text",
     null,
@@ -63,8 +71,10 @@
     -3
   ],
   [
-    "__AppendElement",
-    "0",
-    "<_et_7a8c6_test_2 />"
+    "__InsertNodeToElementTemplate",
+    "<page />",
+    0,
+    "<_et_7a8c6_test_2 />",
+    null
   ]
 ]

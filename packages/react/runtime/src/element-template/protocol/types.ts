@@ -26,6 +26,10 @@ export type RuntimeAttributeSlotValue =
   | RuntimeAttributeSlotValue[]
   | { [key: string]: RuntimeAttributeSlotValue };
 
+export type RuntimeTypedElementAttributes = Record<string, RuntimeAttributeSlotValue>;
+
+export type TypedElementAttributesCommand = Record<string, SerializableValue>;
+
 export interface ElementTemplateHandleRefCommandValue {
   __etHandleRef: number;
   [key: string]: SerializableValue;
@@ -115,6 +119,7 @@ export type CreateTypedElementCommand = [
   typeof ElementTemplateUpdateOps.createTypedElement,
   handleId: number,
   type: string,
+  attributes: TypedElementAttributesCommand | null | undefined,
   elementSlots: number[][] | null | undefined,
   options: RuntimeOptionsCommand | null | undefined,
 ];
