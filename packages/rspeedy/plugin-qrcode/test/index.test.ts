@@ -17,7 +17,7 @@ import { beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest'
 import type { Config, ExposedAPI } from '@lynx-js/rspeedy'
 
 import { getRandomNumberInRange } from './port.js'
-import { pluginQRCode } from '../src/index.js'
+import { pluginQRCode, wrapPrintUrlsWithFullscreen } from '../src/index.js'
 
 const exit = vi.fn()
 
@@ -509,6 +509,91 @@ describe('Plugins - Terminal', () => {
       await server.waitDevCompileSuccess()
 
       expect(renderUnicodeCompact).toBeCalledTimes(1)
+    })
+  })
+
+  describe('fullscreen hint', () => {
+    const params = { urls: [], port: 0, routes: [] } as never
+
+    test('appends ∟ No nav under Lynx URL', () => {
+      const wrapped = wrapPrintUrlsWithFullscreen(() => [
+        { label: 'Lynx', url: 'http://example.com/foo/main.lynx.bundle' },
+      ])
+
+      expect(wrapped(params)).toEqual([
+        { label: 'Lynx', url: 'http://example.com/foo/main.lynx.bundle' },
+        {
+          label: '∟ No nav',
+          url: 'http://example.com/foo/main.lynx.bundle?fullscreen=true',
+        },
+      ])
+    })
+
+    test('preserves existing query params on Lynx URL', () => {
+      const wrapped = wrapPrintUrlsWithFullscreen(() => [
+        {
+          label: 'Lynx',
+          url: 'http://example.com/foo/main.lynx.bundle?dev=1',
+        },
+      ])
+
+      expect(wrapped(params)).toContainEqual({
+        label: '∟ No nav',
+        url: 'http://example.com/foo/main.lynx.bundle?dev=1&fullscreen=true',
+      })
+    })
+
+    test('does not append for non-Lynx entries', () => {
+      const wrapped = wrapPrintUrlsWithFullscreen(() => [
+        { label: 'Web', url: 'http://example.com/foo/main.web.bundle' },
+        { label: '∟ Preview', url: 'http://example.com/foo/__web_preview' },
+      ])
+
+      expect(wrapped(params)).not.toContainEqual(
+        expect.objectContaining({ label: '∟ No nav' }),
+      )
+    })
+
+    test('passes through string entries untouched', () => {
+      const wrapped = wrapPrintUrlsWithFullscreen(() => [
+        'http://example.com/foo/main.lynx.bundle',
+      ])
+
+      expect(wrapped(params)).toEqual([
+        'http://example.com/foo/main.lynx.bundle',
+      ])
+    })
+
+    test('handles undefined return from previous printUrls', () => {
+      const wrapped = wrapPrintUrlsWithFullscreen(() => undefined)
+
+      expect(wrapped(params)).toEqual([])
+    })
+
+    test('appends with all Lynx-labelled entries', () => {
+      const wrapped = wrapPrintUrlsWithFullscreen(() => [
+        { label: 'Lynx', url: 'http://example.com/a.lynx.bundle' },
+        { label: 'Web', url: 'http://example.com/a.web.bundle' },
+        { label: 'Lynx', url: 'http://example.com/b.lynx.bundle' },
+      ])
+
+      const result = wrapped(params) as Array<
+        { label: string, url: string } | string
+      >
+
+      expect(result).toHaveLength(5)
+      expect(
+        result.filter((e) => typeof e !== 'string' && e.label === '∟ No nav'),
+      ).toEqual([
+        {
+          label: '∟ No nav',
+          url: 'http://example.com/a.lynx.bundle?fullscreen=true',
+        },
+        {
+          label: '∟ No nav',
+          url: 'http://example.com/b.lynx.bundle?fullscreen=true',
+        },
+      ])
     })
   })
 })

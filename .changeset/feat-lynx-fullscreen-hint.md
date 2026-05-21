@@ -1,7 +1,7 @@
 ---
-"create-rspeedy": patch
+"@lynx-js/qrcode-rsbuild-plugin": patch
 ---
 
-feat(create-rspeedy): print fullscreen URL hint in dev server output
+feat(qrcode-rsbuild-plugin): print fullscreen URL hint in dev server output
 
-Add a `pluginLynxFullscreenHint` Rsbuild plugin to the React-TS template that wraps `server.printUrls` and appends a `∟ No nav` entry with `?fullscreen=true` under each Lynx bundle URL. Tapping the variant opens the bundle in LynxExplorer with the in-app nav chrome stripped.
+Append a `∟ No nav` entry with `?fullscreen=true` under each Lynx bundle URL printed by the dev server. Tapping the variant opens the bundle in LynxExplorer with the in-app navigation chrome stripped. Disable via the new `fullscreen: false` option.

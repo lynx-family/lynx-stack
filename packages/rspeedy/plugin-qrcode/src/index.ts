@@ -10,6 +10,7 @@
 
 import type {
   EnvironmentContext,
+  RsbuildConfig,
   RsbuildEntry,
   RsbuildPlugin,
 } from '@rsbuild/core'
@@ -78,6 +79,15 @@ export interface PluginQRCodeOptions {
    * })
    * ```   */
   schema?: CustomizedSchemaFn | undefined
+
+  /**
+   * Append a `∟ No nav` entry with `?fullscreen=true` under each Lynx bundle URL
+   * printed by the dev server. Tapping the variant opens the bundle in LynxExplorer
+   * with the in-app navigation chrome stripped.
+   *
+   * @defaultValue `true`
+   */
+  fullscreen?: boolean | undefined
 }
 
 /**
@@ -99,14 +109,32 @@ export function pluginQRCode(
 ): RsbuildPlugin {
   const defaultPluginOptions = {
     schema: (url) => ({ http: url }),
+    fullscreen: true,
   } satisfies Required<PluginQRCodeOptions>
 
-  const { schema } = Object.assign({}, defaultPluginOptions, options)
+  const { schema, fullscreen } = Object.assign(
+    {},
+    defaultPluginOptions,
+    options,
+  )
 
   return {
     name: 'lynx:rsbuild:qrcode',
     pre: ['lynx:rsbuild:api'],
     setup(api) {
+      if (fullscreen) {
+        api.modifyRsbuildConfig({
+          order: 'post',
+          handler: (config, { mergeRsbuildConfig }) => {
+            const prev = config.server?.printUrls
+            if (typeof prev !== 'function') return
+            return mergeRsbuildConfig(config, {
+              server: { printUrls: wrapPrintUrlsWithFullscreen(prev) },
+            })
+          },
+        })
+      }
+
       api.onAfterStartProdServer(async ({ environments, port }) => {
         await main(getEntries(environments), port)
       })
@@ -165,5 +193,46 @@ export function pluginQRCode(
         api.onCloseDevServer(unregister)
       }
     },
+  }
+}
+
+type PrintUrlsFn = Extract<
+  NonNullable<NonNullable<RsbuildConfig['server']>['printUrls']>,
+  (...args: never[]) => unknown
+>
+
+/**
+ * Wrap a `server.printUrls` function so that each `Lynx`-labelled URL is
+ * followed by an `∟ No nav` entry with `?fullscreen=true`.
+ *
+ * @internal
+ */
+export function wrapPrintUrlsWithFullscreen(
+  prev: PrintUrlsFn,
+): PrintUrlsFn {
+  return (params) => {
+    const urls = prev(params) ?? []
+    const out: typeof urls = []
+    for (const entry of urls) {
+      out.push(entry)
+      if (typeof entry !== 'string' && entry.label === 'Lynx') {
+        out.push({
+          label: '∟ No nav',
+          url: appendFullscreenParam(entry.url),
+        })
+      }
+    }
+    return out
+  }
+}
+
+function appendFullscreenParam(rawUrl: string): string {
+  try {
+    const url = new URL(rawUrl)
+    url.searchParams.set('fullscreen', 'true')
+    return url.toString()
+  } catch {
+    const separator = rawUrl.includes('?') ? '&' : '?'
+    return `${rawUrl}${separator}fullscreen=true`
   }
 }
