@@ -2,13 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { setupPage } from '../runtime/page/page.js';
+import { applyUpdatePageData } from '../../core/lynx-page-data.js';
+import { __page, setupPage } from '../runtime/page/page.js';
 import { renderMainThread } from '../runtime/render/render-main-thread.js';
 
 function injectCalledByNative(): void {
   const calledByNative: LynxCallByNative = {
     renderPage,
-    updatePage: function(): void {},
+    updatePage,
     updateGlobalProps: function(): void {},
     getPageData: function() {
       return null;
@@ -23,6 +24,15 @@ function renderPage(data: Record<string, unknown> | undefined): void {
   lynx.__initData = data ?? {};
   setupPage(__CreatePage('0', 0));
   renderMainThread();
+}
+
+function updatePage(data: Record<string, unknown> | undefined, options?: UpdatePageOption): void {
+  if (__FIRST_SCREEN_SYNC_TIMING__ !== 'immediately' || options?.reloadTemplate) {
+    return;
+  }
+
+  applyUpdatePageData(data, options);
+  __FlushElementTree(__page, options ?? {});
 }
 
 /**
