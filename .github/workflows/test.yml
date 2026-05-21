@@ -178,6 +178,9 @@ jobs:
             return files;
           }
           NODE
+      - name: Trust workspace
+        if: ${{ steps.ui-judge-inputs.outputs.should-run == 'true' }}
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: TurboCache
         if: ${{ steps.ui-judge-inputs.outputs.should-run == 'true' }}
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
@@ -207,7 +210,7 @@ jobs:
           npm install -g corepack@latest
           corepack enable
           pnpm install --frozen-lockfile
-      - name: Build
+      - name: Build UI Judge package
         if: ${{ steps.ui-judge-inputs.outputs.should-run == 'true' }}
         timeout-minutes: 10
         working-directory: ${{ github.workspace }}
@@ -215,13 +218,14 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=32768
         run: |
           cd "$GITHUB_WORKSPACE"
-          pnpm turbo build --summarize
+          pnpm --filter @lynx-js/ui-judge build
       - name: Prepare A2UI playground artifacts
         if: ${{ steps.ui-judge-inputs.outputs.should-run == 'true' }}
         timeout-minutes: 12
         working-directory: ${{ github.workspace }}
         run: |
           cd "$GITHUB_WORKSPACE"
+          pnpm --filter @lynx-js/rspeedy build
           pnpm turbo build:lynx --filter a2ui-playground
       - name: Run UI Judge
         id: ui-judge
