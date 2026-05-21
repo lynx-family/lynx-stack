@@ -567,8 +567,6 @@ describe('BackgroundElementTemplateInstance', () => {
       const ref = vi.fn(() => cleanup);
       __etAttrPlanMap.view = [0, adaptRefAttrSlot];
       const parent = new BackgroundElementTemplateInstance('view');
-      parent.setAttribute('id', 0);
-      parent.appendChild(parent);
       const child = new BackgroundElementTemplateInstance('view');
       parent.appendChild(child);
 
