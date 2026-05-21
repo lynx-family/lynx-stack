@@ -6,11 +6,11 @@ When wiring `@lynx-js/ui-judge` into pull request CI, preserve the PR comment ev
 
 Keep long UI Judge work inside a job with a bounded timeout, and write a fallback `ui-judge-results.json` before artifact upload when build or test execution fails. If UI Judge setup is ever split back into custom steps outside the reusable workflow, use step-level `timeout-minutes` on long setup, build, and model execution steps so the fallback result writer and PR comment action still run.
 
-Keep the UI Judge Playwright job dependent on the repository `build` job, matching the `playwright-web-elements` dependency shape. Restore the same strict `.turbo` cache key with `fail-on-cache-miss: true`, but do not repeat a broad full-repository build in the Playwright container; pass focused `pnpm turbo build` commands through the reusable workflow's build command input for the UI Judge package and the A2UI playground prerequisites that the test actually consumes.
+Keep the UI Judge Playwright job dependent on the repository `build` job, matching the `playwright-web-elements` dependency shape. Let the reusable `workflow-test.yml` run its default `pnpm turbo build --summarize`; do not add UI Judge-specific `build-run` overrides. The A2UI playground Turbo config already makes `build` depend on `build:lynx`.
 
-Use the upstream build job's restored turbo cache in UI Judge CI. Do not call package scripts directly with `pnpm --filter <package> build`, and do not pass `--force`; the focused turbo commands should replay the upstream build outputs from cache.
+Use the upstream build job's restored turbo cache in UI Judge CI. Do not call package scripts directly with `pnpm --filter <package> build`, and do not pass `--force`; use Turbo commands so dependency ordering and cached outputs remain consistent.
 
-Keep the UI Judge early-success gate limited to Midscene secret availability. Do not add changed-file gating or GitHub API calls to the reusable test path; fork pull requests without secrets should set `should-run=false` before install/build/test, while normal pull requests with secrets should run UI Judge.
+Do not add changed-file gating, GitHub API calls, or reusable-workflow `preflight-run` wiring to UI Judge CI. If Midscene secrets are unavailable, the UI Judge test command should write a clear skipped result and exit successfully; fork pull requests should skip the comment steps rather than requiring write permissions.
 
 Raise the soft open-file limit before running UI Judge Playwright tests in the Playwright container. The A2UI playground dev server uses rsbuild/chokidar watchers, so mirror the web-elements Playwright pattern with `ulimit -Sn 655350` before invoking `pnpm --filter @lynx-js/ui-judge test`.
 
