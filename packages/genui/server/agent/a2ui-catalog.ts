@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { BASIC_CATALOG_EXAMPLES } from './a2ui-examples';
+import type { A2UIExample } from './a2ui-examples';
 import buttonManifest from './catalog/Button/catalog.json';
 import cardManifest from './catalog/Card/catalog.json';
 import checkBoxManifest from './catalog/CheckBox/catalog.json';
@@ -25,6 +27,7 @@ export interface A2UIComponentProp {
   description?: string;
   required?: boolean;
   enums?: readonly string[];
+  schema?: JsonSchema;
 }
 
 export interface A2UIComponentSpec {
@@ -41,13 +44,13 @@ export interface A2UICatalog {
   version?: string;
   components: A2UIComponentSpec[];
   extraRules?: string[];
-  examples?: string[];
+  examples?: A2UIExample[];
 }
 
 export const BASIC_CATALOG_ID =
   'https://a2ui.org/specification/v0_9/basic_catalog.json';
 
-interface JsonSchema {
+export interface JsonSchema {
   type?: string;
   enum?: unknown;
   oneOf?: JsonSchema[];
@@ -184,6 +187,7 @@ function componentFromManifest(
       type: inferType(propSchema),
       description: propSchema.description ?? '',
       required: required.has(propName),
+      schema: propSchema,
       ...(enums ? { enums } : {}),
     };
   });
@@ -210,6 +214,7 @@ export const BASIC_CATALOG: A2UICatalog = {
     'Use only components listed in this catalog; unsupported examples such as Video, AudioPlayer, DatePicker, or Checkbox are not available unless they appear here.',
     'The implemented checkbox component is named "CheckBox" with a capital B.',
   ],
+  examples: BASIC_CATALOG_EXAMPLES,
 };
 
 export function renderCatalogReference(catalog: A2UICatalog): string {

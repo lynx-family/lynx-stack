@@ -62,8 +62,9 @@ and exactly ONE of the following keys:
       ...component specific props
     }
 - The component with id "root" is the entry point of the tree.
-- Layout containers (Row / Column / List) take "children": ["id1", "id2", ...]
-  OR a template object for repeating from the data model.
+- Layout containers (Row / Column / List) take "children": ["id1", "id2", ...].
+  To repeat from the data model, use "children":
+    { "path": "/items", "componentId": "itemRow" }
 - Card uses "child": "id".  Modal uses "trigger" + "content".  Tabs uses an
   array of {title, child}.
 
@@ -71,7 +72,7 @@ and exactly ONE of the following keys:
 - Static text:  "text": "Hello"
 - Bound text:   "text": { "path": "/user/name" }
 - Bound list children:
-    "children": { "template": { "path": "/items", "componentId": "itemRow" } }
+    "children": { "path": "/items", "componentId": "itemRow" }
 - Use updateDataModel messages to populate values at those paths.
 - DynamicString/DynamicNumber/DynamicBoolean props accept either a literal value
   or { "path": "/json/pointer" }. If you bind a prop to a path, create the
@@ -129,57 +130,19 @@ function buildHardRules(catalogId: string): string {
 `;
 }
 
-const FEW_SHOT_EXAMPLE = `## Example response (login card)
+function renderCatalogExamples(catalog: A2UICatalog): string {
+  if (!catalog.examples || catalog.examples.length === 0) return '';
 
-User: "Generate a login card with email + password and a submit button."
-
-Assistant (response body, raw JSON, no fences):
-[
-  {
-    "version": "v0.9",
-    "createSurface": {
-      "surfaceId": "main",
-      "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json"
-    }
-  },
-  {
-    "version": "v0.9",
-    "updateComponents": {
-      "surfaceId": "main",
-      "components": [
-        { "id": "root",     "component": "Card",   "child": "form-col" },
-        { "id": "form-col", "component": "Column", "children": ["title", "email", "password", "submit"] },
-        { "id": "title",    "component": "Text",   "text": "Sign in",  "variant": "h2" },
-        { "id": "email",    "component": "TextField", "label": "Email",
-          "value": { "path": "/form/email" } },
-        { "id": "password", "component": "TextField", "label": "Password",
-          "value": { "path": "/form/password" } },
-        { "id": "submit",   "component": "Button",
-          "variant": "primary",
-          "action": {
-            "event": {
-              "name": "submit_login",
-              "context": {
-                "email":    { "path": "/form/email" },
-                "password": { "path": "/form/password" }
-              }
-            }
-          },
-          "child": "submit-label"
-        },
-        { "id": "submit-label", "component": "Text", "text": "Sign in" }
-      ]
-    }
-  },
-  {
-    "version": "v0.9",
-    "updateDataModel": {
-      "surfaceId": "main",
-      "value": { "form": { "email": "", "password": "" } }
-    }
+  const lines = ['## Validated examples'];
+  for (const example of catalog.examples) {
+    lines.push('');
+    lines.push(`### ${example.name}`);
+    lines.push(`User: ${JSON.stringify(example.user)}`);
+    lines.push('Assistant (raw JSON array, no fences):');
+    lines.push(JSON.stringify(example.messages, null, 2));
   }
-]
-`;
+  return lines.join('\n');
+}
 
 export interface BuildSystemPromptOptions {
   catalog?: A2UICatalog;
@@ -202,7 +165,7 @@ export function buildA2UISystemPrompt(
     '',
     buildHardRules(catalog.id),
     '',
-    FEW_SHOT_EXAMPLE,
+    renderCatalogExamples(catalog),
   ];
   if (opts.appendix) {
     parts.push('', opts.appendix);
