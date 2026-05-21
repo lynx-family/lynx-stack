@@ -1,0 +1,3 @@
+---
+"@lynx-js/react": patch
+---
