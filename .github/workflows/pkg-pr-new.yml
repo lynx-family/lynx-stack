@@ -67,17 +67,14 @@ jobs:
           } >> "$GITHUB_OUTPUT"
       - name: Build
         if: steps.changeset.outputs.skip != 'true'
-        # We build via pnpm rather than turbo here because turbo's pnpm-lock
-        # parser can't read this repo's patched-dependency block, which makes
-        # turbo's `--filter` fail. The exclusions mirror canary-publish; skipping
-        # the heavyweight e2e/test bundles also avoids OOMing the runner.
-        run: |
-          pnpm \
-            --filter '!@lynx-js/web-tests' \
-            --filter '!@lynx-js/web-core-e2e' \
-            --filter '!@lynx-js/benchmark-*' \
-            --filter '!benchx_cli' \
-            --recursive run build
+        # Turbo gives us the `^build` topological ordering, which `pnpm -r` does
+        # not. Cap concurrency so the parallel rspeedy/rsbuild workers don't
+        # collectively exceed the runner's OS commit limit.
+        #
+        # `--filter` is intentionally omitted: turbo's pnpm-lock parser chokes
+        # on this repo's patched-dependencies block, which makes filter lookups
+        # fail. Building everything is cheap enough at concurrency=4.
+        run: pnpm turbo build --summarize --concurrency=4
         env:
           NODE_OPTIONS: --max-old-space-size=8192
       - name: Publish to pkg.pr.new
