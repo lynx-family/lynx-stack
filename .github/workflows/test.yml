@@ -218,15 +218,14 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=32768
         run: |
           cd "$GITHUB_WORKSPACE"
-          pnpm --filter @lynx-js/ui-judge build
+          pnpm turbo build --filter @lynx-js/ui-judge... --summarize
       - name: Prepare A2UI playground artifacts
         if: ${{ steps.ui-judge-inputs.outputs.should-run == 'true' }}
         timeout-minutes: 12
         working-directory: ${{ github.workspace }}
         run: |
           cd "$GITHUB_WORKSPACE"
-          pnpm turbo build --filter @lynx-js/rspeedy... --summarize --force
-          pnpm turbo build:lynx --filter a2ui-playground
+          pnpm turbo build:lynx --filter a2ui-playground --summarize
       - name: Run UI Judge
         id: ui-judge
         if: ${{ steps.ui-judge-inputs.outputs.should-run == 'true' }}

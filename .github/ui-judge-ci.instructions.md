@@ -6,9 +6,9 @@ When wiring `@lynx-js/ui-judge` into pull request CI, preserve the PR comment ev
 
 Use step-level `timeout-minutes` on long UI Judge setup, build, and model execution steps so a hung prerequisite fails early enough for the fallback result writer and PR comment action to run before the job-level timeout kills the whole job.
 
-Keep the UI Judge Playwright job dependent on the repository `build` job, matching the `playwright-web-elements` dependency shape. Restore the same strict `.turbo` cache key with `fail-on-cache-miss: true`, but do not repeat a broad full-repository build in the Playwright container; build the UI Judge package and the A2UI playground prerequisites that the test actually consumes.
+Keep the UI Judge Playwright job dependent on the repository `build` job, matching the `playwright-web-elements` dependency shape. Restore the same strict `.turbo` cache key with `fail-on-cache-miss: true`, but do not repeat a broad full-repository build in the Playwright container; run focused `pnpm turbo build` commands for the UI Judge package and the A2UI playground prerequisites that the test actually consumes.
 
-When the A2UI playground preview needs Rspeedy in CI, build `@lynx-js/rspeedy` through turbo with its workspace dependencies, for example `pnpm turbo build --filter @lynx-js/rspeedy... --force`, instead of calling `pnpm --filter @lynx-js/rspeedy build` directly.
+Use the upstream build job's restored turbo cache in UI Judge CI. Do not call package scripts directly with `pnpm --filter <package> build`, and do not pass `--force`; the focused turbo commands should replay the upstream build outputs from cache.
 
 Inject the full Midscene/OpenAI model environment into the UI Judge execution step, including `MIDSCENE_MODEL_API_KEY`, `MIDSCENE_MODEL_BASE_URL`, `MIDSCENE_MODEL_FAMILY`, `MIDSCENE_MODEL_NAME`, and `MIDSCENE_OPENAI_INIT_CONFIG_JSON`.
 
