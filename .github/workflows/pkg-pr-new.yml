@@ -23,10 +23,15 @@ jobs:
     name: Publish to pkg.pr.new
     runs-on: lynx-ubuntu-24.04-medium
     timeout-minutes: 15
+    # Skip fork PRs: workflow_run would otherwise execute fork-controlled
+    # install/build scripts while holding an `id-token: write` OIDC token that
+    # could publish malicious previews to pkg.pr.new under our repo identity.
+    # Same-repo PRs are already trusted via branch protection.
     if: >
       github.repository == 'lynx-family/lynx-stack' &&
       github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.conclusion == 'success'
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
     permissions:
       contents: read
       actions: read
