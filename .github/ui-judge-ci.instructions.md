@@ -17,3 +17,5 @@ Raise the soft open-file limit before running UI Judge Playwright tests in the P
 Inject the full Midscene/OpenAI model environment into the UI Judge execution step, including `MIDSCENE_MODEL_API_KEY`, `MIDSCENE_MODEL_BASE_URL`, `MIDSCENE_MODEL_FAMILY`, `MIDSCENE_MODEL_NAME`, and `MIDSCENE_OPENAI_INIT_CONFIG_JSON`.
 
 When rendering the UI Judge PR comment, include `GITHUB_RUN_ATTEMPT` in the workflow footer/link. GitHub reruns keep the same `GITHUB_RUN_ID`, so relying only on the run URL can make a successful rerun write an identical comment body and appear not to update.
+
+Keep `.github/actions/ui-judge-comment` self-contained for self-hosted runners: set up Node inside the composite action before invoking `comment.mjs`, rather than requiring every caller job to prepare `node` separately.
