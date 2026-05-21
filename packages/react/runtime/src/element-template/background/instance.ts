@@ -30,17 +30,6 @@ function stringifyRawTextValue(value: SerializableValue | undefined): string {
   return '';
 }
 
-function syncElementSlotChildren(
-  parent: BackgroundElementTemplateInstance | null,
-  slotId: number,
-  children: BackgroundElementTemplateInstance[],
-): void {
-  if (!parent || slotId < 0) {
-    return;
-  }
-  parent.elementSlots[slotId] = children;
-}
-
 export class BackgroundElementTemplateInstance {
   public instanceId: number = 0; // Assigned by manager
   public type: string;
@@ -51,9 +40,10 @@ export class BackgroundElementTemplateInstance {
   public nextSibling: BackgroundElementTemplateInstance | null = null;
   public previousSibling: BackgroundElementTemplateInstance | null = null;
 
+  public __slotIndex: number = 0;
+
   // Shadow State for Hydration
   public attributeSlots: SerializableValue[];
-  public elementSlots: BackgroundElementTemplateInstance[][] = [];
   private rawAttributeSlots: readonly unknown[] | undefined;
   private isMaterializedOnMainThread = false;
 
@@ -69,6 +59,16 @@ export class BackgroundElementTemplateInstance {
       child = child.nextSibling;
     }
     return nodes;
+  }
+
+  get elementSlots(): BackgroundElementTemplateInstance[][] {
+    const elementSlots: BackgroundElementTemplateInstance[][] = [];
+    let child = this.firstChild;
+    while (child) {
+      (elementSlots[child.__slotIndex] ??= []).push(child);
+      child = child.nextSibling;
+    }
+    return elementSlots;
   }
 
   public nodeType: number;
@@ -175,39 +175,19 @@ export class BackgroundElementTemplateInstance {
       child.nextSibling = null;
     }
 
-    if (child instanceof BackgroundElementTemplateSlot) {
-      syncElementSlotChildren(this, child.partId, collectChildren(child));
-    }
-
-    if (this instanceof BackgroundElementTemplateSlot) {
-      const slotId = this.partId;
-      const parent = this.parent;
-      if (parent) {
-        syncElementSlotChildren(parent, slotId, collectChildren(this));
-      }
-      if (silent) {
-        return;
-      }
-      if (slotId !== -1 && parent) {
-        if (!parent.canEmitUpdatePatch()) {
-          return;
-        }
-        const beforeId = beforeChild ? beforeChild.instanceId : 0;
-        emitMainThreadCreateRecursive(child);
-        pushOp(
-          ElementTemplateUpdateOps.insertNode,
-          parent.instanceId,
-          slotId,
-          child.instanceId,
-          beforeId,
-        );
-      }
+    if (silent || !this.canEmitUpdatePatch()) {
       return;
     }
 
-    if (silent) {
-      return;
-    }
+    const beforeId = beforeChild ? beforeChild.instanceId : 0;
+    emitMainThreadCreateRecursive(child);
+    pushOp(
+      ElementTemplateUpdateOps.insertNode,
+      this.instanceId,
+      child.__slotIndex,
+      child.instanceId,
+      beforeId,
+    );
   }
 
   removeChild(child: BackgroundElementTemplateInstance, silent?: boolean): void {
@@ -231,52 +211,37 @@ export class BackgroundElementTemplateInstance {
     child.nextSibling = null;
     child.previousSibling = null;
 
-    if (child instanceof BackgroundElementTemplateSlot && child.partId >= 0) {
-      this.elementSlots[child.partId] = [];
-    }
-
-    if (this instanceof BackgroundElementTemplateSlot) {
-      const slotId = this.partId;
-      const parent = this.parent;
-      if (parent) {
-        syncElementSlotChildren(parent, slotId, collectChildren(this));
-      }
-      if (silent) {
-        return;
-      }
-      if (slotId !== -1 && parent) {
-        if (!parent.canEmitUpdatePatch()) {
-          if (!isElementTemplateHydrated()) {
-            // Pre-hydration commits have already exposed refs to user effects, so
-            // a local slot removal must detach them even though no native patch exists.
-            child.queueRefCleanupForSubtree();
-          }
-          if (child.needsMainThreadCreate()) {
-            // An unmaterialized subtree has no main-thread registry entry, so it
-            // can be released from the background manager without delayed cleanup.
-            child.tearDown();
-          }
-          return;
-        }
-        pushOp(
-          ElementTemplateUpdateOps.removeNode,
-          parent.instanceId,
-          slotId,
-          child.instanceId,
-          collectElementTemplateSubtreeHandleIds(child),
-        );
-        child.queueRefCleanupForSubtree();
-        // The removed JS object graph may outlive the detach until GC, so keep
-        // it pending and tear it down on the Snapshot-aligned delayed boundary.
-        markRemovedSubtreeForPostDispatchTeardown(child);
-      }
-      return;
-    }
-
+    const slotId = child.__slotIndex;
+    const parent = this.parent;
     if (silent) {
       return;
     }
-    child.queueRefCleanupForSubtree();
+    if (slotId !== -1 && parent) {
+      if (!parent.canEmitUpdatePatch()) {
+        if (!isElementTemplateHydrated()) {
+          // Pre-hydration commits have already exposed refs to user effects, so
+          // a local slot removal must detach them even though no native patch exists.
+          child.queueRefCleanupForSubtree();
+        }
+        if (child.needsMainThreadCreate()) {
+          // An unmaterialized subtree has no main-thread registry entry, so it
+          // can be released from the background manager without delayed cleanup.
+          child.tearDown();
+        }
+        return;
+      }
+      pushOp(
+        ElementTemplateUpdateOps.removeNode,
+        parent.instanceId,
+        slotId,
+        child.instanceId,
+        collectElementTemplateSubtreeHandleIds(child),
+      );
+      child.queueRefCleanupForSubtree();
+      // The removed JS object graph may outlive the detach until GC, so keep
+      // it pending and tear it down on the Snapshot-aligned delayed boundary.
+      markRemovedSubtreeForPostDispatchTeardown(child);
+    }
   }
 
   tearDown(): void {
@@ -297,7 +262,6 @@ export class BackgroundElementTemplateInstance {
 
     this.attributeSlots = [];
     this.rawAttributeSlots = undefined;
-    this.elementSlots = [];
 
     // Remove from manager
     if (this.instanceId) {
@@ -388,15 +352,6 @@ export class BackgroundElementTemplateInstance {
           nextValue ?? null,
         );
       }
-    } else if (key === 'id' && this instanceof BackgroundElementTemplateSlot) {
-      const previousPartId = this.partId;
-      this.partId = Number(value);
-      if (this.parent && previousPartId >= 0 && previousPartId !== this.partId) {
-        this.parent.elementSlots[previousPartId] = [];
-      }
-      syncElementSlotChildren(this.parent, this.partId, collectChildren(this));
-    } else {
-      return;
     }
   }
 
@@ -427,14 +382,6 @@ export class BackgroundElementTemplateInstance {
   }
 }
 
-export class BackgroundElementTemplateSlot extends BackgroundElementTemplateInstance {
-  public partId: number = -1;
-
-  constructor() {
-    super('slot');
-  }
-}
-
 export function collectElementTemplateSubtreeHandleIds(
   root: BackgroundElementTemplateInstance,
 ): number[] {
@@ -447,7 +394,7 @@ function collectElementTemplateSubtreeHandleIdsImpl(
   instance: BackgroundElementTemplateInstance,
   handles: number[],
 ): void {
-  if (!(instance instanceof BackgroundElementTemplateSlot) && instance.instanceId !== 0) {
+  if (instance.instanceId !== 0) {
     handles.push(instance.instanceId);
   }
   let child = instance.firstChild;
@@ -461,7 +408,6 @@ function emitMainThreadCreateRecursive(instance: BackgroundElementTemplateInstan
   if (
     !isElementTemplateHydrated()
     || instance.instanceId < 0
-    || instance instanceof BackgroundElementTemplateSlot
   ) {
     return;
   }
@@ -475,14 +421,4 @@ function emitMainThreadCreateRecursive(instance: BackgroundElementTemplateInstan
     }
   }
   instance.emitMainThreadCreateIfNeeded();
-}
-
-function collectChildren(slot: BackgroundElementTemplateSlot): BackgroundElementTemplateInstance[] {
-  const res: BackgroundElementTemplateInstance[] = [];
-  let child = slot.firstChild;
-  while (child) {
-    res.push(child);
-    child = child.nextSibling;
-  }
-  return res;
 }

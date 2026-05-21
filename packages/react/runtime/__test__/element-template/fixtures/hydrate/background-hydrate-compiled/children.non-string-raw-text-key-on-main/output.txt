@@ -1,7 +1,7 @@
 Object {
   "stream": Array [
     1,
-    4,
+    3,
     "_et_builtin_raw_text",
     null,
     Array [
@@ -11,7 +11,7 @@ Object {
     3,
     -2,
     0,
-    4,
+    3,
     0,
   ],
 }

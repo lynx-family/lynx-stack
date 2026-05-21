@@ -254,7 +254,12 @@ function renderCompiledEtHostVNode(vnode, props, context, opcodes) {
 
   // ET host nodes are compiler-generated and encode dynamic element slots in
   // `children`, so the runtime can interpret the prop as a slot array directly.
-  const elementSlots = props.children;
+  let elementSlots = props.children;
+  for (const name in props) {
+    if (name.startsWith('$')) {
+      (elementSlots ??= [])[+name.slice(1)] = props[name];
+    }
+  }
   if (elementSlots !== undefined) {
     renderEtSlotArray(elementSlots, context, vnode, opcodes);
   }
