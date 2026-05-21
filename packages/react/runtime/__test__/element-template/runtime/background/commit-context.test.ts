@@ -58,16 +58,10 @@ describe('ElementTemplate commit context', () => {
 
   it('collects only handles that are registered in the main-thread registry', () => {
     const root = new BackgroundElementTemplateInstance('root');
-    const slot = new BackgroundElementTemplateSlot();
-    slot.setAttribute('id', 0);
-    root.appendChild(slot);
     const child = new BackgroundElementTemplateInstance('child');
-    const childSlot = new BackgroundElementTemplateSlot();
-    childSlot.setAttribute('id', 0);
-    child.appendChild(childSlot);
     const rawText = new BackgroundElementTemplateInstance(BUILTIN_RAW_TEXT_TEMPLATE_KEY, ['text']);
-    childSlot.appendChild(rawText);
-    slot.appendChild(child);
+    child.appendChild(rawText);
+    root.appendChild(child);
 
     expect(collectElementTemplateSubtreeHandleIds(root)).toEqual([
       root.instanceId,

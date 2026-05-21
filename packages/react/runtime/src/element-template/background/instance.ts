@@ -212,11 +212,21 @@ export class BackgroundElementTemplateInstance {
     child.previousSibling = null;
 
     const slotId = child.__slotIndex;
-    const parent = this.parent;
     if (silent) {
       return;
     }
-    if (!this.canEmitUpdatePatch()) {
+    if (this.canEmitUpdatePatch()) {
+      pushOp(
+        ElementTemplateUpdateOps.removeNode,
+        this.instanceId,
+        slotId,
+        child.instanceId,
+        collectElementTemplateSubtreeHandleIds(child),
+      );
+      // The removed JS object graph may outlive the detach until GC, so keep
+      // it pending and tear it down on the Snapshot-aligned delayed boundary.
+      markRemovedSubtreeForPostDispatchTeardown(child);
+    } else {
       if (!isElementTemplateHydrated()) {
         // Pre-hydration commits have already exposed refs to user effects, so
         // a local slot removal must detach them even though no native patch exists.
@@ -227,19 +237,8 @@ export class BackgroundElementTemplateInstance {
         // can be released from the background manager without delayed cleanup.
         child.tearDown();
       }
-      return;
     }
-    pushOp(
-      ElementTemplateUpdateOps.removeNode,
-      this.instanceId,
-      slotId,
-      child.instanceId,
-      collectElementTemplateSubtreeHandleIds(child),
-    );
     child.queueRefCleanupForSubtree();
-    // The removed JS object graph may outlive the detach until GC, so keep
-    // it pending and tear it down on the Snapshot-aligned delayed boundary.
-    markRemovedSubtreeForPostDispatchTeardown(child);
   }
 
   tearDown(): void {
