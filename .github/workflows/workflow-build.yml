@@ -129,6 +129,16 @@ jobs:
       # build matrix, only for same-repo pull_request events (fork-controlled
       # install scripts shouldn't run with this job's privileges), and only
       # when the PR adds a changeset that actually bumps a publishable package.
+      - name: Fetch base ref for changeset status
+        if: >
+          matrix.runs-on.label == 'lynx-ubuntu-24.04-xlarge' &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        # actions/checkout uses depth=1 by default, so origin/<base> isn't
+        # populated. changeset status --since=<ref> needs the ref to resolve.
+        run: git fetch --depth=1 origin "$BASE_REF":"refs/remotes/origin/$BASE_REF"
       - name: Collect packages with changesets
         id: changeset
         if: >
