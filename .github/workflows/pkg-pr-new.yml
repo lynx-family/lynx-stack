@@ -35,22 +35,27 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions-rust-lang/setup-rust-toolchain@1780873c7b576612439a134613cc4cc74ce5538c # v1
+      - name: Setup Rust
+        uses: ./.github/actions/rustup
         with:
-          cache: false
+          key: pkg-pr-new
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "24"
           package-manager-cache: false
       - name: Install
         run: |
-          npm install -g corepack@latest
-          corepack enable && corepack prepare
-          corepack pnpm install --frozen-lockfile
+          corepack enable
+          pnpm install --frozen-lockfile
       - name: Collect packages with changesets
         id: changeset
         run: |
-          corepack pnpm changeset status --since=origin/main --output .changeset-status.json
+          # `changeset status` can exit non-zero on some edge cases (e.g. empty
+          # repo state); tolerate that and fall back to the parsed JSON.
+          pnpm changeset status --since=origin/main --output .changeset-status.json || true
+          if [ ! -f .changeset-status.json ]; then
+            echo '{"changesets":[],"releases":[]}' > .changeset-status.json
+          fi
           PACKAGE_DIRS=$(node .github/scripts/list-changeset-packages.cjs .changeset-status.json | tr '\n' ' ')
           if [ -z "$(echo "$PACKAGE_DIRS" | tr -d '[:space:]')" ]; then
             echo "No publishable packages affected by changesets; skipping publish."
@@ -71,11 +76,11 @@ jobs:
         # can't read this repo's patched-dependency block, which makes filter
         # lookups fail. The unfiltered command still builds the publishable
         # packages we need (web-tests / benchmark builds are no-ops here).
-        run: |
-          corepack pnpm turbo build --summarize
+        run: pnpm turbo build --summarize
         env:
           NODE_OPTIONS: --max-old-space-size=32768
       - name: Publish to pkg.pr.new
         if: steps.changeset.outputs.skip != 'true'
-        run: |
-          corepack pnpm dlx pkg-pr-new publish --compact --pnpm ${{ steps.changeset.outputs.package-dirs }}
+        env:
+          PACKAGE_DIRS: ${{ steps.changeset.outputs.package-dirs }}
+        run: pnpm dlx pkg-pr-new publish --compact --pnpm $PACKAGE_DIRS
