@@ -9,6 +9,7 @@ import './AIChatPage.css';
 
 import { ConfirmDialog } from '../components/ConfirmDialog.js';
 import { ConversationListPanel } from '../components/ConversationListPanel.js';
+import { PageHeader } from '../components/PageHeader.js';
 import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
 import { PreviewPanel } from '../components/PreviewPanel.js';
 import { PreviewViewport } from '../components/PreviewViewport.js';
@@ -119,7 +120,6 @@ const ONLINE_A2UI_SERVER_ORIGIN = 'https://genui-server.vercel.app';
 const ONLINE_A2UI_CHAT_URL = `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/stream`;
 const LOCAL_A2UI_SERVER_PORT = '3060';
 const jsonExtensions = [json(), EditorView.lineWrapping];
-
 function isDevHost(hostname: string): boolean {
   return (
     hostname === 'localhost'
@@ -1110,21 +1110,14 @@ export function AIChatPage(
         onConfirm={handleConfirmDeleteConversation}
       />
 
-      <ConversationListPanel
-        conversations={conversations}
-        activeId={activeId}
-        disabled={!isReady || isGenerating}
-        isPersistent={isPersistent}
-        onCreate={handleCreateConversation}
-        onSwitch={handleSwitchConversation}
-        onRename={handleRenameConversation}
-        onRemove={handleRemoveConversation}
-      />
-
-      <div className='chatPanel' style={chatPanelStyle}>
-        <div className='chatHeader'>
-          <div className='chatHeaderTitleRow'>
-            <h2 className='chatHeaderTitle'>Create</h2>
+      <PageHeader
+        className='chatHeader'
+        titleClassName='chatHeaderTitle'
+        descriptionClassName='chatHeaderSub'
+        title='Create'
+        description='Describe the UI you want to build. Share the structure, interactions, or visual style you want to explore.'
+        topContent={
+          <>
             <span className='constructionBadge'>Online Agent</span>
             {tokenUsage.totalTokens > 0
               ? (
@@ -1144,158 +1137,172 @@ export function AIChatPage(
                 </span>
               )
               : null}
-          </div>
-          <p className='chatHeaderSub'>Describe the UI you want to build</p>
-        </div>
-
-        <div
-          className='chatMessages'
-          ref={chatMessagesRef}
-          onScroll={handleChatScroll}
-        >
-          {messages.map((msg, i) => {
-            const baseClassName = (() => {
-              if (msg.role === 'user') return 'chatMessageUser';
-              if (msg.role === 'action') return 'chatMessageAction';
-              if (msg.role === 'json') return 'chatMessageJson';
-              if (msg.role === 'status') {
-                return `chatMessageStatus chatMessageStatus-${
-                  msg.tone ?? 'info'
-                }`;
-              }
-              return 'chatMessageAI';
-            })();
-
-            const payloadStr = msg.payload === undefined
-              ? null
-              : safeStringifyPayload(msg.payload);
-
-            const className = msg.role === 'action' && payloadStr !== null
-              ? `${baseClassName} chatMessageActionExpanded`
-              : baseClassName;
-
-            return (
-              <div key={i} className={`chatMessage ${className}`}>
-                <div className='chatMessageBody'>{msg.content}</div>
-                {payloadStr === null
-                  ? null
-                  : (
-                    <div className='chatMessagePayload'>
-                      {msg.payloadLabel
-                        ? (
-                          <div className='chatMessagePayloadLabel'>
-                            {msg.payloadLabel}
-                          </div>
-                        )
-                        : null}
-                      <CodeMirror
-                        className='chatMessagePayloadEditor'
-                        value={payloadStr}
-                        extensions={jsonExtensions}
-                        editable={false}
-                        basicSetup={{
-                          lineNumbers: true,
-                          foldGutter: true,
-                          bracketMatching: true,
-                          closeBrackets: false,
-                          autocompletion: false,
-                        }}
-                      />
-                    </div>
-                  )}
-              </div>
-            );
-          })}
-          {isGenerating && generatedJson
-            ? (
-              <div className='chatGeneratedJson'>
-                <div className='chatGeneratedJsonTitle'>
-                  Generated Output
-                  <span className='chatGeneratedJsonBadge'>JSON</span>
-                </div>
-                <CodeMirror
-                  className='chatGeneratedJsonEditor'
-                  value={generatedJson}
-                  extensions={jsonExtensions}
-                  editable={false}
-                  basicSetup={{
-                    lineNumbers: true,
-                    foldGutter: true,
-                    bracketMatching: true,
-                    closeBrackets: false,
-                    autocompletion: false,
-                  }}
-                />
-              </div>
-            )
-            : null}
-          <div ref={messagesEndRef} />
-        </div>
-
-        <div className='chatInputArea'>
-          {messages.length === 1
-            ? (
-              <div className='chatSuggestionsRow'>
-                {SUGGESTED_PROMPTS.map((p) => (
-                  <button
-                    key={p.label}
-                    type='button'
-                    className='chatSuggestionChip'
-                    disabled={isGenerating}
-                    onClick={() => setInputValue(p.text)}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            )
-            : null}
-          <div className='chatInputRow'>
-            <input
-              className='chatInput'
-              type='text'
-              placeholder='Describe the UI you want to generate...'
-              value={inputValue}
-              disabled={isGenerating}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-            <button
-              className='chatSendBtn'
-              type='button'
-              disabled={isGenerating}
-              onClick={handleSend}
-            >
-              {isGenerating ? 'Sending' : 'Send'}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <PanelResizeHandle
-        isActive={isPanelResizing}
-        isCompactLayout={isCompactLayout}
-        ariaLabel='Resize Create and preview panels'
-        onPointerDown={handlePanelResizeStart}
+          </>
+        }
       />
 
-      <PreviewPanel
-        className='previewPanel'
-        style={previewPanelStyle}
-        title='Lynx Preview'
-        showPreviewModeSwitch
-        previewSource={previewSource}
-      >
-        <PreviewViewport
-          src={renderUrl}
-          iframeRef={previewFrameRef}
-          onLoad={handlePreviewLoad}
-          retainPreviousFrame
-          emptyIcon='💬'
-          emptyTitle='Send a message to generate UI'
-          emptySubTitle='Generated components will be previewed here'
+      <div className='chatPageBody'>
+        <ConversationListPanel
+          conversations={conversations}
+          activeId={activeId}
+          disabled={!isReady || isGenerating}
+          isPersistent={isPersistent}
+          onCreate={handleCreateConversation}
+          onSwitch={handleSwitchConversation}
+          onRename={handleRenameConversation}
+          onRemove={handleRemoveConversation}
         />
-      </PreviewPanel>
+
+        <div className='chatPanel' style={chatPanelStyle}>
+          <div
+            className='chatMessages'
+            ref={chatMessagesRef}
+            onScroll={handleChatScroll}
+          >
+            {messages.map((msg, i) => {
+              const baseClassName = (() => {
+                if (msg.role === 'user') return 'chatMessageUser';
+                if (msg.role === 'action') return 'chatMessageAction';
+                if (msg.role === 'json') return 'chatMessageJson';
+                if (msg.role === 'status') {
+                  return `chatMessageStatus chatMessageStatus-${
+                    msg.tone ?? 'info'
+                  }`;
+                }
+                return 'chatMessageAI';
+              })();
+
+              const payloadStr = msg.payload === undefined
+                ? null
+                : safeStringifyPayload(msg.payload);
+
+              const className = msg.role === 'action'
+                  && payloadStr !== null
+                ? `${baseClassName} chatMessageActionExpanded`
+                : baseClassName;
+
+              return (
+                <div key={i} className={`chatMessage ${className}`}>
+                  <div className='chatMessageBody'>{msg.content}</div>
+                  {payloadStr === null
+                    ? null
+                    : (
+                      <div className='chatMessagePayload'>
+                        {msg.payloadLabel
+                          ? (
+                            <div className='chatMessagePayloadLabel'>
+                              {msg.payloadLabel}
+                            </div>
+                          )
+                          : null}
+                        <CodeMirror
+                          className='chatMessagePayloadEditor'
+                          value={payloadStr}
+                          extensions={jsonExtensions}
+                          editable={false}
+                          basicSetup={{
+                            lineNumbers: true,
+                            foldGutter: true,
+                            bracketMatching: true,
+                            closeBrackets: false,
+                            autocompletion: false,
+                          }}
+                        />
+                      </div>
+                    )}
+                </div>
+              );
+            })}
+            {isGenerating && generatedJson
+              ? (
+                <div className='chatGeneratedJson'>
+                  <div className='chatGeneratedJsonTitle'>
+                    Generated Output
+                    <span className='chatGeneratedJsonBadge'>JSON</span>
+                  </div>
+                  <CodeMirror
+                    className='chatGeneratedJsonEditor'
+                    value={generatedJson}
+                    extensions={jsonExtensions}
+                    editable={false}
+                    basicSetup={{
+                      lineNumbers: true,
+                      foldGutter: true,
+                      bracketMatching: true,
+                      closeBrackets: false,
+                      autocompletion: false,
+                    }}
+                  />
+                </div>
+              )
+              : null}
+            <div ref={messagesEndRef} />
+          </div>
+          <div className='chatInputArea'>
+            {messages.length === 1
+              ? (
+                <div className='chatSuggestionsRow'>
+                  {SUGGESTED_PROMPTS.map((p) => (
+                    <button
+                      key={p.label}
+                      type='button'
+                      className='chatSuggestionChip'
+                      disabled={isGenerating}
+                      onClick={() => setInputValue(p.text)}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              )
+              : null}
+            <div className='chatInputRow'>
+              <input
+                className='chatInput'
+                type='text'
+                placeholder='Describe the UI you want to generate...'
+                value={inputValue}
+                disabled={isGenerating}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+              />
+              <button
+                className='chatSendBtn'
+                type='button'
+                disabled={isGenerating}
+                onClick={handleSend}
+              >
+                {isGenerating ? 'Sending' : 'Send'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <PanelResizeHandle
+          isActive={isPanelResizing}
+          isCompactLayout={isCompactLayout}
+          ariaLabel='Resize Create and preview panels'
+          onPointerDown={handlePanelResizeStart}
+        />
+
+        <PreviewPanel
+          className='previewPanel'
+          style={previewPanelStyle}
+          title='Lynx Preview'
+          showPreviewModeSwitch
+          previewSource={previewSource}
+        >
+          <PreviewViewport
+            src={renderUrl}
+            iframeRef={previewFrameRef}
+            onLoad={handlePreviewLoad}
+            retainPreviousFrame
+            emptyIcon='💬'
+            emptyTitle='Send a message to generate UI'
+            emptySubTitle='Generated components will be previewed here'
+          />
+        </PreviewPanel>
+      </div>
     </div>
   );
 }

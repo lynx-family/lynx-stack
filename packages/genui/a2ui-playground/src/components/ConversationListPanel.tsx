@@ -30,7 +30,6 @@ export function ConversationListPanel(props: ConversationListPanelProps) {
     activeId,
     conversations,
     disabled = false,
-    isPersistent,
     onCreate,
     onRemove,
     onRename,
@@ -66,24 +65,14 @@ export function ConversationListPanel(props: ConversationListPanelProps) {
   return (
     <aside className='conversationPanel'>
       <div className='conversationPanelHeader'>
-        <div className='conversationPanelTitleRow'>
-          <h2 className='conversationPanelTitle'>Conversations</h2>
-          <span
-            className={isPersistent
-              ? 'conversationStorageBadge'
-              : 'conversationStorageBadge conversationStorageBadge-memory'}
-            title={isPersistent ? 'IndexedDB' : 'Memory only'}
-          >
-            {isPersistent ? 'IDB' : 'MEM'}
-          </span>
-        </div>
         <button
           type='button'
           className='conversationNewButton'
           disabled={disabled}
           onClick={onCreate}
         >
-          New
+          <span className='conversationNewButtonIcon'>💬</span>
+          <span className='conversationNewButtonLabel'>+ New Chat</span>
         </button>
       </div>
 

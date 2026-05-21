@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import './PlaybackPage.css';
 
+import { PageHeader } from '../components/PageHeader.js';
 import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
 import { PreviewViewport } from '../components/PreviewViewport.js';
 import { DYNAMIC_PRESETS, STATIC_DEMOS } from '../demos.js';
@@ -315,42 +316,43 @@ export function PlaybackPage(props: { protocol: Protocol; theme: Theme }) {
       className={isPanelResizing ? 'playbackPage resizing' : 'playbackPage'}
     >
       <div className='playbackStreamPanel' style={streamPanelStyle}>
-        <div className='playbackPanelHeader'>
-          <div className='playbackPanelHeaderTop'>
-            <span className='playbackPanelTitle'>Playback</span>
-            <span className='playbackPanelBadge'>JSONL</span>
-            <select
-              className='playbackScenarioSelect'
-              value={scenarioId}
-              onChange={(e) => handleSelectScenario(e.target.value)}
-            >
-              {ALL_SCENARIOS.map((s) => (
-                <option key={s.id} value={s.id}>{s.title}</option>
-              ))}
-            </select>
-            <div className='spacer' />
-            <div className='playbackControls'>
-              <label className='simSpeedLabel' htmlFor='pbSpeedSlider'>
-                Speed
-              </label>
-              <input
-                id='pbSpeedSlider'
-                className='simSpeedSlider'
-                type='range'
-                min='0.25'
-                max='4'
-                step='0.25'
-                value={speed}
-                onChange={(e) => setSpeed(Number(e.target.value))}
-              />
-              <span className='simSpeedValue'>{speed}x</span>
-              {primaryControl}
-            </div>
+        <PageHeader
+          className='playbackPanelHeader'
+          titleClassName='playbackPanelTitle'
+          descriptionClassName='playbackPanelSubtitle'
+          title='Playback'
+          description='Stream the scenario step by step and inspect the preview on the right.'
+          topContent={<span className='playbackPanelBadge'>JSONL</span>}
+        />
+
+        <div className='playbackPanelToolbar'>
+          <select
+            className='playbackScenarioSelect'
+            value={scenarioId}
+            onChange={(e) => handleSelectScenario(e.target.value)}
+          >
+            {ALL_SCENARIOS.map((s) => (
+              <option key={s.id} value={s.id}>{s.title}</option>
+            ))}
+          </select>
+          <div className='spacer' />
+          <div className='playbackControls'>
+            <label className='simSpeedLabel' htmlFor='pbSpeedSlider'>
+              Speed
+            </label>
+            <input
+              id='pbSpeedSlider'
+              className='simSpeedSlider'
+              type='range'
+              min='0.25'
+              max='4'
+              step='0.25'
+              value={speed}
+              onChange={(e) => setSpeed(Number(e.target.value))}
+            />
+            <span className='simSpeedValue'>{speed}x</span>
+            {primaryControl}
           </div>
-          <p className='playbackPanelSubtitle'>
-            Stream the scenario step by step and inspect the preview on the
-            right.
-          </p>
         </div>
 
         {messages.length > 0 && !isIdle
