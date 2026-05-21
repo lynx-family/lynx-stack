@@ -171,7 +171,7 @@ jobs:
           overwrite: true
           include-hidden-files: true
       - name: Upload Test Result
-        if: ${{ inputs.is-web && failure() }}
+        if: ${{ inputs.is-web && failure() && (inputs.preflight-run == '' || steps.preflight.outputs.should-run == 'true') }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ inputs.web-report-name }}

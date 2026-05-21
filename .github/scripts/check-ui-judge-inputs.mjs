@@ -3,6 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 
 const relevantFilePatterns = [
   /^packages\/genui\/(ui-judge|a2ui|a2ui-playground)\//,
@@ -47,6 +50,6 @@ function listPullRequestFiles() {
     'diff',
     '--name-only',
     `${base}...${head}`,
-  ], { cwd: process.env.GITHUB_WORKSPACE, encoding: 'utf8' });
+  ], { cwd: repoRoot, encoding: 'utf8' });
   return output.split(/\r?\n/).filter(Boolean);
 }
