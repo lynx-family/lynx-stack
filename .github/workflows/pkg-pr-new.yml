@@ -1,0 +1,84 @@
+name: Pkg.pr.new
+
+# Triggered after the `Test` workflow finishes on a PR. We piggy-back on its
+# build artifacts via the TurboCache so we don't redo the monorepo build.
+on:
+  workflow_run:
+    workflows: ["Test"]
+    types: [completed]
+
+permissions: {}
+
+env:
+  CI: 1
+  TURBO_TELEMETRY_DISABLED: 1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: Publish to pkg.pr.new
+    runs-on: lynx-ubuntu-24.04-medium
+    timeout-minutes: 15
+    if: >
+      github.repository == 'lynx-family/lynx-stack' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    permissions:
+      contents: read
+      pull-requests: write
+      actions: read
+      # required for the pkg.pr.new OIDC verification
+      id-token: write
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          # workflow_run runs in the default-branch context, so we need to
+          # explicitly check out the PR head.
+          ref: ${{ github.event.workflow_run.head_sha }}
+          repository: ${{ github.event.workflow_run.head_repository.full_name }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - name: TurboCache
+        uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+        with:
+          path: .turbo
+          # Must match the key written by build-all in workflow-build.yml so
+          # the build step below is a cache hit instead of a fresh build.
+          key: turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.event.workflow_run.head_sha }}
+          fail-on-cache-miss: true
+      - name: Install
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+      - name: Build (cache hit)
+        run: pnpm turbo build --summarize
+      - name: Collect packages with changesets
+        id: changeset
+        run: |
+          pnpm changeset status --since=origin/main --output .changeset-status.json
+          PACKAGE_DIRS=$(node .github/scripts/list-changeset-packages.cjs .changeset-status.json | tr '\n' ' ')
+          if [ -z "$(echo "$PACKAGE_DIRS" | tr -d '[:space:]')" ]; then
+            echo "No publishable packages affected by changesets; skipping publish."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Publishing the following package directories to pkg.pr.new:"
+          printf '  %s\n' $PACKAGE_DIRS
+          {
+            echo "skip=false"
+            echo "package-dirs<<EOF"
+            echo "$PACKAGE_DIRS"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+      - name: Publish to pkg.pr.new
+        if: steps.changeset.outputs.skip != 'true'
+        env:
+          PACKAGE_DIRS: ${{ steps.changeset.outputs.package-dirs }}
+        run: pnpm dlx pkg-pr-new publish --compact --pnpm $PACKAGE_DIRS
