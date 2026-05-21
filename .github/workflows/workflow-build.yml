@@ -64,7 +64,11 @@ jobs:
         run: |
           echo "merge-base=$(git merge-base "$CLEAN_BASE_REF" "$CLEAN_HEAD_REF" || git rev-parse "$CLEAN_BASE_REF")" >> $GITHUB_OUTPUT
   build-all:
-    permissions: {}
+    permissions:
+      # required for the pkg.pr.new publish step further down. Only the publish
+      # step actually uses this; the rest of the job runs with the default
+      # github-token permissions.
+      id-token: write
     name: Build (${{ matrix.runs-on.name }})
     runs-on: ${{ matrix.runs-on.label }}
     strategy:
@@ -125,3 +129,34 @@ jobs:
           retention-days: 1
           overwrite: true
           include-hidden-files: true
+      # Publish PR previews to pkg.pr.new. Only runs on the Ubuntu leg of the
+      # build matrix, only for same-repo pull_request events (fork PRs can't
+      # be granted id-token without security risk), and only when the PR adds
+      # a changeset that actually bumps a publishable package.
+      - name: Collect packages with changesets
+        id: changeset
+        if: >
+          matrix.runs-on.label == 'lynx-ubuntu-24.04-xlarge' &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          pnpm changeset status --since=origin/${{ github.base_ref }} --output .changeset-status.json
+          PACKAGE_DIRS=$(node .github/scripts/list-changeset-packages.cjs .changeset-status.json | tr '\n' ' ')
+          if [ -z "$(echo "$PACKAGE_DIRS" | tr -d '[:space:]')" ]; then
+            echo "No publishable packages affected by changesets; skipping pkg.pr.new publish."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Publishing the following package directories to pkg.pr.new:"
+          printf '  %s\n' $PACKAGE_DIRS
+          {
+            echo "skip=false"
+            echo "package-dirs<<EOF"
+            echo "$PACKAGE_DIRS"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+      - name: Publish to pkg.pr.new
+        if: steps.changeset.outputs.skip == 'false'
+        env:
+          PACKAGE_DIRS: ${{ steps.changeset.outputs.package-dirs }}
+        run: pnpm dlx pkg-pr-new publish --compact --pnpm $PACKAGE_DIRS
