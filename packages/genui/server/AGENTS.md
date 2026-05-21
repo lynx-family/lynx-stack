@@ -32,6 +32,16 @@ export OPENAI_MODEL="..."
 - `OPENAI_BASE_URL` selects the OpenAI-compatible API endpoint.
 - `OPENAI_MODEL` selects the model used by the A2UI agent.
 
+Image components are resolved after A2UI validation. To enable query-matched
+stock images, provide a Pexels API key:
+
+```bash
+export PEXELS_API_KEY="..."
+```
+
+When `PEXELS_API_KEY` is absent or Pexels returns no result, the server falls
+back to a deterministic Picsum URL.
+
 The server fails fast at startup (via `instrumentation.ts`) when any of
 these are missing in production. In development, a warning is logged
 instead so the playground keeps working.

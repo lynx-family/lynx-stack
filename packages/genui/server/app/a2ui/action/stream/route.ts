@@ -5,6 +5,7 @@
 import type { A2UICatalog } from '../../../../agent/a2ui-catalog';
 import { BASIC_CATALOG } from '../../../../agent/a2ui-catalog';
 import { validateA2UIOutput } from '../../../../agent/a2ui-validator';
+import { resolveA2UIImageUrls } from '../../../../agent/image-resolver';
 import { getA2UIAgentService } from '../../../../service/a2ui-agent';
 import type { ChatMessage } from '../../../../service/a2ui-agent';
 import {
@@ -155,10 +156,11 @@ export async function POST(req: Request) {
               existingSurfaceIds: body.surfaceId ? [body.surfaceId] : [],
             },
           );
+          const messages = v.ok ? await resolveA2UIImageUrls(v.messages) : [];
           validation = {
             ok: v.ok,
             errors: v.errors,
-            messages: v.ok ? v.messages : [],
+            messages,
           };
         }
 

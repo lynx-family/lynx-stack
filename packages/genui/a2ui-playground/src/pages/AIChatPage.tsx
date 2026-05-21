@@ -337,6 +337,7 @@ async function readA2UIResponse(
   onText: (text: string) => void,
   onMessages: (messages: unknown[]) => void,
   onUsage?: (usage: TokenUsage) => void,
+  options: { publishPartialMessages?: boolean } = {},
 ): Promise<unknown[]> {
   const contentType = response.headers.get('content-type') ?? '';
   if (!contentType.includes('text/event-stream')) {
@@ -360,6 +361,7 @@ async function readA2UIResponse(
   let buffer = '';
   let generatedText = '';
   let latestMessages: unknown[] = [];
+  const publishPartialMessages = options.publishPartialMessages ?? true;
 
   while (true) {
     const { done, value } = await reader.read();
@@ -376,6 +378,7 @@ async function readA2UIResponse(
         if (typeof deltaData.text === 'string') {
           generatedText += deltaData.text;
           onText(generatedText);
+          if (!publishPartialMessages) continue;
           const completed = parseCompletedArrayItems(generatedText);
           if (completed.length > latestMessages.length) {
             latestMessages = completed;
@@ -417,12 +420,12 @@ const SUGGESTED_PROMPTS: Array<{ label: string; text: string }> = [
   {
     label: '🌤️ Weather with Refresh',
     text:
-      'Create a weather card for San Francisco showing sunny, 22°C, humidity 60%, and a "Refresh" button. When the user taps Refresh, update the card with slightly different weather data to simulate a live fetch.',
+      'Create a weather card for San Francisco showing sunny, a photo, 22°C, humidity 60%, and a "Refresh" button. When the user taps Refresh, update the card with slightly different weather data to simulate a live fetch.',
   },
   {
     label: '🛍️ Product card with Buy',
     text:
-      'Create a product card for a limited-edition sneaker. Include name, price ($189), a short description, and a "Buy Now" button. When tapped, show an order confirmation with a fake order number and estimated delivery.',
+      'Create a product card for a limited-edition sneaker. Include name, a photo, price ($189), a short description, and a "Buy Now" button. When tapped, show an order confirmation with a fake order number and estimated delivery.',
   },
   {
     label: '⚡ Quiz card with actions',
@@ -726,6 +729,7 @@ export function AIChatPage(
               totalTokens: prev.totalTokens + usage.totalTokens,
             }));
           },
+          { publishPartialMessages: false },
         );
 
         if (finalMessages.length === 0) {
