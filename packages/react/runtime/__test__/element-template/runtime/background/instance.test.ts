@@ -753,6 +753,27 @@ describe('BackgroundElementTemplateInstance', () => {
       expect(backgroundElementTemplateInstanceManager.get(childId)).toBeUndefined();
     });
 
+    it('invokes a callback ref cleanup exactly once on pre-hydration removal', () => {
+      // Regression: an earlier rewrite left a redundant `queueRefCleanupForSubtree`
+      // inside the pre-hydration branch in addition to the unconditional one
+      // emitted at the end of `removeChild`, so callback ref cleanups fired twice.
+      const cleanup = vi.fn();
+      const ref = vi.fn(() => cleanup);
+      __etAttrPlanMap.view = [0, adaptRefAttrSlot];
+      const parent = new BackgroundElementTemplateInstance('view');
+      const child = new BackgroundElementTemplateInstance('view');
+      parent.appendChild(child);
+      child.setAttribute('attributeSlots', [ref]);
+      flushPendingRefs();
+      ref.mockClear();
+
+      parent.removeChild(child);
+      flushPendingRefs();
+
+      expect(cleanup).toHaveBeenCalledTimes(1);
+      expect(ref).not.toHaveBeenCalled();
+    });
+
     it('supports silent removal from a slot container', () => {
       const parent = new BackgroundElementTemplateInstance('view');
       const child = new BackgroundElementTemplateInstance('text');

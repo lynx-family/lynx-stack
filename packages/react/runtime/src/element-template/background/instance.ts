@@ -226,19 +226,20 @@ export class BackgroundElementTemplateInstance {
       // The removed JS object graph may outlive the detach until GC, so keep
       // it pending and tear it down on the Snapshot-aligned delayed boundary.
       markRemovedSubtreeForPostDispatchTeardown(child);
+      child.queueRefCleanupForSubtree();
     } else {
-      if (!isElementTemplateHydrated()) {
-        // Pre-hydration commits have already exposed refs to user effects, so
-        // a local slot removal must detach them even though no native patch exists.
-        child.queueRefCleanupForSubtree();
-      }
+      // Pre-hydration commits and post-hydration unmaterialized subtrees have
+      // both exposed refs to user effects (via the pre-hydration flush), so a
+      // local removal must detach them even though no native patch exists.
+      // Run the ref cleanup before any `tearDown()` below — tearDown clears
+      // `rawAttributeSlots`, which `queueRefCleanupForSubtree` depends on.
+      child.queueRefCleanupForSubtree();
       if (child.needsMainThreadCreate()) {
         // An unmaterialized subtree has no main-thread registry entry, so it
         // can be released from the background manager without delayed cleanup.
         child.tearDown();
       }
     }
-    child.queueRefCleanupForSubtree();
   }
 
   tearDown(): void {
