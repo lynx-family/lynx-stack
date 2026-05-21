@@ -77,6 +77,17 @@ export async function POST(req: Request) {
     );
   }
 
+  if (!body.surfaceId) {
+    return jsonWithCors(
+      req,
+      {
+        ok: false,
+        error: 'surfaceId is required for action responses',
+      },
+      { status: 400 },
+    );
+  }
+
   const validatedConversation = validateConversation(body.conversation);
   if (!validatedConversation.ok) {
     return jsonWithCors(
@@ -139,6 +150,10 @@ export async function POST(req: Request) {
           const v = validateA2UIOutput(
             finalText,
             opts.catalog ?? BASIC_CATALOG,
+            {
+              requireCreateSurface: false,
+              existingSurfaceIds: body.surfaceId ? [body.surfaceId] : [],
+            },
           );
           validation = {
             ok: v.ok,

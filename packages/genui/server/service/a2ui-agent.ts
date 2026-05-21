@@ -12,7 +12,7 @@ import {
   formatErrorsForModel,
   validateA2UIOutput,
 } from '../agent/a2ui-validator';
-import type { A2UIMessage } from '../agent/a2ui-validator';
+import type { A2UIMessage, ValidationOptions } from '../agent/a2ui-validator';
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -225,6 +225,7 @@ export default class A2UIAgentService {
     messages: ChatMessage[],
     opts: ChatOptions = {},
     conversation?: ConversationContext,
+    validationOptions?: ValidationOptions,
   ): Promise<A2UIResponse> {
     const catalog = opts.catalog ?? BASIC_CATALOG;
     const maxAttempts = Math.max(1, opts.maxRepairAttempts ?? 2) + 1;
@@ -253,7 +254,7 @@ export default class A2UIAgentService {
         (await Promise.resolve(result?.finishReason).catch(() => undefined))
           ?? result?.finishReason;
 
-      const validation = validateA2UIOutput(text, catalog);
+      const validation = validateA2UIOutput(text, catalog, validationOptions);
       if (validation.ok) {
         return {
           ok: true,
