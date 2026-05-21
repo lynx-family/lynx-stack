@@ -47,15 +47,31 @@ jobs:
           npm install -g corepack@latest
           corepack enable && corepack prepare
           corepack pnpm install --frozen-lockfile
+      - name: Collect packages with changesets
+        id: changeset
+        run: |
+          corepack pnpm changeset status --since=origin/main --output .changeset-status.json
+          PACKAGE_DIRS=$(node .github/scripts/list-changeset-packages.cjs .changeset-status.json | tr '\n' ' ')
+          if [ -z "$(echo "$PACKAGE_DIRS" | tr -d '[:space:]')" ]; then
+            echo "No publishable packages affected by changesets; skipping publish."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Publishing the following package directories to pkg.pr.new:"
+          printf '  %s\n' $PACKAGE_DIRS
+          {
+            echo "skip=false"
+            echo "package-dirs<<EOF"
+            echo "$PACKAGE_DIRS"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
       - name: Build
+        if: steps.changeset.outputs.skip != 'true'
         run: |
           corepack pnpm turbo --filter !@lynx-js/web-tests --filter !benchx_cli --filter "!@lynx-js/benchmark-*" build --summarize
         env:
           NODE_OPTIONS: --max-old-space-size=32768
       - name: Publish to pkg.pr.new
+        if: steps.changeset.outputs.skip != 'true'
         run: |
-          corepack pnpm dlx pkg-pr-new publish \
-            --compact \
-            --pnpm \
-            './packages/*' \
-            './packages/*/*'
+          corepack pnpm dlx pkg-pr-new publish --compact --pnpm ${{ steps.changeset.outputs.package-dirs }}
