@@ -170,7 +170,7 @@ function formatComment({ marker, results, title }) {
   const average = results.reduce((sum, result) => sum + result.score, 0)
     / results.length;
   const failedCount = results.filter((result) => result.error).length;
-  const runUrl = getRunUrl();
+  const runLink = getRunLink();
   const lines = [
     marker,
     `### ${escapeMarkdown(title)}`,
@@ -209,8 +209,8 @@ function formatComment({ marker, results, title }) {
     );
   }
 
-  if (runUrl) {
-    lines.push('', `[Workflow run](${runUrl})`);
+  if (runLink) {
+    lines.push('', `[${runLink.label}](${runLink.url})`);
   }
 
   return lines.join('\n');
@@ -410,10 +410,23 @@ function truncateComment(body) {
   }\n\n_Comment truncated because it exceeded ${MAX_COMMENT_LENGTH} characters._`;
 }
 
-function getRunUrl() {
+function getRunLink() {
   const serverUrl = process.env.GITHUB_SERVER_URL || 'https://github.com';
   const repository = process.env.GITHUB_REPOSITORY;
   const runId = process.env.GITHUB_RUN_ID;
   if (!repository || !runId) return undefined;
-  return `${serverUrl}/${repository}/actions/runs/${runId}`;
+
+  const runUrl = `${serverUrl}/${repository}/actions/runs/${runId}`;
+  const runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || '1');
+  if (!Number.isInteger(runAttempt) || runAttempt <= 1) {
+    return {
+      label: 'Workflow run',
+      url: runUrl,
+    };
+  }
+
+  return {
+    label: `Workflow run (attempt ${runAttempt})`,
+    url: `${runUrl}/attempts/${runAttempt}`,
+  };
 }
