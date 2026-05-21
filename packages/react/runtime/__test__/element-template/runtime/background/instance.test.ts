@@ -404,6 +404,71 @@ describe('BackgroundElementTemplateInstance', () => {
         'Cannot insert a node before itself',
       );
     });
+
+    it('emits beforeId=0 when the reference child lives in a different slot', () => {
+      // Slot ordering is per-slot, so a beforeChild from another slot has no
+      // meaning for the new child's position. Falling back to 0 keeps the
+      // main-thread insert as an append within the destination slot.
+      const parent = new BackgroundElementTemplateInstance('view');
+      const slot0Anchor = new BackgroundElementTemplateInstance('view');
+      slot0Anchor.__slotIndex = 0;
+      parent.appendChild(slot0Anchor);
+
+      markElementTemplateHydrated();
+      parent.markMaterializedByHydration();
+      slot0Anchor.markMaterializedByHydration();
+      globalCommitContext.ops = [];
+
+      const newChild = new BackgroundElementTemplateInstance('text');
+      newChild.__slotIndex = 1;
+
+      parent.insertBefore(newChild, slot0Anchor);
+
+      expect(globalCommitContext.ops).toEqual([
+        ElementTemplateUpdateOps.createTemplate,
+        newChild.instanceId,
+        'text',
+        null,
+        [],
+        [],
+        ElementTemplateUpdateOps.insertNode,
+        parent.instanceId,
+        1,
+        newChild.instanceId,
+        0,
+      ]);
+    });
+
+    it('keeps beforeId pointing at the reference child when slots match', () => {
+      const parent = new BackgroundElementTemplateInstance('view');
+      const anchor = new BackgroundElementTemplateInstance('view');
+      anchor.__slotIndex = 1;
+      parent.appendChild(anchor);
+
+      markElementTemplateHydrated();
+      parent.markMaterializedByHydration();
+      anchor.markMaterializedByHydration();
+      globalCommitContext.ops = [];
+
+      const newChild = new BackgroundElementTemplateInstance('text');
+      newChild.__slotIndex = 1;
+
+      parent.insertBefore(newChild, anchor);
+
+      expect(globalCommitContext.ops).toEqual([
+        ElementTemplateUpdateOps.createTemplate,
+        newChild.instanceId,
+        'text',
+        null,
+        [],
+        [],
+        ElementTemplateUpdateOps.insertNode,
+        parent.instanceId,
+        1,
+        newChild.instanceId,
+        anchor.instanceId,
+      ]);
+    });
   });
 
   describe('removeChild', () => {

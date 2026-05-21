@@ -179,7 +179,7 @@ export class BackgroundElementTemplateInstance {
       return;
     }
 
-    const beforeId = beforeChild ? beforeChild.instanceId : 0;
+    const beforeId = (beforeChild && beforeChild.__slotIndex === child.__slotIndex) ? beforeChild.instanceId : 0;
     emitMainThreadCreateRecursive(child);
     pushOp(
       ElementTemplateUpdateOps.insertNode,
