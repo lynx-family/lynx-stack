@@ -136,9 +136,22 @@ jobs:
           github.event.pull_request.head.repo.full_name == github.repository
         env:
           BASE_REF: ${{ github.base_ref }}
-        # actions/checkout uses depth=1 by default, so origin/<base> isn't
-        # populated. changeset status --since=<ref> needs the ref to resolve.
-        run: git fetch --depth=1 origin "$BASE_REF":"refs/remotes/origin/$BASE_REF"
+        # actions/checkout uses depth=1, so neither `origin/<base>` nor the
+        # PR/base merge-base are present. `changeset status --since=<ref>`
+        # calls `git merge-base <ref> HEAD`, which requires the common
+        # ancestor to be in local history. Deepen both refs iteratively until
+        # we have it.
+        run: |
+          git fetch --depth=1 origin "$BASE_REF":"refs/remotes/origin/$BASE_REF"
+          for _ in 1 2 3 4 5 6 7 8 9 10; do
+            if git merge-base "refs/remotes/origin/$BASE_REF" HEAD >/dev/null 2>&1; then
+              exit 0
+            fi
+            git fetch -q --deepen=10 origin "$BASE_REF":"refs/remotes/origin/$BASE_REF"
+            git fetch -q --deepen=10 origin HEAD
+          done
+          echo "::error::Unable to find a merge base between origin/$BASE_REF and HEAD after 10 deepen iterations" >&2
+          exit 1
       - name: Collect packages with changesets
         id: changeset
         if: >
