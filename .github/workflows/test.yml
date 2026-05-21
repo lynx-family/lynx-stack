@@ -241,6 +241,7 @@ jobs:
           UI_JUDGE_RESULT_FILE: ${{ github.workspace }}/ui-judge-results.json
         run: |
           cd "$GITHUB_WORKSPACE"
+          ulimit -Sn 655350
           pnpm --filter @lynx-js/ui-judge test
       - name: Write UI Judge failure result
         if: ${{ always() && steps.ui-judge-inputs.outputs.should-run == 'true' && (failure() || steps.ui-judge.outcome == 'failure') && hashFiles('ui-judge-results.json') == '' }}

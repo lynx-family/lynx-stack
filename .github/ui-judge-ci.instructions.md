@@ -10,6 +10,8 @@ Keep the UI Judge Playwright job dependent on the repository `build` job, matchi
 
 Use the upstream build job's restored turbo cache in UI Judge CI. Do not call package scripts directly with `pnpm --filter <package> build`, and do not pass `--force`; the focused turbo commands should replay the upstream build outputs from cache.
 
+Raise the soft open-file limit before running UI Judge Playwright tests in the Playwright container. The A2UI playground dev server uses rsbuild/chokidar watchers, so mirror the web-elements Playwright pattern with `ulimit -Sn 655350` before invoking `pnpm --filter @lynx-js/ui-judge test`.
+
 Inject the full Midscene/OpenAI model environment into the UI Judge execution step, including `MIDSCENE_MODEL_API_KEY`, `MIDSCENE_MODEL_BASE_URL`, `MIDSCENE_MODEL_FAMILY`, `MIDSCENE_MODEL_NAME`, and `MIDSCENE_OPENAI_INIT_CONFIG_JSON`.
 
 When rendering the UI Judge PR comment, include `GITHUB_RUN_ATTEMPT` in the workflow footer/link. GitHub reruns keep the same `GITHUB_RUN_ID`, so relying only on the run URL can make a successful rerun write an identical comment body and appear not to update.
