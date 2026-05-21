@@ -36,7 +36,6 @@
     "version": false
   },
   "ignore": [
-    "@lynx-js/web-tests",
     "@lynx-js/example-react",
     "@lynx-js/web-core-e2e"
   ],

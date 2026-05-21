@@ -29,6 +29,7 @@ import {
 } from './globalState.js';
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
+import { takeGlobalFlushOptions } from '../../../core/commit-context.js';
 import { profileEnd, profileStart } from '../../../shared/profile.js';
 import { COMMIT } from '../../../shared/render-constants.js';
 import { hook, isEmptyObject } from '../../../utils.js';
@@ -43,14 +44,6 @@ import {
 import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValue.js';
 import { isRendering } from '../isRendering.js';
 import { getReloadVersion } from '../pass.js';
-
-let globalFlushOptions: FlushOptions = {};
-
-function takeGlobalFlushOptions() {
-  const res = globalFlushOptions;
-  globalFlushOptions = {};
-  return res;
-}
 
 const globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map<number, () => void>();
 let nextCommitTaskId = 1;
@@ -244,7 +237,6 @@ export {
   genCommitTaskId,
   globalBackgroundSnapshotInstancesToRemove,
   globalCommitTaskMap,
-  globalFlushOptions,
   replaceCommitHook,
   type PatchList,
   type PatchOptions,

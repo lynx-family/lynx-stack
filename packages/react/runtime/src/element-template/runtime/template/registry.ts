@@ -10,7 +10,7 @@
 // Other IDs (e.g. positive IDs coming from background-created nodes) fall back to a Map.
 
 const negativeRefs: Array<ElementRef | undefined> = [];
-const otherRefs: Map<number, ElementRef> = new Map();
+const otherRefs: Map<number, ElementRef> = /*#__PURE__*/ new Map();
 
 export function setElementTemplateNativeRef(id: number, nativeRef: ElementRef): void {
   if (id < 0) {

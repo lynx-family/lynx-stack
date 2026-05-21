@@ -9,11 +9,6 @@ extend-exclude = [
   "pnpm-lock.yaml",
   "biome.jsonc",
   "packages/web-platform/web-explorer/preinstalled/homepage.json",
-  "packages/web-platform/web-tests/tests/web-elements/performance/react-dom.production.min.js",
-  "packages/web-platform/web-tests/tests/web-elements/*",
-  "packages/web-platform/web-tests/tests/react.spec.ts-snapshots/*",
-  "packages/web-platform/web-tests/tests/react.spec.ts",
-  "packages/web-platform/web-tests/tests/react/basic-element-x-overlay-ng-playground-test/index.jsx",
 ]
 
 [default]

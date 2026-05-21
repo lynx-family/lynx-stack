@@ -87,17 +87,6 @@ function ComponentDetail(
 
   return (
     <div className='compContent'>
-      <div className='compBreadcrumb'>
-        <a
-          className='compBreadcrumbLink'
-          href={`#/${protocol.name}/components`}
-        >
-          Components
-        </a>
-        <span className='compBreadcrumbSep'>/</span>
-        <span className='compBreadcrumbCurrent'>{comp.name}</span>
-      </div>
-
       <h2 className='compName'>{comp.name}</h2>
       <p className='compDesc'>{comp.description}</p>
 
@@ -231,16 +220,26 @@ function ComponentDetail(
 function ComponentGrid(props: { protocol: Protocol }) {
   const { protocol } = props;
 
+  const groupedByCategory = useMemo(() => {
+    const map = new Map<string, ComponentDoc[]>();
+    for (const cat of CATEGORIES) {
+      const items = COMPONENT_CATALOG.filter((c) => c.category === cat.id);
+      if (items.length > 0) map.set(cat.id, items);
+    }
+    return map;
+  }, []);
+
   return (
     <div className='compContent'>
-      <h2 className='compName'>Components</h2>
+      <h2 className='compName'>All Components</h2>
       <p className='compDesc'>
         Browse all supported A2UI components by category.
       </p>
 
       {CATEGORIES.map((cat) => {
-        const items = COMPONENT_CATALOG.filter((c) => c.category === cat.id);
-        if (items.length === 0) return null;
+        const items = groupedByCategory.get(cat.id);
+        if (!items) return null;
+
         return (
           <div key={cat.id} className='compCategorySection'>
             <h3 className='compCategoryTitle'>{cat.label}</h3>
@@ -249,7 +248,7 @@ function ComponentGrid(props: { protocol: Protocol }) {
                 <a
                   key={comp.name}
                   className='compGridCard'
-                  href={`#/${protocol.name}/components/${comp.name}`}
+                  href={`#/${protocol.name}/catalog/${comp.name}`}
                 >
                   <div className='compGridCardName'>{comp.name}</div>
                   <div className='compGridCardDesc'>{comp.description}</div>
@@ -290,44 +289,68 @@ export function ComponentsPage(
 
   return (
     <div className='compPage'>
-      <div className='compSidebar'>
-        <a
-          className={'compSidebarAll' + (componentName ? '' : ' active')}
-          href={`#/${protocol.name}/components`}
-        >
-          All Components
-        </a>
-
-        {CATEGORIES.map((cat) => {
-          const items = groupedByCategory.get(cat.id);
-          if (!items) return null;
-          return (
-            <div key={cat.id} className='compSidebarGroup'>
-              <div className='compSidebarGroupLabel'>{cat.label}</div>
-              {items.map((comp) => (
-                <a
-                  key={comp.name}
-                  className={'compSidebarItem'
-                    + (componentName === comp.name ? ' active' : '')}
-                  href={`#/${protocol.name}/components/${comp.name}`}
-                >
-                  {comp.name}
-                </a>
-              ))}
+      <div className='compCatalogPage'>
+        <div className='compCatalogContent'>
+          <div className='compCatalogHero'>
+            <div className='compCatalogHeroTop'>
+              <h2 className='compCatalogHeaderTitle'>Basic Catalog</h2>
+              <span className='chip'>
+                {COMPONENT_CATALOG.length} components
+              </span>
             </div>
-          );
-        })}
-      </div>
+            <p className='compCatalogHeaderDesc'>
+              To help developers get started quickly, Lynx team maintains basic
+              components. Based on them, developers can build custom catalog.
+            </p>
+          </div>
+        </div>
 
-      {selectedComp
-        ? (
-          <ComponentDetail
-            comp={selectedComp}
-            protocol={protocol}
-            theme={theme}
-          />
-        )
-        : <ComponentGrid protocol={protocol} />}
+        <div className='compCatalogSplit'>
+          <div className='compSidebar compCatalogSidebar'>
+            <a
+              className={'compSidebarAll' + (selectedComp ? '' : ' active')}
+              href={`#/${protocol.name}/catalog`}
+            >
+              All Components
+            </a>
+            {CATEGORIES.map((cat) => {
+              const items = groupedByCategory.get(cat.id);
+              if (!items) return null;
+              return (
+                <div
+                  key={cat.id}
+                  className='compSidebarGroup'
+                  id={`sidebar-${cat.id}`}
+                >
+                  <div className='compSidebarGroupLabel'>{cat.label}</div>
+                  {items.map((comp) => (
+                    <a
+                      key={comp.name}
+                      className={'compSidebarItem'
+                        + (selectedComp?.name === comp.name ? ' active' : '')}
+                      href={`#/${protocol.name}/catalog/${comp.name}`}
+                    >
+                      {comp.name}
+                    </a>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className='compCatalogDetail'>
+            {selectedComp
+              ? (
+                <ComponentDetail
+                  comp={selectedComp}
+                  protocol={protocol}
+                  theme={theme}
+                />
+              )
+              : <ComponentGrid protocol={protocol} />}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

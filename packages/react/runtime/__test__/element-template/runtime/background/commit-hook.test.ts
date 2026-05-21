@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { options } from 'preact';
+import { Component, createElement } from 'preact/compat';
 
 import * as elementTemplateAlog from '../../../../src/element-template/debug/alog.js';
 import {
@@ -18,12 +19,21 @@ import { BackgroundElementTemplateInstance } from '../../../../src/element-templ
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import {
   globalCommitContext,
-  markRemovedSubtreeForCurrentCommit,
+  markRemovedSubtreeForPostDispatchTeardown,
 } from '../../../../src/element-template/background/commit-context.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import { PipelineOrigins } from '../../../../src/element-template/lynx/performance.js';
+import {
+  InitDataConsumer,
+  InitDataProvider,
+  root,
+  useInitData,
+  useInitDataChanged,
+  withInitDataInState,
+} from '../../../../src/element-template/index.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
+import { clearRefState, queueRefAttrUpdate } from '../../../../src/element-template/prop-adapters/ref.js';
 
 function createRawTextOps(id: number, text: string) {
   return [
@@ -34,6 +44,55 @@ function createRawTextOps(id: number, text: string) {
     [text],
     [],
   ];
+}
+
+type DataChangeListener = (...args: unknown[]) => void;
+
+function installDataChangeHarness() {
+  const scheduledRenders: Array<() => void> = [];
+  const previousDebounce = options.debounceRendering;
+  options.debounceRendering = (cb) => {
+    scheduledRenders.push(cb);
+  };
+
+  const listeners = new Set<DataChangeListener>();
+  const emitter = {
+    addListener: vi.fn((eventName: string, listener: DataChangeListener) => {
+      if (eventName === 'onDataChanged') {
+        listeners.add(listener);
+      }
+    }),
+    removeListener: vi.fn((eventName: string, listener: DataChangeListener) => {
+      if (eventName === 'onDataChanged') {
+        listeners.delete(listener);
+      }
+    }),
+  };
+  const originalGetJSModule = lynx.getJSModule;
+  lynx.getJSModule = ((moduleName: string) => {
+    if (moduleName === 'GlobalEventEmitter') {
+      return emitter;
+    }
+    return originalGetJSModule?.(moduleName);
+  }) as typeof lynx.getJSModule;
+
+  return {
+    listeners,
+    emitDataChanged(...args: unknown[]) {
+      for (const listener of [...listeners]) {
+        listener(...args);
+      }
+    },
+    flushScheduledRenders() {
+      while (scheduledRenders.length > 0) {
+        scheduledRenders.shift()?.();
+      }
+    },
+    restore() {
+      options.debounceRendering = previousDebounce;
+      lynx.getJSModule = originalGetJSModule;
+    },
+  };
 }
 
 describe('ElementTemplate commit hook', () => {
@@ -48,6 +107,7 @@ describe('ElementTemplate commit hook', () => {
     resetElementTemplateCommitState();
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
+    clearRefState();
     updateEvents = [];
     envManager.resetEnv('background');
     installElementTemplateCommitHook();
@@ -64,6 +124,7 @@ describe('ElementTemplate commit hook', () => {
     envManager.switchToBackground();
     resetElementTemplateHydrationListener();
     resetElementTemplateCommitState();
+    clearRefState();
   });
 
   it('dispatches update after commit when hydrated', () => {
@@ -81,6 +142,191 @@ describe('ElementTemplate commit hook', () => {
     });
     envManager.switchToBackground();
     expect(globalCommitContext.ops).toEqual([]);
+  });
+
+  it('dispatches flush-only update after commit when hydrated', () => {
+    markElementTemplateHydrated();
+    globalCommitContext.flushOptions = { triggerDataUpdated: true };
+
+    options.__c?.({} as unknown as object, []);
+
+    envManager.switchToMainThread();
+    expect(updateEvents).toHaveLength(1);
+    expect(updateEvents[0]).toEqual({
+      ops: [],
+      flushOptions: { triggerDataUpdated: true },
+    });
+    envManager.switchToBackground();
+    expect(globalCommitContext.flushOptions).toEqual({});
+
+    options.__c?.({} as unknown as object, []);
+    envManager.switchToMainThread();
+    expect(updateEvents).toHaveLength(1);
+    envManager.switchToBackground();
+  });
+
+  it('dispatches triggerDataUpdated when useInitData observes a data change', () => {
+    const dataChange = installDataChangeHarness();
+
+    try {
+      function App() {
+        useInitData();
+        return createElement('view');
+      }
+
+      lynx.__initData = { msg: 'before' };
+      root.render(createElement(App, null));
+      expect(dataChange.listeners.size).toBe(1);
+
+      markElementTemplateHydrated();
+      lynx.__initData = { msg: 'after' };
+      dataChange.emitDataChanged();
+      dataChange.flushScheduledRenders();
+
+      envManager.switchToMainThread();
+      expect(updateEvents).toHaveLength(1);
+      expect(updateEvents[0]).toMatchObject({
+        ops: [],
+        flushOptions: { triggerDataUpdated: true },
+      });
+    } finally {
+      dataChange.restore();
+    }
+  });
+
+  it('dispatches triggerDataUpdated when InitDataProvider observes a data change', () => {
+    const dataChange = installDataChangeHarness();
+    const renderedMessages: unknown[] = [];
+
+    try {
+      function App() {
+        return createElement(
+          InitDataProvider,
+          null,
+          createElement(InitDataConsumer, null, (initData: { msg?: string }) => {
+            renderedMessages.push(initData.msg);
+            return createElement('view');
+          }),
+        );
+      }
+
+      lynx.__initData = { msg: 'before' };
+      root.render(createElement(App, null));
+      expect(dataChange.listeners.size).toBe(1);
+      expect(renderedMessages).toEqual(['before']);
+
+      markElementTemplateHydrated();
+      lynx.__initData = { msg: 'after' };
+      dataChange.emitDataChanged();
+      dataChange.flushScheduledRenders();
+
+      expect(renderedMessages).toContain('after');
+      envManager.switchToMainThread();
+      expect(updateEvents).toHaveLength(1);
+      expect(updateEvents[0]).toMatchObject({
+        ops: [],
+        flushOptions: { triggerDataUpdated: true },
+      });
+    } finally {
+      dataChange.restore();
+    }
+  });
+
+  it('notifies useInitDataChanged listeners through aliased ET hooks', () => {
+    const dataChange = installDataChangeHarness();
+    const onChanged = vi.fn();
+
+    try {
+      function App() {
+        useInitDataChanged(onChanged);
+        return createElement('view');
+      }
+
+      root.render(createElement(App, null));
+      expect(dataChange.listeners.size).toBe(1);
+
+      dataChange.emitDataChanged({ msg: 'after' });
+
+      expect(onChanged).toHaveBeenCalledTimes(1);
+      expect(onChanged).toHaveBeenCalledWith({ msg: 'after' });
+    } finally {
+      dataChange.restore();
+    }
+  });
+
+  it('dispatches triggerDataUpdated when withInitDataInState observes a data change', () => {
+    const dataChange = installDataChangeHarness();
+
+    try {
+      class App extends Component<Record<string, never>, { msg?: string }> {
+        override render() {
+          return createElement('view');
+        }
+      }
+      const WrappedApp = withInitDataInState(App);
+
+      lynx.__initData = { msg: 'before' };
+      root.render(createElement(WrappedApp, null));
+      expect(dataChange.listeners.size).toBe(1);
+
+      markElementTemplateHydrated();
+      dataChange.emitDataChanged({ msg: 'after' });
+      dataChange.flushScheduledRenders();
+
+      envManager.switchToMainThread();
+      expect(updateEvents).toHaveLength(1);
+      expect(updateEvents[0]).toMatchObject({
+        ops: [],
+        flushOptions: { triggerDataUpdated: true },
+      });
+    } finally {
+      dataChange.restore();
+    }
+  });
+
+  it('dispatches one data-updated payload for multiple initData readers', () => {
+    const dataChange = installDataChangeHarness();
+    let first: unknown;
+    let second: unknown;
+    let consumed: unknown;
+
+    try {
+      function App() {
+        first = useInitData();
+        second = useInitData();
+        return createElement(
+          InitDataProvider,
+          null,
+          createElement(InitDataConsumer, null, (initData: { msg?: string }) => {
+            consumed = initData;
+            return createElement('view');
+          }),
+        );
+      }
+
+      lynx.__initData = { msg: 'before' };
+      root.render(createElement(App, null));
+      expect(first).toEqual({ msg: 'before' });
+      expect(second).toEqual({ msg: 'before' });
+      expect(consumed).toEqual({ msg: 'before' });
+
+      markElementTemplateHydrated();
+      lynx.__initData = { msg: 'after' };
+      dataChange.emitDataChanged();
+      dataChange.flushScheduledRenders();
+
+      expect(first).toEqual({ msg: 'after' });
+      expect(second).toEqual({ msg: 'after' });
+      expect(consumed).toEqual({ msg: 'after' });
+      envManager.switchToMainThread();
+      expect(updateEvents).toHaveLength(1);
+      expect(updateEvents[0]).toMatchObject({
+        ops: [],
+        flushOptions: { triggerDataUpdated: true },
+      });
+    } finally {
+      dataChange.restore();
+    }
   });
 
   it('skips dispatch before hydration', () => {
@@ -167,11 +413,11 @@ describe('ElementTemplate commit hook', () => {
     try {
       markElementTemplateHydrated();
       const root = new BackgroundElementTemplateInstance('root');
-      markRemovedSubtreeForCurrentCommit(root);
+      markRemovedSubtreeForPostDispatchTeardown(root);
       globalCommitContext.ops = createRawTextOps(1, 'flush');
 
       options.__c?.({} as unknown as object, []);
-      expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+      expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
       vi.advanceTimersByTime(9999);
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBe(root);
 
@@ -183,13 +429,63 @@ describe('ElementTemplate commit hook', () => {
     }
   });
 
+  it('flushes ref-only updates without dispatching native ops', () => {
+    const ref = vi.fn();
+    markElementTemplateHydrated();
+    queueRefAttrUpdate(null, ref, -2, 0);
+
+    options.__c?.({} as unknown as object, []);
+
+    envManager.switchToMainThread();
+    expect(updateEvents).toHaveLength(0);
+    envManager.switchToBackground();
+    expect(ref).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
+  });
+
+  it('dispatches data-updated payload while flushing ref-only effects', () => {
+    const ref = vi.fn();
+    markElementTemplateHydrated();
+    globalCommitContext.flushOptions = { triggerDataUpdated: true };
+    queueRefAttrUpdate(null, ref, -2, 0);
+
+    options.__c?.({} as unknown as object, []);
+
+    envManager.switchToMainThread();
+    expect(updateEvents).toEqual([
+      {
+        ops: [],
+        flushOptions: { triggerDataUpdated: true },
+      },
+    ]);
+    envManager.switchToBackground();
+    expect(ref).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=-2-0]',
+    }));
+  });
+
+  it('flushes pre-hydration ref effects on commit without dispatching native ops', () => {
+    const ref = vi.fn();
+    queueRefAttrUpdate(null, ref, 1, 0);
+
+    options.__c?.({} as unknown as object, []);
+
+    envManager.switchToMainThread();
+    expect(updateEvents).toHaveLength(0);
+    envManager.switchToBackground();
+    expect(ref).toHaveBeenCalledWith(expect.objectContaining({
+      selector: '[ref=1-0]',
+    }));
+  });
+
   it('keeps pending removed subtrees when only the hydration listener is reset', () => {
     const root = new BackgroundElementTemplateInstance('root');
-    markRemovedSubtreeForCurrentCommit(root);
+    markRemovedSubtreeForPostDispatchTeardown(root);
 
     resetElementTemplateHydrationListener();
 
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([root]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([root]);
   });
 
   it('cancels scheduled removed subtree cleanup on background destroy', () => {
@@ -219,18 +515,41 @@ describe('ElementTemplate commit hook', () => {
     try {
       markElementTemplateHydrated();
       const root = new BackgroundElementTemplateInstance('root');
-      markRemovedSubtreeForCurrentCommit(root);
+      markRemovedSubtreeForPostDispatchTeardown(root);
       globalCommitContext.ops = createRawTextOps(1, 'flush');
 
       expect(() => options.__c?.({} as unknown as object, [])).toThrow(dispatchError);
       expect(globalCommitContext.ops).toEqual([]);
-      expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+      expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
 
       vi.advanceTimersByTime(10000);
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
     } finally {
       dispatchSpy.mockRestore();
       vi.useRealTimers();
+    }
+  });
+
+  it('clears pending refs when update dispatch throws', () => {
+    const ref = vi.fn();
+    const dispatchError = new Error('update dispatch failed');
+    const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
+      throw dispatchError;
+    });
+
+    try {
+      markElementTemplateHydrated();
+      queueRefAttrUpdate(null, ref, -2, 0);
+      globalCommitContext.ops = createRawTextOps(1, 'flush');
+
+      expect(() => options.__c?.({} as unknown as object, [])).toThrow(dispatchError);
+      expect(ref).not.toHaveBeenCalled();
+
+      globalCommitContext.ops = [];
+      options.__c?.({} as unknown as object, []);
+      expect(ref).not.toHaveBeenCalled();
+    } finally {
+      dispatchSpy.mockRestore();
     }
   });
 

@@ -407,7 +407,10 @@ test('cross-slot keyed move: E is placed before A with correct beforeId in patch
   // Lock in the exact element-PAPI sequence so an extra DOM op shows up as a diff.
   expect(trace.trace()).toMatchInlineSnapshot(`
     "remove(<wrapper>X</wrapper> -x <text>X</text>)
-    remove(<wrapper> -x <text>E</text>)
+    remove(<wrapper>E</wrapper> -x <text>E</text>)
+    create(text)
+    create(raw-text "E")
+    append(<text> <- <raw>E</raw>)
     append(<wrapper> <- <text>E</text>)
     create(text)
     create(raw-text "N")
@@ -463,20 +466,30 @@ test('cross-slot keyed move: E is placed before A with correct beforeId in patch
         "parentId": 2,
       },
       {
-        "beforeId": 4,
         "childId": 5,
+        "op": "RemoveChild",
+        "parentId": 2,
+      },
+      {
+        "id": 7,
+        "op": "CreateElement",
+        "type": "__snapshot_c1db7_test_7",
+      },
+      {
+        "beforeId": 4,
+        "childId": 7,
         "op": "InsertBefore",
         "parentId": 2,
         "slotIndex": 0,
       },
       {
-        "id": 7,
+        "id": 8,
         "op": "CreateElement",
         "type": "__snapshot_c1db7_test_9",
       },
       {
         "beforeId": 6,
-        "childId": 7,
+        "childId": 8,
         "op": "InsertBefore",
         "parentId": 2,
         "slotIndex": 2,
@@ -488,9 +501,9 @@ test('cross-slot keyed move: E is placed before A with correct beforeId in patch
   expect(printSnapshotInstanceToString(__root)).toMatchInlineSnapshot(`
     "| -1(root): undefined
       | 2(__snapshot_c1db7_test_10): [null]
-        | 5(__snapshot_c1db7_test_7): undefined
+        | 7(__snapshot_c1db7_test_7): undefined
         | 4(__snapshot_c1db7_test_6): undefined
-        | 7(__snapshot_c1db7_test_9): undefined
+        | 8(__snapshot_c1db7_test_9): undefined
         | 6(__snapshot_c1db7_test_8): undefined"
   `);
 });
@@ -544,19 +557,25 @@ test('multi-key cross-slot moves keep background snapshot tree in slot order', a
   act(() => setMoved(true));
 
   expect(trace.trace()).toMatchInlineSnapshot(`
-    "remove(<wrapper>A</wrapper> -x <text>A</text>)
+    "remove(<wrapper>H</wrapper> -x <text>H</text>)
+    remove(<wrapper>A</wrapper> -x <text>A</text>)
+    remove(<wrapper>G</wrapper> -x <text>G</text>)
     remove(<wrapper>B</wrapper> -x <text>B</text>)
     create(text)
     create(raw-text "F")
     append(<text> <- <raw>F</raw>)
-    insertBefore(<wrapper>H</wrapper>: <text>F</text> before <text>H</text>)
-    remove(<wrapper> -x <text>H</text>)
+    append(<wrapper> <- <text>F</text>)
+    create(text)
+    create(raw-text "H")
+    append(<text> <- <raw>H</raw>)
     append(<wrapper> <- <text>H</text>)
     create(text)
     create(raw-text "E")
     append(<text> <- <raw>E</raw>)
-    insertBefore(<wrapper>G</wrapper>: <text>E</text> before <text>G</text>)
-    remove(<wrapper> -x <text>G</text>)
+    append(<wrapper> <- <text>E</text>)
+    create(text)
+    create(raw-text "G")
+    append(<text> <- <raw>G</raw>)
     append(<wrapper> <- <text>G</text>)"
   `);
 
@@ -565,9 +584,9 @@ test('multi-key cross-slot moves keep background snapshot tree in slot order', a
     "| -1(root): undefined
       | 2(__snapshot_c1db7_test_19): undefined
         | 7(__snapshot_c1db7_test_16): undefined
-        | 3(__snapshot_c1db7_test_18): undefined
-        | 8(__snapshot_c1db7_test_15): undefined
-        | 5(__snapshot_c1db7_test_17): undefined"
+        | 8(__snapshot_c1db7_test_18): undefined
+        | 9(__snapshot_c1db7_test_15): undefined
+        | 10(__snapshot_c1db7_test_17): undefined"
   `);
   expect(container).toMatchInlineSnapshot(`
     <page>
@@ -652,10 +671,14 @@ test('three-key cross-slot move applies cleanly on main thread', async () => {
   trace.mark();
   act(() => setMoved(true));
   expect(trace.trace()).toMatchInlineSnapshot(`
-    "remove(<wrapper>E</wrapper> -x <text>E</text>)
+    "remove(<wrapper>F</wrapper> -x <text>F</text>)
+    remove(<wrapper>H</wrapper> -x <text>H</text>)
+    remove(<wrapper>E</wrapper> -x <text>E</text>)
     remove(<wrapper>G</wrapper> -x <text>G</text>)
-    remove(<wrapper>F</wrapper> -x <text>H</text>)
-    insertBefore(<wrapper>F</wrapper>: <text>H</text> before <text>F</text>)
+    create(text)
+    create(raw-text "H")
+    append(<text> <- <raw>H</raw>)
+    append(<wrapper> <- <text>H</text>)
     create(text)
     create(raw-text "A")
     append(<text> <- <raw>A</raw>)
@@ -664,7 +687,9 @@ test('three-key cross-slot move applies cleanly on main thread', async () => {
     create(raw-text "D")
     append(<text> <- <raw>D</raw>)
     append(<wrapper> <- <text>D</text>)
-    remove(<wrapper> -x <text>F</text>)
+    create(text)
+    create(raw-text "F")
+    append(<text> <- <raw>F</raw>)
     append(<wrapper> <- <text>F</text>)"
   `);
 
@@ -709,10 +734,10 @@ test('three-key cross-slot move applies cleanly on main thread', async () => {
   expect(printSnapshotInstanceToString(__root)).toMatchInlineSnapshot(`
     "| -1(root): undefined
       | 2(__snapshot_c1db7_test_26): undefined
-        | 4(__snapshot_c1db7_test_25): undefined
-        | 7(__snapshot_c1db7_test_20): undefined
-        | 8(__snapshot_c1db7_test_21): undefined
-        | 3(__snapshot_c1db7_test_23): undefined"
+        | 7(__snapshot_c1db7_test_25): undefined
+        | 8(__snapshot_c1db7_test_20): undefined
+        | 9(__snapshot_c1db7_test_21): undefined
+        | 10(__snapshot_c1db7_test_23): undefined"
   `);
 });
 
@@ -807,9 +832,15 @@ test('cross-slot keyed swap between two single-VNode slots', async () => {
   act(() => setSwap(true));
 
   expect(trace.trace()).toMatchInlineSnapshot(`
-    "remove(<wrapper>A</wrapper> -x <text>B</text>)
-    insertBefore(<wrapper>A</wrapper>: <text>B</text> before <text>A</text>)
-    remove(<wrapper> -x <text>A</text>)
+    "remove(<wrapper>A</wrapper> -x <text>A</text>)
+    remove(<wrapper>B</wrapper> -x <text>B</text>)
+    create(text)
+    create(raw-text "B")
+    append(<text> <- <raw>B</raw>)
+    append(<wrapper> <- <text>B</text>)
+    create(text)
+    create(raw-text "A")
+    append(<text> <- <raw>A</raw>)
     append(<wrapper> <- <text>A</text>)"
   `);
   expect(container).toMatchInlineSnapshot(`

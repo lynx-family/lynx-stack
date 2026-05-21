@@ -17,7 +17,7 @@ interface PatchedVNode extends VNode {
   [DOM]?: { __id?: number } | null;
 }
 
-const snapshotVNodeSourceMap: Map<number, string> = new Map();
+const snapshotVNodeSourceMap: Map<number, string> = /*#__PURE__*/ new Map();
 
 let hookInstalled = false;
 

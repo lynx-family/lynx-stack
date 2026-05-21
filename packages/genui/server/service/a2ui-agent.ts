@@ -12,15 +12,20 @@ import {
   formatErrorsForModel,
   validateA2UIOutput,
 } from '../agent/a2ui-validator';
-import type { A2UIMessage } from '../agent/a2ui-validator';
+import type { A2UIMessage, ValidationOptions } from '../agent/a2ui-validator';
+import { resolveA2UIImageUrls } from '../agent/image-resolver';
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
 }
 
+export interface ConversationContext {
+  history: ChatMessage[];
+  dataModel: Record<string, unknown>;
+}
+
 export interface ChatOptions {
-  threadId?: string | undefined;
   resourceId?: string | undefined;
   apiKey?: string | undefined;
   baseURL?: string | undefined;
@@ -37,13 +42,6 @@ export interface A2UIResponse {
   attempts: number;
   usage?: unknown;
   finishReason?: unknown;
-}
-
-interface ConversationMemory {
-  history: ChatMessage[];
-  surfaceIds: Set<string>;
-  dataModel: Record<string, unknown>;
-  lastSeenAt: number;
 }
 
 interface MastraResult {
@@ -82,16 +80,6 @@ function hashApiKey(apiKey: string | undefined): string {
   return createHash('sha256').update(apiKey).digest('hex');
 }
 
-function parsePositiveInt(
-  raw: string | undefined,
-  fallback: number,
-): number {
-  if (!raw) return fallback;
-  const n = Number(raw);
-  if (!Number.isFinite(n) || n <= 0) return fallback;
-  return Math.floor(n);
-}
-
 function buildDataModelSystemMessage(
   dataModel: Record<string, unknown>,
 ): ChatMessage {
@@ -106,48 +94,6 @@ function buildDataModelSystemMessage(
 
 export default class A2UIAgentService {
   private agentCache = new Map<string, Promise<A2UIAgent>>();
-
-  private conversations = new Map<string, ConversationMemory>();
-
-  private readonly maxThreads: number = parsePositiveInt(
-    process.env.A2UI_MAX_THREADS,
-    500,
-  );
-
-  private readonly threadTtlMs: number = parsePositiveInt(
-    process.env.A2UI_THREAD_TTL_MS,
-    30 * 60_000,
-  );
-
-  private lastSweepAt = 0;
-
-  private sweepConversations(now: number): void {
-    if (now - this.lastSweepAt < 60_000) return;
-    this.lastSweepAt = now;
-
-    for (const [key, value] of this.conversations) {
-      if (now - value.lastSeenAt > this.threadTtlMs) {
-        this.conversations.delete(key);
-      }
-    }
-
-    if (this.conversations.size > this.maxThreads) {
-      const overflow = this.conversations.size - this.maxThreads;
-      const iter = this.conversations.keys();
-      for (let i = 0; i < overflow; i++) {
-        const oldest = iter.next();
-        if (oldest.done) break;
-        this.conversations.delete(oldest.value);
-      }
-    }
-  }
-
-  private touchConversation(threadId: string, conv: ConversationMemory): void {
-    conv.lastSeenAt = Date.now();
-    // Re-insert to update LRU order in Map insertion order semantics.
-    this.conversations.delete(threadId);
-    this.conversations.set(threadId, conv);
-  }
 
   private getAgent(opts: ChatOptions): Promise<A2UIAgent> {
     const cacheKey = `${opts.baseURL ?? 'default'}:${opts.model ?? 'default'}:${
@@ -172,43 +118,6 @@ export default class A2UIAgentService {
     return messages.map((m) => ({ role: m.role, content: m.content }));
   }
 
-  public getConversation(threadId: string): ConversationMemory {
-    this.sweepConversations(Date.now());
-    const existing = this.conversations.get(threadId);
-    if (existing) {
-      this.touchConversation(threadId, existing);
-      return existing;
-    }
-    const conv: ConversationMemory = {
-      history: [],
-      surfaceIds: new Set<string>(),
-      dataModel: {},
-      lastSeenAt: Date.now(),
-    };
-    this.conversations.set(threadId, conv);
-    return conv;
-  }
-
-  public peekConversation(threadId: string): ConversationMemory | undefined {
-    const conv = this.conversations.get(threadId);
-    if (conv) this.touchConversation(threadId, conv);
-    return conv;
-  }
-
-  public resetConversation(threadId: string): void {
-    this.conversations.delete(threadId);
-  }
-
-  public recordStreamedConversation(
-    threadId: string,
-    messages: ChatMessage[],
-    assistantText: string,
-    a2uiMessages: A2UIMessage[],
-  ): void {
-    const conv = this.getConversation(threadId);
-    mergeIntoConversation(conv, messages, assistantText, a2uiMessages);
-  }
-
   public async stream(
     messages: ChatMessage[],
     opts: ChatOptions = {},
@@ -217,7 +126,6 @@ export default class A2UIAgentService {
     return agent.stream(
       this.toModelMessages(messages),
       pickDefined({
-        threadId: opts.threadId,
         resourceId: opts.resourceId,
       }),
     ) as MastraStreamResult;
@@ -226,6 +134,7 @@ export default class A2UIAgentService {
   public async streamAsAsyncIterable(
     messages: ChatMessage[],
     opts: ChatOptions = {},
+    conversation?: ConversationContext,
   ): Promise<{
     textStream: AsyncIterable<string>;
     finalize: () => Promise<{
@@ -235,7 +144,7 @@ export default class A2UIAgentService {
     }>;
   }> {
     const streamResult: MastraStreamResult = await this.stream(
-      messages,
+      buildConversationMessages(messages, conversation),
       opts,
     );
     const raw = streamResult.textStream;
@@ -290,7 +199,6 @@ export default class A2UIAgentService {
     return agent.generate(
       this.toModelMessages(messages),
       pickDefined({
-        threadId: opts.threadId,
         resourceId: opts.resourceId,
       }),
     );
@@ -299,8 +207,12 @@ export default class A2UIAgentService {
   public async generateRaw(
     messages: ChatMessage[],
     opts: ChatOptions = {},
+    conversation?: ConversationContext,
   ): Promise<{ text: string; usage: unknown; finishReason: unknown }> {
-    const result = await this.generate(messages, opts) as MastraResult;
+    const result = await this.generate(
+      buildConversationMessages(messages, conversation),
+      opts,
+    ) as MastraResult;
     const text = await extractText(result);
     const usage = (await Promise.resolve(result?.usage).catch(() => undefined))
       ?? result?.usage;
@@ -313,21 +225,14 @@ export default class A2UIAgentService {
   public async generateValidated(
     messages: ChatMessage[],
     opts: ChatOptions = {},
+    conversation?: ConversationContext,
+    validationOptions?: ValidationOptions,
   ): Promise<A2UIResponse> {
     const catalog = opts.catalog ?? BASIC_CATALOG;
     const maxAttempts = Math.max(1, opts.maxRepairAttempts ?? 2) + 1;
     const agent = await this.getAgent({ ...opts, catalog });
 
-    const threadId = opts.threadId;
-    const conv = threadId ? this.getConversation(threadId) : null;
-
-    const convo: ChatMessage[] = [
-      ...(conv ? conv.history : []),
-      ...(conv && Object.keys(conv.dataModel).length > 0
-        ? [buildDataModelSystemMessage(conv.dataModel)]
-        : []),
-      ...messages,
-    ];
+    const convo = buildConversationMessages(messages, conversation);
 
     let lastText = '';
     let lastErrors: string[] = [];
@@ -338,7 +243,6 @@ export default class A2UIAgentService {
       const result = await agent.generate(
         this.toModelMessages(convo),
         pickDefined({
-          threadId,
           resourceId: opts.resourceId,
         }),
       ) as MastraResult;
@@ -351,15 +255,13 @@ export default class A2UIAgentService {
         (await Promise.resolve(result?.finishReason).catch(() => undefined))
           ?? result?.finishReason;
 
-      const validation = validateA2UIOutput(text, catalog);
+      const validation = validateA2UIOutput(text, catalog, validationOptions);
       if (validation.ok) {
-        if (conv) {
-          mergeIntoConversation(conv, messages, text, validation.messages);
-        }
+        const messages = await resolveA2UIImageUrls(validation.messages);
         return {
           ok: true,
           text,
-          messages: validation.messages,
+          messages,
           errors: [],
           attempts: attempt,
           usage: lastUsage,
@@ -389,6 +291,19 @@ export default class A2UIAgentService {
   }
 }
 
+function buildConversationMessages(
+  messages: ChatMessage[],
+  conversation?: ConversationContext,
+): ChatMessage[] {
+  return [
+    ...(conversation?.history ?? []),
+    ...(conversation && Object.keys(conversation.dataModel).length > 0
+      ? [buildDataModelSystemMessage(conversation.dataModel)]
+      : []),
+    ...messages,
+  ];
+}
+
 async function extractText(result: MastraResult): Promise<string> {
   const direct = typeof result.text === 'string' ? result.text : undefined;
   if (direct) return direct;
@@ -404,66 +319,6 @@ async function extractText(result: MastraResult): Promise<string> {
     })
     .map((c) => c.text);
   return textParts.join('');
-}
-
-function mergeIntoConversation(
-  conv: ConversationMemory,
-  incoming: ChatMessage[],
-  assistantText: string,
-  messages: A2UIMessage[],
-): void {
-  conv.history.push(...incoming);
-  conv.history.push({ role: 'assistant', content: assistantText });
-  for (const msg of messages) {
-    if ('createSurface' in msg && msg.createSurface) {
-      conv.surfaceIds.add(msg.createSurface.surfaceId);
-    } else if ('deleteSurface' in msg && msg.deleteSurface) {
-      conv.surfaceIds.delete(msg.deleteSurface.surfaceId);
-    } else if ('updateDataModel' in msg && msg.updateDataModel) {
-      const updateDataModel = msg.updateDataModel as
-        & typeof msg.updateDataModel
-        & { value?: unknown };
-      applyDataModel(
-        conv.dataModel,
-        updateDataModel.path ?? '/',
-        updateDataModel.value,
-      );
-    }
-  }
-  const MAX_HISTORY = 20;
-  if (conv.history.length > MAX_HISTORY) {
-    conv.history.splice(0, conv.history.length - MAX_HISTORY);
-  }
-}
-
-function applyDataModel(
-  model: Record<string, unknown>,
-  path: string,
-  value: unknown,
-): void {
-  if (!path || path === '/' || path === '') {
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      Object.assign(model, value as Record<string, unknown>);
-    }
-    return;
-  }
-  const parts = path.replace(/^\//, '').split('/').filter(Boolean);
-  let cursor = model;
-  for (let i = 0; i < parts.length - 1; i++) {
-    const key = parts[i];
-    if (!key) continue;
-    if (typeof cursor[key] !== 'object' || cursor[key] === null) {
-      cursor[key] = {};
-    }
-    cursor = cursor[key] as Record<string, unknown>;
-  }
-  const last = parts[parts.length - 1];
-  if (!last) return;
-  if (value === undefined) {
-    delete cursor[last];
-  } else {
-    cursor[last] = value;
-  }
 }
 
 const SERVICE_KEY = '__A2UI_AGENT_SERVICE__';

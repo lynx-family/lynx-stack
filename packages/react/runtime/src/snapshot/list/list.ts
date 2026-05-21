@@ -8,7 +8,7 @@ import { applyRefQueue } from '../snapshot/workletRef.js';
 
 export const gSignMap: Record<number, Map<number, SnapshotInstance>> = {};
 export const gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstance>>> = {};
-const gParentWeakMap: WeakMap<SnapshotInstance, unknown> = new WeakMap();
+const gParentWeakMap: WeakMap<SnapshotInstance, unknown> = /*#__PURE__*/ new WeakMap();
 const resolvedPromise = /* @__PURE__ */ Promise.resolve();
 
 export function clearListGlobal(): void {

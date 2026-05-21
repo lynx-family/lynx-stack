@@ -5,6 +5,7 @@
 import type { A2UICatalog } from '../../../../agent/a2ui-catalog';
 import { BASIC_CATALOG } from '../../../../agent/a2ui-catalog';
 import { validateA2UIOutput } from '../../../../agent/a2ui-validator';
+import { resolveA2UIImageUrls } from '../../../../agent/image-resolver';
 import { getA2UIAgentService } from '../../../../service/a2ui-agent';
 import type { ChatMessage } from '../../../../service/a2ui-agent';
 import {
@@ -12,6 +13,7 @@ import {
   errorMessage,
   pickChatOptions,
   readJsonBodyWithLimit,
+  validateConversation,
 } from '../../_shared';
 import { corsHeaders, corsPreflight, jsonWithCors } from '../../cors';
 import { checkRateLimit, rateLimitSseResponse } from '../../rate-limit';
@@ -20,7 +22,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 interface A2UIActionStreamBody {
-  threadId: string;
+  conversation?: unknown;
   surfaceId?: string;
   action: {
     name: string;
@@ -32,7 +34,6 @@ interface A2UIActionStreamBody {
   baseURL?: string;
   catalog?: A2UICatalog;
   maxRepairAttempts?: number;
-  reset?: boolean;
 }
 
 function encodeSSE(event: string, data: unknown): Uint8Array {
@@ -69,13 +70,6 @@ export async function POST(req: Request) {
   }
   const body = parsed.body;
 
-  if (!body || !body.threadId) {
-    return jsonWithCors(
-      req,
-      { ok: false, error: 'threadId is required' },
-      { status: 400 },
-    );
-  }
   if (!body.action || !body.action.name) {
     return jsonWithCors(
       req,
@@ -84,20 +78,27 @@ export async function POST(req: Request) {
     );
   }
 
+  if (!body.surfaceId) {
+    return jsonWithCors(
+      req,
+      {
+        ok: false,
+        error: 'surfaceId is required for action responses',
+      },
+      { status: 400 },
+    );
+  }
+
+  const validatedConversation = validateConversation(body.conversation);
+  if (!validatedConversation.ok) {
+    return jsonWithCors(
+      req,
+      { ok: false, error: validatedConversation.error },
+      { status: validatedConversation.status },
+    );
+  }
+
   const service = getA2UIAgentService();
-
-  if (body.reset) {
-    service.resetConversation(body.threadId);
-  }
-
-  const conv = service.peekConversation(body.threadId);
-  if (!conv && !body.reset) {
-    return jsonWithCors(req, {
-      ok: false,
-      error: `unknown threadId "${body.threadId}" - call /a2ui/chat first`,
-    });
-  }
-
   const payload = {
     surfaceId: body.surfaceId,
     action: body.action,
@@ -120,7 +121,6 @@ export async function POST(req: Request) {
   };
 
   const opts = pickChatOptions(body);
-  const optsWithThread = { ...opts, threadId: body.threadId };
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -131,13 +131,9 @@ export async function POST(req: Request) {
       try {
         const { textStream, finalize } = await service.streamAsAsyncIterable(
           [userMessage],
-          optsWithThread,
+          opts,
+          validatedConversation.conversation,
         );
-
-        enqueue('start', {
-          threadId: body.threadId,
-          actionName: body.action.name,
-        });
 
         for await (const chunk of textStream) {
           enqueue('delta', { text: chunk });
@@ -154,21 +150,18 @@ export async function POST(req: Request) {
         if (finalText) {
           const v = validateA2UIOutput(
             finalText,
-            optsWithThread.catalog ?? BASIC_CATALOG,
+            opts.catalog ?? BASIC_CATALOG,
+            {
+              requireCreateSurface: false,
+              existingSurfaceIds: body.surfaceId ? [body.surfaceId] : [],
+            },
           );
+          const messages = v.ok ? await resolveA2UIImageUrls(v.messages) : [];
           validation = {
             ok: v.ok,
             errors: v.errors,
-            messages: v.ok ? v.messages : [],
+            messages,
           };
-          if (v.ok && v.messages.length > 0) {
-            service.recordStreamedConversation(
-              body.threadId,
-              [userMessage],
-              finalText,
-              v.messages,
-            );
-          }
         }
 
         enqueue('done', {

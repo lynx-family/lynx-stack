@@ -3,7 +3,7 @@
 .column {
   display: flex;
   flex-direction: column;
-  gap: var(--a2ui-spacing-l);
+  gap: 18px;
   width: 100%;
   min-width: 0;
 }
@@ -58,18 +58,18 @@
 
 /* Section: Large sections of content */
 .col-hint-section {
-  padding: var(--a2ui-spacing-xl);
-  gap: var(--a2ui-spacing-xl);
+  padding: 36px;
+  gap: 28px;
 }
 
 /* Group: Standard logical grouping */
 .col-hint-group {
-  gap: var(--a2ui-spacing-l);
+  gap: 18px;
 }
 
 /* Compact: Tighter grouping */
 .col-hint-compact {
-  gap: var(--a2ui-spacing-m);
+  gap: 10px;
 }
 
 /* Screen: Full screen container */
@@ -83,7 +83,7 @@
 .col-hint-root-column {
   width: 100%;
   min-height: 100%;
-  padding: var(--a2ui-spacing-l);
-  gap: var(--a2ui-spacing-l);
+  padding: 20px;
+  gap: 18px;
   background-color: var(--a2ui-color-background-ambient);
 }

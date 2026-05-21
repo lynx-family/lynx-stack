@@ -104,6 +104,11 @@ export interface ValidationResult {
   errors: string[];
 }
 
+export interface ValidationOptions {
+  requireCreateSurface?: boolean;
+  existingSurfaceIds?: string[];
+}
+
 function stripCodeFenceWrapper(text: string): string {
   let body = text.trim();
   if (body.startsWith('```')) {
@@ -119,6 +124,12 @@ function stripCodeFenceWrapper(text: string): string {
 function unescapeInvalidBackticks(text: string): string {
   // Some models emit "\`" inside JSON strings, which is not a valid JSON escape.
   return text.replaceAll('\\`', '`');
+}
+
+function unescapeInvalidJsonEscapes(text: string): string {
+  // LLMs occasionally add a stray backslash before punctuation or whitespace
+  // inside JSON strings. Remove only escapes that JSON itself does not allow.
+  return text.replace(/\\(?!["\\/bfnrtu])/g, '');
 }
 
 function extractFirstBalancedJsonArray(text: string): string | null {
@@ -179,6 +190,15 @@ export function extractJsonArray(text: string): unknown {
     try {
       return JSON.parse(candidate);
     } catch {
+      // Retry only after the original parse fails, so valid JSON strings with
+      // literal backslashes are not changed before parsing.
+    }
+
+    const repairedCandidate = unescapeInvalidJsonEscapes(candidate);
+    if (repairedCandidate === candidate) continue;
+    try {
+      return JSON.parse(repairedCandidate);
+    } catch {
       // try the next candidate
     }
   }
@@ -189,6 +209,7 @@ export function extractJsonArray(text: string): unknown {
 export function validateA2UIOutput(
   raw: string,
   catalog: A2UICatalog,
+  options: ValidationOptions = {},
 ): ValidationResult {
   const errors: string[] = [];
   const parsed = extractJsonArray(raw);
@@ -236,6 +257,7 @@ export function validateA2UIOutput(
   const firstIsCreate = firstMessage
     && 'createSurface' in firstMessage
     && firstMessage.createSurface;
+  const requireCreateSurface = options.requireCreateSurface ?? true;
   if (firstIsCreate) {
     const catalogId = firstMessage.createSurface.catalogId;
     if (catalogId !== catalog.id) {
@@ -243,11 +265,11 @@ export function validateA2UIOutput(
         `createSurface.catalogId must equal "${catalog.id}"; received "${catalogId}".`,
       );
     }
-  } else {
+  } else if (requireCreateSurface) {
     errors.push('The first message MUST be a createSurface.');
   }
 
-  const surfaces = new Set<string>();
+  const surfaces = new Set<string>(options.existingSurfaceIds ?? []);
   const componentsBySurface = new Map<string, Map<string, A2UIComponent>>();
   const allPaths: { surfaceId: string; path: string }[] = [];
   const providedPaths: { surfaceId: string; path: string }[] = [];

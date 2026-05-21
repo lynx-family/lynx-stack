@@ -173,6 +173,17 @@ export default defineConfig({
   },
   html: {
     title: 'Lynx A2UI Playground',
+    tags: [
+      {
+        tag: 'link',
+        attrs: {
+          rel: 'icon',
+          type: 'image/svg+xml',
+          href:
+            'https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/lynx-dark-logo.svg',
+        },
+      },
+    ],
   },
   output: {
     assetPrefix: process.env.ASSET_PREFIX,

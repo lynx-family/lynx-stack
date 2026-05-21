@@ -1,0 +1,183 @@
+{
+  "Slider": {
+    "properties": {
+      "label": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "call": {
+                "type": "string"
+              },
+              "args": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "returnType": {
+                "type": "string",
+                "enum": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "object",
+                  "array",
+                  "any",
+                  "void"
+                ]
+              }
+            },
+            "required": [
+              "call",
+              "args"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "description": "The label for the slider."
+      },
+      "min": {
+        "type": "number",
+        "description": "The minimum value of the slider."
+      },
+      "max": {
+        "type": "number",
+        "description": "The maximum value of the slider."
+      },
+      "value": {
+        "oneOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "call": {
+                "type": "string"
+              },
+              "args": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "returnType": {
+                "type": "string",
+                "enum": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "object",
+                  "array",
+                  "any",
+                  "void"
+                ]
+              }
+            },
+            "required": [
+              "call",
+              "args"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "description": "The current value of the slider."
+      },
+      "checks": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "condition": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "call": {
+                      "type": "string"
+                    },
+                    "args": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "returnType": {
+                      "type": "string",
+                      "enum": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "object",
+                        "array",
+                        "any",
+                        "void"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "call",
+                    "args"
+                  ],
+                  "additionalProperties": false
+                }
+              ],
+              "description": "The condition that indicates whether the check passes."
+            },
+            "message": {
+              "type": "string",
+              "description": "The error message to display if the check fails."
+            }
+          },
+          "required": [
+            "condition",
+            "message"
+          ],
+          "additionalProperties": false
+        },
+        "description": "A list of checks to perform."
+      }
+    },
+    "required": [
+      "max",
+      "value"
+    ]
+  }
+}

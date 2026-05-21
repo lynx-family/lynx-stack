@@ -7,9 +7,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import './AIChatPage.css';
 
+import { ConfirmDialog } from '../components/ConfirmDialog.js';
+import { ConversationListPanel } from '../components/ConversationListPanel.js';
 import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
 import { PreviewPanel } from '../components/PreviewPanel.js';
 import { PreviewViewport } from '../components/PreviewViewport.js';
+import { useConversation } from '../hooks/useConversation.js';
+import type { ModelChatMessage } from '../hooks/useConversation.js';
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
@@ -21,11 +25,6 @@ interface ChatMessage {
   payload?: unknown;
   payloadLabel?: string;
   tone?: 'info' | 'pending' | 'success' | 'error';
-}
-
-interface ModelChatMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
 }
 
 interface SseEvent {
@@ -44,6 +43,50 @@ interface A2UIDonePayload {
   };
   error?: unknown;
   message?: unknown;
+  usage?: unknown;
+}
+
+interface TokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
+function parseUsage(value: unknown): TokenUsage | null {
+  if (!value || typeof value !== 'object') return null;
+  const record = value as Record<string, unknown>;
+  const pickNumber = (...keys: string[]): number => {
+    for (const key of keys) {
+      const v = record[key];
+      if (typeof v === 'number' && Number.isFinite(v)) return v;
+    }
+    return 0;
+  };
+  // Support both legacy (promptTokens/completionTokens) and new
+  // (inputTokens/outputTokens) AI SDK usage shapes.
+  const promptTokens = pickNumber(
+    'promptTokens',
+    'inputTokens',
+    'prompt_tokens',
+  );
+  const completionTokens = pickNumber(
+    'completionTokens',
+    'outputTokens',
+    'completion_tokens',
+  );
+  const totalTokens = pickNumber('totalTokens', 'total_tokens')
+    || promptTokens + completionTokens;
+  if (promptTokens === 0 && completionTokens === 0 && totalTokens === 0) {
+    return null;
+  }
+  return { promptTokens, completionTokens, totalTokens };
+}
+
+function formatTokenCount(value: number): string {
+  if (value < 1000) return String(value);
+  if (value < 10_000) return `${(value / 1000).toFixed(2)}k`;
+  if (value < 1_000_000) return `${(value / 1000).toFixed(1)}k`;
+  return `${(value / 1_000_000).toFixed(2)}M`;
 }
 
 interface BrowserResponse {
@@ -293,7 +336,8 @@ async function readA2UIResponse(
   response: BrowserResponse,
   onText: (text: string) => void,
   onMessages: (messages: unknown[]) => void,
-  onStart?: (threadId: string) => void,
+  onUsage?: (usage: TokenUsage) => void,
+  options: { publishPartialMessages?: boolean } = {},
 ): Promise<unknown[]> {
   const contentType = response.headers.get('content-type') ?? '';
   if (!contentType.includes('text/event-stream')) {
@@ -301,6 +345,10 @@ async function readA2UIResponse(
     const messages = normalizeA2UIMessages(payload);
     if (messages.length === 0) {
       throw new Error(normalizeErrorPayload(payload));
+    }
+    if (payload && typeof payload === 'object') {
+      const usage = parseUsage((payload as A2UIDonePayload).usage);
+      if (usage) onUsage?.(usage);
     }
     onMessages(messages);
     return messages;
@@ -313,6 +361,7 @@ async function readA2UIResponse(
   let buffer = '';
   let generatedText = '';
   let latestMessages: unknown[] = [];
+  const publishPartialMessages = options.publishPartialMessages ?? true;
 
   while (true) {
     const { done, value } = await reader.read();
@@ -324,19 +373,12 @@ async function readA2UIResponse(
       const parsed = parseSseFrame(frame);
       if (!parsed) continue;
 
-      if (parsed.event === 'start') {
-        const data = parsed.data as { threadId?: unknown };
-        if (typeof data.threadId === 'string') {
-          onStart?.(data.threadId);
-        }
-        continue;
-      }
-
       if (parsed.event === 'delta') {
         const deltaData = parsed.data as { text?: unknown };
         if (typeof deltaData.text === 'string') {
           generatedText += deltaData.text;
           onText(generatedText);
+          if (!publishPartialMessages) continue;
           const completed = parseCompletedArrayItems(generatedText);
           if (completed.length > latestMessages.length) {
             latestMessages = completed;
@@ -348,6 +390,10 @@ async function readA2UIResponse(
 
       if (parsed.event === 'done') {
         const doneMessages = normalizeA2UIMessages(parsed.data);
+        if (parsed.data && typeof parsed.data === 'object') {
+          const usage = parseUsage((parsed.data as A2UIDonePayload).usage);
+          if (usage) onUsage?.(usage);
+        }
         if (doneMessages.length > 0) {
           latestMessages = doneMessages;
           onMessages(latestMessages);
@@ -372,24 +418,63 @@ async function readA2UIResponse(
 
 const SUGGESTED_PROMPTS: Array<{ label: string; text: string }> = [
   {
-    label: '⚡ Quiz card with actions',
+    label: '🌤️ Weather with Refresh',
     text:
-      'Create a trivia quiz card. Show a question "What is the capital of Japan?" with 4 answer buttons: Tokyo, Beijing, Seoul, Bangkok. When the user taps an answer, show whether it is correct with a brief explanation.',
+      'Create a weather card for San Francisco showing sunny, a photo, 22°C, humidity 60%, and a "Refresh" button. When the user taps Refresh, update the card with slightly different weather data to simulate a live fetch.',
   },
   {
     label: '🛍️ Product card with Buy',
     text:
-      'Create a product card for a limited-edition sneaker. Include name, price ($189), a short description, and a "Buy Now" button. When tapped, show an order confirmation with a fake order number and estimated delivery.',
+      'Create a product card for a limited-edition sneaker. Include name, a photo, price ($189), a short description, and a "Buy Now" button. When tapped, show an order confirmation with a fake order number and estimated delivery.',
   },
   {
-    label: '🌤️ Weather with Refresh',
+    label: '⚡ Quiz card with actions',
     text:
-      'Create a weather card for San Francisco showing sunny, 22°C, humidity 60%, and a "Refresh" button. When the user taps Refresh, update the card with slightly different weather data to simulate a live fetch.',
+      'Create a trivia quiz card. Show a question "Which shape has three sides?" with 4 answer buttons: Triangle, Square, Circle, Hexagon. When the user taps an answer, show whether it is correct with a brief explanation.',
   },
 ];
 
-export function AIChatPage(props: { protocol: Protocol }) {
-  const { protocol } = props;
+function buildChatMessagesFromHistory(
+  history: ModelChatMessage[],
+): ChatMessage[] {
+  if (history.length === 0) return [WELCOME_MESSAGE];
+  const next: ChatMessage[] = [WELCOME_MESSAGE];
+  for (const message of history) {
+    if (message.role === 'user') {
+      next.push({ role: 'user', content: message.content });
+      continue;
+    }
+    if (message.role === 'assistant') {
+      next.push({
+        role: 'json',
+        content: 'Generated Output',
+        payload: message.content,
+        payloadLabel: 'JSON',
+      });
+    }
+  }
+  return next;
+}
+
+export function AIChatPage(
+  props: { protocol: Protocol; theme: 'light' | 'dark' },
+) {
+  const { protocol, theme } = props;
+  const conversation = useConversation();
+  const {
+    activeId,
+    buildConversationContext,
+    conversations,
+    createNew,
+    isPersistent,
+    isReady,
+    messages: persistedMessages,
+    previewMessages: persistedPreviewMessages,
+    recordTurn,
+    remove,
+    rename,
+    switchTo,
+  } = conversation;
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [inputValue, setInputValue] = useState<string>('');
   const [renderUrl, setRenderUrl] = useState<string>('');
@@ -398,15 +483,22 @@ export function AIChatPage(props: { protocol: Protocol }) {
     null,
   );
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [deleteConversationId, setDeleteConversationId] = useState<
+    string | null
+  >(null);
+  const [tokenUsage, setTokenUsage] = useState<TokenUsage>({
+    promptTokens: 0,
+    completionTokens: 0,
+    totalTokens: 0,
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
   const followBottomRef = useRef<boolean>(true);
   const previewFrameRef = useRef<HTMLIFrameElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const actionAbortRef = useRef<AbortController | null>(null);
-  const conversationRef = useRef<ModelChatMessage[]>([]);
+  const hydratedActiveIdRef = useRef<string | null>(null);
   const latestPreviewMessagesRef = useRef<unknown[]>([]);
-  const threadIdRef = useRef<string | null>(null);
   const {
     containerRef: pageRef,
     handleResizeStart: handlePanelResizeStart,
@@ -496,10 +588,10 @@ export function AIChatPage(props: { protocol: Protocol }) {
       kind: 'a2ui' as const,
       protocol,
       demoUrl: DEFAULT_A2UI_DEMO_URL,
-      theme: 'light' as const,
+      theme,
       messages: previewMessages,
     };
-  }, [previewMessages, protocol]);
+  }, [previewMessages, protocol, theme]);
 
   const publishPreviewMessages = useCallback(
     (nextMessages: unknown[]) => {
@@ -511,8 +603,9 @@ export function AIChatPage(props: { protocol: Protocol }) {
         protocol,
         demoUrl: DEFAULT_A2UI_DEMO_URL,
         messages: nextMessages,
+        theme,
         instant: true,
-        liveAction: !!threadIdRef.current,
+        liveAction: nextMessages.length > 0,
       };
 
       setRenderUrl((current) => {
@@ -527,12 +620,39 @@ export function AIChatPage(props: { protocol: Protocol }) {
         return buildRenderUrl(initData, baseUrl);
       });
     },
-    [baseUrl, protocol],
+    [baseUrl, protocol, theme],
   );
 
   const handlePreviewLoad = useCallback(() => {
     publishPreviewMessages(latestPreviewMessagesRef.current);
   }, [publishPreviewMessages]);
+
+  useEffect(() => {
+    if (!isReady || isGenerating) return;
+    if (hydratedActiveIdRef.current === activeId) return;
+    hydratedActiveIdRef.current = activeId;
+    setMessages(buildChatMessagesFromHistory(persistedMessages));
+    setGeneratedJson('');
+    setTokenUsage({
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+    });
+    if (persistedPreviewMessages.length > 0) {
+      publishPreviewMessages(persistedPreviewMessages);
+    } else {
+      latestPreviewMessagesRef.current = [];
+      setPreviewMessages(null);
+      setRenderUrl('');
+    }
+  }, [
+    activeId,
+    isReady,
+    isGenerating,
+    persistedMessages,
+    persistedPreviewMessages,
+    publishPreviewMessages,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -551,8 +671,7 @@ export function AIChatPage(props: { protocol: Protocol }) {
     abortRef.current = controller;
 
     const userMessage: ModelChatMessage = { role: 'user', content: text };
-    const nextConversation = [...conversationRef.current, userMessage];
-    conversationRef.current = nextConversation;
+    const requestConversation = buildConversationContext();
 
     setMessages((prev) => [
       ...prev,
@@ -563,7 +682,11 @@ export function AIChatPage(props: { protocol: Protocol }) {
     setGeneratedJson('');
     setPreviewMessages(null);
     latestPreviewMessagesRef.current = [];
-    threadIdRef.current = null;
+    setTokenUsage({
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+    });
     setIsGenerating(true);
 
     void (async () => {
@@ -571,7 +694,10 @@ export function AIChatPage(props: { protocol: Protocol }) {
         const response = await window.fetch(getA2UIChatEndpoint(), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: nextConversation }),
+          body: JSON.stringify({
+            messages: [userMessage],
+            conversation: requestConversation,
+          }),
           signal: controller.signal,
         });
 
@@ -595,9 +721,15 @@ export function AIChatPage(props: { protocol: Protocol }) {
             });
           },
           publishPreviewMessages,
-          (threadId) => {
-            threadIdRef.current = threadId;
+          (usage) => {
+            if (controller.signal.aborted) return;
+            setTokenUsage((prev) => ({
+              promptTokens: prev.promptTokens + usage.promptTokens,
+              completionTokens: prev.completionTokens + usage.completionTokens,
+              totalTokens: prev.totalTokens + usage.totalTokens,
+            }));
           },
+          { publishPartialMessages: false },
         );
 
         if (finalMessages.length === 0) {
@@ -607,10 +739,12 @@ export function AIChatPage(props: { protocol: Protocol }) {
         const assistantContent = latestText.length > 0
           ? latestText
           : JSON.stringify(finalMessages);
-        conversationRef.current = [
-          ...nextConversation,
-          { role: 'assistant', content: assistantContent },
-        ];
+        await recordTurn({
+          userMessage,
+          assistantContent,
+          a2uiMessages: finalMessages,
+          previewMessages: finalMessages,
+        });
         setMessages((prev) => {
           const next = prev.slice();
           next[next.length - 1] = {
@@ -629,7 +763,6 @@ export function AIChatPage(props: { protocol: Protocol }) {
         });
       } catch (e) {
         if (controller.signal.aborted) return;
-        conversationRef.current = nextConversation.slice(0, -1);
         setMessages((prev) => {
           const next = prev.slice();
           next[next.length - 1] = {
@@ -645,7 +778,13 @@ export function AIChatPage(props: { protocol: Protocol }) {
         setIsGenerating(false);
       }
     })();
-  }, [inputValue, isGenerating, publishPreviewMessages]);
+  }, [
+    buildConversationContext,
+    inputValue,
+    isGenerating,
+    publishPreviewMessages,
+    recordTurn,
+  ]);
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent<unknown>) => {
@@ -653,16 +792,24 @@ export function AIChatPage(props: { protocol: Protocol }) {
       const msg = e.data as Record<string, unknown>;
       if (msg.type !== 'A2UI_USER_ACTION') return;
 
-      const threadId = threadIdRef.current;
-      if (!threadId) return;
-
       const action = msg.action as {
         name?: string;
+        surfaceId?: string;
         context?: Record<string, unknown>;
       };
       const actionName = typeof action?.name === 'string'
         ? action.name
         : 'unknown';
+      const payload = {
+        surfaceId: typeof msg.surfaceId === 'string' ? msg.surfaceId : action
+          ?.surfaceId,
+        action,
+      };
+      const userActionMessage: ModelChatMessage = {
+        role: 'user',
+        content: `A2UI_USER_ACTION: ${JSON.stringify(payload)}`,
+      };
+      const requestConversation = buildConversationContext();
 
       // Abort any in-flight action stream so a stale request can no longer
       // mutate state or post into the preview iframe after a new action
@@ -725,7 +872,11 @@ export function AIChatPage(props: { protocol: Protocol }) {
               'Content-Type': 'application/json',
               Accept: 'text/event-stream',
             },
-            body: JSON.stringify({ threadId, action }),
+            body: JSON.stringify({
+              surfaceId: payload.surfaceId,
+              action,
+              conversation: requestConversation,
+            }),
             signal,
           });
 
@@ -737,12 +888,14 @@ export function AIChatPage(props: { protocol: Protocol }) {
           }
 
           let responseMessages: unknown[] = [];
+          let latestActionText = '';
 
           await readA2UIResponse(
             response,
             (text) => {
               if (!text) return;
               if (signal.aborted) return;
+              latestActionText = text;
               setMessages((prev) => {
                 const next = prev.slice();
                 if (streamingIndex < 0 || streamingIndex >= next.length) {
@@ -773,6 +926,15 @@ export function AIChatPage(props: { protocol: Protocol }) {
               if (signal.aborted) return;
               responseMessages = msgs;
             },
+            (usage) => {
+              if (signal.aborted) return;
+              setTokenUsage((prev) => ({
+                promptTokens: prev.promptTokens + usage.promptTokens,
+                completionTokens: prev.completionTokens
+                  + usage.completionTokens,
+                totalTokens: prev.totalTokens + usage.totalTokens,
+              }));
+            },
           );
 
           if (signal.aborted) return;
@@ -787,6 +949,15 @@ export function AIChatPage(props: { protocol: Protocol }) {
           );
 
           const count = responseMessages.length;
+          const assistantContent = latestActionText.length > 0
+            ? latestActionText
+            : JSON.stringify(responseMessages);
+          await recordTurn({
+            userMessage: userActionMessage,
+            assistantContent,
+            a2uiMessages: responseMessages,
+            previewMessages: responseMessages,
+          });
           setMessages((prev) => {
             const next = prev.slice();
             if (pendingIndex >= 0 && pendingIndex < next.length) {
@@ -875,7 +1046,7 @@ export function AIChatPage(props: { protocol: Protocol }) {
       actionAbortRef.current?.abort();
       actionAbortRef.current = null;
     };
-  }, []);
+  }, [buildConversationContext, recordTurn]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -886,16 +1057,93 @@ export function AIChatPage(props: { protocol: Protocol }) {
     [handleSend],
   );
 
+  const handleCreateConversation = useCallback(() => {
+    void createNew();
+  }, [createNew]);
+
+  const handleSwitchConversation = useCallback((id: string) => {
+    if (isGenerating) return;
+    abortRef.current?.abort();
+    actionAbortRef.current?.abort();
+    void switchTo(id);
+  }, [isGenerating, switchTo]);
+
+  const handleRenameConversation = useCallback((id: string, title: string) => {
+    void rename(id, title);
+  }, [rename]);
+
+  const handleRemoveConversation = useCallback((id: string) => {
+    setDeleteConversationId(id);
+  }, []);
+
+  const deleteConversationTitle = useMemo(
+    () =>
+      conversations.find((item) => item.id === deleteConversationId)?.title
+        ?? 'this conversation',
+    [conversations, deleteConversationId],
+  );
+
+  const handleCancelDeleteConversation = useCallback(() => {
+    setDeleteConversationId(null);
+  }, []);
+
+  const handleConfirmDeleteConversation = useCallback(() => {
+    const id = deleteConversationId;
+    if (!id) return;
+    setDeleteConversationId(null);
+    void remove(id);
+  }, [deleteConversationId, remove]);
+
   return (
     <div
       ref={pageRef}
       className={isPanelResizing ? 'chatPage resizing' : 'chatPage'}
     >
+      <ConfirmDialog
+        open={deleteConversationId !== null}
+        title='Delete conversation?'
+        description={`"${deleteConversationTitle}" will be removed from this browser. This cannot be undone.`}
+        confirmLabel='Delete'
+        cancelLabel='Keep'
+        tone='danger'
+        onCancel={handleCancelDeleteConversation}
+        onConfirm={handleConfirmDeleteConversation}
+      />
+
+      <ConversationListPanel
+        conversations={conversations}
+        activeId={activeId}
+        disabled={!isReady || isGenerating}
+        isPersistent={isPersistent}
+        onCreate={handleCreateConversation}
+        onSwitch={handleSwitchConversation}
+        onRename={handleRenameConversation}
+        onRemove={handleRemoveConversation}
+      />
+
       <div className='chatPanel' style={chatPanelStyle}>
         <div className='chatHeader'>
           <div className='chatHeaderTitleRow'>
             <h2 className='chatHeaderTitle'>Create</h2>
             <span className='constructionBadge'>Online Agent</span>
+            {tokenUsage.totalTokens > 0
+              ? (
+                <span
+                  className='chatTokenUsageBadge'
+                  title={`Prompt: ${tokenUsage.promptTokens} · Completion: ${tokenUsage.completionTokens} · Total: ${tokenUsage.totalTokens}`}
+                >
+                  <span className='chatTokenUsageItem'>
+                    Prompt {formatTokenCount(tokenUsage.promptTokens)}
+                  </span>
+                  <span className='chatTokenUsageItem'>
+                    Output {formatTokenCount(tokenUsage.completionTokens)}
+                  </span>
+                  <span className='chatTokenUsageItem chatTokenUsageTotal'>
+                    Total {formatTokenCount(tokenUsage.totalTokens)}
+                  </span>
+                </span>
+              )
+              : null}
           </div>
           <p className='chatHeaderSub'>Describe the UI you want to build</p>
         </div>

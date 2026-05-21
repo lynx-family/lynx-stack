@@ -84,10 +84,10 @@ and exactly ONE of the following keys:
 - Button has NO "label" prop. Its visible label is a child Text component
   (use "child": "<text-id>" and add a separate Text component with that id).
 - The renderer will POST that action back to /a2ui/action with the same
-  surfaceId + threadId. Your next turn may receive an assistant message whose
-  content starts with "A2UI_USER_ACTION:" followed by JSON describing the
-  action; handle it by emitting additional updateComponents / updateDataModel
-  messages to update the same surface.
+  surfaceId and current client-held conversation. Your next turn may receive a
+  user message whose content starts with "A2UI_USER_ACTION:" followed by JSON
+  describing the action; handle it by emitting additional updateComponents /
+  updateDataModel messages to update the same surface.
 `;
 
 function buildHardRules(catalogId: string): string {
@@ -95,10 +95,12 @@ function buildHardRules(catalogId: string): string {
 1. Output MUST be a JSON ARRAY of A2UI messages. No prose, no Markdown, no
    code fences, no XML. First character '[' – last character ']'.
 2. Each element MUST include "version": "v0.9".
-3. The first message MUST be createSurface with catalogId = "${catalogId}".
-   Use surfaceId "main" unless the user specifies otherwise.
-4. The second message MUST be updateComponents; its components list MUST
-   contain exactly one component with id "root".
+3. For a fresh non-action response, the first message MUST be createSurface with
+   catalogId = "${catalogId}". Use surfaceId "main" unless the user specifies
+   otherwise.
+4. For a fresh non-action response, the second message MUST be
+   updateComponents; its components list MUST contain exactly one component
+   with id "root".
 5. Use property-based component discriminators: "component": "Text", not
    wrapper objects such as { "Text": {...} }.
 6. Children are referenced by id only. NEVER inline a child component.
@@ -113,6 +115,17 @@ function buildHardRules(catalogId: string): string {
 13. No comments, trailing commas or unknown fields.
 14. If the user asks for impossible, unsafe, or unsupported UI, render a concise
     explanatory A2UI surface using supported components rather than prose.
+15. If the latest user message starts with "A2UI_USER_ACTION:", this is an
+    action response for an existing surface. Return a non-empty JSON array with
+    updateDataModel and/or updateComponents for that same surfaceId. Do NOT
+    return [] and do NOT create a new surface unless the action explicitly asks
+    to replace the whole UI.
+16. For UI that should change after a button tap, keep the initial response in
+    the pre-action state. Put confirmation, success, or result details in the
+    action response instead of showing them before the action happens.
+17. For Image.url, provide a short English image search query such as
+    "fresh pasta on a table" or "city skyline at night". Do NOT invent photo
+    CDN URLs. The server resolves Image.url values through its image provider.
 `;
 }
 
