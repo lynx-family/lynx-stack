@@ -570,6 +570,20 @@ describe('Plugins - Terminal', () => {
       expect(wrapped(params)).toEqual([])
     })
 
+    test('falls back to string concat when URL parsing fails', () => {
+      const wrapped = wrapPrintUrlsWithFullscreen(() => [
+        { label: 'Lynx', url: 'not-a-url' },
+        { label: 'Lynx', url: 'not-a-url?dev=1' },
+      ])
+
+      expect(wrapped(params)).toEqual([
+        { label: 'Lynx', url: 'not-a-url' },
+        { label: '∟ No nav', url: 'not-a-url?fullscreen=true' },
+        { label: 'Lynx', url: 'not-a-url?dev=1' },
+        { label: '∟ No nav', url: 'not-a-url?dev=1&fullscreen=true' },
+      ])
+    })
+
     test('appends with all Lynx-labelled entries', () => {
       const wrapped = wrapPrintUrlsWithFullscreen(() => [
         { label: 'Lynx', url: 'http://example.com/a.lynx.bundle' },
