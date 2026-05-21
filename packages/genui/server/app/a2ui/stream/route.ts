@@ -91,7 +91,16 @@ export async function POST(req: Request) {
           enqueue('delta', { text: chunk });
         }
 
-        const { text: finalText, usage, finishReason } = await finalize();
+        let { text: finalText, usage, finishReason } = await finalize();
+        let repair:
+          | {
+            attempted: true;
+            sourceErrors: string[];
+            ok: boolean;
+            attempts: number;
+            errors?: string[];
+          }
+          | undefined;
 
         let validation: { ok: boolean; errors: string[]; messages: unknown[] } =
           {
@@ -99,17 +108,61 @@ export async function POST(req: Request) {
             errors: ['no text produced'],
             messages: [],
           };
-        if (finalText) {
-          const v = validateA2UIOutput(
-            finalText,
-            opts.catalog ?? BASIC_CATALOG,
-          );
-          const messages = v.ok ? await resolveA2UIImageUrls(v.messages) : [];
-          validation = {
-            ok: v.ok,
-            errors: v.errors,
-            messages,
-          };
+        const v = validateA2UIOutput(
+          finalText ?? '',
+          opts.catalog ?? BASIC_CATALOG,
+        );
+        let resolvedMessages = v.ok
+          ? await resolveA2UIImageUrls(v.messages)
+          : [];
+        validation = {
+          ok: v.ok,
+          errors: v.errors,
+          messages: resolvedMessages,
+        };
+        if (!v.ok) {
+          try {
+            const repaired = await service.generateValidated(
+              messages,
+              opts,
+              validatedConversation.conversation,
+            );
+            repair = {
+              attempted: true,
+              sourceErrors: v.errors,
+              ok: repaired.ok,
+              attempts: repaired.attempts,
+            };
+            enqueue('repair', repair);
+            if (repaired.ok) {
+              finalText = repaired.text;
+              usage = repaired.usage;
+              finishReason = repaired.finishReason;
+              resolvedMessages = await resolveA2UIImageUrls(
+                repaired.messages,
+              );
+              validation = {
+                ok: true,
+                errors: [],
+                messages: resolvedMessages,
+              };
+            } else {
+              validation = {
+                ok: false,
+                errors: repaired.errors,
+                messages: [],
+              };
+            }
+          } catch (err: unknown) {
+            repair = {
+              attempted: true,
+              sourceErrors: v.errors,
+              ok: false,
+              attempts: 0,
+              errors: [errorMessage(err).message],
+            };
+            enqueue('repair', repair);
+          }
         }
 
         enqueue('done', {
@@ -117,6 +170,7 @@ export async function POST(req: Request) {
           usage,
           finishReason,
           validation,
+          repair,
         });
       } catch (err: unknown) {
         enqueue('error', errorMessage(err));
