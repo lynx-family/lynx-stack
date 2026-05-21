@@ -225,7 +225,7 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           cd "$GITHUB_WORKSPACE"
-          pnpm --filter @lynx-js/rspeedy build
+          pnpm turbo build --filter @lynx-js/rspeedy... --summarize --force
           pnpm turbo build:lynx --filter a2ui-playground
       - name: Run UI Judge
         id: ui-judge
