@@ -252,9 +252,10 @@ function renderCompiledEtHostVNode(vnode, props, context, opcodes) {
     opcodes.push(__OpAttr, 'attributeSlots', attributeSlots);
   }
 
-  // ET host nodes are compiler-generated and encode dynamic element slots in
-  // `children`, so the runtime can interpret the prop as a slot array directly.
-  let elementSlots = props.children;
+  // ET host nodes are compiler-generated; `swc_plugin_element_template`
+  // (lowering.rs) emits dynamic children as `$N` named props only — no
+  // `children` prop is produced — so the renderer only consumes `$N`.
+  let elementSlots: unknown[] | undefined;
   for (const name in props) {
     if (name.startsWith('$')) {
       (elementSlots ??= [])[+name.slice(1)] = props[name];
