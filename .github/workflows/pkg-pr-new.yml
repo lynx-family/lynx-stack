@@ -3,6 +3,7 @@ name: Pkg.pr.new
 # Triggered after the `Test` workflow finishes on a PR. We piggy-back on its
 # build artifacts via the TurboCache so we don't redo the monorepo build.
 on:
+  # zizmor: ignore[dangerous-triggers] workflow_run is the documented integration for pkg.pr.new. The job runs without `secrets:` and only holds a short-lived OIDC token scoped to pkg.pr.new — no production credentials, no `pull-requests: write`.
   workflow_run:
     workflows: ["Test"]
     types: [completed]
@@ -28,7 +29,6 @@ jobs:
       github.event.workflow_run.conclusion == 'success'
     permissions:
       contents: read
-      pull-requests: write
       actions: read
       # required for the pkg.pr.new OIDC verification
       id-token: write
