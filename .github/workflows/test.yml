@@ -74,205 +74,60 @@ jobs:
 
   ui-judge:
     needs: build
-    runs-on: lynx-custom-container
-    timeout-minutes: 30
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      MIDSCENE_MODEL_API_KEY: ${{ secrets.MIDSCENE_MODEL_API_KEY }}
+      MIDSCENE_MODEL_BASE_URL: ${{ secrets.MIDSCENE_MODEL_BASE_URL }}
+      MIDSCENE_MODEL_FAMILY: ${{ secrets.MIDSCENE_MODEL_FAMILY }}
+      MIDSCENE_MODEL_NAME: ${{ secrets.MIDSCENE_MODEL_NAME }}
+      MIDSCENE_OPENAI_INIT_CONFIG_JSON: ${{ secrets.MIDSCENE_OPENAI_INIT_CONFIG_JSON }}
+    with:
+      runs-on: lynx-custom-container
+      is-web: true
+      upload-codecov: false
+      artifact-name: ui-judge-results
+      artifact-path: ui-judge-results.json
+      artifact-if-no-files-found: error
+      web-report-name: ui-judge-playwright-report
+      web-report-path: packages/genui/ui-judge/playwright-report
+      preflight-run: |
+        set -euo pipefail
+        node .github/scripts/check-ui-judge-inputs.mjs
+      build-run: |
+        export NODE_OPTIONS="--max-old-space-size=32768"
+        pnpm turbo build --filter @lynx-js/ui-judge... --summarize
+        pnpm turbo build:lynx --filter a2ui-playground --summarize
+      run: |
+        set -euo pipefail
+        export UI_JUDGE_RESULT_FILE="$GITHUB_WORKSPACE/ui-judge-results.json"
+        ulimit -Sn 655350
+        pnpm --filter @lynx-js/ui-judge test
+      failure-result-run: |
+        set -euo pipefail
+        UI_JUDGE_RESULT_FILE="$GITHUB_WORKSPACE/ui-judge-results.json" node .github/scripts/write-ui-judge-failure-result.mjs
+
+  ui-judge-comment:
+    needs: ui-judge
+    if: always()
+    runs-on: lynx-ubuntu-24.04-medium
     permissions:
       contents: read
       issues: write
       pull-requests: write
-    container:
-      image: mcr.microsoft.com/playwright:v1.58.2-noble
-      env:
-        CI: 1
-        TURBO_TELEMETRY_DISABLED: 1
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        if: ${{ needs.ui-judge.outputs.should-run == 'true' }}
         with:
-          fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        if: ${{ needs.ui-judge.outputs.should-run == 'true' }}
         with:
-          node-version: "22"
-          package-manager-cache: false
-      - name: Check UI Judge inputs
-        id: ui-judge-inputs
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          MIDSCENE_MODEL_API_KEY: ${{ secrets.MIDSCENE_MODEL_API_KEY }}
-          MIDSCENE_MODEL_NAME: ${{ secrets.MIDSCENE_MODEL_NAME }}
-        run: |
-          set -euo pipefail
-          node --input-type=module <<'NODE'
-          import { appendFileSync, readFileSync } from 'node:fs';
-
-          const relevantFilePatterns = [
-            /^packages\/genui\/(ui-judge|a2ui|a2ui-playground)\//,
-            /^\.github\/actions\/ui-judge-comment\//,
-            /^\.github\/workflows\/test\.yml$/,
-            /^\.github\/ui-judge\.instructions\.md$/,
-          ];
-
-          let shouldRun = false;
-          let reason = 'UI Judge only comments on pull_request events.';
-
-          if (process.env.GITHUB_EVENT_NAME === 'pull_request') {
-            if (
-              !process.env.MIDSCENE_MODEL_NAME
-              || !process.env.MIDSCENE_MODEL_API_KEY
-            ) {
-              reason =
-                'Midscene model secrets are not configured for this pull request.';
-            } else {
-              const changedFiles = await listPullRequestFiles();
-              shouldRun = changedFiles.some((file) =>
-                relevantFilePatterns.some((pattern) => pattern.test(file))
-              );
-              reason = shouldRun
-                ? 'Relevant UI Judge files changed.'
-                : 'No UI Judge, A2UI, or playground files changed.';
-            }
-          }
-
-          appendFileSync(process.env.GITHUB_OUTPUT, `should-run=${shouldRun}\n`);
-          appendFileSync(process.env.GITHUB_OUTPUT, `reason=${reason}\n`);
-          console.info(reason);
-
-          async function listPullRequestFiles() {
-            const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
-            const pullRequestNumber = event.pull_request?.number ?? event.number;
-            const repository = process.env.GITHUB_REPOSITORY;
-            const token = process.env.GITHUB_TOKEN;
-
-            if (!pullRequestNumber || !repository || !token) {
-              throw new Error(
-                'Unable to list pull request files for the UI Judge gate.',
-              );
-            }
-
-            const apiUrl = process.env.GITHUB_API_URL || 'https://api.github.com';
-            const files = [];
-            for (let page = 1; page < 11; page++) {
-              const url = `${apiUrl}/repos/${repository}/pulls/${pullRequestNumber}/files?per_page=100&page=${page}`;
-              const response = await fetch(url, {
-                headers: {
-                  accept: 'application/vnd.github+json',
-                  authorization: `Bearer ${token}`,
-                  'x-github-api-version': '2022-11-28',
-                },
-              });
-              if (!response.ok) {
-                throw new Error(
-                  `Failed to list pull request files: ${response.status} ${response.statusText}`,
-                );
-              }
-
-              const pageFiles = await response.json();
-              files.push(
-                ...pageFiles
-                  .map((file) => file.filename)
-                  .filter((file) => typeof file === 'string'),
-              );
-              if (pageFiles.length < 100) break;
-            }
-            return files;
-          }
-          NODE
-      - name: Trust workspace
-        if: ${{ steps.ui-judge-inputs.outputs.should-run == 'true' }}
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-      - name: TurboCache
-        if: ${{ steps.ui-judge-inputs.outputs.should-run == 'true' }}
-        uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
-        with:
-          path: .turbo
-          # Match the reusable Playwright test workflow: the build job must have
-          # already produced the cache for this exact commit.
-          key: turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
-          fail-on-cache-miss: true
-      - name: Install native build tools
-        if: ${{ steps.ui-judge-inputs.outputs.should-run == 'true' }}
-        run: |
-          apt-get update
-          apt-get install -y --no-install-recommends build-essential
-      - uses: ./.github/actions/rustup
-        if: ${{ steps.ui-judge-inputs.outputs.should-run == 'true' }}
-        with:
-          key: ui-judge
-      - name: Install Rust wasm targets
-        if: ${{ steps.ui-judge-inputs.outputs.should-run == 'true' }}
-        run: rustup target add wasm32-unknown-unknown wasm32-wasip1
-      - name: Install
-        if: ${{ steps.ui-judge-inputs.outputs.should-run == 'true' }}
-        working-directory: ${{ github.workspace }}
-        run: |
-          cd "$GITHUB_WORKSPACE"
-          npm install -g corepack@latest
-          corepack enable
-          pnpm install --frozen-lockfile
-      - name: Build UI Judge package
-        if: ${{ steps.ui-judge-inputs.outputs.should-run == 'true' }}
-        timeout-minutes: 10
-        working-directory: ${{ github.workspace }}
-        env:
-          NODE_OPTIONS: --max-old-space-size=32768
-        run: |
-          cd "$GITHUB_WORKSPACE"
-          pnpm turbo build --filter @lynx-js/ui-judge... --summarize
-      - name: Prepare A2UI playground artifacts
-        if: ${{ steps.ui-judge-inputs.outputs.should-run == 'true' }}
-        timeout-minutes: 12
-        working-directory: ${{ github.workspace }}
-        run: |
-          cd "$GITHUB_WORKSPACE"
-          pnpm turbo build:lynx --filter a2ui-playground --summarize
-      - name: Run UI Judge
-        id: ui-judge
-        if: ${{ steps.ui-judge-inputs.outputs.should-run == 'true' }}
-        continue-on-error: true
-        timeout-minutes: 10
-        working-directory: ${{ github.workspace }}
-        env:
-          MIDSCENE_MODEL_API_KEY: ${{ secrets.MIDSCENE_MODEL_API_KEY }}
-          MIDSCENE_MODEL_BASE_URL: ${{ secrets.MIDSCENE_MODEL_BASE_URL }}
-          MIDSCENE_MODEL_FAMILY: ${{ secrets.MIDSCENE_MODEL_FAMILY }}
-          MIDSCENE_MODEL_NAME: ${{ secrets.MIDSCENE_MODEL_NAME }}
-          MIDSCENE_OPENAI_INIT_CONFIG_JSON: ${{ secrets.MIDSCENE_OPENAI_INIT_CONFIG_JSON }}
-          UI_JUDGE_RESULT_FILE: ${{ github.workspace }}/ui-judge-results.json
-        run: |
-          cd "$GITHUB_WORKSPACE"
-          ulimit -Sn 655350
-          pnpm --filter @lynx-js/ui-judge test
-      - name: Write UI Judge failure result
-        if: ${{ always() && steps.ui-judge-inputs.outputs.should-run == 'true' && (failure() || steps.ui-judge.outcome == 'failure') && hashFiles('ui-judge-results.json') == '' }}
-        working-directory: ${{ github.workspace }}
-        env:
-          UI_JUDGE_RESULT_FILE: ${{ github.workspace }}/ui-judge-results.json
-        run: |
-          cd "$GITHUB_WORKSPACE"
-          cat > "$UI_JUDGE_RESULT_FILE" <<'JSON'
-          {
-            "results": [
-              {
-                "dimension": "visual-correctness",
-                "score": 0,
-                "error": {
-                  "message": "UI Judge CI failed before writing a model result. See the workflow logs for details."
-                },
-                "steps": [],
-                "url": ""
-              }
-            ]
-          }
-          JSON
+          name: ui-judge-results
       - name: Comment UI Judge result
-        if: ${{ always() && steps.ui-judge-inputs.outputs.should-run == 'true' }}
+        if: ${{ needs.ui-judge.outputs.should-run == 'true' }}
         uses: ./.github/actions/ui-judge-comment
         with:
           result-file: ui-judge-results.json
-      - name: Fail when UI Judge fails
-        if: ${{ always() && steps.ui-judge-inputs.outputs.should-run == 'true' && steps.ui-judge.outcome == 'failure' }}
-        run: exit 1
 
   lighthouse:
     needs: build
@@ -584,6 +439,7 @@ jobs:
       - code-style-check
       - eslint
       - ui-judge
+      - ui-judge-comment
       # - playwright-linux
       - playwright-web-elements
       - test-api
