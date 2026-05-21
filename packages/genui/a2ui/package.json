@@ -21,6 +21,10 @@
       "types": "./dist/catalog/index.d.ts",
       "default": "./dist/catalog/index.js"
     },
+    "./catalog/utils/chart": {
+      "types": "./dist/catalog/utils/chart.d.ts",
+      "default": "./dist/catalog/utils/chart.js"
+    },
     "./catalog/Text": {
       "types": "./dist/catalog/Text/index.d.ts",
       "default": "./dist/catalog/Text/index.js"
@@ -61,6 +65,11 @@
       "default": "./dist/catalog/LineChart/index.js"
     },
     "./catalog/LineChart/catalog.json": "./dist/catalog/LineChart/catalog.json",
+    "./catalog/PieChart": {
+      "types": "./dist/catalog/PieChart/index.d.ts",
+      "default": "./dist/catalog/PieChart/index.js"
+    },
+    "./catalog/PieChart/catalog.json": "./dist/catalog/PieChart/catalog.json",
     "./catalog/Modal": {
       "types": "./dist/catalog/Modal/index.d.ts",
       "default": "./dist/catalog/Modal/index.js"
