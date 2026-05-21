@@ -16,7 +16,14 @@ function main() {
   const raw = readFileSync(statusFile, 'utf8');
   const data = JSON.parse(raw);
   const releases = Array.isArray(data.releases) ? data.releases : [];
-  const affected = new Set(releases.map((r) => r?.name).filter(Boolean));
+  // `releases` includes packages reached via the dependency graph with
+  // `type: "none"` — those don't actually get a version bump, so skip them.
+  const affected = new Set(
+    releases
+      .filter((r) => r?.type && r.type !== 'none')
+      .map((r) => r.name)
+      .filter(Boolean),
+  );
 
   if (affected.size === 0) {
     return;
