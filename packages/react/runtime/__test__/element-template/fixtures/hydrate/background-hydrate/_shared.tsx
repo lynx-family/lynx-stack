@@ -485,9 +485,16 @@ export function runCaseByName(name: string): unknown {
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
 
+    // Background side has a child living at slot 1 that the serialized payload
+    // never mentions. The hydrate loop in `hydrate.ts` extends its slot count
+    // via `Math.max(serializedSlots.length, instance.elementSlots.length)` and
+    // synthesizes a create + insert for the background-only child at slot 1.
     const rootInstance = new BackgroundElementTemplateInstance('root');
+    const slot1Child = new BackgroundElementTemplateInstance('child');
+    slot1Child.__slotIndex = 1;
+    rootInstance.appendChild(slot1Child);
 
-    const before = createHydrationTemplate(-1, 'root', { elementSlots: [[], []] });
+    const before = createHydrationTemplate(-1, 'root', { elementSlots: [[]] });
     const stream = hydrateBackground(before, rootInstance);
     return { stream };
   });
