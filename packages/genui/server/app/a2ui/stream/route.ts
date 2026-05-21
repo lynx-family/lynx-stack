@@ -4,6 +4,7 @@
 
 import { BASIC_CATALOG } from '../../../agent/a2ui-catalog';
 import { validateA2UIOutput } from '../../../agent/a2ui-validator';
+import { resolveA2UIImageUrls } from '../../../agent/image-resolver';
 import { getA2UIAgentService } from '../../../service/a2ui-agent';
 import {
   errorMessage,
@@ -103,10 +104,11 @@ export async function POST(req: Request) {
             finalText,
             opts.catalog ?? BASIC_CATALOG,
           );
+          const messages = v.ok ? await resolveA2UIImageUrls(v.messages) : [];
           validation = {
             ok: v.ok,
             errors: v.errors,
-            messages: v.ok ? v.messages : [],
+            messages,
           };
         }
 

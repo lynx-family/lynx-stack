@@ -123,6 +123,9 @@ function buildHardRules(catalogId: string): string {
 16. For UI that should change after a button tap, keep the initial response in
     the pre-action state. Put confirmation, success, or result details in the
     action response instead of showing them before the action happens.
+17. For Image.url, provide a short English image search query such as
+    "fresh pasta on a table" or "city skyline at night". Do NOT invent photo
+    CDN URLs. The server resolves Image.url values through its image provider.
 `;
 }
 

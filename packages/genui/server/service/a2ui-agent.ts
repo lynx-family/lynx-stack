@@ -13,6 +13,7 @@ import {
   validateA2UIOutput,
 } from '../agent/a2ui-validator';
 import type { A2UIMessage, ValidationOptions } from '../agent/a2ui-validator';
+import { resolveA2UIImageUrls } from '../agent/image-resolver';
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -256,10 +257,11 @@ export default class A2UIAgentService {
 
       const validation = validateA2UIOutput(text, catalog, validationOptions);
       if (validation.ok) {
+        const messages = await resolveA2UIImageUrls(validation.messages);
         return {
           ok: true,
           text,
-          messages: validation.messages,
+          messages,
           errors: [],
           attempts: attempt,
           usage: lastUsage,
