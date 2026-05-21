@@ -3,6 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 import { useResolvedProps } from '../../react/useDataBinding.js';
 import type { GenericComponentProps } from '../../store/types.js';
+import {
+  DEFAULT_CHART_COLORS,
+  escapeXml,
+  formatValue,
+} from '../utils/chart.js';
 
 import '../../../styles/catalog/LineChart.css';
 
@@ -39,31 +44,6 @@ export interface LineChartProps extends GenericComponentProps {
 const SVG_WIDTH = 360;
 const DEFAULT_HEIGHT = 240;
 const MARGIN = { top: 16, right: 16, bottom: 24, left: 16 };
-const DEFAULT_COLORS = [
-  '#0057d9',
-  '#0a8f8f',
-  '#8a5cf6',
-  '#d92d20',
-  '#2d6a4f',
-  '#b26a00',
-];
-
-function escapeXml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-}
-
-function formatValue(value: number): string {
-  if (!Number.isFinite(value)) return '0';
-  const rounded = Math.abs(value) >= 1000
-    ? Math.round(value)
-    : Number(value.toFixed(1));
-  return String(rounded);
-}
 
 function normalizeSeries(
   series: LineChartSeries[],
@@ -207,7 +187,8 @@ function buildSvgMarkup(
       });
 
       const color = escapeXml(
-        item.color ?? DEFAULT_COLORS[seriesIndex % DEFAULT_COLORS.length]
+        item.color
+          ?? DEFAULT_CHART_COLORS[seriesIndex % DEFAULT_CHART_COLORS.length]
           ?? '#0057d9',
       );
       const d = buildPath(points, variant);
@@ -268,7 +249,7 @@ export function LineChart(
     : [];
   const seriesValue = resolvedProps['series'];
   const series = Array.isArray(seriesValue)
-    ? normalizeSeries(seriesValue as LineChartSeries[], DEFAULT_COLORS)
+    ? normalizeSeries(seriesValue as LineChartSeries[], DEFAULT_CHART_COLORS)
     : [];
   const variant = (resolvedProps['variant'] as ChartVariant | undefined)
     ?? 'natural';
@@ -344,7 +325,9 @@ export function LineChart(
                   className='line-chart-legend-swatch'
                   style={{
                     backgroundColor: item.color
-                      ?? DEFAULT_COLORS[index % DEFAULT_COLORS.length]
+                      ?? DEFAULT_CHART_COLORS[
+                        index % DEFAULT_CHART_COLORS.length
+                      ]
                       ?? '#0057d9',
                   }}
                 />

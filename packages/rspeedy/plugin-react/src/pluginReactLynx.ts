@@ -499,5 +499,24 @@ export function pluginReactLynx(
         )
       },
     },
+    {
+      name: 'lynx:react:css-minify-guard',
+      enforce: 'post',
+      setup(api) {
+        if (resolvedOptions.enableRemoveCSSScope !== false) {
+          return
+        }
+
+        api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+          return mergeRsbuildConfig(config, {
+            output: {
+              minify: {
+                css: false,
+              },
+            },
+          })
+        })
+      },
+    },
   ]
 }

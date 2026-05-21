@@ -7,9 +7,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import './AIChatPage.css';
 
+import { ConfirmDialog } from '../components/ConfirmDialog.js';
+import { ConversationListPanel } from '../components/ConversationListPanel.js';
 import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
 import { PreviewPanel } from '../components/PreviewPanel.js';
 import { PreviewViewport } from '../components/PreviewViewport.js';
+import { useConversation } from '../hooks/useConversation.js';
+import type { ModelChatMessage } from '../hooks/useConversation.js';
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
@@ -21,16 +25,6 @@ interface ChatMessage {
   payload?: unknown;
   payloadLabel?: string;
   tone?: 'info' | 'pending' | 'success' | 'error';
-}
-
-interface ModelChatMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-}
-
-interface ConversationContext {
-  history: ModelChatMessage[];
-  dataModel: Record<string, unknown>;
 }
 
 interface SseEvent {
@@ -124,8 +118,6 @@ const RESIZE_BREAKPOINT = 980;
 const ONLINE_A2UI_SERVER_ORIGIN = 'https://genui-server.vercel.app';
 const ONLINE_A2UI_CHAT_URL = `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/stream`;
 const LOCAL_A2UI_SERVER_PORT = '3060';
-const MAX_CONVERSATION_TURNS = 20;
-const MAX_CONVERSATION_CHARS = 16_000;
 const jsonExtensions = [json(), EditorView.lineWrapping];
 
 function isDevHost(hostname: string): boolean {
@@ -286,87 +278,6 @@ function normalizeA2UIMessages(payload: unknown): unknown[] {
   return [];
 }
 
-function cloneDataModel(
-  value: Record<string, unknown>,
-): Record<string, unknown> {
-  try {
-    return JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
-  } catch {
-    return {};
-  }
-}
-
-function truncateConversationHistory(
-  history: ModelChatMessage[],
-): ModelChatMessage[] {
-  const byTurns = history.slice(-MAX_CONVERSATION_TURNS);
-  let totalChars = 0;
-  const kept: ModelChatMessage[] = [];
-
-  for (let i = byTurns.length - 1; i >= 0; i--) {
-    const message = byTurns[i];
-    if (!message) continue;
-    totalChars += message.content.length;
-    if (totalChars > MAX_CONVERSATION_CHARS) break;
-    kept.unshift(message);
-  }
-
-  return kept;
-}
-
-function applyDataModel(
-  model: Record<string, unknown>,
-  path: string,
-  value: unknown,
-): void {
-  if (!path || path === '/' || path === '') {
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      Object.assign(model, value as Record<string, unknown>);
-    }
-    return;
-  }
-
-  const parts = path.replace(/^\//u, '').split('/').filter(Boolean);
-  let cursor = model;
-  for (let i = 0; i < parts.length - 1; i++) {
-    const key = parts[i];
-    if (!key) continue;
-    if (typeof cursor[key] !== 'object' || cursor[key] === null) {
-      cursor[key] = {};
-    }
-    cursor = cursor[key] as Record<string, unknown>;
-  }
-
-  const last = parts[parts.length - 1];
-  if (!last) return;
-  if (value === undefined) {
-    delete cursor[last];
-  } else {
-    cursor[last] = value;
-  }
-}
-
-function applyA2UIDataModelMessages(
-  model: Record<string, unknown>,
-  messages: unknown[],
-): void {
-  for (const message of messages) {
-    if (!message || typeof message !== 'object') continue;
-    const updateDataModel = (message as {
-      updateDataModel?: {
-        path?: unknown;
-        value?: unknown;
-      };
-    }).updateDataModel;
-    if (!updateDataModel) continue;
-    applyDataModel(
-      model,
-      typeof updateDataModel.path === 'string' ? updateDataModel.path : '/',
-      updateDataModel.value,
-    );
-  }
-}
-
 function parseCompletedArrayItems(raw: string): unknown[] {
   const trimmed = raw.trimStart();
   if (!trimmed.startsWith('[')) return [];
@@ -426,6 +337,7 @@ async function readA2UIResponse(
   onText: (text: string) => void,
   onMessages: (messages: unknown[]) => void,
   onUsage?: (usage: TokenUsage) => void,
+  options: { publishPartialMessages?: boolean } = {},
 ): Promise<unknown[]> {
   const contentType = response.headers.get('content-type') ?? '';
   if (!contentType.includes('text/event-stream')) {
@@ -449,6 +361,7 @@ async function readA2UIResponse(
   let buffer = '';
   let generatedText = '';
   let latestMessages: unknown[] = [];
+  const publishPartialMessages = options.publishPartialMessages ?? true;
 
   while (true) {
     const { done, value } = await reader.read();
@@ -465,6 +378,7 @@ async function readA2UIResponse(
         if (typeof deltaData.text === 'string') {
           generatedText += deltaData.text;
           onText(generatedText);
+          if (!publishPartialMessages) continue;
           const completed = parseCompletedArrayItems(generatedText);
           if (completed.length > latestMessages.length) {
             latestMessages = completed;
@@ -504,26 +418,63 @@ async function readA2UIResponse(
 
 const SUGGESTED_PROMPTS: Array<{ label: string; text: string }> = [
   {
+    label: '🌤️ Weather with Refresh',
+    text:
+      'Create a weather card for San Francisco showing sunny, a photo, 22°C, humidity 60%, and a "Refresh" button. When the user taps Refresh, update the card with slightly different weather data to simulate a live fetch.',
+  },
+  {
     label: '🛍️ Product card with Buy',
     text:
-      'Create a product card for a limited-edition sneaker. Include name, price ($189), a short description, and a "Buy Now" button. When tapped, show an order confirmation with a fake order number and estimated delivery.',
+      'Create a product card for a limited-edition sneaker. Include name, a photo, price ($189), a short description, and a "Buy Now" button. When tapped, show an order confirmation with a fake order number and estimated delivery.',
   },
   {
     label: '⚡ Quiz card with actions',
     text:
       'Create a trivia quiz card. Show a question "Which shape has three sides?" with 4 answer buttons: Triangle, Square, Circle, Hexagon. When the user taps an answer, show whether it is correct with a brief explanation.',
   },
-  {
-    label: '🌤️ Weather with Refresh',
-    text:
-      'Create a weather card for San Francisco showing sunny, 22°C, humidity 60%, and a "Refresh" button. When the user taps Refresh, update the card with slightly different weather data to simulate a live fetch.',
-  },
 ];
+
+function buildChatMessagesFromHistory(
+  history: ModelChatMessage[],
+): ChatMessage[] {
+  if (history.length === 0) return [WELCOME_MESSAGE];
+  const next: ChatMessage[] = [WELCOME_MESSAGE];
+  for (const message of history) {
+    if (message.role === 'user') {
+      next.push({ role: 'user', content: message.content });
+      continue;
+    }
+    if (message.role === 'assistant') {
+      next.push({
+        role: 'json',
+        content: 'Generated Output',
+        payload: message.content,
+        payloadLabel: 'JSON',
+      });
+    }
+  }
+  return next;
+}
 
 export function AIChatPage(
   props: { protocol: Protocol; theme: 'light' | 'dark' },
 ) {
   const { protocol, theme } = props;
+  const conversation = useConversation();
+  const {
+    activeId,
+    buildConversationContext,
+    conversations,
+    createNew,
+    isPersistent,
+    isReady,
+    messages: persistedMessages,
+    previewMessages: persistedPreviewMessages,
+    recordTurn,
+    remove,
+    rename,
+    switchTo,
+  } = conversation;
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [inputValue, setInputValue] = useState<string>('');
   const [renderUrl, setRenderUrl] = useState<string>('');
@@ -532,6 +483,9 @@ export function AIChatPage(
     null,
   );
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [deleteConversationId, setDeleteConversationId] = useState<
+    string | null
+  >(null);
   const [tokenUsage, setTokenUsage] = useState<TokenUsage>({
     promptTokens: 0,
     completionTokens: 0,
@@ -543,8 +497,7 @@ export function AIChatPage(
   const previewFrameRef = useRef<HTMLIFrameElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const actionAbortRef = useRef<AbortController | null>(null);
-  const conversationRef = useRef<ModelChatMessage[]>([]);
-  const dataModelRef = useRef<Record<string, unknown>>({});
+  const hydratedActiveIdRef = useRef<string | null>(null);
   const latestPreviewMessagesRef = useRef<unknown[]>([]);
   const {
     containerRef: pageRef,
@@ -670,17 +623,36 @@ export function AIChatPage(
     [baseUrl, protocol, theme],
   );
 
-  const buildConversationContext = useCallback(
-    (): ConversationContext => ({
-      history: truncateConversationHistory(conversationRef.current),
-      dataModel: cloneDataModel(dataModelRef.current),
-    }),
-    [],
-  );
-
   const handlePreviewLoad = useCallback(() => {
     publishPreviewMessages(latestPreviewMessagesRef.current);
   }, [publishPreviewMessages]);
+
+  useEffect(() => {
+    if (!isReady || isGenerating) return;
+    if (hydratedActiveIdRef.current === activeId) return;
+    hydratedActiveIdRef.current = activeId;
+    setMessages(buildChatMessagesFromHistory(persistedMessages));
+    setGeneratedJson('');
+    setTokenUsage({
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+    });
+    if (persistedPreviewMessages.length > 0) {
+      publishPreviewMessages(persistedPreviewMessages);
+    } else {
+      latestPreviewMessagesRef.current = [];
+      setPreviewMessages(null);
+      setRenderUrl('');
+    }
+  }, [
+    activeId,
+    isReady,
+    isGenerating,
+    persistedMessages,
+    persistedPreviewMessages,
+    publishPreviewMessages,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -700,9 +672,6 @@ export function AIChatPage(
 
     const userMessage: ModelChatMessage = { role: 'user', content: text };
     const requestConversation = buildConversationContext();
-    const previousConversation = conversationRef.current;
-    const nextConversation = [...previousConversation, userMessage];
-    conversationRef.current = nextConversation;
 
     setMessages((prev) => [
       ...prev,
@@ -760,6 +729,7 @@ export function AIChatPage(
               totalTokens: prev.totalTokens + usage.totalTokens,
             }));
           },
+          { publishPartialMessages: false },
         );
 
         if (finalMessages.length === 0) {
@@ -769,11 +739,12 @@ export function AIChatPage(
         const assistantContent = latestText.length > 0
           ? latestText
           : JSON.stringify(finalMessages);
-        applyA2UIDataModelMessages(dataModelRef.current, finalMessages);
-        conversationRef.current = [
-          ...nextConversation,
-          { role: 'assistant', content: assistantContent },
-        ];
+        await recordTurn({
+          userMessage,
+          assistantContent,
+          a2uiMessages: finalMessages,
+          previewMessages: finalMessages,
+        });
         setMessages((prev) => {
           const next = prev.slice();
           next[next.length - 1] = {
@@ -792,7 +763,6 @@ export function AIChatPage(
         });
       } catch (e) {
         if (controller.signal.aborted) return;
-        conversationRef.current = previousConversation;
         setMessages((prev) => {
           const next = prev.slice();
           next[next.length - 1] = {
@@ -813,6 +783,7 @@ export function AIChatPage(
     inputValue,
     isGenerating,
     publishPreviewMessages,
+    recordTurn,
   ]);
 
   useEffect(() => {
@@ -823,15 +794,15 @@ export function AIChatPage(
 
       const action = msg.action as {
         name?: string;
+        surfaceId?: string;
         context?: Record<string, unknown>;
       };
       const actionName = typeof action?.name === 'string'
         ? action.name
         : 'unknown';
       const payload = {
-        surfaceId: typeof msg.surfaceId === 'string'
-          ? msg.surfaceId
-          : undefined,
+        surfaceId: typeof msg.surfaceId === 'string' ? msg.surfaceId : action
+          ?.surfaceId,
         action,
       };
       const userActionMessage: ModelChatMessage = {
@@ -981,12 +952,12 @@ export function AIChatPage(
           const assistantContent = latestActionText.length > 0
             ? latestActionText
             : JSON.stringify(responseMessages);
-          applyA2UIDataModelMessages(dataModelRef.current, responseMessages);
-          conversationRef.current = [
-            ...conversationRef.current,
-            userActionMessage,
-            { role: 'assistant', content: assistantContent },
-          ];
+          await recordTurn({
+            userMessage: userActionMessage,
+            assistantContent,
+            a2uiMessages: responseMessages,
+            previewMessages: responseMessages,
+          });
           setMessages((prev) => {
             const next = prev.slice();
             if (pendingIndex >= 0 && pendingIndex < next.length) {
@@ -1075,7 +1046,7 @@ export function AIChatPage(
       actionAbortRef.current?.abort();
       actionAbortRef.current = null;
     };
-  }, [buildConversationContext]);
+  }, [buildConversationContext, recordTurn]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -1086,11 +1057,70 @@ export function AIChatPage(
     [handleSend],
   );
 
+  const handleCreateConversation = useCallback(() => {
+    void createNew();
+  }, [createNew]);
+
+  const handleSwitchConversation = useCallback((id: string) => {
+    if (isGenerating) return;
+    abortRef.current?.abort();
+    actionAbortRef.current?.abort();
+    void switchTo(id);
+  }, [isGenerating, switchTo]);
+
+  const handleRenameConversation = useCallback((id: string, title: string) => {
+    void rename(id, title);
+  }, [rename]);
+
+  const handleRemoveConversation = useCallback((id: string) => {
+    setDeleteConversationId(id);
+  }, []);
+
+  const deleteConversationTitle = useMemo(
+    () =>
+      conversations.find((item) => item.id === deleteConversationId)?.title
+        ?? 'this conversation',
+    [conversations, deleteConversationId],
+  );
+
+  const handleCancelDeleteConversation = useCallback(() => {
+    setDeleteConversationId(null);
+  }, []);
+
+  const handleConfirmDeleteConversation = useCallback(() => {
+    const id = deleteConversationId;
+    if (!id) return;
+    setDeleteConversationId(null);
+    void remove(id);
+  }, [deleteConversationId, remove]);
+
   return (
     <div
       ref={pageRef}
       className={isPanelResizing ? 'chatPage resizing' : 'chatPage'}
     >
+      <ConfirmDialog
+        open={deleteConversationId !== null}
+        title='Delete conversation?'
+        description={`"${deleteConversationTitle}" will be removed from this browser. This cannot be undone.`}
+        confirmLabel='Delete'
+        cancelLabel='Keep'
+        tone='danger'
+        onCancel={handleCancelDeleteConversation}
+        onConfirm={handleConfirmDeleteConversation}
+      />
+
+      <ConversationListPanel
+        conversations={conversations}
+        activeId={activeId}
+        disabled={!isReady || isGenerating}
+        isPersistent={isPersistent}
+        onCreate={handleCreateConversation}
+        onSwitch={handleSwitchConversation}
+        onRename={handleRenameConversation}
+        onRemove={handleRemoveConversation}
+      />
+
       <div className='chatPanel' style={chatPanelStyle}>
         <div className='chatHeader'>
           <div className='chatHeaderTitleRow'>

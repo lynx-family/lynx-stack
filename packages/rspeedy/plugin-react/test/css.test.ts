@@ -623,6 +623,29 @@ describe('Plugins - CSS', () => {
           minimizer && minimizer !== '...'
           && minimizer.constructor.name === 'CssMinimizerPlugin'
         ),
+      ).toBeUndefined()
+    })
+
+    test('with enableRemoveCSSScope: true', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx({
+              enableRemoveCSSScope: true,
+            }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      expect(
+        config?.optimization?.minimizer?.find(minimizer =>
+          minimizer && minimizer !== '...'
+          && minimizer.constructor.name === 'CssMinimizerPlugin'
+        ),
       ).toBeDefined()
     })
   })

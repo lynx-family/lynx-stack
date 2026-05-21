@@ -2,6 +2,23 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import buttonManifest from './catalog/Button/catalog.json';
+import cardManifest from './catalog/Card/catalog.json';
+import checkBoxManifest from './catalog/CheckBox/catalog.json';
+import columnManifest from './catalog/Column/catalog.json';
+import dividerManifest from './catalog/Divider/catalog.json';
+import iconManifest from './catalog/Icon/catalog.json';
+import imageManifest from './catalog/Image/catalog.json';
+import lineChartManifest from './catalog/LineChart/catalog.json';
+import listManifest from './catalog/List/catalog.json';
+import modalManifest from './catalog/Modal/catalog.json';
+import radioGroupManifest from './catalog/RadioGroup/catalog.json';
+import rowManifest from './catalog/Row/catalog.json';
+import sliderManifest from './catalog/Slider/catalog.json';
+import tabsManifest from './catalog/Tabs/catalog.json';
+import textManifest from './catalog/Text/catalog.json';
+import textFieldManifest from './catalog/TextField/catalog.json';
+
 export interface A2UIComponentProp {
   name: string;
   type: string;
@@ -30,280 +47,168 @@ export interface A2UICatalog {
 export const BASIC_CATALOG_ID =
   'https://a2ui.org/specification/v0_9/basic_catalog.json';
 
-const prop = (
-  name: string,
-  type: string,
-  required = false,
-  description = '',
-  enums?: readonly string[],
-): A2UIComponentProp => ({
-  name,
-  type,
-  required,
-  description,
-  ...(enums === undefined ? {} : { enums }),
-});
+interface JsonSchema {
+  type?: string;
+  enum?: unknown;
+  oneOf?: JsonSchema[];
+  items?: JsonSchema;
+  properties?: Record<string, JsonSchema>;
+  required?: string[];
+  description?: string;
+  additionalProperties?: unknown;
+}
 
-const DYN = 'DynamicString (string | { path: string })';
+interface CatalogManifest extends Record<string, JsonSchema> {}
+
+const CATALOG_MANIFESTS = [
+  textManifest,
+  imageManifest,
+  iconManifest,
+  dividerManifest,
+  lineChartManifest,
+  rowManifest,
+  columnManifest,
+  listManifest,
+  cardManifest,
+  tabsManifest,
+  modalManifest,
+  buttonManifest,
+  textFieldManifest,
+  checkBoxManifest,
+  radioGroupManifest,
+  sliderManifest,
+] as const;
+
+const COMPONENT_SUMMARIES: Record<string, string> = {
+  Button:
+    'Clickable button. MUST always include an action. Has no "label" prop; use a child Text component for the visible label.',
+  Card:
+    'Card container with exactly one child. Wrap multiple elements in a Column/Row/List first.',
+  CheckBox: 'Boolean checkbox with a label and optional validation checks.',
+  Column: 'Vertical layout container.',
+  Divider: 'Horizontal or vertical separator line.',
+  Icon: 'Display an icon by name.',
+  Image: 'Display an image by URL.',
+  LineChart: 'Display one or more numeric line series over shared labels.',
+  List: 'Repeating layout container, commonly bound to a data path.',
+  Modal:
+    'Modal dialog with a trigger component and a content component. The trigger opens the modal locally when tapped.',
+  RadioGroup: 'Single-choice selector for a list of string options.',
+  Row: 'Horizontal layout container.',
+  Slider: 'Numeric slider with an optional label and validation checks.',
+  Tabs: 'Tabbed container; each tab references a child component id.',
+  Text:
+    'Display styled text. Supports literal text, data bindings, and function calls.',
+  TextField: 'Single-line or multi-line text input.',
+};
+
+const CONTAINER_SHAPES: Partial<
+  Record<string, A2UIComponentSpec['containerShape']>
+> = {
+  Button: 'child',
+  Card: 'child',
+  Column: 'children',
+  List: 'children',
+  Modal: 'trigger-content',
+  Row: 'children',
+  Tabs: 'tabs',
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function inferType(schema: JsonSchema | undefined): string {
+  if (!schema) return 'unknown';
+
+  if (schema.oneOf && schema.oneOf.length > 0) {
+    return schema.oneOf.map((item) => inferType(item)).join(' | ');
+  }
+
+  if (schema.type === 'array') {
+    return `${inferType(schema.items)}[]`;
+  }
+
+  if (schema.type === 'object') {
+    const properties = schema.properties ?? {};
+    const keys = Object.keys(properties);
+    if (keys.length === 0) return 'object';
+    const required = new Set(schema.required ?? []);
+    const fields = keys.map((key) => {
+      const optional = required.has(key) ? '' : '?';
+      return `${key}${optional}: ${inferType(properties[key])}`;
+    });
+    return `{ ${fields.join('; ')} }`;
+  }
+
+  if (schema.type === 'string') {
+    if (Array.isArray(schema.enum) && schema.enum.length > 0) {
+      return schema.enum
+        .filter((item): item is string => typeof item === 'string')
+        .map((item) => `"${item}"`)
+        .join(' | ');
+    }
+    return 'string';
+  }
+
+  if (schema.type === 'number') return 'number';
+  if (schema.type === 'boolean') return 'boolean';
+  return schema.type ?? 'unknown';
+}
+
+function inferEnums(schema: JsonSchema | undefined): string[] | undefined {
+  if (!schema) return undefined;
+  if (Array.isArray(schema.enum)) {
+    const values = schema.enum.filter((item): item is string =>
+      typeof item === 'string'
+    );
+    return values.length > 0 ? values : undefined;
+  }
+  if (!schema.oneOf) return undefined;
+  const nested = schema.oneOf.flatMap((item) => inferEnums(item) ?? []);
+  return nested.length > 0 ? [...new Set(nested)] : undefined;
+}
+
+function componentFromManifest(
+  manifest: CatalogManifest,
+): A2UIComponentSpec | null {
+  const [name, schema] = Object.entries(manifest)[0] ?? [];
+  if (!name || !schema) return null;
+
+  const properties = isRecord(schema.properties) ? schema.properties : {};
+  const required = new Set(schema.required ?? []);
+  const props = Object.entries(properties).map(([propName, propSchema]) => {
+    const enums = inferEnums(propSchema);
+    return {
+      name: propName,
+      type: inferType(propSchema),
+      description: propSchema.description ?? '',
+      required: required.has(propName),
+      ...(enums ? { enums } : {}),
+    };
+  });
+
+  return {
+    name,
+    summary: COMPONENT_SUMMARIES[name] ?? `${name} component.`,
+    props,
+    ...(name === 'Button' ? { requiresAction: true } : {}),
+    ...(CONTAINER_SHAPES[name]
+      ? { containerShape: CONTAINER_SHAPES[name] }
+      : {}),
+  };
+}
 
 export const BASIC_CATALOG: A2UICatalog = {
   id: BASIC_CATALOG_ID,
-  label: 'A2UI basic catalog (v0.9)',
+  label: 'Lynx A2UI basic catalog (v0.9)',
   version: 'v0.9',
-  components: [
-    {
-      name: 'Text',
-      summary: 'Display styled text. Supports basic markdown.',
-      props: [
-        prop('text', DYN, true, 'The text content.'),
-        prop(
-          'variant',
-          'string',
-          false,
-          'Typography style.',
-          ['h1', 'h2', 'h3', 'h4', 'h5', 'caption', 'body'],
-        ),
-      ],
-    },
-    {
-      name: 'Image',
-      summary: 'Display an image by URL.',
-      props: [
-        prop('url', DYN, true, 'Image URL.'),
-        prop('description', DYN, false, 'Accessibility / alt text.'),
-        prop(
-          'fit',
-          'string',
-          false,
-          'How the image is resized.',
-          ['contain', 'cover', 'fill', 'none', 'scaleDown'],
-        ),
-        prop(
-          'variant',
-          'string',
-          false,
-          'Size hint.',
-          [
-            'icon',
-            'avatar',
-            'smallFeature',
-            'mediumFeature',
-            'largeFeature',
-            'header',
-          ],
-        ),
-      ],
-    },
-    {
-      name: 'Icon',
-      summary: 'Display a material-style icon by name.',
-      props: [
-        prop(
-          'name',
-          'string | { path: string }',
-          true,
-          'One of the icon enum names, or { path } for a custom path.',
-        ),
-      ],
-    },
-    {
-      name: 'Video',
-      summary: 'Play a video from a URL.',
-      props: [prop('url', DYN, true, 'Video URL.')],
-    },
-    {
-      name: 'AudioPlayer',
-      summary: 'Play an audio file.',
-      props: [
-        prop('url', DYN, true, 'Audio URL.'),
-        prop('description', DYN, false, 'Title / summary.'),
-      ],
-    },
-    {
-      name: 'Divider',
-      summary: 'Horizontal or vertical separator line.',
-      props: [
-        prop('axis', 'string', false, 'Orientation.', [
-          'horizontal',
-          'vertical',
-        ]),
-      ],
-    },
-    {
-      name: 'Row',
-      summary: 'Horizontal layout container.',
-      containerShape: 'children',
-      props: [
-        prop(
-          'children',
-          'string[] | ChildTemplate',
-          true,
-          'Child ids or a template object.',
-        ),
-        prop('justify', 'string', false, 'Main-axis arrangement.', [
-          'start',
-          'center',
-          'end',
-          'spaceAround',
-          'spaceBetween',
-          'spaceEvenly',
-          'stretch',
-        ]),
-        prop('align', 'string', false, 'Cross-axis alignment.', [
-          'start',
-          'center',
-          'end',
-          'stretch',
-        ]),
-      ],
-    },
-    {
-      name: 'Column',
-      summary: 'Vertical layout container.',
-      containerShape: 'children',
-      props: [
-        prop(
-          'children',
-          'string[] | ChildTemplate',
-          true,
-          'Child ids or a template object.',
-        ),
-        prop('justify', 'string', false, 'Main-axis arrangement.', [
-          'start',
-          'center',
-          'end',
-          'spaceAround',
-          'spaceBetween',
-          'spaceEvenly',
-          'stretch',
-        ]),
-        prop('align', 'string', false, 'Cross-axis alignment.', [
-          'start',
-          'center',
-          'end',
-          'stretch',
-        ]),
-      ],
-    },
-    {
-      name: 'List',
-      summary: 'Repeating layout container, commonly bound to a data path.',
-      containerShape: 'children',
-      props: [
-        prop(
-          'children',
-          'string[] | ChildTemplate',
-          true,
-          'Child ids or a template object.',
-        ),
-        prop('direction', 'string', false, 'List direction.', [
-          'vertical',
-          'horizontal',
-        ]),
-        prop('align', 'string', false, 'Cross-axis alignment.', [
-          'start',
-          'center',
-          'end',
-          'stretch',
-        ]),
-      ],
-    },
-    {
-      name: 'Card',
-      summary:
-        'Card container with exactly one child. Wrap multiple elements in a Column/Row first.',
-      containerShape: 'child',
-      props: [
-        prop('child', 'string (component id)', true, 'The single child id.'),
-      ],
-    },
-    {
-      name: 'Tabs',
-      summary: 'Tabbed container; each tab references a child component id.',
-      containerShape: 'tabs',
-      props: [
-        prop(
-          'tabs',
-          'Array<{ title: DynamicString, child: string }>',
-          true,
-          'At least one tab.',
-        ),
-      ],
-    },
-    {
-      name: 'Modal',
-      summary: 'Modal dialog with a trigger component and a content component.',
-      containerShape: 'trigger-content',
-      props: [
-        prop('trigger', 'string (component id)', true, 'Id of the opener.'),
-        prop('content', 'string (component id)', true, 'Id of modal content.'),
-      ],
-    },
-    {
-      name: 'Button',
-      summary:
-        'Clickable button. MUST always include an action. Has no "label" prop – use a child Text component for the visible label.',
-      requiresAction: true,
-      containerShape: 'child',
-      props: [
-        prop(
-          'child',
-          'string (component id)',
-          true,
-          'Id of the Text child component that renders the button label.',
-        ),
-        prop(
-          'action',
-          '{ event: { name: string, context?: Record<string, DynamicValue> } }',
-          true,
-          'Action dispatched when clicked. The event name is nested under "event".',
-        ),
-        prop(
-          'variant',
-          'string',
-          false,
-          'Visual variant.',
-          ['primary', 'secondary', 'tertiary', 'destructive'],
-        ),
-      ],
-    },
-    {
-      name: 'TextField',
-      summary: 'Single-line text input bound to a data path.',
-      props: [
-        prop('label', DYN, false, 'Field label.'),
-        prop('value', '{ path: string }', true, 'Bound data path.'),
-        prop('action', 'Action', false, 'Optional on-change action.'),
-      ],
-    },
-    {
-      name: 'Checkbox',
-      summary: 'Boolean checkbox bound to a data path.',
-      props: [
-        prop('label', DYN, false, 'Checkbox label.'),
-        prop('value', '{ path: string }', true, 'Bound boolean path.'),
-        prop('action', 'Action', false, 'Optional on-change action.'),
-      ],
-    },
-    {
-      name: 'Slider',
-      summary: 'Numeric slider.',
-      props: [
-        prop('value', '{ path: string }', true, 'Bound numeric path.'),
-        prop('min', 'number', false),
-        prop('max', 'number', false),
-        prop('step', 'number', false),
-        prop('action', 'Action', false),
-      ],
-    },
-    {
-      name: 'DatePicker',
-      summary: 'Date selector.',
-      props: [
-        prop('value', '{ path: string }', true, 'Bound date path.'),
-        prop('action', 'Action', false),
-      ],
-    },
+  components: CATALOG_MANIFESTS
+    .map((manifest) => componentFromManifest(manifest as CatalogManifest))
+    .filter((component): component is A2UIComponentSpec => component !== null),
+  extraRules: [
+    'Use only components listed in this catalog; unsupported examples such as Video, AudioPlayer, DatePicker, or Checkbox are not available unless they appear here.',
+    'The implemented checkbox component is named "CheckBox" with a capital B.',
   ],
 };
 
