@@ -1,0 +1,61 @@
+name: Pkg.pr.new
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - "**/*.md"
+  workflow_dispatch:
+
+# Set default minimum permissions to prevent unnecessary access
+permissions: {}
+
+env:
+  CI: 1
+  TURBO_TELEMETRY_DISABLED: 1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: Publish to pkg.pr.new
+    timeout-minutes: 30
+    runs-on: lynx-ubuntu-24.04-xlarge
+    if: github.repository == 'lynx-family/lynx-stack'
+    permissions:
+      contents: read
+      pull-requests: write
+      # `id-token: write` is required for the pkg.pr.new OIDC verification
+      id-token: write
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions-rust-lang/setup-rust-toolchain@1780873c7b576612439a134613cc4cc74ce5538c # v1
+        with:
+          cache: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - name: Install
+        run: |
+          npm install -g corepack@latest
+          corepack enable && corepack prepare
+          corepack pnpm install --frozen-lockfile
+      - name: Build
+        run: |
+          corepack pnpm turbo --filter !@lynx-js/web-tests --filter !benchx_cli --filter "!@lynx-js/benchmark-*" build --summarize
+        env:
+          NODE_OPTIONS: --max-old-space-size=32768
+      - name: Publish to pkg.pr.new
+        run: |
+          corepack pnpm dlx pkg-pr-new publish \
+            --compact \
+            --pnpm \
+            './packages/*' \
+            './packages/*/*'
