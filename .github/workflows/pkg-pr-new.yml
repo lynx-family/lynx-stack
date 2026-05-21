@@ -50,12 +50,7 @@ jobs:
       - name: Collect packages with changesets
         id: changeset
         run: |
-          # `changeset status` can exit non-zero on some edge cases (e.g. empty
-          # repo state); tolerate that and fall back to the parsed JSON.
-          pnpm changeset status --since=origin/main --output .changeset-status.json || true
-          if [ ! -f .changeset-status.json ]; then
-            echo '{"changesets":[],"releases":[]}' > .changeset-status.json
-          fi
+          pnpm changeset status --since=origin/main --output .changeset-status.json
           PACKAGE_DIRS=$(node .github/scripts/list-changeset-packages.cjs .changeset-status.json | tr '\n' ' ')
           if [ -z "$(echo "$PACKAGE_DIRS" | tr -d '[:space:]')" ]; then
             echo "No publishable packages affected by changesets; skipping publish."
