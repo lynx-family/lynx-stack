@@ -216,32 +216,30 @@ export class BackgroundElementTemplateInstance {
     if (silent) {
       return;
     }
-    if (slotId !== -1 && parent) {
-      if (!parent.canEmitUpdatePatch()) {
-        if (!isElementTemplateHydrated()) {
-          // Pre-hydration commits have already exposed refs to user effects, so
-          // a local slot removal must detach them even though no native patch exists.
-          child.queueRefCleanupForSubtree();
-        }
-        if (child.needsMainThreadCreate()) {
-          // An unmaterialized subtree has no main-thread registry entry, so it
-          // can be released from the background manager without delayed cleanup.
-          child.tearDown();
-        }
-        return;
+    if (!this.canEmitUpdatePatch()) {
+      if (!isElementTemplateHydrated()) {
+        // Pre-hydration commits have already exposed refs to user effects, so
+        // a local slot removal must detach them even though no native patch exists.
+        child.queueRefCleanupForSubtree();
       }
-      pushOp(
-        ElementTemplateUpdateOps.removeNode,
-        parent.instanceId,
-        slotId,
-        child.instanceId,
-        collectElementTemplateSubtreeHandleIds(child),
-      );
-      child.queueRefCleanupForSubtree();
-      // The removed JS object graph may outlive the detach until GC, so keep
-      // it pending and tear it down on the Snapshot-aligned delayed boundary.
-      markRemovedSubtreeForPostDispatchTeardown(child);
+      if (child.needsMainThreadCreate()) {
+        // An unmaterialized subtree has no main-thread registry entry, so it
+        // can be released from the background manager without delayed cleanup.
+        child.tearDown();
+      }
+      return;
     }
+    pushOp(
+      ElementTemplateUpdateOps.removeNode,
+      this.instanceId,
+      slotId,
+      child.instanceId,
+      collectElementTemplateSubtreeHandleIds(child),
+    );
+    child.queueRefCleanupForSubtree();
+    // The removed JS object graph may outlive the detach until GC, so keep
+    // it pending and tear it down on the Snapshot-aligned delayed boundary.
+    markRemovedSubtreeForPostDispatchTeardown(child);
   }
 
   tearDown(): void {
