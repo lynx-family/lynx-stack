@@ -3,16 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 import { isEmptyObject } from '../utils.js';
 
-function isNonEmptyObjectData(data: unknown): data is Record<string, unknown> {
-  return typeof data == 'object' && data !== null && !isEmptyObject(data);
-}
-
 export function applyUpdatePageData(data: unknown, options?: Pick<UpdatePageOption, 'resetPageData'>): void {
   if (options?.resetPageData) {
     lynx.__initData = {};
   }
 
-  if (isNonEmptyObjectData(data)) {
+  if (typeof data == 'object' && data !== null && !isEmptyObject(data)) {
     lynx.__initData ??= {};
     Object.assign(lynx.__initData, data);
   }

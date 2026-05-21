@@ -10,8 +10,8 @@
 import { render } from 'preact';
 
 import { destroyBackground } from './destroy.js';
-import { increaseReloadVersion } from './pass.js';
 import { renderMainThread } from './render.js';
+import { increaseReloadVersion } from '../../core/reload-version.js';
 import { __root, setRoot } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isEmptyObject } from '../../utils.js';
@@ -32,7 +32,7 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
 
   increaseReloadVersion();
 
-  if (typeof data == 'object' && !isEmptyObject(data as Record<string, unknown>)) {
+  if (typeof data == 'object' && data !== null && !isEmptyObject(data)) {
     Object.assign(lynx.__initData, data);
   }
 

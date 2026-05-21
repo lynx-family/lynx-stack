@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { getReloadVersion } from '../../core/reload-version.js';
 import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
 import { markTiming, setPipeline } from '../lynx/performance.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
@@ -19,6 +20,10 @@ export function installElementTemplatePatchListener(): void {
   listener = (event: { data: unknown }) => {
     const { data } = event;
     const payload = data as ElementTemplateUpdateCommitContext;
+    if (typeof payload?.reloadVersion === 'number' && payload.reloadVersion < getReloadVersion()) {
+      return;
+    }
+
     const hasOps = Array.isArray(payload?.ops) && payload.ops.length > 0;
     const flushOptions = payload?.flushOptions ?? {};
     const pipelineOptions = flushOptions.pipelineOptions;

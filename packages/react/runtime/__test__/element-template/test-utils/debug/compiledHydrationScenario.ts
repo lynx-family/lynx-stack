@@ -11,6 +11,7 @@ import { installMockNativePapi } from '../mock/mockNativePapi.js';
 import { compileFixtureSource, type CompiledFixtureTarget } from './compiledFixtureCompiler.js';
 import { loadCompiledFixtureModule } from './compiledFixtureModule.js';
 import { ElementTemplateEnvManager } from './envManager.js';
+import { extractSerializedHydrateInstances } from './hydratePayload.js';
 import { primeCompiledFixtureTemplates } from './compiledFixtureRegistry.js';
 import { renderCompiledFixtureOnBackground, renderCompiledFixtureOnMainThread } from './compiledThreadRunner.js';
 
@@ -47,10 +48,7 @@ export async function runCompiledHydrationScenario(
 
   const hydrationData: SerializedElementTemplate[] = [];
   const onHydrate = vi.fn().mockImplementation((event: { data: unknown }) => {
-    const data = event.data;
-    if (Array.isArray(data)) {
-      hydrationData.push(...data as SerializedElementTemplate[]);
-    }
+    hydrationData.push(...extractSerializedHydrateInstances(event.data));
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 

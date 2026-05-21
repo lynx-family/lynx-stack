@@ -13,13 +13,18 @@ import {
 } from './commit-hook.js';
 import { hydrateIntoContext } from './hydrate.js';
 import { BackgroundElementTemplateInstance } from './instance.js';
+import { getReloadVersion } from '../../core/reload-version.js';
 import { formatElementTemplateUpdateCommands, printElementTemplateTreeToString } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../lynx/performance.js';
 import { clearPendingEvents, flushPendingEvents } from '../prop-adapters/event.js';
 import { clearDelayedRefUiOps, clearPendingRefs, flushDelayedRefUiOps } from '../prop-adapters/ref.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
-import type { SerializedElementTemplate, SerializedEtNode } from '../protocol/types.js';
+import type {
+  ElementTemplateHydrateCommitContext,
+  SerializedElementTemplate,
+  SerializedEtNode,
+} from '../protocol/types.js';
 import { __root } from '../runtime/page/root-instance.js';
 
 let listener:
@@ -32,12 +37,22 @@ export function installElementTemplateHydrationListener(): void {
 
   listener = (event: { data: unknown }) => {
     const { data } = event;
+    let instances: SerializedEtNode[];
+    if (Array.isArray(data)) {
+      instances = data as SerializedEtNode[];
+    } else {
+      const payload = data as ElementTemplateHydrateCommitContext;
+      if (typeof payload.reloadVersion === 'number' && payload.reloadVersion < getReloadVersion()) {
+        return;
+      }
+      instances = payload.instances;
+    }
+
     if (__PROFILE__) {
       profileStart('ReactLynx::hydrate');
     }
     beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
     markTiming('hydrateParsePayloadStart');
-    const instances = data as SerializedEtNode[];
     markTiming('hydrateParsePayloadEnd');
     markTiming('diffVdomStart');
 
@@ -125,6 +140,7 @@ export function installElementTemplateHydrationListener(): void {
             ops: globalCommitContext.ops,
             flushOptions: globalCommitContext.flushOptions,
             flowIds: globalCommitContext.flowIds,
+            reloadVersion: getReloadVersion(),
           },
         });
         didDispatchHydrateUpdate = true;

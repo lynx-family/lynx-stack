@@ -21,6 +21,7 @@ describe('element-template native index wiring', () => {
     vi.doUnmock('../../../src/element-template/native/patch-listener.js');
     vi.doUnmock('../../../src/element-template/native/mts-destroy.js');
     vi.doUnmock('../../../src/element-template/native/callDestroyLifetimeFun.js');
+    vi.doUnmock('../../../src/element-template/native/reload.js');
     vi.doUnmock('../../../src/element-template/prop-adapters/event.js');
     vi.doUnmock('../../../src/element-template/background/document.js');
     vi.doUnmock('../../../src/element-template/background/hydration-listener.js');
@@ -49,6 +50,7 @@ describe('element-template native index wiring', () => {
     const installElementTemplateHydrationListener = vi.fn();
     const setRoot = vi.fn();
     const initTimingAPI = vi.fn();
+    const reloadBackground = vi.fn();
 
     vi.doMock('../../../src/element-template/native/main-thread-api.js', () => ({
       injectCalledByNative,
@@ -85,6 +87,9 @@ describe('element-template native index wiring', () => {
     }));
     vi.doMock('../../../src/element-template/background/instance.js', () => ({
       BackgroundElementTemplateInstance: class BackgroundElementTemplateInstance {},
+    }));
+    vi.doMock('../../../src/element-template/native/reload.js', () => ({
+      reloadBackground,
     }));
 
     await import('../../../src/element-template/native/index.js');
@@ -123,6 +128,7 @@ describe('element-template native index wiring', () => {
     const publicComponentEvent = vi.fn();
     const resetEventStateForRuntime = vi.fn();
     const updateCardData = vi.fn();
+    const reloadBackground = vi.fn();
 
     vi.doMock('../../../src/element-template/native/main-thread-api.js', () => ({
       injectCalledByNative,
@@ -170,6 +176,9 @@ describe('element-template native index wiring', () => {
         constructor(public type: string) {}
       },
     }));
+    vi.doMock('../../../src/element-template/native/reload.js', () => ({
+      reloadBackground,
+    }));
 
     await import('../../../src/element-template/native/index.js');
 
@@ -185,6 +194,7 @@ describe('element-template native index wiring', () => {
     expect(globalThis.lynxCoreInject.tt.publishEvent).toBe(publishEvent);
     expect(globalThis.lynxCoreInject.tt.publicComponentEvent).toBe(publicComponentEvent);
     expect(globalThis.lynxCoreInject.tt.updateCardData).toBe(updateCardData);
+    expect(globalThis.lynxCoreInject.tt.onAppReload).toBe(reloadBackground);
 
     expect(injectCalledByNative).not.toHaveBeenCalled();
     expect(installElementTemplatePatchListener).not.toHaveBeenCalled();

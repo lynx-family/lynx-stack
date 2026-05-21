@@ -22,6 +22,7 @@ import { __root } from '../../../../src/element-template/runtime/page/root-insta
 import { applyElementTemplateUpdateCommands } from '../../../../src/element-template/runtime/patch.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
+import { extractSerializedHydrateInstances } from '../../test-utils/debug/hydratePayload.js';
 import { registerBuiltinRawTextTemplate, registerTemplates } from '../../test-utils/debug/registry.js';
 import { lastMock } from '../../test-utils/mock/mockNativePapi.js';
 import { serializeToJSX } from '../../test-utils/debug/serializer.js';
@@ -87,12 +88,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     envManager.setUseElementTemplate(true);
 
     onHydrate = vi.fn().mockImplementation((event: { data: unknown }) => {
-      const data = event.data;
-      if (Array.isArray(data)) {
-        for (const item of data) {
-          hydrationData.push(item as SerializedElementTemplate);
-        }
-      }
+      hydrationData.push(...extractSerializedHydrateInstances(event.data));
     });
     lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
   });

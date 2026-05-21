@@ -19,6 +19,7 @@ import {
 import { __page } from '../../../../src/element-template/runtime/page/page.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';
 import { ElementTemplateEnvManager } from './envManager.js';
+import { extractSerializedHydrateInstances } from './hydratePayload.js';
 import { lastMock } from '../mock/mockNativePapi.js';
 import { serializeBackgroundTree, serializeToJSX } from './serializer.js';
 
@@ -158,12 +159,7 @@ export function runElementTemplateUpdate(options: UpdateRunOptions): UpdateRunRe
   envManager.resetEnv('background');
   envManager.setUseElementTemplate(true);
   const onHydrate = (event: { data: unknown }) => {
-    const data = event.data;
-    if (Array.isArray(data)) {
-      for (const item of data) {
-        hydrationData.push(item as SerializedElementTemplate);
-      }
-    }
+    hydrationData.push(...extractSerializedHydrateInstances(event.data));
   };
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 

@@ -29,6 +29,7 @@ import type { SerializedElementTemplate } from '../../../../../src/element-templ
 import { __page } from '../../../../../src/element-template/runtime/page/page.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
 import { ElementTemplateEnvManager } from '../../../test-utils/debug/envManager.js';
+import { extractSerializedHydrateInstances } from '../../../test-utils/debug/hydratePayload.js';
 import { installMockNativePapi } from '../../../test-utils/mock/mockNativePapi.js';
 import { serializeToJSX } from '../../../test-utils/debug/serializer.js';
 
@@ -100,12 +101,7 @@ function setup(): CaseContext {
   envManager.setUseElementTemplate(true);
 
   const onHydrate = vi.fn().mockImplementation((event: { data: unknown }) => {
-    const data = event.data;
-    if (Array.isArray(data)) {
-      for (const item of data) {
-        hydrationData.push(item as SerializedElementTemplate);
-      }
-    }
+    hydrationData.push(...extractSerializedHydrateInstances(event.data));
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 

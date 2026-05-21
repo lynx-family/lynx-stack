@@ -63,6 +63,11 @@ export interface SerializedTypedNode extends SerializedEtNodeBase {
 
 export type SerializedEtNode = SerializedCompiledNode | SerializedTypedNode;
 
+export interface ElementTemplateHydrateCommitContext {
+  instances: SerializedEtNode[];
+  reloadVersion?: number;
+}
+
 // Current hydrate/update code is still compiled-node only. Keep this recursive
 // shape narrow while the RFC-level SerializedEtNode already models typed nodes.
 export interface SerializedElementTemplate {
@@ -148,4 +153,5 @@ export interface ElementTemplateUpdateCommitContext {
   ops: ElementTemplateUpdateCommandStream;
   flushOptions: ElementTemplateFlushOptions;
   flowIds?: number[];
+  reloadVersion?: number;
 }

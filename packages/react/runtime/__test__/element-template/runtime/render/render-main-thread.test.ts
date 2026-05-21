@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderMainThread } from '../../../../src/element-template/runtime/render/render-main-thread.js';
+import { getReloadVersion } from '../../../../src/core/reload-version.js';
 import { setupPage } from '../../../../src/element-template/runtime/page/page.js';
 import { setRoot } from '../../../../src/element-template/runtime/page/root-instance.js';
 
@@ -98,7 +99,10 @@ describe('renderMainThread', () => {
     expect(__SerializeElementTemplate).toHaveBeenNthCalledWith(2, rootRefB);
     expect(dispatchEvent).toHaveBeenCalledWith({
       type: 'rLynxElementTemplateHydrate',
-      data: [serializedA, serializedB],
+      data: {
+        instances: [serializedA, serializedB],
+        reloadVersion: getReloadVersion(),
+      },
     });
   });
 });
