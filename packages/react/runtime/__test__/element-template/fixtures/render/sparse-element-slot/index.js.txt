@@ -1,0 +1,14 @@
+import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+const _et_7a8c6_test_2 = "_et_7a8c6_test_2";
+const _et_7a8c6_test_3 = "_et_7a8c6_test_3";
+const _et_7a8c6_test_1 = "_et_7a8c6_test_1";
+export function App({ showHeader = false, items = [
+    'body'
+] }) {
+    return /*#__PURE__*/ _jsx(_et_7a8c6_test_1, {
+        $0: showHeader && /*#__PURE__*/ _jsx(_et_7a8c6_test_2, {}),
+        $1: items.map((item)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_3, {
+                $0: item
+            }, item))
+    });
+}

@@ -302,6 +302,7 @@ describe('BackgroundElementTemplateInstance', () => {
       globalCommitContext.ops = [];
 
       const grandchild = new BackgroundElementTemplateInstance('view');
+      grandchild.__slotIndex = 1;
       const child = new BackgroundElementTemplateInstance('view');
       child.appendChild(grandchild);
 
@@ -310,8 +311,10 @@ describe('BackgroundElementTemplateInstance', () => {
       const serializedSlots = globalCommitContext.ops[11] as unknown[];
       expect(globalCommitContext.ops[6]).toBe(1);
       expect(globalCommitContext.ops[7]).toBe(child.instanceId);
-      expect(serializedSlots).toHaveLength(1);
-      expect(0 in serializedSlots).toBe(true);
+      expect(serializedSlots).toHaveLength(2);
+      expect(0 in serializedSlots).toBe(false);
+      expect(1 in serializedSlots).toBe(true);
+      expect(serializedSlots[1]).toEqual([grandchild.instanceId]);
       expect(globalCommitContext.ops.slice(12)).toEqual([
         3,
         parent.instanceId,
