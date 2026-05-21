@@ -24,11 +24,6 @@ on:
         required: true
         type: string
         description: "Command run parameters, limited to predefined test commands"
-      failure-result-run:
-        required: false
-        type: string
-        default: ""
-        description: "Optional command that writes a fallback result before artifacts are uploaded"
       is-web:
         required: false
         type: boolean
@@ -116,9 +111,6 @@ jobs:
           MIDSCENE_MODEL_NAME: ${{ secrets.MIDSCENE_MODEL_NAME }}
           MIDSCENE_OPENAI_INIT_CONFIG_JSON: ${{ secrets.MIDSCENE_OPENAI_INIT_CONFIG_JSON }}
         run: ${{ inputs.run }}
-      - name: Write Failure Result # zizmor: ignore[template-injection] The inputs.failure-result-run is provided by us.
-        if: ${{ always() && inputs.failure-result-run != '' && failure() }}
-        run: ${{ inputs.failure-result-run }}
       - name: Upload coverage reports to Codecov
         if: ${{ inputs.upload-codecov }}
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5

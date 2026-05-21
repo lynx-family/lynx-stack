@@ -95,16 +95,12 @@ jobs:
         set -eu
         export UI_JUDGE_RESULT_FILE="$GITHUB_WORKSPACE/ui-judge-results.json"
         if [ -z "${MIDSCENE_MODEL_NAME:-}" ] || [ -z "${MIDSCENE_MODEL_API_KEY:-}" ]; then
-          UI_JUDGE_RESULT_ERROR_MESSAGE="Midscene secrets are unavailable; UI Judge model test was skipped." node .github/scripts/write-ui-judge-failure-result.mjs
+          UI_JUDGE_RESULT_ERROR_MESSAGE="Midscene secrets are unavailable; UI Judge model test was skipped." node .github/scripts/write-ui-judge-result.mjs
           echo "Midscene secrets are unavailable; skipping UI Judge."
           exit 0
         fi
         ulimit -Sn 655350
         pnpm --filter @lynx-js/ui-judge test
-      failure-result-run: |
-        cd "$GITHUB_WORKSPACE"
-        set -eu
-        UI_JUDGE_RESULT_FILE="$GITHUB_WORKSPACE/ui-judge-results.json" node .github/scripts/write-ui-judge-failure-result.mjs
 
   ui-judge-comment:
     needs: ui-judge

@@ -7,7 +7,7 @@ import { join } from 'node:path';
 const resultFile = process.env.UI_JUDGE_RESULT_FILE
   || join(process.env.GITHUB_WORKSPACE, 'ui-judge-results.json');
 const errorMessage = process.env.UI_JUDGE_RESULT_ERROR_MESSAGE
-  || 'UI Judge CI failed before writing a model result. See the workflow logs for details.';
+  || 'UI Judge did not produce a model result. See the workflow logs for details.';
 
 if (!existsSync(resultFile)) {
   writeFileSync(
