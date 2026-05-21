@@ -67,8 +67,12 @@ jobs:
           } >> "$GITHUB_OUTPUT"
       - name: Build
         if: steps.changeset.outputs.skip != 'true'
+        # `--filter` flags are intentionally omitted: turbo's pnpm-lock parser
+        # can't read this repo's patched-dependency block, which makes filter
+        # lookups fail. The unfiltered command still builds the publishable
+        # packages we need (web-tests / benchmark builds are no-ops here).
         run: |
-          corepack pnpm turbo --filter !@lynx-js/web-tests --filter !benchx_cli --filter "!@lynx-js/benchmark-*" build --summarize
+          corepack pnpm turbo build --summarize
         env:
           NODE_OPTIONS: --max-old-space-size=32768
       - name: Publish to pkg.pr.new
