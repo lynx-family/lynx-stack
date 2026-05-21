@@ -91,18 +91,22 @@ jobs:
       web-report-name: ui-judge-playwright-report
       web-report-path: packages/genui/ui-judge/playwright-report
       preflight-run: |
+        cd "$GITHUB_WORKSPACE"
         set -eu
         node .github/scripts/check-ui-judge-inputs.mjs
       build-run: |
+        cd "$GITHUB_WORKSPACE"
         export NODE_OPTIONS="--max-old-space-size=32768"
         pnpm turbo build --filter @lynx-js/ui-judge... --summarize
         pnpm turbo build:lynx --filter a2ui-playground --summarize
       run: |
+        cd "$GITHUB_WORKSPACE"
         set -eu
         export UI_JUDGE_RESULT_FILE="$GITHUB_WORKSPACE/ui-judge-results.json"
         ulimit -Sn 655350
         pnpm --filter @lynx-js/ui-judge test
       failure-result-run: |
+        cd "$GITHUB_WORKSPACE"
         set -eu
         UI_JUDGE_RESULT_FILE="$GITHUB_WORKSPACE/ui-judge-results.json" node .github/scripts/write-ui-judge-failure-result.mjs
 

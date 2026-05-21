@@ -47,6 +47,6 @@ function listPullRequestFiles() {
     'diff',
     '--name-only',
     `${base}...${head}`,
-  ], { encoding: 'utf8' });
+  ], { cwd: process.env.GITHUB_WORKSPACE, encoding: 'utf8' });
   return output.split(/\r?\n/).filter(Boolean);
 }
