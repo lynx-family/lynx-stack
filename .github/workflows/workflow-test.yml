@@ -108,7 +108,6 @@ jobs:
         id: preflight
         if: ${{ inputs.preflight-run != '' }}
         env:
-          GITHUB_TOKEN: ${{ github.token }}
           MIDSCENE_MODEL_API_KEY: ${{ secrets.MIDSCENE_MODEL_API_KEY }}
           MIDSCENE_MODEL_NAME: ${{ secrets.MIDSCENE_MODEL_NAME }}
         run: ${{ inputs.preflight-run }}

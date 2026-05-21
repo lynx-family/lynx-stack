@@ -1,5 +1,5 @@
 ---
-applyTo: ".github/workflows/test.yml,.github/workflows/workflow-test.yml,.github/scripts/*ui-judge*.mjs,.github/ui-judge*.instructions.md,.github/actions/ui-judge-comment/**"
+applyTo: ".github/workflows/test.yml,.github/workflows/workflow-test.yml,.github/scripts/write-ui-judge-failure-result.mjs,.github/ui-judge*.instructions.md,.github/actions/ui-judge-comment/**"
 ---
 
 When wiring `@lynx-js/ui-judge` into pull request CI, preserve the PR comment even when the model-backed test fails, but do not hide the failed test. Prefer running UI Judge through the reusable `workflow-test.yml` job with `is-web: true`, uploading `ui-judge-results.json` as an artifact, and posting the comment from a separate thin job with `issues: write` and `pull-requests: write`.
@@ -10,7 +10,7 @@ Keep the UI Judge Playwright job dependent on the repository `build` job, matchi
 
 Use the upstream build job's restored turbo cache in UI Judge CI. Do not call package scripts directly with `pnpm --filter <package> build`, and do not pass `--force`; the focused turbo commands should replay the upstream build outputs from cache.
 
-In UI Judge preflight code, do not depend on local `.git` metadata inside the custom Playwright container. The checkout can be available as files while `git diff` is unusable there, so use the pull request files API for changed-file gating and fail open by running UI Judge if the file list cannot be fetched.
+Keep the UI Judge early-success gate limited to Midscene secret availability. Do not add changed-file gating or GitHub API calls to the reusable test path; fork pull requests without secrets should set `should-run=false` before install/build/test, while normal pull requests with secrets should run UI Judge.
 
 Raise the soft open-file limit before running UI Judge Playwright tests in the Playwright container. The A2UI playground dev server uses rsbuild/chokidar watchers, so mirror the web-elements Playwright pattern with `ulimit -Sn 655350` before invoking `pnpm --filter @lynx-js/ui-judge test`.
 

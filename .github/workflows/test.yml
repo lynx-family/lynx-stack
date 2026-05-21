@@ -91,9 +91,13 @@ jobs:
       web-report-name: ui-judge-playwright-report
       web-report-path: packages/genui/ui-judge/playwright-report
       preflight-run: |
-        cd "$GITHUB_WORKSPACE"
         set -eu
-        node .github/scripts/check-ui-judge-inputs.mjs
+        if [ -z "${MIDSCENE_MODEL_NAME:-}" ] || [ -z "${MIDSCENE_MODEL_API_KEY:-}" ]; then
+          echo "should-run=false" >> "$GITHUB_OUTPUT"
+          echo "Midscene secrets are unavailable; skipping UI Judge."
+          exit 0
+        fi
+        echo "should-run=true" >> "$GITHUB_OUTPUT"
       build-run: |
         cd "$GITHUB_WORKSPACE"
         export NODE_OPTIONS="--max-old-space-size=32768"
