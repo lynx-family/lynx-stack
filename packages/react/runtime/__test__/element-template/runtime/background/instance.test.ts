@@ -166,7 +166,7 @@ describe('BackgroundElementTemplateInstance', () => {
 
     it('emits create with initialized attrs before inserting a post-hydration template', () => {
       const parent = new BackgroundElementTemplateInstance('view');
-      parent.emitCreate(parent.elementSlots);
+      parent.emitCreate();
 
       markElementTemplateHydrated();
       globalCommitContext.ops = [];
@@ -197,7 +197,7 @@ describe('BackgroundElementTemplateInstance', () => {
       const ref = vi.fn();
       __etAttrPlanMap.view = [0, adaptRefAttrSlot];
       const parent = new BackgroundElementTemplateInstance('view');
-      parent.emitCreate(parent.elementSlots);
+      parent.emitCreate();
 
       markElementTemplateHydrated();
       globalCommitContext.ops = [];
@@ -280,7 +280,7 @@ describe('BackgroundElementTemplateInstance', () => {
 
     it('defers nested slot inserts until the owner template is created', () => {
       const parent = new BackgroundElementTemplateInstance('view');
-      parent.emitCreate(parent.elementSlots);
+      parent.emitCreate();
 
       markElementTemplateHydrated();
       globalCommitContext.ops = [];
@@ -316,7 +316,7 @@ describe('BackgroundElementTemplateInstance', () => {
 
     it('skips sparse child slots when creating a post-hydration template recursively', () => {
       const parent = new BackgroundElementTemplateInstance('view');
-      parent.emitCreate(parent.elementSlots);
+      parent.emitCreate();
 
       markElementTemplateHydrated();
       globalCommitContext.ops = [];
@@ -860,7 +860,7 @@ describe('BackgroundElementTemplateInstance', () => {
 
     const instance = new BackgroundElementTemplateInstance('view');
     instance.instanceId = 0;
-    instance.emitCreate(instance.elementSlots);
+    instance.emitCreate();
 
     expect(reportErrorSpy).toHaveBeenCalledTimes(1);
 
@@ -872,7 +872,7 @@ describe('BackgroundElementTemplateInstance', () => {
     instance.setAttribute('attributeSlots', [undefined]);
     globalCommitContext.ops = [];
 
-    instance.emitCreate(instance.elementSlots);
+    instance.emitCreate();
 
     expect(globalCommitContext.ops).toEqual([
       1,
@@ -1072,7 +1072,7 @@ describe('BackgroundElementTemplateInstance', () => {
     });
     globalCommitContext.ops = [];
 
-    instance.emitCreate(instance.elementSlots);
+    instance.emitCreate();
 
     expect(globalCommitContext.ops).toEqual([
       1,
@@ -1088,8 +1088,8 @@ describe('BackgroundElementTemplateInstance', () => {
     const instance = new BackgroundElementTemplateInstance('view');
     globalCommitContext.ops = [];
 
-    instance.emitCreate(instance.elementSlots);
-    instance.emitCreate(instance.elementSlots);
+    instance.emitCreate();
+    instance.emitCreate();
 
     expect(globalCommitContext.ops).toEqual([
       1,
@@ -1113,7 +1113,7 @@ describe('BackgroundElementTemplateInstance', () => {
 
   it('defers raw-text patches until inserting a post-hydration text node', () => {
     const parent = new BackgroundElementTemplateInstance('view');
-    parent.emitCreate(parent.elementSlots);
+    parent.emitCreate();
 
     markElementTemplateHydrated();
     globalCommitContext.ops = [];
@@ -1180,7 +1180,7 @@ describe('Background raw-text instance', () => {
 
   it('emits setAttribute when existing raw-text data changes after hydration', () => {
     const textNode = createTextNode('old');
-    textNode.emitCreate(textNode.elementSlots);
+    textNode.emitCreate();
     markElementTemplateHydrated();
     globalCommitContext.ops = [];
 
@@ -1260,7 +1260,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
 
   it('emits null when an existing attribute slot is removed after hydration', () => {
     const instance = new BackgroundElementTemplateInstance('view', ['old']);
-    instance.emitCreate(instance.elementSlots);
+    instance.emitCreate();
     markElementTemplateHydrated();
     globalCommitContext.ops = [];
 
@@ -1277,7 +1277,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
 
   it('does not patch equivalent null and undefined attribute slots after hydration', () => {
     const instance = new BackgroundElementTemplateInstance('view', [null]);
-    instance.emitCreate(instance.elementSlots);
+    instance.emitCreate();
     markElementTemplateHydrated();
     globalCommitContext.ops = [];
 
@@ -1290,7 +1290,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
   it('prepares event attribute slots after hydration and resolves the handler by event value', () => {
     __etAttrPlanMap.view = [0, adaptEventAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view');
-    instance.emitCreate(instance.elementSlots);
+    instance.emitCreate();
     markElementTemplateHydrated();
     globalCommitContext.ops = [];
 
@@ -1311,7 +1311,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
   it('uses the latest raw event handler without patching native when the event value is unchanged', () => {
     __etAttrPlanMap.view = [0, adaptEventAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view');
-    instance.emitCreate(instance.elementSlots);
+    instance.emitCreate();
     markElementTemplateHydrated();
 
     const firstHandler = vi.fn();
@@ -1330,7 +1330,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
   it('drops a stale handler when an event slot becomes a non-function marker', () => {
     __etAttrPlanMap.view = [0, adaptEventAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view');
-    instance.emitCreate(instance.elementSlots);
+    instance.emitCreate();
     markElementTemplateHydrated();
 
     const handler = vi.fn();
@@ -1348,7 +1348,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
   it('removes the raw event handler and patches null when the event slot is cleared', () => {
     __etAttrPlanMap.view = [0, adaptEventAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view');
-    instance.emitCreate(instance.elementSlots);
+    instance.emitCreate();
     markElementTemplateHydrated();
 
     const handler = vi.fn();
@@ -1376,7 +1376,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     instance.setAttribute('attributeSlots', [handler]);
     globalCommitContext.ops = [];
 
-    instance.emitCreate(instance.elementSlots);
+    instance.emitCreate();
 
     const eventValue = `${instance.instanceId}:0:`;
     expect(getEventHandlerForEventValue(eventValue)).toBe(handler);
@@ -1419,7 +1419,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
   it('prepares spread event keys after hydration and registers handlers by event value', () => {
     __etAttrPlanMap.view = [0, adaptSpreadAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view');
-    instance.emitCreate(instance.elementSlots);
+    instance.emitCreate();
     markElementTemplateHydrated();
     globalCommitContext.ops = [];
 
@@ -1452,7 +1452,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
   it('updates spread event handlers without patching native when the prepared spread value is unchanged', () => {
     __etAttrPlanMap.view = [0, adaptSpreadAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view');
-    instance.emitCreate(instance.elementSlots);
+    instance.emitCreate();
     markElementTemplateHydrated();
 
     const firstHandler = vi.fn();
@@ -1471,7 +1471,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
   it('patches the whole spread slot when event keys change and cleans removed handlers', () => {
     __etAttrPlanMap.view = [0, adaptSpreadAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view');
-    instance.emitCreate(instance.elementSlots);
+    instance.emitCreate();
     markElementTemplateHydrated();
 
     const handleTap = vi.fn();
@@ -1503,7 +1503,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     instance.setAttribute('attributeSlots', [{ id: 'cta', bindtap: handleTap }]);
     globalCommitContext.ops = [];
 
-    instance.emitCreate(instance.elementSlots);
+    instance.emitCreate();
 
     const eventValue = `${instance.instanceId}:0:bindtap`;
     const preparedSpread = { id: 'cta', bindtap: eventValue };

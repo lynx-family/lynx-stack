@@ -135,18 +135,17 @@ function hydrateInstance(
   }
 
   const serializedElementSlots = serialized.elementSlots ?? [];
-  const backgroundElementSlots = instance.elementSlots;
   // Snapshot hydrates dynamic children through slot-filtered lists. Keeping ET
   // scoped the same way means a cross-slot candidate is a source remove plus a
   // target create/insert, while same-slot reorder can still stay move-like.
-  const slotCount = Math.max(serializedElementSlots.length, backgroundElementSlots.length);
+  const slotCount = Math.max(serializedElementSlots.length, instance.elementSlots.length);
   for (let slotId = 0; slotId < slotCount; slotId += 1) {
     const serializedSlot = serializedElementSlots[slotId];
-    const backgroundSlot = backgroundElementSlots[slotId];
+    const backgroundSlot = instance.elementSlots[slotId];
     if (!serializedSlot && !backgroundSlot) {
       continue;
     }
-    if (!hydrateElementSlot(instance, slotId, serializedSlot ?? [], backgroundSlot ?? [])) {
+    if (!hydrateElementSlot(instance, slotId, serializedSlot ?? [])) {
       return false;
     }
   }
@@ -157,8 +156,8 @@ function hydrateElementSlot(
   parent: BackgroundElementTemplateInstance,
   slotId: number,
   serializedChildren: SerializedElementTemplate[],
-  backgroundChildren: BackgroundElementTemplateInstance[],
 ): boolean {
+  const backgroundChildren = parent.elementSlots[slotId] ?? [];
   if (backgroundChildren.length === 0) {
     for (const serialized of serializedChildren) {
       emitSerializedSubtreeRemove(parent, slotId, serialized);
@@ -272,8 +271,7 @@ function collectSerializedSubtreeHandleIdsInto(
 }
 
 function emitCreateSubtree(node: BackgroundElementTemplateInstance): void {
-  const elementSlots = node.elementSlots;
-  for (const slotChildren of elementSlots) {
+  for (const slotChildren of node.elementSlots) {
     /* v8 ignore start */
     if (!slotChildren) {
       continue;
@@ -284,7 +282,7 @@ function emitCreateSubtree(node: BackgroundElementTemplateInstance): void {
     }
   }
   node.prepareAttributeSlotsForHydration();
-  node.emitCreate(elementSlots);
+  node.emitCreate();
 }
 
 function bindHydrationHandleId(
