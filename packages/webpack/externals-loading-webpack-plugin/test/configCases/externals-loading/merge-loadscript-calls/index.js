@@ -1,3 +1,5 @@
+/// <reference types="@rspack/test-tools/rstest" />
+
 import { a } from 'pkg-a';
 import { b } from 'pkg-b';
 import { c } from 'pkg-c';

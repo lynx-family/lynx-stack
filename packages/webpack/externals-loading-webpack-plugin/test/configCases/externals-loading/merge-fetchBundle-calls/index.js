@@ -1,3 +1,5 @@
+/// <reference types="@rspack/test-tools/rstest" />
+
 import { add } from 'foo';
 import { minus } from 'bar';
 import { mul } from 'baz/sub1';
