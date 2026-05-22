@@ -62,6 +62,46 @@ describe('injectCalledByNative', () => {
     expect(() => globalAny.removeComponents()).not.toThrow();
   });
 
+  it('flushes updateGlobalProps with the current page when options exist', () => {
+    injectCalledByNative();
+    const globalAny = globalThis as typeof globalThis & {
+      renderPage: (data?: Record<string, unknown>) => void;
+      updateGlobalProps: (data?: Record<string, unknown>, options?: UpdatePageOption) => void;
+    };
+    const page = { type: 'page', id: '0', children: [] };
+    vi.mocked(createElementTemplatePage).mockReturnValue(page as unknown as ElementRef);
+    globalThis.lynx.__globalProps = { theme: 'dark' };
+
+    globalAny.renderPage({ msg: 'init' });
+    vi.mocked(__FlushElementTree).mockClear();
+    vi.mocked(renderMainThread).mockClear();
+    const options = { pipelineOptions: { pipelineID: 'global-props' } };
+
+    globalAny.updateGlobalProps({ theme: 'light' }, options);
+
+    expect(__FlushElementTree).toHaveBeenCalledWith(page, options);
+    expect(globalThis.lynx.__globalProps).toEqual({ theme: 'dark' });
+    expect(globalThis.lynx.__initData).toEqual({ msg: 'init' });
+    expect(vi.mocked(renderMainThread)).not.toHaveBeenCalled();
+    expect(vi.mocked(reloadMainThread)).not.toHaveBeenCalled();
+  });
+
+  it('flushes updateGlobalProps without page or options when options are absent', () => {
+    injectCalledByNative();
+    const globalAny = globalThis as typeof globalThis & {
+      updateGlobalProps: (data?: Record<string, unknown>, options?: UpdatePageOption) => void;
+    };
+    globalThis.lynx.__globalProps = { theme: 'dark' };
+    vi.mocked(__FlushElementTree).mockClear();
+
+    globalAny.updateGlobalProps({ theme: 'light' });
+
+    expect(__FlushElementTree).toHaveBeenCalledWith();
+    expect(globalThis.lynx.__globalProps).toEqual({ theme: 'dark' });
+    expect(vi.mocked(renderMainThread)).not.toHaveBeenCalled();
+    expect(vi.mocked(reloadMainThread)).not.toHaveBeenCalled();
+  });
+
   it('wires renderPage through initData, setupPage and renderMainThread', () => {
     injectCalledByNative();
     const globalAny = globalThis as typeof globalThis & {
