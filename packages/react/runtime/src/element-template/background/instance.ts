@@ -91,7 +91,7 @@ export class BackgroundElementTemplateInstance {
     }
   }
 
-  emitCreate(): void {
+  emitCreate(elementSlots: BackgroundElementTemplateInstance[][]): void {
     if (this.isMaterializedOnMainThread) {
       return;
     }
@@ -106,7 +106,7 @@ export class BackgroundElementTemplateInstance {
       this.type,
       null,
       this.attributeSlots,
-      this.elementSlots.map((children) => children.map((child) => child.instanceId)),
+      elementSlots.map((children) => children.map((child) => child.instanceId)),
     );
     this.isMaterializedOnMainThread = true;
   }
@@ -115,14 +115,14 @@ export class BackgroundElementTemplateInstance {
     return this.instanceId > 0 && !this.isMaterializedOnMainThread;
   }
 
-  emitMainThreadCreateIfNeeded(): void {
+  emitMainThreadCreateIfNeeded(elementSlots: BackgroundElementTemplateInstance[][]): void {
     if (!this.needsMainThreadCreate()) {
       return;
     }
     // An unmaterialized subtree may receive attr updates before it is inserted;
     // prepare here so ref attach happens once, at the create boundary.
     this.prepareAttributeSlotsForNative();
-    this.emitCreate();
+    this.emitCreate(elementSlots);
   }
 
   private canEmitUpdatePatch(): boolean {
@@ -410,7 +410,8 @@ function emitMainThreadCreateRecursive(instance: BackgroundElementTemplateInstan
     return;
   }
 
-  for (const slotChildren of instance.elementSlots) {
+  const elementSlots = instance.elementSlots;
+  for (const slotChildren of elementSlots) {
     if (!slotChildren) {
       continue;
     }
@@ -418,5 +419,5 @@ function emitMainThreadCreateRecursive(instance: BackgroundElementTemplateInstan
       emitMainThreadCreateRecursive(child);
     }
   }
-  instance.emitMainThreadCreateIfNeeded();
+  instance.emitMainThreadCreateIfNeeded(elementSlots);
 }

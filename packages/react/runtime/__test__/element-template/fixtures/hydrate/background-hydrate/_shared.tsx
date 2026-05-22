@@ -545,7 +545,7 @@ export function runCaseByName(name: string): unknown {
     resetGlobalCommitContext();
 
     const rawText = createTextNode('raw');
-    rawText.emitCreate();
+    rawText.emitCreate(rawText.elementSlots);
     const ops = [...globalCommitContext.ops];
     resetGlobalCommitContext();
 
@@ -560,7 +560,7 @@ export function runCaseByName(name: string): unknown {
     resetGlobalCommitContext();
 
     const rawText = new BackgroundElementTemplateInstance(BUILTIN_RAW_TEXT_TEMPLATE_KEY);
-    rawText.emitCreate();
+    rawText.emitCreate(rawText.elementSlots);
     const ops = [...globalCommitContext.ops];
     resetGlobalCommitContext();
 
