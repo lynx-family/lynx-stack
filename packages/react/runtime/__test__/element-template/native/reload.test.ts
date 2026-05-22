@@ -205,6 +205,18 @@ describe('ElementTemplate reloadMainThread', () => {
     expect(__FlushElementTree).toHaveBeenCalledWith(page, options);
   });
 
+  it('clears initData before resetPageData main-thread reloads', () => {
+    mockedState.root = { __jsx: { type: 'App' } };
+    lynx.__initData = { stale: true, msg: 'init' };
+    mockedState.page = { type: 'page', id: '0', children: [] };
+    vi.mocked(mockRender).mockReturnValue([]);
+    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({ rootRefs: [] });
+
+    reloadMainThread({ msg: 'reset' }, { reloadTemplate: true, resetPageData: true });
+
+    expect(lynx.__initData).toEqual({ msg: 'reset' });
+  });
+
   it('profiles main-thread reload when profiling is enabled', () => {
     vi.stubGlobal('__PROFILE__', true);
     mockedState.root = { __jsx: null };
@@ -268,5 +280,16 @@ describe('ElementTemplate reloadBackground', () => {
 
     expect(profileStart).toHaveBeenCalledWith('ReactLynx::reloadBackground');
     expect(profileEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps background reload initData object fresh without merging non-object update data', () => {
+    mockedState.root = { __jsx: null };
+    const initData = { stable: true };
+    lynx.__initData = initData;
+
+    reloadBackground('ignored');
+
+    expect(lynx.__initData).not.toBe(initData);
+    expect(lynx.__initData).toEqual({ stable: true });
   });
 });

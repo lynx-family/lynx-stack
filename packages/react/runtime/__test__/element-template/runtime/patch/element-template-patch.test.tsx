@@ -433,6 +433,47 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(elementTemplateRegistry.has(24)).toBe(true);
   });
 
+  it('reports invalid typed create handleId', () => {
+    envManager.switchToMainThread();
+    elementTemplateRegistry.clear();
+    mockCreateTypedElementTemplate.mockClear();
+
+    applyElementTemplateUpdateCommands([
+      ElementTemplateUpdateOps.createTypedElement,
+      0,
+      'list',
+      null,
+      [],
+      null,
+    ]);
+
+    expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(0);
+    const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
+    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('invalid handleId 0');
+    resetReportedErrors();
+  });
+
+  it('reports duplicate typed create handleId', () => {
+    envManager.switchToMainThread();
+    const existingRef = { __isNativeRef: true, id: 'existing' } as unknown as ElementRef;
+    elementTemplateRegistry.set(26, existingRef);
+    mockCreateTypedElementTemplate.mockClear();
+
+    applyElementTemplateUpdateCommands([
+      ElementTemplateUpdateOps.createTypedElement,
+      26,
+      'list',
+      null,
+      [],
+      null,
+    ]);
+
+    expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(0);
+    const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
+    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('duplicate handleId 26');
+    resetReportedErrors();
+  });
+
   it('skips typed create when element slot handles are unresolved', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
@@ -473,6 +514,29 @@ describe('ElementTemplate patch stream (apply)', () => {
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
     expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
       'options.listChildren[0] handle 404 not found',
+    );
+    resetReportedErrors();
+  });
+
+  it('skips typed create when command option handle refs are malformed', () => {
+    envManager.switchToMainThread();
+    elementTemplateRegistry.clear();
+    mockCreateTypedElementTemplate.mockClear();
+
+    applyElementTemplateUpdateCommands([
+      ElementTemplateUpdateOps.createTypedElement,
+      27,
+      'list',
+      null,
+      [],
+      { listChildren: [null] } as unknown as ElementTemplateUpdateCommandStream[number],
+    ]);
+
+    expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(0);
+    expect(elementTemplateRegistry.has(27)).toBe(false);
+    const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
+    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+      'options.listChildren[0] must contain a valid __etHandleRef',
     );
     resetReportedErrors();
   });

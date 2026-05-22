@@ -80,6 +80,14 @@ export function applyElementTemplateUpdateCommands(
         const elementSlots = stream[i++] as number[][] | null | undefined;
         const options = stream[i++] as RuntimeOptionsCommand | null | undefined;
 
+        if (__DEV__) {
+          const createError = validateCreateHandleId(handleId);
+          if (createError) {
+            lynx.reportError(createError);
+            continue;
+          }
+        }
+
         const resolvedElementSlots = resolveElementSlots(elementSlots);
         const resolvedOptions = resolveRuntimeOptions(options);
         if ((__DEV__ && resolvedElementSlots.hasError) || resolvedOptions.hasError) {
@@ -192,8 +200,24 @@ function resolveRuntimeOptions(
 
   const resolvedListChildren: ElementRef[] = [];
   for (let index = 0; index < listChildren.length; index++) {
+    const child = listChildren[index];
+    if (
+      child == null
+      || typeof child !== 'object'
+      || !('__etHandleRef' in child)
+      || !Number.isInteger((child as { __etHandleRef?: unknown }).__etHandleRef)
+    ) {
+      lynx.reportError(
+        new Error(`ElementTemplate update options.listChildren[${index}] must contain a valid __etHandleRef.`),
+      );
+      return {
+        hasError: true,
+        value: null,
+      };
+    }
+
     const ref = resolveHandle(
-      (listChildren[index]!).__etHandleRef,
+      child.__etHandleRef,
       `options.listChildren[${index}]`,
     );
     if (ref === null) {
@@ -227,16 +251,24 @@ function isValidHandleId(handleId: number): boolean {
   return Number.isInteger(handleId) && handleId !== 0;
 }
 
-function validateCreateTemplatePayload(
-  handleId: number,
-  attributeSlots: SerializableValue[] | null | undefined,
-  elementSlots: number[][] | null | undefined,
-): Error | null {
+function validateCreateHandleId(handleId: number): Error | null {
   if (!isValidHandleId(handleId)) {
     return new Error(`ElementTemplate update has invalid handleId ${String(handleId)}.`);
   }
   if (elementTemplateRegistry.get(handleId)) {
     return new Error(`ElementTemplate update received duplicate handleId ${handleId}.`);
+  }
+  return null;
+}
+
+function validateCreateTemplatePayload(
+  handleId: number,
+  attributeSlots: SerializableValue[] | null | undefined,
+  elementSlots: number[][] | null | undefined,
+): Error | null {
+  const handleError = validateCreateHandleId(handleId);
+  if (handleError) {
+    return handleError;
   }
   if (attributeSlots != null && !Array.isArray(attributeSlots)) {
     return new Error('ElementTemplate update create attributeSlots must be an array, null, or undefined.');

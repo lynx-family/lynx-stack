@@ -5,8 +5,8 @@
 import type { ComponentChild, ContainerNode } from 'preact';
 import { render } from 'preact';
 
+import { applyUpdatePageData } from '../../core/lynx-page-data.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
-import { isEmptyObject } from '../../utils.js';
 import { destroyElementTemplateBackgroundRuntime } from '../background/destroy.js';
 import { setupBackgroundElementTemplateDocument } from '../background/document.js';
 import { installElementTemplateHydrationListener } from '../background/hydration-listener.js';
@@ -26,9 +26,7 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
 
   try {
     increaseReloadVersion();
-    if (typeof data == 'object' && data !== null && !isEmptyObject(data)) {
-      Object.assign(lynx.__initData, data);
-    }
+    applyUpdatePageData(data, options);
 
     elementTemplateRegistry.clear();
     resetTemplateId();
@@ -57,7 +55,8 @@ export function reloadBackground(updateData: unknown): void {
     increaseReloadVersion();
     // Reload creates a new object so InitData Provider / Consumer observers do
     // not retain the pre-reload object identity.
-    lynx.__initData = Object.assign({}, lynx.__initData, updateData);
+    lynx.__initData = Object.assign({}, lynx.__initData);
+    applyUpdatePageData(updateData);
 
     setRoot(new BackgroundElementTemplateInstance('root'));
     __root.__jsx = jsx;
