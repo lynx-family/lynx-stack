@@ -69,6 +69,7 @@ async function settleInitialHydration(envManager: InstanceType<typeof ElementTem
 describe('Compiled ET GlobalProps update fixtures', () => {
   const envManager = new ElementTemplateEnvManager();
   let originalLynx: typeof lynx;
+  let originalGlobalEventEmitter: typeof lynxCoreInject.tt.GlobalEventEmitter;
   let emitter: InstanceType<typeof LynxTestEventEmitter>;
   let updateEvents: ElementTemplateUpdateCommitContext[] = [];
 
@@ -109,6 +110,7 @@ describe('Compiled ET GlobalProps update fixtures', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     originalLynx = globalThis.lynx;
+    originalGlobalEventEmitter = globalThis.lynxCoreInject.tt.GlobalEventEmitter;
     emitter = new LynxTestEventEmitter();
     updateEvents = [];
     resetElementTemplateCommitState();
@@ -135,6 +137,7 @@ describe('Compiled ET GlobalProps update fixtures', () => {
     resetElementTemplateCommitState();
     envManager.setUseElementTemplate(false);
     globalThis.__GLOBAL_PROPS_MODE__ = 'event';
+    globalThis.lynxCoreInject.tt.GlobalEventEmitter = originalGlobalEventEmitter;
     vi.stubGlobal('lynx', originalLynx);
   });
 
