@@ -379,31 +379,38 @@ export class ExternalsLoadingPlugin {
 function createRetryingHandler(fetchBundle, retries) {
   let cachedResponse = null
   let asyncPromise = null
-  const initialHandler = fetchBundle()
+  let currentHandler = fetchBundle()
+  let attemptsUsed = 0
   return {
     then(onFulfilled, onRejected) {
       if (asyncPromise === null) {
-        asyncPromise = new Promise((resolve) => {
-          const tryNext = (response, remaining) => {
-            if (response.code === -2 && remaining > 0) {
-              fetchBundle().then((next) => tryNext(next, remaining - 1))
+        asyncPromise = new Promise((resolve, reject) => {
+          const tryNext = (response) => {
+            if (cachedResponse !== null) {
+              resolve(cachedResponse)
+              return
+            }
+            if (response.code === -2 && attemptsUsed < retries) {
+              attemptsUsed++
+              currentHandler = fetchBundle()
+              currentHandler.then(tryNext, reject)
             } else {
               cachedResponse = response
               resolve(response)
             }
           }
-          initialHandler.then((response) => tryNext(response, retries))
+          currentHandler.then(tryNext, reject)
         })
       }
       return asyncPromise.then(onFulfilled, onRejected)
     },
     wait(timeout) {
       if (cachedResponse !== null) return cachedResponse
-      let response = initialHandler.wait(timeout)
-      let remaining = retries
-      while (response.code === -2 && remaining > 0) {
-        remaining--
-        response = fetchBundle().wait(timeout)
+      let response = currentHandler.wait(timeout)
+      while (response.code === -2 && attemptsUsed < retries) {
+        attemptsUsed++
+        currentHandler = fetchBundle()
+        response = currentHandler.wait(timeout)
       }
       cachedResponse = response
       return response
