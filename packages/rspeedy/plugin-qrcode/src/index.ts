@@ -81,9 +81,15 @@ export interface PluginQRCodeOptions {
   schema?: CustomizedSchemaFn | undefined
 
   /**
-   * Append a `∟ No nav` entry with `?fullscreen=true` under each Lynx bundle URL
-   * printed by the dev server. Tapping the variant opens the bundle in LynxExplorer
-   * with the in-app navigation chrome stripped.
+   * Enable the fullscreen variant of the Lynx bundle URL (appends
+   * `?fullscreen=true`, opening the bundle in LynxExplorer with the in-app
+   * navigation chrome stripped).
+   *
+   * When enabled, the plugin:
+   * - Adds a `fullscreen` entry to the schema rotation — toggle the QR code
+   *   between the default schema and `fullscreen` with the `a` shortcut.
+   * - Appends an `∟ Fullscreen` URL line under each Lynx bundle URL printed
+   *   by the dev server.
    *
    * @defaultValue `true`
    */
@@ -108,7 +114,7 @@ export function pluginQRCode(
   options?: PluginQRCodeOptions,
 ): RsbuildPlugin {
   const defaultPluginOptions = {
-    schema: (url) => ({ http: url }),
+    schema: (url) => ({ nav: url }),
     fullscreen: true,
   } satisfies Required<PluginQRCodeOptions>
 
@@ -117,6 +123,8 @@ export function pluginQRCode(
     defaultPluginOptions,
     options,
   )
+
+  const effectiveSchema = fullscreen ? withFullscreenSchema(schema) : schema
 
   return {
     name: 'lynx:rsbuild:qrcode',
@@ -187,7 +195,7 @@ export function pluginQRCode(
             entries: entriesArray,
             api,
             port,
-            schema,
+            schema: effectiveSchema,
           },
         )
         api.onCloseDevServer(unregister)
@@ -203,7 +211,7 @@ type PrintUrlsFn = Extract<
 
 /**
  * Wrap a `server.printUrls` function so that each `Lynx`-labelled URL is
- * followed by an `∟ No nav` entry with `?fullscreen=true`.
+ * followed by an `∟ Fullscreen` entry with `?fullscreen=true`.
  *
  * @internal
  */
@@ -217,12 +225,35 @@ export function wrapPrintUrlsWithFullscreen(
       out.push(entry)
       if (typeof entry !== 'string' && entry.label === 'Lynx') {
         out.push({
-          label: '∟ No nav',
+          label: '∟ Fullscreen',
           url: appendFullscreenParam(entry.url),
         })
       }
     }
     return out
+  }
+}
+
+/**
+ * Wrap a user-provided schema function so that the returned schema map gains a
+ * `fullscreen` entry at the front of the rotation. The variant is derived from
+ * the first URL in the user's schema output by appending `?fullscreen=true` —
+ * so the QR code defaults to fullscreen, and the `a` shortcut switches to the
+ * user-defined (nav) variant(s).
+ *
+ * @internal
+ */
+export function withFullscreenSchema(
+  schemaFn: CustomizedSchemaFn,
+): CustomizedSchemaFn {
+  return (rawUrl) => {
+    const result = schemaFn(rawUrl)
+    const map = typeof result === 'string' ? { default: result } : { ...result }
+    const firstUrl = Object.values(map)[0]
+    if (firstUrl === undefined) {
+      return map
+    }
+    return { fullscreen: appendFullscreenParam(firstUrl), ...map }
   }
 }
 
