@@ -6,6 +6,8 @@ When extending `@lynx-js/ui-judge`, keep `judgePage` as the only public runtime 
 
 Midscene scoring in this package should use `aiNumber()` and return a JSON-serializable integer score from 0 to 5. Prompt text must cooperate with Midscene's `aiNumber()` parser by asking for the requested `Number` field, not a bare JSON number. Do not reintroduce letter grades or `GRADE:` output in prompts.
 
+GEQI model-backed scoring should run each playground demo across the five weighted dimensions: usability-interaction (30), visual-aesthetics (25), consistency-standards (15), architecture-writing (15), and accessibility-performance (15). Keep the original visual-correctness judge as its own test and result score. Attach GEQI scores under each example result's `dimensions` array with `dimensionLabel` and `weight`, so the PR comment can summarize the weighted 100-point GEQI score while rendering one table row per example.
+
 Avoid writing screenshots by default. Playwright and Midscene may capture the page internally, but persistent screenshot artifacts should require an explicit future option.
 
 Midscene currently brings in `sharp`; keep its pnpm build-script policy explicit in `pnpm-workspace.yaml` rather than letting `pnpm install` leave the placeholder value.
