@@ -32,7 +32,7 @@ type Middleware = (
  * dereference at request time.
  */
 export interface CompilerHandle {
-  compiler: Rspack.Compiler | Rspack.MultiCompiler
+  compiler: Rspack.Compiler | Rspack.MultiCompiler | null
 }
 
 /** @internal */

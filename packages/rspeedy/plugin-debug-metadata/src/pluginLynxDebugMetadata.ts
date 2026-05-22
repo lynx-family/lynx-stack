@@ -49,10 +49,10 @@ export function pluginLynxDebugMetadata(): RsbuildPlugin {
   return {
     name: PLUGIN_NAME,
     setup(api) {
-      let compilerHandle: CompilerHandle
+      const compilerHandle: CompilerHandle = { compiler: null }
 
       api.onAfterCreateCompiler(({ compiler }) => {
-        compilerHandle = { compiler }
+        compilerHandle.compiler = compiler
       })
 
       api.modifyBundlerChain((chain, { environment }) => {

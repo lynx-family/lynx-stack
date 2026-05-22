@@ -361,7 +361,7 @@ describe('createDebugMetadataMiddleware', () => {
 
   test('returns 404 metadata_not_found when no compiler is attached yet', async () => {
     const mw = createDebugMetadataMiddleware({
-      compilerHandle: { compiler: null as unknown as Rspack.Compiler },
+      compilerHandle: { compiler: null },
     })
     const res = await runRequest(
       mw,
