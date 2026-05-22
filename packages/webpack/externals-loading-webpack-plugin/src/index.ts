@@ -340,6 +340,7 @@ export class ExternalsLoadingPlugin {
         chunkLayer: string,
       ): string {
         const url2fetchCode: Map<string, string> = new Map();
+        const url2retries: Map<string, number> = new Map();
         const loadCode: Set<string> = new Set();
         // filter duplicate externals by libraryName or package name to avoid loading the same external multiple times. We keep the last one.
         const externalsMap = new Map<
@@ -375,9 +376,44 @@ export class ExternalsLoadingPlugin {
         const runtimeGlobalsInit =
           `${lynxExternalGlobal} = ${lynxExternalGlobal} === undefined ? {} : ${lynxExternalGlobal};`;
         const loadExternalFunc = `
-function createLoadExternalAsync(handler, fetchBundle, sectionPath, retries) {
+function createRetryingHandler(fetchBundle, retries) {
+  let cachedResponse = null
+  let asyncPromise = null
+  const initialHandler = fetchBundle()
+  return {
+    then(onFulfilled, onRejected) {
+      if (asyncPromise === null) {
+        asyncPromise = new Promise((resolve) => {
+          const tryNext = (response, remaining) => {
+            if (response.code === -2 && remaining > 0) {
+              fetchBundle().then((next) => tryNext(next, remaining - 1))
+            } else {
+              cachedResponse = response
+              resolve(response)
+            }
+          }
+          initialHandler.then((response) => tryNext(response, retries))
+        })
+      }
+      return asyncPromise.then(onFulfilled, onRejected)
+    },
+    wait(timeout) {
+      if (cachedResponse !== null) return cachedResponse
+      let response = initialHandler.wait(timeout)
+      let remaining = retries
+      while (response.code === -2 && remaining > 0) {
+        remaining--
+        response = fetchBundle().wait(timeout)
+      }
+      cachedResponse = response
+      return response
+    }
+  }
+}
+
+function createLoadExternalAsync(handler, sectionPath) {
   return new Promise((resolve, reject) => {
-    const handleResponse = (response, attemptsRemaining) => {
+    handler.then((response) => {
       if (response.code === 0) {
         try {
           const result = lynx.loadScript(sectionPath, { bundleName: response.url });
@@ -402,23 +438,15 @@ function createLoadExternalAsync(handler, fetchBundle, sectionPath, retries) {
           console.error(error)
           reject(new Error('Failed to load script ' + sectionPath + ' in ' + response.url, { cause: error }))
         }
-      } else if (response.code === -2 && attemptsRemaining > 0) {
-        fetchBundle().then((next) => handleResponse(next, attemptsRemaining - 1))
       } else {
         reject(new Error('Failed to fetch external source ' + response.url + ' . The response is ' + JSON.stringify(response), { cause: response }));
       }
-    }
-    handler.then((response) => handleResponse(response, retries))
+    })
   })
 }
 
-function createLoadExternalSync(handler, fetchBundle, sectionPath, timeout, retries) {
-  let response = handler.wait(timeout)
-  let attemptsRemaining = retries
-  while (response.code === -2 && attemptsRemaining > 0) {
-    attemptsRemaining--
-    response = fetchBundle().wait(timeout)
-  }
+function createLoadExternalSync(handler, sectionPath, timeout) {
+  const response = handler.wait(timeout)
   if (response.code === 0) {
     try  {
       const result = lynx.loadScript(sectionPath, { bundleName: response.url });
@@ -500,6 +528,10 @@ function createLoadExternalSync(handler, fetchBundle, sectionPath, timeout, retr
             urlKey,
             `() => lynx.fetchBundle(${fetchExpr}, {})`,
           );
+          url2retries.set(
+            urlKey,
+            Math.max(url2retries.get(urlKey) ?? 0, retries),
+          );
 
           const mountVar = `${
             getLynxExternalGlobal(
@@ -528,27 +560,28 @@ function createLoadExternalSync(handler, fetchBundle, sectionPath, timeout, retr
 
           if (async) {
             loadCode.add(
-              `${mountVar} = ${mountVar} === undefined ? createLoadExternalAsync(handler${handlerIndex}, fetchBundle${handlerIndex}, ${
+              `${mountVar} = ${mountVar} === undefined ? createLoadExternalAsync(handler${handlerIndex}, ${
                 JSON.stringify(layerOptions.sectionPath)
-              }, ${retries}) : ${mountVar};`,
+              }) : ${mountVar};`,
             );
             continue;
           }
 
           loadCode.add(
-            `${mountVar} = ${mountVar} === undefined ? createLoadExternalSync(handler${handlerIndex}, fetchBundle${handlerIndex}, ${
+            `${mountVar} = ${mountVar} === undefined ? createLoadExternalSync(handler${handlerIndex}, ${
               JSON.stringify(layerOptions.sectionPath)
-            }, ${timeout}, ${retries}) : ${mountVar};`,
+            }, ${timeout}) : ${mountVar};`,
           );
         }
 
         return [
           runtimeGlobalsInit,
           loadExternalFunc,
-          ...[...url2fetchCode.values()].flatMap((fetchCode, index) => [
-            `const fetchBundle${index} = ${fetchCode};`,
-            `const handler${index} = fetchBundle${index}();`,
-          ]),
+          ...[...url2fetchCode.entries()].map(([urlKey, fetchCode], index) =>
+            `const handler${index} = createRetryingHandler(${fetchCode}, ${
+              url2retries.get(urlKey) ?? 0
+            });`
+          ),
           ...loadCode,
         ].join('\n');
       }
