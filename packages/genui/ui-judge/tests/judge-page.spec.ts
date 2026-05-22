@@ -22,6 +22,7 @@ interface PlaygroundDemoCase {
   demoId: string;
   expectedText: string;
   readyText: string;
+  task: string;
 }
 
 const PLAYGROUND_DEMO_CASES: PlaygroundDemoCase[] = [
@@ -29,24 +30,59 @@ const PLAYGROUND_DEMO_CASES: PlaygroundDemoCase[] = [
     demoId: 'recs',
     readyText: 'Recommendations: Date-Night Dining Ideas',
     expectedText: 'Sea Breeze Kitchen',
+    task:
+      'The A2UI playground preview should show date-night dining recommendations for Moonlight Terrace, Pinewood Bistro, and Sea Breeze Kitchen.',
+  },
+  {
+    demoId: 'cast-grid',
+    readyText: 'AI generated answer',
+    expectedText: 'Zhou Ning',
+    task:
+      'The A2UI playground preview should show a cast grid for the short film Night Notes, including Lin Xia and Zhou Ning cast cards.',
+  },
+  {
+    demoId: 'citywalk-list',
+    readyText: 'AI Answer: Weekend Citywalk Coffee Picks',
+    expectedText: 'Late Sun Roastery',
+    task:
+      'The A2UI playground preview should show weekend citywalk coffee picks with Rooftop Brew Room, Corner Canvas Lab, and Late Sun Roastery.',
+  },
+  {
+    demoId: 'fridge-search',
+    readyText: 'Refrigerators',
+    expectedText: 'Midea 550L Frost-Free French-Door Fridge',
+    task:
+      'The A2UI playground preview should show refrigerator search results with Siemens, Hualing, Haier, and Midea product cards.',
   },
   {
     demoId: 'trip-planner',
     readyText: 'Trip Planner: Kyoto in 48 Hours',
     expectedText: 'Monkey Park Viewpoint',
+    task:
+      'The A2UI playground preview should show a Kyoto 48-hour trip planner with Day 1 and Day 2 itinerary sections, including Monkey Park Viewpoint.',
   },
   {
     demoId: 'weather-current',
     readyText: 'Austin, TX',
     expectedText: 'Clear skies with light breeze',
+    task:
+      'The A2UI playground preview should show the current weather for Austin, TX, including clear skies with light breeze.',
   },
   {
     demoId: 'product-card',
     readyText: 'Wireless Headphones Pro',
     expectedText: 'Add to Cart',
+    task:
+      'The A2UI playground preview should show a Wireless Headphones Pro product card with a visible Add to Cart action.',
+  },
+  {
+    demoId: 'workout-plan',
+    readyText: 'Weekly Workout Plan',
+    expectedText: 'Friday',
+    task:
+      'The A2UI playground preview should show a weekly workout plan with five days from Monday Ramp-Up through Friday Conditioning.',
   },
 ];
-const JUDGE_DEMO: PlaygroundDemoCase = PLAYGROUND_DEMO_CASES[0]!;
 const UI_JUDGE_RESULT_FILE_ENV = 'UI_JUDGE_RESULT_FILE';
 
 test.describe('A2UI playground preview', () => {
@@ -83,44 +119,50 @@ test.describe('A2UI playground preview', () => {
     });
   }
 
-  test('scores a playground render.html demo with speed zero', async ({ page }) => {
-    test.setTimeout(300_000);
+  test('scores playground render.html demos with speed zero', async ({ page }) => {
+    test.setTimeout(1_200_000);
 
     if (!previewServer) {
       throw new Error('A2UI playground preview server was not started.');
     }
 
-    const previewUrl = previewServer.createDemoPreviewUrl({
-      demoId: JUDGE_DEMO.demoId,
-      speed: 0,
-    });
-
+    const server = previewServer;
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(previewUrl);
-    await waitForPreviewText(page, JUDGE_DEMO.readyText);
-    await waitForPreviewText(page, JUDGE_DEMO.expectedText, 2_000);
+    const judgedResults: JudgedPlaygroundResult[] = [];
 
-    const task =
-      'The A2UI playground preview should show date-night dining recommendations for Moonlight Terrace, Pinewood Bistro, and Sea Breeze Kitchen.';
-    const result = await judgePage({
-      page,
-      task,
-      timeoutMs: 180_000,
-    });
+    for (const demo of PLAYGROUND_DEMO_CASES) {
+      await test.step(`score ${demo.demoId}`, async () => {
+        const previewUrl = server.createDemoPreviewUrl({
+          demoId: demo.demoId,
+          speed: 0,
+        });
 
-    await writeUiJudgeResult({
-      result,
-      task,
-    });
+        await page.goto(previewUrl);
+        await waitForPreviewText(page, demo.readyText);
+        await waitForPreviewText(page, demo.expectedText, 2_000);
 
-    expect(result).toMatchObject({
-      dimension: 'visual-correctness',
-      steps: [],
-      url: previewUrl,
-    });
-    expect(result.error).toBeUndefined();
-    expect(result.score).toBeGreaterThanOrEqual(0);
-    expect(result.score).toBeLessThanOrEqual(5);
+        const result = await judgePage({
+          page,
+          task: demo.task,
+          timeoutMs: 180_000,
+        });
+
+        judgedResults.push({
+          result,
+          task: demo.task,
+        });
+        await writeUiJudgeResults(judgedResults);
+
+        expect(result).toMatchObject({
+          dimension: 'visual-correctness',
+          steps: [],
+          url: previewUrl,
+        });
+        expect(result.error).toBeUndefined();
+        expect(result.score).toBeGreaterThanOrEqual(0);
+        expect(result.score).toBeLessThanOrEqual(5);
+      });
+    }
   });
 });
 
@@ -160,20 +202,34 @@ async function waitForPreviewText(
   );
 }
 
-async function writeUiJudgeResult({
-  result,
-  task,
-}: {
+interface JudgedPlaygroundResult {
   result: UiJudgeResult;
   task: string;
-}): Promise<void> {
+}
+
+async function writeUiJudgeResults(
+  judgedResults: JudgedPlaygroundResult[],
+): Promise<void> {
+  if (judgedResults.length === 0) return;
+
   const resultFile = process.env[UI_JUDGE_RESULT_FILE_ENV];
   if (!resultFile) return;
 
   await mkdir(dirname(resultFile), { recursive: true });
   await writeFile(
     resultFile,
-    `${JSON.stringify({ results: [{ ...result, task }] }, null, 2)}\n`,
+    `${
+      JSON.stringify(
+        {
+          results: judgedResults.map(({ result, task }) => ({
+            ...result,
+            task,
+          })),
+        },
+        null,
+        2,
+      )
+    }\n`,
     'utf8',
   );
 }
