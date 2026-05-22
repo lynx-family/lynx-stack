@@ -100,13 +100,23 @@ export class BackgroundElementTemplateInstance {
       return;
     }
 
+    // Walk the linked-list children once to build the slot-indexed handle list
+    // for the createTemplate op. Going via `this.elementSlots` would allocate
+    // the full `Instance[][]` intermediate just to throw it away here.
+    const serializedSlots: number[][] = [];
+    let child = this.firstChild;
+    while (child) {
+      (serializedSlots[child.__slotIndex] ??= []).push(child.instanceId);
+      child = child.nextSibling;
+    }
+
     pushOp(
       ElementTemplateUpdateOps.createTemplate,
       this.instanceId,
       this.type,
       null,
       this.attributeSlots,
-      this.elementSlots.map((children) => children.map((child) => child.instanceId)),
+      serializedSlots,
     );
     this.isMaterializedOnMainThread = true;
   }
@@ -416,13 +426,12 @@ function emitMainThreadCreateRecursive(instance: BackgroundElementTemplateInstan
     return;
   }
 
-  for (const slotChildren of instance.elementSlots) {
-    if (!slotChildren) {
-      continue;
-    }
-    for (const child of slotChildren) {
-      emitMainThreadCreateRecursive(child);
-    }
+  // Walk children in linked-list order; the slot-grouped view would just be
+  // discarded here since we recurse into every child regardless of slot.
+  let child = instance.firstChild;
+  while (child) {
+    emitMainThreadCreateRecursive(child);
+    child = child.nextSibling;
   }
   instance.emitMainThreadCreateIfNeeded();
 }
