@@ -23,12 +23,6 @@ describe('Background Element Template Adapter', () => {
     expect(el.nodeType).toBe(1);
   });
 
-  it('creates BackgroundElementTemplateSlot for "slot" type', () => {
-    const el = doc.createElement('slot');
-    expect(el).toBeInstanceOf(BackgroundElementTemplateInstance);
-    expect(el.type).toBe('slot');
-  });
-
   it('creates builtin raw-text template instances for text nodes', () => {
     const node = doc.createTextNode('hello');
     expect(node).toBeInstanceOf(BackgroundElementTemplateInstance);

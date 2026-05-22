@@ -12,7 +12,6 @@ import {
 } from '../../../../src/element-template/background/commit-context.js';
 import {
   BackgroundElementTemplateInstance,
-  BackgroundElementTemplateSlot,
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
   collectElementTemplateSubtreeHandleIds,
 } from '../../../../src/element-template/background/instance.js';

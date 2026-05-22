@@ -15,7 +15,6 @@ import {
 import '../../../../../src/element-template/native/index.js';
 import {
   BackgroundElementTemplateInstance,
-  BackgroundElementTemplateSlot,
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
 } from '../../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../../src/element-template/background/manager.js';

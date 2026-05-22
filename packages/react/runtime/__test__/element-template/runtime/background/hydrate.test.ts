@@ -8,7 +8,6 @@ import {
 import { hydrate } from '../../../../src/element-template/background/hydrate.js';
 import {
   BackgroundElementTemplateInstance,
-  BackgroundElementTemplateSlot,
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
 } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';

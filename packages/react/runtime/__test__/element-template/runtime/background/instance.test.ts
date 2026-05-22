@@ -12,7 +12,6 @@ import {
 import { destroyElementTemplateBackgroundRuntime } from '../../../../src/element-template/background/destroy.js';
 import {
   BackgroundElementTemplateInstance,
-  BackgroundElementTemplateSlot,
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
 } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
@@ -1525,7 +1524,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
   });
 });
 
-describe('BackgroundElementTemplateSlot Children', () => {
+describe('BackgroundElementTemplateInstance slot-index children', () => {
   it('should clear the previous slot index when partId changes after attachment', () => {
     const root = new BackgroundElementTemplateInstance('element-template-view');
     const text = createTextNode('move');
