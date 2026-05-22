@@ -89,19 +89,31 @@ describe('ElementTemplate alog helpers', () => {
     const text = new BackgroundElementTemplateInstance('_et_builtin_raw_text', ['hello']);
 
     root.appendChild(card);
+    text.__slotIndex = 2;
     card.appendChild(text);
-    card.elementSlots[0] = [text];
-    card.elementSlots[1] = [];
 
     const output = printElementTemplateTreeToString(root);
 
     expect(output).toContain('root#1');
     expect(output).toContain('_et_card#2');
     expect(output).toContain('attributeSlots: ["title"]');
-    expect(output).toContain('elementSlots[0]: [3]');
+    expect(output).toContain('elementSlots[2]: [3]');
     expect(output).not.toContain('elementSlots[1]');
     expect(output).toContain('_et_builtin_raw_text#3');
     expect(output).toContain('attributeSlots: ["hello"]');
+  });
+
+  it('skips sparse element slots when printing the background tree', () => {
+    const root = new BackgroundElementTemplateInstance('root');
+    const child = new BackgroundElementTemplateInstance('view');
+    child.__slotIndex = 1;
+    root.appendChild(child);
+
+    const output = printElementTemplateTreeToString(root);
+
+    expect(output).toContain(`view#${child.instanceId}`);
+    expect(output).toContain(`elementSlots[1]: [${child.instanceId}]`);
+    expect(output).not.toMatch(/elementSlots\[0\]/);
   });
 
   it('prints an empty marker for missing roots', () => {

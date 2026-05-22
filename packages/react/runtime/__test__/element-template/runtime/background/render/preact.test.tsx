@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createElement } from 'preact';
 
 import {
   markElementTemplateHydrated,
@@ -79,4 +80,34 @@ describe('Background Preact render', () => {
       ).toEqual(next);
     }
   });
+
+  // The Lynx Preact fork's `findMatchingIndex` requires
+  // `oldVNode._slotIndex === newSlot` before keyed reuse (introduced by #2664),
+  // so a same-key child cannot migrate across `$N` indices via `root.render`.
+  // The old slot must end up empty because the previous child is fully
+  // unmounted (not moved) and a fresh instance is mounted at the new slot.
+  for (
+    const [from, to] of [
+      [2, 0],
+      [1, 0],
+    ] as const
+  ) {
+    it(`unmounts the old child when a same-key host child moves from $${from} to $${to}`, () => {
+      const moved = createElement('_et_child', { key: 'moved' });
+      root.render(createElement('_et_host', { [`$${from}`]: moved }));
+      markElementTemplateHydrated();
+
+      const initialHost = (__root as BackgroundElementTemplateInstance).firstChild!;
+      const initialChild = initialHost.elementSlots[from]?.[0];
+      expect(initialChild?.type).toBe('_et_child');
+
+      root.render(createElement('_et_host', { [`$${to}`]: moved }));
+
+      const host = (__root as BackgroundElementTemplateInstance).firstChild!;
+      const movedChild = host.elementSlots[to]?.[0];
+      expect(movedChild?.type).toBe('_et_child');
+      expect(movedChild).not.toBe(initialChild);
+      expect(host.elementSlots[from] ?? []).toEqual([]);
+    });
+  }
 });

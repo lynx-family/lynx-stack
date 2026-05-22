@@ -25,11 +25,9 @@ describe('Element Template renderToOpcodes', () => {
     expect(__OpSlot).toBe(4);
   });
 
-  it('should emit slot opcodes for ET host slot arrays', () => {
+  it('emits slot opcodes for ET host nodes using $N named props', () => {
     const Template = '_et_test_root';
-    const opcodes = renderToString(
-      <Template children={[null, null, null, 'marker']} />,
-    );
+    const opcodes = renderToString(<Template $3='marker' />);
 
     expect(opcodes[0]).toBe(__OpBegin);
     expect(opcodes).toContain(__OpSlot);
@@ -37,10 +35,10 @@ describe('Element Template renderToOpcodes', () => {
     expect(opcodes).toContain(__OpEnd);
   });
 
-  it('should skip empty slot entries when rendering ET host slot arrays', () => {
+  it('skips empty $N slots and renders only the populated indices', () => {
     const Template = '_et_test_root';
     const opcodes = renderToString(
-      <Template children={[false, 'first', null, true, 'second']} />,
+      <Template $0={false} $1='first' $2={null} $3 $4='second' />,
     );
 
     const normalized = opcodes.map(item => (typeof item === 'object' ? '<vnode>' : item));

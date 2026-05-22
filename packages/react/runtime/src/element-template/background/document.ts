@@ -4,11 +4,7 @@
 
 import { options } from 'preact';
 
-import {
-  BUILTIN_RAW_TEXT_TEMPLATE_KEY,
-  BackgroundElementTemplateInstance,
-  BackgroundElementTemplateSlot,
-} from './instance.js';
+import { BUILTIN_RAW_TEXT_TEMPLATE_KEY, BackgroundElementTemplateInstance } from './instance.js';
 
 export interface BackgroundElementTemplateDocument {
   createElement(type: string): BackgroundElementTemplateInstance;
@@ -19,15 +15,9 @@ export interface BackgroundElementTemplateDocument {
 export function setupBackgroundElementTemplateDocument(): BackgroundElementTemplateDocument {
   const doc = {
     createElement(type: string): BackgroundElementTemplateInstance {
-      if (type === 'slot') {
-        return new BackgroundElementTemplateSlot();
-      }
       return new BackgroundElementTemplateInstance(type);
     },
     createElementNS(_ns: string, type: string): BackgroundElementTemplateInstance {
-      if (type === 'slot') {
-        return new BackgroundElementTemplateSlot();
-      }
       return new BackgroundElementTemplateInstance(type);
     },
     createTextNode(text: string): BackgroundElementTemplateInstance {

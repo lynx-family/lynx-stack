@@ -30,6 +30,7 @@ ignore:
   - "packages/genui/**"
   - "pnpm-lock.yaml"
   - "rstest.config.ts"
+  - "**/__test__/**/fixtures/**"
 
 fixes:
   - "/home/runner/_work/lynx-stack::"

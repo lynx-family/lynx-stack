@@ -1,19 +1,10 @@
-import {
-  BackgroundElementTemplateInstance,
-  BackgroundElementTemplateSlot,
-  globalCommitContext,
-  runCase,
-} from '../../_shared.js';
+import { BackgroundElementTemplateInstance, globalCommitContext, runCase } from '../../_shared.js';
 
 export function run() {
   return runCase(() => {
     const root = new BackgroundElementTemplateInstance('root');
-    const slot = new BackgroundElementTemplateSlot();
-    slot.setAttribute('id', 0);
-    root.appendChild(slot);
-
     const child = new BackgroundElementTemplateInstance('view');
-    slot.insertBefore(child, null, true);
+    root.insertBefore(child, null, true);
 
     return globalCommitContext.ops;
   });

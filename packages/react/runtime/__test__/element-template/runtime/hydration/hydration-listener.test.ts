@@ -6,10 +6,7 @@ import {
   installElementTemplateHydrationListener,
   resetElementTemplateHydrationListener,
 } from '../../../../src/element-template/background/hydration-listener.js';
-import {
-  BackgroundElementTemplateInstance,
-  BackgroundElementTemplateSlot,
-} from '../../../../src/element-template/background/instance.js';
+import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { PerformanceTimingFlags, PipelineOrigins } from '../../../../src/element-template/lynx/performance.js';
 import {
@@ -112,9 +109,6 @@ describe('ElementTemplate hydration listener', () => {
 
       const backgroundRoot = __root as BackgroundElementTemplateInstance;
       const host = new BackgroundElementTemplateInstance('_et_test');
-      const slot = new BackgroundElementTemplateSlot();
-      slot.setAttribute('id', 0);
-      host.appendChild(slot);
       backgroundRoot.appendChild(host);
       const stale = new BackgroundElementTemplateInstance('_et_stale');
 
@@ -154,9 +148,6 @@ describe('ElementTemplate hydration listener', () => {
 
       const backgroundRoot = __root as BackgroundElementTemplateInstance;
       const host = new BackgroundElementTemplateInstance('_et_test');
-      const slot = new BackgroundElementTemplateSlot();
-      slot.setAttribute('id', 0);
-      host.appendChild(slot);
       backgroundRoot.appendChild(host);
       const stale = new BackgroundElementTemplateInstance('_et_stale');
 
@@ -198,12 +189,9 @@ describe('ElementTemplate hydration listener', () => {
 
       const backgroundRoot = __root as BackgroundElementTemplateInstance;
       const parent = new BackgroundElementTemplateInstance('_et_parent');
-      const slot = new BackgroundElementTemplateSlot();
-      slot.setAttribute('id', 0);
-      parent.appendChild(slot);
       const inserted = new BackgroundElementTemplateInstance('_et_ref_parent');
       inserted.setAttribute('attributeSlots', [ref]);
-      slot.appendChild(inserted);
+      parent.appendChild(inserted);
       backgroundRoot.appendChild(parent);
 
       envManager.switchToMainThread();
@@ -384,11 +372,8 @@ describe('ElementTemplate hydration listener', () => {
       const backgroundRoot = __root as BackgroundElementTemplateInstance;
       const parent = new BackgroundElementTemplateInstance('_et_event_parent');
       parent.setAttribute('attributeSlots', [handler]);
-      const slot = new BackgroundElementTemplateSlot();
-      slot.setAttribute('id', 0);
-      parent.appendChild(slot);
       const stale = new BackgroundElementTemplateInstance('_et_stale');
-      slot.appendChild(stale);
+      parent.appendChild(stale);
       backgroundRoot.appendChild(parent);
 
       publishEvent('-1:0:', eventData);
