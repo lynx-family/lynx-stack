@@ -8,7 +8,7 @@ import {
   clamp as clamp_,
   progress as progress_,
   stagger as stagger_,
-} from 'framer-motion/dom' with { runtime: 'shared' };
+} from 'framer-motion/dom';
 import type {
   AnimationSequence,
   ObjectTarget,
@@ -21,7 +21,7 @@ import {
   spring as spring_,
   styleEffect as styleEffect_,
   transformValue as transformValue_,
-} from 'motion-dom' with { runtime: 'shared' };
+} from 'motion-dom';
 import type {
   AnimationOptions,
   AnimationPlaybackControlsWithThen,
@@ -39,7 +39,7 @@ import type {
 } from 'motion-dom';
 
 import { useMotionValueRefEvent } from '../hooks/useMotionEvent.js';
-import { motionValue as motionValue_ } from '../polyfill/MotionValue.js' with { runtime: 'shared' };
+import { motionValue as motionValue_ } from '../polyfill/MotionValue.js';
 import type { ElementOrElements } from '../types/index.js';
 import { elementOrSelector2Dom } from '../utils/elementHelper.js';
 import { noopMT } from '../utils/noop.js';

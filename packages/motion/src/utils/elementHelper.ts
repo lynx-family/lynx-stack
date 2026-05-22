@@ -9,7 +9,7 @@ import {
   isMainThreadElement,
   isMainThreadElementArray,
 } from './isMainThreadElement.js';
-import { ElementCompt } from '../polyfill/element.js' with { runtime: 'shared' };
+import { ElementCompt } from '../polyfill/element.js';
 import type { ElementOrElements } from '../types/index.js';
 
 export function elementOrSelector2Dom(
