@@ -3039,6 +3039,14 @@ test.describe('web-elements test suite', () => {
       },
     );
     test(
+      'style-border-radius',
+      async ({ page }, { titlePath }) => {
+        const title = getTitle(titlePath);
+        await gotoWebComponentPage(page, title);
+        await diffScreenShot(page, title, 'initial');
+      },
+    );
+    test(
       'style-inherit-margin',
       async ({ page }, { titlePath }) => {
         const title = getTitle(titlePath);

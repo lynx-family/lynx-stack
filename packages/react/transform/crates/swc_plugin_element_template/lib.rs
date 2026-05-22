@@ -21,7 +21,6 @@ mod asset;
 mod attr_name;
 mod extractor;
 mod lowering;
-mod slot;
 mod template_attribute;
 mod template_definition;
 mod template_slot;
@@ -140,8 +139,6 @@ where
   template_counter: u32,
   current_template_defs: Vec<ModuleItem>,
   comments: Option<C>,
-  slot_ident: Ident,
-  used_slot: bool,
 }
 
 impl<C> JSXTransformer<C>
@@ -195,8 +192,6 @@ where
       template_counter: 0,
       current_template_defs: vec![],
       comments,
-      slot_ident: private_ident!("__etSlot"),
-      used_slot: false,
     }
   }
 
@@ -300,6 +295,7 @@ where
     #[derive(Clone, Copy)]
     enum AttrPlanAdapter {
       Event,
+      Ref,
       Spread,
     }
 
@@ -311,6 +307,11 @@ where
           slot_index,
           ..
         } => Some((*slot_index, AttrPlanAdapter::Event)),
+        DynamicAttributePart::Attr {
+          attr_name: AttrName::Ref,
+          slot_index,
+          ..
+        } => Some((*slot_index, AttrPlanAdapter::Ref)),
         DynamicAttributePart::Spread { slot_index, .. } => {
           Some((*slot_index, AttrPlanAdapter::Spread))
         }
@@ -352,6 +353,10 @@ where
         let adapter_expr = match adapter {
           AttrPlanAdapter::Event => quote!(
             "$internal_runtime_id.adaptEventAttrSlot" as Expr,
+            internal_runtime_id: Expr = internal_runtime_id.clone(),
+          ),
+          AttrPlanAdapter::Ref => quote!(
+            "$internal_runtime_id.adaptRefAttrSlot" as Expr,
             internal_runtime_id: Expr = internal_runtime_id.clone(),
           ),
           AttrPlanAdapter::Spread => quote!(
@@ -479,33 +484,6 @@ where
           specifiers: vec![ImportSpecifier::Namespace(ImportStarAsSpecifier {
             span: DUMMY_SP,
             local: internal_runtime_id.clone(),
-          })],
-          src: Box::new(Str {
-            span: DUMMY_SP,
-            raw: None,
-            value: internal_runtime_pkg(&self.cfg.runtime_pkg).into(),
-          }),
-          type_only: Default::default(),
-          with: Default::default(),
-          phase: ImportPhase::Evaluation,
-        })),
-      );
-    }
-
-    if self.used_slot {
-      prepend_stmt(
-        &mut n.body,
-        ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
-          span: DUMMY_SP,
-          specifiers: vec![ImportSpecifier::Named(ImportNamedSpecifier {
-            span: DUMMY_SP,
-            local: self.slot_ident.clone(),
-            imported: Some(ModuleExportName::Ident(Ident::new(
-              "__etSlot".into(),
-              DUMMY_SP,
-              SyntaxContext::default(),
-            ))),
-            is_type_only: false,
           })],
           src: Box::new(Str {
             span: DUMMY_SP,

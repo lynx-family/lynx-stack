@@ -25,6 +25,7 @@ function namedStub(name: string): CatalogComponent {
 const Text = namedStub('Text');
 const Button = namedStub('Button');
 const Icon = namedStub('Icon');
+const LineChart = namedStub('LineChart');
 const Tabs = namedStub('Tabs');
 
 const TEXT_MANIFEST: CatalogManifest = {
@@ -35,6 +36,24 @@ const BUTTON_MANIFEST: CatalogManifest = {
 };
 const ICON_MANIFEST: CatalogManifest = {
   Icon: { type: 'object', properties: { name: { type: 'string' } } },
+};
+const LINE_CHART_MANIFEST: CatalogManifest = {
+  LineChart: {
+    type: 'object',
+    properties: {
+      labels: { type: 'array', items: { type: 'string' } },
+      series: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            values: { type: 'array', items: { type: 'number' } },
+          },
+        },
+      },
+    },
+  },
 };
 const TABS_MANIFEST: CatalogManifest = {
   Tabs: {
@@ -57,9 +76,9 @@ const TABS_MANIFEST: CatalogManifest = {
 describe('defineCatalog', () => {
   test('bare component derives name from displayName ?? function name', () => {
     const cat = defineCatalog([Text, Button]);
-    expect(cat.map((e) => e.name)).toEqual(['Text', 'Button']);
-    expect(cat[0]!.component).toBe(Text);
-    expect(cat[0]!.schema).toBeUndefined();
+    expect(cat.components.map((e) => e.name)).toEqual(['Text', 'Button']);
+    expect(cat.components[0]!.component).toBe(Text);
+    expect(cat.components[0]!.schema).toBeUndefined();
   });
 
   test('tuple form derives name + schema from manifest', () => {
@@ -67,21 +86,21 @@ describe('defineCatalog', () => {
       [Text, TEXT_MANIFEST],
       [Button, BUTTON_MANIFEST],
     ]);
-    expect(cat[0]!.name).toBe('Text');
-    expect(cat[0]!.schema).toEqual(TEXT_MANIFEST.Text);
-    expect(cat[1]!.name).toBe('Button');
-    expect(cat[1]!.schema).toEqual(BUTTON_MANIFEST.Button);
+    expect(cat.components[0]!.name).toBe('Text');
+    expect(cat.components[0]!.schema).toEqual(TEXT_MANIFEST.Text);
+    expect(cat.components[1]!.name).toBe('Button');
+    expect(cat.components[1]!.schema).toEqual(BUTTON_MANIFEST.Button);
   });
 
   test('mixes bare and tuple inputs in one call', () => {
     const cat = defineCatalog([Text, [Button, BUTTON_MANIFEST]]);
-    expect(cat[0]!.schema).toBeUndefined();
-    expect(cat[1]!.schema).toEqual(BUTTON_MANIFEST.Button);
+    expect(cat.components[0]!.schema).toBeUndefined();
+    expect(cat.components[1]!.schema).toEqual(BUTTON_MANIFEST.Button);
   });
 
   test('passes through already-resolved entries', () => {
     const inner = defineCatalog([[Text, TEXT_MANIFEST]]);
-    const outer = defineCatalog(inner);
+    const outer = defineCatalog(inner.components);
     expect(outer).toEqual(inner);
   });
 
@@ -100,7 +119,7 @@ describe('defineCatalog', () => {
     Object.defineProperty(fn, 'name', { value: 'Mangled' });
     (fn as { displayName?: string }).displayName = 'Custom';
     const cat = defineCatalog([fn]);
-    expect(cat[0]!.name).toBe('Custom');
+    expect(cat.components[0]!.name).toBe('Custom');
   });
 });
 
@@ -110,7 +129,7 @@ describe('mergeCatalogs', () => {
     const Override = namedStub('Text');
     const b = defineCatalog([Override]);
     const merged = mergeCatalogs(a, b);
-    const text = merged.find((e) => e.name === 'Text')!;
+    const text = merged.components.find((e) => e.name === 'Text')!;
     expect(text.component).toBe(Override);
     expect(text.schema).toBeUndefined();
   });
@@ -152,6 +171,7 @@ describe('user composes their own all-builtins catalog', () => {
       [Text, TEXT_MANIFEST],
       [Button, BUTTON_MANIFEST],
       [Icon, ICON_MANIFEST],
+      [LineChart, LINE_CHART_MANIFEST],
       [Tabs, TABS_MANIFEST],
     ]);
     const manifest = serializeCatalog(all);
@@ -159,6 +179,7 @@ describe('user composes their own all-builtins catalog', () => {
       'Text',
       'Button',
       'Icon',
+      'LineChart',
       'Tabs',
     ]);
     expect(manifest.components.every((c) => c.schema)).toBe(true);

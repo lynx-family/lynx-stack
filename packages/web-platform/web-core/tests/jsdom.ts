@@ -101,6 +101,7 @@ Object.assign(globalThis, {
   window,
   Window: window.Window,
   CustomEvent: window.CustomEvent,
+  KeyboardEvent: window.KeyboardEvent,
   HTMLElement: window.HTMLElement,
   customElements: window.customElements,
   requestAnimationFrame: (cb: any) => setTimeout(cb, 0),
@@ -109,4 +110,11 @@ Object.assign(globalThis, {
   CSS: vi.mockObject({
     supports: vi.fn().mockReturnValue(true),
   }),
+  // jsdom provides these on `window` but does not surface them as globals;
+  // production code relies on these being available globally, and the
+  // Event constructors must come from jsdom (not Node's native Event) so
+  // jsdom's `dispatchEvent` accepts them.
+  DOMRect: window.DOMRect,
+  Event: window.Event,
+  MouseEvent: window.MouseEvent,
 });

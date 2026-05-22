@@ -163,11 +163,12 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
     let j = 0;
     for (let i = 0; i < this.oldChildNodes.length; i++, j++) {
       const child = this.oldChildNodes[i]!;
+      const insertedBefore = insertBefore.get(child)?.length ?? 0;
       if (platformInfoUpdate.has(child)) {
         updates.push({
           ...platformInfoUpdate.get(child),
-          from: +j,
-          to: +j,
+          from: +j + insertedBefore,
+          to: +j + insertedBefore,
           // no flush
           flush: false,
           type: child.type,

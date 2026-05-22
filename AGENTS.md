@@ -35,11 +35,16 @@ rustc --version  # Required for native bindings
 # Full build (REQUIRED before running tests)
 pnpm turbo build
 
+# Focused package builds should still go through Turbo filtering
+pnpm turbo build --filter <package-or-task>
+
 # Development build with watching
 pnpm turbo watch build
 ```
 
 **⚠️ Critical**: Always run full build before tests. Watch mode only compiles TypeScript, not Rust components.
+
+When narrowing builds to a package or task, prefer `pnpm turbo build --filter ...` over `pnpm build --filter ...` so Turbo dependency ordering, task outputs, and cache behavior remain consistent.
 
 ### 3. Code Quality
 
@@ -247,6 +252,10 @@ These instructions were generated through comprehensive analysis and testing of 
 - See `packages/web-platform/web-core/AGENTS.md` for specific instructions on `web-core`.
 
 Remember: This is a complex, multi-language monorepo. Always allow extra time for builds and tests, and follow the exact command sequences provided.
+
+## Commit conventions
+
+- Do **not** add `Co-Authored-By:` (or other AI-attribution) footers to commit messages. Authorship is tracked via the git author field; trailers like these add noise to the history.
 
 ## Submit knowledge updates
 

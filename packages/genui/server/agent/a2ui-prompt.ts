@@ -62,8 +62,9 @@ and exactly ONE of the following keys:
       ...component specific props
     }
 - The component with id "root" is the entry point of the tree.
-- Layout containers (Row / Column / List) take "children": ["id1", "id2", ...]
-  OR a template object for repeating from the data model.
+- Layout containers (Row / Column / List) take "children": ["id1", "id2", ...].
+  To repeat from the data model, use "children":
+    { "path": "/items", "componentId": "itemRow" }
 - Card uses "child": "id".  Modal uses "trigger" + "content".  Tabs uses an
   array of {title, child}.
 
@@ -71,7 +72,7 @@ and exactly ONE of the following keys:
 - Static text:  "text": "Hello"
 - Bound text:   "text": { "path": "/user/name" }
 - Bound list children:
-    "children": { "template": { "path": "/items", "componentId": "itemRow" } }
+    "children": { "path": "/items", "componentId": "itemRow" }
 - Use updateDataModel messages to populate values at those paths.
 - DynamicString/DynamicNumber/DynamicBoolean props accept either a literal value
   or { "path": "/json/pointer" }. If you bind a prop to a path, create the
@@ -79,13 +80,15 @@ and exactly ONE of the following keys:
 
 ## Client-to-server events
 - Interactive components carry an "action":
-    { "name": "submit_booking",
-      "context": { "restaurantId": { "path": "/selected/id" } } }
+    { "event": { "name": "submit_booking",
+                 "context": { "restaurantId": { "path": "/selected/id" } } } }
+- Button has NO "label" prop. Its visible label is a child Text component
+  (use "child": "<text-id>" and add a separate Text component with that id).
 - The renderer will POST that action back to /a2ui/action with the same
-  surfaceId + threadId. Your next turn may receive an assistant message whose
-  content starts with "A2UI_USER_ACTION:" followed by JSON describing the
-  action; handle it by emitting additional updateComponents / updateDataModel
-  messages to update the same surface.
+  surfaceId and current client-held conversation. Your next turn may receive a
+  user message whose content starts with "A2UI_USER_ACTION:" followed by JSON
+  describing the action; handle it by emitting additional updateComponents /
+  updateDataModel messages to update the same surface.
 `;
 
 function buildHardRules(catalogId: string): string {
@@ -93,16 +96,19 @@ function buildHardRules(catalogId: string): string {
 1. Output MUST be a JSON ARRAY of A2UI messages. No prose, no Markdown, no
    code fences, no XML. First character '[' – last character ']'.
 2. Each element MUST include "version": "v0.9".
-3. The first message MUST be createSurface with catalogId = "${catalogId}".
-   Use surfaceId "main" unless the user specifies otherwise.
-4. The second message MUST be updateComponents; its components list MUST
-   contain exactly one component with id "root".
+3. For a fresh non-action response, the first message MUST be createSurface with
+   catalogId = "${catalogId}". Use surfaceId "main" unless the user specifies
+   otherwise.
+4. For a fresh non-action response, the second message MUST be
+   updateComponents; its components list MUST contain exactly one component
+   with id "root".
 5. Use property-based component discriminators: "component": "Text", not
    wrapper objects such as { "Text": {...} }.
 6. Children are referenced by id only. NEVER inline a child component.
 7. Container references MUST point to components present in the same response.
 8. Card.child is exactly one id; wrap multiple elements in Row/Column/List.
-9. Buttons MUST include a non-empty "action.name".
+9. Buttons MUST include a non-empty "action.event.name". Button has NO "label"
+   prop – provide the label via a child Text component ("child": "<text-id>").
 10. Any "{path:...}" reference MUST be populated by some updateDataModel in the
    same response.
 11. Ids are kebab-case, unique per surface ("root", "title-text", "submit-btn").
@@ -110,57 +116,33 @@ function buildHardRules(catalogId: string): string {
 13. No comments, trailing commas or unknown fields.
 14. If the user asks for impossible, unsafe, or unsupported UI, render a concise
     explanatory A2UI surface using supported components rather than prose.
+15. If the latest user message starts with "A2UI_USER_ACTION:", this is an
+    action response for an existing surface. Return a non-empty JSON array with
+    updateDataModel and/or updateComponents for that same surfaceId. Do NOT
+    return [] and do NOT create a new surface unless the action explicitly asks
+    to replace the whole UI.
+16. For UI that should change after a button tap, keep the initial response in
+    the pre-action state. Put confirmation, success, or result details in the
+    action response instead of showing them before the action happens.
+17. For Image.url, provide a short English image search query such as
+    "fresh pasta on a table" or "city skyline at night". Do NOT invent photo
+    CDN URLs. The server resolves Image.url values through its image provider.
 `;
 }
 
-const FEW_SHOT_EXAMPLE = `## Example response (login card)
+function renderCatalogExamples(catalog: A2UICatalog): string {
+  if (!catalog.examples || catalog.examples.length === 0) return '';
 
-User: "Generate a login card with email + password and a submit button."
-
-Assistant (response body, raw JSON, no fences):
-[
-  {
-    "version": "v0.9",
-    "createSurface": {
-      "surfaceId": "main",
-      "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json"
-    }
-  },
-  {
-    "version": "v0.9",
-    "updateComponents": {
-      "surfaceId": "main",
-      "components": [
-        { "id": "root",     "component": "Card",   "child": "form-col" },
-        { "id": "form-col", "component": "Column", "children": ["title", "email", "password", "submit"] },
-        { "id": "title",    "component": "Text",   "text": "Sign in",  "variant": "h2" },
-        { "id": "email",    "component": "TextField", "label": "Email",
-          "value": { "path": "/form/email" } },
-        { "id": "password", "component": "TextField", "label": "Password",
-          "value": { "path": "/form/password" } },
-        { "id": "submit",   "component": "Button",
-          "label": "Sign in",
-          "variant": "primary",
-          "action": {
-            "name": "submit_login",
-            "context": {
-              "email":    { "path": "/form/email" },
-              "password": { "path": "/form/password" }
-            }
-          }
-        }
-      ]
-    }
-  },
-  {
-    "version": "v0.9",
-    "updateDataModel": {
-      "surfaceId": "main",
-      "value": { "form": { "email": "", "password": "" } }
-    }
+  const lines = ['## Validated examples'];
+  for (const example of catalog.examples) {
+    lines.push('');
+    lines.push(`### ${example.name}`);
+    lines.push(`User: ${JSON.stringify(example.user)}`);
+    lines.push('Assistant (raw JSON array, no fences):');
+    lines.push(JSON.stringify(example.messages, null, 2));
   }
-]
-`;
+  return lines.join('\n');
+}
 
 export interface BuildSystemPromptOptions {
   catalog?: A2UICatalog;
@@ -183,7 +165,7 @@ export function buildA2UISystemPrompt(
     '',
     buildHardRules(catalog.id),
     '',
-    FEW_SHOT_EXAMPLE,
+    renderCatalogExamples(catalog),
   ];
   if (opts.appendix) {
     parts.push('', opts.appendix);

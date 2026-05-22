@@ -6,6 +6,7 @@ import type { KeyboardEvent } from 'react';
 
 import './DemosPage.css';
 
+import { PageHeader } from '../components/PageHeader.js';
 import { PreviewViewport } from '../components/PreviewViewport.js';
 import {
   DYNAMIC_PRESETS,
@@ -83,9 +84,16 @@ export function DemosListPage(
 
   return (
     <div className='examplePage'>
-      <div className='exampleMetaRow'>
-        <span className='chip'>{ALL_EXAMPLES.length} examples</span>
-      </div>
+      <PageHeader
+        className='examplePageHeader'
+        titleClassName='examplePageHeaderTitle'
+        descriptionClassName='examplePageHeaderDesc'
+        title='Showcase'
+        description='Browse playground examples and the curated A2UI gallery in one place. Click any card to jump into the full detail workspace.'
+        topContent={
+          <span className='chip'>{ALL_EXAMPLES.length} examples</span>
+        }
+      />
       <div className='exampleColumns'>
         <section className='exampleSection'>
           <div className='exampleSectionHeader'>

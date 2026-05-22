@@ -11,6 +11,12 @@ import {
   useSyncExternalStore,
 } from '@lynx-js/react';
 
+import type { CatalogFunctionEntry } from '../catalog/defineCatalog.js';
+import type { MessageProcessor } from '../store/MessageProcessor.js';
+import {
+  isFunctionCall,
+  resolveDynamicValue,
+} from '../store/resolveFunctionCall.js';
 import type { Surface } from '../store/types.js';
 
 const noop = () => {
@@ -152,12 +158,22 @@ export function resolveProperties(
   properties: Record<string, unknown>,
   surface: Surface | undefined,
   dataContextPath?: string,
+  processor?: MessageProcessor,
+  functions?: readonly CatalogFunctionEntry[],
 ) {
   if (!properties) return properties;
   const result: Record<string, unknown> = {};
   for (const key in properties) {
     const prop = properties[key];
-    if (isDataBinding(prop)) {
+    if (isFunctionCall(prop) && surface && processor) {
+      result[key] = resolveDynamicValue(
+        processor,
+        prop,
+        surface.surfaceId,
+        dataContextPath,
+        { functions },
+      );
+    } else if (isDataBinding(prop)) {
       let path = (prop as Record<string, unknown>)['path'] as
         | string
         | undefined;
@@ -204,27 +220,41 @@ export function useResolvedProps(
   properties: Record<string, unknown>,
   surface: Surface | undefined,
   dataContextPath?: string,
+  processor?: MessageProcessor,
+  functions?: readonly CatalogFunctionEntry[],
 ): readonly [Record<string, unknown>, (key: string, value: unknown) => void] {
   const cacheRef = useRef<Record<string, unknown> | null>(null);
 
   const computeSnapshot = useCallback(() => {
-    const next = resolveProperties(properties, surface, dataContextPath);
+    const next = resolveProperties(
+      properties,
+      surface,
+      dataContextPath,
+      processor,
+      functions,
+    );
     if (cacheRef.current && shallowEqual(cacheRef.current, next)) {
       return cacheRef.current;
     }
     cacheRef.current = next;
     return next;
-  }, [properties, surface, dataContextPath]);
+  }, [properties, surface, dataContextPath, processor, functions]);
 
   const subscribe = useCallback(
     (cb: () => void) => {
       if (!surface?.store) return noop;
       return effect(() => {
-        resolveProperties(properties, surface, dataContextPath);
+        resolveProperties(
+          properties,
+          surface,
+          dataContextPath,
+          processor,
+          functions,
+        );
         cb();
       });
     },
-    [properties, surface, dataContextPath],
+    [properties, surface, dataContextPath, processor, functions],
   );
 
   const resolved = useSyncExternalStore(

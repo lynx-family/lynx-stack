@@ -13,10 +13,12 @@ export interface RenderInit {
   theme?: 'light' | 'dark';
   /** When set, use a short `?demo=<id>` param instead of inlining the payload. */
   demoId?: string;
-  /** Simulation speed multiplier (e.g. 0.5, 1, 2, 4). */
+  /** Simulation speed multiplier (e.g. 0, 0.5, 1, 2, 4); 0 disables delay. */
   speed?: number;
   /** When true, render the final UI immediately without streaming playback. */
   instant?: boolean;
+  /** When true, actions in the preview are forwarded to the parent frame for live agent handling. */
+  liveAction?: boolean;
 }
 
 export function buildRenderUrl(init: RenderInit, baseUrl: string): string {
@@ -51,6 +53,10 @@ export function buildRenderUrl(init: RenderInit, baseUrl: string): string {
 
   if (init.instant) {
     url.searchParams.set('instant', '1');
+  }
+
+  if (init.liveAction) {
+    url.searchParams.set('liveAction', '1');
   }
 
   return url.toString();

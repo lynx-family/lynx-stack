@@ -19,7 +19,7 @@ export function installElementTemplatePatchListener(): void {
   listener = (event: { data: unknown }) => {
     const { data } = event;
     const payload = data as ElementTemplateUpdateCommitContext;
-    const hasOps = Array.isArray(payload?.ops);
+    const hasOps = Array.isArray(payload?.ops) && payload.ops.length > 0;
     const flushOptions = payload?.flushOptions ?? {};
     const pipelineOptions = flushOptions.pipelineOptions;
     setPipeline(pipelineOptions);

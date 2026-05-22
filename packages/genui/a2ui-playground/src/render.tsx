@@ -13,7 +13,7 @@ import { decodeBase64Url } from './utils/base64url.js';
 import { DEFAULT_A2UI_DEMO_URL } from './utils/demoUrl.js';
 
 interface InitData {
-  protocol?: '0.9';
+  protocol?: '0.9' | 'a2ui' | 'openui';
   messagesUrl?: string;
   messages?: unknown;
   actionMocksUrl?: string;
@@ -26,6 +26,7 @@ interface InitData {
   rawText?: string;
   rawTextUrl?: string;
   playbackPaused?: boolean;
+  liveAction?: boolean;
 }
 
 interface InitLynxViewMessage {
@@ -47,9 +48,14 @@ interface PlaybackProgressMessage {
   };
 }
 
-interface PlaybackSyncMessage {
-  type: 'A2UI_PLAYBACK_SYNC';
-  data: unknown;
+interface UserActionMessage {
+  type: 'A2UI_USER_ACTION';
+  action: unknown;
+}
+
+interface ActionResponseMessage {
+  type: 'A2UI_ACTION_RESPONSE';
+  messages: unknown[];
 }
 
 interface LynxViewElement extends HTMLElement {
@@ -57,6 +63,11 @@ interface LynxViewElement extends HTMLElement {
   globalProps?: unknown;
   reload?: () => void;
   sendGlobalEvent?: (eventName: string, params: unknown[]) => void;
+  onNativeModulesCall?: (
+    name: string,
+    data: unknown,
+    moduleName: string,
+  ) => unknown;
 }
 
 function parseJsonParam(raw: string): unknown {
@@ -96,7 +107,10 @@ function parseInitDataFromQuery(): InitData | null {
     return null;
   }
 
-  const protocolValue = protocol === '0.9' ? '0.9' : undefined;
+  const protocolValue = protocol === '0.9' || protocol === 'a2ui'
+      || protocol === 'openui'
+    ? protocol
+    : undefined;
 
   const speedRaw = params.get('speed');
   const speedVal = speedRaw === null ? undefined : Number(speedRaw);
@@ -107,7 +121,7 @@ function parseInitDataFromQuery(): InitData | null {
     actionMocksUrl: actionMocksUrl ?? undefined,
     demoUrl: demoUrl ?? undefined,
     messages: [], // Default to an empty array
-    speed: speedVal && Number.isFinite(speedVal) && speedVal > 0
+    speed: speedVal !== undefined && Number.isFinite(speedVal) && speedVal >= 0
       ? speedVal
       : undefined,
     instant: instant === '1' ? true : undefined,
@@ -117,6 +131,7 @@ function parseInitDataFromQuery(): InitData | null {
       : (theme === 'light' ? 'light' : undefined),
     rawText: rawText ?? undefined,
     rawTextUrl: rawTextUrl ?? undefined,
+    liveAction: params.get('liveAction') === '1' ? true : undefined,
   };
 
   if (messages) {
@@ -171,6 +186,7 @@ function buildGlobalPropsFromInitData(
   if (initData.playbackPaused !== undefined) {
     out.playbackPaused = initData.playbackPaused;
   }
+  if (initData.liveAction !== undefined) out.liveAction = initData.liveAction;
   return Object.keys(out).length > 0 ? out : null;
 }
 
@@ -191,12 +207,6 @@ function isPlaybackControlMessage(
   const payload = data as Partial<PlaybackControlMessage>;
   return payload.type === 'A2UI_PLAYBACK_CONTROL'
     && (payload.action === 'pause' || payload.action === 'resume');
-}
-
-function isPlaybackSyncMessage(data: unknown): data is PlaybackSyncMessage {
-  if (!data || typeof data !== 'object') return false;
-  const payload = data as Partial<PlaybackSyncMessage>;
-  return payload.type === 'A2UI_PLAYBACK_SYNC' && 'data' in payload;
 }
 
 function Render() {
@@ -238,13 +248,42 @@ function Render() {
   }, []);
 
   useEffect(() => {
-    const handleMessage = (e: MessageEvent<unknown>) => {
-      if (isPlaybackSyncMessage(e.data)) {
+    const lynxView = lynxViewRef.current;
+    if (!lynxView) return;
+
+    lynxView.onNativeModulesCall = (name, data, moduleName) => {
+      if (moduleName !== 'bridge') return;
+      if (name === 'A2UI_PLAYBACK_SYNC') {
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage(e.data, '*');
+          window.parent.postMessage(
+            {
+              type: 'A2UI_PLAYBACK_SYNC',
+              data,
+            },
+            '*',
+          );
         }
         return;
       }
+      if (name === 'A2UI_USER_ACTION') {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(
+            { type: 'A2UI_USER_ACTION', action: data },
+            '*',
+          );
+        }
+        return;
+      }
+    };
+
+    return () => {
+      if (lynxView.onNativeModulesCall === undefined) return;
+      lynxView.onNativeModulesCall = undefined;
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent<unknown>) => {
       if (
         e.data
         && typeof e.data === 'object'
@@ -253,6 +292,27 @@ function Render() {
         const lynxView = lynxViewRef.current;
         lynxView?.sendGlobalEvent?.('A2UI_PLAYBACK_PROGRESS', [
           (e.data as PlaybackProgressMessage).data,
+        ]);
+        return;
+      }
+      if (
+        e.data
+        && typeof e.data === 'object'
+        && (e.data as UserActionMessage).type === 'A2UI_USER_ACTION'
+      ) {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(e.data, '*');
+        }
+        return;
+      }
+      if (
+        e.data
+        && typeof e.data === 'object'
+        && (e.data as ActionResponseMessage).type === 'A2UI_ACTION_RESPONSE'
+      ) {
+        const lynxView = lynxViewRef.current;
+        lynxView?.sendGlobalEvent?.('A2UI_ACTION_RESPONSE', [
+          (e.data as ActionResponseMessage).messages,
         ]);
         return;
       }

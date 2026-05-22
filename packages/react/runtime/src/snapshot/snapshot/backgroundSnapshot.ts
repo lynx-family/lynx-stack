@@ -14,7 +14,7 @@ import { createRuntimeSnapshot, snapshotManager } from './definition.js';
 import type { Snapshot } from './definition.js';
 import { DynamicPartType } from './dynamicPartType.js';
 import { reconstructInstanceTree } from './reconstructInstanceTree.js';
-import { applyRef, clearQueuedRefs, getRefFromValue, queueRefAttrUpdate } from './ref.js';
+import { clearQueuedRefs, clearRef, getRefFromValue, queueRefAttrUpdate } from './ref.js';
 import type { Ref } from './ref.js';
 import { snapshotCreatorMap } from './snapshot.js';
 import { hydrationMap } from './snapshotInstanceHydrationMap.js';
@@ -300,9 +300,9 @@ export class BackgroundSnapshotInstance {
               const value = v.__values![i];
               if (value && (typeof value === 'object' || typeof value === 'function')) {
                 if ('__spread' in value && 'ref' in value && value.ref) {
-                  applyRef(value.ref as Ref, null);
+                  clearRef(value.ref as Ref);
                 } else if ('__ref' in value) {
-                  applyRef(value as Ref, null);
+                  clearRef(value as Ref);
                 }
               }
             });
@@ -439,7 +439,7 @@ export class BackgroundSnapshotInstance {
         };
       }
       if ('__ref' in newValueObj) {
-        queueRefAttrUpdate(oldValue as Ref, newValueObj as Ref, this.__id, index);
+        queueRefAttrUpdate(oldValue as Ref, newValueObj as unknown as Ref, this.__id, index);
         return { needUpdate: false, valueToCommit: 1 };
       }
       if ('_wkltId' in newValueObj) {

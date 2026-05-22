@@ -1,0 +1,48 @@
+@import "../theme.css";
+
+.textfield {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+
+.textfield-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--a2ui-color-text-muted);
+  line-height: 1.5;
+}
+
+.textfield-control {
+  width: 100%;
+  min-height: 44px;
+  padding-left: 12px;
+  padding-right: 12px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--a2ui-color-border-strong);
+  border-radius: 12px;
+  background-color: var(--a2ui-color-surface-strong);
+  color: var(--a2ui-color-on-input);
+  font-size: 15px;
+  line-height: 1.5;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.45) inset;
+}
+
+.textfield-textarea {
+  min-height: 112px;
+}
+
+.textfield-invalid .textfield-control {
+  border-color: var(--a2ui-color-input-error);
+}
+
+.textfield-error {
+  font-size: 11px;
+  color: var(--a2ui-color-input-error);
+  line-height: 1.5;
+}

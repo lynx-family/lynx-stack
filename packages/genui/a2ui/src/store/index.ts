@@ -25,3 +25,18 @@ export type {
   SurfaceId,
   UserActionPayload,
 } from './types.js';
+export { FunctionRegistry, functionRegistry } from './FunctionRegistry.js';
+export type { FunctionEntry, FunctionImpl } from './FunctionRegistry.js';
+export type { FunctionCallContext } from './FunctionRegistry.js';
+// `createFormController` + `FormController` are intentionally not exported.
+// `useChecks` uses them internally to keep the door open for a follow-up
+// `<Form>` component, but they aren't public API until that consumer
+// lands and validates the shape.
+export {
+  executeFunctionCall,
+  isDataBinding,
+  isFunctionCall,
+  resolveDynamicValue,
+  resolveFunctionArguments,
+} from './resolveFunctionCall.js';
+export type { ResolveFunctionOptions } from './resolveFunctionCall.js';

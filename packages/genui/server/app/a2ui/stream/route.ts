@@ -4,26 +4,21 @@
 
 import { BASIC_CATALOG } from '../../../agent/a2ui-catalog';
 import { validateA2UIOutput } from '../../../agent/a2ui-validator';
+import { resolveA2UIImageUrls } from '../../../agent/image-resolver';
 import { getA2UIAgentService } from '../../../service/a2ui-agent';
-import type { ChatMessage } from '../../../service/a2ui-agent';
-import { errorMessage, pickChatOptions } from '../_shared';
+import {
+  errorMessage,
+  pickChatOptions,
+  readJsonBodyWithLimit,
+  validateConversation,
+  validateMessages,
+} from '../_shared';
 import type { A2UIChatBody } from '../_shared';
 import { corsHeaders, corsPreflight, jsonWithCors } from '../cors';
 import { checkRateLimit, rateLimitSseResponse } from '../rate-limit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-function isChatMessageArray(value: unknown): value is ChatMessage[] {
-  if (!Array.isArray(value) || value.length === 0) return false;
-  return value.every(
-    (item) =>
-      item !== null
-      && typeof item === 'object'
-      && typeof (item as ChatMessage).role === 'string'
-      && typeof (item as ChatMessage).content === 'string',
-  );
-}
 
 function encodeSSE(event: string, data: unknown): Uint8Array {
   const payload = typeof data === 'string' ? data : JSON.stringify(data);
@@ -49,25 +44,33 @@ export async function POST(req: Request) {
     return rateLimitSseResponse(req, decision);
   }
 
-  let body: A2UIChatBody;
-  try {
-    body = (await req.json()) as A2UIChatBody;
-  } catch {
+  const parsed = await readJsonBodyWithLimit<A2UIChatBody>(req);
+  if (!parsed.ok) {
     return jsonWithCors(
       req,
-      { ok: false, error: 'invalid JSON body' },
-      { status: 400 },
+      { ok: false, error: parsed.error },
+      { status: parsed.status },
     );
   }
+  const body = parsed.body;
 
-  if (!isChatMessageArray(body.messages)) {
+  const validated = validateMessages(body.messages);
+  if (!validated.ok) {
     return jsonWithCors(
       req,
-      { ok: false, error: 'messages is required' },
-      { status: 400 },
+      { ok: false, error: validated.error },
+      { status: validated.status },
     );
   }
-  const messages = body.messages;
+  const messages = validated.messages;
+  const validatedConversation = validateConversation(body.conversation);
+  if (!validatedConversation.ok) {
+    return jsonWithCors(
+      req,
+      { ok: false, error: validatedConversation.error },
+      { status: validatedConversation.status },
+    );
+  }
   const opts = pickChatOptions(body);
   const service = getA2UIAgentService();
 
@@ -81,18 +84,23 @@ export async function POST(req: Request) {
         const { textStream, finalize } = await service.streamAsAsyncIterable(
           messages,
           opts,
+          validatedConversation.conversation,
         );
-
-        enqueue('start', {
-          threadId: opts.threadId,
-          resourceId: opts.resourceId,
-        });
 
         for await (const chunk of textStream) {
           enqueue('delta', { text: chunk });
         }
 
-        const { text: finalText, usage, finishReason } = await finalize();
+        let { text: finalText, usage, finishReason } = await finalize();
+        let repair:
+          | {
+            attempted: true;
+            sourceErrors: string[];
+            ok: boolean;
+            attempts: number;
+            errors?: string[];
+          }
+          | undefined;
 
         let validation: { ok: boolean; errors: string[]; messages: unknown[] } =
           {
@@ -100,16 +108,61 @@ export async function POST(req: Request) {
             errors: ['no text produced'],
             messages: [],
           };
-        if (finalText) {
-          const v = validateA2UIOutput(
-            finalText,
-            opts.catalog ?? BASIC_CATALOG,
-          );
-          validation = {
-            ok: v.ok,
-            errors: v.errors,
-            messages: v.ok ? v.messages : [],
-          };
+        const v = validateA2UIOutput(
+          finalText ?? '',
+          opts.catalog ?? BASIC_CATALOG,
+        );
+        let resolvedMessages = v.ok
+          ? await resolveA2UIImageUrls(v.messages)
+          : [];
+        validation = {
+          ok: v.ok,
+          errors: v.errors,
+          messages: resolvedMessages,
+        };
+        if (!v.ok) {
+          try {
+            const repaired = await service.generateValidated(
+              messages,
+              opts,
+              validatedConversation.conversation,
+            );
+            repair = {
+              attempted: true,
+              sourceErrors: v.errors,
+              ok: repaired.ok,
+              attempts: repaired.attempts,
+            };
+            enqueue('repair', repair);
+            if (repaired.ok) {
+              finalText = repaired.text;
+              usage = repaired.usage;
+              finishReason = repaired.finishReason;
+              resolvedMessages = await resolveA2UIImageUrls(
+                repaired.messages,
+              );
+              validation = {
+                ok: true,
+                errors: [],
+                messages: resolvedMessages,
+              };
+            } else {
+              validation = {
+                ok: false,
+                errors: repaired.errors,
+                messages: [],
+              };
+            }
+          } catch (err: unknown) {
+            repair = {
+              attempted: true,
+              sourceErrors: v.errors,
+              ok: false,
+              attempts: 0,
+              errors: [errorMessage(err).message],
+            };
+            enqueue('repair', repair);
+          }
         }
 
         enqueue('done', {
@@ -117,6 +170,7 @@ export async function POST(req: Request) {
           usage,
           finishReason,
           validation,
+          repair,
         });
       } catch (err: unknown) {
         enqueue('error', errorMessage(err));

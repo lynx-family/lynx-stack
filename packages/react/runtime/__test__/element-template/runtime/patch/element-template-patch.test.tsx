@@ -225,13 +225,35 @@ describe('ElementTemplate patch stream (apply)', () => {
     envManager.switchToBackground();
     lynx.getCoreContext().dispatchEvent({
       type: ElementTemplateLifecycleConstant.update,
-      data: { flushOptions: {}, flowIds: [101, 202] },
+      data: { ops: [], flushOptions: { triggerDataUpdated: true }, flowIds: [101, 202] },
     });
     envManager.switchToMainThread();
 
     expect(performance.profileStart).not.toHaveBeenCalled();
     expect(performance.profileEnd).not.toHaveBeenCalled();
     expect(mockFlushElementTree.mock.calls).toHaveLength(1);
+    expect(mockFlushElementTree.mock.calls[0]?.[1]).toEqual({ triggerDataUpdated: true });
+  });
+
+  it('flushes option-only update payloads without ops', () => {
+    envManager.switchToMainThread();
+    installElementTemplatePatchListener();
+    const performance = lynx.performance;
+    performance.profileStart.mockClear();
+    performance.profileEnd.mockClear();
+    mockFlushElementTree.mockClear();
+
+    envManager.switchToBackground();
+    lynx.getCoreContext().dispatchEvent({
+      type: ElementTemplateLifecycleConstant.update,
+      data: { flushOptions: { triggerDataUpdated: true }, flowIds: [101, 202] },
+    });
+    envManager.switchToMainThread();
+
+    expect(performance.profileStart).not.toHaveBeenCalled();
+    expect(performance.profileEnd).not.toHaveBeenCalled();
+    expect(mockFlushElementTree.mock.calls).toHaveLength(1);
+    expect(mockFlushElementTree.mock.calls[0]?.[1]).toEqual({ triggerDataUpdated: true });
   });
 
   it('reports illegal handleId 0 on create', () => {
@@ -557,18 +579,22 @@ describe('ElementTemplate patch stream (apply)', () => {
     resetReportedErrors();
   });
 
-  it('still flushes update payloads without ops so flushOptions can reach native', () => {
+  it('still flushes update payloads with empty ops so flushOptions can reach native', () => {
     envManager.switchToMainThread();
     installElementTemplatePatchListener();
     mockSetAttributeOfElementTemplate.mockClear();
     mockInsertNodeToElementTemplate.mockClear();
     mockRemoveNodeFromElementTemplate.mockClear();
     mockFlushElementTree.mockClear();
+    lynx.performance._markTiming.mockClear();
 
     envManager.switchToBackground();
     lynx.getCoreContext().dispatchEvent({
       type: ElementTemplateLifecycleConstant.update,
-      data: { flushOptions: {} },
+      data: {
+        ops: [],
+        flushOptions: { triggerDataUpdated: true },
+      },
     });
     envManager.switchToMainThread();
 
@@ -576,6 +602,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(mockInsertNodeToElementTemplate.mock.calls).toHaveLength(0);
     expect(mockRemoveNodeFromElementTemplate.mock.calls).toHaveLength(0);
     expect(mockFlushElementTree.mock.calls).toHaveLength(1);
-    expect(mockFlushElementTree.mock.calls[0]?.[1]).toEqual({});
+    expect(mockFlushElementTree.mock.calls[0]?.[1]).toEqual({ triggerDataUpdated: true });
+    expect(lynx.performance._markTiming.mock.calls).toEqual([]);
   });
 });

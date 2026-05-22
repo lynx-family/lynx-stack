@@ -1,0 +1,45 @@
+{
+  "Icon": {
+    "properties": {
+      "name": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "description": "Material icon name (camelCase or snake_case), e.g. \"info\", \"skipNext\", \"play_arrow\"."
+      },
+      "size": {
+        "type": "string",
+        "enum": [
+          "sm",
+          "md",
+          "lg"
+        ]
+      },
+      "color": {
+        "type": "string",
+        "enum": [
+          "primary",
+          "muted",
+          "inherit"
+        ]
+      }
+    },
+    "required": [
+      "name"
+    ]
+  }
+}

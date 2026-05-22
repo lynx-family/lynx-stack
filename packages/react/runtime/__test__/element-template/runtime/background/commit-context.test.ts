@@ -6,13 +6,12 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
   globalCommitContext,
-  markRemovedSubtreeForCurrentCommit,
+  markRemovedSubtreeForPostDispatchTeardown,
   resetGlobalCommitContext,
-  takeRemovedSubtreesForCurrentCommit,
+  takeRemovedSubtreesForPostDispatchTeardown,
 } from '../../../../src/element-template/background/commit-context.js';
 import {
   BackgroundElementTemplateInstance,
-  BackgroundElementTemplateSlot,
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
   collectElementTemplateSubtreeHandleIds,
 } from '../../../../src/element-template/background/instance.js';
@@ -28,46 +27,40 @@ describe('ElementTemplate commit context', () => {
   it('keeps removed subtree roots outside the update payload', () => {
     const root = new BackgroundElementTemplateInstance('view');
 
-    markRemovedSubtreeForCurrentCommit(root);
-    markRemovedSubtreeForCurrentCommit(root);
+    markRemovedSubtreeForPostDispatchTeardown(root);
+    markRemovedSubtreeForPostDispatchTeardown(root);
 
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([root]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([root]);
     expect({
       ops: globalCommitContext.ops,
       flushOptions: globalCommitContext.flushOptions,
       flowIds: globalCommitContext.flowIds,
-    }).not.toHaveProperty('removedSubtrees');
+    }).not.toHaveProperty('removedSubtreesAwaitingTeardown');
   });
 
   it('takes removed subtree roots from the current commit once', () => {
     const root = new BackgroundElementTemplateInstance('view');
-    markRemovedSubtreeForCurrentCommit(root);
+    markRemovedSubtreeForPostDispatchTeardown(root);
 
-    expect(takeRemovedSubtreesForCurrentCommit()).toEqual([root]);
-    expect(takeRemovedSubtreesForCurrentCommit()).toEqual([]);
+    expect(takeRemovedSubtreesForPostDispatchTeardown()).toEqual([root]);
+    expect(takeRemovedSubtreesForPostDispatchTeardown()).toEqual([]);
   });
 
   it('clears non-payload state when the global commit context resets', () => {
     const root = new BackgroundElementTemplateInstance('view');
-    markRemovedSubtreeForCurrentCommit(root);
+    markRemovedSubtreeForPostDispatchTeardown(root);
 
     resetGlobalCommitContext();
 
-    expect(globalCommitContext.nonPayload.removedSubtrees).toEqual([]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
   });
 
   it('collects only handles that are registered in the main-thread registry', () => {
     const root = new BackgroundElementTemplateInstance('root');
-    const slot = new BackgroundElementTemplateSlot();
-    slot.setAttribute('id', 0);
-    root.appendChild(slot);
     const child = new BackgroundElementTemplateInstance('child');
-    const childSlot = new BackgroundElementTemplateSlot();
-    childSlot.setAttribute('id', 0);
-    child.appendChild(childSlot);
     const rawText = new BackgroundElementTemplateInstance(BUILTIN_RAW_TEXT_TEMPLATE_KEY, ['text']);
-    childSlot.appendChild(rawText);
-    slot.appendChild(child);
+    child.appendChild(rawText);
+    root.appendChild(child);
 
     expect(collectElementTemplateSubtreeHandleIds(root)).toEqual([
       root.instanceId,

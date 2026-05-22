@@ -5,6 +5,7 @@ www
 playwright-report
 test-results
 trace.zip
+midscene_run
 .turbo
 **/test/js
 .swc

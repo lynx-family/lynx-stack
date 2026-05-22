@@ -74,11 +74,16 @@ import {
   Divider,
   Icon,
   Image,
+  LineChart,
+  PieChart,
   List,
+  Modal,
   RadioGroup,
   Row,
+  Slider,
   Tabs,
   Text,
+  TextField,
 } from '@lynx-js/a2ui-reactlynx';
 import buttonManifest from '@lynx-js/a2ui-reactlynx/catalog/Button/catalog.json' with {
   type: 'json',
@@ -101,7 +106,16 @@ import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json' wit
 import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json' with {
   type: 'json',
 };
+import lineChartManifest from '@lynx-js/a2ui-reactlynx/catalog/LineChart/catalog.json' with {
+  type: 'json',
+};
+import pieChartManifest from '@lynx-js/a2ui-reactlynx/catalog/PieChart/catalog.json' with {
+  type: 'json',
+};
 import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json' with {
+  type: 'json',
+};
+import modalManifest from '@lynx-js/a2ui-reactlynx/catalog/Modal/catalog.json' with {
   type: 'json',
 };
 import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json' with {
@@ -110,10 +124,16 @@ import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catal
 import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json' with {
   type: 'json',
 };
+import sliderManifest from '@lynx-js/a2ui-reactlynx/catalog/Slider/catalog.json' with {
+  type: 'json',
+};
 import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json' with {
   type: 'json',
 };
 import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json' with {
+  type: 'json',
+};
+import textFieldManifest from '@lynx-js/a2ui-reactlynx/catalog/TextField/catalog.json' with {
   type: 'json',
 };
 
@@ -124,11 +144,16 @@ export const allBuiltins = defineCatalog([
   [Column, columnManifest],
   [List, listManifest],
   [Card, cardManifest],
+  [Modal, modalManifest],
   [Button, buttonManifest],
   [Divider, dividerManifest],
+  [LineChart, lineChartManifest],
+  [PieChart, pieChartManifest],
+  [TextField, textFieldManifest],
   [CheckBox, checkBoxManifest],
   [Icon, iconManifest],
   [RadioGroup, radioGroupManifest],
+  [Slider, sliderManifest],
   [Tabs, tabsManifest],
 ]);
 ```

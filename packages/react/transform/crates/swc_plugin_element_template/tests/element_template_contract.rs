@@ -183,7 +183,7 @@ fn should_emit_direct_event_attr_plan_for_lepus_target() {
 }
 
 #[test]
-fn should_emit_spread_attr_plan_without_ref_adapter() {
+fn should_emit_spread_attr_plan_with_ref_adapter() {
   let (code, _) = first_user_template_json_with_code(
     r#"
       <view id={dynamicId} ref={viewRef} {...props} />
@@ -197,13 +197,13 @@ fn should_emit_spread_attr_plan_without_ref_adapter() {
 
   assert!(
     code.contains(
-      "ReactLynxInternal.__etAttrPlanMap[_et_da39a_test_1]=[2,ReactLynxInternal.adaptSpreadAttrSlot];"
+      "ReactLynxInternal.__etAttrPlanMap[_et_da39a_test_1]=[1,ReactLynxInternal.adaptRefAttrSlot,2,ReactLynxInternal.adaptSpreadAttrSlot];"
     ),
-    "spread slots should register the ET spread attr adapter, got: {code}"
+    "ref and spread slots should register ET attr adapters, got: {code}"
   );
   assert!(
     !code.contains("adaptEventAttrSlot"),
-    "ref and ordinary attrs must not enter the event adapter plan, got: {code}"
+    "ref, spread, and ordinary attrs must not enter the event adapter plan, got: {code}"
   );
 }
 
@@ -432,9 +432,9 @@ fn should_keep_slot_descriptor_order_for_dynamic_attr_spread_event_and_ref() {
   let code = without_whitespace(&code);
   assert!(
     code.contains(
-      "ReactLynxInternal.__etAttrPlanMap[_et_da39a_test_1]=[1,ReactLynxInternal.adaptSpreadAttrSlot,2,ReactLynxInternal.adaptEventAttrSlot];"
+      "ReactLynxInternal.__etAttrPlanMap[_et_da39a_test_1]=[1,ReactLynxInternal.adaptSpreadAttrSlot,2,ReactLynxInternal.adaptEventAttrSlot,3,ReactLynxInternal.adaptRefAttrSlot];"
     ),
-    "spread and direct event adapters should keep their descriptor slot order, got: {code}"
+    "spread, direct event, and ref adapters should keep their descriptor slot order, got: {code}"
   );
 
   let attrs = template["attributesArray"]
@@ -460,10 +460,20 @@ fn should_keep_slot_descriptor_order_for_dynamic_attr_spread_event_and_ref() {
 
 #[test]
 fn should_keep_worklet_attr_descriptor_keys_for_namespaced_attrs() {
-  let template = first_user_template_json(
+  let (code, template) = first_user_template_json_with_code(
     r#"
       <view main-thread:bindtap={handleTap} main-thread:ref={viewRef} />
     "#,
+    element_template_config(),
+  );
+  let code = without_whitespace(&code);
+  assert!(
+    !code.contains("adaptRefAttrSlot"),
+    "main-thread:ref must not be lowered as an ordinary ET ref adapter, got: {code}"
+  );
+  assert!(
+    !code.contains("viewRef"),
+    "unsupported namespaced ref must not leak the raw ref value, got: {code}"
   );
 
   let attrs = template["attributesArray"]
