@@ -1,0 +1,25 @@
+Object {
+  "ops": Array [
+    Object {
+      "attrSlotIndex": 0,
+      "op": "setAttribute",
+      "targetId": -1,
+      "value": "BG",
+    },
+    Object {
+      "attributeSlots": Array [],
+      "bundleUrl": null,
+      "elementSlots": Array [],
+      "handleId": 7,
+      "op": "createTemplate",
+      "templateKey": "_et_25b95_test_5",
+    },
+    Object {
+      "childId": 7,
+      "elementSlotIndex": 0,
+      "op": "insertNode",
+      "referenceId": 0,
+      "targetId": -4,
+    },
+  ],
+}

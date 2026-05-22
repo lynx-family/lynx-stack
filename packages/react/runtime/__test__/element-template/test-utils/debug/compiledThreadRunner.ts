@@ -8,8 +8,14 @@ import type { CompiledFixtureModuleExports } from './compiledFixtureModule.js';
 
 declare const renderPage: () => void;
 
+interface RenderableCompiledFixture<TProps extends object> {
+  App: (props: TProps) => JSX.Element;
+  mainProps?: TProps;
+  backgroundProps?: TProps;
+}
+
 function resolveThreadProps(
-  moduleExports: CompiledFixtureModuleExports,
+  moduleExports: RenderableCompiledFixture<Record<string, unknown>> | CompiledFixtureModuleExports,
   thread: 'main' | 'background',
   overrideProps?: Record<string, unknown>,
 ): Record<string, unknown> {
@@ -23,19 +29,23 @@ function resolveThreadProps(
 }
 
 function createAppVNode(
-  moduleExports: CompiledFixtureModuleExports,
+  moduleExports: RenderableCompiledFixture<Record<string, unknown>> | CompiledFixtureModuleExports,
   props: Record<string, unknown>,
 ) {
-  return createElement(moduleExports.App, props);
+  return createElement(moduleExports.App as (props: Record<string, unknown>) => JSX.Element, props);
 }
 
-export function renderCompiledFixtureOnMainThread(
-  moduleExports: CompiledFixtureModuleExports,
+export function renderCompiledFixtureOnMainThread<TProps extends object = Record<string, unknown>>(
+  moduleExports: RenderableCompiledFixture<TProps> | CompiledFixtureModuleExports,
   envManager: ElementTemplateEnvManager,
-  props?: Record<string, unknown>,
+  props?: TProps,
 ): void {
   envManager.switchToMainThread();
-  const resolvedProps = resolveThreadProps(moduleExports, 'main', props);
+  const resolvedProps = resolveThreadProps(
+    moduleExports,
+    'main',
+    props as Record<string, unknown> | undefined,
+  );
   const vnode = createAppVNode(moduleExports, resolvedProps);
   root.render(vnode);
   renderPage();
@@ -43,13 +53,17 @@ export function renderCompiledFixtureOnMainThread(
   envManager.switchToBackground();
 }
 
-export function renderCompiledFixtureOnBackground(
-  moduleExports: CompiledFixtureModuleExports,
+export function renderCompiledFixtureOnBackground<TProps extends object = Record<string, unknown>>(
+  moduleExports: RenderableCompiledFixture<TProps> | CompiledFixtureModuleExports,
   envManager: ElementTemplateEnvManager,
-  props?: Record<string, unknown>,
+  props?: TProps,
 ): BackgroundElementTemplateInstance | null {
   envManager.switchToBackground();
-  const resolvedProps = resolveThreadProps(moduleExports, 'background', props);
+  const resolvedProps = resolveThreadProps(
+    moduleExports,
+    'background',
+    props as Record<string, unknown> | undefined,
+  );
   root.render(createAppVNode(moduleExports, resolvedProps));
   const backgroundRoot = __root as BackgroundElementTemplateInstance;
   return backgroundRoot.firstChild;

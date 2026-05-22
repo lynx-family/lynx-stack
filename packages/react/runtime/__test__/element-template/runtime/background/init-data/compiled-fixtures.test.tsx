@@ -7,34 +7,34 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   installElementTemplateCommitHook,
   resetElementTemplateCommitState,
-} from '../../../../src/element-template/background/commit-hook.js';
+} from '../../../../../src/element-template/background/commit-hook.js';
 import {
   installElementTemplateHydrationListener,
   resetElementTemplateHydrationListener,
-} from '../../../../src/element-template/background/hydration-listener.js';
-import { root } from '../../../../src/element-template/index.js';
-import { updateCardData } from '../../../../src/core/lynx-update-data.js';
+} from '../../../../../src/element-template/background/hydration-listener.js';
+import { root } from '../../../../../src/element-template/index.js';
+import { updateCardData } from '../../../../../src/core/lynx-update-data.js';
 import {
   installElementTemplatePatchListener,
   resetElementTemplatePatchListener,
-} from '../../../../src/element-template/native/patch-listener.js';
-import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
-import type { ElementTemplateUpdateCommitContext } from '../../../../src/element-template/protocol/types.js';
-import { __page } from '../../../../src/element-template/runtime/page/page.js';
-import { clearEtAttrPlanMap } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
-import { LynxTestEventEmitter } from '../../../test-utils/lynx-event-emitter.js';
-import { compileFixtureSource } from '../../test-utils/debug/compiledFixtureCompiler.js';
-import { loadCompiledFixtureModule } from '../../test-utils/debug/compiledFixtureModule.js';
-import type { CompiledFixtureModuleExports } from '../../test-utils/debug/compiledFixtureModule.js';
-import { primeCompiledFixtureTemplates } from '../../test-utils/debug/compiledFixtureRegistry.js';
-import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
-import { serializeToJSX } from '../../test-utils/debug/serializer.js';
+} from '../../../../../src/element-template/native/patch-listener.js';
+import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
+import type { ElementTemplateUpdateCommitContext } from '../../../../../src/element-template/protocol/types.js';
+import { __page } from '../../../../../src/element-template/runtime/page/page.js';
+import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
+import { LynxTestEventEmitter } from '../../../../test-utils/lynx-event-emitter.js';
+import {
+  loadCompiledFixturePair,
+  type CompiledFixtureModuleExports,
+} from '../../../test-utils/debug/compiledFixtureModule.js';
+import { ElementTemplateEnvManager } from '../../../test-utils/debug/envManager.js';
+import { serializeToJSX } from '../../../test-utils/debug/serializer.js';
 
 declare const renderPage: (data?: Record<string, unknown>) => void;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const FIXTURE = path.resolve(__dirname, '../../fixtures/background/init-data-update/index.tsx');
+const FIXTURE = path.resolve(__dirname, '../../../fixtures/background/init-data/update/index.tsx');
 
 function waitForRender(): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, 0));
@@ -44,14 +44,7 @@ async function loadCompiledInitDataFixture(): Promise<{
   backgroundModule: CompiledFixtureModuleExports;
   mainModule: CompiledFixtureModuleExports;
 }> {
-  const mainArtifact = await compileFixtureSource(FIXTURE, { target: 'LEPUS' });
-  primeCompiledFixtureTemplates(mainArtifact);
-  const mainModule = await loadCompiledFixtureModule(mainArtifact);
-
-  const backgroundArtifact = await compileFixtureSource(FIXTURE, { target: 'JS' });
-  const backgroundModule = await loadCompiledFixtureModule(backgroundArtifact);
-
-  return { backgroundModule, mainModule };
+  return loadCompiledFixturePair(FIXTURE);
 }
 
 describe('Compiled ET InitData updateData fixture', () => {

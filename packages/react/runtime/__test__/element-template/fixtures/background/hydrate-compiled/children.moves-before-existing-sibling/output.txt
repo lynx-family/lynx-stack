@@ -1,0 +1,11 @@
+Object {
+  "ops": Array [
+    Object {
+      "childId": -1,
+      "elementSlotIndex": 0,
+      "op": "insertNode",
+      "referenceId": -3,
+      "targetId": -4,
+    },
+  ],
+}

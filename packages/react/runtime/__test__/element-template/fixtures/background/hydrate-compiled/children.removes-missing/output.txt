@@ -1,0 +1,13 @@
+Object {
+  "ops": Array [
+    Object {
+      "childId": -1,
+      "elementSlotIndex": 0,
+      "op": "removeNode",
+      "removedSubtreeHandleIds": Array [
+        -1,
+      ],
+      "targetId": -2,
+    },
+  ],
+}

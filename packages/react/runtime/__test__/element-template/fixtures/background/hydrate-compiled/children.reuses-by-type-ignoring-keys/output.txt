@@ -1,0 +1,16 @@
+Object {
+  "ops": Array [
+    Object {
+      "attrSlotIndex": 0,
+      "op": "setAttribute",
+      "targetId": -1,
+      "value": "2",
+    },
+    Object {
+      "attrSlotIndex": 0,
+      "op": "setAttribute",
+      "targetId": -2,
+      "value": "1",
+    },
+  ],
+}
