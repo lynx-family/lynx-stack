@@ -13,7 +13,7 @@ export interface RenderInit {
   theme?: 'light' | 'dark';
   /** When set, use a short `?demo=<id>` param instead of inlining the payload. */
   demoId?: string;
-  /** Simulation speed multiplier (e.g. 0.5, 1, 2, 4). */
+  /** Simulation speed multiplier (e.g. 0, 0.5, 1, 2, 4); 0 disables delay. */
   speed?: number;
   /** When true, render the final UI immediately without streaming playback. */
   instant?: boolean;

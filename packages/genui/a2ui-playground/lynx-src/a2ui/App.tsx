@@ -347,14 +347,16 @@ export function App() {
   const playbackTargetCountRef = useRef(0);
 
   // Per-batch delay (ms) the mock agent waits between successive
-  // protocol messages. Configurable via `?speed=2` (faster) etc.
+  // protocol messages. Configurable via `?speed=2` (faster);
+  // `?speed=0` paints the full stream with no delay.
   const streamDelay = useMemo(() => {
     const raw = (globalProps as Record<string, unknown> | null)?.speed
       ?? (rawInitData as Record<string, unknown> | null)?.speed;
     const speed = typeof raw === 'string'
       ? Number(raw)
       : (typeof raw === 'number' ? raw : 1);
-    if (!speed || speed <= 0) return DEFAULT_STREAM_DELAY_MS;
+    if (!Number.isFinite(speed) || speed < 0) return DEFAULT_STREAM_DELAY_MS;
+    if (speed === 0) return 0;
     return DEFAULT_STREAM_DELAY_MS / speed;
   }, [globalProps, rawInitData]);
 
