@@ -53,6 +53,23 @@ interface TokenUsage {
   totalTokens: number;
 }
 
+interface ProviderSettings {
+  apiKey: string;
+  baseURL: string;
+  model: string;
+}
+
+interface ProviderRequestOptions {
+  apiKey?: string;
+  baseURL?: string;
+  model?: string;
+}
+
+interface PersistedProviderSettings {
+  baseURL: string;
+  model: string;
+}
+
 function parseUsage(value: unknown): TokenUsage | null {
   if (!value || typeof value !== 'object') return null;
   const record = value as Record<string, unknown>;
@@ -119,7 +136,15 @@ const RESIZE_BREAKPOINT = 980;
 const ONLINE_A2UI_SERVER_ORIGIN = 'https://genui-server.vercel.app';
 const ONLINE_A2UI_CHAT_URL = `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/stream`;
 const LOCAL_A2UI_SERVER_PORT = '3060';
+const PROVIDER_SETTINGS_STORAGE_KEY = 'a2ui-playground-provider-settings';
 const jsonExtensions = [json(), EditorView.lineWrapping];
+
+const EMPTY_PROVIDER_SETTINGS: ProviderSettings = {
+  apiKey: '',
+  baseURL: '',
+  model: '',
+};
+
 function isDevHost(hostname: string): boolean {
   return (
     hostname === 'localhost'
@@ -229,6 +254,35 @@ function safeStringifyPayload(value: unknown): string {
   } catch {
     return String(value);
   }
+}
+
+function readProviderSettings(): ProviderSettings {
+  if (typeof window === 'undefined') return EMPTY_PROVIDER_SETTINGS;
+  try {
+    const raw = window.localStorage.getItem(PROVIDER_SETTINGS_STORAGE_KEY);
+    if (!raw) return EMPTY_PROVIDER_SETTINGS;
+    const parsed = JSON.parse(raw) as Partial<PersistedProviderSettings>;
+    return {
+      apiKey: '',
+      baseURL: typeof parsed.baseURL === 'string' ? parsed.baseURL : '',
+      model: typeof parsed.model === 'string' ? parsed.model : '',
+    };
+  } catch {
+    return EMPTY_PROVIDER_SETTINGS;
+  }
+}
+
+function toProviderRequestOptions(
+  settings: ProviderSettings,
+): ProviderRequestOptions {
+  const apiKey = settings.apiKey.trim();
+  const baseURL = settings.baseURL.trim();
+  const model = settings.model.trim();
+  return {
+    ...(apiKey ? { apiKey } : {}),
+    ...(baseURL ? { baseURL } : {}),
+    ...(model ? { model } : {}),
+  };
 }
 
 function parseSseFrame(frame: string): SseEvent | null {
@@ -491,6 +545,12 @@ export function AIChatPage(
     completionTokens: 0,
     totalTokens: 0,
   });
+  const [providerSettingsOpen, setProviderSettingsOpen] = useState<boolean>(
+    false,
+  );
+  const [providerSettings, setProviderSettings] = useState<ProviderSettings>(
+    readProviderSettings,
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
   const followBottomRef = useRef<boolean>(true);
@@ -515,6 +575,29 @@ export function AIChatPage(
     initialPrimarySize: 400,
     initialSecondarySize: 480,
   });
+
+  const providerRequestOptions = useMemo(
+    () => toProviderRequestOptions(providerSettings),
+    [providerSettings],
+  );
+
+  const hasProviderOverride = Object.keys(providerRequestOptions).length > 0;
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        PROVIDER_SETTINGS_STORAGE_KEY,
+        JSON.stringify(
+          {
+            baseURL: providerSettings.baseURL,
+            model: providerSettings.model,
+          } satisfies PersistedProviderSettings,
+        ),
+      );
+    } catch {
+      // Keep the in-memory settings usable even when browser storage is off.
+    }
+  }, [providerSettings]);
 
   useEffect(() => {
     // Re-run on every render so streaming text growth & async editor mounts
@@ -697,6 +780,7 @@ export function AIChatPage(
           body: JSON.stringify({
             messages: [userMessage],
             conversation: requestConversation,
+            ...providerRequestOptions,
           }),
           signal: controller.signal,
         });
@@ -783,6 +867,7 @@ export function AIChatPage(
     inputValue,
     isGenerating,
     publishPreviewMessages,
+    providerRequestOptions,
     recordTurn,
   ]);
 
@@ -876,6 +961,7 @@ export function AIChatPage(
               surfaceId: payload.surfaceId,
               action,
               conversation: requestConversation,
+              ...providerRequestOptions,
             }),
             signal,
           });
@@ -1046,7 +1132,7 @@ export function AIChatPage(
       actionAbortRef.current?.abort();
       actionAbortRef.current = null;
     };
-  }, [buildConversationContext, recordTurn]);
+  }, [buildConversationContext, providerRequestOptions, recordTurn]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -1118,7 +1204,9 @@ export function AIChatPage(
         description='Describe the UI you want to build. Share the structure, interactions, or visual style you want to explore.'
         topContent={
           <>
-            <span className='constructionBadge'>Online Agent</span>
+            <span className='constructionBadge'>
+              {hasProviderOverride ? 'Custom Provider' : 'Online Agent'}
+            </span>
             {tokenUsage.totalTokens > 0
               ? (
                 <span
@@ -1137,9 +1225,73 @@ export function AIChatPage(
                 </span>
               )
               : null}
+            <button
+              className='chatProviderToggle'
+              type='button'
+              aria-expanded={providerSettingsOpen}
+              onClick={() => setProviderSettingsOpen((open) => !open)}
+            >
+              Provider
+            </button>
           </>
         }
       />
+      {providerSettingsOpen
+        ? (
+          <div className='chatProviderPanel'>
+            <label className='chatProviderField'>
+              <span className='chatProviderLabel'>API Key</span>
+              <input
+                className='chatProviderInput'
+                type='password'
+                autoComplete='off'
+                placeholder='Use server default'
+                value={providerSettings.apiKey}
+                onChange={(e) =>
+                  setProviderSettings((current) => ({
+                    ...current,
+                    apiKey: e.target.value,
+                  }))}
+              />
+            </label>
+            <label className='chatProviderField'>
+              <span className='chatProviderLabel'>Base URL</span>
+              <input
+                className='chatProviderInput'
+                type='url'
+                placeholder='https://api.openai.com/v1'
+                value={providerSettings.baseURL}
+                onChange={(e) =>
+                  setProviderSettings((current) => ({
+                    ...current,
+                    baseURL: e.target.value,
+                  }))}
+              />
+            </label>
+            <label className='chatProviderField'>
+              <span className='chatProviderLabel'>Model</span>
+              <input
+                className='chatProviderInput'
+                type='text'
+                placeholder='gpt-4o-mini'
+                value={providerSettings.model}
+                onChange={(e) =>
+                  setProviderSettings((current) => ({
+                    ...current,
+                    model: e.target.value,
+                  }))}
+              />
+            </label>
+            <button
+              className='chatProviderClearButton'
+              type='button'
+              onClick={() => setProviderSettings(EMPTY_PROVIDER_SETTINGS)}
+            >
+              Reset
+            </button>
+          </div>
+        )
+        : null}
 
       <div className='chatPageBody'>
         <ConversationListPanel
