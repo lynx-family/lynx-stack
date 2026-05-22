@@ -38,6 +38,7 @@ It can also wrap those generated components with a `catalogId`,
 - It does not ask you to write JSON Schema in comments.
 - It does not expand arbitrary imported type aliases or external
   interfaces.
+- It does not call an LLM or choose a model.
 
 The package consumes TypeDoc reflection data. This keeps the implementation
 small, but it also means catalog-facing shapes should be written inline in
@@ -53,7 +54,7 @@ the marked interface.
 
 ### Package manager
 
-Install it as a development dependency:
+Install the extractor as a development dependency:
 
 ```bash
 pnpm add -D @lynx-js/a2ui-catalog-extractor
@@ -385,8 +386,16 @@ export interface CardProps {
 
 ## CLI Reference
 
+The package exposes the standalone `a2ui-catalog-extractor` binary. The
+separate `@lynx-js/a2ui-cli` package also exposes this flow as
+`a2ui-cli generate catalog`.
+
+### Generate catalog artifacts
+
 ```bash
 a2ui-catalog-extractor [options]
+# or
+a2ui-cli generate catalog [options]
 ```
 
 | Option                  | Description                                                                  | Default        |

@@ -3,6 +3,7 @@
   "compilerOptions": {
     "noEmit": false,
     "rootDir": "./src",
+    "tsBuildInfoFile": "./dist/tsconfig.build.tsbuildinfo",
   },
   "include": ["src"],
   "exclude": ["test"],

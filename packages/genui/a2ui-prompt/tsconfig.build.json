@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src",
+    "../server/agent/a2ui-catalog.ts",
+    "../server/agent/a2ui-examples.ts",
+    "../server/agent/a2ui-prompt.ts",
+    "../server/agent/catalog/**/*.json",
+  ],
+}

@@ -36,6 +36,7 @@ agent 哪些 props 合法、哪些 props 必填、哪些 enum 值可用，以及
 - 它不直接使用 TypeScript compiler API。
 - 它不要求你在注释里写 JSON Schema。
 - 它不会展开任意导入的 type alias 或外部 interface。
+- 它不会调用 LLM，也不会替你选择模型。
 
 这个包消费 TypeDoc reflection 数据。这样实现更小，但也意味着面向 catalog
 的类型形状应该直接内联写在被标记的 interface 中。
@@ -50,7 +51,7 @@ agent 哪些 props 合法、哪些 props 必填、哪些 enum 值可用，以及
 
 ### 包管理器
 
-把它安装为开发依赖：
+把 extractor 安装为开发依赖：
 
 ```bash
 pnpm add -D @lynx-js/a2ui-catalog-extractor
@@ -377,8 +378,16 @@ export interface CardProps {
 
 ## CLI 参考
 
+这个包暴露独立的 `a2ui-catalog-extractor` binary。单独的
+`@lynx-js/a2ui-cli` 包也把这个流程暴露为
+`a2ui-cli generate catalog`。
+
+### 生成 catalog artifacts
+
 ```bash
 a2ui-catalog-extractor [options]
+# 或
+a2ui-cli generate catalog [options]
 ```
 
 | 选项                    | 说明                                                           | 默认值         |
