@@ -7,6 +7,8 @@ import path from 'node:path'
 import { URL } from 'node:url'
 import type { URLSearchParams } from 'node:url'
 
+import type { Rspack } from '@rsbuild/core'
+
 import { knownFields, resolveField } from '@lynx-js/debug-metadata'
 import type { DebugMetadataAsset, QueryParams } from '@lynx-js/debug-metadata'
 
@@ -24,37 +26,13 @@ type Middleware = (
 ) => void
 
 /**
- * Minimal slice of webpack `Compiler` the middleware uses.
- */
-interface SingleCompiler {
-  name?: string
-  outputPath?: string
-  options?: {
-    output?: {
-      path?: string
-      publicPath?: string | ((...args: unknown[]) => string)
-    }
-  }
-  outputFileSystem?: {
-    readFile: (
-      file: string,
-      cb: (err: NodeJS.ErrnoException | null, data?: Buffer | string) => void,
-    ) => void
-  }
-}
-
-interface MultiCompiler {
-  compilers: SingleCompiler[]
-}
-
-/**
  * Lazily-acquired compiler reference. The rsbuild plugin's
  * `setupMiddlewares` callback runs before `onAfterCreateCompiler`, so
  * the compiler may be `null` at middleware-construction time; we
  * dereference at request time.
  */
 export interface CompilerHandle {
-  compiler: SingleCompiler | MultiCompiler | null
+  compiler: Rspack.Compiler | Rspack.MultiCompiler
 }
 
 /** @internal */
@@ -214,14 +192,14 @@ async function readMetadataAsset(
 }
 
 function isMultiCompiler(
-  c: SingleCompiler | MultiCompiler,
-): c is MultiCompiler {
-  return Array.isArray((c as MultiCompiler).compilers)
+  c: Rspack.Compiler | Rspack.MultiCompiler,
+): c is Rspack.MultiCompiler {
+  return Array.isArray((c as Rspack.MultiCompiler).compilers)
 }
 
 function readFromCompiler(
   pathname: string,
-  compiler: SingleCompiler,
+  compiler: Rspack.Compiler,
 ): Promise<string | undefined> {
   return new Promise((resolve, reject) => {
     if (!compiler.outputFileSystem) {
@@ -312,17 +290,14 @@ function joinOutputPath(
  *   middleware's request-time strip).
  */
 function extractPublicPathPrefix(
-  publicPath:
-    | string
-    | ((...args: unknown[]) => string)
-    | undefined,
+  publicPath: Rspack.PublicPath | undefined,
 ): string {
   let resolved: string | undefined
   if (typeof publicPath === 'string') {
     resolved = publicPath
   } else if (typeof publicPath === 'function') {
     try {
-      const out = publicPath({})
+      const out = (publicPath as (...args: unknown[]) => string)({})
       resolved = typeof out === 'string' ? out : undefined
     } catch {
       resolved = undefined

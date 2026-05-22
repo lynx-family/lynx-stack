@@ -41,9 +41,7 @@
     "@microsoft/api-extractor": "catalog:",
     "@rollup/plugin-typescript": "^12.3.0",
     "@rsbuild/core": "catalog:rsbuild",
-    "picocolors": "^1.1.1",
-    "terminal-link": "^4.0.0",
-    "webpack": "^5.105.2"
+    "terminal-link": "^4.0.0"
   },
   "engines": {
     "node": ">=18"

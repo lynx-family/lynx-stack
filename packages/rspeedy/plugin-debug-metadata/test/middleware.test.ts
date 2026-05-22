@@ -4,6 +4,7 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
+import type { Rspack } from '@rsbuild/core'
 import { describe, expect, test } from 'vitest'
 
 import type { DebugMetadataAsset } from '@lynx-js/debug-metadata'
@@ -58,7 +59,13 @@ function fakeCompiler(
         ? {}
         : { options: { output: { path: '/out', publicPath } } }),
       outputFileSystem: {
-        readFile(file, cb) {
+        readFile(
+          file: string,
+          cb: (
+            err: NodeJS.ErrnoException | null,
+            data?: string | Buffer,
+          ) => void,
+        ) {
           const data = files[toPosixKey(file)]
           if (data === undefined) {
             const err = Object.assign(new Error('ENOENT'), { code: 'ENOENT' })
@@ -68,7 +75,7 @@ function fakeCompiler(
           cb(null, data)
         },
       },
-    },
+    } as unknown as Rspack.Compiler,
   }
 }
 
@@ -354,7 +361,7 @@ describe('createDebugMetadataMiddleware', () => {
 
   test('returns 404 metadata_not_found when no compiler is attached yet', async () => {
     const mw = createDebugMetadataMiddleware({
-      compilerHandle: { compiler: null },
+      compilerHandle: { compiler: null as unknown as Rspack.Compiler },
     })
     const res = await runRequest(
       mw,
@@ -371,7 +378,10 @@ describe('createDebugMetadataMiddleware', () => {
           {
             outputPath: '/web-out',
             outputFileSystem: {
-              readFile(_file, cb) {
+              readFile(
+                _file: string,
+                cb: (err: NodeJS.ErrnoException) => void,
+              ) {
                 cb(
                   Object.assign(new Error('ENOENT'), {
                     code: 'ENOENT',
@@ -383,7 +393,13 @@ describe('createDebugMetadataMiddleware', () => {
           {
             outputPath: '/lynx-out',
             outputFileSystem: {
-              readFile(file, cb) {
+              readFile(
+                file: string,
+                cb: (
+                  err: NodeJS.ErrnoException | null,
+                  data?: string | Buffer,
+                ) => void,
+              ) {
                 if (
                   toPosixKey(file)
                     === '/lynx-out/.rspeedy/main/debug-metadata.json'
@@ -400,7 +416,7 @@ describe('createDebugMetadataMiddleware', () => {
             },
           },
         ],
-      },
+      } as unknown as Rspack.MultiCompiler,
     }
     const mw = createDebugMetadataMiddleware({
       compilerHandle: handle,

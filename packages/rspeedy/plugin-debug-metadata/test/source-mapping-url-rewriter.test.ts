@@ -128,4 +128,49 @@ describe('rewriteTrailerToAbsoluteUrl', () => {
         `path=${encodeURIComponent(vendorMap)}`,
       )
   })
+
+  describe('CSS block-comment trailer', () => {
+    const CSS_BODY = '.App { color: red; }\n'
+    const CSS_MAP = 'main.css.map'
+    const CSS_MAP_ENC = encodeURIComponent(CSS_MAP)
+
+    test('rewrites a `/*# sourceMappingURL=… */` trailer and keeps the block-comment form', () => {
+      const before =
+        `${CSS_BODY}/*# sourceMappingURL=http://host:3020/main.css.map*/`
+      const after = rewriteTrailerToAbsoluteUrl(before, BUNDLE_URL, CSS_MAP)
+      expect(after).toBe(
+        `${CSS_BODY}/*# sourceMappingURL=${BUNDLE_URL}?field=source-map&path=${CSS_MAP_ENC}*/`,
+      )
+    })
+
+    test('accepts the legacy `/*@ sourceMappingURL=` form', () => {
+      const before = `${CSS_BODY}/*@ sourceMappingURL=main.css.map*/`
+      const after = rewriteTrailerToAbsoluteUrl(before, BUNDLE_URL, CSS_MAP)
+      expect(after).toBe(
+        `${CSS_BODY}/*# sourceMappingURL=${BUNDLE_URL}?field=source-map&path=${CSS_MAP_ENC}*/`,
+      )
+    })
+
+    test('tolerates whitespace before the closing block-comment', () => {
+      const before = `${CSS_BODY}/*# sourceMappingURL=main.css.map */\n`
+      const after = rewriteTrailerToAbsoluteUrl(before, BUNDLE_URL, CSS_MAP)!
+      expect(after).toContain(
+        `/*# sourceMappingURL=${BUNDLE_URL}?field=source-map&path=${CSS_MAP_ENC}*/`,
+      )
+    })
+
+    test('is idempotent for CSS trailers already pointing at debug-metadata.json', () => {
+      const before =
+        `${CSS_BODY}/*# sourceMappingURL=${BUNDLE_URL}?field=source-map&path=${CSS_MAP_ENC}*/`
+      expect(rewriteTrailerToAbsoluteUrl(before, BUNDLE_URL, CSS_MAP))
+        .toBeUndefined()
+    })
+
+    test('does not match a JS-style trailer hiding inside a CSS file body', () => {
+      const before =
+        `.content::before { content: "//# sourceMappingURL=lure.js.map"; }\n`
+      expect(rewriteTrailerToAbsoluteUrl(before, BUNDLE_URL, CSS_MAP))
+        .toBeUndefined()
+    })
+  })
 })

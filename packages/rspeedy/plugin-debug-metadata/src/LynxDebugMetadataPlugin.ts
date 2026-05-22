@@ -3,15 +3,17 @@
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path'
 
-import type { RsbuildEntry } from '@rsbuild/core'
-import type { Compilation, Compiler } from 'webpack'
+import type { RsbuildEntry, Rspack } from '@rsbuild/core'
 
 import type {
   DebugMetadataAsset,
   GitMetadata,
   RspeedyMeta,
 } from '@lynx-js/debug-metadata'
-import type { LynxTemplatePlugin as LynxTemplatePluginClass } from '@lynx-js/template-webpack-plugin'
+import type {
+  LynxTemplatePlugin as LynxTemplatePluginClass,
+  TemplateHooks,
+} from '@lynx-js/template-webpack-plugin'
 
 import { collectArtifacts } from './collectors/artifacts.js'
 import { parseLepusNGDebugInfo } from './collectors/bytecode-debug-info.js'
@@ -64,7 +66,7 @@ export class LynxDebugMetadataPlugin {
    * The entry point of a webpack plugin.
    * @param compiler - the webpack compiler
    */
-  apply(compiler: Compiler): void {
+  apply(compiler: Rspack.Compiler): void {
     if (!this.options) {
       throw new Error('LynxDebugMetadataPlugin requires options')
     }
@@ -75,7 +77,7 @@ export class LynxDebugMetadataPlugin {
 export class LynxDebugMetadataPluginImpl {
   name = 'LynxDebugMetadataPlugin'
   constructor(
-    protected compiler: Compiler,
+    protected compiler: Rspack.Compiler,
     protected options: LynxDebugMetadataPluginOptions,
   ) {
     this.options = options
@@ -105,7 +107,9 @@ export class LynxDebugMetadataPluginImpl {
     compiler.hooks.thisCompilation.tap(this.name, compilation => {
       const templateHooks = this.options.LynxTemplatePlugin
         .getLynxTemplatePluginHooks(
-          compilation,
+          compilation as unknown as Parameters<
+            typeof this.options.LynxTemplatePlugin.getLynxTemplatePluginHooks
+          >[0],
         )
 
       // Carry per-template `intermediate` from `beforeEncode` to
@@ -127,8 +131,6 @@ export class LynxDebugMetadataPluginImpl {
           const git = getGit()
           const entryPathMap = getEntryPathMap()
           const baseDir = git?.rootDir ?? compiler.context
-          const toRel = (abs: string): string =>
-            path.relative(baseDir, abs).split(path.sep).join('/')
           // Lazy-bundle entry names (e.g. `LazyComponent.js-react__main-thread`)
           // are internal chunk-group names that never appear in rsbuild
           // `source.entry`. When the map has nothing for any of this
@@ -143,7 +145,7 @@ export class LynxDebugMetadataPluginImpl {
             : dedupe(
               args.entryNames.flatMap(name =>
                 collectLazyBundleEntryResources(compilation, name).map(abs =>
-                  toRel(abs)
+                  path.relative(baseDir, abs).split(path.sep).join('/')
                 )
               ),
             )
@@ -175,9 +177,8 @@ export class LynxDebugMetadataPluginImpl {
           // `LynxEncodePlugin`'s production-only cleanup
           // (`PROCESS_ASSETS_STAGE_REPORT + 1`) — intentional: prod
           // bundles should not ship debug metadata to end users.
-          // The file is uploaded by a separate reverse-symbolication
-          // service (Slardar) before cleanup runs; dev / debug / rsdoctor
-          // builds keep it on disk for local consumption.
+          // The file can be uploaded by a separate plugin to
+          // error monitoring services by users.
           args.intermediateAssets.push(debugMetadataAssetName)
 
           rewriteSourceMappingURLTrailers(compilation, args)
@@ -258,7 +259,7 @@ function entryKey(entryNames: string[]): string {
  * guessing the wrong path.
  */
 function readTasmSection(
-  compilation: Compilation,
+  compilation: Rspack.Compilation,
   assetName: string,
 ): string[] | undefined {
   const value: unknown = compilation.getAsset(assetName)?.info
@@ -268,59 +269,34 @@ function readTasmSection(
     : undefined
 }
 
-interface BeforeEncodeAssetLike {
-  name: string
-  source: { source(): string | Buffer }
-  info?: Record<string, unknown>
-}
-interface BeforeEncodeArgsLike {
-  encodeData: {
-    sourceContent: { config: Record<string, unknown> }
-    lepusCode: {
-      root: BeforeEncodeAssetLike | undefined
-      chunks: BeforeEncodeAssetLike[]
-    }
-    manifest: Record<string, string>
-  }
-}
+type BeforeEncodeArgs = Parameters<
+  Parameters<TemplateHooks['beforeEncode']['tap']>[1]
+>[0]
 
-/**
- * Per-template `//# sourceMappingURL=` trailer rewrite for the JS this
- * template owns (main entry's main-thread + background JS, or each
- * lazy bundle's main-thread + background JS). Runs inside
- * `templateHooks.beforeEncode` — which only fires when
- * `LynxTemplatePlugin` is active — so multi-env builds (web + lynx)
- * leave the non-lynx env's JS trailers untouched. The non-lynx env has
- * no `debug-metadata.json` and the original `.map` sibling URL is the
- * correct one for browsers to follow.
- *
- * Reads `args.encodeData.sourceContent.config.debugMetadataUrl`, which
- * `LynxTemplatePlugin` populates with `joinPublicPath(publicPath,
- * <intermediate>/debug-metadata.json)`. Empty string (publicPath is
- * `/`, `'auto'`, or a function that can't be statically resolved) means
- * we cannot form an absolute URL — skip rather than emit a broken one.
- */
 function rewriteSourceMappingURLTrailers(
-  compilation: Compilation,
-  args: BeforeEncodeArgsLike,
+  compilation: Rspack.Compilation,
+  args: BeforeEncodeArgs,
 ): void {
   const debugMetadataUrl = args.encodeData.sourceContent.config[
     'debugMetadataUrl'
   ]
   if (typeof debugMetadataUrl !== 'string' || debugMetadataUrl === '') return
   const { RawSource } = compilation.compiler.webpack.sources
-  const jsAssetNames: string[] = []
+  const assetNames: string[] = []
   if (args.encodeData.lepusCode.root) {
-    jsAssetNames.push(args.encodeData.lepusCode.root.name)
+    assetNames.push(args.encodeData.lepusCode.root.name)
   }
   for (const chunk of args.encodeData.lepusCode.chunks) {
-    jsAssetNames.push(chunk.name)
+    assetNames.push(chunk.name)
   }
   for (const name of Object.keys(args.encodeData.manifest)) {
-    if (name.endsWith('.js')) jsAssetNames.push(name)
+    if (name.endsWith('.js')) assetNames.push(name)
+  }
+  for (const chunk of args.encodeData.css.chunks) {
+    assetNames.push(chunk.name)
   }
   const seen = new Set<string>()
-  for (const assetName of jsAssetNames) {
+  for (const assetName of assetNames) {
     if (seen.has(assetName)) continue
     seen.add(assetName)
     const asset = compilation.getAsset(assetName)
@@ -334,12 +310,7 @@ function rewriteSourceMappingURLTrailers(
     if (after === undefined) continue
     const newSource = new RawSource(after)
     compilation.updateAsset(assetName, newSource, asset.info)
-    // Mirror back into `encodeData` so the template encoder sees the
-    // rewritten source too. `LynxTemplatePlugin` snapshots background
-    // JS as strings (`manifest`) and main-thread/chunks as `Asset`
-    // refs *before* this hook fires — without these writes the encoded
-    // template binary would embed the original `.map`-sibling trailer
-    // even though the on-disk JS now points at the metadata endpoint.
+    if (!assetName.endsWith('.js')) continue
     if (assetName in args.encodeData.manifest) {
       args.encodeData.manifest[assetName] = after
     }

@@ -1,7 +1,14 @@
 /// <reference types="@rstest/core/globals" />
 
+import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+
+it('should not emit debug-info.json', () => {
+  expect(
+    existsSync(path.resolve(__dirname, '.rspeedy/main/debug-info.json')),
+  ).toBe(false);
+});
 
 it('should have templateDebugUrl pointing at debug-metadata endpoint', async () => {
   const tasmJSON = await fs.readFile(

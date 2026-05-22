@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { Compilation } from 'webpack'
+import type { Rspack } from '@rsbuild/core'
 
 import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '@lynx-js/debug-metadata'
 import type {
@@ -92,7 +92,7 @@ export function createUiSourceMap(
  * {@link compareUiSourceMapRecord}.
  */
 export function collectUiSourceMapRecords(
-  compilation: Compilation,
+  compilation: Rspack.Compilation,
   entryNames: string[],
 ): UiSourceMapRecord[] {
   const moduleSet = new Set<ModuleWithUiSourceMapBuildInfo>()

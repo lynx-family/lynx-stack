@@ -4,27 +4,7 @@
 
 ```ts
 
-import type { Compiler } from 'webpack';
-import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
-import type { RsbuildEntry } from '@rsbuild/core';
 import type { RsbuildPlugin } from '@rsbuild/core';
-
-// @public
-export const DEBUG_METADATA_ASSET_NAME = "debug-metadata.json";
-
-// @public
-export class LynxDebugMetadataPlugin {
-    constructor(options?: LynxDebugMetadataPluginOptions | undefined);
-    apply(compiler: Compiler): void;
-    // (undocumented)
-    protected options?: LynxDebugMetadataPluginOptions | undefined;
-}
-
-// @public
-export interface LynxDebugMetadataPluginOptions {
-    LynxTemplatePlugin: typeof LynxTemplatePlugin;
-    rsbuildEntry?: RsbuildEntry;
-}
 
 // @public
 export function pluginLynxDebugMetadata(): RsbuildPlugin;

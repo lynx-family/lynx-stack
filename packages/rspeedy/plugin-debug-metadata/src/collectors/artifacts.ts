@@ -4,7 +4,7 @@
 
 import path from 'node:path'
 
-import type { Chunk, Compilation } from 'webpack'
+import type { Rspack } from '@rsbuild/core'
 
 import type {
   Artifact,
@@ -19,7 +19,7 @@ import type {
  * eval-only, runtime helpers, etc.) are skipped silently.
  */
 export function collectArtifacts(
-  compilation: Compilation,
+  compilation: Rspack.Compilation,
   entryNames: string[],
 ): Artifact[] {
   const artifacts: Artifact[] = []
@@ -76,7 +76,7 @@ function isMappableAsset(file: string): boolean {
 }
 
 function readSourceMap(
-  compilation: Compilation,
+  compilation: Rspack.Compilation,
   mapAssetName: string,
 ): SourceMap | undefined {
   const asset = compilation.getAsset(mapAssetName)
@@ -89,23 +89,20 @@ function readSourceMap(
 }
 
 /**
- * Identifier used by reverse-symbolication services to match a map.
+ * Unique key used by remapping services to match a map.
  *
  * - JS assets use `chunk.hash` so the value matches the
  *   `__SOURCEMAP_RELEASE__` banner `SlardarWebpackPlugin` bakes into
  *   the top of the JS at build time.
- * - CSS assets use `chunk.contentHash.css` instead — `chunk.hash`
+ * - CSS assets use `chunk.contentHash['css/mini-extract']` instead — `chunk.hash`
  *   would collide with the sibling JS asset's key when a single chunk
  *   produces both `*.js` and `*.css` (as MiniCssExtractPlugin does),
  *   and CSS has no equivalent baked-in release identifier that forces
  *   the same value as the JS one.
  */
-function extractKey(chunk: Chunk, file: string): string {
+function extractKey(chunk: Rspack.Chunk, file: string): string {
   if (file.endsWith('.css')) {
-    return chunk.contentHash?.['css/mini-extract']
-      ?? chunk.contentHash?.['css']
-      ?? chunk.hash
-      ?? ''
+    return chunk.contentHash?.['css/mini-extract'] ?? ''
   }
   return chunk.hash ?? ''
 }
@@ -121,7 +118,7 @@ function extractKey(chunk: Chunk, file: string): string {
  * - Anything else → `'background'`.
  */
 function inferKind(
-  compilation: Compilation,
+  compilation: Rspack.Compilation,
   assetName: string,
 ): Artifact['kind'] {
   if (assetName.endsWith('.css')) return 'css'

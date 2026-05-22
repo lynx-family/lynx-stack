@@ -13,9 +13,4 @@
  * plugin — consumers do not need to apply it explicitly.
  */
 
-export { LynxDebugMetadataPlugin } from './LynxDebugMetadataPlugin.js'
-export type { LynxDebugMetadataPluginOptions } from './LynxDebugMetadataPlugin.js'
-
 export { pluginLynxDebugMetadata } from './pluginLynxDebugMetadata.js'
-
-export { DEBUG_METADATA_ASSET_NAME } from './constants.js'

@@ -2,8 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { Rspack } from '@rsbuild/core'
 import { describe, expect, test } from 'vitest'
-import type { Compilation } from 'webpack'
 
 import {
   collectEntryPathMap,
@@ -89,7 +89,7 @@ function fakeCompilation(args: {
   name: string
   origins: Array<{ blocks: Array<{ deps: unknown[] }> }>
   resolveTo: Map<unknown, string>
-}): { compilation: Compilation, cg: unknown } {
+}): { compilation: Rspack.Compilation, cg: unknown } {
   const builtOrigins = args.origins.map(o => ({
     blocks: o.blocks.map(b => ({ dependencies: b.deps })),
   }))
@@ -114,7 +114,7 @@ function fakeCompilation(args: {
         return resource ? { resource } : null
       },
     },
-  } as unknown as Compilation
+  } as unknown as Rspack.Compilation
   return { compilation, cg }
 }
 
@@ -154,7 +154,7 @@ describe('collectLazyBundleEntryResources', () => {
             ? { resource: '/abs/target.tsx' }
             : { resource: '/abs/other.tsx' },
       },
-    } as unknown as Compilation
+    } as unknown as Rspack.Compilation
     expect(collectLazyBundleEntryResources(compilation, 'name')).toEqual([
       '/abs/target.tsx',
     ])
@@ -179,7 +179,7 @@ describe('collectLazyBundleEntryResources', () => {
       moduleGraph: {
         getResolvedModule: () => ({ resource: '/abs/shared.tsx' }),
       },
-    } as unknown as Compilation
+    } as unknown as Rspack.Compilation
     expect(collectLazyBundleEntryResources(compilation, 'name')).toEqual([
       '/abs/shared.tsx',
     ])
@@ -190,7 +190,7 @@ describe('collectLazyBundleEntryResources', () => {
       namedChunkGroups: new Map(),
       chunkGraph: { getBlockChunkGroup: () => null },
       moduleGraph: { getResolvedModule: () => null },
-    } as unknown as Compilation
+    } as unknown as Rspack.Compilation
     expect(collectLazyBundleEntryResources(compilation, 'missing')).toEqual([])
   })
 
@@ -202,7 +202,7 @@ describe('collectLazyBundleEntryResources', () => {
       namedChunkGroups: new Map([['name', cg]]),
       chunkGraph: { getBlockChunkGroup: () => cg },
       moduleGraph: { getResolvedModule: () => null },
-    } as unknown as Compilation
+    } as unknown as Rspack.Compilation
     expect(collectLazyBundleEntryResources(compilation, 'name')).toEqual([])
   })
 
@@ -216,7 +216,7 @@ describe('collectLazyBundleEntryResources', () => {
       moduleGraph: {
         getResolvedModule: () => ({ resource: 'relative/x.tsx' }),
       },
-    } as unknown as Compilation
+    } as unknown as Rspack.Compilation
     expect(collectLazyBundleEntryResources(compilation, 'name')).toEqual([])
   })
 
@@ -224,7 +224,7 @@ describe('collectLazyBundleEntryResources', () => {
     const cg = { origins: [{ module: { blocks: [] } }] }
     const compilation = {
       namedChunkGroups: new Map([['name', cg]]),
-    } as unknown as Compilation
+    } as unknown as Rspack.Compilation
     expect(collectLazyBundleEntryResources(compilation, 'name')).toEqual([])
   })
 })
