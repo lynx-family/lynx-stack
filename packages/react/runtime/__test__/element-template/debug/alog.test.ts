@@ -89,16 +89,15 @@ describe('ElementTemplate alog helpers', () => {
     const text = new BackgroundElementTemplateInstance('_et_builtin_raw_text', ['hello']);
 
     root.appendChild(card);
+    text.__slotIndex = 2;
     card.appendChild(text);
-    card.elementSlots[0] = [text];
-    card.elementSlots[1] = [];
 
     const output = printElementTemplateTreeToString(root);
 
     expect(output).toContain('root#1');
     expect(output).toContain('_et_card#2');
     expect(output).toContain('attributeSlots: ["title"]');
-    expect(output).toContain('elementSlots[0]: [3]');
+    expect(output).toContain('elementSlots[2]: [3]');
     expect(output).not.toContain('elementSlots[1]');
     expect(output).toContain('_et_builtin_raw_text#3');
     expect(output).toContain('attributeSlots: ["hello"]');
