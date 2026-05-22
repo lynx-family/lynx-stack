@@ -18,10 +18,9 @@ const [
   { clearEtAttrPlanMap },
   { LynxTestEventEmitter },
   { loadCompiledFixturePair },
+  { renderCompiledFixtureOnBackground, renderCompiledFixtureOnMainThread },
   { ElementTemplateEnvManager },
   { serializeToJSX },
-  { createElement },
-  { root },
 ] = await Promise.all([
   import('../../../../../src/element-template/background/commit-hook.js'),
   import('../../../../../src/element-template/background/hydration-listener.js'),
@@ -32,10 +31,9 @@ const [
   import('../../../../../src/element-template/runtime/template/attr-slot-plan.js'),
   import('../../../../test-utils/lynx-event-emitter.js'),
   import('../../../test-utils/debug/compiledFixtureModule.js'),
+  import('../../../test-utils/debug/compiledThreadRunner.js'),
   import('../../../test-utils/debug/envManager.js'),
   import('../../../test-utils/debug/serializer.js'),
-  import('preact'),
-  import('../../../../../src/element-template/index.js'),
 ]);
 
 const __filename = fileURLToPath(import.meta.url);
@@ -97,17 +95,15 @@ describe('Compiled ET GlobalProps update fixtures', () => {
     moduleExports: CompiledGlobalPropsModule,
     props?: GlobalPropsFixtureProps,
   ): void {
-    envManager.switchToBackground();
-    root.render(createElement(moduleExports.App, props));
+    renderCompiledFixtureOnBackground(moduleExports, envManager, props);
   }
 
   function renderFixtureOnMainThread(
     moduleExports: CompiledGlobalPropsModule,
     props?: GlobalPropsFixtureProps,
   ): void {
+    renderCompiledFixtureOnMainThread(moduleExports, envManager, props);
     envManager.switchToMainThread();
-    root.render(createElement(moduleExports.App, props));
-    renderPage({});
   }
 
   beforeEach(() => {
