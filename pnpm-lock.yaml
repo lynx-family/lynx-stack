@@ -608,9 +608,9 @@ importers:
         specifier: ^2.5.1
         version: 2.5.1(preact@10.29.1)
     devDependencies:
-      '@lynx-js/a2ui-catalog-extractor':
+      '@lynx-js/a2ui-cli':
         specifier: workspace:*
-        version: link:../a2ui-catalog-extractor
+        version: link:../a2ui-cli
       '@lynx-js/lynx-ui':
         specifier: ^3.133.0
         version: 3.133.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
@@ -639,6 +639,15 @@ importers:
       '@types/node':
         specifier: ^24.10.13
         version: 24.10.13
+
+  packages/genui/a2ui-cli:
+    dependencies:
+      '@lynx-js/a2ui-catalog-extractor':
+        specifier: workspace:*
+        version: link:../a2ui-catalog-extractor
+      '@lynx-js/a2ui-prompt':
+        specifier: workspace:*
+        version: link:../a2ui-prompt
 
   packages/genui/a2ui-playground:
     dependencies:
@@ -715,6 +724,12 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+
+  packages/genui/a2ui-prompt:
+    devDependencies:
+      '@types/node':
+        specifier: ^24.10.13
+        version: 24.10.13
 
   packages/genui/openui:
     dependencies:

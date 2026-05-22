@@ -123,7 +123,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc --project tsconfig.build.json && npm run build:catalog",
-    "build:catalog": "a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog",
+    "build:catalog": "a2ui-cli generate catalog --catalog-dir src/catalog --out-dir dist/catalog",
     "test": "rstest"
   },
   "dependencies": {
@@ -131,7 +131,7 @@
     "@preact/signals": "^2.5.1"
   },
   "devDependencies": {
-    "@lynx-js/a2ui-catalog-extractor": "workspace:*",
+    "@lynx-js/a2ui-cli": "workspace:*",
     "@lynx-js/lynx-ui": "^3.133.0",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "3.7.0",

@@ -45,6 +45,21 @@ export interface A2UICatalog {
   components: A2UIComponentSpec[];
   extraRules?: string[];
   examples?: A2UIExample[];
+  functions?: A2UIFunctionSpec[];
+}
+
+export interface A2UIFunctionSpec {
+  description?: string;
+  name: string;
+  parameters: JsonSchema;
+  returnType:
+    | 'string'
+    | 'number'
+    | 'boolean'
+    | 'array'
+    | 'object'
+    | 'any'
+    | 'void';
 }
 
 export const BASIC_CATALOG_ID =
@@ -203,6 +218,30 @@ function componentFromManifest(
   };
 }
 
+export function createA2UICatalogFromManifests(options: {
+  catalogId: string;
+  componentManifests: Record<string, JsonSchema>[];
+  examples?: A2UIExample[];
+  extraRules?: string[];
+  functions?: A2UIFunctionSpec[];
+  label?: string;
+  version?: string;
+}): A2UICatalog {
+  return {
+    id: options.catalogId,
+    label: options.label ?? `A2UI catalog (${options.catalogId})`,
+    ...(options.version ? { version: options.version } : {}),
+    components: options.componentManifests
+      .map((manifest) => componentFromManifest(manifest as CatalogManifest))
+      .filter((component): component is A2UIComponentSpec =>
+        component !== null
+      ),
+    ...(options.extraRules ? { extraRules: options.extraRules } : {}),
+    ...(options.examples ? { examples: options.examples } : {}),
+    ...(options.functions ? { functions: options.functions } : {}),
+  };
+}
+
 export const BASIC_CATALOG: A2UICatalog = {
   id: BASIC_CATALOG_ID,
   label: 'Lynx A2UI basic catalog (v0.9)',
@@ -247,6 +286,17 @@ export function renderCatalogReference(catalog: A2UICatalog): string {
   if (catalog.extraRules !== undefined && catalog.extraRules.length > 0) {
     lines.push('### Additional catalog rules');
     for (const r of catalog.extraRules) lines.push(`- ${r}`);
+    lines.push('');
+  }
+  if (catalog.functions !== undefined && catalog.functions.length > 0) {
+    lines.push('### Available functions');
+    for (const fn of catalog.functions) {
+      lines.push(`- ${fn.name}: returns ${fn.returnType}`);
+      if (fn.description) {
+        lines.push(`  ${fn.description}`);
+      }
+      lines.push(`  parameters: ${JSON.stringify(fn.parameters)}`);
+    }
     lines.push('');
   }
   return lines.join('\n');

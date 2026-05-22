@@ -173,4 +173,4 @@ export function buildA2UISystemPrompt(
   return parts.join('\n');
 }
 
-export const A2UI_SYSTEM_PROMPT = buildA2UISystemPrompt();
+export const A2UI_SYSTEM_PROMPT: string = buildA2UISystemPrompt();
