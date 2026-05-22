@@ -395,7 +395,7 @@ function createRetryingHandler(fetchBundle, retries) {
               currentHandler = fetchBundle()
               currentHandler.then(tryNext, reject)
             } else {
-              cachedResponse = response
+              if (response.code !== -2) cachedResponse = response
               resolve(response)
             }
           }
@@ -412,7 +412,7 @@ function createRetryingHandler(fetchBundle, retries) {
         currentHandler = fetchBundle()
         response = currentHandler.wait(timeout)
       }
-      cachedResponse = response
+      if (response.code !== -2) cachedResponse = response
       return response
     }
   }
