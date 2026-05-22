@@ -5,9 +5,6 @@ import { defineConfig } from '@lynx-js/rspeedy';
 const enableBundleAnalysis = !!process.env['RSPEEDY_BUNDLE_ANALYSIS'];
 
 export default defineConfig({
-  output: {
-    // sourceMap: false
-  },
   plugins: [
     pluginReactLynx(),
     pluginQRCode({
@@ -18,7 +15,7 @@ export default defineConfig({
     }),
   ],
   environments: {
-    // web: {},
+    web: {},
     lynx: {
       performance: {
         profile: enableBundleAnalysis,
