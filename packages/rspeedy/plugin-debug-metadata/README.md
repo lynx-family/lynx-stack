@@ -45,7 +45,7 @@ Status codes:
 
 To get every consumer pointed at the unified endpoint, the plugin rewrites three things during build:
 
-- **JS `//# sourceMappingURL=…` trailers.** Whatever `SourceMapDevToolPlugin` (or `output.publicPath`, or a user-supplied `filename` / `append`) wrote stays as the source-of-truth dir; only the basename is swapped for `debug-metadata.json?field=source-map&filename=<original basename>`. URL surgery is delegated to `new URL` so query strings / fragments / encoding / relative-vs-absolute all behave correctly. Runs at `PROCESS_ASSETS_STAGE_DEV_TOOLING + 1` so the rewrite is in the JS source the template encoder consumes.
+- **JS / CSS `sourceMappingURL` trailers.** Whatever the original trailer pointed at is discarded; the new URL is `<publicPath>/<intermediate>/debug-metadata.json?field=source-map&path=<encoded bundler-relative map path>`. JS keeps the `//#` line-comment form, CSS keeps the `/*# … */` block-comment form. The rewrite runs inside `templateHooks.beforeEncode` so the encoded template binary embeds the new trailer, and the rewritten source is mirrored back into `encodeData.lepusCode` / `encodeData.manifest` (CSS goes through `@lynx-js/css-serializer`, so only `compilation.updateAsset` is needed for it). Only Lynx envs are touched — multi-env builds (web + lynx) leave the non-lynx env alone.
 - **tasm `compilerOptions.templateDebugUrl`.** Points at `<publicPath>/<intermediate>/debug-metadata.json?field=bytecode-debug-info&filename=main-thread.js` instead of the legacy `debug-info.json`. Left empty when `publicPath` is `auto` / `/` (unchanged from previous behavior).
 - **tasm `sourceContent.config.debugMetadataUrl`.** The base endpoint without any query — `<publicPath>/<intermediate>/debug-metadata.json`. Consumers append their own `?field=…` to it. Left empty when `publicPath` is `auto` / `/`.
 
@@ -53,9 +53,7 @@ The legacy `debug-info.json` is **no longer written to disk** — its contents a
 
 ## Contents
 
-- `LynxDebugMetadataPlugin` — the underlying webpack / rspack plugin. Taps `LynxTemplatePlugin.beforeEncode` to assemble + emit the metadata asset, `beforeEmit` to enrich it with `tasmSection` paths and bytecode debug info, and `processAssets` to rewrite JS source map trailers.
-- `pluginLynxDebugMetadata` — the Rsbuild plugin wrapper, applied by `applyDefaultPlugins` in `@lynx-js/rspeedy/core`.
-- `UI_SOURCE_MAP_RECORDS_BUILD_INFO` + `UiSourceMapRecord` — wire-protocol constants the main-thread loader in `@lynx-js/react-webpack-plugin` uses to stash UI source-map records on `module.buildInfo` for the plugin to collect.
+- `pluginLynxDebugMetadata` — the Rsbuild plugin wrapper (the only public export), applied by `applyDefaultPlugins` in `@lynx-js/rspeedy/core`. Internally it taps `LynxTemplatePlugin.beforeEncode` to assemble + emit the metadata asset and to rewrite JS / CSS source-map trailers, and `beforeEmit` to enrich the asset with `tasmSection` paths and bytecode debug info.
 
 ## Convention for plugin authors
 
