@@ -305,7 +305,7 @@ async function handleStream(
         const blobMap: Record<string, string> = {};
         for (const [key, code] of Object.entries(codeMap)) {
           const blob = new Blob([
-            '//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0,window=void 0; ',
+            '//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0,window=globalThis; ',
             isLazy ? 'module.exports=' : '',
             code as unknown as BlobPart,
             ' \n })()\n//# sourceURL=',
@@ -434,7 +434,7 @@ async function handleJSON(
     for (const [key, code] of Object.entries(json.lepusCode)) {
       if (typeof code !== 'string') continue;
       const prefix =
-        `//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0,window=void 0; ${
+        `//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0,window=globalThis; ${
           isLazy ? 'module.exports=' : ''
         } `;
       const suffix = ` \n })()\n//# sourceURL=${url}/${key}\n`;
