@@ -228,12 +228,18 @@ export class BackgroundElementTemplateInstance {
       markRemovedSubtreeForPostDispatchTeardown(child);
       child.queueRefCleanupForSubtree();
     } else {
-      // Pre-hydration commits and post-hydration unmaterialized subtrees have
-      // both exposed refs to user effects (via the pre-hydration flush), so a
-      // local removal must detach them even though no native patch exists.
-      // Run the ref cleanup before any `tearDown()` below — tearDown clears
-      // `rawAttributeSlots`, which `queueRefCleanupForSubtree` depends on.
-      child.queueRefCleanupForSubtree();
+      // Mirrors `shouldQueueRefEffects` in `setAttribute`: pre-hydration
+      // commits and post-hydration materialized children publish their refs
+      // to user effects. Post-hydration unmaterialized children defer attach
+      // to `emitCreate`, which never fires for a subtree torn down before
+      // insert — so cleaning up there would emit a spurious detach.
+      const refAttachWasPublished = !isElementTemplateHydrated()
+        || !child.needsMainThreadCreate();
+      if (refAttachWasPublished) {
+        // Run before any tearDown below: `tearDown` clears `rawAttributeSlots`,
+        // which `queueRefCleanupForSubtree` walks to enqueue the detach.
+        child.queueRefCleanupForSubtree();
+      }
       if (child.needsMainThreadCreate()) {
         // An unmaterialized subtree has no main-thread registry entry, so it
         // can be released from the background manager without delayed cleanup.

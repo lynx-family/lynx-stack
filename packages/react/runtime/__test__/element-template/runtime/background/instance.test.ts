@@ -225,6 +225,27 @@ describe('BackgroundElementTemplateInstance', () => {
       }));
     });
 
+    it('does not detach refs that never attached on a post-hydration unmaterialized subtree', () => {
+      // Regression: post-hydration `setAttribute` runs with
+      // `queueRefEffects=false` on unmaterialized children (attach is deferred
+      // to `emitCreate`). If `removeChild` unconditionally queues a cleanup,
+      // the ref observes a spurious detach for an attach that never fired.
+      const ref = vi.fn();
+      __etAttrPlanMap.view = [0, adaptRefAttrSlot];
+      markElementTemplateHydrated();
+      const parent = new BackgroundElementTemplateInstance('view');
+      const child = new BackgroundElementTemplateInstance('view');
+      child.setAttribute('attributeSlots', [ref]);
+      parent.appendChild(child);
+      flushPendingRefs();
+      expect(ref).not.toHaveBeenCalled();
+
+      parent.removeChild(child);
+      flushPendingRefs();
+
+      expect(ref).not.toHaveBeenCalled();
+    });
+
     it('does not re-attach stable direct refs when moving an existing hydrated child', () => {
       const ref = vi.fn();
       __etAttrPlanMap.view = [0, adaptRefAttrSlot];
