@@ -2882,10 +2882,24 @@ describe('Config', () => {
     interface Rule {
       test?: RegExp
       use?: Array<{ loader: string }>
+      oneOf?: Rule[]
       [key: string]: unknown
     }
 
     const rules = config?.module?.rules as Rule[] | undefined
+    const getLoaderBranches = (rule: Rule): string[][] => {
+      const loaderBranch = rule.use?.map((u: { loader: string }) => u.loader)
+        ?? []
+      const oneOfBranches = rule.oneOf?.flatMap(rule => getLoaderBranches(rule))
+        ?? []
+
+      return oneOfBranches.length > 0
+        ? [
+          ...loaderBranch.length > 0 ? [loaderBranch] : [],
+          ...oneOfBranches,
+        ]
+        : [loaderBranch]
+    }
 
     test('css rules should be rsbuild default', () => {
       expect(
@@ -2894,12 +2908,24 @@ describe('Config', () => {
           && typeof rule === 'object'
           && rule.test
           && rule.test.toString() === (/\.css$/).toString()
-        ).map((rule: Rule) =>
-          (rule?.use?.map((u: { loader: string }) => u.loader)) ?? []
-        ),
+        ).flatMap(rule => getLoaderBranches(rule)),
       ).toMatchInlineSnapshot(`
         [
+          [
+            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/dist/cssUrlLoader.mjs",
+            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
+            "builtin:lightningcss-loader",
+          ],
+          [
+            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
+            "builtin:lightningcss-loader",
+          ],
           [],
+          [
+            "<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/cssExtractLoader.js",
+            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
+            "builtin:lightningcss-loader",
+          ],
         ]
       `)
     })
@@ -2911,12 +2937,14 @@ describe('Config', () => {
           && rule.test
           && rule.test.toString()
             === (/\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)$/).toString()
-        ).map((rule: Rule) =>
-          (rule?.use?.map((u: { loader: string }) => u.loader)) ?? []
-        ),
+        ).flatMap(rule => getLoaderBranches(rule)),
       ).toMatchInlineSnapshot(`
         [
           [],
+          [
+            "builtin:swc-loader",
+            "<ROOT>/packages/webpack/react-webpack-plugin/lib/loaders/testing.js",
+          ],
         ]
       `)
     })

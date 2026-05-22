@@ -16,7 +16,7 @@ describe('Plugins - Rsdoctor', () => {
 
     const compiler = await rsbuild.createCompiler() as Rspack.Compiler
 
-    const { options } = (compiler.options as Rspack.Configuration).plugins
+    const { options } = compiler.options.plugins
       ?.find(
         (plugin) => (typeof plugin === 'object'
           && plugin?.['isRsdoctorPlugin'] === true),
@@ -54,7 +54,7 @@ describe('Plugins - Rsdoctor', () => {
 
     const compiler = await rsbuild.createCompiler() as Rspack.Compiler
 
-    const { options } = (compiler.options as Rspack.Configuration).plugins
+    const { options } = compiler.options.plugins
       ?.find(
         (plugin) => (typeof plugin === 'object'
           && plugin?.['isRsdoctorPlugin'] === true),
@@ -85,7 +85,7 @@ describe('Plugins - Rsdoctor', () => {
 
     const compiler = await rsbuild.createCompiler() as Rspack.Compiler
 
-    const { options } = (compiler.options as Rspack.Configuration).plugins
+    const { options } = compiler.options.plugins
       ?.find(
         (plugin) => (typeof plugin === 'object'
           && plugin?.['isRsdoctorPlugin'] === true),
@@ -128,7 +128,7 @@ describe('Plugins - Rsdoctor', () => {
 
     const compiler = await rsbuild.createCompiler() as Rspack.Compiler
 
-    const { options } = (compiler.options as Rspack.Configuration).plugins
+    const { options } = compiler.options.plugins
       ?.find(
         (plugin) => (typeof plugin === 'object'
           && plugin?.['isRsdoctorPlugin'] === true),
@@ -163,7 +163,7 @@ describe('Plugins - Rsdoctor', () => {
 
     const compiler = await rsbuild.createCompiler() as Rspack.Compiler
 
-    const { options } = (compiler.options as Rspack.Configuration).plugins
+    const { options } = compiler.options.plugins
       ?.find(
         (plugin) => (typeof plugin === 'object'
           && plugin?.['isRsdoctorPlugin'] === true),
