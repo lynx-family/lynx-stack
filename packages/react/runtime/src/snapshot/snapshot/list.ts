@@ -6,7 +6,7 @@ import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap
 import { hydrate } from '../renderToOpcodes/hydrate.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
-const destroyLifetimeHandlerMap = new Map<number, () => void>();
+const destroyLifetimeHandlerMap = /*#__PURE__*/ new Map<number, () => void>();
 
 export function snapshotCreateList(
   pageId: number,

@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
-  gap: var(--a2ui-spacing-l);
+  gap: 18px;
   width: 100%;
   min-width: 0;
 }
@@ -59,12 +59,12 @@
 
 /* Group: Standard horizontal grouping */
 .row-hint-group {
-  gap: var(--a2ui-spacing-l);
+  gap: 18px;
 }
 
 /* Compact: Tight grouping (e.g., icon + text) */
 .row-hint-compact {
-  gap: var(--a2ui-spacing-m);
+  gap: 10px;
 }
 
 /* Balanced: Good for space-between layouts */
@@ -75,9 +75,9 @@
 /* Toolbar: Specific for action bars */
 .row-hint-toolbar {
   width: 100%;
-  height: 56px;
-  padding: 0 var(--a2ui-spacing-l);
+  height: 60px;
+  padding: 0 20px;
   align-items: center;
   background-color: var(--a2ui-color-surface);
-  border-bottom: var(--a2ui-border);
+  border-bottom: 1px solid var(--a2ui-color-border);
 }

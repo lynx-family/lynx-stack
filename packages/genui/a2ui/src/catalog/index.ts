@@ -27,6 +27,8 @@ export type {
 export { Button } from './Button/index.jsx';
 export { Card } from './Card/index.jsx';
 export { CheckBox } from './CheckBox/index.jsx';
+export { LineChart } from './LineChart/index.jsx';
+export { PieChart } from './PieChart/index.jsx';
 export { Column } from './Column/index.jsx';
 export { Divider } from './Divider/index.jsx';
 export { Icon } from './Icon/index.jsx';
@@ -39,3 +41,4 @@ export { Slider } from './Slider/index.jsx';
 export { Tabs } from './Tabs/index.jsx';
 export { Text } from './Text/index.jsx';
 export { TextField } from './TextField/index.jsx';
+export { DEFAULT_CHART_COLORS, escapeXml, formatValue } from './utils/chart.js';

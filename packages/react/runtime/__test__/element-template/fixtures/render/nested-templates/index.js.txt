@@ -4,9 +4,7 @@ const _et_7a8c6_test_1 = "_et_7a8c6_test_1";
 class Inner extends Component {
     render() {
         return /*#__PURE__*/ _jsx(_et_7a8c6_test_1, {
-            children: [
-                this.props.message
-            ]
+            $0: this.props.message
         });
     }
 }
@@ -14,11 +12,9 @@ const _et_7a8c6_test_2 = "_et_7a8c6_test_2";
 export class App extends Component {
     render() {
         return /*#__PURE__*/ _jsx(_et_7a8c6_test_2, {
-            children: [
-                /*#__PURE__*/ _jsx(Inner, {
-                    message: "X"
-                })
-            ]
+            $0: /*#__PURE__*/ _jsx(Inner, {
+                message: "X"
+            })
         });
     }
 }

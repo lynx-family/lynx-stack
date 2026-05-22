@@ -4,8 +4,9 @@
   display: block;
   min-height: 0;
   overflow: hidden;
-  background-color: var(--a2ui-color-border-strong);
+  background-color: var(--a2ui-color-border);
   border: none;
+  opacity: 0.7;
 }
 
 .divider-horizontal {

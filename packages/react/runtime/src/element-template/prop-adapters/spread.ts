@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { getEventValue } from './event-value.js';
+import { prepareSpreadRefAttrValue } from './ref.js';
 import type { SerializableValue } from '../protocol/types.js';
 
 export interface SpreadAttrAdapterContext {
@@ -43,6 +44,14 @@ export function prepareSpreadAttrSlot(
       continue;
     }
 
+    if (key === 'ref') {
+      const refValue = prepareSpreadRefAttrValue(handleId, attrSlotIndex, value);
+      if (refValue !== undefined) {
+        prepared['ref'] = refValue;
+      }
+      continue;
+    }
+
     if (isEventPropKey(key)) {
       prepared[key] = spreadValue === null || spreadValue === undefined || spreadValue === false
         ? null
@@ -52,7 +61,6 @@ export function prepareSpreadAttrSlot(
 
     if (
       spreadValue === undefined
-      || key === 'ref'
       || key.endsWith(':ref')
       || key.endsWith(':gesture')
       || namespacedEventKeyRegExp.test(key)

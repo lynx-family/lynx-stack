@@ -235,13 +235,15 @@ export const elementTree = new (class {
   }
 
   __RemoveElement(parent: Element, child: Element) {
-    parent.children.forEach((ch, index) => {
-      if (ch === child) {
-        parent.children.splice(index, 1);
-        return;
-      }
-    });
-    parentMap.delete(child);
+    if (parentMap.get(child) === parent) {
+      parent.children.splice(parent.children.indexOf(child), 1);
+      parentMap.delete(child);
+    } else {
+      throw new Error(
+        // @ts-ignore
+        `child ${child.$$uiSign} is not in parent ${parent.$$uiSign}, cannot remove it!`,
+      );
+    }
   }
 
   __InsertElementBefore(
@@ -267,6 +269,8 @@ export const elementTree = new (class {
     parent.children.forEach((ch, index) => {
       if (ch === oldElement) {
         parent.children[index] = newElement;
+        parentMap.set(newElement, parent);
+        parentMap.delete(oldElement);
         return;
       }
     });

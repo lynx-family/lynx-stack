@@ -11,6 +11,7 @@ import {
 import { backgroundSnapshotInstanceToJSON } from '../utils/debug';
 import { useState } from 'preact/compat';
 import { useInitData, withInitDataInState } from '../../../src/lynx-api';
+import { NativeUpdateDataType } from '../../../src/snapshot/lifecycle/constant';
 import { globalEnvManager } from '../utils/envManager';
 
 /** @type {SnapshotInstance} */
@@ -147,5 +148,42 @@ describe('withInitDataInState', () => {
         "key3": "value3",
       }
     `);
+  });
+
+  it('resets initData and strips timing flag before emitting data changes', () => {
+    const tt = lynxCoreInject.tt;
+    const emitter = lynx.getJSModule('GlobalEventEmitter');
+    const listener = vi.fn();
+    const originalReportError = lynx.reportError;
+    lynx.reportError = vi.fn();
+    lynx.__initData = {
+      stale: true,
+      key4: 'old',
+    };
+    emitter.addListener('onDataChanged', listener);
+
+    try {
+      tt.updateCardData(
+        {
+          key4: 'reset',
+          __lynx_timing_flag: '__lynx_timing_actual_fmp',
+        },
+        { type: NativeUpdateDataType.RESET },
+      );
+
+      expect(lynx.__initData).toEqual({
+        key4: 'reset',
+      });
+      expect(listener).toHaveBeenCalledWith({
+        key4: 'reset',
+      });
+      expect(lynx.reportError).toHaveBeenCalledTimes(1);
+      expect(String(lynx.reportError.mock.calls[0]?.[0]?.message ?? '')).toBe(
+        'Received unsupported updateData with `__lynx_timing_flag` (value "__lynx_timing_actual_fmp"), the timing flag is ignored',
+      );
+    } finally {
+      emitter.removeListener('onDataChanged', listener);
+      lynx.reportError = originalReportError;
+    }
   });
 });

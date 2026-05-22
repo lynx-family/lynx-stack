@@ -4,6 +4,8 @@ applyTo: "packages/genui/a2ui*/**"
 
 When maintaining A2UI component catalogs, keep the catalog-facing contract in a TypeScript interface marked with `@a2uiCatalog <ComponentName>`. The extractor consumes TypeDoc reflection data and does not parse TS/TSX source itself, so inline the JSON-schema-facing property shape instead of relying on aliases or external interfaces.
 
+When working on multi-theme A2UI styling, keep shared token definitions in `packages/genui/a2ui/styles/theme.css` `:root`, and put theme-specific differences in the `.a2ui-light` and `.a2ui-dark` blocks. Prefer light/dark overrides for colors such as surface, text, border, overlay, and icon colors. Avoid reintroducing layout tokens like spacing, size, or radius as global CSS variables unless the component contract truly needs them; those should generally be handled by component CSS overrides instead. Keep `--a2ui-icon-font-family` configurable when icon glyph fonts need to vary by theme or embedding host.
+
 Only `@a2uiCatalog` is a custom tag. Use standard TypeDoc-supported comments and tags for metadata: summaries for descriptions, `@remarks` for additional description, `@defaultValue` for schema defaults, and `@deprecated` for deprecated fields. Do not write JSON Schema in comments. Preserve existing enum order when regenerating catalog JSON, because catalog snapshots and LLM prompts can depend on deterministic option ordering.
 
 Avoid adding `@defaultValue` for string defaults in A2UI catalog component props until the extractor normalizes TypeDoc code-span output; otherwise generated `catalog.json` may contain a rendered code fragment instead of the intended plain string. Prefer documenting the default in surrounding docs and keeping the runtime default in code.
@@ -17,6 +19,8 @@ For the `<A2UI>` shell, treat `className` and `wrapSurface` as complementary the
 When adding a built-in A2UI catalog component, update the component export chain (`src/catalog/index.ts`, `src/index.ts`, and the package `exports` map), refresh the all-builtins README recipe, and add the component plus its generated manifest to the playground `ALL_BUILTINS` list so official gallery examples can render it.
 
 When evolving `packages/genui/a2ui-playground`, treat protocol-prefixed hashes such as `#/a2ui/...` and `#/openui/...` as the canonical routes, and preserve the current mainline tab names (`create`, `examples`, `components`) when adding protocol-aware routing. If you keep compatibility aliases for older or transitional paths such as `#/demos` or `#/chat`, parse them into the canonical route model instead of letting a rebase silently rename the mainline routes.
+
+For catalog navigation, keep `components` and `catalog` as route aliases that resolve to the same catalog page for a given protocol. Prefer one canonical tab label per protocol in the UI, but ensure legacy and new entrypoints both land on the same content so links and bookmarks stay valid during route renames.
 
 When a GenUI package builds a CLI or other generated artifact that another workspace package executes during its own build, declare that package's `dist/**` (or equivalent generated directory) as Turbo `build.outputs`. Without explicit outputs, cache hits can skip restoring the built CLI and leave downstream workspace bins pointing at missing files.
 

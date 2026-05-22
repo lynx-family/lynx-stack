@@ -2,27 +2,30 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { json } from '@codemirror/lang-json';
-import CodeMirror from '@uiw/react-codemirror';
+import CodeMirror, { EditorView } from '@uiw/react-codemirror';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import './AIChatPage.css';
 
+import { ConfirmDialog } from '../components/ConfirmDialog.js';
+import { ConversationListPanel } from '../components/ConversationListPanel.js';
+import { PageHeader } from '../components/PageHeader.js';
 import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
 import { PreviewPanel } from '../components/PreviewPanel.js';
 import { PreviewViewport } from '../components/PreviewViewport.js';
+import { useConversation } from '../hooks/useConversation.js';
+import type { ModelChatMessage } from '../hooks/useConversation.js';
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
 
 interface ChatMessage {
-  role: 'user' | 'ai';
+  role: 'user' | 'ai' | 'action' | 'json' | 'status';
   content: string | React.ReactNode;
-}
-
-interface ModelChatMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
+  payload?: unknown;
+  payloadLabel?: string;
+  tone?: 'info' | 'pending' | 'success' | 'error';
 }
 
 interface SseEvent {
@@ -41,6 +44,67 @@ interface A2UIDonePayload {
   };
   error?: unknown;
   message?: unknown;
+  usage?: unknown;
+}
+
+interface TokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
+interface ProviderSettings {
+  apiKey: string;
+  baseURL: string;
+  model: string;
+}
+
+interface ProviderRequestOptions {
+  apiKey?: string;
+  baseURL?: string;
+  model?: string;
+}
+
+interface PersistedProviderSettings {
+  baseURL: string;
+  model: string;
+}
+
+function parseUsage(value: unknown): TokenUsage | null {
+  if (!value || typeof value !== 'object') return null;
+  const record = value as Record<string, unknown>;
+  const pickNumber = (...keys: string[]): number => {
+    for (const key of keys) {
+      const v = record[key];
+      if (typeof v === 'number' && Number.isFinite(v)) return v;
+    }
+    return 0;
+  };
+  // Support both legacy (promptTokens/completionTokens) and new
+  // (inputTokens/outputTokens) AI SDK usage shapes.
+  const promptTokens = pickNumber(
+    'promptTokens',
+    'inputTokens',
+    'prompt_tokens',
+  );
+  const completionTokens = pickNumber(
+    'completionTokens',
+    'outputTokens',
+    'completion_tokens',
+  );
+  const totalTokens = pickNumber('totalTokens', 'total_tokens')
+    || promptTokens + completionTokens;
+  if (promptTokens === 0 && completionTokens === 0 && totalTokens === 0) {
+    return null;
+  }
+  return { promptTokens, completionTokens, totalTokens };
+}
+
+function formatTokenCount(value: number): string {
+  if (value < 1000) return String(value);
+  if (value < 10_000) return `${(value / 1000).toFixed(2)}k`;
+  if (value < 1_000_000) return `${(value / 1000).toFixed(1)}k`;
+  return `${(value / 1_000_000).toFixed(2)}M`;
 }
 
 interface BrowserResponse {
@@ -72,7 +136,14 @@ const RESIZE_BREAKPOINT = 980;
 const ONLINE_A2UI_SERVER_ORIGIN = 'https://genui-server.vercel.app';
 const ONLINE_A2UI_CHAT_URL = `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/stream`;
 const LOCAL_A2UI_SERVER_PORT = '3060';
-const jsonExtensions = [json()];
+const PROVIDER_SETTINGS_STORAGE_KEY = 'a2ui-playground-provider-settings';
+const jsonExtensions = [json(), EditorView.lineWrapping];
+
+const EMPTY_PROVIDER_SETTINGS: ProviderSettings = {
+  apiKey: '',
+  baseURL: '',
+  model: '',
+};
 
 function isDevHost(hostname: string): boolean {
   return (
@@ -124,6 +195,13 @@ function getA2UIChatEndpoint(): string {
   return ONLINE_A2UI_CHAT_URL;
 }
 
+function getA2UIActionStreamEndpoint(): string {
+  return getA2UIChatEndpoint().replace(
+    /\/a2ui\/stream$/,
+    '/a2ui/action/stream',
+  );
+}
+
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return String(error);
@@ -159,6 +237,52 @@ function parseSseData(raw: string): unknown {
   } catch {
     return raw;
   }
+}
+
+function safeStringifyPayload(value: unknown): string {
+  if (typeof value === 'string') {
+    // Streaming JSON often arrives minified (no spaces/newlines) — try to
+    // re-pretty-print it so CodeMirror can show it across multiple lines.
+    try {
+      return JSON.stringify(JSON.parse(value), null, 2);
+    } catch {
+      return value;
+    }
+  }
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+}
+
+function readProviderSettings(): ProviderSettings {
+  if (typeof window === 'undefined') return EMPTY_PROVIDER_SETTINGS;
+  try {
+    const raw = window.localStorage.getItem(PROVIDER_SETTINGS_STORAGE_KEY);
+    if (!raw) return EMPTY_PROVIDER_SETTINGS;
+    const parsed = JSON.parse(raw) as Partial<PersistedProviderSettings>;
+    return {
+      apiKey: '',
+      baseURL: typeof parsed.baseURL === 'string' ? parsed.baseURL : '',
+      model: typeof parsed.model === 'string' ? parsed.model : '',
+    };
+  } catch {
+    return EMPTY_PROVIDER_SETTINGS;
+  }
+}
+
+function toProviderRequestOptions(
+  settings: ProviderSettings,
+): ProviderRequestOptions {
+  const apiKey = settings.apiKey.trim();
+  const baseURL = settings.baseURL.trim();
+  const model = settings.model.trim();
+  return {
+    ...(apiKey ? { apiKey } : {}),
+    ...(baseURL ? { baseURL } : {}),
+    ...(model ? { model } : {}),
+  };
 }
 
 function parseSseFrame(frame: string): SseEvent | null {
@@ -266,6 +390,8 @@ async function readA2UIResponse(
   response: BrowserResponse,
   onText: (text: string) => void,
   onMessages: (messages: unknown[]) => void,
+  onUsage?: (usage: TokenUsage) => void,
+  options: { publishPartialMessages?: boolean } = {},
 ): Promise<unknown[]> {
   const contentType = response.headers.get('content-type') ?? '';
   if (!contentType.includes('text/event-stream')) {
@@ -273,6 +399,10 @@ async function readA2UIResponse(
     const messages = normalizeA2UIMessages(payload);
     if (messages.length === 0) {
       throw new Error(normalizeErrorPayload(payload));
+    }
+    if (payload && typeof payload === 'object') {
+      const usage = parseUsage((payload as A2UIDonePayload).usage);
+      if (usage) onUsage?.(usage);
     }
     onMessages(messages);
     return messages;
@@ -285,6 +415,7 @@ async function readA2UIResponse(
   let buffer = '';
   let generatedText = '';
   let latestMessages: unknown[] = [];
+  const publishPartialMessages = options.publishPartialMessages ?? true;
 
   while (true) {
     const { done, value } = await reader.read();
@@ -297,10 +428,11 @@ async function readA2UIResponse(
       if (!parsed) continue;
 
       if (parsed.event === 'delta') {
-        const data = parsed.data as { text?: unknown };
-        if (typeof data.text === 'string') {
-          generatedText += data.text;
+        const deltaData = parsed.data as { text?: unknown };
+        if (typeof deltaData.text === 'string') {
+          generatedText += deltaData.text;
           onText(generatedText);
+          if (!publishPartialMessages) continue;
           const completed = parseCompletedArrayItems(generatedText);
           if (completed.length > latestMessages.length) {
             latestMessages = completed;
@@ -312,6 +444,10 @@ async function readA2UIResponse(
 
       if (parsed.event === 'done') {
         const doneMessages = normalizeA2UIMessages(parsed.data);
+        if (parsed.data && typeof parsed.data === 'object') {
+          const usage = parseUsage((parsed.data as A2UIDonePayload).usage);
+          if (usage) onUsage?.(usage);
+        }
         if (doneMessages.length > 0) {
           latestMessages = doneMessages;
           onMessages(latestMessages);
@@ -334,8 +470,65 @@ async function readA2UIResponse(
     : normalizeA2UIMessages(generatedText);
 }
 
-export function AIChatPage(props: { protocol: Protocol }) {
-  const { protocol } = props;
+const SUGGESTED_PROMPTS: Array<{ label: string; text: string }> = [
+  {
+    label: '🌤️ Weather with Refresh',
+    text:
+      'Create a weather card for San Francisco showing sunny, a photo, 22°C, humidity 60%, and a "Refresh" button. When the user taps Refresh, update the card with slightly different weather data to simulate a live fetch.',
+  },
+  {
+    label: '🛍️ Product card with Buy',
+    text:
+      'Create a product card for a limited-edition sneaker. Include name, a photo, price ($189), a short description, and a "Buy Now" button. When tapped, show an order confirmation with a fake order number and estimated delivery.',
+  },
+  {
+    label: '⚡ Quiz card with actions',
+    text:
+      'Create a trivia quiz card. Show a question "Which shape has three sides?" with 4 answer buttons: Triangle, Square, Circle, Hexagon. When the user taps an answer, show whether it is correct with a brief explanation.',
+  },
+];
+
+function buildChatMessagesFromHistory(
+  history: ModelChatMessage[],
+): ChatMessage[] {
+  if (history.length === 0) return [WELCOME_MESSAGE];
+  const next: ChatMessage[] = [WELCOME_MESSAGE];
+  for (const message of history) {
+    if (message.role === 'user') {
+      next.push({ role: 'user', content: message.content });
+      continue;
+    }
+    if (message.role === 'assistant') {
+      next.push({
+        role: 'json',
+        content: 'Generated Output',
+        payload: message.content,
+        payloadLabel: 'JSON',
+      });
+    }
+  }
+  return next;
+}
+
+export function AIChatPage(
+  props: { protocol: Protocol; theme: 'light' | 'dark' },
+) {
+  const { protocol, theme } = props;
+  const conversation = useConversation();
+  const {
+    activeId,
+    buildConversationContext,
+    conversations,
+    createNew,
+    isPersistent,
+    isReady,
+    messages: persistedMessages,
+    previewMessages: persistedPreviewMessages,
+    recordTurn,
+    remove,
+    rename,
+    switchTo,
+  } = conversation;
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [inputValue, setInputValue] = useState<string>('');
   const [renderUrl, setRenderUrl] = useState<string>('');
@@ -344,10 +537,27 @@ export function AIChatPage(props: { protocol: Protocol }) {
     null,
   );
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [deleteConversationId, setDeleteConversationId] = useState<
+    string | null
+  >(null);
+  const [tokenUsage, setTokenUsage] = useState<TokenUsage>({
+    promptTokens: 0,
+    completionTokens: 0,
+    totalTokens: 0,
+  });
+  const [providerSettingsOpen, setProviderSettingsOpen] = useState<boolean>(
+    false,
+  );
+  const [providerSettings, setProviderSettings] = useState<ProviderSettings>(
+    readProviderSettings,
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatMessagesRef = useRef<HTMLDivElement>(null);
+  const followBottomRef = useRef<boolean>(true);
   const previewFrameRef = useRef<HTMLIFrameElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const conversationRef = useRef<ModelChatMessage[]>([]);
+  const actionAbortRef = useRef<AbortController | null>(null);
+  const hydratedActiveIdRef = useRef<string | null>(null);
   const latestPreviewMessagesRef = useRef<unknown[]>([]);
   const {
     containerRef: pageRef,
@@ -366,9 +576,93 @@ export function AIChatPage(props: { protocol: Protocol }) {
     initialSecondarySize: 480,
   });
 
+  const providerRequestOptions = useMemo(
+    () => toProviderRequestOptions(providerSettings),
+    [providerSettings],
+  );
+
+  const hasProviderOverride = Object.keys(providerRequestOptions).length > 0;
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  });
+    try {
+      window.localStorage.setItem(
+        PROVIDER_SETTINGS_STORAGE_KEY,
+        JSON.stringify(
+          {
+            baseURL: providerSettings.baseURL,
+            model: providerSettings.model,
+          } satisfies PersistedProviderSettings,
+        ),
+      );
+    } catch {
+      // Keep the in-memory settings usable even when browser storage is off.
+    }
+  }, [providerSettings]);
+
+  useEffect(() => {
+    // Re-run on every render so streaming text growth & async editor mounts
+    // both keep the chat pinned to the latest message.
+    void messages;
+    void generatedJson;
+    void isGenerating;
+    if (!followBottomRef.current) return;
+    const container = chatMessagesRef.current;
+    if (!container) return;
+    container.scrollTop = container.scrollHeight;
+  }, [messages, generatedJson, isGenerating]);
+
+  useEffect(() => {
+    const container = chatMessagesRef.current;
+    if (!container) return;
+    if (typeof ResizeObserver === 'undefined') return;
+    // Async-mounted CodeMirror editors and streaming JSON expand the container
+    // height after React commits. ResizeObserver fires for those layout shifts
+    // and lets us keep the chat pinned to the bottom while the user is in
+    // "follow" mode.
+    const sizeObserver = new ResizeObserver(() => {
+      if (!followBottomRef.current) return;
+      container.scrollTop = container.scrollHeight;
+    });
+    sizeObserver.observe(container);
+    Array.from(container.children).forEach((child: Element) => {
+      sizeObserver.observe(child);
+    });
+    // Newly inserted message rows must also be observed so their delayed
+    // CodeMirror layout still triggers the bottom-pin behavior. We use a
+    // MutationObserver instead of re-running this effect on every messages
+    // change so it stays a one-time setup.
+    const childObserver = new MutationObserver((entries) => {
+      let inserted = false;
+      for (const entry of entries) {
+        entry.addedNodes.forEach((node) => {
+          if (node instanceof Element) {
+            sizeObserver.observe(node);
+            inserted = true;
+          }
+        });
+      }
+      if (inserted && followBottomRef.current) {
+        container.scrollTop = container.scrollHeight;
+      }
+    });
+    childObserver.observe(container, { childList: true });
+    return () => {
+      sizeObserver.disconnect();
+      childObserver.disconnect();
+    };
+  }, []);
+
+  const handleChatScroll = useCallback(() => {
+    const container = chatMessagesRef.current;
+    if (!container) return;
+    const distanceFromBottom = container.scrollHeight
+      - container.scrollTop
+      - container.clientHeight;
+    // 32px hysteresis: small upward scrolls inside CodeMirror still count as
+    // "at bottom"; once the user is clearly above we stop auto-following so
+    // their reading position is respected.
+    followBottomRef.current = distanceFromBottom <= 32;
+  }, []);
 
   const baseUrl = useMemo(() => window.location.href.replace(/#.*$/, ''), []);
   const previewSource = useMemo(() => {
@@ -377,10 +671,10 @@ export function AIChatPage(props: { protocol: Protocol }) {
       kind: 'a2ui' as const,
       protocol,
       demoUrl: DEFAULT_A2UI_DEMO_URL,
-      theme: 'light' as const,
+      theme,
       messages: previewMessages,
     };
-  }, [previewMessages, protocol]);
+  }, [previewMessages, protocol, theme]);
 
   const publishPreviewMessages = useCallback(
     (nextMessages: unknown[]) => {
@@ -392,7 +686,9 @@ export function AIChatPage(props: { protocol: Protocol }) {
         protocol,
         demoUrl: DEFAULT_A2UI_DEMO_URL,
         messages: nextMessages,
+        theme,
         instant: true,
+        liveAction: nextMessages.length > 0,
       };
 
       setRenderUrl((current) => {
@@ -407,12 +703,39 @@ export function AIChatPage(props: { protocol: Protocol }) {
         return buildRenderUrl(initData, baseUrl);
       });
     },
-    [baseUrl, protocol],
+    [baseUrl, protocol, theme],
   );
 
   const handlePreviewLoad = useCallback(() => {
     publishPreviewMessages(latestPreviewMessagesRef.current);
   }, [publishPreviewMessages]);
+
+  useEffect(() => {
+    if (!isReady || isGenerating) return;
+    if (hydratedActiveIdRef.current === activeId) return;
+    hydratedActiveIdRef.current = activeId;
+    setMessages(buildChatMessagesFromHistory(persistedMessages));
+    setGeneratedJson('');
+    setTokenUsage({
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+    });
+    if (persistedPreviewMessages.length > 0) {
+      publishPreviewMessages(persistedPreviewMessages);
+    } else {
+      latestPreviewMessagesRef.current = [];
+      setPreviewMessages(null);
+      setRenderUrl('');
+    }
+  }, [
+    activeId,
+    isReady,
+    isGenerating,
+    persistedMessages,
+    persistedPreviewMessages,
+    publishPreviewMessages,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -431,8 +754,7 @@ export function AIChatPage(props: { protocol: Protocol }) {
     abortRef.current = controller;
 
     const userMessage: ModelChatMessage = { role: 'user', content: text };
-    const nextConversation = [...conversationRef.current, userMessage];
-    conversationRef.current = nextConversation;
+    const requestConversation = buildConversationContext();
 
     setMessages((prev) => [
       ...prev,
@@ -443,6 +765,11 @@ export function AIChatPage(props: { protocol: Protocol }) {
     setGeneratedJson('');
     setPreviewMessages(null);
     latestPreviewMessagesRef.current = [];
+    setTokenUsage({
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+    });
     setIsGenerating(true);
 
     void (async () => {
@@ -450,7 +777,11 @@ export function AIChatPage(props: { protocol: Protocol }) {
         const response = await window.fetch(getA2UIChatEndpoint(), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: nextConversation }),
+          body: JSON.stringify({
+            messages: [userMessage],
+            conversation: requestConversation,
+            ...providerRequestOptions,
+          }),
           signal: controller.signal,
         });
 
@@ -474,6 +805,15 @@ export function AIChatPage(props: { protocol: Protocol }) {
             });
           },
           publishPreviewMessages,
+          (usage) => {
+            if (controller.signal.aborted) return;
+            setTokenUsage((prev) => ({
+              promptTokens: prev.promptTokens + usage.promptTokens,
+              completionTokens: prev.completionTokens + usage.completionTokens,
+              totalTokens: prev.totalTokens + usage.totalTokens,
+            }));
+          },
+          { publishPartialMessages: false },
         );
 
         if (finalMessages.length === 0) {
@@ -483,10 +823,12 @@ export function AIChatPage(props: { protocol: Protocol }) {
         const assistantContent = latestText.length > 0
           ? latestText
           : JSON.stringify(finalMessages);
-        conversationRef.current = [
-          ...nextConversation,
-          { role: 'assistant', content: assistantContent },
-        ];
+        await recordTurn({
+          userMessage,
+          assistantContent,
+          a2uiMessages: finalMessages,
+          previewMessages: finalMessages,
+        });
         setMessages((prev) => {
           const next = prev.slice();
           next[next.length - 1] = {
@@ -495,11 +837,16 @@ export function AIChatPage(props: { protocol: Protocol }) {
               finalMessages.length === 1 ? '' : 's'
             }.`,
           };
+          next.push({
+            role: 'json',
+            content: 'Generated Output',
+            payload: assistantContent,
+            payloadLabel: 'JSON',
+          });
           return next;
         });
       } catch (e) {
         if (controller.signal.aborted) return;
-        conversationRef.current = nextConversation.slice(0, -1);
         setMessages((prev) => {
           const next = prev.slice();
           next[next.length - 1] = {
@@ -515,7 +862,277 @@ export function AIChatPage(props: { protocol: Protocol }) {
         setIsGenerating(false);
       }
     })();
-  }, [inputValue, isGenerating, publishPreviewMessages]);
+  }, [
+    buildConversationContext,
+    inputValue,
+    isGenerating,
+    publishPreviewMessages,
+    providerRequestOptions,
+    recordTurn,
+  ]);
+
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent<unknown>) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      const msg = e.data as Record<string, unknown>;
+      if (msg.type !== 'A2UI_USER_ACTION') return;
+
+      const action = msg.action as {
+        name?: string;
+        surfaceId?: string;
+        context?: Record<string, unknown>;
+      };
+      const actionName = typeof action?.name === 'string'
+        ? action.name
+        : 'unknown';
+      const payload = {
+        surfaceId: typeof msg.surfaceId === 'string' ? msg.surfaceId : action
+          ?.surfaceId,
+        action,
+      };
+      const userActionMessage: ModelChatMessage = {
+        role: 'user',
+        content: `A2UI_USER_ACTION: ${JSON.stringify(payload)}`,
+      };
+      const requestConversation = buildConversationContext();
+
+      // Abort any in-flight action stream so a stale request can no longer
+      // mutate state or post into the preview iframe after a new action
+      // arrives.
+      actionAbortRef.current?.abort();
+      const controller = new AbortController();
+      actionAbortRef.current = controller;
+      const signal = controller.signal;
+
+      let pendingIndex = -1;
+      let streamingIndex = -1;
+      setMessages((prev) => {
+        const next: ChatMessage[] = [
+          ...prev,
+          {
+            role: 'status' as const,
+            tone: 'info',
+            content: (
+              <>
+                <span className='chatMessageStatusIcon' aria-hidden='true'>
+                  📤
+                </span>
+                <span>
+                  Lynx Preview triggered{' '}
+                  <code className='chatMessageStatusInline'>{actionName}</code>
+                  , forwarding request to agent...
+                </span>
+              </>
+            ),
+          },
+          {
+            role: 'action' as const,
+            content: `⚡ Action: ${actionName}`,
+            payload: action,
+            payloadLabel: 'REQUEST',
+          },
+          {
+            role: 'status' as const,
+            tone: 'pending',
+            content: (
+              <>
+                <span
+                  className='chatMessageActionSpinner'
+                  aria-hidden='true'
+                />
+                <span>Streaming response from agent...</span>
+              </>
+            ),
+          },
+        ];
+        pendingIndex = next.length - 1;
+        return next;
+      });
+
+      void (async () => {
+        try {
+          const response = await window.fetch(getA2UIActionStreamEndpoint(), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'text/event-stream',
+            },
+            body: JSON.stringify({
+              surfaceId: payload.surfaceId,
+              action,
+              conversation: requestConversation,
+              ...providerRequestOptions,
+            }),
+            signal,
+          });
+
+          if (!response.ok) {
+            const errPayload: unknown = await response.json().catch(
+              () => ({}),
+            );
+            throw new Error(normalizeErrorPayload(errPayload));
+          }
+
+          let responseMessages: unknown[] = [];
+          let latestActionText = '';
+
+          await readA2UIResponse(
+            response,
+            (text) => {
+              if (!text) return;
+              if (signal.aborted) return;
+              latestActionText = text;
+              setMessages((prev) => {
+                const next = prev.slice();
+                if (streamingIndex < 0 || streamingIndex >= next.length) {
+                  // First non-empty delta — insert the streaming card right
+                  // after the pending status row so the card appears only
+                  // when there is actual data to show.
+                  const insertAt = pendingIndex >= 0
+                      && pendingIndex < next.length
+                    ? pendingIndex + 1
+                    : next.length;
+                  next.splice(insertAt, 0, {
+                    role: 'action' as const,
+                    content: '✨ Streaming RESPONSE...',
+                    payload: text,
+                    payloadLabel: 'RESPONSE (streaming)',
+                  });
+                  streamingIndex = insertAt;
+                  return next;
+                }
+                next[streamingIndex] = {
+                  ...next[streamingIndex],
+                  payload: text,
+                };
+                return next;
+              });
+            },
+            (msgs) => {
+              if (signal.aborted) return;
+              responseMessages = msgs;
+            },
+            (usage) => {
+              if (signal.aborted) return;
+              setTokenUsage((prev) => ({
+                promptTokens: prev.promptTokens + usage.promptTokens,
+                completionTokens: prev.completionTokens
+                  + usage.completionTokens,
+                totalTokens: prev.totalTokens + usage.totalTokens,
+              }));
+            },
+          );
+
+          if (signal.aborted) return;
+
+          if (responseMessages.length === 0) {
+            throw new Error('Agent returned no A2UI messages');
+          }
+
+          previewFrameRef.current?.contentWindow?.postMessage(
+            { type: 'A2UI_ACTION_RESPONSE', messages: responseMessages },
+            window.location.origin,
+          );
+
+          const count = responseMessages.length;
+          const assistantContent = latestActionText.length > 0
+            ? latestActionText
+            : JSON.stringify(responseMessages);
+          await recordTurn({
+            userMessage: userActionMessage,
+            assistantContent,
+            a2uiMessages: responseMessages,
+            previewMessages: responseMessages,
+          });
+          setMessages((prev) => {
+            const next = prev.slice();
+            if (pendingIndex >= 0 && pendingIndex < next.length) {
+              next[pendingIndex] = {
+                role: 'status' as const,
+                tone: 'success',
+                content: (
+                  <>
+                    <span className='chatMessageStatusIcon' aria-hidden='true'>
+                      📥
+                    </span>
+                    <span>
+                      Agent responded with {count} A2UI{' '}
+                      {count === 1 ? 'message' : 'messages'}.
+                    </span>
+                  </>
+                ),
+              };
+            }
+            const finalCard: ChatMessage = {
+              role: 'action' as const,
+              content: `✅ Applied ${count} ${
+                count === 1 ? 'message' : 'messages'
+              } to Lynx Preview`,
+              payload: responseMessages,
+              payloadLabel: 'RESPONSE',
+            };
+            if (streamingIndex >= 0 && streamingIndex < next.length) {
+              next[streamingIndex] = finalCard;
+            } else {
+              next.push(finalCard);
+            }
+            next.push({
+              role: 'status' as const,
+              tone: 'info',
+              content: (
+                <>
+                  <span className='chatMessageStatusIcon' aria-hidden='true'>
+                    ✨
+                  </span>
+                  <span>UI updated. Ready for the next action.</span>
+                </>
+              ),
+            });
+            return next;
+          });
+        } catch (e) {
+          if (signal.aborted) return;
+          setMessages((prev) => {
+            const next = prev.slice();
+            if (pendingIndex >= 0 && pendingIndex < next.length) {
+              next[pendingIndex] = {
+                role: 'status' as const,
+                tone: 'error',
+                content: (
+                  <>
+                    <span className='chatMessageStatusIcon' aria-hidden='true'>
+                      ❌
+                    </span>
+                    <span>
+                      Action failed: {getErrorMessage(e)}
+                    </span>
+                  </>
+                ),
+              };
+            }
+            // Drop the streaming placeholder card on failure.
+            if (streamingIndex >= 0 && streamingIndex < next.length) {
+              next.splice(streamingIndex, 1);
+            }
+            return next;
+          });
+        } finally {
+          if (actionAbortRef.current === controller) {
+            actionAbortRef.current = null;
+          }
+        }
+      })();
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      // Cancel any in-flight action stream when this effect tears down
+      // (component unmount / hot reload) so its callbacks can't fire.
+      actionAbortRef.current?.abort();
+      actionAbortRef.current = null;
+    };
+  }, [buildConversationContext, providerRequestOptions, recordTurn]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -526,103 +1143,318 @@ export function AIChatPage(props: { protocol: Protocol }) {
     [handleSend],
   );
 
+  const handleCreateConversation = useCallback(() => {
+    void createNew();
+  }, [createNew]);
+
+  const handleSwitchConversation = useCallback((id: string) => {
+    if (isGenerating) return;
+    abortRef.current?.abort();
+    actionAbortRef.current?.abort();
+    void switchTo(id);
+  }, [isGenerating, switchTo]);
+
+  const handleRenameConversation = useCallback((id: string, title: string) => {
+    void rename(id, title);
+  }, [rename]);
+
+  const handleRemoveConversation = useCallback((id: string) => {
+    setDeleteConversationId(id);
+  }, []);
+
+  const deleteConversationTitle = useMemo(
+    () =>
+      conversations.find((item) => item.id === deleteConversationId)?.title
+        ?? 'this conversation',
+    [conversations, deleteConversationId],
+  );
+
+  const handleCancelDeleteConversation = useCallback(() => {
+    setDeleteConversationId(null);
+  }, []);
+
+  const handleConfirmDeleteConversation = useCallback(() => {
+    const id = deleteConversationId;
+    if (!id) return;
+    setDeleteConversationId(null);
+    void remove(id);
+  }, [deleteConversationId, remove]);
+
   return (
     <div
       ref={pageRef}
       className={isPanelResizing ? 'chatPage resizing' : 'chatPage'}
     >
-      <div className='chatPanel' style={chatPanelStyle}>
-        <div className='chatHeader'>
-          <div className='chatHeaderTitleRow'>
-            <h2 className='chatHeaderTitle'>Create</h2>
-            <span className='constructionBadge'>Online Agent</span>
-          </div>
-          <p className='chatHeaderSub'>Describe the UI you want to build</p>
-        </div>
-
-        <div className='chatMessages'>
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`chatMessage ${
-                msg.role === 'user' ? 'chatMessageUser' : 'chatMessageAI'
-              }`}
-            >
-              {msg.content}
-            </div>
-          ))}
-          {generatedJson
-            ? (
-              <div className='chatGeneratedJson'>
-                <div className='chatGeneratedJsonTitle'>
-                  Generated Output
-                  <span className='chatGeneratedJsonBadge'>JSON</span>
-                </div>
-                <CodeMirror
-                  className='chatGeneratedJsonEditor'
-                  value={generatedJson}
-                  extensions={jsonExtensions}
-                  theme='dark'
-                  editable={false}
-                  basicSetup={{
-                    lineNumbers: true,
-                    foldGutter: true,
-                    bracketMatching: true,
-                    closeBrackets: false,
-                    autocompletion: false,
-                  }}
-                />
-              </div>
-            )
-            : null}
-          <div ref={messagesEndRef} />
-        </div>
-
-        <div className='chatInputArea'>
-          <input
-            className='chatInput'
-            type='text'
-            placeholder='Describe the UI you want to generate...'
-            value={inputValue}
-            disabled={isGenerating}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-          <button
-            className='chatSendBtn'
-            type='button'
-            disabled={isGenerating}
-            onClick={handleSend}
-          >
-            {isGenerating ? 'Sending' : 'Send'}
-          </button>
-        </div>
-      </div>
-
-      <PanelResizeHandle
-        isActive={isPanelResizing}
-        isCompactLayout={isCompactLayout}
-        ariaLabel='Resize Create and preview panels'
-        onPointerDown={handlePanelResizeStart}
+      <ConfirmDialog
+        open={deleteConversationId !== null}
+        title='Delete conversation?'
+        description={`"${deleteConversationTitle}" will be removed from this browser. This cannot be undone.`}
+        confirmLabel='Delete'
+        cancelLabel='Keep'
+        tone='danger'
+        onCancel={handleCancelDeleteConversation}
+        onConfirm={handleConfirmDeleteConversation}
       />
 
-      <PreviewPanel
-        className='previewPanel'
-        style={previewPanelStyle}
-        title='Lynx Preview'
-        showPreviewModeSwitch
-        previewSource={previewSource}
-      >
-        <PreviewViewport
-          src={renderUrl}
-          iframeRef={previewFrameRef}
-          onLoad={handlePreviewLoad}
-          retainPreviousFrame
-          emptyIcon='💬'
-          emptyTitle='Send a message to generate UI'
-          emptySubTitle='Generated components will be previewed here'
+      <PageHeader
+        className='chatHeader'
+        titleClassName='chatHeaderTitle'
+        descriptionClassName='chatHeaderSub'
+        title='Create'
+        description='Describe the UI you want to build. Share the structure, interactions, or visual style you want to explore.'
+        topContent={
+          <>
+            <span className='constructionBadge'>
+              {hasProviderOverride ? 'Custom Provider' : 'Online Agent'}
+            </span>
+            {tokenUsage.totalTokens > 0
+              ? (
+                <span
+                  className='chatTokenUsageBadge'
+                  title={`Prompt: ${tokenUsage.promptTokens} · Completion: ${tokenUsage.completionTokens} · Total: ${tokenUsage.totalTokens}`}
+                >
+                  <span className='chatTokenUsageItem'>
+                    Prompt {formatTokenCount(tokenUsage.promptTokens)}
+                  </span>
+                  <span className='chatTokenUsageItem'>
+                    Output {formatTokenCount(tokenUsage.completionTokens)}
+                  </span>
+                  <span className='chatTokenUsageItem chatTokenUsageTotal'>
+                    Total {formatTokenCount(tokenUsage.totalTokens)}
+                  </span>
+                </span>
+              )
+              : null}
+            <button
+              className='chatProviderToggle'
+              type='button'
+              aria-expanded={providerSettingsOpen}
+              onClick={() => setProviderSettingsOpen((open) => !open)}
+            >
+              Provider
+            </button>
+          </>
+        }
+      />
+      {providerSettingsOpen
+        ? (
+          <div className='chatProviderPanel'>
+            <label className='chatProviderField'>
+              <span className='chatProviderLabel'>API Key</span>
+              <input
+                className='chatProviderInput'
+                type='password'
+                autoComplete='off'
+                placeholder='Use server default'
+                value={providerSettings.apiKey}
+                onChange={(e) =>
+                  setProviderSettings((current) => ({
+                    ...current,
+                    apiKey: e.target.value,
+                  }))}
+              />
+            </label>
+            <label className='chatProviderField'>
+              <span className='chatProviderLabel'>Base URL</span>
+              <input
+                className='chatProviderInput'
+                type='url'
+                placeholder='https://api.openai.com/v1'
+                value={providerSettings.baseURL}
+                onChange={(e) =>
+                  setProviderSettings((current) => ({
+                    ...current,
+                    baseURL: e.target.value,
+                  }))}
+              />
+            </label>
+            <label className='chatProviderField'>
+              <span className='chatProviderLabel'>Model</span>
+              <input
+                className='chatProviderInput'
+                type='text'
+                placeholder='gpt-4o-mini'
+                value={providerSettings.model}
+                onChange={(e) =>
+                  setProviderSettings((current) => ({
+                    ...current,
+                    model: e.target.value,
+                  }))}
+              />
+            </label>
+            <button
+              className='chatProviderClearButton'
+              type='button'
+              onClick={() => setProviderSettings(EMPTY_PROVIDER_SETTINGS)}
+            >
+              Reset
+            </button>
+          </div>
+        )
+        : null}
+
+      <div className='chatPageBody'>
+        <ConversationListPanel
+          conversations={conversations}
+          activeId={activeId}
+          disabled={!isReady || isGenerating}
+          isPersistent={isPersistent}
+          onCreate={handleCreateConversation}
+          onSwitch={handleSwitchConversation}
+          onRename={handleRenameConversation}
+          onRemove={handleRemoveConversation}
         />
-      </PreviewPanel>
+
+        <div className='chatPanel' style={chatPanelStyle}>
+          <div
+            className='chatMessages'
+            ref={chatMessagesRef}
+            onScroll={handleChatScroll}
+          >
+            {messages.map((msg, i) => {
+              const baseClassName = (() => {
+                if (msg.role === 'user') return 'chatMessageUser';
+                if (msg.role === 'action') return 'chatMessageAction';
+                if (msg.role === 'json') return 'chatMessageJson';
+                if (msg.role === 'status') {
+                  return `chatMessageStatus chatMessageStatus-${
+                    msg.tone ?? 'info'
+                  }`;
+                }
+                return 'chatMessageAI';
+              })();
+
+              const payloadStr = msg.payload === undefined
+                ? null
+                : safeStringifyPayload(msg.payload);
+
+              const className = msg.role === 'action'
+                  && payloadStr !== null
+                ? `${baseClassName} chatMessageActionExpanded`
+                : baseClassName;
+
+              return (
+                <div key={i} className={`chatMessage ${className}`}>
+                  <div className='chatMessageBody'>{msg.content}</div>
+                  {payloadStr === null
+                    ? null
+                    : (
+                      <div className='chatMessagePayload'>
+                        {msg.payloadLabel
+                          ? (
+                            <div className='chatMessagePayloadLabel'>
+                              {msg.payloadLabel}
+                            </div>
+                          )
+                          : null}
+                        <CodeMirror
+                          className='chatMessagePayloadEditor'
+                          value={payloadStr}
+                          extensions={jsonExtensions}
+                          editable={false}
+                          basicSetup={{
+                            lineNumbers: true,
+                            foldGutter: true,
+                            bracketMatching: true,
+                            closeBrackets: false,
+                            autocompletion: false,
+                          }}
+                        />
+                      </div>
+                    )}
+                </div>
+              );
+            })}
+            {isGenerating && generatedJson
+              ? (
+                <div className='chatGeneratedJson'>
+                  <div className='chatGeneratedJsonTitle'>
+                    Generated Output
+                    <span className='chatGeneratedJsonBadge'>JSON</span>
+                  </div>
+                  <CodeMirror
+                    className='chatGeneratedJsonEditor'
+                    value={generatedJson}
+                    extensions={jsonExtensions}
+                    editable={false}
+                    basicSetup={{
+                      lineNumbers: true,
+                      foldGutter: true,
+                      bracketMatching: true,
+                      closeBrackets: false,
+                      autocompletion: false,
+                    }}
+                  />
+                </div>
+              )
+              : null}
+            <div ref={messagesEndRef} />
+          </div>
+          <div className='chatInputArea'>
+            {messages.length === 1
+              ? (
+                <div className='chatSuggestionsRow'>
+                  {SUGGESTED_PROMPTS.map((p) => (
+                    <button
+                      key={p.label}
+                      type='button'
+                      className='chatSuggestionChip'
+                      disabled={isGenerating}
+                      onClick={() => setInputValue(p.text)}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              )
+              : null}
+            <div className='chatInputRow'>
+              <input
+                className='chatInput'
+                type='text'
+                placeholder='Describe the UI you want to generate...'
+                value={inputValue}
+                disabled={isGenerating}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+              />
+              <button
+                className='chatSendBtn'
+                type='button'
+                disabled={isGenerating}
+                onClick={handleSend}
+              >
+                {isGenerating ? 'Sending' : 'Send'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <PanelResizeHandle
+          isActive={isPanelResizing}
+          isCompactLayout={isCompactLayout}
+          ariaLabel='Resize Create and preview panels'
+          onPointerDown={handlePanelResizeStart}
+        />
+
+        <PreviewPanel
+          className='previewPanel'
+          style={previewPanelStyle}
+          title='Lynx Preview'
+          showPreviewModeSwitch
+          previewSource={previewSource}
+        >
+          <PreviewViewport
+            src={renderUrl}
+            iframeRef={previewFrameRef}
+            onLoad={handlePreviewLoad}
+            retainPreviousFrame
+            emptyIcon='💬'
+            emptyTitle='Send a message to generate UI'
+            emptySubTitle='Generated components will be previewed here'
+          />
+        </PreviewPanel>
+      </div>
     </div>
   );
 }

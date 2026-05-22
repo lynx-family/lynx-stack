@@ -92,6 +92,8 @@ export {
   Column,
   Divider,
   Image,
+  LineChart,
+  PieChart,
   List,
   Modal,
   RadioGroup,

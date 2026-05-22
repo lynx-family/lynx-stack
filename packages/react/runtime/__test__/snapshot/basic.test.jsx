@@ -327,7 +327,19 @@ describe('removeChild', () => {
 
     expect(snapshotInstanceManager.values.size).toMatchInlineSnapshot(`2`);
 
+    const __elements = b.__elements;
+    const __element_root = b.__element_root;
     a.removeChild(b);
+    // Restore b.__element_root and b.__elements
+    // to make `__RemoveElement` receive real parent and child element
+    b.__element_root = __element_root;
+    b.__elements = __elements;
+    expect(() => a.removeChild(b)).toThrowErrorMatchingInlineSnapshot(
+      `[Error: child 4 is not in parent 3, cannot remove it!]`,
+    );
+
+    // suppress the error of `__RemoveElement` called with mismatched parent and child element
+    vi.spyOn(globalThis, '__RemoveElement').mockImplementation(() => {});
     expect(() => a.removeChild(b)).toThrowErrorMatchingInlineSnapshot(
       `[Error: The node to be removed is not a child of this node.]`,
     );

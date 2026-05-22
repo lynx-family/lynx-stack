@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import './PlaybackPage.css';
 
+import { PageHeader } from '../components/PageHeader.js';
 import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
 import { PreviewViewport } from '../components/PreviewViewport.js';
 import { DYNAMIC_PRESETS, STATIC_DEMOS } from '../demos.js';
@@ -315,9 +316,16 @@ export function PlaybackPage(props: { protocol: Protocol; theme: Theme }) {
       className={isPanelResizing ? 'playbackPage resizing' : 'playbackPage'}
     >
       <div className='playbackStreamPanel' style={streamPanelStyle}>
-        <div className='playbackPanelHeader'>
-          <span className='playbackPanelTitle'>Message Stream</span>
-          <span className='playbackPanelBadge'>JSONL</span>
+        <PageHeader
+          className='playbackPanelHeader'
+          titleClassName='playbackPanelTitle'
+          descriptionClassName='playbackPanelSubtitle'
+          title='Playback'
+          description='Stream the scenario step by step and inspect the preview on the right.'
+          topContent={<span className='playbackPanelBadge'>JSONL</span>}
+        />
+
+        <div className='playbackPanelToolbar'>
           <select
             className='playbackScenarioSelect'
             value={scenarioId}

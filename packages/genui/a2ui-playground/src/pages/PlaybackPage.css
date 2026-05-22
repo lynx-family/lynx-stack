@@ -22,27 +22,22 @@
   overflow: hidden;
 }
 
-.playbackPanelHeader {
+.playbackPanelToolbar {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
   border-bottom: 1px solid var(--geist-border);
   background: var(--geist-background);
   flex-shrink: 0;
-  flex-wrap: wrap;
-}
-
-.playbackPanelTitle {
-  font-size: 13px;
-  font-weight: 600;
 }
 
 .playbackPanelBadge {
   font-size: 10px;
   font-weight: 500;
-  padding: 1px 6px;
-  border-radius: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
   background: var(--geist-surface);
   border: 1px solid var(--geist-border);
   color: var(--geist-secondary);
@@ -52,7 +47,7 @@
 
 .playbackScenarioSelect {
   font-size: 12px;
-  padding: 3px 6px;
+  padding: 4px 8px;
   border-radius: 6px;
   border: 1px solid var(--geist-border);
   background: var(--geist-background);

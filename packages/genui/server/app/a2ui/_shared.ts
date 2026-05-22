@@ -2,11 +2,15 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { A2UICatalog } from '../../agent/a2ui-catalog';
-import type { ChatMessage, ChatOptions } from '../../service/a2ui-agent';
+import type {
+  ChatMessage,
+  ChatOptions,
+  ConversationContext,
+} from '../../service/a2ui-agent';
 
 export interface A2UIChatBody {
   messages?: unknown;
-  threadId?: string;
+  conversation?: unknown;
   resourceId?: string;
   model?: string;
   apiKey?: string;
@@ -45,8 +49,12 @@ export const MAX_MESSAGES = parsePositiveInt(
   40,
 );
 
+export const MAX_CONVERSATION_CHARS = parsePositiveInt(
+  process.env.A2UI_MAX_CONVERSATION_CHARS,
+  16_000,
+);
+
 export function pickChatOptions(body: {
-  threadId?: string;
   resourceId?: string;
   model?: string;
   apiKey?: string;
@@ -56,7 +64,6 @@ export function pickChatOptions(body: {
 }): ChatOptions {
   const allowOverride = clientOverridesAllowed();
   return {
-    threadId: body.threadId,
     resourceId: body.resourceId,
     model: body.model,
     apiKey: allowOverride ? body.apiKey : undefined,
@@ -123,6 +130,106 @@ export function validateMessages(
     messages.push(message);
   }
   return { ok: true, messages };
+}
+
+export function validateConversation(
+  value: unknown,
+):
+  | { ok: true; conversation: ConversationContext | undefined }
+  | InvalidMessages
+{
+  if (value === undefined) {
+    return { ok: true, conversation: undefined };
+  }
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'conversation must be {history, dataModel}',
+    };
+  }
+
+  const record = value as {
+    history?: unknown;
+    dataModel?: unknown;
+  };
+  const rawHistory = record.history ?? [];
+  if (!Array.isArray(rawHistory)) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'conversation.history must be an array',
+    };
+  }
+  if (rawHistory.length > MAX_MESSAGES) {
+    return {
+      ok: false,
+      status: 400,
+      error: `too many conversation messages (max ${MAX_MESSAGES})`,
+    };
+  }
+
+  const history: ChatMessage[] = [];
+  let totalChars = 0;
+  for (let i = 0; i < rawHistory.length; i++) {
+    const item = rawHistory[i] as unknown;
+    if (
+      item === null
+      || typeof item !== 'object'
+      || typeof (item as ChatMessage).role !== 'string'
+      || typeof (item as ChatMessage).content !== 'string'
+    ) {
+      return {
+        ok: false,
+        status: 400,
+        error:
+          `conversation.history[${i}] must be {role: string, content: string}`,
+      };
+    }
+    const message = item as ChatMessage;
+    if (
+      message.role !== 'user'
+      && message.role !== 'assistant'
+      && message.role !== 'system'
+    ) {
+      return {
+        ok: false,
+        status: 400,
+        error: `conversation.history[${i}].role is invalid`,
+      };
+    }
+    totalChars += message.content.length;
+    if (totalChars > MAX_CONVERSATION_CHARS) {
+      return {
+        ok: false,
+        status: 413,
+        error:
+          `conversation.history exceeds ${MAX_CONVERSATION_CHARS} characters`,
+      };
+    }
+    history.push(message);
+  }
+
+  const dataModel = record.dataModel ?? {};
+  if (
+    dataModel === null
+    || typeof dataModel !== 'object'
+    || Array.isArray(dataModel)
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'conversation.dataModel must be an object',
+    };
+  }
+
+  return {
+    ok: true,
+    conversation: {
+      history,
+      dataModel: dataModel as Record<string, unknown>,
+    },
+  };
 }
 
 export async function readJsonBodyWithLimit<T>(

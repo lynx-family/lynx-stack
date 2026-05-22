@@ -74,6 +74,8 @@ import {
   Divider,
   Icon,
   Image,
+  LineChart,
+  PieChart,
   List,
   Modal,
   RadioGroup,
@@ -102,6 +104,12 @@ import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json' wit
   type: 'json',
 };
 import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json' with {
+  type: 'json',
+};
+import lineChartManifest from '@lynx-js/a2ui-reactlynx/catalog/LineChart/catalog.json' with {
+  type: 'json',
+};
+import pieChartManifest from '@lynx-js/a2ui-reactlynx/catalog/PieChart/catalog.json' with {
   type: 'json',
 };
 import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json' with {
@@ -139,6 +147,8 @@ export const allBuiltins = defineCatalog([
   [Modal, modalManifest],
   [Button, buttonManifest],
   [Divider, dividerManifest],
+  [LineChart, lineChartManifest],
+  [PieChart, pieChartManifest],
   [TextField, textFieldManifest],
   [CheckBox, checkBoxManifest],
   [Icon, iconManifest],

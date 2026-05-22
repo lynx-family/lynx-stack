@@ -141,7 +141,16 @@ a {
 .brandGroup {
   display: flex;
   align-items: center;
+  gap: 10px;
   flex-shrink: 0;
+}
+
+.brandLogo {
+  width: 26px;
+  height: 26px;
+  display: block;
+  flex: 0 0 auto;
+  object-fit: contain;
 }
 
 .protocolSelect {

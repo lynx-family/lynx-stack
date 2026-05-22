@@ -10,8 +10,10 @@ import {
   Divider,
   Icon,
   Image,
+  LineChart,
   List,
   Modal,
+  PieChart,
   RadioGroup,
   Row,
   Slider,
@@ -37,8 +39,10 @@ import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json'
 import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json';
 import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json';
 import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
+import lineChartManifest from '@lynx-js/a2ui-reactlynx/catalog/LineChart/catalog.json';
 import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
 import modalManifest from '@lynx-js/a2ui-reactlynx/catalog/Modal/catalog.json';
+import pieChartManifest from '@lynx-js/a2ui-reactlynx/catalog/PieChart/catalog.json';
 import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
 import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
 import sliderManifest from '@lynx-js/a2ui-reactlynx/catalog/Slider/catalog.json';
@@ -90,6 +94,8 @@ const ALL_BUILTINS: readonly CatalogInput[] = [
   manifestEntry(Divider, dividerManifest),
   manifestEntry(Icon, iconManifest),
   manifestEntry(CheckBox, checkBoxManifest),
+  manifestEntry(LineChart, lineChartManifest),
+  manifestEntry(PieChart, pieChartManifest),
   manifestEntry(RadioGroup, radioGroupManifest),
   manifestEntry(Slider, sliderManifest),
   manifestEntry(TextField, textFieldManifest),
@@ -106,6 +112,7 @@ interface InitData {
   playbackMode?: boolean;
   theme?: 'light' | 'dark';
   playbackPaused?: boolean;
+  liveAction?: boolean;
 }
 
 type Theme = 'light' | 'dark';
@@ -211,6 +218,12 @@ function normalizeInitDataLike(raw: unknown): InitData {
     out.theme = theme.toLowerCase() as Theme;
   }
 
+  const liveAction = obj.liveAction;
+  if (liveAction !== undefined) {
+    out.liveAction = liveAction === true || liveAction === '1'
+      || liveAction === 1;
+  }
+
   return out;
 }
 
@@ -224,6 +237,7 @@ function mergeInitDataPreferLeft(a: InitData, b: InitData): InitData {
     playbackMode: a.playbackMode ?? b.playbackMode,
     playbackPaused: a.playbackPaused ?? b.playbackPaused,
     theme: a.theme ?? b.theme,
+    liveAction: a.liveAction ?? b.liveAction,
   };
 }
 
@@ -333,14 +347,16 @@ export function App() {
   const playbackTargetCountRef = useRef(0);
 
   // Per-batch delay (ms) the mock agent waits between successive
-  // protocol messages. Configurable via `?speed=2` (faster) etc.
+  // protocol messages. Configurable via `?speed=2` (faster);
+  // `?speed=0` paints the full stream with no delay.
   const streamDelay = useMemo(() => {
     const raw = (globalProps as Record<string, unknown> | null)?.speed
       ?? (rawInitData as Record<string, unknown> | null)?.speed;
     const speed = typeof raw === 'string'
       ? Number(raw)
       : (typeof raw === 'number' ? raw : 1);
-    if (!speed || speed <= 0) return DEFAULT_STREAM_DELAY_MS;
+    if (!Number.isFinite(speed) || speed < 0) return DEFAULT_STREAM_DELAY_MS;
+    if (speed === 0) return 0;
     return DEFAULT_STREAM_DELAY_MS / speed;
   }, [globalProps, rawInitData]);
 
@@ -411,6 +427,18 @@ export function App() {
         : (typeof next === 'string' ? Number(next) : Number.NaN);
       if (!Number.isFinite(nextCount) || nextCount < 0) return;
       setPlaybackTargetCount(Math.floor(nextCount));
+    },
+  );
+
+  useLynxGlobalEventListener(
+    'A2UI_ACTION_RESPONSE',
+    (messages: unknown) => {
+      const currentStore = storeRef.current;
+      if (!currentStore) return;
+      const normalized = normalizeProtocolMessages(messages);
+      for (const msg of normalized) {
+        currentStore.push(msg);
+      }
     },
   );
 
@@ -516,6 +544,14 @@ export function App() {
                     messageStore={store}
                     catalogs={ALL_BUILTINS}
                     onAction={(action) => {
+                      if (effectiveData.liveAction) {
+                        NativeModules.bridge.call(
+                          'A2UI_USER_ACTION',
+                          action as unknown as Record<string, unknown>,
+                          () => undefined,
+                        );
+                        return;
+                      }
                       // Forward user actions to the mock agent — it pushes
                       // the canned response messages back into the same store.
                       void agentRef.current?.onAction(action);

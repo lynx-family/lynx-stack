@@ -1,0 +1,10 @@
+<view>
+  <view id="header">
+
+  </view>
+  <view id="body">
+    <text>
+      <raw-text text="body" />
+    </text>
+  </view>
+</view>

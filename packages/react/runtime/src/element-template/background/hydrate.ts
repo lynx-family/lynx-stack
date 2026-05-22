@@ -2,11 +2,16 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { globalCommitContext, markRemovedSubtreeForCurrentCommit, resetGlobalCommitContext } from './commit-context.js';
+import {
+  globalCommitContext,
+  markRemovedSubtreeForPostDispatchTeardown,
+  resetGlobalCommitContext,
+} from './commit-context.js';
 import { BUILTIN_RAW_TEXT_TEMPLATE_KEY } from './instance.js';
 import type { BackgroundElementTemplateInstance } from './instance.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
+import { hydrationMap } from '../hydration-map.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import type {
   ElementTemplateUpdateCommandStream,
@@ -19,15 +24,20 @@ export function hydrate(
   instance: BackgroundElementTemplateInstance,
 ): ElementTemplateUpdateCommandStream {
   resetGlobalCommitContext();
-  hydrateIntoContext(serialized, instance);
+  if (!hydrateIntoContext(serialized, instance)) {
+    // Hydration protocol errors are not transactional: earlier matched nodes
+    // may already be rebound while discovering a later mismatch. Discard the
+    // native output for this failed pass and let the listener keep refs/events gated.
+    resetGlobalCommitContext();
+  }
   return globalCommitContext.ops;
 }
 
 export function hydrateIntoContext(
   serialized: SerializedElementTemplate,
   instance: BackgroundElementTemplateInstance,
-): void {
-  hydrateInstance(serialized, instance);
+): boolean {
+  return hydrateInstance(serialized, instance);
 }
 
 interface HydrateChildListDiff {
@@ -44,7 +54,7 @@ interface HydrateChildListDiff {
 function hydrateMatchingChildrenAndDiffSlot(
   serializedChildren: SerializedElementTemplate[],
   backgroundChildren: BackgroundElementTemplateInstance[],
-): HydrateChildListDiff {
+): HydrateChildListDiff | null {
   let lastPlacedIndex = 0;
   const result: HydrateChildListDiff = {
     hasChanges: false,
@@ -70,7 +80,9 @@ function hydrateMatchingChildrenAndDiffSlot(
     if (matchedSerialized) {
       serializedCursorByTemplateKey[backgroundChild.type] = candidateCursor + 1;
       const oldIndex = matchedSerialized[1];
-      hydrateInstance(matchedSerialized[0], backgroundChild);
+      if (!hydrateInstance(matchedSerialized[0], backgroundChild)) {
+        return null;
+      }
       if (oldIndex < lastPlacedIndex) {
         result.moves[oldIndex] = { toIndex: i, instance: backgroundChild };
         result.hasChanges = true;
@@ -99,7 +111,7 @@ function hydrateMatchingChildrenAndDiffSlot(
 function hydrateInstance(
   serialized: SerializedElementTemplate,
   instance: BackgroundElementTemplateInstance,
-): void {
+): boolean {
   if (serialized.templateKey !== instance.type) {
     if (__DEV__) {
       lynx.reportError(
@@ -108,59 +120,66 @@ function hydrateInstance(
         ),
       );
     }
-    return;
+    return false;
   }
 
   const handleId = serialized.uid as number;
   if (!bindHydrationHandleId(instance, handleId, serialized.templateKey)) {
-    return;
+    return false;
   }
-  instance.prepareAttributeSlotsForNative();
+  instance.prepareAttributeSlotsForHydration();
   hydrateAttributeSlots(handleId, serialized.attributeSlots ?? [], instance.attributeSlots);
 
   if (serialized.templateKey === BUILTIN_RAW_TEXT_TEMPLATE_KEY) {
-    return;
+    return true;
   }
 
   const serializedElementSlots = serialized.elementSlots ?? [];
+  const backgroundElementSlots = instance.elementSlots;
   // Snapshot hydrates dynamic children through slot-filtered lists. Keeping ET
   // scoped the same way means a cross-slot candidate is a source remove plus a
   // target create/insert, while same-slot reorder can still stay move-like.
-  const slotCount = Math.max(serializedElementSlots.length, instance.elementSlots.length);
+  const slotCount = Math.max(serializedElementSlots.length, backgroundElementSlots.length);
   for (let slotId = 0; slotId < slotCount; slotId += 1) {
     const serializedSlot = serializedElementSlots[slotId];
-    const backgroundSlot = instance.elementSlots[slotId];
+    const backgroundSlot = backgroundElementSlots[slotId];
     if (!serializedSlot && !backgroundSlot) {
       continue;
     }
-    hydrateElementSlot(instance, slotId, serializedSlot ?? []);
+    if (!hydrateElementSlot(instance, slotId, serializedSlot ?? [], backgroundSlot ?? [])) {
+      return false;
+    }
   }
+  return true;
 }
 
 function hydrateElementSlot(
   parent: BackgroundElementTemplateInstance,
   slotId: number,
   serializedChildren: SerializedElementTemplate[],
-): void {
-  const backgroundChildren = parent.elementSlots[slotId] ?? [];
+  backgroundChildren: BackgroundElementTemplateInstance[],
+): boolean {
   if (backgroundChildren.length === 0) {
     for (const serialized of serializedChildren) {
       emitSerializedSubtreeRemove(parent, slotId, serialized);
     }
-    return;
+    return true;
   }
 
   const listDiff = hydrateMatchingChildrenAndDiffSlot(serializedChildren, backgroundChildren);
+  if (listDiff === null) {
+    return false;
+  }
 
   if (!listDiff.hasChanges) {
-    return;
+    return true;
   }
 
   // Hydrate emits patches directly here. Replaying against serialized order
   // keeps insert targets in the main-thread slot without reshaping background.
   const removalIndexes = new Set(listDiff.removals);
   const { insertions, moves } = listDiff;
-  const pendingMoves = new Map<number, BackgroundElementTemplateInstance>();
+  const movesWaitingForInsertionPoint = new Map<number, BackgroundElementTemplateInstance>();
   let serializedCursor = 0;
   let currentSerializedChild = serializedChildren[serializedCursor];
   let newIndex = 0;
@@ -168,18 +187,18 @@ function hydrateElementSlot(
   // Insertions are known before replay starts. Moves are counted only when their
   // old serialized position is reached, so the cursor can keep emitting patches
   // even after all serialized children have been consumed.
-  let pendingInsertOrMovePatchCount = listDiff.insertionCount;
-  while (currentSerializedChild || pendingInsertOrMovePatchCount > 0) {
+  let insertOrMovePatchesWaitingForInsertionPoint = listDiff.insertionCount;
+  while (currentSerializedChild || insertOrMovePatchesWaitingForInsertionPoint > 0) {
     let keepCurrentSerializedChild = false;
     if (currentSerializedChild && removalIndexes.has(oldIndex)) {
       emitSerializedSubtreeRemove(parent, slotId, currentSerializedChild);
     } else if (currentSerializedChild && moves[oldIndex] !== undefined) {
       const move = moves[oldIndex]!;
-      pendingMoves.set(move.toIndex, move.instance);
-      pendingInsertOrMovePatchCount += 1;
+      movesWaitingForInsertionPoint.set(move.toIndex, move.instance);
+      insertOrMovePatchesWaitingForInsertionPoint += 1;
     } else {
       const beforeChildId = currentSerializedChild ? currentSerializedChild.uid as number : 0;
-      const movedChild = pendingMoves.get(newIndex);
+      const movedChild = movesWaitingForInsertionPoint.get(newIndex);
       if (movedChild) {
         keepCurrentSerializedChild = true;
         globalCommitContext.ops.push(
@@ -189,7 +208,7 @@ function hydrateElementSlot(
           movedChild.instanceId,
           beforeChildId,
         );
-        pendingInsertOrMovePatchCount -= 1;
+        insertOrMovePatchesWaitingForInsertionPoint -= 1;
       } else if (insertions[newIndex] !== undefined) {
         const insertedChild = insertions[newIndex]!;
         keepCurrentSerializedChild = true;
@@ -201,7 +220,7 @@ function hydrateElementSlot(
           insertedChild.instanceId,
           beforeChildId,
         );
-        pendingInsertOrMovePatchCount -= 1;
+        insertOrMovePatchesWaitingForInsertionPoint -= 1;
       }
 
       newIndex += 1;
@@ -211,6 +230,7 @@ function hydrateElementSlot(
       oldIndex += 1;
     }
   }
+  return true;
 }
 
 function emitSerializedSubtreeRemove(
@@ -232,7 +252,7 @@ function emitSerializedSubtreeRemove(
     removedSubtreeHandleIds,
   );
   if (existing && !existing.parent) {
-    markRemovedSubtreeForCurrentCommit(existing);
+    markRemovedSubtreeForPostDispatchTeardown(existing);
   }
 }
 
@@ -252,17 +272,15 @@ function collectSerializedSubtreeHandleIdsInto(
 }
 
 function emitCreateSubtree(node: BackgroundElementTemplateInstance): void {
-  for (const slotChildren of node.elementSlots) {
-    /* v8 ignore start */
-    if (!slotChildren) {
-      continue;
-    }
-    /* v8 ignore stop */
-    for (const child of slotChildren) {
-      emitCreateSubtree(child);
-    }
+  // Linked-list walk: slot grouping would be discarded since we recurse into
+  // every child regardless of slot. `emitCreate` does its own single-walk
+  // serialization of `instanceId`s grouped by slot.
+  let child = node.firstChild;
+  while (child) {
+    emitCreateSubtree(child);
+    child = child.nextSibling;
   }
-  node.prepareAttributeSlotsForNative();
+  node.prepareAttributeSlotsForHydration();
   node.emitCreate();
 }
 
@@ -271,9 +289,13 @@ function bindHydrationHandleId(
   handleId: number,
   templateKey: string,
 ): boolean {
+  const oldHandleId = instance.instanceId;
   try {
     backgroundElementTemplateInstanceManager.updateId(instance.instanceId, handleId);
-    instance.markCreateEmittedForHydration();
+    // Ref proxies created before hydrate keep the old background id; resolve it
+    // lazily so user-held proxies continue selecting the hydrated native node.
+    hydrationMap.set(oldHandleId, handleId);
+    instance.markMaterializedByHydration();
     return true;
   } catch (error) {
     if (__DEV__) {

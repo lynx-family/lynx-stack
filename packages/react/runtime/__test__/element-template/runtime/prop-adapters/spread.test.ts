@@ -32,6 +32,7 @@ describe('ElementTemplate spread prop adapter', () => {
       class: 'final',
       id: 'cta',
       name: 'submit',
+      ref: '-1-0',
       bindtap: getEventValue(-1, 0, 'bindtap'),
     });
   });
@@ -56,6 +57,38 @@ describe('ElementTemplate spread prop adapter', () => {
     });
   });
 
+  it('emits ordinary ref markers from spread values', () => {
+    const ref = vi.fn();
+    const prepared = prepareSpreadAttrSlot(-4, 1, {
+      id: 'cta',
+      ref,
+    });
+
+    expect(prepared).toEqual({
+      id: 'cta',
+      ref: '-4-1',
+    });
+  });
+
+  it('emits null for explicit nullish spread refs', () => {
+    expect(prepareSpreadAttrSlot(-4, 1, { ref: null })).toEqual({ ref: null });
+    expect(prepareSpreadAttrSlot(-4, 1, { ref: undefined })).toEqual({ ref: null });
+  });
+
+  it('uses ordinary ref validation for spread refs', () => {
+    const error = 'Elements\' "ref" property should be a function, or an object created by createRef()';
+
+    expect(() => prepareSpreadAttrSlot(-4, 1, { ref: false })).toThrowError(error);
+    expect(() => prepareSpreadAttrSlot(-4, 1, { ref: {} })).toThrowError(error);
+  });
+
+  it('ignores inherited spread refs', () => {
+    const spread = Object.create({ ref: vi.fn() }) as Record<string, unknown>;
+    spread.id = 'cta';
+
+    expect(prepareSpreadAttrSlot(-4, 1, spread)).toEqual({ id: 'cta' });
+  });
+
   it('returns null for removed spread values', () => {
     expect(prepareSpreadAttrSlot(-4, 0, null)).toBeNull();
     expect(prepareSpreadAttrSlot(-4, 0, false)).toBeNull();
@@ -63,7 +96,7 @@ describe('ElementTemplate spread prop adapter', () => {
 
   it('ignores non-host spread props', () => {
     const prepared = prepareSpreadAttrSlot(-5, 0, {
-      ref: vi.fn(),
+      'worklet:ref': vi.fn(),
       'main-thread:ref': vi.fn(),
       'main-thread:bindtap': vi.fn(),
       'main-thread:gesture': {},

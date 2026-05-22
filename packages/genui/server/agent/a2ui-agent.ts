@@ -16,7 +16,6 @@ export interface A2UIAgentOptions extends OpenAIProviderOptions {
 }
 
 interface A2UIAgentRunOptions {
-  threadId?: string | undefined;
   resourceId?: string | undefined;
 }
 
