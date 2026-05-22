@@ -8,15 +8,11 @@ export function App() {
         'C'
     ];
     return /*#__PURE__*/ _jsx(_et_7a8c6_test_1, {
-        children: [
-            items.map((item)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_2, {
-                    attributeSlots: [
-                        item
-                    ],
-                    children: [
-                        item
-                    ]
-                }))
-        ]
+        $0: items.map((item)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_2, {
+                attributeSlots: [
+                    item
+                ],
+                $0: item
+            }))
     });
 }
