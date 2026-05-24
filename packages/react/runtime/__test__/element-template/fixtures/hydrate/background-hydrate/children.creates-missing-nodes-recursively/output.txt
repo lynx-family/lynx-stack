@@ -1,7 +1,7 @@
 Object {
   "stream": Array [
     1,
-    6,
+    4,
     "_et_builtin_raw_text",
     null,
     Array [
@@ -9,7 +9,7 @@ Object {
     ],
     Array [],
     1,
-    4,
+    3,
     "card",
     null,
     Array [
@@ -19,13 +19,13 @@ Object {
     ],
     Array [
       Array [
-        6,
+        4,
       ],
     ],
     3,
     -1,
     0,
-    4,
+    3,
     -2,
     4,
     -1,

@@ -11,6 +11,7 @@ import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
 import lineChartManifest from '@lynx-js/a2ui-reactlynx/catalog/LineChart/catalog.json';
 import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
 import modalManifest from '@lynx-js/a2ui-reactlynx/catalog/Modal/catalog.json';
+import pieChartManifest from '@lynx-js/a2ui-reactlynx/catalog/PieChart/catalog.json';
 import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
 import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
 import sliderManifest from '@lynx-js/a2ui-reactlynx/catalog/Slider/catalog.json';
@@ -613,6 +614,69 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
             variant: 'step',
             xLabel: 'Day',
             yLabel: 'Traffic',
+          },
+        },
+      ],
+      openui: [],
+    },
+  },
+  {
+    name: 'PieChart',
+    category: 'Chart',
+    description:
+      'Renders pie and donut slices with native SVG arcs and a responsive legend.',
+    props: schemaToProps(pieChartManifest),
+    usage: {
+      a2ui: {
+        id: 'revenue-share',
+        component: 'PieChart',
+        variant: 'donut',
+        title: 'Revenue mix',
+        subtitle: 'This month',
+        data: [
+          { name: 'Subscriptions', value: 48, color: '#0057d9' },
+          { name: 'Services', value: 26, color: '#0a8f8f' },
+          { name: 'Licensing', value: 16, color: '#8a5cf6' },
+          { name: 'Other', value: 10, color: '#d92d20' },
+        ],
+        paddingAngle: 2,
+      },
+      openui: {},
+    },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Donut',
+          value: {
+            id: 'donut-revenue-share',
+            component: 'PieChart',
+            variant: 'donut',
+            title: 'Revenue mix',
+            subtitle: 'This month',
+            data: [
+              { name: 'Subscriptions', value: 48, color: '#0057d9' },
+              { name: 'Services', value: 26, color: '#0a8f8f' },
+              { name: 'Licensing', value: 16, color: '#8a5cf6' },
+              { name: 'Other', value: 10, color: '#d92d20' },
+            ],
+            paddingAngle: 2,
+          },
+        },
+        {
+          label: 'Flat pie',
+          value: {
+            id: 'flat-audience-share',
+            component: 'PieChart',
+            variant: 'pie',
+            title: 'Audience split',
+            subtitle: 'Active users by region',
+            data: [
+              { name: 'Asia', value: 42, color: '#0057d9' },
+              { name: 'Europe', value: 28, color: '#0a8f8f' },
+              { name: 'North America', value: 18, color: '#8a5cf6' },
+              { name: 'Other', value: 12, color: '#b26a00' },
+            ],
+            paddingAngle: 3,
           },
         },
       ],

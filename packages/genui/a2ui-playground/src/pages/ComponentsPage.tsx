@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { CATEGORIES, COMPONENT_CATALOG } from '../catalog/a2ui.js';
 import type { ComponentDoc } from '../catalog/a2ui.js';
+import { PageHeader } from '../components/PageHeader.js';
 import { PreviewViewport } from '../components/PreviewViewport.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
@@ -290,20 +291,16 @@ export function ComponentsPage(
   return (
     <div className='compPage'>
       <div className='compCatalogPage'>
-        <div className='compCatalogContent'>
-          <div className='compCatalogHero'>
-            <div className='compCatalogHeroTop'>
-              <h2 className='compCatalogHeaderTitle'>Basic Catalog</h2>
-              <span className='chip'>
-                {COMPONENT_CATALOG.length} components
-              </span>
-            </div>
-            <p className='compCatalogHeaderDesc'>
-              To help developers get started quickly, Lynx team maintains basic
-              components. Based on them, developers can build custom catalog.
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          className='compCatalogContent'
+          titleClassName='compCatalogHeaderTitle'
+          descriptionClassName='compCatalogHeaderDesc'
+          title='Basic Catalog'
+          description='To help developers get started quickly, Lynx team maintains basic components. Based on them, developers can build custom catalog.'
+          topContent={
+            <span className='chip'>{COMPONENT_CATALOG.length} components</span>
+          }
+        />
 
         <div className='compCatalogSplit'>
           <div className='compSidebar compCatalogSidebar'>

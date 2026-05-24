@@ -31,3 +31,17 @@ variables, such as `MIDSCENE_MODEL_BASE_URL`, `MIDSCENE_MODEL_API_KEY`,
 The Playwright test suite uses the real Midscene service when
 `MIDSCENE_MODEL_NAME` is present. Without model configuration, the model-backed
 test is skipped and the error-path test still runs.
+
+The model-backed package test uses the A2UI playground preview server instead
+of a scratch HTTP fixture. It opens the playground's `render.html` demo route
+with `speed=0`, for example
+`/render.html?protocol=a2ui&demoUrl=.%2Fa2ui.web.js&theme=light&demo=recs&speed=0`.
+Prepare the playground artifacts first:
+
+```sh
+pnpm turbo build:lynx --filter a2ui-playground
+pnpm --filter @lynx-js/ui-judge test
+```
+
+The playground dev server binds to a local TCP port, so sandboxed runs need
+local-bind permission.

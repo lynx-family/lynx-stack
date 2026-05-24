@@ -34,9 +34,9 @@ Options:
   --typedoc-json <file>
                        Read an existing TypeDoc JSON project instead of
                        running TypeDoc conversion.
-  --out-dir <dir>     Output directory for component catalog.json files.
-  --version           Print the package version.
-  --help              Print this help message.
+  --out-dir <dir>      Output directory for component catalog.json files.
+  --version            Print the package version.
+  --help               Print this help message.
 
 Defaults:
   --catalog-dir src/catalog
@@ -55,6 +55,8 @@ export function parseCliArgs(args: string[]): CliOptions {
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index]!;
     switch (arg) {
+      case 'catalog-extractor':
+        break;
       case '--catalog-dir':
         options.catalogDirs.push(readValue(args, ++index, arg));
         break;

@@ -93,6 +93,7 @@ export {
   Divider,
   Image,
   LineChart,
+  PieChart,
   List,
   Modal,
   RadioGroup,

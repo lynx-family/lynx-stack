@@ -4,7 +4,11 @@
 
 import { z } from 'zod';
 
-import type { A2UICatalog } from './a2ui-catalog';
+import type {
+  A2UICatalog,
+  A2UIComponentSpec,
+  JsonSchema,
+} from './a2ui-catalog';
 
 const ChildTemplateSchema = z
   .object({
@@ -87,7 +91,7 @@ export const A2UIMessageArray = z.array(A2UIMessage).min(1);
 export type A2UIMessage = z.infer<typeof A2UIMessage>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object';
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 function hasActionName(value: unknown): value is { event: { name: string } } {
@@ -102,6 +106,11 @@ export interface ValidationResult {
   ok: boolean;
   messages: A2UIMessage[];
   errors: string[];
+}
+
+export interface ValidationOptions {
+  requireCreateSurface?: boolean;
+  existingSurfaceIds?: string[];
 }
 
 function stripCodeFenceWrapper(text: string): string {
@@ -204,6 +213,7 @@ export function extractJsonArray(text: string): unknown {
 export function validateA2UIOutput(
   raw: string,
   catalog: A2UICatalog,
+  options: ValidationOptions = {},
 ): ValidationResult {
   const errors: string[] = [];
   const parsed = extractJsonArray(raw);
@@ -242,6 +252,7 @@ export function validateA2UIOutput(
     };
   });
   const knownComponents = new Set(catalog.components.map((c) => c.name));
+  const componentSpecs = new Map(catalog.components.map((c) => [c.name, c]));
   const requiresAction = new Set(
     catalog.components.filter((c) => c.requiresAction).map((c) => c.name),
   );
@@ -251,6 +262,7 @@ export function validateA2UIOutput(
   const firstIsCreate = firstMessage
     && 'createSurface' in firstMessage
     && firstMessage.createSurface;
+  const requireCreateSurface = options.requireCreateSurface ?? true;
   if (firstIsCreate) {
     const catalogId = firstMessage.createSurface.catalogId;
     if (catalogId !== catalog.id) {
@@ -258,11 +270,11 @@ export function validateA2UIOutput(
         `createSurface.catalogId must equal "${catalog.id}"; received "${catalogId}".`,
       );
     }
-  } else {
+  } else if (requireCreateSurface) {
     errors.push('The first message MUST be a createSurface.');
   }
 
-  const surfaces = new Set<string>();
+  const surfaces = new Set<string>(options.existingSurfaceIds ?? []);
   const componentsBySurface = new Map<string, Map<string, A2UIComponent>>();
   const allPaths: { surfaceId: string; path: string }[] = [];
   const providedPaths: { surfaceId: string; path: string }[] = [];
@@ -281,7 +293,13 @@ export function validateA2UIOutput(
         ?? new Map<string, A2UIComponent>();
       for (const rawComponent of msg.updateComponents.components) {
         const comp = rawComponent as A2UIComponent;
-        if (!knownComponents.has(comp.component)) {
+        if (knownComponents.has(comp.component)) {
+          validateComponentAgainstCatalog(
+            comp,
+            componentSpecs.get(comp.component)!,
+            errors,
+          );
+        } else {
           errors.push(
             `Unknown component "${comp.component}" (id=${comp.id}). Allowed: ${
               [...knownComponents].join(', ')
@@ -371,14 +389,8 @@ export function validateA2UIOutput(
   for (const referenced of allPaths) {
     const providedSet = providedBySurface.get(referenced.surfaceId)
       ?? new Set<string>();
-    const hasMatch = [...providedSet].some(
-      (provided) =>
-        referenced.path === provided
-        || provided.startsWith(
-          referenced.path.endsWith('/')
-            ? referenced.path
-            : referenced.path + '/',
-        ),
+    const hasMatch = [...providedSet].some((provided) =>
+      isPathCovered(referenced.path, provided)
     );
     if (!hasMatch) {
       errors.push(
@@ -392,6 +404,39 @@ export function validateA2UIOutput(
     messages: errors.length === 0 ? messages : [],
     errors,
   };
+}
+
+function isPathCovered(referencedPath: string, providedPath: string): boolean {
+  const referencedSegments = normalizePathSegments(referencedPath);
+  const providedSegments = normalizePathSegments(providedPath);
+  const comparableLength = Math.min(
+    referencedSegments.length,
+    providedSegments.length,
+  );
+
+  for (let i = 0; i < comparableLength; i++) {
+    const referenced = referencedSegments[i];
+    const provided = providedSegments[i];
+    if (referenced !== provided && referenced !== '*' && provided !== '*') {
+      return false;
+    }
+  }
+
+  if (providedSegments.length === referencedSegments.length) return true;
+  const referencedExtra = referencedSegments.slice(comparableLength);
+  const providedExtra = providedSegments.slice(comparableLength);
+  return (
+    referencedExtra.length > 0
+    && referencedExtra.every((segment) => segment === '*')
+  )
+    || (
+      providedExtra.length > 0
+      && providedExtra.every((segment) => segment === '*')
+    );
+}
+
+function normalizePathSegments(path: string): string[] {
+  return path.split('/').filter(Boolean);
 }
 
 function collectPaths(node: unknown, acc: string[]): void {
@@ -418,10 +463,14 @@ function collectChildRefs(comp: A2UIComponent): string[] {
       if (typeof c === 'string') refs.push(c);
     }
   } else if (isRecord(comp.children)) {
-    const children = comp.children as { template?: unknown };
-    const template = children.template;
-    if (isRecord(template)) {
-      const childTemplate = template as { componentId?: unknown };
+    const children = comp.children as {
+      componentId?: unknown;
+      template?: unknown;
+    };
+    if (typeof children.componentId === 'string') {
+      refs.push(children.componentId);
+    } else if (isRecord(children.template)) {
+      const childTemplate = children.template as { componentId?: unknown };
       if (typeof childTemplate.componentId === 'string') {
         refs.push(childTemplate.componentId);
       }
@@ -447,12 +496,157 @@ function flattenProvidedPaths(basePath: string, value: unknown): string[] {
   return paths.length > 0 ? paths : [normalized];
 }
 
+function validateComponentAgainstCatalog(
+  comp: A2UIComponent,
+  spec: A2UIComponentSpec,
+  errors: string[],
+): void {
+  const allowed = new Set([
+    'id',
+    'component',
+    ...spec.props.map((p) => p.name),
+  ]);
+  for (const key of Object.keys(comp)) {
+    if (!allowed.has(key)) {
+      errors.push(
+        `Component "${comp.id}" (${comp.component}) has unknown prop "${key}". Allowed props: ${
+          [...allowed].join(', ')
+        }.`,
+      );
+    }
+  }
+
+  for (const prop of spec.props) {
+    const hasValue = Object.prototype.hasOwnProperty.call(comp, prop.name);
+    if (prop.required && !hasValue) {
+      errors.push(
+        `Component "${comp.id}" (${comp.component}) is missing required prop "${prop.name}".`,
+      );
+      continue;
+    }
+    if (!hasValue || !prop.schema) continue;
+    const value = (comp as Record<string, unknown>)[prop.name];
+    const propErrors = validateValueAgainstSchema(
+      value,
+      prop.schema,
+      `${comp.id}.${prop.name}`,
+    );
+    errors.push(...propErrors);
+  }
+}
+
+function validateValueAgainstSchema(
+  value: unknown,
+  schema: JsonSchema,
+  path: string,
+): string[] {
+  if (schema.oneOf && schema.oneOf.length > 0) {
+    const branchErrors = schema.oneOf.map((branch) =>
+      validateValueAgainstSchema(value, branch, path)
+    );
+    if (branchErrors.some((branch) => branch.length === 0)) return [];
+    return [
+      `Prop ${path} does not match any allowed shape: ${
+        branchErrors.map((branch) => branch[0]).filter(Boolean).join(' | ')
+      }`,
+    ];
+  }
+
+  const errors: string[] = [];
+  if (Array.isArray(schema.enum) && !schema.enum.includes(value)) {
+    errors.push(
+      `Prop ${path} must be one of ${
+        schema.enum.map(String).join(', ')
+      }; received ${JSON.stringify(value)}.`,
+    );
+    return errors;
+  }
+
+  switch (schema.type) {
+    case 'string':
+      if (typeof value !== 'string') {
+        errors.push(`Prop ${path} must be a string.`);
+      }
+      return errors;
+    case 'number':
+      if (typeof value !== 'number' || !Number.isFinite(value)) {
+        errors.push(`Prop ${path} must be a finite number.`);
+      }
+      return errors;
+    case 'boolean':
+      if (typeof value !== 'boolean') {
+        errors.push(`Prop ${path} must be a boolean.`);
+      }
+      return errors;
+    case 'array':
+      if (!Array.isArray(value)) {
+        errors.push(`Prop ${path} must be an array.`);
+        return errors;
+      }
+      if (schema.items) {
+        value.forEach((item, index) => {
+          errors.push(
+            ...validateValueAgainstSchema(
+              item,
+              schema.items!,
+              `${path}[${index}]`,
+            ),
+          );
+        });
+      }
+      return errors;
+    case 'object':
+      if (!isRecord(value)) {
+        errors.push(`Prop ${path} must be an object.`);
+        return errors;
+      }
+      validateObjectAgainstSchema(value, schema, path, errors);
+      return errors;
+    default:
+      return errors;
+  }
+}
+
+function validateObjectAgainstSchema(
+  value: Record<string, unknown>,
+  schema: JsonSchema,
+  path: string,
+  errors: string[],
+): void {
+  const properties = schema.properties ?? {};
+  const required = schema.required ?? [];
+  for (const key of required) {
+    if (!Object.prototype.hasOwnProperty.call(value, key)) {
+      errors.push(`Prop ${path} is missing required field "${key}".`);
+    }
+  }
+
+  const additional = schema.additionalProperties;
+  for (const [key, child] of Object.entries(value)) {
+    const childSchema = properties[key];
+    if (childSchema) {
+      errors.push(
+        ...validateValueAgainstSchema(child, childSchema, `${path}.${key}`),
+      );
+      continue;
+    }
+    if (additional === false) {
+      errors.push(`Prop ${path} has unknown field "${key}".`);
+    }
+  }
+}
+
 function walk(prefix: string, value: unknown, acc: string[]): void {
   if (value === null || value === undefined) {
     if (prefix) acc.push(prefix || '/');
     return;
   }
-  if (typeof value !== 'object' || Array.isArray(value)) {
+  if (Array.isArray(value)) {
+    acc.push(prefix || '/');
+    for (const item of value) walk(`${prefix || ''}/*`, item, acc);
+    return;
+  }
+  if (typeof value !== 'object') {
     acc.push(prefix || '/');
     return;
   }

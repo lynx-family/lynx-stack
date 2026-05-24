@@ -1,0 +1,24 @@
+{
+  "Card": {
+    "properties": {
+      "child": {
+        "type": "string"
+      },
+      "variant": {
+        "type": "string",
+        "enum": [
+          "elevated",
+          "outlined",
+          "filled",
+          "ghost"
+        ]
+      },
+      "weight": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "child"
+    ]
+  }
+}

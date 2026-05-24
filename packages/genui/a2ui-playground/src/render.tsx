@@ -13,7 +13,7 @@ import { decodeBase64Url } from './utils/base64url.js';
 import { DEFAULT_A2UI_DEMO_URL } from './utils/demoUrl.js';
 
 interface InitData {
-  protocol?: '0.9';
+  protocol?: '0.9' | 'a2ui' | 'openui';
   messagesUrl?: string;
   messages?: unknown;
   actionMocksUrl?: string;
@@ -107,7 +107,10 @@ function parseInitDataFromQuery(): InitData | null {
     return null;
   }
 
-  const protocolValue = protocol === '0.9' ? '0.9' : undefined;
+  const protocolValue = protocol === '0.9' || protocol === 'a2ui'
+      || protocol === 'openui'
+    ? protocol
+    : undefined;
 
   const speedRaw = params.get('speed');
   const speedVal = speedRaw === null ? undefined : Number(speedRaw);
@@ -118,7 +121,7 @@ function parseInitDataFromQuery(): InitData | null {
     actionMocksUrl: actionMocksUrl ?? undefined,
     demoUrl: demoUrl ?? undefined,
     messages: [], // Default to an empty array
-    speed: speedVal && Number.isFinite(speedVal) && speedVal > 0
+    speed: speedVal !== undefined && Number.isFinite(speedVal) && speedVal >= 0
       ? speedVal
       : undefined,
     instant: instant === '1' ? true : undefined,

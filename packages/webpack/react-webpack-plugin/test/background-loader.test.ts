@@ -57,7 +57,7 @@ function runBackgroundLoader(
 }
 
 describe('background loader', () => {
-  it('uses Preact JSX with the ET runtime package when ET is enabled', async () => {
+  it('compiles ET background output to Preact JSX with multi-slot template ids', async () => {
     const jsxContent = `
       export function App({ name }) {
         return <view>Hello, {name}</view>;
@@ -75,9 +75,13 @@ describe('background loader', () => {
     expect(result.code).not.toContain(
       '"@lynx-js/react/element-template/jsx-runtime"',
     );
-    expect(result.code).toMatch(
-      /"@lynx-js\/react\/element-template(?:\/internal)?"/,
+    expect(result.code).not.toContain(
+      '"@lynx-js/react/element-template/internal"',
     );
+    expect(result.code).not.toContain('"@lynx-js/react/element-template"');
     expect(result.code).not.toContain('"@lynx-js/react/internal"');
+
+    // eg. const _et_e5e28_54282_1 = "_et_e5e28_54282_1";
+    expect(result.code).toMatch(/_et_[a-z0-9]+_/);
   });
 });

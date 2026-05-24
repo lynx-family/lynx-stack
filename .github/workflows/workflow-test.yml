@@ -6,6 +6,16 @@ on:
         required: false
       LHCI_GITHUB_APP_TOKEN:
         required: false
+      MIDSCENE_MODEL_API_KEY:
+        required: false
+      MIDSCENE_MODEL_BASE_URL:
+        required: false
+      MIDSCENE_MODEL_FAMILY:
+        required: false
+      MIDSCENE_MODEL_NAME:
+        required: false
+      MIDSCENE_OPENAI_INIT_CONFIG_JSON:
+        required: false
     inputs:
       runs-on:
         required: true
@@ -18,6 +28,10 @@ on:
         required: false
         type: boolean
         default: false
+      upload-codecov:
+        required: false
+        type: boolean
+        default: true
       web-report-name:
         required: false
         type: string
@@ -26,6 +40,18 @@ on:
         required: false
         type: string
         default: "packages/web-platform/web-core-e2e/playwright-report"
+      artifact-name:
+        required: false
+        type: string
+        default: ""
+      artifact-path:
+        required: false
+        type: string
+        default: ""
+      artifact-if-no-files-found:
+        required: false
+        type: string
+        default: "warn"
       codecov-flags:
         required: false
         type: string
@@ -70,8 +96,7 @@ jobs:
           corepack enable
           pnpm install --frozen-lockfile
       - name: Build
-        run: |
-          pnpm turbo build --summarize
+        run: pnpm turbo build --summarize
       - name: Test # zizmor: ignore[template-injection] The inputs.run is provided by us.
         id: test
         env:
@@ -80,20 +105,36 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          MIDSCENE_MODEL_API_KEY: ${{ secrets.MIDSCENE_MODEL_API_KEY }}
+          MIDSCENE_MODEL_BASE_URL: ${{ secrets.MIDSCENE_MODEL_BASE_URL }}
+          MIDSCENE_MODEL_FAMILY: ${{ secrets.MIDSCENE_MODEL_FAMILY }}
+          MIDSCENE_MODEL_NAME: ${{ secrets.MIDSCENE_MODEL_NAME }}
+          MIDSCENE_OPENAI_INIT_CONFIG_JSON: ${{ secrets.MIDSCENE_OPENAI_INIT_CONFIG_JSON }}
         run: ${{ inputs.run }}
       - name: Upload coverage reports to Codecov
+        if: ${{ inputs.upload-codecov }}
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: ${{ inputs.codecov-flags }}
       - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && inputs.upload-codecov }}
         continue-on-error: true
         uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: ${{ inputs.codecov-flags }}
           override_branch: ${{ github.event_name == 'merge_group' && 'main' || '' }}
+      - name: Upload Artifact
+        if: ${{ always() && !cancelled() && inputs.artifact-name != '' && inputs.artifact-path != '' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: ${{ inputs.artifact-path }}
+          if-no-files-found: ${{ inputs.artifact-if-no-files-found }}
+          retention-days: 1
+          overwrite: true
+          include-hidden-files: true
       - name: Upload Test Result
         if: ${{ inputs.is-web && failure() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

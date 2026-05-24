@@ -53,10 +53,22 @@ export async function POST(req: Request) {
   const body = parsed.body;
 
   if (!body.action || !body.action.name) {
-    return jsonWithCors(req, {
-      ok: false,
-      error: 'action.name is required',
-    });
+    return jsonWithCors(
+      req,
+      { ok: false, error: 'action.name is required' },
+      { status: 400 },
+    );
+  }
+
+  if (!body.surfaceId) {
+    return jsonWithCors(
+      req,
+      {
+        ok: false,
+        error: 'surfaceId is required for action responses',
+      },
+      { status: 400 },
+    );
   }
 
   const validatedConversation = validateConversation(body.conversation);
@@ -96,6 +108,10 @@ export async function POST(req: Request) {
       [userMessage],
       opts,
       validatedConversation.conversation,
+      {
+        requireCreateSurface: false,
+        existingSurfaceIds: body.surfaceId ? [body.surfaceId] : [],
+      },
     );
     return jsonWithCors(req, validated);
   } catch (err: unknown) {
