@@ -8,11 +8,10 @@ import type {
   SerializedElementTemplate,
 } from '../../../../src/element-template/protocol/types.js';
 import { installMockNativePapi } from '../mock/mockNativePapi.js';
-import { compileFixtureSource, type CompiledFixtureTarget } from './compiledFixtureCompiler.js';
-import { loadCompiledFixtureModule } from './compiledFixtureModule.js';
+import type { CompiledFixtureTarget } from './compiledFixtureCompiler.js';
+import { loadCompiledFixturePair } from './compiledFixtureModule.js';
 import { ElementTemplateEnvManager } from './envManager.js';
 import { extractSerializedHydrateInstances } from './hydratePayload.js';
-import { primeCompiledFixtureTemplates } from './compiledFixtureRegistry.js';
 import { renderCompiledFixtureOnBackground, renderCompiledFixtureOnMainThread } from './compiledThreadRunner.js';
 
 interface RunCompiledHydrationScenarioOptions {
@@ -53,9 +52,10 @@ export async function runCompiledHydrationScenario(
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 
   try {
-    const mainArtifact = await compileFixtureSource(sourcePath, { target: mainTarget });
-    primeCompiledFixtureTemplates(mainArtifact);
-    const mainModule = await loadCompiledFixtureModule(mainArtifact);
+    const { backgroundModule, mainModule } = await loadCompiledFixturePair(sourcePath, {
+      backgroundTarget,
+      mainTarget,
+    });
     renderCompiledFixtureOnMainThread(mainModule, envManager, mainProps);
 
     const before = hydrationData[0];
@@ -63,8 +63,6 @@ export async function runCompiledHydrationScenario(
       throw new Error('Missing compiled main-thread hydration data.');
     }
 
-    const backgroundArtifact = await compileFixtureSource(sourcePath, { target: backgroundTarget });
-    const backgroundModule = await loadCompiledFixtureModule(backgroundArtifact);
     const after = renderCompiledFixtureOnBackground(backgroundModule, envManager, backgroundProps);
     if (!after) {
       throw new Error('Missing compiled background root child.');

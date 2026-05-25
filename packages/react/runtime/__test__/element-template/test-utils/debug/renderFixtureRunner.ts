@@ -138,6 +138,7 @@ async function runCompiledRenderFixture(options: {
   elementTemplateRegistry.clear();
   clearEtAttrPlanMap();
   resetTemplateId();
+  clearEtAttrPlanMap();
   globalThis.__USE_ELEMENT_TEMPLATE__ = true;
 
   globalThis.__LEPUS__ = true;
@@ -260,6 +261,7 @@ async function runCompiledRenderFixture(options: {
     expectReportErrorCount(0);
   } finally {
     resetElementTemplateHydrationListener();
+    clearEtAttrPlanMap();
     cleanup();
     globalThis.__USE_ELEMENT_TEMPLATE__ = undefined;
   }
