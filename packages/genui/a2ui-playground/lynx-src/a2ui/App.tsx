@@ -336,6 +336,7 @@ export function App() {
 
   const storeRef = useRef<MessageStore | null>(null);
   const agentRef = useRef<ReturnType<typeof createMockAgent> | null>(null);
+  const pendingLiveMessagesRef = useRef<unknown[] | null>(null);
   const [store, setStore] = useState<MessageStore | null>(null);
   const [error, setError] = useState<string>('');
   const playbackMode = useMemo(
@@ -377,6 +378,15 @@ export function App() {
   const isPlaybackPaused = useMemo(
     () => effectiveData.playbackPaused === true,
     [effectiveData.playbackPaused],
+  );
+  const pushLiveMessagesToStore = useCallback(
+    (targetStore: MessageStore, messages: unknown) => {
+      const normalized = normalizeProtocolMessages(messages);
+      for (const msg of normalized) {
+        targetStore.push(msg);
+      }
+    },
+    [],
   );
   const postPlaybackSync = useCallback((state: MockAgentProgress) => {
     NativeModules.bridge?.call?.(
@@ -445,15 +455,16 @@ export function App() {
   useLynxGlobalEventListener(
     'A2UI_LIVE_MESSAGES',
     (messages: unknown) => {
-      const normalized = normalizeProtocolMessages(messages);
-      const next = createMessageStore();
-      for (const msg of normalized) {
-        next.push(msg);
+      const currentStore = storeRef.current;
+      if (!currentStore) {
+        pendingLiveMessagesRef.current = Array.isArray(messages)
+          ? messages
+          : [messages];
+        return;
       }
+      pushLiveMessagesToStore(currentStore, messages);
       agentRef.current?.stop();
       agentRef.current = null;
-      storeRef.current = next;
-      setStore(next);
     },
   );
 
@@ -508,9 +519,18 @@ export function App() {
       storeRef.current = next;
       agentRef.current = agent;
       setStore(next);
+      const pendingLiveMessages = pendingLiveMessagesRef.current;
+      if (pendingLiveMessages) {
+        pendingLiveMessagesRef.current = null;
+        pushLiveMessagesToStore(next, pendingLiveMessages);
+        agent.stop();
+        agentRef.current = null;
+      }
       syncPlaybackAgent();
       // Begin streaming the demo's initial messages into the buffer.
-      void agent.start();
+      if (agentRef.current === agent) {
+        void agent.start();
+      }
     };
 
     run()
@@ -527,7 +547,13 @@ export function App() {
       storeRef.current = null;
       agentRef.current = null;
     };
-  }, [isInstantPreview, postPlaybackSync, streamConfig, streamDelay]);
+  }, [
+    isInstantPreview,
+    postPlaybackSync,
+    pushLiveMessagesToStore,
+    streamConfig,
+    streamDelay,
+  ]);
 
   return (
     <view

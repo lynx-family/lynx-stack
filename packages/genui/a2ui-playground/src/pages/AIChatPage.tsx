@@ -222,6 +222,14 @@ function getA2UIActionStreamEndpoint(): string {
   );
 }
 
+function targetOriginForFrame(src: string): string {
+  try {
+    return new URL(src, window.location.href).origin;
+  } catch {
+    return window.location.origin;
+  }
+}
+
 function canForwardApiKeyToEndpoint(raw: string): boolean {
   try {
     const endpoint = new URL(raw, window.location.origin);
@@ -310,9 +318,34 @@ function payloadToChunks(value: unknown): unknown[] {
 }
 
 function JsonPayloadViewer(
-  props: { payload: unknown; onCopy: (text: string) => void },
+  props: {
+    payload: unknown;
+    onCopy: (text: string) => void;
+    singleBlock?: boolean;
+  },
 ) {
-  const { onCopy, payload } = props;
+  const { onCopy, payload, singleBlock = false } = props;
+  if (singleBlock) {
+    const payloadStr = safeStringifyPayload(payload);
+    return (
+      <div className='chatMessagePayload'>
+        <div className='chatMessageSingleChunk'>
+          <div className='chatMessageChunkHeader'>
+            <span className='chatMessageChunkIndex'>Request</span>
+            <button
+              type='button'
+              className='chatJsonCopyButton'
+              onClick={() => onCopy(payloadStr)}
+            >
+              Copy
+            </button>
+          </div>
+          <pre className='chatMessageChunkJson'>{payloadStr}</pre>
+        </div>
+      </div>
+    );
+  }
+
   const chunks = payloadToChunks(payload);
 
   return (
@@ -429,6 +462,27 @@ function normalizeA2UIMessages(payload: unknown): unknown[] {
   return [];
 }
 
+function includesCreateSurface(messages: unknown[]): boolean {
+  return messages.some((message) =>
+    Boolean(
+      message
+        && typeof message === 'object'
+        && 'createSurface' in message
+        && (message as { createSurface?: unknown }).createSurface,
+    )
+  );
+}
+
+function buildPreviewMessagesFromHistory(
+  history: ModelChatMessage[],
+): unknown[] {
+  return history.flatMap((message) =>
+    message.role === 'assistant'
+      ? normalizeA2UIMessages(message.content)
+      : []
+  );
+}
+
 function parseCompletedArrayItems(raw: string): unknown[] {
   const trimmed = raw.trimStart();
   if (!trimmed.startsWith('[')) return [];
@@ -540,6 +594,7 @@ async function readA2UIResponse(
       }
 
       if (parsed.event === 'message') {
+        if (!publishPartialMessages) continue;
         const messages = normalizeA2UIMessages(parsed.data);
         if (messages.length > 0) {
           latestMessages = messages;
@@ -615,6 +670,58 @@ function parsePersistedUserAction(content: string): {
   }
 }
 
+function createActionForwardingStatus(actionName: string): ChatMessage {
+  return {
+    role: 'status',
+    tone: 'info',
+    content: (
+      <>
+        <span className='chatMessageStatusIcon' aria-hidden='true'>
+          📤
+        </span>
+        <span>
+          Lynx Preview triggered{' '}
+          <code className='chatMessageStatusInline'>{actionName}</code>,
+          forwarding request to agent...
+        </span>
+      </>
+    ),
+  };
+}
+
+function createAgentRespondedStatus(count: number): ChatMessage {
+  return {
+    role: 'status',
+    tone: 'success',
+    content: (
+      <>
+        <span className='chatMessageStatusIcon' aria-hidden='true'>
+          📥
+        </span>
+        <span>
+          Agent responded with {count} A2UI{' '}
+          {count === 1 ? 'message' : 'messages'}.
+        </span>
+      </>
+    ),
+  };
+}
+
+function createPreviewReadyStatus(): ChatMessage {
+  return {
+    role: 'status',
+    tone: 'info',
+    content: (
+      <>
+        <span className='chatMessageStatusIcon' aria-hidden='true'>
+          ✨
+        </span>
+        <span>UI updated. Ready for the next action.</span>
+      </>
+    ),
+  };
+}
+
 function buildChatMessagesFromHistory(
   history: ModelChatMessage[],
 ): ChatMessage[] {
@@ -625,6 +732,7 @@ function buildChatMessagesFromHistory(
     if (message.role === 'user') {
       const action = parsePersistedUserAction(message.content);
       if (action) {
+        next.push(createActionForwardingStatus(action.name));
         next.push({
           role: 'action',
           content: `⚡ Action: ${action.name}`,
@@ -641,6 +749,7 @@ function buildChatMessagesFromHistory(
       if (previousWasAction) {
         const actionMessages = normalizeA2UIMessages(message.content);
         if (actionMessages.length > 0) {
+          next.push(createAgentRespondedStatus(actionMessages.length));
           next.push({
             role: 'action',
             content: `✅ Applied ${actionMessages.length} ${
@@ -648,6 +757,7 @@ function buildChatMessagesFromHistory(
             } to Lynx Preview`,
             payload: actionMessages,
           });
+          next.push(createPreviewReadyStatus());
           previousWasAction = false;
           continue;
         }
@@ -710,6 +820,7 @@ export function AIChatPage(
   const actionAbortRef = useRef<AbortController | null>(null);
   const hydratedActiveIdRef = useRef<string | null>(null);
   const latestPreviewMessagesRef = useRef<unknown[]>([]);
+  const renderUrlRef = useRef('');
   const {
     containerRef: pageRef,
     handleResizeStart: handlePanelResizeStart,
@@ -745,6 +856,10 @@ export function AIChatPage(
   useEffect(() => {
     providerRequestOptionsRef.current = providerRequestOptions;
   }, [providerRequestOptions]);
+
+  useEffect(() => {
+    renderUrlRef.current = renderUrl;
+  }, [renderUrl]);
 
   useEffect(() => {
     try {
@@ -849,7 +964,7 @@ export function AIChatPage(
       const initData = {
         protocol,
         demoUrl: DEFAULT_A2UI_DEMO_URL,
-        messages: nextMessages,
+        messages: [],
         theme,
         instant: true,
         liveAction: nextMessages.length > 0,
@@ -857,14 +972,16 @@ export function AIChatPage(
 
       setRenderUrl((current) => {
         if (current) {
+          const targetOrigin = targetOriginForFrame(current);
           previewFrameRef.current?.contentWindow?.postMessage(
             { type: 'A2UI_LIVE_MESSAGES', messages: nextMessages },
-            window.location.origin,
+            targetOrigin,
           );
           return current;
         }
 
-        return buildRenderUrl(initData, baseUrl);
+        const nextRenderUrl = buildRenderUrl(initData, baseUrl);
+        return nextRenderUrl;
       });
     },
     [baseUrl, protocol, theme],
@@ -876,7 +993,17 @@ export function AIChatPage(
 
   useEffect(() => {
     if (!isReady || isGenerating) return;
-    if (hydratedActiveIdRef.current === activeId) return;
+    const replayMessages = includesCreateSurface(persistedPreviewMessages)
+      ? persistedPreviewMessages
+      : buildPreviewMessagesFromHistory(persistedMessages);
+
+    if (hydratedActiveIdRef.current === activeId) {
+      if (!renderUrl && replayMessages.length > 0) {
+        publishPreviewMessages(replayMessages);
+      }
+      return;
+    }
+
     hydratedActiveIdRef.current = activeId;
     setMessages(buildChatMessagesFromHistory(persistedMessages));
     setGeneratedJson('');
@@ -885,8 +1012,8 @@ export function AIChatPage(
       completionTokens: 0,
       totalTokens: 0,
     });
-    if (persistedPreviewMessages.length > 0) {
-      publishPreviewMessages(persistedPreviewMessages);
+    if (replayMessages.length > 0) {
+      publishPreviewMessages(replayMessages);
     } else {
       latestPreviewMessagesRef.current = [];
       setPreviewMessages(null);
@@ -899,6 +1026,7 @@ export function AIChatPage(
     persistedMessages,
     persistedPreviewMessages,
     publishPreviewMessages,
+    renderUrl,
   ]);
 
   useEffect(() => {
@@ -980,7 +1108,6 @@ export function AIChatPage(
               totalTokens: prev.totalTokens + usage.totalTokens,
             }));
           },
-          { publishPartialMessages: false },
         );
 
         if (finalMessages.length === 0) {
@@ -1038,6 +1165,10 @@ export function AIChatPage(
     const handleMessage = (e: MessageEvent<unknown>) => {
       if (!e.data || typeof e.data !== 'object') return;
       const msg = e.data as Record<string, unknown>;
+      if (msg.type === 'A2UI_RENDER_READY') {
+        publishPreviewMessages(latestPreviewMessagesRef.current);
+        return;
+      }
       if (msg.type !== 'A2UI_USER_ACTION') return;
 
       const action = msg.action as {
@@ -1072,22 +1203,7 @@ export function AIChatPage(
       setMessages((prev) => {
         const next: ChatMessage[] = [
           ...prev,
-          {
-            role: 'status' as const,
-            tone: 'info',
-            content: (
-              <>
-                <span className='chatMessageStatusIcon' aria-hidden='true'>
-                  📤
-                </span>
-                <span>
-                  Lynx Preview triggered{' '}
-                  <code className='chatMessageStatusInline'>{actionName}</code>
-                  , forwarding request to agent...
-                </span>
-              </>
-            ),
-          },
+          createActionForwardingStatus(actionName),
           {
             role: 'action' as const,
             content: `⚡ Action: ${actionName}`,
@@ -1148,28 +1264,25 @@ export function AIChatPage(
             (text) => {
               if (!text) return;
               if (signal.aborted) return;
-              if (responseMessages.length > 0) return;
               setMessages((prev) => {
                 const next = prev.slice();
-                if (streamingIndex < 0 || streamingIndex >= next.length) {
-                  // First non-empty delta — insert the streaming card right
-                  // after the pending status row so the card appears only
-                  // when there is actual data to show.
-                  const insertAt = pendingIndex >= 0
-                      && pendingIndex < next.length
-                    ? pendingIndex + 1
-                    : next.length;
-                  next.splice(insertAt, 0, {
-                    role: 'action' as const,
-                    content: '✨ Streaming RESPONSE...',
-                    payload: text,
-                  });
-                  streamingIndex = insertAt;
+                if (pendingIndex < 0 || pendingIndex >= next.length) {
                   return next;
                 }
-                next[streamingIndex] = {
-                  ...next[streamingIndex],
-                  payload: text,
+                next[pendingIndex] = {
+                  role: 'status' as const,
+                  tone: 'pending',
+                  content: (
+                    <>
+                      <span
+                        className='chatMessageActionSpinner'
+                        aria-hidden='true'
+                      />
+                      <span>
+                        Streaming response from agent... {text.length} chars
+                      </span>
+                    </>
+                  ),
                 };
                 return next;
               });
@@ -1200,7 +1313,7 @@ export function AIChatPage(
               });
               previewFrameRef.current?.contentWindow?.postMessage(
                 { type: 'A2UI_ACTION_RESPONSE', messages: responseMessages },
-                window.location.origin,
+                targetOriginForFrame(renderUrlRef.current),
               );
             },
             (usage) => {
@@ -1212,7 +1325,6 @@ export function AIChatPage(
                 totalTokens: prev.totalTokens + usage.totalTokens,
               }));
             },
-            { publishPartialMessages: false },
           );
 
           if (signal.aborted) return;
@@ -1222,30 +1334,22 @@ export function AIChatPage(
           }
 
           const count = responseMessages.length;
+          const replayMessages = [
+            ...latestPreviewMessagesRef.current,
+            ...responseMessages,
+          ];
+          latestPreviewMessagesRef.current = replayMessages;
+          setPreviewMessages(replayMessages);
           await recordTurn({
             userMessage: userActionMessage,
             assistantContent: JSON.stringify(responseMessages),
             a2uiMessages: responseMessages,
-            previewMessages: responseMessages,
+            previewMessages: replayMessages,
           });
           setMessages((prev) => {
             const next = prev.slice();
             if (pendingIndex >= 0 && pendingIndex < next.length) {
-              next[pendingIndex] = {
-                role: 'status' as const,
-                tone: 'success',
-                content: (
-                  <>
-                    <span className='chatMessageStatusIcon' aria-hidden='true'>
-                      📥
-                    </span>
-                    <span>
-                      Agent responded with {count} A2UI{' '}
-                      {count === 1 ? 'message' : 'messages'}.
-                    </span>
-                  </>
-                ),
-              };
+              next[pendingIndex] = createAgentRespondedStatus(count);
             }
             const finalCard: ChatMessage = {
               role: 'action' as const,
@@ -1259,18 +1363,7 @@ export function AIChatPage(
             } else {
               next.push(finalCard);
             }
-            next.push({
-              role: 'status' as const,
-              tone: 'info',
-              content: (
-                <>
-                  <span className='chatMessageStatusIcon' aria-hidden='true'>
-                    ✨
-                  </span>
-                  <span>UI updated. Ready for the next action.</span>
-                </>
-              ),
-            });
+            next.push(createPreviewReadyStatus());
             return next;
           });
         } catch (e) {
@@ -1315,7 +1408,7 @@ export function AIChatPage(
       actionAbortRef.current?.abort();
       actionAbortRef.current = null;
     };
-  }, [buildConversationContext, recordTurn]);
+  }, [buildConversationContext, publishPreviewMessages, recordTurn]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -1452,6 +1545,9 @@ export function AIChatPage(
               const isAppliedActionResponse = msg.role === 'action'
                 && typeof msg.content === 'string'
                 && msg.content.startsWith('✅ Applied ');
+              const isActionRequest = msg.role === 'action'
+                && typeof msg.content === 'string'
+                && msg.content.startsWith('⚡ Action:');
 
               const className = msg.role === 'action'
                   && hasPayload
@@ -1480,6 +1576,7 @@ export function AIChatPage(
                       <JsonPayloadViewer
                         payload={msg.payload}
                         onCopy={handleCopyText}
+                        singleBlock={isActionRequest}
                       />
                     )
                     : null}

@@ -70,6 +70,24 @@ function isA2UIComponent(value: unknown): value is Record<string, unknown> & {
     && value.component.length > 0;
 }
 
+function isLoadableImageSource(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  const src = value.trim();
+  if (!src) return false;
+  if (/^(?:https?:|data:image\/|blob:|file:)/iu.test(src)) return true;
+  if (/^(?:\/|\.\/|\.\.\/)/u.test(src)) return true;
+  return /\.(?:avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/iu.test(src);
+}
+
+function isStreamRenderableComponent(
+  component: Record<string, unknown>,
+): boolean {
+  if (component.component !== 'Image') return true;
+  const url = component.url;
+  if (isRecord(url) && typeof url.path === 'string') return true;
+  return isLoadableImageSource(url);
+}
+
 function sniffUpdateComponentsSurfaceId(buffer: string): string | null {
   const updateIndex = buffer.lastIndexOf('"updateComponents"');
   if (updateIndex === -1) return null;
@@ -89,13 +107,39 @@ function placeholderId(id: string): string {
   return `loading_${id}`;
 }
 
-function createPlaceholderComponent(id: string): ComponentRecord {
+function createPlaceholderComponent(
+  id: string,
+  expectedComponent?: string,
+): ComponentRecord {
+  if (expectedComponent === 'Image') {
+    return {
+      id: placeholderId(id),
+      component: 'Image',
+      url: '',
+      variant: 'mediumFeature',
+    };
+  }
+
   return {
     id: placeholderId(id),
     component: 'Text',
     text: 'Loading...',
     variant: 'caption',
   };
+}
+
+function expectedPlaceholderComponent(
+  childId: string,
+  seen: Map<string, ComponentRecord>,
+): string | undefined {
+  const component = seen.get(childId);
+  if (component) return component.component;
+  if (
+    /image|photo|picture|thumbnail|avatar|cover|poster|hero/iu.test(childId)
+  ) {
+    return 'Image';
+  }
+  return undefined;
 }
 
 function collectChildRefs(component: ComponentRecord): string[] {
@@ -144,7 +188,10 @@ function replaceMissingChildRefs(
 
   const replaceRef = (id: string) => {
     if (seen.has(id)) return id;
-    const placeholder = createPlaceholderComponent(id);
+    const placeholder = createPlaceholderComponent(
+      id,
+      expectedPlaceholderComponent(id, seen),
+    );
     placeholders.set(placeholder.id, placeholder);
     return placeholder.id;
   };
@@ -327,6 +374,7 @@ export class A2UIProtocolMessageStreamParser {
       return;
     }
     if (!isA2UIComponent(parsed)) return;
+    if (!isStreamRenderableComponent(parsed)) return;
 
     const surfaceId = sniffUpdateComponentsSurfaceId(
       this.buffer.slice(0, start),
@@ -353,33 +401,7 @@ export class A2UIProtocolMessageStreamParser {
 export function splitA2UIProtocolMessages(
   messages: A2UIMessage[],
 ): A2UIMessage[] {
-  const result: A2UIMessage[] = [];
-  const seenComponentsBySurface = new Map<
-    string,
-    Map<string, ComponentRecord>
-  >();
-  for (const message of messages) {
-    if (!isUpdateComponentsMessage(message)) {
-      result.push(message);
-      continue;
-    }
-
-    const { surfaceId, components } = message.updateComponents;
-    const seen = seenComponentsBySurface.get(surfaceId)
-      ?? new Map<string, ComponentRecord>();
-    for (const component of components) {
-      seen.set(component.id, component as ComponentRecord);
-      seenComponentsBySurface.set(surfaceId, seen);
-      const snapshot = buildReachableComponentSnapshot(seen);
-      if (snapshot.length === 0) continue;
-      result.push({
-        version: 'v0.9',
-        updateComponents: {
-          surfaceId,
-          components: snapshot,
-        },
-      });
-    }
-  }
-  return result;
+  const parser = new A2UIProtocolMessageStreamParser();
+  const replayMessages = parser.push(JSON.stringify(messages));
+  return replayMessages.length > 0 ? replayMessages : messages;
 }

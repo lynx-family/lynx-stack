@@ -113,6 +113,18 @@ export interface ValidationOptions {
   existingSurfaceIds?: string[];
 }
 
+export interface A2UIValidationDebugEntry {
+  error: string;
+  path: string;
+  value: unknown;
+}
+
+export interface A2UIValidationDebugData {
+  parsedType: string;
+  entries: A2UIValidationDebugEntry[];
+  rawText?: string;
+}
+
 function stripCodeFenceWrapper(text: string): string {
   let body = text.trim();
   if (body.startsWith('```')) {
@@ -208,6 +220,33 @@ export function extractJsonArray(text: string): unknown {
   }
 
   return null;
+}
+
+export function getA2UIValidationDebugData(
+  raw: string,
+  errors: string[],
+): A2UIValidationDebugData {
+  const parsed = extractJsonArray(raw);
+  const parsedType = parsed === null
+    ? 'null'
+    : (Array.isArray(parsed)
+      ? 'array'
+      : typeof parsed);
+  const hasJsonParseError = errors.some((error) =>
+    error.startsWith('Response was not valid JSON.')
+  );
+  return {
+    parsedType,
+    rawText: hasJsonParseError ? raw : undefined,
+    entries: errors.map((error) => {
+      const path = extractValidationErrorPath(error);
+      return {
+        error,
+        path,
+        value: valueAtPath(parsed, path),
+      };
+    }),
+  };
 }
 
 export function validateA2UIOutput(
@@ -494,6 +533,27 @@ function flattenProvidedPaths(basePath: string, value: unknown): string[] {
   const paths: string[] = [];
   walk(normalized === '/' ? '' : normalized, value, paths);
   return paths.length > 0 ? paths : [normalized];
+}
+
+function extractValidationErrorPath(error: string): string {
+  const match = /^Schema violation at ([^:]+):/u.exec(error);
+  return match?.[1] ?? '<root>';
+}
+
+function valueAtPath(value: unknown, path: string): unknown {
+  if (path === '<root>' || path === '') return value;
+  let current = value;
+  for (const segment of path.split('.')) {
+    if (Array.isArray(current)) {
+      const index = Number(segment);
+      if (!Number.isInteger(index)) return undefined;
+      current = current[index];
+      continue;
+    }
+    if (!isRecord(current)) return undefined;
+    current = current[segment];
+  }
+  return current;
 }
 
 function validateComponentAgainstCatalog(

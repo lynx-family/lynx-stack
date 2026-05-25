@@ -781,6 +781,14 @@
   flex-shrink: 0;
 }
 
+.chatMessageSingleChunk {
+  margin: 10px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  overflow: hidden;
+  background: var(--geist-background);
+}
+
 .chatMessageChunkHeader {
   display: flex;
   align-items: center;
