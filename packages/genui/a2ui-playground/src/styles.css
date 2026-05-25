@@ -338,12 +338,12 @@ a {
   min-height: 0;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
 }
 
 .phoneFrame {
-  width: 300px;
-  height: 560px;
+  width: min(330px, 100%);
+  height: min(680px, 100%);
   box-sizing: border-box;
   flex: 0 0 auto;
   padding: 10px 10px 12px;
@@ -674,7 +674,8 @@ html[data-theme="dark"] .phoneHomeIndicator {
 
 /* ── Preview Panels (shared) ── */
 .previewPanel {
-  width: 420px;
+  width: min(520px, 100%);
+  min-width: 0;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -762,10 +763,11 @@ html[data-theme="dark"] .phoneHomeIndicator {
 
 .previewPanelBody {
   flex: 1;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 16px;
   overflow: hidden;
 }
 
@@ -785,7 +787,7 @@ html[data-theme="dark"] .phoneHomeIndicator {
   border-top: 1px solid var(--geist-border);
   background: var(--geist-background);
   font-size: 12px;
-  min-height: 42px;
+  min-height: 36px;
   overflow-x: auto;
 }
 
@@ -950,20 +952,22 @@ html[data-theme="dark"] .phoneHomeIndicator {
   flex-shrink: 0;
   border-top: 1px solid var(--geist-border);
   background: var(--geist-background);
-  padding: 16px;
+  padding: 10px 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+  max-height: 132px;
+  overflow-y: auto;
 }
 
 .previewQrContent {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
 }
 
 .previewQrContentAlt {
-  padding-top: 12px;
+  padding-top: 8px;
   border-top: 1px dashed var(--geist-border);
 }
 
@@ -973,15 +977,15 @@ html[data-theme="dark"] .phoneHomeIndicator {
 }
 
 .previewQrTitle {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .previewQrDesc {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--geist-secondary);
-  line-height: 1.5;
+  line-height: 1.35;
 }
 
 .previewQrUrl {
@@ -1031,8 +1035,8 @@ html[data-theme="dark"] .phoneHomeIndicator {
 }
 
 .previewQrPlaceholder {
-  width: 80px;
-  height: 80px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--geist-radius-md);
   border: 1px dashed var(--geist-border);
   display: flex;
@@ -1065,6 +1069,11 @@ html[data-theme="dark"] .phoneHomeIndicator {
 }
 /* ── Responsive ── */
 @media (max-width: 980px) {
+  .previewPanel {
+    width: 100%;
+    flex-shrink: 1;
+  }
+
   .tabNav {
     gap: 0;
   }
@@ -1072,5 +1081,57 @@ html[data-theme="dark"] .phoneHomeIndicator {
   .tabNavItem {
     padding: 6px 8px;
     font-size: 12px;
+  }
+
+  .previewPanelBody {
+    min-height: 460px;
+  }
+
+  .previewQrSection {
+    max-height: 120px;
+  }
+}
+
+@media (max-width: 720px) {
+  .topBar {
+    gap: 8px;
+    padding: 0 10px;
+  }
+
+  .brand {
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .brandLogo {
+    width: 22px;
+    height: 22px;
+  }
+
+  .protocolLabel {
+    display: none;
+  }
+
+  .protocolSelect {
+    max-width: 120px;
+  }
+
+  .previewPanelBody {
+    padding: 10px;
+    min-height: 420px;
+  }
+
+  .phoneWrap {
+    padding: 10px;
+  }
+
+  .previewQrContent {
+    align-items: flex-start;
+  }
+
+  .previewQrDesc {
+    display: none;
   }
 }
