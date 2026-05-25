@@ -115,7 +115,7 @@ export function pluginQRCode(
   options?: PluginQRCodeOptions,
 ): RsbuildPlugin {
   const defaultPluginOptions = {
-    schema: (url) => ({ nav: url }),
+    schema: (url) => ({ fullscreen: url }),
     fullscreen: true,
   } satisfies Required<PluginQRCodeOptions>
 
