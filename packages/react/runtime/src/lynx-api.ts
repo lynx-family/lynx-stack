@@ -6,6 +6,8 @@ import { createContext, createElement } from 'preact/compat';
 import { useState } from 'preact/hooks';
 import type { Consumer, FC, ReactNode } from 'react';
 
+import { createGlobalProps } from './core/globalProps.js';
+import type { GlobalProps } from './core/globalProps.js';
 import { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListener.js';
 import { factory, withInitDataInState } from './core/initData.js';
 import { __root } from './root.js';
@@ -189,65 +191,14 @@ export const useInitData: () => InitData = /* @__PURE__ */ _InitData.use();
  */
 export const useInitDataChanged: (callback: (data: InitData) => void) => void = /* @__PURE__ */ _InitData.useChanged();
 
-/**
- * The interface you can extends so that the `useGlobalProps` returning value can be customized
- *
- * @public
- */
-export interface GlobalProps {}
+export type { GlobalProps } from './core/globalProps.js';
 
-const _GlobalProps = typeof __GLOBAL_PROPS_MODE__ !== 'undefined' && __GLOBAL_PROPS_MODE__ === 'event'
-  ? /* @__PURE__ */ factory<GlobalProps>(
-    {
-      createContext,
-      useState,
-      createElement,
-      useLynxGlobalEventListener,
-    },
-    '__globalProps',
-    'onGlobalPropsChanged',
-  )
-  : /* @__PURE__ */ createFallbackGlobalProps();
-
-function warnGlobalPropsMode() {
-  if (typeof __LEPUS__ !== 'undefined' && !__LEPUS__ && typeof __DEV__ !== 'undefined' && __DEV__) {
-    console.warn(
-      `No need to use this API when 'globalPropsMode' is not 'event', `
-        + `updates will be triggered automatically by full re-render. `
-        + `Please set 'globalPropsMode' to 'event' to enable optimized updates.`,
-    );
-  }
-}
-
-function createFallbackGlobalProps() {
-  return {
-    Provider: () => {
-      return ({ children }: { children?: ReactNode | undefined }) => {
-        warnGlobalPropsMode();
-        return children;
-      };
-    },
-    Consumer: () => {
-      return ({ children }: { children: (data: GlobalProps) => ReactNode }) => {
-        warnGlobalPropsMode();
-        return children(lynx.__globalProps);
-      };
-    },
-    use: () => {
-      return (): GlobalProps => {
-        warnGlobalPropsMode();
-        return lynx.__globalProps;
-      };
-    },
-    useChanged: () => {
-      return (callback: (data: GlobalProps) => void): void => {
-        if (!__LEPUS__) {
-          useLynxGlobalEventListener('onGlobalPropsChanged', callback);
-        }
-      };
-    },
-  };
-}
+const _GlobalProps = /* @__PURE__ */ createGlobalProps<GlobalProps>({
+  createContext,
+  useState,
+  createElement,
+  useLynxGlobalEventListener,
+});
 
 /**
  * The {@link https://react.dev/reference/react/createContext#provider | Provider} Component that provide `lynx.__globalProps`,

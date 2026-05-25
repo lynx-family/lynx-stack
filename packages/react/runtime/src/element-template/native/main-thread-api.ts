@@ -11,7 +11,7 @@ function injectCalledByNative(): void {
   const calledByNative: LynxCallByNative = {
     renderPage,
     updatePage,
-    updateGlobalProps: function(): void {},
+    updateGlobalProps,
     getPageData: function() {
       return null;
     },
@@ -40,6 +40,14 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
 
   applyUpdatePageData(data, options);
   __FlushElementTree(__page, options ?? {});
+}
+
+function updateGlobalProps(_data: unknown, options?: UpdatePageOption): void {
+  if (options) {
+    __FlushElementTree(__page, options);
+  } else {
+    __FlushElementTree();
+  }
 }
 
 /**
