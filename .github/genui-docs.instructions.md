@@ -8,4 +8,6 @@ Assume the reader knows React but does not know A2UI. Introduce A2UI as a JSON m
 
 When documenting GenUI transport implementations, describe the transport as the adapter between product state and `MessageStore`. Cover both REST and SSE paths, make the SSE `done` event the final validated render source, call out `AbortController` cancellation for prompt and action requests, and warn against passing provider credentials or endpoint overrides from untrusted browser clients.
 
+When documenting GenUI CLI usage, explain both command families: `generate catalog` for TypeScript-derived catalog artifacts and `generate prompt` for A2UI system prompts. Mention the direct `a2ui-catalog-extractor` path only as the lower-level extractor or TypeDoc JSON integration path, and remind readers that generated prompts and client catalogs must agree on component names and props.
+
 Avoid literal wording such as "recommended shape" / "推荐形状" in user-facing docs. Prefer "interface best practice", "implementation pattern", "接口设计最佳实践", or other product-facing phrases that read naturally to React developers.

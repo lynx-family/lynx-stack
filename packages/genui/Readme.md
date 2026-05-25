@@ -65,6 +65,8 @@ has already allowed.
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `a2ui`                   | `@lynx-js/a2ui-reactlynx`, the ReactLynx renderer for A2UI v0.9. It provides `<A2UI>`, `MessageStore`, catalog APIs, built-in components, and protocol helpers.                        |
 | `a2ui-catalog-extractor` | A TypeDoc-powered CLI that turns TypeScript interfaces marked with `@a2uiCatalog` into `catalog.json` schemas.                                                                         |
+| `a2ui-cli`               | `@lynx-js/a2ui-cli`, a single command-line entry point for generating catalog artifacts and A2UI system prompts.                                                                       |
+| `a2ui-prompt`            | `@lynx-js/a2ui-prompt`, prompt construction utilities used by the CLI and backend integrations.                                                                                        |
 | `server`                 | A Next.js agent service. It builds the A2UI prompt, calls an OpenAI-compatible model, validates output, repairs malformed turns, resolves image queries, and exposes chat/action APIs. |
 | `a2ui-playground`        | A browser and Lynx preview environment for demos, component browsing, AI chat generation, playback, actions, and QR-based native preview.                                              |
 | `openui`                 | A ReactLynx renderer and catalog bridge for OpenUI language experiments through `@openuidev/lang-core`.                                                                                |
@@ -127,7 +129,7 @@ pnpm install --frozen-lockfile
 Build the core GenUI packages:
 
 ```sh
-pnpm turbo build --filter @lynx-js/a2ui-catalog-extractor --filter @lynx-js/a2ui-reactlynx
+pnpm turbo build --filter @lynx-js/a2ui-catalog-extractor --filter @lynx-js/a2ui-prompt --filter @lynx-js/a2ui-reactlynx
 ```
 
 For broad test confidence in this monorepo, run the repository-level
@@ -218,7 +220,80 @@ Production note: minifiers can rewrite function names. Set
 `ProductTile.displayName = 'ProductTile'` or pair custom components with their
 manifest so the protocol name stays stable.
 
-### 2. Agent: Ask For UI, Receive Validated Messages
+### 2. CLI: Generate Catalogs And Prompts
+
+The CLI is the build-time bridge between React source code and the agent. Use
+it when you want repeatable artifacts instead of hand-maintained JSON:
+
+- `generate catalog` reads TypeScript catalog contracts and writes
+  `dist/catalog/<Component>/catalog.json`.
+- `generate prompt` reads generated catalog artifacts and writes an A2UI system
+  prompt for an agent.
+
+For local workspace development, use the package bin after dependencies are
+installed:
+
+```sh
+pnpm exec a2ui-cli generate catalog \
+  --catalog-dir src/catalog \
+  --source src/functions \
+  --out-dir dist/catalog
+
+pnpm exec a2ui-cli generate prompt \
+  --catalog-dir dist/catalog \
+  --catalog-id https://example.com/catalogs/custom/v1/catalog.json \
+  --out dist/a2ui-system-prompt.txt
+```
+
+For consumers outside the monorepo, the published package exposes the same
+entry point:
+
+```sh
+npx @lynx-js/a2ui-cli@latest generate catalog --catalog-dir src/catalog --out-dir dist/catalog
+npx @lynx-js/a2ui-cli@latest generate prompt --out dist/a2ui-system-prompt.txt
+```
+
+Use `a2ui-catalog-extractor` directly when you only need catalog extraction or
+want to integrate with an existing TypeDoc JSON pipeline:
+
+```sh
+pnpm exec a2ui-catalog-extractor \
+  --typedoc-json typedoc.json \
+  --out-dir dist/catalog
+```
+
+Key options:
+
+| Option                  | Use                                                                          |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| `--catalog-dir <dir>`   | Scan catalog component interfaces, or read generated artifacts for prompts.  |
+| `--source <path>`       | Add source files or directories, commonly for catalog functions. Repeatable. |
+| `--typedoc-json <file>` | Reuse an existing TypeDoc JSON project instead of running TypeDoc.           |
+| `--out-dir <dir>`       | Write generated catalog artifacts. Defaults to `dist/catalog`.               |
+| `--catalog-id <id>`     | Set the catalog id expected in generated `createSurface` messages.           |
+| `--out <file>`          | Write the generated prompt to a file instead of stdout.                      |
+| `--appendix <text>`     | Add extra agent instructions to the generated prompt.                        |
+
+Operational notes:
+
+- Keep generated catalog artifacts in your package build output and commit API
+  reports or generated manifests when the package contract expects them.
+- Regenerate catalog artifacts whenever a catalog-facing props interface or
+  `@a2uiFunction` definition changes.
+- `generate prompt` uses the built-in A2UI basic catalog when `--catalog-dir`
+  is omitted; pass `--catalog-dir` for custom generated catalogs.
+- The generated prompt and the client catalog must describe the same component
+  names and props. A mismatch can pass server validation but render as
+  unsupported on the client.
+- `functions` and `theme` are not inferred from component props. Add them
+  explicitly through generated function definitions or prompt/catalog helpers.
+
+See [`a2ui-cli`](./a2ui-cli/README.md),
+[`a2ui-catalog-extractor`](./a2ui-catalog-extractor/README.md), and
+[`a2ui-prompt`](./a2ui-prompt/README.md) for the full command and API
+reference.
+
+### 3. Agent: Ask For UI, Receive Validated Messages
 
 Start the local agent service:
 
@@ -310,7 +385,7 @@ Useful environment variables:
 | `A2UI_RATE_LIMIT_PER_MIN`    | Per-client request limit. Defaults to `20`.                                                                 |
 | `A2UI_ALLOW_CLIENT_OVERRIDE` | Set to `1` only for trusted local experiments that pass API keys, base URLs, or model ids from the browser. |
 
-### 3. Client: Render Messages Like React State
+### 4. Client: Render Messages Like React State
 
 The client fetches agent output and pushes each message into the store.
 `<A2UI>` does the protocol processing and renders the matching ReactLynx
@@ -754,5 +829,7 @@ GenUI is designed around a few commitments:
   workflows.
 
 For implementation details, start with the package-level READMEs in
-[`a2ui`](./a2ui/README.md), [`a2ui-catalog-extractor`](./a2ui-catalog-extractor/README.md),
-and [`ui-judge`](./ui-judge/README.md).
+[`a2ui`](./a2ui/README.md), [`a2ui-cli`](./a2ui-cli/README.md),
+[`a2ui-catalog-extractor`](./a2ui-catalog-extractor/README.md),
+[`a2ui-prompt`](./a2ui-prompt/README.md), and
+[`ui-judge`](./ui-judge/README.md).

@@ -56,6 +56,8 @@ function WeatherCard(props: WeatherCardProps) {
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `a2ui`                   | `@lynx-js/a2ui-reactlynx`，面向 A2UI v0.9 的 ReactLynx 渲染器，提供 `<A2UI>`、`MessageStore`、Catalog API、内置组件和协议辅助能力。 |
 | `a2ui-catalog-extractor` | 基于 TypeDoc 的 CLI，可将带有 `@a2uiCatalog` 标记的 TypeScript interface 转换成 `catalog.json` schema。                             |
+| `a2ui-cli`               | `@lynx-js/a2ui-cli`，统一的命令行入口，用来生成 catalog artifacts 和 A2UI system prompt。                                           |
+| `a2ui-prompt`            | `@lynx-js/a2ui-prompt`，供 CLI 和后端集成使用的 prompt 构建工具。                                                                   |
 | `server`                 | Next.js Agent 服务，构建 A2UI prompt，请求 OpenAI 兼容模型，校验输出，自动修复异常响应，解析图片查询，并暴露 chat/action API。      |
 | `a2ui-playground`        | 用于浏览器和 Lynx 预览的实验台，支持 demo、组件浏览、AI 对话生成、回放、action 流程和二维码原生预览。                               |
 | `openui`                 | 基于 `@openuidev/lang-core` 的 OpenUI 语言实验渲染器和 Catalog 桥接层。                                                             |
@@ -112,7 +114,7 @@ pnpm install --frozen-lockfile
 构建核心 GenUI 包：
 
 ```sh
-pnpm turbo build --filter @lynx-js/a2ui-catalog-extractor --filter @lynx-js/a2ui-reactlynx
+pnpm turbo build --filter @lynx-js/a2ui-catalog-extractor --filter @lynx-js/a2ui-prompt --filter @lynx-js/a2ui-reactlynx
 ```
 
 如果要获得完整测试信心，请遵循仓库规则：先运行根级 `pnpm turbo build`，再运行测试。
@@ -186,8 +188,8 @@ export const catalogHandshake = serializeCatalog(uiCatalog);
 export const store = createMessageStore();
 ```
 
-当你自己的传输层或 Agent 消费客户端握手形状时，可以使用 `catalogHandshake`。当前内置 server 会从
-`server/agent/a2ui-catalog.ts` 里的 `A2UICatalog` 形状构建 prompt，因此如果要把自定义 client catalog
+当你自己的传输层或 Agent 消费客户端握手格式时，可以使用 `catalogHandshake`。当前内置 server 会从
+`server/agent/a2ui-catalog.ts` 里的 `A2UICatalog` 格式构建 prompt，因此如果要把自定义 client catalog
 传给该服务，需要显式转换层，或者扩展 server 侧 Catalog。
 
 包里故意没有导出 “all built-ins” 常量。一次性引入所有组件会让包体成本不可见，也会削弱 tree-shaking。确实需要全量内置组件时，可以参考
@@ -196,7 +198,69 @@ export const store = createMessageStore();
 生产环境注意：压缩工具可能改写函数名。请设置 `ProductTile.displayName = 'ProductTile'`，或将自定义组件与 manifest
 配对，确保协议里的组件名稳定。
 
-### 2. Agent：描述 UI，收到已校验消息
+### 2. CLI：生成 Catalog 和 Prompt
+
+CLI 是 React 源码和 Agent 之间的构建期桥梁。需要稳定、可重复的 artifacts 时，不要手写 JSON，交给 CLI 生成：
+
+- `generate catalog` 读取 TypeScript catalog 契约，并写出
+  `dist/catalog/<Component>/catalog.json`。
+- `generate prompt` 读取生成好的 catalog artifacts，并为 Agent 写出 A2UI system
+  prompt。
+
+在 monorepo 本地开发时，安装依赖后直接使用 workspace bin：
+
+```sh
+pnpm exec a2ui-cli generate catalog \
+  --catalog-dir src/catalog \
+  --source src/functions \
+  --out-dir dist/catalog
+
+pnpm exec a2ui-cli generate prompt \
+  --catalog-dir dist/catalog \
+  --catalog-id https://example.com/catalogs/custom/v1/catalog.json \
+  --out dist/a2ui-system-prompt.txt
+```
+
+仓库外消费者可以使用发布包提供的同一个入口：
+
+```sh
+npx @lynx-js/a2ui-cli@latest generate catalog --catalog-dir src/catalog --out-dir dist/catalog
+npx @lynx-js/a2ui-cli@latest generate prompt --out dist/a2ui-system-prompt.txt
+```
+
+如果只需要 catalog extraction，或者你已经有 TypeDoc JSON 产物，可以直接使用 `a2ui-catalog-extractor`：
+
+```sh
+pnpm exec a2ui-catalog-extractor \
+  --typedoc-json typedoc.json \
+  --out-dir dist/catalog
+```
+
+常用选项：
+
+| 选项                    | 用途                                                           |
+| ----------------------- | -------------------------------------------------------------- |
+| `--catalog-dir <dir>`   | 扫描 catalog 组件接口；生成 prompt 时则读取已生成 artifacts。  |
+| `--source <path>`       | 增加要扫描的源码文件或目录，常用于 catalog functions。可重复。 |
+| `--typedoc-json <file>` | 复用已有 TypeDoc JSON project，不重新运行 TypeDoc。            |
+| `--out-dir <dir>`       | 写出生成的 catalog artifacts，默认 `dist/catalog`。            |
+| `--catalog-id <id>`     | 设置生成的 `createSurface` 消息中要求使用的 catalog id。       |
+| `--out <file>`          | 将生成的 prompt 写入文件，而不是输出到 stdout。                |
+| `--appendix <text>`     | 为生成的 prompt 添加额外 Agent 指令。                          |
+
+实现注意事项：
+
+- 将生成的 catalog artifacts 放进包的构建输出；如果包契约依赖这些 manifests，记得随变更一起提交。
+- catalog-facing props interface 或 `@a2uiFunction` 定义变化后，都要重新生成 artifacts。
+- 省略 `--catalog-dir` 时，`generate prompt` 会使用内置 A2UI basic catalog；自定义 catalog 必须传入 `--catalog-dir`。
+- 生成的 prompt 和 Client catalog 必须描述同一组组件名与 props。二者不一致时，server 侧校验可能通过，但 Client 侧仍可能渲染为 unsupported。
+- `functions` 和 `theme` 不会从组件 props 自动推断。需要这些信息时，请通过生成的 function definitions 或 prompt/catalog helper 显式加入。
+
+完整命令和 API 参考见 [`a2ui-cli`](./a2ui-cli/README.md)、
+[`a2ui-catalog-extractor`](./a2ui-catalog-extractor/README.md) 和
+[`a2ui-prompt`](./a2ui-prompt/README.md)。
+
+### 3. Agent：描述 UI，收到已校验消息
 
 启动本地 Agent 服务：
 
@@ -286,7 +350,7 @@ curl http://localhost:3060/a2ui/chat \
 | `A2UI_RATE_LIMIT_PER_MIN`    | 单客户端每分钟请求限制，默认 `20`。                                        |
 | `A2UI_ALLOW_CLIENT_OVERRIDE` | 仅建议可信本地实验设置为 `1`，允许浏览器传入 API key、base URL 或模型 id。 |
 
-### 3. Client：像处理 React 状态一样渲染消息
+### 4. Client：像处理 React 状态一样渲染消息
 
 Client 获取 Agent 输出，并把每条消息写入 store。`<A2UI>` 负责处理协议并渲染对应的 ReactLynx 组件。
 
@@ -683,5 +747,6 @@ GenUI 围绕几个原则演进：
 - 生成式 UI 应该能被检查、回放，并进入自动化评估流程。
 
 更多实现细节可以从这些包级文档开始：
-[`a2ui`](./a2ui/README.md)、[`a2ui-catalog-extractor`](./a2ui-catalog-extractor/README.md)
-和 [`ui-judge`](./ui-judge/README.md)。
+[`a2ui`](./a2ui/README.md)、[`a2ui-cli`](./a2ui-cli/README.md)、
+[`a2ui-catalog-extractor`](./a2ui-catalog-extractor/README.md)、
+[`a2ui-prompt`](./a2ui-prompt/README.md) 和 [`ui-judge`](./ui-judge/README.md)。
