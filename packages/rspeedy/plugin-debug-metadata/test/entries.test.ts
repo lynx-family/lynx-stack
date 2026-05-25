@@ -227,6 +227,18 @@ describe('collectLazyBundleEntryResources', () => {
     } as unknown as Rspack.Compilation
     expect(collectLazyBundleEntryResources(compilation, 'name')).toEqual([])
   })
+
+  test('returns [] for a plain entry origin that has no importer module', () => {
+    const cg = {
+      origins: [{ request: '/abs/src/background.ts', loc: 'card__background' }],
+    }
+    const compilation = {
+      namedChunkGroups: new Map([['card__background', cg]]),
+    } as unknown as Rspack.Compilation
+    expect(
+      collectLazyBundleEntryResources(compilation, 'card__background'),
+    ).toEqual([])
+  })
 })
 
 describe('dedupe', () => {

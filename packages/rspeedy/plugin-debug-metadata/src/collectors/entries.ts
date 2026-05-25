@@ -52,13 +52,16 @@ export function collectLazyBundleEntryResources(
   chunkGroupName: string,
 ): string[] {
   const cg = compilation.namedChunkGroups.get(chunkGroupName)!
+  const importerModule = cg.origins[0]?.module
+  if (!importerModule) return []
+
   const chunkGraph = compilation.chunkGraph
   const moduleGraph = compilation.moduleGraph
 
   const { AsyncDependenciesBlock } = compilation.compiler.webpack
 
   const out: string[] = []
-  for (const block of cg.origins[0]!.module!.blocks) {
+  for (const block of importerModule.blocks) {
     if (
       block instanceof AsyncDependenciesBlock
       && chunkGraph.getBlockChunkGroup(block) === cg
