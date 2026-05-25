@@ -10,6 +10,6 @@ When documenting GenUI transport implementations, describe the transport as the 
 
 When documenting GenUI CLI usage, use `npx @lynx-js/a2ui-cli` as the user-facing command prefix. Explain both command families: `generate catalog` for TypeScript-derived catalog artifacts and `generate prompt` for A2UI system prompts. Treat `@lynx-js/a2ui-catalog-extractor` as an internal implementation detail used by the catalog generation command, not as an external API or recommended binary, and remind readers that generated prompts and client catalogs must agree on component names and props.
 
-When documenting the GenUI playground, make the hosted URL `https://lynx-stack.dev/a2ui/` the primary trial path. Do not require readers to start the local server just to try demos, inspect generated A2UI JSON, browse the catalog, or preview Lynx surfaces; keep local `a2ui-server` / `a2ui-playground` commands as repository development and custom endpoint debugging guidance.
+When documenting the GenUI playground, only present the hosted URL `https://lynx-stack.dev/a2ui/` as the trial path. Do not document local `a2ui-playground` package usage, local server startup, or local playground endpoint overrides in user-facing docs; the package is not planned as a published product surface.
 
 Avoid literal wording such as "recommended shape" / "推荐形状" in user-facing docs. Prefer "interface best practice", "implementation pattern", "接口设计最佳实践", or other product-facing phrases that read naturally to React developers.

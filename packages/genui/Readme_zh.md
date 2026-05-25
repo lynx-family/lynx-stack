@@ -59,7 +59,6 @@ function WeatherCard(props: WeatherCardProps) {
 | `a2ui-catalog-extractor` | `npx @lynx-js/a2ui-cli generate catalog` 内部使用的 TypeDoc extraction engine。                                                     |
 | `a2ui-prompt`            | `@lynx-js/a2ui-prompt`，供 CLI 和后端集成使用的 prompt 构建工具。                                                                   |
 | `server`                 | Next.js Agent 服务，构建 A2UI prompt，请求 OpenAI 兼容模型，校验输出，自动修复异常响应，解析图片查询，并暴露 chat/action API。      |
-| `a2ui-playground`        | 用于浏览器和 Lynx 预览的实验台，支持 demo、组件浏览、AI 对话生成、回放、action 流程和二维码原生预览。                               |
 | `openui`                 | 基于 `@openuidev/lang-core` 的 OpenUI 语言实验渲染器和 Catalog 桥接层。                                                             |
 | `ui-judge`               | 基于 Playwright 和 Midscene 的生成式 UI 评估工具，输出 `visual-correctness` 分数。                                                  |
 
@@ -659,7 +658,7 @@ async function readA2UISse(
 - 统一处理支持的响应格式：直接数组、`{ messages }`、`{ validation: { messages } }`、以及字符串化 JSON。
 - 检查 `content-type`。内置 endpoint 可能根据 route 返回 JSON 或 `text/event-stream`。
 - 非 2xx 响应优先按结构化 JSON 解析错误，再回退到基于 status 的错误。
-- endpoint 白名单要严格。Playground 只信任同源、托管 GenUI server，以及本地开发 endpoint。
+- endpoint 白名单要严格。线上 Playground 只应该访问可信 GenUI endpoint。
 - 生产环境不要让浏览器传入模型 API key、base URL 或 model id。`A2UI_ALLOW_CLIENT_OVERRIDE=1` 只适合可信本地实验。
 - 对浏览器暴露 Agent 前，先配置好 CORS 和 rate limit。
 - 为 Catalog 契约做版本管理。Agent Catalog 和 Client Catalog 必须在组件名与 props 上一致，否则已校验输出在 Client 侧仍可能变成 unsupported。
@@ -679,20 +678,7 @@ async function readA2UISse(
 
 [https://lynx-stack.dev/a2ui/](https://lynx-stack.dev/a2ui/)
 
-只是试用 demo、查看生成出的 A2UI JSON、浏览 Catalog 或预览 Lynx surface 时，不需要在本地启动 GenUI。
-
-如果你要做仓库开发，或者调试自定义 server，仍然可以本地运行 Playground：
-
-```sh
-pnpm --filter a2ui-server dev
-pnpm --filter a2ui-playground dev
-```
-
-打开 `http://localhost:3000`。本地 Playground 会自动寻找 `http://localhost:3060/a2ui/stream`。也可以显式传入可信 endpoint：
-
-```text
-http://localhost:3000/?a2uiEndpoint=http://localhost:3060/a2ui/stream
-```
+通过线上页面可以试用 demo、查看生成出的 A2UI JSON、浏览 Catalog，并预览 Lynx surface。
 
 你可以在 Playground 中：
 

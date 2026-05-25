@@ -68,7 +68,6 @@ has already allowed.
 | `a2ui-catalog-extractor` | Internal TypeDoc-powered extraction engine used by the `npx @lynx-js/a2ui-cli generate catalog` command.                                                                               |
 | `a2ui-prompt`            | `@lynx-js/a2ui-prompt`, prompt construction utilities used by the CLI and backend integrations.                                                                                        |
 | `server`                 | A Next.js agent service. It builds the A2UI prompt, calls an OpenAI-compatible model, validates output, repairs malformed turns, resolves image queries, and exposes chat/action APIs. |
-| `a2ui-playground`        | A browser and Lynx preview environment for demos, component browsing, AI chat generation, playback, actions, and QR-based native preview.                                              |
 | `openui`                 | A ReactLynx renderer and catalog bridge for OpenUI language experiments through `@openuidev/lang-core`.                                                                                |
 | `ui-judge`               | Playwright and Midscene utilities for scoring generated UI with a `visual-correctness` signal.                                                                                         |
 
@@ -718,8 +717,8 @@ replace them with the final validated messages when `done` arrives.
   `text/event-stream` depending on the route.
 - Parse non-2xx responses as structured JSON when possible, then fall back to a
   status-based error.
-- Keep endpoint allowlists strict. The playground only trusts same-origin, the
-  hosted GenUI server, and local development endpoints.
+- Keep endpoint allowlists strict. The hosted Playground should only talk to
+  trusted GenUI endpoints.
 - Do not pass model API keys, base URLs, or model ids from a browser in
   production. `A2UI_ALLOW_CLIENT_OVERRIDE=1` is for trusted local experiments.
 - Configure CORS and rate limits on the server before exposing the agent to
@@ -748,24 +747,8 @@ integrating it into an app:
 
 [https://lynx-stack.dev/a2ui/](https://lynx-stack.dev/a2ui/)
 
-You do not need to run GenUI locally just to try the demos, inspect generated
-A2UI JSON, browse the catalog, or preview Lynx surfaces.
-
-For repository development or custom server debugging, you can still run the
-playground locally:
-
-```sh
-pnpm --filter a2ui-server dev
-pnpm --filter a2ui-playground dev
-```
-
-Open `http://localhost:3000`. The local playground discovers the agent at
-`http://localhost:3060/a2ui/stream`. You can also pass an explicit trusted
-endpoint:
-
-```text
-http://localhost:3000/?a2uiEndpoint=http://localhost:3060/a2ui/stream
-```
+Use the hosted page to try the demos, inspect generated A2UI JSON, browse the
+catalog, and preview Lynx surfaces.
 
 Use the playground to:
 
