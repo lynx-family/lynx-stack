@@ -2,7 +2,9 @@
 applyTo: "packages/genui/Readme*.md"
 ---
 
-When documenting the GenUI folder-level workflow, frame the happy path as Catalog -> Agent -> Client. Catalog docs should distinguish the client renderer catalog built with `defineCatalog` / `serializeCatalog` from the server agent's internal `A2UICatalog` prompt-reference format; do not imply the server accepts the client `SerializedCatalog` payload directly unless a conversion layer exists.
+Write `packages/genui/Readme*.md` for external app developers who use A2UI from their own ReactLynx projects, not for contributors developing inside `lynx-stack`. Avoid monorepo setup, Turbo commands, package folder maps, private package names, local sample-server startup, localhost-only endpoints, and repository test commands in these user-facing docs.
+
+When documenting the GenUI workflow, frame the happy path as Catalog -> Agent -> Client. Catalog docs should distinguish the client renderer catalog built with `defineCatalog` / `serializeCatalog` from whatever catalog-reference format an agent backend uses for prompts; do not imply the server accepts the client `SerializedCatalog` payload directly unless a conversion layer exists.
 
 Assume the reader knows React but does not know A2UI. Introduce A2UI as a JSON message protocol for safely asking an agent to assemble approved ReactLynx components, and explain GenUI terms by mapping them back to familiar React ideas such as components, props, state updates, external stores, and event handlers.
 

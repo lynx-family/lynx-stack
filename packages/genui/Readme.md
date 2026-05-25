@@ -59,17 +59,16 @@ Here is the GenUI mental model:
 The model never imports your code. It only names components that the renderer
 has already allowed.
 
-## Folder Map
+## What You Use
 
-| Package                  | Role                                                                                                                                                                                   |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `a2ui`                   | `@lynx-js/a2ui-reactlynx`, the ReactLynx renderer for A2UI v0.9. It provides `<A2UI>`, `MessageStore`, catalog APIs, built-in components, and protocol helpers.                        |
-| `a2ui-cli`               | `@lynx-js/a2ui-cli`, a single command-line entry point for generating catalog artifacts and A2UI system prompts.                                                                       |
-| `a2ui-catalog-extractor` | Internal TypeDoc-powered extraction engine used by the `npx @lynx-js/a2ui-cli generate catalog` command.                                                                               |
-| `a2ui-prompt`            | `@lynx-js/a2ui-prompt`, prompt construction utilities used by the CLI and backend integrations.                                                                                        |
-| `server`                 | A Next.js agent service. It builds the A2UI prompt, calls an OpenAI-compatible model, validates output, repairs malformed turns, resolves image queries, and exposes chat/action APIs. |
-| `openui`                 | A ReactLynx renderer and catalog bridge for OpenUI language experiments through `@openuidev/lang-core`.                                                                                |
-| `ui-judge`               | Playwright and Midscene utilities for scoring generated UI with a `visual-correctness` signal.                                                                                         |
+For a product app using A2UI, the important surfaces are:
+
+| Surface                       | Role                                                                                                                                       |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@lynx-js/a2ui-reactlynx`     | ReactLynx renderer for A2UI v0.9. It provides `<A2UI>`, `MessageStore`, catalog APIs, built-in components, and protocol helpers.           |
+| `npx @lynx-js/a2ui-cli`       | Build-time command for generating catalog artifacts from TypeScript contracts and A2UI system prompts for your agent.                      |
+| Your agent service            | A backend you own. It receives user prompts/actions, calls a model with the A2UI prompt and catalog, validates output, and returns A2UI.   |
+| Your transport implementation | Client code that calls your agent service, handles REST or streaming responses, pushes messages into `MessageStore`, and forwards actions. |
 
 ## The Three Pieces
 
@@ -100,7 +99,7 @@ The catalog tells the client:
 ### Agent
 
 The agent is a UI planner. It receives normal chat messages, reads the catalog,
-and returns A2UI JSON messages. The packaged server validates those messages
+and returns A2UI JSON messages. Your backend should validate those messages
 before returning them to the client.
 
 The important product rule is: the agent designs within your catalog. If a
@@ -110,7 +109,7 @@ component is not in the catalog, it should not appear in the generated UI.
 
 The client owns transport and rendering. It fetches messages from the agent,
 pushes them into `MessageStore`, renders `<A2UI>`, and forwards generated user
-actions back to the server.
+actions back to your backend.
 
 If you know `useSyncExternalStore`, the `MessageStore` idea should feel
 familiar: it is an append-only external store of protocol messages. `<A2UI>`
@@ -118,21 +117,17 @@ subscribes to it and updates the rendered surface as messages arrive.
 
 ## Quickstart
 
-Run commands from the repository root. For a fresh workspace:
+In your ReactLynx app, install the renderer package and keep the CLI as an
+`npx` command. The CLI requires Node.js 22 or newer.
 
 ```sh
-corepack enable
-pnpm install --frozen-lockfile
+pnpm add @lynx-js/a2ui-reactlynx
+npx @lynx-js/a2ui-cli --help
 ```
 
-Build the core GenUI packages:
-
-```sh
-pnpm turbo build --filter @lynx-js/a2ui-cli --filter @lynx-js/a2ui-prompt --filter @lynx-js/a2ui-reactlynx
-```
-
-For broad test confidence in this monorepo, run the repository-level
-`pnpm turbo build` before tests.
+The rest of the flow is app-local: define catalog-facing component contracts,
+generate catalog artifacts, give the generated prompt to your agent service,
+and render validated A2UI messages in your ReactLynx client.
 
 ### 1. Catalog: Turn React Components Into Agent-Visible Components
 
@@ -205,15 +200,14 @@ export const store = createMessageStore();
 ```
 
 Use `catalogHandshake` when your own transport or agent consumes the client
-handshake format. The packaged server currently builds its prompt from the
-`A2UICatalog` format in `server/agent/a2ui-catalog.ts`, so passing custom
-client catalogs to that service needs an explicit conversion layer or a
-server-side catalog extension.
+handshake format. If your agent uses a different internal catalog format to
+build prompts, add an explicit backend conversion step so the agent sees the
+same component names that the client has registered.
 
 There is intentionally no exported "all built-ins" constant. Importing every
-component makes bundle cost invisible and weakens tree-shaking. If you truly
-need every built-in, use the paste-able recipe in
-[`a2ui/src/catalog/README.md`](./a2ui/src/catalog/README.md).
+component makes bundle cost invisible and weakens tree-shaking. Import only the
+built-in components and catalog manifests your generated UI should be allowed to
+use.
 
 Production note: minifiers can rewrite function names. Set
 `ProductTile.displayName = 'ProductTile'` or pair custom components with their
@@ -229,8 +223,7 @@ it when you want repeatable artifacts instead of hand-maintained JSON:
 - `generate prompt` reads generated catalog artifacts and writes an A2UI system
   prompt for an agent.
 
-For local workspace development and product projects, run the published CLI
-package through `npx`:
+Run the published CLI package through `npx`:
 
 ```sh
 npx @lynx-js/a2ui-cli generate catalog \
@@ -242,13 +235,6 @@ npx @lynx-js/a2ui-cli generate prompt \
   --catalog-dir dist/catalog \
   --catalog-id https://example.com/catalogs/custom/v1/catalog.json \
   --out dist/a2ui-system-prompt.txt
-```
-
-The same command prefix works outside the monorepo:
-
-```sh
-npx @lynx-js/a2ui-cli generate catalog --catalog-dir src/catalog --out-dir dist/catalog
-npx @lynx-js/a2ui-cli generate prompt --out dist/a2ui-system-prompt.txt
 ```
 
 When your build already produces TypeDoc JSON, keep the same
@@ -285,34 +271,27 @@ Operational notes:
   unsupported on the client.
 - `functions` and `theme` are not inferred from component props. Add them
   explicitly through generated function definitions or prompt/catalog helpers.
-- `@lynx-js/a2ui-catalog-extractor` is an internal implementation package used
-  by the catalog generation command. User-facing scripts and docs should use
-  `npx @lynx-js/a2ui-cli` for CLI execution.
 
-See [`a2ui-cli`](./a2ui-cli/README.md) and
-[`a2ui-prompt`](./a2ui-prompt/README.md) for the full command and prompt API
-reference.
+Keep the generated prompt with your backend code and the generated catalog
+artifacts with your app package so agent and client deployments stay in sync.
 
 ### 3. Agent: Ask For UI, Receive Validated Messages
 
-Start the local agent service:
+Your agent service is a backend route in your product, not browser code. It
+should:
+
+- Load the A2UI system prompt generated by `npx @lynx-js/a2ui-cli generate
+  prompt`.
+- Add conversation history, user intent, and any product state the model needs.
+- Call your model provider from the server.
+- Validate or repair model output before returning A2UI messages to the client.
+- Keep provider credentials, base URLs, and model selection out of untrusted
+  browser requests.
+
+A typical request shape looks like this:
 
 ```sh
-export OPENAI_API_KEY=sk-...
-export OPENAI_MODEL=gpt-4o-mini
-pnpm --filter a2ui-server dev
-```
-
-Check configuration:
-
-```sh
-curl http://localhost:3060/a2ui/health
-```
-
-Ask the agent for UI:
-
-```sh
-curl http://localhost:3060/a2ui/chat \
+curl https://your-domain.example/api/a2ui/chat \
   -H 'Content-Type: application/json' \
   -d '{
     "messages": [
@@ -364,26 +343,25 @@ useful to recognize the structure when debugging.
 
 Important endpoints:
 
-| Endpoint                   | Use                                                                                 |
-| -------------------------- | ----------------------------------------------------------------------------------- |
-| `GET /a2ui/health`         | Check provider configuration and selected model.                                    |
-| `POST /a2ui/chat`          | Return one validated JSON response.                                                 |
-| `POST /a2ui/stream`        | Stream model deltas as SSE, then emit validated messages in the final `done` event. |
-| `POST /a2ui/action`        | Convert a client action into the next validated A2UI response.                      |
-| `POST /a2ui/action/stream` | Stream an action response and final validation payload.                             |
+| Endpoint                       | Use                                                                                 |
+| ------------------------------ | ----------------------------------------------------------------------------------- |
+| `GET /api/a2ui/health`         | Optional health/configuration check for your backend.                               |
+| `POST /api/a2ui/chat`          | Return one validated JSON response.                                                 |
+| `POST /api/a2ui/stream`        | Stream model deltas as SSE, then emit validated messages in the final `done` event. |
+| `POST /api/a2ui/action`        | Convert a client action into the next validated A2UI response.                      |
+| `POST /api/a2ui/action/stream` | Stream an action response and final validation payload.                             |
 
-Useful environment variables:
+Common server-side configuration:
 
-| Variable                     | Purpose                                                                                                     |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `OPENAI_API_KEY`             | Required model credential.                                                                                  |
-| `OPENAI_MODEL`               | Model id. Defaults to `gpt-4o-mini`.                                                                        |
-| `OPENAI_BASE_URL`            | Optional OpenAI-compatible endpoint.                                                                        |
-| `OPENAI_API_STYLE`           | `responses` or `chat`; official OpenAI defaults to `responses`.                                             |
-| `PEXELS_API_KEY`             | Optional image search provider. Without it, image queries fall back to deterministic Picsum URLs.           |
-| `A2UI_CORS_ORIGINS`          | Comma-separated extra browser origins allowed by the server.                                                |
-| `A2UI_RATE_LIMIT_PER_MIN`    | Per-client request limit. Defaults to `20`.                                                                 |
-| `A2UI_ALLOW_CLIENT_OVERRIDE` | Set to `1` only for trusted local experiments that pass API keys, base URLs, or model ids from the browser. |
+| Variable                  | Purpose                                                                  |
+| ------------------------- | ------------------------------------------------------------------------ |
+| `OPENAI_API_KEY`          | Model credential kept on the server.                                     |
+| `OPENAI_MODEL`            | Model id chosen by your backend.                                         |
+| `OPENAI_BASE_URL`         | Optional OpenAI-compatible endpoint.                                     |
+| `OPENAI_API_STYLE`        | `responses` or `chat`, depending on your provider integration.           |
+| `IMAGE_PROVIDER_API_KEY`  | Optional image provider credential if your agent resolves image queries. |
+| `A2UI_CORS_ORIGINS`       | Comma-separated browser origins allowed by your server.                  |
+| `A2UI_RATE_LIMIT_PER_MIN` | Per-client request limit for your server.                                |
 
 ### 4. Client: Render Messages Like React State
 
@@ -405,7 +383,7 @@ const store = createMessageStore();
 const catalogs = [Text, Column, Button];
 
 async function sendPrompt(content: string) {
-  const response = await fetch('http://localhost:3060/a2ui/chat', {
+  const response = await fetch('/api/a2ui/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -419,7 +397,7 @@ async function sendPrompt(content: string) {
 }
 
 async function sendAction(action: UserActionPayload) {
-  const response = await fetch('http://localhost:3060/a2ui/action', {
+  const response = await fetch('/api/a2ui/action', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -521,8 +499,8 @@ only place that interprets A2UI messages.
 
 ### REST Baseline
 
-Use `/a2ui/chat` and `/a2ui/action` when you want a simple request/response
-implementation:
+Use routes such as `/api/a2ui/chat` and `/api/a2ui/action` when you want a
+simple request/response implementation:
 
 ```ts
 function extractMessages(payload: unknown): unknown[] {
@@ -579,7 +557,7 @@ Then wire it to the renderer:
 ```ts
 async function generate(prompt: string, signal?: AbortSignal) {
   const messages = await postA2UI(
-    'http://localhost:3060/a2ui/chat',
+    '/api/a2ui/chat',
     { messages: [{ role: 'user', content: prompt }] },
     signal,
   );
@@ -591,7 +569,7 @@ async function respondToAction(
   signal?: AbortSignal,
 ) {
   const messages = await postA2UI(
-    'http://localhost:3060/a2ui/action',
+    '/api/a2ui/action',
     { surfaceId: action.surfaceId, action },
     signal,
   );
@@ -601,8 +579,8 @@ async function respondToAction(
 
 ### SSE Streaming
 
-Use `/a2ui/stream` and `/a2ui/action/stream` when you want to show generation
-progress. The server emits:
+Use routes such as `/api/a2ui/stream` and `/api/a2ui/action/stream` when you
+want to show generation progress. The server emits:
 
 - `delta`: raw model text, useful for an inspector or loading state.
 - `repair`: optional metadata when the server had to repair invalid model
@@ -713,14 +691,14 @@ replace them with the final validated messages when `done` arrives.
   new one.
 - Normalize all supported response formats: direct arrays, `{ messages }`,
   `{ validation: { messages } }`, and stringified JSON.
-- Check `content-type`. The packaged endpoints can return JSON or
-  `text/event-stream` depending on the route.
+- Check `content-type`. Your endpoints may return JSON or `text/event-stream`
+  depending on the route.
 - Parse non-2xx responses as structured JSON when possible, then fall back to a
   status-based error.
 - Keep endpoint allowlists strict. The hosted Playground should only talk to
   trusted GenUI endpoints.
 - Do not pass model API keys, base URLs, or model ids from a browser in
-  production. `A2UI_ALLOW_CLIENT_OVERRIDE=1` is for trusted local experiments.
+  production. Keep provider selection and credentials on the server.
 - Configure CORS and rate limits on the server before exposing the agent to
   browsers.
 - Version your catalog contract. The agent catalog and client catalog must
@@ -786,23 +764,16 @@ The current A2UI path targets A2UI v0.9.
 
 ## Testing And Quality
 
-Focused checks:
+Use your app's normal test runner. The high-value checks are:
 
-```sh
-pnpm --filter @lynx-js/a2ui-reactlynx test
-pnpm --filter @lynx-js/ui-judge test
-```
-
-`@lynx-js/ui-judge` uses Playwright and Midscene. Model-backed cases run only
-when Midscene model environment variables such as `MIDSCENE_MODEL_NAME` are
-configured.
-
-Before broad test runs, follow the repository rule:
-
-```sh
-pnpm turbo build
-pnpm test
-```
+- Unit-test catalog registration so every component name in generated messages
+  maps to the ReactLynx component you expect.
+- Unit-test transport parsing with deterministic JSON and SSE fixtures,
+  including malformed responses and aborts.
+- Replay saved A2UI message arrays through `<A2UI>` so renderer regressions are
+  visible without calling a model.
+- E2E-test one prompt flow and one action flow with mocked agent responses
+  before adding model-backed tests.
 
 ## Product Direction
 
@@ -819,6 +790,6 @@ GenUI is designed around a few commitments:
 - Generated UI should be inspectable, replayable, and judgeable in automated
   workflows.
 
-For implementation details, start with the package-level READMEs in
-[`a2ui`](./a2ui/README.md), [`a2ui-cli`](./a2ui-cli/README.md),
-[`a2ui-prompt`](./a2ui-prompt/README.md), and [`ui-judge`](./ui-judge/README.md).
+Start with the hosted Playground, then generate a small catalog in your app and
+wire one prompt route plus one action route before expanding to richer
+components.
