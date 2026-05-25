@@ -104,6 +104,45 @@ describe('config plugin', () => {
     await expect(rspeedy.initConfigs()).resolves.toHaveLength(1)
   })
 
+  test('output.filename.bundle as a string keeps the lazy bundle default', async () => {
+    const rspeedy = await createRspeedy({
+      rspeedyConfig: {
+        source: {
+          entry: {
+            main: './fixtures/basic.tsx',
+          },
+        },
+        output: {
+          filename: {
+            bundle: '[name].[platform].bundle',
+          },
+        },
+        plugins: [
+          pluginReactLynx(),
+        ],
+      },
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      cwd: import.meta.dirname,
+    })
+
+    const [config] = await rspeedy.initConfigs()
+
+    const templatePlugin = config?.plugins?.find((
+      p,
+    ): p is LynxTemplatePlugin => p?.constructor.name === 'LynxTemplatePlugin')
+
+    // The string form is resolved as before.
+    // @ts-expect-error private field
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    expect(templatePlugin?.options.filename).toBe('main.lynx.bundle')
+
+    // The string form does not override `lazyBundleFilename`, so
+    // `LynxTemplatePlugin` keeps its default (`async/[name].[fullhash].bundle`).
+    // @ts-expect-error private field
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    expect(templatePlugin?.options.lazyBundleFilename).toBeUndefined()
+  })
+
   test('output.filename.bundle as a function controls main and lazy bundles', async () => {
     const rspeedy = await createRspeedy({
       rspeedyConfig: {
