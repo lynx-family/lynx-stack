@@ -55,7 +55,6 @@ export interface ReactWebpackPluginOptions {
     globalPropsMode?: 'reactive' | 'event';
     mainThreadChunks?: string[] | undefined;
     profile?: boolean | undefined;
-    workletRuntimePath: string;
 }
 
 ```

@@ -22,7 +22,7 @@ struct RegisterWorkletParams<'a> {
   hash: Expr,
   is_class_member: bool,
   named_imports: &'a mut HashSet<String>,
-  worklet_runtime_loaded_ident: Ident,
+  should_inject_runtime_init: &'a mut bool,
 }
 
 impl StmtGen {
@@ -36,7 +36,7 @@ impl StmtGen {
     ident_collector: &mut ExtractingIdentsCollector,
     is_class_member: bool,
     named_imports: &mut HashSet<String>,
-    worklet_runtime_loaded_ident: Ident,
+    should_inject_runtime_init: &mut bool,
   ) -> (Box<Expr>, Stmt) {
     let hash = Expr::Lit(hash.into());
     let extracted_value = ident_collector.take_values();
@@ -71,7 +71,7 @@ impl StmtGen {
         hash,
         is_class_member,
         named_imports,
-        worklet_runtime_loaded_ident,
+        should_inject_runtime_init,
       }),
     )
   }
@@ -188,7 +188,7 @@ impl StmtGen {
       hash,
       is_class_member,
       named_imports,
-      worklet_runtime_loaded_ident,
+      should_inject_runtime_init,
     } = params;
 
     let function_to_register = Box::new(StmtGen::gen_function_to_register(
@@ -201,9 +201,8 @@ impl StmtGen {
     ));
 
     if target == TransformTarget::LEPUS {
-      named_imports.insert("loadWorkletRuntime".into());
-      quote!("$loaded && registerWorkletInternal($type_, $hash, $fn_)" as Stmt,
-        loaded: Expr = Expr::Ident(worklet_runtime_loaded_ident.clone()),
+      *should_inject_runtime_init = true;
+      quote!("registerWorkletInternal($type_, $hash, $fn_)" as Stmt,
         type_: Expr = Expr::Lit(worklet_type.type_str().into()),
         hash: Expr = hash,
         fn_: Expr = Expr::Fn(FnExpr {

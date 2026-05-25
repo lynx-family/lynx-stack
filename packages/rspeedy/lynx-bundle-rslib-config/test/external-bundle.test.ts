@@ -17,6 +17,41 @@ import { defineExternalBundleRslibConfig } from '../src/index.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+const repoRoot = path.resolve(__dirname, '../../../../')
+
+function normalizeSlashes(value: string) {
+  return value.replaceAll('\\', '/')
+}
+
+function normalizeAliasValue(key: string, value: unknown) {
+  if (typeof value !== 'string') {
+    return value
+  }
+
+  const normalizedValue = normalizeSlashes(value)
+
+  if (key.startsWith('preact')) {
+    return normalizedValue.replace(/.*(preact\/.*)/, '$1')
+  }
+
+  return normalizedValue
+    .replaceAll(normalizeSlashes(repoRoot), '<ROOT>')
+    .replace(
+      /<ROOT>\/node_modules\/\.pnpm\/[^/]+\/node_modules/g,
+      '<ROOT>/node_modules/<PNPM_INNER>',
+    )
+}
+
+function normalizeAliases(
+  aliases: Record<string, unknown>,
+) {
+  return Object.fromEntries(
+    Object.entries(aliases).map(([key, value]) => [
+      key,
+      normalizeAliasValue(key, value),
+    ]),
+  )
+}
 
 async function build(rslibConfig: RslibConfig) {
   const rslib = await createRslib({
@@ -681,19 +716,8 @@ describe('pluginReactLynx', () => {
 
   it('should handle alias', async () => {
     const config = await rslib.inspectConfig()
-    const alias = Object.fromEntries(
-      Object.entries(config.origin.bundlerConfigs[0]!.resolve!.alias!).map((
-        [key, value],
-      ) => {
-        if (typeof value === 'string' && key.startsWith('preact')) {
-          // Simplify the path to only keep the part starting from 'preact/'
-          return [
-            key,
-            value.replaceAll(path.sep, '/').replace(/.*(preact\/.*)/, '$1'),
-          ]
-        }
-        return [key, value]
-      }),
+    const alias = normalizeAliases(
+      config.origin.bundlerConfigs[0]!.resolve!.alias!,
     )
     expect(alias).toMatchInlineSnapshot(`
       {
@@ -708,6 +732,7 @@ describe('pluginReactLynx', () => {
         "@lynx-js/react/legacy-react-runtime$": "<ROOT>/packages/react/runtime/lib/snapshot/legacy-react-runtime/index.js",
         "@lynx-js/react/runtime-components$": "<ROOT>/packages/react/components/lib/index.js",
         "@lynx-js/react/worklet-runtime/bindings$": "<ROOT>/packages/react/runtime/lib/worklet-runtime/bindings/index.js",
+        "@lynx-js/react/worklet-runtime/init$": "<ROOT>/packages/react/runtime/src/worklet-runtime/init.ts",
         "@swc/helpers": "<ROOT>/node_modules/<PNPM_INNER>/@swc/helpers",
         "preact$": "preact/dist/preact.mjs",
         "preact/compat$": "preact/compat/dist/compat.mjs",

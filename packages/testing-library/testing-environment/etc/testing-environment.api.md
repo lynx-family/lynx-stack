@@ -72,6 +72,7 @@ export const initElementTree: () => {
     __GetElementByUniqueId(uniqueId: number): LynxElement | undefined;
     __GetPageElement(): LynxElement | undefined;
     __QuerySelector(e: LynxElement, cssSelector: string, _params: object): LynxElement | undefined;
+    __QuerySelectorAll(e: LynxElement, cssSelector: string, _params: object): LynxElement[];
 };
 
 // @public

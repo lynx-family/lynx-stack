@@ -262,10 +262,6 @@ export function applyEntry(
       extractStr = false
     }
 
-    const { resolve } = api.useExposed<
-      { resolve: (request: string) => Promise<string> }
-    >(Symbol.for('@lynx-js/react/internal:resolve'))!
-
     chain
       .plugin(PLUGIN_NAME_REACT)
       .after(PLUGIN_NAME_TEMPLATE)
@@ -281,9 +277,6 @@ export function applyEntry(
         experimental_useElementTemplate:
           options.experimental_useElementTemplate,
         profile: getDefaultProfile(),
-        workletRuntimePath: await resolve(
-          `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,
-        ),
       }])
 
     function getDefaultProfile(): boolean | undefined {

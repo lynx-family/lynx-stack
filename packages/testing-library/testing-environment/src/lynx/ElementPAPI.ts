@@ -546,5 +546,12 @@ export const initElementTree = () => {
     ): LynxElement | undefined {
       return (e.querySelector(cssSelector) as LynxElement | null) ?? undefined;
     }
+    __QuerySelectorAll(
+      e: LynxElement,
+      cssSelector: string,
+      _params: object,
+    ): LynxElement[] {
+      return Array.from(e.querySelectorAll(cssSelector)) as LynxElement[];
+    }
   })();
 };

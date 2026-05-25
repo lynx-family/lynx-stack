@@ -5,14 +5,27 @@
 // LICENSE file in the root directory of this source tree.
 /* eslint-disable n/no-unpublished-bin */
 // @ts-check
+// The dev bin performs process-wide CLI dispatch; CI exercises it as a command,
+// while unit coverage should stay focused on the CLI implementation it loads.
+/* c8 ignore start */
+
+import { existsSync } from 'node:fs'
 
 try {
   process.title = 'node (Rspeedy)'
 } catch {
   // ignore error
 }
-const { main } = await import('../lib/cli/main.js')
+const ciDistEntry = '../dist/cli/main.js'
+const localLibEntry = '../lib/cli/main.js'
+
+// CI runs `rslib build` before invoking workspace bins, so use the freshly
+// produced dist entry there instead of restored incremental `lib` output.
+const entry =
+  process.env.CI && existsSync(new URL(ciDistEntry, import.meta.url))
+    ? ciDistEntry
+    : localLibEntry
+
+const { main } = await import(entry)
 
 await main(process.argv)
-
-export {}
