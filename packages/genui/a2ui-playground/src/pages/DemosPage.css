@@ -19,36 +19,6 @@
   background: var(--geist-background);
 }
 
-.examplePageHeader {
-  width: 100%;
-  margin: 0;
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--geist-border);
-}
-
-.examplePageHeaderTop {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.examplePageHeaderTitle {
-  margin: 0;
-  color: var(--geist-foreground);
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.4;
-}
-
-.examplePageHeaderDesc {
-  margin: 2px 0 0;
-  color: var(--geist-secondary);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
 .exampleColumns {
   display: flex;
   flex-direction: column;

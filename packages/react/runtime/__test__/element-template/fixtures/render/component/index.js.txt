@@ -5,10 +5,8 @@ export function App() {
     const y = 2;
     const z = 3;
     return /*#__PURE__*/ _jsx(_et_7a8c6_test_1, {
-        children: [
-            x,
-            y,
-            z
-        ]
+        $0: x,
+        $1: y,
+        $2: z
     });
 }

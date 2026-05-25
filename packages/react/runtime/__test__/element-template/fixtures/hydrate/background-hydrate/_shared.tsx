@@ -15,7 +15,6 @@ import {
 import '../../../../../src/element-template/native/index.js';
 import {
   BackgroundElementTemplateInstance,
-  BackgroundElementTemplateSlot,
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
 } from '../../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../../src/element-template/background/manager.js';
@@ -378,11 +377,8 @@ export function runCaseByName(name: string): unknown {
     backgroundElementTemplateInstanceManager.nextId = 0;
 
     const rootInstance = new BackgroundElementTemplateInstance('root');
-    const slot0 = new BackgroundElementTemplateSlot();
-    slot0.setAttribute('id', 0);
     const child = new BackgroundElementTemplateInstance('child');
-    slot0.appendChild(child);
-    rootInstance.appendChild(slot0);
+    rootInstance.appendChild(child);
 
     const before = createHydrationTemplate(-1, 'root');
     const stream = hydrateBackground(before, rootInstance);
@@ -410,21 +406,15 @@ export function runCaseByName(name: string): unknown {
     backgroundElementTemplateInstanceManager.nextId = 0;
 
     const rootInstance = new BackgroundElementTemplateInstance('root');
-    const slot0 = new BackgroundElementTemplateSlot();
-    slot0.setAttribute('id', 0);
-    rootInstance.appendChild(slot0);
 
     const existing = new BackgroundElementTemplateInstance('existing');
-    slot0.appendChild(existing);
+    rootInstance.appendChild(existing);
 
     const card = new BackgroundElementTemplateInstance('card');
     card.setAttribute('attributeSlots', [{ id: 'card' }]);
-    const cardSlot = new BackgroundElementTemplateSlot();
-    cardSlot.setAttribute('id', 0);
     const text = createTextNode('NEW');
-    cardSlot.appendChild(text);
-    card.appendChild(cardSlot);
-    slot0.insertBefore(card, existing);
+    card.appendChild(text);
+    rootInstance.insertBefore(card, existing);
 
     const beforeExisting = createHydrationChild(-2, 'existing');
     const beforeRemoved = createHydrationChild(-3, 'removed');
@@ -443,11 +433,8 @@ export function runCaseByName(name: string): unknown {
     backgroundElementTemplateInstanceManager.nextId = 0;
 
     const rootInstance = new BackgroundElementTemplateInstance('root');
-    const slot0 = new BackgroundElementTemplateSlot();
-    slot0.setAttribute('id', 0);
-    rootInstance.appendChild(slot0);
     const rawText = createTextNode('');
-    slot0.appendChild(rawText);
+    rootInstance.appendChild(rawText);
 
     const before = createHydrationTemplate(-1, 'root', {
       elementSlots: [[createHydrationRawTextChild(3, '')]],
@@ -467,14 +454,11 @@ export function runCaseByName(name: string): unknown {
     backgroundElementTemplateInstanceManager.nextId = 0;
 
     const rootInstance = new BackgroundElementTemplateInstance('root');
-    const slot0 = new BackgroundElementTemplateSlot();
-    slot0.setAttribute('id', 0);
-    rootInstance.appendChild(slot0);
 
     const rawTextText = createTextNode('bg');
     const rawTextInstance = new BackgroundElementTemplateInstance(BUILTIN_RAW_TEXT_TEMPLATE_KEY);
-    slot0.appendChild(rawTextText);
-    slot0.appendChild(rawTextInstance);
+    rootInstance.appendChild(rawTextText);
+    rootInstance.appendChild(rawTextInstance);
 
     const beforeExistingString = createHydrationRawTextChild(rawTextText.instanceId, 'bg');
     const beforeExistingNonString = createHydrationRawTextChild(rawTextInstance.instanceId, 123);
@@ -500,15 +484,16 @@ export function runCaseByName(name: string): unknown {
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
 
+    // Background side has a child living at slot 1 that the serialized payload
+    // never mentions. The hydrate loop in `hydrate.ts` extends its slot count
+    // via `Math.max(serializedSlots.length, instance.elementSlots.length)` and
+    // synthesizes a create + insert for the background-only child at slot 1.
     const rootInstance = new BackgroundElementTemplateInstance('root');
-    const slot0 = new BackgroundElementTemplateSlot();
-    slot0.setAttribute('id', 0);
-    rootInstance.appendChild(slot0);
-    const slot1 = new BackgroundElementTemplateSlot();
-    slot1.setAttribute('id', 1);
-    rootInstance.appendChild(slot1);
+    const slot1Child = new BackgroundElementTemplateInstance('child');
+    slot1Child.__slotIndex = 1;
+    rootInstance.appendChild(slot1Child);
 
-    const before = createHydrationTemplate(-1, 'root', { elementSlots: [[], []] });
+    const before = createHydrationTemplate(-1, 'root', { elementSlots: [[]] });
     const stream = hydrateBackground(before, rootInstance);
     return { stream };
   });
@@ -520,9 +505,6 @@ export function runCaseByName(name: string): unknown {
     backgroundElementTemplateInstanceManager.nextId = 0;
 
     const rootInstance = new BackgroundElementTemplateInstance('root');
-    const slot0 = new BackgroundElementTemplateSlot();
-    slot0.setAttribute('id', 0);
-    rootInstance.appendChild(slot0);
 
     const before = createHydrationTemplate(-1, 'root', { elementSlots: [[]] });
     const stream = hydrateBackground(before, rootInstance);
@@ -536,16 +518,13 @@ export function runCaseByName(name: string): unknown {
     backgroundElementTemplateInstanceManager.nextId = 0;
 
     const rootInstance = new BackgroundElementTemplateInstance('root');
-    const slot0 = new BackgroundElementTemplateSlot();
-    slot0.setAttribute('id', 0);
-    rootInstance.appendChild(slot0);
 
     const childA = new BackgroundElementTemplateInstance('a');
     const childB = new BackgroundElementTemplateInstance('b');
     const childC = new BackgroundElementTemplateInstance('c');
-    slot0.appendChild(childB);
-    slot0.appendChild(childA);
-    slot0.appendChild(childC);
+    rootInstance.appendChild(childB);
+    rootInstance.appendChild(childA);
+    rootInstance.appendChild(childC);
 
     const beforeChildA = createHydrationChild(childA.instanceId, 'a');
     const beforeChildB = createHydrationChild(childB.instanceId, 'b');

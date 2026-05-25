@@ -7,11 +7,9 @@ export class App extends Component {
         const innerText = 'B';
         const trailing = 'C';
         return /*#__PURE__*/ _jsx(_et_7a8c6_test_1, {
-            children: [
-                leading,
-                innerText,
-                trailing
-            ]
+            $0: leading,
+            $1: innerText,
+            $2: trailing
         });
     }
 }

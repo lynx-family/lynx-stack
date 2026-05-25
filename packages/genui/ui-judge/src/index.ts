@@ -154,7 +154,9 @@ function buildVisualCorrectnessPrompt(
 Task:
 ${options.task}
 ${reference}
-Return exactly one integer from 0 to 5. Do not return "GRADE:", letters, Markdown, prose, or explanation.
+Set Midscene's requested Number result to exactly one integer from 0 to 5.
+Do not return a bare JSON number; the structured result must use the Number field.
+Do not return "GRADE:", letters, Markdown, prose, or explanation.
 
 Use this scale:
 5 = The UI fully satisfies the task and reference.
@@ -173,7 +175,7 @@ Grading notes:
 6. If data binding paths are not explicitly specified, accept any logically sound path structure.
 7. Do not award a high score when required components are missing or substantive behavior is wrong.
 
-Think through the criteria internally, then return only the final integer score.`;
+Think through the criteria internally, then return only the structured Number result.`;
 }
 
 async function waitForNetworkIdleBestEffort(

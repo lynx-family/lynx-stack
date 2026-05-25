@@ -1,90 +1,174 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { readFile } from 'node:fs/promises';
-import { createServer } from 'node:http';
-import type { Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 
 import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 import { judgePage } from '../src/index.js';
-
-let server: Server;
-let baseUrl: string;
+import type { UiJudgeResult } from '../src/index.js';
+import {
+  startPlaygroundPreviewServer,
+} from './helpers/playground-preview-server.js';
+import type { PlaygroundPreviewServer } from './helpers/playground-preview-server.js';
 
 function hasMidsceneModelConfig(): boolean {
   return Boolean(process.env['MIDSCENE_MODEL_NAME']);
 }
 
-test.beforeAll(async () => {
-  const fixtureHtml = await readFile(
-    new URL('./fixtures/interactive.html', import.meta.url),
-    'utf8',
-  );
+interface PlaygroundDemoCase {
+  demoId: string;
+  expectedText: string;
+  readyText: string;
+  task: string;
+}
 
-  server = createServer((req, res) => {
-    const url = new URL(req.url ?? '/', 'http://127.0.0.1');
-    if (url.pathname === '/' || url.pathname === '/interactive') {
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(fixtureHtml);
-      return;
-    }
+const PLAYGROUND_DEMO_CASES: PlaygroundDemoCase[] = [
+  {
+    demoId: 'recs',
+    readyText: 'Recommendations: Date-Night Dining Ideas',
+    expectedText: 'Sea Breeze Kitchen',
+    task:
+      'The A2UI playground preview should show date-night dining recommendations for Moonlight Terrace, Pinewood Bistro, and Sea Breeze Kitchen.',
+  },
+  {
+    demoId: 'cast-grid',
+    readyText: 'AI generated answer',
+    expectedText: 'Zhou Ning',
+    task:
+      'The A2UI playground preview should show a cast grid for the short film Night Notes, including Lin Xia and Zhou Ning cast cards.',
+  },
+  {
+    demoId: 'citywalk-list',
+    readyText: 'AI Answer: Weekend Citywalk Coffee Picks',
+    expectedText: 'Late Sun Roastery',
+    task:
+      'The A2UI playground preview should show weekend citywalk coffee picks with Rooftop Brew Room, Corner Canvas Lab, and Late Sun Roastery.',
+  },
+  {
+    demoId: 'fridge-search',
+    readyText: 'Refrigerators',
+    expectedText: 'Midea 550L Frost-Free French-Door Fridge',
+    task:
+      'The A2UI playground preview should show refrigerator search results with Siemens, Hualing, Haier, and Midea product cards.',
+  },
+  {
+    demoId: 'trip-planner',
+    readyText: 'Trip Planner: Kyoto in 48 Hours',
+    expectedText: 'Monkey Park Viewpoint',
+    task:
+      'The A2UI playground preview should show a Kyoto 48-hour trip planner with Day 1 and Day 2 itinerary sections, including Monkey Park Viewpoint.',
+  },
+  {
+    demoId: 'weather-current',
+    readyText: 'Austin, TX',
+    expectedText: 'Clear skies with light breeze',
+    task:
+      'The A2UI playground preview should show the current weather for Austin, TX, including clear skies with light breeze.',
+  },
+  {
+    demoId: 'product-card',
+    readyText: 'Wireless Headphones Pro',
+    expectedText: 'Add to Cart',
+    task:
+      'The A2UI playground preview should show a Wireless Headphones Pro product card with a visible Add to Cart action.',
+  },
+  {
+    demoId: 'workout-plan',
+    readyText: 'Weekly Workout Plan',
+    expectedText: 'Friday',
+    task:
+      'The A2UI playground preview should show a weekly workout plan with five days from Monday Ramp-Up through Friday Conditioning.',
+  },
+];
+const UI_JUDGE_RESULT_FILE_ENV = 'UI_JUDGE_RESULT_FILE';
 
-    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('not found');
-  });
-
-  await new Promise<void>((resolve) => {
-    server.listen(0, '127.0.0.1', resolve);
-  });
-
-  const address = server.address() as AddressInfo;
-  baseUrl = `http://127.0.0.1:${address.port}`;
-});
-
-test.afterAll(async () => {
-  await new Promise<void>((resolve, reject) => {
-    server.close((error) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve();
-    });
-  });
-});
-
-test('scores a caller-provided page after Midscene interactions', async ({ page }) => {
+test.describe('A2UI playground preview', () => {
   test.skip(
     !hasMidsceneModelConfig(),
     'MIDSCENE_MODEL_NAME is required for the real Midscene model test.',
   );
 
-  const steps = ['Click the Reveal details button.'];
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(`${baseUrl}/interactive`);
+  let previewServer: PlaygroundPreviewServer | undefined;
 
-  const result = await judgePage({
-    page,
-    task:
-      'The page should show an order confirmation card with a revealed status, shipping date, and 390x844 viewport label.',
-    steps,
-    timeoutMs: 120_000,
+  test.beforeAll(async () => {
+    previewServer = await startPlaygroundPreviewServer();
   });
 
-  expect(result).toMatchObject({
-    dimension: 'visual-correctness',
-    steps,
-    url: `${baseUrl}/interactive`,
+  test.afterAll(async () => {
+    await previewServer?.dispose();
   });
-  expect(result.error).toBeUndefined();
-  expect(result.score).toBeGreaterThanOrEqual(0);
-  expect(result.score).toBeLessThanOrEqual(5);
+
+  for (const demo of PLAYGROUND_DEMO_CASES) {
+    test(`renders playground example ${demo.demoId} with speed zero`, async ({ page }) => {
+      if (!previewServer) {
+        throw new Error('A2UI playground preview server was not started.');
+      }
+
+      const previewUrl = previewServer.createDemoPreviewUrl({
+        demoId: demo.demoId,
+        speed: 0,
+      });
+
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(previewUrl);
+      await waitForPreviewText(page, demo.readyText);
+      await waitForPreviewText(page, demo.expectedText, 2_000);
+    });
+  }
+
+  test('scores playground render.html demos with speed zero', async ({ page }) => {
+    test.setTimeout(1_200_000);
+
+    if (!previewServer) {
+      throw new Error('A2UI playground preview server was not started.');
+    }
+
+    const server = previewServer;
+    await page.setViewportSize({ width: 390, height: 844 });
+    const judgedResults: JudgedPlaygroundResult[] = [];
+
+    for (const demo of PLAYGROUND_DEMO_CASES) {
+      await test.step(`score ${demo.demoId}`, async () => {
+        const previewUrl = server.createDemoPreviewUrl({
+          demoId: demo.demoId,
+          speed: 0,
+        });
+
+        await page.goto(previewUrl);
+        await waitForPreviewText(page, demo.readyText);
+        await waitForPreviewText(page, demo.expectedText, 2_000);
+
+        const result = await judgePage({
+          page,
+          task: demo.task,
+          timeoutMs: 180_000,
+        });
+
+        judgedResults.push({
+          result,
+          task: demo.task,
+        });
+        await writeUiJudgeResults(judgedResults);
+
+        expect(result).toMatchObject({
+          dimension: 'visual-correctness',
+          steps: [],
+          url: previewUrl,
+        });
+        expect(result.error).toBeUndefined();
+        expect(result.score).toBeGreaterThanOrEqual(0);
+        expect(result.score).toBeLessThanOrEqual(5);
+      });
+    }
+  });
 });
 
 test('returns a JSON error when input validation fails', async ({ page }) => {
-  await page.goto(`${baseUrl}/interactive`);
+  await page.setContent('<main><h1>Order Confirmed</h1></main>');
+  const url = page.url();
 
   const result = await judgePage({
     page,
@@ -96,7 +180,56 @@ test('returns a JSON error when input validation fails', async ({ page }) => {
     dimension: 'visual-correctness',
     score: 0,
     steps: [],
-    url: `${baseUrl}/interactive`,
+    url,
   });
   expect(result.error?.message).toBeTruthy();
 });
+
+async function waitForPreviewText(
+  page: Page,
+  text: string,
+  timeout = 30_000,
+): Promise<void> {
+  await page.waitForFunction(
+    (expectedText) => {
+      const lynxView = document.querySelector('lynx-view');
+      const shadowText = lynxView?.shadowRoot?.textContent ?? '';
+      return shadowText.includes(expectedText)
+        || document.body.textContent?.includes(expectedText) === true;
+    },
+    text,
+    { timeout },
+  );
+}
+
+interface JudgedPlaygroundResult {
+  result: UiJudgeResult;
+  task: string;
+}
+
+async function writeUiJudgeResults(
+  judgedResults: JudgedPlaygroundResult[],
+): Promise<void> {
+  if (judgedResults.length === 0) return;
+
+  const resultFile = process.env[UI_JUDGE_RESULT_FILE_ENV];
+  if (!resultFile) return;
+
+  await mkdir(dirname(resultFile), { recursive: true });
+  await writeFile(
+    resultFile,
+    `${
+      JSON.stringify(
+        {
+          results: judgedResults.map(({ result, task }) => ({
+            ...result,
+            task,
+          })),
+        },
+        null,
+        2,
+      )
+    }\n`,
+    'utf8',
+  );
+}

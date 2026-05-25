@@ -53,7 +53,6 @@ export { withInitDataInState } from '../core/initData.js';
 // export { transformToWorklet } from '../worklet/call/transformToWorklet.js';
 // export { registerWorkletOnBackground } from '../worklet/hmr.js';
 // export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';
-export { __etSlot } from './runtime/components/slot.js';
 export {
   __etAttrPlanMap,
   adaptEventAttrSlot,
