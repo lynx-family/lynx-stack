@@ -89,35 +89,33 @@ export function applyEntry(
           ? config.output.filename.bundle ?? config.output.filename.template
           : config.output?.filename
 
-        // Resolve the `output.filename.bundle` config into a concrete filename
-        // template. When `bundle` is a function, it is called once for the main
-        // bundle and once for the lazy bundles, so a single function can control
-        // both without a dedicated `lazyBundle` field.
-        const resolveBundleFilename = (lazyBundle: boolean) =>
-          typeof bundleFilename === 'function'
-            ? bundleFilename({
-              lazyBundle,
-              // A lazy bundle name is resolved per async chunk, so there is no
-              // single entry name for it.
-              entryName: lazyBundle ? undefined : entryName,
-              platform: environment.name,
-            })
-            : bundleFilename
-
-        const templateFilename = resolveBundleFilename(false)
-          ?? '[name].[platform].bundle'
-
-        // Only override the lazy bundle filename when `bundle` is a function.
+        let templateFilename: string
+        // `lazyBundleFilename` is only set when `bundle` is a function.
         // Otherwise `LynxTemplatePlugin` keeps its default
         // (`async/[name].[fullhash].bundle`).
-        const lazyBundleFilename = typeof bundleFilename === 'function'
-          // `[name]` is replaced per async chunk by `LynxTemplatePlugin`, so we
-          // only resolve `[platform]` here.
-          ? resolveBundleFilename(true)?.replaceAll(
-            '[platform]',
-            environment.name,
-          )
-          : undefined
+        let lazyBundleFilename: string | undefined
+        if (typeof bundleFilename === 'function') {
+          // A single function controls both the main bundle and the lazy
+          // bundles via the `lazyBundle` flag, without a dedicated
+          // `lazyBundle` field.
+          templateFilename = bundleFilename({
+            lazyBundle: false,
+            entryName,
+            platform: environment.name,
+          })
+          lazyBundleFilename = bundleFilename({
+            lazyBundle: true,
+            // A lazy bundle name is resolved per async chunk, so there is no
+            // single entry name for it.
+            entryName: undefined,
+            platform: environment.name,
+          })
+            // `[name]` is replaced per async chunk by `LynxTemplatePlugin`, so
+            // we only resolve `[platform]` here.
+            .replaceAll('[platform]', environment.name)
+        } else {
+          templateFilename = bundleFilename ?? '[name].[platform].bundle'
+        }
 
         // We do not use `${entryName}__background` since the default CSS name is `[name]/[name].css`.
         // We would like to avoid adding `__background` to the output CSS filename.
