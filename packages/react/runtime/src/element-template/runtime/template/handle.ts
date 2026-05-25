@@ -37,5 +37,4 @@ export function resetTemplateId(): void {
 
 export function destroyElementTemplateId(id: number): void {
   deleteElementTemplateNativeRef(id);
-  // __ReleaseElement(nativeRef);
 }

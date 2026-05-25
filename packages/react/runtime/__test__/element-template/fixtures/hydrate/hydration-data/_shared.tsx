@@ -9,6 +9,7 @@ import { resetTemplateId } from '../../../../../src/element-template/runtime/tem
 import { elementTemplateRegistry } from '../../../../../src/element-template/runtime/template/registry.js';
 import { loadCompiledFixtureApp } from '../../../test-utils/debug/compiledFixtureApp.js';
 import { ElementTemplateEnvManager } from '../../../test-utils/debug/envManager.js';
+import { extractSerializedHydrateInstances } from '../../../test-utils/debug/hydratePayload.js';
 import { installMockNativePapi } from '../../../test-utils/mock/mockNativePapi.js';
 
 declare const renderPage: () => void;
@@ -32,12 +33,7 @@ function setup(): HydrationContext {
 
   const hydrationData: unknown[] = [];
   const onHydrate = vi.fn().mockImplementation((event: { data: unknown }) => {
-    const data = event.data;
-    if (Array.isArray(data)) {
-      for (const item of data) {
-        hydrationData.push(item);
-      }
-    }
+    hydrationData.push(...extractSerializedHydrateInstances(event.data));
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 

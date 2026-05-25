@@ -2,8 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { markTiming, setPipeline } from './performance.js';
+import { applyUpdatePageData } from '../../core/lynx-page-data.js';
 import { __root, setRoot } from '../../root.js';
-import { isEmptyObject } from '../../utils.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
 import { isJSReady, jsReady, jsReadyEventIdSwap, resetJSReady } from '../lifecycle/event/jsReady.js';
 import { reloadMainThread } from '../lifecycle/reload.js';
@@ -114,14 +114,7 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
     return;
   }
 
-  if (options?.resetPageData) {
-    lynx.__initData = {};
-  }
-
-  if (typeof data == 'object' && !isEmptyObject(data)) {
-    lynx.__initData ??= {};
-    Object.assign(lynx.__initData, data);
-  }
+  applyUpdatePageData(data, options);
 
   const flushOptions = options ?? {};
   if (!isJSReady) {

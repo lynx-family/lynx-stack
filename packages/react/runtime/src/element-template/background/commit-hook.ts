@@ -10,6 +10,7 @@ import {
   takeRemovedSubtreesForPostDispatchTeardown,
 } from './commit-context.js';
 import type { BackgroundElementTemplateInstance } from './instance.js';
+import { getReloadVersion } from '../../core/reload-version.js';
 import { COMMIT } from '../../shared/render-constants.js';
 import { hook, isEmptyObject } from '../../utils.js';
 import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
@@ -122,6 +123,7 @@ export function installElementTemplateCommitHook(): void {
               ops: globalCommitContext.ops,
               flushOptions: globalCommitContext.flushOptions,
               flowIds: globalCommitContext.flowIds,
+              reloadVersion: getReloadVersion(),
             },
           });
         }

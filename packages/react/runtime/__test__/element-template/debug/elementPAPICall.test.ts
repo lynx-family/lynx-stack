@@ -21,6 +21,7 @@ describe('ElementTemplate PAPI alog wrapper', () => {
   it('wraps ET PAPI calls and formats native refs', () => {
     const templateRef = { id: 1 };
     const childRef = { id: 2 };
+    const typedRef = { id: 'page' };
     const circular: Record<string, unknown> = {};
     circular['self'] = circular;
     const jsonUndefined = { toJSON: () => undefined };
@@ -30,6 +31,7 @@ describe('ElementTemplate PAPI alog wrapper', () => {
 
     const target = {
       __CreateElementTemplate: vi.fn(() => templateRef),
+      __CreateTypedElementTemplate: vi.fn(() => typedRef),
       __SetAttributeOfElementTemplate: vi.fn(),
       __InsertNodeToElementTemplate: vi.fn(() => childRef),
       __RemoveNodeFromElementTemplate: vi.fn(() => null),
@@ -45,6 +47,13 @@ describe('ElementTemplate PAPI alog wrapper', () => {
       [],
       17,
     )).toBe(templateRef);
+    expect((target.__CreateTypedElementTemplate as (...args: unknown[]) => unknown)(
+      'page',
+      null,
+      null,
+      '0',
+      null,
+    )).toBe(typedRef);
     (target.__SetAttributeOfElementTemplate as (...args: unknown[]) => unknown)(
       templateRef,
       0,
@@ -81,6 +90,7 @@ describe('ElementTemplate PAPI alog wrapper', () => {
     expect(logs).toContain(
       '__CreateElementTemplate("_et_card", null, ["title"], [], 17) => _et_card#17',
     );
+    expect(logs).toContain('__CreateTypedElementTemplate("page", null, null, "0", null) => page#0');
     expect(logs).toContain(
       '__SetAttributeOfElementTemplate(_et_card#17, 0, [_et_card#17, undefined, null, [Function namedHandler], [Function], Symbol(slot), [object Object], [object Object]], null)',
     );
@@ -89,8 +99,8 @@ describe('ElementTemplate PAPI alog wrapper', () => {
     );
     expect(logs).toContain('__RemoveNodeFromElementTemplate(_et_card#17, 1, {"id":2})');
     expect(logs).toContain('__SerializeElementTemplate(_et_card#17) => Symbol(serialized)');
-    expect(globalThis.lynx.performance.profileStart).toHaveBeenCalledTimes(5);
-    expect(globalThis.lynx.performance.profileEnd).toHaveBeenCalledTimes(5);
+    expect(globalThis.lynx.performance.profileStart).toHaveBeenCalledTimes(6);
+    expect(globalThis.lynx.performance.profileEnd).toHaveBeenCalledTimes(6);
   });
 
   it('skips missing APIs and keeps logging optional', () => {

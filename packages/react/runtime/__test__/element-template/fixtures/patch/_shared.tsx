@@ -30,6 +30,7 @@ import { resetTemplateId } from '../../../../src/element-template/runtime/templa
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import { registerBuiltinRawTextTemplate } from '../../test-utils/debug/registry.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
+import { extractSerializedHydrateInstances } from '../../test-utils/debug/hydratePayload.js';
 import { compileFixtureSource } from '../../test-utils/debug/compiledFixtureCompiler.js';
 import {
   loadCompiledFixtureModule,
@@ -87,12 +88,7 @@ export function setupPatchContext(): PatchContext {
   envManager.switchToBackground();
 
   const onHydrate = vi.fn().mockImplementation((event: { data: unknown }) => {
-    const data = event.data;
-    if (Array.isArray(data)) {
-      for (const item of data) {
-        hydrationData.push(item as SerializedElementTemplate);
-      }
-    }
+    hydrationData.push(...extractSerializedHydrateInstances(event.data));
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 
@@ -124,12 +120,7 @@ export function setupUpdateFixtureContext(): UpdateFixtureContext {
   installElementTemplateHydrationListener();
   installElementTemplateCommitHook();
   const onHydrate = (event: { data: unknown }) => {
-    const data = event.data;
-    if (Array.isArray(data)) {
-      for (const item of data) {
-        hydrationData.push(item as SerializedElementTemplate);
-      }
-    }
+    hydrationData.push(...extractSerializedHydrateInstances(event.data));
   };
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 

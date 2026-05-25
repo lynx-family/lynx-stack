@@ -1,14 +1,13 @@
-// Copyright 2024 The Lynx Authors. All rights reserved.
+// Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+
 let reloadVersion = 0;
 
-function getReloadVersion(): number {
+export function getReloadVersion(): number {
   return reloadVersion;
 }
 
-function increaseReloadVersion(): number {
+export function increaseReloadVersion(): number {
   return ++reloadVersion;
 }
-
-export { getReloadVersion, increaseReloadVersion };
