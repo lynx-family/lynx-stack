@@ -9,10 +9,15 @@ import { runWithForceRootRender } from '../../src/core/forceRootRender.js';
 import { COMPONENT, DIFF2, FORCE, ORIGINAL } from '../../src/shared/render-constants.js';
 
 const mutablePreactOptions = preactOptions as typeof preactOptions & Record<string, any>;
+const initialDiff2 = mutablePreactOptions[DIFF2];
 
 describe('core/forceRootRender', () => {
   afterEach(() => {
-    delete mutablePreactOptions[DIFF2];
+    if (typeof initialDiff2 === 'undefined') {
+      delete mutablePreactOptions[DIFF2];
+    } else {
+      mutablePreactOptions[DIFF2] = initialDiff2;
+    }
     vi.restoreAllMocks();
   });
 
@@ -55,6 +60,6 @@ describe('core/forceRootRender', () => {
     ).toThrow(error);
 
     expect(setRootVNode).not.toHaveBeenCalled();
-    expect(mutablePreactOptions[DIFF2]).toBeUndefined();
+    expect(mutablePreactOptions[DIFF2]).toBe(initialDiff2);
   });
 });

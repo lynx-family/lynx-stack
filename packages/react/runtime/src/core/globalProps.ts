@@ -97,7 +97,7 @@ function createFallbackGlobalProps<Data>(
   useListener: typeof useLynxGlobalEventListener,
 ): Getter<GlobalPropsApi<Data>> {
   const useChanged = (callback: (data: Data) => void): void => {
-    if (!__LEPUS__) {
+    if (typeof __LEPUS__ === 'undefined' || !__LEPUS__) {
       useListener('onGlobalPropsChanged', callback);
     }
   };

@@ -43,6 +43,7 @@ async function setupGlobalPropsRuntime(mode: 'reactive' | 'event') {
   envManager.setUseElementTemplate(true);
 
   const baseLynx = globalThis.lynx;
+  const originalGlobalEventEmitter = globalThis.lynxCoreInject.tt.GlobalEventEmitter;
   vi.stubGlobal('lynx', {
     ...baseLynx,
     __globalProps: { theme: 'dark', stable: true },
@@ -73,6 +74,7 @@ async function setupGlobalPropsRuntime(mode: 'reactive' | 'event') {
       envManager.switchToBackground();
       resetElementTemplateHydrationListener();
       resetElementTemplateCommitState();
+      globalThis.lynxCoreInject.tt.GlobalEventEmitter = originalGlobalEventEmitter;
     },
   };
 }
