@@ -84,6 +84,10 @@ describe('Plugins - Dev', () => {
     const config = await rsbuild.unwrapConfig()
 
     expect(config.resolve?.alias).toHaveProperty(
+      '@rspack/core/hot/emitter.js',
+      expect.stringContaining('hot/emitter.js'.replaceAll('/', path.sep)),
+    )
+    expect(config.resolve?.alias).toHaveProperty(
       '@rspack/core/hot/dev-server',
       expect.stringContaining('hot/dev-server.js'.replaceAll('/', path.sep)),
     )

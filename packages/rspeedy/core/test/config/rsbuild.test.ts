@@ -11,6 +11,12 @@ import type { Config } from '../../src/index.js'
 
 describe('Config - toRsBuildConfig', () => {
   describe('splitChunks', () => {
+    test('defaults splitChunks to false', () => {
+      const rsbuildConfig = toRsbuildConfig({})
+
+      expect(rsbuildConfig.splitChunks).toBe(false)
+    })
+
     test('passes top-level splitChunks to Rsbuild', () => {
       const rsbuildConfig = toRsbuildConfig({
         splitChunks: {
@@ -21,6 +27,41 @@ describe('Config - toRsBuildConfig', () => {
       expect(rsbuildConfig.splitChunks).toStrictEqual({
         preset: 'single-vendor',
       })
+    })
+
+    test('passes explicit top-level splitChunks false to Rsbuild', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        splitChunks: false,
+      })
+
+      expect(rsbuildConfig.splitChunks).toBe(false)
+    })
+
+    test('lets legacy performance.chunkSplit enable chunk splitting', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        performance: {
+          chunkSplit: {
+            strategy: 'single-vendor',
+          },
+        },
+      })
+
+      expect(rsbuildConfig.splitChunks).toBeUndefined()
+      expect(rsbuildConfig.performance?.chunkSplit).toStrictEqual({
+        strategy: 'single-vendor',
+      })
+    })
+
+    test('keeps legacy performance.chunkSplit all-in-one disabled', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        performance: {
+          chunkSplit: {
+            strategy: 'all-in-one',
+          },
+        },
+      })
+
+      expect(rsbuildConfig.splitChunks).toBe(false)
     })
   })
 

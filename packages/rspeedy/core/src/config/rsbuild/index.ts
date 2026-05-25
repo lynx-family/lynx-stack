@@ -85,7 +85,7 @@ export function toRsbuildConfig(
 
       tsconfigPath: config.source?.tsconfigPath,
     },
-    splitChunks: config.splitChunks,
+    splitChunks: toRsbuildSplitChunks(config),
     server: {
       base: config.server?.base,
 
@@ -142,9 +142,26 @@ function toRsbuildRemoveConsole(config: Config): string[] | false | undefined {
   return config.performance?.removeConsole
 }
 
+function toRsbuildSplitChunks(config: Config): RsbuildConfig['splitChunks'] {
+  if (config.splitChunks !== undefined) {
+    return config.splitChunks
+  }
+  // Compatible with Rsbuild v1.
+  // TODO: Rspeedy v1 should remove.
+  const legacyStrategy = config.performance?.chunkSplit?.strategy
+
+  if (legacyStrategy && legacyStrategy !== 'all-in-one') {
+    return undefined
+  }
+
+  return false
+}
+
 function toRsbuildAlias(
   config: Config,
 ): RsbuildConfig['resolve'] extends { alias?: infer T } ? T : never {
+  // Compatible with Rsbuild v1.
+  // TODO: Rspeedy v1 should remove.
   const sourceAlias = config.source?.alias
   const resolveAlias = config.resolve?.alias
 
