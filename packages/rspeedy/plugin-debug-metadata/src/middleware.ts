@@ -284,6 +284,7 @@ function joinOutputPath(
  * too), so a relative `publicPath` like `'assets/'` still matches.
  *
  * - `'http://host:port/assets/'`               → `'/assets'`
+ * - `'//cdn.example.com/assets/'`              → `'/assets'`
  * - `'/assets/'`                               → `'/assets'`
  * - `'assets/'`                                → `'/assets'`
  * - `() => '/build/'`                          → `'/build'`
@@ -313,6 +314,12 @@ function extractPublicPathPrefix(
   if (/^https?:\/\//.test(resolved)) {
     try {
       pathPart = new URL(resolved).pathname
+    } catch {
+      return ''
+    }
+  } else if (resolved.startsWith('//')) {
+    try {
+      pathPart = new URL(`https:${resolved}`).pathname
     } catch {
       return ''
     }

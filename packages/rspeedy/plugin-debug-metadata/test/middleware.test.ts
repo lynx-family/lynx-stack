@@ -378,6 +378,25 @@ describe('createDebugMetadataMiddleware', () => {
     expect(res?.body).toEqual(VALID_METADATA.meta)
   })
 
+  test('strips the path part of a protocol-relative publicPath', async () => {
+    const mw = createDebugMetadataMiddleware({
+      compilerHandle: fakeCompiler(
+        {
+          '/out/.rspeedy/main/debug-metadata.json': JSON.stringify(
+            VALID_METADATA,
+          ),
+        },
+        '//cdn.example.com/static/',
+      ),
+    })
+    const res = await runRequest(
+      mw,
+      '/static/.rspeedy/main/debug-metadata.json?field=meta',
+    )
+    expect(res?.status).toBe(200)
+    expect(res?.body).toEqual(VALID_METADATA.meta)
+  })
+
   test('returns 404 metadata_not_found when no compiler is attached yet', async () => {
     const mw = createDebugMetadataMiddleware({
       compilerHandle: { compiler: null },
