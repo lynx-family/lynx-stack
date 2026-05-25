@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { RsbuildPlugin } from '@rsbuild/core'
-import link from 'terminal-link'
 
 import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
@@ -73,20 +72,7 @@ export function pluginLynxDebugMetadata(): RsbuildPlugin {
           || environment.name.startsWith('lynx-')
         if (!isLynx) return
 
-        if (!exposed) {
-          throw new Error(
-            `\
-[${PLUGIN_NAME}] No \`LynxTemplatePlugin\` exposed to ${
-              link(
-                'the plugin API',
-                'https://rsbuild.rs/plugins/dev/core#apiexpose',
-              )
-            }.
-
-Please upgrade your DSL plugin to latest version.
-`,
-          )
-        }
+        if (!exposed) return
 
         chain.plugin(PLUGIN_NAME).use(LynxDebugMetadataPlugin, [{
           LynxTemplatePlugin: exposed.LynxTemplatePlugin,

@@ -1380,9 +1380,6 @@ importers:
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 1.7.5
-      terminal-link:
-        specifier: ^4.0.0
-        version: 4.0.0
 
   packages/rspeedy/plugin-external-bundle:
     dependencies:

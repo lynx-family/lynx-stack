@@ -40,8 +40,7 @@
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@rollup/plugin-typescript": "^12.3.0",
-    "@rsbuild/core": "catalog:rsbuild",
-    "terminal-link": "^4.0.0"
+    "@rsbuild/core": "catalog:rsbuild"
   },
   "engines": {
     "node": ">=18"
