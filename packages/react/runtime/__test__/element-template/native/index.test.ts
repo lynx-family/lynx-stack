@@ -21,6 +21,7 @@ describe('element-template native index wiring', () => {
     vi.doUnmock('../../../src/element-template/native/patch-listener.js');
     vi.doUnmock('../../../src/element-template/native/mts-destroy.js');
     vi.doUnmock('../../../src/element-template/native/callDestroyLifetimeFun.js');
+    vi.doUnmock('../../../src/element-template/native/reload.js');
     vi.doUnmock('../../../src/element-template/prop-adapters/event.js');
     vi.doUnmock('../../../src/element-template/background/document.js');
     vi.doUnmock('../../../src/element-template/background/hydration-listener.js');
@@ -31,6 +32,7 @@ describe('element-template native index wiring', () => {
     vi.doUnmock('../../../src/element-template/lynx/env.js');
     vi.doUnmock('../../../src/element-template/lynx/performance.js');
     vi.doUnmock('../../../src/core/lynx-update-data.js');
+    vi.doUnmock('../../../src/core/globalProps.js');
     vi.doUnmock('../../../src/element-template/runtime/page/root-instance.js');
   });
 
@@ -49,6 +51,7 @@ describe('element-template native index wiring', () => {
     const installElementTemplateHydrationListener = vi.fn();
     const setRoot = vi.fn();
     const initTimingAPI = vi.fn();
+    const reloadBackground = vi.fn();
 
     vi.doMock('../../../src/element-template/native/main-thread-api.js', () => ({
       injectCalledByNative,
@@ -85,6 +88,9 @@ describe('element-template native index wiring', () => {
     }));
     vi.doMock('../../../src/element-template/background/instance.js', () => ({
       BackgroundElementTemplateInstance: class BackgroundElementTemplateInstance {},
+    }));
+    vi.doMock('../../../src/element-template/native/reload.js', () => ({
+      reloadBackground,
     }));
 
     await import('../../../src/element-template/native/index.js');
@@ -123,6 +129,8 @@ describe('element-template native index wiring', () => {
     const publicComponentEvent = vi.fn();
     const resetEventStateForRuntime = vi.fn();
     const updateCardData = vi.fn();
+    const updateGlobalProps = vi.fn();
+    const reloadBackground = vi.fn();
 
     vi.doMock('../../../src/element-template/native/main-thread-api.js', () => ({
       injectCalledByNative,
@@ -154,6 +162,9 @@ describe('element-template native index wiring', () => {
     vi.doMock('../../../src/core/lynx-update-data.js', () => ({
       updateCardData,
     }));
+    vi.doMock('../../../src/core/globalProps.js', () => ({
+      updateGlobalProps,
+    }));
     vi.doMock('../../../src/element-template/runtime/page/root-instance.js', () => ({
       setRoot,
     }));
@@ -170,6 +181,9 @@ describe('element-template native index wiring', () => {
         constructor(public type: string) {}
       },
     }));
+    vi.doMock('../../../src/element-template/native/reload.js', () => ({
+      reloadBackground,
+    }));
 
     await import('../../../src/element-template/native/index.js');
 
@@ -184,7 +198,15 @@ describe('element-template native index wiring', () => {
     expect(globalThis.lynxCoreInject.tt.callDestroyLifetimeFun).toBe(callDestroyLifetimeFun);
     expect(globalThis.lynxCoreInject.tt.publishEvent).toBe(publishEvent);
     expect(globalThis.lynxCoreInject.tt.publicComponentEvent).toBe(publicComponentEvent);
+    expect(globalThis.lynxCoreInject.tt.updateGlobalProps).toEqual(expect.any(Function));
     expect(globalThis.lynxCoreInject.tt.updateCardData).toBe(updateCardData);
+    expect(globalThis.lynxCoreInject.tt.onAppReload).toBe(reloadBackground);
+
+    globalThis.lynxCoreInject.tt.updateGlobalProps({ theme: 'light' });
+    expect(updateGlobalProps).toHaveBeenCalledWith(
+      { theme: 'light' },
+      { forceRerender: expect.any(Function) },
+    );
 
     expect(injectCalledByNative).not.toHaveBeenCalled();
     expect(installElementTemplatePatchListener).not.toHaveBeenCalled();

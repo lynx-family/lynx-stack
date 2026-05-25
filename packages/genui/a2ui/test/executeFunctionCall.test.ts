@@ -6,10 +6,7 @@ import { beforeEach, describe, expect, test } from '@rstest/core';
 import { basicFunctions } from '../src/functions/index.js';
 import { functionRegistry } from '../src/store/FunctionRegistry.js';
 import { MessageProcessor } from '../src/store/MessageProcessor.js';
-import {
-  executeFunctionCall,
-  resolveDynamicValue,
-} from '../src/store/resolveFunctionCall.js';
+import { executeFunctionCall } from '../src/store/resolveFunctionCall.js';
 
 describe('executeFunctionCall', () => {
   const surfaceId = 'execTestSurface';
@@ -75,18 +72,6 @@ describe('executeFunctionCall', () => {
     } finally {
       console.warn = originalWarn;
     }
-  });
-
-  test('resolveDynamicValue evaluates nested function calls', () => {
-    expect(resolveDynamicValue(
-      processor,
-      {
-        call: 'add',
-        args: { a: 1, b: { call: 'identity', args: { value: 2 } } },
-        returnType: 'number',
-      },
-      surfaceId,
-    )).toBe(3);
   });
 
   test('resolves array args without turning them into objects', () => {

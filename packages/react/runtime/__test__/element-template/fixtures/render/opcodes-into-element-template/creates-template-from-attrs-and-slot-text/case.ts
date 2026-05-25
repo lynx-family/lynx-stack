@@ -24,7 +24,7 @@ export function run() {
     ];
 
     const { rootRefs } = renderOpcodesIntoElementTemplate(opcodes);
-    rootRefs.forEach(rootRef => __AppendElement(root as FiberElement, rootRef));
+    rootRefs.forEach(rootRef => __InsertNodeToElementTemplate(root as FiberElement, 0, rootRef, null));
 
     const rootChild = root.children?.[0];
 

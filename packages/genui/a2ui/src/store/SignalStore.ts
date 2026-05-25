@@ -4,6 +4,8 @@
 import { batch, signal } from '@preact/signals';
 import type { Signal } from '@preact/signals';
 
+import type { MessageProcessor } from './MessageProcessor.js';
+
 export class SignalStore {
   private signals = new Map<string, Signal<unknown>>();
 
@@ -30,4 +32,16 @@ export class SignalStore {
       }
     });
   }
+}
+
+export function setInStore(
+  processor: MessageProcessor,
+  path: string,
+  value: unknown,
+  surfaceId: string,
+  dataContextPath?: string,
+): void {
+  const surface = processor.getOrCreateSurface(surfaceId);
+  const resolvedPath = processor.resolvePath(path, dataContextPath);
+  surface.store.update(resolvedPath, value);
 }

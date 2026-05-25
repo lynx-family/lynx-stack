@@ -14,7 +14,7 @@ import {
 } from '../../core/context.js';
 import { useFormValidation } from '../../core/hooks/index.js';
 import { defineComponent } from '../../core/library.js';
-import { actionPropSchema } from '../Action/index.jsx';
+import { actionPropSchema } from '../Action/index.js';
 import { asArray } from '../utils.js';
 
 const CONTINUE_CONVERSATION_ACTION = String(

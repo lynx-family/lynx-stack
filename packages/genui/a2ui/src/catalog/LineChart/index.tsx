@@ -166,7 +166,7 @@ function buildSvgMarkup(
   const chartWidth = width - MARGIN.left - MARGIN.right;
   const chartHeight = height - MARGIN.top - MARGIN.bottom;
   const maxPoints = labels.length;
-  const values = series.flatMap((item) => item.values.slice(0, maxPoints));
+  const values = series.flatMap((item) => item.values?.slice(0, maxPoints));
 
   if (maxPoints === 0 || series.length === 0 || values.length === 0) {
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}"></svg>`;
@@ -179,7 +179,7 @@ function buildSvgMarkup(
 
   const lineMarkup = series
     .map((item, seriesIndex) => {
-      const points = item.values.slice(0, maxPoints).map((value, index) => {
+      const points = item.values?.slice(0, maxPoints).map((value, index) => {
         const x = MARGIN.left + xStep * index;
         const y = MARGIN.top + chartHeight
           - ((value - minValue) / yRange) * chartHeight;
@@ -262,7 +262,7 @@ export function LineChart(
   const svgMarkup = buildSvgMarkup(labels, series, variant, showGrid);
   const visibleLabelIndices = sampleIndices(labels.length, 8);
   const { min, max } = minMax(
-    series.flatMap((item) => item.values.slice(0, labels.length)),
+    series.flatMap((item) => item.values?.slice(0, labels.length)),
   );
 
   return (

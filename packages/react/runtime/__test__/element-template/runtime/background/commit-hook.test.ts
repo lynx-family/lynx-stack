@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { options } from 'preact';
 import { Component, createElement } from 'preact/compat';
 
+import { getReloadVersion } from '../../../../src/core/reload-version.js';
 import * as elementTemplateAlog from '../../../../src/element-template/debug/alog.js';
 import {
   installElementTemplateCommitHook,
@@ -139,6 +140,8 @@ describe('ElementTemplate commit hook', () => {
     expect(updateEvents[0]).toEqual({
       ops: createRawTextOps(1, 'hello'),
       flushOptions: { nativeUpdateDataOrder: 7 },
+      flowIds: undefined,
+      reloadVersion: getReloadVersion(),
     });
     envManager.switchToBackground();
     expect(globalCommitContext.ops).toEqual([]);
@@ -155,6 +158,8 @@ describe('ElementTemplate commit hook', () => {
     expect(updateEvents[0]).toEqual({
       ops: [],
       flushOptions: { triggerDataUpdated: true },
+      flowIds: undefined,
+      reloadVersion: getReloadVersion(),
     });
     envManager.switchToBackground();
     expect(globalCommitContext.flushOptions).toEqual({});
@@ -457,6 +462,8 @@ describe('ElementTemplate commit hook', () => {
       {
         ops: [],
         flushOptions: { triggerDataUpdated: true },
+        flowIds: undefined,
+        reloadVersion: getReloadVersion(),
       },
     ]);
     envManager.switchToBackground();

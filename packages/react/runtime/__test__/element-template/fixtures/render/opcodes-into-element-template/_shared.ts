@@ -14,7 +14,7 @@ import { installMockNativePapi } from '../../../test-utils/mock/mockNativePapi.j
 import { registerBuiltinRawTextTemplate, registerTemplates } from '../../../test-utils/debug/registry.js';
 
 export interface RootNode {
-  type: 'root';
+  type: 'page';
   children?: unknown[];
 }
 
@@ -114,7 +114,7 @@ function setup(): CaseContext {
   registerTemplates(templates);
 
   return {
-    root: { type: 'root' },
+    root: __CreateTypedElementTemplate('page', null, null, '0', null) as unknown as RootNode,
     nativeLog: installed.nativeLog,
   };
 }

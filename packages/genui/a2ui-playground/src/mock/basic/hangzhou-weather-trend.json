@@ -31,16 +31,22 @@
         {
           "id": "chart",
           "component": "LineChart",
-          "labels": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+          "labels": {
+            "path": "/weather/dates"
+          },
           "series": [
             {
               "name": "High (°C)",
-              "values": [12, 14, 16, 18, 20, 22, 19],
+              "values": {
+                "path": "/weather/temperatures"
+              },
               "color": "#0057d9"
             },
             {
               "name": "Low (°C)",
-              "values": [6, 7, 8, 10, 11, 13, 12],
+              "values": {
+                "path": "/weather/precipitations"
+              },
               "color": "#0a8f8f"
             }
           ],
@@ -49,6 +55,18 @@
           "yLabel": "Temperature"
         }
       ]
+    }
+  },
+  {
+    "updateDataModel": {
+      "surfaceId": "default",
+      "value": {
+        "weather": {
+          "dates": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+          "temperatures": [12, 14, 16, 18, 20, 22, 19],
+          "precipitations": [6, 7, 8, 10, 11, 13, 12]
+        }
+      }
     }
   }
 ]

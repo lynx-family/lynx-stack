@@ -11,4 +11,14 @@ export type {
 } from '@openuidev/lang-core';
 
 export { createOpenUiLibrary } from './createLibrary.js';
+export type { CreateOpenUiLibraryOptions } from './createLibrary.js';
+export type {
+  ComponentGroup,
+  ComponentRenderer,
+  ComponentRenderProps,
+  DefinedComponent,
+  Library,
+  LibraryDefinition,
+} from './library.js';
+export { defineComponent } from './library.js';
 export { OpenUiRenderer } from './renderer.js';

@@ -2,7 +2,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createElement } from 'preact';
 
 import {
   installElementTemplateCommitHook,
@@ -17,7 +16,6 @@ import {
   BackgroundElementTemplateInstance,
 } from '../../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../../src/element-template/background/manager.js';
-import { root } from '../../../../../src/element-template/index.js';
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../../src/element-template/protocol/opcodes.js';
 import type {
@@ -26,21 +24,21 @@ import type {
 } from '../../../../../src/element-template/protocol/types.js';
 import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
-import { compileFixtureSource } from '../../../test-utils/debug/compiledFixtureCompiler.js';
 import {
-  loadCompiledFixtureModule,
+  loadCompiledFixturePair,
   type CompiledFixtureModuleExports,
 } from '../../../test-utils/debug/compiledFixtureModule.js';
-import { primeCompiledFixtureTemplates } from '../../../test-utils/debug/compiledFixtureRegistry.js';
+import {
+  renderCompiledFixtureOnBackground,
+  renderCompiledFixtureOnMainThread,
+} from '../../../test-utils/debug/compiledThreadRunner.js';
 import { ElementTemplateEnvManager } from '../../../test-utils/debug/envManager.js';
 import { runFixtureTests } from '../../../test-utils/debug/fixtureRunner.js';
 import { serializeBackgroundTree } from '../../../test-utils/debug/serializer.js';
 
-declare const renderPage: () => void;
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const FIXTURES_DIR = path.resolve(__dirname, '../../../fixtures/background/update');
+const FIXTURES_DIR = path.resolve(__dirname, '../../../fixtures/background/update/keyed');
 const SLOT_ID = 0;
 
 interface CompiledKeyedListModule extends CompiledFixtureModuleExports {
@@ -101,23 +99,20 @@ describe('Compiled background Preact updates', () => {
     backgroundModule: CompiledKeyedListModule;
     mainModule: CompiledKeyedListModule;
   }> {
-    const mainArtifact = await compileFixtureSource(sourcePath, { target: 'LEPUS' });
-    primeCompiledFixtureTemplates(mainArtifact);
-    const mainModule = await loadCompiledFixtureModule<CompiledKeyedListModule>(mainArtifact);
-
-    const backgroundArtifact = await compileFixtureSource(sourcePath, { target: 'JS' });
-    const backgroundModule = await loadCompiledFixtureModule<CompiledKeyedListModule>(backgroundArtifact);
-
-    return { backgroundModule, mainModule };
+    return loadCompiledFixturePair<CompiledKeyedListModule>(sourcePath);
   }
 
   function renderCompiledOnBackground(
     moduleExports: CompiledKeyedListModule,
     items: readonly string[],
   ): BackgroundElementTemplateInstance {
-    envManager.switchToBackground();
-    root.render(createElement(moduleExports.App, { items: [...items] }));
-    return getRenderedHost();
+    const host = renderCompiledFixtureOnBackground(moduleExports, envManager, {
+      items: [...items],
+    });
+    if (!host) {
+      throw new Error('Missing rendered host.');
+    }
+    return host;
   }
 
   function hydrateFromMainThread(
@@ -125,12 +120,7 @@ describe('Compiled background Preact updates', () => {
     items: readonly string[],
   ): BackgroundElementTemplateInstance {
     const host = getRenderedHost();
-
-    envManager.switchToMainThread();
-    root.render(createElement(moduleExports.App, { items: [...items] }));
-    renderPage();
-    envManager.switchToBackground();
-
+    renderCompiledFixtureOnMainThread(moduleExports, envManager, { items: [...items] });
     return host;
   }
 

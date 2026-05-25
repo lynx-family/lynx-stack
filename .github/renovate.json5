@@ -92,6 +92,23 @@
       ]
     },
     {
+      // These packages only publish dated snapshot builds (e.g.
+      // `5.0.1-<YYYYMMDDHHMMSS>-<sha>`) under the `latest` dist-tag. They are
+      // semver prereleases that sort *below* their stable baseline, so a plain
+      // `^x.y.z` range never sees them and Renovate gets stuck. Follow the
+      // `latest` tag and pin to it so each new build produces an update PR.
+      // Note: `@lynx-js/internal-preact` is consumed via the
+      // `"preact": "npm:@lynx-js/internal-preact@..."` alias; Renovate matches
+      // it by its resolved packageName.
+      "matchPackageNames": [
+        "@lynx-js/preact-devtools",
+        "@lynx-js/internal-preact",
+      ],
+      "followTag": "latest",
+      "ignoreUnstable": false,
+      "rangeStrategy": "pin",
+    },
+    {
       "groupName": "API Extractor",
       "groupSlug": "api-extractor",
       "matchPackageNames": [

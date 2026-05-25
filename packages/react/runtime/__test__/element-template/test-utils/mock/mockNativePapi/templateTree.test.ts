@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { instantiateCompiledTemplate, setAttributeSlotOnTemplateInstance } from './templateTree.js';
+import {
+  instantiateCompiledTemplate,
+  insertNodeIntoTemplateInstance,
+  serializeTemplateInstance,
+  setAttributeSlotOnTemplateInstance,
+} from './templateTree.js';
 import type { CompiledTemplateNode } from './templateTree.js';
 
 type CompiledElementTemplate = NonNullable<CompiledTemplateNode['__compiledTemplate']>;
@@ -48,5 +53,68 @@ describe('mock native template tree spread slots', () => {
 
     expect(root.__attributeSlots).toEqual([{ id: 'cta-next' }]);
     expect(root.attributes).toEqual({ id: 'cta-next' });
+  });
+
+  it('serializes typed nodes with attributeSlots and omits function fields', () => {
+    const child = {
+      templateId: '_et_builtin_raw_text',
+      attributes: { text: 'row' },
+      children: [],
+      __handleId: 2,
+    } satisfies CompiledTemplateNode;
+    const componentAtIndex = () => child;
+    const root = {
+      tag: 'list',
+      type: 'list',
+      attributes: {},
+      children: [child],
+      __typedElementType: 'list',
+      __handleId: 1,
+      __attributeSlots: [{
+        'component-at-index': componentAtIndex,
+        'update-list-info': { insertAction: [] },
+      }],
+      __elementSlots: [[child]],
+      __options: {
+        listChildren: [child],
+        callback: componentAtIndex,
+      },
+    } satisfies CompiledTemplateNode;
+
+    const serializedChild = {
+      templateKey: '_et_builtin_raw_text',
+      attributeSlots: ['row'],
+      elementSlots: [],
+      uid: 2,
+    };
+
+    expect(serializeTemplateInstance(root)).toEqual({
+      type: 'list',
+      attributeSlots: [{ 'update-list-info': { insertAction: [] } }],
+      elementSlots: [[serializedChild]],
+      uid: 1,
+      options: {
+        listChildren: [serializedChild],
+      },
+    });
+  });
+
+  it('moves typed children between element slots instead of duplicating them', () => {
+    const child = { tag: 'view' };
+    const root = {
+      tag: 'list',
+      type: 'list',
+      attributes: {},
+      children: [child],
+      __typedElementType: 'list',
+      __handleId: 1,
+      __attributeSlots: null,
+      __elementSlots: [[child], []],
+    } satisfies CompiledTemplateNode;
+
+    insertNodeIntoTemplateInstance(root, 1, child, null);
+
+    expect(root.__elementSlots).toEqual([[], [child]]);
+    expect(root.children).toEqual([]);
   });
 });

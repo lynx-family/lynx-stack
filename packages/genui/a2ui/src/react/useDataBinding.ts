@@ -14,10 +14,17 @@ import {
 import type { CatalogFunctionEntry } from '../catalog/defineCatalog.js';
 import type { MessageProcessor } from '../store/MessageProcessor.js';
 import {
-  isFunctionCall,
+  resolveBindingPath,
+  resolveDeepValue,
   resolveDynamicValue,
-} from '../store/resolveFunctionCall.js';
+} from '../store/resolveDynamic.js';
+import { executeFunctionCall } from '../store/resolveFunctionCall.js';
 import type { Surface } from '../store/types.js';
+import {
+  isCallExpression,
+  isFunctionCall,
+  isPlainDataBinding,
+} from '../store/utils.js';
 
 const noop = () => {
   /* no-op subscribe disposer */
@@ -107,25 +114,6 @@ export function useDataBinding<T = unknown>(
   return [currentValue, setValue, path];
 }
 
-function isDataBinding(prop: unknown): boolean {
-  return Boolean(
-    prop
-      && typeof prop === 'object'
-      && 'path' in prop
-      && !('componentId' in prop),
-  );
-}
-
-function isCallExpression(prop: unknown): boolean {
-  return Boolean(
-    prop
-      && typeof prop === 'object'
-      && 'call' in prop
-      && 'args' in prop
-      && 'returnType' in prop,
-  );
-}
-
 export function splitUnsupportedProps(
   properties: Record<string, unknown> | undefined,
 ): {
@@ -160,46 +148,45 @@ export function resolveProperties(
   dataContextPath?: string,
   processor?: MessageProcessor,
   functions?: readonly CatalogFunctionEntry[],
+  previousResolved?: Record<string, unknown>,
 ) {
   if (!properties) return properties;
-  const result: Record<string, unknown> = {};
-  for (const key in properties) {
-    const prop = properties[key];
-    if (isFunctionCall(prop) && surface && processor) {
-      result[key] = resolveDynamicValue(
-        processor,
-        prop,
-        surface.surfaceId,
-        dataContextPath,
-        { functions },
-      );
-    } else if (isDataBinding(prop)) {
-      let path = (prop as Record<string, unknown>)['path'] as
-        | string
-        | undefined;
-      if (path && typeof path === 'string' && !path.startsWith('/')) {
-        path = dataContextPath ? `${dataContextPath}/${path}` : `/${path}`;
+  return resolveDeepValue(
+    properties,
+    previousResolved,
+    (leaf) => {
+      if (isFunctionCall(leaf) && surface && processor) {
+        return resolveDynamicValue(
+          processor,
+          leaf,
+          surface.surfaceId,
+          dataContextPath,
+          {
+            functions,
+            resolveFunctionCall: executeFunctionCall,
+          },
+        );
       }
 
-      if (path && surface?.store) {
-        const signal = surface.store.getSignal(path);
-        result[key] = signal.value;
-      } else {
-        result[key] = undefined;
+      if (isPlainDataBinding(leaf)) {
+        const rawPath = (leaf as Record<string, unknown>)['path'] as
+          | string
+          | undefined;
+        const path = resolveBindingPath(rawPath ?? '', dataContextPath);
+        if (path && surface?.store) {
+          const signal = surface.store.getSignal(path);
+          return signal.value;
+        }
+        return undefined;
       }
-    } else if (isCallExpression(prop)) {
-      result[key] = UNSUPPORTED_PROP;
-    } else if (
-      typeof prop === 'string'
-      || typeof prop === 'number'
-      || typeof prop === 'boolean'
-    ) {
-      result[key] = prop;
-    } else {
-      result[key] = prop;
-    }
-  }
-  return result;
+
+      if (isCallExpression(leaf)) {
+        return UNSUPPORTED_PROP;
+      }
+
+      return leaf;
+    },
+  ) as Record<string, unknown>;
 }
 
 function shallowEqual(
@@ -232,6 +219,7 @@ export function useResolvedProps(
       dataContextPath,
       processor,
       functions,
+      cacheRef.current ?? undefined,
     );
     if (cacheRef.current && shallowEqual(cacheRef.current, next)) {
       return cacheRef.current;
@@ -250,6 +238,7 @@ export function useResolvedProps(
           dataContextPath,
           processor,
           functions,
+          cacheRef.current ?? undefined,
         );
         cb();
       });
@@ -266,14 +255,12 @@ export function useResolvedProps(
   const setValue = useCallback(
     (key: string, value: unknown) => {
       const prop = properties?.[key];
-      if (isDataBinding(prop)) {
-        let path = (prop as Record<string, unknown>)['path'] as
+      if (isPlainDataBinding(prop)) {
+        const rawPath = (prop as Record<string, unknown>)['path'] as
           | string
           | undefined;
+        const path = resolveBindingPath(rawPath ?? '', dataContextPath);
         if (path && surface?.store) {
-          if (!path.startsWith('/')) {
-            path = dataContextPath ? `${dataContextPath}/${path}` : `/${path}`;
-          }
           surface.store.update(path, value);
         }
       }

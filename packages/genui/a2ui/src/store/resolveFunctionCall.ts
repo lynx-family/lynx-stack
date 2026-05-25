@@ -2,8 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type * as v0_9 from '@a2ui/web_core/v0_9';
-import { computed, signal } from '@preact/signals';
-import type { Signal } from '@preact/signals';
 
 import { functionRegistry } from './FunctionRegistry.js';
 import type {
@@ -12,126 +10,26 @@ import type {
   FunctionRegistry,
 } from './FunctionRegistry.js';
 import type { MessageProcessor } from './MessageProcessor.js';
+import { resolveDynamicValue } from './resolveDynamic.js';
+import { createResolvedSignal } from './signalResolution.js';
+import { setInStore } from './SignalStore.js';
 import type { CatalogFunctionEntry } from '../catalog/defineCatalog.js';
 
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
+export interface ResolveFunctionOptions {
+  functions?: readonly CatalogFunctionEntry[] | undefined;
+  registry?: FunctionRegistry | undefined;
 }
 
-export function isDataBinding(value: unknown): value is v0_9.DataBinding {
-  return isObject(value) && 'path' in value;
-}
-
-export function isFunctionCall(value: unknown): value is v0_9.FunctionCall {
-  return isObject(value) && 'call' in value;
-}
-
-function resolveFromStore(
-  processor: MessageProcessor,
-  path: string,
-  surfaceId: string,
-  dataContextPath?: string,
-): unknown {
-  const surface = processor.getOrCreateSurface(surfaceId);
-  const store = surface.store;
-  const resolvedPath = processor.resolvePath(path, dataContextPath);
-  const signal = store.getSignal(resolvedPath);
-  const raw = signal.value;
-  if (raw === undefined || raw === null) return raw;
-  if (typeof raw !== 'string') return raw;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return raw;
-  }
-}
-
-function setInStore(
-  processor: MessageProcessor,
-  path: string,
-  value: unknown,
-  surfaceId: string,
-  dataContextPath?: string,
-): void {
-  const surface = processor.getOrCreateSurface(surfaceId);
-  const resolvedPath = processor.resolvePath(path, dataContextPath);
-  surface.store.update(resolvedPath, value);
-}
-
-function signalFromStore(
-  processor: MessageProcessor,
-  path: string,
-  surfaceId: string,
-  dataContextPath?: string,
-): Signal<unknown> {
-  const surface = processor.getOrCreateSurface(surfaceId);
-  const resolvedPath = processor.resolvePath(path, dataContextPath);
-  return surface.store.getSignal(resolvedPath);
-}
-
-export function resolveDynamicValue(
-  processor: MessageProcessor,
-  value: unknown,
-  surfaceId: string,
-  dataContextPath?: string,
-  options: ResolveFunctionOptions = {},
-): unknown {
-  if (
-    typeof value === 'string' || typeof value === 'number'
-    || typeof value === 'boolean'
-  ) {
-    return value;
-  }
-  if (Array.isArray(value)) {
-    return value.map(item =>
-      resolveDynamicValue(processor, item, surfaceId, dataContextPath, options)
-    );
-  }
-  if (isDataBinding(value)) {
-    return resolveFromStore(processor, value.path, surfaceId, dataContextPath);
-  }
-  if (isFunctionCall(value)) {
-    return executeFunctionCall(
-      processor,
-      value,
-      surfaceId,
-      dataContextPath,
-      options,
-    );
-  }
-  return value;
-}
-
-function resolveSignal(
-  processor: MessageProcessor,
-  value: unknown,
-  surfaceId: string,
-  dataContextPath: string | undefined,
+function resolveFunctionImpl(
+  name: string,
   options: ResolveFunctionOptions,
-): Signal<unknown> {
-  if (isDataBinding(value)) {
-    return signalFromStore(processor, value.path, surfaceId, dataContextPath);
-  }
-  if (isFunctionCall(value)) {
-    return computed(() =>
-      executeFunctionCall(processor, value, surfaceId, dataContextPath, options)
-    );
-  }
-  if (Array.isArray(value)) {
-    return computed(() =>
-      value.map(item =>
-        resolveDynamicValue(
-          processor,
-          item,
-          surfaceId,
-          dataContextPath,
-          options,
-        )
-      )
-    );
-  }
-  return signal(value);
+): FunctionImpl | undefined {
+  const scoped = options.functions?.find(entry => entry.name === name)?.impl;
+  if (scoped) return scoped;
+  return (options.registry ?? functionRegistry).resolve(name);
 }
+
+const warnedUnknownFunctions = new Set<string>();
 
 function createFunctionContext(
   processor: MessageProcessor,
@@ -149,16 +47,24 @@ function createFunctionContext(
         value,
         surfaceId,
         dataContextPath,
-        options,
+        {
+          ...options,
+          resolveFunctionCall: executeFunctionCall,
+          registry: options.registry ?? functionRegistry,
+        },
       );
     },
     resolveSignal(value) {
-      return resolveSignal(
+      return createResolvedSignal(
         processor,
         value,
         surfaceId,
         dataContextPath,
-        options,
+        {
+          ...options,
+          resolveFunctionCall: executeFunctionCall,
+          registry: options.registry ?? functionRegistry,
+        },
       );
     },
     set(path, value) {
@@ -177,45 +83,22 @@ export function resolveFunctionArguments(
   const resolved: Record<string, unknown> = {};
   if (!args) return resolved;
   for (const [key, raw] of Object.entries(args)) {
-    if (Array.isArray(raw) || isDataBinding(raw) || isFunctionCall(raw)) {
-      resolved[key] = resolveDynamicValue(
-        processor,
-        raw,
-        surfaceId,
-        dataContextPath,
-        options,
-      );
-    } else if (isObject(raw)) {
-      resolved[key] = { ...raw };
-    } else {
-      resolved[key] = resolveDynamicValue(
-        processor,
-        raw,
-        surfaceId,
-        dataContextPath,
-        options,
-      );
-    }
+    resolved[key] = resolveDynamicValue(
+      processor,
+      raw,
+      surfaceId,
+      dataContextPath,
+      {
+        ...options,
+        resolveFunctionCall: executeFunctionCall,
+        registry: options.registry ?? functionRegistry,
+      },
+    );
   }
   return resolved;
 }
 
-export interface ResolveFunctionOptions {
-  functions?: readonly CatalogFunctionEntry[] | undefined;
-  registry?: FunctionRegistry | undefined;
-}
-
-function resolveFunctionImpl(
-  name: string,
-  options: ResolveFunctionOptions,
-): FunctionImpl | undefined {
-  const scoped = options.functions?.find(entry => entry.name === name)?.impl;
-  if (scoped) return scoped;
-  return (options.registry ?? functionRegistry).resolve(name);
-}
-
-const warnedUnknownFunctions = new Set<string>();
-
+export type ExecuteFunctionCall = typeof executeFunctionCall;
 /**
  * Resolve arguments, look the function up in the registry, and invoke it.
  * When no impl is registered, log once and return `undefined` so callers

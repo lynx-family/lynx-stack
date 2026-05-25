@@ -97,6 +97,13 @@ export interface ExternalsLoadingPluginOptions {
    * @defaultValue 2000
    */
   timeout?: number | undefined;
+
+  /**
+   * The number of additional attempts when fetching the external bundle times out (`response.code === -2`).
+   *
+   * @defaultValue 0
+   */
+  retries?: number | undefined;
 }
 
 /**
@@ -228,6 +235,13 @@ export interface ExternalValue {
    * @defaultValue `2000`
    */
   timeout?: number;
+
+  /**
+   * The number of additional attempts when fetching the external bundle times out (`response.code === -2`).
+   *
+   * @defaultValue `0`
+   */
+  retries?: number;
 }
 
 /**
@@ -326,6 +340,7 @@ export class ExternalsLoadingPlugin {
         chunkLayer: string,
       ): string {
         const url2fetchCode: Map<string, string> = new Map();
+        const url2retries: Map<string, number> = new Map();
         const loadCode: Set<string> = new Set();
         // filter duplicate externals by libraryName or package name to avoid loading the same external multiple times. We keep the last one.
         const externalsMap = new Map<
@@ -361,6 +376,48 @@ export class ExternalsLoadingPlugin {
         const runtimeGlobalsInit =
           `${lynxExternalGlobal} = ${lynxExternalGlobal} === undefined ? {} : ${lynxExternalGlobal};`;
         const loadExternalFunc = `
+function createRetryingHandler(fetchBundle, retries) {
+  let cachedResponse = null
+  let asyncPromise = null
+  let currentHandler = fetchBundle()
+  let attemptsUsed = 0
+  return {
+    then(onFulfilled, onRejected) {
+      if (asyncPromise === null) {
+        asyncPromise = new Promise((resolve, reject) => {
+          const tryNext = (response) => {
+            if (cachedResponse !== null) {
+              resolve(cachedResponse)
+              return
+            }
+            if (response.code === -2 && attemptsUsed < retries) {
+              attemptsUsed++
+              currentHandler = fetchBundle()
+              currentHandler.then(tryNext, reject)
+            } else {
+              if (response.code !== -2) cachedResponse = response
+              resolve(response)
+            }
+          }
+          currentHandler.then(tryNext, reject)
+        })
+      }
+      return asyncPromise.then(onFulfilled, onRejected)
+    },
+    wait(timeout) {
+      if (cachedResponse !== null) return cachedResponse
+      let response = currentHandler.wait(timeout)
+      while (response.code === -2 && attemptsUsed < retries) {
+        attemptsUsed++
+        currentHandler = fetchBundle()
+        response = currentHandler.wait(timeout)
+      }
+      if (response.code !== -2) cachedResponse = response
+      return response
+    }
+  }
+}
+
 function createLoadExternalAsync(handler, sectionPath) {
   return new Promise((resolve, reject) => {
     handler.then((response) => {
@@ -441,6 +498,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             async = true,
             timeout: timeoutInMs = externalsLoadingPluginOptions.timeout
               ?? 2000,
+            retries = externalsLoadingPluginOptions.retries ?? 0,
           } = external;
           const layerOptions = external[layer];
           // Lynx fetchBundle timeout is in seconds
@@ -475,7 +533,11 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             }`;
           url2fetchCode.set(
             urlKey,
-            `lynx.fetchBundle(${fetchExpr}, {});`,
+            `() => lynx.fetchBundle(${fetchExpr}, {})`,
+          );
+          url2retries.set(
+            urlKey,
+            Math.max(url2retries.get(urlKey) ?? 0, retries),
           );
 
           const mountVar = `${
@@ -501,19 +563,19 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           }
           sectionLoadTracker.set(sectionKey, mountVar);
 
+          const handlerIndex = [...url2fetchCode.keys()].indexOf(urlKey);
+
           if (async) {
             loadCode.add(
-              `${mountVar} = ${mountVar} === undefined ? createLoadExternalAsync(handler${
-                [...url2fetchCode.keys()].indexOf(urlKey)
-              }, ${JSON.stringify(layerOptions.sectionPath)}) : ${mountVar};`,
+              `${mountVar} = ${mountVar} === undefined ? createLoadExternalAsync(handler${handlerIndex}, ${
+                JSON.stringify(layerOptions.sectionPath)
+              }) : ${mountVar};`,
             );
             continue;
           }
 
           loadCode.add(
-            `${mountVar} = ${mountVar} === undefined ? createLoadExternalSync(handler${
-              [...url2fetchCode.keys()].indexOf(urlKey)
-            }, ${
+            `${mountVar} = ${mountVar} === undefined ? createLoadExternalSync(handler${handlerIndex}, ${
               JSON.stringify(layerOptions.sectionPath)
             }, ${timeout}) : ${mountVar};`,
           );
@@ -522,8 +584,10 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
         return [
           runtimeGlobalsInit,
           loadExternalFunc,
-          ...[...url2fetchCode.values()].map((fetchCode, index) =>
-            `const handler${index} = ${fetchCode};`
+          ...[...url2fetchCode.entries()].map(([urlKey, fetchCode], index) =>
+            `const handler${index} = createRetryingHandler(${fetchCode}, ${
+              url2retries.get(urlKey) ?? 0
+            });`
           ),
           ...loadCode,
         ].join('\n');

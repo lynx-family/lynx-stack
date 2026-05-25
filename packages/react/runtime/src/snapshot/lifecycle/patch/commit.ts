@@ -30,6 +30,7 @@ import {
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { takeGlobalFlushOptions } from '../../../core/commit-context.js';
+import { getReloadVersion } from '../../../core/reload-version.js';
 import { profileEnd, profileStart } from '../../../shared/profile.js';
 import { COMMIT } from '../../../shared/render-constants.js';
 import { hook, isEmptyObject } from '../../../utils.js';
@@ -43,7 +44,6 @@ import {
 } from '../../worklet/call/delayedRunOnMainThreadData.js';
 import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValue.js';
 import { isRendering } from '../isRendering.js';
-import { getReloadVersion } from '../pass.js';
 
 const globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map<number, () => void>();
 let nextCommitTaskId = 1;

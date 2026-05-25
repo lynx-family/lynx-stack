@@ -2,7 +2,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createElement } from 'preact';
 
 import {
   installElementTemplateCommitHook,
@@ -17,7 +16,6 @@ import {
   BackgroundElementTemplateInstance,
 } from '../../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../../src/element-template/background/manager.js';
-import { root } from '../../../../../src/element-template/index.js';
 import {
   clearEventState,
   getEventHandlerForEventValue,
@@ -31,16 +29,16 @@ import type {
 } from '../../../../../src/element-template/protocol/types.js';
 import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
-import { compileFixtureSource } from '../../../test-utils/debug/compiledFixtureCompiler.js';
 import {
-  loadCompiledFixtureModule,
+  loadCompiledFixturePair,
   type CompiledFixtureModuleExports,
 } from '../../../test-utils/debug/compiledFixtureModule.js';
-import { primeCompiledFixtureTemplates } from '../../../test-utils/debug/compiledFixtureRegistry.js';
+import {
+  renderCompiledFixtureOnBackground,
+  renderCompiledFixtureOnMainThread,
+} from '../../../test-utils/debug/compiledThreadRunner.js';
 import { ElementTemplateEnvManager } from '../../../test-utils/debug/envManager.js';
 import { serializeBackgroundTree } from '../../../test-utils/debug/serializer.js';
-
-declare const renderPage: () => void;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -125,53 +123,34 @@ describe('Compiled direct event background updates', () => {
     backgroundModule: CompiledDirectEventModule;
     mainModule: CompiledDirectEventModule;
   }> {
-    const mainArtifact = await compileFixtureSource(DIRECT_EVENT_FIXTURE, { target: 'LEPUS' });
-    primeCompiledFixtureTemplates(mainArtifact);
-    const mainModule = await loadCompiledFixtureModule<CompiledDirectEventModule>(mainArtifact);
-
-    const backgroundArtifact = await compileFixtureSource(DIRECT_EVENT_FIXTURE, { target: 'JS' });
-    const backgroundModule = await loadCompiledFixtureModule<CompiledDirectEventModule>(backgroundArtifact);
-
-    return { backgroundModule, mainModule };
+    return loadCompiledFixturePair<CompiledDirectEventModule>(DIRECT_EVENT_FIXTURE);
   }
 
   async function loadCompiledConditionalDirectEventFixture(): Promise<{
     backgroundModule: CompiledConditionalDirectEventModule;
     mainModule: CompiledConditionalDirectEventModule;
   }> {
-    const mainArtifact = await compileFixtureSource(CONDITIONAL_DIRECT_EVENT_FIXTURE, { target: 'LEPUS' });
-    primeCompiledFixtureTemplates(mainArtifact);
-    const mainModule = await loadCompiledFixtureModule<CompiledConditionalDirectEventModule>(mainArtifact);
-
-    const backgroundArtifact = await compileFixtureSource(CONDITIONAL_DIRECT_EVENT_FIXTURE, { target: 'JS' });
-    const backgroundModule = await loadCompiledFixtureModule<CompiledConditionalDirectEventModule>(
-      backgroundArtifact,
+    return loadCompiledFixturePair<CompiledConditionalDirectEventModule>(
+      CONDITIONAL_DIRECT_EVENT_FIXTURE,
     );
-
-    return { backgroundModule, mainModule };
   }
 
   async function loadCompiledSpreadEventFixture(): Promise<{
     backgroundModule: CompiledSpreadEventModule;
     mainModule: CompiledSpreadEventModule;
   }> {
-    const mainArtifact = await compileFixtureSource(SPREAD_EVENT_FIXTURE, { target: 'LEPUS' });
-    primeCompiledFixtureTemplates(mainArtifact);
-    const mainModule = await loadCompiledFixtureModule<CompiledSpreadEventModule>(mainArtifact);
-
-    const backgroundArtifact = await compileFixtureSource(SPREAD_EVENT_FIXTURE, { target: 'JS' });
-    const backgroundModule = await loadCompiledFixtureModule<CompiledSpreadEventModule>(backgroundArtifact);
-
-    return { backgroundModule, mainModule };
+    return loadCompiledFixturePair<CompiledSpreadEventModule>(SPREAD_EVENT_FIXTURE);
   }
 
   function renderDirectEventOnBackground(
     moduleExports: CompiledDirectEventModule,
     onTap?: () => void,
   ): BackgroundElementTemplateInstance {
-    envManager.switchToBackground();
-    root.render(createElement(moduleExports.App, { onTap }));
-    return getRenderedHost();
+    const host = renderCompiledFixtureOnBackground(moduleExports, envManager, { onTap });
+    if (!host) {
+      throw new Error('Missing rendered host.');
+    }
+    return host;
   }
 
   function hydrateDirectEventFromMainThread(
@@ -179,12 +158,7 @@ describe('Compiled direct event background updates', () => {
     onTap?: () => void,
   ): BackgroundElementTemplateInstance {
     const host = getRenderedHost();
-
-    envManager.switchToMainThread();
-    root.render(createElement(moduleExports.App, { onTap }));
-    renderPage();
-    envManager.switchToBackground();
-
+    renderCompiledFixtureOnMainThread(moduleExports, envManager, { onTap });
     return host;
   }
 
@@ -197,9 +171,15 @@ describe('Compiled direct event background updates', () => {
       childSpread?: SpreadFixtureProps;
     },
   ): BackgroundElementTemplateInstance {
-    envManager.switchToBackground();
-    root.render(createElement(moduleExports.App, { spread, onCatch, ...childOptions }));
-    return getRenderedHost();
+    const host = renderCompiledFixtureOnBackground(moduleExports, envManager, {
+      spread,
+      onCatch,
+      ...childOptions,
+    });
+    if (!host) {
+      throw new Error('Missing rendered host.');
+    }
+    return host;
   }
 
   function hydrateSpreadEventFromMainThread(
@@ -212,12 +192,11 @@ describe('Compiled direct event background updates', () => {
     },
   ): BackgroundElementTemplateInstance {
     const host = getRenderedHost();
-
-    envManager.switchToMainThread();
-    root.render(createElement(moduleExports.App, { spread, onCatch, ...childOptions }));
-    renderPage();
-    envManager.switchToBackground();
-
+    renderCompiledFixtureOnMainThread(moduleExports, envManager, {
+      spread,
+      onCatch,
+      ...childOptions,
+    });
     return host;
   }
 
@@ -226,9 +205,11 @@ describe('Compiled direct event background updates', () => {
     show: boolean,
     onTap?: () => void,
   ): BackgroundElementTemplateInstance {
-    envManager.switchToBackground();
-    root.render(createElement(moduleExports.App, { show, onTap }));
-    return getRenderedHost();
+    const host = renderCompiledFixtureOnBackground(moduleExports, envManager, { show, onTap });
+    if (!host) {
+      throw new Error('Missing rendered host.');
+    }
+    return host;
   }
 
   function hydrateConditionalDirectEventFromMainThread(
@@ -237,12 +218,7 @@ describe('Compiled direct event background updates', () => {
     onTap?: () => void,
   ): BackgroundElementTemplateInstance {
     const host = getRenderedHost();
-
-    envManager.switchToMainThread();
-    root.render(createElement(moduleExports.App, { show, onTap }));
-    renderPage();
-    envManager.switchToBackground();
-
+    renderCompiledFixtureOnMainThread(moduleExports, envManager, { show, onTap });
     return host;
   }
 

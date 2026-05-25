@@ -6,6 +6,7 @@ import { profileEnd, profileStart } from '../../shared/profile.js';
 
 const elementTemplatePAPINameList = [
   '__CreateElementTemplate',
+  '__CreateTypedElementTemplate',
   '__SetAttributeOfElementTemplate',
   '__InsertNodeToElementTemplate',
   '__RemoveNodeFromElementTemplate',
@@ -44,6 +45,8 @@ export function initElementTemplatePAPICallAlog(globalWithIndex: Record<string, 
 
       if (elementTemplatePAPIName === '__CreateElementTemplate' && result != null) {
         elementTemplateMap.set(result, `${String(args[0])}#${String(args[4])}`);
+      } else if (elementTemplatePAPIName === '__CreateTypedElementTemplate' && result != null) {
+        elementTemplateMap.set(result, `${String(args[0])}#${String(args[3])}`);
       }
 
       const formattedResult = result == null ? undefined : formatValue(result, elementTemplateMap);

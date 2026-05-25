@@ -401,12 +401,16 @@ describe('CLI - Inspect', () => {
 
         const { apply } = await import('../../src/cli/commands.js')
 
+        // Isolate the output dir so this inspect cannot race other tests
+        // writing to a shared relative `./dist` directory.
+        const tmp = await mkdtemp(path.join(tmpdir(), 'rspeedy-test-inspect-'))
+
         await apply(new Command('test')).parseAsync([
           'node',
           'rspeedy',
           'inspect',
           '--output',
-          './dist',
+          tmp,
           '--config',
           'foo/bar/config.js',
         ])

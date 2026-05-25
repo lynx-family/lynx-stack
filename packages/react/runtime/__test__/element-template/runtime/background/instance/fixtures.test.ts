@@ -12,6 +12,5 @@ const FIXTURES_DIR = path.resolve(__dirname, '../../../fixtures/background/insta
 describe('Background instance fixtures', () => {
   runCaseModuleFixtureTests({
     fixturesRoot: FIXTURES_DIR,
-    allowEmpty: true,
   });
 });

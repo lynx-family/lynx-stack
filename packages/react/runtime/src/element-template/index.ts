@@ -32,6 +32,8 @@ import {
   useState,
 } from '@lynx-js/react/hooks';
 
+import { createGlobalProps } from '../core/globalProps.js';
+import type { GlobalProps } from '../core/globalProps.js';
 import { useLynxGlobalEventListener } from '../core/hooks/useLynxGlobalEventListener.js';
 import { factory, withInitDataInState } from '../core/initData.js';
 import type { InitData } from '../lynx-api.js';
@@ -106,8 +108,25 @@ export const InitDataConsumer: Consumer<InitData> = /* @__PURE__ */ _InitData.Co
 export const useInitData: () => InitData = /* @__PURE__ */ _InitData.use();
 export const useInitDataChanged: (callback: (data: InitData) => void) => void = /* @__PURE__ */ _InitData.useChanged();
 
+const _GlobalProps = /* @__PURE__ */ createGlobalProps<GlobalProps>({
+  createContext,
+  useState,
+  createElement,
+  useLynxGlobalEventListener,
+});
+
+// @ts-expect-error make preact and react types work
+export const GlobalPropsProvider: FC<{ children?: ReactNode | undefined }> = /* @__PURE__ */ _GlobalProps.Provider();
+// @ts-expect-error make preact and react types work
+export const GlobalPropsConsumer: Consumer<GlobalProps> = /* @__PURE__ */ _GlobalProps.Consumer();
+export const useGlobalProps: () => GlobalProps = /* @__PURE__ */ _GlobalProps.use();
+export const useGlobalPropsChanged: (callback: (data: GlobalProps) => void) => void = /* @__PURE__ */ _GlobalProps
+  .useChanged();
+
 export { withInitDataInState };
+export { useLynxGlobalEventListener };
 
 export * from './client/root.js';
 
+export type { GlobalProps } from '../core/globalProps.js';
 export type { DataProcessorDefinition, DataProcessors, InitData, InitDataRaw } from '../lynx-api.js';

@@ -6,10 +6,8 @@ import type * as v0_9 from '@a2ui/web_core/v0_9';
 import { useCallback } from '@lynx-js/react';
 
 import { useA2UIContext } from './useA2UIContext.js';
-import {
-  executeFunctionCall,
-  resolveDynamicValue,
-} from '../store/resolveFunctionCall.js';
+import { resolveDynamicValue } from '../store/resolveDynamic.js';
+import { executeFunctionCall } from '../store/resolveFunctionCall.js';
 import type { UserActionPayload } from '../store/types.js';
 
 export interface ActionProps {
