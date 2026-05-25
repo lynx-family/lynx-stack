@@ -37,7 +37,7 @@ const prompt = buildA2UISystemPrompt({ catalog });
 
 `readA2UICatalogFromDirectory` expects generated files such as
 `<Component>/catalog.json` and optional function definitions under `functions/`.
-Use `a2ui-cli generate catalog` to create those artifacts.
+Use `npx @lynx-js/a2ui-cli generate catalog` to create those artifacts.
 
 ## Exports
 
