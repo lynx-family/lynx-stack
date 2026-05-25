@@ -1,8 +1,11 @@
 Array [
   Array [
-    "__CreatePage",
+    "__CreateTypedElementTemplate",
+    "page",
+    null,
+    null,
     "0",
-    0,
+    null,
   ],
   Array [
     "__CreateElementTemplate",
@@ -13,8 +16,10 @@ Array [
     -1,
   ],
   Array [
-    "__AppendElement",
-    "0",
+    "__InsertNodeToElementTemplate",
+    "<page />",
+    0,
     "<_et_a94a8_test_1 />",
+    null,
   ],
 ]

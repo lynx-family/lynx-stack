@@ -22,12 +22,10 @@ import type {
 } from '../../../../../src/element-template/protocol/types.js';
 import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
-import { compileFixtureSource } from '../../../test-utils/debug/compiledFixtureCompiler.js';
 import {
-  loadCompiledFixtureModule,
   type CompiledFixtureModuleExports,
+  loadCompiledFixturePair,
 } from '../../../test-utils/debug/compiledFixtureModule.js';
-import { primeCompiledFixtureTemplates } from '../../../test-utils/debug/compiledFixtureRegistry.js';
 import { ElementTemplateEnvManager } from '../../../test-utils/debug/envManager.js';
 
 declare const renderPage: () => void;
@@ -36,11 +34,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const FIXTURE_DIR = path.resolve(
   __dirname,
-  '../../../fixtures/background/update-sparse/mount-sparse-template',
+  '../../../fixtures/background/update/sparse/compiled-element-slot',
 );
 
 interface SparseTemplateAppProps {
-  mounted?: boolean;
+  showCard?: boolean;
   showHeader?: boolean;
   items?: string[];
 }
@@ -61,15 +59,7 @@ async function loadFixture(): Promise<{
   backgroundModule: SparseTemplateModule;
   mainModule: SparseTemplateModule;
 }> {
-  const sourcePath = path.join(FIXTURE_DIR, 'index.tsx');
-  const mainArtifact = await compileFixtureSource(sourcePath, { target: 'LEPUS' });
-  primeCompiledFixtureTemplates(mainArtifact);
-  const mainModule = await loadCompiledFixtureModule<SparseTemplateModule>(mainArtifact);
-
-  const backgroundArtifact = await compileFixtureSource(sourcePath, { target: 'JS' });
-  const backgroundModule = await loadCompiledFixtureModule<SparseTemplateModule>(backgroundArtifact);
-
-  return { backgroundModule, mainModule };
+  return loadCompiledFixturePair<SparseTemplateModule>(path.join(FIXTURE_DIR, 'index.tsx'));
 }
 
 describe('Sparse element slot updates', () => {

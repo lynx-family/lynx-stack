@@ -7,6 +7,7 @@ import {
 import { setPipeline } from '../../../../src/element-template/lynx/performance.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
+import { getReloadVersion, increaseReloadVersion } from '../../../../src/core/reload-version.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
 import { BUILTIN_RAW_TEXT_TEMPLATE_ID, registerBuiltinRawTextTemplate } from '../../test-utils/debug/registry.js';
 
@@ -74,6 +75,70 @@ describe('ElementTemplate update timing (main thread patch)', () => {
   it('handles updates without flush options', () => {
     const payload = {
       ops: createRawTextOps(1, 'hello'),
+    };
+
+    envManager.switchToBackground(() => {
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.update,
+        data: payload,
+      });
+    });
+    envManager.switchToMainThread();
+
+    const flushCalls = (__FlushElementTree as unknown as { mock: { calls: unknown[][] } }).mock
+      .calls;
+    expect(flushCalls.length).toBeGreaterThan(0);
+  });
+
+  it('ignores update payloads from an older reload version', () => {
+    const staleReloadVersion = getReloadVersion();
+    increaseReloadVersion();
+    const payload = {
+      ops: createRawTextOps(1, 'stale'),
+      flushOptions: { pipelineOptions },
+      reloadVersion: staleReloadVersion,
+    };
+
+    envManager.switchToBackground(() => {
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.update,
+        data: payload,
+      });
+    });
+    envManager.switchToMainThread();
+
+    const flushCalls = (__FlushElementTree as unknown as { mock: { calls: unknown[][] } }).mock
+      .calls;
+    expect(flushCalls).toHaveLength(0);
+    expect(lynx.performance._markTiming.mock.calls).toEqual([]);
+  });
+
+  it('accepts update payloads from the current reload version', () => {
+    increaseReloadVersion();
+    const payload = {
+      ops: createRawTextOps(1, 'fresh'),
+      flushOptions: { pipelineOptions },
+      reloadVersion: getReloadVersion(),
+    };
+
+    envManager.switchToBackground(() => {
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.update,
+        data: payload,
+      });
+    });
+    envManager.switchToMainThread();
+
+    const flushCalls = (__FlushElementTree as unknown as { mock: { calls: unknown[][] } }).mock
+      .calls;
+    expect(flushCalls.length).toBeGreaterThan(0);
+    expect(flushCalls[0]?.[1]).toMatchObject({ pipelineOptions });
+  });
+
+  it('accepts update payloads without reloadVersion for compatibility', () => {
+    const payload = {
+      ops: createRawTextOps(1, 'legacy'),
+      flushOptions: { pipelineOptions },
     };
 
     envManager.switchToBackground(() => {

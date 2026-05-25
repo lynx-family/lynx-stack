@@ -8,15 +8,31 @@
 
 import { renderOpcodesIntoElementTemplate } from './render-opcodes.js';
 import { render as renderToString } from './render-to-opcodes.js';
+import { getReloadVersion } from '../../../core/reload-version.js';
 import { profileEnd, profileStart } from '../../debug/profile.js';
 import { ElementTemplateLifecycleConstant } from '../../protocol/lifecycle-constant.js';
-import type { SerializedElementTemplate } from '../../protocol/types.js';
-import { __page } from '../page/page.js';
+import type { ElementTemplateHydrateCommitContext, SerializedEtNode } from '../../protocol/types.js';
+import { insertRootIntoPage, removeRootFromPage } from '../page/page.js';
 import { __root } from '../page/root-instance.js';
+
+// ET reload reuses the native page, so the main-thread render path owns the
+// root refs it appended and can remove only those roots before rebuilding.
+let mainThreadRootRefs: ElementRef[] = [];
+
+function resetMainThreadRootRefs(): void {
+  mainThreadRootRefs = [];
+}
+
+function removeMainThreadRootRefs(): void {
+  const rootRefs = mainThreadRootRefs;
+  mainThreadRootRefs = [];
+  for (const rootRef of rootRefs) {
+    removeRootFromPage(rootRef);
+  }
+}
 
 function renderMainThread(): void {
   let opcodes;
-  let rootRefs: ElementRef[] = [];
   profileStart('ReactLynx::renderMainThread');
   try {
     opcodes = renderToString(__root.__jsx, undefined);
@@ -29,28 +45,33 @@ function renderMainThread(): void {
 
   profileStart('ReactLynx::renderOpcodes');
   try {
-    rootRefs = renderOpcodesIntoElementTemplate(opcodes).rootRefs;
+    const { rootRefs } = renderOpcodesIntoElementTemplate(opcodes);
     for (const rootRef of rootRefs) {
-      __AppendElement(__page, rootRef);
+      insertRootIntoPage(rootRef);
     }
+    mainThreadRootRefs = rootRefs;
   } finally {
     profileEnd();
   }
 
   profileStart('ReactLynx::packSerializedETInstance');
   try {
-    const instances: SerializedElementTemplate[] = [];
-    for (const rootRef of rootRefs) {
+    const instances: SerializedEtNode[] = [];
+    for (const rootRef of mainThreadRootRefs) {
       instances.push(__SerializeElementTemplate(rootRef));
     }
+    const payload: ElementTemplateHydrateCommitContext = {
+      instances,
+      reloadVersion: getReloadVersion(),
+    };
 
     lynx.getJSContext().dispatchEvent({
       type: ElementTemplateLifecycleConstant.hydrate,
-      data: instances,
+      data: payload,
     });
   } finally {
     profileEnd();
   }
 }
 
-export { renderMainThread };
+export { removeMainThreadRootRefs, renderMainThread, resetMainThreadRootRefs };

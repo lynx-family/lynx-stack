@@ -6,6 +6,7 @@ import { vi } from 'vitest';
 
 import { resetElementTemplateHydrationListener } from '../../../../src/element-template/background/hydration-listener.js';
 import { renderOpcodesIntoElementTemplate } from '../../../../src/element-template/runtime/render/render-opcodes.js';
+import { clearEtAttrPlanMap } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import { renderToString } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
@@ -26,8 +27,7 @@ declare global {
 
 interface RootNode {
   type: 'page';
-  id: string;
-  children: unknown[];
+  children?: unknown[];
 }
 
 interface TransformResult {
@@ -136,7 +136,9 @@ async function runCompiledRenderFixture(options: {
 
   vi.resetAllMocks();
   elementTemplateRegistry.clear();
+  clearEtAttrPlanMap();
   resetTemplateId();
+  clearEtAttrPlanMap();
   globalThis.__USE_ELEMENT_TEMPLATE__ = true;
 
   globalThis.__LEPUS__ = true;
@@ -161,7 +163,7 @@ async function runCompiledRenderFixture(options: {
   const installed = installMockNativePapi({ clearTemplatesOnCleanup: true });
   const nativeLog = installed.nativeLog as unknown[];
   const cleanup = installed.cleanup;
-  const root: RootNode = { type: 'page', id: '0', children: [] };
+  const root = __CreateTypedElementTemplate('page', null, null, '0', null) as unknown as RootNode;
 
   try {
     const code = fs.readFileSync(sourcePath, 'utf8');
@@ -233,12 +235,12 @@ async function runCompiledRenderFixture(options: {
       const opcodes = renderToString(vnode, null);
       const { rootRefs } = renderOpcodesIntoElementTemplate(opcodes);
       for (const rootRef of rootRefs) {
-        __AppendElement(root as FiberElement, rootRef);
+        __InsertNodeToElementTemplate(root as FiberElement, 0, rootRef, null);
       }
 
       assertOrUpdateTextFile({
         path: expectedPath,
-        actual: serializeToJSX(root.children[0]),
+        actual: serializeToJSX(root.children?.[0]),
         update,
         fixtureName,
         label: 'jsx output',
@@ -259,6 +261,7 @@ async function runCompiledRenderFixture(options: {
     expectReportErrorCount(0);
   } finally {
     resetElementTemplateHydrationListener();
+    clearEtAttrPlanMap();
     cleanup();
     globalThis.__USE_ELEMENT_TEMPLATE__ = undefined;
   }

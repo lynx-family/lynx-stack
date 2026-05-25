@@ -1,0 +1,28 @@
+Object {
+  "ops": Array [
+    Object {
+      "childId": -1,
+      "elementSlotIndex": 0,
+      "op": "removeNode",
+      "removedSubtreeHandleIds": Array [
+        -1,
+      ],
+      "targetId": -3,
+    },
+    Object {
+      "attributeSlots": Array [],
+      "bundleUrl": null,
+      "elementSlots": Array [],
+      "handleId": 4,
+      "op": "createTemplate",
+      "templateKey": "_et_45693_test_3",
+    },
+    Object {
+      "childId": 4,
+      "elementSlotIndex": 0,
+      "op": "insertNode",
+      "referenceId": 0,
+      "targetId": -3,
+    },
+  ],
+}

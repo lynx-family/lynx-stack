@@ -23,8 +23,8 @@ it('should merge fetchBundle calls', async () => {
     'utf-8',
   );
 
-  const backgroundFetchBundleCalls = background.split('fetchBundle' + '(');
-  const mainThreadFetchBundleCalls = mainThread.split('fetchBundle' + '(');
+  const backgroundFetchBundleCalls = background.split('lynx.fetchBundle' + '(');
+  const mainThreadFetchBundleCalls = mainThread.split('lynx.fetchBundle' + '(');
   expect(backgroundFetchBundleCalls.length).toBe(2);
   expect(mainThreadFetchBundleCalls.length).toBe(2);
 });

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { getReloadVersion, increaseReloadVersion } from '../../../../src/core/reload-version.js';
 import * as elementTemplateAlog from '../../../../src/element-template/debug/alog.js';
 import { globalCommitContext } from '../../../../src/element-template/background/commit-context.js';
 import {
@@ -20,7 +21,10 @@ import {
   flushPendingRefs,
 } from '../../../../src/element-template/prop-adapters/ref.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
-import type { SerializedElementTemplate } from '../../../../src/element-template/protocol/types.js';
+import type {
+  SerializedElementTemplate,
+  SerializedTypedNode,
+} from '../../../../src/element-template/protocol/types.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';
 import {
   __etAttrPlanMap,
@@ -101,11 +105,76 @@ describe('ElementTemplate hydration listener', () => {
     expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
   });
 
+  it('ignores stale hydrate payloads from before reload', () => {
+    envManager.switchToBackground();
+    installElementTemplateHydrationListener();
+
+    const backgroundRoot = __root as BackgroundElementTemplateInstance;
+    const after = new BackgroundElementTemplateInstance('_et_test');
+    backgroundRoot.appendChild(after);
+    const oldId = after.instanceId;
+    const staleReloadVersion = getReloadVersion();
+    increaseReloadVersion();
+
+    envManager.switchToMainThread();
+    lynx.getJSContext().dispatchEvent({
+      type: ElementTemplateLifecycleConstant.hydrate,
+      data: {
+        instances: [createSerializedTemplate(-1, '_et_test')],
+        reloadVersion: staleReloadVersion,
+      },
+    });
+
+    envManager.switchToBackground();
+    expect(backgroundElementTemplateInstanceManager.get(oldId)).toBe(after);
+    expect(backgroundElementTemplateInstanceManager.get(-1)).toBeUndefined();
+  });
+
+  it('drops typed roots before typed hydrate support lands', () => {
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      envManager.switchToBackground();
+      installElementTemplateHydrationListener();
+
+      const backgroundRoot = __root as BackgroundElementTemplateInstance;
+      const after = new BackgroundElementTemplateInstance('_et_test');
+      backgroundRoot.appendChild(after);
+      const oldId = after.instanceId;
+
+      envManager.switchToMainThread();
+      lynx.getJSContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.hydrate,
+        data: [
+          {
+            type: 'view',
+            elementSlots: [],
+            uid: -1,
+          } satisfies SerializedTypedNode,
+        ],
+      });
+
+      envManager.switchToBackground();
+
+      expect(reportError).toHaveBeenCalledTimes(1);
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+        'does not support serialized typed root',
+      );
+      expect(backgroundElementTemplateInstanceManager.get(oldId)).toBe(after);
+      expect(backgroundElementTemplateInstanceManager.get(-1)).toBeUndefined();
+    } finally {
+      lynx.reportError = oldReportError;
+    }
+  });
+
   it('schedules delayed cleanup for removed subtrees produced during hydration', () => {
     vi.useFakeTimers();
     try {
       envManager.switchToBackground();
       installElementTemplateHydrationListener();
+      const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
 
       const backgroundRoot = __root as BackgroundElementTemplateInstance;
       const host = new BackgroundElementTemplateInstance('_et_test');
@@ -124,6 +193,12 @@ describe('ElementTemplate hydration listener', () => {
       });
 
       envManager.switchToBackground();
+      expect(dispatchSpy).toHaveBeenCalledWith({
+        type: ElementTemplateLifecycleConstant.update,
+        data: expect.objectContaining({
+          reloadVersion: getReloadVersion(),
+        }),
+      });
       vi.advanceTimersByTime(9999);
       expect(backgroundElementTemplateInstanceManager.get(stale.instanceId)).toBe(stale);
 

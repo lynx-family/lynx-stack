@@ -1,0 +1,19 @@
+Array [
+  Object {
+    "attributeSlots": Array [],
+    "elementSlots": Array [
+      Array [
+        Object {
+          "attributeSlots": Array [
+            "Hello",
+          ],
+          "elementSlots": Array [],
+          "templateKey": "_et_builtin_raw_text",
+          "uid": -1,
+        },
+      ],
+    ],
+    "templateKey": "_et_1692a_test_1",
+    "uid": -2,
+  },
+]

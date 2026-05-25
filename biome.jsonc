@@ -62,6 +62,8 @@
 
       // REPL examples use Lynx platform globals and are not subject to lint rules
       "packages/repl/src/examples/**",
+      // REPL generated artifacts can exceed Biome's file-size limit
+      "packages/repl/src/generated/**",
     ],
     "rules": {
       // We are migrating from ESLint to Biome

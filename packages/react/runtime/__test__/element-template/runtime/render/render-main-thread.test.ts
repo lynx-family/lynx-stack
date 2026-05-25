@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderMainThread } from '../../../../src/element-template/runtime/render/render-main-thread.js';
+import { getReloadVersion } from '../../../../src/core/reload-version.js';
 import { setupPage } from '../../../../src/element-template/runtime/page/page.js';
 import { setRoot } from '../../../../src/element-template/runtime/page/root-instance.js';
 
@@ -19,7 +20,7 @@ import { renderOpcodesIntoElementTemplate as mockRenderOpcodesIntoElementTemplat
 describe('renderMainThread', () => {
   beforeEach(() => {
     setRoot({ __jsx: { type: 'test-root' } });
-    setupPage({ type: 'page', children: [] } as unknown as FiberElement);
+    setupPage({ type: 'page', children: [] } as unknown as ElementRef);
     globalThis.__MAIN_THREAD__ = true;
     globalThis.__BACKGROUND__ = false;
     const dispatchEvent = vi.fn();
@@ -30,7 +31,7 @@ describe('renderMainThread', () => {
         dispatchEvent,
       })),
     } as typeof lynx;
-    vi.stubGlobal('__AppendElement', vi.fn());
+    vi.stubGlobal('__InsertNodeToElementTemplate', vi.fn());
     vi.stubGlobal('__SerializeElementTemplate', vi.fn());
     vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({ rootRefs: [] });
   });
@@ -92,13 +93,28 @@ describe('renderMainThread', () => {
     expect(mockRenderOpcodesIntoElementTemplate).toHaveBeenCalledWith(
       opcodes,
     );
-    expect(__AppendElement).toHaveBeenNthCalledWith(1, expect.objectContaining({ type: 'page' }), rootRefA);
-    expect(__AppendElement).toHaveBeenNthCalledWith(2, expect.objectContaining({ type: 'page' }), rootRefB);
+    expect(__InsertNodeToElementTemplate).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ type: 'page' }),
+      0,
+      rootRefA,
+      null,
+    );
+    expect(__InsertNodeToElementTemplate).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ type: 'page' }),
+      0,
+      rootRefB,
+      null,
+    );
     expect(__SerializeElementTemplate).toHaveBeenNthCalledWith(1, rootRefA);
     expect(__SerializeElementTemplate).toHaveBeenNthCalledWith(2, rootRefB);
     expect(dispatchEvent).toHaveBeenCalledWith({
       type: 'rLynxElementTemplateHydrate',
-      data: [serializedA, serializedB],
+      data: {
+        instances: [serializedA, serializedB],
+        reloadVersion: getReloadVersion(),
+      },
     });
   });
 });
