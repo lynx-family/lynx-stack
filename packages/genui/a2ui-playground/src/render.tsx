@@ -58,6 +58,11 @@ interface ActionResponseMessage {
   messages: unknown[];
 }
 
+interface LiveMessagesMessage {
+  type: 'A2UI_LIVE_MESSAGES';
+  messages: unknown[];
+}
+
 interface LynxViewElement extends HTMLElement {
   initData?: InitData;
   globalProps?: unknown;
@@ -313,6 +318,17 @@ function Render() {
         const lynxView = lynxViewRef.current;
         lynxView?.sendGlobalEvent?.('A2UI_ACTION_RESPONSE', [
           (e.data as ActionResponseMessage).messages,
+        ]);
+        return;
+      }
+      if (
+        e.data
+        && typeof e.data === 'object'
+        && (e.data as LiveMessagesMessage).type === 'A2UI_LIVE_MESSAGES'
+      ) {
+        const lynxView = lynxViewRef.current;
+        lynxView?.sendGlobalEvent?.('A2UI_LIVE_MESSAGES', [
+          (e.data as LiveMessagesMessage).messages,
         ]);
         return;
       }

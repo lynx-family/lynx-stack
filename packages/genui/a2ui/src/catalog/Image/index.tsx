@@ -28,6 +28,15 @@ export interface ImageProps extends GenericComponentProps {
 const fallbackImage =
   'https://lf3-static.bytednsdoc.com/obj/eden-cn/zalzzh-ukj-lapzild-shpjpmmv-eufs/ljhwZthlaukjlkulzlp/built-in-images/logo.png';
 
+function isLoadableImageSource(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  const src = value.trim();
+  if (!src) return false;
+  if (/^(?:https?:|data:image\/|blob:|file:)/iu.test(src)) return true;
+  if (/^(?:\/|\.\/|\.\.\/)/u.test(src)) return true;
+  return /\.(?:avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/iu.test(src);
+}
+
 export function Image(
   props: ImageProps,
 ): import('@lynx-js/react').ReactNode {
@@ -48,19 +57,22 @@ export function Image(
   })();
 
   const [hasError, setHasError] = useState(false);
+  const variant = props.variant ?? 'mediumFeature';
+  const className = `a2ui-image image-variant-${variant} ${
+    typeof props.weight === 'number' ? 'image-weighted' : ''
+  }`;
+  const loadableSrc = isLoadableImageSource(src) ? src.trim() : undefined;
 
   useEffect(() => {
     setHasError(false);
-  }, [src]);
+  }, [loadableSrc]);
 
   return (
     <image
       key={props.id}
-      className={`a2ui-image image-variant-${
-        props.variant ?? 'mediumFeature'
-      } ${typeof props.weight === 'number' ? 'image-weighted' : ''}`}
+      className={className}
       auto-size={true}
-      src={hasError ? fallbackImage : src as string}
+      src={hasError || !loadableSrc ? fallbackImage : loadableSrc}
       mode={mode}
       binderror={() => setHasError(true)}
     />

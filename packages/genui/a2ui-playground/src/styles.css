@@ -55,6 +55,55 @@ html[data-theme="light"] {
   color-scheme: light;
 }
 
+/* ── Shared Feedback ── */
+.copyToastViewport {
+  position: fixed;
+  z-index: 10000;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.copyToast {
+  min-width: 148px;
+  padding: 9px 14px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--geist-background) 94%, transparent);
+  box-shadow: var(--geist-shadow-lg);
+  color: var(--geist-foreground);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  backdrop-filter: blur(12px);
+  animation: copyToastIn 160ms ease-out;
+}
+
+.copyToast-success {
+  border-color: color-mix(
+    in srgb,
+    var(--geist-success) 35%,
+    var(--geist-border)
+  );
+}
+
+.copyToast-error {
+  border-color: color-mix(in srgb, var(--geist-error) 45%, var(--geist-border));
+  color: var(--geist-error);
+}
+
+@keyframes copyToastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ── Reset & Base ── */
 *,
 *::before,

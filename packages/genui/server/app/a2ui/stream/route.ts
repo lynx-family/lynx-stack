@@ -3,6 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 
 import { BASIC_CATALOG } from '../../../agent/a2ui-catalog';
+import {
+  A2UIProtocolMessageStreamParser,
+  splitA2UIProtocolMessages,
+} from '../../../agent/a2ui-stream-parser';
 import { validateA2UIOutput } from '../../../agent/a2ui-validator';
 import { resolveA2UIImageUrls } from '../../../agent/image-resolver';
 import { getA2UIAgentService } from '../../../service/a2ui-agent';
@@ -86,12 +90,22 @@ export async function POST(req: Request) {
           opts,
           validatedConversation.conversation,
         );
+        const protocolParser = new A2UIProtocolMessageStreamParser();
+        const streamedMessages: unknown[] = [];
+        let streamedText = '';
 
         for await (const chunk of textStream) {
+          streamedText += chunk;
           enqueue('delta', { text: chunk });
+          const newMessages = protocolParser.push(chunk);
+          if (newMessages.length > 0) {
+            streamedMessages.push(...newMessages);
+            enqueue('message', { messages: streamedMessages });
+          }
         }
 
         let { text: finalText, usage, finishReason } = await finalize();
+        finalText ??= streamedText;
         let repair:
           | {
             attempted: true;
@@ -113,7 +127,7 @@ export async function POST(req: Request) {
           opts.catalog ?? BASIC_CATALOG,
         );
         let resolvedMessages = v.ok
-          ? await resolveA2UIImageUrls(v.messages)
+          ? splitA2UIProtocolMessages(await resolveA2UIImageUrls(v.messages))
           : [];
         validation = {
           ok: v.ok,
@@ -138,8 +152,8 @@ export async function POST(req: Request) {
               finalText = repaired.text;
               usage = repaired.usage;
               finishReason = repaired.finishReason;
-              resolvedMessages = await resolveA2UIImageUrls(
-                repaired.messages,
+              resolvedMessages = splitA2UIProtocolMessages(
+                await resolveA2UIImageUrls(repaired.messages),
               );
               validation = {
                 ok: true,
@@ -154,12 +168,18 @@ export async function POST(req: Request) {
               };
             }
           } catch (err: unknown) {
+            const repairError = errorMessage(err).message;
             repair = {
               attempted: true,
               sourceErrors: v.errors,
               ok: false,
               attempts: 0,
-              errors: [errorMessage(err).message],
+              errors: [repairError],
+            };
+            validation = {
+              ok: false,
+              errors: [repairError],
+              messages: [],
             };
             enqueue('repair', repair);
           }

@@ -442,6 +442,21 @@ export function App() {
     },
   );
 
+  useLynxGlobalEventListener(
+    'A2UI_LIVE_MESSAGES',
+    (messages: unknown) => {
+      const normalized = normalizeProtocolMessages(messages);
+      const next = createMessageStore();
+      for (const msg of normalized) {
+        next.push(msg);
+      }
+      agentRef.current?.stop();
+      agentRef.current = null;
+      storeRef.current = next;
+      setStore(next);
+    },
+  );
+
   useEffect(() => {
     playbackPausedRef.current = isPlaybackPaused;
   }, [isPlaybackPaused]);
