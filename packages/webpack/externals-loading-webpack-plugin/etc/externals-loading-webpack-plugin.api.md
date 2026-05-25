@@ -20,6 +20,7 @@ export interface ExternalsLoadingPluginOptions {
     // Warning: (tsdoc-undefined-tag) The TSDoc tag "@default" is not defined in this configuration
     globalObject?: 'lynx' | 'globalThis' | undefined;
     mainThreadLayer: string;
+    retries?: number | undefined;
     timeout?: number | undefined;
 }
 
@@ -30,6 +31,7 @@ export interface ExternalValue {
     bundlePath?: string;
     libraryName?: string | string[];
     mainThread?: LayerOptions;
+    retries?: number;
     timeout?: number;
     url?: string;
 }

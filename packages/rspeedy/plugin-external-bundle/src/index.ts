@@ -254,7 +254,7 @@ export const builtInExternalsPresetDefinitions: ExternalsPresetDefinitions =
 export interface PluginExternalBundleOptions extends
   Pick<
     ExternalsLoadingPluginOptions,
-    'globalObject' | 'timeout'
+    'globalObject' | 'timeout' | 'retries'
   >
 {
   /**
@@ -868,6 +868,7 @@ export function pluginExternalBundle(
             externals,
             globalObject: options.globalObject,
             timeout: options.timeout,
+            retries: options.retries,
           }),
         )
         return config
