@@ -1,6 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { mkdtemp } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 import { describe, expect, test, vi } from 'vitest'
@@ -158,12 +160,19 @@ describe('Web', () => {
   test('all-in-one-public-path-not-auto', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
+    const tmp = await mkdtemp(path.join(tmpdir(), 'rspeedy-react-test-web-'))
+
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
         source: {
           entry: {
             main: new URL('./fixtures/basic.tsx', import.meta.url).pathname,
           },
+        },
+        output: {
+          // Isolate the dist root so this build cannot race other tests in
+          // this package writing to the default `test/dist/` directory.
+          distPath: { root: tmp },
         },
         tools: {
           swc(config) {

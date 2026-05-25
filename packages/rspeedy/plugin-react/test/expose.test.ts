@@ -1,6 +1,10 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { mkdtemp } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+
 import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
 import { describe, expect, test } from 'vitest'
 
@@ -17,12 +21,19 @@ describe('Expose', () => {
       | Parameters<Parameters<TemplateHooks['beforeEncode']['tap']>[1]>[0]
       | undefined
 
+    const tmp = await mkdtemp(path.join(tmpdir(), 'rspeedy-react-test-expose-'))
+
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
         source: {
           entry: {
             main: new URL('./fixtures/basic.tsx', import.meta.url).pathname,
           },
+        },
+        output: {
+          // Isolate the dist root so this build cannot race other tests in
+          // this package writing to the default `test/dist/` directory.
+          distPath: { root: tmp },
         },
         plugins: [
           pluginReactLynx(),

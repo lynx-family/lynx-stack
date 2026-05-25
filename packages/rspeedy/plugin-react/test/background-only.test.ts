@@ -1,6 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { mkdtemp } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 import { describe, expect, test, vi } from 'vitest'
@@ -132,6 +134,10 @@ describe('Build background-only', () => {
   test('build fail', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
+    const tmp = await mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-test-background-only-fail-'),
+    )
+
     const rsbuild = await createRspeedy({
       // eslint-disable-next-line n/no-unsupported-features/node-builtins
       cwd: import.meta.dirname,
@@ -140,6 +146,11 @@ describe('Build background-only', () => {
           entry: {
             main: './fixtures/background-only/fail.tsx',
           },
+        },
+        output: {
+          // Isolate the dist root so this build cannot race other tests in
+          // this package writing to the default `test/dist/` directory.
+          distPath: { root: tmp },
         },
         plugins: [
           pluginReactLynx(),
@@ -159,6 +170,10 @@ describe('Build background-only', () => {
   test('build success', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
+    const tmp = await mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-test-background-only-success-'),
+    )
+
     const rsbuild = await createRspeedy({
       // eslint-disable-next-line n/no-unsupported-features/node-builtins
       cwd: import.meta.dirname,
@@ -167,6 +182,11 @@ describe('Build background-only', () => {
           entry: {
             main: './fixtures/background-only/success.tsx',
           },
+        },
+        output: {
+          // Isolate the dist root so this build cannot race other tests in
+          // this package writing to the default `test/dist/` directory.
+          distPath: { root: tmp },
         },
         plugins: [
           pluginReactLynx(),
