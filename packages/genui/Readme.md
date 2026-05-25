@@ -743,17 +743,25 @@ Common mistakes:
 
 ## Try The Playground
 
-The playground is the fastest way to see the whole loop before integrating it
-into an app:
+The hosted playground is the fastest way to see the whole loop before
+integrating it into an app:
+
+[https://lynx-stack.dev/a2ui/](https://lynx-stack.dev/a2ui/)
+
+You do not need to run GenUI locally just to try the demos, inspect generated
+A2UI JSON, browse the catalog, or preview Lynx surfaces.
+
+For repository development or custom server debugging, you can still run the
+playground locally:
 
 ```sh
 pnpm --filter a2ui-server dev
 pnpm --filter a2ui-playground dev
 ```
 
-Open `http://localhost:3000`. In local development, the playground discovers
-the agent at `http://localhost:3060/a2ui/stream`. You can also pass an explicit
-trusted endpoint:
+Open `http://localhost:3000`. The local playground discovers the agent at
+`http://localhost:3060/a2ui/stream`. You can also pass an explicit trusted
+endpoint:
 
 ```text
 http://localhost:3000/?a2uiEndpoint=http://localhost:3060/a2ui/stream

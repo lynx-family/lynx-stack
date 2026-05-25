@@ -675,14 +675,20 @@ async function readA2UISse(
 
 ## 体验 Playground
 
-在接入应用前，Playground 是理解完整链路最快的入口：
+在接入应用前，线上 Playground 是理解完整链路最快的入口：
+
+[https://lynx-stack.dev/a2ui/](https://lynx-stack.dev/a2ui/)
+
+只是试用 demo、查看生成出的 A2UI JSON、浏览 Catalog 或预览 Lynx surface 时，不需要在本地启动 GenUI。
+
+如果你要做仓库开发，或者调试自定义 server，仍然可以本地运行 Playground：
 
 ```sh
 pnpm --filter a2ui-server dev
 pnpm --filter a2ui-playground dev
 ```
 
-打开 `http://localhost:3000`。本地开发时，Playground 会自动寻找 `http://localhost:3060/a2ui/stream`。也可以显式传入可信 endpoint：
+打开 `http://localhost:3000`。本地 Playground 会自动寻找 `http://localhost:3060/a2ui/stream`。也可以显式传入可信 endpoint：
 
 ```text
 http://localhost:3000/?a2uiEndpoint=http://localhost:3060/a2ui/stream
