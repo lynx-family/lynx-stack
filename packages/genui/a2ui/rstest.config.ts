@@ -3,10 +3,16 @@
 // LICENSE file in the root directory of this source tree.
 import { defineConfig } from '@rstest/core';
 
-const config: ReturnType<typeof defineConfig> = defineConfig({
-  name: 'genui/a2ui',
-  globals: true,
-  include: ['test/**/*.test.ts'],
-});
+import { withDefaultConfig } from '@lynx-js/react/testing-library/rstest-config';
 
-export default config;
+export default defineConfig({
+  extends: withDefaultConfig({
+    modifyRstestConfig(config) {
+      return {
+        ...config,
+        name: 'genui/a2ui',
+        include: ['test/**/*.test.ts'],
+      };
+    },
+  }),
+});

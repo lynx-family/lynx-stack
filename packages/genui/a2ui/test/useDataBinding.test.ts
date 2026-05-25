@@ -55,4 +55,91 @@ describe('resolveProperties', () => {
 
     expect(typeof resolved['text']).toBe('symbol');
   });
+
+  test('resolves nested bindings inside arrays and objects', () => {
+    const surface = createSurface();
+    surface.store.update('/weather/dates', [
+      'Oct 1',
+      'Oct 2',
+      'Oct 3',
+    ]);
+    surface.store.update('/weather/temperatures', [22, 24, 23]);
+    surface.store.update('/weather/precipitations', [0, 5, 0]);
+
+    const resolved = resolveProperties(
+      {
+        labels: { path: '/weather/dates' },
+        series: [
+          {
+            name: 'Temperature',
+            values: { path: '/weather/temperatures' },
+            color: '#FF5733',
+          },
+          {
+            name: 'Precipitation',
+            values: { path: '/weather/precipitations' },
+            color: '#33A1FF',
+          },
+        ],
+        variant: 'linear',
+        xLabel: 'Date',
+        yLabel: 'Value',
+        showGrid: true,
+        showLegend: true,
+        height: 300,
+      },
+      surface,
+    );
+
+    expect(resolved).toMatchObject({
+      labels: ['Oct 1', 'Oct 2', 'Oct 3'],
+      series: [
+        {
+          name: 'Temperature',
+          values: [22, 24, 23],
+          color: '#FF5733',
+        },
+        {
+          name: 'Precipitation',
+          values: [0, 5, 0],
+          color: '#33A1FF',
+        },
+      ],
+      variant: 'linear',
+      xLabel: 'Date',
+      yLabel: 'Value',
+      showGrid: true,
+      showLegend: true,
+      height: 300,
+    });
+  });
+
+  test('reuses the previous resolved snapshot when values do not change', () => {
+    const surface = createSurface();
+    surface.store.update('/weather/dates', ['Mon', 'Tue']);
+    surface.store.update('/weather/temperatures', [12, 14]);
+
+    const props = {
+      labels: { path: '/weather/dates' },
+      series: [
+        {
+          name: 'Temperature',
+          values: { path: '/weather/temperatures' },
+        },
+      ],
+    };
+
+    const first = resolveProperties(props, surface);
+    const second = resolveProperties(
+      props,
+      surface,
+      undefined,
+      undefined,
+      undefined,
+      first,
+    );
+
+    expect(second).toBe(first);
+    expect(second['series']).toBe(first['series']);
+  });
 });

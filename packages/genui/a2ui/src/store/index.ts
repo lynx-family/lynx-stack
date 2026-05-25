@@ -34,9 +34,9 @@ export type { FunctionCallContext } from './FunctionRegistry.js';
 // lands and validates the shape.
 export {
   executeFunctionCall,
-  isDataBinding,
-  isFunctionCall,
-  resolveDynamicValue,
   resolveFunctionArguments,
 } from './resolveFunctionCall.js';
 export type { ResolveFunctionOptions } from './resolveFunctionCall.js';
+
+export { isDataBinding, isFunctionCall } from './utils.js';
+export { resolveDynamicValue } from './resolveDynamic.js';
