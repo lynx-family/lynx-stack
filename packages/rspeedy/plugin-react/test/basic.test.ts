@@ -22,12 +22,19 @@ describe('ReactLynx rsbuild', () => {
     vi.stubEnv('NODE_ENV', 'production')
     const { pluginReactLynx } = await import('../src/index.js')
 
+    const tmp = await mkdtemp(path.join(tmpdir(), 'rspeedy-react-test-basic-'))
+
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
         source: {
           entry: {
             main: new URL('./fixtures/basic.tsx', import.meta.url).pathname,
           },
+        },
+        output: {
+          // Isolate the dist root so this build cannot race other tests in
+          // this package writing to the default `test/dist/` directory.
+          distPath: { root: tmp },
         },
         tools: {
           rspack: {
@@ -56,6 +63,10 @@ describe('ReactLynx rsbuild', () => {
     vi.stubEnv('NODE_ENV', 'production')
     const { pluginReactLynx } = await import('../src/index.js')
 
+    const tmp = await mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-test-element-template-'),
+    )
+
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
         source: {
@@ -65,6 +76,11 @@ describe('ReactLynx rsbuild', () => {
               import.meta.url,
             ).pathname,
           },
+        },
+        output: {
+          // Isolate the dist root so this build cannot race other tests in
+          // this package writing to the default `test/dist/` directory.
+          distPath: { root: tmp },
         },
         tools: {
           rspack: {
