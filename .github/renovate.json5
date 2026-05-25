@@ -92,6 +92,19 @@
       ]
     },
     {
+      // `@lynx-js/preact-devtools` only publishes dated snapshot builds
+      // (`5.0.1-<YYYYMMDDHHMMSS>-<sha>`) under the `latest` dist-tag. These are
+      // semver prereleases that sort *below* the stable `5.0.1` baseline, so a
+      // `^5.0.1` range never sees them and Renovate gets stuck. Follow the
+      // `latest` tag and pin to it so each new build produces an update PR.
+      "matchPackageNames": [
+        "@lynx-js/preact-devtools",
+      ],
+      "followTag": "latest",
+      "ignoreUnstable": false,
+      "rangeStrategy": "pin",
+    },
+    {
       "groupName": "API Extractor",
       "groupSlug": "api-extractor",
       "matchPackageNames": [
