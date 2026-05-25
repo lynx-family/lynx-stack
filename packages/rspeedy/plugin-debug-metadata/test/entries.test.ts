@@ -81,6 +81,20 @@ describe('collectEntryPathMap', () => {
 })
 
 /**
+ * Stand-in for rspack's `AsyncDependenciesBlock` so the collector's
+ * `block instanceof AsyncDependenciesBlock` check is exercised against
+ * real instances. Exposed to the collector via `compiler.webpack`.
+ */
+class FakeAsyncDependenciesBlock {
+  dependencies: unknown[]
+  constructor(deps: unknown[]) {
+    this.dependencies = deps
+  }
+}
+
+const fakeWebpack = { AsyncDependenciesBlock: FakeAsyncDependenciesBlock }
+
+/**
  * Build a fake compilation where chunkGroup `name` has `origins`
  * matching pre-built importer/block/dep wiring. `resolveTo` is a
  * dependency-instance → resource map.
@@ -91,7 +105,7 @@ function fakeCompilation(args: {
   resolveTo: Map<unknown, string>
 }): { compilation: Rspack.Compilation, cg: unknown } {
   const builtOrigins = args.origins.map(o => ({
-    blocks: o.blocks.map(b => ({ dependencies: b.deps })),
+    blocks: o.blocks.map(b => new FakeAsyncDependenciesBlock(b.deps)),
   }))
   const allBlocks = builtOrigins.flatMap(o => o.blocks)
   const cg = {
@@ -104,6 +118,7 @@ function fakeCompilation(args: {
     allBlocks.map(b => [b, cg]),
   )
   const compilation = {
+    compiler: { webpack: fakeWebpack },
     namedChunkGroups: new Map([[args.name, cg]]),
     chunkGraph: {
       getBlockChunkGroup: (b: unknown) => blockToCg.get(b) ?? null,
@@ -137,13 +152,14 @@ describe('collectLazyBundleEntryResources', () => {
   test('skips blocks whose getBlockChunkGroup does not match the target', () => {
     const targetDep = { id: 'target' }
     const otherDep = { id: 'other' }
-    const targetBlock = { dependencies: [targetDep] }
-    const otherBlock = { dependencies: [otherDep] }
+    const targetBlock = new FakeAsyncDependenciesBlock([targetDep])
+    const otherBlock = new FakeAsyncDependenciesBlock([otherDep])
     const cg = { origins: [] as unknown[] }
     const otherCg = { origins: [] as unknown[] }
     const importer = { blocks: [otherBlock, targetBlock] }
     ;(cg as { origins: unknown[] }).origins = [{ module: importer }]
     const compilation = {
+      compiler: { webpack: fakeWebpack },
       namedChunkGroups: new Map([['name', cg]]),
       chunkGraph: {
         getBlockChunkGroup: (b: unknown) => b === targetBlock ? cg : otherCg,
@@ -162,8 +178,8 @@ describe('collectLazyBundleEntryResources', () => {
 
   test('dedupes when multiple origins resolve to the same module', () => {
     const dep = { id: 'shared' }
-    const importer1 = { blocks: [{ dependencies: [dep] }] }
-    const importer2 = { blocks: [{ dependencies: [dep] }] }
+    const importer1 = { blocks: [new FakeAsyncDependenciesBlock([dep])] }
+    const importer2 = { blocks: [new FakeAsyncDependenciesBlock([dep])] }
     const cg = {
       origins: [{ module: importer1 }, { module: importer2 }],
     }
@@ -172,6 +188,7 @@ describe('collectLazyBundleEntryResources', () => {
       ...importer2.blocks,
     ] as unknown[]
     const compilation = {
+      compiler: { webpack: fakeWebpack },
       namedChunkGroups: new Map([['name', cg]]),
       chunkGraph: {
         getBlockChunkGroup: (b: unknown) => allBlocks.includes(b) ? cg : null,
@@ -196,9 +213,10 @@ describe('collectLazyBundleEntryResources', () => {
 
   test('returns [] when getResolvedModule yields no resource', () => {
     const dep = { id: 'd' }
-    const block = { dependencies: [dep] }
+    const block = new FakeAsyncDependenciesBlock([dep])
     const cg = { origins: [{ module: { blocks: [block] } }] }
     const compilation = {
+      compiler: { webpack: fakeWebpack },
       namedChunkGroups: new Map([['name', cg]]),
       chunkGraph: { getBlockChunkGroup: () => cg },
       moduleGraph: { getResolvedModule: () => null },
@@ -208,9 +226,10 @@ describe('collectLazyBundleEntryResources', () => {
 
   test('drops non-absolute resources (defensive guard against virtual modules)', () => {
     const dep = { id: 'd' }
-    const block = { dependencies: [dep] }
+    const block = new FakeAsyncDependenciesBlock([dep])
     const cg = { origins: [{ module: { blocks: [block] } }] }
     const compilation = {
+      compiler: { webpack: fakeWebpack },
       namedChunkGroups: new Map([['name', cg]]),
       chunkGraph: { getBlockChunkGroup: () => cg },
       moduleGraph: {
@@ -233,7 +252,10 @@ describe('collectLazyBundleEntryResources', () => {
       origins: [{ request: '/abs/src/background.ts', loc: 'card__background' }],
     }
     const compilation = {
+      compiler: { webpack: fakeWebpack },
       namedChunkGroups: new Map([['card__background', cg]]),
+      chunkGraph: { getBlockChunkGroup: () => null },
+      moduleGraph: { getResolvedModule: () => null },
     } as unknown as Rspack.Compilation
     expect(
       collectLazyBundleEntryResources(compilation, 'card__background'),

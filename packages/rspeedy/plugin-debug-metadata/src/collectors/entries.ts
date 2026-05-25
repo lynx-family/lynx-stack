@@ -51,28 +51,33 @@ export function collectLazyBundleEntryResources(
   compilation: Rspack.Compilation,
   chunkGroupName: string,
 ): string[] {
-  const cg = compilation.namedChunkGroups.get(chunkGroupName)!
-  const importerModule = cg.origins[0]?.module
-  if (!importerModule) return []
-
+  const cg = compilation.namedChunkGroups.get(chunkGroupName)
+  if (!cg) return []
   const chunkGraph = compilation.chunkGraph
   const moduleGraph = compilation.moduleGraph
+  if (!chunkGraph || !moduleGraph) return []
 
   const { AsyncDependenciesBlock } = compilation.compiler.webpack
 
   const out: string[] = []
-  for (const block of importerModule.blocks) {
-    if (
-      block instanceof AsyncDependenciesBlock
-      && chunkGraph.getBlockChunkGroup(block) === cg
-    ) {
-      // Rspeedy Lazy Bundle will have only one dependency. eg. import('./Foo.jsx')
-      // We can safely assume that it's the entry module.
-      const dep = block.dependencies[0]!
-      const resolved = moduleGraph.getResolvedModule(
-        dep,
-      )! as Rspack.NormalModule
-      out.push(resolved.resource)
+  for (const origin of cg.origins) {
+    const importer = origin.module
+    if (!importer?.blocks) continue
+    for (const block of importer.blocks) {
+      if (
+        !(block instanceof AsyncDependenciesBlock)
+        || chunkGraph.getBlockChunkGroup(block) !== cg
+      ) {
+        continue
+      }
+      const dep = block.dependencies[0]
+      const resolved = dep
+        ? moduleGraph.getResolvedModule(dep) as Rspack.NormalModule | null
+        : null
+      const resource = resolved?.resource
+      if (typeof resource === 'string' && path.isAbsolute(resource)) {
+        out.push(resource)
+      }
     }
   }
   return dedupe(out)
