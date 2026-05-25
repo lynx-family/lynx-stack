@@ -1,0 +1,29 @@
+{
+  "name": "@lynx-js/genui-cli",
+  "version": "0.0.0",
+  "private": true,
+  "description": "CLI for GenUI workflows.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/genui/cli"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "a2ui-cli": "./bin/cli.js",
+    "genui": "./bin/cli.js",
+    "genui-cli": "./bin/cli.js"
+  },
+  "files": [
+    "bin",
+    "README.md"
+  ],
+  "dependencies": {
+    "@lynx-js/genui-a2ui-catalog-extractor": "workspace:*",
+    "@lynx-js/genui-a2ui-prompt": "workspace:*"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

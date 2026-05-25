@@ -18,12 +18,7 @@ the protocol name comes from `displayName ?? component.name`.
 > using the tuple form below — the manifest key is authoritative.
 
 ```tsx
-import {
-  A2UI,
-  Text,
-  Button,
-  createMessageStore,
-} from '@lynx-js/a2ui-reactlynx';
+import { A2UI, Text, Button, createMessageStore } from '@lynx-js/genui/a2ui';
 
 const store = createMessageStore();
 
@@ -51,8 +46,8 @@ If you want `serializeCatalog(...)` to emit JSON Schema for each component
 JSON the extractor emitted at `dist/catalog/<Name>/catalog.json`:
 
 ```tsx
-import { Text } from '@lynx-js/a2ui-reactlynx/catalog/Text';
-import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json'
+import { Text } from '@lynx-js/genui/a2ui/catalog/Text';
+import textManifest from '@lynx-js/genui/a2ui/catalog/Text/catalog.json'
   with { type: 'json' };
 
 const catalog = defineCatalog([[Text, textManifest]]);
@@ -86,62 +81,62 @@ import {
   Tabs,
   Text,
   TextField,
-} from '@lynx-js/a2ui-reactlynx';
-import buttonManifest from '@lynx-js/a2ui-reactlynx/catalog/Button/catalog.json' with {
+} from '@lynx-js/genui/a2ui';
+import buttonManifest from '@lynx-js/genui/a2ui/catalog/Button/catalog.json' with {
   type: 'json',
 };
-import cardManifest from '@lynx-js/a2ui-reactlynx/catalog/Card/catalog.json' with {
+import cardManifest from '@lynx-js/genui/a2ui/catalog/Card/catalog.json' with {
   type: 'json',
 };
-import checkBoxManifest from '@lynx-js/a2ui-reactlynx/catalog/CheckBox/catalog.json' with {
+import checkBoxManifest from '@lynx-js/genui/a2ui/catalog/CheckBox/catalog.json' with {
   type: 'json',
 };
-import choicePickerManifest from '@lynx-js/a2ui-reactlynx/catalog/ChoicePicker/catalog.json' with {
+import choicePickerManifest from '@lynx-js/genui/a2ui/catalog/ChoicePicker/catalog.json' with {
   type: 'json',
 };
-import dateTimeInputManifest from '@lynx-js/a2ui-reactlynx/catalog/DateTimeInput/catalog.json' with {
+import dateTimeInputManifest from '@lynx-js/genui/a2ui/catalog/DateTimeInput/catalog.json' with {
   type: 'json',
 };
-import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json' with {
+import columnManifest from '@lynx-js/genui/a2ui/catalog/Column/catalog.json' with {
   type: 'json',
 };
-import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json' with {
+import dividerManifest from '@lynx-js/genui/a2ui/catalog/Divider/catalog.json' with {
   type: 'json',
 };
-import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json' with {
+import iconManifest from '@lynx-js/genui/a2ui/catalog/Icon/catalog.json' with {
   type: 'json',
 };
-import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json' with {
+import imageManifest from '@lynx-js/genui/a2ui/catalog/Image/catalog.json' with {
   type: 'json',
 };
-import lineChartManifest from '@lynx-js/a2ui-reactlynx/catalog/LineChart/catalog.json' with {
+import lineChartManifest from '@lynx-js/genui/a2ui/catalog/LineChart/catalog.json' with {
   type: 'json',
 };
-import pieChartManifest from '@lynx-js/a2ui-reactlynx/catalog/PieChart/catalog.json' with {
+import pieChartManifest from '@lynx-js/genui/a2ui/catalog/PieChart/catalog.json' with {
   type: 'json',
 };
-import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json' with {
+import listManifest from '@lynx-js/genui/a2ui/catalog/List/catalog.json' with {
   type: 'json',
 };
-import modalManifest from '@lynx-js/a2ui-reactlynx/catalog/Modal/catalog.json' with {
+import modalManifest from '@lynx-js/genui/a2ui/catalog/Modal/catalog.json' with {
   type: 'json',
 };
-import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json' with {
+import radioGroupManifest from '@lynx-js/genui/a2ui/catalog/RadioGroup/catalog.json' with {
   type: 'json',
 };
-import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json' with {
+import rowManifest from '@lynx-js/genui/a2ui/catalog/Row/catalog.json' with {
   type: 'json',
 };
-import sliderManifest from '@lynx-js/a2ui-reactlynx/catalog/Slider/catalog.json' with {
+import sliderManifest from '@lynx-js/genui/a2ui/catalog/Slider/catalog.json' with {
   type: 'json',
 };
-import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json' with {
+import tabsManifest from '@lynx-js/genui/a2ui/catalog/Tabs/catalog.json' with {
   type: 'json',
 };
-import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json' with {
+import textManifest from '@lynx-js/genui/a2ui/catalog/Text/catalog.json' with {
   type: 'json',
 };
-import textFieldManifest from '@lynx-js/a2ui-reactlynx/catalog/TextField/catalog.json' with {
+import textFieldManifest from '@lynx-js/genui/a2ui/catalog/TextField/catalog.json' with {
   type: 'json',
 };
 
@@ -188,7 +183,7 @@ MyChart.displayName = 'MyChart';
 ```
 
 If you want schema introspection for a custom component, generate the
-manifest with `@lynx-js/a2ui-catalog-extractor` against your interface and
+manifest with `@lynx-js/genui/a2ui-catalog-extractor` against your interface and
 pair it the same way:
 
 ```tsx

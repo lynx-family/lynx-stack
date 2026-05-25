@@ -15,9 +15,9 @@
 // that aggregates input validity — exporting the context now would
 // pre-commit the package to a Provider-based API before there's a real
 // consumer to validate it.
-export { A2UI } from './A2UI.jsx';
-export type { A2UIProps } from './A2UI.jsx';
-export { NodeRenderer } from './A2UIRenderer.jsx';
+export { A2UI } from './A2UI.js';
+export type { A2UIProps } from './A2UI.js';
+export { NodeRenderer } from './A2UIRenderer.js';
 export { useAction } from './useAction.js';
 export type { ActionProps } from './useAction.js';
 export { useDataBinding, useResolvedProps } from './useDataBinding.js';

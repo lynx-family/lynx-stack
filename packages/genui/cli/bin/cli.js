@@ -5,15 +5,33 @@
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import * as path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
-const usage = `Usage: a2ui-cli generate <target> [options]
+const usage = `Usage: genui <namespace> <command> [options]
+
+Namespaces:
+  a2ui    Generate A2UI catalog artifacts and system prompts.
+  openui  Reserved for future OpenUI workflows.
+
+Examples:
+  genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog
+  genui a2ui generate prompt --out dist/a2ui-system-prompt.txt
+`;
+
+const a2uiUsage = `Usage: genui a2ui generate <target> [options]
 
 Targets:
   catalog  Generate A2UI component and function catalog files.
   prompt   Generate an A2UI system prompt from catalog files.
 `;
 
-const generateCatalogUsage = `Usage: a2ui-cli generate catalog [options]
+const openuiUsage = `Usage: genui openui <command> [options]
+
+OpenUI CLI commands are reserved for future GenUI workflows.
+`;
+
+function createGenerateCatalogUsage(programName) {
+  return `Usage: ${programName} generate catalog [options]
 
 Options:
   --catalog-dir <dir>  Directory to scan for TypeScript catalog interfaces.
@@ -29,8 +47,10 @@ Defaults:
   --catalog-dir src/catalog
   --out-dir dist/catalog
 `;
+}
 
-const generatePromptUsage = `Usage: a2ui-cli generate prompt [options]
+function createGeneratePromptUsage(programName) {
+  return `Usage: ${programName} generate prompt [options]
 
 Options:
   --catalog-dir <dir>  Directory containing generated catalog files. When
@@ -44,15 +64,25 @@ Options:
 Defaults:
   --catalog-id built-in A2UI basic catalog id
 `;
-
-try {
-  process.exitCode = await runCli(process.argv.slice(2));
-} catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
 }
 
-async function runCli(args, cwd = process.cwd()) {
+if (isMain(import.meta.url)) {
+  try {
+    process.exitCode = await runCli(process.argv.slice(2), process.cwd(), {
+      binName: path.basename(process.argv[1] ?? 'genui'),
+    });
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  }
+}
+
+export async function runCli(args, cwd = process.cwd(), cliOptions = {}) {
+  const binName = cliOptions.binName ?? 'genui';
+  if (binName === 'a2ui-cli') {
+    return await runA2UICli(args, cwd, { programName: 'a2ui-cli' });
+  }
+
   const command = args[0];
   if (command === undefined || command === '--help' || command === '-h') {
     console.info(usage);
@@ -62,14 +92,35 @@ async function runCli(args, cwd = process.cwd()) {
     printPackageVersion();
     return 0;
   }
-  if (command !== 'generate') {
-    throw new Error(`Unknown command: ${command}`);
+
+  if (command === 'a2ui') {
+    return await runA2UICli(args.slice(1), cwd, { programName: 'genui a2ui' });
+  }
+  if (command === 'openui') {
+    return runOpenUICli(args.slice(1));
   }
 
+  throw new Error(`Unknown namespace: ${command}`);
+}
+
+async function runA2UICli(args, cwd, options) {
+  const programName = options.programName;
+  const command = args[0];
+  if (command === undefined || command === '--help' || command === '-h') {
+    console.info(programName === 'a2ui-cli' ? legacyA2UIUsage : a2uiUsage);
+    return 0;
+  }
+  if (command === '--version' || command === '-v') {
+    printPackageVersion();
+    return 0;
+  }
+  if (command !== 'generate') {
+    throw new Error(`Unknown A2UI command: ${command}`);
+  }
   const target = args[1];
   const targetArgs = args.slice(2);
   if (target === undefined || target === '--help' || target === '-h') {
-    console.info(usage);
+    console.info(programName === 'a2ui-cli' ? legacyA2UIUsage : a2uiUsage);
     return 0;
   }
   if (target === '--version' || target === '-v') {
@@ -78,24 +129,42 @@ async function runCli(args, cwd = process.cwd()) {
   }
   if (target === 'catalog') {
     if (targetArgs.includes('--help') || targetArgs.includes('-h')) {
-      console.info(generateCatalogUsage);
+      console.info(createGenerateCatalogUsage(programName));
       return 0;
     }
     const { runCli: runCatalogExtractorCli } = await import(
-      '@lynx-js/a2ui-catalog-extractor/cli'
+      '../../a2ui-catalog-extractor/dist/cli.js'
     );
     return await runCatalogExtractorCli(targetArgs, cwd);
   }
   if (target === 'prompt') {
-    return runGeneratePromptCli(targetArgs, cwd);
+    return runGeneratePromptCli(targetArgs, cwd, { programName });
   }
   throw new Error(`Unknown generate target: ${target}`);
 }
 
-async function runGeneratePromptCli(args, cwd = process.cwd()) {
+const legacyA2UIUsage = a2uiUsage.replaceAll('genui a2ui', 'a2ui-cli');
+
+function runOpenUICli(args) {
+  const command = args[0];
+  if (command === undefined || command === '--help' || command === '-h') {
+    console.info(openuiUsage);
+    return 0;
+  }
+  if (command === '--version' || command === '-v') {
+    printPackageVersion();
+    return 0;
+  }
+  throw new Error(
+    `Unknown OpenUI command: ${command}. OpenUI CLI commands are not available yet.`,
+  );
+}
+
+async function runGeneratePromptCli(args, cwd, cliOptions) {
+  const programName = cliOptions.programName;
   const options = parseGeneratePromptArgs(args);
   if (options.help) {
-    console.info(generatePromptUsage);
+    console.info(createGeneratePromptUsage(programName));
     return 0;
   }
   if (options.version) {
@@ -108,7 +177,7 @@ async function runGeneratePromptCli(args, cwd = process.cwd()) {
     BASIC_CATALOG_ID,
     buildA2UISystemPrompt,
     readA2UICatalogFromDirectory,
-  } = await import('@lynx-js/a2ui-prompt');
+  } = await import('../../a2ui-prompt/dist/index.js');
   const catalog = options.catalogDir
     ? readA2UICatalogFromDirectory({
       catalogDir: options.catalogDir,
@@ -120,7 +189,7 @@ async function runGeneratePromptCli(args, cwd = process.cwd()) {
       : undefined);
   if (options.catalogDir && catalog && isEmptyCatalog(catalog)) {
     throw new Error(
-      `[a2ui-cli] No components or functions found in generated catalog directory: ${options.catalogDir}`,
+      `[${programName}] No components or functions found in generated catalog directory: ${options.catalogDir}`,
     );
   }
   const systemPrompt = buildA2UISystemPrompt({
@@ -194,4 +263,9 @@ function printPackageVersion() {
   const require = createRequire(import.meta.url);
   const packageJson = require('../package.json');
   console.info(packageJson.version);
+}
+
+function isMain(moduleUrl) {
+  return process.argv[1] !== undefined
+    && moduleUrl === pathToFileURL(process.argv[1]).href;
 }

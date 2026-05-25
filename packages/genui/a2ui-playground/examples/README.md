@@ -1,7 +1,7 @@
 # A2UI playground examples
 
 Reference implementations that intentionally live **outside**
-`@lynx-js/a2ui-reactlynx`. The package itself ships only:
+`@lynx-js/genui/a2ui`. The package itself ships only:
 
 - `<A2UI>` — the protocol-naive renderer.
 - `MessageStore` — a pure raw-message buffer.

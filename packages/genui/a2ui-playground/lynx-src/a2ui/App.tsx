@@ -25,7 +25,7 @@ import {
   basicFunctions,
   createMessageStore,
   normalizePayloadToMessages as normalizeProtocolMessages,
-} from '@lynx-js/a2ui-reactlynx';
+} from '@lynx-js/genui/a2ui';
 import type {
   CatalogComponent,
   CatalogInput,
@@ -33,26 +33,7 @@ import type {
   MessageStore,
   ServerToClientMessage,
   UserActionPayload,
-} from '@lynx-js/a2ui-reactlynx';
-import buttonManifest from '@lynx-js/a2ui-reactlynx/catalog/Button/catalog.json';
-import cardManifest from '@lynx-js/a2ui-reactlynx/catalog/Card/catalog.json';
-import checkBoxManifest from '@lynx-js/a2ui-reactlynx/catalog/CheckBox/catalog.json';
-import choicePickerManifest from '@lynx-js/a2ui-reactlynx/catalog/ChoicePicker/catalog.json';
-import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json';
-import dateTimeInputManifest from '@lynx-js/a2ui-reactlynx/catalog/DateTimeInput/catalog.json';
-import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json';
-import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json';
-import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
-import lineChartManifest from '@lynx-js/a2ui-reactlynx/catalog/LineChart/catalog.json';
-import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
-import modalManifest from '@lynx-js/a2ui-reactlynx/catalog/Modal/catalog.json';
-import pieChartManifest from '@lynx-js/a2ui-reactlynx/catalog/PieChart/catalog.json';
-import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
-import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
-import sliderManifest from '@lynx-js/a2ui-reactlynx/catalog/Slider/catalog.json';
-import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json';
-import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json';
-import textFieldManifest from '@lynx-js/a2ui-reactlynx/catalog/TextField/catalog.json';
+} from '@lynx-js/genui/a2ui';
 import {
   useCallback,
   useEffect,
@@ -64,6 +45,25 @@ import {
   useState,
 } from '@lynx-js/react';
 
+import buttonManifest from '../../.generated/a2ui/catalog/Button/catalog.json';
+import cardManifest from '../../.generated/a2ui/catalog/Card/catalog.json';
+import checkBoxManifest from '../../.generated/a2ui/catalog/CheckBox/catalog.json';
+import choicePickerManifest from '../../.generated/a2ui/catalog/ChoicePicker/catalog.json';
+import columnManifest from '../../.generated/a2ui/catalog/Column/catalog.json';
+import dateTimeInputManifest from '../../.generated/a2ui/catalog/DateTimeInput/catalog.json';
+import dividerManifest from '../../.generated/a2ui/catalog/Divider/catalog.json';
+import iconManifest from '../../.generated/a2ui/catalog/Icon/catalog.json';
+import imageManifest from '../../.generated/a2ui/catalog/Image/catalog.json';
+import lineChartManifest from '../../.generated/a2ui/catalog/LineChart/catalog.json';
+import listManifest from '../../.generated/a2ui/catalog/List/catalog.json';
+import modalManifest from '../../.generated/a2ui/catalog/Modal/catalog.json';
+import pieChartManifest from '../../.generated/a2ui/catalog/PieChart/catalog.json';
+import radioGroupManifest from '../../.generated/a2ui/catalog/RadioGroup/catalog.json';
+import rowManifest from '../../.generated/a2ui/catalog/Row/catalog.json';
+import sliderManifest from '../../.generated/a2ui/catalog/Slider/catalog.json';
+import tabsManifest from '../../.generated/a2ui/catalog/Tabs/catalog.json';
+import textManifest from '../../.generated/a2ui/catalog/Text/catalog.json';
+import textFieldManifest from '../../.generated/a2ui/catalog/TextField/catalog.json';
 import { createMockAgent } from '../../examples/io-mock/mockAgent.js';
 import type { MockAgentProgress } from '../../examples/io-mock/mockAgent.js';
 

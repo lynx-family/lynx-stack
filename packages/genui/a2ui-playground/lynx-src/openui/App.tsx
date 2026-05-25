@@ -5,8 +5,8 @@ import {
   OpenUiRenderer,
   createOpenUiLibrary,
   createStreamingParser,
-} from '@lynx-js/openui-reactlynx';
-import type { ActionEvent, ParseResult } from '@lynx-js/openui-reactlynx';
+} from '@lynx-js/genui/openui';
+import type { ActionEvent, ParseResult } from '@lynx-js/genui/openui';
 import {
   useCallback,
   useEffect,

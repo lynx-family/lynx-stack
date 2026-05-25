@@ -152,7 +152,7 @@ function assertPlaygroundPrerequisites(): void {
 
   const formatted = missing.map((artifact) => `- ${artifact}`).join('\n');
   throw new Error(
-    `Missing A2UI catalog artifacts required by the playground preview server:\n${formatted}\n\nRun \`pnpm --filter @lynx-js/a2ui-reactlynx build\` before starting @lynx-js/ui-judge model-backed tests.`,
+    `Missing A2UI catalog artifacts required by the playground preview server:\n${formatted}\n\nRun \`pnpm -C packages/genui/a2ui build\` before starting @lynx-js/ui-judge model-backed tests.`,
   );
 }
 

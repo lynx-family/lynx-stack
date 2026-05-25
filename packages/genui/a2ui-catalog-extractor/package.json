@@ -1,6 +1,7 @@
 {
-  "name": "@lynx-js/a2ui-catalog-extractor",
+  "name": "@lynx-js/genui-a2ui-catalog-extractor",
   "version": "0.0.0",
+  "private": true,
   "description": "TypeDoc-driven A2UI catalog extractor for TypeScript interfaces.",
   "repository": {
     "type": "git",
@@ -31,7 +32,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rslib build",
+    "build": "tsc --project tsconfig.build.json",
     "test": "rstest"
   },
   "dependencies": {

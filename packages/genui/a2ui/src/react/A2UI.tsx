@@ -13,9 +13,9 @@ import {
 } from '@lynx-js/react';
 import type { ReactNode } from '@lynx-js/react';
 
-import { A2UIProvider } from './A2UIProvider.jsx';
-import { A2UIRenderer } from './A2UIRenderer.jsx';
-import type { UnsupportedInfo } from './A2UIRenderer.jsx';
+import { A2UIProvider } from './A2UIProvider.js';
+import { A2UIRenderer } from './A2UIRenderer.js';
+import type { UnsupportedInfo } from './A2UIRenderer.js';
 import type { Catalog, CatalogInput } from '../catalog/defineCatalog.js';
 import { defineCatalog } from '../catalog/defineCatalog.js';
 import { MessageProcessor } from '../store/MessageProcessor.js';
@@ -258,7 +258,7 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
     return renderEmpty?.() ?? null;
   }
 
-  const rendererProps: import('./A2UIRenderer.jsx').A2UIRendererProps = {
+  const rendererProps: import('./A2UIRenderer.js').A2UIRendererProps = {
     resource: activeResource,
   };
   if (className !== undefined) rendererProps.className = className;

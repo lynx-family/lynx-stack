@@ -9,7 +9,7 @@ This package may contain thin package-specific adapters such as
 behavior should live in the server agent source and be re-exported from here.
 
 The server package must remain self-contained for package-root Vercel
-deployments. Do not make `packages/genui/server` depend on `@lynx-js/a2ui-prompt`
+deployments. Do not make `packages/genui/server` depend on `@lynx-js/genui/a2ui-prompt`
 at runtime.
 
 When editing exported functions or constants reachable through this package,

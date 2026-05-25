@@ -16,5 +16,5 @@
     { "path": "./ui-judge/tsconfig.json" },
     /** packages-end */
   ],
-  "include": [],
+  "include": ["index.ts"],
 }
