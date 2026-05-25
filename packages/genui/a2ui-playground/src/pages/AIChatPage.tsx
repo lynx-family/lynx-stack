@@ -1502,7 +1502,7 @@ export function AIChatPage(
                   disabled={isGenerating || inputValue.trim().length === 0}
                   onClick={handleSend}
                 >
-                  <span className='chatSendIcon' aria-hidden='true'>-&gt;</span>
+                  <span className='chatSendIcon' aria-hidden='true'>↖</span>
                   {isGenerating ? 'Generating' : 'Send'}
                 </button>
               </div>
