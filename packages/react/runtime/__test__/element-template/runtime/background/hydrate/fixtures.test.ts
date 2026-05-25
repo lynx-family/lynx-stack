@@ -7,10 +7,10 @@ import { runCaseModuleFixtureTests } from '../../../test-utils/debug/fixtureRunn
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const FIXTURES_DIR = path.resolve(__dirname, '../../../fixtures/background/instance');
+const BACKGROUND_HYDRATE_FIXTURES_DIR = path.resolve(__dirname, '../../../fixtures/background/hydrate');
 
-describe('Background instance fixtures', () => {
+describe('Background hydrate fixtures', () => {
   runCaseModuleFixtureTests({
-    fixturesRoot: FIXTURES_DIR,
+    fixturesRoot: BACKGROUND_HYDRATE_FIXTURES_DIR,
   });
 });

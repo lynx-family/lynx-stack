@@ -1,0 +1,19 @@
+Object {
+  "ops": Array [
+    Object {
+      "attributeSlots": Array [],
+      "bundleUrl": null,
+      "elementSlots": Array [],
+      "handleId": 3,
+      "op": "createTemplate",
+      "templateKey": "_et_469e0_test_2",
+    },
+    Object {
+      "childId": 3,
+      "elementSlotIndex": 0,
+      "op": "insertNode",
+      "referenceId": -1,
+      "targetId": -3,
+    },
+  ],
+}

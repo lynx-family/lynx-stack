@@ -4,15 +4,20 @@ import { fileURLToPath } from 'node:url';
 
 import { beforeEach, describe } from 'vitest';
 
-import { clearTemplates } from '../../test-utils/debug/registry.js';
-import { assertOrUpdateTextFile, formatFixtureOutput, runFixtureTests } from '../../test-utils/debug/fixtureRunner.js';
-import { runCompiledHydrationScenario } from '../../test-utils/debug/compiledHydrationScenario.js';
+import { formatElementTemplateUpdateCommands } from '../../../../../src/element-template/debug/alog.js';
+import { clearTemplates } from '../../../test-utils/debug/registry.js';
+import {
+  assertOrUpdateTextFile,
+  formatFixtureOutput,
+  runFixtureTests,
+} from '../../../test-utils/debug/fixtureRunner.js';
+import { runCompiledHydrationScenario } from '../../../test-utils/debug/compiledHydrationScenario.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const FIXTURES_DIR = path.resolve(__dirname, '../../fixtures/hydrate/background-hydrate-compiled');
+const FIXTURES_DIR = path.resolve(__dirname, '../../../fixtures/background/hydrate-compiled');
 
-describe('Compiled hydration fixtures', () => {
+describe('Compiled background hydrate fixtures', () => {
   beforeEach(() => {
     clearTemplates();
   });
@@ -28,7 +33,7 @@ describe('Compiled hydration fixtures', () => {
       const { stream } = await runCompiledHydrationScenario({ sourcePath });
       assertOrUpdateTextFile({
         path: path.join(fixtureDir, 'output.txt'),
-        actual: formatFixtureOutput({ stream }),
+        actual: formatFixtureOutput({ ops: formatElementTemplateUpdateCommands(stream) }),
         update,
         fixtureName,
         label: 'output',

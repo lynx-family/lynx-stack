@@ -2,7 +2,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createElement } from 'preact';
 
 import {
   installElementTemplateCommitHook,
@@ -13,22 +12,21 @@ import {
   resetElementTemplateHydrationListener,
 } from '../../../../../src/element-template/background/hydration-listener.js';
 import { BackgroundElementTemplateInstance } from '../../../../../src/element-template/background/instance.js';
-import { root } from '../../../../../src/element-template/index.js';
 import { clearRefState } from '../../../../../src/element-template/prop-adapters/ref.js';
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../../src/element-template/protocol/opcodes.js';
 import type { ElementTemplateUpdateCommitContext } from '../../../../../src/element-template/protocol/types.js';
 import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
-import { compileFixtureSource } from '../../../test-utils/debug/compiledFixtureCompiler.js';
 import {
-  loadCompiledFixtureModule,
+  loadCompiledFixturePair,
   type CompiledFixtureModuleExports,
 } from '../../../test-utils/debug/compiledFixtureModule.js';
-import { primeCompiledFixtureTemplates } from '../../../test-utils/debug/compiledFixtureRegistry.js';
+import {
+  renderCompiledFixtureOnBackground,
+  renderCompiledFixtureOnMainThread,
+} from '../../../test-utils/debug/compiledThreadRunner.js';
 import { ElementTemplateEnvManager } from '../../../test-utils/debug/envManager.js';
-
-declare const renderPage: () => void;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,7 +61,7 @@ interface UnsupportedFixtureProps {
   workletRef?: unknown;
 }
 
-interface CompiledAppModule<TProps> extends CompiledFixtureModuleExports {
+interface CompiledAppModule<TProps extends object> extends CompiledFixtureModuleExports {
   App: (props: TProps) => JSX.Element;
 }
 
@@ -73,14 +71,7 @@ async function loadCompiledFixture<T extends object>(
   backgroundModule: T;
   mainModule: T;
 }> {
-  const mainArtifact = await compileFixtureSource(sourcePath, { target: 'LEPUS' });
-  primeCompiledFixtureTemplates(mainArtifact);
-  const mainModule = await loadCompiledFixtureModule<T>(mainArtifact);
-
-  const backgroundArtifact = await compileFixtureSource(sourcePath, { target: 'JS' });
-  const backgroundModule = await loadCompiledFixtureModule<T>(backgroundArtifact);
-
-  return { backgroundModule, mainModule };
+  return loadCompiledFixturePair<T>(sourcePath);
 }
 
 function getRenderedHost(): BackgroundElementTemplateInstance {
@@ -98,26 +89,23 @@ describe('Compiled ordinary ref background updates', () => {
     updateEvents.push(event.data as ElementTemplateUpdateCommitContext);
   };
 
-  function renderOnBackground<TProps>(
+  function renderOnBackground<TProps extends object>(
     moduleExports: CompiledAppModule<TProps>,
     props: TProps,
   ): BackgroundElementTemplateInstance {
-    envManager.switchToBackground();
-    root.render(createElement(moduleExports.App, props));
-    return getRenderedHost();
+    const host = renderCompiledFixtureOnBackground(moduleExports, envManager, props);
+    if (!host) {
+      throw new Error('Missing rendered host.');
+    }
+    return host;
   }
 
-  function hydrateFromMainThread<TProps>(
+  function hydrateFromMainThread<TProps extends object>(
     moduleExports: CompiledAppModule<TProps>,
     props: TProps,
   ): BackgroundElementTemplateInstance {
     const host = getRenderedHost();
-
-    envManager.switchToMainThread();
-    root.render(createElement(moduleExports.App, props));
-    renderPage();
-    envManager.switchToBackground();
-
+    renderCompiledFixtureOnMainThread(moduleExports, envManager, props);
     return host;
   }
 
