@@ -81,7 +81,7 @@ export interface PluginQRCodeOptions {
   schema?: CustomizedSchemaFn | undefined
 
   /**
-   * Enable the fullscreen variant of the Lynx bundle URL (appends
+   * Opt in to the fullscreen variant of the Lynx bundle URL (appends
    * `?fullscreen=true`, opening the bundle in LynxExplorer with the in-app
    * navigation chrome stripped).
    *
@@ -92,7 +92,7 @@ export interface PluginQRCodeOptions {
    * - Appends an `∟ Fullscreen` URL line under each Lynx bundle URL printed
    *   by the dev server.
    *
-   * @defaultValue `true`
+   * @defaultValue `false`
    */
   fullscreen?: boolean | undefined
 }
@@ -115,8 +115,8 @@ export function pluginQRCode(
   options?: PluginQRCodeOptions,
 ): RsbuildPlugin {
   const defaultPluginOptions = {
-    schema: (url) => ({ fullscreen: url }),
-    fullscreen: true,
+    schema: (url) => ({ http: url }),
+    fullscreen: false,
   } satisfies Required<PluginQRCodeOptions>
 
   const { schema, fullscreen } = Object.assign(
