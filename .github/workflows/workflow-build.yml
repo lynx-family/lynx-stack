@@ -126,14 +126,16 @@ jobs:
           overwrite: true
           include-hidden-files: true
       # Publish PR previews to pkg.pr.new. Only runs on the Ubuntu leg of the
-      # build matrix, only for same-repo pull_request events (fork-controlled
-      # install scripts shouldn't run with this job's privileges), and only
-      # when the PR adds a changeset that actually bumps a publishable package.
+      # build matrix, and only when the PR adds a changeset that actually
+      # bumps a publishable package. Fork PRs are included: this is a
+      # `pull_request` (not `pull_request_target`) workflow, so fork runs use
+      # a read-only token with no base-repo secrets, and are gated by the
+      # repo's required-approval setting — the same trust boundary the Build
+      # step above (which already runs fork install/build scripts) relies on.
       - name: Fetch base ref for changeset status
         if: >
           matrix.runs-on.label == 'lynx-ubuntu-24.04-xlarge' &&
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
+          github.event_name == 'pull_request'
         env:
           BASE_REF: ${{ github.base_ref }}
         # actions/checkout uses depth=1, so neither `origin/<base>` nor the
@@ -156,8 +158,7 @@ jobs:
         id: changeset
         if: >
           matrix.runs-on.label == 'lynx-ubuntu-24.04-xlarge' &&
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
+          github.event_name == 'pull_request'
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |
