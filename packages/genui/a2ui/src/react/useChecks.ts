@@ -9,14 +9,11 @@ import { FormContext } from './FormContext.js';
 import { useA2UIContext } from './useA2UIContext.js';
 import type { CatalogFunctionEntry } from '../catalog/defineCatalog.js';
 import type { CheckFailure, CheckOutcome } from '../store/FormController.js';
+import { executeFunctionCall } from '../store/index.js';
 import type { MessageProcessor } from '../store/MessageProcessor.js';
-import {
-  executeFunctionCall,
-  isDataBinding,
-  isFunctionCall,
-  resolveDynamicValue,
-} from '../store/resolveFunctionCall.js';
+import { resolveDynamicValue } from '../store/resolveDynamic.js';
 import type { Surface } from '../store/types.js';
+import { isDataBinding, isFunctionCall } from '../store/utils.js';
 
 /**
  * A v0.9 `CheckRule` is `{ condition, message }` where `condition` is a
@@ -49,7 +46,16 @@ function evaluateCondition(
   }
   if (isDataBinding(condition)) {
     return Boolean(
-      resolveDynamicValue(processor, condition, surfaceId, dataContextPath),
+      resolveDynamicValue(
+        processor,
+        condition,
+        surfaceId,
+        dataContextPath,
+        {
+          functions,
+          resolveFunctionCall: executeFunctionCall,
+        },
+      ),
     );
   }
   // Unknown shape — treat as passing rather than blocking the user.

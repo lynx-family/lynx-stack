@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import type * as v0_9 from '@a2ui/web_core/v0_9';
 
+import { resolveBindingPath } from './resolveDynamic.js';
 import { createResource } from './Resource.js';
 import { SignalStore } from './SignalStore.js';
 import type {
@@ -10,14 +11,11 @@ import type {
   ServerToClientMessage,
   Surface,
 } from './types.js';
+import { isObject } from './utils.js';
 
 export interface A2UIEvent {
   message: Record<string, unknown>;
   resolve: (response: unknown) => void;
-}
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
 }
 
 /**
@@ -138,25 +136,13 @@ export class MessageProcessor {
    * - Relative paths are resolved against the provided dataContextPath.
    */
   resolvePath(path: string, dataContextPath?: string): string {
-    if (!path) return path;
-    if (path.startsWith('/')) {
-      return path;
-    }
-    const context = dataContextPath ?? '';
-    const cleanContext = context.endsWith('/') ? context.slice(0, -1) : context;
-
+    const context = dataContextPath?.endsWith('/')
+      ? dataContextPath.slice(0, -1)
+      : dataContextPath;
     if (path.startsWith('./')) {
-      const rest = path.substring(2);
-      if (!cleanContext) {
-        return `/${rest}`;
-      }
-      return `${cleanContext}/${rest}`;
+      return resolveBindingPath(path.substring(2), context);
     }
-
-    if (!cleanContext) {
-      return `/${path}`;
-    }
-    return `${cleanContext}/${path}`;
+    return resolveBindingPath(path, context);
   }
 
   private cloneComponentTree(
