@@ -1169,12 +1169,17 @@ function findChunkForAsset(
  * code path only when `publicPath` looks like an absolute URL,
  * otherwise concatenate strings with single-slash normalization.
  *
+ * A trailing slash is forced on the absolute-URL base before joining:
+ * `new URL('a', 'https://h/static')` drops the `static` segment, while
+ * `'https://h/static/'` preserves it.
+ *
  * @internal Exported for unit testing only.
  */
 export function joinPublicPath(publicPath: string, relPath: string): string {
   const rel = relPath.replace(/^\/+/, '');
   if (/^[a-z][a-z0-9+\-.]*:\/\//i.test(publicPath)) {
-    return new URL(rel, publicPath).toString();
+    const base = publicPath.endsWith('/') ? publicPath : `${publicPath}/`;
+    return new URL(rel, base).toString();
   }
   const trimmed = publicPath.endsWith('/')
     ? publicPath.slice(0, -1)

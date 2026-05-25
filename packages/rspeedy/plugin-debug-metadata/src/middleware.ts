@@ -280,8 +280,12 @@ function joinOutputPath(
  * prefix to strip (root publicPath, `'auto'`, missing, or a function
  * that throws / returns a non-string when invoked with empty pathData).
  *
+ * The returned prefix always has a leading slash (request pathnames do
+ * too), so a relative `publicPath` like `'assets/'` still matches.
+ *
  * - `'http://host:port/assets/'`               → `'/assets'`
  * - `'/assets/'`                               → `'/assets'`
+ * - `'assets/'`                                → `'/assets'`
  * - `() => '/build/'`                          → `'/build'`
  * - `'/'` / `'auto'` / `undefined`             → `''`
  * - `({ chunk }) => '/build/' + chunk.hash`    → `''` (function
@@ -313,7 +317,9 @@ function extractPublicPathPrefix(
       return ''
     }
   }
-  return pathPart.replace(/\/+$/, '')
+  const trimmed = pathPart.replace(/\/+$/, '')
+  if (trimmed === '') return ''
+  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`
 }
 
 function respondJSON(

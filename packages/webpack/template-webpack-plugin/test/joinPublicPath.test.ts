@@ -28,6 +28,17 @@ describe('joinPublicPath', () => {
       );
     });
 
+    test('preserves the path segment when publicPath has no trailing slash', () => {
+      expect(
+        joinPublicPath(
+          'https://cdn.example.com/static',
+          '.rspeedy/main/debug-metadata.json',
+        ),
+      ).toBe(
+        'https://cdn.example.com/static/.rspeedy/main/debug-metadata.json',
+      );
+    });
+
     test('http (non-https) origin', () => {
       expect(
         joinPublicPath(

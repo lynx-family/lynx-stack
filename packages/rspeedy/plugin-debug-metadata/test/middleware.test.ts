@@ -280,6 +280,25 @@ describe('createDebugMetadataMiddleware', () => {
     expect(res?.body).toEqual(VALID_METADATA.meta)
   })
 
+  test('strips a relative publicPath that has no leading slash (e.g. assets/)', async () => {
+    const mw = createDebugMetadataMiddleware({
+      compilerHandle: fakeCompiler(
+        {
+          '/out/.rspeedy/main/debug-metadata.json': JSON.stringify(
+            VALID_METADATA,
+          ),
+        },
+        'assets/',
+      ),
+    })
+    const res = await runRequest(
+      mw,
+      '/assets/.rspeedy/main/debug-metadata.json?field=meta',
+    )
+    expect(res?.status).toBe(200)
+    expect(res?.body).toEqual(VALID_METADATA.meta)
+  })
+
   test('does NOT strip a prefix that only matches a partial segment (e.g. /assets vs /assets2)', async () => {
     const mw = createDebugMetadataMiddleware({
       compilerHandle: fakeCompiler(
