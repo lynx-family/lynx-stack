@@ -55,8 +55,8 @@ function WeatherCard(props: WeatherCardProps) {
 | Package                  | 作用                                                                                                                                |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `a2ui`                   | `@lynx-js/a2ui-reactlynx`，面向 A2UI v0.9 的 ReactLynx 渲染器，提供 `<A2UI>`、`MessageStore`、Catalog API、内置组件和协议辅助能力。 |
-| `a2ui-catalog-extractor` | 基于 TypeDoc 的 CLI，可将带有 `@a2uiCatalog` 标记的 TypeScript interface 转换成 `catalog.json` schema。                             |
 | `a2ui-cli`               | `@lynx-js/a2ui-cli`，统一的命令行入口，用来生成 catalog artifacts 和 A2UI system prompt。                                           |
+| `a2ui-catalog-extractor` | `a2ui-cli generate catalog` 内部使用的 TypeDoc extraction engine。                                                                  |
 | `a2ui-prompt`            | `@lynx-js/a2ui-prompt`，供 CLI 和后端集成使用的 prompt 构建工具。                                                                   |
 | `server`                 | Next.js Agent 服务，构建 A2UI prompt，请求 OpenAI 兼容模型，校验输出，自动修复异常响应，解析图片查询，并暴露 chat/action API。      |
 | `a2ui-playground`        | 用于浏览器和 Lynx 预览的实验台，支持 demo、组件浏览、AI 对话生成、回放、action 流程和二维码原生预览。                               |
@@ -114,7 +114,7 @@ pnpm install --frozen-lockfile
 构建核心 GenUI 包：
 
 ```sh
-pnpm turbo build --filter @lynx-js/a2ui-catalog-extractor --filter @lynx-js/a2ui-prompt --filter @lynx-js/a2ui-reactlynx
+pnpm turbo build --filter @lynx-js/a2ui-cli --filter @lynx-js/a2ui-prompt --filter @lynx-js/a2ui-reactlynx
 ```
 
 如果要获得完整测试信心，请遵循仓库规则：先运行根级 `pnpm turbo build`，再运行测试。
@@ -154,7 +154,7 @@ ProductTile.displayName = 'ProductTile';
 为 Agent 生成 schema：
 
 ```sh
-pnpm exec a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog
+pnpm exec a2ui-cli generate catalog --catalog-dir src/catalog --out-dir dist/catalog
 ```
 
 然后把组件和 manifest 配对：
@@ -228,10 +228,10 @@ npx @lynx-js/a2ui-cli@latest generate catalog --catalog-dir src/catalog --out-di
 npx @lynx-js/a2ui-cli@latest generate prompt --out dist/a2ui-system-prompt.txt
 ```
 
-如果只需要 catalog extraction，或者你已经有 TypeDoc JSON 产物，可以直接使用 `a2ui-catalog-extractor`：
+如果你的构建流程已经产出 TypeDoc JSON，仍然使用同一个 `a2ui-cli` 入口，把该文件传给 `generate catalog`：
 
 ```sh
-pnpm exec a2ui-catalog-extractor \
+pnpm exec a2ui-cli generate catalog \
   --typedoc-json typedoc.json \
   --out-dir dist/catalog
 ```
@@ -255,9 +255,9 @@ pnpm exec a2ui-catalog-extractor \
 - 省略 `--catalog-dir` 时，`generate prompt` 会使用内置 A2UI basic catalog；自定义 catalog 必须传入 `--catalog-dir`。
 - 生成的 prompt 和 Client catalog 必须描述同一组组件名与 props。二者不一致时，server 侧校验可能通过，但 Client 侧仍可能渲染为 unsupported。
 - `functions` 和 `theme` 不会从组件 props 自动推断。需要这些信息时，请通过生成的 function definitions 或 prompt/catalog helper 显式加入。
+- `@lynx-js/a2ui-catalog-extractor` 是 `a2ui-cli generate catalog` 使用的内部实现包。用户脚本和文档都应该把 `a2ui-cli` 作为唯一 CLI 入口。
 
-完整命令和 API 参考见 [`a2ui-cli`](./a2ui-cli/README.md)、
-[`a2ui-catalog-extractor`](./a2ui-catalog-extractor/README.md) 和
+完整命令和 prompt API 参考见 [`a2ui-cli`](./a2ui-cli/README.md) 和
 [`a2ui-prompt`](./a2ui-prompt/README.md)。
 
 ### 3. Agent：描述 UI，收到已校验消息
@@ -723,7 +723,6 @@ http://localhost:3000/?a2uiEndpoint=http://localhost:3060/a2ui/stream
 
 ```sh
 pnpm --filter @lynx-js/a2ui-reactlynx test
-pnpm --filter @lynx-js/a2ui-catalog-extractor test
 pnpm --filter @lynx-js/ui-judge test
 ```
 
@@ -748,5 +747,4 @@ GenUI 围绕几个原则演进：
 
 更多实现细节可以从这些包级文档开始：
 [`a2ui`](./a2ui/README.md)、[`a2ui-cli`](./a2ui-cli/README.md)、
-[`a2ui-catalog-extractor`](./a2ui-catalog-extractor/README.md)、
 [`a2ui-prompt`](./a2ui-prompt/README.md) 和 [`ui-judge`](./ui-judge/README.md)。

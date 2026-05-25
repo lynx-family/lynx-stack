@@ -64,8 +64,8 @@ has already allowed.
 | Package                  | Role                                                                                                                                                                                   |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `a2ui`                   | `@lynx-js/a2ui-reactlynx`, the ReactLynx renderer for A2UI v0.9. It provides `<A2UI>`, `MessageStore`, catalog APIs, built-in components, and protocol helpers.                        |
-| `a2ui-catalog-extractor` | A TypeDoc-powered CLI that turns TypeScript interfaces marked with `@a2uiCatalog` into `catalog.json` schemas.                                                                         |
 | `a2ui-cli`               | `@lynx-js/a2ui-cli`, a single command-line entry point for generating catalog artifacts and A2UI system prompts.                                                                       |
+| `a2ui-catalog-extractor` | Internal TypeDoc-powered extraction engine used by `a2ui-cli generate catalog`.                                                                                                        |
 | `a2ui-prompt`            | `@lynx-js/a2ui-prompt`, prompt construction utilities used by the CLI and backend integrations.                                                                                        |
 | `server`                 | A Next.js agent service. It builds the A2UI prompt, calls an OpenAI-compatible model, validates output, repairs malformed turns, resolves image queries, and exposes chat/action APIs. |
 | `a2ui-playground`        | A browser and Lynx preview environment for demos, component browsing, AI chat generation, playback, actions, and QR-based native preview.                                              |
@@ -129,7 +129,7 @@ pnpm install --frozen-lockfile
 Build the core GenUI packages:
 
 ```sh
-pnpm turbo build --filter @lynx-js/a2ui-catalog-extractor --filter @lynx-js/a2ui-prompt --filter @lynx-js/a2ui-reactlynx
+pnpm turbo build --filter @lynx-js/a2ui-cli --filter @lynx-js/a2ui-prompt --filter @lynx-js/a2ui-reactlynx
 ```
 
 For broad test confidence in this monorepo, run the repository-level
@@ -171,7 +171,7 @@ ProductTile.displayName = 'ProductTile';
 Generate a schema for the agent:
 
 ```sh
-pnpm exec a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog
+pnpm exec a2ui-cli generate catalog --catalog-dir src/catalog --out-dir dist/catalog
 ```
 
 Then pair the component with its manifest:
@@ -253,11 +253,11 @@ npx @lynx-js/a2ui-cli@latest generate catalog --catalog-dir src/catalog --out-di
 npx @lynx-js/a2ui-cli@latest generate prompt --out dist/a2ui-system-prompt.txt
 ```
 
-Use `a2ui-catalog-extractor` directly when you only need catalog extraction or
-want to integrate with an existing TypeDoc JSON pipeline:
+When your build already produces TypeDoc JSON, keep the same `a2ui-cli` entry
+point and pass that file to `generate catalog`:
 
 ```sh
-pnpm exec a2ui-catalog-extractor \
+pnpm exec a2ui-cli generate catalog \
   --typedoc-json typedoc.json \
   --out-dir dist/catalog
 ```
@@ -287,10 +287,12 @@ Operational notes:
   unsupported on the client.
 - `functions` and `theme` are not inferred from component props. Add them
   explicitly through generated function definitions or prompt/catalog helpers.
+- `@lynx-js/a2ui-catalog-extractor` is an internal implementation package used
+  by `a2ui-cli generate catalog`. User-facing scripts and docs should keep
+  `a2ui-cli` as the only CLI entry point.
 
-See [`a2ui-cli`](./a2ui-cli/README.md),
-[`a2ui-catalog-extractor`](./a2ui-catalog-extractor/README.md), and
-[`a2ui-prompt`](./a2ui-prompt/README.md) for the full command and API
+See [`a2ui-cli`](./a2ui-cli/README.md) and
+[`a2ui-prompt`](./a2ui-prompt/README.md) for the full command and prompt API
 reference.
 
 ### 3. Agent: Ask For UI, Receive Validated Messages
@@ -798,7 +800,6 @@ Focused checks:
 
 ```sh
 pnpm --filter @lynx-js/a2ui-reactlynx test
-pnpm --filter @lynx-js/a2ui-catalog-extractor test
 pnpm --filter @lynx-js/ui-judge test
 ```
 
@@ -830,6 +831,4 @@ GenUI is designed around a few commitments:
 
 For implementation details, start with the package-level READMEs in
 [`a2ui`](./a2ui/README.md), [`a2ui-cli`](./a2ui-cli/README.md),
-[`a2ui-catalog-extractor`](./a2ui-catalog-extractor/README.md),
-[`a2ui-prompt`](./a2ui-prompt/README.md), and
-[`ui-judge`](./ui-judge/README.md).
+[`a2ui-prompt`](./a2ui-prompt/README.md), and [`ui-judge`](./ui-judge/README.md).

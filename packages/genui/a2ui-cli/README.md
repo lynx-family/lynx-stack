@@ -39,7 +39,8 @@ like `<Component>/catalog.json`.
 
 ### `generate catalog`
 
-Delegates catalog extraction to `@lynx-js/a2ui-catalog-extractor`.
+Uses the internal `@lynx-js/a2ui-catalog-extractor` engine. Keep user-facing
+scripts on `a2ui-cli generate catalog`.
 
 Useful options:
 
