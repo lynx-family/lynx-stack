@@ -5,7 +5,10 @@ In this example, we show how to customize the output filename of lazy bundles
 
 By default, lazy bundles are emitted to `async/[name].[fullhash].bundle`. The
 [`pluginLazyBundleFilename`](./plugins/pluginLazyBundleFilename.ts) plugin in
-this example overrides that to `my-lazy-bundles/[name].[fullhash].bundle`.
+this example overrides that to
+`my-lazy-bundles/[name].[fullhash]-<gitCommitHash>.bundle`, where the short git
+commit hash is resolved at config time so every lazy bundle is traceable back to
+a commit.
 
 ## How it works
 
@@ -27,4 +30,5 @@ pnpm dev
 ```
 
 After `pnpm build`, the lazy bundles are emitted under `dist/my-lazy-bundles/`
-instead of the default `dist/async/`.
+(instead of the default `dist/async/`), with the short git commit hash appended
+to each filename.
