@@ -85,11 +85,39 @@ export function applyEntry(
       Object.entries(entries).forEach(([entryName, entryPoint]) => {
         const { imports } = getChunks(entryName, entryPoint.values())
 
-        const templateFilename = (
-          typeof config.output?.filename === 'object'
-            ? config.output.filename.bundle ?? config.output.filename.template
-            : config.output?.filename
-        ) ?? '[name].[platform].bundle'
+        const bundleFilename = typeof config.output?.filename === 'object'
+          ? config.output.filename.bundle ?? config.output.filename.template
+          : config.output?.filename
+
+        // Resolve the `output.filename.bundle` config into a concrete filename
+        // template. When `bundle` is a function, it is called once for the main
+        // bundle and once for the lazy bundles, so a single function can control
+        // both without a dedicated `lazyBundle` field.
+        const resolveBundleFilename = (lazyBundle: boolean) =>
+          typeof bundleFilename === 'function'
+            ? bundleFilename({
+              lazyBundle,
+              // A lazy bundle name is resolved per async chunk, so there is no
+              // single entry name for it.
+              entryName: lazyBundle ? undefined : entryName,
+              platform: environment.name,
+            })
+            : bundleFilename
+
+        const templateFilename = resolveBundleFilename(false)
+          ?? '[name].[platform].bundle'
+
+        // Only override the lazy bundle filename when `bundle` is a function.
+        // Otherwise `LynxTemplatePlugin` keeps its default
+        // (`async/[name].[fullhash].bundle`).
+        const lazyBundleFilename = typeof bundleFilename === 'function'
+          // `[name]` is replaced per async chunk by `LynxTemplatePlugin`, so we
+          // only resolve `[platform]` here.
+          ? resolveBundleFilename(true)?.replaceAll(
+            '[platform]',
+            environment.name,
+          )
+          : undefined
 
         // We do not use `${entryName}__background` since the default CSS name is `[name]/[name].css`.
         // We would like to avoid adding `__background` to the output CSS filename.
@@ -185,6 +213,7 @@ export function applyEntry(
                 '[platform]',
                 environment.name,
               ),
+            ...(lazyBundleFilename ? { lazyBundleFilename } : {}),
             intermediate: path.posix.join(
               DEFAULT_DIST_PATH_INTERMEDIATE,
               entryName,

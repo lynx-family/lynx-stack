@@ -109,13 +109,19 @@ export function pluginDev(
         )!
         const defaultFilename = '[name].[platform].bundle'
         const { filename } = rspeedyAPIs.config.output ?? {}
-        let name: string
-        if (!filename) {
-          name = defaultFilename
-        } else if (typeof filename === 'object') {
-          name = filename.bundle ?? filename.template ?? defaultFilename
-        } else {
-          name = filename
+        const bundle = typeof filename === 'object'
+          ? filename.bundle ?? filename.template
+          : filename
+        // Resolve the main bundle filename template for a given entry/platform.
+        // When `bundle` is a function, it is called with `lazyBundle: false`
+        // since the dev URLs always point at the main bundle.
+        const resolveName = (entry: string, platform: string): string => {
+          const resolved = typeof bundle === 'function'
+            ? bundle({ lazyBundle: false, entryName: entry, platform })
+            : bundle ?? defaultFilename
+          return resolved
+            .replaceAll('[name]', entry)
+            .replaceAll('[platform]', platform)
         }
         if (
           config.server?.printUrls === undefined
@@ -133,9 +139,7 @@ export function pluginDev(
                 ).replaceAll('<port>', String(param.port))
                 for (const entry of Object.keys(config.source?.entry ?? {})) {
                   for (const environmentName of environmentNames) {
-                    const pathname = name
-                      .replaceAll('[name]', entry)
-                      .replaceAll('[platform]', environmentName)
+                    const pathname = resolveName(entry, environmentName)
                     finalUrls.push({
                       label: environmentName,
                       url: new URL(pathname, baseForUrls).toString(),
