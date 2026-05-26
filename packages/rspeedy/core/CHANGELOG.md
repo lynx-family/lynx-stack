@@ -1,5 +1,28 @@
 # @lynx-js/rspeedy
 
+## 0.14.5
+
+### Patch Changes
+
+- Respect custom SWC target configuration in `lynx.config.js`, such as: ([#2654](https://github.com/lynx-family/lynx-stack/pull/2654))
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  export default defineConfig({
+    tools: {
+      swc: {
+        jsc: {
+          target: 'es5',
+        },
+      },
+    },
+  })
+  ```
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.21.0
+
 ## 0.14.4
 
 ### Patch Changes

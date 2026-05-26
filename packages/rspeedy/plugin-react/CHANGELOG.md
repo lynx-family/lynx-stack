@@ -1,5 +1,19 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.16.3
+
+### Patch Changes
+
+- Force CSS minification off when `enableRemoveCSSScope` is set to `false`, overriding the default CSS minify configuration in ReactLynx builds. ([#2641](https://github.com/lynx-family/lynx-stack/pull/2641))
+
+- Updated dependencies [[`11ef105`](https://github.com/lynx-family/lynx-stack/commit/11ef105e3dcc3c08f098360d5a3e0367efe4a9d4)]:
+  - @lynx-js/react-webpack-plugin@0.9.3
+  - @lynx-js/react-alias-rsbuild-plugin@0.16.3
+  - @lynx-js/react-refresh-webpack-plugin@0.3.6
+  - @lynx-js/template-webpack-plugin@0.11.2
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/css-extract-webpack-plugin@0.7.1
+
 ## 0.16.2
 
 ### Patch Changes
