@@ -1,3 +1,10 @@
+/**
+ * The Lynx `GlobalEventEmitter` module, accessible via `lynx.getJSModule('GlobalEventEmitter')`.
+ *
+ * Framework testing libraries can use this to trigger and listen to cross-thread events.
+ *
+ * @public
+ */
 export class GlobalEventEmitter {
   listeners: Record<string, Function[]> = {};
   addListener(eventName: string, listener: Function): void {

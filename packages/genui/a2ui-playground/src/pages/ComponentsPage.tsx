@@ -25,20 +25,34 @@ function formatJson(value: unknown): string {
 function createComponentPreviewMessages(
   comp: ComponentDoc,
   usage: unknown,
+  data?: unknown,
+  dataPath?: string,
 ): unknown[] {
   const components = Array.isArray(usage) ? usage : [usage];
-  return [
+  const messages: unknown[] = [
     {
       createSurface: {
         surfaceId: 'default',
         catalogId: `component-${comp.name.toLowerCase()}`,
       },
-      updateComponents: {
-        surfaceId: 'default',
-        components,
-      },
     },
   ];
+  if (data !== undefined) {
+    messages.push({
+      updateDataModel: {
+        surfaceId: 'default',
+        path: dataPath ?? '/',
+        value: data,
+      },
+    });
+  }
+  messages.push({
+    updateComponents: {
+      surfaceId: 'default',
+      components,
+    },
+  });
+  return messages;
 }
 
 function ComponentDetail(
@@ -70,6 +84,8 @@ function ComponentDetail(
       return { error: `Invalid JSON: ${String(e)}`, value: null };
     }
   }, [usageJson]);
+  const selectedUsageData = usageExamples[selectedUsageExample]?.data;
+  const selectedUsageDataPath = usageExamples[selectedUsageExample]?.dataPath;
 
   const previewUrl = useMemo(() => {
     if (parsedUsage.error) return '';
@@ -78,13 +94,25 @@ function ComponentDetail(
       {
         protocol,
         demoUrl: DEFAULT_A2UI_DEMO_URL,
-        messages: createComponentPreviewMessages(comp, parsedUsage.value),
+        messages: createComponentPreviewMessages(
+          comp,
+          parsedUsage.value,
+          selectedUsageData,
+          selectedUsageDataPath,
+        ),
         theme,
         instant: true,
       },
       baseUrl,
     );
-  }, [comp, parsedUsage, protocol, theme]);
+  }, [
+    comp,
+    parsedUsage,
+    protocol,
+    selectedUsageData,
+    selectedUsageDataPath,
+    theme,
+  ]);
 
   return (
     <div className='compContent'>

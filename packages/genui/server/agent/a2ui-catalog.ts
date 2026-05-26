@@ -7,6 +7,7 @@ import type { A2UIExample } from './a2ui-examples';
 import buttonManifest from './catalog/Button/catalog.json';
 import cardManifest from './catalog/Card/catalog.json';
 import checkBoxManifest from './catalog/CheckBox/catalog.json';
+import choicePickerManifest from './catalog/ChoicePicker/catalog.json';
 import columnManifest from './catalog/Column/catalog.json';
 import dividerManifest from './catalog/Divider/catalog.json';
 import iconManifest from './catalog/Icon/catalog.json';
@@ -93,6 +94,7 @@ const CATALOG_MANIFESTS = [
   buttonManifest,
   textFieldManifest,
   checkBoxManifest,
+  choicePickerManifest,
   radioGroupManifest,
   sliderManifest,
 ] as const;
@@ -103,6 +105,8 @@ const COMPONENT_SUMMARIES: Record<string, string> = {
   Card:
     'Card container with exactly one child. Wrap multiple elements in a Column/Row/List first.',
   CheckBox: 'Boolean checkbox with a label and optional validation checks.',
+  ChoicePicker:
+    'Single- or multi-select choice picker with checkbox and chip display styles.',
   Column: 'Vertical layout container.',
   Divider: 'Horizontal or vertical separator line.',
   Icon: 'Display an icon by name.',

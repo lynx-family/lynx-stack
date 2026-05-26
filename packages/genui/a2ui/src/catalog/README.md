@@ -70,6 +70,7 @@ import {
   Button,
   Card,
   CheckBox,
+  ChoicePicker,
   Column,
   Divider,
   Icon,
@@ -92,6 +93,9 @@ import cardManifest from '@lynx-js/a2ui-reactlynx/catalog/Card/catalog.json' wit
   type: 'json',
 };
 import checkBoxManifest from '@lynx-js/a2ui-reactlynx/catalog/CheckBox/catalog.json' with {
+  type: 'json',
+};
+import choicePickerManifest from '@lynx-js/a2ui-reactlynx/catalog/ChoicePicker/catalog.json' with {
   type: 'json',
 };
 import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json' with {
@@ -151,6 +155,7 @@ export const allBuiltins = defineCatalog([
   [PieChart, pieChartManifest],
   [TextField, textFieldManifest],
   [CheckBox, checkBoxManifest],
+  [ChoicePicker, choicePickerManifest],
   [Icon, iconManifest],
   [RadioGroup, radioGroupManifest],
   [Slider, sliderManifest],
