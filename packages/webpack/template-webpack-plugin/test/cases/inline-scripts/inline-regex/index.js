@@ -73,7 +73,6 @@ it('should generate correct bar template', async () => {
     `lynx.requireModuleAsync(\"/bar:background.rspack.bundle.js\")`,
   );
 
-  it('inlined scripts should not have syntax error', () => {
-    eval(manifest['/app-service.js']);
-  });
+  // the inlined app-service should be valid JavaScript
+  expect(() => eval(manifest['/app-service.js'])).not.toThrow();
 });

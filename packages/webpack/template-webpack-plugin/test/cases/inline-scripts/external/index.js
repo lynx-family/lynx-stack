@@ -57,7 +57,6 @@ it('lazy bundle bts is inlined even with inlineScripts: false', async () => {
     `module.exports=;`,
   );
 
-  it('inlined scripts should not have syntax error', () => {
-    eval(manifest['/app-service.js']);
-  });
+  // the inlined app-service should be valid JavaScript
+  expect(() => eval(manifest['/app-service.js'])).not.toThrow();
 });

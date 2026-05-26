@@ -51,7 +51,6 @@ it('inlines every split background chunk of a lazy bundle', async () => {
   );
   expect(manifest['/app-service.js']).not.toContain('requireModuleAsync');
 
-  it('inlined scripts should not have syntax error', () => {
-    eval(manifest['/app-service.js']);
-  });
+  // the inlined app-service should be valid JavaScript
+  expect(() => eval(manifest['/app-service.js'])).not.toThrow();
 });
