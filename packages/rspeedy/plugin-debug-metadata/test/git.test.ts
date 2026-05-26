@@ -70,12 +70,10 @@ describe('collectGitMetadata', () => {
     mockExecFileSync.mockReset()
     mockExecFileSync
       .mockReturnValueOnce('abc123\n')
-      .mockReturnValueOnce('feat/foo\n')
       .mockReturnValueOnce('/repo\n')
       .mockReturnValueOnce('git@github.com:owner/repo.git\n')
 
     expect(collectGitMetadata('/repo')).toEqual({
-      branch: 'feat/foo',
       commit: 'abc123',
       rootDir: '/repo',
       remoteUrl: 'https://github.com/owner/repo',
@@ -87,33 +85,16 @@ describe('collectGitMetadata', () => {
     mockExecFileSync.mockReset()
     mockExecFileSync
       .mockReturnValueOnce('abc123\n')
-      .mockReturnValueOnce('main\n')
       .mockReturnValueOnce('/repo\n')
       .mockImplementationOnce(() => {
         throw new Error('no remote')
       })
 
     expect(collectGitMetadata('/repo')).toEqual({
-      branch: 'main',
       commit: 'abc123',
       rootDir: '/repo',
       remoteUrl: null,
       commitUrl: null,
     })
-  })
-
-  test('falls back to "unknown" branch when `git rev-parse --abbrev-ref` fails', () => {
-    mockExecFileSync.mockReset()
-    mockExecFileSync
-      .mockReturnValueOnce('abc123\n')
-      .mockImplementationOnce(() => {
-        throw new Error('detached HEAD')
-      })
-      .mockReturnValueOnce('/repo\n')
-      .mockImplementationOnce(() => {
-        throw new Error('no remote')
-      })
-
-    expect(collectGitMetadata('/repo')?.branch).toBe('unknown')
   })
 })

@@ -3,7 +3,6 @@
 "@lynx-js/debug-metadata": minor
 "@lynx-js/rspeedy": minor
 "@lynx-js/template-webpack-plugin": minor
-"@lynx-js/react-webpack-plugin": patch
 ---
 
 Add unified `debug-metadata.json` per Lynx entry.

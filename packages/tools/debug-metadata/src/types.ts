@@ -241,7 +241,6 @@ export interface UiSourceMapData {
  * @public
  */
 export interface GitMetadata {
-  branch: string;
   commit: string;
   /**
    * Absolute path of the git worktree root
