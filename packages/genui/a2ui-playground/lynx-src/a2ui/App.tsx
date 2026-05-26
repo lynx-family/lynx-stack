@@ -8,6 +8,7 @@ import {
   CheckBox,
   ChoicePicker,
   Column,
+  DateTimeInput,
   Divider,
   Icon,
   Image,
@@ -38,6 +39,7 @@ import cardManifest from '@lynx-js/a2ui-reactlynx/catalog/Card/catalog.json';
 import checkBoxManifest from '@lynx-js/a2ui-reactlynx/catalog/CheckBox/catalog.json';
 import choicePickerManifest from '@lynx-js/a2ui-reactlynx/catalog/ChoicePicker/catalog.json';
 import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json';
+import dateTimeInputManifest from '@lynx-js/a2ui-reactlynx/catalog/DateTimeInput/catalog.json';
 import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json';
 import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json';
 import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
@@ -97,6 +99,7 @@ const ALL_BUILTINS: readonly CatalogInput[] = [
   manifestEntry(Icon, iconManifest),
   manifestEntry(CheckBox, checkBoxManifest),
   manifestEntry(ChoicePicker, choicePickerManifest),
+  manifestEntry(DateTimeInput, dateTimeInputManifest),
   manifestEntry(LineChart, lineChartManifest),
   manifestEntry(PieChart, pieChartManifest),
   manifestEntry(RadioGroup, radioGroupManifest),

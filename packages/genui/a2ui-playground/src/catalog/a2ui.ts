@@ -6,6 +6,7 @@ import cardManifest from '@lynx-js/a2ui-reactlynx/catalog/Card/catalog.json';
 import checkBoxManifest from '@lynx-js/a2ui-reactlynx/catalog/CheckBox/catalog.json';
 import choicePickerManifest from '@lynx-js/a2ui-reactlynx/catalog/ChoicePicker/catalog.json';
 import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json';
+import dateTimeInputManifest from '@lynx-js/a2ui-reactlynx/catalog/DateTimeInput/catalog.json';
 import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json';
 import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json';
 import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
@@ -1423,6 +1424,68 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
             min: 0,
             max: 1,
           },
+        },
+      ],
+      openui: [],
+    },
+  },
+  {
+    name: 'DateTimeInput',
+    category: 'Input',
+    description:
+      'A date and/or time input with a calendar panel and configurable output format.',
+    props: schemaToProps(dateTimeInputManifest),
+    usage: {
+      a2ui: {
+        id: 'date-input',
+        component: 'DateTimeInput',
+        label: 'Date',
+        value: { path: '/date' },
+        enableDate: true,
+        enableTime: false,
+      },
+      openui: {},
+    },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Date',
+          value: {
+            id: 'date-input',
+            component: 'DateTimeInput',
+            label: 'Date',
+            value: { path: '/date' },
+            enableDate: true,
+            enableTime: false,
+          },
+          data: { date: '2026-05-26' },
+        },
+        {
+          label: 'Date & Time',
+          value: {
+            id: 'datetime-input',
+            component: 'DateTimeInput',
+            label: 'Event date',
+            value: { path: '/eventDate' },
+            enableDate: true,
+            enableTime: true,
+            outputFormat: 'YYYY-MM-DD HH:mm',
+          },
+          data: { eventDate: '2026-05-26 19:30' },
+        },
+        {
+          label: 'Date Range',
+          value: {
+            id: 'booking-date',
+            component: 'DateTimeInput',
+            label: 'Booking date',
+            value: { path: '/bookingDate' },
+            enableDate: true,
+            enableTime: false,
+            min: '2026-05-01',
+            max: '2026-05-31',
+          },
+          data: { bookingDate: '2026-05-26' },
         },
       ],
       openui: [],
