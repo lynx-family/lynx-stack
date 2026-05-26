@@ -23,7 +23,7 @@ it('should have correct chunk content', async () => {
   expect(fooBackground.foo()).toBe(42);
 });
 
-it('manifest only contains /app-service.js', async () => {
+it('lazy bundle bts is inlined even with inlineScripts: false', async () => {
   const tasmJSONPath = resolve(__dirname, '.rspeedy/async/foo/tasm.json');
   expect(existsSync(tasmJSONPath)).toBeTruthy();
 
@@ -37,13 +37,19 @@ it('manifest only contains /app-service.js', async () => {
 
   expect(sourceContent).toHaveProperty('appType', 'DynamicComponent');
 
-  expect(manifest).not.toHaveProperty('/foo:background.rspack.bundle.js');
+  // A lazy bundle's background must be loaded synchronously when the bundle
+  // is required, so it is always inlined into the bundle regardless of
+  // `inlineScripts: false`. Otherwise it would be loaded via
+  // `requireModuleAsync` and be unavailable at `installChunk` time.
   expect(manifest).toHaveProperty('/app-service.js');
-
-  // should have requireModuleAsyncCache polyfill
-  expect(manifest['/app-service.js']).toContain('var moduleCache = {}');
+  expect(manifest).toHaveProperty('/foo:background.rspack.bundle.js');
 
   expect(manifest['/app-service.js']).toContain(
+    `module.exports=lynx.requireModule(\"/foo:background.rspack.bundle.js\"`,
+  );
+
+  // the bts must not be externalized via requireModuleAsync
+  expect(manifest['/app-service.js']).not.toContain(
     `lynx.requireModuleAsync(\"/foo:background.rspack.bundle.js\")`,
   );
 
