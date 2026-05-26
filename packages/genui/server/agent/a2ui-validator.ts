@@ -125,6 +125,11 @@ export interface A2UIValidationDebugData {
   rawText?: string;
 }
 
+export interface A2UIValidationDebugOptions {
+  includeRaw?: boolean;
+  previewChars?: number;
+}
+
 function stripCodeFenceWrapper(text: string): string {
   let body = text.trim();
   if (body.startsWith('```')) {
@@ -225,6 +230,7 @@ export function extractJsonArray(text: string): unknown {
 export function getA2UIValidationDebugData(
   raw: string,
   errors: string[],
+  options: A2UIValidationDebugOptions = {},
 ): A2UIValidationDebugData {
   const parsed = extractJsonArray(raw);
   const parsedType = parsed === null
@@ -235,9 +241,14 @@ export function getA2UIValidationDebugData(
   const hasJsonParseError = errors.some((error) =>
     error.startsWith('Response was not valid JSON.')
   );
+  const rawText = options.includeRaw
+    ? raw
+    : (hasJsonParseError
+      ? previewText(raw, options.previewChars ?? 500)
+      : undefined);
   return {
     parsedType,
-    rawText: hasJsonParseError ? raw : undefined,
+    ...(rawText === undefined ? {} : { rawText }),
     entries: errors.map((error) => {
       const path = extractValidationErrorPath(error);
       return {
@@ -536,14 +547,15 @@ function flattenProvidedPaths(basePath: string, value: unknown): string[] {
 }
 
 function extractValidationErrorPath(error: string): string {
-  const match = /^Schema violation at ([^:]+):/u.exec(error);
+  const match = /^Schema violation at ([^:]+):/u.exec(error)
+    ?? /^Prop ([^ ]+) /u.exec(error);
   return match?.[1] ?? '<root>';
 }
 
 function valueAtPath(value: unknown, path: string): unknown {
   if (path === '<root>' || path === '') return value;
   let current = value;
-  for (const segment of path.split('.')) {
+  for (const segment of path.match(/[^.[\]]+/gu) ?? []) {
     if (Array.isArray(current)) {
       const index = Number(segment);
       if (!Number.isInteger(index)) return undefined;
@@ -554,6 +566,13 @@ function valueAtPath(value: unknown, path: string): unknown {
     current = current[segment];
   }
   return current;
+}
+
+function previewText(raw: string, maxChars: number): string {
+  if (raw.length <= maxChars) return raw;
+  return `${raw.slice(0, maxChars)}... [truncated ${
+    raw.length - maxChars
+  } chars]`;
 }
 
 function validateComponentAgainstCatalog(

@@ -661,9 +661,15 @@ function parsePersistedUserAction(content: string): {
     const action = (parsed as { action?: unknown }).action;
     if (!action || typeof action !== 'object') return null;
     const record = action as Record<string, unknown>;
+    const event = record.event;
+    const eventName = event && typeof event === 'object'
+      ? (event as { name?: unknown }).name
+      : undefined;
     return {
       action: record,
-      name: typeof record.name === 'string' ? record.name : 'unknown',
+      name: typeof record.name === 'string'
+        ? record.name
+        : (typeof eventName === 'string' ? eventName : 'unknown'),
     };
   } catch {
     return null;
@@ -1163,6 +1169,9 @@ export function AIChatPage(
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent<unknown>) => {
+      const frameWindow = previewFrameRef.current?.contentWindow;
+      if (!frameWindow || e.source !== frameWindow) return;
+      if (e.origin !== targetOriginForFrame(renderUrlRef.current)) return;
       if (!e.data || typeof e.data !== 'object') return;
       const msg = e.data as Record<string, unknown>;
       if (msg.type === 'A2UI_RENDER_READY') {

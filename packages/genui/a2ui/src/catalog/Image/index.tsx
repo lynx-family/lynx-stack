@@ -24,8 +24,13 @@ export interface ImageProps extends GenericComponentProps {
 }
 
 function imageSourceFromServer(value: unknown): string | undefined {
-  if (typeof value !== 'string') return undefined;
-  const src = value.trim();
+  const raw = typeof value === 'string'
+    ? value
+    : (value && typeof value === 'object'
+        && typeof (value as { path?: unknown }).path === 'string'
+      ? (value as { path: string }).path
+      : undefined);
+  const src = raw?.trim();
   if (!src) return undefined;
   return src;
 }
@@ -33,7 +38,7 @@ function imageSourceFromServer(value: unknown): string | undefined {
 export function Image(
   props: ImageProps,
 ): import('@lynx-js/react').ReactNode {
-  const src = props.url;
+  const src = imageSourceFromServer(props.url);
   const fit = props.fit ?? 'fit';
   const mode = props.mode ?? (() => {
     switch (fit) {
@@ -53,14 +58,12 @@ export function Image(
   const className = `a2ui-image image-variant-${variant} ${
     typeof props.weight === 'number' ? 'image-weighted' : ''
   }`;
-  const serverSrc = imageSourceFromServer(src);
-
   return (
     <image
       key={props.id}
       className={className}
       auto-size={true}
-      src={serverSrc ?? ''}
+      src={src ?? ''}
       mode={mode}
     />
   );

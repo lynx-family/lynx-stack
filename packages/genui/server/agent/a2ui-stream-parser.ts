@@ -103,45 +103,6 @@ function sniffUpdateComponentsSurfaceId(buffer: string): string | null {
   }
 }
 
-function placeholderId(id: string): string {
-  return `loading_${id}`;
-}
-
-function createPlaceholderComponent(
-  id: string,
-  expectedComponent?: string,
-): ComponentRecord {
-  if (expectedComponent === 'Image') {
-    return {
-      id: placeholderId(id),
-      component: 'Image',
-      url: '',
-      variant: 'mediumFeature',
-    };
-  }
-
-  return {
-    id: placeholderId(id),
-    component: 'Text',
-    text: 'Loading...',
-    variant: 'caption',
-  };
-}
-
-function expectedPlaceholderComponent(
-  childId: string,
-  seen: Map<string, ComponentRecord>,
-): string | undefined {
-  const component = seen.get(childId);
-  if (component) return component.component;
-  if (
-    /image|photo|picture|thumbnail|avatar|cover|poster|hero/iu.test(childId)
-  ) {
-    return 'Image';
-  }
-  return undefined;
-}
-
 function collectChildRefs(component: ComponentRecord): string[] {
   const refs: string[] = [];
   const child = component.child;
@@ -179,67 +140,11 @@ function collectChildRefs(component: ComponentRecord): string[] {
   return refs;
 }
 
-function replaceMissingChildRefs(
-  component: ComponentRecord,
-  seen: Map<string, ComponentRecord>,
-  placeholders: Map<string, ComponentRecord>,
-): ComponentRecord {
-  const next = { ...component };
-
-  const replaceRef = (id: string) => {
-    if (seen.has(id)) return id;
-    const placeholder = createPlaceholderComponent(
-      id,
-      expectedPlaceholderComponent(id, seen),
-    );
-    placeholders.set(placeholder.id, placeholder);
-    return placeholder.id;
-  };
-
-  if (typeof next.child === 'string') {
-    next.child = replaceRef(next.child);
-  }
-  if (typeof next.trigger === 'string') {
-    next.trigger = replaceRef(next.trigger);
-  }
-  if (typeof next.content === 'string') {
-    next.content = replaceRef(next.content);
-  }
-  if (Array.isArray(next.children)) {
-    const children = next.children as unknown[];
-    next.children = children.map((item) =>
-      typeof item === 'string' ? replaceRef(item) : item
-    );
-  } else if (isRecord(next.children)) {
-    const children = { ...next.children };
-    if (typeof children.componentId === 'string') {
-      children.componentId = replaceRef(children.componentId);
-    }
-    const template = children.template;
-    if (isRecord(template) && typeof template.componentId === 'string') {
-      children.template = {
-        ...template,
-        componentId: replaceRef(template.componentId),
-      };
-    }
-    next.children = children;
-  }
-  if (Array.isArray(next.tabs)) {
-    const tabs = next.tabs as unknown[];
-    next.tabs = tabs.map((tab) => {
-      if (!isRecord(tab) || typeof tab.child !== 'string') return tab;
-      return { ...tab, child: replaceRef(tab.child) };
-    });
-  }
-
-  return next;
-}
-
 function buildReachableComponentSnapshot(
   seen: Map<string, ComponentRecord>,
 ): ComponentRecord[] {
-  const root = seen.get(ROOT_COMPONENT_ID) ?? seen.values().next().value;
-  if (!root) return [];
+  const root = seen.get(ROOT_COMPONENT_ID);
+  if (!root) return [...seen.values()];
 
   const reachableIds = new Set<string>();
   const visit = (id: string) => {
@@ -253,13 +158,11 @@ function buildReachableComponentSnapshot(
   };
   visit(root.id);
 
-  const placeholders = new Map<string, ComponentRecord>();
   const components: ComponentRecord[] = [];
   for (const component of seen.values()) {
     if (!reachableIds.has(component.id)) continue;
-    components.push(replaceMissingChildRefs(component, seen, placeholders));
+    components.push(component);
   }
-  components.push(...placeholders.values());
   return components;
 }
 
@@ -402,6 +305,5 @@ export function splitA2UIProtocolMessages(
   messages: A2UIMessage[],
 ): A2UIMessage[] {
   const parser = new A2UIProtocolMessageStreamParser();
-  const replayMessages = parser.push(JSON.stringify(messages));
-  return replayMessages.length > 0 ? replayMessages : messages;
+  return parser.push(JSON.stringify(messages));
 }

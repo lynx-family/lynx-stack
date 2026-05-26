@@ -595,7 +595,8 @@
   border-radius: var(--geist-radius-lg);
   font-size: 14px;
   line-height: 1.5;
-  word-break: break-word;
+  overflow-wrap: anywhere;
+  word-break: normal;
   flex-shrink: 0;
 }
 
@@ -816,7 +817,8 @@
   font-size: 12px;
   line-height: 1.55;
   white-space: pre-wrap;
-  word-break: break-word;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .chatGeneratedJson {
