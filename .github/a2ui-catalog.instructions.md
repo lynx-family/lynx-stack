@@ -18,6 +18,8 @@ For the `<A2UI>` shell, treat `className` and `wrapSurface` as complementary the
 
 When adding a built-in A2UI catalog component, update the component export chain (`src/catalog/index.ts`, `src/index.ts`, and the package `exports` map), refresh the all-builtins README recipe, and add the component plus its generated manifest to the playground `ALL_BUILTINS` list so official gallery examples can render it.
 
+When adding a built-in A2UI catalog component that should be available to the GenUI server agent, copy the generated component manifest into `packages/genui/server/agent/catalog/<ComponentName>/catalog.json`, import it from `packages/genui/server/agent/a2ui-catalog.ts`, add it to `CATALOG_MANIFESTS`, and provide a `COMPONENT_SUMMARIES` entry. The server prompt catalog is intentionally assembled from this static manifest list instead of reading the renderer package dist at runtime.
+
 When evolving `packages/genui/a2ui-playground`, treat protocol-prefixed hashes such as `#/a2ui/...` and `#/openui/...` as the canonical routes, and preserve the current mainline tab names (`create`, `examples`, `components`) when adding protocol-aware routing. If you keep compatibility aliases for older or transitional paths such as `#/demos` or `#/chat`, parse them into the canonical route model instead of letting a rebase silently rename the mainline routes.
 
 For catalog navigation, keep `components` and `catalog` as route aliases that resolve to the same catalog page for a given protocol. Prefer one canonical tab label per protocol in the UI, but ensure legacy and new entrypoints both land on the same content so links and bookmarks stay valid during route renames.
@@ -29,3 +31,5 @@ When implementing A2UI v0.9 functions in `packages/genui/a2ui`, keep function re
 When verifying `packages/genui/a2ui-playground`, remember that `pnpm -F @lynx-js/a2ui-reactlynx build` regenerates catalog JSON only. The playground consumes `@lynx-js/a2ui-reactlynx` through package exports under `dist/**`, so run `pnpm -F @lynx-js/a2ui-reactlynx exec tsc -p tsconfig.build.json` before rebuilding the playground if runtime TypeScript changed.
 
 For known A2UI playground examples, keep the web preview URL on `?demo=<id>` instead of swapping it to the payload-store `messagesUrl`. `render.html` intentionally fetches known demo JSON in the browser shell and passes resolved messages into Lynx, avoiding fetch differences in the Lynx worker runtime; use payload-store URLs for custom edited JSON.
+
+For interactive A2UI playground component examples, bind mutable props through `{ path: ... }` and provide matching example data so the component preview emits an initial `updateDataModel` before `updateComponents`. Literal values render the initial state but cannot be changed by `setValue`, which only writes back to data-bound props.
