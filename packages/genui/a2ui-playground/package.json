@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "rsbuild build",
-    "build:lynx": "rspeedy build",
+    "build": "pnpm run build:a2ui && rsbuild build",
+    "build:a2ui": "pnpm --dir ../a2ui-catalog-extractor build && pnpm --dir ../a2ui build",
+    "build:lynx": "pnpm run build:a2ui && rspeedy build",
     "dev": "pnpm run build:lynx && rsbuild dev",
     "dev:lynx": "rspeedy dev",
     "preview": "rsbuild preview",

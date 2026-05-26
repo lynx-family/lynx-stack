@@ -269,6 +269,12 @@ export default tseslint.config(
       reportUnusedDisableDirectives: true,
     },
   },
+  {
+    files: ['packages/genui/index.ts'],
+    rules: {
+      'import/no-unresolved': 'off',
+    },
+  },
   // TypeScript-related
   {
     files: ['**/*.ts', '**/*.tsx'],
@@ -293,6 +299,7 @@ export default tseslint.config(
             'rslib.config.ts',
             'vitest.config.ts',
             'rstest.config.ts',
+            'packages/genui/index.ts',
           ],
           defaultProject: './tsconfig.json',
         },

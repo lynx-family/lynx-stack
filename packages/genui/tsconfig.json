@@ -7,14 +7,6 @@
     "lib": ["DOM", "ESNext"],
     "moduleResolution": "Bundler",
   },
-  "references": [
-    /** packages-start */
-    { "path": "./a2ui-catalog-extractor/tsconfig.json" },
-    { "path": "./a2ui-prompt/tsconfig.json" },
-    { "path": "./a2ui/tsconfig.build.json" },
-    { "path": "./openui/tsconfig.json" },
-    { "path": "./ui-judge/tsconfig.json" },
-    /** packages-end */
-  ],
-  "include": ["index.ts"],
+  "references": [],
+  "include": [],
 }

@@ -67,8 +67,8 @@ For a product app using A2UI, the important surfaces are:
 
 | Surface                       | Role                                                                                                                                       |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@lynx-js/genui/a2ui`     | ReactLynx renderer for A2UI v0.9. It provides `<A2UI>`, `MessageStore`, catalog APIs, built-in components, and protocol helpers.           |
-| `genui a2ui`       | Build-time command for generating catalog artifacts from TypeScript contracts and A2UI system prompts for your agent.                      |
+| `@lynx-js/genui/a2ui`         | ReactLynx renderer for A2UI v0.9. It provides `<A2UI>`, `MessageStore`, catalog APIs, built-in components, and protocol helpers.           |
+| `genui a2ui`                  | Build-time command for generating catalog artifacts from TypeScript contracts and A2UI system prompts for your agent.                      |
 | Your agent service            | A backend you own. It receives user prompts/actions, calls a model with the A2UI prompt and catalog, validates output, and returns A2UI.   |
 | Your transport implementation | Client code that calls your agent service, handles REST or streaming responses, pushes messages into `MessageStore`, and forwards actions. |
 

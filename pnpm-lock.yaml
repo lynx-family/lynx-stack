@@ -2312,12 +2312,6 @@ importers:
         specifier: 19.2.4
         version: 19.2.4(react@19.2.4)
     devDependencies:
-      '@lynx-js/a2ui-cli':
-        specifier: workspace:*
-        version: link:../packages/genui/a2ui-cli
-      '@lynx-js/a2ui-reactlynx':
-        specifier: workspace:*
-        version: link:../packages/genui/a2ui
       '@lynx-js/chunk-loading-webpack-plugin':
         specifier: workspace:*
         version: link:../packages/webpack/chunk-loading-webpack-plugin
@@ -2333,6 +2327,12 @@ importers:
       '@lynx-js/externals-loading-webpack-plugin':
         specifier: workspace:*
         version: link:../packages/webpack/externals-loading-webpack-plugin
+      '@lynx-js/genui':
+        specifier: workspace:*
+        version: link:../packages/genui
+      '@lynx-js/genui-cli':
+        specifier: workspace:*
+        version: link:../packages/genui/cli
       '@lynx-js/lynx-bundle-rslib-config':
         specifier: workspace:*
         version: link:../packages/rspeedy/lynx-bundle-rslib-config
@@ -15293,10 +15293,6 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 2.0.6(core-js@3.48.0)
 
-  '@rsbuild/plugin-typed-css-modules@1.2.2(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))':
-    optionalDependencies:
-      '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
-
   '@rsdoctor/client@1.5.6': {}
 
   '@rsdoctor/core@1.5.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@rsbuild/core@2.0.6(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))':
@@ -21934,12 +21930,6 @@ snapshots:
       tailwindcss: 4.2.1
     optionalDependencies:
       '@rsbuild/core': 2.0.6(core-js@3.48.0)
-
-  rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0))(tailwindcss@4.2.1):
-    dependencies:
-      tailwindcss: 4.2.1
-    optionalDependencies:
-      '@rsbuild/core': 2.0.0-beta.3(@module-federation/runtime-tools@0.22.0)(core-js@3.48.0)
 
   rslog@1.3.2: {}
 
