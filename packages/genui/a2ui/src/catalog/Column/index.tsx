@@ -1,8 +1,6 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { useMemo } from '@lynx-js/react';
-
 import { NodeRenderer } from '../../react/A2UIRenderer.jsx';
 import { useDataBinding } from '../../react/useDataBinding.js';
 import type {
@@ -78,13 +76,11 @@ export function Column(
     [],
   );
 
-  const childList = useMemo(() => {
-    if (Array.isArray(children)) {
-      return children.map((childId: string) =>
-        buildChild(surface, childId, dataContextPath)
-      );
-    }
-    return (Array.isArray(columnData) ? columnData : []).map((item, index) => {
+  const childList = Array.isArray(children)
+    ? children.map((childId: string) =>
+      buildChild(surface, childId, dataContextPath)
+    )
+    : (Array.isArray(columnData) ? columnData : []).map((item, index) => {
       const key = item && typeof item === 'object' && 'key' in item
         ? String(item['key'])
         : `${index}`;
@@ -97,7 +93,6 @@ export function Column(
         key,
       );
     });
-  }, [children, surface, dataContextPath, columnData, fullPath, template]);
 
   return (
     <view
