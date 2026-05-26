@@ -5,7 +5,7 @@
 The first public API is `judgePage`. Callers own the Playwright page lifecycle,
 including navigation, viewport, cookies, route mocks, and authentication. The
 judge reads `page.url()` for the returned JSON object and produces a single
-`visual-correctness` score from `0` to `5`.
+score from `0` to `5`.
 
 ```ts
 import { test } from '@playwright/test';
@@ -16,6 +16,7 @@ test('judges generated UI', async ({ page }) => {
   await page.goto('http://localhost:3000/render.html');
 
   const result = await judgePage({
+    dimension: 'usability-interaction',
     page,
     task:
       'The page should render a login form with email, password, and submit.',
@@ -23,6 +24,15 @@ test('judges generated UI', async ({ page }) => {
   });
 });
 ```
+
+When `dimension` is omitted, `judgePage` keeps the legacy
+`visual-correctness` prompt. GEQI scoring can pass one of these dimensions:
+
+- `usability-interaction`
+- `visual-aesthetics`
+- `consistency-standards`
+- `architecture-writing`
+- `accessibility-performance`
 
 Midscene reads its model configuration from the standard Midscene environment
 variables, such as `MIDSCENE_MODEL_BASE_URL`, `MIDSCENE_MODEL_API_KEY`,

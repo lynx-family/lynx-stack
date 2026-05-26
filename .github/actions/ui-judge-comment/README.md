@@ -25,14 +25,29 @@ Example result payload:
 {
   "results": [
     {
+      "demoId": "recs",
       "dimension": "visual-correctness",
-      "score": 5,
+      "dimensions": [
+        {
+          "dimension": "usability-interaction",
+          "dimensionLabel": "Usability & Interaction",
+          "score": 4,
+          "steps": [],
+          "url": "http://127.0.0.1:3000/render.html?demo=recs",
+          "weight": 30
+        }
+      ],
+      "score": 3,
       "steps": [],
       "url": "http://127.0.0.1:3000/render.html?demo=recs"
     }
   ]
 }
 ```
+
+When a result includes weighted GEQI `dimensions`, the comment renders one row
+per example, adds one column per GEQI dimension, and shows the weighted
+100-point GEQI score without replacing the visual-correctness score.
 
 Inputs:
 
