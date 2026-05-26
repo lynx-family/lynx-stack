@@ -24,7 +24,7 @@ it('should have custom templateDebugUrl in tasm.json from hook', async () => {
   );
 });
 
-it('should emit debug metadata URL in tasm.json sourceContent.config', async () => {
+it('should leave debugMetadataUrl empty when the hook only sets templateDebugUrl', async () => {
   const tasmJSON = await fs.readFile(
     path.resolve(__dirname, '.rspeedy/main/tasm.json'),
     'utf-8',
@@ -32,8 +32,5 @@ it('should emit debug metadata URL in tasm.json sourceContent.config', async () 
 
   const { sourceContent } = JSON.parse(tasmJSON);
 
-  expect(sourceContent.config).toHaveProperty(
-    'debugMetadataUrl',
-    'https://should-be-overridden.com/.rspeedy/main/debug-metadata.json',
-  );
+  expect(sourceContent.config).toHaveProperty('debugMetadataUrl', '');
 });

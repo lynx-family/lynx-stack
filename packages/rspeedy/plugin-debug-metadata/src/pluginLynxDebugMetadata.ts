@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RsbuildPlugin } from '@rsbuild/core'
+import type { RsbuildPlugin, RsbuildPluginAPI } from '@rsbuild/core'
 
 import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
@@ -11,6 +11,18 @@ import { createDebugMetadataMiddleware } from './middleware.js'
 import type { CompilerHandle } from './middleware.js'
 
 const PLUGIN_NAME = 'lynx:debug-metadata'
+
+function devServerOrigin(api: RsbuildPluginAPI): string | undefined {
+  if (!api.context.devServer) return
+  const port = api.context.devServer.port
+  const { assetPrefix } = api.getNormalizedConfig().dev
+  if (typeof assetPrefix !== 'string') {
+    const errorMsg = 'dev.assetPrefix is not string, skip printing QRCode'
+    // Rspeedy will normalized dev.assetPrefix to string
+    throw new Error(errorMsg)
+  }
+  return new URL(assetPrefix.replaceAll('<port>', String(port))).origin
+}
 
 interface LynxTemplatePluginExposure {
   LynxTemplatePlugin: typeof LynxTemplatePlugin
@@ -77,6 +89,7 @@ export function pluginLynxDebugMetadata(): RsbuildPlugin {
         chain.plugin(PLUGIN_NAME).use(LynxDebugMetadataPlugin, [{
           LynxTemplatePlugin: exposed.LynxTemplatePlugin,
           rsbuildEntry: environment.entry,
+          getDevServerOrigin: () => devServerOrigin(api),
         }])
       })
 

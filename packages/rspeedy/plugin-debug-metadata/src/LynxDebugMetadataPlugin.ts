@@ -47,6 +47,7 @@ export interface LynxDebugMetadataPluginOptions {
    * `meta.rspeedy.entryFiles` is empty.
    */
   rsbuildEntry?: RsbuildEntry
+  getDevServerOrigin?: () => string | undefined
 }
 
 /**
@@ -180,6 +181,22 @@ export class LynxDebugMetadataPluginImpl {
           // The file can be uploaded by a separate plugin to
           // error monitoring services by users.
           args.intermediateAssets.push(debugMetadataAssetName)
+
+          const devServerOrigin = this.options.getDevServerOrigin?.()
+          if (devServerOrigin) {
+            const debugMetadataUrl =
+              `${devServerOrigin}/${debugMetadataAssetName}`
+            const rootName = args.encodeData.lepusCode.root?.name
+            const mainThreadBasename = rootName
+              ? path.posix.basename(rootName.replace(/\\/g, '/'))
+              : 'main-thread.js'
+            args.encodeData.sourceContent.config['debugMetadataUrl'] =
+              debugMetadataUrl
+            args.encodeData.compilerOptions['templateDebugUrl'] =
+              `${debugMetadataUrl}?field=bytecode-debug-info&filename=${
+                encodeURIComponent(mainThreadBasename)
+              }`
+          }
 
           rewriteSourceMappingURLTrailers(compilation, args)
 

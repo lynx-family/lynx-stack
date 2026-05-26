@@ -13,14 +13,14 @@ exports[`template > templateCases/defaults/compile-options > templateCases/defau
   enableRemoveCSSScope: false,
   enableReuseContext: true,
   targetSdkVersion: 3.2,
-  templateDebugUrl: https://example.com/.rspeedy/main/debug-metadata.json?field=bytecode-debug-info&filename=main-thread.js,
+  templateDebugUrl: ,
   useLepusNG: true,
 }
 `;
 
 exports[`template > templateCases/defaults/config > templateCases/defaults/config > templateCases/defaults/config - rspack > templateCases/defaults/config - rspack should run async 1`] = `
 {
-  debugMetadataUrl: https://example.com/.rspeedy/main/debug-metadata.json,
+  debugMetadataUrl: ,
   enableA11y: true,
   enableAccessibilityElement: false,
   enableCSSInheritance: false,
